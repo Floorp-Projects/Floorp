@@ -62,8 +62,6 @@
 #include "gc/Barrier.h"
 #include "vm/String.h"
 
-namespace nanojit { class ValidateWriter; }
-
 namespace js {
 
 class AutoPropDescArrayRooter;
@@ -410,20 +408,8 @@ class RegExpObject;
  * overflow, and never points to the object's fixed slots. Unlike dense arrays,
  * the fixed slots can always be accessed. Two objects with the same shape are
  * guaranteed to have the same number of fixed slots.
- *
- * If you change this struct, you'll probably need to change the AccSet values
- * in jsbuiltins.h.
  */
 struct JSObject : js::gc::Cell {
-    /*
-     * TraceRecorder must be a friend because it generates code that
-     * manipulates JSObjects, which requires peeking under any encapsulation.
-     * ValidateWriter must be a friend because it works in tandem with
-     * TraceRecorder.
-     */
-    friend class js::TraceRecorder;
-    friend class nanojit::ValidateWriter;
-
     /*
      * Private pointer to the last added property and methods to manipulate the
      * list it links among properties in this scope.
@@ -500,7 +486,7 @@ struct JSObject : js::gc::Cell {
 
     jsuword &initializedLength() { return *newType.unsafeGetUnioned(); }
 
-    JS_FRIEND_API(size_t) sizeOfSlotsArray(JSUsableSizeFun usf);
+    JS_FRIEND_API(size_t) sizeOfSlotsArray(JSMallocSizeOfFun mallocSizeOf);
 
     js::HeapPtrObject parent;               /* object's parent */
     void              *privateData;         /* private data */

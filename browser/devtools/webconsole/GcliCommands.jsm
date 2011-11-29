@@ -84,7 +84,7 @@ gcli.addCommand({
       let command = canon.getCommand(commandNames[i]);
       if (!command.hidden && command.description) {
         output.push("<tr>");
-        output.push('<th class="gcliCmdHelpRight">' + command.name + "</th>");
+        output.push('<th class="gcli-help-right">' + command.name + "</th>");
         output.push("<td>&#x2192; " + command.description + "</td>");
         output.push("</tr>");
       }

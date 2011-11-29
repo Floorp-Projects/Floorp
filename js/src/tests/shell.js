@@ -649,8 +649,6 @@ function optionsClear() {
     var optionName = optionNames[i];
     if (optionName &&
         optionName != "methodjit" &&
-        optionName != "tracejit" &&
-        optionName != "jitprofiling" &&
         optionName != "methodjit_always")
     {
       options(optionName);
@@ -878,14 +876,6 @@ function jsTestDriverEnd()
 
 function jit(on)
 {
-  if (on && !options().match(/tracejit/))
-  {
-    options('tracejit');
-  }
-  else if (!on && options().match(/tracejit/))
-  {
-    options('tracejit');
-  }
 }
 
 /*

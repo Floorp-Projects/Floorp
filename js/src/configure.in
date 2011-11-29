@@ -803,7 +803,7 @@ case "$target" in
         # Identify which version of the SDK we're building with
         # Windows Server 2008 and newer SDKs have WinSDKVer.h, get the version
         # from there
-        AC_CHECK_HEADERS([winsdkver.h])
+        MOZ_CHECK_HEADERS([winsdkver.h])
         if test "$ac_cv_header_winsdkver_h" = "yes"; then
             # Get the highest _WIN32_WINNT and NTDDI versions supported
             # Take the higher of the two
@@ -830,7 +830,7 @@ EOF
         else
             # The Vista SDK is the only one to have sdkddkver.h but not
             # WinSDKVer.h
-            AC_CHECK_HEADERS([sdkddkver.h])
+            MOZ_CHECK_HEADERS([sdkddkver.h])
             if test "$ac_cv_header_sdkddkver_h" = "yes"; then
                 MOZ_WINSDK_MAXVER=0x06000000
             else
@@ -1190,7 +1190,7 @@ tools are selected during the Xcode/Developer Tools installation.])
     CFLAGS="$CFLAGS -isysroot ${MACOS_SDK_DIR}"
     CXXFLAGS="$CXXFLAGS -isysroot ${MACOS_SDK_DIR}"
 
-    dnl CPP/CXXCPP needs to be set for AC_CHECK_HEADER.
+    dnl CPP/CXXCPP needs to be set for MOZ_CHECK_HEADER.
     CPP="$CPP -isysroot ${MACOS_SDK_DIR}"
     CXXCPP="$CXXCPP -isysroot ${MACOS_SDK_DIR}"
 
@@ -2164,7 +2164,7 @@ case "$target" in
         ;;
     esac
     if test "$COMPILE_ENVIRONMENT"; then
-        AC_CHECK_HEADERS(sys/inttypes.h)
+        MOZ_CHECK_HEADERS(sys/inttypes.h)
     fi
     AC_DEFINE(JS_SYS_TYPES_H_DEFINES_EXACT_SIZE_TYPES)
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
@@ -2501,7 +2501,7 @@ ia64*-hpux*)
             CXXFLAGS="$CXXFLAGS -mstackrealign"
         fi
 
-    	AC_CHECK_HEADERS(mmintrin.h)
+        MOZ_CHECK_HEADERS(mmintrin.h)
     	AC_DEFINE(_X86_)
 	;;
     x86_64-*)
@@ -2790,7 +2790,6 @@ dnl Configure JIT support
 
 case "$target" in
 i?86-*)
-    NANOJIT_ARCH=i386
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
@@ -2799,7 +2798,6 @@ i?86-*)
     AC_DEFINE(JS_NUNBOX32)
     ;;
 x86_64*-*)
-    NANOJIT_ARCH=X64
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
@@ -2808,7 +2806,6 @@ x86_64*-*)
     AC_DEFINE(JS_PUNBOX64)
     ;;
 arm*-*)
-    NANOJIT_ARCH=ARM
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
@@ -2817,7 +2814,6 @@ arm*-*)
     AC_DEFINE(JS_NUNBOX32)
     ;;
 sparc*-*)
-    NANOJIT_ARCH=Sparc
     ENABLE_METHODJIT=1
     ENABLE_MONOIC=1
     ENABLE_POLYIC=1
@@ -2840,8 +2836,8 @@ MOZ_ARG_DISABLE_BOOL(polyic,
   ENABLE_POLYIC= )
 
 MOZ_ARG_ENABLE_BOOL(tracejit,
-[  --enable-tracejit      Enable tracing JIT support],
-  ENABLE_TRACEJIT=1,
+[  --enable-tracejit     Deprecated, does nothing],
+  ENABLE_TRACEJIT=,
   ENABLE_TRACEJIT= )
 
 MOZ_ARG_ENABLE_BOOL(methodjit-spew,
@@ -2870,62 +2866,6 @@ fi
 if test "$ENABLE_METHODJIT_SPEW"; then
     AC_DEFINE(JS_METHODJIT_SPEW)
 fi
-
-if test "$ENABLE_TRACEJIT"; then
-
-AC_DEFINE(FEATURE_NANOJIT)
-AC_DEFINE(JS_TRACER)
-
-case "$target" in
-i?86-*)
-    AC_DEFINE(AVMPLUS_IA32)
-    ;;
-x86_64*-*)
-    AC_DEFINE(AVMPLUS_AMD64)
-    AC_DEFINE(AVMPLUS_64BIT)
-    ;;
-arm*-*)
-    AC_DEFINE(AVMPLUS_ARM)
-    ;;
-sparc-*)
-    AC_DEFINE(AVMPLUS_SPARC)
-    ;;
-esac
-
-case "$target" in
-*-linux*|*-android*|*-linuxandroid*)
-    AC_DEFINE(AVMPLUS_UNIX)
-    AC_DEFINE(AVMPLUS_LINUX)
-    ;;
-*-darwin*)
-    AC_DEFINE(AVMPLUS_UNIX)
-    ;;
-*-solaris*)
-    AC_DEFINE(AVMPLUS_UNIX)
-    ;;
-*-freebsd*|*-kfreebsd*)
-    AC_DEFINE(AVMPLUS_UNIX)
-    ;;
-*-openbsd*)
-    AC_DEFINE(AVMPLUS_UNIX)
-    ;;
-*-gnu*)
-    AC_DEFINE(AVMPLUS_UNIX)
-    ;;
-*-mingw*)
-    AC_DEFINE(AVMPLUS_WIN32)
-    ;;
-*-os2*)
-    AC_DEFINE(AVMPLUS_OS2)
-    ;;
-*)
-    AC_MSG_ERROR([Unrecognized nanojit platform. Use --disable-tracejit to build without tracing JIT support.])
-esac
-
-fi # ENABLE_TRACEJIT
-
-AC_SUBST(ENABLE_TRACEJIT)
-AC_SUBST(NANOJIT_ARCH)
 
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -2986,7 +2926,7 @@ dnl ========================================================
 dnl Once this is working, we can delete the code for int16_t,
 dnl etc. below.
 
-AC_CHECK_HEADER(stdint.h)
+MOZ_CHECK_HEADER(stdint.h)
 if test "$ac_cv_header_stdint_h" = yes; then
     AC_DEFINE(JS_HAVE_STDINT_H)
 else
@@ -3014,12 +2954,12 @@ fi
 MOZ_ALIGN_OF_TYPE(JS_ALIGN_OF_POINTER, void*, 2 4 8 16)
 MOZ_SIZE_OF_TYPE(JS_BYTES_PER_DOUBLE, double, 6 8 10 12 14)
 
-AC_CHECK_HEADERS(endian.h)
+MOZ_CHECK_HEADERS(endian.h)
 if test "$ac_cv_header_endian_h" = yes; then
     AC_DEFINE(JS_HAVE_ENDIAN_H)
 fi
 
-AC_CHECK_HEADERS(sys/isa_defs.h)
+MOZ_CHECK_HEADERS(sys/isa_defs.h)
 if test "$ac_cv_header_sys_isa_defs_h" = yes; then
     AC_DEFINE(JS_HAVE_SYS_ISA_DEFS_H)
 fi
@@ -3308,30 +3248,25 @@ freebsd*)
     CPPFLAGS="${CPPFLAGS} ${X_CFLAGS}"
     ;;
 esac
-AC_CHECK_HEADERS(sys/byteorder.h compat.h getopt.h)
-AC_CHECK_HEADERS(sys/bitypes.h memory.h unistd.h)
-AC_CHECK_HEADERS(gnu/libc-version.h nl_types.h)
-AC_CHECK_HEADERS(malloc.h)
-AC_CHECK_HEADERS(X11/XKBlib.h)
-AC_CHECK_HEADERS(io.h)
+MOZ_CHECK_COMMON_HEADERS
 
 dnl These are all the places some variant of statfs can be hiding.
-AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
+MOZ_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 
 dnl Quota support
-AC_CHECK_HEADERS(sys/quota.h)
-AC_CHECK_HEADERS(linux/quota.h)
+MOZ_CHECK_HEADERS(sys/quota.h)
+MOZ_CHECK_HEADERS(linux/quota.h)
 
 dnl Try for MMX support
 dnl NB - later gcc versions require -mmmx for this header to be successfully
 dnl included (or another option which implies it, such as -march=pentium-mmx)
-AC_CHECK_HEADERS(mmintrin.h)
+MOZ_CHECK_HEADERS(mmintrin.h)
 
 dnl Check whether the compiler supports the new-style C++ standard
 dnl library headers (i.e. <new>) or needs the old "new.h"
 AC_LANG_CPLUSPLUS
 NEW_H=new.h
-AC_CHECK_HEADER(new, [NEW_H=new])
+MOZ_CHECK_HEADER(new, [NEW_H=new])
 AC_DEFINE_UNQUOTED(NEW_H, <$NEW_H>)
 AC_LANG_C
 
@@ -3339,7 +3274,7 @@ AC_ARG_ENABLE(dtrace,
               [  --enable-dtrace         build with dtrace support if available (default=no)],
               [enable_dtrace="yes"],)
 if test "x$enable_dtrace" = "xyes"; then
-  AC_CHECK_HEADER(sys/sdt.h, HAVE_DTRACE=1)
+  MOZ_CHECK_HEADER(sys/sdt.h, HAVE_DTRACE=1)
   if test -n "$HAVE_DTRACE"; then
       AC_DEFINE(INCLUDE_MOZILLA_DTRACE)
   else
@@ -3352,12 +3287,12 @@ case $target in
 *-aix4.3*|*-aix5*)
 	;;
 *)
-	AC_CHECK_HEADERS(sys/cdefs.h)
+    MOZ_CHECK_HEADERS(sys/cdefs.h)
 	;;
 esac
 
 dnl Performance measurement headers.
-AC_CHECK_HEADER(linux/perf_event.h,
+MOZ_CHECK_HEADER(linux/perf_event.h,
     [AC_CACHE_CHECK(for perf_event_open system call,ac_cv_perf_event_open,
         [AC_TRY_COMPILE([#include <sys/syscall.h>],[return sizeof(__NR_perf_event_open);],
         ac_cv_perf_event_open=yes,
@@ -3392,7 +3327,7 @@ case $target in
     ;;
 *)
     AC_SEARCH_LIBS(dlopen, dl,
-        AC_CHECK_HEADER(dlfcn.h,
+        MOZ_CHECK_HEADER(dlfcn.h,
         AC_DEFINE(HAVE_DLOPEN)))
     ;;
 esac
@@ -3965,11 +3900,11 @@ fi
 dnl Check for the existence of various allocation headers/functions
 
 MALLOC_H=
-AC_CHECK_HEADER(malloc.h,        [MALLOC_H=malloc.h])
+MOZ_CHECK_HEADER(malloc.h,        [MALLOC_H=malloc.h])
 if test "$MALLOC_H" = ""; then
-  AC_CHECK_HEADER(malloc/malloc.h, [MALLOC_H=malloc/malloc.h])
+  MOZ_CHECK_HEADER(malloc/malloc.h, [MALLOC_H=malloc/malloc.h])
   if test "$MALLOC_H" = ""; then
-    AC_CHECK_HEADER(sys/malloc.h,    [MALLOC_H=sys/malloc.h])
+    MOZ_CHECK_HEADER(sys/malloc.h,    [MALLOC_H=sys/malloc.h])
   fi
 fi
 if test "$MALLOC_H" != ""; then
@@ -4504,20 +4439,6 @@ if test -n "$MOZ_TRACE_JSCALLS"; then
 fi
 
 dnl ========================================================
-dnl = Use TraceVis
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(tracevis,
-[  --enable-tracevis       Enable TraceVis tracing tool (default=no)],
-    MOZ_TRACEVIS=1,
-    MOZ_TRACEVIS= )
-if test -n "$MOZ_TRACEVIS"; then
-    AC_DEFINE(MOZ_TRACEVIS)
-    if test -z "$ENABLE_TRACEJIT"; then
-       AC_MSG_ERROR([--enable-tracevis is incompatible with --disable-tracejit])
-    fi
-fi
-
-dnl ========================================================
 dnl = Use incremental GC
 dnl ========================================================
 JSGC_INCREMENTAL=1
@@ -4536,7 +4457,7 @@ MOZ_ARG_ENABLE_BOOL(valgrind,
     MOZ_VALGRIND=1,
     MOZ_VALGRIND= )
 if test -n "$MOZ_VALGRIND"; then
-    AC_CHECK_HEADER([valgrind/valgrind.h], [],
+    MOZ_CHECK_HEADER([valgrind/valgrind.h], [],
         AC_MSG_ERROR(
             [--enable-valgrind specified but Valgrind is not installed]))
     AC_DEFINE(MOZ_VALGRIND)
@@ -4741,7 +4662,7 @@ dnl ========================================================
 dnl = Support for gcc stack unwinding (from gcc 3.3)
 dnl ========================================================
 if test -z "$SKIP_LIBRARY_CHECKS"; then
-    AC_CHECK_HEADER(unwind.h, AC_CHECK_FUNCS(_Unwind_Backtrace))
+    MOZ_CHECK_HEADER(unwind.h, AC_CHECK_FUNCS(_Unwind_Backtrace))
 fi
 
 dnl ========================================================

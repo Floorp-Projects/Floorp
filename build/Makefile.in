@@ -56,6 +56,7 @@ endif
 DIRS += pgo
 
 ifdef ENABLE_TESTS
+  DIRS += autoconf/test
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
   DIRS += mobile/sutagent/android \
           mobile/sutagent/android/watcher \
@@ -63,6 +64,60 @@ ifeq (android,$(MOZ_WIDGET_TOOLKIT))
           mobile/sutagent/android/fencp \
           $(NULL)
 endif
+endif
+
+ifdef MOZ_APP_BASENAME
+DIST_FILES = application.ini
+
+ifdef LIBXUL_SDK
+GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build Milestone)
+APP_INI_DEPS = $(LIBXUL_DIST)/bin/platform.ini
+else
+GRE_MILESTONE = $(shell tail -n 1 $(topsrcdir)/config/milestone.txt 2>/dev/null || tail -1 $(topsrcdir)/config/milestone.txt)
+APP_INI_DEPS = $(topsrcdir)/config/milestone.txt
+endif
+
+APP_BUILDID := $(shell cat $(DEPTH)/config/buildid)
+APP_INI_DEPS += $(DEPTH)/config/buildid
+
+DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DAPP_BUILDID=$(APP_BUILDID)
+
+DEFINES += -DMOZ_APP_VERSION="$(MOZ_APP_VERSION)"
+APP_INI_DEPS += $(DEPTH)/config/autoconf.mk
+
+MOZ_SOURCE_STAMP ?= $(firstword $(shell hg -R $(topsrcdir) parent --template="{node|short}\n" 2>/dev/null))
+ifdef MOZ_SOURCE_STAMP
+DEFINES += -DMOZ_SOURCE_STAMP="$(MOZ_SOURCE_STAMP)"
+endif
+
+_dollar=$$
+SOURCE_REPO := $(shell cd $(topsrcdir) && hg showconfig paths.default 2>/dev/null | head -n1 | sed -e "s/^ssh:/http:/" -e "s/\/$(_dollar)//" )
+ifdef SOURCE_REPO
+DEFINES += -DMOZ_SOURCE_REPO="$(SOURCE_REPO)"
+endif
+
+DEFINES += \
+  -DMOZ_APP_BASENAME="$(MOZ_APP_BASENAME)" \
+  -DMOZ_APP_VENDOR="$(MOZ_APP_VENDOR)" \
+  -DMOZ_APP_ID="$(MOZ_APP_ID)" \
+  $(NULL)
+
+ifdef MOZ_APP_PROFILE
+DEFINES += -DMOZ_APP_PROFILE="$(MOZ_APP_PROFILE)"
+endif
+
+ifdef MOZILLA_OFFICIAL
+DEFINES += -DMOZILLA_OFFICIAL
+endif
+
+ifdef MOZ_PROFILE_MIGRATOR
+DEFINES += -DMOZ_PROFILE_MIGRATOR
+endif
+
+ifdef MOZ_EXTENSION_MANAGER
+DEFINES += -DMOZ_EXTENSION_MANAGER
+endif
+
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -98,6 +153,19 @@ leaktest.py: leaktest.py.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $^ > $@
 	chmod +x $@
 GARBAGE += leaktest.py
+
+ifdef MOZ_APP_BASENAME
+application.ini: application.ini.in $(APP_INI_DEPS)
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
+GARBAGE += application.ini
+
+ifdef MOZ_APP_STATIC_INI
+application.ini.h: appini_header.py application.ini 
+	$(PYTHON) $^ > $@
+export:: application.ini.h
+GARBAGE += application.ini.h
+endif
+endif
 
 libs:: $(_LEAKTEST_FILES)
 	$(INSTALL) $^ $(_LEAKTEST_DIR)

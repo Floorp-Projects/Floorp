@@ -340,6 +340,9 @@ var MigrationWizard = {
       case "safari":
         source = "sourceNameSafari";
         break;
+      case "chrome":
+        source = "sourceNameChrome";
+        break;
     }
 
     // semi-wallpaper for crash when multiple profiles exist, since we haven't initialized mSourceProfile in places

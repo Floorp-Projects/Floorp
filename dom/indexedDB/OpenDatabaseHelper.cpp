@@ -121,11 +121,10 @@ CreateTables(mozIStorageConnection* aDBConn)
   // Table `object_store`
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE object_store ("
-      "id INTEGER, "
+      "id INTEGER PRIMARY KEY, "
       "name TEXT NOT NULL, "
       "key_path TEXT NOT NULL, "
       "auto_increment INTEGER NOT NULL DEFAULT 0, "
-      "PRIMARY KEY (id), "
       "UNIQUE (name)"
     ");"
   ));
@@ -134,20 +133,14 @@ CreateTables(mozIStorageConnection* aDBConn)
   // Table `object_data`
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE object_data ("
-      "id INTEGER, "
+      "id INTEGER PRIMARY KEY, "
       "object_store_id INTEGER NOT NULL, "
+      "key_value DEFAULT NULL, "
       "data BLOB NOT NULL, "
-      "key_value DEFAULT NULL, " // NONE affinity
-      "PRIMARY KEY (id), "
+      "UNIQUE (object_store_id, key_value), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
         "CASCADE"
     ");"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE UNIQUE INDEX key_index "
-    "ON object_data (key_value, object_store_id);"
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -157,15 +150,10 @@ CreateTables(mozIStorageConnection* aDBConn)
       "id INTEGER PRIMARY KEY AUTOINCREMENT, "
       "object_store_id INTEGER NOT NULL, "
       "data BLOB NOT NULL, "
+      "UNIQUE (object_store_id, id), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
         "CASCADE"
     ");"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE UNIQUE INDEX ai_key_index "
-    "ON ai_object_data (id, object_store_id);"
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -189,12 +177,11 @@ CreateTables(mozIStorageConnection* aDBConn)
   // Table `index_data`
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE index_data ("
-      "id INTEGER, "
       "index_id INTEGER NOT NULL, "
-      "object_data_id INTEGER NOT NULL, "
-      "object_data_key NOT NULL, " // NONE affinity
       "value NOT NULL, "
-      "PRIMARY KEY (id), "
+      "object_data_key NOT NULL, "
+      "object_data_id INTEGER NOT NULL, "
+      "PRIMARY KEY (index_id, value, object_data_key), "
       "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
         "CASCADE, "
       "FOREIGN KEY (object_data_id) REFERENCES object_data(id) ON DELETE "
@@ -203,21 +190,21 @@ CreateTables(mozIStorageConnection* aDBConn)
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Need this to make cascading deletes from object_data and object_store fast.
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX value_index "
-    "ON index_data (index_id, value);"
+    "CREATE INDEX index_data_object_data_id_index "
+    "ON index_data (object_data_id);"
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Table `unique_index_data`
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE unique_index_data ("
-      "id INTEGER, "
       "index_id INTEGER NOT NULL, "
-      "object_data_id INTEGER NOT NULL, "
-      "object_data_key NOT NULL, " // NONE affinity
       "value NOT NULL, "
-      "PRIMARY KEY (id), "
+      "object_data_key NOT NULL, " // NONE affinity
+      "object_data_id INTEGER NOT NULL, "
+      "PRIMARY KEY (index_id, value, object_data_key), "
       "UNIQUE (index_id, value), "
       "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
         "CASCADE "
@@ -227,14 +214,20 @@ CreateTables(mozIStorageConnection* aDBConn)
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Need this to make cascading deletes from object_data and object_store fast.
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX unique_index_data_object_data_id_index "
+    "ON unique_index_data (object_data_id);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Table `ai_index_data`
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE ai_index_data ("
-      "id INTEGER, "
       "index_id INTEGER NOT NULL, "
-      "ai_object_data_id INTEGER NOT NULL, "
       "value NOT NULL, "
-      "PRIMARY KEY (id), "
+      "ai_object_data_id INTEGER NOT NULL, "
+      "PRIMARY KEY (index_id, value, ai_object_data_id), "
       "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
         "CASCADE, "
       "FOREIGN KEY (ai_object_data_id) REFERENCES ai_object_data(id) ON DELETE "
@@ -243,26 +236,35 @@ CreateTables(mozIStorageConnection* aDBConn)
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Need this to make cascading deletes from ai_object_data and object_store
+  // fast.
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX ai_value_index "
-    "ON ai_index_data (index_id, value);"
+    "CREATE INDEX ai_index_data_ai_object_data_id_index "
+    "ON ai_index_data (ai_object_data_id);"
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Table `ai_unique_index_data`
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE ai_unique_index_data ("
-      "id INTEGER, "
       "index_id INTEGER NOT NULL, "
-      "ai_object_data_id INTEGER NOT NULL, "
       "value NOT NULL, "
-      "PRIMARY KEY (id), "
+      "ai_object_data_id INTEGER NOT NULL, "
       "UNIQUE (index_id, value), "
+      "PRIMARY KEY (index_id, value, ai_object_data_id), "
       "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
         "CASCADE, "
       "FOREIGN KEY (ai_object_data_id) REFERENCES ai_object_data(id) ON DELETE "
         "CASCADE"
     ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Need this to make cascading deletes from ai_object_data and object_store
+  // fast.
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX ai_unique_index_data_ai_object_data_id_index "
+    "ON ai_unique_index_data (ai_object_data_id);"
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -377,7 +379,372 @@ UpgradeSchemaFrom4To5(mozIStorageConnection* aConnection)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = aConnection->SetSchemaVersion(DB_SCHEMA_VERSION);
+  rv = aConnection->SetSchemaVersion(5);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+UpgradeSchemaFrom5To6(mozIStorageConnection* aConnection)
+{
+  mozStorageTransaction transaction(aConnection, false,
+                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+  // Turn off foreign key constraints before we do anything here.
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "PRAGMA foreign_keys = OFF;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // First, drop all the indexes we're no longer going to use.
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP INDEX key_index;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP INDEX ai_key_index;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP INDEX value_index;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP INDEX ai_value_index;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Now, reorder the columns of object_data to put the blob data last. We do
+  // this by copying into a temporary table, dropping the original, then copying
+  // back into a newly created table.
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TEMPORARY TABLE temp_upgrade ("
+      "id INTEGER PRIMARY KEY, "
+      "object_store_id, "
+      "key_value, "
+      "data "
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO temp_upgrade "
+      "SELECT id, object_store_id, key_value, data "
+      "FROM object_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE object_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE object_data ("
+      "id INTEGER PRIMARY KEY, "
+      "object_store_id INTEGER NOT NULL, "
+      "key_value DEFAULT NULL, "
+      "data BLOB NOT NULL, "
+      "UNIQUE (object_store_id, key_value), "
+      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO object_data "
+      "SELECT id, object_store_id, key_value, data "
+      "FROM temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We need to add a unique constraint to our ai_object_data table. Copy all
+  // the data out of it using a temporary table as before.
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TEMPORARY TABLE temp_upgrade ("
+      "id INTEGER PRIMARY KEY, "
+      "object_store_id, "
+      "data "
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO temp_upgrade "
+      "SELECT id, object_store_id, data "
+      "FROM ai_object_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE ai_object_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE ai_object_data ("
+      "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+      "object_store_id INTEGER NOT NULL, "
+      "data BLOB NOT NULL, "
+      "UNIQUE (object_store_id, id), "
+      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO ai_object_data "
+      "SELECT id, object_store_id, data "
+      "FROM temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Fix up the index_data table. We're reordering the columns as well as
+  // changing the primary key from being a simple id to being a composite.
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TEMPORARY TABLE temp_upgrade ("
+      "index_id, "
+      "value, "
+      "object_data_key, "
+      "object_data_id "
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO temp_upgrade "
+      "SELECT index_id, value, object_data_key, object_data_id "
+      "FROM index_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE index_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE index_data ("
+      "index_id INTEGER NOT NULL, "
+      "value NOT NULL, "
+      "object_data_key NOT NULL, "
+      "object_data_id INTEGER NOT NULL, "
+      "PRIMARY KEY (index_id, value, object_data_key), "
+      "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
+        "CASCADE, "
+      "FOREIGN KEY (object_data_id) REFERENCES object_data(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT OR IGNORE INTO index_data "
+      "SELECT index_id, value, object_data_key, object_data_id "
+      "FROM temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX index_data_object_data_id_index "
+    "ON index_data (object_data_id);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Fix up the unique_index_data table. We're reordering the columns as well as
+  // changing the primary key from being a simple id to being a composite.
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TEMPORARY TABLE temp_upgrade ("
+      "index_id, "
+      "value, "
+      "object_data_key, "
+      "object_data_id "
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO temp_upgrade "
+      "SELECT index_id, value, object_data_key, object_data_id "
+      "FROM unique_index_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE unique_index_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE unique_index_data ("
+      "index_id INTEGER NOT NULL, "
+      "value NOT NULL, "
+      "object_data_key NOT NULL, "
+      "object_data_id INTEGER NOT NULL, "
+      "PRIMARY KEY (index_id, value, object_data_key), "
+      "UNIQUE (index_id, value), "
+      "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
+        "CASCADE "
+      "FOREIGN KEY (object_data_id) REFERENCES object_data(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO unique_index_data "
+      "SELECT index_id, value, object_data_key, object_data_id "
+      "FROM temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX unique_index_data_object_data_id_index "
+    "ON unique_index_data (object_data_id);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Fix up the ai_index_data table. We're reordering the columns as well as
+  // changing the primary key from being a simple id to being a composite.
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TEMPORARY TABLE temp_upgrade ("
+      "index_id, "
+      "value, "
+      "ai_object_data_id "
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO temp_upgrade "
+      "SELECT index_id, value, ai_object_data_id "
+      "FROM ai_index_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE ai_index_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE ai_index_data ("
+      "index_id INTEGER NOT NULL, "
+      "value NOT NULL, "
+      "ai_object_data_id INTEGER NOT NULL, "
+      "PRIMARY KEY (index_id, value, ai_object_data_id), "
+      "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
+        "CASCADE, "
+      "FOREIGN KEY (ai_object_data_id) REFERENCES ai_object_data(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT OR IGNORE INTO ai_index_data "
+      "SELECT index_id, value, ai_object_data_id "
+      "FROM temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX ai_index_data_ai_object_data_id_index "
+    "ON ai_index_data (ai_object_data_id);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Fix up the ai_unique_index_data table. We're reordering the columns as well
+  // as changing the primary key from being a simple id to being a composite.
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TEMPORARY TABLE temp_upgrade ("
+      "index_id, "
+      "value, "
+      "ai_object_data_id "
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO temp_upgrade "
+      "SELECT index_id, value, ai_object_data_id "
+      "FROM ai_unique_index_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE ai_unique_index_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE ai_unique_index_data ("
+      "index_id INTEGER NOT NULL, "
+      "value NOT NULL, "
+      "ai_object_data_id INTEGER NOT NULL, "
+      "UNIQUE (index_id, value), "
+      "PRIMARY KEY (index_id, value, ai_object_data_id), "
+      "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
+        "CASCADE, "
+      "FOREIGN KEY (ai_object_data_id) REFERENCES ai_object_data(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO ai_unique_index_data "
+      "SELECT index_id, value, ai_object_data_id "
+      "FROM temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX ai_unique_index_data_ai_object_data_id_index "
+    "ON ai_unique_index_data (ai_object_data_id);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->SetSchemaVersion(6);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -393,14 +760,6 @@ CreateDatabaseConnection(const nsAString& aName,
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
-  nsCOMPtr<nsIFile> dbDirectory;
-  nsresult rv = aDBFile->GetParent(getter_AddRefs(dbDirectory));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool exists;
-  rv = aDBFile->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   NS_NAMED_LITERAL_CSTRING(quotaVFSName, "quota");
 
   nsCOMPtr<mozIStorageServiceQuotaManagement> ss =
@@ -408,14 +767,12 @@ CreateDatabaseConnection(const nsAString& aName,
   NS_ENSURE_TRUE(ss, NS_ERROR_FAILURE);
 
   nsCOMPtr<mozIStorageConnection> connection;
-  rv = ss->OpenDatabaseWithVFS(aDBFile, quotaVFSName,
-                               getter_AddRefs(connection));
+  nsresult rv = ss->OpenDatabaseWithVFS(aDBFile, quotaVFSName,
+                                        getter_AddRefs(connection));
   if (rv == NS_ERROR_FILE_CORRUPTED) {
     // Nuke the database file.  The web services can recreate their data.
     rv = aDBFile->Remove(false);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    exists = false;
 
     rv = ss->OpenDatabaseWithVFS(aDBFile, quotaVFSName,
                                  getter_AddRefs(connection));
@@ -427,42 +784,49 @@ CreateDatabaseConnection(const nsAString& aName,
   rv = connection->GetSchemaVersion(&schemaVersion);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (schemaVersion != DB_SCHEMA_VERSION) {
+  if (!schemaVersion) {
+    // Brand new file, initialize our tables.
+    mozStorageTransaction transaction(connection, false,
+                                  mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+    rv = CreateTables(connection);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = CreateMetaData(connection, aName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = transaction.Commit();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ASSERTION(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)) &&
+                 schemaVersion == DB_SCHEMA_VERSION,
+                 "CreateTables set a bad schema version!");
+  }
+  else if (schemaVersion != DB_SCHEMA_VERSION) {
     // This logic needs to change next time we change the schema!
-    PR_STATIC_ASSERT(DB_SCHEMA_VERSION == 5);
-    if (schemaVersion == 4) {
-      rv = UpgradeSchemaFrom4To5(connection);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else {
-      // Nuke it from orbit, it's the only way to be sure.
-      if (exists) {
-        // If the connection is not at the right schema version, nuke it.
-        rv = aDBFile->Remove(false);
-        NS_ENSURE_SUCCESS(rv, rv);
+    PR_STATIC_ASSERT(DB_SCHEMA_VERSION == 6);
 
-        rv = ss->OpenDatabaseWithVFS(aDBFile, quotaVFSName,
-                                     getter_AddRefs(connection));
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      mozStorageTransaction transaction(connection, false,
-                                        mozIStorageConnection::TRANSACTION_IMMEDIATE);
-      rv = CreateTables(connection);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = CreateMetaData(connection, aName);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = transaction.Commit();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+#define UPGRADE_SCHEMA_CASE(_from, _to)                                        \
+  if (schemaVersion == _from) {                                                \
+    rv = UpgradeSchemaFrom##_from##To##_to (connection);                       \
+    NS_ENSURE_SUCCESS(rv, rv);                                                 \
+                                                                               \
+    rv = connection->GetSchemaVersion(&schemaVersion);                         \
+    NS_ENSURE_SUCCESS(rv, rv);                                                 \
+                                                                               \
+    NS_ASSERTION(schemaVersion == _to, "Bad upgrade function!");               \
   }
 
-  // Check to make sure that the database schema is correct again.
-  NS_ASSERTION(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)) &&
-               schemaVersion == DB_SCHEMA_VERSION,
-               "CreateTables failed!");
+    UPGRADE_SCHEMA_CASE(4, 5)
+    UPGRADE_SCHEMA_CASE(5, 6)
+
+#undef UPGRADE_SCHEMA_CASE
+
+    if (schemaVersion != DB_SCHEMA_VERSION) {
+      NS_WARNING("Unable to open IndexedDB database, schema doesn't match");
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+  }
 
   // Turn on foreign key constraints.
   rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
@@ -1143,7 +1507,8 @@ void
 OpenDatabaseHelper::DispatchSuccessEvent()
 {
   nsRefPtr<nsDOMEvent> event =
-    CreateGenericEvent(NS_LITERAL_STRING(SUCCESS_EVT_STR));
+    CreateGenericEvent(NS_LITERAL_STRING(SUCCESS_EVT_STR),
+                       eDoesNotBubble, eNotCancelable);
   if (!event) {
     NS_ERROR("Failed to create event!");
     return;
@@ -1157,7 +1522,8 @@ void
 OpenDatabaseHelper::DispatchErrorEvent()
 {
   nsRefPtr<nsDOMEvent> event =
-    CreateGenericEvent(NS_LITERAL_STRING(ERROR_EVT_STR));
+    CreateGenericEvent(NS_LITERAL_STRING(ERROR_EVT_STR),
+                       eDoesBubble, eCancelable);
   if (!event) {
     NS_ERROR("Failed to create event!");
     return;
@@ -1182,6 +1548,7 @@ OpenDatabaseHelper::ReleaseMainThreadObjects()
 
   mOpenDBRequest = nsnull;
   mDatabase = nsnull;
+  mDatabaseId = nsnull;
 
   HelperBase::ReleaseMainThreadObjects();
 }

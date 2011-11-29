@@ -51,3 +51,7 @@ MOZ_EXTENSIONS_DEFAULT=" gnomevfs"
 # because branding dependencies are broken.
 MOZ_BRANDING_DIRECTORY=browser/branding/nightly
 MOZ_OFFICIAL_BRANDING_DIRECTORY=browser/branding/official
+MOZ_APP_ID={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+MOZ_PROFILE_MIGRATOR=1
+MOZ_EXTENSION_MANAGER=1
+MOZ_APP_STATIC_INI=1

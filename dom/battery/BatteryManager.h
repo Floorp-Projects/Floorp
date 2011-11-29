@@ -39,10 +39,13 @@
 #define mozilla_dom_battery_BatteryManager_h
 
 #include "nsIDOMBatteryManager.h"
-#include "nsDOMEventTargetHelper.h"
+#include "nsDOMEventTargetWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Observer.h"
 #include "Types.h"
+
+class nsPIDOMWindow;
+class nsIScriptContext;
 
 namespace mozilla {
 
@@ -53,26 +56,26 @@ class BatteryInformation;
 namespace dom {
 namespace battery {
 
-class BatteryManager : public nsIDOMBatteryManager
-                     , public nsDOMEventTargetHelper
+class BatteryManager : public nsDOMEventTargetWrapperCache
+                     , public nsIDOMMozBatteryManager
                      , public BatteryObserver
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMBATTERYMANAGER
-  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
+  NS_DECL_NSIDOMMOZBATTERYMANAGER
+  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetWrapperCache::)
 
   BatteryManager();
   virtual ~BatteryManager();
 
-  void Init();
+  void Init(nsPIDOMWindow *aWindow, nsIScriptContext* aScriptContext);
   void Shutdown();
 
   // For IObserver.
   void Notify(const hal::BatteryInformation& aBatteryInfo);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(BatteryManager,
-                                           nsDOMEventTargetHelper)
+                                           nsDOMEventTargetWrapperCache)
 
   /**
    * Returns whether the battery api is supported (ie. not disabled by the user)
@@ -101,10 +104,10 @@ private:
    */
   double mRemainingTime;
 
-  nsRefPtr<nsDOMEventListenerWrapper> mOnLevelChangeListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnChargingChangeListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnDischargingTimeChangeListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnChargingTimeChangeListener;
+  NS_DECL_EVENT_HANDLER(levelchange)
+  NS_DECL_EVENT_HANDLER(chargingchange)
+  NS_DECL_EVENT_HANDLER(chargingtimechange)
+  NS_DECL_EVENT_HANDLER(dischargingtimechange)
 };
 
 } // namespace battery

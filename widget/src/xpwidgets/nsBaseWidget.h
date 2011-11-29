@@ -142,12 +142,6 @@ public:
   virtual nsresult        ActivateNativeMenuItemAt(const nsAString& indexString) { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual nsresult        ForceUpdateNativeMenuAt(const nsAString& indexString) { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              ResetInputState() { return NS_OK; }
-  NS_IMETHOD              SetIMEOpenState(bool aState) { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              GetIMEOpenState(bool* aState) { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              SetInputMode(const IMEContext& aContext) { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              GetInputMode(IMEContext& aContext) { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              SetIMEEnabled(PRUint32 aState);
-  NS_IMETHOD              GetIMEEnabled(PRUint32* aState);
   NS_IMETHOD              CancelIMEComposition() { return NS_OK; }
   NS_IMETHOD              SetAcceleratedRendering(bool aEnabled);
   virtual bool            GetAcceleratedRendering();
@@ -165,6 +159,7 @@ public:
               nsDeviceContext *aContext,
               nsWidgetInitData *aInitData = nsnull,
               bool             aForceUseIWidgetParent = false);
+  NS_IMETHOD              SetEventCallback(EVENT_CALLBACK aEventFunction, nsDeviceContext *aContext);
   NS_IMETHOD              AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction, nsDeviceContext *aContext);
   virtual ViewWrapper*    GetAttachedViewPtr();
   NS_IMETHOD              SetAttachedViewPtr(ViewWrapper* aViewWrapper);

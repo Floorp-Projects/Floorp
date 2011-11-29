@@ -913,7 +913,7 @@ function update(input) {
 
   status = requ.getStatus();
   assignC = requ.getAssignmentAt(input.cursor.start);
-  statuses = requ.getInputStatusMarkup().map(function(s) {
+  statuses = requ.getInputStatusMarkup(input.cursor.start).map(function(s) {
     return s.toString()[0];
   }).join('');
 
@@ -1431,7 +1431,7 @@ function input(typed) {
   }
 
   status = requ.getStatus();
-  statuses = requ.getInputStatusMarkup().map(function(s) {
+  statuses = requ.getInputStatusMarkup(input.cursor.start).map(function(s) {
     return s.toString()[0];
   }).join('');
 
@@ -1588,6 +1588,7 @@ function onLoad() {
   catch (ex) {
     failed = ex;
     console.error('Test Failure', ex);
+    ok(false, '' + ex);
   }
   finally {
     closeConsole();

@@ -1313,14 +1313,6 @@ typedef struct JSPtrTable {
 } JSPtrTable;
 
 extern JSBool
-js_RegisterCloseableIterator(JSContext *cx, JSObject *obj);
-
-#ifdef JS_TRACER
-extern JSBool
-js_ReserveObjects(JSContext *cx, size_t nobjects);
-#endif
-
-extern JSBool
 js_LockGCThingRT(JSRuntime *rt, void *thing);
 
 extern void
@@ -1683,12 +1675,10 @@ struct GCMarker : public JSTracer {
      * edges in the GC heap. This invariant lets the CC not trace through black
      * objects. If this invariant is violated, the cycle collector may free
      * objects that are still reachable.
-     *
-     * We don't assert this yet, but we should.
      */
-    void setMarkColor(uint32 newColor) {
-        //JS_ASSERT(color == BLACK && newColor == GRAY);
-        color = newColor;
+    void setMarkColorGray() {
+        JS_ASSERT(color == gc::BLACK);
+        color = gc::GRAY;
     }
 
     void delayMarkingChildren(const void *thing);

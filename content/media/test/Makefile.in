@@ -73,6 +73,7 @@ _TEST_FILES = \
 		can_play_type_webm.js \
 		cancellable_request.sjs \
 		dynamic_redirect.sjs \
+		dynamic_resource.sjs \
 		file_access_controls.html \
 		fragment_play.js \
 		fragment_noplay.js \
@@ -120,7 +121,9 @@ _TEST_FILES = \
 		test_info_leak.html \
 		test_load.html \
 		test_load_candidates.html \
+		test_load_same_resource.html \
 		test_load_source.html \
+		test_loop.html \
 		test_media_selection.html \
 		test_mozLoadFrom.html \
 		test_networkState.html \

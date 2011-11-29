@@ -83,6 +83,8 @@ public:
     CreateHTML4ButtonAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
   virtual already_AddRefed<nsAccessible>
     CreateHTMLButtonAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  already_AddRefed<nsAccessible>
+    CreateHTMLCanvasAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
   virtual already_AddRefed<nsAccessible>
     CreateHTMLCaptionAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
   virtual already_AddRefed<nsAccessible>

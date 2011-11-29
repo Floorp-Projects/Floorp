@@ -99,7 +99,7 @@
 
 #include "mozilla/Preferences.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
+#include "nsIGConfService.h"
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
 #include "nsGfxCIID.h"
@@ -115,13 +115,15 @@
 #include "stdlib.h"
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
 static bool sAccessibilityChecked = false;
 /* static */
 bool nsWindow::sAccessibilityEnabled = false;
-static const char sSysPrefService [] = "@mozilla.org/system-preference-service;1";
 static const char sAccEnv [] = "GNOME_ACCESSIBILITY";
+static const char sUseSystemPrefsKey[] = "config.use_system_prefs";
 static const char sAccessibilityKey [] = "config.use_system_prefs.accessibility";
+static const char sGconfAccessibilityKey[] = "/desktop/gnome/interface/accessibility";
 #endif
 
 /* For SetIcon */
@@ -172,6 +174,7 @@ D_DEBUG_DOMAIN( ns_Window, "nsWindow", "nsWindow" );
 #endif
 
 using namespace mozilla;
+using namespace mozilla::widget;
 using mozilla::gl::GLContext;
 using mozilla::layers::LayerManagerOGL;
 
@@ -897,15 +900,17 @@ nsWindow::GetDPI()
 NS_IMETHODIMP
 nsWindow::SetParent(nsIWidget *aNewParent)
 {
-    if (mContainer || !mGdkWindow || !mParent) {
-        NS_NOTREACHED("nsWindow::SetParent - reparenting a non-child window");
+    if (mContainer || !mGdkWindow) {
+        NS_NOTREACHED("nsWindow::SetParent called illegally");
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
     NS_ASSERTION(!mTransientParent, "child widget with transient parent");
 
     nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
-    mParent->RemoveChild(this);
+    if (mParent) {
+        mParent->RemoveChild(this);
+    }
 
     mParent = aNewParent;
 
@@ -1002,6 +1007,10 @@ nsWindow::ReparentNativeWidgetInternal(nsIWidget* aNewParent,
             NS_ABORT_IF_FALSE(!gdk_window_is_destroyed(aNewParentWindow),
                               "destroyed GdkWindow with widget");
             SetWidgetForHierarchy(mGdkWindow, aOldContainer, aNewContainer);
+
+            if (aOldContainer == gInvisibleContainer) {
+                CheckDestroyInvisibleContainer();
+            }
         }
 
         if (!mIsTopLevel) {
@@ -4287,17 +4296,20 @@ nsWindow::Create(nsIWidget        *aParent,
             LOG(("Accessibility Env %s=%s\n", sAccEnv, envValue));
         }
         //check gconf-2 setting
-        else {
-            nsCOMPtr<nsIPrefBranch> sysPrefService =
-                do_GetService(sSysPrefService, &rv);
-            if (NS_SUCCEEDED(rv) && sysPrefService) {
+        else if (Preferences::GetBool(sUseSystemPrefsKey, false)) {
+            nsCOMPtr<nsIGConfService> gconf =
+                do_GetService(NS_GCONFSERVICE_CONTRACTID, &rv); 
+            if (NS_SUCCEEDED(rv) && gconf) {
 
                 // do the work to get gconf setting.
                 // will be done soon later.
-                sysPrefService->GetBoolPref(sAccessibilityKey,
-                                            &sAccessibilityEnabled);
+                gconf->GetBool(NS_LITERAL_CSTRING(sGconfAccessibilityKey),
+                               &sAccessibilityEnabled);
             }
 
+        } else {
+            sAccessibilityEnabled =
+                Preferences::GetBool(sAccessibilityKey, false);
         }
     }
 #endif
@@ -6565,20 +6577,27 @@ nsWindow::ResetInputState()
     return mIMModule ? mIMModule->ResetInputState(this) : NS_OK;
 }
 
-NS_IMETHODIMP
-nsWindow::SetInputMode(const IMEContext& aContext)
+NS_IMETHODIMP_(void)
+nsWindow::SetInputContext(const InputContext& aContext,
+                          const InputContextAction& aAction)
 {
-    return mIMModule ? mIMModule->SetInputMode(this, &aContext) : NS_OK;
+    if (!mIMModule) {
+        return;
+    }
+    mIMModule->SetInputContext(this, &aContext, &aAction);
 }
 
-NS_IMETHODIMP
-nsWindow::GetInputMode(IMEContext& aContext)
+NS_IMETHODIMP_(InputContext)
+nsWindow::GetInputContext()
 {
+  InputContext context;
   if (!mIMModule) {
-      aContext.mStatus = nsIWidget::IME_STATUS_DISABLED;
-      return NS_OK;
+      context.mIMEState.mEnabled = IMEState::DISABLED;
+      context.mIMEState.mOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
+  } else {
+      context = mIMModule->GetInputContext();
   }
-  return mIMModule->GetInputMode(&aContext);
+  return context;
 }
 
 NS_IMETHODIMP

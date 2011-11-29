@@ -126,7 +126,7 @@ var popupTests = [
 
     is(Math.round(rect.left),
        Math.round(buttonrect.left + parseFloat(popupstyle.marginLeft) + 6),
-       testname + " top position of tooltip");
+       testname + " left position of tooltip");
     is(Math.round(rect.top),
        Math.round(buttonrect.top + parseFloat(popupstyle.marginTop) + 6),
        testname + " top position of tooltip");
@@ -176,7 +176,7 @@ var popupTests = [
 
     is(Math.round(rect.left),
        Math.round(buttonrect.left + parseFloat(popupstyle.marginLeft) + 4),
-       testname + " top position of tooltip");
+       testname + " left position of tooltip");
     is(Math.round(rect.top),
        Math.round(buttonrect.top + parseFloat(popupstyle.marginTop) + 4),
        testname + " top position of tooltip");
@@ -221,7 +221,7 @@ var popupTests = [
 
     is(Math.round(rect.left),
        Math.round(buttonrect.left + parseFloat(popupstyle.marginLeft) + 6),
-       testname + " top position of tooltip");
+       testname + " left position of tooltip");
     is(Math.round(rect.top),
        Math.round(buttonrect.top + parseFloat(popupstyle.marginTop) + 6),
        testname + " top position of tooltip");

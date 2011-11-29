@@ -1280,6 +1280,7 @@ struct nsStyleText {
   PRUint8 mWhiteSpace;                  // [inherited] see nsStyleConsts.h
   PRUint8 mWordWrap;                    // [inherited] see nsStyleConsts.h
   PRUint8 mHyphens;                     // [inherited] see nsStyleConsts.h
+  PRUint8 mTextSizeAdjust;              // [inherited] see nsStyleConsts.h
   PRInt32 mTabSize;                     // [inherited] see nsStyleConsts.h
 
   nsStyleCoord  mLetterSpacing;         // [inherited] coord, normal

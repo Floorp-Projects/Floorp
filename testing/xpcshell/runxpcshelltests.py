@@ -219,7 +219,7 @@ class XPCShellTests(object):
     #   do_load_child_test_harness() in head.js
     if not self.appPath:
         self.appPath = self.xrePath
-    self.xpcsCmd = [self.xpcshell, '-g', self.xrePath, '-a', self.appPath, '-r', self.httpdManifest, '-j', '-s'] + \
+    self.xpcsCmd = [self.xpcshell, '-g', self.xrePath, '-a', self.appPath, '-r', self.httpdManifest, '-m', '-n', '-s'] + \
         ['-e', 'const _HTTPD_JS_PATH = "%s";' % self.httpdJSPath,
          '-e', 'const _HEAD_JS_PATH = "%s";' % self.headJSPath,
          '-f', os.path.join(self.testharnessdir, 'head.js')]
@@ -499,11 +499,15 @@ class XPCShellTests(object):
       # The test file will have to be loaded after the head files.
       cmdT = self.buildCmdTestFile(name)
 
+      args = self.xpcsRunArgs
+      if 'debug' in test:
+          args.insert(0, '-d')
+
       try:
         self.log.info("TEST-INFO | %s | running test ..." % name)
         startTime = time.time()
 
-        proc = self.launchProcess(cmdH + cmdT + self.xpcsRunArgs,
+        proc = self.launchProcess(cmdH + cmdT + args,
                     stdout=pStdout, stderr=pStderr, env=self.env, cwd=testdir)
 
         # Allow user to kill hung subprocess with SIGINT w/o killing this script

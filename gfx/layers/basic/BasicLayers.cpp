@@ -36,14 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Attributes.h"
+
 #include "gfxSharedImageSurface.h"
 
 #include "mozilla/layers/PLayerChild.h"
 #include "mozilla/layers/PLayersChild.h"
 #include "mozilla/layers/PLayersParent.h"
 #include "mozilla/gfx/2D.h"
-
-#include "mozilla/Types.h"
 
 #include "ipc/ShadowLayerChild.h"
 

@@ -43,6 +43,7 @@
 #define jsweakmap_h___
 
 #include "jsapi.h"
+#include "jsfriendapi.h"
 #include "jscntxt.h"
 #include "jsobj.h"
 #include "jsgcmark.h"
@@ -101,11 +102,15 @@ namespace js {
 // provides default types for WeakMap's MarkPolicy template parameter.
 template <class Type> class DefaultMarkPolicy;
 
+// A policy template holding default tracing algorithms for common type combinations. This
+// provides default types for WeakMap's TracePolicy template parameter.
+template <class Key, class Value> class DefaultTracePolicy;
+
 // Common base class for all WeakMap specializations. The collector uses this to call
 // their markIteratively and sweep methods.
 class WeakMapBase {
   public:
-    WeakMapBase() : next(NULL) { }
+    WeakMapBase(JSObject *memOf) : memberOf(memOf), next(NULL) { }
     virtual ~WeakMapBase() { }
 
     void trace(JSTracer *tracer) {
@@ -121,8 +126,8 @@ class WeakMapBase {
         } else {
             // If we're not actually doing garbage collection, the keys won't be marked
             // nicely as needed by the true ephemeral marking algorithm --- custom tracers
-            // must use their own means for cycle detection. So here we do a conservative
-            // approximation: pretend all keys are live.
+            // such as the cycle collector must use their own means for cycle detection.
+            // So here we do a conservative approximation: pretend all keys are live.
             if (tracer->eagerlyTraceWeakMaps)
                 nonMarkingTrace(tracer);
         }
@@ -140,12 +145,19 @@ class WeakMapBase {
     // garbage collection.
     static void sweepAll(JSTracer *tracer);
 
+    // Trace all delayed weak map bindings. Used by the cycle collector.
+    static void traceAllMappings(WeakMapTracer *tracer);
+
   protected:
     // Instance member functions called by the above. Instantiations of WeakMap override
     // these with definitions appropriate for their Key and Value types.
     virtual void nonMarkingTrace(JSTracer *tracer) = 0;
     virtual bool markIteratively(JSTracer *tracer) = 0;
     virtual void sweep(JSTracer *tracer) = 0;
+    virtual void traceMappings(WeakMapTracer *tracer) = 0;
+
+    // Object that this weak map is part of, if any.
+    JSObject *memberOf;
 
   private:
     // Link in a list of WeakMaps to mark iteratively and sweep in this garbage
@@ -156,7 +168,8 @@ class WeakMapBase {
 template <class Key, class Value,
           class HashPolicy = DefaultHasher<Key>,
           class KeyMarkPolicy = DefaultMarkPolicy<Key>,
-          class ValueMarkPolicy = DefaultMarkPolicy<Value> >
+          class ValueMarkPolicy = DefaultMarkPolicy<Value>,
+          class TracePolicy = DefaultTracePolicy<Key, Value> >
 class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, public WeakMapBase {
   private:
     typedef HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy> Base;
@@ -165,8 +178,8 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
   public:
     typedef typename Base::Range Range;
 
-    explicit WeakMap(JSRuntime *rt) : Base(rt) { }
-    explicit WeakMap(JSContext *cx) : Base(cx) { }
+    explicit WeakMap(JSRuntime *rt, JSObject *memOf=NULL) : Base(rt), WeakMapBase(memOf) { }
+    explicit WeakMap(JSContext *cx, JSObject *memOf=NULL) : Base(cx), WeakMapBase(memOf) { }
 
     // Use with caution, as result can be affected by garbage collection.
     Range nondeterministicAll() {
@@ -191,9 +204,8 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
             if (kp.isMarked(k)) {
                 markedAny |= vp.mark(v);
             } else if (kp.overrideKeyMarking(k)) {
-                // We always mark wrapped natives.  This will cause leaks, but WeakMap+CC
-                // integration is currently busted anyways.  When WeakMap+CC integration is
-                // fixed in Bug 668855, XPC wrapped natives should only be marked during
+                // We always mark wrapped natives. This will cause leaks.  Bug 680937
+                // will fix this so XPC wrapped natives are only marked during
                 // non-BLACK marking (ie grey marking).
                 kp.mark(k);
                 vp.mark(v);
@@ -224,6 +236,13 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
             JS_ASSERT(vp.isMarked(r.front().value));
         }
 #endif
+    }
+
+    // mapObj can be NULL, which means that the map is not part of a JSObject.
+    void traceMappings(WeakMapTracer *tracer) {
+        TracePolicy t(tracer);
+        for (Range r = Base::all(); !r.empty(); r.popFront())
+            t.traceMapping(memberOf, r.front().key, r.front().value);
     }
 };
 
@@ -287,6 +306,42 @@ class DefaultMarkPolicy<HeapPtrScript> {
         return true;
     }
     bool overrideKeyMarking(const HeapPtrScript &k) { return false; }
+};
+
+// Default trace policies
+
+template <>
+class DefaultTracePolicy<HeapPtrObject, HeapValue> {
+  private:
+    WeakMapTracer *tracer;
+  public:
+    DefaultTracePolicy(WeakMapTracer *t) : tracer(t) { }
+    void traceMapping(JSObject *m, const HeapPtr<JSObject> &k, HeapValue &v) {
+        if (v.isMarkable())
+            tracer->callback(tracer, m, k.get(), JSTRACE_OBJECT, v.toGCThing(), v.gcKind());
+    }
+};
+
+template <>
+class DefaultTracePolicy<HeapPtrObject, HeapPtrObject> {
+  private:
+    WeakMapTracer *tracer;
+  public:
+    DefaultTracePolicy(WeakMapTracer *t) : tracer(t) { }
+    void traceMapping(JSObject *m, const HeapPtrObject &k, const HeapPtrObject &v) {
+        tracer->callback(tracer, m, k.get(), JSTRACE_OBJECT, v.get(), JSTRACE_OBJECT);
+    }
+};
+
+template <>
+class DefaultTracePolicy<HeapPtrScript, HeapPtrObject> {
+  private:
+    WeakMapTracer *tracer;
+  public:
+    DefaultTracePolicy(WeakMapTracer *t) : tracer(t) { }
+    void traceMapping(JSObject *m, const HeapPtrScript &k, const HeapPtrObject &v) {
+        tracer->callback(tracer, m, k.get(), JSTRACE_SCRIPT, v.get(), JSTRACE_OBJECT);
+    }
 };
 
 }

@@ -30,14 +30,15 @@ const playButtonHeight = 28;
 const muteButtonWidth = 33;
 const muteButtonHeight = 28;
 const durationWidth = 34;
-const scrubberWidth = videoWidth - playButtonWidth - muteButtonWidth - durationWidth;
+const fullscreenButtonWidth = document.mozFullScreenEnabled ? 28 : 0;
+const scrubberWidth = videoWidth - playButtonWidth - muteButtonWidth - durationWidth - fullscreenButtonWidth;
 const scrubberHeight = 28;
 
 // Play button is on the bottom-left
 const playButtonCenterX = 0 + Math.round(playButtonWidth / 2);
 const playButtonCenterY = videoHeight - Math.round(playButtonHeight / 2);
-// Mute button is on the bottom-right
-const muteButtonCenterX = videoWidth - Math.round(muteButtonWidth / 2);
+// Mute button is on the bottom-right before the full screen button
+const muteButtonCenterX = videoWidth - Math.round(muteButtonWidth / 2) - fullscreenButtonWidth;
 const muteButtonCenterY = videoHeight - Math.round(muteButtonHeight / 2);
 // Scrubber bar is between the play and mute buttons. We don't need it's
 // X center, just the offset of its box.

@@ -110,7 +110,6 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jsbool.h"
-#include "jsbuiltins.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsfun.h"
@@ -123,13 +122,14 @@
 #include "jsobj.h"
 #include "jsscope.h"
 #include "jsstr.h"
-#include "jstracer.h"
 #include "jswrapper.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/StubCalls.h"
 #include "methodjit/StubCalls-inl.h"
 
 #include "vm/ArgumentsObject.h"
+
+#include "ds/Sort.h"
 
 #include "jsarrayinlines.h"
 #include "jsatominlines.h"
@@ -188,8 +188,8 @@ namespace js {
  * only if ToString(ToUint32(P)) is equal to P and ToUint32(P) is not equal
  * to 2^32-1."
  *
- * This means the largest allowed index is actually 2^32-2 (4294967294).  
- * 
+ * This means the largest allowed index is actually 2^32-2 (4294967294).
+ *
  * In our implementation, it would be sufficient to check for JSVAL_IS_INT(id)
  * except that by using signed 31-bit integers we miss the top half of the
  * valid range. This function checks the string representation itself; note
@@ -207,7 +207,7 @@ StringIsArrayIndex(JSLinearString *str, jsuint *indexp)
     if (length == 0 || length > (sizeof("4294967294") - 1) || !JS7_ISDEC(*s))
         return false;
 
-    uint32 c = 0, previous = 0;    
+    uint32 c = 0, previous = 0;
     uint32 index = JS7_UNDEC(*s++);
 
     /* Don't allow leading zeros. */
@@ -224,13 +224,13 @@ StringIsArrayIndex(JSLinearString *str, jsuint *indexp)
     }
 
     /* Make sure we didn't overflow. */
-    if (previous < (MAX_ARRAY_INDEX / 10) || (previous == (MAX_ARRAY_INDEX / 10) && 
+    if (previous < (MAX_ARRAY_INDEX / 10) || (previous == (MAX_ARRAY_INDEX / 10) &&
         c <= (MAX_ARRAY_INDEX % 10))) {
         JS_ASSERT(index <= MAX_ARRAY_INDEX);
         *indexp = index;
         return true;
     }
-    
+
     return false;
 }
 
@@ -504,25 +504,6 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, const Value &v)
     Value tmp = v;
     return obj->setGeneric(cx, idr.id(), &tmp, true);
 }
-
-#ifdef JS_TRACER
-JSBool JS_FASTCALL
-js_EnsureDenseArrayCapacity(JSContext *cx, JSObject *obj, jsint i)
-{
-#ifdef DEBUG
-    Class *origObjClasp = obj->getClass();
-#endif
-    jsuint u = jsuint(i);
-    JSBool ret = (obj->ensureDenseArrayElements(cx, u, 1) == JSObject::ED_OK);
-
-    /* Partially check the CallInfo's storeAccSet is correct. */
-    JS_ASSERT(obj->getClass() == origObjClasp);
-    return ret;
-}
-/* This function and its callees do not touch any object's .clasp field. */
-JS_DEFINE_CALLINFO_3(extern, BOOL, js_EnsureDenseArrayCapacity, CONTEXT, OBJECT, INT32,
-                     0, nanojit::ACCSET_STORE_ANY & ~tjit::ACCSET_OBJ_CLASP)
-#endif
 
 /*
  * Delete the element |index| from |obj|. If |strict|, do a strict
@@ -1716,7 +1697,6 @@ array_toString(JSContext *cx, uintN argc, Value *vp)
         return true;
     }
 
-    LeaveTrace(cx);
     InvokeArgsGuard ag;
     if (!cx->stack.pushInvokeArgs(cx, 0, &ag))
         return false;
@@ -1768,16 +1748,22 @@ InitArrayTypes(JSContext *cx, TypeObject *type, const Value *vector, unsigned co
     return true;
 }
 
-static JSBool
-InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, const Value *vector, bool updateTypes)
+enum ShouldUpdateTypes
+{
+    UpdateTypes = true,
+    DontUpdateTypes = false
+};
+
+static bool
+InitArrayElements(JSContext *cx, JSObject *obj, uint32 start, uint32 count, const Value *vector, ShouldUpdateTypes updateTypes)
 {
     JS_ASSERT(count <= MAX_ARRAY_INDEX);
 
     if (count == 0)
-        return JS_TRUE;
+        return true;
 
     if (updateTypes && !InitArrayTypes(cx, obj->getType(cx), vector, count))
-        return JS_FALSE;
+        return false;
 
     /*
      * Optimize for dense arrays so long as adding the given set of elements
@@ -1810,16 +1796,16 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, cons
     while (vector < end && start <= MAX_ARRAY_INDEX) {
         if (!JS_CHECK_OPERATION_LIMIT(cx) ||
             !SetArrayElement(cx, obj, start++, *vector++)) {
-            return JS_FALSE;
+            return false;
         }
     }
 
     if (vector == end)
-        return JS_TRUE;
+        return true;
 
     /* Finish out any remaining elements past the max array index. */
     if (obj->isDenseArray() && !obj->makeDenseArraySlow(cx))
-        return JS_FALSE;
+        return false;
 
     JS_ASSERT(start == MAX_ARRAY_INDEX + 1);
     AutoValueRooter tvr(cx);
@@ -1829,12 +1815,12 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, cons
         *tvr.addr() = *vector++;
         if (!js_ValueToStringId(cx, idval, idr.addr()) ||
             !obj->setGeneric(cx, idr.id(), tvr.addr(), true)) {
-            return JS_FALSE;
+            return false;
         }
         idval.getDoubleRef() += 1;
     } while (vector != end);
 
-    return JS_TRUE;
+    return true;
 }
 
 #if 0
@@ -1980,239 +1966,104 @@ array_reverse(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-typedef struct MSortArgs {
-    size_t       elsize;
-    JSComparator cmp;
-    void         *arg;
-    JSBool       isValue;
-} MSortArgs;
+namespace {
 
-/* Helper function for js_MergeSort. */
-static JSBool
-MergeArrays(MSortArgs *msa, void *src, void *dest, size_t run1, size_t run2)
+inline bool
+CompareStringValues(JSContext *cx, const Value &a, const Value &b, bool *lessOrEqualp)
 {
-    void *arg, *a, *b, *c;
-    size_t elsize, runtotal;
-    int cmp_result;
-    JSComparator cmp;
-    JSBool isValue;
+    if (!JS_CHECK_OPERATION_LIMIT(cx))
+        return false;
 
-    runtotal = run1 + run2;
+    JSString *astr = a.toString();
+    JSString *bstr = b.toString();
+    int32 result;
+    if (!CompareStrings(cx, astr, bstr, &result))
+        return false;
 
-    elsize = msa->elsize;
-    cmp = msa->cmp;
-    arg = msa->arg;
-    isValue = msa->isValue;
-
-#define CALL_CMP(a, b) \
-    if (!cmp(arg, (a), (b), &cmp_result)) return JS_FALSE;
-
-    /* Copy runs already in sorted order. */
-    b = (char *)src + run1 * elsize;
-    a = (char *)b - elsize;
-    CALL_CMP(a, b);
-    if (cmp_result <= 0) {
-        memcpy(dest, src, runtotal * elsize);
-        return JS_TRUE;
-    }
-
-#define COPY_ONE(p,q,n) \
-    (isValue ? (void)(*(Value*)p = *(Value*)q) : (void)memcpy(p, q, n))
-
-    a = src;
-    c = dest;
-    for (; runtotal != 0; runtotal--) {
-        JSBool from_a = run2 == 0;
-        if (!from_a && run1 != 0) {
-            CALL_CMP(a,b);
-            from_a = cmp_result <= 0;
-        }
-
-        if (from_a) {
-            COPY_ONE(c, a, elsize);
-            run1--;
-            a = (char *)a + elsize;
-        } else {
-            COPY_ONE(c, b, elsize);
-            run2--;
-            b = (char *)b + elsize;
-        }
-        c = (char *)c + elsize;
-    }
-#undef COPY_ONE
-#undef CALL_CMP
-
-    return JS_TRUE;
+    *lessOrEqualp = (result <= 0);
+    return true;
 }
 
-/*
- * This sort is stable, i.e. sequence of equal elements is preserved.
- * See also bug #224128.
- */
-bool
-js_MergeSort(void *src, size_t nel, size_t elsize,
-             JSComparator cmp, void *arg, void *tmp,
-             JSMergeSortElemType elemType)
-{
-    void *swap, *vec1, *vec2;
-    MSortArgs msa;
-    size_t i, j, lo, hi, run;
-    int cmp_result;
+struct SortComparatorStrings {
+    JSContext   *const cx;
 
-    JS_ASSERT_IF(JS_SORTING_VALUES, elsize == sizeof(Value));
-    bool isValue = elemType == JS_SORTING_VALUES;
+    SortComparatorStrings(JSContext *cx)
+      : cx(cx) {}
 
-    /* Avoid memcpy overhead for word-sized and word-aligned elements. */
-#define COPY_ONE(p,q,n) \
-    (isValue ? (void)(*(Value*)p = *(Value*)q) : (void)memcpy(p, q, n))
-#define CALL_CMP(a, b) \
-    if (!cmp(arg, (a), (b), &cmp_result)) return JS_FALSE;
-#define INS_SORT_INT 4
-
-    /*
-     * Apply insertion sort to small chunks to reduce the number of merge
-     * passes needed.
-     */
-    for (lo = 0; lo < nel; lo += INS_SORT_INT) {
-        hi = lo + INS_SORT_INT;
-        if (hi >= nel)
-            hi = nel;
-        for (i = lo + 1; i < hi; i++) {
-            vec1 = (char *)src + i * elsize;
-            vec2 = (char *)vec1 - elsize;
-            for (j = i; j > lo; j--) {
-                CALL_CMP(vec2, vec1);
-                /* "<=" instead of "<" insures the sort is stable */
-                if (cmp_result <= 0) {
-                    break;
-                }
-
-                /* Swap elements, using "tmp" as tmp storage */
-                COPY_ONE(tmp, vec2, elsize);
-                COPY_ONE(vec2, vec1, elsize);
-                COPY_ONE(vec1, tmp, elsize);
-                vec1 = vec2;
-                vec2 = (char *)vec1 - elsize;
-            }
-        }
+    bool operator()(const Value &a, const Value &b, bool *lessOrEqualp) {
+        return CompareStringValues(cx, a, b, lessOrEqualp);
     }
-#undef CALL_CMP
-#undef COPY_ONE
-
-    msa.elsize = elsize;
-    msa.cmp = cmp;
-    msa.arg = arg;
-    msa.isValue = isValue;
-
-    vec1 = src;
-    vec2 = tmp;
-    for (run = INS_SORT_INT; run < nel; run *= 2) {
-        for (lo = 0; lo < nel; lo += 2 * run) {
-            hi = lo + run;
-            if (hi >= nel) {
-                memcpy((char *)vec2 + lo * elsize, (char *)vec1 + lo * elsize,
-                       (nel - lo) * elsize);
-                break;
-            }
-            if (!MergeArrays(&msa, (char *)vec1 + lo * elsize,
-                             (char *)vec2 + lo * elsize, run,
-                             hi + run > nel ? nel - hi : run)) {
-                return JS_FALSE;
-            }
-        }
-        swap = vec1;
-        vec1 = vec2;
-        vec2 = swap;
-    }
-    if (src != vec1)
-        memcpy(src, tmp, nel * elsize);
-
-    return JS_TRUE;
-}
-
-struct CompareArgs
-{
-    JSContext          *context;
-    InvokeArgsGuard    args;
-    Value              fval;
-
-    CompareArgs(JSContext *cx, Value fval)
-      : context(cx), fval(fval)
-    {}
 };
 
-static JS_REQUIRES_STACK JSBool
-sort_compare(void *arg, const void *a, const void *b, int *result)
-{
-    const Value *av = (const Value *)a, *bv = (const Value *)b;
-    CompareArgs *ca = (CompareArgs *) arg;
-    JSContext *cx = ca->context;
+struct StringValuePair {
+    Value   str;
+    Value   v;
+};
 
+struct SortComparatorStringValuePairs {
+    JSContext   *const cx;
+
+    SortComparatorStringValuePairs(JSContext *cx)
+      : cx(cx) {}
+
+    bool operator()(const StringValuePair &a, const StringValuePair &b, bool *lessOrEqualp) {
+        return CompareStringValues(cx, a.str, b.str, lessOrEqualp);
+    }
+};
+
+struct SortComparatorFunction {
+    JSContext          *const cx;
+    const Value        &fval;
+    InvokeArgsGuard    &ag;
+
+    SortComparatorFunction(JSContext *cx, const Value &fval, InvokeArgsGuard &ag)
+      : cx(cx), fval(fval), ag(ag) { }
+
+    bool JS_REQUIRES_STACK operator()(const Value &a, const Value &b, bool *lessOrEqualp);
+};
+
+bool
+SortComparatorFunction::operator()(const Value &a, const Value &b, bool *lessOrEqualp)
+{
     /*
      * array_sort deals with holes and undefs on its own and they should not
      * come here.
      */
-    JS_ASSERT(!av->isMagic() && !av->isUndefined());
-    JS_ASSERT(!av->isMagic() && !bv->isUndefined());
+    JS_ASSERT(!a.isMagic() && !a.isUndefined());
+    JS_ASSERT(!a.isMagic() && !b.isUndefined());
 
     if (!JS_CHECK_OPERATION_LIMIT(cx))
-        return JS_FALSE;
+        return false;
 
-    InvokeArgsGuard &ag = ca->args;
     if (!ag.pushed() && !cx->stack.pushInvokeArgs(cx, 2, &ag))
-        return JS_FALSE;
-        
-    ag.setCallee(ca->fval);
+        return false;
+
+    ag.setCallee(fval);
     ag.thisv() = UndefinedValue();
-    ag[0] = *av;
-    ag[1] = *bv;
+    ag[0] = a;
+    ag[1] = b;
 
     if (!Invoke(cx, ag))
-        return JS_FALSE;
+        return false;
 
     jsdouble cmp;
     if (!ToNumber(cx, ag.rval(), &cmp))
-        return JS_FALSE;
-
-    /* Clamp cmp to -1, 0, 1. */
-    *result = 0;
-    if (!JSDOUBLE_IS_NaN(cmp) && cmp != 0)
-        *result = cmp > 0 ? 1 : -1;
+        return false;
 
     /*
-     * XXX else report some kind of error here?  ECMA talks about 'consistent
-     * compare functions' that don't return NaN, but is silent about what the
-     * result should be.  So we currently ignore it.
+     * XXX eport some kind of error here if cmp is NaN? ECMA talks about
+     * 'consistent compare functions' that don't return NaN, but is silent
+     * about what the result should be. So we currently ignore it.
      */
-
-    return JS_TRUE;
+    *lessOrEqualp = (JSDOUBLE_IS_NaN(cmp) || cmp <= 0);
+    return true;
 }
 
-typedef JSBool (JS_REQUIRES_STACK *JSRedComparator)(void*, const void*,
-                                                    const void*, int *);
-
-static inline JS_IGNORE_STACK JSComparator
-comparator_stack_cast(JSRedComparator func)
-{
-    return func;
-}
-
-static int
-sort_compare_strings(void *arg, const void *a, const void *b, int *result)
-{
-    JSContext *cx = (JSContext *)arg;
-    JSString *astr = ((const Value *)a)->toString();
-    JSString *bstr = ((const Value *)b)->toString();
-    return JS_CHECK_OPERATION_LIMIT(cx) && CompareStrings(cx, astr, bstr, result);
-}
+} /* namespace anonymous */
 
 JSBool
 js::array_sort(JSContext *cx, uintN argc, Value *vp)
 {
-    jsuint len, newlen, i, undefs;
-    size_t elemsize;
-    JSString *str;
-    
     CallArgs args = CallArgsFromVp(argc, vp);
     Value fval;
     if (args.length() > 0 && !args[0].isUndefined()) {
@@ -2228,6 +2079,8 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
+
+    jsuint len;
     if (!js_GetLengthProperty(cx, obj, &len))
         return false;
     if (len == 0) {
@@ -2257,22 +2110,11 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
      * access the tail of vec corresponding to properties that do not
      * exist, allowing OS to avoiding committing RAM. See bug 330812.
      */
+    size_t n, undefs;
     {
-        Value *vec = (Value *) cx->malloc_(2 * size_t(len) * sizeof(Value));
-        if (!vec)
+        AutoValueVector vec(cx);
+        if (!vec.reserve(2 * size_t(len)))
             return false;
-
-        DEFINE_LOCAL_CLASS_OF_STATIC_FUNCTION(AutoFreeVector) {
-            JSContext *const cx;
-            Value *&vec;
-           public:
-            AutoFreeVector(JSContext *cx, Value *&vec) : cx(cx), vec(vec) { }
-            ~AutoFreeVector() {
-                cx->free_(vec);
-            }
-        } free_(cx, vec);
-
-        AutoArrayRooter tvr(cx, 0, vec);
 
         /*
          * By ECMA 262, 15.4.4.11, a property that does not exist (which we
@@ -2283,136 +2125,95 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
          * undefs.
          */
         undefs = 0;
-        newlen = 0;
         bool allStrings = true;
-        for (i = 0; i < len; i++) {
+        for (jsuint i = 0; i < len; i++) {
             if (!JS_CHECK_OPERATION_LIMIT(cx))
                 return false;
 
             /* Clear vec[newlen] before including it in the rooted set. */
             JSBool hole;
-            vec[newlen].setNull();
-            tvr.changeLength(newlen + 1);
-            if (!GetElement(cx, obj, i, &hole, &vec[newlen]))
+            Value v;
+            if (!GetElement(cx, obj, i, &hole, &v))
                 return false;
-
             if (hole)
                 continue;
-
-            if (vec[newlen].isUndefined()) {
+            if (v.isUndefined()) {
                 ++undefs;
                 continue;
             }
-
-            allStrings = allStrings && vec[newlen].isString();
-
-            ++newlen;
+            vec.infallibleAppend(v);
+            allStrings = allStrings && v.isString();
         }
 
-        if (newlen == 0) {
+        n = vec.length();
+        if (n == 0) {
             args.rval().setObject(*obj);
             return true; /* The array has only holes and undefs. */
         }
 
-        /*
-         * The first newlen elements of vec are copied from the array object
-         * (above). The remaining newlen positions are used as GC-rooted scratch
-         * space for mergesort. We must clear the space before including it to
-         * the root set covered by tvr.count.
-         */
-        Value *mergesort_tmp = vec + newlen;
-        MakeRangeGCSafe(mergesort_tmp, newlen);
-        tvr.changeLength(newlen * 2);
+        JS_ALWAYS_TRUE(vec.resize(n * 2));
 
-        /* Here len == 2 * (newlen + undefs + number_of_holes). */
+        /* Here len == n + undefs + number_of_holes. */
         if (fval.isNull()) {
             /*
              * Sort using the default comparator converting all elements to
              * strings.
              */
             if (allStrings) {
-                elemsize = sizeof(Value);
+                if (!MergeSort(vec.begin(), n, vec.begin() + n, SortComparatorStrings(cx)))
+                    return false;
             } else {
                 /*
                  * To avoid string conversion on each compare we do it only once
                  * prior to sorting. But we also need the space for the original
-                 * values to recover the sorting result. To reuse
-                 * sort_compare_strings we move the original values to the odd
-                 * indexes in vec, put the string conversion results in the even
-                 * indexes and pass 2 * sizeof(Value) as an element size to the
-                 * sorting function. In this way sort_compare_strings will only
-                 * see the string values when it casts the compare arguments as
-                 * pointers to Value.
-                 *
-                 * This requires doubling the temporary storage including the
-                 * scratch space for the merge sort. Since vec already contains
-                 * the rooted scratch space for newlen elements at the tail, we
-                 * can use it to rearrange and convert to strings first and try
-                 * realloc only when we know that we successfully converted all
-                 * the elements.
+                 * values to recover the sorting result. For that we move the
+                 * original values to the odd indexes in vec, put the string
+                 * conversion results in the even indexes and do the merge sort
+                 * over resulting string-value pairs using an extra allocated
+                 * scratch space.
                  */
-#if JS_BITS_PER_WORD == 32
-                if (size_t(newlen) > size_t(-1) / (4 * sizeof(Value))) {
-                    js_ReportAllocationOverflow(cx);
-                    return false;
-                }
-#endif
-
-                /*
-                 * Rearrange and string-convert the elements of the vector from
-                 * the tail here and, after sorting, move the results back
-                 * starting from the start to prevent overwrite the existing
-                 * elements.
-                 */
-                i = newlen;
+                size_t i = n;
                 do {
                     --i;
                     if (!JS_CHECK_OPERATION_LIMIT(cx))
                         return false;
                     const Value &v = vec[i];
-                    str = js_ValueToString(cx, v);
+                    JSString *str = js_ValueToString(cx, v);
                     if (!str)
                         return false;
-                    // Copying v must come first, because the following line overwrites v
-                    // when i == 0.
+
+                    /*
+                     * Copying v must come first, because the following line
+                     * overwrites v when i == 0.
+                     */
                     vec[2 * i + 1] = v;
                     vec[2 * i].setString(str);
                 } while (i != 0);
 
-                JS_ASSERT(tvr.array == vec);
-                vec = (Value *) cx->realloc_(vec, 4 * size_t(newlen) * sizeof(Value));
-                if (!vec) {
-                    vec = tvr.array;  /* N.B. AutoFreeVector */
+                AutoValueVector extraScratch(cx);
+                if (!extraScratch.resize(n * 2))
+                    return false;
+                if (!MergeSort(reinterpret_cast<StringValuePair *>(vec.begin()), n,
+                               reinterpret_cast<StringValuePair *>(extraScratch.begin()),
+                               SortComparatorStringValuePairs(cx))) {
                     return false;
                 }
-                mergesort_tmp = vec + 2 * newlen;
-                MakeRangeGCSafe(mergesort_tmp, 2 * newlen);
-                tvr.changeArray(vec, newlen * 4);
-                elemsize = 2 * sizeof(Value);
-            }
-            if (!js_MergeSort(vec, size_t(newlen), elemsize,
-                              sort_compare_strings, cx, mergesort_tmp,
-                              JS_SORTING_GENERIC)) {
-                return false;
-            }
-            if (!allStrings) {
+
                 /*
-                 * We want to make the following loop fast and to unroot the
-                 * cached results of toString invocations before the operation
-                 * callback has a chance to run the GC. For this reason we do
-                 * not call JS_CHECK_OPERATION_LIMIT in the loop.
+                 * We want to unroot the cached results of toString calls
+                 * before the operation callback has a chance to run the GC.
+                 * So we do not call JS_CHECK_OPERATION_LIMIT in the loop.
                  */
                 i = 0;
                 do {
                     vec[i] = vec[2 * i + 1];
-                } while (++i != newlen);
+                } while (++i != n);
             }
         } else {
-            CompareArgs ca(cx, fval);
-            if (!js_MergeSort(vec, size_t(newlen), sizeof(Value),
-                              comparator_stack_cast(sort_compare),
-                              &ca, mergesort_tmp,
-                              JS_SORTING_VALUES)) {
+            InvokeArgsGuard args;
+            if (!MergeSort(vec.begin(), n, vec.begin() + n,
+                           SortComparatorFunction(cx, fval, args)))
+            {
                 return false;
             }
         }
@@ -2422,22 +2223,20 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
          * unroot it now to make the job of a potential GC under
          * InitArrayElements easier.
          */
-        tvr.changeLength(newlen);
-        if (!InitArrayElements(cx, obj, 0, newlen, vec, false))
+        vec.resize(n);
+        if (!InitArrayElements(cx, obj, 0, jsuint(n), vec.begin(), DontUpdateTypes))
             return false;
     }
 
     /* Set undefs that sorted after the rest of elements. */
     while (undefs != 0) {
         --undefs;
-        if (!JS_CHECK_OPERATION_LIMIT(cx) ||
-            !SetArrayElement(cx, obj, newlen++, UndefinedValue())) {
+        if (!JS_CHECK_OPERATION_LIMIT(cx) || !SetArrayElement(cx, obj, n++, UndefinedValue()))
             return false;
-        }
     }
 
     /* Re-create any holes that sorted to the end of the array. */
-    while (len > newlen) {
+    while (len > n) {
         if (!JS_CHECK_OPERATION_LIMIT(cx) || DeleteArrayElement(cx, obj, --len, true) < 0)
             return false;
     }
@@ -2455,7 +2254,7 @@ array_push_slowly(JSContext *cx, JSObject *obj, CallArgs &args)
 
     if (!js_GetLengthProperty(cx, obj, &length))
         return false;
-    if (!InitArrayElements(cx, obj, length, args.length(), args.array(), true))
+    if (!InitArrayElements(cx, obj, length, args.length(), args.array(), UpdateTypes))
         return false;
 
     /* Per ECMA-262, return the new array length. */
@@ -2518,23 +2317,6 @@ js_NewbornArrayPush(JSContext *cx, JSObject *obj, const Value &vp)
     return NewbornArrayPushImpl(cx, obj, vp);
 }
 
-#ifdef JS_TRACER
-JSBool JS_FASTCALL
-js_NewbornArrayPush_tn(JSContext *cx, JSObject *obj, ValueArgType v)
-{
-    TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
-
-    if (!NewbornArrayPushImpl(cx, obj, ValueArgToConstRef(v))) {
-        SetBuiltinError(tm);
-        return JS_FALSE;
-    }
-
-    return WasBuiltinSuccessful(tm);
-}
-JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, js_NewbornArrayPush_tn, CONTEXT, OBJECT,
-                     VALUE, 0, nanojit::ACCSET_STORE_ANY)
-#endif
-
 JSBool
 js::array_push(JSContext *cx, uintN argc, Value *vp)
 {
@@ -2586,7 +2368,7 @@ array_pop_dense(JSContext *cx, JSObject* obj, CallArgs &args)
     }
 
     index--;
-    
+
     JSBool hole;
     Value elt;
     if (!GetElement(cx, obj, index, &hole, &elt))
@@ -2621,7 +2403,6 @@ mjit::stubs::ArrayShift(VMFrame &f)
 {
     JSObject *obj = &f.regs.sp[-1].toObject();
     JS_ASSERT(obj->isDenseArray());
-    JS_ASSERT(!js_PrototypeHasIndexedProperties(f.cx, obj));
 
     /*
      * At this point the length and initialized length have already been
@@ -2740,7 +2521,7 @@ array_unshift(JSContext *cx, uintN argc, Value *vp)
         }
 
         /* Copy from args to the bottom of the array. */
-        if (!InitArrayElements(cx, obj, 0, args.length(), args.array(), true))
+        if (!InitArrayElements(cx, obj, 0, args.length(), args.array(), UpdateTypes))
             return JS_FALSE;
 
         newlen += args.length();
@@ -3392,7 +3173,7 @@ array_readonlyCommon(JSContext *cx, CallArgs &args)
     args.rval() = Behavior::lateExitValue();
     return true;
  }
- 
+
 /* ES5 15.4.4.16. */
 static JSBool
 array_every(JSContext *cx, uintN argc, Value *vp)
@@ -3595,7 +3376,7 @@ class ArrayReduceRightBehavior
     {
         *start = len - 1;
         *step = -1;
-        /* 
+        /*
          * We rely on (well defined) unsigned integer underflow to check our
          * end condition after visiting the full range (including 0).
          */
@@ -3937,19 +3718,6 @@ NewDenseCopiedArray(JSContext *cx, uint32 length, const Value *vp, JSObject *pro
 
     return obj;
 }
-
-#ifdef JS_TRACER
-JS_DEFINE_CALLINFO_2(extern, OBJECT, NewDenseEmptyArray, CONTEXT, OBJECT, 0,
-                     nanojit::ACCSET_STORE_ANY)
-JS_DEFINE_CALLINFO_3(extern, OBJECT, NewDenseAllocatedArray, CONTEXT, UINT32, OBJECT, 0,
-                     nanojit::ACCSET_STORE_ANY)
-JS_DEFINE_CALLINFO_3(extern, OBJECT, NewDenseAllocatedEmptyArray, CONTEXT, UINT32, OBJECT, 0,
-                     nanojit::ACCSET_STORE_ANY)
-JS_DEFINE_CALLINFO_3(extern, OBJECT, NewDenseUnallocatedArray, CONTEXT, UINT32, OBJECT, 0,
-                     nanojit::ACCSET_STORE_ANY)
-#endif
-
-
 
 JSObject *
 NewSlowEmptyArray(JSContext *cx)

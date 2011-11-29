@@ -70,6 +70,9 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
 extern JS_FRIEND_API(uint32)
 JS_ObjectCountDynamicSlots(JSObject *obj);
 
+extern JS_FRIEND_API(void)
+JS_ShrinkingGC(JSContext *cx);
+
 extern JS_FRIEND_API(size_t)
 JS_GetE4XObjectsCreated(JSContext *cx);
 
@@ -116,12 +119,12 @@ typedef struct TypeInferenceMemoryStats
 extern JS_FRIEND_API(void)
 JS_GetTypeInferenceMemoryStats(JSContext *cx, JSCompartment *compartment,
                                TypeInferenceMemoryStats *stats,
-                               JSUsableSizeFun usf);
+                               JSMallocSizeOfFun mallocSizeOf);
 
 extern JS_FRIEND_API(void)
 JS_GetTypeInferenceObjectStats(/*TypeObject*/ void *object,
                                TypeInferenceMemoryStats *stats,
-                               JSUsableSizeFun usf);
+                               JSMallocSizeOfFun mallocSizeOf);
 
 extern JS_FRIEND_API(JSPrincipals *)
 JS_GetCompartmentPrincipals(JSCompartment *compartment);
@@ -204,6 +207,30 @@ JS_FRIEND_API(JSBool) obj_defineSetter(JSContext *cx, uintN argc, js::Value *vp)
  */
 extern JS_FRIEND_API(bool)
 CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname);
+
+struct WeakMapTracer;
+
+/*
+ * Weak map tracer callback, called once for every binding of every
+ * weak map that was live at the time of the last garbage collection.
+ *
+ * m will be NULL if the weak map is not contained in a JS Object.
+ */
+typedef void
+(* WeakMapTraceCallback)(WeakMapTracer *trc, JSObject *m,
+                         void *k, JSGCTraceKind kkind,
+                         void *v, JSGCTraceKind vkind);
+
+struct WeakMapTracer {
+    JSContext            *context;
+    WeakMapTraceCallback callback;
+
+    WeakMapTracer(JSContext *cx, WeakMapTraceCallback cb) 
+        : context(cx), callback(cb) {}
+};
+
+extern JS_FRIEND_API(void)
+TraceWeakMaps(WeakMapTracer *trc);
 
 /*
  * Shadow declarations of JS internal structures, for access by inline access
@@ -365,9 +392,6 @@ StringIsArrayIndex(JSLinearString *str, jsuint *indexp);
 #define JSITER_KEYVALUE   0x4   /* destructuring for-in wants [key, value] */
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
-
-/* When defining functions, JSFunctionSpec::call points to a JSNativeTraceInfo. */
-#define JSFUN_TRCINFO     0x2000
 
 } /* namespace js */
 #endif

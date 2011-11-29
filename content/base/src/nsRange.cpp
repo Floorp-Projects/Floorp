@@ -2167,9 +2167,9 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
         continue;
 
       // overlapping with the offset we want
-      f->EnsureTextRun();
-      NS_ENSURE_TRUE(f->GetTextRun(), NS_ERROR_OUT_OF_MEMORY);
-      bool rtl = f->GetTextRun()->IsRightToLeft();
+      f->EnsureTextRun(nsTextFrame::eInflated);
+      NS_ENSURE_TRUE(f->GetTextRun(nsTextFrame::eInflated), NS_ERROR_OUT_OF_MEMORY);
+      bool rtl = f->GetTextRun(nsTextFrame::eInflated)->IsRightToLeft();
       nsRect r(f->GetOffsetTo(relativeTo), f->GetSize());
       if (fstart < aStartOffset) {
         // aStartOffset is within this frame

@@ -69,7 +69,7 @@ interface nsIScriptContext;
 interface nsIDOMEventListener;
 interface nsIDOMEvent;
 
-[scriptable, builtinclass, uuid(1797d5a4-b12a-428d-9eef-a0e13839728c)]
+[scriptable, builtinclass, uuid(8e375931-298d-4d0a-9cb4-5668f0cdc5a8)]
 interface nsIDOMEventTarget : nsISupports
 {
   /**
@@ -106,6 +106,28 @@ interface nsIDOMEventTarget : nsISupports
                                         [optional] in boolean useCapture,
                                         [optional] in boolean wantsUntrusted);
 
+  /**
+   * addSystemEventListener() adds an event listener of aType to the system
+   * group.  Typically, core code should use system group for listening to
+   * content (i.e., non-chrome) element's events.  If core code uses
+   * nsIDOMEventTarget::AddEventListener for a content node, it means
+   * that the listener cannot listen the event when web content calls
+   * stopPropagation() of the event.
+   *
+   * @param aType            An event name you're going to handle.
+   * @param aListener        An event listener.
+   * @param aUseCapture      TRUE if you want to listen the event in capturing
+   *                         phase.  Otherwise, FALSE.
+   * @param aWantsUntrusted  TRUE if you want to handle untrusted events.
+   *                         Otherwise, FALSE.
+   * @return                 NS_OK if succeed.  Otherwise, NS_ERROR_*.
+   */
+  [noscript, optional_argc] void addSystemEventListener(
+                                   in DOMString type,
+                                   in nsIDOMEventListener listener,
+                                   [optional] in boolean aUseCapture,
+                                   [optional] in boolean aWantsUntrusted);
+
 %{C++
   // non-virtual so it won't affect the vtable
   nsresult AddEventListener(const nsAString& aType,
@@ -121,6 +143,22 @@ interface nsIDOMEventTarget : nsISupports
                             bool aWantsUntrusted)
   {
     return AddEventListener(aType, aListener, aUseCapture, aWantsUntrusted, 2);
+  }
+  // non-virtual so it won't affect the vtable
+  nsresult AddSystemEventListener(const nsAString& aType,
+                                  nsIDOMEventListener* aListener,
+                                  bool aUseCapture)
+  {
+    return AddSystemEventListener(aType, aListener, aUseCapture, PR_FALSE, 1);
+  }
+  // non-virtual so it won't affect the vtable
+  nsresult AddSystemEventListener(const nsAString& aType,
+                                  nsIDOMEventListener* aListener,
+                                  bool aUseCapture,
+                                  bool aWantsUntrusted)
+  {
+    return AddSystemEventListener(aType, aListener, aUseCapture,
+                                  aWantsUntrusted, 2);
   }
 %}
 
@@ -147,6 +185,15 @@ interface nsIDOMEventTarget : nsISupports
   void                     removeEventListener(in DOMString type,
                                                in nsIDOMEventListener listener,
                                                [optional] in boolean useCapture);
+
+  /**
+   * removeSystemEventListener() should be used if you have used
+   * addSystemEventListener().
+   */
+  [noscript] void          removeSystemEventListener(
+                             in DOMString type,
+                             in nsIDOMEventListener listener,
+                             [optional] in boolean aUseCapture);
 
   /**
    * This method allows the dispatch of events into the implementations 
@@ -277,5 +324,21 @@ nsPIDOMEventTarget* _class::GetTargetForDOMEvent() { return this; } \
 nsPIDOMEventTarget* _class::GetTargetForEventTargetChain() { return this; } \
 nsresult _class::WillHandleEvent(nsEventChainPostVisitor& aVisitor) { return NS_OK; } \
 JSContext* _class::GetJSContextForEventHandlers() { return nsnull; }
+
+#define NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(aClass) \
+NS_IMETHODIMP \
+aClass::RemoveSystemEventListener(const nsAString& aType, \
+                                  nsIDOMEventListener *aListener, \
+                                  bool aUseCapture) \
+{ \
+  nsEventListenerManager* listenerManager = GetListenerManager(false); \
+  if (!listenerManager) { \
+    return NS_OK; \
+  } \
+  PRUint32 flags = NS_EVENT_FLAG_SYSTEM_EVENT; \
+  flags |= aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE; \
+  listenerManager->RemoveEventListenerByType(aListener, aType, flags); \
+  return NS_OK; \
+}
 
 %}

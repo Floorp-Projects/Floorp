@@ -9,8 +9,8 @@ ac_add_options --disable-updater
 ac_add_options --prefix=$PREFIX
 ac_add_options --libdir=$LIBDIR
 
-CC=/tools/gcc-4.5/bin/gcc
-CXX=/tools/gcc-4.5/bin/g++
+. $topsrcdir/build/unix/mozconfig.linux
+
 # Avoid dependency on libstdc++ 4.5
 ac_add_options --enable-stdcxx-compat
 

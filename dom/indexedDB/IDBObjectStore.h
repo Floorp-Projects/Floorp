@@ -72,6 +72,9 @@ public:
   Create(IDBTransaction* aTransaction,
          const ObjectStoreInfo* aInfo);
 
+  static bool
+  IsValidKeyPath(JSContext* aCx, const nsAString& aKeyPath);
+
   static nsresult
   GetKeyPathValueFromStructuredData(const PRUint8* aData,
                                     PRUint32 aDataLength,

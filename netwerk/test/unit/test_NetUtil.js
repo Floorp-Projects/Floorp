@@ -536,6 +536,59 @@ function test_readInputStreamToString_too_many_bytes()
   run_next_test();
 }
 
+function test_readInputStreamToString_with_charset()
+{
+  const TEST_DATA = "\uff10\uff11\uff12\uff13";
+  const TEST_DATA_UTF8 = "\xef\xbc\x90\xef\xbc\x91\xef\xbc\x92\xef\xbc\x93";
+  const TEST_DATA_SJIS = "\x82\x4f\x82\x50\x82\x51\x82\x52";
+
+  let istream = Cc["@mozilla.org/io/string-input-stream;1"].
+                createInstance(Ci.nsIStringInputStream);
+
+  istream.setData(TEST_DATA_UTF8, TEST_DATA_UTF8.length);
+  do_check_eq(NetUtil.readInputStreamToString(istream,
+                                              TEST_DATA_UTF8.length,
+                                              { charset: "UTF-8"}),
+              TEST_DATA);
+
+  istream.setData(TEST_DATA_SJIS, TEST_DATA_SJIS.length);
+  do_check_eq(NetUtil.readInputStreamToString(istream,
+                                              TEST_DATA_SJIS.length,
+                                              { charset: "Shift_JIS"}),
+              TEST_DATA);
+
+  run_next_test();
+}
+
+function test_readInputStreamToString_invalid_sequence()
+{
+  const TEST_DATA = "\ufffd\ufffd\ufffd\ufffd";
+  const TEST_DATA_UTF8 = "\xaa\xaa\xaa\xaa";
+
+  let istream = Cc["@mozilla.org/io/string-input-stream;1"].
+                createInstance(Ci.nsIStringInputStream);
+
+  istream.setData(TEST_DATA_UTF8, TEST_DATA_UTF8.length);
+  try {
+    NetUtil.readInputStreamToString(istream,
+                                    TEST_DATA_UTF8.length,
+                                    { charset: "UTF-8" });
+    do_throw("should throw!");
+  } catch (e) {
+    do_check_eq(e.result, Cr.NS_ERROR_ILLEGAL_INPUT);
+  }
+
+  istream.setData(TEST_DATA_UTF8, TEST_DATA_UTF8.length);
+  do_check_eq(NetUtil.readInputStreamToString(istream,
+                                              TEST_DATA_UTF8.length, {
+                                                charset: "UTF-8",
+                                                replacement: Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER}),
+              TEST_DATA);
+
+  run_next_test();
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
@@ -565,6 +618,8 @@ function test_readInputStreamToString_too_many_bytes()
   test_readInputStreamToString_no_bytes_arg,
   test_readInputStreamToString_blocking_stream,
   test_readInputStreamToString_too_many_bytes,
+  test_readInputStreamToString_with_charset,
+  test_readInputStreamToString_invalid_sequence,
 ].forEach(add_test);
 let index = 0;
 

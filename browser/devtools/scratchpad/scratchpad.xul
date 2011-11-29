@@ -69,7 +69,7 @@
   <command id="sp-cmd-printFile" oncommand="Scratchpad.printFile();" disabled="true"/>
  -->
 
-  <command id="sp-cmd-close" oncommand="window.close();"/>
+  <command id="sp-cmd-close" oncommand="Scratchpad.close();"/>
   <command id="sp-cmd-run" oncommand="Scratchpad.run();"/>
   <command id="sp-cmd-inspect" oncommand="Scratchpad.inspect();"/>
   <command id="sp-cmd-display" oncommand="Scratchpad.display();"/>

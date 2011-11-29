@@ -346,14 +346,14 @@ __BitScanReverse64(unsigned __int64 val)
 #  define js_FloorLog2wImpl(n)                                                \
     ((size_t)(JS_BITS_PER_WORD - 1 - js_bitscan_clz32(n)))
 # else
-extern size_t js_FloorLog2wImpl(size_t n);
+JS_PUBLIC_API(size_t) js_FloorLog2wImpl(size_t n);
 # endif
 #elif JS_BYTES_PER_WORD == 8
 # ifdef JS_HAS_BUILTIN_BITSCAN64
 #  define js_FloorLog2wImpl(n)                                                \
     ((size_t)(JS_BITS_PER_WORD - 1 - js_bitscan_clz64(n)))
 # else
-extern size_t js_FloorLog2wImpl(size_t n);
+JS_PUBLIC_API(size_t) js_FloorLog2wImpl(size_t n);
 # endif
 #else
 # error "NOT SUPPORTED"
@@ -895,11 +895,9 @@ RoundUpPow2(size_t x)
 #endif /* defined(__cplusplus) */
 
 /*
- * This signature is for malloc_usable_size-like functions used to measure
- * memory usage.  A return value of zero indicates that the size is unknown,
- * and so a fall-back computation should be done for the size.
+ * This is SpiderMonkey's equivalent to |nsMallocSizeOfFun|.
  */
-typedef size_t(*JSUsableSizeFun)(void *p);
+typedef size_t(*JSMallocSizeOfFun)(const void *p, size_t computedSize);
 
 /* sixgill annotation defines */
 #ifndef HAVE_STATIC_ANNOTATIONS

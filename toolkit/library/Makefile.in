@@ -288,9 +288,6 @@ endif
 
 ifdef MOZ_ENABLE_GTK2
 COMPONENT_LIBS += widget_gtk2
-ifdef MOZ_PREF_EXTENSIONS
-COMPONENT_LIBS += system-pref
-endif
 endif
 
 ifdef MOZ_ENABLE_GTK2
@@ -313,11 +310,9 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
 COMPONENT_LIBS += widget_gonk
 endif
 
-STATIC_LIBS += thebes ycbcr
+STATIC_LIBS += thebes gl ycbcr
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-STATIC_LIBS += profiler
-endif
+COMPONENT_LIBS += profiler
 
 STATIC_LIBS += angle
 

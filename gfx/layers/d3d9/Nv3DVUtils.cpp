@@ -39,6 +39,7 @@
 #include "nsIConsoleService.h"
 #include <initguid.h>
 #include "Nv3DVUtils.h"
+#include "mozilla/Util.h"
 
 DEFINE_GUID(CLSID_NV3DVStreaming, 
 0xf7747266, 0x777d, 0x4f61, 0xa1, 0x75, 0xdd, 0x5a, 0xdf, 0x1e, 0x37, 0xdf);
@@ -127,13 +128,13 @@ Nv3DVUtils::SetDeviceInfo(IUnknown *devUnknown)
 
   bool rv = false;
   rv = m3DVStreaming->Nv3DVSetDevice(devUnknown);
-  if (!rv) {
+  if (rv) {
       NS_WARNING("Nv3DVStreaming Nv3DVControl failed!");
       return;
   }
 
   rv = m3DVStreaming->Nv3DVControl(NV_STEREO_MODE_RIGHT_LEFT, true, FIREFOX_3DV_APP_HANDLE);
-  NS_ASSERTION(rv, "Nv3DVStreaming Nv3DVControl failed!");
+  NS_WARN_IF_FALSE(!rv, "Nv3DVStreaming Nv3DVControl failed!");
 }
 
 /*
@@ -146,8 +147,8 @@ Nv3DVUtils::SendNv3DVControl(Nv_Stereo_Mode eStereoMode, bool bEnableStereo, DWO
   if (!m3DVStreaming)
       return;
 
-  bool rv = m3DVStreaming->Nv3DVControl(eStereoMode, bEnableStereo, dw3DVAppHandle);
-  NS_ASSERTION(rv, "Nv3DVStreaming Nv3DVControl failed");
+  DebugOnly<bool> rv = m3DVStreaming->Nv3DVControl(eStereoMode, bEnableStereo, dw3DVAppHandle);
+  NS_WARN_IF_FALSE(!rv, "Nv3DVStreaming Nv3DVControl failed!");
 }
 
 /*
@@ -160,8 +161,8 @@ Nv3DVUtils::SendNv3DVMetaData(unsigned int dwWidth, unsigned int dwHeight, HANDL
   if (!m3DVStreaming)
       return;
 
-  bool rv = m3DVStreaming->Nv3DVMetaData((DWORD)dwWidth, (DWORD)dwHeight, hSrcLuma, hDst);
-  NS_ASSERTION(rv, "Nv3DVStreaming Nv3DVMetaData failed!");
+  DebugOnly<bool> rv = m3DVStreaming->Nv3DVMetaData((DWORD)dwWidth, (DWORD)dwHeight, hSrcLuma, hDst);
+  NS_WARN_IF_FALSE(!rv, "Nv3DVStreaming Nv3DVMetaData failed!");
 }
 
 } /* namespace layers */

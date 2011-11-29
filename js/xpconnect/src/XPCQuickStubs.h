@@ -71,7 +71,6 @@ struct xpc_qsHashEntry {
     nsID iid;
     const xpc_qsPropertySpec *properties;
     const xpc_qsFunctionSpec *functions;
-    const xpc_qsTraceableSpec *traceables;
     // These last two fields index to other entries in the same table.
     // XPC_QS_NULL_ENTRY indicates there are no more entries in the chain.
     size_t parentInterface;
@@ -164,7 +163,7 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN extraFlags,
                        PRUint32 ifacec, const nsIID **interfaces,
                        PRUint32 tableSize, const xpc_qsHashEntry *table);
 
-/** Raise an exception on @a cx and return JS_FALSE. */
+/** Raise an exception on @a cx and return false. */
 JSBool
 xpc_qsThrow(JSContext *cx, nsresult rv);
 
@@ -235,7 +234,7 @@ inline JSBool
 xpc_qsInt32ToJsval(JSContext *cx, PRInt32 i, jsval *rv)
 {
     *rv = INT_TO_JSVAL(i);
-    return JS_TRUE;
+    return true;
 }
 
 inline JSBool
@@ -245,7 +244,7 @@ xpc_qsUint32ToJsval(JSContext *cx, PRUint32 u, jsval *rv)
         *rv = INT_TO_JSVAL(u);
     else
         *rv = DOUBLE_TO_JSVAL(u);
-    return JS_TRUE;
+    return true;
 }
 
 #ifdef HAVE_LONG_LONG
@@ -371,13 +370,13 @@ protected:
                 // eStringify should end up with void strings.
                 (new(mBuf) implementation_type(traits::sEmptyBuffer, PRUint32(0)))->
                     SetIsVoid(behavior != eEmpty);
-                mValid = JS_TRUE;
+                mValid = true;
                 return nsnull;
             }
 
             s = JS_ValueToString(cx, v);
             if (!s) {
-                mValid = JS_FALSE;
+                mValid = false;
                 return nsnull;
             }
             *pval = STRING_TO_JSVAL(s);  // Root the new string.
@@ -392,7 +391,7 @@ protected:
  *
  *     xpc_qsDOMString arg0(cx, &argv[0]);
  *     if (!arg0.IsValid())
- *         return JS_FALSE;
+ *         return false;
  *
  * The second argument to the constructor is an in-out parameter. It must
  * point to a rooted jsval, such as a JSNative argument or return value slot.
@@ -453,7 +452,7 @@ struct xpc_qsSelfRef
 };
 
 /**
- * Convert a jsval to char*, returning JS_TRUE on success.
+ * Convert a jsval to char*, returning true on success.
  *
  * @param cx
  *     A context.
@@ -470,14 +469,14 @@ JSBool
 xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, jsval *pval, const PRUnichar **pstr);
 
 
-/** Convert an nsString to jsval, returning JS_TRUE on success.
+/** Convert an nsString to jsval, returning true on success.
  *  Note, the ownership of the string buffer may be moved from str to rval.
  *  If that happens, str will point to an empty string after this call.
  */
 JSBool
 xpc_qsStringToJsval(JSContext *cx, nsString &str, jsval *rval);
 
-/** Convert an nsString to JSString, returning JS_TRUE on success. This will sometimes modify |str| to be empty. */
+/** Convert an nsString to JSString, returning true on success. This will sometimes modify |str| to be empty. */
 JSBool
 xpc_qsStringToJsstring(JSContext *cx, nsString &str, JSString **rval);
 
@@ -506,7 +505,7 @@ castNative(JSContext *cx,
  *
  * If an object implementing T is found, store a reference to the wrapper
  * JSObject in @a *pThisVal, store a pointer to the T in @a *ppThis, and return
- * JS_TRUE. Otherwise, raise an exception on @a cx and return JS_FALSE.
+ * true. Otherwise, raise an exception on @a cx and return false.
  *
  * @a *pThisRef receives the same pointer as *ppThis if the T was AddRefed.
  * Otherwise it receives null (even on error).
@@ -540,7 +539,7 @@ xpc_qsUnwrapThis(JSContext *cx,
 
     if (NS_FAILED(rv))
         *ppThis = nsnull;
-    return JS_TRUE;
+    return true;
 }
 
 inline nsISupports*
@@ -681,7 +680,7 @@ xpc_qsGetWrapperCache(void *p)
     return nsnull;
 }
 
-/** Convert an XPCOM pointer to jsval. Return JS_TRUE on success.
+/** Convert an XPCOM pointer to jsval. Return true on success.
  * aIdentity is a performance optimization. Set it to true,
  * only if p is the identity pointer.
  */
@@ -693,7 +692,7 @@ xpc_qsXPCOMObjectToJsval(XPCLazyCallContext &lccx,
                          jsval *rval);
 
 /**
- * Convert a variant to jsval. Return JS_TRUE on success.
+ * Convert a variant to jsval. Return true on success.
  */
 JSBool
 xpc_qsVariantToJsval(XPCLazyCallContext &ccx,
@@ -701,7 +700,7 @@ xpc_qsVariantToJsval(XPCLazyCallContext &ccx,
                      jsval *rval);
 
 /**
- * Convert a jsval to PRInt64. Return JS_TRUE on success.
+ * Convert a jsval to PRInt64. Return true on success.
  */
 inline JSBool
 xpc_qsValueToInt64(JSContext *cx,
@@ -711,15 +710,15 @@ xpc_qsValueToInt64(JSContext *cx,
     if (JSVAL_IS_INT(v)) {
         int32 intval;
         if (!JS_ValueToECMAInt32(cx, v, &intval))
-            return JS_FALSE;
+            return false;
         *result = static_cast<PRInt64>(intval);
     } else {
         jsdouble doubleval;
         if (!JS_ValueToNumber(cx, v, &doubleval))
-            return JS_FALSE;
+            return false;
         *result = static_cast<PRInt64>(doubleval);
     }
-    return JS_TRUE;
+    return true;
 }
 
 /**
@@ -737,7 +736,7 @@ xpc_qsDoubleToUint64(jsdouble doubleval)
 }
 
 /**
- * Convert a jsval to PRUint64. Return JS_TRUE on success.
+ * Convert a jsval to PRUint64. Return true on success.
  */
 inline JSBool
 xpc_qsValueToUint64(JSContext *cx,
@@ -747,15 +746,15 @@ xpc_qsValueToUint64(JSContext *cx,
     if (JSVAL_IS_INT(v)) {
         uint32 intval;
         if (!JS_ValueToECMAUint32(cx, v, &intval))
-            return JS_FALSE;
+            return false;
         *result = static_cast<PRUint64>(intval);
     } else {
         jsdouble doubleval;
         if (!JS_ValueToNumber(cx, v, &doubleval))
-            return JS_FALSE;
+            return false;
         *result = xpc_qsDoubleToUint64(doubleval);
     }
-    return JS_TRUE;
+    return true;
 }
 
 #ifdef DEBUG

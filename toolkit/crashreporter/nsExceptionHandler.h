@@ -64,7 +64,12 @@ bool     GetServerURL(nsACString& aServerURL);
 nsresult SetServerURL(const nsACString& aServerURL);
 bool     GetMinidumpPath(nsAString& aPath);
 nsresult SetMinidumpPath(const nsAString& aPath);
+
+
+// AnnotateCrashReport may be called from any thread in a chrome process,
+// but may only be called from the main thread in a content process.
 nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data);
+
 nsresult AppendAppNotesToCrashReport(const nsACString& data);
 nsresult SetRestartArgs(int argc, char** argv);
 nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
