@@ -663,6 +663,13 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_SETGNAME:
         return jsop_setgname(info().getAtom(pc));
+ 
+      case JSOP_DUP:
+        current->pushSlot(current->stackDepth() - 1);
+        return true;
+
+      case JSOP_DUP2:
+        return jsop_dup2();
 
       case JSOP_UINT24:
         return pushConstant(Int32Value(GET_UINT24(pc)));
@@ -1692,6 +1699,16 @@ IonBuilder::jsop_andor(JSOp op)
         return false;
 
     current = evalRhs;
+    return true;
+}
+
+bool
+IonBuilder::jsop_dup2()
+{
+    uint32 lhsSlot = current->stackDepth() - 2;
+    uint32 rhsSlot = current->stackDepth() - 1;
+    current->pushSlot(lhsSlot);
+    current->pushSlot(rhsSlot);
     return true;
 }
 
