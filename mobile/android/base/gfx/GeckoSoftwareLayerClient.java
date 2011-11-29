@@ -49,6 +49,7 @@ import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoEventListener;
 import android.content.Context;
 import android.graphics.Point;
 import android.graphics.PointF;
@@ -66,7 +67,7 @@ import java.nio.ByteBuffer;
  *
  * TODO: Throttle down Gecko's priority when we pan and zoom.
  */
-public class GeckoSoftwareLayerClient extends LayerClient {
+public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventListener {
     private static final String LOGTAG = "GeckoSoftwareLayerClient";
 
     private Context mContext;
@@ -118,10 +119,43 @@ public class GeckoSoftwareLayerClient extends LayerClient {
         if (mGeckoViewport != null)
             layerController.setViewportMetrics(mGeckoViewport);
         geometryChanged();
+        GeckoAppShell.registerGeckoEventListener("Viewport:Update", this);
     }
 
     public void beginDrawing() {
         mTileLayer.beginTransaction();
+    }
+
+    private void updateViewport(String viewportDescription, final boolean onlyUpdatePageSize) {
+        try {
+            JSONObject viewportObject = new JSONObject(viewportDescription);
+            mGeckoViewport = new ViewportMetrics(viewportObject);
+
+            mTileLayer.setOrigin(PointUtils.round(mGeckoViewport.getDisplayportOrigin()));
+            mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
+
+            // Make sure LayerController metrics changes only happen in the
+            // UI thread.
+            final LayerController controller = getLayerController();
+
+            if (controller != null) {
+                controller.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (onlyUpdatePageSize) {
+                            // Don't adjust page size when zooming unless zoom levels are
+                            // approximately equal.
+                            if (FloatUtils.fuzzyEquals(controller.getZoomFactor(), mGeckoViewport.getZoomFactor()))
+                                controller.setPageSize(mGeckoViewport.getPageSize());
+                        } else {
+                            controller.setViewportMetrics(mGeckoViewport);
+                        }
+                    }
+                });
+            }
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /*
@@ -130,32 +164,7 @@ public class GeckoSoftwareLayerClient extends LayerClient {
      */
     public void endDrawing(int x, int y, int width, int height, String metadata) {
         try {
-            try {
-                JSONObject metadataObject = new JSONObject(metadata);
-                mGeckoViewport = new ViewportMetrics(metadataObject);
-
-                mTileLayer.setOrigin(PointUtils.round(mGeckoViewport.getDisplayportOrigin()));
-                mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
-
-                // Make sure LayerController metrics changes only happen in the
-                // UI thread.
-                final LayerController controller = getLayerController();
-
-                if (controller != null) {
-                    controller.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            // Don't adjust page size when zooming unless zoom levels are
-                            // approximately equal.
-                            if (FloatUtils.fuzzyEquals(controller.getZoomFactor(), mGeckoViewport.getZoomFactor()))
-                                controller.setPageSize(mGeckoViewport.getPageSize());
-                        }
-                    });
-                }
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
-            }
-
+            updateViewport(metadata, true);
             Rect rect = new Rect(x, y, x + width, y + height);
             mTileLayer.invalidate(rect);
         } finally {
@@ -243,6 +252,19 @@ public class GeckoSoftwareLayerClient extends LayerClient {
         GeckoAppShell.sendEventToGecko(event);
 
         mLastViewportChangeTime = System.currentTimeMillis();
+    }
+
+    public void handleMessage(String event, JSONObject message) {
+        if ("Viewport:Update".equals(event)) {
+            mTileLayer.beginTransaction();
+            try {
+                updateViewport(message.getString("viewport"), false);
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "Unable to update viewport", e);
+            } finally {
+                mTileLayer.endTransaction();
+            }
+        }
     }
 }
 
