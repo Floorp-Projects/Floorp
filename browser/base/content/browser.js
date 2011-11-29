@@ -3951,6 +3951,9 @@ var FullScreen = {
       return;
     }
 
+    if (gFindBarInitialized)
+      gFindBar.close();
+
     this.showWarning(true);
 
     // Exit DOM full-screen mode upon open, close, or change tab.
