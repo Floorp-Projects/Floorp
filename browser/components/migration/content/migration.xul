@@ -76,6 +76,7 @@
 #endif
 #endif
       <radio id="chrome"    label="&importFromChrome.label;"    accesskey="&importFromChrome.accesskey;"/>
+      <radio id="firefox"   label="&importFromFirefox.label;"   accesskey="&importFromFirefox.accesskey;"/>
       <radio id="fromfile"  label="&importFromHTMLFile.label;"  accesskey="&importFromHTMLFile.accesskey;" hidden="true"/>
       <radio id="nothing"   label="&importFromNothing.label;"   accesskey="&importFromNothing.accesskey;" hidden="true"/>
     </radiogroup>
