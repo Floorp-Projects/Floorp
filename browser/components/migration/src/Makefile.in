@@ -67,5 +67,13 @@ CPPSRCS += nsSafariProfileMigrator.cpp \
            $(NULL)
 endif            
 
+EXTRA_PP_COMPONENTS = \
+  ChromeProfileMigrator.js \
+  $(NULL)
+
+EXTRA_COMPONENTS = \
+	BrowserProfileMigrators.manifest \
+	$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
