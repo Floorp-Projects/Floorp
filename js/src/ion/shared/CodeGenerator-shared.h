@@ -148,6 +148,8 @@ class CodeGeneratorShared : public LInstructionVisitor
     bool encode(LSnapshot *snapshot);
     bool encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint, uint32 *startIndex);
 
+    Operand createArraySlotOperand(Register slots, const LAllocation *index);
+
     // Attempts to assign a BailoutId to a snapshot, if one isn't already set.
     // If the bailout table is full, this returns false, which is not a fatal
     // error (the code generator may use a slower bailout mechanism).

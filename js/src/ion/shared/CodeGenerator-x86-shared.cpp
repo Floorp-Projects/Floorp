@@ -894,6 +894,16 @@ CodeGeneratorX86Shared::visitMathD(LMathD *math)
     return true;
 }
 
+bool
+CodeGeneratorX86Shared::visitBoundsCheck(LBoundsCheck *lir)
+{
+    if (lir->index()->isConstant())
+        masm.cmpl(ToRegister(lir->length()), Imm32(ToInt32(lir->index())));
+    else
+        masm.cmpl(ToRegister(lir->length()), ToRegister(lir->index()));
+    return bailoutIf(Assembler::BelowOrEqual, lir->snapshot());
+}
+
 // Checks whether a double is representable as a 32-bit integer. If so, the
 // integer is written to the output register. Otherwise, a bailout is taken to
 // the given snapshot. This function overwrites the scratch float register.
@@ -937,4 +947,3 @@ CodeGeneratorX86Shared::emitTruncateDouble(const FloatRegister &src, const Regis
     masm.cmpl(dest, Imm32(INT_MIN));
     masm.j(Assembler::Equal, fail);
 }
-

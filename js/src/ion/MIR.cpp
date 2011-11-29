@@ -751,6 +751,16 @@ MResumePoint::inheritUnwrapArgs(MBasicBlock *block, uint32 argc)
 }
 
 MDefinition *
+MToInt32::foldsTo(bool useValueNumbers)
+{
+    MDefinition *input = getOperand(0);
+    if (input->type() == MIRType_Int32)
+        return input;
+
+    return this;
+}
+
+MDefinition *
 MToDouble::foldsTo(bool useValueNumbers)
 {
     if (input()->isConstant()) {

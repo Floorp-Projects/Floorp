@@ -295,6 +295,9 @@ class Assembler : public AssemblerX86Shared
           case Operand::REG_DISP:
             masm.movq_mr(src.disp(), src.base(), dest.code());
             break;
+          case Operand::SCALE:
+            masm.movq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            break;
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }
@@ -306,6 +309,9 @@ class Assembler : public AssemblerX86Shared
             break;
           case Operand::REG_DISP:
             masm.movq_rm(src.code(), dest.disp(), dest.base());
+            break;
+          case Operand::SCALE:
+            masm.movq_rm(src.code(), dest.disp(), dest.base(), dest.index(), dest.scale());
             break;
           default:
             JS_NOT_REACHED("unexpected operand kind");

@@ -675,6 +675,71 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
     return defineAs(barrier, ins, ins->input()) && add(barrier);
 }
 
+bool
+LIRGenerator::visitInitializedLength(MInitializedLength *ins)
+{
+    return define(new LInitializedLength(useRegister(ins->input())), ins);
+}
+
+bool
+LIRGenerator::visitBoundsCheck(MBoundsCheck *ins)
+{
+    LBoundsCheck *check = new LBoundsCheck(useRegisterOrConstant(ins->index()),
+                                           useRegister(ins->length()));
+    return assignSnapshot(check) && add(check, ins);
+}
+
+bool
+LIRGenerator::visitLoadElement(MLoadElement *ins)
+{
+    switch (ins->type()) {
+      case MIRType_Value:
+      {
+        LLoadElementV *lir = new LLoadElementV(useRegister(ins->slots()),
+                                               useRegisterOrConstant(ins->index()));
+        if (ins->fallible() && !assignSnapshot(lir))
+            return false;
+        return defineBox(lir, ins);
+      }
+      case MIRType_Undefined:
+      case MIRType_Null:
+        JS_NOT_REACHED("typed load must have a payload");
+        return false;
+
+      default:
+        JS_ASSERT(!ins->fallible());
+        return define(new LLoadElementT(useRegister(ins->slots()),
+                                        useRegisterOrConstant(ins->index())), ins);
+    }
+}
+
+bool
+LIRGenerator::visitStoreElement(MStoreElement *ins)
+{
+    JS_ASSERT(ins->slots()->type() == MIRType_Slots);
+    JS_ASSERT(ins->index()->type() == MIRType_Int32);
+
+    switch (ins->value()->type()) {
+      case MIRType_Value:
+      {
+        LInstruction *lir = new LStoreElementV(useRegister(ins->slots()),
+                                               useRegisterOrConstant(ins->index()));
+        if (!useBox(lir, LStoreElementV::Value, ins->value()))
+            return false;
+        return add(lir, ins);
+      }
+      case MIRType_Double:
+        return add(new LStoreElementT(useRegister(ins->slots()),
+                                      useRegisterOrConstant(ins->index()),
+                                      useRegister(ins->value())), ins);
+
+      default:
+        return add(new LStoreElementT(useRegister(ins->slots()),
+                                      useRegisterOrConstant(ins->index()),
+                                      useRegisterOrConstant(ins->value())), ins);
+    }
+}
+
 static void
 SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint)
 {

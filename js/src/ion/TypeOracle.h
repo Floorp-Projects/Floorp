@@ -101,6 +101,27 @@ class TypeOracle
         *barrier = NULL;
         return NULL;
     }
+    virtual bool elementReadIsDense(JSScript *script, jsbytecode *pc) {
+        return false;
+    }
+    virtual bool elementReadIsPacked(JSScript *script, jsbytecode *pc) {
+        return false;
+    }
+    virtual bool elementWriteIsDense(JSScript *script, jsbytecode *pc) {
+        return false;
+    }
+    virtual bool elementWriteIsPacked(JSScript *script, jsbytecode *pc) {
+        return false;
+    }
+    virtual bool propertyWriteCanSpecialize(JSScript *script, jsbytecode *pc) {
+        return true;
+    }
+    virtual MIRType elementWrite(JSScript *script, jsbytecode *pc) {
+        return MIRType_None;
+    }
+    virtual bool arrayProtoHasIndexedProperty() {
+        return true;
+    }
 
     /* |pc| must be a |JSOP_CALL|. */
     virtual types::TypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc) {
@@ -152,6 +173,13 @@ class TypeInferenceOracle : public TypeOracle
     types::TypeSet *globalPropertyWrite(JSScript *script, jsbytecode *pc, jsid id, bool *canSpecialize);
     types::TypeSet *returnTypeSet(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
     types::TypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc);
+    bool elementReadIsDense(JSScript *script, jsbytecode *pc);
+    bool elementReadIsPacked(JSScript *script, jsbytecode *pc);
+    bool elementWriteIsDense(JSScript *script, jsbytecode *pc);
+    bool elementWriteIsPacked(JSScript *script, jsbytecode *pc);
+    bool propertyWriteCanSpecialize(JSScript *script, jsbytecode *pc);
+    MIRType elementWrite(JSScript *script, jsbytecode *pc);
+    bool arrayProtoHasIndexedProperty();
     bool canEnterInlinedScript(JSScript *inlineScript);
 };
 

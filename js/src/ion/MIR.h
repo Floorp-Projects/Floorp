@@ -1181,6 +1181,8 @@ class MToInt32 : public MUnaryInstruction
     MDefinition *input() const {
         return getOperand(0);
     }
+
+    MDefinition *foldsTo(bool useValueNumbers);
 };
 
 // Converts a value or typed input to a truncated int32, for use with bitwise
@@ -1609,7 +1611,6 @@ class MSlots
     {
         setResultType(MIRType_Slots);
         setIdempotent();
-        JS_ASSERT(from->type() == MIRType_Object);
     }
 
   public:
@@ -1624,6 +1625,155 @@ class MSlots
     }
     MDefinition *input() const {
         return getOperand(0);
+    }
+};
+
+// Load JSObject initializedLength field.
+class MInitializedLength
+    : public MUnaryInstruction,
+      public ObjectPolicy
+{
+    MInitializedLength(MDefinition *object)
+      : MUnaryInstruction(object)
+    {
+        setResultType(MIRType_Int32);
+        setIdempotent();
+    }
+
+  public:
+    INSTRUCTION_HEADER(InitializedLength);
+
+    static MInitializedLength *New(MDefinition *object) {
+        return new MInitializedLength(object);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+};
+
+// Bailout if index >= length.
+class MBoundsCheck
+  : public MBinaryInstruction
+{
+    MBoundsCheck(MDefinition *index, MDefinition *length)
+      : MBinaryInstruction(index, length)
+    {
+        setIdempotent();
+        setGuard();
+        JS_ASSERT(index->type() == MIRType_Int32);
+        JS_ASSERT(length->type() == MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(BoundsCheck);
+
+    static MBoundsCheck *New(MDefinition *index, MDefinition *length) {
+        return new MBoundsCheck(index, length);
+    }
+
+    MDefinition *index() const {
+        return getOperand(0);
+    }
+    MDefinition *length() const {
+        return getOperand(1);
+    }
+    bool congruentTo(MDefinition * const &ins) const {
+        return false;
+    }
+};
+
+// Load a value from a dense array's slots vector and does a hole check if the
+// array is not known to be packed.
+class MLoadElement
+  : public MBinaryInstruction,
+    public ObjectPolicy
+{
+    bool needsHoleCheck_;
+
+    MLoadElement(MDefinition *slots, MDefinition *index, bool needsHoleCheck)
+        : MBinaryInstruction(slots, index),
+          needsHoleCheck_(needsHoleCheck)
+    {
+        setResultType(MIRType_Value);
+        setIdempotent();
+        JS_ASSERT(slots->type() == MIRType_Slots);
+        JS_ASSERT(index->type() == MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(LoadElement);
+
+    static MLoadElement *New(MDefinition *slots, MDefinition *index, bool needsHoleCheck) {
+        return new MLoadElement(slots, index, needsHoleCheck);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *slots() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    bool needsHoleCheck() const {
+        return needsHoleCheck_;
+    }
+    bool fallible() const {
+        return needsHoleCheck();
+    }
+    bool congruentTo(MDefinition * const &ins) const {
+        return false;
+    }
+};
+
+// Store a value to a dense array slots vector.
+class MStoreElement
+  : public MAryInstruction<3>,
+    public ObjectPolicy
+{
+    MIRType slotType_;
+
+    MStoreElement(MDefinition *slots, MDefinition *index, MDefinition *value) {
+        initOperand(0, slots);
+        initOperand(1, index);
+        initOperand(2, value);
+        JS_ASSERT(slots->type() == MIRType_Slots);
+        JS_ASSERT(index->type() == MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(StoreElement);
+
+    static MStoreElement *New(MDefinition *slots, MDefinition *index, MDefinition *value) {
+        return new MStoreElement(slots, index, value);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *slots() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    MDefinition *value() const {
+        return getOperand(2);
+    }
+    MIRType slotType() const {
+        return slotType_;
+    }
+    void setSlotType(MIRType slotType) {
+        JS_ASSERT(slotType != MIRType_None);
+        slotType_ = slotType;
+    }
+    bool congruentTo(MDefinition * const &ins) const {
+        return false;
     }
 };
 
