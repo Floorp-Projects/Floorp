@@ -108,9 +108,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Sets a slot, taking care to rewrite copies.
     void setSlot(uint32 slot, MDefinition *ins);
 
-    // Pushes a copy of a slot.
-    void pushCopy(uint32 slot);
-
     // Pushes a copy of a local variable or argument.
     void pushVariable(uint32 slot);
 
