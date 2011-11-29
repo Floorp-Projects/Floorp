@@ -4005,10 +4005,6 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("evalInFrame",    EvalInFrame,    2,0),
     JS_FN("shapeOf",        ShapeOf,        1,0),
     JS_FN("resolver",       Resolver,       1,0),
-#ifdef MOZ_TRACEVIS
-    JS_FN("startTraceVis",  StartTraceVisNative, 1,0),
-    JS_FN("stopTraceVis",   StopTraceVisNative,  0,0),
-#endif
 #ifdef DEBUG
     JS_FN("arrayInfo",      js_ArrayInfo,   1,0),
 #endif
@@ -4131,10 +4127,6 @@ static const char *const shell_help_messages[] = {
 "shapeOf(obj)             Get the shape of obj (an implementation detail)",
 "resolver(src[, proto])   Create object with resolve hook that copies properties\n"
 "                         from src. If proto is omitted, use Object.prototype.",
-#ifdef MOZ_TRACEVIS
-"startTraceVis(filename)  Start TraceVis recording (stops any current recording)",
-"stopTraceVis()           Stop TraceVis recording",
-#endif
 #ifdef DEBUG
 "arrayInfo(a1, a2, ...)   Report statistics about arrays",
 #endif
