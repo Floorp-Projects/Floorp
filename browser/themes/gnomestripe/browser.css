@@ -222,7 +222,7 @@ menuitem.bookmark-item {
 }
 
 .bookmark-item[query][tagContainer] {
-  list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
+  list-style-image: url("chrome://browser/skin/places/tag.png");
 }
 
 .bookmark-item[query][dayContainer] {
