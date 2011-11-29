@@ -7321,17 +7321,6 @@ if test -n "$MOZ_TRACE_JSCALLS"; then
 fi
 
 dnl ========================================================
-dnl = Use TraceVis
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(tracevis,
-[  --enable-tracevis       Enable TraceVis tracing tool (default=no)],
-    MOZ_TRACEVIS=1,
-    MOZ_TRACEVIS= )
-if test -n "$MOZ_TRACEVIS"; then
-    AC_DEFINE(MOZ_TRACEVIS)
-fi
-
-dnl ========================================================
 dnl = Use incremental GC
 dnl ========================================================
 JSGC_INCREMENTAL=1
