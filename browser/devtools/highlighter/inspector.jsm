@@ -487,7 +487,7 @@ Highlighter.prototype = {
     this.nodeInfo.tagNameLabel.textContent = this.node.tagName;
 
     // ID
-    this.nodeInfo.idLabel.textContent = this.node.id;
+    this.nodeInfo.idLabel.textContent = this.node.id ? "#" + this.node.id : "";
 
     // Classes
     let classes = this.nodeInfo.classesBox;
@@ -500,7 +500,7 @@ Highlighter.prototype = {
       for (let i = 0; i < this.node.classList.length; i++) {
         let classLabel = this.chromeDoc.createElement("label");
         classLabel.className = "highlighter-nodeinfobar-class plain";
-        classLabel.textContent = this.node.classList[i];
+        classLabel.textContent = "." + this.node.classList[i];
         fragment.appendChild(classLabel);
       }
       classes.appendChild(fragment);

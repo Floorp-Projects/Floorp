@@ -63,6 +63,17 @@
   direction: ltr;
 }
 
+#highlighter-nodeinfobar-container[locked] > #highlighter-nodeinfobar {
+  pointer-events: auto;
+}
+
+#highlighter-nodeinfobar-id,
+.highlighter-nodeinfobar-class,
+#highlighter-nodeinfobar-tagname {
+  -moz-user-select: text;
+  cursor: text;
+}
+
 .highlighter-nodeinfobar-arrow {
   display: none;
 }
@@ -81,14 +92,6 @@
 
 #highlighter-nodeinfobar-id:empty {
   display: none;
-}
-
-#highlighter-nodeinfobar-id::before {
-  content: "#";
-}
-
-.highlighter-nodeinfobar-class::before {
-  content: ".";
 }
 
 #highlighter-nodeinfobar-tagname {
