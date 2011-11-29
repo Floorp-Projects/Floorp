@@ -242,7 +242,7 @@ toolbarbutton.bookmark-item > menupopup {
 }
 
 .bookmark-item[query][tagContainer] {
-  list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
+  list-style-image: url("chrome://browser/skin/places/tag.png");
 }
 
 .bookmark-item[query][dayContainer] {
