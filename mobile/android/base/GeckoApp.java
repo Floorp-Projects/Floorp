@@ -906,7 +906,6 @@ abstract public class GeckoApp
         final Tab tab = Tabs.getInstance().addTab(tabId, uri);
         if (selected) {
             Tabs.getInstance().selectTab(tabId);
-            mSoftwareLayerClient.geckoLoadedNewContent();
         }
 
         mMainHandler.post(new Runnable() { 
@@ -938,8 +937,6 @@ abstract public class GeckoApp
         final Tab tab = Tabs.getInstance().selectTab(tabId);
         if (tab == null)
             return;
-
-        mSoftwareLayerClient.geckoLoadedNewContent();
 
         mMainHandler.post(new Runnable() { 
             public void run() {
@@ -1016,8 +1013,6 @@ abstract public class GeckoApp
                 if (Tabs.getInstance().isSelectedTab(tab))
                     mBrowserToolbar.setTitle(tab.getDisplayTitle());
                 onTabsChanged(tab);
-
-                mSoftwareLayerClient.geckoLoadedNewContent();
             }
         });
     }
