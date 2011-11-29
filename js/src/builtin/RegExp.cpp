@@ -517,13 +517,8 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
     RegExpObject *reobj = obj->asRegExp();
 
     RegExpMatcher matcher(cx);
-    if (reobj->startsWithAtomizedGreedyStar()) {
-        if (!matcher.resetWithTestOptimized(reobj))
-            return false;
-    } else {
-        if (!matcher.reset(reobj))
-            return false;
-    }
+    if (!matcher.reset(reobj))
+        return false;
 
     RegExpStatics *res = cx->regExpStatics();
 
