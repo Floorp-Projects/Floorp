@@ -1052,12 +1052,14 @@ Tab.prototype = {
     this._viewport.y = this.browser.contentWindow.scrollY +
                        this.viewportExcess.y;
 
-    let doc = this.browser.contentDocument.documentElement;
+    let doc = this.browser.contentDocument;
     let pageWidth = this._viewport.width;
     let pageHeight = this._viewport.height;
     if (doc != null) {
-      pageWidth = Math.max(pageWidth, doc.scrollWidth);
-      pageHeight = Math.max(pageHeight, doc.scrollHeight);
+	let body = doc.body || {};
+	let html = doc.documentElement || {};
+	pageWidth = Math.max(body.scrollWidth || 1, html.scrollWidth);
+	pageHeight = Math.max(body.scrollHeight || 1, html.scrollHeight);
     }
 
     // Transform coordinates based on zoom
