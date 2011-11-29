@@ -60,6 +60,10 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     // This returns the tag in ScratchReg.
     Assembler::Condition testStringTruthy(bool truthy, const ValueOperand &value);
 
+    void loadUnboxedValue(Operand source, MIRType type, const LDefinition *dest);
+    void storeUnboxedValue(const LAllocation *value, MIRType valueType,
+                           Operand dest, MIRType slotType);
+
   public:
     CodeGeneratorX64(MIRGenerator *gen, LIRGraph &graph);
 
@@ -78,6 +82,10 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     bool visitWriteBarrierV(LWriteBarrierV *barrier);
     bool visitWriteBarrierT(LWriteBarrierT *barrier);
     bool visitGuardShape(LGuardShape *guard);
+    bool visitLoadElementV(LLoadElementV *load);
+    bool visitLoadElementT(LLoadElementT *load);
+    bool visitStoreElementV(LStoreElementV *store);
+    bool visitStoreElementT(LStoreElementT *store);
 };
 
 typedef CodeGeneratorX64 CodeGeneratorSpecific;

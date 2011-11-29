@@ -681,6 +681,12 @@ IonBuilder::inspectOpcode(JSOp op)
         assertValidTraceOp(op);
         return true;
 
+      case JSOP_GETELEM:
+        return jsop_getelem();
+
+      case JSOP_SETELEM:
+        return jsop_setelem();
+
       default:
 #ifdef DEBUG
         return abort("Unsupported opcode: %s (line %d)", js_CodeName[op], info().lineno(cx, pc));
@@ -2663,4 +2669,113 @@ IonBuilder::jsop_setgname(JSAtom *atom)
 
     current->push(value);
     return true;
+}
+
+bool
+IonBuilder::jsop_getelem()
+{
+    if (oracle->elementReadIsDense(script, pc))
+        return jsop_getelem_dense();
+
+    return abort("GETELEM Not a dense array");
+}
+
+bool
+IonBuilder::jsop_getelem_dense()
+{
+    if (oracle->arrayProtoHasIndexedProperty())
+        return abort("GETELEM Array proto has indexed properties");
+
+    types::TypeSet *barrier;
+    types::TypeSet *types = oracle->propertyRead(script, pc, &barrier);
+    bool needsHoleCheck = !oracle->elementReadIsPacked(script, pc);
+
+    MDefinition *id = current->pop();
+    MDefinition *obj = current->pop();
+
+    JSValueType knownType = JSVAL_TYPE_UNKNOWN;
+    if (!needsHoleCheck && !barrier) {
+        knownType = types->getKnownTypeTag(cx);
+
+        if (knownType == JSVAL_TYPE_UNDEFINED)
+            return pushConstant(UndefinedValue());
+        if (knownType == JSVAL_TYPE_NULL)
+            return pushConstant(NullValue());
+    }
+
+    // Ensure id is an integer.
+    MInstruction *idInt32 = MToInt32::New(id);
+    current->add(idInt32);
+    id = idInt32;
+
+    // Read and check length.
+    MInitializedLength *initLength = MInitializedLength::New(obj);
+    current->add(initLength);
+
+    MBoundsCheck *check = MBoundsCheck::New(id, initLength);
+    current->add(check);
+
+    // Load the value.
+    MSlots *slots = MSlots::New(obj);
+    current->add(slots);
+
+    MLoadElement *load = MLoadElement::New(slots, id, needsHoleCheck);
+    current->add(load);
+
+    if (knownType != JSVAL_TYPE_UNKNOWN)
+        load->setResultType(MIRTypeFromValueType(knownType));
+
+    current->push(load);
+    return pushTypeBarrier(load, types, barrier);
+}
+
+bool
+IonBuilder::jsop_setelem()
+{
+    if (!oracle->propertyWriteCanSpecialize(script, pc))
+        return abort("SETELEM cannot specialize");
+
+    if (oracle->elementWriteIsDense(script, pc))
+        return jsop_setelem_dense();
+
+    return abort("SETELEM Not a dense array");
+}
+
+bool
+IonBuilder::jsop_setelem_dense()
+{
+    if (oracle->arrayProtoHasIndexedProperty())
+        return abort("SETELEM Array proto has indexed properties");
+
+    MIRType elementType = oracle->elementWrite(script, pc);
+    bool packed = oracle->elementWriteIsPacked(script, pc);
+
+    MDefinition *value = current->pop();
+    MDefinition *id = current->pop();
+    MDefinition *obj = current->pop();
+
+    // Ensure id is an integer.
+    MInstruction *idInt32 = MToInt32::New(id);
+    current->add(idInt32);
+    id = idInt32;
+
+    // Read and check length.
+    MInitializedLength *initLength = MInitializedLength::New(obj);
+    current->add(initLength);
+
+    MBoundsCheck *check = MBoundsCheck::New(id, initLength);
+    current->add(check);
+
+    // Store the value.
+    MSlots *slots = MSlots::New(obj);
+    current->add(slots);
+
+    MStoreElement *store = MStoreElement::New(slots, id, value);
+    current->add(store);
+    current->push(value);
+
+    if (elementType != MIRType_None && packed)
+        store->setSlotType(elementType);
+
+    return resumeAfter(store);
 }

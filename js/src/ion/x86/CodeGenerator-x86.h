@@ -103,6 +103,10 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitWriteBarrierV(LWriteBarrierV *barrier);
     bool visitWriteBarrierT(LWriteBarrierT *barrier);
     bool visitGuardShape(LGuardShape *guard);
+    bool visitLoadElementV(LLoadElementV *load);
+    bool visitLoadElementT(LLoadElementT *load);
+    bool visitStoreElementV(LStoreElementV *store);
+    bool visitStoreElementT(LStoreElementT *store);
 };
 
 typedef CodeGeneratorX86 CodeGeneratorSpecific;

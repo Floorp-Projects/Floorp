@@ -127,6 +127,9 @@ class MacroAssemblerX86Shared : public Assembler
         ucomisd(ScratchFloatReg, reg);
         return truthy ? NonZero : Zero;
     }
+    void loadInt32(const Address &address, Register dest) {
+        movl(Operand(address), dest);
+    }
 };
 
 } // namespace ion

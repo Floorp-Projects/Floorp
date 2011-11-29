@@ -338,6 +338,74 @@ CodeGeneratorX86::visitStoreSlotT(LStoreSlotT *store)
 }
 
 bool
+CodeGeneratorX86::visitLoadElementV(LLoadElementV *load)
+{
+    Operand source = createArraySlotOperand(ToRegister(load->slots()), load->index());
+    Register type = ToRegister(load->getDef(TYPE_INDEX));
+    Register payload = ToRegister(load->getDef(PAYLOAD_INDEX));
+
+    masm.movl(masm.ToType(source), type);
+    masm.movl(masm.ToPayload(source), payload);
+
+    if (load->mir()->needsHoleCheck()) {
+        masm.cmpl(type, ImmTag(JSVAL_TAG_MAGIC));
+        return bailoutIf(Assembler::Equal, load->snapshot());
+    }
+
+    return true;
+}
+
+bool
+CodeGeneratorX86::visitLoadElementT(LLoadElementT *load)
+{
+    Operand source = createArraySlotOperand(ToRegister(load->slots()), load->index());
+
+    if (load->mir()->type() == MIRType_Double)
+        masm.movsd(source, ToFloatRegister(load->output()));
+    else
+        masm.movl(masm.ToPayload(source), ToRegister(load->output()));
+
+    JS_ASSERT(!load->mir()->needsHoleCheck());
+    return true;
+}
+
+bool
+CodeGeneratorX86::visitStoreElementV(LStoreElementV *store)
+{
+    Operand dest = createArraySlotOperand(ToRegister(store->slots()), store->index());
+    const ValueOperand value = ToValue(store, LStoreElementV::Value);
+
+    masm.storeValue(value, dest);
+    return true;
+}
+
+bool
+CodeGeneratorX86::visitStoreElementT(LStoreElementT *store)
+{
+    Operand dest = createArraySlotOperand(ToRegister(store->slots()), store->index());
+
+    const LAllocation *value = store->value();
+    MIRType valueType = store->mir()->value()->type();
+
+    if (valueType == MIRType_Double) {
+        masm.movsd(ToFloatRegister(value), dest);
+        return true;
+    }
+
+    // Store the type tag if needed.
+    if (valueType != store->mir()->slotType())
+        masm.storeTypeTag(ImmTag(MIRTypeToTag(valueType)), dest);
+
+    // Store the payload.
+    if (value->isConstant())
+        masm.storePayload(*value->toConstant(), dest);
+    else
+        masm.storePayload(ToRegister(value), dest);
+
+    return true;
+}
+
+bool
 CodeGeneratorX86::visitWriteBarrierV(LWriteBarrierV *barrier)
 {
     // TODO: Perform C++ call to some WriteBarrier stub.

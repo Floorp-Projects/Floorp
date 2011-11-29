@@ -143,6 +143,115 @@ TypeInferenceOracle::propertyRead(JSScript *script, jsbytecode *pc, TypeSet **ba
     return script->analysis()->pushedTypes(pc, 0);
 }
 
+bool
+TypeInferenceOracle::elementReadIsDense(JSScript *script, jsbytecode *pc)
+{
+    // Check whether the object is a dense array and index is int32 or double.
+    types::TypeSet *obj = script->analysis()->poppedTypes(pc, 1);
+    types::TypeSet *id = script->analysis()->poppedTypes(pc, 0);
+
+    JSValueType objType = obj->getKnownTypeTag(cx);
+    if (objType != JSVAL_TYPE_OBJECT)
+        return false;
+
+    JSValueType idType = id->getKnownTypeTag(cx);
+    if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
+        return false;
+
+    return !obj->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY);
+}
+
+bool
+TypeInferenceOracle::elementReadIsPacked(JSScript *script, jsbytecode *pc)
+{
+    types::TypeSet *types = script->analysis()->poppedTypes(pc, 1);
+    return !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
+}
+
+bool
+TypeInferenceOracle::elementWriteIsDense(JSScript *script, jsbytecode *pc)
+{
+    // Check whether the object is a dense array and index is int32 or double.
+    types::TypeSet *obj = script->analysis()->poppedTypes(pc, 2);
+    types::TypeSet *id = script->analysis()->poppedTypes(pc, 1);
+
+    JSValueType objType = obj->getKnownTypeTag(cx);
+    if (objType != JSVAL_TYPE_OBJECT)
+        return false;
+
+    JSValueType idType = id->getKnownTypeTag(cx);
+    if (idType != JSVAL_TYPE_INT32 && idType != JSVAL_TYPE_DOUBLE)
+        return false;
+
+    return !obj->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY);
+}
+
+bool
+TypeInferenceOracle::elementWriteIsPacked(JSScript *script, jsbytecode *pc)
+{
+    types::TypeSet *types = script->analysis()->poppedTypes(pc, 2);
+    return !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
+}
+
+MIRType
+TypeInferenceOracle::elementWrite(JSScript *script, jsbytecode *pc)
+{
+    types::TypeSet *objTypes = script->analysis()->poppedTypes(pc, 2);
+    MIRType elementType = MIRType_None;
+    unsigned count = objTypes->getObjectCount();
+
+    for (unsigned i = 0; i < count; i++) {
+        if (objTypes->getSingleObject(i))
+            return MIRType_None;
+
+        if (TypeObject *object = objTypes->getTypeObject(i)) {
+            types::TypeSet *elementTypes = object->getProperty(cx, JSID_VOID, false);
+            if (!elementTypes)
+                return MIRType_None;
+
+            MIRType type = getMIRType(elementTypes);
+            if (type == MIRType_None)
+                return MIRType_None;
+
+            if (elementType == MIRType_None)
+                elementType = type;
+            else if (elementType != type)
+                return MIRType_None;
+        }
+    }
+
+    // Recompile when other array types are added.
+    objTypes->addFreeze(cx);
+    return elementType;
+}
+
+bool
+TypeInferenceOracle::arrayProtoHasIndexedProperty()
+{
+    if (!script->hasGlobal())
+        return true;
+
+    JSObject *proto;
+    if (!js_GetClassPrototype(cx, NULL, JSProto_Array, &proto, NULL))
+        return true;
+
+    /*
+     * It is sufficient to check just Array.prototype; if Object.prototype is
+     * unknown or has an indexed property, those will be reflected in
+     * Array.prototype.
+     */
+    if (proto->getType(cx)->unknownProperties())
+        return true;
+    types::TypeSet *arrayTypes = proto->getType(cx)->getProperty(cx, JSID_VOID, false);
+    return !arrayTypes || arrayTypes->knownNonEmpty(cx);
+}
+
+bool
+TypeInferenceOracle::propertyWriteCanSpecialize(JSScript *script, jsbytecode *pc)
+{
+    return !script->analysis()->getCode(pc).monitoredTypes;
+}
+
 TypeSet *
 TypeInferenceOracle::getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc)
 {

@@ -98,8 +98,18 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         return base;
     }
     Operand ToType(Operand base) {
-        return Operand(Register::FromCode(base.base()),
-                       base.disp() + sizeof(void *));
+        switch (base.kind()) {
+          case Operand::REG_DISP:
+            return Operand(Register::FromCode(base.base()), base.disp() + sizeof(void *));
+
+          case Operand::SCALE:
+            return Operand(Register::FromCode(base.base()), Register::FromCode(base.index()),
+                           base.scale(), base.disp() + sizeof(void *));
+
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+            return base; // Silence GCC warning.
+        }
     }
     void moveValue(const Value &val, Register type, Register data) {
         jsval_layout jv = JSVAL_TO_IMPL(val);

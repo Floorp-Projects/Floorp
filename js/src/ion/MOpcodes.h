@@ -82,8 +82,11 @@ namespace ion {
     _(LoadSlot)                                                             \
     _(StoreSlot)                                                            \
     _(TypeBarrier)                                                          \
-    _(GuardShape)
-
+    _(GuardShape)                                                           \
+    _(InitializedLength)                                                    \
+    _(BoundsCheck)                                                          \
+    _(LoadElement)                                                          \
+    _(StoreElement)
 
 // Forward declarations of MIR types.
 #define FORWARD_DECLARE(op) class M##op;
