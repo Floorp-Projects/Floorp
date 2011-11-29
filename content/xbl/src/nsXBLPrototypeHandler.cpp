@@ -327,7 +327,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Execute it.
-  nsCOMPtr<nsIDOMEventListener> eventListener;
+  nsCOMPtr<nsIJSEventListener> eventListener;
   rv = NS_NewJSEventListener(boundContext, scope,
                              scriptTarget, onEventAtom,
                              boundHandler.getObject(),
@@ -336,6 +336,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
 
   // Handle the event.
   eventListener->HandleEvent(aEvent);
+  eventListener->Disconnect();
   return NS_OK;
 }
 
