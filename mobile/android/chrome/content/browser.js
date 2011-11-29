@@ -897,12 +897,17 @@ nsBrowserAccess.prototype = {
 
 let gTabIDFactory = 0;
 
+// track the last known screen size so that new tabs
+// get created with the right size rather than being 1x1
+let gScreenWidth = 1;
+let gScreenHeight = 1;
+
 function Tab(aURL, aParams) {
   this.browser = null;
   this.vbox = null;
   this.id = 0;
   this.create(aURL, aParams);
-  this._viewport = { x: 0, y: 0, width: 1, height: 1, offsetX: 0, offsetY: 0,
+  this._viewport = { x: 0, y: 0, width: gScreenWidth, height: gScreenHeight, offsetX: 0, offsetY: 0,
                      pageWidth: 1, pageHeight: 1, zoom: 1.0 };
   this.viewportExcess = { x: 0, y: 0 };
 }
@@ -1004,10 +1009,12 @@ Tab.prototype = {
     if (aViewport.width != this._viewport.width) {
       this._viewport.width = aViewport.width;
       this.browser.style.width = this._viewport.width.toString() + "px";
+      gScreenWidth = aViewport.width;
     }
     if (aViewport.height != this._viewport.height) {
       this._viewport.height = aViewport.height;
       this.browser.style.height = this._viewport.height.toString() + "px";
+      gScreenHeight = aViewport.height;
     }
 
     let transformChanged = false;
