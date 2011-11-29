@@ -533,7 +533,7 @@ ConsiderUnbranding(FunctionBox *funbox)
             pn2 = pn2->pn_tree;
         if (pn2->isKind(PNK_ARGSBODY))
             pn2 = pn2->last();
-        if (!pn2->isKind(PNK_LC))
+        if (!pn2->isKind(PNK_STATEMENTLIST))
             returnsExpr = true;
     }
 #endif

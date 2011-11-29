@@ -3248,12 +3248,7 @@ freebsd*)
     CPPFLAGS="${CPPFLAGS} ${X_CFLAGS}"
     ;;
 esac
-MOZ_CHECK_HEADERS(sys/byteorder.h compat.h getopt.h)
-MOZ_CHECK_HEADERS(sys/bitypes.h memory.h unistd.h)
-MOZ_CHECK_HEADERS(gnu/libc-version.h nl_types.h)
-MOZ_CHECK_HEADERS(malloc.h)
-MOZ_CHECK_HEADERS(X11/XKBlib.h)
-MOZ_CHECK_HEADERS(io.h)
+MOZ_CHECK_COMMON_HEADERS
 
 dnl These are all the places some variant of statfs can be hiding.
 MOZ_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
