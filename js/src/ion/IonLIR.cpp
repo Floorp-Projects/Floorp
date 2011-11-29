@@ -280,7 +280,7 @@ LInstruction::assignSnapshot(LSnapshot *snapshot)
 void
 LInstruction::assignPostSnapshot(LSnapshot *snapshot)
 {
-    JS_ASSERT(!snapshot_);
+    JS_ASSERT(!postSnapshot_);
     postSnapshot_ = snapshot;
 
 #ifdef DEBUG
