@@ -41,7 +41,7 @@ script regress-191633.js
 script regress-191668.js
 script regress-192414.js
 script regress-193418.js
-skip script regress-203278-1.js # slow
+script regress-203278-1.js
 script regress-203402.js
 script regress-203841.js
 script regress-204210.js
@@ -167,7 +167,7 @@ skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) slow script regress-341360.js
 script regress-343713.js
 script regress-343966.js
 script regress-344711-n.js
-skip script regress-344804.js # bug 524732
+script regress-344804.js
 script regress-344959.js
 script regress-346237.js
 script regress-346801.js

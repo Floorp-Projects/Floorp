@@ -634,7 +634,7 @@ struct JSObject : js::gc::Cell
 
     inline size_t structSize() const;
     inline size_t slotsAndStructSize() const;
-    inline size_t dynamicSlotSize(JSUsableSizeFun usf) const;
+    inline size_t dynamicSlotSize(JSMallocSizeOfFun mallocSizeOf) const;
 
     inline size_t numFixedSlots() const;
 

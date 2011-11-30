@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Autocomplete Widget Test"
+        onload="setTimeout(keyCaretTest, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<textbox id="autocomplete" type="autocomplete"/>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function keyCaretTest()
+{
+  var autocomplete = $("autocomplete");
+
+  autocomplete.focus();
+  checkKeyCaretTest("VK_UP", 0, 0, false, "no value up");
+  checkKeyCaretTest("VK_DOWN", 0, 0, false, "no value down");
+
+  autocomplete.value = "Sample";
+
+  autocomplete.selectionStart = 3;
+  autocomplete.selectionEnd = 3;
+  checkKeyCaretTest("VK_UP", 0, 0, true, "value up with caret in middle");
+  checkKeyCaretTest("VK_UP", 0, 0, false, "value up with caret in middle again");
+
+  autocomplete.selectionStart = 2;
+  autocomplete.selectionEnd = 2;
+  checkKeyCaretTest("VK_DOWN", 6, 6, true, "value down with caret in middle");
+  checkKeyCaretTest("VK_DOWN", 6, 6, false, "value down with caret in middle again");
+
+  autocomplete.selectionStart = 1;
+  autocomplete.selectionEnd = 4;
+  checkKeyCaretTest("VK_UP", 0, 0, true, "value up with selection");
+
+  autocomplete.selectionStart = 1;
+  autocomplete.selectionEnd = 4;
+  checkKeyCaretTest("VK_DOWN", 6, 6, true, "value down with selection");
+
+  SimpleTest.finish();
+}
+
+function checkKeyCaretTest(key, expectedStart, expectedEnd, result, testid)
+{
+  var autocomplete = $("autocomplete");
+
+  var event = result ? "keypress" : "!keypress";
+  synthesizeKeyExpectEvent(key, { }, autocomplete.inputField, event, testid);
+  is(autocomplete.selectionStart, expectedStart, testid + " selectionStart");
+  is(autocomplete.selectionEnd, expectedEnd, testid + " selectionEnd");
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

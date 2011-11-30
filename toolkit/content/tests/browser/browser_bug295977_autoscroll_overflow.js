@@ -34,7 +34,7 @@ function test()
     var skipFrames = 1;
     var checkScroll = function () {
       if (skipFrames--) {
-        window.mozRequestAnimationFrame();
+        window.mozRequestAnimationFrame(checkScroll);
         return;
       }
       EventUtils.synthesizeKey("VK_ESCAPE", {}, gBrowser.contentWindow);
@@ -46,7 +46,6 @@ function test()
       ok((scrollHori && elem.scrollLeft > 0) ||
          (!scrollHori && elem.scrollLeft == 0),
          test.elem+' should'+(scrollHori ? '' : ' not')+' have scrolled horizontally');
-      window.removeEventListener("MozBeforePaint", checkScroll, false);
       nextTest();
     };
     EventUtils.synthesizeMouse(elem, 50, 50, { button: 1 },
@@ -61,13 +60,12 @@ function test()
     EventUtils.synthesizeMouse(elem, 100, 100,
                                { type: "mousemove", clickCount: "0" },
                                gBrowser.contentWindow);
-    window.addEventListener("MozBeforePaint", checkScroll, false);
     /*
      * if scrolling didn’t work, we wouldn’t do any redraws and thus time out.
      * so request and force redraws to get the chance to check for scrolling at
      * all.
      */
-    window.mozRequestAnimationFrame();
+    window.mozRequestAnimationFrame(checkScroll);
   }
 
   waitForExplicitFinish();

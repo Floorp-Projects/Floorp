@@ -1389,7 +1389,7 @@ nsTableRowGroupFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
       tableFrame->BCRecalcNeeded(aOldStyleContext, GetStyleContext())) {
     nsRect damageArea(0, GetStartRowIndex(), tableFrame->GetColCount(),
                       GetRowCount());
-    tableFrame->SetBCDamageArea(damageArea);
+    tableFrame->AddBCDamageArea(damageArea);
   }
   return;
 }

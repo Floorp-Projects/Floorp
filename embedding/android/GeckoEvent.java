@@ -148,9 +148,9 @@ public class GeckoEvent {
 
         if (s.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             mType = ACCELERATION_EVENT;
-            mX = s.values[0] / SensorManager.GRAVITY_EARTH;
-            mY = s.values[1] / SensorManager.GRAVITY_EARTH;
-            mZ = s.values[2] / SensorManager.GRAVITY_EARTH;
+            mX = s.values[0];
+            mY = s.values[1];
+            mZ = s.values[2];
         }
         else {
             mType = ORIENTATION_EVENT;

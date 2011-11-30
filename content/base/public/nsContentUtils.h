@@ -1290,11 +1290,6 @@ public:
   static void TraceWrapper(nsWrapperCache* aCache, TraceCallback aCallback,
                            void *aClosure);
 
-  /**
-   * Convert nsIContent::IME_STATUS_* to nsIWidget::IME_STATUS_*
-   */
-  static PRUint32 GetWidgetStatusFromIMEStatus(PRUint32 aState);
-
   /*
    * Notify when the first XUL menu is opened and when the all XUL menus are
    * closed. At opening, aInstalling should be TRUE, otherwise, it should be

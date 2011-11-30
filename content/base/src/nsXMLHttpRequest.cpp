@@ -2491,6 +2491,16 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
                                               &haveCharset, &charsetStart,
                                               &charsetEnd);
         if (NS_SUCCEEDED(rv)) {
+          // special case: the extracted charset is quoted with single quotes
+          // -- for the purpose of preserving what was set we want to handle
+          // them as delimiters (although they aren't really)
+          if (specifiedCharset.Length() >= 2 &&
+              specifiedCharset.First() == '\'' &&
+              specifiedCharset.Last() == '\'') {
+            specifiedCharset = Substring(specifiedCharset, 1,
+                                         specifiedCharset.Length() - 2);
+          }
+
           // If the content-type the page set already has a charset parameter,
           // and it's the same charset, up to case, as |charset|, just send the
           // page-set content-type header.  Apparently at least

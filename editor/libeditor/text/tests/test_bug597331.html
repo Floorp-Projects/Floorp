@@ -25,35 +25,42 @@ line3
 /** Test for Bug 597331 **/
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
-  var t = document.querySelector("textarea");
-  t.focus();
-  t.selectionStart = 4;
-  t.selectionEnd = 4;
   SimpleTest.executeSoon(function() {
-    var before = snapshotWindow(window, true);
-    t.selectionStart = 5;
-    t.selectionEnd = 5;
-    t.addEventListener("keydown", function() {
-      t.removeEventListener("keydown", arguments.callee, false);
+    var t = document.querySelector("textarea");
+    t.focus();
+    t.selectionStart = 4;
+    t.selectionEnd = 4;
+    SimpleTest.executeSoon(function() {
+      var before = snapshotWindow(window, true);
+      t.selectionStart = 5;
+      t.selectionEnd = 5;
+      t.addEventListener("keydown", function() {
+        t.removeEventListener("keydown", arguments.callee, false);
 
-      SimpleTest.executeSoon(function() {
-        t.style.display = 'block';
-        document.body.offsetWidth;
-        t.style.display = '';
-        document.body.offsetWidth;
+        SimpleTest.executeSoon(function() {
+          t.style.display = 'block';
+          document.body.offsetWidth;
+          t.style.display = '';
+          document.body.offsetWidth;
 
-        is(t.selectionStart, 4, "Cursor should be moved correctly");
-        is(t.selectionEnd, 4, "Cursor should be moved correctly");
+          is(t.selectionStart, 4, "Cursor should be moved correctly");
+          is(t.selectionEnd, 4, "Cursor should be moved correctly");
 
-        var after = snapshotWindow(window, true);
+          var after = snapshotWindow(window, true);
 
-        var result = compareSnapshots(before, after, true);
-        ok(result[0], "The caret should be displayed correctly after reframing");
+          var result = compareSnapshots(before, after, true);
+          var msg = "The caret should be displayed correctly after reframing";
+          if (!result[0]) {
+            msg += "\nRESULT:\n" + result[2];
+            msg += "\nREFERENCE:\n" + result[1];
+          }
+          ok(result[0], msg);
 
-        SimpleTest.finish();
-      });
-    }, false);
-    synthesizeKey("VK_LEFT", {});
+          SimpleTest.finish();
+        });
+      }, false);
+      synthesizeKey("VK_LEFT", {});
+    });
   });
 });
 

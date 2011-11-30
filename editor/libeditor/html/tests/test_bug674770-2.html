@@ -1,0 +1,394 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=674770
+-->
+<head>
+  <title>Test for Bug 674770</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=674770">Mozilla Bug 674770</a>
+<p id="display"></p>
+<div id="content">
+<iframe id="iframe" style="display: block; height: 14em;"
+  src="data:text/html,<input id='text' value='pasted'><input id='input' style='display: block;'><p id='editor1' contenteditable>editor1:</p><p id='editor2' contenteditable>editor2:</p>"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 674770 **/
+SimpleTest.waitForExplicitFinish();
+
+var iframe = document.getElementById("iframe");
+var frameWindow, frameDocument;
+
+var gClicked = false;
+var gClicking = null;
+var gDoPreventDefault1 = null;
+var gDoPreventDefault2 = null;
+
+function clickEventHnalder(aEvent)
+{
+  if (aEvent.button == 1 && aEvent.target == gClicking) {
+    gClicked = true;
+  }
+  if (gDoPreventDefault1 == aEvent.target) {
+    aEvent.preventDefault();
+  }
+  if (gDoPreventDefault2 == aEvent.target) {
+    aEvent.preventDefault();
+  }
+}
+
+// NOTE: tests need to check the result *after* the content is actually
+//       modified.  Sometimes, the modification is delayed. Therefore, there
+//       are a lot of functions and SimpleTest.executeSoon()s.
+
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.setBoolPref("middlemouse.paste", true);
+
+  frameWindow = iframe.contentWindow;
+  frameDocument = iframe.contentDocument;
+
+  frameDocument.getElementById("input").addEventListener("click", clickEventHnalder, false);
+  frameDocument.getElementById("editor1").addEventListener("click", clickEventHnalder, false);
+  frameDocument.getElementById("editor2").addEventListener("click", clickEventHnalder, false);
+
+  var text = frameDocument.getElementById("text");
+
+  text.focus();
+
+  SimpleTest.executeSoon(function() {
+    synthesizeKey("a", { accelKey: true }, frameWindow);
+    // Windows and Mac don't have primary selection, we should copy the text to
+    // the global clipboard.
+    if (!SpecialPowers.supportsSelectionClipboard()) {
+      SimpleTest.waitForClipboard("pasted",
+        function() { synthesizeKey("c", { accelKey: true }, frameWindow); },
+        function() { SimpleTest.executeSoon(runInputTests1) },
+        cleanup);
+    } else {
+      // Otherwise, don't call waitForClipboard since it breaks primary
+      // selection.
+      runInputTests1();
+    }
+  });
+});
+
+function runInputTests1()
+{
+  var input = frameDocument.getElementById("input");
+
+  // first, copy text.
+
+  // when middle clicked in focused input element, text should be pasted.
+  input.value = "";
+  input.focus();
+
+  SimpleTest.executeSoon(function() {
+    gClicked = false;
+    gClicking = input;
+    gDoPreventDefault1 = null;
+    gDoPreventDefault2 = null;
+
+    synthesizeMouseAtCenter(input, {button: 1}, frameWindow);
+
+    SimpleTest.executeSoon(function() {
+      todo(gClicked, "click event hasn't been fired for runInputTests1");
+      is(input.value, "pasted", "failed to paste in input element");
+
+      SimpleTest.executeSoon(runInputTests2);
+    });
+  });
+}
+
+function runInputTests2()
+{
+  var input = frameDocument.getElementById("input");
+
+  // even if the input element hasn't had focus, middle click should set focus
+  // to it and paste the text.
+  input.value = "";
+  input.blur();
+
+  SimpleTest.executeSoon(function() {
+    gClicked = false;
+    gClicking = input;
+    gDoPreventDefault1 = null;
+    gDoPreventDefault2 = null;
+
+    synthesizeMouseAtCenter(input, {button: 1}, frameWindow);
+
+    SimpleTest.executeSoon(function() {
+      todo(gClicked, "click event hasn't been fired for runInputTests2");
+      is(input.value, "pasted",
+         "failed to paste in input element when it hasn't had focus yet");
+
+      SimpleTest.executeSoon(runInputTests3);
+    });
+  });
+}
+
+function runInputTests3()
+{
+  var input = frameDocument.getElementById("input");
+  var editor1 = frameDocument.getElementById("editor1");
+
+  // preventDefault() of HTML editor's click event handler shouldn't prevent
+  // middle click pasting in input element.
+  input.value = "";
+  input.focus();
+
+  SimpleTest.executeSoon(function() {
+    gClicked = false;
+    gClicking = input;
+    gDoPreventDefault1 = editor1;
+    gDoPreventDefault2 = null;
+
+    synthesizeMouseAtCenter(input, {button: 1}, frameWindow);
+
+    SimpleTest.executeSoon(function() {
+      todo(gClicked, "click event hasn't been fired for runInputTests3");
+      is(input.value, "pasted",
+         "failed to paste in input element when editor1 does preventDefault()");
+
+      SimpleTest.executeSoon(runInputTests4);
+    });
+  });
+}
+
+function runInputTests4()
+{
+  var input = frameDocument.getElementById("input");
+  var editor1 = frameDocument.getElementById("editor1");
+
+  // preventDefault() of input element's click event handler should prevent
+  // middle click pasting in it.
+  input.value = "";
+  input.focus();
+
+  SimpleTest.executeSoon(function() {
+    gClicked = false;
+    gClicking = input;
+    gDoPreventDefault1 = input;
+    gDoPreventDefault2 = null;
+
+    synthesizeMouseAtCenter(input, {button: 1}, frameWindow);
+
+    SimpleTest.executeSoon(function() {
+      todo(gClicked, "click event hasn't been fired for runInputTests4");
+      todo_is(input.value, "",
+         "pasted in input element when it does preventDefault()");
+
+      SimpleTest.executeSoon(runContentEditableTests1);
+    });
+  });
+}
+
+function runContentEditableTests1()
+{
+  var editor1 = frameDocument.getElementById("editor1");
+
+  // when middle clicked in focused contentediable editor, text should be
+  // pasted.
+  editor1.innerHTML = "editor1:";
+  editor1.focus();
+
+  SimpleTest.executeSoon(function() {
+    gClicked = false;
+    gClicking = editor1;
+    gDoPreventDefault1 = null;
+    gDoPreventDefault2 = null;
+
+    synthesizeMouseAtCenter(editor1, {button: 1}, frameWindow);
+
+    SimpleTest.executeSoon(function() {
+      todo(gClicked, "click event hasn't been fired for runContentEditableTests1");
+      is(editor1.innerHTML, "editor1:pasted",
+         "failed to paste text in contenteditable editor");
+      SimpleTest.executeSoon(runContentEditableTests2);
+    });
+  });
+}
+
+function runContentEditableTests2()
+{
+  var editor1 = frameDocument.getElementById("editor1");
+
+  // even if the contenteditable editor hasn't had focus, middle click should
+  // set focus to it and paste the text.
+  editor1.innerHTML = "editor1:";
+  editor1.blur();
+
+  SimpleTest.executeSoon(function() {
+    gClicked = false;
+    gClicking = editor1;
+    gDoPreventDefault1 = null;
+    gDoPreventDefault2 = null;
+
+    synthesizeMouseAtCenter(editor1, {button: 1}, frameWindow);
+
+    SimpleTest.executeSoon(function() {
+      todo(gClicked, "click event hasn't been fired for runContentEditableTests2");
+      is(editor1.innerHTML, "editor1:pasted",
+         "failed to paste in contenteditable editor #1 when it hasn't had focus yet");
+      SimpleTest.executeSoon(runContentEditableTests3);
+    });
+  });
+}
+
+function runContentEditableTests3()
+{
+  var editor1 = frameDocument.getElementById("editor1");
+  var editor2 = frameDocument.getElementById("editor2");
+
+  // When editor1 has focus but editor2 is middle clicked, should be pasted
+  // in the editor2.
+  editor1.innerHTML = "editor1:";
+  editor2.innerHTML = "editor2:";
+  editor1.focus();
+
+  SimpleTest.executeSoon(function() {
+    gClicked = false;
+    gClicking = editor2;
+    gDoPreventDefault1 = null;
+    gDoPreventDefault2 = null;
+
+    synthesizeMouseAtCenter(editor2, {button: 1}, frameWindow);
+
+    SimpleTest.executeSoon(function() {
+      todo(gClicked, "click event hasn't been fired for runContentEditableTests3");
+      is(editor1.innerHTML, "editor1:",
+         "pasted in contenteditable editor #1 when editor2 is clicked");
+      is(editor2.innerHTML, "editor2:pasted",
+         "failed to paste in contenteditable editor #2 when editor2 is clicked");
+      SimpleTest.executeSoon(runContentEditableTests4);
+    });
+  });
+}
+
+function runContentEditableTests4()
+{
+  var editor1 = frameDocument.getElementById("editor1");
+
+  // preventDefault() of editor1's click event handler should prevent
+  // middle click pasting in it.
+  editor1.innerHTML = "editor1:";
+  editor1.focus();
+
+  SimpleTest.executeSoon(function() {
+    gClicked = false;
+    gClicking = editor1;
+    gDoPreventDefault1 = editor1;
+    gDoPreventDefault2 = null;
+
+    synthesizeMouseAtCenter(editor1, {button: 1}, frameWindow);
+
+    SimpleTest.executeSoon(function() {
+      todo(gClicked, "click event hasn't been fired for runContentEditableTests4");
+      todo_is(editor1.innerHTML, "editor1:",
+         "pasted in contenteditable editor #1 when it does preventDefault()");
+      SimpleTest.executeSoon(runContentEditableTests5);
+    });
+  });
+}
+
+function runContentEditableTests5()
+{
+  var editor1 = frameDocument.getElementById("editor1");
+  var editor2 = frameDocument.getElementById("editor2");
+
+  // preventDefault() of editor1's click event handler shouldn't prevent
+  // middle click pasting in editor2.
+  editor1.innerHTML = "editor1:";
+  editor2.innerHTML = "editor2:";
+  editor2.focus();
+
+  SimpleTest.executeSoon(function() {
+    gClicked = false;
+    gClicking = editor2;
+    gDoPreventDefault1 = editor1;
+    gDoPreventDefault2 = null;
+
+    synthesizeMouseAtCenter(editor2, {button: 1}, frameWindow);
+
+    SimpleTest.executeSoon(function() {
+      todo(gClicked, "click event hasn't been fired for runContentEditableTests5");
+      is(editor1.innerHTML, "editor1:",
+         "pasted in contenteditable editor #1?");
+      is(editor2.innerHTML, "editor2:pasted",
+         "failed to paste in contenteditable editor #2");
+
+      SimpleTest.executeSoon(initForBodyEditableDocumentTests);
+    });
+  });
+}
+
+function initForBodyEditableDocumentTests()
+{
+  frameDocument.getElementById("input").removeEventListener("click", clickEventHnalder, false);
+  frameDocument.getElementById("editor1").removeEventListener("click", clickEventHnalder, false);
+  frameDocument.getElementById("editor2").removeEventListener("click", clickEventHnalder, false);
+
+  iframe.onload =
+    function (aEvent) { SimpleTest.executeSoon(runBodyEditableDocumentTests1); };
+  iframe.src =
+    "data:text/html,<body contenteditable>body:</body>";
+}
+
+function runBodyEditableDocumentTests1()
+{
+  frameWindow = iframe.contentWindow;
+  frameDocument = iframe.contentDocument;
+
+  var body = frameDocument.body;
+
+  is(body.innerHTML, "body:",
+     "failed to initialize at runBodyEditableDocumentTests1");
+
+  // middle click on html element should cause pasting text in its body.
+  synthesizeMouseAtCenter(frameDocument.documentElement, {button: 1}, frameWindow);
+
+  SimpleTest.executeSoon(function() {
+    is(body.innerHTML,
+       "body:pasted",
+       "failed to paste in editable body element when clicked on html element");
+
+    SimpleTest.executeSoon(runBodyEditableDocumentTests2);
+  });
+}
+
+function runBodyEditableDocumentTests2()
+{
+  frameDocument.body.innerHTML = "body:<span id='span' contenteditable='false'>non-editable</span>";
+
+  var body = frameDocument.body;
+
+  is(body.innerHTML, "body:<span id=\"span\" contenteditable=\"false\">non-editable</span>",
+     "failed to initialize at runBodyEditableDocumentTests2");
+
+  synthesizeMouseAtCenter(frameDocument.getElementById("span"), {button: 1}, frameWindow);
+
+  SimpleTest.executeSoon(function() {
+    is(body.innerHTML,
+       "body:<span id=\"span\" contenteditable=\"false\">non-editable</span>",
+       "pasted when middle clicked in non-editable element");
+
+    SimpleTest.executeSoon(cleanup);
+  });
+}
+
+function cleanup()
+{
+  SpecialPowers.clearUserPref("middlemouse.paste");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
