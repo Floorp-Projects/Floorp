@@ -41,6 +41,9 @@
 #   There is no need to rerun autoconf after adding makefiles.
 #   You only need to run configure.
 
+# Turn on exit on error
+set -o errexit
+
 MAKEFILES=""
 
 # add_makefiles - Shell function to add makefiles to MAKEFILES
@@ -151,3 +154,6 @@ fi
 
 # Services makefiles
 . "${srcdir}/services/makefiles.sh"
+
+# Turn off exit on error, since it breaks the rest of configure
+set +o errexit
