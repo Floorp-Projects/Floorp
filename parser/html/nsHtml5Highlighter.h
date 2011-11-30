@@ -350,16 +350,6 @@ class nsHtml5Highlighter
     bool mSyntaxHighlight;
 
     /**
-     * Whether to wrap long lines.
-     */
-    bool mWrapLongLines;
-
-    /**
-     * The tab size pref.
-     */
-    PRInt32 mTabSize;
-
-    /**
      * The outgoing tree op queue.
      */
     nsTArray<nsHtml5TreeOperation> mOpQueue;
