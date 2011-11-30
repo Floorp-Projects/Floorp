@@ -2829,6 +2829,12 @@ CType::IsCType(JSContext* cx, JSObject* obj)
   return JS_GET_CLASS(cx, obj) == &sCTypeClass;
 }
 
+bool
+CType::IsCTypeProto(JSContext* cx, JSObject* obj)
+{
+  return JS_GET_CLASS(cx, obj) == &sCTypeProtoClass;
+}
+
 TypeCode
 CType::GetTypeCode(JSContext* cx, JSObject* typeObj)
 {
@@ -3034,7 +3040,7 @@ CType::GetProtoFromCtor(JSContext* cx, JSObject* obj, CTypeProtoSlot slot)
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FN_CTORPROTO, &protoslot));
   JSObject* proto = JSVAL_TO_OBJECT(protoslot);
   JS_ASSERT(proto);
-  JS_ASSERT(JS_GET_CLASS(cx, proto) == &sCTypeProtoClass);
+  JS_ASSERT(CType::IsCTypeProto(cx, proto));
 
   // Get the desired prototype.
   jsval result;
@@ -3050,7 +3056,7 @@ CType::GetProtoFromType(JSContext* cx, JSObject* obj, CTypeProtoSlot slot)
   // Get the prototype of the type object.
   JSObject* proto = JS_GetPrototype(cx, obj);
   JS_ASSERT(proto);
-  JS_ASSERT(JS_GET_CLASS(cx, proto) == &sCTypeProtoClass);
+  JS_ASSERT(CType::IsCTypeProto(cx, proto));
 
   // Get the requested ctypes.{Pointer,Array,Struct,Function}Type.prototype.
   jsval result;
@@ -3196,7 +3202,7 @@ CType::HasInstance(JSContext* cx, JSObject* obj, const jsval* v, JSBool* bp)
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_PROTO, &slot));
   JSObject* prototype = JSVAL_TO_OBJECT(slot);
   JS_ASSERT(prototype);
-  JS_ASSERT(JS_GET_CLASS(cx, prototype) == &sCDataProtoClass);
+  JS_ASSERT(CData::IsCDataProto(cx, prototype));
 
   *bp = JS_FALSE;
   if (JSVAL_IS_PRIMITIVE(*v))
@@ -5269,7 +5275,7 @@ CClosure::Create(JSContext* cx,
   // which stores our JSContext for use with the closure.
   JSObject* proto = JS_GetPrototype(cx, typeObj);
   JS_ASSERT(proto);
-  JS_ASSERT(JS_GET_CLASS(cx, proto) == &sCTypeProtoClass);
+  JS_ASSERT(CType::IsCTypeProto(cx, proto));
 
   // Get a JSContext for use with the closure.
   jsval slot;
@@ -5697,6 +5703,12 @@ bool
 CData::IsCData(JSContext* cx, JSObject* obj)
 {
   return JS_GET_CLASS(cx, obj) == &sCDataClass;
+}
+
+bool
+CData::IsCDataProto(JSContext* cx, JSObject* obj)
+{
+  return JS_GET_CLASS(cx, obj) == &sCDataProtoClass;
 }
 
 JSBool
