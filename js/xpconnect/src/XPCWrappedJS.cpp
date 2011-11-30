@@ -316,7 +316,7 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
     nsXPCWrappedJS* wrapper = nsnull;
     nsXPCWrappedJSClass* clazz = nsnull;
     XPCJSRuntime* rt = ccx.GetRuntime();
-    JSBool release_root = JS_FALSE;
+    JSBool release_root = false;
 
     map = rt->GetWrappedJSMap();
     if (!map) {
@@ -389,7 +389,7 @@ nsXPCWrappedJS::GetNewOrUsed(XPCCallContext& ccx,
             if (!root)
                 goto return_wrapper;
 
-            release_root = JS_TRUE;
+            release_root = true;
 
             {   // scoped lock
 #if DEBUG_xpc_leaks

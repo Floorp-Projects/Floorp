@@ -42,7 +42,7 @@
 #include "imgIRequest.h"
 #include "imgIContainer.h"
 
-NS_IMPL_ISUPPORTS3(nsTreeImageListener, imgIDecoderObserver, imgIContainerObserver, nsITreeImageListener)
+NS_IMPL_ISUPPORTS2(nsTreeImageListener, imgIDecoderObserver, imgIContainerObserver)
 
 nsTreeImageListener::nsTreeImageListener(nsTreeBodyFrame* aTreeFrame)
   : mTreeFrame(aTreeFrame),
@@ -92,7 +92,7 @@ NS_IMETHODIMP nsTreeImageListener::FrameChanged(imgIContainer *aContainer,
 }
 
 
-NS_IMETHODIMP
+void
 nsTreeImageListener::AddCell(PRInt32 aIndex, nsITreeColumn* aCol)
 {
   if (!mInvalidationArea) {
@@ -114,8 +114,6 @@ nsTreeImageListener::AddCell(PRInt32 aIndex, nsITreeColumn* aCol)
       mInvalidationArea->AddRow(aIndex);
     }
   }
-
-  return NS_OK;
 }
 
 

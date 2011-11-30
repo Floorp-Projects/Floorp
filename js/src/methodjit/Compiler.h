@@ -613,7 +613,7 @@ private:
     void tryConvertInteger(FrameEntry *fe, Uses uses);
 
     /* Opcode handlers. */
-    bool jumpAndTrace(Jump j, jsbytecode *target, Jump *slow = NULL, bool *trampoline = NULL);
+    bool jumpAndRun(Jump j, jsbytecode *target, Jump *slow = NULL, bool *trampoline = NULL);
     bool startLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget);
     bool finishLoop(jsbytecode *head);
     void jsop_bindname(JSAtom *atom, bool usePropCache);

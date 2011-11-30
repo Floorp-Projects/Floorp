@@ -299,6 +299,7 @@ SHELL_WRAPPER1(cameraCallbackBridge, jbyteArray)
 SHELL_WRAPPER1(notifyUriVisited, jstring)
 SHELL_WRAPPER3(notifyBatteryChange, jdouble, jboolean, jdouble);
 SHELL_WRAPPER1_WITH_RETURN(canCreateFixupURI, bool, jstring);
+SHELL_WRAPPER3(notifySmsReceived, jstring, jstring, jlong);
 
 static void * xul_handle = NULL;
 static time_t apk_mtime = 0;
@@ -708,6 +709,7 @@ loadLibs(const char *apkName)
   GETFUNC(notifyUriVisited);
   GETFUNC(notifyBatteryChange);
   GETFUNC(canCreateFixupURI);
+  GETFUNC(notifySmsReceived);
 #undef GETFUNC
   sStartupTimeline = (uint64_t *)__wrap_dlsym(xul_handle, "_ZN7mozilla15StartupTimeline16sStartupTimelineE");
   gettimeofday(&t1, 0);

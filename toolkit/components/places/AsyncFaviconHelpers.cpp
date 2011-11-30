@@ -872,6 +872,10 @@ AsyncGetFaviconURLForPage::Run()
   nsresult rv = FetchIconURL(mDB, mPageSpec, iconSpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // No icon was found.
+  if (iconSpec.IsEmpty())
+    return NS_OK;
+
   // Now notify our callback of the icon spec we retrieved.
   IconData iconData;
   iconData.spec.Assign(iconSpec);

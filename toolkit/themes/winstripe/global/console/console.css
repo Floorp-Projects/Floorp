@@ -118,7 +118,7 @@
 
 .console-row[type="error"],
 .console-row[type="exception"] {
-  list-style-image: url("chrome://global/skin/console/bullet-error.png");
+  list-style-image: url("chrome://global/skin/icons/error-16.png");
 }
 
 .console-row[type="error"] .console-row-msg,
@@ -127,11 +127,11 @@
 }
 
 .console-row[type="warning"] {
-  list-style-image: url("chrome://global/skin/console/bullet-warning.png");
+  list-style-image: url("chrome://global/skin/icons/warning-16.png");
 }
 
 .console-row[type="message"] {
-  list-style-image: url("chrome://global/skin/console/bullet-question.png");
+  list-style-image: url("chrome://global/skin/icons/question-16.png");
 }
 
 /* ::::: toolbars ::::: */

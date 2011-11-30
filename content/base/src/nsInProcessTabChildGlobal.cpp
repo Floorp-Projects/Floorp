@@ -311,7 +311,7 @@ nsInProcessTabChildGlobal::InitTabChildGlobal()
 
   JS_SetNativeStackQuota(cx, 128 * sizeof(size_t) * 1024);
 
-  JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_JIT | JSOPTION_PRIVATE_IS_NSISUPPORTS);
+  JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_PRIVATE_IS_NSISUPPORTS);
   JS_SetVersion(cx, JSVERSION_LATEST);
   JS_SetErrorReporter(cx, ContentScriptErrorReporter);
 

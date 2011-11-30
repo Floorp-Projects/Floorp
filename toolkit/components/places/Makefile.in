@@ -62,7 +62,6 @@ XPIDLSRCS += \
   mozIPlacesAutoComplete.idl \
   nsIAnnotationService.idl \
   nsIBrowserHistory.idl \
-  nsIDynamicContainer.idl \
   nsIFaviconService.idl \
   nsILivemarkService.idl \
   nsINavBookmarksService.idl \

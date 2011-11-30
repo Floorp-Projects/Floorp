@@ -358,7 +358,6 @@ tests.push({
   _bookmarkId: null,
   _separatorId: null,
   _folderId: null,
-  _dynamicContainerId: null,
   _placeId: null,
 
   setup: function() {
@@ -372,8 +371,6 @@ tests.push({
     this._separatorId = addBookmark(null, bs.TYPE_SEPARATOR, this._tagId);
     // Insert a folder in the tag
     this._folderId = addBookmark(null, bs.TYPE_FOLDER, this._tagId);
-    // Insert a dynamic container in the tag
-    this._dynamicContainerId = addBookmark(null, bs.TYPE_DYNAMIC_CONTAINER, this._tagId);
   },
 
   check: function() {
@@ -390,11 +387,6 @@ tests.push({
     stmt.reset();
     // Check that folder is no more there
     stmt.params["type"] = bs.TYPE_FOLDER;
-    stmt.params["parent"] = this._tagId;
-    do_check_false(stmt.executeStep());
-    stmt.reset();
-    // Check that dynamic container is no more there
-    stmt.params["type"] = bs.TYPE_DYNAMIC_CONTAINER;
     stmt.params["parent"] = this._tagId;
     do_check_false(stmt.executeStep());
     stmt.finalize();
@@ -546,7 +538,6 @@ tests.push({
 
   _separatorId: null,
   _folderId: null,
-  _dynamicContainerId: null,
   _placeId: null,
 
   setup: function() {
@@ -556,8 +547,6 @@ tests.push({
     this._separatorId = addBookmark(this._placeId, bs.TYPE_SEPARATOR);
     // Add a folder with a fk
     this._folderId = addBookmark(this._placeId, bs.TYPE_FOLDER);
-    // Add a dynamic container with a fk
-    this._dynamicContainerId = addBookmark(this._placeId, bs.TYPE_DYNAMIC_CONTAINER, null, null, "test");
   },
 
   check: function() {
@@ -568,10 +557,6 @@ tests.push({
     do_check_true(stmt.executeStep());
     stmt.reset();
     stmt.params["item_id"] = this._folderId;
-    stmt.params["type"] = bs.TYPE_BOOKMARK;
-    do_check_true(stmt.executeStep());
-    stmt.reset();
-    stmt.params["item_id"] = this._dynamicContainerId;
     stmt.params["type"] = bs.TYPE_BOOKMARK;
     do_check_true(stmt.executeStep());
     stmt.finalize();
@@ -615,46 +600,13 @@ tests.push({
 //------------------------------------------------------------------------------
 
 tests.push({
-  name: "D.8",
-  desc: "Fix wrong item types | dynamic containers",
-
-  _validDynamicContainerId: null,
-  _invalidDynamicContainerId: null,
-
-  setup: function() {
-    // Add a valid dynamic container with a folder type
-    this._validDynamicContainerId = addBookmark(null, bs.TYPE_DYNAMIC_CONTAINER, null, null, "test");
-    // Add an invalid dynamic container without a folder type
-    this._invalidDynamicContainerId = addBookmark(null, bs.TYPE_DYNAMIC_CONTAINER, null, null, null);
-  },
-
-  check: function() {
-    // Check valid dynamic container is still there
-    let stmt = mDBConn.createStatement("SELECT id FROM moz_bookmarks WHERE id = :item_id AND type = :type");
-    stmt.params["item_id"] = this._validDynamicContainerId;
-    stmt.params["type"] = bs.TYPE_DYNAMIC_CONTAINER;
-    do_check_true(stmt.executeStep());
-    stmt.reset();
-    // Check invalid dynamic container has been converted to a normal folder
-    stmt.params["item_id"] = this._invalidDynamicContainerId;
-    stmt.params["type"] = bs.TYPE_FOLDER;
-    do_check_true(stmt.executeStep());
-    stmt.finalize();
-  }
-});
-
-//------------------------------------------------------------------------------
-
-tests.push({
   name: "D.9",
   desc: "Fix wrong parents",
 
   _bookmarkId: null,
   _separatorId: null,
-  _dynamicContainerId: null,
   _bookmarkId1: null,
   _bookmarkId2: null,
-  _bookmarkId3: null,
   _placeId: null,
 
   setup: function() {
@@ -664,12 +616,9 @@ tests.push({
     this._bookmarkId = addBookmark(this._placeId, bs.TYPE_BOOKMARK);
     // Insert a separator
     this._separatorId = addBookmark(null, bs.TYPE_SEPARATOR);
-    // Insert a dynamic container
-    this.dynamicContainerId = addBookmark(null, bs.TYPE_DYNAMIC_CONTAINER, null, null, "test");
     // Create 3 children of these items
     this._bookmarkId1 = addBookmark(this._placeId, bs.TYPE_BOOKMARK, this._bookmarkId);
     this._bookmarkId2 = addBookmark(this._placeId, bs.TYPE_BOOKMARK, this._separatorId);
-    this._bookmarkId3 = addBookmark(this._placeId, bs.TYPE_BOOKMARK, this._dynamicContainerId);
   },
 
   check: function() {
@@ -680,10 +629,6 @@ tests.push({
     do_check_true(stmt.executeStep());
     stmt.reset();
     stmt.params["item_id"] = this._bookmarkId2;
-    stmt.params["parent"] = bs.unfiledBookmarksFolder;
-    do_check_true(stmt.executeStep());
-    stmt.reset();
-    stmt.params["item_id"] = this._bookmarkId3;
     stmt.params["parent"] = bs.unfiledBookmarksFolder;
     do_check_true(stmt.executeStep());
     stmt.finalize();

@@ -108,15 +108,18 @@ abstract public class GeckoApp
     public static File sGREDir = null;
     public static Menu sMenu;
     public Handler mMainHandler;
+
     private IntentFilter mConnectivityFilter;
+    private IntentFilter mBatteryFilter;
+
     private BroadcastReceiver mConnectivityReceiver;
+    private BroadcastReceiver mSmsReceiver;
+    private BroadcastReceiver mBatteryReceiver;
 
     public static BrowserToolbar mBrowserToolbar;
     public static DoorHangerPopup mDoorHangerPopup;
     public Favicons mFavicons;
-    private IntentFilter mBatteryFilter;
 
-    private BroadcastReceiver mBatteryReceiver;
     private Geocoder mGeocoder;
     private Address  mLastGeoAddress;
     private static LayerController mLayerController;
@@ -1369,6 +1372,11 @@ abstract public class GeckoApp
         mBatteryReceiver = new GeckoBatteryManager();
         registerReceiver(mBatteryReceiver, batteryFilter);
                 
+        IntentFilter smsFilter = new IntentFilter();
+        smsFilter.addAction("android.provider.Telephony.SMS_RECEIVED");
+        mSmsReceiver = new GeckoSmsManager();
+        registerReceiver(mSmsReceiver, smsFilter);
+
         final GeckoApp self = this;
  
         mMainHandler.postDelayed(new Runnable() {
@@ -1480,6 +1488,7 @@ abstract public class GeckoApp
         // onPause will be followed by either onResume or onStop.
         super.onPause();
 
+        unregisterReceiver(mSmsReceiver);
         unregisterReceiver(mConnectivityReceiver);
     }
 

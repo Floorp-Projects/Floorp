@@ -85,7 +85,7 @@ public:
   // Listener Helper Methods
   void OnEndPrinting();
   void OnStartPrinting();
-  void DoOnProgressChange(PRInt32      aProgess,
+  void DoOnProgressChange(PRInt32      aProgress,
                           PRInt32      aMaxProgress,
                           bool         aDoStartStop,
                           PRInt32      aFlag);

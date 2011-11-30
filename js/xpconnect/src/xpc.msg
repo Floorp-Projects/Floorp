@@ -222,3 +222,5 @@ XPC_MSG_DEF(NS_ERROR_STORAGE_CONSTRAINT             , "SQLite database operation
 /* plugin related codes (from nsPluginError.h) */
 XPC_MSG_DEF(NS_ERROR_PLUGIN_TIME_RANGE_NOT_SUPPORTED, "Clearing site data by time range not supported by plugin")
 
+/* character converter related codes (from nsIUnicodeDecoder.h) */
+XPC_MSG_DEF(NS_ERROR_ILLEGAL_INPUT                  , "The input characters have illegal sequences")

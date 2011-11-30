@@ -53,7 +53,7 @@ interface nsIDOMBlob;
 #include "jsapi.h"
 %}
 
-[scriptable, builtinclass, uuid(dea238a1-240f-45f4-9f07-7769bc69eb76)]
+[scriptable, builtinclass, uuid(e2b59e48-3655-4429-a94c-b4332c346ba2)]
 interface nsIXMLHttpRequestEventTarget : nsIDOMEventTarget {
   // event handler attributes
   attribute nsIDOMEventListener onabort;
@@ -64,7 +64,7 @@ interface nsIXMLHttpRequestEventTarget : nsIDOMEventTarget {
   attribute nsIDOMEventListener onloadend;
 };
 
-[scriptable, builtinclass, uuid(09ff3682-7759-4441-a765-f70e1a1fabcf)]
+[scriptable, builtinclass, uuid(db9357fc-edf7-42b2-aab2-c24ab19ece20)]
 interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
   // for future use
 };

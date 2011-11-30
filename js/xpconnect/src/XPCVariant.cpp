@@ -78,7 +78,7 @@ XPCVariant::XPCVariant(XPCCallContext& ccx, jsval aJSVal)
                                                          &proto);
         mReturnRawObject = !wn && !proto;
     } else
-        mReturnRawObject = JS_FALSE;
+        mReturnRawObject = false;
 }
 
 XPCTraceableVariant::~XPCTraceableVariant()
@@ -220,7 +220,7 @@ XPCArrayHomogenizer::GetTypeForArray(XPCCallContext& ccx, JSObject* array,
     for (jsuint i = 0; i < length; i++) {
         jsval val;
         if (!JS_GetElement(ccx, array, i, &val))
-            return JS_FALSE;
+            return false;
 
         if (JSVAL_IS_INT(val))
             type = tInt;
@@ -294,14 +294,14 @@ XPCArrayHomogenizer::GetTypeForArray(XPCCallContext& ccx, JSObject* array,
             // FALL THROUGH
         default:
             NS_ERROR("bad state");
-            return JS_FALSE;
+            return false;
     }
-    return JS_TRUE;
+    return true;
 }
 
 JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 {
-    JS_CHECK_RECURSION(ccx.GetJSContext(), return JS_FALSE);
+    JS_CHECK_RECURSION(ccx.GetJSContext(), return false);
 
     jsval val = GetJSVal();
 
@@ -322,7 +322,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
         // which nsVariant assumes for its PRUnichar* stuff.
         JSString* str = JSVAL_TO_STRING(val);
         if (!JS_MakeStringImmutable(ccx, str))
-            return JS_FALSE;
+            return false;
 
         // Don't use nsVariant::SetFromWStringWithSize, because that will copy
         // the data.  Just handle this ourselves.  Note that it's ok to not
@@ -335,7 +335,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
         size_t length;
         const jschar *chars = JS_GetStringCharsZAndLength(ccx, str, &length);
         if (!chars)
-            return JS_FALSE;
+            return false;
 
         mData.u.wstr.mWStringValue = const_cast<jschar *>(chars);
         // Use C-style cast, because reinterpret cast from size_t to
@@ -343,7 +343,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
         mData.u.wstr.mWStringLength = (PRUint32)length;
         mData.mType = nsIDataType::VTYPE_WSTRING_SIZE_IS;
 
-        return JS_TRUE;
+        return true;
     }
 
     // leaving only JSObject...
@@ -365,18 +365,18 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
         if (!len) {
             // Zero length array
             nsVariant::SetToEmptyArray(&mData);
-            return JS_TRUE;
+            return true;
         }
 
         nsXPTType type;
         nsID id;
 
         if (!XPCArrayHomogenizer::GetTypeForArray(ccx, jsobj, len, &type, &id))
-            return JS_FALSE;
+            return false;
 
         if (!XPCConvert::JSArray2Native(ccx, &mData.u.array.mArrayValue,
                                         val, len, type, &id, nsnull))
-            return JS_FALSE;
+            return false;
 
         mData.mType = nsIDataType::VTYPE_ARRAY;
         if (type.IsInterfacePointer())
@@ -384,7 +384,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
         mData.u.array.mArrayCount = len;
         mData.u.array.mArrayType = type.TagPart();
 
-        return JS_TRUE;
+        return true;
     }
 
     // XXX This could be smarter and pick some more interesting iface.
@@ -416,7 +416,7 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
     // Get the type early because we might need to spoof it below.
     PRUint16 type;
     if (NS_FAILED(variant->GetDataType(&type)))
-        return JS_FALSE;
+        return false;
 
     jsval realVal;
     nsresult rv = variant->GetAsJSVal(&realVal);
@@ -428,9 +428,9 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
          type == nsIDataType::VTYPE_ID)) {
         JSContext *cx = lccx.GetJSContext();
         if (!JS_WrapValue(cx, &realVal))
-            return JS_FALSE;
+            return false;
         *pJSVal = realVal;
-        return JS_TRUE;
+        return true;
     }
 
     nsCOMPtr<XPCVariant> xpcvariant = do_QueryInterface(variant);
@@ -441,9 +441,9 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
 
         JSContext *cx = lccx.GetJSContext();
         if (!JS_WrapValue(cx, &realVal))
-            return JS_FALSE;
+            return false;
         *pJSVal = realVal;
-        return JS_TRUE;
+        return true;
     }
 
     // else, it's an object and we really need to double wrap it if we've
@@ -483,80 +483,80 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
         {
             // Easy. Handle inline.
             if (NS_FAILED(variant->GetAsDouble(&xpctvar.val.d)))
-                return JS_FALSE;
+                return false;
             return JS_NewNumberValue(cx, xpctvar.val.d, pJSVal);
         }
         case nsIDataType::VTYPE_BOOL:
         {
             // Easy. Handle inline.
             if (NS_FAILED(variant->GetAsBool(&xpctvar.val.b)))
-                return JS_FALSE;
+                return false;
             *pJSVal = BOOLEAN_TO_JSVAL(xpctvar.val.b);
-            return JS_TRUE;
+            return true;
         }
         case nsIDataType::VTYPE_CHAR:
             if (NS_FAILED(variant->GetAsChar(&xpctvar.val.c)))
-                return JS_FALSE;
+                return false;
             xpctvar.type = (uint8)TD_CHAR;
             break;
         case nsIDataType::VTYPE_WCHAR:
             if (NS_FAILED(variant->GetAsWChar(&xpctvar.val.wc)))
-                return JS_FALSE;
+                return false;
             xpctvar.type = (uint8)TD_WCHAR;
             break;
         case nsIDataType::VTYPE_ID:
             if (NS_FAILED(variant->GetAsID(&iid)))
-                return JS_FALSE;
+                return false;
             xpctvar.type = (uint8)(TD_PNSIID | XPT_TDP_POINTER);
             xpctvar.val.p = &iid;
             break;
         case nsIDataType::VTYPE_ASTRING:
             if (NS_FAILED(variant->GetAsAString(astring)))
-                return JS_FALSE;
+                return false;
             xpctvar.type = (uint8)(TD_ASTRING | XPT_TDP_POINTER);
             xpctvar.val.p = &astring;
             break;
         case nsIDataType::VTYPE_DOMSTRING:
             if (NS_FAILED(variant->GetAsAString(astring)))
-                return JS_FALSE;
+                return false;
             xpctvar.type = (uint8)(TD_DOMSTRING | XPT_TDP_POINTER);
             xpctvar.val.p = &astring;
             break;
         case nsIDataType::VTYPE_CSTRING:
             if (NS_FAILED(variant->GetAsACString(cString)))
-                return JS_FALSE;
+                return false;
             xpctvar.type = (uint8)(TD_CSTRING | XPT_TDP_POINTER);
             xpctvar.val.p = &cString;
             break;
         case nsIDataType::VTYPE_UTF8STRING:
             if (NS_FAILED(variant->GetAsAUTF8String(utf8String)))
-                return JS_FALSE;
+                return false;
             xpctvar.type = (uint8)(TD_UTF8STRING | XPT_TDP_POINTER);
             xpctvar.val.p = &utf8String;
             break;
         case nsIDataType::VTYPE_CHAR_STR:
             if (NS_FAILED(variant->GetAsString((char**)&xpctvar.val.p)))
-                return JS_FALSE;
+                return false;
             xpctvar.type = (uint8)(TD_PSTRING | XPT_TDP_POINTER);
             xpctvar.SetValNeedsCleanup();
             break;
         case nsIDataType::VTYPE_STRING_SIZE_IS:
             if (NS_FAILED(variant->GetAsStringWithSize(&size,
                                                        (char**)&xpctvar.val.p)))
-                return JS_FALSE;
+                return false;
             xpctvar.type = (uint8)(TD_PSTRING_SIZE_IS | XPT_TDP_POINTER);
             xpctvar.SetValNeedsCleanup();
             break;
         case nsIDataType::VTYPE_WCHAR_STR:
             if (NS_FAILED(variant->GetAsWString((PRUnichar**)&xpctvar.val.p)))
-                return JS_FALSE;
+                return false;
             xpctvar.type = (uint8)(TD_PWSTRING | XPT_TDP_POINTER);
             xpctvar.SetValNeedsCleanup();
             break;
         case nsIDataType::VTYPE_WSTRING_SIZE_IS:
             if (NS_FAILED(variant->GetAsWStringWithSize(&size,
                                                         (PRUnichar**)&xpctvar.val.p)))
-                return JS_FALSE;
+                return false;
             xpctvar.type = (uint8)(TD_PWSTRING_SIZE_IS | XPT_TDP_POINTER);
             xpctvar.SetValNeedsCleanup();
             break;
@@ -565,7 +565,7 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
         {
             nsID* piid;
             if (NS_FAILED(variant->GetAsInterface(&piid, &xpctvar.val.p)))
-                return JS_FALSE;
+                return false;
 
             iid = *piid;
             nsMemory::Free((char*)piid);
@@ -586,11 +586,11 @@ XPCVariant::VariantDataToJS(XPCLazyCallContext& lccx,
                                      &du.u.array.mArrayCount,
                                      &du.u.array.mArrayValue);
             if (NS_FAILED(rv))
-                return JS_FALSE;
+                return false;
 
             // must exit via VARIANT_DONE from here on...
             du.mType = nsIDataType::VTYPE_ARRAY;
-            success = JS_FALSE;
+            success = false;
 
             nsXPTType conversionType;
             PRUint16 elementType = du.u.array.mArrayType;
@@ -659,19 +659,19 @@ VARIANT_DONE:
         {
             JSObject* array = JS_NewArrayObject(cx, 0, nsnull);
             if (!array)
-                return JS_FALSE;
+                return false;
             *pJSVal = OBJECT_TO_JSVAL(array);
-            return JS_TRUE;
+            return true;
         }
         case nsIDataType::VTYPE_VOID:
             *pJSVal = JSVAL_VOID;
-            return JS_TRUE;
+            return true;
         case nsIDataType::VTYPE_EMPTY:
             *pJSVal = JSVAL_NULL;
-            return JS_TRUE;
+            return true;
         default:
             NS_ERROR("bad type in variant!");
-            return JS_FALSE;
+            return false;
     }
 
     // If we are here then we need to convert the data in the xpctvar.

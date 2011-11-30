@@ -47,6 +47,7 @@
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "nsGUIEvent.h"
+#include "nsIWidget.h"
 
 // If software keyboard is needed in password field and uses GTK2 IM module
 // for inputting characters, we need to enable IME in password field too.
@@ -58,6 +59,10 @@ class nsWindow;
 
 class nsGtkIMModule
 {
+protected:
+    typedef mozilla::widget::InputContext InputContext;
+    typedef mozilla::widget::InputContextAction InputContextAction;
+
 public:
     nsrefcnt AddRef()
     {
@@ -112,8 +117,10 @@ public:
 
     // IME related nsIWidget methods.
     nsresult ResetInputState(nsWindow* aCaller);
-    nsresult SetInputMode(nsWindow* aCaller, const IMEContext* aContext);
-    nsresult GetInputMode(IMEContext* aContext);
+    void SetInputContext(nsWindow* aCaller,
+                         const InputContext* aContext,
+                         const InputContextAction* aAction);
+    InputContext GetInputContext();
     nsresult CancelIMEComposition(nsWindow* aCaller);
 
     // If a software keyboard has been opened, this returns TRUE.
@@ -148,9 +155,9 @@ protected:
     // always "closed", so it closes IME forcedly.
     GtkIMContext       *mDummyContext;
 
-    // IME enabled state and other things defined in IMEContext.
+    // IME enabled state and other things defined in InputContext.
     // Use following helper methods if you don't need the detail of the status.
-    IMEContext mIMEContext;
+    InputContext mInputContext;
 
     // mCompositionStart is the start offset of the composition string in the
     // current content.  When <textarea> or <input> have focus, it means offset

@@ -46,7 +46,7 @@ namespace {
 // <intrin.h> conflicts with <windows.h> on MSVC 2005, and some files want to
 // include both SSE.h and <windows.h>.
 
-#if defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)) && (defined(__i386__) || defined(__x86_64__))
+#ifdef HAVE_CPUID_H
 
 // cpuid.h is available on gcc 4.3 and higher on i386 and x86_64
 #include <cpuid.h>

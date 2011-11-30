@@ -1,0 +1,24 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head><script type="text/javascript">
+<![CDATA[
+
+  function boom() {
+    var tr = document.getElementById('tr');
+    th = document.createElementNS("http://www.w3.org/1999/xhtml", 'th');
+    th.setAttribute('rowspan', 9);
+    tr.appendChild(th);
+    document.documentElement.removeAttribute("class");
+  }
+
+
+  function ol(e) {
+    window.removeEventListener("load", ol, false);
+    setTimeout(boom, 400);
+  }
+  
+  window.addEventListener("load", ol, false);
+
+]]></script>
+</head>
+<body><table style="border-collapse: collapse;"><tbody><tr id="tr"></tr></tbody></table></body>
+</html>

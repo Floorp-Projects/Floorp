@@ -486,7 +486,7 @@ struct JSObject : js::gc::Cell {
 
     jsuword &initializedLength() { return *newType.unsafeGetUnioned(); }
 
-    JS_FRIEND_API(size_t) sizeOfSlotsArray(JSUsableSizeFun usf);
+    JS_FRIEND_API(size_t) sizeOfSlotsArray(JSMallocSizeOfFun mallocSizeOf);
 
     js::HeapPtrObject parent;               /* object's parent */
     void              *privateData;         /* private data */

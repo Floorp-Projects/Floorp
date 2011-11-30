@@ -115,7 +115,7 @@ public:
                                  const nsCString& aClassStr) = 0;
   virtual nsresult CompileMember(nsIScriptContext* aContext,
                                  const nsCString& aClassStr,
-                                 void* aClassObject)=0;
+                                 JSObject* aClassObject) = 0;
 
   virtual void Trace(TraceCallback aCallback, void *aClosure) const = 0;
 

@@ -39,9 +39,6 @@ BEGIN_TEST(testTrap_gc)
     CHECK(JSVAL_IS_OBJECT(v2));
     CHECK_EQUAL(emptyTrapCallCount, 0);
 
-    // Disable JIT for debugging
-    JS_SetOptions(cx, JS_GetOptions(cx) & ~JSOPTION_JIT);
-
     // Enable debug mode
     CHECK(JS_SetDebugMode(cx, JS_TRUE));
 

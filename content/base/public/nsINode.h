@@ -288,8 +288,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x20d16be2, 0x3c58, 0x4099, \
-  { 0xbf, 0xa6, 0xd0, 0xe7, 0x6b, 0xb1, 0x3d, 0xc5 } }
+{ 0xd026d280, 0x5b25, 0x41c0, \
+  { 0x92, 0xcf, 0x6, 0xf6, 0xf, 0xb, 0x9a, 0xfe } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -728,6 +728,7 @@ public:
    */
   NS_DECL_NSIDOMEVENTTARGET
   using nsIDOMEventTarget::AddEventListener;
+  using nsIDOMEventTarget::AddSystemEventListener;
 
   /**
    * Adds a mutation observer to be notified when this node, or any of its

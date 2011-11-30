@@ -419,7 +419,7 @@ pref("browser.ui.zoom.animationDuration", 200); // ms duration of double-tap zoo
 pref("browser.ui.zoom.reflow", false); // Change text wrapping on double-tap
 pref("browser.ui.zoom.reflow.fontSize", 720);
 
-pref("font.size.inflation.minTwips", 160);
+pref("font.size.inflation.minTwips", 120);
 
 // pinch gesture
 pref("browser.ui.pinch.maxGrowth", 150);     // max pinch distance growth

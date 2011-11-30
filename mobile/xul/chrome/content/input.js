@@ -175,7 +175,7 @@ MouseModule.prototype = {
     }
   },
 
-  onBeforePaint: function onBeforePaint(aTimeStamp) {
+  sample: function sample(aTimeStamp) {
     this._waitingForPaint = false;
   },
 
@@ -889,7 +889,7 @@ KineticController.prototype = {
     }
 
     let callback = {
-      onBeforePaint: function kineticHandleEvent(timeStamp) {
+      sample: function kineticHandleEvent(timeStamp) {
         // Someone called end() on us between timer intervals
         // or we are paused.
         if (!self.isActive() || self._paused)

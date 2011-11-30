@@ -41,7 +41,7 @@ interface nsIDOMEventListener;
 interface nsIDOMBlob;
 interface nsIDOMFileError;
 
-[scriptable, builtinclass, uuid(fc316500-87c4-411e-ab75-dd62468f4174)]
+[scriptable, builtinclass, uuid(d158de26-904e-4731-b42c-8b3a4d172703)]
 interface nsIDOMFileReader : nsIDOMEventTarget
 {
   [implicit_jscontext]

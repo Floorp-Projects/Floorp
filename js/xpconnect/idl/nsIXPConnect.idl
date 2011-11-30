@@ -392,7 +392,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(29b63029-0868-4344-b0ca-d93256ee7c78)]
+[uuid(07661008-5505-4784-a612-89f7dc2144da)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -735,7 +735,7 @@ interface nsIXPConnect : nsISupports
     /**
      * Trigger a JS garbage collection.
      */
-    void GarbageCollect();
+    void GarbageCollect(in boolean shrinkingGC);
 
     /**
      * Define quick stubs on the given object, @a proto.
