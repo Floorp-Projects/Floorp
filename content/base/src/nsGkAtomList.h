@@ -1672,8 +1672,6 @@ GK_ATOM(veryverythinmathspace_, "veryverythinmathspace")
 GK_ATOM(voffset_, "voffset")
 GK_ATOM(xref_, "xref")
 GK_ATOM(math, "math") // the only one without an underscore
-
-#ifndef DISABLE_XFORMS_HOOKS
 GK_ATOM(avg, "avg")
 GK_ATOM(booleanFromString, "boolean-from-string")
 GK_ATOM(countNonEmpty, "count-non-empty")
@@ -1684,7 +1682,6 @@ GK_ATOM(months, "months")
 GK_ATOM(now, "now")
 GK_ATOM(seconds, "seconds")
 GK_ATOM(secondsFromDateTime, "seconds-from-dateTime")
-#endif
 
 // Simple gestures support
 GK_ATOM(onMozSwipeGesture, "onMozSwipeGesture")
