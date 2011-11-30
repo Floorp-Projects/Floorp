@@ -98,6 +98,9 @@
       // layout table having datatable="0" attribute and containing data table structure (tfoot element)
       testAttrs("table22", attr, true);
 
+      // css table with non-table tag
+      testAttrs("table23", attr, true);
+
       SimpleTest.finish();
     }
 
@@ -116,6 +119,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=690222"
      title="Data table elements used to determine layout-guess attribute shouldn't be picked from nested tables">
     Mozilla Bug 690222
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=693948"
+     title="Expose layout-guess: true object attribute on CSS table accessible">
+    Mozilla Bug 693948
   </a>
 
   <p id="display"></p>
@@ -431,5 +439,14 @@
       </tr>
     </tfoot>
   </table>
+
+  <!-- css table with noon-table tag -->
+  <div id="table23" style="display:table;">
+    <div style="display:table-row;">
+      <div style="display:table-cell;">Row 1, column 1</div>
+      <div style="display:table-cell;">Row 1, column 2</div>
+      <div style="display:table-cell;">Row 1, column 3</div>
+    </div>
+  </div>
 </body>
 </html>
