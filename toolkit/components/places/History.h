@@ -112,10 +112,10 @@ public:
   bool FetchPageInfo(VisitData& _place);
 
   /**
-   * Get the number of bytes of memory this History object is using (not
-   * counting sizeof(*this)).
+   * Get the number of bytes of memory this History object is using,
+   * including sizeof(*this))
    */
-  PRInt64 SizeOf();
+  PRInt64 SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
 
   /**
    * Obtains a pointer to this service.

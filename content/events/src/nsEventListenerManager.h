@@ -63,7 +63,8 @@ class nsCxPusher;
 class nsIEventListenerInfo;
 class nsIDocument;
 
-typedef struct {
+struct nsListenerStruct
+{
   nsRefPtr<nsIDOMEventListener> mListener;
   PRUint32                      mEventType;
   nsCOMPtr<nsIAtom>             mTypeAtom;
@@ -74,7 +75,14 @@ typedef struct {
     return (mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) ?
       static_cast<nsIJSEventListener *>(mListener.get()) : nsnull;
   }
-} nsListenerStruct;
+
+  ~nsListenerStruct()
+  {
+    if ((mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) && mListener) {
+      static_cast<nsIJSEventListener*>(mListener.get())->Disconnect();
+    }
+  }
+};
 
 /*
  * Event listener manager
@@ -317,5 +325,27 @@ protected:
   friend class nsEventTargetChainItem;
   static PRUint32                           sCreatedCount;
 };
+
+/**
+ * NS_AddSystemEventListener() is a helper function for implementing
+ * nsIDOMEventTarget::AddSystemEventListener().
+ */
+inline nsresult
+NS_AddSystemEventListener(nsIDOMEventTarget* aTarget,
+                          const nsAString& aType,
+                          nsIDOMEventListener *aListener,
+                          bool aUseCapture,
+                          bool aWantsUntrusted)
+{
+  nsEventListenerManager* listenerManager = aTarget->GetListenerManager(true);
+  NS_ENSURE_STATE(listenerManager);
+  PRUint32 flags = NS_EVENT_FLAG_SYSTEM_EVENT;
+  flags |= aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+  if (aWantsUntrusted) {
+    flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
+  }
+  listenerManager->AddEventListenerByType(aListener, aType, flags);
+  return NS_OK;
+}
 
 #endif // nsEventListenerManager_h__

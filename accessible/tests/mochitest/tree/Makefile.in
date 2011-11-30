@@ -52,6 +52,7 @@ _TEST_FILES =\
 		test_aria_imgmap.html \
 		test_aria_presentation.html \
 		test_button.xul \
+		test_canvas.html \
 		test_combobox.xul \
 		test_cssoverflow.html \
 		test_dochierarchy.html \

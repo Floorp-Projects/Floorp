@@ -57,6 +57,13 @@
  */
 #include "prtypes.h"
 
+/*
+ * This is for functions that are like malloc_usable_size but also take a
+ * computed size as a fallback.  Such functions are used for measuring the size
+ * of data structures.
+ */
+typedef size_t(*nsMallocSizeOfFun)(const void *p, size_t computedSize);
+
 /* Core XPCOM declarations. */
 
 /**

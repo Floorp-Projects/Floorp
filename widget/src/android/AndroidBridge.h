@@ -318,6 +318,9 @@ public:
     void DisableBatteryNotifications();
     void GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo);
 
+    PRUint16 GetNumberOfMessagesForText(const nsAString& aText);
+    void SendMessage(const nsAString& aNumber, const nsAString& aText);
+
 protected:
     static AndroidBridge *sBridge;
 
@@ -401,6 +404,9 @@ protected:
     jmethodID jCheckUriVisited;
     jmethodID jMarkUriVisited;
     jmethodID jEmitGeckoAccessibilityEvent;
+
+    jmethodID jNumberOfMessages;
+    jmethodID jSendMessage;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;

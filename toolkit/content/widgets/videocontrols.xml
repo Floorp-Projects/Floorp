@@ -286,6 +286,9 @@
                         <box class="volumeBackgroundBar"/>
                         <scale class="volumeControl" orient="vertical" dir="reverse" movetoclick="true"/>
                     </stack>
+                    <button class="fullscreenButton"
+                            enterfullscreenlabel="&fullscreenButton.enterfullscreenlabel;"
+                            exitfullscreenlabel="&fullscreenButton.exitfullscreenlabel;"/>
                 </hbox>
             </vbox>
         </stack>
@@ -320,6 +323,7 @@
                 statusOverlay  : null,
                 controlsSpacer : null,
                 stats          : {},
+                fullscreenButton : null,
 
                 randomID : 0,
                 videoEvents : ["play", "pause", "ended", "volumechange", "loadeddata",
@@ -374,6 +378,8 @@
                     this.setPlayButtonState(this.video.paused);
                     this.setMuteButtonState(this.video.muted);
 
+                    this.setFullscreenButtonState();
+
                     var volume = this.video.muted ? 0 : Math.round(this.video.volume * 100);
                     this.volumeControl.value = volume;
 
@@ -420,6 +426,7 @@
                     this._playButtonWidth = this.playButton.clientWidth;
                     this._durationLabelWidth = this.durationLabel.clientWidth;
                     this._muteButtonWidth = this.muteButton.clientWidth;
+                    this._fullscreenButtonWidth = this.fullscreenButton.clientWidth;
                     this._controlBarHeight = this.controlBar.clientHeight;
                     if (controlBarWasHidden)
                       this.controlBar.setAttribute("hidden", "true");
@@ -600,6 +607,7 @@
                     for each (var event in this.videoEvents)
                         this.video.removeEventListener(event, this, false);
                     this.video.removeEventListener("media-showStatistics", this._handleCustomEventsBound, false);
+                    this.video.ownerDocument.removeEventListener("mozfullscreenchange", this.setFullscreenButtonState, false);
                     delete this._handleCustomEventsBound;
                     this.log("--- videocontrols terminated ---");
                 },
@@ -826,8 +834,37 @@
                     // controlling volume.
                 },
 
+                isVideoInFullScreen : function () {
+                    return document.mozFullScreenElement != null;
+                },
+
+                toggleFullscreen : function () {
+                    this.isVideoInFullScreen() ?
+                        document.mozCancelFullScreen() :
+                        this.video.mozRequestFullScreen();
+                },
+
+                setFullscreenButtonState : function () {
+                    if (this.isAudioOnly || !document.mozFullScreenEnabled) {
+                        this.fullscreenButton.hidden = true;
+                        return;
+                    }
+
+                    var attrName = this.isVideoInFullScreen() ? "enterfullscreenlabel" : "exitfullscreenlabel";
+                    var value = this.fullscreenButton.getAttribute(attrName);
+                    this.fullscreenButton.setAttribute("aria-label", value);
+
+                    if (this.isVideoInFullScreen())
+                        this.fullscreenButton.setAttribute("fullscreened", "true");
+                    else
+                        this.fullscreenButton.removeAttribute("fullscreened");
+                },
+
                 setPlayButtonState : function(aPaused) {
-                  this.playButton.setAttribute("paused", aPaused);
+                  if (aPaused)
+                      this.playButton.setAttribute("paused", "true");
+                  else
+                      this.playButton.removeAttribute("paused");
 
                   var attrName = aPaused ? "playlabel" : "pauselabel";
                   var value = this.playButton.getAttribute(attrName);
@@ -835,7 +872,10 @@
                 },
 
                 setMuteButtonState : function(aMuted) {
-                  this.muteButton.setAttribute("muted", aMuted);
+                  if (aMuted)
+                      this.muteButton.setAttribute("muted", "true");
+                  else
+                      this.muteButton.removeAttribute("muted");
 
                   var attrName = aMuted ? "unmutelabel" : "mutelabel";
                   var value = this.muteButton.getAttribute(attrName);
@@ -1060,6 +1100,7 @@
                 _playButtonWidth : 0,
                 _durationLabelWidth : 0,
                 _muteButtonWidth : 0,
+                _fullscreenButtonWidth : 0,
                 _controlBarHeight : 0,
                 adjustControlSize : function adjustControlSize() {
                     if (this.isAudioOnly)
@@ -1074,7 +1115,8 @@
                     let minWidthAllControls = this._playButtonWidth +
                                               minScrubberWidth +
                                               this._durationLabelWidth +
-                                              this._muteButtonWidth;
+                                              this._muteButtonWidth +
+                                              this._fullscreenButtonWidth;
                     let minHeightForControlBar = this._controlBarHeight;
                     let minWidthOnlyPlayPause = this._playButtonWidth + this._muteButtonWidth;
 
@@ -1108,6 +1150,7 @@
                     this.statusOverlay = document.getAnonymousElementByAttribute(binding, "class", "statusOverlay");
                     this.statsOverlay  = document.getAnonymousElementByAttribute(binding, "class", "statsOverlay");
                     this.controlsSpacer = document.getAnonymousElementByAttribute(binding, "class", "controlsSpacer");
+                    this.fullscreenButton = document.getAnonymousElementByAttribute(binding, "class", "fullscreenButton");
 
                     this.statsTable       = document.getAnonymousElementByAttribute(binding, "class", "statsTable");
                     this.stats.filename   = document.getAnonymousElementByAttribute(binding, "class", "statFilename");
@@ -1148,6 +1191,7 @@
                     this.muteButton.addEventListener("command", function() { self.toggleMute(); }, false);
                     this.playButton.addEventListener("command", function() { self.togglePause(); }, false);
                     this.controlsSpacer.addEventListener("click", function(e) { if (e.button == 0) { self.togglePause(); } }, false);
+                    this.fullscreenButton.addEventListener("command", function() { self.toggleFullscreen(); }, false );
                     if (!this.isAudioOnly) {
                       this.muteButton.addEventListener("mouseover",  function(e) { self.onVolumeMouseInOut(e); }, false);
                       this.muteButton.addEventListener("mouseout",   function(e) { self.onVolumeMouseInOut(e); }, false);
@@ -1156,6 +1200,7 @@
                     }
 
                     this.videocontrols.addEventListener("transitionend", function(e) { self.onTransitionEnd(e); }, false);
+                    this.video.ownerDocument.addEventListener("mozfullscreenchange", this.setFullscreenButtonState, false);
 
                     // Make the <video> element keyboard accessible.
                     this.video.setAttribute("tabindex", 0);
@@ -1217,6 +1262,9 @@
                         <label class="positionLabel" role="presentation"/>
                         <label class="durationLabel" role="presentation"/>
                     </vbox>
+                    <button class="fullscreenButton"
+                            enterfullscreenlabel="&fullscreenButton.enterfullscreenlabel;"
+                            exitfullscreenlabel="&fullscreenButton.exitfullscreenlabel;"/>
                 </vbox>
             </vbox>
         </stack>

@@ -168,10 +168,9 @@ public:
   virtual gfxASurface*      GetThebesSurface();
 
   NS_IMETHOD ResetInputState();
-  NS_IMETHOD SetIMEOpenState(bool aState);
-  NS_IMETHOD GetIMEOpenState(bool *aState);
-  NS_IMETHOD SetInputMode(const IMEContext& aContext);
-  NS_IMETHOD GetInputMode(IMEContext& aContext);
+  NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
+                                    const InputContextAction& aAction);
+  NS_IMETHOD_(InputContext) GetInputContext();
   NS_IMETHOD CancelComposition();
   NS_IMETHOD OnIMEFocusChange(bool aFocus);
   NS_IMETHOD OnIMETextChange(PRUint32 aOffset, PRUint32 aEnd,

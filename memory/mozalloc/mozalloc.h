@@ -53,7 +53,6 @@
 #include "xpcom-config.h"
 
 #define MOZALLOC_HAVE_XMALLOC
-#define MOZALLOC_HAVE_MALLOC_USABLE_SIZE
 
 #if defined(MOZALLOC_EXPORT)
 /* do nothing: it's been defined to __declspec(dllexport) by
@@ -135,6 +134,8 @@ MOZALLOC_EXPORT char* moz_strdup(const char* str)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 
 MOZALLOC_EXPORT size_t moz_malloc_usable_size(void *ptr);
+
+MOZALLOC_EXPORT size_t moz_malloc_size_of(const void *ptr, size_t computedSize);
 
 #if defined(HAVE_STRNDUP)
 MOZALLOC_EXPORT char* moz_xstrndup(const char* str, size_t strsize)

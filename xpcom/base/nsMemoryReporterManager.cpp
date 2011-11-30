@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com> (original author)
+ *   Nicholas Nethercote <nnethercote@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -856,3 +857,11 @@ NS_UnregisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter)
     return mgr->UnregisterMultiReporter(reporter);
 }
 
+namespace mozilla {
+
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(MemoryReporterMallocSizeOf, "default")
+
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(MemoryReporterMallocSizeOfForCounterInc, "default")
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(MemoryReporterMallocSizeOfForCounterDec, "default")
+
+}

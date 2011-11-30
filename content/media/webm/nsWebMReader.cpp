@@ -86,7 +86,7 @@ static int webm_read(void *aBuffer, size_t aLength, void *aUserData)
 {
   NS_ASSERTION(aUserData, "aUserData must point to a valid nsBuiltinDecoder");
   nsBuiltinDecoder* decoder = reinterpret_cast<nsBuiltinDecoder*>(aUserData);
-  nsMediaStream* stream = decoder->GetCurrentStream();
+  nsMediaStream* stream = decoder->GetStream();
   NS_ASSERTION(stream, "Decoder has no media stream");
 
   nsresult rv = NS_OK;
@@ -112,7 +112,7 @@ static int webm_seek(int64_t aOffset, int aWhence, void *aUserData)
 {
   NS_ASSERTION(aUserData, "aUserData must point to a valid nsBuiltinDecoder");
   nsBuiltinDecoder* decoder = reinterpret_cast<nsBuiltinDecoder*>(aUserData);
-  nsMediaStream* stream = decoder->GetCurrentStream();
+  nsMediaStream* stream = decoder->GetStream();
   NS_ASSERTION(stream, "Decoder has no media stream");
   nsresult rv = stream->Seek(aWhence, aOffset);
   return NS_SUCCEEDED(rv) ? 0 : -1;
@@ -122,7 +122,7 @@ static int64_t webm_tell(void *aUserData)
 {
   NS_ASSERTION(aUserData, "aUserData must point to a valid nsBuiltinDecoder");
   nsBuiltinDecoder* decoder = reinterpret_cast<nsBuiltinDecoder*>(aUserData);
-  nsMediaStream* stream = decoder->GetCurrentStream();
+  nsMediaStream* stream = decoder->GetStream();
   NS_ASSERTION(stream, "Decoder has no media stream");
   return stream->Tell();
 }
@@ -559,7 +559,7 @@ nsReturnRef<NesteggPacketHolder> nsWebMReader::NextPacket(TrackType aTrackType)
       if (r <= 0) {
         return nsReturnRef<NesteggPacketHolder>();
       }
-      PRInt64 offset = mDecoder->GetCurrentStream()->Tell();
+      PRInt64 offset = mDecoder->GetStream()->Tell();
       holder.own(new NesteggPacketHolder(packet, offset));
 
       unsigned int track = 0;
@@ -755,7 +755,7 @@ nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
-  LOG(PR_LOG_DEBUG, ("%p About to seek to %lldms", mDecoder, aTarget));
+  LOG(PR_LOG_DEBUG, ("%p About to seek to %fs", mDecoder, aTarget/1000000.0));
   if (NS_FAILED(ResetDecode())) {
     return NS_ERROR_FAILURE;
   }
@@ -769,7 +769,7 @@ nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
 
 nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 {
-  nsMediaStream* stream = mDecoder->GetCurrentStream();
+  nsMediaStream* stream = mDecoder->GetStream();
 
   uint64_t timecodeScale;
   if (!mContext || nestegg_tstamp_scale(mContext, &timecodeScale) == -1) {
@@ -783,7 +783,7 @@ nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
       aBuffered->Add(0, duration / NS_PER_S);
     }
   } else {
-    nsMediaStream* stream = mDecoder->GetCurrentStream();
+    nsMediaStream* stream = mDecoder->GetStream();
     nsTArray<nsByteRange> ranges;
     nsresult res = stream->GetCachedRanges(ranges);
     NS_ENSURE_SUCCESS(res, res);
