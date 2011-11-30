@@ -851,7 +851,6 @@ if [ "$ENABLE_TESTS" ]; then
     editor/libeditor/text/tests/Makefile
     embedding/test/Makefile
     extensions/cookie/test/Makefile
-    extensions/pref/Makefile
     js/xpconnect/tests/mochitest/Makefile
     layout/forms/test/Makefile
     layout/generic/test/Makefile
@@ -1015,50 +1014,6 @@ if [ ! "$SYSTEM_PNG" ]; then
     media/libpng/Makefile
   "
 fi
-
-if [ -f ${srcdir}/l10n/makefiles.all ]; then
-  MAKEFILES_langpacks=`cat ${srcdir}/l10n/makefiles.all`
-  add_makefiles "
-    $MAKEFILES_langpacks
-  "
-fi
-
-if [ "$MOZ_L10N" ]; then
-  add_makefiles "
-    l10n/Makefile
-  "
-
-  if [ "$MOZ_L10N_LANG" ]; then
-    add_makefiles "
-      l10n/lang/Makefile
-      l10n/lang/addressbook/Makefile
-      l10n/lang/bookmarks/Makefile
-      l10n/lang/directory/Makefile
-      l10n/lang/editor/Makefile
-      l10n/lang/global/Makefile
-      l10n/lang/history/Makefile
-      l10n/lang/messenger/Makefile
-      l10n/lang/messengercompose/Makefile
-      l10n/lang/navigator/Makefile
-      l10n/lang/pref/Makefile
-      l10n/lang/related/Makefile
-      l10n/lang/sidebar/Makefile
-      l10n/lang/addressbook/locale/Makefile
-      l10n/lang/bookmarks/locale/Makefile
-      l10n/lang/directory/locale/Makefile
-      l10n/lang/editor/locale/Makefile
-      l10n/lang/global/locale/Makefile
-      l10n/lang/history/locale/Makefile
-      l10n/lang/messenger/locale/Makefile
-      l10n/lang/messengercompose/locale/Makefile
-      l10n/lang/navigator/locale/Makefile
-      l10n/lang/pref/locale/Makefile
-      l10n/lang/related/locale/Makefile
-      l10n/lang/sidebar/locale/Makefile
-    "
-  fi # MOZ_L10N_LANG
-
-fi # MOZ_L10N
 
 if [ "$MOZ_JPROF" ]; then
   add_makefiles "
