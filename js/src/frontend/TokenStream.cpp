@@ -2251,6 +2251,7 @@ TokenKindToString(TokenKind tt)
       case TOK_CONTINUE:        return "TOK_CONTINUE";
       case TOK_IN:              return "TOK_IN";
       case TOK_VAR:             return "TOK_VAR";
+      case TOK_CONST:           return "TOK_CONST";
       case TOK_WITH:            return "TOK_WITH";
       case TOK_RETURN:          return "TOK_RETURN";
       case TOK_NEW:             return "TOK_NEW";

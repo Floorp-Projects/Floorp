@@ -70,7 +70,7 @@ fails-if(d2d) == repeating-linear-1b.html repeating-linear-1-ref.html
 == repeating-radial-2a.html repeating-radial-2-ref.html
 == twostops-1a.html twostops-1-ref.html
 == twostops-1b.html twostops-1-ref.html
-fails-if(cocoaWidget) == twostops-1c.html twostops-1-ref.html # bug 524173
+fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)) == twostops-1c.html twostops-1-ref.html # bug 524173
 == twostops-1d.html twostops-1-ref.html
 == twostops-1e.html twostops-1-ref.html
 == twostops-1f.html twostops-1-ref.html

@@ -588,7 +588,7 @@ GLContextProviderCGL::CreateOffscreen(const gfxIntSize& aSize,
     nsRefPtr<GLContextCGL> glContext;
     
     NS_ENSURE_TRUE(Preferences::GetRootBranch(), nsnull);
-    const bool preferFBOs = Preferences::GetBool("cgl.prefer-fbo", false);
+    const bool preferFBOs = Preferences::GetBool("cgl.prefer-fbo", true);
     if (!preferFBOs)
     {
         glContext = CreateOffscreenPBufferContext(aSize, actualFormat);

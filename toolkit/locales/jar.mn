@@ -102,8 +102,8 @@
   locale/@AB_CD@/mozapps/update/updates.dtd                       (%chrome/mozapps/update/updates.dtd)
   locale/@AB_CD@/mozapps/update/updates.properties                (%chrome/mozapps/update/updates.properties)
   locale/@AB_CD@/mozapps/update/history.dtd                       (%chrome/mozapps/update/history.dtd)
-  locale/@AB_CD@/mozapps/xpinstall/xpinstallConfirm.dtd           (%chrome/mozapps/xpinstall/xpinstallConfirm.dtd)
-  locale/@AB_CD@/mozapps/xpinstall/xpinstallConfirm.properties    (%chrome/mozapps/xpinstall/xpinstallConfirm.properties)
+  locale/@AB_CD@/mozapps/xpinstall/xpinstallConfirm.dtd           (%chrome/mozapps/extensions/xpinstallConfirm.dtd)
+  locale/@AB_CD@/mozapps/xpinstall/xpinstallConfirm.properties    (%chrome/mozapps/extensions/xpinstallConfirm.properties)
 % locale alerts @AB_CD@ %locale/@AB_CD@/alerts/
   locale/@AB_CD@/alerts/notificationNames.properties             (%chrome/alerts/notificationNames.properties)
 % locale cookie @AB_CD@ %locale/@AB_CD@/cookie/

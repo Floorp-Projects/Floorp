@@ -350,7 +350,8 @@ nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
   nscoord baseline = frame->GetCaretBaseline();
   nscoord ascent = 0, descent = 0;
   nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
+  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
+    nsLayoutUtils::FontSizeInflationFor(aFrame));
   NS_ASSERTION(fm, "We should be able to get the font metrics");
   if (fm) {
     ascent = fm->MaxAscent();

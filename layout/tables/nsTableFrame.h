@@ -58,6 +58,7 @@ class nsStyleContext;
 
 struct nsTableReflowState;
 struct nsStylePosition;
+struct BCPropertyData;
 
 static inline bool IS_TABLE_CELL(nsIAtom* frameType) {
   return nsGkAtoms::tableCellFrame == frameType ||
@@ -291,7 +292,7 @@ public:
 
   friend class nsDelayedCalcBCBorders;
   
-  void SetBCDamageArea(const nsRect& aValue);
+  void AddBCDamageArea(const nsRect& aValue);
   bool BCRecalcNeeded(nsStyleContext* aOldStyleContext,
                         nsStyleContext* aNewStyleContext);
   void PaintBCBorders(nsRenderingContext& aRenderingContext,
@@ -688,10 +689,13 @@ public:
 
   nsTArray<nsTableColFrame*>& GetColCache();
 
+
 protected:
 
   void SetBorderCollapse(bool aValue);
 
+  BCPropertyData* GetBCProperty(bool aCreateIfNecessary = false) const;
+  void SetFullBCDamageArea();
   void CalcBCBorders();
 
   void ExpandBCDamageArea(nsRect& aRect) const;

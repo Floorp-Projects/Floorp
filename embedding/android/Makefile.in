@@ -55,6 +55,7 @@ JAVAFILES = \
   AlertNotification.java \
   SurfaceInfo.java \
   GeckoBatteryManager.java \
+  GeckoSmsManager.java \
   $(NULL)
 
 PROCESSEDJAVAFILES = \

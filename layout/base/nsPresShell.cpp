@@ -661,8 +661,7 @@ PresShell::MemoryReporter::SizeEnumerator(PresShellPtrKey *aEntry,
   PRUint32 styleSize;
   styleSize = aShell->StyleSet()->SizeOf();
 
-  PRUint64 textRunsSize;
-  textRunsSize = aShell->ComputeTextRunMemoryUsed();
+  PRInt64 textRunsSize = aShell->SizeOfTextRuns(MemoryReporterMallocSizeOf);
 
   data->callback->
     Callback(EmptyCString(), arenaPath, nsIMemoryReporter::KIND_HEAP,
@@ -693,7 +692,7 @@ PresShell::MemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
   data.closure = aClosure;
 
   // clear TEXT_RUN_SIZE_ACCOUNTED flag on cached runs
-  gfxTextRunWordCache::ComputeStorage(nsnull);
+  gfxTextRunWordCache::ResetSizeOfAccountingFlags();
 
   sLiveShells->EnumerateEntries(SizeEnumerator, &data);
 
@@ -704,8 +703,8 @@ PresShell::MemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
                            "not owned by a PresShell's frame tree.");
 
   // now total up cached runs that aren't otherwise accounted for
-  PRUint64 textRunWordCacheSize = 0;
-  gfxTextRunWordCache::ComputeStorage(&textRunWordCacheSize);
+  PRInt64 textRunWordCacheSize =
+    gfxTextRunWordCache::MaybeSizeOfExcludingThis(MemoryReporterMallocSizeOf);
 
   aCb->Callback(EmptyCString(), kTextRunWordCachePath,
                 nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
@@ -8808,8 +8807,8 @@ PresShell::GetRootPresShell()
   return nsnull;
 }
 
-PRUint64
-PresShell::ComputeTextRunMemoryUsed()
+size_t
+PresShell::SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf)
 {
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
   if (!rootFrame) {
@@ -8817,12 +8816,11 @@ PresShell::ComputeTextRunMemoryUsed()
   }
 
   // clear the TEXT_RUN_MEMORY_ACCOUNTED flags
-  nsLayoutUtils::GetTextRunMemoryForFrames(rootFrame, nsnull);
+  nsLayoutUtils::SizeOfTextRunsForFrames(rootFrame, nsnull,
+                                         /* clear = */true);
 
   // collect the total memory in use for textruns
-  PRUint64 total = 0;
-  nsLayoutUtils::GetTextRunMemoryForFrames(rootFrame, &total);
-
-  return total;
+  return nsLayoutUtils::SizeOfTextRunsForFrames(rootFrame, aMallocSizeOf,
+                                                /* clear = */false);
 }
 
