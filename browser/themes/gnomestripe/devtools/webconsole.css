@@ -21,6 +21,7 @@
  * Contributor(s):
  *   David Dahl <ddahl@mozilla.com>
  *   Patrick Walton <pcwalton@mozilla.com>
+ *   Mihai Șucan <mihai.sucan@gmail.com>
  *   Rob Campbell <rcampbell@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -47,7 +48,7 @@
 }
 
 .hud-splitter {
-  border-top: none;
+  box-shadow: 0 -1px 0 0 ThreeDShadow inset, 0 0 0 10px -moz-Dialog inset;
 }
 
 .hud-outer-wrapper {
@@ -69,7 +70,7 @@
 }
 
 .hud-msg-node {
-  list-style-image: url(chrome://global/skin/icons/webconsole.png);
+  list-style-image: url(chrome://browser/skin/devtools/webconsole.png);
   -moz-image-region: rect(0, 1px, 0, 0);
 }
 
@@ -135,7 +136,7 @@
 .hud-output-node,
 .jsterm-input-node,
 .jsterm-complete-node {
-  font: 12px Consolas, Lucida Console, monospace;
+  font: 12px "DejaVu Sans Mono", monospace;
 }
 
 .hud-output-node {
@@ -154,20 +155,14 @@
   display: none;
 }
 
-.webconsole-filter-button > .toolbarbutton-menubutton-button {
-  -moz-box-orient: horizontal;
-  list-style-image: url("chrome://global/skin/icons/webconsole.png");
+.webconsole-filter-button {
+  margin: 0 3px;
 }
 
 .webconsole-filter-button > .toolbarbutton-menubutton-button,
-.webconsole-filter-button > .toolbarbutton-menubutton-button:hover:active {
-  -moz-padding-start: 6px;
-  -moz-padding-end: 3px;
-}
-
-.webconsole-filter-button {
-  -moz-margin-start: 3px;
-  -moz-margin-end: 3px;
+.webconsole-filter-button:not([type="menu-button"]) {
+  -moz-box-orient: horizontal;
+  list-style-image: url("chrome://browser/skin/devtools/webconsole.png");
 }
 
 /* Network styles */
@@ -254,19 +249,7 @@
 }
 
 .webconsole-close-button {
-  border: none;
-  padding: 3px;
-  list-style-image: url("chrome://global/skin/icons/close.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
-  -moz-appearance: none;
-}
-
-.webconsole-close-button:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-.webconsole-close-button:hover:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
+  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
 }
 
 /* JSTerm Styles */
@@ -308,6 +291,7 @@
 }
 
 .jsterm-input-node {
+  width: 98%;
   background: url("chrome://global/skin/icons/commandline.png") 4px 3px no-repeat;
 }
 
@@ -322,14 +306,6 @@
 
 .jsterm-output-line {
   font-size: 1em;
-}
-
-.hud-console-filter-toolbar {
-  padding: 1px 2px;
-  -moz-box-align: center;
-  -moz-appearance: none;
-  background-color: -moz-dialog;
-  border-top: none;
 }
 
 .web-console-panel {

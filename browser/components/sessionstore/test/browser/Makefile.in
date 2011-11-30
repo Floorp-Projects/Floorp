@@ -100,6 +100,7 @@ _BROWSER_TEST_FILES = \
 	browser_465223.js \
 	browser_466937.js \
 	browser_466937_sample.html \
+	browser_467409-backslashplosion.js \
 	browser_477657.js \
 	browser_480148.js \
 	browser_480893.js \
