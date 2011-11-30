@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-%include shared.inc
-
 .hud-box {
   border-bottom: 1px solid #aaa;
   text-shadow: none;
@@ -49,9 +47,7 @@
 }
 
 .hud-splitter {
-  border-bottom: solid #a5a5a5 1px;
-  background: url("chrome://global/skin/splitter/dimple.png") no-repeat center,
-    -moz-linear-gradient(top, #fcfcfc, #dfdfdf);
+  border-top: none;
 }
 
 .hud-outer-wrapper {
@@ -73,7 +69,7 @@
 }
 
 .hud-msg-node {
-  list-style-image: url(chrome://global/skin/icons/webconsole.png);
+  list-style-image: url(chrome://browser/skin/devtools/webconsole.png);
   -moz-image-region: rect(0, 1px, 0, 0);
 }
 
@@ -139,7 +135,7 @@
 .hud-output-node,
 .jsterm-input-node,
 .jsterm-complete-node {
-  font: 11px Menlo, Monaco, monospace;
+  font: 12px Consolas, Lucida Console, monospace;
 }
 
 .hud-output-node {
@@ -154,69 +150,24 @@
   display: none;
 }
 
-.webconsole-filter-button,
-.webconsole-clear-console-button {
-  -moz-appearance: none;
-  border: @roundButtonBorder@;
-  background: @roundButtonBackground@;
-  box-shadow: @roundButtonShadow@;
-  color: buttontext;
-  margin: 1px 0;
-  padding: 0;
-}
-
-.webconsole-filter-button {
-  border-radius: 10000px;
-  -moz-margin-start: 6px;
-  -moz-box-orient: horizontal;
-}
-
-.webconsole-clear-console-button {
-  border-radius: 3px;
-  -moz-margin-end: 6px;
-  -moz-margin-start: 4px;
-  padding: 1px 6px;
-}
-
-.webconsole-filter-button[checked="true"] {
-  box-shadow: @roundButtonPressedShadow@;
-  background: #d0d0d0;
+.webconsole-clear-console-button > .toolbarbutton-icon {
+  display: none;
 }
 
 .webconsole-filter-button > .toolbarbutton-menubutton-button {
-  -moz-appearance: none;
-  margin: 0;
-  padding: 1px 0;
-  list-style-image: url("chrome://global/skin/icons/webconsole.png");
   -moz-box-orient: horizontal;
+  list-style-image: url("chrome://browser/skin/devtools/webconsole.png");
 }
 
-.webconsole-filter-button:hover:active,
-.webconsole-clear-console-button:hover:active {
-  text-shadow: @loweredShadow@;
-  box-shadow: @roundButtonPressedShadow@;
-  background: @roundButtonPressedBackground@;
+.webconsole-filter-button > .toolbarbutton-menubutton-button,
+.webconsole-filter-button > .toolbarbutton-menubutton-button:hover:active {
+  -moz-padding-start: 6px;
+  -moz-padding-end: 3px;
 }
 
-.webconsole-clear-console-button > .toolbarbutton-text {
-  margin: 0;
-}
-
-.webconsole-filter-button > .toolbarbutton-menubutton-button > .toolbarbutton-text {
-  margin: 0 3px;
-}
-
-.webconsole-filter-button > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+.webconsole-filter-button {
   -moz-margin-start: 3px;
-}
-
-.webconsole-filter-button > .toolbarbutton-menubutton-dropmarker {
-  padding: 6px 3px 2px;
-  -moz-border-start: dotted #aaaaaa 1px;
-}
-
-.webconsole-new-group {
-  margin-top: 6px;
+  -moz-margin-end: 3px;
 }
 
 /* Network styles */
@@ -303,14 +254,11 @@
 }
 
 .webconsole-close-button {
+  border: none;
+  padding: 3px;
   list-style-image: url("chrome://global/skin/icons/close.png");
-  margin-top: 0;
-  margin-bottom: 0;
-  -moz-margin-start: 3px;
-  -moz-margin-end: -14px;
-  min-width: 0;
-  -moz-appearance: none;
   -moz-image-region: rect(0, 16px, 16px, 0);
+  -moz-appearance: none;
 }
 
 .webconsole-close-button:hover {
@@ -360,7 +308,7 @@
 }
 
 .jsterm-input-node {
-  background: url("chrome://global/skin/icons/commandline.png") 4px 2px no-repeat;
+  background: url("chrome://global/skin/icons/commandline.png") 4px 3px no-repeat;
 }
 
 :-moz-any(.jsterm-input-node,
@@ -377,15 +325,11 @@
 }
 
 .hud-console-filter-toolbar {
-  background: @scopeBarBackground@;
-  border-bottom: @scopeBarSeparatorBorder@;
-  padding: 0px 1px;
-  -moz-appearance: none;
+  padding: 1px 2px;
   -moz-box-align: center;
-}
-
-.hud-console-filter-toolbar:-moz-lwtheme {
-  border-top: @scopeBarSeparatorBorder@;
+  -moz-appearance: none;
+  background-color: -moz-dialog;
+  border-top: none;
 }
 
 .web-console-panel {
