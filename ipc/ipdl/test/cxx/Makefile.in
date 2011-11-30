@@ -119,11 +119,19 @@ IPDLUNITTEST_BIN = $(DEPTH)/dist/bin/ipdlunittest$(BIN_SUFFIX)
 IPDLUnitTests.cpp : Makefile.in $(GENTESTER) $(TESTER_TEMPLATE) $(IPDLTESTHDRS)
 	$(PYTHON) $(GENTESTER) $(TESTER_TEMPLATE) -t $(IPDLTESTS) -e $(EXTRA_PROTOCOLS) > $@
 
-check::
+check-proc::
 	@$(EXIT_ON_ERROR)  \
 	for test in $(IPDLTESTS); do  \
 		 $(RUN_TEST_PROGRAM) $(IPDLUNITTEST_BIN) $$test ;  \
 	done
+
+check-thread::
+	@$(EXIT_ON_ERROR)  \
+	for test in $(IPDLTESTS); do  \
+		 $(RUN_TEST_PROGRAM) $(IPDLUNITTEST_BIN) thread:$$test ;  \
+	done
+
+check:: check-proc check-thread
 
 check-valgrind::
 	@$(EXIT_ON_ERROR)  \

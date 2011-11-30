@@ -25,6 +25,13 @@ public:
     TestFailedCtorParent() { }
     virtual ~TestFailedCtorParent() { }
 
+    static bool RunTestInProcesses() { return true; }
+
+    // FIXME/bug 703322 Disabled because child calls exit() to end
+    //                  test, not clear how to handle failed ctor in
+    //                  threaded mode.
+    static bool RunTestInThreads() { return false; }
+
     void Main();
 
 protected:
