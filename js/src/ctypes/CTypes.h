@@ -457,6 +457,7 @@ namespace CType {
     jsval size, jsval align, ffi_type* ffiType);
 
   bool IsCType(JSContext* cx, JSObject* obj);
+  bool IsCTypeProto(JSContext* cx, JSObject* obj);
   TypeCode GetTypeCode(JSContext* cx, JSObject* typeObj);
   bool TypesEqual(JSContext* cx, JSObject* t1, JSObject* t2);
   size_t GetSize(JSContext* cx, JSObject* obj);
@@ -520,6 +521,7 @@ namespace CData {
   JSObject* GetCType(JSContext* cx, JSObject* dataObj);
   void* GetData(JSContext* cx, JSObject* dataObj);
   bool IsCData(JSContext* cx, JSObject* obj);
+  bool IsCDataProto(JSContext* cx, JSObject* obj);
 
   // Attached by JSAPI as the function 'ctypes.cast'
   JSBool Cast(JSContext* cx, uintN argc, jsval* vp);
