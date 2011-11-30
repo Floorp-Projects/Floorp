@@ -784,7 +784,7 @@ let UI = {
               return;
           }
 
-          var groupItem = GroupItems.getActiveGroupItem();
+          let groupItem = GroupItems.getActiveGroupItem();
 
           // 1) Only go back to the TabView tab when there you close the last
           // tab of a groupItem.

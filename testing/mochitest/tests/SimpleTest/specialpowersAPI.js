@@ -687,6 +687,14 @@ SpecialPowersAPI.prototype = {
     cbHelperSvc.copyString(preExpectedVal);
   },
 
+  supportsSelectionClipboard: function() {
+    if (this._cb == null) {
+      this._cb = Components.classes["@mozilla.org/widget/clipboard;1"].
+                            getService(Components.interfaces.nsIClipboard);
+    }
+    return this._cb.supportsSelectionClipboard();
+  },
+
   snapshotWindow: function (win, withCaret) {
     var el = this.window.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
     el.width = win.innerWidth;

@@ -1,0 +1,89 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is web apps.
+ *
+ * The Initial Developer of the Original Code is Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Andreas Gal <gal@mozilla.com>  (Original Author)
+ *  Fabrice Desré <fabrice@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "domstubs.idl"
+
+[scriptable, uuid(e0c271cb-266b-48c9-a7e4-96590b445c26)]
+interface mozIDOMApplicationRegistryError : nsISupports
+{
+  const unsigned short DENIED = 1;
+  const unsigned short PERMISSION_DENIED = 2;
+  const unsigned short MANIFEST_URL_ERROR = 3;
+  const unsigned short NETWORK_ERROR = 4;
+  const unsigned short MANIFEST_PARSE_ERROR = 5;
+  const unsigned short INVALID_MANIFEST = 6;
+
+  readonly attribute short code;
+};
+
+[scriptable, uuid(a6856a3d-dece-43ce-89b9-72dba07f4246)]
+interface mozIDOMApplication : nsISupports
+{
+  readonly attribute jsval manifest;
+  readonly attribute DOMString receipt;
+  readonly attribute DOMString origin;
+  readonly attribute DOMString installOrigin;
+  readonly attribute unsigned long installTime;
+};
+
+[scriptable, function, uuid(be170df5-9154-463b-9197-10a6195eba52)]
+interface mozIDOMApplicationRegistryEnumerateCallback : nsISupports
+{
+  void handleEvent([array, size_is(count)] in mozIDOMApplication apps,
+                    in unsigned long count);
+};
+
+[scriptable, function, uuid(ae0ed33d-35cf-443a-837b-a6cebf16bd49)]
+interface mozIDOMApplicationRegistryErrorCallback : nsISupports
+{
+  void handleEvent(in mozIDOMApplicationRegistryError error);
+};
+
+[scriptable, uuid(4070ea6f-dca1-4052-8bc6-7a9bcfc314ac)]
+interface mozIDOMApplicationRegistry : nsISupports
+{
+  void install(in DOMString manifestUrl,
+	       [optional] in DOMString receipt);
+  void uninstall(in DOMString origin);
+  void enumerate(in mozIDOMApplicationRegistryEnumerateCallback success,
+		 [optional] in mozIDOMApplicationRegistryErrorCallback error);
+  void launch(in DOMString origin);
+
+  attribute nsIDOMEventListener oninstall;
+  attribute nsIDOMEventListener onuninstall;
+  attribute nsIDOMEventListener onerror;
+};
