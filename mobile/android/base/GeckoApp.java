@@ -113,6 +113,7 @@ abstract public class GeckoApp
 
     private IntentFilter mConnectivityFilter;
     private IntentFilter mBatteryFilter;
+    private IntentFilter mSmsFilter;
 
     private BroadcastReceiver mConnectivityReceiver;
     private BroadcastReceiver mSmsReceiver;
@@ -1377,10 +1378,10 @@ abstract public class GeckoApp
         mBatteryReceiver = new GeckoBatteryManager();
         registerReceiver(mBatteryReceiver, batteryFilter);
                 
-        IntentFilter smsFilter = new IntentFilter();
-        smsFilter.addAction("android.provider.Telephony.SMS_RECEIVED");
+        mSmsFilter = new IntentFilter();
+        mSmsFilter.addAction("android.provider.Telephony.SMS_RECEIVED");
         mSmsReceiver = new GeckoSmsManager();
-        registerReceiver(mSmsReceiver, smsFilter);
+        registerReceiver(mSmsReceiver, mSmsFilter);
 
         final GeckoApp self = this;
  
@@ -1511,6 +1512,7 @@ abstract public class GeckoApp
         if (checkLaunchState(LaunchState.Launching))
             onNewIntent(getIntent());
 
+        registerReceiver(mSmsReceiver, mSmsFilter);
         registerReceiver(mConnectivityReceiver, mConnectivityFilter);
     }
 
