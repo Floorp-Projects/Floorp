@@ -1,0 +1,32 @@
+Test the Test Manifest
+======================
+
+Boilerplate::
+
+    >>> import os
+
+Test filtering based on platform::
+
+    >>> from manifestparser import TestManifest
+    >>> manifest = TestManifest(manifests=('filter-example.ini',))
+    >>> [i['name'] for i in manifest.active_tests(os='win', disabled=False, exists=False)]
+    ['windowstest', 'fleem']
+    >>> [i['name'] for i in manifest.active_tests(os='linux', disabled=False, exists=False)]
+    ['fleem', 'linuxtest']
+
+Look for existing tests.  There is only one::
+
+    >>> [i['name'] for i in manifest.active_tests()]
+    ['fleem']
+
+You should be able to expect failures::
+
+    >>> last_test = manifest.active_tests(exists=False, toolkit='gtk2')[-1]
+    >>> last_test['name']
+    'linuxtest'
+    >>> last_test['expected']
+    'pass'
+    >>> last_test = manifest.active_tests(exists=False, toolkit='cocoa')[-1]
+    >>> last_test['expected']
+    'fail'
+

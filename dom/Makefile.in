@@ -66,6 +66,7 @@ DIRS = \
   interfaces/notification \
   interfaces/svg \
   interfaces/smil \
+  interfaces/apps \
   $(NULL)
 
 DIRS += \

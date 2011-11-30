@@ -64,7 +64,7 @@ script regress-468711.js
 script regress-469547.js
 script regress-469625-02.js
 script regress-469625-03.js
-skip-if(Android) script regress-471373.js # bug xxx No test results reported
+script regress-471373.js
 script regress-471660.js
 script regress-472450-01.js
 script regress-472450-02.js

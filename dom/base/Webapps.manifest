@@ -1,0 +1,10 @@
+# Webapps.js
+component {fff440b3-fae2-45c1-bf03-3b5a2e432270} Webapps.js
+contract @mozilla.org/webapps;1 {fff440b3-fae2-45c1-bf03-3b5a2e432270}
+category JavaScript-navigator-property mozApps @mozilla.org/webapps;1
+
+component {723ed303-7757-4fb0-b261-4f78b1f6bd22} Webapps.js
+contract @mozilla.org/webapps/application;1 {723ed303-7757-4fb0-b261-4f78b1f6bd22}
+
+component {b4937718-11a3-400b-a69f-ab442a418569} Webapps.js
+contract @mozilla.org/webapps/error;1 {b4937718-11a3-400b-a69f-ab442a418569}
