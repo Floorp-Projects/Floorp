@@ -71,5 +71,15 @@ public class CairoUtils {
         default:        throw new RuntimeException("Unknown Skia bitmap config");
         }
     }
+
+    public static Bitmap.Config cairoFormatTobitmapConfig(int format) {
+        switch (format) {
+        case CairoImage.FORMAT_A8:        return Bitmap.Config.ALPHA_8;
+        case CairoImage.FORMAT_ARGB32:    return Bitmap.Config.ARGB_8888;
+        case CairoImage.FORMAT_RGB16_565: return Bitmap.Config.RGB_565;
+        default:
+            throw new RuntimeException("Unknown CairoImage format");
+        }
+    }
 }
 
