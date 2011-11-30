@@ -83,7 +83,6 @@ nsHtml5Highlighter::nsHtml5Highlighter(nsAHtml5TreeOpSink* aOpSink)
  , mCStart(PR_INT32_MAX)
  , mPos(0)
  , mLineNumber(1)
- , mUnicharsInThisPre(0)
  , mInlinesOpen(0)
  , mInCharacters(false)
  , mBuffer(nsnull)
@@ -608,22 +607,8 @@ nsHtml5Highlighter::FlushChars()
             PRInt32 len = i - mCStart;
             AppendCharacters(buf, mCStart, len);
             mCStart = i;
-            mUnicharsInThisPre += len;
           }
           ++mLineNumber;
-          if (mUnicharsInThisPre > NS_HTML5_HIGHLIGHTER_PRE_BREAK_THRESHOLD &&
-              !mInlinesOpen && mInCharacters) {
-            mUnicharsInThisPre = 0;
-            // Split the pre. See bug 86355.
-            Pop(); // span
-            Pop(); // pre
-            Push(nsGkAtoms::pre, nsnull);
-            nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
-            NS_ASSERTION(treeOp, "Tree op allocation failed.");
-            treeOp->InitAddLineNumberId(CurrentNode(), mLineNumber);
-            Push(nsGkAtoms::span, nsnull);
-            break;
-          }
           Push(nsGkAtoms::span, nsnull);
           nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
           NS_ASSERTION(treeOp, "Tree op allocation failed.");
@@ -640,7 +625,6 @@ nsHtml5Highlighter::FlushChars()
       PRInt32 len = mPos - mCStart;
       AppendCharacters(buf, mCStart, len);
       mCStart = mPos;
-      mUnicharsInThisPre += len;
     }
   }
 }
