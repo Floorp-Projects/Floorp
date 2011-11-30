@@ -392,7 +392,8 @@ enum CTypeProtoSlot {
   SLOT_FUNCTIONDATAPROTO = 8,  // common ancestor of all CData objects of FunctionType
   SLOT_INT64PROTO        = 9,  // ctypes.Int64.prototype object
   SLOT_UINT64PROTO       = 10, // ctypes.UInt64.prototype object
-  SLOT_CLOSURECX         = 11, // JSContext for use with FunctionType closures
+  SLOT_OURDATAPROTO      = 11, // the data prototype corresponding to this object
+  SLOT_CLOSURECX         = 12, // JSContext for use with FunctionType closures
   CTYPEPROTO_SLOTS
 };
 
