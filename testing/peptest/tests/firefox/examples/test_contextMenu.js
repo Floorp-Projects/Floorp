@@ -14,12 +14,12 @@
  * The Original Code is peptest.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ *   The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Andrew Halberstadt <halbersa@gmail.com>
+ *   Andrew Halberstadt <halbersa@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,7 +42,7 @@
  */
 
 // Import mozmill and initialize a controller
-Components.utils.import("resource://mozmill/driver/mozmill.js")
+Components.utils.import("resource://mozmill/driver/mozmill.js");
 let c = getBrowserController();
 
 // Open mozilla.org and wait for the page to load
@@ -50,11 +50,11 @@ c.open("http://mozilla.org");
 c.waitForPageLoad();
 
 // Grab reference to element on page (this is the <body> element in this case)
-let page = findElement.ID(c.tabs.activeTab, 'home');
+let page = findElement.ID(c.tabs.activeTab, 'header');
 // Perform our first action, reload.
 // It is very important to only place things that we
 // are interested in testing inside of a performAction call
-performAction('content_reload', function() {
+pep.performAction('content_reload', function() {
   page.rightClick();
   page.keypress('r');
 });
@@ -65,16 +65,16 @@ c.waitForPageLoad();
 
 page = findElement.ID(c.tabs.activeTab, 'main');
 // Perform our second action, go back
-performAction('content_back', function() {
+pep.performAction('content_back', function() {
   page.rightClick();
   page.keypress('b');
 });
 // Bug 699400 - waitForPageLoad times out when pressing back button
-c.sleep(10);
+c.sleep(100);
 
 page = findElement.ID(c.tabs.activeTab, 'home');
 // Perform our third action, scroll through context menu
-performAction('content_scroll', function() {
+pep.performAction('content_scroll', function() {
   page.rightClick();
   for (let i = 0; i < 15; ++i) {
     page.keypress('VK_DOWN');
@@ -86,17 +86,17 @@ performAction('content_scroll', function() {
 // Now test context menus in chrome
 let bar = findElement.ID(c.window.document, "appmenu-toolbar-button");
 bar.click();
-performAction('chrome_menu', function() {
+pep.performAction('chrome_menu', function() {
   bar.rightClick();
   bar.keypress('m');
 });
 
-performAction('chrome_addon', function() {
+pep.performAction('chrome_addon', function() {
   bar.rightClick();
   bar.keypress('a');
 });
 
-performAction('chrome_scroll', function() {
+pep.performAction('chrome_scroll', function() {
   bar.rightClick();
   for (let i = 0; i < 15; ++i) {
     page.keypress('VK_DOWN');

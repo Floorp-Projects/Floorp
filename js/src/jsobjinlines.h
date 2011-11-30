@@ -1261,17 +1261,18 @@ JSObject::slotsAndStructSize() const
 }
 
 inline size_t
-JSObject::dynamicSlotSize(JSUsableSizeFun usf) const
+JSObject::dynamicSlotSize(JSMallocSizeOfFun mallocSizeOf) const
 {
     size_t size = 0;
     if (hasDynamicSlots()) {
-        size_t usable = usf ? usf(slots) : 0;
-        size += usable ? usable : (numDynamicSlots() * sizeof(js::Value));
+        size_t bytes = numDynamicSlots() * sizeof(js::Value);
+        size += mallocSizeOf ? mallocSizeOf(slots, bytes) : bytes;
     }
     if (hasDynamicElements()) {
-        size_t nelements = js::ObjectElements::VALUES_PER_HEADER + getElementsHeader()->capacity;
-        size_t usable = usf ? usf(getElementsHeader()) : 0;
-        size += usable ? usable : (nelements * sizeof(js::Value));
+        size_t bytes =
+            (js::ObjectElements::VALUES_PER_HEADER +
+             getElementsHeader()->capacity) * sizeof(js::Value);
+        size += mallocSizeOf ? mallocSizeOf(getElementsHeader(), bytes) : bytes;
     }
     return size;
 }

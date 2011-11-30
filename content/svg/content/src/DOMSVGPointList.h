@@ -120,8 +120,7 @@ public:
    */
   PRUint32 Length() const {
     NS_ABORT_IF_FALSE(mItems.Length() == 0 ||
-                      mItems.Length() ==
-                        const_cast<DOMSVGPointList*>(this)->InternalList().Length(),
+                      mItems.Length() == InternalList().Length(),
                       "DOM wrapper's list length is out of sync");
     return mItems.Length();
   }
@@ -184,9 +183,9 @@ private:
    * get const protection, but our setter methods guard against changing
    * anim val lists.
    */
-  SVGPointList& InternalList();
+  SVGPointList& InternalList() const;
 
-  SVGAnimatedPointList& InternalAList();
+  SVGAnimatedPointList& InternalAList() const;
 
   /// Creates a DOMSVGPoint for aIndex, if it doesn't already exist.
   void EnsureItemAt(PRUint32 aIndex);

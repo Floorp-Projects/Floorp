@@ -105,6 +105,7 @@ enum TokenKind {
     TOK_CONTINUE,                  /* continue keyword */
     TOK_IN,                        /* in keyword */
     TOK_VAR,                       /* var keyword */
+    TOK_CONST,                     /* const keyword */
     TOK_WITH,                      /* with keyword */
     TOK_RETURN,                    /* return keyword */
     TOK_NEW,                       /* new keyword */
@@ -543,14 +544,7 @@ class TokenStream
     bool isEOF() const { return !!(flags & TSF_EOF); }
     bool hasOctalCharacterEscape() const { return flags & TSF_OCTAL_CHAR; }
 
-    /* Mutators. */
     bool reportCompileErrorNumberVA(ParseNode *pn, uintN flags, uintN errorNumber, va_list ap);
-    void mungeCurrentToken(TokenKind newKind) { tokens[cursor].type = newKind; }
-    void mungeCurrentToken(JSOp newOp) { tokens[cursor].t_op = newOp; }
-    void mungeCurrentToken(TokenKind newKind, JSOp newOp) {
-        mungeCurrentToken(newKind);
-        mungeCurrentToken(newOp);
-    }
 
   private:
     static JSAtom *atomize(JSContext *cx, CharBuffer &cb);
@@ -664,6 +658,10 @@ class TokenStream
     bool matchToken(TokenKind tt, uintN withFlags) {
         Flagger flagger(this, withFlags);
         return matchToken(tt);
+    }
+
+    void consumeKnownToken(TokenKind tt) {
+        JS_ALWAYS_TRUE(matchToken(tt));
     }
 
     /*

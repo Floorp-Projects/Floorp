@@ -242,117 +242,11 @@ private:
     Vector<CharacterRange> m_rangesUnicode;
 };
 
-struct BeginCharHelper {
-    BeginCharHelper(Vector<BeginChar>* beginChars, bool isCaseInsensitive = false)
-        : m_beginChars(beginChars)
-        , m_isCaseInsensitive(isCaseInsensitive)
-    {}
-
-    void addBeginChar(BeginChar beginChar, Vector<TermChain>* hotTerms, QuantifierType quantityType, unsigned quantityCount)
-    {
-        if (quantityType == QuantifierFixedCount && quantityCount > 1) {
-            // We duplicate the first found character if the quantity of the term is more than one. eg.: /a{3}/
-            beginChar.value |= beginChar.value << 16;
-            beginChar.mask |= beginChar.mask << 16;
-            addCharacter(beginChar);
-        } else if (quantityType == QuantifierFixedCount && quantityCount == 1 && hotTerms->size())
-            // In case of characters with fixed quantifier we should check the next character as well.
-            linkHotTerms(beginChar, hotTerms);
-        else
-            // In case of greedy matching the next character checking is unnecessary therefore we just store
-            // the first character.
-            addCharacter(beginChar);
-    }
-
-    // Merge two following BeginChars in the vector to reduce the number of character checks.
-    void merge(unsigned size)
-    {
-        for (unsigned i = 0; i < size; i++) {
-            BeginChar* curr = &m_beginChars->at(i);
-            BeginChar* next = &m_beginChars->at(i + 1);
-
-            // If the current and the next size of value is different we should skip the merge process
-            // because the 16bit and 32bit values are unmergable.
-            if (curr->value <= 0xFFFF && next->value > 0xFFFF)
-                continue;
-
-            unsigned diff = curr->value ^ next->value;
-
-            curr->mask |= diff;
-            curr->value |= curr->mask;
-
-            m_beginChars->remove(i + 1);
-            size--;
-        }
-    }
-
-private:
-    void addCharacter(BeginChar beginChar)
-    {
-        unsigned pos = 0;
-        unsigned range = m_beginChars->size();
-
-        // binary chop, find position to insert char.
-        while (range) {
-            unsigned index = range >> 1;
-
-            int val = m_beginChars->at(pos+index).value - beginChar.value;
-            if (!val)
-                return;
-            if (val < 0)
-                range = index;
-            else {
-                pos += (index+1);
-                range -= (index+1);
-            }
-        }
-
-        if (pos == m_beginChars->size())
-            m_beginChars->append(beginChar);
-        else
-            m_beginChars->insert(pos, beginChar);
-    }
-
-    // Create BeginChar objects by appending each terms from a hotTerms vector to an existing BeginChar object.
-    void linkHotTerms(BeginChar beginChar, Vector<TermChain>* hotTerms)
-    {
-        for (unsigned i = 0; i < hotTerms->size(); i++) {
-            PatternTerm hotTerm = hotTerms->at(i).term;
-            ASSERT(hotTerm.type == PatternTerm::TypePatternCharacter);
-
-            UChar characterNext = hotTerm.patternCharacter;
-
-            // Append a character to an existing BeginChar object.
-            if (characterNext <= 0x7f) {
-                unsigned mask = 0;
-
-                if (m_isCaseInsensitive && isASCIIAlpha(characterNext)) {
-                    mask = 32;
-                    characterNext = toASCIILower(characterNext);
-                }
-
-                addCharacter(BeginChar(beginChar.value | (characterNext << 16), beginChar.mask | (mask << 16)));
-            } else {
-                UChar upper, lower;
-                if (m_isCaseInsensitive && ((upper = Unicode::toUpper(characterNext)) != (lower = Unicode::toLower(characterNext)))) {
-                    addCharacter(BeginChar(beginChar.value | (upper << 16), beginChar.mask));
-                    addCharacter(BeginChar(beginChar.value | (lower << 16), beginChar.mask));
-                } else
-                    addCharacter(BeginChar(beginChar.value | (characterNext << 16), beginChar.mask));
-            }
-        }
-    }
-
-    Vector<BeginChar>* m_beginChars;
-    bool m_isCaseInsensitive;
-};
-
 class YarrPatternConstructor {
 public:
     YarrPatternConstructor(YarrPattern& pattern)
         : m_pattern(pattern)
         , m_characterClassConstructor(pattern.m_ignoreCase)
-        , m_beginCharHelper(&pattern.m_beginChars, pattern.m_ignoreCase)
         , m_invertParentheticalAssertion(false)
     {
         m_pattern.m_body = js::OffTheBooks::new_<PatternDisjunction>();
@@ -622,7 +516,7 @@ public:
         m_alternative = m_alternative->m_parent->addNewAlternative();
     }
 
-    unsigned setupAlternativeOffsets(PatternAlternative* alternative, unsigned currentCallFrameSize, unsigned initialInputPosition)
+    ErrorCode setupAlternativeOffsets(PatternAlternative* alternative, unsigned currentCallFrameSize, unsigned initialInputPosition, unsigned *callFrameSizeOut)
     {
         alternative->m_hasFixedSize = true;
         unsigned currentInputPosition = initialInputPosition;
@@ -673,18 +567,22 @@ public:
                 if (term.quantityCount == 1 && !term.parentheses.isCopy) {
                     if (term.quantityType != QuantifierFixedCount)
                         currentCallFrameSize += YarrStackSpaceForBackTrackInfoParenthesesOnce;
-                    currentCallFrameSize = setupDisjunctionOffsets(term.parentheses.disjunction, currentCallFrameSize, currentInputPosition);
+                    if (ErrorCode error = setupDisjunctionOffsets(term.parentheses.disjunction, currentCallFrameSize, currentInputPosition, &currentCallFrameSize))
+                        return error;
                     // If quantity is fixed, then pre-check its minimum size.
                     if (term.quantityType == QuantifierFixedCount)
                         currentInputPosition += term.parentheses.disjunction->m_minimumSize;
                     term.inputPosition = currentInputPosition;
                 } else if (term.parentheses.isTerminal) {
                     currentCallFrameSize += YarrStackSpaceForBackTrackInfoParenthesesTerminal;
-                    currentCallFrameSize = setupDisjunctionOffsets(term.parentheses.disjunction, currentCallFrameSize, currentInputPosition);
+                    if (ErrorCode error = setupDisjunctionOffsets(term.parentheses.disjunction, currentCallFrameSize, currentInputPosition, &currentCallFrameSize))
+                        return error;
                     term.inputPosition = currentInputPosition;
                 } else {
                     term.inputPosition = currentInputPosition;
-                    setupDisjunctionOffsets(term.parentheses.disjunction, BASE_FRAME_SIZE, currentInputPosition);
+                    unsigned dummy;
+                    if (ErrorCode error = setupDisjunctionOffsets(term.parentheses.disjunction, BASE_FRAME_SIZE, currentInputPosition, &dummy))
+                        return error;
                     currentCallFrameSize += YarrStackSpaceForBackTrackInfoParentheses;
                 }
                 // Fixed count of 1 could be accepted, if they have a fixed size *AND* if all alternatives are of the same length.
@@ -694,16 +592,18 @@ public:
             case PatternTerm::TypeParentheticalAssertion:
                 term.inputPosition = currentInputPosition;
                 term.frameLocation = currentCallFrameSize;
-                currentCallFrameSize = setupDisjunctionOffsets(term.parentheses.disjunction, currentCallFrameSize + YarrStackSpaceForBackTrackInfoParentheticalAssertion, currentInputPosition);
+                if (ErrorCode error = setupDisjunctionOffsets(term.parentheses.disjunction, currentCallFrameSize + YarrStackSpaceForBackTrackInfoParentheticalAssertion, currentInputPosition, &currentCallFrameSize))
+                    return error;
                 break;
             }
         }
 
         alternative->m_minimumSize = currentInputPosition - initialInputPosition;
-        return currentCallFrameSize;
+        *callFrameSizeOut = currentCallFrameSize;
+        return NoError;
     }
 
-    unsigned setupDisjunctionOffsets(PatternDisjunction* disjunction, unsigned initialCallFrameSize, unsigned initialInputPosition)
+    ErrorCode setupDisjunctionOffsets(PatternDisjunction* disjunction, unsigned initialCallFrameSize, unsigned initialInputPosition, unsigned *maximumCallFrameSizeOut)
     {
         if ((disjunction != m_pattern.m_body) && (disjunction->m_alternatives.size() > 1))
             initialCallFrameSize += YarrStackSpaceForBackTrackInfoAlternative;
@@ -714,24 +614,30 @@ public:
 
         for (unsigned alt = 0; alt < disjunction->m_alternatives.size(); ++alt) {
             PatternAlternative* alternative = disjunction->m_alternatives[alt];
-            unsigned currentAlternativeCallFrameSize = setupAlternativeOffsets(alternative, initialCallFrameSize, initialInputPosition);
+            unsigned currentAlternativeCallFrameSize;
+            if (ErrorCode error = setupAlternativeOffsets(alternative, initialCallFrameSize, initialInputPosition, &currentAlternativeCallFrameSize))
+                return error;
             minimumInputSize = std::min(minimumInputSize, alternative->m_minimumSize);
             maximumCallFrameSize = std::max(maximumCallFrameSize, currentAlternativeCallFrameSize);
             hasFixedSize &= alternative->m_hasFixedSize;
         }
         
-        ASSERT(minimumInputSize != UINT_MAX);
+        if (minimumInputSize == UINT_MAX)
+            return PatternTooLarge;
+
         ASSERT(maximumCallFrameSize >= initialCallFrameSize);
 
         disjunction->m_hasFixedSize = hasFixedSize;
         disjunction->m_minimumSize = minimumInputSize;
         disjunction->m_callFrameSize = maximumCallFrameSize;
-        return maximumCallFrameSize;
+        *maximumCallFrameSizeOut = maximumCallFrameSize;
+        return NoError;
     }
 
-    void setupOffsets()
+    ErrorCode setupOffsets()
     {
-        setupDisjunctionOffsets(m_pattern.m_body, BASE_FRAME_SIZE, 0);
+        unsigned dummy;
+        return setupDisjunctionOffsets(m_pattern.m_body, BASE_FRAME_SIZE, 0, &dummy);
     }
 
     // This optimization identifies sets of parentheses that we will never need to backtrack.
@@ -789,144 +695,10 @@ public:
         }
     }
 
-    // This function collects the terms which are potentially matching the first number of depth characters in the result.
-    // If this function returns false then it found at least one term which makes the beginning character
-    // look-up optimization inefficient.
-    bool setupDisjunctionBeginTerms(PatternDisjunction* disjunction, Vector<TermChain>* beginTerms, unsigned depth)
-    {
-        for (unsigned alt = 0; alt < disjunction->m_alternatives.size(); ++alt) {
-            PatternAlternative* alternative = disjunction->m_alternatives[alt];
-
-            if (!setupAlternativeBeginTerms(alternative, beginTerms, 0, depth))
-                return false;
-        }
-
-        return true;
-    }
-
-    bool setupAlternativeBeginTerms(PatternAlternative* alternative, Vector<TermChain>* beginTerms, unsigned termIndex, unsigned depth)
-    {
-        bool checkNext = true;
-        unsigned numTerms = alternative->m_terms.size();
-
-        while (checkNext && termIndex < numTerms) {
-            PatternTerm term = alternative->m_terms[termIndex];
-            checkNext = false;
-
-            switch (term.type) {
-            case PatternTerm::TypeAssertionBOL:
-            case PatternTerm::TypeAssertionEOL:
-            case PatternTerm::TypeAssertionWordBoundary:
-                return false;
-
-            case PatternTerm::TypeBackReference:
-            case PatternTerm::TypeForwardReference:
-                return false;
-
-            case PatternTerm::TypePatternCharacter:
-                if (termIndex != numTerms - 1) {
-                    beginTerms->append(TermChain(term));
-                    termIndex++;
-                    checkNext = true;
-                } else if (term.quantityType == QuantifierFixedCount) {
-                    beginTerms->append(TermChain(term));
-                    if (depth < 2 && termIndex < numTerms - 1 && term.quantityCount == 1)
-                        if (!setupAlternativeBeginTerms(alternative, &beginTerms->last().hotTerms, termIndex + 1, depth + 1))
-                            return false;
-                }
-
-                break;
-
-            case PatternTerm::TypeCharacterClass:
-                return false;
-
-            case PatternTerm::TypeParentheticalAssertion:
-                if (term.invert())
-                    return false;
-
-            case PatternTerm::TypeParenthesesSubpattern:
-                if (term.quantityType != QuantifierFixedCount) {
-                    if (termIndex == numTerms - 1)
-                        break;
-
-                    termIndex++;
-                    checkNext = true;
-                }
-
-                if (!setupDisjunctionBeginTerms(term.parentheses.disjunction, beginTerms, depth))
-                    return false;
-
-                break;
-            }
-        }
-
-        return true;
-    }
-
-    void setupBeginChars()
-    {
-        Vector<TermChain> beginTerms;
-        bool containsFixedCharacter = false;
-
-        if ((!m_pattern.m_body->m_hasFixedSize || m_pattern.m_body->m_alternatives.size() > 1)
-                && setupDisjunctionBeginTerms(m_pattern.m_body, &beginTerms, 0)) {
-            unsigned size = beginTerms.size();
-
-            // If we haven't collected any terms we should abort the preparation of beginning character look-up optimization.
-            if (!size)
-                return;
-
-            m_pattern.m_containsBeginChars = true;
-
-            for (unsigned i = 0; i < size; i++) {
-                PatternTerm term = beginTerms[i].term;
-
-                // We have just collected PatternCharacter terms, other terms are not allowed.
-                ASSERT(term.type == PatternTerm::TypePatternCharacter);
-
-                if (term.quantityType == QuantifierFixedCount)
-                    containsFixedCharacter = true;
-
-                UChar character = term.patternCharacter;
-                unsigned mask = 0;
-
-                if (character <= 0x7f) {
-                    if (m_pattern.m_ignoreCase && isASCIIAlpha(character)) {
-                        mask = 32;
-                        character = toASCIILower(character);
-                    }
-
-                    m_beginCharHelper.addBeginChar(BeginChar(character, mask), &beginTerms[i].hotTerms, term.quantityType, term.quantityCount);
-                } else {
-                    UChar upper, lower;
-                    if (m_pattern.m_ignoreCase && ((upper = Unicode::toUpper(character)) != (lower = Unicode::toLower(character)))) {
-                        m_beginCharHelper.addBeginChar(BeginChar(upper, mask), &beginTerms[i].hotTerms, term.quantityType, term.quantityCount);
-                        m_beginCharHelper.addBeginChar(BeginChar(lower, mask), &beginTerms[i].hotTerms, term.quantityType, term.quantityCount);
-                    } else
-                        m_beginCharHelper.addBeginChar(BeginChar(character, mask), &beginTerms[i].hotTerms, term.quantityType, term.quantityCount);
-                }
-            }
-
-            // If the pattern doesn't contain terms with fixed quantifiers then the beginning character look-up optimization is inefficient.
-            if (!containsFixedCharacter) {
-                m_pattern.m_containsBeginChars = false;
-                return;
-            }
-
-            size = m_pattern.m_beginChars.size();
-
-            if (size > 2)
-                m_beginCharHelper.merge(size - 1);
-            else if (size <= 1)
-                m_pattern.m_containsBeginChars = false;
-        }
-    }
-
 private:
     YarrPattern& m_pattern;
     PatternAlternative* m_alternative;
     CharacterClassConstructor m_characterClassConstructor;
-    BeginCharHelper m_beginCharHelper;
     bool m_invertCharacterClass;
     bool m_invertParentheticalAssertion;
 };
@@ -958,8 +730,8 @@ ErrorCode YarrPattern::compile(const UString& patternString)
     constructor.checkForTerminalParentheses();
     constructor.optimizeBOL();
         
-    constructor.setupOffsets();
-    constructor.setupBeginChars();
+    if (ErrorCode error = constructor.setupOffsets())
+        return error;
 
     return NoError;
 }
@@ -968,7 +740,6 @@ YarrPattern::YarrPattern(const UString& pattern, bool ignoreCase, bool multiline
     : m_ignoreCase(ignoreCase)
     , m_multiline(multiline)
     , m_containsBackreferences(false)
-    , m_containsBeginChars(false)
     , m_containsBOL(false)
     , m_numSubpatterns(0)
     , m_maxBackReference(0)

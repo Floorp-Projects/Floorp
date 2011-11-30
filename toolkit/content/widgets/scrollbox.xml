@@ -272,19 +272,26 @@
 
       <field name="_scrollAnim"><![CDATA[({
         scrollbox: this,
+        started: false,
         start: function scrollAnim_start(distance) {
           this.distance = distance;
           this.startPos = this.scrollbox.scrollPosition;
           this.duration = Math.min(1000, Math.round(50 * Math.sqrt(Math.abs(distance))));
           this.startTime = window.mozAnimationStartTime;
 
-          window.addEventListener("MozBeforePaint", this, false);
-          window.mozRequestAnimationFrame();
+          if (!this.started) {
+            this.started = true;
+            window.mozRequestAnimationFrame(this);
+          }
         },
         stop: function scrollAnim_stop() {
-          window.removeEventListener("MozBeforePaint", this, false);
+          this.started = false;
         },
-        handleEvent: function scrollAnim_handleEvent(event) {
+        sample: function scrollAnim_handleEvent(event) {
+          if (!this.started) {
+            // We've been stopped
+            return;
+          }
           const timePassed = event.timeStamp - this.startTime;
           const pos = timePassed >= this.duration ? 1 :
                       1 - Math.pow(1 - timePassed / this.duration, 4);
@@ -294,7 +301,7 @@
           if (pos == 1)
             this.scrollbox._stopSmoothScroll();
           else
-            window.mozRequestAnimationFrame();
+            window.mozRequestAnimationFrame(this);
         }
       })]]></field>
 
@@ -638,15 +645,22 @@
 
       <field name="_arrowScrollAnim"><![CDATA[({
         scrollbox: this,
+        started: false,
         start: function arrowSmoothScroll_start() {
           this.lastFrameTime = window.mozAnimationStartTime;
-          window.addEventListener("MozBeforePaint", this, false);
-          window.mozRequestAnimationFrame();
+          if (!this.started) {
+            this.started = true;
+            window.mozRequestAnimationFrame(this);
+          }
         },
         stop: function arrowSmoothScroll_stop() {
-          window.removeEventListener("MozBeforePaint", this, false);
+          this.started = false;
         },
-        handleEvent: function arrowSmoothScroll_handleEvent(event) {
+        sample: function arrowSmoothScroll_handleEvent(event) {
+          if (!this.started) {
+            // We've been stopped
+            return;
+          }
           const scrollIndex = this.scrollbox._scrollIndex;
           const timePassed = event.timeStamp - this.lastFrameTime;
           this.lastFrameTime = event.timeStamp;
@@ -654,7 +668,7 @@
           const scrollDelta = 0.5 * timePassed * scrollIndex;
           this.scrollbox.scrollPosition += scrollDelta;
 
-          window.mozRequestAnimationFrame();
+          window.mozRequestAnimationFrame(this);
         }
       })]]></field>
 
