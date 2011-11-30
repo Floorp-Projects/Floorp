@@ -64,9 +64,9 @@ SimpleTest.waitForFocus(function() {
 
   SimpleTest.executeSoon(function() {
     synthesizeKey("a", { accelKey: true }, frameWindow);
-    // Windows doesn't have primary selection, we should copy the text to the
-    // global clipboard.
-    if (navigator.platform.indexOf("Win") == 0) {
+    // Windows and Mac don't have primary selection, we should copy the text to
+    // the global clipboard.
+    if (!SpecialPowers.supportsSelectionClipboard()) {
       SimpleTest.waitForClipboard("pasted",
         function() { synthesizeKey("c", { accelKey: true }, frameWindow); },
         function() { SimpleTest.executeSoon(runInputTests1) },
