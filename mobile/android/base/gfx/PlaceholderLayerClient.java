@@ -136,9 +136,9 @@ public class PlaceholderLayerClient extends LayerClient {
             BufferedCairoImage image = new BufferedCairoImage(mBuffer, mWidth, mHeight, mFormat);
             SingleTileLayer tileLayer = new SingleTileLayer(image);
 
-            tileLayer.beginTransaction();
+            beginTransaction(tileLayer);
             tileLayer.setOrigin(PointUtils.round(mViewport.getDisplayportOrigin()));
-            tileLayer.endTransaction();
+            endTransaction(tileLayer);
 
             getLayerController().setRoot(tileLayer);
         }
