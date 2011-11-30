@@ -1255,15 +1255,14 @@ abstract public class GeckoApp
         mAppContext = this;
 
         if (Build.VERSION.SDK_INT >= 11) {
-            ActionBar actionBar = getActionBar();
+            GeckoActionBar actionBar = new GeckoActionBar();
             mBrowserToolbar = (BrowserToolbar) getLayoutInflater().inflate(R.layout.gecko_app_actionbar, null);
 
-            actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM |
-                                                                       ActionBar.DISPLAY_SHOW_HOME |
-                                                                       ActionBar.DISPLAY_SHOW_TITLE |
-                                                                       ActionBar.DISPLAY_USE_LOGO);
-            actionBar.setCustomView(mBrowserToolbar, new ActionBar.LayoutParams(ActionBar.LayoutParams.FILL_PARENT,
-                                                                                ActionBar.LayoutParams.WRAP_CONTENT));
+            actionBar.setDisplayOptions(this, ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM |
+                                                                             ActionBar.DISPLAY_SHOW_HOME |
+                                                                             ActionBar.DISPLAY_SHOW_TITLE |
+                                                                             ActionBar.DISPLAY_USE_LOGO);
+            actionBar.setCustomView(this, mBrowserToolbar);
         } else {
             mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
         }
