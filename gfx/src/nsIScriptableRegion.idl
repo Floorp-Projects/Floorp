@@ -46,7 +46,7 @@ class nsIntRegion;
 native nsIntRegion(nsIntRegion);
 
 
-[scriptable, uuid(f390b97c-a0cf-4cb4-b9e8-bfc15df76ab5)]
+[scriptable, uuid(a5f44cc7-2820-489b-b817-ae8a08506ff6)]
 interface nsIScriptableRegion : nsISupports
 {
   void init ( ) ;
@@ -192,7 +192,7 @@ interface nsIScriptableRegion : nsISupports
    * @return flat array of rects,ie [x1,y1,width1,height1,x2...].
    * The result will contain bogus data if values don't fit in 31 bit
    **/
-  void getRects();
+  [implicit_jscontext] jsval getRects();
 
   /**
   * does the region intersect the rectangle?
@@ -207,8 +207,3 @@ interface nsIScriptableRegion : nsISupports
   [noscript] readonly attribute nsIntRegion region;
   
 };
-
-
-%{ C++
-
-%}

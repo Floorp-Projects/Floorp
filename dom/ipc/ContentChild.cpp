@@ -111,11 +111,14 @@
 #include "nsIAccessibilityService.h"
 #endif
 
+#include "mozilla/dom/sms/SmsChild.h"
+
 using namespace mozilla::hal_sandbox;
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
 using namespace mozilla::docshell;
+using namespace mozilla::dom::sms;
 
 namespace mozilla {
 namespace dom {
@@ -532,6 +535,19 @@ ContentChild::DeallocPExternalHelperApp(PExternalHelperAppChild* aService)
 {
     ExternalHelperAppChild *child = static_cast<ExternalHelperAppChild*>(aService);
     child->Release();
+    return true;
+}
+
+PSmsChild*
+ContentChild::AllocPSms()
+{
+    return new SmsChild();
+}
+
+bool
+ContentChild::DeallocPSms(PSmsChild* aSms)
+{
+    delete aSms;
     return true;
 }
 

@@ -274,6 +274,12 @@ const NetUtil = {
      *        The input stream to read from.
      * @param aCount
      *        The number of bytes to read from the stream.
+     * @param aOptions [optional]
+     *        charset
+     *          The character encoding of stream data.
+     *        replacement
+     *          The character to replace unknown byte sequences.
+     *          If unset, it causes an exceptions to be thrown.
      *
      * @return the bytes from the input stream in string form.
      *
@@ -282,9 +288,11 @@ const NetUtil = {
      *         block the calling thread (non-blocking mode only).
      * @throws NS_ERROR_FAILURE if there are not enough bytes available to read
      *         aCount amount of data.
+     * @throws NS_ERROR_ILLEGAL_INPUT if aInputStream has invalid sequences
      */
     readInputStreamToString: function NetUtil_readInputStreamToString(aInputStream,
-                                                                      aCount)
+                                                                      aCount,
+                                                                      aOptions)
     {
         if (!(aInputStream instanceof Ci.nsIInputStream)) {
             let exception = new Components.Exception(
@@ -302,6 +310,33 @@ const NetUtil = {
                 Components.stack.caller
             );
             throw exception;
+        }
+
+        if (aOptions && "charset" in aOptions) {
+          let cis = Cc["@mozilla.org/intl/converter-input-stream;1"].
+                    createInstance(Ci.nsIConverterInputStream);
+          try {
+            // When replacement is set, the character that is unknown sequence 
+            // replaces with aOptions.replacement character.
+            if (!("replacement" in aOptions)) {
+              // aOptions.replacement isn't set.
+              // If input stream has unknown sequences for aOptions.charset,
+              // throw NS_ERROR_ILLEGAL_INPUT.
+              aOptions.replacement = 0;
+            }
+
+            cis.init(aInputStream, aOptions.charset, aCount,
+                     aOptions.replacement);
+            let str = {};
+            cis.readString(-1, str);
+            cis.close();
+            return str.value;
+          }
+          catch (e) {
+            // Adjust the stack so it throws at the caller's location.
+            throw new Components.Exception(e.message, e.result,
+                                           Components.stack.caller, e.data);
+          }
         }
 
         let sis = Cc["@mozilla.org/scriptableinputstream;1"].

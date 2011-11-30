@@ -6,7 +6,7 @@ browser.jar:
         skin/classic/browser/sanitizeDialog.css                      (sanitizeDialog.css)
 *       skin/classic/browser/aboutPrivateBrowsing.css                (aboutPrivateBrowsing.css)
 *       skin/classic/browser/aboutSessionRestore.css                 (aboutSessionRestore.css)
-        skin/classic/browser/aboutSessionRestore-window-icon.png     (aboutSessionRestore-window-icon.png)
+        skin/classic/browser/aboutSessionRestore-window-icon.png     (preferences/application.png)
         skin/classic/browser/aboutCertError.css                      (aboutCertError.css)
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/browser/aboutSyncTabs.css
@@ -51,10 +51,10 @@ browser.jar:
         skin/classic/browser/urlbar-history-dropmarker.png
         skin/classic/browser/feeds/feedIcon.png                      (feeds/feedIcon.png)
         skin/classic/browser/feeds/feedIcon16.png                    (feeds/feedIcon16.png)
-        skin/classic/browser/feeds/audioFeedIcon.png                 (feeds/audioFeedIcon.png)
-        skin/classic/browser/feeds/audioFeedIcon16.png               (feeds/audioFeedIcon16.png)
-        skin/classic/browser/feeds/videoFeedIcon.png                 (feeds/videoFeedIcon.png)
-        skin/classic/browser/feeds/videoFeedIcon16.png               (feeds/videoFeedIcon16.png)
+        skin/classic/browser/feeds/audioFeedIcon.png                 (feeds/feedIcon.png)
+        skin/classic/browser/feeds/audioFeedIcon16.png               (feeds/feedIcon16.png)
+        skin/classic/browser/feeds/videoFeedIcon.png                 (feeds/feedIcon.png)
+        skin/classic/browser/feeds/videoFeedIcon16.png               (feeds/feedIcon16.png)
         skin/classic/browser/feeds/subscribe.css                     (feeds/subscribe.css)
         skin/classic/browser/feeds/subscribe-ui.css                  (feeds/subscribe-ui.css)
         skin/classic/browser/inspector.css
@@ -204,10 +204,10 @@ browser.jar:
         skin/classic/aero/browser/urlbar-history-dropmarker.png
         skin/classic/aero/browser/feeds/feedIcon.png                 (feeds/feedIcon-aero.png)
         skin/classic/aero/browser/feeds/feedIcon16.png               (feeds/feedIcon16-aero.png)
-        skin/classic/aero/browser/feeds/audioFeedIcon.png            (feeds/audioFeedIcon-aero.png)
-        skin/classic/aero/browser/feeds/audioFeedIcon16.png          (feeds/audioFeedIcon16-aero.png)
-        skin/classic/aero/browser/feeds/videoFeedIcon.png            (feeds/videoFeedIcon-aero.png)
-        skin/classic/aero/browser/feeds/videoFeedIcon16.png          (feeds/videoFeedIcon16-aero.png)
+        skin/classic/aero/browser/feeds/audioFeedIcon.png            (feeds/feedIcon-aero.png)
+        skin/classic/aero/browser/feeds/audioFeedIcon16.png          (feeds/feedIcon16-aero.png)
+        skin/classic/aero/browser/feeds/videoFeedIcon.png            (feeds/feedIcon-aero.png)
+        skin/classic/aero/browser/feeds/videoFeedIcon16.png          (feeds/feedIcon16-aero.png)
         skin/classic/aero/browser/feeds/subscribe.css                (feeds/subscribe.css)
         skin/classic/aero/browser/feeds/subscribe-ui.css             (feeds/subscribe-ui.css)
         skin/classic/aero/browser/inspector.css
@@ -228,7 +228,7 @@ browser.jar:
         skin/classic/aero/browser/places/history.png                 (places/history-aero.png)
         skin/classic/aero/browser/places/allBookmarks.png            (places/allBookmarks-aero.png)
         skin/classic/aero/browser/places/unsortedBookmarks.png       (places/unsortedBookmarks-aero.png)
-        skin/classic/aero/browser/places/searching_16.png            (places/searching_16-aero.png)
+        skin/classic/aero/browser/places/searching_16.png            (places/searching_16.png)
         skin/classic/aero/browser/places/downloads.png               (places/downloads.png)
         skin/classic/aero/browser/preferences/alwaysAsk.png          (preferences/alwaysAsk-aero.png)
         skin/classic/aero/browser/preferences/application.png        (preferences/application-aero.png)
@@ -237,7 +237,6 @@ browser.jar:
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/aero/browser/preferences/Options-sync.png       (preferences/Options-sync.png)
 #endif
-        skin/classic/aero/browser/preferences/plugin.png             (preferences/plugin-aero.png)
         skin/classic/aero/browser/preferences/saveFile.png           (preferences/saveFile-aero.png)
 *       skin/classic/aero/browser/preferences/preferences.css        (preferences/preferences.css)
         skin/classic/aero/browser/preferences/applications.css       (preferences/applications.css)

@@ -146,7 +146,7 @@ chrome.jar:
   skin/images/aurora-lightbox-close.png     (images/aurora-lightbox-close.png)
 
 chrome.jar:
-% skin browser classic/1.0 %skin/gingerbread/ os=Android osversion=2.3 osversion=2.3.3 osversion=2.3.4 osversion=2.3.5 osversion=2.3.6 osversion=2.3.7
+% skin browser classic/1.0 %skin/gingerbread/ os=Android osversion=2.3 osversion=2.3.3 osversion=2.3.4 osversion=2.3.5 osversion=2.3.6 osversion=2.3.7 osversion=2.3.8 osversion>=4.0
 % skin browser gingerbread/1.0 %skin/gingerbread/
   skin/gingerbread/aboutPage.css                        (aboutPage.css)
   skin/gingerbread/about.css                            (about.css)
@@ -285,7 +285,7 @@ chrome.jar:
   skin/gingerbread/images/aurora-lightbox-close.png     (images/aurora-lightbox-close.png)
 
 chrome.jar:
-% skin browser classic/1.0 %skin/honeycomb/ os=Android osversion>=3.0
+% skin browser classic/1.0 %skin/honeycomb/ os=Android osversion=3.0 osversion=3.1 osversion=3.2 osversion=3.2.1 osversion=3.2.2 osversion=3.2.3 osversion=3.2.4 osversion=3.2.5 osversion=3.2.6 osversion=3.2.7 osversion=3.2.8 osversion=3.2.9
 % skin browser honeycomb/1.0 %skin/honeycomb/
   skin/honeycomb/aboutPage.css                        (aboutPage.css)
   skin/honeycomb/about.css                            (about.css)

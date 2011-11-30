@@ -132,7 +132,7 @@ const AnimatedZoom = {
     return this.beginTime != null;
   },
 
-  onBeforePaint: function(aTimeStamp) {
+  sample: function(aTimeStamp) {
     try {
       let tdiff = aTimeStamp - this.beginTime;
       let counter = tdiff / this.animationDuration;

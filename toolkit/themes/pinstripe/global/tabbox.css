@@ -46,6 +46,13 @@ tab:last-of-type {
   -moz-padding-end: 2px;
 }
 
+@media (-moz-mac-lion-theme) {
+  tab[selected="true"] {
+    color: #FFF;
+    text-shadow: rgba(0, 0, 0, 0.4) 0 1px;
+  }
+}
+
 .tab-middle {
   padding: 1px 6px 2px;
 }

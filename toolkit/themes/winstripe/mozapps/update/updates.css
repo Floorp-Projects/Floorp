@@ -34,7 +34,7 @@ wizardpage {
 }
 
 .remoteLoadingThrobber[state="error"] {
-  list-style-image: url("chrome://global/skin/icons/notfound.png");
+  list-style-image: url("chrome://global/skin/icons/information-16.png");
 }
 
 .wizard-buttons-separator {

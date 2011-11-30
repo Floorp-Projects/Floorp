@@ -628,8 +628,6 @@ pref("javascript.options.strict.debug",     true);
 pref("javascript.options.relimit",          true);
 pref("javascript.options.methodjit.content", true);
 pref("javascript.options.methodjit.chrome",  true);
-pref("javascript.options.jitprofiling.content", true);
-pref("javascript.options.jitprofiling.chrome",  true);
 pref("javascript.options.pccounts.content", false);
 pref("javascript.options.pccounts.chrome",  false);
 pref("javascript.options.methodjit_always", false);
@@ -1468,23 +1466,21 @@ pref("dom.max_script_run_time", 10);
 
 // Hang monitor timeout after which we kill the browser, in seconds
 // (0 is disabled)
-#ifndef DEBUG
-pref("hangmonitor.timeout", 30);
-#else
+// Disabled on all platforms per bug 705748 until the found issues are
+// resolved.
 pref("hangmonitor.timeout", 0);
-#endif
 
 #ifndef DEBUG
 // How long a plugin is allowed to process a synchronous IPC message
 // before we consider it "hung".
-pref("dom.ipc.plugins.timeoutSecs", 45);
+pref("dom.ipc.plugins.timeoutSecs", 25);
 // How long a plugin process will wait for a response from the parent
 // to a synchronous request before terminating itself. After this
 // point the child assumes the parent is hung.
 pref("dom.ipc.plugins.parentTimeoutSecs", 15);
 // How long a plugin launch is allowed to take before
 // we consider it failed.
-pref("dom.ipc.plugins.processLaunchTimeoutSecs", 45);
+pref("dom.ipc.plugins.processLaunchTimeoutSecs", 25);
 #else
 // No timeout in DEBUG builds
 pref("dom.ipc.plugins.timeoutSecs", 0);
@@ -3395,6 +3391,10 @@ pref("layout.3d-transforms.enabled", true);
 
 // Battery API
 pref("dom.battery.enabled", true);
+
+// WebSMS
+pref("dom.sms.enabled", false);
+pref("dom.sms.whitelist", "");
 
 // enable JS dump() function.
 pref("browser.dom.window.dump.enabled", false);

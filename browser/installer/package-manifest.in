@@ -148,6 +148,7 @@
 @BINPATH@/components/dom_json.xpt
 @BINPATH@/components/dom_range.xpt
 @BINPATH@/components/dom_sidebar.xpt
+@BINPATH@/components/dom_sms.xpt
 @BINPATH@/components/dom_storage.xpt
 @BINPATH@/components/dom_stylesheets.xpt
 @BINPATH@/components/dom_threads.xpt
@@ -356,6 +357,8 @@
 @BINPATH@/components/contentSecurityPolicy.js
 @BINPATH@/components/contentAreaDropListener.manifest
 @BINPATH@/components/contentAreaDropListener.js
+@BINPATH@/components/BrowserProfileMigrators.manifest
+@BINPATH@/components/ChromeProfileMigrator.js
 #ifdef XP_MACOSX
 @BINPATH@/components/libalerts_s.dylib
 #endif

@@ -157,7 +157,13 @@ struct Parser : private AutoGCRooter
     /* Public entry points for parsing. */
     ParseNode *statement();
     bool recognizeDirectivePrologue(ParseNode *pn, bool *isDirectivePrologueMember);
-    ParseNode *functionBody();
+
+    /*
+     * Parse a function body.  Pass StatementListBody if the body is a list of
+     * statements; pass ExpressionBody if the body is a single expression.
+     */
+    enum FunctionBodyType { StatementListBody, ExpressionBody };
+    ParseNode *functionBody(FunctionBodyType type);
 
   private:
     /*
@@ -188,7 +194,7 @@ struct Parser : private AutoGCRooter
     ParseNode *letStatement();
 #endif
     ParseNode *expressionStatement();
-    ParseNode *variables(bool inLetHead);
+    ParseNode *variables(ParseNodeKind kind, bool inLetHead);
     ParseNode *expr();
     ParseNode *assignExpr();
     ParseNode *condExpr1();

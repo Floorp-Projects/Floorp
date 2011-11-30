@@ -43,6 +43,7 @@ include protocol PExternalHelperApp;
 include protocol PHal;
 include protocol PMemoryReportRequest;
 include protocol PNecko;
+include protocol PSms;
 include protocol PStorage;
 include protocol PTestShell;
 
@@ -104,6 +105,7 @@ rpc protocol PContent
     manages PHal;
     manages PMemoryReportRequest;
     manages PNecko;
+    manages PSms;
     manages PStorage;
     manages PTestShell;
 
@@ -157,6 +159,8 @@ parent:
     PHal();
 
     PNecko();
+
+    PSms();
     
     PStorage(StorageConstructData data);
 

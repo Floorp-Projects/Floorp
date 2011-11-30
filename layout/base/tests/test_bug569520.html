@@ -25,9 +25,8 @@ var start = window.mozAnimationStartTime;
 var firstListenerTime;
 var secondListenerTime;
 
-function secondListener(ev) {
-  secondListenerTime = ev.timeStamp;
-  window.removeEventListener("MozBeforePaint", secondListener, false);
+function secondListener(t) {
+  secondListenerTime = t;
 
   // They really shouldn't be more than 100ms apart, but we can get weird
   // effects on slow machines.  5 minutes is our test timeout, though.
@@ -40,17 +39,14 @@ function secondListener(ev) {
   SimpleTest.finish();
 }
                             
-function firstListener(ev) {
-  firstListenerTime = ev.timeStamp;
-  window.removeEventListener("MozBeforePaint", firstListener, false);
-  window.addEventListener("MozBeforePaint", secondListener, false);
-  mozRequestAnimationFrame();
+function firstListener(t) {
+  firstListenerTime = t;
+  mozRequestAnimationFrame(secondListener);
 }
                             
 addLoadEvent(function() {
     setTimeout(function() {
-      window.addEventListener("MozBeforePaint", firstListener, false);
-      mozRequestAnimationFrame();
+      mozRequestAnimationFrame(firstListener);
     }, 100);
   });
 

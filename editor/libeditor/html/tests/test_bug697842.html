@@ -1,0 +1,125 @@
+<!DOCTYPE>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=697842
+-->
+<head>
+  <title>Test for Bug 697842</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="display">
+  <p id="editor" contenteditable style="min-height: 1.5em;"></p>
+</div>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="application/javascript">
+
+/** Test for Bug 697842 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function runTests()
+{
+  var editor = document.getElementById("editor");
+  editor.focus();
+
+  SimpleTest.executeSoon(function() {
+    var composingString = "";
+
+    function handler(aEvent) {
+      if (aEvent.type != "text") {
+        is(aEvent.data, composingString, "mismatch composition string");
+      }
+      aEvent.stopPropagation();
+      aEvent.preventDefault();
+    }
+
+    editor.addEventListener("compositionstart", handler, true);
+    editor.addEventListener("compositionend", handler, true);
+    editor.addEventListener("compositionupdate", handler, true);
+    editor.addEventListener("text", handler, true);
+
+    // start composition
+    synthesizeComposition({ type: "compositionstart" });
+
+    // input first character
+    composingString = "\u306B";
+    synthesizeComposition({ type: "compositionupdate", data: composingString });
+    synthesizeText(
+      { "composition":
+        { "string": composingString,
+          "clauses":
+          [
+            { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+          ]
+        },
+        "caret": { "start": 1, "length": 0 }
+      });
+
+    // input second character
+    composingString = "\u306B\u3085";
+    synthesizeComposition({ type: "compositionupdate", data: composingString });
+    synthesizeText(
+      { "composition":
+        { "string": composingString,
+          "clauses":
+          [
+            { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+          ]
+        },
+        "caret": { "start": 2, "length": 0 }
+      });
+
+    // convert them
+    synthesizeText(
+      { "composition":
+        { "string": composingString,
+          "clauses":
+          [
+            { "length": 2,
+              "attr": COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT }
+          ]
+        },
+        "caret": { "start": 2, "length": 0 }
+      });
+
+    // commit
+    synthesizeText(
+      { "composition":
+        { "string": composingString,
+          "clauses":
+          [
+            { "length": 0, "attr": 0 }
+          ]
+        },
+        "caret": { "start": 2, "length": 0 }
+      });
+
+    synthesizeComposition({ type: "compositionend", data: composingString });
+
+    is(editor.innerHTML, composingString,
+       "editor has unexpected result");
+
+    editor.removeEventListener("compositionstart", handler, true);
+    editor.removeEventListener("compositionend", handler, true);
+    editor.removeEventListener("compositionupdate", handler, true);
+    editor.removeEventListener("text", handler, true);
+
+    SimpleTest.finish();
+  });
+}
+
+
+</script>
+</body>
+
+</html>

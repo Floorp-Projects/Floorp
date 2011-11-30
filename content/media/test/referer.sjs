@@ -1,9 +1,24 @@
+function parseQuery(request, key) {
+  var params = request.queryString.split('&');
+  for (var j = 0; j < params.length; ++j) {
+    var p = params[j];
+	if (p == key)
+	  return true;
+    if (p.indexOf(key + "=") == 0)
+	  return p.substring(key.length + 1);
+	if (p.indexOf("=") < 0 && key == "")
+	  return p;
+  }
+  return false;
+}
+
 function handleRequest(request, response)
 {
   var referer = request.hasHeader("Referer") ? request.getHeader("Referer")
                                              : undefined; 
   if (referer == "http://mochi.test:8888/tests/content/media/test/test_referer.html") {
-    var [ignore, name, type] = request.queryString.match(/name=(.*)&type=(.*)$/);
+    var name = parseQuery(request, "name");
+	var type = parseQuery(request, "type");
     var file = Components.classes["@mozilla.org/file/directory_service;1"].
                           getService(Components.interfaces.nsIProperties).
                           get("CurWorkD", Components.interfaces.nsILocalFile);

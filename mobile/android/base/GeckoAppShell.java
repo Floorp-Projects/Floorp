@@ -135,6 +135,8 @@ public class GeckoAppShell
 
     public static native void notifyBatteryChange(double aLevel, boolean aCharging, double aRemainingTime);
 
+    public static native void notifySmsReceived(String aSender, String aBody, long aTimestamp);
+
     // A looper thread, accessed by GeckoAppShell.getHandler
     private static class LooperThread extends Thread {
         public SynchronousQueue<Handler> mHandlerQueue =
@@ -1463,6 +1465,9 @@ public class GeckoAppShell
         listeners.remove(listener);
     }
 
+    /*
+     * Battery API related methods.
+     */
     public static void enableBatteryNotifications() {
         GeckoBatteryManager.enableNotifications();
     }
@@ -1546,6 +1551,17 @@ public class GeckoAppShell
 
     static void hideProgressDialog() {
         // unused stub
+    }
+
+    /*
+     * WebSMS related methods.
+     */
+    public static int getNumberOfMessagesForText(String aText) {
+        return GeckoSmsManager.getNumberOfMessagesForText(aText);
+    }
+
+    public static void sendMessage(String aNumber, String aMessage) {
+        GeckoSmsManager.send(aNumber, aMessage);
     }
 
     public static void emitGeckoAccessibilityEvent (int eventType, String role, String text, String description, boolean enabled, boolean checked, boolean password) {

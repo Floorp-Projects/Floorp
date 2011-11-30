@@ -4295,10 +4295,14 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
 }
 
 /* static */
-nsresult
-nsLayoutUtils::GetTextRunMemoryForFrames(nsIFrame* aFrame, PRUint64* aTotal)
+size_t
+nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
+                                       nsMallocSizeOfFun aMallocSizeOf,
+                                       bool clear)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
+
+  size_t total = 0;
 
   if (aFrame->GetType() == nsGkAtoms::textFrame) {
     nsTextFrame* textFrame = static_cast<nsTextFrame*>(aFrame);
@@ -4306,14 +4310,14 @@ nsLayoutUtils::GetTextRunMemoryForFrames(nsIFrame* aFrame, PRUint64* aTotal)
       gfxTextRun *run = textFrame->GetTextRun(
         (i != 0) ? nsTextFrame::eInflated : nsTextFrame::eNotInflated);
       if (run) {
-        if (aTotal) {
-          run->AccountForSize(aTotal);
+        if (clear) {
+          run->ResetSizeOfAccountingFlags();
         } else {
-          run->ClearSizeAccounted();
+          total += run->MaybeSizeOfIncludingThis(aMallocSizeOf);
         }
       }
     }
-    return NS_OK;
+    return total;
   }
 
   nsAutoTArray<nsIFrame::ChildList,4> childListArray;
@@ -4323,11 +4327,10 @@ nsLayoutUtils::GetTextRunMemoryForFrames(nsIFrame* aFrame, PRUint64* aTotal)
        !childLists.IsDone(); childLists.Next()) {
     for (nsFrameList::Enumerator e(childLists.CurrentList());
          !e.AtEnd(); e.Next()) {
-      GetTextRunMemoryForFrames(e.get(), aTotal);
+      total += SizeOfTextRunsForFrames(e.get(), aMallocSizeOf, clear);
     }
   }
-
-  return NS_OK;
+  return total;
 }
 
 /* static */

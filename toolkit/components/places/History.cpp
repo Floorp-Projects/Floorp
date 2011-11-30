@@ -1295,7 +1295,7 @@ PRInt64 GetHistoryObserversSize()
   History* history = History::GetService();
   if (!history)
     return 0;
-  return sizeof(*history) + history->SizeOf();
+  return history->SizeOfIncludingThis(MemoryReporterMallocSizeOf);
 }
 
 NS_MEMORY_REPORTER_IMPLEMENT(HistoryService,
@@ -1585,9 +1585,10 @@ History::SizeOfEnumerator(KeyClass* aEntry, void* aArg)
 }
 
 PRInt64
-History::SizeOf()
+History::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOfThis)
 {
-  PRInt64 size = mObservers.SizeOf();
+  PRInt64 size = aMallocSizeOfThis(this, sizeof(History)) +
+                 mObservers.ShallowSizeOfExcludingThis(aMallocSizeOfThis);
   if (mObservers.IsInitialized()) {
     mObservers.EnumerateEntries(SizeOfEnumerator, &size);
   }

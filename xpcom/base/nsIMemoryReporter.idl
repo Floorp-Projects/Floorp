@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com> (original author)
+ *   Nicholas Nethercote <nnethercote@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,6 +40,13 @@
 #include "nsISupports.idl"
 
 interface nsISimpleEnumerator;
+
+/*
+ * Memory reporters measure Firefox's memory usage.  They are mainly used to
+ * generate the about:memory page.  You should read
+ * https://wiki.mozilla.org/Memory_Reporting before writing a memory
+ * reporter.
+ */
 
 /*
  * An nsIMemoryReporter reports a single memory measurement as an object.
@@ -305,5 +313,69 @@ nsresult NS_RegisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter);
 
 nsresult NS_UnregisterMemoryReporter (nsIMemoryReporter *reporter);
 nsresult NS_UnregisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter);
+
+namespace mozilla {
+
+/*
+ * This function should be used by all traversal-based memory reporters.
+ * - On platforms where moz_malloc_usable_size() returns 0 it just returns
+ *   |computedSize| (this happens on platforms where malloc_usable_size() or
+ *   equivalent isn't available).
+ * - Otherwise, it |returns moz_malloc_usable_size(p)|, but only after doing
+ *   some sanity checking -- it will assert if the usable size is too
+ *   dissimilar to |computedSize|.  (However, this checking is skipped if
+ *   |computedSize| is zero, which is useful if the computation is not worth
+ *   the effort, e.g. because it's tricky and the |computedSize| would be
+ *   small.)
+ */
+size_t MemoryReporterMallocSizeOf(const void *ptr, size_t computedSize);
+
+/*
+ * These functions are like MemoryReporterMallocSizeOf(), and should be used by
+ * all counter-based memory reporters when incrementing/decrementing a counter.
+ */
+size_t MemoryReporterMallocSizeOfForCounterInc(const void *ptr,
+                                               size_t computedSize);
+size_t MemoryReporterMallocSizeOfForCounterDec(const void *ptr,
+                                               size_t computedSize);
+
+/*
+ * For the purposes of debugging, temporary profiling, and DMD integration, it
+ * is sometimes useful to temporarily create multiple variants of
+ * MemoryReporterMallocSizeOf(), with each one distinguished by a string
+ * |name|.  This macro makes creating such variants easy.  |name| isn't used,
+ * but it will be if extra debugging code is temporarily added.
+ */
+#define NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(fn, name)                        \
+  size_t fn(const void *ptr, size_t computedSize)                             \
+  {                                                                           \
+      size_t usable = moz_malloc_usable_size((void*)ptr);                     \
+      if (!usable) {                                                          \
+          return computedSize;                                                \
+      }                                                                       \
+      NS_MEMORY_REPORTER_CHECK_SIZES(usable, computedSize);                   \
+      return usable;                                                          \
+  }
+
+/*
+ * This is used by the MemoryReporterMallocSizeOf* functions for checking
+ * usable against computedSize.
+ */
+#define NS_MEMORY_REPORTER_CHECK_SIZES(usable, computedSize)                  \
+  do {                                                                        \
+    /* The factor of two is because no reasonable heap allocator will    */   \
+    /* return a block more than twice the requested size.  The one       */   \
+    /* exception is that a request less than N bytes may be rounded up   */   \
+    /* by the allocator to N bytes (we use N = 16 in our checking        */   \
+    /* because that's what the default allocator on Mac uses).  Also, if */   \
+    /* computedSize is 0 we don't check it against usable.               */   \
+    NS_ASSERTION(usable >= computedSize,                                      \
+                 "MemoryReporterMallocSizeOf: computedSize is too big");      \
+    NS_ASSERTION(usable < computedSize * 2 || usable <= 16 ||                 \
+                 computedSize == 0,                                           \
+                 "MemoryReporterMallocSizeOf: computedSize is too small");    \
+  } while(0)
+
+}
 
 %}

@@ -354,6 +354,8 @@ size_t sCustomIteratorCount = 0;
 static inline bool
 GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
+
     /* Check whether we have a valid __iterator__ method. */
     JSAtom *atom = cx->runtime->atomState.iteratorAtom;
     if (!js_GetMethod(cx, obj, ATOM_TO_JSID(atom), JSGET_NO_METHOD_BARRIER, vp))

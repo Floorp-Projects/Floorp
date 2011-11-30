@@ -52,6 +52,10 @@
 
 #include "gfxContext.h"
 
+#ifdef ACCESSIBILITY
+#include "nsAccessibilityService.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::layers;
 
@@ -360,6 +364,10 @@ nsHTMLCanvasFrame::GetContinuationOffset(nscoord* aWidth) const
 already_AddRefed<nsAccessible>
 nsHTMLCanvasFrame::CreateAccessible()
 {
+  nsAccessibilityService* accService = nsIPresShell::AccService();
+  if (accService) {
+    return accService->CreateHTMLCanvasAccessible(mContent, PresContext()->PresShell());
+  }
   return nsnull;
 }
 #endif

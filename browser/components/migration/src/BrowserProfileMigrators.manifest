@@ -1,0 +1,2 @@
+component {4cec1de4-1671-4fc3-a53e-6c539dc77a26} ChromeProfileMigrator.js
+contract @mozilla.org/profile/migrator;1?app=browser&type=chrome {4cec1de4-1671-4fc3-a53e-6c539dc77a26}

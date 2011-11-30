@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="A" width=200 height=50></canvas><br />
+<canvas id="B" width=200 height=50></canvas>
+<script>
+  var canvasA = document.getElementById("A"),
+    ctxA = canvasA.getContext('2d'),
+    canvasB = document.getElementById("B"),
+    ctxB = canvasB.getContext('2d'),
+    width = canvasA.width,
+    height = canvasA.height;
+
+  ctxA.fillStyle = 'green';
+  ctxA.fillRect(0, 0, width, height);
+
+  ctxB.drawImage(canvasA, 0, 0);
+
+  ctxA.fillStyle = 'red';
+  ctxA.fillRect(0, 0, width, height);
+</script>
+</body>
+</html>

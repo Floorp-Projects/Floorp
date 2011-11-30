@@ -3409,12 +3409,7 @@ freebsd*|openbsd*)
     CPPFLAGS="${CPPFLAGS} ${X_CFLAGS}"
     ;;
 esac
-MOZ_CHECK_HEADERS(sys/byteorder.h compat.h getopt.h)
-MOZ_CHECK_HEADERS(sys/bitypes.h memory.h unistd.h)
-MOZ_CHECK_HEADERS(gnu/libc-version.h nl_types.h)
-MOZ_CHECK_HEADERS(malloc.h)
-MOZ_CHECK_HEADERS(X11/XKBlib.h)
-MOZ_CHECK_HEADERS(io.h)
+MOZ_CHECK_COMMON_HEADERS
 
 dnl These are all the places some variant of statfs can be hiding.
 MOZ_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
@@ -5936,12 +5931,11 @@ if test "$MOZ_XTF"; then
 fi
 
 dnl ========================================================
-dnl Pref extensions (autoconfig and system-pref)
+dnl Pref extensions (autoconfig)
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(pref-extensions,
 [  --disable-pref-extensions
-                          Disable pref extensions such as autoconfig and
-                          system-pref],
+                          Disable pref extensions such as autoconfig],
   MOZ_PREF_EXTENSIONS=,
   MOZ_PREF_EXTENSIONS=1 )
 
@@ -7325,17 +7319,6 @@ MOZ_ARG_ENABLE_BOOL(trace-jscalls,
     MOZ_TRACE_JSCALLS= )
 if test -n "$MOZ_TRACE_JSCALLS"; then
     AC_DEFINE(MOZ_TRACE_JSCALLS)
-fi
-
-dnl ========================================================
-dnl = Use TraceVis
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(tracevis,
-[  --enable-tracevis       Enable TraceVis tracing tool (default=no)],
-    MOZ_TRACEVIS=1,
-    MOZ_TRACEVIS= )
-if test -n "$MOZ_TRACEVIS"; then
-    AC_DEFINE(MOZ_TRACEVIS)
 fi
 
 dnl ========================================================
@@ -8762,8 +8745,8 @@ if test "$USE_FC_FREETYPE"; then
     if test "$COMPILE_ENVIRONMENT"; then
     	_SAVE_CPPFLAGS="$CPPFLAGS"
     	CPPFLAGS="$CPPFLAGS $FT2_CFLAGS $XCFLAGS"
-        AC_CHECK_HEADERS(fontconfig/fcfreetype.h, ,
-            [AC_MSG_ERROR(Can't find header fontconfig/fcfreetype.h.)])
+        MOZ_CHECK_HEADERS([fontconfig/fcfreetype.h], ,
+            [AC_MSG_ERROR(Can't find header fontconfig/fcfreetype.h.)], [#include <fontconfig/fontconfig.h>])
     	CPPFLAGS="$_SAVE_CPPFLAGS"
     else
         AC_DEFINE(HAVE_FONTCONFIG_FCFREETYPE_H)

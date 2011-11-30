@@ -41,7 +41,7 @@
 
 #include "domstubs.idl"
 
-interface nsIAnimationFrameListener;
+interface nsIFrameRequestCallback;
 interface nsIControllers;
 interface nsIDOMBlob;
 interface nsIDOMLocation;
@@ -418,7 +418,7 @@ interface nsIDOMWindow : nsISupports
    * @see <http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/RequestAnimationFrame/Overview.html>
    */
   void
-    mozRequestAnimationFrame([optional] in nsIAnimationFrameListener aListener);
+    mozRequestAnimationFrame(in nsIFrameRequestCallback aCallback);
 
   /**
    * The current animation start time in milliseconds since the epoch.

@@ -391,29 +391,25 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
   nsINode* targetNode = accessible->GetNode();
 
 #ifdef MOZ_XUL
-  bool isTree = targetNode->IsElement() &&
-    targetNode->AsElement()->NodeInfo()->Equals(nsGkAtoms::tree, kNameSpaceID_XUL);
+  nsRefPtr<nsXULTreeAccessible> treeAcc;
+  if (targetNode->IsElement() &&
+      targetNode->AsElement()->NodeInfo()->Equals(nsGkAtoms::tree,
+                                                  kNameSpaceID_XUL)) {
+    treeAcc = do_QueryObject(accessible);
 
-  if (isTree) {
-    nsRefPtr<nsXULTreeAccessible> treeAcc = do_QueryObject(accessible);
-    NS_ASSERTION(treeAcc,
-                 "Accessible for xul:tree isn't nsXULTreeAccessible.");
+    if (eventType.EqualsLiteral("TreeViewChanged")) {
+      treeAcc->TreeViewChanged();
+      return;
+    }
 
-    if (treeAcc) {
-      if (eventType.EqualsLiteral("TreeViewChanged")) {
-        treeAcc->TreeViewChanged();
-        return;
-      }
+    if (eventType.EqualsLiteral("TreeRowCountChanged")) {
+      HandleTreeRowCountChangedEvent(aDOMEvent, treeAcc);
+      return;
+    }
 
-      if (eventType.EqualsLiteral("TreeRowCountChanged")) {
-        HandleTreeRowCountChangedEvent(aDOMEvent, treeAcc);
-        return;
-      }
-      
-      if (eventType.EqualsLiteral("TreeInvalidated")) {
-        HandleTreeInvalidatedEvent(aDOMEvent, treeAcc);
-        return;
-      }
+    if (eventType.EqualsLiteral("TreeInvalidated")) {
+      HandleTreeInvalidatedEvent(aDOMEvent, treeAcc);
+      return;
     }
   }
 #endif
@@ -451,18 +447,16 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
     return;
   }
 
-  nsAccessible *treeItemAccessible = nsnull;
+  nsAccessible* treeItemAcc = nsnull;
 #ifdef MOZ_XUL
-  // If it's a tree element, need the currently selected item
-  if (isTree) {
-    treeItemAccessible = accessible->CurrentItem();
-    if (treeItemAccessible)
-      accessible = treeItemAccessible;
+  // If it's a tree element, need the currently selected item.
+  if (treeAcc) {
+    treeItemAcc = accessible->CurrentItem();
+    if (treeItemAcc)
+      accessible = treeItemAcc;
   }
-#endif
 
-#ifdef MOZ_XUL
-  if (treeItemAccessible && eventType.EqualsLiteral("OpenStateChange")) {
+  if (treeItemAcc && eventType.EqualsLiteral("OpenStateChange")) {
     PRUint64 state = accessible->State();
     bool isEnabled = (state & states::EXPANDED) != 0;
 
@@ -472,7 +466,7 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
     return;
   }
 
-  if (treeItemAccessible && eventType.EqualsLiteral("select")) {
+  if (treeItemAcc && eventType.EqualsLiteral("select")) {
     // XXX: We shouldn't be based on DOM select event which doesn't provide us
     // any context info. We should integrate into nsTreeSelection instead.
     // If multiselect tree, we should fire selectionadd or selection removed
@@ -491,8 +485,10 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
         return;
       }
 
-      nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SELECTION,
-                              treeItemAccessible);
+      nsRefPtr<AccSelChangeEvent> selChangeEvent =
+        new AccSelChangeEvent(treeAcc, treeItemAcc,
+                              AccSelChangeEvent::eSelectionAdd);
+      nsEventShell::FireEvent(selChangeEvent);
       return;
     }
   }

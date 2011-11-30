@@ -401,11 +401,11 @@ Preferences::ReadUserPrefs(nsIFile *aFile)
   nsresult rv;
 
   if (nsnull == aFile) {
-    rv = UseDefaultPrefFile();
-    UseUserPrefFile();
 
     NotifyServiceObservers(NS_PREFSERVICE_READ_TOPIC_ID);
 
+    rv = UseDefaultPrefFile();
+    UseUserPrefFile();
   } else {
     rv = ReadAndOwnUserPrefFile(aFile);
   }

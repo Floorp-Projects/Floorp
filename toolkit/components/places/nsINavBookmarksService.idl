@@ -281,7 +281,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(573f99bd-988c-4253-836f-4ce009d33ac6)]
+[scriptable, uuid(5398fdee-72d8-4100-9863-6bb7f88274e0)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
@@ -319,6 +319,8 @@ interface nsINavBookmarksService : nsISupports
   const unsigned short TYPE_BOOKMARK = 1;
   const unsigned short TYPE_FOLDER = 2;
   const unsigned short TYPE_SEPARATOR = 3;
+  // Dynamic containers are deprecated and unsupported.
+  // This const exists just to avoid reusing the value.
   const unsigned short TYPE_DYNAMIC_CONTAINER = 4;
 
   /**
@@ -359,24 +361,6 @@ interface nsINavBookmarksService : nsISupports
    */
   long long createFolder(in long long aParentFolder, in AUTF8String name,
                          in long index);
-
-  /**
-   * Creates a dynamic container under the given parent folder.
-   *
-   *  @param aParentFolder
-   *         The id of the parent folder
-   *  @param aName
-   *         The name of the new folder
-   *  @param aContractId
-   *         The contract id of the service which is to manipulate this
-   *         container.
-   *  @param aIndex
-   *         The index to insert at, or DEFAULT_INDEX to append
-   *         
-   *  @return The ID of the newly-inserted folder.
-   */
-  long long createDynamicContainer(in long long aParentFolder, in AUTF8String aName,
-                                   in AString aContractId, in long aIndex);
 
   /**
    * Gets an undo-able transaction for removing a folder from the bookmarks

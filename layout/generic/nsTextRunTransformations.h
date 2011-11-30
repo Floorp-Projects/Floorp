@@ -132,8 +132,9 @@ public:
     }
   }
 
-  // override the gfxTextRun impl to account for additional members here
-  virtual PRUint64 ComputeSize();
+  // override the gfxTextRun impls to account for additional members here
+  virtual NS_MUST_OVERRIDE size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf);
+  virtual NS_MUST_OVERRIDE size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
 
   nsTransformingTextRunFactory       *mFactory;
   nsTArray<nsRefPtr<nsStyleContext> > mStyles;
