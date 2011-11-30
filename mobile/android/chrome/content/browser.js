@@ -48,6 +48,9 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "URIFixup",
   "@mozilla.org/docshell/urifixup;1", "nsIURIFixup");
+XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
+  "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
+const kStateActive = 0x00000001; // :active pseudoclass for elements
 
 // TODO: Take into account ppi in these units?
 
@@ -846,6 +849,7 @@ var NativeWindow = {
     },
 
     observe: function(aSubject, aTopic, aData) {
+      BrowserEventHandler._cancelTapHighlight();
       let data = JSON.parse(aData);
       // content gets first crack at cancelling context menus
       this._sendToContent(data.x, data.y);
@@ -1393,10 +1397,52 @@ var BrowserEventHandler = {
     window.addEventListener("mouseup", this, true);
     window.addEventListener("mousemove", this, true);
 
+    Services.obs.addObserver(this, "Gesture:SingleTap", false);
+    Services.obs.addObserver(this, "Gesture:ShowPress", false);
+    Services.obs.addObserver(this, "Gesture:CancelTouch", false);
+
     BrowserApp.deck.addEventListener("DOMContentLoaded", this, true);
     BrowserApp.deck.addEventListener("DOMLinkAdded", this, true);
     BrowserApp.deck.addEventListener("DOMTitleChanged", this, true);
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "Gesture:CancelTouch") {
+      this._cancelTapHighlight();
+    } else if (aTopic == "Gesture:ShowPress") {
+      let data = JSON.parse(aData);
+      let closest = ElementTouchHelper.elementFromPoint(BrowserApp.selectedBrowser.contentWindow,
+                                                        data.x, data.y);
+      if (!closest)
+        closest = ElementTouchHelper.anyElementFromPoint(BrowserApp.selectedBrowser.contentWindow,
+                                                        data.x, data.y);
+      if (closest)
+        this._doTapHighlight(closest);
+    } else if (aTopic == "Gesture:SingleTap") {
+      let element = this._highlightElement;
+      if (element && !FormAssistant.handleClick(element)) {
+        let data = JSON.parse(aData);
+        [data.x, data.y] = ElementTouchHelper.toScreenCoords(element.ownerDocument.defaultView, data.x, data.y);
+
+        this._sendMouseEvent("mousemove", element, data.x, data.y);
+        this._sendMouseEvent("mousedown", element, data.x, data.y);
+        this._sendMouseEvent("mouseup",   element, data.x, data.y);
+      }
+      this._cancelTapHighlight();
+    }
+  },
+
+  _highlihtElement: null,
+
+  _doTapHighlight: function _doTapHighlight(aElement) {
+    DOMUtils.setContentState(aElement, kStateActive);
+    this._highlightElement = aElement;
+  },
+
+  _cancelTapHighlight: function _cancelTapHighlight() {
+    DOMUtils.setContentState(BrowserApp.selectedBrowser.contentWindow.document.documentElement, kStateActive);
+    this._highlightElement = null;
   },
 
   handleEvent: function(aEvent) {
@@ -1484,298 +1530,6 @@ var BrowserEventHandler = {
         });
         break;
       }
-
-      case "click":
-        if (this.blockClick) {
-          aEvent.stopPropagation();
-          aEvent.preventDefault();
-        } else {
-          let closest = ElementTouchHelper.elementFromPoint(BrowserApp.selectedBrowser.contentWindow, aEvent.clientX, aEvent.clientY);
-          if (closest) {
-            aEvent.stopPropagation();
-            aEvent.preventDefault();
-            this._sendMouseEvent("mousedown", closest, aEvent.clientX, aEvent.clientY);
-            this._sendMouseEvent("mouseup", closest, aEvent.clientX, aEvent.clientY);
-          } else {
-            FormAssistant.handleClick(aEvent);
-          }
-        }
-        break;
-
-      case "mousedown":
-        this.startX = aEvent.clientX;
-        this.startY = aEvent.clientY;
-        this.blockClick = false;
-
-        this.firstMovement = true;
-        this.edx = 0;
-        this.edy = 0;
-        this.lockXaxis = false;
-        this.lockYaxis = false;
-
-        this.motionBuffer = [];
-        this._updateLastPosition(aEvent.clientX, aEvent.clientY, 0, 0);
-        this.panElement = this._findScrollableElement(aEvent.originalTarget,
-                                                      true);
-
-        if (this.panElement)
-          this.panning = true;
-        if (!this._elementReceivesInput(aEvent.target))
-          aEvent.preventDefault();  // Stops selection.
-        break;
-
-      case "mousemove":
-        aEvent.stopPropagation();
-        aEvent.preventDefault();
-
-        if (!this.panning)
-          break;
-
-        this.edx += aEvent.clientX - this.lastX;
-        this.edy += aEvent.clientY - this.lastY;
-
-        // If this is the first panning motion, check if we can
-        // move in the given direction. If we can't, find an
-        // ancestor that can.
-        // We do this per-axis, as often the very first movement doesn't
-        // reflect the direction of movement for both axes.
-        if (this.firstMovement &&
-            (Math.abs(this.edx) > kDragThreshold ||
-             Math.abs(this.edy) > kDragThreshold)) {
-          this.firstMovement = false;
-          let originalElement = this.panElement;
-
-          // Decide if we want to lock an axis while scrolling
-          if (Math.abs(this.edx) > Math.abs(this.edy) * kAxisLockRatio)
-            this.lockYaxis = true;
-          else if (Math.abs(this.edy) > Math.abs(this.edx) * kAxisLockRatio)
-            this.lockXaxis = true;
-
-          // See if we've reached the extents of this element and if so,
-          // find an element above it that can be scrolled.
-          while (this.panElement &&
-                 !this._elementCanScroll(this.panElement,
-                                         -this.edx,
-                                         -this.edy)) {
-            this.panElement =
-              this._findScrollableElement(this.panElement, false);
-          }
-
-          // If there are no scrollable elements above the element whose
-          // extents we've reached, let that element be scrolled.
-          if (!this.panElement)
-            this.panElement = originalElement;
-        }
-
-        // Only scroll once we've moved past the drag threshold
-        if (!this.firstMovement) {
-          this._scrollElementBy(this.panElement,
-                                this.lockXaxis ? 0 : -this.edx,
-                                this.lockYaxis ? 0 : -this.edy);
-
-          // Note, it's important that this happens after the scrollElementBy,
-          // as this will modify the clientX/clientY to be relative to the
-          // correct element.
-          this._updateLastPosition(aEvent.clientX, aEvent.clientY,
-                                   this.lockXaxis ? 0 : this.edx,
-                                   this.lockYaxis ? 0 : this.edy);
-
-          // Allow breaking out of axis lock if we move past a certain threshold
-          if (this.lockXaxis) {
-            if (Math.abs(this.edx) > kLockBreakThreshold)
-              this.lockXaxis = false;
-          } else {
-            this.edx = 0;
-          }
-
-          if (this.lockYaxis) {
-            if (Math.abs(this.edy) > kLockBreakThreshold)
-              this.lockYaxis = false;
-          } else {
-            this.edy = 0;
-          }
-        }
-        break;
-
-      case "mouseup":
-        this.panning = false;
-
-        if (Math.abs(aEvent.clientX - this.startX) > kDragThreshold ||
-            Math.abs(aEvent.clientY - this.startY) > kDragThreshold) {
-          this.blockClick = true;
-          aEvent.stopPropagation();
-          aEvent.preventDefault();
-
-          // Calculate a regression line for the last few motion events in
-          // the same direction to estimate the velocity. This ought to do a
-          // reasonable job of accounting for jitter/bad events.
-          this.panLastTime = Date.now();
-
-          // Variables required for calculating regression on each axis
-          // 'p' will be sum of positions
-          // 't' will be sum of times
-          // 'tp' will be sum of times * positions
-          // 'tt' will be sum of time^2's
-          // 'n' is the number of data-points
-          let xSums = { p: 0, t: 0, tp: 0, tt: 0, n: 0 };
-          let ySums = { p: 0, t: 0, tp: 0, tt: 0, n: 0 };
-          let lastDx = 0;
-          let lastDy = 0;
-
-          // Variables to find the absolute x,y (relative to the first event)
-          let edx = 0; // Sum of x changes
-          let edy = 0; // Sum of y changes
-
-          // For convenience
-          let mb = this.motionBuffer;
-
-          // First collect the variables necessary to calculate the line
-          for (let i = 0; i < mb.length; i++) {
-
-            // Sum up total movement so far
-            let dx = edx + mb[i].dx;
-            let dy = edy + mb[i].dy;
-            edx += mb[i].dx;
-            edy += mb[i].dy;
-
-            // Don't consider events before direction changes
-            if ((xSums.n > 0) &&
-                ((mb[i].dx < 0 && lastDx > 0) ||
-                 (mb[i].dx > 0 && lastDx < 0))) {
-              xSums = { p: 0, t: 0, tp: 0, tt: 0, n: 0 };
-            }
-            if ((ySums.n > 0) &&
-                ((mb[i].dy < 0 && lastDy > 0) ||
-                 (mb[i].dy > 0 && lastDy < 0))) {
-              ySums = { p: 0, t: 0, tp: 0, tt: 0, n: 0 };
-            }
-
-            if (mb[i].dx != 0)
-              lastDx = mb[i].dx;
-            if (mb[i].dy != 0)
-              lastDy = mb[i].dy;
-
-            // Only consider events that happened in the last kSwipeLength ms
-            let timeDelta = this.panLastTime - mb[i].time;
-            if (timeDelta > kSwipeLength)
-              continue;
-
-            xSums.p += dx;
-            xSums.t += timeDelta;
-            xSums.tp += timeDelta * dx;
-            xSums.tt += timeDelta * timeDelta;
-            xSums.n ++;
-
-            ySums.p += dy;
-            ySums.t += timeDelta;
-            ySums.tp += timeDelta * dy;
-            ySums.tt += timeDelta * timeDelta;
-            ySums.n ++;
-          }
-
-          // If we don't have enough usable motion events, bail out
-          if (xSums.n < 2 && ySums.n < 2)
-            break;
-
-          // Calculate the slope of the regression line.
-          // The intercept of the regression line is commented for reference.
-          let sx = 0;
-          if (xSums.n > 1)
-            sx = ((xSums.n * xSums.tp) - (xSums.t * xSums.p)) /
-                 ((xSums.n * xSums.tt) - (xSums.t * xSums.t));
-          //let ix = (xSums.p - (sx * xSums.t)) / xSums.n;
-
-          let sy = 0;
-          if (ySums.n > 1)
-            sy = ((ySums.n * ySums.tp) - (ySums.t * ySums.p)) /
-                 ((ySums.n * ySums.tt) - (ySums.t * ySums.t));
-          //let iy = (ySums.p - (sy * ySums.t)) / ySums.n;
-
-          // The slope of the regression line is the projected acceleration
-          this.panX = -sx;
-          this.panY = -sy;
-
-          if (Math.abs(this.panX) > kMaxKineticSpeed)
-            this.panX = (this.panX > 0) ? kMaxKineticSpeed : -kMaxKineticSpeed;
-          if (Math.abs(this.panY) > kMaxKineticSpeed)
-            this.panY = (this.panY > 0) ? kMaxKineticSpeed : -kMaxKineticSpeed;
-
-          // If we have (near) zero acceleration, bail out.
-          if (Math.abs(this.panX) < kMinKineticSpeed &&
-              Math.abs(this.panY) < kMinKineticSpeed)
-            break;
-
-          // Check if this element can scroll - if not, let's bail out.
-          if (!this.panElement || !this._elementCanScroll(
-                 this.panElement, -this.panX, -this.panY))
-            break;
-
-          // Fire off the first kinetic panning event
-          this._scrollElementBy(this.panElement, -this.panX, -this.panY);
-
-          // TODO: Use the kinetic scrolling prefs
-          this.panAccumulatedDeltaX = 0;
-          this.panAccumulatedDeltaY = 0;
-
-          let self = this;
-          let panElement = this.panElement;
-          let callback = {
-            onBeforePaint: function kineticPanCallback(timeStamp) {
-              if (self.panning || self.panElement != panElement)
-                return;
-
-              let timeDelta = timeStamp - self.panLastTime;
-              self.panLastTime = timeStamp;
-
-              // Adjust deceleration
-              self.panX *= Math.pow(kPanDeceleration, timeDelta);
-              self.panY *= Math.pow(kPanDeceleration, timeDelta);
-
-              // Calculate panning motion
-              let dx = self.panX * timeDelta;
-              let dy = self.panY * timeDelta;
-
-              // We only want to set integer scroll coordinates
-              self.panAccumulatedDeltaX += dx - Math.floor(dx);
-              self.panAccumulatedDeltaY += dy - Math.floor(dy);
-
-              dx = Math.floor(dx);
-              dy = Math.floor(dy);
-
-              if (Math.abs(self.panAccumulatedDeltaX) >= 1.0) {
-                  let adx = Math.floor(self.panAccumulatedDeltaX);
-                  dx += adx;
-                  self.panAccumulatedDeltaX -= adx;
-              }
-
-              if (Math.abs(self.panAccumulatedDeltaY) >= 1.0) {
-                  let ady = Math.floor(self.panAccumulatedDeltaY);
-                  dy += ady;
-                  self.panAccumulatedDeltaY -= ady;
-              }
-
-              if (!self._elementCanScroll(panElement, -dx, -dy)) {
-                return;
-              }
-
-              self._scrollElementBy(panElement, -dx, -dy);
-
-              if (Math.abs(self.panX) >= kMinKineticSpeed ||
-                  Math.abs(self.panY) >= kMinKineticSpeed)
-                window.mozRequestAnimationFrame(this);
-            }
-          };
-
-          // If one axis is moving a lot slower than the other, lock it.
-          if (Math.abs(this.panX) < Math.abs(this.panY) / kAxisLockRatio)
-            this.panX = 0;
-          else if (Math.abs(this.panY) < Math.abs(this.panX) / kAxisLockRatio)
-            this.panY = 0;
-
-          // Start the panning animation
-          window.mozRequestAnimationFrame(callback);
-        }
-        break;
     }
   },
 
@@ -1817,6 +1571,7 @@ var BrowserEventHandler = {
       }
     }
 
+    [aX, aY] = ElementTouchHelper.toBrowserCoords(aElement.ownerDocument.defaultView, aX, aY);
     let cwu = aElement.ownerDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     aButton = aButton || 0;
     cwu.sendMouseEventToWindow(aName, Math.round(aX), Math.round(aY), aButton, 1, 0, true);
@@ -1910,7 +1665,34 @@ var BrowserEventHandler = {
 const kReferenceDpi = 240; // standard "pixel" size used in some preferences
 
 const ElementTouchHelper = {
+  toBrowserCoords: function(aWindow, aX, aY) {
+    let tab = BrowserApp.selectedTab;
+    if (aWindow) {
+      let browser = BrowserApp.getBrowserForWindow(aWindow);
+      tab = BrowserApp.getTabForBrowser(browser);
+    }
+    let viewport = tab.viewport;
+    return [
+        ((aX-tab.viewportExcess.x)*viewport.zoom + viewport.offsetX),
+        ((aY-tab.viewportExcess.y)*viewport.zoom + viewport.offsetY)
+    ];
+  },
+
+  toScreenCoords: function(aWindow, aX, aY) {
+    let tab = BrowserApp.selectedTab;
+    if (aWindow) {
+      let browser = BrowserApp.getBrowserForWindow(aWindow);
+      tab = BrowserApp.getTabForBrowser(browser);
+    }
+    let viewport = tab.viewport;
+    return [
+        (aX - viewport.offsetX)/viewport.zoom + tab.viewportExcess.x,
+        (aY - viewport.offsetY)/viewport.zoom + tab.viewportExcess.y
+    ];
+  },
+
   anyElementFromPoint: function(aWindow, aX, aY) {
+    [aX, aY] = this.toScreenCoords(aWindow, aX, aY);
     let cwu = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     let elem = cwu.elementFromPoint(aX, aY, false, true);
 
@@ -1926,6 +1708,7 @@ const ElementTouchHelper = {
   },
 
   elementFromPoint: function(aWindow, aX, aY) {
+    [aX, aY] = this.toScreenCoords(aWindow, aX, aY);
     // browser's elementFromPoint expect browser-relative client coordinates.
     // subtract browser's scroll values to adjust
     let cwu = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
@@ -1970,9 +1753,10 @@ const ElementTouchHelper = {
                                                true,   /* ignore root scroll frame*/
                                                false); /* don't flush layout */
 
-    // return null if the click is over a clickable element
+    // if this element is clickable we return quickly
     if (this._isElementClickable(target))
-      return null;
+      return target;
+
     let target = null;
     let nodes = aWindowUtils.nodesFromRect(aX, aY, this.radius.top * dpiRatio,
                                                    this.radius.right * dpiRatio,
@@ -2150,8 +1934,8 @@ var FormAssistant = {
     this.fireOnChange(aElement);
   },
 
-  handleClick: function(aEvent) {
-    let target = aEvent.target;
+  handleClick: function(aTarget) {
+    let target = aTarget;
     while (target) {
       if (this._isSelectElement(target)) {
         let list = this.getListForElement(target);

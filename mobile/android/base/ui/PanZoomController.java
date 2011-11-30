@@ -181,6 +181,7 @@ public class PanZoomController
         case TOUCHING:
             if (panDistance(event) < PAN_THRESHOLD * GeckoAppShell.getDpi())
                 return false;
+            cancelTouch();
             // fall through
         case PANNING_HOLD_LOCKED:
             mState = PanZoomState.PANNING_LOCKED;
@@ -688,6 +689,7 @@ public class PanZoomController
         mState = PanZoomState.PINCHING;
         mLastZoomFocus = new PointF(detector.getFocusX(), detector.getFocusY());
         GeckoApp.mAppContext.hidePluginViews();
+        cancelTouch();
 
         return true;
     }
@@ -726,5 +728,44 @@ public class PanZoomController
 
     public boolean getRedrawHint() {
         return (mState != PanZoomState.PINCHING);
+    }
+
+    @Override
+    public boolean onDown(MotionEvent motionEvent) {
+        JSONObject ret = new JSONObject();
+        try {
+            PointF point = new PointF(motionEvent.getX(), motionEvent.getY());
+            point = mController.convertViewPointToLayerPoint(point);
+            ret.put("x", (int)Math.round(point.x));
+            ret.put("y", (int)Math.round(point.y));
+        } catch(Exception ex) {
+            throw new RuntimeException(ex);
+        }
+
+        GeckoEvent e = new GeckoEvent("Gesture:ShowPress", ret.toString());
+        GeckoAppShell.sendEventToGecko(e);
+        return false;
+    }
+
+    @Override
+    public boolean onSingleTapConfirmed(MotionEvent motionEvent) {
+        JSONObject ret = new JSONObject();
+        try {
+            PointF point = new PointF(motionEvent.getX(), motionEvent.getY());
+            point = mController.convertViewPointToLayerPoint(point);
+            ret.put("x", (int)Math.round(point.x));
+            ret.put("y", (int)Math.round(point.y));
+        } catch(Exception ex) {
+            throw new RuntimeException(ex);
+        }
+
+        GeckoEvent e = new GeckoEvent("Gesture:SingleTap", ret.toString());
+        GeckoAppShell.sendEventToGecko(e);
+        return true;
+    }
+
+    private void cancelTouch() {
+        GeckoEvent e = new GeckoEvent("Gesture:CancelTouch", "");
+        GeckoAppShell.sendEventToGecko(e);
     }
 }
