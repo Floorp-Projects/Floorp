@@ -794,7 +794,6 @@ let TabItems = {
   tempCanvas: null,
   _reconnectingPaused: false,
   tabItemPadding: {},
-  _mozAfterPaintHandler: null,
 
   // ----------
   // Function: toString
@@ -825,10 +824,6 @@ let TabItems = {
     // algorithm breaks down
     this.tempCanvas.width = 150;
     this.tempCanvas.height = 112;
-
-    let mm = gWindow.messageManager;
-    this._mozAfterPaintHandler = this.onMozAfterPaint.bind(this);
-    mm.addMessageListener("Panorama:MozAfterPaint", this._mozAfterPaintHandler);
 
     // When a tab is opened, create the TabItem
     this._eventListeners.open = function (event) {
@@ -879,9 +874,6 @@ let TabItems = {
   // ----------
   // Function: uninit
   uninit: function TabItems_uninit() {
-    let mm = gWindow.messageManager;
-    mm.removeMessageListener("Panorama:MozAfterPaint", this._mozAfterPaintHandler);
-
     for (let name in this._eventListeners) {
       AllTabs.unregister(name, this._eventListeners[name]);
     }
@@ -920,33 +912,20 @@ let TabItems = {
     return this._fragment;
   },
 
-  // Function: _isComplete
-  // Checks whether the xul:tab has fully loaded and calls a callback with a 
-  // boolean indicates whether the tab is loaded or not.
-  _isComplete: function TabItems__isComplete(tab, callback) {
-    Utils.assertThrow(tab, "tab");
-
-    let mm = tab.linkedBrowser.messageManager;
-    let message = "Panorama:isDocumentLoaded";
-
-    mm.addMessageListener(message, function onMessage(cx) {
-      mm.removeMessageListener(cx.name, onMessage);
-      callback(cx.json.isLoaded);
-    });
-    mm.sendAsyncMessage(message);
-  },
-
   // ----------
-  // Function: _onMozAfterPaint
-  // Called when a web page is painted.
-  onMozAfterPaint: function TabItems_onMozAfterPaint(cx) {
-    let index = gBrowser.browsers.indexOf(cx.target);
-    if (index == -1)
-      return;
-
-    let tab = gBrowser.tabs[index];
-    if (!tab.pinned)
-      this.update(tab);
+  // Function: isComplete
+  // Return whether the xul:tab has fully loaded.
+  isComplete: function TabItems_isComplete(tab) {
+    // If our readyState is complete, but we're showing about:blank,
+    // and we're not loading about:blank, it means we haven't really
+    // started loading. This can happen to the first few tabs in a
+    // page.
+    Utils.assertThrow(tab, "tab");
+    return (
+      tab.linkedBrowser.contentDocument.readyState == 'complete' &&
+      !(tab.linkedBrowser.contentDocument.URL == 'about:blank' &&
+        tab._tabViewTabItem.url != 'about:blank')
+    );
   },
 
   // ----------
@@ -1030,41 +1009,35 @@ let TabItems = {
       }
 
       // ___ Make sure the tab is complete and ready for updating.
-      let self = this;
-      let updateCanvas = function TabItems__update_updateCanvas(tabItem) {
-        // ___ thumbnail
-        let $canvas = tabItem.$canvas;
-        if (!tabItem.canvasSizeForced) {
-          let w = $canvas.width();
-          let h = $canvas.height();
-          if (w != tabItem.$canvas[0].width || h != tabItem.$canvas[0].height) {
-            tabItem.$canvas[0].width = w;
-            tabItem.$canvas[0].height = h;
-          }
+      if (!this.isComplete(tab) && (!options || !options.force)) {
+        // If it's incomplete, stick it on the end of the queue
+        this._tabsWaitingForUpdate.push(tab);
+        return;
+      }
+
+      // ___ thumbnail
+      let $canvas = tabItem.$canvas;
+      if (!tabItem.canvasSizeForced) {
+        let w = $canvas.width();
+        let h = $canvas.height();
+        if (w != tabItem.$canvas[0].width || h != tabItem.$canvas[0].height) {
+          tabItem.$canvas[0].width = w;
+          tabItem.$canvas[0].height = h;
         }
+      }
 
-        self._lastUpdateTime = Date.now();
-        tabItem._lastTabUpdateTime = self._lastUpdateTime;
+      this._lastUpdateTime = Date.now();
+      tabItem._lastTabUpdateTime = this._lastUpdateTime;
 
-        tabItem.tabCanvas.paint();
-        tabItem.saveThumbnail();
+      tabItem.tabCanvas.paint();
+      tabItem.saveThumbnail();
 
-        // ___ cache
-        if (tabItem.isShowingCachedData())
-          tabItem.hideCachedData();
+      // ___ cache
+      if (tabItem.isShowingCachedData())
+        tabItem.hideCachedData();
 
-        // ___ notify subscribers that a full update has completed.
-        tabItem._sendToSubscribers("updated");
-      };
-      if (options && options.force)
-        updateCanvas(tabItem);
-      else
-        this._isComplete(tab, function TabItems__update_isComplete(isComplete) {
-          if (isComplete)
-            updateCanvas(tabItem);
-          else
-            self._tabsWaitingForUpdate.push(tab);
-        });
+      // ___ notify subscribers that a full update has completed.
+      tabItem._sendToSubscribers("updated");
     } catch(e) {
       Utils.log(e);
     }
