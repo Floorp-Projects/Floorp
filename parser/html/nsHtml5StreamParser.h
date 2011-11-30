@@ -77,6 +77,11 @@ enum eParserMode {
   VIEW_SOURCE_XML,
 
   /**
+   * View document as plain text source
+   */
+  VIEW_SOURCE_PLAIN,
+
+  /**
    * View document as plain text
    */
   PLAIN_TEXT,
