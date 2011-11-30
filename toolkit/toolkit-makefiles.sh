@@ -134,9 +134,7 @@ MAKEFILES_htmlparser="
   parser/htmlparser/src/Makefile
   parser/htmlparser/tests/Makefile
   parser/htmlparser/tests/grabpage/Makefile
-  parser/htmlparser/tests/logparse/Makefile
   parser/htmlparser/tests/html/Makefile
-  parser/htmlparser/tests/outsinks/Makefile
 "
 
 MAKEFILES_intl="
@@ -181,7 +179,6 @@ MAKEFILES_intl="
   intl/unicharutil/public/Makefile
   intl/unicharutil/tables/Makefile
   intl/unicharutil/tests/Makefile
-  intl/unicharutil/tools/Makefile
   intl/strres/Makefile
   intl/strres/public/Makefile
   intl/strres/src/Makefile
@@ -501,14 +498,11 @@ MAKEFILES_xpcom="
   xpcom/reflect/xptcall/src/Makefile
   xpcom/reflect/xptcall/src/md/Makefile
   xpcom/reflect/xptcall/src/md/os2/Makefile
-  xpcom/reflect/xptcall/src/md/test/Makefile
   xpcom/reflect/xptcall/src/md/unix/Makefile
   xpcom/reflect/xptcall/src/md/win32/Makefile
-  xpcom/reflect/xptcall/tests/Makefile
   xpcom/reflect/xptinfo/Makefile
   xpcom/reflect/xptinfo/public/Makefile
   xpcom/reflect/xptinfo/src/Makefile
-  xpcom/reflect/xptinfo/tests/Makefile
   xpcom/proxy/Makefile
   xpcom/proxy/public/Makefile
   xpcom/proxy/src/Makefile
@@ -532,9 +526,6 @@ MAKEFILES_xpfe="
   toolkit/components/remote/Makefile
   xpfe/components/Makefile
   xpfe/components/directory/Makefile
-  xpfe/components/autocomplete/Makefile
-  xpfe/components/autocomplete/public/Makefile
-  xpfe/components/autocomplete/src/Makefile
   xpfe/components/windowds/Makefile
   xpfe/components/build/Makefile
   xpfe/appshell/Makefile
@@ -573,7 +564,6 @@ MAKEFILES_embedding="
   embedding/components/windowwatcher/Makefile
   embedding/components/windowwatcher/public/Makefile
   embedding/components/windowwatcher/src/Makefile
-  embedding/tests/winEmbed/Makefile
 "
 
 MAKEFILES_xulapp="
@@ -676,7 +666,7 @@ MAKEFILES_jsductwork="
   js/ductwork/debugger/Makefile
 "
 
-MAKEFILES_libpr0n="
+MAKEFILES_imagelib="
   image/Makefile
   image/build/Makefile
   image/public/Makefile
@@ -751,7 +741,6 @@ add_makefiles "
   $MAKEFILES_libreg
   $MAKEFILES_libpref
   $MAKEFILES_mathml
-  $MAKEFILES_plugin
   $MAKEFILES_netwerk
   $MAKEFILES_storage
   $MAKEFILES_uriloader
@@ -767,7 +756,7 @@ add_makefiles "
   $MAKEFILES_xpfe
   $MAKEFILES_embedding
   $MAKEFILES_xulapp
-  $MAKEFILES_libpr0n
+  $MAKEFILES_imagelib
   $MAKEFILES_accessible
   $MAKEFILES_libmar
   $MAKEFILES_extensions
