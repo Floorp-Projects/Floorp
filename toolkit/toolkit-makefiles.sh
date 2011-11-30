@@ -40,9 +40,11 @@
 
 MAKEFILES_dom="
   ipc/Makefile
+  ipc/app/Makefile
   ipc/chromium/Makefile
   ipc/glue/Makefile
   ipc/ipdl/Makefile
+  ipc/testshell/Makefile
   dom/Makefile
   dom/interfaces/base/Makefile
   dom/interfaces/canvas/Makefile
@@ -54,6 +56,7 @@ MAKEFILES_dom="
   dom/interfaces/json/Makefile
   dom/interfaces/load-save/Makefile
   dom/interfaces/offline/Makefile
+  dom/interfaces/notification/Makefile
   dom/interfaces/range/Makefile
   dom/interfaces/sidebar/Makefile
   dom/interfaces/storage/Makefile
@@ -63,14 +66,20 @@ MAKEFILES_dom="
   dom/interfaces/xbl/Makefile
   dom/interfaces/xpath/Makefile
   dom/interfaces/xul/Makefile
+  dom/ipc/Makefile
   dom/base/Makefile
+  dom/battery/Makefile
+  dom/indexedDB/Makefile
   dom/src/Makefile
   dom/src/events/Makefile
   dom/src/jsurl/Makefile
   dom/src/geolocation/Makefile
   dom/src/json/Makefile
   dom/src/offline/Makefile
+  dom/src/notification/Makefile
   dom/src/storage/Makefile
+  dom/system/Makefile
+  dom/workers/Makefile
   dom/locales/Makefile
   dom/plugins/base/Makefile
   dom/plugins/ipc/Makefile
@@ -97,7 +106,12 @@ MAKEFILES_editor="
   editor/libeditor/text/Makefile
 "
 
-MAKEFILES_xmlparser="
+MAKEFILES_parser="
+  parser/Makefile
+  parser/html/Makefile
+  parser/htmlparser/Makefile
+  parser/htmlparser/public/Makefile
+  parser/htmlparser/src/Makefile
   parser/expat/Makefile
   parser/expat/lib/Makefile
   parser/xml/Makefile
@@ -107,18 +121,16 @@ MAKEFILES_xmlparser="
 
 MAKEFILES_gfx="
   gfx/Makefile
-  gfx/ycbcr/Makefile
+  gfx/2d/Makefile
+  gfx/angle/Makefile
+  gfx/harfbuzz/src/Makefile
+  gfx/ipc/Makefile
   gfx/layers/Makefile
+  gfx/ots/src/Makefile
   gfx/src/Makefile
   gfx/thebes/Makefile
   gfx/qcms/Makefile
-  gfx/angle/Makefile
-"
-
-MAKEFILES_htmlparser="
-  parser/htmlparser/Makefile
-  parser/htmlparser/public/Makefile
-  parser/htmlparser/src/Makefile
+  gfx/ycbcr/Makefile
 "
 
 MAKEFILES_intl="
@@ -127,6 +139,9 @@ MAKEFILES_intl="
   intl/chardet/Makefile
   intl/chardet/public/Makefile
   intl/chardet/src/Makefile
+  intl/hyphenation/Makefile
+  intl/hyphenation/public/Makefile
+  intl/hyphenation/src/Makefile
   intl/uconv/Makefile
   intl/uconv/idl/Makefile
   intl/uconv/util/Makefile
@@ -167,6 +182,7 @@ MAKEFILES_xpconnect="
   js/xpconnect/shell/Makefile
   js/xpconnect/src/Makefile
   js/xpconnect/loader/Makefile
+  js/xpconnect/wrappers/Makefile
 "
 
 MAKEFILES_jsipc="
@@ -203,6 +219,7 @@ MAKEFILES_content="
   content/xml/document/src/Makefile
   content/xul/Makefile
   content/xul/content/Makefile
+  content/xul/content/public/Makefile
   content/xul/content/src/Makefile
   content/xul/document/Makefile
   content/xul/document/public/Makefile
@@ -231,6 +248,7 @@ MAKEFILES_layout="
   layout/build/Makefile
   layout/forms/Makefile
   layout/generic/Makefile
+  layout/ipc/Makefile
   layout/inspector/public/Makefile
   layout/inspector/src/Makefile
   layout/style/Makefile
@@ -271,14 +289,18 @@ MAKEFILES_netwerk="
   netwerk/cache/Makefile
   netwerk/cookie/Makefile
   netwerk/dns/Makefile
+  netwerk/ipc/Makefile
   netwerk/protocol/Makefile
   netwerk/protocol/about/Makefile
   netwerk/protocol/data/Makefile
+  netwerk/protocol/device/Makefile
   netwerk/protocol/file/Makefile
   netwerk/protocol/ftp/Makefile
   netwerk/protocol/http/Makefile
   netwerk/protocol/res/Makefile
   netwerk/protocol/viewsource/Makefile
+  netwerk/protocol/websocket/Makefile
+  netwerk/protocol/wyciwyg/Makefile
   netwerk/mime/Makefile
   netwerk/socket/Makefile
   netwerk/streamconv/Makefile
@@ -361,6 +383,7 @@ MAKEFILES_widget="
   widget/Makefile
   widget/public/Makefile
   widget/src/Makefile
+  widget/src/shared/Makefile
   widget/src/xpwidgets/Makefile
 "
 
@@ -374,6 +397,7 @@ MAKEFILES_xpcom="
   xpcom/components/Makefile
   xpcom/ds/Makefile
   xpcom/glue/Makefile
+  xpcom/glue/nomozalloc/Makefile
   xpcom/glue/standalone/Makefile
   xpcom/io/Makefile
   xpcom/typelib/Makefile
@@ -437,6 +461,7 @@ MAKEFILES_xulapp="
   toolkit/library/Makefile
   toolkit/crashreporter/client/Makefile
   toolkit/content/Makefile
+  toolkit/components/aboutmemory/Makefile
   toolkit/components/alerts/Makefile
   toolkit/components/apppicker/Makefile
   toolkit/components/Makefile
@@ -453,10 +478,14 @@ MAKEFILES_xulapp="
   toolkit/components/microformats/Makefile
   toolkit/components/parentalcontrols/Makefile
   toolkit/components/passwordmgr/Makefile
+  toolkit/components/perf/Makefile
   toolkit/components/places/Makefile
+  toolkit/components/prompts/Makefile
+  toolkit/components/prompts/src/Makefile
   toolkit/components/startup/Makefile
   toolkit/components/startup/public/Makefile
   toolkit/components/statusfilter/Makefile
+  toolkit/components/telemetry/Makefile
   toolkit/components/typeaheadfind/Makefile
   toolkit/components/urlformatter/Makefile
   toolkit/components/viewconfig/Makefile
@@ -466,7 +495,10 @@ MAKEFILES_xulapp="
   toolkit/mozapps/extensions/Makefile
   toolkit/mozapps/handling/Makefile
   toolkit/mozapps/plugins/Makefile
+  toolkit/mozapps/preferences/Makefile
+  toolkit/mozapps/shared/Makefile
   toolkit/mozapps/update/Makefile
+  toolkit/obsolete/Makefile
   toolkit/profile/Makefile
   toolkit/themes/Makefile
   toolkit/xre/Makefile
@@ -488,8 +520,10 @@ MAKEFILES_imagelib="
   image/decoders/Makefile
   image/decoders/icon/Makefile
   image/encoders/Makefile
-  image/encoders/png/Makefile
+  image/encoders/bmp/Makefile
+  image/encoders/ico/Makefile
   image/encoders/jpeg/Makefile
+  image/encoders/png/Makefile
 "
 
 MAKEFILES_startupcache="
@@ -512,9 +546,8 @@ MAKEFILES_profiler="
 add_makefiles "
   $MAKEFILES_dom
   $MAKEFILES_editor
-  $MAKEFILES_xmlparser
+  $MAKEFILES_parser
   $MAKEFILES_gfx
-  $MAKEFILES_htmlparser
   $MAKEFILES_intl
   $MAKEFILES_xpconnect
   $MAKEFILES_jsipc
@@ -554,6 +587,8 @@ add_makefiles "
 
 if [ "$MOZ_WIDGET_TOOLKIT" = "windows" ]; then
   add_makefiles "
+    content/xbl/builtin/win/Makefile
+    dom/system/windows/Makefile
     image/decoders/icon/win/Makefile
     intl/locale/src/windows/Makefile
     netwerk/system/win32/Makefile
@@ -565,6 +600,8 @@ if [ "$MOZ_WIDGET_TOOLKIT" = "windows" ]; then
 elif [ "$MOZ_WIDGET_TOOLKIT" = "cocoa" ]; then
   add_makefiles "
     content/xbl/builtin/mac/Makefile
+    dom/plugins/ipc/interpose/Makefile
+    dom/system/cocoa/Makefile
     image/decoders/icon/mac/Makefile
     intl/locale/src/mac/Makefile
     netwerk/system/mac/Makefile
@@ -581,8 +618,34 @@ elif [ "$MOZ_WIDGET_TOOLKIT" = "gtk2" ]; then
     image/decoders/icon/gtk/Makefile
     widget/src/gtk2/Makefile
   "
+elif [ "$MOZ_WIDGET_TOOLKIT" = "android" ]; then
+  add_makefiles "
+    dom/plugins/base/android/Makefile
+    dom/system/android/Makefile
+    image/decoders/icon/android/Makefile
+    netwerk/system/android/Makefile
+    widget/src/android/Makefile
+  "
+  if [ "$MOZ_BUILD_APP" = "mobile/xul" ]; then
+    add_makefiles "
+      embedding/android/Makefile
+      embedding/android/locales/Makefile
+    "
+  fi
+elif [ "$MOZ_WIDGET_TOOLKIT" = "gonk" ]; then
+  add_makefiles "
+    widget/src/gonk/Makefile
+  "
+elif [ "$MOZ_WIDGET_TOOLKIT" = "qt" ]; then
+  add_makefiles "
+    image/decoders/icon/qt/Makefile
+    image/decoders/icon/qt/public/Makefile
+    widget/src/qt/Makefile
+    widget/src/qt/faststartupqt/Makefile
+  "
 elif [ "$MOZ_WIDGET_TOOLKIT" = "os2" ]; then
   add_makefiles "
+    image/decoders/icon/os2/Makefile
     intl/locale/src/os2/Makefile
     toolkit/themes/pmstripe/global/Makefile
     widget/src/os2/Makefile
@@ -596,15 +659,29 @@ if [ "$MOZ_WIDGET_TOOLKIT" != "cocoa" ]; then
     toolkit/themes/winstripe/global/Makefile
     toolkit/themes/winstripe/mozapps/Makefile
   "
+  if [ "$MOZ_THEME_FASTSTRIPE" ]; then
+    add_makefiles "
+      toolkit/themes/faststripe/global/Makefile
+    "
+  fi
 fi
 
 if [ "$MOZ_WIDGET_TOOLKIT" = "gtk2" -o "$MOZ_WIDGET_TOOLKIT" = "qt" ]; then
   add_makefiles "
     content/xbl/builtin/unix/Makefile
+    dom/system/unix/Makefile
     toolkit/system/unixproxy/Makefile
     toolkit/themes/gnomestripe/Makefile
     toolkit/themes/gnomestripe/global/Makefile
     toolkit/themes/gnomestripe/mozapps/Makefile
+  "
+fi
+
+if [ "$MOZ_WIDGET_TOOLKIT" = "cocoa" \
+  -o "$MOZ_WIDGET_TOOLKIT" = "android" \
+  -o "$MOZ_WIDGET_TOOLKIT" = "windows" ]; then
+  add_makefiles "
+    gfx/skia/Makefile
   "
 fi
 
@@ -643,8 +720,12 @@ if [ "$ENABLE_TESTS" ]; then
     content/base/test/Makefile
     content/base/test/chrome/Makefile
     content/canvas/test/Makefile
+    content/canvas/test/crossorigin/Makefile
+    content/canvas/test/webgl/Makefile
     content/events/test/Makefile
     content/html/content/test/Makefile
+    content/html/content/test/bug649134/Makefile
+    content/html/content/test/forms/Makefile
     content/html/document/test/Makefile
     content/smil/test/Makefile
     content/svg/content/test/Makefile
@@ -658,8 +739,11 @@ if [ "$ENABLE_TESTS" ]; then
     docshell/test/Makefile
     docshell/test/chrome/Makefile
     docshell/test/navigation/Makefile
+    dom/battery/test/Makefile
+    dom/indexedDB/test/Makefile
     dom/plugins/test/Makefile
     dom/plugins/test/testplugin/Makefile
+    dom/src/foo/Makefile
     dom/src/json/test/Makefile
     dom/src/jsurl/test/Makefile
     dom/tests/Makefile
@@ -704,9 +788,16 @@ if [ "$ENABLE_TESTS" ]; then
     dom/tests/mochitest/dom-level2-html/files/Makefile
     dom/tests/mochitest/general/Makefile
     dom/tests/mochitest/geolocation/Makefile
+    dom/tests/mochitest/globalstorage/Makefile
     dom/tests/mochitest/localstorage/Makefile
+    dom/tests/mochitest/orientation/Makefile
     dom/tests/mochitest/sessionstorage/Makefile
+    dom/tests/mochitest/storageevent/Makefile
     dom/tests/mochitest/whatwg/Makefile
+    dom/workers/test/Makefile
+    dom/workers/test/extensions/Makefile
+    dom/workers/test/extensions/bootstrap/Makefile
+    dom/workers/test/extensions/traditional/Makefile
     editor/composer/test/Makefile
     editor/libeditor/base/tests/Makefile
     editor/libeditor/html/tests/Makefile
@@ -722,17 +813,21 @@ if [ "$ENABLE_TESTS" ]; then
     intl/uconv/tests/Makefile
     intl/unicharutil/tests/Makefile
     js/xpconnect/tests/Makefile
+    js/xpconnect/tests/chrome/Makefile
     js/xpconnect/tests/components/js/Makefile
     js/xpconnect/tests/components/native/Makefile
     js/xpconnect/tests/idl/Makefile
     js/xpconnect/tests/mochitest/Makefile
     layout/base/tests/Makefile
+    layout/base/tests/chrome/Makefile
     layout/forms/test/Makefile
     layout/generic/test/Makefile
     layout/inspector/tests/Makefile
+    layout/inspector/tests/chrome/Makefile
     layout/reftests/fonts/Makefile
     layout/reftests/fonts/mplus/Makefile
     layout/style/test/Makefile
+    layout/style/test/chrome/Makefile
     layout/tables/test/Makefile
     layout/tools/pageloader/Makefile
     layout/tools/reftest/Makefile
@@ -744,22 +839,29 @@ if [ "$ENABLE_TESTS" ]; then
     modules/libpref/test/Makefile
     netwerk/streamconv/test/Makefile
     netwerk/test/Makefile
+    netwerk/test/browser/Makefile
     netwerk/test/httpserver/Makefile
     parser/htmlparser/tests/Makefile
     parser/htmlparser/tests/grabpage/Makefile
     parser/htmlparser/tests/html/Makefile
     parser/htmlparser/tests/mochitest/Makefile
+    parser/htmlparser/tests/mochitest/dir_bug534293/Makefile
+    parser/htmlparser/tests/mochitest/html5lib_tree_construction/Makefile
+    parser/htmlparser/tests/mochitest/html5lib_tree_construction/scripted/Makefile
     parser/xml/test/Makefile
     rdf/tests/Makefile
     rdf/tests/rdfcat/Makefile
     rdf/tests/rdfpoll/Makefile
     rdf/tests/triplescat/Makefile
+    services/crypto/component/tests/Makefile
     startupcache/test/Makefile
     storage/test/Makefile
     testing/firebug/Makefile
     testing/mochitest/Makefile
     testing/mochitest/MochiKit/Makefile
     testing/mochitest/chrome/Makefile
+    testing/mochitest/dynamic/Makefile
+    testing/mochitest/specialpowers/Makefile
     testing/mochitest/ssltunnel/Makefile
     testing/mochitest/static/Makefile
     testing/mochitest/tests/Makefile
@@ -774,6 +876,7 @@ if [ "$ENABLE_TESTS" ]; then
     testing/tools/screenshot/Makefile
     testing/xpcshell/Makefile
     testing/xpcshell/example/Makefile
+    toolkit/components/aboutmemory/tests/chrome/Makefile
     toolkit/components/alerts/test/Makefile
     toolkit/components/commandlines/test/Makefile
     toolkit/components/contentprefs/tests/Makefile
@@ -782,18 +885,26 @@ if [ "$ENABLE_TESTS" ]; then
     toolkit/components/passwordmgr/test/Makefile
     toolkit/components/places/tests/Makefile
     toolkit/components/places/tests/chrome/Makefile
+    toolkit/components/places/tests/cpp/Makefile
     toolkit/components/places/tests/mochitest/bug_411966/Makefile
     toolkit/components/places/tests/mochitest/bug_461710/Makefile
+    toolkit/components/prompts/test/Makefile
     toolkit/components/satchel/test/Makefile
+    toolkit/components/telemetry/tests/Makefile
     toolkit/components/urlformatter/tests/Makefile
     toolkit/components/viewsource/test/Makefile
     toolkit/content/tests/Makefile
     toolkit/content/tests/chrome/Makefile
+    toolkit/content/tests/chrome/rtlchrome/Makefile
+    toolkit/content/tests/chrome/rtltest/Makefile
     toolkit/content/tests/widgets/Makefile
     toolkit/mozapps/downloads/tests/Makefile
     toolkit/mozapps/downloads/tests/chrome/Makefile
     toolkit/mozapps/extensions/test/Makefile
     toolkit/mozapps/plugins/tests/Makefile
+    toolkit/mozapps/shared/test/chrome/Makefile
+    toolkit/mozapps/update/test_timermanager/Makefile
+    toolkit/profile/test/Makefile
     toolkit/xre/test/Makefile
     uriloader/exthandler/tests/Makefile
     uriloader/exthandler/tests/mochitest/Makefile
@@ -802,9 +913,34 @@ if [ "$ENABLE_TESTS" ]; then
     xpcom/sample/Makefile
     xpcom/sample/program/Makefile
     xpcom/tests/Makefile
+    xpcom/tests/bug656331_component/Makefile
+    xpcom/tests/component/Makefile
     xpcom/tests/external/Makefile
     xpcom/typelib/xpt/tests/Makefile
   "
+  if [ "$ACCESSIBILITY" ]; then
+    add_makefiles "
+      accessible/tests/Makefile
+      accessible/tests/mochitest/Makefile
+      accessible/tests/mochitest/actions/Makefile
+      accessible/tests/mochitest/attributes/Makefile
+      accessible/tests/mochitest/editabletext/Makefile
+      accessible/tests/mochitest/events/Makefile
+      accessible/tests/mochitest/focus/Makefile
+      accessible/tests/mochitest/hyperlink/Makefile
+      accessible/tests/mochitest/hypertext/Makefile
+      accessible/tests/mochitest/name/Makefile
+      accessible/tests/mochitest/relations/Makefile
+      accessible/tests/mochitest/selectable/Makefile
+      accessible/tests/mochitest/states/Makefile
+      accessible/tests/mochitest/table/Makefile
+      accessible/tests/mochitest/text/Makefile
+      accessible/tests/mochitest/textselection/Makefile
+      accessible/tests/mochitest/tree/Makefile
+      accessible/tests/mochitest/treeupdate/Makefile
+      accessible/tests/mochitest/value/Makefile
+    "
+  fi
   if [ "$BUILD_CTYPES" ]; then
     add_makefiles "
       toolkit/components/ctypes/tests/Makefile
@@ -820,6 +956,16 @@ if [ "$ENABLE_TESTS" ]; then
       toolkit/crashreporter/test/Makefile
     "
   fi
+  if [ "$MOZ_FEEDS" ]; then
+    add_makefiles "
+      toolkit/components/feeds/test/Makefile
+    "
+  fi
+  if [ "$MOZ_JSDEBUGGER" ]; then
+    add_makefiles "
+      js/jsd/test/Makefile
+    "
+  fi
   if [ "$MOZ_MEDIA" ]; then
    add_makefiles "
      content/media/test/Makefile
@@ -828,6 +974,27 @@ if [ "$ENABLE_TESTS" ]; then
   if [ "$MOZ_PERMISSIONS" ]; then
     add_makefiles "
       extensions/cookie/test/Makefile
+    "
+  fi
+  if [ "$MOZ_PSM" ]; then
+    add_makefiles "
+      security/manager/ssl/tests/Makefile
+      security/manager/ssl/tests/mochitest/Makefile
+      security/manager/ssl/tests/mochitest/bugs/Makefile
+      security/manager/ssl/tests/mochitest/mixedcontent/Makefile
+      security/manager/ssl/tests/mochitest/stricttransportsecurity/Makefile
+    "
+  fi
+  if [ "$MOZ_SPELLCHECK" ]; then
+    add_makefiles "
+      extensions/spellcheck/tests/chrome/Makefile
+      extensions/spellcheck/tests/chrome/base/Makefile
+      extensions/spellcheck/tests/chrome/map/Makefile
+    "
+  fi
+  if [ "$MOZ_TOOLKIT_SEARCH" ]; then
+    add_makefiles "
+      toolkit/components/search/tests/Makefile
     "
   fi
   if [ "$MOZ_UNIVERSALCHARDET" ]; then
@@ -839,6 +1006,11 @@ if [ "$ENABLE_TESTS" ]; then
     add_makefiles "
       toolkit/mozapps/update/test/Makefile
     "
+    if [ "$OS_TARGET" != "Android" ]; then
+      add_makefiles "
+        toolkit/mozapps/update/test/chrome/Makefile
+      "
+    fi
   fi
   if [ "$MOZ_URL_CLASSIFIER" ]; then
     add_makefiles "
@@ -865,9 +1037,27 @@ if [ "$ENABLE_TESTS" ]; then
   if [ "$MOZ_BUILD_APP" != "mobile" ]; then
     add_makefiles "
       docshell/test/browser/Makefile
+      dom/tests/browser/Makefile
+      image/test/browser/Makefile
       toolkit/components/downloads/test/browser/Makefile
       toolkit/components/passwordmgr/test/browser/Makefile
+      toolkit/components/places/tests/browser/Makefile
+      toolkit/components/startup/tests/browser/Makefile
       toolkit/content/tests/browser/Makefile
+      toolkit/content/tests/browser/common/Makefile
+      toolkit/content/tests/browser/data/Makefile
+      toolkit/mozapps/extensions/test/browser/Makefile
+      toolkit/mozapps/extensions/test/mochitest/Makefile
+      toolkit/mozapps/extensions/test/xpinstall/Makefile
+    "
+  fi
+  if [ "$MOZ_WIDGET_TOOLKIT" = "cocoa" ]; then
+    add_makefiles "
+      toolkit/themes/pinstripe/mochitests/Makefile
+    "
+  else
+    add_makefiles "
+      dom/ipc/tests/Makefile
     "
   fi
   if [ "$MOZ_WIDGET_TOOLKIT" = "windows" \
@@ -880,6 +1070,9 @@ if [ "$ENABLE_TESTS" ]; then
   fi
   if [ "$OS_ARCH" = "WINNT" ]; then
     add_makefiles "
+      intl/chardet/tests/Makefile
+      toolkit/xre/test/win/Makefile
+      widget/src/windows/tests/Makefile
       xpcom/tests/windows/Makefile
     "
   fi
@@ -898,6 +1091,7 @@ if [ "$ACCESSIBILITY" ]; then
     accessible/src/Makefile
     accessible/src/base/Makefile
     accessible/src/html/Makefile
+    accessible/src/xpcom/Makefile
   "
   if [ ! "$DISABLE_XFORMS_HOOKS" ]; then
     add_makefiles "
@@ -923,12 +1117,22 @@ if [ "$ACCESSIBILITY" ]; then
     add_makefiles "
       accessible/src/atk/Makefile
     "
+  else
+    add_makefiles "
+      accessible/src/other/Makefile
+    "
   fi
 fi
 
 if [ "$BUILD_CTYPES" ]; then
   add_makefiles "
     toolkit/components/ctypes/Makefile
+  "
+fi
+
+if [ "$DEHYDRA_PATH" ]; then
+  add_makefiles "
+    xpcom/analysis/Makefile
   "
 fi
 
@@ -958,6 +1162,7 @@ if [ "$MOZ_CRASHREPORTER" ]; then
   elif [ "$OS_ARCH" = "Darwin" ]; then
     add_makefiles "
       $MAKEFILES_crashreporter_shared
+      toolkit/crashreporter/google-breakpad/src/client/mac/crash_generation/Makefile
       toolkit/crashreporter/google-breakpad/src/client/mac/handler/Makefile
       toolkit/crashreporter/google-breakpad/src/common/mac/Makefile
       toolkit/crashreporter/google-breakpad/src/tools/mac/dump_syms/Makefile
@@ -965,11 +1170,17 @@ if [ "$MOZ_CRASHREPORTER" ]; then
   elif [ "$OS_ARCH" = "Linux" ]; then
     add_makefiles "
       $MAKEFILES_crashreporter_shared
+      toolkit/crashreporter/google-breakpad/src/client/linux/crash_generation/Makefile
       toolkit/crashreporter/google-breakpad/src/client/linux/handler/Makefile
       toolkit/crashreporter/google-breakpad/src/client/linux/minidump_writer/Makefile
       toolkit/crashreporter/google-breakpad/src/common/linux/Makefile
       toolkit/crashreporter/google-breakpad/src/tools/linux/dump_syms/Makefile
     "
+    if [ "$OS_TARGET" = "Android" ]; then
+      add_makefiles "
+        toolkit/crashreporter/fileid/Makefile
+      "
+    fi
   elif [ "$OS_ARCH" = "SunOS" ]; then
     add_makefiles "
       $MAKEFILES_crashreporter_shared
@@ -980,10 +1191,18 @@ if [ "$MOZ_CRASHREPORTER" ]; then
   fi
 fi
 
-if [ "$MOZ_DEBUG" -a "$MOZ_WIDGET_TOOLKIT" = "windows" ]; then
+if [ "$MOZ_DEBUG" ]; then
   add_makefiles "
-    xpcom/windbgdlg/Makefile
+    layout/tools/layout-debug/Makefile
+    layout/tools/layout-debug/src/Makefile
+    layout/tools/layout-debug/tests/Makefile
+    layout/tools/layout-debug/ui/Makefile
   "
+  if [ "$MOZ_WIDGET_TOOLKIT" = "windows" ]; then
+    add_makefiles "
+      xpcom/windbgdlg/Makefile
+    "
+  fi
 fi
 
 if [ "$MOZ_ENABLE_GNOME_COMPONENT" ]; then
@@ -992,9 +1211,20 @@ if [ "$MOZ_ENABLE_GNOME_COMPONENT" ]; then
   "
 fi
 
-if [ "$MOZ_ENABLE_LIBCONIC" = "" -a "$MOZ_ENABLE_DBUS" ]; then
+if [ "$MOZ_ENABLE_LIBCONIC" ]; then
   add_makefiles "
-    toolkit/system/dbus/Makefile
+    netwerk/system/maemo/Makefile
+  "
+  if [ "$MOZ_ENABLE_DBUS" ]; then
+    add_makefiles "
+      toolkit/system/dbus/Makefile
+    "
+  fi
+fi
+
+if [ "$MOZ_ENABLE_QTNETWORK" ]; then
+  add_makefiles "
+    netwerk/system/qt/Makefile
   "
 fi
 
@@ -1023,7 +1253,21 @@ if [ "$MOZ_HELP_VIEWER" ]; then
     add_makefiles "
       toolkit/themes/winstripe/help/Makefile
     "
+    if [ "$MOZ_WIDGET_TOOLKIT" = "gtk2" -o "$MOZ_WIDGET_TOOLKIT" = "qt" ]; then
+      add_makefiles "
+        toolkit/themes/gnomestripe/help/Makefile
+      "
+    fi
   fi
+fi
+
+if [ "$MOZ_IPDL_TESTS" ]; then
+  add_makefiles "
+    ipc/ipdl/test/Makefile
+    ipc/ipdl/test/cxx/Makefile
+    ipc/ipdl/test/cxx/app/Makefile
+    ipc/ipdl/test/ipdl/Makefile
+  "
 fi
 
 if [ "$MOZ_JSDEBUGGER" ]; then
@@ -1104,10 +1348,15 @@ if [ "$MOZ_URL_CLASSIFIER" ]; then
   "
 fi
 
-if [ "$MOZ_X11" -a "$MOZ_WIDGET_TOOLKIT" = "gtk2" ]; then
+if [ "$MOZ_X11" ]; then
   add_makefiles "
-    widget/src/gtkxtbin/Makefile
+    widget/src/shared/x11/Makefile
   "
+  if [ "$MOZ_WIDGET_TOOLKIT" = "gtk2" ]; then
+    add_makefiles "
+      widget/src/gtkxtbin/Makefile
+    "
+  fi
 fi
 
 if [ "$MOZ_XUL" ]; then
@@ -1145,6 +1394,10 @@ if [ "$NS_PRINTING" ]; then
     elif [ "$MOZ_WIDGET_TOOLKIT" = "cocoa" ]; then
       add_makefiles "
         embedding/components/printingui/src/mac/Makefile
+      "
+    elif [ "$MOZ_WIDGET_TOOLKIT" = "os2" ]; then
+      add_makefiles "
+        embedding/components/printingui/src/os2/Makefile
       "
     elif [ "$MOZ_PDF_PRINTING" ]; then
       add_makefiles "
@@ -1208,6 +1461,7 @@ fi
 if [ ! "$SYSTEM_JPEG" ]; then
   add_makefiles "
     media/libjpeg/Makefile
+    media/libjpeg/simd/Makefile
   "
 fi
 
@@ -1299,6 +1553,12 @@ if [ "$MOZ_OGG" ]; then
     media/libtheora/include/Makefile
     media/libtheora/include/theora/Makefile
   "
+fi
+
+if [ "$MOZ_RAW" ]; then
+ add_makefiles "
+   content/media/raw/Makefile
+ "
 fi
 
 if [ "$MOZ_WEBM" ]; then
