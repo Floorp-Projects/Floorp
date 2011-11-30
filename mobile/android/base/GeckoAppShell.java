@@ -459,23 +459,6 @@ public class GeckoAppShell
 
         layerController.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View view, MotionEvent event) {
-                if (event == null)
-                    return true;
-
-                float origX = event.getX();
-                float origY = event.getY();
-                /* Transform the point to the layer offset. */
-                PointF eventPoint = new PointF(origX, origY);
-                PointF geckoPoint = layerController.convertViewPointToLayerPoint(eventPoint);
-                if (geckoPoint == null) {
-                    return false;
-                }
-                event.setLocation((int)Math.round(geckoPoint.x), (int)Math.round(geckoPoint.y));
-
-                GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
-
-                /* Restore the view coordinates in case the caller further processes this event */
-                event.setLocation(origX, origY);
                 return true;
             }
         });
