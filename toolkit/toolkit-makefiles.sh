@@ -936,13 +936,13 @@ if [ "$MOZ_ZIPWRITER" ]; then
   "
 fi
 
-if [ "$MOZ_TREE_CAIRO" ] ; then
+if [ "$MOZ_TREE_CAIRO" ]; then
   add_makefiles "
     gfx/cairo/Makefile
     gfx/cairo/cairo/src/Makefile
     gfx/cairo/cairo/src/cairo-features.h
   "
-  if [ "$MOZ_TREE_PIXMAN" ] ; then
+  if [ "$MOZ_TREE_PIXMAN" ]; then
     add_makefiles "
       gfx/cairo/libpixman/src/Makefile
     "
@@ -950,7 +950,7 @@ if [ "$MOZ_TREE_CAIRO" ] ; then
 
 fi
 
-if [ "$MOZ_UNIVERSALCHARDET" ] ; then
+if [ "$MOZ_UNIVERSALCHARDET" ]; then
   add_makefiles "
     extensions/universalchardet/Makefile
     extensions/universalchardet/src/Makefile
@@ -966,7 +966,7 @@ if [ "$MOZ_AUTH_EXTENSION" ]; then
   "
 fi
 
-if test -n "$MOZ_PSM"; then
+if [ "$MOZ_PSM" ]; then
   add_makefiles "
     security/manager/Makefile
     security/manager/boot/Makefile
@@ -1003,7 +1003,7 @@ if [ ! "$SYSTEM_BZ2" ]; then
   "
 fi
 
-if test -n "$MOZ_UPDATE_PACKAGING"; then
+if [ "$MOZ_UPDATE_PACKAGING" ]; then
   add_makefiles "
     tools/update-packaging/Makefile
     other-licenses/bsdiff/Makefile
