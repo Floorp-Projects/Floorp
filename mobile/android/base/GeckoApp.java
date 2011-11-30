@@ -86,7 +86,6 @@ import android.database.sqlite.*;
 import android.provider.*;
 import android.content.pm.*;
 import android.content.pm.PackageManager.*;
-import android.content.SharedPreferences.*;
 import dalvik.system.*;
 
 abstract public class GeckoApp
@@ -94,11 +93,14 @@ abstract public class GeckoApp
 {
     private static final String LOGTAG = "GeckoApp";
 
-    public static final String ACTION_ALERT_CLICK = "org.mozilla.gecko.ACTION_ALERT_CLICK";
-    public static final String ACTION_ALERT_CLEAR = "org.mozilla.gecko.ACTION_ALERT_CLEAR";
-    public static final String ACTION_WEBAPP      = "org.mozilla.gecko.WEBAPP";
-    public static final String ACTION_DEBUG       = "org.mozilla.gecko.DEBUG";
-    public static final String ACTION_BOOKMARK    = "org.mozilla.gecko.BOOKMARK";
+    public static final String ACTION_ALERT_CLICK   = "org.mozilla.gecko.ACTION_ALERT_CLICK";
+    public static final String ACTION_ALERT_CLEAR   = "org.mozilla.gecko.ACTION_ALERT_CLEAR";
+    public static final String ACTION_WEBAPP        = "org.mozilla.gecko.WEBAPP";
+    public static final String ACTION_DEBUG         = "org.mozilla.gecko.DEBUG";
+    public static final String ACTION_BOOKMARK      = "org.mozilla.gecko.BOOKMARK";
+    public static final String SAVED_STATE_URI      = "uri";
+    public static final String SAVED_STATE_TITLE    = "title";
+    public static final String SAVED_STATE_VIEWPORT = "viewport";
 
     private LinearLayout mMainLayout;
     private AbsoluteLayout mGeckoLayout;
@@ -127,6 +129,10 @@ abstract public class GeckoApp
     private static GeckoSoftwareLayerClient mSoftwareLayerClient;
     AboutHomeContent mAboutHomeContent;
     boolean mUserDefinedProfile = false;
+
+    public String mLastUri;
+    public String mLastTitle;
+    public String mLastViewport;
 
     private Vector<View> mPluginViews = new Vector<View>();
 
@@ -385,7 +391,7 @@ abstract public class GeckoApp
             intent = getIntent();
 
         prefetchDNS(intent.getData());
-        new GeckoThread(intent).start();
+        new GeckoThread(intent, mLastUri, mLastTitle).start();
 
         return true;
     }
@@ -549,9 +555,19 @@ abstract public class GeckoApp
         return file.toString();
     }
 
-    public SharedPreferences getPlaceholderPrefs() {
-        return getSharedPreferences("GeckoApp", MODE_PRIVATE);
+    public String getLastViewport() {
+        return mLastViewport;
     }
+
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (outState == null)
+            outState = new Bundle();
+        outState.putString(SAVED_STATE_URI, mLastUri);
+        outState.putString(SAVED_STATE_TITLE, mLastTitle);
+        outState.putString(SAVED_STATE_VIEWPORT, mLastViewport);
+    }
+
 
     private void rememberLastScreen(boolean sync) {
         if (mUserDefinedProfile)
@@ -568,28 +584,10 @@ abstract public class GeckoApp
         if (getLayerController().getLayerClient() != mSoftwareLayerClient)
             return;
 
-        ViewportMetrics viewport = mSoftwareLayerClient.getGeckoViewportMetrics();
-        String uri = lastHistoryEntry.mUri;
-        String title = lastHistoryEntry.mTitle;
+        mLastViewport = mSoftwareLayerClient.getGeckoViewportMetrics().toJSON();
+        mLastUri = lastHistoryEntry.mUri;
+        mLastTitle = lastHistoryEntry.mTitle;
 
-        SharedPreferences prefs = getPlaceholderPrefs();
-        Editor editor = prefs.edit();
-
-        editor.putString("last-uri", uri);
-        editor.putString("last-title", title);
-
-        if (viewport != null) {
-            /* XXX Saving this viewport means there may be a slight
-             *     discrepancy between what the user sees when shutting down
-             *     and what they see when starting up, but it oughtn't be much.
-             *
-             *     The alternative is to do a transformation between the two.
-             */
-            editor.putString("viewport", viewport.toJSON());
-        }
-
-        Log.i(LOGTAG, "Saving:: " + uri + " " + title);
-        editor.commit();
 
         GeckoEvent event = new GeckoEvent();
         event.mType = GeckoEvent.SAVE_STATE;
@@ -1238,7 +1236,11 @@ abstract public class GeckoApp
     public void onCreate(Bundle savedInstanceState)
     {
         Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - onCreate");
-
+        if (savedInstanceState != null) {
+            mLastUri = savedInstanceState.getString(SAVED_STATE_URI);
+            mLastTitle = savedInstanceState.getString(SAVED_STATE_TITLE);
+            mLastViewport = savedInstanceState.getString(SAVED_STATE_VIEWPORT);
+        }
         if (Build.VERSION.SDK_INT >= 9) {
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
                                        .detectDiskReads().detectDiskWrites().detectNetwork()
