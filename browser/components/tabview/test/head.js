@@ -81,7 +81,7 @@ function afterAllTabItemsUpdated(callback, win) {
         if (--counter == 0)
           callback();
       });
-      tabItems.addToUpdateQueue(tab);
+      tabItems.update(tab);
     }
   }
   if (counter == 0)
