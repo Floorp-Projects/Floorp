@@ -180,11 +180,13 @@ GeneratePrototypeGuards(JSContext *cx, Vector<JSC::MacroAssembler::Jump,8> &mism
                 types::TypeObject *type = pobj->getType(cx);
                 j = masm.branchPtr(Assembler::NotEqual,
                                    AbsoluteAddress(&type->proto),
-                                   ImmPtr(pobj->getProto()));
+                                   ImmPtr(pobj->getProto()),
+                                   scratchReg);
             } else {
                 j = masm.branchPtr(Assembler::NotEqual,
                                    AbsoluteAddress(pobj->addressOfType()),
-                                   ImmPtr(pobj->type()));
+                                   ImmPtr(pobj->type()),
+                                   scratchReg);
             }
             if (!mismatches.append(j))
                 return false;
