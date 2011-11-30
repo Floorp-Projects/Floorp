@@ -54,6 +54,13 @@ struct RunnableMethodTraits<mozilla::ipc::AsyncChannel>
     static void ReleaseCallee(mozilla::ipc::AsyncChannel* obj) { }
 };
 
+template<>
+struct RunnableMethodTraits<mozilla::ipc::AsyncChannel::ProcessLink>
+{
+    static void RetainCallee(mozilla::ipc::AsyncChannel::ProcessLink* obj) { }
+    static void ReleaseCallee(mozilla::ipc::AsyncChannel::ProcessLink* obj) { }
+};
+
 // We rely on invariants about the lifetime of the transport:
 //
 //  - outlives this AsyncChannel
@@ -102,30 +109,39 @@ public:
 namespace mozilla {
 namespace ipc {
 
-AsyncChannel::AsyncChannel(AsyncListener* aListener)
-  : mTransport(0),
-    mListener(aListener),
-    mChannelState(ChannelClosed),
-    mMonitor("mozilla.ipc.AsyncChannel.mMonitor"),
-    mIOLoop(),
-    mWorkerLoop(),
-    mChild(false),
-    mChannelErrorTask(NULL),
-    mExistingListener(NULL)
+AsyncChannel::Link::Link(AsyncChannel *aChan)
+    : mChan(aChan)
 {
-    MOZ_COUNT_CTOR(AsyncChannel);
 }
 
-AsyncChannel::~AsyncChannel()
+AsyncChannel::Link::~Link()
 {
-    MOZ_COUNT_DTOR(AsyncChannel);
-    Clear();
+    mChan = 0;
 }
 
-bool
-AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop, Side aSide)
+AsyncChannel::ProcessLink::ProcessLink(AsyncChannel *aChan)
+    : Link(aChan)
+    , mExistingListener(NULL)
 {
-    NS_PRECONDITION(!mTransport, "Open() called > once");
+}
+
+AsyncChannel::ProcessLink::~ProcessLink()
+{
+    mIOLoop = 0;
+    if (mTransport) {
+        mTransport->set_listener(0);
+        
+        // we only hold a weak ref to the transport, which is "owned"
+        // by GeckoChildProcess/GeckoThread
+        mTransport = 0;
+    }
+}
+
+void 
+AsyncChannel::ProcessLink::Open(mozilla::ipc::Transport* aTransport,
+                                MessageLoop *aIOLoop,
+                                Side aSide)
+{
     NS_PRECONDITION(aTransport, "need transport layer");
 
     // FIXME need to check for valid channel
@@ -140,38 +156,96 @@ AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop, Side aSide)
         // We're a child or using the new arguments.  Either way, we
         // need an open.
         needOpen = true;
-        mChild = (aSide == Unknown) || (aSide == Child);
+        mChan->mChild = (aSide == AsyncChannel::Unknown) || (aSide == AsyncChannel::Child);
     } else {
         NS_PRECONDITION(aSide == Unknown, "expected default side arg");
 
         // parent
-        mChild = false;
+        mChan->mChild = false;
         needOpen = false;
         aIOLoop = XRE_GetIOMessageLoop();
         // FIXME assuming that the parent waits for the OnConnected event.
         // FIXME see GeckoChildProcessHost.cpp.  bad assumption!
-        mChannelState = ChannelConnected;
+        mChan->mChannelState = ChannelConnected;
     }
 
     mIOLoop = aIOLoop;
-    mWorkerLoop = MessageLoop::current();
 
     NS_ASSERTION(mIOLoop, "need an IO loop");
-    NS_ASSERTION(mWorkerLoop, "need a worker loop");
+    NS_ASSERTION(mChan->mWorkerLoop, "need a worker loop");
 
     if (needOpen) {             // child process
-        MonitorAutoLock lock(mMonitor);
+        MonitorAutoLock lock(*mChan->mMonitor);
 
         mIOLoop->PostTask(FROM_HERE, 
-                          NewRunnableMethod(this,
-                                            &AsyncChannel::OnChannelOpened));
+                          NewRunnableMethod(this, &ProcessLink::OnChannelOpened));
 
         // FIXME/cjones: handle errors
-        while (mChannelState != ChannelConnected) {
-            mMonitor.Wait();
+        while (mChan->mChannelState != ChannelConnected) {
+            mChan->mMonitor->Wait();
         }
     }
+}
 
+void
+AsyncChannel::ProcessLink::EchoMessage(Message *msg)
+{
+    // NB: Go through this OnMessageReceived indirection so that
+    // echoing this message does the right thing for SyncChannel
+    // and RPCChannel too
+    mIOLoop->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(this, &ProcessLink::OnEchoMessage, msg));
+    // OnEchoMessage takes ownership of |msg|
+}
+
+void
+AsyncChannel::ProcessLink::SendMessage(Message *msg)
+{
+    mChan->AssertWorkerThread();
+    mIOLoop->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(mTransport, &Transport::Send, msg));
+}
+
+void
+AsyncChannel::ProcessLink::SendClose()
+{
+    mChan->AssertWorkerThread();
+    mChan->mMonitor->AssertCurrentThreadOwns();
+
+    mIOLoop->PostTask(
+        FROM_HERE, NewRunnableMethod(this, &ProcessLink::OnCloseChannel));
+}
+
+AsyncChannel::AsyncChannel(AsyncListener* aListener)
+  : mListener(aListener),
+    mChannelState(ChannelClosed),
+    mWorkerLoop(),
+    mChild(false),
+    mChannelErrorTask(NULL),
+    mLink(NULL)
+{
+    MOZ_COUNT_CTOR(AsyncChannel);
+}
+
+AsyncChannel::~AsyncChannel()
+{
+    MOZ_COUNT_DTOR(AsyncChannel);
+    Clear();
+}
+
+bool
+AsyncChannel::Open(Transport* aTransport,
+                   MessageLoop* aIOLoop,
+                   AsyncChannel::Side aSide)
+{
+    ProcessLink *link;
+    NS_PRECONDITION(!mLink, "Open() called > once");
+    mMonitor = new RefCountedMonitor();
+    mWorkerLoop = MessageLoop::current();
+    mLink = link = new ProcessLink(this);
+    link->Open(aTransport, aIOLoop, aSide); // n.b.: sets mChild
     return true;
 }
 
@@ -181,7 +255,12 @@ AsyncChannel::Close()
     AssertWorkerThread();
 
     {
-        MonitorAutoLock lock(mMonitor);
+        // n.b.: We increase the ref count of monitor temporarily
+        //       for the duration of this block.  Otherwise, the
+        //       function NotifyMaybeChannelError() will call
+        //       ::Clear() which can free the monitor.
+        nsRefPtr<RefCountedMonitor> monitor(mMonitor);
+        MonitorAutoLock lock(*monitor);
 
         if (ChannelError == mChannelState ||
             ChannelTimeout == mChannelState) {
@@ -191,7 +270,7 @@ AsyncChannel::Close()
             // also be deleted and the listener will never be notified
             // of the channel error.
             if (mListener) {
-                MonitorAutoUnlock unlock(mMonitor);
+                MonitorAutoUnlock unlock(*monitor);
                 NotifyMaybeChannelError();
             }
             return;
@@ -217,13 +296,10 @@ void
 AsyncChannel::SynchronouslyClose()
 {
     AssertWorkerThread();
-    mMonitor.AssertCurrentThreadOwns();
-
-    mIOLoop->PostTask(
-        FROM_HERE, NewRunnableMethod(this, &AsyncChannel::OnCloseChannel));
-
+    mMonitor->AssertCurrentThreadOwns();
+    mLink->SendClose();
     while (ChannelClosed != mChannelState)
-        mMonitor.Wait();
+        mMonitor->Wait();
 }
 
 bool
@@ -231,18 +307,18 @@ AsyncChannel::Send(Message* _msg)
 {
     nsAutoPtr<Message> msg(_msg);
     AssertWorkerThread();
-    mMonitor.AssertNotCurrentThreadOwns();
+    mMonitor->AssertNotCurrentThreadOwns();
     NS_ABORT_IF_FALSE(MSG_ROUTING_NONE != msg->routing_id(), "need a route");
 
     {
-        MonitorAutoLock lock(mMonitor);
+        MonitorAutoLock lock(*mMonitor);
 
         if (!Connected()) {
             ReportConnectionError("AsyncChannel");
             return false;
         }
 
-        SendThroughTransport(msg.forget());
+        mLink->SendMessage(msg.forget());
     }
 
     return true;
@@ -253,24 +329,18 @@ AsyncChannel::Echo(Message* _msg)
 {
     nsAutoPtr<Message> msg(_msg);
     AssertWorkerThread();
-    mMonitor.AssertNotCurrentThreadOwns();
+    mMonitor->AssertNotCurrentThreadOwns();
     NS_ABORT_IF_FALSE(MSG_ROUTING_NONE != msg->routing_id(), "need a route");
 
     {
-        MonitorAutoLock lock(mMonitor);
+        MonitorAutoLock lock(*mMonitor);
 
         if (!Connected()) {
             ReportConnectionError("AsyncChannel");
             return false;
         }
 
-        // NB: Go through this OnMessageReceived indirection so that
-        // echoing this message does the right thing for SyncChannel
-        // and RPCChannel too
-        mIOLoop->PostTask(
-            FROM_HERE,
-            NewRunnableMethod(this, &AsyncChannel::OnEchoMessage, msg.forget()));
-        // OnEchoMessage takes ownership of |msg|
+        mLink->EchoMessage(msg.forget());
     }
 
     return true;
@@ -306,31 +376,21 @@ void
 AsyncChannel::SendSpecialMessage(Message* msg) const
 {
     AssertWorkerThread();
-    SendThroughTransport(msg);
-}
-
-void
-AsyncChannel::SendThroughTransport(Message* msg) const
-{
-    AssertWorkerThread();
-
-    mIOLoop->PostTask(
-        FROM_HERE,
-        NewRunnableMethod(mTransport, &Transport::Send, msg));
+    mLink->SendMessage(msg);
 }
 
 void
 AsyncChannel::OnNotifyMaybeChannelError()
 {
     AssertWorkerThread();
-    mMonitor.AssertNotCurrentThreadOwns();
+    mMonitor->AssertNotCurrentThreadOwns();
 
     // OnChannelError holds mMonitor when it posts this task and this
     // task cannot be allowed to run until OnChannelError has
     // exited. We enforce that order by grabbing the mutex here which
     // should only continue once OnChannelError has completed.
     {
-        MonitorAutoLock lock(mMonitor);
+        MonitorAutoLock lock(*mMonitor);
         // nothing to do here
     }
 
@@ -348,7 +408,7 @@ AsyncChannel::OnNotifyMaybeChannelError()
 void
 AsyncChannel::NotifyChannelClosed()
 {
-    mMonitor.AssertNotCurrentThreadOwns();
+    mMonitor->AssertNotCurrentThreadOwns();
 
     if (ChannelClosed != mChannelState)
         NS_RUNTIMEABORT("channel should have been closed!");
@@ -363,7 +423,7 @@ AsyncChannel::NotifyChannelClosed()
 void
 AsyncChannel::NotifyMaybeChannelError()
 {
-    mMonitor.AssertNotCurrentThreadOwns();
+    mMonitor->AssertNotCurrentThreadOwns();
 
     // TODO sort out Close() on this side racing with Close() on the
     // other side
@@ -386,16 +446,12 @@ void
 AsyncChannel::Clear()
 {
     mListener = 0;
-    mIOLoop = 0;
     mWorkerLoop = 0;
 
-    if (mTransport) {
-        mTransport->set_listener(0);
+    delete mLink;
+    mLink = 0;
+    mMonitor = 0;
 
-        // we only hold a weak ref to the transport, which is "owned"
-        // by GeckoChildProcess/GeckoThread
-        mTransport = 0;
-    }
     if (mChannelErrorTask) {
         mChannelErrorTask->Cancel();
         mChannelErrorTask = NULL;
@@ -480,17 +536,96 @@ AsyncChannel::ReportConnectionError(const char* channelName) const
     mListener->OnProcessingError(MsgDropped);
 }
 
+void
+AsyncChannel::DispatchOnChannelConnected(int32 peer_pid)
+{
+    AssertWorkerThread();
+    if (mListener)
+        mListener->OnChannelConnected(peer_pid);
+}
+
 //
 // The methods below run in the context of the IO thread
 //
 
 void
-AsyncChannel::OnMessageReceived(const Message& msg)
+AsyncChannel::ProcessLink::OnMessageReceived(const Message& msg)
 {
     AssertIOThread();
-    NS_ASSERTION(mChannelState != ChannelError, "Shouldn't get here!");
+    NS_ASSERTION(mChan->mChannelState != ChannelError, "Shouldn't get here!");
+    MonitorAutoLock lock(*mChan->mMonitor);
+    mChan->OnMessageReceivedFromLink(msg);
+}
 
-    MonitorAutoLock lock(mMonitor);
+void
+AsyncChannel::ProcessLink::OnEchoMessage(Message* msg)
+{
+    AssertIOThread();
+    OnMessageReceived(*msg);
+    delete msg;
+}
+
+void
+AsyncChannel::ProcessLink::OnChannelOpened()
+{
+    mChan->AssertLinkThread();
+    {
+        MonitorAutoLock lock(*mChan->mMonitor);
+        mChan->mChannelState = ChannelOpening;
+    }
+    /*assert*/mTransport->Connect();
+}
+
+void
+AsyncChannel::ProcessLink::OnChannelConnected(int32 peer_pid)
+{
+    AssertIOThread();
+
+    {
+        MonitorAutoLock lock(*mChan->mMonitor);
+        mChan->mChannelState = ChannelConnected;
+        mChan->mMonitor->Notify();
+    }
+
+    if(mExistingListener)
+        mExistingListener->OnChannelConnected(peer_pid);
+
+    mChan->mWorkerLoop->PostTask(
+        FROM_HERE, 
+        NewRunnableMethod(mChan, 
+                          &AsyncChannel::DispatchOnChannelConnected, 
+                          peer_pid));
+}
+
+void
+AsyncChannel::ProcessLink::OnChannelError()
+{
+    AssertIOThread();
+    MonitorAutoLock lock(*mChan->mMonitor);
+    mChan->OnChannelErrorFromLink();
+}
+
+void
+AsyncChannel::ProcessLink::OnCloseChannel()
+{
+    AssertIOThread();
+
+    mTransport->Close();
+
+    MonitorAutoLock lock(*mChan->mMonitor);
+    mChan->mChannelState = ChannelClosed;
+    mChan->mMonitor->Notify();
+}
+
+//
+// The methods below run in the context of the link thread
+//
+
+void
+AsyncChannel::OnMessageReceivedFromLink(const Message& msg)
+{
+    AssertLinkThread();
+    mMonitor->AssertCurrentThreadOwns();
 
     if (!MaybeInterceptSpecialIOMessage(msg))
         // wake up the worker, there's work to do
@@ -500,57 +635,10 @@ AsyncChannel::OnMessageReceived(const Message& msg)
 }
 
 void
-AsyncChannel::OnEchoMessage(Message* msg)
+AsyncChannel::OnChannelErrorFromLink()
 {
-    AssertIOThread();
-    OnMessageReceived(*msg);
-    delete msg;
-}
-
-void
-AsyncChannel::OnChannelOpened()
-{
-    AssertIOThread();
-    {
-        MonitorAutoLock lock(mMonitor);
-        mChannelState = ChannelOpening;
-    }
-    /*assert*/mTransport->Connect();
-}
-
-void
-AsyncChannel::DispatchOnChannelConnected(int32 peer_pid)
-{
-    AssertWorkerThread();
-    if (mListener)
-        mListener->OnChannelConnected(peer_pid);
-}
-
-void
-AsyncChannel::OnChannelConnected(int32 peer_pid)
-{
-    AssertIOThread();
-
-    {
-        MonitorAutoLock lock(mMonitor);
-        mChannelState = ChannelConnected;
-        mMonitor.Notify();
-    }
-
-    if(mExistingListener)
-        mExistingListener->OnChannelConnected(peer_pid);
-
-    mWorkerLoop->PostTask(FROM_HERE, NewRunnableMethod(this, 
-                                                       &AsyncChannel::DispatchOnChannelConnected, 
-                                                       peer_pid));
-}
-
-void
-AsyncChannel::OnChannelError()
-{
-    AssertIOThread();
-
-    MonitorAutoLock lock(mMonitor);
+    AssertLinkThread();
+    mMonitor->AssertCurrentThreadOwns();
 
     if (ChannelClosing != mChannelState)
         mChannelState = ChannelError;
@@ -561,8 +649,8 @@ AsyncChannel::OnChannelError()
 void
 AsyncChannel::PostErrorNotifyTask()
 {
-    AssertIOThread();
-    mMonitor.AssertCurrentThreadOwns();
+    AssertLinkThread();
+    mMonitor->AssertCurrentThreadOwns();
 
     NS_ASSERTION(!mChannelErrorTask, "OnChannelError called twice?");
 
@@ -572,23 +660,11 @@ AsyncChannel::PostErrorNotifyTask()
     mWorkerLoop->PostTask(FROM_HERE, mChannelErrorTask);
 }
 
-void
-AsyncChannel::OnCloseChannel()
-{
-    AssertIOThread();
-
-    mTransport->Close();
-
-    MonitorAutoLock lock(mMonitor);
-    mChannelState = ChannelClosed;
-    mMonitor.Notify();
-}
-
 bool
 AsyncChannel::MaybeInterceptSpecialIOMessage(const Message& msg)
 {
-    AssertIOThread();
-    mMonitor.AssertCurrentThreadOwns();
+    AssertLinkThread();
+    mMonitor->AssertCurrentThreadOwns();
 
     if (MSG_ROUTING_NONE == msg.routing_id()
         && GOODBYE_MESSAGE_TYPE == msg.type()) {
@@ -601,8 +677,8 @@ AsyncChannel::MaybeInterceptSpecialIOMessage(const Message& msg)
 void
 AsyncChannel::ProcessGoodbyeMessage()
 {
-    AssertIOThread();
-    mMonitor.AssertCurrentThreadOwns();
+    AssertLinkThread();
+    mMonitor->AssertCurrentThreadOwns();
 
     // TODO sort out Close() on this side racing with Close() on the
     // other side
