@@ -229,7 +229,7 @@ public:
     : mClient(aClient), mResourceID(0), mInitialized(false),
       mHasHadUpdate(false),
       mIsSeekable(false), mCacheSuspended(false),
-      mDidNotifyDataEnded(false),
+      mChannelEnded(false), mDidNotifyDataEnded(false),
       mUsingNullPrincipal(false),
       mChannelOffset(0), mStreamLength(-1),  
       mStreamOffset(0), mPlaybackBytesPerSecond(10000),
@@ -352,7 +352,8 @@ public:
   // Returns the last set value of SetSeekable.
   bool IsSeekable();
 
-  // Returns true when all streams for this resource are suspended.
+  // Returns true when all streams for this resource are suspended or their
+  // channel has ended.
   bool AreAllStreamsForResourceSuspended();
 
   // These methods must be called on a different thread from the main
@@ -469,6 +470,8 @@ private:
   // full and the priority of the data that would be received is lower
   // than the priority of the data already in the cache
   bool mCacheSuspended;
+  // True if the channel ended and we haven't seeked it again.
+  bool mChannelEnded;
   // True if CacheClientNotifyDataEnded has been called for this stream.
   bool mDidNotifyDataEnded;
   // True if mPrincipal is a null principal because we saw data from

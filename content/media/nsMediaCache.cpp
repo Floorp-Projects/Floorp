@@ -1351,6 +1351,7 @@ nsMediaCache::Update()
       rv = stream->mClient->CacheClientSeek(stream->mChannelOffset,
                                             stream->mCacheSuspended);
       stream->mCacheSuspended = false;
+      stream->mChannelEnded = false;
       break;
 
     case RESUME:
@@ -1854,6 +1855,8 @@ nsMediaCacheStream::NotifyDataEnded(nsresult aStatus)
       stream->mClient->CacheClientNotifyDataEnded(aStatus);
     }
   }
+
+  mChannelEnded = true;
 }
 
 nsMediaCacheStream::~nsMediaCacheStream()
@@ -1893,7 +1896,7 @@ nsMediaCacheStream::AreAllStreamsForResourceSuspended()
   ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
   nsMediaCache::ResourceStreamIterator iter(mResourceID);
   while (nsMediaCacheStream* stream = iter.Next()) {
-    if (!stream->mCacheSuspended)
+    if (!stream->mCacheSuspended && !stream->mChannelEnded)
       return false;
   }
   return true;
@@ -2312,6 +2315,7 @@ nsMediaCacheStream::InitAsClone(nsMediaCacheStream* aOriginal)
   // Cloned streams are initially suspended, since there is no channel open
   // initially for a clone.
   mCacheSuspended = true;
+  mChannelEnded = true;
 
   if (aOriginal->mDidNotifyDataEnded) {
     mNotifyDataEndedStatus = aOriginal->mNotifyDataEndedStatus;
