@@ -1991,7 +1991,6 @@ abstract public class GeckoApp
 
         LayerController layerController = getLayerController();
         layerController.setLayerClient(mSoftwareLayerClient);
-        GeckoAppShell.scheduleRedraw();
     }
 
     private void prefetchDNS(final Uri u) {
