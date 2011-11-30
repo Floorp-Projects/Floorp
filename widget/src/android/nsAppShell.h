@@ -76,7 +76,6 @@ public:
     virtual bool ProcessNextNativeEvent(bool mayWait);
 
     void PostEvent(mozilla::AndroidGeckoEvent *event);
-    void RemoveNextEvent();
     void OnResume();
 
     nsresult AddObserver(const nsAString &aObserverKey, nsIObserver *aObserver);
@@ -93,10 +92,11 @@ protected:
     Mutex mCondLock;
     CondVar mQueueCond;
     int mNumDraws;
+    mozilla::AndroidGeckoEvent *mLastDrawEvent;
     nsTArray<mozilla::AndroidGeckoEvent *> mEventQueue;
     nsInterfaceHashtable<nsStringHashKey, nsIObserver> mObserversHash;
 
-    mozilla::AndroidGeckoEvent *GetNextEvent();
+    mozilla::AndroidGeckoEvent *PopNextEvent();
     mozilla::AndroidGeckoEvent *PeekNextEvent();
 };
 
