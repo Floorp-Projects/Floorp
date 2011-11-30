@@ -693,6 +693,10 @@ InitTypeConstructor(JSContext* cx,
   if (instanceProps && !JS_DefineProperties(cx, dataProto, instanceProps))
     return false;
 
+  // Link the type prototype to the data prototype.
+  if (!JS_SetReservedSlot(cx, typeProto, SLOT_OURDATAPROTO, OBJECT_TO_JSVAL(dataProto)))
+    return false;
+
   if (!JS_FreezeObject(cx, obj) ||
       //!JS_FreezeObject(cx, dataProto) || // XXX fixme - see bug 541212!
       !JS_FreezeObject(cx, typeProto))
@@ -740,7 +744,7 @@ AttachProtos(JSContext* cx, JSObject* proto, JSObject** protos)
 {
   // For a given 'proto' of [[Class]] "CTypeProto", attach each of the 'protos'
   // to the appropriate CTypeProtoSlot. (SLOT_UINT64PROTO is the last slot
-  // of [[Class]] "CTypeProto".)
+  // of [[Class]] "CTypeProto" that we fill in this automated manner.)
   for (JSUint32 i = 0; i <= SLOT_UINT64PROTO; ++i) {
     if (!JS_SetReservedSlot(cx, proto, i, OBJECT_TO_JSVAL(protos[i])))
       return false;
@@ -782,6 +786,11 @@ InitTypeClasses(JSContext* cx, JSObject* parent)
   //     * Provides properties and functions common to all CDatas.
   JSObject* CDataProto = InitCDataClass(cx, parent, CTypeProto);
   if (!CDataProto)
+    return false;
+
+  // Link CTypeProto to CDataProto.
+  if (!JS_SetReservedSlot(cx, CTypeProto, SLOT_OURDATAPROTO,
+                          OBJECT_TO_JSVAL(CDataProto)))
     return false;
 
   // Create and attach the special class constructors: ctypes.PointerType,
@@ -2829,6 +2838,12 @@ CType::IsCType(JSContext* cx, JSObject* obj)
   return JS_GET_CLASS(cx, obj) == &sCTypeClass;
 }
 
+bool
+CType::IsCTypeProto(JSContext* cx, JSObject* obj)
+{
+  return JS_GET_CLASS(cx, obj) == &sCTypeProtoClass;
+}
+
 TypeCode
 CType::GetTypeCode(JSContext* cx, JSObject* typeObj)
 {
@@ -3034,7 +3049,7 @@ CType::GetProtoFromCtor(JSContext* cx, JSObject* obj, CTypeProtoSlot slot)
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FN_CTORPROTO, &protoslot));
   JSObject* proto = JSVAL_TO_OBJECT(protoslot);
   JS_ASSERT(proto);
-  JS_ASSERT(JS_GET_CLASS(cx, proto) == &sCTypeProtoClass);
+  JS_ASSERT(CType::IsCTypeProto(cx, proto));
 
   // Get the desired prototype.
   jsval result;
@@ -3050,7 +3065,7 @@ CType::GetProtoFromType(JSContext* cx, JSObject* obj, CTypeProtoSlot slot)
   // Get the prototype of the type object.
   JSObject* proto = JS_GetPrototype(cx, obj);
   JS_ASSERT(proto);
-  JS_ASSERT(JS_GET_CLASS(cx, proto) == &sCTypeProtoClass);
+  JS_ASSERT(CType::IsCTypeProto(cx, proto));
 
   // Get the requested ctypes.{Pointer,Array,Struct,Function}Type.prototype.
   jsval result;
@@ -3061,12 +3076,14 @@ CType::GetProtoFromType(JSContext* cx, JSObject* obj, CTypeProtoSlot slot)
 JSBool
 CType::PrototypeGetter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp)
 {
-  if (!CType::IsCType(cx, obj)) {
-    JS_ReportError(cx, "not a CType");
+  if (!(CType::IsCType(cx, obj) || CType::IsCTypeProto(cx, obj))) {
+    JS_ReportError(cx, "not a CType or CTypeProto");
     return JS_FALSE;
   }
 
-  ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_PROTO, vp));
+  unsigned slot = CType::IsCTypeProto(cx, obj) ? (unsigned) SLOT_OURDATAPROTO
+                                               : (unsigned) SLOT_PROTO;
+  ASSERT_OK(JS_GetReservedSlot(cx, obj, slot, vp));
   JS_ASSERT(!JSVAL_IS_PRIMITIVE(*vp) || JSVAL_IS_VOID(*vp));
   return JS_TRUE;
 }
@@ -3151,19 +3168,28 @@ JSBool
 CType::ToString(JSContext* cx, uintN argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj || !CType::IsCType(cx, obj)) {
+  if (!obj ||
+      !(CType::IsCType(cx, obj) || CType::IsCTypeProto(cx, obj)))
+  {
     JS_ReportError(cx, "not a CType");
     return JS_FALSE;
   }
 
-  AutoString type;
-  AppendString(type, "type ");
-  AppendString(type, GetName(cx, obj));
-
-  JSString* result = NewUCString(cx, type);
+  // Create the appropriate string depending on whether we're sCTypeClass or
+  // sCTypeProtoClass.
+  JSString* result;
+  if (CType::IsCType(cx, obj)) {
+    AutoString type;
+    AppendString(type, "type ");
+    AppendString(type, GetName(cx, obj));
+    result = NewUCString(cx, type);
+  }
+  else {
+    result = JS_NewStringCopyZ(cx, "[CType proto object]");
+  }
   if (!result)
     return JS_FALSE;
-  
+
   JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(result));
   return JS_TRUE;
 }
@@ -3172,17 +3198,26 @@ JSBool
 CType::ToSource(JSContext* cx, uintN argc, jsval* vp)
 {
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj || !CType::IsCType(cx, obj)) {
+  if (!obj ||
+      !(CType::IsCType(cx, obj) || CType::IsCTypeProto(cx, obj)))
+  {
     JS_ReportError(cx, "not a CType");
     return JS_FALSE;
   }
 
-  AutoString source;
-  BuildTypeSource(cx, obj, false, source);
-  JSString* result = NewUCString(cx, source);
+  // Create the appropriate string depending on whether we're sCTypeClass or
+  // sCTypeProtoClass.
+  JSString* result;
+  if (CType::IsCType(cx, obj)) {
+    AutoString source;
+    BuildTypeSource(cx, obj, false, source);
+    result = NewUCString(cx, source);
+  } else {
+    result = JS_NewStringCopyZ(cx, "[CType proto object]");
+  }
   if (!result)
     return JS_FALSE;
-  
+
   JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(result));
   return JS_TRUE;
 }
@@ -3196,7 +3231,7 @@ CType::HasInstance(JSContext* cx, JSObject* obj, const jsval* v, JSBool* bp)
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_PROTO, &slot));
   JSObject* prototype = JSVAL_TO_OBJECT(slot);
   JS_ASSERT(prototype);
-  JS_ASSERT(JS_GET_CLASS(cx, prototype) == &sCDataProtoClass);
+  JS_ASSERT(CData::IsCDataProto(cx, prototype));
 
   *bp = JS_FALSE;
   if (JSVAL_IS_PRIMITIVE(*v))
@@ -5269,7 +5304,7 @@ CClosure::Create(JSContext* cx,
   // which stores our JSContext for use with the closure.
   JSObject* proto = JS_GetPrototype(cx, typeObj);
   JS_ASSERT(proto);
-  JS_ASSERT(JS_GET_CLASS(cx, proto) == &sCTypeProtoClass);
+  JS_ASSERT(CType::IsCTypeProto(cx, proto));
 
   // Get a JSContext for use with the closure.
   jsval slot;
@@ -5699,6 +5734,12 @@ CData::IsCData(JSContext* cx, JSObject* obj)
   return JS_GET_CLASS(cx, obj) == &sCDataClass;
 }
 
+bool
+CData::IsCDataProto(JSContext* cx, JSObject* obj)
+{
+  return JS_GET_CLASS(cx, obj) == &sCDataProtoClass;
+}
+
 JSBool
 CData::ValueGetter(JSContext* cx, JSObject* obj, jsid idval, jsval* vp)
 {
@@ -5933,29 +5974,35 @@ CData::ToSource(JSContext* cx, uintN argc, jsval* vp)
   }
 
   JSObject* obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj || !CData::IsCData(cx, obj)) {
+  if (!obj ||
+      !(CData::IsCData(cx, obj) || CData::IsCDataProto(cx, obj))) {
     JS_ReportError(cx, "not a CData");
     return JS_FALSE;
   }
 
-  JSObject* typeObj = CData::GetCType(cx, obj);
-  void* data = CData::GetData(cx, obj);
+  JSString* result;
+  if (CData::IsCData(cx, obj)) {
+    JSObject* typeObj = CData::GetCType(cx, obj);
+    void* data = CData::GetData(cx, obj);
 
-  // Walk the types, building up the toSource() string.
-  // First, we build up the type expression:
-  // 't.ptr' for pointers;
-  // 't.array([n])' for arrays;
-  // 'n' for structs, where n = t.name, the struct's name. (We assume this is
-  // bound to a variable in the current scope.)
-  AutoString source;
-  BuildTypeSource(cx, typeObj, true, source);
-  AppendString(source, "(");
-  if (!BuildDataSource(cx, typeObj, data, false, source))
-    return JS_FALSE;
+    // Walk the types, building up the toSource() string.
+    // First, we build up the type expression:
+    // 't.ptr' for pointers;
+    // 't.array([n])' for arrays;
+    // 'n' for structs, where n = t.name, the struct's name. (We assume this is
+    // bound to a variable in the current scope.)
+    AutoString source;
+    BuildTypeSource(cx, typeObj, true, source);
+    AppendString(source, "(");
+    if (!BuildDataSource(cx, typeObj, data, false, source))
+      return JS_FALSE;
 
-  AppendString(source, ")");
+    AppendString(source, ")");
 
-  JSString* result = NewUCString(cx, source);
+    result = NewUCString(cx, source);
+  }
+  else
+    result = JS_NewStringCopyZ(cx, "[CData proto object]");
   if (!result)
     return JS_FALSE;
 
