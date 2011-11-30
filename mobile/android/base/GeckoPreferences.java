@@ -69,7 +69,7 @@ public class GeckoPreferences
         super.onCreate(savedInstanceState);
 
         if (Build.VERSION.SDK_INT >= 11)
-            getActionBar().setDisplayHomeAsUpEnabled(true);
+            new GeckoActionBar().setDisplayHomeAsUpEnabled(this, true);
 
         addPreferencesFromResource(R.xml.preferences);
         mPreferenceScreen = getPreferenceScreen();

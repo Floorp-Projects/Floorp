@@ -58,6 +58,7 @@ JAVAFILES = \
   DoorHangerPopup.java \
   Favicons.java \
   FloatUtils.java \
+  GeckoActionBar.java \
   GeckoApp.java \
   GeckoAppShell.java \
   GeckoAsyncTask.java \
