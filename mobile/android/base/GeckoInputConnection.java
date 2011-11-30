@@ -854,6 +854,7 @@ public class GeckoInputConnection
         if (mIMEState == IME_STATE_DISABLED ||
             keyCode == KeyEvent.KEYCODE_ENTER ||
             keyCode == KeyEvent.KEYCODE_DEL ||
+            keyCode == KeyEvent.KEYCODE_TAB ||
             (event.getFlags() & KeyEvent.FLAG_SOFT_KEYBOARD) != 0 ||
             !mKeyListener.onKeyDown(v, mEditable, keyCode, event))
             GeckoAppShell.sendEventToGecko(new GeckoEvent(event));
