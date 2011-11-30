@@ -84,8 +84,6 @@ VideoDocument::StartDocumentLoad(const char*         aCommand,
   NS_ENSURE_SUCCESS(rv, rv);
 
   mStreamListener = new MediaDocumentStreamListener(this);
-  if (!mStreamListener)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   // Create synthetic document
   rv = CreateSyntheticVideoDocument(aChannel,
@@ -158,7 +156,6 @@ nsresult
 NS_NewVideoDocument(nsIDocument** aResult)
 {
   mozilla::dom::VideoDocument* doc = new mozilla::dom::VideoDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(doc);
   nsresult rv = doc->Init();
