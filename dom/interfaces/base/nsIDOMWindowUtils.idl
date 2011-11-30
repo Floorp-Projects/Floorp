@@ -926,4 +926,9 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   boolean checkAndClearPaintedState(in nsIDOMElement aElement);
 
+  /**
+   * Prevent this window (and any child windows) from displaying any further
+   * dialogs (e.g. window.alert()).
+   */
+  void preventFurtherDialogs();
 };

@@ -2627,10 +2627,7 @@ nsGlobalWindow::AreDialogsBlocked()
 
   topWindow = topWindow->GetCurrentInnerWindowInternal();
 
-  return !topWindow ||
-         (topWindow->mDialogDisabled &&
-          (topWindow->GetPopupControlState() > openAllowed ||
-           topWindow->mDialogAbuseCount >= MAX_DIALOG_COUNT));
+  return !topWindow || topWindow->mDialogDisabled;
 }
 
 bool
