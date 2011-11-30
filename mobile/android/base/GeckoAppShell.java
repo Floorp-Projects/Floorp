@@ -1026,10 +1026,12 @@ public class GeckoAppShell
     }
 
     public static void setSelectedLocale(String localeCode) {
-        SharedPreferences settings =
+        /* We're not using this, not need to save it (see bug 635342)
+          SharedPreferences settings =
             GeckoApp.mAppContext.getPreferences(Activity.MODE_PRIVATE);
         settings.edit().putString(GeckoApp.mAppContext.getPackageName() + ".locale",
                                   localeCode).commit();
+        */
         Locale locale;
         int index;
         if ((index = localeCode.indexOf('-')) != -1 ||

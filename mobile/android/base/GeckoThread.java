@@ -38,7 +38,6 @@
 package org.mozilla.gecko;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.content.res.Configuration;
 import android.util.Log;
@@ -54,9 +53,13 @@ public class GeckoThread extends Thread {
     private static final String LOGTAG = "GeckoThread";
 
     Intent mIntent;
+    String mUri;
+    String mTitle;
 
-    GeckoThread (Intent intent) {
+    GeckoThread (Intent intent, String uri, String title) {
         mIntent = intent;
+        mUri = uri;
+        mTitle = title;
     }
 
     public void run() {
@@ -65,9 +68,8 @@ public class GeckoThread extends Thread {
         String uri = intent.getDataString();
         String title = uri;
         if (!app.mUserDefinedProfile && (uri == null || uri.length() == 0)) {
-            SharedPreferences prefs = app.getSharedPreferences("GeckoApp", app.MODE_PRIVATE);
-            uri = prefs.getString("last-uri", "");
-            title = prefs.getString("last-title", uri);
+            uri = mUri;
+            title = mTitle;
         }
         if (uri == null || uri.equals("") || uri.equals("about:home")) {
             app.showAboutHome();
