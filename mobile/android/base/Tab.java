@@ -414,32 +414,35 @@ public class Tab {
     }
 
     private void saveThumbnailToDB(Bitmap bitmap) {
-        ContentResolver resolver = Tabs.getInstance().getContentResolver();
-        Cursor cursor = resolver.query(Browser.BOOKMARKS_URI,
-                                       null,
-                                       Browser.BookmarkColumns.URL + " = ?",
-                                       new String[] { getURL() },
-                                       Browser.BookmarkColumns.URL);
+        try {
+            ContentResolver resolver = Tabs.getInstance().getContentResolver();
+            Cursor cursor = resolver.query(Browser.BOOKMARKS_URI,
+                                           null,
+                                           Browser.BookmarkColumns.URL + " = ?",
+                                           new String[] { getURL() },
+                                           Browser.BookmarkColumns.URL);
 
-        ContentValues values = new ContentValues();
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
-        values.put("thumbnail", bos.toByteArray());
+            ContentValues values = new ContentValues();
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
+            values.put("thumbnail", bos.toByteArray());
 
-        if (cursor.getCount() == 1) {
-            //entry exists, update the bookmark flag
-            resolver.update(Browser.BOOKMARKS_URI,
-                            values,
-                            Browser.BookmarkColumns.URL + " = ?",
-                            new String[] { getURL() });
-        } else {
-            //add a new entry
-            values.put(Browser.BookmarkColumns.URL, mUrl);
-            resolver.insert(Browser.BOOKMARKS_URI,
-                            values);
+            if (cursor.getCount() == 1) {
+                //entry exists, update the bookmark flag
+                resolver.update(Browser.BOOKMARKS_URI,
+                                values,
+                                Browser.BookmarkColumns.URL + " = ?",
+                                new String[] { getURL() });
+            } else {
+                //add a new entry
+                values.put(Browser.BookmarkColumns.URL, mUrl);
+                resolver.insert(Browser.BOOKMARKS_URI,
+                                values);
+            }
+            cursor.close();
+        } catch (IllegalArgumentException e) {
+            // ignore
         }
-
-        cursor.close();
     }
 
     private class RemoveBookmarkTask extends GeckoAsyncTask<Void, Void, Void> {
