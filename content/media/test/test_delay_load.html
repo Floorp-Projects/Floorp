@@ -65,7 +65,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479711
 
 function createVideo(name, type, id) {
   var v = document.createElement("video");
-  v.src = name;
+  // Make sure each video is a unique resource
+  v.src = name + "?" + id;
   v._name = name;
   v.id = id;
   register(v);
@@ -95,14 +96,19 @@ v.load();
 
 // Load and move to another document.
 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+// Open a new window for the following test. We open it here instead of in
+// the event handler to ensure that our document load event doesn't fire while
+// window.open is spinning the event loop.
+var w = window.open("", "testWindow", "width=400,height=400");
+testWindows.push(w);
+
 v = createVideo(test.name, test.type, "4");
 v.onloadstart = function(e) {
-  // Opening a new window to do this is a bit annoying, but if we use an iframe here,
+  // Using a new window to do this is a bit annoying, but if we use an iframe here,
   // delaying of the iframe's load event might interfere with the firing of our load event
-  // in some confusing way. So it's simpler just to open another window.
-  var w = window.open("", "testWindow", "width=400,height=400");
+  // in some confusing way. So it's simpler just to use another window.
   w.document.body.appendChild(v);
-  testWindows.push(w);
 };
 v.load(); // load started while in this document, this doc's load will block until
           // the video's finished loading (in the other document).

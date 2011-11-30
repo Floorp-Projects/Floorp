@@ -534,6 +534,12 @@ function _getDOMWindowUtils(aWindow)
                                getInterface(Components.interfaces.nsIDOMWindowUtils);
 }
 
+// Must be synchronized with nsIDOMWindowUtils.
+const COMPOSITION_ATTR_RAWINPUT              = 0x02;
+const COMPOSITION_ATTR_SELECTEDRAWTEXT       = 0x03;
+const COMPOSITION_ATTR_CONVERTEDTEXT         = 0x04;
+const COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT = 0x05;
+
 /**
  * Synthesize a composition event.
  *

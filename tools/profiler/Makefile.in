@@ -43,6 +43,7 @@ srcdir      = @srcdir@
 VPATH       = \
   $(srcdir) \
   $(srcdir)/sps \
+  $(srcdir)/public \
   $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
@@ -54,17 +55,29 @@ EXPORTS = \
 
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/ipc/chromium/src \
-  -I$(topsrcdir)/ipc/chromium/src/base \
   $(NULL)
 
-ifeq ($(OS_TARGET),Android)
 MODULE          = profiler
+MODULE_NAME     = nsProfilerModule
 LIBRARY_NAME    = profiler
 EXPORT_LIBRARY  = 1
 LIBXUL_LIBRARY  = 1
+IS_COMPONENT    = 1
 
 CPPSRCS		= \
+  nsProfilerFactory.cpp \
+  nsProfiler.cpp \
   $(NULL)
+
+XPIDLSRCS = \
+  nsIProfiler.idl \
+  $(NULL)
+
+EXTRA_JS_MODULES = \
+  Profiler.jsm \
+  $(NULL)
+
+ifeq ($(OS_TARGET),Android)
 
 DEFINES += -DMOZ_ENABLE_PROFILER_SPS
 

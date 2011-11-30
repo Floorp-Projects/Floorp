@@ -228,6 +228,7 @@ public:
   nsMediaCacheStream(nsMediaChannelStream* aClient)
     : mClient(aClient), mResourceID(0), mInitialized(false),
       mIsSeekable(false), mCacheSuspended(false),
+      mDidNotifyDataEnded(false),
       mUsingNullPrincipal(false),
       mChannelOffset(0), mStreamLength(-1),  
       mStreamOffset(0), mPlaybackBytesPerSecond(10000),
@@ -456,6 +457,8 @@ private:
   // full and the priority of the data that would be received is lower
   // than the priority of the data already in the cache
   bool mCacheSuspended;
+  // True if CacheClientNotifyDataEnded has been called for this stream.
+  bool mDidNotifyDataEnded;
   // True if mPrincipal is a null principal because we saw data from
   // multiple origins
   bool mUsingNullPrincipal;
@@ -486,6 +489,8 @@ private:
   // The number of times this stream has been Pinned without a
   // corresponding Unpin
   PRUint32          mPinCount;
+  // The status used when we did CacheClientNotifyDataEnded
+  nsresult          mNotifyDataEndedStatus;
   // The last reported read mode
   ReadMode          mCurrentMode;
   // True if some data in mPartialBlockBuffer has been read as metadata

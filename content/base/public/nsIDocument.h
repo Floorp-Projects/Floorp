@@ -64,7 +64,7 @@
 #include "nsSMILAnimationController.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocumentEncoder.h"
-#include "nsIAnimationFrameListener.h"
+#include "nsIFrameRequestCallback.h"
 #include "nsEventStates.h"
 #include "nsIStructuredCloneContainer.h"
 #include "nsIBFCacheEntry.h"
@@ -124,8 +124,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x184e0a3c, 0x1899, 0x417d, \
-  { 0xbf, 0xf4, 0x5a, 0x15, 0xe6, 0xe8, 0xaa, 0x94 } }
+{ 0x3b78f6, 0x6dc5, 0x44c6, \
+  { 0xbc, 0x28, 0x60, 0x2a, 0xb2, 0x4f, 0xfb, 0x7b } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1518,18 +1518,14 @@ public:
    */
   virtual Element* LookupImageElement(const nsAString& aElementId) = 0;
 
-  void ScheduleBeforePaintEvent(nsIAnimationFrameListener* aListener);
-  void BeforePaintEventFiring()
-  {
-    mHavePendingPaint = false;
-  }
+  void ScheduleFrameRequestCallback(nsIFrameRequestCallback* aCallback);
 
-  typedef nsTArray< nsCOMPtr<nsIAnimationFrameListener> > AnimationListenerList;
+  typedef nsTArray< nsCOMPtr<nsIFrameRequestCallback> > FrameRequestCallbackList;
   /**
-   * Put this documents animation frame listeners into the provided
+   * Put this document's frame request callbacks into the provided
    * list, and forget about them.
    */
-  void TakeAnimationFrameListeners(AnimationListenerList& aListeners);
+  void TakeFrameRequestCallbacks(FrameRequestCallbackList& aCallbacks);
 
   // This returns true when the document tree is being teared down.
   bool InUnlinkOrDeletion() { return mInUnlinkOrDeletion; }
@@ -1746,9 +1742,6 @@ protected:
   // True if document has ever had script handling object.
   bool mHasHadScriptHandlingObject;
 
-  // True if we're waiting for a before-paint event.
-  bool mHavePendingPaint;
-
   // True if we're an SVG document being used as an image.
   bool mIsBeingUsedAsImage;
 
@@ -1812,7 +1805,7 @@ protected:
 
   nsCOMPtr<nsIDocumentEncoder> mCachedEncoder;
 
-  AnimationListenerList mAnimationFrameListeners;
+  FrameRequestCallbackList mFrameRequestCallbacks;
 
   // This object allows us to evict ourself from the back/forward cache.  The
   // pointer is non-null iff we're currently in the bfcache.

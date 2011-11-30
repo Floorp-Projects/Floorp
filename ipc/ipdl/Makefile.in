@@ -57,6 +57,7 @@ IPDLDIRS =  \
   uriloader/exthandler \
   dom/plugins/ipc  \
   dom/ipc  \
+  dom/sms/src/ipc \
   dom/src/storage \
   gfx/layers/ipc \
   hal/sandbox \
