@@ -1369,6 +1369,8 @@ nsMediaCache::Update()
       break;
     }
 
+    stream->mHasHadUpdate = true;
+
     if (NS_FAILED(rv)) {
       // Close the streams that failed due to error. This will cause all
       // client Read and Seek operations on those streams to fail. Blocked
@@ -1885,6 +1887,18 @@ nsMediaCacheStream::IsSeekable()
   return mIsSeekable;
 }
 
+bool
+nsMediaCacheStream::AreAllStreamsForResourceSuspended()
+{
+  ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
+  nsMediaCache::ResourceStreamIterator iter(mResourceID);
+  while (nsMediaCacheStream* stream = iter.Next()) {
+    if (!stream->mCacheSuspended)
+      return false;
+  }
+  return true;
+}
+
 void
 nsMediaCacheStream::Close()
 {
@@ -1896,6 +1910,14 @@ nsMediaCacheStream::Close()
   // it from CloseInternal since that gets called by Update() itself
   // sometimes, and we try to not to queue updates from Update().
   gMediaCache->QueueUpdate();
+}
+
+void
+nsMediaCacheStream::EnsureCacheUpdate()
+{
+  if (mHasHadUpdate)
+    return;
+  gMediaCache->Update();
 }
 
 void
