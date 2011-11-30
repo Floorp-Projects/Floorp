@@ -9,6 +9,7 @@
 
 #include "base/command_line.h"
 #include "base/string_util.h"
+#include "base/thread.h"
 
 #include "nsRegion.h"
 
@@ -20,11 +21,19 @@ ${INCLUDES}
 //-----------------------------------------------------------------------------
 
 using mozilla::_ipdltest::IPDLUnitTestSubprocess;
+using namespace base;
 
 void* mozilla::_ipdltest::gParentActor;
 IPDLUnitTestSubprocess* mozilla::_ipdltest::gSubprocess;
 
 void* mozilla::_ipdltest::gChildActor;
+
+// Note: in threaded mode, this will be non-null (for both parent and
+// child, since they share one set of globals).  
+Thread* mozilla::_ipdltest::gChildThread;
+MessageLoop *gParentMessageLoop;
+bool gParentDone;
+bool gChildDone;
 
 //-----------------------------------------------------------------------------
 // data/functions accessed by both parent and child processes
@@ -120,9 +129,24 @@ namespace mozilla {
 namespace _ipdltest {
 
 void
+DeferredParentShutdown();
+
+void
+IPDLUnitTestThreadMain(char *testString);
+
+void
 IPDLUnitTestMain(void* aData)
 {
     char* testString = reinterpret_cast<char*>(aData);
+
+    // Check if we are to run the test using threads instead:
+    const char *prefix = "thread:";
+    const int prefixLen = strlen(prefix);
+    if (!strncmp(testString, prefix, prefixLen)) {
+        IPDLUnitTestThreadMain(testString + prefixLen);
+        return;
+    }
+
     IPDLUnitTestType test = IPDLUnitTestFromString(testString);
     if (!test) {
         // use this instead of |fail()| because we don't know what the test is
@@ -132,6 +156,19 @@ IPDLUnitTestMain(void* aData)
     }
     gIPDLUnitTestName = testString;
 
+    // Check whether this test is enabled for processes:
+    switch (test) {
+//-----------------------------------------------------------------------------
+//===== TEMPLATED =====
+${PARENT_ENABLED_CASES_PROC}
+//-----------------------------------------------------------------------------
+
+    default:
+        fail("not reached");
+        return;                 // unreached
+    }
+
+    // Create the two processes:
     if (NS_FAILED(nsRegion::InitStatic()))
         fail("initializing nsRegion");
 
@@ -153,7 +190,59 @@ IPDLUnitTestMain(void* aData)
     switch (test) {
 //-----------------------------------------------------------------------------
 //===== TEMPLATED =====
-${PARENT_MAIN_CASES}
+${PARENT_MAIN_CASES_PROC}
+//-----------------------------------------------------------------------------
+
+    default:
+        fail("not reached");
+        return;                 // unreached
+    }
+}
+
+void
+IPDLUnitTestThreadMain(char *testString)
+{
+    IPDLUnitTestType test = IPDLUnitTestFromString(testString);
+    if (!test) {
+        // use this instead of |fail()| because we don't know what the test is
+        fprintf(stderr, MOZ_IPDL_TESTFAIL_LABEL "| %s | unknown unit test %s\n",
+                "<--->", testString);
+        NS_RUNTIMEABORT("can't continue");
+    }
+    gIPDLUnitTestName = testString;
+
+    // Check whether this test is enabled for threads:
+    switch (test) {
+//-----------------------------------------------------------------------------
+//===== TEMPLATED =====
+${PARENT_ENABLED_CASES_THREAD}
+//-----------------------------------------------------------------------------
+
+    default:
+        fail("not reached");
+        return;                 // unreached
+    }
+
+    // Create the two threads:
+    if (NS_FAILED(nsRegion::InitStatic()))
+        fail("initializing nsRegion");
+
+    printf(MOZ_IPDL_TESTINFO_LABEL "| running test | %s\n", gIPDLUnitTestName);
+
+    std::vector<std::string> testCaseArgs;
+    testCaseArgs.push_back(testString);
+
+    gChildThread = new Thread("ParentThread");
+    if (!gChildThread->Start())
+        fail("starting parent thread");
+
+    gParentMessageLoop = MessageLoop::current();
+    MessageLoop *childMessageLoop = gChildThread->message_loop();
+
+    switch (test) {
+//-----------------------------------------------------------------------------
+//===== TEMPLATED =====
+${PARENT_MAIN_CASES_THREAD}
 //-----------------------------------------------------------------------------
 
     default:
@@ -198,19 +287,61 @@ DeleteSubprocess(MessageLoop* uiLoop)
 void
 DeferredParentShutdown()
 {
-  // ping to DeleteSubprocess
-  XRE_GetIOMessageLoop()->PostTask(
-      FROM_HERE,
-      NewRunnableFunction(DeleteSubprocess, MessageLoop::current()));
+    // ping to DeleteSubprocess
+    XRE_GetIOMessageLoop()->PostTask(
+        FROM_HERE,
+        NewRunnableFunction(DeleteSubprocess, MessageLoop::current()));
+}
+
+void 
+TryThreadedShutdown()
+{
+    // Stop if either: 
+    // - the child has not finished, 
+    // - the parent has not finished,
+    // - or this code has already executed.
+    // Remember: this TryThreadedShutdown() task is enqueued
+    // by both parent and child (though always on parent's msg loop).
+    if (!gChildDone || !gParentDone || !gChildThread)
+        return;
+
+    delete gChildThread;
+    gChildThread = 0;
+    DeferredParentShutdown();
+}
+
+void 
+ChildCompleted()
+{
+    // Executes on the parent message loop once child has completed.
+    gChildDone = true;
+    TryThreadedShutdown();
 }
 
 void
 QuitParent()
 {
-  // defer "real" shutdown to avoid *Channel::Close() racing with the
-  // deletion of the subprocess
-    MessageLoop::current()->PostTask(
-        FROM_HERE, NewRunnableFunction(DeferredParentShutdown));
+    if (gChildThread) {
+        gParentDone = true;
+        MessageLoop::current()->PostTask(
+            FROM_HERE, NewRunnableFunction(TryThreadedShutdown));
+    } else {
+        // defer "real" shutdown to avoid *Channel::Close() racing with the
+        // deletion of the subprocess
+        MessageLoop::current()->PostTask(
+            FROM_HERE, NewRunnableFunction(DeferredParentShutdown));
+    }
+}
+
+void
+QuitChild()
+{
+    if (gChildThread) { // Threaded-mode test
+        gParentMessageLoop->PostTask(
+            FROM_HERE, NewRunnableFunction(ChildCompleted));
+    } else { // Process-mode test
+        XRE_ShutdownChildProcess();
+    }
 }
 
 } // namespace _ipdltest
