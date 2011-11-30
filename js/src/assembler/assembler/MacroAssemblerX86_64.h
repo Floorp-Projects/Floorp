@@ -431,10 +431,10 @@ public:
         return branchPtr(cond, Address(scratchRegister), right);
     }
 
-    Jump branchPtr(Condition cond, AbsoluteAddress left, ImmPtr right)
+    Jump branchPtr(Condition cond, AbsoluteAddress left, ImmPtr right, RegisterID scratch)
     {
-        move(ImmPtr(left.m_ptr), scratchRegister);
-        return branchPtr(cond, Address(scratchRegister), right);
+        move(ImmPtr(left.m_ptr), scratch);
+        return branchPtr(cond, Address(scratch), right);
     }
 
     Jump branchPtr(Condition cond, Address left, RegisterID right)
