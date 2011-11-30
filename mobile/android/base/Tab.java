@@ -47,10 +47,12 @@ import android.graphics.Bitmap;
 import android.provider.Browser;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.graphics.Bitmap;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -144,7 +146,9 @@ public class Tab {
                     GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
                     sMinDim = Math.min(metrics.widthPixels, metrics.heightPixels);
                 }
-                mThumbnail = new BitmapDrawable(Bitmap.createBitmap(b, 0, 0, sMinDim, sMinDim));
+                Bitmap bitmap = Bitmap.createBitmap(b, 0, 0, sMinDim, sMinDim);
+                mThumbnail = new BitmapDrawable(bitmap);
+                saveThumbnailToDB(bitmap);
             }
         });
     }
@@ -407,6 +411,35 @@ public class Tab {
         protected void onPostExecute(Void unused) {
             setBookmark(true);
         }
+    }
+
+    private void saveThumbnailToDB(Bitmap bitmap) {
+        ContentResolver resolver = Tabs.getInstance().getContentResolver();
+        Cursor cursor = resolver.query(Browser.BOOKMARKS_URI,
+                                       null,
+                                       Browser.BookmarkColumns.URL + " = ?",
+                                       new String[] { getURL() },
+                                       Browser.BookmarkColumns.URL);
+
+        ContentValues values = new ContentValues();
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
+        values.put("thumbnail", bos.toByteArray());
+
+        if (cursor.getCount() == 1) {
+            //entry exists, update the bookmark flag
+            resolver.update(Browser.BOOKMARKS_URI,
+                            values,
+                            Browser.BookmarkColumns.URL + " = ?",
+                            new String[] { getURL() });
+        } else {
+            //add a new entry
+            values.put(Browser.BookmarkColumns.URL, mUrl);
+            resolver.insert(Browser.BOOKMARKS_URI,
+                            values);
+        }
+
+        cursor.close();
     }
 
     private class RemoveBookmarkTask extends GeckoAsyncTask<Void, Void, Void> {
