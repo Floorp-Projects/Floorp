@@ -12,13 +12,15 @@ function test() {
   // create new tab
   testTab = gBrowser.addTab("about:blank");
 
-  showTabView(onTabViewShown);
+  window.addEventListener("tabviewshown", onTabViewWindowLoaded, false);
+  TabView.toggle();
 }
 
-function onTabViewShown() {
+function onTabViewWindowLoaded() {
+  window.removeEventListener("tabviewshown", onTabViewWindowLoaded, false);
   ok(TabView.isVisible(), "Tab View is visible");
 
-  contentWindow = TabView.getContentWindow();
+  contentWindow = document.getElementById("tab-view").contentWindow;
 
   // create group
   let testGroupRect = new contentWindow.Rect(20, 20, 300, 300);
@@ -36,13 +38,8 @@ function onTabViewShown() {
 
   ok(testTab._tabViewTabItem, "tab item exists after adding to group");
 
-  // keep track of last thumbnail update time
-  let thumbnailUpdateCount = 0;
-  function onUpdate() thumbnailUpdateCount++;
-  testTabItem.addSubscriber("thumbnailUpdated", onUpdate);
-  registerCleanupFunction(function () {
-    testTabItem.removeSubscriber("thumbnailUpdated", onUpdate)
-  });
+  // record last update time of tab canvas
+  let initialUpdateTime = testTabItem._lastTabUpdateTime;
 
   // simulate resize
   let resizer = contentWindow.iQ('.iq-resizable-handle', testGroup.container)[0];
@@ -72,7 +69,9 @@ function onTabViewShown() {
   });
   funcChain.push(function() {
     // verify that update time has changed after last update
-    ok(thumbnailUpdateCount > 0, "Tab has been updated");
+    let lastTime = testTabItem._lastTabUpdateTime;
+    let hbTiming = contentWindow.TabItems._heartbeatTiming;
+    ok((lastTime - initialUpdateTime) > hbTiming, "Tab has been updated:"+lastTime+"-"+initialUpdateTime+">"+hbTiming);
 
     // clean up
     testGroup.remove(testTab._tabViewTabItem);
