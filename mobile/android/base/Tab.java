@@ -440,7 +440,7 @@ public class Tab {
                                 values);
             }
             cursor.close();
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             // ignore
         }
     }
