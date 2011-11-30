@@ -1013,6 +1013,7 @@ abstract public class GeckoApp
 
     void handleSelectTab(int tabId) {
         Tab selTab = Tabs.getInstance().getSelectedTab();
+        selTab.updateThumbnail(mSoftwareLayerClient.getBitmap());
         final Tab tab = Tabs.getInstance().selectTab(tabId);
         if (tab == null)
             return;
@@ -1096,8 +1097,10 @@ abstract public class GeckoApp
             public void run() {
                 loadFavicon(tab);
 
-                if (Tabs.getInstance().isSelectedTab(tab))
+                if (Tabs.getInstance().isSelectedTab(tab)) {
                     mBrowserToolbar.setTitle(tab.getDisplayTitle());
+                    tab.updateThumbnail(mSoftwareLayerClient.getBitmap());
+                }
                 onTabsChanged(tab);
             }
         });

@@ -51,6 +51,7 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoEventListener;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -177,6 +178,13 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         if (mGeckoViewport != null)
             return new ViewportMetrics(mGeckoViewport);
         return null;
+    }
+
+    public Bitmap getBitmap() {
+        Bitmap b = Bitmap.createBitmap(mWidth, mHeight,
+                                       CairoUtils.cairoFormatTobitmapConfig(mFormat));
+        b.copyPixelsFromBuffer(mBuffer.asIntBuffer());
+        return b;
     }
 
     /** Returns the back buffer. This function is for Gecko to use. */

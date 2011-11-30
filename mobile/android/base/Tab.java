@@ -42,7 +42,10 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.Bitmap;
 import android.provider.Browser;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -60,6 +63,7 @@ public class Tab {
     public static enum AgentMode { MOBILE, DESKTOP };
     private static final String LOGTAG = "GeckoTab";
 
+    static int sMinDim = 0;
     private int mId;
     private String mUrl;
     private String mTitle;
@@ -126,6 +130,23 @@ public class Tab {
 
     public Drawable getFavicon() {
         return mFavicon;
+    }
+
+    public Drawable getThumbnail() {
+        return mThumbnail;
+    }
+
+    public void updateThumbnail(final Bitmap b) {
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                if (sMinDim == 0) {
+                    DisplayMetrics metrics = new DisplayMetrics();
+                    GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+                    sMinDim = Math.min(metrics.widthPixels, metrics.heightPixels);
+                }
+                mThumbnail = new BitmapDrawable(Bitmap.createBitmap(b, 0, 0, sMinDim, sMinDim));
+            }
+        });
     }
 
     public String getFaviconURL() {
