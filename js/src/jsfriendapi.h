@@ -70,6 +70,9 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
 extern JS_FRIEND_API(uint32)
 JS_ObjectCountDynamicSlots(JSObject *obj);
 
+extern JS_FRIEND_API(void)
+JS_ShrinkingGC(JSContext *cx);
+
 extern JS_FRIEND_API(size_t)
 JS_GetE4XObjectsCreated(JSContext *cx);
 
@@ -115,12 +118,12 @@ typedef struct TypeInferenceMemoryStats
 extern JS_FRIEND_API(void)
 JS_GetTypeInferenceMemoryStats(JSContext *cx, JSCompartment *compartment,
                                TypeInferenceMemoryStats *stats,
-                               JSUsableSizeFun usf);
+                               JSMallocSizeOfFun mallocSizeOf);
 
 extern JS_FRIEND_API(void)
 JS_GetTypeInferenceObjectStats(/*TypeObject*/ void *object,
                                TypeInferenceMemoryStats *stats,
-                               JSUsableSizeFun usf);
+                               JSMallocSizeOfFun mallocSizeOf);
 
 extern JS_FRIEND_API(JSPrincipals *)
 JS_GetCompartmentPrincipals(JSCompartment *compartment);
@@ -196,10 +199,10 @@ JS_FRIEND_API(JSBool) obj_defineSetter(JSContext *cx, uintN argc, js::Value *vp)
 #endif
 
 extern JS_FRIEND_API(size_t)
-GetObjectDynamicSlotSize(JSObject *obj, JSUsableSizeFun usf);
+GetObjectDynamicSlotSize(JSObject *obj, JSMallocSizeOfFun mallocSizeOf);
 
 extern JS_FRIEND_API(size_t)
-GetCompartmentShapeTableSize(JSCompartment *c, JSUsableSizeFun usf);
+GetCompartmentShapeTableSize(JSCompartment *c, JSMallocSizeOfFun mallocSizeOf);
 
 /*
  * Check whether it is OK to assign an undeclared property with name

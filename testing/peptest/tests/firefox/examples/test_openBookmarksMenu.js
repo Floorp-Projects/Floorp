@@ -14,12 +14,12 @@
  * The Original Code is peptest.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ *   The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Andrew Halberstadt <halbersa@gmail.com>
+ *   Andrew Halberstadt <halbersa@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,7 +43,7 @@ c.open('http://mozilla.org');
 c.waitForPageLoad();
 
 let bookmark = findElement.ID(c.window.document, "bookmarksMenu");
-performAction('scroll_bookmarks', function() {
+pep.performAction('scroll_bookmarks', function() {
   bookmark.click();
   for (let i = 0; i < 15; ++i) {
     bookmark.keypress('VK_DOWN');
@@ -53,6 +53,6 @@ performAction('scroll_bookmarks', function() {
 });
 
 let showall = findElement.ID(c.window.document, "bookmarksShowAll");
-performAction('show_all_bookmarks', function() {
+pep.performAction('show_all_bookmarks', function() {
   showall.click();
 });

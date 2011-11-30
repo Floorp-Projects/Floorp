@@ -1050,11 +1050,6 @@ BookmarksStore.prototype = {
       record.pos = PlacesUtils.bookmarks.getItemIndex(placeId);
       break;
 
-    case PlacesUtils.bookmarks.TYPE_DYNAMIC_CONTAINER:
-      record = new PlacesItem(collection, id);
-      this._log.warn("Don't know how to serialize dynamic containers yet");
-      break;
-
     default:
       record = new PlacesItem(collection, id);
       this._log.warn("Unknown item type, cannot serialize: " +

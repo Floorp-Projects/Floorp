@@ -83,7 +83,7 @@ JS_KEYWORD(super,       TOK_RESERVED,   JSOP_NOP,       JSVERSION_DEFAULT)
  * implementation to ease code migration.
  */
 #if JS_HAS_CONST
-JS_KEYWORD(const,       TOK_VAR,        JSOP_DEFCONST,  JSVERSION_DEFAULT)
+JS_KEYWORD(const,       TOK_CONST,      JSOP_DEFCONST,  JSVERSION_DEFAULT)
 #else
 JS_KEYWORD(const,       TOK_RESERVED,   JSOP_NOP,       JSVERSION_DEFAULT)
 #endif

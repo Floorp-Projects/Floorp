@@ -133,7 +133,10 @@ endif
 endif
 
 LOCAL_INCLUDES += \
+  -DSK_BUILD_FOR_ANDROID_NDK \
   -I$(topsrcdir)/xpcom/base/ \
+  -I$(topsrcdir)/gfx/skia/include/core \
+  -I$(topsrcdir)/gfx/skia/include/config \
   $(MOZ_CAIRO_CFLAGS) \
   $(NULL)
 

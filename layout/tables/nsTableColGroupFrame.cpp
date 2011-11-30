@@ -205,7 +205,7 @@ nsTableColGroupFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
       return; // this is a degenerated colgroup 
     nsRect damageArea(GetFirstColumn()->GetColIndex(), 0, colCount,
                       tableFrame->GetRowCount());
-    tableFrame->SetBCDamageArea(damageArea);
+    tableFrame->AddBCDamageArea(damageArea);
   }
   return;
 }

@@ -897,36 +897,6 @@ TabChild::InitTabChildGlobal()
     do_QueryInterface(window->GetChromeEventHandler());
   NS_ENSURE_TRUE(chromeHandler, false);
 
-  nsCOMPtr<nsIJSRuntimeService> runtimeSvc = 
-    do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
-  NS_ENSURE_TRUE(runtimeSvc, false);
-
-  JSRuntime* rt = nsnull;
-  runtimeSvc->GetRuntime(&rt);
-  NS_ENSURE_TRUE(rt, false);
-
-  JSContext* cx = JS_NewContext(rt, 8192);
-  NS_ENSURE_TRUE(cx, false);
-
-  mCx = cx;
-
-  nsContentUtils::XPConnect()->SetSecurityManagerForJSContext(cx, nsContentUtils::GetSecurityManager(), 0);
-  nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
-
-  JS_SetNativeStackQuota(cx, 128 * sizeof(size_t) * 1024);
-
-  JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_JIT | JSOPTION_PRIVATE_IS_NSISUPPORTS);
-  JS_SetVersion(cx, JSVERSION_LATEST);
-  JS_SetErrorReporter(cx, ContentScriptErrorReporter);
-
-  xpc_LocalizeContext(cx);
-
-  JSAutoRequest ar(cx);
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  const PRUint32 flags = nsIXPConnect::INIT_JS_STANDARD_CLASSES |
-                         /*nsIXPConnect::OMIT_COMPONENTS_OBJECT ?  |*/
-                         nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT;
-
   nsRefPtr<TabChildGlobal> scope = new TabChildGlobal(this);
   NS_ENSURE_TRUE(scope, false);
 
@@ -934,25 +904,12 @@ TabChild::InitTabChildGlobal()
 
   nsISupports* scopeSupports =
     NS_ISUPPORTS_CAST(nsIDOMEventTarget*, scope);
-  JS_SetContextPrivate(cx, scopeSupports);
-
-  nsresult rv =
-    xpc->InitClassesWithNewWrappedGlobal(cx, scopeSupports,
-                                         NS_GET_IID(nsISupports),
-                                         scope->GetPrincipal(), nsnull,
-                                         flags, getter_AddRefs(mGlobal));
-  NS_ENSURE_SUCCESS(rv, false);
+  
+  NS_ENSURE_TRUE(InitTabChildGlobalInternal(scopeSupports), false); 
 
   nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(chromeHandler);
   NS_ENSURE_TRUE(root, false);
   root->SetParentTarget(scope);
-  
-  JSObject* global = nsnull;
-  rv = mGlobal->GetJSObject(&global);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  JS_SetGlobalObject(cx, global);
-  DidCreateCx();
   return true;
 }
 

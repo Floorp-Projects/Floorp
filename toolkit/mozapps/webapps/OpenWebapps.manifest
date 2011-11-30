@@ -1,8 +1,0 @@
-# OpenWebapps.js
-component {d8fd4d63-27ea-47b9-a931-481214bb8b5b} OpenWebapps.js
-contract @mozilla.org/openwebapps;1 {d8fd4d63-27ea-47b9-a931-481214bb8b5b}
-category JavaScript-navigator-property mozApps @mozilla.org/openwebapps;1
-
-component {34456347-0792-45a4-8eb1-7b5f94f2d700} OpenWebapps.js
-contract @mozilla.org/openwebapps/application;1 {34456347-0792-45a4-8eb1-7b5f94f2d700}
-

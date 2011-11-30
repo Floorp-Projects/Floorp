@@ -522,6 +522,11 @@ private:
         ASSERT(!m_err);
         ASSERT(min <= max);
 
+        if (min == unsigned(-1)) {
+            m_err = QuantifierTooLarge;
+            return;
+        }
+
         if (lastTokenWasAnAtom)
             m_delegate.quantifyAtom(min, max, !tryConsume('?'));
         else

@@ -125,6 +125,12 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
     return obj;
 }
 
+JS_PUBLIC_API(void)
+JS_ShrinkingGC(JSContext *cx)
+{
+    js_GC(cx, NULL, GC_SHRINK, gcstats::PUBLIC_API);
+}
+
 JS_FRIEND_API(JSPrincipals *)
 JS_GetCompartmentPrincipals(JSCompartment *compartment)
 {
@@ -173,18 +179,18 @@ AutoSwitchCompartment::~AutoSwitchCompartment()
 }
 
 JS_FRIEND_API(size_t)
-js::GetObjectDynamicSlotSize(JSObject *obj, JSUsableSizeFun usf)
+js::GetObjectDynamicSlotSize(JSObject *obj, JSMallocSizeOfFun mallocSizeOf)
 {
-    return obj->dynamicSlotSize(usf);
+    return obj->dynamicSlotSize(mallocSizeOf);
 }
 
 JS_FRIEND_API(size_t)
-js::GetCompartmentShapeTableSize(JSCompartment *c, JSUsableSizeFun usf)
+js::GetCompartmentShapeTableSize(JSCompartment *c, JSMallocSizeOfFun mallocSizeOf)
 {
-    return c->baseShapes.sizeOf(usf, /* countMe = */ false)
-         + c->initialShapes.sizeOf(usf, /* countMe = */ false)
-         + c->newTypeObjects.sizeOf(usf, /* countMe = */ false)
-         + c->lazyTypeObjects.sizeOf(usf, /* countMe = */ false);
+    return c->baseShapes.sizeOfExcludingThis(mallocSizeOf)
+         + c->initialShapes.sizeOfExcludingThis(mallocSizeOf)
+         + c->newTypeObjects.sizeOfExcludingThis(mallocSizeOf)
+         + c->lazyTypeObjects.sizeOfExcludingThis(mallocSizeOf);
 }
 
 JS_FRIEND_API(bool)

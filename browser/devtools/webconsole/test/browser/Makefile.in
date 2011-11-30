@@ -22,6 +22,7 @@
 #  Patrick Walton <pcwalton@mozilla.com>
 #  Mihai Șucan <mihai.sucan@gmail.com>
 #  Rob Campbell <rcampbell@mozilla.com>
+#  Sonny Piers <sonny.piers@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -81,10 +82,6 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_property_panel.js \
 	browser_webconsole_property_provider.js \
 	browser_webconsole_registries.js \
-	browser_webconsole_storage_create_display.js \
-	browser_webconsole_storage_iteration.js \
-	browser_webconsole_storage_record_entry.js \
-	browser_webconsole_storage_record_many_entries.js \
 	browser_webconsole_bug_587617_output_copy.js \
 	browser_webconsole_bug_585237_line_limit.js \
 	browser_webconsole_bug_581231_close_button.js \

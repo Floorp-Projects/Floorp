@@ -7263,8 +7263,12 @@ mjit::Compiler::constructThis()
     JSFunction *fun = script->function();
 
     do {
-        if (!cx->typeInferenceEnabled() || fun->getType(cx)->unknownProperties())
+        if (!cx->typeInferenceEnabled() ||
+            !fun->hasSingletonType() ||
+            fun->getType(cx)->unknownProperties())
+        {
             break;
+        }
 
         jsid id = ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom);
         types::TypeSet *protoTypes = fun->getType(cx)->getProperty(cx, id, false);

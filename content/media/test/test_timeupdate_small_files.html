@@ -46,6 +46,13 @@ function ended(e) {
     500);
 }
 
+var eventsToLog = ["play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+  "loadeddata", "playing", "progress", "timeupdate", "ended", "suspend", "error", "stalled", "emptied", "abort",
+  "waiting", "pause"];
+function logEvent(event) {
+  ok(true, event.target.currentSrc + " got " + event.type);
+}
+
 function startTest(test, token) {
   var type = /^video/.test(test.type) ? "video" : "audio";
   var v = document.createElement(type);
@@ -59,6 +66,9 @@ function startTest(test, token) {
   v.autoplay = true;
   v.addEventListener("ended", ended, false);
   v.addEventListener("timeupdate", timeupdate, false);
+  for (var i = 0; i < eventsToLog.length; ++i) {
+    v.addEventListener(eventsToLog[i], logEvent, false);
+  }
   document.body.appendChild(v);
 }
 
