@@ -55,8 +55,6 @@ toolkit.jar:
 *       skin/classic/global/toolbar.css
         skin/classic/global/toolbarbutton.css
         skin/classic/global/tree.css
-*       skin/classic/global/webConsole.css
-*       skin/classic/global/webConsole_networkPanel.css
         skin/classic/global/wizard.css
         skin/classic/global/alerts/alert.css                     (alerts/alert.css)
         skin/classic/global/arrow/arrow-dn.gif                   (arrow/arrow-dn.gif)
@@ -139,7 +137,6 @@ toolkit.jar:
         skin/classic/global/icons/warning-16.png                 (icons/warning-16.png)
         skin/classic/global/icons/warning-24.png                 (icons/warning-24.png)
         skin/classic/global/icons/warning-64.png                 (icons/warning-64.png)
-        skin/classic/global/icons/webconsole.png                 (icons/webconsole.png)
         skin/classic/global/icons/windowControls.png             (icons/windowControls.png)
         skin/classic/global/icons/wrap.png                       (icons/wrap.png)
         skin/classic/global/inContentUI/background-texture.png  (inContentUI/background-texture.png)
@@ -232,8 +229,6 @@ toolkit.jar:
 *       skin/classic/aero/global/toolbar.css
 *       skin/classic/aero/global/toolbarbutton.css                       (toolbarbutton-aero.css)
 *       skin/classic/aero/global/tree.css                                (tree-aero.css)
-*       skin/classic/aero/global/webConsole.css
-*       skin/classic/aero/global/webConsole_networkPanel.css
         skin/classic/aero/global/wizard.css
         skin/classic/aero/global/alerts/alert.css                        (alerts/alert.css)
         skin/classic/aero/global/arrow/arrow-dn.gif                      (arrow/arrow-dn.gif)
@@ -316,7 +311,6 @@ toolkit.jar:
         skin/classic/aero/global/icons/warning-16.png                    (icons/warning-16-aero.png)
         skin/classic/aero/global/icons/warning-24.png                    (icons/warning-24-aero.png)
         skin/classic/aero/global/icons/warning-64.png                    (icons/warning-64-aero.png)
-        skin/classic/aero/global/icons/webconsole.png                    (icons/webconsole.png)
         skin/classic/aero/global/icons/windowControls.png                (icons/windowControls-aero.png)
         skin/classic/aero/global/icons/wrap.png                          (icons/wrap-aero.png)
         skin/classic/aero/global/inContentUI/background-texture.png     (inContentUI/background-texture.png)
