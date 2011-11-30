@@ -77,11 +77,6 @@ enum eParserMode {
   VIEW_SOURCE_XML,
 
   /**
-   * View document as plain text source
-   */
-  VIEW_SOURCE_PLAIN,
-
-  /**
    * View document as plain text
    */
   PLAIN_TEXT,
@@ -224,13 +219,6 @@ class nsHtml5StreamParser : public nsIStreamListener,
      * the mCharset and mCharsetSource to the UTF-8 default otherwise.
      */
     void SetEncodingFromExpat(const PRUnichar* aEncoding);
-
-    /**
-     * Sets the URL for View Source title in case this parser ends up being
-     * used for View Source. If aURL is a view-source: URL, takes the inner
-     * URL. data: URLs are shown with an ellipsis instead of the actual data.
-     */
-    void SetViewSourceTitle(nsIURI* aURL);
 
   private:
 
@@ -396,11 +384,6 @@ class nsHtml5StreamParser : public nsIStreamListener,
 
     nsCOMPtr<nsIRequest>          mRequest;
     nsCOMPtr<nsIRequestObserver>  mObserver;
-
-    /**
-     * The document title to use if this turns out to be a View Source parser.
-     */
-    nsCString                     mViewSourceTitle;
 
     /**
      * The Unicode decoder

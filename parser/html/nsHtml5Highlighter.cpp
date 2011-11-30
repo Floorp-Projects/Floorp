@@ -41,7 +41,6 @@
 #include "nsHtml5AttributeName.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
-#include "nsHtml5ViewSourceUtils.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
@@ -83,11 +82,14 @@ nsHtml5Highlighter::nsHtml5Highlighter(nsAHtml5TreeOpSink* aOpSink)
  , mCStart(PR_INT32_MAX)
  , mPos(0)
  , mLineNumber(1)
+ , mUnicharsInThisPre(0)
  , mInlinesOpen(0)
  , mInCharacters(false)
  , mBuffer(nsnull)
  , mSyntaxHighlight(Preferences::GetBool("view_source.syntax_highlight",
                                          true))
+ , mWrapLongLines(Preferences::GetBool("view_source.wrap_long_lines", true))
+ , mTabSize(Preferences::GetInt("view_source.tab_size", 4))
  , mOpSink(aOpSink)
  , mCurrentRun(nsnull)
  , mAmpersand(nsnull)
@@ -104,7 +106,7 @@ nsHtml5Highlighter::~nsHtml5Highlighter()
 }
 
 void
-nsHtml5Highlighter::Start(const nsAutoString& aTitle)
+nsHtml5Highlighter::Start()
 {
   // Doctype
   mOpQueue.AppendElement()->Init(nsGkAtoms::html, EmptyString(), EmptyString());
@@ -119,14 +121,18 @@ nsHtml5Highlighter::Start(const nsAutoString& aTitle)
 
   Push(nsGkAtoms::title, nsnull);
   // XUL will add the "Source of: " prefix.
-  PRUint32 length = aTitle.Length();
-  if (length > PR_INT32_MAX) {
-    length = PR_INT32_MAX;
-  }
-  AppendCharacters(aTitle.get(), 0, (PRInt32)length);
+  AppendCharacters(mURL.get(), 0, mURL.Length());
   Pop(); // title
 
-  Push(nsGkAtoms::link, nsHtml5ViewSourceUtils::NewLinkAttributes());
+  nsHtml5HtmlAttributes* linkAttrs = new nsHtml5HtmlAttributes(0);
+  nsString* rel = new nsString(NS_LITERAL_STRING("stylesheet"));
+  linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_REL, rel);
+  nsString* type = new nsString(NS_LITERAL_STRING("text/css"));
+  linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_TYPE, type);
+  nsString* href = new nsString(
+      NS_LITERAL_STRING("resource://gre-resources/viewsource.css"));
+  linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_HREF, href);
+  Push(nsGkAtoms::link, linkAttrs);
 
   mOpQueue.AppendElement()->Init(eTreeOpUpdateStyleSheet, CurrentNode());
 
@@ -134,7 +140,22 @@ nsHtml5Highlighter::Start(const nsAutoString& aTitle)
 
   Pop(); // head
 
-  Push(nsGkAtoms::body, nsHtml5ViewSourceUtils::NewBodyAttributes());
+  nsHtml5HtmlAttributes* bodyAttrs = new nsHtml5HtmlAttributes(0);
+  nsString* id = new nsString(NS_LITERAL_STRING("viewsource"));
+  bodyAttrs->addAttribute(nsHtml5AttributeName::ATTR_ID, id);
+
+  if (mWrapLongLines) {
+    nsString* klass = new nsString(NS_LITERAL_STRING("wrap"));
+    bodyAttrs->addAttribute(nsHtml5AttributeName::ATTR_CLASS, klass);
+  }
+
+  if (mTabSize > 0) {
+    nsString* style = new nsString(NS_LITERAL_STRING("-moz-tab-size: "));
+    style->AppendInt(mTabSize);
+    bodyAttrs->addAttribute(nsHtml5AttributeName::ATTR_STYLE, style);
+  }
+
+  Push(nsGkAtoms::body, bodyAttrs);
 
   nsHtml5HtmlAttributes* preAttrs = new nsHtml5HtmlAttributes(0);
   nsString* preId = new nsString(NS_LITERAL_STRING("line1"));
@@ -607,8 +628,22 @@ nsHtml5Highlighter::FlushChars()
             PRInt32 len = i - mCStart;
             AppendCharacters(buf, mCStart, len);
             mCStart = i;
+            mUnicharsInThisPre += len;
           }
           ++mLineNumber;
+          if (mUnicharsInThisPre > NS_HTML5_HIGHLIGHTER_PRE_BREAK_THRESHOLD &&
+              !mInlinesOpen && mInCharacters) {
+            mUnicharsInThisPre = 0;
+            // Split the pre. See bug 86355.
+            Pop(); // span
+            Pop(); // pre
+            Push(nsGkAtoms::pre, nsnull);
+            nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+            NS_ASSERTION(treeOp, "Tree op allocation failed.");
+            treeOp->InitAddLineNumberId(CurrentNode(), mLineNumber);
+            Push(nsGkAtoms::span, nsnull);
+            break;
+          }
           Push(nsGkAtoms::span, nsnull);
           nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
           NS_ASSERTION(treeOp, "Tree op allocation failed.");
@@ -625,6 +660,7 @@ nsHtml5Highlighter::FlushChars()
       PRInt32 len = mPos - mCStart;
       AppendCharacters(buf, mCStart, len);
       mCStart = mPos;
+      mUnicharsInThisPre += len;
     }
   }
 }
