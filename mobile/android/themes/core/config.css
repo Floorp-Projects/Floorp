@@ -44,9 +44,13 @@ button {
   padding: 5px;
 }
 
-#filter-container,
+#filter-container {
+  display: -moz-box;
+  -moz-box-align: center;
+}
+
 #new-pref-container {
-  margin-bottom: 10px;
+  margin: 10px 0;
 }
 
 .pref-item {
