@@ -122,6 +122,16 @@ public:
     // i.e., mChannelState == ChannelConnected.
     bool Open(Transport* aTransport, MessageLoop* aIOLoop=0, Side aSide=Unknown);
     
+    // "Open" a connection to another thread in the same process.
+    //
+    // Returns true iff the transport layer was successfully connected,
+    // i.e., mChannelState == ChannelConnected.
+    //
+    // For more details on the process of opening a channel between
+    // threads, see the extended comment on this function
+    // in AsyncChannel.cpp.
+    bool Open(AsyncChannel *aTargetChan, MessageLoop *aTargetLoop, Side aSide);
+
     // Close the underlying transport channel.
     void Close();
 
@@ -189,9 +199,22 @@ public:
         NS_OVERRIDE virtual void OnChannelConnected(int32 peer_pid);
         NS_OVERRIDE virtual void OnChannelError();
 
-        virtual void EchoMessage(Message *msg);
-        virtual void SendMessage(Message *msg);
-        virtual void SendClose();
+        NS_OVERRIDE virtual void EchoMessage(Message *msg);
+        NS_OVERRIDE virtual void SendMessage(Message *msg);
+        NS_OVERRIDE virtual void SendClose();
+    };
+    
+    class ThreadLink : public Link {
+    protected:
+        AsyncChannel* mTargetChan;
+    
+    public:
+        ThreadLink(AsyncChannel *aChan, AsyncChannel *aTargetChan);
+        virtual ~ThreadLink();
+
+        NS_OVERRIDE virtual void EchoMessage(Message *msg);
+        NS_OVERRIDE virtual void SendMessage(Message *msg);
+        NS_OVERRIDE virtual void SendClose();
     };
 
 protected:
@@ -251,6 +274,8 @@ protected:
     }
     void NotifyChannelClosed();
     void NotifyMaybeChannelError();
+    void OnOpenAsSlave(AsyncChannel *aTargetChan, Side aSide);
+    void CommonThreadOpenInit(AsyncChannel *aTargetChan, Side aSide);
 
     virtual void Clear();
 
