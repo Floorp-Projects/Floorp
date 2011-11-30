@@ -47,7 +47,7 @@ void EnableViewSource(nsHtml5Highlighter* aHighlighter);
 
 bool FlushViewSource();
 
-void StartViewSource(const nsAutoString& aTitle);
+void StartViewSource();
 
 void EndViewSource();
 
