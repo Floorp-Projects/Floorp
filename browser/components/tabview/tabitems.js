@@ -260,8 +260,14 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     function TabItem_loadThumbnail_callback(error, imageData) {
       // we could have been unlinked while waiting for the thumbnail to load
-      if (error || !imageData || !self.tab)
+      if (!self.tab)
         return;
+
+      if (error || !imageData) {
+        // paint the canvas to avoid leaving traces when dragging tab over it
+        self.tabCanvas.paint();
+        return;
+      }
 
       self._sendToSubscribers("loadedCachedImageData");
 
