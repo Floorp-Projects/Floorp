@@ -925,7 +925,8 @@ ion::FindNaturalLoops(MIRGraph &graph)
 
                 // Assert that all blocks are contained between the loop
                 // header and the backedge.
-                JS_ASSERT(header->id() < pred->id() && pred->id() < block->id());
+                JS_ASSERT_IF(pred != graph.osrBlock(),
+                             header->id() < pred->id() && pred->id() < block->id());
 
                 // If this block belongs to another loop body, skip past that
                 // entire loop (which is contained within this one).
