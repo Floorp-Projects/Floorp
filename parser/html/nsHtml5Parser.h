@@ -167,7 +167,7 @@ class nsHtml5Parser : public nsIParser,
     /**
      * Set up request observer.
      *
-     * @param   aURL ignored (for interface compat only)
+     * @param   aURL used for View Source title
      * @param   aListener a listener to forward notifications to
      * @param   aKey the root context key (used for document.write)
      * @param   aMode ignored (for interface compat only)

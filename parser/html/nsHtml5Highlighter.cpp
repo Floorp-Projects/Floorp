@@ -106,7 +106,7 @@ nsHtml5Highlighter::~nsHtml5Highlighter()
 }
 
 void
-nsHtml5Highlighter::Start()
+nsHtml5Highlighter::Start(const nsAutoString& aTitle)
 {
   // Doctype
   mOpQueue.AppendElement()->Init(nsGkAtoms::html, EmptyString(), EmptyString());
@@ -121,7 +121,11 @@ nsHtml5Highlighter::Start()
 
   Push(nsGkAtoms::title, nsnull);
   // XUL will add the "Source of: " prefix.
-  AppendCharacters(mURL.get(), 0, mURL.Length());
+  PRUint32 length = aTitle.Length();
+  if (length > PR_INT32_MAX) {
+    length = PR_INT32_MAX;
+  }
+  AppendCharacters(aTitle.get(), 0, (PRInt32)length);
   Pop(); // title
 
   nsHtml5HtmlAttributes* linkAttrs = new nsHtml5HtmlAttributes(0);
