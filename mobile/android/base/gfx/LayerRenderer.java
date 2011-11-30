@@ -77,6 +77,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
     // FPS display
     private long mFrameCountTimestamp;
+    private long mFrameTime;
     private int mFrameCount;            // number of frames since last timestamp
 
     public LayerRenderer(LayerView view) {
@@ -225,8 +226,16 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     }
 
     private void checkFPS() {
+        mFrameTime += mView.getRenderTime();
+        mFrameCount ++;
+
         if (System.currentTimeMillis() >= mFrameCountTimestamp + 1000) {
             mFrameCountTimestamp = System.currentTimeMillis();
+
+            // Extrapolate FPS based on time taken by frames drawn.
+            // XXX This doesn't take into account the vblank, so the FPS
+            //     can show higher than it actually is.
+            mFrameCount = (int)(mFrameCount * 1000000000L / mFrameTime);
 
             mFPSLayer.beginTransaction();
             try {
@@ -236,8 +245,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             }
 
             mFrameCount = 0;
-        } else {
-            mFrameCount++;
+            mFrameTime = 0;
         }
     }
 }
