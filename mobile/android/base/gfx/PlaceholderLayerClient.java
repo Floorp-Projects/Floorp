@@ -45,7 +45,6 @@ import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.gfx.SingleTileLayer;
 import org.mozilla.gecko.GeckoApp;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
@@ -74,11 +73,11 @@ public class PlaceholderLayerClient extends LayerClient {
 
     private PlaceholderLayerClient(Context context) {
         mContext = context;
-        SharedPreferences prefs = GeckoApp.mAppContext.getPlaceholderPrefs();
+        String viewport = GeckoApp.mAppContext.getLastViewport();
         mViewportUnknown = true;
-        if (prefs.contains("viewport")) {
+        if (viewport != null) {
             try {
-                JSONObject viewportObject = new JSONObject(prefs.getString("viewport", null));
+                JSONObject viewportObject = new JSONObject(viewport);
                 mViewport = new ViewportMetrics(viewportObject);
                 mViewportUnknown = false;
             } catch (JSONException e) {
