@@ -11,14 +11,17 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Open Web Apps.
+# The Original Code is mozprocess.
 #
-# The Initial Developer of the Original Code is Ben Goodger.
-# Portions created by the Initial Developer are Copyright (C) 2004
+# The Initial Developer of the Original Code is
+#  The Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Fabrice Desré <fabrice@mozilla.com>
+#  Clint Talbert <ctalbert@mozilla.com>
+#  Jonathan Griffin <jgriffin@mozilla.com>
+#  Jeff Hammel <jhammel@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,24 +37,33 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ../../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
+import os
+from setuptools import setup, find_packages
 
-include $(DEPTH)/config/autoconf.mk
+version = '0.1b2'
 
-MODULE = openwebapps
+# take description from README
+here = os.path.dirname(os.path.abspath(__file__))
+try:
+    description = file(os.path.join(here, 'README.md')).read()
+except (OSError, IOError):
+    description = ''
 
-XPIDLSRCS = OpenWebapps.idl
-
-EXTRA_COMPONENTS += \
-  OpenWebapps.js \
-  OpenWebapps.manifest \
-  $(NULL)
-
-EXTRA_JS_MODULES = \
-  OpenWebapps.jsm \
-  $(NULL)
-
-include $(topsrcdir)/config/rules.mk
+setup(name='mozprocess',
+      version=version,
+      description="Mozilla-authored process handling",
+      long_description=description,
+      classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+      keywords='',
+      author='Mozilla Automation and Testing Team',
+      author_email='mozmill-dev@googlegroups.com',
+      url='http://github.com/mozautomation/mozmill',
+      license='MPL',
+      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+      include_package_data=True,
+      zip_safe=False,
+      install_requires=['mozinfo'],
+      entry_points="""
+      # -*- Entry points: -*-
+      """,
+      )
