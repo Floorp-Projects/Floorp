@@ -227,6 +227,7 @@ public:
   // data for this stream.
   nsMediaCacheStream(nsMediaChannelStream* aClient)
     : mClient(aClient), mResourceID(0), mInitialized(false),
+      mHasHadUpdate(false),
       mIsSeekable(false), mCacheSuspended(false),
       mDidNotifyDataEnded(false),
       mUsingNullPrincipal(false),
@@ -263,6 +264,11 @@ public:
   bool IsClosed() const { return mClosed; }
   // Get the principal for this stream.
   nsIPrincipal* GetCurrentPrincipal() { return mPrincipal; }
+  // Ensure a global media cache update has run with this stream present.
+  // This ensures the cache has had a chance to suspend or unsuspend this stream.
+  // Called only on main thread. This can change the state of streams, fire
+  // notifications, etc.
+  void EnsureCacheUpdate();
 
   // These callbacks are called on the main thread by the client
   // when data has been received via the channel.
@@ -345,6 +351,9 @@ public:
   void SetPlaybackRate(PRUint32 aBytesPerSecond);
   // Returns the last set value of SetSeekable.
   bool IsSeekable();
+
+  // Returns true when all streams for this resource are suspended.
+  bool AreAllStreamsForResourceSuspended();
 
   // These methods must be called on a different thread from the main
   // thread. They should always be called on the same thread for a given
@@ -447,6 +456,9 @@ private:
   PRInt64                mResourceID;
   // Set to true when Init or InitAsClone has been called
   bool                   mInitialized;
+  // Set to true when nsMediaCache::Update() has finished while this stream
+  // was present.
+  bool                   mHasHadUpdate;
 
   // The following fields are protected by the cache's monitor but are
   // only written on the main thread. 

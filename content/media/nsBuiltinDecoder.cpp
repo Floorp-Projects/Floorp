@@ -451,6 +451,9 @@ void nsBuiltinDecoder::MetadataLoaded(PRUint32 aChannels,
     mElement->FirstFrameLoaded(resourceIsLoaded);
   }
 
+  // This can run cache callbacks.
+  mStream->EnsureCacheUpToDate();
+
   // The element can run javascript via events
   // before reaching here, so only change the
   // state if we're still set to the original
@@ -467,6 +470,10 @@ void nsBuiltinDecoder::MetadataLoaded(PRUint32 aChannels,
   if (resourceIsLoaded) {
     ResourceLoaded();
   }
+
+  // Run NotifySuspendedStatusChanged now to give us a chance to notice
+  // that autoplay should run.
+  NotifySuspendedStatusChanged();
 }
 
 void nsBuiltinDecoder::ResourceLoaded()
