@@ -714,6 +714,8 @@ nsHtml5Parser::MarkAsNotScriptCreated(const char* aCommand)
     mode = VIEW_SOURCE_HTML;
   } else if (!nsCRT::strcmp(aCommand, "view-source-xml")) {
     mode = VIEW_SOURCE_XML;
+  } else if (!nsCRT::strcmp(aCommand, "view-source-plain")) {
+    mode = VIEW_SOURCE_PLAIN;
   } else if (!nsCRT::strcmp(aCommand, "plain-text")) {
     mode = PLAIN_TEXT;
   } else if (!nsCRT::strcmp(aCommand, kLoadAsData)) {
