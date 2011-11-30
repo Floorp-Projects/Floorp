@@ -106,10 +106,8 @@
 #include "AtkSocketAccessible.h"
 #endif
 
-#ifndef DISABLE_XFORMS_HOOKS
 #include "nsXFormsFormControlsAccessible.h"
 #include "nsXFormsWidgetsAccessible.h"
-#endif
 
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/dom/Element.h"
@@ -1516,7 +1514,6 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 
 #endif // MOZ_XUL
 
-#ifndef DISABLE_XFORMS_HOOKS
     // XForms elements
     case nsIAccessibleProvider::XFormsContainer:
       accessible = new nsXFormsContainerAccessible(aContent, aWeakShell);
@@ -1593,8 +1590,6 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
     case nsIAccessibleProvider::XFormsComboboxPopupWidget:
       accessible = new nsXFormsComboboxPopupWidgetAccessible(aContent, aWeakShell);
       break;
-
-#endif
 
     default:
       return nsnull;
