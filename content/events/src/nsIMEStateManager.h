@@ -40,11 +40,12 @@
 #define nsIMEStateManager_h__
 
 #include "nscore.h"
+#include "nsIWidget.h"
 
 class nsIContent;
+class nsIDOMMouseEvent;
 class nsPIDOMWindow;
 class nsPresContext;
-class nsIWidget;
 class nsTextStateManager;
 class nsISelection;
 
@@ -54,13 +55,23 @@ class nsISelection;
 
 class nsIMEStateManager
 {
+protected:
+  typedef mozilla::widget::IMEState IMEState;
+  typedef mozilla::widget::InputContext InputContext;
+  typedef mozilla::widget::InputContextAction InputContextAction;
+
 public:
   static nsresult OnDestroyPresContext(nsPresContext* aPresContext);
   static nsresult OnRemoveContent(nsPresContext* aPresContext,
                                   nsIContent* aContent);
+  /**
+   * OnChangeFocus() should be called when focused content is changed or
+   * IME enabled state is changed.  If focus isn't actually changed and IME
+   * enabled state isn't changed, this will do nothing.
+   */
   static nsresult OnChangeFocus(nsPresContext* aPresContext,
                                 nsIContent* aContent,
-                                PRUint32 aReason);
+                                InputContextAction::Cause aCause);
   static void OnInstalledMenuKeyboardListener(bool aInstalling);
 
   // These two methods manage focus and selection/text observers.
@@ -85,14 +96,27 @@ public:
   // isn't changed by the new state, this method does nothing.
   // Note that this method changes the IME state of the active element in the
   // widget.  So, the caller must have focus.
-  // aNewIMEState must have an enabled state of nsIContent::IME_STATUS_*.
-  // And optionally, it can have an open state of nsIContent::IME_STATUS_*.
-  static void UpdateIMEState(PRUint32 aNewIMEState, nsIContent* aContent);
+  static void UpdateIMEState(const IMEState &aNewIMEState,
+                             nsIContent* aContent);
+
+  // This method is called when user clicked in an editor.
+  // aContent must be:
+  //   If the editor is for <input> or <textarea>, the element.
+  //   If the editor is for contenteditable, the active editinghost.
+  //   If the editor is for designMode, NULL.
+  static void OnClickInEditor(nsPresContext* aPresContext,
+                              nsIContent* aContent,
+                              nsIDOMMouseEvent* aMouseEvent);
 
 protected:
-  static void SetIMEState(PRUint32 aState, nsIContent* aContent,
-                          nsIWidget* aWidget, PRUint32 aReason);
-  static PRUint32 GetNewIMEState(nsPresContext* aPresContext,
+  static nsresult OnChangeFocusInternal(nsPresContext* aPresContext,
+                                        nsIContent* aContent,
+                                        InputContextAction aAction);
+  static void SetIMEState(const IMEState &aState,
+                          nsIContent* aContent,
+                          nsIWidget* aWidget,
+                          InputContextAction aAction);
+  static IMEState GetNewIMEState(nsPresContext* aPresContext,
                                  nsIContent* aContent);
 
   static nsIWidget* GetWidget(nsPresContext* aPresContext);

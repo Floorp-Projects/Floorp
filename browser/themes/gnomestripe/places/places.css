@@ -77,7 +77,7 @@ treechildren::-moz-tree-image(query, OrganizerQuery_Downloads) {
 
 treechildren::-moz-tree-image(title, query, tagContainer),
 treechildren::-moz-tree-image(query, OrganizerQuery_Tags) {
-  list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
+  list-style-image: url("chrome://browser/skin/places/tag.png");
 }
 
 /* calendar icon for folders grouping items by date */

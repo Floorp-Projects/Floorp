@@ -54,6 +54,7 @@
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
 #include "nsCSSRendering.h"
+#include "nsEventListenerManager.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDocument.h"
@@ -974,11 +975,12 @@ nsSliderFrame::AddListener()
   }
 
   nsIFrame* thumbFrame = mFrames.FirstChild();
-  if (thumbFrame) {
-    thumbFrame->GetContent()->
-      AddEventListener(NS_LITERAL_STRING("mousedown"), mMediator, false,
-                       false);
+  if (!thumbFrame) {
+    return;
   }
+  thumbFrame->GetContent()->
+    AddSystemEventListener(NS_LITERAL_STRING("mousedown"), mMediator,
+                           false, false);
 }
 
 void
@@ -991,7 +993,7 @@ nsSliderFrame::RemoveListener()
     return;
 
   thumbFrame->GetContent()->
-    RemoveEventListener(NS_LITERAL_STRING("mousedown"), mMediator, false);
+    RemoveSystemEventListener(NS_LITERAL_STRING("mousedown"), mMediator, false);
 }
 
 NS_IMETHODIMP

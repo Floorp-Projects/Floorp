@@ -88,6 +88,17 @@
   padding: 2px 4px;
 }
 
+/* Because of -moz-box-align: center above, separators will be invisible unless
+   we set their min-height. See bug 583510 for more information. */
+toolbarseparator {
+  min-height: 22px;
+}
+
+/* We need more height when toolbar buttons show both icon and text. */
+toolbar[mode="full"] toolbarseparator {
+  min-height: 36px;
+}
+
 #nav-bar {
   padding-bottom: 4px !important;
 }
@@ -231,7 +242,7 @@ toolbarbutton.bookmark-item > menupopup {
 }
 
 .bookmark-item[query][tagContainer] {
-  list-style-image: url("chrome://mozapps/skin/places/tagContainerIcon.png");
+  list-style-image: url("chrome://browser/skin/places/tag.png");
 }
 
 .bookmark-item[query][dayContainer] {
@@ -1902,6 +1913,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .tabbrowser-tab[selected="true"] {
+  color: #000;
   z-index: 1;
   position: relative;
 }

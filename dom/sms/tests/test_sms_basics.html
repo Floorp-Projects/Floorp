@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for WebSMS</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for WebSMS **/
+
+function checkSmsDisabled() {
+  ok('mozSms' in frames[0].navigator, "navigator.mozSms should exist");
+  is(navigator.mozSms, null, "navigator.mozSms should return null");
+}
+
+function checkSmsEnabled() {
+  // WebSms is disabled on all platforms except Android for the moment.
+  if (navigator.appVersion.indexOf("Android") == -1) {
+    checkSmsDisabled();
+    return;
+  }
+
+  ok('mozSms' in frames[0].navigator, "navigator.mozSms should exist");
+  ok(frames[0].navigator.mozSms, "navigator.mozSms returns an object");
+  ok(frames[0].navigator.mozSms instanceof MozSmsManager, "navigator.mozSms is an SmsManager object");
+}
+
+function checkInterface(aInterface) {
+  ok(!(aInterface in window), aInterface + " should be prefixed");
+  ok(("Moz" + aInterface) in window, aInterface + " should be prefixed");
+}
+
+function test() {
+  var gSmsEnabled = SpecialPowers.getBoolPref("dom.sms.enabled");
+  var gSmsWhiteList = SpecialPowers.getCharPref("dom.sms.whitelist");
+
+  checkInterface("SmsManager");
+  checkInterface("NavigatorSms");
+  checkInterface("SmsMessage");
+  checkInterface("SmsEvent");
+
+  // If sms are disabled and whitelist is empty, sms is disabled.
+  SpecialPowers.setBoolPref("dom.sms.enabled", false);
+  SpecialPowers.setCharPref("dom.sms.whitelist", "");
+  checkSmsDisabled();
+
+  // If sms are enabled and whitelist is empty, sms are disabled.
+  SpecialPowers.setBoolPref("dom.sms.enabled", true);
+  SpecialPowers.setCharPref("dom.sms.whitelist", "");
+  checkSmsDisabled();
+
+  // If sms are disabled and whitelist contains the current URL prepath,
+  // sms are disabled.
+  SpecialPowers.setBoolPref("dom.sms.enabled", false);
+  SpecialPowers.setCharPref("dom.sms.whitelist", "http://mochi.test:8888");
+  checkSmsDisabled();
+
+  // If sms are enabled and whitelist contains something else than the current
+  // URL prepath, sms are disabled.
+  SpecialPowers.setBoolPref("dom.sms.enabled", true);
+  SpecialPowers.setCharPref("dom.sms.whitelist", "http://foo.mochi.test:8888");
+  checkSmsDisabled();
+
+  // If sms are enabled and whitelist contains the current URL prepath,
+  // sms are enabled.
+  SpecialPowers.setBoolPref("dom.sms.enabled", true);
+  SpecialPowers.setCharPref("dom.sms.whitelist", "http://mochi.test:8888");
+  checkSmsEnabled();
+
+  // Now, if sms are disabled with the pref, they will still be enabled.
+  // The page has to be reloaded.
+  SpecialPowers.setBoolPref("dom.sms.enabled", false);
+  checkSmsEnabled();
+
+  var iframeElt = document.getElementsByTagName('iframe')[0];
+  iframeElt.addEventListener("load", function() {
+    iframeElt.removeEventListener("load", arguments.callee);
+    checkSmsEnabled();
+
+    // Disabling sms takes effect on reload.
+    SpecialPowers.setBoolPref("dom.sms.enabled", false);
+    iframeElt.addEventListener("load", function() {
+      iframeElt.removeEventListener("load", arguments.callee);
+
+      checkSmsDisabled();
+
+      // Cleanup and quit.
+      SpecialPowers.setBoolPref("dom.sms.enabled", gSmsEnabled);
+      SpecialPowers.setCharPref("dom.sms.whitelist", gSmsWhiteList);
+      SimpleTest.finish();
+    });
+    frames[0].location.reload();
+  });
+
+  // Having more than one item in the whitelist should work.
+  SpecialPowers.setBoolPref("dom.sms.enabled", true);
+  SpecialPowers.setCharPref("dom.sms.whitelist", "http://mochi.test:8888, http://foo.com");
+  frames[0].location.reload();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(test);
+
+</script>
+</pre>
+</body>
+</html>

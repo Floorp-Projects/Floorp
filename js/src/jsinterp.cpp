@@ -2382,38 +2382,6 @@ END_CASE(JSOP_PICK)
         }                                                                     \
     JS_END_MACRO
 
-/*
- * Skip the JSOP_POP typically found after a JSOP_SET* opcode, where oplen is
- * the constant length of the SET opcode sequence, and spdec is the constant
- * by which to decrease the stack pointer to pop all of the SET op's operands.
- *
- * NB: unlike macros that could conceivably be replaced by functions (ignoring
- * goto error), where a call should not have to be braced in order to expand
- * correctly (e.g., in if (cond) FOO(); else BAR()), these three macros lack
- * JS_{BEGIN,END}_MACRO brackets. They are also indented so as to align with
- * nearby opcode code.
- */
-#define SKIP_POP_AFTER_SET(oplen,spdec)                                       \
-            if (regs.pc[oplen] == JSOP_POP) {                                 \
-                regs.sp -= spdec;                                             \
-                regs.pc += oplen + JSOP_POP_LENGTH;                           \
-                op = (JSOp) *regs.pc;                                         \
-                DO_OP();                                                      \
-            }
-
-#define END_SET_CASE(OP)                                                      \
-            SKIP_POP_AFTER_SET(OP##_LENGTH, 1);                               \
-          END_CASE(OP)
-
-#define END_SET_CASE_STORE_RVAL(OP,spdec)                                     \
-            SKIP_POP_AFTER_SET(OP##_LENGTH, spdec);                           \
-            {                                                                 \
-                Value *newsp = regs.sp - ((spdec) - 1);                       \
-                newsp[-1] = regs.sp[-1];                                      \
-                regs.sp = newsp;                                              \
-            }                                                                 \
-          END_CASE(OP)
-
 BEGIN_CASE(JSOP_SETCONST)
 {
     JSAtom *atom;
@@ -2426,7 +2394,7 @@ BEGIN_CASE(JSOP_SETCONST)
         goto error;
     }
 }
-END_SET_CASE(JSOP_SETCONST);
+END_CASE(JSOP_SETCONST);
 
 #if JS_HAS_DESTRUCTURING
 BEGIN_CASE(JSOP_ENUMCONSTELEM)
@@ -2935,17 +2903,23 @@ END_CASE(JSOP_DELELEM)
 BEGIN_CASE(JSOP_TOID)
 {
     /*
+     * Increment or decrement requires use to lookup the same property twice, but we need to avoid
+     * the oberservable stringification the second time.
      * There must be an object value below the id, which will not be popped
      * but is necessary in interning the id for XML.
      */
-    JSObject *obj;
-    FETCH_OBJECT(cx, -2, obj);
-
-    jsid id;
-    FETCH_ELEMENT_ID(obj, -1, id);
-
-    if (!regs.sp[-1].isInt32())
+ 
+    Value &idval = regs.sp[-1];
+    if (!idval.isInt32()) {
+        JSObject *obj;
+        FETCH_OBJECT(cx, -2, obj);
+ 
+        jsid dummy;
+        if (!js_InternNonIntElementId(cx, obj, idval, &dummy, &idval))
+            goto error;
+ 
         TypeScript::MonitorUnknown(cx, script, regs.pc);
+    } 
 }
 END_CASE(JSOP_TOID)
 
@@ -3176,7 +3150,6 @@ BEGIN_CASE(JSOP_LOCALINC)
     if (JS_LIKELY(vp->isInt32() && CanIncDecWithoutOverflow(tmp = vp->toInt32()))) {
         vp->getInt32Ref() = tmp + incr;
         JS_ASSERT(JSOP_INCARG_LENGTH == js_CodeSpec[op].length);
-        SKIP_POP_AFTER_SET(JSOP_INCARG_LENGTH, 0);
         PUSH_INT32(tmp + incr2);
     } else {
         PUSH_COPY(*vp);
@@ -3549,8 +3522,11 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 goto error;
         }
     } while (0);
+
+    regs.sp[-2] = regs.sp[-1];
+    regs.sp--;
 }
-END_SET_CASE_STORE_RVAL(JSOP_SETPROP, 2);
+END_CASE(JSOP_SETPROP)
 
 BEGIN_CASE(JSOP_GETELEM)
 {
@@ -3695,9 +3671,11 @@ BEGIN_CASE(JSOP_SETELEM)
     rval = regs.sp[-1];
     if (!obj->setGeneric(cx, id, &rval, script->strictModeCode))
         goto error;
-  end_setelem:;
+  end_setelem:
+    regs.sp[-3] = regs.sp[-1];
+    regs.sp -= 2;
 }
-END_SET_CASE_STORE_RVAL(JSOP_SETELEM, 3)
+END_CASE(JSOP_SETELEM)
 
 BEGIN_CASE(JSOP_ENUMELEM)
 {
@@ -4213,7 +4191,7 @@ BEGIN_CASE(JSOP_SETARG)
     JS_ASSERT(slot < regs.fp()->numFormalArgs());
     argv[slot] = regs.sp[-1];
 }
-END_SET_CASE(JSOP_SETARG)
+END_CASE(JSOP_SETARG)
 
 BEGIN_CASE(JSOP_GETLOCAL)
 {
@@ -4249,7 +4227,7 @@ BEGIN_CASE(JSOP_SETLOCAL)
     JS_ASSERT(slot < script->nslots);
     regs.fp()->slots()[slot] = regs.sp[-1];
 }
-END_SET_CASE(JSOP_SETLOCAL)
+END_CASE(JSOP_SETLOCAL)
 
 BEGIN_CASE(JSOP_GETFCSLOT)
 BEGIN_CASE(JSOP_CALLFCSLOT)

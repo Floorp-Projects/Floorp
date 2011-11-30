@@ -24,12 +24,6 @@ BEGIN_TEST(testGCOutOfMemory)
 
     jsvalRoot root(cx);
 
-    /*
-     * We loop until we get out-of-memory. We have to disable the jit since it
-     * ignores the runtime allocation limits during execution.
-     */
-    JS_ToggleOptions(cx, JSOPTION_JIT);
-
     static const char source[] =
         "var max = 0; (function() {"
         "    var array = [];"
@@ -45,7 +39,6 @@ BEGIN_TEST(testGCOutOfMemory)
     CHECK(!JS_IsExceptionPending(cx));
     CHECK_EQUAL(errorCount, 1);
     JS_GC(cx);
-    JS_ToggleOptions(cx, JSOPTION_JIT);
     EVAL("(function() {"
          "    var array = [];"
          "    for (var i = max >> 2; i != 0;) {"

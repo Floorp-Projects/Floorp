@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -93,50 +93,34 @@ nsresult xpcJSWeakReference::Init()
 }
 
 NS_IMETHODIMP
-xpcJSWeakReference::Get()
+xpcJSWeakReference::Get(JSContext* aCx, JS::Value* aRetval)
 {
-    nsresult rv;
+    *aRetval = JSVAL_NULL;
 
-    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-    if (!xpc)
-        return NS_ERROR_UNEXPECTED;
-
-    nsAXPCNativeCallContext* cc = nsnull;
-    rv = xpc->GetCurrentNativeCallContext(&cc);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    JSContext *cx;
-    cc->GetJSContext(&cx);
-    if (!cx)
-        return NS_ERROR_UNEXPECTED;
-
-    jsval *retval = nsnull;
-    cc->GetRetValPtr(&retval);
-    if (!retval)
-        return NS_ERROR_UNEXPECTED;
-    *retval = JSVAL_NULL;
-
-    nsCOMPtr<nsIXPConnectWrappedJS> wrappedObj;
-
-    if (mWrappedJSObject &&
-        NS_SUCCEEDED(mWrappedJSObject->QueryReferent(NS_GET_IID(nsIXPConnectWrappedJS), getter_AddRefs(wrappedObj))) &&
-        wrappedObj) {
-        JSObject *obj;
-        wrappedObj->GetJSObject(&obj);
-        if (obj) {
-            // Most users of XPCWrappedJS don't need to worry about
-            // re-wrapping because things are implicitly rewrapped by
-            // xpcconvert. However, because we're doing this directly
-            // through the native call context, we need to call
-            // JS_WrapObject().
-
-            if (!JS_WrapObject(cx, &obj)) {
-                return NS_ERROR_FAILURE;
-            }
-
-            *retval = OBJECT_TO_JSVAL(obj);
-        }
+    if (!mWrappedJSObject) {
+        return NS_OK;
     }
 
+    nsCOMPtr<nsIXPConnectWrappedJS> wrappedObj = do_QueryReferent(mWrappedJSObject);
+    if (!wrappedObj) {
+        return NS_OK;
+    }
+
+    JSObject *obj;
+    wrappedObj->GetJSObject(&obj);
+    if (!obj) {
+        return NS_OK;
+    }
+
+    // Most users of XPCWrappedJS don't need to worry about
+    // re-wrapping because things are implicitly rewrapped by
+    // xpcconvert. However, because we're doing this directly
+    // through the native call context, we need to call
+    // JS_WrapObject().
+    if (!JS_WrapObject(aCx, &obj)) {
+        return NS_ERROR_FAILURE;
+    }
+
+    *aRetval = OBJECT_TO_JSVAL(obj);
     return NS_OK;
 }

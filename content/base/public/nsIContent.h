@@ -63,8 +63,11 @@ class nsIDOMCSSStyleDeclaration;
 namespace mozilla {
 namespace css {
 class StyleRule;
-}
-}
+} // namespace css
+namespace widget {
+struct IMEState;
+} // namespace widget
+} // namespace mozilla
 
 enum nsLinkState {
   eLinkState_Unknown    = 0,
@@ -75,8 +78,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID \
-{ 0xb651e0a7, 0x1471, 0x49cc, \
-  { 0xb4, 0xe1, 0xc2, 0xca, 0x01, 0xfe, 0xb7, 0x80 } }
+{ 0xed40a3e5, 0xd7ed, 0x473e, \
+ { 0x85, 0xe3, 0x82, 0xc3, 0xf0, 0x41, 0xdb, 0x52 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -84,6 +87,8 @@ enum nsLinkState {
  */
 class nsIContent : public nsINode {
 public:
+  typedef mozilla::widget::IMEState IMEState;
+
 #ifdef MOZILLA_INTERNAL_API
   // If you're using the external API, the only thing you can know about
   // nsIContent is that it exists with an IID
@@ -604,40 +609,18 @@ public:
    * Get desired IME state for the content.
    *
    * @return The desired IME status for the content.
-   *         This is a combination of IME_STATUS_* flags,
-   *         controlling what happens to IME when the content takes focus.
-   *         If this is IME_STATUS_NONE, IME remains in its current state.
-   *         IME_STATUS_ENABLE and IME_STATUS_DISABLE must not be set
-   *         together; likewise IME_STATUS_OPEN and IME_STATUS_CLOSE must
-   *         not be set together.
-   *         If you return IME_STATUS_DISABLE, you should not set the
-   *         OPEN or CLOSE flag; that way, when IME is next enabled,
-   *         the previous OPEN/CLOSE state will be restored (unless the newly
-   *         focused content specifies the OPEN/CLOSE state by setting the OPEN
-   *         or CLOSE flag with the ENABLE flag).
-   *         IME_STATUS_PASSWORD should be returned only from password editor,
-   *         this value has a special meaning. It is used as alternative of
-   *         IME_STATUS_DISABLED.
-   *         IME_STATUS_PLUGIN should be returned only when plug-in has focus.
-   *         When a plug-in is focused content, we should send native events
-   *         directly. Because we don't process some native events, but they may
-   *         be needed by the plug-in.
+   *         This is a combination of an IME enabled value and
+   *         an IME open value of widget::IMEState.
+   *         If you return DISABLED, you should not set the OPEN and CLOSE
+   *         value.
+   *         PASSWORD should be returned only from password editor, this value
+   *         has a special meaning. It is used as alternative of DISABLED.
+   *         PLUGIN should be returned only when plug-in has focus.  When a
+   *         plug-in is focused content, we should send native events directly.
+   *         Because we don't process some native events, but they may be needed
+   *         by the plug-in.
    */
-  enum {
-    IME_STATUS_NONE     = 0x0000,
-    IME_STATUS_ENABLE   = 0x0001,
-    IME_STATUS_DISABLE  = 0x0002,
-    IME_STATUS_PASSWORD = 0x0004,
-    IME_STATUS_PLUGIN   = 0x0008,
-    IME_STATUS_OPEN     = 0x0010,
-    IME_STATUS_CLOSE    = 0x0020
-  };
-  enum {
-    IME_STATUS_MASK_ENABLED = IME_STATUS_ENABLE | IME_STATUS_DISABLE |
-                              IME_STATUS_PASSWORD | IME_STATUS_PLUGIN,
-    IME_STATUS_MASK_OPENED  = IME_STATUS_OPEN | IME_STATUS_CLOSE
-  };
-  virtual PRUint32 GetDesiredIMEState();
+  virtual IMEState GetDesiredIMEState();
 
   /**
    * Gets content node with the binding (or native code, possibly on the

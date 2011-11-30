@@ -7,6 +7,7 @@ const ROLE_APPLICATION = nsIAccessibleRole.ROLE_APPLICATION;
 const ROLE_APP_ROOT = nsIAccessibleRole.ROLE_APP_ROOT;
 const ROLE_AUTOCOMPLETE = nsIAccessibleRole.ROLE_AUTOCOMPLETE;
 const ROLE_BUTTONDROPDOWNGRID = nsIAccessibleRole.ROLE_BUTTONDROPDOWNGRID;
+const ROLE_CANVAS = nsIAccessibleRole.ROLE_CANVAS;
 const ROLE_CAPTION = nsIAccessibleRole.ROLE_CAPTION;
 const ROLE_CELL = nsIAccessibleRole.ROLE_CELL;
 const ROLE_CHECKBUTTON = nsIAccessibleRole.ROLE_CHECKBUTTON;

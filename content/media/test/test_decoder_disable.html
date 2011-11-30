@@ -77,14 +77,14 @@ function videoError(event, id) {
 }
 
 </script>
-
+<!-- We make the resource URIs unique to ensure that they are (re)loaded with the new disable-decoder prefs. -->
 <video id="video1">
-  <source type="video/ogg" src="320x240.ogv" onerror="videoError(event, 'video1');"/>
-  <source type="audio/wave" src="r11025_u8_c1.wav" id='s2' onerror="videoError(event, 'video1');"/>
+  <source type="video/ogg" src="320x240.ogv?decoder_disabled=1" onerror="videoError(event, 'video1');"/>
+  <source type="audio/wave" src="r11025_u8_c1.wav?decoder_disabled=1" id='s2' onerror="videoError(event, 'video1');"/>
 </video>
 
-<video id="video2" src="320x240.ogv" onerror="videoError(event, 'video2');"></video>
-<video id="video3" src="r11025_u8_c1.wav" onerror="videoError(event, 'video3');"></video>
+<video id="video2" src="320x240.ogv?decoder_disabled=2" onerror="videoError(event, 'video2');"></video>
+<video id="video3" src="r11025_u8_c1.wav?decoder_disabled=2" onerror="videoError(event, 'video3');"></video>
 
 </pre>
 

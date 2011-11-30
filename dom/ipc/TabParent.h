@@ -103,10 +103,14 @@ public:
     virtual bool RecvNotifyIMETextHint(const nsString& aText);
     virtual bool RecvEndIMEComposition(const bool& aCancel,
                                        nsString* aComposition);
-    virtual bool RecvGetIMEEnabled(PRUint32* aValue);
-    virtual bool RecvSetInputMode(const PRUint32& aValue, const nsString& aType, const nsString& aAction, const PRUint32& aReason);
-    virtual bool RecvGetIMEOpenState(bool* aValue);
-    virtual bool RecvSetIMEOpenState(const bool& aValue);
+    virtual bool RecvGetInputContext(PRInt32* aIMEEnabled,
+                                     PRInt32* aIMEOpen);
+    virtual bool RecvSetInputContext(const PRInt32& aIMEEnabled,
+                                     const PRInt32& aIMEOpen,
+                                     const nsString& aType,
+                                     const nsString& aActionHint,
+                                     const PRInt32& aCause,
+                                     const PRInt32& aFocusChange);
     virtual bool RecvSetCursor(const PRUint32& aValue);
     virtual bool RecvSetBackgroundColor(const nscolor& aValue);
     virtual bool RecvGetDPI(float* aValue);

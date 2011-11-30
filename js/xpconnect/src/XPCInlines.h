@@ -423,7 +423,7 @@ XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
                 *pMember = nsnull;
             if (pInterfaceIndex)
                 *pInterfaceIndex = (PRUint16) i;
-            return JS_TRUE;
+            return true;
         }
     }
 
@@ -435,10 +435,10 @@ XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
                 *pMember = member;
             if (pInterfaceIndex)
                 *pInterfaceIndex = (PRUint16) i;
-            return JS_TRUE;
+            return true;
         }
     }
-    return JS_FALSE;
+    return false;
 }
 
 inline JSBool
@@ -447,9 +447,9 @@ XPCNativeSet::FindMember(jsid name, XPCNativeMember** pMember,
 {
     PRUint16 index;
     if (!FindMember(name, pMember, &index))
-        return JS_FALSE;
+        return false;
     *pInterface = mInterfaces[index];
-    return JS_TRUE;
+    return true;
 }
 
 inline JSBool
@@ -464,7 +464,7 @@ XPCNativeSet::FindMember(jsid name,
     XPCNativeMember* protoMember;
 
     if (!FindMember(name, &Member, &Interface))
-        return JS_FALSE;
+        return false;
 
     *pMember = Member;
     *pInterface = Interface;
@@ -477,7 +477,7 @@ XPCNativeSet::FindMember(jsid name,
          (!protoSet->FindMember(name, &protoMember, (PRUint16*)nsnull) ||
           protoMember != Member));
 
-    return JS_TRUE;
+    return true;
 }
 
 inline XPCNativeInterface*
@@ -515,9 +515,9 @@ XPCNativeSet::HasInterface(XPCNativeInterface* aInterface) const
 
     for (int i = (int) mInterfaceCount; i > 0; i--, pp++) {
         if (aInterface == *pp)
-            return JS_TRUE;
+            return true;
     }
-    return JS_FALSE;
+    return false;
 }
 
 inline JSBool
@@ -533,13 +533,13 @@ XPCNativeSet::HasInterfaceWithAncestor(const nsIID* iid) const
     XPCNativeInterface* const * pp = mInterfaces+1;
     for (int i = (int) mInterfaceCount; i > 1; i--, pp++)
         if ((*pp)->HasAncestor(iid))
-            return JS_TRUE;
+            return true;
 
     // This is rare, so check last.
     if (iid == &NS_GET_IID(nsISupports))
         return true;
 
-    return JS_FALSE;
+    return false;
 }
 
 inline JSBool
@@ -554,11 +554,11 @@ XPCNativeSet::MatchesSetUpToInterface(const XPCNativeSet* other,
     for (int i = (int) count; i > 0; i--, pp1++, pp2++) {
         XPCNativeInterface* cur = (*pp1);
         if (cur != (*pp2))
-            return JS_FALSE;
+            return false;
         if (cur == iface)
-            return JS_TRUE;
+            return true;
     }
-    return JS_FALSE;
+    return false;
 }
 
 inline void XPCNativeSet::Mark()
@@ -648,8 +648,8 @@ xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsid id)
     jsval prop;
 
     if (!JS_LookupPropertyById(cx, obj, id, &prop))
-        return JS_FALSE;
-    return JS_TRUE;
+        return false;
+    return true;
 }
 
 inline JSObject*
@@ -690,7 +690,7 @@ inline
 JSBool ThrowBadParam(nsresult rv, uintN paramNum, XPCCallContext& ccx)
 {
     XPCThrower::ThrowBadParam(rv, paramNum, ccx);
-    return JS_FALSE;
+    return false;
 }
 
 inline

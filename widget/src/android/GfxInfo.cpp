@@ -109,6 +109,10 @@ GfxInfo::GetAdapterDescription(nsAString & aAdapterDescription)
       if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MANUFACTURER", str))
         aAdapterDescription.Append(str);
       aAdapterDescription.Append(NS_LITERAL_STRING("', Hardware: '"));
+      PRInt32 version; // the HARDWARE field isn't available on Android SDK < 8
+      if (!mozilla::AndroidBridge::Bridge()->GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &version))
+        version = 0;
+      if (version >= 8 && mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str))
       if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str))
         aAdapterDescription.Append(str);
       aAdapterDescription.Append(NS_LITERAL_STRING("'"));
@@ -189,7 +193,10 @@ NS_IMETHODIMP
 GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
 {
   nsAutoString str;
-  if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str)) {
+  PRInt32 version; // the HARDWARE field isn't available on Android SDK < 8
+  if (!mozilla::AndroidBridge::Bridge()->GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &version))
+    version = 0;
+  if (version >= 8 && mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str)) {
     *aAdapterVendorID = HashString(str);
     return NS_OK;
   }

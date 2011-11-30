@@ -334,6 +334,7 @@ nsHtml5Highlighter::Transition(PRInt32 aState, bool aReconsume, PRInt32 aPos)
       break;
       // most comment states are omitted, because they don't matter to
       // highlighting
+    case NS_HTML5TOKENIZER_COMMENT_START:
     case NS_HTML5TOKENIZER_COMMENT_END:
     case NS_HTML5TOKENIZER_COMMENT_END_BANG:
     case NS_HTML5TOKENIZER_COMMENT_START_DASH:

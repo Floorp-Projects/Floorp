@@ -56,7 +56,6 @@
 #include "prtime.h"
 #include "prprf.h"
 
-#include "nsIDynamicContainer.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIClassInfo.h"
 #include "nsIProgrammingLanguage.h"
@@ -498,14 +497,13 @@ NS_INTERFACE_MAP_END_INHERITING(nsNavHistoryResultNode)
 nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
     const nsACString& aURI, const nsACString& aTitle,
     const nsACString& aIconURI, PRUint32 aContainerType, bool aReadOnly,
-    const nsACString& aDynamicContainerType, nsNavHistoryQueryOptions* aOptions) :
+    nsNavHistoryQueryOptions* aOptions) :
   nsNavHistoryResultNode(aURI, aTitle, 0, 0, aIconURI),
   mResult(nsnull),
   mContainerType(aContainerType),
   mExpanded(false),
   mChildrenReadOnly(aReadOnly),
   mOptions(aOptions),
-  mDynamicContainerType(aDynamicContainerType),
   mAsyncCanceledState(NOT_CANCELED)
 {
 }
@@ -514,7 +512,6 @@ nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
     const nsACString& aURI, const nsACString& aTitle,
     PRTime aTime,
     const nsACString& aIconURI, PRUint32 aContainerType, bool aReadOnly,
-    const nsACString& aDynamicContainerType, 
     nsNavHistoryQueryOptions* aOptions) :
   nsNavHistoryResultNode(aURI, aTitle, 0, aTime, aIconURI),
   mResult(nsnull),
@@ -522,7 +519,6 @@ nsNavHistoryContainerResultNode::nsNavHistoryContainerResultNode(
   mExpanded(false),
   mChildrenReadOnly(aReadOnly),
   mOptions(aOptions),
-  mDynamicContainerType(aDynamicContainerType),
   mAsyncCanceledState(NOT_CANCELED)
 {
 }
@@ -655,24 +651,7 @@ nsNavHistoryContainerResultNode::OpenContainer()
   NS_ASSERTION(!mExpanded, "Container must not be expanded to open it");
   mExpanded = true;
 
-  nsresult rv;
-
-  if (IsDynamicContainer()) {
-    // dynamic container API may want to fill us
-    nsCOMPtr<nsIDynamicContainer> svc = do_GetService(mDynamicContainerType.get(), &rv);
-    if (NS_SUCCEEDED(rv)) {
-      svc->OnContainerNodeOpening(this, GetGeneratingOptions());
-    } else {
-      NS_WARNING("Unable to get dynamic container for ");
-      NS_WARNING(mDynamicContainerType.get());
-    }
-    PRInt32 oldAccessCount = mAccessCount;
-    FillStats();
-    rv = ReverseUpdateStats(mAccessCount - oldAccessCount);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  rv = NotifyOnStateChange(STATE_CLOSED);
+  nsresult rv = NotifyOnStateChange(STATE_CLOSED);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -706,14 +685,6 @@ nsNavHistoryContainerResultNode::CloseContainer(bool aSuppressNotifications)
     }
 
     mExpanded = false;
-
-    if (IsDynamicContainer()) {
-      // Notify dynamic containers that we are closing.
-      nsCOMPtr<nsIDynamicContainer> svc =
-        do_GetService(mDynamicContainerType.get());
-      if (svc)
-        svc->OnContainerNodeClosed(this);
-    }
   }
 
   // Be sure to set this to null before notifying observers.  It signifies that
@@ -2082,197 +2053,6 @@ nsNavHistoryContainerResultNode::GetChildrenReadOnly(bool *aChildrenReadOnly)
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsNavHistoryContainerResultNode::GetDynamicContainerType(
-    nsACString& aDynamicContainerType)
-{
-  aDynamicContainerType = mDynamicContainerType;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNavHistoryContainerResultNode::AppendURINode(
-    const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount,
-    PRTime aTime, const nsACString& aIconURI, nsINavHistoryResultNode** _retval)
-{
-  *_retval = nsnull;
-  if (!IsDynamicContainer())
-    return NS_ERROR_INVALID_ARG; // we must be a dynamic container
-
-  // If we are child of an ExcludeItems parent or root, we should not append
-  // URI Nodes.
-  if ((mResult && mResult->mRootNode->mOptions->ExcludeItems()) ||
-      (mParent && mParent->mOptions->ExcludeItems()))
-    return NS_OK;
-
-  nsRefPtr<nsNavHistoryResultNode> result =
-      new nsNavHistoryResultNode(aURI, aTitle, aAccessCount, aTime, aIconURI);
-  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
-
-  // append to our list
-  nsresult rv = InsertChildAt(result, mChildren.Count());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ADDREF(*_retval = result);
-  return NS_OK;
-}
-
-
-#if 0 // UNTESTED, commented out until it can be tested
-NS_IMETHODIMP
-nsNavHistoryContainerResultNode::AppendVisitNode(
-    const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount,
-    PRTime aTime, const nsACString& aIconURI, PRInt64 aSession,
-    nsINavHistoryVisitResultNode** _retval)
-{
-  *_retval = nsnull;
-  if (!IsDynamicContainer())
-    return NS_ERROR_INVALID_ARG; // we must be a dynamic container
-
-  nsRefPtr<nsNavHistoryVisitResultNode> result =
-      new nsNavHistoryVisitResultNode(aURI, aTitle, aAccessCount, aTime,
-                                      aIconURI, aSession);
-  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
-
-  // append to our list
-  if (! mChildren.AppendObject(result))
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*_retval = result);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNavHistoryContainerResultNode::AppendFullVisitNode(
-    const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount,
-    PRTime aTime, const nsACString& aIconURI, PRInt64 aSession,
-    PRInt64 aVisitId, PRInt64 aReferringVisitId, PRInt32 aTransitionType,
-    nsINavHistoryFullVisitResultNode** _retval)
-{
-  *_retval = nsnull;
-  if (!IsDynamicContainer())
-    return NS_ERROR_INVALID_ARG; // we must be a dynamic container
-
-  nsRefPtr<nsNavHistoryFullVisitResultNode> result =
-      new nsNavHistoryFullVisitResultNode(aURI, aTitle, aAccessCount, aTime,
-                                          aIconURI, aSession, aVisitId,
-                                          aReferringVisitId, aTransitionType);
-  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
-
-  // append to our list
-  if (! mChildren.AppendObject(result))
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*_retval = result);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNavHistoryContainerResultNode::AppendContainerNode(
-    const nsACString& aTitle, const nsACString& aIconURI,
-    PRUint32 aContainerType, const nsACString& aDynamicContainerType,
-    nsINavHistoryContainerResultNode** _retval)
-{
-  *_retval = nsnull;
-  if (!IsDynamicContainer())
-    return NS_ERROR_INVALID_ARG; // we must be a dynamic container
-  if (! IsTypeContainer(aContainerType) || IsTypeFolder(aContainerType) ||
-      IsTypeQuery(aContainerType))
-    return NS_ERROR_INVALID_ARG; // not proper container type
-  if (aContainerType == nsNavHistoryResultNode::RESULT_TYPE_DYNAMIC_CONTAINER &&
-      aRemoteContainerType.IsEmpty())
-    return NS_ERROR_INVALID_ARG; // dynamic containers must have d.c. type
-  if (aContainerType != nsNavHistoryResultNode::RESULT_TYPE_DYNAMIC_CONTAINER &&
-      ! aDynamicContainerType.IsEmpty())
-    return NS_ERROR_INVALID_ARG; // non-dynamic containers must NOT have d.c. type
-
-  nsRefPtr<nsNavHistoryContainerResultNode> result =
-      new nsNavHistoryContainerResultNode(EmptyCString(), aTitle, aIconURI,
-                                          aContainerType, true,
-                                          aDynamicContainerType);
-  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
-
-  // append to our list
-  if (! mChildren.AppendObject(result))
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*_retval = result);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNavHistoryContainerResultNode::AppendQueryNode(
-    const nsACString& aQueryURI, const nsACString& aTitle,
-    const nsACString& aIconURI, nsINavHistoryQueryResultNode** _retval)
-{
-  *_retval = nsnull;
-  if (!IsDynamicContainer())
-    return NS_ERROR_INVALID_ARG; // we must be a dynamic container
-
-  nsRefPtr<nsNavHistoryQueryResultNode> result =
-      new nsNavHistoryQueryResultNode(aQueryURI, aTitle, aIconURI);
-  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
-
-  // append to our list
-  if (! mChildren.AppendObject(result))
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*_retval = result);
-  return NS_OK;
-}
-#endif
-
-
-NS_IMETHODIMP
-nsNavHistoryContainerResultNode::AppendFolderNode(
-    PRInt64 aFolderId, nsINavHistoryContainerResultNode** _retval)
-{
-  *_retval = nsnull;
-  if (!IsDynamicContainer())
-    return NS_ERROR_INVALID_ARG; // we must be a dynamic container
-
-  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-
-  // create the node, it will be addrefed for us
-  nsRefPtr<nsNavHistoryResultNode> result;
-  nsresult rv = bookmarks->ResultNodeForContainer(aFolderId,
-                                                  GetGeneratingOptions(),
-                                                  getter_AddRefs(result));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // append to our list
-  rv = InsertChildAt(result, mChildren.Count());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ADDREF(*_retval = result->GetAsContainer());
-  return NS_OK;
-}
-
-
-#if 0 // UNTESTED, commented out until it can be tested
-NS_IMETHODIMP
-nsNavHistoryContainerResultNode::ClearContents()
-{
-  if (!IsDynamicContainer())
-    return NS_ERROR_INVALID_ARG; // we must be a dynamic container
-
-  // we know if CanRemoteContainersChange() then we are a regular container
-  // and not a query or folder, so clearing doesn't need anything else to
-  // happen (like unregistering observers). Also, since this should only
-  // happen when the container is closed, we don't need to redraw the screen.
-  mChildren.Clear();
-
-  PRUint32 oldAccessCount = mAccessCount;
-  mAccessCount = 0;
-  mTime = 0;
-  rv = ReverseUpdateStats(-PRInt32(oldAccessCount));
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-#endif
-
 /**
  * HOW QUERY UPDATING WORKS
  *
@@ -2300,7 +2080,7 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
     const nsACString& aQueryURI) :
   nsNavHistoryContainerResultNode(aQueryURI, aTitle, aIconURI,
                                   nsNavHistoryResultNode::RESULT_TYPE_QUERY,
-                                  true, EmptyCString(), nsnull),
+                                  true, nsnull),
   mLiveUpdate(QUERYUPDATE_COMPLEX_WITH_BOOKMARKS),
   mHasSearchTerms(false),
   mContentsValid(false),
@@ -2314,7 +2094,7 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
     nsNavHistoryQueryOptions* aOptions) :
   nsNavHistoryContainerResultNode(EmptyCString(), aTitle, aIconURI,
                                   nsNavHistoryResultNode::RESULT_TYPE_QUERY,
-                                  true, EmptyCString(), aOptions),
+                                  true, aOptions),
   mQueries(aQueries),
   mContentsValid(false),
   mBatchChanges(0)
@@ -2336,7 +2116,7 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
     nsNavHistoryQueryOptions* aOptions) :
   nsNavHistoryContainerResultNode(EmptyCString(), aTitle, aTime, aIconURI,
                                   nsNavHistoryResultNode::RESULT_TYPE_QUERY,
-                                  true, EmptyCString(), aOptions),
+                                  true, aOptions),
   mQueries(aQueries),
   mContentsValid(false),
   mBatchChanges(0)
@@ -3480,10 +3260,10 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsNavHistoryFolderResultNode,
 
 nsNavHistoryFolderResultNode::nsNavHistoryFolderResultNode(
     const nsACString& aTitle, nsNavHistoryQueryOptions* aOptions,
-    PRInt64 aFolderId, const nsACString& aDynamicContainerType) :
+    PRInt64 aFolderId) :
   nsNavHistoryContainerResultNode(EmptyCString(), aTitle, EmptyCString(),
                                   nsNavHistoryResultNode::RESULT_TYPE_FOLDER,
-                                  false, aDynamicContainerType, aOptions),
+                                  false, aOptions),
   mContentsValid(false),
   mQueryItemId(-1),
   mIsRegisteredFolderObserver(false)
@@ -3521,16 +3301,6 @@ nsNavHistoryFolderResultNode::OpenContainer()
   if (!mContentsValid) {
     rv = FillChildren();
     NS_ENSURE_SUCCESS(rv, rv);
-    if (IsDynamicContainer()) {
-      // dynamic container API may want to change the bookmarks for this folder.
-      nsCOMPtr<nsIDynamicContainer> svc = do_GetService(mDynamicContainerType.get(), &rv);
-      if (NS_SUCCEEDED(rv)) {
-        svc->OnContainerNodeOpening(TO_CONTAINER(this), mOptions);
-      } else {
-        NS_WARNING("Unable to get dynamic container for ");
-        NS_WARNING(mDynamicContainerType.get());
-      }
-    }
   }
   mExpanded = true;
 
@@ -3857,21 +3627,6 @@ nsNavHistoryFolderResultNode::HandleCompletion(PRUint16 aReason)
     nsresult rv = OnChildrenFilled();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (IsDynamicContainer()) {
-      // The dynamic container service may want to change the bookmarks of this
-      // folder.
-      nsCOMPtr<nsIDynamicContainer> svc =
-        do_GetService(mDynamicContainerType.get(), &rv);
-      if (NS_SUCCEEDED(rv)) {
-        svc->OnContainerNodeOpening(
-          static_cast<nsNavHistoryContainerResultNode*>(this), mOptions);
-      }
-      else {
-        NS_WARNING("Unable to get dynamic container for ");
-        NS_WARNING(mDynamicContainerType.get());
-      }
-    }
-
     mExpanded = true;
     mAsyncPendingStmt = nsnull;
 
@@ -4117,8 +3872,7 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
     rv = history->BookmarkIdToResultNode(aItemId, mOptions, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  else if (aItemType == nsINavBookmarksService::TYPE_FOLDER ||
-           aItemType == nsINavBookmarksService::TYPE_DYNAMIC_CONTAINER) {
+  else if (aItemType == nsINavBookmarksService::TYPE_FOLDER) {
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
     rv = bookmarks->ResultNodeForContainer(aItemId, mOptions, getter_AddRefs(node));

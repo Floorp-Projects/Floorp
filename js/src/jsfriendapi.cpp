@@ -132,6 +132,12 @@ JS_ObjectCountDynamicSlots(JSObject *obj)
         return obj->numDynamicSlots(obj->numSlots());
     return 0;
 }
+    
+JS_PUBLIC_API(void)
+JS_ShrinkingGC(JSContext *cx)
+{
+    js_GC(cx, NULL, GC_SHRINK, gcstats::PUBLIC_API);
+}
 
 JS_FRIEND_API(JSPrincipals *)
 JS_GetCompartmentPrincipals(JSCompartment *compartment)

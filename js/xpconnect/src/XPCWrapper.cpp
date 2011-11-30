@@ -52,7 +52,7 @@ ThrowException(nsresult ex, JSContext *cx)
 {
   XPCThrower::Throw(ex, cx);
 
-  return JS_FALSE;
+  return false;
 }
 
 static JSBool
@@ -70,7 +70,7 @@ UnwrapNW(JSContext *cx, uintN argc, jsval *vp)
   JSObject *obj = JSVAL_TO_OBJECT(v);
   if (!js::IsWrapper(obj)) {
     JS_SET_RVAL(cx, vp, v);
-    return JS_TRUE;
+    return true;
   }
 
   if (xpc::WrapperFactory::IsXrayWrapper(obj) &&
@@ -79,7 +79,7 @@ UnwrapNW(JSContext *cx, uintN argc, jsval *vp)
   }
 
   JS_SET_RVAL(cx, vp, v);
-  return JS_TRUE;
+  return true;
 }
 
 static JSBool
@@ -96,7 +96,7 @@ XrayWrapperConstructor(JSContext *cx, uintN argc, jsval *vp)
   JSObject *obj = JSVAL_TO_OBJECT(vp[2]);
   if (!js::IsWrapper(obj)) {
     *vp = OBJECT_TO_JSVAL(obj);
-    return JS_TRUE;
+    return true;
   }
 
   obj = js::UnwrapObject(obj);

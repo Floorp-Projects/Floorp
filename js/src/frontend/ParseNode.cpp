@@ -405,7 +405,7 @@ ParseNode::append(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right
         left->pn_parens = false;
         left->initList(pn1);
         left->append(pn2);
-        if (kind == PNK_PLUS) {
+        if (kind == PNK_ADD) {
             if (pn1->isKind(PNK_STRING))
                 left->pn_xflags |= PNX_STRCAT;
             else if (!pn1->isKind(PNK_NUMBER))
@@ -418,7 +418,7 @@ ParseNode::append(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right
     }
     left->append(right);
     left->pn_pos.end = right->pn_pos.end;
-    if (kind == PNK_PLUS) {
+    if (kind == PNK_ADD) {
         if (right->isKind(PNK_STRING))
             left->pn_xflags |= PNX_STRCAT;
         else if (!right->isKind(PNK_NUMBER))
@@ -437,19 +437,19 @@ ParseNode::newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, Parse
 
     /*
      * Flatten a left-associative (left-heavy) tree of a given operator into
-     * a list, to reduce js_FoldConstants and js_EmitTree recursion.
+     * a list to reduce js::FoldConstants and js::frontend::EmitTree recursion.
      */
     if (left->isKind(kind) && left->isOp(op) && (js_CodeSpec[op].format & JOF_LEFTASSOC))
         return append(kind, op, left, right);
 
     /*
      * Fold constant addition immediately, to conserve node space and, what's
-     * more, so js_FoldConstants never sees mixed addition and concatenation
+     * more, so js::FoldConstants never sees mixed addition and concatenation
      * operations with more than one leading non-string operand in a PN_LIST
      * generated for expressions such as 1 + 2 + "pt" (which should evaluate
      * to "3pt", not "12pt").
      */
-    if (kind == PNK_PLUS &&
+    if (kind == PNK_ADD &&
         left->isKind(PNK_NUMBER) &&
         right->isKind(PNK_NUMBER) &&
         tc->parser->foldConstants)
