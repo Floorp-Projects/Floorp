@@ -68,7 +68,7 @@ class nsHtml5Highlighter
     /**
      * Starts the generated document.
      */
-    void Start();
+    void Start(const nsAutoString& aTitle);
 
     /**
      * Report a tokenizer state transition.
@@ -343,11 +343,6 @@ class nsHtml5Highlighter
      * The current buffer being tokenized.
      */
     nsHtml5UTF16Buffer* mBuffer;
-
-    /**
-     * The URL of the document to be shown in the page title.
-     */
-    nsString mURL;
 
     /**
      * Whether to highlight syntax visibly initially.
