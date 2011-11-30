@@ -748,11 +748,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     if (loadAsHtml5) {
       mParser = nsHtml5Module::NewHtml5Parser();
       if (plainText) {
-        if (viewSource) {
-          mParser->MarkAsNotScriptCreated("view-source-plain");
-        } else {
-          mParser->MarkAsNotScriptCreated("plain-text");
-        }
+        mParser->MarkAsNotScriptCreated("plain-text");
       } else if (viewSource && !contentType.EqualsLiteral("text/html")) {
         mParser->MarkAsNotScriptCreated("view-source-xml");
       } else {

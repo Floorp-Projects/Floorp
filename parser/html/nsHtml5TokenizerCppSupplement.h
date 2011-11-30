@@ -54,9 +54,9 @@ nsHtml5Tokenizer::FlushViewSource()
 }
 
 void
-nsHtml5Tokenizer::StartViewSource(const nsAutoString& aTitle)
+nsHtml5Tokenizer::StartViewSource()
 {
-  mViewSource->Start(aTitle);
+  mViewSource->Start();
 }
 
 void
