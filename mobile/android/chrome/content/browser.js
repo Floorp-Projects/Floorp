@@ -1100,10 +1100,10 @@ Tab.prototype = {
     let pageWidth = this._viewport.width;
     let pageHeight = this._viewport.height;
     if (doc != null) {
-      let body = doc.body || {};
-      let html = doc.documentElement || {};
-      pageWidth = Math.max(body.scrollWidth || 1, html.scrollWidth);
-      pageHeight = Math.max(body.scrollHeight || 1, html.scrollHeight);
+      let body = doc.body || { scrollWidth: pageWidth, scrollHeight: pageHeight };
+      let html = doc.documentElement || { scrollWidth: pageWidth, scrollHeight: pageHeight };
+      pageWidth = Math.max(body.scrollWidth, html.scrollWidth);
+      pageHeight = Math.max(body.scrollHeight, html.scrollHeight);
     }
 
     // Transform coordinates based on zoom

@@ -155,6 +155,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
                 });
             }
         } catch (JSONException e) {
+            Log.e(LOGTAG, "Bad viewport description: " + viewportDescription);
             throw new RuntimeException(e);
         }
     }
