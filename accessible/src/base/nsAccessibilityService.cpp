@@ -287,6 +287,16 @@ nsAccessibilityService::CreateHTMLCanvasAccessible(nsIContent* aContent,
 }
 
 already_AddRefed<nsAccessible>
+nsAccessibilityService::CreateHTMLFileInputAccessible(nsIContent* aContent,
+                                                      nsIPresShell* aPresShell)
+{
+  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aPresShell));
+  nsAccessible* accessible = new nsHTMLFileInputAccessible(aContent, weakShell);
+  NS_IF_ADDREF(accessible);
+  return accessible;
+}
+
+already_AddRefed<nsAccessible>
 nsAccessibilityService::CreateHTMLImageAccessible(nsIContent* aContent,
                                                   nsIPresShell* aPresShell)
 {
