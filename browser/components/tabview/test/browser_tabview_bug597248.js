@@ -67,8 +67,8 @@ function setupTwo(win) {
             "tabviewframeinitialized", onTabViewFrameInitialized, false);
 
           let restoredContentWindow = restoredWin.TabView.getContentWindow();
-          // prevent thumbnails from being updated before checking cached images
-          restoredContentWindow.TabItems.pausePainting();
+          // prevent TabItems._update being called before checking cached images
+          restoredContentWindow.TabItems._pauseUpdateForTest = true;
 
           let nextStep = function() {
             // since we are not sure whether the frame is initialized first or two tabs
@@ -130,17 +130,17 @@ function updateAndCheck() {
   // force all canvas to update
   let contentWindow = restoredWin.TabView.getContentWindow();
 
-  contentWindow.TabItems.resumePainting();
+  contentWindow.TabItems._pauseUpdateForTest = false;
 
   let tabItems = contentWindow.TabItems.getItems();
   tabItems.forEach(function(tabItem) {
-    tabItem.addSubscriber("thumbnailUpdated", function onUpdated() {
-      tabItem.removeSubscriber("thumbnailUpdated", onUpdated);
+    tabItem.addSubscriber("updated", function onUpdated() {
+      tabItem.removeSubscriber("updated", onUpdated);
       ok(!tabItem.isShowingCachedData(),
          "Tab item is not showing cached data anymore. " +
          tabItem.tab.linkedBrowser.currentURI.spec);
     });
-    contentWindow.TabItems.addToUpdateQueue(tabItem.tab);
+    contentWindow.TabItems.update(tabItem.tab);
   });
 
   // clean up and finish
