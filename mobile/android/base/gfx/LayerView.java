@@ -62,6 +62,8 @@ public class LayerView extends GLSurfaceView {
     private LayerRenderer mRenderer;
     private GestureDetector mGestureDetector;
     private ScaleGestureDetector mScaleGestureDetector;
+    private long mRenderTime;
+    private boolean mRenderTimeReset;
 
     public LayerView(Context context, LayerController controller) {
         super(context);
@@ -70,6 +72,7 @@ public class LayerView extends GLSurfaceView {
         mController = controller;
         mRenderer = new LayerRenderer(this);
         setRenderer(mRenderer);
+        setRenderMode(RENDERMODE_WHEN_DIRTY);
         mGestureDetector = new GestureDetector(context, controller.getGestureListener());
         mScaleGestureDetector = new ScaleGestureDetector(context, controller.getScaleGestureListener());
         mInputConnectionHandler = null;
@@ -139,6 +142,29 @@ public class LayerView extends GLSurfaceView {
         if (mInputConnectionHandler != null)
             return mInputConnectionHandler.onKeyUp(keyCode, event);
         return false;
+    }
+
+    @Override
+    public void requestRender() {
+        super.requestRender();
+
+        synchronized(this) {
+            if (!mRenderTimeReset) {
+                mRenderTimeReset = true;
+                mRenderTime = System.nanoTime();
+            }
+        }
+    }
+
+    /**
+     * Returns the time elapsed between the first call of requestRender() after
+     * the last call of getRenderTime(), in nanoseconds.
+     */
+    public long getRenderTime() {
+        synchronized(this) {
+            mRenderTimeReset = false;
+            return System.nanoTime() - mRenderTime;
+        }
     }
 }
 

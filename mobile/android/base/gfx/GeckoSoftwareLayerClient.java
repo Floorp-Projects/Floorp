@@ -124,7 +124,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     }
 
     public void beginDrawing() {
-        mTileLayer.beginTransaction();
+        beginTransaction(mTileLayer);
     }
 
     private void updateViewport(String viewportDescription, final boolean onlyUpdatePageSize) {
@@ -169,7 +169,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             Rect rect = new Rect(x, y, x + width, y + height);
             mTileLayer.invalidate(rect);
         } finally {
-            mTileLayer.endTransaction();
+            endTransaction(mTileLayer);
         }
     }
 
@@ -264,13 +264,13 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
     public void handleMessage(String event, JSONObject message) {
         if ("Viewport:Update".equals(event)) {
-            mTileLayer.beginTransaction();
+            beginTransaction(mTileLayer);
             try {
                 updateViewport(message.getString("viewport"), false);
             } catch (JSONException e) {
                 Log.e(LOGTAG, "Unable to update viewport", e);
             } finally {
-                mTileLayer.endTransaction();
+                endTransaction(mTileLayer);
             }
         }
     }

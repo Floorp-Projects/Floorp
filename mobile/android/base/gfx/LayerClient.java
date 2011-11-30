@@ -50,5 +50,26 @@ public abstract class LayerClient {
     public void setLayerController(LayerController layerController) {
         mLayerController = layerController;
     }
+
+    /**
+     * A utility function for calling TileLayer.beginTransaction with the
+     * appropriate LayerView.
+     */
+    public void beginTransaction(TileLayer aTileLayer) {
+        if (mLayerController != null) {
+            LayerView view = mLayerController.getView();
+            if (view != null) {
+                aTileLayer.beginTransaction(view);
+                return;
+            }
+        }
+
+        aTileLayer.beginTransaction();
+    }
+
+    // Included for symmetry.
+    public void endTransaction(TileLayer aTileLayer) {
+        aTileLayer.endTransaction();
+    }
 }
 
