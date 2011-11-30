@@ -41,6 +41,7 @@
 #include "nsHtml5AttributeName.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
+#include "nsHtml5ViewSourceUtils.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
@@ -88,8 +89,6 @@ nsHtml5Highlighter::nsHtml5Highlighter(nsAHtml5TreeOpSink* aOpSink)
  , mBuffer(nsnull)
  , mSyntaxHighlight(Preferences::GetBool("view_source.syntax_highlight",
                                          true))
- , mWrapLongLines(Preferences::GetBool("view_source.wrap_long_lines", true))
- , mTabSize(Preferences::GetInt("view_source.tab_size", 4))
  , mOpSink(aOpSink)
  , mCurrentRun(nsnull)
  , mAmpersand(nsnull)
@@ -128,15 +127,7 @@ nsHtml5Highlighter::Start(const nsAutoString& aTitle)
   AppendCharacters(aTitle.get(), 0, (PRInt32)length);
   Pop(); // title
 
-  nsHtml5HtmlAttributes* linkAttrs = new nsHtml5HtmlAttributes(0);
-  nsString* rel = new nsString(NS_LITERAL_STRING("stylesheet"));
-  linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_REL, rel);
-  nsString* type = new nsString(NS_LITERAL_STRING("text/css"));
-  linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_TYPE, type);
-  nsString* href = new nsString(
-      NS_LITERAL_STRING("resource://gre-resources/viewsource.css"));
-  linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_HREF, href);
-  Push(nsGkAtoms::link, linkAttrs);
+  Push(nsGkAtoms::link, nsHtml5ViewSourceUtils::NewLinkAttributes());
 
   mOpQueue.AppendElement()->Init(eTreeOpUpdateStyleSheet, CurrentNode());
 
@@ -144,22 +135,7 @@ nsHtml5Highlighter::Start(const nsAutoString& aTitle)
 
   Pop(); // head
 
-  nsHtml5HtmlAttributes* bodyAttrs = new nsHtml5HtmlAttributes(0);
-  nsString* id = new nsString(NS_LITERAL_STRING("viewsource"));
-  bodyAttrs->addAttribute(nsHtml5AttributeName::ATTR_ID, id);
-
-  if (mWrapLongLines) {
-    nsString* klass = new nsString(NS_LITERAL_STRING("wrap"));
-    bodyAttrs->addAttribute(nsHtml5AttributeName::ATTR_CLASS, klass);
-  }
-
-  if (mTabSize > 0) {
-    nsString* style = new nsString(NS_LITERAL_STRING("-moz-tab-size: "));
-    style->AppendInt(mTabSize);
-    bodyAttrs->addAttribute(nsHtml5AttributeName::ATTR_STYLE, style);
-  }
-
-  Push(nsGkAtoms::body, bodyAttrs);
+  Push(nsGkAtoms::body, nsHtml5ViewSourceUtils::NewBodyAttributes());
 
   nsHtml5HtmlAttributes* preAttrs = new nsHtml5HtmlAttributes(0);
   nsString* preId = new nsString(NS_LITERAL_STRING("line1"));

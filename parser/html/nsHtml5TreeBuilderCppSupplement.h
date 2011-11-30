@@ -701,6 +701,32 @@ nsHtml5TreeBuilder::MarkAsBroken()
 }
 
 void
+nsHtml5TreeBuilder::StartPlainTextViewSource(const nsAutoString& aTitle)
+{
+  startTag(nsHtml5ElementName::ELT_TITLE,
+           nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES,
+           false);
+
+  // XUL will add the "Source of: " prefix.
+  PRUint32 length = aTitle.Length();
+  if (length > PR_INT32_MAX) {
+    length = PR_INT32_MAX;
+  }
+  characters(aTitle.get(), 0, (PRInt32)length);
+  endTag(nsHtml5ElementName::ELT_TITLE);
+
+  startTag(nsHtml5ElementName::ELT_LINK,
+           nsHtml5ViewSourceUtils::NewLinkAttributes(),
+           false);
+
+  startTag(nsHtml5ElementName::ELT_BODY,
+           nsHtml5ViewSourceUtils::NewBodyAttributes(),
+           false);
+
+  StartPlainText();
+}
+
+void
 nsHtml5TreeBuilder::StartPlainText()
 {
   startTag(nsHtml5ElementName::ELT_PRE,

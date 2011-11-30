@@ -922,6 +922,9 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   if (mMode == PLAIN_TEXT) {
     mTreeBuilder->StartPlainText();
     mTokenizer->StartPlainText();
+  } else if (mMode == VIEW_SOURCE_PLAIN) {
+    mTreeBuilder->StartPlainTextViewSource(NS_ConvertUTF8toUTF16(mViewSourceTitle));
+    mTokenizer->StartPlainText();
   }
 
   /*
