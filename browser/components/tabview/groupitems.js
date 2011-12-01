@@ -2472,10 +2472,14 @@ let GroupItems = {
   // ----------
   // Function: updateActiveGroupItemAndTabBar
   // Sets active TabItem and GroupItem, and updates tab bar appropriately.
-  updateActiveGroupItemAndTabBar: function GroupItems_updateActiveGroupItemAndTabBar(tabItem) {
+  // Parameters:
+  // tabItem - the tab item
+  // options - is passed to UI.setActive() directly
+  updateActiveGroupItemAndTabBar: 
+    function GroupItems_updateActiveGroupItemAndTabBar(tabItem, options) {
     Utils.assertThrow(tabItem && tabItem.isATabItem, "tabItem must be a TabItem");
 
-    UI.setActive(tabItem);
+    UI.setActive(tabItem, options);
     this._updateTabBar();
   },
 
