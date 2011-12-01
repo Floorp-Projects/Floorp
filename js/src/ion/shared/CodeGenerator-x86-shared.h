@@ -92,6 +92,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void emitDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail);
     void emitTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
 
+    Operand createArraySlotOperand(Register slots, const LAllocation *index);
+
     enum NaNCond {
         NaN_Unexpected,
         NaN_IsTrue,
