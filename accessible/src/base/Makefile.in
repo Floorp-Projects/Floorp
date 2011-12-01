@@ -106,11 +106,8 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../xul \
   -I$(srcdir)/../../../layout/generic \
   -I$(srcdir)/../../../layout/xul/base/src \
+  -I$(srcdir)/../xforms \
   $(NULL)
-
-ifndef DISABLE_XFORMS_HOOKS
-LOCAL_INCLUDES += -I$(srcdir)/../xforms
-endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 LOCAL_INCLUDES += \

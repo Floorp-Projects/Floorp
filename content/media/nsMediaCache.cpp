@@ -1351,6 +1351,7 @@ nsMediaCache::Update()
       rv = stream->mClient->CacheClientSeek(stream->mChannelOffset,
                                             stream->mCacheSuspended);
       stream->mCacheSuspended = false;
+      stream->mChannelEnded = false;
       break;
 
     case RESUME:
@@ -1368,6 +1369,8 @@ nsMediaCache::Update()
     default:
       break;
     }
+
+    stream->mHasHadUpdate = true;
 
     if (NS_FAILED(rv)) {
       // Close the streams that failed due to error. This will cause all
@@ -1852,6 +1855,8 @@ nsMediaCacheStream::NotifyDataEnded(nsresult aStatus)
       stream->mClient->CacheClientNotifyDataEnded(aStatus);
     }
   }
+
+  mChannelEnded = true;
 }
 
 nsMediaCacheStream::~nsMediaCacheStream()
@@ -1885,6 +1890,18 @@ nsMediaCacheStream::IsSeekable()
   return mIsSeekable;
 }
 
+bool
+nsMediaCacheStream::AreAllStreamsForResourceSuspended()
+{
+  ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
+  nsMediaCache::ResourceStreamIterator iter(mResourceID);
+  while (nsMediaCacheStream* stream = iter.Next()) {
+    if (!stream->mCacheSuspended && !stream->mChannelEnded)
+      return false;
+  }
+  return true;
+}
+
 void
 nsMediaCacheStream::Close()
 {
@@ -1896,6 +1913,14 @@ nsMediaCacheStream::Close()
   // it from CloseInternal since that gets called by Update() itself
   // sometimes, and we try to not to queue updates from Update().
   gMediaCache->QueueUpdate();
+}
+
+void
+nsMediaCacheStream::EnsureCacheUpdate()
+{
+  if (mHasHadUpdate)
+    return;
+  gMediaCache->Update();
 }
 
 void
@@ -2290,6 +2315,7 @@ nsMediaCacheStream::InitAsClone(nsMediaCacheStream* aOriginal)
   // Cloned streams are initially suspended, since there is no channel open
   // initially for a clone.
   mCacheSuspended = true;
+  mChannelEnded = true;
 
   if (aOriginal->mDidNotifyDataEnded) {
     mNotifyDataEndedStatus = aOriginal->mNotifyDataEndedStatus;

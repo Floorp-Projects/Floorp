@@ -70,6 +70,7 @@ DIRS           += build
 
 ifdef ENABLE_TESTS
 PARALLEL_DIRS += \
+  mathml/tests \
   xul/test \
   xul/base/test \
   $(NULL)

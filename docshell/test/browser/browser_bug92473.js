@@ -22,7 +22,7 @@ function afterOpen() {
   testContent(wrongText);
 
   /* Force the page encoding to Shift_JIS */
-  SetForcedCharset("Shift_JIS");
+  BrowserSetForcedCharacterSet("Shift_JIS");
 }
   
 function afterChangeCharset() {

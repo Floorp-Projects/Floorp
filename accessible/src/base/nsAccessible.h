@@ -424,6 +424,8 @@ public:
   inline bool IsHyperText() const { return mFlags & eHyperTextAccessible; }
   nsHyperTextAccessible* AsHyperText();
 
+  inline bool IsHTMLFileInput() const { return mFlags & eHTMLFileInputAccessible; }
+
   inline bool IsHTMLListItem() const { return mFlags & eHTMLListItemAccessible; }
   nsHTMLLIAccessible* AsHTMLListItem();
 
@@ -645,12 +647,13 @@ protected:
     eComboboxAccessible = 1 << 5,
     eDocAccessible = 1 << 6,
     eHyperTextAccessible = 1 << 7,
-    eHTMLListItemAccessible = 1 << 8,
-    eListControlAccessible = 1 << 9,
-    eMenuButtonAccessible = 1 << 10,
-    eMenuPopupAccessible = 1 << 11,
-    eRootAccessible = 1 << 12,
-    eTextLeafAccessible = 1 << 13
+    eHTMLFileInputAccessible = 1 << 8,
+    eHTMLListItemAccessible = 1 << 9,
+    eListControlAccessible = 1 << 10,
+    eMenuButtonAccessible = 1 << 11,
+    eMenuPopupAccessible = 1 << 12,
+    eRootAccessible = 1 << 13,
+    eTextLeafAccessible = 1 << 14
   };
 
   //////////////////////////////////////////////////////////////////////////////
