@@ -165,8 +165,6 @@ public class PanZoomController
         case FLING:
         case NOTHING:
             mState = PanZoomState.TOUCHING;
-            mX.setFlingState(Axis.FlingStates.STOPPED);
-            mY.setFlingState(Axis.FlingStates.STOPPED);
             mX.velocity = mY.velocity = 0.0f;
             mX.locked = mY.locked = false;
             mX.lastTouchPos = mX.firstTouchPos = mX.touchPos = event.getX(0);
@@ -356,6 +354,8 @@ public class PanZoomController
             }
         }
 
+        mX.setFlingState(Axis.FlingStates.PANNING);
+        mY.setFlingState(Axis.FlingStates.PANNING);
         mX.applyEdgeResistance(); mX.displace();
         mY.applyEdgeResistance(); mY.displace();
         updatePosition();
@@ -458,7 +458,8 @@ public class PanZoomController
     private static class Axis {
         public enum FlingStates {
             STOPPED,
-            SCROLLING,
+            PANNING,
+            FLINGING,
             WAITING_TO_SNAP,
             SNAPPING,
         }
@@ -529,21 +530,21 @@ public class PanZoomController
 
         public void startFling(boolean stopped) {
             if (!stopped) {
-                mFlingState = FlingStates.SCROLLING;
+                setFlingState(FlingStates.FLINGING);
                 return;
             }
 
             float excess = getExcess();
             if (FloatUtils.fuzzyEquals(excess, 0.0f))
-                mFlingState = FlingStates.STOPPED;
+                setFlingState(FlingStates.STOPPED);
             else
-                mFlingState = FlingStates.WAITING_TO_SNAP;
+                setFlingState(FlingStates.WAITING_TO_SNAP);
         }
 
         // Advances a fling animation by one step.
         public void advanceFling() {
             switch (mFlingState) {
-            case SCROLLING:
+            case FLINGING:
                 scroll();
                 return;
             case WAITING_TO_SNAP:
@@ -563,7 +564,7 @@ public class PanZoomController
                 velocity *= FRICTION;
                 if (Math.abs(velocity) < 0.1f) {
                     velocity = 0.0f;
-                    mFlingState = FlingStates.STOPPED;
+                    setFlingState(FlingStates.STOPPED);
                 }
                 return;
             }
@@ -577,7 +578,7 @@ public class PanZoomController
 
             if (Math.abs(velocity) < 0.3f) {
                 velocity = 0.0f;
-                mFlingState = FlingStates.WAITING_TO_SNAP;
+                setFlingState(FlingStates.WAITING_TO_SNAP);
             }
         }
 
@@ -592,11 +593,11 @@ public class PanZoomController
                 break;
             default:
                 // no overscroll to deal with, so we're done
-                mFlingState = FlingStates.STOPPED;
+                setFlingState(FlingStates.STOPPED);
                 return;
             }
 
-            mFlingState = FlingStates.SNAPPING;
+            setFlingState(FlingStates.SNAPPING);
         }
 
         // Performs one frame of a snap-into-place operation.
@@ -606,7 +607,7 @@ public class PanZoomController
 
             if (mSnapAnim.getFinished()) {
                 mSnapAnim = null;
-                mFlingState = FlingStates.STOPPED;
+                setFlingState(FlingStates.STOPPED);
             }
         }
 
@@ -615,10 +616,10 @@ public class PanZoomController
             if (locked)
                 return;
 
-            if (mFlingState == FlingStates.SCROLLING)
-                viewportPos += velocity;
-            else
+            if (mFlingState == FlingStates.PANNING)
                 viewportPos += lastTouchPos - touchPos;
+            else
+                viewportPos += velocity;
         }
     }
 
