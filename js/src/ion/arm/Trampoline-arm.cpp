@@ -230,84 +230,69 @@ IonCode *
 IonCompartment::generateArgumentsRectifier(JSContext *cx)
 {
     MacroAssembler masm(cx);
-#if 0
     // ArgumentsRectifierReg contains the |nargs| pushed onto the current frame.
     // Including |this|, there are (|nargs| + 1) arguments to copy.
     JS_ASSERT(ArgumentsRectifierReg == r8);
 
     // Load the number of |undefined|s to push into %rcx.
-    masm.ma_ldr(DTRAddr(sp, DtrOffsetImm(offsetof(IonFrameData, calleeToken_))), r1);
-    masm.ma_ldrh(EDTRAddr(r1, EDtrOffsetImm(offsetof(JSFunction, nargs))), r2);
+    masm.ma_ldr(DTRAddr(sp, DtrOffImm(IonFrameData::offsetOfCalleeToken())), r1);
+    masm.ma_ldrh(EDtrAddr(r1, EDtrOffImm(offsetof(JSFunction, nargs))), r6);
 
-    masm.ma_sub(r2, r8, r2);
-    //CONTINUE HERE
-    masm.moveValue(UndefinedValue(), r10);
+    masm.ma_sub(r6, r8, r2);
 
-    masm.movq(rsp, rbp); // Save %rsp.
+    masm.moveValue(UndefinedValue(), r4, r5);
+
+    masm.ma_mov(sp, r3); // Save %rsp.
 
     // Push undefined.
     {
         Label undefLoopTop;
         masm.bind(&undefLoopTop);
+        masm.ma_dataTransferN(IsStore, 64, true, sp, Imm32(-8), r4, PreIndex);
+        masm.ma_sub(r2, Imm32(1), r2);
 
-        masm.push(r10);
-        masm.subl(Imm32(1), rcx);
-
-        masm.testl(rcx, rcx);
-        masm.j(Assembler::NonZero, &undefLoopTop);
+        masm.ma_b(&undefLoopTop, Assembler::NonZero);
     }
 
     // Get the topmost argument.
-    masm.movq(r8, r9);
-    masm.shlq(Imm32(3), r9); // r9 <- (nargs) * sizeof(Value)
 
-    masm.movq(rbp, rcx);
-    masm.addq(Imm32(sizeof(IonFrameData)), rcx);
-    masm.addq(r9, rcx);
+    masm.ma_alu(r3, lsl(r8, 3), r3, op_add); // r3 <- r3 + nargs * 8
+    masm.ma_add(r3, Imm32(sizeof(IonFrameData)), r3);
 
     // Push arguments, |nargs| + 1 times (to include |this|).
     {
-        Label copyLoopTop, initialSkip;
-
-        masm.jump(&initialSkip);
-
+        Label copyLoopTop;
         masm.bind(&copyLoopTop);
-        masm.subq(Imm32(sizeof(Value)), rcx);
-        masm.subl(Imm32(1), r8);
-        masm.bind(&initialSkip);
+        masm.ma_dataTransferN(IsLoad, 64, true, r3, Imm32(-8), r4, PostIndex);
+        masm.ma_dataTransferN(IsStore, 64, true, sp, Imm32(-8), r4, PreIndex);
 
-        masm.mov(Operand(rcx, 0x0), rdx);
-        masm.push(rdx);
-
-        masm.testl(r8, r8);
-        masm.j(Assembler::NonZero, &copyLoopTop);
+        masm.ma_sub(r8, Imm32(1), r8, SetCond);
+        masm.ma_b(&copyLoopTop, Assembler::NonZero);
     }
 
     // Construct sizeDescriptor.
-    masm.subq(rsp, rbp);
-    masm.shll(Imm32(IonFramePrefix::FrameTypeBits), rbp);
-    masm.orl(Imm32(IonFramePrefix::RectifierFrame), rbp);
+    masm.makeFrameDescriptor(r6, IonFrame_Rectifier);
 
     // Construct IonFrameData.
-    masm.push(rax); // calleeToken.
-    masm.push(rbp); // sizeDescriptor.
+    masm.ma_push(r0); // calleeToken.
+    masm.ma_push(r1); // calleeToken.
+    masm.ma_push(r6); // sizeDescriptor.
 
     // Call the target function.
     // Note that this code assumes the function is JITted.
-    masm.movq(Operand(rax, offsetof(JSFunction, u.i.script)), rax);
-    masm.movq(Operand(rax, offsetof(JSScript, ion)), rax);
-    masm.movq(Operand(rax, offsetof(IonScript, method_)), rax);
-    masm.movq(Operand(rax, IonCode::OffsetOfCode()), rax);
-    masm.call(rax);
+    masm.ma_ldr(DTRAddr(r3, DtrOffImm(offsetof(JSFunction, u.i.script_))), r3);
+    masm.ma_ldr(DTRAddr(r3, DtrOffImm(offsetof(JSScript, ion))), r3);
+    masm.ma_ldr(DTRAddr(r3, DtrOffImm(offsetof(IonScript, method_))), r3);
+    masm.ma_ldr(DTRAddr(r3, DtrOffImm(IonCode::OffsetOfCode())), r3);
+    masm.ma_callIonHalfPush(r3);
 
     // Remove the rectifier frame.
-    masm.pop(rbp);            // rbp <- sizeDescriptor with FrameType.
-    masm.shrl(Imm32(IonFramePrefix::FrameTypeBits), rbp); // rbp <- size of pushed arguments.
-    masm.pop(r11);            // Discard calleeToken.
-    masm.addq(rbp, rsp);      // Discard pushed arguments.
+    masm.ma_pop(r3);            // rbp <- sizeDescriptor with FrameType.
+    //    masm.shrl(Imm32(IonFramePrefix::FrameTypeBits), rbp); // rbp <- size of pushed arguments.
+    masm.ma_pop(r11);            // Discard calleeToken.
+    masm.ma_alu(sp, lsr(r3, FRAMETYPE_BITS), sp, op_add);      // Discard pushed arguments.
 
     masm.ret();
-#endif
     Linker linker(masm);
     return linker.newCode(cx);
 }
