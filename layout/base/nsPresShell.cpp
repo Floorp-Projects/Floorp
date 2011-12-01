@@ -7295,14 +7295,14 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
                 desiredSize.height == size.height),
                "non-root frame's desired size changed during an "
                "incremental reflow");
-  NS_ASSERTION(target == rootFrame || desiredSize.VisualOverflow().IsEqualInterior(
+  NS_ASSERTION(desiredSize.VisualOverflow().IsEqualInterior(
                  nsRect(nsPoint(0, 0),
                         nsSize(desiredSize.width, desiredSize.height))),
-               "non-root reflow roots must not have visible overflow");
-  NS_ASSERTION(target == rootFrame || desiredSize.ScrollableOverflow().IsEqualEdges(
+               "reflow roots must not have visible overflow");
+  NS_ASSERTION(desiredSize.ScrollableOverflow().IsEqualEdges(
                  nsRect(nsPoint(0, 0),
                         nsSize(desiredSize.width, desiredSize.height))),
-               "non-root reflow roots must not have scrollable overflow");
+               "reflow roots must not have scrollable overflow");
   NS_ASSERTION(status == NS_FRAME_COMPLETE,
                "reflow roots should never split");
 
