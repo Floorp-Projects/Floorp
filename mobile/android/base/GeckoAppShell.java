@@ -108,6 +108,7 @@ public class GeckoAppShell
 
     static private File sCacheFile = null;
     static private int sFreeSpace = -1;
+    static File sHomeDir = null;
 
     private static HashMap<String, ArrayList<GeckoEventListener>> mEventListeners;
 
@@ -299,8 +300,8 @@ public class GeckoAppShell
         if (Build.VERSION.SDK_INT < 8 ||
             geckoApp.getApplication().getPackageResourcePath().startsWith("/data") ||
             geckoApp.getApplication().getPackageResourcePath().startsWith("/system")) {
-            File home = geckoApp.getFilesDir();
-            homeDir = home.getPath();
+            sHomeDir = geckoApp.getFilesDir();
+            homeDir = sHomeDir.getPath();
             // handle the application being moved to phone from sdcard
             File profileDir = new File(homeDir, "mozilla");
             File oldHome = new File("/data/data/" + 
@@ -314,8 +315,8 @@ public class GeckoAppShell
                     moveDir(extProf, profileDir);
             }
         } else {
-            File home = geckoApp.getExternalFilesDir(null);
-            homeDir = home.getPath();
+            sHomeDir = geckoApp.getExternalFilesDir(null);
+            homeDir = sHomeDir.getPath();
             // handle the application being moved to phone from sdcard
             File profileDir = new File(homeDir, "mozilla");
             File oldHome = new File("/data/data/" + 
