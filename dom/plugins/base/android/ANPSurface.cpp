@@ -36,151 +36,255 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "assert.h"
-#include "ANPBase.h"
+#include <dlfcn.h>
 #include <android/log.h>
-#include "AndroidBridge.h"
-#include "gfxImageSurface.h"
-#include "gfxContext.h"
-#include "nsNPAPIPluginInstance.h"
+#include "ANPBase.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
 #define ASSIGN(obj, name)   (obj)->name = anp_surface_##name
 
+#define CLEAR_EXCEPTION(env) if (env->ExceptionOccurred()) env->ExceptionClear();
+
+#define ANDROID_REGION_SIZE 512
+
+enum {
+    PIXEL_FORMAT_RGBA_8888   = 1,
+    PIXEL_FORMAT_RGB_565     = 4,
+};
+
+struct SurfaceInfo {
+    uint32_t    w;
+    uint32_t    h;
+    uint32_t    s;
+    uint32_t    usage;
+    uint32_t    format;
+    unsigned char* bits;
+    uint32_t    reserved[2];
+};
+
+typedef struct ARect {
+    int32_t left;
+    int32_t top;
+    int32_t right;
+    int32_t bottom;
+} ARect;
+
 
 // used to cache JNI method and field IDs for Surface Objects
 static struct ANPSurfaceInterfaceJavaGlue {
-  bool        initialized;
-  jclass geckoAppShellClass;
-  jclass surfaceInfoCls;
-  jmethodID getSurfaceInfo;
-  jfieldID jFormat;
-  jfieldID jWidth ;
-  jfieldID jHeight;
+    bool        initialized;
+    jmethodID   getSurfaceHolder;
+    jmethodID   getSurface;
+    jfieldID    surfacePointer;
 } gSurfaceJavaGlue;
 
-#define getClassGlobalRef(env, cname)                                    \
-     (jClass = jclass(env->NewGlobalRef(env->FindClass(cname))))
+static struct ANPSurfaceFunctions {
+    bool initialized;
 
-static void init(JNIEnv* env) {
-  if (gSurfaceJavaGlue.initialized)
-    return;
-  
-  gSurfaceJavaGlue.geckoAppShellClass = mozilla::AndroidBridge::GetGeckoAppShellClass();
-  
-  jmethodID getClass = env->GetStaticMethodID(gSurfaceJavaGlue.geckoAppShellClass, 
-                                              "getSurfaceInfoClass",
-                                              "()Ljava/lang/Class;");
+    int (* lock)(void*, SurfaceInfo*, void*);
+    int (* unlockAndPost)(void*);
 
-  gSurfaceJavaGlue.surfaceInfoCls = (jclass) env->NewGlobalRef(env->CallStaticObjectMethod(gSurfaceJavaGlue.geckoAppShellClass, getClass));
+    void* (* regionConstructor)(void*);
+    void (* setRegion)(void*, ARect const&);
+} gSurfaceFunctions;
 
-  gSurfaceJavaGlue.jFormat = env->GetFieldID(gSurfaceJavaGlue.surfaceInfoCls, "format", "I");
-  gSurfaceJavaGlue.jWidth = env->GetFieldID(gSurfaceJavaGlue.surfaceInfoCls, "width", "I");
-  gSurfaceJavaGlue.jHeight = env->GetFieldID(gSurfaceJavaGlue.surfaceInfoCls, "height", "I");
 
-  gSurfaceJavaGlue.getSurfaceInfo = env->GetStaticMethodID(gSurfaceJavaGlue.geckoAppShellClass, "getSurfaceInfo", "(Landroid/view/SurfaceView;)Lorg/mozilla/gecko/SurfaceInfo;");
-  gSurfaceJavaGlue.initialized = true;
+static inline void* getSurface(JNIEnv* env, jobject view) {
+  if (!env || !view) {
+    return NULL;
+  }
+
+  if (!gSurfaceJavaGlue.initialized) {
+
+    jclass surfaceViewClass = env->FindClass("android/view/SurfaceView");
+    gSurfaceJavaGlue.getSurfaceHolder = env->GetMethodID(surfaceViewClass, "getHolder", "()Landroid/view/SurfaceHolder;");
+
+    jclass surfaceHolderClass = env->FindClass("android/view/SurfaceHolder");
+    gSurfaceJavaGlue.getSurface = env->GetMethodID(surfaceHolderClass, "getSurface", "()Landroid/view/Surface;");
+
+    jclass surfaceClass = env->FindClass("android/view/Surface");
+    gSurfaceJavaGlue.surfacePointer = env->GetFieldID(surfaceClass,
+        "mSurfacePointer", "I");
+
+    if (!gSurfaceJavaGlue.surfacePointer) {
+      CLEAR_EXCEPTION(env);
+
+      // It was something else in 2.2.
+      gSurfaceJavaGlue.surfacePointer = env->GetFieldID(surfaceClass,
+          "mSurface", "I");
+
+      if (!gSurfaceJavaGlue.surfacePointer) {
+        CLEAR_EXCEPTION(env);
+
+        // And something else in 2.3+
+        gSurfaceJavaGlue.surfacePointer = env->GetFieldID(surfaceClass,
+            "mNativeSurface", "I");
+        
+        CLEAR_EXCEPTION(env);
+      }
+    }
+
+    if (!gSurfaceJavaGlue.surfacePointer) {
+      LOG("Failed to acquire surface pointer");
+      return NULL;
+    }
+
+    env->DeleteLocalRef(surfaceClass);
+    env->DeleteLocalRef(surfaceViewClass);
+    env->DeleteLocalRef(surfaceHolderClass);
+
+    gSurfaceJavaGlue.initialized = (gSurfaceJavaGlue.surfacePointer != NULL);
+  }
+
+  jobject holder = env->CallObjectMethod(view, gSurfaceJavaGlue.getSurfaceHolder);
+  jobject surface = env->CallObjectMethod(holder, gSurfaceJavaGlue.getSurface);
+  jint surfacePointer = env->GetIntField(surface, gSurfaceJavaGlue.surfacePointer);
+
+  env->DeleteLocalRef(holder);
+  env->DeleteLocalRef(surface);
+
+  return (void*)surfacePointer;
 }
 
-static bool anp_lock(JNIEnv* env, jobject surfaceView, ANPBitmap* bitmap, ANPRectI* dirtyRect) {
-  LOG("%s", __PRETTY_FUNCTION__);
+static ANPBitmapFormat convertPixelFormat(int32_t format) {
+  switch (format) {
+    case PIXEL_FORMAT_RGBA_8888:  return kRGBA_8888_ANPBitmapFormat;
+    case PIXEL_FORMAT_RGB_565:    return kRGB_565_ANPBitmapFormat;
+    default:            return kUnknown_ANPBitmapFormat;
+  }
+}
+
+static int bytesPerPixel(int32_t format) {
+  switch (format) {
+    case PIXEL_FORMAT_RGBA_8888: return 4;
+    case PIXEL_FORMAT_RGB_565: return 2;
+    default: return -1;
+  }
+}
+
+static bool init() {
+  if (gSurfaceFunctions.initialized)
+    return true;
+
+  void* handle = dlopen("/system/lib/libsurfaceflinger_client.so", RTLD_LAZY);
+
+  if (!handle) {
+    LOG("Failed to open libsurfaceflinger_client.so");
+    return false;
+  }
+
+  gSurfaceFunctions.lock = (int (*)(void*, SurfaceInfo*, void*))dlsym(handle, "_ZN7android7Surface4lockEPNS0_11SurfaceInfoEPNS_6RegionEb");
+  gSurfaceFunctions.unlockAndPost = (int (*)(void*))dlsym(handle, "_ZN7android7Surface13unlockAndPostEv");
+
+  handle = dlopen("/system/lib/libui.so", RTLD_LAZY);
+  if (!handle) {
+    LOG("Failed to open libui.so");
+    return false;
+  }
+
+  gSurfaceFunctions.regionConstructor = (void* (*)(void*))dlsym(handle, "_ZN7android6RegionC1Ev");
+  gSurfaceFunctions.setRegion = (void (*)(void*, ARect const&))dlsym(handle, "_ZN7android6Region3setERKNS_4RectE");
+
+  gSurfaceFunctions.initialized = (gSurfaceFunctions.lock && gSurfaceFunctions.unlockAndPost &&
+                                   gSurfaceFunctions.regionConstructor && gSurfaceFunctions.setRegion);
+  LOG("Initialized? %d\n", gSurfaceFunctions.initialized);
+  return gSurfaceFunctions.initialized;
+}
+
+static bool anp_surface_lock(JNIEnv* env, jobject surfaceView, ANPBitmap* bitmap, ANPRectI* dirtyRect) {
   if (!bitmap || !surfaceView) {
-    LOG("%s, null bitmap or surface, exiting", __PRETTY_FUNCTION__);
     return false;
   }
 
-  init(env);
+  void* surface = getSurface(env, surfaceView);
 
-  jobject info = env->CallStaticObjectMethod(gSurfaceJavaGlue.geckoAppShellClass,
-                                             gSurfaceJavaGlue.getSurfaceInfo, surfaceView);
-
-  LOG("info: %p", info);
-  if (!info)
-    return false;
-
-  bitmap->width  = env->GetIntField(info, gSurfaceJavaGlue.jWidth);
-  bitmap->height = env->GetIntField(info, gSurfaceJavaGlue.jHeight);
-
-  if (bitmap->width <= 0 || bitmap->height <= 0)
-    return false;
-
-  int format = env->GetIntField(info, gSurfaceJavaGlue.jFormat);
-  gfxImageFormat targetFormat;
-
-  // format is PixelFormat
-  if (format & 0x00000001) {
-    /*
-    bitmap->format = kRGBA_8888_ANPBitmapFormat;
-    bitmap->rowBytes = bitmap->width * 4;
-    targetFormat = gfxASurface::ImageFormatARGB32;
-    */
-    
-    // We actually can't handle this right now because gfxImageSurface
-    // doesn't support RGBA32.
-    LOG("Unable to handle 32bit pixel format");
-    return false;
-  } else if (format & 0x00000004) {
-    bitmap->format = kRGB_565_ANPBitmapFormat;
-    bitmap->rowBytes = bitmap->width * 2;
-    targetFormat = gfxASurface::ImageFormatRGB16_565;
-  } else {
-    LOG("format from glue is unknown %d\n", format);
+  if (!bitmap || !surface) {
     return false;
   }
 
-  nsNPAPIPluginInstance* pinst = nsNPAPIPluginInstance::FindByJavaSurface((void*)surfaceView);
-  if (!pinst) {
-    LOG("Failed to get plugin instance");
+  if (!init()) {
     return false;
   }
 
-  NPRect lockRect;
+  void* region = NULL;
   if (dirtyRect) {
-    lockRect.top = dirtyRect->top;
-    lockRect.left = dirtyRect->left;
-    lockRect.right = dirtyRect->right;
-    lockRect.bottom = dirtyRect->bottom;
-  } else {
-    // No dirty rect, use the whole bitmap
-    lockRect.top = lockRect.left = 0;
-    lockRect.right = bitmap->width;
-    lockRect.bottom = bitmap->height;
-  }
-  
-  gfxImageSurface* target = pinst->LockTargetSurface(bitmap->width, bitmap->height, targetFormat, &lockRect);
-  bitmap->baseAddr = target->Data();
+    region = malloc(ANDROID_REGION_SIZE);
+    gSurfaceFunctions.regionConstructor(region);
 
-  env->DeleteLocalRef(info);
+    ARect rect;
+    rect.left = dirtyRect->left;
+    rect.top = dirtyRect->top;
+    rect.right = dirtyRect->right;
+    rect.bottom = dirtyRect->bottom;
+
+    gSurfaceFunctions.setRegion(region, rect);
+  }
+
+  SurfaceInfo info;
+  int err = gSurfaceFunctions.lock(surface, &info, region);
+  if (err < 0) {
+    LOG("Failed to lock surface");
+    return false;
+  }
+
+  // the surface may have expanded the dirty region so we must to pass that
+  // information back to the plugin.
+  if (dirtyRect) {
+    ARect* dirtyBounds = (ARect*)region; // The bounds are the first member, so this should work!
+
+    dirtyRect->left = dirtyBounds->left;
+    dirtyRect->right = dirtyBounds->right;
+    dirtyRect->top = dirtyBounds->top;
+    dirtyRect->bottom = dirtyBounds->bottom;
+  }
+
+  if (region)
+    free(region);
+
+  int bpr = info.s * bytesPerPixel(info.format);
+
+  bitmap->format = convertPixelFormat(info.format);
+  bitmap->width = info.w;
+  bitmap->height = info.h;
+  bitmap->rowBytes = bpr;
+
+  if (info.w > 0 && info.h > 0) {
+    bitmap->baseAddr = info.bits;
+  } else {
+    bitmap->baseAddr = NULL;
+    return false;
+  }
 
   return true;
 }
 
-static void anp_unlock(JNIEnv* env, jobject surfaceView) {
-  LOG("%s", __PRETTY_FUNCTION__);
-
+static void anp_surface_unlock(JNIEnv* env, jobject surfaceView) {
   if (!surfaceView) {
-    LOG("null surface, exiting %s", __PRETTY_FUNCTION__);
     return;
   }
 
-  nsNPAPIPluginInstance* pinst = nsNPAPIPluginInstance::FindByJavaSurface((void*)surfaceView);
-  if (!pinst) {
-    LOG("Could not find plugin instance!");
+  if (!init()) {
     return;
   }
-  
-  pinst->UnlockTargetSurface(true /* invalidate the locked area */);
+
+  void* surface = getSurface(env, surfaceView);
+
+  if (!surface) {
+    return;
+  }
+
+  gSurfaceFunctions.unlockAndPost(surface);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#define ASSIGN(obj, name)   (obj)->name = anp_##name
-
-void InitSurfaceInterface(ANPSurfaceInterfaceV0 *i) {
-
+void InitSurfaceInterface(ANPSurfaceInterfaceV0* i) {
   ASSIGN(i, lock);
   ASSIGN(i, unlock);
 
   // setup the java glue struct
   gSurfaceJavaGlue.initialized = false;
+
+  // setup the function struct
+  gSurfaceFunctions.initialized = false;
 }
