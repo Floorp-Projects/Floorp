@@ -1147,7 +1147,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
       let closed = options.dontClose ? false : this.closeIfEmpty();
       if (closed ||
-          (this._children.length == 0 && !gBrowser.selectedTab.pinned &&
+          (this._children.length == 0 && !gBrowser._numPinnedTabs &&
            !item.isDragging)) {
         this._makeLastActiveGroupItemActive();
       } else if (!options.dontArrange) {
