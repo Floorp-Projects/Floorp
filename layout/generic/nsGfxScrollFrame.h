@@ -182,7 +182,7 @@ public:
   static void AsyncScrollCallback(nsITimer *aTimer, void* anInstance);
   void ScrollTo(nsPoint aScrollPosition, nsIScrollableFrame::ScrollMode aMode);
   void ScrollToImpl(nsPoint aScrollPosition);
-  void ScrollVisual();
+  void ScrollVisual(nsPoint aOldScrolledFramePosition);
   void ScrollBy(nsIntPoint aDelta, nsIScrollableFrame::ScrollUnit aUnit,
                 nsIScrollableFrame::ScrollMode aMode, nsIntPoint* aOverflow);
   void ScrollToRestoredPosition();
@@ -255,6 +255,8 @@ public:
   void LayoutScrollbars(nsBoxLayoutState& aState,
                         const nsRect& aContentArea,
                         const nsRect& aOldScrollArea);
+
+  bool IsIgnoringViewportClipping() const;
 
   bool IsAlwaysActive() const;
   void MarkActive();
