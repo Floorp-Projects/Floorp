@@ -29,7 +29,7 @@ function test()
     }
 
     var elem = doc.getElementById(test.elem);
-    // Skip the first BeforePaint event as it's the same event that the browser
+    // Skip the first callback as it's the same callback that the browser
     // uses to kick off the scrolling.
     var skipFrames = 1;
     var checkScroll = function () {

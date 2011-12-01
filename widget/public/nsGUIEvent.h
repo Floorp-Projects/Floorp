@@ -451,7 +451,6 @@ class nsHashKey;
 // paint notification events
 #define NS_NOTIFYPAINT_START    3400
 #define NS_AFTERPAINT           (NS_NOTIFYPAINT_START)
-#define NS_BEFOREPAINT          (NS_NOTIFYPAINT_START+1)
 
 // Simple gesture events
 #define NS_SIMPLE_GESTURE_EVENT_START    3500
