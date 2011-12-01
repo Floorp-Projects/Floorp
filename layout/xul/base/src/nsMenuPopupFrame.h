@@ -176,7 +176,7 @@ public:
   virtual void LockMenuUntilClosed(bool aLock);
   virtual bool IsMenuLocked() { return mIsMenuLocked; }
 
-  NS_IMETHOD GetWidget(nsIWidget **aWidget);
+  nsIWidget* GetWidget();
 
   // The dismissal listener gets created and attached to the window.
   void AttachedDismissalListener();
