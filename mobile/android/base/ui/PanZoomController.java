@@ -130,8 +130,23 @@ public class PanZoomController
         }
     }
 
-    public void geometryChanged() {
+    public void geometryChanged(boolean aAbortFling) {
         populatePositionAndLength();
+
+        if (aAbortFling) {
+            // this happens when gecko changes the viewport on us. if that's the case, abort
+            // any fling that's in progress and re-fling so that the page snaps to edges. for
+            // other cases (where the user's finger(s) are down) don't do anything special.
+            switch (mState) {
+            case FLING:
+                mX.velocity = mY.velocity = 0.0f;
+                mState = PanZoomState.NOTHING;
+                // fall through
+            case NOTHING:
+                fling();
+                break;
+            }
+        }
     }
 
     /*
