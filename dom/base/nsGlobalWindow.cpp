@@ -10324,7 +10324,7 @@ nsGlobalChromeWindow::BeginWindowMove(nsIDOMEvent *aMouseDownEvent, nsIDOMElemen
     nsIFrame* frame = panel->GetPrimaryFrame();
     NS_ENSURE_TRUE(frame && frame->GetType() == nsGkAtoms::menuPopupFrame, NS_OK);
 
-    (static_cast<nsMenuPopupFrame*>(frame))->GetWidget(getter_AddRefs(widget));
+    widget = (static_cast<nsMenuPopupFrame*>(frame))->GetWidget();
   }
   else {
 #endif
