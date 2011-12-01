@@ -51,6 +51,9 @@
 #include "nsIScriptError.h"
 #include "nsIConsoleService.h"
 #include "nsIProtocolHandler.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsIJSRuntimeService.h"
+#include "xpcpublic.h"
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -806,6 +809,58 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
     JSContext* unused;
     nsContentUtils::ThreadJSContextStack()->Pop(&unused);
   }
+}
+
+bool
+nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope)
+{
+  
+  nsCOMPtr<nsIJSRuntimeService> runtimeSvc = 
+    do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
+  NS_ENSURE_TRUE(runtimeSvc, false);
+
+  JSRuntime* rt = nsnull;
+  runtimeSvc->GetRuntime(&rt);
+  NS_ENSURE_TRUE(rt, false);
+
+  JSContext* cx = JS_NewContext(rt, 8192);
+  NS_ENSURE_TRUE(cx, false);
+
+  mCx = cx;
+
+  nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
+
+  JS_SetNativeStackQuota(cx, 128 * sizeof(size_t) * 1024);
+
+  JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_PRIVATE_IS_NSISUPPORTS);
+  JS_SetVersion(cx, JSVERSION_LATEST);
+  JS_SetErrorReporter(cx, ContentScriptErrorReporter);
+
+  xpc_LocalizeContext(cx);
+
+  JSAutoRequest ar(cx);
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  const PRUint32 flags = nsIXPConnect::INIT_JS_STANDARD_CLASSES |
+                         nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT;
+
+  
+  JS_SetContextPrivate(cx, aScope);
+
+  nsresult rv =
+    xpc->InitClassesWithNewWrappedGlobal(cx, aScope,
+                                         NS_GET_IID(nsISupports),
+                                         mPrincipal, nsnull,
+                                         flags, getter_AddRefs(mGlobal));
+  NS_ENSURE_SUCCESS(rv, false);
+
+    
+  JSObject* global = nsnull;
+  rv = mGlobal->GetJSObject(&global);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  JS_SetGlobalObject(cx, global);
+  DidCreateCx();
+  return true;
 }
 
 // static
