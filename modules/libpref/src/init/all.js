@@ -1436,12 +1436,6 @@ pref("browser.popups.showPopupBlocker", true);
 // See http://bugzilla.mozilla.org/show_bug.cgi?id=169483 for further details...
 pref("viewmanager.do_doublebuffering", true);
 
-// whether use prefs from system
-pref("config.use_system_prefs", false);
-
-// if the system has enabled accessibility
-pref("config.use_system_prefs.accessibility", false);
-
 // enable single finger gesture input (win7+ tablets)
 pref("gestures.enable_single_finger_input", true);
 
