@@ -392,7 +392,8 @@ enum CTypeProtoSlot {
   SLOT_FUNCTIONDATAPROTO = 8,  // common ancestor of all CData objects of FunctionType
   SLOT_INT64PROTO        = 9,  // ctypes.Int64.prototype object
   SLOT_UINT64PROTO       = 10, // ctypes.UInt64.prototype object
-  SLOT_CLOSURECX         = 11, // JSContext for use with FunctionType closures
+  SLOT_OURDATAPROTO      = 11, // the data prototype corresponding to this object
+  SLOT_CLOSURECX         = 12, // JSContext for use with FunctionType closures
   CTYPEPROTO_SLOTS
 };
 
@@ -457,6 +458,7 @@ namespace CType {
     jsval size, jsval align, ffi_type* ffiType);
 
   bool IsCType(JSContext* cx, JSObject* obj);
+  bool IsCTypeProto(JSContext* cx, JSObject* obj);
   TypeCode GetTypeCode(JSContext* cx, JSObject* typeObj);
   bool TypesEqual(JSContext* cx, JSObject* t1, JSObject* t2);
   size_t GetSize(JSContext* cx, JSObject* obj);
@@ -520,6 +522,7 @@ namespace CData {
   JSObject* GetCType(JSContext* cx, JSObject* dataObj);
   void* GetData(JSContext* cx, JSObject* dataObj);
   bool IsCData(JSContext* cx, JSObject* obj);
+  bool IsCDataProto(JSContext* cx, JSObject* obj);
 
   // Attached by JSAPI as the function 'ctypes.cast'
   JSBool Cast(JSContext* cx, uintN argc, jsval* vp);

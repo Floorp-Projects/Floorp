@@ -590,13 +590,16 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
       if (ctrlKey)
         mailEditor = do_QueryObject(mEditor);
 
-      PRInt32 clipboard;
-
-#if defined(XP_OS2) || defined(XP_WIN32)
-      clipboard = nsIClipboard::kGlobalClipboard;
-#else
-      clipboard = nsIClipboard::kSelectionClipboard;
-#endif
+      PRInt32 clipboard = nsIClipboard::kGlobalClipboard;
+      nsCOMPtr<nsIClipboard> clipboardService =
+        do_GetService("@mozilla.org/widget/clipboard;1", &rv);
+      if (NS_SUCCEEDED(rv)) {
+        bool selectionSupported;
+        rv = clipboardService->SupportsSelectionClipboard(&selectionSupported);
+        if (NS_SUCCEEDED(rv) && selectionSupported) {
+          clipboard = nsIClipboard::kSelectionClipboard;
+        }
+      }
 
       if (mailEditor)
         mailEditor->PasteAsQuotation(clipboard);

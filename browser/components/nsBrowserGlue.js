@@ -1532,10 +1532,10 @@ ContentPermissionPrompt.prototype = {
 
     // Different message/options if it is a local file
     if (requestingURI.schemeIs("file")) {
-      message = browserBundle.formatStringFromName("geolocation.fileWantsToKnow",
+      message = browserBundle.formatStringFromName("geolocation.shareWithFile",
                                                    [requestingURI.path], 1);
     } else {
-      message = browserBundle.formatStringFromName("geolocation.siteWantsToKnow",
+      message = browserBundle.formatStringFromName("geolocation.shareWithSite",
                                                    [requestingURI.host], 1);
 
       // Don't offer to "always/never share" in PB mode
@@ -1545,16 +1545,16 @@ ContentPermissionPrompt.prototype = {
 
       if (!inPrivateBrowsing) {
         secondaryActions.push({
-          label: browserBundle.GetStringFromName("geolocation.alwaysShare"),
-          accessKey: browserBundle.GetStringFromName("geolocation.alwaysShare.accesskey"),
+          label: browserBundle.GetStringFromName("geolocation.alwaysShareLocation"),
+          accessKey: browserBundle.GetStringFromName("geolocation.alwaysShareLocation.accesskey"),
           callback: function () {
             Services.perms.add(requestingURI, "geo", Ci.nsIPermissionManager.ALLOW_ACTION);
             request.allow();
           }
         });
         secondaryActions.push({
-          label: browserBundle.GetStringFromName("geolocation.neverShare"),
-          accessKey: browserBundle.GetStringFromName("geolocation.neverShare.accesskey"),
+          label: browserBundle.GetStringFromName("geolocation.neverShareLocation"),
+          accessKey: browserBundle.GetStringFromName("geolocation.neverShareLocation.accesskey"),
           callback: function () {
             Services.perms.add(requestingURI, "geo", Ci.nsIPermissionManager.DENY_ACTION);
             request.cancel();

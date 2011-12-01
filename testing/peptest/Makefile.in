@@ -14,7 +14,7 @@
 # The Original Code is peptest.
 #
 # The Initial Developer of the Original Code is
-#   Mozilla Corporation 
+#   The Mozilla Foundation 
 # Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
@@ -46,11 +46,23 @@ MODULE = testing_peptest
 
 include $(topsrcdir)/config/rules.mk
 
-TEST_FILES = \
+PEPTEST_HARNESS = \
+  peptest \
+  $(NULL)
+
+PEPTEST_EXTRAS = \
+  setup.py \
+  MANIFEST.in \
+  README.md \
+  $(NULL)
+
+PEPTEST_TESTS = \
   tests \
   $(NULL)
 
 stage-package: PKG_STAGE = $(DIST)/test-package-stage
 stage-package:
 	$(NSINSTALL) -D $(PKG_STAGE)/peptest
-	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(TEST_FILES)) | (cd $(PKG_STAGE)/peptest && tar -xf -)
+	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(PEPTEST_HARNESS)) | (cd $(PKG_STAGE)/peptest && tar -xf -)
+	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(PEPTEST_EXTRAS)) | (cd $(PKG_STAGE)/peptest && tar -xf -)
+	@(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - $(PEPTEST_TESTS)) | (cd $(PKG_STAGE)/peptest && tar -xf -)

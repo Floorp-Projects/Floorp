@@ -75,6 +75,11 @@
     -moz-margin-start: -3px;
     position: relative;
   }
+
+  .menu-accel,
+  .menu-iconic-accel {
+    color: graytext;
+  }
 }
 
 @media all and (-moz-windows-compositor) {

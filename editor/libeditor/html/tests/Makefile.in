@@ -87,6 +87,7 @@ _TEST_FILES = \
 		test_bug668599.html \
 		test_bug674770-1.html \
 		file_bug674770-1.html \
+		test_bug674770-2.html \
 		test_bug674861.html \
 		test_bug676401.html \
 		test_bug677752.html \
@@ -98,11 +99,6 @@ _TEST_FILES = \
 		file_select_all_without_body.html \
 		test_root_element_replacement.html \
 		$(NULL)
-
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-_TEST_FILES +=  test_bug674770-2.html \
-		$(NULL)
-endif
 
 ifneq (mobile,$(MOZ_BUILD_APP))
 _TEST_FILES +=  test_spellcheck_pref.html \

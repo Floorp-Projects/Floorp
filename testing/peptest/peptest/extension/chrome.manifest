@@ -1,0 +1,14 @@
+resource mozmill resource/mozmill/
+resource stdlib resource/stdlib/
+resource pep resource/pep/
+content pep chrome/content/
+locale	pep en-US	locale/en-US/
+skin	pep classic/1.0	skin/
+
+style	chrome://global/content/customizeToolbar.xul	chrome://pep/skin/overlay.css
+
+component {807b1ae9-df22-40bd-8d0a-2a583da551bb} components/pep-cmdline.js
+contract @mozilla.org/commandlinehandler/general-startup;1?type=pep {807b1ae9-df22-40bd-8d0a-2a583da551bb}
+category command-line-handler m-pep @mozilla.org/commandlinehandler/general-startup;1?type=pep
+
+overlay chrome://browser/content/browser.xul chrome://pep/content/overlay.xul

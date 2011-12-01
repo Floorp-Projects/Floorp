@@ -121,15 +121,15 @@ function run_test() {
   hadCharset =
     netutil.extractCharsetFromContentType("text/html; charset='ISO-8859-1'",
 					  charset, charsetStart, charsetEnd);
-  check(true, "ISO-8859-1", 9, 31);
+  check(true, "'ISO-8859-1'", 9, 31);
 
   hadCharset =
-    netutil.extractCharsetFromContentType("text/html; charset='ISO-8859-1', text/html",
+    netutil.extractCharsetFromContentType("text/html; charset=\"ISO-8859-1\", text/html",
 					  charset, charsetStart, charsetEnd);
   check(true, "ISO-8859-1", 9, 31);
 
   hadCharset =
-    netutil.extractCharsetFromContentType("text/html; charset='ISO-8859-1', text/html; charset=UTF8",
+    netutil.extractCharsetFromContentType("text/html; charset=\"ISO-8859-1\", text/html; charset=UTF8",
 					  charset, charsetStart, charsetEnd);
   check(true, "UTF8", 42, 56);
 
@@ -144,17 +144,17 @@ function run_test() {
   check(false, "", 41, 41);
 
   hadCharset =
-    netutil.extractCharsetFromContentType("text/plain, TEXT/HTML; charset='ISO-8859-1', text/html, TEXT/HTML",
+    netutil.extractCharsetFromContentType("text/plain, TEXT/HTML; charset=\"ISO-8859-1\", text/html, TEXT/HTML",
 					  charset, charsetStart, charsetEnd);
   check(true, "ISO-8859-1", 21, 43);
 
   hadCharset =
-    netutil.extractCharsetFromContentType('text/plain, TEXT/HTML; param="charset=UTF8"; charset=\'ISO-8859-1\'; param2="charset=UTF16", text/html, TEXT/HTML',
+    netutil.extractCharsetFromContentType('text/plain, TEXT/HTML; param="charset=UTF8"; charset="ISO-8859-1"; param2="charset=UTF16", text/html, TEXT/HTML',
 					  charset, charsetStart, charsetEnd);
   check(true, "ISO-8859-1", 43, 65);
 
   hadCharset =
-    netutil.extractCharsetFromContentType('text/plain, TEXT/HTML; param=charset=UTF8; charset=\'ISO-8859-1\'; param2=charset=UTF16, text/html, TEXT/HTML',
+    netutil.extractCharsetFromContentType('text/plain, TEXT/HTML; param=charset=UTF8; charset="ISO-8859-1"; param2=charset=UTF16, text/html, TEXT/HTML',
 					  charset, charsetStart, charsetEnd);
   check(true, "ISO-8859-1", 41, 63);
 
