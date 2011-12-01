@@ -63,14 +63,11 @@ DIRS += \
   base \
   html \
   xpcom \
+  xforms \
   $(null)
 
 ifdef MOZ_XUL
 DIRS +=   xul
-endif
-
-ifndef DISABLE_XFORMS_HOOKS
-DIRS +=   xforms
 endif
 
 include $(topsrcdir)/config/rules.mk

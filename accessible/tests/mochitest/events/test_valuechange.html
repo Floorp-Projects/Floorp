@@ -58,6 +58,27 @@
       }
     }
 
+    function changeInputValue(aID, aValue)
+    {
+      this.DOMNode = getNode(aID);
+
+      this.invoke = function changeInputValue_invoke()
+      {
+        this.DOMNode.value = aValue;
+      }
+
+      this.check = function changeInputValue_check()
+      {
+        var acc = getAccessible(this.DOMNode);
+        is(acc.value, aValue, "Wrong value for " + prettyName(aID));
+      }
+
+      this.getID = function changeInputValue_getID()
+      {
+        return prettyName(aID) + " value changed";
+      }
+    }
+
     function doTests()
     {
       // Test initial values
@@ -73,6 +94,8 @@
       gQueue.push(new changeValue("slider_vt", undefined, "hey!"));
       gQueue.push(new changeValue("slider_vnvt", "3", "sweet"));
       gQueue.push(new changeValue("scrollbar", "6", undefined));
+
+      gQueue.push(new changeInputValue("combobox", "hello"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -94,6 +117,11 @@
     title="We dont expose new aria role 'scrollbar' and property aria-orientation">
    Mozilla Bug 529289
   </a>
+  <a target="_blank"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=703202"
+    title="ARIA comboboxes don't fire value change events">
+   Mozilla Bug 703202
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -114,5 +142,8 @@
   <!-- ARIA scrollbar -->
   <div id="scrollbar" role="scrollbar" aria-valuenow="5"
        aria-valuemin="0" aria-valuemax="1000">slider</div>
+
+  <!-- ARIA combobox -->
+  <input id="combobox" role="combobox" aria-autocomplete="inline">
 </body>
 </html>

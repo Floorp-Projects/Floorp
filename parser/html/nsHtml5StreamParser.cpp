@@ -56,6 +56,7 @@
 #include "nsHtml5Highlighter.h"
 #include "expat_config.h"
 #include "expat.h"
+#include "nsINestedURI.h"
 
 using namespace mozilla;
 
@@ -289,6 +290,31 @@ nsHtml5StreamParser::Notify(const char* aCharset, nsDetectionConfident aConf)
     }
   }
   return NS_OK;
+}
+
+void
+nsHtml5StreamParser::SetViewSourceTitle(nsIURI* aURL)
+{
+  if (aURL) {
+    nsCOMPtr<nsIURI> temp;
+    bool isViewSource;
+    aURL->SchemeIs("view-source", &isViewSource);
+    if (isViewSource) {
+      nsCOMPtr<nsINestedURI> nested = do_QueryInterface(aURL);
+      nested->GetInnerURI(getter_AddRefs(temp));
+    } else {
+      temp = aURL;
+    }
+    bool isData;
+    temp->SchemeIs("data", &isData);
+    if (isData) {
+      // Avoid showing potentially huge data: URLs. The three last bytes are
+      // UTF-8 for an ellipsis.
+      mViewSourceTitle.AssignLiteral("data:\xE2\x80\xA6");
+    } else {
+      temp->GetSpec(mViewSourceTitle);
+    }
+  }
 }
 
 nsresult
@@ -880,8 +906,9 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   mStreamState = STREAM_BEING_READ;
 
   if (mMode == VIEW_SOURCE_HTML || mMode == VIEW_SOURCE_XML) {
-    mTokenizer->StartViewSource();
+    mTokenizer->StartViewSource(NS_ConvertUTF8toUTF16(mViewSourceTitle));
   }
+
   // For View Source, the parser should run with scripts "enabled" if a normal
   // load would have scripts enabled.
   bool scriptingEnabled = mMode == LOAD_AS_DATA ?
@@ -894,6 +921,9 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 
   if (mMode == PLAIN_TEXT) {
     mTreeBuilder->StartPlainText();
+    mTokenizer->StartPlainText();
+  } else if (mMode == VIEW_SOURCE_PLAIN) {
+    mTreeBuilder->StartPlainTextViewSource(NS_ConvertUTF8toUTF16(mViewSourceTitle));
     mTokenizer->StartPlainText();
   }
 

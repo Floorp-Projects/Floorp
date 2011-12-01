@@ -97,6 +97,14 @@
       // disabled, too. See bug 429285.
       testAriaDisabledTree("group");
 
+      // universal ARIA properties inherited from file input control
+      var fileTextField = getAccessible("fileinput").firstChild;
+      testStates(fileTextField,
+                 STATE_BUSY | STATE_UNAVAILABLE | STATE_REQUIRED | STATE_HASPOPUP | STATE_INVALID);
+      var fileBrowseButton = getAccessible("fileinput").lastChild;
+      testStates(fileBrowseButton,
+                 STATE_BUSY | STATE_UNAVAILABLE | STATE_REQUIRED | STATE_HASPOPUP | STATE_INVALID);
+
       // offscreen test
       testStates("aria_offscreen_textbox", STATE_OFFSCREEN);
 
@@ -171,6 +179,11 @@
      title="aria-orientation should be applied to separator and slider roles">
     Mozilla Bug 681674
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=699017"
+     title="File input control should be propogate states to descendants">
+    Mozilla Bug 699017
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -215,7 +228,15 @@
     </div>
     <div role="slider" tabindex="0">A slider</div>
   </div>
-  
+
+  <!-- universal ARIA properties should be inherited by text field of file input -->
+  <input type="file" id="fileinput"
+         aria-busy="true"
+         aria-disabled="true"
+         aria-required="true"
+         aria-haspopup="true"
+         aria-invalid="true">
+
   <div id="offscreen_log" role="log" class="offscreen">
     <div id="aria_offscreen_textbox" role="textbox" aria-readonly="true">This text should be offscreen</div>
   </div>

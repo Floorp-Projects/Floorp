@@ -49,6 +49,10 @@ function onTabViewWindowLoaded() {
   is(appTabCount(groupItemTwo), 1,
       "there's an app tab icon in the second group");
 
+  // When the tab was pinned, the last active group with an item got the focus.
+  // Therefore, switching the focus back to group item one.
+  contentWindow.UI.setActive(groupItemOne);
+
   // unpin the tab, make sure the icon goes away and the TabItem comes on
   gBrowser.unpinTab(xulTab);
   is(groupItemOne._children.length, 1, "the app tab's TabItem is back");
