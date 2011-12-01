@@ -198,7 +198,11 @@ MacroAssemblerARM::ma_alu(Register src1, Operand op2, Register dest, ALUOp op,
     as_alu(dest, src1, op2.toOp2(), op, sc, c);
 }
 
-
+void
+MacroAssemblerARM::ma_alu(Register src1, Operand2 op2, Register dest, ALUOp op, SetCond_ sc, Condition c)
+{
+    as_alu(dest, src1, op2, op, sc, c);
+}
 void
 MacroAssemblerARM::ma_mov(Register src, Register dest,
             SetCond_ sc, Assembler::Condition c)
@@ -400,10 +404,11 @@ MacroAssemblerARM::ma_add(Imm32 imm, Register dest, SetCond_ sc, Condition c)
 {
     ma_alu(dest, imm, dest, op_add, sc, c);
 }
+
 void
 MacroAssemblerARM::ma_add(Register src1, Register dest, SetCond_ sc, Condition c)
 {
-    as_alu(dest, dest, O2Reg(src1), op_add, sc, c);
+    ma_alu(dest, O2Reg(src1), dest, op_add, sc, c);
 }
 void
 MacroAssemblerARM::ma_add(Register src1, Register src2, Register dest, SetCond_ sc, Condition c)
@@ -755,7 +760,7 @@ MacroAssemblerARM::ma_ldrd(EDtrAddr addr, Register rt, Index mode, Condition cc)
 
 // specialty for moving N bits of data, where n == 8,16,32,64
 void
-MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size,
+MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                           Register rn, Register rm, Register rt,
                           Index mode, Assembler::Condition cc)
 {
@@ -763,11 +768,26 @@ MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size,
 }
 
 void
-MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size,
+MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                           Register rn, Imm32 offset, Register rt,
                           Index mode, Assembler::Condition cc)
 {
-    JS_NOT_REACHED("Feature NYI");
+    int x = offset.value;
+    // we can encode this as a standard ldr... MAKE IT SO
+    if (size == 32 || (size == 8 && !IsSigned) ) {
+        if (x < 4096 && x > -4096) {
+            as_dtr(ls, size, mode, rt, DTRAddr(rn, DtrOffImm(x)), cc);
+        } else {
+            JS_NOT_REACHED("Feature NYI");
+        }
+    } else {
+        // should attempt to use the extended load/store instructions
+        if (x < 256 && x > -256) {
+            as_extdtr(ls, size, IsSigned, mode, rt, EDtrAddr(rn, EDtrOffImm(x)), cc);
+        } else {
+            JS_NOT_REACHED("Feature NYI");
+        }
+    }
 }
 void
 MacroAssemblerARM::ma_pop(Register r)
@@ -952,7 +972,7 @@ MacroAssemblerARM::loadPtr(const Address &address, Register dest)
 void
 MacroAssemblerARM::setStackArg(const Register &reg, uint32 arg)
 {
-    ma_dataTransferN(IsStore, 32, sp, Imm32(arg * STACK_SLOT_SIZE), reg);
+    ma_dataTransferN(IsStore, 32, true, sp, Imm32(arg * STACK_SLOT_SIZE), reg);
 
 }
 
