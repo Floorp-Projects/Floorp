@@ -799,9 +799,10 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD GetScreenBounds(nsIntRect &aRect) = 0;
 
     /**
-     * Get this widget's client area dimensions, if the window has a 3D
-     * border appearance this returns the area inside the border. Origin
-     * is always zero.
+     * Get this widget's client area bounds, if the window has a 3D border
+     * appearance this returns the area inside the border. The position is the
+     * position of the client area relative to the client area of the parent
+     * widget (for root widgets and popup widgets it is in screen coordinates).
      *
      * @param aRect   On return it holds the  x. y, width and height of
      *                the client area of this widget.
