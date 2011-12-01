@@ -1763,16 +1763,14 @@ nsMenuPopupFrame::LockMenuUntilClosed(bool aLock)
   }
 }
 
-NS_IMETHODIMP
-nsMenuPopupFrame::GetWidget(nsIWidget **aWidget)
+nsIWidget*
+nsMenuPopupFrame::GetWidget()
 {
   nsIView * view = GetRootViewForPopup(this);
   if (!view)
-    return NS_OK;
+    return nsnull;
 
-  *aWidget = view->GetWidget();
-  NS_IF_ADDREF(*aWidget);
-  return NS_OK;
+  return view->GetWidget();
 }
 
 void

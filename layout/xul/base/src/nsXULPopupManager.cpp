@@ -283,8 +283,7 @@ nsXULPopupManager::GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain)
   NS_ASSERTION(aWidgetChain, "null parameter");
   nsMenuChainItem* item = GetTopVisibleMenu();
   while (item) {
-    nsCOMPtr<nsIWidget> widget;
-    item->Frame()->GetWidget(getter_AddRefs(widget));
+    nsCOMPtr<nsIWidget> widget = item->Frame()->GetWidget();
     NS_ASSERTION(widget, "open popup has no widget");
     aWidgetChain->AppendElement(widget.get());
     // In the case when a menulist inside a panel is open, clicking in the
@@ -1464,8 +1463,7 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
   }
 
   // if the popup was just rolled up, don't reopen it
-  nsCOMPtr<nsIWidget> widget;
-  aPopup->GetWidget(getter_AddRefs(widget));
+  nsCOMPtr<nsIWidget> widget = aPopup->GetWidget();
   if (widget && widget->GetLastRollup() == aPopup->GetContent())
       return false;
 
@@ -1618,8 +1616,7 @@ nsXULPopupManager::SetCaptureState(nsIContent* aOldPopup)
 
   if (item) {
     nsMenuPopupFrame* popup = item->Frame();
-    nsCOMPtr<nsIWidget> widget;
-    popup->GetWidget(getter_AddRefs(widget));
+    nsCOMPtr<nsIWidget> widget = popup->GetWidget();
     if (widget) {
       widget->CaptureRollupEvents(this, true, popup->ConsumeOutsideClicks());
       mWidget = widget;
