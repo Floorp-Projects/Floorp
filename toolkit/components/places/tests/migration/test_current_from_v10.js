@@ -295,6 +295,7 @@ function test_final_state()
 
   do_check_true(db.indexExists("moz_bookmarks_guid_uniqueindex"));
   do_check_true(db.indexExists("moz_places_guid_uniqueindex"));
+  do_check_true(db.indexExists("moz_favicons_guid_uniqueindex"));
 
   do_check_eq(db.schemaVersion, CURRENT_SCHEMA_VERSION);
 
