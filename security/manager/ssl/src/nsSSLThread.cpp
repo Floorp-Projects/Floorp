@@ -645,7 +645,7 @@ PRInt32 nsSSLThread::requestRead(nsNSSSocketInfo *si, void *buf, PRInt32 amount,
     return -1;
   }
 
-  if (si->GetCanceled()) {
+  if (si->GetErrorCode()) {
     return PR_FAILURE;
   }
 
@@ -866,7 +866,7 @@ PRInt32 nsSSLThread::requestWrite(nsNSSSocketInfo *si, const void *buf, PRInt32 
     return -1;
   }
 
-  if (si->GetCanceled()) {
+  if (si->GetErrorCode()) {
     return PR_FAILURE;
   }
 
