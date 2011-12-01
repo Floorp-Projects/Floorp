@@ -93,9 +93,6 @@ ScriptAnalysis::addJump(JSContext *cx, unsigned offset,
         jsbytecode *pc = script->code + offset;
         UntrapOpcode untrap(cx, script, pc);
 
-        if (JSOp(*pc) == JSOP_TRACE || JSOp(*pc) == JSOP_NOTRACE)
-            code->loopHead = true;
-
         /* Scripts containing loops are never inlined. */
         isInlineable = false;
 
@@ -669,7 +666,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 
         JSOp op = (JSOp) *pc;
 
-        if ((op == JSOP_TRACE || op == JSOP_NOTRACE) && code->loop) {
+        if (op == JSOP_LOOPHEAD && code->loop) {
             /*
              * This is the head of a loop, we need to go and make sure that any
              * variables live at the head are live at the backedge and points prior.
@@ -816,7 +813,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 
 #ifdef DEBUG
                 JSOp nop = JSOp(script->code[targetOffset]);
-                JS_ASSERT(nop == JSOP_TRACE || nop == JSOP_NOTRACE || nop == JSOP_TRAP);
+                JS_ASSERT(nop == JSOP_LOOPHEAD || nop == JSOP_TRAP);
 #endif
 
                 /*
@@ -1173,7 +1170,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             PodZero(stack + stackDepth, code->stackDepth - stackDepth);
         stackDepth = code->stackDepth;
 
-        if ((op == JSOP_TRACE || op == JSOP_NOTRACE) && code->loop) {
+        if (op == JSOP_LOOPHEAD && code->loop) {
             /*
              * Make sure there is a pending value array for phi nodes at the
              * loop head. We won't be able to clear these until we reach the

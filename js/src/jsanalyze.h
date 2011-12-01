@@ -98,9 +98,6 @@ class Bytecode
     /* Whether there are any incoming jumps to this instruction. */
     bool jumpTarget : 1;
 
-    /* There is a backwards jump to this instruction. */
-    bool loopHead : 1;
-
     /* Whether there is fallthrough to this instruction from a non-branching instruction. */
     bool fallthrough : 1;
 
