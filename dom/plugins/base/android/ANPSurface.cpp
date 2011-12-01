@@ -47,7 +47,6 @@
 
 #define ANDROID_REGION_SIZE 512
 
-// Copied from Android headers
 enum {
     PIXEL_FORMAT_RGBA_8888   = 1,
     PIXEL_FORMAT_RGB_565     = 4,

@@ -14,12 +14,12 @@
  * The Original Code is peptest.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ *   The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Andrew Halberstadt <halbersa@gmail.com>
+ *   Andrew Halberstadt <halbersa@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,10 +44,10 @@ c.waitForPageLoad();
 
 // Only put things you want to test for responsiveness inside a perfom action call
 let page = findElement.ID(c.tabs.activeTab, "home");
-performAction('open_blank_tab', function() {
+pep.performAction('open_blank_tab', function() {
   page.keypress('t', {'ctrlKey': true});
 });
 
-performAction('close_blank_tab', function() {
+pep.performAction('close_blank_tab', function() {
   page.keypress('w', {'ctrlKey': true});
 });

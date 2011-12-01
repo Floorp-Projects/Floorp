@@ -230,6 +230,7 @@ members = [
     'nsIDOMHTMLDocument.domain',
     'nsIDOMHTMLDocument.getSelection',
     'nsIDOMHTMLDocument.designMode',
+    'nsIDOMHTMLDocument.head',
     'nsIDOMHTMLElement.*',
     'nsIDOMHTMLFormElement.elements',
     'nsIDOMHTMLFormElement.name',
@@ -650,7 +651,13 @@ customMethodCalls = {
         },
     'nsIDOMHTMLDocument_GetBody': {
         'thisType': 'nsHTMLDocument',
-        'code': '    nsIContent *result = self->GetBody(&rv);'
+        'code': '    nsIContent *result = self->GetBody();',
+        'canFail': False
+        },
+    'nsIDOMHTMLDocument_GetHead': {
+        'thisType': 'nsHTMLDocument',
+        'code': '    nsIContent *result = self->GetHead();',
+        'canFail': False
         },
     'nsIDOMHTMLDocument_GetElementsByName': {
         'thisType': 'nsHTMLDocument',

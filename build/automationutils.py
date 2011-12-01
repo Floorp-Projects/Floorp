@@ -138,7 +138,8 @@ log = logging.getLogger()
 
 def isURL(thing):
   """Return True if |thing| looks like a URL."""
-  return urlparse(thing).scheme != ''
+  # We want to download URLs like http://... but not Windows paths like c:\...
+  return len(urlparse(thing).scheme) >= 2
 
 def addCommonOptions(parser, defaults={}):
   parser.add_option("--xre-path",
@@ -284,7 +285,7 @@ def getDebuggerInfo(directory, debugger, debuggerArgs, debuggerInteractive = Fal
       debuggerInfo["args"] = debuggerArgs.split()
     if debuggerInteractive:
       debuggerInfo["interactive"] = debuggerInteractive
-  
+
   return debuggerInfo
 
 

@@ -45,6 +45,10 @@ function log(m) {
 }
 
 function maybeFinish(v, n) {
+  if (v._finished) {
+    return;
+  }
+  v._finished = true;
   log(n + ",");
   if (v.parentNode) {
     v.parentNode.removeChild(v);
@@ -56,8 +60,7 @@ function filename(uri) {
   return uri.substr(uri.lastIndexOf("/")+1);
 }
 
-// Every test must have a setup(v) function, and must set _finished field on target v to
-// true when test is complete.
+// Every test must have a setup(v) function, and must call maybeFinish() when test is complete.
 var tests = [
   {
     // 1. Add preload:none video with src to document. Load should halt at NETWORK_IDLE and HAVE_NOTHING,
@@ -71,7 +74,6 @@ var tests = [
       is(v._gotLoadedMetaData, false, "(1) Must not get loadedmetadata.");
       is(v.readyState, v.HAVE_NOTHING, "(1) ReadyState must be HAVE_NOTHING");
       is(v.networkState, v.NETWORK_IDLE, "(1) NetworkState must be NETWORK_IDLE");
-      v._finished = true;
       maybeFinish(v, 1);
     },
     
@@ -79,7 +81,6 @@ var tests = [
     function(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
-      v._finished = false;
       v.preload = "none";
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
@@ -98,7 +99,6 @@ var tests = [
       is(v._gotLoadedMetaData, true, "(2) Must get loadedmetadata.");
       ok(v.readyState >= v.HAVE_CURRENT_DATA, "(2) ReadyState must be >= HAVE_CURRENT_DATA");
       is(v.networkState, v.NETWORK_IDLE, "(2) NetworkState must be NETWORK_IDLE");
-      v._finished = true;
       maybeFinish(v, 2);
     },
     
@@ -106,7 +106,6 @@ var tests = [
     function(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
-      v._finished = false;
       v.preload = "metadata";
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
@@ -123,7 +122,6 @@ var tests = [
       var v = e.target;
       is(v._gotLoadStart, true, "(3) Must get loadstart.");
       is(v._gotLoadedMetaData, true, "(3) Must get loadedmetadata.");
-      v._finished = true;
       maybeFinish(v, 3);
     },
     
@@ -131,7 +129,6 @@ var tests = [
     function(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
-      v._finished = false;
       v.preload = "auto";
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
@@ -159,7 +156,6 @@ var tests = [
     ended:
     function(e) {
       ok(true, "(4) Got playback ended");
-      e.target._finished = true;
       maybeFinish(e.target, 4);
     },
       
@@ -168,7 +164,6 @@ var tests = [
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v._gotSuspend = false;
-      v._finished = false;
       v.preload = "none";
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
@@ -188,7 +183,6 @@ var tests = [
       is(v._gotLoadedMetaData, false, "(5) Must not get loadedmetadata.");
       is(v.readyState, v.HAVE_NOTHING, "(5) ReadyState must be HAVE_NOTHING");
       is(v.networkState, v.NETWORK_IDLE, "(5) NetworkState must be NETWORK_IDLE");
-      v._finished = true;
       maybeFinish(v, 5);
     },
       
@@ -196,7 +190,6 @@ var tests = [
     function(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
-      v._finished = false;
       v.preload = "none";
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
@@ -215,7 +208,6 @@ var tests = [
       is(v._gotLoadedMetaData, false, "(6) Must not get loadedmetadata.");
       is(v.readyState, v.HAVE_NOTHING, "(6) ReadyState must be HAVE_NOTHING");
       is(v.networkState, v.NETWORK_IDLE, "(6) NetworkState must be NETWORK_IDLE");
-      v._finished = true;
       maybeFinish(v, 6);
     },
       
@@ -223,7 +215,6 @@ var tests = [
     function(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
-      v._finished = false;
       v.preload = "none";
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
@@ -255,7 +246,6 @@ var tests = [
     function(e) {
       ok(true, "(7) Got playback ended");
       var v = e.target;
-      v._finished = true;
       is(v._gotErrorEvent, true, "(7) Should get error event from first source load failure");      
       maybeFinish(v, 7);
     },
@@ -264,7 +254,6 @@ var tests = [
     function(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
-      v._finished = false;
       v.preload = "none";
       v._gotErrorEvent = false;
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
@@ -291,14 +280,12 @@ var tests = [
       is(v._gotLoadedMetaData, true, "(8) Must get loadedmetadata.");
       ok(v.readyState >= v.HAVE_CURRENT_DATA, "(8) ReadyState must be >= HAVE_CURRENT_DATA on suspend.");
       is(v.networkState, v.NETWORK_IDLE, "(8) NetworkState must be NETWORK_IDLE when load is halted");
-      v._finished = true;
       maybeFinish(v, 8);
     },
     
     setup:
     function(v) {
       v._gotLoadedMetaData = false;
-      v._finished = false;
       v.preload = "none";
       v.addEventListener("loadstart", function(e){v.preload = "metadata";}, false);
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
@@ -314,11 +301,8 @@ var tests = [
     canplaythrough:
     function(e) {
       var v = e.target;
-      if (v._finished)
-        return;
       is(v._gotLoadStart, true, "(9) Must get loadstart.");
       is(v._gotLoadedMetaData, true, "(9) Must get loadedmetadata.");
-      v._finished = true;
       maybeFinish(v, 9);
     },
     
@@ -326,7 +310,6 @@ var tests = [
     function(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
-      v._finished = false;
       v.preload = "metadata";
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
@@ -342,14 +325,12 @@ var tests = [
     function(e) {
       var v = e.target;
       is(v._gotLoadedMetaData, true, "(10) Must get loadedmetadata.");
-      v._finished = true;
       maybeFinish(v, 10);
     },
     
     setup:
     function(v) {
       v._gotLoadedMetaData = false;
-      v._finished = false;
       v.preload = "none";
       v.addEventListener("loadstart", function(e){v.preload = "auto";}, false);
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
@@ -366,14 +347,12 @@ var tests = [
       is(v._gotLoadedMetaData, true, "(11) Must get loadedmetadata.");
       ok(v.readyState >= v.HAVE_CURRENT_DATA, "(11) ReadyState must be >= HAVE_CURRENT_DATA.");
       is(v.networkState, v.NETWORK_IDLE, "(11) NetworkState must be NETWORK_IDLE.");
-      v._finished = true;
       maybeFinish(v, 11);
     },
 
     setup:
     function(v) {
       v._gotLoadedMetaData = false;
-      v._finished = false;
       v.preload = "none";
       v.addEventListener("loadstart", function(e){v.preload = "metadata";}, false);
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
@@ -390,7 +369,6 @@ var tests = [
       var v = e.target;
       is(v._gotLoadedMetaData, true, "(12) Must get loadedmetadata.");
       is(v._gotLoadStart, true, "(12) Must get loadstart.");
-      v._finished = true;
       maybeFinish(v, 12);
     },
 
@@ -398,7 +376,6 @@ var tests = [
     function(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
-      v._finished = false;
       v.preload = "auto";
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
@@ -419,7 +396,6 @@ var tests = [
       is(v._gotLoadedMetaData, true, "(13) Must get loadedmetadata.");
       ok(v.readyState >= v.HAVE_CURRENT_DATA, "(13) ReadyState must be >= HAVE_CURRENT_DATA.");
       is(v.networkState, v.NETWORK_IDLE, "(13) NetworkState must be NETWORK_IDLE.");
-      v._finished = true;
       maybeFinish(v, 13);
     },
 
@@ -427,7 +403,6 @@ var tests = [
     function(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
-      v._finished = false;
       v.preload = "metadata";
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
@@ -453,7 +428,6 @@ var tests = [
     function(e) {
       ok(true, "(14) Got playback ended");
       var v = e.target;
-      v._finished = true;
       maybeFinish(v, 14);
     },
 
@@ -461,7 +435,6 @@ var tests = [
     function(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
-      v._finished = false;
       v.preload = "metadata";
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
       v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
@@ -478,7 +451,6 @@ var tests = [
     function(e) {
       ok(true, "(15) Got playback ended.");
       var v = e.target;
-      v._finished = true;
       maybeFinish(v, 15);
     },
     
@@ -486,7 +458,6 @@ var tests = [
     function(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
-      v._finished = false;
       v.preload = "none";
       v.autoplay = true;
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
@@ -502,13 +473,11 @@ var tests = [
     function(e) {
       ok(true, "(16) Got playback ended.");
       var v = e.target;
-      v._finished = true;
       maybeFinish(v, 16);
     },
     
     setup:
     function(v) {
-      v._finished = false;
       v.preload = "metadata";
       v.autoplay = true;
       v.addEventListener("ended", this.ended, false);
@@ -522,14 +491,12 @@ var tests = [
     function(e) {
       ok(true, "(17) Got playback ended.");
       var v = e.target;
-      v._finished = true;
       maybeFinish(v, 17);
     },
     
     setup:
     function(v) {
       v.addEventListener("ended", this.ended, false);
-      v._finished = false;
       v.preload = "none";
       document.body.appendChild(v); // Causes implicit load, which will be halted due to preload:none.
       v.autoplay = true;
@@ -543,14 +510,12 @@ var tests = [
     function(e) {
       ok(true, "(18) Got playback ended.");
       var v = e.target;
-      v._finished = true;
       maybeFinish(v, 18);
     },
     
     setup:
     function(v) {
       v.addEventListener("ended", this.ended, false);
-      v._finished = false;
       v.preload = "none";
       v.src = test.name; // Schedules async section to continue load algorithm.
       document.body.appendChild(v);

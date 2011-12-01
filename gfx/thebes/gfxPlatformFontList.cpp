@@ -78,6 +78,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/TimeStamp.h"
 
 using namespace mozilla;
 
@@ -406,10 +407,15 @@ gfxPlatformFontList::FindFontForChar(const PRUint32 aCh, gfxFont *aPrevFont)
             return fontEntry;
     }
 
+    static bool first = true;
+    TimeStamp start = TimeStamp::Now();
+
     FontSearch data(aCh, aPrevFont);
 
     // iterate over all font families to find a font that support the character
     mFontFamilies.Enumerate(gfxPlatformFontList::FindFontForCharProc, &data);
+
+    TimeDuration elapsed = TimeStamp::Now() - start;
 
 #ifdef PR_LOGGING
     PRLogModuleInfo *log = gfxPlatform::GetLog(eGfxLog_textrun);
@@ -420,13 +426,15 @@ gfxPlatformFontList::FindFontForChar(const PRUint32 aCh, gfxFont *aPrevFont)
         PRUint32 hbscript = gfxUnicodeProperties::GetScriptCode(aCh);
         PR_LOG(log, PR_LOG_DEBUG,\
                ("(textrun-systemfallback) char: u+%6.6x "
-                "char-range: %d unicode-range: %d script: %d match: [%s] count: %d\n",
+                "char-range: %d unicode-range: %d script: %d match: [%s]"
+                " count: %d time: %dus\n",
                 aCh,
                 charRange, unicodeRange, hbscript,
                 (data.mBestMatch ?
                  NS_ConvertUTF16toUTF8(data.mBestMatch->Name()).get() :
                  "<none>"),
-                data.mCount));
+                data.mCount,
+                PRInt32(elapsed.ToMicroseconds())));
     }
 #endif
 
@@ -436,6 +444,13 @@ gfxPlatformFontList::FindFontForChar(const PRUint32 aCh, gfxFont *aPrevFont)
     } else if (aCh == 0xFFFD) {
         mReplacementCharFallbackFamily = data.mBestMatch->FamilyName();
     }
+
+    PRInt32 intElapsed = PRInt32(first ? elapsed.ToMilliseconds() :
+                                         elapsed.ToMicroseconds());
+    Telemetry::Accumulate((first ? Telemetry::SYSTEM_FONT_FALLBACK_FIRST :
+                                   Telemetry::SYSTEM_FONT_FALLBACK),
+                          intElapsed);
+    first = false;
 
     return data.mBestMatch;
 }

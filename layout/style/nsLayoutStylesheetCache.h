@@ -64,6 +64,7 @@ class nsLayoutStylesheetCache
   static nsCSSStyleSheet* UserChromeSheet();
   static nsCSSStyleSheet* UASheet();
   static nsCSSStyleSheet* QuirkSheet();
+  static nsCSSStyleSheet* FullScreenOverrideSheet();
 
   static void Shutdown();
 
@@ -85,6 +86,7 @@ private:
   nsRefPtr<nsCSSStyleSheet> mUserChromeSheet;
   nsRefPtr<nsCSSStyleSheet> mUASheet;
   nsRefPtr<nsCSSStyleSheet> mQuirkSheet;
+  nsRefPtr<nsCSSStyleSheet> mFullScreenOverrideSheet;
 };
 
 #endif

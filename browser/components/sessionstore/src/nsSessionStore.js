@@ -359,7 +359,7 @@ SessionStoreService.prototype = {
               // replace the crashed session with a restore-page-only session
               let pageData = {
                 url: "about:sessionrestore",
-                formdata: { "#sessionData": JSON.stringify(this._initialState) }
+                formdata: { "#sessionData": this._initialState }
               };
               this._initialState = { windows: [{ tabs: [{ entries: [pageData] }] }] };
             }
@@ -2140,10 +2140,17 @@ SessionStoreService.prototype = {
     }
     var isHTTPS = this._getURIFromString((aContent.parent || aContent).
                                          document.location.href).schemeIs("https");
-    if (aFullData || this._checkPrivacyLevel(isHTTPS, aIsPinned) ||
-        aContent.top.document.location.href == "about:sessionrestore") {
+    let isAboutSR = aContent.top.document.location.href == "about:sessionrestore";
+    if (aFullData || this._checkPrivacyLevel(isHTTPS, aIsPinned) || isAboutSR) {
       if (aFullData || aUpdateFormData) {
         let formData = this._collectFormDataForFrame(aContent.document);
+
+        // We want to avoid saving data for about:sessionrestore as a string.
+        // Since it's stored in the form as stringified JSON, stringifying further
+        // causes an explosion of escape characters. cf. bug 467409
+        if (formData && isAboutSR)
+          formData["#sessionData"] = JSON.parse(formData["#sessionData"]);
+
         if (formData)
           aData.formdata = formData;
         else if (aData.formdata)
@@ -2981,8 +2988,9 @@ SessionStoreService.prototype = {
   restoreHistory:
     function sss_restoreHistory(aWindow, aTabs, aTabData, aIdMap, aDocIdentMap) {
     var _this = this;
-    while (aTabs.length > 0 && (!aTabs[0].linkedBrowser.__SS_tabStillLoading || !aTabs[0].parentNode)) {
-      aTabs.shift(); // this tab got removed before being completely restored
+    // if the tab got removed before being completely restored, then skip it
+    while (aTabs.length > 0 && !(this._canRestoreTabHistory(aTabs[0]))) {
+      aTabs.shift();
       aTabData.shift();
     }
     if (aTabs.length == 0) {
@@ -3379,6 +3387,13 @@ SessionStoreService.prototype = {
 
         let eventType;
         let value = aData[key];
+
+        // for about:sessionrestore we saved the field as JSON to avoid nested
+        // instances causing humongous sessionstore.js files. cf. bug 467409
+        if (aURL == "about:sessionrestore" && typeof value == "object") {
+          value = JSON.stringify(value);
+        }
+
         if (typeof value == "string" && node.type != "file") {
           if (node.value == value)
             continue; // don't dispatch an input event for no change
@@ -3994,6 +4009,20 @@ SessionStoreService.prototype = {
            !(aTabState.entries.length == 1 &&
              aTabState.entries[0].url == "about:blank" &&
              !aTabState.userTypedValue);
+  },
+
+  /**
+   * Determine if we can restore history into this tab.
+   * This will be false when a tab has been removed (usually between
+   * restoreHistoryPrecursor && restoreHistory) or if the tab is still marked
+   * as loading.
+   *
+   * @param aTab
+   * @returns boolean
+   */
+  _canRestoreTabHistory: function sss__canRestoreTabHistory(aTab) {
+    return aTab.parentNode && aTab.linkedBrowser &&
+           aTab.linkedBrowser.__SS_tabStillLoading;
   },
 
   /**

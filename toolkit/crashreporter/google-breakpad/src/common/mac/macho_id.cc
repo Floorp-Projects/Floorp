@@ -52,6 +52,10 @@ extern "C" {  // necessary for Leopard
 
 namespace MacFileUtilities {
 
+using google_breakpad::MD5Init;
+using google_breakpad::MD5Update;
+using google_breakpad::MD5Final;
+
 MachoID::MachoID(const char *path)
    : file_(0), 
      crc_(0), 
