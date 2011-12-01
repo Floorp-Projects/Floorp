@@ -121,7 +121,7 @@ public class PanZoomController
     }
 
     public boolean onTouchEvent(MotionEvent event) {
-        switch (event.getActionMasked()) {
+        switch (event.getAction() & event.ACTION_MASK) {
         case MotionEvent.ACTION_DOWN:   return onTouchStart(event);
         case MotionEvent.ACTION_MOVE:   return onTouchMove(event);
         case MotionEvent.ACTION_UP:     return onTouchEnd(event);
