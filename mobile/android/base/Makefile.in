@@ -91,6 +91,7 @@ JAVAFILES = \
   gfx/LayerRenderer.java \
   gfx/LayerView.java \
   gfx/NinePatchTileLayer.java \
+  gfx/PanningPerfAPI.java \
   gfx/PlaceholderLayerClient.java \
   gfx/PointUtils.java \
   gfx/RectUtils.java \
