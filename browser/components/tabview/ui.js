@@ -466,7 +466,8 @@ let UI = {
     if (item.isATabItem) {
       if (item.parent)
         GroupItems.setActiveGroupItem(item.parent);
-      this._setActiveTab(item);
+      if (!options || !options.dontSetActiveTabInGroup)
+        this._setActiveTab(item);
     } else {
       GroupItems.setActiveGroupItem(item);
       if (!options || !options.dontSetActiveTabInGroup) {

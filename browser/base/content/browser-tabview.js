@@ -360,8 +360,10 @@ let TabView = {
           if (!tabItem)
             return;
 
-          // Switch to the new tab
-          window.gBrowser.selectedTab = tabItem.tab;
+          if (gBrowser.selectedTab.pinned)
+            groupItems.updateActiveGroupItemAndTabBar(tabItem, {dontSetActiveTabInGroup: true});
+          else
+            gBrowser.selectedTab = tabItem.tab;
         });
       }
     }, true);
