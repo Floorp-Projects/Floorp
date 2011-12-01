@@ -55,13 +55,14 @@ public class GeckoBatteryManager
   // dom/battery/Constants.h
   private final static double  kDefaultLevel         = 1.0;
   private final static boolean kDefaultCharging      = true;
+  private final static double  kDefaultRemainingTime = -1.0;
   private final static double  kUnknownRemainingTime = -1.0;
 
   private static Date    sLastLevelChange            = new Date(0);
   private static boolean sNotificationsEnabled       = false;
   private static double  sLevel                      = kDefaultLevel;
   private static boolean sCharging                   = kDefaultCharging;
-  private static double  sRemainingTime              = kUnknownRemainingTime;;
+  private static double  sRemainingTime              = kDefaultRemainingTime;;
 
   @Override
   public void onReceive(Context context, Intent intent) {
@@ -135,7 +136,7 @@ public class GeckoBatteryManager
     } else {
       sLevel = kDefaultLevel;
       sCharging = kDefaultCharging;
-      sRemainingTime = kUnknownRemainingTime;
+      sRemainingTime = kDefaultRemainingTime;
     }
 
     /*
