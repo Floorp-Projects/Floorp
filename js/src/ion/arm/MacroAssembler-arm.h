@@ -108,6 +108,8 @@ class MacroAssemblerARM : public Assembler
     bool alu_dbl(Register src1, Imm32 imm, Register dest, ALUOp op,
                  SetCond_ sc, Condition c);
   public:
+    void ma_alu(Register src1, Operand2 op2, Register dest, ALUOp op,
+                SetCond_ sc = NoSetCond, Condition c = Always);
     void ma_alu(Register src1, Imm32 imm, Register dest,
                 ALUOp op,
                 SetCond_ sc =  NoSetCond, Condition c = Always);
@@ -287,11 +289,11 @@ class MacroAssemblerARM : public Assembler
     void ma_ldrsb(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
     void ma_ldrd(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
     // specialty for moving N bits of data, where n == 8,16,32,64
-    void ma_dataTransferN(LoadStore ls, int size,
+    void ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                           Register rn, Register rm, Register rt,
                           Index mode = Offset, Condition cc = Always);
 
-    void ma_dataTransferN(LoadStore ls, int size,
+    void ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                           Register rn, Imm32 offset, Register rt,
                           Index mode = Offset, Condition cc = Always);
     void ma_pop(Register r);
@@ -549,8 +551,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label *label) {
         JS_NOT_REACHED("NYI");
     }
-
     void moveValue(const Value &val, Register type, Register data);
+
     void moveValue(const Value &val, const ValueOperand &dest);
     void storeValue(ValueOperand val, Operand dst);
     void loadValue(Operand src, ValueOperand val);
