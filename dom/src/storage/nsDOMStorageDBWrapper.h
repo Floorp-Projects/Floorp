@@ -89,11 +89,6 @@ public:
   nsDOMStorageDBWrapper();
   ~nsDOMStorageDBWrapper();
 
-  /**
-   * Close the connections, finalizing all the cached statements.
-   */
-  void Close();
-
   nsresult
   Init();
 
