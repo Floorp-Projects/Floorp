@@ -63,6 +63,12 @@ public:
   Init(const nsString& aDatabaseName);
 
   /**
+   * Close the connection, finalizing all the cached statements.
+   */
+  void
+  Close();
+
+  /**
    * Retrieve a list of all the keys associated with a particular domain.
    */
   nsresult
@@ -199,6 +205,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mRemoveAllStatement;
   nsCOMPtr<mozIStorageStatement> mGetOfflineExcludedUsageStatement;
   nsCOMPtr<mozIStorageStatement> mGetFullUsageStatement;
+  // If you add an statement, remember to null in in Close.
 
   nsCString mCachedOwner;
   PRInt32 mCachedUsage;
