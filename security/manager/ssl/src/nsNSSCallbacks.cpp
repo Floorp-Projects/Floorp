@@ -48,7 +48,6 @@
 #include "nsITokenDialogs.h"
 #include "nsNSSShutDown.h"
 #include "nsIUploadChannel.h"
-#include "nsSSLThread.h"
 #include "nsThreadUtils.h"
 #include "nsIPrompt.h"
 #include "nsProxyRelease.h"
@@ -420,11 +419,10 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
 
       if (!request_canceled)
       {
-        bool wantExit = nsSSLThread::stoppedOrStopping();
         bool timeout = 
           (PRIntervalTime)(PR_IntervalNow() - start_time) > mTimeoutInterval;
-
-        if (wantExit || timeout)
+ 
+        if (timeout)
         {
           request_canceled = true;
 
@@ -821,6 +819,12 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
   nsresult rv;
   PRInt32 encryptBits;
 
+  nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
+
+  // If the handshake completed, then we know the site is TLS tolerant (if this
+  // was a TLS connection).
+  nsSSLIOLayerHelpers::rememberTolerantSite(fd, infoObject);
+
   if (SECSuccess != SSL_SecurityStatus(fd, &sslStatus, &cipherName, &keyLength,
                                        &encryptBits, &signer, nsnull)) {
     return;
@@ -842,7 +846,6 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
     bool wantWarning = (nsSSLIOLayerHelpers::getWarnLevelMissingRFC5746() > 0);
 
-    nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
     nsCOMPtr<nsIConsoleService> console;
     if (infoObject && wantWarning) {
       console = do_GetService(NS_CONSOLESERVICE_CONTRACTID);

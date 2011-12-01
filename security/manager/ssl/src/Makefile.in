@@ -60,7 +60,6 @@ CPPSRCS = 				\
 	nsRecentBadCerts.cpp \
         nsClientAuthRemember.cpp        \
 	nsPSMBackgroundThread.cpp       \
-	nsSSLThread.cpp                 \
 	nsCertVerificationThread.cpp    \
 	nsProtectedAuthThread.cpp \
 	nsNSSCallbacks.cpp		\
