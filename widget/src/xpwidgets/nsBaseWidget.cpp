@@ -300,6 +300,15 @@ NS_IMETHODIMP nsBaseWidget::SetAttachedViewPtr(ViewWrapper* aViewWrapper)
    return NS_OK;
  }
 
+NS_METHOD nsBaseWidget::ResizeClient(PRInt32 aX,
+                                     PRInt32 aY,
+                                     PRInt32 aWidth,
+                                     PRInt32 aHeight,
+                                     bool aRepaint)
+{
+  return Resize(aX, aY, aWidth, aHeight, aRepaint);
+}
+
 //-------------------------------------------------------------------------
 //
 // Close this nsBaseWidget
@@ -908,50 +917,6 @@ void nsBaseWidget::OnDestroy()
 NS_METHOD nsBaseWidget::SetWindowClass(const nsAString& xulWinType)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_METHOD nsBaseWidget::MoveClient(PRInt32 aX, PRInt32 aY)
-{
-  nsIntPoint clientOffset(GetClientOffset());
-  aX -= clientOffset.x;
-  aY -= clientOffset.y;
-  return Move(aX, aY);
-}
-
-NS_METHOD nsBaseWidget::ResizeClient(PRInt32 aWidth,
-                                     PRInt32 aHeight,
-                                     bool aRepaint)
-{
-  NS_ASSERTION((aWidth >=0) , "Negative width passed to ResizeClient");
-  NS_ASSERTION((aHeight >=0), "Negative height passed to ResizeClient");
-
-  nsIntRect clientBounds;
-  GetClientBounds(clientBounds);
-  aWidth = mBounds.width + (aWidth - clientBounds.width);
-  aHeight = mBounds.height + (aHeight - clientBounds.height);
-
-  return Resize(aWidth, aHeight, aRepaint);
-}
-
-NS_METHOD nsBaseWidget::ResizeClient(PRInt32 aX,
-                                     PRInt32 aY,
-                                     PRInt32 aWidth,
-                                     PRInt32 aHeight,
-                                     bool aRepaint)
-{
-  NS_ASSERTION((aWidth >=0) , "Negative width passed to ResizeClient");
-  NS_ASSERTION((aHeight >=0), "Negative height passed to ResizeClient");
-
-  nsIntRect clientBounds;
-  GetClientBounds(clientBounds);
-  aWidth = mBounds.width + (aWidth - clientBounds.width);
-  aHeight = mBounds.height + (aHeight - clientBounds.height);
-
-  nsIntPoint clientOffset(GetClientOffset());
-  aX -= clientOffset.x;
-  aY -= clientOffset.y;
-
-  return Resize(aX, aY, aWidth, aHeight, aRepaint);
 }
 
 //-------------------------------------------------------------------------

@@ -161,7 +161,8 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
          // move the widget associated with the window
          if (parent) {
            nsMenuPopupFrame* menuPopupFrame = static_cast<nsMenuPopupFrame*>(parent);
-           nsCOMPtr<nsIWidget> widget = menuPopupFrame->GetWidget();
+           nsCOMPtr<nsIWidget> widget;
+           menuPopupFrame->GetWidget(getter_AddRefs(widget));
            nsIntRect bounds;
            widget->GetScreenBounds(bounds);
            menuPopupFrame->MoveTo(bounds.x + nsMoveBy.x, bounds.y + nsMoveBy.y, false);

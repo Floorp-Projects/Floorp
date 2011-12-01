@@ -259,7 +259,8 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         nsIntRect oldRect;
         nsWeakFrame weakFrame(menuPopupFrame);
         if (menuPopupFrame) {
-          nsCOMPtr<nsIWidget> widget = menuPopupFrame->GetWidget();
+          nsCOMPtr<nsIWidget> widget;
+          menuPopupFrame->GetWidget(getter_AddRefs(widget));
           if (widget)
             widget->GetScreenBounds(oldRect);
 
