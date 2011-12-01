@@ -751,7 +751,7 @@ private:
 void
 nsMediaChannelStream::CacheClientNotifyDataEnded(nsresult aStatus)
 {
-  printf("*** nsMediaChannelStream::CacheClientNotifyDataEnded() mDecoder=%p\n", mDecoder.get());
+  printf("*** nsMediaChannelStream::CacheClientNotifyDataEnded() mDecoder=%p\n", mDecoder);
 
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
   // NOTE: this can be called with the media cache lock held, so don't
@@ -766,7 +766,7 @@ nsMediaChannelStream::CacheClientSeek(PRInt64 aOffset, bool aResume)
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
-  printf("*** nsMediaChannelStream::CacheClientSeek() mDecoder=%p\n", mDecoder.get());
+  printf("*** nsMediaChannelStream::CacheClientSeek() mDecoder=%p\n", mDecoder);
 
   CloseChannel();
 
@@ -787,7 +787,7 @@ nsMediaChannelStream::CacheClientSeek(PRInt64 aOffset, bool aResume)
 nsresult
 nsMediaChannelStream::CacheClientSuspend()
 {
-  printf("*** nsMediaChannelStream::CacheClientSuspend() mDecoder=%p\n", mDecoder.get());
+  printf("*** nsMediaChannelStream::CacheClientSuspend() mDecoder=%p\n", mDecoder);
 
   Suspend(false);
 
@@ -798,7 +798,7 @@ nsMediaChannelStream::CacheClientSuspend()
 nsresult
 nsMediaChannelStream::CacheClientResume()
 {
-  printf("*** nsMediaChannelStream::CacheClientResume() mDecoder=%p\n", mDecoder.get());
+  printf("*** nsMediaChannelStream::CacheClientResume() mDecoder=%p\n", mDecoder);
 
   Resume();
 
