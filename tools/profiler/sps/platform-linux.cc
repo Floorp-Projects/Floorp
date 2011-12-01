@@ -295,7 +295,7 @@ void Sampler::Start() {
   // Start a thread that sends SIGPROF signal to VM thread.
   // Sending the signal ourselves instead of relying on itimer provides
   // much better accuracy.
-  active_ = true;
+  SetActive(true);
   if (pthread_create(
           &data_->signal_sender_thread_, NULL, SenderEntry, data_) == 0) {
     data_->signal_sender_launched_ = true;
@@ -308,7 +308,7 @@ void Sampler::Start() {
 
 
 void Sampler::Stop() {
-  active_ = false;
+  SetActive(false);
 
   // Wait for signal sender termination (it will exit after setting
   // active_ to false).
