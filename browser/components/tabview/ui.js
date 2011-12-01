@@ -195,7 +195,8 @@ let UI = {
       iQ("#exit-button").click(function() {
         self.exit();
         self.blurAll();
-      });
+      })
+      .attr("title", tabviewString("button.exitTabGroups"));
 
       // When you click on the background/empty part of TabView,
       // we create a new groupItem.

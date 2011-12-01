@@ -148,6 +148,7 @@ function GroupItem(listOfEls, options) {
     .click(function() {
       self.closeAll();
     })
+    .attr("title", tabviewString("groupItem.closeGroup"))
     .appendTo($container);
 
   // ___ Title
@@ -198,7 +199,8 @@ function GroupItem(listOfEls, options) {
       e.stopPropagation();
     })
     .keypress(handleKeyPress)
-    .keyup(handleKeyUp);
+    .keyup(handleKeyUp)
+    .attr("title", tabviewString("groupItem.defaultName"));
 
   this.$titleShield
     .mousedown(function(e) {
@@ -212,7 +214,8 @@ function GroupItem(listOfEls, options) {
 
       if (!self.isDragging)
         self.focusTitle();
-    });
+    })
+    .attr("title", tabviewString("groupItem.defaultName"));
 
   if (options.focusTitle)
     this.focusTitle();
@@ -904,6 +907,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       .appendTo(this.$undoContainer);
     let undoClose = iQ("<span/>")
       .addClass("close")
+      .attr("title", tabviewString("groupItem.discardClosedGroup"))
       .appendTo(this.$undoContainer);
 
     this.$undoContainer.css({
