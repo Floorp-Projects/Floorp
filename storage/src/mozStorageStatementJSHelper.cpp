@@ -66,9 +66,13 @@ stepFunc(JSContext *aCtx,
 {
   nsCOMPtr<nsIXPConnect> xpc(Service::getXPConnect());
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-  nsresult rv = xpc->GetWrappedNativeOfJSObject(
-    aCtx, JS_THIS_OBJECT(aCtx, _vp), getter_AddRefs(wrapper)
-  );
+  JSObject *obj = JS_THIS_OBJECT(aCtx, _vp);
+  if (!obj) {
+    return JS_FALSE;
+  }
+
+  nsresult rv =
+    xpc->GetWrappedNativeOfJSObject(aCtx, obj, getter_AddRefs(wrapper));
   if (NS_FAILED(rv)) {
     ::JS_ReportError(aCtx, "mozIStorageStatement::step() could not obtain native statement");
     return JS_FALSE;
