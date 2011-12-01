@@ -1971,6 +1971,10 @@ nsresult nsHTMLMediaElement::FinishDecoderSetup(nsMediaDecoder* aDecoder)
 {
   NS_ASSERTION(mLoadingSrc, "mLoadingSrc set up");
 
+  nsCAutoString src;
+  GetCurrentSpec(src);
+  printf("*** nsHTMLElement::FinishDecoderSetup() mDecoder=%p src=%s\n",
+         aDecoder, src.get());
   mDecoder = aDecoder;
   AddMediaElementToURITable();
 
@@ -2064,10 +2068,6 @@ void nsHTMLMediaElement::MetadataLoaded(PRUint32 aChannels, PRUint32 aRate)
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
   DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));
-  if (!mBegun) {
-    // Something ended our downloaded. We're probably done with downloading already.
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
-  }
   if (mDecoder && mDecoder->IsSeekable()) {
     ProcessMediaFragmentURI();
     mDecoder->SetEndTime(mFragmentEnd);

@@ -93,7 +93,6 @@ static const char* const sEventNames[] = {
   "durationchange", "volumechange", "MozAudioAvailable",
 #endif // MOZ_MEDIA
   "MozAfterPaint",
-  "MozBeforePaint",
   "MozBeforeResize",
   "mozfullscreenchange",
   "mozfullscreenerror",
@@ -1343,8 +1342,6 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
 #endif
   case NS_AFTERPAINT:
     return sEventNames[eDOMEvents_afterpaint];
-  case NS_BEFOREPAINT:
-    return sEventNames[eDOMEvents_beforepaint];
   case NS_BEFORERESIZE_EVENT:
     return sEventNames[eDOMEvents_beforeresize];
   case NS_SIMPLE_GESTURE_SWIPE:

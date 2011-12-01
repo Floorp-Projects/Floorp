@@ -1355,9 +1355,10 @@ function stateChangeChecker(aState, aIsExtraState, aIsEnabled,
     if (!event)
       return;
 
-    is(event.state, aState, "Wrong state of the statechange event.");
     is(event.isExtraState(), aIsExtraState,
        "Wrong extra state bit of the statechange event.");
+    isState(event.state, aState, aIsExtraState,
+            "Wrong state of the statechange event.");
     is(event.isEnabled(), aIsEnabled,
       "Wrong state of statechange event state");
 

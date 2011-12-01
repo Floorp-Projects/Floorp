@@ -78,6 +78,13 @@ nsDOMStorageDBWrapper::~nsDOMStorageDBWrapper()
 {
 }
 
+void
+nsDOMStorageDBWrapper::Close()
+{
+  mPersistentDB.Close();
+  mChromePersistentDB.Close();
+}
+
 nsresult
 nsDOMStorageDBWrapper::Init()
 {
