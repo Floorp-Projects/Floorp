@@ -747,8 +747,8 @@ nsFileControlFrame::CreateAccessible()
   if (!accService)
     return nsnull;
 
-  return accService->CreateHyperTextAccessible(mContent,
-                                               PresContext()->PresShell());
+  return accService->CreateHTMLFileInputAccessible(mContent,
+                                                   PresContext()->PresShell());
 }
 #endif
 

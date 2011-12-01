@@ -52,6 +52,7 @@
 #include "nsHtml5StreamParser.h"
 #include "nsAHtml5TreeBuilderState.h"
 #include "nsHtml5Highlighter.h"
+#include "nsHtml5ViewSourceUtils.h"
 
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5MetaScanner.h"

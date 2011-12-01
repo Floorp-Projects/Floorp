@@ -80,6 +80,7 @@ nsReferencedElement.h \
 nsTreeSanitizer.h \
 nsXMLNameSpaceMap.h \
 nsDOMEventTargetWrapperCache.h \
+nsIXFormsUtilityService.h \
 $(NULL)
 
 EXPORTS_NAMESPACES = mozilla/dom
@@ -88,10 +89,6 @@ EXPORTS_mozilla/dom = \
 		Element.h \
 		FromParser.h \
 		$(NULL)
-
-ifndef DISABLE_XFORMS_HOOKS
-EXPORTS += nsIXFormsUtilityService.h
-endif
 
 SDK_XPIDLSRCS   = \
 		nsISelection.idl  \

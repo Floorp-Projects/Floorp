@@ -149,16 +149,6 @@ nsAccessNode::Shutdown()
   mWeakShell = nsnull;
 }
 
-// nsIAccessNode
-NS_IMETHODIMP
-nsAccessNode::GetUniqueID(void **aUniqueID)
-{
-  NS_ENSURE_ARG_POINTER(aUniqueID);
-
-  *aUniqueID = UniqueID();
-  return NS_OK;
-}
-
 nsApplicationAccessible*
 nsAccessNode::GetApplicationAccessible()
 {

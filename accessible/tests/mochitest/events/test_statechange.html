@@ -70,12 +70,38 @@
       };
     }
 
+    function stateChangeOnFileInput(aID, aAttr, aValue,
+                                    aState, aIsExtraState, aIsEnabled)
+    {
+      this.fileControlNode = getNode(aID);
+      this.fileControl = getAccessible(this.fileControlNode);
+      this.textEntry = this.fileControl.firstChild;
+      this.browseButton = this.fileControl.lastChild;
+
+      this.invoke = function stateChangeOnFileInput_invoke()
+      {
+        this.fileControlNode.setAttribute(aAttr, aValue);
+      }
+
+      this.eventSeq = [
+        new stateChangeChecker(aState, aIsExtraState, aIsEnabled, this.fileControl),
+        new stateChangeChecker(aState, aIsExtraState, aIsEnabled, this.textEntry),
+        new stateChangeChecker(aState, aIsExtraState, aIsEnabled, this.browseButton)
+      ];
+
+      this.getID = function stateChangeOnFileInput_getID()
+      {
+        return "inherited state change on file input on attribute '" + aAttr + "' change";
+      }
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Do tests
 
     var gQueue = null;
 
     // var gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true; // debug stuff
 
     function doTests()
     {
@@ -87,6 +113,14 @@
 
       // invalid state change
       gQueue.push(new invalidInput("email"));
+
+      // file input inherited state changes
+      gQueue.push(new stateChangeOnFileInput("file", "aria-busy", "true",
+                                             STATE_BUSY, false, true));
+      gQueue.push(new stateChangeOnFileInput("file", "aria-required", "true",
+                                             STATE_REQUIRED, false, true));
+      gQueue.push(new stateChangeOnFileInput("file", "aria-invalid", "true",
+                                             STATE_INVALID, false, true));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -108,6 +142,11 @@
      title="Fire a11y event based on HTML5 constraint validation">
     Mozilla Bug 555728
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=699017"
+     title="File input control should be propogate states to descendants">
+    Mozilla Bug 699017
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -119,6 +158,8 @@
   </div>
 
   <input id="email" type='email'>
+
+  <input id="file" type="file">
 
   <div id="eventdump"></div>
 </body>

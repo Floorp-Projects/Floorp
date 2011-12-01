@@ -259,9 +259,10 @@ nsDOMStorageManager::nsDOMStorageManager()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsDOMStorageManager,
+NS_IMPL_ISUPPORTS3(nsDOMStorageManager,
                    nsIDOMStorageManager,
-                   nsIObserver)
+                   nsIObserver,
+                   nsISupportsWeakReference)
 
 //static
 nsresult
@@ -288,25 +289,24 @@ nsDOMStorageManager::Initialize()
     return NS_OK;
 
   nsresult rv;
-  rv = os->AddObserver(gStorageManager, "cookie-changed", false);
+  rv = os->AddObserver(gStorageManager, "cookie-changed", true);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = os->AddObserver(gStorageManager, "offline-app-removed", false);
+  rv = os->AddObserver(gStorageManager, "offline-app-removed", true);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = os->AddObserver(gStorageManager, NS_PRIVATE_BROWSING_SWITCH_TOPIC,
-                       false);
+  rv = os->AddObserver(gStorageManager, NS_PRIVATE_BROWSING_SWITCH_TOPIC, true);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = os->AddObserver(gStorageManager, "profile-after-change", false);
+  rv = os->AddObserver(gStorageManager, "profile-after-change", true);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = os->AddObserver(gStorageManager, "perm-changed", false);
+  rv = os->AddObserver(gStorageManager, "perm-changed", true);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = os->AddObserver(gStorageManager, "browser:purge-domain-data", false);
+  rv = os->AddObserver(gStorageManager, "browser:purge-domain-data", true);
   NS_ENSURE_SUCCESS(rv, rv);
   // Used for temporary table flushing
-  rv = os->AddObserver(gStorageManager, "profile-before-change", false);
+  rv = os->AddObserver(gStorageManager, "profile-before-change", true);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = os->AddObserver(gStorageManager, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  rv = os->AddObserver(gStorageManager, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = os->AddObserver(gStorageManager, NS_DOMSTORAGE_FLUSH_TIMER_TOPIC, false);
+  rv = os->AddObserver(gStorageManager, NS_DOMSTORAGE_FLUSH_TIMER_TOPIC, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
