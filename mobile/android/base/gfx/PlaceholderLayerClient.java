@@ -44,6 +44,7 @@ import org.mozilla.gecko.gfx.LayerClient;
 import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.gfx.SingleTileLayer;
 import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoAppShell;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -94,6 +95,10 @@ public class PlaceholderLayerClient extends LayerClient {
     }
 
     public void destroy() {
+        if (mBuffer != null) {
+            GeckoAppShell.freeDirectBuffer(mBuffer);
+            mBuffer = null;
+        }
         if (mTask != null) {
             mTask.cancel(false);
             mTask = null;
@@ -118,7 +123,7 @@ public class PlaceholderLayerClient extends LayerClient {
             mFormat = CairoUtils.bitmapConfigToCairoFormat(config);
 
             int bpp = CairoUtils.bitsPerPixelForCairoFormat(mFormat) / 8;
-            mBuffer = ByteBuffer.allocateDirect(mWidth * mHeight * bpp);
+            mBuffer = GeckoAppShell.allocateDirectBuffer(mWidth * mHeight * bpp);
 
             bitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
 
