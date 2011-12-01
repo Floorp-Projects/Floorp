@@ -1579,6 +1579,45 @@ nsWindow::GetScreenBounds(nsIntRect &aRect)
     return NS_OK;
 }
 
+nsIntPoint
+nsWindow::GetClientOffset()
+{
+    if (!mIsTopLevel) {
+        return nsIntPoint(0, 0);
+    }
+
+    GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
+
+    GdkAtom type_returned;
+    int format_returned;
+    int length_returned;
+    long *frame_extents;
+
+    if (!mShell || !mShell->window ||
+        !gdk_property_get(mShell->window,
+                          gdk_atom_intern ("_NET_FRAME_EXTENTS", FALSE),
+                          cardinal_atom,
+                          0, // offset
+                          4*4, // length
+                          FALSE, // delete
+                          &type_returned,
+                          &format_returned,
+                          &length_returned,
+                          (guchar **) &frame_extents) ||
+        length_returned/sizeof(glong) != 4) {
+
+        return nsIntPoint(0, 0);
+    }
+
+    // data returned is in the order left, right, top, bottom
+    PRInt32 left = PRInt32(frame_extents[0]);
+    PRInt32 top = PRInt32(frame_extents[2]);
+
+    g_free(frame_extents);
+
+    return nsIntPoint(left, top);
+}
+
 NS_IMETHODIMP
 nsWindow::SetForegroundColor(const nscolor &aColor)
 {
