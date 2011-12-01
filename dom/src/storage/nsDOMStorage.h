@@ -129,6 +129,7 @@ public:
   static nsresult Initialize();
   static nsDOMStorageManager* GetInstance();
   static void Shutdown();
+  static void ShutdownDB();
 
   /**
    * Checks whether there is any data waiting to be flushed from a temp table.
