@@ -66,7 +66,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
             return Operand(a.toGeneralReg()->reg());
         if (a.isFloatReg())
             return Operand(a.toFloatReg()->reg());
-        return Operand(DTRAddr(StackPointer, DtrOffImm(ToStackOffset(&a))));
+        return Operand(StackPointer, ToStackOffset(&a));
     }
     inline Operand ToOperand(const LAllocation *a) {
         return ToOperand(*a);
@@ -172,6 +172,8 @@ private:
 
     bool visitLoadSlotV(LLoadSlotV *load);
     bool visitLoadSlotT(LLoadSlotT *load);
+    bool visitStoreSlotV(LStoreSlotV *load);
+    bool visitStoreSlotT(LStoreSlotT *load);
     bool visitGuardShape(LGuardShape *guard);
 };
 

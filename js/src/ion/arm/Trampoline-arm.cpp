@@ -45,7 +45,7 @@
 #include "ion/IonLinker.h"
 #include "ion/IonFrames.h"
 #include "ion/Bailouts.h"
-#include "ion/arm/Bailouts-arm.h"
+//#include "ion/arm/Bailouts-arm.h"
 
 using namespace js;
 using namespace js::ion;
@@ -128,8 +128,9 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     // The sixth argument is located at [sp, 44].
     masm.as_dtr(IsLoad, 32, Offset, OsrFrameReg, DTRAddr(sp, DtrOffImm(44)));
     // The OsrFrameReg may not be used below.
+#if 0
     JS_STATIC_ASSERT(OsrFrameReg == r7);
-
+#endif
     aasm->as_mov(r9, lsl(r1, 3)); // r9 = 8*argc
     // The size of the IonFrame is actually 16, and we pushed r3 when we aren't
     // going to pop it, BUT, we pop the return value, rather than just branching
@@ -176,20 +177,26 @@ IonCompartment::generateEnterJIT(JSContext *cx)
         aasm->as_b(&header, Assembler::NonZero);
         masm.bind(&footer);
     }
+    masm.makeFrameDescriptor(r9, IonFrame_Entry);
+#ifdef DEBUG
+    masm.ma_mov(Imm32(0xdeadbeef), r8);
+#endif
     masm.startDataTransferM(IsStore, sp, IB, NoWriteBack);
-    masm.transferReg(r9);  // [sp',4]  = argc*8+20
-    masm.transferReg(r10); // [sp',8]  = callee token
-    masm.transferReg(r11); // [sp',12] = fill in the buffer value with junk.
+                           // [sp]    = return address (written later)
+    masm.transferReg(r8);  // [sp',4] = fill in the buffer value with junk.
+    masm.transferReg(r9);  // [sp',8]  = argc*8+20
+    masm.transferReg(r10); // [sp',12]  = callee token
     masm.finishDataTransfer();
     // Throw our return address onto the stack.  this setup seems less-than-ideal
     aasm->as_dtr(IsStore, 32, Offset, pc, DTRAddr(sp, DtrOffImm(0)));
     // Call the function.  using lr as the link register would be *so* nice
-    aasm->as_bx(r0);
-    // The top of the stack now points to *ABOVE* our return address... great
+    aasm->as_blx(r0);
+    // The top of the stack now points to *ABOVE* the address that we previously stored the
+    // return address into.
     // Load off of the stack the size of our local stack
-    aasm->as_dtr(IsLoad, 32, Offset, r5, DTRAddr(sp, DtrOffImm(0)));
-    // TODO: these can be fused into one!
-    aasm->as_add(sp, sp, O2Reg(r5));
+    aasm->as_dtr(IsLoad, 32, Offset, r5, DTRAddr(sp, DtrOffImm(4)));
+    // TODO: these can be fused into one! I don't think this is true since I added in the lsr.
+    aasm->as_add(sp, sp, lsr(r5,FRAMETYPE_BITS));
     // Reach into our saved arguments, and find the pointer to where we want
     // to write our return value.
     aasm->as_dtr(IsLoad, 32, PostIndex, r5, DTRAddr(sp, DtrOffImm(4)));
@@ -308,6 +315,13 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
 static void
 GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
 {
+    // the stack should look like:
+    // [IonFrame]
+    // bailoutFrame.registersnapshot
+    // bailoutFrame.fpsnapshot
+    // bailoutFrame.snapshotOffset
+    // bailoutFrame.frameSize
+
     // STEP 1a: save our register sets to the stack so Bailout() can
     // read everything.
     // sp % 8 == 0
@@ -317,8 +331,7 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     for (uint32 i = 0; i < Registers::Total; i++)
         masm.transferReg(Register::FromCode(i));
     masm.finishDataTransfer();
-    // Float transfer hasn't been implemented yet.  this is a NOP.
-    // setting fpregs_
+
     masm.startFloatTransferM(IsStore, sp, DB, WriteBack);
     for (uint32 i = 0; i < FloatRegisters::Total; i++)
         masm.transferFloatReg(FloatRegister::FromCode(i));
@@ -371,7 +384,9 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     if (frameClass == NO_FRAME_SIZE_CLASS_ID) {
         // Make sure the bailout frame size fits into the offset for a load
         masm.as_dtr(IsLoad, 32, Offset,
-                    r4, DTRAddr(sp, DtrOffImm(offsetof(BailoutStack, frameSize_))));
+                    r4, DTRAddr(sp, DtrOffImm(4)));
+        // used to be: offsetof(BailoutStack, frameSize_)
+        // this structure is no longer available to us :(
         // We add 12 to the bailoutFrameSize because:
         // sizeof(uint32) for the tableOffset that was pushed onto the stack
         // sizeof(uintptr_t) for the snapshotOffset;
@@ -386,24 +401,31 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
                     , sp);
     }
 
+    Label frameFixupDone;
+    masm.ma_ldr(Operand(sp, IonJSFrameLayout::offsetOfDescriptor()), r1);
+    // see if we have a JS frame, and fix it up.  We don't fix up rectifier or exit frames?
+    masm.ma_and(Imm32(FRAMETYPE_BITS), r1, r2);
+    masm.ma_cmp(r2, Imm32(IonFrame_JS));
+    masm.ma_b(&frameFixupDone, Assembler::NotEqual);
+    {
+        JS_STATIC_ASSERT(sizeof(IonJSFrameLayout) >= sizeof(IonExitFrameLayout));
+        ptrdiff_t difference = sizeof(IonJSFrameLayout) - sizeof(IonExitFrameLayout);
+        masm.ma_add(r1, Imm32(difference << FRAMETYPE_BITS), r1);
+        masm.ma_str(r1, Operand(sp, IonJSFrameLayout::offsetOfDescriptor()));
+    }
+    masm.bind(&frameFixupDone);
+    masm.linkExitFrame();
     Label exception;
 
     // See if the bailout code says it is an exception
     masm.as_cmp(r0, Imm8(0));
     masm.as_b(&exception, Assembler::NonZero);
-    // The actual thunk gets two arguments: the previous frame's
-    // stack (sp), and the place where it is going to return
-    // its value (namely, right below the *present* sp;
-    masm.as_mov(r0, O2Reg(sp));
     // Make room on the stack
     masm.as_sub(sp, sp, Imm8(sizeof(Value)));
-    // And make that the second argument
-    masm.as_mov(r1, O2Reg(sp));
     // Do the call
-    masm.setupAlignedABICall(2);
-    // These should be NOPs
-    masm.setABIArg(0, r0);
-    masm.setABIArg(1, r1);
+    masm.setupAlignedABICall(1);
+    
+    masm.setABIArg(0, sp);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
 
     // Load the value that the interpreter returned *and* return the stack
@@ -416,7 +438,8 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     masm.as_b(&exception, Assembler::Zero);
     masm.as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
     masm.bind(&exception);
-
+    masm.handleException();
+#if 0
     // Call into HandleException, passing in the top frame prefix
     masm.as_mov(r0, O2Reg(sp));
     masm.setupAlignedABICall(1);
@@ -429,6 +452,7 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     // We're going to be returning by the ion calling convention, which returns
     // by ??? (for now, I think ldr pc, [sp]!)
     masm.as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
+#endif
 }
 
 IonCode *
@@ -456,4 +480,102 @@ IonCompartment::generateBailoutHandler(JSContext *cx)
 
     Linker linker(masm);
     return linker.newCode(cx);
+}
+
+IonCode *
+IonCompartment::generateCWrapper(JSContext *cx, const VMFunction &f)
+{
+    typedef MoveResolver::MoveOperand MoveOperand;
+
+    JS_ASSERT(functionWrappers_);
+    JS_ASSERT(functionWrappers_->initialized());
+    VMWrapperMap::AddPtr p = functionWrappers_->lookupForAdd(&f);
+    if (p)
+        return p->value;
+    MacroAssembler masm;
+    // Avoid conflicts with argument registers while discarding the result after
+    // the function call.
+    const GeneralRegisterSet allocatableRegs(Registers::AllocatableMask & ~Registers::ArgRegMask);
+    GeneralRegisterSet regs(allocatableRegs);
+    // the stack is:
+    // ... frame ...
+    //  +8   [args]
+    //  +4   descriptor
+    //  +0   padding (not the return value)
+    // Save the current stack pointer as the base for copying arguments.
+    Register argsBase = InvalidReg;
+    if (f.explicitArgs) {
+        argsBase = regs.takeAny();
+        masm.ma_add(sp, Imm32(sizeof(IonExitFrameLayout)), argsBase);
+    }
+
+    // Reserve space for the outparameter.
+    Register outReg = InvalidReg;
+    if (f.outParam == VMFunction::OutParam_Value) {
+        outReg = regs.takeAny();
+        masm.reserveStack(sizeof(Value));
+        masm.ma_mov(sp, outReg);
+    }
+
+    Register temp = regs.takeAny();
+    // TODO: investigate if this can be changed into setupAlignedABICall.
+    masm.setupUnalignedABICall(f.argc(), temp);
+
+    // Initialize and set the context parameter.
+    Register cxreg = r0;
+    // the imm32 here used to be Operand, I have no clue what the type ws supposed to be.
+    masm.movePtr(ImmWord(&JS_THREAD_DATA(cx)->ionJSContext), cxreg);
+    masm.setABIArg(0, cxreg);
+
+    // Copy arguments.
+    if (f.explicitArgs) {
+        for (uint32 i = 0; i < f.explicitArgs; i++)
+            masm.setABIArg(i + 1, MoveOperand(argsBase, i * sizeof(void *)));
+    }
+
+    // Copy the implicit outparam, if any.
+    if (outReg != InvalidReg)
+        masm.setABIArg(f.argc() - 1, outReg);
+
+    masm.callWithABI(f.wrapped);
+    // TODO: add in relocatable moves..
+    Label ret;
+    masm.bind(&ret);
+    // Test for failure.
+    Label exception;
+    masm.ma_cmp(r0, Imm32(0));
+    masm.ma_b(&exception,Assembler::Zero);
+
+    // Load the outparam and free any allocated stack.
+    if (f.outParam == VMFunction::OutParam_Value) {
+        masm.ma_ldrd(EDtrAddr(sp, EDtrOffImm(0)), JSReturnReg_Data);
+        masm.freeStack(sizeof(Value));
+    }
+
+    // Pick a register which is not among the return registers.
+    regs = GeneralRegisterSet(Registers::AllocatableMask & ~Registers::JSCCallMask);
+    temp = regs.takeAny();
+
+    // Save the return address, remove the caller's arguments, then push the
+    // return address back again.
+    //masm.ma_ldr(Operand(sp, IonExitFrameLayout::offsetOfReturnAddress()), temp);
+    // ARM's ABI does not ask you to put the return address on the stack, so we don't
+    // We still need to have the return address, so we use the pc to compute it.
+    // Presently, I'm hard coding the value because I know exactly what code is being generated
+    // but I'll set up a as_mov(Register, Label *) that will automatically do this.
+    masm.ma_sub(pc, Imm32(128), temp);
+    masm.ma_add(Imm32(sizeof(IonExitFrameLayout) + f.explicitArgs * sizeof(void *)), sp);
+    masm.ma_push(temp);
+    masm.ret();
+
+    masm.bind(&exception);
+    masm.handleException();
+
+
+    Linker linker(masm);
+    IonCode *wrapper = linker.newCode(cx);
+    if (!wrapper || !functionWrappers_->add(p, &f, wrapper))
+        return NULL;
+
+    return wrapper;
 }
