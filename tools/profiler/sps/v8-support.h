@@ -14,16 +14,17 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Mozilla Foundation
+ * The Initial Developer of the Original Code is
+ * Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mounir Lamouri <mounir.lamouri@mozilla.com> (Original Author)
+ *   Jeff Muizelaar <jmuizelaar@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,24 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_battery_Constants_h__
-#define mozilla_dom_battery_Constants_h__
+/* This contains stubs and infrastructure to support code from v8 */
 
-/**
- * A set of constants that might need to be used by battery backends.
- * It's not part of BatteryManager.h to prevent those backends to include it.
- */
-namespace mozilla {
-namespace dom {
-namespace battery {
-
-  static const double kDefaultLevel         = 1.0;
-  static const bool   kDefaultCharging      = true;
-  static const double kDefaultRemainingTime = 0;
-  static const double kUnknownRemainingTime = -1;
-
-} // namespace battery
-} // namespace dom
-} // namespace mozilla
-
-#endif // mozilla_dom_battery_Constants_h__
+class Malloced {
+};
