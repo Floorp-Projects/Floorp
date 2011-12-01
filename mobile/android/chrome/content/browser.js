@@ -203,7 +203,7 @@ var BrowserApp = {
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
-    let uri = "about:support";
+    let uri = "about:home";
     if ("arguments" in window && window.arguments[0])
       uri = window.arguments[0];
 
