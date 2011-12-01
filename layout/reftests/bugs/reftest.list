@@ -1233,6 +1233,7 @@ fails-if(cocoaWidget) == 456147.xul 456147-ref.html # bug 458047
 == 466395-2.html 466395-2-ref.html
 == 467084-1.html 467084-1-ref.html
 == 467084-2.html 467084-2-ref.html
+== 467444-1.html 467444-1-ref.html
 == 467460-1.html 467460-1-ref.html
 == 468546-1.xhtml 468546-1-ref.xhtml
 == 468473-1.xul 468473-1-ref.xul
