@@ -796,82 +796,6 @@ nsWindow::GetThebesSurface()
     return new gfxImageSurface(gfxIntSize(5,5), gfxImageSurface::ImageFormatRGB24);
 }
 
-
-class DrawToFileRunnable : public nsRunnable {
-public:
-    DrawToFileRunnable(nsWindow* win, const nsAString &path) {
-       mPath = path;
-       mWindow = win;
-   }
-    NS_IMETHOD Run() {
-        mWindow->DrawToFile(mPath);
-        return NS_OK;
-    }
-private:
-    nsString mPath;
-    nsRefPtr<nsWindow> mWindow;
-};
-
-bool
-nsWindow::DrawToFile(const nsAString &path)
-{
-    if (!IsTopLevel() || !mIsVisible) {
-        ALOG("### DrawToFile works only for a visible toplevel window!");
-        return PR_FALSE;
-    }
-
-    if (GetLayerManager(nsnull)->GetBackendType() != LayerManager::LAYERS_BASIC) {
-        ALOG("### DrawToFile works only for a basic layers!");
-        return PR_FALSE;
-    }
-
-    nsRefPtr<gfxImageSurface> imgSurface =
-        new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
-                            gfxImageSurface::ImageFormatARGB32);
-    
-    if (imgSurface->CairoStatus()) {
-        ALOG("### Failed to create a valid surface");
-        return PR_FALSE;
-    }
-
-    nsIntRect boundsRect(0, 0, mBounds.width, mBounds.height);
-    bool result = DrawTo(imgSurface, boundsRect);
-    NS_ENSURE_TRUE(result, PR_FALSE);
-
-    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance("@mozilla.org/image/encoder;2?type=image/png");
-    NS_ENSURE_TRUE(encoder, PR_FALSE);
-
-    encoder->InitFromData(imgSurface->Data(),
-                          imgSurface->Stride() * mBounds.height,
-                          mBounds.width,
-                          mBounds.height,
-                          imgSurface->Stride(),
-                          imgIEncoder::INPUT_FORMAT_HOSTARGB,
-                          EmptyString());
-
-    nsCOMPtr<nsILocalFile> file;
-    NS_NewLocalFile(path, true, getter_AddRefs(file));
-    NS_ENSURE_TRUE(file, PR_FALSE);
-
-    PRUint32 length;
-    encoder->Available(&length);
-
-    nsCOMPtr<nsIOutputStream> outputStream;
-    NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), file);
-    NS_ENSURE_TRUE(outputStream, PR_FALSE);
-
-    nsCOMPtr<nsIOutputStream> bufferedOutputStream;
-    NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream),
-                               outputStream, length);
-    NS_ENSURE_TRUE(bufferedOutputStream, PR_FALSE);
-
-    PRUint32 numWritten;
-    bufferedOutputStream->WriteFrom(encoder, length, &numWritten);
-    NS_ENSURE_SUCCESS(length == numWritten, PR_FALSE);
-
-    return PR_TRUE;
-}
-
 void
 nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 {
@@ -1022,14 +946,6 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 
         case AndroidGeckoEvent::GECKO_EVENT_SYNC:
             AndroidBridge::Bridge()->AcknowledgeEventSync();
-            break;
-
-        case AndroidGeckoEvent::SAVE_STATE:
-            {
-                nsCOMPtr<nsIThread> thread;
-                nsRefPtr<DrawToFileRunnable> runnable = new DrawToFileRunnable(win, ae->Characters());
-                NS_NewThread(getter_AddRefs(thread), runnable);
-            }
             break;
 
         default:

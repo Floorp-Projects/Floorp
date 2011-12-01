@@ -75,7 +75,6 @@ public class GeckoEvent {
     public static final int SURFACE_DESTROYED = 14;
     public static final int GECKO_EVENT_SYNC = 15;
     public static final int ACTIVITY_START = 17;
-    public static final int SAVE_STATE = 18;
     public static final int BROADCAST = 19;
 
     public static final int IME_COMPOSITION_END = 0;
