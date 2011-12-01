@@ -77,7 +77,7 @@ EXTRA_JS_MODULES = \
   Profiler.jsm \
   $(NULL)
 
-ifneq (,$(filter Android Linux,$(OS_TARGET)))
+ifeq ($(OS_TARGET),Android)
 
 DEFINES += -DMOZ_ENABLE_PROFILER_SPS
 
@@ -86,16 +86,6 @@ CPPSRCS += \
   TableTicker.cpp \
   $(NULL)
 endif
-ifeq ($(OS_TARGET),Darwin)
-
-DEFINES += -DMOZ_ENABLE_PROFILER_SPS
-
-CPPSRCS += \
-  platform-macos.cc \
-  TableTicker.cpp \
-  $(NULL)
-endif
-
 
 include $(topsrcdir)/config/rules.mk
 
