@@ -26,7 +26,7 @@ var battery = navigator.mozBattery;
 is(battery.level, 1.0, "Default battery level should be 1.0");
 is(battery.charging, true, "Default charging value should be true");
 is(battery.dischargingTime, Infinity, "Default dischargingTime should be Inifinity");
-is(battery.chargingTime, Infinity, "Default chargingTime should be Inifinity");
+is(battery.chargingTime, 0, "Default chargingTime should be 0");
 
 </script>
 </pre>
