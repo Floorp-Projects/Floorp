@@ -14,12 +14,12 @@
  * The Original Code is peptest.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ *   The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Andrew Halberstadt <halbersa@gmail.com>
+ *   Andrew Halberstadt <halbersa@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,15 +40,15 @@
 //
 // This test will check responsiveness while resizing the window
 
-let window = getWindow();
+let window = pep.getWindow();
 let width = window.outerWidth;
 let height = window.outerHeight;
 
-performAction('resize_by', function() {
+pep.performAction('resize_by', function() {
   window.resizeBy(100, 100);
 });
 
-performAction('resize_to', function() {
+pep.performAction('resize_to', function() {
   window.resizeTo(800, 600);
 });
 

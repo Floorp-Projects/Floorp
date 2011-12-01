@@ -808,7 +808,7 @@ net_FindMediaDelimiter(const nsCString& flatStr,
     do {
         // searchStart points to the spot from which we should start looking
         // for the delimiter.
-        const char delimStr[] = { delimiter, '"', '\'', '\0' };
+        const char delimStr[] = { delimiter, '"', '\0' };
         PRUint32 curDelimPos = flatStr.FindCharInSet(delimStr, searchStart);
         if (curDelimPos == PRUint32(kNotFound))
             return flatStr.Length();
@@ -893,7 +893,7 @@ net_ParseMediaType(const nsACString &aMediaTypeStr,
         // '(' in the trailing trim set to catch media-type comments, which are
         // not at all standard, but may occur in rare cases.
         charset = net_FindCharNotInSet(charset, charsetEnd, HTTP_LWS);
-        if (*charset == '"' || *charset == '\'') {
+        if (*charset == '"') {
             charsetEnd =
                 start + net_FindStringEnd(flatStr, charset - start, *charset);
             charset++;

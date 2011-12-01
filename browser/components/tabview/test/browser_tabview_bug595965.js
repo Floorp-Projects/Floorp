@@ -104,6 +104,10 @@ function onTabViewShown(win) {
   ok(!trayContainer.hasClass("appTabTrayContainerTruncated"),
      "$appTabTray container does not have .appTabTrayContainerTruncated");
 
+  // When the tab was pinned, the last active group with an item got the focus.
+  // Therefore, switching the focus back to group item one.
+  contentWindow.UI.setActive(groupItem);
+
   // unpin the last remaining tab
   gBrowser.unpinTab(xulTabs[0]);
 

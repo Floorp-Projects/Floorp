@@ -287,12 +287,12 @@
         stop: function scrollAnim_stop() {
           this.started = false;
         },
-        sample: function scrollAnim_handleEvent(event) {
+        sample: function scrollAnim_handleEvent(timeStamp) {
           if (!this.started) {
             // We've been stopped
             return;
           }
-          const timePassed = event.timeStamp - this.startTime;
+          const timePassed = timeStamp - this.startTime;
           const pos = timePassed >= this.duration ? 1 :
                       1 - Math.pow(1 - timePassed / this.duration, 4);
 
@@ -656,14 +656,14 @@
         stop: function arrowSmoothScroll_stop() {
           this.started = false;
         },
-        sample: function arrowSmoothScroll_handleEvent(event) {
+        sample: function arrowSmoothScroll_handleEvent(timeStamp) {
           if (!this.started) {
             // We've been stopped
             return;
           }
           const scrollIndex = this.scrollbox._scrollIndex;
-          const timePassed = event.timeStamp - this.lastFrameTime;
-          this.lastFrameTime = event.timeStamp;
+          const timePassed = timeStamp - this.lastFrameTime;
+          this.lastFrameTime = timeStamp;
           
           const scrollDelta = 0.5 * timePassed * scrollIndex;
           this.scrollbox.scrollPosition += scrollDelta;

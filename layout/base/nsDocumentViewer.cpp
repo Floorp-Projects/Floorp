@@ -2219,6 +2219,11 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
     styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
   }
 
+  sheet = nsLayoutStylesheetCache::FullScreenOverrideSheet();
+  if (sheet) {
+    styleSet->PrependStyleSheet(nsStyleSet::eOverrideSheet, sheet);
+  }
+
   // Make sure to clone the quirk sheet so that it can be usefully
   // enabled/disabled as needed.
   nsRefPtr<nsCSSStyleSheet> quirkClone;

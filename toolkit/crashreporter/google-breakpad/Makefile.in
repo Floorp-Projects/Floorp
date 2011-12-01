@@ -633,7 +633,7 @@ EXTRA_DIST = \
 	src/common/mac/macho_walker.h \
 	src/common/mac/string_utilities.cc \
 	src/common/mac/string_utilities.h \
-	src/common/md5.c \
+	src/common/md5.cc \
 	src/common/md5.h \
 	src/common/solaris/dump_symbols.cc \
 	src/common/solaris/dump_symbols.h \

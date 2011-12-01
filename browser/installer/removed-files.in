@@ -252,6 +252,7 @@ res/fonts/mathfontMath4.properties
 res/fonts/mathfontPUA.properties
 res/fonts/pangoFontEncoding.properties
 res/forms.css
+res/full-screen-override.css
 res/hiddenWindow.html
 res/html.css
 res/html/gopher-audio.gif

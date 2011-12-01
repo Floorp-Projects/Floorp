@@ -408,6 +408,7 @@
 			baseConfigurationReference = 8B3102DA11F0D65600FCF3E4 /* BreakpadDebug.xcconfig */;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = HAVE_MACH_O_NLIST_H;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 			};
 			name = Debug;
 		};

@@ -850,7 +850,7 @@
                         return;
                     }
 
-                    var attrName = this.isVideoInFullScreen() ? "enterfullscreenlabel" : "exitfullscreenlabel";
+                    var attrName = this.isVideoInFullScreen() ? "exitfullscreenlabel" : "enterfullscreenlabel";
                     var value = this.fullscreenButton.getAttribute(attrName);
                     this.fullscreenButton.setAttribute("aria-label", value);
 

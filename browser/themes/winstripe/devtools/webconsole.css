@@ -1,0 +1,344 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is DevTools code
+ *
+ * The Initial Developer of the Original Code is
+ *   Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   David Dahl <ddahl@mozilla.com>
+ *   Patrick Walton <pcwalton@mozilla.com>
+ *   Rob Campbell <rcampbell@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+.hud-box {
+  border-bottom: 1px solid #aaa;
+  text-shadow: none;
+}
+
+.hud-box.animated {
+  -moz-transition: height 100ms;
+}
+
+.hud-splitter {
+  border-top: none;
+}
+
+.hud-outer-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+.hud-console-wrapper {
+  width: 100%;
+  overflow: auto;
+}
+
+/* General output styles */
+
+.webconsole-timestamp {
+  color: GrayText;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.hud-msg-node {
+  list-style-image: url(chrome://browser/skin/devtools/webconsole.png);
+  -moz-image-region: rect(0, 1px, 0, 0);
+}
+
+.webconsole-msg-icon {
+  margin: 3px 4px;
+  width: 8px;
+  height: 8px;
+}
+
+.hud-clickable {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.webconsole-msg-body {
+  margin-top: 0;
+  margin-bottom: 3px;
+  -moz-margin-start: 3px;
+  -moz-margin-end: 6px;
+  white-space: pre-wrap;
+}
+
+.webconsole-msg-body-piece {
+  margin: 0;
+}
+
+.webconsole-msg-url {
+  margin: 0 6px;
+}
+
+/* Repeated messages */
+.webconsole-msg-repeat {
+  margin: 2px 0;
+  padding-left: 4px;
+  padding-right: 4px;
+  color: white;
+  background-color: red;
+  border-radius: 40px;
+  font: message-box;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* TODO move this and other functional rules to content - bug 635359 */
+.webconsole-msg-repeat[value="1"] {
+  display: none;
+}
+
+.webconsole-location {
+  margin-top: 0;
+  margin-bottom: 0;
+  -moz-margin-start: 0;
+  -moz-margin-end: 6px;
+  width: 10em;
+  text-align: end;
+}
+
+.hud-msg-node[selected="true"] > .webconsole-timestamp,
+.hud-msg-node[selected="true"] > .webconsole-location {
+  color: inherit;
+}
+
+.hud-output-node,
+.jsterm-input-node,
+.jsterm-complete-node {
+  font: 12px Consolas, Lucida Console, monospace;
+}
+
+.hud-output-node {
+  -moz-appearance: none;
+  border-bottom: 1px solid ThreeDShadow;
+  border-top: 1px solid ThreeDShadow;
+  margin: 0;
+}
+
+.hud-filtered-by-type,
+.hud-filtered-by-string {
+  display: none;
+}
+
+.webconsole-clear-console-button > .toolbarbutton-icon {
+  display: none;
+}
+
+.webconsole-filter-button > .toolbarbutton-menubutton-button {
+  -moz-box-orient: horizontal;
+  list-style-image: url("chrome://browser/skin/devtools/webconsole.png");
+}
+
+.webconsole-filter-button > .toolbarbutton-menubutton-button,
+.webconsole-filter-button > .toolbarbutton-menubutton-button:hover:active {
+  -moz-padding-start: 6px;
+  -moz-padding-end: 3px;
+}
+
+.webconsole-filter-button {
+  -moz-margin-start: 3px;
+  -moz-margin-end: 3px;
+}
+
+/* Network styles */
+.webconsole-filter-button[category="net"] {
+  -moz-image-region: rect(0, 8px, 8px, 0);
+}
+
+.webconsole-msg-network > .webconsole-msg-icon-container {
+  -moz-border-start: solid #000 6px;
+}
+
+.webconsole-msg-network.webconsole-msg-error {
+  -moz-image-region: rect(0, 16px, 8px, 8px);
+}
+
+/* CSS styles */
+.webconsole-filter-button[category="css"] {
+  -moz-image-region: rect(8px, 8px, 16px, 0);
+}
+
+.webconsole-msg-cssparser > .webconsole-msg-icon-container {
+  -moz-border-start: solid #00b6f0 6px;
+}
+
+.webconsole-msg-cssparser.webconsole-msg-error {
+  -moz-image-region: rect(8px, 16px, 16px, 8px);
+}
+
+.webconsole-msg-cssparser.webconsole-msg-warn {
+  -moz-image-region: rect(8px, 24px, 16px, 16px);
+}
+
+/* JS styles */
+.webconsole-filter-button[category="js"] {
+  -moz-image-region: rect(16px, 8px, 24px, 0);
+}
+
+.webconsole-msg-exception > .webconsole-msg-icon-container {
+  -moz-border-start: solid #fb9500 6px;
+}
+
+.webconsole-msg-exception.webconsole-msg-error {
+  -moz-image-region: rect(16px, 16px, 24px, 8px);
+}
+
+.webconsole-msg-exception.webconsole-msg-warn {
+  -moz-image-region: rect(16px, 24px, 24px, 16px);
+}
+
+/* Web Developer styles */
+.webconsole-filter-button[category="logging"] {
+  -moz-image-region: rect(24px, 8px, 32px, 0);
+}
+
+.webconsole-msg-console > .webconsole-msg-icon-container {
+  -moz-border-start: solid #cbcbcb 6px;
+}
+
+.webconsole-msg-console.webconsole-msg-error,
+.webconsole-msg-output.webconsole-msg-error {
+  -moz-image-region: rect(24px, 16px, 32px, 8px);
+}
+
+.webconsole-msg-console.webconsole-msg-warn {
+  -moz-image-region: rect(24px, 24px, 32px, 16px);
+}
+
+.webconsole-msg-console.webconsole-msg-info {
+  -moz-image-region: rect(24px, 32px, 32px, 24px);
+}
+
+/* Input and output styles */
+.webconsole-msg-input > .webconsole-msg-icon-container,
+.webconsole-msg-output > .webconsole-msg-icon-container {
+  border-left: solid #808080 6px;
+}
+
+.webconsole-msg-input {
+  -moz-image-region: rect(24px, 40px, 32px, 32px);
+}
+
+.webconsole-msg-output {
+  -moz-image-region: rect(24px, 48px, 32px, 40px);
+}
+
+.webconsole-close-button {
+  border: none;
+  padding: 3px;
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+  -moz-appearance: none;
+}
+
+.webconsole-close-button:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.webconsole-close-button:hover:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
+}
+
+/* JSTerm Styles */
+
+.jsterm-wrapper-node {
+  font-family: monospace;
+  font-size: 1em;
+  background-color: #000;
+  border: 1px solid #333;
+  padding: 0.1em;
+  width: 100%;
+  height: 400px;
+}
+
+.jsterm-output-node {
+  width: 100%;
+  height: 400px;
+  color: white;
+  background-color: black;
+  overflow: auto;
+  overflow-x: auto;
+  position: absolute;
+  -moz-box-direction: reverse;
+}
+
+.jsterm-scroll-to-node {
+  height: 1px;
+  width: 1px;
+  position: relative;
+  top: 92%;
+  display: block;
+}
+
+.jsterm-input-node,
+.jsterm-complete-node {
+  border: none;
+  padding: 0 0 0 16px;
+  -moz-appearance: none;
+}
+
+.jsterm-input-node {
+  background: url("chrome://global/skin/icons/commandline.png") 4px 3px no-repeat;
+}
+
+:-moz-any(.jsterm-input-node,
+          .jsterm-complete-node) > .textbox-input-box > .textbox-textarea {
+  overflow-x: hidden;
+}
+
+.jsterm-complete-node > .textbox-input-box > .textbox-textarea {
+  color: GrayText;
+}
+
+.jsterm-output-line {
+  font-size: 1em;
+}
+
+.hud-console-filter-toolbar {
+  padding: 1px 2px;
+  -moz-box-align: center;
+  -moz-appearance: none;
+  background-color: -moz-dialog;
+  border-top: none;
+}
+
+.web-console-panel {
+  -moz-appearance: none;
+  background-color: white;
+}
+
+.web-console-panel > .hud-box {
+  height: 100%;
+  width: 100%;
+  background-color: white;
+}
