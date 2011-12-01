@@ -152,17 +152,37 @@ public class AboutHomeContent extends LinearLayout {
         });
     }
 
+    InputStream getProfileRecommendedAddonsStream() {
+        try {
+            File profileDir = GeckoApp.mAppContext.getProfileDir();
+            if (profileDir == null)
+                return null;
+            File recommendedAddonsFile = new File(profileDir, "recommended-addons.json");
+            if (!recommendedAddonsFile.exists())
+                return null;
+            return new FileInputStream(recommendedAddonsFile);
+        } catch (FileNotFoundException fnfe) {
+            // ignore
+        }
+        return null;
+    }
+
+    InputStream getRecommendedAddonsStream(Activity activity) throws Exception{
+        InputStream is = getProfileRecommendedAddonsStream();
+        if (is != null)
+            return is;
+        File applicationPackage = new File(activity.getApplication().getPackageResourcePath());
+        ZipFile zip = new ZipFile(applicationPackage);
+        ZipEntry fileEntry = zip.getEntry("recommended-addons.json");
+        return zip.getInputStream(fileEntry);
+    }
+
     void readRecommendedAddons(final Activity activity) {
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
                 try {
-                    File applicationPackage = new File(activity.getApplication().getPackageResourcePath());
                     byte[] buf = new byte[32768];
-                    ZipFile zip = new ZipFile(applicationPackage);
-                    ZipEntry fileEntry = zip.getEntry("recommended-addons.json");
-
-                    InputStream fileStream;
-                    fileStream = zip.getInputStream(fileEntry);
+                    InputStream fileStream = getRecommendedAddonsStream(activity);
                     StringBuffer jsonString = new StringBuffer();
                     int read = 0;
                     while ((read = fileStream.read(buf, 0, 32768)) != -1) {
