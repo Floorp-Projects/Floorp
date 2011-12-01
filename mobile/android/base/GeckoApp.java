@@ -137,6 +137,7 @@ abstract public class GeckoApp
     public String mLastTitle;
     public String mLastViewport;
     public byte[] mLastScreen;
+    public int mOwnActivityDepth = 0;
 
     private Vector<View> mPluginViews = new Vector<View>();
 
@@ -561,6 +562,8 @@ abstract public class GeckoApp
 
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        if (mOwnActivityDepth > 0)
+            return; // we're showing one of our own activities and likely won't get paged out
         if (outState == null)
             outState = new Bundle();
         rememberLastScreen();
@@ -710,10 +713,7 @@ abstract public class GeckoApp
     }
 
     void addTab() {
-        Intent intent = new Intent(mAppContext, AwesomeBar.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
-        intent.putExtra(AwesomeBar.TYPE_KEY, AwesomeBar.Type.ADD.name());
-        startActivityForResult(intent, AWESOMEBAR_REQUEST);
+        showAwesomebar(AwesomeBar.Type.ADD);
     }
 
     void showTabs() {
@@ -1527,6 +1527,8 @@ abstract public class GeckoApp
 
         registerReceiver(mSmsReceiver, mSmsFilter);
         registerReceiver(mConnectivityReceiver, mConnectivityFilter);
+        if (mOwnActivityDepth > 0)
+            mOwnActivityDepth--;
     }
 
     @Override
@@ -1788,6 +1790,7 @@ abstract public class GeckoApp
                 }
             }
         }
+        mOwnActivityDepth++;
         startActivityForResult(intent, AWESOMEBAR_REQUEST);
         return true;
     }
