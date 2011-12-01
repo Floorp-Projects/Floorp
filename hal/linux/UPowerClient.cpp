@@ -199,7 +199,7 @@ UPowerClient::UPowerClient()
   , mTrackedDevice(nsnull)
   , mLevel(kDefaultLevel)
   , mCharging(kDefaultCharging)
-  , mRemainingTime(kUnknownRemainingTime)
+  , mRemainingTime(kDefaultRemainingTime)
 {
 }
 
@@ -279,7 +279,7 @@ UPowerClient::StopListening()
   // We should now show the default values, not the latest we got.
   mLevel = kDefaultLevel;
   mCharging = kDefaultCharging;
-  mRemainingTime = kUnknownRemainingTime;
+  mRemainingTime = kDefaultRemainingTime;
 }
 
 void
