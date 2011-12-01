@@ -2378,17 +2378,16 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
     LOG(("configure event [%p] %d %d %d %d\n", (void *)this,
          aEvent->x, aEvent->y, aEvent->width, aEvent->height));
 
-    // mBounds.x/y are set to the window manager frame top-left when Move() or
-    // Resize()d from within Gecko, so comparing with the client window
-    // top-left is weird.  However, mBounds.x/y are set to client window
-    // position below, so this check avoids unwanted rollup on spurious
-    // configure events from Cygwin/X (bug 672103).
-    if (mBounds.x == aEvent->x &&
-        mBounds.y == aEvent->y)
-        return FALSE;
+    nsIntRect screenBounds;
+    GetScreenBounds(screenBounds);
 
     if (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) {
-        check_for_rollup(aEvent->window, 0, 0, false, true);
+        // This check avoids unwanted rollup on spurious configure events from
+        // Cygwin/X (bug 672103).
+        if (mBounds.x != screenBounds.x ||
+            mBounds.y != screenBounds.y) {
+            check_for_rollup(aEvent->window, 0, 0, false, true);
+        }
     }
 
     // This event indicates that the window position may have changed.
@@ -2416,11 +2415,7 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
         return FALSE;
     }
 
-    // This is wrong, but noautohide titlebar panels currently depend on it
-    // (bug 601545#c13).  mBounds.TopLeft() should refer to the
-    // window-manager frame top-left, but WidgetToScreenOffset() gives the
-    // client window origin.
-    mBounds.MoveTo(WidgetToScreenOffset());
+    mBounds.MoveTo(screenBounds.TopLeft());
 
     nsGUIEvent event(true, NS_MOVE, this);
 
