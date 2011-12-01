@@ -121,6 +121,10 @@ class Registers
     static const uint32 Allocatable = 13;
 
     static const uint32 AllMask = (1 << Total) - 1;
+    static const uint32 ArgRegMask = (1 << r0) | (1 << r1) | (1 << r2) | (1 << r3);
+
+    // r12 and lr are excluded fro JSCCallMask because they are not presently allocatable.
+    static const uint32 JSCCallMask = (1 << r0) | (1 << r1) | (1 << r2) | (1 << r3);
 
     static const uint32 VolatileMask =
         (1 << r0) |
@@ -233,6 +237,7 @@ class FloatRegisters
 
 bool hasMOVWT();
 bool hasVFPv3();
+bool has16DP();
 
 } // namespace ion
 } // namespace js

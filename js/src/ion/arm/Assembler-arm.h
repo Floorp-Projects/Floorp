@@ -105,6 +105,7 @@ static const FloatRegister d13 = {FloatRegisters::d13};
 static const FloatRegister d14 = {FloatRegisters::d14};
 static const FloatRegister d15 = {FloatRegisters::d15};
 
+
 uint32 RM(Register r);
 uint32 RS(Register r);
 uint32 RD(Register r);
@@ -364,6 +365,7 @@ class ValueOperand
     }
 };
 
+static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg_Type, JSReturnReg_Data);
 
 // All of these classes exist solely to shuffle data into the various operands.
 // For example Operand2 can be an imm8, a register-shifted-by-a-constant or
@@ -790,23 +792,44 @@ class Operand
 
     enum Tag_ {
         OP2,
-        DTR,
-        EDTR,
-        VDTR,
+        MEM,
         FOP
     };
   private:
-    Tag_ Tag;
+    Tag_ Tag : 3;
+    uint32 reg : 5;
+    int32 offset;
     uint32 data;
   public:
-    Operand (Register reg)  : Tag(OP2), data(reg.code()) {}
-    Operand (FloatRegister reg)  : Tag(FOP), data(reg.code()) {}
-    Operand (DTRAddr addr) : Tag(DTR), data(addr.encode()) {}
-    Operand (VFPAddr addr) : Tag(VDTR), data(addr.encode()) {}
-    Tag_ getTag() { return Tag; }
-    Operand2 toOp2() { return Operand2(data); }
-    DTRAddr toDTRAddr() {JS_ASSERT(Tag == DTR); return DTRAddr(data); }
-    VFPAddr toVFPAddr() {JS_ASSERT(Tag == VDTR); return VFPAddr(data); }
+    Operand (Register reg_)  : Tag(OP2), reg(reg_.code()) {}
+    Operand (FloatRegister freg)  : Tag(FOP), reg(freg.code()) {}
+    Operand (Register base, Imm32 off) : Tag(MEM), reg(base.code()), offset(off.value) {}
+    Operand (Register base, int32 off) : Tag(MEM), reg(base.code()), offset(off) {}
+    Tag_ getTag() const { return Tag; }
+    Operand2 toOp2() { JS_ASSERT(Tag == OP2); return O2Reg(Register::FromCode(reg)); }
+    void toAddr(Register *r, Imm32 *dest) const {
+        JS_ASSERT(Tag == MEM);
+        *r = Register::FromCode(reg);
+        *dest = Imm32(offset);
+    }
+    int32 disp() const {
+        JS_ASSERT(Tag == MEM);
+        return offset;
+    }
+
+    int32 base() const {
+        JS_ASSERT(Tag == MEM);
+        return reg;
+    }
+    Register baseReg() const {
+        return Register::FromCode(reg);
+    }
+    DTRAddr toDTRAddr() const {
+        return DTRAddr(baseReg(), DtrOffImm(offset));
+    }
+    VFPAddr toVFPAddr() const {
+        return VFPAddr(baseReg(), VFPOffImm(offset));
+    }
 };
 
 

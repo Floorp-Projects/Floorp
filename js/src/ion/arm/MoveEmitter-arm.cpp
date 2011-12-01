@@ -79,7 +79,7 @@ MoveEmitterARM::cycleSlot() const
 {
     int offset =  masm.framePushed() - pushedAtCycle_;
     JS_ASSERT(offset < 4096 && offset > -4096);
-    return Operand(DTRAddr(StackPointer, DtrOffImm(offset)));
+    return Operand(StackPointer, offset);
 }
 
 // THIS IS ALWAYS AN LDRAddr.  It should not be wrapped in an operand, methinks
@@ -88,7 +88,7 @@ MoveEmitterARM::spillSlot() const
 {
     int offset =  masm.framePushed() - pushedAtSpill_;
     JS_ASSERT(offset < 4096 && offset > -4096);
-    return Operand(DTRAddr(StackPointer, DtrOffImm(offset)));
+    return Operand(StackPointer, offset);
 }
 
 Operand
@@ -101,7 +101,7 @@ MoveEmitterARM::doubleSpillSlot() const
     // in general, this single operand will be wrong, since
     // there are only a few offsets that can be encoded in a single
     // instruction.
-    return Operand(VFPAddr(StackPointer, VFPOffImm(offset)));
+    return Operand(StackPointer, offset);
 }
 
 Operand
@@ -111,22 +111,18 @@ MoveEmitterARM::toOperand(const MoveOperand &operand, bool isFloat) const
         if (operand.base() != StackPointer) {
             JS_ASSERT(operand.disp() < 1024 && operand.disp() > -1024);
             if (isFloat)
-                return Operand(DTRAddr(operand.base(),
-                                       DtrOffImm(operand.disp())));
+                return Operand(operand.base(), operand.disp());
             else
-                return Operand(VFPAddr(operand.base(),
-                                       VFPOffImm(operand.disp())));
+                return Operand(operand.base(), operand.disp());
         }
 
         JS_ASSERT(operand.disp() >= 0);
         
         // Otherwise, the stack offset may need to be adjusted.
         if (isFloat)
-            return Operand(VFPAddr(StackPointer,
-                                   VFPOffImm(operand.disp() + (masm.framePushed() - pushedAtStart_))));
+            return Operand(StackPointer, operand.disp() + (masm.framePushed() - pushedAtStart_));
         else
-            return Operand(DTRAddr(StackPointer,
-                                   DtrOffImm(operand.disp() + (masm.framePushed() - pushedAtStart_))));
+            return Operand(StackPointer, operand.disp() + (masm.framePushed() - pushedAtStart_));
     }
     if (operand.isGeneralReg())
         return Operand(operand.reg());
@@ -148,7 +144,7 @@ MoveEmitterARM::tempReg()
         masm.ma_push(spilledReg_);
         pushedAtSpill_ = masm.framePushed();
     } else {
-        masm.ma_str(spilledReg_, spillSlot().toDTRAddr());
+        masm.ma_str(spilledReg_, spillSlot());
     }
     return spilledReg_;
 }
@@ -183,19 +179,19 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, Move:
     if (kind == Move::DOUBLE) {
         if (to.isMemory()) {
             FloatRegister temp = tempFloatReg();
-            masm.ma_vldr(toOperand(to, true).toVFPAddr(), temp);
-            masm.ma_vstr(temp, cycleSlot().toVFPAddr());
+            masm.ma_vldr(toOperand(to, true), temp);
+            masm.ma_vstr(temp, cycleSlot());
         } else {
-            masm.ma_vstr(to.floatReg(), cycleSlot().toVFPAddr());
+            masm.ma_vstr(to.floatReg(), cycleSlot());
         }
     } else {
         // an non-vfp value
         if (to.isMemory()) {
             Register temp = tempReg();
-            masm.ma_ldr(toOperand(to, false).toDTRAddr(), temp);
-            masm.ma_str(temp, cycleSlot().toDTRAddr());
+            masm.ma_ldr(toOperand(to, false), temp);
+            masm.ma_str(temp, cycleSlot());
         } else {
-            masm.ma_str(to.reg(), cycleSlot().toDTRAddr());
+            masm.ma_str(to.reg(), cycleSlot());
         }
     }
 }
@@ -212,18 +208,18 @@ MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
     if (kind == Move::DOUBLE) {
         if (to.isMemory()) {
             FloatRegister temp = tempFloatReg();
-            masm.ma_vldr(cycleSlot().toVFPAddr(), temp);
-            masm.ma_vstr(temp, toOperand(to, true).toVFPAddr());
+            masm.ma_vldr(cycleSlot(), temp);
+            masm.ma_vstr(temp, toOperand(to, true));
         } else {
-            masm.ma_vldr(cycleSlot().toVFPAddr(), to.floatReg());
+            masm.ma_vldr(cycleSlot(), to.floatReg());
         }
     } else {
         if (to.isMemory()) {
             Register temp = tempReg();
-            masm.ma_ldr(cycleSlot().toDTRAddr(), temp);
-            masm.ma_str(temp, toOperand(to, false).toDTRAddr());
+            masm.ma_ldr(cycleSlot(), temp);
+            masm.ma_str(temp, toOperand(to, false));
         } else {
-            masm.ma_ldr(cycleSlot().toDTRAddr(), to.reg());
+            masm.ma_ldr(cycleSlot(), to.reg());
         }
     }
 }
@@ -235,7 +231,7 @@ MoveEmitterARM::emitMove(const MoveOperand &from, const MoveOperand &to)
         if (from.reg() == spilledReg_) {
             // If the source is a register that has been spilled, make sure
             // to load the source back into that register.
-            masm.ma_ldr(spillSlot().toDTRAddr(), spilledReg_);
+            masm.ma_ldr(spillSlot(), spilledReg_);
             spilledReg_ = InvalidReg;
         }
         switch (toOperand(to, false).getTag()) {
@@ -243,8 +239,8 @@ MoveEmitterARM::emitMove(const MoveOperand &from, const MoveOperand &to)
             // secretly must be a register
             masm.ma_mov(from.reg(), to.reg());
             break;
-          case Operand::DTR:
-            masm.ma_str(from.reg(), toOperand(to, false).toDTRAddr());
+          case Operand::MEM:
+            masm.ma_str(from.reg(), toOperand(to, false));
             break;
           default:
             JS_NOT_REACHED("strange move!");
@@ -255,12 +251,12 @@ MoveEmitterARM::emitMove(const MoveOperand &from, const MoveOperand &to)
             // don't re-clobber its value.
             spilledReg_ = InvalidReg;
         }
-        masm.ma_ldr(toOperand(from, false).toDTRAddr(), to.reg());
+        masm.ma_ldr(toOperand(from, false), to.reg());
     } else {
         // Memory to memory gpr move.
         Register reg = tempReg();
-        masm.ma_ldr(toOperand(from, false).toDTRAddr(), reg);
-        masm.ma_str(reg, toOperand(to, false).toDTRAddr());
+        masm.ma_ldr(toOperand(from, false), reg);
+        masm.ma_str(reg, toOperand(to, false));
     }
 }
 
@@ -274,10 +270,10 @@ MoveEmitterARM::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
             if (from.floatReg() == spilledFloatReg_) {
                 // If the source is a register that has been spilled, make
                 // sure to load the source back into that register.
-                masm.ma_vldr(doubleSpillSlot().toVFPAddr(), spilledFloatReg_);
+                masm.ma_vldr(doubleSpillSlot(), spilledFloatReg_);
                 spilledFloatReg_ = InvalidFloatReg;
             }
-            masm.ma_vstr(from.floatReg(), toOperand(to, true).toVFPAddr());
+            masm.ma_vstr(from.floatReg(), toOperand(to, true));
         }
     } else if (to.isFloatReg()) {
         if (to.floatReg() == spilledFloatReg_) {
@@ -285,12 +281,12 @@ MoveEmitterARM::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
             // don't re-clobber its value.
             spilledFloatReg_ = InvalidFloatReg;
         }
-        masm.ma_vldr(toOperand(from, true).toVFPAddr(), to.floatReg());
+        masm.ma_vldr(toOperand(from, true), to.floatReg());
     } else {
         // Memory to memory float move.
         FloatRegister reg = tempFloatReg();
-        masm.ma_vldr(toOperand(from, true).toVFPAddr(), reg);
-        masm.ma_vstr(reg, toOperand(to, true).toVFPAddr());
+        masm.ma_vldr(toOperand(from, true), reg);
+        masm.ma_vstr(reg, toOperand(to, true));
     }
 }
 
@@ -329,10 +325,10 @@ MoveEmitterARM::finish()
     assertDone();
 
     if (pushedAtDoubleSpill_ != -1 && spilledFloatReg_ != InvalidFloatReg) {
-        masm.ma_vldr(doubleSpillSlot().toVFPAddr(), spilledFloatReg_);
+        masm.ma_vldr(doubleSpillSlot(), spilledFloatReg_);
     }
     if (pushedAtSpill_ != -1 && spilledReg_ != InvalidReg) {
-        masm.ma_ldr(spillSlot().toDTRAddr(), spilledReg_);
+        masm.ma_ldr(spillSlot(), spilledReg_);
     }
     masm.freeStack(masm.framePushed() - pushedAtStart_);
 }

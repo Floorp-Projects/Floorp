@@ -663,10 +663,66 @@ MacroAssemblerARM::ma_str(Register rt, DTRAddr addr, Index mode, Condition cc)
 {
     as_dtr(IsStore, 32, mode, rt, addr, cc);
 }
+
+void
+MacroAssemblerARM::ma_dtr(LoadStore ls, Register rt, const Operand &addr, Index mode, Condition cc)
+{
+    int off = addr.disp();
+    Register base = Register::FromCode(addr.base());
+    if (off > -4096 && off < 4096) {
+        as_dtr(ls, 32, mode, rt, addr.toDTRAddr(), cc);
+        return;
+    }
+    // We cannot encode this offset in a a single ldr.  Try to encode it as
+    // an add scratch, base, imm; ldr dest, [scratch, +offset].
+    int bottom = off & 0xfff;
+    int neg_bottom = 0x1000 - bottom;
+    // at this point, both off - bottom and off + neg_bottom will be reasonable-ish
+    // quantities.
+    if (off < 0) {
+        Operand2 sub_off = Imm8(-(off-bottom)); // sub_off = bottom - off
+        if (!sub_off.invalid) {
+            as_sub(ScratchRegister, base, sub_off, NoSetCond, cc); // - sub_off = off - bottom
+            as_dtr(ls, 32, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(bottom)), cc);
+            return;
+        }
+        sub_off = Imm8(-(off+neg_bottom));// sub_off = -neg_bottom - off
+        if (!sub_off.invalid) {
+            as_sub(ScratchRegister, base, sub_off, NoSetCond, cc); // - sub_off = neg_bottom + off
+            as_dtr(ls, 32, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(-neg_bottom)), cc);
+            return;
+        }
+    } else {
+        Operand2 sub_off = Imm8(off-bottom); // sub_off = off - bottom
+        if (!sub_off.invalid) {
+            as_add(ScratchRegister, base, sub_off, NoSetCond, cc); //  sub_off = off - bottom
+            as_dtr(ls, 32, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(bottom)), cc);
+            return;
+        }
+        sub_off = Imm8(off+neg_bottom);// sub_off = neg_bottom + off
+        if (!sub_off.invalid) {
+            as_add(ScratchRegister, base, sub_off, NoSetCond,  cc); // sub_off = neg_bottom + off
+            as_dtr(ls, 32, Offset, rt, DTRAddr(ScratchRegister, DtrOffImm(-neg_bottom)), cc);
+            return;
+        }
+    }
+    JS_NOT_REACHED("TODO: implement bigger offsets :(");
+}
+void
+MacroAssemblerARM::ma_str(Register rt, const Operand &addr, Index mode, Condition cc)
+{
+    ma_dtr(IsStore, rt, addr, mode, cc);
+}
+
 void
 MacroAssemblerARM::ma_ldr(DTRAddr addr, Register rt, Index mode, Condition cc)
 {
     as_dtr(IsLoad, 32, mode, rt, addr, cc);
+}
+void
+MacroAssemblerARM::ma_ldr(const Operand &addr, Register rt, Index mode, Condition cc)
+{
+    ma_dtr(IsLoad, rt, addr, mode, cc);
 }
 
 void
@@ -690,6 +746,11 @@ void
 MacroAssemblerARM::ma_ldrsb(EDtrAddr addr, Register rt, Index mode, Condition cc)
 {
     as_extdtr(IsLoad, 8, true, mode, rt, addr, cc);
+}
+void
+MacroAssemblerARM::ma_ldrd(EDtrAddr addr, Register rt, Index mode, Condition cc)
+{
+    as_extdtr(IsLoad, 64, true, mode, rt, addr, cc);
 }
 
 // specialty for moving N bits of data, where n == 8,16,32,64
@@ -828,15 +889,28 @@ MacroAssemblerARM::ma_vxfer(FloatRegister src, Register dest)
 {
     as_vxfer(dest, InvalidReg, VFPRegister(src).singleOverlay(), FloatToCore);
 }
+
 void
 MacroAssemblerARM::ma_vldr(VFPAddr addr, FloatRegister dest)
 {
     as_vdtr(IsLoad, dest, addr);
 }
 void
+MacroAssemblerARM::ma_vldr(const Operand &addr, FloatRegister dest)
+{
+    as_vdtr(IsLoad, dest, VFPAddr(Register::FromCode(addr.base()), VFPOffImm(addr.disp())));
+}
+
+void
 MacroAssemblerARM::ma_vstr(FloatRegister src, VFPAddr addr)
 {
     as_vdtr(IsStore, src, addr);
+}
+
+void
+MacroAssemblerARM::ma_vstr(FloatRegister src, const Operand &addr)
+{
+    as_vdtr(IsStore, src, VFPAddr(Register::FromCode(addr.base()), VFPOffImm(addr.disp())));
 }
 
 void
@@ -1083,6 +1157,98 @@ MacroAssemblerARMCompat::testDoubleTruthy(bool truthy, const FloatRegister &reg)
     as_cmp(r0, O2Reg(r0), Overflow);
     return truthy ? NonZero : Zero;
 }
+Operand ToPayload(Operand base) {
+    return base;
+}
+Operand ToType(Operand base) {
+    return Operand(Register::FromCode(base.base()),
+                   base.disp() + sizeof(void *));
+}
+
+void
+MacroAssemblerARMCompat::moveValue(const Value &val, Register type, Register data) {
+    jsval_layout jv = JSVAL_TO_IMPL(val);
+    ma_mov(Imm32(jv.s.tag), type);
+    ma_mov(Imm32(jv.s.payload.i32), data);
+}
+void
+MacroAssemblerARMCompat::moveValue(const Value &val, const ValueOperand &dest) {
+    moveValue(val, dest.typeReg(), dest.payloadReg());
+}
+
+/////////////////////////////////////////////////////////////////
+// X86/X64-common (ARM too now) interface.
+/////////////////////////////////////////////////////////////////
+void
+MacroAssemblerARMCompat::storeValue(ValueOperand val, Operand dst) {
+    ma_str(val.payloadReg(), ToPayload(dst));
+    ma_str(val.typeReg(), ToType(dst));
+}
+void
+MacroAssemblerARMCompat::loadValue(Operand src, ValueOperand val) {
+#if 0
+    Operand payload = ToPayload(src);
+    Operand type = ToType(src);
+    
+    // Ensure that loading the payload does not erase the pointer to the
+    // Value in memory.
+    if (Register::FromCode(type.base()) != val.payloadReg()) {
+        movl(payload, val.payloadReg());
+        movl(type, val.typeReg());
+    } else {
+        movl(type, val.typeReg());
+        movl(payload, val.payloadReg());
+    }
+#endif
+    JS_NOT_REACHED("loadValue NYI");
+}
+void
+MacroAssemblerARMCompat::pushValue(ValueOperand val) {
+    ma_push(val.typeReg());
+    ma_push(val.payloadReg());
+}
+void
+MacroAssemblerARMCompat::popValue(ValueOperand val) {
+    ma_pop(val.payloadReg());
+    ma_pop(val.typeReg());
+}
+void
+MacroAssemblerARMCompat::storePayload(const Value &val, Operand dest) {
+    jsval_layout jv = JSVAL_TO_IMPL(val);
+    if (val.isMarkable()) {
+        JS_NOT_REACHED("why do we do all of these things?");
+        //ma_str(ImmGCPtr((gc::Cell *)jv.s.payload.ptr), ToPayload(dest));
+    } else {
+        ma_mov(Imm32(jv.s.payload.i32), ScratchRegister);
+        ma_str(ScratchRegister, ToPayload(dest));
+    }
+}
+void
+MacroAssemblerARMCompat::storePayload(Register src, Operand dest) {
+    if (dest.getTag() == Operand::MEM) {
+        ma_str(src, ToPayload(dest));
+        return;
+    }
+    JS_NOT_REACHED("why do we do all of these things?");
+
+}
+void
+MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Operand dest) {
+    if (dest.getTag() == Operand::MEM) {
+        ma_mov(tag, ScratchRegister);
+        ma_str(ScratchRegister, ToType(dest));
+        return;
+    }
+
+    JS_NOT_REACHED("why do we do all of these things?");
+
+}
+
+void
+MacroAssemblerARMCompat::linkExitFrame() {
+    movePtr(ImmWord(JS_THREAD_DATA(GetIonContext()->cx)), ScratchRegister);
+    ma_str(StackPointer, Operand(ScratchRegister, offsetof(ThreadData, ionTop)));
+}
 
 // ARM says that all reads of pc will return 8 higher than the
 // address of the currently executing instruction.  This means we are
@@ -1167,8 +1333,9 @@ MacroAssemblerARM::setupUnalignedABICall(uint32 args, const Register &scratch)
     // in order to compute alignment. framePushed_ is bogus or we don't know
     // it for sure, so instead, save the original value of esp and then chop
     // off its low bits. Then, we push the original value of esp.
-    JS_NOT_REACHED("Codegen for dynamicallyAlignedStackForCall NYI");
-
+    ma_mov(sp, scratch);
+    ma_and(Imm32(~(StackAlignment - 1)), sp, sp);
+    ma_push(scratch);
     stackAdjust_ = stackForCall + ComputeByteAlignment(displacement, StackAlignment);
     dynamicAlignment_ = true;
     reserveStack(stackAdjust_);
@@ -1233,5 +1400,27 @@ MacroAssemblerARM::callWithABI(void *fun)
 
     JS_ASSERT(inCall_);
     inCall_ = false;
+}
+
+void
+MacroAssemblerARMCompat::handleException()
+{
+    // Reserve space for exception information.
+    int size = (sizeof(ResumeFromException) + 7) & ~7;
+    ma_sub(Imm32(size), sp);
+    ma_mov(sp, r0);
+
+    // Ask for an exception handler.
+    setupAlignedABICall(1);
+    setABIArg(0, r0);
+    callWithABI(JS_FUNC_TO_DATA_PTR(void *, ion::HandleException));
+    // Load the error value, load the new stack pointer, and return.
+    moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
+    ma_ldr(Operand(sp, offsetof(ResumeFromException, stackPointer)), sp);
+
+    // We're going to be returning by the ion calling convention, which returns
+    // by ??? (for now, I think ldr pc, [sp]!)
+    as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
+    //ret();
 }
 

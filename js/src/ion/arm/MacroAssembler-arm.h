@@ -43,6 +43,7 @@
 #define jsion_macro_assembler_arm_h__
 
 #include "ion/arm/Assembler-arm.h"
+#include "ion/IonFrames.h"
 #include "ion/MoveResolver.h"
 #include "jsopcode.h"
 
@@ -274,13 +275,17 @@ class MacroAssemblerARM : public Assembler
 
 
     void ma_str(Register rt, DTRAddr addr, Index mode = Offset, Condition cc = Always);
+    void ma_str(Register rt, const Operand &addr, Index mode = Offset, Condition cc = Always);
+    void ma_dtr(LoadStore ls, Register rt, const Operand &addr, Index mode, Condition cc);
 
     void ma_ldr(DTRAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
+    void ma_ldr(const Operand &addr, Register rt, Index mode = Offset, Condition cc = Always);
+
     void ma_ldrb(DTRAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
     void ma_ldrh(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
     void ma_ldrsh(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
     void ma_ldrsb(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
-
+    void ma_ldrd(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
     // specialty for moving N bits of data, where n == 8,16,32,64
     void ma_dataTransferN(LoadStore ls, int size,
                           Register rn, Register rm, Register rt,
@@ -326,8 +331,10 @@ class MacroAssemblerARM : public Assembler
     void ma_vxfer(FloatRegister src, Register dest);
 
     void ma_vldr(VFPAddr addr, FloatRegister dest);
+    void ma_vldr(const Operand &addr, FloatRegister dest);
 
     void ma_vstr(FloatRegister src, VFPAddr addr);
+    void ma_vstr(FloatRegister src, const Operand &addr);
 
   public:
     void reserveStack(uint32 amount);
@@ -542,6 +549,24 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label *label) {
         JS_NOT_REACHED("NYI");
     }
+
+    void moveValue(const Value &val, Register type, Register data);
+    void moveValue(const Value &val, const ValueOperand &dest);
+    void storeValue(ValueOperand val, Operand dst);
+    void loadValue(Operand src, ValueOperand val);
+    void pushValue(ValueOperand val);
+    void popValue(ValueOperand val);
+    void storePayload(const Value &val, Operand dest);
+    void storePayload(Register src, Operand dest);
+    void storeTypeTag(ImmTag tag, Operand dest);
+    void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
+        ma_lsl(Imm32(FRAMETYPE_BITS), frameSizeReg, frameSizeReg);
+        ma_orr(Imm32(type), frameSizeReg);
+    }
+
+    void linkExitFrame();
+    void handleException();
+
 };
 
 typedef MacroAssemblerARMCompat MacroAssemblerSpecific;

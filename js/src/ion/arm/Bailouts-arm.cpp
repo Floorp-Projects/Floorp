@@ -47,7 +47,7 @@
 using namespace js;
 using namespace js::ion;
 
-static const uintptr_t BAILOUT_TABLE_ENTRY_SIZE = 5;
+static const uintptr_t BAILOUT_TABLE_ENTRY_SIZE = 4;
 #if 0
 // no clue what these asserts should be.
 JS_STATIC_ASSERT(sizeof(BailoutStack) ==
@@ -102,12 +102,18 @@ namespace ion {
 class BailoutStack
 {
     uintptr_t frameClassId_;
-    double    fpregs_[FloatRegisters::Total];
-    uintptr_t regs_[Registers::Total];
+    // This is pushed in the bailout handler.  Both entry points into the handler
+    // inserts their own value int lr, which is then placed onto the stack along
+    // with frameClassId_ above.  This should be migrated to ip.
+  public:
     union {
         uintptr_t frameSize_;
         uintptr_t tableOffset_;
     };
+  private:
+    double    fpregs_[FloatRegisters::Total];
+    uintptr_t regs_[Registers::Total];
+
     uintptr_t snapshotOffset_;
 
   public:
@@ -153,7 +159,7 @@ ion::FrameRecoveryFromBailout(IonCompartment *ion, BailoutStack *bailout)
     IonCode *code = ion->getBailoutTable(bailout->frameClass());
     uintptr_t tableOffset = bailout->tableOffset();
     uintptr_t tableStart = reinterpret_cast<uintptr_t>(code->raw());
-
+    // the table offset is really the absolute
     JS_ASSERT(tableOffset >= tableStart &&
               tableOffset < tableStart + code->instructionsSize());
     JS_ASSERT((tableOffset - tableStart) % BAILOUT_TABLE_ENTRY_SIZE == 0);
@@ -163,3 +169,4 @@ ion::FrameRecoveryFromBailout(IonCompartment *ion, BailoutStack *bailout)
 
     return FrameRecovery::FromBailoutId(fp, sp, bailout->machine(), bailoutId);
 }
+

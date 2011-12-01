@@ -279,6 +279,8 @@ Assembler::processCodeLabels(IonCode *code)
 Assembler::Condition
 Assembler::InvertCondition(Condition cond)
 {
+    return Condition(0x80000000^cond);
+#if 0
     switch (cond) {
       case Equal:
         //case Zero:
@@ -304,7 +306,7 @@ Assembler::InvertCondition(Condition cond)
         JS_NOT_REACHED("Comparisons other than LT, LE, GT, GE not yet supported");
         return Equal;
     }
-
+#endif
 }
 
 Imm8::TwoImm8mData
@@ -1430,7 +1432,7 @@ Assembler::retarget(Label *label, Label *target)
         } else {
             // The target is unbound.  We can just take the head of the list
             // hanging off of label, and dump that into target.
-            uint32 prev = target->use(label->offset());
+            DebugOnly<uint32> prev = target->use(label->offset());
             JS_ASSERT((int32)prev == Label::INVALID_OFFSET);
         }
     }
