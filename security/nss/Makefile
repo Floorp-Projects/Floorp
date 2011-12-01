@@ -147,10 +147,10 @@ clobber_nspr: $(NSPR_CONFIG_STATUS)
 	cd $(CORE_DEPTH)/../nsprpub/$(OBJDIR_NAME) ; $(MAKE) clobber
 
 build_dbm:
-ifndef NSS_DISABLE_DBM
-	cd $(CORE_DEPTH)/dbm ; $(MAKE) export libs
+ifdef NSS_DISABLE_DBM
+	@echo "skipping the build of DBM"
 else
-	echo "skipping the build of DBM"
+	cd $(CORE_DEPTH)/dbm ; $(MAKE) export libs
 endif
 
 clobber_dbm:

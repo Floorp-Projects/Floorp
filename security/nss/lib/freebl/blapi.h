@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapi.h,v 1.42 2011/10/04 22:05:53 wtc%google.com Exp $ */
+/* $Id: blapi.h,v 1.43 2011/10/29 23:28:45 wtc%google.com Exp $ */
 
 #ifndef _BLAPI_H_
 #define _BLAPI_H_
@@ -273,7 +273,7 @@ JPAKE_Sign(PLArenaPool * arena, const PQGParams * pqg, HASH_HashType hashType,
  * The arena is *not* optional so do not pass NULL for the arena parameter. 
  */
 SECStatus
-JPAKE_Verify(PRArenaPool * arena, const PQGParams * pqg,
+JPAKE_Verify(PLArenaPool * arena, const PQGParams * pqg,
              HASH_HashType hashType, const SECItem * signerID,
              const SECItem * peerID, const SECItem * gx,
              const SECItem * gv, const SECItem * r);
