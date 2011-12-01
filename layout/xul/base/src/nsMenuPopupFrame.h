@@ -176,7 +176,7 @@ public:
   virtual void LockMenuUntilClosed(bool aLock);
   virtual bool IsMenuLocked() { return mIsMenuLocked; }
 
-  nsIWidget* GetWidget();
+  NS_IMETHOD GetWidget(nsIWidget **aWidget);
 
   // The dismissal listener gets created and attached to the window.
   void AttachedDismissalListener();
@@ -352,9 +352,6 @@ public:
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
-
-  nsIntPoint GetLastClientOffset() const { return mLastClientOffset; }
-
 protected:
 
   // returns the popup's level.
@@ -438,10 +435,6 @@ protected:
   PRInt32 mYPos;
   PRInt32 mScreenXPos;
   PRInt32 mScreenYPos;
-  // The value of the client offset of our widget the last time we positioned
-  // ourselves. We store this so that we can detect when it changes but the
-  // position of our widget didn't change.
-  nsIntPoint mLastClientOffset;
 
   nsPopupType mPopupType; // type of popup
   nsPopupState mPopupState; // open state of the popup

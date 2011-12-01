@@ -122,15 +122,10 @@ public:
   virtual gfxASurface*    GetThebesSurface();
   NS_IMETHOD              SetModal(bool aModal); 
   NS_IMETHOD              SetWindowClass(const nsAString& xulWinType);
-  NS_IMETHOD              MoveClient(PRInt32 aX, PRInt32 aY);
-  NS_IMETHOD              ResizeClient(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint);
-  NS_IMETHOD              ResizeClient(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, bool aRepaint);
   NS_IMETHOD              SetBounds(const nsIntRect &aRect);
   NS_IMETHOD              GetBounds(nsIntRect &aRect);
   NS_IMETHOD              GetClientBounds(nsIntRect &aRect);
   NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
-  NS_IMETHOD              GetNonClientMargins(nsIntMargin &margins);
-  NS_IMETHOD              SetNonClientMargins(nsIntMargin &margins);
   virtual nsIntPoint      GetClientOffset();
   NS_IMETHOD              EnableDragDrop(bool aEnable);
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
@@ -168,6 +163,9 @@ public:
   NS_IMETHOD              AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction, nsDeviceContext *aContext);
   virtual ViewWrapper*    GetAttachedViewPtr();
   NS_IMETHOD              SetAttachedViewPtr(ViewWrapper* aViewWrapper);
+  NS_IMETHOD              ResizeClient(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, bool aRepaint);
+  NS_IMETHOD              GetNonClientMargins(nsIntMargin &margins);
+  NS_IMETHOD              SetNonClientMargins(nsIntMargin &margins);
   NS_IMETHOD              RegisterTouchWindow();
   NS_IMETHOD              UnregisterTouchWindow();
 
