@@ -111,6 +111,7 @@ abstract public class GeckoApp
     public static File sGREDir = null;
     public static Menu sMenu;
     public Handler mMainHandler;
+    private File mProfileDir;
 
     private IntentFilter mConnectivityFilter;
     private IntentFilter mBatteryFilter;
@@ -387,8 +388,10 @@ abstract public class GeckoApp
             return false;
 
                 String args = intent.getStringExtra("args");
-                if (args != null && args.contains("-profile"))
+                if (args != null && args.contains("-profile")) {
+                    // XXX: TO-DO set mProfileDir to the path passed in
                     mUserDefinedProfile = true;
+                }
 
         if (intent == null)
             intent = getIntent();
@@ -689,6 +692,21 @@ abstract public class GeckoApp
                     mBrowserToolbar.setSecurityMode(mode);
             }
         });
+    }
+
+    File getProfileDir() {
+        if (mProfileDir == null && !mUserDefinedProfile) {
+            File mozDir = new File(GeckoAppShell.sHomeDir, "mozilla");
+            File[] profiles = mozDir.listFiles(new FileFilter() {
+                public boolean accept(File pathname) {
+                    return pathname.getName().endsWith(".default");
+                }
+            });
+            if (profiles.length == 1)
+                mProfileDir = profiles[0];
+            // XXX: TO-DO read profiles.ini to get the default profile
+        }
+        return mProfileDir;
     }
 
     void addTab() {
