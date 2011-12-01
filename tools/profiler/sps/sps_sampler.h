@@ -43,7 +43,6 @@
 // TODO Merge into Sampler.h
 
 extern pthread_key_t pkey_stack;
-extern pthread_key_t pkey_ticker;
 
 #define SAMPLER_INIT() mozilla_sampler_init();
 #define SAMPLER_DEINIT() mozilla_sampler_deinit();
