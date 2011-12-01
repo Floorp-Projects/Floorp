@@ -775,6 +775,17 @@ js_ReportOutOfMemory(JSContext *cx)
 JS_FRIEND_API(void)
 js_ReportOverRecursed(JSContext *maybecx)
 {
+#ifdef JS_MORE_DETERMINISTIC
+    /*
+     * We cannot make stack depth deterministic across different
+     * implementations (e.g. JIT vs. interpreter will differ in
+     * their maximum stack depth).
+     * However, we can detect externally when we hit the maximum
+     * stack depth which is useful for external testing programs
+     * like fuzzers.
+     */
+    fprintf(stderr, "js_ReportOverRecursed called\n");
+#endif
     if (maybecx)
         JS_ReportErrorNumber(maybecx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
 }
