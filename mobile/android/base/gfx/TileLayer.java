@@ -38,8 +38,10 @@
 package org.mozilla.gecko.gfx;
 
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.util.Log;
 import javax.microedition.khronos.opengles.GL10;
+import javax.microedition.khronos.opengles.GL11Ext;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -80,35 +82,12 @@ public abstract class TileLayer extends Layer {
 
     protected boolean repeats() { return mRepeat; }
     protected int getTextureID() { return mTextureIDs[0]; }
+    protected boolean initialized() { return mImage != null && mTextureIDs != null; }
 
     @Override
     protected void finalize() throws Throwable {
         if (mTextureIDs != null)
             TextureReaper.get().add(mTextureIDs);
-    }
-
-    /**
-     * Subclasses implement this method to perform tile drawing.
-     *
-     * Invariant: The current matrix mode must be GL_MODELVIEW both before and after this call.
-     */
-    protected abstract void onTileDraw(GL10 gl);
-
-    @Override
-    protected void onDraw(GL10 gl) {
-        // mTextureIDs may be null here during startup if Layer.java's draw method
-        // failed to acquire the transaction lock and call performUpdates.
-        if (mImage == null || mTextureIDs == null)
-            return;
-
-        gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-        gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
-        gl.glPushMatrix();
-
-        onTileDraw(gl);
-
-        gl.glPopMatrix();
-        gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
     }
 
     /**
@@ -198,13 +177,6 @@ public abstract class TileLayer extends Layer {
         floatBuffer.put(values);
         floatBuffer.position(0);
         return floatBuffer;
-    }
-
-    protected static void drawTriangles(GL10 gl, FloatBuffer vertexBuffer,
-                                        FloatBuffer texCoordBuffer, int count) {
-        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vertexBuffer);
-        gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, texCoordBuffer);
-        gl.glDrawArrays(GL10.GL_TRIANGLE_STRIP, 0, count);
     }
 }
 

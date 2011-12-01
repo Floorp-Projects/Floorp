@@ -102,4 +102,8 @@ public final class RectUtils {
         return new Rect(Math.round(rect.left), Math.round(rect.top),
                         Math.round(rect.right), Math.round(rect.bottom));
     }
+
+    public static IntSize getSize(Rect rect) {
+        return new IntSize(rect.width(), rect.height());
+    }
 }
