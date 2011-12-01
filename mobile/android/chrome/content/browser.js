@@ -276,7 +276,7 @@ var BrowserApp = {
     if (!aTab)
       return;
 
-    aTab.sendViewportUpdate(false);
+    aTab.updateViewport(false);
     this.deck.selectedPanel = aTab.vbox;
   },
 
@@ -1121,7 +1121,7 @@ Tab.prototype = {
     return this._viewport;
   },
 
-  sendViewportUpdate: function(aReset) {
+  updateViewport: function(aReset) {
     let win = this.browser.contentWindow;
     let zoom = (aReset ? this.getDefaultZoomLevel() : this._viewport.zoom);
     let xpos = (aReset ? win.scrollX * zoom : this._viewport.x);
@@ -1132,6 +1132,10 @@ Tab.prototype = {
                       width: this._viewport.width, height: this._viewport.height,
                       pageWidth: 1, pageHeight: 1,
                       zoom: zoom };
+    this.sendViewportUpdate();
+  },
+
+  sendViewportUpdate: function() {
     sendMessageToJava({
       gecko: {
         type: "Viewport:Update",
@@ -1180,7 +1184,9 @@ Tab.prototype = {
     sendMessageToJava(message);
 
     if ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) == 0) {
-      this.sendViewportUpdate(true);
+      this.updateViewport(true);
+    } else {
+      this.sendViewportUpdate();
     }
   },
 
@@ -1276,7 +1282,7 @@ Tab.prototype = {
     }
     this._metadata = aMetadata;
     this.updateViewportSize();
-    this.sendViewportUpdate(true);
+    this.updateViewport(true);
   },
 
   /** Update viewport when the metadata or the window size changes. */
@@ -1458,7 +1464,7 @@ var BrowserEventHandler = {
           return;
 
         let tab = BrowserApp.getTabForBrowser(browser);
-        tab.sendViewportUpdate(true);
+        tab.updateViewport(true);
 
         sendMessageToJava({
           gecko: {
