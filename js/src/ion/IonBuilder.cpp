@@ -2774,6 +2774,15 @@ IonBuilder::jsop_setelem_dense()
     current->add(store);
     current->push(value);
 
+#ifdef JSGC_INCREMENTAL
+    // Determine whether a write barrier is required.
+    if (cx->compartment->needsBarrier() &&
+        oracle->propertyWriteNeedsBarrier(script, pc, JSID_VOID))
+    {
+        store->setNeedsBarrier(true);
+    }
+#endif
+
     if (elementType != MIRType_None && packed)
         store->setSlotType(elementType);
 
