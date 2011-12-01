@@ -304,6 +304,8 @@ nsDOMStorageManager::Initialize()
   // Used for temporary table flushing
   rv = os->AddObserver(gStorageManager, "profile-before-change", true);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = os->AddObserver(gStorageManager, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = os->AddObserver(gStorageManager, NS_DOMSTORAGE_FLUSH_TIMER_TOPIC, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -327,14 +329,6 @@ nsDOMStorageManager::Shutdown()
   NS_IF_RELEASE(gStorageManager);
   gStorageManager = nsnull;
 
-  ShutdownDB();
-}
-
-//static
-void
-nsDOMStorageManager::ShutdownDB()
-{
-  DOMStorageImpl::gStorageDB->Close();
   delete DOMStorageImpl::gStorageDB;
   DOMStorageImpl::gStorageDB = nsnull;
 }
@@ -490,13 +484,13 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
     NS_ENSURE_SUCCESS(rv, rv);
 
     DOMStorageImpl::gStorageDB->RemoveOwner(aceDomain, true);
-  } else if (!strcmp(aTopic, "profile-before-change")) {
+  } else if (!strcmp(aTopic, "profile-before-change") || 
+             !strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     if (DOMStorageImpl::gStorageDB) {
       DebugOnly<nsresult> rv =
         DOMStorageImpl::gStorageDB->FlushAndDeleteTemporaryTables(true);
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                        "DOMStorage: temporary table commit failed");
-      nsDOMStorageManager::ShutdownDB();
     }
   } else if (!strcmp(aTopic, NS_DOMSTORAGE_FLUSH_TIMER_TOPIC)) {
     if (DOMStorageImpl::gStorageDB) {
