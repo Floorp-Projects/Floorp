@@ -1236,6 +1236,7 @@ abstract public class GeckoApp
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
+        System.loadLibrary("mozutils");
         Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - onCreate");
         if (savedInstanceState != null) {
             mLastUri = savedInstanceState.getString(SAVED_STATE_URI);
