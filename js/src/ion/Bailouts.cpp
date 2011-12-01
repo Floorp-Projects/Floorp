@@ -243,12 +243,6 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
     // Forbid OSR in the future: bailouts are now expected.
     in.ionScript()->forbidOsr();
 
-    // It is critical to temporarily repoint the frame regs here, otherwise
-    // pushing a new frame could clobber existing frames, since the stack code
-    // cannot determine the real stack top. We unpoint the regs after the
-    // bailout completes.
-    cx->stack.repointRegs(&activation->oldFrameRegs());
-
     BailoutClosure *br = cx->new_<BailoutClosure>();
     if (!br)
         return false;
@@ -345,9 +339,6 @@ ion::ThunkToInterpreter(Value *vp)
     // The BailoutFrameGuard's destructor will ensure that the frame is
     // removed.
     cx->delete_(br);
-
-    JS_ASSERT(&cx->regs() == &activation->oldFrameRegs());
-    cx->stack.repointRegs(NULL);
 
     return ok ? JS_TRUE : JS_FALSE;
 }

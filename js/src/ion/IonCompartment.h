@@ -169,7 +169,6 @@ class IonActivation
     JSContext *cx_;
     IonActivation *prev_;
     StackFrame *entryfp_;
-    FrameRegs &oldFrameRegs_;
     BailoutClosure *bailout_;
     uint8 *prevIonTop_;
     JSContext *prevIonJSContext_;
@@ -195,9 +194,6 @@ class IonActivation
     BailoutClosure *takeBailout() {
         JS_ASSERT(bailout_);
         return maybeTakeBailout();
-    }
-    FrameRegs &oldFrameRegs() {
-        return oldFrameRegs_;
     }
 };
 
