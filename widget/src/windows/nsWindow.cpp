@@ -1930,9 +1930,9 @@ NS_METHOD nsWindow::GetClientBounds(nsIntRect &aRect)
     RECT r;
     VERIFY(::GetClientRect(mWnd, &r));
 
-    // assign size
-    aRect.x = 0;
-    aRect.y = 0;
+    nsIntRect bounds;
+    GetBounds(bounds);
+    aRect.MoveTo(bounds.TopLeft() + GetClientOffset());
     aRect.width  = r.right - r.left;
     aRect.height = r.bottom - r.top;
 
