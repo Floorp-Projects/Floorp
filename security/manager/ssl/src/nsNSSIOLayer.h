@@ -62,6 +62,7 @@
 
 class nsIChannel;
 class nsSSLThread;
+class ::mozilla::MutexAutoLock;
 
 /*
  * This class is used to store SSL socket I/O state information,
@@ -153,7 +154,6 @@ public:
 
   nsresult SetSecurityState(PRUint32 aState);
   nsresult SetShortSecurityDescription(const PRUnichar *aText);
-  void SetErrorMessage(const PRUnichar *aText);
 
   nsresult SetForSTARTTLS(bool aForSTARTTLS);
   nsresult GetForSTARTTLS(bool *aForSTARTTLS);
@@ -172,8 +172,12 @@ public:
 
   void GetPreviousCert(nsIX509Cert** _result);
 
-  void SetCanceled(bool aCanceled);
-  bool GetCanceled();
+  enum ErrorMessageType {
+    OverridableCertErrorMessage  = 1, // for *overridable* certificate errors
+    PlainErrorMessage = 2,            // all other errors
+  };
+  void SetCanceled(PRErrorCode errorCode, ErrorMessageType errorMessageType);
+  PRErrorCode GetErrorCode() const;
   
   void SetHasCleartextPhase(bool aHasCleartextPhase);
   bool GetHasCleartextPhase();
@@ -183,8 +187,6 @@ public:
   bool HandshakeTimeout();
 
   void SetAllowTLSIntoleranceTimeout(bool aAllow);
-
-  bool GetExternalErrorReporting();
 
   nsresult RememberCAChain(CERTCertList *aCertList);
 
@@ -201,6 +203,8 @@ public:
     mIsCertIssuerBlacklisted = true;
   }
 protected:
+  mutable ::mozilla::Mutex mMutex;
+
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   PRFileDesc* mFd;
   enum { 
@@ -212,12 +216,16 @@ protected:
   PRInt32 mSubRequestsBrokenSecurity;
   PRInt32 mSubRequestsNoSecurity;
   nsString mShortDesc;
-  nsString mErrorMessage;
+
+  PRErrorCode mErrorCode;
+  ErrorMessageType mErrorMessageType;
+  nsString mErrorMessageCached;
+  nsresult formatErrorMessage(::mozilla::MutexAutoLock const & proofOfLock);
+
   bool mDocShellDependentStuffKnown;
   bool mExternalErrorReporting; // DocShellDependent
   bool mForSTARTTLS;
   bool mHandshakePending;
-  bool mCanceled;
   bool mHasCleartextPhase;
   bool mHandshakeInProgress;
   bool mAllowTLSIntoleranceTimeout;
