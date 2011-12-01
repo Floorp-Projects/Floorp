@@ -349,7 +349,10 @@ class StackFrame
 
         /* Method JIT state */
         DOWN_FRAMES_EXPANDED = 0x100000,  /* inlining in down frames has been expanded */
-        LOWERED_CALL_APPLY   = 0x200000   /* Pushed by a lowered call/apply */
+        LOWERED_CALL_APPLY   = 0x200000,  /* Pushed by a lowered call/apply */
+
+        /* Ion frame state */
+        RUNNING_IN_ION       = 0x400000   /* frame is running in Ion */
     };
 
   private:
@@ -1158,6 +1161,16 @@ class StackFrame
 #endif
 
     void methodjitStaticAsserts();
+
+    bool runningInIon() const {
+        return !!(flags_ & RUNNING_IN_ION);
+    }
+    void setRunningInIon() {
+        flags_ |= RUNNING_IN_ION;
+    }
+    void clearRunningInIon() {
+        flags_ &= ~RUNNING_IN_ION;
+    }
 };
 
 static const size_t VALUES_PER_STACK_FRAME = sizeof(StackFrame) / sizeof(Value);
