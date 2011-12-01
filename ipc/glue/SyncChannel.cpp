@@ -95,8 +95,10 @@ SyncChannel::EventOccurred()
 }
 
 bool
-SyncChannel::Send(Message* msg, Message* reply)
+SyncChannel::Send(Message* _msg, Message* reply)
 {
+    nsAutoPtr<Message> msg(_msg);
+
     AssertWorkerThread();
     mMonitor.AssertNotCurrentThreadOwns();
     NS_ABORT_IF_FALSE(!ProcessingSyncMessage(),
@@ -118,7 +120,7 @@ SyncChannel::Send(Message* msg, Message* reply)
 
     mPendingReply = msg->type() + 1;
     int32 msgSeqno = msg->seqno();
-    SendThroughTransport(msg);
+    SendThroughTransport(msg.forget());
 
     while (1) {
         bool maybeTimedOut = !SyncChannel::WaitForNotify();

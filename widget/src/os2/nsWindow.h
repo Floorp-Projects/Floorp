@@ -213,7 +213,7 @@ public:
                                       nsEventStatus& aStatus);
   NS_IMETHOD            ReparentNativeWidget(nsIWidget* aNewParent);
 
-  NS_IMETHOD_(void)     SetInputContext(const InputContext& aContext,
+  NS_IMETHOD_(void)     SetInputContext(const InputContext& aInputContext,
                                         const InputContextAction& aAction)
   {
     mInputContext = aInputContext;
