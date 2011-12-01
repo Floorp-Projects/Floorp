@@ -101,6 +101,7 @@ abstract public class GeckoApp
     public static final String SAVED_STATE_URI      = "uri";
     public static final String SAVED_STATE_TITLE    = "title";
     public static final String SAVED_STATE_VIEWPORT = "viewport";
+    public static final String SAVED_STATE_SCREEN   = "screen";
 
     private LinearLayout mMainLayout;
     private AbsoluteLayout mGeckoLayout;
@@ -134,6 +135,7 @@ abstract public class GeckoApp
     public String mLastUri;
     public String mLastTitle;
     public String mLastViewport;
+    public byte[] mLastScreen;
 
     private Vector<View> mPluginViews = new Vector<View>();
 
@@ -550,12 +552,6 @@ abstract public class GeckoApp
         }
     }
 
-    public static String getStartupBitmapFilePath() {
-        File file = new File(GeckoAppShell.getCacheDir(),
-                             "lastScreen.png");
-        return file.toString();
-    }
-
     public String getLastViewport() {
         return mLastViewport;
     }
@@ -564,13 +560,15 @@ abstract public class GeckoApp
         super.onSaveInstanceState(outState);
         if (outState == null)
             outState = new Bundle();
+        rememberLastScreen();
         outState.putString(SAVED_STATE_URI, mLastUri);
         outState.putString(SAVED_STATE_TITLE, mLastTitle);
         outState.putString(SAVED_STATE_VIEWPORT, mLastViewport);
+        outState.putByteArray(SAVED_STATE_SCREEN, mLastScreen);
     }
 
 
-    private void rememberLastScreen(boolean sync) {
+    private void rememberLastScreen() {
         if (mUserDefinedProfile)
             return;
 
@@ -588,15 +586,10 @@ abstract public class GeckoApp
         mLastViewport = mSoftwareLayerClient.getGeckoViewportMetrics().toJSON();
         mLastUri = lastHistoryEntry.mUri;
         mLastTitle = lastHistoryEntry.mTitle;
-
-
-        GeckoEvent event = new GeckoEvent();
-        event.mType = GeckoEvent.SAVE_STATE;
-        event.mCharacters = getStartupBitmapFilePath();
-        if (sync)
-            GeckoAppShell.sendEventToGeckoSync(event);
-        else
-            GeckoAppShell.sendEventToGecko(event);
+        Bitmap bitmap = mSoftwareLayerClient.getBitmap();
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
+        mLastScreen = bos.toByteArray();
     }
 
     private void maybeCancelFaviconLoad(Tab tab) {
@@ -1242,6 +1235,7 @@ abstract public class GeckoApp
             mLastUri = savedInstanceState.getString(SAVED_STATE_URI);
             mLastTitle = savedInstanceState.getString(SAVED_STATE_TITLE);
             mLastViewport = savedInstanceState.getString(SAVED_STATE_VIEWPORT);
+            mLastScreen = savedInstanceState.getByteArray(SAVED_STATE_SCREEN);
         }
         if (Build.VERSION.SDK_INT >= 9) {
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()

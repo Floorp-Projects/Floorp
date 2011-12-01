@@ -50,12 +50,12 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.graphics.RectF;
-import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.File;
+import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 
 /**
@@ -70,7 +70,6 @@ public class PlaceholderLayerClient extends LayerClient {
     private boolean mViewportUnknown;
     private int mWidth, mHeight, mFormat;
     private ByteBuffer mBuffer;
-    private FetchImageTask mTask;
 
     private PlaceholderLayerClient(Context context) {
         mContext = context;
@@ -88,6 +87,7 @@ public class PlaceholderLayerClient extends LayerClient {
         } else {
             mViewport = new ViewportMetrics();
         }
+        loadScreenshot();
     }
 
     public static PlaceholderLayerClient createInstance(Context context) {
@@ -99,22 +99,14 @@ public class PlaceholderLayerClient extends LayerClient {
             GeckoAppShell.freeDirectBuffer(mBuffer);
             mBuffer = null;
         }
-        if (mTask != null) {
-            mTask.cancel(false);
-            mTask = null;
-        }
     }
 
-    private class FetchImageTask extends AsyncTask<Void, Void, Void> {
-
-        @Override
-        protected Void doInBackground(Void... unused) {
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inScaled = false;
-            Bitmap bitmap = BitmapFactory.decodeFile(GeckoApp.getStartupBitmapFilePath(),
-                                                     options);
+    boolean loadScreenshot() {
+            if (GeckoApp.mAppContext.mLastScreen == null)
+                return false;
+            Bitmap bitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(GeckoApp.mAppContext.mLastScreen));
             if (bitmap == null)
-                return null;
+                return false;
 
             Bitmap.Config config = bitmap.getConfig();
 
@@ -133,11 +125,10 @@ public class PlaceholderLayerClient extends LayerClient {
                     getLayerController().setPageSize(mViewport.getPageSize());
             }
 
-            return null;
+            return true;
         }
 
-        @Override
-        protected void onPostExecute(Void unused) {
+    void showScreenshot() {
             BufferedCairoImage image = new BufferedCairoImage(mBuffer, mWidth, mHeight, mFormat);
             SingleTileLayer tileLayer = new SingleTileLayer(image);
 
@@ -147,7 +138,6 @@ public class PlaceholderLayerClient extends LayerClient {
 
             getLayerController().setRoot(tileLayer);
         }
-    }
 
     @Override
     public void geometryChanged() { /* no-op */ }
@@ -164,7 +154,11 @@ public class PlaceholderLayerClient extends LayerClient {
 
         BufferedCairoImage image = new BufferedCairoImage(mBuffer, mWidth, mHeight, mFormat);
         SingleTileLayer tileLayer = new SingleTileLayer(image);
+
+        beginTransaction(tileLayer);
+        tileLayer.setOrigin(PointUtils.round(mViewport.getDisplayportOrigin()));
+        endTransaction(tileLayer);
+
         layerController.setRoot(tileLayer);
     }
 }
-
