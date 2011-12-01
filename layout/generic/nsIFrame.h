@@ -2274,15 +2274,14 @@ public:
   /**
    * Store the overflow area in the frame's mOverflow.mVisualDeltas
    * fields or as a frame property in the frame manager so that it can
-   * be retrieved later without reflowing the frame. Returns true if either of
-   * the overflow areas changed.
+   * be retrieved later without reflowing the frame.
    */
-  bool FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
+  void FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
                               nsSize aNewSize);
 
-  bool FinishAndStoreOverflow(nsHTMLReflowMetrics* aMetrics) {
-    return FinishAndStoreOverflow(aMetrics->mOverflowAreas,
-                                  nsSize(aMetrics->width, aMetrics->height));
+  void FinishAndStoreOverflow(nsHTMLReflowMetrics* aMetrics) {
+    FinishAndStoreOverflow(aMetrics->mOverflowAreas,
+                           nsSize(aMetrics->width, aMetrics->height));
   }
 
   /**
@@ -2295,9 +2294,8 @@ public:
 
   /**
    * Removes any stored overflow rects (visual and scrollable) from the frame.
-   * Returns true if the overflow changed.
    */
-  bool ClearOverflowRects();
+  void ClearOverflowRects();
 
   /**
    * Determine whether borders should not be painted on certain sides of the
@@ -2824,24 +2822,14 @@ protected:
   // If mOverflow.mType == NS_FRAME_OVERFLOW_LARGE, then the
   // delta values are not meaningful and the overflow area is stored
   // as a separate rect property.
-  struct VisualDeltas {
-    PRUint8 mLeft;
-    PRUint8 mTop;
-    PRUint8 mRight;
-    PRUint8 mBottom;
-    bool operator==(const VisualDeltas& aOther) const
-    {
-      return mLeft == aOther.mLeft && mTop == aOther.mTop &&
-             mRight == aOther.mRight && mBottom == aOther.mBottom;
-    }
-    bool operator!=(const VisualDeltas& aOther) const
-    {
-      return !(*this == aOther);
-    }
-  };
   union {
-    PRUint32     mType;
-    VisualDeltas mVisualDeltas;
+    PRUint32  mType;
+    struct {
+      PRUint8 mLeft;
+      PRUint8 mTop;
+      PRUint8 mRight;
+      PRUint8 mBottom;
+    } mVisualDeltas;
   } mOverflow;
 
   // Helpers
@@ -2956,10 +2944,7 @@ private:
                   mRect.height + mOverflow.mVisualDeltas.mBottom +
                                  mOverflow.mVisualDeltas.mTop);
   }
-  /**
-   * Returns true if any overflow changed.
-   */
-  bool SetOverflowAreas(const nsOverflowAreas& aOverflowAreas);
+  void SetOverflowAreas(const nsOverflowAreas& aOverflowAreas);
   nsPoint GetOffsetToCrossDoc(const nsIFrame* aOther, const PRInt32 aAPD) const;
 
 #ifdef NS_DEBUG
