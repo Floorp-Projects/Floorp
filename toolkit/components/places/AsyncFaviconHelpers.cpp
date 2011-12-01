@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Marco Bonardo <mak77@bonardo.net> (original author)
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -724,11 +725,18 @@ AsyncAssociateIconToPage::Run()
 
   // If there is no entry for this icon, or the entry is obsolete, replace it.
   if (mIcon.id == 0 || (mIcon.status & ICON_STATUS_CHANGED)) {
+    // The 'multi-coalesce' here ensures that replacing a favicon without
+    // specifying a :guid parameter doesn't cause it to be allocated a new
+    // GUID.
     nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
       "INSERT OR REPLACE INTO moz_favicons "
-        "(id, url, data, mime_type, expiration) "
+        "(id, url, data, mime_type, expiration, guid) "
       "VALUES ((SELECT id FROM moz_favicons WHERE url = :icon_url), "
-              ":icon_url, :data, :mime_type, :expiration) "
+              ":icon_url, :data, :mime_type, :expiration, "
+              "COALESCE(:guid, "
+                       "(SELECT guid FROM moz_favicons "
+                        "WHERE url = :icon_url), "
+                       "GENERATE_GUID()))"
     );
     NS_ENSURE_STATE(stmt);
     mozStorageStatementScoper scoper(stmt);
@@ -741,6 +749,16 @@ AsyncAssociateIconToPage::Run()
     NS_ENSURE_SUCCESS(rv, rv);
     rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("expiration"), mIcon.expiration);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // Binding a GUID allows us to override the current (or generated) GUID.
+    if (mIcon.guid.IsEmpty()) {
+      rv = stmt->BindNullByName(NS_LITERAL_CSTRING("guid"));
+    }
+    else {
+      rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), mIcon.guid);
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
     rv = stmt->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
 
