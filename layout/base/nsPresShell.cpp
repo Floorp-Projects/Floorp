@@ -60,6 +60,10 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/Util.h"
 
+#ifdef XP_WIN
+#include "winuser.h"
+#endif
+
 #include "nsPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
@@ -6260,6 +6264,11 @@ IsFullScreenAndRestrictedKeyEvent(nsIContent* aTarget, const nsEvent* aEvent)
     case NS_VK_CONTROL:
     case NS_VK_ALT:
     case NS_VK_META:
+#ifdef XP_WIN
+    case VK_VOLUME_MUTE:
+    case VK_VOLUME_DOWN:
+    case VK_VOLUME_UP:
+#endif
       // Unrestricted key code.
       return false;
     default:
