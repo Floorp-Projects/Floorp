@@ -1579,6 +1579,18 @@ nsWindow::GetScreenBounds(nsIntRect &aRect)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWindow::GetClientBounds(nsIntRect &aRect)
+{
+    // GetBounds returns a rect whose top left represents the top left of the
+    // outer bounds, but whose width/height represent the size of the inner
+    // bounds (which is messed up).
+    GetBounds(aRect);
+    aRect.MoveBy(GetClientOffset());
+
+    return NS_OK;
+}
+
 nsIntPoint
 nsWindow::GetClientOffset()
 {
