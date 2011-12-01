@@ -74,7 +74,7 @@ function checkPopupOpen(isOpen, expectedIndex) {
         autocompletePopup.selectedIndex = expectedIndex;
 }
 
-function doKeyUnprivledged(key) {
+function doKeyUnpriviledged(key) {
     var keyName = "DOM_VK_" + key.toUpperCase();
     var keycode, charcode, alwaysVal;
 
@@ -103,7 +103,7 @@ function doKeyUnprivledged(key) {
     input.dispatchEvent(upEvent);
 }
 
-function doClickUnprivledged() {
+function doClickUnpriviledged() {
     var dnEvent = document.createEvent('MouseEvent');
     var upEvent = document.createEvent('MouseEvent');
     var ckEvent = document.createEvent('MouseEvent');
@@ -130,7 +130,7 @@ function runTest(testNum) {
   ok(true, "Starting test #" + testNum);
 
   if (nextTestPrivledged) {
-      ok(true, "This test is privledged.");
+      ok(true, "This test is priviledged.");
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       nextTestPrivledged = false;
   }
@@ -168,7 +168,7 @@ function runTest(testNum) {
         break;
     // try a mouseclick event
     case 6:
-        doClickUnprivledged();
+        doClickUnpriviledged();
         nextTestPrivledged = true;
         break;
     case 7:
@@ -177,7 +177,7 @@ function runTest(testNum) {
         break;
     // try a down-arrow
     case 8:
-        doKeyUnprivledged("down");
+        doKeyUnpriviledged("down");
         nextTestPrivledged = true;
         break;
     case 9:
@@ -186,7 +186,7 @@ function runTest(testNum) {
         break;
     // try a page-down
     case 10:
-        doKeyUnprivledged("page_down");
+        doKeyUnpriviledged("page_down");
         nextTestPrivledged = true;
         break;
     case 11:
@@ -196,7 +196,7 @@ function runTest(testNum) {
     // try a return
     case 12:
 // XXX this causes later tests to fail for some reason.
-//        doKeyUnprivledged("return"); // not "enter"!
+//        doKeyUnpriviledged("return"); // not "enter"!
         nextTestPrivledged = true;
         break;
     case 13:
@@ -205,7 +205,7 @@ function runTest(testNum) {
         break;
     // try a keypress
     case 14:
-        doKeyUnprivledged('v');
+        doKeyUnpriviledged('v');
         nextTestPrivledged = true;
         break;
     case 15:
@@ -214,7 +214,7 @@ function runTest(testNum) {
         break;
     // try a space
     case 16:
-        doKeyUnprivledged(" ");
+        doKeyUnpriviledged(" ");
         nextTestPrivledged = true;
         break;
     case 17:
@@ -223,7 +223,7 @@ function runTest(testNum) {
         break;
     // backspace
     case 18:
-        doKeyUnprivledged("back_space");
+        doKeyUnpriviledged("back_space");
         nextTestPrivledged = true;
         break;
     case 19:
@@ -232,7 +232,7 @@ function runTest(testNum) {
         nextTestPrivledged = true;
         break;
     case 20:
-        // We're privledged for this test, so open the popup.
+        // We're priviledged for this test, so open the popup.
         checkPopupOpen(false);
         checkForm("v");
         doKey("down");
@@ -250,7 +250,7 @@ function runTest(testNum) {
 
     // try a down-arrow
     case 100:
-        doKeyUnprivledged("down");
+        doKeyUnpriviledged("down");
         nextTestPrivledged = true;
         break;
     case 101:
@@ -259,7 +259,7 @@ function runTest(testNum) {
         break;
     // try a page-down
     case 102:
-        doKeyUnprivledged("page_down");
+        doKeyUnpriviledged("page_down");
         nextTestPrivledged = true;
         break;
     case 103:
@@ -269,6 +269,7 @@ function runTest(testNum) {
         break;
     // really adjust the index
     case 104:
+        // (We're priviledged for this test.) Try a priviledged down-arrow.
         doKey("down");
         nextTestPrivledged = true;
         break;
@@ -278,7 +279,7 @@ function runTest(testNum) {
         break;
     // try a down-arrow
     case 106:
-        doKeyUnprivledged("down");
+        doKeyUnpriviledged("down");
         nextTestPrivledged = true;
         break;
     case 107:
@@ -287,7 +288,7 @@ function runTest(testNum) {
         break;
     // try a page-down
     case 108:
-        doKeyUnprivledged("page_down");
+        doKeyUnpriviledged("page_down");
         nextTestPrivledged = true;
         break;
     case 109:
@@ -296,7 +297,7 @@ function runTest(testNum) {
     // try a keypress
     case 110:
         // XXX this causes the popup to close, and makes the value "vaa" (sic)
-        //doKeyUnprivledged('a');
+        //doKeyUnpriviledged('a');
         nextTestPrivledged = true;
         break;
     case 111:
@@ -310,7 +311,7 @@ function runTest(testNum) {
     //
     // try a right-arrow
     case 200:
-        doKeyUnprivledged("right");
+        doKeyUnpriviledged("right");
         nextTestPrivledged = true;
         break;
     case 201:
@@ -319,7 +320,7 @@ function runTest(testNum) {
         break;
     // try a space
     case 202:
-        doKeyUnprivledged(" ");
+        doKeyUnpriviledged(" ");
         nextTestPrivledged = true;
         break;
     case 203:
@@ -329,7 +330,7 @@ function runTest(testNum) {
         break;
     // backspace
     case 204:
-        doKeyUnprivledged("back_space");
+        doKeyUnpriviledged("back_space");
         nextTestPrivledged = true;
         break;
     case 205:
@@ -349,7 +350,7 @@ function runTest(testNum) {
     // try a return
     case 208:
 // XXX this seems to cause problems with reliably closing the popup
-//        doKeyUnprivledged("return"); // not "enter"!
+//        doKeyUnpriviledged("return"); // not "enter"!
         nextTestPrivledged = true;
         break;
     case 209:
@@ -358,13 +359,13 @@ function runTest(testNum) {
         break;
     // Send a real Escape to ensure popup closed at end of test.
     case 210:
+        // Need to use doKey(), even though this test is not priviledged.
         doKey("escape");
         nextTestPrivledged = true;
         break;
     case 211:
         checkPopupOpen(false);
         checkForm("");
-
 
         SimpleTest.finish();
         return;

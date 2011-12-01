@@ -106,10 +106,8 @@
 #include "AtkSocketAccessible.h"
 #endif
 
-#ifndef DISABLE_XFORMS_HOOKS
 #include "nsXFormsFormControlsAccessible.h"
 #include "nsXFormsWidgetsAccessible.h"
-#endif
 
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/dom/Element.h"
@@ -282,6 +280,16 @@ nsAccessibilityService::CreateHTMLCanvasAccessible(nsIContent* aContent,
 {
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aPresShell));
   nsAccessible* accessible = new nsHTMLCanvasAccessible(aContent, weakShell);
+  NS_IF_ADDREF(accessible);
+  return accessible;
+}
+
+already_AddRefed<nsAccessible>
+nsAccessibilityService::CreateHTMLFileInputAccessible(nsIContent* aContent,
+                                                      nsIPresShell* aPresShell)
+{
+  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aPresShell));
+  nsAccessible* accessible = new nsHTMLFileInputAccessible(aContent, weakShell);
   NS_IF_ADDREF(accessible);
   return accessible;
 }
@@ -1506,7 +1514,6 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 
 #endif // MOZ_XUL
 
-#ifndef DISABLE_XFORMS_HOOKS
     // XForms elements
     case nsIAccessibleProvider::XFormsContainer:
       accessible = new nsXFormsContainerAccessible(aContent, aWeakShell);
@@ -1583,8 +1590,6 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
     case nsIAccessibleProvider::XFormsComboboxPopupWidget:
       accessible = new nsXFormsComboboxPopupWidgetAccessible(aContent, aWeakShell);
       break;
-
-#endif
 
     default:
       return nsnull;

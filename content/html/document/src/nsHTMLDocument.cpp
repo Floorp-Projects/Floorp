@@ -748,7 +748,11 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     if (loadAsHtml5) {
       mParser = nsHtml5Module::NewHtml5Parser();
       if (plainText) {
-        mParser->MarkAsNotScriptCreated("plain-text");
+        if (viewSource) {
+          mParser->MarkAsNotScriptCreated("view-source-plain");
+        } else {
+          mParser->MarkAsNotScriptCreated("plain-text");
+        }
       } else if (viewSource && !contentType.EqualsLiteral("text/html")) {
         mParser->MarkAsNotScriptCreated("view-source-xml");
       } else {
@@ -1293,11 +1297,9 @@ nsHTMLDocument::GetURL(nsAString& aURL)
 }
 
 nsIContent*
-nsHTMLDocument::GetBody(nsresult *aResult)
+nsHTMLDocument::GetBody()
 {
   Element* body = GetBodyElement();
-
-  *aResult = NS_OK;
 
   if (body) {
     // There is a body element, return that as the body.
@@ -1317,10 +1319,9 @@ nsHTMLDocument::GetBody(nsIDOMHTMLElement** aBody)
 {
   *aBody = nsnull;
 
-  nsresult rv;
-  nsIContent *body = GetBody(&rv);
+  nsIContent *body = GetBody();
 
-  return body ? CallQueryInterface(body, aBody) : rv;
+  return body ? CallQueryInterface(body, aBody) : NS_OK;
 }
 
 NS_IMETHODIMP

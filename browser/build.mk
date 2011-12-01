@@ -55,6 +55,22 @@ tier_app_dirs += browser
 # Never add other tier_app_dirs after browser. They won't get packaged
 # properly on mac.
 
+################################################
+# Parallel build on Windows with GNU make check
+
+default::
+ifeq (,$(findstring pymake,$(MAKE)))
+ifeq ($(HOST_OS_ARCH),WINNT)
+ifneq (1,$(NUMBER_OF_PROCESSORS))
+	@echo $(if $(findstring -j,$(value MAKEFLAGS)), \
+$(error You are using GNU make to build Firefox with -jN on Windows. \
+This will randomly deadlock. To compile a parallel build on Windows \
+run "python -OO build/pymake/make.py -f client.mk build". \
+See https://developer.mozilla.org/en/pymake for more details.))
+endif
+endif
+endif
+
 installer:
 	@$(MAKE) -C browser/installer installer
 

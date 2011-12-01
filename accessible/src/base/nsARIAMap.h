@@ -347,6 +347,20 @@ struct nsARIAMap
    */
   static nsAttributeCharacteristics gWAIUnivAttrMap[];
   static PRUint32 gWAIUnivAttrMapLength;
+
+  /**
+   * Return accessible state from ARIA universal states applied to the given
+   * element.
+   */
+  static PRUint64 UniversalStatesFor(nsIContent* aContent)
+  {
+    PRUint64 state = 0;
+    PRUint32 index = 0;
+    while (nsStateMapEntry::MapToStates(aContent, &state, gWAIUnivStateMap[index]))
+      index++;
+
+    return state;
+  }
 };
 
 #endif
