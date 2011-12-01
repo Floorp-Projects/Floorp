@@ -49,15 +49,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title>&homepage.default;</title>
-  <link rel="icon" type="image/png"
-	href="chrome://branding/content/favicon32.png" />
+  <link rel="icon" type="image/png" href="chrome://branding/content/favicon32.png" />
 </head>
-<body onload="init();" >
+<body>
   <script type="application/javascript;version=1.8"><![CDATA[
     let Cc = Components.classes;
     let Ci = Components.interfaces;
 
-    function init() {
+    window.addEventListener("pageshow", onPageshow, false);
+
+    function onPageshow() {
       let bridge = Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge);
       let obj = { gecko: {
             type: "AboutHome:Show"
@@ -65,7 +66,6 @@
       };
       bridge.handleGeckoMessage(JSON.stringify(obj));
     }
-
-]]></script>
+  ]]></script>
 </body>
 </html>
