@@ -102,42 +102,42 @@ public class PlaceholderLayerClient extends LayerClient {
     }
 
     boolean loadScreenshot() {
-            if (GeckoApp.mAppContext.mLastScreen == null)
-                return false;
-            Bitmap bitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(GeckoApp.mAppContext.mLastScreen));
-            if (bitmap == null)
-                return false;
+        if (GeckoApp.mAppContext.mLastScreen == null)
+            return false;
+        Bitmap bitmap = BitmapFactory.decodeStream(new ByteArrayInputStream(GeckoApp.mAppContext.mLastScreen));
+        if (bitmap == null)
+            return false;
 
-            Bitmap.Config config = bitmap.getConfig();
+        Bitmap.Config config = bitmap.getConfig();
 
-            mWidth = bitmap.getWidth();
-            mHeight = bitmap.getHeight();
-            mFormat = CairoUtils.bitmapConfigToCairoFormat(config);
+        mWidth = bitmap.getWidth();
+        mHeight = bitmap.getHeight();
+        mFormat = CairoUtils.bitmapConfigToCairoFormat(config);
 
-            int bpp = CairoUtils.bitsPerPixelForCairoFormat(mFormat) / 8;
-            mBuffer = GeckoAppShell.allocateDirectBuffer(mWidth * mHeight * bpp);
+        int bpp = CairoUtils.bitsPerPixelForCairoFormat(mFormat) / 8;
+        mBuffer = GeckoAppShell.allocateDirectBuffer(mWidth * mHeight * bpp);
 
-            bitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
+        bitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
 
-            if (mViewportUnknown) {
-                mViewport.setPageSize(new FloatSize(mWidth, mHeight));
-                if (getLayerController() != null)
-                    getLayerController().setPageSize(mViewport.getPageSize());
-            }
-
-            return true;
+        if (mViewportUnknown) {
+            mViewport.setPageSize(new FloatSize(mWidth, mHeight));
+            if (getLayerController() != null)
+                getLayerController().setPageSize(mViewport.getPageSize());
         }
+
+        return true;
+    }
 
     void showScreenshot() {
-            BufferedCairoImage image = new BufferedCairoImage(mBuffer, mWidth, mHeight, mFormat);
-            SingleTileLayer tileLayer = new SingleTileLayer(image);
+        BufferedCairoImage image = new BufferedCairoImage(mBuffer, mWidth, mHeight, mFormat);
+        SingleTileLayer tileLayer = new SingleTileLayer(image);
 
-            beginTransaction(tileLayer);
-            tileLayer.setOrigin(PointUtils.round(mViewport.getDisplayportOrigin()));
-            endTransaction(tileLayer);
+        beginTransaction(tileLayer);
+        tileLayer.setOrigin(PointUtils.round(mViewport.getDisplayportOrigin()));
+        endTransaction(tileLayer);
 
-            getLayerController().setRoot(tileLayer);
-        }
+        getLayerController().setRoot(tileLayer);
+    }
 
     @Override
     public void geometryChanged() { /* no-op */ }
