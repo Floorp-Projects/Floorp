@@ -5,7 +5,7 @@ findbar {
   background: @scopeBarBackground@;
   border-top: @scopeBarSeparatorBorder@;
   min-width: 1px;
-  padding: 4px 1px;
+  padding: 4px 2px;
 }
 
 findbar:-moz-lwtheme {

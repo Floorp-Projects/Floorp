@@ -51,11 +51,7 @@ ifdef USE_ELF_HACK
 DIRS = elfhack
 endif
 
-ifdef ENABLE_TESTS
-  ifeq (,$(filter WINNT OS2,$(OS_ARCH)))
-    DIRS += test
-  endif # WIN
-endif # ENABLE_TESTS
+TEST_DIRS = test
 
 include $(topsrcdir)/config/rules.mk
 

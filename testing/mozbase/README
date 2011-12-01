@@ -1,0 +1,7 @@
+This is the git repo for the mozbase suite of python utilities.
+
+Learn more about mozbase here: https://wiki.mozilla.org/Auto-tools/Projects/MozBase
+
+Bugs live at https://bugzilla.mozilla.org/buglist.cgi?resolution=---&component=Mozbase&product=Testing and https://bugzilla.mozilla.org/buglist.cgi?resolution=---&status_whiteboard_type=allwordssubstr&query_format=advanced&status_whiteboard=mozbase
+
+To file a bug, go to https://bugzilla.mozilla.org/enter_bug.cgi?product=Testing&component=Mozbase

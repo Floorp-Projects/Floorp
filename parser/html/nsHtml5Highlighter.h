@@ -68,7 +68,7 @@ class nsHtml5Highlighter
     /**
      * Starts the generated document.
      */
-    void Start();
+    void Start(const nsAutoString& aTitle);
 
     /**
      * Report a tokenizer state transition.
@@ -322,12 +322,6 @@ class nsHtml5Highlighter
     PRInt32 mLineNumber;
 
     /**
-     * The number of PRUnichars flushed since the start of the current pre
-     * block.
-     */
-    PRInt32 mUnicharsInThisPre;
-
-    /**
      * The number of inline elements open inside the <pre> excluding the
      * span potentially wrapping a run of characters.
      */
@@ -345,24 +339,9 @@ class nsHtml5Highlighter
     nsHtml5UTF16Buffer* mBuffer;
 
     /**
-     * The URL of the document to be shown in the page title.
-     */
-    nsString mURL;
-
-    /**
      * Whether to highlight syntax visibly initially.
      */
     bool mSyntaxHighlight;
-
-    /**
-     * Whether to wrap long lines.
-     */
-    bool mWrapLongLines;
-
-    /**
-     * The tab size pref.
-     */
-    PRInt32 mTabSize;
 
     /**
      * The outgoing tree op queue.

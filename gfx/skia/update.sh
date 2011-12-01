@@ -104,4 +104,7 @@ patch -p3 < new-aa.patch
 # Bug 688366 - Fix Skia marking radial gradients with the same radius as invalid.
 patch -p3 < radial-gradients.patch
 # Fix restrict keyword problem for VS2005
-patch -p3 < skia-restrict-problem.patch
+patch -p3 < skia_restrict_problem.patch
+# Bug 705656 - Broken SKIA compilation on mingw
+patch -p3 < mingw-fix.patch
+

@@ -87,7 +87,7 @@ NS_IMPL_RELEASE_INHERITED(BatteryManager, nsDOMEventTargetWrapperCache)
 BatteryManager::BatteryManager()
   : mLevel(kDefaultLevel)
   , mCharging(kDefaultCharging)
-  , mRemainingTime(kUnknownRemainingTime)
+  , mRemainingTime(kDefaultRemainingTime)
 {
 }
 
@@ -191,6 +191,14 @@ BatteryManager::UpdateFromBatteryInfo(const hal::BatteryInformation& aBatteryInf
   mLevel = aBatteryInfo.level();
   mCharging = aBatteryInfo.charging();
   mRemainingTime = aBatteryInfo.remainingTime();
+
+  // Add some guards to make sure the values are coherent.
+  if (mLevel == 1.0 && mCharging == true &&
+      mRemainingTime != kDefaultRemainingTime) {
+    mRemainingTime = kDefaultRemainingTime;
+    NS_ERROR("Battery API: When charging and level at 1.0, remaining time "
+             "should be 0. Please fix your backend!");
+  }
 }
 
 void

@@ -135,7 +135,8 @@ public:
                                     nsWrapperCache **aCache,
                                     nsresult *aResult);
 
-  nsIContent *GetBody(nsresult *aResult);
+  nsIContent *GetBody();
+  Element *GetHead() { return GetHeadElement(); }
   already_AddRefed<nsContentList> GetElementsByName(const nsAString & aName)
   {
     return NS_GetFuncStringContentList(this, MatchNameAttribute, nsnull,

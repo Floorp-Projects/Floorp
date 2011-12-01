@@ -36,26 +36,23 @@
 # ***** END LICENSE BLOCK *****
 
 add_makefiles "
-netwerk/locales/Makefile
-dom/locales/Makefile
-toolkit/locales/Makefile
-security/manager/locales/Makefile
 mobile/xul/app/Makefile
 mobile/xul/app/profile/extensions/Makefile
 $MOZ_BRANDING_DIRECTORY/Makefile
+$MOZ_BRANDING_DIRECTORY/content/Makefile
 $MOZ_BRANDING_DIRECTORY/locales/Makefile
 mobile/xul/chrome/Makefile
-mobile/xul/chrome/tests/Makefile
 mobile/xul/components/Makefile
 mobile/xul/components/build/Makefile
 mobile/xul/modules/Makefile
 mobile/xul/installer/Makefile
 mobile/xul/locales/Makefile
 mobile/xul/Makefile
-mobile/xul/themes/core/Makefile"
+mobile/xul/themes/core/Makefile
+"
 
-if test -n "$MOZ_UPDATE_PACKAGING"; then
-   add_makefiles "
-     tools/update-packaging/Makefile
-   "
+if [ "$ENABLE_TESTS" ]; then
+  add_makefiles "
+    mobile/xul/chrome/tests/Makefile
+  "
 fi
