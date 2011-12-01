@@ -2497,8 +2497,8 @@ ia64*-hpux*)
         fi
 
         if test -n "$GNU_CC"; then
-            CFLAGS="$CFLAGS -mstackrealign"
-            CXXFLAGS="$CXXFLAGS -mstackrealign"
+            CFLAGS="$CFLAGS -mstackrealign -fno-keep-inline-dllexport"
+            CXXFLAGS="$CXXFLAGS -mstackrealign -fno-keep-inline-dllexport"
         fi
 
         MOZ_CHECK_HEADERS(mmintrin.h)
