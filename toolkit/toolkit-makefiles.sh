@@ -824,6 +824,7 @@ if [ "$ENABLE_TESTS" ]; then
     layout/generic/test/Makefile
     layout/inspector/tests/Makefile
     layout/inspector/tests/chrome/Makefile
+    layout/mathml/tests/Makefile
     layout/reftests/fonts/Makefile
     layout/reftests/fonts/mplus/Makefile
     layout/style/test/Makefile
