@@ -154,21 +154,21 @@ class FrameSizeClass
     }
 };
 
+class IonCommonFrameLayout;
+
 class IonFrameIterator
 {
     uint8 *current_;
     FrameType type_;
 
-    // Cache the next frame pointer because it is used at least twice.  Once for
-    // iterating and once for recovering the frame. (see
-    // FrameRecovery::FromIterator)
-    mutable uint8 *prevCache_;
+    IonCommonFrameLayout *current() const {
+        return (IonCommonFrameLayout *)current_;
+    }
 
   public:
     IonFrameIterator(uint8 *top)
       : current_(top),
-        type_(IonFrame_Exit),
-        prevCache_(top)
+        type_(IonFrame_Exit)
     { }
 
     // Current frame information.
