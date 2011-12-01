@@ -35,11 +35,13 @@
 #
 # ***** END LICENSE BLOCK *****
 
+# Deliberately excluded, since the braces cause some versions of sed to choke, 
+# causing the build to fail (see bug 696498 comment 13):
+# browser/app/profile/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/Makefile
 add_makefiles "
 browser/Makefile
 browser/app/Makefile
 browser/app/profile/extensions/Makefile
-browser/app/profile/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/Makefile
 browser/base/Makefile
 browser/components/Makefile
 browser/components/about/Makefile
