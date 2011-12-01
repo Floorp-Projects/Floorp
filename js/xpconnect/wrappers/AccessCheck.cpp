@@ -154,8 +154,6 @@ IsPermitted(const char *name, JSFlatString *prop, bool set)
         NAME('L', "Location",
              PROP('h', W("hash") W("href"))
              PROP('r', R("replace")))
-        NAME('N', "Navigator",
-             PROP('p', RW("preference")))
         NAME('W', "Window",
              PROP('b', R("blur"))
              PROP('c', R("close") R("closed"))
