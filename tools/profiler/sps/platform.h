@@ -10,6 +10,7 @@
 
 #include "mozilla/Util.h"
 #include "mozilla/unused.h"
+#include "v8-support.h"
 #include <vector>
 #define ASSERT(a) MOZ_ASSERT(a)
 #ifdef ANDROID
@@ -80,6 +81,122 @@ private:
 #ifdef ENABLE_SPS_LEAF_DATA
 struct MapInfo getmaps(pid_t pid);
 #endif
+// ----------------------------------------------------------------------------
+// Mutex
+//
+// Mutexes are used for serializing access to non-reentrant sections of code.
+// The implementations of mutex should allow for nested/recursive locking.
+
+class Mutex {
+ public:
+  virtual ~Mutex() {}
+
+  // Locks the given mutex. If the mutex is currently unlocked, it becomes
+  // locked and owned by the calling thread, and immediately. If the mutex
+  // is already locked by another thread, suspends the calling thread until
+  // the mutex is unlocked.
+  virtual int Lock() = 0;
+
+  // Unlocks the given mutex. The mutex is assumed to be locked and owned by
+  // the calling thread on entrance.
+  virtual int Unlock() = 0;
+
+  // Tries to lock the given mutex. Returns whether the mutex was
+  // successfully locked.
+  virtual bool TryLock() = 0;
+};
+
+// ----------------------------------------------------------------------------
+// ScopedLock
+//
+// Stack-allocated ScopedLocks provide block-scoped locking and
+// unlocking of a mutex.
+class ScopedLock {
+ public:
+  explicit ScopedLock(Mutex* mutex): mutex_(mutex) {
+    ASSERT(mutex_ != NULL);
+    mutex_->Lock();
+  }
+  ~ScopedLock() {
+    mutex_->Unlock();
+  }
+
+ private:
+  Mutex* mutex_;
+  DISALLOW_COPY_AND_ASSIGN(ScopedLock);
+};
+
+
+
+// ----------------------------------------------------------------------------
+// OS
+//
+// This class has static methods for the different platform specific
+// functions. Add methods here to cope with differences between the
+// supported platforms.
+
+class OS {
+ public:
+
+  // Sleep for a number of milliseconds.
+  static void Sleep(const int milliseconds);
+
+  // Factory method for creating platform dependent Mutex.
+  // Please use delete to reclaim the storage for the returned Mutex.
+  static Mutex* CreateMutex();
+
+ private:
+  static const int msPerSecond = 1000;
+
+};
+
+
+
+
+// ----------------------------------------------------------------------------
+// Thread
+//
+// Thread objects are used for creating and running threads. When the start()
+// method is called the new thread starts running the run() method in the new
+// thread. The Thread object should not be deallocated before the thread has
+// terminated.
+
+class Thread {
+ public:
+
+  // Create new thread.
+  explicit Thread(const char* name);
+  virtual ~Thread();
+
+  // Start new thread by calling the Run() method in the new thread.
+  void Start();
+
+  inline const char* name() const {
+    return name_;
+  }
+
+  // Abstract method for run handler.
+  virtual void Run() = 0;
+
+  // The thread name length is limited to 16 based on Linux's implementation of
+  // prctl().
+  static const int kMaxThreadNameLength = 16;
+
+  class PlatformData;
+  PlatformData* data() { return data_; }
+
+ private:
+  void set_name(const char *name);
+
+  PlatformData* data_;
+
+  char name_[kMaxThreadNameLength];
+  int stack_size_;
+
+  DISALLOW_COPY_AND_ASSIGN(Thread);
+};
+
+
 
 // ----------------------------------------------------------------------------
 // Sampler
@@ -113,6 +230,8 @@ class Sampler {
   explicit Sampler(int interval, bool profiling);
   virtual ~Sampler();
 
+  int interval() const { return interval_; }
+
   // Performs stack sampling.
   virtual void SampleStack(TickSample* sample) = 0;
 
@@ -132,22 +251,20 @@ class Sampler {
   // Is the sampler used for profiling?
   bool IsProfiling() const { return profiling_; }
 
-  // Is the sampler running in sync with the JS thread? On platforms
-  // where the sampler is implemented with a thread that wakes up
-  // every now and then, having a synchronous sampler implies
-  // suspending/resuming the JS thread.
-  bool IsSynchronous() const { return synchronous_; }
-
   // Whether the sampler is running (that is, consumes resources).
   bool IsActive() const { return active_; }
 
   class PlatformData;
 
+  PlatformData* platform_data() { return data_; }
+
  private:
+  void SetActive(bool value) { NoBarrier_Store(&active_, value); }
+
   const int interval_;
   const bool profiling_;
   const bool synchronous_;
-  bool active_;
+  Atomic32 active_;
   PlatformData* data_;  // Platform specific data.
 };
 
