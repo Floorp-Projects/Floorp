@@ -143,14 +143,12 @@ public:
   nsRefPtr<nsIDocShell> mDocShell;
 };
 
-static void InvalidateFrame(nsIFrame* aFrame)
+static void InvalidateFrame(nsIFrame* aFrame, PRUint32 aFlags)
 {
+  if (!aFrame)
+    return;
   nsRect rect = nsRect(nsPoint(0, 0), aFrame->GetRect().Size());
-  // NB: we pass INVALIDATE_NO_THEBES_LAYERS here to keep view
-  // semantics the same for both in-process and out-of-process
-  // <browser>.  This is just a transform of the layer subtree in
-  // both.
-  aFrame->InvalidateWithFlags(rect, nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
+  aFrame->InvalidateWithFlags(rect, aFlags);
 }
 
 NS_IMPL_ISUPPORTS1(nsContentView, nsIContentView)
@@ -189,8 +187,11 @@ nsContentView::Update(const ViewConfig& aConfig)
 
   // XXX could be clever here and compute a smaller invalidation
   // rect
-  nsIFrame* frame = mFrameLoader->GetPrimaryFrameOfOwningContent();
-  InvalidateFrame(frame);
+  // NB: we pass INVALIDATE_NO_THEBES_LAYERS here to keep view
+  // semantics the same for both in-process and out-of-process
+  // <browser>.  This is just a transform of the layer subtree in
+  // both.
+  InvalidateFrame(mFrameLoader->GetPrimaryFrameOfOwningContent(), nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
   return NS_OK;
 }
 
@@ -328,6 +329,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   , mDelayRemoteDialogs(false)
   , mRemoteBrowserShown(false)
   , mRemoteFrame(false)
+  , mClipSubdocument(true)
   , mCurrentRemoteFrame(nsnull)
   , mRemoteBrowser(nsnull)
   , mRenderMode(RENDER_MODE_DEFAULT)
@@ -1693,7 +1695,11 @@ nsFrameLoader::SetRenderMode(PRUint32 aRenderMode)
   }
 
   mRenderMode = aRenderMode;
-  InvalidateFrame(GetPrimaryFrameOfOwningContent());
+  // NB: we pass INVALIDATE_NO_THEBES_LAYERS here to keep view
+  // semantics the same for both in-process and out-of-process
+  // <browser>.  This is just a transform of the layer subtree in
+  // both.
+  InvalidateFrame(GetPrimaryFrameOfOwningContent(), nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
   return NS_OK;
 }
 
@@ -1708,6 +1714,38 @@ NS_IMETHODIMP
 nsFrameLoader::SetEventMode(PRUint32 aEventMode)
 {
   mEventMode = aEventMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::GetClipSubdocument(bool* aResult)
+{
+  *aResult = mClipSubdocument;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::SetClipSubdocument(bool aClip)
+{
+  mClipSubdocument = aClip;
+  nsIFrame* frame = GetPrimaryFrameOfOwningContent();
+  if (frame) {
+    InvalidateFrame(frame, 0);
+    frame->PresContext()->PresShell()->
+      FrameNeedsReflow(frame, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+    nsSubDocumentFrame* subdocFrame = do_QueryFrame(frame);
+    if (subdocFrame) {
+      nsIFrame* subdocRootFrame = subdocFrame->GetSubdocumentRootFrame();
+      if (subdocRootFrame) {
+        nsIFrame* subdocRootScrollFrame = subdocRootFrame->PresContext()->PresShell()->
+          GetRootScrollFrame();
+        if (subdocRootScrollFrame) {
+          frame->PresContext()->PresShell()->
+            FrameNeedsReflow(frame, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+        }
+      }
+    }
+  }
   return NS_OK;
 }
 
