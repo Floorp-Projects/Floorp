@@ -947,3 +947,12 @@ CodeGeneratorX86Shared::emitTruncateDouble(const FloatRegister &src, const Regis
     masm.cmpl(dest, Imm32(INT_MIN));
     masm.j(Assembler::Equal, fail);
 }
+
+Operand
+CodeGeneratorX86Shared::createArraySlotOperand(Register slots, const LAllocation *index)
+{
+    if (index->isConstant())
+        return Operand(slots, ToInt32(index) * sizeof(js::Value));
+
+    return Operand(slots, ToRegister(index), TimesEight);
+}

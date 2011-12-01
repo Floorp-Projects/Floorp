@@ -719,6 +719,11 @@ LIRGenerator::visitStoreElement(MStoreElement *ins)
     JS_ASSERT(ins->slots()->type() == MIRType_Slots);
     JS_ASSERT(ins->index()->type() == MIRType_Int32);
 
+#ifdef JSGC_INCREMENTAL
+    if (ins->needsBarrier() && !emitWriteBarrier(ins, ins->value()))
+        return false;
+#endif
+
     switch (ins->value()->type()) {
       case MIRType_Value:
       {

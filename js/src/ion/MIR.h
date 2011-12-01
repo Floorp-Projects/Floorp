@@ -1737,8 +1737,11 @@ class MStoreElement
     public ObjectPolicy
 {
     MIRType slotType_;
+    bool needsBarrier_;
 
-    MStoreElement(MDefinition *slots, MDefinition *index, MDefinition *value) {
+    MStoreElement(MDefinition *slots, MDefinition *index, MDefinition *value)
+      : needsBarrier_(false)
+    {
         initOperand(0, slots);
         initOperand(1, index);
         initOperand(2, value);
@@ -1774,6 +1777,12 @@ class MStoreElement
     }
     bool congruentTo(MDefinition * const &ins) const {
         return false;
+    }
+    bool needsBarrier() const {
+        return needsBarrier_;
+    }
+    void setNeedsBarrier(bool needsBarrier) {
+        needsBarrier_ = needsBarrier;
     }
 };
 
