@@ -2234,29 +2234,31 @@ let GroupItems = {
         }
 
         toClose.forEach(function(groupItem) {
-          // All remaining children in to-be-closed groups are re-used by
-          // session restore. Reconnect them so that they're put into their
-          // right groups.
-          let children = groupItem.getChildren().concat();
-
-          children.forEach(function (tabItem) {
-            if (tabItem.parent && tabItem.parent.hidden)
+          // all tabs still existing in closed groups will be moved to new
+          // groups. prepare them to be reconnected later.
+          groupItem.getChildren().forEach(function (tabItem) {
+            if (tabItem.parent.hidden)
               iQ(tabItem.container).show();
+
+            tabItem._reconnected = false;
 
             // sanity check the tab's groupID
             let tabData = Storage.getTabData(tabItem.tab);
-            let parentGroup = GroupItems.groupItem(tabData.groupID);
 
-            // correct the tab's groupID if necessary
-            if (!parentGroup || -1 < toClose.indexOf(parentGroup)) {
-              tabData.groupID = activeGroupId || Object.keys(groupItemData)[0];
-              Storage.saveTab(tabItem.tab, tabData);
+            if (tabData) {
+              let parentGroup = GroupItems.groupItem(tabData.groupID);
+
+              // the tab's group id could be invalid or point to a non-existing
+              // group. correct it by assigning the active group id or the first
+              // group of the just restored session.
+              if (!parentGroup || -1 < toClose.indexOf(parentGroup)) {
+                tabData.groupID = activeGroupId || Object.keys(groupItemData)[0];
+                Storage.saveTab(tabItem.tab, tabData);
+              }
             }
-
-            tabItem._reconnected = false;
-            tabItem._reconnect();
           });
 
+          // this closes the group but not its children
           groupItem.close({immediately: true});
         });
       }
