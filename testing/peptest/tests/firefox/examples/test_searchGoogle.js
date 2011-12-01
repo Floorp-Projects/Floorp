@@ -14,12 +14,12 @@
  * The Original Code is peptest.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ *   The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Andrew Halberstadt <halbersa@gmail.com>
+ *   Andrew Halberstadt <halbersa@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,7 +44,7 @@ controller.waitForPageLoad();
 
 let textbox = findElement.ID(controller.tabs.activeTab, 'lst-ib');
 let button = findElement.Name(controller.tabs.activeTab, 'btnK');
-performAction('enterText', function() {
+pep.performAction('enterText', function() {
   textbox.sendKeys('foobar');
   button.click();
 });
