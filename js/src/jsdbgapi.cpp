@@ -1607,22 +1607,6 @@ js_ResumeVtune()
 
 #endif /* MOZ_VTUNE */
 
-#ifdef MOZ_TRACE_JSCALLS
-
-JS_PUBLIC_API(void)
-JS_SetFunctionCallback(JSContext *cx, JSFunctionCallback fcb)
-{
-    cx->functionCallback = fcb;
-}
-
-JS_PUBLIC_API(JSFunctionCallback)
-JS_GetFunctionCallback(JSContext *cx)
-{
-    return cx->functionCallback;
-}
-
-#endif /* MOZ_TRACE_JSCALLS */
-
 JS_PUBLIC_API(void)
 JS_DumpBytecode(JSContext *cx, JSScript *script)
 {
