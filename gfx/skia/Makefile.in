@@ -342,3 +342,11 @@ CPPSRCS += \
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifneq (,$(INTEL_ARCHITECTURE))
+ifdef GNU_CC
+SkBitmapProcState_opts_SSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
+SkBlitRow_opts_SSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
+SkUtils_opts_SSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
+endif
+endif

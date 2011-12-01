@@ -36,6 +36,12 @@
     testStates("f_input", STATE_UNAVAILABLE);
     testStates("f_input_disabled", STATE_UNAVAILABLE);
 
+    // inherited from file control
+    var fileTextField = getAccessible("file").firstChild;
+    testStates(fileTextField, STATE_UNAVAILABLE | STATE_REQUIRED);
+    var fileBrowseButton = getAccessible("file").lastChild;
+    testStates(fileBrowseButton, STATE_UNAVAILABLE | STATE_REQUIRED);
+
     /**
      * maxlength doesn't make the element invalid until bug 613016 and bug 613019
      * are fixed. Commenting out related lines and adding a todo to make sure
@@ -110,6 +116,11 @@
      title="Add accessibility support for @list on HTML input and for HTML datalist">
     Mozilla Bug 559766
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=699017"
+     title="File input control should be propogate states to descendants">
+    Mozilla Bug 699017
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -145,6 +156,9 @@
     <input id="f_input">
     <input id="f_input_disabled" disabled>
   </fieldset>
+
+  <!-- inherited from input@type="file" -->
+  <input id="file" type="file" required disabled>
 
   <!-- invalid/valid -->
   <input id="maxlength" maxlength="1">

@@ -19,7 +19,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com>
+ *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Marco Bonardo <mak77@bonardo.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -158,7 +159,25 @@ interface mozIVisitInfoCallback : nsISupports
 /**
  * @status EXPERIMENTAL
  */
-[scriptable, uuid(f79ca67c-7e57-4511-a400-ea31001c762f)]
+[scriptable, function, uuid(994092bf-936f-449b-8dd6-0941e024360d)]
+interface mozIVisitedStatusCallback : nsISupports
+{
+  /**
+   * Notifies whether a certain URI has been visited.
+   *
+   * @param aURI
+   *        URI being notified about.
+   * @param aVisitedStatus
+   *        The visited status of aURI.
+   */
+  void isVisited(in nsIURI aURI,
+                 in boolean aVisitedStatus);
+};
+
+/**
+ * @status EXPERIMENTAL
+ */
+[scriptable, uuid(b7edc16e-9f3c-4bf5-981b-4e8000b02d89)]
 interface mozIAsyncHistory : nsISupports
 {
   /**
@@ -186,4 +205,14 @@ interface mozIAsyncHistory : nsISupports
   void updatePlaces(in jsval aPlaceInfo,
                     [optional] in mozIVisitInfoCallback aCallback);
 
+  /**
+   * Checks if a given URI has been visited.
+   *
+   * @param aURI
+   *        The URI to check for.
+   * @param aCallback
+   *        A mozIVisitStatusCallback object which receives the visited status.
+   */
+  void isURIVisited(in nsIURI aURI,
+                    in mozIVisitedStatusCallback aCallback);
 };

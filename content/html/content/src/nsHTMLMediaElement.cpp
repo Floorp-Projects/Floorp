@@ -1971,6 +1971,10 @@ nsresult nsHTMLMediaElement::FinishDecoderSetup(nsMediaDecoder* aDecoder)
 {
   NS_ASSERTION(mLoadingSrc, "mLoadingSrc set up");
 
+  nsCAutoString src;
+  GetCurrentSpec(src);
+  printf("*** nsHTMLElement::FinishDecoderSetup() mDecoder=%p src=%s\n",
+         aDecoder, src.get());
   mDecoder = aDecoder;
   AddMediaElementToURITable();
 

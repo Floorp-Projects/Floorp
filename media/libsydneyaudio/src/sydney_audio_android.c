@@ -119,10 +119,10 @@ extern JNIEnv * GetJNIForThread();
 
 static jclass
 init_jni_bindings(JNIEnv *jenv) {
-  jclass class =
-    (*jenv)->NewGlobalRef(jenv,
-                          (*jenv)->FindClass(jenv,
-                                             "android/media/AudioTrack"));
+  jclass class = (*jenv)->FindClass(jenv, "android/media/AudioTrack");
+  if (!class) {
+    return NULL;
+  }
   at.constructor = (*jenv)->GetMethodID(jenv, class, "<init>", "(IIIIII)V");
   at.flush       = (*jenv)->GetMethodID(jenv, class, "flush", "()V");
   at.getminbufsz = (*jenv)->GetStaticMethodID(jenv, class, "getMinBufferSize", "(III)I");
@@ -134,7 +134,7 @@ init_jni_bindings(JNIEnv *jenv) {
   at.write       = (*jenv)->GetMethodID(jenv, class, "write", "([BII)I");
   at.getpos      = (*jenv)->GetMethodID(jenv, class, "getPlaybackHeadPosition", "()I");
 
-  return class;
+  return (*jenv)->NewGlobalRef(jenv, class);
 }
 
 /*
@@ -217,6 +217,9 @@ sa_stream_open(sa_stream_t *s) {
   }
 
   s->at_class = init_jni_bindings(jenv);
+  if (!s->at_class) {
+    return SA_ERROR_NO_DEVICE;
+  }
 
   int32_t chanConfig = s->channels == 1 ?
     CHANNEL_OUT_MONO : CHANNEL_OUT_STEREO;
@@ -224,7 +227,6 @@ sa_stream_open(sa_stream_t *s) {
   jint minsz = (*jenv)->CallStaticIntMethod(jenv, s->at_class, at.getminbufsz,
                                             s->rate, chanConfig, ENCODING_PCM_16BIT);
   if (minsz <= 0) {
-    (*jenv)->DeleteGlobalRef(jenv, s->at_class);
     (*jenv)->PopLocalFrame(jenv, NULL);
     return SA_ERROR_INVALID;
   }
@@ -247,13 +249,11 @@ sa_stream_open(sa_stream_t *s) {
   if (exception) {
     (*jenv)->ExceptionDescribe(jenv);
     (*jenv)->ExceptionClear(jenv);
-    (*jenv)->DeleteGlobalRef(jenv, s->at_class);
     (*jenv)->PopLocalFrame(jenv, NULL);
     return SA_ERROR_INVALID;
   }
 
   if (!obj) {
-    (*jenv)->DeleteGlobalRef(jenv, s->at_class);
     (*jenv)->PopLocalFrame(jenv, NULL);
     return SA_ERROR_OOM;
   }
@@ -267,7 +267,6 @@ sa_stream_open(sa_stream_t *s) {
   if (!buf) {
     (*jenv)->ExceptionClear(jenv);
     (*jenv)->DeleteGlobalRef(jenv, s->output_unit);
-    (*jenv)->DeleteGlobalRef(jenv, s->at_class);
     (*jenv)->PopLocalFrame(jenv, NULL);
     return SA_ERROR_OOM;
   }
@@ -295,12 +294,18 @@ sa_stream_destroy(sa_stream_t *s) {
     return SA_SUCCESS;
   }
 
-  (*jenv)->CallVoidMethod(jenv, s->output_unit, at.stop);
-  (*jenv)->CallVoidMethod(jenv, s->output_unit, at.flush);
-  (*jenv)->CallVoidMethod(jenv, s->output_unit, at.release);
-  (*jenv)->DeleteGlobalRef(jenv, s->output_buf);
-  (*jenv)->DeleteGlobalRef(jenv, s->output_unit);
-  (*jenv)->DeleteGlobalRef(jenv, s->at_class);
+  if (s->output_buf) {
+    (*jenv)->DeleteGlobalRef(jenv, s->output_buf);
+  }
+  if (s->output_unit) {
+    (*jenv)->CallVoidMethod(jenv, s->output_unit, at.stop);
+    (*jenv)->CallVoidMethod(jenv, s->output_unit, at.flush);
+    (*jenv)->CallVoidMethod(jenv, s->output_unit, at.release);
+    (*jenv)->DeleteGlobalRef(jenv, s->output_unit);
+  }
+  if (s->at_class) {
+    (*jenv)->DeleteGlobalRef(jenv, s->at_class);
+  }
   free(s);
 
   ALOG("%p - Stream destroyed", s);

@@ -72,7 +72,7 @@
 		F93A88880E8B4C9A0026AF89 /* bytereader.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9721F760E8B0DC700D7E813 /* bytereader.cc */; };
 		F93A88890E8B4C9A0026AF89 /* dwarf2reader.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9721F770E8B0DC700D7E813 /* dwarf2reader.cc */; };
 		F93A888A0E8B4C9A0026AF89 /* functioninfo.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9721F780E8B0DC700D7E813 /* functioninfo.cc */; };
-		F93A888B0E8B4C9A0026AF89 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = F9721FA80E8B0E4800D7E813 /* md5.c */; };
+		F93A888B0E8B4C9A0026AF89 /* md5.cc in Sources */ = {isa = PBXBuildFile; fileRef = F9721FA80E8B0E4800D7E813 /* md5.cc */; };
 		F9721F6C0E8B0D7000D7E813 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F9721F6B0E8B0D7000D7E813 /* Cocoa.framework */; };
 		F9721FA20E8B0E2300D7E813 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F9721FA10E8B0E2300D7E813 /* SenTestingKit.framework */; };
 		F982089C0DB3280D0017AECA /* breakpad_nlist_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = F982089B0DB3280D0017AECA /* breakpad_nlist_test.cc */; };
@@ -157,7 +157,7 @@
 		F9721F770E8B0DC700D7E813 /* dwarf2reader.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dwarf2reader.cc; path = ../../../common/dwarf/dwarf2reader.cc; sourceTree = SOURCE_ROOT; };
 		F9721F780E8B0DC700D7E813 /* functioninfo.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = functioninfo.cc; path = ../../../common/dwarf/functioninfo.cc; sourceTree = SOURCE_ROOT; };
 		F9721FA10E8B0E2300D7E813 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
-		F9721FA80E8B0E4800D7E813 /* md5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = md5.c; path = ../../../common/md5.c; sourceTree = SOURCE_ROOT; };
+		F9721FA80E8B0E4800D7E813 /* md5.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = md5.cc; path = ../../../common/md5.cc; sourceTree = SOURCE_ROOT; };
 		F982089A0DB3280D0017AECA /* breakpad_nlist_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = breakpad_nlist_test.h; sourceTree = "<group>"; };
 		F982089B0DB3280D0017AECA /* breakpad_nlist_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = breakpad_nlist_test.cc; sourceTree = "<group>"; };
 		F98208A10DB32CAE0017AECA /* breakpad_nlist_64.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = breakpad_nlist_64.cc; sourceTree = "<group>"; };
@@ -236,7 +236,7 @@
 				8BFC812011FF99D5002CB4DC /* Breakpad.xcconfig */,
 				8BFC812111FF99D5002CB4DC /* BreakpadDebug.xcconfig */,
 				8BFC812211FF99D5002CB4DC /* BreakpadRelease.xcconfig */,
-				F9721FA80E8B0E4800D7E813 /* md5.c */,
+				F9721FA80E8B0E4800D7E813 /* md5.cc */,
 				F9721F760E8B0DC700D7E813 /* bytereader.cc */,
 				F9721F770E8B0DC700D7E813 /* dwarf2reader.cc */,
 				F9721F780E8B0DC700D7E813 /* functioninfo.cc */,
@@ -594,7 +594,7 @@
 				F93A88880E8B4C9A0026AF89 /* bytereader.cc in Sources */,
 				F93A88890E8B4C9A0026AF89 /* dwarf2reader.cc in Sources */,
 				F93A888A0E8B4C9A0026AF89 /* functioninfo.cc in Sources */,
-				F93A888B0E8B4C9A0026AF89 /* md5.c in Sources */,
+				F93A888B0E8B4C9A0026AF89 /* md5.cc in Sources */,
 				F93A887D0E8B4C8C0026AF89 /* macho_walker.cc in Sources */,
 				F93A887E0E8B4C8C0026AF89 /* macho_id.cc in Sources */,
 				F93A887F0E8B4C8C0026AF89 /* macho_utilities.cc in Sources */,

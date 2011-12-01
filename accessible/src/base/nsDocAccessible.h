@@ -205,6 +205,21 @@ public:
   nsresult FireDelayedAccessibleEvent(AccEvent* aEvent);
 
   /**
+   * Fire value change event on the given accessible if applicable.
+   */
+  inline void MaybeNotifyOfValueChange(nsAccessible* aAccessible)
+  {
+    PRUint32 role = aAccessible->Role();
+    if (role == nsIAccessibleRole::ROLE_ENTRY ||
+        role == nsIAccessibleRole::ROLE_COMBOBOX) {
+      nsRefPtr<AccEvent> valueChangeEvent =
+        new AccEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aAccessible,
+                     eAutoDetect, AccEvent::eRemoveDupes);
+      FireDelayedAccessibleEvent(valueChangeEvent);
+    }
+  }
+
+  /**
    * Get/set the anchor jump.
    */
   inline nsAccessible* AnchorJump()

@@ -1,0 +1,120 @@
+Test Expressionparser
+=====================
+
+Test the conditional expression parser.
+
+Boilerplate::
+
+    >>> from manifestparser import parse
+
+Test basic values::
+
+    >>> parse("1")
+    1
+    >>> parse("100")
+    100
+    >>> parse("true")
+    True
+    >>> parse("false")
+    False
+    >>> '' == parse('""')
+    True
+    >>> parse('"foo bar"')
+    'foo bar'
+    >>> parse("'foo bar'")
+    'foo bar'
+    >>> parse("foo", foo=1)
+    1
+    >>> parse("bar", bar=True)
+    True
+    >>> parse("abc123", abc123="xyz")
+    'xyz'
+
+Test equality::
+
+    >>> parse("true == true")
+    True
+    >>> parse("false == false")
+    True
+    >>> parse("false == false")
+    True
+    >>> parse("1 == 1")
+    True
+    >>> parse("100 == 100")
+    True
+    >>> parse('"some text" == "some text"')
+    True
+    >>> parse("true != false")
+    True
+    >>> parse("1 != 2")
+    True
+    >>> parse('"text" != "other text"')
+    True
+    >>> parse("foo == true", foo=True)
+    True
+    >>> parse("foo == 1", foo=1)
+    True
+    >>> parse('foo == "bar"', foo='bar')
+    True
+    >>> parse("foo == bar", foo=True, bar=True)
+    True
+    >>> parse("true == foo", foo=True)
+    True
+    >>> parse("foo != true", foo=False)
+    True
+    >>> parse("foo != 2", foo=1)
+    True
+    >>> parse('foo != "bar"', foo='abc')
+    True
+    >>> parse("foo != bar", foo=True, bar=False)
+    True
+    >>> parse("true != foo", foo=False)
+    True
+    >>> parse("!false")
+    True
+
+Test conjunctions::
+    
+    >>> parse("true && true")
+    True
+    >>> parse("true || false")
+    True
+    >>> parse("false || false")
+    False
+    >>> parse("true && false")
+    False
+    >>> parse("true || false && false")
+    True
+
+Test parentheses::
+    
+    >>> parse("(true)")
+    True
+    >>> parse("(10)")
+    10
+    >>> parse('("foo")')
+    'foo'
+    >>> parse("(foo)", foo=1)
+    1
+    >>> parse("(true == true)")
+    True
+    >>> parse("(true != false)")
+    True
+    >>> parse("(true && true)")
+    True
+    >>> parse("(true || false)")
+    True
+    >>> parse("(true && true || false)")
+    True
+    >>> parse("(true || false) && false")
+    False
+    >>> parse("(true || false) && true")
+    True
+    >>> parse("true && (true || false)")
+    True
+    >>> parse("true && (true || false)")
+    True
+    >>> parse("(true && false) || (true && (true || false))")
+    True
+        
+
