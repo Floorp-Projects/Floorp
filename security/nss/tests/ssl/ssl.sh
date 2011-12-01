@@ -308,6 +308,16 @@ ssl_cov()
       EXP=$?
       echo "${testname}" | grep "SSL2" > /dev/null
       SSL2=$?
+
+      if [ "${SSL2}" -eq 0 ] ; then
+          # We cannot use asynchronous cert verification with SSL2
+          SSL2_FLAGS=-O
+      else
+          # Do not enable SSL2 for non-SSL2-specific tests. SSL2 is disabled by
+          # default in libssl but it is enabled by default in tstclnt; we want
+          # to test the libssl default whenever possible.
+          SSL2_FLAGS=-2
+      fi
       
       if [ "$NORM_EXT" = "Extended Test" -a "${SSL2}" -eq 0 ] ; then
           echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
@@ -350,11 +360,11 @@ ssl_cov()
             fi
           fi
 
-          echo "tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} ${TLS_FLAG} ${CLIENT_OPTIONS} \\"
+          echo "tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} ${TLS_FLAG} ${SSL2_FLAGS} ${CLIENT_OPTIONS} \\"
           echo "        -f -d ${P_R_CLIENTDIR} -v -w nss < ${REQUEST_FILE}"
 
           rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-          ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} ${TLS_FLAG} ${CLIENT_OPTIONS} -f \
+          ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -c ${param} ${TLS_FLAG} ${SSL2_FLAGS} ${CLIENT_OPTIONS} -f \
                   -d ${P_R_CLIENTDIR} -v -w nss < ${REQUEST_FILE} \
                   >${TMP}/$HOST.tmp.$$  2>&1
           ret=$?

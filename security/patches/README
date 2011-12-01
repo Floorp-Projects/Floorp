@@ -1,2 +1,7 @@
 This directory contains patches that were added locally
 on top of the NSS release.
+
+bug-542832-ssl-restart-4.patch and bug-542832-ssl-restart-tstclnt-4.patch were
+added so that we could test the new PSM SSL threading code (bug 674147) and
+SPDY (bug 528288). These patches will be removed when the NSS 3.13.2 release
+that includes them is imported into mozilla-central.

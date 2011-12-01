@@ -750,6 +750,8 @@ struct TLSExtensionDataStr {
     PRUint32 sniNameArrSize;
 };
 
+typedef SECStatus (*sslRestartTarget)(sslSocket *);
+
 /*
 ** This is the "hs" member of the "ssl3" struct.
 ** This entire struct is protected by ssl3HandshakeLock
@@ -789,6 +791,13 @@ const ssl3CipherSuiteDef *suite_def;
 #ifdef NSS_ENABLE_ECC
     PRUint32              negotiatedECCurves; /* bit mask */
 #endif /* NSS_ENABLE_ECC */
+
+    PRBool                authCertificatePending;
+    /* Which function should SSL_RestartHandshake* call if we're blocked?
+     * One of NULL, ssl3_SendClientSecondRound, or ssl3_FinishHandshake. */
+    sslRestartTarget      restartTarget;
+    /* Shared state between ssl3_HandleFinished and ssl3_FinishHandshake */
+    PRBool                cacheSID; 
 } SSL3HandshakeState;
 
 
@@ -1340,7 +1349,6 @@ extern  SECStatus ssl3_MasterKeyDeriveBypass( ssl3CipherSpec * pwSpec,
 /* These functions are called from secnav, even though they're "private". */
 
 extern int ssl2_SendErrorMessage(struct sslSocketStr *ss, int error);
-extern int SSL_RestartHandshakeAfterServerCert(struct sslSocketStr *ss);
 extern int SSL_RestartHandshakeAfterCertReq(struct sslSocketStr *ss,
 					    CERTCertificate *cert,
 					    SECKEYPrivateKey *key,
@@ -1350,12 +1358,7 @@ extern void ssl_FreeSocket(struct sslSocketStr *ssl);
 extern SECStatus SSL3_SendAlert(sslSocket *ss, SSL3AlertLevel level,
 				SSL3AlertDescription desc);
 
-extern SECStatus ssl3_RestartHandshakeAfterCertReq(sslSocket *    ss,
-					     CERTCertificate *    cert, 
-					     SECKEYPrivateKey *   key,
-					     CERTCertificateList *certChain);
-
-extern int ssl3_RestartHandshakeAfterServerCert(sslSocket *ss);
+extern SECStatus ssl3_RestartHandshakeAfterAuthCertificate(sslSocket *ss);
 
 /*
  * for dealing with SSL 3.0 clients sending SSL 2.0 format hellos
