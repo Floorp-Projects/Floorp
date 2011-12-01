@@ -123,6 +123,7 @@ public:
         mLastTransactionExpectedNoContent = val;
     }
 
+    nsISocketTransport   *Transport()      { return mSocketTransport; }
     nsAHttpTransaction   *Transaction()    { return mTransaction; }
     nsHttpConnectionInfo *ConnectionInfo() { return mConnInfo; }
 
