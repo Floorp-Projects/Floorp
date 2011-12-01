@@ -42,6 +42,10 @@ import org.mozilla.gecko.gfx.CairoUtils;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.TileLayer;
+import android.graphics.PointF;
+import android.graphics.RectF;
+import android.opengl.GLES11;
+import android.opengl.GLES11Ext;
 import android.util.Log;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -50,58 +54,48 @@ import javax.microedition.khronos.opengles.GL10;
 
 /**
  * Encapsulates the logic needed to draw a single textured tile.
+ *
+ * TODO: Repeating textures really should be their own type of layer.
  */
 public class SingleTileLayer extends TileLayer {
-    private FloatBuffer mTexCoordBuffer, mVertexBuffer;
-
-    private static final float[] VERTICES = {
-        0.0f, 0.0f, 0.0f,
-        1.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-        1.0f, 1.0f, 0.0f
-    };
-
-    private static final float[] TEX_COORDS = {
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        0.0f, 1.0f,
-        1.0f, 1.0f
-    };
-
     public SingleTileLayer(CairoImage image) { this(false, image); }
 
     public SingleTileLayer(boolean repeat, CairoImage image) {
         super(repeat, image);
-
-        mVertexBuffer = createBuffer(VERTICES);
-        mTexCoordBuffer = createBuffer(TEX_COORDS);
     }
 
     @Override
-    protected void onTileDraw(GL10 gl) {
+    public void draw(RenderContext context) {
+        // mTextureIDs may be null here during startup if Layer.java's draw method
+        // failed to acquire the transaction lock and call performUpdates.
+        if (!initialized())
+            return;
+
+        GLES11.glBindTexture(GL10.GL_TEXTURE_2D, getTextureID());
+
+        RectF bounds;
+        int[] cropRect;
         IntSize size = getSize();
+        RectF viewport = context.viewport;
 
         if (repeats()) {
-            gl.glMatrixMode(GL10.GL_TEXTURE);
-            gl.glPushMatrix();
-            gl.glScalef(LayerController.TILE_WIDTH / size.width,
-                        LayerController.TILE_HEIGHT / size.height,
-                        1.0f);
-
-            gl.glMatrixMode(GL10.GL_MODELVIEW);
-            gl.glScalef(LayerController.TILE_WIDTH, LayerController.TILE_HEIGHT, 1.0f);
+            bounds = new RectF(0.0f, 0.0f, viewport.width(), viewport.height());
+            int width = (int)Math.round(viewport.width());
+            int height = (int)Math.round(-viewport.height());
+            cropRect = new int[] { 0, size.height, width, height };
         } else {
-            gl.glScalef(size.width, size.height, 1.0f);
+            bounds = getBounds(context, new FloatSize(size));
+            cropRect = new int[] { 0, size.height, size.width, -size.height };
         }
 
-        gl.glBindTexture(GL10.GL_TEXTURE_2D, getTextureID());
-        drawTriangles(gl, mVertexBuffer, mTexCoordBuffer, 4);
+        GLES11.glTexParameteriv(GL10.GL_TEXTURE_2D, GLES11Ext.GL_TEXTURE_CROP_RECT_OES, cropRect,
+                                0);
 
-        if (repeats()) {
-            gl.glMatrixMode(GL10.GL_TEXTURE);
-            gl.glPopMatrix();
-            gl.glMatrixMode(GL10.GL_MODELVIEW);
-        }
+        float height = bounds.height();
+        float left = bounds.left - viewport.left;
+        float top = viewport.height() - (bounds.top + height - viewport.top);
+
+        GLES11Ext.glDrawTexfOES(left, top, 0.0f, bounds.width(), height);
     }
 }
 
