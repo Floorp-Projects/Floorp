@@ -1646,25 +1646,13 @@ SessionStoreService.prototype = {
     // Inspect extData for Panorama identifiers. If found, then we want to
     // inspect further. If there is a single group, then we can use this
     // window. If there are multiple groups then we won't use this window.
-    let data = this.getWindowValue(aWindow, "tabview-group");
-    if (data) {
-      data = JSON.parse(data);
+    let groupsData = this.getWindowValue(aWindow, "tabview-groups");
+    if (groupsData) {
+      groupsData = JSON.parse(groupsData);
 
-      // Multiple keys means multiple groups, which means we don't want to use this window.
-      if (Object.keys(data).length > 1) {
+      // If there are multiple groups, we don't want to use this window.
+      if (groupsData.totalNumber > 1)
         return [false, false];
-      }
-      else {
-        // If there is only one group, then we want to ensure that its group id
-        // is 0. This is how Panorama forces group merging when new tabs are opened.
-        //XXXzpao This is a hack and the proper fix really belongs in Panorama.
-        let groupKey = Object.keys(data)[0];
-        if (groupKey !== "0") {
-          data["0"] = data[groupKey];
-          delete data[groupKey];
-          this.setWindowValue(aWindow, "tabview-groups", JSON.stringify(data));
-        }
-      }
     }
 
     // Step 2 of processing:
