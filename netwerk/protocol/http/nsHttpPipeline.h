@@ -111,6 +111,11 @@ private:
     char     *mPushBackBuf;
     PRUint32  mPushBackLen;
     PRUint32  mPushBackMax;
+
+    // For support of OnTransportStatus()
+    PRUint64  mReceivingFromProgress;
+    PRUint64  mSendingToProgress;
+    bool      mSuppressSendEvents;
 };
 
 #endif // nsHttpPipeline_h__
