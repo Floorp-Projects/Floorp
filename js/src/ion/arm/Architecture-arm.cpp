@@ -8,5 +8,9 @@ bool hasVFPv3()
 {
     return true;
 }
+bool has32DR()
+{
+    return true;
+}
 }// ion
 }// js

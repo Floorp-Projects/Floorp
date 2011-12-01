@@ -50,20 +50,16 @@ class IonFramePrefix;
 // If this is ever not the case, we'll have to refactor.
 class IonCommonFrameLayout
 {
-# if 0
-    // the return address does not go on the stack
     void *returnAddress_;
-#endif
+    void *padding;
     uintptr_t descriptor_;
   public:
     static size_t offsetOfDescriptor() {
         return offsetof(IonCommonFrameLayout, descriptor_);
     }
-#if 0
     static size_t offsetOfReturnAddress() {
         return offsetof(IonCommonFrameLayout, returnAddress_);
     }
-#endif
     FrameType prevType() const {
         return FrameType(descriptor_ & ((1 << FRAMETYPE_BITS) - 1));
     }
@@ -78,14 +74,12 @@ class IonCommonFrameLayout
 // this is the layout of the frame that is used when we enter Ion code from EABI code
 class IonEntryFrameLayout : public IonCommonFrameLayout
 {
-  private:
 };
 
-class IonJSFrameLayout : IonCommonFrameLayout
+class IonJSFrameLayout : public IonEntryFrameLayout
 {
   protected:
     void *calleeToken_;
-    void *padding; // this is here so we can keep 8-byte stack alignment.
   public:
     void *calleeToken() const {
         return calleeToken_;
@@ -97,16 +91,6 @@ class IonJSFrameLayout : IonCommonFrameLayout
 
 };
 typedef IonJSFrameLayout IonFrameData;
-
-// This Frame is constructed when JS jited code calls a C function.
-// NOTE: the C calling convention does not put the return address on the stack,
-//  so we are pretty sol.
-struct IonCFrame
-{
-    uintptr_t frameSize;
-    uintptr_t snapshotOffset;
-};
-
 
 class IonRectifierFrameLayout : public IonJSFrameLayout
 {
