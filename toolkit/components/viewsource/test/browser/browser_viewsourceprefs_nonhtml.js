@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let source = "about:robots";
+let source = "data:text/plain,hello+world";
 let mWindow, wrapMenuItem, syntaxMenuItem;
 
 // Check the default values are set.
@@ -74,7 +74,7 @@ function test4() {
     is(syntaxMenuItem.hasAttribute("checked"), true, "Syntax menu item checked");
     is(SpecialPowers.getBoolPref("view_source.syntax_highlight"), true, "Syntax highlighting pref set");
 
-    checkHighlight(mWindow, true);
+    checkHighlight(mWindow, false);
     closeViewSourceWindow(mWindow, test5);
   }, false);
 
