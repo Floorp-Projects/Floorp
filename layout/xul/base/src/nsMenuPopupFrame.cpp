@@ -115,6 +115,7 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContex
   :nsBoxFrame(aShell, aContext),
   mCurrentMenu(nsnull),
   mPrefSize(-1, -1),
+  mLastClientOffset(0, 0),
   mPopupType(ePopupTypePanel),
   mPopupState(ePopupClosed),
   mPopupAlignment(POPUPALIGNMENT_NONE),
@@ -1327,9 +1328,9 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove)
   // to save time since they will never have a titlebar.
   nsIWidget* widget = view->GetWidget();
   if (mPopupType == ePopupTypePanel && widget) {
-    nsIntPoint offset = widget->GetClientOffset();
-    viewPoint.x += presContext->DevPixelsToAppUnits(offset.x);
-    viewPoint.y += presContext->DevPixelsToAppUnits(offset.y);
+    mLastClientOffset = widget->GetClientOffset();
+    viewPoint.x += presContext->DevPixelsToAppUnits(mLastClientOffset.x);
+    viewPoint.y += presContext->DevPixelsToAppUnits(mLastClientOffset.y);
   }
 
   // Now that we've positioned the view, sync up the frame's origin.
@@ -1869,8 +1870,11 @@ nsMenuPopupFrame::DestroyFrom(nsIFrame* aDestructRoot)
 void
 nsMenuPopupFrame::MoveTo(PRInt32 aLeft, PRInt32 aTop, bool aUpdateAttrs)
 {
-  if (mScreenXPos == aLeft && mScreenYPos == aTop)
+  nsIWidget* widget = GetWidget();
+  if ((mScreenXPos == aLeft && mScreenYPos == aTop) &&
+      (!widget || widget->GetClientOffset() == mLastClientOffset)) {
     return;
+  }
 
   // reposition the popup at the specified coordinates. Don't clear the anchor
   // and position, because the popup can be reset to its anchor position by
