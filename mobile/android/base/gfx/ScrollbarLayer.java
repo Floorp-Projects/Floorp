@@ -37,55 +37,65 @@
 
 package org.mozilla.gecko.gfx;
 
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Rect;
+import android.graphics.PointF;
+import android.graphics.RectF;
+import android.opengl.GLES11;
+import android.opengl.GLES11Ext;
+import android.util.Log;
+import java.nio.ByteBuffer;
 import javax.microedition.khronos.opengles.GL10;
 
 /**
  * Draws a small rect. This is scaled to become a scrollbar.
  */
-public class ScrollbarLayer extends SingleTileLayer {
+public class ScrollbarLayer extends TileLayer {
     private static final int BAR_SIZE = 8;  // has to be power of 2
 
-    /*
-     * This awkward pattern is necessary due to Java's restrictions on when one can call superclass
-     * constructors.
-     */
-    private ScrollbarLayer(CairoImage image) {
-        super(image);
+    private final boolean mVertical;
+
+    private ScrollbarLayer(CairoImage image, boolean vertical) {
+        super(false, image);
+        mVertical = vertical;
     }
 
-    public static ScrollbarLayer create() {
-        Bitmap bitmap = Bitmap.createBitmap(BAR_SIZE, BAR_SIZE, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-
-        Paint painter = new Paint();
-        painter.setColor(Color.argb(127, 0, 0, 0));
-        canvas.drawRect(0.0f, 0.0f, BAR_SIZE, BAR_SIZE, painter);
-
-        return new ScrollbarLayer(new BufferedCairoImage(bitmap));
+    public static ScrollbarLayer create(boolean vertical) {
+        ByteBuffer buffer = ByteBuffer.allocateDirect(4);
+        buffer.put(3, (byte)127);   // Set A to 0.5; leave R/G/B at 0.
+        CairoImage image = new BufferedCairoImage(buffer, 1, 1, CairoImage.FORMAT_ARGB32);
+        return new ScrollbarLayer(image, vertical);
     }
 
-    void drawVertical(GL10 gl, IntSize screenSize, Rect pageRect) {
-        float barStart = (float)screenSize.height * (float)(0 - pageRect.top) / pageRect.height();
-        float barEnd = (float)screenSize.height * (float)(screenSize.height - pageRect.top) / pageRect.height();
-        float scale = Math.max(1.0f, (barEnd - barStart) / BAR_SIZE);
-        gl.glLoadIdentity();
-        gl.glScalef(1.0f, scale, 1.0f);
-        gl.glTranslatef(screenSize.width - BAR_SIZE, barStart / scale, 0.0f);
-        draw(gl);
+    @Override
+    public void draw(RenderContext context) {
+        if (!initialized())
+            return;
+
+        try {
+            GLES11.glEnable(GL10.GL_BLEND);
+
+            RectF rect = mVertical ? getVerticalRect(context) : getHorizontalRect(context);
+            GLES11.glBindTexture(GL10.GL_TEXTURE_2D, getTextureID());
+
+            float y = context.viewport.height() - rect.bottom;
+            GLES11Ext.glDrawTexfOES(rect.left, y, 0.0f, rect.width(), rect.height());
+        } finally {
+            GLES11.glDisable(GL10.GL_BLEND);
+        }
     }
 
-    void drawHorizontal(GL10 gl, IntSize screenSize, Rect pageRect) {
-        float barStart = (float)screenSize.width * (float)(0 - pageRect.left) / pageRect.width();
-        float barEnd = (float)screenSize.width * (float)(screenSize.width - pageRect.left) / pageRect.width();
-        float scale = Math.max(1.0f, (barEnd - barStart) / BAR_SIZE);
-        gl.glLoadIdentity();
-        gl.glScalef(scale, 1.0f, 1.0f);
-        gl.glTranslatef(barStart / scale, screenSize.height - BAR_SIZE, 0.0f);
-        draw(gl);
+    private RectF getVerticalRect(RenderContext context) {
+        RectF viewport = context.viewport;
+        FloatSize pageSize = context.pageSize;
+        float barStart = viewport.height() * viewport.top / pageSize.height;
+        float barEnd = viewport.height() * viewport.bottom / pageSize.height;
+        return new RectF(viewport.width() - BAR_SIZE, barStart, viewport.width(), barEnd);
+    }
+
+    private RectF getHorizontalRect(RenderContext context) {
+        RectF viewport = context.viewport;
+        FloatSize pageSize = context.pageSize;
+        float barStart = viewport.width() * viewport.left / pageSize.width;
+        float barEnd = viewport.width() * viewport.right / pageSize.width;
+        return new RectF(barStart, viewport.height() - BAR_SIZE, barEnd, viewport.height());
     }
 }

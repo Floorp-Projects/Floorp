@@ -39,6 +39,8 @@
 package org.mozilla.gecko.gfx;
 
 import android.graphics.Point;
+import android.graphics.PointF;
+import android.graphics.RectF;
 import android.util.Log;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.microedition.khronos.opengles.GL10;
@@ -74,19 +76,15 @@ public abstract class Layer {
         }
     }
 
-    /** Sets the transformation for the layer. */
-    public final void transform(GL10 gl) {
-        gl.glScalef(1.0f / mResolution, 1.0f / mResolution, 1.0f);
-        gl.glTranslatef(mOrigin.x, mOrigin.y, 0.0f);
-    }
+    /** Subclasses override this function to draw the layer. */
+    public abstract void draw(RenderContext context);
 
-    /** Draws the layer. Automatically applies the transformation. */
-    public final void draw(GL10 gl) {
-        gl.glPushMatrix();
-
-        onDraw(gl);
-
-        gl.glPopMatrix();
+    /** Given the intrinsic size of the layer, returns the pixel boundaries of the layer rect. */
+    protected RectF getBounds(RenderContext context, FloatSize size) {
+        float scaleFactor = context.zoomFactor / mResolution;
+        float x = mOrigin.x * scaleFactor, y = mOrigin.y * scaleFactor;
+        float width = size.width * scaleFactor, height = size.height * scaleFactor;
+        return new RectF(x, y, x + width, y + height);
     }
 
     /**
@@ -154,13 +152,6 @@ public abstract class Layer {
     }
 
     /**
-     * Subclasses implement this method to perform drawing.
-     *
-     * Invariant: The current matrix mode must be GL_MODELVIEW both before and after this call.
-     */
-    protected abstract void onDraw(GL10 gl);
-
-    /**
      * Subclasses may override this method to perform custom layer updates. This will be called
      * with the transaction lock held. Subclass implementations of this method must call the
      * superclass implementation.
@@ -170,7 +161,22 @@ public abstract class Layer {
             mOrigin = mNewOrigin;
             mNewOrigin = null;
         }
-        mResolution = mNewResolution;
+        if (mNewResolution != 0.0f) {
+            mResolution = mNewResolution;
+            mNewResolution = 0.0f;
+        }
+    }
+
+    public static class RenderContext {
+        public final RectF viewport;
+        public final FloatSize pageSize;
+        public final float zoomFactor;
+
+        public RenderContext(RectF aViewport, FloatSize aPageSize, float aZoomFactor) {
+            viewport = aViewport;
+            pageSize = aPageSize;
+            zoomFactor = aZoomFactor;
+        }
     }
 }
 

@@ -40,6 +40,7 @@ package org.mozilla.gecko.gfx;
 
 import org.mozilla.gecko.gfx.BufferedCairoImage;
 import org.mozilla.gecko.gfx.IntSize;
+import org.mozilla.gecko.gfx.Layer.RenderContext;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.NinePatchTileLayer;
@@ -68,12 +69,12 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private static final float BACKGROUND_COLOR_G = 0.81f;
     private static final float BACKGROUND_COLOR_B = 0.81f;
 
-    private LayerView mView;
-    private SingleTileLayer mCheckerboardLayer;
-    private NinePatchTileLayer mShadowLayer;
-    private TextLayer mFPSLayer;
-    private ScrollbarLayer mHorizScrollLayer;
-    private ScrollbarLayer mVertScrollLayer;
+    private final LayerView mView;
+    private final SingleTileLayer mCheckerboardLayer;
+    private final NinePatchTileLayer mShadowLayer;
+    private final TextLayer mFPSLayer;
+    private final ScrollbarLayer mHorizScrollLayer;
+    private final ScrollbarLayer mVertScrollLayer;
 
     // FPS display
     private long mFrameCountTimestamp;
@@ -83,15 +84,17 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     public LayerRenderer(LayerView view) {
         mView = view;
 
-        /* FIXME: Layers should not be directly connected to the layer controller. */
         LayerController controller = view.getController();
+
         CairoImage checkerboardImage = new BufferedCairoImage(controller.getCheckerboardPattern());
         mCheckerboardLayer = new SingleTileLayer(true, checkerboardImage);
+
         CairoImage shadowImage = new BufferedCairoImage(controller.getShadowPattern());
-        mShadowLayer = new NinePatchTileLayer(controller, shadowImage);
+        mShadowLayer = new NinePatchTileLayer(shadowImage);
+
         mFPSLayer = TextLayer.create(new IntSize(64, 32), "-- FPS");
-        mHorizScrollLayer = ScrollbarLayer.create();
-        mVertScrollLayer = ScrollbarLayer.create();
+        mHorizScrollLayer = ScrollbarLayer.create(false);
+        mVertScrollLayer = ScrollbarLayer.create(true);
 
         mFrameCountTimestamp = System.currentTimeMillis();
         mFrameCount = 0;
@@ -106,14 +109,21 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         gl.glEnable(GL10.GL_TEXTURE_2D);
     }
 
+    /**
+     * Called whenever a new frame is about to be drawn.
+     *
+     * FIXME: This is racy. Layers and page sizes can be modified by the pan/zoom controller while
+     * this is going on.
+     */
     public void onDrawFrame(GL10 gl) {
         checkFPS();
         TextureReaper.get().reap(gl);
 
         LayerController controller = mView.getController();
         Layer rootLayer = controller.getRoot();
+        RenderContext screenContext = createScreenContext(), pageContext = createPageContext();
 
-        /* Update layers */
+        /* Update layers. */
         if (rootLayer != null) rootLayer.update(gl);
         mShadowLayer.update(gl);
         mCheckerboardLayer.update(gl);
@@ -125,60 +135,61 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         gl.glClearColor(BACKGROUND_COLOR_R, BACKGROUND_COLOR_G, BACKGROUND_COLOR_B, 1.0f);
         gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 
-        /* Draw the drop shadow. */
-        setupPageTransform(gl, false);
-        mShadowLayer.draw(gl);
+        /* Draw the drop shadow, if we need to. */
+        Rect pageRect = getPageRect();
+        RectF untransformedPageRect = new RectF(0.0f, 0.0f, pageRect.width(), pageRect.height());
+        if (!untransformedPageRect.contains(controller.getViewport()))
+            mShadowLayer.draw(pageContext);
 
         /* Draw the checkerboard. */
-        Rect pageRect = getPageRect();
         Rect scissorRect = transformToScissorRect(pageRect);
         gl.glEnable(GL10.GL_SCISSOR_TEST);
         gl.glScissor(scissorRect.left, scissorRect.top,
                      scissorRect.width(), scissorRect.height());
 
-        gl.glLoadIdentity();
-        mCheckerboardLayer.draw(gl);
+        mCheckerboardLayer.draw(screenContext);
 
         /* Draw the layer the client added to us. */
-        if (rootLayer != null) {
-            gl.glLoadIdentity();
-            setupPageTransform(gl, true);
-            rootLayer.transform(gl);
-            rootLayer.draw(gl);
-        }
+        if (rootLayer != null)
+            rootLayer.draw(pageContext);
 
         gl.glDisable(GL10.GL_SCISSOR_TEST);
 
-        gl.glEnable(GL10.GL_BLEND);
-
-        /* Draw the vertical scrollbar */
+        /* Draw the vertical scrollbar. */
         IntSize screenSize = new IntSize(controller.getViewportSize());
-        if (pageRect.height() > screenSize.height) {
-            mVertScrollLayer.drawVertical(gl, screenSize, pageRect);
-        }
+        if (pageRect.height() > screenSize.height)
+            mVertScrollLayer.draw(pageContext);
 
-        /* Draw the horizontal scrollbar */
-        if (pageRect.width() > screenSize.width) {
-            mHorizScrollLayer.drawHorizontal(gl, screenSize, pageRect);
-        }
+        /* Draw the horizontal scrollbar. */
+        if (pageRect.width() > screenSize.width)
+            mHorizScrollLayer.draw(pageContext);
 
         /* Draw the FPS. */
-        gl.glLoadIdentity();
-        mFPSLayer.draw(gl);
-
-        gl.glDisable(GL10.GL_BLEND);
+        try {
+            gl.glEnable(GL10.GL_BLEND);
+            mFPSLayer.draw(screenContext);
+        } finally {
+            gl.glDisable(GL10.GL_BLEND);
+        }
     }
 
-    private void setupPageTransform(GL10 gl, boolean scale) {
-        LayerController controller = mView.getController();
+    private RenderContext createScreenContext() {
+        LayerController layerController = mView.getController();
+        IntSize viewportSize = new IntSize(layerController.getViewportSize());
+        RectF viewport = new RectF(0.0f, 0.0f, viewportSize.width, viewportSize.height);
+        FloatSize pageSize = new FloatSize(layerController.getPageSize());
+        return new RenderContext(viewport, pageSize, 1.0f);
+    }
 
-        PointF origin = controller.getOrigin();
-        gl.glTranslatef(Math.round(-origin.x), Math.round(-origin.y), 0.0f);
+    private RenderContext createPageContext() {
+        LayerController layerController = mView.getController();
 
-        if (scale) {
-            float zoomFactor = controller.getZoomFactor();
-            gl.glScalef(zoomFactor, zoomFactor, 1.0f);
-        }
+        Rect viewport = new Rect();
+        layerController.getViewport().round(viewport);
+
+        FloatSize pageSize = new FloatSize(layerController.getPageSize());
+        float zoomFactor = layerController.getZoomFactor();
+        return new RenderContext(new RectF(viewport), pageSize, zoomFactor);
     }
 
     private Rect getPageRect() {
@@ -208,11 +219,6 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
     public void onSurfaceChanged(GL10 gl, final int width, final int height) {
         gl.glViewport(0, 0, width, height);
-        gl.glMatrixMode(GL10.GL_PROJECTION);
-        gl.glLoadIdentity();
-        gl.glOrthof(0.0f, (float)width, (float)height, 0.0f, -10.0f, 10.0f);
-        gl.glMatrixMode(GL10.GL_MODELVIEW);
-        gl.glLoadIdentity();
 
         // updating the state in the view/controller/client should be
         // done on the main UI thread, not the GL renderer thread
