@@ -405,3 +405,9 @@ ER3(SSL_ERROR_RX_UNEXPECTED_UNCOMPRESSED_RECORD, (SSL_ERROR_BASE + 114),
 
 ER3(SSL_ERROR_WEAK_SERVER_EPHEMERAL_DH_KEY,    (SSL_ERROR_BASE + 115),
 "SSL received a weak ephemeral Diffie-Hellman key in Server Key Exchange handshake message.")
+
+ER3(SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID,      (SSL_ERROR_BASE + 116),
+"SSL received invalid NPN extension data.")
+
+ER3(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SSL2,  (SSL_ERROR_BASE + 117),
+"SSL feature not supported for SSL 2.0 connections.")

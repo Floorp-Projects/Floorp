@@ -225,9 +225,6 @@ typedef struct {
 const SECCertUsageToEku certUsageEkuStringMap[] = {
     {certUsageSSLClient,             ekuIndexSSLClient},
     {certUsageSSLServer,             ekuIndexSSLServer},
-    {certUsageSSLServerWithStepUp,   ekuIndexSSLServer}, /* need to add oids to
-                                                          * the list of eku.
-                                                          * see 390381*/
     {certUsageSSLCA,                 ekuIndexSSLServer},
     {certUsageEmailSigner,           ekuIndexEmail},
     {certUsageEmailRecipient,        ekuIndexEmail},
@@ -238,8 +235,6 @@ const SECCertUsageToEku certUsageEkuStringMap[] = {
     {certUsageStatusResponder,       ekuIndexStatusResponder},
     {certUsageAnyCA,                 ekuIndexUnknown},
 };
-
-#define CERT_USAGE_EKU_STRING_MAPS_TOTAL       12
 
 /*
  * FUNCTION: cert_NssCertificateUsageToPkixKUAndEKU
@@ -292,7 +287,7 @@ cert_NssCertificateUsageToPkixKUAndEKU(
         PKIX_List_Create(&ekuOidsList, plContext),
         PKIX_LISTCREATEFAILED);
 
-    for (;i < CERT_USAGE_EKU_STRING_MAPS_TOTAL;i++) {
+    for (;i < PR_ARRAY_SIZE(certUsageEkuStringMap);i++) {
         const SECCertUsageToEku *usageToEkuElem =
             &certUsageEkuStringMap[i];
         if (usageToEkuElem->certUsage == requiredCertUsage) {
