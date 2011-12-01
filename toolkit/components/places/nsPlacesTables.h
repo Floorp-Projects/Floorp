@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -127,6 +128,7 @@
     ", data BLOB" \
     ", mime_type VARCHAR(32)" \
     ", expiration LONG" \
+    ", guid TEXT" \
   ")" \
 )
 

@@ -238,12 +238,15 @@ nsFaviconService::SetFaviconUrlForPage(nsIURI* aPageURI, nsIURI* aFaviconURI)
   if (iconId == -1) {
     // We did not find any entry for this icon, so create a new one.
     nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      "INSERT INTO moz_favicons (id, url, data, mime_type, expiration) "
-      "VALUES (:icon_id, :icon_url, :data, :mime_type, :expiration)"
+      "INSERT INTO moz_favicons (id, url, data, mime_type, expiration, guid) "
+      "VALUES (:icon_id, :icon_url, :data, :mime_type, :expiration, "
+              "COALESCE(:guid, GENERATE_GUID()))"
     );
     NS_ENSURE_STATE(stmt);
     mozStorageStatementScoper scoper(stmt);
 
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("guid"));
+    NS_ENSURE_SUCCESS(rv, rv);
     rv = stmt->BindNullByName(NS_LITERAL_CSTRING("icon_id"));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"), aFaviconURI);
@@ -443,12 +446,17 @@ nsFaviconService::SetFaviconData(nsIURI* aFaviconURI, const PRUint8* aData,
       rv = stmt->GetInt64(0, &id);
       NS_ENSURE_SUCCESS(rv, rv);
       statement = mDB->GetStatement(
-        "UPDATE moz_favicons SET data = :data, mime_type = :mime_type, "
-                                "expiration = :expiration "
+        "UPDATE moz_favicons SET "
+               "guid       = COALESCE(:guid, guid), "
+               "data       = :data, "
+               "mime_type  = :mime_type, "
+               "expiration = :expiration "
         "WHERE id = :icon_id"
       );
       NS_ENSURE_STATE(statement);
 
+      rv = statement->BindNullByName(NS_LITERAL_CSTRING("guid"));
+      NS_ENSURE_SUCCESS(rv, rv);
       rv = statement->BindInt64ByName(NS_LITERAL_CSTRING("icon_id"), id);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = statement->BindBlobByName(NS_LITERAL_CSTRING("data"), data, dataLen);
@@ -461,9 +469,9 @@ nsFaviconService::SetFaviconData(nsIURI* aFaviconURI, const PRUint8* aData,
     else {
       // Insert a new entry.
       statement = mDB->GetStatement(
-        "INSERT INTO moz_favicons (id, url, data, mime_type, expiration) "
-        "VALUES (:icon_id, :icon_url, :data, :mime_type, :expiration)"
-      );
+       "INSERT INTO moz_favicons (id, url, data, mime_type, expiration, guid) "
+       "VALUES (:icon_id, :icon_url, :data, :mime_type, :expiration, "
+               "COALESCE(:guid, GENERATE_GUID()))");
       NS_ENSURE_STATE(statement);
 
       rv = statement->BindNullByName(NS_LITERAL_CSTRING("icon_id"));
@@ -475,6 +483,8 @@ nsFaviconService::SetFaviconData(nsIURI* aFaviconURI, const PRUint8* aData,
       rv = statement->BindUTF8StringByName(NS_LITERAL_CSTRING("mime_type"), *mimeType);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = statement->BindInt64ByName(NS_LITERAL_CSTRING("expiration"), aExpiration);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = statement->BindNullByName(NS_LITERAL_CSTRING("guid"));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
