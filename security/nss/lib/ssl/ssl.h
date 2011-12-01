@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl.h,v 1.44 2011/10/06 22:42:33 wtc%google.com Exp $ */
+/* $Id: ssl.h,v 1.45 2011/10/29 00:29:11 bsmith%mozilla.com Exp $ */
 
 #ifndef __ssl_h_
 #define __ssl_h_
@@ -180,6 +180,62 @@ SSL_IMPORT SECStatus SSL_OptionGet(PRFileDesc *fd, PRInt32 option, PRBool *on);
 SSL_IMPORT SECStatus SSL_OptionSetDefault(PRInt32 option, PRBool on);
 SSL_IMPORT SECStatus SSL_OptionGetDefault(PRInt32 option, PRBool *on);
 SSL_IMPORT SECStatus SSL_CertDBHandleSet(PRFileDesc *fd, CERTCertDBHandle *dbHandle);
+
+/* SSLNextProtoCallback is called during the handshake for the client, when a
+ * Next Protocol Negotiation (NPN) extension has been received from the server.
+ * |protos| and |protosLen| define a buffer which contains the server's
+ * advertisement. This data is guaranteed to be well formed per the NPN spec.
+ * |protoOut| is a buffer provided by the caller, of length 255 (the maximum
+ * allowed by the protocol). On successful return, the protocol to be announced
+ * to the server will be in |protoOut| and its length in |*protoOutLen|.
+ *
+ * The callback must return SECFailure or SECSuccess (not SECWouldBlock).
+ */
+typedef SECStatus (PR_CALLBACK *SSLNextProtoCallback)(
+    void *arg,
+    PRFileDesc *fd,
+    const unsigned char* protos,
+    unsigned int protosLen,
+    unsigned char* protoOut,
+    unsigned int* protoOutLen,
+    unsigned int protoMaxOut);
+
+/* SSL_SetNextProtoCallback sets a callback function to handle Next Protocol
+ * Negotiation. It causes a client to advertise NPN. */
+SSL_IMPORT SECStatus SSL_SetNextProtoCallback(PRFileDesc *fd,
+                                              SSLNextProtoCallback callback,
+                                              void *arg);
+
+/* SSL_SetNextProtoNego can be used as an alternative to
+ * SSL_SetNextProtoCallback. It also causes a client to advertise NPN and
+ * installs a default callback function which selects the first supported
+ * protocol in server-preference order. If no matching protocol is found it
+ * selects the first supported protocol.
+ *
+ * The supported protocols are specified in |data| in wire-format (8-bit
+ * length-prefixed). For example: "\010http/1.1\006spdy/2". */
+SSL_IMPORT SECStatus SSL_SetNextProtoNego(PRFileDesc *fd,
+					  const unsigned char *data,
+					  unsigned int length);
+
+typedef enum SSLNextProtoState { 
+  SSL_NEXT_PROTO_NO_SUPPORT = 0, /* No peer support                */
+  SSL_NEXT_PROTO_NEGOTIATED = 1, /* Mutual agreement               */
+  SSL_NEXT_PROTO_NO_OVERLAP = 2  /* No protocol overlap found      */
+} SSLNextProtoState;
+
+/* SSL_GetNextProto can be used in the HandshakeCallback or any time after
+ * a handshake to retrieve the result of the Next Protocol negotiation.
+ *
+ * The length of the negotiated protocol, if any, is written into *bufLen.
+ * If the negotiated protocol is longer than bufLenMax, then SECFailure is
+ * returned. Otherwise, the negotiated protocol, if any, is written into buf,
+ * and SECSuccess is returned. */
+SSL_IMPORT SECStatus SSL_GetNextProto(PRFileDesc *fd,
+				      SSLNextProtoState *state,
+				      unsigned char *buf,
+				      unsigned int *bufLen,
+				      unsigned int bufLenMax);
 
 /*
 ** Control ciphers that SSL uses. If on is non-zero then the named cipher

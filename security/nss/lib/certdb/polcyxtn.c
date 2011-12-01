@@ -37,7 +37,7 @@
 /*
  * Support for various policy related extensions
  *
- * $Id: polcyxtn.c,v 1.11 2008/02/13 04:03:19 julien.pierre.boogz%sun.com Exp $
+ * $Id: polcyxtn.c,v 1.13 2011/11/16 19:12:32 kaie%kuix.de Exp $
  */
 
 #include "seccomon.h"
