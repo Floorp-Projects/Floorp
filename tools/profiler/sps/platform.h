@@ -144,12 +144,10 @@ class Sampler {
   class PlatformData;
 
  private:
-  void SetActive(bool value) { NoBarrier_Store(&active_, value); }
-
   const int interval_;
   const bool profiling_;
   const bool synchronous_;
-  Atomic32 active_;
+  bool active_;
   PlatformData* data_;  // Platform specific data.
 };
 
