@@ -2646,7 +2646,7 @@ panel[dimmed="true"] {
 
 #addonbar-closebutton {
   padding: 0;
-  margin: 0 4px;
+  margin: 0 6px;
   list-style-image: url("chrome://global/skin/icons/close.png");
   border: none;
   -moz-image-region: rect(0, 16px, 16px, 0);

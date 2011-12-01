@@ -85,9 +85,7 @@ doubleVariantToIdentifier(NPVariant variant)
 }
 
 /*
- * Parse a color in hex format, like AARRGGBB
- * If the string is short, portions to the left are assumed omitted.
- * R G B default to 0, A defaults to 0xFF
+ * Parse a color in hex format, #AARRGGBB or AARRGGBB.
  */
 PRUint32
 parseHexColor(const char* color, int len)
@@ -95,19 +93,14 @@ parseHexColor(const char* color, int len)
   PRUint8 bgra[4] = { 0, 0, 0, 0xFF };
   int i = 0;
 
+  assert(len == 9 || len == 8);
+
   // start from the right and work to the left
-  while (len > 0) {
+  while (len >= 2) { // we have at least #AA or AA left.
     char byte[3];
-    if (len > 1) {
-      // parse two hex digits
-      byte[0] = color[len - 2];
-      byte[1] = color[len - 1];
-    }
-    else {
-      // only one digit left
-      byte[0] = '0';
-      byte[1] = color[len - 1];
-    }
+    // parse two hex digits
+    byte[0] = color[len - 2];
+    byte[1] = color[len - 1];
     byte[2] = '\0';
 
     bgra[i] = (PRUint8)(strtoul(byte, NULL, 16) & 0xFF);
