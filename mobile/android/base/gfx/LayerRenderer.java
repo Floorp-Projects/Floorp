@@ -171,6 +171,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         } finally {
             gl.glDisable(GL10.GL_BLEND);
         }
+
+        PanningPerfAPI.recordFrameTime();
     }
 
     private RenderContext createScreenContext() {
