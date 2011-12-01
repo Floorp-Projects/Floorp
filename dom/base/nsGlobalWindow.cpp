@@ -1272,6 +1272,11 @@ nsGlobalWindow::FreeInnerObjects(bool aClearScope)
 {
   NS_ASSERTION(IsInnerWindow(), "Don't free inner objects on an outer window");
 
+  // Make sure that this is called before we null out the document and
+  // other members that the window destroyed observers could
+  // re-create.
+  NotifyDOMWindowDestroyed(this);
+
   // Kill all of the workers for this window.
   nsIScriptContext *scx = GetContextInternal();
   JSContext *cx = scx ? scx->GetNativeContext() : nsnull;
@@ -1296,6 +1301,11 @@ nsGlobalWindow::FreeInnerObjects(bool aClearScope)
   mLocation = nsnull;
   mHistory = nsnull;
 
+  if (mNavigator) {
+    mNavigator->Invalidate();
+    mNavigator = nsnull;
+  }
+
   if (mDocument) {
     NS_ASSERTION(mDoc, "Why is mDoc null?");
 
@@ -1307,9 +1317,6 @@ nsGlobalWindow::FreeInnerObjects(bool aClearScope)
   if (mDocument)
     nsCycleCollector_DEBUG_shouldBeFreed(nsCOMPtr<nsISupports>(do_QueryInterface(mDocument)));
 #endif
-
-  // Make sure that this is called before we null out the document.
-  NotifyDOMWindowDestroyed(this);
 
   // Remove our reference to the document and the document principal.
   mDocument = nsnull;
@@ -1733,7 +1740,6 @@ public:
 
   WindowStateHolder(nsGlobalWindow *aWindow,
                     nsIXPConnectJSObjectHolder *aHolder,
-                    Navigator *aNavigator,
                     nsIXPConnectJSObjectHolder *aOuterProto,
                     nsIXPConnectJSObjectHolder *aOuterRealProto);
 
@@ -1741,7 +1747,6 @@ public:
   nsIXPConnectJSObjectHolder *GetInnerWindowHolder()
   { return mInnerWindowHolder; }
 
-  Navigator* GetNavigator() { return mNavigator; }
   nsIXPConnectJSObjectHolder* GetOuterProto() { return mOuterProto; }
   nsIXPConnectJSObjectHolder* GetOuterRealProto() { return mOuterRealProto; }
 
@@ -1750,7 +1755,6 @@ public:
     mInnerWindow = nsnull;
 
     mInnerWindowHolder = nsnull;
-    mNavigator = nsnull;
     mOuterProto = nsnull;
     mOuterRealProto = nsnull;
   }
@@ -1762,7 +1766,6 @@ protected:
   // We hold onto this to make sure the inner window doesn't go away. The outer
   // window ends up recalculating it anyway.
   nsCOMPtr<nsIXPConnectJSObjectHolder> mInnerWindowHolder;
-  nsRefPtr<Navigator> mNavigator;
   nsCOMPtr<nsIXPConnectJSObjectHolder> mOuterProto;
   nsCOMPtr<nsIXPConnectJSObjectHolder> mOuterRealProto;
 };
@@ -1771,11 +1774,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WindowStateHolder, WINDOWSTATEHOLDER_IID)
 
 WindowStateHolder::WindowStateHolder(nsGlobalWindow *aWindow,
                                      nsIXPConnectJSObjectHolder *aHolder,
-                                     Navigator *aNavigator,
                                      nsIXPConnectJSObjectHolder *aOuterProto,
                                      nsIXPConnectJSObjectHolder *aOuterRealProto)
   : mInnerWindow(aWindow),
-    mNavigator(aNavigator),
     mOuterProto(aOuterProto),
     mOuterRealProto(aOuterRealProto)
 {
@@ -1930,32 +1931,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
   nsresult rv = NS_OK;
 
-  // Drop our reference to the navigator object unless we're reusing
-  // the existing inner window or the new document is from the same
-  // origin as the old document.
-  if (!reUseInnerWindow && mNavigator && oldPrincipal) {
-    bool equal;
-    rv = oldPrincipal->Equals(aDocument->NodePrincipal(), &equal);
-
-    if (NS_FAILED(rv) || !equal) {
-      // Different origins.  Release the navigator object so it gets
-      // recreated for the new document.  The plugins or mime types
-      // arrays may have changed. See bug 150087.
-      mNavigator->SetDocShell(nsnull);
-
-      mNavigator = nsnull;
-    }
-  }
-
-  if (mNavigator && aDocument != oldDoc) {
-    // We didn't drop our reference to our old navigator object and
-    // we're loading a new document. Notify the navigator object about
-    // the new document load so that it can make sure it is ready for
-    // the new document.
-
-    mNavigator->LoadingNewDocument();
-  }
-
   // Set mDocument even if this is an outer window to avoid
   // having to *always* reach into the inner window to find the
   // document.
@@ -1973,8 +1948,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   nsRefPtr<nsGlobalWindow> newInnerWindow;
 
   bool thisChrome = IsChromeWindow();
-  nsCOMPtr<nsIXPConnectJSObjectHolder> navigatorHolder;
-  jsval nav;
 
   bool isChrome = false;
 
@@ -1994,11 +1967,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   // inner scope.
   mContext->ClearScope(mJSObject, false);
 
-  // This code should not be called during shutdown any more (now that
-  // we don't ever call SetNewDocument(nsnull), so no need to null
-  // check xpc here.
-  nsIXPConnect *xpc = nsContentUtils::XPConnect();
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
   if (reUseInnerWindow) {
     // We're reusing the current inner window.
     NS_ASSERTION(!currentInner->IsFrozen(),
@@ -2023,15 +1991,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       mInnerWindowHolder = wsh->GetInnerWindowHolder();
       
       NS_ASSERTION(newInnerWindow, "Got a state without inner window");
-
-      // These assignments addref.
-      mNavigator = wsh->GetNavigator();
-
-      if (mNavigator) {
-        // Update mNavigator's docshell pointer now.
-        mNavigator->SetDocShell(mDocShell);
-        mNavigator->LoadingNewDocument();
-      }
     } else if (thisChrome) {
       newInnerWindow = new nsGlobalChromeWindow(this);
       isChrome = true;
@@ -2039,21 +1998,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       newInnerWindow = new nsGlobalModalWindow(this);
     } else {
       newInnerWindow = new nsGlobalWindow(this);
-    }
-
-    if (currentInner && currentInner->mJSObject) {
-      if (mNavigator && !aState) {
-        // Hold on to the navigator wrapper so that we can set
-        // window.navigator in the new window to point to the same
-        // object (assuming we didn't change origins etc). See bug
-        // 163645 for more on why we need this.
-
-        nsIDOMNavigator* navigator =
-          static_cast<nsIDOMNavigator*>(mNavigator.get());
-        nsContentUtils::WrapNative(cx, currentInner->mJSObject, navigator,
-                                   &NS_GET_IID(nsIDOMNavigator), &nav,
-                                   getter_AddRefs(navigatorHolder));
-      }
     }
 
     if (!aState) {
@@ -2289,33 +2233,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       // Initialize DOM classes etc on the inner window.
       rv = mContext->InitClasses(newInnerWindow->mJSObject);
       NS_ENSURE_SUCCESS(rv, rv);
-
-      if (navigatorHolder) {
-        JS_ASSERT(JSVAL_IS_OBJECT(nav));
-
-        if (js::GetObjectCompartment(JSVAL_TO_OBJECT(nav)) ==
-            js::GetObjectCompartment(newInnerWindow->mJSObject)) {
-          // Restore window.navigator onto the new inner window.
-
-          ::JS_DefineProperty(cx, newInnerWindow->mJSObject, "navigator",
-                              nav, nsnull, nsnull,
-                              JSPROP_ENUMERATE | JSPROP_PERMANENT |
-                              JSPROP_READONLY);
-
-          // The Navigator's prototype object keeps a reference to the
-          // window in which it was first created and can thus cause that
-          // window to stay alive for too long. Reparenting it here allows
-          // the window to be collected sooner.
-          nsIDOMNavigator* navigator =
-            static_cast<nsIDOMNavigator*>(mNavigator);
-
-          xpc->
-            ReparentWrappedNativeIfFound(cx, JSVAL_TO_OBJECT(nav),
-                                         newInnerWindow->mJSObject,
-                                         navigator,
-                                         getter_AddRefs(navigatorHolder));
-        }
-      }
     }
 
     if (mArguments) {
@@ -2502,8 +2419,8 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
 
   mDocShell = aDocShell;        // Weak Reference
 
-  if (mNavigator)
-    mNavigator->SetDocShell(aDocShell);
+  NS_ASSERTION(!mNavigator, "Non-null mNavigator in outer window!");
+
   if (mFrames)
     mFrames->SetDocShell(aDocShell);
   if (mScreen)
@@ -2999,12 +2916,12 @@ nsGlobalWindow::GetSelf(nsIDOMWindow** aWindow)
 NS_IMETHODIMP
 nsGlobalWindow::GetNavigator(nsIDOMNavigator** aNavigator)
 {
-  FORWARD_TO_OUTER(GetNavigator, (aNavigator), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_INNER(GetNavigator, (aNavigator), NS_ERROR_NOT_INITIALIZED);
 
   *aNavigator = nsnull;
 
   if (!mNavigator) {
-    mNavigator = new Navigator(mDocShell);
+    mNavigator = new Navigator(this);
   }
 
   NS_ADDREF(*aNavigator = mNavigator);
@@ -9960,7 +9877,6 @@ nsGlobalWindow::SaveWindowState(nsISupports **aState)
 
   nsCOMPtr<nsISupports> state = new WindowStateHolder(inner,
                                                       mInnerWindowHolder,
-                                                      mNavigator,
                                                       proto,
                                                       realProtoHolder);
   NS_ENSURE_TRUE(state, NS_ERROR_OUT_OF_MEMORY);

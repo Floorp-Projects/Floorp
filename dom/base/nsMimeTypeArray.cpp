@@ -210,20 +210,23 @@ nsMimeTypeArray::NamedItem(const nsAString& aName, nsIDOMMimeType** aReturn)
   return rv;
 }
 
-void  nsMimeTypeArray::Clear()
+void
+nsMimeTypeArray::Clear()
 {
   mInited = false;
   mMimeTypeArray.Clear();
   mPluginMimeTypeCount = 0;
 }
 
-nsresult nsMimeTypeArray::Refresh()
+void
+nsMimeTypeArray::Refresh()
 {
   Clear();
-  return GetMimeTypes();
+  GetMimeTypes();
 }
 
-nsresult nsMimeTypeArray::GetMimeTypes()
+nsresult
+nsMimeTypeArray::GetMimeTypes()
 {
   NS_PRECONDITION(!mInited && mPluginMimeTypeCount==0,
                       "already initialized");
