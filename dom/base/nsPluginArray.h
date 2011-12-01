@@ -43,6 +43,7 @@
 #include "nsIDOMPlugin.h"
 #include "nsIPluginHost.h"
 #include "nsIURL.h"
+#include "nsWeakReference.h"
 
 namespace mozilla {
 namespace dom {
@@ -92,7 +93,6 @@ private:
   bool AllowPlugins();
 
 public:
-  void SetDocShell(nsIDocShell *aDocShell);
   void Invalidate();
 
 protected:
@@ -100,7 +100,7 @@ protected:
   nsCOMPtr<nsIPluginHost> mPluginHost;
   PRUint32 mPluginCount;
   nsIDOMPlugin** mPluginArray;
-  nsIDocShell* mDocShell; // weak reference
+  nsWeakPtr mDocShell;
 };
 
 class nsPluginElement : public nsIDOMPlugin

@@ -236,6 +236,9 @@ public:
   // block the load event. Any new loads initiated (for example to seek)
   // will also be in the background.
   void MoveLoadsToBackground();
+  // Ensures that the value returned by IsSuspendedByCache below is up to date
+  // (i.e. the cache has examined this stream at least once).
+  virtual void EnsureCacheUpToDate() {}
 
   // These can be called on any thread.
   // Cached blocks associated with this stream will not be evicted
@@ -267,6 +270,8 @@ public:
   // data, otherwise we may not be able to make progress.
   // nsMediaDecoder::NotifySuspendedStatusChanged is called when this
   // changes.
+  // For resources using the media cache, this returns true only when all
+  // streams for the same resource are all suspended.
   virtual bool IsSuspendedByCache() = 0;
   // Returns true if this stream has been suspended.
   virtual bool IsSuspended() = 0;
@@ -382,6 +387,7 @@ public:
   bool IsClosed() const { return mCacheStream.IsClosed(); }
   virtual nsMediaStream* CloneData(nsMediaDecoder* aDecoder);
   virtual nsresult ReadFromCache(char* aBuffer, PRInt64 aOffset, PRUint32 aCount);
+  virtual void     EnsureCacheUpToDate();
 
   // Other thread
   virtual void     SetReadMode(nsMediaCacheStream::ReadMode aMode);
@@ -475,10 +481,9 @@ protected:
   // Any thread access
   nsMediaCacheStream mCacheStream;
 
-  // This lock protects mChannelStatistics and mCacheSuspendCount
+  // This lock protects mChannelStatistics
   Mutex               mLock;
   nsChannelStatistics mChannelStatistics;
-  PRUint32            mCacheSuspendCount;
 
   // True if we couldn't suspend the stream and we therefore don't want
   // to resume later. This is usually due to the channel not being in the

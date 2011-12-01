@@ -2233,12 +2233,26 @@ let GroupItems = {
           // All remaining children in to-be-closed groups are re-used by
           // session restore. Reconnect them so that they're put into their
           // right groups.
-          groupItem.getChildren().forEach(function (tabItem) {
+          let children = groupItem.getChildren().concat();
+
+          children.forEach(function (tabItem) {
             if (tabItem.parent && tabItem.parent.hidden)
               iQ(tabItem.container).show();
+
+            // sanity check the tab's groupID
+            let tabData = Storage.getTabData(tabItem.tab);
+            let parentGroup = GroupItems.groupItem(tabData.groupID);
+
+            // correct the tab's groupID if necessary
+            if (!parentGroup || -1 < toClose.indexOf(parentGroup)) {
+              tabData.groupID = activeGroupId || Object.keys(groupItemData)[0];
+              Storage.saveTab(tabItem.tab, tabData);
+            }
+
             tabItem._reconnected = false;
             tabItem._reconnect();
           });
+
           groupItem.close({immediately: true});
         });
       }
