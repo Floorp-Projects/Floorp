@@ -45,6 +45,7 @@ function test() {
   let cm = Cc["@mozilla.org/cookiemanager;1"].
            getService(Ci.nsICookieManager);
   waitForExplicitFinish();
+  ignoreAllUncaughtExceptions();
 
   const TEST_URL = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/title.sjs";
 

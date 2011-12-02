@@ -312,8 +312,15 @@ nsUrlClassifierPrefixSet::Contains(PRUint32 aPrefix, bool * aFound)
   // Now search through the deltas for the target.
   PRUint32 diff = target - mIndexPrefixes[i];
   PRUint32 deltaIndex = mIndexStarts[i];
+  PRUint32 deltaSize  = mDeltas.Length();
   PRUint32 end = (i + 1 < mIndexStarts.Length()) ? mIndexStarts[i+1]
-                                                 : mDeltas.Length();
+                                                 : deltaSize;
+
+  // Sanity check the read values
+  if (end > deltaSize) {
+    return NS_ERROR_FILE_CORRUPTED;
+  }
+
   while (diff > 0 && deltaIndex < end) {
     diff -= mDeltas[deltaIndex];
     deltaIndex++;
@@ -402,22 +409,26 @@ nsUrlClassifierPrefixSet::LoadFromFd(AutoFDClose & fileFd)
   PRInt32 read;
 
   read = PR_Read(fileFd, &magic, sizeof(PRUint32));
-  NS_ENSURE_TRUE(read > 0, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(read == sizeof(PRUint32), NS_ERROR_FAILURE);
 
   if (magic == PREFIXSET_VERSION_MAGIC) {
     PRUint32 indexSize;
     PRUint32 deltaSize;
 
     read = PR_Read(fileFd, &mRandomKey, sizeof(PRUint32));
-    NS_ENSURE_TRUE(read > 0, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(read == sizeof(PRUint32), NS_ERROR_FILE_CORRUPTED);
     read = PR_Read(fileFd, &indexSize, sizeof(PRUint32));
-    NS_ENSURE_TRUE(read > 0, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(read == sizeof(PRUint32), NS_ERROR_FILE_CORRUPTED);
     read = PR_Read(fileFd, &deltaSize, sizeof(PRUint32));
-    NS_ENSURE_TRUE(read > 0, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(read == sizeof(PRUint32), NS_ERROR_FILE_CORRUPTED);
 
     if (indexSize == 0) {
       LOG(("stored PrefixSet is empty!"));
       return NS_ERROR_FAILURE;
+    }
+
+    if (deltaSize > (indexSize * DELTAS_LIMIT)) {
+      return NS_ERROR_FILE_CORRUPTED;
     }
 
     nsTArray<PRUint32> mNewIndexPrefixes;
@@ -428,13 +439,15 @@ nsUrlClassifierPrefixSet::LoadFromFd(AutoFDClose & fileFd)
     mNewIndexPrefixes.SetLength(indexSize);
     mNewDeltas.SetLength(deltaSize);
 
-    read = PR_Read(fileFd, mNewIndexPrefixes.Elements(), indexSize*sizeof(PRUint32));
-    NS_ENSURE_TRUE(read > 0, NS_ERROR_FAILURE);
-    read = PR_Read(fileFd, mNewIndexStarts.Elements(), indexSize*sizeof(PRUint32));
-    NS_ENSURE_TRUE(read > 0, NS_ERROR_FAILURE);
+    PRInt32 toRead = indexSize*sizeof(PRUint32);
+    read = PR_Read(fileFd, mNewIndexPrefixes.Elements(), toRead);
+    NS_ENSURE_TRUE(read == toRead, NS_ERROR_FILE_CORRUPTED);
+    read = PR_Read(fileFd, mNewIndexStarts.Elements(), toRead);
+    NS_ENSURE_TRUE(read == toRead, NS_ERROR_FILE_CORRUPTED);
     if (deltaSize > 0) {
-      read = PR_Read(fileFd, mNewDeltas.Elements(), deltaSize*sizeof(PRUint16));
-      NS_ENSURE_TRUE(read > 0, NS_ERROR_FAILURE);
+      toRead = deltaSize*sizeof(PRUint16);
+      read = PR_Read(fileFd, mNewDeltas.Elements(), toRead);
+      NS_ENSURE_TRUE(read == toRead, NS_ERROR_FILE_CORRUPTED);
     }
 
     MutexAutoLock lock(mPrefixSetLock);
