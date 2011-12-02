@@ -1417,15 +1417,17 @@ var AddonRepository = {
   // Find a AddonCompatibilityOverride that matches a given aAddonVersion and
   // application/platform version.
   findMatchingCompatOverride: function AR_findMatchingCompatOverride(aAddonVersion,
-                                                                     aCompatOverrides) {
+                                                                     aCompatOverrides,
+                                                                     aAppVersion,
+                                                                     aPlatformVersion) {
     for (let i = 0; i < aCompatOverrides.length; i++) {
       let override = aCompatOverrides[i];
 
       let appVersion = null;
       if (override.appID == TOOLKIT_ID)
-        appVersion = Services.appinfo.platformVersion;
+        appVersion = aPlatformVersion || Services.appinfo.platformVersion;
       else
-        appVersion = Services.appinfo.version;
+        appVersion = aAppVersion || Services.appinfo.version;
 
       if (Services.vc.compare(override.minVersion, aAddonVersion) <= 0 &&
           Services.vc.compare(aAddonVersion, override.maxVersion) <= 0 &&
