@@ -1077,7 +1077,7 @@ nsMediaCache::PredictNextUseForIncomingData(nsMediaCacheStream* aStream)
       NS_MIN<PRInt64>(millisecondsAhead, PR_INT32_MAX));
 }
 
-enum StreamAction { NONE, SEEK, RESUME, SUSPEND };
+enum StreamAction { NONE, SEEK, SEEK_AND_RESUME, RESUME, SUSPEND };
 
 void
 nsMediaCache::Update()
@@ -1322,7 +1322,7 @@ nsMediaCache::Update()
         // because we don't want to think we have part of a block already
         // in mPartialBlockBuffer.
         stream->mChannelOffset = (desiredOffset/BLOCK_SIZE)*BLOCK_SIZE;
-        actions[i] = SEEK;
+        actions[i] = stream->mCacheSuspended ? SEEK_AND_RESUME : SEEK;
       } else if (enableReading && stream->mCacheSuspended) {
         actions[i] = RESUME;
       } else if (!enableReading && !stream->mCacheSuspended) {
@@ -1339,38 +1339,55 @@ nsMediaCache::Update()
   // other cache state. That's OK, they'll trigger new Update events and we'll
   // get back here and revise our decisions. The important thing here is that
   // performing these actions only depends on mChannelOffset and
-  // mCacheSuspended, which can only be written by the main thread (i.e., this
+  // the action, which can only be written by the main thread (i.e., this
   // thread), so we don't have races here.
+
+  // First, update the mCacheSuspended/mCacheEnded flags so that they're all correct
+  // when we fire our CacheClient commands below. Those commands can rely on these flags
+  // being set correctly for all streams.
   for (PRUint32 i = 0; i < mStreams.Length(); ++i) {
     nsMediaCacheStream* stream = mStreams[i];
-    nsresult rv = NS_OK;
     switch (actions[i]) {
     case SEEK:
-      LOG(PR_LOG_DEBUG, ("Stream %p CacheSeek to %lld (resume=%d)", stream,
-           (long long)stream->mChannelOffset, stream->mCacheSuspended));
-      rv = stream->mClient->CacheClientSeek(stream->mChannelOffset,
-                                            stream->mCacheSuspended);
+	case SEEK_AND_RESUME:
       stream->mCacheSuspended = false;
       stream->mChannelEnded = false;
       break;
-
     case RESUME:
-      LOG(PR_LOG_DEBUG, ("Stream %p Resumed", stream));
-      rv = stream->mClient->CacheClientResume();
       stream->mCacheSuspended = false;
       break;
-
     case SUSPEND:
-      LOG(PR_LOG_DEBUG, ("Stream %p Suspended", stream));
-      rv = stream->mClient->CacheClientSuspend();
       stream->mCacheSuspended = true;
       break;
-
     default:
       break;
     }
-
     stream->mHasHadUpdate = true;
+  }
+
+  for (PRUint32 i = 0; i < mStreams.Length(); ++i) {
+    nsMediaCacheStream* stream = mStreams[i];
+    nsresult rv;
+    switch (actions[i]) {
+    case SEEK:
+	case SEEK_AND_RESUME:
+      LOG(PR_LOG_DEBUG, ("Stream %p CacheSeek to %lld (resume=%d)", stream,
+           (long long)stream->mChannelOffset, actions[i] == SEEK_AND_RESUME));
+      rv = stream->mClient->CacheClientSeek(stream->mChannelOffset,
+                                            actions[i] == SEEK_AND_RESUME);
+      break;
+    case RESUME:
+      LOG(PR_LOG_DEBUG, ("Stream %p Resumed", stream));
+      rv = stream->mClient->CacheClientResume();
+      break;
+    case SUSPEND:
+      LOG(PR_LOG_DEBUG, ("Stream %p Suspended", stream));
+      rv = stream->mClient->CacheClientSuspend();
+      break;
+    default:
+      rv = NS_OK;
+      break;
+    }
 
     if (NS_FAILED(rv)) {
       // Close the streams that failed due to error. This will cause all
