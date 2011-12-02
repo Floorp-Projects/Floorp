@@ -7678,7 +7678,8 @@ var FeedHandler = {
     if (browserForLink == gBrowser.selectedBrowser) {
       // Batch updates to avoid updating the UI for multiple onLinkAdded events
       // fired within 100ms of each other.
-      clearTimeout(this._updateFeedTimeout);
+      if (this._updateFeedTimeout)
+        clearTimeout(this._updateFeedTimeout);
       this._updateFeedTimeout = setTimeout(this.updateFeeds.bind(this), 100);
     }
   }
