@@ -7,7 +7,7 @@ function test() {
     aEvent.stopPropagation();
   }
 
-  let onPopupShowing = function (aEvent)
+  let onPopupShown = function (aEvent)
   {
     is(aEvent.originalTarget.localName, "tooltip", "tooltip is showing");
 
@@ -29,7 +29,7 @@ function test() {
     doc.removeEventListener("mouseleave", doStopPropagation, true);
     doc.removeEventListener("mouseover", doStopPropagation, true);
     doc.removeEventListener("mouseout", doStopPropagation, true);
-    document.removeEventListener("popupshowing", onPopupShowing, true);
+    document.removeEventListener("popupshown", onPopupShown, true);
     document.removeEventListener("popuphiding", onPopupHiding, true);
 
     gBrowser.removeCurrentTab();
@@ -50,7 +50,7 @@ function test() {
     doc.addEventListener("mouseleave", doStopPropagation, true);
     doc.addEventListener("mouseover", doStopPropagation, true);
     doc.addEventListener("mouseout", doStopPropagation, true);
-    document.addEventListener("popupshown", onPopupShowing, true);
+    document.addEventListener("popupshown", onPopupShown, true);
     document.addEventListener("popuphiding", onPopupHiding, true);
 
     EventUtils.synthesizeMouseAtCenter(p1, { type: "mousemove" }, win);
