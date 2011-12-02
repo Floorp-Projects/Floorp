@@ -163,7 +163,6 @@ public class AwesomeBarTabs extends TabHost {
             return true;
         }
 
-        @Override
         public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
             int faviconIndex = cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.FAVICON);
             if (columnIndex == faviconIndex) {
@@ -442,7 +441,6 @@ public class AwesomeBarTabs extends TabHost {
         addHistoryTab();
 
         setOnTabChangedListener(new TabHost.OnTabChangeListener() {
-            @Override
             public void onTabChanged(String tabId) {
                 boolean hideSoftInput = true;
 
