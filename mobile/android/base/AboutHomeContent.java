@@ -76,7 +76,11 @@ public class AboutHomeContent extends LinearLayout {
 
     public AboutHomeContent(Context context, AttributeSet attrs) {
         super(context, attrs);
+
+        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        inflater.inflate(R.layout.abouthome_content, this);
     }
+
     private static final String LOGTAG = "GeckoAboutHome";
     private static final String TITLE_KEY = "title";
     private static final String kAbouthomeWhereClause = Browser.BookmarkColumns.BOOKMARK + " = 1";
@@ -120,11 +124,6 @@ public class AboutHomeContent extends LinearLayout {
     };
 
     void init(final Activity activity) {
-        LayoutInflater inflater =
-            (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-        inflater.inflate(R.layout.abouthome_content, this);
-
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
                 mCursor = activity.managedQuery(Browser.BOOKMARKS_URI,

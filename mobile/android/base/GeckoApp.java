@@ -102,7 +102,7 @@ abstract public class GeckoApp
     public static final String SAVED_STATE_SCREEN   = "screen";
 
     private LinearLayout mMainLayout;
-    private AbsoluteLayout mGeckoLayout;
+    private RelativeLayout mGeckoLayout;
     public static SurfaceView cameraView;
     public static GeckoApp mAppContext;
     public static boolean mFullScreen = false;
@@ -130,6 +130,7 @@ abstract public class GeckoApp
     private static PlaceholderLayerClient mPlaceholderLayerClient;
     private static GeckoSoftwareLayerClient mSoftwareLayerClient;
     AboutHomeContent mAboutHomeContent;
+    private static AbsoluteLayout mPluginContainer;
     boolean mUserDefinedProfile = false;
 
     public String mLastUri;
@@ -916,7 +917,7 @@ abstract public class GeckoApp
 
         public void run() {
             if (mAboutHomeContent == null) {
-                mAboutHomeContent = new AboutHomeContent(GeckoApp.mAppContext, null);
+                mAboutHomeContent = (AboutHomeContent) findViewById(R.id.abouthome_content);
                 mAboutHomeContent.init(GeckoApp.mAppContext);
                 mAboutHomeContent.setUriLoadCallback(new AboutHomeContent.UriLoadCallback() {
                     public void callback(String url) {
@@ -924,10 +925,7 @@ abstract public class GeckoApp
                         loadUrl(url, AwesomeBar.Type.EDIT);
                     }
                 });
-                mGeckoLayout.addView(mAboutHomeContent);
             }
-            if (mLayerController != null && mLayerController.getView() != null)
-                mLayerController.getView().setVisibility(mShow ? View.GONE : View.VISIBLE);
             mAboutHomeContent.setVisibility(mShow ? View.VISIBLE : View.GONE);
         }
     }
@@ -1157,7 +1155,7 @@ abstract public class GeckoApp
 
                 ViewportMetrics geckoViewport = mSoftwareLayerClient.getGeckoViewportMetrics();
 
-                if (mGeckoLayout.indexOfChild(view) == -1) {
+                if (mPluginContainer.indexOfChild(view) == -1) {
                     lp = PluginLayoutParams.create((int)x, (int)y, (int)w, (int)h, geckoViewport.getZoomFactor());
 
                     view.setWillNotDraw(false);
@@ -1168,13 +1166,13 @@ abstract public class GeckoApp
                         sview.setZOrderMediaOverlay(true);
                     }
 
-                    mGeckoLayout.addView(view, lp);
+                    mPluginContainer.addView(view, lp);
                     mPluginViews.add(view);
                 } else {
                     lp = (PluginLayoutParams)view.getLayoutParams();
                     lp.reset((int)x, (int)y, (int)w, (int)h, geckoViewport.getZoomFactor());
                     try {
-                        mGeckoLayout.updateViewLayout(view, lp);
+                        mPluginContainer.updateViewLayout(view, lp);
                     } catch (IllegalArgumentException e) {
                         Log.i(LOGTAG, "e:" + e);
                         // it can be the case where we
@@ -1190,7 +1188,7 @@ abstract public class GeckoApp
         mMainHandler.post(new Runnable() { 
             public void run() {
                 try {
-                    mGeckoLayout.removeView(view);
+                    mPluginContainer.removeView(view);
                     mPluginViews.remove(view);
                 } catch (Exception e) {}
             }
@@ -1222,7 +1220,7 @@ abstract public class GeckoApp
                 view.setVisibility(View.VISIBLE);
             }
 
-            mGeckoLayout.updateViewLayout(view, lp);
+            mPluginContainer.updateViewLayout(view, lp);
         }
     }
 
@@ -1278,7 +1276,7 @@ abstract public class GeckoApp
         mFavicons = new Favicons(this);
 
         // setup gecko layout
-        mGeckoLayout = (AbsoluteLayout) findViewById(R.id.gecko_layout);
+        mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (LinearLayout) findViewById(R.id.main_layout);
 
         mDoorHangerPopup = new DoorHangerPopup(this);
@@ -1322,8 +1320,10 @@ abstract public class GeckoApp
                 mLayerController.setLayerClient(mPlaceholderLayerClient);
             }
 
-            mGeckoLayout.addView(mLayerController.getView());
+            mGeckoLayout.addView(mLayerController.getView(), 0);
         }
+
+        mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
 
         Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - UI almost up");
 
