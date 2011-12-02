@@ -54,8 +54,6 @@ JAVAFILES = \
   AwesomeBarTabs.java \
   BrowserToolbar.java \
   ConfirmPreference.java \
-  db/AndroidBrowserDB.java \
-  db/BrowserDB.java \
   DoorHanger.java \
   DoorHangerPopup.java \
   Favicons.java \
