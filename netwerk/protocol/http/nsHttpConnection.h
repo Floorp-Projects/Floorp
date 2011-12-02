@@ -174,6 +174,7 @@ private:
     // Makes certain the SSL handshake is complete and NPN negotiation
     // has had a chance to happen
     bool     EnsureNPNComplete();
+    void     SetupNPN(PRUint8 caps);
 
     // Directly Add a transaction to an active connection for SPDY
     nsresult AddTransaction(nsAHttpTransaction *, PRInt32);
@@ -218,6 +219,7 @@ private:
 
     // SPDY related
     bool                            mNPNComplete;
+    bool                            mSetupNPNCalled;
     bool                            mUsingSpdy;
     nsRefPtr<mozilla::net::SpdySession> mSpdySession;
     PRInt32                         mPriority;
