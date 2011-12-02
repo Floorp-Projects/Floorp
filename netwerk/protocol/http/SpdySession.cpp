@@ -445,10 +445,13 @@ SpdySession::DownstreamUncompress(char *blockStart, PRUint32 blockLen)
     if (zlib_rv == Z_DATA_ERROR || zlib_rv == Z_MEM_ERROR)
       return NS_ERROR_FAILURE;
 
-    mDecompressBufferUsed += mDecompressBufferSize -mDecompressBufferUsed -
+    mDecompressBufferUsed += mDecompressBufferSize - mDecompressBufferUsed -
       mDownstreamZlib.avail_out;
-
-    if (mDownstreamZlib.avail_out) {
+    
+    // When there is no more output room, but input still available then
+    // increase the output space
+    if (zlib_rv == Z_OK &&
+        !mDownstreamZlib.avail_out && mDownstreamZlib.avail_in) {
       LOG3(("SpdySession::DownstreamUncompress %p Large Headers - so far %d",
             this, mDecompressBufferSize));
       EnsureBuffer(mDecompressBuffer,
