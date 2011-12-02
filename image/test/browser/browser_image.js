@@ -187,6 +187,7 @@ function nextTest() {
 }
 
 function test() {
+  ignoreAllUncaughtExceptions();
   nextTest();
 }
 

@@ -2,6 +2,7 @@
 // Tests installing an unsigned add-on through a navigation. Should not be
 // blocked since the referer is whitelisted.
 function test() {
+  ignoreAllUncaughtExceptions();
   Harness.installConfirmCallback = confirm_install;
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();

@@ -105,6 +105,7 @@ function finishUp() {
 function test()
 {
   waitForExplicitFinish();
+  ignoreAllUncaughtExceptions();
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function() {
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
