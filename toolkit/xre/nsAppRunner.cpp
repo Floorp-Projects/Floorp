@@ -2816,6 +2816,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (appData.name)
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProductName"),
                                          nsDependentCString(appData.name));
+    if (appData.ID)
+      CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProductID"),
+                                         nsDependentCString(appData.ID));
     if (appData.version)
       CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Version"),
                                          nsDependentCString(appData.version));
