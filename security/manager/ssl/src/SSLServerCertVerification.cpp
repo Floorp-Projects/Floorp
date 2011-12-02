@@ -365,10 +365,81 @@ PSM_SSL_BlacklistDigiNotar(CERTCertificate * serverCert,
   return 0;
 }
 
+// This function assumes that we will only use the SPDY connection coalescing
+// feature on connections where we have negotiated SPDY using NPN. If we ever
+// talk SPDY without having negotiated it with SPDY, this code will give wrong
+// and perhaps unsafe results.
+//
+// Returns SECSuccess on the initial handshake of all connections, on
+// renegotiations for any connections where we did not negotiate SPDY, or on any
+// SPDY connection where the server's certificate did not change.
+//
+// Prohibit changing the server cert only if we negotiated SPDY,
+// in order to support SPDY's cross-origin connection pooling.
+
+static SECStatus
+BlockServerCertChangeForSpdy(nsNSSSocketInfo *infoObject,
+                             CERTCertificate *serverCert)
+{
+  // Get the existing cert. If there isn't one, then there is
+  // no cert change to worry about.
+  nsCOMPtr<nsIX509Cert> cert;
+  nsCOMPtr<nsIX509Cert2> cert2;
+
+  nsRefPtr<nsSSLStatus> status = infoObject->SSLStatus();
+  if (!status) {
+    // If we didn't have a status, then this is the
+    // first handshake on this connection, not a
+    // renegotiation.
+    return SECSuccess;
+  }
+  
+  status->GetServerCert(getter_AddRefs(cert));
+  cert2 = do_QueryInterface(cert);
+  if (!cert2) {
+    NS_NOTREACHED("every nsSSLStatus must have a cert"
+                  "that implements nsIX509Cert2");
+    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+    return SECFailure;
+  }
+
+  // Filter out sockets that did not neogtiate SPDY via NPN
+  nsCAutoString negotiatedNPN;
+  nsresult rv = infoObject->GetNegotiatedNPN(negotiatedNPN);
+  NS_ASSERTION(NS_SUCCEEDED(rv),
+               "GetNegotiatedNPN() failed during renegotiation");
+
+  if (NS_SUCCEEDED(rv) && !negotiatedNPN.Equals(NS_LITERAL_CSTRING("spdy/2")))
+    return SECSuccess;
+
+  // If GetNegotiatedNPN() failed we will assume spdy for safety's safe
+  if (NS_FAILED(rv))
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("BlockServerCertChangeForSpdy failed GetNegotiatedNPN() call."
+            " Assuming spdy.\n"));
+
+  // Check to see if the cert has actually changed
+  CERTCertificate * c = cert2->GetCert();
+  NS_ASSERTION(c, "very bad and hopefully impossible state");
+  bool sameCert = CERT_CompareCerts(c, serverCert);
+  CERT_DestroyCertificate(c);
+  if (sameCert)
+    return SECSuccess;
+
+  // Report an error - changed cert is confirmed
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+         ("SPDY Refused to allow new cert during renegotiation\n"));
+  PR_SetError(SSL_ERROR_RENEGOTIATION_NOT_ALLOWED, 0);
+  return SECFailure;
+}
+
 SECStatus
 SSLServerCertVerificationJob::AuthCertificate(
   nsNSSShutDownPreventionLock const & nssShutdownPreventionLock)
 {
+  if (BlockServerCertChangeForSpdy(mSocketInfo, mCert) != SECSuccess)
+    return SECFailure;
+
   if (mCert->serialNumber.data &&
       mCert->issuerName &&
       !strcmp(mCert->issuerName, 
