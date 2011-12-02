@@ -6,6 +6,8 @@
 
 const PREF_MATCH_OS_LOCALE = "intl.locale.matchOS";
 const PREF_SELECTED_LOCALE = "general.useragent.locale";
+const PREF_GETADDONS_BYIDS = "extensions.getAddons.get.url";
+const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
@@ -771,9 +773,10 @@ function run_test_12() {
   });
 }
 
-// Tests that no compatibility update is passed to the listener when there is
+// Tests that a compatibility update is passed to the listener when there is
 // compatibility info for the current version of the app but not for the
-// version of the app that the caller requested an update check for.
+// version of the app that the caller requested an update check for, when
+// strict compatibility checking is disabled.
 function run_test_13() {
   // Not initially compatible but the update check will make it compatible
   writeInstallRDFForExtension({
@@ -798,8 +801,8 @@ function run_test_13() {
 
     a7.findUpdates({
       sawUpdate: false,
-      onCompatibilityUpdateAvailable: function(addon) {
-        do_throw("Should have not have seen compatibility information");
+      onNoCompatibilityUpdateAvailable: function(addon) {
+        do_throw("Should have seen compatibility information");
       },
 
       onUpdateAvailable: function(addon, install) {
@@ -1052,7 +1055,7 @@ function run_test_16() {
                   a2.uninstall();
                   restartManager();
 
-                  end_test();
+                  run_test_17();
                 });
               }
             });
@@ -1063,4 +1066,107 @@ function run_test_16() {
     });
     aInstall.install();
   }, "application/x-xpinstall");
+}
+
+// Test that the update check correctly observes the
+// extensions.strictCompatibility pref and compatibility overrides.
+function run_test_17() {
+  writeInstallRDFForExtension({
+    id: "addon9@tests.mozilla.org",
+    version: "1.0",
+    updateURL: "http://localhost:4444/data/test_update.rdf",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "0.1",
+      maxVersion: "0.2"
+    }],
+    name: "Test Addon 9",
+  }, profileDir);
+  restartManager();
+
+  AddonManager.addInstallListener({
+    onNewInstall: function(aInstall) {
+      if (aInstall.existingAddon.id != "addon9@tests.mozilla.org")
+        do_throw("Saw unexpected onNewInstall for " + aInstall.existingAddon.id);
+      do_check_eq(aInstall.version, "3.0");
+    },
+    onDownloadFailed: function(aInstall) {
+      do_execute_soon(run_test_18);
+    }
+  });
+
+  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, "http://localhost:4444/data/test_update.xml");
+  Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
+  // Fake a timer event
+  gInternalManager.notify(null);
+}
+
+// Tests that compatibility updates are applied to addons when the updated
+// compatibility data wouldn't match with strict compatibility enabled.
+function run_test_18() {
+  writeInstallRDFForExtension({
+    id: "addon10@tests.mozilla.org",
+    version: "1.0",
+    updateURL: "http://localhost:4444/data/test_update.rdf",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "0.1",
+      maxVersion: "0.2"
+    }],
+    name: "Test Addon 10",
+  }, profileDir);
+  restartManager();
+
+  AddonManager.getAddonByID("addon10@tests.mozilla.org", function(a10) {
+    do_check_neq(a10, null);
+
+    a10.findUpdates({
+      onNoCompatibilityUpdateAvailable: function() {
+        do_throw("Should have seen compatibility information");
+      },
+
+      onUpdateAvailable: function() {
+        do_throw("Should not have seen an available update");
+      },
+
+      onUpdateFinished: function() {
+        run_test_19();
+      }
+    }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+  });
+}
+
+// Test that the update check correctly observes when an addon opts-in to
+// strict compatibility checking.
+function run_test_19() {
+  writeInstallRDFForExtension({
+    id: "addon11@tests.mozilla.org",
+    version: "1.0",
+    updateURL: "http://localhost:4444/data/test_update.rdf",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "0.1",
+      maxVersion: "0.2"
+    }],
+    name: "Test Addon 11",
+  }, profileDir);
+  restartManager();
+
+  AddonManager.getAddonByID("addon11@tests.mozilla.org", function(a11) {
+    do_check_neq(a11, null);
+
+    a11.findUpdates({
+      onCompatibilityUpdateAvailable: function() {
+        do_throw("Should have not have seen compatibility information");
+      },
+
+      onUpdateAvailable: function() {
+        do_throw("Should not have seen an available update");
+      },
+
+      onUpdateFinished: function() {
+        end_test();
+      }
+   }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+  });
 }

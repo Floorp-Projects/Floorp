@@ -431,13 +431,15 @@ let Search = {
 
     iQ("#searchbox").keyup(function Search_init_box_keyup() {
       self.perform();
-    });
+    })
+    .attr("title", tabviewString("button.searchTabs"));
 
     iQ("#searchbutton").mousedown(function Search_init_button_mousedown() {
       self._initiatedBy = "buttonclick";
       self.ensureShown();
       self.switchToInMode();
-    });
+    })
+    .attr("title", tabviewString("button.searchTabs"));
 
     window.addEventListener("focus", function Search_init_window_focus() {
       if (self.isEnabled()) {
