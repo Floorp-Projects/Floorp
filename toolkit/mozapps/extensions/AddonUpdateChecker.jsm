@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Dave Townsend <dtownsend@oxymoronical.com>
+#   Blair McBride <bmcbride@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -61,6 +62,7 @@ const XMLURI_PARSE_ERROR    = "http://www.mozilla.org/newlayout/xml/parsererror.
 const PREF_UPDATE_REQUIREBUILTINCERTS = "extensions.update.requireBuiltInCerts";
 
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/AddonRepository.jsm");
 // shared code for suppressing bad cert dialogs
 Components.utils.import("resource://gre/modules/CertUtils.jsm");
 
@@ -393,6 +395,7 @@ function parseRDFManifest(aId, aType, aUpdateKey, aRequest) {
         updateURL: getProperty(ds, targetApp, "updateLink"),
         updateHash: getProperty(ds, targetApp, "updateHash"),
         updateInfoURL: getProperty(ds, targetApp, "updateInfoURL"),
+        strictCompatibility: getProperty(ds, targetApp, "strictCompatibility") == "true",
         targetApplications: [appEntry]
       };
 
@@ -594,19 +597,39 @@ UpdateParser.prototype = {
  *         The application version to use
  * @param  aPlatformVersion
  *         The platform version to use
+ * @param  aIgnoreMaxVersion
+ *         Ignore maxVersion when testing if an update matches. Optional.
+ * @param  aIgnoreStrictCompat
+ *         Ignore strictCompatibility when testing if an update matches. Optional.
+ * @param  aCompatOverrides
+ *         AddonCompatibilityOverride objects to match against. Optional.
  * @return true if the update is compatible with the application/platform
  */
-function matchesVersions(aUpdate, aAppVersion, aPlatformVersion) {
+function matchesVersions(aUpdate, aAppVersion, aPlatformVersion,
+                         aIgnoreMaxVersion, aIgnoreStrictCompat,
+                         aCompatOverrides) {
+  if (aCompatOverrides) {
+    let override = AddonRepository.findMatchingCompatOverride(aUpdate.version,
+                                                              aCompatOverrides,
+                                                              aAppVersion,
+                                                              aPlatformVersion);
+    if (override && override.type == "incompatible")
+      return false;
+  }
+
+  if (aUpdate.strictCompatibility && !aIgnoreStrictCompat)
+    aIgnoreMaxVersion = false;
+
   let result = false;
   for (let i = 0; i < aUpdate.targetApplications.length; i++) {
     let app = aUpdate.targetApplications[i];
     if (app.id == Services.appinfo.ID) {
       return (Services.vc.compare(aAppVersion, app.minVersion) >= 0) &&
-             (Services.vc.compare(aAppVersion, app.maxVersion) <= 0);
+             (aIgnoreMaxVersion || (Services.vc.compare(aAppVersion, app.maxVersion) <= 0));
     }
     if (app.id == TOOLKIT_ID) {
       result = (Services.vc.compare(aPlatformVersion, app.minVersion) >= 0) &&
-               (Services.vc.compare(aPlatformVersion, app.maxVersion) <= 0);
+               (aIgnoreMaxVersion || (Services.vc.compare(aPlatformVersion, app.maxVersion) <= 0));
     }
   }
   return result;
@@ -640,12 +663,18 @@ var AddonUpdateChecker = {
    *         The version of the application or null to use the current version
    * @param  aPlatformVersion
    *         The version of the platform or null to use the current version
+   * @param  aIgnoreMaxVersion
+   *         Ignore maxVersion when testing if an update matches. Optional.
+   * @param  aIgnoreStrictCompat
+   *         Ignore strictCompatibility when testing if an update matches. Optional.
    * @return an update object if one matches or null if not
    */
   getCompatibilityUpdate: function AUC_getCompatibilityUpdate(aUpdates, aVersion,
                                                               aIgnoreCompatibility,
                                                               aAppVersion,
-                                                              aPlatformVersion) {
+                                                              aPlatformVersion,
+                                                              aIgnoreMaxVersion,
+                                                              aIgnoreStrictCompat) {
     if (!aAppVersion)
       aAppVersion = Services.appinfo.version;
     if (!aPlatformVersion)
@@ -660,7 +689,8 @@ var AddonUpdateChecker = {
               return aUpdates[i];
           }
         }
-        else if (matchesVersions(aUpdates[i], aAppVersion, aPlatformVersion)) {
+        else if (matchesVersions(aUpdates[i], aAppVersion, aPlatformVersion,
+                                 aIgnoreMaxVersion, aIgnoreStrictCompat)) {
           return aUpdates[i];
         }
       }
@@ -677,11 +707,20 @@ var AddonUpdateChecker = {
    *         The version of the application or null to use the current version
    * @param  aPlatformVersion
    *         The version of the platform or null to use the current version
+   * @param  aIgnoreMaxVersion
+   *         When determining compatible updates, ignore maxVersion. Optional.
+   * @param  aIgnoreMaxVersion
+   *         When determining compatible updates, ignore strictCompatibility. Optional.
+   * @param  aCompatOverrides
+   *         Array of AddonCompatibilityOverride to take into account. Optional.
    * @return an update object if one matches or null if not
    */
   getNewestCompatibleUpdate: function AUC_getNewestCompatibleUpdate(aUpdates,
                                                                     aAppVersion,
-                                                                    aPlatformVersion) {
+                                                                    aPlatformVersion,
+                                                                    aIgnoreMaxVersion,
+                                                                    aIgnoreStrictCompat,
+                                                                    aCompatOverrides) {
     if (!aAppVersion)
       aAppVersion = Services.appinfo.version;
     if (!aPlatformVersion)
@@ -699,8 +738,11 @@ var AddonUpdateChecker = {
       if (state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED)
         continue;
       if ((newest == null || (Services.vc.compare(newest.version, aUpdates[i].version) < 0)) &&
-          matchesVersions(aUpdates[i], aAppVersion, aPlatformVersion))
+          matchesVersions(aUpdates[i], aAppVersion, aPlatformVersion,
+                          aIgnoreMaxVersion, aIgnoreStrictCompat,
+                          aCompatOverrides)) {
         newest = aUpdates[i];
+      }
     }
     return newest;
   },

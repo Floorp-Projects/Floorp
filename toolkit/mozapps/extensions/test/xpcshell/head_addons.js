@@ -244,6 +244,12 @@ function do_check_addon(aActualAddon, aExpectedAddon, aProperties) {
         do_check_eq(actualValue.getTime(), expectedValue.getTime());
         break;
 
+      case "compatibilityOverrides":
+        do_check_eq(actualValue.length, expectedValue.length);
+        for (let i = 0; i < actualValue.length; i++)
+          do_check_compatibilityoverride(actualValue[i], expectedValue[i]);
+        break;
+
       default:
         if (actualValue !== expectedValue)
           do_throw("Failed for " + aProperty + " for add-on " + aExpectedAddon.id +
@@ -283,6 +289,24 @@ function do_check_screenshot(aActual, aExpected) {
   do_check_eq(aActual.thumbnailWidth, aExpected.thumbnailWidth);
   do_check_eq(aActual.thumbnailHeight, aExpected.thumbnailHeight);
   do_check_eq(aActual.caption, aExpected.caption);
+}
+
+/**
+ * Check that the actual compatibility override is the same as the expected
+ * compatibility override.
+ *
+ * @param  aAction
+ *         The actual compatibility override to check.
+ * @param  aExpected
+ *         The expected compatibility override to check against.
+ */
+function do_check_compatibilityoverride(aActual, aExpected) {
+  do_check_eq(aActual.type, aExpected.type);
+  do_check_eq(aActual.minVersion, aExpected.minVersion);
+  do_check_eq(aActual.maxVersion, aExpected.maxVersion);
+  do_check_eq(aActual.appID, aExpected.appID);
+  do_check_eq(aActual.appMinVersion, aExpected.appMinVersion);
+  do_check_eq(aActual.appMaxVersion, aExpected.appMaxVersion);
 }
 
 /**

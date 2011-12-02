@@ -15,16 +15,26 @@ function test() {
     is(groupItemOne.getChildren().length, 1, "Group one has 1 tab item");
 
     let groupItemTwo = createGroupItemWithBlankTabs(win, 300, 300, 40, 1);
-    is(groupItemTwo.getChildren().length, 1, "Group two has 1 tab item");
+    is(groupItemTwo.getChildren().length, 1, "Group two has 1 tab items");
 
     whenTabViewIsHidden(function() {
-      executeSoon(function() { 
-        win.gBrowser.removeTab(win.gBrowser.selectedTab);
-        is(cw.UI.getActiveTab(), groupItemOne.getChild(0), "TabItem in Group one is selected");
+      win.gBrowser.removeTab(win.gBrowser.selectedTab);
+      executeSoon(function() {
+        win.undoCloseTab();
+
+        groupItemTwo.addSubscriber("childAdded", function onChildAdded(data) {
+          groupItemTwo.removeSubscriber("childAdded", onChildAdded);
+
+          is(groupItemOne.getChildren().length, 1, "Group one still has 1 tab item");
+          is(groupItemTwo.getChildren().length, 1, "Group two still has 1 tab item");
+        });
+
         finish();
       });
     }, win);
     groupItemTwo.getChild(0).zoomIn();
+  }, function(win) {
+    let newTab = win.gBrowser.addTab();
+    win.gBrowser.pinTab(newTab);
   });
 }
-
