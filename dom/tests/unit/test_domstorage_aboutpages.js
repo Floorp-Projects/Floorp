@@ -13,15 +13,34 @@ function run_test()
   testURI(Services.io.newURI("moz-safe-about:rights", null, null));
 }
 
+function sum(a)
+{
+  return a.reduce(function(prev, current, index, array) {
+    return prev + current;
+  });
+}
+
 function testURI(aURI)
 {
   print("Testing: " + aURI.spec);
   let storage = getStorageForURI(aURI);
+  let Telemetry = Components.classes["@mozilla.org/base/telemetry;1"].
+                  getService(Components.interfaces.nsITelemetry);
+  let key_histogram = Telemetry.getHistogramById("LOCALDOMSTORAGE_KEY_SIZE_BYTES");
+  let value_histogram = Telemetry.getHistogramById("LOCALDOMSTORAGE_VALUE_SIZE_BYTES");
+  let before_key_snapshot = key_histogram.snapshot();
+  let before_value_snapshot = value_histogram.snapshot();
   storage.setItem("test-item", "test-value");
   print("Check that our value has been correctly stored.");
+  let after_key_snapshot = key_histogram.snapshot();
+  let after_value_snapshot = value_histogram.snapshot();
   do_check_eq(storage.length, 1);
   do_check_eq(storage.key(0), "test-item");
   do_check_eq(storage.getItem("test-item"), "test-value");
+  do_check_eq(sum(after_key_snapshot.counts),
+	      sum(before_key_snapshot.counts)+1);
+  do_check_eq(sum(after_value_snapshot.counts),
+	      sum(before_value_snapshot.counts)+1);
 
   print("Check that our value is correctly removed.");
   storage.removeItem("test-item");
