@@ -210,7 +210,6 @@ var BrowserApp = {
     // XXX maybe we don't do this if the launch was kicked off from external
     Services.io.offline = false;
     let newTab = this.addTab(uri);
-    newTab.active = true;
 
     // Broadcast a UIReady message so add-ons know we are finished with startup
     let event = document.createEvent("Events");
@@ -335,8 +334,12 @@ var BrowserApp = {
   },
 
   addTab: function addTab(aURI, aParams) {
+    aParams = aParams || { selected: true };
     let newTab = new Tab(aURI, aParams);
     this._tabs.push(newTab);
+    if ("selected" in aParams && aParams.selected)
+      newTab.active = true;
+
     return newTab;
   },
 
@@ -539,7 +542,6 @@ var BrowserApp = {
     } else if (aTopic == "Tab:Add") {
       let uri = URIFixup.createFixupURI(aData, Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP);
       let newTab = this.addTab(uri ? uri.spec : aData);
-      newTab.active = true;
     } else if (aTopic == "Tab:Load") {
       let uri = URIFixup.createFixupURI(aData, Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP);
       browser.loadURI(uri ? uri.spec : aData);
@@ -705,7 +707,7 @@ var NativeWindow = {
                this.linkContext,
                function(aTarget) {
                  let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-                 BrowserApp.addTab(url, {selected: false});
+                 BrowserApp.addTab(url, { selected: false });
                });
 
       this.add(Strings.browser.GetStringFromName("contextmenu.changeInputMethod"),
@@ -963,7 +965,7 @@ Tab.prototype = {
     this.browser.stop();
 
     this.id = ++gTabIDFactory;
-    let aParams = aParams || { selected: true };
+    aParams = aParams || { selected: true };
     let message = {
       gecko: {
         type: "Tab:Added",
