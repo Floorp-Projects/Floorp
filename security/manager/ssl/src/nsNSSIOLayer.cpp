@@ -171,7 +171,9 @@ nsNSSSocketInfo::nsNSSSocketInfo()
     mPort(0),
     mIsCertIssuerBlacklisted(false),
     mNPNCompleted(false),
-    mHandshakeCompleted(false)
+    mHandshakeCompleted(false),
+    mJoined(false),
+    mSentClientCert(false)
 {
 }
 
@@ -491,6 +493,12 @@ nsNSSSocketInfo::JoinConnection(const nsACString & npnProtocol,
   if (SSLStatus()->mHaveCertErrorBits)
     return NS_OK;
 
+  // If the connection is using client certificates then do not join
+  // because the user decides on whether to send client certs to hosts on a
+  // per-domain basis.
+  if (mSentClientCert)
+    return NS_OK;
+
   // Ensure that the server certificate covers the hostname that would
   // like to join this connection
 
@@ -509,6 +517,7 @@ nsNSSSocketInfo::JoinConnection(const nsACString & npnProtocol,
     return NS_OK;
 
   // All tests pass - this is joinable
+  mJoined = true;
   *_retval = true;
   return NS_OK;
 }
@@ -2883,9 +2892,9 @@ public:
                          CERTCertificate * serverCert) 
     : mRV(SECFailure)
     , mErrorCodeToReport(SEC_ERROR_NO_MEMORY)
-    , mCANames(caNames)
     , mPRetCert(pRetCert)
     , mPRetKey(pRetKey)
+    , mCANames(caNames)
     , mSocketInfo(info)
     , mServerCert(serverCert)
   {
@@ -2893,12 +2902,12 @@ public:
 
   SECStatus mRV;                        // out
   PRErrorCode mErrorCodeToReport;       // out
+  CERTCertificate** const mPRetCert;    // in/out
+  SECKEYPrivateKey** const mPRetKey;    // in/out
 protected:
   virtual void RunOnTargetThread();
 private:
   CERTDistNames* const mCANames;        // in
-  CERTCertificate** const mPRetCert;    // in/out
-  SECKEYPrivateKey** const mPRetKey;    // in/out
   nsNSSSocketInfo * const mSocketInfo;  // in
   CERTCertificate * const mServerCert;  // in
 };
@@ -2941,6 +2950,18 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     return SECFailure;
   }
 
+  if (info->GetJoined()) {
+    // We refuse to send a client certificate when there are multiple hostnames
+    // joined on this connection, because we only show the user one hostname
+    // (mHostName) in the client certificate UI.
+
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("[%p] Not returning client cert due to previous join\n", socket));
+    *pRetCert = nsnull;
+    *pRetKey = nsnull;
+    return SECSuccess;
+  }
+
   // XXX: This should be done asynchronously; see bug 696976
   nsRefPtr<ClientAuthDataRunnable> runnable =
     new ClientAuthDataRunnable(caNames, pRetCert, pRetKey, info, serverCert);
@@ -2952,6 +2973,9 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
   
   if (runnable->mRV != SECSuccess) {
     PR_SetError(runnable->mErrorCodeToReport, 0);
+  } else if (*runnable->mPRetCert || *runnable->mPRetKey) {
+    // Make joinConnection prohibit joining after we've sent a client cert
+    info->SetSentClientCert();
   }
 
   return runnable->mRV;
