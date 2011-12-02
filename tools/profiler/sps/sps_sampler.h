@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <pthread.h>
-#include "base/atomicops.h"
 #include "nscore.h"
 #include "mozilla/TimeStamp.h"
 
@@ -61,17 +60,34 @@ extern bool stack_key_initialized;
 #define SAMPLE_LABEL(name_space, info) mozilla::SamplerStackFrameRAII only_one_sampleraii_per_scope(FULLFUNCTION, name_space "::" info);
 #define SAMPLE_MARKER(info) mozilla_sampler_add_marker(info);
 
+/* we duplicate this code here to avoid header dependencies
+ * which make it more difficult to include in other places */
+#if defined(_M_X64) || defined(__x86_64__)
+#define V8_HOST_ARCH_X64 1
+#elif defined(_M_IX86) || defined(__i386__) || defined(__i386)
+#define V8_HOST_ARCH_IA32 1
+#elif defined(__ARMEL__)
+#define V8_HOST_ARCH_ARM 1
+#else
+#warning Please add support for your architecture in chromium_types.h
+#endif
+
+
 // STORE_SEQUENCER: Because signals can interrupt our profile modification
 //                  we need to make stores are not re-ordered by the compiler
 //                  or hardware to make sure the profile is consistent at
 //                  every point the signal can fire.
-#ifdef ARCH_CPU_ARM_FAMILY
+#ifdef V8_HOST_ARCH_ARM
 // TODO Is there something cheaper that will prevent
 //      memory stores from being reordered
-// Uses: pLinuxKernelMemoryBarrier
-# define STORE_SEQUENCER() base::subtle::MemoryBarrier();
-#elif ARCH_CPU_X86_FAMILY
-# define STORE_SEQUENCER() asm volatile("" ::: "memory");
+
+typedef void (*LinuxKernelMemoryBarrierFunc)(void);
+LinuxKernelMemoryBarrierFunc pLinuxKernelMemoryBarrier __attribute__((weak)) =
+    (LinuxKernelMemoryBarrierFunc) 0xffff0fa0;
+
+# define STORE_SEQUENCER() pLinuxKernelMemoryBarrier()
+#elif defined(V8_HOST_ARCH_IA32) || defined(V8_HOST_ARCH_X64)
+# define STORE_SEQUENCER() asm volatile("" ::: "memory")
 #else
 # error "Memory clobber not supported for your platform."
 #endif
