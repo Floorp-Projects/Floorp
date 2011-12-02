@@ -193,13 +193,15 @@ private:
         nsTArray<nsHalfOpenSocket*>  mHalfOpens;
 
         // Spdy sometimes resolves the address in the socket manager in order
-        // to re-coalesce sharded HTTP hosts.
+        // to re-coalesce sharded HTTP hosts. The dotted decimal address is
+        // combined with the Anonymous flag from the connection information
+        // to build the hash key for hosts in the same ip pool.
         //
         // When a set of hosts are coalesced together one of them is marked
         // mSpdyPreferred, and the others are marked mSpdyRedir. The mapping is
         // maintained in the conection manager mSpdyPreferred hash.
         //
-        nsCString mDottedDecimalAddress;
+        nsCString mCoalescingKey;
 
         bool mUsingSpdy;
         bool mTestedSpdy;

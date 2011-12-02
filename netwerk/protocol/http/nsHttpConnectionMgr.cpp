@@ -457,10 +457,10 @@ nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection *conn,
     // lookup. Filtering on that has to be done at the time of use
     // rather than the time of registration (i.e. now).
     nsConnectionEntry *preferred =
-        mSpdyPreferredHash.Get(ent->mDottedDecimalAddress);
+        mSpdyPreferredHash.Get(ent->mCoalescingKey);
 
     LOG(("ReportSpdyConnection %s %s ent=%p ispreferred=%d\n",
-         ent->mConnInfo->Host(), ent->mDottedDecimalAddress.get(),
+         ent->mConnInfo->Host(), ent->mCoalescingKey.get(),
          ent, preferred));
     
     if (!preferred) {
@@ -578,11 +578,11 @@ nsHttpConnectionMgr::GetSpdyPreferred(nsConnectionEntry *aOriginalEntry)
 {
     if (!gHttpHandler->IsSpdyEnabled() ||
         !gHttpHandler->CoalesceSpdy() ||
-        aOriginalEntry->mDottedDecimalAddress.IsEmpty())
+        aOriginalEntry->mCoalescingKey.IsEmpty())
         return nsnull;
 
     nsConnectionEntry *preferred =
-        mSpdyPreferredHash.Get(aOriginalEntry->mDottedDecimalAddress);
+        mSpdyPreferredHash.Get(aOriginalEntry->mCoalescingKey);
 
     if (preferred == aOriginalEntry)
         return aOriginalEntry;   /* no redirection so no cert check required */
@@ -616,22 +616,22 @@ nsHttpConnectionMgr::SetSpdyPreferred(nsConnectionEntry *ent)
     if (!gHttpHandler->CoalesceSpdy())
         return;
 
-    if (ent->mDottedDecimalAddress.IsEmpty())
+    if (ent->mCoalescingKey.IsEmpty())
         return;
     
-    mSpdyPreferredHash.Put(ent->mDottedDecimalAddress, ent);
+    mSpdyPreferredHash.Put(ent->mCoalescingKey, ent);
 }
 
 void
-nsHttpConnectionMgr::RemoveSpdyPreferred(nsACString &aDottedDecimal)
+nsHttpConnectionMgr::RemoveSpdyPreferred(nsACString &aHashKey)
 {
     if (!gHttpHandler->CoalesceSpdy())
         return;
 
-    if (aDottedDecimal.IsEmpty())
+    if (aHashKey.IsEmpty())
         return;
     
-    mSpdyPreferredHash.Remove(aDottedDecimal);
+    mSpdyPreferredHash.Remove(aHashKey);
 }
 
 //-----------------------------------------------------------------------------
@@ -1078,7 +1078,7 @@ nsHttpConnectionMgr::GetConnection(nsConnectionEntry *ent,
 
         LOG(("nsHttpConnectionMgr::GetConnection Open Connection "
              "%s %s ent=%p spdy=%d",
-             ent->mConnInfo->Host(), ent->mDottedDecimalAddress.get(),
+             ent->mConnInfo->Host(), ent->mCoalescingKey.get(),
              ent, ent->mUsingSpdy));
         
         nsresult rv = CreateTransport(ent, trans);
@@ -1617,7 +1617,7 @@ nsHttpConnectionMgr::OnMsgUpdateParam(PRInt32, void *param)
 nsHttpConnectionMgr::nsConnectionEntry::~nsConnectionEntry()
 {
     if (mSpdyPreferred)
-        gHttpHandler->ConnMgr()->RemoveSpdyPreferred(mDottedDecimalAddress);
+        gHttpHandler->ConnMgr()->RemoveSpdyPreferred(mCoalescingKey);
 
     NS_RELEASE(mConnInfo);
 }
@@ -1885,7 +1885,13 @@ nsHalfOpenSocket::OnLookupComplete(nsICancelable *aRequest,
     NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
     if (NS_SUCCEEDED(aStatus) && mEnt) {
-        aRecord->GetNextAddrAsString(mEnt->mDottedDecimalAddress);
+        aRecord->GetNextAddrAsString(mEnt->mCoalescingKey);
+        if (mEnt->mConnInfo->GetAnonymous())
+            mEnt->mCoalescingKey.Append("~A:");
+        else
+            mEnt->mCoalescingKey.Append("~.:");
+        mEnt->mCoalescingKey.AppendInt(mEnt->mConnInfo->Port());
+
         gHttpHandler->ConnMgr()->ProcessSpdyPendingQ(mEnt);
     }
     return NS_OK;
