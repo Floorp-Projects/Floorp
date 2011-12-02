@@ -697,7 +697,7 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
                     if (NS_SUCCEEDED(rv)) {
                         bool exists;
                         if (NS_SUCCEEDED(profDir->Exists(&exists)) && exists)
-                            DeleteDir(profDir, false, false);
+                            nsDeleteDir::DeleteDir(profDir, false);
                     }
                 }
             }
@@ -1038,6 +1038,11 @@ nsCacheService::Init()
         NS_WARNING("Can't create cache IO thread");
     }
 
+    rv = nsDeleteDir::Init();
+    if (NS_FAILED(rv)) {
+        NS_WARNING("Can't initialize nsDeleteDir");
+    }
+
     // initialize hashtable for active cache entries
     rv = mActiveEntries.Init();
     if (NS_FAILED(rv)) return rv;
@@ -1061,6 +1066,7 @@ void
 nsCacheService::Shutdown()
 {
     nsCOMPtr<nsIThread> cacheIOThread;
+    Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_SHUTDOWN> totalTimer;
 
     {
     nsCacheServiceAutoLock lock;
@@ -1106,6 +1112,29 @@ nsCacheService::Shutdown()
 
     if (cacheIOThread)
         cacheIOThread->Shutdown();
+
+    bool finishDeleting = false;
+    nsresult rv;
+    nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!branch) {
+        NS_WARNING("Failed to get pref service!");
+    } else {
+        bool isSet;
+        rv = branch->GetBoolPref("privacy.sanitize.sanitizeOnShutdown", &isSet);
+        if (NS_SUCCEEDED(rv) && isSet) {
+            rv = branch->GetBoolPref("privacy.clearOnShutdown.cache", &isSet);
+            if (NS_SUCCEEDED(rv) && isSet) {
+                finishDeleting = true;
+            }
+        }
+    }
+    if (finishDeleting) {
+      Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_SHUTDOWN_CLEAR_PRIVATE> timer;
+      nsDeleteDir::Shutdown(finishDeleting);
+    } else {
+      Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_DELETEDIR_SHUTDOWN> timer;
+      nsDeleteDir::Shutdown(finishDeleting);
+    }
 }
 
 
