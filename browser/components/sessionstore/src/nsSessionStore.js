@@ -2518,7 +2518,7 @@ SessionStoreService.prototype = {
       // at startup we don't accidentally add them to a popup window
       do {
         total.unshift(lastClosedWindowsCopy.shift())
-      } while (total[0].isPopup)
+      } while (total[0].isPopup && lastClosedWindowsCopy.length > 0)
     }
 #endif
 
