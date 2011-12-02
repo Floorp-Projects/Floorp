@@ -844,7 +844,9 @@ abstract public class GeckoApp
                 int tabId = message.getInt("tabID");
                 String uri = message.getString("uri");
                 Boolean selected = message.getBoolean("selected");
-                handleAddTab(tabId, uri, selected);
+                handleAddTab(tabId, uri);
+                if (selected)
+                    handleSelectTab(tabId);
             } else if (event.equals("Tab:Closed")) {
                 Log.i(LOGTAG, "Destroyed a tab");
                 int tabId = message.getInt("tabID");
@@ -979,17 +981,11 @@ abstract public class GeckoApp
         });
     }
 
-    void handleAddTab(final int tabId, final String uri, final boolean selected) {
+    void handleAddTab(final int tabId, final String uri) {
         final Tab tab = Tabs.getInstance().addTab(tabId, uri);
-        if (selected)
-            Tabs.getInstance().selectTab(tabId);
 
         mMainHandler.post(new Runnable() { 
             public void run() {
-                if (selected && Tabs.getInstance().isSelectedTab(tab)) {
-                    onTabsChanged(tab);
-                    mDoorHangerPopup.updatePopup();
-                }
                 mBrowserToolbar.updateTabs(Tabs.getInstance().getCount());
             }
         });
@@ -1011,15 +1007,17 @@ abstract public class GeckoApp
 
     void handleSelectTab(int tabId) {
         Tab selTab = Tabs.getInstance().getSelectedTab();
-        selTab.updateThumbnail(mSoftwareLayerClient.getBitmap());
+        if (selTab != null)
+            selTab.updateThumbnail(mSoftwareLayerClient.getBitmap());
+
         final Tab tab = Tabs.getInstance().selectTab(tabId);
         if (tab == null)
             return;
 
-        if (selTab.getURL().equals("about:home") && !tab.getURL().equals("about:home"))
-            hideAboutHome();
-        else if (tab.getURL().equals("about:home"))
+        if (tab.getURL().equals("about:home"))
             showAboutHome();
+        else
+            hideAboutHome();
 
         updateAgentModeMenuItem(tab, tab.getAgentMode());
 
