@@ -1293,8 +1293,8 @@ Tab.prototype = {
     if (!browser)
       return;
 
-    let screenW = screen.width;
-    let screenH = screen.height;
+    let screenW = this._viewport.width;
+    let screenH = this._viewport.height;
     let viewportW, viewportH;
 
     let metadata = this.metadata;
@@ -1347,7 +1347,7 @@ Tab.prototype = {
     if (!this.browser.contentDocument || !this.browser.contentDocument.body)
       return 1.0;
 
-    return screen.width / this.browser.contentDocument.body.clientWidth;
+    return this._viewport.width / this.browser.contentDocument.body.clientWidth;
   },
 
   setBrowserSize: function(aWidth, aHeight) {
