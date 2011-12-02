@@ -61,7 +61,6 @@ import java.lang.reflect.*;
 import java.net.*;
 
 import org.json.*;
-import org.xmlpull.v1.*;
 
 import android.os.*;
 import android.app.*;
@@ -77,7 +76,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.widget.*;
 import android.hardware.*;
 import android.location.*;
-import android.preference.*;
 
 import android.util.*;
 import android.net.*;
@@ -112,6 +110,7 @@ abstract public class GeckoApp
     public static Menu sMenu;
     public Handler mMainHandler;
     private File mProfileDir;
+    private static boolean sIsGeckoReady = false;
 
     private IntentFilter mConnectivityFilter;
     private IntentFilter mBatteryFilter;
@@ -446,7 +445,7 @@ abstract public class GeckoApp
             }
         }
 
-        if (!GeckoPreferences.isLoaded())
+        if (!sIsGeckoReady)
             aMenu.findItem(R.id.preferences).setEnabled(false);
 
         Tab tab = Tabs.getInstance().getSelectedTab();
@@ -851,38 +850,16 @@ abstract public class GeckoApp
                 handleDoorHanger(message);
             } else if (event.equals("Doorhanger:Remove")) {
                 handleDoorHangerRemove(message);
-            } else if (event.equals("Preferences:Data")) {
-                JSONArray jsonPrefs = message.getJSONArray("preferences");
-                GeckoPreferences.setData(jsonPrefs);
+            } else if (event.equals("Gecko:Ready")) {
+                sIsGeckoReady = true;
                 mMainHandler.post(new Runnable() {
                     public void run() {
                         if (sMenu != null)
                             sMenu.findItem(R.id.preferences).setEnabled(true);
                     }
                 });
-            } else if (event.equals("Gecko:Ready")) {
                 setLaunchState(GeckoApp.LaunchState.GeckoRunning);
                 GeckoAppShell.sendPendingEventsToGecko();
-                // retrieve the list of preferences from our preferences.xml file
-                XmlResourceParser parser = getResources().getXml(R.xml.preferences);
-                ArrayList<String> prefs = new ArrayList<String>();
-                while (parser.getEventType() != XmlPullParser.END_DOCUMENT) {
-                    if (parser.getEventType() == XmlPullParser.START_TAG) {
-                        String attr = parser.getAttributeValue("http://schemas.android.com/apk/res/android", "key");
-                        if (attr != null) {
-                            prefs.add(attr);
-                        }
-                    }
-                    parser.next();
-                }
-                parser.close();
-
-                // request the preferences. doing it here means we don't need
-                // to wait when we open the GeckoPreferences activity.
-                JSONArray jsonPrefs = new JSONArray(prefs);
-                GeckoEvent getPrefsEvent = new GeckoEvent("Preferences:Get", jsonPrefs.toString());
-                GeckoAppShell.sendEventToGecko(getPrefsEvent);
-
                 connectGeckoLayerClient();
             } else if (event.equals("ToggleChrome:Hide")) {
                 mMainHandler.post(new Runnable() {
@@ -1382,7 +1359,6 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Doorhanger:Remove", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("Preferences:Data", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
@@ -1592,7 +1568,6 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Doorhanger:Add", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Menu:Add", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Menu:Remove", GeckoApp.mAppContext);
-        GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Gecko:Ready", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Toast:Show", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
