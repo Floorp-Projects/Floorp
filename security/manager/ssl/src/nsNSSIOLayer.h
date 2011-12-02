@@ -153,6 +153,8 @@ public:
     mIsCertIssuerBlacklisted = true;
   }
 
+  void SetNegotiatedNPN(const char *value, PRUint32 length);
+
   // XXX: These are only used on for diagnostic purposes
   enum CertVerificationState {
     before_cert_verification,
@@ -207,6 +209,9 @@ protected:
   nsRefPtr<nsSSLStatus> mSSLStatus;
 
   nsresult ActivateSSL();
+
+  nsCString mNegotiatedNPN;
+  bool      mNPNCompleted;
 
 private:
   virtual void virtualDestroyNSSReference();

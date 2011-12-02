@@ -552,7 +552,8 @@ nsSocketOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *countWrit
 
     *countWritten = 0;
 
-    if (count == 0)
+    // A write of 0 bytes can be used to force the initial SSL handshake.
+    if (count == 0 && mByteCount)
         return NS_OK;
 
     PRFileDesc *fd;

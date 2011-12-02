@@ -634,6 +634,7 @@ nsHttpChannel::SetupTransaction()
         mCaps |=  NS_HTTP_STICKY_CONNECTION;
         mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
         mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
+        mCaps |=  NS_HTTP_DISALLOW_SPDY;
     }
 
     nsCOMPtr<nsIAsyncInputStream> responseStream;
