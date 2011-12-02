@@ -1403,6 +1403,7 @@ LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
         LOperand *op = interval->reg()->getUse(i);
         if (interval->start() == inputOf(op->ins)) {
             if (op->use->policy() == LUse::FIXED) {
+                fixedOpIsHint = false;
                 fixedOp = op;
                 break;
             } else if (op->use->policy() == LUse::REGISTER || op->use->policy() == LUse::COPY) {
