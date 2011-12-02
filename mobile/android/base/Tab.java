@@ -38,12 +38,9 @@
 package org.mozilla.gecko;
 
 import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.Bitmap;
-import android.provider.Browser;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.graphics.Bitmap;
@@ -55,6 +52,8 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import org.mozilla.gecko.db.BrowserDB;
 
 public class Tab {
     public static enum AgentMode { MOBILE, DESKTOP };
@@ -143,7 +142,7 @@ public class Tab {
                 }
                 Bitmap bitmap = Bitmap.createBitmap(b, 0, 0, sMinDim, sMinDim);
                 mThumbnail = new BitmapDrawable(bitmap);
-                saveThumbnailToDB(bitmap);
+                saveThumbnailToDB((BitmapDrawable) mThumbnail);
             }
         });
     }
@@ -351,17 +350,7 @@ public class Tab {
         @Override
         protected Boolean doInBackground(Void... unused) {
             ContentResolver resolver = Tabs.getInstance().getContentResolver();
-            Cursor cursor = resolver.query(Browser.BOOKMARKS_URI,
-                                           null,
-                                           Browser.BookmarkColumns.URL + " = ? and " + Browser.BookmarkColumns.BOOKMARK + " = ?",
-                                           new String[] { getURL(), "1" },
-                                           Browser.BookmarkColumns.URL);
-            int count = cursor.getCount();
-            cursor.close();
-            if (count == 1)
-                return true;
-            else
-                return false;
+            return BrowserDB.isBookmark(resolver, getURL());
         }
 
         @Override
@@ -374,31 +363,7 @@ public class Tab {
         @Override
         protected Void doInBackground(Void... unused) {
             ContentResolver resolver = Tabs.getInstance().getContentResolver();
-            Cursor cursor = resolver.query(Browser.BOOKMARKS_URI,
-                                           null,
-                                           Browser.BookmarkColumns.URL + " = ?",
-                                           new String[] { getURL() },
-                                           Browser.BookmarkColumns.URL);
-
-            ContentValues values = new ContentValues();
-            values.put(Browser.BookmarkColumns.BOOKMARK, "1");
-            values.put(Browser.BookmarkColumns.TITLE, getTitle());
-
-            if (cursor.getCount() == 1) {
-                //entry exists, update the bookmark flag
-                resolver.update(Browser.BOOKMARKS_URI,
-                                values,
-                                Browser.BookmarkColumns.URL + " = ?",
-                                new String[] { getURL() });
-            } else {
-                //add a new entry
-                values.put(Browser.BookmarkColumns.URL, mUrl);
-                resolver.insert(Browser.BOOKMARKS_URI,
-                                values);
-            }
-
-            cursor.close();
-
+            BrowserDB.addBookmark(resolver, getTitle(), getURL());
             return null;
         }
 
@@ -408,33 +373,10 @@ public class Tab {
         }
     }
 
-    private void saveThumbnailToDB(Bitmap bitmap) {
+    private void saveThumbnailToDB(BitmapDrawable thumbnail) {
         try {
             ContentResolver resolver = Tabs.getInstance().getContentResolver();
-            Cursor cursor = resolver.query(Browser.BOOKMARKS_URI,
-                                           null,
-                                           Browser.BookmarkColumns.URL + " = ?",
-                                           new String[] { getURL() },
-                                           Browser.BookmarkColumns.URL);
-
-            ContentValues values = new ContentValues();
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
-            values.put("thumbnail", bos.toByteArray());
-
-            if (cursor.getCount() == 1) {
-                //entry exists, update the bookmark flag
-                resolver.update(Browser.BOOKMARKS_URI,
-                                values,
-                                Browser.BookmarkColumns.URL + " = ?",
-                                new String[] { getURL() });
-            } else {
-                //add a new entry
-                values.put(Browser.BookmarkColumns.URL, mUrl);
-                resolver.insert(Browser.BOOKMARKS_URI,
-                                values);
-            }
-            cursor.close();
+            BrowserDB.updateThumbnailForUrl(resolver, getURL(), thumbnail);
         } catch (Exception e) {
             // ignore
         }
@@ -444,12 +386,7 @@ public class Tab {
         @Override
         protected Void doInBackground(Void... unused) {
             ContentResolver resolver = Tabs.getInstance().getContentResolver();
-            ContentValues values = new ContentValues();
-            values.put(Browser.BookmarkColumns.BOOKMARK, "0");
-            resolver.update(Browser.BOOKMARKS_URI,
-                            values,
-                            Browser.BookmarkColumns.URL + " = ?",
-                            new String[] { getURL() });
+            BrowserDB.removeBookmark(resolver, getURL());
             return null;
         }
 

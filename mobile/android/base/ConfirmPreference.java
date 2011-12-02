@@ -37,9 +37,10 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.db.BrowserDB;
+
 import android.content.Context;
 import android.preference.DialogPreference;
-import android.provider.Browser;
 import android.util.AttributeSet;
 import android.util.Log;
 
@@ -64,7 +65,7 @@ class ConfirmPreference extends DialogPreference {
         if ("clear_history".equalsIgnoreCase(mAction)) {
             GeckoAppShell.getHandler().post(new Runnable(){
                 public void run() {
-                    Browser.clearHistory(mContext.getContentResolver());
+                    BrowserDB.clearHistory(mContext.getContentResolver());
                 }
             });
         } else if ("clear_private_data".equalsIgnoreCase(mAction)) {
