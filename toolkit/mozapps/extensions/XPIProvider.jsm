@@ -7015,8 +7015,10 @@ UpdateChecker.prototype = {
     let AUC = AddonUpdateChecker;
 
     let ignoreMaxVersion = false;
+    let ignoreStrictCompat = false;
     if (!XPIProvider.checkCompatibility) {
       ignoreMaxVersion = true;
+      ignoreStrictCompat = true;
     } else if (this.addon.type == "extension" &&
                !AddonManager.strictCompatibility &&
                !this.addon.strictCompatibility &&
@@ -7028,7 +7030,8 @@ UpdateChecker.prototype = {
     let compatUpdate = AUC.getCompatibilityUpdate(aUpdates, this.addon.version,
                                                   this.syncCompatibility,
                                                   null, null,
-                                                  ignoreMaxVersion);
+                                                  ignoreMaxVersion,
+                                                  ignoreStrictCompat);
     // Apply the compatibility update to the database
     if (compatUpdate)
       this.addon.applyCompatibilityUpdate(compatUpdate, this.syncCompatibility);
@@ -7043,7 +7046,8 @@ UpdateChecker.prototype = {
       compatUpdate = AUC.getCompatibilityUpdate(aUpdates, this.addon.version,
                                                 false, this.appVersion,
                                                 this.platformVersion,
-                                                ignoreMaxVersion);
+                                                ignoreMaxVersion,
+                                                ignoreStrictCompat);
     }
 
     if (compatUpdate)
@@ -7071,6 +7075,7 @@ UpdateChecker.prototype = {
                                                this.appVersion,
                                                this.platformVersion,
                                                ignoreMaxVersion,
+                                               ignoreStrictCompat,
                                                compatOverrides);
 
     if (update && Services.vc.compare(this.addon.version, update.version) < 0) {
