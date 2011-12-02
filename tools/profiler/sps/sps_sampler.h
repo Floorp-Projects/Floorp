@@ -57,7 +57,7 @@ extern pthread_key_t pkey_stack;
 #define SAMPLER_GET_RESPONSIVENESS() mozilla_sampler_get_responsiveness()
 #define SAMPLER_SAVE() mozilla_sampler_save();
 #define SAMPLER_GET_PROFILE() mozilla_sampler_get_profile();
-#define SAMPLE_CHECKPOINT(name_space, info) mozilla::SamplerStackFrameRAII only_one_sampleraii_per_scope(FULLFUNCTION, name_space "::" info);
+#define SAMPLE_LABEL(name_space, info) mozilla::SamplerStackFrameRAII only_one_sampleraii_per_scope(FULLFUNCTION, name_space "::" info);
 #define SAMPLE_MARKER(info) mozilla_sampler_add_marker(info);
 
 // STORE_SEQUENCER: Because signals can interrupt our profile modification
