@@ -296,6 +296,7 @@ nsHttpConnection::SetupNPN(PRUint8 caps)
 
         if (mConnInfo->UsingSSL() &&
             !(caps & NS_HTTP_DISALLOW_SPDY) &&
+            !mConnInfo->UsingHttpProxy() &&
             gHttpHandler->IsSpdyEnabled()) {
             LOG(("nsHttpConnection::Init Setting up SPDY Negotiation"));
             nsCOMPtr<nsISupports> securityInfo;
