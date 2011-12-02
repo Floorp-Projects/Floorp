@@ -201,6 +201,7 @@ nsHttpHandler::nsHttpHandler()
     , mDoNotTrackEnabled(false)
     , mEnableSpdy(false)
     , mCoalesceSpdy(true)
+    , mUseAlternateProtocol(false)
 {
 #if defined(PR_LOGGING)
     gHttpLog = PR_NewLogModule("nsHttp");
@@ -1097,6 +1098,13 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetBoolPref(HTTP_PREF("spdy.coalesce-hostnames"), &cVar);
         if (NS_SUCCEEDED(rv))
             mCoalesceSpdy = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.use-alternate-protocol"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("spdy.use-alternate-protocol"),
+                                &cVar);
+        if (NS_SUCCEEDED(rv))
+            mUseAlternateProtocol = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.timeout"))) {
