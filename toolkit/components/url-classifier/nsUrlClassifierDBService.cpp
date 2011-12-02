@@ -786,7 +786,7 @@ nsresult
 nsUrlClassifierStore::RandomNumber(PRInt64 *randomNum)
 {
   mozStorageStatementScoper randScoper(mRandomStatement);
-  PRBool exists;
+  bool exists;
   nsresult rv = mRandomStatement->ExecuteStep(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!exists)
