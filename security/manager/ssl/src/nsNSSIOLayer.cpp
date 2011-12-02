@@ -169,7 +169,8 @@ nsNSSSocketInfo::nsNSSSocketInfo()
     mRememberClientAuthCertificate(false),
     mHandshakeStartTime(0),
     mPort(0),
-    mIsCertIssuerBlacklisted(false)
+    mIsCertIssuerBlacklisted(false),
+    mNPNCompleted(false)
 {
 }
 
@@ -435,6 +436,26 @@ nsNSSSocketInfo::GetErrorMessage(PRUnichar** aText)
   return *aText != nsnull ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
+void
+nsNSSSocketInfo::SetNegotiatedNPN(const char *value, PRUint32 length)
+{
+  if (!value)
+    mNegotiatedNPN.Truncate();
+  else
+    mNegotiatedNPN.Assign(value, length);
+  mNPNCompleted = true;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetNegotiatedNPN(nsACString &aNegotiatedNPN)
+{
+  if (!mNPNCompleted)
+    return NS_ERROR_NOT_CONNECTED;
+
+  aNegotiatedNPN = mNegotiatedNPN;
+  return NS_OK;
+}
+
 static nsresult
 formatPlainErrorMessage(nsXPIDLCString const & host, PRInt32 port,
                         PRErrorCode err, nsString &returnedMessage);
@@ -524,6 +545,36 @@ NS_IMETHODIMP
 nsNSSSocketInfo::StartTLS()
 {
   return ActivateSSL();
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::SetNPNList(nsTArray<nsCString> &protocolArray)
+{
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+  if (!mFd)
+    return NS_ERROR_FAILURE;
+
+  // the npn list is a concatenated list of 8 bit byte strings.
+  nsCString npnList;
+
+  for (PRUint32 index = 0; index < protocolArray.Length(); ++index) {
+    if (protocolArray[index].IsEmpty() ||
+        protocolArray[index].Length() > 255)
+      return NS_ERROR_ILLEGAL_VALUE;
+
+    npnList.Append(protocolArray[index].Length());
+    npnList.Append(protocolArray[index]);
+  }
+  
+  if (SSL_SetNextProtoNego(
+        mFd,
+        reinterpret_cast<const unsigned char *>(npnList.get()),
+        npnList.Length()) != SECSuccess)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 static NS_DEFINE_CID(kNSSCertificateCID, NS_X509CERT_CID);

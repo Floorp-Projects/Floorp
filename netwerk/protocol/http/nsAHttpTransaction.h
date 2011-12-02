@@ -62,6 +62,7 @@ class nsAHttpTransaction : public nsISupports
 public:
     // called by the connection when it takes ownership of the transaction.
     virtual void SetConnection(nsAHttpConnection *) = 0;
+    virtual nsAHttpConnection *Connection() = 0;
 
     // called by the connection to get security callbacks to set on the
     // socket transport.
@@ -99,6 +100,7 @@ public:
 
 #define NS_DECL_NSAHTTPTRANSACTION \
     void SetConnection(nsAHttpConnection *); \
+    nsAHttpConnection *Connection(); \
     void GetSecurityCallbacks(nsIInterfaceRequestor **, \
                               nsIEventTarget **);       \
     void OnTransportStatus(nsITransport* transport, \

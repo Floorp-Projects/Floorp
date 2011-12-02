@@ -125,6 +125,7 @@ public:
     void          SetAnonymous(bool anon)         
                                          { mHashKey.SetCharAt(anon ? 'A' : '.', 2); }
     bool          ShouldForceConnectMethod();
+    const nsCString &GetHost() { return mHost; }
 
 private:
     nsrefcnt               mRef;

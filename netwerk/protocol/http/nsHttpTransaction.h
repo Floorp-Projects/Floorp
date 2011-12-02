@@ -120,7 +120,6 @@ public:
 
     nsIInterfaceRequestor *Callbacks()      { return mCallbacks; } 
     nsIEventTarget        *ConsumerTarget() { return mConsumerTarget; }
-    nsAHttpConnection     *Connection()     { return mConnection; }
 
     // Called to take ownership of the response headers; the transaction
     // will drop any reference to the response headers after this call.
@@ -131,7 +130,7 @@ public:
 
     bool      SSLConnectFailed() { return mSSLConnectFailed; }
 
-    // These methods may only be used by the connection manager.
+    // SetPriority() may only be used by the connection manager.
     void    SetPriority(PRInt32 priority) { mPriority = priority; }
     PRInt32    Priority()                 { return mPriority; }
 
