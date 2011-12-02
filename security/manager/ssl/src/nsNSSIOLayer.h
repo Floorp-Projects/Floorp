@@ -154,6 +154,7 @@ public:
   }
 
   void SetNegotiatedNPN(const char *value, PRUint32 length);
+  void SetHandshakeCompleted() { mHandshakeCompleted = true; }
 
   // XXX: These are only used on for diagnostic purposes
   enum CertVerificationState {
@@ -212,6 +213,7 @@ protected:
 
   nsCString mNegotiatedNPN;
   bool      mNPNCompleted;
+  bool      mHandshakeCompleted;
 
 private:
   virtual void virtualDestroyNSSReference();

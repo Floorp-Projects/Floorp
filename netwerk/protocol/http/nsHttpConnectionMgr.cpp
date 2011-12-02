@@ -48,8 +48,7 @@
 
 #include "nsIObserverService.h"
 
-#include "nsISSLStatusProvider.h"
-#include "nsISSLStatus.h"
+#include "nsISSLSocketControl.h"
 #include "prnetdb.h"
 
 using namespace mozilla;
@@ -517,39 +516,8 @@ nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection *conn,
         // IP address.
         ent->mUsingSpdy = true;
         conn->DontReuse();
-        ent->mCert = nsnull;
     }
 
-    // If this is a preferred host for coalescing (aka ip pooling) then
-    // keep a reference to the server SSL cert. This will be used as an
-    // extra level of verification when deciding that
-    // connections from other hostnames are redirected to the preferred host.
-    //
-    if (preferred == ent) {
-        // Even if mCert is already set update the reference in case the
-        // reference is changing.
-        ent->mCert = nsnull;
-
-        nsCOMPtr<nsISupports> securityInfo;
-        nsCOMPtr<nsISSLStatusProvider> sslStatusProvider;
-        nsCOMPtr<nsISSLStatus> sslStatus;
-        nsCOMPtr<nsIX509Cert> cert;
-
-        conn->GetSecurityInfo(getter_AddRefs(securityInfo));
-        if (securityInfo)
-            sslStatusProvider = do_QueryInterface(securityInfo);
-
-        if (sslStatusProvider)
-            sslStatusProvider->
-                GetSSLStatus(getter_AddRefs(sslStatus));
-
-        if (sslStatus)
-            sslStatus->GetServerCert(getter_AddRefs(cert));
-
-        if (cert)
-            ent->mCert = do_QueryInterface(cert);
-    }
-    
     ProcessSpdyPendingQ();
 }
 
@@ -634,9 +602,9 @@ nsHttpConnectionMgr::GetSpdyPreferred(nsConnectionEntry *aOriginalEntry)
     if (preferred == aOriginalEntry)
         return aOriginalEntry;
 
-    // if there is no server cert stored for the destination host
-    // then no validation can be made and we need to skip pooling
-    if (!preferred || !preferred->mCert || !preferred->mUsingSpdy)
+    // if there is no preferred host or it is no longer using spdy
+    // then skip pooling
+    if (!preferred || !preferred->mUsingSpdy)
         return nsnull;                         
 
     // if there is not an active spdy session in this entry then
@@ -644,14 +612,15 @@ nsHttpConnectionMgr::GetSpdyPreferred(nsConnectionEntry *aOriginalEntry)
     // be the same as the old one. Active sessions are prohibited
     // from changing certs.
 
-    bool activeSpdy = false;
+    nsHttpConnection *activeSpdy = nsnull;
 
-    for (PRUint32 index = 0; index < preferred->mActiveConns.Length(); ++index)
+    for (PRUint32 index = 0; index < preferred->mActiveConns.Length(); ++index) {
         if (preferred->mActiveConns[index]->CanDirectlyActivate()) {
-            activeSpdy = true;
+            activeSpdy = preferred->mActiveConns[index];
             break;
         }
-    
+    }
+
     if (!activeSpdy) {
         // remove the preferred status of this entry if it cannot be
         // used for pooling.
@@ -667,14 +636,28 @@ nsHttpConnectionMgr::GetSpdyPreferred(nsConnectionEntry *aOriginalEntry)
 
     // Check that the server cert supports redirection
     nsresult rv;
-    bool validCert = false;
+    bool isJoined = false;
 
-    rv = preferred->mCert->IsValidForHostname(
-        aOriginalEntry->mConnInfo->GetHost(), &validCert);
+    nsCOMPtr<nsISupports> securityInfo;
+    nsCOMPtr<nsISSLSocketControl> sslSocketControl;
+    nsCAutoString negotiatedNPN;
+    
+    activeSpdy->GetSecurityInfo(getter_AddRefs(securityInfo));
+    if (!securityInfo)
+        return nsnull;
 
-    if (NS_FAILED(rv) || !validCert) {
+    sslSocketControl = do_QueryInterface(securityInfo, &rv);
+    if (NS_FAILED(rv))
+        return nsnull;
+
+    rv = sslSocketControl->JoinConnection(NS_LITERAL_CSTRING("spdy/2"),
+                                          aOriginalEntry->mConnInfo->GetHost(),
+                                          aOriginalEntry->mConnInfo->Port(),
+                                          &isJoined);
+
+    if (NS_FAILED(rv) || !isJoined) {
         LOG(("nsHttpConnectionMgr::GetSpdyPreferredConnection "
-             "Host %s has cert which cannot be confirmed to use "
+             "Host %s cannot be confirmed to be joined "
              "with %s connections",
              preferred->mConnInfo->Host(), aOriginalEntry->mConnInfo->Host()));
         return nsnull;

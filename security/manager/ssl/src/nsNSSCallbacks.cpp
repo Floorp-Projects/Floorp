@@ -966,6 +966,8 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
       infoObject->SetNegotiatedNPN(reinterpret_cast<char *>(npnbuf), npnlen);
     else
       infoObject->SetNegotiatedNPN(nsnull, 0);
+
+    infoObject->SetHandshakeCompleted();
   }
 
   PORT_Free(cipherName);

@@ -48,7 +48,7 @@ class nsCString;
 %}
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);
 
-[scriptable, uuid(87fe5d5a-7f72-48d7-8a13-ef992e0cad43)]
+[scriptable, uuid(753f0f13-681d-4de3-a6c6-11aa7e0b3afd)]
 interface nsISSLSocketControl : nsISupports {
     attribute nsIInterfaceRequestor     notificationCallbacks;
 
@@ -74,5 +74,15 @@ interface nsISSLSocketControl : nsISupports {
      * raised.
      */
     readonly attribute ACString negotiatedNPN;
+
+    /* Determine if a potential SSL connection to hostname:port with
+     * a desired NPN negotiated protocol of npnProtocol can use the socket
+     * associated with this object instead of making a new one.
+     */
+    boolean joinConnection(
+      in ACString npnProtocol, /* e.g. "spdy/2" */
+      in ACString hostname,
+      in long port);
+    
 };
 
