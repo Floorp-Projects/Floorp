@@ -53,7 +53,7 @@ interface nsIProxyInfo;
  * The callback interface for nsIHttpChannelInternal::HTTPUpgrade()
  */
 
-[scriptable, uuid(5644af88-09e1-4fbd-83da-f012b3b30180)]
+[scriptable, uuid(4b967b6d-cd1c-49ae-a457-23ff76f5a2e8)]
 interface nsIHttpUpgradeListener : nsISupports
 {
     void onTransportAvailable(in nsISocketTransport   aTransport,
@@ -180,5 +180,12 @@ interface nsIHttpChannelInternal : nsISupports
      */
     void HTTPUpgrade(in ACString aProtocolName,
                      in nsIHttpUpgradeListener aListener);
+
+    /**
+     * Enable/Disable Spdy negotiation on per channel basis.
+     * The network.http.spdy.enabled preference is still a pre-requisite
+     * for starting spdy.
+     */
+    attribute boolean allowSpdy;
 
 };
