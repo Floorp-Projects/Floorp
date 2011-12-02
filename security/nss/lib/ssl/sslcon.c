@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslcon.c,v 1.42 2011/08/01 07:08:09 kaie%kuix.de Exp $ */
+/* $Id: sslcon.c,v 1.45 2011/11/19 21:58:21 bsmith%mozilla.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -518,7 +518,6 @@ ssl2_GetSendBuffer(sslSocket *ss, unsigned int len)
  * ssl2_HandleMessage()                <- ssl_Do1stHandshake()
  * ssl2_HandleServerHelloMessage() <- ssl_Do1stHandshake()
                                      after ssl2_BeginClientHandshake()
- * ssl2_RestartHandshakeAfterCertReq() <- Called from certdlgs.c in nav.
  * ssl2_HandleClientHelloMessage() <- ssl_Do1stHandshake() 
                                      after ssl2_BeginServerHandshake()
  * 
@@ -765,7 +764,6 @@ done:
 }
 
 /* Called from ssl2_HandleRequestCertificate() <- ssl2_HandleMessage()
- *             ssl2_RestartHandshakeAfterCertReq() <- (application)
  * Acquires and releases the socket's xmitBufLock.
  */
 static int
@@ -1177,7 +1175,6 @@ loser:
 /*
 ** Called from: ssl2_HandleServerHelloMessage,
 **              ssl2_HandleClientSessionKeyMessage,
-**              ssl2_RestartHandshakeAfterServerCert,
 **              ssl2_HandleClientHelloMessage,
 **              
 */
@@ -1237,9 +1234,7 @@ ssl2_UseClearSendFunc(sslSocket *ss)
  *	ssl2_HandleServerHelloMessage
  *	ssl2_BeginClientHandshake	
  *	ssl2_HandleClientSessionKeyMessage
- *	ssl2_RestartHandshakeAfterCertReq 
  *	ssl3_RestartHandshakeAfterCertReq 
- *	ssl2_RestartHandshakeAfterServerCert 
  *	ssl3_RestartHandshakeAfterServerCert 
  *	ssl2_HandleClientHelloMessage
  *	ssl2_BeginServerHandshake
@@ -2232,8 +2227,6 @@ ssl2_TriggerNextMessage(sslSocket *ss)
 **             ssl2_HandleVerifyMessage 
 **             ssl2_HandleServerHelloMessage
 **             ssl2_HandleClientSessionKeyMessage
-**             ssl2_RestartHandshakeAfterCertReq
-**             ssl2_RestartHandshakeAfterServerCert
 */
 static SECStatus
 ssl2_TryToFinish(sslSocket *ss)
@@ -2267,7 +2260,6 @@ ssl2_TryToFinish(sslSocket *ss)
 
 /*
 ** Called from ssl2_HandleRequestCertificate
-**             ssl2_RestartHandshakeAfterCertReq
 */
 static SECStatus
 ssl2_SignResponse(sslSocket *ss,
@@ -2354,8 +2346,9 @@ ssl2_HandleRequestCertificate(sslSocket *ss)
     ret = (*ss->getClientAuthData)(ss->getClientAuthDataArg, ss->fd,
 				   NULL, &cert, &key);
     if ( ret == SECWouldBlock ) {
-	ssl_SetAlwaysBlock(ss);
-	goto done;
+	PORT_SetError(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SSL2);
+	ret = -1;
+	goto loser;
     }
 
     if (ret) {
@@ -2715,8 +2708,7 @@ ssl2_HandleMessage(sslSocket *ss)
 
 /************************************************************************/
 
-/* Called from ssl_Do1stHandshake, after ssl2_HandleServerHelloMessage or 
-** ssl2_RestartHandshakeAfterServerCert.
+/* Called from ssl_Do1stHandshake, after ssl2_HandleServerHelloMessage.
 */
 static SECStatus
 ssl2_HandleVerifyMessage(sslSocket *ss)
@@ -2936,19 +2928,16 @@ ssl2_HandleServerHelloMessage(sslSocket *ss)
 	    rv = (*ss->handleBadCert)(ss->badCertArg, ss->fd);
 	    if ( rv ) {
 		if ( rv == SECWouldBlock ) {
-		    /* someone will handle this connection asynchronously*/
-
-		    SSL_DBG(("%d: SSL[%d]: go to async cert handler",
-			     SSL_GETPID(), ss->fd));
-		    ssl_ReleaseRecvBufLock(ss);
-		    ssl_SetAlwaysBlock(ss);
-		    return SECWouldBlock;
+		    SSL_DBG(("%d: SSL[%d]: SSL2 bad cert handler returned "
+			     "SECWouldBlock", SSL_GETPID(), ss->fd));
+		    PORT_SetError(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SSL2);
+		    rv = SECFailure;
+		} else {
+		    /* cert is bad */
+		    SSL_DBG(("%d: SSL[%d]: server certificate is no good: error=%d",
+			     SSL_GETPID(), ss->fd, PORT_GetError()));
 		}
-		/* cert is bad */
-		SSL_DBG(("%d: SSL[%d]: server certificate is no good: error=%d",
-			 SSL_GETPID(), ss->fd, PORT_GetError()));
 		goto loser;
-
 	    }
 	    /* cert is good */
 	} else {
@@ -3328,133 +3317,6 @@ bad_client:
 
 loser:
     return SECFailure;
-}
-
-/*
- * attempt to restart the handshake after asynchronously handling
- * a request for the client's certificate.
- *
- * inputs:  
- *	cert	Client cert chosen by application.
- *	key	Private key associated with cert.  
- *
- * XXX: need to make ssl2 and ssl3 versions of this function agree on whether
- *	they take the reference, or bump the ref count!
- *
- * Return value: XXX
- *
- * Caller holds 1stHandshakeLock.
- */
-int
-ssl2_RestartHandshakeAfterCertReq(sslSocket *          ss,
-				  CERTCertificate *    cert, 
-				  SECKEYPrivateKey *   key)
-{
-    int              ret;
-    SECStatus        rv          = SECSuccess;
-    SECItem          response;
-
-    if (ss->version >= SSL_LIBRARY_VERSION_3_0) 
-    	return SECFailure;
-
-    response.data = NULL;
-
-    /* generate error if no cert or key */
-    if ( ( cert == NULL ) || ( key == NULL ) ) {
-	goto no_cert;
-    }
-    
-    /* generate signed response to the challenge */
-    rv = ssl2_SignResponse(ss, key, &response);
-    if ( rv != SECSuccess ) {
-	goto no_cert;
-    }
-    
-    /* Send response message */
-    ret = ssl2_SendCertificateResponseMessage(ss, &cert->derCert, &response);
-    if (ret) {
-	goto no_cert;
-    }
-
-    /* try to finish the handshake */
-    ret = ssl2_TryToFinish(ss);
-    if (ret) {
-	goto loser;
-    }
-    
-    /* done with handshake */
-    if (ss->handshake == 0) {
-	ret = SECSuccess;
-	goto done;
-    }
-
-    /* continue handshake */
-    ssl_GetRecvBufLock(ss);
-    ss->gs.recordLen = 0;
-    ssl_ReleaseRecvBufLock(ss);
-
-    ss->handshake     = ssl_GatherRecord1stHandshake;
-    ss->nextHandshake = ssl2_HandleMessage;
-    ret = ssl2_TriggerNextMessage(ss);
-    goto done;
-    
-no_cert:
-    /* no cert - send error */
-    ret = ssl2_SendErrorMessage(ss, SSL_PE_NO_CERTIFICATE);
-    goto done;
-    
-loser:
-    ret = SECFailure;
-done:
-    /* free allocated data */
-    if ( response.data ) {
-	PORT_Free(response.data);
-    }
-    
-    return ret;
-}
-
-
-/* restart an SSL connection that we stopped to run certificate dialogs 
-** XXX	Need to document here how an application marks a cert to show that
-**	the application has accepted it (overridden CERT_VerifyCert).
- *
- * Return value: XXX
- *
- * Caller holds 1stHandshakeLock.
-*/
-int
-ssl2_RestartHandshakeAfterServerCert(sslSocket *ss)
-{
-    int rv	= SECSuccess;
-
-    if (ss->version >= SSL_LIBRARY_VERSION_3_0) 
-	return SECFailure;
-
-    /* SSL 2
-    ** At this point we have a completed session key and our session
-    ** cipher is setup and ready to go. Switch to encrypted write routine
-    ** as all future message data is to be encrypted.
-    */
-    ssl2_UseEncryptedSendFunc(ss);
-
-    rv = ssl2_TryToFinish(ss);
-    if (rv == SECSuccess && ss->handshake != NULL) {	
-	/* handshake is not yet finished. */
-
-	SSL_TRC(5, ("%d: SSL[%d]: got server-hello, required=0x%d got=0x%x",
-		SSL_GETPID(), ss->fd, ss->sec.ci.requiredElements,
-		ss->sec.ci.elements));
-
-	ssl_GetRecvBufLock(ss);
-	ss->gs.recordLen = 0;	/* mark it all used up. */
-	ssl_ReleaseRecvBufLock(ss);
-
-	ss->handshake     = ssl_GatherRecord1stHandshake;
-	ss->nextHandshake = ssl2_HandleVerifyMessage;
-    }
-
-    return rv;
 }
 
 /*
