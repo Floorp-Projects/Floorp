@@ -279,7 +279,8 @@ Assembler::processCodeLabels(IonCode *code)
 Assembler::Condition
 Assembler::InvertCondition(Condition cond)
 {
-    return Condition(0x80000000^cond);
+    const uint32 ConditionInversionBit = 0x10000000;
+    return Condition(ConditionInversionBit ^ cond);
 #if 0
     switch (cond) {
       case Equal:
