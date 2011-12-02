@@ -417,10 +417,7 @@ function testGen() {
   networkPanel = HUDService.openNetworkPanel(filterBox, httpActivity);
   networkPanel.isDoneCallback = function NP_doneCallback() {
     networkPanel.isDoneCallback = null;
-    try {
-      testDriver.next();
-    } catch (e if e instanceof StopIteration) {
-    }
+    testDriver.next();
   }
 
   yield;
@@ -481,5 +478,5 @@ function testGen() {
   networkPanel.panel.hidePopup(); */
 
   // All done!
-  finish();
+  finishTest();
 }

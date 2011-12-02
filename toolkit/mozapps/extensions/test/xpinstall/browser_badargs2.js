@@ -3,7 +3,6 @@
 // exception
 function test() {
   waitForExplicitFinish();
-  ignoreAllUncaughtExceptions();
 
   var triggers = encodeURIComponent(JSON.stringify({
     "Unsigned XPI": {

@@ -44,7 +44,6 @@ function observeOneRestore(callback) {
 
 function test() {
   waitForExplicitFinish();
-  ignoreAllUncaughtExceptions();
 
   // There should be one tab when we start the test
   let [origTab] = gBrowser.visibleTabs;
