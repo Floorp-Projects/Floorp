@@ -603,7 +603,7 @@ abstract public class GeckoApp
                 mLastScreen = bos.toByteArray();
             }
         }
-    }
+    };
 
     private void maybeCancelFaviconLoad(Tab tab) {
         long faviconLoadId = tab.getFaviconLoadId();
@@ -1249,11 +1249,6 @@ abstract public class GeckoApp
                                      WindowManager.LayoutParams.FLAG_FULLSCREEN);
             }
         });
-    }
-
-    public GeckoApp() {
-        super();
-        mRememberLastScreenRunnable = new RememberLastScreenRunnable();
     }
 
     /** Called when the activity is first created. */
