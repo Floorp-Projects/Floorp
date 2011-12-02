@@ -170,7 +170,8 @@ nsNSSSocketInfo::nsNSSSocketInfo()
     mHandshakeStartTime(0),
     mPort(0),
     mIsCertIssuerBlacklisted(false),
-    mNPNCompleted(false)
+    mNPNCompleted(false),
+    mHandshakeCompleted(false)
 {
 }
 
@@ -453,6 +454,62 @@ nsNSSSocketInfo::GetNegotiatedNPN(nsACString &aNegotiatedNPN)
     return NS_ERROR_NOT_CONNECTED;
 
   aNegotiatedNPN = mNegotiatedNPN;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::JoinConnection(const nsACString & npnProtocol,
+                                const nsACString & hostname,
+                                PRInt32 port,
+                                bool *_retval NS_OUTPARAM)
+{
+  *_retval = false;
+
+  // Different ports may not be joined together
+  if (port != mPort)
+    return NS_OK;
+
+  // Make sure NPN has been completed and matches requested npnProtocol
+  if (!mNPNCompleted || !mNegotiatedNPN.Equals(npnProtocol))
+    return NS_OK;
+
+  // If this is the same hostname then the certicate status does not
+  // need to be considered. They are joinable.
+  if (mHostName && hostname.Equals(mHostName)) {
+    *_retval = true;
+    return NS_OK;
+  }
+
+  // Before checking the server certificate we need to make sure the
+  // handshake has completed.
+  if (!mHandshakeCompleted || !SSLStatus() || !SSLStatus()->mServerCert)
+    return NS_OK;
+
+  // If the cert has error bits (e.g. it is untrusted) then do not join.
+  // The value of mHaveCertErrorBits is only reliable because we know that
+  // the handshake completed.
+  if (SSLStatus()->mHaveCertErrorBits)
+    return NS_OK;
+
+  // Ensure that the server certificate covers the hostname that would
+  // like to join this connection
+
+  CERTCertificate *nssCert = nsnull;
+  CERTCertificateCleaner nsscertCleaner(nssCert);
+
+  nsCOMPtr<nsIX509Cert2> cert2 = do_QueryInterface(SSLStatus()->mServerCert);
+  if (cert2)
+    nssCert = cert2->GetCert();
+
+  if (!nssCert)
+    return NS_OK;
+
+  if (CERT_VerifyCertName(nssCert, PromiseFlatCString(hostname).get()) !=
+      SECSuccess)
+    return NS_OK;
+
+  // All tests pass - this is joinable
+  *_retval = true;
   return NS_OK;
 }
 
