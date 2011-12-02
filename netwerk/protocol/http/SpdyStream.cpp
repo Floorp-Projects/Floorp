@@ -380,7 +380,7 @@ SpdyStream::ParseHttpRequestHeaders(const char *buf,
         name.Equals("scheme") ||
         name.Equals("keep-alive") ||
         name.Equals("accept-encoding") ||
-        name.Equals("TE") ||
+        name.Equals("te") ||
         name.Equals("connection") ||
         name.Equals("proxy-connection") ||
         name.Equals("url"))
