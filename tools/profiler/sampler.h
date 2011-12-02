@@ -97,7 +97,7 @@
 #define SAMPLER_GET_PROFILE() NULL
 #define SAMPLER_RESPONSIVENESS(time) NULL
 #define SAMPLER_GET_RESPONSIVENESS() NULL
-#define SAMPLE_CHECKPOINT(name_space, info)
+#define SAMPLE_LABEL(name_space, info)
 #define SAMPLE_MARKER(info)
 
 // Redefine the macros for platforms where SPS is supported.
