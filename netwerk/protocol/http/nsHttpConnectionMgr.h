@@ -49,7 +49,6 @@
 #include "nsAutoPtr.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsISocketTransportService.h"
-#include "nsIDNSListener.h"
 #include "nsHashSets.h"
 
 #include "nsIObserver.h"
@@ -179,7 +178,6 @@ private:
             mUsingSpdy(false),
             mTestedSpdy(false),
             mSpdyRedir(false),
-            mDidDNS(false),
             mSpdyPreferred(false)
         {
             NS_ADDREF(mConnInfo);
@@ -206,7 +204,6 @@ private:
         bool mUsingSpdy;
         bool mTestedSpdy;
         bool mSpdyRedir;
-        bool mDidDNS;
         bool mSpdyPreferred;
         nsCOMPtr<nsIX509Cert3> mCert;
     };
@@ -238,8 +235,7 @@ private:
     class nsHalfOpenSocket : public nsIOutputStreamCallback,
                              public nsITransportEventSink,
                              public nsIInterfaceRequestor,
-                             public nsITimerCallback,
-                             public nsIDNSListener
+                             public nsITimerCallback
     {
     public:
         NS_DECL_ISUPPORTS
@@ -247,7 +243,6 @@ private:
         NS_DECL_NSITRANSPORTEVENTSINK
         NS_DECL_NSIINTERFACEREQUESTOR
         NS_DECL_NSITIMERCALLBACK
-        NS_DECL_NSIDNSLISTENER
 
         nsHalfOpenSocket(nsConnectionEntry *ent,
                          nsHttpTransaction *trans);

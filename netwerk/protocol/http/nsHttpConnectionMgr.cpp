@@ -47,12 +47,10 @@
 #include "nsIServiceManager.h"
 
 #include "nsIObserverService.h"
-#include "nsIDNSRecord.h"
-#include "nsIDNSService.h"
-#include "nsICancelable.h"
 
 #include "nsISSLStatusProvider.h"
 #include "nsISSLStatus.h"
+#include "prnetdb.h"
 
 using namespace mozilla;
 
@@ -1818,27 +1816,6 @@ nsHttpConnectionMgr::nsHalfOpenSocket::SetupPrimaryStreams()
     NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
     nsresult rv;
-    if (gHttpHandler->IsSpdyEnabled() &&
-        gHttpHandler->CoalesceSpdy() &&
-        mEnt->mConnInfo->UsingSSL() &&
-        !mEnt->mConnInfo->UsingHttpProxy() &&
-        !mEnt->mDidDNS) {
-
-        // Grab the DNS resolution for this host for un-sharding purposes
-        // This lookup will no doubt be coalesced by the DNS sub system as it
-        // overlaps with the SocketTransport
-        
-        nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID,
-                                                    &rv);
-        mEnt->mDidDNS = true;
-
-        if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsICancelable> cancelable;
-            dns->AsyncResolve(mEnt->mConnInfo->GetHost(), 0, this,
-                              NS_GetCurrentThread(),
-                              getter_AddRefs(cancelable));
-        }
-    }
 
     rv = SetupStreams(getter_AddRefs(mSocketTransport),
                       getter_AddRefs(mStreamIn),
@@ -1873,28 +1850,6 @@ nsHttpConnectionMgr::nsHalfOpenSocket::SetupBackupStreams()
         mBackupTransport = nsnull;
     }
     return rv;
-}
-
-
-NS_IMETHODIMP // nsIDNSListener
-nsHttpConnectionMgr::
-nsHalfOpenSocket::OnLookupComplete(nsICancelable *aRequest,
-                                   nsIDNSRecord *aRecord,
-                                   nsresult aStatus)
-{
-    NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
-
-    if (NS_SUCCEEDED(aStatus) && mEnt) {
-        aRecord->GetNextAddrAsString(mEnt->mCoalescingKey);
-        if (mEnt->mConnInfo->GetAnonymous())
-            mEnt->mCoalescingKey.Append("~A:");
-        else
-            mEnt->mCoalescingKey.Append("~.:");
-        mEnt->mCoalescingKey.AppendInt(mEnt->mConnInfo->Port());
-
-        gHttpHandler->ConnMgr()->ProcessSpdyPendingQ(mEnt);
-    }
-    return NS_OK;
 }
 
 void
@@ -2068,6 +2023,42 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
                                                          PRUint64 progress,
                                                          PRUint64 progressMax)
 {
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
+    // if we are doing spdy coalescing and haven't recorded the ip address
+    // for this entry before then make the hash key if our dns lookup
+    // just completed
+
+    if (gHttpHandler->IsSpdyEnabled() &&
+        gHttpHandler->CoalesceSpdy() &&
+        mEnt && mEnt->mConnInfo && mEnt->mConnInfo->UsingSSL() &&
+        !mEnt->mConnInfo->UsingHttpProxy() &&
+        mEnt->mCoalescingKey.IsEmpty() &&
+        status == nsISocketTransport::STATUS_CONNECTED_TO) {
+
+        PRNetAddr addr;
+        nsresult rv = mSocketTransport->GetPeerAddr(&addr);
+        if (NS_SUCCEEDED(rv)) {
+            mEnt->mCoalescingKey.SetCapacity(72);
+            PR_NetAddrToString(&addr, mEnt->mCoalescingKey.BeginWriting(), 64);
+            mEnt->mCoalescingKey.SetLength(
+                strlen(mEnt->mCoalescingKey.BeginReading()));
+
+            if (mEnt->mConnInfo->GetAnonymous())
+                mEnt->mCoalescingKey.AppendLiteral("~A:");
+            else
+                mEnt->mCoalescingKey.AppendLiteral("~.:");
+            mEnt->mCoalescingKey.AppendInt(mEnt->mConnInfo->Port());
+
+            LOG(("nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus "
+                 "STATUS_CONNECTED_TO Established New Coalescing Key for host "
+                 "%s [%s]", mEnt->mConnInfo->Host(),
+                 mEnt->mCoalescingKey.get()));
+
+            gHttpHandler->ConnMgr()->ProcessSpdyPendingQ(mEnt);
+        }
+    }
+
     if (mTransaction)
         mTransaction->OnTransportStatus(trans, status, progress);
 
