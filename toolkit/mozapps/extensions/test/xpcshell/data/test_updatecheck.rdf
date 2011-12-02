@@ -394,4 +394,26 @@
       </Seq>
     </em:updates>
   </Description>
+
+  <!-- Opt-in to strict compatibility checking -->
+  <Description about="urn:mozilla:extension:compat-strict-optin@tests.mozilla.org">
+    <em:updates>
+      <Seq>
+        <li>
+          <Description>
+            <em:version>1.0</em:version>
+            <em:targetApplication>
+              <Description>
+                <em:id>xpcshell@tests.mozilla.org</em:id>
+                <em:minVersion>0.1</em:minVersion>
+                <em:maxVersion>0.2</em:maxVersion>
+                <em:strictCompatibility>true</em:strictCompatibility>
+                <em:updateLink>https://localhost:4444/addons/test1.xpi</em:updateLink>
+              </Description>
+            </em:targetApplication>
+          </Description>
+        </li>
+      </Seq>
+    </em:updates>
+  </Description>
 </RDF>

@@ -1045,7 +1045,7 @@ function run_test_16() {
       do_check_eq(aInstall.version, "2.0");
     },
     onDownloadFailed: function(aInstall) {
-      end_test();
+      do_execute_soon(run_test_17);
     }
   });
 
@@ -1055,3 +1055,38 @@ function run_test_16() {
   gInternalManager.notify(null);
 }
 
+// Test that the update check correctly observes when an addon opts-in to
+// strict compatibility checking.
+function run_test_17() {
+
+  writeInstallRDFForExtension({
+    id: "addon11@tests.mozilla.org",
+    version: "1.0",
+    updateURL: "http://localhost:4444/data/test_update.rdf",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "0.1",
+      maxVersion: "0.2"
+    }],
+    name: "Test Addon 11",
+  }, profileDir);
+  restartManager();
+
+  AddonManager.getAddonByID("addon11@tests.mozilla.org", function(a11) {
+    do_check_neq(a11, null);
+
+    a11.findUpdates({
+      onCompatibilityUpdateAvailable: function() {
+        do_throw("Should have not have seen compatibility information");
+      },
+
+      onUpdateAvailable: function() {
+        do_throw("Should not have seen an available update");
+      },
+
+      onUpdateFinished: function() {
+        end_test();
+      }
+    }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+  });
+}
