@@ -3078,8 +3078,13 @@ nsUrlClassifierDBServiceWorker::FinishStream()
         static_cast<PRUint32>(gWorkingTimeThreshold)) {
       // We've spent long enough working that we should commit what we
       // have and hold off for a bit.
-      ApplyUpdate();
-
+      nsresult rv = ApplyUpdate();
+      if (NS_FAILED(rv)) {
+        if (rv == NS_ERROR_FILE_CORRUPTED) {
+          ResetDatabase();
+        }
+        return rv;
+      }
       nextStreamDelay = gDelayTime * 1000;
     }
   }
@@ -3191,7 +3196,13 @@ nsUrlClassifierDBServiceWorker::FinishUpdate()
   if (mConnection)
     mConnection->GetLastError(&errcode);
 
-  ApplyUpdate();
+  nsresult rv = ApplyUpdate();
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_FILE_CORRUPTED) {
+      ResetDatabase();
+    }
+    return rv;
+  }
 
   if (NS_SUCCEEDED(mUpdateStatus)) {
     mUpdateObserver->UpdateSuccess(mUpdateWait);
@@ -3453,7 +3464,12 @@ nsUrlClassifierDBServiceWorker::OpenDb()
 
   LOG(("loading Prefix Set\n"));
   rv = LoadPrefixSet(mPSFile);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_FILE_CORRUPTED) {
+      ResetDatabase();
+    }
+    return rv;
+  }
 
   return NS_OK;
 }
@@ -3561,6 +3577,11 @@ nsresult nsUrlClassifierStore::ReadPrefixes(nsTArray<PRUint32>& array,
 
     array.AppendElement(keyedVal);
     pcnt++;
+    // Normal DB size is about 500k entries. If we are getting 10x
+    // as much, the database must be corrupted.
+    if (pcnt > 5000000) {
+      return NS_ERROR_FILE_CORRUPTED;
+    }
   }
 
   LOG(("SB prefixes: %d fulldomain: %d\n", pcnt, fcnt));
@@ -3648,7 +3669,8 @@ nsUrlClassifierDBServiceWorker::LoadPrefixSet(nsCOMPtr<nsIFile> & aFile)
   }
   if (!exists || NS_FAILED(rv)) {
     LOG(("no (usable) stored PrefixSet found, constructing from store"));
-    ConstructPrefixSet();
+    rv = ConstructPrefixSet();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
 #ifdef DEBUG
