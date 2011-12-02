@@ -1472,7 +1472,7 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
                         return JS_FALSE;
                     str = NULL;
                 } else {
-                    str = js_ValueToString(cx, key);
+                    str = ToString(cx, key);
                     if (!str)
                         return JS_FALSE;
                 }

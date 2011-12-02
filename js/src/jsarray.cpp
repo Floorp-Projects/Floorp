@@ -1870,7 +1870,7 @@ array_join(JSContext *cx, uintN argc, Value *vp)
     if (args.length() == 0 || args[0].isUndefined()) {
         str = NULL;
     } else {
-        str = js_ValueToString(cx, args[0]);
+        str = ToString(cx, args[0]);
         if (!str)
             return JS_FALSE;
         args[0].setString(str);
@@ -2177,7 +2177,7 @@ js::array_sort(JSContext *cx, uintN argc, Value *vp)
                     if (!JS_CHECK_OPERATION_LIMIT(cx))
                         return false;
                     const Value &v = vec[i];
-                    JSString *str = js_ValueToString(cx, v);
+                    JSString *str = ToString(cx, v);
                     if (!str)
                         return false;
 

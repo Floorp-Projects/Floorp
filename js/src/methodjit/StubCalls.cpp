@@ -983,7 +983,7 @@ stubs::Add(VMFrame &f)
             if (lIsString) {
                 lstr = lval.toString();
             } else {
-                lstr = js_ValueToString(cx, lval);
+                lstr = ToString(cx, lval);
                 if (!lstr)
                     THROW();
                 regs.sp[-2].setString(lstr);
@@ -991,7 +991,7 @@ stubs::Add(VMFrame &f)
             if (rIsString) {
                 rstr = rval.toString();
             } else {
-                rstr = js_ValueToString(cx, rval);
+                rstr = ToString(cx, rval);
                 if (!rstr)
                     THROW();
                 regs.sp[-1].setString(rstr);

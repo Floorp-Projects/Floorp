@@ -585,7 +585,7 @@ js_IsXMLName(JSContext *cx, jsval v)
         name = JSVAL_TO_OBJECT(v)->getQNameLocalName();
     } else {
         older = JS_SetErrorReporter(cx, NULL);
-        JSString *str = js_ValueToString(cx, v);
+        JSString *str = ToString(cx, v);
         if (str)
             name = str->ensureLinear(cx);
         JS_SetErrorReporter(cx, older);
@@ -659,7 +659,7 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
             obj->setNameURI(uri);
             obj->setNamePrefix(uriobj->getNamePrefix());
         } else {
-            JSString *str = js_ValueToString(cx, urival);
+            JSString *str = ToString(cx, urival);
             if (!str)
                 return JS_FALSE;
             uri = str->ensureLinear(cx);
@@ -671,7 +671,7 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
         }
     } else if (argc == 2) {
         if (!isQName || !(uri = uriobj->getNameURI())) {
-            JSString *str = js_ValueToString(cx, urival);
+            JSString *str = ToString(cx, urival);
             if (!str)
                 return JS_FALSE;
             uri = str->ensureLinear(cx);
@@ -683,7 +683,7 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
         prefixval = argv[0];
         if (uri->empty()) {
             if (!JSVAL_IS_VOID(prefixval)) {
-                JSString *str = js_ValueToString(cx, prefixval);
+                JSString *str = ToString(cx, prefixval);
                 if (!str)
                     return JS_FALSE;
                 if (!str->empty()) {
@@ -698,7 +698,7 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
         } else if (JSVAL_IS_VOID(prefixval) || !js_IsXMLName(cx, prefixval)) {
             obj->clearNamePrefix();
         } else {
-            JSString *str = js_ValueToString(cx, prefixval);
+            JSString *str = ToString(cx, prefixval);
             if (!str)
                 return JS_FALSE;
             prefix = str->ensureLinear(cx);
@@ -821,7 +821,7 @@ QNameHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv, jsval *rval)
             prefix = obj2->getNamePrefix();
         } else {
             JS_ASSERT(argc > 1);
-            JSString *str = js_ValueToString(cx, nsval);
+            JSString *str = ToString(cx, nsval);
             if (!str)
                 return JS_FALSE;
             uri = str->ensureLinear(cx);
@@ -1907,7 +1907,7 @@ ToXML(JSContext *cx, jsval v)
         }
     }
 
-    str = js_ValueToString(cx, v);
+    str = ToString(cx, v);
     if (!str)
         return NULL;
     if (str->empty()) {
@@ -1988,7 +1988,7 @@ ToXMLList(JSContext *cx, jsval v)
         }
     }
 
-    str = js_ValueToString(cx, v);
+    str = ToString(cx, v);
     if (!str)
         return NULL;
     if (str->empty()) {
@@ -2799,7 +2799,7 @@ ToXMLString(JSContext *cx, jsval v, uint32 toSourceFlag)
     }
 
     if (JSVAL_IS_BOOLEAN(v) || JSVAL_IS_NUMBER(v))
-        return js_ValueToString(cx, v);
+        return ToString(cx, v);
 
     if (JSVAL_IS_STRING(v)) {
         StringBuffer sb(cx);
@@ -2810,7 +2810,7 @@ ToXMLString(JSContext *cx, jsval v, uint32 toSourceFlag)
     if (!obj->isXML()) {
         if (!ToPrimitive(cx, JSTYPE_STRING, &v))
             return NULL;
-        JSString *str = js_ValueToString(cx, v);
+        JSString *str = ToString(cx, v);
         if (!str)
             return NULL;
         StringBuffer sb(cx);
@@ -2934,7 +2934,7 @@ ToXMLName(JSContext *cx, jsval v, jsid *funidp)
             name = cx->runtime->atomState.starAtom;
             goto construct;
         }
-        name = js_ValueToString(cx, v);
+        name = ToStringSlow(cx, v);
         if (!name)
             return NULL;
     }
@@ -3535,7 +3535,7 @@ Insert(JSContext *cx, JSXML *xml, uint32 i, jsval v)
         }
     }
     if (!vxml) {
-        str = js_ValueToString(cx, v);
+        str = ToString(cx, v);
         if (!str)
             return JS_FALSE;
 
@@ -3614,7 +3614,7 @@ Replace(JSContext *cx, JSXML *xml, uint32 i, jsval v)
         break;
 
       default:
-        str = js_ValueToString(cx, v);
+        str = ToString(cx, v);
         if (!str)
             return JS_FALSE;
 
@@ -3881,7 +3881,7 @@ KidToString(JSContext *cx, JSXML *xml, uint32 index)
     kidobj = js_GetXMLObject(cx, kid);
     if (!kidobj)
         return NULL;
-    return js_ValueToString(cx, ObjectValue(*kidobj));
+    return ToString(cx, ObjectValue(*kidobj));
 }
 
 /* Forward declared -- its implementation uses other statics that call it. */
@@ -5288,8 +5288,8 @@ js_TestXMLEquality(JSContext *cx, const Value &v1, const Value &v2, JSBool *bp)
                  HasSimpleContent(xml))) {
                 ok = js_EnterLocalRootScope(cx);
                 if (ok) {
-                    ok = (str = js_ValueToString(cx, ObjectValue(*obj))) &&
-                         (vstr = js_ValueToString(cx, v));
+                    ok = (str = ToStringSlow(cx, ObjectValue(*obj))) &&
+                         (vstr = ToString(cx, v));
                     if (ok)
                         ok = EqualStrings(cx, str, vstr, bp);
                     js_LeaveLocalRootScope(cx);
@@ -5302,12 +5302,12 @@ js_TestXMLEquality(JSContext *cx, const Value &v1, const Value &v2, JSBool *bp)
         ok = js_EnterLocalRootScope(cx);
         if (ok) {
             if (HasSimpleContent(xml)) {
-                ok = (str = js_ValueToString(cx, ObjectValue(*obj))) &&
-                     (vstr = js_ValueToString(cx, v));
+                ok = (str = ToString(cx, ObjectValue(*obj))) &&
+                     (vstr = ToString(cx, v));
                 if (ok)
                     ok = EqualStrings(cx, str, vstr, bp);
             } else if (JSVAL_IS_STRING(v) || JSVAL_IS_NUMBER(v)) {
-                str = js_ValueToString(cx, ObjectValue(*obj));
+                str = ToString(cx, ObjectValue(*obj));
                 if (!str) {
                     ok = JS_FALSE;
                 } else if (JSVAL_IS_STRING(v)) {
@@ -6214,7 +6214,7 @@ xml_namespace(JSContext *cx, uintN argc, jsval *vp)
     if (argc == 0) {
         prefix = NULL;
     } else {
-        JSString *str = js_ValueToString(cx, vp[2]);
+        JSString *str = ToString(cx, vp[2]);
         if (!str)
             return false;
         prefix = str->ensureLinear(cx);
