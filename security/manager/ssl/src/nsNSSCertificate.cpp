@@ -939,26 +939,6 @@ nsNSSCertificate::GetAllTokenNames(PRUint32 *aLength, PRUnichar*** aTokenNames)
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::IsValidForHostname(const nsACString & aHostName,
-                                     bool *retval)
-{
-  *retval = false;
-
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
-    return NS_ERROR_NOT_AVAILABLE;
-
-  if (!mCert)
-    return NS_OK;
-    
-  if (CERT_VerifyCertName(mCert,
-                          PromiseFlatCString(aHostName).get()) == SECSuccess)
-    *retval = true;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNSSCertificate::GetSubjectName(nsAString &_subjectName)
 {
   nsNSSShutDownPreventionLock locker;
