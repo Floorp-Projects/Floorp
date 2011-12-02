@@ -14,13 +14,14 @@ function test() {
     gManagerWindow = aWindow;
 
     var searchBox = gManagerWindow.document.getElementById("header-search");
-    searchBox.addEventListener("focus", function() {
+    function focusHandler() {
       searchBox.blur();
       focusCount++;
-    });
+    }
+    searchBox.addEventListener("focus", focusHandler);
     f_key_test();
     slash_key_test();
-    searchBox.removeEventListener("focus");
+    searchBox.removeEventListener("focus", focusHandler);
     end_test();
   });
 }
