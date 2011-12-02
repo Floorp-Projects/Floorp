@@ -655,6 +655,13 @@ abstract public class GeckoApp
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
+
+        if (Tabs.getInstance().isSelectedTab(tab)) {
+            if (uri.equals("about:home"))
+                showAboutHome();
+            else 
+                hideAboutHome();
+        }
         
         String oldBaseURI = tab.getURL();
         tab.updateURL(uri);
@@ -873,8 +880,6 @@ abstract public class GeckoApp
                         mBrowserToolbar.setVisibility(View.VISIBLE);
                     }
                 });
-            } else if (event.equals("AboutHome:Show")) {
-                showAboutHome();
             } else if (event.equals("AgentMode:Changed")) {
                 Tab.AgentMode agentMode = message.getString("agentMode").equals("mobile") ? Tab.AgentMode.MOBILE : Tab.AgentMode.DESKTOP;
                 int tabId = message.getInt("tabId");
@@ -976,9 +981,8 @@ abstract public class GeckoApp
 
     void handleAddTab(final int tabId, final String uri, final boolean selected) {
         final Tab tab = Tabs.getInstance().addTab(tabId, uri);
-        if (selected) {
+        if (selected)
             Tabs.getInstance().selectTab(tabId);
-        }
 
         mMainHandler.post(new Runnable() { 
             public void run() {
@@ -1364,7 +1368,6 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("AgentMode:Changed", GeckoApp.mAppContext);
-        GeckoAppShell.registerGeckoEventListener("AboutHome:Show", GeckoApp.mAppContext);
 
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -1909,7 +1912,6 @@ abstract public class GeckoApp
     }
 
     public void loadUrl(String url, AwesomeBar.Type type) {
-        hideAboutHome();
         mBrowserToolbar.setTitle(url);
         Log.d(LOGTAG, type.name());
         if (type == AwesomeBar.Type.ADD) {
