@@ -53,6 +53,7 @@
 #include "nsProxyRelease.h"
 #include "PSMRunnable.h"
 #include "nsIConsoleService.h"
+#include "nsIHttpChannelInternal.h"
 
 #include "ssl.h"
 #include "ocsp.h"
@@ -130,6 +131,16 @@ nsHTTPDownloadEvent::Run()
     rv = uploadChannel->SetUploadStream(uploadStream, 
                                         mRequestSession->mPostContentType,
                                         -1);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Do not use SPDY for internal security operations. It could result
+  // in the silent upgrade to ssl, which in turn could require an SSL
+  // operation to fufill something like a CRL fetch, which is an
+  // endless loop.
+  nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(chan);
+  if (internalChannel) {
+    rv = internalChannel->SetAllowSpdy(false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
