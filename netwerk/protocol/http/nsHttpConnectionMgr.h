@@ -177,7 +177,6 @@ private:
           : mConnInfo(ci),
             mUsingSpdy(false),
             mTestedSpdy(false),
-            mSpdyRedir(false),
             mSpdyPreferred(false)
         {
             NS_ADDREF(mConnInfo);
@@ -196,14 +195,17 @@ private:
         // to build the hash key for hosts in the same ip pool.
         //
         // When a set of hosts are coalesced together one of them is marked
-        // mSpdyPreferred, and the others are marked mSpdyRedir. The mapping is
-        // maintained in the conection manager mSpdyPreferred hash.
+        // mSpdyPreferred. The mapping is maintained in the connection mananger
+        // mSpdyPreferred hash.
         //
         nsCString mCoalescingKey;
 
+        // To have the UsingSpdy flag means some host with the same hash information
+        // has done NPN=spdy/2 at some point. It does not mean every connection
+        // is currently using spdy.
         bool mUsingSpdy;
+
         bool mTestedSpdy;
-        bool mSpdyRedir;
         bool mSpdyPreferred;
         nsCOMPtr<nsIX509Cert3> mCert;
     };
@@ -325,6 +327,9 @@ private:
     void               RemoveSpdyPreferred(nsACString &aDottedDecimal);
     nsHttpConnection  *GetSpdyPreferredConn(nsConnectionEntry *ent);
     nsDataHashtable<nsCStringHashKey, nsConnectionEntry *>   mSpdyPreferredHash;
+    nsConnectionEntry *LookupConnectionEntry(nsHttpConnectionInfo *ci,
+                                             nsHttpConnection *conn,
+                                             nsHttpTransaction *trans);
 
     void               ProcessSpdyPendingQ(nsConnectionEntry *ent);
     void               ProcessSpdyPendingQ();

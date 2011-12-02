@@ -400,6 +400,50 @@ nsHttpConnectionMgr::ProcessPendingQ(nsHttpConnectionInfo *ci)
     return rv;
 }
 
+// Given a nsHttpConnectionInfo find the connection entry object that
+// contains either the nshttpconnection or nshttptransaction parameter.
+// Normally this is done by the hashkey lookup of connectioninfo,
+// but if spdy coalescing is in play it might be found in a redirected
+// entry
+nsHttpConnectionMgr::nsConnectionEntry *
+nsHttpConnectionMgr::LookupConnectionEntry(nsHttpConnectionInfo *ci,
+                                           nsHttpConnection *conn,
+                                           nsHttpTransaction *trans)
+{
+    if (!ci)
+        return nsnull;
+
+    nsConnectionEntry *ent = mCT.Get(ci->HashKey());
+    
+    // If there is no sign of coalescing (or it is disabled) then just
+    // return the primary hash lookup
+    if (!gHttpHandler->IsSpdyEnabled() || !gHttpHandler->CoalesceSpdy() ||
+        !ent || !ent->mUsingSpdy || ent->mCoalescingKey.IsEmpty())
+        return ent;
+
+    // If there is no preferred coalescing entry for this host (or the
+    // preferred entry is the one that matched the mCT hash lookup) then
+    // there is only option
+    nsConnectionEntry *preferred = mSpdyPreferredHash.Get(ent->mCoalescingKey);
+    if (!preferred || (preferred == ent))
+        return ent;
+
+    if (conn) {
+        // The connection could be either in preferred or ent. It is most
+        // likely the only active connection in preferred - so start with that.
+        if (preferred->mActiveConns.Contains(conn))
+            return preferred;
+        if (preferred->mIdleConns.Contains(conn))
+            return preferred;
+    }
+    
+    if (trans && preferred->mPendingQ.Contains(trans))
+        return preferred;
+    
+    // Neither conn nor trans found in preferred, use the default entry
+    return ent;
+}
+
 nsresult
 nsHttpConnectionMgr::CloseIdleConnection(nsHttpConnection *conn)
 {
@@ -407,11 +451,11 @@ nsHttpConnectionMgr::CloseIdleConnection(nsHttpConnection *conn)
     LOG(("nsHttpConnectionMgr::CloseIdleConnection %p conn=%p",
          this, conn));
 
-    nsHttpConnectionInfo *ci = conn->ConnectionInfo();
-    if (!ci)
+    if (!conn->ConnectionInfo())
         return NS_ERROR_UNEXPECTED;
 
-    nsConnectionEntry *ent = mCT.Get(ci->HashKey());
+    nsConnectionEntry *ent = LookupConnectionEntry(conn->ConnectionInfo(),
+                                                   conn, nsnull);
 
     if (!ent || !ent->mIdleConns.RemoveElement(conn))
         return NS_ERROR_UNEXPECTED;
@@ -429,7 +473,9 @@ nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection *conn,
 {
     NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     
-    nsConnectionEntry *ent = mCT.Get(conn->ConnectionInfo()->HashKey());
+    nsConnectionEntry *ent = LookupConnectionEntry(conn->ConnectionInfo(),
+                                                   conn, nsnull);
+
     NS_ABORT_IF_FALSE(ent, "no connection entry");
     if (!ent)
         return;
@@ -464,13 +510,14 @@ nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection *conn,
     if (!preferred) {
         ent->mSpdyPreferred = true;
         SetSpdyPreferred(ent);
-        ent->mSpdyRedir = false;
+        preferred = ent;
     }
     else if (preferred != ent) {
         // A different hostname is the preferred spdy host for this
         // IP address.
-        ent->mSpdyRedir = true;
+        ent->mUsingSpdy = true;
         conn->DontReuse();
+        ent->mCert = nsnull;
     }
 
     // If this is a preferred host for coalescing (aka ip pooling) then
@@ -478,30 +525,31 @@ nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection *conn,
     // extra level of verification when deciding that
     // connections from other hostnames are redirected to the preferred host.
     //
+    if (preferred == ent) {
+        // Even if mCert is already set update the reference in case the
+        // reference is changing.
+        ent->mCert = nsnull;
 
-    // Even if mCert is already set update the reference in case the
-    // reference is changing.
-    ent->mCert = nsnull;
+        nsCOMPtr<nsISupports> securityInfo;
+        nsCOMPtr<nsISSLStatusProvider> sslStatusProvider;
+        nsCOMPtr<nsISSLStatus> sslStatus;
+        nsCOMPtr<nsIX509Cert> cert;
 
-    nsCOMPtr<nsISupports> securityInfo;
-    nsCOMPtr<nsISSLStatusProvider> sslStatusProvider;
-    nsCOMPtr<nsISSLStatus> sslStatus;
-    nsCOMPtr<nsIX509Cert> cert;
+        conn->GetSecurityInfo(getter_AddRefs(securityInfo));
+        if (securityInfo)
+            sslStatusProvider = do_QueryInterface(securityInfo);
 
-    conn->GetSecurityInfo(getter_AddRefs(securityInfo));
-    if (securityInfo)
-        sslStatusProvider = do_QueryInterface(securityInfo);
+        if (sslStatusProvider)
+            sslStatusProvider->
+                GetSSLStatus(getter_AddRefs(sslStatus));
 
-    if (sslStatusProvider)
-        sslStatusProvider->
-            GetSSLStatus(getter_AddRefs(sslStatus));
+        if (sslStatus)
+            sslStatus->GetServerCert(getter_AddRefs(cert));
 
-    if (sslStatus)
-        sslStatus->GetServerCert(getter_AddRefs(cert));
-
-    if (cert)
-        ent->mCert = do_QueryInterface(cert);
-
+        if (cert)
+            ent->mCert = do_QueryInterface(cert);
+    }
+    
     ProcessSpdyPendingQ();
 }
 
@@ -582,12 +630,42 @@ nsHttpConnectionMgr::GetSpdyPreferred(nsConnectionEntry *aOriginalEntry)
     nsConnectionEntry *preferred =
         mSpdyPreferredHash.Get(aOriginalEntry->mCoalescingKey);
 
+    // if there is no redirection no cert validation is required
     if (preferred == aOriginalEntry)
-        return aOriginalEntry;   /* no redirection so no cert check required */
+        return aOriginalEntry;
 
-    if (!preferred || !preferred->mCert)
-        return nsnull;                         /* no ip pooling */
+    // if there is no server cert stored for the destination host
+    // then no validation can be made and we need to skip pooling
+    if (!preferred || !preferred->mCert || !preferred->mUsingSpdy)
+        return nsnull;                         
 
+    // if there is not an active spdy session in this entry then
+    // we cannot pool because the cert upon activation may not
+    // be the same as the old one. Active sessions are prohibited
+    // from changing certs.
+
+    bool activeSpdy = false;
+
+    for (PRUint32 index = 0; index < preferred->mActiveConns.Length(); ++index)
+        if (preferred->mActiveConns[index]->CanDirectlyActivate()) {
+            activeSpdy = true;
+            break;
+        }
+    
+    if (!activeSpdy) {
+        // remove the preferred status of this entry if it cannot be
+        // used for pooling.
+        preferred->mSpdyPreferred = false;
+        RemoveSpdyPreferred(preferred->mCoalescingKey);
+        LOG(("nsHttpConnectionMgr::GetSpdyPreferredConnection "
+             "preferred host mapping %s to %s removed due to inactivity.\n",
+             aOriginalEntry->mConnInfo->Host(),
+             preferred->mConnInfo->Host()));
+
+        return nsnull;
+    }
+
+    // Check that the server cert supports redirection
     nsresult rv;
     bool validCert = false;
 
@@ -599,9 +677,10 @@ nsHttpConnectionMgr::GetSpdyPreferred(nsConnectionEntry *aOriginalEntry)
              "Host %s has cert which cannot be confirmed to use "
              "with %s connections",
              preferred->mConnInfo->Host(), aOriginalEntry->mConnInfo->Host()));
-        return nsnull;                            /* no ip pooling */
+        return nsnull;
     }
 
+    // IP pooling confirmed
     LOG(("nsHttpConnectionMgr::GetSpdyPreferredConnection "
          "Host %s has cert valid for %s connections",
          preferred->mConnInfo->Host(), aOriginalEntry->mConnInfo->Host()));
@@ -1000,10 +1079,14 @@ nsHttpConnectionMgr::GetConnection(nsConnectionEntry *ent,
 
     if (trans->Caps() & NS_HTTP_ALLOW_KEEPALIVE) {
 
-        conn = GetSpdyPreferredConn(ent);
-        if (conn)
-            addConnToActiveList = false;
-
+        // if willing to use spdy look for an active spdy connections
+        // before considering idle http ones.
+        if (gHttpHandler->IsSpdyEnabled()) {
+            conn = GetSpdyPreferredConn(ent);
+            if (conn)
+                addConnToActiveList = false;
+        }
+        
         // search the idle connection list. Each element in the list
         // has a reference, so if we remove it from the list into a local
         // ptr, that ptr now owns the reference
@@ -1037,21 +1120,16 @@ nsHttpConnectionMgr::GetConnection(nsConnectionEntry *ent,
         if (onlyReusedConnection)
             return;
         
-        // If this is a possible Spdy connection we need to limit the number of
-        // connections outstanding to 1 while we wait for the spdy/https
-        // ReportSpdyConnection()
-    
         if (gHttpHandler->IsSpdyEnabled() &&
             ent->mConnInfo->UsingSSL() &&
             !ent->mConnInfo->UsingHttpProxy())
         {
-            nsConnectionEntry *preferred = GetSpdyPreferred(ent);
-            if (preferred)
-                ent = preferred;
-
+            // If this is a possible Spdy connection we need to limit the number
+            // of connections outstanding to 1 while we wait for the spdy/https
+            // ReportSpdyConnection()
+    
             if ((!ent->mTestedSpdy || ent->mUsingSpdy) &&
-                (ent->mSpdyRedir || ent->mHalfOpens.Length() ||
-                 ent->mActiveConns.Length()))
+                (ent->mHalfOpens.Length() || ent->mActiveConns.Length()))
                 return;
         }
         
@@ -1143,6 +1221,10 @@ nsHttpConnectionMgr::DispatchTransaction(nsConnectionEntry *ent,
     PRInt32 priority = aTrans->Priority();
 
     if (conn->UsingSpdy()) {
+        LOG(("Spdy Dispatch Transaction via Activate(). Transaction host = %s,"
+             "Connection host = %s\n",
+             aTrans->ConnectionInfo()->Host(),
+             conn->ConnectionInfo()->Host()));
         rv = conn->Activate(aTrans, caps, priority);
         NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "SPDY Cannot Fail Dispatch");
         return rv;
@@ -1263,10 +1345,11 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
     // SPDY coalescing of hostnames means we might redirect from this
     // connection entry onto the preferred one.
     nsConnectionEntry *preferredEntry = GetSpdyPreferred(ent);
-    if (preferredEntry) {
+    if (preferredEntry && (preferredEntry != ent)) {
         LOG(("nsHttpConnectionMgr::ProcessNewTransaction trans=%p "
              "redirected via coalescing from %s to %s\n", trans,
              ent->mConnInfo->Host(), preferredEntry->mConnInfo->Host()));
+
         ent = preferredEntry;
     }
 
@@ -1308,6 +1391,12 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
 
     return rv;
 }
+
+// This function tries to dispatch the pending spdy transactions on
+// the connection entry sent in as an argument. It will do so on the
+// active spdy connection either in that same entry or in the
+// redirected 'preferred' entry for the same coalescing hash key if
+// coalescing is enabled.
 
 void
 nsHttpConnectionMgr::ProcessSpdyPendingQ(nsConnectionEntry *ent)
@@ -1357,18 +1446,10 @@ nsHttpConnectionMgr::GetSpdyPreferredConn(nsConnectionEntry *ent)
 
     nsConnectionEntry *preferred = GetSpdyPreferred(ent);
 
-    // this entry is spdy-enabled if it is a redirect to another spdy host
-    if (preferred && preferred != ent) {
+    // this entry is spdy-enabled if it is involved in a redirect
+    if (preferred)
         ent->mUsingSpdy = true;
-        ent->mSpdyRedir = true;
-    }
-    else {
-        ent->mSpdyRedir = false;
-        // don't clear usingSpdy, that will be reset in ReportSpdyConnection
-        // if it no longer applies
-    }
-
-    if (!preferred)
+    else
         preferred = ent;
     
     nsHttpConnection *conn = nsnull;
@@ -1422,8 +1503,9 @@ nsHttpConnectionMgr::OnMsgReschedTransaction(PRInt32 priority, void *param)
     nsHttpTransaction *trans = (nsHttpTransaction *) param;
     trans->SetPriority(priority);
 
-    nsHttpConnectionInfo *ci = trans->ConnectionInfo();
-    nsConnectionEntry *ent = mCT.Get(ci->HashKey());
+    nsConnectionEntry *ent = LookupConnectionEntry(trans->ConnectionInfo(),
+                                                   nsnull, trans);
+
     if (ent) {
         PRInt32 index = ent->mPendingQ.IndexOf(trans);
         if (index >= 0) {
@@ -1450,8 +1532,9 @@ nsHttpConnectionMgr::OnMsgCancelTransaction(PRInt32 reason, void *param)
     if (conn && !trans->IsDone())
         conn->CloseTransaction(trans, reason);
     else {
-        nsHttpConnectionInfo *ci = trans->ConnectionInfo();
-        nsConnectionEntry *ent = mCT.Get(ci->HashKey());
+        nsConnectionEntry *ent = LookupConnectionEntry(trans->ConnectionInfo(),
+                                                       nsnull, trans);
+
         if (ent) {
             PRInt32 index = ent->mPendingQ.IndexOf(trans);
             if (index >= 0) {
@@ -1518,13 +1601,18 @@ nsHttpConnectionMgr::OnMsgReclaimConnection(PRInt32, void *param)
     // 3) post event to process the pending transaction queue
     //
 
-    nsHttpConnectionInfo *ci = conn->ConnectionInfo();
-    NS_ADDREF(ci);
+    nsConnectionEntry *ent = LookupConnectionEntry(conn->ConnectionInfo(),
+                                                   conn, nsnull);
+    nsHttpConnectionInfo *ci = nsnull;
 
-    nsConnectionEntry *ent = mCT.Get(ci->HashKey());
+    if (!ent) {
+        // this should never happen
+        NS_ASSERTION(ent, "no connection entry");
+        NS_ADDREF(ci = conn->ConnectionInfo());
+    }
+    else {
+        NS_ADDREF(ci = ent->mConnInfo);
 
-    NS_ASSERTION(ent, "no connection entry");
-    if (ent) {
         // If the connection is in the active list, remove that entry
         // and the reference held by the mActiveConns list.
         // This is never the final reference on conn as the event context
