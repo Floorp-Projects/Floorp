@@ -40,20 +40,12 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
+const MIGRATOR = Ci.nsIBrowserProfileMigrator;
 
 const LOCAL_FILE_CID = "@mozilla.org/file/local;1";
 const FILE_INPUT_STREAM_CID = "@mozilla.org/network/file-input-stream;1";
 
 const BUNDLE_MIGRATION = "chrome://browser/locale/migration/migration.properties";
-
-const MIGRATE_ALL = 0x0000;
-const MIGRATE_SETTINGS = 0x0001;
-const MIGRATE_COOKIES = 0x0002;
-const MIGRATE_HISTORY = 0x0004;
-const MIGRATE_FORMDATA = 0x0008;
-const MIGRATE_PASSWORDS = 0x0010;
-const MIGRATE_BOOKMARKS = 0x0020;
-const MIGRATE_OTHERDATA = 0x0040;
 
 const S100NS_FROM1601TO1970 = 0x19DB1DED53E8000;
 const S100NS_PER_MS = 10;
@@ -142,7 +134,7 @@ ChromeProfileMigrator.prototype = {
    * Notify to observers to start migration
    *
    * @param   aType
-   *          notification type such as MIGRATE_BOOKMARKS
+   *          notification type such as MIGRATOR.BOOKMARKS
    */
   _notifyStart : function Chrome_notifyStart(aType)
   {
@@ -154,7 +146,7 @@ ChromeProfileMigrator.prototype = {
    * Notify observers that a migration error occured with an item
    *
    * @param   aType
-   *          notification type such as MIGRATE_BOOKMARKS
+   *          notification type such as MIGRATOR.BOOKMARKS
    */
   _notifyError : function Chrome_notifyError(aType)
   {
@@ -166,7 +158,7 @@ ChromeProfileMigrator.prototype = {
    * If all items are finished, it sends migration end notification.
    *
    * @param   aType
-   *          notification type such as MIGRATE_BOOKMARKS
+   *          notification type such as MIGRATOR.BOOKMARKS
    */
   _notifyCompleted : function Chrome_notifyIfCompleted(aType)
   {
@@ -182,7 +174,7 @@ ChromeProfileMigrator.prototype = {
    */
   _migrateBookmarks : function Chrome_migrateBookmarks()
   {
-    this._notifyStart(MIGRATE_BOOKMARKS);
+    this._notifyStart(MIGRATOR.BOOKMARKS);
 
     try {
       PlacesUtils.bookmarks.runInBatchMode({
@@ -194,7 +186,7 @@ ChromeProfileMigrator.prototype = {
 
           NetUtil.asyncFetch(file, function(aInputStream, aResultCode) {
             if (!Components.isSuccessCode(aResultCode)) {
-              migrator._notifyCompleted(MIGRATE_BOOKMARKS);
+              migrator._notifyCompleted(MIGRATOR.BOOKMARKS);
               return;
             }
 
@@ -232,14 +224,14 @@ ChromeProfileMigrator.prototype = {
               insertBookmarkItems(parentId, roots.other.children);
             }
 
-            migrator._notifyCompleted(MIGRATE_BOOKMARKS);
+            migrator._notifyCompleted(MIGRATOR.BOOKMARKS);
           });
         }
       }, null);
     } catch (e) {
       Cu.reportError(e);
-      this._notifyError(MIGRATE_BOOKMARKS);
-      this._notifyCompleted(MIGRATE_BOOKMARKS);
+      this._notifyError(MIGRATOR.BOOKMARKS);
+      this._notifyCompleted(MIGRATOR.BOOKMARKS);
     }
   },
 
@@ -248,7 +240,7 @@ ChromeProfileMigrator.prototype = {
    */
   _migrateHistory : function Chrome_migrateHistory()
   {
-    this._notifyStart(MIGRATE_HISTORY);
+    this._notifyStart(MIGRATOR.HISTORY);
 
     try {
       PlacesUtils.history.runInBatchMode({
@@ -305,7 +297,7 @@ ChromeProfileMigrator.prototype = {
 
             handleCompletion : function(aReason) {
               this._db.asyncClose();
-              this._self._notifyCompleted(MIGRATE_HISTORY);
+              this._self._notifyCompleted(MIGRATOR.HISTORY);
             }
           });
           stmt.finalize();
@@ -313,8 +305,8 @@ ChromeProfileMigrator.prototype = {
       }, null);
     } catch (e) {
       Cu.reportError(e);
-      this._notifyError(MIGRATE_HISTORY);
-      this._notifyCompleted(MIGRATE_HISTORY);
+      this._notifyError(MIGRATOR.HISTORY);
+      this._notifyCompleted(MIGRATOR.HISTORY);
     }
   },
 
@@ -323,7 +315,7 @@ ChromeProfileMigrator.prototype = {
    */
   _migrateCookies : function Chrome_migrateCookies()
   {
-    this._notifyStart(MIGRATE_COOKIES);
+    this._notifyStart(MIGRATOR.COOKIES);
 
     try {
       // Access sqlite3 database of Chrome's cookie
@@ -369,14 +361,14 @@ ChromeProfileMigrator.prototype = {
 
         handleCompletion : function(aReason) {
           this._db.asyncClose();
-          this._self._notifyCompleted(MIGRATE_COOKIES);
+          this._self._notifyCompleted(MIGRATOR.COOKIES);
         },
       });
       stmt.finalize();
     } catch (e) {
       Cu.reportError(e);
-      this._notifyError(MIGRATE_COOKIES);
-      this._notifyCompleted(MIGRATE_COOKIES);
+      this._notifyError(MIGRATOR.COOKIES);
+      this._notifyCompleted(MIGRATOR.COOKIES);
     }
   },
 
@@ -409,13 +401,13 @@ ChromeProfileMigrator.prototype = {
     // notification is sent
     this._pendingCount = 1;
 
-    if (aItems & MIGRATE_HISTORY)
+    if (aItems & MIGRATOR.HISTORY)
       this._migrateHistory();
 
-    if (aItems & MIGRATE_COOKIES)
+    if (aItems & MIGRATOR.COOKIES)
       this._migrateCookies();
 
-    if (aItems & MIGRATE_BOOKMARKS)
+    if (aItems & MIGRATOR.BOOKMARKS)
       this._migrateBookmarks();
 
     if (--this._pendingCount == 0) {
@@ -452,7 +444,7 @@ ChromeProfileMigrator.prototype = {
       file.append("Bookmarks");
       if (file.exists()) {
         this._paths.bookmarks = file.path;
-        result += MIGRATE_BOOKMARKS;
+        result += MIGRATOR.BOOKMARKS;
       }
     } catch (e) {
       Cu.reportError(e);
@@ -471,7 +463,7 @@ ChromeProfileMigrator.prototype = {
       file.append("History");
       if (file.exists()) {
         this._paths.history = file.path;
-        result += MIGRATE_HISTORY;
+        result += MIGRATOR.HISTORY;
       }
     } catch (e) {
       Cu.reportError(e);
@@ -482,7 +474,7 @@ ChromeProfileMigrator.prototype = {
       file.append("Cookies");
       if (file.exists()) {
         this._paths.cookies = file.path;
-        result += MIGRATE_COOKIES;
+        result += MIGRATOR.COOKIES;
       }
     } catch (e) {
       Cu.reportError(e);
