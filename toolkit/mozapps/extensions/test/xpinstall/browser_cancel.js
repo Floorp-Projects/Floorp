@@ -5,6 +5,7 @@
 // ----------------------------------------------------------------------------
 // Tests that cancelling multiple installs doesn't fail
 function test() {
+  ignoreAllUncaughtExceptions();
   Harness.installConfirmCallback = confirm_install;
   Harness.installEndedCallback = install_ended;
   Harness.installsCompletedCallback = finish_test;

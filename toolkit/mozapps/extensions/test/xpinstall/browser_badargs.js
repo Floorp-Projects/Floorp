@@ -3,6 +3,7 @@
 // exception
 function test() {
   waitForExplicitFinish();
+  ignoreAllUncaughtExceptions();
 
   var triggers = encodeURIComponent(JSON.stringify(TESTROOT + "unsigned.xpi"));
   gBrowser.selectedTab = gBrowser.addTab();

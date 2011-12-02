@@ -1,5 +1,5 @@
 function test() {
   ok(true, "ok called");
   expectUncaughtException();
-  throw "uncaught exception";
+  throw "this is a deliberately thrown exception";
 }
