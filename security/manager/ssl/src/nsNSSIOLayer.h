@@ -60,71 +60,20 @@
 #include "nsNSSCertificate.h"
 #include "nsDataHashtable.h"
 
-class nsIChannel;
-class nsSSLThread;
+namespace mozilla {
 
-/*
- * This class is used to store SSL socket I/O state information,
- * that is not being executed directly, but defered to 
- * the separate SSL thread.
- */
-class nsSSLSocketThreadData
-{
-public:
-  nsSSLSocketThreadData();
-  ~nsSSLSocketThreadData();
+class MutexAutoLock;
 
-  bool ensure_buffer_size(PRInt32 amount);
-  
-  enum ssl_state { 
-    ssl_invalid,       // used for initializating, should never occur
-    ssl_idle,          // not in use by SSL thread, no activity pending
-    ssl_pending_write, // waiting for SSL thread to complete writing
-    ssl_pending_read,  // waiting for SSL thread to complete reading
-    ssl_writing_done,  // SSL write completed, results are ready
-    ssl_reading_done   // SSL read completed, results are ready
-  };
-  
-  ssl_state mSSLState;
+namespace psm {
 
-  // Used to transport I/O error codes between SSL thread
-  // and initial caller thread.
-  PRErrorCode mPRErrorCode;
-
-  // A buffer used to transfer I/O data between threads
-  char *mSSLDataBuffer;
-  PRInt32 mSSLDataBufferAllocatedSize;
-
-  // The amount requested to read or write by the caller.
-  PRInt32 mSSLRequestedTransferAmount;
-
-  // A pointer into our buffer, to the first byte
-  // that has not yet been delivered to the caller.
-  // Necessary, as the caller of the read function
-  // might request smaller chunks.
-  const char *mSSLRemainingReadResultData;
-  
-  // The caller previously requested to read or write.
-  // As the initial request to read or write is defered,
-  // the caller might (in theory) request smaller chunks
-  // in subsequent calls.
-  // This variable stores the amount of bytes successfully
-  // transfered, that have not yet been reported to the caller.
-  PRInt32 mSSLResultRemainingBytes;
-
-  // When defering SSL read/write activity to another thread,
-  // we switch the SSL level file descriptor of the original
-  // layered file descriptor to a pollable event,
-  // so we can wake up the original caller of the I/O function
-  // as soon as data is ready.
-  // This variable is used to save the SSL level file descriptor,
-  // to allow us to restore the original file descriptor layering.
-  PRFileDesc *mReplacedSSLFileDesc;
-
-  bool mOneBytePendingFromEarlierWrite;
-  unsigned char mThePendingByte;
-  PRInt32 mOriginalRequestedTransferAmount;
+enum SSLErrorMessageType {
+  OverridableCertErrorMessage  = 1, // for *overridable* certificate errors
+  PlainErrorMessage = 2             // all other errors (or "no error")
 };
+
+} // namespace psm
+
+} // namespace mozilla
 
 class nsNSSSocketInfo : public nsITransportSecurityInfo,
                         public nsISSLSocketControl,
@@ -153,7 +102,6 @@ public:
 
   nsresult SetSecurityState(PRUint32 aState);
   nsresult SetShortSecurityDescription(const PRUnichar *aText);
-  void SetErrorMessage(const PRUnichar *aText);
 
   nsresult SetForSTARTTLS(bool aForSTARTTLS);
   nsresult GetForSTARTTLS(bool *aForSTARTTLS);
@@ -164,6 +112,9 @@ public:
   nsresult GetHandshakePending(bool *aHandshakePending);
   nsresult SetHandshakePending(bool aHandshakePending);
 
+  const char * GetHostName() const {
+    return mHostName.get();
+  }
   nsresult GetHostName(char **aHostName);
   nsresult SetHostName(const char *aHostName);
 
@@ -172,8 +123,9 @@ public:
 
   void GetPreviousCert(nsIX509Cert** _result);
 
-  void SetCanceled(bool aCanceled);
-  bool GetCanceled();
+  PRErrorCode GetErrorCode() const;
+  void SetCanceled(PRErrorCode errorCode,
+                   ::mozilla::psm::SSLErrorMessageType errorMessageType);
   
   void SetHasCleartextPhase(bool aHasCleartextPhase);
   bool GetHasCleartextPhase();
@@ -184,15 +136,15 @@ public:
 
   void SetAllowTLSIntoleranceTimeout(bool aAllow);
 
-  bool GetExternalErrorReporting();
-
   nsresult RememberCAChain(CERTCertList *aCertList);
 
   /* Set SSL Status values */
   nsresult SetSSLStatus(nsSSLStatus *aSSLStatus);
   nsSSLStatus* SSLStatus() { return mSSLStatus; }
-  
-  PRStatus CloseSocketAndDestroy();
+  void SetStatusErrorBits(nsIX509Cert & cert, PRUint32 collected_errors);
+
+  PRStatus CloseSocketAndDestroy(
+                const nsNSSShutDownPreventionLock & proofOfLock);
   
   bool IsCertIssuerBlacklisted() const {
     return mIsCertIssuerBlacklisted;
@@ -200,24 +152,48 @@ public:
   void SetCertIssuerBlacklisted() {
     mIsCertIssuerBlacklisted = true;
   }
+
+  // XXX: These are only used on for diagnostic purposes
+  enum CertVerificationState {
+    before_cert_verification,
+    waiting_for_cert_verification,
+    after_cert_verification
+  };
+  void SetCertVerificationWaiting();
+  // Use errorCode == 0 to indicate success; in that case, errorMessageType is
+  // ignored.
+  void SetCertVerificationResult(PRErrorCode errorCode,
+              ::mozilla::psm::SSLErrorMessageType errorMessageType);
+  
+  // for logging only
+  PRBool IsWaitingForCertVerification() const
+  {
+    return mCertVerificationState == waiting_for_cert_verification;
+  }
+  
+
 protected:
+  mutable ::mozilla::Mutex mMutex;
+
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   PRFileDesc* mFd;
-  enum { 
-    blocking_state_unknown, is_nonblocking_socket, is_blocking_socket 
-  } mBlockingState;
+  CertVerificationState mCertVerificationState;
   PRUint32 mSecurityState;
   PRInt32 mSubRequestsHighSecurity;
   PRInt32 mSubRequestsLowSecurity;
   PRInt32 mSubRequestsBrokenSecurity;
   PRInt32 mSubRequestsNoSecurity;
   nsString mShortDesc;
-  nsString mErrorMessage;
+
+  PRErrorCode mErrorCode;
+  ::mozilla::psm::SSLErrorMessageType mErrorMessageType;
+  nsString mErrorMessageCached;
+  nsresult formatErrorMessage(::mozilla::MutexAutoLock const & proofOfLock);
+
   bool mDocShellDependentStuffKnown;
   bool mExternalErrorReporting; // DocShellDependent
   bool mForSTARTTLS;
   bool mHandshakePending;
-  bool mCanceled;
   bool mHasCleartextPhase;
   bool mHandshakeInProgress;
   bool mAllowTLSIntoleranceTimeout;
@@ -232,13 +208,9 @@ protected:
 
   nsresult ActivateSSL();
 
-  nsSSLSocketThreadData *mThreadData;
-
 private:
   virtual void virtualDestroyNSSReference();
   void destructorSafeDestroyNSSReference();
-
-friend class nsSSLThread;
 };
 
 class nsCStringHashSet;
@@ -303,11 +275,6 @@ public:
 
   static void setRenegoUnrestrictedSites(const nsCString &str);
   static bool isRenegoUnrestrictedSite(const nsCString &str);
-
-  static PRFileDesc *mSharedPollableEvent;
-  static nsNSSSocketInfo *mSocketOwningPollableEvent;
-  
-  static bool mPollableEventCurrentlySet;
 };
 
 nsresult nsSSLIOLayerNewSocket(PRInt32 family,

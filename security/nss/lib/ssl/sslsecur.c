@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsecur.c,v 1.49 2011/04/08 05:37:44 wtc%google.com Exp $ */
+/* $Id: sslsecur.c,v 1.53 2011/11/19 21:58:21 bsmith%mozilla.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"
@@ -173,7 +173,7 @@ ssl_Do1stHandshake(sslSocket *ss)
  * retry on a connection on the next read/write.
  */
 static SECStatus
-AlwaysBlock(sslSocket *ss)
+ssl3_AlwaysBlock(sslSocket *ss)
 {
     PORT_SetError(PR_WOULD_BLOCK_ERROR);	/* perhaps redundant. */
     return SECWouldBlock;
@@ -183,10 +183,10 @@ AlwaysBlock(sslSocket *ss)
  * set the initial handshake state machine to block
  */
 void
-ssl_SetAlwaysBlock(sslSocket *ss)
+ssl3_SetAlwaysBlock(sslSocket *ss)
 {
     if (!ss->firstHsDone) {
-	ss->handshake = AlwaysBlock;
+	ss->handshake = ssl3_AlwaysBlock;
 	ss->nextHandshake = 0;
     }
 }
@@ -391,6 +391,18 @@ SSL_ForceHandshake(PRFileDesc *fd)
     /* Don't waste my time */
     if (!ss->opt.useSecurity) 
     	return SECSuccess;
+
+    if (!ssl_SocketIsBlocking(ss)) {
+	ssl_GetXmitBufLock(ss);
+	if (ss->pendingBuf.len != 0) {
+	    rv = ssl_SendSavedWriteData(ss);
+	    if ((rv < 0) && (PORT_GetError() != PR_WOULD_BLOCK_ERROR)) {
+		ssl_ReleaseXmitBufLock(ss);
+		return SECFailure;
+	    }
+	}
+	ssl_ReleaseXmitBufLock(ss);
+    }
 
     ssl_Get1stHandshakeLock(ss);
 
@@ -1141,7 +1153,6 @@ ssl_SecureRecv(sslSocket *ss, unsigned char *buf, int len, int flags)
 		ssl_ReleaseXmitBufLock(ss);
 		return SECFailure;
 	    }
-	    /* XXX short write? */
 	}
 	ssl_ReleaseXmitBufLock(ss);
     }
@@ -1452,29 +1463,8 @@ SSL_CertDBHandleSet(PRFileDesc *fd, CERTCertDBHandle *dbHandle)
     return SECSuccess;
 }
 
-/*
- * attempt to restart the handshake after asynchronously handling
- * a request for the client's certificate.
- *
- * inputs:  
- *	cert	Client cert chosen by application.
- *		Note: ssl takes this reference, and does not bump the 
- *		reference count.  The caller should drop its reference
- *		without calling CERT_DestroyCert after calling this function.
- *
- *	key	Private key associated with cert.  This function makes a 
- *		copy of the private key, so the caller remains responsible 
- *		for destroying its copy after this function returns.
- *
- *	certChain  Chain of signers for cert.  
- *		Note: ssl takes this reference, and does not copy the chain.
- *		The caller should drop its reference without destroying the 
- *		chain.  SSL will free the chain when it is done with it.
- *
- * Return value: XXX
- *
- * XXX This code only works on the initial handshake on a connection, XXX
- *     It does not work on a subsequent handshake (redo).
+/* DO NOT USE. This function was exported in ssl.def with the wrong signature;
+ * this implementation exists to maintain link-time compatibility.
  */
 int
 SSL_RestartHandshakeAfterCertReq(sslSocket *         ss,
@@ -1482,44 +1472,47 @@ SSL_RestartHandshakeAfterCertReq(sslSocket *         ss,
 				SECKEYPrivateKey *   key,
 				CERTCertificateList *certChain)
 {
-    int              ret;
-
-    ssl_Get1stHandshakeLock(ss);   /************************************/
-
-    if (ss->version >= SSL_LIBRARY_VERSION_3_0) {
-	ret = ssl3_RestartHandshakeAfterCertReq(ss, cert, key, certChain);
-    } else {
-    	ret = ssl2_RestartHandshakeAfterCertReq(ss, cert, key);
-    }
-
-    ssl_Release1stHandshakeLock(ss);  /************************************/
-    return ret;
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
+    return -1;
 }
 
-
-/* restart an SSL connection that we stopped to run certificate dialogs 
-** XXX	Need to document here how an application marks a cert to show that
-**	the application has accepted it (overridden CERT_VerifyCert).
- *
- * XXX This code only works on the initial handshake on a connection, XXX
- *     It does not work on a subsequent handshake (redo).
- *
- * Return value: XXX
-*/
+/* DO NOT USE. This function was exported in ssl.def with the wrong signature;
+ * this implementation exists to maintain link-time compatibility.
+ */
 int
-SSL_RestartHandshakeAfterServerCert(sslSocket *ss)
+SSL_RestartHandshakeAfterServerCert(sslSocket * ss)
 {
-    int rv	= SECSuccess;
+    PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
+    return -1;
+}
 
-    ssl_Get1stHandshakeLock(ss); 
+/* See documentation in ssl.h */
+SECStatus
+SSL_RestartHandshakeAfterAuthCertificate(PRFileDesc *fd)
+{
+    SECStatus rv = SECSuccess;
+    sslSocket *ss = ssl_FindSocket(fd);
 
-    if (ss->version >= SSL_LIBRARY_VERSION_3_0) {
-	rv = ssl3_RestartHandshakeAfterServerCert(ss);
+    if (!ss) {
+	SSL_DBG(("%d: SSL[%d]: bad socket in SSL_RestartHandshakeAfterPeerCert",
+		 SSL_GETPID(), fd));
+	return SECFailure;
+    }
+
+    ssl_Get1stHandshakeLock(ss);
+
+    if (!ss->ssl3.initialized) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	rv = SECFailure;
+    } else if (ss->version < SSL_LIBRARY_VERSION_3_0) {
+	PORT_SetError(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_SSL2);
+	rv = SECFailure;
     } else {
-	rv = ssl2_RestartHandshakeAfterServerCert(ss);
+	rv = ssl3_RestartHandshakeAfterAuthCertificate(ss);
     }
 
     ssl_Release1stHandshakeLock(ss);
+
     return rv;
 }
 

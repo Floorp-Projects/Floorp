@@ -39,7 +39,7 @@
 #define _PKCS11N_H_
 
 #ifdef DEBUG
-static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.23 $ $Date: 2011/09/14 01:21:10 $";
+static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.27 $ $Date: 2011/11/24 12:26:35 $";
 #endif /* DEBUG */
 
 /*
@@ -162,7 +162,6 @@ static const char CKT_CVS_ID[] = "@(#) $RCSfile: pkcs11n.h,v $ $Revision: 1.23 $
 #define CKA_CERT_MD5_HASH		(CKA_TRUST + 101)
 
 /* NSS trust stuff */
-/* XXX fgmr new ones here-- step-up, etc. */
 
 /* HISTORICAL: define used to pass in the database key for DSA private keys */
 #define CKA_NETSCAPE_DB                 0xD5A0DB00L
@@ -346,7 +345,7 @@ typedef CK_ULONG          CK_TRUST;
  * labels have never been accurate to what was really implemented.
  * The new labels correctly reflect what the values effectively mean.
  */
-#if __GNUC__ > 3
+#if defined(__GNUC__) && (__GNUC__ > 3)
 /* make GCC warn when we use these #defines */
 /*
  *  This is really painful because GCC doesn't allow us to mark random
@@ -362,7 +361,7 @@ typedef CK_ULONG          CK_TRUST;
  *  cast the resulting value to the deprecated type in the #define, thus
  *  producting the warning when the #define is used.
  */
-#if (__GNUC__  == 4) && (__GNUC_MINOR < 5)
+#if (__GNUC__  == 4) && (__GNUC_MINOR__ < 5)
 /* The mac doesn't like the friendlier deprecate messages. I'm assuming this
  * is a gcc version issue rather than mac or ppc specific */
 typedef CK_TRUST __CKT_NSS_UNTRUSTED __attribute__((deprecated));
