@@ -43,7 +43,7 @@ interface nsICertVerificationListener;
 /**
  * Extending nsIX509Cert
  */
-[scriptable, uuid(399004d8-b8c7-4eb9-8362-d99f4c0161fd)]
+[scriptable, uuid(09143cd9-dee3-4870-8450-8440c87e40e2)]
 interface nsIX509Cert3 : nsIX509Cert2 {
 
   /**
@@ -88,6 +88,15 @@ interface nsIX509Cert3 : nsIX509Cert2 {
   void getAllTokenNames(out unsigned long length,
                        [retval, array, size_is(length)] out wstring
                        tokenNames);
+
+   /**
+   * Determine if the certificate can be verified for specific host name
+   *
+   * @param aHostName the hostname to be verified
+   * @return a boolean successful verification
+   */
+    bool isValidForHostname(in AUTF8String aHostName);
+
 };
 
 [scriptable, uuid(2fd0a785-9f2d-4327-8871-8c3e0783891d)]
