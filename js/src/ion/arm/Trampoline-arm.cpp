@@ -119,8 +119,8 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     masm.transferReg(lr);  // [sp,36]
     // The 5th argument is located at [sp, 40]
     masm.finishDataTransfer();
-    // Load said argument int r10
-    aasm->as_dtr(IsLoad, 32, Offset, r10, DTRAddr(sp, DtrOffImm(40)));
+    // Load said argument into r11
+    aasm->as_dtr(IsLoad, 32, Offset, r11, DTRAddr(sp, DtrOffImm(40)));
 
     // If this code is being executed as part of OSR, there is a sixth argument.
     // In the case of non-OSR code, loading into OsrFrameReg as if there were a
@@ -129,7 +129,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     masm.as_dtr(IsLoad, 32, Offset, OsrFrameReg, DTRAddr(sp, DtrOffImm(44)));
     // The OsrFrameReg may not be used below.
 #if 0
-    JS_STATIC_ASSERT(OsrFrameReg == r7);
+    JS_STATIC_ASSERT(OsrFrameReg == r10);
 #endif
     aasm->as_mov(r9, lsl(r1, 3)); // r9 = 8*argc
     // The size of the IonFrame is actually 16, and we pushed r3 when we aren't
@@ -172,6 +172,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
         // We could be more awesome, and unroll this, using a loadm
         // (particularly since the offset is effectively 0)
         // but that seems more error prone, and complex.
+        // BIG FAT WARNING: this loads both r6 and r7.
         aasm->as_extdtr(IsLoad,  64, true, PostIndex, r6, EDtrAddr(r2, EDtrOffImm(8)));
         aasm->as_extdtr(IsStore, 64, true, PostIndex, r6, EDtrAddr(r4, EDtrOffImm(8)));
         aasm->as_b(&header, Assembler::NonZero);
@@ -185,7 +186,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
                            // [sp]    = return address (written later)
     masm.transferReg(r8);  // [sp',4] = fill in the buffer value with junk.
     masm.transferReg(r9);  // [sp',8]  = argc*8+20
-    masm.transferReg(r10); // [sp',12]  = callee token
+    masm.transferReg(r11); // [sp',12]  = callee token
     masm.finishDataTransfer();
     // Throw our return address onto the stack.  this setup seems less-than-ideal
     aasm->as_dtr(IsStore, 32, Offset, pc, DTRAddr(sp, DtrOffImm(0)));
