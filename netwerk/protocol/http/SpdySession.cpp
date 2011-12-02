@@ -511,11 +511,37 @@ SpdySession::ConvertHeaders(nsDependentCSubstring &status,
     PRUint16 valueLen = (nvpair[2 + nameLen] << 8) + nvpair[3 + nameLen];
     if (lastHeaderByte < nvpair + 4 + nameLen + valueLen)
       return NS_ERROR_ILLEGAL_VALUE;
+    
+    // Look for upper case characters in the name. They are illegal.
+    for (char *cPtr = nameString.BeginWriting();
+         cPtr && cPtr < nameString.EndWriting();
+         ++cPtr) {
+      if (*cPtr <= 'Z' && *cPtr >= 'A') {
+        nsCString toLog(nameString);
+
+        LOG(("SpdySession::ConvertHeaders session=%p stream=%p "
+             "upper case response header found. [%s]\n",
+             this, mFrameDataStream, toLog.get()));
+
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
+    }
+
+    // HTTP Chunked responses are not legal over spdy. We do not need
+    // to look for chunked specifically because it is the only HTTP
+    // allowed default encoding and we did not negotiate further encodings
+    // via TE
+    if (nameString.Equals(NS_LITERAL_CSTRING("transfer-encoding"))) {
+      LOG(("SpdySession::ConvertHeaders session=%p stream=%p "
+           "transfer-encoding found. Chunked is invalid and no TE sent.",
+           this, mFrameDataStream));
+
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
 
     if (!nameString.Equals(NS_LITERAL_CSTRING("version")) &&
         !nameString.Equals(NS_LITERAL_CSTRING("status")) &&
         !nameString.Equals(NS_LITERAL_CSTRING("connection")) &&
-        !nameString.Equals(NS_LITERAL_CSTRING("transfer-encoding")) &&
         !nameString.Equals(NS_LITERAL_CSTRING("keep-alive"))) {
       nsDependentCSubstring valueString =
         Substring (reinterpret_cast<const char *>(nvpair) + 4 + nameLen,
