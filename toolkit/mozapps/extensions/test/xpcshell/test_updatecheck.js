@@ -289,9 +289,31 @@ function run_test_13() {
                                                                 null,
                                                                 null,
                                                                 true,
+                                                                false,
                                                                 overrides);
       do_check_neq(update, null);
       do_check_eq(update.version, 1);
+      run_test_14();
+    },
+
+    onUpdateCheckError: function(status) {
+      do_throw("Update check failed with status " + status);
+    }
+  });
+}
+
+function run_test_14() {
+  AddonUpdateChecker.checkForUpdates("compat-strict-optin@tests.mozilla.org",
+                                     "extension", null,
+                                     "http://localhost:4444/data/test_updatecheck.rdf", {
+    onUpdateCheckComplete: function(updates) {
+      do_check_eq(updates.length, 1);
+      let update = AddonUpdateChecker.getNewestCompatibleUpdate(updates,
+                                                                null,
+                                                                null,
+                                                                true,
+                                                                false);
+      do_check_eq(update, null);
       end_test();
     },
 
