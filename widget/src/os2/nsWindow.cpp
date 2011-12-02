@@ -769,10 +769,7 @@ NS_METHOD nsWindow::GetBounds(nsIntRect& aRect)
 
 NS_METHOD nsWindow::GetClientBounds(nsIntRect& aRect)
 {
-  aRect.x = 0;
-  aRect.y = 0;
-  aRect.width = mBounds.width;
-  aRect.height = mBounds.height;
+  aRect = mBounds;
   return NS_OK;
 }
 

@@ -674,7 +674,6 @@ struct BytecodeEmitter : public TreeContext
     SlotVector      closedArgs;
     SlotVector      closedVars;
 
-    uint16          traceIndex;     /* index for the next JSOP_TRACE instruction */
     uint16          typesetCount;   /* Number of JOF_TYPESET opcodes generated */
 
     BytecodeEmitter(Parser *parser, uintN lineno);
@@ -957,7 +956,7 @@ enum SrcNoteType {
     SRC_WHILE       = 4,        /* JSOP_GOTO to for or while loop condition
                                    from before loop, else JSOP_NOP at top of
                                    do-while loop */
-    SRC_TRACE       = 4,        /* For JSOP_TRACE; includes distance to loop end */
+    SRC_LOOPHEAD    = 4,        /* For JSOP_LOOPHEAD; includes distance to loop end */
     SRC_CONTINUE    = 5,        /* JSOP_GOTO is a continue, not a break;
                                    also used on JSOP_ENDINIT if extra comma
                                    at end of array literal: [1,2,,];
