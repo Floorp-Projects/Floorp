@@ -1174,6 +1174,13 @@ function escapeAddonURI(aAddon, aUri, aUpdateType, aAppVersion)
     maxVersion = "";
   uri = uri.replace(/%ITEM_MAXAPPVERSION%/g, maxVersion);
 
+  let compatMode = "normal";
+  if (!XPIProvider.checkCompatibility)
+    compatMode = "ignore";
+  else if (AddonManager.strictCompatibility)
+    compatMode = "strict";
+  uri = uri.replace(/%COMPATIBILITY_MODE%/g, compatMode);
+
   // Replace custom parameters (names of custom parameters must have at
   // least 3 characters to prevent lookups for something like %D0%C8)
   var catMan = null;
@@ -7007,10 +7014,21 @@ UpdateChecker.prototype = {
   onUpdateCheckComplete: function UC_onUpdateCheckComplete(aUpdates) {
     let AUC = AddonUpdateChecker;
 
+    let ignoreMaxVersion = false;
+    if (!XPIProvider.checkCompatibility) {
+      ignoreMaxVersion = true;
+    } else if (this.addon.type == "extension" &&
+               !AddonManager.strictCompatibility &&
+               !this.addon.strictCompatibility &&
+               !this.addon.hasBinaryComponents) {
+      ignoreMaxVersion = true;
+    }
+
     // Always apply any compatibility update for the current version
     let compatUpdate = AUC.getCompatibilityUpdate(aUpdates, this.addon.version,
-                                                  this.syncCompatibility);
-
+                                                  this.syncCompatibility,
+                                                  null, null,
+                                                  ignoreMaxVersion);
     // Apply the compatibility update to the database
     if (compatUpdate)
       this.addon.applyCompatibilityUpdate(compatUpdate, this.syncCompatibility);
@@ -7024,7 +7042,8 @@ UpdateChecker.prototype = {
          Services.vc.compare(this.platformVersion, Services.appinfo.platformVersion) != 0)) {
       compatUpdate = AUC.getCompatibilityUpdate(aUpdates, this.addon.version,
                                                 false, this.appVersion,
-                                                this.platformVersion);
+                                                this.platformVersion,
+                                                ignoreMaxVersion);
     }
 
     if (compatUpdate)
@@ -7044,9 +7063,15 @@ UpdateChecker.prototype = {
                          AddonManager.UPDATE_STATUS_NO_ERROR);
     }
 
+    let compatOverrides = AddonManager.strictCompatibility ?
+                            null :
+                            this.addon.compatibilityOverrides;
+
     let update = AUC.getNewestCompatibleUpdate(aUpdates,
                                                this.appVersion,
-                                               this.platformVersion);
+                                               this.platformVersion,
+                                               ignoreMaxVersion,
+                                               compatOverrides);
 
     if (update && Services.vc.compare(this.addon.version, update.version) < 0) {
       for (let i = 0; i < XPIProvider.installs.length; i++) {

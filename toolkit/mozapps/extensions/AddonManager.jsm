@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Dave Townsend <dtownsend@oxymoronical.com>
+#   Blair McBride <bmcbride@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -616,15 +617,13 @@ var AddonManagerInternal = {
       return;
 
     Services.obs.notifyObservers(null, "addons-background-update-start", null);
-    let pendingUpdates = 1;
+    let pendingUpdates = 0;
 
     function notifyComplete() {
       if (--pendingUpdates == 0) {
-        AddonManagerInternal.updateAddonRepositoryData(function BUC_updateAddonCallback() {
-          Services.obs.notifyObservers(null,
-                                       "addons-background-update-complete",
-                                       null);
-        });
+        Services.obs.notifyObservers(null,
+                                     "addons-background-update-complete",
+                                     null);
       }
     }
 
@@ -634,30 +633,34 @@ var AddonManagerInternal = {
     scope.LightweightThemeManager.updateCurrentTheme();
 
     this.getAllAddons(function getAddonsCallback(aAddons) {
-      pendingUpdates++;
+      // Repopulate repository cache first, to ensure compatibility overrides
+      // are up to date before checking for addon updates.
       var ids = [a.id for each (a in aAddons)];
-      scope.AddonRepository.repopulateCache(ids, notifyComplete);
+      scope.AddonRepository.repopulateCache(ids, function BUC_repopulateCacheCallback() {
+        AddonManagerInternal.updateAddonRepositoryData(function BUC_updateAddonCallback() {
 
-      pendingUpdates += aAddons.length;
+          pendingUpdates += aAddons.length;
 
-      aAddons.forEach(function BUC_forEachCallback(aAddon) {
-        // Check all add-ons for updates so that any compatibility updates will
-        // be applied
-        aAddon.findUpdates({
-          onUpdateAvailable: function BUC_onUpdateAvailable(aAddon, aInstall) {
-            // Start installing updates when the add-on can be updated and
-            // background updates should be applied.
-            if (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE &&
-                AddonManager.shouldAutoUpdate(aAddon)) {
-              aInstall.install();
-            }
-          },
-
-          onUpdateFinished: notifyComplete
-        }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+          aAddons.forEach(function BUC_forEachCallback(aAddon) {
+            // Check all add-ons for updates so that any compatibility updates will
+            // be applied
+            aAddon.findUpdates({
+              onUpdateAvailable: function BUC_onUpdateAvailable(aAddon, aInstall) {
+                // Start installing updates when the add-on can be updated and
+                // background updates should be applied.
+                if (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE &&
+                    AddonManager.shouldAutoUpdate(aAddon)) {
+                  aInstall.install();
+                }
+              },
+    
+              onUpdateFinished: notifyComplete
+            }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+          });
+    
+          notifyComplete();
+        });
       });
-
-      notifyComplete();
     });
   },
 
