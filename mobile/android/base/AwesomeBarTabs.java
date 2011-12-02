@@ -66,8 +66,6 @@ import android.widget.SimpleExpandableListAdapter;
 import android.widget.TabHost;
 import android.widget.TextView;
 
-import java.lang.ref.WeakReference;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
