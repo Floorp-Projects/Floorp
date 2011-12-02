@@ -45,9 +45,11 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "nsClassHashtable.h"
+#include "nsDataHashtable.h"
 #include "nsAutoPtr.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsISocketTransportService.h"
+#include "nsIDNSListener.h"
 
 #include "nsIObserver.h"
 #include "nsITimer.h"
@@ -96,8 +98,9 @@ public:
     // given time.
     void PruneDeadConnectionsAfter(PRUint32 time);
 
-    // Stops timer scheduled for next pruning of dead connections.
-    void StopPruneDeadConnectionsTimer();
+    // Stops timer scheduled for next pruning of dead connections if
+    // there are no more idle connections or active spdy ones
+    void ConditionallyStopPruneDeadConnectionsTimer();
 
     // adds a transaction to the list of managed transactions.
     nsresult AddTransaction(nsHttpTransaction *, PRInt32 priority);
@@ -147,6 +150,11 @@ public:
     // that the network peer has closed the transport.
     nsresult CloseIdleConnection(nsHttpConnection *);
 
+    // The connection manager needs to know when a normal HTTP connection has been
+    // upgraded to SPDY because the dispatch and idle semantics are a little
+    // bit different.
+    void ReportSpdyConnection(nsHttpConnection *, bool usingSpdy);
+
 private:
     virtual ~nsHttpConnectionMgr();
     class nsHalfOpenSocket;
@@ -160,17 +168,37 @@ private:
     struct nsConnectionEntry
     {
         nsConnectionEntry(nsHttpConnectionInfo *ci)
-            : mConnInfo(ci)
+          : mConnInfo(ci),
+            mUsingSpdy(false),
+            mTestedSpdy(false),
+            mSpdyRedir(false),
+            mDidDNS(false),
+            mSpdyPreferred(false)
         {
             NS_ADDREF(mConnInfo);
         }
-       ~nsConnectionEntry() { NS_RELEASE(mConnInfo); }
+        ~nsConnectionEntry();
 
         nsHttpConnectionInfo        *mConnInfo;
         nsTArray<nsHttpTransaction*> mPendingQ;    // pending transaction queue
         nsTArray<nsHttpConnection*>  mActiveConns; // active connections
         nsTArray<nsHttpConnection*>  mIdleConns;   // idle persistent connections
         nsTArray<nsHalfOpenSocket*>  mHalfOpens;
+
+        // Spdy sometimes resolves the address in the socket manager in order
+        // to re-coalesce sharded HTTP hosts.
+        //
+        // When a set of hosts are coalesced together one of them is marked
+        // mSpdyPreferred, and the others are marked mSpdyRedir. The mapping is
+        // maintained in the conection manager mSpdyPreferred hash.
+        //
+        nsCString mDottedDecimalAddress;
+
+        bool mUsingSpdy;
+        bool mTestedSpdy;
+        bool mSpdyRedir;
+        bool mDidDNS;
+        bool mSpdyPreferred;
     };
 
     // nsConnectionHandle
@@ -200,7 +228,8 @@ private:
     class nsHalfOpenSocket : public nsIOutputStreamCallback,
                              public nsITransportEventSink,
                              public nsIInterfaceRequestor,
-                             public nsITimerCallback
+                             public nsITimerCallback,
+                             public nsIDNSListener
     {
     public:
         NS_DECL_ISUPPORTS
@@ -208,6 +237,7 @@ private:
         NS_DECL_NSITRANSPORTEVENTSINK
         NS_DECL_NSIINTERFACEREQUESTOR
         NS_DECL_NSITIMERCALLBACK
+        NS_DECL_NSIDNSLISTENER
 
         nsHalfOpenSocket(nsConnectionEntry *ent,
                          nsHttpTransaction *trans);
@@ -273,7 +303,7 @@ private:
     bool     AtActiveConnectionLimit(nsConnectionEntry *, PRUint8 caps);
     void     GetConnection(nsConnectionEntry *, nsHttpTransaction *,
                            bool, nsHttpConnection **);
-    nsresult DispatchTransaction(nsConnectionEntry *, nsAHttpTransaction *,
+    nsresult DispatchTransaction(nsConnectionEntry *, nsHttpTransaction *,
                                  PRUint8 caps, nsHttpConnection *);
     bool     BuildPipeline(nsConnectionEntry *, nsAHttpTransaction *, nsHttpPipeline **);
     nsresult ProcessNewTransaction(nsHttpTransaction *);
@@ -283,7 +313,21 @@ private:
     void     AddActiveConn(nsHttpConnection *, nsConnectionEntry *);
     void     StartedConnect();
     void     RecvdConnect();
-    
+
+    // Manage the preferred spdy connection entry for this address
+    nsConnectionEntry *GetSpdyPreferred(nsACString &aDottedDecimal);
+    void               SetSpdyPreferred(nsACString &aDottedDecimal,
+                                        nsConnectionEntry *ent);
+    void               RemoveSpdyPreferred(nsACString &aDottedDecimal);
+    nsHttpConnection  *GetSpdyPreferredConn(nsConnectionEntry *ent);
+    nsDataHashtable<nsCStringHashKey, nsConnectionEntry *>   mSpdyPreferredHash;
+
+    void               ProcessSpdyPendingQ(nsConnectionEntry *ent);
+    void               ProcessSpdyPendingQ();
+    static PLDHashOperator ProcessSpdyPendingQCB(
+        const nsACString &key, nsAutoPtr<nsConnectionEntry> &ent,
+        void *closure);
+
     // message handlers have this signature
     typedef void (nsHttpConnectionMgr:: *nsConnEventHandler)(PRInt32, void *);
 

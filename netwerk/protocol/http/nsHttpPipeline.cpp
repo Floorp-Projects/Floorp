@@ -128,7 +128,7 @@ nsHttpPipeline::AddTransaction(nsAHttpTransaction *trans)
         trans->SetConnection(this);
 
         if (mRequestQ.Length() == 1)
-            mConnection->ResumeSend();
+            mConnection->ResumeSend(trans);
     }
 
     return NS_OK;
@@ -167,19 +167,19 @@ nsHttpPipeline::OnHeadersAvailable(nsAHttpTransaction *trans,
 }
 
 nsresult
-nsHttpPipeline::ResumeSend()
+nsHttpPipeline::ResumeSend(nsAHttpTransaction *trans)
 {
     if (mConnection)
-        return mConnection->ResumeSend();
+        return mConnection->ResumeSend(trans);
     return NS_ERROR_UNEXPECTED;
 }
 
 nsresult
-nsHttpPipeline::ResumeRecv()
+nsHttpPipeline::ResumeRecv(nsAHttpTransaction *trans)
 {
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     NS_ASSERTION(mConnection, "no connection");
-    return mConnection->ResumeRecv();
+    return mConnection->ResumeRecv(trans);
 }
 
 void
@@ -372,6 +372,15 @@ nsHttpPipeline::SetConnection(nsAHttpConnection *conn)
     PRInt32 i, count = mRequestQ.Length();
     for (i=0; i<count; ++i)
         Request(i)->SetConnection(this);
+}
+
+nsAHttpConnection *
+nsHttpPipeline::Connection()
+{
+    LOG(("nsHttpPipeline::Connection [this=%x conn=%x]\n", this, mConnection));
+
+    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    return mConnection;
 }
 
 void

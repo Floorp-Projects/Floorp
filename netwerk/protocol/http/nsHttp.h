@@ -131,6 +131,11 @@ typedef PRUint8 nsHttpVersion;
 // host. Used by a forced reload to reset the connection states.
 #define NS_HTTP_CLEAR_KEEPALIVES     (1<<6)
 
+// Disallow the use of the SPDY protocol. This is meant for the contexts
+// such as HTTP upgrade which are nonsensical for SPDY, it is not the
+// SPDY configuration variable.
+#define NS_HTTP_DISALLOW_SPDY        (1<<7)
+
 //-----------------------------------------------------------------------------
 // some default values
 //-----------------------------------------------------------------------------

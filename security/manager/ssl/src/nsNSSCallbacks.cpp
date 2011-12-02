@@ -942,6 +942,19 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
     status->mKeyLength = keyLength;
     status->mSecretKeyLength = encryptBits;
     status->mCipherName.Assign(cipherName);
+
+    // Get the NPN value. Do this on the stack and copy it into
+    // a string rather than preallocating the string because right
+    // now we expect NPN to fail more often than it succeeds.
+    SSLNextProtoState state;
+    unsigned char npnbuf[256];
+    unsigned int npnlen;
+    
+    if (SSL_GetNextProto(fd, &state, npnbuf, &npnlen, 256) == SECSuccess &&
+        state == SSL_NEXT_PROTO_NEGOTIATED)
+      infoObject->SetNegotiatedNPN(reinterpret_cast<char *>(npnbuf), npnlen);
+    else
+      infoObject->SetNegotiatedNPN(nsnull, 0);
   }
 
   PORT_Free(cipherName);
