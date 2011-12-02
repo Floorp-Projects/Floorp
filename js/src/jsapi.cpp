@@ -316,7 +316,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format
             break;
           case 'S':
           case 'W':
-            str = js_ValueToString(cx, *sp);
+            str = ToString(cx, *sp);
             if (!str)
                 return JS_FALSE;
             *sp = STRING_TO_JSVAL(str);
@@ -433,7 +433,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
         ok = (obj != NULL);
         break;
       case JSTYPE_STRING:
-        str = js_ValueToString(cx, v);
+        str = ToString(cx, v);
         ok = (str != NULL);
         if (ok)
             *vp = STRING_TO_JSVAL(str);
@@ -486,7 +486,7 @@ JS_ValueToString(JSContext *cx, jsval v)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, v);
-    return js_ValueToString(cx, v);
+    return ToString(cx, v);
 }
 
 JS_PUBLIC_API(JSString *)

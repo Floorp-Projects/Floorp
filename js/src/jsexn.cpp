@@ -729,7 +729,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
     /* Set the 'message' property. */
     JSString *message;
     if (args.length() != 0 && !args[0].isUndefined()) {
-        message = js_ValueToString(cx, args[0]);
+        message = ToString(cx, args[0]);
         if (!message)
             return false;
         args[0].setString(message);
@@ -745,7 +745,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
     /* Set the 'fileName' property. */
     JSString *filename;
     if (args.length() > 1) {
-        filename = js_ValueToString(cx, args[1]);
+        filename = ToString(cx, args[1]);
         if (!filename)
             return false;
         args[1].setString(filename);
@@ -801,7 +801,7 @@ exn_toString(JSContext *cx, uintN argc, Value *vp)
     if (nameVal.isUndefined()) {
         name = CLASS_ATOM(cx, Error);
     } else {
-        name = js_ValueToString(cx, nameVal);
+        name = ToString(cx, nameVal);
         if (!name)
             return false;
     }
@@ -816,7 +816,7 @@ exn_toString(JSContext *cx, uintN argc, Value *vp)
     if (msgVal.isUndefined()) {
         message = cx->runtime->emptyString;
     } else {
-        message = js_ValueToString(cx, msgVal);
+        message = ToString(cx, msgVal);
         if (!message)
             return false;
     }
@@ -867,7 +867,8 @@ exn_toSource(JSContext *cx, uintN argc, Value *vp)
     Value nameVal;
     JSString *name;
     if (!obj->getProperty(cx, cx->runtime->atomState.nameAtom, &nameVal) ||
-        !(name = js_ValueToString(cx, nameVal))) {
+        !(name = ToString(cx, nameVal)))
+    {
         return false;
     }
 
@@ -911,7 +912,7 @@ exn_toSource(JSContext *cx, uintN argc, Value *vp)
         if (filename->empty() && !sb.append(", \"\""))
                 return false;
 
-        JSString *linenumber = js_ValueToString(cx, linenoVal);
+        JSString *linenumber = ToString(cx, linenoVal);
         if (!linenumber)
             return false;
         if (!sb.append(", ") || !sb.append(linenumber))
@@ -1178,10 +1179,10 @@ js_ReportUncaughtException(JSContext *cx)
     AutoArrayRooter tvr(cx, ArrayLength(roots), roots);
 
     /*
-     * Because js_ValueToString below could error and an exception object
-     * could become unrooted, we must root exnObject.  Later, if exnObject is
-     * non-null, we need to root other intermediates, so allocate an operand
-     * stack segment to protect all of these values.
+     * Because ToString below could error and an exception object could become
+     * unrooted, we must root exnObject.  Later, if exnObject is non-null, we
+     * need to root other intermediates, so allocate an operand stack segment
+     * to protect all of these values.
      */
     if (JSVAL_IS_PRIMITIVE(exn)) {
         exnObject = NULL;
@@ -1194,12 +1195,12 @@ js_ReportUncaughtException(JSContext *cx)
     reportp = js_ErrorFromException(cx, exn);
 
     /* XXX L10N angels cry once again. see also everywhere else */
-    str = js_ValueToString(cx, exn);
+    str = ToString(cx, exn);
     JSAutoByteString bytesStorage;
     if (!str) {
         bytes = "unknown (can't convert to string)";
     } else {
-        roots[1] = STRING_TO_JSVAL(str);
+        roots[1] = StringValue(str);
         if (!bytesStorage.encode(cx, str))
             return false;
         bytes = bytesStorage.ptr();
@@ -1218,7 +1219,7 @@ js_ReportUncaughtException(JSContext *cx)
 
         if (!JS_GetProperty(cx, exnObject, js_fileName_str, &roots[3]))
             return false;
-        str = js_ValueToString(cx, roots[3]);
+        str = ToString(cx, roots[3]);
         if (!str || !filename.encode(cx, str))
             return false;
 

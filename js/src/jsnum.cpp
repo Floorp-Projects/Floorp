@@ -321,7 +321,7 @@ num_parseFloat(JSContext *cx, uintN argc, Value *vp)
         vp->setDouble(js_NaN);
         return JS_TRUE;
     }
-    str = js_ValueToString(cx, vp[2]);
+    str = ToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
     bp = str->getChars(cx);
@@ -438,7 +438,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Step 1. */
-    JSString *inputString = js_ValueToString(cx, args[0]);
+    JSString *inputString = ToString(cx, args[0]);
     if (!inputString)
         return false;
     args[0].setString(inputString);
