@@ -3347,6 +3347,36 @@ var XPIProvider = {
   },
 
   /**
+   * Update the repositoryAddon property for all add-ons.
+   *
+   * @param  aCallback
+   *         Function to call when operation is complete.
+   */
+  updateAddonRepositoryData: function XPI_updateAddonRepositoryData(aCallback) {
+    let self = this;
+    XPIDatabase.getVisibleAddons(null, function UARD_getVisibleAddonsCallback(aAddons) {
+      let pending = aAddons.length;
+      function notifyComplete() {
+        if (--pending == 0)
+          aCallback();
+      }
+
+      aAddons.forEach(function UARD_forEachCallback(aAddon) {
+        AddonRepository.getCachedAddonByID(aAddon.id,
+                                           function UARD_getCachedAddonCallback(aRepoAddon) {
+          if (aRepoAddon) {
+            aAddon._repositoryAddon = aRepoAddon;
+            aAddon.compatibilityOverrides = aRepoAddon.compatibilityOverrides;
+            self.updateAddonDisabledState(aAddon);
+          }
+
+          notifyComplete();
+        });
+      });
+    });
+  },
+
+  /**
    * When the previously selected theme is removed this method will be called
    * to enable the default theme.
    */
@@ -4052,6 +4082,9 @@ AsyncAddonListCallback.prototype = {
       XPIDatabase.makeAddonFromRowAsync(row, function(aAddon) {
         function completeAddon(aRepositoryAddon) {
           aAddon._repositoryAddon = aRepositoryAddon;
+          aAddon.compatibilityOverrides = aRepositoryAddon ?
+                                            aRepositoryAddon.compatibilityOverrides :
+                                            null;
           self.addons.push(aAddon);
           if (self.complete && self.addons.length == self.count)
            self.callback(self.addons);
@@ -6152,6 +6185,7 @@ AddonInstall.prototype = {
       AddonRepository.getCachedAddonByID(aAddon.id, function(aRepoAddon) {
         if (aRepoAddon) {
           aAddon._repositoryAddon = aRepoAddon;
+          aAddon.compatibilityOverrides = aRepoAddon.compatibilityOverrides;
           aCallback();
           return;
         }
@@ -6160,6 +6194,9 @@ AddonInstall.prototype = {
         AddonRepository.cacheAddons([aAddon.id], function() {
           AddonRepository.getCachedAddonByID(aAddon.id, function(aRepoAddon) {
             aAddon._repositoryAddon = aRepoAddon;
+            aAddon.compatibilityOverrides = aRepoAddon ?
+                                              aRepoAddon.compatibilityOverrides :
+                                              null;
             aCallback();
           });
         });
@@ -7149,6 +7186,17 @@ AddonInternal.prototype = {
     if (this.type == "extension" && !AddonManager.strictCompatibility &&
         !this.strictCompatibility && !this.hasBinaryComponents) {
 
+      // The repository can specify compatibility overrides.
+      // Note: For now, only blacklisting is supported by overrides.
+      if (this._repositoryAddon &&
+          this._repositoryAddon.compatibilityOverrides) {
+        let overrides = this._repositoryAddon.compatibilityOverrides;
+        let override = AddonRepository.findMatchingCompatOverride(this.version,
+                                                                  overrides);
+        if (override && override.type == "incompatible")
+          return false;
+      }
+
       // Extremely old extensions should not be compatible by default.
       let minCompatVersion;
       if (app.id == Services.appinfo.ID)
@@ -7252,7 +7300,7 @@ AddonInternal.prototype = {
   importMetadata: function(aObj) {
     ["targetApplications", "userDisabled", "softDisabled", "existingAddonID",
      "sourceURI", "releaseNotesURI", "installDate", "updateDate",
-     "applyBackgroundUpdates"].forEach(function(aProp) {
+     "applyBackgroundUpdates", "compatibilityOverrides"].forEach(function(aProp) {
       if (!(aProp in aObj))
         return;
 
@@ -7368,7 +7416,7 @@ function AddonWrapper(aAddon) {
   ["id", "syncGUID", "version", "type", "isCompatible", "isPlatformCompatible",
    "providesUpdatesSecurely", "blocklistState", "blocklistURL", "appDisabled",
    "softDisabled", "skinnable", "size", "foreignInstall", "hasBinaryComponents",
-   "strictCompatibility"].forEach(function(aProp) {
+   "strictCompatibility", "compatibilityOverrides"].forEach(function(aProp) {
      this.__defineGetter__(aProp, function() aAddon[aProp]);
   }, this);
 
