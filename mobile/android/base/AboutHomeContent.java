@@ -63,6 +63,9 @@ import android.os.Handler;
 import org.json.*;
 import android.util.AttributeSet;
 
+import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.BrowserDB.URLColumns;
+
 public class AboutHomeContent extends LinearLayout {
     public interface UriLoadCallback {
         public void callback(String uriSpec);
@@ -79,7 +82,7 @@ public class AboutHomeContent extends LinearLayout {
     }
     private static final String LOGTAG = "GeckoAboutHome";
     private static final String TITLE_KEY = "title";
-    private static final String kAbouthomeWhereClause = Browser.BookmarkColumns.BOOKMARK + " = 1";
+    private static final int NUMBER_OF_TOP_SITES = 9;
     private static final int kTileWidth = 122;
 
     private Cursor mCursor;
@@ -127,8 +130,8 @@ public class AboutHomeContent extends LinearLayout {
 
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
-                mCursor = activity.managedQuery(Browser.BOOKMARKS_URI,
-                                                null, kAbouthomeWhereClause, null, null);
+                ContentResolver resolver = GeckoApp.mAppContext.getContentResolver();
+                mCursor = BrowserDB.filter(resolver, "", NUMBER_OF_TOP_SITES);
                 activity.startManagingCursor(mCursor);
 
                 onActivityContentChanged(activity);
@@ -137,10 +140,10 @@ public class AboutHomeContent extends LinearLayout {
                     public void run() {
                         final SimpleCursorAdapter gridAdapter =
                             new SimpleCursorAdapter(activity, R.layout.abouthome_grid_box, mCursor,
-                                                    new String[] {Browser.BookmarkColumns.TITLE,
-                                                                  Browser.BookmarkColumns.FAVICON,
-                                                                  Browser.BookmarkColumns.URL,
-                                                                  "thumbnail"},
+                                                    new String[] { URLColumns.TITLE,
+                                                                   URLColumns.FAVICON,
+                                                                   URLColumns.URL,
+                                                                   URLColumns.THUMBNAIL },
                                                     new int[] {R.id.bookmark_title, R.id.bookmark_icon, R.id.bookmark_url, R.id.screenshot});
                         mGrid.setAdapter(gridAdapter);
                         gridAdapter.setViewBinder(new AwesomeCursorViewBinder());
@@ -211,7 +214,7 @@ public class AboutHomeContent extends LinearLayout {
 
     protected void onGridItemClick(GridView l, View v, int position, long id) {
         mCursor.moveToPosition(position);
-        String spec = mCursor.getString(mCursor.getColumnIndex(Browser.BookmarkColumns.URL));
+        String spec = mCursor.getString(mCursor.getColumnIndex(URLColumns.URL));
         Log.i(LOGTAG, "clicked: " + spec);
         if (mUriLoadCallback != null)
             mUriLoadCallback.callback(spec);
@@ -239,7 +242,7 @@ class AwesomeCursorViewBinder implements SimpleCursorAdapter.ViewBinder {
         // Use the URL instead of an empty title for consistency with the normal URL
         // bar view - this is the equivalent of getDisplayTitle() in Tab.java
         if (title == null || title.length() == 0) {
-            int urlIndex = cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.URL);
+            int urlIndex = cursor.getColumnIndexOrThrow(URLColumns.URL);
             title = cursor.getString(urlIndex);
         }
 
@@ -265,23 +268,22 @@ class AwesomeCursorViewBinder implements SimpleCursorAdapter.ViewBinder {
 
     @Override
     public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
-        int faviconIndex = cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.FAVICON);
+        int faviconIndex = cursor.getColumnIndexOrThrow(URLColumns.FAVICON);
         if (columnIndex == faviconIndex) {
             return updateImage(view, cursor, faviconIndex);
         }
 
-        int titleIndex = cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.TITLE);
+        int titleIndex = cursor.getColumnIndexOrThrow(URLColumns.TITLE);
         if (columnIndex == titleIndex) {
             return updateTitle(view, cursor, titleIndex);
         }
 
-        int urlIndex = cursor.getColumnIndexOrThrow(Browser.BookmarkColumns.URL);
+        int urlIndex = cursor.getColumnIndexOrThrow(URLColumns.URL);
         if (columnIndex == urlIndex) {
             return updateUrl(view, cursor, urlIndex);
         }
 
-        int thumbIndex = cursor.getColumnIndexOrThrow("thumbnail");
-
+        int thumbIndex = cursor.getColumnIndexOrThrow(URLColumns.THUMBNAIL);
         if (columnIndex == thumbIndex) {
             return updateImage(view, cursor, thumbIndex);
         }
