@@ -54,6 +54,7 @@
 
 #include "nsIObserver.h"
 #include "nsITimer.h"
+#include "nsIX509Cert3.h"
 
 class nsHttpPipeline;
 
@@ -205,6 +206,7 @@ private:
         bool mSpdyRedir;
         bool mDidDNS;
         bool mSpdyPreferred;
+        nsCOMPtr<nsIX509Cert3> mCert;
     };
 
     // nsConnectionHandle
@@ -321,9 +323,8 @@ private:
     void     RecvdConnect();
 
     // Manage the preferred spdy connection entry for this address
-    nsConnectionEntry *GetSpdyPreferred(nsACString &aDottedDecimal);
-    void               SetSpdyPreferred(nsACString &aDottedDecimal,
-                                        nsConnectionEntry *ent);
+    nsConnectionEntry *GetSpdyPreferred(nsConnectionEntry *aOriginalEntry);
+    void               SetSpdyPreferred(nsConnectionEntry *ent);
     void               RemoveSpdyPreferred(nsACString &aDottedDecimal);
     nsHttpConnection  *GetSpdyPreferredConn(nsConnectionEntry *ent);
     nsDataHashtable<nsCStringHashKey, nsConnectionEntry *>   mSpdyPreferredHash;
