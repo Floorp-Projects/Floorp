@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
-  <LinearLayout
-      android:id="@+id/abouthome_content"
-      android:orientation="vertical"
-      android:layout_width="fill_parent"
-      android:layout_height="wrap_content"
-      android:isScrollContainer="true" >
     <ImageView
         android:layout_width="fill_parent"
         android:layout_height="100dip"
@@ -39,5 +33,4 @@
         android:layout_width="fill_parent"
         android:isScrollContainer="false"
         android:layout_height="wrap_content"/>
-  </LinearLayout>
 </merge>
