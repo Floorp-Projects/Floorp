@@ -50,7 +50,10 @@ const PREF_EM_LAST_PLATFORM_VERSION   = "extensions.lastPlatformVersion";
 const PREF_EM_AUTOUPDATE_DEFAULT      = "extensions.update.autoUpdateDefault";
 const PREF_EM_STRICT_COMPATIBILITY    = "extensions.strictCompatibility";
 
+// Note: This has to be kept in sync with the same constant in AddonRepository.jsm
 const STRICT_COMPATIBILITY_DEFAULT    = true;
+
+const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const VALID_TYPES_REGEXP = /^[\w\-]+$/;
 
@@ -234,6 +237,67 @@ AddonScreenshot.prototype = {
     return this.url || "";
   }
 }
+
+
+/**
+ * This represents a compatibility override for an addon.
+ *
+ * @param  aType
+ *         Overrride type - "compatible" or "incompatible"
+ * @param  aMinVersion
+ *         Minimum version of the addon to match
+ * @param  aMaxVersion
+ *         Maximum version of the addon to match
+ * @param  aAppID
+ *         Application ID used to match appMinVersion and appMaxVersion
+ * @param  aAppMinVersion
+ *         Minimum version of the application to match
+ * @param  aAppMaxVersion
+ *         Maximum version of the application to match
+ */
+function AddonCompatibilityOverride(aType, aMinVersion, aMaxVersion, aAppID,
+                                    aAppMinVersion, aAppMaxVersion) {
+  this.type = aType;
+  this.minVersion = aMinVersion;
+  this.maxVersion = aMaxVersion;
+  this.appID = aAppID;
+  this.appMinVersion = aAppMinVersion;
+  this.appMaxVersion = aAppMaxVersion;
+}
+
+AddonCompatibilityOverride.prototype = {
+  /**
+   * Type of override - "incompatible" or "compatible".
+   * Only "incompatible" is supported for now.
+   */
+  type: null,
+
+  /**
+   * Min version of the addon to match.
+   */
+  minVersion: null,
+
+  /**
+   * Max version of the addon to match.
+   */
+  maxVersion: null,
+
+  /**
+   * Application ID to match.
+   */
+  appID: null,
+
+  /**
+   * Min version of the application to match.
+   */
+  appMinVersion: null,
+
+  /**
+   * Max version of the application to match.
+   */
+  appMaxVersion: null
+};
+
 
 /**
  * A type of add-on, used by the UI to determine how to display different types
@@ -555,8 +619,13 @@ var AddonManagerInternal = {
     let pendingUpdates = 1;
 
     function notifyComplete() {
-      if (--pendingUpdates == 0)
-        Services.obs.notifyObservers(null, "addons-background-update-complete", null);
+      if (--pendingUpdates == 0) {
+        AddonManagerInternal.updateAddonRepositoryData(function BUC_updateAddonCallback() {
+          Services.obs.notifyObservers(null,
+                                       "addons-background-update-complete",
+                                       null);
+        });
+      }
     }
 
     let scope = {};
@@ -715,7 +784,31 @@ var AddonManagerInternal = {
       callProvider(provider, "updateAddonAppDisabledStates");
     });
   },
+  
+  /**
+   * Notifies all providers that the repository has updated its data for
+   * installed add-ons.
+   *
+   * @param  aCallback
+   *         Function to call when operation is complete.
+   */
+  updateAddonRepositoryData: function AMI_updateAddonRepositoryData(aCallback) {
+    if (!aCallback)
+      throw Components.Exception("Must specify aCallback",
+                                 Cr.NS_ERROR_INVALID_ARG);
 
+    new AsyncObjectCaller(this.providers, "updateAddonRepositoryData", {
+      nextObject: function(aCaller, aProvider) {
+        callProvider(aProvider,
+                     "updateAddonRepositoryData",
+                     null,
+                     aCaller.callNext.bind(aCaller));
+      },
+      noMoreObjects: function(aCaller) {
+        safeCall(aCallback);
+      }
+    });
+  },
   /**
    * Asynchronously gets an AddonInstall for a URL.
    *
@@ -1224,6 +1317,8 @@ var AddonManagerPrivate = {
   AddonAuthor: AddonAuthor,
 
   AddonScreenshot: AddonScreenshot,
+
+  AddonCompatibilityOverride: AddonCompatibilityOverride,
 
   AddonType: AddonType
 };
