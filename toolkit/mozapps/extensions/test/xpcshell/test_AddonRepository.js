@@ -36,7 +36,8 @@ var ADDON_PROPERTIES = ["id", "type", "version", "creator", "developers",
                         "averageRating", "reviewCount", "reviewURL",
                         "totalDownloads", "weeklyDownloads", "dailyUsers",
                         "sourceURI", "repositoryStatus", "size", "updateDate",
-                        "purchaseURL", "purchaseAmount", "purchaseDisplayAmount"];
+                        "purchaseURL", "purchaseAmount", "purchaseDisplayAmount",
+                        "compatibilityOverrides"];
 
 // Results of getAddonsByIDs
 var GET_RESULTS = [{
@@ -82,7 +83,22 @@ var GET_RESULTS = [{
   sourceURI:              BASE_URL + INSTALL_URL2,
   repositoryStatus:       8,
   size:                   5555,
-  updateDate:             new Date(1265033045000)
+  updateDate:             new Date(1265033045000),
+  compatibilityOverrides: [{
+                            type: "incompatible",
+                            minVersion: 0.1,
+                            maxVersion: 0.2,
+                            appID: "xpcshell@tests.mozilla.org",
+                            appMinVersion: 3.0,
+                            appMaxVersion: 4.0
+                          }, {
+                            type: "incompatible",
+                            minVersion: 0.2,
+                            maxVersion: 0.3,
+                            appID: "xpcshell@tests.mozilla.org",
+                            appMinVersion: 5.0,
+                            appMaxVersion: 6.0
+                          }]
 }, {
   id:                     "test_AddonRepository_1@tests.mozilla.org",
   version:                "1.4",
@@ -176,7 +192,8 @@ var SEARCH_RESULTS = [{
   sourceURI:              BASE_URL + "/test3.xpi",
   repositoryStatus:       8,
   size:                   5555,
-  updateDate:             new Date(1265033045000)
+  updateDate:             new Date(1265033045000),
+  
 }, {
   id:                     "purchase1@tests.mozilla.org",
   type:                   "extension",
