@@ -50,6 +50,7 @@
 #include "nsRenderingContext.h"
 
 #include "mozilla/Preferences.h"
+#include "sampler.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -2014,6 +2015,8 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
                                    const nsIntRegion& aRegionToInvalidate,
                                    void* aCallbackData)
 {
+  SAMPLE_LABEL("gfx", "DrawThebesLayer");
+
   nsDisplayListBuilder* builder = static_cast<nsDisplayListBuilder*>
     (aCallbackData);
 
