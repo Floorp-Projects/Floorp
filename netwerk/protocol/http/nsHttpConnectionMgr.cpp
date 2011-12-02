@@ -480,6 +480,10 @@ nsHttpConnectionMgr::GetSpdyAlternateProtocol(nsACString &hostPortKey)
 void
 nsHttpConnectionMgr::ReportSpdyAlternateProtocol(nsHttpConnection *conn)
 {
+    // Check network.http.spdy.use-alternate-protocol pref
+    if (!gHttpHandler->UseAlternateProtocol())
+        return;
+
     // For now lets not bypass proxies due to the alternate-protocol header
     if (conn->ConnectionInfo()->UsingHttpProxy())
         return;

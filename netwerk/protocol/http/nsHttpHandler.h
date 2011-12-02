@@ -115,6 +115,7 @@ public:
 
     bool           IsSpdyEnabled() { return mEnableSpdy; }
     bool           CoalesceSpdy() { return mCoalesceSpdy; }
+    bool           UseAlternateProtocol() { return mUseAlternateProtocol; }
 
     bool           PromptTempRedirect()      { return mPromptTempRedirect; }
 
@@ -337,9 +338,10 @@ private:
     // For broadcasting the preference to not be tracked
     bool           mDoNotTrackEnabled;
     
-    // Try to use SPDY instead of HTTP/1.1 over SSL
+    // Try to use SPDY features instead of HTTP/1.1 over SSL
     bool           mEnableSpdy;
     bool           mCoalesceSpdy;
+    bool           mUseAlternateProtocol;
 };
 
 //-----------------------------------------------------------------------------
