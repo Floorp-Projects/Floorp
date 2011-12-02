@@ -1042,6 +1042,7 @@ StackIter::settleOnNewState()
                 continue;
             }
 
+#ifdef JS_ION
             if (fp_->runningInIon()) {
                 ionFrames_ = ion::IonFrameIterator(ionActivations_.top());
 
@@ -1057,6 +1058,7 @@ StackIter::settleOnNewState()
                 ++ionFrames_;
                 return;
             }
+#endif /* JS_ION */
 
             /*
              * As an optimization, there is no CallArgsList element pushed for
@@ -1128,9 +1130,11 @@ StackIter::settleOnNewState()
 
 StackIter::StackIter(JSContext *cx, SavedOption savedOption)
   : cx_(cx),
-    savedOption_(savedOption),
-    ionActivations_(cx),
+    savedOption_(savedOption)
+#ifdef JS_ION
+    , ionActivations_(cx),
     ionFrames_(NULL)
+#endif
 {
 #ifdef JS_METHODJIT
     mjit::ExpandInlineFrames(cx->compartment);
@@ -1144,6 +1148,7 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
     }
 }
 
+#ifdef JS_ION
 void
 StackIter::popIonFrame()
 {
@@ -1155,6 +1160,7 @@ StackIter::popIonFrame()
         settleOnNewState();
     }
 }
+#endif
 
 StackIter &
 StackIter::operator++()
@@ -1174,9 +1180,11 @@ StackIter::operator++()
       case IMPLICIT_NATIVE:
         state_ = SCRIPTED;
         break;
+#ifdef JS_ION
       case ION:
         popIonFrame();
         break;
+#endif
     }
     return *this;
 }
