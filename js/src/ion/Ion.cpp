@@ -248,24 +248,24 @@ IonCompartment::~IonCompartment()
 
 IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
   : cx_(cx),
-    prev_(cx->compartment->ionCompartment()->activation()),
+    prev_(JS_THREAD_DATA(cx)->ionActivation),
     entryfp_(fp),
     bailout_(NULL),
     prevIonTop_(JS_THREAD_DATA(cx)->ionTop),
     prevIonJSContext_(JS_THREAD_DATA(cx)->ionJSContext)
 {
-    cx->compartment->ionCompartment()->active_ = this;
     fp->setRunningInIon();
     JS_THREAD_DATA(cx)->ionJSContext = cx;
+    JS_THREAD_DATA(cx)->ionActivation = this;
 }
 
 IonActivation::~IonActivation()
 {
-    JS_ASSERT(cx_->compartment->ionCompartment()->active_ == this);
+    JS_ASSERT(JS_THREAD_DATA(cx_)->ionActivation == this);
     JS_ASSERT(!bailout_);
 
     entryfp_->clearRunningInIon();
-    cx_->compartment->ionCompartment()->active_ = prev();
+    JS_THREAD_DATA(cx_)->ionActivation = prev();
     JS_THREAD_DATA(cx_)->ionTop = prevIonTop_;
     JS_THREAD_DATA(cx_)->ionJSContext = prevIonJSContext_;
 }

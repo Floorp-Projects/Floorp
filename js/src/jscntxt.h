@@ -86,6 +86,10 @@ namespace mjit {
 class JaegerCompartment;
 }
 
+namespace ion {
+class IonActivation;
+}
+
 class WeakMapBase;
 class InterpreterFrames;
 
@@ -210,6 +214,9 @@ struct ThreadData {
     // aligned to an Ion exit frame.
     uint8               *ionTop;
     JSContext           *ionJSContext;
+
+    // This points to the most recent Ion activation running on the thread.
+    ion::IonActivation  *ionActivation;
 
 #ifdef DEBUG
     size_t              noGCOrAllocationCheck;
