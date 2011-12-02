@@ -176,6 +176,10 @@ private:
     bool     EnsureNPNComplete();
     void     SetupNPN(PRUint8 caps);
 
+    // Inform the connection manager of any SPDY Alternate-Protocol
+    // redirections
+    void     HandleAlternateProtocol(nsHttpResponseHead *);
+
     // Directly Add a transaction to an active connection for SPDY
     nsresult AddTransaction(nsAHttpTransaction *, PRInt32);
 
