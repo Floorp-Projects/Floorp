@@ -1844,12 +1844,13 @@ const ElementTouchHelper = {
     }
     return false;
   },
+
   getContentClientRects: function(aElement) {
-    let offset = {x: 0, y: 0};
+    let offset = { x: 0, y: 0 };
 
     let nativeRects = aElement.getClientRects();
     // step out of iframes and frames, offsetting scroll values
-    for (let frame = aElement.ownerDocument.defaultView; frame != content; frame = frame.parent) {
+    for (let frame = aElement.ownerDocument.defaultView; frame.frameElement; frame = frame.parent) {
       // adjust client coordinates' origin to be top left of iframe viewport
       let rect = frame.frameElement.getBoundingClientRect();
       let left = frame.getComputedStyle(frame.frameElement, "").borderLeftWidth;
