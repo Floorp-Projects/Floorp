@@ -152,6 +152,11 @@ public:
 
   static void EnsureBuffer(nsAutoArrayPtr<char> &,
                            PRUint32, PRUint32, PRUint32 &);
+
+  // For writing the SPDY data stream to LOG4
+  static void LogIO(SpdySession *, SpdyStream *, const char *,
+                    const char *, PRUint32);
+
 private:
 
   enum stateType {
