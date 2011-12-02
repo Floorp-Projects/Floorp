@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=670817
 
 SimpleTest.expectUncaughtException();
 ok(true, "a call to ok");
-throw "uncaught exception";
+throw "this is a deliberately thrown exception";
 
 ]]></script> 
 </body>
