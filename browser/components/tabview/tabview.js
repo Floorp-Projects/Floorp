@@ -13,8 +13,13 @@ XPCOMUtils.defineLazyGetter(this, "tabviewBundle", function() {
   return Services.strings.
     createBundle("chrome://browser/locale/tabview.properties");
 });
+XPCOMUtils.defineLazyGetter(this, "tabbrowserBundle", function() {
+  return Services.strings.
+    createBundle("chrome://browser/locale/tabbrowser.properties");
+});
 
 function tabviewString(name) tabviewBundle.GetStringFromName('tabview.' + name);
+function tabbrowserString(name) tabbrowserBundle.GetStringFromName(name);
 
 XPCOMUtils.defineLazyGetter(this, "gPrefBranch", function() {
   return Services.prefs.getBranch("browser.panorama.");
