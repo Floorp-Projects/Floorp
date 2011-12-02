@@ -44,7 +44,6 @@
 const TEST_DUPLICATE_ERROR_URI = "http://example.com/browser/browser/devtools/webconsole/test//browser/test-duplicate-error.html";
 
 function test() {
-  expectUncaughtException();
   addTab(TEST_DUPLICATE_ERROR_URI);
   browser.addEventListener("DOMContentLoaded", testDuplicateErrors, false);
 }
@@ -58,7 +57,6 @@ function testDuplicateErrors() {
 
   Services.console.registerListener(consoleObserver);
 
-  expectUncaughtException();
   content.location.reload();
 }
 
