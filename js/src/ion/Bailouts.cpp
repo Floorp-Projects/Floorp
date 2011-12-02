@@ -312,7 +312,7 @@ ion::Bailout(BailoutStack *sp)
 {
     JSContext *cx = GetIonContext()->cx;
     IonCompartment *ioncompartment = cx->compartment->ionCompartment();
-    IonActivation *activation = ioncompartment->activation();
+    IonActivation *activation = JS_THREAD_DATA(cx)->ionActivation;
     FrameRecovery in = FrameRecoveryFromBailout(ioncompartment, sp);
 
     if (!ConvertFrames(cx, activation, in)) {
@@ -328,7 +328,7 @@ JSBool
 ion::ThunkToInterpreter(Value *vp)
 {
     JSContext *cx = GetIonContext()->cx;
-    IonActivation *activation = cx->compartment->ionCompartment()->activation();
+    IonActivation *activation = JS_THREAD_DATA(cx)->ionActivation;
     BailoutClosure *br = activation->takeBailout();
 
     bool ok = Interpret(cx, br->entryfp(), JSINTERP_BAILOUT);

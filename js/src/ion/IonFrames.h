@@ -46,6 +46,7 @@
 #include "jsutil.h"
 #include "IonRegisters.h"
 #include "IonCode.h"
+#include "IonFrameIterator.h"
 
 struct JSFunction;
 struct JSScript;
@@ -76,7 +77,6 @@ struct IonFrameInfo
     SnapshotOffset snapshotOffset;
 };
 
-
 // The layout of an Ion frame on the C stack is roughly:
 //      argN     _
 //      ...       \ - These are jsvals
@@ -87,13 +87,6 @@ struct IonFrameInfo
 //    0 returnAddress
 //   .. locals ..
 
-enum FrameType
-{
-    IonFrame_JS,
-    IonFrame_Entry,
-    IonFrame_Rectifier,
-    IonFrame_Exit
-};
 static const uint32 FRAMETYPE_BITS = 3;
 
 // Ion frames have a few important numbers associated with them:
@@ -152,45 +145,6 @@ class FrameSizeClass
     bool operator !=(const FrameSizeClass &other) const {
         return class_ != other.class_;
     }
-};
-
-class IonCommonFrameLayout;
-
-class IonFrameIterator
-{
-    uint8 *current_;
-    FrameType type_;
-
-    IonCommonFrameLayout *current() const {
-        return (IonCommonFrameLayout *)current_;
-    }
-
-  public:
-    IonFrameIterator(uint8 *top)
-      : current_(top),
-        type_(IonFrame_Exit)
-    { }
-
-    // Current frame information.
-    FrameType type() const {
-        return type_;
-    }
-    uint8 *fp() const {
-        return current_;
-    }
-    uint8 *returnAddress() const;
-
-    // Previous frame information extracted from the current frame.
-    size_t prevFrameLocalSize() const;
-    FrameType prevType() const;
-    uint8 *prevFp() const;
-
-    // Funtctions used to iterate on frames.
-    // When prevType is IonFrame_Entry, the current frame is the last frame.
-    bool more() const {
-        return prevType() != IonFrame_Entry;
-    }
-    void prev();
 };
 
 // Information needed to recover machine register state.

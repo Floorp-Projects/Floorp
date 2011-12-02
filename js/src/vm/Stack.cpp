@@ -907,6 +907,7 @@ StackIter::popFrame()
     StackFrame *oldfp = fp_;
     JS_ASSERT(seg_->contains(oldfp));
     fp_ = fp_->prev();
+
     if (seg_->contains(fp_)) {
         JSInlinedSite *inline_;
         pc_ = oldfp->prevpc(&inline_);
@@ -1041,6 +1042,22 @@ StackIter::settleOnNewState()
                 continue;
             }
 
+            if (fp_->runningInIon()) {
+                ionFrames_ = ion::IonFrameIterator(ionActivations_.top());
+
+                JS_ASSERT(ionFrames_.type() == ion::IonFrame_Exit);
+                if (!ionFrames_.more()) {
+                    // In this case, we bailed out the last frame, so we
+                    // shouldn't really transition to Ion code.
+                    popFrame();
+                    continue;
+                }
+
+                state_ = ION;
+                ++ionFrames_;
+                return;
+            }
+
             /*
              * As an optimization, there is no CallArgsList element pushed for
              * natives called directly by a script (compiled or interpreted).
@@ -1111,7 +1128,9 @@ StackIter::settleOnNewState()
 
 StackIter::StackIter(JSContext *cx, SavedOption savedOption)
   : cx_(cx),
-    savedOption_(savedOption)
+    savedOption_(savedOption),
+    ionActivations_(cx),
+    ionFrames_(NULL)
 {
 #ifdef JS_METHODJIT
     mjit::ExpandInlineFrames(cx->compartment);
@@ -1122,6 +1141,18 @@ StackIter::StackIter(JSContext *cx, SavedOption savedOption)
         settleOnNewState();
     } else {
         state_ = DONE;
+    }
+}
+
+void
+StackIter::popIonFrame()
+{
+    if (ionFrames_.more()) {
+        ++ionFrames_;
+    } else {
+        ++ionActivations_;
+        popFrame();
+        settleOnNewState();
     }
 }
 
@@ -1142,6 +1173,9 @@ StackIter::operator++()
         break;
       case IMPLICIT_NATIVE:
         state_ = SCRIPTED;
+        break;
+      case ION:
+        popIonFrame();
         break;
     }
     return *this;
