@@ -50,6 +50,7 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "nsISocketTransportService.h"
 #include "nsIDNSListener.h"
+#include "nsHashSets.h"
 
 #include "nsIObserver.h"
 #include "nsITimer.h"
@@ -132,6 +133,11 @@ public:
     // called to update a parameter after the connection manager has already
     // been initialized.
     nsresult UpdateParam(nsParamName name, PRUint16 value);
+
+    // Lookup/Cancel HTTP->SPDY redirections
+    bool GetSpdyAlternateProtocol(nsACString &key);
+    void ReportSpdyAlternateProtocol(nsHttpConnection *);
+    void RemoveSpdyAlternateProtocol(nsACString &key);
 
     //-------------------------------------------------------------------------
     // NOTE: functions below may be called only on the socket thread.
@@ -405,6 +411,13 @@ private:
     // nsConnectionEntry object.
     //
     nsClassHashtable<nsCStringHashKey, nsConnectionEntry> mCT;
+
+    // this table is protected by the monitor
+    nsCStringHashSet mAlternateProtocolHash;
+    static PLDHashOperator TrimAlternateProtocolHash(PLDHashTable *table,
+                                                     PLDHashEntryHdr *hdr,
+                                                     PRUint32 number,
+                                                     void *closure);
 };
 
 #endif // !nsHttpConnectionMgr_h__

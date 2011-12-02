@@ -97,6 +97,7 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
 {
     LOG(("Creating nsHttpConnectionMgr @%x\n", this));
     mCT.Init();
+    mAlternateProtocolHash.Init(16);
 }
 
 nsHttpConnectionMgr::~nsHttpConnectionMgr()
@@ -464,6 +465,68 @@ nsHttpConnectionMgr::ReportSpdyConnection(nsHttpConnection *conn,
         conn->DontReuse();
     }
     ProcessSpdyPendingQ();
+}
+
+bool
+nsHttpConnectionMgr::GetSpdyAlternateProtocol(nsACString &hostPortKey)
+{
+    // The Alternate Protocol hash is protected under the monitor because
+    // it is read from both the main and the network thread.
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+    return mAlternateProtocolHash.Contains(hostPortKey);
+}
+
+void
+nsHttpConnectionMgr::ReportSpdyAlternateProtocol(nsHttpConnection *conn)
+{
+    // For now lets not bypass proxies due to the alternate-protocol header
+    if (conn->ConnectionInfo()->UsingHttpProxy())
+        return;
+
+    nsCString hostPortKey(conn->ConnectionInfo()->Host());
+    if (conn->ConnectionInfo()->Port() != 80) {
+        hostPortKey.Append(NS_LITERAL_CSTRING(":"));
+        hostPortKey.AppendInt(conn->ConnectionInfo()->Port());
+    }
+
+    // The Alternate Protocol hash is protected under the monitor because
+    // it is read from both the main and the network thread.
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+    // Check to see if this is already present
+    if (mAlternateProtocolHash.Contains(hostPortKey))
+        return;
+    
+    if (mAlternateProtocolHash.mHashTable.entryCount > 2000)
+        PL_DHashTableEnumerate(&mAlternateProtocolHash.mHashTable,
+                               &nsHttpConnectionMgr::TrimAlternateProtocolHash,
+                               this);
+    
+    mAlternateProtocolHash.Put(hostPortKey);
+}
+
+void
+nsHttpConnectionMgr::RemoveSpdyAlternateProtocol(nsACString &hostPortKey)
+{
+    // The Alternate Protocol hash is protected under the monitor because
+    // it is read from both the main and the network thread.
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+    return mAlternateProtocolHash.Remove(hostPortKey);
+}
+
+PLDHashOperator
+nsHttpConnectionMgr::TrimAlternateProtocolHash(PLDHashTable *table,
+                                               PLDHashEntryHdr *hdr,
+                                               PRUint32 number,
+                                               void *closure)
+{
+    nsHttpConnectionMgr *self = (nsHttpConnectionMgr *) closure;
+    
+    if (self->mAlternateProtocolHash.mHashTable.entryCount > 2000)
+        return PL_DHASH_REMOVE;
+    return PL_DHASH_STOP;
 }
 
 nsHttpConnectionMgr::nsConnectionEntry *
