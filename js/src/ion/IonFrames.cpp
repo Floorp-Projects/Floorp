@@ -44,6 +44,7 @@
 #include "jsobj.h"
 #include "jsscript.h"
 #include "jsfun.h"
+#include "IonCompartment.h"
 
 using namespace js;
 using namespace js::ion;
@@ -102,6 +103,12 @@ FrameRecovery::ionScript() const
     return script_->ion;
 }
 
+IonCommonFrameLayout *
+IonFrameIterator::current() const
+{
+    return (IonCommonFrameLayout *)current_;
+}
+
 uint8 *
 IonFrameIterator::returnAddress() const
 {
@@ -148,8 +155,8 @@ IonFrameIterator::prevFp() const
     return current_ + currentSize;
 }
 
-void
-IonFrameIterator::prev()
+IonFrameIterator &
+IonFrameIterator::operator++()
 {
     JS_ASSERT(type_ != IonFrame_Entry);
 
@@ -157,7 +164,7 @@ IonFrameIterator::prev()
     // since the entry and first frames overlap.
     if (current()->prevType() == IonFrame_Entry) {
         type_ = IonFrame_Entry;
-        return;
+        return *this;
     }
 
     // Note: prevFp() needs the current type, so set it after computing the
@@ -165,6 +172,7 @@ IonFrameIterator::prev()
     uint8 *prev = prevFp();
     type_ = current()->prevType();
     current_ = prev;
+    return *this;
 }
 
 void
@@ -174,8 +182,24 @@ ion::HandleException(ResumeFromException *rfe)
 
     IonFrameIterator iter(JS_THREAD_DATA(cx)->ionTop);
     while (iter.type() != IonFrame_Entry)
-        iter.prev();
+        ++iter;
 
     rfe->stackPointer = iter.fp();
+}
+
+IonActivationIterator::IonActivationIterator(JSContext *cx)
+  : cx_(cx),
+    top_(JS_THREAD_DATA(cx)->ionTop),
+    activation_(JS_THREAD_DATA(cx)->ionActivation)
+{
+}
+
+IonActivationIterator &
+IonActivationIterator::operator++()
+{
+    JS_ASSERT(activation_);
+    top_ = activation_->prevIonTop();
+    activation_ = activation_->prev();
+    return *this;
 }
 

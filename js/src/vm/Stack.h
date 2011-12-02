@@ -42,6 +42,9 @@
 #define Stack_h__
 
 #include "jsfun.h"
+#ifdef JS_ION
+# include "ion/IonFrameIterator.h"
+#endif
 
 struct JSContext;
 struct JSCompartment;
@@ -1502,7 +1505,7 @@ class StackIter
   private:
     SavedOption  savedOption_;
 
-    enum State { DONE, SCRIPTED, NATIVE, IMPLICIT_NATIVE };
+    enum State { DONE, SCRIPTED, NATIVE, IMPLICIT_NATIVE, ION };
     State        state_;
 
     StackFrame   *fp_;
@@ -1512,10 +1515,13 @@ class StackIter
     Value        *sp_;
     jsbytecode   *pc_;
     CallArgs     args_;
+    ion::IonActivationIterator ionActivations_;
+    ion::IonFrameIterator ionFrames_;
 
     void poisonRegs();
     void popFrame();
     void popCall();
+    void popIonFrame();
     void settleOnNewSegment();
     void settleOnNewState();
     void startOnSegment(StackSegment *seg);
