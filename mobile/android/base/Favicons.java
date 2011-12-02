@@ -44,14 +44,19 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.provider.Browser;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -59,8 +64,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
-import org.mozilla.gecko.db.BrowserDB;
 
 public class Favicons {
     private static final String LOGTAG = "GeckoFavicons";
@@ -232,19 +235,51 @@ public class Favicons {
             Log.d(LOGTAG, "Loading favicon from DB for URL = " + mPageUrl);
 
             ContentResolver resolver = mContext.getContentResolver();
-            BitmapDrawable favicon = BrowserDB.getFaviconForUrl(resolver, mPageUrl);
 
-            if (favicon != null)
-                Log.d(LOGTAG, "Loaded favicon from DB successfully for URL = " + mPageUrl);
+            Cursor c = resolver.query(Browser.BOOKMARKS_URI,
+                                      new String[] { Browser.BookmarkColumns.FAVICON },
+                                      Browser.BookmarkColumns.URL + " = ?",
+                                      new String[] { mPageUrl },
+                                      null);
 
-            return favicon;
+            if (!c.moveToFirst()) {
+                c.close();
+                return null;
+            }
+
+            int faviconIndex = c.getColumnIndexOrThrow(Browser.BookmarkColumns.FAVICON);
+            
+            byte[] b = c.getBlob(faviconIndex);
+            c.close();
+            if (b == null)
+                return null;
+
+            Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
+
+            Log.d(LOGTAG, "Loaded favicon from DB successfully for URL = " + mPageUrl);
+
+            return new BitmapDrawable(bitmap);
         }
 
         // Runs in background thread
         private void saveFaviconToDb(BitmapDrawable favicon) {
-            Log.d(LOGTAG, "Saving favicon on browser database for URL = " + mPageUrl);
+            Bitmap bitmap = favicon.getBitmap();
+
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+
+            ContentValues values = new ContentValues();
+            values.put(Browser.BookmarkColumns.FAVICON, stream.toByteArray());
+            values.put(Browser.BookmarkColumns.URL, mPageUrl);
+
             ContentResolver resolver = mContext.getContentResolver();
-            BrowserDB.updateFaviconForUrl(resolver, mPageUrl, favicon);
+
+            Log.d(LOGTAG, "Saving favicon on browser database for URL = " + mPageUrl);
+            resolver.update(Browser.BOOKMARKS_URI,
+                            values,
+                            Browser.BookmarkColumns.URL + " = ?",
+                            new String[] { mPageUrl });
+
 
             Log.d(LOGTAG, "Saving favicon URL for URL = " + mPageUrl);
             mDbHelper.setFaviconUrlForPageUrl(mPageUrl, mFaviconUrl);
