@@ -137,6 +137,7 @@ ThreadData::init()
     return stackSpace.init() && !!(dtoaState = js_NewDtoaState());
 }
 
+#ifdef JS_THREADSAFE
 void
 ThreadData::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, size_t *temporary,
                                 size_t *regexpCode, size_t *stackCommitted)
@@ -163,6 +164,7 @@ ThreadData::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, 
 
     *stackCommitted = stackSpace.sizeOfCommitted();
 }
+#endif
 
 void
 ThreadData::triggerOperationCallback(JSRuntime *rt)
