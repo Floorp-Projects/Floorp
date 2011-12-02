@@ -1503,7 +1503,12 @@ class StackIter
   private:
     SavedOption  savedOption_;
 
-    enum State { DONE, SCRIPTED, NATIVE, IMPLICIT_NATIVE, ION };
+    enum State { DONE, SCRIPTED, NATIVE, IMPLICIT_NATIVE
+#ifdef JS_ION
+        , ION
+#endif
+    };
+
     State        state_;
 
     StackFrame   *fp_;
@@ -1513,13 +1518,18 @@ class StackIter
     Value        *sp_;
     jsbytecode   *pc_;
     CallArgs     args_;
+
+#ifdef JS_ION
     ion::IonActivationIterator ionActivations_;
     ion::IonFrameIterator ionFrames_;
+#endif
 
     void poisonRegs();
     void popFrame();
     void popCall();
+#ifdef JS_ION
     void popIonFrame();
+#endif
     void settleOnNewSegment();
     void settleOnNewState();
     void startOnSegment(StackSegment *seg);
