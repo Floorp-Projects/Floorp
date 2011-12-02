@@ -2685,7 +2685,7 @@ BEGIN_CASE(JSOP_ADD)
             if (lIsString) {
                 lstr = lval.toString();
             } else {
-                lstr = js_ValueToString(cx, lval);
+                lstr = ToString(cx, lval);
                 if (!lstr)
                     goto error;
                 regs.sp[-2].setString(lstr);
@@ -2693,7 +2693,7 @@ BEGIN_CASE(JSOP_ADD)
             if (rIsString) {
                 rstr = rval.toString();
             } else {
-                rstr = js_ValueToString(cx, rval);
+                rstr = ToString(cx, rval);
                 if (!rstr)
                     goto error;
                 regs.sp[-1].setString(rstr);
@@ -5124,7 +5124,7 @@ BEGIN_CASE(JSOP_XMLTAGEXPR)
     JS_ASSERT(!script->strictModeCode);
 
     Value rval = regs.sp[-1];
-    JSString *str = js_ValueToString(cx, rval);
+    JSString *str = ToString(cx, rval);
     if (!str)
         goto error;
     regs.sp[-1].setString(str);
@@ -5140,7 +5140,7 @@ BEGIN_CASE(JSOP_XMLELTEXPR)
     if (IsXML(rval)) {
         str = js_ValueToXMLString(cx, rval);
     } else {
-        str = js_ValueToString(cx, rval);
+        str = ToString(cx, rval);
         if (str)
             str = js_EscapeElementValue(cx, str);
     }
