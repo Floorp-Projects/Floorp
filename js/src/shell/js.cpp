@@ -3831,7 +3831,7 @@ MJitCodeStats(JSContext *cx, uintN argc, jsval *vp)
     size_t n = 0, method, regexp, unused;
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
     {
-        (*c)->getMjitCodeStats(method, regexp, unused);
+        (*c)->sizeOfCode(&method, &regexp, &unused);
         n += method + regexp + unused;
     }
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(n));
