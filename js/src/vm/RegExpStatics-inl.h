@@ -47,6 +47,13 @@
 
 namespace js {
 
+inline js::RegExpStatics *
+js::GlobalObject::getRegExpStatics() const
+{
+    JSObject &resObj = getSlot(REGEXP_STATICS).toObject();
+    return static_cast<RegExpStatics *>(resObj.getPrivate());
+}
+
 inline
 RegExpStatics::RegExpStatics()
   : bufferLink(NULL),
@@ -303,5 +310,11 @@ RegExpStatics::reset(JSContext *cx, JSString *newInput, bool newMultiline)
 }
 
 } /* namespace js */
+
+inline js::RegExpStatics *
+JSContext::regExpStatics()
+{
+    return js::GetGlobalForScopeChain(this)->getRegExpStatics();
+}
 
 #endif

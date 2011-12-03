@@ -48,6 +48,7 @@
 #include "WrapperFactory.h"
 #include "dom_quickstubs.h"
 
+#include "jscompartment.h"
 #include "jsgcchunk.h"
 #include "jsscope.h"
 #include "nsIMemoryReporter.h"
@@ -531,7 +532,7 @@ static PLDHashOperator
 SuspectDOMExpandos(nsPtrHashKey<JSObject> *expando, void *arg)
 {
     Closure *closure = static_cast<Closure*>(arg);
-    closure->cb->NoteXPCOMRoot(static_cast<nsISupports*>(expando->GetKey()->getPrivate()));
+    closure->cb->NoteXPCOMRoot(static_cast<nsISupports*>(js::GetObjectPrivate(expando->GetKey())));
     return PL_DHASH_NEXT;
 }
 
@@ -1233,6 +1234,8 @@ CompartmentCallback(JSContext *cx, void *vdata, JSCompartment *compartment)
 #endif
     JS_GetTypeInferenceMemoryStats(cx, compartment, &curr->typeInferenceMemory,
                                    MemoryReporterMallocSizeOf);
+    curr->shapesCompartmentTables =
+        js::GetCompartmentShapeTableSize(compartment, MemoryReporterMallocSizeOf);
 }
 
 void
@@ -1272,12 +1275,12 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
         case JSTRACE_OBJECT:
         {
             JSObject *obj = static_cast<JSObject *>(thing);
-            if (obj->isFunction()) {
+            if (JS_ObjectIsFunction(cx, obj)) {
                 curr->gcHeapObjectsFunction += thingSize;
             } else {
                 curr->gcHeapObjectsNonFunction += thingSize;
             }
-            curr->objectSlots += obj->sizeOfSlotsArray(MemoryReporterMallocSizeOf);
+            curr->objectSlots += js::GetObjectDynamicSlotSize(obj, MemoryReporterMallocSizeOf);
             break;
         }
         case JSTRACE_STRING:
@@ -1293,14 +1296,19 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
             if (shape->inDictionary()) {
                 curr->gcHeapShapesDict += thingSize;
                 curr->shapesExtraDictTables +=
-                    shape->sizeOfPropertyTableIncludingThis(MemoryReporterMallocSizeOf);
+                    shape->sizeOfPropertyTable(MemoryReporterMallocSizeOf);
             } else {
                 curr->gcHeapShapesTree += thingSize;
                 curr->shapesExtraTreeTables +=
-                    shape->sizeOfPropertyTableIncludingThis(MemoryReporterMallocSizeOf);
+                    shape->sizeOfPropertyTable(MemoryReporterMallocSizeOf);
                 curr->shapesExtraTreeShapeKids +=
-                    shape->sizeOfKidsIncludingThis(MemoryReporterMallocSizeOf);
+                    shape->sizeOfKids(MemoryReporterMallocSizeOf);
             }
+            break;
+        }
+        case JSTRACE_BASE_SHAPE:
+        {
+            curr->gcHeapShapesBase += thingSize;
             break;
         }
         case JSTRACE_SCRIPT:
@@ -1602,9 +1610,10 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
                               stats.objectSlots;
         data->totalShapes  += stats.gcHeapShapesTree + 
                               stats.gcHeapShapesDict +
+                              stats.gcHeapShapesBase +
                               stats.shapesExtraTreeTables +
                               stats.shapesExtraDictTables +
-                              stats.typeInferenceMemory.emptyShapes;
+                              stats.shapesCompartmentTables;
         data->totalScripts += stats.gcHeapScripts + 
                               stats.scriptData;
         data->totalStrings += stats.gcHeapStrings + 
@@ -1719,6 +1728,13 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
+                                              "gc-heap/shapes/base"),
+                       JS_GC_HEAP_KIND, stats.gcHeapShapesBase,
+                       "Memory on the compartment's garbage-collected JavaScript heap that collates "
+                       "data common to many shapes.",
+                       callback, closure);
+
+    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
                                               "gc-heap/type-objects"),
                        JS_GC_HEAP_KIND, stats.gcHeapTypeObjects,
                        "Memory on the compartment's garbage-collected JavaScript heap that holds "
@@ -1774,11 +1790,10 @@ ReportCompartmentStats(const CompartmentStats &stats,
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "shapes-extra/empty-shape-arrays"),
-                       nsIMemoryReporter::KIND_HEAP,
-                       stats.typeInferenceMemory.emptyShapes,
-                       "Memory used for arrays attached to prototype JS objects managing shape "
-                       "information.",
+                                              "shapes-extra/compartment-tables"),
+                       nsIMemoryReporter::KIND_HEAP, stats.shapesCompartmentTables,
+                       "Memory used by compartment wide tables storing shape information "
+                       "for use during object construction.",
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
@@ -2001,6 +2016,7 @@ public:
                           nsIMemoryReporter::KIND_OTHER, data.totalShapes,
                           "Memory used for all shape-related data.  This is the sum of all "
                           "compartments' 'gc-heap/shapes/tree', 'gc-heap/shapes/dict', "
+                          "'gc-heap/shapes/base', "
                           "'shapes-extra/tree-tables', 'shapes-extra/dict-tables', "
                           "'shapes-extra/tree-shape-kids' and 'shapes-extra/empty-shape-arrays'.",
                           callback, closure);

@@ -48,6 +48,7 @@
 #include "jsscript.h"
 #include "jsscope.h"
 
+#include "vm/CallObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/RegExpObject.h"
 
@@ -57,42 +58,26 @@ namespace js {
 
 inline
 Bindings::Bindings(JSContext *cx)
-    : nargs(0), nvars(0), nupvars(0), hasExtensibleParents(false)
-{
-}
-
-inline
-Bindings::~Bindings()
-{
-}
+    : lastBinding(NULL), nargs(0), nvars(0), nupvars(0)
+{}
 
 inline void
 Bindings::transfer(JSContext *cx, Bindings *bindings)
 {
     JS_ASSERT(!lastBinding);
+    JS_ASSERT(!bindings->lastBinding || !bindings->lastBinding->inDictionary());
 
     *this = *bindings;
 #ifdef DEBUG
     bindings->lastBinding = NULL;
 #endif
-
-    /* Preserve back-pointer invariants across the lastBinding transfer. */
-    if (lastBinding && lastBinding->inDictionary())
-        lastBinding->listp = &this->lastBinding;
 }
 
 inline void
 Bindings::clone(JSContext *cx, Bindings *bindings)
 {
     JS_ASSERT(!lastBinding);
-
-    /*
-     * Non-dictionary bindings are fine to share, as are dictionary bindings if
-     * they're copy-on-modification.
-     */
-    JS_ASSERT(!bindings->lastBinding ||
-              !bindings->lastBinding->inDictionary() ||
-              bindings->lastBinding->frozen());
+    JS_ASSERT(!bindings->lastBinding || !bindings->lastBinding->inDictionary());
 
     *this = *bindings;
 }
@@ -101,7 +86,7 @@ Shape *
 Bindings::lastShape() const
 {
     JS_ASSERT(lastBinding);
-    JS_ASSERT_IF(lastBinding->inDictionary(), lastBinding->frozen());
+    JS_ASSERT(!lastBinding->inDictionary());
     return lastBinding;
 }
 
@@ -109,11 +94,22 @@ bool
 Bindings::ensureShape(JSContext *cx)
 {
     if (!lastBinding) {
-        lastBinding = EmptyShape::getEmptyCallShape(cx);
+        /* Get an allocation kind to match an empty call object. */
+        gc::AllocKind kind = gc::FINALIZE_OBJECT4;
+        JS_ASSERT(gc::GetGCKindSlots(kind) == CallObject::RESERVED_SLOTS + 1);
+
+        lastBinding = EmptyShape::getInitialShape(cx, &CallClass, NULL, NULL, kind,
+                                                  BaseShape::VAROBJ);
         if (!lastBinding)
             return false;
     }
     return true;
+}
+
+bool
+Bindings::extensibleParents()
+{
+    return lastBinding && lastBinding->extensibleParents();
 }
 
 extern const char *
@@ -138,11 +134,8 @@ inline JSFunction *
 JSScript::getFunction(size_t index)
 {
     JSObject *funobj = getObject(index);
-    JS_ASSERT(funobj->isFunction());
-    JS_ASSERT(funobj == (JSObject *) funobj->getPrivate());
-    JSFunction *fun = (JSFunction *) funobj;
-    JS_ASSERT(fun->isInterpreted());
-    return fun;
+    JS_ASSERT(funobj->isFunction() && funobj->toFunction()->isInterpreted());
+    return funobj->toFunction();
 }
 
 inline JSFunction *
@@ -202,17 +195,10 @@ JSScript::hasClearedGlobal() const
     return obj && obj->isCleared();
 }
 
-inline JSFunction *
-JSScript::function() const
-{
-    JS_ASSERT(hasFunction && types);
-    return types->function;
-}
-
 inline js::types::TypeScriptNesting *
 JSScript::nesting() const
 {
-    JS_ASSERT(hasFunction && types && types->hasScope());
+    JS_ASSERT(function() && types && types->hasScope());
     return types->nesting;
 }
 

@@ -745,8 +745,8 @@ bool
 CrossCompartmentWrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs srcArgs)
 {
     JS_ASSERT_IF(!srcArgs.calleev().isUndefined(),
-                 srcArgs.callee().getFunctionPrivate()->native() == native ||
-                 srcArgs.callee().getFunctionPrivate()->native() == js_generic_native_method_dispatcher);
+                 srcArgs.callee().toFunction()->native() == native ||
+                 srcArgs.callee().toFunction()->native() == js_generic_native_method_dispatcher);
     JS_ASSERT(&srcArgs.thisv().toObject() == wrapper);
     JS_ASSERT(!UnwrapObject(wrapper)->isCrossCompartmentWrapper());
 
