@@ -86,6 +86,7 @@ if [ ! "$LIBXUL_SDK" ]; then
   if [ "$MOZ_WIDGET_TOOLKIT" = "android" ]; then
     add_makefiles "
       other-licenses/android/Makefile
+      other-licenses/skia-npapi/Makefile
     "
   fi
 fi
@@ -115,6 +116,9 @@ if [ "$COMPILER_DEPEND" = "" -a "$MOZ_NATIVE_MAKEDEPEND" = "" ]; then
 fi
 
 if [ "$ENABLE_TESTS" ]; then
+  add_makefiles "
+    build/autoconf/test/Makefile
+  "
   if [ "$_MSC_VER" -a "$OS_TEST" != "x86_64" ]; then
     add_makefiles "
       build/win32/vmwarerecordinghelper/Makefile
