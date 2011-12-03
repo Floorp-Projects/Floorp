@@ -1,6 +1,5 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -65,11 +64,11 @@ interface nsIJSIID : nsIJSID
 {
 };
 
-[scriptable, uuid(26b2a374-6eaf-46d4-acaf-1c6be152d36b)]
+[scriptable, uuid(bf5eb086-9eaa-4694-aec3-fe4aac6119bd)]
 interface nsIJSCID : nsIJSID
 {
-    nsISupports createInstance();
-    nsISupports getService();
+    [implicit_jscontext,optional_argc] jsval createInstance([optional] in jsval iid);
+    [implicit_jscontext,optional_argc] jsval getService([optional] in jsval iid);
 };
 
 /* this goes into the C++ header verbatim. */
