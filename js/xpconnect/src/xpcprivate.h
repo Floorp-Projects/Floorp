@@ -3327,7 +3327,14 @@ public:
 
     static JSBool JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
                                  JSUint32 count, const nsXPTType& type,
-                                 const nsID* iid, uintN* pErr);
+                                 const nsID* iid, nsresult* pErr);
+
+    static JSBool JSTypedArray2Native(XPCCallContext& ccx,
+                                      void** d,
+                                      JSObject* jsarray,
+                                      JSUint32 count,
+                                      const nsXPTType& type,
+                                      nsresult* pErr);
 
     static JSBool NativeStringWithSize2JS(JSContext* cx,
                                           jsval* d, const void* s,
