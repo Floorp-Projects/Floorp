@@ -47,7 +47,7 @@
 interface nsIXPCTestInterfaceA;
 interface nsIXPCTestInterfaceB;
 
-[scriptable, uuid(b94cd289-d0df-4d25-8995-facf687d921d)]
+[scriptable, uuid(fe2b7433-ac3b-49ef-9344-b67228bfdd46)]
 interface nsIXPCTestParams : nsISupports {
 
   // These types correspond to the ones in typelib.py
@@ -79,9 +79,9 @@ interface nsIXPCTestParams : nsISupports {
   void                  testShortArray(in unsigned long aLength, [array, size_is(aLength)] in short a,
                                        inout unsigned long bLength, [array, size_is(bLength)] inout short b,
                                        out unsigned long rvLength, [retval, array, size_is(rvLength)] out short rv);
-  void                  testLongLongArray(in unsigned long aLength, [array, size_is(aLength)] in long long a,
-                                          inout unsigned long bLength, [array, size_is(bLength)] inout long long b,
-                                          out unsigned long rvLength, [retval, array, size_is(rvLength)] out long long rv);
+  void                  testDoubleArray(in unsigned long aLength, [array, size_is(aLength)] in double a,
+                                        inout unsigned long bLength, [array, size_is(bLength)] inout double b,
+                                        out unsigned long rvLength, [retval, array, size_is(rvLength)] out double rv);
   void                  testStringArray(in unsigned long aLength, [array, size_is(aLength)] in string a,
                                         inout unsigned long bLength, [array, size_is(bLength)] inout string b,
                                         out unsigned long rvLength, [retval, array, size_is(rvLength)] out string rv);

@@ -246,14 +246,14 @@ NS_IMETHODIMP nsXPCTestParams::TestShortArray(PRUint32 aLength, PRInt16 *a,
     BUFFER_METHOD_IMPL(PRInt16, 0, TAKE_OWNERSHIP_NOOP);
 }
 
-/* void testLongLongArray (in unsigned long aLength, [array, size_is (aLength)] in long long a,
- *                         inout unsigned long bLength, [array, size_is (bLength)] inout long long b,
- *                         out unsigned long rvLength, [array, size_is (rvLength), retval] out long long rv); */
-NS_IMETHODIMP nsXPCTestParams::TestLongLongArray(PRUint32 aLength, PRInt64 *a,
-                                                 PRUint32 *bLength NS_INOUTPARAM, PRInt64 **b NS_INOUTPARAM,
-                                                 PRUint32 *rvLength NS_OUTPARAM, PRInt64 **rv NS_OUTPARAM)
+/* void testDoubleArray (in unsigned long aLength, [array, size_is (aLength)] in double a,
+ *                       inout unsigned long bLength, [array, size_is (bLength)] inout double b,
+ *                       out unsigned long rvLength, [array, size_is (rvLength), retval] out double rv); */
+NS_IMETHODIMP nsXPCTestParams::TestDoubleArray(PRUint32 aLength, double *a,
+                                               PRUint32 *bLength NS_INOUTPARAM, double **b NS_INOUTPARAM,
+                                               PRUint32 *rvLength NS_OUTPARAM,  double **rv NS_OUTPARAM)
 {
-    BUFFER_METHOD_IMPL(PRInt64, 0, TAKE_OWNERSHIP_NOOP);
+    BUFFER_METHOD_IMPL(double, 0, TAKE_OWNERSHIP_NOOP);
 }
 
 /* void testStringArray (in unsigned long aLength, [array, size_is (aLength)] in string a,
