@@ -521,7 +521,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
 
     // the scheme is already ASCII
     if (mScheme.mLen > 0)
-        approxLen += mScheme.mLen + 3; // includes room for "://";
+        approxLen += mScheme.mLen + 3; // includes room for "://", which we insert always
 
     // encode URL segments; convert UTF-8 to origin charset and possibly escape.
     // results written to encXXX variables only if |spec| is not already in the
@@ -532,8 +532,9 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
         // Items using an extraLen of 1 don't add anything unless mLen > 0
         // Username@
         approxLen += encoder.EncodeSegmentCount(spec, mUsername,  esc_Username,      encUsername,  useEncUsername, 1);
-        // :Password
-        approxLen += encoder.EncodeSegmentCount(spec, mPassword,  esc_Password,      encPassword,  useEncPassword, 1);
+        // :password - we insert the ':' even if there's no actual password if "user:@" was in the spec
+        if (mPassword.mLen >= 0)
+            approxLen += 1 + encoder.EncodeSegmentCount(spec, mPassword,  esc_Password,      encPassword,  useEncPassword);
         // mHost is handled differently below due to encoding differences
         NS_ABORT_IF_FALSE(mPort > 0 || mPort == -1, "Invalid negative mPort");
         if (mPort != -1 && mPort != mDefaultPort)
@@ -563,6 +564,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     // already point to a [ ] delimited IPv6 address literal.
     // However, perform Unicode normalization on it, as IDN does.
     mHostEncoding = eEncoding_ASCII;
+    // Note that we don't disallow URLs without a host - file:, etc
     if (mHost.mLen > 0) {
         const nsCSubstring& tempHost =
             Substring(spec + mHost.mPos, spec + mHost.mPos + mHost.mLen);

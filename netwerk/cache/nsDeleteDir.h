@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *  Darin Fisher <darin@meer.net>
+ *  Michal Novotny <michal.novotny@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,39 +41,72 @@
 #define nsDeleteDir_h__
 
 #include "nsCOMPtr.h"
+#include "nsCOMArray.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/CondVar.h"
 
 class nsIFile;
+class nsIThread;
+class nsITimer;
 
-/**
- * This routine attempts to delete a directory that may contain some files that
- * are still in use.  This later point is only an issue on Windows and a few
- * other systems.
- *
- * If the moveToTrash parameter is true, then the process for deleting the
- * directory creates a sibling directory of the same name with the ".Trash"
- * suffix.  It then attempts to move the given directory into the corresponding
- * trash folder (moving individual files if necessary).  Next, it proceeds to
- * delete each file in the trash folder on a low-priority background thread.
- *
- * If the moveToTrash parameter is false, then the given directory is deleted
- * directly.
- *
- * If the sync flag is true, then the delete operation runs to completion
- * before this function returns.  Otherwise, deletion occurs asynchronously.
- *
- * If 'delay' is non-zero, the directory will not be deleted until the
- * specified number of milliseconds have passed. (The directory is still
- * renamed immediately if 'moveToTrash' is passed, so upon return it is safe
- * to create a directory with the same name). This parameter is ignored if
- * 'sync' is true.
- */
-NS_HIDDEN_(nsresult) DeleteDir(nsIFile *dir, bool moveToTrash, bool sync, 
-                               PRUint32 delay = 0);
 
-/**
- * This routine returns the trash directory corresponding to the given 
- * directory.
- */
-NS_HIDDEN_(nsresult) GetTrashDir(nsIFile *dir, nsCOMPtr<nsIFile> *result);
+class nsDeleteDir {
+public:
+  nsDeleteDir();
+  ~nsDeleteDir();
+
+  static nsresult Init();
+  static nsresult Shutdown(bool finishDeleting);
+
+  /**
+   * This routine attempts to delete a directory that may contain some files
+   * that are still in use. This latter point is only an issue on Windows and
+   * a few other systems.
+   *
+   * If the moveToTrash parameter is true we first rename the given directory
+   * "foo.Trash123" (where "foo" is the original directory name, and "123" is
+   * a random number, in order to support multiple concurrent deletes). The
+   * directory is then deleted, file-by-file, on a background thread.
+   *
+   * If the moveToTrash parameter is false, then the given directory is deleted
+   * directly.
+   *
+   * If 'delay' is non-zero, the directory will not be deleted until the
+   * specified number of milliseconds have passed. (The directory is still
+   * renamed immediately if 'moveToTrash' is passed, so upon return it is safe
+   * to create a directory with the same name).
+   */
+  static nsresult DeleteDir(nsIFile *dir, bool moveToTrash, PRUint32 delay = 0);
+
+  /**
+   * Returns the trash directory corresponding to the given directory.
+   */
+  static nsresult GetTrashDir(nsIFile *dir, nsCOMPtr<nsIFile> *result);
+
+  /**
+   * Remove all trashes left from previous run. This function does nothing when
+   * called second and more times.
+   */
+  static nsresult RemoveOldTrashes(nsIFile *cacheDir);
+
+  static void TimerCallback(nsITimer *aTimer, void *arg);
+
+private:
+  friend class nsBlockOnBackgroundThreadEvent;
+  friend class nsDestroyThreadEvent;
+
+  nsresult InitThread();
+  void     DestroyThread();
+  nsresult PostTimer(void *arg, PRUint32 delay);
+  nsresult RemoveDir(nsIFile *file, bool *stopDeleting);
+
+  static nsDeleteDir * gInstance;
+  mozilla::Mutex       mLock;
+  mozilla::CondVar     mCondVar;
+  nsCOMArray<nsITimer> mTimers;
+  nsCOMPtr<nsIThread>  mThread;
+  bool                 mShutdownPending;
+  bool                 mStopDeleting;
+};
 
 #endif  // nsDeleteDir_h__

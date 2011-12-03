@@ -1327,6 +1327,7 @@ nsDOMWindowUtils::SendQueryContentEvent(PRUint32 aType,
     nsIntRect widgetBounds;
     nsresult rv = widget->GetClientBounds(widgetBounds);
     NS_ENSURE_SUCCESS(rv, rv);
+    widgetBounds.MoveTo(0, 0);
 
     // There is no popup frame at the point and the point isn't in our widget,
     // we cannot process this request.

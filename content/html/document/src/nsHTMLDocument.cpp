@@ -1745,7 +1745,8 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
 
     nsCOMPtr<nsIScriptGlobalObject> newScope(do_QueryReferent(mScopeObject));
     if (oldScope && newScope != oldScope) {
-      nsContentUtils::ReparentContentWrappersInScope(cx, oldScope, newScope);
+      rv = nsContentUtils::ReparentContentWrappersInScope(cx, oldScope, newScope);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
@@ -1954,6 +1955,8 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
     if (NS_FAILED(rv) || !mParser) {
       return rv;
     }
+    NS_ABORT_IF_FALSE(!JS_IsExceptionPending(cx),
+                      "Open() succeeded but JS exception is pending");
   }
 
   static NS_NAMED_LITERAL_STRING(new_line, "\n");

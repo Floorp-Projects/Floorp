@@ -325,7 +325,8 @@ class LifoAlloc
     void *reallocUnaligned(void *origPtr, size_t origSize, size_t incr);
 };
 
-class LifoAllocScope {
+class LifoAllocScope
+{
     LifoAlloc   *lifoAlloc;
     void        *mark;
     bool        shouldRelease;

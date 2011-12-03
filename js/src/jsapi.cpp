@@ -1141,6 +1141,12 @@ JS_ContextIterator(JSRuntime *rt, JSContext **iterp)
     return js_ContextIterator(rt, JS_TRUE, iterp);
 }
 
+JS_PUBLIC_API(JSContext *)
+JS_ContextIteratorUnlocked(JSRuntime *rt, JSContext **iterp)
+{
+    return js_ContextIterator(rt, JS_FALSE, iterp);
+}
+
 JS_PUBLIC_API(JSVersion)
 JS_GetVersion(JSContext *cx)
 {
@@ -5296,6 +5302,20 @@ JS_RestoreFrameChain(JSContext *cx)
     CHECK_REQUEST(cx);
     cx->stack.restoreFrameChain();
 }
+
+#ifdef MOZ_TRACE_JSCALLS
+JS_PUBLIC_API(void)
+JS_SetFunctionCallback(JSContext *cx, JSFunctionCallback fcb)
+{
+    cx->functionCallback = fcb;
+}
+
+JS_PUBLIC_API(JSFunctionCallback)
+JS_GetFunctionCallback(JSContext *cx)
+{
+    return cx->functionCallback;
+}
+#endif
 
 /************************************************************************/
 JS_PUBLIC_API(JSString *)

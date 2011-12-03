@@ -217,6 +217,10 @@ JSHistogram_Add(JSContext *cx, uintN argc, jsval *vp)
 
   if (TelemetryImpl::CanRecord()) {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj) {
+      return JS_FALSE;
+    }
+
     Histogram *h = static_cast<Histogram*>(JS_GetPrivate(cx, obj));
     if (h->histogram_type() == Histogram::BOOLEAN_HISTOGRAM)
       h->Add(!!value);
@@ -230,6 +234,10 @@ JSBool
 JSHistogram_Snapshot(JSContext *cx, uintN argc, jsval *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
+  if (!obj) {
+    return JS_FALSE;
+  }
+
   Histogram *h = static_cast<Histogram*>(JS_GetPrivate(cx, obj));
   JSObject *snapshot = JS_NewObject(cx, NULL, NULL, NULL);
   if (!snapshot)

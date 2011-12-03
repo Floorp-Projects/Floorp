@@ -36,10 +36,10 @@
 
 #include "nsISupports.idl"
 
-interface nsISupportsArray;
+interface nsIArray;
 interface nsIProfileStartup;
 
-[scriptable, uuid(f8365b4a-da55-4e47-be7a-230142360f62)]
+[scriptable, uuid(5f445759-86a8-4dd3-ab84-4fc5341d9d9d)]
 interface nsIBrowserProfileMigrator : nsISupports 
 {
   /**
@@ -68,7 +68,8 @@ interface nsIBrowserProfileMigrator : nsISupports
    * @param   aProfile the profile that we are looking for available data
    *          to import
    * @param   aDoingStartup "true" if the profile is not currently being used.
-   * @returns bit field containing profile items (see above)
+   * @return  bit field containing profile items (see above)
+   * @note    a return value of 0 represents no items rather than ALL.
    */
   unsigned short getMigrateData(in wstring aProfile, in boolean aDoingStartup);
 
@@ -89,8 +90,8 @@ interface nsIBrowserProfileMigrator : nsISupports
    * An enumeration of available profiles. If the import source does 
    * not support profiles, this attribute is null.
    */
-  readonly attribute nsISupportsArray sourceProfiles;
-  
+  readonly attribute nsIArray         sourceProfiles;
+
   /**
    * The import source homepage.  Returns null if not present/available
    */

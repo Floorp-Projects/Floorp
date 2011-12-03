@@ -4564,6 +4564,18 @@ if test -n "$JS_CRASH_DIAGNOSTICS"; then
     AC_DEFINE(JS_CRASH_DIAGNOSTICS)
 fi
 
+dnl ========================================================
+dnl Enable changes that make the shell more deterministic
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(more-deterministic,
+[  --enable-more-deterministic
+                          Enable changes that make the shell more deterministic],
+    JS_MORE_DETERMINISTIC=1,
+    JS_MORE_DETERMINISTIC= )
+if test -n "$JS_MORE_DETERMINISTIC"; then
+    AC_DEFINE(JS_MORE_DETERMINISTIC)
+fi
+
 dnl ======================================================
 dnl = Enable compiling with ccache
 dnl ======================================================

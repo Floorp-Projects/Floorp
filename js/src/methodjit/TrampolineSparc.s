@@ -112,7 +112,7 @@ throwpoline_exit:
 JaegerInterpolineScripted:
     ld      [%l0 + 0x10], %l0                        /* Load f->prev_ */
     st      %l0, [%fp - 36]                          /* Update f->regs->fp_ */
-    ba     JaegerInterpoline
+    ba     interpoline_enter
     nop
 .size    JaegerInterpolineScripted, . - JaegerInterpolineScripted
 
@@ -120,6 +120,7 @@ JaegerInterpolineScripted:
 .global JaegerInterpoline
 .type   JaegerInterpoline, #function
 JaegerInterpoline:
+interpoline_enter:
     mov     %o0,%o2
     mov     %l3,%o0
     mov     %l2,%o1

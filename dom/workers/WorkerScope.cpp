@@ -378,6 +378,9 @@ private:
   Close(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     WorkerGlobalScope* scope = GetInstancePrivate(aCx, obj, sFunctions[0].name);
     if (!scope) {
@@ -391,6 +394,9 @@ private:
   ImportScripts(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     WorkerGlobalScope* scope = GetInstancePrivate(aCx, obj, sFunctions[1].name);
     if (!scope) {
@@ -408,6 +414,9 @@ private:
   SetTimeout(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     WorkerGlobalScope* scope = GetInstancePrivate(aCx, obj, sFunctions[2].name);
     if (!scope) {
@@ -426,6 +435,9 @@ private:
   ClearTimeout(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     WorkerGlobalScope* scope = GetInstancePrivate(aCx, obj, sFunctions[3].name);
     if (!scope) {
@@ -444,6 +456,9 @@ private:
   SetInterval(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     WorkerGlobalScope* scope = GetInstancePrivate(aCx, obj, sFunctions[4].name);
     if (!scope) {
@@ -462,6 +477,9 @@ private:
   ClearInterval(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     WorkerGlobalScope* scope = GetInstancePrivate(aCx, obj, sFunctions[5].name);
     if (!scope) {
@@ -479,8 +497,12 @@ private:
   static JSBool
   Dump(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
-    if (!GetInstancePrivate(aCx, JS_THIS_OBJECT(aCx, aVp),
-                            sFunctions[6].name)) {
+    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
+
+    if (!GetInstancePrivate(aCx, obj, sFunctions[6].name)) {
       return false;
     }
 
@@ -505,8 +527,12 @@ private:
   static JSBool
   AtoB(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
-    if (!GetInstancePrivate(aCx, JS_THIS_OBJECT(aCx, aVp),
-                            sFunctions[7].name)) {
+    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
+
+    if (!GetInstancePrivate(aCx, obj, sFunctions[7].name)) {
       return false;
     }
 
@@ -527,8 +553,12 @@ private:
   static JSBool
   BtoA(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
-    if (!GetInstancePrivate(aCx, JS_THIS_OBJECT(aCx, aVp),
-                            sFunctions[8].name)) {
+    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
+
+    if (!GetInstancePrivate(aCx, obj, sFunctions[8].name)) {
       return false;
     }
 
@@ -746,6 +776,9 @@ private:
   PostMessage(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     const char*& name = sFunctions[0].name;
     DedicatedWorkerGlobalScope* scope = GetInstancePrivate(aCx, obj, name);
