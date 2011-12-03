@@ -528,9 +528,6 @@ _TEST_FILES2 = \
 		test_bug693875.html \
 		test_nodelist_holes.html \
 		test_xhr_abort_after_load.html \
-		test_bug702439.html \
-		test_bug702439.html^headers^ \
-		file_bug702439.html \
 		$(NULL)
 
 _CHROME_FILES =	\
