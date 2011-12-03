@@ -2,6 +2,13 @@
 <window xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <hbox flex="1">
+  <html:style>
+    /* Make sure our splitter's background doesn't depend on its hover styles */
+    splitter {
+      background-color: yellow;
+      -moz-appearance: none;
+    }
+  </html:style>
   <splitter collapse="before" resizeafter="farthest" width="200" id="s">
   </splitter>
 </hbox>
