@@ -122,6 +122,13 @@ CreateDummyWindow(HDC *aWindowDC = nsnull)
     return win;
 }
 
+static inline bool
+HasExtension(const char* aExtensions, const char* aRequiredExtension)
+{
+    return GLContext::ListHasExtension(
+        reinterpret_cast<const GLubyte*>(aExtensions), aRequiredExtension);
+}
+
 bool
 WGLLibrary::EnsureInitialized()
 {
@@ -205,8 +212,46 @@ WGLLibrary::EnsureInitialized()
         fChoosePixelFormat = nsnull;
     }
 
+    LibrarySymbolLoader::SymLoadStruct extensionsSymbols[] = {
+        { (PRFuncPtr *) &fGetExtensionsString, { "wglGetExtensionsStringARB", NULL} },
+        { NULL, { NULL } }
+    };
+
+    LibrarySymbolLoader::SymLoadStruct robustnessSymbols[] = {
+        { (PRFuncPtr *) &fCreateContextAttribs, { "wglCreateContextAttribsARB", NULL} },
+        { NULL, { NULL } }
+    };
+
+    if (LibrarySymbolLoader::LoadSymbols(mOGLLibrary, &extensionsSymbols[0],
+        (LibrarySymbolLoader::PlatformLookupFunction)fGetProcAddress)) {
+        const char *wglExts = fGetExtensionsString(gSharedWindowDC);
+        if (wglExts && HasExtension(wglExts, "WGL_ARB_create_context")) {
+            LibrarySymbolLoader::LoadSymbols(mOGLLibrary, &robustnessSymbols[0],
+            (LibrarySymbolLoader::PlatformLookupFunction)fGetProcAddress);
+            if (HasExtension(wglExts, "WGL_ARB_create_context_robustness")) {
+                mHasRobustness = true;
+            }
+        }
+    }
+
     // reset back to the previous context, just in case
     fMakeCurrent(curDC, curCtx);
+
+    if (mHasRobustness) {
+        fDeleteContext(gSharedWindowGLContext);
+
+        int attribs[] = {
+            LOCAL_WGL_CONTEXT_FLAGS_ARB, LOCAL_WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
+            LOCAL_WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_WGL_LOSE_CONTEXT_ON_RESET_ARB,
+            NULL
+        };
+
+        gSharedWindowGLContext = fCreateContextAttribs(gSharedWindowDC, NULL, attribs);
+        if (!gSharedWindowGLContext) {
+            mHasRobustness = false;
+            gSharedWindowGLContext = fCreateContext(gSharedWindowDC);
+        }
+    }
 
     mInitialized = true;
 
@@ -309,7 +354,7 @@ public:
 
     bool SupportsRobustness()
     {
-        return false;
+        return sWGLLibrary.HasRobustness();
     }
 
     virtual bool SwapBuffers() {
@@ -502,16 +547,35 @@ GLContextProviderWGL::CreateForWindow(nsIWidget *aWidget)
     HDC dc = (HDC)aWidget->GetNativeData(NS_NATIVE_GRAPHIC);
 
     SetPixelFormat(dc, gSharedWindowPixelFormat, NULL);
-    HGLRC context = sWGLLibrary.fCreateContext(dc);
-    if (!context) {
-        return nsnull;
-    }
+    HGLRC context;
 
     GLContextWGL *shareContext = GetGlobalContextWGL();
-    if (shareContext &&
-        !sWGLLibrary.fShareLists(shareContext->Context(), context))
-    {
-        shareContext = nsnull;
+
+    if (sWGLLibrary.HasRobustness()) {
+        int attribs[] = {
+            LOCAL_WGL_CONTEXT_FLAGS_ARB, LOCAL_WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
+            LOCAL_WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_WGL_LOSE_CONTEXT_ON_RESET_ARB,
+            NULL
+        };
+
+        context = sWGLLibrary.fCreateContextAttribs(dc,
+                                                    shareContext ? shareContext->Context() : nsnull,
+                                                    attribs);
+        if (!context && shareContext) {
+            context = sWGLLibrary.fCreateContextAttribs(dc, nsnull, attribs);
+            if (context) {
+                shareContext = nsnull;
+            }
+        } else {
+            context = sWGLLibrary.fCreateContext(dc);
+            if (context && shareContext && !sWGLLibrary.fShareLists(shareContext->Context(), context)) {
+                shareContext = nsnull;
+            }
+        }
+    }
+
+    if (!context) {
+        return nsnull;
     }
 
     nsRefPtr<GLContextWGL> glContext = new GLContextWGL(ContextFormat(ContextFormat::BasicRGB24),
@@ -597,7 +661,19 @@ CreatePBufferOffscreenContext(const gfxIntSize& aSize,
     HDC pbdc = sWGLLibrary.fGetPbufferDC(pbuffer);
     NS_ASSERTION(pbdc, "expected a dc");
 
-    HGLRC context = sWGLLibrary.fCreateContext(pbdc);
+    HGLRC context;
+    if (sWGLLibrary.HasRobustness()) {
+        int attribs[] = {
+            LOCAL_WGL_CONTEXT_FLAGS_ARB, LOCAL_WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
+            LOCAL_WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_WGL_LOSE_CONTEXT_ON_RESET_ARB,
+            NULL
+        };
+
+        context = sWGLLibrary.fCreateContextAttribs(pbdc, nsnull, attribs);
+    } else {
+        context = sWGLLibrary.fCreateContext(pbdc);
+    }
+
     if (!context) {
         sWGLLibrary.fDestroyPbuffer(pbuffer);
         return false;
@@ -629,15 +705,28 @@ CreateWindowOffscreenContext(const ContextFormat& aFormat)
     }
     
     HGLRC context = sWGLLibrary.fCreateContext(dc);
-    if (!context) {
-        return nsnull;
+    if (sWGLLibrary.HasRobustness()) {
+        int attribs[] = {
+            LOCAL_WGL_CONTEXT_FLAGS_ARB, LOCAL_WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
+            LOCAL_WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_WGL_LOSE_CONTEXT_ON_RESET_ARB,
+            NULL
+        };
+
+        context = sWGLLibrary.fCreateContextAttribs(dc, shareContext->Context(), attribs);
+    } else {
+        context = sWGLLibrary.fCreateContext(dc);
+        if (context && shareContext &&
+            !sWGLLibrary.fShareLists(shareContext->Context(), context))
+        {
+            NS_WARNING("wglShareLists failed!");
+
+            sWGLLibrary.fDeleteContext(context);
+            DestroyWindow(win);
+            return nsnull;
+        }
     }
 
-    if (!sWGLLibrary.fShareLists(shareContext->Context(), context)) {
-        NS_WARNING("wglShareLists failed!");
-
-        sWGLLibrary.fDeleteContext(context);
-        DestroyWindow(win);
+    if (!context) {
         return nsnull;
     }
 
