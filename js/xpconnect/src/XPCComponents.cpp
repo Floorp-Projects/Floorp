@@ -4025,46 +4025,16 @@ SetBoolOption(JSContext* cx, uint32 aOption, bool aValue)
     return NS_OK;
 }
 
-// FIXME/bug 671453: work around broken [implicit_jscontext]
-nsresult
-GetCurrentJSContext(JSContext** aCx)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-    if(NS_FAILED(rv))
-        return rv;
-
-    // get the xpconnect native call context
-    nsAXPCNativeCallContext *cc = nsnull;
-    xpc->GetCurrentNativeCallContext(&cc);
-    if(!cc)
-        return NS_ERROR_FAILURE;
-
-    // Get JSContext of current call
-    JSContext* cx;
-    rv = cc->GetJSContext(&cx);
-    if(NS_FAILED(rv) || !cx)
-        return NS_ERROR_FAILURE;
-
-    *aCx = cx;
-    return NS_OK;
-}
-
 #define GENERATE_JSOPTION_GETTER_SETTER(_attr, _flag)                   \
     NS_IMETHODIMP                                                       \
-    nsXPCComponents_Utils::Get## _attr(bool* aValue)                    \
+    nsXPCComponents_Utils::Get## _attr(JSContext* cx, bool* aValue)     \
     {                                                                   \
-        JSContext* cx;                                                  \
-        nsresult rv = GetCurrentJSContext(&cx);                         \
-        return NS_FAILED(rv) ? rv : GetBoolOption(cx, _flag, aValue);   \
+        return GetBoolOption(cx, _flag, aValue);                        \
     }                                                                   \
     NS_IMETHODIMP                                                       \
-    nsXPCComponents_Utils::Set## _attr(bool aValue)                     \
+    nsXPCComponents_Utils::Set## _attr(JSContext* cx, bool aValue)      \
     {                                                                   \
-        JSContext* cx;                                                  \
-        nsresult rv = GetCurrentJSContext(&cx);                         \
-        return NS_FAILED(rv) ? rv : SetBoolOption(cx, _flag, aValue);   \
+        return SetBoolOption(cx, _flag, aValue);                        \
     }
 
 GENERATE_JSOPTION_GETTER_SETTER(Strict, JSOPTION_STRICT)

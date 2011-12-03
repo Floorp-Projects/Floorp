@@ -318,13 +318,27 @@ interface nsIXPCComponents_Utils : nsISupports
      * NB: Assume that getting any of these attributes is relatively
      * cheap, but setting any of them is relatively expensive.
      */
+    [implicit_jscontext]
     attribute boolean strict;
+
+    [implicit_jscontext]
     attribute boolean werror;
+
+    [implicit_jscontext]
     attribute boolean atline;
+
+    [implicit_jscontext]
     attribute boolean xml;
+
+    [implicit_jscontext]
     attribute boolean relimit;
+
+    [implicit_jscontext]
     attribute boolean methodjit;
+
+    [implicit_jscontext]
     attribute boolean methodjit_always;
+
     [implicit_jscontext]
     void setGCZeal(in long zeal);
 };
