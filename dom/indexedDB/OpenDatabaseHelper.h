@@ -60,8 +60,8 @@ public:
                      bool aForDeletion)
     : HelperBase(aRequest), mOpenDBRequest(aRequest), mName(aName),
       mASCIIOrigin(aASCIIOrigin), mRequestedVersion(aRequestedVersion),
-      mForDeletion(aForDeletion), mDatabaseId(nsnull), mCurrentVersion(0),
-      mDataVersion(DB_SCHEMA_VERSION), mLastObjectStoreId(0),
+      mForDeletion(aForDeletion), mCurrentVersion(0),
+      mDataVersion(DB_SCHEMA_VERSION), mDatabaseId(0), mLastObjectStoreId(0),
       mLastIndexId(0), mState(eCreated), mResultCode(NS_OK)
   {
     NS_ASSERTION(!aForDeletion || !aRequestedVersion,
