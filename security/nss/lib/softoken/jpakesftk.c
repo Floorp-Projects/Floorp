@@ -74,9 +74,9 @@ jpake_Sign(PLArenaPool * arena, const PQGParams * pqg, HASH_HashType hashType,
                                      NULL, &gx, &gv, &r),
                           CKR_MECHANISM_PARAM_INVALID);
     if (crv == CKR_OK) {
-        if (out->pGX != NULL && out->ulGXLen >= gx.len ||
-            out->pGV != NULL && out->ulGVLen >= gv.len ||
-            out->pR  != NULL && out->ulRLen >= r.len) {
+        if ((out->pGX != NULL && out->ulGXLen >= gx.len) ||
+            (out->pGV != NULL && out->ulGVLen >= gv.len) ||
+            (out->pR  != NULL && out->ulRLen >= r.len)) {
             PORT_Memcpy(out->pGX, gx.data, gx.len); 
             PORT_Memcpy(out->pGV, gv.data, gv.len); 
             PORT_Memcpy(out->pR, r.data, r.len);
@@ -107,21 +107,6 @@ jpake_Verify(PLArenaPool * arena, const PQGParams * pqg,
 }
 
 #define NUM_ELEM(x) (sizeof (x) / sizeof (x)[0])
-
-/* Ensure that the key is of the given type. */
-static CK_RV
-jpake_ensureKeyType(SFTKObject * key, CK_KEY_TYPE keyType)
-{
-    CK_RV crv;
-    SFTKAttribute * keyTypeAttr = sftk_FindAttribute(key, CKA_KEY_TYPE);
-    crv = keyTypeAttr != NULL && 
-          *(CK_KEY_TYPE *)keyTypeAttr->attrib.pValue == keyType
-        ? CKR_OK
-        : CKR_TEMPLATE_INCONSISTENT;
-    if (keyTypeAttr != NULL)
-        sftk_FreeAttribute(keyTypeAttr);
-    return crv;
-}
 
 /* If the template has the key type set, ensure that it was set to the correct
  * value. If the template did not have the key type set, set it to the

@@ -396,20 +396,21 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
       targetNode->AsElement()->NodeInfo()->Equals(nsGkAtoms::tree,
                                                   kNameSpaceID_XUL)) {
     treeAcc = do_QueryObject(accessible);
+    if (treeAcc) {
+      if (eventType.EqualsLiteral("TreeViewChanged")) {
+        treeAcc->TreeViewChanged();
+        return;
+      }
 
-    if (eventType.EqualsLiteral("TreeViewChanged")) {
-      treeAcc->TreeViewChanged();
-      return;
-    }
+      if (eventType.EqualsLiteral("TreeRowCountChanged")) {
+        HandleTreeRowCountChangedEvent(aDOMEvent, treeAcc);
+        return;
+      }
 
-    if (eventType.EqualsLiteral("TreeRowCountChanged")) {
-      HandleTreeRowCountChangedEvent(aDOMEvent, treeAcc);
-      return;
-    }
-
-    if (eventType.EqualsLiteral("TreeInvalidated")) {
-      HandleTreeInvalidatedEvent(aDOMEvent, treeAcc);
-      return;
+      if (eventType.EqualsLiteral("TreeInvalidated")) {
+        HandleTreeInvalidatedEvent(aDOMEvent, treeAcc);
+        return;
+      }
     }
   }
 #endif

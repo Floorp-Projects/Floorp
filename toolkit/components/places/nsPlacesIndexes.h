@@ -145,5 +145,13 @@
     "itemattributeindex", "moz_items_annos", "item_id, anno_attribute_id", "UNIQUE" \
   )
 
+/**
+ * moz_favicons
+ */
+
+#define CREATE_IDX_MOZ_FAVICONS_GUID \
+  CREATE_PLACES_IDX( \
+    "guid_uniqueindex", "moz_favicons", "guid", "UNIQUE" \
+  )
 
 #endif // nsPlacesIndexes_h__

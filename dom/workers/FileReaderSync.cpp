@@ -180,6 +180,9 @@ private:
   ReadAsArrayBuffer(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     FileReaderSyncPrivate* fileReader =
       GetInstancePrivate(aCx, obj, "readAsArrayBuffer");
@@ -224,6 +227,9 @@ private:
   ReadAsDataURL(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     FileReaderSyncPrivate* fileReader =
       GetInstancePrivate(aCx, obj, "readAsDataURL");
@@ -261,6 +267,9 @@ private:
   ReadAsBinaryString(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     FileReaderSyncPrivate* fileReader =
       GetInstancePrivate(aCx, obj, "readAsBinaryString");
@@ -298,6 +307,9 @@ private:
   ReadAsText(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     FileReaderSyncPrivate* fileReader =
       GetInstancePrivate(aCx, obj, "readAsText");

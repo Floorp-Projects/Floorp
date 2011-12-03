@@ -4,6 +4,7 @@
 function test()
 {
   waitForExplicitFinish();
+  ignoreAllUncaughtExceptions();
 
   let doc;
   let nodes;
