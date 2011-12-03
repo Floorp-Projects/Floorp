@@ -103,8 +103,6 @@ public:
   void OnNewRequest();
   void OnRequestFinished();
 
-  void ReleaseCachedObjectStore(const nsAString& aName);
-
   void SetTransactionListener(IDBTransactionListener* aListener);
 
   bool StartSavepoint();
