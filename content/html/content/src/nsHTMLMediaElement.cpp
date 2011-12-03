@@ -1516,6 +1516,9 @@ nsresult nsHTMLMediaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::src) {
     Load();
   }
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::muted) {
+    mMuted = true;
+  }
   if (aNotify && aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::autoplay) {
       StopSuspendingAfterFirstFrame();

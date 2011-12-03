@@ -594,6 +594,9 @@ GK_ATOM(x_moz_errormessage, "x-moz-errormessage")
 GK_ATOM(msthemecompatible, "msthemecompatible")
 GK_ATOM(multicol, "multicol")
 GK_ATOM(multiple, "multiple")
+#ifdef MOZ_MEDIA
+GK_ATOM(muted, "muted")
+#endif
 GK_ATOM(name, "name")
 GK_ATOM(_namespace, "namespace")
 GK_ATOM(namespaceAlias, "namespace-alias")
