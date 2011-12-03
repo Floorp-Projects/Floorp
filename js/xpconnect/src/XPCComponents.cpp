@@ -3813,57 +3813,21 @@ nsXPCComponents_Utils::NondeterministicGetWeakMapKeys(const jsval &aMap,
 
 /* void getGlobalForObject(); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::GetGlobalForObject()
+nsXPCComponents_Utils::GetGlobalForObject(const JS::Value& object,
+                                          JSContext *cx,
+                                          JS::Value *retval)
 {
-  nsresult rv;
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  // get the xpconnect native call context
-  nsAXPCNativeCallContext *cc = nsnull;
-  xpc->GetCurrentNativeCallContext(&cc);
-  if (!cc)
-    return NS_ERROR_FAILURE;
-
-  // Get JSContext of current call
-  JSContext* cx;
-  rv = cc->GetJSContext(&cx);
-  if (NS_FAILED(rv) || !cx)
-    return NS_ERROR_FAILURE;
-
-  // get place for return value
-  jsval *rval = nsnull;
-  rv = cc->GetRetValPtr(&rval);
-  if (NS_FAILED(rv) || !rval)
-    return NS_ERROR_FAILURE;
-
-  // get argc and argv and verify arg count
-  PRUint32 argc;
-  rv = cc->GetArgc(&argc);
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  if (argc != 1)
-    return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
-
-  jsval* argv;
-  rv = cc->GetArgvPtr(&argv);
-  if (NS_FAILED(rv) || !argv)
-    return NS_ERROR_FAILURE;
-
-  // first argument must be an object
-  if (JSVAL_IS_PRIMITIVE(argv[0]))
+  // First argument must be an object.
+  if (JSVAL_IS_PRIMITIVE(object))
     return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-  JSObject *obj = JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(argv[0]));
-  *rval = OBJECT_TO_JSVAL(obj);
+  JSObject *obj = JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(object));
+  *retval = OBJECT_TO_JSVAL(obj);
 
   // Outerize if necessary.
   if (JSObjectOp outerize = js::GetObjectClass(obj)->ext.outerObject)
-      *rval = OBJECT_TO_JSVAL(outerize(cx, obj));
+      *retval = OBJECT_TO_JSVAL(outerize(cx, obj));
 
-  cc->SetReturnValueWasSet(true);
   return NS_OK;
 }
 
