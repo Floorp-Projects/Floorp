@@ -121,6 +121,7 @@ struct IndexInfo
   nsString keyPath;
   bool unique;
   bool autoIncrement;
+  bool multiEntry;
 };
 
 struct ObjectStoreInfo
@@ -149,7 +150,8 @@ struct IndexUpdateInfo
   ~IndexUpdateInfo();
 #endif
 
-  IndexInfo info;
+  PRInt64 indexId;
+  bool indexUnique;
   Key value;
 };
 

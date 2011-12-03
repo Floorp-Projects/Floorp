@@ -273,7 +273,7 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
 
   // Load index information
   rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT object_store_id, id, name, key_path, unique_index, "
+    "SELECT object_store_id, id, name, key_path, unique_index, multientry, "
            "object_store_autoincrement "
     "FROM object_store_index"
   ), getter_AddRefs(stmt));
@@ -307,7 +307,8 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
     NS_ENSURE_SUCCESS(rv, rv);
 
     indexInfo->unique = !!stmt->AsInt32(4);
-    indexInfo->autoIncrement = !!stmt->AsInt32(5);
+    indexInfo->multiEntry = !!stmt->AsInt32(5);
+    indexInfo->autoIncrement = !!stmt->AsInt32(6);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
