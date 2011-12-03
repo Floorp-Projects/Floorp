@@ -2180,9 +2180,6 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
   PRUint32 colSpan = GetEffectiveColSpan(aMap, aRowIndex, aColIndex, zeroColSpan);
   PRUint32 endRowIndex = aRowIndex + rowSpan - 1;
   PRUint32 endColIndex = aColIndex + colSpan - 1;
-  SetDamageArea(aColIndex, aRgFirstRowIndex + aRowIndex,
-                NS_MAX(0, aMap.GetColCount() - aColIndex - 1),
-                1 + endRowIndex - aRowIndex, aDamageArea);
 
   if (aMap.mTableFrame.HasZeroColSpans()) {
     aMap.mTableFrame.SetNeedColSpanExpansion(true);
@@ -2253,6 +2250,9 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
     }
   }
   aMap.RemoveColsAtEnd();
+  SetDamageArea(aColIndex, aRgFirstRowIndex + aRowIndex,
+                NS_MAX(0, aMap.GetColCount() - aColIndex - 1),
+                1 + endRowIndex - aRowIndex, aDamageArea);
 }
 
 void
