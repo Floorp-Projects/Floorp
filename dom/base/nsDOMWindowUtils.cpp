@@ -869,10 +869,18 @@ nsDOMWindowUtils::NodesFromRect(float aX, float aY,
 }
 
 static already_AddRefed<gfxImageSurface>
-CanvasToImageSurface(nsIDOMHTMLCanvasElement *canvas)
+CanvasToImageSurface(nsIDOMHTMLCanvasElement* aCanvas)
 {
+  nsCOMPtr<nsINode> node = do_QueryInterface(aCanvas);
+  if (!node) {
+    return nsnull;
+  }
+
+  NS_ABORT_IF_FALSE(node->IsElement(),
+                    "An nsINode that implements nsIDOMHTMLCanvasElement should "
+                    "be an element.");
   nsLayoutUtils::SurfaceFromElementResult result =
-    nsLayoutUtils::SurfaceFromElement(canvas,
+    nsLayoutUtils::SurfaceFromElement(node->AsElement(),
                                       nsLayoutUtils::SFE_WANT_IMAGE_SURFACE);
   return static_cast<gfxImageSurface*>(result.mSurface.forget().get());
 }
