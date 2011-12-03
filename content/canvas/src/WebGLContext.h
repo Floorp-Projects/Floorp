@@ -57,6 +57,7 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsIMemoryReporter.h"
+#include "nsContentUtils.h"
 
 #include "GLContextProvider.h"
 #include "Layers.h"
@@ -449,7 +450,7 @@ public:
     // Sets up the GL_ARB_robustness timer if it isn't already, so that if the
     // driver gets restarted, the context may get reset with it.
     void SetupRobustnessTimer() {
-        if (mContextLost || !mHasRobustness)
+        if (mContextLost || (!mHasRobustness && gl->GetContextType() != gl::GLContext::ContextTypeEGL))
             return;
 
         // If the timer was already running, don't restart it here. Instead,
