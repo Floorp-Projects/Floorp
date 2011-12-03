@@ -357,8 +357,6 @@ protected:
         nsresult Peek(nsXULPrototypeElement** aPrototype, nsIContent** aElement, PRInt32* aIndex);
 
         nsresult SetTopIndex(PRInt32 aIndex);
-
-        bool IsInsideXULTemplate();
     };
 
     friend class ContextStack;
