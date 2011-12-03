@@ -168,7 +168,7 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
      * Don't hoist bounds checks or loop invariant code in scripts that have
      * had indirect modification of their arguments.
      */
-    if (outerScript->hasFunction) {
+    if (outerScript->function()) {
         if (TypeSet::HasObjectFlags(cx, outerScript->function()->getType(cx), OBJECT_FLAG_UNINLINEABLE))
             this->skipAnalysis = true;
     }
@@ -316,7 +316,7 @@ LoopState::entryRedundant(const InvariantEntry &e0, const InvariantEntry &e1)
     int32 c1 = e1.u.check.constant;
 
     /*
-     * initialized lengths are always <= JSObject::NSLOTS_LIMIT, check for
+     * initialized lengths are always <= JSObject::NELEMENTS_LIMIT, check for
      * integer overflow checks redundant given initialized length checks.
      * If Y <= c0 and Y + c1 < initlen(array):
      *
@@ -331,7 +331,7 @@ LoopState::entryRedundant(const InvariantEntry &e0, const InvariantEntry &e1)
             constant = c0;
         else if (!SafeAdd(c0, c1, &constant))
             return false;
-        return constant >= JSObject::NSLOTS_LIMIT;
+        return constant >= (int32) JSObject::NELEMENTS_LIMIT;
     }
 
     /* Look for matching tests that differ only in their constants. */
@@ -1324,10 +1324,12 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
              * in the invariant list, so don't recheck this is an object.
              */
             masm.loadPayload(frame.addressOf(entry.u.check.arraySlot), T0);
-            if (entry.kind == InvariantEntry::DENSE_ARRAY_BOUNDS_CHECK)
-                masm.load32(Address(T0, JSObject::offsetOfInitializedLength()), T0);
-            else
+            if (entry.kind == InvariantEntry::DENSE_ARRAY_BOUNDS_CHECK) {
+                masm.loadPtr(Address(T0, JSObject::offsetOfElements()), T0);
+                masm.load32(Address(T0, ObjectElements::offsetOfInitializedLength()), T0);
+            } else {
                 masm.loadPayload(Address(T0, TypedArray::lengthOffset()), T0);
+            }
 
             int32 constant = entry.u.check.constant;
 
@@ -1393,18 +1395,16 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
             Jump notObject = masm.testObject(Assembler::NotEqual, frame.addressOf(array));
             jumps->append(notObject);
             masm.loadPayload(frame.addressOf(array), T0);
-
-            uint32 offset = (entry.kind == InvariantEntry::DENSE_ARRAY_SLOTS)
-                ? JSObject::offsetOfSlots()
-                : offsetof(JSObject, privateData);
+            masm.loadPtr(Address(T0, JSObject::offsetOfElements()), T0);
 
             Address address = frame.addressOf(frame.getTemporary(entry.u.array.temporary));
 
-            masm.loadPtr(Address(T0, offset), T0);
-            if (entry.kind == InvariantEntry::DENSE_ARRAY_LENGTH)
+            if (entry.kind == InvariantEntry::DENSE_ARRAY_LENGTH) {
+                masm.load32(Address(T0, ObjectElements::offsetOfLength()), T0);
                 masm.storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), T0, address);
-            else
+            } else {
                 masm.storePayload(T0, address);
+            }
             break;
           }
 

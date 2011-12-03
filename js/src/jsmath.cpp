@@ -703,7 +703,7 @@ js_IsMathFunction(Native native)
 JSObject *
 js_InitMathClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *Math = NewNonFunction<WithProto::Class>(cx, &MathClass, NULL, obj);
+    JSObject *Math = NewObjectWithClassProto(cx, &MathClass, NULL, obj);
     if (!Math || !Math->setSingletonType(cx))
         return NULL;
 

@@ -174,11 +174,9 @@ class Bindings {
     uint16 nargs;
     uint16 nvars;
     uint16 nupvars;
-    bool hasExtensibleParents;
 
   public:
     inline Bindings(JSContext *cx);
-    inline ~Bindings();
 
     /*
      * Transfers ownership of bindings data from bindings into this fresh
@@ -210,6 +208,12 @@ class Bindings {
 
     /* Returns the shape lineage generated for these bindings. */
     inline js::Shape *lastShape() const;
+
+    /* See Scope::extensibleParents */
+    inline bool extensibleParents();
+    bool setExtensibleParents(JSContext *cx);
+
+    bool setParent(JSContext *cx, JSObject *obj);
 
     enum {
         /*
@@ -293,54 +297,6 @@ class Bindings {
      * the original bindings to be safely shared.
      */
     void makeImmutable();
-
-    /*
-     * Sometimes call objects and run-time block objects need unique shapes, but
-     * sometimes they don't.
-     *
-     * Property cache entries only record the shapes of the first and last
-     * objects along the search path, so if the search traverses more than those
-     * two objects, then those first and last shapes must determine the shapes
-     * of everything else along the path. The js_PurgeScopeChain stuff takes
-     * care of making this work, but that suffices only because we require that
-     * start points with the same shape have the same successor object in the
-     * search path --- a cache hit means the starting shapes were equal, which
-     * means the seach path tail (everything but the first object in the path)
-     * was shared, which in turn means the effects of a purge will be seen by
-     * all affected starting search points.
-     *
-     * For call and run-time block objects, the "successor object" is the scope
-     * chain parent. Unlike prototype objects (of which there are usually few),
-     * scope chain parents are created frequently (possibly on every call), so
-     * following the shape-implies-parent rule blindly would lead one to give
-     * every call and block its own shape.
-     *
-     * In many cases, however, it's not actually necessary to give call and
-     * block objects their own shapes, and we can do better. If the code will
-     * always be used with the same global object, and none of the enclosing
-     * call objects could have bindings added to them at runtime (by direct eval
-     * calls or function statements), then we can use a fixed set of shapes for
-     * those objects. You could think of the shapes in the functions' bindings
-     * and compile-time blocks as uniquely identifying the global object(s) at
-     * the end of the scope chain.
-     *
-     * (In fact, some JSScripts we do use against multiple global objects (see
-     * bug 618497), and using the fixed shapes isn't sound there.)
-     *
-     * In deciding whether a call or block has any extensible parents, we
-     * actually only need to consider enclosing calls; blocks are never
-     * extensible, and the other sorts of objects that appear in the scope
-     * chains ('with' blocks, say) are not CacheableNonGlobalScopes.
-     *
-     * If the hasExtensibleParents flag is set, then Call objects created for
-     * the function this Bindings describes need unique shapes. If the flag is
-     * clear, then we can use lastBinding's shape.
-     *
-     * For blocks, we set the the OWN_SHAPE flag on the compiler-generated
-     * blocksto indicate that their clones need unique shapes.
-     */
-    void setExtensibleParents() { hasExtensibleParents = true; }
-    bool extensibleParents() const { return hasExtensibleParents; }
 
     /*
      * These methods provide direct access to the shape path normally
@@ -490,11 +446,9 @@ struct JSScript : public js::gc::Cell {
                                                    undefined properties in this
                                                    script */
     bool            hasSingletons:1;  /* script has singleton objects */
-    bool            hasFunction:1;       /* script has an associated function */
-    bool            isHeavyweightFunction:1; /* function is heavyweight */
-    bool            isOuterFunction:1;       /* function is heavyweight, with inner functions */
-    bool            isInnerFunction:1;       /* function is directly nested in a heavyweight
-                                              * outer function */
+    bool            isOuterFunction:1; /* function is heavyweight, with inner functions */
+    bool            isInnerFunction:1; /* function is directly nested in a heavyweight
+                                        * outer function */
     bool            isActiveEval:1;   /* script came from eval(), and is still active */
     bool            isCachedEval:1;   /* script came from eval(), and is in eval cache */
     bool            usedLazyArgs:1;   /* script has used lazy arguments at some point */
@@ -520,8 +474,10 @@ struct JSScript : public js::gc::Cell {
      * the script with 4 bytes. We use them to store tiny scripts like empty
      * scripts.
      */
+#if JS_BITS_PER_WORD == 64
 #define JS_SCRIPT_INLINE_DATA_LIMIT 4
     uint8           inlineData[JS_SCRIPT_INLINE_DATA_LIMIT];
+#endif
 
     const char      *filename;  /* source filename or null */
     JSAtom          **atoms;    /* maps immediate index to literal struct */
@@ -556,6 +512,17 @@ struct JSScript : public js::gc::Cell {
     /* Execution and profiling information for JIT code in the script. */
     js::ScriptOpcodeCounts pcCounters;
 
+  private:
+    JSFunction      *function_;
+  public:
+
+    /*
+     * Original compiled function for the script, if it has a function.
+     * NULL for global and eval scripts.
+     */
+    JSFunction *function() const { return function_; }
+    void setFunction(JSFunction *fun) { function_ = fun; }
+
 #ifdef JS_CRASH_DIAGNOSTICS
     /* All diagnostic fields must be multiples of Cell::CellSize. */
     uint32          cookie2[Cell::CellSize / sizeof(uint32)];
@@ -577,15 +544,15 @@ struct JSScript : public js::gc::Cell {
     js::types::TypeScript *types;
 
     /* Ensure the script has a TypeScript. */
-    inline bool ensureHasTypes(JSContext *cx, JSFunction *fun = NULL);
+    inline bool ensureHasTypes(JSContext *cx);
 
     /*
      * Ensure the script has scope and bytecode analysis information.
      * Performed when the script first runs, or first runs after a TypeScript
-     * GC purge. If fun/scope are NULL then the script must already have types
-     * with scope information.
+     * GC purge. If scope is NULL then the script must already have types with
+     * scope information.
      */
-    inline bool ensureRanAnalysis(JSContext *cx, JSFunction *fun = NULL, JSObject *scope = NULL);
+    inline bool ensureRanAnalysis(JSContext *cx, JSObject *scope);
 
     /* Ensure the script has type inference analysis information. */
     inline bool ensureRanInference(JSContext *cx);
@@ -603,7 +570,6 @@ struct JSScript : public js::gc::Cell {
     inline bool hasGlobal() const;
     inline bool hasClearedGlobal() const;
 
-    inline JSFunction *function() const;
     inline js::GlobalObject *global() const;
     inline js::types::TypeScriptNesting *nesting() const;
 
@@ -615,7 +581,7 @@ struct JSScript : public js::gc::Cell {
     }
 
   private:
-    bool makeTypes(JSContext *cx, JSFunction *fun);
+    bool makeTypes(JSContext *cx);
     bool makeAnalysis(JSContext *cx);
   public:
 
@@ -803,7 +769,7 @@ struct JSScript : public js::gc::Cell {
     uint32 stepModeCount() { return stepMode & stepCountMask; }
 #endif
 
-    void finalize(JSContext *cx);
+    void finalize(JSContext *cx, bool background);
 
     static inline void writeBarrierPre(JSScript *script);
     static inline void writeBarrierPost(JSScript *script, void *addr);

@@ -110,9 +110,9 @@ public:
         MacroAssembler::repatchInt32(dataLabel32, value);
     }
 
-    void repatch(CodeLocationDataLabelPtr dataLabelPtr, void* value)
+    void repatch(CodeLocationDataLabelPtr dataLabelPtr, const void* value)
     {
-        MacroAssembler::repatchPointer(dataLabelPtr, value);
+        MacroAssembler::repatchPointer(dataLabelPtr, (void*) value);
     }
 
     void repatchLoadPtrToLEA(CodeLocationInstruction instruction)

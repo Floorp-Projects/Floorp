@@ -731,18 +731,15 @@ struct TypeObject : gc::Cell
      */
     HeapPtrObject singleton;
 
-    /* Lazily filled array of empty shapes for each size of objects with this type. */
-    HeapPtr<EmptyShape> *emptyShapes;
+    /*
+     * Value held by singleton if this is a standin type for a singleton JS
+     * object whose type has not been constructed yet.
+     */
+    static const size_t LAZY_SINGLETON = 1;
+    bool lazy() const { return singleton == (JSObject *) LAZY_SINGLETON; }
 
     /* Flags for this object. */
     TypeObjectFlags flags;
-
-    /*
-     * If non-NULL, objects of this type have always been constructed using
-     * 'new' on the specified script, which adds some number of properties to
-     * the object in a definite order before the object escapes.
-     */
-    HeapPtr<TypeNewScript> newScript;
 
     /*
      * Estimate of the contribution of this object to the type sets it appears in.
@@ -757,6 +754,13 @@ struct TypeObject : gc::Cell
      */
     uint32 contribution;
     static const uint32 CONTRIBUTION_LIMIT = 2000;
+
+    /*
+     * If non-NULL, objects of this type have always been constructed using
+     * 'new' on the specified script, which adds some number of properties to
+     * the object in a definite order before the object escapes.
+     */
+    HeapPtr<TypeNewScript> newScript;
 
     /*
      * Properties of this object. This may contain JSID_VOID, representing the
@@ -793,6 +797,10 @@ struct TypeObject : gc::Cell
     /* If this is an interpreted function, the function object. */
     HeapPtrFunction interpretedFunction;
 
+#if JS_BITS_PER_WORD == 32
+    void *padding;
+#endif
+
     inline TypeObject(JSObject *proto, bool isFunction, bool unknown);
 
     bool isFunction() { return !!(flags & OBJECT_FLAG_FUNCTION); }
@@ -811,16 +819,6 @@ struct TypeObject : gc::Cell
                      hasAllFlags(OBJECT_FLAG_DYNAMIC_MASK));
         return !!(flags & OBJECT_FLAG_UNKNOWN_PROPERTIES);
     }
-
-    /*
-     * Return an immutable, shareable, empty shape with the same clasp as this
-     * and the same slotSpan as this had when empty.
-     *
-     * If |this| is the scope of an object |proto|, the resulting scope can be
-     * used as the scope of a new object whose prototype is |proto|.
-     */
-    inline bool canProvideEmptyShape(js::Class *clasp);
-    inline js::EmptyShape *getEmptyShape(JSContext *cx, js::Class *aclasp, gc::AllocKind kind);
 
     /*
      * Get or create a property of this object. Only call this for properties which
@@ -874,10 +872,11 @@ struct TypeObject : gc::Cell
      * object pending deletion is released when weak references are sweeped
      * from all the compartment's type objects.
      */
-    void finalize(JSContext *cx) {}
+    void finalize(JSContext *cx, bool background) {}
 
     static inline void writeBarrierPre(TypeObject *type);
     static inline void writeBarrierPost(TypeObject *type, void *addr);
+    static inline void readBarrier(TypeObject *type);
 
   private:
     inline uint32 basePropertyCount() const;
@@ -888,8 +887,18 @@ struct TypeObject : gc::Cell
     }
 };
 
-/* Global singleton for the generic type of objects with no prototype. */
-extern TypeObject emptyTypeObject;
+/*
+ * Entries for the per-compartment set of type objects which are the default
+ * 'new' or the lazy types of some prototype.
+ */
+struct TypeObjectEntry
+{
+    typedef JSObject *Lookup;
+
+    static inline HashNumber hash(JSObject *base);
+    static inline bool match(TypeObject *key, JSObject *lookup);
+};
+typedef HashSet<TypeObject *, TypeObjectEntry, SystemAllocPolicy> TypeObjectSet;
 
 /*
  * Call to mark a script's arguments as having been created, recompile any
@@ -1020,9 +1029,6 @@ class TypeScript
     /* Analysis information for the script, cleared on each GC. */
     analyze::ScriptAnalysis *analysis;
 
-    /* Function for the script, if it has one. */
-    HeapPtrFunction function;
-
     /*
      * Information about the scope in which a script executes. This information
      * is not set until the script has executed at least once and SetScope
@@ -1041,8 +1047,7 @@ class TypeScript
     /* Dynamic types generated at points within this script. */
     TypeResult *dynamicList;
 
-    inline TypeScript(JSFunction *fun);
-    inline ~TypeScript();
+    inline TypeScript();
 
     bool hasScope() { return size_t(global.get()) != GLOBAL_MISSING_SCOPE; }
 
@@ -1269,5 +1274,9 @@ void TypeFailure(JSContext *cx, const char *fmt, ...);
 
 } /* namespace types */
 } /* namespace js */
+
+namespace JS {
+    template<> class AnchorPermitted<js::types::TypeObject *> { };
+}
 
 #endif // jsinfer_h___

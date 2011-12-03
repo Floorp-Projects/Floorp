@@ -403,24 +403,10 @@ IDBFactory::OpenCommon(const nsAString& aName,
   nsIScriptContext* context = sgo->GetContext();
   NS_ENSURE_TRUE(context, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = nsContentUtils::GetSecurityManager()->
-    GetSubjectPrincipal(getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
   nsCString origin;
-  if (nsContentUtils::IsSystemPrincipal(principal)) {
-    origin.AssignLiteral("chrome");
-  }
-  else {
-    rv = nsContentUtils::GetASCIIOrigin(principal, origin);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-    if (origin.EqualsLiteral("null")) {
-      NS_WARNING("IndexedDB databases not allowed for this principal!");
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    }
-  }
+  nsresult rv =
+    IndexedDatabaseManager::GetASCIIOriginFromWindow(window, origin);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<IDBOpenDBRequest> request =
     IDBOpenDBRequest::Create(context, window);

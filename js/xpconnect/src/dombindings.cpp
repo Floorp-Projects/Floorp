@@ -253,19 +253,19 @@ ListBase<LC>::getListObject(JSObject *obj)
 }
 
 template<class LC>
-uint32
+js::Shape *
 ListBase<LC>::getProtoShape(JSObject *obj)
 {
     JS_ASSERT(objIsList(obj));
-    return js::GetProxyExtra(obj, JSPROXYSLOT_PROTOSHAPE).toPrivateUint32();
+    return (js::Shape *) js::GetProxyExtra(obj, JSPROXYSLOT_PROTOSHAPE).toPrivate();
 }
 
 template<class LC>
 void
-ListBase<LC>::setProtoShape(JSObject *obj, uint32 shape)
+ListBase<LC>::setProtoShape(JSObject *obj, js::Shape *shape)
 {
     JS_ASSERT(objIsList(obj));
-    js::SetProxyExtra(obj, JSPROXYSLOT_PROTOSHAPE, PrivateUint32Value(shape));
+    js::SetProxyExtra(obj, JSPROXYSLOT_PROTOSHAPE, PrivateValue(shape));
 }
 
 template<class LC>
@@ -273,7 +273,7 @@ bool
 ListBase<LC>::instanceIsListObject(JSContext *cx, JSObject *obj, JSObject *callee)
 {
     if (XPCWrapper::IsSecurityWrapper(obj)) {
-        if (callee && js::GetObjectGlobal(obj) == js::GetObjectGlobal(callee)) {
+        if (callee && JS_GetGlobalForObject(cx, obj) == JS_GetGlobalForObject(cx, callee)) {
             obj = js::UnwrapObject(obj);
         } else {
             obj = XPCWrapper::Unwrap(cx, obj);
@@ -480,7 +480,7 @@ ListBase<LC>::create(JSContext *cx, XPCWrappedNativeScope *scope, ListType *aLis
         return NULL;
 
     JSAutoEnterCompartment ac;
-    if (js::GetObjectGlobal(parent) != scope->GetGlobalJSObject()) {
+    if (js::GetGlobalForObjectCrossCompartment(parent) != scope->GetGlobalJSObject()) {
         if (!ac.enter(cx, parent))
             return NULL;
 
@@ -498,7 +498,7 @@ ListBase<LC>::create(JSContext *cx, XPCWrappedNativeScope *scope, ListType *aLis
         return NULL;
 
     NS_ADDREF(aList);
-    setProtoShape(obj, -1);
+    setProtoShape(obj, NULL);
 
     aWrapperCache->SetWrapper(obj);
 
@@ -855,7 +855,7 @@ ListBase<LC>::shouldCacheProtoShape(JSContext *cx, JSObject *proto, bool *should
         if (!JS_GetPropertyDescriptorById(cx, proto, id, JSRESOLVE_QUALIFIED, &desc))
             return false;
         if (desc.obj != proto || desc.getter || JSVAL_IS_PRIMITIVE(desc.value) ||
-            n >= js::GetNumSlots(proto) || js::GetSlot(proto, n) != desc.value ||
+            n >= js::GetObjectSlotSpan(proto) || js::GetObjectSlot(proto, n) != desc.value ||
             !JS_IsNativeFunction(JSVAL_TO_OBJECT(desc.value), sProtoMethods[n].native)) {
             *shouldCache = false;
             return true;
@@ -932,7 +932,7 @@ ListBase<LC>::nativeGet(JSContext *cx, JSObject *proxy, JSObject *proto, jsid id
             if (!vp)
                 return true;
 
-            *vp = js::GetSlot(proto, n);
+            *vp = js::GetObjectSlot(proto, n);
             JS_ASSERT(JS_IsNativeFunction(&vp->toObject(), sProtoMethods[n].native));
             return true;
         }
