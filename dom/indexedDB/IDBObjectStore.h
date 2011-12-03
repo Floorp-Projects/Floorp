@@ -145,6 +145,11 @@ public:
     return mKeyPath;
   }
 
+  const bool HasKeyPath() const
+  {
+    return !mKeyPath.IsVoid();
+  }
+
   IDBTransaction* Transaction()
   {
     return mTransaction;
