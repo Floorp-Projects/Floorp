@@ -1090,6 +1090,14 @@ OpenDatabaseHelper::DoDatabaseWork()
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
+  NS_ASSERTION(mOpenDBRequest, "This should never be null!");
+
+  // Once we support IDB outside of Windows this assertion will no longer hold.
+  nsPIDOMWindow* window = mOpenDBRequest->Owner();
+  NS_ASSERTION(window, "This should never be null");
+
+  AutoEnterWindow autoWindow(window);
+
   nsCOMPtr<nsIFile> dbFile;
   nsresult rv = GetDatabaseFile(mASCIIOrigin, mName, getter_AddRefs(dbFile));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
