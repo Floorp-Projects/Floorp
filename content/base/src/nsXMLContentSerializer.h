@@ -103,13 +103,6 @@ class nsXMLContentSerializer : public nsIContentSerializer {
  protected:
 
   /**
-   * Appends a PRUnichar string and increments the column position
-   */
-  void AppendToString(const PRUnichar* aStr,
-                      PRInt32 aLength,
-                      nsAString& aOutputStr);
-
-  /**
    * Appends a PRUnichar character and increments the column position
    */
   void AppendToString(const PRUnichar aChar,
