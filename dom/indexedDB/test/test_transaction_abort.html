@@ -57,7 +57,7 @@
       is(transaction.onabort, null, "No abort listener");
 
       is(objectStore.name, "foo", "Correct name");
-      is(objectStore.keyPath, "", "Correct keyPath");
+      is(objectStore.keyPath, null, "Correct keyPath");
 
       is(objectStore.indexNames.length, 1, "Correct indexNames length");
       is(objectStore.indexNames[0], "fooindex", "Correct indexNames name");
@@ -83,7 +83,7 @@
       }
 
       is(objectStore.name, "foo", "Correct name");
-      is(objectStore.keyPath, "", "Correct keyPath");
+      is(objectStore.keyPath, null, "Correct keyPath");
 
       is(objectStore.indexNames.length, 1, "Correct indexNames length");
       is(objectStore.indexNames[0], "fooindex", "Correct indexNames name");

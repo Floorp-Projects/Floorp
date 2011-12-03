@@ -247,8 +247,18 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
 
     info->id = stmt->AsInt64(1);
 
-    rv = stmt->GetString(2, info->keyPath);
+    PRInt32 columnType;
+    nsresult rv = stmt->GetTypeOfIndex(2, &columnType);
     NS_ENSURE_SUCCESS(rv, rv);
+    if (columnType == mozIStorageStatement::VALUE_TYPE_NULL) {
+      info->keyPath.SetIsVoid(true);
+    }
+    else {
+      NS_ASSERTION(columnType == mozIStorageStatement::VALUE_TYPE_TEXT,
+                   "Should be a string");
+      rv = stmt->GetString(2, info->keyPath);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     info->autoIncrement = !!stmt->AsInt32(3);
     info->databaseId = aDatabaseId;
