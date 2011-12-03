@@ -406,7 +406,7 @@ IDBTransaction::IndexDataInsertStatement(bool aAutoIncrement,
       );
     }
     return GetCachedStatement(
-      "INSERT INTO ai_index_data "
+      "INSERT OR IGNORE INTO ai_index_data "
         "(index_id, ai_object_data_id, value) "
       "VALUES (:index_id, :object_data_id, :value)"
     );
@@ -419,7 +419,7 @@ IDBTransaction::IndexDataInsertStatement(bool aAutoIncrement,
     );
   }
   return GetCachedStatement(
-    "INSERT INTO index_data ("
+    "INSERT OR IGNORE INTO index_data ("
       "index_id, object_data_id, object_data_key, value) "
     "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
   );

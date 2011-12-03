@@ -1641,6 +1641,7 @@ jsid nsDOMClassInfo::sURL_id             = JSID_VOID;
 jsid nsDOMClassInfo::sKeyPath_id         = JSID_VOID;
 jsid nsDOMClassInfo::sAutoIncrement_id   = JSID_VOID;
 jsid nsDOMClassInfo::sUnique_id          = JSID_VOID;
+jsid nsDOMClassInfo::sMultiEntry_id      = JSID_VOID;
 jsid nsDOMClassInfo::sOnload_id          = JSID_VOID;
 jsid nsDOMClassInfo::sOnerror_id         = JSID_VOID;
 
@@ -1904,6 +1905,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sKeyPath_id,         cx, "keyPath");
   SET_JSID_TO_STRING(sAutoIncrement_id,   cx, "autoIncrement");
   SET_JSID_TO_STRING(sUnique_id,          cx, "unique");
+  SET_JSID_TO_STRING(sMultiEntry_id,      cx, "multiEntry");
   SET_JSID_TO_STRING(sOnload_id,          cx, "onload");
   SET_JSID_TO_STRING(sOnerror_id,         cx, "onerror");
 
@@ -4902,6 +4904,7 @@ nsDOMClassInfo::ShutDown()
   sKeyPath_id         = JSID_VOID;
   sAutoIncrement_id   = JSID_VOID;
   sUnique_id          = JSID_VOID;
+  sMultiEntry_id      = JSID_VOID;
   sOnload_id          = JSID_VOID;
   sOnerror_id         = JSID_VOID;
 

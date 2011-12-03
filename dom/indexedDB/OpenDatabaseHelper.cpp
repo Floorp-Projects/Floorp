@@ -165,6 +165,7 @@ CreateTables(mozIStorageConnection* aDBConn)
       "name TEXT NOT NULL, "
       "key_path TEXT NOT NULL, "
       "unique_index INTEGER NOT NULL, "
+      "multientry INTEGER NOT NULL DEFAULT 0, "
       "object_store_autoincrement INTERGER NOT NULL, "
       "PRIMARY KEY (id), "
       "UNIQUE (object_store_id, name), "
@@ -819,6 +820,83 @@ UpgradeSchemaFrom6To7(mozIStorageConnection* aConnection)
   return NS_OK;
 }
 
+
+nsresult
+UpgradeSchemaFrom7To8(mozIStorageConnection* aConnection)
+{
+  mozStorageTransaction transaction(aConnection, false,
+                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+  // Turn off foreign key constraints before we do anything here.
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "PRAGMA foreign_keys = OFF;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TEMPORARY TABLE temp_upgrade ("
+      "id, "
+      "object_store_id, "
+      "name, "
+      "key_path, "
+      "unique_index, "
+      "object_store_autoincrement, "
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO temp_upgrade "
+      "SELECT id, object_store_id, name, key_path, "
+      "unique_index, object_store_autoincrement, "
+      "FROM object_store_index;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE object_store_index;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE object_store_index ("
+      "id INTEGER, "
+      "object_store_id INTEGER NOT NULL, "
+      "name TEXT NOT NULL, "
+      "key_path TEXT NOT NULL, "
+      "unique_index INTEGER NOT NULL, "
+      "multientry INTEGER NOT NULL, "
+      "object_store_autoincrement INTERGER NOT NULL, "
+      "PRIMARY KEY (id), "
+      "UNIQUE (object_store_id, name), "
+      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO object_store_index "
+      "SELECT id, object_store_id, name, key_path, "
+      "unique_index, 0, object_store_autoincrement, "
+      "FROM temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->SetSchemaVersion(8);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 nsresult
 CreateDatabaseConnection(const nsAString& aName,
                          nsIFile* aDBFile,
@@ -870,7 +948,7 @@ CreateDatabaseConnection(const nsAString& aName,
   }
   else if (schemaVersion != DB_SCHEMA_VERSION) {
     // This logic needs to change next time we change the schema!
-    PR_STATIC_ASSERT(DB_SCHEMA_VERSION == 7);
+    PR_STATIC_ASSERT(DB_SCHEMA_VERSION == 8);
 
 #define UPGRADE_SCHEMA_CASE(_from, _to)                                        \
   if (schemaVersion == _from) {                                                \
@@ -886,6 +964,7 @@ CreateDatabaseConnection(const nsAString& aName,
     UPGRADE_SCHEMA_CASE(4, 5)
     UPGRADE_SCHEMA_CASE(5, 6)
     UPGRADE_SCHEMA_CASE(6, 7)
+    UPGRADE_SCHEMA_CASE(7, 8)
 
 #undef UPGRADE_SCHEMA_CASE
 

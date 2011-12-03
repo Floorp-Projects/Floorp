@@ -318,6 +318,7 @@ IDBIndex::Create(IDBObjectStore* aObjectStore,
   index->mName = aIndexInfo->name;
   index->mKeyPath = aIndexInfo->keyPath;
   index->mUnique = aIndexInfo->unique;
+  index->mMultiEntry = aIndexInfo->multiEntry;
   index->mAutoIncrement = aIndexInfo->autoIncrement;
 
   return index.forget();
@@ -393,6 +394,15 @@ IDBIndex::GetUnique(bool* aUnique)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   *aUnique = mUnique;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBIndex::GetMultiEntry(bool* aMultiEntry)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  *aMultiEntry = mMultiEntry;
   return NS_OK;
 }
 

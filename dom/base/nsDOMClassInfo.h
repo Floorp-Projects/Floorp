@@ -295,6 +295,7 @@ public:
   static jsid sKeyPath_id;
   static jsid sAutoIncrement_id;
   static jsid sUnique_id;
+  static jsid sMultiEntry_id;
   static jsid sOnload_id;
   static jsid sOnerror_id;
 
