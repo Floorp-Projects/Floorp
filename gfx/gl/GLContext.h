@@ -78,7 +78,7 @@ namespace mozilla {
   namespace layers {
     class LayerManagerOGL;
     class ColorTextureLayerProgram;
-  };
+  }
 
 namespace gl {
 class GLContext;
