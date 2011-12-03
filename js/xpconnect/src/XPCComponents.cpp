@@ -3902,8 +3902,11 @@ FunctionWrapper(JSContext *cx, uintN argc, jsval *vp)
     jsval v = js::GetFunctionNativeReserved(JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), 0);
     NS_ASSERTION(JSVAL_IS_OBJECT(v), "weird function");
 
-    return JS_CallFunctionValue(cx, JS_THIS_OBJECT(cx, vp), v,
-                                argc, JS_ARGV(cx, vp), vp);
+    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    if (!obj) {
+        return JS_FALSE;
+    }
+    return JS_CallFunctionValue(cx, obj, v, argc, JS_ARGV(cx, vp), vp);
 }
 
 JSBool

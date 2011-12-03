@@ -20,14 +20,14 @@ f3()
 
 // bug 657984 #2
 function f4(){ for(y in x); }
-trap(f4, 10, '')
+trap(f4, 8, '')
 f4()
 
 // bug 658464
 function f5() {
   for ([, x] in 0) {}
 }
-trap(f5, 9, '')
+trap(f5, 7, '')
 f5()
 
 // bug 658465
@@ -60,7 +60,7 @@ f9 = (function() {
     for each(let w in []) {}
   }
 })
-trap(f9, 27, undefined);
+trap(f9, 22, undefined);
 for (b in f9())
   (function() {})()
 
@@ -75,5 +75,5 @@ try { f10() } catch (e) {}
 
 // bug 659337
 f11 = Function("for (x = 0; x < 6; x++) { gc() }");
-trap(f11, 25, '');
+trap(f11, 23, '');
 f11()

@@ -1580,6 +1580,57 @@ nsWindow::GetScreenBounds(nsIntRect &aRect)
 }
 
 NS_IMETHODIMP
+nsWindow::GetClientBounds(nsIntRect &aRect)
+{
+    // GetBounds returns a rect whose top left represents the top left of the
+    // outer bounds, but whose width/height represent the size of the inner
+    // bounds (which is messed up).
+    GetBounds(aRect);
+    aRect.MoveBy(GetClientOffset());
+
+    return NS_OK;
+}
+
+nsIntPoint
+nsWindow::GetClientOffset()
+{
+    if (!mIsTopLevel) {
+        return nsIntPoint(0, 0);
+    }
+
+    GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
+
+    GdkAtom type_returned;
+    int format_returned;
+    int length_returned;
+    long *frame_extents;
+
+    if (!mShell || !mShell->window ||
+        !gdk_property_get(mShell->window,
+                          gdk_atom_intern ("_NET_FRAME_EXTENTS", FALSE),
+                          cardinal_atom,
+                          0, // offset
+                          4*4, // length
+                          FALSE, // delete
+                          &type_returned,
+                          &format_returned,
+                          &length_returned,
+                          (guchar **) &frame_extents) ||
+        length_returned/sizeof(glong) != 4) {
+
+        return nsIntPoint(0, 0);
+    }
+
+    // data returned is in the order left, right, top, bottom
+    PRInt32 left = PRInt32(frame_extents[0]);
+    PRInt32 top = PRInt32(frame_extents[2]);
+
+    g_free(frame_extents);
+
+    return nsIntPoint(left, top);
+}
+
+NS_IMETHODIMP
 nsWindow::SetForegroundColor(const nscolor &aColor)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -2339,17 +2390,16 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
     LOG(("configure event [%p] %d %d %d %d\n", (void *)this,
          aEvent->x, aEvent->y, aEvent->width, aEvent->height));
 
-    // mBounds.x/y are set to the window manager frame top-left when Move() or
-    // Resize()d from within Gecko, so comparing with the client window
-    // top-left is weird.  However, mBounds.x/y are set to client window
-    // position below, so this check avoids unwanted rollup on spurious
-    // configure events from Cygwin/X (bug 672103).
-    if (mBounds.x == aEvent->x &&
-        mBounds.y == aEvent->y)
-        return FALSE;
+    nsIntRect screenBounds;
+    GetScreenBounds(screenBounds);
 
     if (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) {
-        check_for_rollup(aEvent->window, 0, 0, false, true);
+        // This check avoids unwanted rollup on spurious configure events from
+        // Cygwin/X (bug 672103).
+        if (mBounds.x != screenBounds.x ||
+            mBounds.y != screenBounds.y) {
+            check_for_rollup(aEvent->window, 0, 0, false, true);
+        }
     }
 
     // This event indicates that the window position may have changed.
@@ -2377,11 +2427,7 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
         return FALSE;
     }
 
-    // This is wrong, but noautohide titlebar panels currently depend on it
-    // (bug 601545#c13).  mBounds.TopLeft() should refer to the
-    // window-manager frame top-left, but WidgetToScreenOffset() gives the
-    // client window origin.
-    mBounds.MoveTo(WidgetToScreenOffset());
+    mBounds.MoveTo(screenBounds.TopLeft());
 
     nsGUIEvent event(true, NS_MOVE, this);
 

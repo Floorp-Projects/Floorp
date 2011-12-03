@@ -124,7 +124,9 @@ public:
     PRInt32       DefaultPort() const    { return mUsingSSL ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT; }
     void          SetAnonymous(bool anon)         
                                          { mHashKey.SetCharAt(anon ? 'A' : '.', 2); }
+    bool          GetAnonymous()         { return mHashKey.CharAt(2) == 'A'; }
     bool          ShouldForceConnectMethod();
+    const nsCString &GetHost() { return mHost; }
 
 private:
     nsrefcnt               mRef;

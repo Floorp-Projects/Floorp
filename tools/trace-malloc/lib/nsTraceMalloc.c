@@ -957,7 +957,7 @@ backtrace(tm_thread *t, int skip, int *immediate_abort)
     t->suppress_tracing++;
 
     if (!stacks_enabled) {
-#if defined(XP_MACOSX) && defined(__i386)
+#if defined(XP_MACOSX)
         /* Walk the stack, even if stacks_enabled is false. We do this to
            check if we must set immediate_abort. */
         info->entries = 0;

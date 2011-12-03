@@ -1,6 +1,7 @@
 function test()
 {
   waitForExplicitFinish();
+  ignoreAllUncaughtExceptions();
   var frame = document.getElementById("customizeToolbarSheetIFrame");
   frame.addEventListener("load", testCustomizeFrameLoadedPre, true);
 

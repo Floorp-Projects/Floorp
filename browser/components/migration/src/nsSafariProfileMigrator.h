@@ -41,7 +41,6 @@
 
 #include "nsIBrowserProfileMigrator.h"
 #include "nsIObserverService.h"
-#include "nsISupportsArray.h"
 #include "nsStringAPI.h"
 #include "nsINavHistoryService.h"
 

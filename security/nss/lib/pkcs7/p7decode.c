@@ -38,7 +38,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.26 2011/08/21 01:14:17 wtc%google.com Exp $
+ * $Id: p7decode.c,v 1.28 2011/11/16 19:12:34 kaie%kuix.de Exp $
  */
 
 #include "p7local.h"
