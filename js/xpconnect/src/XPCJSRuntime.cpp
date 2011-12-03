@@ -1227,10 +1227,9 @@ CompartmentCallback(JSContext *cx, void *vdata, JSCompartment *compartment)
     // Get the compartment-level numbers.
 #ifdef JS_METHODJIT
     size_t method, regexp, unused;
-    compartment->getMjitCodeStats(method, regexp, unused);
-    curr->mjitCodeMethod = method;
-    curr->mjitCodeRegexp = regexp;
-    curr->mjitCodeUnused = unused;
+    compartment->sizeOfCode(&method, &regexp, &unused);
+    JS_ASSERT(regexp == 0);     /* this execAlloc is only used for method code */
+    curr->mjitCode = method + unused;
 #endif
     JS_GetTypeInferenceMemoryStats(cx, compartment, &curr->typeInferenceMemory,
                                    MemoryReporterMallocSizeOf);
@@ -1531,15 +1530,43 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
                                            ArenaCallback, CellCallback);
         js::IterateChunks(cx, data, ChunkCallback);
 
-        for (js::ThreadDataIter i(rt); !i.empty(); i.popFront())
-            data->stackSize += i.threadData()->stackSpace.committedSize();
-
-        data->runtimeObjectSize = MemoryReporterMallocSizeOf(rt, sizeof(JSRuntime));
+        data->runtimeObject = MemoryReporterMallocSizeOf(rt, sizeof(JSRuntime));
 
         // Nb: we use sizeOfExcludingThis() because atomState.atoms is within
         // JSRuntime, and so counted when JSRuntime is counted.
-        data->atomsTableSize =
+        data->runtimeAtomsTable =
             rt->atomState.atoms.sizeOfExcludingThis(MemoryReporterMallocSizeOf);
+
+        {
+            #ifndef JS_THREADSAFE
+            #error "This code assumes JS_THREADSAFE is defined"
+            #endif
+
+            // Need the GC lock to call JS_ContextIteratorUnlocked() and to
+            // access rt->threads.
+            js::AutoLockGC lock(rt);
+
+            JSContext *acx, *iter = NULL;
+            while ((acx = JS_ContextIteratorUnlocked(rt, &iter)) != NULL) {
+                data->runtimeContexts +=
+                    acx->sizeOfIncludingThis(MemoryReporterMallocSizeOf);
+            }
+
+            for (JSThread::Map::Range r = rt->threads.all(); !r.empty(); r.popFront()) {
+                JSThread *thread = r.front().value;
+                size_t normal, temporary, regexpCode, stackCommitted;
+                thread->sizeOfIncludingThis(MemoryReporterMallocSizeOf,
+                                            &normal,
+                                            &temporary,
+                                            &regexpCode,
+                                            &stackCommitted);
+
+                data->runtimeThreadsNormal         += normal;
+                data->runtimeThreadsTemporary      += temporary;
+                data->runtimeThreadsRegexpCode     += regexpCode;
+                data->runtimeThreadsStackCommitted += stackCommitted;
+            }
+        }
     }
 
     JS_DestroyContextNoGC(cx);
@@ -1583,9 +1610,7 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
         data->totalStrings += stats.gcHeapStrings + 
                               stats.stringChars;
 #ifdef JS_METHODJIT
-        data->totalMjit    += stats.mjitCodeMethod + 
-                              stats.mjitCodeRegexp +
-                              stats.mjitCodeUnused +
+        data->totalMjit    += stats.mjitCode + 
                               stats.mjitData;
 #endif
         data->totalTypeInference += stats.gcHeapTypeObjects +
@@ -1765,22 +1790,9 @@ ReportCompartmentStats(const CompartmentStats &stats,
 
 #ifdef JS_METHODJIT
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "mjit-code/method"),
-                       nsIMemoryReporter::KIND_NONHEAP, stats.mjitCodeMethod,
+                                              "mjit-code"),
+                       nsIMemoryReporter::KIND_NONHEAP, stats.mjitCode,
                        "Memory used by the method JIT to hold the compartment's generated code.",
-                       callback, closure);
-
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "mjit-code/regexp"),
-                       nsIMemoryReporter::KIND_NONHEAP, stats.mjitCodeRegexp,
-                       "Memory used by the regexp JIT to hold the compartment's generated code.",
-                       callback, closure);
-
-    ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
-                                              "mjit-code/unused"),
-                       nsIMemoryReporter::KIND_NONHEAP, stats.mjitCodeUnused,
-                       "Memory allocated by the method and/or regexp JIT to hold the "
-                       "compartment's code, but which is currently unused.",
                        callback, closure);
 
     ReportMemoryBytes0(MakeMemoryReporterPath(pathPrefix, stats.name,
@@ -1836,20 +1848,45 @@ ReportJSRuntimeStats(const IterateData &data, const nsACString &pathPrefix,
     }
 
     ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/runtime-object"),
-                      nsIMemoryReporter::KIND_NONHEAP, data.runtimeObjectSize,
+                      nsIMemoryReporter::KIND_HEAP, data.runtimeObject,
                       "Memory used by the JSRuntime object." SLOP_BYTES_STRING,
                       callback, closure);
 
     ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/atoms-table"),
-                      nsIMemoryReporter::KIND_NONHEAP, data.atomsTableSize,
-                      "Memory used by the atoms table.",
+                      nsIMemoryReporter::KIND_HEAP, data.runtimeAtomsTable,
+                      "Memory used by the atoms table." SLOP_BYTES_STRING,
                       callback, closure);
 
-    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("stack"),
-                      nsIMemoryReporter::KIND_NONHEAP, data.stackSize,
-                      "Memory used for the JavaScript stack.  This is the committed portion "
-                      "of the stack; any uncommitted portion is not measured because it "
-                      "hardly costs anything.",
+    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/contexts"),
+                      nsIMemoryReporter::KIND_HEAP, data.runtimeContexts,
+                      "Memory used by JSContext objects and certain structures "
+                      "hanging off them."  SLOP_BYTES_STRING,
+                      callback, closure);
+
+    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/threads/normal"),
+                      nsIMemoryReporter::KIND_HEAP, data.runtimeThreadsNormal,
+                      "Memory used by JSThread objects and their data, "
+                      "excluding memory that is reported by "
+                      "other reporters under 'explicit/js/runtime/'." SLOP_BYTES_STRING,
+                      callback, closure);
+
+    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/threads/temporary"),
+                      nsIMemoryReporter::KIND_HEAP, data.runtimeThreadsTemporary,
+                      "Memory held transiently in JSThreads and used during "
+                      "compilation.  It mostly holds parse nodes."
+                      SLOP_BYTES_STRING,
+                      callback, closure);
+
+    ReportMemoryBytes0(pathPrefix + NS_LITERAL_CSTRING("runtime/threads/regexp-code"),
+                       nsIMemoryReporter::KIND_NONHEAP, data.runtimeThreadsRegexpCode,
+                       "Memory used by the regexp JIT to hold generated code.",
+                       callback, closure);
+
+    ReportMemoryBytes(pathPrefix + NS_LITERAL_CSTRING("runtime/threads/stack-committed"),
+                      nsIMemoryReporter::KIND_NONHEAP, data.runtimeThreadsStackCommitted,
+                      "Memory used for the thread stacks.  This is the committed portions "
+                      "of the stacks; any uncommitted portions are not measured because they "
+                      "hardly cost anything.",
                       callback, closure);
 
     ReportMemoryBytes(pathPrefix +
@@ -1983,8 +2020,7 @@ public:
         ReportMemoryBytes(NS_LITERAL_CSTRING("js-total-mjit"),
                           nsIMemoryReporter::KIND_OTHER, data.totalMjit,
                           "Memory used by the method JIT.  This is the sum of all compartments' "
-                          "'mjit-code-method', 'mjit-code-regexp', 'mjit-code-unused' and '"
-                          "'mjit-data' numbers.",
+                          "'mjit-code', and 'mjit-data' numbers.",
                           callback, closure);
 #endif
         ReportMemoryBytes(NS_LITERAL_CSTRING("js-total-type-inference"),
@@ -1996,7 +2032,7 @@ public:
 
         ReportMemoryBytes(NS_LITERAL_CSTRING("js-total-analysis-temporary"),
                           nsIMemoryReporter::KIND_OTHER, data.totalAnalysisTemp,
-                          "Transient memory used during type inference and compilation. "
+                          "Memory used transiently during type inference and compilation. "
                           "This is the sum of all compartments' 'analysis-temporary' numbers.",
                           callback, closure);
 

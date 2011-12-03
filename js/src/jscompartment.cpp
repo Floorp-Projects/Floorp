@@ -49,7 +49,6 @@
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 #include "assembler/wtf/Platform.h"
-#include "assembler/jit/ExecutableAllocator.h"
 #include "yarr/BumpPointerAllocator.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
@@ -150,14 +149,14 @@ JSCompartment::ensureJaegerCompartmentExists(JSContext *cx)
 }
 
 void
-JSCompartment::getMjitCodeStats(size_t& method, size_t& regexp, size_t& unused) const
+JSCompartment::sizeOfCode(size_t *method, size_t *regexp, size_t *unused) const
 {
     if (jaegerCompartment_) {
-        jaegerCompartment_->execAlloc()->getCodeStats(method, regexp, unused);
+        jaegerCompartment_->execAlloc()->sizeOfCode(method, regexp, unused);
     } else {
-        method = 0;
-        regexp = 0;
-        unused = 0;
+        *method = 0;
+        *regexp = 0;
+        *unused = 0;
     }
 }
 #endif

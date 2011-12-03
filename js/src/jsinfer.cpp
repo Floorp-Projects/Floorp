@@ -3386,8 +3386,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         /* Nop bytecodes. */
       case JSOP_POP:
       case JSOP_NOP:
-      case JSOP_TRACE:
-      case JSOP_NOTRACE:
+      case JSOP_LOOPHEAD:
       case JSOP_GOTO:
       case JSOP_GOTOX:
       case JSOP_IFEQ:

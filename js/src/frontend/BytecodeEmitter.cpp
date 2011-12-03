@@ -126,7 +126,6 @@ BytecodeEmitter::BytecodeEmitter(Parser *parser, uintN lineno)
     globalMap(parser->context),
     closedArgs(parser->context),
     closedVars(parser->context),
-    traceIndex(0),
     typesetCount(0)
 {
     flags = TCF_COMPILING;
@@ -1450,7 +1449,7 @@ EmitTraceOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *nextpn)
 {
     if (nextpn) {
         /*
-         * Try to give the JSOP_TRACE the same line number as the next
+         * Try to give the JSOP_LOOPHEAD the same line number as the next
          * instruction. nextpn is often a block, in which case the next
          * instruction typically comes from the first statement inside.
          */
@@ -1461,10 +1460,7 @@ EmitTraceOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *nextpn)
             return -1;
     }
 
-    uint32 index = bce->traceIndex;
-    if (index < UINT16_MAX)
-        bce->traceIndex++;
-    return Emit3(cx, bce, JSOP_TRACE, UINT16_HI(index), UINT16_LO(index));
+    return Emit1(cx, bce, JSOP_LOOPHEAD);
 }
 
 /*
@@ -5510,7 +5506,7 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (jmp < 0)
         return false;
 
-    intN noteIndex2 = NewSrcNote(cx, bce, SRC_TRACE);
+    intN noteIndex2 = NewSrcNote(cx, bce, SRC_LOOPHEAD);
     if (noteIndex2 < 0)
         return false;
 
@@ -5651,7 +5647,7 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     top = bce->offset();
     SET_STATEMENT_TOP(&stmtInfo, top);
 
-    intN noteIndex2 = NewSrcNote(cx, bce, SRC_TRACE);
+    intN noteIndex2 = NewSrcNote(cx, bce, SRC_LOOPHEAD);
     if (noteIndex2 < 0)
         return false;
 
@@ -5975,7 +5971,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         jmp = EmitJump(cx, bce, JSOP_GOTO, 0);
         if (jmp < 0)
             return JS_FALSE;
-        noteIndex2 = NewSrcNote(cx, bce, SRC_TRACE);
+        noteIndex2 = NewSrcNote(cx, bce, SRC_LOOPHEAD);
         if (noteIndex2 < 0)
             return JS_FALSE;
         top = EmitTraceOp(cx, bce, pn->pn_right);
@@ -6006,7 +6002,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (noteIndex < 0 || Emit1(cx, bce, JSOP_NOP) < 0)
             return JS_FALSE;
 
-        noteIndex2 = NewSrcNote(cx, bce, SRC_TRACE);
+        noteIndex2 = NewSrcNote(cx, bce, SRC_LOOPHEAD);
         if (noteIndex2 < 0)
             return JS_FALSE;
 

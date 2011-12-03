@@ -1144,6 +1144,12 @@ JS_ContextIterator(JSRuntime *rt, JSContext **iterp)
     return js_ContextIterator(rt, JS_TRUE, iterp);
 }
 
+JS_PUBLIC_API(JSContext *)
+JS_ContextIteratorUnlocked(JSRuntime *rt, JSContext **iterp)
+{
+    return js_ContextIterator(rt, JS_FALSE, iterp);
+}
+
 JS_PUBLIC_API(JSVersion)
 JS_GetVersion(JSContext *cx)
 {

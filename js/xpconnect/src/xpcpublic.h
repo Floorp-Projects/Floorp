@@ -219,9 +219,7 @@ struct CompartmentStats
     PRInt64 scriptData;
 
 #ifdef JS_METHODJIT
-    PRInt64 mjitCodeMethod;
-    PRInt64 mjitCodeRegexp;
-    PRInt64 mjitCodeUnused;
+    PRInt64 mjitCode;
     PRInt64 mjitData;
 #endif
     TypeInferenceMemoryStats typeInferenceMemory;
@@ -230,9 +228,13 @@ struct CompartmentStats
 struct IterateData
 {
     IterateData()
-      : runtimeObjectSize(0),
-        atomsTableSize(0),
-        stackSize(0),
+      : runtimeObject(0),
+        runtimeAtomsTable(0),
+        runtimeContexts(0),
+        runtimeThreadsNormal(0),
+        runtimeThreadsTemporary(0),
+        runtimeThreadsRegexpCode(0),
+        runtimeThreadsStackCommitted(0),
         gcHeapChunkTotal(0),
         gcHeapChunkCleanUnused(0),
         gcHeapChunkDirtyUnused(0),
@@ -253,9 +255,13 @@ struct IterateData
         compartmentStatsVector(),
         currCompartmentStats(NULL) { }
 
-    PRInt64 runtimeObjectSize;
-    PRInt64 atomsTableSize;
-    PRInt64 stackSize;
+    PRInt64 runtimeObject;
+    PRInt64 runtimeAtomsTable;
+    PRInt64 runtimeContexts;
+    PRInt64 runtimeThreadsNormal;
+    PRInt64 runtimeThreadsTemporary;
+    PRInt64 runtimeThreadsRegexpCode;
+    PRInt64 runtimeThreadsStackCommitted;
     PRInt64 gcHeapChunkTotal;
     PRInt64 gcHeapChunkCleanUnused;
     PRInt64 gcHeapChunkDirtyUnused;

@@ -37,7 +37,7 @@
 /*
  * Interface to the PKCS7 implementation.
  *
- * $Id: secpkcs7.h,v 1.6 2008/06/14 14:20:25 wtc%google.com Exp $
+ * $Id: secpkcs7.h,v 1.8 2011/11/16 19:12:34 kaie%kuix.de Exp $
  */
 
 #ifndef _SECPKCS7_H_
