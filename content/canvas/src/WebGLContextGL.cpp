@@ -3993,7 +3993,10 @@ nsresult
 WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
                                        gfxImageSurface **imageOut, int *format)
 {
-    gfxImageSurface *surf = nsnull;
+    nsCOMPtr<nsIContent> content = do_QueryInterface(imageOrCanvas);
+    if (!content) {
+        return NS_ERROR_FAILURE;
+    }        
 
     PRUint32 flags =
         nsLayoutUtils::SFE_WANT_NEW_SURFACE |
@@ -4005,7 +4008,7 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
         flags |= nsLayoutUtils::SFE_NO_PREMULTIPLY_ALPHA;
 
     nsLayoutUtils::SurfaceFromElementResult res =
-        nsLayoutUtils::SurfaceFromElement(imageOrCanvas, flags);
+        nsLayoutUtils::SurfaceFromElement(content->AsElement(), flags);
     if (!res.mSurface)
         return NS_ERROR_FAILURE;
     if (res.mSurface->GetType() != gfxASurface::SurfaceTypeImage) {
@@ -4034,11 +4037,10 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
         }
     }
 
-    // part 2: if the DOM element is a canvas, check that it's not write-only. That would indicate a tainted canvas,
-    // i.e. a canvas that could contain cross-domain image data.
-    nsCOMPtr<nsIContent> maybeDOMCanvas = do_QueryInterface(imageOrCanvas);
-    if (maybeDOMCanvas && maybeDOMCanvas->IsHTML(nsGkAtoms::canvas)) {
-        nsHTMLCanvasElement *canvas = static_cast<nsHTMLCanvasElement*>(maybeDOMCanvas.get());
+    // part 2: if the DOM element is a canvas, check that it's not write-only.
+    // That would indicate a tainted canvas, i.e. a canvas that could contain
+    // cross-domain image data.
+    if (nsHTMLCanvasElement* canvas = nsHTMLCanvasElement::FromContent(content)) {
         if (canvas->IsWriteOnly()) {
             LogMessageIfVerbose("The canvas used as source for texImage2D here is tainted (write-only). It is forbidden "
                                 "to load a WebGL texture from a tainted canvas. A Canvas becomes tainted for example "
@@ -4052,7 +4054,7 @@ WebGLContext::DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
     // Notice that there is never a need to mark the WebGL canvas as write-only, since we reject write-only/cross-domain
     // texture sources in the first place.
 
-    surf = static_cast<gfxImageSurface*>(res.mSurface.get());
+    gfxImageSurface* surf = static_cast<gfxImageSurface*>(res.mSurface.get());
 
     res.mSurface.forget();
     *imageOut = surf;
