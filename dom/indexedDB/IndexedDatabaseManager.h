@@ -339,6 +339,21 @@ private:
   nsTArray<nsCString> mTrackedQuotaPaths;
 };
 
+class AutoEnterWindow
+{
+public:
+  AutoEnterWindow(nsPIDOMWindow* aWindow)
+  {
+    NS_ASSERTION(aWindow, "This should never be null!");
+    IndexedDatabaseManager::SetCurrentWindow(aWindow);
+  }
+
+  ~AutoEnterWindow()
+  {
+    IndexedDatabaseManager::SetCurrentWindow(nsnull);
+  }
+};
+
 END_INDEXEDDB_NAMESPACE
 
 #endif /* mozilla_dom_indexeddb_indexeddatabasemanager_h__ */
