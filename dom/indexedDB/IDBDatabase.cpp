@@ -576,6 +576,9 @@ IDBDatabase::DeleteObjectStore(const nsAString& aName)
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   info->RemoveObjectStore(aName);
+
+  transaction->ReleaseCachedObjectStore(aName);
+
   return NS_OK;
 }
 
