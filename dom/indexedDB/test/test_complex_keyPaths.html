@@ -50,9 +50,10 @@
         { keyPath: ".bar",    exception: true },
       ];
 
-      let request = mozIndexedDB.open(name, 1);
-      request.onerror = errorHandler;
-      request.onupgradeneeded = grabEventAndContinueHandler;
+      let openRequest = mozIndexedDB.open(name, 1);
+      openRequest.onerror = errorHandler;
+      openRequest.onupgradeneeded = grabEventAndContinueHandler;
+      openRequest.onsuccess = unexpectedSuccessHandler;
       let event = yield;
       let db = event.target.result;
 
@@ -136,6 +137,68 @@
         store.clear().onsuccess = grabEventAndContinueHandler;
         yield;
       }
+
+      // Autoincrement and complex key paths
+      let aitests = [{ v: {},                           k: 1, res: { foo: { id: 1 }} },
+                     { v: { value: "x" },               k: 2, res: { value: "x", foo: { id: 2 }} },
+                     { v: { value: "x", foo: {} },      k: 3, res: { value: "x", foo: { id: 3 }} },
+                     { v: { v: "x", foo: { x: "y" } },  k: 4, res: { v: "x", foo: { x: "y", id: 4 }} },
+                     { v: { value: 2, foo: { id: 10 }}, k: 10 },
+                     { v: { value: 2 },                 k: 11, res: { value: 2, foo: { id: 11 }} },
+                     { v: true,                         },
+                     { v: { value: 2, foo: 12 },        },
+                     { v: { foo: { id: true }},         },
+                     { v: { foo: { x: 5, id: {} }},     },
+                     { v: undefined,                    },
+                     { v: { foo: undefined },           },
+                     { v: { foo: { id: undefined }},    },
+                     { v: null,                         },
+                     { v: { foo: null },                },
+                     { v: { foo: { id: null }},         },
+                     ];
+
+      store = db.createObjectStore("gen", { keyPath: "foo.id", autoIncrement: true });
+      for (let i = 0; i < aitests.length; ++i) {
+        let test = aitests[i];
+
+        let preValue = JSON.stringify(test.v);
+        try {
+          store.add(test.v).onsuccess = grabEventAndContinueHandler;
+          ok("k" in test, "shouldn't have thrown");
+          is(JSON.stringify(test.v), preValue, "put didn't modify value");
+        }
+        catch(e) {
+          ok(!("k" in test), "expected exception behavior observed");
+          ok(e instanceof IDBDatabaseException, "Got a IDBDatabaseException");
+          is(e.code, IDBDatabaseException.DATA_ERR, "expect a DATA_ERR");
+
+          is(JSON.stringify(test.v), preValue, "put didn't modify value");
+
+          continue;
+        }
+
+        let e = yield;
+        is(e.target.result, test.k, "got correct return key");
+
+        store.get(test.k).onsuccess = grabEventAndContinueHandler;
+        e = yield;
+        is(JSON.stringify(e.target.result), JSON.stringify(test.res || test.v),
+           "expected value stored");
+      }
+
+      // Can't handle autoincrement and empty keypath
+      try {
+        store = db.createObjectStore("storefail", { keyPath: "", autoIncrement: true });
+        ok(false, "Should have thrown");
+      }
+      catch(e) {
+        ok(true, "Did throw");
+        ok(e instanceof DOMException, "Got a DOMException");
+        is(e.code, DOMException.INVALID_ACCESS_ERR, "expect a INVALID_ACCESS_ERR");
+      }
+
+      openRequest.onsuccess = grabEventAndContinueHandler;
+      yield;
 
       finishTest();
       yield;
