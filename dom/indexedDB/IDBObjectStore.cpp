@@ -915,7 +915,7 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
     rv = aKey.SetFromJSVal(aCx, aKeyVal);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  else {
+  else if (!mAutoIncrement) {
     // Inline keys live on the object. Make sure that the value passed in is an
     // object.
     rv = GetKeyFromValue(aCx, aValue, mKeyPath, aKey);
@@ -943,32 +943,105 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
                                indexInfo.unique, indexInfo.multiEntry,
                                aCx, aValue, aUpdateInfoArray);
     NS_ENSURE_SUCCESS(rv, rv);
-
   }
 
-  const jschar* keyPathChars =
-    reinterpret_cast<const jschar*>(mKeyPath.get());
-  const size_t keyPathLen = mKeyPath.Length();
-  JSBool ok = JS_FALSE;
+  nsString targetObjectPropName;
+  JSObject* targetObject = nsnull;
 
-  if (HasKeyPath() && aKey.IsUnset()) {
-    NS_ASSERTION(mAutoIncrement, "Should have bailed earlier!");
-    
+  if (mAutoIncrement && HasKeyPath()) {
+    NS_ASSERTION(aKey.IsUnset(), "Shouldn't have gotten the key yet!");
+
     if (JSVAL_IS_PRIMITIVE(aValue)) {
       return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
     }
 
-    JSObject* obj = JS_NewObject(aCx, &gDummyPropClass, nsnull, nsnull);
-    NS_ENSURE_TRUE(obj, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    KeyPathTokenizer tokenizer(mKeyPath, '.');
+    NS_ASSERTION(tokenizer.hasMoreTokens(),
+                 "Shouldn't have empty keypath and autoincrement");
 
-    jsval key = OBJECT_TO_JSVAL(obj);
- 
-    ok = JS_DefineUCProperty(aCx, JSVAL_TO_OBJECT(aValue), keyPathChars,
-                             keyPathLen, key, nsnull, nsnull,
-                             JSPROP_ENUMERATE);
-    NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    JSObject* obj = JSVAL_TO_OBJECT(aValue);
+    while (tokenizer.hasMoreTokens()) {
+      const nsDependentSubstring& token = tokenizer.nextToken();
+  
+      NS_ASSERTION(!token.IsEmpty(), "Should be a valid keypath");
+  
+      const jschar* keyPathChars = token.BeginReading();
+      const size_t keyPathLen = token.Length();
+  
+      JSBool hasProp;
+      if (!targetObject) {
+        // We're still walking the chain of existing objects
 
-    // From this point on we have to try to remove the property.
+        JSBool ok = JS_HasUCProperty(aCx, obj, keyPathChars, keyPathLen,
+                                     &hasProp);
+        NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+        if (hasProp) {
+          // Get if the property exists...
+          jsval intermediate;
+          JSBool ok = JS_GetUCProperty(aCx, obj, keyPathChars, keyPathLen,
+                                       &intermediate);
+          NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+          if (tokenizer.hasMoreTokens()) {
+            // ...and walk to it if there are more steps...
+            if (JSVAL_IS_PRIMITIVE(intermediate)) {
+              return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+            }
+            obj = JSVAL_TO_OBJECT(intermediate);
+          }
+          else {
+            // ...otherwise use it as key
+            aKey.SetFromJSVal(aCx, intermediate);
+            if (aKey.IsUnset()) {
+              return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+            }
+          }
+        }
+        else {
+          // If the property doesn't exist, fall into below path of starting
+          // to define properties
+          targetObject = obj;
+          targetObjectPropName = token;
+        }
+      }
+
+      if (targetObject) {
+        // We have started inserting new objects or are about to just insert
+        // the first one.
+        if (tokenizer.hasMoreTokens()) {
+          // If we're not at the end, we need to add a dummy object to the chain.
+          JSObject* dummy = JS_NewObject(aCx, nsnull, nsnull, nsnull);
+          if (!dummy) {
+            rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+            break;
+          }
+  
+          if (!JS_DefineUCProperty(aCx, obj, token.BeginReading(),
+                                   token.Length(),
+                                   OBJECT_TO_JSVAL(dummy), nsnull, nsnull,
+                                   JSPROP_ENUMERATE)) {
+            rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+            break;
+          }
+  
+          obj = dummy;
+        }
+        else {
+          JSObject* dummy = JS_NewObject(aCx, &gDummyPropClass, nsnull, nsnull);
+          if (!dummy) {
+            rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+            break;
+          }
+  
+          if (!JS_DefineUCProperty(aCx, obj, token.BeginReading(),
+                                   token.Length(), OBJECT_TO_JSVAL(dummy),
+                                   nsnull, nsnull, JSPROP_ENUMERATE)) {
+            rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+          }
+        }
+      }
+    }
   }
 
   JSStructuredCloneCallbacks callbacks = {
@@ -986,13 +1059,15 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
     rv = NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
-  if (ok) {
+  if (targetObject) {
     // If this fails, we lose, and the web page sees a magical property
     // appear on the object :-(
     jsval succeeded;
-    ok = JS_DeleteUCProperty2(aCx, JSVAL_TO_OBJECT(aValue), keyPathChars,
-                              keyPathLen, &succeeded);
-    NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    if (!JS_DeleteUCProperty2(aCx, targetObject,
+                              targetObjectPropName.get(),
+                              targetObjectPropName.Length(), &succeeded)) {
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
     NS_ASSERTION(JSVAL_IS_BOOLEAN(succeeded), "Wtf?");
     NS_ENSURE_TRUE(JSVAL_TO_BOOLEAN(succeeded),
                    NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
