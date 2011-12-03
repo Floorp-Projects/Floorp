@@ -47,7 +47,7 @@ interface nsIIDBRequest;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBIndex for more
  * information.
  */
-[scriptable, builtinclass, uuid(1da60889-3db4-4f66-9fd7-b78c1e7969b7)]
+[scriptable, builtinclass, uuid(fcb9a158-833e-4aa9-ab19-ab90cbb50afc)]
 interface nsIIDBIndex : nsISupports
 {
   readonly attribute DOMString name;
@@ -57,6 +57,8 @@ interface nsIIDBIndex : nsISupports
   readonly attribute DOMString keyPath;
 
   readonly attribute boolean unique;
+
+  readonly attribute boolean multiEntry;
 
   readonly attribute nsIIDBObjectStore objectStore;
 
