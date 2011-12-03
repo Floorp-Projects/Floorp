@@ -834,6 +834,10 @@ public:
             succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
                                                  mSurface, mSurface,
                                                  mContext);
+            if (!succeeded && sEGLLibrary.fGetError() == LOCAL_EGL_CONTEXT_LOST) {
+                mContextLost = true;
+                NS_WARNING("EGL context has been lost.");
+            }
             NS_ASSERTION(succeeded, "Failed to make GL context current!");
         }
 
