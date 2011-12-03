@@ -164,3 +164,12 @@ NSSSSL_GetVersion;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.13.2 {    # NSS 3.13.2 release
+;+    global:
+SSL_SetNextProtoCallback;
+SSL_SetNextProtoNego;
+SSL_GetNextProto;
+SSL_RestartHandshakeAfterAuthCertificate;
+;+    local:
+;+       *;
+;+};

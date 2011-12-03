@@ -96,7 +96,7 @@
       this.invoke = function removeTextData_invoke()
       {
         var tree = {
-          role: ROLE_SECTION,
+          role: ROLE_PARAGRAPH,
           children: [
             {
               role: ROLE_TEXT_LEAF,
@@ -112,7 +112,7 @@
       this.finalCheck = function removeTextData_finalCheck()
       {
         var tree = {
-          role: ROLE_SECTION,
+          role: ROLE_PARAGRAPH,
           children: []
         };
         testAccessibleTree(this.containerNode, tree);
@@ -147,7 +147,8 @@
       gQueue.push(new setOnClickNRoleAttrs("span"));
 
       // text data removal of text node should remove its text accessible
-      gQueue.push(new removeTextData("container2"));
+      gQueue.push(new removeTextData("p"));
+      gQueue.push(new removeTextData("pre"));
 
       gQueue.invoke(); // SimpleTest.finish() will be called in the end
     }
@@ -168,6 +169,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=625652">
     Mozilla Bug 625652
   </a>
+  <a target="_blank"
+     title="Remove text accesible getting no text inside a preformatted area"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=706335">
+    Mozilla Bug 706335
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -179,7 +185,8 @@
     <span id="span">span</span>
   </div>
 
-  <div id="container2">text</div>
+  <p id="p">text</p>
+  <pre id="pre">text</pre>
 
   <div id="eventdump"></div>
 </body>

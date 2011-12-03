@@ -75,10 +75,11 @@
 #    if __GNUC__ > 4
 #      define MOZ_HAVE_CXX11_DELETE
 #      define MOZ_HAVE_CXX11_OVERRIDE
-#      define MOZ_HAVE CXX11_FINAL       final
+#      define MOZ_HAVE_CXX11_FINAL       final
 #    elif __GNUC__ == 4
 #      if __GNUC_MINOR__ >= 7
 #        define MOZ_HAVE_CXX11_OVERRIDE
+#        define MOZ_HAVE_CXX11_FINAL     final
 #      endif
 #      if __GNUC_MINOR__ >= 4
 #        define MOZ_HAVE_CXX11_DELETE

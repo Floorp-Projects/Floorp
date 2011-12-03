@@ -230,7 +230,7 @@ public:
         m_pools.remove(m_pools.lookup(pool));   // this asserts if |pool| is not in m_pools
     }
 
-    void getCodeStats(size_t& method, size_t& regexp, size_t& unused) const;
+    void sizeOfCode(size_t *method, size_t *regexp, size_t *unused) const;
 
     void setDestroyCallback(DestroyCallback destroyCallback) {
         this->destroyCallback = destroyCallback;

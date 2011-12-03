@@ -118,8 +118,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0x34460b01, 0x3dc2, 0x4b58, \
-    { 0x8e, 0xd3, 0x7e, 0x7c, 0x33, 0xb5, 0x78, 0x8b } }
+  { 0x41fc0f2c, 0x65c2, 0x418e, \
+    { 0x89, 0x91, 0x5f, 0x0c, 0xa7, 0x01, 0x05, 0x34 } }
 /*
  * Window shadow styles
  * Also used for the -moz-window-shadow CSS property
@@ -673,6 +673,21 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD Move(PRInt32 aX, PRInt32 aY) = 0;
 
     /**
+     * Reposition this widget so that the client area has the given offset.
+     *
+     * @param aX       the new x offset of the client area expressed as an
+     *                 offset from the origin of the client area of the parent
+     *                 widget (for root widgets and popup widgets it is in
+     *                 screen coordinates)
+     * @param aY       the new y offset of the client area expressed as an
+     *                 offset from the origin of the client area of the parent
+     *                 widget (for root widgets and popup widgets it is in
+     *                 screen coordinates)
+     *
+     **/
+    NS_IMETHOD MoveClient(PRInt32 aX, PRInt32 aY) = 0;
+
+    /**
      * Resize this widget. 
      *
      * @param aWidth  the new width expressed in the parent's coordinate system
@@ -701,10 +716,29 @@ class nsIWidget : public nsISupports {
                       bool     aRepaint) = 0;
 
     /**
-     * Resize and reposition the inner client area of the widget.
+     * Resize the widget so that the inner client area has the given size.
      *
-     * @param aX       the new x offset expressed in the parent's coordinate system
-     * @param aY       the new y offset expressed in the parent's coordinate system
+     * @param aWidth   the new width of the client area.
+     * @param aHeight  the new height of the client area.
+     * @param aRepaint whether the widget should be repainted
+     *
+     */
+    NS_IMETHOD ResizeClient(PRInt32 aWidth,
+                            PRInt32 aHeight,
+                            bool  aRepaint) = 0;
+
+    /**
+     * Resize and reposition the widget so tht inner client area has the given
+     * offset and size.
+     *
+     * @param aX       the new x offset of the client area expressed as an
+     *                 offset from the origin of the client area of the parent
+     *                 widget (for root widgets and popup widgets it is in
+     *                 screen coordinates)
+     * @param aY       the new y offset of the client area expressed as an
+     *                 offset from the origin of the client area of the parent
+     *                 widget (for root widgets and popup widgets it is in
+     *                 screen coordinates)
      * @param aWidth   the new width of the client area.
      * @param aHeight  the new height of the client area.
      * @param aRepaint whether the widget should be repainted
@@ -799,9 +833,10 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD GetScreenBounds(nsIntRect &aRect) = 0;
 
     /**
-     * Get this widget's client area dimensions, if the window has a 3D
-     * border appearance this returns the area inside the border. Origin
-     * is always zero.
+     * Get this widget's client area bounds, if the window has a 3D border
+     * appearance this returns the area inside the border. The position is the
+     * position of the client area relative to the client area of the parent
+     * widget (for root widgets and popup widgets it is in screen coordinates).
      *
      * @param aRect   On return it holds the  x. y, width and height of
      *                the client area of this widget.
