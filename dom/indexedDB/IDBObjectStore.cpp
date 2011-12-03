@@ -899,13 +899,13 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
 
   // Return DATA_ERR if a key was passed in and this objectStore uses inline
   // keys.
-  if (!JSVAL_IS_VOID(aKeyVal) && !mKeyPath.IsEmpty()) {
+  if (!JSVAL_IS_VOID(aKeyVal) && HasKeyPath()) {
     return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
   JSAutoRequest ar(aCx);
 
-  if (mKeyPath.IsEmpty()) {
+  if (!HasKeyPath()) {
     // Out-of-line keys must be passed in.
     rv = aKey.SetFromJSVal(aCx, aKeyVal);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -913,10 +913,6 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
   else {
     // Inline keys live on the object. Make sure that the value passed in is an
     // object.
-    if (JSVAL_IS_PRIMITIVE(aValue)) {
-      return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
-    }
-
     rv = GetKeyFromValue(aCx, aValue, mKeyPath, aKey);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -941,8 +937,12 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
   const size_t keyPathLen = mKeyPath.Length();
   JSBool ok = JS_FALSE;
 
-  if (!mKeyPath.IsEmpty() && aKey.IsUnset()) {
+  if (HasKeyPath() && aKey.IsUnset()) {
     NS_ASSERTION(mAutoIncrement, "Should have bailed earlier!");
+    
+    if (JSVAL_IS_PRIMITIVE(aValue)) {
+      return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
+    }
 
     JSObject* obj = JS_NewObject(aCx, &gDummyPropClass, nsnull, nsnull);
     NS_ENSURE_TRUE(obj, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
