@@ -1936,8 +1936,3 @@ nsDOMWindowUtils::CheckAndClearPaintedState(nsIDOMElement* aElement, bool* aResu
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMWindowUtils::PreventFurtherDialogs() {
-  mWindow->PreventFurtherDialogs();
-  return NS_OK;
-}
