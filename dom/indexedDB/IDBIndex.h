@@ -87,11 +87,6 @@ public:
     return mUnique;
   }
 
-  bool IsMultiEntry() const
-  {
-    return mMultiEntry;
-  }
-
   bool IsAutoIncrement() const
   {
     return mAutoIncrement;
@@ -115,7 +110,6 @@ private:
   nsString mName;
   nsString mKeyPath;
   bool mUnique;
-  bool mMultiEntry;
   bool mAutoIncrement;
 };
 
