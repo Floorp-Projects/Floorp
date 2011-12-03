@@ -55,6 +55,8 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "mozilla/Preferences.h"
+#include "nsIScriptError.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 
@@ -284,10 +286,28 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   // the redirect is permitted, so propagate the Content Security Policy
   // and load type to the redirecting channel
   nsresult rv;
-  nsCOMPtr<nsIWritablePropertyBag2> props2 = do_QueryInterface(newChannel, &rv);
-  if (props2)
-    props2->SetPropertyAsInterface(NS_CHANNEL_PROP_CHANNEL_POLICY,
-                                   channelPolicy);
+  nsCOMPtr<nsIWritablePropertyBag2> props2 = do_QueryInterface(newChannel);
+  if (props2) {
+    rv = props2->SetPropertyAsInterface(NS_CHANNEL_PROP_CHANNEL_POLICY,
+                                        channelPolicy);
+    if (NS_SUCCEEDED(rv)) {
+      return NS_OK;
+    }
+  }
 
-  return NS_OK;
+  // The redirecting channel isn't a writable property bag, we won't be able
+  // to enforce the load policy if it redirects again, so we stop it now.
+  nsXPIDLString message;
+  nsCAutoString newUriSpec;
+  newUri->GetSpec(newUriSpec);
+  const PRUnichar *formatParams[] = { NS_ConvertUTF8toUTF16(newUriSpec).get() };
+  if (NS_SUCCEEDED(rv)) {
+    nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                   "InvalidRedirectChannelWarning",
+                                    formatParams, 1, nsnull, EmptyString(),
+                                    0, 0, nsIScriptError::warningFlag,
+                                    "Redirect Error");
+  }
+
+  return NS_BINDING_FAILED;
 }
