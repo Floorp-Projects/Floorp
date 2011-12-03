@@ -1,6 +1,7 @@
 // ----------------------------------------------------------------------------
 // Test whether an InstallTrigger.install call fails when xpinstall is disabled
 function test() {
+  ignoreAllUncaughtExceptions();
   Harness.installDisabledCallback = install_disabled;
   Harness.installBlockedCallback = allow_blocked;
   Harness.installConfirmCallback = confirm_install;

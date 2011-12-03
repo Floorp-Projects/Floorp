@@ -60,13 +60,13 @@ CPPSRCS = 				\
 	nsRecentBadCerts.cpp \
         nsClientAuthRemember.cpp        \
 	nsPSMBackgroundThread.cpp       \
-	nsSSLThread.cpp                 \
 	nsCertVerificationThread.cpp    \
 	nsProtectedAuthThread.cpp \
 	nsNSSCallbacks.cpp		\
 	nsNSSComponent.cpp		\
 	nsNSSErrors.cpp			\
 	nsNSSIOLayer.cpp		\
+	SSLServerCertVerification.cpp   \
 	nsSSLStatus.cpp		\
 	nsNSSModule.cpp			\
 	nsSSLSocketProvider.cpp		\

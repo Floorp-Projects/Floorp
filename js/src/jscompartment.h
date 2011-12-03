@@ -232,7 +232,7 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool ensureJaegerCompartmentExists(JSContext *cx);
 
-    void getMjitCodeStats(size_t& method, size_t& regexp, size_t& unused) const;
+    void sizeOfCode(size_t *method, size_t *regexp, size_t *unused) const;
 #endif
 
     /*

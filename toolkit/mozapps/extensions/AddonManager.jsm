@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Dave Townsend <dtownsend@oxymoronical.com>
+#   Blair McBride <bmcbride@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,7 +51,10 @@ const PREF_EM_LAST_PLATFORM_VERSION   = "extensions.lastPlatformVersion";
 const PREF_EM_AUTOUPDATE_DEFAULT      = "extensions.update.autoUpdateDefault";
 const PREF_EM_STRICT_COMPATIBILITY    = "extensions.strictCompatibility";
 
+// Note: This has to be kept in sync with the same constant in AddonRepository.jsm
 const STRICT_COMPATIBILITY_DEFAULT    = true;
+
+const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const VALID_TYPES_REGEXP = /^[\w\-]+$/;
 
@@ -234,6 +238,67 @@ AddonScreenshot.prototype = {
     return this.url || "";
   }
 }
+
+
+/**
+ * This represents a compatibility override for an addon.
+ *
+ * @param  aType
+ *         Overrride type - "compatible" or "incompatible"
+ * @param  aMinVersion
+ *         Minimum version of the addon to match
+ * @param  aMaxVersion
+ *         Maximum version of the addon to match
+ * @param  aAppID
+ *         Application ID used to match appMinVersion and appMaxVersion
+ * @param  aAppMinVersion
+ *         Minimum version of the application to match
+ * @param  aAppMaxVersion
+ *         Maximum version of the application to match
+ */
+function AddonCompatibilityOverride(aType, aMinVersion, aMaxVersion, aAppID,
+                                    aAppMinVersion, aAppMaxVersion) {
+  this.type = aType;
+  this.minVersion = aMinVersion;
+  this.maxVersion = aMaxVersion;
+  this.appID = aAppID;
+  this.appMinVersion = aAppMinVersion;
+  this.appMaxVersion = aAppMaxVersion;
+}
+
+AddonCompatibilityOverride.prototype = {
+  /**
+   * Type of override - "incompatible" or "compatible".
+   * Only "incompatible" is supported for now.
+   */
+  type: null,
+
+  /**
+   * Min version of the addon to match.
+   */
+  minVersion: null,
+
+  /**
+   * Max version of the addon to match.
+   */
+  maxVersion: null,
+
+  /**
+   * Application ID to match.
+   */
+  appID: null,
+
+  /**
+   * Min version of the application to match.
+   */
+  appMinVersion: null,
+
+  /**
+   * Max version of the application to match.
+   */
+  appMaxVersion: null
+};
+
 
 /**
  * A type of add-on, used by the UI to determine how to display different types
@@ -552,11 +617,14 @@ var AddonManagerInternal = {
       return;
 
     Services.obs.notifyObservers(null, "addons-background-update-start", null);
-    let pendingUpdates = 1;
+    let pendingUpdates = 0;
 
     function notifyComplete() {
-      if (--pendingUpdates == 0)
-        Services.obs.notifyObservers(null, "addons-background-update-complete", null);
+      if (--pendingUpdates == 0) {
+        Services.obs.notifyObservers(null,
+                                     "addons-background-update-complete",
+                                     null);
+      }
     }
 
     let scope = {};
@@ -565,30 +633,34 @@ var AddonManagerInternal = {
     scope.LightweightThemeManager.updateCurrentTheme();
 
     this.getAllAddons(function getAddonsCallback(aAddons) {
-      pendingUpdates++;
+      // Repopulate repository cache first, to ensure compatibility overrides
+      // are up to date before checking for addon updates.
       var ids = [a.id for each (a in aAddons)];
-      scope.AddonRepository.repopulateCache(ids, notifyComplete);
+      scope.AddonRepository.repopulateCache(ids, function BUC_repopulateCacheCallback() {
+        AddonManagerInternal.updateAddonRepositoryData(function BUC_updateAddonCallback() {
 
-      pendingUpdates += aAddons.length;
+          pendingUpdates += aAddons.length;
 
-      aAddons.forEach(function BUC_forEachCallback(aAddon) {
-        // Check all add-ons for updates so that any compatibility updates will
-        // be applied
-        aAddon.findUpdates({
-          onUpdateAvailable: function BUC_onUpdateAvailable(aAddon, aInstall) {
-            // Start installing updates when the add-on can be updated and
-            // background updates should be applied.
-            if (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE &&
-                AddonManager.shouldAutoUpdate(aAddon)) {
-              aInstall.install();
-            }
-          },
-
-          onUpdateFinished: notifyComplete
-        }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+          aAddons.forEach(function BUC_forEachCallback(aAddon) {
+            // Check all add-ons for updates so that any compatibility updates will
+            // be applied
+            aAddon.findUpdates({
+              onUpdateAvailable: function BUC_onUpdateAvailable(aAddon, aInstall) {
+                // Start installing updates when the add-on can be updated and
+                // background updates should be applied.
+                if (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE &&
+                    AddonManager.shouldAutoUpdate(aAddon)) {
+                  aInstall.install();
+                }
+              },
+    
+              onUpdateFinished: notifyComplete
+            }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+          });
+    
+          notifyComplete();
+        });
       });
-
-      notifyComplete();
     });
   },
 
@@ -715,7 +787,31 @@ var AddonManagerInternal = {
       callProvider(provider, "updateAddonAppDisabledStates");
     });
   },
+  
+  /**
+   * Notifies all providers that the repository has updated its data for
+   * installed add-ons.
+   *
+   * @param  aCallback
+   *         Function to call when operation is complete.
+   */
+  updateAddonRepositoryData: function AMI_updateAddonRepositoryData(aCallback) {
+    if (!aCallback)
+      throw Components.Exception("Must specify aCallback",
+                                 Cr.NS_ERROR_INVALID_ARG);
 
+    new AsyncObjectCaller(this.providers, "updateAddonRepositoryData", {
+      nextObject: function(aCaller, aProvider) {
+        callProvider(aProvider,
+                     "updateAddonRepositoryData",
+                     null,
+                     aCaller.callNext.bind(aCaller));
+      },
+      noMoreObjects: function(aCaller) {
+        safeCall(aCallback);
+      }
+    });
+  },
   /**
    * Asynchronously gets an AddonInstall for a URL.
    *
@@ -1224,6 +1320,8 @@ var AddonManagerPrivate = {
   AddonAuthor: AddonAuthor,
 
   AddonScreenshot: AddonScreenshot,
+
+  AddonCompatibilityOverride: AddonCompatibilityOverride,
 
   AddonType: AddonType
 };

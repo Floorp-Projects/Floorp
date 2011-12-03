@@ -1,5 +1,10 @@
 <!ENTITY addons.windowTitle                   "Add-ons Manager">
+
 <!ENTITY search.placeholder                   "Search all add-ons">
+<!-- LOCALIZATION NOTE (search.commandKey):
+     The search command key should match findOnCmd.commandkey from browser.dtd -->
+<!ENTITY search.commandkey                    "f">
+
 <!ENTITY loading.label                        "Loading…">
 <!ENTITY listEmpty.installed.label            "You don't have any add-ons of this type installed">
 <!ENTITY listEmpty.availableUpdates.label     "No updates found">

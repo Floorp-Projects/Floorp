@@ -605,6 +605,9 @@ private:
   Abort(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     XMLHttpRequestPrivate* priv =
       GetInstancePrivate(aCx, obj, sFunctions[0].name);
@@ -619,6 +622,9 @@ private:
   GetAllResponseHeaders(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     XMLHttpRequestPrivate* priv =
       GetInstancePrivate(aCx, obj, sFunctions[1].name);
@@ -639,6 +645,9 @@ private:
   GetResponseHeader(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     XMLHttpRequestPrivate* priv =
       GetInstancePrivate(aCx, obj, sFunctions[2].name);
@@ -675,6 +684,9 @@ private:
   Open(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     XMLHttpRequestPrivate* priv =
       GetInstancePrivate(aCx, obj, sFunctions[3].name);
@@ -698,6 +710,9 @@ private:
   Send(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     XMLHttpRequestPrivate* priv =
       GetInstancePrivate(aCx, obj, sFunctions[4].name);
@@ -714,6 +729,9 @@ private:
   SendAsBinary(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     XMLHttpRequestPrivate* priv =
       GetInstancePrivate(aCx, obj, sFunctions[5].name);
@@ -744,6 +762,9 @@ private:
   SetRequestHeader(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     XMLHttpRequestPrivate* priv =
       GetInstancePrivate(aCx, obj, sFunctions[6].name);
@@ -764,6 +785,9 @@ private:
   OverrideMimeType(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     XMLHttpRequestPrivate* priv =
       GetInstancePrivate(aCx, obj, sFunctions[7].name);

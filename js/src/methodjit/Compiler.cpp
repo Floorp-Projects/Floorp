@@ -958,7 +958,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         Bytecode *opinfo = analysis->maybeCode(i);
         if (opinfo && opinfo->safePoint) {
             /* loopEntries cover any safe points which are at loop heads. */
-            if (!cx->typeInferenceEnabled() || !opinfo->loopHead)
+            JSOp op = js_GetOpcode(cx, script, script->code + i);
+            if (!cx->typeInferenceEnabled() || op != JSOP_LOOPHEAD)
                 nNmapLive++;
         }
     }
@@ -1021,7 +1022,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         for (size_t i = 0; i < script->length; i++) {
             Bytecode *opinfo = analysis->maybeCode(i);
             if (opinfo && opinfo->safePoint) {
-                if (cx->typeInferenceEnabled() && opinfo->loopHead)
+                JSOp op = js_GetOpcode(cx, script, script->code + i);
+                if (cx->typeInferenceEnabled() && op == JSOP_LOOPHEAD)
                     continue;
                 Label L = jumpMap[i];
                 JS_ASSERT(L.isSet());
@@ -1581,7 +1583,7 @@ mjit::Compiler::generateMethod()
                  * of the loop so sync, branch, and fix it up after the loop
                  * has been processed.
                  */
-                if (cx->typeInferenceEnabled() && analysis->getCode(PC).loopHead) {
+                if (cx->typeInferenceEnabled() && op == JSOP_LOOPHEAD) {
                     frame.syncAndForgetEverything();
                     Jump j = masm.jump();
                     if (!startLoop(PC, j, PC))
@@ -1734,7 +1736,7 @@ mjit::Compiler::generateMethod()
              */
             jsbytecode *next = PC + js_CodeSpec[op].length;
             if (cx->typeInferenceEnabled() && analysis->maybeCode(next) &&
-                analysis->getCode(next).loopHead) {
+                js_GetOpcode(cx, script, next) == JSOP_LOOPHEAD) {
                 frame.syncAndForgetEverything();
                 Jump j = masm.jump();
                 if (!startLoop(next, j, target))
@@ -2811,15 +2813,14 @@ mjit::Compiler::generateMethod()
           }
           END_CASE(JSOP_LAMBDA_FC)
 
-          BEGIN_CASE(JSOP_TRACE)
-          BEGIN_CASE(JSOP_NOTRACE)
+          BEGIN_CASE(JSOP_LOOPHEAD)
           {
             if (analysis->jumpTarget(PC)) {
                 interruptCheckHelper();
                 recompileCheckHelper();
             }
           }
-          END_CASE(JSOP_TRACE)
+          END_CASE(JSOP_LOOPHEAD)
 
           BEGIN_CASE(JSOP_DEBUGGER)
           {

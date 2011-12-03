@@ -3883,6 +3883,10 @@ nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback)
     return NS_OK;
   }
 
+  if (!aCallback) {
+    return NS_ERROR_XPC_BAD_CONVERT_JS;
+  }
+
   mDoc->ScheduleFrameRequestCallback(aCallback);
   return NS_OK;
 }
@@ -10320,7 +10324,7 @@ nsGlobalChromeWindow::BeginWindowMove(nsIDOMEvent *aMouseDownEvent, nsIDOMElemen
     nsIFrame* frame = panel->GetPrimaryFrame();
     NS_ENSURE_TRUE(frame && frame->GetType() == nsGkAtoms::menuPopupFrame, NS_OK);
 
-    (static_cast<nsMenuPopupFrame*>(frame))->GetWidget(getter_AddRefs(widget));
+    widget = (static_cast<nsMenuPopupFrame*>(frame))->GetWidget();
   }
   else {
 #endif

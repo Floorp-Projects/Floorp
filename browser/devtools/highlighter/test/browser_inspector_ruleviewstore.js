@@ -137,6 +137,7 @@ function ruleViewOpened2()
 function test()
 {
   waitForExplicitFinish();
+  ignoreAllUncaughtExceptions();
 
   tab1 = gBrowser.addTab();
   gBrowser.selectedTab = tab1;

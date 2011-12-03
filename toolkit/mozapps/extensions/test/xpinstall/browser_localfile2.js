@@ -3,6 +3,7 @@
 // web content
 function test() {
   waitForExplicitFinish();
+  ignoreAllUncaughtExceptions();
 
   var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                      .getService(Components.interfaces.nsIChromeRegistry);

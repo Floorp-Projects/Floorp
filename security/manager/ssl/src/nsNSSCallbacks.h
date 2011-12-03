@@ -52,11 +52,6 @@ char* PR_CALLBACK
 PK11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void* arg);
 
 void PR_CALLBACK HandshakeCallback(PRFileDesc *fd, void *client_data);
-SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
-                                              PRBool checksig, PRBool isServer);
-
-PRErrorCode PSM_SSL_BlacklistDigiNotar(CERTCertificate * serverCert,
-                                       CERTCertList * serverCertChain);
 
 SECStatus RegisterMyOCSPAIAInfoCallback();
 SECStatus UnregisterMyOCSPAIAInfoCallback();

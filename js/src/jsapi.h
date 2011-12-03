@@ -2101,6 +2101,9 @@ JS_GetRuntime(JSContext *cx);
 extern JS_PUBLIC_API(JSContext *)
 JS_ContextIterator(JSRuntime *rt, JSContext **iterp);
 
+extern JS_PUBLIC_API(JSContext *)
+JS_ContextIteratorUnlocked(JSRuntime *rt, JSContext **iterp);
+
 extern JS_PUBLIC_API(JSVersion)
 JS_GetVersion(JSContext *cx);
 

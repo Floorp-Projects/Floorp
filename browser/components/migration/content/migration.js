@@ -186,8 +186,8 @@ var MigrationWizard = {
         this._wiz.currentPage.next = "importItems";
 
       var sourceProfiles = this._migrator.sourceProfiles;
-      if (sourceProfiles && sourceProfiles.Count() == 1) {
-        var profileName = sourceProfiles.QueryElementAt(0, Components.interfaces.nsISupportsString);
+      if (sourceProfiles && sourceProfiles.length == 1) {
+        var profileName = sourceProfiles.queryElementAt(0, Ci.nsISupportsString);
         this._selectedProfile = profileName.data;
       }
       else
@@ -211,10 +211,9 @@ var MigrationWizard = {
     // and we canceled the dialog.  When that happens, _migrator will be null.
     if (this._migrator) {
       var sourceProfiles = this._migrator.sourceProfiles;
-      var count = sourceProfiles.Count();
-      for (var i = 0; i < count; ++i) {
+      for (var i = 0; i < sourceProfiles.length; ++i) {
         var item = document.createElement("radio");
-        var str = sourceProfiles.QueryElementAt(i, Components.interfaces.nsISupportsString);
+        var str = sourceProfiles.queryElementAt(i, Ci.nsISupportsString);
         item.id = str.data;
         item.setAttribute("label", str.data);
         profiles.appendChild(item);
