@@ -1546,11 +1546,33 @@ GetArgOrVarAtom(JSPrinter *jp, uintN slot)
     return name;
 }
 
+#define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, "")
+
+static const char *
+GetLocalInSlot(SprintStack *ss, jsint i, jsint slot, JSObject *obj)
+{
+    for (Shape::Range r(obj->lastProperty()); !r.empty(); r.popFront()) {
+        const Shape &shape = r.front();
+
+        if (shape.shortid == slot) {
+            LOCAL_ASSERT(JSID_IS_ATOM(shape.propid));
+            
+            JSAtom *atom = JSID_TO_ATOM(shape.propid);
+            const char *rval = QuoteString(&ss->sprinter, atom, 0);
+            if (!rval)
+                return NULL;
+
+            RETRACT(&ss->sprinter, rval);
+            return rval;
+        }
+    }
+
+    return GetStr(ss, i);
+}
+
 const char *
 GetLocal(SprintStack *ss, jsint i)
 {
-#define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, "")
-
     ptrdiff_t off = ss->offsets[i];
     if (off >= 0)
         return OFF2STR(&ss->sprinter, off);
@@ -1569,40 +1591,47 @@ GetLocal(SprintStack *ss, jsint i)
     if (!JSScript::isValidOffset(script->objectsOffset))
         return GetStr(ss, i);
 
-    for (jsatomid j = 0, n = script->objects()->length; j != n; j++) {
-        JSObject *obj = script->getObject(j);
-        if (obj->isBlock()) {
-            jsint depth = OBJ_BLOCK_DEPTH(cx, obj);
-            jsint count = OBJ_BLOCK_COUNT(cx, obj);
+    // In case of a let variable, the stack points to a JSOP_ENTERBLOCK opcode.
+    // Get the object number from the block instead of iterating all objects and
+    // hoping the right object is found.
+    if (off <= -2 && ss->printer->pcstack) {
+        jsbytecode *pc = ss->printer->pcstack[-2 - off];
 
-            if (jsuint(i - depth) < jsuint(count)) {
-                jsint slot = i - depth;
+        JS_ASSERT(ss->printer->script->code <= pc);
+        JS_ASSERT(pc < (ss->printer->script->code + ss->printer->script->length));
 
-                for (Shape::Range r(obj->lastProperty()); !r.empty(); r.popFront()) {
-                    const Shape &shape = r.front();
+        if (JSOP_ENTERBLOCK == (JSOp)*pc) {
+            jsatomid j = js_GetIndexFromBytecode(ss->sprinter.context,
+                                                 ss->printer->script, pc, 0);
+            JSObject *obj = script->getObject(j);
 
-                    if (shape.shortid == slot) {
-                        LOCAL_ASSERT(JSID_IS_ATOM(shape.propid));
+            if (obj->isBlock()) {
+                jsint depth = OBJ_BLOCK_DEPTH(cx, obj);
+                jsint count = OBJ_BLOCK_COUNT(cx, obj);
 
-                        JSAtom *atom = JSID_TO_ATOM(shape.propid);
-                        const char *rval = QuoteString(&ss->sprinter, atom, 0);
-                        if (!rval)
-                            return NULL;
-
-                        RETRACT(&ss->sprinter, rval);
-                        return rval;
-                    }
-                }
-
-                break;
+                if (jsuint(i - depth) < jsuint(count))
+                    return GetLocalInSlot(ss, i, jsint(i - depth), obj);
             }
         }
     }
 
+    // Iterate over all objects.
+    for (jsatomid j = 0, n = script->objects()->length; j != n; j++) {
+        JSObject *obj = script->getObject(j);
+
+        if (obj->isBlock()) {
+            jsint depth = OBJ_BLOCK_DEPTH(cx, obj);
+            jsint count = OBJ_BLOCK_COUNT(cx, obj);
+
+            if (jsuint(i - depth) < jsuint(count))
+                return GetLocalInSlot(ss, i, jsint(i - depth), obj);
+        }
+    }
+
     return GetStr(ss, i);
+}
 
 #undef LOCAL_ASSERT
-}
 
 static JSBool
 IsVarSlot(JSPrinter *jp, jsbytecode *pc, jsint *indexp)
