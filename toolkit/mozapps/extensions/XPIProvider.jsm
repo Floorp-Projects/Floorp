@@ -3363,6 +3363,11 @@ var XPIProvider = {
     let self = this;
     XPIDatabase.getVisibleAddons(null, function UARD_getVisibleAddonsCallback(aAddons) {
       let pending = aAddons.length;
+      if (pending == 0) {
+        aCallback();
+        return;
+      }
+
       function notifyComplete() {
         if (--pending == 0)
           aCallback();
