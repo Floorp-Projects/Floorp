@@ -537,12 +537,12 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
             while (!r.empty()) {
                 const Shape &shape = r.front();
                 JSAutoByteString bytes;
-                if (!js_AtomToPrintableString(cx, JSID_TO_ATOM(shape.propid), &bytes))
+                if (!js_AtomToPrintableString(cx, JSID_TO_ATOM(shape.propid()), &bytes))
                     return false;
 
                 r.popFront();
                 source = JS_sprintf_append(source, "%s: %d%s",
-                                           bytes.ptr(), shape.shortid,
+                                           bytes.ptr(), shape.shortid(),
                                            !r.empty() ? ", " : "");
                 if (!source)
                     return false;
@@ -556,8 +556,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
         }
 
         if (clasp == &FunctionClass) {
-            JSFunction *fun = obj->getFunctionPrivate();
-            JSString *str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
+            JSString *str = JS_DecompileFunction(cx, obj->toFunction(), JS_DONT_PRETTY_PRINT);
             if (!str)
                 return false;
             return bytes->encode(cx, str);
@@ -1554,10 +1553,10 @@ GetLocalInSlot(SprintStack *ss, jsint i, jsint slot, JSObject *obj)
     for (Shape::Range r(obj->lastProperty()); !r.empty(); r.popFront()) {
         const Shape &shape = r.front();
 
-        if (shape.shortid == slot) {
-            LOCAL_ASSERT(JSID_IS_ATOM(shape.propid));
-            
-            JSAtom *atom = JSID_TO_ATOM(shape.propid);
+        if (shape.shortid() == slot) {
+            LOCAL_ASSERT(JSID_IS_ATOM(shape.propid()));
+
+            JSAtom *atom = JSID_TO_ATOM(shape.propid());
             const char *rval = QuoteString(&ss->sprinter, atom, 0);
             if (!rval)
                 return NULL;
@@ -2049,8 +2048,8 @@ GetBlockNames(JSContext *cx, JSObject *blockObj, AtomVector *atoms)
         const Shape &shape = r.front();
         LOCAL_ASSERT(shape.hasShortID());
         --i;
-        LOCAL_ASSERT((uintN)shape.shortid == i);
-        (*atoms)[i] = JSID_TO_ATOM(shape.propid);
+        LOCAL_ASSERT((uintN)shape.shortid() == i);
+        (*atoms)[i] = JSID_TO_ATOM(shape.propid());
     }
 
     LOCAL_ASSERT(i == 0);
@@ -2320,7 +2319,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
             uint32 format = cs->format;
             if (((fp && pc == fp->pcQuadratic(cx)) ||
                  (pc == startpc && nuses != 0)) &&
-                format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_FOR|JOF_VARPROP)) {
+                format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_VARPROP)) {
                 uint32 mode = JOF_MODE(format);
                 if (mode == JOF_NAME) {
                     /*

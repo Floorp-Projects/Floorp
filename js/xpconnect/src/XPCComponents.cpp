@@ -3899,9 +3899,7 @@ nsXPCComponents_Utils::CreateObjectIn(const jsval &vobj, JSContext *cx, jsval *r
 JSBool
 FunctionWrapper(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval v;
-    if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), 0, &v))
-        return false;
+    jsval v = js::GetFunctionNativeReserved(JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), 0);
     NS_ASSERTION(JSVAL_IS_OBJECT(v), "weird function");
 
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -3914,14 +3912,13 @@ FunctionWrapper(JSContext *cx, uintN argc, jsval *vp)
 JSBool
 WrapCallable(JSContext *cx, JSObject *obj, jsid id, JSObject *propobj, jsval *vp)
 {
-    JSFunction *fun = JS_NewFunctionById(cx, FunctionWrapper, 0, 0,
-                                         JS_GetGlobalForObject(cx, obj), id);
+    JSFunction *fun = js::NewFunctionByIdWithReserved(cx, FunctionWrapper, 0, 0,
+                                                      JS_GetGlobalForObject(cx, obj), id);
     if (!fun)
         return false;
 
     JSObject *funobj = JS_GetFunctionObject(fun);
-    if (!JS_SetReservedSlot(cx, funobj, 0, OBJECT_TO_JSVAL(propobj)))
-        return false;
+    js::SetFunctionNativeReserved(funobj, 0, OBJECT_TO_JSVAL(propobj));
     *vp = OBJECT_TO_JSVAL(funobj);
     return true;
 }

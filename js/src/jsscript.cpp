@@ -90,13 +90,13 @@ Bindings::lookup(JSContext *cx, JSAtom *name, uintN *indexp) const
         return NONE;
 
     Shape *shape =
-        SHAPE_FETCH(Shape::search(cx, const_cast<HeapPtr<Shape> *>(&lastBinding),
-                    ATOM_TO_JSID(name)));
+        SHAPE_FETCH(Shape::search(cx, const_cast<HeapPtrShape *>(&lastBinding),
+                                  ATOM_TO_JSID(name)));
     if (!shape)
         return NONE;
 
     if (indexp)
-        *indexp = shape->shortid;
+        *indexp = shape->shortid();
 
     if (shape->getter() == GetCallArg)
         return ARGUMENT;
@@ -117,7 +117,7 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
      * of the Call objects enumerable. ES5 reformulated all of its Clause 10 to
      * avoid objects as activations, something we should do too.
      */
-    uintN attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_SHARED;
+    uintN attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
     uint16 *indexp;
     PropertyOp getter;
@@ -135,7 +135,8 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
         indexp = &nupvars;
         getter = GetCallUpvar;
         setter = SetCallUpvar;
-        slot = SHAPE_INVALID_SLOT;
+        slot = lastBinding->maybeSlot();
+        attrs |= JSPROP_SHARED;
     } else {
         JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
         JS_ASSERT(nupvars == 0);
@@ -164,9 +165,15 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
         id = ATOM_TO_JSID(name);
     }
 
-    Shape child(id, getter, setter, slot, attrs, Shape::HAS_SHORTID, *indexp);
+    BaseShape base(&CallClass, NULL, BaseShape::VAROBJ, attrs, getter, setter);
+    BaseShape *nbase = BaseShape::getUnowned(cx, base);
+    if (!nbase)
+        return NULL;
 
-    Shape *shape = lastBinding->getChild(cx, child, &lastBinding);
+    Shape child(nbase, id, slot, 0, attrs, Shape::HAS_SHORTID, *indexp);
+
+    /* Shapes in bindings cannot be dictionaries. */
+    Shape *shape = lastBinding->getChildBinding(cx, child, &lastBinding);
     if (!shape)
         return false;
 
@@ -196,7 +203,7 @@ Bindings::getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp)
 
     for (Shape::Range r = lastBinding->all(); !r.empty(); r.popFront()) {
         const Shape &shape = r.front();
-        uintN index = uint16(shape.shortid);
+        uintN index = uint16(shape.shortid());
 
         if (shape.getter() == GetCallArg) {
             JS_ASSERT(index < nargs);
@@ -208,10 +215,10 @@ Bindings::getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp)
             index += nargs;
         }
 
-        if (JSID_IS_ATOM(shape.propid)) {
-            names[index] = JSID_TO_ATOM(shape.propid);
+        if (JSID_IS_ATOM(shape.propid())) {
+            names[index] = JSID_TO_ATOM(shape.propid());
         } else {
-            JS_ASSERT(JSID_IS_INT(shape.propid));
+            JS_ASSERT(JSID_IS_INT(shape.propid()));
             JS_ASSERT(shape.getter() == GetCallArg);
             names[index] = NULL;
         }
@@ -277,7 +284,7 @@ void
 Bindings::makeImmutable()
 {
     JS_ASSERT(lastBinding);
-    lastBinding->freezeIfDictionary();
+    JS_ASSERT(!lastBinding->inDictionary());
 }
 
 void
@@ -1222,10 +1229,16 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         if (bce->flags & TCF_FUN_HEAVYWEIGHT)
             fun->flags |= JSFUN_HEAVYWEIGHT;
 
-        /* Watch for scripts whose functions will not be cloned. These are singletons. */
+        /*
+         * Mark functions which will only be executed once as singletons.
+         * Skip this for flat closures, which must be copied on executing.
+         */
         bool singleton =
-            cx->typeInferenceEnabled() && bce->parent && bce->parent->compiling() &&
-            bce->parent->asBytecodeEmitter()->checkSingletonContext();
+            cx->typeInferenceEnabled() &&
+            bce->parent &&
+            bce->parent->compiling() &&
+            bce->parent->asBytecodeEmitter()->checkSingletonContext() &&
+            !fun->isFlatClosure();
 
         if (!script->typeSetFunction(cx, fun, singleton))
             return NULL;
@@ -1322,7 +1335,7 @@ js_CallDestroyScriptHook(JSContext *cx, JSScript *script)
 }
 
 void
-JSScript::finalize(JSContext *cx)
+JSScript::finalize(JSContext *cx, bool background)
 {
     CheckScript(this, NULL);
 

@@ -54,6 +54,47 @@
 
 namespace js {
 
+/*
+ * We cache name lookup results only for the global object or for native
+ * non-global objects without prototype or with prototype that never mutates,
+ * see bug 462734 and bug 487039.
+ */
+static inline bool
+IsCacheableNonGlobalScope(JSObject *obj)
+{
+    bool cacheable = (obj->isCall() || obj->isBlock() || obj->isDeclEnv());
+
+    JS_ASSERT_IF(cacheable, !obj->getOps()->lookupProperty);
+    return cacheable;
+}
+
+inline JSObject &
+StackFrame::scopeChain() const
+{
+    JS_ASSERT_IF(!(flags_ & HAS_SCOPECHAIN), isFunctionFrame());
+    if (!(flags_ & HAS_SCOPECHAIN)) {
+        scopeChain_ = callee().toFunction()->environment();
+        flags_ |= HAS_SCOPECHAIN;
+    }
+    return *scopeChain_;
+}
+
+inline JSObject &
+StackFrame::varObj()
+{
+    JSObject *obj = &scopeChain();
+    while (!obj->isVarObj())
+        obj = obj->scopeChain();
+    return *obj;
+}
+
+inline JSCompartment *
+StackFrame::compartment() const
+{
+    JS_ASSERT_IF(isScriptFrame(), scopeChain().compartment() == script()->compartment());
+    return scopeChain().compartment();
+}
+
 inline void
 StackFrame::initPrev(JSContext *cx)
 {
@@ -103,21 +144,20 @@ StackFrame::resetInlinePrev(StackFrame *prevfp, jsbytecode *prevpc)
 }
 
 inline void
-StackFrame::initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
+StackFrame::initCallFrame(JSContext *cx, JSFunction &callee,
                           JSScript *script, uint32 nactual, StackFrame::Flags flagsArg)
 {
     JS_ASSERT((flagsArg & ~(CONSTRUCTING |
                             LOWERED_CALL_APPLY |
                             OVERFLOW_ARGS |
                             UNDERFLOW_ARGS)) == 0);
-    JS_ASSERT(fun == callee.getFunctionPrivate());
-    JS_ASSERT(script == fun->script());
+    JS_ASSERT(script == callee.toFunction()->script());
 
     /* Initialize stack frame members. */
     flags_ = FUNCTION | HAS_PREVPC | HAS_SCOPECHAIN | flagsArg;
-    exec.fun = fun;
+    exec.fun = &callee;
     args.nactual = nactual;
-    scopeChain_ = callee.getParent();
+    scopeChain_ = callee.toFunction()->environment();
     ncode_ = NULL;
     initPrev(cx);
     JS_ASSERT(!hasHookData());
@@ -152,8 +192,8 @@ StackFrame::resetCallFrame(JSScript *script)
               HAS_PREVPC |
               UNDERFLOW_ARGS;
 
-    JS_ASSERT(exec.fun == callee().getFunctionPrivate());
-    scopeChain_ = callee().getParent();
+    JS_ASSERT(exec.fun->script() == callee().toFunction()->script());
+    scopeChain_ = callee().toFunction()->environment();
 
     SetValueRangeToUndefined(slots(), script->nfixed);
 }
@@ -200,6 +240,13 @@ StackFrame::initJitFrameLatePrologue(JSContext *cx, Value **limit)
     scopeChain();
     SetValueRangeToUndefined(slots(), script()->nfixed);
     return true;
+}
+
+inline void
+StackFrame::overwriteCallee(JSObject &newCallee)
+{
+    JS_ASSERT(callee().toFunction()->script() == newCallee.toFunction()->script());
+    mutableCalleev().setObject(newCallee);
 }
 
 inline Value &
@@ -328,10 +375,10 @@ StackFrame::setScopeChainNoCallObj(JSObject &obj)
         if (hasCallObj()) {
             JSObject *pobj = &obj;
             while (pobj && pobj->getPrivate() != this)
-                pobj = pobj->getParent();
+                pobj = pobj->scopeChain();
             JS_ASSERT(pobj);
         } else {
-            for (JSObject *pobj = &obj; pobj; pobj = pobj->getParent())
+            for (JSObject *pobj = &obj; pobj->isInternalScope(); pobj = pobj->scopeChain())
                 JS_ASSERT_IF(pobj->isCall(), pobj->getPrivate() != this);
         }
     }
@@ -356,7 +403,7 @@ StackFrame::callObj() const
 
     JSObject *pobj = &scopeChain();
     while (JS_UNLIKELY(!pobj->isCall()))
-        pobj = pobj->getParent();
+        pobj = pobj->scopeChain();
     return pobj->asCall();
 }
 
@@ -423,12 +470,12 @@ StackFrame::markFunctionEpilogueDone()
              * For function frames, the call object may or may not have have an
              * enclosing DeclEnv object, so we use the callee's parent, since
              * it was the initial scope chain. For global (strict) eval frames,
-             * there is no calle, but the call object's parent is the initial
+             * there is no callee, but the call object's parent is the initial
              * scope chain.
              */
             scopeChain_ = isFunctionFrame()
-                          ? callee().getParent()
-                          : scopeChain_->getParent();
+                          ? callee().toFunction()->environment()
+                          : scopeChain_->internalScopeChain();
             flags_ &= ~HAS_CALL_OBJ;
         }
     }
@@ -513,22 +560,21 @@ ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArg
 
 JS_ALWAYS_INLINE bool
 ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
-                              JSObject &callee, JSFunction *fun, JSScript *script,
+                              JSFunction &callee, JSScript *script,
                               InitialFrameFlags initial)
 {
     JS_ASSERT(onTop());
     JS_ASSERT(regs.sp == args.end());
     /* Cannot assert callee == args.callee() since this is called from LeaveTree. */
-    JS_ASSERT(callee.getFunctionPrivate() == fun);
-    JS_ASSERT(fun->script() == script);
+    JS_ASSERT(script == callee.toFunction()->script());
 
     /*StackFrame::Flags*/ uint32 flags = ToFrameFlags(initial);
-    StackFrame *fp = getCallFrame(cx, REPORT_ERROR, args, fun, script, &flags);
+    StackFrame *fp = getCallFrame(cx, REPORT_ERROR, args, &callee, script, &flags);
     if (!fp)
         return false;
 
     /* Initialize frame, locals, regs. */
-    fp->initCallFrame(cx, callee, fun, script, args.length(), (StackFrame::Flags) flags);
+    fp->initCallFrame(cx, callee, script, args.length(), (StackFrame::Flags) flags);
 
     /*
      * N.B. regs may differ from the active registers, if the parent is about
@@ -540,10 +586,10 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
 
 JS_ALWAYS_INLINE bool
 ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
-                              JSObject &callee, JSFunction *fun, JSScript *script,
+                              JSFunction &callee, JSScript *script,
                               InitialFrameFlags initial, Value **stackLimit)
 {
-    if (!pushInlineFrame(cx, regs, args, callee, fun, script, initial))
+    if (!pushInlineFrame(cx, regs, args, callee, script, initial))
         return false;
     *stackLimit = space().conservativeEnd_;
     return true;
@@ -555,7 +601,7 @@ ContextStack::getFixupFrame(JSContext *cx, MaybeReportError report,
                             void *ncode, InitialFrameFlags initial, Value **stackLimit)
 {
     JS_ASSERT(onTop());
-    JS_ASSERT(args.callee().getFunctionPrivate() == fun);
+    JS_ASSERT(fun->script() == args.callee().toFunction()->script());
     JS_ASSERT(fun->script() == script);
 
     /*StackFrame::Flags*/ uint32 flags = ToFrameFlags(initial);

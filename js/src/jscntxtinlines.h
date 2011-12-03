@@ -334,7 +334,7 @@ CallJSNativeConstructor(JSContext *cx, Native native, const CallArgs &args)
     JS_ASSERT_IF(native != FunctionProxyClass.construct &&
                  native != CallableObjectClass.construct &&
                  native != js::CallOrConstructBoundFunction &&
-                 (!callee.isFunction() || callee.getFunctionPrivate()->u.n.clasp != &ObjectClass),
+                 (!callee.isFunction() || callee.toFunction()->u.n.clasp != &ObjectClass),
                  !args.rval().isPrimitive() && callee != args.rval().toObject());
 
     return true;
@@ -470,12 +470,6 @@ JSContext::ensureGeneratorStackSpace()
     if (!ok)
         js_ReportOutOfMemory(this);
     return ok;
-}
-
-inline js::RegExpStatics *
-JSContext::regExpStatics()
-{
-    return js::GetGlobalForScopeChain(this)->getRegExpStatics();
 }
 
 inline void

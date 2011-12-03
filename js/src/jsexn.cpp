@@ -550,7 +550,7 @@ ValueToShortSource(JSContext *cx, const Value &v)
         /*
          * XXX Avoid function decompilation bloat for now.
          */
-        str = JS_GetFunctionId(obj->getFunctionPrivate());
+        str = JS_GetFunctionId(obj->toFunction());
         if (!str && !(str = js_ValueToSource(cx, v))) {
             /*
              * Continue to soldier on if the function couldn't be
@@ -700,10 +700,6 @@ FilenameToString(JSContext *cx, const char *filename)
     return JS_NewStringCopyZ(cx, filename);
 }
 
-enum {
-    JSSLOT_ERROR_EXNTYPE = 0
-};
-
 static JSBool
 Exception(JSContext *cx, uintN argc, Value *vp)
 {
@@ -726,7 +722,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
     }
 
     JSObject *errProto = &protov.toObject();
-    JSObject *obj = NewNativeClassInstance(cx, &ErrorClass, errProto, errProto->getParent());
+    JSObject *obj = NewObjectWithGivenProto(cx, &ErrorClass, errProto, NULL);
     if (!obj)
         return false;
 
@@ -772,7 +768,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
         lineno = iter.done() ? 0 : js_FramePCToLineNumber(cx, iter.fp(), iter.pc());
     }
 
-    intN exnType = args.callee().getReservedSlot(JSSLOT_ERROR_EXNTYPE).toInt32();
+    intN exnType = args.callee().toFunction()->getExtendedSlot(0).toInt32();
     if (!InitExnPrivate(cx, obj, message, filename, lineno, NULL, exnType))
         return false;
 
@@ -1035,10 +1031,11 @@ InitErrorClass(JSContext *cx, GlobalObject *global, intN type, JSObject &proto)
     }
 
     /* Create the corresponding constructor. */
-    JSFunction *ctor = global->createConstructor(cx, Exception, &ErrorClass, name, 1);
+    JSFunction *ctor = global->createConstructor(cx, Exception, &ErrorClass, name, 1,
+                                                 JSFunction::ExtendedFinalizeKind);
     if (!ctor)
         return NULL;
-    ctor->setReservedSlot(JSSLOT_ERROR_EXNTYPE, Int32Value(int32(type)));
+    ctor->setExtendedSlot(0, Int32Value(int32(type)));
 
     if (!LinkConstructorAndPrototype(cx, ctor, errorProto))
         return NULL;
@@ -1174,7 +1171,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
         goto out;
     tv[0] = OBJECT_TO_JSVAL(errProto);
 
-    errObject = NewNativeClassInstance(cx, &ErrorClass, errProto, errProto->getParent());
+    errObject = NewObjectWithGivenProto(cx, &ErrorClass, errProto, NULL);
     if (!errObject) {
         ok = JS_FALSE;
         goto out;
@@ -1362,7 +1359,7 @@ js_CopyErrorObject(JSContext *cx, JSObject *errobj, JSObject *scope)
     JSObject *proto;
     if (!js_GetClassPrototype(cx, scope->getGlobal(), GetExceptionProtoKey(copy->exnType), &proto))
         return NULL;
-    JSObject *copyobj = NewNativeClassInstance(cx, &ErrorClass, proto, proto->getParent());
+    JSObject *copyobj = NewObjectWithGivenProto(cx, &ErrorClass, proto, NULL);
     copyobj->setPrivate(copy);
     autoFree.p = NULL;
     return copyobj;

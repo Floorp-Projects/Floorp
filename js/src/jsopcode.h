@@ -109,7 +109,6 @@ typedef enum JSOp {
 #define JOF_INC          (2U<<10) /* increment (++, not --) opcode */
 #define JOF_INCDEC       (3U<<10) /* increment or decrement opcode */
 #define JOF_POST         (1U<<12) /* postorder increment or decrement */
-#define JOF_FOR          (1U<<13) /* for-in property op (akin to JOF_SET) */
 #define JOF_ASSIGNING     JOF_SET /* hint for Class.resolve, used for ops
                                      that do simplex assignment */
 #define JOF_DETECTING    (1U<<14) /* object detection for JSNewResolveOp */
