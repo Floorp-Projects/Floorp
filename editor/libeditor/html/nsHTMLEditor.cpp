@@ -381,28 +381,29 @@ nsHTMLEditor::GetRootElement(nsIDOMElement **aRootElement)
   // Use the HTML documents body element as the editor root if we didn't
   // get a root element during initialization.
 
+  nsCOMPtr<nsIDOMElement> rootElement; 
   nsCOMPtr<nsIDOMHTMLElement> bodyElement; 
   nsresult rv = GetBodyElement(getter_AddRefs(bodyElement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (bodyElement) {
-    mRootElement = bodyElement;
+    rootElement = bodyElement;
   } else {
     // If there is no HTML body element,
     // we should use the document root element instead.
     nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
     NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
 
-    rv = doc->GetDocumentElement(getter_AddRefs(mRootElement));
+    rv = doc->GetDocumentElement(getter_AddRefs(rootElement));
     NS_ENSURE_SUCCESS(rv, rv);
     // Document can have no elements
-    if (!mRootElement) {
+    if (!rootElement) {
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
 
-  *aRootElement = mRootElement;
-  NS_ADDREF(*aRootElement);
+  mRootElement = do_QueryInterface(rootElement);
+  rootElement.forget(aRootElement);
 
   return NS_OK;
 }
@@ -544,7 +545,7 @@ nsHTMLEditor::BeginningOfDocument()
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
 
   // Get the root element.
-  nsIDOMElement *rootElement = GetRoot();
+  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(GetRoot());
   if (!rootElement) {
     NS_WARNING("GetRoot() returned a null pointer (mRootElement is null)");
     return NS_OK;
@@ -1809,8 +1810,7 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   nsresult res = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(res, res);
 
-  nsIDOMElement *bodyElement = GetRoot();
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsIDOMElement> bodyElement = do_QueryInterface(GetRoot());
   NS_ENSURE_TRUE(bodyElement, NS_ERROR_NULL_POINTER);
 
   // Find where the <body> tag starts.
@@ -2452,10 +2452,10 @@ nsHTMLEditor::GetHTMLBackgroundColorState(bool *aMixed, nsAString &aOutColor)
   }
 
   // If no table or cell found, get page body
-  element = GetRoot();
-  NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
+  mozilla::dom::Element *bodyElement = GetRoot();
+  NS_ENSURE_TRUE(bodyElement, NS_ERROR_NULL_POINTER);
 
-  return element->GetAttribute(styleName, aOutColor);
+  return bodyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::bgcolor, aOutColor);
 }
 
 NS_IMETHODIMP 
@@ -3392,7 +3392,7 @@ nsHTMLEditor::SetHTMLBackgroundColor(const nsAString& aColor)
     // If we failed to find a cell, fall through to use originally-found element
   } else {
     // No table element -- set the background color on the body tag
-    element = GetRoot();
+    element = do_QueryInterface(GetRoot());
     NS_ENSURE_TRUE(element, NS_ERROR_NULL_POINTER);
   }
   // Use the editor method that goes through the transaction system
@@ -3411,8 +3411,7 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsAString& aAttribute, const 
   NS_ASSERTION(mDocWeak, "Missing Editor DOM Document");
   
   // Set the background color attribute on the body tag
-  nsIDOMElement *bodyElement = GetRoot();
-
+  nsCOMPtr<nsIDOMElement> bodyElement = do_QueryInterface(GetRoot());
   NS_ENSURE_TRUE(bodyElement, NS_ERROR_NULL_POINTER);
 
   // Use the editor method that goes through the transaction system
@@ -3880,7 +3879,7 @@ already_AddRefed<nsIDOMNode>
 nsHTMLEditor::FindUserSelectAllNode(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsIDOMNode> node = aNode;
-  nsIDOMElement *root = GetRoot();
+  nsCOMPtr<nsIDOMElement> root = do_QueryInterface(GetRoot());
   if (!nsEditorUtils::IsDescendantOf(aNode, root))
     return nsnull;
 
@@ -4145,7 +4144,7 @@ nsHTMLEditor::SelectEntireDocument(nsISelection *aSelection)
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   // get editor root node
-  nsIDOMElement *rootElement = GetRoot();
+  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(GetRoot());
   
   // is doc empty?
   bool bDocIsEmpty;
@@ -4190,7 +4189,9 @@ nsHTMLEditor::SelectAll()
     NS_ENSURE_TRUE(selPriv, NS_ERROR_UNEXPECTED);
     rv = selPriv->SetAncestorLimiter(nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
-    return selection->SelectAllChildren(mRootElement);
+    nsCOMPtr<nsIDOMNode> rootElement = do_QueryInterface(mRootElement, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return selection->SelectAllChildren(rootElement);
   }
 
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
@@ -4481,7 +4482,7 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
 NS_IMETHODIMP 
 nsHTMLEditor::SetSelectionAtDocumentStart(nsISelection *aSelection)
 {
-  nsIDOMElement *rootElement = GetRoot();  
+  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(GetRoot());
   NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER);
 
   return aSelection->Collapse(rootElement,0);
