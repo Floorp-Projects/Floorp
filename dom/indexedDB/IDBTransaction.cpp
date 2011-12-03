@@ -214,6 +214,17 @@ IDBTransaction::OnRequestFinished()
 }
 
 void
+IDBTransaction::ReleaseCachedObjectStore(const nsAString& aName)
+{
+  for (PRUint32 i = 0; i < mCreatedObjectStores.Length(); i++) {
+    if (mCreatedObjectStores[i]->Name() == aName) {
+      mCreatedObjectStores.RemoveElementAt(i);
+      break;
+    }
+  }
+}
+
+void
 IDBTransaction::SetTransactionListener(IDBTransactionListener* aListener)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
