@@ -1152,21 +1152,6 @@ nsXMLContentSerializer::CheckElementEnd(nsIContent * aContent,
   return aContent->GetChildCount() > 0;
 }
 
-void
-nsXMLContentSerializer::AppendToString(const PRUnichar* aStr,
-                                       PRInt32 aLength,
-                                       nsAString& aOutputStr)
-{
-  if (mBodyOnly && !mInBody) {
-    return;
-  }
-  PRInt32 length = (aLength == -1) ? nsCRT::strlen(aStr) : aLength;
-
-  mColPos += length;
-
-  aOutputStr.Append(aStr, length);
-}
-
 void 
 nsXMLContentSerializer::AppendToString(const PRUnichar aChar,
                                        nsAString& aOutputStr)
