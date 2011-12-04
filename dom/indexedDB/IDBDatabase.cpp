@@ -438,8 +438,13 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
     return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
   }
 
-  if (!keyPath.IsVoid() && !IDBObjectStore::IsValidKeyPath(aCx, keyPath)) {
-    return NS_ERROR_DOM_SYNTAX_ERR;
+  if (!keyPath.IsVoid()) {
+    if (keyPath.IsEmpty() && autoIncrement) {
+      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    }
+    if (!IDBObjectStore::IsValidKeyPath(aCx, keyPath)) {
+      return NS_ERROR_DOM_SYNTAX_ERR;
+    }
   }
 
   nsAutoPtr<ObjectStoreInfo> newInfo(new ObjectStoreInfo());
