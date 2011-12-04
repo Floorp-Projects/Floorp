@@ -1,0 +1,43 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<script>
+
+var HTML_NS = "http://www.w3.org/1999/xhtml";
+
+function foo() { 
+  var table = document.getElementById("table");
+  var newRow = document.createElementNS(HTML_NS, 'tr');  
+  table.insertBefore(newRow, document.getElementById('lastrow'));
+}
+
+
+doc = document;
+
+</script>
+
+</head>
+
+
+<body onload="setTimeout(foo, 300);">
+
+
+<h3>Tables</h3>
+
+
+<table id="table" border="1" style="border-collapse: collapse">
+
+  <tr>
+    <col></col>
+    <td rowspan="2">TD</td>
+  </tr>
+  
+  <tr id="lastrow">
+    <td width="50%">TD</td>
+  </tr>
+
+</table>
+
+
+</body>
+</html>
