@@ -365,6 +365,76 @@ protected:
     T *mRawPtr;
 };
 
+typedef PRUint64 WebGLMonotonicHandle;
+
+/* WebGLFastArray offers a fast array for the use case where all what one needs is to append
+ * and remove elements. Removal is fast because the array is always kept sorted with respect
+ * to "monotonic handles". Appending an element returns such a "monotonic handle" which the
+ * user needs to keep for future use for when it will want to remove the element.
+ */
+template<typename ElementType>
+class WebGLFastArray
+{
+    struct Entry {
+        ElementType mElement;
+        WebGLMonotonicHandle mMonotonicHandle;
+
+        Entry(ElementType elem, WebGLMonotonicHandle monotonicHandle)
+            : mElement(elem), mMonotonicHandle(monotonicHandle)
+        {}
+
+        struct Comparator {
+            bool Equals(const Entry& a, const Entry& b) const {
+                return a.mMonotonicHandle == b.mMonotonicHandle;
+            }
+            bool LessThan(const Entry& a, const Entry& b) const {
+                return a.mMonotonicHandle < b.mMonotonicHandle;
+            }
+        };
+    };
+
+public:
+    WebGLFastArray()
+        : mCurrentMonotonicHandle(0) // CheckedInt already does it, this is just defensive coding
+    {}
+
+    ElementType operator[](size_t index) const {
+        return mArray[index].mElement;
+    }
+
+    size_t Length() const {
+        return mArray.Length();
+    }
+
+    ElementType Last() const {
+        return operator[](Length() - 1);
+    }
+
+    WebGLMonotonicHandle AppendElement(ElementType elem)
+    {
+        WebGLMonotonicHandle monotonicHandle = NextMonotonicHandle();
+        mArray.AppendElement(Entry(elem, monotonicHandle));
+        return monotonicHandle;
+    }
+
+    void RemoveElement(WebGLMonotonicHandle monotonicHandle)
+    {
+        mArray.RemoveElementSorted(Entry(ElementType(), monotonicHandle),
+                                   typename Entry::Comparator());
+    }
+
+private:
+    WebGLMonotonicHandle NextMonotonicHandle() {
+        ++mCurrentMonotonicHandle;
+        if (!mCurrentMonotonicHandle.valid())
+            NS_RUNTIMEABORT("ran out of monotonic ids!");
+        return mCurrentMonotonicHandle.value();
+    }
+
+    nsTArray<Entry> mArray;
+    CheckedInt<WebGLMonotonicHandle> mCurrentMonotonicHandle;
+};
+
 struct WebGLContextOptions {
     // these are defaults
     WebGLContextOptions()
@@ -578,6 +648,9 @@ protected:
     bool mDisableExtensions;
     bool mHasRobustness;
 
+    template<typename WebGLObjectType>
+    void DeleteWebGLObjectsArray(nsTArray<WebGLObjectType>& array);
+
     WebGLuint mActiveTexture;
     WebGLenum mWebGLError;
 
@@ -752,7 +825,7 @@ protected:
     WebGLRefPtr<WebGLRenderbuffer> mBoundRenderbuffer;
 
     // lookup tables for GL name -> object wrapper
-    nsRefPtrHashtable<nsUint32HashKey, WebGLTexture> mMapTextures;
+    WebGLFastArray<WebGLTexture*> mTextures;
     nsRefPtrHashtable<nsUint32HashKey, WebGLBuffer> mMapBuffers;
     nsRefPtrHashtable<nsUint32HashKey, WebGLProgram> mMapPrograms;
     nsRefPtrHashtable<nsUint32HashKey, WebGLShader> mMapShaders;
@@ -1065,6 +1138,7 @@ public:
     {
         mContext->MakeContextCurrent();
         mContext->gl->fGenTextures(1, &mGLName);
+        mMonotonicHandle = mContext->mTextures.AppendElement(this);
     }
 
     ~WebGLTexture() {
@@ -1075,6 +1149,7 @@ public:
         mImageInfos.Clear();
         mContext->MakeContextCurrent();
         mContext->gl->fDeleteTextures(1, &mGLName);
+        mContext->mTextures.RemoveElement(mMonotonicHandle);
     }
 
     bool HasEverBeenBound() { return mHasEverBeenBound; }
@@ -1157,6 +1232,8 @@ public:
     }
 
     PRInt64 MemoryUsage() const {
+        if (IsDeleted())
+            return 0;
         PRInt64 result = 0;
         for(size_t face = 0; face < mFacesCount; face++) {
             if (mHaveGeneratedMipmap) {
@@ -1182,6 +1259,8 @@ protected:
 
     bool mHaveGeneratedMipmap;
     FakeBlackStatus mFakeBlackStatus;
+
+    WebGLMonotonicHandle mMonotonicHandle;
 
     void EnsureMaxLevelWithCustomImagesAtLeast(size_t aMaxLevelWithCustomImages) {
         mMaxLevelWithCustomImages = NS_MAX(mMaxLevelWithCustomImages, aMaxLevelWithCustomImages);
@@ -2390,33 +2469,23 @@ class WebGLMemoryReporter
         }
     }
 
-    static PLDHashOperator TextureMemoryUsageFunction(const PRUint32&, WebGLTexture *aValue, void *aData)
-    {
-        PRInt64 *result = (PRInt64*) aData;
-        *result += aValue->MemoryUsage();
-        return PL_DHASH_NEXT;
-    }
-
     static PRInt64 GetTextureMemoryUsed() {
         const ContextsArrayType & contexts = Contexts();
         PRInt64 result = 0;
-        for(size_t i = 0; i < contexts.Length(); ++i) {
-            PRInt64 textureMemoryUsageForThisContext = 0;
-            contexts[i]->mMapTextures.EnumerateRead(TextureMemoryUsageFunction, &textureMemoryUsageForThisContext);
-            result += textureMemoryUsageForThisContext;
-        }
+        for(size_t i = 0; i < contexts.Length(); ++i)
+            for (size_t t = 0; t < contexts[i]->mTextures.Length(); ++t)
+              result += contexts[i]->mTextures[t]->MemoryUsage();
         return result;
     }
-    
+
     static PRInt64 GetTextureCount() {
         const ContextsArrayType & contexts = Contexts();
         PRInt64 result = 0;
-        for(size_t i = 0; i < contexts.Length(); ++i) {
-            result += contexts[i]->mMapTextures.Count();
-        }
+        for(size_t i = 0; i < contexts.Length(); ++i)
+            result += contexts[i]->mTextures.Length();
         return result;
     }
-    
+
     static PLDHashOperator BufferMemoryUsageFunction(const PRUint32&, WebGLBuffer *aValue, void *aData)
     {
         PRInt64 *result = (PRInt64*) aData;

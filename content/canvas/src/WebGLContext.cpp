@@ -237,7 +237,6 @@ WebGLContext::WebGLContext()
     mShaderValidation = true;
 
     mMapBuffers.Init();
-    mMapTextures.Init();
     mMapPrograms.Init();
     mMapShaders.Init();
     mMapFramebuffers.Init();
@@ -348,7 +347,8 @@ WebGLContext::DestroyResourcesAndContext()
 
     mAttribBuffers.Clear();
 
-    DeleteWebGLObjectsHashTable(mMapTextures);
+    while (mTextures.Length())
+        mTextures.Last()->DeleteOnce();
     DeleteWebGLObjectsHashTable(mMapRenderbuffers);
     DeleteWebGLObjectsHashTable(mMapFramebuffers);
     DeleteWebGLObjectsHashTable(mMapBuffers);
