@@ -1949,15 +1949,21 @@ public:
         : mAttachmentPoint(aAttachmentPoint)
     {}
 
-    bool IsNull() const {
-        return !mTexturePtr && !mRenderbufferPtr;
+    bool IsDefined() const {
+        return Texture() || Renderbuffer();
+    }
+
+    bool IsDeleteRequested() const {
+        return Texture() ? Texture()->IsDeleteRequested()
+             : Renderbuffer() ? Renderbuffer()->IsDeleteRequested()
+             : false;
     }
 
     bool HasAlpha() const {
         WebGLenum format = 0;
-        if (mTexturePtr)
+        if (Texture() && Texture()->HasImageInfoAt(0,0))
             format = mTexturePtr->ImageInfoAt(0,0).mFormat;
-        if (mRenderbufferPtr)
+        else if (Renderbuffer())
             format = mRenderbufferPtr->InternalFormat();
         return format == LOCAL_GL_RGBA ||
                format == LOCAL_GL_LUMINANCE_ALPHA ||
@@ -2023,6 +2029,11 @@ public:
 
     bool HasUninitializedRenderbuffer() const {
         return mRenderbufferPtr && !mRenderbufferPtr->Initialized();
+    }
+
+    void Reset() {
+        mTexturePtr = nsnull;
+        mRenderbufferPtr = nsnull;
     }
 };
 
@@ -2200,23 +2211,23 @@ public:
             // some attachment is incompatible with its attachment point
             return true;
         }
-        
-        if (int(mDepthAttachment.IsNull()) +
-            int(mStencilAttachment.IsNull()) +
-            int(mDepthStencilAttachment.IsNull()) <= 1)
+
+        if (int(mDepthAttachment.IsDefined()) +
+            int(mStencilAttachment.IsDefined()) +
+            int(mDepthStencilAttachment.IsDefined()) >= 2)
         {
             // has at least two among Depth, Stencil, DepthStencil
             return true;
         }
-        
-        if (!mDepthAttachment.IsNull() && !mDepthAttachment.HasSameDimensionsAs(mColorAttachment))
+
+        if (mDepthAttachment.IsDefined() && !mDepthAttachment.HasSameDimensionsAs(mColorAttachment))
             return true;
-        if (!mStencilAttachment.IsNull() && !mStencilAttachment.HasSameDimensionsAs(mColorAttachment))
+        if (mStencilAttachment.IsDefined() && !mStencilAttachment.HasSameDimensionsAs(mColorAttachment))
             return true;
-        if (!mDepthStencilAttachment.IsNull() && !mDepthStencilAttachment.HasSameDimensionsAs(mColorAttachment))
+        if (mDepthStencilAttachment.IsDefined() && !mDepthStencilAttachment.HasSameDimensionsAs(mColorAttachment))
             return true;
-        
-        else return false;
+
+        return false;
     }
 
     const WebGLFramebufferAttachment& ColorAttachment() const {
@@ -2245,6 +2256,28 @@ public:
 
         NS_ASSERTION(attachment == LOCAL_GL_COLOR_ATTACHMENT0, "bad attachment!");
         return mColorAttachment;
+    }
+
+    void DetachTexture(const WebGLTexture *tex) {
+        if (mColorAttachment.Texture() == tex)
+            FramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_TEXTURE_2D, nsnull, 0);
+        if (mDepthAttachment.Texture() == tex)
+            FramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT, LOCAL_GL_TEXTURE_2D, nsnull, 0);
+        if (mStencilAttachment.Texture() == tex)
+            FramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT, LOCAL_GL_TEXTURE_2D, nsnull, 0);
+        if (mDepthStencilAttachment.Texture() == tex)
+            FramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT, LOCAL_GL_TEXTURE_2D, nsnull, 0);
+    }
+
+    void DetachRenderbuffer(const WebGLRenderbuffer *rb) {
+        if (mColorAttachment.Renderbuffer() == rb)
+            FramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_RENDERBUFFER, nsnull);
+        if (mDepthAttachment.Renderbuffer() == rb)
+            FramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT, LOCAL_GL_RENDERBUFFER, nsnull);
+        if (mStencilAttachment.Renderbuffer() == rb)
+            FramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT, LOCAL_GL_RENDERBUFFER, nsnull);
+        if (mDepthStencilAttachment.Renderbuffer() == rb)
+            FramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT, LOCAL_GL_RENDERBUFFER, nsnull);
     }
 
     NS_DECL_ISUPPORTS
