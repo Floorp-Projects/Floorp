@@ -68,6 +68,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 
@@ -460,8 +461,7 @@ nsTextEditRules::CollapseSelectionToTrailingBRIfNeeded(nsISelection* aSelection)
                                   &parentOffset);
   NS_ENSURE_SUCCESS(res, res);
 
-  nsIDOMElement *rootElem = mEditor->GetRoot();
-  nsCOMPtr<nsIDOMNode> root = do_QueryInterface(rootElem);
+  nsCOMPtr<nsIDOMNode> root = do_QueryInterface(mEditor->GetRoot());
   NS_ENSURE_TRUE(root, NS_ERROR_NULL_POINTER);
   if (parentNode != root) return NS_OK;
 
@@ -949,7 +949,7 @@ nsTextEditRules::DidUndo(nsISelection *aSelection, nsresult aResult)
     }
     else
     {
-      nsIDOMElement *theRoot = mEditor->GetRoot();
+      nsCOMPtr<nsIDOMElement> theRoot = do_QueryInterface(mEditor->GetRoot());
       NS_ENSURE_TRUE(theRoot, NS_ERROR_FAILURE);
       nsCOMPtr<nsIDOMNode> node = mEditor->GetLeftmostChild(theRoot);
       if (node && mEditor->IsMozEditorBogusNode(node))
@@ -982,7 +982,7 @@ nsTextEditRules::DidRedo(nsISelection *aSelection, nsresult aResult)
     }
     else
     {
-      nsIDOMElement *theRoot = mEditor->GetRoot();
+      nsCOMPtr<nsIDOMElement> theRoot = do_QueryInterface(mEditor->GetRoot());
       NS_ENSURE_TRUE(theRoot, NS_ERROR_FAILURE);
       
       nsCOMPtr<nsIDOMNodeList> nodeList;
@@ -1056,7 +1056,7 @@ nsTextEditRules::RemoveRedundantTrailingBR()
   if (IsSingleLineEditor())
     return NS_OK;
 
-  nsIDOMNode* body = mEditor->GetRoot();
+  nsCOMPtr<nsIDOMNode> body = do_QueryInterface(mEditor->GetRoot());
   if (!body)
     return NS_ERROR_NULL_POINTER;
 
@@ -1111,7 +1111,7 @@ nsTextEditRules::CreateTrailingBRIfNeeded()
   // but only if we aren't a single line edit field
   if (IsSingleLineEditor())
     return NS_OK;
-  nsIDOMNode *body = mEditor->GetRoot();
+  nsCOMPtr<nsIDOMNode> body = do_QueryInterface(mEditor->GetRoot());
   NS_ENSURE_TRUE(body, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMNode> lastChild;
   nsresult res = body->GetLastChild(getter_AddRefs(lastChild));
@@ -1141,7 +1141,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
   // tell rules system to not do any post-processing
   nsAutoRules beginRulesSniffing(mEditor, nsEditor::kOpIgnore, nsIEditor::eNone);
 
-  nsIDOMNode* body = mEditor->GetRoot();
+  nsCOMPtr<nsIDOMNode> body = do_QueryInterface(mEditor->GetRoot());
   if (!body)
   {
     // we don't even have a body yet, don't insert any bogus nodes at

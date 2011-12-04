@@ -2690,18 +2690,17 @@ nsHTMLMediaElement::CopyInnerTo(nsGenericElement* aDest) const
       dest->mMediaSize = mMediaSize;
     } else {
       nsIFrame* frame = GetPrimaryFrame();
-      nsCOMPtr<nsIDOMElement> elem;
+      Element* element;
       if (frame && frame->GetType() == nsGkAtoms::HTMLVideoFrame &&
           static_cast<nsVideoFrame*>(frame)->ShouldDisplayPoster()) {
-        elem = do_QueryInterface(static_cast<nsVideoFrame*>(frame)->
-                                 GetPosterImage());
+        nsIContent* content = static_cast<nsVideoFrame*>(frame)->GetPosterImage();
+        element = content ? content->AsElement() : NULL;
       } else {
-        elem = do_QueryInterface(
-          static_cast<nsGenericElement*>(const_cast<nsHTMLMediaElement*>(this)));
+        element = const_cast<nsHTMLMediaElement*>(this);
       }
 
       nsLayoutUtils::SurfaceFromElementResult res =
-        nsLayoutUtils::SurfaceFromElement(elem,
+        nsLayoutUtils::SurfaceFromElement(element,
                                           nsLayoutUtils::SFE_WANT_NEW_SURFACE);
       dest->mPrintSurface = res.mSurface;
       dest->mMediaSize = nsIntSize(res.mSize.width, res.mSize.height);

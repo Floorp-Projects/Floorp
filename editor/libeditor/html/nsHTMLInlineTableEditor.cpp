@@ -43,6 +43,7 @@
 #include "nsIContent.h"
 #include "nsHTMLEditUtils.h"
 #include "nsReadableUtils.h"
+#include "mozilla/dom/Element.h"
 
 // Uncomment the following line if you want to disable
 // table deletion when the only column/row is removed
@@ -77,7 +78,7 @@ nsHTMLEditor::ShowInlineTableEditingUI(nsIDOMElement * aCell)
   }
 
   // the resizers and the shadow will be anonymous children of the body
-  nsIDOMElement *bodyElement = GetRoot();
+  nsCOMPtr<nsIDOMElement> bodyElement = do_QueryInterface(GetRoot());
   NS_ENSURE_TRUE(bodyElement, NS_ERROR_NULL_POINTER);
 
   CreateAnonymousElement(NS_LITERAL_STRING("a"), bodyElement,
@@ -130,10 +131,7 @@ nsHTMLEditor::HideInlineTableEditingUI()
   // UnbindFromTree.
 
   // get the root content node.
-
-  nsIDOMElement *bodyElement = GetRoot();
-
-  nsCOMPtr<nsIContent> bodyContent( do_QueryInterface(bodyElement) );
+  nsCOMPtr<nsIContent> bodyContent = GetRoot();
   NS_ENSURE_TRUE(bodyContent, NS_ERROR_FAILURE);
 
   DeleteRefToAnonymousNode(mAddColumnBeforeButton, bodyContent, ps);
