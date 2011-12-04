@@ -911,6 +911,10 @@ public class GeckoInputConnection
         return false;
     }
 
+    public boolean isIMEEnabled() {
+        // make sure this picks up PASSWORD and PLUGIN states as well
+        return mIMEState != IME_STATE_DISABLED;
+    }
 
     public void notifyIME(int type, int state) {
 

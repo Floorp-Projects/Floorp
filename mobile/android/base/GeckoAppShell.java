@@ -1572,4 +1572,10 @@ public class GeckoAppShell
 
         accessibilityManager.sendAccessibilityEvent(event);
     }
+
+    public static void viewSizeChanged() {
+        if (mInputConnection != null && mInputConnection.isIMEEnabled()) {
+            sendEventToGecko(new GeckoEvent("ScrollTo:FocusedInput", ""));
+        }
+    }
 }
