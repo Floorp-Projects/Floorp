@@ -51,7 +51,11 @@
 #warning Please add support for your architecture in chromium_types.h
 #endif
 
-typedef int32_t Atomic32;
+#ifdef _MSC_VER
+ typedef __int32 Atomic32;
+#else
+ typedef int32_t Atomic32;
+#endif
 
 #if defined(V8_HOST_ARCH_X64) || defined(V8_HOST_ARCH_IA32) || defined(V8_HOST_ARCH_ARM)
 inline void NoBarrier_Store(volatile Atomic32* ptr, Atomic32 value) {
