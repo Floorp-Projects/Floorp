@@ -824,9 +824,8 @@ protected:
     WebGLRefPtr<WebGLFramebuffer> mBoundFramebuffer;
     WebGLRefPtr<WebGLRenderbuffer> mBoundRenderbuffer;
 
-    // lookup tables for GL name -> object wrapper
     WebGLFastArray<WebGLTexture*> mTextures;
-    nsRefPtrHashtable<nsUint32HashKey, WebGLBuffer> mMapBuffers;
+    WebGLFastArray<WebGLBuffer*> mBuffers;
     nsRefPtrHashtable<nsUint32HashKey, WebGLProgram> mMapPrograms;
     nsRefPtrHashtable<nsUint32HashKey, WebGLShader> mMapShaders;
     nsRefPtrHashtable<nsUint32HashKey, WebGLFramebuffer> mMapFramebuffers;
@@ -1001,6 +1000,7 @@ public:
     {
         mContext->MakeContextCurrent();
         mContext->gl->fGenBuffers(1, &mGLName);
+        mMonotonicHandle = mContext->mBuffers.AppendElement(this);
     }
 
     ~WebGLBuffer() {
@@ -1013,6 +1013,7 @@ public:
         free(mData);
         mData = nsnull;
         mByteLength = 0;
+        mContext->mBuffers.RemoveElement(mMonotonicHandle);
     }
 
     bool HasEverBeenBound() { return mHasEverBeenBound; }
@@ -1108,6 +1109,7 @@ protected:
     bool mHasEverBeenBound;
     GLuint mByteLength;
     GLenum mTarget;
+    WebGLMonotonicHandle mMonotonicHandle;
 
     PRUint8 mCachedMaxUbyteElement;
     bool mHasCachedMaxUbyteElement;
@@ -2486,53 +2488,33 @@ class WebGLMemoryReporter
         return result;
     }
 
-    static PLDHashOperator BufferMemoryUsageFunction(const PRUint32&, WebGLBuffer *aValue, void *aData)
-    {
-        PRInt64 *result = (PRInt64*) aData;
-        *result += aValue->ByteLength();
-        return PL_DHASH_NEXT;
-    }
-
     static PRInt64 GetBufferMemoryUsed() {
         const ContextsArrayType & contexts = Contexts();
         PRInt64 result = 0;
-        for(size_t i = 0; i < contexts.Length(); ++i) {
-            PRInt64 bufferMemoryUsageForThisContext = 0;
-            contexts[i]->mMapBuffers.EnumerateRead(BufferMemoryUsageFunction, &bufferMemoryUsageForThisContext);
-            result += bufferMemoryUsageForThisContext;
-        }
+        for(size_t i = 0; i < contexts.Length(); ++i)
+            for (size_t b = 0; b < contexts[i]->mBuffers.Length(); ++b)
+                result += contexts[i]->mBuffers[b]->ByteLength();
         return result;
-    }
-    
-    static PLDHashOperator BufferCacheMemoryUsageFunction(const PRUint32&, WebGLBuffer *aValue, void *aData)
-    {
-        PRInt64 *result = (PRInt64*) aData;
-        // element array buffers are cached in the WebGL implementation. Other buffers aren't.
-        if (aValue->Target() == LOCAL_GL_ELEMENT_ARRAY_BUFFER)
-          *result += aValue->ByteLength();
-        return PL_DHASH_NEXT;
     }
 
     static PRInt64 GetBufferCacheMemoryUsed() {
         const ContextsArrayType & contexts = Contexts();
         PRInt64 result = 0;
-        for(size_t i = 0; i < contexts.Length(); ++i) {
-            PRInt64 bufferCacheMemoryUsageForThisContext = 0;
-            contexts[i]->mMapBuffers.EnumerateRead(BufferCacheMemoryUsageFunction, &bufferCacheMemoryUsageForThisContext);
-            result += bufferCacheMemoryUsageForThisContext;
-        }
+        for(size_t i = 0; i < contexts.Length(); ++i)
+            for (size_t b = 0; b < contexts[i]->mBuffers.Length(); ++b)
+                if (contexts[i]->mBuffers[b]->Target() == LOCAL_GL_ELEMENT_ARRAY_BUFFER)
+                    result += contexts[i]->mBuffers[b]->ByteLength();
         return result;
     }
 
     static PRInt64 GetBufferCount() {
         const ContextsArrayType & contexts = Contexts();
         PRInt64 result = 0;
-        for(size_t i = 0; i < contexts.Length(); ++i) {
-            result += contexts[i]->mMapBuffers.Count();
-        }
+        for(size_t i = 0; i < contexts.Length(); ++i)
+            result += contexts[i]->mBuffers.Length();
         return result;
     }
-    
+
     static PLDHashOperator RenderbufferMemoryUsageFunction(const PRUint32&, WebGLRenderbuffer *aValue, void *aData)
     {
         PRInt64 *result = (PRInt64*) aData;
