@@ -236,8 +236,6 @@ WebGLContext::WebGLContext()
 
     mShaderValidation = true;
 
-    mMapFramebuffers.Init();
-
     mBlackTexturesAreInitialized = false;
     mFakeBlackStatus = DoNotNeedFakeBlack;
 
@@ -309,22 +307,6 @@ WebGLContext::~WebGLContext()
     mContextRestorer = nsnull;
 }
 
-template<typename WebGLObjectType>
-static PLDHashOperator
-WebGLObjectDeleteFunction(const PRUint32& aKey, WebGLObjectType *aValue, void *)
-{
-    aValue->DeleteOnce();
-    return PL_DHASH_NEXT;
-}
-
-template<typename WebGLObjectType>
-void
-DeleteWebGLObjectsHashTable(nsRefPtrHashtable<nsUint32HashKey, WebGLObjectType>& table)
-{
-    table.EnumerateRead(WebGLObjectDeleteFunction<WebGLObjectType>, nsnull);
-    table.Clear();
-}
-
 void
 WebGLContext::DestroyResourcesAndContext()
 {
@@ -349,7 +331,8 @@ WebGLContext::DestroyResourcesAndContext()
         mBuffers.Last()->DeleteOnce();
     while (mRenderbuffers.Length())
         mRenderbuffers.Last()->DeleteOnce();
-    DeleteWebGLObjectsHashTable(mMapFramebuffers);
+    while (mFramebuffers.Length())
+        mFramebuffers.Last()->DeleteOnce();
     while (mShaders.Length())
         mShaders.Last()->DeleteOnce();
     while (mPrograms.Length())
