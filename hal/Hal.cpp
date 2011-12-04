@@ -66,6 +66,15 @@ using namespace mozilla::services;
     }                                             \
   } while (0)
 
+#define RETURN_PROXY_IF_SANDBOXED(_call)          \
+  do {                                            \
+    if (InSandbox()) {                            \
+      return hal_sandbox::_call;                  \
+    } else {                                      \
+      return hal_impl::_call;                     \
+    }                                             \
+  } while (0)
+
 namespace mozilla {
 namespace hal {
 
@@ -277,7 +286,7 @@ CancelVibrate(const WindowIdentifier &id)
     hal_impl::CancelVibrate(WindowIdentifier());
   }
 }
- 
+
 class BatteryObserversManager
 {
 public:
@@ -370,6 +379,30 @@ void NotifyBatteryChange(const BatteryInformation& aBatteryInfo)
 
   sBatteryObservers.CacheBatteryInformation(aBatteryInfo);
   sBatteryObservers.Broadcast(aBatteryInfo);
+}
+
+bool GetScreenEnabled()
+{
+  AssertMainThread();
+  RETURN_PROXY_IF_SANDBOXED(GetScreenEnabled());
+}
+
+void SetScreenEnabled(bool enabled)
+{
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(SetScreenEnabled(enabled));
+}
+
+double GetScreenBrightness()
+{
+  AssertMainThread();
+  RETURN_PROXY_IF_SANDBOXED(GetScreenBrightness());
+}
+
+void SetScreenBrightness(double brightness)
+{
+  AssertMainThread();
+  PROXY_IF_SANDBOXED(SetScreenBrightness(clamped(brightness, 0.0, 1.0)));
 }
 
 } // namespace hal
