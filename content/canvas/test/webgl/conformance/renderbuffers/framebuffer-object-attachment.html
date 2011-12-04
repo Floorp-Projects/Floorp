@@ -27,29 +27,43 @@ var colorBuffer;
 var width;
 var height;
 
-function testAttachment(attachment, buffer, isConflicted)
+const ALLOW_COMPLETE              = 0x01;
+const ALLOW_UNSUPPORTED           = 0x02;
+const ALLOW_INCOMPLETE_ATTACHMENT = 0x04;
+
+function CheckFramebufferForAllowedStatuses(allowedStatuses)
+{
+    // If the framebuffer is in an error state for multiple reasons,
+    // we can't guarantee which one will be reported.
+    var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    var statusAllowed = ((allowedStatuses & ALLOW_COMPLETE) && (status == gl.FRAMEBUFFER_COMPLETE)) ||
+                        ((allowedStatuses & ALLOW_UNSUPPORTED) && (status == gl.FRAMEBUFFER_UNSUPPORTED)) ||
+                        ((allowedStatuses & ALLOW_INCOMPLETE_ATTACHMENT) && (status == gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT));
+    var msg = "gl.checkFramebufferStatus(gl.FRAMEBUFFER) returned " + status;
+    if (statusAllowed)
+        testPassed(msg);
+    else
+        testFailed(msg);
+}
+
+function testAttachment(attachment, buffer, allowedStatuses)
 {
     shouldBeNonNull("fbo = gl.createFramebuffer()");
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, colorBuffer);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachment, gl.RENDERBUFFER, buffer);
     glErrorShouldBe(gl, gl.NO_ERROR);
-    // If the framebuffer is in an error state for multiple reasons,
-    // we can't guarantee which one will be reported.
-    if ((width == 0 || height == 0) && !isConflicted) {
-        // Zero-sized renderbuffers are supposed to result in an incomplete attachment.
-        // However, certain combination may violate implementation specific restrictions.
-        shouldBeTrue("gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT || gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_UNSUPPORTED");
-    } else if (isConflicted) {
-        shouldBe("gl.checkFramebufferStatus(gl.FRAMEBUFFER)", "gl.FRAMEBUFFER_UNSUPPORTED");
+    CheckFramebufferForAllowedStatuses(allowedStatuses);
+    if ((allowedStatuses & ALLOW_COMPLETE) == 0) {
         gl.clear(gl.COLOR_BUFFER_BIT);
         glErrorShouldBe(gl, gl.INVALID_FRAMEBUFFER_OPERATION);
         gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(width * height * 4));
         glErrorShouldBe(gl, gl.INVALID_FRAMEBUFFER_OPERATION);
     }
+    gl.deleteFramebuffer(fbo);
 }
 
-function testAttachments(attachment0, buffer0, attachment1, buffer1, isConflicted)
+function testAttachments(attachment0, buffer0, attachment1, buffer1, allowedStatuses)
 {
     shouldBeNonNull("fbo = gl.createFramebuffer()");
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
@@ -58,27 +72,20 @@ function testAttachments(attachment0, buffer0, attachment1, buffer1, isConflicte
     glErrorShouldBe(gl, gl.NO_ERROR);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachment1, gl.RENDERBUFFER, buffer1);
     glErrorShouldBe(gl, gl.NO_ERROR);
-    // If the framebuffer is in an error state for multiple reasons,
-    // we can't guarantee which one will be reported.
-    if ((width == 0 || height == 0) && !isConflicted) {
-        // Zero-sized renderbuffers are supposed to result in an incomplete attachment.
-        // However, certain combination may violate implementation specific restrictions.
-        shouldBeTrue("gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT || gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_UNSUPPORTED");
-    } else if (isConflicted) {
-        shouldBe("gl.checkFramebufferStatus(gl.FRAMEBUFFER)", "gl.FRAMEBUFFER_UNSUPPORTED");
-    }
+    CheckFramebufferForAllowedStatuses(allowedStatuses);
+    gl.deleteFramebuffer(fbo);
 }
 
-function testColorRenderbuffer(internalformat)
+function testColorRenderbuffer(internalformat, allowedStatuses)
 {
     shouldBeNonNull("colorBuffer = gl.createRenderbuffer()");
     gl.bindRenderbuffer(gl.RENDERBUFFER, colorBuffer);
     gl.renderbufferStorage(gl.RENDERBUFFER, internalformat, width, height);
     glErrorShouldBe(gl, gl.NO_ERROR);
-    testAttachment(gl.COLOR_ATTACHMENT0, colorBuffer, false);
+    testAttachment(gl.COLOR_ATTACHMENT0, colorBuffer, allowedStatuses);
 }
 
-function testDepthStencilRenderbuffer()
+function testDepthStencilRenderbuffer(allowedStatuses)
 {
     shouldBeNonNull("depthStencilBuffer = gl.createRenderbuffer()");
     gl.bindRenderbuffer(gl.RENDERBUFFER, depthStencilBuffer);
@@ -103,7 +110,7 @@ function testDepthStencilRenderbuffer()
         shouldBeTrue("gl.getRenderbufferParameter(gl.RENDERBUFFER, gl.RENDERBUFFER_STENCIL_SIZE) > 0");
     }
     glErrorShouldBe(gl, gl.NO_ERROR);
-    testAttachment(gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, false);
+    testAttachment(gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, allowedStatuses);
 }
 
 description("Test framebuffer object attachment behaviors");
@@ -134,49 +141,59 @@ for (width = 0; width <= 2; width += 2)
         gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, width, height);
         glErrorShouldBe(gl, gl.NO_ERROR);
 
+        var allowedStatusForGoodCase
+            = (width == 0 || height == 0) ? ALLOW_INCOMPLETE_ATTACHMENT : ALLOW_COMPLETE;
+
+        // some cases involving stencil seem to be implementation-dependent
+        var allowedStatusForImplDependentCase = allowedStatusForGoodCase | ALLOW_UNSUPPORTED;
+
         debug("Attach depth using DEPTH_ATTACHMENT");
-        testAttachment(gl.DEPTH_ATTACHMENT, depthBuffer, false);
+        testAttachment(gl.DEPTH_ATTACHMENT, depthBuffer, allowedStatusForGoodCase);
         debug("Attach depth using STENCIL_ATTACHMENT");
-        testAttachment(gl.STENCIL_ATTACHMENT, depthBuffer, true);
+        testAttachment(gl.STENCIL_ATTACHMENT, depthBuffer, ALLOW_INCOMPLETE_ATTACHMENT);
         debug("Attach depth using DEPTH_STENCIL_ATTACHMENT");
-        testAttachment(gl.DEPTH_STENCIL_ATTACHMENT, depthBuffer, true);
+        testAttachment(gl.DEPTH_STENCIL_ATTACHMENT, depthBuffer, ALLOW_INCOMPLETE_ATTACHMENT);
         debug("Attach stencil using STENCIL_ATTACHMENT");
-        testAttachment(gl.STENCIL_ATTACHMENT, stencilBuffer, false);
+        testAttachment(gl.STENCIL_ATTACHMENT, stencilBuffer, allowedStatusForImplDependentCase);
         debug("Attach stencil using DEPTH_ATTACHMENT");
-        testAttachment(gl.DEPTH_ATTACHMENT, stencilBuffer, true);
+        testAttachment(gl.DEPTH_ATTACHMENT, stencilBuffer, ALLOW_INCOMPLETE_ATTACHMENT);
         debug("Attach stencil using DEPTH_STENCIL_ATTACHMENT");
-        testAttachment(gl.DEPTH_STENCIL_ATTACHMENT, stencilBuffer, true);
+        testAttachment(gl.DEPTH_STENCIL_ATTACHMENT, stencilBuffer, ALLOW_INCOMPLETE_ATTACHMENT);
         debug("Attach depthStencil using DEPTH_STENCIL_ATTACHMENT");
-        testAttachment(gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, false);
+        testAttachment(gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, allowedStatusForGoodCase);
         debug("Attach depthStencil using DEPTH_ATTACHMENT");
-        testAttachment(gl.DEPTH_ATTACHMENT, depthStencilBuffer, true);
+        testAttachment(gl.DEPTH_ATTACHMENT, depthStencilBuffer, ALLOW_INCOMPLETE_ATTACHMENT);
         debug("Attach depthStencil using STENCIL_ATTACHMENT");
-        testAttachment(gl.STENCIL_ATTACHMENT, depthStencilBuffer, true);
+        testAttachment(gl.STENCIL_ATTACHMENT, depthStencilBuffer, ALLOW_INCOMPLETE_ATTACHMENT);
+
+        var allowedStatusForConflictedAttachment
+            = (width == 0 || height == 0) ? ALLOW_UNSUPPORTED | ALLOW_INCOMPLETE_ATTACHMENT
+                                          : ALLOW_UNSUPPORTED;
 
         debug("Attach depth, then stencil, causing conflict");
-        testAttachments(gl.DEPTH_ATTACHMENT, depthBuffer, gl.STENCIL_ATTACHMENT, stencilBuffer, true);
+        testAttachments(gl.DEPTH_ATTACHMENT, depthBuffer, gl.STENCIL_ATTACHMENT, stencilBuffer, allowedStatusForConflictedAttachment);
         debug("Attach stencil, then depth, causing conflict");
-        testAttachments(gl.STENCIL_ATTACHMENT, stencilBuffer, gl.DEPTH_ATTACHMENT, depthBuffer, true);
+        testAttachments(gl.STENCIL_ATTACHMENT, stencilBuffer, gl.DEPTH_ATTACHMENT, depthBuffer, allowedStatusForConflictedAttachment);
         debug("Attach depth, then depthStencil, causing conflict");
-        testAttachments(gl.DEPTH_ATTACHMENT, depthBuffer, gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, true);
+        testAttachments(gl.DEPTH_ATTACHMENT, depthBuffer, gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, allowedStatusForConflictedAttachment);
         debug("Attach depthStencil, then depth, causing conflict");
-        testAttachments(gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, gl.DEPTH_ATTACHMENT, depthBuffer, true);
+        testAttachments(gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, gl.DEPTH_ATTACHMENT, depthBuffer, allowedStatusForConflictedAttachment);
         debug("Attach stencil, then depthStencil, causing conflict");
-        testAttachments(gl.DEPTH_ATTACHMENT, depthBuffer, gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, true);
+        testAttachments(gl.DEPTH_ATTACHMENT, depthBuffer, gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, allowedStatusForConflictedAttachment);
         debug("Attach depthStencil, then stencil, causing conflict");
-        testAttachments(gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, gl.STENCIL_ATTACHMENT, stencilBuffer, true);
+        testAttachments(gl.DEPTH_STENCIL_ATTACHMENT, depthStencilBuffer, gl.STENCIL_ATTACHMENT, stencilBuffer, allowedStatusForConflictedAttachment);
 
         debug("Attach color renderbuffer with internalformat == RGBA4");
-        testColorRenderbuffer(gl.RGBA4);
+        testColorRenderbuffer(gl.RGBA4, allowedStatusForGoodCase);
 
         debug("Attach color renderbuffer with internalformat == RGB5_A1");
-        testColorRenderbuffer(gl.RGB5_A1);
+        testColorRenderbuffer(gl.RGB5_A1, allowedStatusForGoodCase);
 
         debug("Attach color renderbuffer with internalformat == RGB565");
-        testColorRenderbuffer(gl.RGB565);
+        testColorRenderbuffer(gl.RGB565, allowedStatusForGoodCase);
 
         debug("Create and attach depthStencil renderbuffer");
-        testDepthStencilRenderbuffer();
+        testDepthStencilRenderbuffer(allowedStatusForGoodCase);
     }
 }
 
@@ -266,9 +283,18 @@ function testUsingIncompleteFramebuffer() {
     debug("Drawing or reading from an incomplete framebuffer should generate INVALID_FRAMEBUFFER_OPERATION");
     testRenderingAndReading();
 
-    shouldBeNonNull("fbo = gl.createFramebuffer()");
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    shouldBeNonNull("fbo2 = gl.createFramebuffer()");
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo2);
     CheckFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT);
+    debug("");
+    debug("Drawing or reading from an incomplete framebuffer should generate INVALID_FRAMEBUFFER_OPERATION");
+    testRenderingAndReading();
+
+    shouldBeNonNull("colorBuffer = gl.createRenderbuffer()");
+    gl.bindRenderbuffer(gl.RENDERBUFFER, colorBuffer);
+    gl.framebufferRenderbuffer(
+        gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, colorBuffer);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, 0, 0);
     debug("");
     debug("Drawing or reading from an incomplete framebuffer should generate INVALID_FRAMEBUFFER_OPERATION");
     testRenderingAndReading();
@@ -279,10 +305,13 @@ function testUsingIncompleteFramebuffer() {
         glErrorShouldBe(gl, gl.INVALID_FRAMEBUFFER_OPERATION, "drawArrays with incomplete framebuffer");
         gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
         glErrorShouldBe(gl, gl.INVALID_FRAMEBUFFER_OPERATION, "readPixels from incomplete framebuffer");
+        // copyTexImage and copyTexSubImage can be either INVALID_FRAMEBUFFER_OPERATION because
+        // the framebuffer is invalid OR INVALID_OPERATION because in the case of no attachments
+        // the framebuffer is not of a compatible type.
         gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 0, 0, 1, 1);
-        glErrorShouldBe(gl, gl.INVALID_FRAMEBUFFER_OPERATION, "copyTexImage2D from incomplete framebuffer");
+        glErrorShouldBe(gl, [gl.INVALID_FRAMEBUFFER_OPERATION, gl.INVALID_OPERATION], "copyTexImage2D from incomplete framebuffer");
         gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, 1, 1, 0);
-        glErrorShouldBe(gl, gl.INVALID_FRAMEBUFFER_OPERATION, "copyTexSubImage2D from incomplete framebuffer");
+        glErrorShouldBe(gl, [gl.INVALID_FRAMEBUFFER_OPERATION, gl.INVALID_OPERATION], "copyTexSubImage2D from incomplete framebuffer");
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         glErrorShouldBe(gl, gl.INVALID_FRAMEBUFFER_OPERATION, "clear with incomplete framebuffer");
     }

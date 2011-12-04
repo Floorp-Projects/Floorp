@@ -35,6 +35,7 @@ description('Tests texSubImage2D upload path from Uint8Array');
 var wtu = WebGLTestUtils;
 var canvas = document.getElementById("example");
 var gl = wtu.create3DContext(canvas);
+gl.disable(gl.DITHER);
 var program = wtu.setupProgram(
     gl,
     [wtu.setupSimpleTextureVertexShader(gl),
