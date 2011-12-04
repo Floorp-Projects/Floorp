@@ -3,7 +3,6 @@
 // web content
 function test() {
   waitForExplicitFinish();
-  ignoreAllUncaughtExceptions();
 
   var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                      .getService(Components.interfaces.nsIChromeRegistry);
@@ -24,6 +23,7 @@ function test() {
     // Allow the in-page load handler to run first
     executeSoon(page_loaded);
   }, true);
+  expectUncaughtException();
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
 }
 
