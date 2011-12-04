@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,13 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
+ * The Original Code is mozilla.org code.
+ *
  * The Initial Developer of the Original Code is
- *   Mozilla Foundation
+ * Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Benoit Girard <bgirard@mozilla.com>
+ *   Ehsan Akhgari <ehsan@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,74 +36,74 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <string>
-#include "sampler.h"
-#include "nsProfiler.h"
-#include "nsMemory.h"
+// Cross-platform lightweight thread local data wrappers
 
-using std::string;
+#if defined(XP_WIN)
+  // This file will get included in any file that wants to add
+  // a profiler mark. In order to not bring <windows.h> together
+  // we just include windef.h and winbase.h which are sufficient
+  // to get the prototypes for the Tls* functions.
+# include <windef.h>
+# include <winbase.h>
+#else
+# include <pthread.h>
+# include <signal.h>
+#endif
 
-NS_IMPL_ISUPPORTS1(nsProfiler, nsIProfiler)
+namespace mozilla {
 
+#if defined(XP_WIN)
+typedef unsigned long sig_safe_t;
+#else
+typedef sig_atomic_t sig_safe_t;
+#endif
 
-nsProfiler::nsProfiler()
-{
+namespace tls {
+
+#if defined(XP_WIN)
+
+typedef DWORD key;
+
+template <typename T>
+static T* get(key mykey) {
+  return (T*) TlsGetValue(mykey);
 }
 
-
-NS_IMETHODIMP
-nsProfiler::StartProfiler(PRUint32 aInterval, PRUint32 aEntries)
-{
-  SAMPLER_START(aInterval, aEntries);
-  return NS_OK;
+template <typename T>
+static bool set(key mykey, const T* value) {
+  return TlsSetValue(mykey, const_cast<T*>(value));
 }
 
-NS_IMETHODIMP
-nsProfiler::StopProfiler()
-{
-  SAMPLER_STOP();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsProfiler::GetProfile(char **aProfile)
-{
-  char *profile = SAMPLER_GET_PROFILE();
-  if (profile) {
-    PRUint32 len = strlen(profile);
-    char *profileStr = static_cast<char *>
-                         (nsMemory::Clone(profile, (len + 1) * sizeof(char)));
-    profileStr[len] = '\0';
-    *aProfile = profileStr;
-    free(profile);
+static inline bool create(key* mykey) {
+  key newkey = TlsAlloc();
+  if (newkey == TLS_OUT_OF_INDEXES) {
+    return false;
   }
-  return NS_OK;
+  *mykey = newkey;
+  return true;
 }
 
-NS_IMETHODIMP
-nsProfiler::IsActive(bool *aIsActive)
-{
-  *aIsActive = SAMPLER_IS_ACTIVE();
-  return NS_OK;
+#else
+
+typedef pthread_key_t key;
+
+template <typename T>
+static T* get(key mykey) {
+  return (T*) pthread_getspecific(mykey);
 }
 
-NS_IMETHODIMP
-nsProfiler::GetResponsivenessTimes(PRUint32 *aCount, float **aResult)
-{
-  unsigned int len = 100;
-  const float* times = SAMPLER_GET_RESPONSIVENESS();
-  if (!times) {
-    *aCount = 0;
-    *aResult = nsnull;
-    return NS_OK;
-  }
-
-  float *fs = static_cast<float *>
-                       (nsMemory::Clone(times, len * sizeof(float)));
-
-  *aCount = len;
-  *aResult = fs;
-
-  return NS_OK;
+template <typename T>
+static bool set(key mykey, const T* value) {
+  return !pthread_setspecific(mykey, value);
 }
 
+static bool create(key* mykey) {
+  return !pthread_key_create(mykey, NULL);
+}
+
+#endif
+
+}
+
+}
+ 
