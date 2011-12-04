@@ -1550,6 +1550,14 @@ IDBObjectStore::DeleteIndex(const nsAString& aName)
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   info->indexes.RemoveElementAt(index);
+
+  for (PRUint32 i = 0; i < mCreatedIndexes.Length(); i++) {
+    if (mCreatedIndexes[i]->Name() == aName) {
+      mCreatedIndexes.RemoveElementAt(i);
+      break;
+    }
+  }
+
   return NS_OK;
 }
 
