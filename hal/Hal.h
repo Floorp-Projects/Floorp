@@ -257,6 +257,39 @@ void GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo);
  */
 void NotifyBatteryChange(const hal::BatteryInformation& aBatteryInfo);
 
+/**
+ * Determine whether the device's screen is currently enabled.
+ */
+bool GetScreenEnabled();
+
+/**
+ * Enable or disable the device's screen.
+ *
+ * Note that it may take a few seconds for the screen to turn on or off.
+ */
+void SetScreenEnabled(bool enabled);
+
+/**
+ * Get the brightness of the device's screen's backlight, on a scale from 0
+ * (very dim) to 1 (full blast).
+ *
+ * If the display is currently disabled, this returns the brightness the
+ * backlight will have when the display is re-enabled.
+ */
+double GetScreenBrightness();
+
+/**
+ * Set the brightness of the device's screen's backlight, on a scale from 0
+ * (very dimm) to 1 (full blast).  Values larger than 1 are treated like 1, and
+ * values smaller than 0 are treated like 0.
+ *
+ * Note that we may reduce the resolution of the given brightness value before
+ * sending it to the screen.  Therefore if you call SetScreenBrightness(x)
+ * followed by GetScreenBrightness(), the value returned by
+ * GetScreenBrightness() may not be exactly x.
+ */
+void SetScreenBrightness(double brightness);
+
 } // namespace MOZ_HAL_NAMESPACE
 } // namespace mozilla
 
