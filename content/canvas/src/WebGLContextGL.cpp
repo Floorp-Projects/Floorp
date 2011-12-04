@@ -2574,7 +2574,8 @@ WebGLContext::GetProgramParameter(nsIWebGLProgram *pobj, PRUint32 pname, nsIVari
 
     WebGLuint progname;
     bool isDeleted;
-    if (!GetGLName<WebGLProgram>("getProgramParameter: program", pobj, &progname, nsnull, &isDeleted))
+    WebGLProgram *prog;
+    if (!GetConcreteObjectAndGLName("getProgramParameter: program", pobj, &prog, &progname, nsnull, &isDeleted))
         return NS_OK;
 
     nsCOMPtr<nsIWritableVariant> wrval = do_CreateInstance("@mozilla.org/variant;1");
@@ -2597,6 +2598,8 @@ WebGLContext::GetProgramParameter(nsIWebGLProgram *pobj, PRUint32 pname, nsIVari
         }
             break;
         case LOCAL_GL_DELETE_STATUS:
+            wrval->SetAsBool(prog->IsDeleteRequested());
+            break;
         case LOCAL_GL_LINK_STATUS:
         {
             GLint i = 0;
@@ -4514,6 +4517,8 @@ WebGLContext::GetShaderParameter(nsIWebGLShader *sobj, WebGLenum pname, nsIVaria
         }
             break;
         case LOCAL_GL_DELETE_STATUS:
+            wrval->SetAsBool(shader->IsDeleteRequested());
+            break;
         case LOCAL_GL_COMPILE_STATUS:
         {
             GLint i = 0;
