@@ -84,6 +84,7 @@ TEST_FILES = \
   test_indexes_bad_values.html \
   test_key_requirements.html \
   test_leaving_page.html \
+  test_multientry.html \
   test_objectCursors.html \
   test_objectStore_inline_autoincrement_key_added_on_put.html \
   test_objectStore_remove_values.html \
