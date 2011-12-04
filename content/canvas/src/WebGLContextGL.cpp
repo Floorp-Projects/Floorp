@@ -1199,7 +1199,6 @@ WebGLContext::DeleteRenderbuffer(nsIWebGLRenderbuffer *rbobj)
         BindRenderbuffer(LOCAL_GL_RENDERBUFFER, nsnull);
 
     rbuf->RequestDelete();
-    mMapRenderbuffers.Remove(rbufname);
 
     return NS_OK;
 }
@@ -4324,7 +4323,6 @@ WebGLContext::CreateRenderbuffer(nsIWebGLRenderbuffer **retval)
 
     WebGLRenderbuffer *globj = new WebGLRenderbuffer(this);
     NS_ADDREF(*retval = globj);
-    mMapRenderbuffers.Put(globj->GLName(), globj);
 
     return NS_OK;
 }
