@@ -32,6 +32,11 @@
         { keyPath: "foo.id",  value: { foo: { id: undefined } } },
         { keyPath: "foo.id",  value: { foo: 47 } },
         { keyPath: "foo.id",  value: {} },
+        { keyPath: "",        value: "foopy",                        key: "foopy" },
+        { keyPath: "",        value: 2,                              key: 2 },
+        { keyPath: "",        value: undefined },
+        { keyPath: "",        value: { id: 12 } },
+        { keyPath: "",        value: /x/ },
         { keyPath: "foo.bar", value: { baz: 1, foo: { baz2: 2, bar: "xo" } },     key: "xo" },
         { keyPath: "foo.bar.baz", value: { foo: { bar: { bazz: 16, baz: 17 } } }, key: 17 },
         { keyPath: "foo..id", exception: true },
@@ -61,6 +66,7 @@
           try {
             let objectStore = db.createObjectStore(info.keyPath, { keyPath: info.keyPath });
             ok(!("exception" in info), "expected exception behavior observed" + test);
+            is(objectStore.keyPath, info.keyPath, "objectStore has correct keyPath property" + test);
             stores[info.keyPath] = objectStore;
           } catch (e) {
             ok("exception" in info, "expected exception behavior observed" + test);
@@ -103,6 +109,7 @@
           try {
             let index = store.createIndex(info.keyPath, info.keyPath);
             ok(!("exception" in info), "expected exception behavior observed");
+            is(index.keyPath, info.keyPath, "index has correct keyPath property");
             indexes[info.keyPath] = index;
           } catch (e) {
             ok("exception" in info, "expected exception behavior observed");
