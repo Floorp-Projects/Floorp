@@ -1236,7 +1236,6 @@ WebGLContext::DeleteTexture(nsIWebGLTexture *tobj)
     ActiveTexture(LOCAL_GL_TEXTURE0 + mActiveTexture);
 
     tex->RequestDelete();
-    mMapTextures.Remove(texname);
 
     return NS_OK;
 }
@@ -2551,7 +2550,6 @@ WebGLContext::CreateTexture(nsIWebGLTexture **retval)
 
     WebGLTexture *globj = new WebGLTexture(this);
     NS_ADDREF(*retval = globj);
-    mMapTextures.Put(globj->GLName(), globj);
 
     return NS_OK;
 }
