@@ -1,0 +1,18 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var a = document.getElementById("a");
+  a.parentNode.removeChild(a);
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<table style="border-collapse: collapse;">X<td id="a"/><td rowspan="0"/><tbody>Y<tr><td colspan="3"/></tr></tbody></table>
+</body>
+
+</html>
