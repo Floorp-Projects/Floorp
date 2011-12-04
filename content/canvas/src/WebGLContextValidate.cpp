@@ -526,7 +526,6 @@ WebGLContext::InitAndValidateGL()
     mBoundRenderbuffer = nsnull;
 
     mMapFramebuffers.Clear();
-    mMapRenderbuffers.Clear();
 
     MakeContextCurrent();
 

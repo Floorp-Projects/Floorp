@@ -829,7 +829,7 @@ protected:
     WebGLFastArray<WebGLProgram*> mPrograms;
     WebGLFastArray<WebGLShader*> mShaders;
     nsRefPtrHashtable<nsUint32HashKey, WebGLFramebuffer> mMapFramebuffers;
-    nsRefPtrHashtable<nsUint32HashKey, WebGLRenderbuffer> mMapRenderbuffers;
+    WebGLFastArray<WebGLRenderbuffer*> mRenderbuffers;
 
     // PixelStore parameters
     PRUint32 mPixelStorePackAlignment, mPixelStoreUnpackAlignment, mPixelStoreColorspaceConversion;
@@ -1782,6 +1782,7 @@ public:
 
         mContext->MakeContextCurrent();
         mContext->gl->fGenRenderbuffers(1, &mGLName);
+        mMonotonicHandle = mContext->mRenderbuffers.AppendElement(this);
     }
 
     ~WebGLRenderbuffer() {
@@ -1791,6 +1792,7 @@ public:
     void Delete() {
         mContext->MakeContextCurrent();
         mContext->gl->fDeleteRenderbuffers(1, &mGLName);
+        mContext->mRenderbuffers.RemoveElement(mMonotonicHandle);
     }
 
     bool HasEverBeenBound() { return mHasEverBeenBound; }
@@ -1837,7 +1839,7 @@ protected:
     WebGLuint mGLName;
     WebGLenum mInternalFormat;
     WebGLenum mInternalFormatForGL;
-
+    WebGLMonotonicHandle mMonotonicHandle;
     bool mHasEverBeenBound;
     bool mInitialized;
 
@@ -2521,30 +2523,20 @@ class WebGLMemoryReporter
         return result;
     }
 
-    static PLDHashOperator RenderbufferMemoryUsageFunction(const PRUint32&, WebGLRenderbuffer *aValue, void *aData)
-    {
-        PRInt64 *result = (PRInt64*) aData;
-        *result += aValue->MemoryUsage();
-        return PL_DHASH_NEXT;
-    }
-
     static PRInt64 GetRenderbufferMemoryUsed() {
         const ContextsArrayType & contexts = Contexts();
         PRInt64 result = 0;
-        for(size_t i = 0; i < contexts.Length(); ++i) {
-            PRInt64 bufferMemoryUsageForThisContext = 0;
-            contexts[i]->mMapRenderbuffers.EnumerateRead(RenderbufferMemoryUsageFunction, &bufferMemoryUsageForThisContext);
-            result += bufferMemoryUsageForThisContext;
-        }
+        for(size_t i = 0; i < contexts.Length(); ++i)
+            for (size_t r = 0; r < contexts[i]->mRenderbuffers.Length(); ++r)
+              result += contexts[i]->mRenderbuffers[r]->MemoryUsage();
         return result;
     }
-    
+
     static PRInt64 GetRenderbufferCount() {
         const ContextsArrayType & contexts = Contexts();
         PRInt64 result = 0;
-        for(size_t i = 0; i < contexts.Length(); ++i) {
-            result += contexts[i]->mMapRenderbuffers.Count();
-        }
+        for(size_t i = 0; i < contexts.Length(); ++i)
+            result += contexts[i]->mRenderbuffers.Length();
         return result;
     }
 
