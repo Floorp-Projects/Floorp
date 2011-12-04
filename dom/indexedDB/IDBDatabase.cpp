@@ -387,11 +387,8 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
 
   DatabaseInfo* databaseInfo = Info();
 
-  if (databaseInfo->ContainsStoreName(aName)) {
-    return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
-  }
-
   nsString keyPath;
+  keyPath.SetIsVoid(true);
   bool autoIncrement = false;
 
   if (!JSVAL_IS_VOID(aOptions) && !JSVAL_IS_NULL(aOptions)) {
@@ -437,7 +434,11 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
     autoIncrement = !!boolVal;
   }
 
-  if (!IDBObjectStore::IsValidKeyPath(aCx, keyPath)) {
+  if (databaseInfo->ContainsStoreName(aName)) {
+    return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
+  }
+
+  if (!keyPath.IsVoid() && !IDBObjectStore::IsValidKeyPath(aCx, keyPath)) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
@@ -723,8 +724,8 @@ CreateObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   nsCOMPtr<mozIStorageStatement> stmt =
     mTransaction->GetCachedStatement(NS_LITERAL_CSTRING(
-    "INSERT INTO object_store (id, name, key_path, auto_increment) "
-    "VALUES (:id, :name, :key_path, :auto_increment)"
+    "INSERT INTO object_store (id, auto_increment, name, key_path) "
+    "VALUES (:id, :auto_increment, :name, :key_path)"
   ));
   NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -734,15 +735,17 @@ CreateObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                                        mObjectStore->Id());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("auto_increment"),
+                             mObjectStore->IsAutoIncrement() ? 1 : 0);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mObjectStore->Name());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"),
-                              mObjectStore->KeyPath());
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("auto_increment"),
-                             mObjectStore->IsAutoIncrement() ? 1 : 0);
+  rv = mObjectStore->HasKeyPath() ?
+    stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"),
+                           mObjectStore->KeyPath()) :
+    stmt->BindNullByName(NS_LITERAL_CSTRING("key_path"));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   rv = stmt->Execute();
