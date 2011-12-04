@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html><head>
+<title>Testcase #2 for bug 370713</title>
+<script>
+function boom() {
+  document.getElementById('tbody').appendChild(document.createElement('tr'));
+}
+
+window.addEventListener("load", boom, false);
+</script>
+</head>
+<body><table style="border-collapse:collapse"><tbody id="tbody"><tr><td></td></tr><tr></tr></tbody></table></body>
+</html>
