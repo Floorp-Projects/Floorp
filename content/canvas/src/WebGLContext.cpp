@@ -237,7 +237,6 @@ WebGLContext::WebGLContext()
     mShaderValidation = true;
 
     mMapFramebuffers.Init();
-    mMapRenderbuffers.Init();
 
     mBlackTexturesAreInitialized = false;
     mFakeBlackStatus = DoNotNeedFakeBlack;
@@ -348,9 +347,9 @@ WebGLContext::DestroyResourcesAndContext()
         mTextures.Last()->DeleteOnce();
     while (mBuffers.Length())
         mBuffers.Last()->DeleteOnce();
-    DeleteWebGLObjectsHashTable(mMapRenderbuffers);
+    while (mRenderbuffers.Length())
+        mRenderbuffers.Last()->DeleteOnce();
     DeleteWebGLObjectsHashTable(mMapFramebuffers);
-    DeleteWebGLObjectsHashTable(mMapShaders);
     while (mShaders.Length())
         mShaders.Last()->DeleteOnce();
     while (mPrograms.Length())
