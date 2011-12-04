@@ -429,8 +429,6 @@ GetKeyFromValue(JSContext* aCx,
 {
   NS_ASSERTION(aCx, "Null pointer!");
   // aVal can be primitive iff the key path is empty.
-  NS_ASSERTION(!JSVAL_IS_PRIMITIVE(aVal) || aKeyPath.IsEmpty(),
-               "Why are we here!?");
   NS_ASSERTION(IDBObjectStore::IsValidKeyPath(aCx, aKeyPath),
                "This will explode!");
 
@@ -438,17 +436,16 @@ GetKeyFromValue(JSContext* aCx,
 
   jsval intermediate = aVal;
   while (tokenizer.hasMoreTokens()) {
-    nsString token(tokenizer.nextToken());
+    const nsDependentSubstring& token = tokenizer.nextToken();
 
-    if (!token.Length()) {
-      return NS_ERROR_DOM_SYNTAX_ERR;
-    }
+    NS_ASSERTION(!token.IsEmpty(), "Should be a valid keypath");
 
-    const jschar* keyPathChars = token.get();
+    const jschar* keyPathChars = token.BeginReading();
     const size_t keyPathLen = token.Length();
 
     if (JSVAL_IS_PRIMITIVE(intermediate)) {
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      intermediate = JSVAL_VOID;
+      break;
     }
 
     JSBool ok = JS_GetUCProperty(aCx, JSVAL_TO_OBJECT(intermediate),
@@ -623,10 +620,6 @@ IDBObjectStore::GetIndexUpdateInfo(ObjectStoreInfo* aObjectStoreInfo,
 
     for (PRUint32 indexesIndex = 0; indexesIndex < count; indexesIndex++) {
       const IndexInfo& indexInfo = aObjectStoreInfo->indexes[indexesIndex];
-
-      if (JSVAL_IS_PRIMITIVE(aObject) && !indexInfo.keyPath.IsEmpty()) {
-        continue;
-      }
 
       Key value;
       nsresult rv = GetKeyFromValue(aCx, aObject, indexInfo.keyPath, value);
