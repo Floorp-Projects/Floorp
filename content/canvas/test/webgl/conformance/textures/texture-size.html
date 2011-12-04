@@ -14,7 +14,7 @@ found in the LICENSE file.
 <script src="../resources/webgl-test-utils.js"></script>
 </head>
 <body>
-<canvas id="example" width="256" height="256" style="width: 40px; height: 40px;"></canvas>
+<canvas id="example" width="32" height="32" style="width: 40px; height: 40px;"></canvas>
 <div id="description"></div>
 <div id="console"></div>
 <script id="vshader" type="x-shader/x-vertex">
@@ -149,14 +149,29 @@ function checkTexture(width, height, cubeMap) {
 
 function fillLevel(level, width, height, color, opt_cubemap) {
   var numPixels = width * height;
-  var pixels = new Uint8Array(numPixels * 4);
-  for (var jj = 0; jj < numPixels; ++jj) {
+  var pixels = null;
+  var largeDim = Math.max(width, height);
+  var smallDim = Math.min(width, height);
+
+  var pixelRow = new Uint8Array(largeDim * 4);
+  for (var jj = 0; jj < largeDim; ++jj) {
     var off = jj * 4;
-    pixels[off + 0] = color[0];
-    pixels[off + 1] = color[1];
-    pixels[off + 2] = color[2];
-    pixels[off + 3] = color[3];
+    pixelRow[off + 0] = color[0];
+    pixelRow[off + 1] = color[1];
+    pixelRow[off + 2] = color[2];
+    pixelRow[off + 3] = color[3];
   }
+
+  if (largeDim == numPixels) {
+    pixels = pixelRow;
+  } else {
+    var pixels = new Uint8Array(numPixels * 4);
+    for (var jj = 0; jj < smallDim; ++jj) {
+      var off = jj * largeDim * 4;
+      pixels.set(pixelRow, off);
+    }
+  }
+ 
   var targets = opt_cubemap ? [
     gl.TEXTURE_CUBE_MAP_POSITIVE_X,
     gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
