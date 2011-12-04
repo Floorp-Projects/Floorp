@@ -1105,7 +1105,6 @@ WebGLContext::CreateShader(WebGLenum type, nsIWebGLShader **retval)
 
     WebGLShader *shader = new WebGLShader(this, type);
     NS_ADDREF(*retval = shader);
-    mMapShaders.Put(shader->GLName(), shader);
 
     return NS_OK;
 }
@@ -1274,7 +1273,6 @@ WebGLContext::DeleteShader(nsIWebGLShader *sobj)
         return NS_OK;
 
     shader->RequestDelete();
-    mMapShaders.Remove(shadername);
 
     return NS_OK;
 }
