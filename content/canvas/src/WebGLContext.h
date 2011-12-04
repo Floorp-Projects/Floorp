@@ -851,16 +851,12 @@ protected:
     PRUint32 mContextGeneration;
 };
 
-#define WEBGLBUFFER_PRIVATE_IID \
-    {0xd69f22e9, 0x6f98, 0x48bd, {0xb6, 0x94, 0x34, 0x17, 0xed, 0x06, 0x11, 0xab}}
 class WebGLBuffer :
     public nsIWebGLBuffer,
     public WebGLZeroingObject<8>, // almost never has more than 8 owners
     public WebGLContextBoundObject
 {
 public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLBUFFER_PRIVATE_IID)
-
     WebGLBuffer(WebGLContext *context, WebGLuint name) :
         WebGLContextBoundObject(context),
         mName(name), mDeleted(false), mHasEverBeenBound(false),
@@ -985,17 +981,13 @@ protected:
     void* mData; // in the case of an Element Array Buffer, we keep a copy.
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(WebGLBuffer, WEBGLBUFFER_PRIVATE_IID)
 
-#define WEBGLTEXTURE_PRIVATE_IID \
-    {0x4c19f189, 0x1f86, 0x4e61, {0x96, 0x21, 0x0a, 0x11, 0xda, 0x28, 0x10, 0xdd}}
 class WebGLTexture :
     public nsIWebGLTexture,
     public WebGLZeroingObject<8>, // almost never has more than 8 owners
     public WebGLContextBoundObject
 {
 public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLTEXTURE_PRIVATE_IID)
 
     WebGLTexture(WebGLContext *context, WebGLuint name) :
         WebGLContextBoundObject(context),
@@ -1425,18 +1417,12 @@ public:
     }
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(WebGLTexture, WEBGLTEXTURE_PRIVATE_IID)
-
-#define WEBGLSHADER_PRIVATE_IID \
-    {0x48cce975, 0xd459, 0x4689, {0x83, 0x82, 0x37, 0x82, 0x6e, 0xac, 0xe0, 0xa7}}
 class WebGLShader :
     public nsIWebGLShader,
     public WebGLZeroingObject<8>, // almost never has more than 8 owners
     public WebGLContextBoundObject
 {
 public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLSHADER_PRIVATE_IID)
-
     WebGLShader(WebGLContext *context, WebGLuint name, WebGLenum stype) :
         WebGLContextBoundObject(context),
         mName(name), mDeleted(false), mType(stype),
@@ -1514,10 +1500,6 @@ protected:
     bool mDeletePending;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(WebGLShader, WEBGLSHADER_PRIVATE_IID)
-
-#define WEBGLPROGRAM_PRIVATE_IID \
-    {0xb3084a5b, 0xa5b4, 0x4ee0, {0xa0, 0xf0, 0xfb, 0xdd, 0x64, 0xaf, 0x8e, 0x82}}
 class WebGLProgram :
     public nsIWebGLProgram,
     public WebGLZeroingObject<8>, // can actually have many more owners (WebGLUniformLocations),
@@ -1526,7 +1508,6 @@ class WebGLProgram :
     public WebGLContextBoundObject
 {
 public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLPROGRAM_PRIVATE_IID)
 
     WebGLProgram(WebGLContext *context, WebGLuint name) :
         WebGLContextBoundObject(context),
@@ -1666,10 +1647,6 @@ protected:
     std::vector<bool> mAttribsInUse;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(WebGLProgram, WEBGLPROGRAM_PRIVATE_IID)
-
-#define WEBGLRENDERBUFFER_PRIVATE_IID \
-    {0x3cbc2067, 0x5831, 0x4e3f, {0xac, 0x52, 0x7e, 0xf4, 0x5c, 0x04, 0xff, 0xae}}
 class WebGLRenderbuffer :
     public nsIWebGLRenderbuffer,
     public WebGLZeroingObject<8>, // almost never has more than 8 owners
@@ -1677,7 +1654,6 @@ class WebGLRenderbuffer :
     public WebGLContextBoundObject
 {
 public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLRENDERBUFFER_PRIVATE_IID)
 
     WebGLRenderbuffer(WebGLContext *context, WebGLuint name, WebGLuint secondBufferName = 0) :
         WebGLContextBoundObject(context),
@@ -1744,8 +1720,6 @@ protected:
 
     friend class WebGLFramebuffer;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(WebGLRenderbuffer, WEBGLRENDERBUFFER_PRIVATE_IID)
 
 class WebGLFramebufferAttachment
     : public WebGLRectangleObject
@@ -1839,15 +1813,12 @@ public:
     }
 };
 
-#define WEBGLFRAMEBUFFER_PRIVATE_IID \
-    {0x0052a16f, 0x4bc9, 0x4a55, {0x9d, 0xa3, 0x54, 0x95, 0xaa, 0x4e, 0x80, 0xb9}}
 class WebGLFramebuffer :
     public nsIWebGLFramebuffer,
     public WebGLZeroingObject<8>, // almost never has more than 8 owners
     public WebGLContextBoundObject
 {
 public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLFRAMEBUFFER_PRIVATE_IID)
 
     WebGLFramebuffer(WebGLContext *context, WebGLuint name) :
         WebGLContextBoundObject(context),
@@ -2112,10 +2083,6 @@ protected:
                                mDepthStencilAttachment;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(WebGLFramebuffer, WEBGLFRAMEBUFFER_PRIVATE_IID)
-
-#define WEBGLUNIFORMLOCATION_PRIVATE_IID \
-    {0x01a8a614, 0xb109, 0x42f1, {0xb4, 0x40, 0x8d, 0x8b, 0x87, 0x0b, 0x43, 0xa7}}
 class WebGLUniformLocation :
     public nsIWebGLUniformLocation,
     public WebGLZeroingObject<2>, // never saw a WebGLUniformLocation have more than 2 owners, and since these
@@ -2124,7 +2091,6 @@ class WebGLUniformLocation :
     public WebGLContextBoundObject
 {
 public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLUNIFORMLOCATION_PRIVATE_IID)
 
     WebGLUniformLocation(WebGLContext *context, WebGLProgram *program, GLint location) :
         WebGLContextBoundObject(context), mProgram(program), mProgramGeneration(program->Generation()),
@@ -2145,16 +2111,10 @@ protected:
     GLint mLocation;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(WebGLUniformLocation, WEBGLUNIFORMLOCATION_PRIVATE_IID)
-
-#define WEBGLACTIVEINFO_PRIVATE_IID \
-    {0x90def5ec, 0xc672, 0x4ac3, {0xb8, 0x97, 0x04, 0xa2, 0x6d, 0xda, 0x66, 0xd7}}
 class WebGLActiveInfo :
     public nsIWebGLActiveInfo
 {
 public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLACTIVEINFO_PRIVATE_IID)
-
     WebGLActiveInfo(WebGLint size, WebGLenum type, const char *nameptr, PRUint32 namelength) :
         mDeleted(false),
         mSize(size),
@@ -2180,10 +2140,7 @@ protected:
     nsString mName;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(WebGLActiveInfo, WEBGLACTIVEINFO_PRIVATE_IID)
 
-#define WEBGLEXTENSION_PRIVATE_IID \
-    {0x457dd0b2, 0x9f77, 0x4c23, {0x95, 0x70, 0x9d, 0x62, 0x65, 0xc1, 0xa4, 0x81}}
 class WebGLExtension :
     public nsIWebGLExtension,
     public WebGLContextBoundObject,
@@ -2198,11 +2155,7 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLEXTENSION
-
-    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLEXTENSION_PRIVATE_IID)
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(WebGLExtension, WEBGLACTIVEINFO_PRIVATE_IID)
 
 /**
  ** Template implementations
@@ -2247,17 +2200,8 @@ WebGLContext::GetConcreteObject(const char *info,
     if (isNull)
         *isNull = false;
 
-#ifdef DEBUG
-    {
-        // once bug 694114 is implemented, we want to replace this by a static assertion, without #ifdef DEBUG
-        nsresult rv = NS_OK;
-        nsCOMPtr<ConcreteObjectType> tmp(do_QueryInterface(aInterface, &rv));
-        NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv),
-                          "QueryInterface failed. WebGL objects are builtinclass, so this should never happen. "
-                          "Please file a bug at bugzilla.mozilla.org -> Core -> Canvas:WebGL and link to the present page.");
-    }
-#endif
-    
+    // the key to why this static_cast is all we need to do (as opposed to the QueryInterface check we used to do)
+    // is that since bug 638328, WebGL interfaces are marked 'builtinclass' in the IDL
     *aConcreteObject = static_cast<ConcreteObjectType*>(aInterface);
 
     if (!(*aConcreteObject)->IsCompatibleWithContext(this)) {
