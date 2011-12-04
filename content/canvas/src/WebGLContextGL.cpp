@@ -1151,7 +1151,6 @@ WebGLContext::DeleteBuffer(nsIWebGLBuffer *bobj)
     }
 
     buf->RequestDelete();
-    mMapBuffers.Remove(bufname);
 
     return NS_OK;
 }
@@ -2533,7 +2532,6 @@ WebGLContext::CreateBuffer(nsIWebGLBuffer **retval)
 
     WebGLBuffer *globj = new WebGLBuffer(this);
     NS_ADDREF(*retval = globj);
-    mMapBuffers.Put(globj->GLName(), globj);
 
     return NS_OK;
 }
