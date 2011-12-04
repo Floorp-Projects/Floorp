@@ -826,7 +826,7 @@ protected:
 
     WebGLFastArray<WebGLTexture*> mTextures;
     WebGLFastArray<WebGLBuffer*> mBuffers;
-    nsRefPtrHashtable<nsUint32HashKey, WebGLProgram> mMapPrograms;
+    WebGLFastArray<WebGLProgram*> mPrograms;
     nsRefPtrHashtable<nsUint32HashKey, WebGLShader> mMapShaders;
     nsRefPtrHashtable<nsUint32HashKey, WebGLFramebuffer> mMapFramebuffers;
     nsRefPtrHashtable<nsUint32HashKey, WebGLRenderbuffer> mMapRenderbuffers;
@@ -1645,6 +1645,7 @@ public:
         mMapUniformLocations.Init();
         mContext->MakeContextCurrent();
         mGLName = mContext->gl->fCreateProgram();
+        mMonotonicHandle = mContext->mPrograms.AppendElement(this);
     }
 
     ~WebGLProgram() {
@@ -1656,6 +1657,7 @@ public:
         mContext->MakeContextCurrent();
         mContext->gl->fDeleteProgram(mGLName);
         mMapUniformLocations.EnumerateRead(NotifyUniformLocationOfProgramDeletion, nsnull);
+        mContext->mPrograms.RemoveElement(mMonotonicHandle);
     }
 
     void DetachShaders() {
@@ -1753,6 +1755,7 @@ protected:
     GLint mUniformCount;
     GLint mAttribCount;
     std::vector<bool> mAttribsInUse;
+    WebGLMonotonicHandle mMonotonicHandle;
 
 private:
     static PLDHashOperator

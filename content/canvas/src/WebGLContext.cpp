@@ -236,7 +236,6 @@ WebGLContext::WebGLContext()
 
     mShaderValidation = true;
 
-    mMapPrograms.Init();
     mMapShaders.Init();
     mMapFramebuffers.Init();
     mMapRenderbuffers.Init();
@@ -353,7 +352,8 @@ WebGLContext::DestroyResourcesAndContext()
     DeleteWebGLObjectsHashTable(mMapRenderbuffers);
     DeleteWebGLObjectsHashTable(mMapFramebuffers);
     DeleteWebGLObjectsHashTable(mMapShaders);
-    DeleteWebGLObjectsHashTable(mMapPrograms);
+    while (mPrograms.Length())
+        mPrograms.Last()->DeleteOnce();
 
     if (mBlackTexturesAreInitialized) {
         gl->fDeleteTextures(1, &mBlackTexture2D);
