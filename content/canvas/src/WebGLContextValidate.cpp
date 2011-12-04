@@ -515,7 +515,6 @@ WebGLContext::InitAndValidateGL()
 
     mAttribBuffers.Clear();
 
-    mUniformTextures.Clear();
     mBound2DTextures.Clear();
     mBoundCubeMapTextures.Clear();
 
