@@ -1097,7 +1097,7 @@ class WebGLBuffer :
 public:
     WebGLBuffer(WebGLContext *context, WebGLuint name) :
         WebGLContextBoundObject(context),
-        mName(name), mDeleted(false), mHasEverBeenBound(false),
+        mGLName(name), mDeleted(false), mHasEverBeenBound(false),
         mByteLength(0), mTarget(LOCAL_GL_NONE), mData(nsnull)
     {}
 
@@ -1120,7 +1120,7 @@ public:
     bool Deleted() const { return mDeleted; }
     bool HasEverBeenBound() { return mHasEverBeenBound; }
     void SetHasEverBeenBound(bool x) { mHasEverBeenBound = x; }
-    GLuint GLName() const { return mName; }
+    GLuint GLName() const { return mGLName; }
     GLuint ByteLength() const { return mByteLength; }
     GLenum Target() const { return mTarget; }
     const void *Data() const { return mData; }
@@ -1205,7 +1205,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLBUFFER
 protected:
-    WebGLuint mName;
+    WebGLuint mGLName;
     bool mDeleted;
     bool mHasEverBeenBound;
     GLuint mByteLength;
@@ -1229,7 +1229,7 @@ public:
 
     WebGLTexture(WebGLContext *context, WebGLuint name) :
         WebGLContextBoundObject(context),
-        mDeleted(false), mHasEverBeenBound(false), mName(name),
+        mDeleted(false), mHasEverBeenBound(false), mGLName(name),
         mTarget(0),
         mMinFilter(LOCAL_GL_NEAREST_MIPMAP_LINEAR),
         mMagFilter(LOCAL_GL_LINEAR),
@@ -1252,7 +1252,7 @@ public:
     bool Deleted() { return mDeleted; }
     bool HasEverBeenBound() { return mHasEverBeenBound; }
     void SetHasEverBeenBound(bool x) { mHasEverBeenBound = x; }
-    WebGLuint GLName() { return mName; }
+    WebGLuint GLName() { return mGLName; }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLTEXTURE
@@ -1263,7 +1263,7 @@ protected:
 
     bool mDeleted;
     bool mHasEverBeenBound;
-    WebGLuint mName;
+    WebGLuint mGLName;
 
     // we store information about the various images that are part of
     // this texture (cubemap faces, mipmap levels)
@@ -1417,7 +1417,7 @@ public:
 
         mTarget = aTarget;
 
-        mContext->gl->fBindTexture(mTarget, mName);
+        mContext->gl->fBindTexture(mTarget, mGLName);
 
         if (firstTimeThisTextureIsBound) {
             mFacesCount = (mTarget == LOCAL_GL_TEXTURE_2D) ? 1 : 6;
@@ -1663,7 +1663,7 @@ class WebGLShader :
 public:
     WebGLShader(WebGLContext *context, WebGLuint name, WebGLenum stype) :
         WebGLContextBoundObject(context),
-        mName(name), mDeleted(false), mType(stype),
+        mGLName(name), mDeleted(false), mType(stype),
         mNeedsTranslation(true), mAttachCount(0),
         mDeletePending(false)
     { }
@@ -1697,7 +1697,7 @@ public:
     }
 
     bool Deleted() { return mDeleted; }
-    WebGLuint GLName() { return mName; }
+    WebGLuint GLName() { return mGLName; }
     WebGLenum ShaderType() { return mType; }
 
     PRInt32 AttachCount() { return mAttachCount; }
@@ -1728,7 +1728,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLSHADER
 protected:
-    WebGLuint mName;
+    WebGLuint mGLName;
     bool mDeleted;
     WebGLenum mType;
     nsString mSource;
@@ -1749,7 +1749,7 @@ public:
 
     WebGLProgram(WebGLContext *context, WebGLuint name) :
         WebGLContextBoundObject(context),
-        mName(name), mDeleted(false), mDeletePending(false),
+        mGLName(name), mDeleted(false), mDeletePending(false),
         mLinkStatus(false), mGeneration(0),
         mUniformMaxNameLength(0), mAttribMaxNameLength(0),
         mUniformCount(0), mAttribCount(0)
@@ -1800,7 +1800,7 @@ public:
     void ClearDeletePending() { mDeletePending = false; }
     bool HasDeletePending() { return mDeletePending; }
 
-    WebGLuint GLName() { return mName; }
+    WebGLuint GLName() { return mGLName; }
     const nsTArray<nsRefPtr<WebGLShader> >& AttachedShaders() const { return mAttachedShaders; }
     bool LinkStatus() { return mLinkStatus; }
     PRUint32 Generation() const { return mGeneration.value(); }
@@ -1868,7 +1868,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLPROGRAM
 protected:
-    WebGLuint mName;
+    WebGLuint mGLName;
     bool mDeleted;
     bool mDeletePending;
     bool mLinkStatus;
@@ -1895,7 +1895,7 @@ public:
 
     WebGLRenderbuffer(WebGLContext *context, WebGLuint name, WebGLuint secondBufferName = 0) :
         WebGLContextBoundObject(context),
-        mName(name),
+        mGLName(name),
         mInternalFormat(0),
         mInternalFormatForGL(0),
         mDeleted(false), mHasEverBeenBound(false), mInitialized(false)
@@ -1910,7 +1910,7 @@ public:
     bool Deleted() const { return mDeleted; }
     bool HasEverBeenBound() { return mHasEverBeenBound; }
     void SetHasEverBeenBound(bool x) { mHasEverBeenBound = x; }
-    WebGLuint GLName() const { return mName; }
+    WebGLuint GLName() const { return mGLName; }
 
     bool Initialized() const { return mInitialized; }
     void SetInitialized(bool aInitialized) { mInitialized = aInitialized; }
@@ -1948,7 +1948,7 @@ public:
     NS_DECL_NSIWEBGLRENDERBUFFER
 
 protected:
-    WebGLuint mName;
+    WebGLuint mGLName;
     WebGLenum mInternalFormat;
     WebGLenum mInternalFormatForGL;
 
@@ -2060,7 +2060,7 @@ public:
 
     WebGLFramebuffer(WebGLContext *context, WebGLuint name) :
         WebGLContextBoundObject(context),
-        mName(name), mDeleted(false), mHasEverBeenBound(false),
+        mGLName(name), mDeleted(false), mHasEverBeenBound(false),
         mColorAttachment(LOCAL_GL_COLOR_ATTACHMENT0),
         mDepthAttachment(LOCAL_GL_DEPTH_ATTACHMENT),
         mStencilAttachment(LOCAL_GL_STENCIL_ATTACHMENT),
@@ -2076,7 +2076,7 @@ public:
     bool Deleted() { return mDeleted; }
     bool HasEverBeenBound() { return mHasEverBeenBound; }
     void SetHasEverBeenBound(bool x) { mHasEverBeenBound = x; }
-    WebGLuint GLName() { return mName; }
+    WebGLuint GLName() { return mGLName; }
     
     WebGLsizei width() { return mColorAttachment.width(); }
     WebGLsizei height() { return mColorAttachment.height(); }
@@ -2309,7 +2309,7 @@ protected:
             mDepthStencilAttachment.Renderbuffer()->SetInitialized(true);
     }
 
-    WebGLuint mName;
+    WebGLuint mGLName;
     bool mDeleted;
     bool mHasEverBeenBound;
 
