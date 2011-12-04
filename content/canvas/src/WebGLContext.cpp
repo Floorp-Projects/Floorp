@@ -314,70 +314,20 @@ WebGLContext::~WebGLContext()
     mContextRestorer = nsnull;
 }
 
+template<typename WebGLObjectType>
 static PLDHashOperator
-DeleteTextureFunction(const PRUint32& aKey, WebGLTexture *aValue, void *aData)
+WebGLObjectDeleteFunction(const PRUint32& aKey, WebGLObjectType *aValue, void *)
 {
-    gl::GLContext *gl = (gl::GLContext *) aData;
-    NS_ASSERTION(!aValue->Deleted(), "Texture is still in mMapTextures, but is deleted?");
-    GLuint name = aValue->GLName();
-    gl->fDeleteTextures(1, &name);
-    aValue->Delete();
+    aValue->DeleteOnce();
     return PL_DHASH_NEXT;
 }
 
-static PLDHashOperator
-DeleteBufferFunction(const PRUint32& aKey, WebGLBuffer *aValue, void *aData)
+template<typename WebGLObjectType>
+void
+DeleteWebGLObjectsHashTable(nsRefPtrHashtable<nsUint32HashKey, WebGLObjectType>& table)
 {
-    gl::GLContext *gl = (gl::GLContext *) aData;
-    NS_ASSERTION(!aValue->Deleted(), "Buffer is still in mMapBuffers, but is deleted?");
-    GLuint name = aValue->GLName();
-    gl->fDeleteBuffers(1, &name);
-    aValue->Delete();
-    return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-DeleteFramebufferFunction(const PRUint32& aKey, WebGLFramebuffer *aValue, void *aData)
-{
-    gl::GLContext *gl = (gl::GLContext *) aData;
-    NS_ASSERTION(!aValue->Deleted(), "Framebuffer is still in mMapFramebuffers, but is deleted?");
-    GLuint name = aValue->GLName();
-    gl->fDeleteFramebuffers(1, &name);
-    aValue->Delete();
-    return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-DeleteRenderbufferFunction(const PRUint32& aKey, WebGLRenderbuffer *aValue, void *aData)
-{
-    gl::GLContext *gl = (gl::GLContext *) aData;
-    NS_ASSERTION(!aValue->Deleted(), "Renderbuffer is still in mMapRenderbuffers, but is deleted?");
-    GLuint name = aValue->GLName();
-    gl->fDeleteRenderbuffers(1, &name);
-    aValue->Delete();
-    return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-DeleteProgramFunction(const PRUint32& aKey, WebGLProgram *aValue, void *aData)
-{
-    gl::GLContext *gl = (gl::GLContext *) aData;
-    NS_ASSERTION(!aValue->Deleted(), "Program is still in mMapPrograms, but is deleted?");
-    GLuint name = aValue->GLName();
-    gl->fDeleteProgram(name);
-    aValue->Delete();
-    return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-DeleteShaderFunction(const PRUint32& aKey, WebGLShader *aValue, void *aData)
-{
-    gl::GLContext *gl = (gl::GLContext *) aData;
-    NS_ASSERTION(!aValue->Deleted(), "Shader is still in mMapShaders, but is deleted?");
-    GLuint name = aValue->GLName();
-    gl->fDeleteShader(name);
-    aValue->Delete();
-    return PL_DHASH_NEXT;
+    table.EnumerateRead(WebGLObjectDeleteFunction<WebGLObjectType>, nsnull);
+    table.Clear();
 }
 
 void
@@ -388,23 +338,22 @@ WebGLContext::DestroyResourcesAndContext()
 
     gl->MakeCurrent();
 
-    mMapTextures.EnumerateRead(DeleteTextureFunction, gl);
-    mMapTextures.Clear();
+    mBound2DTextures.Clear();
+    mBoundCubeMapTextures.Clear();
+    mBoundArrayBuffer = nsnull;
+    mBoundElementArrayBuffer = nsnull;
+    mCurrentProgram = nsnull;
+    mBoundFramebuffer = nsnull;
+    mBoundRenderbuffer = nsnull;
 
-    mMapBuffers.EnumerateRead(DeleteBufferFunction, gl);
-    mMapBuffers.Clear();
+    mAttribBuffers.Clear();
 
-    mMapPrograms.EnumerateRead(DeleteProgramFunction, gl);
-    mMapPrograms.Clear();
-
-    mMapShaders.EnumerateRead(DeleteShaderFunction, gl);
-    mMapShaders.Clear();
-
-    mMapFramebuffers.EnumerateRead(DeleteFramebufferFunction, gl);
-    mMapFramebuffers.Clear();
-
-    mMapRenderbuffers.EnumerateRead(DeleteRenderbufferFunction, gl);
-    mMapRenderbuffers.Clear();
+    DeleteWebGLObjectsHashTable(mMapTextures);
+    DeleteWebGLObjectsHashTable(mMapRenderbuffers);
+    DeleteWebGLObjectsHashTable(mMapFramebuffers);
+    DeleteWebGLObjectsHashTable(mMapBuffers);
+    DeleteWebGLObjectsHashTable(mMapShaders);
+    DeleteWebGLObjectsHashTable(mMapPrograms);
 
     if (mBlackTexturesAreInitialized) {
         gl->fDeleteTextures(1, &mBlackTexture2D);
