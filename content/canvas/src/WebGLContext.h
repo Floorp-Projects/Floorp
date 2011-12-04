@@ -828,8 +828,8 @@ protected:
     WebGLFastArray<WebGLBuffer*> mBuffers;
     WebGLFastArray<WebGLProgram*> mPrograms;
     WebGLFastArray<WebGLShader*> mShaders;
-    nsRefPtrHashtable<nsUint32HashKey, WebGLFramebuffer> mMapFramebuffers;
     WebGLFastArray<WebGLRenderbuffer*> mRenderbuffers;
+    WebGLFastArray<WebGLFramebuffer*> mFramebuffers;
 
     // PixelStore parameters
     PRUint32 mPixelStorePackAlignment, mPixelStoreUnpackAlignment, mPixelStoreColorspaceConversion;
@@ -1965,6 +1965,7 @@ public:
     {
         mContext->MakeContextCurrent();
         mContext->gl->fGenFramebuffers(1, &mGLName);
+        mMonotonicHandle = mContext->mFramebuffers.AppendElement(this);
     }
 
     ~WebGLFramebuffer() {
@@ -1976,9 +1977,9 @@ public:
         mDepthAttachment.Reset();
         mStencilAttachment.Reset();
         mDepthStencilAttachment.Reset();
-
         mContext->MakeContextCurrent();
         mContext->gl->fDeleteFramebuffers(1, &mGLName);
+        mContext->mFramebuffers.RemoveElement(mMonotonicHandle);
     }
 
     bool HasEverBeenBound() { return mHasEverBeenBound; }
@@ -2247,6 +2248,8 @@ protected:
                                mDepthAttachment,
                                mStencilAttachment,
                                mDepthStencilAttachment;
+
+    WebGLMonotonicHandle mMonotonicHandle;
 };
 
 class WebGLUniformLocation

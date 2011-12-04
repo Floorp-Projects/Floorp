@@ -1169,7 +1169,6 @@ WebGLContext::DeleteFramebuffer(nsIWebGLFramebuffer *fbobj)
         return NS_OK;
 
     fbuf->RequestDelete();
-    mMapFramebuffers.Remove(fbufname);
 
     if (mBoundFramebuffer == fbuf)
         BindFramebuffer(LOCAL_GL_FRAMEBUFFER, nsnull);
@@ -4308,7 +4307,6 @@ WebGLContext::CreateFramebuffer(nsIWebGLFramebuffer **retval)
 
     WebGLFramebuffer *globj = new WebGLFramebuffer(this);
     NS_ADDREF(*retval = globj);
-    mMapFramebuffers.Put(globj->GLName(), globj);
 
     return NS_OK;
 }

@@ -525,8 +525,6 @@ WebGLContext::InitAndValidateGL()
     mBoundFramebuffer = nsnull;
     mBoundRenderbuffer = nsnull;
 
-    mMapFramebuffers.Clear();
-
     MakeContextCurrent();
 
     // on desktop OpenGL, we always keep vertex attrib 0 array enabled
