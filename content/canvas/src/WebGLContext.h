@@ -680,8 +680,6 @@ protected:
     // the buffers bound to the current program's attribs
     nsTArray<WebGLVertexAttribData> mAttribBuffers;
 
-    // the textures bound to any sampler uniforms
-    nsTArray<WebGLObjectRefPtr<WebGLTexture> > mUniformTextures;
 
     // textures bound to 
     nsTArray<WebGLObjectRefPtr<WebGLTexture> > mBound2DTextures;
