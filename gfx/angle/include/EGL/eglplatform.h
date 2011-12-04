@@ -89,7 +89,7 @@ typedef struct wl_display     *EGLNativeDisplayType;
 typedef struct wl_egl_pixmap  *EGLNativePixmapType;
 typedef struct wl_egl_window  *EGLNativeWindowType;
 
-#elif defined(__unix__)
+#elif defined(__unix__) && !defined(ANDROID)
 
 /* X11 (tentative)  */
 #include <X11/Xlib.h>
@@ -98,6 +98,14 @@ typedef struct wl_egl_window  *EGLNativeWindowType;
 typedef Display *EGLNativeDisplayType;
 typedef Pixmap   EGLNativePixmapType;
 typedef Window   EGLNativeWindowType;
+
+#elif defined(ANDROID)
+
+struct egl_native_pixmap_t;
+
+typedef struct ANativeWindow*           EGLNativeWindowType;
+typedef struct egl_native_pixmap_t*     EGLNativePixmapType;
+typedef void*                           EGLNativeDisplayType;
 
 #else
 #error "Platform not recognized"
