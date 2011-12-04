@@ -525,7 +525,6 @@ WebGLContext::InitAndValidateGL()
     mBoundFramebuffer = nsnull;
     mBoundRenderbuffer = nsnull;
 
-    mMapTextures.Clear();
     mMapBuffers.Clear();
     mMapPrograms.Clear();
     mMapShaders.Clear();
