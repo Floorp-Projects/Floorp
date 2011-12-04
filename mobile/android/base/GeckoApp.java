@@ -1095,7 +1095,15 @@ abstract public class GeckoApp
 
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     mBrowserToolbar.setTitle(tab.getDisplayTitle());
-                    tab.updateThumbnail(mSoftwareLayerClient.getBitmap());
+                    Bitmap screencap = null;
+                    try {
+                        screencap = mSoftwareLayerClient.getBitmap();
+                    } catch (OutOfMemoryError oom) {
+                        Log.e(LOGTAG, "Unable to generate thumbnail", oom);
+                    }
+                    if (screencap != null) {
+                        tab.updateThumbnail(screencap);
+                    }
                 }
                 onTabsChanged(tab);
             }
