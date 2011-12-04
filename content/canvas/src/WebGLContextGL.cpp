@@ -150,7 +150,7 @@ WebGLContext::ActiveTexture(WebGLenum texture)
     if (mContextLost)
         return NS_OK;
 
-    if (texture < LOCAL_GL_TEXTURE0 || texture >= LOCAL_GL_TEXTURE0+mBound2DTextures.Length())
+    if (texture < LOCAL_GL_TEXTURE0 || texture >= LOCAL_GL_TEXTURE0 + mBound2DTextures.Length())
         return ErrorInvalidEnum("ActiveTexture: texture unit %d out of range (0..%d)",
                                 texture, mBound2DTextures.Length()-1);
 
@@ -1195,6 +1195,9 @@ WebGLContext::DeleteRenderbuffer(nsIWebGLRenderbuffer *rbobj)
     if (isNull || isDeleted)
         return NS_OK;
 
+    if (mBoundFramebuffer)
+        mBoundFramebuffer->DetachRenderbuffer(rbuf);
+
     if (mBoundRenderbuffer == rbuf)
         BindRenderbuffer(LOCAL_GL_RENDERBUFFER, nsnull);
 
@@ -1218,6 +1221,9 @@ WebGLContext::DeleteTexture(nsIWebGLTexture *tobj)
 
     if (isNull || isDeleted)
         return NS_OK;
+
+    if (mBoundFramebuffer)
+        mBoundFramebuffer->DetachTexture(tex);
 
     for (int i = 0; i < mGLMaxTextureUnits; i++) {
         if ((tex->Target() == LOCAL_GL_TEXTURE_2D && mBound2DTextures[i] == tex) ||
