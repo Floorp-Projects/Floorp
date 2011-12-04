@@ -3088,15 +3088,9 @@ WebGLContext::IsBuffer(nsIWebGLBuffer *bobj, WebGLboolean *retval)
     bool isDeleted;
     WebGLuint buffername;
     WebGLBuffer *buffer;
-    bool ok = GetConcreteObjectAndGLName("isBuffer", bobj, &buffer, &buffername, nsnull, &isDeleted) && 
-                !isDeleted &&
-                buffer->HasEverBeenBound();
-    if (ok) {
-        MakeContextCurrent();
-        ok = gl->fIsBuffer(buffername);
-    }
-
-    *retval = ok;
+    *retval = GetConcreteObjectAndGLName("isBuffer", bobj, &buffer, &buffername, nsnull, &isDeleted) && 
+              !isDeleted &&
+              buffer->HasEverBeenBound();
     return NS_OK;
 }
 
@@ -3112,15 +3106,9 @@ WebGLContext::IsFramebuffer(nsIWebGLFramebuffer *fbobj, WebGLboolean *retval)
     bool isDeleted;
     WebGLuint fbname;
     WebGLFramebuffer *fb;
-    bool ok = GetConcreteObjectAndGLName("isFramebuffer", fbobj, &fb, &fbname, nsnull, &isDeleted) &&
-                !isDeleted &&
-                fb->HasEverBeenBound();
-    if (ok) {
-        MakeContextCurrent();
-        ok = gl->fIsFramebuffer(fbname);
-    }
-
-    *retval = ok;
+    *retval = GetConcreteObjectAndGLName("isFramebuffer", fbobj, &fb, &fbname, nsnull, &isDeleted) &&
+              !isDeleted &&
+              fb->HasEverBeenBound();
     return NS_OK;
 }
 
@@ -3135,10 +3123,8 @@ WebGLContext::IsProgram(nsIWebGLProgram *pobj, WebGLboolean *retval)
 
     bool isDeleted;
     WebGLProgram *prog = nsnull;
-    bool ok = GetConcreteObject("isProgram", pobj, &prog, nsnull, &isDeleted, false) &&
-                !isDeleted;
-
-    *retval = ok;
+    *retval = GetConcreteObject("isProgram", pobj, &prog, nsnull, &isDeleted, false) &&
+              !isDeleted;
     return NS_OK;
 }
 
@@ -3154,15 +3140,9 @@ WebGLContext::IsRenderbuffer(nsIWebGLRenderbuffer *rbobj, WebGLboolean *retval)
     bool isDeleted;
     WebGLuint rbname;
     WebGLRenderbuffer *rb;
-    bool ok = GetConcreteObjectAndGLName("isRenderBuffer", rbobj, &rb, &rbname, nsnull, &isDeleted) &&
-                !isDeleted &&
-                rb->HasEverBeenBound();
-    if (ok) {
-        MakeContextCurrent();
-        ok = gl->fIsRenderbuffer(rbname);
-    }
-
-    *retval = ok;
+    *retval = GetConcreteObjectAndGLName("isRenderBuffer", rbobj, &rb, &rbname, nsnull, &isDeleted) &&
+              !isDeleted &&
+              rb->HasEverBeenBound();
     return NS_OK;
 }
 
@@ -3177,10 +3157,8 @@ WebGLContext::IsShader(nsIWebGLShader *sobj, WebGLboolean *retval)
 
     bool isDeleted;
     WebGLShader *shader = nsnull;
-    bool ok = GetConcreteObject("isShader", sobj, &shader, nsnull, &isDeleted, false) &&
-                !isDeleted;
-
-    *retval = ok;
+    *retval = GetConcreteObject("isShader", sobj, &shader, nsnull, &isDeleted, false) &&
+              !isDeleted;
     return NS_OK;
 }
 
@@ -3196,15 +3174,9 @@ WebGLContext::IsTexture(nsIWebGLTexture *tobj, WebGLboolean *retval)
     bool isDeleted;
     WebGLuint texname;
     WebGLTexture *tex;
-    bool ok = GetConcreteObjectAndGLName("isTexture", tobj, &tex, &texname, nsnull, &isDeleted) &&
-                !isDeleted &&
-                tex->HasEverBeenBound();
-    if (ok) {
-        MakeContextCurrent();
-        ok = gl->fIsTexture(texname);
-    }
-
-    *retval = ok;
+    *retval = GetConcreteObjectAndGLName("isTexture", tobj, &tex, &texname, nsnull, &isDeleted) &&
+              !isDeleted &&
+              tex->HasEverBeenBound();
     return NS_OK;
 }
 
