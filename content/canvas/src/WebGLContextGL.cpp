@@ -1085,7 +1085,6 @@ WebGLContext::CreateProgram(nsIWebGLProgram **retval)
 
     WebGLProgram *prog = new WebGLProgram(this);
     NS_ADDREF(*retval = prog);
-    mMapPrograms.Put(prog->GLName(), prog);
 
     return NS_OK;
 }
@@ -1255,7 +1254,6 @@ WebGLContext::DeleteProgram(nsIWebGLProgram *pobj)
         return NS_OK;
 
     prog->RequestDelete();
-    mMapPrograms.Remove(progname);
 
     return NS_OK;
 }
