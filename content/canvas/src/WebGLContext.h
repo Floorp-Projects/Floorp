@@ -264,6 +264,107 @@ protected:
     DeletionStatus mDeletionStatus;
 };
 
+/* This WebGLRefPtr class is meant to be used for references between WebGL objects.
+ * For example, a WebGLProgram holds WebGLRefPtr's to the WebGLShader's attached
+ * to it.
+ *
+ * Why the need for a separate refptr class? The only special thing that WebGLRefPtr
+ * does is that it increments and decrements the WebGL refcount of
+ * WebGLRefCountedObject's, in addition to incrementing and decrementing the
+ * usual XPCOM refcount.
+ *
+ * This means that by using a WebGLRefPtr instead of a nsRefPtr, you ensure that
+ * the WebGL refcount is incremented, which means that the object will be kept
+ * alive by this reference even if the matching webgl.deleteXxx() function is
+ * called on it.
+ */
+template<typename T>
+class WebGLRefPtr
+{
+public:
+    WebGLRefPtr()
+        : mRawPtr(0)
+    { }
+
+    WebGLRefPtr(const WebGLRefPtr<T>& aSmartPtr)
+        : mRawPtr(aSmartPtr.mRawPtr)
+    {
+        AddRefOnPtr(mRawPtr);
+    }
+
+    WebGLRefPtr(T *aRawPtr)
+        : mRawPtr(aRawPtr)
+    {
+        AddRefOnPtr(mRawPtr);
+    }
+
+    ~WebGLRefPtr() {
+        ReleasePtr(mRawPtr);
+    }
+
+    WebGLRefPtr<T>&
+    operator=(const WebGLRefPtr<T>& rhs)
+    {
+        assign_with_AddRef(rhs.mRawPtr);
+        return *this;
+    }
+
+    WebGLRefPtr<T>&
+    operator=(T* rhs)
+    {
+        assign_with_AddRef(rhs);
+        return *this;
+    }
+
+    T* get() const {
+        return static_cast<T*>(mRawPtr);
+    }
+
+    operator T*() const {
+        return get();
+    }
+
+    T* operator->() const {
+        NS_ABORT_IF_FALSE(mRawPtr != 0, "You can't dereference a NULL WebGLRefPtr with operator->()!");
+        return get();
+    }
+
+    T& operator*() const {
+        NS_ABORT_IF_FALSE(mRawPtr != 0, "You can't dereference a NULL WebGLRefPtr with operator*()!");
+        return *get();
+    }
+
+private:
+
+    static void AddRefOnPtr(T* rawPtr) {
+        if (rawPtr) {
+            rawPtr->WebGLAddRef();
+            rawPtr->AddRef();
+        }
+    }
+
+    static void ReleasePtr(T* rawPtr) {
+        if (rawPtr) {
+            rawPtr->WebGLRelease(); // must be done first before Release(), as Release() might actually destroy the object
+            rawPtr->Release();
+        }
+    }
+
+    void assign_with_AddRef(T* rawPtr) {
+        AddRefOnPtr(rawPtr);
+        assign_assuming_AddRef(rawPtr);
+    }
+
+    void assign_assuming_AddRef(T* newPtr) {
+        T* oldPtr = mRawPtr;
+        mRawPtr = newPtr;
+        ReleasePtr(oldPtr);
+    }
+
+protected:
+    T *mRawPtr;
+};
+
 class WebGLObjectBaseRefPtr
 {
 protected:
