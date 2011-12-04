@@ -1022,7 +1022,7 @@ nsEditor::GetDocumentIsEmpty(bool *aDocumentIsEmpty)
 {
   *aDocumentIsEmpty = true;
 
-  nsIDOMElement *rootElement = GetRoot(); 
+  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(GetRoot());
   NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER); 
 
   bool hasChildNodes;
@@ -1063,7 +1063,7 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
     
   // get the root element 
-  nsIDOMElement *rootElement = GetRoot(); 
+  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(GetRoot());
   NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER); 
   
   // find first editable thingy
@@ -1109,12 +1109,9 @@ nsEditor::EndOfDocument()
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER); 
   
   // get the root element 
-  nsIDOMElement *rootElement = GetRoot(); 
-  NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER); 
-
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(rootElement);
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(GetRoot());
+  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER); 
   nsCOMPtr<nsIDOMNode> child;
-  NS_ASSERTION(node, "Invalid root element");
 
   do {
     node->GetLastChild(getter_AddRefs(child));
@@ -1978,18 +1975,14 @@ nsEditor::GetPhonetic(nsAString& aPhonetic)
 
 
 static nsresult
-GetEditorContentWindow(nsIDOMElement *aRoot, nsIWidget **aResult)
+GetEditorContentWindow(dom::Element *aRoot, nsIWidget **aResult)
 {
   NS_ENSURE_TRUE(aRoot && aResult, NS_ERROR_NULL_POINTER);
 
   *aResult = 0;
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aRoot);
-
-  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
-
   // Not ref counted
-  nsIFrame *frame = content->GetPrimaryFrame();
+  nsIFrame *frame = aRoot->GetPrimaryFrame();
 
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
@@ -2103,8 +2096,8 @@ nsEditor::GetRootElement(nsIDOMElement **aRootElement)
 {
   NS_ENSURE_ARG_POINTER(aRootElement);
   NS_ENSURE_TRUE(mRootElement, NS_ERROR_NOT_AVAILABLE);
-  *aRootElement = mRootElement;
-  NS_ADDREF(*aRootElement);
+  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(mRootElement);
+  rootElement.forget(aRootElement);
   return NS_OK;
 }
 
@@ -2175,12 +2168,10 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
 
   // Use transaction system for undo only if destination
   //   is already in the document
-  nsIDOMElement *rootElement = GetRoot();
-  NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER);
-
-  bool destInBody = true;
-  nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootElement);
   nsCOMPtr<nsIDOMNode> p = aDestNode;
+  nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(GetRoot());
+  NS_ENSURE_TRUE(rootNode, NS_ERROR_NULL_POINTER);
+  bool destInBody = true;
   while (p && p != rootNode)
   {
     nsCOMPtr<nsIDOMNode> tmp;
@@ -2292,11 +2283,12 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsAString& aStringToInsert,
   if (!mInIMEMode && aStringToInsert.IsEmpty()) return NS_OK;
   nsCOMPtr<nsIDOMText> nodeAsText = do_QueryInterface(*aInOutNode);
   if (!nodeAsText && IsPlaintextEditor()) {
+    nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(GetRoot());
     // In some cases, aInOutNode is the anonymous DIV, and aInOutOffset is 0.
     // To avoid injecting unneeded text nodes, we first look to see if we have
     // one available.  In that case, we'll just adjust aInOutNode and aInOutOffset
     // accordingly.
-    if (*aInOutNode == GetRoot() && *aInOutOffset == 0) {
+    if (*aInOutNode == rootNode && *aInOutOffset == 0) {
       nsCOMPtr<nsIDOMNode> possibleTextNode;
       res = (*aInOutNode)->GetFirstChild(getter_AddRefs(possibleTextNode));
       if (NS_SUCCEEDED(res)) {
@@ -2309,7 +2301,7 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsAString& aStringToInsert,
     // In some other cases, aInOutNode is the anonymous DIV, and aInOutOffset points
     // to the terminating mozBR.  In that case, we'll adjust aInOutNode and aInOutOffset
     // to the preceding text node, if any.
-    if (!nodeAsText && *aInOutNode == GetRoot() && *aInOutOffset > 0) {
+    if (!nodeAsText && *aInOutNode == rootNode && *aInOutOffset > 0) {
       nsCOMPtr<nsIDOMNodeList> children;
       res = (*aInOutNode)->GetChildNodes(getter_AddRefs(children));
       if (NS_SUCCEEDED(res)) {
@@ -2363,7 +2355,7 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsAString& aStringToInsert,
       } else {
         nsCOMPtr<nsIDOMNode> parent;
         (*aInOutNode)->GetParentNode(getter_AddRefs(parent));
-        if (parent == GetRoot()) {
+        if (parent == rootNode) {
           *aInOutNode = parent;
         }
       }
@@ -2530,7 +2522,7 @@ NS_IMETHODIMP nsEditor::SelectEntireDocument(nsISelection *aSelection)
 {
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
 
-  nsIDOMElement *rootElement = GetRoot();
+  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(GetRoot());
   if (!rootElement) { return NS_ERROR_NOT_INITIALIZED; }
 
   return aSelection->SelectAllChildren(rootElement);
@@ -3546,7 +3538,9 @@ nsEditor::IsRootNode(nsIDOMNode *inNode)
 {
   NS_ENSURE_TRUE(inNode, false);
 
-  return inNode == GetRoot();
+  nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(GetRoot());
+
+  return inNode == rootNode;
 }
 
 bool 
@@ -3554,11 +3548,9 @@ nsEditor::IsRootNode(nsINode *inNode)
 {
   NS_ENSURE_TRUE(inNode, false);
 
-  nsIDOMElement *rootElement = GetRoot();
+  nsCOMPtr<nsINode> rootNode = GetRoot();
 
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(inNode);
-
-  return node == rootElement;
+  return inNode == rootNode;
 }
 
 bool 
@@ -3572,7 +3564,7 @@ bool
 nsEditor::IsDescendantOfBody(nsINode *inNode)
 {
   NS_ENSURE_TRUE(inNode, false);
-  nsCOMPtr<nsIContent> root = do_QueryInterface(GetRoot());
+  nsCOMPtr<nsIContent> root = GetRoot();
   NS_ENSURE_TRUE(root, false);
 
   return nsContentUtils::ContentIsDescendantOf(inNode, root);
@@ -5149,7 +5141,7 @@ nsEditor::HandleInlineSpellCheck(PRInt32 action,
 already_AddRefed<nsIContent>
 nsEditor::FindSelectionRoot(nsINode *aNode)
 {
-  nsCOMPtr<nsIContent> rootContent = do_QueryInterface(GetRoot());
+  nsCOMPtr<nsIContent> rootContent = GetRoot();
   return rootContent.forget();
 }
 
@@ -5218,7 +5210,7 @@ nsEditor::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
   return NS_OK;
 }
 
-nsIDOMElement *
+dom::Element *
 nsEditor::GetRoot()
 {
   if (!mRootElement)
@@ -5236,18 +5228,14 @@ nsresult
 nsEditor::DetermineCurrentDirection()
 {
   // Get the current root direction from its frame
-  nsIDOMElement *rootElement = GetRoot();
-
-  nsresult rv;
+  dom::Element *rootElement = GetRoot();
 
   // If we don't have an explicit direction, determine our direction
   // from the content's direction
   if (!(mFlags & (nsIPlaintextEditor::eEditorLeftToRight |
                   nsIPlaintextEditor::eEditorRightToLeft))) {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(rootElement, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    nsIFrame* frame = content->GetPrimaryFrame();
+    nsIFrame* frame = rootElement->GetPrimaryFrame();
     NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
     // Set the flag here, to enable us to use the same code path below.
@@ -5266,8 +5254,7 @@ NS_IMETHODIMP
 nsEditor::SwitchTextDirection()
 {
   // Get the current root direction from its frame
-  nsIDOMElement *rootElement = GetRoot();
-
+  dom::Element *rootElement = GetRoot();
   nsresult rv = DetermineCurrentDirection();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -5277,13 +5264,13 @@ nsEditor::SwitchTextDirection()
                  "Unexpected mutually exclusive flag");
     mFlags &= ~nsIPlaintextEditor::eEditorRightToLeft;
     mFlags |= nsIPlaintextEditor::eEditorLeftToRight;
-    rv = rootElement->SetAttribute(NS_LITERAL_STRING("dir"), NS_LITERAL_STRING("ltr"));
+    rv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("ltr"), true);
   } else if (mFlags & nsIPlaintextEditor::eEditorLeftToRight) {
     NS_ASSERTION(!(mFlags & nsIPlaintextEditor::eEditorRightToLeft),
                  "Unexpected mutually exclusive flag");
     mFlags |= nsIPlaintextEditor::eEditorRightToLeft;
     mFlags &= ~nsIPlaintextEditor::eEditorLeftToRight;
-    rv = rootElement->SetAttribute(NS_LITERAL_STRING("dir"), NS_LITERAL_STRING("rtl"));
+    rv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("rtl"), true);
   }
 
   return rv;
@@ -5293,8 +5280,7 @@ void
 nsEditor::SwitchTextDirectionTo(PRUint32 aDirection)
 {
   // Get the current root direction from its frame
-  nsIDOMElement *rootElement = GetRoot();
-
+  dom::Element *rootElement = GetRoot();
   nsresult rv = DetermineCurrentDirection();
   NS_ENSURE_SUCCESS(rv, );
 
@@ -5305,14 +5291,14 @@ nsEditor::SwitchTextDirectionTo(PRUint32 aDirection)
                  "Unexpected mutually exclusive flag");
     mFlags &= ~nsIPlaintextEditor::eEditorRightToLeft;
     mFlags |= nsIPlaintextEditor::eEditorLeftToRight;
-    rootElement->SetAttribute(NS_LITERAL_STRING("dir"), NS_LITERAL_STRING("ltr"));
+    rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("ltr"), true);
   } else if (aDirection == nsIPlaintextEditor::eEditorRightToLeft &&
              (mFlags & nsIPlaintextEditor::eEditorLeftToRight)) {
     NS_ASSERTION(!(mFlags & nsIPlaintextEditor::eEditorRightToLeft),
                  "Unexpected mutually exclusive flag");
     mFlags |= nsIPlaintextEditor::eEditorRightToLeft;
     mFlags &= ~nsIPlaintextEditor::eEditorLeftToRight;
-    rootElement->SetAttribute(NS_LITERAL_STRING("dir"), NS_LITERAL_STRING("rtl"));
+    rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, NS_LITERAL_STRING("rtl"), true);
   }
 }
 

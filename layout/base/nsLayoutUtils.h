@@ -73,6 +73,12 @@ class nsFontFaceList;
 class nsBlockFrame;
 class gfxDrawable;
 
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
+
 /**
  * nsLayoutUtils is a namespace class used for various helper
  * functions that are useful in multiple places in layout.  The goal
@@ -1381,7 +1387,7 @@ public:
     bool mCORSUsed;
   };
 
-  static SurfaceFromElementResult SurfaceFromElement(nsIDOMElement *aElement,
+  static SurfaceFromElementResult SurfaceFromElement(mozilla::dom::Element *aElement,
                                                      PRUint32 aSurfaceFlags = 0);
 
   /**

@@ -77,9 +77,6 @@ void DoDrawImageSecurityCheck(nsHTMLCanvasElement *aCanvasElement,
                               bool forceWriteOnly,
                               bool CORSUsed);
 
-void LogMessage (const nsCString& errorString);
-void LogMessagef (const char *fmt, ...);
-
 // Make a double out of |v|, treating undefined values as 0.0 (for
 // the sake of sparse arrays).  Return true iff coercion
 // succeeded.

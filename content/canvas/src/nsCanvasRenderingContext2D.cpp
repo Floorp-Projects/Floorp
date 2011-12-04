@@ -1813,11 +1813,12 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLElement *image,
                                           const nsAString& repeat,
                                           nsIDOMCanvasPattern **_retval)
 {
-    if (!image) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(image);
+    if (!content) {
         return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
     }
-    gfxPattern::GraphicsExtend extend;
 
+    gfxPattern::GraphicsExtend extend;
     if (repeat.IsEmpty() || repeat.EqualsLiteral("repeat")) {
         extend = gfxPattern::EXTEND_REPEAT;
     } else if (repeat.EqualsLiteral("repeat-x")) {
@@ -1833,7 +1834,6 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLElement *image,
         return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
-    nsCOMPtr<nsIContent> content = do_QueryInterface(image);
     nsHTMLCanvasElement* canvas = nsHTMLCanvasElement::FromContent(content);
     if (canvas) {
         nsIntSize size = canvas->GetSize();
@@ -1845,8 +1845,8 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLElement *image,
     // The canvas spec says that createPattern should use the first frame
     // of animated images
     nsLayoutUtils::SurfaceFromElementResult res =
-        nsLayoutUtils::SurfaceFromElement(image, nsLayoutUtils::SFE_WANT_FIRST_FRAME |
-                                                 nsLayoutUtils::SFE_WANT_NEW_SURFACE);
+        nsLayoutUtils::SurfaceFromElement(content->AsElement(),
+            nsLayoutUtils::SFE_WANT_FIRST_FRAME | nsLayoutUtils::SFE_WANT_NEW_SURFACE);
     if (!res.mSurface)
         return NS_ERROR_NOT_AVAILABLE;
 
@@ -3399,11 +3399,11 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
     if (!EnsureSurface())
         return NS_ERROR_FAILURE;
 
-    if (!imgElt) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(imgElt);
+    if (!content) {
         return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
     }
 
-    nsCOMPtr<nsIContent> content = do_QueryInterface(imgElt);
     nsHTMLCanvasElement* canvas = nsHTMLCanvasElement::FromContent(content);
     if (canvas) {
         nsIntSize size = canvas->GetSize();
@@ -3423,7 +3423,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         // of animated images
         PRUint32 sfeFlags = nsLayoutUtils::SFE_WANT_FIRST_FRAME;
         nsLayoutUtils::SurfaceFromElementResult res =
-            nsLayoutUtils::SurfaceFromElement(imgElt, sfeFlags);
+            nsLayoutUtils::SurfaceFromElement(content->AsElement(), sfeFlags);
         if (!res.mSurface) {
             // Spec says to silently do nothing if the element is still loading.
             return res.mIsStillLoading ? NS_OK : NS_ERROR_NOT_AVAILABLE;
@@ -3433,7 +3433,8 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         // as a source to work around some Cairo self-copy semantics issues.
         if (res.mSurface == mSurface) {
             sfeFlags |= nsLayoutUtils::SFE_WANT_NEW_SURFACE;
-            res = nsLayoutUtils::SurfaceFromElement(imgElt, sfeFlags);
+            res = nsLayoutUtils::SurfaceFromElement(content->AsElement(),
+                                                    sfeFlags);
             if (!res.mSurface)
                 return NS_ERROR_NOT_AVAILABLE;
         }
