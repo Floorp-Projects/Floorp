@@ -162,6 +162,9 @@ public class LayerController {
         mViewportMetrics.setSize(size);
         setForceRedraw();
 
+        if (mLayerClient != null)
+            mLayerClient.viewportSizeChanged();
+
         notifyLayerClientOfGeometryChange();
         mPanZoomController.geometryChanged(false);
         mView.requestRender();
