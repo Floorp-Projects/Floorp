@@ -85,6 +85,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     private static final long MIN_VIEWPORT_CHANGE_DELAY = 350L;
     private long mLastViewportChangeTime;
     private boolean mPendingViewportAdjust;
+    private boolean mViewportSizeChanged;
 
     public GeckoSoftwareLayerClient(Context context) {
         mContext = context;
@@ -228,6 +229,11 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     }
 
     @Override
+    public void viewportSizeChanged() {
+        mViewportSizeChanged = true;
+    }
+
+    @Override
     public void render() {
         adjustViewportWithThrottling();
     }
@@ -266,6 +272,10 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
         GeckoEvent event = new GeckoEvent("Viewport:Change", viewportMetrics.toJSON());
         GeckoAppShell.sendEventToGecko(event);
+        if (mViewportSizeChanged) {
+            mViewportSizeChanged = false;
+            GeckoAppShell.viewSizeChanged();
+        }
 
         mLastViewportChangeTime = System.currentTimeMillis();
     }

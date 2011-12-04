@@ -44,6 +44,7 @@ public abstract class LayerClient {
     private LayerController mLayerController;
 
     public abstract void geometryChanged();
+    public abstract void viewportSizeChanged();
     protected abstract void render();
 
     public LayerController getLayerController() { return mLayerController; }

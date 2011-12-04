@@ -518,8 +518,10 @@ var BrowserApp = {
     if (!doc)
       return;
     let focused = doc.activeElement;
-    if ((focused instanceof HTMLInputElement && focused.mozIsTextField(false)) || (focused instanceof HTMLTextAreaElement))
+    if ((focused instanceof HTMLInputElement && focused.mozIsTextField(false)) || (focused instanceof HTMLTextAreaElement)) {
       focused.scrollIntoView(false);
+      BrowserApp.getTabForBrowser(aBrowser).sendViewportUpdate();
+    }
   },
 
   getDrawMetadata: function getDrawMetadata() {

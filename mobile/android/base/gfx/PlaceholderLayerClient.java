@@ -142,6 +142,8 @@ public class PlaceholderLayerClient extends LayerClient {
     @Override
     public void geometryChanged() { /* no-op */ }
     @Override
+    public void viewportSizeChanged() { /* no-op */ }
+    @Override
     public void render() { /* no-op */ }
 
     @Override
