@@ -337,6 +337,8 @@ WebGLContext::DestroyResourcesAndContext()
         mShaders.Last()->DeleteOnce();
     while (mPrograms.Length())
         mPrograms.Last()->DeleteOnce();
+    while (mUniformLocations.Length())
+        mUniformLocations.Last()->DeleteOnce();
 
     if (mBlackTexturesAreInitialized) {
         gl->fDeleteTextures(1, &mBlackTexture2D);
