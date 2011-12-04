@@ -32,14 +32,30 @@
 
       is(objectStore.indexNames.length, 0, "Correct indexNames list");
 
-      objectStore.createIndex(indexName, "foo");
+      let index = objectStore.createIndex(indexName, "foo");
 
       is(objectStore.indexNames.length, 1, "Correct indexNames list");
       is(objectStore.indexNames.item(0), indexName, "Correct name");
+      is(objectStore.index(indexName), index, "Correct instance");
 
       objectStore.deleteIndex(indexName);
 
       is(objectStore.indexNames.length, 0, "Correct indexNames list");
+      try {
+        objectStore.index(indexName);
+        ok(false, "should have thrown");
+      }
+      catch(ex) {
+        ok(ex instanceof IDBDatabaseException, "Got a IDBDatabaseException");
+        is(ex.code, IDBDatabaseException.NOT_FOUND_ERR, "expect a NOT_FOUND_ERR");
+      }
+
+      let index2 = objectStore.createIndex(indexName, "foo");
+      isnot(index, index2, "New instance should be created");
+
+      is(objectStore.indexNames.length, 1, "Correct recreacted indexNames list");
+      is(objectStore.indexNames.item(0), indexName, "Correct recreacted name");
+      is(objectStore.index(indexName), index2, "Correct instance");
 
       finishTest();
       yield;
