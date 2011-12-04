@@ -1,3 +1,4 @@
+conformance/context/context-lost-restored.html
 conformance/context/premultiplyalpha-test.html
 conformance/glsl/functions/glsl-function-atan.html
 conformance/glsl/functions/glsl-function-atan-xy.html
@@ -11,3 +12,5 @@ conformance/glsl/misc/attrib-location-length-limits.html
 conformance/glsl/misc/struct-nesting-under-maximum.html
 conformance/glsl/misc/uniform-location-length-limits.html
 conformance/renderbuffers/framebuffer-object-attachment.html
+conformance/rendering/line-loop-tri-fan.html
+
