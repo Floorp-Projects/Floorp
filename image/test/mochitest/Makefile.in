@@ -98,6 +98,7 @@ _CHROME_FILES = imgutils.js \
                 animation.svg \
                 test_animSVGImage.html \
                 test_animation.html \
+                test_animation2.html \
                 animated-gif-finalframe.gif \
                 animated-gif.gif \
                 animated-gif2.gif \
