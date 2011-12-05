@@ -278,8 +278,10 @@ Service::getSynchronousPref()
 }
 
 Service::Service()
-: mMutex("Service::mMutex"),
-  mSqliteVFS(nsnull)
+: mMutex("Service::mMutex")
+, mSqliteVFS(nsnull)
+, mRegistrationMutex("Service::mRegistrationMutex")
+, mConnections()
 {
 }
 
@@ -305,6 +307,39 @@ Service::~Service()
   gService = nsnull;
   delete mSqliteVFS;
   mSqliteVFS = nsnull;
+}
+
+void
+Service::registerConnection(Connection *aConnection)
+{
+  mRegistrationMutex.AssertNotCurrentThreadOwns();
+  MutexAutoLock mutex(mRegistrationMutex);
+  (void)mConnections.AppendElement(aConnection);
+}
+
+void
+Service::unregisterConnection(Connection *aConnection)
+{
+  // If this is the last Connection it might be the only thing keeping Service
+  // alive.  So ensure that Service is destroyed only after the Connection is
+  // cleanly unregistered and destroyed.
+  nsRefPtr<Service> kungFuDeathGrip(this);
+  {
+    mRegistrationMutex.AssertNotCurrentThreadOwns();
+    MutexAutoLock mutex(mRegistrationMutex);
+    DebugOnly<bool> removed = mConnections.RemoveElement(aConnection);
+    // Assert if we try to unregister a non-existent connection.
+    MOZ_ASSERT(removed);
+  }
+}
+
+void
+Service::getConnections(/* inout */ nsTArray<nsRefPtr<Connection> >& aConnections)
+{
+  mRegistrationMutex.AssertNotCurrentThreadOwns();
+  MutexAutoLock mutex(mRegistrationMutex);
+  aConnections.Clear();
+  aConnections.AppendElements(mConnections);
 }
 
 void
