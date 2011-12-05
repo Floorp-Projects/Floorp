@@ -39,7 +39,7 @@
 #include "nsISupports.idl"
 #include "nsIArray.idl"
 
-[scriptable, uuid(09637d3c-3c07-40b4-aff9-1d2a0f046f3c)]
+[scriptable, uuid(16d5b0ed-e756-4f1b-a8ce-9132e869acd8)]
 interface nsIGSettingsCollection : nsISupports
 {
   void          setString(in AUTF8String key, in AUTF8String value);
@@ -48,6 +48,7 @@ interface nsIGSettingsCollection : nsISupports
   AUTF8String   getString(in AUTF8String key);
   boolean       getBoolean(in AUTF8String key);
   long          getInt(in AUTF8String key);
+  nsIArray      getStringList(in AUTF8String key);
 };
 
 [scriptable, uuid(849c088b-57d1-4f24-b7b2-3dc4acb04c0a)]

@@ -125,6 +125,14 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
           if (file.endswith(".so")):
             self.device.pushFile(os.path.join(localLib, file), self.remoteBinDir)
 
+        # Additional libraries may be found in a sub-directory such as "lib/armeabi-v7a"
+        localArmLib = os.path.join(localLib, "lib")
+        if os.path.exists(localArmLib):
+          for root, dirs, files in os.walk(localArmLib):
+            for file in files:
+              if (file.endswith(".so")):
+                self.device.pushFile(os.path.join(root, file), self.remoteBinDir)
+
     def setupTestDir(self):
         xpcDir = os.path.join(self.options.objdir, "_tests/xpcshell")
         self.device.pushDir(xpcDir, self.remoteScriptsDir)
@@ -145,7 +153,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
            self.remoteJoin(self.remoteBinDir, "xpcshell"),
            '-r', self.remoteJoin(self.remoteComponentsDir, 'httpd.manifest'),
            '--greomni', self.remoteAPK,
-           '-j', '-s',
+           '-s',
            '-e', 'const _HTTPD_JS_PATH = "%s";' % self.remoteJoin(self.remoteComponentsDir, 'httpd.js'),
            '-e', 'const _HEAD_JS_PATH = "%s";' % self.remoteJoin(self.remoteScriptsDir, 'head.js'),
            '-f', self.remoteScriptsDir+'/head.js']

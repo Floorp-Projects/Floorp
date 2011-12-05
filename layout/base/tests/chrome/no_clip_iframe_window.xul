@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTests()">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+
+  <div id="container" xmlns="http://www.w3.org/1999/xhtml" style="height:400px; overflow:auto; background:gray">
+    <div style="height:0">
+      <iframe type="content" id="f" src="no_clip_iframe_subdoc.html"
+       style="margin-top:50px; border:1px solid black; width:100px; height:100px;"/>
+    </div>
+    <div id="ref" style="background:gray;">
+      <div style="border:1px solid black; margin-top:50px; width:100px; height:100px;">
+        <div id="ref-d" style="background:lime; height:250px; width:150px;">
+          <div style="position:relative; top:-50px; width:150px; height:100%; background:yellow;"/>
+        </div>
+      </div>
+    </div>
+  </div>
+  <vbox flex="1"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+    var imports = [ "SimpleTest", "is", "isnot", "ok", "onerror" ];
+    for each (var name in imports) {
+      window[name] = window.opener.wrappedJSObject[name];
+    }
+
+    SimpleTest.waitForExplicitFinish();
+
+    var accumulatedRect = null;
+    var onpaint = function() {};
+
+    function paintListener(event) {
+      if (event.target != window)
+        return;
+      dump("got MozAfterPaint: " + event.boundingClientRect.left + "," + event.boundingClientRect.top + "," +
+           event.boundingClientRect.right + "," + event.boundingClientRect.bottom + "\n");
+      if (accumulatedRect) {
+        accumulatedRect[0] = Math.min(accumulatedRect[0], event.boundingClientRect.left);
+        accumulatedRect[1] = Math.min(accumulatedRect[1], event.boundingClientRect.top);
+        accumulatedRect[2] = Math.max(accumulatedRect[2], event.boundingClientRect.right);
+        accumulatedRect[3] = Math.max(accumulatedRect[3], event.boundingClientRect.bottom);
+      } else {
+        accumulatedRect = [event.boundingClientRect.left, event.boundingClientRect.top,
+                           event.boundingClientRect.right, event.boundingClientRect.bottom];
+      }
+      onpaint();
+    }
+    window.addEventListener("MozAfterPaint", paintListener, false);
+
+    function waitForAllPaintsFlushed(callback, subdoc) {
+      document.documentElement.getBoundingClientRect();
+      if (subdoc) {
+        subdoc.documentElement.getBoundingClientRect();
+      }
+      var CI = Components.interfaces;
+      var utils = window.QueryInterface(CI.nsIInterfaceRequestor)
+                  .getInterface(CI.nsIDOMWindowUtils);
+      if (!utils.isMozAfterPaintPending) {
+        dump("done...\n");
+        var result = accumulatedRect;
+        accumulatedRect = null;
+        onpaint = function() {};
+        if (!result) {
+          result = [0,0,0,0];
+        }
+        callback(result[0], result[1], result[2], result[3]);
+        return;
+      }
+      dump("waiting for paint...\n");
+      onpaint = function() { waitForAllPaintsFlushed(callback); };
+    }
+
+    var Ci = Components.interfaces;
+    var frame = document.getElementById("f");
+    var fl = frame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+    is(fl.clipSubdocument, true, "clipSubdocument should default to true");
+    fl.clipSubdocument = false;
+    is(fl.clipSubdocument, false, "clipSubdocument should have been set to false");
+
+    function runTests() {
+      var ref = document.getElementById("ref");
+      frame.contentWindow.scrollTo(0,0);
+
+      ref.style.visibility = "hidden";
+      var testCanvas = snapshotWindow(window);
+      ref.style.visibility = "";
+      var refCanvas = snapshotWindow(window);
+      var comparison = compareSnapshots(testCanvas, refCanvas, true);
+      ok(comparison[0], "Basic overflow drawing; got " + comparison[1] + ", expected " + comparison[2]);
+
+      document.getElementById("container").style.height = "200px";
+      ref.style.visibility = "hidden";
+      testCanvas = snapshotWindow(window);
+      ref.style.visibility = "";
+      refCanvas = snapshotWindow(window);
+      comparison = compareSnapshots(testCanvas, refCanvas, true);
+      ok(comparison[0], "Drawing with vertical scrollbar to show overflow area computation; got " +
+                        comparison[1] + ", expected " + comparison[2]);
+
+      frame.contentDocument.getElementById("d").style.height = "350px";
+      document.getElementById("ref-d").style.height = "350px";
+      ref.style.visibility = "hidden";
+      testCanvas = snapshotWindow(window);
+      ref.style.visibility = "";
+      refCanvas = snapshotWindow(window);
+      comparison = compareSnapshots(testCanvas, refCanvas, true);
+      ok(comparison[0], "testing dynamic overflow area change affecting scrollbar; got " +
+                        comparison[1] + ", expected " + comparison[2]);
+
+      // Now do invalidation tests
+      ref.style.visibility = "hidden";
+      document.getElementById("container").style.height = "400px";
+      waitForAllPaintsFlushed(function() {
+        dump("Scrolling\n");
+        frame.contentWindow.scrollTo(0,80);
+        waitForAllPaintsFlushed(function(x1, y1, x2, y2) {
+          ok(x1 <= 1 && x2 >= 151 && y1 <= 0 && y2 >= 400,
+             "Entire scrolled region is painted: " + x1 + "," + y1 + "," + x2 + "," + y2);
+          frame.contentDocument.getElementById("p").style.background = "cyan";
+          waitForAllPaintsFlushed(function(x1, y1, x2, y2) {
+            ok(x1 <= 1 && x2 >= 151 && y1 <= 271 && y2 >= 320,
+               "Entire updated region is painted: " + x1 + "," + y1 + "," + x2 + "," + y2);
+      
+            var tester = window.SimpleTest;
+            window.close();
+            tester.finish();
+          }, frame.contentDocument);
+        });
+      });
+    }
+  ]]>
+  </script>
+</window>

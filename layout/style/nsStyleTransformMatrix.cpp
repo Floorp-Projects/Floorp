@@ -472,7 +472,12 @@ ProcessRotate3D(gfx3DMatrix& aMatrix, const nsCSSValue::Array* aData)
    * |                                0                                  0                                 0   1 |
    * (see http://www.w3.org/TR/css3-3d-transforms/#transform-functions)
    */
-  double theta = aData->Item(4).GetAngleValueInRadians();
+
+  /* The current spec specifies a matrix that rotates in the wrong direction. For now we just negate
+   * the angle provided to get the correct rotation direction until the spec is updated.
+   * See bug 704468.
+   */
+  double theta = -aData->Item(4).GetAngleValueInRadians();
   float cosTheta = FlushToZero(cos(theta));
   float sinTheta = FlushToZero(sin(theta));
 
