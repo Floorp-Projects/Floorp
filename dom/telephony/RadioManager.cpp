@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "Radio.h"
+#include "RadioManager.h"
 #include "nsITelephonyWorker.h"
 #include "nsContentUtils.h"
 #include "nsIXPConnect.h"
@@ -68,7 +68,7 @@ USING_TELEPHONY_NAMESPACE
 namespace {
 
 // Doesn't carry a reference, we're owned by services.
-Radio* gInstance = nsnull;
+RadioManager* gInstance = nsnull;
 
 class ConnectWorkerToRIL : public WorkerTask {
 public:
@@ -194,14 +194,14 @@ RILReceiver::DispatchRILEvent::RunTask(JSContext *aCx)
 
 } // anonymous namespace
 
-Radio::Radio()
+RadioManager::RadioManager()
   : mShutdown(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!gInstance, "There should only be one instance!");
 }
 
-Radio::~Radio()
+RadioManager::~RadioManager()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!gInstance || gInstance == this,
@@ -210,7 +210,7 @@ Radio::~Radio()
 }
 
 nsresult
-Radio::Init()
+RadioManager::Init()
 {
   NS_ASSERTION(NS_IsMainThread(), "We can only initialize on the main thread");
 
@@ -273,7 +273,7 @@ Radio::Init()
 }
 
 void
-Radio::Shutdown()
+RadioManager::Shutdown()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -284,15 +284,15 @@ Radio::Shutdown()
 }
 
 // static
-already_AddRefed<Radio>
-Radio::FactoryCreate()
+already_AddRefed<RadioManager>
+RadioManager::FactoryCreate()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsRefPtr<Radio> instance(gInstance);
+  nsRefPtr<RadioManager> instance(gInstance);
 
   if (!instance) {
-    instance = new Radio();
+    instance = new RadioManager();
     if (NS_FAILED(instance->Init())) {
       return nsnull;
     }
@@ -305,7 +305,7 @@ Radio::FactoryCreate()
 
 // static
 already_AddRefed<nsIRadioInterface>
-Radio::GetRadioInterface()
+RadioManager::GetRadioInterface()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -318,11 +318,11 @@ Radio::GetRadioInterface()
 }
 
 
-NS_IMPL_ISUPPORTS1(Radio, nsIObserver)
+NS_IMPL_ISUPPORTS1(RadioManager, nsIObserver)
 
 NS_IMETHODIMP
-Radio::Observe(nsISupports* aSubject, const char* aTopic,
-               const PRUnichar* aData)
+RadioManager::Observe(nsISupports* aSubject, const char* aTopic,
+                      const PRUnichar* aData)
 {
   if (!strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC)) {
     Shutdown();
