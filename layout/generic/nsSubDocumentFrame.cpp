@@ -340,15 +340,8 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     aBuilder->EnterPresShell(subdocRootFrame, dirty);
   }
 
-  // The subdocView's bounds are in appunits of the subdocument, so adjust
-  // them.
   nsRect subdocBoundsInParentUnits =
-    subdocView->GetBounds().ConvertAppUnitsRoundOut(subdocAPD, parentAPD);
-
-  // Get the bounds of subdocView relative to the reference frame.
-  subdocBoundsInParentUnits = subdocBoundsInParentUnits +
-                              mInnerView->GetPosition() +
-                              GetOffsetToCrossDoc(aBuilder->ReferenceFrame());
+    mInnerView->GetBounds() + GetOffsetToCrossDoc(aBuilder->ReferenceFrame());
 
   if (subdocRootFrame && NS_SUCCEEDED(rv)) {
     rv = subdocRootFrame->
@@ -362,10 +355,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // for the canvas background color item.
     nsRect bounds;
     if (subdocRootFrame) {
-      nsPoint offset = mInnerView->GetPosition() +
-                       GetOffsetToCrossDoc(aBuilder->ReferenceFrame());
-      offset = offset.ConvertAppUnits(parentAPD, subdocAPD);
-      bounds = subdocView->GetBounds() + offset;
+      bounds = subdocBoundsInParentUnits.ConvertAppUnitsRoundOut(parentAPD, subdocAPD);
     } else {
       bounds = subdocBoundsInParentUnits;
     }
