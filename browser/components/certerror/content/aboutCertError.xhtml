@@ -123,11 +123,12 @@
           toggle('expertContent');
         }
 
-        // if this is a Strict-Transport-Security host and the cert
-        // is bad, don't allow overrides (STS Spec section 7.3).
-        if (getCSSClass() == "badStsCert") {
+        // Disallow overrides if this is a Strict-Transport-Security
+        // host and the cert is bad (STS Spec section 7.3) or if the
+        // certerror is in a frame (bug 633691).
+        if (getCSSClass() == "badStsCert" || window != top) {
           var ec = document.getElementById('expertContent');
-          document.getElementById('errorLongContent').removeChild(ec);
+          ec.parentNode.removeChild(ec);
         }
         
         var tech = document.getElementById("technicalContentText");
