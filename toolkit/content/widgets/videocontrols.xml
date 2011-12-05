@@ -607,8 +607,9 @@
                     for each (var event in this.videoEvents)
                         this.video.removeEventListener(event, this, false);
                     this.video.removeEventListener("media-showStatistics", this._handleCustomEventsBound, false);
-                    this.video.ownerDocument.removeEventListener("mozfullscreenchange", this.setFullscreenButtonState, false);
                     delete this._handleCustomEventsBound;
+                    this.video.ownerDocument.removeEventListener("mozfullscreenchange", this._setFullscreenButtonStateBound, false);
+                    delete this._setFullscreenButtonStateBound;
                     this.log("--- videocontrols terminated ---");
                 },
 
@@ -1200,7 +1201,8 @@
                     }
 
                     this.videocontrols.addEventListener("transitionend", function(e) { self.onTransitionEnd(e); }, false);
-                    this.video.ownerDocument.addEventListener("mozfullscreenchange", this.setFullscreenButtonState, false);
+                    this._setFullscreenButtonStateBound = this.setFullscreenButtonState.bind(this);
+                    this.video.ownerDocument.addEventListener("mozfullscreenchange", this._setFullscreenButtonStateBound, false);
 
                     // Make the <video> element keyboard accessible.
                     this.video.setAttribute("tabindex", 0);
