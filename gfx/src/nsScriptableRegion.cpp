@@ -173,13 +173,12 @@ NS_IMETHODIMP nsScriptableRegion::GetRects(JSContext* aCx, JS::Value* aRects)
   const nsIntRect *rect;
 
   while ((rect = iter.Next())) {
-    // This will contain bogus data if values don't fit in 31 bit
-    // TODO: Bug 705414 - check for failure
-    JS_DefineElement(aCx, destArray, n, INT_TO_JSVAL(rect->x), NULL, NULL, JSPROP_ENUMERATE);
-    JS_DefineElement(aCx, destArray, n + 1, INT_TO_JSVAL(rect->y), NULL, NULL, JSPROP_ENUMERATE);
-    JS_DefineElement(aCx, destArray, n + 2, INT_TO_JSVAL(rect->width), NULL, NULL, JSPROP_ENUMERATE);
-    JS_DefineElement(aCx, destArray, n + 3, INT_TO_JSVAL(rect->height), NULL, NULL, JSPROP_ENUMERATE);
-
+    if (!JS_DefineElement(aCx, destArray, n, INT_TO_JSVAL(rect->x), NULL, NULL, JSPROP_ENUMERATE) ||
+        !JS_DefineElement(aCx, destArray, n + 1, INT_TO_JSVAL(rect->y), NULL, NULL, JSPROP_ENUMERATE) ||
+        !JS_DefineElement(aCx, destArray, n + 2, INT_TO_JSVAL(rect->width), NULL, NULL, JSPROP_ENUMERATE) ||
+        !JS_DefineElement(aCx, destArray, n + 3, INT_TO_JSVAL(rect->height), NULL, NULL, JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
     n += 4;
   }
 
