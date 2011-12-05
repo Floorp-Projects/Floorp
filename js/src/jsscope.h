@@ -592,7 +592,7 @@ struct Shape : public js::gc::Cell
         return !(flags & NON_NATIVE);
     }
 
-    const HeapPtrShape &previous() const {
+    const js::Shape *previous() const {
         return parent;
     }
 
