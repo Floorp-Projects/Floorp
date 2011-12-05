@@ -1116,16 +1116,14 @@ void
 nsPrintOptions::ReadInchesToTwipsPref(const char * aPrefId, PRInt32& aTwips,
                                       const char * aMarginPref)
 {
-  nsCAutoString str;
-  nsresult rv = Preferences::GetCString(aPrefId, &str);
+  nsAutoString str;
+  nsresult rv = Preferences::GetString(aPrefId, &str);
   if (NS_FAILED(rv) || str.IsEmpty()) {
-    rv = Preferences::GetCString(aMarginPref, &str);
+    rv = Preferences::GetString(aMarginPref, &str);
   }
   if (NS_SUCCEEDED(rv) && !str.IsEmpty()) {
-    nsAutoString justStr;
-    justStr.AssignWithConversion(str);
     PRInt32 errCode;
-    float inches = justStr.ToFloat(&errCode);
+    float inches = str.ToFloat(&errCode);
     if (NS_SUCCEEDED(errCode)) {
       aTwips = NS_INCHES_TO_INT_TWIPS(inches);
     } else {

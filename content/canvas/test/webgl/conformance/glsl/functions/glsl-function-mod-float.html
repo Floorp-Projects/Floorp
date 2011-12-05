@@ -24,6 +24,7 @@ GLSLGenerator.runFeatureTest({
   args: "$(type) value, float divisor",
   baseArgs: "value$(field), divisor",
   testFunc: "$(func)($(arg0), float)",
+  fragmentTolerance: 1,
   emuFunc: ["float $(func)_base(float value, float divisor) {",
             "  return value - divisor * floor(value / divisor);",
             "}"].join("\n"),
