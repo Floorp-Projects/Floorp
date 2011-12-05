@@ -69,7 +69,6 @@
  */
 #ifdef DEBUG
 
-#define JSDHASH_ONELINE_ASSERT PR_ASSERT
 #define RECURSION_LEVEL(table_) (*(PRUint32*)(table_->entryStore + \
                                             PL_DHASH_TABLE_SIZE(table_) * \
                                             table_->entrySize))
@@ -795,12 +794,46 @@ PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg)
     return i;
 }
 
-size_t
-PL_DHashTableShallowSizeOfExcludingThis(PLDHashTable *table,
-                                        nsMallocSizeOfFun mallocSizeOf)
+struct SizeOfEntryEnumeratorArg
 {
-  return mallocSizeOf(table->entryStore,
-                      PL_DHASH_TABLE_SIZE(table) * table->entrySize);
+    size_t total;
+    PLDHashSizeOfEntryFun sizeOfEntry;
+    nsMallocSizeOfFun mallocSizeOf;
+};
+
+static PLDHashOperator
+SizeOfEntryEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                      PRUint32 number, void *arg)
+{
+    SizeOfEntryEnumeratorArg *e = (SizeOfEntryEnumeratorArg *)arg;
+    e->total += e->sizeOfEntry(hdr, e->mallocSizeOf);
+    return PL_DHASH_NEXT;
+}
+
+size_t
+PL_DHashTableSizeOfExcludingThis(PLDHashTable *table,
+                                 PLDHashSizeOfEntryFun sizeOfEntry,
+                                 nsMallocSizeOfFun mallocSizeOf)
+{
+    size_t n = 0;
+    n += mallocSizeOf(table->entryStore,
+                      PL_DHASH_TABLE_SIZE(table) * table->entrySize +
+                      ENTRY_STORE_EXTRA);
+    if (sizeOfEntry) {
+        SizeOfEntryEnumeratorArg arg = { 0, sizeOfEntry, mallocSizeOf };
+        PL_DHashTableEnumerate(table, SizeOfEntryEnumerator, &arg);
+        n += arg.total;
+    }
+    return n;
+}
+
+size_t
+PL_DHashTableSizeOfIncludingThis(PLDHashTable *table,
+                                 PLDHashSizeOfEntryFun sizeOfEntry,
+                                 nsMallocSizeOfFun mallocSizeOf)
+{
+    return mallocSizeOf(table, sizeof(PLDHashTable)) +
+           PL_DHashTableSizeOfExcludingThis(table, sizeOfEntry, mallocSizeOf);
 }
 
 #ifdef DEBUG
