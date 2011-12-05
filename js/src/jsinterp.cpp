@@ -2456,9 +2456,9 @@ END_CASE(JSOP_BINDNAME)
 #define BITWISE_OP(OP)                                                        \
     JS_BEGIN_MACRO                                                            \
         int32_t i, j;                                                         \
-        if (!ValueToECMAInt32(cx, regs.sp[-2], &i))                           \
+        if (!ToInt32(cx, regs.sp[-2], &i))                                    \
             goto error;                                                       \
-        if (!ValueToECMAInt32(cx, regs.sp[-1], &j))                           \
+        if (!ToInt32(cx, regs.sp[-1], &j))                                    \
             goto error;                                                       \
         i = i OP j;                                                           \
         regs.sp--;                                                            \
@@ -2607,9 +2607,9 @@ END_CASE(JSOP_GE)
 #define SIGNED_SHIFT_OP(OP)                                                   \
     JS_BEGIN_MACRO                                                            \
         int32_t i, j;                                                         \
-        if (!ValueToECMAInt32(cx, regs.sp[-2], &i))                           \
+        if (!ToInt32(cx, regs.sp[-2], &i))                                    \
             goto error;                                                       \
-        if (!ValueToECMAInt32(cx, regs.sp[-1], &j))                           \
+        if (!ToInt32(cx, regs.sp[-1], &j))                                    \
             goto error;                                                       \
         i = i OP (j & 31);                                                    \
         regs.sp--;                                                            \
@@ -2629,10 +2629,10 @@ END_CASE(JSOP_RSH)
 BEGIN_CASE(JSOP_URSH)
 {
     uint32_t u;
-    if (!ValueToECMAUint32(cx, regs.sp[-2], &u))
+    if (!ToUint32(cx, regs.sp[-2], &u))
         goto error;
     int32_t j;
-    if (!ValueToECMAInt32(cx, regs.sp[-1], &j))
+    if (!ToInt32(cx, regs.sp[-1], &j))
         goto error;
 
     u >>= (j & 31);
@@ -2799,7 +2799,7 @@ END_CASE(JSOP_NOT)
 BEGIN_CASE(JSOP_BITNOT)
 {
     int32_t i;
-    if (!ValueToECMAInt32(cx, regs.sp[-1], &i))
+    if (!ToInt32(cx, regs.sp[-1], &i))
         goto error;
     i = ~i;
     regs.sp[-1].setInt32(i);

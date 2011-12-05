@@ -2000,7 +2000,7 @@ mjit::Compiler::generateMethod()
             FrameEntry *top = frame.peek(-1);
             if (top->isConstant() && top->getValue().isPrimitive()) {
                 int32_t i;
-                JS_ALWAYS_TRUE(ValueToECMAInt32(cx, top->getValue(), &i));
+                JS_ALWAYS_TRUE(ToInt32(cx, top->getValue(), &i));
                 i = ~i;
                 frame.pop();
                 frame.push(Int32Value(i));

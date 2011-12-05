@@ -3201,7 +3201,7 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
             /* config.line */
             if (!GetPropertyDefault(cx, config, ATOM_TO_JSID(cx->runtime->atomState.lineAtom),
                                     Int32Value(1), &prop) ||
-                !ValueToECMAUint32(cx, prop, &lineno)) {
+                !ToUint32(cx, prop, &lineno)) {
                 return JS_FALSE;
             }
         }
