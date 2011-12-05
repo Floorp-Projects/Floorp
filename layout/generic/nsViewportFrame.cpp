@@ -211,8 +211,6 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
 
   nsresult rv = NS_OK;
   
-  aDesiredSize.SetOverflowAreasToDesiredBounds();
-
   if (mFrames.NotEmpty()) {
     // Deal with a non-incremental reflow or an incremental reflow
     // targeted at our one-and-only principal child frame.
@@ -237,7 +235,6 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
     } else {
       kidHeight = mFrames.FirstChild()->GetSize().height;
     }
-    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, mFrames.FirstChild());
   }
 
   NS_ASSERTION(aReflowState.availableWidth != NS_UNCONSTRAINEDSIZE,
@@ -250,6 +247,11 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
   aDesiredSize.height = aReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE
                           ? aReflowState.ComputedHeight()
                           : kidHeight;
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
+
+  if (mFrames.NotEmpty()) {
+    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, mFrames.FirstChild());
+  }
 
   // Make a copy of the reflow state and change the computed width and height
   // to reflect the available space for the fixed items
