@@ -4183,7 +4183,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
             JS_ASSERT(shape->isEmptyShape());
             *idp = JSID_VOID;
         } else {
-            iterobj->setPrivate(const_cast<Shape *>(shape->previous().get()));
+            iterobj->setPrivate(const_cast<Shape *>(shape->previous()));
             *idp = shape->propid();
         }
     } else {
