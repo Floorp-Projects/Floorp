@@ -169,7 +169,7 @@ public class LayerController {
             mLayerClient.viewportSizeChanged();
 
         notifyLayerClientOfGeometryChange();
-        mPanZoomController.geometryChanged(false);
+        mPanZoomController.geometryChanged(true);
         mView.requestRender();
     }
 
