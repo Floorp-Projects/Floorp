@@ -74,27 +74,38 @@ let DOMApplicationRegistry = {
     if (!this.appsFile.exists())
       return;
     
+    this._loadJSONAsync(this.appsFile, (function(aData) { this.webapps = aData; }).bind(this));
+  },
+
+  _loadJSONAsync: function(aFile, aCallback) {
     try {
-      let channel = NetUtil.newChannel(this.appsFile);
+      let channel = NetUtil.newChannel(aFile);
       channel.contentType = "application/json";
-      let self = this;
       NetUtil.asyncFetch(channel, function(aStream, aResult) {
         if (!Components.isSuccessCode(aResult)) {
-          Cu.reportError("DOMApplicationRegistry: Could not read from json file " + this.appsFile.path);
+          Cu.reportError("DOMApplicationRegistry: Could not read from json file " + aFile.path);
+          if (aCallback)
+            aCallback(null);
           return;
         }
 
         // Read json file into a string
         let data = null;
         try {
-          self.webapps = JSON.parse(NetUtil.readInputStreamToString(aStream, aStream.available()) || "");
+          data = JSON.parse(NetUtil.readInputStreamToString(aStream, aStream.available()) || "");
           aStream.close();
+          if (aCallback)
+            aCallback(data);
         } catch (ex) {
           Cu.reportError("DOMApplicationRegistry: Could not parse JSON: " + ex);
+          if (aCallback)
+            aCallback(null);
         }
       });
     } catch (ex) {
       Cu.reportError("DOMApplicationRegistry: Could not read from " + aFile.path + " : " + ex);
+      if (aCallback)
+        aCallback(null);
     }
   },
 
@@ -202,30 +213,24 @@ let DOMApplicationRegistry = {
     return null;
   },
 
-  _readManifest: function(aId) {
+  /**
+    * Asynchronously reads a list of manifests
+    */
+  _readManifests: function(aData, aFinalCallback, aIndex) {
+    let index = aIndex || 0;
+    let id = aData[index].id;
     let file = this.appsDir.clone();
-    file.append(aId);
+    file.append(id);
     file.append("manifest.json");
-    let data = "";  
-    let fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
-    var cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
-    fstream.init(file, -1, 0, 0);
-    cstream.init(fstream, "UTF-8", 0, 0);
-    let (str = {}) {  
-      let read = 0;  
-      do {   
-        read = cstream.readString(0xffffffff, str); // read as much as we can and put it in str.value  
-        data += str.value;  
-      } while (read != 0);  
-    }  
-    cstream.close(); // this closes fstream  
-    try {
-      return JSON.parse(data);
-    } catch(e) {
-      return null;
-    }
+    this._loadJSONAsync(file, (function(aJSON) {
+      aData[index].manifest = aJSON;
+      if (index == aData.length - 1)
+        aFinalCallback(aData);
+      else
+        this._readManifests(aData, aFinalCallback, index + 1);
+    }).bind(this)); 
   },
-  
+ 
   uninstall: function(aData) {
     for (let id in this.webapps) {
       let app = this.webapps[id];
@@ -245,13 +250,14 @@ let DOMApplicationRegistry = {
   
   enumerate: function(aData) {
     aData.apps = [];
+    let tmp = [];
 
     let id = this._appId(aData.origin);
     // if it's an app, add itself to the result
     if (id) {
       let app = this._cloneAppObject(this.webapps[id]);
-      app.manifest = this._readManifest(id);
       aData.apps.push(app);
+      tmp.push({ id: id });
     }
 
     // check if it's a store.
@@ -269,13 +275,17 @@ let DOMApplicationRegistry = {
       for (id in this.webapps) {
         let app = this._cloneAppObject(this.webapps[id]);
         if (app.installOrigin == aData.origin) {
-          app.manifest = this._readManifest(id);
           aData.apps.push(app);
+          tmp.push({ id: id });
         }
       }
     }
 
-    this.mm.sendAsyncMessage("Webapps:Enumerate:Return:OK", aData);
+    this._readManifests(tmp, (function(aResult) {
+      for (let i = 0; i < aResult.length; i++)
+        aData.apps[i].manifest = aResult[i].manifest;
+      this.mm.sendAsyncMessage("Webapps:Enumerate:Return:OK", aData);
+    }).bind(this));
   },
 
   denyEnumerate: function(aData) {
@@ -284,21 +294,35 @@ let DOMApplicationRegistry = {
 
   enumerateAll: function(aData) {
     aData.apps = [];
+    let tmp = [];
 
     for (id in this.webapps) {
       let app = this._cloneAppObject(this.webapps[id]);
-      app.manifest = this._readManifest(id);
       aData.apps.push(app);
+      tmp.push({ id: id });
     }
 
-    this.mm.sendAsyncMessage("Webapps:Enumerate:Return:OK", aData);
+    this._readManifests(tmp, (function(aResult) {
+      for (let i = 0; i < aResult.length; i++)
+        aData.apps[i].manifest = aResult[i].manifest;
+      this.mm.sendAsyncMessage("Webapps:Enumerate:Return:OK", aData);
+    }).bind(this));
   },
 
-  getManifestFor: function(aOrigin) {
+  getManifestFor: function(aOrigin, aCallback) {
+    if (!aCallback)
+      return;
+
     let id = this._appId(aOrigin);
-    if (!id)
-      return null;
-    return this._readManifest(id);
+
+    if (!id) {
+      aCallback(null);
+      return;
+    }
+
+    this._readManifests([{ id: id }], function(aResult) {
+      aCallback(aResult[0].manifest);
+    });
   }
 };
 
