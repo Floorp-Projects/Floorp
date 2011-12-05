@@ -230,6 +230,7 @@ greprefs/xpinstall.js
 install.rdf
 modules/ISO8601DateUtils.jsm
 modules/JSON.jsm
+modules/SpatialNavigation.js
 modules/utils.js
 mozilla-runtime@BIN_SUFFIX@
 old-homepage-default.properties
@@ -1298,6 +1299,7 @@ xpicleanup@BIN_SUFFIX@
     components/libimgicon.so
     dictionaries/PL.aff
     dictionaries/PL.dic
+    icons/document.png
     icons/mozicon16.xpm
     icons/mozicon50.xpm
     plugins/libnullplugin.so
