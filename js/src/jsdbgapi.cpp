@@ -605,7 +605,7 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fpArg, jsval *thisv)
 JS_PUBLIC_API(JSFunction *)
 JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp)
 {
-    return Valueify(fp)->maybeFun();
+    return Valueify(fp)->maybeScriptFunction();
 }
 
 JS_PUBLIC_API(JSObject *)
