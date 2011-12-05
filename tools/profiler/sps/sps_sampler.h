@@ -49,17 +49,17 @@ extern mozilla::tls::key pkey_stack;
 extern mozilla::tls::key pkey_ticker;
 extern bool stack_key_initialized;
 
-#define SAMPLER_INIT() mozilla_sampler_init();
-#define SAMPLER_DEINIT() mozilla_sampler_deinit();
-#define SAMPLER_START(entries, interval) mozilla_sampler_start(entries, interval);
-#define SAMPLER_STOP() mozilla_sampler_stop();
-#define SAMPLER_IS_ACTIVE() mozilla_sampler_is_active();
+#define SAMPLER_INIT() mozilla_sampler_init()
+#define SAMPLER_DEINIT() mozilla_sampler_deinit()
+#define SAMPLER_START(entries, interval) mozilla_sampler_start(entries, interval)
+#define SAMPLER_STOP() mozilla_sampler_stop()
+#define SAMPLER_IS_ACTIVE() mozilla_sampler_is_active()
 #define SAMPLER_RESPONSIVENESS(time) mozilla_sampler_responsiveness(time)
 #define SAMPLER_GET_RESPONSIVENESS() mozilla_sampler_get_responsiveness()
-#define SAMPLER_SAVE() mozilla_sampler_save();
-#define SAMPLER_GET_PROFILE() mozilla_sampler_get_profile();
-#define SAMPLE_LABEL(name_space, info) mozilla::SamplerStackFrameRAII only_one_sampleraii_per_scope(FULLFUNCTION, name_space "::" info);
-#define SAMPLE_MARKER(info) mozilla_sampler_add_marker(info);
+#define SAMPLER_SAVE() mozilla_sampler_save()
+#define SAMPLER_GET_PROFILE() mozilla_sampler_get_profile()
+#define SAMPLE_LABEL(name_space, info) mozilla::SamplerStackFrameRAII only_one_sampleraii_per_scope(FULLFUNCTION, name_space "::" info)
+#define SAMPLE_MARKER(info) mozilla_sampler_add_marker(info)
 
 /* we duplicate this code here to avoid header dependencies
  * which make it more difficult to include in other places */

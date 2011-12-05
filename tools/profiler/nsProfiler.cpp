@@ -35,6 +35,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <string>
+#ifdef MOZ_INSTRUMENT_EVENT_LOOP
+#include "EventTracer.h"
+#endif
 #include "sampler.h"
 #include "nsProfiler.h"
 #include "nsMemory.h"
@@ -53,6 +56,9 @@ NS_IMETHODIMP
 nsProfiler::StartProfiler(PRUint32 aInterval, PRUint32 aEntries)
 {
   SAMPLER_START(aInterval, aEntries);
+#ifdef MOZ_INSTRUMENT_EVENT_LOOP
+  mozilla::InitEventTracing();
+#endif
   return NS_OK;
 }
 
