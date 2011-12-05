@@ -134,10 +134,10 @@ public:
     SetJSPrivateSafeish(aCx, aObj, NULL);
   }
 
-protected:
   static WorkerPrivate*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName);
 
+protected:
   static JSBool
   ConstructInternal(JSContext* aCx, uintN aArgc, jsval* aVp,
                     bool aIsChromeWorker)
@@ -470,6 +470,23 @@ ClearPrivateSlot(JSContext* aCx, JSObject* aObj, bool aSaveEventHandlers)
 }
 
 } // namespace worker
+
+WorkerCrossThreadDispatcher*
+GetWorkerCrossThreadDispatcher(JSContext* aCx, jsval aWorker)
+{
+  if (JSVAL_IS_PRIMITIVE(aWorker)) {
+    return NULL;
+  }
+
+  WorkerPrivate* w =
+      Worker::GetInstancePrivate(aCx, JSVAL_TO_OBJECT(aWorker),
+                                 "GetWorkerCrossThreadDispatcher");
+  if (!w) {
+    return NULL;
+  }
+  return w->GetCrossThreadDispatcher();
+}
+
 
 namespace chromeworker {
 
