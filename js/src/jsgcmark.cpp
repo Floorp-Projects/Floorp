@@ -735,6 +735,7 @@ restart:
     else if (JS_UNLIKELY(JSID_IS_OBJECT(id)))
         PushMarkStack(gcmarker, JSID_TO_OBJECT(id));
 
+    /* We need the loop here to prevent unbounded recursion. */
     shape = shape->previous();
     if (shape && shape->markIfUnmarked(gcmarker->getMarkColor()))
         goto restart;
@@ -974,13 +975,11 @@ MarkChildren(JSTracer *trc, JSScript *script)
 void
 MarkChildren(JSTracer *trc, const Shape *shape)
 {
-restart:
     MarkBaseShapeUnbarriered(trc, shape->base(), "base");
     MarkIdUnbarriered(trc, shape->maybePropid(), "propid");
 
-    shape = shape->previous();
-    if (shape)
-        goto restart;
+    if (shape->previous())
+        MarkShape(trc, shape->previous(), "parent");
 }
 
 void
