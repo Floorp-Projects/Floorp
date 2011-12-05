@@ -124,10 +124,10 @@ class DeviceManagerADB(DeviceManager):
           if (not self.dirExists(targetDir)):
             self.mkDir(targetDir)
       self.checkCmdAs(["shell", "chmod", "777", remoteDir])
-      return True
+      return remoteDir
     except:
       print "pushing " + localDir + " to " + remoteDir + " failed"
-      return False
+      return None
 
   # external function
   # returns:
