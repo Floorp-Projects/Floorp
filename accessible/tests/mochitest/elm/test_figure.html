@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML5 figure/figcaption tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../attributes.js"></script>
+  <script type="application/javascript"
+          src="../relations.js"></script>
+  <script type="application/javascript"
+          src="../name.js"></script>
+
+  <script type="application/javascript">
+
+    function doTest()
+    {
+      testRole("figure", ROLE_FIGURE);
+      testRole("figcaption", ROLE_CAPTION);
+
+      todo(false, "figure name gets extra whitespace in the end!");
+      testName("figure", "figure caption ");
+      testName("figcaption", null);
+
+      testRelation("figure", RELATION_LABELLED_BY, "figcaption");
+      testRelation("figcaption", RELATION_LABEL_FOR, "figure");
+
+      testAttrs("figure", {"xml-roles" : "figure"}, true);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+    title="Implement figure and figcaption accessibility"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=658272">
+     Mozilla Bug 658272
+  </a><br/>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <figure id="figure">
+    <figcaption id="figcaption">figure caption</figcaption>
+  </figure>
+
+</body>
+</html>

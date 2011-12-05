@@ -59,7 +59,6 @@ _TEST_FILES	= \
 	test_changingManifest.html \
 	test_refetchManifest.html \
 	test_offlineIFrame.html \
-	test_offlineMode.html \
 	test_bug445544.html \
 	test_bug460353.html \
 	test_bug474696.html \
@@ -123,6 +122,8 @@ _TEST_FILES	= \
 	missing.html \
 	jupiter.jpg \
 	$(NULL)
+
+# test_offlineMode.html disabled due to bug 656943
 
 libs::	$(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

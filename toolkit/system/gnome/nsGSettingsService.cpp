@@ -44,6 +44,8 @@
 #include "nsMemory.h"
 #include "prlink.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIMutableArray.h"
+#include "nsISupportsPrimitives.h"
 
 #include <glib.h>
 #include <glib-object.h>
@@ -60,6 +62,7 @@ typedef struct _GVariant GVariant;
 # define G_VARIANT_TYPE_STRING       ((const GVariantType *) "s")
 # define G_VARIANT_TYPE_OBJECT_PATH  ((const GVariantType *) "o")
 # define G_VARIANT_TYPE_SIGNATURE    ((const GVariantType *) "g")
+# define G_VARIANT_TYPE_STRING_ARRAY ((const GVariantType *) "as")
 #endif
 
 #define GSETTINGS_FUNCTIONS \
@@ -72,6 +75,7 @@ typedef struct _GVariant GVariant;
   FUNC(g_variant_get_int32, gint32, (GVariant* variant)) \
   FUNC(g_variant_get_boolean, gboolean, (GVariant* variant)) \
   FUNC(g_variant_get_string, const char *, (GVariant* value, gsize* length)) \
+  FUNC(g_variant_get_strv, const char **, (GVariant* value, gsize* length)) \
   FUNC(g_variant_is_of_type, gboolean, (GVariant* value, const GVariantType* type)) \
   FUNC(g_variant_new_int32, GVariant *, (gint32 value)) \
   FUNC(g_variant_new_boolean, GVariant *, (gboolean value)) \
@@ -95,6 +99,7 @@ GSETTINGS_FUNCTIONS
 #define g_variant_get_int32 _g_variant_get_int32
 #define g_variant_get_boolean _g_variant_get_boolean
 #define g_variant_get_string _g_variant_get_string
+#define g_variant_get_strv _g_variant_get_strv
 #define g_variant_is_of_type _g_variant_is_of_type
 #define g_variant_new_int32 _g_variant_new_int32
 #define g_variant_new_boolean _g_variant_new_boolean
@@ -275,6 +280,49 @@ struct nsGSettingsDynamicFunction {
   const char *functionName;
   nsGSettingsFunc *function;
 };
+
+NS_IMETHODIMP
+nsGSettingsCollection::GetStringList(const nsACString& aKey, nsIArray** aResult)
+{
+  if (!KeyExists(aKey))
+    return NS_ERROR_INVALID_ARG;
+
+  nsCOMPtr<nsIMutableArray> items(do_CreateInstance(NS_ARRAY_CONTRACTID));
+  if (!items) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  GVariant *value = g_settings_get_value(mSettings,
+                                         PromiseFlatCString(aKey).get());
+
+  if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING_ARRAY)) {
+    g_variant_unref(value);
+    return NS_ERROR_FAILURE;
+  }
+
+  const gchar ** gs_strings = g_variant_get_strv(value, NULL);
+  if (!gs_strings) {
+    // empty array
+    NS_ADDREF(*aResult = items);
+    g_variant_unref(value);
+    return NS_OK;
+  }
+
+  const gchar** p_gs_strings = gs_strings;
+  while (*p_gs_strings != NULL)
+  {
+    nsCOMPtr<nsISupportsCString> obj(do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
+    if (obj) {
+      obj->SetData(nsDependentCString(*p_gs_strings));
+      items->AppendElement(obj, false);
+    }
+    p_gs_strings++;
+  }
+  g_free(gs_strings);
+  NS_ADDREF(*aResult = items);
+  g_variant_unref(value);
+  return NS_OK;
+}
 
 nsresult
 nsGSettingsService::Init()
