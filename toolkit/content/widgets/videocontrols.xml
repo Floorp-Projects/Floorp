@@ -788,10 +788,42 @@
                     this.startFade(this.volumeStack, isMouseOver);
                 },
 
+                _hideControlsTimeout : 0,
+                _hideControlsFn : function () {
+                    if (!Utils.scrubber.isDragging)
+                        Utils.startFade(Utils.controlBar, false);
+                },
+                HIDE_CONTROLS_TIMEOUT_MS : 2000,
+                onMouseMove : function (event) {
+                    // If the controls are static, don't change anything.
+                    if (!this.dynamicControls)
+                        return;
+
+                    clearTimeout(this._hideControlsTimeout);
+
+                    // Suppress fading out the controls until the video has rendered
+                    // its first frame. But since autoplay videos start off with no
+                    // controls, let them fade-out so the controls don't get stuck on.
+                    if (!this.firstFrameShown &&
+                        !(this.video.autoplay && this.video.mozAutoplayEnabled))
+                        return;
+
+                    this.startFade(this.controlBar, true);
+                    // Only hide the controls if the mouse cursor is not left on top of
+                    // the control bar. We only need to check the Y position of the cursor
+                    // since the controls span the width of the video and are always located
+                    // at the bottom of the video.
+                    if (event.clientY < this.controlBar.getBoundingClientRect().top) {
+                        this._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
+                    }
+                },
+
                 onMouseInOut : function (event) {
                     // If the controls are static, don't change anything.
                     if (!this.dynamicControls)
                         return;
+
+                    clearTimeout(this._hideControlsTimeout);
 
                     // Ignore events caused by transitions between child nodes.
                     // Note that the videocontrols element is the same
@@ -810,10 +842,13 @@
                         !(this.video.autoplay && this.video.mozAutoplayEnabled))
                         return;
 
-                    if (!isMouseOver)
+                    if (!isMouseOver) {
                         this.adjustControlSize();
 
-                    this.startFade(this.controlBar, isMouseOver);
+                        // Setting a timer here to handle the case where the mouse leaves
+                        // the video from hovering over the controls.
+                        this._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
+                    }
                 },
 
                 startFadeIn : function (element, immediate) {
@@ -825,11 +860,15 @@
                 },
 
                 startFade : function (element, fadeIn, immediate) {
-                    // Bug 493523, the scrubber doesn't call valueChanged while hidden,
-                    // so our dependent state (eg, timestamp in the thumb) will be stale.
-                    // As a workaround, update it manually when it first becomes unhidden.
-                    if (element.className == "controlBar" && fadeIn && element.hidden)
-                        this.scrubber.valueChanged("curpos", this.video.currentTime * 1000, false);
+                    if (element.className == "controlBar" && fadeIn) {
+                        clearTimeout(this._hideControlsTimeout);
+
+                        // Bug 493523, the scrubber doesn't call valueChanged while hidden,
+                        // so our dependent state (eg, timestamp in the thumb) will be stale.
+                        // As a workaround, update it manually when it first becomes unhidden.
+                        if (element.hidden)
+                            this.scrubber.valueChanged("curpos", this.video.currentTime * 1000, false);
+                    }
 
                     if (immediate)
                         element.setAttribute("immediate", true);
@@ -1274,6 +1313,10 @@
         <handler event="mouseout">
             if (!this.isTouchControl)
                 this.Utils.onMouseInOut(event);
+        </handler>
+        <handler event="mousemove">
+            if (!this.isTouchControl)
+                this.Utils.onMouseMove(event);
         </handler>
     </handlers>
   </binding>
