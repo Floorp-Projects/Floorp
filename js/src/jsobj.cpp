@@ -5383,7 +5383,6 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
      * value to define, and just so addProperty can mutate its inout parameter.
      */
     Value valueCopy = value;
-    bool adding = false;
 
     if (!shape) {
         /* Add a new property, or replace an existing one of the same id. */
@@ -5410,8 +5409,6 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
                 if (!obj->methodReadBarrier(cx, *existingShape, &valueCopy))
                     return NULL;
             }
-        } else {
-            adding = true;
         }
 
         shape = obj->putProperty(cx, id, getter, setter, SHAPE_INVALID_SLOT,
@@ -5803,8 +5800,6 @@ static JS_ALWAYS_INLINE JSBool
 js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *pobj,
                    const Shape *shape, uintN getHow, Value *vp)
 {
-    int32 sample;
-
     JS_ASSERT(pobj->isNative());
 
     if (shape->hasSlot()) {
@@ -5829,7 +5824,6 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
             code->accessGetter = true;
     }
 
-    sample = cx->runtime->propertyRemovals;
     if (!shape->get(cx, receiver, obj, pobj, vp))
         return false;
 
