@@ -576,29 +576,6 @@ main(PRInt32 argc, char *argv[])
       allTestsPassed = PrintResult(rv, 10) && allTestsPassed;
 
 
-      // *** mailnews tests
-      sBuffer = PR_sprintf_append(sBuffer, "*** Beginning mailnews tests...\n");
-
-      // test some mailnews cookies to ensure blockage.
-      // we use null firstURI's deliberately, since we have hacks to deal with
-      // this situation...
-      SetACookie(cookieService, "mailbox://mail.co.uk/", nsnull, "test=mailnews", nsnull);
-      GetACookie(cookieService, "mailbox://mail.co.uk/", nsnull, getter_Copies(cookie));
-      rv[0] = CheckResult(cookie.get(), MUST_BE_NULL);
-      GetACookie(cookieService, "http://mail.co.uk/", nsnull, getter_Copies(cookie));
-      rv[1] = CheckResult(cookie.get(), MUST_BE_NULL);
-      SetACookie(cookieService, "http://mail.co.uk/", nsnull, "test=mailnews", nsnull);
-      GetACookie(cookieService, "mailbox://mail.co.uk/", nsnull, getter_Copies(cookie));
-      rv[2] = CheckResult(cookie.get(), MUST_BE_NULL);
-      GetACookie(cookieService, "http://mail.co.uk/", nsnull, getter_Copies(cookie));
-      rv[3] = CheckResult(cookie.get(), MUST_EQUAL, "test=mailnews");
-      SetACookie(cookieService, "http://mail.co.uk/", nsnull, "test=mailnews; max-age=0", nsnull);
-      GetACookie(cookieService, "http://mail.co.uk/", nsnull, getter_Copies(cookie));
-      rv[4] = CheckResult(cookie.get(), MUST_BE_NULL);
-
-      allTestsPassed = PrintResult(rv, 5) && allTestsPassed;
-
-
       // *** path ordering tests
       sBuffer = PR_sprintf_append(sBuffer, "*** Beginning path ordering tests...\n");
 

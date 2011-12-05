@@ -65,10 +65,6 @@ XPIDLSRCS	= \
 		nsICookiePromptService.idl \
 		$(NULL)
 
-ifdef MOZ_MAIL_NEWS
-DEFINES += -DMOZ_MAIL_NEWS
-endif
-
 ifdef ENABLE_TESTS
 TOOL_DIRS		+= test
 endif
