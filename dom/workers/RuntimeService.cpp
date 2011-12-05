@@ -455,6 +455,51 @@ ResumeWorkersForWindow(JSContext* aCx, nsPIDOMWindow* aWindow)
   }
 }
 
+namespace {
+
+class WorkerTaskRunnable : public WorkerRunnable
+{
+public:
+  WorkerTaskRunnable(WorkerPrivate* aPrivate, WorkerTask* aTask)
+    : WorkerRunnable(aPrivate, WorkerThread, UnchangedBusyCount),
+      mTask(aTask)
+  { }
+
+  virtual bool PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) {
+    return true;
+  }
+
+  virtual void PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+                            bool aDispatchResult)
+  { }
+
+  virtual bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate);
+
+private:
+  nsRefPtr<WorkerTask> mTask;
+};
+
+bool
+WorkerTaskRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+{
+  return mTask->RunTask(aCx);
+}
+
+}
+
+bool
+WorkerCrossThreadDispatcher::PostTask(WorkerTask* aTask)
+{
+  mozilla::MutexAutoLock lock(mMutex);
+  if (!mPrivate) {
+    return false;
+  }
+
+  nsRefPtr<WorkerTaskRunnable> runnable = new WorkerTaskRunnable(mPrivate, aTask);
+  runnable->Dispatch(nsnull);
+  return true;
+}
+
 END_WORKERS_NAMESPACE
 
 PRUint32 RuntimeService::sDefaultJSContextOptions = kRequiredJSContextOptions;
