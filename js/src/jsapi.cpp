@@ -637,9 +637,6 @@ static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 
 JSRuntime::JSRuntime()
   : atomsCompartment(NULL),
-#ifdef JS_THREADSAFE
-    atomsCompartmentIsLocked(false),
-#endif
     state(),
     cxCallback(NULL),
     compartmentCallback(NULL),
