@@ -113,7 +113,6 @@ typedef struct TypeInferenceMemoryStats
     int64 objects;
     int64 tables;
     int64 temporary;
-    int64 emptyShapes;
 } TypeInferenceMemoryStats;
 
 extern JS_FRIEND_API(void)
@@ -199,6 +198,12 @@ JS_FRIEND_API(JSBool) obj_defineGetter(JSContext *cx, uintN argc, js::Value *vp)
 JS_FRIEND_API(JSBool) obj_defineSetter(JSContext *cx, uintN argc, js::Value *vp);
 #endif
 
+extern JS_FRIEND_API(size_t)
+GetObjectDynamicSlotSize(JSObject *obj, JSMallocSizeOfFun mallocSizeOf);
+
+extern JS_FRIEND_API(size_t)
+GetCompartmentShapeTableSize(JSCompartment *c, JSMallocSizeOfFun mallocSizeOf);
+
 /*
  * Check whether it is OK to assign an undeclared property with name
  * propname of the global object in the current script on cx.  Reports
@@ -244,24 +249,34 @@ struct TypeObject {
     JSObject    *proto;
 };
 
-struct Object {
-    void        *_1;
+struct BaseShape {
     js::Class   *clasp;
-    uint32      flags;
-    uint32      objShape;
-    void        *_2;
     JSObject    *parent;
-    void        *privateData;
-    jsuword     capacity;
-    js::Value   *slots;
-    TypeObject  *type;
+};
+
+struct Shape {
+    BaseShape   *base;
+    jsid        _1;
+    uint32      slotInfo;
 
     static const uint32 FIXED_SLOTS_SHIFT = 27;
+};
+
+struct Object {
+    Shape       *shape;
+    TypeObject  *type;
+    js::Value   *slots;
+    js::Value   *_1;
+
+    size_t numFixedSlots() const { return shape->slotInfo >> Shape::FIXED_SLOTS_SHIFT; }
+    Value *fixedSlots() const {
+        return (Value *)((jsuword) this + sizeof(shadow::Object));
+    }
 
     js::Value &slotRef(size_t slot) const {
-        size_t nfixed = flags >> FIXED_SLOTS_SHIFT;
+        size_t nfixed = numFixedSlots();
         if (slot < nfixed)
-            return ((Value *)((jsuword) this + sizeof(shadow::Object)))[slot];
+            return fixedSlots()[slot];
         return slots[slot - nfixed];
     }
 };
@@ -284,7 +299,7 @@ extern JS_FRIEND_DATA(js::Class) XMLClass;
 inline js::Class *
 GetObjectClass(const JSObject *obj)
 {
-    return reinterpret_cast<const shadow::Object*>(obj)->clasp;
+    return reinterpret_cast<const shadow::Object*>(obj)->shape->base->clasp;
 }
 
 inline JSClass *
@@ -293,11 +308,48 @@ GetObjectJSClass(const JSObject *obj)
     return js::Jsvalify(GetObjectClass(obj));
 }
 
+JS_FRIEND_API(bool)
+IsScopeObject(const JSObject *obj);
+
 inline JSObject *
 GetObjectParent(const JSObject *obj)
 {
-    return reinterpret_cast<const shadow::Object*>(obj)->parent;
+    JS_ASSERT(!IsScopeObject(obj));
+    return reinterpret_cast<const shadow::Object*>(obj)->shape->base->parent;
 }
+
+JS_FRIEND_API(JSObject *)
+GetObjectParentMaybeScope(const JSObject *obj);
+
+JS_FRIEND_API(JSObject *)
+GetGlobalForObjectCrossCompartment(JSObject *obj);
+
+JS_FRIEND_API(bool)
+IsOriginalScriptFunction(JSFunction *fun);
+
+JS_FRIEND_API(JSFunction *)
+DefineFunctionWithReserved(JSContext *cx, JSObject *obj, const char *name, JSNative call,
+                           uintN nargs, uintN attrs);
+
+JS_FRIEND_API(JSFunction *)
+NewFunctionWithReserved(JSContext *cx, JSNative call, uintN nargs, uintN flags,
+                        JSObject *parent, const char *name);
+
+JS_FRIEND_API(JSFunction *)
+NewFunctionByIdWithReserved(JSContext *cx, JSNative native, uintN nargs, uintN flags,
+                            JSObject *parent, jsid id);
+
+JS_FRIEND_API(JSObject *)
+InitClassWithReserved(JSContext *cx, JSObject *obj, JSObject *parent_proto,
+                      JSClass *clasp, JSNative constructor, uintN nargs,
+                      JSPropertySpec *ps, JSFunctionSpec *fs,
+                      JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
+
+JS_FRIEND_API(const Value &)
+GetFunctionNativeReserved(JSObject *fun, size_t which);
+
+JS_FRIEND_API(void)
+SetFunctionNativeReserved(JSObject *fun, size_t which, const Value &val);
 
 inline JSObject *
 GetObjectProto(const JSObject *obj)
@@ -308,24 +360,10 @@ GetObjectProto(const JSObject *obj)
 inline void *
 GetObjectPrivate(const JSObject *obj)
 {
-    return reinterpret_cast<const shadow::Object*>(obj)->privateData;
+    const shadow::Object *nobj = reinterpret_cast<const shadow::Object*>(obj);
+    void **addr = reinterpret_cast<void**>(&nobj->fixedSlots()[nobj->numFixedSlots()]);
+    return *addr;
 }
-
-inline JSObject *
-GetObjectGlobal(JSObject *obj)
-{
-    while (JSObject *parent = GetObjectParent(obj))
-        obj = parent;
-    return obj;
-}
-
-#ifdef DEBUG
-extern JS_FRIEND_API(void) CheckReservedSlot(const JSObject *obj, size_t slot);
-extern JS_FRIEND_API(void) CheckSlot(const JSObject *obj, size_t slot);
-#else
-inline void CheckReservedSlot(const JSObject *obj, size_t slot) {}
-inline void CheckSlot(const JSObject *obj, size_t slot) {}
-#endif
 
 /*
  * Get a slot that is both reserved for object's clasp *and* is fixed (fits
@@ -334,34 +372,32 @@ inline void CheckSlot(const JSObject *obj, size_t slot) {}
 inline const Value &
 GetReservedSlot(const JSObject *obj, size_t slot)
 {
-    CheckReservedSlot(obj, slot);
+    JS_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
     return reinterpret_cast<const shadow::Object *>(obj)->slotRef(slot);
 }
 
 inline void
 SetReservedSlot(JSObject *obj, size_t slot, const Value &value)
 {
-    CheckReservedSlot(obj, slot);
+    JS_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
     reinterpret_cast<shadow::Object *>(obj)->slotRef(slot) = value;
 }
 
-inline uint32
-GetNumSlots(const JSObject *obj)
-{
-    return uint32(reinterpret_cast<const shadow::Object *>(obj)->capacity);
-}
+JS_FRIEND_API(uint32)
+GetObjectSlotSpan(const JSObject *obj);
 
 inline const Value &
-GetSlot(const JSObject *obj, size_t slot)
+GetObjectSlot(const JSObject *obj, size_t slot)
 {
-    CheckSlot(obj, slot);
+    JS_ASSERT(slot < GetObjectSlotSpan(obj));
     return reinterpret_cast<const shadow::Object *>(obj)->slotRef(slot);
 }
 
-inline uint32
+inline Shape *
 GetObjectShape(const JSObject *obj)
 {
-    return reinterpret_cast<const shadow::Object*>(obj)->objShape;
+    shadow::Shape *shape = reinterpret_cast<const shadow::Object*>(obj)->shape;
+    return reinterpret_cast<Shape *>(shape);
 }
 
 static inline js::PropertyOp

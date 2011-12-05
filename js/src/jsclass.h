@@ -360,6 +360,10 @@ struct Class
     bool isNative() const {
         return !(flags & NON_NATIVE);
     }
+
+    bool hasPrivate() const {
+        return !!(flags & JSCLASS_HAS_PRIVATE);
+    }
 };
 
 JS_STATIC_ASSERT(offsetof(JSClass, name) == offsetof(Class, name));

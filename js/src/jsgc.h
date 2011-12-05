@@ -559,7 +559,7 @@ struct Arena {
     }
 
     template <typename T>
-    bool finalize(JSContext *cx, AllocKind thingKind, size_t thingSize);
+    bool finalize(JSContext *cx, AllocKind thingKind, size_t thingSize, bool background);
 };
 
 /* The chunk header (located at the end of the chunk to preserve arena alignment). */
@@ -952,9 +952,9 @@ MapAllocToTraceKind(AllocKind thingKind)
         JSTRACE_OBJECT,     /* FINALIZE_OBJECT12_BACKGROUND */
         JSTRACE_OBJECT,     /* FINALIZE_OBJECT16 */
         JSTRACE_OBJECT,     /* FINALIZE_OBJECT16_BACKGROUND */
-        JSTRACE_OBJECT,     /* FINALIZE_FUNCTION */
         JSTRACE_SCRIPT,     /* FINALIZE_SCRIPT */
         JSTRACE_SHAPE,      /* FINALIZE_SHAPE */
+        JSTRACE_BASE_SHAPE, /* FINALIZE_BASE_SHAPE */
         JSTRACE_TYPE_OBJECT,/* FINALIZE_TYPE_OBJECT */
 #if JS_HAS_XML_SUPPORT      /* FINALIZE_XML */
         JSTRACE_XML,

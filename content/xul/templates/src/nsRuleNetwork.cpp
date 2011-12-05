@@ -454,13 +454,6 @@ TestNode::Constrain(InstantiationSet& aInstantiations)
 }
 
 
-bool
-TestNode::HasAncestor(const ReteNode* aNode) const
-{
-    return aNode == this || (mParent && mParent->HasAncestor(aNode));
-}
-
-
 //----------------------------------------------------------------------
 
 ReteNodeSet::ReteNodeSet()

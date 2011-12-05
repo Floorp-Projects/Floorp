@@ -3836,9 +3836,8 @@ ImageRenderer::PrepareImage()
       // If the referenced element doesn't have a frame we might still be able
       // to paint it if it's an <img>, <canvas>, or <video> element.
       if (!mPaintServerFrame) {
-        nsCOMPtr<nsIDOMElement> imageElement =
-          do_QueryInterface(property->GetReferencedElement());
-        mImageElementSurface = nsLayoutUtils::SurfaceFromElement(imageElement);
+        mImageElementSurface =
+          nsLayoutUtils::SurfaceFromElement(property->GetReferencedElement());
         if (!mImageElementSurface.mSurface)
           return false;
       }

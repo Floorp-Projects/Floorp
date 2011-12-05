@@ -873,6 +873,9 @@ function rssArrayElement(s) {
  */
 function dateParse(aDateString) {
   let dateString = aDateString.trim();
+  // Without bug 682781 fixed, JS won't parse an RFC822 date with a Z for the
+  // timezone, so convert to -00:00 which works for any date format.
+  dateString = dateString.replace(/z$/i, "-00:00");
   let date = new Date(dateString);
   if (!isNaN(date)) {
     return date.toUTCString();

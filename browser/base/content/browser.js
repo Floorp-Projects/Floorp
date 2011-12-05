@@ -3478,10 +3478,29 @@ const BrowserSearch = {
     if (!submission)
       return;
 
+    let newTab;
+    function newTabHandler(event) {
+      newTab = event.target;
+    }
+    gBrowser.tabContainer.addEventListener("TabOpen", newTabHandler);
+
     openLinkIn(submission.uri.spec,
                useNewTab ? "tab" : "current",
                { postData: submission.postData,
                  relatedToCurrent: true });
+
+    gBrowser.tabContainer.removeEventListener("TabOpen", newTabHandler);
+    if (newTab && !newTab.selected) {
+      let tabSelected = false;
+      function tabSelectHandler() {
+        tabSelected = true;
+      }
+      newTab.addEventListener("TabSelect", tabSelectHandler);
+      setTimeout(function () {
+        newTab.removeEventListener("TabSelect", tabSelectHandler);
+        Services.telemetry.getHistogramById("FX_CONTEXT_SEARCH_AND_TAB_SELECT").add(tabSelected);
+      }, 5000);
+    }
   },
 
   /**
@@ -7659,7 +7678,8 @@ var FeedHandler = {
     if (browserForLink == gBrowser.selectedBrowser) {
       // Batch updates to avoid updating the UI for multiple onLinkAdded events
       // fired within 100ms of each other.
-      clearTimeout(this._updateFeedTimeout);
+      if (this._updateFeedTimeout)
+        clearTimeout(this._updateFeedTimeout);
       this._updateFeedTimeout = setTimeout(this.updateFeeds.bind(this), 100);
     }
   }

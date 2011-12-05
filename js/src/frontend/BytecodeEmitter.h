@@ -204,15 +204,6 @@ struct StmtInfo {
 /* bits 0x40000 and 0x80000 are unused */
 
 /*
- * Flag signifying that the current function seems to be a constructor that
- * sets this.foo to define "methods", at least one of which can't be a null
- * closure, so we should avoid over-specializing property cache entries and
- * trace inlining guards to method function object identity, which will vary
- * per instance.
- */
-#define TCF_FUN_UNBRAND_THIS   0x100000
-
-/*
  * "Module pattern", i.e., a lambda that is immediately applied and the whole
  * of an expression statement.
  */

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+
+Description: Test whether date parsing handles "Z" as a timezone in RFC822.
+Expect:      feed.updated == 'Tue, 25 Apr 2006 08:00:00 GMT'
+
+-->
+<rss version="2.0" >
+<channel>
+<pubDate>Tue, 25 Apr 2006 08:00:00 Z</pubDate>
+</channel>
+</rss>

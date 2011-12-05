@@ -1,0 +1,55 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+  <head>
+    <title>Indexed Database Test</title>
+
+    <script type="text/javascript;version=1.7">
+      const READ_WRITE = Components.interfaces.nsIIDBTransaction.READ_WRITE;
+
+      let db;
+      let i = 0;
+
+      function onAddMore() {
+        const name = window.location.pathname + i++;
+
+        let request = mozIndexedDB.open(name, 1);
+        request.onerror = errorHandler;
+        request.onsuccess = grabEventAndContinueHandler;
+
+        request.onsuccess = function(event) {
+          setTimeout(testFinishedCallback, 0, "complete");
+        }
+        request.onerror = function(event) {
+          setTimeout(testFinishedCallback, 0, "abort");
+        }
+      }
+
+      function onDone() {
+        window.removeEventListener("indexedDB-addMore", onAddMore, true);
+        window.removeEventListener("indexedDB-done", onDone, true);
+
+        testResult = "finished";
+        testException = undefined;
+        finishTest();
+      }
+
+      function testSteps()
+      {
+        window.addEventListener("indexedDB-addMore", onAddMore, true);
+        window.addEventListener("indexedDB-done", onDone, true);
+
+        setTimeout(testFinishedCallback, 0, "ready");
+        yield;
+      }
+    </script>
+
+    <script type="text/javascript;version=1.7" src="browserHelpers.js"></script>
+
+  </head>
+
+  <body onload="runTest();" onunload="finishTestNow();"></body>
+
+</html>

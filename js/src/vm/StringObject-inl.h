@@ -52,6 +52,30 @@ JSObject::asString()
 
 namespace js {
 
+inline bool
+StringObject::init(JSContext *cx, JSString *str)
+{
+    JS_ASSERT(gc::GetGCKindSlots(getAllocKind()) == 2);
+
+    if (nativeEmpty()) {
+        if (isDelegate()) {
+            if (!assignInitialShape(cx))
+                return false;
+        } else {
+            Shape *shape = assignInitialShape(cx);
+            if (!shape)
+                return false;
+            EmptyShape::insertInitialShape(cx, shape, getProto());
+        }
+    }
+
+    JS_ASSERT(!nativeEmpty());
+    JS_ASSERT(nativeLookup(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))->slot() == LENGTH_SLOT);
+
+    setStringThis(str);
+    return true;
+}
+
 inline StringObject *
 StringObject::create(JSContext *cx, JSString *str)
 {
@@ -67,8 +91,7 @@ StringObject::create(JSContext *cx, JSString *str)
 inline StringObject *
 StringObject::createWithProto(JSContext *cx, JSString *str, JSObject &proto)
 {
-    JS_ASSERT(gc::FINALIZE_OBJECT2 == gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(&StringClass)));
-    JSObject *obj = NewObjectWithClassProto(cx, &StringClass, &proto, gc::FINALIZE_OBJECT2);
+    JSObject *obj = NewObjectWithClassProto(cx, &StringClass, &proto, NULL);
     if (!obj)
         return NULL;
     StringObject *strobj = obj->asString();

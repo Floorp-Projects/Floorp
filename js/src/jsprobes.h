@@ -137,6 +137,9 @@ bool resizeHeap(JSCompartment *compartment, size_t oldSize, size_t newSize);
  */
 bool createObject(JSContext *cx, JSObject *obj);
 
+/* Resize events are being tracked. */
+bool objectResizeActive();
+
 /* Object has been resized */
 bool resizeObject(JSContext *cx, JSObject *obj, size_t oldSize, size_t newSize);
 
@@ -487,6 +490,17 @@ Probes::finalizeObject(JSObject *obj)
 #endif
 
     return ok;
+}
+
+inline bool
+Probes::objectResizeActive()
+{
+#ifdef MOZ_ETW
+    if (ProfilingActive)
+        return true;
+#endif
+
+    return false;
 }
 
 inline bool
