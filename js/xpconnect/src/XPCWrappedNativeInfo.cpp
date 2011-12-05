@@ -416,6 +416,16 @@ XPCNativeInterface::DestroyInstance(XPCNativeInterface* inst)
     delete [] (char*) inst;
 }
 
+size_t
+XPCNativeInterface::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
+{
+    size_t computedSize = sizeof(XPCNativeInterface);
+    if (mMemberCount > 1)
+        computedSize += (mMemberCount - 1) * sizeof(XPCNativeMember);
+
+    return mallocSizeOf(this, computedSize);
+}
+
 void
 XPCNativeInterface::DebugDump(PRInt16 depth)
 {
@@ -770,6 +780,16 @@ XPCNativeSet::DestroyInstance(XPCNativeSet* inst)
 {
     inst->~XPCNativeSet();
     delete [] (char*) inst;
+}
+
+size_t
+XPCNativeSet::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
+{
+    size_t computedSize = sizeof(XPCNativeSet);
+    if (mInterfaceCount > 1)
+        computedSize += (mInterfaceCount - 1) * sizeof(XPCNativeInterface *);
+
+    return mallocSizeOf(this, computedSize);
 }
 
 void
