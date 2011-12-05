@@ -3969,6 +3969,10 @@ var FullScreen = {
       return;
     }
 
+    // Ensure the sidebar is hidden.
+    if (!document.getElementById("sidebar-box").hidden)
+      toggleSidebar();
+
     if (gFindBarInitialized)
       gFindBar.close();
 
