@@ -62,7 +62,7 @@ const PRUint32 FPR_COUNT            = 8;
 // The parameters are mapped into an array of type 'nsXPTCMiniVariant'
 // and then the method gets called.
 
-extern "C" nsresult ATTRIBUTE_USED
+extern "C" nsresult
 PrepareAndDispatch(nsXPTCStubBase * self, PRUint32 methodIndex,
                    PRUint64 * args, PRUint64 * gpregs, double *fpregs)
 {
