@@ -241,11 +241,25 @@ class DeviceManagerADB(DeviceManager):
     acmd = ["shell", "am","start"]
     cmd = ' '.join(cmd).strip()
     i = cmd.find(" ")
+    # SUT identifies the URL by looking for :\\ -- another strategy to consider
+    re_url = re.compile('^[http|file|chrome|about].*')
+    last = cmd.rfind(" ")
+    uri = ""
+    args = ""
+    if re_url.match(cmd[last:].strip()):
+      args = cmd[i:last].strip()
+      uri = cmd[last:].strip()
+    else:
+      args = cmd[i:].strip()
     acmd.append("-n")
     acmd.append(cmd[0:i] + "/.App")
     acmd.append("--es")
-    acmd.append("args")
-    acmd.append(cmd[i:])
+    if args != "":
+      acmd.append("args")
+      acmd.append(args)
+    if uri != "":
+      acmd.append("-d")
+      acmd.append(''.join(['\'',uri, '\'']));
     print acmd
     self.checkCmd(acmd)
     return outputFile;
