@@ -50,7 +50,7 @@ FORCE_STATIC_LIB = 1
 include $(topsrcdir)/dom/dom-config.mk
 
 CPPSRCS = \
-  Radio.cpp \
+  RadioManager.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \

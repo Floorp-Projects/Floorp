@@ -73,7 +73,7 @@ class nsIXPConnectJSObjectHolder;
 
 BEGIN_TELEPHONY_NAMESPACE
 
-class Radio : public nsIObserver
+class RadioManager : public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -82,15 +82,15 @@ public:
   nsresult Init();
   void Shutdown();
 
-  static already_AddRefed<Radio>
+  static already_AddRefed<RadioManager>
   FactoryCreate();
 
   static already_AddRefed<nsIRadioInterface>
   GetRadioInterface();
 
 protected:
-  Radio();
-  ~Radio();
+  RadioManager();
+  ~RadioManager();
 
   nsCOMPtr<nsIRadioInterface> mRadioInterface;
   bool mShutdown;
