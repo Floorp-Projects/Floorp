@@ -54,8 +54,11 @@
     }
     window.addEventListener("MozAfterPaint", paintListener, false);
 
-    function waitForAllPaintsFlushed(callback) {
+    function waitForAllPaintsFlushed(callback, subdoc) {
       document.documentElement.getBoundingClientRect();
+      if (subdoc) {
+        subdoc.documentElement.getBoundingClientRect();
+      }
       var CI = Components.interfaces;
       var utils = window.QueryInterface(CI.nsIInterfaceRequestor)
                   .getInterface(CI.nsIDOMWindowUtils);
@@ -128,7 +131,7 @@
             var tester = window.SimpleTest;
             window.close();
             tester.finish();
-          });
+          }, frame.contentDocument);
         });
       });
     }
