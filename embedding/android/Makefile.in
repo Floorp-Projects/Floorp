@@ -56,6 +56,7 @@ JAVAFILES = \
   SurfaceInfo.java \
   GeckoBatteryManager.java \
   GeckoSmsManager.java \
+  VideoPlayer.java \
   $(NULL)
 
 PROCESSEDJAVAFILES = \
@@ -127,6 +128,7 @@ RES_LAYOUT = \
   res/layout/notification_icon_text.xml \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
+  res/layout/videoplayer.xml \
   $(NULL)
 
 RES_VALUES = res/values/colors.xml res/values/themes.xml
