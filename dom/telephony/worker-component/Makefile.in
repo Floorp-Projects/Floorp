@@ -42,6 +42,16 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+EXTRA_COMPONENTS = \
+  nsTelephonyWorker.manifest \
+  nsTelephonyWorker.js \
+  $(NULL)
+
+EXTRA_JS_MODULES = \
+  ril_consts.js \
+  ril_worker.js \
+  $(NULL)
+
 XPIDL_MODULE = dom_telephony_worker
 XPIDLSRCS = \
   nsITelephonyWorker.idl \
