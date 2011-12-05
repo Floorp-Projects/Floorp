@@ -888,12 +888,14 @@ net_ParseMediaType(const nsACString &aMediaTypeStr,
         } while (curParamStart < flatStr.Length());
     }
 
+    bool charsetNeedsQuotedStringUnescaping = false;
     if (typeHasCharset) {
         // Trim LWS leading and trailing whitespace from charset.  We include
         // '(' in the trailing trim set to catch media-type comments, which are
         // not at all standard, but may occur in rare cases.
         charset = net_FindCharNotInSet(charset, charsetEnd, HTTP_LWS);
         if (*charset == '"') {
+            charsetNeedsQuotedStringUnescaping = true;
             charsetEnd =
                 start + net_FindStringEnd(flatStr, charset - start, *charset);
             charset++;
@@ -924,7 +926,21 @@ net_ParseMediaType(const nsACString &aMediaTypeStr,
 
         if ((!eq && *aHadCharset) || typeHasCharset) {
             *aHadCharset = true;
-            aContentCharset.Assign(charset, charsetEnd - charset);
+            if (charsetNeedsQuotedStringUnescaping) {
+                // parameters using the "quoted-string" syntax need
+                // backslash-escapes to be unescaped (see RFC 2616 Section 2.2)
+                aContentCharset.Truncate();
+                for (const char *c = charset; c != charsetEnd; c++) {
+                    if (*c == '\\' && c + 1 != charsetEnd) {
+                        // eat escape
+                        c++;  
+                    }
+                    aContentCharset.Append(*c);
+                }
+            }
+            else {
+                aContentCharset.Assign(charset, charsetEnd - charset);
+            }
             if (typeHasCharset) {
                 *aCharsetStart = charsetParamStart + aOffset;
                 *aCharsetEnd = charsetParamEnd + aOffset;

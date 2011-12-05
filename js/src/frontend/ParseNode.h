@@ -1271,18 +1271,6 @@ struct FunctionBox : public ObjectBox
      * ancestor?
      */
     bool scopeIsExtensible() const;
-
-    /*
-     * Unbrand an object being initialized or constructed if any method cannot
-     * be joined to one compiler-created null closure shared among N different
-     * closure environments.
-     *
-     * We despecialize from caching function objects, caching slots or shapes
-     * instead, because an unbranded object may still have joined methods (for
-     * which shape->isMethod), since PropertyCache::fill gives precedence to
-     * joined methods over branded methods.
-     */
-    bool shouldUnbrand(uintN methods, uintN slowMethods) const;
 };
 
 struct FunctionBoxQueue {

@@ -174,7 +174,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
     LifoAlloc &tla = cx->typeLifoAlloc();
 
     unsigned length = script->length;
-    unsigned nargs = script->hasFunction ? script->function()->nargs : 0;
+    unsigned nargs = script->function() ? script->function()->nargs : 0;
 
     numSlots = TotalSlots(script);
 
@@ -226,15 +226,16 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
     if (cx->compartment->debugMode())
         usesReturnValue_ = true;
 
+    bool heavyweight = script->function() && script->function()->isHeavyweight();
+
     isInlineable = true;
-    if (script->nClosedArgs || script->nClosedVars ||
-        (script->hasFunction && script->function()->isHeavyweight()) ||
+    if (script->nClosedArgs || script->nClosedVars || heavyweight ||
         script->usesEval || script->usesArguments || cx->compartment->debugMode()) {
         isInlineable = false;
     }
 
     modifiesArguments_ = false;
-    if (script->nClosedArgs || (script->hasFunction && script->function()->isHeavyweight()))
+    if (script->nClosedArgs || heavyweight)
         modifiesArguments_ = true;
 
     canTrackVars = true;

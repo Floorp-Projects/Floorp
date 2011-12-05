@@ -74,6 +74,9 @@ public:
   bool mIsUntrusted;
 
   bool mHaveKeyLengthAndCipher;
+
+  /* mHaveCertErrrorBits is relied on to determine whether or not a SPDY
+     connection is eligible for joining in nsNSSSocketInfo::JoinConnection() */
   bool mHaveCertErrorBits;
 };
 

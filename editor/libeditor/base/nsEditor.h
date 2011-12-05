@@ -651,7 +651,7 @@ public:
   virtual already_AddRefed<nsIDOMEventTarget> GetDOMEventTarget() = 0;
 
   // Fast non-refcounting editor root element accessor
-  nsIDOMElement *GetRoot();
+  mozilla::dom::Element *GetRoot();
 
   // Accessor methods to flags
   bool IsPlaintextEditor() const
@@ -763,8 +763,8 @@ public:
 
 protected:
 
-  PRUint32        mModCount;		// number of modifications (for undo/redo stack)
-  PRUint32        mFlags;		// behavior flags. See nsIPlaintextEditor.idl for the flags we use.
+  PRUint32        mModCount;     // number of modifications (for undo/redo stack)
+  PRUint32        mFlags;        // behavior flags. See nsIPlaintextEditor.idl for the flags we use.
 
   nsWeakPtr       mSelConWeak;   // weak reference to the nsISelectionController
   PRInt32         mUpdateCount;
@@ -785,7 +785,7 @@ protected:
   nsSelectionState *mSelState;           // saved selection state for placeholder txn batching
   nsSelectionState  mSavedSel;           // cached selection for nsAutoSelectionReset
   nsRangeUpdater    mRangeUpdater;       // utility class object for maintaining preserved ranges
-  nsCOMPtr<nsIDOMElement> mRootElement;    // cached root node
+  nsCOMPtr<mozilla::dom::Element> mRootElement;   // cached root node
   PRInt32           mAction;             // the current editor action
   EDirection        mDirection;          // the current direction of editor action
   

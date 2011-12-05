@@ -135,6 +135,10 @@ function run_test() {
   type = netutil.parseContentType('text/plain, TEXT/HTML; param="charset=UTF8"; ; param2="charset=UTF16", text/html, TEXT/HTML', charset, hadCharset);
   check("text/html", "", false);
 
+  // Bug 562915 - correctness: "\x" is "x"
+  type = netutil.parseContentType('text/plain; charset="UTF\\-8"', charset, hadCharset);
+  check("text/plain", "UTF-8", true);
+
   // Bug 700589
 
   // check that single quote doesn't confuse parsing of subsequent parameters

@@ -189,10 +189,7 @@ NewBuiltinClassInstanceXML(JSContext *cx, Class *clasp)
     if (!cx->runningWithTrustedPrincipals())
         ++sE4XObjectsCreated;
 
-    JSObject *obj = NewBuiltinClassInstance(cx, clasp);
-    if (obj)
-        obj->syncSpecialEquality();
-    return obj;
+    return NewBuiltinClassInstance(cx, clasp);
 }
 
 #define DEFINE_GETTER(name,code)                                               \
@@ -524,7 +521,7 @@ NewXMLAttributeName(JSContext *cx, JSLinearString *uri, JSLinearString *prefix,
      * exposed to scripts.
      */
     JSObject *parent = GetGlobalForScopeChain(cx);
-    JSObject *obj = NewNonFunction<WithProto::Given>(cx, &AttributeNameClass, NULL, parent);
+    JSObject *obj = NewObjectWithGivenProto(cx, &AttributeNameClass, NULL, parent);
     if (!obj)
         return NULL;
     JS_ASSERT(obj->isQName());
@@ -1188,7 +1185,7 @@ static const char xml_namespace_str[] = "http://www.w3.org/XML/1998/namespace";
 static const char xmlns_namespace_str[] = "http://www.w3.org/2000/xmlns/";
 
 void
-JSXML::finalize(JSContext *cx)
+JSXML::finalize(JSContext *cx, bool builtin)
 {
     if (JSXML_HAS_KIDS(this)) {
         xml_kids.finish(cx);
@@ -5458,7 +5455,7 @@ StartNonListXMLMethod(JSContext *cx, jsval *vp, JSObject **objp)
         }
     }
 
-    fun = JSVAL_TO_OBJECT(*vp)->getFunctionPrivate();
+    fun = JSVAL_TO_OBJECT(*vp)->toFunction();
     JS_snprintf(numBuf, sizeof numBuf, "%u", xml->xml_kids.length);
     JSAutoByteString funNameBytes;
     if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
@@ -7384,7 +7381,7 @@ NewXMLObject(JSContext *cx, JSXML *xml)
     JSObject *obj;
 
     JSObject *parent = GetGlobalForScopeChain(cx);
-    obj = NewNonFunction<WithProto::Class>(cx, &XMLClass, NULL, parent);
+    obj = NewObjectWithClassProto(cx, &XMLClass, NULL, parent);
     if (!obj)
         return NULL;
     obj->setPrivate(xml);
@@ -7422,7 +7419,6 @@ js_InitNamespaceClass(JSContext *cx, JSObject *obj)
     JSFlatString *empty = cx->runtime->emptyString;
     namespaceProto->setNamePrefix(empty);
     namespaceProto->setNameURI(empty);
-    namespaceProto->syncSpecialEquality();
 
     const uintN NAMESPACE_CTOR_LENGTH = 2;
     JSFunction *ctor = global->createConstructor(cx, Namespace, &NamespaceClass,
@@ -7456,7 +7452,6 @@ js_InitQNameClass(JSContext *cx, JSObject *obj)
     JSAtom *empty = cx->runtime->emptyString;
     if (!InitXMLQName(cx, qnameProto, empty, empty, empty))
         return NULL;
-    qnameProto->syncSpecialEquality();
 
     const uintN QNAME_CTOR_LENGTH = 2;
     JSFunction *ctor = global->createConstructor(cx, QName, &QNameClass,
@@ -7569,7 +7564,8 @@ GlobalObject::getFunctionNamespace(JSContext *cx, Value *vp)
          * names, its prefix and uri references are copied to the QName.
          * The parent remains set and links back to global.
          */
-        obj->clearType();
+        if (!obj->clearType(cx))
+            return false;
 
         v.set(compartment(), ObjectValue(*obj));
     }
@@ -7606,7 +7602,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         return false;
 
     obj = NULL;
-    for (tmp = scopeChain; tmp; tmp = tmp->getParent()) {
+    for (tmp = scopeChain; tmp; tmp = tmp->scopeChain()) {
         Class *clasp = tmp->getClass();
         if (clasp == &BlockClass || clasp == &WithClass)
             continue;
@@ -7722,7 +7718,7 @@ js_GetAnyName(JSContext *cx, jsid *idp)
     JSObject *global = cx->hasfp() ? cx->fp()->scopeChain().getGlobal() : cx->globalObject;
     Value v = global->getReservedSlot(JSProto_AnyName);
     if (v.isUndefined()) {
-        JSObject *obj = NewNonFunction<WithProto::Given>(cx, &AnyNameClass, NULL, global);
+        JSObject *obj = NewObjectWithGivenProto(cx, &AnyNameClass, NULL, global);
         if (!obj)
             return false;
 
@@ -7804,7 +7800,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
                 return JS_TRUE;
             }
         }
-    } while ((obj = obj->getParent()) != NULL);
+    } while ((obj = obj->scopeChain()) != NULL);
 
     JSAutoByteString printable;
     JSString *str = ConvertQNameToString(cx, nameobj);
@@ -7990,7 +7986,7 @@ js_StepXMLListFilter(JSContext *cx, JSBool initialized)
         }
 
         JSObject *parent = GetGlobalForScopeChain(cx);
-        filterobj = NewNonFunction<WithProto::Given>(cx, &js_XMLFilterClass, NULL, parent);
+        filterobj = NewObjectWithGivenProto(cx, &js_XMLFilterClass, NULL, parent);
         if (!filterobj)
             return JS_FALSE;
 

@@ -279,7 +279,7 @@ AsyncConnectionHelper::Run()
   if (NS_SUCCEEDED(rv)) {
     bool hasSavepoint = false;
     if (mDatabase) {
-      IndexedDatabaseManager::SetCurrentDatabase(mDatabase);
+      IndexedDatabaseManager::SetCurrentWindow(mDatabase->Owner());
 
       // Make the first savepoint.
       if (mTransaction) {
@@ -292,7 +292,7 @@ AsyncConnectionHelper::Run()
     mResultCode = DoDatabaseWork(connection);
 
     if (mDatabase) {
-      IndexedDatabaseManager::SetCurrentDatabase(nsnull);
+      IndexedDatabaseManager::SetCurrentWindow(nsnull);
 
       // Release or roll back the savepoint depending on the error code.
       if (hasSavepoint) {

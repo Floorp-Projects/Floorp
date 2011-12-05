@@ -3813,57 +3813,21 @@ nsXPCComponents_Utils::NondeterministicGetWeakMapKeys(const jsval &aMap,
 
 /* void getGlobalForObject(); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::GetGlobalForObject()
+nsXPCComponents_Utils::GetGlobalForObject(const JS::Value& object,
+                                          JSContext *cx,
+                                          JS::Value *retval)
 {
-  nsresult rv;
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  // get the xpconnect native call context
-  nsAXPCNativeCallContext *cc = nsnull;
-  xpc->GetCurrentNativeCallContext(&cc);
-  if (!cc)
-    return NS_ERROR_FAILURE;
-
-  // Get JSContext of current call
-  JSContext* cx;
-  rv = cc->GetJSContext(&cx);
-  if (NS_FAILED(rv) || !cx)
-    return NS_ERROR_FAILURE;
-
-  // get place for return value
-  jsval *rval = nsnull;
-  rv = cc->GetRetValPtr(&rval);
-  if (NS_FAILED(rv) || !rval)
-    return NS_ERROR_FAILURE;
-
-  // get argc and argv and verify arg count
-  PRUint32 argc;
-  rv = cc->GetArgc(&argc);
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  if (argc != 1)
-    return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
-
-  jsval* argv;
-  rv = cc->GetArgvPtr(&argv);
-  if (NS_FAILED(rv) || !argv)
-    return NS_ERROR_FAILURE;
-
-  // first argument must be an object
-  if (JSVAL_IS_PRIMITIVE(argv[0]))
+  // First argument must be an object.
+  if (JSVAL_IS_PRIMITIVE(object))
     return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-  JSObject *obj = JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(argv[0]));
-  *rval = OBJECT_TO_JSVAL(obj);
+  JSObject *obj = JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(object));
+  *retval = OBJECT_TO_JSVAL(obj);
 
   // Outerize if necessary.
   if (JSObjectOp outerize = js::GetObjectClass(obj)->ext.outerObject)
-      *rval = OBJECT_TO_JSVAL(outerize(cx, obj));
+      *retval = OBJECT_TO_JSVAL(outerize(cx, obj));
 
-  cc->SetReturnValueWasSet(true);
   return NS_OK;
 }
 
@@ -3899,9 +3863,7 @@ nsXPCComponents_Utils::CreateObjectIn(const jsval &vobj, JSContext *cx, jsval *r
 JSBool
 FunctionWrapper(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval v;
-    if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), 0, &v))
-        return false;
+    jsval v = js::GetFunctionNativeReserved(JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), 0);
     NS_ASSERTION(JSVAL_IS_OBJECT(v), "weird function");
 
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -3914,14 +3876,13 @@ FunctionWrapper(JSContext *cx, uintN argc, jsval *vp)
 JSBool
 WrapCallable(JSContext *cx, JSObject *obj, jsid id, JSObject *propobj, jsval *vp)
 {
-    JSFunction *fun = JS_NewFunctionById(cx, FunctionWrapper, 0, 0,
-                                         JS_GetGlobalForObject(cx, obj), id);
+    JSFunction *fun = js::NewFunctionByIdWithReserved(cx, FunctionWrapper, 0, 0,
+                                                      JS_GetGlobalForObject(cx, obj), id);
     if (!fun)
         return false;
 
     JSObject *funobj = JS_GetFunctionObject(fun);
-    if (!JS_SetReservedSlot(cx, funobj, 0, OBJECT_TO_JSVAL(propobj)))
-        return false;
+    js::SetFunctionNativeReserved(funobj, 0, OBJECT_TO_JSVAL(propobj));
     *vp = OBJECT_TO_JSVAL(funobj);
     return true;
 }
@@ -4025,46 +3986,16 @@ SetBoolOption(JSContext* cx, uint32 aOption, bool aValue)
     return NS_OK;
 }
 
-// FIXME/bug 671453: work around broken [implicit_jscontext]
-nsresult
-GetCurrentJSContext(JSContext** aCx)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-    if(NS_FAILED(rv))
-        return rv;
-
-    // get the xpconnect native call context
-    nsAXPCNativeCallContext *cc = nsnull;
-    xpc->GetCurrentNativeCallContext(&cc);
-    if(!cc)
-        return NS_ERROR_FAILURE;
-
-    // Get JSContext of current call
-    JSContext* cx;
-    rv = cc->GetJSContext(&cx);
-    if(NS_FAILED(rv) || !cx)
-        return NS_ERROR_FAILURE;
-
-    *aCx = cx;
-    return NS_OK;
-}
-
 #define GENERATE_JSOPTION_GETTER_SETTER(_attr, _flag)                   \
     NS_IMETHODIMP                                                       \
-    nsXPCComponents_Utils::Get## _attr(bool* aValue)                    \
+    nsXPCComponents_Utils::Get## _attr(JSContext* cx, bool* aValue)     \
     {                                                                   \
-        JSContext* cx;                                                  \
-        nsresult rv = GetCurrentJSContext(&cx);                         \
-        return NS_FAILED(rv) ? rv : GetBoolOption(cx, _flag, aValue);   \
+        return GetBoolOption(cx, _flag, aValue);                        \
     }                                                                   \
     NS_IMETHODIMP                                                       \
-    nsXPCComponents_Utils::Set## _attr(bool aValue)                     \
+    nsXPCComponents_Utils::Set## _attr(JSContext* cx, bool aValue)      \
     {                                                                   \
-        JSContext* cx;                                                  \
-        nsresult rv = GetCurrentJSContext(&cx);                         \
-        return NS_FAILED(rv) ? rv : SetBoolOption(cx, _flag, aValue);   \
+        return SetBoolOption(cx, _flag, aValue);                        \
     }
 
 GENERATE_JSOPTION_GETTER_SETTER(Strict, JSOPTION_STRICT)

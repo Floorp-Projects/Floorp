@@ -336,11 +336,11 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format
             *va_arg(ap, JSObject **) = obj;
             break;
           case 'f':
-            obj = js_ValueToFunctionObject(cx, sp, 0);
+            obj = js_ValueToFunction(cx, sp, 0);
             if (!obj)
                 return JS_FALSE;
             *sp = OBJECT_TO_JSVAL(obj);
-            *va_arg(ap, JSFunction **) = obj->getFunctionPrivate();
+            *va_arg(ap, JSFunction **) = obj->toFunction();
             break;
           case 'v':
             *va_arg(ap, jsval *) = *sp;
@@ -429,7 +429,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
         break;
       case JSTYPE_FUNCTION:
         *vp = v;
-        obj = js_ValueToFunctionObject(cx, vp, JSV2F_SEARCH_STACK);
+        obj = js_ValueToFunction(cx, vp, JSV2F_SEARCH_STACK);
         ok = (obj != NULL);
         break;
       case JSTYPE_STRING:
@@ -645,7 +645,6 @@ JSRuntime::JSRuntime()
     compartmentCallback(NULL),
     activityCallback(NULL),
     activityCallbackArg(NULL),
-    protoHazardShape(0),
     gcSystemAvailableChunkListHead(NULL),
     gcUserAvailableChunkListHead(NULL),
     gcKeepAtoms(0),
@@ -672,7 +671,6 @@ JSRuntime::JSRuntime()
     gcPoke(false),
     gcMarkAndSweep(false),
     gcRunning(false),
-    gcRegenShapes(false),
 #ifdef JS_GC_ZEAL
     gcZeal_(0),
     gcZealFrequency(0),
@@ -726,7 +724,6 @@ JSRuntime::JSRuntime()
     threadData(thisFromCtor()),
 #endif
     trustedPrincipals_(NULL),
-    shapeGen(0),
     wrapObjectCallback(NULL),
     preWrapObjectCallback(NULL),
     inOOMReport(0)
@@ -2383,6 +2380,10 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
         name = "shape";
         break;
 
+      case JSTRACE_BASE_SHAPE:
+        name = "base_shape";
+        break;
+
       case JSTRACE_TYPE_OBJECT:
         name = "type_object";
         break;
@@ -2411,7 +2412,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
             JSObject  *obj = (JSObject *)thing;
             Class *clasp = obj->getClass();
             if (clasp == &FunctionClass) {
-                JSFunction *fun = obj->getFunctionPrivate();
+                JSFunction *fun = obj->toFunction();
                 if (!fun) {
                     JS_snprintf(buf, bufsize, "<newborn>");
                 } else if (fun != obj) {
@@ -2446,6 +2447,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
           }
 
           case JSTRACE_SHAPE:
+          case JSTRACE_BASE_SHAPE:
           case JSTRACE_TYPE_OBJECT:
             break;
 
@@ -3080,14 +3082,9 @@ JS_GetInstancePrivate(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
 JS_PUBLIC_API(JSObject *)
 JS_GetPrototype(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto;
-
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    proto = obj->getProto();
-
-    /* Beware ref to dead object (we may be called from obj's finalizer). */
-    return proto && !proto->isNewborn() ? proto : NULL;
+    return obj->getProto();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3101,21 +3098,19 @@ JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
 JS_PUBLIC_API(JSObject *)
 JS_GetParent(JSContext *cx, JSObject *obj)
 {
+    JS_ASSERT(!obj->isInternalScope());
     assertSameCompartment(cx, obj);
-    JSObject *parent = obj->getParent();
-
-    /* Beware ref to dead object (we may be called from obj's finalizer). */
-    return parent && !parent->isNewborn() ? parent : NULL;
+    return obj->getParent();
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
 {
     CHECK_REQUEST(cx);
+    JS_ASSERT(!obj->isInternalScope());
     JS_ASSERT(parent || !obj->getParent());
     assertSameCompartment(cx, obj, parent);
-    obj->setParent(parent);
-    return true;
+    return obj->setParent(cx, parent);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -3131,8 +3126,7 @@ JS_GetConstructor(JSContext *cx, JSObject *proto)
         if (!proto->getProperty(cx, cx->runtime->atomState.constructorAtom, &cval))
             return NULL;
     }
-    JSObject *funobj;
-    if (!IsFunctionObject(cval, &funobj)) {
+    if (!IsFunctionObject(cval)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR,
                              proto->getClass()->name);
         return NULL;
@@ -3206,14 +3200,13 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
     JS_ASSERT(clasp != &FunctionClass);
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
-    if (proto)
-        proto->getNewType(cx, NULL, /* markUnknown = */ true);
+    if (proto && !proto->setNewTypeUnknown(cx))
+        return NULL;
 
-    JSObject *obj = NewNonFunction<WithProto::Class>(cx, clasp, proto, parent);
+    JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, parent);
     if (obj) {
         if (clasp->ext.equality)
             MarkTypeObjectFlags(cx, obj, OBJECT_FLAG_SPECIAL_EQUALITY);
-        obj->syncSpecialEquality();
         MarkTypeObjectUnknownProperties(cx, obj->type());
     }
 
@@ -3235,11 +3228,9 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSO
     JS_ASSERT(clasp != &FunctionClass);
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
-    JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
-    if (obj) {
-        obj->syncSpecialEquality();
+    JSObject *obj = NewObjectWithGivenProto(cx, clasp, proto, parent);
+    if (obj)
         MarkTypeObjectUnknownProperties(cx, obj->type());
-    }
     return obj;
 }
 
@@ -3349,13 +3340,13 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, jsid id,
         Shape *shape = (Shape *) prop;
 
         if (shape->isMethod()) {
-            vp->setObject(shape->methodObject());
+            vp->setObject(*obj2->nativeGetMethod(shape));
             return !!obj2->methodReadBarrier(cx, *shape, vp);
         }
 
         /* Peek at the native property's slot value, without doing a Get. */
-        if (obj2->containsSlot(shape->slot)) {
-            *vp = obj2->nativeGetSlot(shape->slot);
+        if (shape->hasSlot()) {
+            *vp = obj2->nativeGetSlot(shape->slot());
             return true;
         }
     } else {
@@ -3654,11 +3645,9 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *jsclasp
     if (!clasp)
         clasp = &ObjectClass;    /* default class is Object */
 
-    JSObject *nobj = NewObject<WithProto::Class>(cx, clasp, proto, obj);
+    JSObject *nobj = NewObjectWithClassProto(cx, clasp, proto, obj);
     if (!nobj)
         return NULL;
-
-    nobj->syncSpecialEquality();
 
     if (!DefineProperty(cx, obj, name, ObjectValue(*nobj), NULL, NULL, attrs, 0, 0))
         return NULL;
@@ -3726,12 +3715,12 @@ GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         if (shape->isMethod()) {
             desc->getter = JS_PropertyStub;
             desc->setter = JS_StrictPropertyStub;
-            desc->value.setObject(shape->methodObject());
+            desc->value.setObject(*obj2->nativeGetMethod(shape));
         } else {
             desc->getter = shape->getter();
             desc->setter = shape->setter();
-            if (obj2->containsSlot(shape->slot))
-                desc->value = obj2->nativeGetSlot(shape->slot);
+            if (shape->hasSlot())
+                desc->value = obj2->nativeGetSlot(shape->slot());
             else
                 desc->value.setUndefined();
         }
@@ -4143,7 +4132,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    iterobj = NewNonFunction<WithProto::Class>(cx, &prop_iter_class, NULL, obj);
+    iterobj = NewObjectWithClassProto(cx, &prop_iter_class, NULL, obj);
     if (!iterobj)
         return NULL;
 
@@ -4191,11 +4180,11 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
             shape = shape->previous();
 
         if (!shape->previous()) {
-            JS_ASSERT(JSID_IS_EMPTY(shape->propid));
+            JS_ASSERT(shape->isEmptyShape());
             *idp = JSID_VOID;
         } else {
             iterobj->setPrivate(const_cast<Shape *>(shape->previous()));
-            *idp = shape->propid;
+            *idp = shape->propid();
         }
     } else {
         /* Non-native case: use the ida enumerated when iterobj was created. */
@@ -4382,9 +4371,9 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         return NULL;
     }
 
-    JSFunction *fun = funobj->getFunctionPrivate();
+    JSFunction *fun = funobj->toFunction();
     if (!fun->isInterpreted())
-        return CloneFunctionObject(cx, fun, parent);
+        return CloneFunctionObject(cx, fun, parent, fun->getAllocKind());
 
     if (fun->script()->compileAndGo) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -4393,7 +4382,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     }
 
     if (!fun->isFlatClosure())
-        return CloneFunctionObject(cx, fun, parent);
+        return CloneFunctionObject(cx, fun, parent, fun->getAllocKind());
 
     /*
      * A flat closure carries its own environment, so why clone it? In case
@@ -4424,13 +4413,13 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
                                      JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
                 return NULL;
             }
-            obj = obj->getParent();
+            obj = obj->scopeChain();
         }
 
         Value v;
-        if (!obj->getGeneric(cx, r.front().propid, &v))
+        if (!obj->getGeneric(cx, r.front().propid(), &v))
             return NULL;
-        clone->setFlatClosureUpvar(i, v);
+        clone->toFunction()->setFlatClosureUpvar(i, v);
     }
 
     return clone;
@@ -4477,14 +4466,15 @@ JS_IsNativeFunction(JSObject *funobj, JSNative call)
 {
     if (!funobj->isFunction())
         return false;
-    JSFunction *fun = funobj->getFunctionPrivate();
+    JSFunction *fun = funobj->toFunction();
     return fun->isNative() && fun->native() == call;
 }
 
 JSBool
 js_generic_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
 {
-    JSFunctionSpec *fs = (JSFunctionSpec *) vp->toObject().getReservedSlot(0).toPrivate();
+    JSFunctionSpec *fs = (JSFunctionSpec *)
+        vp->toObject().toFunction()->getExtendedSlot(0).toPrivate();
     JS_ASSERT((fs->flags & JSFUN_GENERIC_NATIVE) != 0);
 
     if (argc < 1) {
@@ -4539,7 +4529,8 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
             fun = js_DefineFunction(cx, ctor, ATOM_TO_JSID(atom),
                                     js_generic_native_method_dispatcher,
                                     fs->nargs + 1,
-                                    flags);
+                                    flags,
+                                    JSFunction::ExtendedFinalizeKind);
             if (!fun)
                 return JS_FALSE;
 
@@ -4547,9 +4538,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
              * As jsapi.h notes, fs must point to storage that lives as long
              * as fun->object lives.
              */
-            Value priv = PrivateValue(fs);
-            if (!js_SetReservedSlot(cx, fun, 0, priv))
-                return JS_FALSE;
+            fun->setExtendedSlot(0, PrivateValue(fs));
         }
 
         fun = js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), fs->call, fs->nargs, flags);
@@ -5313,6 +5302,20 @@ JS_RestoreFrameChain(JSContext *cx)
     CHECK_REQUEST(cx);
     cx->stack.restoreFrameChain();
 }
+
+#ifdef MOZ_TRACE_JSCALLS
+JS_PUBLIC_API(void)
+JS_SetFunctionCallback(JSContext *cx, JSFunctionCallback fcb)
+{
+    cx->functionCallback = fcb;
+}
+
+JS_PUBLIC_API(JSFunctionCallback)
+JS_GetFunctionCallback(JSContext *cx)
+{
+    return cx->functionCallback;
+}
+#endif
 
 /************************************************************************/
 JS_PUBLIC_API(JSString *)

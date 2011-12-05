@@ -48,23 +48,30 @@ class CallObject : public ::JSObject
     /*
      * Reserved slot structure for Call objects:
      *
-     * private               - the stack frame corresponding to the Call object
-     *                         until js_PutCallObject or its on-trace analog
-     *                         is called, null thereafter
-     * JSSLOT_CALL_CALLEE    - callee function for the stack frame, or null if
-     *                         the stack frame is for strict mode eval code
-     * JSSLOT_CALL_ARGUMENTS - arguments object for non-strict mode eval stack
-     *                         frames (not valid for strict mode eval frames)
+     * SCOPE_CHAIN_SLOT - The enclosing scope. This must come first, for
+     *                    JSObject::scopeParent.
+     * CALLEE_SLOT      - Callee function for the stack frame, or null if
+     *                    the stack frame is for strict mode eval code.
+     * ARGUMENTS_SLOT   - Arguments object for non-strict mode eval stack
+     *                    frames (not valid for strict mode eval frames).
+     * private          - The stack frame corresponding to the Call object
+     *                    until js_PutCallObject or its on-trace analog
+     *                    is called, null thereafter.
+     *
+     * DeclEnv objects use SCOPE_CHAIN_SLOT and private in the same fashion.
      */
-    static const uintN CALLEE_SLOT = 0;
-    static const uintN ARGUMENTS_SLOT = 1;
+    static const uint32 CALLEE_SLOT = 1;
+    static const uint32 ARGUMENTS_SLOT = 2;
 
   public:
-    static const uintN RESERVED_SLOTS = 2;
-
     /* Create a CallObject for the given callee function. */
     static CallObject *
     create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObject *callee);
+
+    static const uint32 RESERVED_SLOTS = 3;
+
+    static const uint32 DECL_ENV_RESERVED_SLOTS = 1;
+    static const gc::AllocKind DECL_ENV_FINALIZE_KIND = gc::FINALIZE_OBJECT2;
 
     /* True if this is for a strict mode eval frame or for a function call. */
     inline bool isForEval() const;

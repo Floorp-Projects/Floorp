@@ -64,12 +64,6 @@ USING_INDEXEDDB_NAMESPACE
 
 namespace {
 
-PRUint32 gDatabaseInstanceCount = 0;
-mozilla::Mutex* gPromptHelpersMutex = nsnull;
-
-// Protected by gPromptHelpersMutex.
-nsTArray<nsRefPtr<CheckQuotaHelper> >* gPromptHelpers = nsnull;
-
 class CreateObjectStoreHelper : public AsyncConnectionHelper
 {
 public:
@@ -195,11 +189,6 @@ IDBDatabase::IDBDatabase()
   mRunningVersionChange(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (!gDatabaseInstanceCount++) {
-    NS_ASSERTION(!gPromptHelpersMutex, "Should be null!");
-    gPromptHelpersMutex = new mozilla::Mutex("IDBDatabase gPromptHelpersMutex");
-  }
 }
 
 IDBDatabase::~IDBDatabase()
@@ -218,86 +207,20 @@ IDBDatabase::~IDBDatabase()
   if (mListenerManager) {
     mListenerManager->Disconnect();
   }
-
-  if (!--gDatabaseInstanceCount) {
-    NS_ASSERTION(gPromptHelpersMutex, "Should not be null!");
-
-    delete gPromptHelpers;
-    gPromptHelpers = nsnull;
-
-    delete gPromptHelpersMutex;
-    gPromptHelpersMutex = nsnull;
-  }
-}
-
-bool
-IDBDatabase::IsQuotaDisabled()
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(gPromptHelpersMutex, "This should never be null!");
-
-  MutexAutoLock lock(*gPromptHelpersMutex);
-
-  if (!gPromptHelpers) {
-    gPromptHelpers = new nsAutoTArray<nsRefPtr<CheckQuotaHelper>, 10>();
-  }
-
-  CheckQuotaHelper* foundHelper = nsnull;
-
-  PRUint32 count = gPromptHelpers->Length();
-  for (PRUint32 index = 0; index < count; index++) {
-    nsRefPtr<CheckQuotaHelper>& helper = gPromptHelpers->ElementAt(index);
-    if (helper->WindowSerial() == Owner()->GetSerial()) {
-      foundHelper = helper;
-      break;
-    }
-  }
-
-  if (!foundHelper) {
-    nsRefPtr<CheckQuotaHelper>* newHelper = gPromptHelpers->AppendElement();
-    if (!newHelper) {
-      NS_WARNING("Out of memory!");
-      return false;
-    }
-    *newHelper = new CheckQuotaHelper(this, *gPromptHelpersMutex);
-    foundHelper = *newHelper;
-
-    {
-      // Unlock before calling out to XPCOM.
-      MutexAutoUnlock unlock(*gPromptHelpersMutex);
-
-      nsresult rv = NS_DispatchToMainThread(foundHelper, NS_DISPATCH_NORMAL);
-      NS_ENSURE_SUCCESS(rv, false);
-    }
-  }
-
-  return foundHelper->PromptAndReturnQuotaIsDisabled();
 }
 
 void
 IDBDatabase::Invalidate()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(gPromptHelpersMutex, "This should never be null!");
 
   // Make sure we're closed too.
   Close();
 
-  // Cancel any quota prompts that are currently being displayed.
-  {
-    MutexAutoLock lock(*gPromptHelpersMutex);
-
-    if (gPromptHelpers) {
-      PRUint32 count = gPromptHelpers->Length();
-      for (PRUint32 index = 0; index < count; index++) {
-        nsRefPtr<CheckQuotaHelper>& helper = gPromptHelpers->ElementAt(index);
-        if (helper->WindowSerial() == Owner()->GetSerial()) {
-          helper->Cancel();
-          break;
-        }
-      }
-    }
-  }
+  // When the IndexedDatabaseManager needs to invalidate databases, all it has
+  // is an origin, so we call back into the manager to cancel any prompts for
+  // our owner.
+  IndexedDatabaseManager::CancelPromptsForWindow(Owner());
 
   mInvalidated = true;
 }
