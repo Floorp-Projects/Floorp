@@ -762,7 +762,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
     /* Set the 'lineNumber' property. */
     uint32_t lineno;
     if (args.length() > 2) {
-        if (!ValueToECMAUint32(cx, args[2], &lineno))
+        if (!ToUint32(cx, args[2], &lineno))
             return false;
     } else {
         lineno = iter.done() ? 0 : js_FramePCToLineNumber(cx, iter.fp(), iter.pc());
@@ -891,7 +891,7 @@ exn_toSource(JSContext *cx, uintN argc, Value *vp)
     Value linenoVal;
     uint32_t lineno;
     if (!obj->getProperty(cx, cx->runtime->atomState.lineNumberAtom, &linenoVal) ||
-        !ValueToECMAUint32(cx, linenoVal, &lineno))
+        !ToUint32(cx, linenoVal, &lineno))
     {
         return false;
     }
@@ -1226,7 +1226,7 @@ js_ReportUncaughtException(JSContext *cx)
         if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, &roots[4]))
             return false;
         uint32_t lineno;
-        if (!ValueToECMAUint32(cx, roots[4], &lineno))
+        if (!ToUint32(cx, roots[4], &lineno))
             return false;
 
         reportp = &report;

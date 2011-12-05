@@ -1581,7 +1581,7 @@ fun_toString(JSContext *cx, uintN argc, Value *vp)
     JS_ASSERT(IsFunctionObject(vp[0]));
     uint32_t indent = 0;
 
-    if (argc != 0 && !ValueToECMAUint32(cx, vp[2], &indent))
+    if (argc != 0 && !ToUint32(cx, vp[2], &indent))
         return false;
 
     JSObject *obj = ToObject(cx, &vp[1]);
