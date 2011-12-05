@@ -44,6 +44,8 @@
 #include "mozilla/dom/indexedDB/IDBDatabase.h"
 #include "mozilla/dom/indexedDB/IDBRequest.h"
 
+#include "mozilla/Mutex.h"
+
 #include "nsIIndexedDatabaseManager.h"
 #include "nsIObserver.h"
 #include "nsIRunnable.h"
@@ -51,6 +53,7 @@
 #include "nsIURI.h"
 
 #include "nsClassHashtable.h"
+#include "nsRefPtrHashtable.h"
 #include "nsHashKeys.h"
 
 #define INDEXEDDB_MANAGER_CONTRACTID "@mozilla.org/dom/indexeddb/manager;1"
@@ -61,6 +64,8 @@ class nsITimer;
 BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
+
+class CheckQuotaHelper;
 
 class IndexedDatabaseManager : public nsIIndexedDatabaseManager,
                                public nsIObserver
@@ -129,13 +134,44 @@ public:
   // Used to check if there are running transactions in a given window.
   bool HasOpenTransactions(nsPIDOMWindow* aWindow);
 
-  static bool
-  SetCurrentDatabase(IDBDatabase* aDatabase);
+  // Set the Window that the current thread is doing operations for.
+  // The caller is responsible for ensuring that aWindow is held alive.
+  static inline void
+  SetCurrentWindow(nsPIDOMWindow* aWindow)
+  {
+    IndexedDatabaseManager* mgr = Get();
+    NS_ASSERTION(mgr, "Must have a manager here!");
+
+    return mgr->SetCurrentWindowInternal(aWindow);
+  }
 
   static PRUint32
   GetIndexedDBQuotaMB();
 
   nsresult EnsureQuotaManagementForDirectory(nsIFile* aDirectory);
+
+  // Determine if the quota is lifted for the Window the current thread is
+  // using.
+  static inline bool
+  QuotaIsLifted()
+  {
+    IndexedDatabaseManager* mgr = Get();
+    NS_ASSERTION(mgr, "Must have a manager here!");
+
+    return mgr->QuotaIsLiftedInternal();
+  }
+
+  static inline void
+  CancelPromptsForWindow(nsPIDOMWindow* aWindow)
+  {
+    IndexedDatabaseManager* mgr = Get();
+    NS_ASSERTION(mgr, "Must have a manager here!");
+
+    mgr->CancelPromptsForWindowInternal(aWindow);
+  }
+
+  static nsresult
+  GetASCIIOriginFromWindow(nsPIDOMWindow* aWindow, nsCString& aASCIIOrigin);
 
 private:
   IndexedDatabaseManager();
@@ -146,6 +182,10 @@ private:
                                   AsyncConnectionHelper* aHelper,
                                   WaitingOnDatabasesCallback aCallback,
                                   void* aClosure);
+
+  void SetCurrentWindowInternal(nsPIDOMWindow* aWindow);
+  bool QuotaIsLiftedInternal();
+  void CancelPromptsForWindowInternal(nsPIDOMWindow* aWindow);
 
   // Called when a database is created.
   bool RegisterDatabase(IDBDatabase* aDatabase);
@@ -267,6 +307,15 @@ private:
   // Maintains a list of live databases per origin.
   nsClassHashtable<nsCStringHashKey, nsTArray<IDBDatabase*> > mLiveDatabases;
 
+  // TLS storage index for the current thread's window
+  PRUintn mCurrentWindowIndex;
+
+  // Lock protecting mQuotaHelperHash
+  mozilla::Mutex mQuotaHelperMutex;
+
+  // A map of Windows to the corresponding quota helper.
+  nsRefPtrHashtable<nsPtrHashKey<nsPIDOMWindow>, CheckQuotaHelper> mQuotaHelperHash;
+
   // Maintains a list of origins that we're currently enumerating to gather
   // usage statistics.
   nsAutoTArray<nsRefPtr<AsyncUsageRunnable>, 1> mUsageRunnables;
@@ -288,6 +337,21 @@ private:
   // list isn't protected by any mutex but it is only ever touched on the IO
   // thread.
   nsTArray<nsCString> mTrackedQuotaPaths;
+};
+
+class AutoEnterWindow
+{
+public:
+  AutoEnterWindow(nsPIDOMWindow* aWindow)
+  {
+    NS_ASSERTION(aWindow, "This should never be null!");
+    IndexedDatabaseManager::SetCurrentWindow(aWindow);
+  }
+
+  ~AutoEnterWindow()
+  {
+    IndexedDatabaseManager::SetCurrentWindow(nsnull);
+  }
 };
 
 END_INDEXEDDB_NAMESPACE

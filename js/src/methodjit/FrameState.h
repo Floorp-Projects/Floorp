@@ -1052,7 +1052,7 @@ class FrameState
     inline bool isConstructorThis(const FrameEntry *fe) const;
 
     bool isArg(const FrameEntry *fe) const {
-        return a->script->hasFunction && fe >= a->args && fe - a->args < a->script->function()->nargs;
+        return a->script->function() && fe >= a->args && fe - a->args < a->script->function()->nargs;
     }
 
     bool isLocal(const FrameEntry *fe) const {

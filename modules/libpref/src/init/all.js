@@ -787,6 +787,13 @@ pref("network.http.connection-retry-timeout", 250);
 // IPv6 connectivity.
 pref("network.http.fast-fallback-to-IPv4", true);
 
+// Try and use SPDY when using SSL
+pref("network.http.spdy.enabled", false);
+pref("network.http.spdy.chunk-size", 4096);
+pref("network.http.spdy.timeout", 180);
+pref("network.http.spdy.coalesce-hostnames", true);
+pref("network.http.spdy.use-alternate-protocol", true);
+
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
 // Section 4.8 "High-Throughput Data Service Class", and 80 (0x50, or AF22)

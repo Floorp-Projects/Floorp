@@ -151,7 +151,7 @@ StackFrame::stealFrameAndSlots(Value *vp, StackFrame *otherfp,
         obj.setPrivate(this);
         otherfp->flags_ &= ~HAS_CALL_OBJ;
         if (js_IsNamedLambda(fun())) {
-            JSObject *env = obj.getParent();
+            JSObject *env = obj.internalScopeChain();
             JS_ASSERT(env->isDeclEnv());
             env->setPrivate(this);
         }
@@ -679,7 +679,7 @@ ContextStack::pushInvokeFrame(JSContext *cx, const CallArgs &args,
     JS_ASSERT(space().firstUnused() == args.end());
 
     JSObject &callee = args.callee();
-    JSFunction *fun = callee.getFunctionPrivate();
+    JSFunction *fun = callee.toFunction();
     JSScript *script = fun->script();
 
     /*StackFrame::Flags*/ uint32 flags = ToFrameFlags(initial);
@@ -687,7 +687,7 @@ ContextStack::pushInvokeFrame(JSContext *cx, const CallArgs &args,
     if (!fp)
         return false;
 
-    fp->initCallFrame(cx, callee, fun, script, args.length(), (StackFrame::Flags) flags);
+    fp->initCallFrame(cx, *fun, script, args.length(), (StackFrame::Flags) flags);
     ifg->regs_.prepareToRun(*fp, script);
 
     ifg->prevRegs_ = seg_->pushRegs(ifg->regs_);

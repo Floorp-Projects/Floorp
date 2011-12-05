@@ -207,6 +207,7 @@ struct CompartmentStats
     PRInt64 gcHeapStrings;
     PRInt64 gcHeapShapesTree;
     PRInt64 gcHeapShapesDict;
+    PRInt64 gcHeapShapesBase;
     PRInt64 gcHeapScripts;
     PRInt64 gcHeapTypeObjects;
     PRInt64 gcHeapXML;
@@ -216,6 +217,7 @@ struct CompartmentStats
     PRInt64 shapesExtraTreeTables;
     PRInt64 shapesExtraDictTables;
     PRInt64 shapesExtraTreeShapeKids;
+    PRInt64 shapesCompartmentTables;
     PRInt64 scriptData;
 
 #ifdef JS_METHODJIT

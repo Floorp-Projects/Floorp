@@ -641,7 +641,7 @@ InitTypeConstructor(JSContext* cx,
                     JSObject*& typeProto,
                     JSObject*& dataProto)
 {
-  JSFunction* fun = JS_DefineFunction(cx, parent, spec.name, spec.call, 
+  JSFunction* fun = js::DefineFunctionWithReserved(cx, parent, spec.name, spec.call, 
                       spec.nargs, spec.flags);
   if (!fun)
     return false;
@@ -672,8 +672,7 @@ InitTypeConstructor(JSContext* cx,
 
   // Stash ctypes.{Pointer,Array,Struct}Type.prototype on a reserved slot of
   // the type constructor, for faster lookup.
-  if (!JS_SetReservedSlot(cx, obj, SLOT_FN_CTORPROTO, OBJECT_TO_JSVAL(typeProto)))
-    return false;
+  js::SetFunctionNativeReserved(obj, SLOT_FN_CTORPROTO, OBJECT_TO_JSVAL(typeProto));
 
   // Create an object to serve as the common ancestor for all CData objects
   // created from the given type constructor. This has ctypes.CData.prototype
@@ -725,13 +724,17 @@ InitInt64Class(JSContext* cx,
   if (!JS_FreezeObject(cx, ctor))
     return NULL;
 
-  // Stash ctypes.{Int64,UInt64}.prototype on a reserved slot of the 'join'
-  // function.
-  jsval join;
-  ASSERT_OK(JS_GetProperty(cx, ctor, "join", &join));
-  if (!JS_SetReservedSlot(cx, JSVAL_TO_OBJECT(join), SLOT_FN_INT64PROTO,
-         OBJECT_TO_JSVAL(prototype)))
+  // Redefine the 'join' function as an extended native and stash
+  // ctypes.{Int64,UInt64}.prototype in a reserved slot of the new function.
+  JS_ASSERT(clasp == &sInt64ProtoClass || clasp == &sUInt64ProtoClass);
+  JSNative native = (clasp == &sInt64ProtoClass) ? Int64::Join : UInt64::Join;
+  JSFunction* fun = js::DefineFunctionWithReserved(cx, ctor, "join", native,
+                      2, CTYPESFN_FLAGS);
+  if (!fun)
     return NULL;
+
+  js::SetFunctionNativeReserved(fun, SLOT_FN_INT64PROTO,
+    OBJECT_TO_JSVAL(prototype));
 
   if (!JS_FreezeObject(cx, prototype))
     return NULL;
@@ -3045,8 +3048,7 @@ CType::GetProtoFromCtor(JSContext* cx, JSObject* obj, CTypeProtoSlot slot)
 {
   // Get ctypes.{Pointer,Array,Struct}Type.prototype from a reserved slot
   // on the type constructor.
-  jsval protoslot;
-  ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FN_CTORPROTO, &protoslot));
+  jsval protoslot = js::GetFunctionNativeReserved(obj, SLOT_FN_CTORPROTO);
   JSObject* proto = JSVAL_TO_OBJECT(protoslot);
   JS_ASSERT(proto);
   JS_ASSERT(CType::IsCTypeProto(cx, proto));
@@ -6291,8 +6293,7 @@ Int64::Join(JSContext* cx, uintN argc, jsval* vp)
   // Get Int64.prototype from the function's reserved slot.
   JSObject* callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
 
-  jsval slot;
-  ASSERT_OK(JS_GetReservedSlot(cx, callee, SLOT_FN_INT64PROTO, &slot));
+  jsval slot = js::GetFunctionNativeReserved(callee, SLOT_FN_INT64PROTO);
   JSObject* proto = JSVAL_TO_OBJECT(slot);
   JS_ASSERT(JS_GET_CLASS(cx, proto) == &sInt64ProtoClass);
 
@@ -6459,8 +6460,7 @@ UInt64::Join(JSContext* cx, uintN argc, jsval* vp)
   // Get UInt64.prototype from the function's reserved slot.
   JSObject* callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
 
-  jsval slot;
-  ASSERT_OK(JS_GetReservedSlot(cx, callee, SLOT_FN_INT64PROTO, &slot));
+  jsval slot = js::GetFunctionNativeReserved(callee, SLOT_FN_INT64PROTO);
   JSObject* proto = JSVAL_TO_OBJECT(slot);
   JS_ASSERT(JS_GET_CLASS(cx, proto) == &sUInt64ProtoClass);
 

@@ -30,6 +30,8 @@ load 308752-2.html
 load 316636-1.html
 load 322779-1.xul
 load 323489-1.html
+load 323604-1.html
+load 323604-2.xhtml
 load 331344-1.html
 load 331446-1.xhtml
 load 331690-1.html
@@ -56,6 +58,7 @@ load 366556-1.xhtml
 load 367673-1.xhtml
 load 368166-1.xhtml
 load 370360-1.html
+load 370713-1.html
 load 370876-1.html
 load 370897-1.html
 load 373611-1.html
@@ -94,6 +97,7 @@ load 430374.html
 load 444431-1.html
 load 448988-1.xhtml
 load 450311-1.html
+load 451355-1.html
 load 456041.html
 load 457115.html
 load 460637-1.xhtml
@@ -101,6 +105,7 @@ load 460637-2.xhtml
 load 460637-3.xhtml
 load 467141-1.html
 load 488388-1.html
+load 509562-1.xhtml
 load 512749-1.html
 load 513732-1.html
 asserts(0-1) load 533380-1.xhtml # Bug 614457
@@ -109,8 +114,11 @@ load 573354-1.xhtml
 load 576890-1.html
 load 576890-2.html
 load 576890-3.html
+load 580481-1.xhtml
 asserts(0-3) load 595758-1.xhtml # Bug 453871
 load 595758-2.xhtml
 load 678447-1.html
 load 691824-1.xhtml
 load 695430-1.html
+load 705996-1.html
+load 705996-2.html

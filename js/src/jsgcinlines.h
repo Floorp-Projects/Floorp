@@ -68,20 +68,42 @@ const size_t SLOTS_TO_THING_KIND_LIMIT = 17;
 
 /* Get the best kind to use when making an object with the given slot count. */
 static inline AllocKind
-GetGCObjectKind(size_t numSlots, bool isArray = false)
+GetGCObjectKind(size_t numSlots)
 {
     extern AllocKind slotsToThingKind[];
 
-    if (numSlots >= SLOTS_TO_THING_KIND_LIMIT) {
-        /*
-         * If the object will definitely want more than the maximum number of
-         * fixed slots, use zero fixed slots for arrays and the maximum for
-         * other objects. Arrays do not use their fixed slots anymore when
-         * they have a slots array, while other objects will continue to do so.
-         */
-        return isArray ? FINALIZE_OBJECT0 : FINALIZE_OBJECT16;
-    }
+    if (numSlots >= SLOTS_TO_THING_KIND_LIMIT)
+        return FINALIZE_OBJECT16;
     return slotsToThingKind[numSlots];
+}
+
+static inline AllocKind
+GetGCObjectKind(Class *clasp)
+{
+    if (clasp == &FunctionClass)
+        return JSFunction::FinalizeKind;
+    uint32 nslots = JSCLASS_RESERVED_SLOTS(clasp);
+    if (clasp->flags & JSCLASS_HAS_PRIVATE)
+        nslots++;
+    return GetGCObjectKind(nslots);
+}
+
+/* As for GetGCObjectKind, but for dense array allocation. */
+static inline AllocKind
+GetGCArrayKind(size_t numSlots)
+{
+    extern AllocKind slotsToThingKind[];
+
+    /*
+     * Dense arrays can use their fixed slots to hold their elements array
+     * (less two Values worth of ObjectElements header), but if more than the
+     * maximum number of fixed slots is needed then the fixed slots will be
+     * unused.
+     */
+    JS_STATIC_ASSERT(ObjectElements::VALUES_PER_HEADER == 2);
+    if (numSlots > JSObject::NELEMENTS_LIMIT || numSlots + 2 >= SLOTS_TO_THING_KIND_LIMIT)
+        return FINALIZE_OBJECT2;
+    return slotsToThingKind[numSlots + 2];
 }
 
 static inline AllocKind
@@ -149,6 +171,27 @@ GetGCKindSlots(AllocKind thingKind)
         JS_NOT_REACHED("Bad object finalize kind");
         return 0;
     }
+}
+
+static inline size_t
+GetGCKindSlots(AllocKind thingKind, Class *clasp)
+{
+    size_t nslots = GetGCKindSlots(thingKind);
+
+    /* An object's private data uses the space taken by its last fixed slot. */
+    if (clasp->flags & JSCLASS_HAS_PRIVATE) {
+        JS_ASSERT(nslots > 0);
+        nslots--;
+    }
+
+    /*
+     * Functions have a larger finalize kind than FINALIZE_OBJECT to reserve
+     * space for the extra fields in JSFunction, but have no fixed slots.
+     */
+    if (clasp == &FunctionClass)
+        nslots = 0;
+
+    return nslots;
 }
 
 static inline void
@@ -324,9 +367,6 @@ class CellIter: public CellIterImpl
 inline void EmptyArenaOp(Arena *arena) {}
 inline void EmptyCellOp(Cell *t) {}
 
-} /* namespace gc */
-} /* namespace js */
-
 /*
  * Allocates a new GC thing. After a successful allocation the caller must
  * fully initialize the thing before calling any function that can potentially
@@ -358,54 +398,80 @@ NewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
     return static_cast<T *>(t);
 }
 
+/* Alternate form which allocates a GC thing if doing so cannot trigger a GC. */
+template <typename T>
+inline T *
+TryNewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
+{
+    JS_ASSERT(thingSize == js::gc::Arena::thingSize(kind));
+#ifdef JS_THREADSAFE
+    JS_ASSERT_IF((cx->compartment == cx->runtime->atomsCompartment),
+                 kind == js::gc::FINALIZE_STRING || kind == js::gc::FINALIZE_SHORT_STRING);
+#endif
+    JS_ASSERT(!cx->runtime->gcRunning);
+    JS_ASSERT(!JS_THREAD_DATA(cx)->noGCOrAllocationCheck);
+
+#ifdef JS_GC_ZEAL
+    if (cx->runtime->needZealousGC())
+        return NULL;
+#endif
+
+    void *t = cx->compartment->arenas.allocateFromFreeList(kind, thingSize);
+    return static_cast<T *>(t);
+}
+
+} /* namespace gc */
+} /* namespace js */
+
 inline JSObject *
 js_NewGCObject(JSContext *cx, js::gc::AllocKind kind)
 {
     JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
-    JSObject *obj = NewGCThing<JSObject>(cx, kind, js::gc::Arena::thingSize(kind));
-    if (obj)
-        obj->earlyInit(js::gc::GetGCKindSlots(kind));
-    return obj;
+    return js::gc::NewGCThing<JSObject>(cx, kind, js::gc::Arena::thingSize(kind));
+}
+
+inline JSObject *
+js_TryNewGCObject(JSContext *cx, js::gc::AllocKind kind)
+{
+    JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
+    return js::gc::TryNewGCThing<JSObject>(cx, kind, js::gc::Arena::thingSize(kind));
 }
 
 inline JSString *
 js_NewGCString(JSContext *cx)
 {
-    return NewGCThing<JSString>(cx, js::gc::FINALIZE_STRING, sizeof(JSString));
+    return js::gc::NewGCThing<JSString>(cx, js::gc::FINALIZE_STRING, sizeof(JSString));
 }
 
 inline JSShortString *
 js_NewGCShortString(JSContext *cx)
 {
-    return NewGCThing<JSShortString>(cx, js::gc::FINALIZE_SHORT_STRING, sizeof(JSShortString));
+    return js::gc::NewGCThing<JSShortString>(cx, js::gc::FINALIZE_SHORT_STRING, sizeof(JSShortString));
 }
 
 inline JSExternalString *
 js_NewGCExternalString(JSContext *cx)
 {
-    return NewGCThing<JSExternalString>(cx, js::gc::FINALIZE_EXTERNAL_STRING,
-                                        sizeof(JSExternalString));
-}
-
-inline JSFunction*
-js_NewGCFunction(JSContext *cx)
-{
-    JSFunction *fun = NewGCThing<JSFunction>(cx, js::gc::FINALIZE_FUNCTION, sizeof(JSFunction));
-    if (fun)
-        fun->earlyInit(JSObject::FUN_CLASS_RESERVED_SLOTS);
-    return fun;
+    return js::gc::NewGCThing<JSExternalString>(cx, js::gc::FINALIZE_EXTERNAL_STRING,
+                                                sizeof(JSExternalString));
 }
 
 inline JSScript *
 js_NewGCScript(JSContext *cx)
 {
-    return NewGCThing<JSScript>(cx, js::gc::FINALIZE_SCRIPT, sizeof(JSScript));
+    return js::gc::NewGCThing<JSScript>(cx, js::gc::FINALIZE_SCRIPT, sizeof(JSScript));
 }
 
 inline js::Shape *
 js_NewGCShape(JSContext *cx)
 {
-    return NewGCThing<js::Shape>(cx, js::gc::FINALIZE_SHAPE, sizeof(js::Shape));
+    return js::gc::NewGCThing<js::Shape>(cx, js::gc::FINALIZE_SHAPE, sizeof(js::Shape));
+}
+
+inline js::BaseShape *
+js_NewGCBaseShape(JSContext *cx)
+{
+    return js::gc::NewGCThing<js::BaseShape>(cx, js::gc::FINALIZE_BASE_SHAPE, sizeof(js::BaseShape));
 }
 
 #if JS_HAS_XML_SUPPORT

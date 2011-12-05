@@ -86,6 +86,16 @@ CPPSRCS += \
   TableTicker.cpp \
   $(NULL)
 endif
+ifeq ($(OS_TARGET),Darwin)
+
+DEFINES += -DMOZ_ENABLE_PROFILER_SPS
+
+CPPSRCS += \
+  platform-macos.cc \
+  TableTicker.cpp \
+  $(NULL)
+endif
+
 
 include $(topsrcdir)/config/rules.mk
 

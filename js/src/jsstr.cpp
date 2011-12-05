@@ -1734,8 +1734,8 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         /* Only handle the case where the property exists and is on this object. */
         if (prop && holder == base) {
             Shape *shape = (Shape *) prop;
-            if (shape->slot != SHAPE_INVALID_SLOT && shape->hasDefaultGetter()) {
-                Value value = base->getSlot(shape->slot);
+            if (shape->hasSlot() && shape->hasDefaultGetter()) {
+                Value value = base->getSlot(shape->slot());
                 if (value.isString()) {
                     rdata.repstr = value.toString()->ensureLinear(cx);
                     if (!rdata.repstr)
@@ -2146,7 +2146,7 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
         rdata.dollar = rdata.dollarEnd = NULL;
 
         if (rdata.lambda->isFunction()) {
-            JSFunction *fun = rdata.lambda->getFunctionPrivate();
+            JSFunction *fun = rdata.lambda->toFunction();
             if (fun->isInterpreted()) {
                 /*
                  * Pattern match the script to check if it is is indexing into a
@@ -2161,7 +2161,7 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
 
                 Value table = UndefinedValue();
                 if (JSOp(*pc) == JSOP_GETFCSLOT) {
-                    table = rdata.lambda->getFlatClosureUpvar(GET_UINT16(pc));
+                    table = fun->getFlatClosureUpvar(GET_UINT16(pc));
                     pc += JSOP_GETFCSLOT_LENGTH;
                 }
 
@@ -2955,10 +2955,9 @@ static JSFunctionSpec string_static_methods[] = {
     JS_FS_END
 };
 
-const Shape *
+Shape *
 StringObject::assignInitialShape(JSContext *cx)
 {
-    JS_ASSERT(!cx->compartment->initialStringShape);
     JS_ASSERT(nativeEmpty());
 
     return addDataProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),

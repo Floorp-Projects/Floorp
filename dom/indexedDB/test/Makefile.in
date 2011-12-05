@@ -129,6 +129,8 @@ BROWSER_TEST_FILES = \
   browser_quotaPrompt.html \
   browser_quotaPromptAllow.js \
   browser_quotaPromptDeny.js \
+  browser_quotaPromptDatabases.html \
+  browser_quotaPromptDatabases.js \
   head.js \
   $(NULL)
 

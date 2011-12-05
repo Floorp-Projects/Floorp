@@ -80,7 +80,7 @@ class Compiler : public BaseCompiler
     struct GlobalNameICInfo {
         Label fastPathStart;
         Call slowPathCall;
-        DataLabel32 shape;
+        DataLabelPtr shape;
         DataLabelPtr addrLabel;
         bool usePropertyCache;
 
@@ -147,7 +147,6 @@ class Compiler : public BaseCompiler
         Jump         oolJump;
         Label        icCall;
         RegisterID   funObjReg;
-        RegisterID   funPtrReg;
         FrameSize    frameSize;
         bool         typeMonitored;
     };
@@ -200,7 +199,7 @@ class Compiler : public BaseCompiler
         RegisterID  objReg;
         ValueRemat  id;
         MaybeJump   typeGuard;
-        Jump        claspGuard;
+        Jump        shapeGuard;
     };
 
     struct SetElementICInfo : public BaseICInfo {
@@ -210,7 +209,7 @@ class Compiler : public BaseCompiler
         StateRemat  objRemat;
         ValueRemat  vr;
         Jump        capacityGuard;
-        Jump        claspGuard;
+        Jump        shapeGuard;
         Jump        holeGuard;
         Int32Key    key;
         uint32      volatileMask;
@@ -233,7 +232,6 @@ class Compiler : public BaseCompiler
         bool typeMonitored;
         types::TypeSet *rhsTypes;
         ValueRemat vr;
-#ifdef JS_HAS_IC_LABELS
         union {
             ic::GetPropLabels getPropLabels_;
             ic::SetPropLabels setPropLabels_;
@@ -258,25 +256,6 @@ class Compiler : public BaseCompiler
                       kind == ic::PICInfo::XNAME);
             return scopeNameLabels_;
         }
-#else
-        ic::GetPropLabels &getPropLabels() {
-            JS_ASSERT(kind == ic::PICInfo::GET || kind == ic::PICInfo::CALL);
-            return ic::PICInfo::getPropLabels_;
-        }
-        ic::SetPropLabels &setPropLabels() {
-            JS_ASSERT(kind == ic::PICInfo::SET || kind == ic::PICInfo::SETMETHOD);
-            return ic::PICInfo::setPropLabels_;
-        }
-        ic::BindNameLabels &bindNameLabels() {
-            JS_ASSERT(kind == ic::PICInfo::BIND);
-            return ic::PICInfo::bindNameLabels_;
-        }
-        ic::ScopeNameLabels &scopeNameLabels() {
-            JS_ASSERT(kind == ic::PICInfo::NAME || kind == ic::PICInfo::CALLNAME ||
-                      kind == ic::PICInfo::XNAME);
-            return ic::PICInfo::scopeNameLabels_;
-        }
-#endif
 
         void copySimpleMembersTo(ic::PICInfo &ic) {
             ic.kind = kind;
@@ -292,7 +271,6 @@ class Compiler : public BaseCompiler
             }
             ic.typeMonitored = typeMonitored;
             ic.rhsTypes = rhsTypes;
-#ifdef JS_HAS_IC_LABELS
             if (ic.isGet())
                 ic.setLabels(getPropLabels());
             else if (ic.isSet())
@@ -301,7 +279,6 @@ class Compiler : public BaseCompiler
                 ic.setLabels(bindNameLabels());
             else if (ic.isScopeName())
                 ic.setLabels(scopeNameLabels());
-#endif
         }
 
     };
@@ -647,7 +624,6 @@ private:
     void jsop_setelem_slow();
     void jsop_getelem_slow();
     void jsop_callelem_slow();
-    void jsop_unbrand();
     bool jsop_getprop(JSAtom *atom, JSValueType type,
                       bool typeCheck = true, bool usePropCache = true);
     bool jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed);

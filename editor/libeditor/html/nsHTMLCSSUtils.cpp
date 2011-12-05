@@ -1401,17 +1401,3 @@ nsHTMLCSSUtils::SetCSSPropertyPixels(nsIDOMElement * aElement,
   s.AppendInt(aIntValue);
   return SetCSSProperty(aElement, aProperty, s + NS_LITERAL_STRING("px"));
 }
-
-nsresult
-nsHTMLCSSUtils::RemoveCSSProperty(nsIDOMElement * aElement,
-                                  const nsAString & aProperty)
-{
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-  PRUint32 length;
-  nsresult res = GetInlineStyles(aElement, getter_AddRefs(cssDecl), &length);
-  if (NS_FAILED(res) || !cssDecl) return res;
-
-  nsAutoString returnString;
-  return cssDecl->RemoveProperty(aProperty, returnString);
-}
-

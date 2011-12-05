@@ -134,6 +134,10 @@ GCMarker::dumpConservativeRoots()
             fprintf(fp, "shape");
             break;
           }
+          case JSTRACE_BASE_SHAPE: {
+            fprintf(fp, "base_shape");
+            break;
+          }
           case JSTRACE_TYPE_OBJECT: {
             fprintf(fp, "type_object");
             break;
