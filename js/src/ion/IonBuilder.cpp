@@ -640,6 +640,12 @@ IonBuilder::inspectOpcode(JSOp op)
         current->pop();
         return true;
 
+      case JSOP_NEWARRAY:
+        return jsop_newarray(GET_UINT24(pc));
+
+      case JSOP_ENDINIT:
+        return true;
+
       case JSOP_IFEQX:
         return jsop_ifeq(JSOP_IFEQX);
 
@@ -2238,6 +2244,29 @@ IonBuilder::jsop_compare(JSOp op)
 
     // Push result
     current->push(ins);
+    return true;
+}
+
+bool
+IonBuilder::jsop_newarray(uint32 count)
+{
+    using namespace types;
+
+    // This type object will stay the same for each couple (script, pc).  We do
+    // not use the type oracle here because the type oracle needs to see a few
+    // runs before giving us a typeset containing only the result of the
+    // InitObject function.
+    TypeObject *type = TypeScript::InitObject(cx, script, pc, JSProto_Array);
+    if (!type)
+        return false;
+
+    MNewArray *ins = new MNewArray(count, type);
+
+    current->add(ins);
+    current->push(ins);
+
+    if (!resumeAfter(ins))
+        return false;
     return true;
 }
 

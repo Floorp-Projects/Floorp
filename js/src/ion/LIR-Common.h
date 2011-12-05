@@ -183,6 +183,25 @@ class LGoto : public LInstructionHelper<0, 0, 0>
     }
 };
 
+typedef LVMCallInstructionHelper<VMFunction::ReturnPointer, 1, 0, 0> LNewArrayBase;
+class LNewArray : public LNewArrayBase
+{
+  public:
+    LIR_HEADER(NewArray);
+
+    LNewArray()
+      : LNewArrayBase(function())
+    { }
+
+    MNewArray *mir() const {
+        return mir_->toNewArray();
+    }
+
+    static const VMFunction &function() {
+        return NewInitArrayVMFun;
+    }
+};
+
 // Writes an argument for a function call to the frame's argument vector.
 class LStackArg : public LInstructionHelper<0, BOX_PIECES, 0>
 {
@@ -202,7 +221,7 @@ class LStackArg : public LInstructionHelper<0, BOX_PIECES, 0>
 
 // Generates a polymorphic callsite, wherein the function being called is
 // unknown and anticipated to vary.
-class LCallGeneric : public LInstructionHelper<BOX_PIECES, 1, 2>
+class LCallGeneric : public LCallInstructionHelper<BOX_PIECES , 1, 2>
 {
     // Slot below which %esp should be adjusted to make the call.
     // Zero for a function without arguments.

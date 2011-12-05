@@ -112,7 +112,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph &graph);
 
   public:
-    bool callVM(const VMFunction *f, LInstruction *ins);
+    bool callVM(const VMFunction &f, LInstruction *ins);
 
   public:
     // Instruction visitors.
@@ -134,6 +134,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitCompareDAndBranch(LCompareDAndBranch *comp);
     virtual bool visitMathD(LMathD *math);
     virtual bool visitTableSwitch(LTableSwitch *ins);
+    virtual bool visitNewArray(LNewArray *builder);
     virtual bool visitCallGeneric(LCallGeneric *call);
     virtual bool visitBoundsCheck(LBoundsCheck *lir);
 

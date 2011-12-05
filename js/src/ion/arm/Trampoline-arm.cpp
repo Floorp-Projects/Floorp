@@ -469,7 +469,7 @@ IonCompartment::generateBailoutHandler(JSContext *cx)
 }
 
 IonCode *
-IonCompartment::generateCWrapper(JSContext *cx, const VMFunction &f)
+IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 {
     typedef MoveResolver::MoveOperand MoveOperand;
 

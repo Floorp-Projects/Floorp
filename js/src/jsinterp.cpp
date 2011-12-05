@@ -4795,14 +4795,14 @@ END_CASE(JSOP_NEWINIT)
 BEGIN_CASE(JSOP_NEWARRAY)
 {
     unsigned count = GET_UINT24(regs.pc);
-    JSObject *obj = NewDenseAllocatedArray(cx, count);
-    if (!obj)
-        goto error;
 
     TypeObject *type = TypeScript::InitObject(cx, script, regs.pc, JSProto_Array);
     if (!type)
         goto error;
-    obj->setType(type);
+
+    JSObject *obj = NewInitArray(cx, count, type);
+    if (!obj)
+        goto error;
 
     PUSH_OBJECT(*obj);
     CHECK_INTERRUPT_HANDLER();
@@ -5903,4 +5903,14 @@ END_CASE(JSOP_ARRAYPUSH)
             js_ReportIsNotDefined(cx, printable.ptr());
     }
     goto error;
+}
+
+JSObject*
+js::NewInitArray(JSContext *cx, uint32 count, types::TypeObject *type)
+{
+    JSObject *obj = NewDenseAllocatedArray(cx, count);
+    if (!obj)
+        return NULL;
+    obj->setType(type);
+    return obj;
 }

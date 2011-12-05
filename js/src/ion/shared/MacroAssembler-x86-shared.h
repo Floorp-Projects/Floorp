@@ -112,6 +112,13 @@ class MacroAssemblerX86Shared : public Assembler
         push(reg);
         framePushed_ += STACK_SLOT_SIZE;
     }
+    void Push(const Imm32 imm) {
+        push(imm);
+        framePushed_ += STACK_SLOT_SIZE;
+    }
+    void implicitPop(uint32 args) {
+        framePushed_ -= args * STACK_SLOT_SIZE;
+    }
     uint32 framePushed() const {
         return framePushed_;
     }
