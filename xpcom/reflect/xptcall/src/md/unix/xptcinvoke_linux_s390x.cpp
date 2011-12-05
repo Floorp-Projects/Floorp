@@ -194,55 +194,23 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint64* d_ov, PRUi
     }
 }
 
+typedef nsresult (*vtable_func)(nsISupports *, PRUint64, PRUint64, PRUint64, PRUint64, double, double, double, double);
+
 EXPORT_XPCOM_API(nsresult)
 NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
                  PRUint32 paramCount, nsXPTCVariant* params)
 {
-    PRUint64 *vtable = *(PRUint64 **)that;
-    PRUint64 method = vtable[methodIndex];
+    vtable_func *vtable = *reinterpret_cast<vtable_func **>(that);
+    vtable_func method = vtable[methodIndex];
     PRUint64 overflow = invoke_count_words (paramCount, params);
+    PRUint64 *stack_space = reinterpret_cast<PRUint64 *>(__builtin_alloca((overflow + 8 /* 4 64-bits gpr + 4 64-bits fpr */) * 8));
     PRUint64 result;
 
-    __asm__ __volatile__
-    (
-        "lgr    7,15\n\t"
-        "aghi   7,-64\n\t"
+    invoke_copy_to_stack(paramCount, params, stack_space, overflow);
 
-        "lgr    3,%3\n\t"
-        "sllg   3,3,3\n\t"
-        "lcgr   3,3\n\t"
-        "lg     2,0(15)\n\t"
-        "la     15,0(3,7)\n\t"
-        "stg    2,0(15)\n\t"
+    PRUint64 *d_gpr = stack_space + overflow;
+    double *d_fpr = reinterpret_cast<double *>(d_gpr + 4);
 
-        "lgr    2,%1\n\t"
-        "lgr    3,%2\n\t"
-        "la     4,160(15)\n\t"
-        "lgr    5,%3\n\t"
-        "basr   14,%4\n\t"
-
-        "lgr    2,%5\n\t"
-        "ld     0,192(7)\n\t"
-        "ld     2,200(7)\n\t"
-        "ld     4,208(7)\n\t"
-        "ld     6,216(7)\n\t"
-        "lmg    3,6,160(7)\n\t"
-        "basr   14,%6\n\t"
-
-        "la     15,64(7)\n\t"
-
-        "lgr    %0,2\n\t"
-        : "=r" (result)
-        : "r" ((PRUint64)paramCount),
-          "r" (params),
-          "r" (overflow),
-          "a" (invoke_copy_to_stack),
-          "a" (that),
-          "a" (method)
-        : "2", "3", "4", "5", "6", "7", "14", "cc", "memory",
-	  "%f0", "%f1", "%f2", "%f3", "%f4", "%f5", "%f6", "%f7"
-    );
-  
-    return result;
+    return method(that, d_gpr[0], d_gpr[1], d_gpr[2], d_gpr[3], d_fpr[0], d_fpr[1], d_fpr[2], d_fpr[3]);
 }
 
