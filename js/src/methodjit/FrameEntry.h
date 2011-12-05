@@ -91,7 +91,7 @@ class FrameEntry
     void convertConstantDoubleToInt32(JSContext *cx) {
         JS_ASSERT(isType(JSVAL_TYPE_DOUBLE) && isConstant());
         int32 value;
-        ValueToECMAInt32(cx, getValue(), &value);
+        ToInt32(cx, getValue(), &value);
 
         Value newValue = Int32Value(value);
         setConstant(newValue);

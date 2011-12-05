@@ -565,10 +565,9 @@ stubs::BitOr(VMFrame &f)
 {
     int32_t i, j;
 
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-2], &i) ||
-        !ValueToECMAInt32(f.cx, f.regs.sp[-1], &j)) {
+    if (!ToInt32(f.cx, f.regs.sp[-2], &i) || !ToInt32(f.cx, f.regs.sp[-1], &j))
         THROW();
-    }
+
     i = i | j;
     f.regs.sp[-2].setInt32(i);
 }
@@ -578,10 +577,9 @@ stubs::BitXor(VMFrame &f)
 {
     int32_t i, j;
 
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-2], &i) ||
-        !ValueToECMAInt32(f.cx, f.regs.sp[-1], &j)) {
+    if (!ToInt32(f.cx, f.regs.sp[-2], &i) || !ToInt32(f.cx, f.regs.sp[-1], &j))
         THROW();
-    }
+
     i = i ^ j;
     f.regs.sp[-2].setInt32(i);
 }
@@ -591,10 +589,9 @@ stubs::BitAnd(VMFrame &f)
 {
     int32_t i, j;
 
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-2], &i) ||
-        !ValueToECMAInt32(f.cx, f.regs.sp[-1], &j)) {
+    if (!ToInt32(f.cx, f.regs.sp[-2], &i) || !ToInt32(f.cx, f.regs.sp[-1], &j))
         THROW();
-    }
+
     i = i & j;
     f.regs.sp[-2].setInt32(i);
 }
@@ -604,7 +601,7 @@ stubs::BitNot(VMFrame &f)
 {
     int32_t i;
 
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-1], &i))
+    if (!ToInt32(f.cx, f.regs.sp[-1], &i))
         THROW();
     i = ~i;
     f.regs.sp[-1].setInt32(i);
@@ -614,9 +611,9 @@ void JS_FASTCALL
 stubs::Lsh(VMFrame &f)
 {
     int32_t i, j;
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-2], &i))
+    if (!ToInt32(f.cx, f.regs.sp[-2], &i))
         THROW();
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-1], &j))
+    if (!ToInt32(f.cx, f.regs.sp[-1], &j))
         THROW();
     i = i << (j & 31);
     f.regs.sp[-2].setInt32(i);
@@ -626,9 +623,9 @@ void JS_FASTCALL
 stubs::Rsh(VMFrame &f)
 {
     int32_t i, j;
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-2], &i))
+    if (!ToInt32(f.cx, f.regs.sp[-2], &i))
         THROW();
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-1], &j))
+    if (!ToInt32(f.cx, f.regs.sp[-1], &j))
         THROW();
     i = i >> (j & 31);
     f.regs.sp[-2].setInt32(i);
@@ -638,10 +635,10 @@ void JS_FASTCALL
 stubs::Ursh(VMFrame &f)
 {
     uint32_t u;
-    if (!ValueToECMAUint32(f.cx, f.regs.sp[-2], &u))
+    if (!ToUint32(f.cx, f.regs.sp[-2], &u))
         THROW();
     int32_t j;
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-1], &j))
+    if (!ToInt32(f.cx, f.regs.sp[-1], &j))
         THROW();
 
     u >>= (j & 31);

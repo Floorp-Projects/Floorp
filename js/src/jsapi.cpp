@@ -532,7 +532,7 @@ JS_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip)
     assertSameCompartment(cx, v);
 
     AutoValueRooter tvr(cx, v);
-    return ValueToECMAInt32(cx, tvr.value(), (int32_t *)ip);
+    return ToInt32(cx, tvr.value(), (int32_t *)ip);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -542,7 +542,7 @@ JS_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip)
     assertSameCompartment(cx, v);
 
     AutoValueRooter tvr(cx, v);
-    return ValueToECMAUint32(cx, tvr.value(), (uint32_t *)ip);
+    return ToUint32(cx, tvr.value(), (uint32_t *)ip);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -552,7 +552,7 @@ JS_ValueToInt32(JSContext *cx, jsval v, int32 *ip)
     assertSameCompartment(cx, v);
 
     AutoValueRooter tvr(cx, v);
-    return ValueToInt32(cx, tvr.value(), (int32_t *)ip);
+    return NonstandardToInt32(cx, tvr.value(), (int32_t *)ip);
 }
 
 JS_PUBLIC_API(JSBool)

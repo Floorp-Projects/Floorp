@@ -173,7 +173,7 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     }
 
     JS_STATIC_ASSERT(sizeof(jsuint) == sizeof(uint32_t));
-    return ValueToECMAUint32(cx, tvr.value(), (uint32_t *)lengthp);
+    return ToUint32(cx, tvr.value(), (uint32_t *)lengthp);
 }
 
 namespace js {
@@ -600,7 +600,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value 
     }
 
     uint32 newlen;
-    if (!ValueToECMAUint32(cx, *vp, &newlen))
+    if (!ToUint32(cx, *vp, &newlen))
         return false;
 
     jsdouble d;
