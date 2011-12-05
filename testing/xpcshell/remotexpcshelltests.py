@@ -145,7 +145,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
            self.remoteJoin(self.remoteBinDir, "xpcshell"),
            '-r', self.remoteJoin(self.remoteComponentsDir, 'httpd.manifest'),
            '--greomni', self.remoteAPK,
-           '-j', '-s',
+           '-s',
            '-e', 'const _HTTPD_JS_PATH = "%s";' % self.remoteJoin(self.remoteComponentsDir, 'httpd.js'),
            '-e', 'const _HEAD_JS_PATH = "%s";' % self.remoteJoin(self.remoteScriptsDir, 'head.js'),
            '-f', self.remoteScriptsDir+'/head.js']
