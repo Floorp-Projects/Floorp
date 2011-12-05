@@ -623,14 +623,18 @@ IonCompile(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode *osrPc)
         types::AutoEnterCompilation enterCompiler(cx, script);
 
         IonBuilder builder(cx, temp, graph, &oracle, *info);
-        if (!TestCompiler(builder, graph))
+        if (!TestCompiler(builder, graph)) {
+            IonSpew(IonSpew_Abort, "IM Compilation failed.");
             return false;
+        }
     } else {
         DummyOracle oracle;
         IonBuilder builder(cx, temp, graph, &oracle, *info);
-        if (!TestCompiler(builder, graph))
+        if (!TestCompiler(builder, graph)) {
+            IonSpew(IonSpew_Abort, "IM Compilation failed.");
             return false;
-    }
+        }
+   }
 
     return true;
 }

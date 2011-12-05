@@ -478,6 +478,12 @@ class LDefinition
         set(0, type, PRESET);
     }
 
+    LDefinition(uint32 index, Type type, const LAllocation &a)
+      : output_(a)
+    {
+        set(index, type, PRESET);
+    }
+
     LDefinition() : bits_(0)
     { }
 
@@ -607,6 +613,15 @@ class LInstruction : public TempObject,
     virtual size_t numTemps() const = 0;
     virtual LDefinition *getTemp(size_t index) = 0;
     virtual void setTemp(size_t index, const LDefinition &a) = 0;
+
+    virtual bool isCall() const {
+        return false;
+    };
+    virtual RegisterSet &spillRegs() const {
+        JS_NOT_REACHED("spillRegs should be guarded by isCall().");
+        static RegisterSet regs;
+        return regs;
+    }
 
     uint32 id() const {
         return id_;
@@ -766,6 +781,64 @@ class LInstructionHelper : public LInstruction
         printOperands(fp);
     }
 };
+
+template <size_t Defs, size_t Operands, size_t Temps>
+class LCallInstructionHelper : public LInstructionHelper<Defs, Operands, Temps>
+{
+  public:
+    virtual bool isCall() const {
+        return true;
+    }
+    virtual RegisterSet &spillRegs() const {
+        JS_ASSERT(Defs == BOX_PIECES);
+        static RegisterSet regs(
+            GeneralRegisterSet::Not(GeneralRegisterSet(Registers::JSCallMask)),
+            FloatRegisterSet::All()
+        );
+        return regs;
+    }
+};
+
+template <enum VMFunction::ReturnType DefType, size_t Defs, size_t Operands, size_t Temps>
+class LVMCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, Temps>
+{
+  public:
+    LVMCallInstructionHelper(const VMFunction &f) {
+        JS_ASSERT(f.returnType == DefType);
+    }
+    virtual RegisterSet &spillRegs() const {
+        static RegisterSet regs(
+            GeneralRegisterSet::Not(GeneralRegisterSet(defMask())),
+            FloatRegisterSet::All()
+        );
+        return regs;
+    }
+
+  private:
+    static uint32 defMask() {
+        switch (DefType) {
+          case VMFunction::ReturnValue:
+#if defined(JS_NUNBOX32)
+            JS_ASSERT(Defs == 2);
+            return Registers::JSCallMask;
+#elif defined(JS_PUNBOX64)
+            // Use the same mask as ReturnPointer.
+#endif
+          case VMFunction::ReturnBool:
+          case VMFunction::ReturnPointer:
+            JS_ASSERT(Defs == 1);
+            return Registers::JSCCallMask;
+          case VMFunction::ReturnNothing:
+            JS_ASSERT(Defs == 0);
+            return 0;
+          default:
+            JS_NOT_REACHED("Unknown ReturnType.");
+            return 0;
+        }
+        return 0;
+    }
+};
+
 
 // An LSnapshot is the reflection of an MResumePoint in LIR. Unlike MResumePoints,
 // they cannot be shared, as they are filled in by the register allocator in

@@ -106,6 +106,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     // intercept without a bunch of explicit gunk in the .cpp.
     bool visitParameter(MParameter *param);
     bool visitGoto(MGoto *ins);
+    bool visitNewArray(MNewArray *ins);
     bool visitPrepareCall(MPrepareCall *ins);
     bool visitPassArg(MPassArg *arg);
     bool visitCall(MCall *call);

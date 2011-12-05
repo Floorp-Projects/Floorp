@@ -196,7 +196,11 @@ MoveEmitterX86::emitMove(const MoveOperand &from, const MoveOperand &to)
     } else {
         // Memory to memory gpr move.
         Register reg = tempReg();
+        // Reload its previous value from the stack.
+        if (reg == from.base())
+            masm.mov(spillSlot(), from.base());
         masm.mov(toOperand(from), reg);
+        JS_ASSERT(to.base() != reg);
         masm.mov(reg, toOperand(to));
     }
 }

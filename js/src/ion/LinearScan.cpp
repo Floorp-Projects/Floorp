@@ -481,10 +481,8 @@ LinearScanAllocator::buildLivenessInfo()
         // point of definition, if found.
         for (LInstructionReverseIterator ins = block->rbegin(); ins != block->rend(); ins++) {
             // Calls may clobber registers, so force a spill and reload around the callsite.
-            if (ins->isCallGeneric()) {
-                GeneralRegisterSet genset(Registers::JSCallClobberMask);
-                FloatRegisterSet floatset(FloatRegisters::JSCallClobberMask);
-                for (AnyRegisterIterator iter(genset, floatset); iter.more(); iter++)
+            if (ins->isCall()) {
+                for (AnyRegisterIterator iter(ins->spillRegs()); iter.more(); iter++)
                     addSpillInterval(*ins, Requirement(LAllocation(*iter)));
             }
 
