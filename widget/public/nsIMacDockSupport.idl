@@ -42,7 +42,7 @@ interface nsIStandaloneNativeMenu;
  * Allow applications to interface with the Mac OS X Dock.
  */
 
-[scriptable, uuid(CBC8A835-0733-470B-A51D-B7EBBFA88689)]
+[scriptable, uuid(8BE66B0C-5F71-4B74-98CF-6C2551B999B1)]
 interface nsIMacDockSupport : nsISupports
 {
   /**
@@ -60,4 +60,9 @@ interface nsIMacDockSupport : nsISupports
    *        application activates regardless. 
    */
   void activateApplication(in boolean aIgnoreOtherApplications);
+
+  /**
+   * Text used to badge the dock tile.
+   */
+  attribute AString badgeText;
 };
