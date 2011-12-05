@@ -446,6 +446,9 @@ static const WindowsRoleMapItem gWindowsRoleMap[] = {
   // nsIAccessibleRole::ROLE_NOTE
   { USE_ROLE_STRING, IA2_ROLE_NOTE },
 
+  // nsIAccessibleRole::ROLE_FIGURE
+  { ROLE_SYSTEM_GROUPING, ROLE_SYSTEM_GROUPING },
+
   // nsIAccessibleRole::ROLE_LAST_ENTRY
   { ROLE_WINDOWS_LAST_ENTRY, ROLE_WINDOWS_LAST_ENTRY }
 };
