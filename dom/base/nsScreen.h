@@ -64,13 +64,6 @@ protected:
   nsresult GetAvailRect(nsRect& aRect);
 
   nsIDocShell* mDocShell; // Weak Reference
-
-private:
-  static bool sInitialized;
-  static bool sAllowScreenEnabledProperty;
-  static bool sAllowScreenBrightnessProperty;
-
-  static void Initialize();
 };
 
 #endif /* nsScreen_h___ */
