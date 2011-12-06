@@ -417,8 +417,8 @@ Debugger::hasAnyLiveHooks(JSContext *cx) const
     return false;
 }
 
-void
-Debugger::slowPathOnEnterFrame(JSContext *cx)
+JSTrapStatus
+Debugger::slowPathOnEnterFrame(JSContext *cx, Value *vp)
 {
     /* Build the list of recipients. */
     AutoValueVector triggered(cx);
@@ -428,16 +428,21 @@ Debugger::slowPathOnEnterFrame(JSContext *cx)
             Debugger *dbg = *p;
             JS_ASSERT(dbg->observesFrame(cx->fp()));
             if (dbg->observesEnterFrame() && !triggered.append(ObjectValue(*dbg->toJSObject())))
-                return;
+                return JSTRAP_ERROR;
         }
     }
 
     /* Deliver the event, checking again as in dispatchHook. */
     for (Value *p = triggered.begin(); p != triggered.end(); p++) {
         Debugger *dbg = Debugger::fromJSObject(&p->toObject());
-        if (dbg->debuggees.has(global) && dbg->observesEnterFrame())
-            dbg->fireEnterFrame(cx);
+        if (dbg->debuggees.has(global) && dbg->observesEnterFrame()) {
+            JSTrapStatus status = dbg->fireEnterFrame(cx, vp);
+            if (status != JSTRAP_CONTINUE)
+                return status;
+        }
     }
+
+    return JSTRAP_CONTINUE;
 }
 
 void
@@ -709,8 +714,8 @@ Debugger::fireExceptionUnwind(JSContext *cx, Value *vp)
     return st;
 }
 
-void
-Debugger::fireEnterFrame(JSContext *cx)
+JSTrapStatus
+Debugger::fireEnterFrame(JSContext *cx, Value *vp)
 {
     JSObject *hook = getHook(OnEnterFrame);
     JS_ASSERT(hook);
@@ -719,16 +724,15 @@ Debugger::fireEnterFrame(JSContext *cx)
     StackFrame *fp = cx->fp();
     AutoCompartment ac(cx, object);
     if (!ac.enter())
-        return;
+        return JSTRAP_ERROR;
 
     Value argv[1];
-    if (!getScriptFrame(cx, fp, &argv[0])) {
-        handleUncaughtException(ac, NULL, false);
-        return;
-    }
+    if (!getScriptFrame(cx, fp, &argv[0]))
+        return handleUncaughtException(ac, vp, false);
+
     Value rv;
-    if (!Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv))
-        handleUncaughtException(ac, NULL, true);
+    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, argv, &rv);
+    return parseResumptionValue(ac, ok, rv, vp);
 }
 
 void

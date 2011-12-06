@@ -550,6 +550,9 @@ js_InternalThrow(VMFrame &f)
                     cx->clearPendingException();
                     return NULL;
 
+                case JSTRAP_CONTINUE:
+                  break;
+
                 case JSTRAP_RETURN:
                     cx->clearPendingException();
                     cx->fp()->setReturnValue(rval);
@@ -560,7 +563,7 @@ js_InternalThrow(VMFrame &f)
                     break;
 
                 default:
-                    break;
+                    JS_NOT_REACHED("bad onExceptionUnwind status");
                 }
             }
         }
@@ -658,7 +661,19 @@ void JS_FASTCALL
 stubs::ScriptDebugPrologue(VMFrame &f)
 {
     Probes::enterJSFun(f.cx, f.fp()->maybeFun(), f.fp()->script());
-    js::ScriptDebugPrologue(f.cx, f.fp());
+    JSTrapStatus status = js::ScriptDebugPrologue(f.cx, f.fp());
+    switch (status) {
+      case JSTRAP_CONTINUE:
+        break;
+      case JSTRAP_RETURN:
+        *f.returnAddressLocation() = f.cx->jaegerCompartment()->forceReturnFromFastCall();
+        return;
+      case JSTRAP_ERROR:
+      case JSTRAP_THROW:
+        THROW();
+      default:
+        JS_NOT_REACHED("bad ScriptDebugPrologue status");
+    }
 }
 
 void JS_FASTCALL
@@ -893,8 +908,25 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
             return js_InternalThrow(f);
         fp->formalArgs()[-1].setObject(*obj);
 
-        if (script->debugMode || Probes::callTrackingActive(cx))
-            js::ScriptDebugPrologue(cx, fp);
+        if (Probes::callTrackingActive(cx))
+            Probes::enterJSFun(f.cx, f.fp()->maybeFun(), f.fp()->script());
+
+        if (script->debugMode) {
+            JSTrapStatus status = js::ScriptDebugPrologue(f.cx, f.fp());
+            switch (status) {
+              case JSTRAP_CONTINUE:
+                break;
+              case JSTRAP_RETURN:
+                *f.returnAddressLocation() = f.cx->jaegerCompartment()->forceReturnFromExternC();
+                return NULL;
+              case JSTRAP_THROW:
+              case JSTRAP_ERROR:
+                return js_InternalThrow(f);
+              default:
+                JS_NOT_REACHED("bad ScriptDebugPrologue status");
+            }
+        }
+
         break;
       }
 
