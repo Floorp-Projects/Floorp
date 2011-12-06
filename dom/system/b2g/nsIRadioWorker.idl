@@ -38,14 +38,6 @@
 #include "nsISupports.idl"
 
 [scriptable, uuid(8f031451-ac25-4816-a09e-a075bb704e63)]
-interface nsITelephonyWorker : nsISupports {
+interface nsIRadioWorker : nsISupports {
     readonly attribute jsval worker;
 };
-
-%{ C++
-
-#define NS_TELEPHONYWORKER_CID \
-    { 0x2d831c8d, 0x6017, 0x435b, \
-      { 0xa8, 0x0c, 0xe5, 0xd4, 0x22, 0x81, 0x0c, 0xea } }
-
-%}

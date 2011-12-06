@@ -138,6 +138,7 @@
 @BINPATH@/components/dom_base.xpt
 #ifdef MOZ_B2G_RIL
 @BINPATH@/components/dom_telephony.xpt
+@BINPATH@/components/dom_system_b2g.xpt
 #endif
 @BINPATH@/components/dom_battery.xpt
 @BINPATH@/components/dom_canvas.xpt
