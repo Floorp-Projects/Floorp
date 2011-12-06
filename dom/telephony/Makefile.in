@@ -52,7 +52,6 @@ include $(topsrcdir)/dom/dom-config.mk
 
 XPIDLSRCS = \
   mozIDOMTelephony.idl \
-  nsITelephonyWorker.idl \
   nsITelephone.idl \
   $(NULL)
 
