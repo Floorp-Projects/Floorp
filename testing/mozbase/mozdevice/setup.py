@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,7 +11,7 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is manifestdestiny.
+# The Original Code is mozdevice.
 #
 # The Initial Developer of the Original Code is
 #  The Mozilla Foundation.
@@ -20,11 +19,11 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#     Jeff Hammel <jhammel@mozilla.com>     (Original author)
+#  Will Lachance <wlachance@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either of the GNU General Public License Version 2 or later (the "GPL"),
-# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,42 +35,33 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# The real details are in manifestparser.py; this is just a front-end
-# BUT use this file when you want to distribute to python!
-# otherwise setuptools will complain that it can't find setup.py
-# and result in a useless package
-
-from setuptools import setup, find_packages
-import sys
 import os
+from setuptools import setup, find_packages
 
+version = '0.1'
+
+# take description from README
 here = os.path.dirname(os.path.abspath(__file__))
 try:
-    filename = os.path.join(here, 'README.txt')
-    description = file(filename).read()
-except:
+    description = file(os.path.join(here, 'README.md')).read()
+except (OSError, IOError):
     description = ''
 
-PACKAGE_NAME = "ManifestDestiny"
-PACKAGE_VERSION = "0.5.4"
-
-setup(name=PACKAGE_NAME,
-      version=PACKAGE_VERSION,
-      description="Universal manifests for Mozilla test harnesses",
+setup(name='mozdevice',
+      version=version,
+      description="Mozilla-authored device management",
       long_description=description,
       classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
-      keywords='mozilla manifests',
-      author='Jeff Hammel',
-      author_email='jhammel@mozilla.com',
-      url='https://github.com/mozilla/mozbase/tree/master/manifestdestiny',
+      keywords='',
+      author='Mozilla Automation and Testing Team',
+      author_email='tools@lists.mozilla.com',
+      url='http://github.com/mozilla/mozbase',
       license='MPL',
+      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+      include_package_data=True,
       zip_safe=False,
-      packages=find_packages(exclude=['legacy']),
-      install_requires=[
-      # -*- Extra requirements: -*-
-      ],
+      install_requires=[],
       entry_points="""
-      [console_scripts]
-      manifestparser = manifestparser:main
+      # -*- Entry points: -*-
       """,
-     )
+      )
