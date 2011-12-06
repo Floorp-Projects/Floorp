@@ -38,6 +38,7 @@
 
 #include "mozilla/dom/TabChild.h"
 
+#include "Compatibility.h"
 #include "nsDocAccessibleWrap.h"
 #include "ISimpleDOMDocument_i.c"
 #include "nsIAccessibilityService.h"
@@ -291,7 +292,7 @@ nsDocAccessibleWrap::DoInitialUpdate()
 
       bool isActive = true;
       PRInt32 x = CW_USEDEFAULT, y = CW_USEDEFAULT, width = 0, height = 0;
-      if (nsWinUtils::IsWindowEmulationFor(kDolphinModuleHandle)) {
+      if (Compatibility::IsDolphin()) {
         GetBounds(&x, &y, &width, &height);
         PRInt32 rootX = 0, rootY = 0, rootWidth = 0, rootHeight = 0;
         rootDocument->GetBounds(&rootX, &rootY, &rootWidth, &rootHeight);
