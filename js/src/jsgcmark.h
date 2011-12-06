@@ -90,6 +90,9 @@ void
 MarkIonCode(JSTracer *trc, const MarkablePtr<ion::IonCode> &code, const char *name);
 
 void
+MarkBaseShapeUnbarriered(JSTracer *trc, BaseShape *shape, const char *name);
+
+void
 MarkTypeObjectUnbarriered(JSTracer *trc, types::TypeObject *type, const char *name);
 
 void

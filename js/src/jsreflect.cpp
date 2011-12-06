@@ -321,7 +321,7 @@ class NodeBuilder
     }
 
     bool newObject(JSObject **dst) {
-        JSObject *nobj = NewNonFunction<WithProto::Class>(cx, &ObjectClass, NULL, NULL);
+        JSObject *nobj = NewBuiltinClassInstance(cx, &ObjectClass);
         if (!nobj)
             return false;
 
@@ -631,7 +631,7 @@ NodeBuilder::newNode(ASTType type, TokenPos *pos, JSObject **dst)
 
     Value tv;
 
-    JSObject *node = NewNonFunction<WithProto::Class>(cx, &ObjectClass, NULL, NULL);
+    JSObject *node = NewBuiltinClassInstance(cx, &ObjectClass);
     if (!node ||
         !setNodeLoc(node, pos) ||
         !atomValue(nodeTypeNames[type], &tv) ||
@@ -3264,7 +3264,7 @@ JS_BEGIN_EXTERN_C
 JS_PUBLIC_API(JSObject *)
 JS_InitReflect(JSContext *cx, JSObject *obj)
 {
-    JSObject *Reflect = NewNonFunction<WithProto::Class>(cx, &ObjectClass, NULL, obj);
+    JSObject *Reflect = NewObjectWithClassProto(cx, &ObjectClass, NULL, obj);
     if (!Reflect || !Reflect->setSingletonType(cx))
         return NULL;
 

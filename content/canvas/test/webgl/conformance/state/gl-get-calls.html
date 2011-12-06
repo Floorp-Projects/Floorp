@@ -61,8 +61,8 @@ else {
     debug("");
     debug("Check default values");
     shouldBe('context.getParameter(context.ACTIVE_TEXTURE)', 'context.TEXTURE0');
-    shouldBe('(context.getParameter(context.ALIASED_LINE_WIDTH_RANGE)[0] == 1) || (context.getParameter(context.ALIASED_LINE_WIDTH_RANGE)[1] == 1)', 'true');
-    shouldBe('(context.getParameter(context.ALIASED_POINT_SIZE_RANGE)[0] == 1) || (context.getParameter(context.ALIASED_POINT_SIZE_RANGE)[1] == 1)', 'true');
+	shouldBe('(context.getParameter(context.ALIASED_LINE_WIDTH_RANGE)[0] <= 1) && (context.getParameter(context.ALIASED_LINE_WIDTH_RANGE)[0] > 0) && (context.getParameter(context.ALIASED_LINE_WIDTH_RANGE)[1] >= 1)', 'true');
+	shouldBe('(context.getParameter(context.ALIASED_POINT_SIZE_RANGE)[0] <= 1) && (context.getParameter(context.ALIASED_POINT_SIZE_RANGE)[0] > 0) && (context.getParameter(context.ALIASED_POINT_SIZE_RANGE)[1] >= 1)', 'true');
     shouldBe('context.getParameter(context.ARRAY_BUFFER_BINDING)', 'null');
     shouldBe('context.getParameter(context.BLEND)', 'false');
     shouldBe('context.getParameter(context.BLEND_COLOR)', '[0, 0, 0, 0]');

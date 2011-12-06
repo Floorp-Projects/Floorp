@@ -55,13 +55,26 @@
       let event = yield;
 
       let db = event.target.result;
+      let trans = event.target.transaction;
 
-      db.deleteObjectStore(objectStore.name);
+      let oldObjectStore = trans.objectStore(objectStoreName);
+      isnot(oldObjectStore, null, "Correct object store prior to deleting");
+      db.deleteObjectStore(objectStoreName);
       is(db.objectStoreNames.length, 0, "Correct objectStores list");
+      try {
+        trans.objectStore(objectStoreName);
+        ok(false, "should have thrown");
+      }
+      catch(ex) {
+        ok(ex instanceof IDBDatabaseException, "Got a IDBDatabaseException");
+        is(ex.code, IDBDatabaseException.NOT_FOUND_ERR, "expect a NOT_FOUND_ERR");
+      }
 
       objectStore = db.createObjectStore(objectStoreName, { keyPath: "foo" });
       is(db.objectStoreNames.length, 1, "Correct objectStoreNames list");
       is(db.objectStoreNames.item(0), objectStoreName, "Correct name");
+      is(trans.objectStore(objectStoreName), objectStore, "Correct new objectStore");
+      isnot(oldObjectStore, objectStore, "Old objectStore is not new objectStore");
 
       request = objectStore.openCursor();
       request.onerror = errorHandler;

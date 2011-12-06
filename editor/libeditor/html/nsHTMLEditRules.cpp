@@ -81,6 +81,7 @@
 #include "nsIHTMLDocument.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 
@@ -256,7 +257,7 @@ nsHTMLEditRules::Init(nsPlaintextEditor *aEditor)
   NS_ENSURE_TRUE(mUtilRange, NS_ERROR_NULL_POINTER);
    
   // set up mDocChangeRange to be whole doc
-  nsIDOMElement *rootElem = mHTMLEditor->GetRoot();
+  nsCOMPtr<nsIDOMElement> rootElem = do_QueryInterface(mHTMLEditor->GetRoot());
   if (rootElem)
   {
     // temporarily turn off rules sniffing
@@ -805,7 +806,7 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
 
   // get selection location
   nsCOMPtr<nsIDOMNode> parent;
-  nsIDOMElement *rootElem = mHTMLEditor->GetRoot();
+  nsCOMPtr<nsIDOMElement> rootElem = do_QueryInterface(mHTMLEditor->GetRoot());
   NS_ENSURE_TRUE(rootElem, NS_ERROR_FAILURE);
 
   PRInt32 offset, rootOffset;
@@ -1012,13 +1013,10 @@ nsHTMLEditRules::GetIndentState(bool *aCanIndent, bool *aCanOutdent)
     // in the parent hierarchy.
     
     // gather up info we need for test
-    nsCOMPtr<nsIDOMNode> parent, tmp, root;
-    nsIDOMElement *rootElem = mHTMLEditor->GetRoot();
-    NS_ENSURE_TRUE(rootElem, NS_ERROR_NULL_POINTER);
+    nsCOMPtr<nsIDOMNode> parent, tmp, root = do_QueryInterface(mHTMLEditor->GetRoot());
+    NS_ENSURE_TRUE(root, NS_ERROR_NULL_POINTER);
     nsCOMPtr<nsISelection> selection;
     PRInt32 selOffset;
-    root = do_QueryInterface(rootElem);
-    NS_ENSURE_TRUE(root, NS_ERROR_NO_INTERFACE);
     res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
     NS_ENSURE_SUCCESS(res, res);
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
@@ -1108,7 +1106,7 @@ nsHTMLEditRules::GetParagraphState(bool *aMixed, nsAString &outFormat)
   }
 
   // remember root node
-  nsIDOMElement *rootElem = mHTMLEditor->GetRoot();
+  nsCOMPtr<nsIDOMElement> rootElem = do_QueryInterface(mHTMLEditor->GetRoot());
   NS_ENSURE_TRUE(rootElem, NS_ERROR_NULL_POINTER);
 
   // loop through the nodes in selection and examine their paragraph format
@@ -7778,9 +7776,8 @@ nsHTMLEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
     // check if br can go into the destination node
     if (bIsEmptyNode && mHTMLEditor->CanContainTag(selNode, NS_LITERAL_STRING("br")))
     {
-      nsIDOMElement *rootElement = mHTMLEditor->GetRoot();
-      NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
-      nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
+      nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(mHTMLEditor->GetRoot());
+      NS_ENSURE_TRUE(rootNode, NS_ERROR_FAILURE);
       if (selNode == rootNode)
       {
         // Our root node is completely empty. Don't add a <br> here.
@@ -8359,7 +8356,7 @@ nsHTMLEditRules::ConfirmSelectionInBody()
   nsresult res = NS_OK;
 
   // get the body  
-  nsIDOMElement *rootElement = mHTMLEditor->GetRoot();
+  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(mHTMLEditor->GetRoot());
   NS_ENSURE_TRUE(rootElement, NS_ERROR_UNEXPECTED);
 
   // get the selection

@@ -1206,10 +1206,15 @@ GC(JSContext *cx, uintN argc, jsval *vp)
             comp = UnwrapObject(&arg.toObject())->compartment();
     }
 
+#ifndef JS_MORE_DETERMINISTIC
     size_t preBytes = cx->runtime->gcBytes;
+#endif
     JS_CompartmentGC(cx, comp);
 
     char buf[256];
+#ifdef JS_MORE_DETERMINISTIC
+    buf[0] = '\0';
+#else
     JS_snprintf(buf, sizeof(buf), "before %lu, after %lu, break %08lx\n",
                 (unsigned long)preBytes, (unsigned long)cx->runtime->gcBytes,
 #ifdef HAVE_SBRK
@@ -1218,6 +1223,7 @@ GC(JSContext *cx, uintN argc, jsval *vp)
                 0
 #endif
                 );
+#endif
     *vp = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, buf));
     return true;
 }
@@ -1916,7 +1922,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
           case SRC_FUNCDEF: {
             uint32 index = js_GetSrcNoteOffset(sn, 0);
             JSObject *obj = script->getObject(index);
-            JSFunction *fun = (JSFunction *) JS_GetPrivate(cx, obj);
+            JSFunction *fun = obj->toFunction();
             JSString *str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
             JSAutoByteString bytes;
             if (!str || !bytes.encode(cx, str))
@@ -2058,7 +2064,7 @@ DisassembleScript(JSContext *cx, JSScript *script, JSFunction *fun, bool lines, 
             JSObject *obj = objects->vector[i];
             if (obj->isFunction()) {
                 Sprint(sp, "\n");
-                JSFunction *fun = obj->getFunctionPrivate();
+                JSFunction *fun = obj->toFunction();
                 JSScript *nested = fun->maybeScript();
                 if (!DisassembleScript(cx, nested, fun, lines, recursive, sp))
                     return false;
@@ -2508,7 +2514,7 @@ DumpStack(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     StackIter iter(cx);
-    JS_ASSERT(iter.nativeArgs().callee().getFunctionPrivate()->native() == DumpStack);
+    JS_ASSERT(iter.nativeArgs().callee().toFunction()->native() == DumpStack);
     ++iter;
 
     uint32 index = 0;
@@ -2737,7 +2743,7 @@ Clone(JSContext *cx, uintN argc, jsval *vp)
         }
     }
     if (funobj->compartment() != cx->compartment) {
-        JSFunction *fun = funobj->getFunctionPrivate();
+        JSFunction *fun = funobj->toFunction();
         if (fun->isInterpreted() && fun->script()->compileAndGo) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNEXPECTED_TYPE,
                                  "function", "compile-and-go");
@@ -3104,11 +3110,7 @@ ShapeOf(JSContext *cx, uintN argc, jsval *vp)
         *vp = JSVAL_ZERO;
         return JS_TRUE;
     }
-    if (!obj->isNative()) {
-        *vp = INT_TO_JSVAL(-1);
-        return JS_TRUE;
-    }
-    return JS_NewNumberValue(cx, obj->shape(), vp);
+    return JS_NewNumberValue(cx, (double) ((jsuword)obj->lastProperty() >> 3), vp);
 }
 
 /*
@@ -3138,7 +3140,7 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
             if (!shape)
                 return false;
         } else if (shape->hasSlot()) {
-            desc.value = referent->nativeGetSlot(shape->slot);
+            desc.value = referent->nativeGetSlot(shape->slot());
         } else {
             desc.value.setUndefined();
         }
@@ -3150,7 +3152,7 @@ CopyProperty(JSContext *cx, JSObject *obj, JSObject *referent, jsid id,
         desc.setter = shape->setter();
         if (!desc.setter && !(desc.attrs & JSPROP_SETTER))
             desc.setter = JS_StrictPropertyStub;
-        desc.shortid = shape->shortid;
+        desc.shortid = shape->shortid();
         propFlags = shape->getFlags();
    } else if (IsProxy(referent)) {
         PropertyDescriptor desc;
@@ -3826,7 +3828,7 @@ MJitCodeStats(JSContext *cx, uintN argc, jsval *vp)
     size_t n = 0, method, regexp, unused;
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
     {
-        (*c)->getMjitCodeStats(method, regexp, unused);
+        (*c)->sizeOfCode(&method, &regexp, &unused);
         n += method + regexp + unused;
     }
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(n));

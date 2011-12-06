@@ -83,6 +83,10 @@ DIRS += \
   workers \
   $(NULL)
 
+ifdef MOZ_B2G_RIL #{
+DIRS += telephony
+endif #}
+
 ifdef ENABLE_TESTS
 DIRS += tests
 ifneq (,$(filter gtk2 cocoa windows android qt os2,$(MOZ_WIDGET_TOOLKIT)))

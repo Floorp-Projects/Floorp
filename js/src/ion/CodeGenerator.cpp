@@ -350,7 +350,7 @@ CodeGenerator::generateBody()
 bool
 CodeGenerator::visitInitializedLength(LInitializedLength *lir)
 {
-    Address initLength(ToRegister(lir->input()), JSObject::offsetOfInitializedLength());
+    Address initLength(ToRegister(lir->input()), ObjectElements::offsetOfInitializedLength());
     masm.load32(initLength, ToRegister(lir->output()));
     return true;
 }

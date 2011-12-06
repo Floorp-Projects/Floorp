@@ -73,8 +73,8 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
 #define NATIVE_SET(cx,obj,shape,entry,strict,vp)                              \
     JS_BEGIN_MACRO                                                            \
         if (shape->hasDefaultSetter() &&                                      \
-            (shape)->slot != SHAPE_INVALID_SLOT &&                            \
-            !(obj)->brandedOrHasMethodBarrier()) {                            \
+            (shape)->hasSlot() &&                                             \
+            !(shape)->isMethod()) {                                           \
             /* Fast path for, e.g., plain Object instance properties. */      \
             (obj)->nativeSetSlotWithType(cx, shape, *vp);                     \
         } else {                                                              \
@@ -87,10 +87,10 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
     JS_BEGIN_MACRO                                                            \
         if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {         \
             /* Fast path for Object instance properties. */                   \
-            JS_ASSERT((shape)->slot != SHAPE_INVALID_SLOT ||                  \
+            JS_ASSERT((shape)->slot() != SHAPE_INVALID_SLOT ||                \
                       !shape->hasDefaultSetter());                            \
-            if (((shape)->slot != SHAPE_INVALID_SLOT))                        \
-                *(vp) = (pobj)->nativeGetSlot((shape)->slot);                 \
+            if (((shape)->slot() != SHAPE_INVALID_SLOT))                      \
+                *(vp) = (pobj)->nativeGetSlot((shape)->slot());               \
             else                                                              \
                 (vp)->setUndefined();                                         \
         } else {                                                              \

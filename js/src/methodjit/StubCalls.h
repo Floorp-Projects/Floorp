@@ -90,13 +90,11 @@ void JS_FASTCALL ScriptProbeOnlyEpilogue(VMFrame &f);
  *       to JM native code. Then all fields are non-NULL.
  */
 struct UncachedCallResult {
-    JSObject   *callee;       // callee object
     JSFunction *fun;          // callee function
     void       *codeAddr;     // code address of compiled callee function
     bool       unjittable;    // did we try to JIT and fail?
 
     void init() {
-        callee = NULL;
         fun = NULL;
         codeAddr = NULL;
         unjittable = false;
@@ -192,8 +190,6 @@ JSBool JS_FASTCALL ValueToBoolean(VMFrame &f);
 JSString * JS_FASTCALL TypeOf(VMFrame &f);
 JSBool JS_FASTCALL InstanceOf(VMFrame &f);
 void JS_FASTCALL FastInstanceOf(VMFrame &f);
-void JS_FASTCALL Unbrand(VMFrame &f);
-void JS_FASTCALL UnbrandThis(VMFrame &f);
 
 /*
  * Helper for triggering recompilation should a name read miss a type barrier,

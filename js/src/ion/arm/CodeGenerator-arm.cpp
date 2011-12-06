@@ -1131,19 +1131,11 @@ CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
     uint32 callargslot  = call->argslot();
     uint32 unused_stack = StackOffsetOfPassedArg(callargslot);
 
-
-
     // Guard that objreg is actually a function object.
-    masm.ma_ldr(DTRAddr(objreg, DtrOffImm(JSObject::offsetOfClassPointer())), tokreg);
-    masm.ma_ldr(DTRAddr(tokreg, DtrOffImm(0)), tokreg);
-
+    masm.loadObjClass(objreg, tokreg);
     masm.ma_cmp(tokreg, Imm32((uint32)&js::FunctionClass));
     if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
         return false;
-
-    // Extract the function object.
-    masm.ma_ldr(DTRAddr(objreg, DtrOffImm(offsetof(JSObject, privateData))),
-                objreg);
 
     // Guard that objreg is a non-native function:
     // Non-native iff (obj->flags & JSFUN_KINDMASK >= JSFUN_INTERPRETED).
@@ -1364,14 +1356,10 @@ CodeGeneratorARM::visitGuardShape(LGuardShape *guard)
 {
     Register obj = ToRegister(guard->input());
     Register tmp = ToRegister(guard->tempInt());
-    masm.ma_ldr(DTRAddr(obj, DtrOffImm(offsetof(JSObject, lastProp))), tmp, Offset);
+    masm.ma_ldr(DTRAddr(obj, DtrOffImm(JSObject::offsetOfShape())), tmp, Offset);
     masm.ma_cmp(tmp, ImmGCPtr(guard->mir()->shape()), Assembler::Always);
 
     if (!bailoutIf(Assembler::NotEqual, guard->snapshot()))
         return false;
     return true;
-#if 0
-    JS_NOT_REACHED("visitGuardShape NYI");
-    return false;
-#endif
 }

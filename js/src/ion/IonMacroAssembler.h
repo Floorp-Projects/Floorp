@@ -50,6 +50,8 @@
 # include "ion/arm/MacroAssembler-arm.h"
 #endif
 
+#include "jsscope.h"
+
 namespace js {
 namespace ion {
 
@@ -102,6 +104,18 @@ class MacroAssembler : public MacroAssemblerSpecific
     template <typename T>
     void guardTypeSet(const T &address, types::TypeSet *types, Register scratch,
                       Label *mismatched);
+
+    void loadBaseShape(Register objReg, Register dest) {
+        loadPtr(Address(objReg, JSObject::offsetOfShape()), dest);
+        loadPtr(Address(dest, Shape::offsetOfBase()), dest);
+    }
+    void loadBaseShapeClass(Register baseShapeReg, Register dest) {
+        loadPtr(Address(baseShapeReg, BaseShape::offsetOfClass()), dest);
+    }
+    void loadObjClass(Register objReg, Register dest) {
+        loadBaseShape(objReg, dest);
+        loadBaseShapeClass(dest, dest);
+    }
 };
 
 } // namespace ion

@@ -14,6 +14,7 @@ Cu.import("resource:///modules/devtools/CssHtmlTree.jsm");
 function test()
 {
   waitForExplicitFinish();
+  ignoreAllUncaughtExceptions();
   addTab(TEST_URI);
   browser.addEventListener("load", tabLoaded, true);
 }

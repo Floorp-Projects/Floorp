@@ -18,6 +18,7 @@
 
 function test() {
   waitForExplicitFinish();
+  ignoreAllUncaughtExceptions();
 
   let blankState = { windows: [{ tabs: [{ entries: [{ url: "about:blank" }] }]}]};
   let crashState = { windows: [{ tabs: [{ entries: [{ url: "about:mozilla" }] }]}]};

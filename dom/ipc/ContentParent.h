@@ -235,7 +235,6 @@ private:
     PRInt32 mGeolocationWatchID;
     int mRunToCompletionDepth;
     bool mShouldCallUnblockChild;
-    nsCOMPtr<nsIThreadObserver> mOldObserver;
 
     // This is a cache of all of the memory reporters
     // registered in the child process.  To update this, one

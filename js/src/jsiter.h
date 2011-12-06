@@ -61,11 +61,11 @@
 namespace js {
 
 struct NativeIterator {
-    HeapPtrObject  obj;
+    HeapPtrObject obj;
     HeapId    *props_array;
     HeapId    *props_cursor;
     HeapId    *props_end;
-    uint32    *shapes_array;
+    const Shape **shapes_array;
     uint32    shapes_length;
     uint32    shapes_key;
     uint32    flags;
@@ -222,16 +222,6 @@ js_LiveFrameIfGenerator(js::StackFrame *fp)
 }
 
 #endif
-
-namespace js {
-
-static inline bool
-IsStopIteration(const js::Value &v)
-{
-    return v.isObject() && v.toObject().isStopIteration();
-}
-
-}  /* namespace js */
 
 extern JSObject *
 js_InitIteratorClasses(JSContext *cx, JSObject *obj);

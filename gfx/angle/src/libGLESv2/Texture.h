@@ -184,8 +184,8 @@ class Texture : public RefCountObject
     GLenum getWrapT() const;
     GLenum getUsage() const;
 
-    virtual GLsizei getWidth() const = 0;
-    virtual GLsizei getHeight() const = 0;
+    virtual GLsizei getWidth(GLint level) const = 0;
+    virtual GLsizei getHeight(GLint level) const = 0;
     virtual GLenum getInternalFormat() const = 0;
     virtual GLenum getType() const = 0;
     virtual D3DFORMAT getD3DFormat() const = 0;
@@ -277,8 +277,8 @@ class Texture2D : public Texture
 
     virtual GLenum getTarget() const;
 
-    virtual GLsizei getWidth() const;
-    virtual GLsizei getHeight() const;
+    virtual GLsizei getWidth(GLint level) const;
+    virtual GLsizei getHeight(GLint level) const;
     virtual GLenum getInternalFormat() const;
     virtual GLenum getType() const;
     virtual D3DFORMAT getD3DFormat() const;
@@ -351,8 +351,8 @@ class TextureCubeMap : public Texture
 
     virtual GLenum getTarget() const;
     
-    virtual GLsizei getWidth() const;
-    virtual GLsizei getHeight() const;
+    virtual GLsizei getWidth(GLint level) const;
+    virtual GLsizei getHeight(GLint level) const;
     virtual GLenum getInternalFormat() const;
     virtual GLenum getType() const;
     virtual D3DFORMAT getD3DFormat() const;

@@ -95,6 +95,15 @@ locationArray0 = contextA.getUniformLocation(programS, "u_array[0]");
 shouldGenerateGLError(contextA, contextA.NO_ERROR, "contextA.uniform1i(locationSx, 3)");
 shouldBe("contextA.getUniform(programS, locationSx)", "3");
 
+// getUniformLocation should return a different object everytime, should not cache and return the same object
+debug("Testing that getUniformLocation returns a different object everytime");
+locationSx  = contextA.getUniformLocation(programS, "u_struct.x");
+locationSx2 = contextA.getUniformLocation(programS, "u_struct.x");
+shouldBeFalse("locationSx === locationSx2");
+locationSx.foo  = {};
+locationSx2.foo = {};
+shouldBeFalse("locationSx.foo === locationSx2.foo");
+
 successfullyParsed = true;
 </script>
 

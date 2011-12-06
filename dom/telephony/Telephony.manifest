@@ -1,0 +1,4 @@
+# Telephony.js
+component {37e248d2-02ff-469b-bb31-eef5a4a4bee3} Telephony.js
+contract @mozilla.org/telephony;1 {37e248d2-02ff-469b-bb31-eef5a4a4bee3}
+category JavaScript-navigator-property mozTelephony @mozilla.org/telephony;1

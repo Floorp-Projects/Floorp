@@ -103,7 +103,6 @@ public:
   PRUint32 AttrCount() const;
   const nsAttrValue* GetAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID = kNameSpaceID_None) const;
   const nsAttrValue* AttrAt(PRUint32 aPos) const;
-  nsresult SetAttr(nsIAtom* aLocalName, const nsAString& aValue);
   nsresult SetAndTakeAttr(nsIAtom* aLocalName, nsAttrValue& aValue);
   nsresult SetAndTakeAttr(nsINodeInfo* aName, nsAttrValue& aValue);
 

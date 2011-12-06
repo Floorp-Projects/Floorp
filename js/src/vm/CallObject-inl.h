@@ -89,7 +89,7 @@ CallObject::getCallee() const
 inline JSFunction *
 CallObject::getCalleeFunction() const
 {
-    return getFixedSlot(CALLEE_SLOT).toObject().getFunctionPrivate();
+    return getFixedSlot(CALLEE_SLOT).toObject().toFunction();
 }
 
 inline const js::Value &
@@ -164,7 +164,7 @@ CallObject::initVarUnchecked(uintN i, const js::Value &v)
 inline void
 CallObject::copyValues(uintN nargs, Value *argv, uintN nvars, Value *slots)
 {
-    JS_ASSERT(numSlots() >= RESERVED_SLOTS + nargs + nvars);
+    JS_ASSERT(slotInRange(RESERVED_SLOTS + nargs + nvars, SENTINEL_ALLOWED));
     copySlotRange(RESERVED_SLOTS, argv, nargs, true);
     copySlotRange(RESERVED_SLOTS + nargs, slots, nvars, true);
 }

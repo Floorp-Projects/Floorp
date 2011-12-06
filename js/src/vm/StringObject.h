@@ -92,7 +92,7 @@ class StringObject : public ::JSObject
      * encodes the initial length property. Return the shape after changing
      * this String object's last property to it.
      */
-    const js::Shape *assignInitialShape(JSContext *cx);
+    Shape *assignInitialShape(JSContext *cx);
 
   private:
     StringObject();

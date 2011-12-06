@@ -43,7 +43,7 @@
  * secder.h - public data structures and prototypes for the DER encoding and
  *	      decoding utilities library
  *
- * $Id: secder.h,v 1.13 2008/06/18 01:04:23 wtc%google.com Exp $
+ * $Id: secder.h,v 1.15 2011/11/16 19:12:36 kaie%kuix.de Exp $
  */
 
 #if defined(_WIN32_WCE)

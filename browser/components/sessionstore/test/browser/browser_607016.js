@@ -52,6 +52,7 @@ function cleanup() {
 function test() {
   /** Bug 607016 - If a tab is never restored, attributes (eg. hidden) aren't updated correctly **/
   waitForExplicitFinish();
+  ignoreAllUncaughtExceptions();
 
   // Set the pref to true so we know exactly how many tabs should be restoring at
   // any given time. This guarantees that a finishing load won't start another.

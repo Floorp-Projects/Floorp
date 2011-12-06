@@ -1630,7 +1630,7 @@ public:
     {
         JS_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_XPCONNECT_GLOBAL);
 
-        const js::Value &v = js::GetSlot(obj, JSCLASS_GLOBAL_SLOT_COUNT);
+        const js::Value &v = js::GetObjectSlot(obj, JSCLASS_GLOBAL_SLOT_COUNT);
         return v.isUndefined()
                ? nsnull
                : static_cast<XPCWrappedNativeScope *>(v.toPrivate());
@@ -3327,7 +3327,14 @@ public:
 
     static JSBool JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
                                  JSUint32 count, const nsXPTType& type,
-                                 const nsID* iid, uintN* pErr);
+                                 const nsID* iid, nsresult* pErr);
+
+    static JSBool JSTypedArray2Native(XPCCallContext& ccx,
+                                      void** d,
+                                      JSObject* jsarray,
+                                      JSUint32 count,
+                                      const nsXPTType& type,
+                                      nsresult* pErr);
 
     static JSBool NativeStringWithSize2JS(JSContext* cx,
                                           jsval* d, const void* s,

@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keyhi.h,v 1.18 2011/07/24 13:48:12 wtc%google.com Exp $ */
+/* $Id: keyhi.h,v 1.20 2011/11/16 19:12:33 kaie%kuix.de Exp $ */
 
 #ifndef _KEYHI_H_
 #define _KEYHI_H_

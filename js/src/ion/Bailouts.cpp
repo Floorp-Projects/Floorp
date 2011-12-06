@@ -206,8 +206,7 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     uintN callerArgc = GET_ARGC(regs.pc);
     const Value &calleeVal = regs.sp[-callerArgc - 2];
 
-    JSObject &callee = calleeVal.toObject();
-    JSFunction *fun = callee.getFunctionPrivate();
+    JSFunction *fun = calleeVal.toObject().toFunction();
     JSScript *script = fun->script();
     CallArgs inlineArgs = CallArgsFromArgv(fun->nargs, regs.sp - callerArgc);
     
@@ -215,14 +214,14 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     // really get filled in by RestoreOneFrame.
     regs.sp = inlineArgs.end();
 
-    if (!cx->stack.pushInlineFrame(cx, regs, inlineArgs, callee, fun, script, INITIAL_NONE))
+    if (!cx->stack.pushInlineFrame(cx, regs, inlineArgs, *fun, script, INITIAL_NONE))
         return NULL;
 
     StackFrame *fp = cx->stack.fp();
     JS_ASSERT(fp == regs.fp());
     JS_ASSERT(fp->prev() == callerFrame);
     
-    fp->formalArgs()[-2].setObject(callee);
+    fp->formalArgs()[-2].setObject(*fun);
 
     return fp;
 }
@@ -254,8 +253,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
 
     IonSpew(IonSpew_Bailouts, " sp before pushing bailout frame: %p",
             (void *) cx->stack.regs().sp);
-    StackFrame *fp = cx->stack.pushBailoutFrame(cx, in.callee(), in.fun(), in.script(),
-                                                br->frameGuard());
+    StackFrame *fp = cx->stack.pushBailoutFrame(cx, *in.callee(), in.script(), br->frameGuard());
     if (!fp)
         return false;
 

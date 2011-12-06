@@ -273,7 +273,7 @@ IonActivation::~IonActivation()
 IonCode *
 IonCode::New(JSContext *cx, uint8 *code, uint32 bufferSize, JSC::ExecutablePool *pool)
 {
-    IonCode *codeObj = NewGCThing<IonCode>(cx, gc::FINALIZE_IONCODE, sizeof(IonCode));
+    IonCode *codeObj = gc::NewGCThing<IonCode>(cx, gc::FINALIZE_IONCODE, sizeof(IonCode));
     if (!codeObj) {
         pool->release();
         return NULL;
@@ -321,8 +321,9 @@ IonCode::trace(JSTracer *trc)
 }
 
 void
-IonCode::finalize(JSContext *cx)
+IonCode::finalize(JSContext *cx, bool background)
 {
+    JS_ASSERT(!background);
     if (pool_)
         pool_->release();
 }
@@ -703,7 +704,7 @@ MethodStatus
 ion::CanEnterAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode *pc)
 {
     JS_ASSERT(ion::IsEnabled());
-    JS_ASSERT((JSOp)*pc == JSOP_TRACE);
+    JS_ASSERT((JSOp)*pc == JSOP_LOOPHEAD);
 
     // Optionally ignore on user request.
     if (!js_IonOptions.osr)
@@ -731,7 +732,7 @@ MethodStatus
 ion::Compile(JSContext *cx, JSScript *script, js::StackFrame *fp, jsbytecode *osrPc)
 {
     JS_ASSERT(ion::IsEnabled());
-    JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_TRACE);
+    JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_LOOPHEAD);
 
     if (cx->compartment->debugMode()) {
         IonSpew(IonSpew_Abort, "debugging");
@@ -778,7 +779,7 @@ EnterIon(JSContext *cx, StackFrame *fp, CallTarget target, void *jitcode, bool o
     if (fp->isFunctionFrame()) {
         argc = CountArgSlots(fp->fun());
         argv = fp->formalArgs() - 1;
-        calleeToken = CalleeToToken(&fp->callee());
+        calleeToken = CalleeToToken(fp->callee().toFunction());
     } else {
         calleeToken = CalleeToToken(fp->script());
     }
