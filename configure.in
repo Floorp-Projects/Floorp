@@ -4981,6 +4981,7 @@ cairo-gonk)
     TK_LIBS='$(MOZ_CAIRO_LIBS)'
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
+    MOZ_B2G_RIL=1
     ;;
 
 esac
@@ -7572,6 +7573,18 @@ MOZ_ARG_ENABLE_BOOL(quantify,
 [  --enable-quantify       Enable Quantify support (Windows only) ],
     MOZ_QUANTIFY=1,
     MOZ_QUANTIFY= )
+
+dnl ========================================================
+dnl = Enable Radio Interface for B2G (Gonk usually)
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(b2g-ril,
+[  --enable-b2g-ril      Set compile flags necessary for testing B2G Radio Interface Layer via network sockets ],
+    MOZ_B2G_RIL=1,
+    MOZ_B2G_RIL= )
+if test -n "$MOZ_B2G_RIL"; then
+   AC_DEFINE(MOZ_B2G_RIL)
+fi
+AC_SUBST(MOZ_B2G_RIL)
 
 dnl ========================================================
 dnl = Support for demangling undefined symbols

@@ -325,6 +325,7 @@ RasterImage::AdvanceFrame(TimeStamp aTime, nsIntRect* aDirtyRect)
   PRUint32 currentFrameIndex = mAnim->currentAnimationFrameIndex;
   PRUint32 nextFrameIndex = mAnim->currentAnimationFrameIndex + 1;
   PRUint32 timeout = 0;
+  mImageContainer = nsnull;
 
   // Figure out if we have the next full frame. This is more complicated than
   // just checking for mFrames.Length() because decoders append their frames
@@ -1409,6 +1410,7 @@ RasterImage::ResetAnimation()
 
   mAnim->lastCompositedFrameIndex = -1;
   mAnim->currentAnimationFrameIndex = 0;
+  mImageContainer = nsnull;
 
   // Note - We probably want to kick off a redecode somewhere around here when
   // we fix bug 500402.

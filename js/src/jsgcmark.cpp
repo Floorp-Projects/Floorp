@@ -757,29 +757,58 @@ ScanBaseShape(GCMarker *gcmarker, BaseShape *base)
 }
 
 static inline void
+ScanLinearString(GCMarker *gcmarker, JSLinearString *str)
+{
+    JS_COMPARTMENT_ASSERT_STR(gcmarker->runtime, str);
+    JS_ASSERT(str->isMarked());
+
+    /*
+     * Add extra asserts to confirm the static type to detect incorrect string
+     * mutations.
+     */
+    JS_ASSERT(str->JSString::isLinear());
+    while (str->isDependent()) {
+        str = str->asDependent().base();
+        JS_ASSERT(str->JSString::isLinear());
+        JS_COMPARTMENT_ASSERT_STR(gcmarker->runtime, str);
+        if (!str->markIfUnmarked())
+            break;
+    }
+}
+
+static void
 ScanRope(GCMarker *gcmarker, JSRope *rope)
 {
-    JS_COMPARTMENT_ASSERT_STR(gcmarker->runtime, rope);
-    JS_ASSERT(rope->isMarked());
-
-    JSString *leftChild = NULL;
+    JS_ASSERT(rope->JSString::isRope());
     do {
-        JSString *rightChild = rope->rightChild();
+        JS_COMPARTMENT_ASSERT_STR(gcmarker->runtime, rope);
+        JS_ASSERT(rope->isMarked());
+        JSRope *next = NULL;
 
-        if (rightChild->isRope()) {
-            if (rightChild->markIfUnmarked())
-                gcmarker->pushRope(&rightChild->asRope());
-        } else {
-            rightChild->asLinear().mark(gcmarker);
+        JSString *right = rope->rightChild();
+        if (right->markIfUnmarked()) {
+            if (right->isLinear())
+                ScanLinearString(gcmarker, &right->asLinear());
+            else
+                next = &right->asRope();
         }
-        leftChild = rope->leftChild();
 
-        if (leftChild->isLinear()) {
-            leftChild->asLinear().mark(gcmarker);
-            return;
+        JSString *left = rope->leftChild();
+        if (left->markIfUnmarked()) {
+            if (left->isLinear()) {
+                ScanLinearString(gcmarker, &left->asLinear());
+            } else {
+                /*
+                 * Both children are ropes, set aside the right one to scan
+                 * it later.
+                 */
+                if (next)
+                    gcmarker->pushRope(next);
+                next = &left->asRope();
+            }
         }
-        rope = &leftChild->asRope();
-    } while (leftChild->markIfUnmarked());
+        rope = next;
+    } while (rope);
 }
 
 static inline void
@@ -787,11 +816,14 @@ PushMarkStack(GCMarker *gcmarker, JSString *str)
 {
     JS_COMPARTMENT_ASSERT_STR(gcmarker->runtime, str);
 
-    if (str->isLinear()) {
-        str->asLinear().mark(gcmarker);
-    } else {
-        JS_ASSERT(str->isRope());
-        if (str->markIfUnmarked())
+    /*
+     * We scan the string directly rather than pushing on the stack except
+     * when we have a rope and both its children are also ropes.
+     */
+    if (str->markIfUnmarked()) {
+        if (str->isLinear())
+            ScanLinearString(gcmarker, &str->asLinear());
+        else
             ScanRope(gcmarker, &str->asRope());
     }
 }

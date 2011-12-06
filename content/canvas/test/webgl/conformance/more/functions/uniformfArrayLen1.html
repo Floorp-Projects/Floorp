@@ -82,10 +82,10 @@ varying vec4 texCoord0;
 void main()
 {
     gl_FragColor = vec4(
-        uniV4[0].r/256.0,
-        uniV4[0].g/256.0,
-        uniV4[0].b/256.0,
-        uniV4[0].a*texCoord0.z/256.0);
+        uniV4[0].r/255.0,
+        uniV4[0].g/255.0,
+        uniV4[0].b/255.0,
+        uniV4[0].a*texCoord0.z/255.0);
 }
 </script>
 <style>canvas{ position:absolute; }</style>

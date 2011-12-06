@@ -553,7 +553,7 @@ bool TParseContext::constructorErrorCheck(int line, TIntermNode* node, TFunction
         return true;
     }
 
-    if (!type->isMatrix()) {
+    if (!type->isMatrix() || !matrixInMatrix) {
         if ((op != EOpConstructStruct && size != 1 && size < type->getObjectSize()) ||
             (op == EOpConstructStruct && size < type->getObjectSize())) {
             error(line, "not enough data provided for construction", "constructor", "");

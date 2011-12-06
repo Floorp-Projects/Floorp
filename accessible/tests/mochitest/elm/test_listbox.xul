@@ -10,9 +10,9 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 
   <script type="application/javascript"
-          src="common.js"></script>
+          src="../common.js"></script>
   <script type="application/javascript"
-          src="role.js"></script>
+          src="../role.js"></script>
 
   <script type="application/javascript">
   <![CDATA[

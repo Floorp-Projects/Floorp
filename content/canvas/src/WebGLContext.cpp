@@ -236,13 +236,6 @@ WebGLContext::WebGLContext()
 
     mShaderValidation = true;
 
-    mMapBuffers.Init();
-    mMapTextures.Init();
-    mMapPrograms.Init();
-    mMapShaders.Init();
-    mMapFramebuffers.Init();
-    mMapRenderbuffers.Init();
-
     mBlackTexturesAreInitialized = false;
     mFakeBlackStatus = DoNotNeedFakeBlack;
 
@@ -314,72 +307,6 @@ WebGLContext::~WebGLContext()
     mContextRestorer = nsnull;
 }
 
-static PLDHashOperator
-DeleteTextureFunction(const PRUint32& aKey, WebGLTexture *aValue, void *aData)
-{
-    gl::GLContext *gl = (gl::GLContext *) aData;
-    NS_ASSERTION(!aValue->Deleted(), "Texture is still in mMapTextures, but is deleted?");
-    GLuint name = aValue->GLName();
-    gl->fDeleteTextures(1, &name);
-    aValue->Delete();
-    return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-DeleteBufferFunction(const PRUint32& aKey, WebGLBuffer *aValue, void *aData)
-{
-    gl::GLContext *gl = (gl::GLContext *) aData;
-    NS_ASSERTION(!aValue->Deleted(), "Buffer is still in mMapBuffers, but is deleted?");
-    GLuint name = aValue->GLName();
-    gl->fDeleteBuffers(1, &name);
-    aValue->Delete();
-    return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-DeleteFramebufferFunction(const PRUint32& aKey, WebGLFramebuffer *aValue, void *aData)
-{
-    gl::GLContext *gl = (gl::GLContext *) aData;
-    NS_ASSERTION(!aValue->Deleted(), "Framebuffer is still in mMapFramebuffers, but is deleted?");
-    GLuint name = aValue->GLName();
-    gl->fDeleteFramebuffers(1, &name);
-    aValue->Delete();
-    return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-DeleteRenderbufferFunction(const PRUint32& aKey, WebGLRenderbuffer *aValue, void *aData)
-{
-    gl::GLContext *gl = (gl::GLContext *) aData;
-    NS_ASSERTION(!aValue->Deleted(), "Renderbuffer is still in mMapRenderbuffers, but is deleted?");
-    GLuint name = aValue->GLName();
-    gl->fDeleteRenderbuffers(1, &name);
-    aValue->Delete();
-    return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-DeleteProgramFunction(const PRUint32& aKey, WebGLProgram *aValue, void *aData)
-{
-    gl::GLContext *gl = (gl::GLContext *) aData;
-    NS_ASSERTION(!aValue->Deleted(), "Program is still in mMapPrograms, but is deleted?");
-    GLuint name = aValue->GLName();
-    gl->fDeleteProgram(name);
-    aValue->Delete();
-    return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-DeleteShaderFunction(const PRUint32& aKey, WebGLShader *aValue, void *aData)
-{
-    gl::GLContext *gl = (gl::GLContext *) aData;
-    NS_ASSERTION(!aValue->Deleted(), "Shader is still in mMapShaders, but is deleted?");
-    GLuint name = aValue->GLName();
-    gl->fDeleteShader(name);
-    aValue->Delete();
-    return PL_DHASH_NEXT;
-}
-
 void
 WebGLContext::DestroyResourcesAndContext()
 {
@@ -388,23 +315,30 @@ WebGLContext::DestroyResourcesAndContext()
 
     gl->MakeCurrent();
 
-    mMapTextures.EnumerateRead(DeleteTextureFunction, gl);
-    mMapTextures.Clear();
+    mBound2DTextures.Clear();
+    mBoundCubeMapTextures.Clear();
+    mBoundArrayBuffer = nsnull;
+    mBoundElementArrayBuffer = nsnull;
+    mCurrentProgram = nsnull;
+    mBoundFramebuffer = nsnull;
+    mBoundRenderbuffer = nsnull;
 
-    mMapBuffers.EnumerateRead(DeleteBufferFunction, gl);
-    mMapBuffers.Clear();
+    mAttribBuffers.Clear();
 
-    mMapPrograms.EnumerateRead(DeleteProgramFunction, gl);
-    mMapPrograms.Clear();
-
-    mMapShaders.EnumerateRead(DeleteShaderFunction, gl);
-    mMapShaders.Clear();
-
-    mMapFramebuffers.EnumerateRead(DeleteFramebufferFunction, gl);
-    mMapFramebuffers.Clear();
-
-    mMapRenderbuffers.EnumerateRead(DeleteRenderbufferFunction, gl);
-    mMapRenderbuffers.Clear();
+    while (mTextures.Length())
+        mTextures.Last()->DeleteOnce();
+    while (mBuffers.Length())
+        mBuffers.Last()->DeleteOnce();
+    while (mRenderbuffers.Length())
+        mRenderbuffers.Last()->DeleteOnce();
+    while (mFramebuffers.Length())
+        mFramebuffers.Last()->DeleteOnce();
+    while (mShaders.Length())
+        mShaders.Last()->DeleteOnce();
+    while (mPrograms.Length())
+        mPrograms.Last()->DeleteOnce();
+    while (mUniformLocations.Length())
+        mUniformLocations.Last()->DeleteOnce();
 
     if (mBlackTexturesAreInitialized) {
         gl->fDeleteTextures(1, &mBlackTexture2D);
@@ -1270,7 +1204,6 @@ NS_IMPL_RELEASE(WebGLBuffer)
 DOMCI_DATA(WebGLBuffer, WebGLBuffer)
 
 NS_INTERFACE_MAP_BEGIN(WebGLBuffer)
-  NS_INTERFACE_MAP_ENTRY(WebGLBuffer)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLBuffer)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLBuffer)
@@ -1282,7 +1215,6 @@ NS_IMPL_RELEASE(WebGLTexture)
 DOMCI_DATA(WebGLTexture, WebGLTexture)
 
 NS_INTERFACE_MAP_BEGIN(WebGLTexture)
-  NS_INTERFACE_MAP_ENTRY(WebGLTexture)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLTexture)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLTexture)
@@ -1294,7 +1226,6 @@ NS_IMPL_RELEASE(WebGLProgram)
 DOMCI_DATA(WebGLProgram, WebGLProgram)
 
 NS_INTERFACE_MAP_BEGIN(WebGLProgram)
-  NS_INTERFACE_MAP_ENTRY(WebGLProgram)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLProgram)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLProgram)
@@ -1306,7 +1237,6 @@ NS_IMPL_RELEASE(WebGLShader)
 DOMCI_DATA(WebGLShader, WebGLShader)
 
 NS_INTERFACE_MAP_BEGIN(WebGLShader)
-  NS_INTERFACE_MAP_ENTRY(WebGLShader)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLShader)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLShader)
@@ -1318,7 +1248,6 @@ NS_IMPL_RELEASE(WebGLFramebuffer)
 DOMCI_DATA(WebGLFramebuffer, WebGLFramebuffer)
 
 NS_INTERFACE_MAP_BEGIN(WebGLFramebuffer)
-  NS_INTERFACE_MAP_ENTRY(WebGLFramebuffer)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLFramebuffer)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLFramebuffer)
@@ -1330,7 +1259,6 @@ NS_IMPL_RELEASE(WebGLRenderbuffer)
 DOMCI_DATA(WebGLRenderbuffer, WebGLRenderbuffer)
 
 NS_INTERFACE_MAP_BEGIN(WebGLRenderbuffer)
-  NS_INTERFACE_MAP_ENTRY(WebGLRenderbuffer)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLRenderbuffer)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLRenderbuffer)
@@ -1342,7 +1270,6 @@ NS_IMPL_RELEASE(WebGLUniformLocation)
 DOMCI_DATA(WebGLUniformLocation, WebGLUniformLocation)
 
 NS_INTERFACE_MAP_BEGIN(WebGLUniformLocation)
-  NS_INTERFACE_MAP_ENTRY(WebGLUniformLocation)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLUniformLocation)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLUniformLocation)
@@ -1354,7 +1281,6 @@ NS_IMPL_RELEASE(WebGLActiveInfo)
 DOMCI_DATA(WebGLActiveInfo, WebGLActiveInfo)
 
 NS_INTERFACE_MAP_BEGIN(WebGLActiveInfo)
-  NS_INTERFACE_MAP_ENTRY(WebGLActiveInfo)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLActiveInfo)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLActiveInfo)
@@ -1379,7 +1305,6 @@ NS_IMPL_RELEASE(WebGLExtension)
 DOMCI_DATA(WebGLExtension, WebGLExtension)
 
 NS_INTERFACE_MAP_BEGIN(WebGLExtension)
-  NS_INTERFACE_MAP_ENTRY(WebGLExtension)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLExtension)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLExtension)
@@ -1391,8 +1316,6 @@ NS_IMPL_RELEASE(WebGLExtensionStandardDerivatives)
 DOMCI_DATA(WebGLExtensionStandardDerivatives, WebGLExtensionStandardDerivatives)
 
 NS_INTERFACE_MAP_BEGIN(WebGLExtensionStandardDerivatives)
-  //NS_INTERFACE_MAP_ENTRY(WebGLExtensionStandardDerivatives)
-  //NS_INTERFACE_MAP_ENTRY(WebGLExtension)
   NS_INTERFACE_MAP_ENTRY(nsIWebGLExtensionStandardDerivatives)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, WebGLExtension)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLExtensionStandardDerivatives)
