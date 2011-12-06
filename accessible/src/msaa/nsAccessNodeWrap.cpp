@@ -41,6 +41,7 @@
 #include "AccessibleApplication.h"
 #include "ISimpleDOMNode_i.c"
 
+#include "Compatibility.h"
 #include "nsAccessibilityService.h"
 #include "nsApplicationAccessibleWrap.h"
 #include "nsCoreUtils.h"
@@ -70,19 +71,7 @@ LPFNLRESULTFROMOBJECT nsAccessNodeWrap::gmLresultFromObject = NULL;
 LPFNNOTIFYWINEVENT nsAccessNodeWrap::gmNotifyWinEvent = nsnull;
 LPFNGETGUITHREADINFO nsAccessNodeWrap::gmGetGUIThreadInfo = nsnull;
 
-// Used to determine whether an IAccessible2 compatible screen reader is loaded.
-bool nsAccessNodeWrap::gIsIA2Disabled = false;
-
 AccTextChangeEvent* nsAccessNodeWrap::gTextEvent = nsnull;
-
-// Pref to disallow CtrlTab preview functionality if JAWS or Window-Eyes are
-// running.
-#define CTRLTAB_DISALLOW_FOR_SCREEN_READERS_PREF "browser.ctrlTab.disallowForScreenReaders"
-
-
-/* For documentation of the accessibility architecture, 
- * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
- */
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessNodeWrap
@@ -613,7 +602,7 @@ void nsAccessNodeWrap::InitAccessibility()
       gmGetGUIThreadInfo = (LPFNGETGUITHREADINFO)GetProcAddress(gmUserLib,"GetGUIThreadInfo");
   }
 
-  DoATSpecificProcessing();
+  Compatibility::Init();
 
   nsWinUtils::MaybeStartWindowEmulation();
 
@@ -669,73 +658,6 @@ GetHRESULT(nsresult aResult)
     default:
       return E_FAIL;
   }
-}
-
-bool nsAccessNodeWrap::IsOnlyMsaaCompatibleJawsPresent()
-{
-  HMODULE jhookhandle = ::GetModuleHandleW(kJAWSModuleHandle);
-  if (!jhookhandle)
-    return false;  // No JAWS, or some other screen reader, use IA2
-
-  PRUnichar fileName[MAX_PATH];
-  ::GetModuleFileNameW(jhookhandle, fileName, MAX_PATH);
-
-  DWORD dummy;
-  DWORD length = ::GetFileVersionInfoSizeW(fileName, &dummy);
-
-  LPBYTE versionInfo = new BYTE[length];
-  ::GetFileVersionInfoW(fileName, 0, length, versionInfo);
-
-  UINT uLen;
-  VS_FIXEDFILEINFO *fixedFileInfo;
-  ::VerQueryValueW(versionInfo, L"\\", (LPVOID*)&fixedFileInfo, &uLen);
-  DWORD dwFileVersionMS = fixedFileInfo->dwFileVersionMS;
-  DWORD dwFileVersionLS = fixedFileInfo->dwFileVersionLS;
-  delete [] versionInfo;
-
-  DWORD dwLeftMost = HIWORD(dwFileVersionMS);
-//  DWORD dwSecondLeft = LOWORD(dwFileVersionMS);
-  DWORD dwSecondRight = HIWORD(dwFileVersionLS);
-//  DWORD dwRightMost = LOWORD(dwFileVersionLS);
-
-  return (dwLeftMost < 8
-          || (dwLeftMost == 8 && dwSecondRight < 2173));
-}
-
-void nsAccessNodeWrap::TurnOffNewTabSwitchingForJawsAndWE()
-{
-  HMODULE srHandle = ::GetModuleHandleW(kJAWSModuleHandle);
-  if (!srHandle) {
-    // No JAWS, try Window-Eyes
-    srHandle = ::GetModuleHandleW(kWEModuleHandle);
-    if (!srHandle) {
-      // no screen reader we're interested in. Bail out.
-      return;
-    }
-  }
-
-  // Check to see if the pref for disallowing CtrlTab is already set.
-  // If so, bail out.
-  // If not, set it.
-  if (Preferences::HasUserValue(CTRLTAB_DISALLOW_FOR_SCREEN_READERS_PREF)) {
-    // This pref has been set before. There is no default for it.
-    // Do nothing further, respect the setting that's there.
-    // That way, if noone touches it, it'll stay on after toggled once.
-    // If someone decided to turn it off, we respect that, too.
-    return;
-  }
-  
-  // Value has never been set, set it.
-  Preferences::SetBool(CTRLTAB_DISALLOW_FOR_SCREEN_READERS_PREF, true);
-}
-
-void nsAccessNodeWrap::DoATSpecificProcessing()
-{
-  if (IsOnlyMsaaCompatibleJawsPresent())
-    // All versions below 8.0.2173 are not compatible
-    gIsIA2Disabled  = true;
-
-  TurnOffNewTabSwitchingForJawsAndWE();
 }
 
 nsRefPtrHashtable<nsVoidPtrHashKey, nsDocAccessible> nsAccessNodeWrap::sHWNDCache;
