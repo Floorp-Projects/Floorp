@@ -70,6 +70,7 @@ components/pluginGlue.js
 components/sidebar.xpt
 #ifdef MOZ_B2G_RIL
 components/dom_telephony.xpt
+components/dom_wifi.xpt
 components/dom_system_b2g.xpt
 #endif
 components/uconvd.dll
@@ -922,6 +923,8 @@ xpicleanup@BIN_SUFFIX@
   components/nsTelephonyWorker.js
   components/Telephony.manifest
   components/Telephony.js
+  components/nsWifiWorker.js
+  components/nsWifiWorker.manifest
 #endif
   components/txEXSLTRegExFunctions.js
   components/Weave.js
@@ -1143,6 +1146,7 @@ xpicleanup@BIN_SUFFIX@
   components/dom_base.xpt
 #ifdef MOZ_B2G_RIL
   components/dom_telephony.xpt
+  components/dom_wifi.xpt
   components/dom_system_b2g.xpt
 #endif
   components/dom_canvas.xpt
