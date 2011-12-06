@@ -411,6 +411,8 @@ public:
 
     virtual void FontsPrefsChanged(const char *aPref);
 
+    PRInt32 GetBidiNumeralOption();
+
     /**
      * Returns a 1x1 surface that can be used to create graphics contexts
      * for measuring text etc as if they will be rendered to the screen
@@ -437,6 +439,8 @@ protected:
 #ifdef MOZ_GRAPHITE
     PRInt8  mGraphiteShapingEnabled;
 #endif
+
+    PRInt8  mBidiNumeralOption;
 
     // which scripts should be shaped with harfbuzz
     PRInt32 mUseHarfBuzzScripts;
