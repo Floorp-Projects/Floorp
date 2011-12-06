@@ -1823,6 +1823,10 @@ public:
         return (Flags() & gfxTextRunFactory::TEXT_IS_RTL) != 0;
     }
 
+    float GetDirection() const {
+        return IsRightToLeft() ? -1.0 : 1.0;
+    }
+
     bool DisableLigatures() const {
         return (Flags() & gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES) != 0;
     }

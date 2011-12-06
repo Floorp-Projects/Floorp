@@ -296,6 +296,11 @@ gfxWindowsPlatform::UpdateRenderMode()
             mDWriteFactory = factory;
             factory->Release();
 
+            if (SUCCEEDED(hr)) {
+                hr = mDWriteFactory->CreateTextAnalyzer(
+                    getter_AddRefs(mDWriteAnalyzer));
+            }
+
             SetupClearTypeParams();
 
             if (hr == S_OK)
