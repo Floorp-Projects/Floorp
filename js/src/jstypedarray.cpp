@@ -225,7 +225,7 @@ ArrayBuffer::create(JSContext *cx, int32 nbytes)
                                                    obj->getProto(), obj->getParent(),
                                                    gc::FINALIZE_OBJECT16);
     if (!empty)
-        return false;
+        return NULL;
     obj->setLastPropertyInfallible(empty);
 
     /*
@@ -1384,7 +1384,7 @@ class TypedArrayTemplate
                                                        gc::FINALIZE_OBJECT8,
                                                        BaseShape::NOT_EXTENSIBLE);
         if (!empty)
-            return false;
+            return NULL;
         obj->setLastPropertyInfallible(empty);
 
         JS_ASSERT(obj->numFixedSlots() == NUM_FIXED_SLOTS);
