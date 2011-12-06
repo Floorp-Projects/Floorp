@@ -1651,7 +1651,7 @@ public:
             // Indicates that a cluster and ligature group starts at this
             // character; this character has a single glyph with a reasonable
             // advance and zero offsets. A "reasonable" advance
-            // is one that fits in the available bits (currently 13) (specified
+            // is one that fits in the available bits (currently 12) (specified
             // in appunits).
             FLAG_IS_SIMPLE_GLYPH  = 0x80000000U,
 
@@ -1665,8 +1665,10 @@ public:
             FLAG_BREAK_TYPE_NORMAL = 1,
             FLAG_BREAK_TYPE_HYPHEN = 2,
 
+            FLAG_CHAR_IS_SPACE     = 0x10000000U,
+
             // The advance is stored in appunits
-            ADVANCE_MASK  = 0x1FFF0000U,
+            ADVANCE_MASK  = 0x0FFF0000U,
             ADVANCE_SHIFT = 16,
 
             GLYPH_MASK = 0x0000FFFFU,
@@ -1683,6 +1685,10 @@ public:
             FLAG_NOT_MISSING              = 0x01,
             FLAG_NOT_CLUSTER_START        = 0x02,
             FLAG_NOT_LIGATURE_GROUP_START = 0x04,
+
+            FLAG_CHAR_IS_TAB              = 0x08,
+            FLAG_CHAR_IS_NEWLINE          = 0x10,
+            FLAG_CHAR_IS_LOW_SURROGATE    = 0x20,
             
             GLYPH_COUNT_MASK = 0x00FFFF00U,
             GLYPH_COUNT_SHIFT = 8
@@ -1718,6 +1724,23 @@ public:
             return (mValue & FLAG_IS_SIMPLE_GLYPH) == 0 &&
                 (mValue & (FLAG_NOT_LIGATURE_GROUP_START | FLAG_NOT_MISSING)) ==
                     (FLAG_NOT_LIGATURE_GROUP_START | FLAG_NOT_MISSING);
+        }
+
+        // Return true if the original character was a normal (breakable,
+        // trimmable) space (U+0020). Not true for other characters that
+        // may happen to map to the space glyph (U+00A0).
+        bool CharIsSpace() const {
+            return (mValue & FLAG_CHAR_IS_SPACE) != 0;
+        }
+
+        bool CharIsTab() const {
+            return !IsSimpleGlyph() && (mValue & FLAG_CHAR_IS_TAB) != 0;
+        }
+        bool CharIsNewline() const {
+            return !IsSimpleGlyph() && (mValue & FLAG_CHAR_IS_NEWLINE) != 0;
+        }
+        bool CharIsLowSurrogate() const {
+            return !IsSimpleGlyph() && (mValue & FLAG_CHAR_IS_LOW_SURROGATE) != 0;
         }
 
         void SetClusterStart(bool aIsClusterStart) {
@@ -1772,6 +1795,22 @@ public:
         PRUint32 GetGlyphCount() const {
             NS_ASSERTION(!IsSimpleGlyph(), "Expected non-simple-glyph");
             return (mValue & GLYPH_COUNT_MASK) >> GLYPH_COUNT_SHIFT;
+        }
+
+        void SetIsSpace() {
+            mValue |= FLAG_CHAR_IS_SPACE;
+        }
+        void SetIsTab() {
+            NS_ASSERTION(!IsSimpleGlyph(), "Expected non-simple-glyph");
+            mValue |= FLAG_CHAR_IS_TAB;
+        }
+        void SetIsNewline() {
+            NS_ASSERTION(!IsSimpleGlyph(), "Expected non-simple-glyph");
+            mValue |= FLAG_CHAR_IS_NEWLINE;
+        }
+        void SetIsLowSurrogate() {
+            NS_ASSERTION(!IsSimpleGlyph(), "Expected non-simple-glyph");
+            mValue |= FLAG_CHAR_IS_LOW_SURROGATE;
         }
 
     private:
@@ -1863,6 +1902,15 @@ public:
                    const DetailedGlyph *aGlyphs);
 
     void SetMissingGlyph(PRUint32 aIndex, PRUint32 aChar, gfxFont *aFont);
+
+    void SetIsSpace(PRUint32 aIndex) {
+        mCharacterGlyphs[aIndex].SetIsSpace();
+    }
+
+    void SetIsLowSurrogate(PRUint32 aIndex) {
+        SetGlyphs(aIndex, CompressedGlyph().SetComplex(false, false, 0), nsnull);
+        mCharacterGlyphs[aIndex].SetIsLowSurrogate();
+    }
 
     bool FilterIfIgnorable(PRUint32 aIndex);
 
@@ -2121,6 +2169,23 @@ public:
         NS_ASSERTION(aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].CanBreakBefore() ==
             CompressedGlyph::FLAG_BREAK_TYPE_HYPHEN;
+    }
+
+    bool CharIsSpace(PRUint32 aPos) {
+        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        return mCharacterGlyphs[aPos].CharIsSpace();
+    }
+    bool CharIsTab(PRUint32 aPos) {
+        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        return mCharacterGlyphs[aPos].CharIsTab();
+    }
+    bool CharIsNewline(PRUint32 aPos) {
+        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        return mCharacterGlyphs[aPos].CharIsNewline();
+    }
+    bool CharIsLowSurrogate(PRUint32 aPos) {
+        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        return mCharacterGlyphs[aPos].CharIsLowSurrogate();
     }
 
     PRUint32 GetLength() { return mCharacterCount; }
@@ -2398,19 +2463,7 @@ public:
     const gfxSkipChars& GetSkipChars() const { return mSkipChars; }
     PRUint32 GetAppUnitsPerDevUnit() const { return mAppUnitsPerDevUnit; }
     gfxFontGroup *GetFontGroup() const { return mFontGroup; }
-    const PRUint8 *GetText8Bit() const
-    { return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? mText.mSingle : nsnull; }
-    const PRUnichar *GetTextUnicode() const
-    { return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? nsnull : mText.mDouble; }
-    const void *GetTextAt(PRUint32 aIndex) {
-        return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT)
-            ? static_cast<const void *>(mText.mSingle + aIndex)
-            : static_cast<const void *>(mText.mDouble + aIndex);
-    }
-    const PRUnichar GetChar(PRUint32 i) const
-    { return (mFlags & gfxTextRunFactory::TEXT_IS_8BIT) ? mText.mSingle[i] : mText.mDouble[i]; }
-    PRUint32 GetHashCode() const { return mHashCode; }
-    void SetHashCode(PRUint32 aHash) { mHashCode = aHash; }
+
 
     // Call this, don't call "new gfxTextRun" directly. This does custom
     // allocation and initialization
@@ -2506,15 +2559,49 @@ public:
     // (not requiring a DetailedGlyph entry). This avoids the need to call
     // the font shaper and go through the shaped-word cache for most spaces.
     //
+    // The parameter aSpaceChar is the original character code for which
+    // this space glyph is being used; if this is U+0020, we need to record
+    // that it could be trimmed at a run edge, whereas other kinds of space
+    // (currently just U+00A0) would not be trimmable/breakable.
+    //
     // Returns true if it was able to set simple glyph data for the space;
     // if it returns false, the caller needs to fall back to some other
     // means to create the necessary (detailed) glyph data.
     bool SetSpaceGlyphIfSimple(gfxFont *aFont, gfxContext *aContext,
-                               PRUint32 aCharIndex);
+                               PRUint32 aCharIndex, PRUnichar aSpaceChar);
 
-    // If the character at aIndex is default-ignorable, set the glyph
-    // to be invisible-missing and return TRUE, else return FALSE
-    bool FilterIfIgnorable(PRUint32 aIndex);
+    // Record the positions of specific characters that layout may need to
+    // detect in the textrun, even though it doesn't have an explicit copy
+    // of the original text. These are recorded using flag bits in the
+    // CompressedGlyph record; if necessary, we convert "simple" glyph records
+    // to "complex" ones as the Tab and Newline flags are not present in
+    // simple CompressedGlyph records.
+    void SetIsTab(PRUint32 aIndex) {
+        CompressedGlyph *g = &mCharacterGlyphs[aIndex];
+        if (g->IsSimpleGlyph()) {
+            DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, 1);
+            details->mGlyphID = g->GetSimpleGlyph();
+            details->mAdvance = g->GetSimpleAdvance();
+            details->mXOffset = details->mYOffset = 0;
+            SetGlyphs(aIndex, CompressedGlyph().SetComplex(true, true, 1), details);
+        }
+        g->SetIsTab();
+    }
+    void SetIsNewline(PRUint32 aIndex) {
+        CompressedGlyph *g = &mCharacterGlyphs[aIndex];
+        if (g->IsSimpleGlyph()) {
+            DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, 1);
+            details->mGlyphID = g->GetSimpleGlyph();
+            details->mAdvance = g->GetSimpleAdvance();
+            details->mXOffset = details->mYOffset = 0;
+            SetGlyphs(aIndex, CompressedGlyph().SetComplex(true, true, 1), details);
+        }
+        g->SetIsNewline();
+    }
+    void SetIsLowSurrogate(PRUint32 aIndex) {
+        SetGlyphs(aIndex, CompressedGlyph().SetComplex(false, false, 0), nsnull);
+        mCharacterGlyphs[aIndex].SetIsLowSurrogate();
+    }
 
     /**
      * Prefetch all the glyph extents needed to ensure that Measure calls
@@ -2575,9 +2662,6 @@ public:
         bool mClipAfterPart;
     };
     
-    // user font set generation when text run was created
-    PRUint64 GetUserFontSetGeneration() { return mUserFontSetGeneration; }
-
     // return storage used by this run, for memory reporter;
     // nsTransformedTextRun needs to override this as it holds additional data
     virtual NS_MUST_OVERRIDE size_t
@@ -2614,12 +2698,9 @@ protected:
 
     /**
      * Helper for the Create() factory method to allocate the required
-     * glyph storage, and copy the text (modifying the aText parameter)
-     * if it is not flagged as persistent.
+     * glyph storage.
      */
-    static CompressedGlyph* AllocateStorage(const void*& aText,
-                                            PRUint32 aLength,
-                                            PRUint32 aFlags);
+    static CompressedGlyph* AllocateStorage(PRUint32 aLength);
 
 private:
     // **** general helpers **** 
@@ -2689,15 +2770,7 @@ private:
     // XXX this should be changed to a GlyphRun plus a maybe-null GlyphRun*,
     // for smaller size especially in the super-common one-glyphrun case
     nsAutoTArray<GlyphRun,1>        mGlyphRuns;
-    // When TEXT_IS_8BIT is set, we use mSingle, otherwise we use mDouble.
-    // When TEXT_IS_PERSISTENT is set, we don't own the text, otherwise we
-    // own the text. When we own the text, it's allocated fused with the
-    // mCharacterGlyphs array, and therefore need not be explicitly deleted.
-    // This text is not null-terminated.
-    union {
-        const PRUint8   *mSingle;
-        const PRUnichar *mDouble;
-    } mText;
+
     void             *mUserData;
     gfxFontGroup     *mFontGroup; // addrefed
     gfxSkipChars      mSkipChars;
@@ -2705,8 +2778,6 @@ private:
     PRUint32          mAppUnitsPerDevUnit;
     PRUint32          mFlags;
     PRUint32          mCharacterCount;
-    PRUint32          mHashCode;
-    PRUint64          mUserFontSetGeneration; // user font set generation when text run created
 
     bool              mSkipDrawing; // true if the font group we used had a user font
                                     // download that's in progress, so we should hide text
