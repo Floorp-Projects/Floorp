@@ -44,7 +44,6 @@
 
 #include "gfxImageSurface.h"
 #include "gfxWindowsSurface.h"
-#include "gfxTextRunWordCache.h"
 
 #include "nsUnicharUtils.h"
 
@@ -921,7 +920,6 @@ gfxWindowsPlatform::FontsPrefsChanged(const char *aPref)
         if (fc) {
             fc->Flush();
         }
-        gfxTextRunWordCache::Flush();
     }
 }
 

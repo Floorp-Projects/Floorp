@@ -2653,10 +2653,10 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags)
     aFlags |= TEXT_IS_8BIT | TEXT_IS_ASCII | TEXT_IS_PERSISTENT;
     static const PRUint8 space = ' ';
 
-    nsAutoPtr<gfxTextRun> textRun;
-    textRun = gfxTextRun::Create(aParams, &space, 1, this, aFlags);
-    if (!textRun)
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, &space, 1, this, aFlags);
+    if (!textRun) {
         return nsnull;
+    }
 
     gfxFont *font = GetFontAt(0);
     if (NS_UNLIKELY(GetStyle()->size == 0)) {
@@ -2668,48 +2668,52 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags)
     else {
         textRun->SetSpaceGlyph(font, aParams->mContext, 0);
     }
+
     // Note that the gfxGlyphExtents glyph bounds storage for the font will
     // always contain an entry for the font's space glyph, so we don't have
     // to call FetchGlyphExtents here.
-    return textRun.forget();
+    return textRun;
 }
 
-#define UNICODE_LRO 0x202d
-#define UNICODE_RLO 0x202e
-#define UNICODE_PDF 0x202c
-
-inline void
-AppendDirectionalIndicatorStart(PRUint32 aFlags, nsAString& aString)
+gfxTextRun *
+gfxFontGroup::MakeBlankTextRun(const void* aText, PRUint32 aLength,
+                               const Parameters *aParams, PRUint32 aFlags)
 {
-    static const PRUnichar overrides[2] = { UNICODE_LRO, UNICODE_RLO };
-    aString.Append(overrides[(aFlags & gfxTextRunFactory::TEXT_IS_RTL) != 0]);    
-    aString.Append(' ');
-}
+    gfxTextRun *textRun =
+        gfxTextRun::Create(aParams, aText, aLength, this, aFlags);
+    if (!textRun) {
+        return nsnull;
+    }
 
-inline void
-AppendDirectionalIndicatorEnd(bool aNeedDirection, nsAString& aString)
-{
-    // append a space (always, for consistent treatment of last char,
-    // and a direction control if required (we skip this for 8-bit text,
-    // which is known to be unidirectional LTR, unless the direction was
-    // forced RTL via overrides)
-    aString.Append(' ');
-    if (!aNeedDirection)
-        return;
-
-    aString.Append('.');
-    aString.Append(UNICODE_PDF);
+    textRun->AddGlyphRun(GetFontAt(0), gfxTextRange::kFontGroup, 0, false);
+    return textRun;
 }
 
 gfxTextRun *
 gfxFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                           const Parameters *aParams, PRUint32 aFlags)
 {
-    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
-    NS_ASSERTION(aFlags & TEXT_IS_8BIT, "should be marked 8bit");
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
-    if (!textRun)
+    if (aLength == 0) {
+        return MakeEmptyTextRun(aParams, aFlags);
+    }
+    if (aLength == 1 && aString[0] == ' ') {
+        return MakeSpaceTextRun(aParams, aFlags);
+    }
+
+    aFlags |= TEXT_IS_8BIT;
+
+    if (GetStyle()->size == 0) {
+        // Short-circuit for size-0 fonts, as Windows and ATSUI can't handle
+        // them, and always create at least size 1 fonts, i.e. they still
+        // render something for size 0 fonts.
+        return MakeBlankTextRun(aString, aLength, aParams, aFlags);
+    }
+
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength,
+                                             this, aFlags);
+    if (!textRun) {
         return nsnull;
+    }
 
     nsDependentCSubstring cString(reinterpret_cast<const char*>(aString),
                                   reinterpret_cast<const char*>(aString) + aLength);
@@ -2728,10 +2732,21 @@ gfxTextRun *
 gfxFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
                           const Parameters *aParams, PRUint32 aFlags)
 {
-    NS_ASSERTION(aLength > 0, "should use MakeEmptyTextRun for zero-length text");
-    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength, this, aFlags);
-    if (!textRun)
+    if (aLength == 0) {
+        return MakeEmptyTextRun(aParams, aFlags);
+    }
+    if (aLength == 1 && aString[0] == ' ') {
+        return MakeSpaceTextRun(aParams, aFlags);
+    }
+    if (GetStyle()->size == 0) {
+        return MakeBlankTextRun(aString, aLength, aParams, aFlags);
+    }
+
+    gfxTextRun *textRun = gfxTextRun::Create(aParams, aString, aLength,
+                                             this, aFlags);
+    if (!textRun) {
         return nsnull;
+    }
 
     gfxPlatform::GetPlatform()->SetupClusterBoundaries(textRun, aString);
 
