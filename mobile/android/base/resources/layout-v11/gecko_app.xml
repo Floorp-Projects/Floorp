@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/main_layout"
+              style="@style/Screen">
+
+    <RelativeLayout android:id="@+id/gecko_layout"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="1">
+
+        <AbsoluteLayout android:id="@+id/plugin_container"
+                        android:background="@android:color/transparent"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent"/>
+
+        <org.mozilla.gecko.AboutHomeContent android:id="@+id/abouthome_content"
+                                            android:orientation="vertical"
+                                            android:layout_width="fill_parent"
+                                            android:layout_height="fill_parent"
+                                            android:background="#ffffff"
+                                            android:isScrollContainer="true"/>
+
+   </RelativeLayout>
+
+</LinearLayout>

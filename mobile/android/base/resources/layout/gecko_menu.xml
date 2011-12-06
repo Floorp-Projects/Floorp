@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/reload"
+          android:icon="@drawable/ic_menu_reload"
+          android:title="@string/reload"/>
+
+    <item android:id="@+id/forward"
+          android:icon="@drawable/ic_menu_forward"
+          android:title="@string/forward"/>
+
+    <item android:id="@+id/bookmark"
+          android:icon="@drawable/ic_menu_bookmark_add"
+          android:title="@string/bookmark_add"/>
+
+    <item android:id="@+id/share"
+          android:icon="@drawable/ic_menu_share"
+          android:title="@string/share" /> 
+    
+    <item android:id="@+id/save_as_pdf"
+          android:icon="@drawable/ic_menu_save_as_pdf"
+          android:title="@string/save_as_pdf" />
+
+    <item android:id="@+id/agent_mode"
+          android:title="@string/agent_request_desktop" />
+
+    <item android:id="@+id/preferences"
+          android:title="@string/preferences" />
+
+    <item android:id="@+id/addons"
+          android:title="@string/addons"/>
+
+    <item android:id="@+id/quit"
+          android:title="@string/quit" />
+</menu>

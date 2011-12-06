@@ -1,0 +1,122 @@
+<!ENTITY urlbar.emptytext      "Enter Search or Address">
+
+<!ENTITY back.label            "Back">
+<!ENTITY forward.label         "Forward">
+<!ENTITY reload.label          "Reload">
+<!ENTITY stop.label            "Stop">
+<!ENTITY go.label              "Go">
+<!ENTITY star.label            "Star">
+
+<!ENTITY showTabs.label        "Show Tabs">
+<!ENTITY newtab.label          "New Tab">
+<!ENTITY closetab.label        "Close Tab">
+
+<!ENTITY cut.label             "Cut">
+<!ENTITY copy.label            "Copy">
+<!ENTITY copyAll.label         "Copy All">
+<!ENTITY copylink.label        "Copy Link Location">
+<!ENTITY paste.label           "Paste">
+<!ENTITY pasteAndGo.label      "Paste &amp; Go">
+<!ENTITY delete.label          "Delete">
+<!ENTITY selectAll.label       "Select All">
+<!ENTITY noSuggestions.label   "(No suggestions)">
+<!ENTITY addToDictionary.label "Add to Dictionary">
+<!ENTITY inputMethod.label     "Select Input Method">
+
+<!ENTITY allPagesHeader.label      "All Pages">
+<!ENTITY bookmarksHeader.label     "Bookmarks">
+<!ENTITY historyHeader.label       "History">
+<!ENTITY desktopHeader.label       "Desktop">
+
+<!ENTITY editBookmarkDialog.title  "Edit Bookmark">
+<!ENTITY editBookmarkDone.label    "Done">
+<!ENTITY editBookmarkTags.label    "Add tags here">
+
+<!ENTITY selectHelper.done         "Done">
+
+<!ENTITY addonsHeader.label        "Add-ons">
+<!ENTITY addonsLocal.label         "Your Add-ons">
+<!ENTITY addonsUpdate.label        "Update">
+<!ENTITY addonsRepo.label          "Get Add-ons">
+<!ENTITY addonsRecommended.label   "Recommended">
+<!ENTITY addonsSearch.label        "Search">
+<!ENTITY addonsSearch2.emptytext   "Search Catalog">
+<!ENTITY addonsSearch.recommended  "Recommended">
+
+<!ENTITY addonOptions.label        "Options">
+<!ENTITY addonEnable.label         "Enable">
+<!ENTITY addonDisable.label        "Disable">
+<!ENTITY addonInstall2.label       "Add to &brandShortName;">
+<!ENTITY addonUninstall.label      "Uninstall">
+<!ENTITY addonCancel.label         "Cancel">
+<!ENTITY addonShowPage.label       "Go to Page">
+
+<!ENTITY downloadsHeader.label     "Downloads">
+<!ENTITY downloadShowPage.label    "Go to Page">
+<!ENTITY downloadShow2.label       "Find">
+<!ENTITY downloadOpen2.label       "Open">
+<!ENTITY downloadCancel.label      "Cancel">
+<!ENTITY downloadPause.label       "Pause">
+<!ENTITY downloadResume.label      "Resume">
+<!ENTITY downloadRetry.label       "Retry">
+<!ENTITY downloadRemove.label      "Remove">
+<!ENTITY downloadDelete.label      "Delete">
+<!ENTITY downloadFailed.label      "Failed">
+
+<!ENTITY noResults.label           "No results">
+<!ENTITY allBookmarks.label        "See all bookmarks">
+
+<!ENTITY bookmarkPopup.label       "Page Bookmarked">
+<!ENTITY bookmarkRemove.label      "Remove">
+<!ENTITY bookmarkEdit.label        "Edit">
+<!ENTITY bookmarkShortcut.label    "Add to Home Screen">
+
+<!ENTITY identity.unverifiedsite2 "This website does not supply identity information.">
+<!ENTITY identity.connectedTo2 "Connected to">
+<!-- Localization note (identity.runBy2)
+ The layout of the identity dialog prevents combining this into a single string with
+ substitution variables.  If it is difficult to translate the sense of the string
+ with that structure, consider a translation which ignores the preceding domain and
+ just addresses the organization to follow, e.g. "This site is run by " -->
+<!ENTITY identity.runBy2 "run by">
+
+<!ENTITY consoleHeader.label       "Error Console">
+<!ENTITY consoleAll.label          "All">
+<!ENTITY consoleErrors.label       "Errors">
+<!ENTITY consoleWarnings.label     "Warnings">
+<!ENTITY consoleMessages.label     "Messages">
+<!ENTITY consoleCodeEval.label     "Code:">
+<!ENTITY consoleClear.label        "Clear">
+<!ENTITY consoleEvaluate.label     "…">
+<!ENTITY consoleErrFile.label      "Source File:">
+<!ENTITY consoleErrLine.label      "Line:">
+<!ENTITY consoleErrColumn.label    "Column:">
+
+<!ENTITY contextOpenInNewTab.label    "Open Link in New Tab">
+<!ENTITY contextSaveImage.label       "Save Image">
+<!ENTITY contextCopyLink.label        "Copy Link">
+<!ENTITY contextCopyEmail.label       "Copy Email Address">
+<!ENTITY contextCopyPhone.label       "Copy Phone Number">
+<!ENTITY contextCopyImageLocation.label       "Copy Image Location">
+<!ENTITY contextShareLink.label       "Share Link">
+<!ENTITY contextShareImage.label      "Share Image">
+<!ENTITY contextBookmarkLink.label    "Bookmark Link">
+<!ENTITY contextSaveVideo.label       "Save Video">
+<!ENTITY contextShareVideo.label      "Share Video">
+<!ENTITY contextPlayMedia.label       "Play">
+<!ENTITY contextPauseMedia.label      "Pause">
+<!ENTITY contextFullScreen.label      "Full Screen">
+<!ENTITY contextEditBookmark.label    "Edit">
+<!ENTITY contextRemoveBookmark.label  "Remove">
+<!ENTITY contextShortcutBookmark.label "Add to Home Screen">
+
+<!ENTITY pageactions.saveas.pdf      "Save As PDF">
+<!ENTITY pageactions.share.page      "Share Page">
+<!ENTITY pageactions.password.forget "Forget Password">
+<!ENTITY pageactions.quit            "Quit">
+<!ENTITY pageactions.reset           "Clear Site Preferences">
+<!ENTITY pageactions.findInPage      "Find In Page">
+<!ENTITY pageactions.search.addNew   "Add Search Engine">
+<!ENTITY pageactions.charEncoding    "Character Encoding">
+
+<!ENTITY appMenu.siteOptions         "Site Options">

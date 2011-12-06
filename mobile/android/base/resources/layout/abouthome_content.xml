@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+    <ImageView
+        android:layout_width="fill_parent"
+        android:layout_height="100dip"
+        android:layout_gravity="center_horizontal"
+        android:src="@drawable/icon" />
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dip"
+        android:textColor="#FF202020"
+        android:textStyle="bold"
+        android:text="Recommended Addons"
+        android:isScrollContainer="false" />
+    <ListView
+        android:id="@+id/recommended_addon_list"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:divider="@android:color/transparent"
+        android:isScrollContainer="false"
+        android:dividerHeight="8dip" />
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dip"
+        android:textColor="#FF202020"
+        android:textStyle="bold"
+        android:isScrollContainer="false"
+        android:text="Favorite Sites" />
+    <GridView
+        android:id="@+id/grid"
+        android:layout_width="fill_parent"
+        android:isScrollContainer="false"
+        android:layout_height="wrap_content"/>
+</merge>
