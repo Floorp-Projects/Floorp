@@ -210,23 +210,43 @@ public class PanZoomController
         }
     }
 
-    public void geometryChanged(boolean aAbortFling) {
+    public void geometryChanged(boolean abortAnimation) {
         populatePositionAndLength();
 
-        if (aAbortFling) {
-            // this happens when gecko changes the viewport on us. if that's the case, abort
-            // any fling that's in progress and re-fling so that the page snaps to edges. for
-            // other cases (where the user's finger(s) are down) don't do anything special.
+        if (abortAnimation) {
+            // this happens when gecko changes the viewport on us or if the device is rotated.
+            // if that's the case, abort any fling or animated zoom that's in progress and
+            // re-zoom so that the page snaps to edges. for other cases (where the user's
+            // finger(s) are down) don't do anything special.
             switch (mState) {
+            case ANIMATED_ZOOM:
+                // the zoom that's in progress likely makes no sense any more (such as if
+                // the screen orientation changed) so abort it and start a new one to
+                // ensure the viewport doesn't contain out-of-bounds areas
+                animatedZoomTo(mController.getViewport());
+                break;
             case FLING:
                 mX.velocity = mY.velocity = 0.0f;
                 mState = PanZoomState.NOTHING;
                 // fall through
             case NOTHING:
-                fling();
+                tryZoomToFitPage();
                 break;
             }
         }
+    }
+
+    private boolean tryZoomToFitPage() {
+        RectF viewport = mController.getViewport();
+        FloatSize pageSize = mController.getPageSize();
+        RectF pageRect = new RectF(0, 0, pageSize.width, pageSize.height);
+
+        if (!pageRect.contains(viewport)) {
+            // animatedZoomTo will ensure that our destRect is within the page bounds
+            animatedZoomTo(viewport);
+            return true;
+        }
+        return false;
     }
 
     /*
@@ -852,16 +872,9 @@ public class PanZoomController
         mX.firstTouchPos = mX.lastTouchPos = mX.touchPos = detector.getFocusX();
         mY.firstTouchPos = mY.lastTouchPos = mY.touchPos = detector.getFocusY();
 
-        RectF viewport = mController.getViewport();
-
-        FloatSize pageSize = mController.getPageSize();
-        RectF pageRect = new RectF(0,0, pageSize.width, pageSize.height);
-
-        if (!pageRect.contains(viewport)) {
-            // animatedZoomTo will ensure that our destRect is within the page bounds
-            animatedZoomTo(viewport);
-        } else {
-            // Force a viewport synchronisation
+        if (!tryZoomToFitPage()) {
+            // No zoom needed, so we're done.
+            // Force a viewport synchronisation to rerender at new scale
             mController.setForceRedraw();
             mController.notifyLayerClientOfGeometryChange();
             GeckoApp.mAppContext.showPluginViews();
@@ -1002,7 +1015,7 @@ public class PanZoomController
                     mZoomTimer.cancel();
                     mZoomTimer = null;
                     mState = PanZoomState.NOTHING;
-               }
+                }
             }
         }, 0, 1000L/60L);
         return true;
