@@ -38,7 +38,7 @@
 #include "nsISupports.idl"
 
 [scriptable, uuid(e21cdf40-c511-442b-8c7d-aa75471b0423)]
-interface nsIRadioCallback : nsISupports {
+interface nsITelephoneCallback : nsISupports {
   void oncallstatechange(in jsval callState);
 
   //XXX philikon's additions
@@ -49,13 +49,13 @@ interface nsIRadioCallback : nsISupports {
 };
 
 [scriptable, uuid(dda49485-5887-49bb-ba0b-10c5d116eb64)]
-interface nsIRadioInterface : nsISupports {
+interface nsITelephone : nsISupports {
 
   readonly attribute jsval initialState;
 
   void dial(in DOMString number);
   void hangup(in long callIndex);
 
-  void registerCallback(in nsIRadioCallback callback);
-  void unregisterCallback(in nsIRadioCallback callback);
+  void registerCallback(in nsITelephoneCallback callback);
+  void unregisterCallback(in nsITelephoneCallback callback);
 };

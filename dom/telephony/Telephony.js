@@ -152,7 +152,7 @@ const DOM_CARDSTATE_NOT_READY      = "not_ready";
 const DOM_CARDSTATE_READY          = "ready";
 
 /**
- * Callback object that Telephony registers with nsIRadioInterface.
+ * Callback object that Telephony registers with nsITelephone.
  * Telephony can't use itself because that might overload event handler
  * attributes ('onfoobar').
  */
@@ -161,9 +161,9 @@ function TelephonyRadioCallback(telephony) {
 }
 TelephonyRadioCallback.prototype = {
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRadioCallback]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITelephoneCallback]),
 
-  // nsIRadioCallback
+  // nsITelephoneCallback
 
   onsignalstrengthchange: function onsignalstrengthchange(signalStrength) {
     this.telephony.signalStrength = signalStrength;
@@ -215,7 +215,7 @@ Telephony.prototype = {
   init: function init(window) {
     this.window = window;
     this.radioInterface = Cc["@mozilla.org/telephony/radio-interface;1"]
-                            .createInstance(Ci.nsIRadioInterface);
+                            .createInstance(Ci.nsITelephone);
     this.radioCallback = new TelephonyRadioCallback(this);
     window.addEventListener("unload", function onunload(event) {
       this.radioInterface.unregisterCallback(this.radioCallback);

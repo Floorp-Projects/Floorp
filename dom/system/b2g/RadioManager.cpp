@@ -264,8 +264,8 @@ RadioManager::Init()
   mozilla::RefPtr<RILReceiver> receiver = new RILReceiver(wctd);
   StartRil(receiver);
 
-  mRadioInterface = do_QueryInterface(worker);
-  NS_ENSURE_TRUE(mRadioInterface, NS_ERROR_FAILURE);
+  mTelephone = do_QueryInterface(worker);
+  NS_ENSURE_TRUE(mTelephone, NS_ERROR_FAILURE);
 
   return NS_OK;
 }
@@ -276,7 +276,7 @@ RadioManager::Shutdown()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   StopRil();
-  mRadioInterface = nsnull;
+  mTelephone = nsnull;
 
   mShutdown = true;
 }
@@ -302,13 +302,13 @@ RadioManager::FactoryCreate()
 }
 
 // static
-already_AddRefed<nsIRadioInterface>
-RadioManager::GetRadioInterface()
+already_AddRefed<nsITelephone>
+RadioManager::GetTelephone()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (gInstance) {
-    nsCOMPtr<nsIRadioInterface> retval = gInstance->mRadioInterface;
+    nsCOMPtr<nsITelephone> retval = gInstance->mTelephone;
     return retval.forget();
   }
 

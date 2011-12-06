@@ -324,7 +324,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(IndexedDatabaseManager,
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(RadioManager, RadioManager::FactoryCreate)
 
 // The 'RadioManager' class controls the lifetime of the nsITelephonyWorker
-// object which is also an nsIRadioInterface, so we don't want to register it
+// object which is also an nsITelephone, so we don't want to register it
 // as a global service on app-startup. Instead, we'll (ab)use createInstance()
 // to always return the one singleton that 'RadioManager' holds on to.
 static nsresult
@@ -334,7 +334,7 @@ RadioInterfaceConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     return NS_ERROR_NO_AGGREGATION;
   }
 
-  nsCOMPtr<nsIRadioInterface> inst = RadioManager::GetRadioInterface();
+  nsCOMPtr<nsITelephone> inst = RadioManager::GetTelephone();
   if (NULL == inst) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
