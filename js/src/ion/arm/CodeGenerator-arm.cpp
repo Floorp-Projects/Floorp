@@ -292,7 +292,7 @@ CodeGeneratorARM::bailoutIf(Assembler::Condition condition, LSnapshot *snapshot)
 
     if (assignBailoutId(snapshot)) {
         uint8 *code = deoptTable_->raw() + snapshot->bailoutId() * BAILOUT_TABLE_ENTRY_SIZE;
-        masm.ma_b(code, condition, Relocation::EXTERNAL);
+        masm.ma_b(code, Relocation::EXTERNAL, condition);
         return true;
     }
 
@@ -965,6 +965,8 @@ MIRTypeToTag(MIRType type)
         return JSVAL_TAG_STRING;
       case MIRType_Object:
         return JSVAL_TAG_OBJECT;
+      case MIRType_Null:
+        return JSVAL_TAG_NULL;
       default:
         JS_NOT_REACHED("no payload...");
     }
