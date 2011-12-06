@@ -470,34 +470,13 @@ str_toSource(JSContext *cx, uintN argc, Value *vp)
     if (!str)
         return false;
 
-    char buf[16];
-    size_t j = JS_snprintf(buf, sizeof buf, "(new String(");
-
-    JS::Anchor<JSString *> anchor(str);
-    size_t k = str->length();
-    const jschar *s = str->getChars(cx);
-    if (!s)
+    StringBuffer sb(cx);
+    if (!sb.append("(new String(") || !sb.append(str) || !sb.append("))"))
         return false;
 
-    size_t n = j + k + 2;
-    jschar *t = (jschar *) cx->malloc_((n + 1) * sizeof(jschar));
-    if (!t)
+    str = sb.finishString();
+    if (!str)
         return false;
-
-    size_t i;
-    for (i = 0; i < j; i++)
-        t[i] = buf[i];
-    for (j = 0; j < k; i++, j++)
-        t[i] = s[j];
-    t[i++] = ')';
-    t[i++] = ')';
-    t[i] = 0;
-
-    str = js_NewString(cx, t, n);
-    if (!str) {
-        cx->free_(t);
-        return false;
-    }
     args.rval().setString(str);
     return true;
 }

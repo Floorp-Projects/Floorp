@@ -76,8 +76,6 @@ Class js::BooleanClass = {
 };
 
 #if JS_HAS_TOSOURCE
-#include "jsprf.h"
-
 static JSBool
 bool_toSource(JSContext *cx, uintN argc, Value *vp)
 {
@@ -87,9 +85,11 @@ bool_toSource(JSContext *cx, uintN argc, Value *vp)
     if (!BoxedPrimitiveMethodGuard(cx, args, bool_toSource, &b, &ok))
         return ok;
 
-    char buf[32];
-    JS_snprintf(buf, sizeof buf, "(new Boolean(%s))", JS_BOOLEAN_STR(b));
-    JSString *str = JS_NewStringCopyZ(cx, buf);
+    StringBuffer sb(cx);
+    if (!sb.append("(new Boolean(") || !BooleanToStringBuffer(cx, b, sb) || !sb.append("))"))
+        return false;
+
+    JSString *str = sb.finishString();
     if (!str)
         return false;
     args.rval().setString(str);
