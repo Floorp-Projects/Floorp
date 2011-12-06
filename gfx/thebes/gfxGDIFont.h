@@ -92,13 +92,10 @@ protected:
     virtual void CreatePlatformShaper();
 
     /* override to check for uniscribe failure and fall back to GDI */
-    virtual bool InitTextRun(gfxContext *aContext,
-                               gfxTextRun *aTextRun,
-                               const PRUnichar *aString,
-                               PRUint32 aRunStart,
-                               PRUint32 aRunLength,
-                               PRInt32 aRunScript,
-                               bool aPreferPlatformShaping = false);
+    virtual bool ShapeWord(gfxContext *aContext,
+                           gfxShapedWord *aShapedWord,
+                           const PRUnichar *aString,
+                           bool aPreferPlatformShaping = false);
 
     void Initialize(); // creates metrics and Cairo fonts
 
