@@ -35,7 +35,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH            = ../../..
+DEPTH            = ../..
 topsrcdir        = @top_srcdir@
 srcdir           = @srcdir@
 VPATH            = @srcdir@
@@ -43,31 +43,28 @@ VPATH            = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE           = dom
-LIBRARY_NAME     = domsystemb2g_s
-XPIDL_MODULE     = dom_system_b2g
+LIBRARY_NAME     = domwifi_s
+XPIDL_MODULE     = dom_wifi
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-CPPSRCS = \
-  RadioManager.cpp \
-  $(NULL)
-
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += AudioManager.cpp
-endif
-
 XPIDLSRCS = \
-  nsIAudioManager.idl \
-  nsIRadioWorker.idl \
+  nsIWifi.idl \
   $(NULL)
 
-LOCAL_INCLUDES = \
-  -I$(topsrcdir)/dom/base \
-  -I$(topsrcdir)/dom/telephony \
-  -I$(topsrcdir)/dom/wifi \
-  -I$(topsrcdir)/content/events/src \
+EXTRA_COMPONENTS = \
+  nsWifiWorker.js \
+  nsWifiWorker.manifest \
+  $(NULL)
+
+EXTRA_JS_MODULES = \
+  libcutils.js \
+  libhardware_legacy.js \
+  libnetutils.js \
+  network_worker.js \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
