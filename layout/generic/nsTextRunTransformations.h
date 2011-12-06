@@ -138,7 +138,8 @@ public:
 
   nsTransformingTextRunFactory       *mFactory;
   nsTArray<nsRefPtr<nsStyleContext> > mStyles;
-  nsTArray<bool>              mCapitalize;
+  nsTArray<bool>                      mCapitalize;
+  nsString                            mString;
   bool                                mOwnsFactory;
   bool                                mNeedsRebuild;
 
@@ -151,13 +152,14 @@ private:
                        bool aOwnsFactory,
                        CompressedGlyph *aGlyphStorage)
     : gfxTextRun(aParams, aString, aLength, aFontGroup, aFlags, aGlyphStorage),
-      mFactory(aFactory), mOwnsFactory(aOwnsFactory), mNeedsRebuild(true)
+      mFactory(aFactory), mString(aString, aLength),
+      mOwnsFactory(aOwnsFactory), mNeedsRebuild(true)
   {
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
       mStyles.AppendElement(aStyles[i]);
     }
-  }  
+  }
 };
 
 #endif /*NSTEXTRUNTRANSFORMATIONS_H_*/
