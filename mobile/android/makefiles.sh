@@ -42,6 +42,8 @@ toolkit/locales/Makefile
 security/manager/locales/Makefile
 mobile/android/app/Makefile
 mobile/android/app/profile/extensions/Makefile
+mobile/android/base/Makefile
+mobile/android/base/locales/Makefile
 $MOZ_BRANDING_DIRECTORY/Makefile
 $MOZ_BRANDING_DIRECTORY/locales/Makefile
 mobile/android/chrome/Makefile
