@@ -44,6 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE           = dom
 LIBRARY_NAME     = domsystemb2g_s
+XPIDL_MODULE     = dom_system_b2g
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 
@@ -53,8 +54,11 @@ CPPSRCS = \
   RadioManager.cpp \
   $(NULL)
 
+XPIDLSRCS = nsIRadioWorker.idl
+
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/base \
+  -I$(topsrcdir)/dom/telephony \
   -I$(topsrcdir)/content/events/src \
   $(NULL)
 

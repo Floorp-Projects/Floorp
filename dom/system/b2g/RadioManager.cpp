@@ -38,13 +38,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "RadioManager.h"
-#include "nsITelephonyWorker.h"
+#include "nsIRadioWorker.h"
 #include "nsContentUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIJSContextStack.h"
 #include "nsIObserverService.h"
 #include "mozilla/dom/workers/Workers.h"
 #include "jstypedarray.h"
+#include "nsTelephonyWorker.h"
 
 #include "nsThreadUtils.h"
 
@@ -226,7 +227,7 @@ RadioManager::Init()
 
   // The telephony worker component is a hack that gives us a global object for
   // our own functions and makes creating the worker possible.
-  nsCOMPtr<nsITelephonyWorker> worker(do_CreateInstance(kTelephonyWorkerCID));
+  nsCOMPtr<nsIRadioWorker> worker(do_CreateInstance(kTelephonyWorkerCID));
   NS_ENSURE_TRUE(worker, NS_ERROR_FAILURE);
 
   jsval workerval;
