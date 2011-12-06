@@ -576,6 +576,10 @@ js_InternalThrow(VMFrame &f)
         // rely on this property.
         JS_ASSERT(!f.fp()->finishedInInterpreter());
         UnwindScope(cx, 0, cx->isExceptionPending());
+
+        if (cx->compartment->debugMode())
+            js::ScriptDebugEpilogue(cx, f.fp(), false);
+
         ScriptEpilogue(f.cx, f.fp(), false);
 
         // Don't remove the last frame, this is the responsibility of
@@ -915,6 +919,10 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         /* Construct the 'this' object for the frame if necessary. */
         if (!ScriptPrologueOrGeneratorResume(cx, fp, types::UseNewTypeAtEntry(cx, fp)))
             return js_InternalThrow(f);
+
+        if (cx->compartment->debugMode())
+            js::ScriptDebugPrologue(cx, fp);
+
         break;
 
       case REJOIN_CALL_PROLOGUE:
