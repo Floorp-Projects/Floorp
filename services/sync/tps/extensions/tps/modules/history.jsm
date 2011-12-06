@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
- /* This is a JavaScript module (JSM) to be imported via 
-  * Components.utils.import() and acts as a singleton. Only the following 
+ /* This is a JavaScript module (JSM) to be imported via
+  * Components.utils.import() and acts as a singleton. Only the following
   * listed symbols will exposed on import, and only when and where imported.
   */
 
@@ -143,9 +143,9 @@ var HistoryEntry = {
     let uri = Services.io.newURI(item.uri, null, null);
     for each (visit in item.visits) {
       let visitId = PlacesUtils.history.addVisit(
-                    uri, 
-                    usSinceEpoch + (visit.date * 60 * 60 * 1000 * 1000), 
-                    null, visit.type, 
+                    uri,
+                    usSinceEpoch + (visit.date * 60 * 60 * 1000 * 1000),
+                    null, visit.type,
                     visit.type == 5 || visit.type == 6, 0);
       Logger.AssertTrue(visitId, "Error adding history entry");
       if ("title" in item)
@@ -170,19 +170,19 @@ var HistoryEntry = {
     let curvisits = this._getVisits(item.uri);
     for each (visit in curvisits) {
       for each (itemvisit in item.visits) {
-        let expectedDate = itemvisit.date * 60 * 60 * 1000 * 1000 
+        let expectedDate = itemvisit.date * 60 * 60 * 1000 * 1000
             + usSinceEpoch;
         if (visit.type == itemvisit.type && visit.date == expectedDate) {
           itemvisit.found = true;
         }
       }
     }
-    
+
     let all_items_found = true;
     for each (itemvisit in item.visits) {
       all_items_found = all_items_found && "found" in itemvisit;
-      Logger.logInfo("History entry for " + item.uri + ", type:" + 
-              itemvisit.type + ", date:" + itemvisit.date + 
+      Logger.logInfo("History entry for " + item.uri + ", type:" +
+              itemvisit.type + ", date:" + itemvisit.date +
               ("found" in itemvisit ? " is present" : " is not present"));
     }
     return all_items_found;
@@ -192,7 +192,7 @@ var HistoryEntry = {
    * Delete
    *
    * Removes visits from the history database. Throws on error.
-   * 
+   *
    * @param item An object representing items to delete
    * @param usSinceEpoch The number of microseconds from Epoch to
    *        the time the current Crossweave run was started
@@ -208,7 +208,7 @@ var HistoryEntry = {
     }
     else if ("begin" in item && "end" in item) {
       PlacesUtils.history.removeVisitsByTimeframe(
-          usSinceEpoch + (item.begin * 60 * 60 * 1000 * 1000), 
+          usSinceEpoch + (item.begin * 60 * 60 * 1000 * 1000),
           usSinceEpoch + (item.end * 60 * 60 * 1000 * 1000));
     }
     else {
