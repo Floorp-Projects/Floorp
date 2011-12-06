@@ -121,6 +121,7 @@ O           [0-7]
 "sampler2D"       { context->lexAfterType = true; return SAMPLER2D; }
 "samplerCube"     { context->lexAfterType = true; return SAMPLERCUBE; }
 "samplerExternalOES" { context->lexAfterType = true; return SAMPLER_EXTERNAL_OES; }
+"sampler2DRect" { context->lexAfterType = true; return SAMPLER2DRECT; }
 
 "struct"       { context->lexAfterType = true; return(STRUCT); }
 

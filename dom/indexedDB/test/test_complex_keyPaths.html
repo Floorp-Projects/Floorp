@@ -18,150 +18,194 @@
       // Test object stores
 
       const name = window.location.pathname;
-      const objectStoreInfo = [
-        { name: "a", options: { keyPath: "id"} },
-        { name: "b", options: { keyPath: "foo.id"} },
-        { name: "c", options: { keyPath: ""} },
-        { name: "d", options: { keyPath: "foo..id"}, exception: true },
-        { name: "e", options: { keyPath: "foo."}, exception: true },
-        { name: "f", options: { keyPath: "foo.bar" } },
-        { name: "g", options: { keyPath: "fo o" }, exception: true},
-        { name: "h", options: { keyPath: "foo " }, exception: true},
-        { name: "i", options: { keyPath: "foo[bar]" }, exception: true },
-        { name: "j", options: { keyPath: "$('id').stuff" }, exception: true },
-        { name: "k", options: { keyPath: "foo.2.bar" }, exception: true }
+      const keyPaths = [
+        { keyPath: "id",      value: { id: 5 },                      key: 5 },
+        { keyPath: "id",      value: { id: "14", iid: 12 },          key: "14" },
+        { keyPath: "id",      value: { iid: "14", id: 12 },          key: 12 },
+        { keyPath: "id",      value: {} },
+        { keyPath: "id",      value: { id: {} } },
+        { keyPath: "id",      value: { id: /x/ } },
+        { keyPath: "id",      value: 2 },
+        { keyPath: "id",      value: undefined },
+        { keyPath: "foo.id",  value: { foo: { id: 7 } },             key: 7 },
+        { keyPath: "foo.id",  value: { id: 7, foo: { id: "asdf" } }, key: "asdf" },
+        { keyPath: "foo.id",  value: { foo: { id: undefined } } },
+        { keyPath: "foo.id",  value: { foo: 47 } },
+        { keyPath: "foo.id",  value: {} },
+        { keyPath: "",        value: "foopy",                        key: "foopy" },
+        { keyPath: "",        value: 2,                              key: 2 },
+        { keyPath: "",        value: undefined },
+        { keyPath: "",        value: { id: 12 } },
+        { keyPath: "",        value: /x/ },
+        { keyPath: "foo.bar", value: { baz: 1, foo: { baz2: 2, bar: "xo" } },     key: "xo" },
+        { keyPath: "foo.bar.baz", value: { foo: { bar: { bazz: 16, baz: 17 } } }, key: 17 },
+        { keyPath: "foo..id", exception: true },
+        { keyPath: "foo.",    exception: true },
+        { keyPath: "fo o",    exception: true },
+        { keyPath: "foo ",    exception: true },
+        { keyPath: "foo[bar]",exception: true },
+        { keyPath: "$('id').stuff", exception: true },
+        { keyPath: "foo.2.bar", exception: true },
+        { keyPath: "foo. .bar", exception: true },
+        { keyPath: ".bar",    exception: true },
       ];
 
-      const indexInfo = [
-        { name: "1", keyPath: "id" },
-        { name: "2", keyPath: "foo..id", exception: true },
-        { name: "3", keyPath: "foo.", exception: true },
-        { name: "4", keyPath: "foo.baz" },
-        { name: "5", keyPath: "fo o", exception: true },
-        { name: "6", keyPath: "foo ", exception: true },
-        { name: "7", keyPath: "foo[bar]", exception: true },
-        { name: "8", keyPath: "$('id').stuff", exception: true },
-        { name: "9", keyPath: "foo.2.bar", exception: true },
-        { name: "10", keyPath: "foo.bork" },
-      ];
-
-      let request = mozIndexedDB.open(name, 1);
-      request.onerror = errorHandler;
-      request.onupgradeneeded = grabEventAndContinueHandler;
-      request.onsuccess = unexpectedSuccessHandler;
+      let openRequest = mozIndexedDB.open(name, 1);
+      openRequest.onerror = errorHandler;
+      openRequest.onupgradeneeded = grabEventAndContinueHandler;
+      openRequest.onsuccess = unexpectedSuccessHandler;
       let event = yield;
       let db = event.target.result;
 
-      for (let i = 0; i < objectStoreInfo.length; i++) {
-        let info = objectStoreInfo[i];
-        try {
-          let objectStore = info.hasOwnProperty("options") ?
-                            db.createObjectStore(info.name, info.options) :
-                            db.createObjectStore(info.name);
-          ok(!info.hasOwnProperty("exception"), "expected exception behavior observed");
-        } catch (e) {
-          ok(info.hasOwnProperty("exception"), "expected exception behavior observed");
-          ok(e instanceof DOMException, "Got a DOM Exception");
-          is(e.code, DOMException.SYNTAX_ERR, "expect a syntax error");
+      let stores = {};
+
+      // Test creating object stores and inserting data
+      for (let i = 0; i < keyPaths.length; i++) {
+        let info = keyPaths[i];
+        let test = " for objectStore test " + JSON.stringify(info);
+        if (!stores[info.keyPath]) {
+          try {
+            let objectStore = db.createObjectStore(info.keyPath, { keyPath: info.keyPath });
+            ok(!("exception" in info), "shouldn't throw" + test);
+            is(objectStore.keyPath, info.keyPath, "correct keyPath property" + test);
+            stores[info.keyPath] = objectStore;
+          } catch (e) {
+            ok("exception" in info, "should throw" + test);
+            ok(e instanceof DOMException, "Got a DOM Exception" + test);
+            is(e.code, DOMException.SYNTAX_ERR, "expect a syntax error" + test);
+            continue;
+          }
         }
+
+        let store = stores[info.keyPath];
+
+        try {
+          request = store.add(info.value);
+          ok("key" in info, "successfully created request to insert value" + test);
+        } catch (e) {
+          ok(!("key" in info), "threw when attempted to insert" + test);
+          ok(e instanceof IDBDatabaseException, "Got a IDBDatabaseException" + test);
+          is(e.code, IDBDatabaseException.DATA_ERR, "expect a DATA_ERR error" + test);
+          continue;
+        }
+
+        request.onerror = errorHandler;
+        request.onsuccess = grabEventAndContinueHandler;
+
+        let e = yield;
+        is(e.type, "success", "inserted successfully" + test);
+        is(e.target, request, "expected target" + test);
+        is(request.result, info.key, "found correct key" + test);
+
+        store.clear().onsuccess = grabEventAndContinueHandler;
+        yield;
       }
 
-      request.onsuccess = grabEventAndContinueHandler;
-      yield;
+      // Attempt to create indexes and insert data
+      let store = db.createObjectStore("indexStore");
+      let indexes = {};
+      for (let i = 0; i < keyPaths.length; i++) {
+        let test = " for index test " + JSON.stringify(info);
+        let info = keyPaths[i];
+        if (!indexes[info.keyPath]) {
+          try {
+            let index = store.createIndex(info.keyPath, info.keyPath);
+            ok(!("exception" in info), "shouldn't throw" + test);
+            is(index.keyPath, info.keyPath, "index has correct keyPath property" + test);
+            indexes[info.keyPath] = index;
+          } catch (e) {
+            ok("exception" in info, "should throw" + test);
+            ok(e instanceof DOMException, "Got a DOM Exception" + test);
+            is(e.code, DOMException.SYNTAX_ERR, "expect a syntax error" + test);
+            continue;
+          }
+        }
+        
+        let index = indexes[info.keyPath];
 
-      let trans = db.transaction(["f"], IDBTransaction.READ_WRITE);
-      let objectStore = trans.objectStore("f");
+        request = store.add(info.value, 1);
+        if ("key" in info) {
+          index.getKey(info.key).onsuccess = grabEventAndContinueHandler;
+          e = yield;
+          is(e.target.result, 1, "found value when reading" + test);
+        }
+        else {
+          index.count().onsuccess = grabEventAndContinueHandler;
+          e = yield;
+          is(e.target.result, 0, "should be empty" + test);
+        }
 
-      objectStore.put({foo: {baz: -1, bar: 72, bork: true}});
-      objectStore.put({foo: {baz: 2, bar: 1, bork: false}});
+        store.clear().onsuccess = grabEventAndContinueHandler;
+        yield;
+      }
 
+      // Autoincrement and complex key paths
+      let aitests = [{ v: {},                           k: 1, res: { foo: { id: 1 }} },
+                     { v: { value: "x" },               k: 2, res: { value: "x", foo: { id: 2 }} },
+                     { v: { value: "x", foo: {} },      k: 3, res: { value: "x", foo: { id: 3 }} },
+                     { v: { v: "x", foo: { x: "y" } },  k: 4, res: { v: "x", foo: { x: "y", id: 4 }} },
+                     { v: { value: 2, foo: { id: 10 }}, k: 10 },
+                     { v: { value: 2 },                 k: 11, res: { value: 2, foo: { id: 11 }} },
+                     { v: true,                         },
+                     { v: { value: 2, foo: 12 },        },
+                     { v: { foo: { id: true }},         },
+                     { v: { foo: { x: 5, id: {} }},     },
+                     { v: undefined,                    },
+                     { v: { foo: undefined },           },
+                     { v: { foo: { id: undefined }},    },
+                     { v: null,                         },
+                     { v: { foo: null },                },
+                     { v: { foo: { id: null }},         },
+                     ];
+
+      store = db.createObjectStore("gen", { keyPath: "foo.id", autoIncrement: true });
+      for (let i = 0; i < aitests.length; ++i) {
+        let info = aitests[i];
+        let test = " for autoIncrement test " + JSON.stringify(info);
+
+        let preValue = JSON.stringify(info.v);
+        if ("k" in info) {
+          store.add(info.v).onsuccess = grabEventAndContinueHandler;
+          is(JSON.stringify(info.v), preValue, "put didn't modify value" + test);
+        }
+        else {
+          try {
+            store.add(info.v);
+            ok(false, "should throw" + test);
+          }
+          catch(e) {
+            ok(true, "did throw" + test);
+            ok(e instanceof IDBDatabaseException, "Got a IDBDatabaseException" + test);
+            is(e.code, IDBDatabaseException.DATA_ERR, "expect a DATA_ERR" + test);
+  
+            is(JSON.stringify(info.v), preValue, "failing put didn't modify value" + test);
+  
+            continue;
+          }
+        }
+
+        let e = yield;
+        is(e.target.result, info.k, "got correct return key" + test);
+
+        store.get(info.k).onsuccess = grabEventAndContinueHandler;
+        e = yield;
+        is(JSON.stringify(e.target.result), JSON.stringify(info.res || info.v),
+           "expected value stored" + test);
+      }
+
+      // Can't handle autoincrement and empty keypath
       try {
-        objectStore.put({foo: {}});
-        ok(false, "Should have thrown!");
-      } catch (e) {
-        ok(true, "Putting an object without the key should throw");
+        store = db.createObjectStore("storefail", { keyPath: "", autoIncrement: true });
+        ok(false, "Should have thrown when creating empty-keypath autoincrement store");
+      }
+      catch(e) {
+        ok(true, "Did throw when creating empty-keypath autoincrement store");
+        ok(e instanceof DOMException, "Got a DOMException when creating empty-keypath autoincrement store");
+        is(e.code, DOMException.INVALID_ACCESS_ERR, "expect a INVALID_ACCESS_ERR when creating empty-keypath autoincrement store");
       }
 
-      trans.onerror = errorHandler;
-      trans.oncomplete = grabEventAndContinueHandler;
-
+      openRequest.onsuccess = grabEventAndContinueHandler;
       yield;
-
-      let trans = db.transaction(["f"], IDBTransaction.READ);
-      let objectStore = trans.objectStore("f");
-      let request = objectStore.openCursor();
-
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-
-      let event = yield;
-
-      let cursor = event.target.result;
-      is(cursor.value.foo.baz, 2, "got things in the right order");
-
-      cursor.continue();
-
-      let event = yield
-
-      let cursor = event.target.result;
-      is(cursor.value.foo.baz, -1, "got things in the right order");
-
-      db.close();
-
-      // Test indexes
-
-      let request = mozIndexedDB.open(name, 2);
-      request.onerror = errorHandler;
-      request.onupgradeneeded = grabEventAndContinueHandler;
-
-      let event = yield;
-      let db = event.target.result;
-
-      let trans = event.target.transaction;
-      let objectStore = trans.objectStore("f");
-
-      let indexes = [];
-      for (let i = 0; i < indexInfo.length; i++) {
-        let info = indexInfo[i];
-        try {
-          indexes[i] = info.hasOwnProperty("options") ?
-                       objectStore.createIndex(info.name, info.keyPath, info.options) :
-                       objectStore.createIndex(info.name, info.keyPath);
-          ok(!info.hasOwnProperty("exception"), "expected exception behavior observed");
-        } catch (e) {
-          ok(info.hasOwnProperty("exception"), "expected exception behavior observed");
-          ok(e instanceof DOMException, "Got a DOM Exception");
-          is(e.code, DOMException.SYNTAX_ERR, "expect a syntax error");
-        }
-      }
-      request.onsuccess = grabEventAndContinueHandler;
-
-      yield;
-
-      let trans = db.transaction(["f"], IDBTransaction.READ);
-      let objectStore = trans.objectStore("f");
-
-      let request = objectStore.index("4").openCursor();
-      request.onsuccess = grabEventAndContinueHandler;
-
-      let event = yield;
-
-      let cursor = event.target.result;
-
-      is(cursor.value.foo.bar, 72, "got things in the right order");
-
-      cursor.continue();
-      yield;
-
-      is(cursor.value.foo.bar, 1, "got things in the right order");
-
-      let request = objectStore.index("10").openCursor();
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-
-      let event = yield;
-
-      is(event.target.result, null, "should have no results");
 
       finishTest();
       yield;

@@ -2574,11 +2574,6 @@ RemoveNamesFromArray(GLContext *aOrigin, GLsizei aCount, GLuint *aNames, nsTArra
                 break;
             }
         }
-#ifdef DEBUG
-        if (!found) {
-            printf_stderr("GL Context %p deleting resource %d, which doesn't exist!\n", aOrigin, name);
-        }
-#endif
     }
 }
 
