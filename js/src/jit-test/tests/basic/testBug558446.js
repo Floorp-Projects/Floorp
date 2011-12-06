@@ -8,4 +8,3 @@ for (var i = 0; i < 10; ++i) {
     assertEq(s, 'ab');
 }
 
-checkStats({ traceTriggered:1 });

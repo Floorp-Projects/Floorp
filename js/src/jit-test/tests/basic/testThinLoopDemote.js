@@ -11,10 +11,3 @@ function testThinLoopDemote() {
     return f();
 }
 assertEq(testThinLoopDemote(), 10000);
-checkStats({
-    recorderStarted: 1,
-    recorderAborted: 0,
-    traceCompleted: 1,
-    traceTriggered: 2,
-    unstableLoopVariable: 0
-});
