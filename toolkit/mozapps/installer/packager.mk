@@ -322,9 +322,9 @@ endif
 endif
 
 ifeq ($(MOZ_BUILD_APP),mobile/xul)
-GECKO_APP_AP_PATH = ../embedding/android
+GECKO_APP_AP_PATH = $(call core_abspath,$(DEPTH)/embedding/android)
 else
-GECKO_APP_AP_PATH = ../mobile/android/base
+GECKO_APP_AP_PATH = $(call core_abspath,$(DEPTH)/mobile/android/base)
 endif
 
 PKG_SUFFIX      = .apk
@@ -351,8 +351,9 @@ INNER_UNMAKE_PACKAGE	= \
   mkdir $(MOZ_PKG_DIR) && \
   cd $(MOZ_PKG_DIR) && \
   $(UNZIP) $(UNPACKAGE) && \
-  mv lib/$(ABI_DIR)/*.so . && \
-  rm -rf lib
+  mv lib/$(ABI_DIR)/libmozutils.so . && \
+  mv lib/$(ABI_DIR)/*plugin-container* $(MOZ_CHILD_PROCESS_NAME) && \
+  rm -rf lib/$(ABI_DIR)
 endif
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 ifndef _APPNAME
