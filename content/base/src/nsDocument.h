@@ -967,9 +967,11 @@ public:
   // by chrome code.
   void RequestFullScreen(Element* aElement, bool aWasCallerChrome);
 
-  // Returns true if making this change results in a change in the full-screen
-  // state of this document.
-  bool SetFullScreenState(Element* aElement, bool aIsFullScreen);
+  // Sets the full-screen element to aElement, applying appropriate styles to
+  // aElement, and removing them from the old full-screen element. Returns true
+  // if making this change results in a change in the full-screen state of this
+  // document.
+  bool SetFullScreenElement(Element* aElement);
  
   // This method may fire a DOM event; if it does so it will happen
   // synchronously.
