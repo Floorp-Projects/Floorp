@@ -252,7 +252,8 @@ IonActivation::IonActivation(JSContext *cx, StackFrame *fp)
     entryfp_(fp),
     bailout_(NULL),
     prevIonTop_(JS_THREAD_DATA(cx)->ionTop),
-    prevIonJSContext_(JS_THREAD_DATA(cx)->ionJSContext)
+    prevIonJSContext_(JS_THREAD_DATA(cx)->ionJSContext),
+    failedInvalidation_(false)
 {
     fp->setRunningInIon();
     JS_THREAD_DATA(cx)->ionJSContext = cx;
