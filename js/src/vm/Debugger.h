@@ -199,7 +199,7 @@ class Debugger {
     JSObject *getHook(Hook hook) const;
     bool hasAnyLiveHooks(JSContext *cx) const;
 
-    static void slowPathOnEnterFrame(JSContext *cx);
+    static JSTrapStatus slowPathOnEnterFrame(JSContext *cx, Value *vp);
     static void slowPathOnLeaveFrame(JSContext *cx);
     static void slowPathOnNewScript(JSContext *cx, JSScript *script,
                                     GlobalObject *compileAndGoGlobal);
@@ -207,7 +207,7 @@ class Debugger {
 
     JSTrapStatus fireDebuggerStatement(JSContext *cx, Value *vp);
     JSTrapStatus fireExceptionUnwind(JSContext *cx, Value *vp);
-    void fireEnterFrame(JSContext *cx);
+    JSTrapStatus fireEnterFrame(JSContext *cx, Value *vp);
 
     /*
      * Allocate and initialize a Debugger.Script instance whose referent is
@@ -256,7 +256,7 @@ class Debugger {
     static void detachAllDebuggersFromGlobal(JSContext *cx, GlobalObject *global,
                                              GlobalObjectSet::Enum *compartmentEnum);
 
-    static inline void onEnterFrame(JSContext *cx);
+    static inline JSTrapStatus onEnterFrame(JSContext *cx, Value *vp);
     static inline void onLeaveFrame(JSContext *cx);
     static inline JSTrapStatus onDebuggerStatement(JSContext *cx, Value *vp);
     static inline JSTrapStatus onExceptionUnwind(JSContext *cx, Value *vp);
@@ -475,11 +475,12 @@ Debugger::observesFrame(StackFrame *fp) const
     return observesGlobal(fp->scopeChain().getGlobal());
 }
 
-void
-Debugger::onEnterFrame(JSContext *cx)
+JSTrapStatus
+Debugger::onEnterFrame(JSContext *cx, Value *vp)
 {
-    if (!cx->compartment->getDebuggees().empty())
-        slowPathOnEnterFrame(cx);
+    if (cx->compartment->getDebuggees().empty())
+        return JSTRAP_CONTINUE;
+    return slowPathOnEnterFrame(cx, vp);
 }
 
 void

@@ -108,7 +108,7 @@ JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug)
 
 namespace js {
 
-void
+JSTrapStatus
 ScriptDebugPrologue(JSContext *cx, StackFrame *fp)
 {
     JS_ASSERT(fp == cx->fp());
@@ -120,7 +120,25 @@ ScriptDebugPrologue(JSContext *cx, StackFrame *fp)
         if (JSInterpreterHook hook = cx->debugHooks->callHook)
             fp->setHookData(hook(cx, Jsvalify(fp), true, 0, cx->debugHooks->callHookData));
     }
-    Debugger::onEnterFrame(cx);
+
+    Value rval;
+    JSTrapStatus status = Debugger::onEnterFrame(cx, &rval);
+    switch (status) {
+      case JSTRAP_CONTINUE:
+        break;
+      case JSTRAP_THROW:
+        cx->setPendingException(rval);
+        break;
+      case JSTRAP_ERROR:
+        cx->clearPendingException();
+        break;
+      case JSTRAP_RETURN:
+        fp->setReturnValue(rval);
+        break;
+      default:
+        JS_NOT_REACHED("bad Debugger::onEnterFrame JSTrapStatus value");
+    }
+    return status;
 }
 
 bool
