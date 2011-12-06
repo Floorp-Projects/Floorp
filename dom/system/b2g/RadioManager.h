@@ -48,7 +48,7 @@
 
 #include "nsIObserver.h"
 #include "mozilla/ipc/Ril.h"
-#include "nsIRadioInterface.h"
+#include "nsITelephone.h"
 
 #define TELEPHONYRADIO_CONTRACTID "@mozilla.org/telephony/radio;1"
 #define TELEPHONYRADIOINTERFACE_CONTRACTID "@mozilla.org/telephony/radio-interface;1"
@@ -85,14 +85,14 @@ public:
   static already_AddRefed<RadioManager>
   FactoryCreate();
 
-  static already_AddRefed<nsIRadioInterface>
-  GetRadioInterface();
+  static already_AddRefed<nsITelephone>
+  GetTelephone();
 
 protected:
   RadioManager();
   ~RadioManager();
 
-  nsCOMPtr<nsIRadioInterface> mRadioInterface;
+  nsCOMPtr<nsITelephone> mTelephone;
   bool mShutdown;
 };
 
