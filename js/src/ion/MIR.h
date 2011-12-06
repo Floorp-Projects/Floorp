@@ -48,6 +48,8 @@
 
 #include "jscntxt.h"
 #include "jslibmath.h"
+#include "jsinfer.h"
+#include "jsinferinlines.h"
 #include "TypeOracle.h"
 #include "TypePolicy.h"
 #include "IonAllocPolicy.h"
@@ -822,6 +824,31 @@ class MReturn
 
     TypePolicy *typePolicy() {
         return this;
+    }
+};
+
+class MNewArray : public MAryInstruction<0>
+{
+    // Number of space to allocate for the array.
+    uint32 count_;
+    // Type of the object.
+    HeapPtr<types::TypeObject> type_;
+
+  public:
+    INSTRUCTION_HEADER(NewArray);
+
+    MNewArray(uint32 count, types::TypeObject *type)
+        : count_(count), type_(type)
+    {
+        setResultType(MIRType_Object);
+    }
+
+    uint32 count() const {
+        return count_;
+    }
+
+    types::TypeObject *type() const {
+        return type_;
     }
 };
 

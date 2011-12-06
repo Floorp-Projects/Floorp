@@ -89,6 +89,19 @@ LIRGenerator::visitGoto(MGoto *ins)
 }
 
 bool
+LIRGenerator::visitNewArray(MNewArray *ins)
+{
+    LNewArray *lir = new LNewArray();
+
+    if (!defineVMReturn(ins, lir))
+        return false;
+    if (!assignSafepoint(ins, lir))
+        return false;
+
+    return true;
+}
+
+bool
 LIRGenerator::visitPrepareCall(MPrepareCall *ins)
 {
     allocateArguments(ins->argc());

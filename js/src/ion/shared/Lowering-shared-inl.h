@@ -147,6 +147,55 @@ LIRGeneratorShared::defineReturn(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir
     return true;
 }
 
+template <enum VMFunction::ReturnType DefType, size_t Defs, size_t Ops, size_t Temps> bool
+LIRGeneratorShared::defineVMReturn(MDefinition *mir,
+                                   LVMCallInstructionHelper<DefType, Defs, Ops, Temps> *lir)
+{
+    if (DefType == VMFunction::ReturnNothing) {
+        lir->setMir(mir);
+        return add(lir);
+    }
+
+    uint32 vreg = getVirtualRegister();
+    if (vreg >= MAX_VIRTUAL_REGISTERS)
+        return false;
+
+    LDefinition::Type type = LDefinition::BOX;
+
+    switch (DefType) {
+      case VMFunction::ReturnValue:
+        type = LDefinition::BOX;
+#if defined(JS_NUNBOX32)
+        lir->setDef(TYPE_INDEX, LDefinition(vreg + VREG_TYPE_OFFSET, LDefinition::TYPE,
+                                            LGeneralReg(JSReturnReg_Type)));
+        lir->setDef(PAYLOAD_INDEX, LDefinition(vreg + VREG_DATA_OFFSET, LDefinition::PAYLOAD,
+                                               LGeneralReg(JSReturnReg_Data)));
+
+        if (getVirtualRegister() >= MAX_VIRTUAL_REGISTERS)
+            return false;
+#elif defined(JS_PUNBOX64)
+        lir->setDef(0, LDefinition(vreg, type, LGeneralReg(JSCReturnReg)));
+#endif
+        break;
+      case VMFunction::ReturnBool:
+        type = LDefinition::INTEGER;
+        lir->setDef(0, LDefinition(vreg, type, LGeneralReg(ReturnReg)));
+        break;
+      case VMFunction::ReturnPointer:
+        type = LDefinition::OBJECT;
+        lir->setDef(0, LDefinition(vreg, type, LGeneralReg(ReturnReg)));
+        break;
+      default:
+        JS_NOT_REACHED("Unknown/Unexpected ReturnType.");
+        return false;
+    }
+
+    JS_ASSERT(LDefinition::TypeFrom(mir->type()) == type);
+    mir->setVirtualRegister(vreg);
+    lir->setMir(mir);
+    return add(lir);
+}
+
 // In LIR, we treat booleans and integers as the same low-level type (INTEGER).
 // When snapshotting, we recover the actual JS type from MIR. This function
 // checks that when making redefinitions, we don't accidentally coerce two
