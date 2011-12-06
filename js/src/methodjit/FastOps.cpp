@@ -1495,7 +1495,7 @@ GetDenseArrayShape(JSContext *cx, JSObject *globalObj)
 
     JSObject *proto;
     if (!js_GetClassPrototype(cx, globalObj, JSProto_Array, &proto, NULL))
-        return false;
+        return NULL;
 
     return EmptyShape::getInitialShape(cx, &ArrayClass, proto,
                                        proto->getParent(), gc::FINALIZE_OBJECT0);
