@@ -35,9 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
- /* This is a JavaScript module (JSM) to be imported via 
-  * Components.utils.import() and acts as a singleton. Only the following 
-  * listed symbols will exposed on import, and only when and where imported. 
+ /* This is a JavaScript module (JSM) to be imported via
+  * Components.utils.import() and acts as a singleton. Only the following
+  * listed symbols will exposed on import, and only when and where imported.
   */
 
 var EXPORTED_SYMBOLS = ["TPS"];
@@ -66,7 +66,7 @@ var hh = CC["@mozilla.org/network/protocol;1?name=http"]
 var prefs = CC["@mozilla.org/preferences-service;1"]
             .getService(CI.nsIPrefBranch);
 
-var mozmillInit = {}; 
+var mozmillInit = {};
 CU.import('resource://mozmill/modules/init.js', mozmillInit);
 
 const ACTION_ADD = "add";
@@ -78,7 +78,7 @@ const ACTION_DELETE = "delete";
 const ACTION_PRIVATE_BROWSING = "private-browsing";
 const ACTION_WIPE_SERVER = "wipe-server";
 const ACTION_SETSTATE = "set-state";
-const ACTIONS = [ACTION_ADD, ACTION_VERIFY, ACTION_VERIFY_NOT, 
+const ACTIONS = [ACTION_ADD, ACTION_VERIFY, ACTION_VERIFY_NOT,
                  ACTION_MODIFY, ACTION_SYNC, ACTION_DELETE,
                  ACTION_PRIVATE_BROWSING, ACTION_WIPE_SERVER,
                  ACTION_SETSTATE];
@@ -87,7 +87,7 @@ const SYNC_WIPE_SERVER = "wipe-server";
 const SYNC_RESET_CLIENT = "reset-client";
 const SYNC_WIPE_CLIENT = "wipe-client";
 
-var TPS = 
+var TPS =
 {
   _waitingForSync: false,
   _test: null,
@@ -204,7 +204,7 @@ var TPS =
           Logger.AssertTrue(typeof(tab.profile) != "undefined",
             "profile must be defined when verifying tabs");
           Logger.AssertTrue(
-            !BrowserTabs.Find(tab.uri, tab.title, tab.profile), 
+            !BrowserTabs.Find(tab.uri, tab.title, tab.profile),
             "tab found which was expected to be absent");
           break;
         default:
@@ -249,14 +249,14 @@ var TPS =
           Logger.AssertTrue(formdata.Find(), "form data not found");
           break;
         case ACTION_VERIFY_NOT:
-          Logger.AssertTrue(!formdata.Find(), 
+          Logger.AssertTrue(!formdata.Find(),
             "form data found, but it shouldn't be present");
           break;
         default:
           Logger.AssertTrue(false, "invalid action: " + action);
       }
     }
-    Logger.logPass("executing action " + action.toUpperCase() + 
+    Logger.logPass("executing action " + action.toUpperCase() +
                    " on formdata");
   },
 
@@ -284,7 +284,7 @@ var TPS =
             Logger.AssertTrue(false, "invalid action: " + action);
         }
       }
-      Logger.logPass("executing action " + action.toUpperCase() + 
+      Logger.logPass("executing action " + action.toUpperCase() +
                      " on history");
     }
     catch(e) {
@@ -297,7 +297,7 @@ var TPS =
     try {
       for each (password in passwords) {
         let password_id = -1;
-        Logger.logInfo("executing action " + action.toUpperCase() + 
+        Logger.logInfo("executing action " + action.toUpperCase() +
                       " on password " + JSON.stringify(password));
         var password = new Password(password);
         switch (action) {
@@ -308,7 +308,7 @@ var TPS =
             Logger.AssertTrue(password.Find() != -1, "password not found");
             break;
           case ACTION_VERIFY_NOT:
-            Logger.AssertTrue(password.Find() == -1, 
+            Logger.AssertTrue(password.Find() == -1,
               "password found, but it shouldn't exist");
             break;
           case ACTION_DELETE:
@@ -323,9 +323,9 @@ var TPS =
             break;
           default:
             Logger.AssertTrue(false, "invalid action: " + action);
-        } 
+        }
       }
-      Logger.logPass("executing action " + action.toUpperCase() + 
+      Logger.logPass("executing action " + action.toUpperCase() +
                      " on passwords");
     }
     catch(e) {
@@ -336,7 +336,7 @@ var TPS =
 
   HandleAddons: function (addons, action, state) {
     for (var i in addons) {
-      Logger.logInfo("executing action " + action.toUpperCase() + 
+      Logger.logInfo("executing action " + action.toUpperCase() +
                      " on addon " + JSON.stringify(addons[i]));
       var addon = new Addon(this, addons[i]);
       switch(action) {
@@ -357,7 +357,7 @@ var TPS =
           break;
       }
     }
-    Logger.logPass("executing action " + action.toUpperCase() + 
+    Logger.logPass("executing action " + action.toUpperCase() +
                    " on addons");
   },
 
@@ -374,7 +374,7 @@ var TPS =
             bookmark['last_item_pos'] = last_item_pos;
           let item_id = -1;
           if (action != ACTION_MODIFY && action != ACTION_DELETE)
-            Logger.logInfo("executing action " + action.toUpperCase() + 
+            Logger.logInfo("executing action " + action.toUpperCase() +
                            " on bookmark " + JSON.stringify(bookmark));
           if ("uri" in bookmark)
             placesItem = new Bookmark(bookmark);
@@ -397,7 +397,7 @@ var TPS =
             else
               Logger.AssertTrue(item_id != -1, "places item not found", true);
           }
-          
+
           last_item_pos = placesItem.GetItemIndex();
           items.push(placesItem);
         }
@@ -405,7 +405,7 @@ var TPS =
 
       if (action == ACTION_DELETE || action == ACTION_MODIFY) {
         for each (item in items) {
-          Logger.logInfo("executing action " + action.toUpperCase() + 
+          Logger.logInfo("executing action " + action.toUpperCase() +
                          " on bookmark " + JSON.stringify(item));
           switch(action) {
             case ACTION_DELETE:
@@ -451,22 +451,22 @@ var TPS =
 
   RunNextTestAction: function() {
     try {
-      if (this._currentAction >= 
+      if (this._currentAction >=
           this._phaselist["phase" + this._currentPhase].length) {
         // we're all done
-        Logger.logInfo("test phase " + this._currentPhase + ": " + 
+        Logger.logInfo("test phase " + this._currentPhase + ": " +
           (this._errors ? "FAIL" : "PASS"));
         this.quit();
         return;
       }
-      
+
       if (this.seconds_since_epoch)
         this._usSinceEpoch = this.seconds_since_epoch * 1000 * 1000;
       else {
         this.DumpError("seconds-since-epoch not set");
         return;
       }
-      
+
       let phase = this._phaselist["phase" + this._currentPhase];
       let action = phase[this._currentAction];
       Logger.logInfo("starting action: " + JSON.stringify(action));
@@ -600,7 +600,7 @@ var TPS =
         Weave.Service.account = "tps" + suffix + "@mozilla.com";
         Weave.Service.password = "tps" + suffix + "tps" + suffix;
         Weave.Service.passphrase = Weave.Utils.generatePassphrase();
-        Weave.Service.createAccount(Weave.Service.account, 
+        Weave.Service.createAccount(Weave.Service.account,
                                     Weave.Service.password,
                                     "dummy1", "dummy2");
         Weave.Service.login();

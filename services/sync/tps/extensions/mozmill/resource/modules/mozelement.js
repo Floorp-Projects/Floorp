@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var EXPORTED_SYMBOLS = ["Elem", "Selector", "ID", "Link", "XPath", "Name", "Lookup", 
+var EXPORTED_SYMBOLS = ["Elem", "Selector", "ID", "Link", "XPath", "Name", "Lookup",
                         "MozMillElement", "MozMillCheckBox", "MozMillRadio", "MozMillDropList",
                         "MozMillTextBox", "subclasses",
                        ];
@@ -121,7 +121,7 @@ MozMillElement.isType = function(node) {
 MozMillElement.prototype.__defineGetter__("element", function() {
   if (this._element == undefined) {
     if (elementslib[this._locatorType]) {
-      this._element = elementslib[this._locatorType](this._document, this._locator); 
+      this._element = elementslib[this._locatorType](this._document, this._locator);
     } else if (this._locatorType == "Elem") {
       this._element = this._locator;
     } else {
@@ -479,7 +479,7 @@ MozMillRadio.prototype.select = function(index) {
   if (!this.element) {
     throw new Error("could not find element " + this.getInfo());
   }
-  
+
   if (this.element.localName.toLowerCase() == "radiogroup") {
     var element = this.element.getElementsByTagName("radio")[index || 0];
     new MozMillRadio("Elem", element).click();
@@ -487,7 +487,7 @@ MozMillRadio.prototype.select = function(index) {
     var element = this.element;
     this.click();
   }
-  
+
   utils.waitFor(function() {
     // If we have a XUL element, unwrap its XPCNativeWrapper
     if (element.namespaceURI == "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul") {
@@ -581,7 +581,7 @@ MozMillDropList.prototype.select = function (indx, option, value) {
     this.element = utils.unwrapNode(this.element);
     // Get the list of menuitems
     menuitems = this.element.getElementsByTagName("menupopup")[0].getElementsByTagName("menuitem");
-    
+
     var item = null;
 
     if (indx != undefined) {
