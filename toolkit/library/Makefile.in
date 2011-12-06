@@ -304,6 +304,7 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 COMPONENT_LIBS += widget_android
+STATIC_LIBS += skia_npapi
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
@@ -312,10 +313,7 @@ endif
 
 STATIC_LIBS += thebes gl ycbcr
 
-ifeq ($(OS_TARGET),Android)
 COMPONENT_LIBS += profiler
-STATIC_LIBS += skia_npapi
-endif
 
 STATIC_LIBS += angle
 

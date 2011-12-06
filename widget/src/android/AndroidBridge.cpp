@@ -105,8 +105,8 @@ bool
 AndroidBridge::Init(JNIEnv *jEnv,
                     jclass jGeckoAppShellClass)
 {
+    ALOG_BRIDGE("AndroidBridge::Init");
     jEnv->GetJavaVM(&mJavaVM);
-    ALOG_BRIDGE("AndroidBridge::Init1");
 
     mJNIEnv = nsnull;
     mThread = nsnull;

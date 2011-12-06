@@ -43,6 +43,7 @@ static const char *dl_errors[] = {
 #define unlikely(expr) __builtin_expect (expr, 0)
 
 static pthread_mutex_t dl_lock = PTHREAD_MUTEX_INITIALIZER;
+extern int extractLibs;
 
 static void set_dlerror(int err)
 {
@@ -53,6 +54,9 @@ static void set_dlerror(int err)
 
 void *__wrap_dlopen(const char *filename, int flag)
 {
+    if (extractLibs)
+        return dlopen(filename, flag);
+
     soinfo *ret;
 
     pthread_mutex_lock(&dl_lock);
@@ -84,6 +88,9 @@ void *moz_mapped_dlopen(const char *filename, int flag,
 
 const char *__wrap_dlerror(void)
 {
+    if (extractLibs)
+        return dlerror();
+
     const char *tmp = dl_err_str;
     dl_err_str = NULL;
     return (const char *)tmp;
@@ -91,6 +98,9 @@ const char *__wrap_dlerror(void)
 
 void *__wrap_dlsym(void *handle, const char *symbol)
 {
+    if (extractLibs)
+        return dlsym(handle, symbol);
+
     soinfo *found;
     Elf32_Sym *sym;
     unsigned bind;
@@ -173,6 +183,9 @@ int __wrap_dladdr(void *addr, Dl_info *info)
 
 int __wrap_dlclose(void *handle)
 {
+    if (extractLibs)
+        return dlclose(handle);
+
     pthread_mutex_lock(&dl_lock);
     (void)unload_library((soinfo*)handle);
     pthread_mutex_unlock(&dl_lock);

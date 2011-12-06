@@ -4716,7 +4716,6 @@ case "${target}" in
         MOZ_THEME_FASTSTRIPE=1
         MOZ_TREE_FREETYPE=1
         MOZ_MEMORY=1
-        MOZ_SPELLCHECK=
         MOZ_RAW=1
         ;;
 esac
