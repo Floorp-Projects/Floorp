@@ -227,9 +227,7 @@ RadioManager::Init()
   // The telephony worker component is a hack that gives us a global object for
   // our own functions and makes creating the worker possible.
   nsCOMPtr<nsITelephonyWorker> worker(do_CreateInstance(kTelephonyWorkerCID));
-  if (!worker) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(worker, NS_ERROR_FAILURE);
 
   jsval workerval;
   rv = worker->GetWorker(&workerval);
