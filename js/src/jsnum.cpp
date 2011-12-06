@@ -391,30 +391,22 @@ ParseIntStringHelper(JSContext *cx, const jschar *ws, const jschar *end, int may
     return true;
 }
 
-static jsdouble
-ParseIntDoubleHelper(jsdouble d)
-{
-    JS_ASSERT(-1e21 < d && d < 1e21);
-    if (d > 0)
-        return floor(d);
-    if (d < 0)
-        return -floor(-d);
-    return 0;
-}
-
 /* See ECMA 15.1.2.2. */
 static JSBool
 num_parseInt(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     /* Fast paths and exceptional cases. */
-    if (argc == 0) {
-        vp->setDouble(js_NaN);
+    if (args.length() == 0) {
+        args.rval().setDouble(js_NaN);
         return true;
     }
 
-    if (argc == 1 || (vp[3].isInt32() && (vp[3].toInt32() == 0 || vp[3].toInt32() == 10))) {
-        if (vp[2].isInt32()) {
-            *vp = vp[2];
+    if (args.length() == 1 || 
+        (args[1].isInt32() && (args[1].toInt32() == 0 || args[1].toInt32() == 10))) {
+        if (args[0].isInt32()) {
+            args.rval() = args[0];
             return true;
         }
         /*
@@ -424,30 +416,42 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
          *
          * To preserve this behaviour, we can't use the fast-path when string >
          * 1e21, or else the result would be |NeM|.
+         * 
+         * The same goes for values smaller than 1.0e-6, because the string would be in
+         * the form of "Ne-M".
          */
-        if (vp[2].isDouble() &&
-            vp[2].toDouble() > -1.0e21 &&
-            vp[2].toDouble() < 1.0e21) {
-            vp->setNumber(ParseIntDoubleHelper(vp[2].toDouble()));
-            return true;
+        if (args[0].isDouble()) {
+            double d = args[0].toDouble();
+            if (1.0e-6 < d && d < 1.0e21) {
+                args.rval().setNumber(floor(d));
+                return true;
+            }
+            if (-1.0e21 < d && d < -1.0e-6) {
+                args.rval().setNumber(-floor(-d));
+                return true;
+            }
+            if (d == 0.0) {
+                args.rval().setInt32(0);
+                return true;
+            }
         }
     }
 
     /* Step 1. */
-    JSString *inputString = js_ValueToString(cx, vp[2]);
+    JSString *inputString = js_ValueToString(cx, args[0]);
     if (!inputString)
         return false;
-    vp[2].setString(inputString);
+    args[0].setString(inputString);
 
     /* 15.1.2.2 steps 6-8. */
     bool stripPrefix = true;
-    int32_t radix = 0;
-    if (argc > 1) {
-        if (!ValueToECMAInt32(cx, vp[3], &radix))
+    int32 radix = 0;
+    if (args.length() > 1) {
+        if (!ValueToECMAInt32(cx, args[1], &radix))
             return false;
         if (radix != 0) {
             if (radix < 2 || radix > 36) {
-                vp->setDouble(js_NaN);
+                args.rval().setDouble(js_NaN);
                 return true;
             }
             if (radix != 16)
@@ -466,7 +470,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     /* Step 15. */
-    vp->setNumber(number);
+    args.rval().setNumber(number);
     return true;
 }
 
