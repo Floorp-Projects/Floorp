@@ -157,11 +157,15 @@ class Registers
     // Registers that can be allocated without being saved, generally.
     static const uint32 TempMask = VolatileMask & ~NonAllocatableMask;
 
-    static const uint32 JSCallClobberMask =
+    // Registers that hold arguments and results of calls.
+    static const uint32 JSCallMask =
               (1 << Registers::r0) |
               (1 << Registers::r1) |
               (1 << Registers::r2) |
               (1 << Registers::r3);
+
+    static const uint32 JSCCallMask = JSCallMask;
+
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
@@ -231,8 +235,6 @@ class FloatRegisters
     static const uint32 TempMask = VolatileMask & ~NonAllocatableMask;
 
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
-    static const uint32 JSCallClobberMask = AllocatableMask;
-
 };
 
 bool hasMOVWT();
