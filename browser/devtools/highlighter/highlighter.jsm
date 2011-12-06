@@ -624,57 +624,6 @@ Highlighter.prototype = {
   },
 
   /**
-   * Return the midpoint of a line from pointA to pointB.
-   *
-   * @param object aPointA
-   *        An object with x and y properties.
-   * @param object aPointB
-   *        An object with x and y properties.
-   * @returns object
-   *          An object with x and y properties.
-   */
-  midPoint: function Highlighter_midPoint(aPointA, aPointB)
-  {
-    let pointC = { };
-    pointC.x = (aPointB.x - aPointA.x) / 2 + aPointA.x;
-    pointC.y = (aPointB.y - aPointA.y) / 2 + aPointA.y;
-    return pointC;
-  },
-
-  /**
-   * Return the node under the highlighter rectangle. Useful for testing.
-   * Calculation based on midpoint of diagonal from top left to bottom right
-   * of panel.
-   *
-   * @returns nsIDOMNode|null
-   *          Returns the node under the current highlighter rectangle. Null is
-   *          returned if there is no node highlighted.
-   */
-  get highlitNode()
-  {
-    // Not highlighting? Bail.
-    if (!this._highlighting || !this._contentRect) {
-      return null;
-    }
-
-    let a = {
-      x: this._contentRect.left,
-      y: this._contentRect.top
-    };
-
-    let b = {
-      x: a.x + this._contentRect.width,
-      y: a.y + this._contentRect.height
-    };
-
-    // Get midpoint of diagonal line.
-    let midpoint = this.midPoint(a, b);
-
-    return LayoutHelpers.getElementFromPoint(this.win.document, midpoint.x,
-      midpoint.y);
-  },
-
-  /**
    * Store page zoom factor.
    */
   computeZoomFactor: function Highlighter_computeZoomFactor() {
