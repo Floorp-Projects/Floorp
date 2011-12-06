@@ -11,8 +11,3 @@ function testMethodSet() {  // bug 503198
     return x.o() + x.k();
 }
 assertEq(testMethodSet(), "ok");
-checkStats({
-  recorderStarted: 1,
-  traceCompleted: 1,
-  sideExitIntoInterpreter: 1
-});

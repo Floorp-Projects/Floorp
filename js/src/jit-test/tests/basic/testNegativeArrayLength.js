@@ -1,6 +1,6 @@
 function f() {
     try {
-	for ( var i = HOTLOOP-1; i > -2; i-- )
+	for ( var i = 7; i > -2; i-- )
 	    new Array(i).join('*');
     } catch (e) {
 	return e instanceof RangeError;

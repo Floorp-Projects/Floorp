@@ -1,5 +1,5 @@
 function f() {
-    var a = [], i, N = HOTLOOP + 2;
+    var a = [], i, N = 10;
     for (i = 0; i < N; i++)
         a[i] = {m: i};
     for (i = 0; i < N; i++)

@@ -36,11 +36,3 @@ function testWeirdDateParse() {
     return result.join(",");
 }
 assertEq(testWeirdDateParse(), "11,17,2008,11,17,2008,11,17,2008,11,17,2008,11,17,2008");
-checkStats({
-    recorderStarted: 8,
-    recorderAborted: 1,
-    traceCompleted: 7,
-    traceTriggered: 13,
-    unstableLoopVariable: 3,
-    noCompatInnerTrees: 1
-});
