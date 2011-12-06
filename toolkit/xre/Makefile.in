@@ -256,7 +256,19 @@ GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
  
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
 
+ifdef MOZILLA_OFFICIAL
+DEFINES += -DMOZILLA_OFFICIAL
+endif
+
+DEFINES += -DAPP_VERSION=$(MOZ_APP_VERSION)
+
+DEFINES += -DAPP_ID=$(MOZ_APP_ID)
+
 $(srcdir)/nsAppRunner.cpp: $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
+
+ifeq ($(OS_TARGET),Android)
+nsAndroidStartup.o: $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
+endif
 
 platform.ini: FORCE
 	$(PYTHON) $(srcdir)/make-platformini.py --buildid=$(shell cat $(DEPTH)/config/buildid) $(INIARGS) $(topsrcdir)/config/milestone.txt > $@
