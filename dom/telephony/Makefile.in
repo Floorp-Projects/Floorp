@@ -53,7 +53,7 @@ include $(topsrcdir)/dom/dom-config.mk
 XPIDLSRCS = \
   mozIDOMTelephony.idl \
   nsITelephonyWorker.idl \
-  nsIRadioInterface.idl \
+  nsITelephone.idl \
   $(NULL)
 
 EXTRA_COMPONENTS = \

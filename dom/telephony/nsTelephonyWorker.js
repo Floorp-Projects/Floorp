@@ -61,10 +61,10 @@ nsTelephonyWorker.prototype = {
                                     contractID: TELEPHONYWORKER_CONTRACTID,
                                     classDescription: "TelephonyWorker",
                                     interfaces: [Ci.nsITelephonyWorker,
-                                                 Ci.nsIRadioInterface]}),
+                                                 Ci.nsITelephone]}),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITelephonyWorker,
-                                         Ci.nsIRadioInterface]),
+                                         Ci.nsITelephone]),
 
   onerror: function onerror(event) {
     // It is very important to call preventDefault on the event here.
@@ -118,11 +118,11 @@ nsTelephonyWorker.prototype = {
     });
   },
 
-  // nsITelephonWorker
+  // nsITelephonyWorker
 
   worker: null,
 
-  // nsIRadioInterface
+  // nsITelephone
 
   initialState: null,
 
