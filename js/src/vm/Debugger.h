@@ -57,7 +57,7 @@
 namespace js {
 
 class Debugger {
-    friend class js::Breakpoint;
+    friend class Breakpoint;
     friend JSBool (::JS_DefineDebuggerObject)(JSContext *cx, JSObject *obj);
 
   public:
@@ -203,7 +203,7 @@ class Debugger {
     static void slowPathOnLeaveFrame(JSContext *cx);
     static void slowPathOnNewScript(JSContext *cx, JSScript *script,
                                     GlobalObject *compileAndGoGlobal);
-    static JSTrapStatus dispatchHook(JSContext *cx, js::Value *vp, Hook which);
+    static JSTrapStatus dispatchHook(JSContext *cx, Value *vp, Hook which);
 
     JSTrapStatus fireDebuggerStatement(JSContext *cx, Value *vp);
     JSTrapStatus fireExceptionUnwind(JSContext *cx, Value *vp);
@@ -258,8 +258,8 @@ class Debugger {
 
     static inline void onEnterFrame(JSContext *cx);
     static inline void onLeaveFrame(JSContext *cx);
-    static inline JSTrapStatus onDebuggerStatement(JSContext *cx, js::Value *vp);
-    static inline JSTrapStatus onExceptionUnwind(JSContext *cx, js::Value *vp);
+    static inline JSTrapStatus onDebuggerStatement(JSContext *cx, Value *vp);
+    static inline JSTrapStatus onExceptionUnwind(JSContext *cx, Value *vp);
     static inline void onNewScript(JSContext *cx, JSScript *script,
                                    GlobalObject *compileAndGoGlobal);
     static JSTrapStatus onTrap(JSContext *cx, Value *vp);
@@ -343,9 +343,9 @@ class Debugger {
 };
 
 class BreakpointSite {
-    friend class js::Breakpoint;
+    friend class Breakpoint;
     friend struct ::JSCompartment;
-    friend class js::Debugger;
+    friend class Debugger;
 
   public:
     JSScript * const script;
@@ -402,7 +402,7 @@ class BreakpointSite {
  */
 class Breakpoint {
     friend struct ::JSCompartment;
-    friend class js::Debugger;
+    friend class Debugger;
 
   public:
     Debugger * const debugger;
@@ -490,7 +490,7 @@ Debugger::onLeaveFrame(JSContext *cx)
 }
 
 JSTrapStatus
-Debugger::onDebuggerStatement(JSContext *cx, js::Value *vp)
+Debugger::onDebuggerStatement(JSContext *cx, Value *vp)
 {
     return cx->compartment->getDebuggees().empty()
            ? JSTRAP_CONTINUE
@@ -498,7 +498,7 @@ Debugger::onDebuggerStatement(JSContext *cx, js::Value *vp)
 }
 
 JSTrapStatus
-Debugger::onExceptionUnwind(JSContext *cx, js::Value *vp)
+Debugger::onExceptionUnwind(JSContext *cx, Value *vp)
 {
     return cx->compartment->getDebuggees().empty()
            ? JSTRAP_CONTINUE
