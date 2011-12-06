@@ -87,6 +87,13 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     private boolean mPendingViewportAdjust;
     private boolean mViewportSizeChanged;
 
+    // mUpdateViewportOnEndDraw is used to indicate that we received a
+    // viewport update notification while drawing. therefore, when the
+    // draw finishes, we need to update the entire viewport rather than
+    // just the page size. this boolean should always be accessed from
+    // inside a transaction, so no synchronization is needed.
+    private boolean mUpdateViewportOnEndDraw;
+
     public GeckoSoftwareLayerClient(Context context) {
         mContext = context;
 
@@ -122,6 +129,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             layerController.setViewportMetrics(mGeckoViewport);
         geometryChanged();
         GeckoAppShell.registerGeckoEventListener("Viewport:Update", this);
+        GeckoAppShell.registerGeckoEventListener("Viewport:UpdateLater", this);
     }
 
     public void beginDrawing() {
@@ -174,7 +182,8 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
      */
     public void endDrawing(int x, int y, int width, int height, String metadata) {
         try {
-            updateViewport(metadata, true);
+            updateViewport(metadata, !mUpdateViewportOnEndDraw);
+            mUpdateViewportOnEndDraw = false;
             Rect rect = new Rect(x, y, x + width, y + height);
             mTileLayer.invalidate(rect);
         } finally {
@@ -290,6 +299,11 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             } finally {
                 endTransaction(mTileLayer);
             }
+        } else if ("Viewport:UpdateLater".equals(event)) {
+            if (!mTileLayer.inTransaction()) {
+                Log.e(LOGTAG, "Viewport:UpdateLater called while not in transaction. You should be using Viewport:Update instead!");
+            }
+            mUpdateViewportOnEndDraw = true;
         }
     }
 }
