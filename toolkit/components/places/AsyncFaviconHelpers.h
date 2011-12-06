@@ -75,6 +75,7 @@ struct IconData
   , fetchMode(FETCH_NEVER)
   , status(ICON_STATUS_UNKNOWN)
   {
+    guid.SetIsVoid(PR_TRUE);
   }
 
   PRInt64 id;
@@ -84,6 +85,7 @@ struct IconData
   PRTime expiration;
   enum AsyncFaviconFetchMode fetchMode;
   PRUint16 status; // This is a bitset, see ICON_STATUS_* defines above.
+  nsCString guid;
 };
 
 /**

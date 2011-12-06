@@ -408,7 +408,7 @@ CodeGeneratorX64::visitGuardShape(LGuardShape *guard)
 {
     Register obj = ToRegister(guard->input());
     masm.movq(ImmGCPtr(guard->mir()->shape()), ScratchReg);
-    masm.cmpq(Operand(obj, offsetof(JSObject, lastProp)), ScratchReg);
+    masm.cmpq(Operand(obj, JSObject::offsetOfShape()), ScratchReg);
     if (!bailoutIf(Assembler::NotEqual, guard->snapshot()))
         return false;
     return true;

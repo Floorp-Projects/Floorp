@@ -42,7 +42,8 @@ namespace gl {
 class WGLLibrary
 {
 public:
-    WGLLibrary() : mInitialized(false), mOGLLibrary(nsnull) {}
+    WGLLibrary() : mInitialized(false), mOGLLibrary(nsnull),
+    mHasRobustness(false) {}
 
     typedef HGLRC (GLAPIENTRY * PFNWGLCREATECONTEXTPROC) (HDC);
     PFNWGLCREATECONTEXTPROC fCreateContext;
@@ -76,11 +77,20 @@ public:
     typedef BOOL (WINAPI * PFNWGLGETPIXELFORMATATTRIBIVPROC) (HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, int* piAttributes, int *piValues);
     PFNWGLGETPIXELFORMATATTRIBIVPROC fGetPixelFormatAttribiv;
 
+    typedef const char * (WINAPI * PFNWGLGETEXTENSIONSSTRINGPROC) (HDC hdc);
+    PFNWGLGETEXTENSIONSSTRINGPROC fGetExtensionsString;
+
+    typedef HGLRC (WINAPI * PFNWGLCREATECONTEXTATTRIBSPROC) (HDC hdc, HGLRC hShareContext, const int *attribList);
+    PFNWGLCREATECONTEXTATTRIBSPROC fCreateContextAttribs;
+
     bool EnsureInitialized();
+
+    bool HasRobustness() const { return mHasRobustness; }
 
 private:
     bool mInitialized;
     PRLibrary *mOGLLibrary;
+    bool mHasRobustness;
 };
 
 // a global WGLLibrary instance

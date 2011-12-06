@@ -55,42 +55,54 @@ CallObject *
 CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObject *callee)
 {
     Bindings &bindings = script->bindings;
-    size_t argsVars = bindings.countArgsAndVars();
-    size_t slots = RESERVED_SLOTS + argsVars;
-    gc::AllocKind kind = gc::GetGCObjectKind(slots);
+    gc::AllocKind kind = gc::GetGCObjectKind(bindings.lastShape()->numFixedSlots() + 1);
 
-    /*
-     * Make sure that the arguments and variables in the call object all end up
-     * in a contiguous range of slots. We need this to be able to embed the
-     * args/vars arrays in the TypeScriptNesting for the function, after the
-     * call object's frame has finished.
-     */
-    if (cx->typeInferenceEnabled() && gc::GetGCKindSlots(kind) < slots) {
-        kind = gc::GetGCObjectKind(RESERVED_SLOTS);
-        JS_ASSERT(gc::GetGCKindSlots(kind) == RESERVED_SLOTS);
-    }
+    js::types::TypeObject *type = cx->compartment->getEmptyType(cx);
+    if (!type)
+        return NULL;
 
-    JSObject *obj = js_NewGCObject(cx, kind);
+    HeapValue *slots;
+    if (!PreallocateObjectDynamicSlots(cx, bindings.lastShape(), &slots))
+        return NULL;
+
+    JSObject *obj = JSObject::create(cx, kind, bindings.lastShape(), type, slots);
     if (!obj)
         return NULL;
 
-    /* Init immediately to avoid GC seeing a half-init'ed object. */
-    obj->initCall(cx, bindings, &scopeChain);
-    obj->makeVarObj();
-
-    /* This must come after callobj->lastProp has been set. */
-    if (!obj->ensureInstanceReservedSlots(cx, argsVars))
-        return NULL;
+    /*
+     * Update the parent for bindings associated with non-compileAndGo scripts,
+     * whose call objects do not have a consistent global variable and need
+     * to be updated dynamically.
+     */
+    JSObject *global = scopeChain.getGlobal();
+    if (global != obj->getParent()) {
+        JS_ASSERT(obj->getParent() == NULL);
+        if (!obj->setParent(cx, global))
+            return NULL;
+    }
 
 #ifdef DEBUG
     for (Shape::Range r = obj->lastProperty(); !r.empty(); r.popFront()) {
         const Shape &s = r.front();
-        if (s.slot != SHAPE_INVALID_SLOT) {
-            JS_ASSERT(s.slot + 1 == obj->slotSpan());
+        if (s.hasSlot()) {
+            JS_ASSERT(s.slot() + 1 == obj->slotSpan());
             break;
         }
     }
 #endif
+
+    JS_ASSERT(obj->isCall());
+    JS_ASSERT(!obj->inDictionaryMode());
+
+    if (!obj->setInternalScopeChain(cx, &scopeChain))
+        return NULL;
+
+    /*
+     * If |bindings| is for a function that has extensible parents, that means
+     * its Call should have its own shape; see js::BaseShape::extensibleParents.
+     */
+    if (obj->lastProperty()->extensibleParents() && !obj->generateOwnShape(cx))
+        return NULL;
 
     CallObject &callobj = obj->asCall();
     callobj.initCallee(callee);

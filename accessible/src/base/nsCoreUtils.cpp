@@ -660,22 +660,6 @@ nsCoreUtils::GetFirstSensibleColumn(nsITreeBoxObject *aTree)
   return column.forget();
 }
 
-already_AddRefed<nsITreeColumn>
-nsCoreUtils::GetLastSensibleColumn(nsITreeBoxObject *aTree)
-{
-  nsCOMPtr<nsITreeColumns> cols;
-  aTree->GetColumns(getter_AddRefs(cols));
-  if (!cols)
-    return nsnull;
-
-  nsCOMPtr<nsITreeColumn> column;
-  cols->GetLastColumn(getter_AddRefs(column));
-  if (column && IsColumnHidden(column))
-    return GetPreviousSensibleColumn(column);
-
-  return column.forget();
-}
-
 PRUint32
 nsCoreUtils::GetSensibleColumnCount(nsITreeBoxObject *aTree)
 {

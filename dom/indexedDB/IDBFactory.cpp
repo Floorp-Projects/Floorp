@@ -247,8 +247,18 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
 
     info->id = stmt->AsInt64(1);
 
-    rv = stmt->GetString(2, info->keyPath);
+    PRInt32 columnType;
+    nsresult rv = stmt->GetTypeOfIndex(2, &columnType);
     NS_ENSURE_SUCCESS(rv, rv);
+    if (columnType == mozIStorageStatement::VALUE_TYPE_NULL) {
+      info->keyPath.SetIsVoid(true);
+    }
+    else {
+      NS_ASSERTION(columnType == mozIStorageStatement::VALUE_TYPE_TEXT,
+                   "Should be a string");
+      rv = stmt->GetString(2, info->keyPath);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     info->autoIncrement = !!stmt->AsInt32(3);
     info->databaseId = aDatabaseId;
@@ -263,7 +273,7 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
 
   // Load index information
   rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT object_store_id, id, name, key_path, unique_index, "
+    "SELECT object_store_id, id, name, key_path, unique_index, multientry, "
            "object_store_autoincrement "
     "FROM object_store_index"
   ), getter_AddRefs(stmt));
@@ -297,7 +307,8 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
     NS_ENSURE_SUCCESS(rv, rv);
 
     indexInfo->unique = !!stmt->AsInt32(4);
-    indexInfo->autoIncrement = !!stmt->AsInt32(5);
+    indexInfo->multiEntry = !!stmt->AsInt32(5);
+    indexInfo->autoIncrement = !!stmt->AsInt32(6);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -403,24 +414,10 @@ IDBFactory::OpenCommon(const nsAString& aName,
   nsIScriptContext* context = sgo->GetContext();
   NS_ENSURE_TRUE(context, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = nsContentUtils::GetSecurityManager()->
-    GetSubjectPrincipal(getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
   nsCString origin;
-  if (nsContentUtils::IsSystemPrincipal(principal)) {
-    origin.AssignLiteral("chrome");
-  }
-  else {
-    rv = nsContentUtils::GetASCIIOrigin(principal, origin);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-    if (origin.EqualsLiteral("null")) {
-      NS_WARNING("IndexedDB databases not allowed for this principal!");
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    }
-  }
+  nsresult rv =
+    IndexedDatabaseManager::GetASCIIOriginFromWindow(window, origin);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<IDBOpenDBRequest> request =
     IDBOpenDBRequest::Create(context, window);

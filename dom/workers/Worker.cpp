@@ -91,8 +91,8 @@ public:
   InitClass(JSContext* aCx, JSObject* aObj, JSObject* aParentProto,
             bool aMainRuntime)
   {
-    JSObject* proto = JS_InitClass(aCx, aObj, aParentProto, &sClass, Construct,
-                                   0, sProperties, sFunctions, NULL, NULL);
+    JSObject* proto = js::InitClassWithReserved(aCx, aObj, aParentProto, &sClass, Construct,
+                                                0, sProperties, sFunctions, NULL, NULL);
     if (!proto) {
       return NULL;
     }
@@ -102,11 +102,10 @@ public:
       parent->AssertIsOnWorkerThread();
 
       JSObject* constructor = JS_GetConstructor(aCx, proto);
-      if (!constructor ||
-          !JS_SetReservedSlot(aCx, constructor, CONSTRUCTOR_SLOT_PARENT,
-                              PRIVATE_TO_JSVAL(parent))) {
+      if (!constructor)
         return NULL;
-      }
+      js::SetFunctionNativeReserved(constructor, CONSTRUCTOR_SLOT_PARENT,
+                                    PRIVATE_TO_JSVAL(parent));
     }
 
     return proto;
@@ -135,10 +134,10 @@ public:
     SetJSPrivateSafeish(aCx, aObj, NULL);
   }
 
-protected:
   static WorkerPrivate*
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName);
 
+protected:
   static JSBool
   ConstructInternal(JSContext* aCx, uintN aArgc, jsval* aVp,
                     bool aIsChromeWorker)
@@ -153,11 +152,8 @@ protected:
       return false;
     }
 
-    jsval priv;
-    if (!JS_GetReservedSlot(aCx, JSVAL_TO_OBJECT(JS_CALLEE(aCx, aVp)),
-                            CONSTRUCTOR_SLOT_PARENT, &priv)) {
-      return false;
-    }
+    jsval priv = js::GetFunctionNativeReserved(JSVAL_TO_OBJECT(JS_CALLEE(aCx, aVp)),
+                                               CONSTRUCTOR_SLOT_PARENT);
 
     RuntimeService* runtimeService;
     WorkerPrivate* parent;
@@ -267,6 +263,9 @@ private:
   Terminate(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     const char*& name = sFunctions[0].name;
     WorkerPrivate* worker = GetInstancePrivate(aCx, obj, name);
@@ -281,6 +280,9 @@ private:
   PostMessage(JSContext* aCx, uintN aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
+    if (!obj) {
+      return false;
+    }
 
     const char*& name = sFunctions[1].name;
     WorkerPrivate* worker = GetInstancePrivate(aCx, obj, name);
@@ -339,8 +341,8 @@ public:
   InitClass(JSContext* aCx, JSObject* aObj, JSObject* aParentProto,
             bool aMainRuntime)
   {
-    JSObject* proto = JS_InitClass(aCx, aObj, aParentProto, &sClass, Construct,
-                                   0, NULL, NULL, NULL, NULL);
+    JSObject* proto = js::InitClassWithReserved(aCx, aObj, aParentProto, &sClass, Construct,
+                                                0, NULL, NULL, NULL, NULL);
     if (!proto) {
       return NULL;
     }
@@ -350,11 +352,10 @@ public:
       parent->AssertIsOnWorkerThread();
 
       JSObject* constructor = JS_GetConstructor(aCx, proto);
-      if (!constructor ||
-          !JS_SetReservedSlot(aCx, constructor, CONSTRUCTOR_SLOT_PARENT,
-                              PRIVATE_TO_JSVAL(parent))) {
+      if (!constructor)
         return NULL;
-      }
+      js::SetFunctionNativeReserved(constructor, CONSTRUCTOR_SLOT_PARENT,
+                                    PRIVATE_TO_JSVAL(parent));
     }
 
     return proto;
@@ -469,6 +470,23 @@ ClearPrivateSlot(JSContext* aCx, JSObject* aObj, bool aSaveEventHandlers)
 }
 
 } // namespace worker
+
+WorkerCrossThreadDispatcher*
+GetWorkerCrossThreadDispatcher(JSContext* aCx, jsval aWorker)
+{
+  if (JSVAL_IS_PRIMITIVE(aWorker)) {
+    return NULL;
+  }
+
+  WorkerPrivate* w =
+      Worker::GetInstancePrivate(aCx, JSVAL_TO_OBJECT(aWorker),
+                                 "GetWorkerCrossThreadDispatcher");
+  if (!w) {
+    return NULL;
+  }
+  return w->GetCrossThreadDispatcher();
+}
+
 
 namespace chromeworker {
 

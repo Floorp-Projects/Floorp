@@ -439,7 +439,7 @@ CodeGeneratorX86::visitGuardShape(LGuardShape *guard)
 {
     Register obj = ToRegister(guard->input());
 
-    masm.cmpl(Operand(obj, offsetof(JSObject, lastProp)), ImmGCPtr(guard->mir()->shape()));
+    masm.cmpl(Operand(obj, JSObject::offsetOfShape()), ImmGCPtr(guard->mir()->shape()));
     if (!bailoutIf(Assembler::NotEqual, guard->snapshot()))
         return false;
     return true;

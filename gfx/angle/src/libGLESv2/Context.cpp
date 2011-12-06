@@ -147,6 +147,7 @@ Context::Context(const egl::Config *config, const gl::Context *shareContext, boo
 
     mState.packAlignment = 4;
     mState.unpackAlignment = 4;
+    mState.packReverseRowOrder = false;
 
     mVertexDataManager = NULL;
     mIndexDataManager = NULL;
@@ -855,6 +856,16 @@ GLint Context::getUnpackAlignment() const
     return mState.unpackAlignment;
 }
 
+void Context::setPackReverseRowOrder(bool reverseRowOrder)
+{
+    mState.packReverseRowOrder = reverseRowOrder;
+}
+
+bool Context::getPackReverseRowOrder() const
+{
+    return mState.packReverseRowOrder;
+}
+
 GLuint Context::createBuffer()
 {
     return mResourceManager->createBuffer();
@@ -1273,6 +1284,7 @@ bool Context::getIntegerv(GLenum pname, GLint *params)
       case GL_RENDERBUFFER_BINDING:             *params = mState.renderbuffer.id();             break;
       case GL_CURRENT_PROGRAM:                  *params = mState.currentProgram;                break;
       case GL_PACK_ALIGNMENT:                   *params = mState.packAlignment;                 break;
+      case GL_PACK_REVERSE_ROW_ORDER_ANGLE:     *params = mState.packReverseRowOrder;           break;
       case GL_UNPACK_ALIGNMENT:                 *params = mState.unpackAlignment;               break;
       case GL_GENERATE_MIPMAP_HINT:             *params = mState.generateMipmapHint;            break;
       case GL_FRAGMENT_SHADER_DERIVATIVE_HINT_OES: *params = mState.fragmentShaderDerivativeHint; break;
@@ -1512,6 +1524,7 @@ bool Context::getQueryParameterInfo(GLenum pname, GLenum *type, unsigned int *nu
       case GL_RENDERBUFFER_BINDING:
       case GL_CURRENT_PROGRAM:
       case GL_PACK_ALIGNMENT:
+      case GL_PACK_REVERSE_ROW_ORDER_ANGLE:
       case GL_UNPACK_ALIGNMENT:
       case GL_GENERATE_MIPMAP_HINT:
       case GL_FRAGMENT_SHADER_DERIVATIVE_HINT_OES:
@@ -2244,19 +2257,38 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
     D3DSURFACE_DESC desc;
     renderTarget->GetDesc(&desc);
 
-    IDirect3DSurface9 *systemSurface;
-    HRESULT result = mDevice->CreateOffscreenPlainSurface(desc.Width, desc.Height, desc.Format, D3DPOOL_SYSTEMMEM, &systemSurface, NULL);
-
-    if (FAILED(result))
-    {
-        ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
-        return error(GL_OUT_OF_MEMORY);
-    }
-
     if (desc.MultiSampleType != D3DMULTISAMPLE_NONE)
     {
         UNIMPLEMENTED();   // FIXME: Requires resolve using StretchRect into non-multisampled render target
         return error(GL_OUT_OF_MEMORY);
+    }
+
+    HRESULT result;
+    IDirect3DSurface9 *systemSurface = NULL;
+    bool directToPixels = getPackReverseRowOrder() && getPackAlignment() <= 4 && mDisplay->isD3d9ExDevice() &&
+                          x == 0 && y == 0 && width == desc.Width && height == desc.Height &&
+                          desc.Format == D3DFMT_A8R8G8B8 && format == GL_BGRA_EXT && type == GL_UNSIGNED_BYTE;
+    if (directToPixels)
+    {
+        // Use the pixels ptr as a shared handle to write directly into client's memory
+        result = mDevice->CreateOffscreenPlainSurface(desc.Width, desc.Height, desc.Format,
+                                                      D3DPOOL_SYSTEMMEM, &systemSurface, &pixels);
+        if (FAILED(result))
+        {
+            // Try again without the shared handle
+            directToPixels = false;
+        }
+    }
+
+    if (!directToPixels)
+    {
+        result = mDevice->CreateOffscreenPlainSurface(desc.Width, desc.Height, desc.Format,
+                                                      D3DPOOL_SYSTEMMEM, &systemSurface, NULL);
+        if (FAILED(result))
+        {
+            ASSERT(result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY);
+            return error(GL_OUT_OF_MEMORY);
+        }
     }
 
     result = mDevice->GetRenderTargetData(renderTarget, systemSurface);
@@ -2277,6 +2309,12 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
 
     }
 
+    if (directToPixels)
+    {
+        systemSurface->Release();
+        return;
+    }
+
     D3DLOCKED_RECT lock;
     RECT rect = transformPixelRect(x, y, width, height, desc.Height);
     rect.left = clamp(rect.left, 0L, static_cast<LONG>(desc.Width));
@@ -2294,10 +2332,21 @@ void Context::readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
         return;   // No sensible error to generate
     }
 
-    unsigned char *source = ((unsigned char*)lock.pBits) + lock.Pitch * (rect.bottom - rect.top - 1);
     unsigned char *dest = (unsigned char*)pixels;
     unsigned short *dest16 = (unsigned short*)pixels;
-    int inputPitch = -lock.Pitch;
+
+    unsigned char *source;
+    int inputPitch;
+    if (getPackReverseRowOrder())
+    {
+        source = (unsigned char*)lock.pBits;
+        inputPitch = lock.Pitch;
+    }
+    else
+    {
+        source = ((unsigned char*)lock.pBits) + lock.Pitch * (rect.bottom - rect.top - 1);
+        inputPitch = -lock.Pitch;
+    }
 
     for (int j = 0; j < rect.bottom - rect.top; j++)
     {
@@ -2748,7 +2797,7 @@ void Context::drawArrays(GLenum mode, GLint first, GLsizei count)
 
         if (mode == GL_LINE_LOOP)   // Draw the last segment separately
         {
-            drawClosingLine(first, first + count - 1);
+            drawClosingLine(0, count - 1, 0);
         }
     }
 }
@@ -2813,7 +2862,7 @@ void Context::drawElements(GLenum mode, GLsizei count, GLenum type, const void *
 
         if (mode == GL_LINE_LOOP)   // Draw the last segment separately
         {
-            drawClosingLine(count, type, indices);
+            drawClosingLine(count, type, indices, indexInfo.minIndex);
         }
     }
 }
@@ -2865,7 +2914,7 @@ void Context::sync(bool block)
     }
 }
 
-void Context::drawClosingLine(unsigned int first, unsigned int last)
+void Context::drawClosingLine(unsigned int first, unsigned int last, int minIndex)
 {
     IDirect3DIndexBuffer9 *indexBuffer = NULL;
     bool succeeded = false;
@@ -2919,7 +2968,7 @@ void Context::drawClosingLine(unsigned int first, unsigned int last)
         mDevice->SetIndices(mClosingIB->getBuffer());
         mAppliedIBSerial = mClosingIB->getSerial();
 
-        mDevice->DrawIndexedPrimitive(D3DPT_LINELIST, 0, 0, last, offset, 1);
+        mDevice->DrawIndexedPrimitive(D3DPT_LINELIST, -minIndex, minIndex, last, offset, 1);
     }
     else
     {
@@ -2928,7 +2977,7 @@ void Context::drawClosingLine(unsigned int first, unsigned int last)
     }
 }
 
-void Context::drawClosingLine(GLsizei count, GLenum type, const void *indices)
+void Context::drawClosingLine(GLsizei count, GLenum type, const void *indices, int minIndex)
 {
     unsigned int first = 0;
     unsigned int last = 0;
@@ -2957,7 +3006,7 @@ void Context::drawClosingLine(GLsizei count, GLenum type, const void *indices)
       default: UNREACHABLE();
     }
 
-    drawClosingLine(first, last);
+    drawClosingLine(first, last, minIndex);
 }
 
 void Context::recordInvalidEnum()
@@ -3447,6 +3496,8 @@ void Context::initExtensionString()
     {
         mExtensionString += "GL_ANGLE_framebuffer_multisample ";
     }
+
+    mExtensionString += "GL_ANGLE_pack_reverse_row_order ";
 
     if (supportsDXT3Textures())
     {

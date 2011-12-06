@@ -766,7 +766,7 @@ nsMediaChannelStream::CacheClientSeek(PRInt64 aOffset, bool aResume)
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
-  printf("*** nsMediaChannelStream::CacheClientSeek() mDecoder=%p\n", mDecoder);
+  printf("*** nsMediaChannelStream::CacheClientSeek() mDecoder=%p aOffset=%lld aResume = %d\n", mDecoder, (long long)aOffset, aResume);
 
   CloseChannel();
 

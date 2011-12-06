@@ -33,6 +33,7 @@
  *   Drew Willcoxon <adw@mozilla.com>
  *   Philipp von Weitershausen <philipp@weitershausen.de>
  *   Paolo Amadini <http://www.amadzone.org/>
+ *   Richard Newman <rnewman@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -642,7 +643,13 @@ Database::InitSchema(bool* aDatabaseMigrated)
         rv = MigrateV13Up();
         NS_ENSURE_SUCCESS(rv, rv);
       }
-      // Firefox 11 uses schema version 13.
+
+      if (currentSchemaVersion < 14) {
+        rv = MigrateV14Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 11 uses schema version 14.
 
       // Schema Upgrades must add migration code here.
     }
@@ -950,7 +957,7 @@ Database::MigrateV7Up()
   mozStorageTransaction transaction(mMainConn, false);
 
   // We need an index on lastModified to catch quickly last modified bookmark
-  // title for tag container's children. This will be useful for sync too.
+  // title for tag container's children. This will be useful for Sync, too.
   bool lastModIndexExists = false;
   rv = mMainConn->IndexExists(
     NS_LITERAL_CSTRING("moz_bookmarks_itemlastmodifiedindex"),
@@ -1282,8 +1289,8 @@ Database::MigrateV11Up()
     rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_BOOKMARKS_GUID);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // moz_placess grew a guid column.  Add the column, but do not populate it
-    // with anything just yet.  We will do that soon.
+    // moz_places grew a guid column. Add the column, but do not populate it
+    // with anything just yet. We will do that soon.
     rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "ALTER TABLE moz_places "
       "ADD COLUMN guid TEXT"
@@ -1306,9 +1313,7 @@ Database::MigrateV13Up()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // Dynamic containers are no more supported.
-
-  // For existing profiles, we may not have a moz_bookmarks.guid column
+  // Dynamic containers are no longer supported.
   nsCOMPtr<mozIStorageAsyncStatement> deleteDynContainersStmt;
   nsresult rv = mMainConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
       "DELETE FROM moz_bookmarks WHERE type = :item_type"),
@@ -1322,6 +1327,38 @@ Database::MigrateV13Up()
   rv = deleteDynContainersStmt->ExecuteAsync(nsnull, getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return NS_OK;
+}
+
+nsresult
+Database::MigrateV14Up()
+{
+  // For existing profiles, we may not have a moz_favicons.guid column.
+  // Add it here. We want it to be unique, but ALTER TABLE doesn't allow
+  // a uniqueness constraint, so the index must be created separately.
+  nsCOMPtr<mozIStorageStatement> hasGuidStatement;
+  nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT guid FROM moz_favicons"),
+    getter_AddRefs(hasGuidStatement));
+
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_favicons "
+      "ADD COLUMN guid TEXT"
+    ));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Generate GUIDs for our existing favicons.
+    rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "UPDATE moz_favicons "
+      "SET guid = GENERATE_GUID()"
+    ));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // And now we can make the column unique.
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_FAVICONS_GUID);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   return NS_OK;
 }
 
@@ -1411,6 +1448,10 @@ Database::Observe(nsISupports *aSubject,
         "UNION ALL "
         "SELECT 1 "
         "FROM moz_bookmarks "
+        "WHERE guid IS NULL "
+        "UNION ALL "
+        "SELECT 1 "
+        "FROM moz_favicons "
         "WHERE guid IS NULL "
       ), getter_AddRefs(stmt));
       NS_ENSURE_SUCCESS(rv, rv);

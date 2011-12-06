@@ -249,11 +249,13 @@ str_unescape(JSContext *cx, uintN argc, Value *vp)
     size_t length = str->length();
     const jschar *chars = str->chars();
 
-    /* Don't bother allocating less space for the new string. */
+    /* Start by allocating the maximum required space for the new string. */
     jschar *newchars = (jschar *) cx->malloc_((length + 1) * sizeof(jschar));
     if (!newchars)
         return false;
+
     size_t ni = 0, i = 0;
+    bool escapeFound = false;
     while (i < length) {
         jschar ch = chars[i++];
         if (ch == '%') {
@@ -263,6 +265,7 @@ str_unescape(JSContext *cx, uintN argc, Value *vp)
             {
                 ch = JS7_UNHEX(chars[i]) * 16 + JS7_UNHEX(chars[i + 1]);
                 i += 2;
+                escapeFound = true;
             } else if (i + 4 < length && chars[i] == 'u' &&
                        JS7_ISHEX(chars[i + 1]) && JS7_ISHEX(chars[i + 2]) &&
                        JS7_ISHEX(chars[i + 3]) && JS7_ISHEX(chars[i + 4]))
@@ -272,19 +275,31 @@ str_unescape(JSContext *cx, uintN argc, Value *vp)
                       + JS7_UNHEX(chars[i + 3])) << 4)
                     + JS7_UNHEX(chars[i + 4]);
                 i += 5;
+                escapeFound = true;
             }
         }
         newchars[ni++] = ch;
     }
     newchars[ni] = 0;
 
+    /* If escapes were found, shrink the string. */
+    if (escapeFound) {
+        JS_ASSERT(ni < length);
+        jschar *tmpchars = (jschar *) cx->realloc_(newchars, (ni + 1) * sizeof(jschar));
+        if (!tmpchars) {
+            cx->free_(newchars);
+            return false;
+        }
+        newchars = tmpchars;
+    }
+
     JSString *retstr = js_NewString(cx, newchars, ni);
     if (!retstr) {
         cx->free_(newchars);
-        return JS_FALSE;
+        return false;
     }
     vp->setString(retstr);
-    return JS_TRUE;
+    return true;
 }
 
 #if JS_HAS_UNEVAL
@@ -1734,8 +1749,8 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         /* Only handle the case where the property exists and is on this object. */
         if (prop && holder == base) {
             Shape *shape = (Shape *) prop;
-            if (shape->slot != SHAPE_INVALID_SLOT && shape->hasDefaultGetter()) {
-                Value value = base->getSlot(shape->slot);
+            if (shape->hasSlot() && shape->hasDefaultGetter()) {
+                Value value = base->getSlot(shape->slot());
                 if (value.isString()) {
                     rdata.repstr = value.toString()->ensureLinear(cx);
                     if (!rdata.repstr)
@@ -2146,7 +2161,7 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
         rdata.dollar = rdata.dollarEnd = NULL;
 
         if (rdata.lambda->isFunction()) {
-            JSFunction *fun = rdata.lambda->getFunctionPrivate();
+            JSFunction *fun = rdata.lambda->toFunction();
             if (fun->isInterpreted()) {
                 /*
                  * Pattern match the script to check if it is is indexing into a
@@ -2161,7 +2176,7 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
 
                 Value table = UndefinedValue();
                 if (JSOp(*pc) == JSOP_GETFCSLOT) {
-                    table = rdata.lambda->getFlatClosureUpvar(GET_UINT16(pc));
+                    table = fun->getFlatClosureUpvar(GET_UINT16(pc));
                     pc += JSOP_GETFCSLOT_LENGTH;
                 }
 
@@ -2955,10 +2970,9 @@ static JSFunctionSpec string_static_methods[] = {
     JS_FS_END
 };
 
-const Shape *
+Shape *
 StringObject::assignInitialShape(JSContext *cx)
 {
-    JS_ASSERT(!cx->compartment->initialStringShape);
     JS_ASSERT(nativeEmpty());
 
     return addDataProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),

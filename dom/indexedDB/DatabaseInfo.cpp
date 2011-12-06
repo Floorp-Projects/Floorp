@@ -97,7 +97,8 @@ DatabaseInfo::~DatabaseInfo()
 IndexInfo::IndexInfo()
 : id(LL_MININT),
   unique(false),
-  autoIncrement(false)
+  autoIncrement(false),
+  multiEntry(false)
 {
   MOZ_COUNT_CTOR(IndexInfo);
 }
@@ -107,7 +108,8 @@ IndexInfo::IndexInfo(const IndexInfo& aOther)
   name(aOther.name),
   keyPath(aOther.keyPath),
   unique(aOther.unique),
-  autoIncrement(aOther.autoIncrement)
+  autoIncrement(aOther.autoIncrement),
+  multiEntry(aOther.multiEntry)
 {
   MOZ_COUNT_CTOR(IndexInfo);
 }

@@ -90,23 +90,6 @@ static const char kCookiesAskPermission[] = "network.cookie.warnAboutCookies";
 
 static const char kPermissionType[] = "cookie";
 
-#ifdef MOZ_MAIL_NEWS
-// returns true if URI appears to be the URI of a mailnews protocol
-// XXXbz this should be a protocol flag, not a scheme list, dammit!
-static bool
-IsFromMailNews(nsIURI *aURI)
-{
-  static const char *kMailNewsProtocols[] =
-      { "imap", "news", "snews", "mailbox", nsnull };
-  bool result;
-  for (const char **p = kMailNewsProtocols; *p; ++p) {
-    if (NS_SUCCEEDED(aURI->SchemeIs(*p, &result)) && result)
-      return true;
-  }
-  return false;
-}
-#endif
-
 NS_IMPL_ISUPPORTS2(nsCookiePermission,
                    nsICookiePermission,
                    nsIObserver)
@@ -206,21 +189,22 @@ nsCookiePermission::CanAccess(nsIURI         *aURI,
                               nsIChannel     *aChannel,
                               nsCookieAccess *aResult)
 {
-#ifdef MOZ_MAIL_NEWS
-  // If this URI is a mailnews one (e.g. imap etc), don't allow cookies for
-  // it.
-  if (IsFromMailNews(aURI)) {
+  // Check this protocol doesn't allow cookies
+  bool hasFlags;
+  nsresult rv =
+    NS_URIChainHasFlags(aURI, nsIProtocolHandler::URI_FORBIDS_COOKIE_ACCESS,
+                        &hasFlags);
+  if (NS_FAILED(rv) || hasFlags) {
     *aResult = ACCESS_DENY;
     return NS_OK;
   }
-#endif // MOZ_MAIL_NEWS
 
   // Lazily initialize ourselves
   if (!EnsureInitialized())
     return NS_ERROR_UNEXPECTED;
 
   // finally, check with permission manager...
-  nsresult rv = mPermMgr->TestPermission(aURI, kPermissionType, (PRUint32 *) aResult);
+  rv = mPermMgr->TestPermission(aURI, kPermissionType, (PRUint32 *) aResult);
   if (NS_SUCCEEDED(rv)) {
     switch (*aResult) {
     // if we have one of the publicly-available values, just return it

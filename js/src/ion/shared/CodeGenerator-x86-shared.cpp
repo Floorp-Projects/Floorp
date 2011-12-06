@@ -783,13 +783,10 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
     uint32 unused_stack = StackOffsetOfPassedArg(callargslot);
 
     // Guard that objreg is actually a function object.
-    masm.movePtr(Operand(objreg, JSObject::offsetOfClassPointer()), tokreg);
+    masm.loadObjClass(objreg, tokreg);
     masm.cmpPtr(tokreg, ImmWord(&js::FunctionClass));
     if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
         return false;
-
-    // Extract the function object.
-    masm.movePtr(Operand(objreg, offsetof(JSObject, privateData)), objreg);
 
     // Guard that objreg is a non-native function:
     // Non-native iff (obj->flags & JSFUN_KINDMASK >= JSFUN_INTERPRETED).

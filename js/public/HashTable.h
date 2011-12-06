@@ -357,6 +357,7 @@ class HashTable : private AllocPolicy
   public:
     HashTable(AllocPolicy ap)
       : AllocPolicy(ap),
+        hashShift(sHashBits),
         entryCount(0),
         gen(0),
         removedCount(0),

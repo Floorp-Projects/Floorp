@@ -328,12 +328,6 @@ public:
     GetFirstSensibleColumn(nsITreeBoxObject *aTree);
 
   /**
-   * Return last sensible column for the given tree box object.
-   */
-  static already_AddRefed<nsITreeColumn>
-    GetLastSensibleColumn(nsITreeBoxObject *aTree);
-
-  /**
    * Return sensible columns count for the given tree box object.
    */
   static PRUint32 GetSensibleColumnCount(nsITreeBoxObject *aTree);

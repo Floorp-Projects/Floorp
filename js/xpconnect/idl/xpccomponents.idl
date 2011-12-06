@@ -153,7 +153,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(d6916b9e-0947-400f-8552-81fd96312c9d)]
+[scriptable, uuid(1fbd5d17-707f-4874-9635-59ad2438caf0)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -288,7 +288,8 @@ interface nsIXPCComponents_Utils : nsISupports
      * @param obj The JavaScript object whose global is to be gotten.
      * @return the corresponding global.
      */
-    void /* JSObject */ getGlobalForObject(/* in JSObject obj */);
+    [implicit_jscontext]
+    jsval getGlobalForObject(in jsval obj);
 
     /*
      * To be called from JS only.
@@ -318,13 +319,27 @@ interface nsIXPCComponents_Utils : nsISupports
      * NB: Assume that getting any of these attributes is relatively
      * cheap, but setting any of them is relatively expensive.
      */
+    [implicit_jscontext]
     attribute boolean strict;
+
+    [implicit_jscontext]
     attribute boolean werror;
+
+    [implicit_jscontext]
     attribute boolean atline;
+
+    [implicit_jscontext]
     attribute boolean xml;
+
+    [implicit_jscontext]
     attribute boolean relimit;
+
+    [implicit_jscontext]
     attribute boolean methodjit;
+
+    [implicit_jscontext]
     attribute boolean methodjit_always;
+
     [implicit_jscontext]
     void setGCZeal(in long zeal);
 };

@@ -292,11 +292,6 @@ void ProfileEntry::WriteTag(Profile *profile, FILE *stream)
 #define PROFILE_DEFAULT_ENTRY 100000
 void mozilla_sampler_init()
 {
-  const char *val = PR_GetEnv("MOZ_PROFILER_SPS");
-  if (!val || !*val) {
-    return;
-  }
-
   // TODO linux port: Use TLS with ifdefs
   // TODO window port: See bug 683229 comment 15
   // profiler uses getspecific because TLS is not supported on android.
@@ -305,6 +300,11 @@ void mozilla_sampler_init()
   if (pthread_key_create(&pkey_stack, NULL) ||
         pthread_key_create(&pkey_ticker, NULL)) {
     LOG("Failed to init.");
+    return;
+  }
+
+  const char *val = PR_GetEnv("MOZ_PROFILER_SPS");
+  if (!val || !*val) {
     return;
   }
 
