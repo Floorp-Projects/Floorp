@@ -64,6 +64,135 @@ Highlighter.prototype = {
   },
 
   /**
+   * Destroy the nodes.
+   */
+  destroy: function Highlighter_destroy()
+  {
+    this.IUI.win.clearTimeout(this.transitionDisabler);
+    this.browser.removeEventListener("scroll", this, true);
+    this.browser.removeEventListener("resize", this, true);
+    this.boundCloseEventHandler = null;
+    this._contentRect = null;
+    this._highlightRect = null;
+    this._highlighting = false;
+    this.veilTopBox = null;
+    this.veilLeftBox = null;
+    this.veilMiddleBox = null;
+    this.veilTransparentBox = null;
+    this.veilContainer = null;
+    this.node = null;
+    this.nodeInfo = null;
+    this.highlighterContainer.parentNode.removeChild(this.highlighterContainer);
+    this.highlighterContainer = null;
+    this.win = null
+    this.browser = null;
+    this.chromeDoc = null;
+    this.IUI = null;
+  },
+
+  /**
+   * Highlight this.node, unhilighting first if necessary.
+   *
+   * @param boolean aScroll
+   *        Boolean determining whether to scroll or not.
+   */
+  highlight: function Highlighter_highlight(aScroll)
+  {
+    let rect = null;
+
+    if (this.node && this.isNodeHighlightable(this.node)) {
+
+      if (aScroll) {
+        this.node.scrollIntoView();
+      }
+
+      let clientRect = this.node.getBoundingClientRect();
+
+      // Go up in the tree of frames to determine the correct rectangle.
+      // clientRect is read-only, we need to be able to change properties.
+      rect = {top: clientRect.top,
+              left: clientRect.left,
+              width: clientRect.width,
+              height: clientRect.height};
+
+      let frameWin = this.node.ownerDocument.defaultView;
+
+      // We iterate through all the parent windows.
+      while (true) {
+
+        // Does the selection overflow on the right of its window?
+        let diffx = frameWin.innerWidth - (rect.left + rect.width);
+        if (diffx < 0) {
+          rect.width += diffx;
+        }
+
+        // Does the selection overflow on the bottom of its window?
+        let diffy = frameWin.innerHeight - (rect.top + rect.height);
+        if (diffy < 0) {
+          rect.height += diffy;
+        }
+
+        // Does the selection overflow on the left of its window?
+        if (rect.left < 0) {
+          rect.width += rect.left;
+          rect.left = 0;
+        }
+
+        // Does the selection overflow on the top of its window?
+        if (rect.top < 0) {
+          rect.height += rect.top;
+          rect.top = 0;
+        }
+
+        // Selection has been clipped to fit in its own window.
+
+        // Are we in the top-level window?
+        if (frameWin.parent === frameWin || !frameWin.frameElement) {
+          break;
+        }
+
+        // We are in an iframe.
+        // We take into account the parent iframe position and its
+        // offset (borders and padding).
+        let frameRect = frameWin.frameElement.getBoundingClientRect();
+
+        let [offsetTop, offsetLeft] =
+          this.IUI.getIframeContentOffset(frameWin.frameElement);
+
+        rect.top += frameRect.top + offsetTop;
+        rect.left += frameRect.left + offsetLeft;
+
+        frameWin = frameWin.parent;
+      }
+    }
+
+    this.highlightRectangle(rect);
+
+    this.moveInfobar();
+
+    if (this._highlighting) {
+      Services.obs.notifyObservers(null,
+        INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, null);
+    }
+  },
+
+  /**
+   * Is the specified node highlightable?
+   *
+   * @param nsIDOMNode aNode
+   *        the DOM element in question
+   * @returns boolean
+   *          True if the node is highlightable or false otherwise.
+   */
+  isNodeHighlightable: function Highlighter_isNodeHighlightable(aNode)
+  {
+    if (aNode.nodeType != aNode.ELEMENT_NODE) {
+      return false;
+    }
+    let nodeName = aNode.nodeName.toLowerCase();
+    return !INSPECTOR_INVISIBLE_ELEMENTS[nodeName];
+  },
+  /**
    * Build the veil:
    *
    * <vbox id="highlighter-veil-container">
@@ -79,6 +208,7 @@ Highlighter.prototype = {
    * @param nsIDOMElement aParent
    *        The container of the veil boxes.
    */
+
   buildVeil: function Highlighter_buildVeil(aParent)
   {
     // We will need to resize these boxes to surround a node.
@@ -184,124 +314,11 @@ Highlighter.prototype = {
   },
 
   /**
-   * Destroy the nodes.
-   */
-  destroy: function Highlighter_destroy()
-  {
-    this.IUI.win.clearTimeout(this.transitionDisabler);
-    this.browser.removeEventListener("scroll", this, true);
-    this.browser.removeEventListener("resize", this, true);
-    this.boundCloseEventHandler = null;
-    this._contentRect = null;
-    this._highlightRect = null;
-    this._highlighting = false;
-    this.veilTopBox = null;
-    this.veilLeftBox = null;
-    this.veilMiddleBox = null;
-    this.veilTransparentBox = null;
-    this.veilContainer = null;
-    this.node = null;
-    this.nodeInfo = null;
-    this.highlighterContainer.parentNode.removeChild(this.highlighterContainer);
-    this.highlighterContainer = null;
-    this.win = null
-    this.browser = null;
-    this.chromeDoc = null;
-    this.IUI = null;
-  },
-
-  /**
    * Is the highlighter highlighting? Public method for querying the state
    * of the highlighter.
    */
   get isHighlighting() {
     return this._highlighting;
-  },
-
-  /**
-   * Highlight this.node, unhilighting first if necessary.
-   *
-   * @param boolean aScroll
-   *        Boolean determining whether to scroll or not.
-   */
-  highlight: function Highlighter_highlight(aScroll)
-  {
-    let rect = null;
-
-    if (this.node && this.isNodeHighlightable(this.node)) {
-
-      if (aScroll) {
-        this.node.scrollIntoView();
-      }
-
-      let clientRect = this.node.getBoundingClientRect();
-
-      // Go up in the tree of frames to determine the correct rectangle.
-      // clientRect is read-only, we need to be able to change properties.
-      rect = {top: clientRect.top,
-              left: clientRect.left,
-              width: clientRect.width,
-              height: clientRect.height};
-
-      let frameWin = this.node.ownerDocument.defaultView;
-
-      // We iterate through all the parent windows.
-      while (true) {
-
-        // Does the selection overflow on the right of its window?
-        let diffx = frameWin.innerWidth - (rect.left + rect.width);
-        if (diffx < 0) {
-          rect.width += diffx;
-        }
-
-        // Does the selection overflow on the bottom of its window?
-        let diffy = frameWin.innerHeight - (rect.top + rect.height);
-        if (diffy < 0) {
-          rect.height += diffy;
-        }
-
-        // Does the selection overflow on the left of its window?
-        if (rect.left < 0) {
-          rect.width += rect.left;
-          rect.left = 0;
-        }
-
-        // Does the selection overflow on the top of its window?
-        if (rect.top < 0) {
-          rect.height += rect.top;
-          rect.top = 0;
-        }
-
-        // Selection has been clipped to fit in its own window.
-
-        // Are we in the top-level window?
-        if (frameWin.parent === frameWin || !frameWin.frameElement) {
-          break;
-        }
-
-        // We are in an iframe.
-        // We take into account the parent iframe position and its
-        // offset (borders and padding).
-        let frameRect = frameWin.frameElement.getBoundingClientRect();
-
-        let [offsetTop, offsetLeft] =
-          this.IUI.getIframeContentOffset(frameWin.frameElement);
-
-        rect.top += frameRect.top + offsetTop;
-        rect.left += frameRect.left + offsetLeft;
-
-        frameWin = frameWin.parent;
-      }
-    }
-
-    this.highlightRectangle(rect);
-
-    this.moveInfobar();
-
-    if (this._highlighting) {
-      Services.obs.notifyObservers(null,
-        INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, null);
-    }
   },
 
   /**
@@ -528,23 +545,6 @@ Highlighter.prototype = {
 
     return this.IUI.elementFromPoint(this.win.document, midpoint.x,
       midpoint.y);
-  },
-
-  /**
-   * Is the specified node highlightable?
-   *
-   * @param nsIDOMNode aNode
-   *        the DOM element in question
-   * @returns boolean
-   *          True if the node is highlightable or false otherwise.
-   */
-  isNodeHighlightable: function Highlighter_isNodeHighlightable(aNode)
-  {
-    if (aNode.nodeType != aNode.ELEMENT_NODE) {
-      return false;
-    }
-    let nodeName = aNode.nodeName.toLowerCase();
-    return !INSPECTOR_INVISIBLE_ELEMENTS[nodeName];
   },
 
   /**
