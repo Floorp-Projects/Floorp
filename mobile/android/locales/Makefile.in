@@ -101,21 +101,31 @@ include $(topsrcdir)/toolkit/locales/l10n.mk
 clobber-zip:
 	$(RM) $(STAGEDIST)/chrome/$(AB_CD).jar \
 	  $(STAGEDIST)/chrome/$(AB_CD).manifest \
-	  $(STAGEDIST)/defaults/preferences/mobile-l10n.js
+	  $(STAGEDIST)/defaults/pref/mobile-l10n.js
 	$(RM) -r $(STAGEDIST)/dictionaries \
 	  $(STAGEDIST)/hyphenation \
 	  $(STAGEDIST)/defaults/profile \
 	  $(STAGEDIST)/chrome/$(AB_CD)
 
+# need to kill stage for repacks for now due to the library moves
+# in PACKAGE and UNPACKAGE
+# also clean up potential left-overs of multi-locale builds, notably
+# values-*/strings.xml. Those would be in the way of a single locale build,
+# which this target is for
+clobber-stage:
+	$(RM) -rf $(STAGEDIST)
+	$(RM) $(DEPTH)/mobile/android/base/res/values-*/strings.xml
+
 libs-%:
 	$(NSINSTALL) -D $(DIST)/install
-	@$(MAKE) -C ../../toolkit/locales libs-$* BOTH_MANIFESTS=1
-	@$(MAKE) -C ../../services/sync/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
-	@$(MAKE) -C ../../intl/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
+	@$(MAKE) -C $(DEPTH)/toolkit/locales libs-$* BOTH_MANIFESTS=1
+	@$(MAKE) -C $(DEPTH)/services/sync/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
+	@$(MAKE) -C $(DEPTH)/intl/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
 	@$(MAKE) -B bookmarks.json AB_CD=$*
 	@$(MAKE) -B searchplugins AB_CD=$* XPI_NAME=locale-$*
-	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/preferences BOTH_MANIFESTS=1
+	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref BOTH_MANIFESTS=1
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
+	@$(MAKE) -C $(DEPTH)/mobile/android/base/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
 
 # Tailored target to just add the chrome processing for multi-locale builds
 chrome-%:
@@ -126,13 +136,13 @@ chrome-%:
 	@$(MAKE) chrome AB_CD=$*
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales chrome AB_CD=$*
 ifeq ($(OS_TARGET),Android)
-	@$(MAKE) -C $(DEPTH)/mobile/android/base chrome AB_CD=$*
+	@$(MAKE) -C $(DEPTH)/mobile/android/base/locales chrome-$*
 endif
 
 # This is a generic target that will make a langpack and repack tarball
 # builds. It is called from the tinderbox scripts. Alter it with caution.
 
-installers-%: clobber-% langpack-% repackage-zip-%
+installers-%: clobber-stage repackage-zip-%
 	@echo "repackaging done"
 
 NO_JA_JP_MAC_AB_CD := $(if $(filter ja-JP-mac, $(AB_CD)),ja,$(AB_CD))
@@ -191,55 +201,6 @@ ident:
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(FENNEC_APPLICATION_INI_PATH) App SourceStamp
 	@printf "buildid "
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(FENNEC_APPLICATION_INI_PATH) App BuildID
-
-# special targets just to do the debian single locale packages
-wget-DEB_PKG_NAME:
-ifndef WGET
-	$(error Wget not installed)
-endif
-ifndef EN_US_BINARY_URL
-	$(error EN_US_BINARY_URL not defined)
-endif
-	@$(WGET) -q -O - $(EN_US_BINARY_URL)/deb_name.txt
-
-wget-deb:
-ifndef WGET
-	$(error Wget not installed)
-endif
-ifndef EN_US_BINARY_URL
-	$(error EN_US_BINARY_URL not defined)
-endif
-ifndef DEB_PKG_NAME
-	$(error DEB_PKG_NAME not defined)
-endif
-	$(WGET) -nv -N  $(EN_US_BINARY_URL)/$(DEB_PKG_NAME)
-
-$(DATASTAGE): $(DEB_PKG_NAME)
-	$(RM) -rf $(DATASTAGE)
-	$(NSINSTALL) -D $(DATASTAGE)/DEBIAN
-	ar -p $(DEB_PKG_NAME) data.tar.gz | $(TAR) -zx -C $(DATASTAGE)
-	$(MAKE) clobber-zip AB_CD=en-US STAGEDIST=$(DATASTAGE)/$(installdir)
-	ar -p $(DEB_PKG_NAME) control.tar.gz | $(TAR) -zx -C $(DATASTAGE)/DEBIAN
-# XXX hack around multi-locale deb right now
-	$(RM) $(DATASTAGE)/$(installdir)/chrome/??.*
-	$(RM) $(DATASTAGE)/$(installdir)/chrome/??-??.*
-
-repackage-deb: $(DATASTAGE)
-	$(RM) -rf $(AB_CD)
-	$(NSINSTALL) -D $(AB_CD)/tmp
-	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
-	  $(TAR) --exclude=install.rdf --exclude=chrome.manifest --exclude=crashreporter.app $(TAR_CREATE_FLAGS) - * | ( cd $(DATASTAGE)/$(installdir) && $(TAR) -xf - )
-	cd $(DATASTAGE) && $(TAR) $(TAR_CREATE_FLAGS) - * | (cd $(CURDIR)/$(AB_CD)/tmp && $(TAR) -xf - )
-	$(MAKE) clobber-zip STAGEDIST=$(DATASTAGE)/$(installdir)
-	cd $(AB_CD) && dpkg-deb -b tmp $(DEB_PKG_NAME)
-	$(RM) -rf $(AB_CD)/tmp
-
-deb-%: AB_CD=$*
-deb-%: clobber-% langpack-%
-ifndef DEB_PKG_NAME
-	$(error DEB_PKG_NAME not defined)
-endif
-	@$(MAKE) repackage-deb AB_CD=$(AB_CD) DEB_PKG_NAME=$(DEB_PKG_NAME)
 
 merge-%:
 ifdef LOCALE_MERGEDIR
