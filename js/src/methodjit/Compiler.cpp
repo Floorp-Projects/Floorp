@@ -3423,7 +3423,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
     }
 
     /*
-     * Outside the mjit, activation objects are put by StackSpace::pop*
+     * Outside the mjit, activation objects are put by ContextStack::pop*
      * members. For JSOP_RETURN, the interpreter only calls popInlineFrame if
      * fp != entryFrame since the VM protocol is that Invoke/Execute are
      * responsible for pushing/popping the initial frame. The mjit does not
