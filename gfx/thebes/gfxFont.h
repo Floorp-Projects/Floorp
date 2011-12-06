@@ -1523,6 +1523,15 @@ protected:
     // some fonts have bad metrics, this method sanitize them.
     // if this font has bad underline offset, aIsBadUnderlineFont should be true.
     void SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont);
+
+    // Bug 674909. When synthetic bolding text by drawing twice, need to
+    // render using a pixel offset in device pixels, otherwise text
+    // doesn't appear bolded, it appears as if a bad text shadow exists
+    // when a non-identity transform exists.  Use an offset factor so that
+    // the second draw occurs at a constant offset in device pixels.
+    // This helper calculates the scale factor we need to apply to the
+    // synthetic-bold offset.
+    static double CalcXScale(gfxContext *aContext);
 };
 
 // proportion of ascent used for x-height, if unable to read value from font

@@ -1197,8 +1197,8 @@ struct GlyphBufferAzure {
 // when a non-identity transform exists.  Use an offset factor so that
 // the second draw occurs at a constant offset in device pixels.
 
-static double
-CalcXScale(gfxContext *aContext)
+double
+gfxFont::CalcXScale(gfxContext *aContext)
 {
     // determine magnitude of a 1px x offset in device space
     gfxSize t = aContext->UserToDevice(gfxSize(1.0, 0.0));
