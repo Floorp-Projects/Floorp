@@ -109,6 +109,23 @@ js::ion::maybeRD(Register r)
     return r.code() << 12;
 }
 
+Register
+js::ion::toRD(Instruction &i)
+{
+    return Register::FromCode((i.encode()>>12) & 0xf);
+}
+Register
+js::ion::toR(Instruction &i)
+{
+    return Register::FromCode(i.encode() & 0xf);
+}
+
+Register
+js::ion::toRM(Instruction &i)
+{
+    return Register::FromCode((i.encode()>>8) & 0xf);
+}
+
 uint32
 js::ion::VD(VFPRegister vr)
 {
@@ -137,7 +154,6 @@ js::ion::VM(VFPRegister vr)
     return s.bit << 5 | s.block;
 }
 
-
 VFPRegister::VFPRegIndexSplit
 ion::VFPRegister::encode()
 {
@@ -156,6 +172,192 @@ ion::VFPRegister::encode()
 
 VFPRegister js::ion::NoVFPRegister(true);
 
+bool
+InstDTR::isTHIS(Instruction &i)
+{
+    return (i.encode() & IsDTRMask) == IsDTR;
+}
+
+InstDTR *
+InstDTR::asTHIS(Instruction &i)
+{
+    if (isTHIS(i))
+        return (InstDTR*)&i;
+    return NULL;
+}
+
+bool
+InstBranchReg::isTHIS(Instruction &i)
+{
+    return InstBXReg::isTHIS(i) ||
+        InstBLXReg::isTHIS(i);
+}
+
+InstBranchReg *
+InstBranchReg::asTHIS(Instruction &i)
+{
+    if (isTHIS(i))
+        return (InstBranchReg*)&i;
+    return NULL;
+}
+void
+InstBranchReg::extractDest(Register *dest)
+{
+    *dest = toR(*this);
+}
+bool
+InstBranchReg::checkDest(Register dest)
+{
+    return dest == toR(*this);
+}
+
+bool
+InstBranchImm::isTHIS(Instruction &i)
+{
+    return InstBImm::isTHIS(i) ||
+        InstBLImm::isTHIS(i);
+}
+
+InstBranchImm *
+InstBranchImm::asTHIS(Instruction &i)
+{
+    if (isTHIS(i))
+        return (InstBranchImm*)&i;
+    return NULL;
+}
+
+void
+InstBranchImm::extractImm(BOffImm *dest)
+{
+    *dest = BOffImm(*this);
+}
+
+bool
+InstBXReg::isTHIS(Instruction &i)
+{
+    return (i.encode () & IsBRegMask) == IsBX;
+}
+
+InstBXReg *
+InstBXReg::asTHIS(Instruction &i)
+{
+    if (isTHIS(i))
+        return (InstBXReg*)&i;
+    return NULL;
+}
+
+bool
+InstBLXReg::isTHIS(Instruction &i)
+{
+    return (i.encode () & IsBRegMask) == IsBLX;
+
+}
+InstBLXReg *
+InstBLXReg::asTHIS(Instruction &i)
+{
+    if (isTHIS(i))
+        return (InstBLXReg*)&i;
+    return NULL;
+}
+
+bool
+InstBImm::isTHIS(Instruction &i)
+{
+    return (i.encode () & IsBImmMask) == IsB;
+}
+InstBImm *
+InstBImm::asTHIS(Instruction &i)
+{
+    if (isTHIS(i))
+        return (InstBImm*)&i;
+    return NULL;
+}
+
+bool
+InstBLImm::isTHIS(Instruction &i)
+{
+    return (i.encode () & IsBImmMask) == IsBL;
+
+}
+InstBLImm *
+InstBLImm::asTHIS(Instruction &i)
+{
+    if (isTHIS(i))
+        return (InstBLImm*)&i;
+    return NULL;
+}
+
+bool
+InstMovWT::isTHIS(Instruction &i)
+{
+    return  InstMovW::isTHIS(i) ||
+        InstMovT::isTHIS(i);
+}
+InstMovWT *
+InstMovWT::asTHIS(Instruction &i)
+{
+    if (isTHIS(i))
+        return (InstMovWT*)&i;
+    return NULL;
+}
+
+void
+InstMovWT::extractImm(Imm16 *imm)
+{
+    *imm = Imm16(*this);
+}
+bool
+InstMovWT::checkImm(Imm16 imm)
+{
+    return (imm.decode() == Imm16(*this).decode());
+}
+
+void
+InstMovWT::extractDest(Register *dest)
+{
+    *dest = toRD(*this);
+}
+bool
+InstMovWT::checkDest(Register dest)
+{
+    return (dest == toRD(*this));
+}
+
+bool
+InstMovW::isTHIS(Instruction &i)
+{
+    return (i.encode() & IsWTMask) == IsW;
+}
+
+InstMovW *
+InstMovW::asTHIS(Instruction &i)
+{
+    if (isTHIS(i))
+        return (InstMovW*) (&i);
+    return NULL;
+}
+InstMovT *
+InstMovT::asTHIS(Instruction &i)
+{
+    if (isTHIS(i))
+        return (InstMovT*) (&i);
+    return NULL;
+}
+
+bool
+InstMovT::isTHIS(Instruction &i)
+{
+    return (i.encode() & IsWTMask) == IsT;
+}
+
+Imm16::Imm16(Instruction &inst)
+  : lower(inst.encode() & 0xfff), upper(inst.encode() >> 16), invalid(0xfff) {}
+Imm16::Imm16(uint32 imm)
+   : lower(imm & 0xfff), pad(0), upper((imm>>12) & 0xf), invalid(0)
+{
+    JS_ASSERT(decode() == imm);
+}
+Imm16::Imm16() : invalid(0xfff) {}
 void
 Assembler::executableCopy(uint8 *buffer)
 {
@@ -173,6 +375,7 @@ Assembler::executableCopy(uint8 *buffer)
 class RelocationIterator
 {
     CompactBufferReader reader_;
+    // offset in bytes
     uint32 offset_;
 
   public:
@@ -191,35 +394,108 @@ class RelocationIterator
         return offset_;
     }
 };
+uint32 *
+Assembler::getCF32Target(Instruction *jump)
+{
+    if (jump->is<InstBranchImm>()) {
+        // see if we have a simple case, b #offset
+        BOffImm imm;
+        InstBranchImm *jumpB = jump->as<InstBranchImm>();
+        jumpB->extractImm(&imm);
+        return imm.getDest(jump)->raw();
+    } else if (jump->is<InstMovW>() &&
+               jump->next()->is<InstMovT>() &&
+               jump->next()->next()->is<InstBranchReg>()) {
+        // see if we have the complex case,
+        // movw r_temp, #imm1
+        // movt r_temp, #imm2
+        // bx r_temp
+
+        Imm16 targ_bot;
+        Imm16 targ_top;
+        Register temp;
+
+        InstMovW *bottom = jump->as<InstMovW>();
+        InstMovT *top = jump->next()->as<InstMovT>();
+        InstBranchReg * branch = jump->next()->next()->as<InstBranchReg>();
+        // extract both the temp register and the bottom immediate
+        bottom->extractImm(&targ_bot);
+        bottom->extractDest(&temp);
+        // extract the top part of the immediate
+        top->extractImm(&targ_top);
+        // make sure they are being loaded intothe same register
+        JS_ASSERT(top->checkDest(temp));
+        // make sure we're branching to the same register.
+        JS_ASSERT(branch->checkDest(temp));
+        uint32 *dest = (uint32*) (targ_bot.decode() | (targ_top.decode() << 16));
+        return dest;
+    }
+    JS_NOT_REACHED("unsupported branch relocation");
+    return NULL;
+}
+
+uint32 *
+Assembler::getPtr32Target(Instruction *load, Register *dest)
+{
+    if (load->is<InstMovW>() &&
+        load->next()->is<InstMovT>()) {
+        // see if we have the complex case,
+        // movw r_temp, #imm1
+        // movt r_temp, #imm2
+
+        Imm16 targ_bot;
+        Imm16 targ_top;
+        Register temp;
+
+        InstMovW *bottom = load->as<InstMovW>();
+        InstMovT *top = load->next()->as<InstMovT>();
+        // extract both the temp register and the bottom immediate
+        bottom->extractImm(&targ_bot);
+        bottom->extractDest(&temp);
+        // extract the top part of the immediate
+        top->extractImm(&targ_top);
+        // make sure they are being loaded intothe same register
+        JS_ASSERT(top->checkDest(temp));
+        uint32 *value = (uint32*) (targ_bot.decode() | (targ_top.decode() << 16));
+        if (dest != NULL)
+            *dest = temp;
+        return value;
+    }
+    JS_NOT_REACHED("unsupported relocation");
+    return NULL;
+}
 
 static inline IonCode *
-CodeFromJump(uint8 *jump)
+CodeFromJump(Instruction *jump)
 {
-    JS_NOT_REACHED("Feature NYI");
-#if 0
-    uint8 *target = (uint8 *)JSC::ARMAssembler::getRel32Target(jump);
+    uint8 *target = (uint8 *)Assembler::getCF32Target(jump);
     return IonCode::FromExecutable(target);
-#endif
-    return NULL;
 }
 
 void
 Assembler::TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader)
 {
-    JS_NOT_REACHED("Feature NYI");
-#if 0
     RelocationIterator iter(reader);
     while (iter.read()) {
-        IonCode *child = CodeFromJump(code->raw() + iter.offset());
+        IonCode *child = CodeFromJump((Instruction *) (code->raw() + iter.offset()));
         MarkIonCodeUnbarriered(trc, child, "rel32");
     };
-#endif
 }
 
+static void
+TraceDataRelocations(JSTracer *trc, uint8 *buffer, CompactBufferReader &reader)
+{
+    while (reader.more()) {
+        size_t offset = reader.readUnsigned();
+        void *ptr = js::ion::Assembler::getPtr32Target((Instruction*)(buffer + offset));
+        gc::MarkGCThing(trc, ptr, "immgcptr");
+    }
+
+}
 void
 Assembler::TraceDataRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader)
 {
-    JS_NOT_REACHED("Feature NYI");
+    ::TraceDataRelocations(trc, code->raw(), reader);
 }
 
 void
@@ -239,34 +515,28 @@ Assembler::copyDataRelocationTable(uint8 *dest)
 void
 Assembler::trace(JSTracer *trc)
 {
-    JS_NOT_REACHED("Feature NYI - must trace jump and data");
-#if 0
     for (size_t i = 0; i < jumps_.length(); i++) {
         RelativePatch &rp = jumps_[i];
         if (rp.kind == Relocation::CODE)
-            MarkIonCodeUnbarriered(trc, IonCode::FromExecutable((uint8 *)rp.target), "masmrel32");
+            MarkIonCodeUnbarriered(trc, IonCode::FromExecutable((uint8*)rp.target), "masmrel32");
     }
-#endif
-}
-
-void
-Assembler::executableCopy(void *buffer)
-{
-    JS_NOT_REACHED("dead code");
+    if (dataRelocations_.length()) {
+        CompactBufferReader reader(dataRelocations_);
+        ::TraceDataRelocations(trc, m_buffer.buffer(), reader);
+    }
 }
 
 void
 Assembler::processDeferredData(IonCode *code, uint8 *data)
 {
+    // Deferred Data is something like Pools for X86.
+    // Since ARM have competent pools, this isn't actually used.
 
     JS_ASSERT(dataSize() == 0);
-    for (size_t i = 0; i < data_.length(); i++) {
-        DeferredData *deferred = data_[i];
-        //Bind(code, deferred->label(), data + deferred->offset());
-        deferred->copy(code, data + deferred->offset());
-    }
 }
 
+// As far as I can tell, CodeLabels were supposed to be used in switch tables
+// and they aren't used there, nor anywhere else.
 void
 Assembler::processCodeLabels(IonCode *code)
 {
@@ -281,33 +551,6 @@ Assembler::InvertCondition(Condition cond)
 {
     const uint32 ConditionInversionBit = 0x10000000;
     return Condition(ConditionInversionBit ^ cond);
-#if 0
-    switch (cond) {
-      case Equal:
-        //case Zero:
-        return NotEqual;
-      case Above:
-        return BelowOrEqual;
-      case AboveOrEqual:
-        return Below;
-      case Below:
-        return AboveOrEqual;
-      case BelowOrEqual:
-        return Above;
-      case LessThan:
-        return GreaterThanOrEqual;
-        //    case LessThanOrEqual:
-        //        return GreaterThan;
-      case GreaterThan:
-        return LessThanOrEqual;
-      case GreaterThanOrEqual:
-        return LessThan;
-        // still missing overflow, signed.
-      default:
-        JS_NOT_REACHED("Comparisons other than LT, LE, GT, GE not yet supported");
-        return Equal;
-    }
-#endif
 }
 
 Imm8::TwoImm8mData
@@ -549,6 +792,16 @@ js::ion::VFPImm::VFPImm(uint32 top)
     if (DoubleEncoder::lookup(top, &tmp)) {
         data = tmp.encode();
     }
+}
+BOffImm::BOffImm(Instruction &inst) : data(inst.encode() & 0x00ffffff) {}
+
+Instruction *
+BOffImm::getDest(Instruction *src)
+{
+    // TODO: It is probably worthwhile to verify that src is actually a branch
+    // NOTE: This does not explicitly shift the offset of the destination left by 2,
+    // since it is indexing into an array of instruction sized objects.
+    return &src[(((int32)data<<8)>>8) + 2];
 }
 
 js::ion::DoubleEncoder js::ion::DoubleEncoder::_this;
@@ -1071,7 +1324,7 @@ Assembler::as_b(Label *l, Condition c)
 void
 Assembler::as_b(BOffImm off, Condition c, BufferOffset inst)
 {
-    *editSrc(inst) = ((int)c) | op_b | off.encode();
+    *editSrc(inst) = InstBImm(off, c);
 }
 
 // blx can go to either an immediate or a register.
@@ -1123,7 +1376,7 @@ Assembler::as_bl(Label *l, Condition c)
 void
 Assembler::as_bl(BOffImm off, Condition c, BufferOffset inst)
 {
-    *editSrc(inst) = ((int)c) | op_bl | off.encode();
+    *editSrc(inst) = InstBLImm(off, c);
 }
 
 // VFP instructions!
@@ -1380,17 +1633,17 @@ Assembler::as_vmrs(Register r, Condition c)
 bool
 Assembler::nextLink(BufferOffset b, BufferOffset *next)
 {
-    uint32 branch = *editSrc(b);
-    JS_ASSERT(((branch & op_b_mask) == op_b) ||
-              ((branch & op_b_mask) == op_bl));
-    uint32 dest = (branch & op_b_dest_mask);
-    // turns out the end marker is the same as the mask.
-    if (dest == op_b_dest_mask)
+    Instruction branch = *editSrc(b);
+    JS_ASSERT(branch.is<InstBranchImm>());
+    BOffImm destOff;
+    branch.as<InstBranchImm>()->extractImm(&destOff);
+    if (destOff.isInvalid())
         return false;
-    // add in the extra 2 bits of padding that we chopped off when we made the b
-    dest = dest << 2;
-    // and let everyone know about it.
-    new (next) BufferOffset(dest);
+
+    // Propagate the next link back to the caller, by
+    // constructing a new BufferOffset into the space they
+    // provided.
+    new (next) BufferOffset(destOff.decode());
     return true;
 }
 
@@ -1406,18 +1659,15 @@ Assembler::bind(Label *label, BufferOffset boff)
         do {
             BufferOffset next;
             more = nextLink(b, &next);
-            uint32 branch = *editSrc(b);
-            Condition c = getCondition(branch);
-            switch (branch & op_b_mask) {
-              case op_b:
+            Instruction branch = *editSrc(b);
+            Condition c;
+            branch.extractCond(&c);
+            if (branch.is<InstBImm>())
                 as_b(dest.diffB(b), c, b);
-                break;
-              case op_bl:
+            else if (branch.is<InstBLImm>())
                 as_bl(dest.diffB(b), c, b);
-                break;
-              default:
+            else
                 JS_NOT_REACHED("crazy fixup!");
-            }
             b = next;
         } while (more);
     }
@@ -1461,30 +1711,6 @@ Assembler::Bind(IonCode *code, AbsoluteLabel *label, const void *address)
     JS_NOT_REACHED("Feature NYI");
 }
 
-#if 0
-// calls should never be handled in this part of the world.  They are strictly
-// a macro assembler thing.
-void
-Assembler::call(Label *label)
-{
-#if 0
-    if (label->bound()) {
-        masm.linkJump(masm.call(), JmpDst(label->offset()));
-    } else {
-        JmpSrc j = masm.call();
-        JmpSrc prev = JmpSrc(label->use(j.offset()));
-        masm.setNextJump(j, prev);
-    }
-#endif
-    JS_NOT_REACHED("Feature NYI");
-}
-
-void
-Assembler::call(void *addr)
-{
-    JS_NOT_REACHED("Feature NYI");
-}
-#endif
 void
 Assembler::as_bkpt()
 {

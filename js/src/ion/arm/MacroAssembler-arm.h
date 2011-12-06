@@ -263,8 +263,8 @@ class MacroAssemblerARM : public Assembler
     // multiplies.  For now, there are only two that we care about.
     void ma_mul(Register src1, Register src2, Register dest);
     void ma_mul(Register src1, Imm32 imm, Register dest);
-    Assembler::Condition ma_check_mul(Register src1, Register src2, Register dest, Condition cond);
-    Assembler::Condition ma_check_mul(Register src1, Imm32 imm, Register dest, Condition cond);
+    Condition ma_check_mul(Register src1, Register src2, Register dest, Condition cond);
+    Condition ma_check_mul(Register src1, Imm32 imm, Register dest, Condition cond);
 
 
     // memory
@@ -302,9 +302,7 @@ class MacroAssemblerARM : public Assembler
     // branches when done from within arm-specific code
     void ma_b(Label *dest, Condition c = Always);
 
-    void ma_b(void *target, Relocation::Kind reloc);
-
-    void ma_b(void *target, Condition c, Relocation::Kind reloc);
+    void ma_b(void *target, Relocation::Kind reloc, Condition c = Always);
 
     // this is almost NEVER necessary, we'll basically never be calling a label
     // except, possibly in the crazy bailout-table case.

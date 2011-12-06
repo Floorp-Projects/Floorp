@@ -164,8 +164,6 @@ class Registers
               (1 << Registers::r2) |
               (1 << Registers::r3);
 
-    static const uint32 JSCCallMask = JSCallMask;
-
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
