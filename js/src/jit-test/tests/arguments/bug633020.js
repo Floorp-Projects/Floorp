@@ -1,4 +1,4 @@
-var N = HOTLOOP + 2;
+var N = 10;
 function f(b) {
     var a = [];
     for (var i = 0; i < N; i++)

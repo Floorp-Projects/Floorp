@@ -4,9 +4,3 @@ function testEliminatedGuardWithinAnchor() {
 }
 
 assertEq(testEliminatedGuardWithinAnchor(), "ok");
-
-if (HAVE_TM) {
-    checkStats({
-        sideExitIntoInterpreter: (jitstats.archIsARM ? 1 : 3)
-    });
-}

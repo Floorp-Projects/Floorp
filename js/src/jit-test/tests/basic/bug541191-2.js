@@ -12,7 +12,7 @@ function f(a, b, c) {
     if (x)
         arguments.length = 4;
     var k;
-    for (var i = 0; i < RUNLOOP; i++)
+    for (var i = 0; i < 9; i++)
         k = g.apply(this, arguments);
     return k;
 }
