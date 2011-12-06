@@ -61,8 +61,6 @@
 #include "gfxPlatformFontList.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
-#include "gfxTextRunCache.h"
-#include "gfxTextRunWordCache.h"
 #include "gfxUserFontSet.h"
 #include "gfxUnicodeProperties.h"
 #include "harfbuzz/hb-unicode.h"
@@ -312,16 +310,6 @@ gfxPlatform::Init()
         NS_RUNTIMEABORT("Could not initialize gfxFontCache");
     }
 
-    rv = gfxTextRunWordCache::Init();
-    if (NS_FAILED(rv)) {
-        NS_RUNTIMEABORT("Could not initialize gfxTextRunWordCache");
-    }
-
-    rv = gfxTextRunCache::Init();
-    if (NS_FAILED(rv)) {
-        NS_RUNTIMEABORT("Could not initialize gfxTextRunCache");
-    }
-
     /* Pref migration hook. */
     MigratePrefs();
 
@@ -343,8 +331,6 @@ gfxPlatform::Shutdown()
 {
     // These may be called before the corresponding subsystems have actually
     // started up. That's OK, they can handle it.
-    gfxTextRunCache::Shutdown();
-    gfxTextRunWordCache::Shutdown();
     gfxFontCache::Shutdown();
     gfxFontGroup::Shutdown();
 #ifdef MOZ_GRAPHITE
@@ -1373,12 +1359,10 @@ gfxPlatform::FontsPrefsChanged(const char *aPref)
 #ifdef MOZ_GRAPHITE
     } else if (!strcmp(GFX_PREF_GRAPHITE_SHAPING, aPref)) {
         mGraphiteShapingEnabled = UNINITIALIZED_VALUE;
-        gfxTextRunWordCache::Flush();
         gfxFontCache::GetCache()->AgeAllGenerations();
 #endif
     } else if (!strcmp(GFX_PREF_HARFBUZZ_SCRIPTS, aPref)) {
         mUseHarfBuzzScripts = UNINITIALIZED_VALUE;
-        gfxTextRunWordCache::Flush();
         gfxFontCache::GetCache()->AgeAllGenerations();
     }
 }

@@ -53,7 +53,6 @@
 #include "gfxContext.h"
 #include "gfxMatrix.h"
 #include "gfxPlatform.h"
-#include "gfxTextRunWordCache.h"
 
 using namespace mozilla;
 
@@ -1488,9 +1487,6 @@ nsSVGGlyphFrame::SetupGlobalTransform(gfxContext *aContext)
 void
 nsSVGGlyphFrame::ClearTextRun()
 {
-  if (!mTextRun)
-    return;
-  gfxTextRunWordCache::RemoveTextRun(mTextRun);
   delete mTextRun;
   mTextRun = nsnull;
 }
@@ -1603,16 +1599,16 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
     nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
     tmpCtx->SetMatrix(m);
 
-    // Use only the word cache here. We don't want to cache the textrun
-    // globally because we'll never hit in that cache, since we create
+    // Use only the fonts' internal word caching here.
+    // We don't cache the textrun globally because we create
     // a new fontgroup every time. Even if we cached fontgroups, we
     // might render at very many different sizes (e.g. during zoom
     // animation) and caching a textrun for each such size would be bad.
     gfxTextRunFactory::Parameters params = {
         tmpCtx, nsnull, nsnull, nsnull, 0, GetTextRunUnitsFactor()
     };
-    mTextRun = gfxTextRunWordCache::MakeTextRun(text.get(), text.Length(),
-      fontGroup, &params, flags);
+    mTextRun =
+      fontGroup->MakeTextRun(text.get(), text.Length(), &params, flags);
     if (!mTextRun)
       return false;
   }
