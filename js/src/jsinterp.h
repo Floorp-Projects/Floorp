@@ -410,7 +410,7 @@ struct VMFunction
 
     uint32 argc() const {
         return 1 + explicitArgs +
-               (outParam == OutParam_None) ? 0 : 1;
+               ((outParam == OutParam_None) ? 0 : 1);
     }
 };
 
