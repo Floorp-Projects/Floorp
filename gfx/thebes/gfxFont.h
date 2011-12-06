@@ -1399,7 +1399,22 @@ public:
          * walking the frame trees and textrun cache, it needs to mark
          * textruns that have been seen so as to avoid multiple-accounting.
          */
-        TEXT_RUN_SIZE_ACCOUNTED      = 0x0200
+        TEXT_RUN_SIZE_ACCOUNTED      = 0x0200,
+
+        /**
+         * nsTextFrameThebes sets these, but they're defined here rather than
+         * in nsTextFrameUtils.h because ShapedWord creation/caching also needs
+         * to check the _INCOMING flag
+         */
+        TEXT_TRAILING_ARABICCHAR = 0x20000000,
+        /**
+         * When set, the previous character for this textrun was an Arabic
+         * character.  This is used for the context detection necessary for
+         * bidi.numeral implementation.
+         */
+        TEXT_INCOMING_ARABICCHAR = 0x40000000,
+
+        TEXT_UNUSED_FLAGS = 0x90000000
     };
 
     /**
@@ -2104,12 +2119,6 @@ public:
     }
 
 #ifdef DEBUG
-    // number of entries referencing this textrun in the gfxTextRunWordCache
-    PRUint32 mCachedWords;
-    // generation of gfxTextRunWordCache that refers to this textrun;
-    // if the cache gets cleared, then mCachedWords is no longer meaningful
-    PRUint32 mCacheGeneration;
-    
     void Dump(FILE* aOutput);
 #endif
 
@@ -2391,17 +2400,6 @@ public:
     static bool IsInvalidChar(PRUnichar ch);
     
     /**
-     * Make a textrun for an empty string. This is fast; if you call it,
-     * don't bother caching the result.
-     */
-    gfxTextRun *MakeEmptyTextRun(const Parameters *aParams, PRUint32 aFlags);
-    /**
-     * Make a textrun for a single ASCII space. This is fast; if you call it,
-     * don't bother caching the result.
-     */
-    gfxTextRun *MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags);
-
-    /**
      * Make a textrun for a given string.
      * If aText is not persistent (aFlags & TEXT_IS_PERSISTENT), the
      * textrun will copy it.
@@ -2417,6 +2415,22 @@ public:
      */
     virtual gfxTextRun *MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
                                     const Parameters *aParams, PRUint32 aFlags);
+
+    /**
+     * Textrun creation helper for clients that don't want to pass
+     * a full Parameters record.
+     */
+    template<typename T>
+    gfxTextRun *MakeTextRun(const T *aString, PRUint32 aLength,
+                            gfxContext *aRefContext,
+                            PRUint32 aAppUnitsPerDevUnit,
+                            PRUint32 aFlags)
+    {
+        gfxTextRunFactory::Parameters params = {
+            aRefContext, nsnull, nsnull, nsnull, 0, aAppUnitsPerDevUnit
+        };
+        return MakeTextRun(aString, aLength, &params, aFlags);
+    }
 
     /* helper function for splitting font families on commas and
      * calling a function for each family to fill the mFonts array
@@ -2500,6 +2514,15 @@ protected:
     bool                    mSkipDrawing; // hide text while waiting for a font
                                           // download to complete (or fallback
                                           // timer to fire)
+
+    /**
+     * Textrun creation short-cuts for special cases where we don't need to
+     * call a font shaper to generate glyphs.
+     */
+    gfxTextRun *MakeEmptyTextRun(const Parameters *aParams, PRUint32 aFlags);
+    gfxTextRun *MakeSpaceTextRun(const Parameters *aParams, PRUint32 aFlags);
+    gfxTextRun *MakeBlankTextRun(const void* aText, PRUint32 aLength,
+                                 const Parameters *aParams, PRUint32 aFlags);
 
     // Used for construction/destruction.  Not intended to change the font set
     // as invalidation of font lists and caches is not considered.

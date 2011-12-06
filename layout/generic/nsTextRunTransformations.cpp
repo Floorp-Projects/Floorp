@@ -274,8 +274,7 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   const PRUnichar* str = aTextRun->GetTextUnicode();
   nsRefPtr<nsStyleContext>* styles = aTextRun->mStyles.Elements();
   // Create a textrun so we can check cluster-start properties
-  gfxTextRunCache::AutoTextRun inner(
-      gfxTextRunCache::MakeTextRun(str, length, fontGroup, &innerParams, flags));
+  nsAutoPtr<gfxTextRun> inner(fontGroup->MakeTextRun(str, length, &innerParams, flags));
   if (!inner.get())
     return;
 
@@ -310,7 +309,7 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
 
     if ((i == length || runIsLowercase != isLowercase) && runStart < i) {
       nsAutoPtr<nsTransformedTextRun> transformedChild;
-      gfxTextRunCache::AutoTextRun cachedChild;
+      nsAutoPtr<gfxTextRun> cachedChild;
       gfxTextRun* child;
 
       if (runIsLowercase) {
@@ -319,8 +318,8 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         child = transformedChild;
       } else {
         cachedChild =
-          gfxTextRunCache::MakeTextRun(str + runStart, i - runStart, fontGroup,
-              &innerParams, flags);
+          fontGroup->MakeTextRun(str + runStart, i - runStart,
+                                 &innerParams, flags);
         child = cachedChild.get();
       }
       if (!child)
@@ -418,7 +417,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   gfxFontGroup* fontGroup = aTextRun->GetFontGroup();
 
   nsAutoPtr<nsTransformedTextRun> transformedChild;
-  gfxTextRunCache::AutoTextRun cachedChild;
+  nsAutoPtr<gfxTextRun> cachedChild;
   gfxTextRun* child;
 
   if (mInnerTransformingTextRunFactory) {
@@ -427,8 +426,8 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         &innerParams, fontGroup, flags, styleArray.Elements(), false);
     child = transformedChild.get();
   } else {
-    cachedChild = gfxTextRunCache::MakeTextRun(
-        convertedString.BeginReading(), convertedString.Length(), fontGroup,
+    cachedChild = fontGroup->MakeTextRun(
+        convertedString.BeginReading(), convertedString.Length(),
         &innerParams, flags);
     child = cachedChild.get();
   }
