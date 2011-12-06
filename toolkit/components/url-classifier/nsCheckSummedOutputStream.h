@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,30 +36,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-#include "nsIFile.idl"
+#ifndef nsCheckSummedOutputStream_h__
+#define nsCheckSummedOutputStream_h__
 
-// Note that the PrefixSet name is historical and we do properly support
-// duplicated values, so it's really a Prefix Trie.
-// All methods are thread-safe.
-[scriptable, uuid(b21b0fa1-20d2-422a-b2cc-b289c9325811)]
-interface nsIUrlClassifierPrefixSet : nsISupports
+#include "nsILocalFile.h"
+#include "nsIFile.h"
+#include "nsIOutputStream.h"
+#include "nsICryptoHash.h"
+#include "nsNetCID.h"
+#include "nsString.h"
+#include "../../../netwerk/base/src/nsFileStreams.h"
+#include "nsToolkitCompsCID.h"
+
+class nsCheckSummedOutputStream : public nsSafeFileOutputStream
 {
-  // Initialize the PrefixSet. Give it a name for memory reporting.
-  void init(in ACString aName);
-  // Fills the PrefixSet with the given array of prefixes.
-  // Can send an empty Array to clear the tree. A truly "empty tree"
-  // cannot be represented, so put a sentinel value if that is required
-  // Requires array to be sorted.
-  void setPrefixes([const, array, size_is(aLength)] in unsigned long aPrefixes,
-                   in unsigned long aLength);
-  void getPrefixes(out unsigned long aCount,
-                  [array, size_is(aCount), retval] out unsigned long aPrefixes);
-  // Do a lookup in the PrefixSet, return whether the value is present.
-  // If aReady is set, we will block until there are any entries.
-  // If not set, we will return in aReady whether we were ready or not.
-  boolean probe(in unsigned long aPrefix, inout boolean aReady);
-  boolean isEmpty();
-  void loadFromFile(in nsIFile aFile);
-  void storeToFile(in nsIFile aFile);
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // Size of MD5 hash in bytes
+  static const PRUint32 CHECKSUM_SIZE = 16;
+
+  nsCheckSummedOutputStream() {}
+  virtual ~nsCheckSummedOutputStream() { nsSafeFileOutputStream::Close(); }
+
+  NS_IMETHOD Finish();
+  NS_IMETHOD Write(const char *buf, PRUint32 count, PRUint32 *result);
+  NS_IMETHOD Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm, PRInt32 behaviorFlags);
+
+protected:
+  nsCOMPtr<nsICryptoHash> mHash;
+  nsCAutoString mCheckSum;
 };
+
+// returns a file output stream which can be QI'ed to nsIFileOutputStream.
+inline nsresult
+NS_NewCheckSummedOutputStream(nsIOutputStream **result,
+                              nsIFile         *file,
+                              PRInt32         ioFlags       = -1,
+                              PRInt32         perm          = -1,
+                              PRInt32         behaviorFlags =  0)
+{
+    nsCOMPtr<nsIFileOutputStream> out = new nsCheckSummedOutputStream();
+    nsresult rv = out->Init(file, ioFlags, perm, behaviorFlags);
+    if (NS_SUCCEEDED(rv))
+      NS_ADDREF(*result = out);  // cannot use nsCOMPtr::swap
+    return rv;
+}
+
+#endif
