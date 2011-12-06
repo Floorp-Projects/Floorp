@@ -1,6 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=2:tabstop=2:
- */
+/* vim: set ts=2 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -18,7 +17,7 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -38,64 +37,71 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsWinUtils_h_
-#define nsWinUtils_h_
+#ifndef COMPATIBILITY_MANAGER_H
+#define COMPATIBILITY_MANAGER_H
 
-#include "Accessible2.h"
+#include "prtypes.h"
 
-#include "nsIArray.h"
-#include "nsIDocument.h"
+class nsAccessNodeWrap;
 
-const LPCWSTR kClassNameRoot = L"MozillaUIWindowClass";
-const LPCWSTR kClassNameTabContent = L"MozillaContentWindowClass";
+namespace mozilla {
+namespace a11y {
 
-class nsWinUtils
+/**
+ * Used to get compatibility modes. Note, modes are computed at accessibility
+ * start up time and aren't changed during lifetime.
+ */
+class Compatibility
 {
 public:
   /**
-   * Convert nsIArray array of accessible objects to an array of IUnknown*
-   * objects used in IA2 methods.
+   * Return true if IAccessible2 disabled.
    */
-  static HRESULT ConvertToIA2Array(nsIArray *aCollection,
-                                   IUnknown ***aAccessibles, long *aCount);
+  static bool IsIA2Off() { return sMode & IA2OffMode; }
 
   /**
-   * Start window emulation if presence of specific AT is detected.
+   * Return true if JAWS mode is enabled.
    */
-  static bool MaybeStartWindowEmulation();
+  static bool IsJAWS() { return sMode & JAWSMode; }
 
   /**
-   * Free resources used for window emulation.
+   * Return true if WE mode is enabled.
    */
-  static void ShutdownWindowEmulation();
+  static bool IsWE() { return sMode & WEMode; }
 
   /**
-   * Return true if window emulation is started.
+   * Return true if Dolphin mode is enabled.
    */
-  static bool IsWindowEmulationStarted();
+  static bool IsDolphin() { return sMode & DolphinMode; }
+
+private:
+  Compatibility();
+  Compatibility(const Compatibility&);
+  Compatibility& operator = (const Compatibility&);
 
   /**
-   * Helper to register window class.
+   * Initialize compatibility mode. Called by nsAccessNodeWrap during
+   * accessibility initialization.
    */
-  static void RegisterNativeWindow(LPCWSTR aWindowClass);
+  static void Init();
+  friend class nsAccessNodeWrap;
 
   /**
-   * Helper to create a window.
+   * List of compatibility modes.
    */
-  static HWND CreateNativeWindow(LPCWSTR aWindowClass, HWND aParentWnd,
-                                 int aX, int aY, int aWidth, int aHeight,
-                                 bool aIsActive);
+  enum {
+    NoCompatibilityMode = 0,
+    JAWSMode = 1 << 0,
+    WEMode = 1 << 1,
+    DolphinMode = 1 << 2,
+    IA2OffMode = 1 << 3
+  };
 
-  /**
-   * Helper to show window.
-   */
-  static void ShowNativeWindow(HWND aWnd);
-
-  /**
-   * Helper to hide window.
-   */
-  static void HideNativeWindow(HWND aWnd);
+private:
+  static PRUint32 sMode;
 };
 
-#endif
+} // a11y namespace
+} // mozilla namespace
 
+#endif
