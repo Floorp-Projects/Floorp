@@ -4579,9 +4579,6 @@ nsGlobalWindow::Dump(const nsAString& aStr)
     nsMemory::Free(cstr);
   }
 
-#if defined(ANDROID) && defined(DEBUG)
-  __android_log_print(ANDROID_LOG_INFO, "GeckoDump", "%s", cstr);
-#endif
   return NS_OK;
 }
 
