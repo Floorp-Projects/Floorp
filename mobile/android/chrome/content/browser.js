@@ -1416,6 +1416,7 @@ var BrowserEventHandler = {
     Services.obs.addObserver(this, "Gesture:ShowPress", false);
     Services.obs.addObserver(this, "Gesture:CancelTouch", false);
     Services.obs.addObserver(this, "Gesture:DoubleTap", false);
+    Services.obs.addObserver(this, "Gesture:Scroll", false);
 
     BrowserApp.deck.addEventListener("DOMContentLoaded", this, true);
     BrowserApp.deck.addEventListener("DOMLinkAdded", this, true);
@@ -1424,7 +1425,36 @@ var BrowserEventHandler = {
   },
 
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "Gesture:CancelTouch") {
+    if (aTopic == "Gesture:Scroll") {
+      // If we've lost our scrollable element, return. Don't cancel the
+      // override, as we probably don't want Java to handle panning until the
+      // user releases their finger.
+      if (this._scrollableElement == null)
+        return;
+
+      // If this is the first scroll event and we can't scroll in the direction
+      // the user wanted, and neither can any non-root sub-frame, cancel the
+      // override so that Java can handle panning the main document.
+      let data = JSON.parse(aData);
+      if (this._firstScrollEvent) {
+        while (this._scrollableElement != null &&
+               !this._elementCanScroll(this._scrollableElement, data.x, data.y))
+          this._scrollableElement = this._findScrollableElement(this._scrollableElement, false);
+
+        let doc = BrowserApp.selectedBrowser.contentDocument;
+        if (this._scrollableElement == doc.body ||
+            this._scrollableElement == doc.documentElement) {
+          sendMessageToJava({ gecko: { type: "Panning:CancelOverride" } });
+          return;
+        }
+
+        this._firstScrollEvent = false;
+      }
+
+      // Scroll the scrollable element
+      this._scrollElementBy(this._scrollableElement, data.x, data.y);
+      sendMessageToJava({ gecko: { type: "Gesture:ScrollAck" } });
+    } else if (aTopic == "Gesture:CancelTouch") {
       this._cancelTapHighlight();
     } else if (aTopic == "Gesture:ShowPress") {
       let data = JSON.parse(aData);
@@ -1433,8 +1463,22 @@ var BrowserEventHandler = {
       if (!closest)
         closest = ElementTouchHelper.anyElementFromPoint(BrowserApp.selectedBrowser.contentWindow,
                                                         data.x, data.y);
-      if (closest)
+      if (closest) {
         this._doTapHighlight(closest);
+
+        // If we've pressed a scrollable element, let Java know that we may
+        // want to override the scroll behaviour (for document sub-frames)
+        this._scrollableElement = this._findScrollableElement(closest, true);
+        this._firstScrollEvent = true;
+
+        if (this._scrollableElement != null) {
+          // Discard if it's the top-level scrollable, we let Java handle this
+          let doc = BrowserApp.selectedBrowser.contentDocument;
+          if (this._scrollableElement != doc.body &&
+              this._scrollableElement != doc.documentElement)
+            sendMessageToJava({ gecko: { type: "Panning:Override" } });
+        }
+      }
     } else if (aTopic == "Gesture:SingleTap") {
       let element = this._highlightElement;
       if (element && !FormAssistant.handleClick(element)) {
@@ -1498,7 +1542,11 @@ var BrowserEventHandler = {
     }
   },
 
-  _highlihtElement: null,
+  _firstScrollEvent: false,
+
+  _scrollableElement: null,
+
+  _highlightElement: null,
 
   _doTapHighlight: function _doTapHighlight(aElement) {
     DOMUtils.setContentState(aElement, kStateActive);
@@ -1649,14 +1697,16 @@ var BrowserEventHandler = {
       /* Element is scrollable if its scroll-size exceeds its client size, and:
        * - It has overflow 'auto' or 'scroll'
        * - It's a textarea
-       * We don't consider HTML/BODY nodes here, since Java pans those.
+       * - It's an HTML/BODY node
        */
       if (checkElem) {
         if (((elem.scrollHeight > elem.clientHeight) ||
              (elem.scrollWidth > elem.clientWidth)) &&
             (elem.style.overflow == 'auto' ||
              elem.style.overflow == 'scroll' ||
-             elem.localName == 'textarea')) {
+             elem.localName == 'textarea' ||
+             elem.localName == 'html' ||
+             elem.localName == 'body')) {
           scrollable = true;
           break;
         }
