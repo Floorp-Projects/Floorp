@@ -11,17 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozprofile.
+# The Original Code is peptest.
 #
 # The Initial Developer of the Original Code is
 #   The Mozilla Foundation.
-# Portions created by the Initial Developer are Copyright (C) 2008
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Mikeal Rogers <mikeal.rogers@gmail.com>
-#   Clint Talbert <ctalbert@mozilla.com>
-#   Jeff Hammel <jhammel@mozilla.com>
 #   Andrew Halberstadt <halbersa@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
@@ -37,47 +34,28 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-
+"""
+Adds peptest's dependencies to sys.path then runs the tests
+"""
 import os
 import sys
-from setuptools import setup, find_packages
 
-version = '0.1'
+deps = ['manifestdestiny',
+        'mozinfo',
+        'mozhttpd',
+        'mozlog',
+        'mozprofile',
+        'mozprocess',
+        'mozrunner',
+       ]
 
-# we only support python 2 right now
-assert sys.version_info[0] == 2
+here = os.path.dirname(__file__)
+mozbase = os.path.realpath(os.path.join(here, '..', 'mozbase'))
 
-deps = ["ManifestDestiny >= 0.5.4"]
-# version-dependent dependencies
-try:
-    import json
-except ImportError:
-    deps.append('simplejson')
+for dep in deps:
+    module = os.path.join(mozbase, dep)
+    if module not in sys.path:
+        sys.path.insert(0, module)
 
-# take description from README
-here = os.path.dirname(os.path.abspath(__file__))
-try:
-    description = file(os.path.join(here, 'README.md')).read()
-except (OSError, IOError):
-    description = ''
-
-setup(name='mozprofile',
-      version=version,
-      description="handling of Mozilla XUL app profiles",
-      long_description=description,
-      classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
-      keywords='',
-      author='Mozilla Automation + Testing Team',
-      author_email='mozmill-dev@googlegroups.com',
-      url='http://github.com/mozautomation/mozmill',
-      license='MPL',
-      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
-      include_package_data=True,
-      zip_safe=False,
-      install_requires=deps,
-      entry_points="""
-      # -*- Entry points: -*-
-      [console_scripts]
-      mozprofile = mozprofile:cli
-      """,
-      )
+from peptest import runpeptests
+runpeptests.main(sys.argv[1:])

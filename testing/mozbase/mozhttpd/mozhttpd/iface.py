@@ -11,18 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozprofile.
+# The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-#   The Mozilla Foundation.
-# Portions created by the Initial Developer are Copyright (C) 2008
+# the Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Mikeal Rogers <mikeal.rogers@gmail.com>
-#   Clint Talbert <ctalbert@mozilla.com>
-#   Jeff Hammel <jhammel@mozilla.com>
-#   Andrew Halberstadt <halbersa@gmail.com>
+#   Joel Maher <joel.maher@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,45 +36,27 @@
 # ***** END LICENSE BLOCK *****
 
 import os
-import sys
-from setuptools import setup, find_packages
+import socket
+if os.name != 'nt':
+    import fcntl
+    import struct
 
-version = '0.1'
+def _get_interface_ip(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+            s.fileno(),
+            0x8915,  # SIOCGIFADDR
+            struct.pack('256s', ifname[:15])
+            )[20:24])
 
-# we only support python 2 right now
-assert sys.version_info[0] == 2
-
-deps = ["ManifestDestiny >= 0.5.4"]
-# version-dependent dependencies
-try:
-    import json
-except ImportError:
-    deps.append('simplejson')
-
-# take description from README
-here = os.path.dirname(os.path.abspath(__file__))
-try:
-    description = file(os.path.join(here, 'README.md')).read()
-except (OSError, IOError):
-    description = ''
-
-setup(name='mozprofile',
-      version=version,
-      description="handling of Mozilla XUL app profiles",
-      long_description=description,
-      classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
-      keywords='',
-      author='Mozilla Automation + Testing Team',
-      author_email='mozmill-dev@googlegroups.com',
-      url='http://github.com/mozautomation/mozmill',
-      license='MPL',
-      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
-      include_package_data=True,
-      zip_safe=False,
-      install_requires=deps,
-      entry_points="""
-      # -*- Entry points: -*-
-      [console_scripts]
-      mozprofile = mozprofile:cli
-      """,
-      )
+def get_lan_ip():
+    ip = socket.gethostbyname(socket.gethostname())
+    if ip.startswith("127.") and os.name != "nt":
+        interfaces = ["eth0", "eth1", "eth2", "wlan0", "wlan1", "wifi0", "ath0", "ath1", "ppp0"]
+        for ifname in interfaces:
+            try:
+                ip = _get_interface_ip(ifname)
+                break;
+            except IOError:
+                pass
+    return ip
