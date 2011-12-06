@@ -51,12 +51,14 @@
 #include "nsAutoPtr.h"
 #include "nsCSSRules.h"
 #include "nsRuleWalker.h"
+#include "nsEventStates.h"
 
 struct RuleCascadeData;
 struct nsCSSSelectorList;
 struct CascadeEnumData;
 struct TreeMatchContext;
 class nsCSSKeyframesRule;
+class nsCSSSelector;
 
 /**
  * The CSS style rule processor provides a mechanism for sibling style
@@ -160,6 +162,16 @@ public:
     sWinThemeId = aId;
   }
 #endif
+
+  struct StateSelector {
+    StateSelector(nsEventStates aStates, nsCSSSelector* aSelector)
+      : mStates(aStates),
+        mSelector(aSelector)
+    {}
+
+    nsEventStates mStates;
+    nsCSSSelector* mSelector;
+  };
 
 private:
   static bool CascadeSheet(nsCSSStyleSheet* aSheet, CascadeEnumData* aData);
