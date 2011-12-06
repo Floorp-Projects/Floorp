@@ -20,6 +20,13 @@
 <!ENTITY stats.framesPresented "Frames presented">
 <!ENTITY stats.framesPainted "Frames painted">
 
+<!ENTITY error.aborted "Video loading stopped.">
+<!ENTITY error.network "Video playback aborted due to a network error.">
+<!ENTITY error.decode "Video can't be played because the file is corrupt.">
+<!ENTITY error.srcNotSupported "Video format or MIME type is not supported.">
+<!ENTITY error.noSource "Video not found.">
+<!ENTITY error.generic "Video playback aborted due to an unknown error.">
+
 <!-- LOCALIZATION NOTE (scrubberScale.nameFormat): the #1 string is the current
 media position, and the #2 string is the total duration. For example, when at
 the 5 minute mark in a 6 hour long video, #1 would be "5:00" and #2 would be
