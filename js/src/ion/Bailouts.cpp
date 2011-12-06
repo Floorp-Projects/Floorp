@@ -226,7 +226,7 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     return fp;
 }
 
-static bool
+static uint32
 ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
 {
     IonSpew(IonSpew_Bailouts, "Bailing out %s:%u, IonScript %p",
@@ -244,62 +244,40 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
 
     BailoutClosure *br = cx->new_<BailoutClosure>();
     if (!br)
-        return false;
+        return BAILOUT_RETURN_FATAL_ERROR;
     activation->setBailout(br);
 
     // Non-function frames are not supported yet. We don't compile or enter
     // global scripts so this assert should not fire yet.
     JS_ASSERT(in.callee());
 
-    IonSpew(IonSpew_Bailouts, " sp before pushing bailout frame: %p",
-            (void *) cx->stack.regs().sp);
     StackFrame *fp = cx->stack.pushBailoutFrame(cx, *in.callee(), in.script(), br->frameGuard());
     if (!fp)
-        return false;
+        return BAILOUT_RETURN_FATAL_ERROR;
 
     br->setEntryFrame(fp);
 
-    IonSpew(IonSpew_Bailouts, " sp after pushing bailout frame: %p",
-            (void *) cx->stack.regs().sp);
     if (in.callee())
         fp->formalArgs()[-2].setObject(*in.callee());
 
     for (size_t i = 0;; ++i) {
         IonSpew(IonSpew_Bailouts, " restoring frame %u (lower is older)", i);
-        IonSpew(IonSpew_Bailouts, " sp before restoring frame: %p",
-                (void *) cx->stack.regs().sp);
         RestoreOneFrame(cx, fp, iter);
-        IonSpew(IonSpew_Bailouts, " sp after restoring frame: %p",
-                (void *) cx->stack.regs().sp);
         if (!iter.nextFrame())
             break;
 
-        IonSpew(IonSpew_Bailouts, " sp before pushing inline frame: %p",
-                (void *) cx->stack.regs().sp);
         fp = PushInlinedFrame(cx, fp);
         if (!fp)
-            return false;
-        IonSpew(IonSpew_Bailouts, " sp after pushing inline frame: %p",
-                (void *) cx->stack.regs().sp);
+            return BAILOUT_RETURN_FATAL_ERROR;
     }
 
     switch (iter.bailoutKind()) {
       case Bailout_Normal:
-        break;
-
+        return BAILOUT_RETURN_OK;
       case Bailout_TypeBarrier:
-      {
-        JSScript *script = cx->fp()->script();
-        if (script->hasAnalysis() && script->analysis()->ranInference()) {
-            types::AutoEnterTypeInference enter(cx);
-            script->analysis()->breakTypeBarriers(cx, cx->regs().pc - script->code, false);
-        }
-
-        // When a type barrier fails, the bad value is at the top of the stack.
-        Value &result = cx->regs().sp[-1];
-        types::TypeScript::Monitor(cx, script, cx->regs().pc, result);
-        break;
-      }
+        return BAILOUT_RETURN_TYPE_BARRIER;
+      case Bailout_ArgumentCheck:
+        return BAILOUT_RETURN_ARGUMENT_CHECK;
     }
 
     return true;
@@ -310,16 +288,58 @@ ion::Bailout(BailoutStack *sp)
 {
     JSContext *cx = GetIonContext()->cx;
     IonCompartment *ioncompartment = cx->compartment->ionCompartment();
-    IonActivation *activation = JS_THREAD_DATA(cx)->ionActivation;
+    IonActivation *activation = cx->threadData()->ionActivation;
     FrameRecovery in = FrameRecoveryFromBailout(ioncompartment, sp);
 
-    if (!ConvertFrames(cx, activation, in)) {
-        if (BailoutClosure *br = activation->maybeTakeBailout())
-            cx->delete_(br);
-        return BAILOUT_RETURN_FATAL_ERROR;
+    uint32 retval = ConvertFrames(cx, activation, in);
+    if (retval != BAILOUT_RETURN_FATAL_ERROR)
+        return retval;
+
+    cx->delete_(activation->maybeTakeBailout());
+    return BAILOUT_RETURN_FATAL_ERROR;
+}
+
+static void
+ReflowArgTypes(JSContext *cx)
+{
+    StackFrame *fp = cx->fp();
+    uintN nargs = fp->fun()->nargs;
+    JSScript *script = fp->script();
+
+    types::AutoEnterTypeInference enter(cx);
+
+    if (!fp->isConstructing())
+        types::TypeScript::SetThis(cx, script, fp->thisValue());
+    for (uintN i = 0; i < nargs; ++i)
+        types::TypeScript::SetArgument(cx, script, i, fp->formalArg(i));
+}
+
+uint32
+ion::ReflowTypeInfo(uint32 bailoutResult)
+{
+    JSContext *cx = GetIonContext()->cx;
+    IonActivation *activation = cx->threadData()->ionActivation;
+
+    if (bailoutResult == BAILOUT_RETURN_ARGUMENT_CHECK) {
+        IonSpew(IonSpew_Bailouts, "reflowing type info at argument-checked entry");
+        ReflowArgTypes(cx);
+        return !activation->failedInvalidation();
     }
 
-    return BAILOUT_RETURN_OK;
+    JSScript *script = cx->fp()->script();
+    jsbytecode *pc = cx->regs().pc;
+    IonSpew(IonSpew_Bailouts, "reflowing type info at %s:%d pcoff %d", script->filename,
+            script->lineno, pc - script->code);
+    if (script->hasAnalysis() && script->analysis()->ranInference()) {
+        types::AutoEnterTypeInference enter(cx);
+        script->analysis()->breakTypeBarriers(cx, pc - script->code, false);
+    }
+
+    // When a type barrier fails, the bad value is at the top of the stack.
+    Value &result = cx->regs().sp[-1];
+    types::TypeScript::Monitor(cx, script, pc, result);
+
+    return !activation->failedInvalidation();
 }
 
 JSBool

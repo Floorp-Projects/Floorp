@@ -316,7 +316,7 @@ void ARMAssembler::dataTransferN(bool isLoad, bool isSigned, int size, RegisterI
     bool posOffset = true;
 
     // There may be more elegant ways of handling this, but this one works.
-    if (offset == 0x80000000) {
+    if (offset == int32_t(0x80000000)) {
         // For even bigger offsets, load the entire offset into a register, then do an
         // indexed load using the base register and the index register.
         moveImm(offset, ARMRegisters::S0);

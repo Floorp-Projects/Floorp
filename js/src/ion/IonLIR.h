@@ -907,6 +907,9 @@ class LSnapshot : public TempObject
     BailoutKind bailoutKind() const {
         return bailoutKind_;
     }
+    void setBailoutKind(BailoutKind kind) {
+        bailoutKind_ = kind;
+    }
 };
 
 class LInstruction::InputIterator
@@ -1039,6 +1042,8 @@ class LIRGraph
     }
     void setEntrySnapshot(LSnapshot *snapshot) {
         JS_ASSERT(!entrySnapshot_);
+        JS_ASSERT(snapshot->bailoutKind() == Bailout_Normal);
+        snapshot->setBailoutKind(Bailout_ArgumentCheck);
         entrySnapshot_ = snapshot;
     }
     LSnapshot *entrySnapshot() const {
