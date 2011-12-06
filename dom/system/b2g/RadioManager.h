@@ -48,7 +48,6 @@
 
 #include "nsIObserver.h"
 #include "mozilla/ipc/Ril.h"
-#include "nsITelephone.h"
 
 #define TELEPHONYRADIO_CONTRACTID "@mozilla.org/telephony/radio;1"
 #define TELEPHONYRADIOINTERFACE_CONTRACTID "@mozilla.org/telephony/radio-interface;1"
@@ -70,6 +69,8 @@
 
 
 class nsIXPConnectJSObjectHolder;
+class nsITelephone;
+class nsIWifi;
 
 BEGIN_TELEPHONY_NAMESPACE
 
@@ -92,7 +93,11 @@ protected:
   RadioManager();
   ~RadioManager();
 
+  nsresult InitTelephone(JSContext *cx);
+  nsresult InitWifi(JSContext *cx);
+
   nsCOMPtr<nsITelephone> mTelephone;
+  nsCOMPtr<nsIWifi> mWifi;
   bool mShutdown;
 };
 
