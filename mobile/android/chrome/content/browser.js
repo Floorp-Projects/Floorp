@@ -984,6 +984,9 @@ Tab.prototype = {
                 Ci.nsIWebProgress.NOTIFY_SECURITY;
     this.browser.addProgressListener(this, flags);
     this.browser.sessionHistory.addSHistoryListener(this);
+    this.browser.addEventListener("DOMContentLoaded", this, true);
+    this.browser.addEventListener("DOMLinkAdded", this, true);
+    this.browser.addEventListener("DOMTitleChanged", this, true);
     this.browser.addEventListener("scroll", this, true);
     Services.obs.addObserver(this, "http-on-modify-request", false);
     this.browser.loadURI(aURL);
@@ -1017,6 +1020,9 @@ Tab.prototype = {
       return;
 
     this.browser.removeProgressListener(this);
+    this.browser.removeEventListener("DOMContentLoaded", this, true);
+    this.browser.removeEventListener("DOMLinkAdded", this, true);
+    this.browser.removeEventListener("DOMTitleChanged", this, true);
     this.browser.removeEventListener("scroll", this, true);
     BrowserApp.deck.removeChild(this.vbox);
     Services.obs.removeObserver(this, "http-on-modify-request", false);
@@ -1156,6 +1162,84 @@ Tab.prototype = {
 
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
+      case "DOMContentLoaded": {
+        let target = aEvent.originalTarget;
+
+        // ignore on frames
+        if (target.defaultView != this.browser.contentWindow)
+          return;
+
+        this.updateViewport(true);
+
+        sendMessageToJava({
+          gecko: {
+            type: "DOMContentLoaded",
+            tabID: this.id,
+            windowID: 0,
+            uri: this.browser.currentURI.spec,
+            title: this.browser.contentTitle
+          }
+        });
+
+        // Attach a listener to watch for "click" events bubbling up from error
+        // pages and other similar page. This lets us fix bugs like 401575 which
+        // require error page UI to do privileged things, without letting error
+        // pages have any privilege themselves.
+        if (/^about:/.test(target.documentURI)) {
+          this.browser.addEventListener("click", ErrorPageEventHandler, false);
+          this.browser.addEventListener("pagehide", function listener() {
+            this.browser.removeEventListener("click", ErrorPageEventHandler, false);
+            this.browser.removeEventListener("pagehide", listener, true);
+          }, true);
+        }
+
+        break;
+      }
+
+      case "DOMLinkAdded": {
+        let target = aEvent.originalTarget;
+        if (!target.href || target.disabled)
+          return;
+
+        // ignore on frames
+        if (target.defaultView != this.browser.contentWindow)
+          return;
+
+        let json = {
+          type: "DOMLinkAdded",
+          tabID: this.id,
+          href: resolveGeckoURI(target.href),
+          charset: target.ownerDocument.characterSet,
+          title: target.title,
+          rel: target.rel
+        };
+
+        // rel=icon can also have a sizes attribute
+        if (target.hasAttribute("sizes"))
+          json.sizes = target.getAttribute("sizes");
+
+        sendMessageToJava({ gecko: json });
+        break;
+      }
+
+      case "DOMTitleChanged": {
+        if (!aEvent.isTrusted)
+          return;
+
+        // ignore on frames
+        if (aEvent.target.defaultView != this.browser.contentWindow)
+          return;
+
+        sendMessageToJava({
+          gecko: {
+            type: "DOMTitleChanged",
+            tabID: this.id,
+            title: aEvent.target.title
+          }
+        });
+        break;
+      }
+
       case "scroll": {
         let win = this.browser.contentWindow;
         if (this.userScrollPos.x != win.scrollX || this.userScrollPos.y != win.scrollY) {
@@ -1440,9 +1524,6 @@ var BrowserEventHandler = {
     Services.obs.addObserver(this, "Gesture:DoubleTap", false);
     Services.obs.addObserver(this, "Gesture:Scroll", false);
 
-    BrowserApp.deck.addEventListener("DOMContentLoaded", this, true);
-    BrowserApp.deck.addEventListener("DOMLinkAdded", this, true);
-    BrowserApp.deck.addEventListener("DOMTitleChanged", this, true);
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
   },
 
@@ -1578,94 +1659,6 @@ var BrowserEventHandler = {
   _cancelTapHighlight: function _cancelTapHighlight() {
     DOMUtils.setContentState(BrowserApp.selectedBrowser.contentWindow.document.documentElement, kStateActive);
     this._highlightElement = null;
-  },
-
-  handleEvent: function(aEvent) {
-    switch (aEvent.type) {
-      case "DOMContentLoaded": {
-        let browser = BrowserApp.getBrowserForDocument(aEvent.target);
-        if (!browser)
-          return;
-
-        let tab = BrowserApp.getTabForBrowser(browser);
-        tab.updateViewport(true);
-
-        sendMessageToJava({
-          gecko: {
-            type: "DOMContentLoaded",
-            tabID: tab.id,
-            windowID: 0,
-            uri: browser.currentURI.spec,
-            title: browser.contentTitle
-          }
-        });
-
-        // Attach a listener to watch for "click" events bubbling up from error
-        // pages and other similar page. This lets us fix bugs like 401575 which
-        // require error page UI to do privileged things, without letting error
-        // pages have any privilege themselves.
-        if (/^about:/.test(aEvent.originalTarget.documentURI)) {
-          let browser = BrowserApp.getBrowserForDocument(aEvent.originalTarget);
-          browser.addEventListener("click", ErrorPageEventHandler, false);
-          browser.addEventListener("pagehide", function listener() {
-            browser.removeEventListener("click", ErrorPageEventHandler, false);
-            browser.removeEventListener("pagehide", listener, true);
-          }, true);
-        }
-
-        break;
-      }
-
-      case "DOMLinkAdded": {
-        let target = aEvent.originalTarget;
-        if (!target.href || target.disabled)
-          return;
-
-        let browser = BrowserApp.getBrowserForDocument(target.ownerDocument);
-        if (!browser)
-          return;
-        let tabID = BrowserApp.getTabForBrowser(browser).id;
-
-        let json = {
-          type: "DOMLinkAdded",
-          tabID: tabID,
-          href: resolveGeckoURI(target.href),
-          charset: target.ownerDocument.characterSet,
-          title: target.title,
-          rel: target.rel
-        };
-
-        // rel=icon can also have a sizes attribute
-        if (target.hasAttribute("sizes"))
-          json.sizes = target.getAttribute("sizes");
-
-        sendMessageToJava({ gecko: json });
-        break;
-      }
-
-      case "DOMTitleChanged": {
-        if (!aEvent.isTrusted)
-          return;
-
-        let contentWin = aEvent.target.defaultView;
-        if (contentWin != contentWin.top)
-          return;
-
-        let browser = BrowserApp.getBrowserForDocument(aEvent.target);
-        if (!browser)
-          return;
-        let tabID = BrowserApp.getTabForBrowser(browser).id;
-
-        sendMessageToJava({
-          gecko: {
-            type: "DOMTitleChanged",
-            tabID: tabID,
-            title: aEvent.target.title
-          }
-        });
-        break;
-      }
-    }
   },
 
   _updateLastPosition: function(x, y, dx, dy) {
