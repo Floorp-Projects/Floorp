@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Url Classifier code.
+ * The Original Code is Url Classifier code
  *
  * The Initial Developer of the Original Code is
  * the Mozilla Foundation.
@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Dave Camp <dcamp@mozilla.com>
  *   Gian-Carlo Pascutto <gpascutto@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -36,30 +37,54 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-#include "nsIFile.idl"
+#ifndef ChunkSet_h__
+#define ChunkSet_h__
 
-// Note that the PrefixSet name is historical and we do properly support
-// duplicated values, so it's really a Prefix Trie.
-// All methods are thread-safe.
-[scriptable, uuid(b21b0fa1-20d2-422a-b2cc-b289c9325811)]
-interface nsIUrlClassifierPrefixSet : nsISupports
-{
-  // Initialize the PrefixSet. Give it a name for memory reporting.
-  void init(in ACString aName);
-  // Fills the PrefixSet with the given array of prefixes.
-  // Can send an empty Array to clear the tree. A truly "empty tree"
-  // cannot be represented, so put a sentinel value if that is required
-  // Requires array to be sorted.
-  void setPrefixes([const, array, size_is(aLength)] in unsigned long aPrefixes,
-                   in unsigned long aLength);
-  void getPrefixes(out unsigned long aCount,
-                  [array, size_is(aCount), retval] out unsigned long aPrefixes);
-  // Do a lookup in the PrefixSet, return whether the value is present.
-  // If aReady is set, we will block until there are any entries.
-  // If not set, we will return in aReady whether we were ready or not.
-  boolean probe(in unsigned long aPrefix, inout boolean aReady);
-  boolean isEmpty();
-  void loadFromFile(in nsIFile aFile);
-  void storeToFile(in nsIFile aFile);
+
+#include "Entries.h"
+#include "nsString.h"
+#include "nsTArray.h"
+
+namespace mozilla {
+namespace safebrowsing {
+
+/**
+ * Store the chunks as an array of uint32.
+ * XXX: We should optimize this further to compress the
+ * many consecutive numbers.
+ */
+class ChunkSet {
+public:
+  ChunkSet() {}
+  ~ChunkSet() {}
+
+  nsresult Serialize(nsACString& aStr);
+  nsresult Set(PRUint32 aChunk);
+  nsresult Unset(PRUint32 aChunk);
+  void Clear();
+  nsresult Merge(const ChunkSet& aOther);
+  nsresult Remove(const ChunkSet& aOther);
+
+  bool Has(PRUint32 chunk) const;
+
+  uint32 Length() const { return mChunks.Length(); }
+
+  nsresult Write(nsIOutputStream* aOut) {
+    return WriteTArray(aOut, mChunks);
+  }
+
+  nsresult Read(nsIInputStream* aIn, PRUint32 aNumElements) {
+    return ReadTArray(aIn, &mChunks, aNumElements);
+  }
+
+  uint32 *Begin() { return mChunks.Elements(); }
+  uint32 *End() { return mChunks.Elements() + mChunks.Length(); }
+
+private:
+  nsTArray<uint32> mChunks;
 };
+
+}
+}
+
+#endif
