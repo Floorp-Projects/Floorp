@@ -52,6 +52,7 @@
     _(Parameter)                    \
     _(TableSwitch)                  \
     _(Goto)                         \
+    _(NewArray)                     \
     _(CallGeneric)                  \
     _(StackArg)                     \
     _(BitNot)                       \

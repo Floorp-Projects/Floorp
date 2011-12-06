@@ -115,16 +115,14 @@ class Registers {
     // Registers that can be allocated without being saved, generally.
     static const uint32 TempMask = VolatileMask & ~NonAllocatableMask;
 
-    // Registers that may be clobbered during a JS -> JS call.
-    static const uint32 JSCallClobberMask =
-        AllocatableMask &
-        ~(1 << JSC::X86Registers::ecx) &
-        ~(1 << JSC::X86Registers::edx);
+    // Registers returned from a JS -> JS call.
+    static const uint32 JSCallMask =
+        (1 << JSC::X86Registers::ecx) |
+        (1 << JSC::X86Registers::edx);
 
     // Registers returned from a JS -> C call.
     static const uint32 JSCCallMask =
-        (1 << JSC::X86Registers::eax) |
-        (1 << JSC::X86Registers::edx);
+        (1 << JSC::X86Registers::eax);
 
     typedef JSC::MacroAssembler::RegisterID RegisterID;
 
@@ -154,12 +152,6 @@ class FloatRegisters {
         (1 << JSC::X86Registers::xmm7);
 
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
-
-    // Registers that may be clobbered during a JS -> JS call.
-    static const uint32 JSCallClobberMask = AllocatableMask;
-
-    // Registers returned from a JS -> C call.
-    static const uint32 JSCCallMask = 0;
 };
 
 } // namespace ion

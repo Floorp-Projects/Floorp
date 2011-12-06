@@ -131,9 +131,9 @@ class Registers {
 
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
 
-    // Registers that may be clobbered during a JS -> JS call.
-    static const uint32 JSCallClobberMask =
-        AllocatableMask & ~(1 << JSC::X86Registers::ecx);
+    // Registers returned from a JS -> JS call.
+    static const uint32 JSCallMask =
+        (1 << JSC::X86Registers::ecx);
 
     // Registers returned from a JS -> C call.
     static const uint32 JSCCallMask =
@@ -181,12 +181,6 @@ class FloatRegisters {
         (1 << JSC::X86Registers::xmm15);    // This is ScratchFloatReg.
 
     static const uint32 AllocatableMask = AllMask & ~NonAllocatableMask;
-
-    // Registers that may be clobbered during a JS -> JS call.
-    static const uint32 JSCallClobberMask = AllocatableMask;
-
-    // Registers returned from a JS -> C call.
-    static const uint32 JSCCallMask = 0;
 };
 
 } // namespace ion
