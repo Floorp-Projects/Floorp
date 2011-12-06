@@ -357,6 +357,82 @@ Debug_SetValueRangeToCrashOnTouch(HeapValue *vec, size_t len)
 #endif
 }
 
+/*
+ * Contains information about a C function and wrapper used by Jitted code.
+ */
+struct VMFunction
+{
+    /*
+     * Should the last argument of the C function be considered as an extra
+     * returned value.
+     */
+    enum OutParam {
+        /* No extra return value given as argument. */
+        OutParam_None,
+        /*
+         * A Value reference is given as last argument to be initialized by
+         * the C function.
+         */
+        OutParam_Value
+    };
+
+    /*
+     * Determine how to check the returned value of the C function to
+     * determine if a failure happened during the execution of the function.
+     */
+    enum FallibleType {
+        /* Cannot fail. */
+        FallibleNone,
+        /* false for failure. */
+        FallibleBool,
+        /* NULL for failure. */
+        FalliblePointer
+    };
+
+    /* Kind of value returned by the wrapper of the C function. */
+    enum ReturnType {
+        ReturnNothing,
+        ReturnBool,
+        ReturnPointer,
+        ReturnValue
+    };
+
+    /* Address of the C function. */
+    void *wrapped;
+
+    /*
+     * Number of arguments expected, excluding JSContext * as an implicit
+     * first argument, and the outparam as an implicit last argument.
+     */
+    uint32 explicitArgs;
+    OutParam outParam;
+    FallibleType failCond;
+
+    /*
+     * Identify which values are returned to the Jitted code. If and only if
+     * the outParam is set to OutParam_Value, then the returnType must be
+     * set to the ReturnValue.  Otherwise it should be either consistent
+     * with the FallibleType or ReturnNothing.
+     */
+    ReturnType returnType;
+
+    uint32 argc() const {
+        return 1 + explicitArgs +
+               ((outParam == OutParam_None) ? 0 : 1);
+    }
+};
+
+JSObject*
+NewInitArray(JSContext *cx, uint32 count, types::TypeObject *type);
+
+const VMFunction NewInitArrayVMFun = {
+    JS_FUNC_TO_DATA_PTR(void *, NewInitArray),
+    2, /* count, type */
+    VMFunction::OutParam_None,
+    VMFunction::FalliblePointer,
+    VMFunction::ReturnPointer
+};
+
 }  /* namespace js */
 
 #endif /* jsinterp_h___ */

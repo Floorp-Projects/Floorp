@@ -214,6 +214,11 @@ class TypedRegisterSet
     static inline TypedRegisterSet Not(const TypedRegisterSet &in) {
         return TypedRegisterSet(~in.bits_ & T::Codes::AllocatableMask);
     }
+    static inline TypedRegisterSet VolatileNot(const TypedRegisterSet &in) {
+        const uint32 allocatableVolatile =
+            T::Codes::AllocatableMask & T::Codes::VolatileMask;
+        return TypedRegisterSet(~in.bits_ & allocatableVolatile);
+    }
     void intersect(TypedRegisterSet other) {
         bits_ &= ~other.bits_;
     }
@@ -260,9 +265,13 @@ class TypedRegisterSet
 typedef TypedRegisterSet<Register> GeneralRegisterSet;
 typedef TypedRegisterSet<FloatRegister> FloatRegisterSet;
 
+class AnyRegisterIterator;
+
 class RegisterSet {
     GeneralRegisterSet gpr_;
     FloatRegisterSet fpu_;
+
+    friend class AnyRegisterIterator;
 
   public:
     RegisterSet()
@@ -281,6 +290,10 @@ class RegisterSet {
     static inline RegisterSet Not(const RegisterSet &in) {
         return RegisterSet(GeneralRegisterSet::Not(in.gpr_),
                            FloatRegisterSet::Not(in.fpu_));
+    }
+    static inline RegisterSet VolatileNot(const RegisterSet &in) {
+        return RegisterSet(GeneralRegisterSet::VolatileNot(in.gpr_),
+                           FloatRegisterSet::VolatileNot(in.fpu_));
     }
     bool has(Register reg) const {
         return gpr_.has(reg);
@@ -379,6 +392,9 @@ class AnyRegisterIterator
     { }
     AnyRegisterIterator(GeneralRegisterSet genset, FloatRegisterSet floatset)
       : geniter_(genset), floatiter_(floatset)
+    { }
+    AnyRegisterIterator(const RegisterSet &set)
+      : geniter_(set.gpr_), floatiter_(set.fpu_)
     { }
     AnyRegisterIterator(const AnyRegisterIterator &other)
       : geniter_(other.geniter_), floatiter_(other.floatiter_)

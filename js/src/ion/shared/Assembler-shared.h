@@ -264,42 +264,6 @@ class DeferredData : public TempObject
     virtual void copy(IonCode *code, uint8 *buffer) const = 0;
 };
 
-class IonCode;
-
-// Contains information about a C function
-struct VMFunction
-{
-    enum OutParam {
-        OutParam_None,
-        OutParam_Value
-    };
-
-    enum ReturnType {
-        // Return a boolean value. (false for failure)
-        ReturnBool,
-        // Return a pointer such as JSObject*. (NULL for failure)
-        ReturnPointer
-    };
-
-    // Address of the C function.
-    void *wrapped;
-
-    // Number of arguments expected, excluding JSContext * as an implicit first
-    // argument, and the outparam as an implicit last argument.
-    uint32 explicitArgs;
-
-    ReturnType returnType;
-
-    // If this is not OutParam_None, then the last parameter is an outparam
-    // which should be loaded into the result registers on success. 
-    OutParam outParam;
-
-    uint32 argc() const {
-        return explicitArgs + 1 +
-               (outParam == OutParam_None) ? 0 : 1;
-    }
-};
-
 } // namespace ion
 } // namespace js
 
