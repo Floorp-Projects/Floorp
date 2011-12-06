@@ -249,11 +249,13 @@ str_unescape(JSContext *cx, uintN argc, Value *vp)
     size_t length = str->length();
     const jschar *chars = str->chars();
 
-    /* Don't bother allocating less space for the new string. */
+    /* Start by allocating the maximum required space for the new string. */
     jschar *newchars = (jschar *) cx->malloc_((length + 1) * sizeof(jschar));
     if (!newchars)
         return false;
+
     size_t ni = 0, i = 0;
+    bool escapeFound = false;
     while (i < length) {
         jschar ch = chars[i++];
         if (ch == '%') {
@@ -263,6 +265,7 @@ str_unescape(JSContext *cx, uintN argc, Value *vp)
             {
                 ch = JS7_UNHEX(chars[i]) * 16 + JS7_UNHEX(chars[i + 1]);
                 i += 2;
+                escapeFound = true;
             } else if (i + 4 < length && chars[i] == 'u' &&
                        JS7_ISHEX(chars[i + 1]) && JS7_ISHEX(chars[i + 2]) &&
                        JS7_ISHEX(chars[i + 3]) && JS7_ISHEX(chars[i + 4]))
@@ -272,19 +275,31 @@ str_unescape(JSContext *cx, uintN argc, Value *vp)
                       + JS7_UNHEX(chars[i + 3])) << 4)
                     + JS7_UNHEX(chars[i + 4]);
                 i += 5;
+                escapeFound = true;
             }
         }
         newchars[ni++] = ch;
     }
     newchars[ni] = 0;
 
+    /* If escapes were found, shrink the string. */
+    if (escapeFound) {
+        JS_ASSERT(ni < length);
+        jschar *tmpchars = (jschar *) cx->realloc_(newchars, (ni + 1) * sizeof(jschar));
+        if (!tmpchars) {
+            cx->free_(newchars);
+            return false;
+        }
+        newchars = tmpchars;
+    }
+
     JSString *retstr = js_NewString(cx, newchars, ni);
     if (!retstr) {
         cx->free_(newchars);
-        return JS_FALSE;
+        return false;
     }
     vp->setString(retstr);
-    return JS_TRUE;
+    return true;
 }
 
 #if JS_HAS_UNEVAL

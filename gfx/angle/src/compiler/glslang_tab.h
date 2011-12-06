@@ -1,24 +1,23 @@
-/* A Bison parser, made by GNU Bison 2.3.  */
+
+/* A Bison parser, made by GNU Bison 2.4.1.  */
 
 /* Skeleton interface for Bison's Yacc-like parsers in C
-
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
+   
+      Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
    Free Software Foundation, Inc.
-
-   This program is free software; you can redistribute it and/or modify
+   
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-
+   
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -29,9 +28,10 @@
    special exception, which will cause the skeleton and the resulting
    Bison output files to be licensed under the GNU General Public
    License without this special exception.
-
+   
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
+
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -80,160 +80,68 @@
      SAMPLER2D = 296,
      SAMPLERCUBE = 297,
      SAMPLER_EXTERNAL_OES = 298,
-     IDENTIFIER = 299,
-     TYPE_NAME = 300,
-     FLOATCONSTANT = 301,
-     INTCONSTANT = 302,
-     BOOLCONSTANT = 303,
-     FIELD_SELECTION = 304,
-     LEFT_OP = 305,
-     RIGHT_OP = 306,
-     INC_OP = 307,
-     DEC_OP = 308,
-     LE_OP = 309,
-     GE_OP = 310,
-     EQ_OP = 311,
-     NE_OP = 312,
-     AND_OP = 313,
-     OR_OP = 314,
-     XOR_OP = 315,
-     MUL_ASSIGN = 316,
-     DIV_ASSIGN = 317,
-     ADD_ASSIGN = 318,
-     MOD_ASSIGN = 319,
-     LEFT_ASSIGN = 320,
-     RIGHT_ASSIGN = 321,
-     AND_ASSIGN = 322,
-     XOR_ASSIGN = 323,
-     OR_ASSIGN = 324,
-     SUB_ASSIGN = 325,
-     LEFT_PAREN = 326,
-     RIGHT_PAREN = 327,
-     LEFT_BRACKET = 328,
-     RIGHT_BRACKET = 329,
-     LEFT_BRACE = 330,
-     RIGHT_BRACE = 331,
-     DOT = 332,
-     COMMA = 333,
-     COLON = 334,
-     EQUAL = 335,
-     SEMICOLON = 336,
-     BANG = 337,
-     DASH = 338,
-     TILDE = 339,
-     PLUS = 340,
-     STAR = 341,
-     SLASH = 342,
-     PERCENT = 343,
-     LEFT_ANGLE = 344,
-     RIGHT_ANGLE = 345,
-     VERTICAL_BAR = 346,
-     CARET = 347,
-     AMPERSAND = 348,
-     QUESTION = 349
+     SAMPLER2DRECT = 299,
+     IDENTIFIER = 300,
+     TYPE_NAME = 301,
+     FLOATCONSTANT = 302,
+     INTCONSTANT = 303,
+     BOOLCONSTANT = 304,
+     FIELD_SELECTION = 305,
+     LEFT_OP = 306,
+     RIGHT_OP = 307,
+     INC_OP = 308,
+     DEC_OP = 309,
+     LE_OP = 310,
+     GE_OP = 311,
+     EQ_OP = 312,
+     NE_OP = 313,
+     AND_OP = 314,
+     OR_OP = 315,
+     XOR_OP = 316,
+     MUL_ASSIGN = 317,
+     DIV_ASSIGN = 318,
+     ADD_ASSIGN = 319,
+     MOD_ASSIGN = 320,
+     LEFT_ASSIGN = 321,
+     RIGHT_ASSIGN = 322,
+     AND_ASSIGN = 323,
+     XOR_ASSIGN = 324,
+     OR_ASSIGN = 325,
+     SUB_ASSIGN = 326,
+     LEFT_PAREN = 327,
+     RIGHT_PAREN = 328,
+     LEFT_BRACKET = 329,
+     RIGHT_BRACKET = 330,
+     LEFT_BRACE = 331,
+     RIGHT_BRACE = 332,
+     DOT = 333,
+     COMMA = 334,
+     COLON = 335,
+     EQUAL = 336,
+     SEMICOLON = 337,
+     BANG = 338,
+     DASH = 339,
+     TILDE = 340,
+     PLUS = 341,
+     STAR = 342,
+     SLASH = 343,
+     PERCENT = 344,
+     LEFT_ANGLE = 345,
+     RIGHT_ANGLE = 346,
+     VERTICAL_BAR = 347,
+     CARET = 348,
+     AMPERSAND = 349,
+     QUESTION = 350
    };
 #endif
-/* Tokens.  */
-#define INVARIANT 258
-#define HIGH_PRECISION 259
-#define MEDIUM_PRECISION 260
-#define LOW_PRECISION 261
-#define PRECISION 262
-#define ATTRIBUTE 263
-#define CONST_QUAL 264
-#define BOOL_TYPE 265
-#define FLOAT_TYPE 266
-#define INT_TYPE 267
-#define BREAK 268
-#define CONTINUE 269
-#define DO 270
-#define ELSE 271
-#define FOR 272
-#define IF 273
-#define DISCARD 274
-#define RETURN 275
-#define BVEC2 276
-#define BVEC3 277
-#define BVEC4 278
-#define IVEC2 279
-#define IVEC3 280
-#define IVEC4 281
-#define VEC2 282
-#define VEC3 283
-#define VEC4 284
-#define MATRIX2 285
-#define MATRIX3 286
-#define MATRIX4 287
-#define IN_QUAL 288
-#define OUT_QUAL 289
-#define INOUT_QUAL 290
-#define UNIFORM 291
-#define VARYING 292
-#define STRUCT 293
-#define VOID_TYPE 294
-#define WHILE 295
-#define SAMPLER2D 296
-#define SAMPLERCUBE 297
-#define SAMPLER_EXTERNAL_OES 298
-#define IDENTIFIER 299
-#define TYPE_NAME 300
-#define FLOATCONSTANT 301
-#define INTCONSTANT 302
-#define BOOLCONSTANT 303
-#define FIELD_SELECTION 304
-#define LEFT_OP 305
-#define RIGHT_OP 306
-#define INC_OP 307
-#define DEC_OP 308
-#define LE_OP 309
-#define GE_OP 310
-#define EQ_OP 311
-#define NE_OP 312
-#define AND_OP 313
-#define OR_OP 314
-#define XOR_OP 315
-#define MUL_ASSIGN 316
-#define DIV_ASSIGN 317
-#define ADD_ASSIGN 318
-#define MOD_ASSIGN 319
-#define LEFT_ASSIGN 320
-#define RIGHT_ASSIGN 321
-#define AND_ASSIGN 322
-#define XOR_ASSIGN 323
-#define OR_ASSIGN 324
-#define SUB_ASSIGN 325
-#define LEFT_PAREN 326
-#define RIGHT_PAREN 327
-#define LEFT_BRACKET 328
-#define RIGHT_BRACKET 329
-#define LEFT_BRACE 330
-#define RIGHT_BRACE 331
-#define DOT 332
-#define COMMA 333
-#define COLON 334
-#define EQUAL 335
-#define SEMICOLON 336
-#define BANG 337
-#define DASH 338
-#define TILDE 339
-#define PLUS 340
-#define STAR 341
-#define SLASH 342
-#define PERCENT 343
-#define LEFT_ANGLE 344
-#define RIGHT_ANGLE 345
-#define VERTICAL_BAR 346
-#define CARET 347
-#define AMPERSAND 348
-#define QUESTION 349
-
 
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-
 {
+
+
     struct {
         TSourceLoc line;
         union {
@@ -263,14 +171,15 @@ typedef union YYSTYPE
             TTypeList* typeList;
         };
     } interm;
-}
-/* Line 1489 of yacc.c.  */
 
-	YYSTYPE;
+
+
+} YYSTYPE;
+# define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
-# define YYSTYPE_IS_TRIVIAL 1
 #endif
+
 
 
 

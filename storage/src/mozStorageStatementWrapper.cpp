@@ -79,6 +79,9 @@ StatementWrapper::Initialize(mozIStorageStatement *aStatement)
   NS_ENSURE_ARG_POINTER(aStatement);
 
   mStatement = static_cast<Statement *>(aStatement);
+  PRInt32 state;
+  (void)mStatement->GetState(&state);
+  NS_ENSURE_TRUE(state != mozIStorageStatement::MOZ_STORAGE_STATEMENT_INVALID, NS_ERROR_FAILURE);
 
   // fetch various things we care about
   (void)mStatement->GetParameterCount(&mParamCount);
