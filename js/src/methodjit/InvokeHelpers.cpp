@@ -920,8 +920,19 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         if (!ScriptPrologueOrGeneratorResume(cx, fp, types::UseNewTypeAtEntry(cx, fp)))
             return js_InternalThrow(f);
 
-        if (cx->compartment->debugMode())
-            js::ScriptDebugPrologue(cx, fp);
+        /* 
+         * Having called ScriptPrologueOrGeneratorResume, we would normally call
+         * ScriptDebugPrologue here. But in debug mode, we only use JITted
+         * functions' invokeEntry entry point, whereas CheckArgumentTypes
+         * (REJOIN_CHECK_ARGUMENTS) and FunctionFramePrologue
+         * (REJOIN_FUNCTION_PROLOGUE) are only reachable via the other entry
+         * points. So we should never need either of these rejoin tails in debug
+         * mode.
+         *
+         * If we fix bug 699196 ("Debug mode code could use inline caches
+         * now"), then these cases will become reachable again.
+         */
+        JS_ASSERT(!cx->compartment->debugMode());
 
         break;
 
