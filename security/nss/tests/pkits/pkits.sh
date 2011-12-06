@@ -127,7 +127,7 @@ pkits_init()
   ${BINDIR}/certutil -A -n TrustAnchorRootCertificate -t "C,C,C" -i \
       $certs/TrustAnchorRootCertificate.crt -d $PKITSdb
   if [ -z "$NSS_NO_PKITS_CRLS" ]; then
-    ${BINDIR}/crlutil -I -i $crls/TrustAnchorRootCRL.crl -d ${PKITSdb}
+    ${BINDIR}/crlutil -I -i $crls/TrustAnchorRootCRL.crl -d ${PKITSdb} -f ${PKITSdb}/pw
   else
     html  "<H3>NO CRLs are being used.</H3>"
     pkits_log "NO CRLs are being used."
@@ -234,8 +234,8 @@ pkitsn()
 crlImport()
 {
   if [ -z "$NSS_NO_PKITS_CRLS" ]; then
-    echo "crlutil -d $PKITSdb -I -i $crls/$*"
-    ${BINDIR}/crlutil -d ${PKITSdb} -I -i $crls/$* > ${PKITSDIR}/cmdout.txt 2>&1
+    echo "crlutil -d $PKITSdb -I -f ${PKITSdb}/pw -i $crls/$*"
+    ${BINDIR}/crlutil -d ${PKITSdb} -I -f ${PKITSdb}/pw -i $crls/$* > ${PKITSDIR}/cmdout.txt 2>&1
     RET=$?
     cat ${PKITSDIR}/cmdout.txt
 
@@ -254,8 +254,8 @@ crlImportn()
 {
   RET=0
   if [ -z "$NSS_NO_PKITS_CRLS" ]; then
-    echo "crlutil -d $PKITSdb -I -i $crls/$*"
-    ${BINDIR}/crlutil -d ${PKITSdb} -I -i $crls/$* > ${PKITSDIR}/cmdout.txt 2>&1
+    echo "crlutil -d $PKITSdb -I -f ${PKITSdb}/pw -i $crls/$*"
+    ${BINDIR}/crlutil -d ${PKITSdb} -I -f ${PKITSdb}/pw -i $crls/$* > ${PKITSDIR}/cmdout.txt 2>&1
     RET=$?
     cat ${PKITSDIR}/cmdout.txt
 

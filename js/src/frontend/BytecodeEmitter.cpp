@@ -126,7 +126,6 @@ BytecodeEmitter::BytecodeEmitter(Parser *parser, uintN lineno)
     globalMap(parser->context),
     closedArgs(parser->context),
     closedVars(parser->context),
-    traceIndex(0),
     typesetCount(0)
 {
     flags = TCF_COMPILING;
@@ -1384,7 +1383,7 @@ frontend::PushBlockScope(TreeContext *tc, StmtInfo *stmt, ObjectBox *blockBox, p
     PushStatement(tc, stmt, STMT_BLOCK, top);
     stmt->flags |= SIF_SCOPE;
     blockBox->parent = tc->blockChainBox;
-    blockBox->object->setParent(tc->blockChain());
+    blockBox->object->setStaticBlockScopeChain(tc->blockChain());
     stmt->downScope = tc->topScopeStmt;
     tc->topScopeStmt = stmt;
     tc->blockChainBox = blockBox;
@@ -1450,7 +1449,7 @@ EmitTraceOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *nextpn)
 {
     if (nextpn) {
         /*
-         * Try to give the JSOP_TRACE the same line number as the next
+         * Try to give the JSOP_LOOPHEAD the same line number as the next
          * instruction. nextpn is often a block, in which case the next
          * instruction typically comes from the first statement inside.
          */
@@ -1461,10 +1460,7 @@ EmitTraceOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *nextpn)
             return -1;
     }
 
-    uint32 index = bce->traceIndex;
-    if (index < UINT16_MAX)
-        bce->traceIndex++;
-    return Emit3(cx, bce, JSOP_TRACE, UINT16_HI(index), UINT16_LO(index));
+    return Emit1(cx, bce, JSOP_LOOPHEAD);
 }
 
 /*
@@ -1725,7 +1721,7 @@ frontend::LexicalLookup(TreeContext *tc, JSAtom *atom, jsint *slotp, StmtInfo *s
 
             if (slotp) {
                 JS_ASSERT(obj->getSlot(JSSLOT_BLOCK_DEPTH).isInt32());
-                *slotp = obj->getSlot(JSSLOT_BLOCK_DEPTH).toInt32() + shape->shortid;
+                *slotp = obj->getSlot(JSSLOT_BLOCK_DEPTH).toInt32() + shape->shortid();
             }
             return stmt;
         }
@@ -1785,8 +1781,8 @@ LookupCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom *atom, Val
                      * from our variable object here.
                      */
                     if (!shape->writable() && !shape->configurable() &&
-                        shape->hasDefaultGetter() && obj->containsSlot(shape->slot)) {
-                        *constp = obj->getSlot(shape->slot);
+                        shape->hasDefaultGetter() && obj->containsSlot(shape->slot())) {
+                        *constp = obj->getSlot(shape->slot());
                     }
                 }
 
@@ -2024,8 +2020,13 @@ EmitEnterBlock(JSContext *cx, ParseNode *pn, BytecodeEmitter *bce)
      * js::Bindings::extensibleParents.
      */
     if ((bce->flags & TCF_FUN_EXTENSIBLE_SCOPE) ||
-        bce->bindings.extensibleParents())
-        blockObj->setBlockOwnShape(cx);
+        bce->bindings.extensibleParents()) {
+        HeapPtrShape shape;
+        shape.init(blockObj->lastProperty());
+        if (!Shape::setExtensibleParents(cx, &shape))
+            return false;
+        blockObj->setLastPropertyInfallible(shape);
+    }
 
     return true;
 }
@@ -2336,7 +2337,6 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         JS_ASSERT(bce->inFunction());
         JS_ASSERT_IF(cookie.slot() != UpvarCookie::CALLEE_SLOT, bce->roLexdeps->lookup(atom));
         JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
-        JS_ASSERT(bce->fun()->u.i.skipmin <= skip);
 
         /*
          * If op is a mutating opcode, this upvar's lookup skips too many levels,
@@ -3848,13 +3848,6 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         bce->switchToMain();
     }
 
-    if (bce->flags & TCF_FUN_UNBRAND_THIS) {
-        bce->switchToProlog();
-        if (Emit1(cx, bce, JSOP_UNBRANDTHIS) < 0)
-            return false;
-        bce->switchToMain();
-    }
-
     return EmitTree(cx, bce, body) &&
            Emit1(cx, bce, JSOP_STOP) >= 0 &&
            JSScript::NewScriptFromEmitter(cx, bce);
@@ -4760,7 +4753,7 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
       case PNK_RC: {
         JS_ASSERT(isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
 
-        gc::AllocKind kind = GuessObjectGCKind(pn_count, false);
+        gc::AllocKind kind = GuessObjectGCKind(pn_count);
         JSObject *obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
         if (!obj)
             return false;
@@ -5452,6 +5445,40 @@ EmitWith(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 }
 
 static bool
+SetMethodFunction(JSContext *cx, FunctionBox *funbox, JSAtom *atom)
+{
+    /*
+     * Replace a boxed function with a new one with a method atom. Methods
+     * require a function with the extended size finalize kind, which normal
+     * functions don't have. We don't eagerly allocate functions with the
+     * expanded size for boxed functions, as most functions are not methods.
+     */
+    JSFunction *fun = js_NewFunction(cx, NULL, NULL,
+                                     funbox->function()->nargs,
+                                     funbox->function()->flags,
+                                     funbox->function()->getParent(),
+                                     funbox->function()->atom,
+                                     JSFunction::ExtendedFinalizeKind);
+    if (!fun)
+        return false;
+
+    JSScript *script = funbox->function()->script();
+    if (script) {
+        fun->setScript(script);
+        if (!script->typeSetFunction(cx, fun))
+            return false;
+    }
+
+    JS_ASSERT(funbox->function()->joinable());
+    fun->setJoinable();
+
+    fun->setMethodAtom(atom);
+
+    funbox->object = fun;
+    return true;
+}
+
+static bool
 EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 {
     StmtInfo stmtInfo;
@@ -5510,7 +5537,7 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (jmp < 0)
         return false;
 
-    intN noteIndex2 = NewSrcNote(cx, bce, SRC_TRACE);
+    intN noteIndex2 = NewSrcNote(cx, bce, SRC_LOOPHEAD);
     if (noteIndex2 < 0)
         return false;
 
@@ -5651,7 +5678,7 @@ EmitNormalFor(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     top = bce->offset();
     SET_STATEMENT_TOP(&stmtInfo, top);
 
-    intN noteIndex2 = NewSrcNote(cx, bce, SRC_TRACE);
+    intN noteIndex2 = NewSrcNote(cx, bce, SRC_LOOPHEAD);
     if (noteIndex2 < 0)
         return false;
 
@@ -5975,7 +6002,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         jmp = EmitJump(cx, bce, JSOP_GOTO, 0);
         if (jmp < 0)
             return JS_FALSE;
-        noteIndex2 = NewSrcNote(cx, bce, SRC_TRACE);
+        noteIndex2 = NewSrcNote(cx, bce, SRC_LOOPHEAD);
         if (noteIndex2 < 0)
             return JS_FALSE;
         top = EmitTraceOp(cx, bce, pn->pn_right);
@@ -6006,7 +6033,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (noteIndex < 0 || Emit1(cx, bce, JSOP_NOP) < 0)
             return JS_FALSE;
 
-        noteIndex2 = NewSrcNote(cx, bce, SRC_TRACE);
+        noteIndex2 = NewSrcNote(cx, bce, SRC_LOOPHEAD);
         if (noteIndex2 < 0)
             return JS_FALSE;
 
@@ -6333,6 +6360,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                         pn2->pn_left->isOp(JSOP_SETPROP) &&
                         pn2->pn_right->isOp(JSOP_LAMBDA) &&
                         pn2->pn_right->pn_funbox->joinable()) {
+                        if (!SetMethodFunction(cx, pn2->pn_right->pn_funbox, pn2->pn_left->pn_atom))
+                            return JS_FALSE;
                         pn2->pn_left->setOp(JSOP_SETMETHOD);
                     }
                     if (!EmitTree(cx, bce, pn2))
@@ -7106,7 +7135,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          */
         JSObject *obj = NULL;
         if (!bce->hasSharps() && bce->compileAndGo()) {
-            gc::AllocKind kind = GuessObjectGCKind(pn->pn_count, false);
+            gc::AllocKind kind = GuessObjectGCKind(pn->pn_count);
             obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
             if (!obj)
                 return JS_FALSE;
@@ -7154,6 +7183,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                     obj = NULL;
                     op = JSOP_INITMETHOD;
                     pn2->setOp(op);
+                    if (!SetMethodFunction(cx, init->pn_funbox, pn3->pn_atom))
+                        return JS_FALSE;
                 } else {
                     /*
                      * Disable NEWOBJECT on initializers that set __proto__, which has
@@ -7181,11 +7212,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             }
         }
 
-        if (bce->funbox && bce->funbox->shouldUnbrand(methodInits, slowMethodInits)) {
-            obj = NULL;
-            if (Emit1(cx, bce, JSOP_UNBRAND) < 0)
-                return JS_FALSE;
-        }
         if (!EmitEndInit(cx, bce, pn->pn_count))
             return JS_FALSE;
 

@@ -94,16 +94,17 @@
                                        global object */
 
 #define JSFUN_EXPR_CLOSURE  0x1000  /* expression closure: function(x) x*x */
+#define JSFUN_EXTENDED      0x2000  /* structure is FunctionExtended */
 #define JSFUN_INTERPRETED   0x4000  /* use u.i if kind >= this value else u.n */
 #define JSFUN_FLAT_CLOSURE  0x8000  /* flat (aka "display") closure */
 #define JSFUN_NULL_CLOSURE  0xc000  /* null closure entrains no scope chain */
 #define JSFUN_KINDMASK      0xc000  /* encode interp vs. native and closure
                                        optimization level -- see above */
 
-struct JSFunction : public JSObject_Slots2
-{
-    /* Functions always have two fixed slots (FUN_CLASS_RESERVED_SLOTS). */
+namespace js { class FunctionExtended; }
 
+struct JSFunction : public JSObject
+{
     uint16          nargs;        /* maximum number of specified arguments,
                                      reflected as f.length/f.arity */
     uint16          flags;        /* flags, see JSFUN_* below and in jsapi.h */
@@ -116,10 +117,7 @@ struct JSFunction : public JSObject_Slots2
         struct Scripted {
             JSScript    *script_; /* interpreted bytecode descriptor or null;
                                      use the setter! */
-            uint16       skipmin; /* net skip amount up (toward zero) from
-                                     script_->staticLevel to nearest upvar,
-                                     including upvars in nested functions */
-            js::Shape   *names;   /* argument and variable names */
+            JSObject    *env;     /* environment for new activations */
         } i;
         void            *nativeOrScript;
     } u;
@@ -163,36 +161,16 @@ struct JSFunction : public JSObject_Slots2
         return flags & JSFUN_JOINABLE;
     }
 
-    JSObject &compiledFunObj() {
-        return *this;
-    }
-
-  private:
     /*
-     * FunctionClass reserves two slots, which are free in JSObject::fslots
-     * without requiring dslots allocation. Null closures that can be joined to
-     * a compiler-created function object use the first one to hold a mutable
-     * methodAtom() state variable, needed for correct foo.caller handling.
+     * For an interpreted function, accessors for the initial scope object of
+     * activations (stack frames) of the function.
      */
-    enum {
-        METHOD_ATOM_SLOT  = JSSLOT_FUN_METHOD_ATOM
-    };
+    inline JSObject *environment() const;
+    inline void setEnvironment(JSObject *obj);
 
-  public:
+    static inline size_t offsetOfEnvironment() { return offsetof(JSFunction, u.i.env); }
+
     inline void setJoinable();
-
-    /*
-     * Method name imputed from property uniquely assigned to or initialized,
-     * where the function does not need to be cloned to carry a scope chain or
-     * flattened upvars.
-     */
-    JSAtom *methodAtom() const {
-        return (joinable() && getSlot(METHOD_ATOM_SLOT).isString())
-               ? &getSlot(METHOD_ATOM_SLOT).toString()->asAtom()
-               : NULL;
-    }
-
-    inline void setMethodAtom(JSAtom *atom);
 
     js::HeapPtrScript &script() const {
         JS_ASSERT(isInterpreted());
@@ -221,10 +199,6 @@ struct JSFunction : public JSObject_Slots2
         return offsetof(JSFunction, u.nativeOrScript);
     }
 
-    /* Number of extra fixed function object slots. */
-    static const uint32 CLASS_RESERVED_SLOTS = JSObject::FUN_CLASS_RESERVED_SLOTS;
-
-
     js::Class *getConstructorClass() const {
         JS_ASSERT(isNative());
         return u.n.clasp;
@@ -234,228 +208,127 @@ struct JSFunction : public JSObject_Slots2
         JS_ASSERT(isNative());
         u.n.clasp = clasp;
     }
+
+#if JS_BITS_PER_WORD == 32
+    static const js::gc::AllocKind FinalizeKind = js::gc::FINALIZE_OBJECT2;
+    static const js::gc::AllocKind ExtendedFinalizeKind = js::gc::FINALIZE_OBJECT4;
+#else
+    static const js::gc::AllocKind FinalizeKind = js::gc::FINALIZE_OBJECT4;
+    static const js::gc::AllocKind ExtendedFinalizeKind = js::gc::FINALIZE_OBJECT8;
+#endif
+
+    inline void trace(JSTracer *trc);
+
+    /* Bound function accessors. */
+
+    inline bool initBoundFunction(JSContext *cx, const js::Value &thisArg,
+                                  const js::Value *args, uintN argslen);
+
+    inline JSObject *getBoundFunctionTarget() const;
+    inline const js::Value &getBoundFunctionThis() const;
+    inline const js::Value &getBoundFunctionArgument(uintN which) const;
+    inline size_t getBoundFunctionArgumentCount() const;
+
+  private:
+    inline js::FunctionExtended *toExtended();
+    inline const js::FunctionExtended *toExtended() const;
+
+    inline bool isExtended() const {
+        JS_STATIC_ASSERT(FinalizeKind != ExtendedFinalizeKind);
+        JS_ASSERT(!!(flags & JSFUN_EXTENDED) == (getAllocKind() == ExtendedFinalizeKind));
+        return !!(flags & JSFUN_EXTENDED);
+    }
+
+  public:
+    /* Accessors for data stored in extended functions. */
+
+    inline void initializeExtended();
+
+    inline void setExtendedSlot(size_t which, const js::Value &val);
+    inline const js::Value &getExtendedSlot(size_t which) const;
+
+    /*
+     * Flat closures with one or more upvars snapshot the upvars' values
+     * into a vector of js::Values referenced from here. This is a private
+     * pointer but is set only at creation and does not need to be barriered.
+     */
+    static const uint32 FLAT_CLOSURE_UPVARS_SLOT = 0;
+
+    static inline size_t getFlatClosureUpvarsOffset();
+
+    inline js::Value getFlatClosureUpvar(uint32 i) const;
+    inline void setFlatClosureUpvar(uint32 i, const js::Value &v);
+    inline void initFlatClosureUpvar(uint32 i, const js::Value &v);
+
+  private:
+    inline bool hasFlatClosureUpvars() const;
+    inline js::HeapValue *getFlatClosureUpvars() const;
+  public:
+
+    /* See comments in fun_finalize. */
+    inline void finalizeUpvars();
+
+    /* Slot holding associated method property, needed for foo.caller handling. */
+    static const uint32 METHOD_PROPERTY_SLOT = 0;
+
+    /* For cloned methods, slot holding the object this was cloned as a property from. */
+    static const uint32 METHOD_OBJECT_SLOT = 1;
+
+    /* Whether this is a function cloned from a method. */
+    inline bool isClonedMethod() const;
+
+    /* For a cloned method, pointer to the object the method was cloned for. */
+    inline JSObject *methodObj() const;
+    inline void setMethodObj(JSObject& obj);
+
+    /*
+     * Method name imputed from property uniquely assigned to or initialized,
+     * where the function does not need to be cloned to carry a scope chain or
+     * flattened upvars. This is set on both the original and cloned function.
+     */
+    inline JSAtom *methodAtom() const;
+    inline void setMethodAtom(JSAtom *atom);
 };
 
 inline JSFunction *
-JSObject::getFunctionPrivate() const
+JSObject::toFunction()
 {
-    JS_ASSERT(isFunction());
-    return reinterpret_cast<JSFunction *>(getPrivate());
+    JS_ASSERT(JS_ObjectIsFunction(NULL, this));
+    return static_cast<JSFunction *>(this);
 }
 
-namespace js {
-
-struct FlatClosureData {
-    HeapValue upvars[1];
-};
-
-static JS_ALWAYS_INLINE bool
-IsFunctionObject(const js::Value &v)
+inline const JSFunction *
+JSObject::toFunction() const
 {
-    return v.isObject() && v.toObject().isFunction();
+    JS_ASSERT(JS_ObjectIsFunction(NULL, const_cast<JSObject *>(this)));
+    return static_cast<const JSFunction *>(this);
 }
-
-static JS_ALWAYS_INLINE bool
-IsFunctionObject(const js::Value &v, JSObject **funobj)
-{
-    return v.isObject() && (*funobj = &v.toObject())->isFunction();
-}
-
-static JS_ALWAYS_INLINE bool
-IsFunctionObject(const js::Value &v, JSObject **funobj, JSFunction **fun)
-{
-    bool b = IsFunctionObject(v, funobj);
-    if (b)
-        *fun = (*funobj)->getFunctionPrivate();
-    return b;
-}
-
-static JS_ALWAYS_INLINE bool
-IsFunctionObject(const js::Value &v, JSFunction **fun)
-{
-    JSObject *funobj;
-    return IsFunctionObject(v, &funobj, fun);
-}
-
-static JS_ALWAYS_INLINE bool
-IsNativeFunction(const js::Value &v)
-{
-    JSFunction *fun;
-    return IsFunctionObject(v, &fun) && fun->isNative();
-}
-
-static JS_ALWAYS_INLINE bool
-IsNativeFunction(const js::Value &v, JSFunction **fun)
-{
-    return IsFunctionObject(v, fun) && (*fun)->isNative();
-}
-
-static JS_ALWAYS_INLINE bool
-IsNativeFunction(const js::Value &v, JSNative native)
-{
-    JSFunction *fun;
-    return IsFunctionObject(v, &fun) && fun->maybeNative() == native;
-}
-
-/*
- * When we have an object of a builtin class, we don't quite know what its
- * valueOf/toString methods are, since these methods may have been overwritten
- * or shadowed. However, we can still do better than the general case by
- * hard-coding the necessary properties for us to find the native we expect.
- *
- * TODO: a per-thread shape-based cache would be faster and simpler.
- */
-static JS_ALWAYS_INLINE bool
-ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *clasp, jsid methodid, JSNative native)
-{
-    JS_ASSERT(obj->getClass() == clasp);
-
-    Value v;
-    if (!HasDataProperty(cx, obj, methodid, &v)) {
-        JSObject *proto = obj->getProto();
-        if (!proto || proto->getClass() != clasp || !HasDataProperty(cx, proto, methodid, &v))
-            return false;
-    }
-
-    return js::IsNativeFunction(v, native);
-}
-
-extern JS_ALWAYS_INLINE bool
-SameTraceType(const Value &lhs, const Value &rhs)
-{
-    return SameType(lhs, rhs) &&
-           (lhs.isPrimitive() ||
-            lhs.toObject().isFunction() == rhs.toObject().isFunction());
-}
-
-/*
- * Return true if this is a compiler-created internal function accessed by
- * its own object. Such a function object must not be accessible to script
- * or embedding code.
- */
-inline bool
-IsInternalFunctionObject(JSObject *funobj)
-{
-    JS_ASSERT(funobj->isFunction());
-    JSFunction *fun = (JSFunction *) funobj->getPrivate();
-    return funobj == fun && (fun->flags & JSFUN_LAMBDA) && !funobj->getParent();
-}
-    
-/* Valueified JS_IsConstructing. */
-static JS_ALWAYS_INLINE bool
-IsConstructing(const Value *vp)
-{
-#ifdef DEBUG
-    JSObject *callee = &JS_CALLEE(cx, vp).toObject();
-    if (callee->isFunction()) {
-        JSFunction *fun = callee->getFunctionPrivate();
-        JS_ASSERT((fun->flags & JSFUN_CONSTRUCTOR) != 0);
-    } else {
-        JS_ASSERT(callee->getClass()->construct != NULL);
-    }
-#endif
-    return vp[1].isMagic();
-}
-
-inline bool
-IsConstructing(CallReceiver call);
-
-static JS_ALWAYS_INLINE bool
-IsConstructing_PossiblyWithGivenThisObject(const Value *vp, JSObject **ctorThis)
-{
-#ifdef DEBUG
-    JSObject *callee = &JS_CALLEE(cx, vp).toObject();
-    if (callee->isFunction()) {
-        JSFunction *fun = callee->getFunctionPrivate();
-        JS_ASSERT((fun->flags & JSFUN_CONSTRUCTOR) != 0);
-    } else {
-        JS_ASSERT(callee->getClass()->construct != NULL);
-    }
-#endif
-    bool isCtor = vp[1].isMagic();
-    if (isCtor)
-        *ctorThis = vp[1].getMagicObjectOrNullPayload();
-    return isCtor;
-}
-
-inline const char *
-GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
-{
-    if (fun->atom)
-        return bytes->encode(cx, fun->atom);
-    return js_anonymous_str;
-}
-
-extern JSFunctionSpec function_methods[];
-
-extern JSBool
-Function(JSContext *cx, uintN argc, Value *vp);
-
-extern bool
-IsBuiltinFunctionConstructor(JSFunction *fun);
-
-/*
- * Preconditions: funobj->isInterpreted() && !funobj->isFunctionPrototype() &&
- * !funobj->isBoundFunction(). This is sufficient to establish that funobj has
- * a non-configurable non-method .prototype data property, thought it might not
- * have been resolved yet, and its value could be anything.
- *
- * Return the shape of the .prototype property of funobj, resolving it if
- * needed. On error, return NULL.
- *
- * This is not safe to call on trace because it defines properties, which can
- * trigger lookups that could reenter.
- */
-const Shape *
-LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj);
-
-} /* namespace js */
 
 extern JSString *
 fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent);
 
 extern JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
-               uintN flags, JSObject *parent, JSAtom *atom);
+               uintN flags, JSObject *parent, JSAtom *atom,
+               js::gc::AllocKind kind = JSFunction::FinalizeKind);
 
 extern void
 js_FinalizeFunction(JSContext *cx, JSFunction *fun);
 
-extern JSObject * JS_FASTCALL
-js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
-                       JSObject *proto);
+extern JSFunction * JS_FASTCALL
+js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent, JSObject *proto,
+                       js::gc::AllocKind kind = JSFunction::FinalizeKind);
 
-inline JSObject *
-CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
-                    bool ignoreSingletonClone = false);
-
-inline JSObject *
-CloneFunctionObject(JSContext *cx, JSFunction *fun)
-{
-    /*
-     * Variant which makes an exact clone of fun, preserving parent and proto.
-     * Calling the above version CloneFunctionObject(cx, fun, fun->getParent())
-     * is not equivalent: API clients, including XPConnect, can reparent
-     * objects so that fun->getGlobal() != fun->getProto()->getGlobal().
-     * See ReparentWrapperIfFound.
-     */
-    JS_ASSERT(fun->getParent() && fun->getProto());
-
-    if (fun->hasSingletonType())
-        return fun;
-
-    return js_CloneFunctionObject(cx, fun, fun->getParent(), fun->getProto());
-}
-
-extern JSObject * JS_FASTCALL
+extern JSFunction * JS_FASTCALL
 js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain);
 
-extern JSObject *
+extern JSFunction *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen);
 
 extern JSFunction *
 js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, JSNative native,
-                  uintN nargs, uintN flags);
+                  uintN nargs, uintN flags,
+                  js::gc::AllocKind kind = JSFunction::FinalizeKind);
 
 /*
  * Flags for js_ValueToFunction and js_ReportIsNotFunction.
@@ -465,9 +338,6 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, JSNative native,
 
 extern JSFunction *
 js_ValueToFunction(JSContext *cx, const js::Value *vp, uintN flags);
-
-extern JSObject *
-js_ValueToFunctionObject(JSContext *cx, js::Value *vp, uintN flags);
 
 extern JSObject *
 js_ValueToCallableObject(JSContext *cx, js::Value *vp, uintN flags);
@@ -511,7 +381,34 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp);
 extern JSBool
 SetCallUpvar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp);
 
+/*
+ * Function extended with reserved slots for use by various kinds of functions.
+ * Most functions do not have these extensions, but enough are that efficient
+ * storage is required (no malloc'ed reserved slots).
+ */
+class FunctionExtended : public JSFunction
+{
+    friend struct JSFunction;
+
+    /* Reserved slots available for storage by particular native functions. */
+    HeapValue extendedSlots[2];
+};
+
 } // namespace js
+
+inline js::FunctionExtended *
+JSFunction::toExtended()
+{
+    JS_ASSERT(isExtended());
+    return static_cast<js::FunctionExtended *>(this);
+}
+
+inline const js::FunctionExtended *
+JSFunction::toExtended() const
+{
+    JS_ASSERT(isExtended());
+    return static_cast<const js::FunctionExtended *>(this);
+}
 
 extern JSBool
 js_GetArgsValue(JSContext *cx, js::StackFrame *fp, js::Value *vp);

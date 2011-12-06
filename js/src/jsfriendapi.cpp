@@ -85,7 +85,7 @@ JS_FRIEND_API(JSFunction *)
 JS_GetObjectFunction(JSObject *obj)
 {
     if (obj->isFunction())
-        return obj->getFunctionPrivate();
+        return obj->toFunction();
     return NULL;
 }
 
@@ -125,14 +125,6 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
     return obj;
 }
 
-JS_FRIEND_API(uint32)
-JS_ObjectCountDynamicSlots(JSObject *obj)
-{
-    if (obj->hasSlotsArray())
-        return obj->numDynamicSlots(obj->numSlots());
-    return 0;
-}
-    
 JS_PUBLIC_API(void)
 JS_ShrinkingGC(JSContext *cx)
 {
@@ -186,20 +178,126 @@ AutoSwitchCompartment::~AutoSwitchCompartment()
     cx->compartment = oldCompartment;
 }
 
-#ifdef DEBUG
-JS_FRIEND_API(void)
-js::CheckReservedSlot(const JSObject *obj, size_t slot)
+JS_FRIEND_API(size_t)
+js::GetObjectDynamicSlotSize(JSObject *obj, JSMallocSizeOfFun mallocSizeOf)
 {
-    CheckSlot(obj, slot);
-    JS_ASSERT(slot < JSSLOT_FREE(obj->getClass()));
+    return obj->dynamicSlotSize(mallocSizeOf);
+}
+
+JS_FRIEND_API(size_t)
+js::GetCompartmentShapeTableSize(JSCompartment *c, JSMallocSizeOfFun mallocSizeOf)
+{
+    return c->baseShapes.sizeOfExcludingThis(mallocSizeOf)
+         + c->initialShapes.sizeOfExcludingThis(mallocSizeOf)
+         + c->newTypeObjects.sizeOfExcludingThis(mallocSizeOf)
+         + c->lazyTypeObjects.sizeOfExcludingThis(mallocSizeOf);
+}
+
+JS_FRIEND_API(bool)
+js::IsScopeObject(const JSObject *obj)
+{
+    return obj->isInternalScope();
+}
+
+JS_FRIEND_API(JSObject *)
+js::GetObjectParentMaybeScope(const JSObject *obj)
+{
+    return obj->scopeChain();
+}
+
+JS_FRIEND_API(JSObject *)
+js::GetGlobalForObjectCrossCompartment(JSObject *obj)
+{
+    return obj->getGlobal();
+}
+
+JS_FRIEND_API(uint32)
+js::GetObjectSlotSpan(const JSObject *obj)
+{
+    return obj->slotSpan();
+}
+
+JS_FRIEND_API(bool)
+js::IsOriginalScriptFunction(JSFunction *fun)
+{
+    return fun->script()->function() == fun;
+}
+
+JS_FRIEND_API(JSFunction *)
+js::DefineFunctionWithReserved(JSContext *cx, JSObject *obj, const char *name, JSNative call,
+                               uintN nargs, uintN attrs)
+{
+    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+    JSAtom *atom = js_Atomize(cx, name, strlen(name));
+    if (!atom)
+        return NULL;
+    return js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), call, nargs, attrs,
+                             JSFunction::ExtendedFinalizeKind);
+}
+
+JS_FRIEND_API(JSFunction *)
+js::NewFunctionWithReserved(JSContext *cx, JSNative native, uintN nargs, uintN flags,
+                            JSObject *parent, const char *name)
+{
+    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
+    JSAtom *atom;
+
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, parent);
+
+    if (!name) {
+        atom = NULL;
+    } else {
+        atom = js_Atomize(cx, name, strlen(name));
+        if (!atom)
+            return NULL;
+    }
+
+    return js_NewFunction(cx, NULL, native, nargs, flags, parent, atom,
+                          JSFunction::ExtendedFinalizeKind);
+}
+
+JS_FRIEND_API(JSFunction *)
+js::NewFunctionByIdWithReserved(JSContext *cx, JSNative native, uintN nargs, uintN flags, JSObject *parent,
+                                jsid id)
+{
+    JS_ASSERT(JSID_IS_STRING(id));
+    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, parent);
+
+    return js_NewFunction(cx, NULL, native, nargs, flags, parent, JSID_TO_ATOM(id),
+                          JSFunction::ExtendedFinalizeKind);
+}
+
+JS_FRIEND_API(JSObject *)
+js::InitClassWithReserved(JSContext *cx, JSObject *obj, JSObject *parent_proto,
+                          JSClass *clasp, JSNative constructor, uintN nargs,
+                          JSPropertySpec *ps, JSFunctionSpec *fs,
+                          JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
+{
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj, parent_proto);
+    return js_InitClass(cx, obj, parent_proto, Valueify(clasp), constructor,
+                        nargs, ps, fs, static_ps, static_fs, NULL,
+                        JSFunction::ExtendedFinalizeKind);
+}
+
+JS_FRIEND_API(const Value &)
+js::GetFunctionNativeReserved(JSObject *fun, size_t which)
+{
+    JS_ASSERT(fun->toFunction()->isNative());
+    return fun->toFunction()->getExtendedSlot(which);
 }
 
 JS_FRIEND_API(void)
-js::CheckSlot(const JSObject *obj, size_t slot)
+js::SetFunctionNativeReserved(JSObject *fun, size_t which, const Value &val)
 {
-    JS_ASSERT(slot < obj->numSlots());
+    JS_ASSERT(fun->toFunction()->isNative());
+    fun->toFunction()->setExtendedSlot(which, val);
 }
-#endif
 
 /*
  * The below code is for temporary telemetry use. It can be removed when

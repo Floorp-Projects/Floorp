@@ -42,9 +42,9 @@
 #include "nsIBinaryInputStream.h"
 #include "nsIBrowserProfileMigrator.h"
 #include "nsIObserverService.h"
-#include "nsISupportsArray.h"
 #include "nsStringAPI.h"
 #include "nsTArray.h"
+#include "nsIMutableArray.h"
 #include "nsINavHistoryService.h"
 #include "nsIStringBundle.h"
 
@@ -144,7 +144,7 @@ protected:
 
 private:
   nsCOMPtr<nsILocalFile> mOperaProfile;
-  nsCOMPtr<nsISupportsArray> mProfiles;
+  nsCOMPtr<nsIMutableArray> mProfiles;
   nsCOMPtr<nsIObserverService> mObserverService;
 };
 

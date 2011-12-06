@@ -98,9 +98,6 @@ class Bytecode
     /* Whether there are any incoming jumps to this instruction. */
     bool jumpTarget : 1;
 
-    /* There is a backwards jump to this instruction. */
-    bool loopHead : 1;
-
     /* Whether there is fallthrough to this instruction from a non-branching instruction. */
     bool fallthrough : 1;
 
@@ -400,7 +397,7 @@ static inline uint32 ArgSlot(uint32 arg) {
     return 2 + arg;
 }
 static inline uint32 LocalSlot(JSScript *script, uint32 local) {
-    return 2 + (script->hasFunction ? script->function()->nargs : 0) + local;
+    return 2 + (script->function() ? script->function()->nargs : 0) + local;
 }
 static inline uint32 TotalSlots(JSScript *script) {
     return LocalSlot(script, 0) + script->nfixed;

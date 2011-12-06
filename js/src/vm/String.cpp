@@ -78,14 +78,6 @@ JSString::isExternal() const
     return is_external;
 }
 
-void
-JSLinearString::mark(JSTracer *)
-{
-    JSLinearString *str = this;
-    while (str->markIfUnmarked() && str->isDependent())
-        str = str->asDependent().base();
-}
-
 size_t
 JSString::charsHeapSize(JSMallocSizeOfFun mallocSizeOf)
 {

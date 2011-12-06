@@ -107,7 +107,7 @@ RegExpObjectBuilder::getOrCreateClone(RegExpObject *proto)
 {
     JS_ASSERT(!reobj_);
 
-    JSObject *clone = NewNativeClassInstance(cx, &RegExpClass, proto, proto->getParent());
+    JSObject *clone = NewObjectWithGivenProto(cx, &RegExpClass, proto, proto->getParent());
     if (!clone)
         return false;
     clone->setPrivate(NULL);
@@ -278,10 +278,9 @@ RegExpObject::execute(JSContext *cx, const jschar *chars, size_t length, size_t 
     return getPrivate()->execute(cx, chars, length, lastIndex, allocScope, output);
 }
 
-const Shape *
+Shape *
 RegExpObject::assignInitialShape(JSContext *cx)
 {
-    JS_ASSERT(!cx->compartment->initialRegExpShape);
     JS_ASSERT(isRegExp());
     JS_ASSERT(nativeEmpty());
 
@@ -343,8 +342,10 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
         if (!reobj)
             return false;
 
-        reobj->clearParent();
-        reobj->clearType();
+        if (!reobj->clearParent(xdr->cx))
+            return false;
+        if (!reobj->clearType(xdr->cx))
+            return false;
         *objp = reobj;
     }
     return true;

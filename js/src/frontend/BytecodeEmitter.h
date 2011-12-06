@@ -204,15 +204,6 @@ struct StmtInfo {
 /* bits 0x40000 and 0x80000 are unused */
 
 /*
- * Flag signifying that the current function seems to be a constructor that
- * sets this.foo to define "methods", at least one of which can't be a null
- * closure, so we should avoid over-specializing property cache entries and
- * trace inlining guards to method function object identity, which will vary
- * per instance.
- */
-#define TCF_FUN_UNBRAND_THIS   0x100000
-
-/*
  * "Module pattern", i.e., a lambda that is immediately applied and the whole
  * of an expression statement.
  */
@@ -674,7 +665,6 @@ struct BytecodeEmitter : public TreeContext
     SlotVector      closedArgs;
     SlotVector      closedVars;
 
-    uint16          traceIndex;     /* index for the next JSOP_TRACE instruction */
     uint16          typesetCount;   /* Number of JOF_TYPESET opcodes generated */
 
     BytecodeEmitter(Parser *parser, uintN lineno);
@@ -957,7 +947,7 @@ enum SrcNoteType {
     SRC_WHILE       = 4,        /* JSOP_GOTO to for or while loop condition
                                    from before loop, else JSOP_NOP at top of
                                    do-while loop */
-    SRC_TRACE       = 4,        /* For JSOP_TRACE; includes distance to loop end */
+    SRC_LOOPHEAD    = 4,        /* For JSOP_LOOPHEAD; includes distance to loop end */
     SRC_CONTINUE    = 5,        /* JSOP_GOTO is a continue, not a break;
                                    also used on JSOP_ENDINIT if extra comma
                                    at end of array literal: [1,2,,];

@@ -64,12 +64,6 @@ USING_INDEXEDDB_NAMESPACE
 
 namespace {
 
-PRUint32 gDatabaseInstanceCount = 0;
-mozilla::Mutex* gPromptHelpersMutex = nsnull;
-
-// Protected by gPromptHelpersMutex.
-nsTArray<nsRefPtr<CheckQuotaHelper> >* gPromptHelpers = nsnull;
-
 class CreateObjectStoreHelper : public AsyncConnectionHelper
 {
 public:
@@ -195,11 +189,6 @@ IDBDatabase::IDBDatabase()
   mRunningVersionChange(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (!gDatabaseInstanceCount++) {
-    NS_ASSERTION(!gPromptHelpersMutex, "Should be null!");
-    gPromptHelpersMutex = new mozilla::Mutex("IDBDatabase gPromptHelpersMutex");
-  }
 }
 
 IDBDatabase::~IDBDatabase()
@@ -218,86 +207,20 @@ IDBDatabase::~IDBDatabase()
   if (mListenerManager) {
     mListenerManager->Disconnect();
   }
-
-  if (!--gDatabaseInstanceCount) {
-    NS_ASSERTION(gPromptHelpersMutex, "Should not be null!");
-
-    delete gPromptHelpers;
-    gPromptHelpers = nsnull;
-
-    delete gPromptHelpersMutex;
-    gPromptHelpersMutex = nsnull;
-  }
-}
-
-bool
-IDBDatabase::IsQuotaDisabled()
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(gPromptHelpersMutex, "This should never be null!");
-
-  MutexAutoLock lock(*gPromptHelpersMutex);
-
-  if (!gPromptHelpers) {
-    gPromptHelpers = new nsAutoTArray<nsRefPtr<CheckQuotaHelper>, 10>();
-  }
-
-  CheckQuotaHelper* foundHelper = nsnull;
-
-  PRUint32 count = gPromptHelpers->Length();
-  for (PRUint32 index = 0; index < count; index++) {
-    nsRefPtr<CheckQuotaHelper>& helper = gPromptHelpers->ElementAt(index);
-    if (helper->WindowSerial() == Owner()->GetSerial()) {
-      foundHelper = helper;
-      break;
-    }
-  }
-
-  if (!foundHelper) {
-    nsRefPtr<CheckQuotaHelper>* newHelper = gPromptHelpers->AppendElement();
-    if (!newHelper) {
-      NS_WARNING("Out of memory!");
-      return false;
-    }
-    *newHelper = new CheckQuotaHelper(this, *gPromptHelpersMutex);
-    foundHelper = *newHelper;
-
-    {
-      // Unlock before calling out to XPCOM.
-      MutexAutoUnlock unlock(*gPromptHelpersMutex);
-
-      nsresult rv = NS_DispatchToMainThread(foundHelper, NS_DISPATCH_NORMAL);
-      NS_ENSURE_SUCCESS(rv, false);
-    }
-  }
-
-  return foundHelper->PromptAndReturnQuotaIsDisabled();
 }
 
 void
 IDBDatabase::Invalidate()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(gPromptHelpersMutex, "This should never be null!");
 
   // Make sure we're closed too.
   Close();
 
-  // Cancel any quota prompts that are currently being displayed.
-  {
-    MutexAutoLock lock(*gPromptHelpersMutex);
-
-    if (gPromptHelpers) {
-      PRUint32 count = gPromptHelpers->Length();
-      for (PRUint32 index = 0; index < count; index++) {
-        nsRefPtr<CheckQuotaHelper>& helper = gPromptHelpers->ElementAt(index);
-        if (helper->WindowSerial() == Owner()->GetSerial()) {
-          helper->Cancel();
-          break;
-        }
-      }
-    }
-  }
+  // When the IndexedDatabaseManager needs to invalidate databases, all it has
+  // is an origin, so we call back into the manager to cancel any prompts for
+  // our owner.
+  IndexedDatabaseManager::CancelPromptsForWindow(Owner());
 
   mInvalidated = true;
 }
@@ -464,11 +387,8 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
 
   DatabaseInfo* databaseInfo = Info();
 
-  if (databaseInfo->ContainsStoreName(aName)) {
-    return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
-  }
-
   nsString keyPath;
+  keyPath.SetIsVoid(true);
   bool autoIncrement = false;
 
   if (!JSVAL_IS_VOID(aOptions) && !JSVAL_IS_NULL(aOptions)) {
@@ -514,8 +434,17 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
     autoIncrement = !!boolVal;
   }
 
-  if (!IDBObjectStore::IsValidKeyPath(aCx, keyPath)) {
-    return NS_ERROR_DOM_SYNTAX_ERR;
+  if (databaseInfo->ContainsStoreName(aName)) {
+    return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
+  }
+
+  if (!keyPath.IsVoid()) {
+    if (keyPath.IsEmpty() && autoIncrement) {
+      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    }
+    if (!IDBObjectStore::IsValidKeyPath(aCx, keyPath)) {
+      return NS_ERROR_DOM_SYNTAX_ERR;
+    }
   }
 
   nsAutoPtr<ObjectStoreInfo> newInfo(new ObjectStoreInfo());
@@ -575,6 +504,9 @@ IDBDatabase::DeleteObjectStore(const nsAString& aName)
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   info->RemoveObjectStore(aName);
+
+  transaction->ReleaseCachedObjectStore(aName);
+
   return NS_OK;
 }
 
@@ -800,8 +732,8 @@ CreateObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   nsCOMPtr<mozIStorageStatement> stmt =
     mTransaction->GetCachedStatement(NS_LITERAL_CSTRING(
-    "INSERT INTO object_store (id, name, key_path, auto_increment) "
-    "VALUES (:id, :name, :key_path, :auto_increment)"
+    "INSERT INTO object_store (id, auto_increment, name, key_path) "
+    "VALUES (:id, :auto_increment, :name, :key_path)"
   ));
   NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -811,15 +743,17 @@ CreateObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                                        mObjectStore->Id());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("auto_increment"),
+                             mObjectStore->IsAutoIncrement() ? 1 : 0);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mObjectStore->Name());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"),
-                              mObjectStore->KeyPath());
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("auto_increment"),
-                             mObjectStore->IsAutoIncrement() ? 1 : 0);
+  rv = mObjectStore->HasKeyPath() ?
+    stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"),
+                           mObjectStore->KeyPath()) :
+    stmt->BindNullByName(NS_LITERAL_CSTRING("key_path"));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   rv = stmt->Execute();

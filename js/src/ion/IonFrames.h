@@ -184,8 +184,7 @@ class FrameRecovery
     MachineState machine_;
     uint32 snapshotOffset_;
 
-    JSObject *callee_;
-    JSFunction *fun_;
+    JSFunction *callee_;
     JSScript *script_;
 
   private:
@@ -217,11 +216,8 @@ class FrameRecovery
         JS_ASSERT((offset % STACK_SLOT_SIZE) == 0);
         return *(double *)(sp_ + offset);
     }
-    JSObject *callee() const {
+    JSFunction *callee() const {
         return callee_;
-    }
-    JSFunction *fun() const {
-        return fun_;
     }
     JSScript *script() const {
         return script_;
@@ -249,7 +245,7 @@ MakeFrameDescriptor(uint32 frameSize, FrameType type)
 typedef void * CalleeToken;
 
 static inline CalleeToken
-CalleeToToken(JSObject *fun)
+CalleeToToken(JSFunction *fun)
 {
     return (CalleeToken *)fun;
 }
@@ -263,11 +259,11 @@ IsCalleeTokenFunction(CalleeToken token)
 {
     return (uintptr_t(token) & 1) == 0;
 }
-static inline JSObject *
+static inline JSFunction *
 CalleeTokenToFunction(CalleeToken token)
 {
     JS_ASSERT(IsCalleeTokenFunction(token));
-    return (JSObject *)token;
+    return (JSFunction *)token;
 }
 static inline JSScript *
 CalleeTokenToScript(CalleeToken token)

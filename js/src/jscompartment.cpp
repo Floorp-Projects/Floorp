@@ -49,7 +49,6 @@
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 #include "assembler/wtf/Platform.h"
-#include "assembler/jit/ExecutableAllocator.h"
 #include "yarr/BumpPointerAllocator.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
@@ -86,14 +85,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     jaegerCompartment_(NULL),
 #endif
     propertyTree(thisForCtor()),
-    emptyArgumentsShape(NULL),
-    emptyBlockShape(NULL),
-    emptyCallShape(NULL),
-    emptyDeclEnvShape(NULL),
-    emptyEnumeratorShape(NULL),
-    emptyWithShape(NULL),
-    initialRegExpShape(NULL),
-    initialStringShape(NULL),
+    emptyTypeObject(NULL),
     debugModeBits(rt->debugMode ? DebugFromC : 0),
     mathCache(NULL),
     breakpointSites(rt),
@@ -129,6 +121,8 @@ JSCompartment::init(JSContext *cx)
 {
     activeAnalysis = activeInference = false;
     types.init(cx);
+
+    newObjectCache.reset();
 
     if (!crossCompartmentWrappers.init())
         return false;
@@ -180,14 +174,14 @@ JSCompartment::ensureJaegerCompartmentExists(JSContext *cx)
 }
 
 void
-JSCompartment::getMjitCodeStats(size_t& method, size_t& regexp, size_t& unused) const
+JSCompartment::sizeOfCode(size_t *method, size_t *regexp, size_t *unused) const
 {
     if (jaegerCompartment_) {
-        jaegerCompartment_->execAlloc()->getCodeStats(method, regexp, unused);
+        jaegerCompartment_->execAlloc()->sizeOfCode(method, regexp, unused);
     } else {
-        method = 0;
-        regexp = 0;
-        unused = 0;
+        *method = 0;
+        *regexp = 0;
+        *unused = 0;
     }
 }
 #endif
@@ -291,7 +285,8 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
             JS_ASSERT(obj->isCrossCompartmentWrapper());
             if (global->getClass() != &dummy_class && obj->getParent() != global) {
                 do {
-                    obj->setParent(global);
+                    if (!obj->setParent(cx, global))
+                        return false;
                     obj = obj->getProto();
                 } while (obj && obj->isCrossCompartmentWrapper());
             }
@@ -345,7 +340,8 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     if (!crossCompartmentWrappers.put(GetProxyPrivate(wrapper), *vp))
         return false;
 
-    wrapper->setParent(global);
+    if (!wrapper->setParent(cx, global))
+        return false;
     return true;
 }
 
@@ -472,11 +468,11 @@ JSCompartment::markTypes(JSTracer *trc)
     }
 
     for (size_t thingKind = FINALIZE_OBJECT0;
-         thingKind < FINALIZE_FUNCTION_AND_OBJECT_LIMIT;
+         thingKind < FINALIZE_OBJECT_LIMIT;
          thingKind++) {
         for (CellIterUnderGC i(this, AllocKind(thingKind)); !i.done(); i.next()) {
             JSObject *object = i.get<JSObject>();
-            if (!object->isNewborn() && object->hasSingletonType())
+            if (object->hasSingletonType())
                 MarkRoot(trc, object, "mark_types_singleton");
         }
     }
@@ -499,24 +495,17 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
         }
     }
 
-    /* Remove dead empty shapes. */
-    if (emptyArgumentsShape && IsAboutToBeFinalized(cx, emptyArgumentsShape))
-        emptyArgumentsShape = NULL;
-    if (emptyBlockShape && IsAboutToBeFinalized(cx, emptyBlockShape))
-        emptyBlockShape = NULL;
-    if (emptyCallShape && IsAboutToBeFinalized(cx, emptyCallShape))
-        emptyCallShape = NULL;
-    if (emptyDeclEnvShape && IsAboutToBeFinalized(cx, emptyDeclEnvShape))
-        emptyDeclEnvShape = NULL;
-    if (emptyEnumeratorShape && IsAboutToBeFinalized(cx, emptyEnumeratorShape))
-        emptyEnumeratorShape = NULL;
-    if (emptyWithShape && IsAboutToBeFinalized(cx, emptyWithShape))
-        emptyWithShape = NULL;
+    /* Remove dead references held weakly by the compartment. */
 
-    if (initialRegExpShape && IsAboutToBeFinalized(cx, initialRegExpShape))
-        initialRegExpShape = NULL;
-    if (initialStringShape && IsAboutToBeFinalized(cx, initialStringShape))
-        initialStringShape = NULL;
+    sweepBaseShapeTable(cx);
+    sweepInitialShapeTable(cx);
+    sweepNewTypeObjectTable(cx, newTypeObjects);
+    sweepNewTypeObjectTable(cx, lazyTypeObjects);
+
+    if (emptyTypeObject && IsAboutToBeFinalized(cx, emptyTypeObject))
+        emptyTypeObject = NULL;
+
+    newObjectCache.reset();
 
     sweepBreakpoints(cx);
 

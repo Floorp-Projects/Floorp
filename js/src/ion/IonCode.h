@@ -106,7 +106,7 @@ class IonCode : public gc::Cell
         return insnSize_;
     }
     void trace(JSTracer *trc);
-    void finalize(JSContext *cx);
+    void finalize(JSContext *cx, bool background);
 
     template <typename T> T as() const {
         return JS_DATA_TO_FUNC_PTR(T, raw());

@@ -99,4 +99,5 @@ function test() {
   });
 
   waitForExplicitFinish();
+  ignoreAllUncaughtExceptions();
 }

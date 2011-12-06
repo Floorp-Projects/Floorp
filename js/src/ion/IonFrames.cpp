@@ -56,8 +56,7 @@ FrameRecovery::FrameRecovery(uint8 *fp, uint8 *sp, const MachineState &machine)
 {
     if (IsCalleeTokenFunction(fp_->calleeToken())) {
         callee_ = CalleeTokenToFunction(fp_->calleeToken());
-        fun_ = callee_->getFunctionPrivate();
-        script_ = fun_->script();
+        script_ = callee_->script();
     } else {
         script_ = CalleeTokenToScript(fp_->calleeToken());
     }

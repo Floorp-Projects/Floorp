@@ -239,6 +239,11 @@ struct ThreadData {
         propertyCache.purge(cx);
     }
 
+#ifdef JS_THREADSAFE
+    void sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, size_t *temporary,
+                             size_t *regexpCode, size_t *stackCommitted);
+#endif
+
     /* This must be called with the GC lock held. */
     void triggerOperationCallback(JSRuntime *rt);
 
@@ -269,7 +274,7 @@ struct JSThread {
     /* Opaque thread-id, from NSPR's PR_GetCurrentThread(). */
     void                *id;
 
-    /* Number of JS_SuspendRequest calls withot JS_ResumeRequest. */
+    /* Number of JS_SuspendRequest calls without JS_ResumeRequest. */
     unsigned            suspendCount;
 
 # ifdef DEBUG
@@ -298,6 +303,10 @@ struct JSThread {
     bool init() {
         return data.init();
     }
+
+    JS_FRIEND_API(void) sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal,
+                                            size_t *temporary, size_t *regexpCode,
+                                            size_t *stackCommitted);
 };
 
 #define JS_THREAD_DATA(cx)      (&(cx)->thread()->data)
@@ -397,20 +406,6 @@ struct JSRuntime
     JSActivityCallback    activityCallback;
     void                 *activityCallbackArg;
 
-    /*
-     * Shape regenerated whenever a prototype implicated by an "add property"
-     * property cache fill and induced trace guard has a readonly property or a
-     * setter defined on it. This number proxies for the shapes of all objects
-     * along the prototype chain of all objects in the runtime on which such an
-     * add-property result has been cached/traced.
-     *
-     * See bug 492355 for more details.
-     *
-     * This comes early in JSRuntime to minimize the immediate format used by
-     * trace-JITted code that reads it.
-     */
-    uint32              protoHazardShape;
-
     /* Garbage collector state, used by jsgc.c. */
 
     /*
@@ -489,7 +484,6 @@ struct JSRuntime
     bool                gcPoke;
     bool                gcMarkAndSweep;
     bool                gcRunning;
-    bool                gcRegenShapes;
 
     /*
      * These options control the zealousness of the GC. The fundamental values
@@ -667,21 +661,6 @@ struct JSRuntime
   public:
     void setTrustedPrincipals(JSPrincipals *p) { trustedPrincipals_ = p; }
     JSPrincipals *trustedPrincipals() const { return trustedPrincipals_; }
-
-    /*
-     * Object shape (property cache structural type) identifier generator.
-     *
-     * Type 0 stands for the empty scope, and must not be regenerated due to
-     * uint32 wrap-around. Since js_GenerateShape (in jsinterp.cpp) uses
-     * atomic pre-increment, the initial value for the first typed non-empty
-     * scope will be 1.
-     *
-     * If this counter overflows into SHAPE_OVERFLOW_BIT (in jsinterp.h), the
-     * cache is disabled, to avoid aliasing two different types. It stays
-     * disabled until a triggered GC at some later moment compresses live
-     * types, minimizing rt->shapeGen in the process.
-     */
-    volatile uint32     shapeGen;
 
     /* Literal table maintained by jsatom.c functions. */
     JSAtomState         atomState;
@@ -1281,6 +1260,8 @@ struct JSContext
      * Note: !cx->compartment is treated as trusted.
      */
     bool runningWithTrustedPrincipals() const;
+
+    JS_FRIEND_API(size_t) sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf) const;
 
     static inline JSContext *fromLinkField(JSCList *link) {
         JS_ASSERT(link);
@@ -2137,29 +2118,6 @@ enum FrameExpandKind {
     FRAME_EXPAND_NONE = 0,
     FRAME_EXPAND_ALL = 1
 };
-
-static JS_INLINE JSBool
-js_IsPropertyCacheDisabled(JSContext *cx)
-{
-    return cx->runtime->shapeGen >= js::SHAPE_OVERFLOW_BIT;
-}
-
-static JS_INLINE uint32
-js_RegenerateShapeForGC(JSRuntime *rt)
-{
-    JS_ASSERT(rt->gcRunning);
-    JS_ASSERT(rt->gcRegenShapes);
-
-    /*
-     * Under the GC, compared with js_GenerateShape, we don't need to use
-     * atomic increments but we still must make sure that after an overflow
-     * the shape stays such.
-     */
-    uint32 shape = rt->shapeGen;
-    shape = (shape + 1) | (shape & js::SHAPE_OVERFLOW_BIT);
-    rt->shapeGen = shape;
-    return shape;
-}
 
 namespace js {
 

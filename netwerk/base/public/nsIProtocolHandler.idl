@@ -261,6 +261,12 @@ interface nsIProtocolHandler : nsISupports
      * ignored if ALLOWS_PROXY is not set.
      */
     const unsigned long ALLOWS_PROXY_HTTP = (1<<3);
+
+    /**
+     * This protocol handler forbids accessing cookies e.g. for mail related
+     * protocols.
+     */
+    const unsigned long URI_FORBIDS_COOKIE_ACCESS = (1<<15);
 };
 
 %{C++

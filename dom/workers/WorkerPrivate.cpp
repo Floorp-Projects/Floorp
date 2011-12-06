@@ -3051,6 +3051,16 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
     mStatus = aStatus;
   }
 
+  // Now that status > Running, no-one can create a new mCrossThreadDispatcher
+  // if we don't already have one.
+  if (mCrossThreadDispatcher) {
+    // Since we'll no longer process events, make sure we no longer allow
+    // anyone to post them.
+    // We have to do this without mMutex held, since our mutex must be
+    // acquired *after* mCrossThreadDispatcher's mutex when they're both held.
+    mCrossThreadDispatcher->Forget();
+  }
+
   NS_ASSERTION(previousStatus != Pending, "How is this possible?!");
 
   NS_ASSERTION(previousStatus >= Canceling || mKillTime.IsNull(),
@@ -3587,6 +3597,16 @@ WorkerPrivate::AssertIsOnWorkerThread() const
   }
 }
 #endif
+
+WorkerCrossThreadDispatcher*
+WorkerPrivate::GetCrossThreadDispatcher()
+{
+  mozilla::MutexAutoLock lock(mMutex);
+  if (!mCrossThreadDispatcher && mStatus <= Running) {
+    mCrossThreadDispatcher = new WorkerCrossThreadDispatcher(this);
+  }
+  return mCrossThreadDispatcher;
+}
 
 BEGIN_WORKERS_NAMESPACE
 

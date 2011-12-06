@@ -78,19 +78,14 @@ MacroAssembler::guardTypeSet(const T &address, types::TypeSet *types,
         branchTestObject(NotEqual, tag, mismatched);
         Register obj = extractObject(address, scratch);
 
-        Label notSingleton;
-        branchTest32(Zero, Address(obj, offsetof(JSObject, flags)),
-                     Imm32(JSObject::SINGLETON_TYPE), &notSingleton);
-
         unsigned count = types->getObjectCount();
         for (unsigned i = 0; i < count; i++) {
             if (JSObject *object = types->getSingleObject(i))
                 branchPtr(Equal, obj, ImmGCPtr(object), &matched);
         }
-        jump(mismatched);
 
-        bind(&notSingleton);
         loadPtr(Address(obj, JSObject::offsetOfType()), scratch);
+
         for (unsigned i = 0; i < count; i++) {
             if (types::TypeObject *object = types->getTypeObject(i))
                 branchPtr(Equal, obj, ImmGCPtr(object), &matched);

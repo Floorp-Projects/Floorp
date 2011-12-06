@@ -37,7 +37,7 @@
 /*
  * Code for dealing with X509.V3 extensions.
  *
- * $Id: certv3.c,v 1.10 2007/10/12 01:44:40 julien.pierre.boogz%sun.com Exp $
+ * $Id: certv3.c,v 1.12 2011/11/16 19:12:32 kaie%kuix.de Exp $
  */
 
 #include "cert.h"

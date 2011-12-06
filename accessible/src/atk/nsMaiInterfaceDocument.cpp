@@ -81,24 +81,6 @@ getDocumentLocaleCB(AtkDocument *aDocument)
     return nsAccessibleWrap::ReturnString(locale);
 }
 
-const gchar *
-getDocumentTypeCB(AtkDocument *aDocument)
-{
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
-    if (!accWrap)
-        return nsnull;
-
-    nsCOMPtr<nsIAccessibleDocument> accDocument;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleDocument),
-                            getter_AddRefs(accDocument));
-    NS_ENSURE_TRUE(accDocument, nsnull);
-
-    nsAutoString mimeType;
-    nsresult rv = accDocument->GetMimeType(mimeType);
-    NS_ENSURE_SUCCESS(rv, nsnull);
-    return nsAccessibleWrap::ReturnString(mimeType);
-}
-
 static inline GSList *
 prependToList(GSList *aList, const char *const aName, const nsAutoString &aValue)
 {

@@ -151,7 +151,7 @@ StackFrame::stealFrameAndSlots(Value *vp, StackFrame *otherfp,
         obj.setPrivate(this);
         otherfp->flags_ &= ~HAS_CALL_OBJ;
         if (js_IsNamedLambda(fun())) {
-            JSObject *env = obj.getParent();
+            JSObject *env = obj.internalScopeChain();
             JS_ASSERT(env->isDeclEnv());
             env->setPrivate(this);
         }
@@ -498,7 +498,7 @@ StackSpace::tryBumpLimit(JSContext *cx, Value *from, uintN nvals, Value **limit)
 }
 
 size_t
-StackSpace::committedSize()
+StackSpace::sizeOfCommitted()
 {
 #ifdef XP_WIN
     return (commitEnd_ - base_) * sizeof(Value);
@@ -679,7 +679,7 @@ ContextStack::pushInvokeFrame(JSContext *cx, const CallArgs &args,
     JS_ASSERT(space().firstUnused() == args.end());
 
     JSObject &callee = args.callee();
-    JSFunction *fun = callee.getFunctionPrivate();
+    JSFunction *fun = callee.toFunction();
     JSScript *script = fun->script();
 
     /*StackFrame::Flags*/ uint32 flags = ToFrameFlags(initial);
@@ -687,7 +687,7 @@ ContextStack::pushInvokeFrame(JSContext *cx, const CallArgs &args,
     if (!fp)
         return false;
 
-    fp->initCallFrame(cx, callee, fun, script, args.length(), (StackFrame::Flags) flags);
+    fp->initCallFrame(cx, *fun, script, args.length(), (StackFrame::Flags) flags);
     ifg->regs_.prepareToRun(*fp, script);
 
     ifg->prevRegs_ = seg_->pushRegs(ifg->regs_);
@@ -750,17 +750,17 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
 }
 
 StackFrame *
-ContextStack::pushBailoutFrame(JSContext *cx, JSObject *callee, JSFunction *fun,
+ContextStack::pushBailoutFrame(JSContext *cx, JSFunction &fun,
                                JSScript *script, BailoutFrameGuard *bfg)
 {
-    uintN formalArgs = fun->nargs + 2;
+    uintN formalArgs = fun.nargs + 2;
     uintN nvars = formalArgs + VALUES_PER_STACK_FRAME + script->nslots;
     Value *firstUnused = ensureOnTop(cx, DONT_REPORT_ERROR, nvars, CAN_EXTEND, &bfg->pushedSeg_);
     if (!firstUnused)
         return NULL;
     
     StackFrame *fp = reinterpret_cast<StackFrame *>(firstUnused + formalArgs);
-    fp->initCallFrame(cx, *callee, fun, script, fun->nargs, ToFrameFlags(INITIAL_NONE));
+    fp->initCallFrame(cx, fun, script, fun.nargs, ToFrameFlags(INITIAL_NONE));
 
     SetValueRangeToUndefined(fp->slots(), script->nfixed);
     bfg->regs_.prepareToRun(*fp, script);

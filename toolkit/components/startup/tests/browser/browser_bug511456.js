@@ -88,6 +88,7 @@ var Watcher = {
 
 function test() {
   waitForExplicitFinish();
+  ignoreAllUncaughtExceptions();
 
   Services.wm.addListener(Watcher);
 

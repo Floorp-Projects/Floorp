@@ -2364,23 +2364,6 @@ nsXULDocument::ContextStack::SetTopIndex(PRInt32 aIndex)
 }
 
 
-bool
-nsXULDocument::ContextStack::IsInsideXULTemplate()
-{
-    if (mDepth) {
-        for (nsIContent* element = mTop->mElement; element;
-             element = element->GetParent()) {
-
-            if (element->NodeInfo()->Equals(nsGkAtoms::_template,
-                                            kNameSpaceID_XUL)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-
 //----------------------------------------------------------------------
 //
 // Content model walking routines

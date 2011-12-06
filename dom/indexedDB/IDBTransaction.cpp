@@ -214,6 +214,17 @@ IDBTransaction::OnRequestFinished()
 }
 
 void
+IDBTransaction::ReleaseCachedObjectStore(const nsAString& aName)
+{
+  for (PRUint32 i = 0; i < mCreatedObjectStores.Length(); i++) {
+    if (mCreatedObjectStores[i]->Name() == aName) {
+      mCreatedObjectStores.RemoveElementAt(i);
+      break;
+    }
+  }
+}
+
+void
 IDBTransaction::SetTransactionListener(IDBTransactionListener* aListener)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -406,7 +417,7 @@ IDBTransaction::IndexDataInsertStatement(bool aAutoIncrement,
       );
     }
     return GetCachedStatement(
-      "INSERT INTO ai_index_data "
+      "INSERT OR IGNORE INTO ai_index_data "
         "(index_id, ai_object_data_id, value) "
       "VALUES (:index_id, :object_data_id, :value)"
     );
@@ -419,7 +430,7 @@ IDBTransaction::IndexDataInsertStatement(bool aAutoIncrement,
     );
   }
   return GetCachedStatement(
-    "INSERT INTO index_data ("
+    "INSERT OR IGNORE INTO index_data ("
       "index_id, object_data_id, object_data_key, value) "
     "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
   );
@@ -887,7 +898,7 @@ CommitHelper::Run()
   }
 
   if (mConnection) {
-    IndexedDatabaseManager::SetCurrentDatabase(database);
+    IndexedDatabaseManager::SetCurrentWindow(database->Owner());
 
     if (!mAborted) {
       NS_NAMED_LITERAL_CSTRING(release, "COMMIT TRANSACTION");
@@ -923,7 +934,7 @@ CommitHelper::Run()
     mConnection->Close();
     mConnection = nsnull;
 
-    IndexedDatabaseManager::SetCurrentDatabase(nsnull);
+    IndexedDatabaseManager::SetCurrentWindow(nsnull);
   }
 
   return NS_OK;

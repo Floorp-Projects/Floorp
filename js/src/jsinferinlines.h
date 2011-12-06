@@ -321,10 +321,10 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
 
     JSObject *callee = &args.callee();
     if (callee->isFunction()) {
-        JSFunction *fun = callee->getFunctionPrivate();
+        JSFunction *fun = callee->toFunction();
         if (fun->isInterpreted()) {
             JSScript *script = fun->script();
-            if (!script->ensureRanAnalysis(cx, fun, callee->getParent()))
+            if (!script->ensureRanAnalysis(cx, fun->environment()))
                 return;
             if (cx->typeInferenceEnabled())
                 TypeMonitorCallSlow(cx, callee, args, constructing);
@@ -460,15 +460,9 @@ UseNewTypeAtEntry(JSContext *cx, StackFrame *fp)
 /////////////////////////////////////////////////////////////////////
 
 inline
-TypeScript::TypeScript(JSFunction *fun)
-  : function(fun),
-    global((js::GlobalObject *) GLOBAL_MISSING_SCOPE)
+TypeScript::TypeScript()
 {
-}
-
-inline
-TypeScript::~TypeScript()
-{
+    this->global = (js::GlobalObject *) GLOBAL_MISSING_SCOPE;
 }
 
 /* static */ inline unsigned
@@ -700,8 +694,6 @@ TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, const js:
 void
 TypeScript::trace(JSTracer *trc)
 {
-    if (function)
-        gc::MarkObject(trc, function, "script_fun");
     if (hasScope() && global)
         gc::MarkObject(trc, global, "script_global");
 
@@ -1268,7 +1260,7 @@ inline void
 TypeObject::writeBarrierPre(TypeObject *type)
 {
 #ifdef JSGC_INCREMENTAL
-    if (!type || type == &js::types::emptyTypeObject)
+    if (!type)
         return;
 
     JSCompartment *comp = type->compartment();
@@ -1280,6 +1272,17 @@ TypeObject::writeBarrierPre(TypeObject *type)
 inline void
 TypeObject::writeBarrierPost(TypeObject *type, void *addr)
 {
+}
+
+inline void
+TypeObject::readBarrier(TypeObject *type)
+{
+#ifdef JSGC_INCREMENTAL
+    JSCompartment *comp = type->compartment();
+    JS_ASSERT(comp->needsBarrier());
+
+    MarkTypeObjectUnbarriered(comp->barrierTracer(), type, "read barrier");
+#endif
 }
 
 inline void
@@ -1317,15 +1320,15 @@ Property::Property(const Property &o)
 } } /* namespace js::types */
 
 inline bool
-JSScript::ensureHasTypes(JSContext *cx, JSFunction *fun)
+JSScript::ensureHasTypes(JSContext *cx)
 {
-    return types || makeTypes(cx, fun);
+    return types || makeTypes(cx);
 }
 
 inline bool
-JSScript::ensureRanAnalysis(JSContext *cx, JSFunction *fun, JSObject *scope)
+JSScript::ensureRanAnalysis(JSContext *cx, JSObject *scope)
 {
-    if (!ensureHasTypes(cx, fun))
+    if (!ensureHasTypes(cx))
         return false;
     if (!types->hasScope() && !js::types::TypeScript::SetScope(cx, this, scope))
         return false;
@@ -1338,7 +1341,7 @@ JSScript::ensureRanAnalysis(JSContext *cx, JSFunction *fun, JSObject *scope)
 inline bool
 JSScript::ensureRanInference(JSContext *cx)
 {
-    if (!ensureRanAnalysis(cx))
+    if (!ensureRanAnalysis(cx, NULL))
         return false;
     if (!analysis()->ranInference()) {
         js::types::AutoEnterTypeInference enter(cx);
@@ -1374,6 +1377,14 @@ js::analyze::ScriptAnalysis::addPushedType(JSContext *cx, uint32 offset, uint32 
 {
     js::types::TypeSet *pushed = pushedTypes(offset, which);
     pushed->addType(cx, type);
+}
+
+inline js::types::TypeObject *
+JSCompartment::getEmptyType(JSContext *cx)
+{
+    if (!emptyTypeObject)
+        emptyTypeObject = types.newTypeObject(cx, NULL, JSProto_Object, NULL, true);
+    return emptyTypeObject;
 }
 
 #endif // jsinferinlines_h___

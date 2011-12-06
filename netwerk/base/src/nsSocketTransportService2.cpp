@@ -54,6 +54,14 @@
 
 #include "mozilla/FunctionTimer.h"
 
+// XXX: There is no good header file to put these in. :(
+namespace mozilla { namespace psm {
+
+void InitializeSSLServerCertVerificationThreads();
+void StopSSLServerCertVerificationThreads();
+
+} } // namespace mozilla::psm
+
 using namespace mozilla;
 
 #if defined(PR_LOGGING)
@@ -609,6 +617,8 @@ nsSocketTransportService::Run()
 {
     SOCKET_LOG(("STS thread init\n"));
 
+    psm::InitializeSSLServerCertVerificationThreads();
+
     gSocketThread = PR_GetCurrentThread();
 
     // add thread event to poll list (mThreadEvent may be NULL)
@@ -664,6 +674,8 @@ nsSocketTransportService::Run()
     NS_ProcessPendingEvents(thread);
 
     gSocketThread = nsnull;
+
+    psm::StopSSLServerCertVerificationThreads();
 
     SOCKET_LOG(("STS thread exit\n"));
     return NS_OK;

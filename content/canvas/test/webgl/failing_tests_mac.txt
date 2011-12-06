@@ -1,3 +1,4 @@
+conformance/context/context-lost-restored.html
 conformance/context/premultiplyalpha-test.html
 conformance/glsl/misc/glsl-function-nodes.html
 conformance/glsl/misc/glsl-long-variable-names.html
@@ -9,3 +10,4 @@ conformance/more/functions/uniformiBadArgs.html
 conformance/glsl/misc/attrib-location-length-limits.html
 conformance/glsl/misc/uniform-location-length-limits.html
 conformance/renderbuffers/framebuffer-object-attachment.html
+conformance/misc/object-deletion-behaviour.html

@@ -788,9 +788,14 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_NOTE = 123;
 
   /**
+   * A figure. Used for things like HTML5 figure element.
+   */
+  const unsigned long ROLE_FIGURE = 124;
+
+  /**
    * It's not role actually. This constant is important to help ensure
    * nsRoleMap's are synchronized.
    */
-  const unsigned long ROLE_LAST_ENTRY = 124;
+  const unsigned long ROLE_LAST_ENTRY = 125;
 };
 

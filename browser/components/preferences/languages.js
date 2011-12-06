@@ -209,18 +209,20 @@ var gLanguagesDialog = {
       if (arrayOfPrefs[i] == selectedID)
         return;
     }
-      
+
     this._selectedItemID = selectedID;
-    
+
     if (preference.value == "") 
       preference.value = selectedID;
-    else
-      preference.value += "," + selectedID;
+    else {
+      arrayOfPrefs.unshift(selectedID);
+      preference.value = arrayOfPrefs.join(",");
+    }
   
     this._acceptLanguages[selectedID] = true;
     this._availableLanguages.selectedItem = null;
     
-    // Reuild the available list with the added item removed...
+    // Rebuild the available list with the added item removed...
     this._buildAvailableLanguageList(); 
     
     this._availableLanguages.setAttribute("label", this._availableLanguages.getAttribute("label2"));

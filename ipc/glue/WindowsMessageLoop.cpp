@@ -223,6 +223,7 @@ ProcessOrDeferMessage(HWND hwnd,
     }
 
     case WM_DEVICECHANGE:
+    case WM_POWERBROADCAST:
     case WM_NCACTIVATE: // Intentional fall-through.
     case WM_SETCURSOR: {
       // Friggin unconventional return value...

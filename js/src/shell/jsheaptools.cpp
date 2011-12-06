@@ -50,6 +50,8 @@
 #include "jsprf.h"
 #include "jsutil.h"
 
+#include "jsobjinlines.h"
+
 using namespace js;
 
 #ifdef DEBUG

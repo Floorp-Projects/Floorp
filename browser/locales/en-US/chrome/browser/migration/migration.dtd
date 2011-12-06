@@ -9,8 +9,6 @@
 <!ENTITY importFromIE.accesskey         "M">
 <!ENTITY importFromNothing.label        "Don't import anything">
 <!ENTITY importFromNothing.accesskey    "D">
-<!ENTITY importFromSeamonkey.label      "Netscape 6, 7 or Mozilla 1.x">
-<!ENTITY importFromSeamonkey.accesskey  "N">
 <!ENTITY importFromOpera.label          "Opera">
 <!ENTITY importFromOpera.accesskey      "O">
 <!ENTITY importFromSafari.label         "Safari">

@@ -879,14 +879,6 @@ public:
     //XXX probably better named "ApplyConstraints" or "Discrminiate" or something
 
     /**
-     * Determine if this node has another node as its direct ancestor.
-     * @param aNode the node to look for.
-     * @return true if aNode is a direct ancestor of this node, false
-     *   otherwise.
-     */
-    bool HasAncestor(const ReteNode* aNode) const;
-
-    /**
      * Add another node as a child of this node.
      * @param aNode the node to add.
      * @return NS_OK if no errors occur.
