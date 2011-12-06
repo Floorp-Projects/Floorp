@@ -78,11 +78,16 @@ class MozRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 class MozHttpd(object):
 
-    def __init__(self, host="127.0.0.1", port=8888, docroot=os.getcwd()):
+    def __init__(self, host="127.0.0.1", port=8888, docroot=os.getcwd(), handler_class=MozRequestHandler):
         self.host = host
         self.port = int(port)
         self.docroot = docroot
         self.httpd = None
+
+        class MozRequestHandlerInstance(handler_class):
+            docroot = self.docroot
+
+        self.handler_class = MozRequestHandlerInstance
 
     def start(self, block=False):
         """
@@ -90,11 +95,7 @@ class MozHttpd(object):
         If block is False, the server will be started on a separate thread that
         can be terminated by a call to .stop()
         """
-
-        class MozRequestHandlerInstance(MozRequestHandler):
-            docroot = self.docroot
-
-        self.httpd = EasyServer((self.host, self.port), MozRequestHandlerInstance)
+        self.httpd = EasyServer((self.host, self.port), self.handler_class)
         if block:
             self.httpd.serve_forever()
         else:

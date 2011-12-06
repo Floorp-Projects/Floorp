@@ -11,18 +11,16 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozprofile.
+# The Original Code is mozinstall.
 #
 # The Initial Developer of the Original Code is
-#   The Mozilla Foundation.
-# Portions created by the Initial Developer are Copyright (C) 2008
+#  The Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Mikeal Rogers <mikeal.rogers@gmail.com>
-#   Clint Talbert <ctalbert@mozilla.com>
-#   Jeff Hammel <jhammel@mozilla.com>
-#   Andrew Halberstadt <halbersa@gmail.com>
+#  Clint Talbert <ctalbert@mozilla.com>
+#  Andrew Halberstadt <halbersa@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,47 +35,4 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-
-import os
-import sys
-from setuptools import setup, find_packages
-
-version = '0.1'
-
-# we only support python 2 right now
-assert sys.version_info[0] == 2
-
-deps = ["ManifestDestiny >= 0.5.4"]
-# version-dependent dependencies
-try:
-    import json
-except ImportError:
-    deps.append('simplejson')
-
-# take description from README
-here = os.path.dirname(os.path.abspath(__file__))
-try:
-    description = file(os.path.join(here, 'README.md')).read()
-except (OSError, IOError):
-    description = ''
-
-setup(name='mozprofile',
-      version=version,
-      description="handling of Mozilla XUL app profiles",
-      long_description=description,
-      classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
-      keywords='',
-      author='Mozilla Automation + Testing Team',
-      author_email='mozmill-dev@googlegroups.com',
-      url='http://github.com/mozautomation/mozmill',
-      license='MPL',
-      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
-      include_package_data=True,
-      zip_safe=False,
-      install_requires=deps,
-      entry_points="""
-      # -*- Entry points: -*-
-      [console_scripts]
-      mozprofile = mozprofile:cli
-      """,
-      )
+from mozinstall import *

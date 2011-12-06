@@ -66,6 +66,12 @@ MOZBASE_EXTRAS = \
   README \
   $(NULL)
 
+_DEST_DIR = $(DEPTH)/_tests/mozbase
+libs:: $(MOZBASE_PACKAGES)
+	$(PYTHON) $(topsrcdir)/config/nsinstall.py $^ $(_DEST_DIR)
+libs:: $(MOZBASE_EXTRAS)
+	$(PYTHON) $(topsrcdir)/config/nsinstall.py $^ $(_DEST_DIR)
+
 stage-package: PKG_STAGE = $(DIST)/test-package-stage
 stage-package:
 	$(NSINSTALL) -D $(PKG_STAGE)/mozbase
