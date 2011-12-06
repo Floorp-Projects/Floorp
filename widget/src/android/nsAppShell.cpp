@@ -121,8 +121,6 @@ nsAppShell::Init()
 
     nsresult rv = nsBaseAppShell::Init();
     AndroidBridge* bridge = AndroidBridge::Bridge();
-    if (bridge)
-        bridge->NotifyAppShellReady();
 
     nsCOMPtr<nsIObserverService> obsServ =
         mozilla::services::GetObserverService();
