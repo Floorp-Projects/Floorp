@@ -402,16 +402,34 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
     }
     masm.bind(&frameFixupDone);
     masm.linkExitFrame();
+
+    Label interpret;
     Label exception;
 
-    // See if the bailout code says it is an exception
-    masm.as_cmp(r0, Imm8(0));
-    masm.as_b(&exception, Assembler::NonZero);
-    // Make room on the stack
-    masm.as_sub(sp, sp, Imm8(sizeof(Value)));
-    // Do the call
+    // The return value from Bailout is tagged as:
+    // - 0x0: done (thunk to interpreter)
+    // - 0x1: error (handle exception)
+    // - 0x2: reflow args
+    // - 0x3: reflow barrier
+
+    masm.ma_cmp(r0, Imm32(BAILOUT_RETURN_FATAL_ERROR));
+    masm.ma_b(&interpret, Assembler::LessThan);
+    masm.ma_b(&exception, Assembler::Equal);
+
+    // Otherwise, we're in the "reflow" case.
     masm.setupAlignedABICall(1);
-    
+    masm.setABIArg(0, r0);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReflowTypeInfo));
+
+    masm.ma_cmp(r0, Imm32(0));
+    masm.ma_b(&exception, Assembler::Equal);
+
+    masm.bind(&interpret);
+    // Reserve space for Interpret() to store a Value.
+    masm.as_sub(sp, sp, Imm8(sizeof(Value)));
+
+    // Call out to the interpreter.
+    masm.setupAlignedABICall(1);
     masm.setABIArg(0, sp);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
 
@@ -422,7 +440,7 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
 
     // Test for an exception
     masm.as_cmp(r0, Imm8(0));
-    masm.as_b(&exception, Assembler::Zero);
+    masm.ma_b(&exception, Assembler::Zero);
     masm.as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
     masm.bind(&exception);
     masm.handleException();

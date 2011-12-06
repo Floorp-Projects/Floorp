@@ -361,12 +361,28 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32 frameClass)
 
     masm.linkExitFrame();
 
+    Label interpret;
     Label exception;
 
-    // Either interpret or handle an exception.
-    masm.testl(eax, eax);
-    masm.j(Assembler::NonZero, &exception);
+    // The return value from Bailout is tagged as:
+    // - 0x0: done (thunk to interpreter)
+    // - 0x1: error (handle exception)
+    // - 0x2: reflow args
+    // - 0x3: reflow barrier
 
+    masm.cmpl(eax, Imm32(BAILOUT_RETURN_FATAL_ERROR));
+    masm.j(Assembler::LessThan, &interpret);
+    masm.j(Assembler::Equal, &exception);
+
+    // Otherwise, we're in the "reflow" case.
+    masm.setupUnalignedABICall(1, edx);
+    masm.setABIArg(0, eax);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReflowTypeInfo));
+
+    masm.testl(eax, eax);
+    masm.j(Assembler::Zero, &exception);
+
+    masm.bind(&interpret);
     // Reserve space for Interpret() to store a Value.
     masm.subl(Imm32(sizeof(Value)), esp);
     masm.movl(esp, ecx);

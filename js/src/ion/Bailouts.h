@@ -133,6 +133,10 @@ enum BailoutKind
     // guards in the compiler.
     Bailout_Normal,
 
+    // A bailout at the very start of a function indicates that there may be
+    // a type mismatch in the arguments that necessitates a reflow.
+    Bailout_ArgumentCheck,
+
     // A bailout required to monitor a newly observed type in a type inference
     // barrier.
     Bailout_TypeBarrier
@@ -144,8 +148,11 @@ static const uint32 BAILOUT_KIND_BITS = 1;
 static const uint32 BAILOUT_TABLE_SIZE = 16;
 
 // Bailout return codes.
+// N.B. the relative order of these values is hard-coded into ::GenerateBailoutThunk.
 static const uint32 BAILOUT_RETURN_OK = 0;
 static const uint32 BAILOUT_RETURN_FATAL_ERROR = 1;
+static const uint32 BAILOUT_RETURN_ARGUMENT_CHECK = 2;
+static const uint32 BAILOUT_RETURN_TYPE_BARRIER = 3;
 
 // Attached to the compartment for easy passing through from ::Bailout to
 // ::ThunkToInterpreter.
@@ -182,6 +189,8 @@ uint32 Bailout(BailoutStack *sp);
 // Called from a bailout thunk. Interprets the frame(s) that have been bailed
 // out.
 JSBool ThunkToInterpreter(Value *vp);
+
+uint32 ReflowTypeInfo(uint32 bailoutResult);
 
 // Called when an error occurs in Ion code. Normally, exceptions are bailouts,
 // and pop the frame. This is called to propagate an exception through multiple
