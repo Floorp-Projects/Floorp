@@ -134,6 +134,15 @@ public:
    */
   void UpdateLinkState(nsEventStates aState);
 
+  /**
+   * Returns true if this element is either a full-screen element or an
+   * ancestor of the full-screen element.
+   */
+  bool IsFullScreenAncestor() const {
+    return mState.HasAtLeastOneOfStates(NS_EVENT_STATE_FULL_SCREEN_ANCESTOR |
+                                        NS_EVENT_STATE_FULL_SCREEN);
+  }
+
 protected:
   /**
    * Method to get the _intrinsic_ content state of this element.  This is the
