@@ -1,0 +1,4 @@
+#filter substitution
+#!/bin/sh
+rm -rf $HOME/.mozilla/@MOZ_APP_NAME@
+gconftool-2 --recursive-unset /apps/@MOZ_APP_NAME@

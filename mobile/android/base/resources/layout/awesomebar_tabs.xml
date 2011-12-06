@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <LinearLayout android:orientation="vertical"
+                  android:layout_width="fill_parent"
+                  android:layout_height="fill_parent">
+
+        <TabWidget android:id="@android:id/tabs"
+                   android:layout_width="fill_parent"
+                   android:layout_height="wrap_content"
+                   android:background="@color/awesomebar_background"/>
+
+        <FrameLayout android:id="@android:id/tabcontent"
+                     android:layout_width="fill_parent"
+                     android:layout_height="fill_parent">
+
+            <ListView android:id="@+id/all_pages_list"
+                      style="@style/AwesomeBarList"/>
+
+            <ListView android:id="@+id/bookmarks_list"
+                      style="@style/AwesomeBarList"/>
+
+            <ExpandableListView android:id="@+id/history_list"
+                                style="@style/AwesomeBarList"
+                                android:groupIndicator="@android:color/transparent"/>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</merge>
