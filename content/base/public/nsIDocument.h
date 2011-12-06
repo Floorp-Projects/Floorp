@@ -124,8 +124,9 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x3b78f6, 0x6dc5, 0x44c6, \
-  { 0xbc, 0x28, 0x60, 0x2a, 0xb2, 0x4f, 0xfb, 0x7b } }
+{ 0x283ec27d, 0x5b23, 0x49b2, \
+  { 0x94, 0xd9, 0x9, 0xb5, 0xdb, 0x45, 0x30, 0x73 } }
+
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -752,20 +753,30 @@ public:
 
   /**
    * Asynchronously requests that the document make aElement the full-screen
-   * element, and move into full-screen mode.
+   * element, and move into full-screen mode. The current full-screen element
+   * (if any) is pushed onto the full-screen element stack, and it can be
+   * returned to full-screen status by calling RestorePreviousFullScreenState().
    */
   virtual void AsyncRequestFullScreen(Element* aElement) = 0;
 
   /**
-   * Requests that the document, and all documents in its hierarchy exit
-   * from DOM full-screen mode.
+   * Restores the previous full-screen element to full-screen status. If there
+   * is no former full-screen element, this exits full-screen, moving the
+   * top-level browser window out of full-screen mode.
    */
-  virtual void CancelFullScreen() = 0;
+  virtual void RestorePreviousFullScreenState() = 0;
 
   /**
    * Returns true if this document is in full-screen mode.
    */
   virtual bool IsFullScreenDoc() = 0;
+
+  /**
+   * Exits all documents from DOM full-screen mode, and moves the top-level
+   * browser window out of full-screen mode. If aRunAsync is true, this runs
+   * asynchronously.
+   */
+  static void ExitFullScreen(bool aRunAsync);
 
   //----------------------------------------------------------------------
 
