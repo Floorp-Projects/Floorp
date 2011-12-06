@@ -82,6 +82,7 @@
 #ifdef ANDROID
 @BINPATH@/AndroidManifest.xml
 @BINPATH@/resources.arsc
+@BINPATH@/package-name.txt
 @BINPATH@/classes.dex
 @BINPATH@/@DLL_PREFIX@mozutils@DLL_SUFFIX@
 @BINPATH@/res/drawable
