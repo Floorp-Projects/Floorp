@@ -54,7 +54,6 @@ function test()
 
   expectExitCode(0);
   expectExitCode(3);
-
   actual = 0;
  
   // construct string of 1<<23 characters

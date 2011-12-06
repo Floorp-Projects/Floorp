@@ -533,16 +533,14 @@ num_toSource(JSContext *cx, uintN argc, Value *vp)
     if (!BoxedPrimitiveMethodGuard(cx, args, num_toSource, &d, &ok))
         return ok;
 
-    ToCStringBuf cbuf;
-    char *numStr = NumberToCString(cx, &cbuf, d);
-    if (!numStr) {
-        JS_ReportOutOfMemory(cx);
+    StringBuffer sb(cx);
+    if (!sb.append("(new Number(") || !NumberValueToStringBuffer(cx, NumberValue(d), sb) ||
+        !sb.append("))"))
+    {
         return false;
     }
 
-    char buf[64];
-    JS_snprintf(buf, sizeof buf, "(new %s(%s))", NumberClass.name, numStr);
-    JSString *str = js_NewStringCopyZ(cx, buf);
+    JSString *str = sb.finishString();
     if (!str)
         return false;
     args.rval().setString(str);
