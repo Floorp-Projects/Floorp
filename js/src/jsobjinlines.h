@@ -569,7 +569,7 @@ JSObject::setDenseArrayInitializedLength(uint32 length)
 {
     JS_ASSERT(isDenseArray());
     JS_ASSERT(length <= getDenseArrayCapacity());
-    prepareElementRangeForOverwrite(length, getElementsHeader()->length);
+    prepareElementRangeForOverwrite(length, getElementsHeader()->initializedLength);
     getElementsHeader()->initializedLength = length;
 }
 
