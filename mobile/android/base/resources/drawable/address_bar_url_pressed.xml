@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/outline"
+          android:left="6dp"
+          android:top="8dp"
+          android:right="6dp"
+          android:bottom="6dp">
+
+        <shape android:shape="rectangle">
+             <solid android:color="#000000"/>
+             <corners android:radius="8dp"/>
+        </shape>
+
+    </item>
+
+    <item android:id="@+id/background"
+          android:left="8dp"
+          android:top="10dp"
+          android:right="8dp"
+          android:bottom="8dp"
+          android:drawable="@drawable/address_bar_url_bg"/>
+
+</layer-list>

@@ -1,0 +1,342 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd" >
+%globalDTD;
+<!ENTITY % configDTD SYSTEM "chrome://browser/locale/config.dtd">
+%configDTD;
+]>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Mobile Browser.
+   -
+   - The Initial Developer of the Original Code is
+   - Mozilla Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2011
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta name="viewport" content="width=480; initial-scale=.6667; user-scalable=0" />
+  <link rel="stylesheet" href="chrome://browser/skin/config.css" type="text/css"/>
+</head>
+
+<body dir="&locale.dir;" onload="AboutConfig.init();" onunload="AboutConfig.uninit();">
+
+  <div id="filter-container">
+    <input id="filter-input" type="search" placeholder="&search.placeholder;"
+           onchange="AboutConfig.filter_onchange();"/>
+    <input id="clear-input" type="image" disabled="true"
+           onclick="AboutConfig.clearInput();" alt="&clear.altText;"
+           src="chrome://browser/skin/images/search-clear-30.png"/>
+  </div>
+
+  <div id="new-pref-container">
+    <button id="new-pref-button" onclick="AboutConfig.addNewPref();">&newpref.label;</button>
+  </div>
+
+  <div id="prefs-container"/>
+
+  <script type="application/javascript;version=1.8"><![CDATA[
+    const {classes: Cc, interfaces: Ci, manager: Cm, utils: Cu} = Components;
+    Cu.import("resource://gre/modules/Services.jsm");
+
+    let gStringBundle = Services.strings.createBundle("chrome://browser/locale/config.properties");
+
+    function dump(a) {
+      Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
+    }
+
+    let AboutConfig = {
+      _container: null,
+      _filterInput: null,
+      _clearInput: null,
+
+      init: function AC_init() {
+        this._container = document.getElementById("prefs-container");
+        this._filterInput = document.getElementById("filter-input");
+        this._clearInput = document.getElementById("clear-input");
+
+        this.filter();
+
+        Services.prefs.addObserver("", this, false);
+      },
+
+      uninit: function AC_uninit() {
+        Services.prefs.removeObserver("", this);
+      },
+
+      filter_onchange: function AC_filter_onchange() {
+        this.filter();
+        this._filterInput.blur(); // close the VKB
+        this._clearInput.disabled = this._filterInput.value == "";
+      },
+
+      clearInput: function AC_clearInput() {
+        this._filterInput.value = '';
+        this.filter();
+        this._clearInput.disabled = true;
+      },
+
+      filter: function AC_filter(aValue) {
+        if (!aValue)
+          aValue = this._filterInput.value;
+
+        // Replace pref container with a new empty one
+        let empty = this._container.cloneNode(false);
+        this._container.parentNode.replaceChild(empty, this._container);
+        this._container = empty;
+
+        let prefs = this._getPrefs(aValue);
+        let fragment = document.createDocumentFragment();
+        for (let i = 0; i < prefs.length; i++) {
+          let item = this._createItem(prefs[i]);
+          fragment.appendChild(item);
+        }
+        this._container.appendChild(fragment);
+      },
+
+      addNewPref: function AC_addNewPref() {
+        let title = gStringBundle.GetStringFromName("addPref.title");
+
+        // Prompt for pref type
+        let typeString = gStringBundle.GetStringFromName("addPref.selectType");
+        let typeArray = [gStringBundle.GetStringFromName("addPref.type.string"),
+                         gStringBundle.GetStringFromName("addPref.type.integer"),
+                         gStringBundle.GetStringFromName("addPref.type.boolean")];
+        let typeResult = { value: null };
+        if (!Services.prompt.select(window, title, typeString, 3, typeArray, typeResult))
+          return;
+
+        // Prompt for pref name
+        let nameString = gStringBundle.GetStringFromName("addPref.enterName");
+        let nameResult = { value: "" };
+        if (!Services.prompt.prompt(window, title, nameString, nameResult, null, {}))
+          return;
+
+        // Make a stub pref item to send to modifyPref
+        let pref = {
+          name: nameResult.value,
+          lock: false,
+          type: [Ci.nsIPrefBranch.PREF_STRING,
+                 Ci.nsIPrefBranch.PREF_INT,
+                 Ci.nsIPrefBranch.PREF_BOOL][typeResult.value],
+          value: ""
+        }
+        this.modifyPref(pref);
+      },
+
+      // Mostly copied from toolkit config.js
+      modifyPref: function AC_modifyPref(aPref) {
+        if (aPref.locked)
+          return;
+
+        let title = gStringBundle.GetStringFromName("modifyPref.label");
+
+        if (aPref.type == Ci.nsIPrefBranch.PREF_BOOL) {
+          // If the pref already exists, we just want to toggle the boolean
+          let result = { value: aPref.value == "false" };
+          // If the pref doesn't exist, we need to prompt the user to choose an initial value
+          if (!aPref.value) {
+            let text = gStringBundle.formatStringFromName("modifyPref.selectText", [aPref.name], 1);
+            if (!Services.prompt.select(window, title, text, 2, [false, true], result))
+              return;
+          }
+
+          Services.prefs.setBoolPref(aPref.name, result.value);
+        } else {
+          let result = { value: aPref.value };
+          let text = gStringBundle.formatStringFromName("modifyPref.promptText", [aPref.name], 1);
+          if (!Services.prompt.prompt(window, title, text, result, null, {}))
+            return;
+
+          if (aPref.type == Ci.nsIPrefBranch.PREF_INT) {
+            // | 0 converts to integer or 0; - 0 to float or NaN.
+            // Thus, this check should catch all cases.
+            let val = result.value | 0;
+            if (val != result.value - 0) {
+              let errorTitle = gStringBundle.GetStringFromName("modifyPref.numberErrorTitle");
+              let errorText = gStringBundle.GetStringFromName("modifyPref.numberErrorText");
+              Services.prompt.alert(window, errorTitle, errorText);
+              return;
+            }
+            Services.prefs.setIntPref(aPref.name, val);
+          } else {
+            let supportsString = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+            supportsString.data = result.value;
+            Services.prefs.setComplexValue(aPref.name, Ci.nsISupportsString, supportsString);
+          }
+        }
+
+        Services.prefs.savePrefFile(null);
+      },
+
+      resetPref: function AC_resetPref(aPref) {
+        Services.prefs.clearUserPref(aPref.name);
+      },
+
+      observe: function AC_observe(aSubject, aTopic, aPrefName) {
+        if (aTopic != "nsPref:changed" || /^capability\./.test(aPrefName))
+          return;
+
+        // Get the updated pref
+        let pref = this._getPref(aPrefName);
+        let item = document.querySelector(".pref-item[name=\"" + aPrefName + "\"]");
+
+        // If a new pref was added, make a new item for it
+        if (!item) {
+          let item = this._createItem(pref);
+
+          // Just stick the item at the beginning of the list so that we don't
+          // need to scroll to it
+          this._container.insertBefore(item, this._container.firstChild);
+          return;
+        }
+
+        // Check to see if the pref was removed
+        if (pref.type == Ci.nsIPrefBranch.PREF_INVALID) {
+          this._container.removeChild(item);
+          return;
+        }
+
+        // Otherwise, just replace the item with an updated item
+        this._container.replaceChild(this._createItem(pref), item);
+      },
+
+      // Gets prefs, optionally filtered for aValue
+      _getPrefs: function AC_getPrefs(aValue) {
+        let list = Services.prefs.getChildList("", {}).filter(function(element) {
+          // Avoid displaying "private" preferences
+          return !(/^capability\./.test(element));
+        });
+
+        let prefs = list.sort().map(this._getPref, this);
+        if (!aValue)
+          return prefs;
+
+        let reg = this._generateRegExp(aValue);
+        if (!reg)
+          return [];
+
+        return prefs.filter(function(element, index, array) {
+          return reg.test(element.name + ";" + element.value);
+        });
+      },
+
+      // Copied from old mobile config.js
+      _generateRegExp: function AC_generateRegExp(aValue) {
+        if (aValue.charAt(0) == "/") {
+          try {
+            let rv = aValue.match(/^\/(.*)\/(i?)$/);
+            return RegExp(rv[1], rv[2]);
+          } catch (e) {
+            return null; // Do nothing on incomplete or bad RegExp
+          }
+        }
+        return RegExp(aValue.replace(/([^* \w])/g, "\\$1").replace(/^\*+/, "")
+                            .replace(/\*+/g, ".*"), "i");
+      },
+
+      _getPref: function AC_getPref(aPrefName) {
+        let pref = {
+          name: aPrefName,
+          value:  "",
+          default: !Services.prefs.prefHasUserValue(aPrefName),
+          lock: Services.prefs.prefIsLocked(aPrefName),
+          type: Services.prefs.getPrefType(aPrefName)
+        };
+
+        try {
+          switch (pref.type) {
+            case Ci.nsIPrefBranch.PREF_BOOL:
+              pref.value = Services.prefs.getBoolPref(aPrefName).toString();
+              break;
+            case Ci.nsIPrefBranch.PREF_INT:
+              pref.value = Services.prefs.getIntPref(aPrefName).toString();
+              break;
+            default:
+            case Ci.nsIPrefBranch.PREF_STRING:
+              pref.value = Services.prefs.getComplexValue(aPrefName, Ci.nsISupportsString).data;
+              // Try in case it's a localized string (will throw an exception if not)
+              if (pref.default && /^chrome:\/\/.+\/locale\/.+\.properties/.test(pref.value))
+                pref.value = Services.prefs.getComplexValue(aPrefName, Ci.nsIPrefLocalizedString).data;
+              break;
+          }
+        } catch (e) {}
+
+        return pref;
+      },
+
+      _createItem: function AC_createItem(aPref) {
+        let name = document.createElement("div");
+        name.className = "pref-name";
+        name.textContent = aPref.name;
+
+        let value = document.createElement("div");
+        value.className = "pref-value";
+        value.textContent = aPref.value;
+
+        let modifyButton = document.createElement("button");
+        modifyButton.className = "modify-pref-button";
+
+        modifyButton.textContent = aPref.type == Ci.nsIPrefBranch.PREF_BOOL ?
+                                   gStringBundle.GetStringFromName("togglePref.label") :
+                                   gStringBundle.GetStringFromName("modifyPref.label");
+        modifyButton.addEventListener("click", function(event) {
+          this.modifyPref(aPref);
+        }.bind(this), false);
+
+        let resetButton = document.createElement("button");
+        resetButton.className = "reset-pref-button";
+        resetButton.textContent = gStringBundle.GetStringFromName("resetPref.label");
+        resetButton.disabled = aPref.default;
+        resetButton.addEventListener("click", function(event) {
+          this.resetPref(aPref);
+        }.bind(this), false);
+
+        let item = document.createElement("div");
+        item.className = "pref-item";
+        item.appendChild(name);
+        item.appendChild(value);
+        item.appendChild(modifyButton);
+        item.appendChild(resetButton);
+
+        item.setAttribute("name", aPref.name);
+        item.setAttribute("value", aPref.value);
+        item.setAttribute("default", aPref.default);
+
+        return item;
+      }
+    }
+  ]]></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/background"
+          android:left="8dp"
+          android:top="10dp"
+          android:right="8dp"
+          android:bottom="8dp"
+          android:drawable="@drawable/address_bar_url_bg"/>
+
+</layer-list>

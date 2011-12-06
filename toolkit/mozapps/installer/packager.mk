@@ -290,6 +290,7 @@ DIST_FILES = \
   libsoftokn3.so \
   extensions \
   application.ini \
+  package-name.txt \
   platform.ini \
   greprefs.js \
   browserconfig.properties \
@@ -297,6 +298,7 @@ DIST_FILES = \
   chrome.manifest \
   update.locale \
   removed-files \
+  recommended-addons.json \
   $(NULL)
 
 NON_DIST_FILES = \
