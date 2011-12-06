@@ -38,9 +38,7 @@ function test()
                                 InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
 
     executeSoon(function() {
-      Services.obs.addObserver(highlightBodyNode,
-                               InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING,
-                               false);
+      InspectorUI.highlighter.addListener("nodeselected", highlightBodyNode);
       // Test that navigating around without a selected node gets us to the
       // body element.
       node = doc.querySelector("body");
@@ -50,14 +48,11 @@ function test()
 
   function highlightBodyNode()
   {
-    Services.obs.removeObserver(highlightBodyNode,
-                                InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
+    InspectorUI.highlighter.removeListener("nodeselected", highlightBodyNode);
     is(InspectorUI.selection, node, "selected body element");
 
     executeSoon(function() {
-      Services.obs.addObserver(highlightHeaderNode,
-                               InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING,
-                               false);
+      InspectorUI.highlighter.addListener("nodeselected", highlightHeaderNode);
       // Test that moving to the child works.
       node = doc.querySelector("h1");
       EventUtils.synthesizeKey("VK_RIGHT", { });
@@ -66,14 +61,11 @@ function test()
 
   function highlightHeaderNode()
   {
-    Services.obs.removeObserver(highlightHeaderNode,
-                                InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
+    InspectorUI.highlighter.removeListener("nodeselected", highlightHeaderNode);
     is(InspectorUI.selection, node, "selected h1 element");
 
     executeSoon(function() {
-      Services.obs.addObserver(highlightParagraphNode,
-                               InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING,
-                               false);
+      InspectorUI.highlighter.addListener("nodeselected", highlightParagraphNode);
       // Test that moving to the next sibling works.
       node = doc.querySelector("p");
       EventUtils.synthesizeKey("VK_DOWN", { });
@@ -82,14 +74,11 @@ function test()
 
   function highlightParagraphNode()
   {
-    Services.obs.removeObserver(highlightParagraphNode,
-                                InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
+    InspectorUI.highlighter.removeListener("nodeselected", highlightParagraphNode);
     is(InspectorUI.selection, node, "selected p element");
 
     executeSoon(function() {
-      Services.obs.addObserver(highlightHeaderNodeAgain,
-                               InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING,
-                               false);
+      InspectorUI.highlighter.addListener("nodeselected", highlightHeaderNodeAgain);
       // Test that moving to the previous sibling works.
       node = doc.querySelector("h1");
       EventUtils.synthesizeKey("VK_UP", { });
@@ -98,14 +87,11 @@ function test()
 
   function highlightHeaderNodeAgain()
   {
-    Services.obs.removeObserver(highlightHeaderNodeAgain,
-                                InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
+    InspectorUI.highlighter.removeListener("nodeselected", highlightHeaderNodeAgain);
     is(InspectorUI.selection, node, "selected h1 element");
 
     executeSoon(function() {
-      Services.obs.addObserver(highlightParentNode,
-                               InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING,
-                               false);
+      InspectorUI.highlighter.addListener("nodeselected", highlightParentNode);
       // Test that moving to the parent works.
       node = doc.querySelector("body");
       EventUtils.synthesizeKey("VK_LEFT", { });
@@ -114,8 +100,7 @@ function test()
 
   function highlightParentNode()
   {
-    Services.obs.removeObserver(highlightParentNode,
-                                InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
+    InspectorUI.highlighter.removeListener("nodeselected", highlightParentNode);
     is(InspectorUI.selection, node, "selected body element");
 
     // Test that locking works.
