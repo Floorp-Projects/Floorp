@@ -943,6 +943,7 @@ function Tab(aURL, aParams) {
   this._viewport = { x: 0, y: 0, width: gScreenWidth, height: gScreenHeight, offsetX: 0, offsetY: 0,
                      pageWidth: 1, pageHeight: 1, zoom: 1.0 };
   this.viewportExcess = { x: 0, y: 0 };
+  this.userScrollPos = { x: 0, y: 0 };
 }
 
 Tab.prototype = {
@@ -983,6 +984,7 @@ Tab.prototype = {
                 Ci.nsIWebProgress.NOTIFY_SECURITY;
     this.browser.addProgressListener(this, flags);
     this.browser.sessionHistory.addSHistoryListener(this);
+    this.browser.addEventListener("scroll", this, true);
     Services.obs.addObserver(this, "http-on-modify-request", false);
     this.browser.loadURI(aURL);
   },
@@ -1015,6 +1017,7 @@ Tab.prototype = {
       return;
 
     this.browser.removeProgressListener(this);
+    this.browser.removeEventListener("scroll", this, true);
     BrowserApp.deck.removeChild(this.vbox);
     Services.obs.removeObserver(this, "http-on-modify-request", false);
     this.browser = null;
@@ -1054,12 +1057,15 @@ Tab.prototype = {
     aViewport.y /= aViewport.zoom;
 
     // Set scroll position
-    this.browser.contentWindow.scrollTo(aViewport.x, aViewport.y);
+    let win = this.browser.contentWindow;
+    win.scrollTo(aViewport.x, aViewport.y);
+    this.userScrollPos.x = win.scrollX;
+    this.userScrollPos.y = win.scrollY;
 
     // If we've been asked to over-scroll, do it via the transformation
     // and store it separately to the viewport.
-    let excessX = aViewport.x - this.browser.contentWindow.scrollX;
-    let excessY = aViewport.y - this.browser.contentWindow.scrollY;
+    let excessX = aViewport.x - win.scrollX;
+    let excessY = aViewport.y - win.scrollY;
 
     this._viewport.width = gScreenWidth = aViewport.width;
     this._viewport.height = gScreenHeight = aViewport.height;
@@ -1146,6 +1152,22 @@ Tab.prototype = {
         viewport: JSON.stringify(this.viewport)
       }
     });
+  },
+
+  handleEvent: function(aEvent) {
+    switch (aEvent.type) {
+      case "scroll": {
+        let win = this.browser.contentWindow;
+        if (this.userScrollPos.x != win.scrollX || this.userScrollPos.y != win.scrollY) {
+          sendMessageToJava({
+            gecko: {
+              type: "Viewport:UpdateLater"
+            }
+          });
+        }
+        break;
+      }
+    }
   },
 
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
