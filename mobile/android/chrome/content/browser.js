@@ -1513,11 +1513,6 @@ Tab.prototype = {
 
 var BrowserEventHandler = {
   init: function init() {
-    window.addEventListener("click", this, true);
-    window.addEventListener("mousedown", this, true);
-    window.addEventListener("mouseup", this, true);
-    window.addEventListener("mousemove", this, true);
-
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
     Services.obs.addObserver(this, "Gesture:ShowPress", false);
     Services.obs.addObserver(this, "Gesture:CancelTouch", false);
