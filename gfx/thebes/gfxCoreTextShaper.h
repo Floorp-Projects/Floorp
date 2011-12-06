@@ -57,12 +57,9 @@ public:
 
     virtual ~gfxCoreTextShaper();
 
-    virtual bool InitTextRun(gfxContext *aContext,
-                               gfxTextRun *aTextRun,
-                               const PRUnichar *aString,
-                               PRUint32 aRunStart,
-                               PRUint32 aRunLength,
-                               PRInt32 aRunScript);
+    virtual bool ShapeWord(gfxContext *aContext,
+                           gfxShapedWord *aShapedWord,
+                           const PRUnichar *aText);
 
     // clean up static objects that may have been cached
     static void Shutdown();
@@ -71,11 +68,9 @@ protected:
     CTFontRef mCTFont;
     CFDictionaryRef mAttributesDict;
 
-    nsresult SetGlyphsFromRun(gfxTextRun *aTextRun,
+    nsresult SetGlyphsFromRun(gfxShapedWord *aShapedWord,
                               CTRunRef aCTRun,
-                              PRInt32 aStringOffset,
-                              PRInt32 aLayoutStart,
-                              PRInt32 aLayoutLength);
+                              PRInt32 aStringOffset);
 
     CTFontRef CreateCTFontWithDisabledLigatures(CGFloat aSize);
 
