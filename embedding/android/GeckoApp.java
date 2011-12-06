@@ -415,7 +415,8 @@ abstract public class GeckoApp
         registerReceiver(mBatteryReceiver, batteryFilter);
 
         IntentFilter smsFilter = new IntentFilter();
-        smsFilter.addAction("android.provider.Telephony.SMS_RECEIVED");
+        smsFilter.addAction(GeckoSmsManager.ACTION_SMS_RECEIVED);
+        smsFilter.addAction(GeckoSmsManager.ACTION_SMS_SENT);
         mSmsReceiver = new GeckoSmsManager();
         registerReceiver(mSmsReceiver, smsFilter);
 
