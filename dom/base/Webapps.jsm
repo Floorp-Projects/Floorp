@@ -43,6 +43,7 @@ let EXPORTED_SYMBOLS = ["DOMApplicationRegistry", "DOMApplicationManifest"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -50,7 +51,6 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
 });
 
 let DOMApplicationRegistry = {
-  appsDir: null,
   appsFile: null,
   webapps: { },
 
@@ -63,17 +63,12 @@ let DOMApplicationRegistry = {
       this.mm.addMessageListener(msgName, this);
     }).bind(this));
 
-    let file =  Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties).get("ProfD", Ci.nsIFile);
-    file.append("webapps");
-    if (!file.exists() || !file.isDirectory()) {
-      file.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
-    }
-    this.appsDir = file;
-    this.appsFile = file.clone();
-    this.appsFile.append("webapps.json");
+    let appsDir = FileUtils.getDir("ProfD", ["webapps"], true, true);
+    this.appsFile = FileUtils.getFile("ProfD", ["webapps", "webapps.json"], true);
+
     if (!this.appsFile.exists())
       return;
-    
+
     this._loadJSONAsync(this.appsFile, (function(aData) { this.webapps = aData; }).bind(this));
   },
 
@@ -140,8 +135,7 @@ let DOMApplicationRegistry = {
 
   _writeFile: function ss_writeFile(aFile, aData, aCallbak) {
     // Initialize the file output stream.
-    let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-    ostream.init(aFile, 0x02 | 0x08 | 0x20, 0600, ostream.DEFER_OPEN);
+    let ostream = FileUtils.openSafeFileOutputStream(aFile);
 
     // Obtain a converter to convert our data to a UTF-8 encoded input stream.
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
@@ -176,8 +170,7 @@ let DOMApplicationRegistry = {
 
     // install an application again is considered as an update
     if (id) {
-      let dir = this.appsDir.clone();
-      dir.append(id);
+      let dir = FileUtils.getDir("ProfD", ["webapps", id], true, true);
       try {
         dir.remove(true);
       } catch(e) {
@@ -188,10 +181,8 @@ let DOMApplicationRegistry = {
       id = uuidGenerator.generateUUID().toString();
     }
 
-    let dir = this.appsDir.clone();
-    dir.append(id);
-    dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
-    
+    let dir = FileUtils.getDir("ProfD", ["webapps", id], true, true);
+
     let manFile = dir.clone();
     manFile.append("manifest.json");
     this._writeFile(manFile, JSON.stringify(app.manifest));
@@ -219,9 +210,7 @@ let DOMApplicationRegistry = {
   _readManifests: function(aData, aFinalCallback, aIndex) {
     let index = aIndex || 0;
     let id = aData[index].id;
-    let file = this.appsDir.clone();
-    file.append(id);
-    file.append("manifest.json");
+    let file = FileUtils.getFile("ProfD", ["webapps", id, "manifest.json"], true);
     this._loadJSONAsync(file, (function(aJSON) {
       aData[index].manifest = aJSON;
       if (index == aData.length - 1)
@@ -237,8 +226,7 @@ let DOMApplicationRegistry = {
       if (app.origin == aData.origin) {
         delete this.webapps[id];
         this._writeFile(this.appsFile, JSON.stringify(this.webapps));
-        let dir = this.appsDir.clone();
-        dir.append(id);
+        let dir = FileUtils.getDir("ProfD", ["webapps", id], true, true);
         try {
           dir.remove(true);
         } catch (e) {
