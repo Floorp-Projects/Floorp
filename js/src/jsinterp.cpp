@@ -1790,6 +1790,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         JS_ASSERT_IF(!fp->isGeneratorFrame(), regs.pc == script->code);
         if (!ScriptPrologueOrGeneratorResume(cx, fp, UseNewTypeAtEntry(cx, fp)))
             goto error;
+        if (cx->compartment->debugMode())
+            ScriptDebugPrologue(cx, fp);
     }
 
     /* The REJOIN mode acts like the normal mode, except the prologue is skipped. */
@@ -2031,6 +2033,10 @@ BEGIN_CASE(JSOP_STOP)
   inline_return:
     {
         JS_ASSERT(!IsActiveWithOrBlock(cx, regs.fp()->scopeChain(), 0));
+
+        if (cx->compartment->debugMode())
+            interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
+ 
         interpReturnOK = ScriptEpilogue(cx, regs.fp(), interpReturnOK);
 
         /* The JIT inlines ScriptEpilogue. */
@@ -3506,6 +3512,9 @@ BEGIN_CASE(JSOP_FUNAPPLY)
 
     if (!ScriptPrologue(cx, regs.fp(), newType))
         goto error;
+
+    if (cx->compartment->debugMode())
+        ScriptDebugPrologue(cx, regs.fp());
 
     CHECK_INTERRUPT_HANDLER();
 
@@ -5524,6 +5533,8 @@ END_CASE(JSOP_ARRAYPUSH)
         goto inline_return;
 
   exit:
+    if (cx->compartment->debugMode())
+        interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
     interpReturnOK = ScriptEpilogueOrGeneratorYield(cx, regs.fp(), interpReturnOK);
     regs.fp()->setFinishedInInterpreter();
 
