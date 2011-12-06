@@ -1,0 +1,220 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Mozilla browser.
+#
+# The Initial Developer of the Original Code is
+#   Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2009-2010
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Vladimir Vukicevic <vladimir@pobox.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/ipc/app/defs.mk
+
+DIRS = locales
+
+JAVAFILES = \
+  GeckoApp.java \
+  GeckoAppShell.java \
+  GeckoConnectivityReceiver.java \
+  GeckoEvent.java \
+  GeckoSurfaceView.java \
+  GeckoInputConnection.java \
+  AlertNotification.java \
+  SurfaceInfo.java \
+  GeckoBatteryManager.java \
+  GeckoSmsManager.java \
+  $(NULL)
+
+PROCESSEDJAVAFILES = \
+  App.java \
+  Restarter.java \
+  NotificationHandler.java \
+  LauncherShortcuts.java \
+  $(NULL)
+
+
+ifneq (,$(findstring -march=armv7,$(OS_CFLAGS)))
+MIN_CPU_VERSION=7
+else
+MIN_CPU_VERSION=5
+endif
+
+ifeq (,$(ANDROID_VERSION_CODE))
+ANDROID_VERSION_CODE=$(shell $(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid | cut -c1-10)
+endif
+
+DEFINES += \
+  -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
+  -DMOZ_APP_DISPLAYNAME="$(MOZ_APP_DISPLAYNAME)" \
+  -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
+  -DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
+  -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME) \
+  -DMOZ_MIN_CPU_VERSION=$(MIN_CPU_VERSION) \
+  -DMOZ_CRASHREPORTER=$(MOZ_CRASHREPORTER) \
+  -DANDROID_VERSION_CODE=$(ANDROID_VERSION_CODE) \
+  -DMOZILLA_OFFICIAL=$(MOZILLA_OFFICIAL) \
+  $(NULL)
+
+GARBAGE += \
+  AndroidManifest.xml  \
+  classes.dex  \
+  $(PROCESSEDJAVAFILES) \
+  gecko.ap_  \
+  res/values/strings.xml \
+  R.java \
+  $(NULL)
+
+GARBAGE_DIRS += classes res
+
+# Bug 567884 - Need a way to find appropriate icons during packaging
+ifeq ($(MOZ_APP_NAME),fennec)
+ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_48x48.png
+ICON_PATH_HDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_72x72.png
+
+# we released these builds to the public with shared IDs and need to keep them
+ifeq (org.mozilla.firefox,$(ANDROID_PACKAGE_NAME))
+DEFINES += -DMOZ_ANDROID_SHARED_ID="org.mozilla.firefox.sharedID"
+else ifeq (org.mozilla.firefox_beta,$(ANDROID_PACKAGE_NAME))
+DEFINES += -DMOZ_ANDROID_SHARED_ID="org.mozilla.firefox.sharedID"
+else ifeq (org.mozilla.fennec_aurora,$(ANDROID_PACKAGE_NAME))
+DEFINES += -DMOZ_ANDROID_SHARED_ID="org.mozilla.fennec.sharedID"
+else ifeq (org.mozilla.fennec,$(ANDROID_PACKAGE_NAME))
+DEFINES += -DMOZ_ANDROID_SHARED_ID="org.mozilla.fennec.sharedID"
+endif
+
+else
+ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon48.png
+ICON_PATH_HDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon64.png
+DEFINES += -DMOZ_ANDROID_SHARED_ID="$(ANDROID_PACKAGE_NAME).sharedID"
+endif
+
+RES_LAYOUT = \
+  res/layout/notification_progress.xml \
+  res/layout/notification_progress_text.xml \
+  res/layout/notification_icon_text.xml \
+  res/layout/launch_app_list.xml \
+  res/layout/launch_app_listitem.xml \
+  $(NULL)
+
+RES_VALUES = res/values/colors.xml res/values/themes.xml
+
+AB_rCD = $(shell echo $(AB_CD) | sed -e s/-/-r/)
+
+JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
+
+DEFAULT_BRANDPATH = $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/en-US/brand.dtd
+DEFAULT_STRINGSPATH = locales/en-US/android_strings.dtd
+LOCALIZED_BRANDPATH = $(DEPTH)/dist/bin/chrome/$(AB_CD)/locale/branding/brand.dtd
+LOCALIZED_STRINGSPATH = $(DEPTH)/dist/bin/chrome/android-res/res/values-$(AB_CD)/android_strings.dtd
+
+ifdef MOZ_CRASHREPORTER
+PROCESSEDJAVAFILES += CrashReporter.java
+MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/crash_reporter.png
+RES_LAYOUT += res/layout/crash_reporter.xml
+endif
+
+MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/desktop_notification.png
+
+MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
+
+include $(topsrcdir)/config/rules.mk
+
+ifneq ($(AB_CD),en-US)
+LOCALIZED_STRINGS_XML = res/values-$(AB_rCD)/strings.xml
+endif
+
+# Override the Java settings with some specific android settings
+include $(topsrcdir)/config/android-common.mk
+
+# Note that we're going to set up a dependency directly between embed_android.dex and the java files
+# Instead of on the .class files, since more than one .class file might be produced per .java file
+classes.dex: $(JAVAFILES) $(PROCESSEDJAVAFILES) R.java
+	$(NSINSTALL) -D classes
+	$(JAVAC) $(JAVAC_FLAGS) -d classes  $(addprefix $(srcdir)/,$(JAVAFILES)) $(PROCESSEDJAVAFILES) R.java
+	$(DX) --dex --output=$@ classes
+
+AndroidManifest.xml $(PROCESSEDJAVAFILES): % : %.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
+
+res/drawable/icon.png: $(MOZ_APP_ICON)
+	$(NSINSTALL) -D res/drawable
+	cp $(ICON_PATH) $@
+
+res/drawable-hdpi/icon.png: $(MOZ_APP_ICON)
+	$(NSINSTALL) -D res/drawable-hdpi
+	cp $(ICON_PATH_HDPI) $@
+
+RES_DRAWABLE = $(addprefix res/drawable/,$(notdir $(MOZ_ANDROID_DRAWABLES)))
+
+$(RES_DRAWABLE): $(addprefix $(topsrcdir)/,$(MOZ_ANDROID_DRAWABLES))
+	$(NSINSTALL) -D res/drawable
+	$(NSINSTALL) $^ res/drawable/
+
+$(RES_LAYOUT): $(subst res/,$(srcdir)/resources/,$(RES_LAYOUT))
+	$(NSINSTALL) -D res/layout
+	$(NSINSTALL) $(srcdir)/resources/layout/* res/layout/
+
+$(RES_VALUES): $(subst res/,$(srcdir)/resources/,$(RES_VALUES))
+	$(NSINSTALL) -D res/values
+	$(NSINSTALL) $(srcdir)/resources/values/* res/values/
+
+R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
+	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
+
+gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/values/strings.xml FORCE
+	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
+
+res/values/strings.xml: $(DEFAULT_BRANDPATH) $(DEFAULT_STRINGSPATH)
+	mkdir -p res/values
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) \
+	  -DBRANDPATH="$(DEFAULT_BRANDPATH)" \
+	  -DSTRINGSPATH="$(DEFAULT_STRINGSPATH)" \
+	  $(srcdir)/strings.xml.in \
+	  > $@
+
+res/values-$(AB_rCD)/strings.xml: $(LOCALIZED_BRANDPATH) $(LOCALIZED_STRINGSPATH)
+	mkdir -p res/values-$(AB_rCD)
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) \
+	  -DBRANDPATH="$(call core_abspath,$(LOCALIZED_BRANDPATH))" \
+	  -DSTRINGSPATH="$(call core_abspath,$(LOCALIZED_STRINGSPATH))" \
+	  $(srcdir)/strings.xml.in \
+	  > $@
+
+chrome:: $(LOCALIZED_STRINGS_XML)
+
+libs:: classes.dex
+	$(INSTALL) classes.dex $(FINAL_TARGET)

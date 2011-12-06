@@ -1,0 +1,21 @@
+
+<!ENTITY  splash_firstrun "Setting up &brandShortName;\u2026">
+
+<!ENTITY  no_space_to_start_error "There is not enough space available for &brandShortName; to start.">
+<!ENTITY  error_loading_file "An error occurred when trying to load files required to run &brandShortName;">
+
+<!ENTITY  crash_reporter_title "&brandShortName; Crash Reporter">
+<!ENTITY  crash_message "&brandShortName; has crashed. Your tabs should be listed on the &brandShortName; Start page when you restart.">
+<!ENTITY  crash_help_message "Please help us fix this problem!">
+<!ENTITY  crash_send_report_message "Send Mozilla a crash report">
+<!ENTITY  crash_include_url "Include page address">
+<!ENTITY  crash_close_label "Close">
+<!ENTITY  crash_restart_label "Restart &brandShortName;">
+<!ENTITY  sending_crash_report "Sending crash report\u2026">
+<!ENTITY  exit_label "Exit">
+<!ENTITY  continue_label "Continue">
+
+<!ENTITY  launcher_shortcuts_title "&brandShortName; Web Apps">
+<!ENTITY  launcher_shortcuts_empty "No web apps were found">
+
+<!ENTITY choose_file "Choose File">
