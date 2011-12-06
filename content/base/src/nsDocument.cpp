@@ -1538,7 +1538,6 @@ nsDOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
 nsDocument::nsDocument(const char* aContentType)
   : nsIDocument()
   , mAnimatingImages(true)
-  , mIsFullScreen(false)
   , mVisibilityState(eHidden)
 {
   SetContentTypeInternal(nsDependentCString(aContentType));
@@ -7305,7 +7304,7 @@ NotifyPageHide(nsIDocument* aDocument, void* aData)
 }
 
 static bool
-SetFullScreenState(nsIDocument* aDoc, Element* aElement, bool aIsFullScreen);
+SetFullScreenElement(nsIDocument* aDoc, Element* aElement);
 
 static void
 SetWindowFullScreen(nsIDocument* aDoc, bool aValue);
@@ -7313,7 +7312,7 @@ SetWindowFullScreen(nsIDocument* aDoc, bool aValue);
 static bool
 ResetFullScreen(nsIDocument* aDocument, void* aData) {
   if (aDocument->IsFullScreenDoc()) {
-    ::SetFullScreenState(aDocument, nsnull, false);
+    ::SetFullScreenElement(aDocument, nsnull);
     aDocument->EnumerateSubDocuments(ResetFullScreen, nsnull);
   }
   return true;
@@ -7379,7 +7378,7 @@ nsDocument::OnPageHide(bool aPersisted,
     // So firstly reset full-screen state in *this* document. OnPageHide()
     // is called in every hidden document, so doing this ensures all hidden
     // documents have their state reset.
-    ::SetFullScreenState(this, nsnull, false);
+    ::SetFullScreenElement(this, nsnull);
 
     // Next walk the document tree of still visible documents, and reset
     // their full-screen state. We then move the top-level window out
@@ -8446,33 +8445,30 @@ DispatchFullScreenChange(nsIDocument* aTarget)
 }
 
 bool
-nsDocument::SetFullScreenState(Element* aElement, bool aIsFullScreen)
+nsDocument::SetFullScreenElement(Element* aElement)
 {
+  if (mFullScreenElement == aElement) {
+    return false;
+  }
   if (mFullScreenElement) {
     // Reset the ancestor and full-screen styles on the outgoing full-screen
     // element in the current document.
     nsEventStateManager::SetFullScreenState(mFullScreenElement, false);
-    mFullScreenElement = nsnull;
   }
-  if (aElement) {
-    nsEventStateManager::SetFullScreenState(aElement, aIsFullScreen);
-  }
+  bool stateChange = (mFullScreenElement != nsnull) != (aElement != nsnull);
   mFullScreenElement = aElement;
-
-  if (mIsFullScreen == aIsFullScreen) {
-    return false;
+  if (aElement) {
+    nsEventStateManager::SetFullScreenState(aElement, true);
   }
-  mIsFullScreen = aIsFullScreen;
-  return true;
+  return stateChange;
 }
 
 // Wrapper for the nsIDocument -> nsDocument cast required to call
-// nsDocument::SetFullScreenState().
+// nsDocument::SetFullScreenElement().
 static bool
-SetFullScreenState(nsIDocument* aDoc, Element* aElement, bool aIsFullScreen)
+SetFullScreenElement(nsIDocument* aDoc, Element* aElement)
 {
-  return static_cast<nsDocument*>(aDoc)->
-    SetFullScreenState(aElement, aIsFullScreen);
+  return static_cast<nsDocument*>(aDoc)->SetFullScreenElement(aElement);
 }
 
 NS_IMETHODIMP
@@ -8527,7 +8523,7 @@ nsDocument::CancelFullScreen()
   // Reset full-screen state in all full-screen documents.
   nsCOMPtr<nsIDocument> doc(do_QueryReferent(sFullScreenDoc));
   while (doc != nsnull) {
-    if (::SetFullScreenState(doc, nsnull, false)) {
+    if (::SetFullScreenElement(doc, nsnull)) {
       DispatchFullScreenChange(doc);
     }
     doc = doc->GetParentDocument();
@@ -8544,7 +8540,7 @@ nsDocument::CancelFullScreen()
 bool
 nsDocument::IsFullScreenDoc()
 {
-  return mIsFullScreen;
+  return mFullScreenElement != nsnull;
 }
 
 static nsIDocument*
@@ -8669,7 +8665,7 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
   }
   nsIDocument* doc = fullScreenDoc;
   while (doc != commonAncestor) {
-    if (::SetFullScreenState(doc, nsnull, false)) {
+    if (::SetFullScreenElement(doc, nsnull)) {
       DispatchFullScreenChange(doc);
     }
     doc = doc->GetParentDocument();
@@ -8688,7 +8684,7 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
   // Set the full-screen element. This sets the full-screen style on the
   // element, and the full-screen-ancestor styles on ancestors of the element
   // in this document.
-  if (SetFullScreenState(aElement, true)) {
+  if (SetFullScreenElement(aElement)) {
     DispatchFullScreenChange(aElement->OwnerDoc());
   }
 
@@ -8701,7 +8697,7 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
   nsIDocument* parent;
   while ((parent = child->GetParentDocument())) {
     Element* element = parent->FindContentForSubDocument(child)->AsElement();
-    if (::SetFullScreenState(parent, element, true)) {
+    if (::SetFullScreenElement(parent, element)) {
       DispatchFullScreenChange(element->OwnerDoc());
     }
     child = parent;
