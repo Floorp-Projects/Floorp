@@ -39,17 +39,21 @@
 #include <sys/stat.h>   // open
 #include <fcntl.h>      // open
 #include <unistd.h>
+#include <string>
 #include <stdio.h>
 #include <semaphore.h>
-#include <string.h>
 #include "sps_sampler.h"
 #include "platform.h"
 #include "nsXULAppAPI.h"
 #include "nsThreadUtils.h"
 #include "prenv.h"
 
+using std::string;
+
 pthread_key_t pkey_stack;
 pthread_key_t pkey_ticker;
+
+TimeStamp sLastTracerEvent;
 
 class Profile;
 
@@ -69,16 +73,27 @@ public:
     , mTagName(aTagName)
   { }
 
+  // aTagData must not need release (i.e. be a string from the text segment)
   ProfileEntry(char aTagName, const char *aTagData, Address aLeafAddress)
     : mTagData(aTagData)
     , mLeafAddress(aLeafAddress)
     , mTagName(aTagName)
   { }
 
+  ProfileEntry(char aTagName, float aTagFloat)
+    : mTagFloat(aTagFloat)
+    , mLeafAddress(0)
+    , mTagName(aTagName)
+  { }
+
+  string TagToString(Profile *profile);
   void WriteTag(Profile *profile, FILE* stream);
 
 private:
-  const char* mTagData;
+  union {
+    const char* mTagData;
+    float mTagFloat;
+  };
   Address mLeafAddress;
   char mTagName;
 };
@@ -112,9 +127,25 @@ public:
     }
   }
 
+  void ToString(string* profile)
+  {
+    // Can't be called from signal because
+    // get_maps calls non reentrant functions.
+#ifdef ENABLE_SPS_LEAF_DATA
+    mMaps = getmaps(getpid());
+#endif
+
+    *profile = "";
+    int oldReadPos = mReadPos;
+    while (mReadPos != mWritePos) {
+      *profile += mEntries[mReadPos].TagToString(this);
+      mReadPos = (mReadPos + 1) % mEntrySize;
+    }
+    mReadPos = oldReadPos;
+  }
+
   void WriteProfile(FILE* stream)
   {
-    LOG("Save profile");
     // Can't be called from signal because
     // get_maps calls non reentrant functions.
 #ifdef ENABLE_SPS_LEAF_DATA
@@ -151,9 +182,10 @@ class SaveProfileTask;
 
 class TableTicker: public Sampler {
  public:
-  explicit TableTicker(int aEntrySize, int aInterval)
+  explicit TableTicker(int aInterval, int aEntrySize, Stack *aStack)
     : Sampler(aInterval, true)
     , mProfile(aEntrySize)
+    , mStack(aStack)
     , mSaveRequested(false)
   {
     mProfile.addTag(ProfileEntry('m', "Start"));
@@ -176,7 +208,7 @@ class TableTicker: public Sampler {
 
   Stack* GetStack()
   {
-    return &mStack;
+    return mStack;
   }
 
   Profile* GetProfile()
@@ -185,7 +217,7 @@ class TableTicker: public Sampler {
   }
  private:
   Profile mProfile;
-  Stack mStack;
+  Stack *mStack;
   bool mSaveRequested;
 };
 
@@ -212,7 +244,7 @@ public:
     if (stream) {
       t->GetProfile()->WriteProfile(stream);
       ::fclose(stream);
-      LOG("Saved to " FOLDER "profile_TYPE_ID.txt");
+      LOG("Saved to " FOLDER "profile_TYPE_PID.txt");
     } else {
       LOG("Fail to open profile log file.");
     }
@@ -238,29 +270,71 @@ void TableTicker::Tick(TickSample* sample)
 {
   // Marker(s) come before the sample
   int i = 0;
-  const char *marker = mStack.getMarker(i++);
+  const char *marker = mStack->getMarker(i++);
   for (int i = 0; marker != NULL; i++) {
     mProfile.addTag(ProfileEntry('m', marker));
-    marker = mStack.getMarker(i++);
+    marker = mStack->getMarker(i++);
   }
-  mStack.mQueueClearMarker = true;
+  mStack->mQueueClearMarker = true;
 
   // Sample
   // 's' tag denotes the start of a sample block
   // followed by 0 or more 'c' tags.
-  for (int i = 0; i < mStack.mStackPointer; i++) {
+  for (int i = 0; i < mStack->mStackPointer; i++) {
     if (i == 0) {
       Address pc = 0;
       if (sample) {
         pc = sample->pc;
       }
-      mProfile.addTag(ProfileEntry('s', mStack.mStack[i], pc));
+      mProfile.addTag(ProfileEntry('s', mStack->mStack[i], pc));
     } else {
-      mProfile.addTag(ProfileEntry('c', mStack.mStack[i]));
+      mProfile.addTag(ProfileEntry('c', mStack->mStack[i]));
     }
+  }
+
+  if (!sLastTracerEvent.IsNull()) {
+    TimeDuration delta = TimeStamp::Now() - sLastTracerEvent;
+    mProfile.addTag(ProfileEntry('r', delta.ToMilliseconds()));
   }
 }
 
+string ProfileEntry::TagToString(Profile *profile)
+{
+  string tag = "";
+  if (mTagName == 'r') {
+    char buff[50];
+    snprintf(buff, 50, "%-40f", mTagFloat);
+    tag += string(1, mTagName) + string("-") + string(buff) + string("\n");
+  } else {
+    tag += string(1, mTagName) + string("-") + string(mTagData) + string("\n");
+  }
+
+#ifdef ENABLE_SPS_LEAF_DATA
+  if (mLeafAddress) {
+    bool found = false;
+    char tagBuff[1024];
+    MapInfo& maps = profile->getMap();
+    unsigned long pc = (unsigned long)mLeafAddress;
+    // TODO Use binary sort (STL)
+    for (size_t i = 0; i < maps.GetSize(); i++) {
+      MapEntry &e = maps.GetEntry(i);
+      if (pc > e.GetStart() && pc < e.GetEnd()) {
+        if (e.GetName()) {
+          found = true;
+          snprintf(tagBuff, 1024, "l-%900s@%llu\n", e.GetName(), pc - e.GetStart());
+          tag += string(tagBuff);
+          break;
+        }
+      }
+    }
+    if (!found) {
+      snprintf(tagBuff, 1024, "l-???@%llu\n", pc);
+      tag += string(tagBuff);
+    }
+  }
+#endif
+  return tag;
+}
 
 void ProfileEntry::WriteTag(Profile *profile, FILE *stream)
 {
@@ -290,6 +364,8 @@ void ProfileEntry::WriteTag(Profile *profile, FILE *stream)
 }
 
 #define PROFILE_DEFAULT_ENTRY 100000
+#define PROFILE_DEFAULT_INTERVAL 10
+
 void mozilla_sampler_init()
 {
   // TODO linux port: Use TLS with ifdefs
@@ -303,19 +379,71 @@ void mozilla_sampler_init()
     return;
   }
 
-  const char *val = PR_GetEnv("MOZ_PROFILER_SPS");
+  Stack *stack = new Stack();
+  pthread_setspecific(pkey_stack, stack);
+
+  // We can't open pref so we use an environment variable
+  // to know if we should trigger the profiler on startup
+  // NOTE: Default
+  const char *val = PR_GetEnv("MOZ_PROFILER_STARTUP");
   if (!val || !*val) {
     return;
   }
 
-  TableTicker *t = new TableTicker(PROFILE_DEFAULT_ENTRY, 10);
-  pthread_setspecific(pkey_ticker, t);
-  pthread_setspecific(pkey_stack, t->GetStack());
-
-  t->Start();
+  mozilla_sampler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL);
 }
 
 void mozilla_sampler_deinit()
+{
+  mozilla_sampler_stop();
+  // We can't delete the Stack because we can be between a
+  // sampler call_enter/call_exit point.
+  // TODO Need to find a safe time to delete Stack
+}
+
+void mozilla_sampler_save() {
+  TableTicker *t = (TableTicker*)pthread_getspecific(pkey_ticker);
+  if (!t) {
+    return;
+  }
+
+  t->RequestSave();
+  // We're on the main thread already so we don't
+  // have to wait to handle the save request.
+  t->HandleSaveRequest();
+}
+
+char* mozilla_sampler_get_profile() {
+  TableTicker *t = (TableTicker*)pthread_getspecific(pkey_ticker);
+  if (!t) {
+    return NULL;
+  }
+
+  string profile;
+  t->GetProfile()->ToString(&profile);
+
+  char *rtn = (char*)malloc( (strlen(profile.c_str())+1) * sizeof(char) );
+  strcpy(rtn, profile.c_str());
+  return rtn;
+}
+
+// Values are only honored on the first start
+void mozilla_sampler_start(int aProfileEntries, int aInterval)
+{
+  Stack *stack = (Stack*)pthread_getspecific(pkey_stack);
+  if (!stack) {
+    ASSERT(false);
+    return;
+  }
+
+  mozilla_sampler_stop();
+
+  TableTicker *t = new TableTicker(aInterval, aProfileEntries, stack);
+  pthread_setspecific(pkey_ticker, t);
+  t->Start();
+}
+
+void mozilla_sampler_stop()
 {
   TableTicker *t = (TableTicker*)pthread_getspecific(pkey_ticker);
   if (!t) {
@@ -323,9 +451,44 @@ void mozilla_sampler_deinit()
   }
 
   t->Stop();
-  pthread_setspecific(pkey_stack, NULL);
-  // We can't delete the TableTicker because we can be between a
-  // sampler call_enter/call_exit point.
-  // TODO Need to find a safe time to delete TableTicker
+  pthread_setspecific(pkey_ticker, NULL);
+}
+
+bool mozilla_sampler_is_active()
+{
+  TableTicker *t = (TableTicker*)pthread_getspecific(pkey_ticker);
+  if (!t) {
+    return false;
+  }
+
+  return t->IsActive();
+}
+
+float sResponsivenessTimes[100];
+float sCurrResponsiveness = 0.f;
+unsigned int sResponsivenessLoc = 0;
+void mozilla_sampler_responsiveness(TimeStamp aTime)
+{
+  if (!sLastTracerEvent.IsNull()) {
+    if (sResponsivenessLoc == 100) {
+      for(size_t i = 0; i < 100-1; i++) {
+        sResponsivenessTimes[i] = sResponsivenessTimes[i+1];
+      }
+      sResponsivenessLoc--;
+      //for(size_t i = 0; i < 100; i++) {
+      //  sResponsivenessTimes[i] = 0;
+      //}
+      //sResponsivenessLoc = 0;
+    }
+    TimeDuration delta = aTime - sLastTracerEvent;
+    sResponsivenessTimes[sResponsivenessLoc++] = delta.ToMilliseconds();
+  }
+
+  sLastTracerEvent = aTime;
+}
+
+const float* mozilla_sampler_get_responsiveness()
+{
+  return sResponsivenessTimes;
 }
 
