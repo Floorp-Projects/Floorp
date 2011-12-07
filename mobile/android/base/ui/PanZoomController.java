@@ -112,7 +112,10 @@ public class PanZoomController
     };
 
     private Timer mFlingTimer;
-    private Axis mX, mY;
+    /* Information about the X axis. */
+    private AxisX mX;
+    /* Information about the Y axis. */
+    private AxisY mY;
     /* The zoom focus at the first zoom event (in page coordinates). */
     private PointF mLastZoomFocus;
     /* The time the last motion event took place. */
@@ -139,10 +142,8 @@ public class PanZoomController
 
     public PanZoomController(LayerController controller) {
         mController = controller;
-        mX = new Axis(); mY = new Axis();
+        mX = new AxisX(); mY = new AxisY();
         mState = PanZoomState.NOTHING;
-
-        populatePositionAndLength();
 
         GeckoAppShell.registerGeckoEventListener("Browser:ZoomToRect", this);
         GeckoAppShell.registerGeckoEventListener("Browser:ZoomToPageWidth", this);
@@ -226,8 +227,6 @@ public class PanZoomController
     }
 
     public void geometryChanged(boolean aAbortFling) {
-        populatePositionAndLength();
-
         if (aAbortFling) {
             // this happens when gecko changes the viewport on us. if that's the case, abort
             // any fling that's in progress and re-fling so that the page snaps to edges. for
@@ -517,25 +516,9 @@ public class PanZoomController
             mOverrideScrollAck = false;
         } else {
             mController.scrollBy(new PointF(mX.displacement, mY.displacement));
-            mX.viewportPos += mX.displacement;
-            mY.viewportPos += mY.displacement;
         }
 
         mX.displacement = mY.displacement = 0;
-    }
-
-    // Populates the viewport info and length in the axes.
-    private void populatePositionAndLength() {
-        FloatSize pageSize = mController.getPageSize();
-        RectF visibleRect = mController.getViewport();
-
-        mX.setPageLength(pageSize.width);
-        mX.viewportPos = visibleRect.left;
-        mX.setViewportLength(visibleRect.width());
-
-        mY.setPageLength(pageSize.height);
-        mY.viewportPos = visibleRect.top;
-        mY.setViewportLength(visibleRect.height());
     }
 
     // The callback that performs the fling animation.
@@ -590,7 +573,7 @@ public class PanZoomController
     }
 
     // Physics information for one axis (X or Y).
-    private static class Axis {
+    private abstract static class Axis {
         public enum FlingStates {
             STOPPED,
             PANNING,
@@ -615,11 +598,9 @@ public class PanZoomController
 
         private FlingStates mFlingState;        /* The fling state we're in on this axis. */
 
-        /* These three need to be kept in sync with the layer controller. */
-        private float viewportPos;
-        private float mViewportLength;
-        private int mScreenLength;
-        private float mPageLength;
+        public abstract float getOrigin();
+        protected abstract float getViewportLength();
+        protected abstract float getPageLength();
 
         public float displacement;
 
@@ -634,15 +615,11 @@ public class PanZoomController
             mFlingState = aFlingState;
         }
 
-        public void setViewportLength(float viewportLength) { mViewportLength = viewportLength; }
-        public void setScreenLength(int screenLength) { mScreenLength = screenLength; }
-        public void setPageLength(float pageLength) { mPageLength = pageLength; }
-
-        private float getViewportEnd() { return viewportPos + mViewportLength; }
+        private float getViewportEnd() { return getOrigin() + getViewportLength(); }
 
         public Overscroll getOverscroll() {
-            boolean minus = (viewportPos < 0.0f);
-            boolean plus = (getViewportEnd() > mPageLength);
+            boolean minus = (getOrigin() < 0.0f);
+            boolean plus = (getViewportEnd() > getPageLength());
             if (minus && plus)
                 return Overscroll.BOTH;
             else if (minus)
@@ -657,8 +634,8 @@ public class PanZoomController
         // overscrolled on this axis, returns 0.
         private float getExcess() {
             switch (getOverscroll()) {
-            case MINUS:     return Math.min(-viewportPos, mPageLength - getViewportEnd());
-            case PLUS:      return Math.min(viewportPos, getViewportEnd() - mPageLength);
+            case MINUS:     return Math.min(-getOrigin(), getPageLength() - getViewportEnd());
+            case PLUS:      return Math.min(getOrigin(), getViewportEnd() - getPageLength());
             default:        return 0.0f;
             }
         }
@@ -667,7 +644,7 @@ public class PanZoomController
         public void applyEdgeResistance() {
             float excess = getExcess();
             if (excess > 0.0f)
-                velocity *= SNAP_LIMIT - excess / mViewportLength;
+                velocity *= SNAP_LIMIT - excess / getViewportLength();
         }
 
         public void startFling(boolean stopped) {
@@ -711,7 +688,7 @@ public class PanZoomController
             }
 
             // Otherwise, decrease the velocity linearly.
-            float elasticity = 1.0f - excess / (mViewportLength * SNAP_LIMIT);
+            float elasticity = 1.0f - excess / (getViewportLength() * SNAP_LIMIT);
             if (getOverscroll() == Overscroll.MINUS)
                 velocity = Math.min((velocity + OVERSCROLL_DECEL_RATE) * elasticity, 0.0f);
             else // must be Overscroll.PLUS
@@ -773,6 +750,24 @@ public class PanZoomController
             else
                 displacement += velocity;
         }
+    }
+
+    private class AxisX extends Axis {
+        @Override
+        public float getOrigin() { return mController.getOrigin().x; }
+        @Override
+        protected float getViewportLength() { return mController.getViewportSize().width; }
+        @Override
+        protected float getPageLength() { return mController.getPageSize().width; }
+    }
+
+    private class AxisY extends Axis {
+        @Override
+        public float getOrigin() { return mController.getOrigin().y; }
+        @Override
+        protected float getViewportLength() { return mController.getViewportSize().height; }
+        @Override
+        protected float getPageLength() { return mController.getPageSize().height; }
     }
 
     /*
@@ -962,7 +957,6 @@ public class PanZoomController
                             mController.setForceRedraw();
                             GeckoApp.mAppContext.showPluginViews();
                             mController.notifyLayerClientOfGeometryChange();
-                            populatePositionAndLength();
                         }
                     });
                     mZoomTimer.cancel();
