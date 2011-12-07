@@ -1328,7 +1328,7 @@ var PlacesUtils = {
             // insert the data into the db
             node.children.forEach(function(child) {
               var index = child.index;
-              var [folders, searches] = this.importJSONNode(child, container, index);
+              var [folders, searches] = this.importJSONNode(child, container, index, 0);
               for (var i = 0; i < folders.length; i++) {
                 if (folders[i])
                   folderIdMap[i] = folders[i];
@@ -1336,9 +1336,9 @@ var PlacesUtils = {
               searchIds = searchIds.concat(searches);
             }, this);
           }
-          else
-            this.importJSONNode(node, this.placesRootId, node.index);
-
+          else {
+            this.importJSONNode(node, this.placesRootId, node.index, 0);
+          }
         }, PlacesUtils);
 
         // fixup imported place: uris that contain folders
@@ -1368,7 +1368,7 @@ var PlacesUtils = {
    *          and an array of saved search ids that need to be fixed up.
    *          eg: [[[oldFolder1, newFolder1]], [search1]]
    */
-  importJSONNode: function PU_importJSONNode(aData, aContainer, aIndex) {
+  importJSONNode: function PU_importJSONNode(aData, aContainer, aIndex, aGrandParentId) {
     var folderIdMap = [];
     var searchIds = [];
     var id = -1;
@@ -1421,7 +1421,7 @@ var PlacesUtils = {
           // process children
           if (aData.children) {
             aData.children.forEach(function(aChild, aIndex) {
-              var [folders, searches] = this.importJSONNode(aChild, id, aIndex);
+              var [folders, searches] = this.importJSONNode(aChild, id, aIndex, aContainer);
               for (var i = 0; i < folders.length; i++) {
                 if (folders[i])
                   folderIdMap[i] = folders[i];
@@ -1473,7 +1473,9 @@ var PlacesUtils = {
     }
 
     // set generic properties, valid for all nodes
-    if (id != -1) {
+    if (id != -1 &&
+        aContainer != PlacesUtils.tagsFolderId &&
+        aGrandParentId != PlacesUtils.tagsFolderId) {
       if (aData.dateAdded)
         this.bookmarks.setItemDateAdded(id, aData.dateAdded);
       if (aData.lastModified)
