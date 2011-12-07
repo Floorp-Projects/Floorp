@@ -27,7 +27,7 @@ function runTest() {
   function test_begin_bs(e) {
     const msg = "BACKSPACE at beginning of contenteditable inline element";
     var before = e.parentNode.childNodes[0].nodeValue;
-    sendKey("back_space", e);
+    sendKey("back_space");
     is(e.parentNode.childNodes[0].nodeValue, before, msg + " with id=" + e.id);
     is(e.innerHTML, "X", msg + " with id=" + e.id);
   }
@@ -35,7 +35,7 @@ function runTest() {
   function test_begin_space(e) {
     const msg = "SPACE at beginning of contenteditable inline element";
     var before = e.parentNode.childNodes[0].nodeValue;
-    sendChar(" ", e);
+    sendChar(" ");
     is(e.parentNode.childNodes[0].nodeValue, before, msg + " with id=" + e.id);
     is(e.innerHTML, "&nbsp;X", msg + " with id=" + e.id);
   }
@@ -43,8 +43,8 @@ function runTest() {
   function test_end_delete(e) {
     const msg = "DEL at end of contenteditable inline element";
     var before = e.parentNode.childNodes[2].nodeValue;
-    sendKey("right", e);
-    sendKey("delete", e);
+    sendKey("right");
+    sendKey("delete");
     is(e.parentNode.childNodes[2].nodeValue, before, msg + " with id=" + e.id);
     is(e.innerHTML, "X", msg + " with id=" + e.id);
   }
@@ -52,8 +52,8 @@ function runTest() {
   function test_end_space(e) {
     const msg = "SPACE at end of contenteditable inline element";
     var before = e.parentNode.childNodes[2].nodeValue;
-    sendKey("right", e);
-    sendChar(" ", e);
+    sendKey("right");
+    sendChar(" ");
     is(e.parentNode.childNodes[2].nodeValue, before, msg + " with id=" + e.id);
     is(e.innerHTML, "X" + (e.tagName=="SPAN" ? "&nbsp;" : " <br>"), msg + " with id=" + e.id);
   }

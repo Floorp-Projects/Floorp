@@ -477,19 +477,22 @@ function runTest(testNum) {
         input = $_(5, "field3");
         restoreForm();
         testNum = 199;
-        sendChar("a", input);
+        input.focus();
+        sendChar("a");
         break;
 
     /* Test filtering as characters are typed. */
 
     case 200:
         checkMenuEntries(["a", "aa", "aaz", "aa\xe6", "az"]);
-        sendChar("a", input);
+        input.focus();
+        sendChar("a");
         break;
 
     case 201:
         checkMenuEntries(["aa", "aaz", "aa\xe6"]);
-        sendChar("\xc6", input);
+        input.focus();
+        sendChar("\xc6");
         break;
 
     case 202:
@@ -504,27 +507,31 @@ function runTest(testNum) {
 
     case 204:
         checkMenuEntries(["a", "aa", "aaz", "aa\xe6", "az"]);
-        sendChar("z", input);
+        input.focus();
+        sendChar("z");
         break;
 
     case 205:
         ok(getMenuEntries().length > 0, "checking typing in middle of text");
+        input.focus();
         doKey("left");
-        sendChar("a", input);
+        sendChar("a");
         break;
 
     case 206:
         checkMenuEntries(["aaz"]);
         fh.addEntry("field3", "aazq");
+        input.focus();
         doKey("right");
-        sendChar("q", input);
+        sendChar("q");
         break;
 
     case 207:
         // check that results were cached
         checkMenuEntries([]);
         fh.addEntry("field3", "aazqq");
-        sendChar("q", input);
+        input.focus();
+        sendChar("q");
         break;
 
     case 208:
@@ -536,7 +543,8 @@ function runTest(testNum) {
         input = $_(6, "field4");
         restoreForm();
         testNum = 249;
-        sendChar("a", input);
+        input.focus();
+        sendChar("a");
         break;
 
     /* Test substring matches and word boundary bonuses */
@@ -544,7 +552,8 @@ function runTest(testNum) {
     case 250:
         // alphabetical results for first character
         checkMenuEntries(["aa a\xe6", "aba\xe6", "a\xe6"]);
-        sendChar("\xc6", input);
+        input.focus();
+        sendChar("\xc6");
         break;
 
     case 251:
@@ -553,31 +562,36 @@ function runTest(testNum) {
         checkMenuEntries(["a\xe6", "aa a\xe6", "aba\xe6"]);
 
         restoreForm();
-        sendChar("b", input);
+        input.focus();
+        sendChar("b");
         break;
 
     case 252:
         checkMenuEntries(["bc d\xe6"]);
-        sendChar(" ", input);
+        input.focus();
+        sendChar(" ");
         break;
 
     case 253:
         // check that trailing space has no effect after single char.
         checkMenuEntries(["bc d\xe6"]);
-        sendChar("\xc6", input);
+        input.focus();
+        sendChar("\xc6");
         break;
 
     case 254:
         // check multi-word substring matches
         checkMenuEntries(["bc d\xe6", "aba\xe6"]);
+        input.focus();
         doKey("left");
-        sendChar("d", input);
+        sendChar("d");
         break;
 
     case 255:
         // check inserting in multi-word searches
         checkMenuEntries(["bc d\xe6"]);
-        sendChar("z", input);
+        input.focus();
+        sendChar("z");
         break;
 
     case 256:
@@ -630,7 +644,8 @@ function runTest(testNum) {
         input.maxLength = 4;
 
         // now again with a character typed
-        sendChar("1", input);
+        input.focus();
+        sendChar("1");
         doKey("escape");
         doKey("down");
         break;

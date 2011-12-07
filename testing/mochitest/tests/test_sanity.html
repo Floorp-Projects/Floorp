@@ -44,13 +44,13 @@ is(press2, true, "synthesizeKey should dispatch keyPress with default prevented"
 
 var press3 = false;
 $("testKeyEvent3").focus();
-sendChar("x", "testKeyEvent3")
+sendChar("x")
 is($("testKeyEvent3").value, "x", "sendChar should work");
 is(press3, true, "sendChar should dispatch keyPress");
 
 var press4 = false;
 $("testKeyEvent4").focus();
-sendChar("x", "testKeyEvent4")
+sendChar("x")
 is($("testKeyEvent4").value, "", "sendChar should respect keydown preventDefault");
 is(press4, true, "sendChar should dispatch keyPress with default prevented");
 

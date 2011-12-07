@@ -26,10 +26,10 @@ SimpleTest.waitForFocus(function() {
     element.focus();
     element.selectionStart = 4;
     element.selectionEnd = 4;
-    synthesizeKey("VK_BACKSPACE", {});
-    synthesizeKey("VK_BACKSPACE", {});
-    synthesizeKey("VK_BACKSPACE", {});
-    synthesizeKey("VK_BACKSPACE", {});
+    synthesizeKey("VK_BACK_SPACE", {});
+    synthesizeKey("VK_BACK_SPACE", {});
+    synthesizeKey("VK_BACK_SPACE", {});
+    synthesizeKey("VK_BACK_SPACE", {});
 
     ok(element.value, "", "4 backspaces should delete all of the characters in the " + element.localName);
   }
