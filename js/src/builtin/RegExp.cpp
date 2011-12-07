@@ -256,7 +256,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder,
         sourceStr = cx->runtime->emptyString;
     } else {
         /* Coerce to string and compile. */
-        JSString *str = js_ValueToString(cx, sourceValue);
+        JSString *str = ToString(cx, sourceValue);
         if (!str)
             return false;
         sourceStr = str->ensureLinear(cx);
@@ -266,7 +266,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder,
 
     RegExpFlag flags = RegExpFlag(0);
     if (argc > 1 && !argv[1].isUndefined()) {
-        JSString *flagStr = js_ValueToString(cx, argv[1]);
+        JSString *flagStr = ToString(cx, argv[1]);
         if (!flagStr)
             return false;
         argv[1].setString(flagStr);
@@ -528,7 +528,7 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
     RegExpStatics *res = cx->regExpStatics();
 
     /* Step 2. */
-    JSString *input = js_ValueToString(cx, (args.length() > 0) ? args[0] : UndefinedValue());
+    JSString *input = ToString(cx, (args.length() > 0) ? args[0] : UndefinedValue());
     if (!input)
         return false;
 

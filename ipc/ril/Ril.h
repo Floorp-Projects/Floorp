@@ -1,9 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et ft=cpp: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at:
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -11,15 +13,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Telephony.
+ * The Original Code is Mozilla Code.
  *
  * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
+ *   The Mozilla Foundation
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Philipp von Weitershausen <philipp@weitershausen.de>
+ *   Chris Jones <jones.chris.g@gmail.com>
+ *   Kyle Machulis <kyle@nonpolynomial.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,29 +38,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef mozilla_ipc_Ril_h
+#define mozilla_ipc_Ril_h 1
 
-[scriptable, uuid(9b7e3a01-9c45-4af3-81bb-1bf08a842226)]
-interface nsITelephoneCallback : nsISupports {
-  void oncallstatechange(in jsval event);
+#include "mozilla/RefPtr.h"
 
-  //XXX philikon's additions
-  void onoperatorchange(in jsval event);
-  void onradiostatechange(in jsval event);
-  void oncardstatechange(in jsval event);
-  void onsignalstrengthchange(in jsval event);
+namespace base {
+class MessageLoop;
+}
+
+class nsIThread;
+
+namespace mozilla {
+namespace ipc {
+
+
+/*
+ * Represents raw data going to or coming from the RIL socket. Can
+ * actually contain multiple RIL parcels in the data block, and may
+ * also contain incomplete parcels on the front or back. Actual parcel
+ * construction is handled in the worker thread.
+ */
+struct RilRawData
+{
+    static const size_t MAX_DATA_SIZE = 1024;
+    uint8_t mData[MAX_DATA_SIZE];
+
+    // Number of octets in mData.
+    size_t mSize;
 };
 
-[scriptable, uuid(3d3deb80-fa5e-4e05-9153-91ee614f67d5)]
-interface nsITelephone : nsISupports {
-
-  readonly attribute jsval currentState;
-
-  void dial(in DOMString number);
-  void hangUp(in long callIndex);
-  void answerCall();
-  void rejectCall();
-
-  void registerCallback(in nsITelephoneCallback callback);
-  void unregisterCallback(in nsITelephoneCallback callback);
+class RilConsumer : public RefCounted<RilConsumer>
+{
+public:
+    virtual ~RilConsumer() { }
+    virtual void MessageReceived(RilRawData* aMessage) { }
 };
+
+bool StartRil(RilConsumer* aConsumer);
+
+bool SendRilRawData(RilRawData** aMessage);
+
+void StopRil();
+
+} // namespace ipc
+} // namepsace mozilla
+
+#endif // mozilla_ipc_Ril_h

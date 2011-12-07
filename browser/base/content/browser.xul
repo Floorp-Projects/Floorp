@@ -279,7 +279,11 @@
                                if (gContextMenu.shouldDisplay)
                                  updateEditUIVisibility();
                                return gContextMenu.shouldDisplay;"
-               onpopuphiding="if (event.target == this) { gContextMenu = null; updateEditUIVisibility(); }">
+               onpopuphiding="if (event.target != this)
+                                return;
+                              gContextMenu.hiding();
+                              gContextMenu = null;
+                              updateEditUIVisibility();">
 #include browser-context.inc
     </menupopup>
 
