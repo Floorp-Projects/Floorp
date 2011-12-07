@@ -44,19 +44,21 @@
 
 %{ C++
 #include "nsMargin.h"
+#include "nsTArray.h"
 %}
 
 /**
  * Native types
  */
   [ref] native nsNativeIntMarginRef(nsIntMargin);
+  [ref] native IntegerArray(nsTArray<PRInt32>);
   
 interface nsIPrintSession;
 
 /**
  * Simplified graphics interface for JS rendering.
  */
-[scriptable, uuid(343700dd-078b-42b6-a809-b9c1d7e951d0)]
+[scriptable, uuid(4404c94b-0506-4255-9e3c-4582dba6cfbb)]
 
 interface nsIPrintSettings : nsISupports
 {
@@ -329,4 +331,15 @@ interface nsIPrintSettings : nsISupports
    */
   [noscript] void SetUnwriteableMarginInTwips(in nsNativeIntMarginRef aEdge);
   [noscript] void GetUnwriteableMarginInTwips(in nsNativeIntMarginRef aEdge);
+  
+  /**
+   * Get more accurate print ranges from the superior interval 
+   * (startPageRange, endPageRange). The aPages array is populated with a 
+   * list of pairs (start, end), where the endpoints are included. The print 
+   * ranges (start, end), must not overlap and must be in the 
+   * (startPageRange, endPageRange) scope.
+   *
+   * If there are no print ranges the aPages array is cleared.
+   */
+  [noscript] void GetPageRanges(in IntegerArray aPages);
 };

@@ -749,3 +749,23 @@ nsPrintSettingsGTK::SetupSilentPrinting()
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPrintSettingsGTK::GetPageRanges(nsTArray<PRInt32> &aPages)
+{
+  gint ctRanges;
+  GtkPageRange* lstRanges = gtk_print_settings_get_page_ranges(mPrintSettings, &ctRanges);
+
+  aPages.Clear();
+
+  if (ctRanges > 1) {
+    for (gint i = 0; i < ctRanges; i++) {
+      aPages.AppendElement(lstRanges[i].start+1);
+      aPages.AppendElement(lstRanges[i].end+1);
+    }
+  }
+
+  g_free(lstRanges);
+  return NS_OK;
+}
+
