@@ -37,24 +37,26 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(e21cdf40-c511-442b-8c7d-aa75471b0423)]
+[scriptable, uuid(9b7e3a01-9c45-4af3-81bb-1bf08a842226)]
 interface nsITelephoneCallback : nsISupports {
-  void oncallstatechange(in jsval callState);
+  void oncallstatechange(in jsval event);
 
   //XXX philikon's additions
-  void onoperatorchange(in jsval operatorInfo);
-  void onradiostatechange(in jsval radioState);
-  void oncardstatechange(in jsval cardState);
-  void onsignalstrengthchange(in jsval signalStrength);
+  void onoperatorchange(in jsval event);
+  void onradiostatechange(in jsval event);
+  void oncardstatechange(in jsval event);
+  void onsignalstrengthchange(in jsval event);
 };
 
-[scriptable, uuid(dda49485-5887-49bb-ba0b-10c5d116eb64)]
+[scriptable, uuid(3d3deb80-fa5e-4e05-9153-91ee614f67d5)]
 interface nsITelephone : nsISupports {
 
-  readonly attribute jsval initialState;
+  readonly attribute jsval currentState;
 
   void dial(in DOMString number);
-  void hangup(in long callIndex);
+  void hangUp(in long callIndex);
+  void answerCall();
+  void rejectCall();
 
   void registerCallback(in nsITelephoneCallback callback);
   void unregisterCallback(in nsITelephoneCallback callback);
