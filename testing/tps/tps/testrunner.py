@@ -236,11 +236,17 @@ class TPSTestRunner(object):
             for f in files:
               weavelog = os.path.join(profiles[profile].profile, 'weave', 'logs', f)
               if os.access(weavelog, os.F_OK):
-                f = open(weavelog, 'r')
-                msg = f.read()
-                self.log(msg)
-                f.close()
-              self.log("\n")
+                with open(weavelog, 'r') as fh:
+                  for line in fh:
+                    possible_time = line[0:13]
+                    if len(possible_time) == 13 and possible_time.isdigit():
+                      time_ms = int(possible_time)
+                      formatted = time.strftime('%Y-%m-%d %H:%M:%S',
+                              time.localtime(time_ms / 1000))
+                      self.log('%s.%03d %s' % (
+                          formatted, time_ms % 1000, line[14:] ))
+                    else:
+                      self.log(line)
         break;
 
     # grep the log for FF and sync versions
