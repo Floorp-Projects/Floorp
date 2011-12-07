@@ -1,0 +1,22 @@
+See src/README for the README that ships with snappy.
+
+Mozilla does not modify the actual snappy source with the exception of the
+'snappy-stubs-public.h' header. We have replaced its build system with our own.
+
+Snappy comes from:
+  http://code.google.com/p/snappy/
+
+To upgrade to a newer version:
+  1. Check out the new code using subversion.
+  2. Update 'snappy-stubs-public.h' in this directory with any changes that were
+     made to 'snappy-stubs-public.h.in' in the new source.
+  3. Copy the major/minor/patch versions from 'configure.ac' into
+     'snappy-stubs-public.h'.
+  4. Copy all source files from the new version into the src subdirectory. The
+     following files are not needed:
+       - 'autom4te.cache' subdirectory
+       - 'm4' subdirectory
+       - 'testdata' subdirectory
+       - 'autogen.sh'
+       - 'configure.ac'
+       - 'Makefile.am'
