@@ -2586,11 +2586,36 @@ nsNavBookmarks::SetItemIndex(PRInt64 aItemId, PRInt32 aNewIndex)
 nsresult
 nsNavBookmarks::UpdateKeywordsHashForRemovedBookmark(PRInt64 aItemId)
 {
-  nsAutoString kw;
-  if (NS_SUCCEEDED(GetKeywordForBookmark(aItemId, kw)) && !kw.IsEmpty()) {
+  nsAutoString keyword;
+  if (NS_SUCCEEDED(GetKeywordForBookmark(aItemId, keyword)) &&
+      !keyword.IsEmpty()) {
     nsresult rv = EnsureKeywordsHash();
     NS_ENSURE_SUCCESS(rv, rv);
     mBookmarkToKeywordHash.Remove(aItemId);
+
+    // If the keyword is unused, remove it from the database.
+    keywordSearchData searchData;
+    searchData.keyword.Assign(keyword);
+    searchData.itemId = -1;
+    mBookmarkToKeywordHash.EnumerateRead(SearchBookmarkForKeyword, &searchData);
+    if (searchData.itemId == -1) {
+      nsCOMPtr<mozIStorageAsyncStatement> stmt = mDB->GetAsyncStatement(
+        "DELETE FROM moz_keywords "
+        "WHERE keyword = :keyword "
+        "AND NOT EXISTS ( "
+          "SELECT id "
+          "FROM moz_bookmarks "
+          "WHERE keyword_id = moz_keywords.id "
+        ")"
+      );
+      NS_ENSURE_STATE(stmt);
+
+      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("keyword"), keyword);
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<mozIStoragePendingStatement> pendingStmt;
+      rv = stmt->ExecuteAsync(nsnull, getter_AddRefs(pendingStmt));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
   return NS_OK;
 }
