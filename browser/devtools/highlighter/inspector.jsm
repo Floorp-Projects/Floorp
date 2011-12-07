@@ -518,10 +518,23 @@ Highlighter.prototype = {
    */
   moveInfobar: function Highlighter_moveInfobar()
   {
-    let rect = this._highlightRect;
-    if (rect && this._highlighting) {
+    if (this._highlightRect) {
       let winHeight = this.win.innerHeight * this.zoom;
       let winWidth = this.win.innerWidth * this.zoom;
+
+      let rect = {top: this._highlightRect.top,
+                  left: this._highlightRect.left,
+                  width: this._highlightRect.width,
+                  height: this._highlightRect.height};
+
+      rect.top = Math.max(rect.top, 0);
+      rect.left = Math.max(rect.left, 0);
+      rect.width = Math.max(rect.width, 0);
+      rect.height = Math.max(rect.height, 0);
+
+      rect.top = Math.min(rect.top, winHeight);
+      rect.left = Math.min(rect.left, winWidth);
+
       this.nodeInfo.container.removeAttribute("disabled");
       // Can the bar be above the node?
       if (rect.top < this.nodeInfo.barHeight) {
