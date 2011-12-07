@@ -6,7 +6,3 @@ function test() {
     return "pass";
 }
 assertEq(test(), "pass");
-checkStats({
-  recorderStarted: 1,
-  recorderAborted: 0
-});

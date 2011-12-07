@@ -13,7 +13,7 @@ function strictArgs(a)
 }
 
 var a1, a2, a3;
-for (var i = 0; i < HOTLOOP+1; i++)
+for (var i = 0; i < 9; i++)
 {
   a1 = strictArgs();
   a2 = strictArgs(1);

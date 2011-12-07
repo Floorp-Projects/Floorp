@@ -7,7 +7,7 @@ function f(x,y,z) {
   assertEq(o[2] == undefined, true);
 }
 
-for (var i = 0; i < HOTLOOP+2; ++i) {
+for (var i = 0; i < 10; ++i) {
     print(i);
     f(1,2,3)
 }

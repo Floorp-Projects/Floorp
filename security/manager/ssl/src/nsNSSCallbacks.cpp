@@ -109,7 +109,9 @@ nsHTTPDownloadEvent::Run()
   ios->NewChannel(mRequestSession->mURL, nsnull, nsnull, getter_AddRefs(chan));
   NS_ENSURE_STATE(chan);
 
-  chan->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS);
+  // Disabled because it breaks authentication with a proxy, when such proxy
+  // had been setup, and brings blue UI for EV certs.
+  // chan->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS);
 
   // Create a loadgroup for this new channel.  This way if the channel
   // is redirected, we'll have a way to cancel the resulting channel.

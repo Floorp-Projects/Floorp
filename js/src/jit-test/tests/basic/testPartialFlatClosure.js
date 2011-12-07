@@ -8,9 +8,3 @@ assertEq((('-r', function (s) {
         a[a.length] = new C(i);
     return a;
 })(42))[4].m(), 168);
-
-checkStats({
-    recorderStarted: 1,
-    recorderAborted: 0,
-    traceCompleted: 1,
-});

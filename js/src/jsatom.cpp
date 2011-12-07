@@ -497,7 +497,7 @@ AtomizeInline(JSContext *cx, const jschar **pchars, size_t length,
 
     /*
      * We have to relookup the key as the last ditch GC invoked from the
-     * string allocation or OOM handling may unlock the atomsCompartment.
+     * string allocation or OOM handling unlocks the atomsCompartment.
      *
      * N.B. this avoids recomputing the hash but still has a potential
      * (# collisions * # chars) comparison cost in the case of a hash

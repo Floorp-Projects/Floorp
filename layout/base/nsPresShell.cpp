@@ -6337,9 +6337,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
           if (aEvent->message == NS_KEY_UP) {
            // ESC key released while in DOM full-screen mode.
            // Exit full-screen mode.
-           NS_DispatchToCurrentThread(
-             NS_NewRunnableMethod(root,
-                                  &nsIDocument::CancelFullScreen));
+            nsIDocument::ExitFullScreen(true);
           }
         } else if (IsFullScreenAndRestrictedKeyEvent(mCurrentEventContent, aEvent)) {
           // Restricted key press while in DOM full-screen mode. Dispatch

@@ -4424,12 +4424,12 @@ nsGlobalWindow::SetFullScreen(bool aFullScreen)
   if (widget)
     widget->MakeFullScreen(aFullScreen);
 
-  if (!mFullScreen && mDocument) {
-    // Notify the document that we've left full-screen mode. This is so that
-    // if we're in full-screen mode and the user exits full-screen mode with
-    // the browser full-screen mode toggle keyboard-shortcut, we detect that
-    // and leave DOM API full-screen mode too.
-    mDocument->MozCancelFullScreen();
+  if (!mFullScreen) {
+    // Force exit from DOM full-screen mode. This is so that if we're in
+    // DOM full-screen mode and the user exits full-screen mode with
+    // the browser full-screen mode toggle keyboard-shortcut, we'll detect
+    // that and leave DOM API full-screen mode too.
+    nsIDocument::ExitFullScreen(false);
   }
 
   return NS_OK;

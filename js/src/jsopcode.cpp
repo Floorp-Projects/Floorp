@@ -1173,7 +1173,7 @@ typedef struct SprintStack {
  */
 static intN
 ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *pc,
-                   jsbytecode **pcstack);
+                   jsbytecode **pcstack, jsbytecode **lastDecomposedPC);
 
 #define FAILED_EXPRESSION_DECOMPILER ((char *) 1)
 
@@ -2312,13 +2312,22 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
         if (pc + oplen == jp->dvgfence) {
             /*
              * Rewrite non-get ops to their "get" format if the error is in
-             * the bytecode at pc, so we don't decompile more than the error
+             * the bytecode at pc, or if at an inner opcode of a 'fat' outer
+             * opcode at pc, so we don't decompile more than the error
              * expression.
              */
-            StackFrame *fp = js_GetScriptedCaller(cx, NULL);
             uint32 format = cs->format;
-            if (((fp && pc == fp->pcQuadratic(cx)) ||
-                 (pc == startpc && nuses != 0)) &&
+            bool matchPC = false;
+            if (StackFrame *fp = js_GetScriptedCaller(cx, NULL)) {
+                jsbytecode *npc = fp->pcQuadratic(cx);
+                if (pc == npc) {
+                    matchPC = true;
+                } else if (format & JOF_DECOMPOSE) {
+                    if (unsigned(npc - pc) < GetDecomposeLength(pc, js_CodeSpec[*pc].length))
+                        matchPC = true;
+                }
+            }
+            if ((matchPC || (pc == startpc && nuses != 0)) &&
                 format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_VARPROP)) {
                 uint32 mode = JOF_MODE(format);
                 if (mode == JOF_NAME) {
@@ -5204,7 +5213,8 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
                   cx->malloc_(StackDepth(script) * sizeof *pcstack);
         if (!pcstack)
             return NULL;
-        intN pcdepth = ReconstructPCStack(cx, script, pc, pcstack);
+        jsbytecode *lastDecomposedPC = NULL;
+        intN pcdepth = ReconstructPCStack(cx, script, pc, pcstack, &lastDecomposedPC);
         if (pcdepth < 0)
             goto release_pcstack;
 
@@ -5237,9 +5247,21 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
              * produced by the current pc. Since it takes a fairly contrived
              * combination of calls to produce a situation where this is not
              * what we want, we just use the current pc.
+             *
+             * If we are in the middle of a decomposed opcode, use the outer
+             * 'fat' opcode itself. Any source notes for the operation which
+             * are needed during decompilation will be associated with the
+             * outer opcode.
              */
-            if (sp < stackBase + pcdepth)
+            if (sp < stackBase + pcdepth) {
                 pc = pcstack[sp - stackBase];
+                if (lastDecomposedPC) {
+                    size_t len = GetDecomposeLength(lastDecomposedPC,
+                                                    js_CodeSpec[*lastDecomposedPC].length);
+                    if (unsigned(pc - lastDecomposedPC) < len)
+                        pc = lastDecomposedPC;
+                }
+            }
         }
 
       release_pcstack:
@@ -5348,7 +5370,7 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     if (!g.pcstack)
         return NULL;
 
-    intN pcdepth = ReconstructPCStack(cx, script, begin, g.pcstack);
+    intN pcdepth = ReconstructPCStack(cx, script, begin, g.pcstack, NULL);
     if (pcdepth < 0)
          return FAILED_EXPRESSION_DECOMPILER;
 
@@ -5368,7 +5390,7 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
 uintN
 js_ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    return ReconstructPCStack(cx, script, pc, NULL);
+    return ReconstructPCStack(cx, script, pc, NULL, NULL);
 }
 
 #define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, -1);
@@ -5431,7 +5453,7 @@ SimulateOp(JSContext *cx, JSScript *script, JSOp op, const JSCodeSpec *cs,
 
 static intN
 ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
-                   jsbytecode **pcstack)
+                   jsbytecode **pcstack, jsbytecode **lastDecomposedPC)
 {
     /*
      * Walk forward from script->main and compute the stack depth and stack of
@@ -5452,8 +5474,11 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
         if (oplen < 0)
             oplen = js_GetVariableBytecodeLength(pc);
 
-        if (cs->format & JOF_DECOMPOSE)
+        if (cs->format & JOF_DECOMPOSE) {
+            if (lastDecomposedPC)
+                *lastDecomposedPC = pc;
             continue;
+        }
 
         /*
          * A (C ? T : E) expression requires skipping either T (if target is in

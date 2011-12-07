@@ -1784,12 +1784,31 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     }
 #endif
 
+    /* State communicated between non-local jumps: */
+    JSBool interpReturnOK;
+    JSAtom *atomNotDefined;
+
     /* Don't call the script prologue if executing between Method and Trace JIT. */
     if (interpMode == JSINTERP_NORMAL) {
         StackFrame *fp = regs.fp();
         JS_ASSERT_IF(!fp->isGeneratorFrame(), regs.pc == script->code);
         if (!ScriptPrologueOrGeneratorResume(cx, fp, UseNewTypeAtEntry(cx, fp)))
             goto error;
+        if (cx->compartment->debugMode()) {
+            JSTrapStatus status = ScriptDebugPrologue(cx, fp);
+            switch (status) {
+              case JSTRAP_CONTINUE:
+                break;
+              case JSTRAP_RETURN:
+                interpReturnOK = JS_TRUE;
+                goto forced_return;
+              case JSTRAP_THROW:
+              case JSTRAP_ERROR:
+                goto error;
+              default:
+                JS_NOT_REACHED("bad ScriptDebugPrologue status");
+            }
+        }
     }
 
     /* The REJOIN mode acts like the normal mode, except the prologue is skipped. */
@@ -1801,10 +1820,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     CHECK_INTERRUPT_HANDLER();
 
     RESET_USE_METHODJIT();
-
-    /* State communicated between non-local jumps: */
-    JSBool interpReturnOK;
-    JSAtom *atomNotDefined;
 
     /*
      * It is important that "op" be initialized before calling DO_OP because
@@ -2031,6 +2046,10 @@ BEGIN_CASE(JSOP_STOP)
   inline_return:
     {
         JS_ASSERT(!IsActiveWithOrBlock(cx, regs.fp()->scopeChain(), 0));
+
+        if (cx->compartment->debugMode())
+            interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
+ 
         interpReturnOK = ScriptEpilogue(cx, regs.fp(), interpReturnOK);
 
         /* The JIT inlines ScriptEpilogue. */
@@ -3507,6 +3526,21 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     if (!ScriptPrologue(cx, regs.fp(), newType))
         goto error;
 
+    if (cx->compartment->debugMode()) {
+        switch (ScriptDebugPrologue(cx, regs.fp())) {
+          case JSTRAP_CONTINUE:
+            break;
+          case JSTRAP_RETURN:
+            interpReturnOK = JS_TRUE;
+            goto forced_return;
+          case JSTRAP_THROW:
+          case JSTRAP_ERROR:
+            goto error;
+          default:
+            JS_NOT_REACHED("bad ScriptDebugPrologue status");
+        }
+    }
+
     CHECK_INTERRUPT_HANDLER();
 
     /* Load first op and dispatch it (safe since JSOP_STOP). */
@@ -4173,24 +4207,19 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
     LOAD_FUNCTION(SLOTNO_LEN);
     JS_ASSERT(fun->isInterpreted());
     JS_ASSERT(!fun->isFlatClosure());
-    JSObject *obj = fun;
 
+    JSObject *parent;
     if (fun->isNullClosure()) {
-        obj = CloneFunctionObjectIfNotSingleton(cx, fun, &regs.fp()->scopeChain());
-        if (!obj)
-            goto error;
+        parent = &regs.fp()->scopeChain();
     } else {
-        JSObject *parent = GetScopeChainFast(cx, regs.fp(), JSOP_DEFLOCALFUN,
-                                             JSOP_DEFLOCALFUN_LENGTH);
+        parent = GetScopeChainFast(cx, regs.fp(), JSOP_DEFLOCALFUN,
+                                   JSOP_DEFLOCALFUN_LENGTH);
         if (!parent)
             goto error;
-
-        if (obj->toFunction()->environment() != parent) {
-            obj = CloneFunctionObjectIfNotSingleton(cx, fun, parent);
-            if (!obj)
-                goto error;
-        }
     }
+    JSObject *obj = CloneFunctionObjectIfNotSingleton(cx, fun, parent);
+    if (!obj)
+        goto error;
 
     JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
 
@@ -5524,6 +5553,8 @@ END_CASE(JSOP_ARRAYPUSH)
         goto inline_return;
 
   exit:
+    if (cx->compartment->debugMode())
+        interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
     interpReturnOK = ScriptEpilogueOrGeneratorYield(cx, regs.fp(), interpReturnOK);
     regs.fp()->setFinishedInInterpreter();
 

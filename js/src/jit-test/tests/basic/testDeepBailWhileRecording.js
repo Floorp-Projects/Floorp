@@ -13,8 +13,3 @@ for (var i = 0; i < 10; ++i) {
 assertEq(out.length, 10 * arr.length);
 for (var i = 0; i < out.length; ++i)
     assertEq(out[i], 1);
-
-checkStats({
-    traceCompleted:2,
-    recorderAborted:1
-});

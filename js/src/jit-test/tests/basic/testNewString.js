@@ -19,9 +19,3 @@ function testNewString()
   return r.length === 35 && r.every(function(v) { return v === "object"; });
 }
 assertEq(testNewString(), true);
-checkStats({
-  recorderStarted:  7,
-  recorderAborted: 0,
-  traceCompleted: 7,
-  sideExitIntoInterpreter: 7
-});

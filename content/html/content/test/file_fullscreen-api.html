@@ -22,11 +22,11 @@ Test DOM full-screen API.
 /** Test for Bug 545812 **/
 
 function ok(condition, msg) {
-  opener.ok(condition, msg);
+  opener.ok(condition, "[fullscreen] " + msg);
 }
 
 function is(a, b, msg) {
-  opener.is(a, b, msg);
+  opener.is(a, b, "[fullscreen] " + msg);
 }
 
 /*
@@ -64,27 +64,23 @@ function fullScreenElement() {
 function fullScreenChange(event) {
   switch (fullScreenChangeCount) {
     case 0: {
-      ok(document.mozFullScreen, "Should be in full-screen mode (first time)");
-      is(event.target, document, "Event target should be full-screen document #1");
-      is(document.mozFullScreenElement, fullScreenElement(),
-         "Full-screen element should be div element.");
-      ok(document.mozFullScreenElement.mozMatchesSelector(":-moz-full-screen"),
-         "FSE should match :-moz-full-screen");
+      ok(document.mozFullScreen, "1. Should be in full-screen mode (first time)");
+      is(event.target, document, "2. Event target should be full-screen document #1");
+      is(document.mozFullScreenElement, fullScreenElement(), "3. Full-screen element should be div element.");
+      ok(document.mozFullScreenElement.mozMatchesSelector(":-moz-full-screen"), "4. FSE should match :-moz-full-screen");
       var fse = fullScreenElement();
       fse.parentNode.removeChild(fse);
-      is(document.mozFullScreenElement, null,
-         "Full-screen element should be null after removing.");
-      ok(!document.mozFullScreen, "Should have left full-screen mode when we remove full-screen element");
+      is(document.mozFullScreenElement, null, "5. Full-screen element should be null after removing.");
+      ok(!document.mozFullScreen, "6. Should have left full-screen mode when we remove full-screen element");
       document.body.appendChild(fse);
-      ok(!document.mozFullScreen, "Should not return to full-screen mode when re-adding former FSE");
-      is(document.mozFullScreenElement, null,
-         "Full-screen element should still be null after re-adding former FSE.");
+      ok(!document.mozFullScreen, "7. Should not return to full-screen mode when re-adding former FSE");
+      is(document.mozFullScreenElement, null, "8. Full-screen element should still be null after re-adding former FSE.");
       break;
     }
     case 1: {
-      ok(!document.mozFullScreen, "Should have left full-screen mode (first time)");
-      is(event.target, document, "Event target should be full-screen document #2");
-      is(document.mozFullScreenElement, null, "Full-screen element should be null.");
+      ok(!document.mozFullScreen, "9. Should have left full-screen mode (first time)");
+      is(event.target, document, "10. Event target should be full-screen document #2");
+      is(document.mozFullScreenElement, null, "11. Full-screen element should be null.");
       iframe = document.createElement("iframe");
       iframe.mozAllowFullScreen = true;
       document.body.appendChild(iframe);
@@ -92,41 +88,48 @@ function fullScreenChange(event) {
       break;
     }
     case 2: {
-      ok(document.mozFullScreen, "Should be back in full-screen mode (second time)");
-      is(event.target, document, "Event target should be full-screen document #3");
-      is(document.mozFullScreenElement, iframe,
-        "Full-screen element should be iframe element.");
- 
-      SimpleTest.waitForFocus(function() {
-        ok(document.mozFullScreen, "Should still be full-screen mode before focus.");
-        SpecialPowers.focus(window);
-        ok(document.mozFullScreen, "Should still be full-screen mode after focus.");
-        
-        var fse = fullScreenElement();
-        fse.mozRequestFullScreen();
-
-        // RequestFullScreen() is async, continue after it completes.
-        setTimeout(function() {
-          ok(document.mozFullScreen, "Should still be full-screen mode after re-requesting.");
-          is(document.mozFullScreenElement, fse, "Full-screen element should have switched to requestee.");
-          var _innerFrame = iframe.contentDocument.getElementById("inner-frame");
-          _innerFrame.contentDocument.body.appendChild(fse);
-          ok(!document.mozFullScreen, "Should exit full-screen after transplanting FSE");
-          is(document.mozFullScreenElement, null, "Full-screen element transplanted, should be null.");
-          is(iframe.contentDocument.mozFullScreenElement, null, "Full-screen element in outer frame should be null.");
-          is(_innerFrame.contentDocument.mozFullScreenElement, null, "Full-screen element in inner frame should be null.");
-          ok(!iframe.contentDocument.mozFullScreen, "Outer frame should not acquire full-screen status.");
-          ok(!_innerFrame.contentDocument.mozFullScreen, "Inner frame should not acquire full-screen status.");
-          
-          document.body.appendChild(fse);
-        }, 0);
-      }, 0);
+      ok(document.mozFullScreen, "12. Should be back in full-screen mode (second time)");
+      is(event.target, document, "13. Event target should be full-screen document #3");
+      is(document.mozFullScreenElement, iframe, "14. Full-screen element should be iframe element.");
+      is(iframe.contentDocument.mozFullScreenElement, iframe.contentDocument.body, "15. Full-screen element in subframe should be body");
+      
+      // The iframe's body is full-screen. Cancel full-screen in the subdocument to return
+      // the full-screen element to the previous full-screen element. This causes
+      // a fullscreenchange event.
+      document.mozCancelFullScreen();
       break;
     }
     case 3: {
-      ok(!document.mozFullScreen, "Should be back in non-full-screen mode (second time)");
-      is(event.target, document, "Event target should be full-screen document #4");
-      is(document.mozFullScreenElement, null, "Full-screen element should be null.");
+      ok(!document.mozFullScreen, "16. Should have left full-screen when removing FSE ancestor.");
+      is(document.mozFullScreenElement, null, "17. Full-screen element should have rolled back.");
+      is(iframe.contentDocument.mozFullScreenElement, null, "18. Full-screen element in subframe should be null");
+      
+      fullScreenElement().mozRequestFullScreen();
+      break;
+    }
+    case 4: {
+      ok(document.mozFullScreen, "19. Should be back in full-screen mode (second time)");
+      is(event.target, document, "20. Event target should be full-screen document #3");
+      is(document.mozFullScreenElement, fullScreenElement(), "21. Full-screen element should be div.");
+      
+      // Transplant the FSE into subdoc. Should exit full-screen.
+      var _innerFrame = iframe.contentDocument.getElementById("inner-frame");
+      var fse = fullScreenElement();
+      _innerFrame.contentDocument.body.appendChild(fse);
+      ok(!document.mozFullScreen, "22. Should exit full-screen after transplanting FSE");
+      is(document.mozFullScreenElement, null, "23. Full-screen element transplanted, should be null.");
+      is(iframe.contentDocument.mozFullScreenElement, null, "24. Full-screen element in outer frame should be null.");
+      is(_innerFrame.contentDocument.mozFullScreenElement, null, "25. Full-screen element in inner frame should be null.");
+      ok(!iframe.contentDocument.mozFullScreen, "26. Outer frame should not acquire full-screen status.");
+      ok(!_innerFrame.contentDocument.mozFullScreen, "27. Inner frame should not acquire full-screen status.");
+      
+      document.body.appendChild(fse);
+      break;
+    }
+    case 5: {
+      ok(!document.mozFullScreen, "28. Should be back in non-full-screen mode (second time)");
+      is(event.target, document, "29. Event target should be full-screen document #4");
+      is(document.mozFullScreenElement, null, "30. Full-screen element should be null.");
       document.body.removeChild(iframe);
       iframe = null;
 
@@ -136,7 +139,7 @@ function fullScreenChange(event) {
       var f =
       function(e) {
         document.removeEventListener("mozfullscreenerror", f, false);
-        ok(!document.mozFullScreen, "Requests for full-screen from not-in-doc elements should fail.");
+        ok(!document.mozFullScreen, "31. Requests for full-screen from not-in-doc elements should fail.");
         fullScreenErrorRun = true;
 
         container = document.createElement("div");
@@ -151,12 +154,11 @@ function fullScreenChange(event) {
 
       break;
     }
-    case 4: {
-      ok(document.mozFullScreen, "Should still be in full-screen mode (third time)");
-      is(event.target, document, "Event target should be full-screen document #5");
-      ok(fullScreenErrorRun, "Should have run fullscreenerror handler from previous case.");
-      is(document.mozFullScreenElement, inDocElement,
-        "FSE should be inDocElement.");
+    case 6: {
+      ok(document.mozFullScreen, "32. Should still be in full-screen mode (third time)");
+      is(event.target, document, "33. Event target should be full-screen document #5");
+      ok(fullScreenErrorRun, "34. Should have run fullscreenerror handler from previous case.");
+      is(document.mozFullScreenElement, inDocElement, "35. FSE should be inDocElement.");
 
       var n = container;
       do {
@@ -166,14 +168,12 @@ function fullScreenChange(event) {
         
       // Remove full-screen ancestor element from document, verify it stops being reported as current FSE.
       container.parentNode.removeChild(container);
-      ok(!document.mozFullScreen,
-         "Should exit full-screen mode after removing full-screen element ancestor from document");
-      is(document.mozFullScreenElement, null,
-        "Should not have a full-screen element again.");
+      ok(!document.mozFullScreen, "36. Should exit full-screen mode after removing full-screen element ancestor from document");
+      is(document.mozFullScreenElement, null, "37. Should not have a full-screen element again.");
       break;
     }
-    case 5: {
-      ok(!document.mozFullScreen, "Should be back in non-full-screen mode (third time)");
+    case 7: {
+      ok(!document.mozFullScreen, "38. Should be back in non-full-screen mode (third time)");
       setRequireTrustedContext(true);
       fullscreendenied = false;
       fullScreenElement().mozRequestFullScreen();
@@ -189,7 +189,7 @@ function fullScreenChange(event) {
         }, 0);
       break;
     }
-    case 6: {
+    case 8: {
       ok(document.mozFullScreen, "Moved to full-screen after mouse click");
       document.mozCancelFullScreen();
       ok(document.mozFullScreen, "Should still be in full-screen mode, because calling context isn't trusted.");
@@ -198,7 +198,7 @@ function fullScreenChange(event) {
       ok(!document.mozFullScreen, "Should have left full-screen mode.");
       break;
     }
-    case 7: {
+    case 9: {
       ok(!document.mozFullScreen, "Should have left full-screen mode (last time).");
 
       SpecialPowers.setBoolPref("full-screen-api.enabled", false);
