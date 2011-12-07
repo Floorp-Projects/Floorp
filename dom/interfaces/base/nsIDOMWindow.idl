@@ -70,7 +70,7 @@ interface nsIDOMMozURLProperty : nsISupports
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(8f577294-d572-4473-94b1-d2c5a74a2a74)]
+[scriptable, uuid(57b7ed24-c340-4994-a023-56ba578b78ab)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -417,7 +417,7 @@ interface nsIDOMWindow : nsISupports
    *
    * @see <http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/RequestAnimationFrame/Overview.html>
    */
-  void
+  long
     mozRequestAnimationFrame(in nsIFrameRequestCallback aCallback);
 
   /**

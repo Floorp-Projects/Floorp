@@ -3874,9 +3874,10 @@ nsGlobalWindow::GetMozPaintCount(PRUint64* aResult)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback)
+nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback,
+                                         PRInt32 *aHandle)
 {
-  FORWARD_TO_INNER(MozRequestAnimationFrame, (aCallback),
+  FORWARD_TO_INNER(MozRequestAnimationFrame, (aCallback, aHandle),
                    NS_ERROR_NOT_INITIALIZED);
 
   if (!mDoc) {
@@ -3887,8 +3888,7 @@ nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback)
     return NS_ERROR_XPC_BAD_CONVERT_JS;
   }
 
-  mDoc->ScheduleFrameRequestCallback(aCallback);
-  return NS_OK;
+  return mDoc->ScheduleFrameRequestCallback(aCallback, aHandle);
 }
 
 NS_IMETHODIMP
