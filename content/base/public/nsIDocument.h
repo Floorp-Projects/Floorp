@@ -1531,6 +1531,7 @@ public:
 
   nsresult ScheduleFrameRequestCallback(nsIFrameRequestCallback* aCallback,
                                         PRInt32 *aHandle);
+  void CancelFrameRequestCallback(PRInt32 aHandle);
 
   typedef nsTArray< nsCOMPtr<nsIFrameRequestCallback> > FrameRequestCallbackList;
   /**
@@ -1832,6 +1833,15 @@ protected:
     // Conversion operator so that we can append these to a
     // FrameRequestCallbackList
     operator nsIFrameRequestCallback* const () const { return mCallback; }
+
+    // Comparator operators to allow RemoveElementSorted with an
+    // integer argument on arrays of FrameRequest
+    bool operator==(PRInt32 aHandle) const {
+      return mHandle == aHandle;
+    }
+    bool operator<(PRInt32 aHandle) const {
+      return mHandle < aHandle;
+    }
     
     nsCOMPtr<nsIFrameRequestCallback> mCallback;
     PRInt32 mHandle;

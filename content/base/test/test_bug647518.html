@@ -18,8 +18,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=647518
 <script type="application/javascript">
 
 /** Test for Bug 647518 **/
-var handle1 = window.mozRequestAnimationFrame(function() {});
+SimpleTest.waitForExplicitFinish();
+var counter = 3;
+
+var called = false;
+var handle1 = window.mozRequestAnimationFrame(function() {
+  called = true;
+});
 ok(handle1 > 0, "Should get back a nonzero handle");
+
+function checker() {
+  --counter;
+  if (counter == 0) {
+    is(called, false, "Canceled callback should not have been called");
+    SimpleTest.finish();
+  } else {
+    window.mozRequestAnimationFrame(checker);
+  }
+}
+window.mozRequestAnimationFrame(checker);
+window.mozCancelRequestAnimationFrame(handle1);
 
 </script>
 </pre>
