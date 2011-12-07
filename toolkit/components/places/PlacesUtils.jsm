@@ -410,13 +410,14 @@ var PlacesUtils = {
    * @returns true if the node is readonly, false otherwise
    */
   nodeIsReadOnly: function PU_nodeIsReadOnly(aNode) {
-    if (this.nodeIsFolder(aNode)) {
-      if (this._readOnly.indexOf(aNode.itemId) != -1)
-        return true;
+    let itemId = aNode.itemId;
+    if (itemId != -1) {
+      return this._readOnly.indexOf(itemId) != -1;
     }
-    else if (this.nodeIsQuery(aNode) &&
-             asQuery(aNode).queryOptions.resultType !=
-             Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS)
+
+    if (this.nodeIsQuery(aNode) &&
+        asQuery(aNode).queryOptions.resultType !=
+        Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_CONTENTS)
       return aNode.childrenReadOnly;
     return false;
   },
@@ -535,7 +536,7 @@ var PlacesUtils = {
   */
   isReadonlyFolder: function(aNode) {
     return this.nodeIsFolder(aNode) &&
-           this.bookmarks.getFolderReadonly(asQuery(aNode).folderItemId);
+           this._readOnly.indexOf(asQuery(aNode).folderItemId) != -1;
   },
 
   /**
