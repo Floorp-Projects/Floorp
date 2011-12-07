@@ -2016,7 +2016,9 @@ nsNavBookmarks::ProcessFolderNodeRow(
   PRInt64 id;
   rv = aRow->GetInt64(nsNavHistory::kGetInfoIndex_ItemId, &id);
   NS_ENSURE_SUCCESS(rv, rv);
+
   nsRefPtr<nsNavHistoryResultNode> node;
+
   if (itemType == TYPE_BOOKMARK) {
     nsNavHistory* history = nsNavHistory::GetHistoryService();
     NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
@@ -2041,7 +2043,18 @@ nsNavBookmarks::ProcessFolderNodeRow(
       if (readOnly)
         return NS_OK;
     }
-    rv = ResultNodeForContainer(id, aOptions, getter_AddRefs(node));
+
+    nsCAutoString title;
+    rv = aRow->GetUTF8String(nsNavHistory::kGetInfoIndex_Title, title);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    node = new nsNavHistoryFolderResultNode(title, aOptions, id);
+
+    rv = aRow->GetInt64(nsNavHistory::kGetInfoIndex_ItemDateAdded,
+                        &node->mDateAdded);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aRow->GetInt64(nsNavHistory::kGetInfoIndex_ItemLastModified,
+                        &node->mLastModified);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
@@ -2050,10 +2063,8 @@ nsNavBookmarks::ProcessFolderNodeRow(
       return NS_OK;
     }
     node = new nsNavHistorySeparatorResultNode();
-    NS_ENSURE_TRUE(node, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = aRow->GetInt64(nsNavHistory::kGetInfoIndex_ItemId, &node->mItemId);
-    NS_ENSURE_SUCCESS(rv, rv);
+    node->mItemId = id;
     rv = aRow->GetInt64(nsNavHistory::kGetInfoIndex_ItemDateAdded,
                         &node->mDateAdded);
     NS_ENSURE_SUCCESS(rv, rv);
