@@ -229,7 +229,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
           case JSOP_URSH:
           {
             uint32 unsignedL;
-            ValueToECMAUint32(cx, Int32Value(L), (uint32_t*)&unsignedL);  /* Can't fail. */
+            ToUint32(cx, Int32Value(L), (uint32_t*)&unsignedL);  /* Can't fail. */
             Value v = NumberValue(uint32(unsignedL >> (R & 31)));
             JS_ASSERT(v.isInt32());
             frame.push(v);
@@ -1495,7 +1495,7 @@ GetDenseArrayShape(JSContext *cx, JSObject *globalObj)
 
     JSObject *proto;
     if (!js_GetClassPrototype(cx, globalObj, JSProto_Array, &proto, NULL))
-        return false;
+        return NULL;
 
     return EmptyShape::getInitialShape(cx, &ArrayClass, proto,
                                        proto->getParent(), gc::FINALIZE_OBJECT0);

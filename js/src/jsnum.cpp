@@ -321,7 +321,7 @@ num_parseFloat(JSContext *cx, uintN argc, Value *vp)
         vp->setDouble(js_NaN);
         return JS_TRUE;
     }
-    str = js_ValueToString(cx, vp[2]);
+    str = ToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
     bp = str->getChars(cx);
@@ -438,7 +438,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Step 1. */
-    JSString *inputString = js_ValueToString(cx, args[0]);
+    JSString *inputString = ToString(cx, args[0]);
     if (!inputString)
         return false;
     args[0].setString(inputString);
@@ -447,7 +447,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
     bool stripPrefix = true;
     int32 radix = 0;
     if (args.length() > 1) {
-        if (!ValueToECMAInt32(cx, args[1], &radix))
+        if (!ToInt32(cx, args[1], &radix))
             return false;
         if (radix != 0) {
             if (radix < 2 || radix > 36) {
@@ -1294,7 +1294,7 @@ ToNumberSlow(JSContext *cx, Value v, double *out)
 }
 
 bool
-ValueToECMAInt32Slow(JSContext *cx, const Value &v, int32_t *out)
+ToInt32Slow(JSContext *cx, const Value &v, int32_t *out)
 {
     JS_ASSERT(!v.isInt32());
     jsdouble d;
@@ -1309,7 +1309,7 @@ ValueToECMAInt32Slow(JSContext *cx, const Value &v, int32_t *out)
 }
 
 bool
-ValueToECMAUint32Slow(JSContext *cx, const Value &v, uint32_t *out)
+ToUint32Slow(JSContext *cx, const Value &v, uint32_t *out)
 {
     JS_ASSERT(!v.isInt32());
     jsdouble d;
@@ -1357,7 +1357,7 @@ js_DoubleToECMAUint32(jsdouble d)
 namespace js {
 
 bool
-ValueToInt32Slow(JSContext *cx, const Value &v, int32_t *out)
+NonstandardToInt32Slow(JSContext *cx, const Value &v, int32_t *out)
 {
     JS_ASSERT(!v.isInt32());
     jsdouble d;
