@@ -570,10 +570,6 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
      */
     oldscript = xdr->script;
 
-    AutoScriptUntrapper untrapper;
-    if (xdr->mode == JSXDR_ENCODE && !untrapper.untrap(cx, script))
-        goto error;
-
     xdr->script = script;
     ok = JS_XDRBytes(xdr, (char *)script->code, length * sizeof(jsbytecode));
 
@@ -746,9 +742,8 @@ JSScript::initCounts(JSContext *cx)
 
     jsbytecode *pc, *next;
     for (pc = code; pc < code + length; pc = next) {
-        analyze::UntrapOpcode untrap(cx, this, pc);
         count += OpcodeCounts::numCounts(JSOp(*pc));
-        next = pc + analyze::GetBytecodeLength(pc);
+        next = pc + GetBytecodeLength(pc);
     }
 
     size_t bytes = (length * sizeof(OpcodeCounts)) + (count * sizeof(double));
@@ -762,14 +757,13 @@ JSScript::initCounts(JSContext *cx)
     cursor += length * sizeof(OpcodeCounts);
 
     for (pc = code; pc < code + length; pc = next) {
-        analyze::UntrapOpcode untrap(cx, this, pc);
         pcCounters.counts[pc - code].counts = (double *) cursor;
         size_t capacity = OpcodeCounts::numCounts(JSOp(*pc));
 #ifdef DEBUG
         pcCounters.counts[pc - code].capacity = capacity;
 #endif
         cursor += capacity * sizeof(double);
-        next = pc + analyze::GetBytecodeLength(pc);
+        next = pc + GetBytecodeLength(pc);
     }
 
     JS_ASSERT(size_t(cursor - base) == bytes);
@@ -1356,6 +1350,19 @@ JSScript::finalize(JSContext *cx, bool background)
     if (sourceMap)
         cx->free_(sourceMap);
 
+    if (debug) {
+        jsbytecode *end = code + length;
+        for (jsbytecode *pc = code; pc < end; pc++) {
+            if (BreakpointSite *site = getBreakpointSite(pc)) {
+                /* Breakpoints are swept before finalization. */
+                JS_ASSERT(site->firstBreakpoint() == NULL);
+                site->clearTrap(cx, NULL, NULL);
+                JS_ASSERT(getBreakpointSite(pc) == NULL);
+            }
+        }
+        cx->free_(debug);
+    }
+
 #if JS_SCRIPT_INLINE_DATA_LIMIT
     if (data != inlineData)
 #endif
@@ -1452,7 +1459,7 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
      * Special case: function definition needs no line number note because
      * the function's script contains its starting line number.
      */
-    JSOp op = js_GetOpcode(cx, script, pc);
+    JSOp op = JSOp(*pc);
     if (js_CodeSpec[op].format & JOF_INDEXBASE)
         pc += js_CodeSpec[op].length;
     if (*pc == JSOP_DEFFUN) {
@@ -1679,6 +1686,29 @@ JSScript::copyClosedSlotsTo(JSScript *other)
 }
 
 bool
+JSScript::ensureHasDebug(JSContext *cx)
+{
+    if (debug)
+        return true;
+
+    size_t nbytes = offsetof(DebugScript, breakpoints) + length * sizeof(BreakpointSite*);
+    debug = (DebugScript *) cx->calloc_(nbytes);
+    if (!debug)
+        return false;
+
+    /*
+     * Ensure that any Interpret() instances running on this script have
+     * interrupts enabled. The interrupts must stay enabled until the
+     * debug state is destroyed.
+     */
+    InterpreterFrames *frames;
+    for (frames = JS_THREAD_DATA(cx)->interpreterFrames; frames; frames = frames->older)
+        frames->enableInterruptsIfRunning(this);
+
+    return true;
+}
+
+bool
 JSScript::recompileForStepMode(JSContext *cx)
 {
 #ifdef JS_METHODJIT
@@ -1694,41 +1724,139 @@ JSScript::recompileForStepMode(JSContext *cx)
 bool
 JSScript::tryNewStepMode(JSContext *cx, uint32 newValue)
 {
-    uint32 prior = stepMode;
-    stepMode = newValue;
+    JS_ASSERT(debug);
+
+    uint32 prior = debug->stepMode;
+    debug->stepMode = newValue;
 
     if (!prior != !newValue) {
         /* Step mode has been enabled or disabled. Alert the methodjit. */
         if (!recompileForStepMode(cx)) {
-            stepMode = prior;
+            debug->stepMode = prior;
             return false;
         }
 
-        if (newValue) {
-            /* Step mode has been enabled. Alert the interpreter. */
-            InterpreterFrames *frames;
-            for (frames = JS_THREAD_DATA(cx)->interpreterFrames; frames; frames = frames->older)
-                frames->enableInterruptsIfRunning(this);
+        if (!stepModeEnabled() && !debug->numSites) {
+            cx->free_(debug);
+            debug = NULL;
         }
     }
+
     return true;
 }
 
 bool
 JSScript::setStepModeFlag(JSContext *cx, bool step)
 {
-    return tryNewStepMode(cx, (stepMode & stepCountMask) | (step ? stepFlagMask : 0));
+    if (!ensureHasDebug(cx))
+        return false;
+
+    return tryNewStepMode(cx, (debug->stepMode & stepCountMask) | (step ? stepFlagMask : 0));
 }
 
 bool
 JSScript::changeStepModeCount(JSContext *cx, int delta)
 {
+    if (!ensureHasDebug(cx))
+        return false;
+
     assertSameCompartment(cx, this);
     JS_ASSERT_IF(delta > 0, cx->compartment->debugMode());
 
-    uint32 count = stepMode & stepCountMask;
+    uint32 count = debug->stepMode & stepCountMask;
     JS_ASSERT(((count + delta) & stepCountMask) == count + delta);
     return tryNewStepMode(cx,
-                          (stepMode & stepFlagMask) |
+                          (debug->stepMode & stepFlagMask) |
                           ((count + delta) & stepCountMask));
+}
+
+BreakpointSite *
+JSScript::getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc,
+                                    GlobalObject *scriptGlobal)
+{
+    JS_ASSERT(size_t(pc - code) < length);
+
+    if (!ensureHasDebug(cx))
+        return NULL;
+
+    BreakpointSite *&site = debug->breakpoints[pc - code];
+
+    if (!site) {
+        site = cx->runtime->new_<BreakpointSite>(this, pc);
+        if (!site) {
+            js_ReportOutOfMemory(cx);
+            return NULL;
+        }
+        debug->numSites++;
+    }
+
+    if (site->scriptGlobal)
+        JS_ASSERT_IF(scriptGlobal, site->scriptGlobal == scriptGlobal);
+    else
+        site->scriptGlobal = scriptGlobal;
+
+    return site;
+}
+
+void
+JSScript::destroyBreakpointSite(JSRuntime *rt, jsbytecode *pc)
+{
+    JS_ASSERT(unsigned(pc - code) < length);
+
+    BreakpointSite *&site = debug->breakpoints[pc - code];
+    JS_ASSERT(site);
+
+    rt->delete_(site);
+    site = NULL;
+
+    if (--debug->numSites == 0 && !stepModeEnabled()) {
+        rt->free_(debug);
+        debug = NULL;
+    }
+}
+
+void
+JSScript::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSObject *handler)
+{
+    if (!hasAnyBreakpointsOrStepMode())
+        return;
+
+    jsbytecode *end = code + length;
+    for (jsbytecode *pc = code; pc < end; pc++) {
+        BreakpointSite *site = getBreakpointSite(pc);
+        if (site) {
+            Breakpoint *nextbp;
+            for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
+                nextbp = bp->nextInSite();
+                if ((!dbg || bp->debugger == dbg) && (!handler || bp->getHandler() == handler))
+                    bp->destroy(cx);
+            }
+        }
+    }
+}
+
+void
+JSScript::clearTraps(JSContext *cx)
+{
+    if (!hasAnyBreakpointsOrStepMode())
+        return;
+
+    jsbytecode *end = code + length;
+    for (jsbytecode *pc = code; pc < end; pc++) {
+        BreakpointSite *site = getBreakpointSite(pc);
+        if (site)
+            site->clearTrap(cx);
+    }
+}
+
+void
+JSScript::markTrapClosures(JSTracer *trc)
+{
+    JS_ASSERT(hasAnyBreakpointsOrStepMode());
+
+    for (unsigned i = 0; i < length; i++) {
+        BreakpointSite *site = debug->breakpoints[i];
+        if (site && site->trapHandler)
+            MarkValue(trc, site->trapClosure, "trap closure");
+    }
 }

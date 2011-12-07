@@ -300,7 +300,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname)
             return NULL;
         if (!prop) {
             /* Kludge to allow (typeof foo == "undefined") tests. */
-            JSOp op2 = js_GetOpcode(cx, f.script(), f.pc() + JSOP_NAME_LENGTH);
+            JSOp op2 = JSOp(f.pc()[JSOP_NAME_LENGTH]);
             if (op2 == JSOP_TYPEOF) {
                 f.regs.sp++;
                 f.regs.sp[-1].setUndefined();
@@ -1467,7 +1467,7 @@ InlineGetProp(VMFrame &f)
     Value *vp = &f.regs.sp[-1];
 
     if (vp->isMagic(JS_LAZY_ARGUMENTS)) {
-        JS_ASSERT(js_GetOpcode(cx, f.script(), f.pc()) == JSOP_LENGTH);
+        JS_ASSERT(JSOp(*f.pc()) == JSOP_LENGTH);
         regs.sp[-1] = Int32Value(regs.fp()->numActualArgs());
         return true;
     }

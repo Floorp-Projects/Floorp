@@ -60,24 +60,6 @@ using namespace js::mjit;
 namespace js {
 namespace mjit {
 
-AutoScriptRetrapper::~AutoScriptRetrapper()
-{
-    while (!traps.empty()) {
-        jsbytecode *pc = traps.back();
-        traps.popBack();
-        *pc = JSOP_TRAP;
-    }
-}
-
-bool
-AutoScriptRetrapper::untrap(jsbytecode *pc)
-{
-    if (!traps.append(pc))
-        return false;
-    *pc = JS_GetTrapOpcode(traps.allocPolicy().context(), script, pc);
-    return true;
-}
-
 static inline JSRejoinState ScriptedRejoin(uint32 pcOffset)
 {
     return REJOIN_SCRIPTED | (pcOffset << 1);
