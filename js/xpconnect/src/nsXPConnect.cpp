@@ -765,6 +765,14 @@ struct TraversalTracer : public JSTracer
 static void
 NoteJSChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
+    /*
+     * This function needs to be careful to avoid stack overflow. Normally, when
+     * AddToCCKind is true, the recursion terminates immediately as we just add
+     * |thing| to the CC graph. So overflow is only possible when there are long
+     * chains of non-AddToCCKind GC things. Currently, this only can happen via
+     * shape parent pointers. The special JSTRACE_SHAPE case below handles
+     * parent pointers iteratively, rather than recursively, to avoid overflow.
+     */
     if (AddToCCKind(kind)) {
         TraversalTracer *tracer = static_cast<TraversalTracer*>(trc);
 
@@ -792,6 +800,10 @@ NoteJSChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
         }
 #endif
         tracer->cb.NoteScriptChild(nsIProgrammingLanguage::JAVASCRIPT, thing);
+    } else if (kind == JSTRACE_SHAPE) {
+        do {
+            thing = JS_TraceShapeChildrenAcyclic(trc, thing);
+        } while (thing);
     } else if (kind != JSTRACE_STRING) {
         JS_TraceChildren(trc, thing, kind);
     }
