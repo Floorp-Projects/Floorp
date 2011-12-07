@@ -121,6 +121,7 @@ abstract public class GeckoApp
 
     public static BrowserToolbar mBrowserToolbar;
     public static DoorHangerPopup mDoorHangerPopup;
+    public static AutoCompletePopup mAutoCompletePopup;
     public Favicons mFavicons;
 
     private Geocoder mGeocoder;
@@ -925,6 +926,23 @@ abstract public class GeckoApp
                         mBrowserToolbar.setVisibility(View.VISIBLE);
                     }
                 });
+            } else if (event.equals("FormAssist:AutoComplete")) {
+                final JSONArray suggestions = message.getJSONArray("suggestions");
+                if (suggestions.length() == 0) {
+                    mMainHandler.post(new Runnable() {
+                        public void run() {
+                            mAutoCompletePopup.hide();
+                        }
+                    });
+                } else {
+                    final JSONArray rect = message.getJSONArray("rect");
+                    final double zoom = message.getDouble("zoom");
+                    mMainHandler.post(new Runnable() {
+                        public void run() {
+                            mAutoCompletePopup.show(suggestions, rect, zoom);
+                        }
+                    });
+                }
             } else if (event.equals("AgentMode:Changed")) {
                 Tab.AgentMode agentMode = message.getString("agentMode").equals("mobile") ? Tab.AgentMode.MOBILE : Tab.AgentMode.DESKTOP;
                 int tabId = message.getInt("tabId");
@@ -958,6 +976,7 @@ abstract public class GeckoApp
         }
 
         public void run() {
+            mAutoCompletePopup.hide();
             if (mAboutHomeContent == null) {
                 mAboutHomeContent = (AboutHomeContent) findViewById(R.id.abouthome_content);
                 mAboutHomeContent.init(GeckoApp.mAppContext);
@@ -1059,6 +1078,7 @@ abstract public class GeckoApp
 
         mMainHandler.post(new Runnable() { 
             public void run() {
+                mAutoCompletePopup.hide();
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     mBrowserToolbar.setTitle(tab.getDisplayTitle());
                     mBrowserToolbar.setFavicon(tab.getFavicon());
@@ -1324,6 +1344,7 @@ abstract public class GeckoApp
         mMainLayout = (LinearLayout) findViewById(R.id.main_layout);
 
         mDoorHangerPopup = new DoorHangerPopup(this);
+        mAutoCompletePopup = (AutoCompletePopup) findViewById(R.id.autocomplete_popup);
 
         Tabs tabs = Tabs.getInstance();
         Tab tab = tabs.getSelectedTab();
@@ -1415,6 +1436,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("AgentMode:Changed", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("FormAssist:AutoComplete", GeckoApp.mAppContext);
 
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -1643,6 +1665,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Hide", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("ToggleChrome:Show", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("AgentMode:Changed", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("FormAssist:AutoComplete", GeckoApp.mAppContext);
 
         mFavicons.close();
 
@@ -1666,7 +1689,10 @@ abstract public class GeckoApp
     public void onConfigurationChanged(android.content.res.Configuration newConfig)
     {
         Log.i(LOGTAG, "configuration changed");
-        // nothing, just ignore
+
+        // hide the autocomplete list on rotation
+        mAutoCompletePopup.hide();
+
         super.onConfigurationChanged(newConfig);
     }
 
