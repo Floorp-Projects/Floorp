@@ -437,11 +437,8 @@ struct JSRuntime
     /* The reason that an interrupt-triggered GC should be called. */
     js::gcstats::Reason gcTriggerReason;
 
-    /* Pre-allocated space for the GC mark stacks. Pointer type ensures alignment. */
-    void                *gcMarkStackObjs[js::OBJECT_MARK_STACK_SIZE / sizeof(void *)];
-    void                *gcMarkStackTypes[js::TYPE_MARK_STACK_SIZE / sizeof(void *)];
-    void                *gcMarkStackXMLs[js::XML_MARK_STACK_SIZE / sizeof(void *)];
-    void                *gcMarkStackLarges[js::LARGE_MARK_STACK_SIZE / sizeof(void *)];
+    /* Pre-allocated space for the GC mark stack. */
+    uintptr_t           gcMarkStackArray[js::MARK_STACK_LENGTH];
 
     /*
      * Compartment that triggered GC. If more than one Compatment need GC,

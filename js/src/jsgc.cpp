@@ -1735,10 +1735,7 @@ namespace js {
 GCMarker::GCMarker(JSContext *cx)
   : color(BLACK),
     unmarkedArenaStackTop(NULL),
-    objStack(cx->runtime->gcMarkStackObjs, sizeof(cx->runtime->gcMarkStackObjs)),
-    typeStack(cx->runtime->gcMarkStackTypes, sizeof(cx->runtime->gcMarkStackTypes)),
-    xmlStack(cx->runtime->gcMarkStackXMLs, sizeof(cx->runtime->gcMarkStackXMLs)),
-    largeStack(cx->runtime->gcMarkStackLarges, sizeof(cx->runtime->gcMarkStackLarges))
+    stack(cx->runtime->gcMarkStackArray)
 {
     JS_TRACER_INIT(this, cx, NULL);
     markLaterArenas = 0;
@@ -1792,7 +1789,8 @@ MarkDelayedChildren(GCMarker *trc, Arena *a)
 void
 GCMarker::markDelayedChildren()
 {
-    while (unmarkedArenaStackTop) {
+    JS_ASSERT(unmarkedArenaStackTop);
+    do {
         /*
          * If marking gets delayed at the same arena again, we must repeat
          * marking of its things. For that we pop arena from the stack and
@@ -1805,7 +1803,7 @@ GCMarker::markDelayedChildren()
         a->aheader.hasDelayedMarking = 0;
         markLaterArenas--;
         MarkDelayedChildren(this, a);
-    }
+    } while (unmarkedArenaStackTop);
     JS_ASSERT(!markLaterArenas);
 }
 
@@ -3496,7 +3494,8 @@ EndVerifyBarriers(JSContext *cx)
 
     JS_ASSERT(trc->number == rt->gcNumber);
 
-    rt->gcIncrementalTracer->markDelayedChildren();
+    if (rt->gcIncrementalTracer->hasDelayedChildren())
+        rt->gcIncrementalTracer->markDelayedChildren();
 
     rt->gcVerifyData = NULL;
     rt->gcIncrementalTracer = NULL;
