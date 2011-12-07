@@ -664,9 +664,11 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder,
                           nsnull, aNewBookmarkId, guid);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Recalculate frecency for this entry, since it changed.
-  rv = history->UpdateFrecency(placeId);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // If not a tag, recalculate frecency for this entry, since it changed.
+  if (grandParentId != mTagsRoot) {
+    rv = history->UpdateFrecency(placeId);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -778,10 +780,13 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
 
   nsCOMPtr<nsIURI> uri;
   if (bookmark.type == TYPE_BOOKMARK) {
-    nsNavHistory* history = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-    rv = history->UpdateFrecency(bookmark.placeId);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // If not a tag, recalculate frecency for this entry, since it changed.
+    if (bookmark.grandParentId != mTagsRoot) {
+      nsNavHistory* history = nsNavHistory::GetHistoryService();
+      NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+      rv = history->UpdateFrecency(bookmark.placeId);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     rv = UpdateKeywordsHashForRemovedBookmark(aItemId);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1234,10 +1239,13 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
   for (PRUint32 i = 0; i < folderChildrenArray.Length(); i++) {
     BookmarkData& child = folderChildrenArray[i];
     if (child.type == TYPE_BOOKMARK) {
-      nsNavHistory* history = nsNavHistory::GetHistoryService();
-      NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-      rv = history->UpdateFrecency(child.placeId);
-      NS_ENSURE_SUCCESS(rv, rv);
+      // If not a tag, recalculate frecency for this entry, since it changed.
+      if (child.grandParentId != mTagsRoot) {
+        nsNavHistory* history = nsNavHistory::GetHistoryService();
+        NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+        rv = history->UpdateFrecency(child.placeId);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
 
       rv = UpdateKeywordsHashForRemovedBookmark(child.id);
       NS_ENSURE_SUCCESS(rv, rv);
