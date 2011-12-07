@@ -69,7 +69,7 @@ public class DoorHangerPopup extends PopupWindow {
         setOutsideTouchable(true);
         setWindowLayoutMode(ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
-        LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater inflater = LayoutInflater.from(mContext);
         RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.doorhangerpopup, null);
         mContent = (LinearLayout) layout.findViewById(R.id.doorhanger_container);
         

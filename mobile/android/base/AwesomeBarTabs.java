@@ -92,6 +92,7 @@ public class AwesomeBarTabs extends TabHost {
     private static enum HistorySection { TODAY, YESTERDAY, WEEK, OLDER };
 
     private Context mContext;
+    private boolean mInflated;
     private OnUrlOpenListener mUrlOpenListener;
     private View.OnTouchListener mListTouchListener;
     private JSONArray mSearchEngines;
@@ -512,13 +513,21 @@ public class AwesomeBarTabs extends TabHost {
         Log.d(LOGTAG, "Creating AwesomeBarTabs");
 
         mContext = context;
+        mInflated = false;
         mSearchEngines = new JSONArray();
+    }
 
-        // Load layout into the custom view
-        LayoutInflater inflater =
-                (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
 
-        inflater.inflate(R.layout.awesomebar_tabs, this);
+        // HACK: Without this, the onFinishInflate is called twice
+        // This issue is due to a bug when Android inflates a layout with a
+        // parent. Fixed in Honeycomb
+        if (mInflated)
+            return;
+
+        mInflated = true;
 
         // This should be called before adding any tabs
         // to the TabHost.
