@@ -61,6 +61,9 @@
 #include "Worker.h"
 #include "WorkerPrivate.h"
 #include "XMLHttpRequest.h"
+#ifdef ANDROID
+#include <android/log.h>
+#endif
 
 #include "WorkerInlines.h"
 
@@ -517,6 +520,9 @@ private:
         return false;
       }
 
+#ifdef ANDROID
+      __android_log_print(ANDROID_LOG_INFO, "Gecko", buffer.ptr());
+#endif
       fputs(buffer.ptr(), stderr);
       fflush(stderr);
     }
