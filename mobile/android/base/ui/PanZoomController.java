@@ -89,8 +89,6 @@ public class PanZoomController
     // The maximum velocity change factor between events, per ms, in %.
     // Direction changes are excluded.
     private static final float MAX_EVENT_ACCELERATION = 0.012f;
-    // Length of time to spend zooming. in ms
-    public static final int ZOOM_DURATION         = 200;
 
     /* 16 precomputed frames of the _ease-out_ animation from the CSS Transitions specification. */
     private static final float[] EASE_OUT_ANIMATION_FRAMES = {
@@ -500,7 +498,7 @@ public class PanZoomController
         mBounceFrame = 0;
         mState = PanZoomState.FLING;
         mX.setFlingState(Axis.FlingStates.SNAPPING); mY.setFlingState(Axis.FlingStates.SNAPPING);
-        mBounceStartMetrics = mController.getViewportMetrics();
+        mBounceStartMetrics = new ViewportMetrics(mController.getViewportMetrics());
         mBounceEndMetrics = metrics;
 
         startAnimationTimer(new BounceRunnable());
@@ -882,15 +880,13 @@ public class PanZoomController
         FloatSize pageSize = mController.getPageSize();
         RectF pageRect = new RectF(0,0, pageSize.width, pageSize.height);
 
-        if (!pageRect.contains(viewport)) {
-            // animatedZoomTo will ensure that our destRect is within the page bounds
-            animatedZoomTo(viewport);
-        } else {
-            // Force a viewport synchronisation
-            mController.setForceRedraw();
-            mController.notifyLayerClientOfGeometryChange();
-            GeckoApp.mAppContext.showPluginViews();
-        }
+        // Force a viewport synchronisation
+        mController.setForceRedraw();
+        mController.notifyLayerClientOfGeometryChange();
+        GeckoApp.mAppContext.showPluginViews();
+
+        /* Bounce back if overscrolled. */
+        bounce();
     }
 
     @Override
@@ -972,13 +968,8 @@ public class PanZoomController
         return true;
     }
 
-    private Timer mZoomTimer;
     public boolean animatedZoomTo(RectF zoomToRect) {
         GeckoApp.mAppContext.hidePluginViews();
-
-        if (mZoomTimer != null) {
-            mZoomTimer.cancel();
-        }
 
         mState = PanZoomState.ANIMATED_ZOOM;
         final float startZoom = mController.getZoomFactor();
@@ -994,41 +985,13 @@ public class PanZoomController
         }
 
         zoomToRect = mController.restrictToPageSize(zoomToRect);
-        final float finalZoom = viewport.width() * startZoom / zoomToRect.width();
-        zoomToRect = RectUtils.scale(zoomToRect, finalZoom/startZoom);
-        final PointF finalPoint = new PointF(zoomToRect.left, zoomToRect.top);
+        float finalZoom = viewport.width() * startZoom / zoomToRect.width();
 
-        mZoomTimer = new Timer();
-        final long startTime = new Date().getTime();
+        ViewportMetrics finalMetrics = new ViewportMetrics(mController.getViewportMetrics());
+        finalMetrics.setOrigin(new PointF(zoomToRect.left, zoomToRect.top));
+        finalMetrics.scaleTo(finalZoom, new PointF(0.0f, 0.0f));
 
-        mZoomTimer.scheduleAtFixedRate(new TimerTask() {
-            public void run() {
-                long now = new Date().getTime();
-                final float dt = (float)(now - startTime)/ZOOM_DURATION;
-
-                if (dt < 1) {
-                    mController.post(new Runnable() {
-                        public void run() {
-                            PointF currentPoint = PointUtils.interpolate(finalPoint, startPoint, dt);
-                            float  currentScale = startZoom + (finalZoom-startZoom)*dt;
-                            mController.scaleWithOrigin(currentScale, currentPoint);
-                        }
-                    });
-                } else {
-                    mController.post(new Runnable() {
-                        public void run() {
-                            mController.scaleWithOrigin(finalZoom, finalPoint);
-                            mController.setForceRedraw();
-                            GeckoApp.mAppContext.showPluginViews();
-                            mController.notifyLayerClientOfGeometryChange();
-                        }
-                    });
-                    mZoomTimer.cancel();
-                    mZoomTimer = null;
-                    mState = PanZoomState.NOTHING;
-               }
-            }
-        }, 0, 1000L/60L);
+        bounce(finalMetrics);
         return true;
     }
 }
