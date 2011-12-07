@@ -2247,31 +2247,28 @@ nsNavHistoryQueryResultNode::OpenContainer()
 NS_IMETHODIMP
 nsNavHistoryQueryResultNode::GetHasChildren(bool* aHasChildren)
 {
+  *aHasChildren = false;
+
   if (!CanExpand()) {
-    *aHasChildren = false;
     return NS_OK;
   }
 
   PRUint16 resultType = mOptions->ResultType();
+
+  // Tags are always populated, otherwise they are removed.
+  if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS) {
+    *aHasChildren = true;
+    return NS_OK;
+  }
+
   // For tag containers query we must check if we have any tag
   if (resultType == nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY) {
-    nsRefPtr<Database> DB = Database::GetDatabase();
-    NS_ENSURE_STATE(DB);
-    nsCOMPtr<mozIStorageStatement> stmt = DB->GetStatement(
-      "SELECT id FROM moz_bookmarks WHERE parent = :tags_folder LIMIT 1"
-    );
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
-
-    nsNavHistory* history = nsNavHistory::GetHistoryService();
-    NS_ENSURE_STATE(history);
-    nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("tags_folder"),
-                                        history->GetTagsFolder());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = stmt->ExecuteStep(aHasChildren);
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    nsCOMPtr<nsITaggingService> tagging =
+      do_GetService(NS_TAGGINGSERVICE_CONTRACTID);
+    if (tagging) {
+      bool hasTags;
+      *aHasChildren = NS_SUCCEEDED(tagging->GetHasTags(&hasTags)) && hasTags;
+    }
     return NS_OK;
   }
 
