@@ -1529,7 +1529,8 @@ public:
    */
   virtual Element* LookupImageElement(const nsAString& aElementId) = 0;
 
-  void ScheduleFrameRequestCallback(nsIFrameRequestCallback* aCallback);
+  nsresult ScheduleFrameRequestCallback(nsIFrameRequestCallback* aCallback,
+                                        PRInt32 *aHandle);
 
   typedef nsTArray< nsCOMPtr<nsIFrameRequestCallback> > FrameRequestCallbackList;
   /**
@@ -1810,13 +1811,33 @@ protected:
    */
   PRUint32 mExternalScriptsBeingEvaluated;
 
+  /**
+   * The current frame request callback handle
+   */
+  PRInt32 mFrameRequestCallbackCounter;
+
   // Weak reference to mScriptGlobalObject QI:d to nsPIDOMWindow,
   // updated on every set of mSecriptGlobalObject.
   nsPIDOMWindow *mWindow;
 
   nsCOMPtr<nsIDocumentEncoder> mCachedEncoder;
 
-  FrameRequestCallbackList mFrameRequestCallbacks;
+  struct FrameRequest {
+    FrameRequest(nsIFrameRequestCallback* aCallback,
+                 PRInt32 aHandle) :
+      mCallback(aCallback),
+      mHandle(aHandle)
+    {}
+
+    // Conversion operator so that we can append these to a
+    // FrameRequestCallbackList
+    operator nsIFrameRequestCallback* const () const { return mCallback; }
+    
+    nsCOMPtr<nsIFrameRequestCallback> mCallback;
+    PRInt32 mHandle;
+  };
+
+  nsTArray<FrameRequest> mFrameRequestCallbacks;
 
   // This object allows us to evict ourself from the back/forward cache.  The
   // pointer is non-null iff we're currently in the bfcache.
