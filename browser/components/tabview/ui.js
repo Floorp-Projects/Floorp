@@ -475,7 +475,7 @@ let UI = {
     } else {
       GroupItems.setActiveGroupItem(item);
       if (!options || !options.dontSetActiveTabInGroup) {
-        let activeTab = item.getActiveTab()
+        let activeTab = item.getActiveTab();
         if (activeTab)
           this._setActiveTab(activeTab);
       }
@@ -574,7 +574,8 @@ let UI = {
         TabItems.resumePainting();
       });
     } else {
-      self.clearActiveTab();
+      if (!currentTab || !currentTab._tabViewTabItem)
+        self.clearActiveTab();
       self._isChangingVisibility = false;
       dispatchEvent(event);
 
