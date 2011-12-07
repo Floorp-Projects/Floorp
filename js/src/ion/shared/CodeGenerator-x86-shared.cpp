@@ -800,7 +800,7 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
     Register nargsreg = ToRegister(nargs);
 
     uint32 callargslot  = call->argslot();
-    uint32 unused_stack = StackOffsetOfPassedArg(callargslot);
+    uint32 unusedStack = StackOffsetOfPassedArg(callargslot);
 
     // Guard that objreg is actually a function object.
     masm.loadObjClass(objreg, tokreg);
@@ -838,8 +838,8 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
         static const VMFunction InvokeFunctionInfo = FunctionInfo<pf>(InvokeFunction);
 
         // Nestle %esp up to the argument vector.
-        if (unused_stack)
-            masm.addPtr(Imm32(unused_stack), StackPointer);
+        if (unusedStack)
+            masm.addPtr(Imm32(unusedStack), StackPointer);
 
         pushArg(StackPointer);          // argv.
         pushArg(Imm32(call->nargs()));  // argc.
@@ -849,8 +849,8 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
             return false;
 
         // Un-nestle %esp from the argument vector. No prefix was pushed.
-        if (unused_stack)
-            masm.subPtr(Imm32(unused_stack), StackPointer);
+        if (unusedStack)
+            masm.subPtr(Imm32(unusedStack), StackPointer);
 
         // Done with the call. Jump to the end.
         masm.jump(&end);
@@ -858,16 +858,16 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
     masm.bind(&compiled);
 
     // Remember the size of the frame above this point, in case of bailout.
-    uint32 stack_size = masm.framePushed() - unused_stack;
-    uint32 size_descriptor = (stack_size << FRAMETYPE_BITS) | IonFrame_JS;
+    uint32 stackSize = masm.framePushed() - unusedStack;
+    uint32 sizeDescriptor = (stackSize << FRAMETYPE_BITS) | IonFrame_JS;
 
     // Nestle %esp up to the argument vector.
-    if (unused_stack)
-        masm.addPtr(Imm32(unused_stack), StackPointer);
+    if (unusedStack)
+        masm.addPtr(Imm32(unusedStack), StackPointer);
 
     // Construct the IonFramePrefix.
     masm.push(tokreg);
-    masm.push(Imm32(size_descriptor));
+    masm.push(Imm32(sizeDescriptor));
 
     // Call the function, padding with |undefined| in case of insufficient args.
     {
@@ -903,13 +903,13 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
     }
 
     // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
-    int prefix_garbage = 2 * sizeof(void *);
-    int restore_diff = prefix_garbage - unused_stack;
+    int prefixGarbage = 2 * sizeof(void *);
+    int restoreDiff = prefixGarbage - unusedStack;
     
-    if (restore_diff > 0)
-        masm.addPtr(Imm32(restore_diff), StackPointer);
-    else if (restore_diff < 0)
-        masm.subPtr(Imm32(-restore_diff), StackPointer);
+    if (restoreDiff > 0)
+        masm.addPtr(Imm32(restoreDiff), StackPointer);
+    else if (restoreDiff < 0)
+        masm.subPtr(Imm32(-restoreDiff), StackPointer);
 
     masm.bind(&end);
 

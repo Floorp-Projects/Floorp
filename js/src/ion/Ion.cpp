@@ -149,6 +149,7 @@ IonCompartment::IonCompartment()
     osrPrologue_(NULL),
     bailoutHandler_(NULL),
     argumentsRectifier_(NULL),
+    invalidator_(NULL),
     functionWrappers_(NULL)
 {
 }
@@ -466,39 +467,29 @@ IonScript::getFrameInfo(ptrdiff_t disp) const
 {
     JS_ASSERT(frameInfoEntries_ > 0);
 
-    if (frameInfoEntries_ == 1) {
-        JS_ASSERT(disp == frameInfoTable()[0].displacement);
-        return &frameInfoTable()[0];
-    }
-
+    const IonFrameInfo *table = frameInfoTable();
     size_t minEntry = 0;
-    size_t maxEntry = frameInfoEntries_ - 1;
-    ptrdiff_t min = frameInfoTable()[minEntry].displacement;
-    ptrdiff_t max = frameInfoTable()[maxEntry].displacement;
-    size_t guess = frameInfoEntries_;
+    size_t limitEntry = frameInfoEntries_;
+    size_t guess;
 
-    JS_ASSERT(min <= disp && disp <= max);
     while (true) {
-        DebugOnly<size_t> oldGuess = guess;
-        guess = (disp - min) * (maxEntry - minEntry) / (max - min);
-        ptrdiff_t guessDisp = frameInfoTable()[guess].displacement;
+        JS_ASSERT(minEntry < limitEntry);
+        JS_ASSERT(table[minEntry].displacement <= disp && disp <= table[limitEntry - 1].displacement);
+
+        guess = (minEntry + limitEntry) / 2;
+        ptrdiff_t guessDisp = table[guess].displacement;
 
         if (guessDisp == disp)
             break;
 
-        // Check for infinite loops.
-        JS_ASSERT(guess != oldGuess);
-
         if (guessDisp > disp) {
-            maxEntry = guess;
-            max = guessDisp;
+            limitEntry = guess;
         } else {
-            minEntry = guess;
-            min = guessDisp;
+            minEntry = guess + 1;
         }
     }
 
-    return &frameInfoTable()[guess];
+    return &table[guess];
 }
 
 
@@ -859,3 +850,114 @@ ion::SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc)
     return EnterIon(cx, fp, target, osrcode, true);
 }
 
+static void
+FailInvalidation(JSContext *cx, uint8 *ionTop)
+{
+    JS_ASSERT(false); // NYI
+
+    // Need to flag the IonActivation that corresponds to
+    // as failing invalidation -- this must be checked for
+    // in the exit frame epilogue.
+}
+
+static bool
+InvalidateActivation(JSContext *cx, HashSet<JSScript *> &invalidHash, uint8 *ionTop)
+{
+    size_t frameno = 1;
+
+    uint8 **calleeReturnAddressPtr = NULL;
+    for (IonFrameIterator it(ionTop);
+         it.more();
+         calleeReturnAddressPtr = it.returnAddressPtr(), ++it, ++frameno)
+    {
+        JS_ASSERT_IF(frameno == 1, it.type() == IonFrame_Exit);
+
+#ifdef DEBUG
+        switch (it.type()) {
+          case IonFrame_Exit:
+            IonSpew(IonSpew_Invalidate, "#%d exit frame @ %p", frameno, it.fp());
+            break;
+          case IonFrame_JS:
+            IonSpew(IonSpew_Invalidate, "#%d JS frame @ %p: %s:%d", frameno, it.fp(),
+                    it.script()->filename, it.script()->lineno);
+            break;
+          case IonFrame_Rectifier:
+            IonSpew(IonSpew_Invalidate, "#%d rectifier frame @ %p", frameno, it.fp());
+            break;
+          case IonFrame_Entry:
+            IonSpew(IonSpew_Invalidate, "#%d entry frame @ %p", frameno, it.fp());
+            break;
+        }
+        IonSpew(IonSpew_Invalidate, "   return address %p @ %p", it.returnAddress(),
+                it.returnAddressPtr());
+#endif
+
+        if (!it.hasScript())
+            continue;
+
+        JSScript *script = it.script();
+        if (!invalidHash.has(script))
+            continue;
+
+        // This frame needs to be invalidated.
+        // Create an invalidation record and stick it where the calleeToken was.
+        IonSpew(IonSpew_Invalidate, "   ! requires invalidation");
+        JS_ASSERT(!CalleeTokenIsInvalidationRecord(it.calleeToken()));
+        JS_ASSERT(MaybeScriptFromCalleeToken(it.calleeToken()) == script);
+        InvalidationRecord *record =
+            OffTheBooks::new_<InvalidationRecord>(it.calleeToken(), *calleeReturnAddressPtr);
+        if (!record)
+            return false;
+
+        IonSpew(IonSpew_Invalidate, "   created invalidation record %p", (void *) record);
+        it.jsFrame()->setInvalidationRecord(record);
+
+        IonCode *invalidator = cx->compartment->ionCompartment()->getOrCreateInvalidationThunk(cx);
+        if (!invalidator)
+            return false;
+
+        IonSpew(IonSpew_Invalidate, "   callee return address @ %p: %p => %p",
+                (void *) calleeReturnAddressPtr, (void *) *calleeReturnAddressPtr,
+                (void *) invalidator->raw());
+        *calleeReturnAddressPtr = invalidator->raw();
+    }
+
+    IonSpew(IonSpew_Invalidate, "Done invalidating activation");
+    return true;
+}
+
+void
+ion::Invalidate(JSContext *cx, const Vector<JSScript *> &invalid)
+{
+    uint8 *ionTop = cx->threadData()->ionTop;
+    if (!ionTop)
+        return;
+
+    // Build the invalids as a hash set to avoid O(n^2) linear scans.
+    // FIXME: this should actually fail all active IonActivations
+    // instead of just the first.
+    HashSet<JSScript *> invalidHash(cx);
+    if (!invalidHash.init(invalid.length())) {
+        FailInvalidation(cx, ionTop);
+        return;
+    }
+
+    for (JSScript **it = invalid.begin(); it != invalid.end(); ++it)
+        JS_ALWAYS_TRUE(invalidHash.putNew(*it));
+
+    IonActivation *activation = cx->threadData()->ionActivation;
+    while (ionTop) {
+        if (!InvalidateActivation(cx, invalidHash, ionTop))
+            FailInvalidation(cx, ionTop);
+
+        if (!activation)
+            break;
+
+        ionTop = activation->prevIonTop();
+        activation = activation->prev();
+    }
+
+    /* Clear out the compiled ion scripts now that they are invalidated. */
+    for (JSScript * const *it = invalid.begin(), * const *end = invalid.end(); it != end; ++it)
+        (*it)->ion = NULL;
+}

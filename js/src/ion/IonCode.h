@@ -134,8 +134,6 @@ class IonCode : public gc::Cell
     static void writeBarrierPost(IonCode *code, void *addr);
 };
 
-#define ION_DISABLED_SCRIPT ((IonScript *)0x1)
-
 class SnapshotWriter;
 struct IonFrameInfo;
 

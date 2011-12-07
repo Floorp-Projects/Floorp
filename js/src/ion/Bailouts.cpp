@@ -299,6 +299,50 @@ ion::Bailout(BailoutStack *sp)
     return BAILOUT_RETURN_FATAL_ERROR;
 }
 
+uint32
+ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
+{
+    JSContext *cx = GetIonContext()->cx;
+    IonCompartment *ioncompartment = cx->compartment->ionCompartment();
+    IonActivation *activation = cx->threadData()->ionActivation;
+    FrameRecovery in = FrameRecoveryFromInvalidation(ioncompartment, sp);
+
+    // Note: the frame size must be computed before we return from this function.
+    *frameSizeOut = in.frameSize();
+
+    uint32 retval = ConvertFrames(cx, activation, in);
+
+    // We've bailed out the invalidated frame, so we now transform it into an exit frame.
+    // Since the callee token isn't part of the exit frame structure, we have to bump the caller
+    // frame size to account for the "extra" caller token word.
+    {
+        IonJSFrameLayout *frame = in.fp();
+        IonSpew(IonSpew_Invalidate, "converting to exit frame");
+        IonSpew(IonSpew_Invalidate, "   orig calleeToken %p", (void *) frame->calleeToken());
+        IonSpew(IonSpew_Invalidate, "   orig frameSize %u", unsigned(frame->prevFrameLocalSize()));
+        IonSpew(IonSpew_Invalidate, "   orig ra %p", (void *) frame->returnAddress());
+
+        InvalidationRecord *record = CalleeTokenToInvalidationRecord(frame->calleeToken());
+        Foreground::delete_<InvalidationRecord>(record);
+        // Not strictly necessary, but nice for sanity.
+        frame->replaceCalleeToken(InvalidationRecordToToken(NULL));
+
+        uint32 callerFrameSize = frame->prevFrameLocalSize() +
+                                 sizeof(IonJSFrameLayout) - sizeof(IonExitFrameLayout);
+        frame->setFrameDescriptor(callerFrameSize, IonFrame_Exit);
+
+        IonSpew(IonSpew_Invalidate, "   new  calleeToken %p", (void *) frame->calleeToken());
+        IonSpew(IonSpew_Invalidate, "   new  frameSize %u", unsigned(frame->prevFrameLocalSize()));
+        IonSpew(IonSpew_Invalidate, "   new  ra %p", (void *) frame->returnAddress());
+    }
+
+    if (retval != BAILOUT_RETURN_FATAL_ERROR)
+        return retval;
+
+    cx->delete_(activation->maybeTakeBailout());
+    return BAILOUT_RETURN_FATAL_ERROR;
+}
+
 static void
 ReflowArgTypes(JSContext *cx)
 {
@@ -360,4 +404,3 @@ ion::ThunkToInterpreter(Value *vp)
 
     return ok ? JS_TRUE : JS_FALSE;
 }
-
