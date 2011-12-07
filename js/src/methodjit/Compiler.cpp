@@ -5498,6 +5498,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
             RegisterID reg = frame.tempRegForData(lhs);
             bool isObject = lhs->isTypeKnown();
 #ifdef JSGC_INCREMENTAL_MJ
+            frame.pinReg(reg);
             if (cx->compartment->needsBarrier() && propertyTypes->needsBarrier(cx)) {
                 /* Write barrier. */
                 Jump j;
@@ -5512,6 +5513,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
                 OOL_STUBCALL(stubs::GCThingWriteBarrier, REJOIN_NONE);
                 stubcc.rejoin(Changes(0));
             }
+            frame.unpinReg(reg);
 #endif
             if (!isObject) {
                 Jump notObject = frame.testObject(Assembler::NotEqual, lhs);
