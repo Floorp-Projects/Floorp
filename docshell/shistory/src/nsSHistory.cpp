@@ -960,8 +960,8 @@ nsSHistory::EvictOutOfRangeWindowContentViewers(PRInt32 aIndex)
   }
 
   // Calculate the range that's safe from eviction.
-  PRInt32 startSafeIndex = PR_MAX(0, aIndex - gHistoryMaxViewers);
-  PRInt32 endSafeIndex = PR_MIN(mLength, aIndex + gHistoryMaxViewers);
+  PRInt32 startSafeIndex = NS_MAX(0, aIndex - gHistoryMaxViewers);
+  PRInt32 endSafeIndex = NS_MIN(mLength, aIndex + gHistoryMaxViewers);
 
   LOG(("EvictOutOfRangeWindowContentViewers(index=%d), "
        "mLength=%d. Safe range [%d, %d]",
@@ -1093,8 +1093,8 @@ nsSHistory::GloballyEvictContentViewers()
         for (PRUint32 j = 0; j < shTransactions.Length(); j++) {
           TransactionAndDistance &container = shTransactions[j];
           if (container.mViewer == contentViewer) {
-            container.mDistance = PR_MIN(container.mDistance,
-                                         PR_ABS(i - shist->mIndex));
+            container.mDistance = NS_MIN(container.mDistance,
+                                         NS_ABS(i - shist->mIndex));
             found = true;
             break;
           }
@@ -1103,7 +1103,7 @@ nsSHistory::GloballyEvictContentViewers()
         // If we didn't find a TransactionAndDistance for this content viewer, make a new
         // one.
         if (!found) {
-          TransactionAndDistance container(trans, PR_ABS(i - shist->mIndex));
+          TransactionAndDistance container(trans, NS_ABS(i - shist->mIndex));
           shTransactions.AppendElement(container);
         }
       }
