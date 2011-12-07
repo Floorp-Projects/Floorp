@@ -1551,7 +1551,9 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       (NS_STYLE_TEXT_ALIGN_LEFT == styleText->mTextAlign ||
        (NS_STYLE_TEXT_ALIGN_DEFAULT == styleText->mTextAlign &&
         NS_STYLE_DIRECTION_LTR ==
-          aState.mReflowState.mStyleVisibility->mDirection) ||
+          aState.mReflowState.mStyleVisibility->mDirection &&
+        !(NS_STYLE_UNICODE_BIDI_PLAINTEXT &
+          GetStyleTextReset()->mUnicodeBidi)) ||
        (NS_STYLE_TEXT_ALIGN_END == styleText->mTextAlign &&
         NS_STYLE_DIRECTION_RTL ==
           aState.mReflowState.mStyleVisibility->mDirection)) &&
