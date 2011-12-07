@@ -276,6 +276,9 @@ JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp);
 extern JS_PUBLIC_API(JSObject *)
 JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp);
 
+JS_PUBLIC_API(JSFunction *)
+JS_GetScriptFunction(JSContext *cx, JSScript *script);
+
 extern JS_PUBLIC_API(JSObject *)
 JS_GetParentOrScopeChain(JSContext *cx, JSObject *obj);
 
