@@ -60,6 +60,9 @@ enum FrameType
 };
 
 class IonCommonFrameLayout;
+struct InvalidationRecord;
+class IonActivation;
+class IonJSFrameLayout;
 
 class IonFrameIterator
 {
@@ -81,7 +84,14 @@ class IonFrameIterator
     uint8 *fp() const {
         return current_;
     }
+    IonJSFrameLayout *jsFrame() {
+        JS_ASSERT(type() == IonFrame_JS);
+        return (IonJSFrameLayout *) fp();
+    }
     uint8 *returnAddress() const;
+    void *calleeToken() const;
+    bool hasScript() const;
+    JSScript *script() const;
 
     // Previous frame information extracted from the current frame.
     size_t prevFrameLocalSize() const;
@@ -94,6 +104,9 @@ class IonFrameIterator
         return prevType() != IonFrame_Entry;
     }
     IonFrameIterator &operator++();
+
+    // Mutation
+    uint8 **returnAddressPtr();
 };
 
 class IonActivationIterator

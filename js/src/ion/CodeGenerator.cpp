@@ -508,7 +508,8 @@ CodeGenerator::generate()
     if (!script->ion)
         return false;
 
-    IonSpew(IonSpew_Codegen, "Created IonScript %p", (void *) script->ion);
+    IonSpew(IonSpew_Codegen, "Created IonScript %p (raw %p)",
+            (void *) script->ion, (void *) code->raw());
 
     script->ion->setOsrPc(gen->info().osrPc());
     script->ion->setOsrEntryOffset(getOsrEntryOffset());

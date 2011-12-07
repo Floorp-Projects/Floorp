@@ -71,6 +71,8 @@ namespace ion {
     _(Codegen)                              \
     /* Information during bailouts */       \
     _(Bailouts)                             \
+    /* Information during OSI */            \
+    _(Invalidate)                           \
     /* Debug info about snapshots */        \
     _(Snapshots)
 

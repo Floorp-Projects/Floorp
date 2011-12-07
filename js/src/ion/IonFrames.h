@@ -53,6 +53,63 @@ struct JSScript;
 namespace js {
 namespace ion {
 
+typedef void * CalleeToken;
+
+enum CalleeTokenTag
+{
+    CalleeToken_Function = 0x0, // untagged
+    CalleeToken_Script = 0x1,
+    CalleeToken_InvalidationRecord = 0x2
+};
+
+static inline CalleeTokenTag
+CalleeTokenGetTag(CalleeToken token)
+{
+    CalleeTokenTag tag = CalleeTokenTag(uintptr_t(token) & 0x3);
+    JS_ASSERT(tag != 0x3);
+    return tag;
+}
+static inline bool
+CalleeTokenIsInvalidationRecord(CalleeToken token)
+{
+    return CalleeTokenGetTag(token) == CalleeToken_InvalidationRecord;
+}
+static inline CalleeToken
+CalleeToToken(JSFunction *fun)
+{
+    return CalleeToken(uintptr_t(fun) | uintptr_t(CalleeToken_Function));
+}
+static inline CalleeToken
+CalleeToToken(JSScript *script)
+{
+    return CalleeToken(uintptr_t(script) | uintptr_t(CalleeToken_Script));
+}
+static inline CalleeToken
+InvalidationRecordToToken(InvalidationRecord *record)
+{
+    return CalleeToken(uintptr_t(record) | uintptr_t(CalleeToken_InvalidationRecord));
+}
+static inline JSFunction *
+CalleeTokenToFunction(CalleeToken token)
+{
+    JS_ASSERT(CalleeTokenGetTag(token) == CalleeToken_Function);
+    return (JSFunction *)token;
+}
+static inline JSScript *
+CalleeTokenToScript(CalleeToken token)
+{
+    JS_ASSERT(CalleeTokenGetTag(token) == CalleeToken_Script);
+    return (JSScript *)(uintptr_t(token) & ~uintptr_t(0x3));
+}
+static inline InvalidationRecord *
+CalleeTokenToInvalidationRecord(CalleeToken token)
+{
+    JS_ASSERT(CalleeTokenGetTag(token) == CalleeToken_InvalidationRecord);
+    return (InvalidationRecord *)(uintptr_t(token) & ~uintptr_t(0x3));
+}
+JSScript *
+MaybeScriptFromCalleeToken(CalleeToken token);
+
 // In between every two frames lies a small header describing both frames. This
 // header, minimally, contains a returnAddress word and a descriptor word. The
 // descriptor describes the size and type of the previous frame, whereas the
@@ -74,6 +131,15 @@ struct IonFrameInfo
     // frameinfo of the script.
     ptrdiff_t displacement;
     SnapshotOffset snapshotOffset;
+};
+
+struct InvalidationRecord
+{
+    void *calleeToken;
+    uint8 *returnAddress;
+    IonScript *ionScript;
+
+    InvalidationRecord(void *calleeToken, uint8 *returnAddress);
 };
 
 // The layout of an Ion frame on the C stack is roughly:
@@ -190,6 +256,8 @@ class FrameRecovery
     }
     void setBailoutId(BailoutId bailoutId);
 
+    void unpackCalleeToken(CalleeToken token);
+
   public:
     static FrameRecovery FromBailoutId(uint8 *fp, uint8 *sp, const MachineState &machine,
                                        BailoutId bailoutId);
@@ -221,6 +289,12 @@ class FrameRecovery
     uint32 snapshotOffset() const {
         return snapshotOffset_;
     }
+    uint32 frameSize() const {
+        return ((uint8 *) fp_) - sp_;
+    }
+    IonJSFrameLayout *fp() {
+        return fp_;
+    }
 };
 
 // Data needed to recover from an exception.
@@ -235,36 +309,6 @@ static inline uint32
 MakeFrameDescriptor(uint32 frameSize, FrameType type)
 {
     return (frameSize << FRAMETYPE_BITS) | type;
-}
-
-typedef void * CalleeToken;
-
-static inline CalleeToken
-CalleeToToken(JSFunction *fun)
-{
-    return (CalleeToken *)fun;
-}
-static inline CalleeToken
-CalleeToToken(JSScript *script)
-{
-    return (CalleeToken *)(uintptr_t(script) | 1);
-}
-static inline bool
-IsCalleeTokenFunction(CalleeToken token)
-{
-    return (uintptr_t(token) & 1) == 0;
-}
-static inline JSFunction *
-CalleeTokenToFunction(CalleeToken token)
-{
-    JS_ASSERT(IsCalleeTokenFunction(token));
-    return (JSFunction *)token;
-}
-static inline JSScript *
-CalleeTokenToScript(CalleeToken token)
-{
-    JS_ASSERT(!IsCalleeTokenFunction(token));
-    return (JSScript*)(uintptr_t(token) & ~uintptr_t(1));
 }
 
 } // namespace ion

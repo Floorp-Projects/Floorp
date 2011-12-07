@@ -141,7 +141,11 @@ TypeSet *
 TypeInferenceOracle::parameterTypeSet(JSScript *script, size_t index)
 {
     JS_ASSERT(script == this->script);
-    return TypeScript::ArgTypes(script, index);
+    TypeSet *argTypes = TypeScript::ArgTypes(script, index);
+    if (argTypes)
+        argTypes->addFreeze(cx);
+
+    return argTypes;
 }
 
 TypeSet *

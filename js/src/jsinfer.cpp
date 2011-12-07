@@ -55,6 +55,7 @@
 #include "jsstr.h"
 #include "jsiter.h"
 
+#include "ion/Ion.h"
 #include "frontend/TokenStream.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Retcon.h"
@@ -1445,8 +1446,7 @@ public:
         : TypeConstraint("freezeTypeTag"), script(script), typeUnknown(false)
     {}
 
-    void newType(JSContext *cx, TypeSet *source, Type type)
-    {
+    void newType(JSContext *cx, TypeSet *source, Type type) {
         if (typeUnknown)
             return;
 
@@ -2125,6 +2125,10 @@ TypeCompartment::processPendingRecompiles(JSContext *cx)
 
 #endif /* JS_METHODJIT */
 
+#ifdef JS_ION
+    ion::Invalidate(cx, *pending);
+#endif
+
     cx->delete_(pending);
 }
 
@@ -2203,12 +2207,19 @@ TypeCompartment::nukeTypes(JSContext *cx)
 void
 TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
 {
-#ifdef JS_METHODJIT
+#if defined(JS_ION) && !defined(JS_METHODJIT)
+    if (!script->hasIonScript())
+        return;
+#endif
+
+#if defined(JS_METHODJIT) && !defined(JS_ION)
     if (!script->jitNormal && !script->jitCtor) {
         /* Scripts which haven't been compiled yet don't need to be recompiled. */
         return;
     }
+#endif
 
+#if defined(JS_METHODJIT) || defined(JS_ION)
     if (!pendingRecompiles) {
         pendingRecompiles = cx->new_< Vector<JSScript*> >(cx);
         if (!pendingRecompiles) {

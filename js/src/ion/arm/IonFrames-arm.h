@@ -84,6 +84,9 @@ class IonJSFrameLayout : public IonEntryFrameLayout
     void *calleeToken() const {
         return calleeToken_;
     }
+    void setCalleeToken(void *value) {
+        calleeToken_ = value;
+    }
 
     static size_t offsetOfCalleeToken() {
         return offsetof(IonJSFrameLayout, calleeToken_);

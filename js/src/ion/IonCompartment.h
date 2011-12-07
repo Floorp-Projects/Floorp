@@ -84,6 +84,9 @@ class IonCompartment
     // to a function call site. Pads with |undefined|.
     ReadBarriered<IonCode> argumentsRectifier_;
 
+    // Thunk that invalides an (Ion compiled) caller on the Ion stack.
+    ReadBarriered<IonCode> invalidator_;
+
     // Map VMFunction addresses to the IonCode of the wrapper.
     VMWrapperMap *functionWrappers_;
 
@@ -94,6 +97,7 @@ class IonCompartment
     IonCode *generateArgumentsRectifier(JSContext *cx);
     IonCode *generateBailoutTable(JSContext *cx, uint32 frameClass);
     IonCode *generateBailoutHandler(JSContext *cx);
+    IonCode *generateInvalidator(JSContext *cx);
 
   public:
     IonCode *generateVMWrapper(JSContext *cx, const VMFunction &f);
@@ -131,6 +135,15 @@ class IonCompartment
                 return NULL;
         }
         return argumentsRectifier_;
+    }
+
+    IonCode *getOrCreateInvalidationThunk(JSContext *cx) {
+        if (!invalidator_) {
+            invalidator_ = generateInvalidator(cx);
+            if (!invalidator_)
+                return NULL;
+        }
+        return invalidator_;
     }
 
     EnterIonCode enterJIT(JSContext *cx) {
@@ -175,6 +188,9 @@ class IonActivation
     IonActivation *prev() const {
         return prev_;
     }
+    uint8 *prevIonTop() const {
+        return prevIonTop_;
+    }
     void setBailout(BailoutClosure *bailout) {
         JS_ASSERT(!bailout_);
         bailout_ = bailout;
@@ -187,9 +203,6 @@ class IonActivation
     BailoutClosure *takeBailout() {
         JS_ASSERT(bailout_);
         return maybeTakeBailout();
-    }
-    uint8 *prevIonTop() const {
-        return prevIonTop_;
     }
     bool failedInvalidation() const {
         return failedInvalidation_;

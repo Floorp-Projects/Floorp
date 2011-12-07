@@ -100,6 +100,25 @@ class TempAllocator
     }
 };
 
+class AutoIonContextAlloc
+{
+    TempAllocator tempAlloc;
+    IonContext *icx;
+
+  public:
+    explicit AutoIonContextAlloc(JSContext *cx)
+      : tempAlloc(&cx->tempLifoAlloc()) {
+        icx = GetIonContext();
+        JS_ASSERT(!icx->temp);
+        icx->temp = &tempAlloc;
+    }
+
+    ~AutoIonContextAlloc() {
+        JS_ASSERT(icx->temp == &tempAlloc);
+        icx->temp = NULL;
+    }
+};
+
 struct TempObject
 {
     inline void *operator new(size_t nbytes) {
