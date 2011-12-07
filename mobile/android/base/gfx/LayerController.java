@@ -212,12 +212,13 @@ public class LayerController {
         mView.requestRender();
     }
 
+    /**
+     * Sets the entire viewport metrics at once. This function does not notify the layer client or
+     * the pan/zoom controller, so you will need to call notifyLayerClientOfGeometryChange() or
+     * notifyPanZoomControllerOfGeometryChange() after calling this.
+     */
     public void setViewportMetrics(ViewportMetrics viewport) {
         mViewportMetrics = new ViewportMetrics(viewport);
-
-        // We assume this was called by the LayerClient (as it includes page
-        // size), so no need to notify it of this change.
-        mPanZoomController.geometryChanged(true);
         GeckoApp.mAppContext.repositionPluginViews(false);
         mView.requestRender();
     }
@@ -254,6 +255,12 @@ public class LayerController {
     public void notifyLayerClientOfGeometryChange() {
         if (mLayerClient != null)
             mLayerClient.geometryChanged();
+    }
+
+    /** Informs the pan/zoom controller that the viewport metrics changed. */
+    public void notifyPanZoomControllerOfGeometryChange(boolean abortFling) {
+        if (mPanZoomController != null)
+            mPanZoomController.geometryChanged(abortFling);
     }
 
     /**
