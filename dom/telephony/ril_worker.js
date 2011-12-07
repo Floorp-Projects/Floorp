@@ -71,9 +71,6 @@ const UINT16_SIZE = 2;
 const UINT32_SIZE = 4;
 const PARCEL_SIZE_SIZE = UINT32_SIZE;
 
-const RESPONSE_TYPE_SOLICITED = 0;
-const RESPONSE_TYPE_UNSOLICITED = 1;
-
 /**
  * This object contains helpers buffering incoming data & deconstructing it
  * into parcels as well as buffering outgoing data & constructing parcels.
@@ -434,12 +431,13 @@ let Buf = {
 
   processParcel: function processParcel() {
     let response_type = this.readUint32();
-    let length = this.readIncoming - 2 * UINT32_SIZE;
+    let length = this.readIncoming - UINT32_SIZE;
 
     let request_type;
     if (response_type == RESPONSE_TYPE_SOLICITED) {
       let token = this.readUint32();
       let error = this.readUint32();
+      length -= 2 * UINT32_SIZE;
       request_type = this.tokenRequestMap[token];
       if (error) {
         //TODO
@@ -452,6 +450,7 @@ let Buf = {
       delete this.tokenRequestMap[token];
     } else if (response_type == RESPONSE_TYPE_UNSOLICITED) {
       request_type = this.readUint32();
+      length -= UINT32_SIZE;
       debug("Unsolicited response for request type " + request_type);
     } else {
       debug("Unknown response type: " + response_type);
@@ -626,6 +625,33 @@ let RIL = {
   },
 
   /**
+   * Hang up the phone.
+   *
+   * @param index
+   *        Call index (1-based) as reported by REQUEST_GET_CURRENT_CALLS.
+   */
+  hangUp: function hangUp(index) {
+    Buf.newParcel(REQUEST_HANGUP);
+    Buf.writeUint32(1);
+    Buf.writeUint32(index);
+    Buf.sendParcel();
+  },
+
+  /**
+   * Answer an incoming call.
+   */
+  answerCall: function answerCall() {
+    Buf.simpleRequest(REQUEST_ANSWER);
+  },
+
+  /**
+   * Reject an incoming call.
+   */
+  rejectCall: function rejectCall() {
+    Buf.simpleRequest(REQUEST_UDUB);
+  },
+
+  /**
    * Send an SMS.
    *
    * @param smscPDU
@@ -698,14 +724,23 @@ RIL[REQUEST_ENTER_SIM_PUK2] = null;
 RIL[REQUEST_CHANGE_SIM_PIN] = null;
 RIL[REQUEST_CHANGE_SIM_PIN2] = null;
 RIL[REQUEST_ENTER_NETWORK_DEPERSONALIZATION] = null;
-RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS() {
-  let calls = [];
-  let calls_length = Buf.readUint32();
+RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length) {
+  let calls_length = 0;
+  // The RIL won't even send us the length integer if there are no active calls.
+  // So only read this integer if the parcel actually has it.
+  if (length) {
+    calls_length = Buf.readUint32();
+  }
+  if (!calls_length) {
+    Phone.onCurrentCalls(null);
+    return;
+  }
 
+  let calls = {};
   for (let i = 0; i < calls_length; i++) {
-    let dc = {
-      state:              Buf.readUint32(), // CALLSTATE_* constants
-      index:              Buf.readUint32(),
+    let call = {
+      state:              Buf.readUint32(), // CALL_STATE_*
+      index:              Buf.readUint32(), // GSM index (1-based)
       toa:                Buf.readUint32(),
       isMpty:             Boolean(Buf.readUint32()),
       isMT:               Boolean(Buf.readUint32()),
@@ -714,41 +749,48 @@ RIL[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS() {
       isVoicePrivacy:     Boolean(Buf.readUint32()),
       somethingOrOther:   Buf.readUint32(), //XXX TODO whatziz? not in ril.h, but it's in the output...
       number:             Buf.readString(), //TODO munge with TOA
-      numberPresentation: Buf.readUint32(), // Connection.PRESENTATION XXX TODO
+      numberPresentation: Buf.readUint32(), // CALL_PRESENTATION_*
       name:               Buf.readString(),
       namePresentation:   Buf.readUint32(),
       uusInfo:            null
     };
     let uusInfoPresent = Buf.readUint32();
     if (uusInfoPresent == 1) {
-      dc.uusInfo = {
+      call.uusInfo = {
         type:     Buf.readUint32(),
         dcs:      Buf.readUint32(),
         userData: null //XXX TODO byte array?!?
       };
     }
-    calls.push(dc);
+    calls[call.index] = call;
   }
-
   Phone.onCurrentCalls(calls);
 };
-RIL[REQUEST_DIAL] = null;
+RIL[REQUEST_DIAL] = function REQUEST_DIAL(length) {
+  Phone.onDial();
+};
 RIL[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length) {
-  let imsi = Buf.readString(length);
+  let imsi = Buf.readString();
   Phone.onIMSI(imsi);
 };
-RIL[REQUEST_HANGUP] = null;
+RIL[REQUEST_HANGUP] = function REQUEST_HANGUP(length) {
+  Phone.onHangUp();
+};
 RIL[REQUEST_HANGUP_WAITING_OR_BACKGROUND] = null;
 RIL[REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND] = null;
 RIL[REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE] = null;
 RIL[REQUEST_SWITCH_HOLDING_AND_ACTIVE] = null;
 RIL[REQUEST_CONFERENCE] = null;
-RIL[REQUEST_UDUB] = null;
+RIL[REQUEST_UDUB] = function REQUEST_UDUB(length) {
+  Phone.onRejectCall();
+};
 RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = null;
 RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH() {
   let strength = {
     // Valid values are (0-31, 99) as defined in TS 27.007 8.5.
-    gsmSignalStrength: Buf.readUint32(),
+    // For some reason we're getting int32s like [99, 4, 0, 0] and [99, 3, 0, 0]
+    // here, so let's strip of anything beyond the first byte.
+    gsmSignalStrength: Buf.readUint32() & 0xff,
     // GSM bit error rate (0-7, 99) as defined in TS 27.007 8.5.
     gsmBitErrorRate:   Buf.readUint32(),
     // The CDMA RSSI value.
@@ -804,7 +846,9 @@ RIL[REQUEST_GET_IMEISV] = function REQUEST_GET_IMEISV() {
   let imeiSV = Buf.readString();
   Phone.onIMEISV(imeiSV);
 };
-RIL[REQUEST_ANSWER] = null;
+RIL[REQUEST_ANSWER] = function REQUEST_ANSWER(length) {
+  Phone.onAnswerCall();
+};
 RIL[REQUEST_DEACTIVATE_DATA_CALL] = null;
 RIL[REQUEST_QUERY_FACILITY_LOCK] = null;
 RIL[REQUEST_SET_FACILITY_LOCK] = null;
@@ -901,7 +945,15 @@ RIL[UNSOLICITED_STK_EVENT_NOTIFY] = null;
 RIL[UNSOLICITED_STK_CALL_SETUP] = null;
 RIL[UNSOLICITED_SIM_SMS_STORAGE_FULL] = null;
 RIL[UNSOLICITED_SIM_REFRESH] = null;
-RIL[UNSOLICITED_CALL_RING] = null;
+RIL[UNSOLICITED_CALL_RING] = function UNSOLICITED_CALL_RING() {
+  let info = {
+    isPresent:  Buf.readUint32(),
+    signalType: Buf.readUint32(),
+    alertPitch: Buf.readUint32(),
+    signal:     Buf.readUint32()
+  };
+  Phone.onCallRing(info);
+};
 RIL[UNSOLICITED_RESPONSE_SIM_STATUS_CHANGED] = null;
 RIL[UNSOLICITED_RESPONSE_CDMA_NEW_SMS] = null;
 RIL[UNSOLICITED_RESPONSE_NEW_BROADCAST_SMS] = null;
@@ -961,7 +1013,7 @@ let Phone = {
   /**
    * Active calls
    */
-  calls: null,
+  currentCalls: {},
 
   /**
    * Handlers for messages from the RIL. They all begin with on* and are called
@@ -1001,7 +1053,8 @@ let Phone = {
       RIL.setScreenState(true);
       this.sendDOMMessage({
         type: "radiostatechange",
-        radioState: (newState == RADIO_STATE_OFF) ? "off" : "ready"
+        radioState: (newState == RADIO_STATE_OFF) ?
+                     DOM_RADIOSTATE_OFF : DOM_RADIOSTATE_READY
       });
 
       //XXX TODO For now, just turn the radio on if it's off. for the real
@@ -1018,7 +1071,7 @@ let Phone = {
       //TODO do that
 
       this.sendDOMMessage({type: "radiostatechange",
-                           radioState: "unavailable"});
+                           radioState: DOM_RADIOSTATE_UNAVAILABLE});
     }
 
     if (newState == RADIO_STATE_SIM_READY  ||
@@ -1029,13 +1082,13 @@ let Phone = {
       this.requestNetworkInfo();
       RIL.getSignalStrength();
       this.sendDOMMessage({type: "cardstatechange",
-                           cardState: "ready"});
+                           cardState: DOM_CARDSTATE_READY});
     }
     if (newState == RADIO_STATE_SIM_LOCKED_OR_ABSENT  ||
         newState == RADIO_STATE_RUIM_LOCKED_OR_ABSENT) {
       RIL.getICCStatus();
       this.sendDOMMessage({type: "cardstatechange",
-                           cardState: "unavailable"});
+                           cardState: DOM_CARDSTATE_UNAVAILABLE});
     }
 
     let wasOn = this.radioState != RADIO_STATE_OFF &&
@@ -1052,14 +1105,66 @@ let Phone = {
     this.radioState = newState;
   },
 
-  onCurrentCalls: function onCurrentCalls(calls) {
-    debug("onCurrentCalls");
-    debug(calls);
-    //TODO 
-    this.sendDOMMessage({type: "callstatechange", callState: calls});
+  onCurrentCalls: function onCurrentCalls(newCalls) {
+    // Go through the calls we currently have on file and see if any of them
+    // changed state. Remove them from the newCalls map as we deal with them
+    // so that only new calls remain in the map after we're done.
+    for each (let currentCall in this.currentCalls) {
+      let callIndex = currentCall.index;
+      let newCall;
+      if (newCalls) {
+        newCall = newCalls[callIndex];
+        delete newCalls[callIndex];
+      }
+
+      if (!newCall) {
+        // Call is no longer reported by the radio. Send disconnected
+        // state change.
+        this.sendDOMMessage({type:      "callstatechange",
+                             callState:  DOM_CALL_READYSTATE_DISCONNECTED,
+                             callIndex:  callIndex,
+                             number:     currentCall.number,
+                             name:       currentCall.name});
+        delete this.currentCalls[currentCall];
+        continue;
+      }
+
+      if (newCall.state == currentCall.state) {
+        continue;
+      }
+
+      this._handleChangedCallState(newCall);
+    }
+
+    // Go through any remaining calls that are new to us.
+    for each (let newCall in newCalls) {
+      if (newCall.isVoice) {
+        this._handleChangedCallState(newCall);
+      }
+    }
+  },
+
+  _handleChangedCallState: function handleChangedCallState(newCall) {
+    // Format international numbers appropriately.
+    if (newCall.number &&
+        newCall.toa == TOA_INTERNATIONAL &&
+        newCall.number[0] != "+") {
+      newCall.number = "+" + newCall.number;
+    }
+    this.currentCalls[newCall.index] = newCall;
+    this.sendDOMMessage({type:      "callstatechange",
+                         callState: RIL_TO_DOM_CALL_STATE[newCall.state],
+                         callIndex: newCall.index,
+                         number:    newCall.number,
+                         name:      newCall.name});
   },
 
   onCallStateChanged: function onCallStateChanged() {
+    RIL.getCurrentCalls();
+  },
+
+  onCallRing: function onCallRing(info) {
+    debug("onCallRing " + JSON.stringify(info)); //DEBUG
     RIL.getCurrentCalls();
   },
 
@@ -1131,6 +1236,18 @@ let Phone = {
                          signalStrength: strength});
   },
 
+  onDial: function onDial() {
+  },
+
+  onHangUp: function onHangUp() {
+  },
+
+  onAnswerCall: function onAnswerCall() {
+  },
+
+  onRejectCall: function onRejectCall() {
+  },
+
   onSendSMS: function onSendSMS(messageRef, ackPDU, errorCode) {
     //TODO
   },
@@ -1168,6 +1285,32 @@ let Phone = {
    */
   dial: function dial(options) {
     RIL.dial(options.number, 0, 0);
+  },
+
+  /**
+   * Hang up a call.
+   *
+   * @param callIndex
+   *        Call index of the call to hang up.
+   */
+  hangUp: function hangUp(options) {
+    //TODO need to check whether call is holding/waiting/background
+    // and then use REQUEST_HANGUP_WAITING_OR_BACKGROUND
+    RIL.hangUp(options.callIndex);
+  },
+
+  /**
+   * Answer an incoming call.
+   */
+  answerCall: function answerCall() {
+    RIL.answerCall();
+  },
+
+  /**
+   * Reject an incoming call.
+   */
+  rejectCall: function rejectCall() {
+    RIL.rejectCall();
   },
 
   /**
