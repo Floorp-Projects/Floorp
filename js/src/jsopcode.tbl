@@ -232,8 +232,7 @@ OPDEF(JSOP_POP,       81, "pop",        NULL,         1,  1,  0,  2,  JOF_BYTE)
 /* Call a function as a constructor; operand is argc. */
 OPDEF(JSOP_NEW,       82, js_new_str,   NULL,         3, -1,  1, 17,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET)
 
-/* Trap into debugger for breakpoint, etc. */
-OPDEF(JSOP_TRAP,      83, "trap",       NULL,         1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED1,   83, "unused1",    NULL,         1,  0,  0,  0,  JOF_BYTE)
 
 /* Fast get/set ops for function arguments and local variables. */
 OPDEF(JSOP_GETARG,    84, "getarg",     NULL,         3,  0,  1, 19,  JOF_QARG |JOF_NAME)

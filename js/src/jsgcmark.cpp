@@ -959,6 +959,9 @@ MarkChildren(JSTracer *trc, JSScript *script)
 
     if (script->types)
         script->types->trace(trc);
+
+    if (script->hasAnyBreakpointsOrStepMode())
+        script->markTrapClosures(trc);
 }
 
 const Shape *

@@ -1169,7 +1169,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
 
 #ifdef DEBUG
         jsbytecode *callerPC = caller->pcQuadratic(cx);
-        JS_ASSERT(callerPC && js_GetOpcode(cx, caller->script(), callerPC) == JSOP_EVAL);
+        JS_ASSERT(callerPC && JSOp(*callerPC) == JSOP_EVAL);
 #endif
     } else {
         JS_ASSERT(args.callee().getGlobal() == &scopeobj);
@@ -1308,7 +1308,7 @@ DirectEval(JSContext *cx, const CallArgs &args)
     StackFrame *caller = cx->fp();
     JS_ASSERT(caller->isScriptFrame());
     JS_ASSERT(IsBuiltinEvalForScope(&caller->scopeChain(), args.calleev()));
-    JS_ASSERT(js_GetOpcode(cx, cx->fp()->script(), cx->regs().pc) == JSOP_EVAL);
+    JS_ASSERT(JSOp(*cx->regs().pc) == JSOP_EVAL);
 
     AutoFunctionCallProbe callProbe(cx, args.callee().toFunction(), caller->script());
 
@@ -3173,7 +3173,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
         JS_ASSERT(script->code <= pc && pc < endpc);
 
         /* General case: a branch or equality op follows the access. */
-        op = js_GetOpcode(cx, script, pc);
+        op = JSOp(*pc);
         if (js_CodeSpec[op].format & JOF_DETECTING)
             return JS_TRUE;
 
@@ -3184,7 +3184,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
              * about JS1.2's revision of the equality operators here.
              */
             if (++pc < endpc) {
-                op = js_GetOpcode(cx, script, pc);
+                op = JSOp(*pc);
                 return *pc == JSOP_EQ || *pc == JSOP_NE;
             }
             return JS_FALSE;
@@ -3199,7 +3199,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
             GET_ATOM_FROM_BYTECODE(script, pc, 0, atom);
             if (atom == cx->runtime->atomState.typeAtoms[JSTYPE_VOID] &&
                 (pc += js_CodeSpec[op].length) < endpc) {
-                op = js_GetOpcode(cx, script, pc);
+                op = JSOp(*pc);
                 return op == JSOP_EQ || op == JSOP_NE ||
                        op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
             }
@@ -3235,7 +3235,7 @@ js_InferFlags(JSContext *cx, uintN defaultFlags)
     if (!script || !pc)
         return defaultFlags;
 
-    cs = &js_CodeSpec[js_GetOpcode(cx, script, pc)];
+    cs = &js_CodeSpec[*pc];
     format = cs->format;
     if (JOF_MODE(format) != JOF_NAME)
         flags |= JSRESOLVE_QUALIFIED;
@@ -5920,8 +5920,6 @@ js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsi
             uintN flags;
 
             op = (JSOp) *pc;
-            if (op == JSOP_TRAP)
-                op = JS_GetTrapOpcode(cx, cx->fp()->script(), pc);
             if (op == JSOP_GETXPROP) {
                 flags = JSREPORT_ERROR;
             } else {

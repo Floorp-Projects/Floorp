@@ -55,26 +55,6 @@ namespace js {
 namespace mjit {
 
 /*
- * A problem often arises where, for one reason or another, a piece of code
- * wants to touch the script->code, but isn't expecting JSOP_TRAP. This allows
- * one to temporarily remove JSOP_TRAPs from the instruction stream (without
- * copying) and automatically re-add them on scope exit.
- */
-class AutoScriptRetrapper
-{
-  public:
-    AutoScriptRetrapper(JSContext *cx, JSScript *script1) :
-        script(script1), traps(cx) {};
-    ~AutoScriptRetrapper();
-
-    bool untrap(jsbytecode *pc);
-
-  private:
-    JSScript *script;
-    Vector<jsbytecode*> traps;
-};
-
-/*
  * This class is responsible for sanely destroying a JITed script while frames
  * for it are still on the stack, removing all references in the world to it
  * and patching up those existing frames to go into the interpreter. If you

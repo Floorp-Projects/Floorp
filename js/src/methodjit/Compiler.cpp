@@ -242,7 +242,7 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
     while (nextOffset < script->length) {
         uint32 offset = nextOffset;
         jsbytecode *pc = script->code + offset;
-        nextOffset = offset + analyze::GetBytecodeLength(pc);
+        nextOffset = offset + GetBytecodeLength(pc);
 
         Bytecode *code = analysis->maybeCode(pc);
         if (!code)
@@ -958,12 +958,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     size_t nNmapLive = loopEntries.length();
     for (size_t i = 0; i < script->length; i++) {
         Bytecode *opinfo = analysis->maybeCode(i);
-        if (opinfo && opinfo->safePoint) {
-            /* loopEntries cover any safe points which are at loop heads. */
-            JSOp op = js_GetOpcode(cx, script, script->code + i);
-            if (!cx->typeInferenceEnabled() || op != JSOP_LOOPHEAD)
-                nNmapLive++;
-        }
+        if (opinfo && opinfo->safePoint)
+            nNmapLive++;
     }
 
     /* Please keep in sync with JITScript::scriptDataSize! */
@@ -1024,9 +1020,6 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         for (size_t i = 0; i < script->length; i++) {
             Bytecode *opinfo = analysis->maybeCode(i);
             if (opinfo && opinfo->safePoint) {
-                JSOp op = js_GetOpcode(cx, script, script->code + i);
-                if (cx->typeInferenceEnabled() && op == JSOP_LOOPHEAD)
-                    continue;
                 Label L = jumpMap[i];
                 JS_ASSERT(L.isSet());
                 jitNmap[ix].bcOff = i;
@@ -1511,7 +1504,6 @@ FixDouble(Value &val)
 CompileStatus
 mjit::Compiler::generateMethod()
 {
-    mjit::AutoScriptRetrapper trapper(cx, script);
     SrcNoteLineScanner scanner(script->notes(), script->lineno);
 
     /* For join points, whether there was fallthrough from the previous opcode. */
@@ -1523,12 +1515,9 @@ mjit::Compiler::generateMethod()
     for (;;) {
         JSOp op = JSOp(*PC);
         int trap = stubs::JSTRAP_NONE;
-        if (op == JSOP_TRAP) {
-            if (!trapper.untrap(PC))
-                return Compile_Error;
-            op = JSOp(*PC);
+
+        if (script->hasBreakpointsAt(PC))
             trap |= stubs::JSTRAP_TRAP;
-        }
 
         Bytecode *opinfo = analysis->maybeCode(PC);
 
@@ -1737,7 +1726,7 @@ mjit::Compiler::generateMethod()
              */
             jsbytecode *next = PC + js_CodeSpec[op].length;
             if (cx->typeInferenceEnabled() && analysis->maybeCode(next) &&
-                js_GetOpcode(cx, script, next) == JSOP_LOOPHEAD) {
+                JSOp(*next) == JSOP_LOOPHEAD) {
                 frame.syncAndForgetEverything();
                 Jump j = masm.jump();
                 if (!startLoop(next, j, target))
@@ -2845,7 +2834,7 @@ mjit::Compiler::generateMethod()
      *  END COMPILER OPS  *
      **********************/
 
-        if (cx->typeInferenceEnabled() && PC == lastPC + analyze::GetBytecodeLength(lastPC)) {
+        if (cx->typeInferenceEnabled() && PC == lastPC + GetBytecodeLength(lastPC)) {
             /*
              * Inform the frame of the type sets for values just pushed. Skip
              * this if we did any opcode fusions, we don't keep track of the
@@ -2869,7 +2858,7 @@ mjit::Compiler::generateMethod()
             /* Update information about the type of value pushed by arithmetic ops. */
             if ((js_CodeSpec[op].format & JOF_ARITH) && !arithUpdated) {
                 FrameEntry *pushed = NULL;
-                if (PC == lastPC + analyze::GetBytecodeLength(lastPC))
+                if (PC == lastPC + GetBytecodeLength(lastPC))
                     pushed = frame.peek(-1);
                 updateArithCounters(lastPC, pushed, arithFirstUseType, arithSecondUseType);
                 typesUpdated = true;
@@ -3413,7 +3402,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
         bool endOfScript =
             (JSOp(*PC) == JSOP_STOP) ||
             (JSOp(*PC) == JSOP_RETURN &&
-             (JSOp(*(PC + JSOP_RETURN_LENGTH)) == JSOP_STOP &&
+             (JSOp(PC[JSOP_RETURN_LENGTH]) == JSOP_STOP &&
               !analysis->maybeCode(PC + JSOP_RETURN_LENGTH)));
         if (!endOfScript)
             a->returnJumps->append(masm.jump());
