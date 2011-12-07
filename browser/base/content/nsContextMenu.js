@@ -97,6 +97,12 @@ nsContextMenu.prototype = {
     this.initItems();
   },
 
+  hiding: function CM_hiding() {
+    InlineSpellCheckerUI.clearSuggestionsFromMenu();
+    InlineSpellCheckerUI.clearDictionaryListFromMenu();
+    InlineSpellCheckerUI.uninit();
+  },
+
   initItems: function CM_initItems() {
     this.initPageMenuSeparator();
     this.initOpenItems();
@@ -487,16 +493,6 @@ nsContextMenu.prototype = {
     this.bgImageURL        = "";
     this.onEditableArea    = false;
     this.isDesignMode      = false;
-
-    // Clear any old spellchecking items from the menu, this used to
-    // be in the menu hiding code but wasn't getting called in all
-    // situations. Here, we can ensure it gets cleaned up any time the
-    // menu is shown. Note: must be before uninit because that clears the
-    // internal vars
-    InlineSpellCheckerUI.clearSuggestionsFromMenu();
-    InlineSpellCheckerUI.clearDictionaryListFromMenu();
-
-    InlineSpellCheckerUI.uninit();
 
     // Remember the node that was clicked.
     this.target = aNode;
