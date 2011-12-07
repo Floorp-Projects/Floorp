@@ -1,3 +1,6 @@
+// |jit-test| error: InternalError: too much recursion
+// FIXME: this should not give an internal error once OSI lands.
+
 var forceReflow = false;
 
 function rec(x, self) {
