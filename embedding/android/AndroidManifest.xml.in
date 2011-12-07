@@ -129,8 +129,7 @@
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation" 
                   android:theme="@android:style/Theme.NoTitleBar" >
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="org.mozilla.gecko.PLAY_VIDEO" />
             </intent-filter>
         </activity>
     </application>
