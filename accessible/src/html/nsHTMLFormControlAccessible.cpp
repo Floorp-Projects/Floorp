@@ -720,11 +720,11 @@ nsHTMLGroupboxAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_GROUPING;
 }
 
-nsIContent* nsHTMLGroupboxAccessible::GetLegend()
+nsIContent*
+nsHTMLGroupboxAccessible::GetLegend()
 {
-  nsresult count = 0;
-  nsIContent *legendContent = nsnull;
-  while ((legendContent = mContent->GetChildAt(count++)) != nsnull) {
+  for (nsIContent* legendContent = mContent->GetFirstChild(); legendContent;
+       legendContent = legendContent->GetNextSibling()) {
     if (legendContent->NodeInfo()->Equals(nsGkAtoms::legend,
                                           mContent->GetNameSpaceID())) {
       // Either XHTML namespace or no namespace
