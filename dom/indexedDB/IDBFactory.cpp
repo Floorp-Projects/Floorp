@@ -142,16 +142,6 @@ IDBFactory::GetConnection(const nsAString& aDatabaseFilePath)
                                getter_AddRefs(connection));
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-#ifdef DEBUG
-  {
-    // Check to make sure that the database schema is correct again.
-    PRInt32 schemaVersion;
-    NS_ASSERTION(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)) &&
-                 schemaVersion == DB_SCHEMA_VERSION,
-                 "Wrong schema!");
-  }
-#endif
-
   // Turn on foreign key constraints!
   rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "PRAGMA foreign_keys = ON;"
