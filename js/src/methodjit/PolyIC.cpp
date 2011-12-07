@@ -1740,7 +1740,7 @@ class ScopeNameCompiler : public PICStubCompiler
         if (!prop) {
             /* Kludge to allow (typeof foo == "undefined") tests. */
             if (kind == ic::PICInfo::NAME) {
-                JSOp op2 = js_GetOpcode(cx, f.script(), f.pc() + JSOP_NAME_LENGTH);
+                JSOp op2 = JSOp(f.pc()[JSOP_NAME_LENGTH]);
                 if (op2 == JSOP_TYPEOF) {
                     vp->setUndefined();
                     return true;

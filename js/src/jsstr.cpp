@@ -2161,8 +2161,8 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
 
                 if (table.isObject() &&
                     JSOp(*pc) == JSOP_GETARG && GET_SLOTNO(pc) == 0 &&
-                    JSOp(*(pc + JSOP_GETARG_LENGTH)) == JSOP_GETELEM &&
-                    JSOp(*(pc + JSOP_GETARG_LENGTH + JSOP_GETELEM_LENGTH)) == JSOP_RETURN) {
+                    JSOp(pc[JSOP_GETARG_LENGTH]) == JSOP_GETELEM &&
+                    JSOp(pc[JSOP_GETARG_LENGTH + JSOP_GETELEM_LENGTH]) == JSOP_RETURN) {
                     Class *clasp = table.toObject().getClass();
                     if (clasp->isNative() &&
                         !clasp->ops.lookupProperty &&

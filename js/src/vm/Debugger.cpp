@@ -125,10 +125,10 @@ ReportObjectRequired(JSContext *cx)
 /*** Breakpoints *********************************************************************************/
 
 BreakpointSite::BreakpointSite(JSScript *script, jsbytecode *pc)
-  : script(script), pc(pc), realOpcode(JSOp(*pc)), scriptGlobal(NULL), enabledCount(0),
+  : script(script), pc(pc), scriptGlobal(NULL), enabledCount(0),
     trapHandler(NULL), trapClosure(UndefinedValue())
 {
-    JS_ASSERT(realOpcode != JSOP_TRAP);
+    JS_ASSERT(!script->hasBreakpointsAt(pc));
     JS_INIT_CLIST(&breakpoints);
 }
 
@@ -176,12 +176,8 @@ bool
 BreakpointSite::inc(JSContext *cx)
 {
     if (enabledCount == 0 && !trapHandler) {
-        JS_ASSERT(*pc == realOpcode);
-        *pc = JSOP_TRAP;
-        if (!recompile(cx, false)) {
-            *pc = realOpcode;
+        if (!recompile(cx, false))
             return false;
-        }
     }
     enabledCount++;
     return true;
@@ -191,23 +187,17 @@ void
 BreakpointSite::dec(JSContext *cx)
 {
     JS_ASSERT(enabledCount > 0);
-    JS_ASSERT(*pc == JSOP_TRAP);
     enabledCount--;
-    if (enabledCount == 0 && !trapHandler) {
-        *pc = realOpcode;
+    if (enabledCount == 0 && !trapHandler)
         recompile(cx, false);  /* ignore failure */
-    }
 }
 
 bool
 BreakpointSite::setTrap(JSContext *cx, JSTrapHandler handler, const Value &closure)
 {
     if (enabledCount == 0) {
-        *pc = JSOP_TRAP;
-        if (!recompile(cx, true)) {
-            *pc = realOpcode;
+        if (!recompile(cx, true))
             return false;
-        }
     }
     trapHandler = handler;
     trapClosure = closure;
@@ -215,8 +205,7 @@ BreakpointSite::setTrap(JSContext *cx, JSTrapHandler handler, const Value &closu
 }
 
 void
-BreakpointSite::clearTrap(JSContext *cx, BreakpointSiteMap::Enum *e,
-                          JSTrapHandler *handlerp, Value *closurep)
+BreakpointSite::clearTrap(JSContext *cx, JSTrapHandler *handlerp, Value *closurep)
 {
     if (handlerp)
         *handlerp = trapHandler;
@@ -226,25 +215,19 @@ BreakpointSite::clearTrap(JSContext *cx, BreakpointSiteMap::Enum *e,
     trapHandler = NULL;
     trapClosure = UndefinedValue();
     if (enabledCount == 0) {
-        *pc = realOpcode;
         if (!cx->runtime->gcRunning) {
             /* If the GC is running then the script is being destroyed. */
             recompile(cx, true);  /* ignore failure */
         }
-        destroyIfEmpty(cx->runtime, e);
+        destroyIfEmpty(cx->runtime);
     }
 }
 
 void
-BreakpointSite::destroyIfEmpty(JSRuntime *rt, BreakpointSiteMap::Enum *e)
+BreakpointSite::destroyIfEmpty(JSRuntime *rt)
 {
-    if (JS_CLIST_IS_EMPTY(&breakpoints) && !trapHandler) {
-        if (e)
-            e->removeFront();
-        else
-            script->compartment()->breakpointSites.remove(pc);
-        rt->delete_(this);
-    }
+    if (JS_CLIST_IS_EMPTY(&breakpoints) && !trapHandler)
+        script->destroyBreakpointSite(rt, pc);
 }
 
 Breakpoint *
@@ -284,14 +267,14 @@ Breakpoint::fromSiteLinks(JSCList *links)
 }
 
 void
-Breakpoint::destroy(JSContext *cx, BreakpointSiteMap::Enum *e)
+Breakpoint::destroy(JSContext *cx)
 {
     if (debugger->enabled)
         site->dec(cx);
     JS_REMOVE_LINK(&debuggerLinks);
     JS_REMOVE_LINK(&siteLinks);
     JSRuntime *rt = cx->runtime;
-    site->destroyIfEmpty(rt, e);
+    site->destroyIfEmpty(rt);
     rt->delete_(this);
 }
 
@@ -482,7 +465,7 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx)
      */
     if (fp->isEvalFrame()) {
         JSScript *script = fp->script();
-        script->compartment()->clearBreakpointsIn(cx, NULL, script, NULL);
+        script->clearBreakpointsIn(cx, NULL, NULL);
     }
 }
 
@@ -861,10 +844,11 @@ JSTrapStatus
 Debugger::onTrap(JSContext *cx, Value *vp)
 {
     StackFrame *fp = cx->fp();
+    JSScript *script = fp->script();
     GlobalObject *scriptGlobal = fp->scopeChain().getGlobal();
     jsbytecode *pc = cx->regs().pc;
-    BreakpointSite *site = cx->compartment->getBreakpointSite(pc);
-    JSOp op = site->realOpcode;
+    BreakpointSite *site = script->getBreakpointSite(pc);
+    JSOp op = JSOp(*pc);
 
     /* Build list of breakpoint handlers. */
     Vector<Breakpoint *> triggered(cx);
@@ -896,7 +880,7 @@ Debugger::onTrap(JSContext *cx, Value *vp)
                 return st;
 
             /* Calling JS code invalidates site. Reload it. */
-            site = cx->compartment->getBreakpointSite(pc);
+            site = script->getBreakpointSite(pc);
         }
     }
 
@@ -1103,10 +1087,6 @@ Debugger::markAllIteratively(GCMarker *trc)
     JSCompartment *comp = rt->gcCurrentCompartment;
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++) {
         JSCompartment *dc = *c;
-
-        /* If dc is being collected, mark jsdbgapi.h trap closures in it. */
-        if (!comp || dc == comp)
-            markedAny = markedAny | dc->markTrapClosuresIteratively(trc);
 
         /*
          * If this is a single-compartment GC, no compartment can debug itself, so skip
@@ -1571,7 +1551,7 @@ Debugger::clearAllBreakpoints(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "clearAllBreakpoints", args, dbg);
     for (GlobalObjectSet::Range r = dbg->debuggees.all(); !r.empty(); r.popFront())
-        r.front()->compartment()->clearBreakpointsIn(cx, dbg, NULL, NULL);
+        r.front()->compartment()->clearBreakpointsIn(cx, dbg, NULL);
     return true;
 }
 
@@ -1988,8 +1968,8 @@ class BytecodeRangeWithLineNumbers : private BytecodeRange
     using BytecodeRange::frontOpcode;
     using BytecodeRange::frontOffset;
 
-    BytecodeRangeWithLineNumbers(JSContext *cx, JSScript *script)
-      : BytecodeRange(cx, script), lineno(script->lineno), sn(script->notes()), snpc(script->code)
+    BytecodeRangeWithLineNumbers(JSScript *script)
+      : BytecodeRange(script), lineno(script->lineno), sn(script->notes()), snpc(script->code)
     {
         if (!SN_IS_TERMINATOR(sn))
             snpc += SN_DELTA(sn);
@@ -2076,7 +2056,7 @@ class FlowGraphSummary : public Vector<size_t> {
 
         size_t prevLine = script->lineno;
         JSOp prevOp = JSOP_NOP;
-        for (BytecodeRangeWithLineNumbers r(cx, script); !r.empty(); r.popFront()) {
+        for (BytecodeRangeWithLineNumbers r(script); !r.empty(); r.popFront()) {
             size_t lineno = r.frontLineNumber();
             JSOp op = r.frontOpcode();
 
@@ -2145,7 +2125,7 @@ DebuggerScript_getAllOffsets(JSContext *cx, uintN argc, Value *vp)
     JSObject *result = NewDenseEmptyArray(cx);
     if (!result)
         return false;
-    for (BytecodeRangeWithLineNumbers r(cx, script); !r.empty(); r.popFront()) {
+    for (BytecodeRangeWithLineNumbers r(script); !r.empty(); r.popFront()) {
         size_t offset = r.frontOffset();
         size_t lineno = r.frontLineNumber();
 
@@ -2217,7 +2197,7 @@ DebuggerScript_getLineOffsets(JSContext *cx, uintN argc, Value *vp)
     JSObject *result = NewDenseEmptyArray(cx);
     if (!result)
         return false;
-    for (BytecodeRangeWithLineNumbers r(cx, script); !r.empty(); r.popFront()) {
+    for (BytecodeRangeWithLineNumbers r(script); !r.empty(); r.popFront()) {
         size_t offset = r.frontOffset();
 
         /* If the op at offset is an entry point, append offset to result. */
@@ -2255,9 +2235,8 @@ DebuggerScript_setBreakpoint(JSContext *cx, uintN argc, Value *vp)
     if (!handler)
         return false;
 
-    JSCompartment *comp = script->compartment();
     jsbytecode *pc = script->code + offset;
-    BreakpointSite *site = comp->getOrCreateBreakpointSite(cx, script, pc, scriptGlobal);
+    BreakpointSite *site = script->getOrCreateBreakpointSite(cx, pc, scriptGlobal);
     if (!site)
         return false;
     if (site->inc(cx)) {
@@ -2267,7 +2246,7 @@ DebuggerScript_setBreakpoint(JSContext *cx, uintN argc, Value *vp)
         }
         site->dec(cx);
     }
-    site->destroyIfEmpty(cx->runtime, NULL);
+    site->destroyIfEmpty(cx->runtime);
     return false;
 }
 
@@ -2290,10 +2269,10 @@ DebuggerScript_getBreakpoints(JSContext *cx, uintN argc, Value *vp)
     JSObject *arr = NewDenseEmptyArray(cx);
     if (!arr)
         return false;
-    JSCompartment *comp = script->compartment();
-    for (BreakpointSiteMap::Range r = comp->breakpointSites.all(); !r.empty(); r.popFront()) {
-        BreakpointSite *site = r.front().value;
-        if (site->script == script && (!pc || site->pc == pc)) {
+
+    for (unsigned i = 0; i < script->length; i++) {
+        BreakpointSite *site = script->getBreakpointSite(script->code + i);
+        if (site && (!pc || site->pc == pc)) {
             for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = bp->nextInSite()) {
                 if (bp->debugger == dbg &&
                     !js_NewbornArrayPush(cx, arr, ObjectValue(*bp->getHandler())))
@@ -2318,7 +2297,7 @@ DebuggerScript_clearBreakpoint(JSContext *cx, uintN argc, Value *vp)
     if (!handler)
         return false;
 
-    script->compartment()->clearBreakpointsIn(cx, dbg, script, handler);
+    script->clearBreakpointsIn(cx, dbg, handler);
     args.rval().setUndefined();
     return true;
 }
@@ -2328,7 +2307,7 @@ DebuggerScript_clearAllBreakpoints(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "clearAllBreakpoints", args, obj, script);
     Debugger *dbg = Debugger::fromChildJSObject(obj);
-    script->compartment()->clearBreakpointsIn(cx, dbg, script, NULL);
+    script->clearBreakpointsIn(cx, dbg, NULL);
     args.rval().setUndefined();
     return true;
 }
