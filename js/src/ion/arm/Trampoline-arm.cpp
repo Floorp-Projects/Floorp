@@ -228,6 +228,14 @@ IonCompartment::generateReturnError(JSContext *cx)
 }
 
 IonCode *
+IonCompartment::generateInvalidator(JSContext *cx)
+{
+    MacroAssembler masm(cx);
+    JS_ASSERT(false); // NYI
+    return NULL;
+}
+
+IonCode *
 IonCompartment::generateArgumentsRectifier(JSContext *cx)
 {
     MacroAssembler masm(cx);

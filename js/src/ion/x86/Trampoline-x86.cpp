@@ -44,6 +44,7 @@
 #include "ion/IonCompartment.h"
 #include "ion/IonLinker.h"
 #include "ion/IonFrames.h"
+#include "ion/IonSpewer.h"
 #include "ion/Bailouts.h"
 #include "ion/VMFunctions.h"
 
@@ -71,7 +72,8 @@ IonCompartment::generateOsrPrologue(JSContext *cx)
     return linker.newCode(cx);
 }
 
-/* This method generates a trampoline on x86 for a c++ function with
+/*
+ * This method generates a trampoline on x86 for a c++ function with
  * the following signature:
  *   JSBool blah(void *code, int argc, Value *argv, Value *vp)
  *   ...using standard cdecl calling convention
@@ -197,6 +199,135 @@ IonCompartment::generateEnterJIT(JSContext *cx)
 
     Linker linker(masm);
     return linker.newCode(cx);
+}
+
+static void
+GenerateBailoutTail(MacroAssembler &masm)
+{
+    masm.linkExitFrame();
+
+    Label interpret;
+    Label exception;
+
+    // The return value from Bailout is tagged as:
+    // - 0x0: done (thunk to interpreter)
+    // - 0x1: error (handle exception)
+    // - 0x2: reflow args
+    // - 0x3: reflow barrier
+
+    masm.cmpl(eax, Imm32(BAILOUT_RETURN_FATAL_ERROR));
+    masm.j(Assembler::LessThan, &interpret);
+    masm.j(Assembler::Equal, &exception);
+
+    // Otherwise, we're in the "reflow" case.
+    masm.setupUnalignedABICall(1, edx);
+    masm.setABIArg(0, eax);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReflowTypeInfo));
+
+    masm.testl(eax, eax);
+    masm.j(Assembler::Zero, &exception);
+
+    masm.bind(&interpret);
+    // Reserve space for Interpret() to store a Value.
+    masm.subl(Imm32(sizeof(Value)), esp);
+    masm.movl(esp, ecx);
+
+    // Call out to the interpreter.
+    masm.setupUnalignedABICall(1, edx);
+    masm.setABIArg(0, ecx);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
+
+    // Load the value the interpreter returned.
+    masm.popValue(JSReturnOperand);
+
+    // Check for an exception.
+    masm.testl(eax, eax);
+    masm.j(Assembler::Zero, &exception);
+
+    // Return to the caller.
+    masm.ret();
+
+    masm.bind(&exception);
+    masm.handleException();
+}
+
+IonCode *
+IonCompartment::generateInvalidator(JSContext *cx)
+{
+    AutoIonContextAlloc aica(cx);
+    MacroAssembler masm(cx);
+
+    // When a frame gets invalidated (as the result of some call), its
+    // *callee* is made to return to this invalidator.
+    //
+    // This code is reponsible for bailing out the invalidated frame and
+    // thunking to the interpreter.
+    //
+    // We start in the following stack state:
+    //
+    //
+    //        |          ...             |
+    //        >--------------------------< <- invalid JS frame fp
+    //        |  invalid callee token    |
+    //        +--------------------------+
+    //        | caller frame descriptor  |
+    //        +--------------------------+
+    //        |        retaddr           |
+    //        +--------------------------+
+    //        |         invalid          |
+    //        |      locals, args        |
+    //        |          ...             |
+    //        +--------------------------+
+    //        | invalid frame descriptor |
+    // esp -> >--------------------------<
+    //        |       old retaddr        |
+    //        \--------------------------/
+    //
+    // Within the invalidated frame, the invalidation process has
+    // replaced what is typically the callee token with an
+    // InvalidationRecord.
+    //
+    // We do the minimum amount of work in assembly and shunt the rest
+    // off to InvalidationBailout. Assembly does:
+    //
+    // - Push the machine state onto the stack.
+    // - Call the InvalidationBailout routine with the stack pointer.
+    // - Now that the frame has been bailed out, convert the invalidated
+    //   frame into an exit frame.
+    // - Do the normal check-return-code-and-thunk-to-the-interpreter dance.
+
+    masm.reserveStack(Registers::Total * sizeof(void *));
+    for (uint32 i = 0; i < Registers::Total; i++)
+        masm.movl(Register::FromCode(i), Operand(esp, i * sizeof(void *)));
+
+    masm.reserveStack(FloatRegisters::Total * sizeof(double));
+    for (uint32 i = 0; i < FloatRegisters::Total; i++)
+        masm.movsd(FloatRegister::FromCode(i), Operand(esp, i * sizeof(double)));
+
+    masm.movl(esp, ebx); // Argument to ion::InvalidationBailout.
+
+    // Make space for InvalidationBailout's frameSize outparam.
+    masm.reserveStack(sizeof(size_t));
+    masm.movl(esp, ecx);
+
+    masm.setupUnalignedABICall(3, edx);
+    masm.setABIArg(0, ebx);
+    masm.setABIArg(1, ecx);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, InvalidationBailout));
+
+    masm.pop(ebx); // Get the frameSize outparam.
+
+    // Pop the machine state and the dead frame.
+    const uint32 BailoutDataSize = sizeof(double) * FloatRegisters::Total +
+                                   sizeof(void *) * Registers::Total;
+    masm.lea(Operand(esp, ebx, TimesOne, BailoutDataSize), esp);
+
+    GenerateBailoutTail(masm);
+
+    Linker linker(masm);
+    IonCode *code = linker.newCode(cx);
+    IonSpew(IonSpew_Invalidate, "   invalidation thunk created at %p", (void *) code->raw());
+    return code;
 }
 
 IonCode *
@@ -359,51 +490,7 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32 frameClass)
     }
     masm.bind(&frameFixupDone);
 
-    masm.linkExitFrame();
-
-    Label interpret;
-    Label exception;
-
-    // The return value from Bailout is tagged as:
-    // - 0x0: done (thunk to interpreter)
-    // - 0x1: error (handle exception)
-    // - 0x2: reflow args
-    // - 0x3: reflow barrier
-
-    masm.cmpl(eax, Imm32(BAILOUT_RETURN_FATAL_ERROR));
-    masm.j(Assembler::LessThan, &interpret);
-    masm.j(Assembler::Equal, &exception);
-
-    // Otherwise, we're in the "reflow" case.
-    masm.setupUnalignedABICall(1, edx);
-    masm.setABIArg(0, eax);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReflowTypeInfo));
-
-    masm.testl(eax, eax);
-    masm.j(Assembler::Zero, &exception);
-
-    masm.bind(&interpret);
-    // Reserve space for Interpret() to store a Value.
-    masm.subl(Imm32(sizeof(Value)), esp);
-    masm.movl(esp, ecx);
-
-    // Call out to the interpreter.
-    masm.setupUnalignedABICall(1, edx);
-    masm.setABIArg(0, ecx);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
-
-    // Load the value the interpreter returned.
-    masm.popValue(JSReturnOperand);
-
-    // Check for an exception.
-    masm.testl(eax, eax);
-    masm.j(Assembler::Zero, &exception);
-
-    // Return to the caller.
-    masm.ret();
-
-    masm.bind(&exception);
-    masm.handleException();
+    GenerateBailoutTail(masm);
 }
 
 IonCode *

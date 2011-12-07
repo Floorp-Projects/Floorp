@@ -177,13 +177,20 @@ class IonCompartment;
 // BailoutStack is an architecture specific pointer to the stack, given by the
 // bailout handler.
 class BailoutStack;
+class InvalidationBailoutStack;
 
 // Must be implemented by each architecture.
 FrameRecovery
 FrameRecoveryFromBailout(IonCompartment *ion, BailoutStack *sp);
 
+FrameRecovery
+FrameRecoveryFromInvalidation(IonCompartment *ion, InvalidationBailoutStack *sp);
+
 // Called from a bailout thunk. Returns a BAILOUT_* error code.
 uint32 Bailout(BailoutStack *sp);
+
+// Called from the invalidation thunk. Returns a BAILOUT_* error code.
+uint32 InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut);
 
 // Called from a bailout thunk. Interprets the frame(s) that have been bailed
 // out.

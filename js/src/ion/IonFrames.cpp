@@ -45,20 +45,62 @@
 #include "jsscript.h"
 #include "jsfun.h"
 #include "IonCompartment.h"
+#include "IonSpewer.h"
 
 using namespace js;
 using namespace js::ion;
+
+JSScript *
+ion::MaybeScriptFromCalleeToken(CalleeToken token)
+{
+    switch (CalleeTokenGetTag(token)) {
+      case CalleeToken_InvalidationRecord:
+        return NULL;
+      case CalleeToken_Script:
+        return CalleeTokenToScript(token);
+      case CalleeToken_Function:
+        return CalleeTokenToFunction(token)->script();
+    }
+    JS_NOT_REACHED("invalid callee token tag");
+    return NULL;
+}
+
+InvalidationRecord::InvalidationRecord(void *calleeToken, uint8 *returnAddress)
+  : calleeToken(calleeToken), returnAddress(returnAddress)
+{
+    JS_ASSERT(!CalleeTokenIsInvalidationRecord(calleeToken));
+    ionScript = MaybeScriptFromCalleeToken(calleeToken)->ion;
+    JS_ASSERT(ionScript);
+}
+
 
 FrameRecovery::FrameRecovery(uint8 *fp, uint8 *sp, const MachineState &machine)
   : fp_((IonJSFrameLayout *)fp),
     sp_(sp),
     machine_(machine)
 {
-    if (IsCalleeTokenFunction(fp_->calleeToken())) {
-        callee_ = CalleeTokenToFunction(fp_->calleeToken());
-        script_ = callee_->script();
-    } else {
-        script_ = CalleeTokenToScript(fp_->calleeToken());
+    unpackCalleeToken(fp_->calleeToken());
+}
+
+void
+FrameRecovery::unpackCalleeToken(CalleeToken token)
+{
+    switch (CalleeTokenGetTag(token)) {
+      case CalleeToken_Function:
+         callee_ = CalleeTokenToFunction(token);
+         script_ = callee_->script();
+         break;
+      case CalleeToken_Script:
+        script_ = CalleeTokenToScript(token);
+        break;
+      case CalleeToken_InvalidationRecord:
+      {
+        InvalidationRecord *record = CalleeTokenToInvalidationRecord(token);
+        unpackCalleeToken(record->calleeToken);
+        break;
+      }
+      default:
+        JS_NOT_REACHED("invalid callee token tag");
     }
 }
 
@@ -99,6 +141,10 @@ FrameRecovery::FromFrameIterator(const IonFrameIterator& it)
 IonScript *
 FrameRecovery::ionScript() const
 {
+    CalleeToken token = fp_->calleeToken();
+    if (CalleeToken_InvalidationRecord == CalleeTokenGetTag(token))
+        return CalleeTokenToInvalidationRecord(token)->ionScript;
+
     return script_->ion;
 }
 
@@ -113,6 +159,40 @@ IonFrameIterator::returnAddress() const
 {
     IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
     return current->returnAddress();
+}
+
+CalleeToken
+IonFrameIterator::calleeToken() const
+{
+    JS_ASSERT(type_ == IonFrame_JS);
+    return ((IonJSFrameLayout *) current_)->calleeToken();
+}
+
+bool
+IonFrameIterator::hasScript() const
+{
+    return type_ == IonFrame_JS;
+}
+
+JSScript *
+IonFrameIterator::script() const
+{
+    JS_ASSERT(hasScript());
+    CalleeToken token = calleeToken();
+    switch (CalleeTokenGetTag(token)) {
+      case CalleeToken_Script:
+        return CalleeTokenToScript(token);
+      case CalleeToken_Function:
+      {
+        JSFunction *fun = CalleeTokenToFunction(token);
+        JSScript *script = fun->maybeScript();
+        JS_ASSERT(script);
+        return script;
+      }
+      default:
+        JS_NOT_REACHED("invalid tag");
+        return NULL;
+    }
 }
 
 size_t
@@ -174,14 +254,28 @@ IonFrameIterator::operator++()
     return *this;
 }
 
+uint8 **
+IonFrameIterator::returnAddressPtr()
+{
+    return current()->returnAddressPtr();
+}
+
 void
 ion::HandleException(ResumeFromException *rfe)
 {
     JSContext *cx = GetIonContext()->cx;
 
     IonFrameIterator iter(JS_THREAD_DATA(cx)->ionTop);
-    while (iter.type() != IonFrame_Entry)
+    while (iter.type() != IonFrame_Entry) {
+        if (iter.type() == IonFrame_JS) {
+            IonJSFrameLayout *fp = iter.jsFrame();
+            CalleeToken token = fp->calleeToken();
+            if (CalleeTokenGetTag(token) == CalleeToken_InvalidationRecord)
+                Foreground::delete_<InvalidationRecord>(CalleeTokenToInvalidationRecord(token));
+        }
+
         ++iter;
+    }
 
     rfe->stackPointer = iter.fp();
 }
