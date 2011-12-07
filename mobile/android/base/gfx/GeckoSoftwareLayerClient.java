@@ -125,8 +125,11 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         super.setLayerController(layerController);
 
         layerController.setRoot(mTileLayer);
-        if (mGeckoViewport != null)
+        if (mGeckoViewport != null) {
             layerController.setViewportMetrics(mGeckoViewport);
+            layerController.notifyPanZoomControllerOfGeometryChange(false);
+        }
+
         geometryChanged();
         GeckoAppShell.registerGeckoEventListener("Viewport:Update", this);
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateLater", this);
@@ -166,6 +169,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
                                 controller.setPageSize(mGeckoViewport.getPageSize());
                         } else {
                             controller.setViewportMetrics(mGeckoViewport);
+                            controller.notifyPanZoomControllerOfGeometryChange(true);
                         }
                     }
                 });
