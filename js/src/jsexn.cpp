@@ -860,17 +860,16 @@ exn_toSource(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    JSObject *obj = ToObject(cx, &vp[1]);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
 
-    if (!obj->getProperty(cx, cx->runtime->atomState.nameAtom, vp))
+    Value nameVal;
+    JSString *name;
+    if (!obj->getProperty(cx, cx->runtime->atomState.nameAtom, &nameVal) ||
+        !(name = js_ValueToString(cx, nameVal))) {
         return false;
-
-    JSString *name = js_ValueToString(cx, *vp);
-    if (!name)
-        return false;
-    vp->setString(name);
+    }
 
     Value messageVal;
     JSString *message;
@@ -925,7 +924,7 @@ exn_toSource(JSContext *cx, uintN argc, Value *vp)
     JSString *str = sb.finishString();
     if (!str)
         return false;
-    vp->setString(str);
+    args.rval().setString(str);
     return true;
 }
 #endif
