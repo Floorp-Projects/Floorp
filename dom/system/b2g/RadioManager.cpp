@@ -88,7 +88,7 @@ PostToRIL(JSContext *cx, uintN argc, jsval *vp)
 
   jsval v = JS_ARGV(cx, vp)[0];
 
-  nsAutoPtr<RilMessage> rm(new RilMessage());
+  nsAutoPtr<RilRawData> rm(new RilRawData());
   JSAutoByteString abs;
   void *data;
   size_t size;
@@ -123,7 +123,7 @@ PostToRIL(JSContext *cx, uintN argc, jsval *vp)
     return false;
   }
 
-  if (size > RilMessage::DATA_SIZE) {
+  if (size > RilRawData::MAX_DATA_SIZE) {
     JS_ReportError(cx, "Passed-in data is too large");
     return false;
   }
@@ -131,8 +131,8 @@ PostToRIL(JSContext *cx, uintN argc, jsval *vp)
   rm->mSize = size;
   memcpy(rm->mData, data, size);
 
-  RilMessage *tosend = rm.forget();
-  JS_ALWAYS_TRUE(SendRilMessage(&tosend));
+  RilRawData *tosend = rm.forget();
+  JS_ALWAYS_TRUE(SendRilRawData(&tosend));
   return true;
 }
 
@@ -152,14 +152,14 @@ class RILReceiver : public RilConsumer
 {
   class DispatchRILEvent : public WorkerTask {
   public:
-    DispatchRILEvent(RilMessage *aMessage)
+    DispatchRILEvent(RilRawData *aMessage)
       : mMessage(aMessage)
     { }
 
     virtual bool RunTask(JSContext *aCx);
 
   private:
-    nsAutoPtr<RilMessage> mMessage;
+    nsAutoPtr<RilRawData> mMessage;
   };
 
 public:
@@ -167,7 +167,7 @@ public:
     : mDispatcher(aDispatcher)
   { }
 
-  virtual void MessageReceived(RilMessage *aMessage) {
+  virtual void MessageReceived(RilRawData *aMessage) {
     nsRefPtr<DispatchRILEvent> dre(new DispatchRILEvent(aMessage));
     mDispatcher->PostTask(dre);
   }
