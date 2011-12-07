@@ -114,6 +114,7 @@ endif
 
 GENERATE_CACHE = 1
 
+include $(topsrcdir)/toolkit/mozapps/installer/signing.mk
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
 ifeq (bundle, $(MOZ_FS_LAYOUT))

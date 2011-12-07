@@ -78,6 +78,16 @@ UNPACKAGE	= "$(PACKAGE_BASE_DIR)/$(PACKAGE)"
 endif
 endif
 
+include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/toolkit/mozapps/installer/signing.mk
+include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
+
+ifdef MOZ_EXTERNAL_SIGNING_FORMAT
+# We can't use signcode on mar files
+MOZ_EXTERNAL_SIGNING_FORMAT := $(filter-out signcode,$(MOZ_EXTERNAL_SIGNING_FORMAT))
+MOZ_EXTERNAL_SIGNING_FORMAT := mar $(MOZ_EXTERNAL_SIGNING_FORMAT)
+endif
+
 complete-patch::
 ifeq ($(OS_TARGET), WINNT)
 	test -f $(UNPACKAGE)
@@ -89,6 +99,9 @@ endif
 	  $(srcdir)/make_full_update.sh \
 	  "$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).complete.mar" \
 	  "$(PACKAGE_DIR)"
+ifdef MOZ_SIGN_PACKAGE_CMD
+	$(MOZ_SIGN_PACKAGE_CMD) "$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).complete.mar"
+endif
 
 partial-patch::
 	mkdir -p $(STAGE_DIR)
@@ -98,6 +111,6 @@ partial-patch::
 	  "$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).partial.$(SRC_BUILD_ID)-$(DST_BUILD_ID).mar" \
 	  "$(SRC_BUILD)" \
 	  "$(DST_BUILD)"
-
-include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
+ifdef MOZ_SIGN_PACKAGE_CMD
+	$(MOZ_SIGN_PACKAGE_CMD) "$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).partial.$(SRC_BUILD_ID)-$(DST_BUILD_ID).mar"
+endif
