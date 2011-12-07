@@ -5497,15 +5497,14 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
             uint32 slot = propertyTypes->definiteSlot();
             RegisterID reg = frame.tempRegForData(lhs);
             bool isObject = lhs->isTypeKnown();
+            MaybeJump notObject;
+            if (!isObject)
+                notObject = frame.testObject(Assembler::NotEqual, lhs);
 #ifdef JSGC_INCREMENTAL_MJ
             frame.pinReg(reg);
             if (cx->compartment->needsBarrier() && propertyTypes->needsBarrier(cx)) {
                 /* Write barrier. */
-                Jump j;
-                if (isObject)
-                    j = masm.testGCThing(Address(reg, JSObject::getFixedSlotOffset(slot)));
-                else
-                    j = masm.jump();
+                Jump j = masm.testGCThing(Address(reg, JSObject::getFixedSlotOffset(slot)));
                 stubcc.linkExit(j, Uses(0));
                 stubcc.leave();
                 stubcc.masm.addPtr(Imm32(JSObject::getFixedSlotOffset(slot)),
@@ -5516,8 +5515,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
             frame.unpinReg(reg);
 #endif
             if (!isObject) {
-                Jump notObject = frame.testObject(Assembler::NotEqual, lhs);
-                stubcc.linkExit(notObject, Uses(2));
+                stubcc.linkExit(notObject.get(), Uses(2));
                 stubcc.leave();
                 stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
                 OOL_STUBCALL(STRICT_VARIANT(stubs::SetName), REJOIN_FALLTHROUGH);
