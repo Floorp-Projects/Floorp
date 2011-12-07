@@ -159,6 +159,22 @@ var tests = [function() { ensure_tag_results([uri1, uri2, uri3], "foo"); },
              function() { ensure_tag_results([uri4, uri5, uri6], "BAR MUD"); },
              function() { ensure_tag_results([uri4, uri5, uri6], "Bar Mud"); }];
 
+/**
+ * Properly tags a uri adding it to bookmarks.
+ *
+ * @param aURI
+ *        The nsIURI to tag.
+ * @param aTags
+ *        The tags to add.
+ */
+function tagURI(aURI, aTags) {
+  PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
+                                       aURI,
+                                       PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                       "A title");
+  tagssvc.tagURI(aURI, aTags);
+}
+
 /** 
  * Test bug #408221
  */
@@ -169,15 +185,15 @@ function run_test() {
   prefs.setIntPref("browser.urlbar.search.sources", 3);
   prefs.setIntPref("browser.urlbar.default.behavior", 0);
 
-  tagssvc.tagURI(uri1, ["Foo"]);
-  tagssvc.tagURI(uri2, ["FOO"]);
-  tagssvc.tagURI(uri3, ["foO"]);
-  tagssvc.tagURI(uri4, ["BAR"]);
-  tagssvc.tagURI(uri4, ["MUD"]);
-  tagssvc.tagURI(uri5, ["bar"]);
-  tagssvc.tagURI(uri5, ["mud"]);
-  tagssvc.tagURI(uri6, ["baR"]);
-  tagssvc.tagURI(uri6, ["muD"]);
+  tagURI(uri1, ["Foo"]);
+  tagURI(uri2, ["FOO"]);
+  tagURI(uri3, ["foO"]);
+  tagURI(uri4, ["BAR"]);
+  tagURI(uri4, ["MUD"]);
+  tagURI(uri5, ["bar"]);
+  tagURI(uri5, ["mud"]);
+  tagURI(uri6, ["baR"]);
+  tagURI(uri6, ["muD"]);
 
   tests[0]();
 }
