@@ -121,7 +121,7 @@ function checkInputEmail()
   synthesizeKey("a", {});
   checkInvalidApplies(element);
 
-  sendString("@b.c", element);
+  sendString("@b.c");
   checkValidApplies(element);
 
   synthesizeKey("VK_BACK_SPACE", {});
@@ -151,7 +151,7 @@ function checkInputURL()
   synthesizeKey("h", {});
   checkInvalidApplies(element);
 
-  sendString("ttp://mozilla.org", element);
+  sendString("ttp://mozilla.org");
   checkValidApplies(element);
 
   for (var i=0; i<13; ++i) {

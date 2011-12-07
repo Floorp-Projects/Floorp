@@ -12,8 +12,8 @@
       function test() {
         document.querySelector("div").focus();
         // type a character, then press backspace to delete it
-        sendKey("X", "div1");
-        sendKey("BACK_SPACE", "div1");
+        sendChar("X");
+        sendKey("BACK_SPACE");
         document.documentElement.removeAttribute("class");
       }
     </script>
