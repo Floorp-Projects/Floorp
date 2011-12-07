@@ -712,6 +712,25 @@ nsXMLHttpRequest::GetChannel(nsIChannel **aChannel)
   return NS_OK;
 }
 
+static void LogMessage(const char* aWarning, nsPIDOMWindow* aWindow)
+{
+  nsCOMPtr<nsIDocument> doc;
+  if (aWindow) {
+    doc = do_QueryInterface(aWindow->GetExtantDocument());
+  }
+  nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                  aWarning,
+                                  nsnull,
+                                  0,
+                                  nsnull, // Response URL not kept around
+                                  EmptyString(),
+                                  0,
+                                  0,
+                                  nsIScriptError::warningFlag,
+                                  "DOM",
+                                  doc);
+}
+
 /* readonly attribute nsIDOMDocument responseXML; */
 NS_IMETHODIMP
 nsXMLHttpRequest::GetResponseXML(nsIDOMDocument **aResponseXML)
@@ -728,31 +747,11 @@ nsXMLHttpRequest::GetResponseXML(nsIDOMDocument **aResponseXML)
   }
   if (mWarnAboutMultipartHtml) {
     mWarnAboutMultipartHtml = false;
-    nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
-                                    "HTMLMultipartXHRWarning",
-                                    nsnull,
-                                    0,
-                                    nsnull, // Response URL not kept around
-                                    EmptyString(),
-                                    0,
-                                    0,
-                                    nsIScriptError::warningFlag,
-                                    "DOM",
-                                    mOwner->WindowID());
+    LogMessage("HTMLMultipartXHRWarning", mOwner);
   }
   if (mWarnAboutSyncHtml) {
     mWarnAboutSyncHtml = false;
-    nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
-                                    "HTMLSyncXHRWarning",
-                                    nsnull,
-                                    0,
-                                    nsnull, // Response URL not kept around
-                                    EmptyString(),
-                                    0,
-                                    0,
-                                    nsIScriptError::warningFlag,
-                                    "DOM",
-                                    mOwner->WindowID());
+    LogMessage("HTMLSyncXHRWarning", mOwner);
   }
   return NS_OK;
 }
@@ -1008,6 +1007,13 @@ NS_IMETHODIMP nsXMLHttpRequest::SetResponseType(const nsAString& aResponseType)
   if (!(mState & (XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT |
                   XML_HTTP_REQUEST_HEADERS_RECEIVED)))
     return NS_ERROR_DOM_INVALID_STATE_ERR;
+
+  // sync request is not allowed setting responseType in window context
+  if (mOwner &&
+      !(mState & (XML_HTTP_REQUEST_UNSENT | XML_HTTP_REQUEST_ASYNC))) {
+    LogMessage("ResponseTypeSyncXHRWarning", mOwner);
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  }
 
   // Set the responseType attribute's value to the given value.
   if (aResponseType.IsEmpty()) {
@@ -1528,6 +1534,20 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
   if (method.LowerCaseEqualsLiteral("trace") ||
       method.LowerCaseEqualsLiteral("track")) {
     return NS_ERROR_INVALID_ARG;
+  }
+
+  // sync request is not allowed using withCredential or responseType
+  // in window context
+  if (!async && mOwner &&
+      (mState & XML_HTTP_REQUEST_AC_WITH_CREDENTIALS ||
+       mResponseType != XML_HTTP_RESPONSE_TYPE_DEFAULT)) {
+    if (mState & XML_HTTP_REQUEST_AC_WITH_CREDENTIALS) {
+      LogMessage("WithCredentialsSyncXHRWarning", mOwner);
+    }
+    if (mResponseType != XML_HTTP_RESPONSE_TYPE_DEFAULT) {
+      LogMessage("ResponseTypeSyncXHRWarning", mOwner);
+    }
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
   nsresult rv;
@@ -2931,7 +2951,14 @@ nsXMLHttpRequest::SetWithCredentials(bool aWithCredentials)
   if (XML_HTTP_REQUEST_SENT & mState) {
     return NS_ERROR_FAILURE;
   }
-  
+
+  // sync request is not allowed setting withCredentials in window context
+  if (mOwner &&
+      !(mState & (XML_HTTP_REQUEST_UNSENT | XML_HTTP_REQUEST_ASYNC))) {
+    LogMessage("WithCredentialsSyncXHRWarning", mOwner);
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  }
+
   if (aWithCredentials) {
     mState |= XML_HTTP_REQUEST_AC_WITH_CREDENTIALS;
   }
