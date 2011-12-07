@@ -275,25 +275,25 @@ ToNumber(JSContext *cx, Value *vp)
  * failure.
  */
 JS_ALWAYS_INLINE bool
-ValueToECMAInt32(JSContext *cx, const js::Value &v, int32_t *out)
+ToInt32(JSContext *cx, const js::Value &v, int32_t *out)
 {
     if (v.isInt32()) {
         *out = v.toInt32();
         return true;
     }
-    extern bool ValueToECMAInt32Slow(JSContext *, const js::Value &, int32_t *);
-    return ValueToECMAInt32Slow(cx, v, out);
+    extern bool ToInt32Slow(JSContext *cx, const js::Value &v, int32_t *ip);
+    return ToInt32Slow(cx, v, out);
 }
 
 JS_ALWAYS_INLINE bool
-ValueToECMAUint32(JSContext *cx, const js::Value &v, uint32_t *out)
+ToUint32(JSContext *cx, const js::Value &v, uint32_t *out)
 {
     if (v.isInt32()) {
         *out = (uint32_t)v.toInt32();
         return true;
     }
-    extern bool ValueToECMAUint32Slow(JSContext *, const js::Value &, uint32_t *);
-    return ValueToECMAUint32Slow(cx, v, out);
+    extern bool ToUint32Slow(JSContext *cx, const js::Value &v, uint32_t *ip);
+    return ToUint32Slow(cx, v, out);
 }
 
 /*
@@ -302,14 +302,14 @@ ValueToECMAUint32(JSContext *cx, const js::Value &v, uint32_t *out)
  * side effect, *vp will be mutated to match *out.
  */
 JS_ALWAYS_INLINE bool
-ValueToInt32(JSContext *cx, const js::Value &v, int32_t *out)
+NonstandardToInt32(JSContext *cx, const js::Value &v, int32_t *out)
 {
     if (v.isInt32()) {
         *out = v.toInt32();
         return true;
     }
-    extern bool ValueToInt32Slow(JSContext *, const js::Value &, int32_t *);
-    return ValueToInt32Slow(cx, v, out);
+    extern bool NonstandardToInt32Slow(JSContext *cx, const js::Value &v, int32_t *ip);
+    return NonstandardToInt32Slow(cx, v, out);
 }
 
 /*

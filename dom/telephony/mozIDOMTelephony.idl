@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDOMEventTarget.idl"
+#include "nsIDOMEvent.idl"
 interface nsIDOMEventListener;
 interface mozIDOMTelephonyCall;
 
@@ -73,4 +74,9 @@ interface mozIDOMTelephonyCall : nsIDOMEventTarget {
   attribute nsIDOMEventListener onconnected;
   attribute nsIDOMEventListener ondisconnecting;
   attribute nsIDOMEventListener ondisconnected;
+};
+
+[scriptable, uuid(c8c42b0c-a0dd-4702-9425-a7a80b2075c3)]
+interface mozIDOMTelephonyCallEvent : nsIDOMEvent {
+  readonly attribute mozIDOMTelephonyCall call;
 };

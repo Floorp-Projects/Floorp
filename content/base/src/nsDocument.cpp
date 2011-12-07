@@ -8041,15 +8041,38 @@ nsIDocument::CreateStaticClone(nsISupports* aCloneContainer)
   return clonedDoc.forget();
 }
 
-void
-nsIDocument::ScheduleFrameRequestCallback(nsIFrameRequestCallback* aCallback)
+nsresult
+nsIDocument::ScheduleFrameRequestCallback(nsIFrameRequestCallback* aCallback,
+                                          PRInt32 *aHandle)
 {
+  if (mFrameRequestCallbackCounter == PR_INT32_MAX) {
+    // Can't increment without overflowing; bail out
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  PRInt32 newHandle = ++mFrameRequestCallbackCounter;
+
   bool alreadyRegistered = !mFrameRequestCallbacks.IsEmpty();
-  if (mFrameRequestCallbacks.AppendElement(aCallback) &&
-      !alreadyRegistered && mPresShell && IsEventHandlingEnabled()) {
+  FrameRequest *request =
+    mFrameRequestCallbacks.AppendElement(FrameRequest(aCallback, newHandle));
+  NS_ASSERTION(request, "This is supposed to be infallible!");
+  if (!alreadyRegistered && mPresShell && IsEventHandlingEnabled()) {
     mPresShell->GetPresContext()->RefreshDriver()->
       ScheduleFrameRequestCallbacks(this);
   }
+
+  *aHandle = newHandle;
+  return NS_OK;
+}
+
+void
+nsIDocument::CancelFrameRequestCallback(PRInt32 aHandle)
+{
+  // mFrameRequestCallbacks is stored sorted by handle
+  mFrameRequestCallbacks.RemoveElementSorted(aHandle);
+
+  // Not going to worry about unscheduling our refresh driver
+  // callback.  It'll just be a no-op when it happens, if we have no
+  // more frame request callbacks.
 }
 
 nsresult

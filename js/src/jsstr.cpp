@@ -430,7 +430,7 @@ ThisToStringForStringProto(JSContext *cx, Value *vp)
         return NULL;
     }
 
-    JSString *str = js_ValueToString(cx, vp[1]);
+    JSString *str = ToStringSlow(cx, vp[1]);
     if (!str)
         return NULL;
     vp[1].setString(str);
@@ -679,7 +679,7 @@ str_localeCompare(JSContext *cx, uintN argc, Value *vp)
     if (argc == 0) {
         vp->setInt32(0);
     } else {
-        JSString *thatStr = js_ValueToString(cx, vp[2]);
+        JSString *thatStr = ToString(cx, vp[2]);
         if (!thatStr)
             return false;
         if (cx->localeCallbacks && cx->localeCallbacks->localeCompare) {
@@ -1401,7 +1401,7 @@ class RegExpGuard
         /* Build RegExp from pattern string. */
         JSString *opt;
         if (optarg < argc) {
-            opt = js_ValueToString(cx, vp[2 + optarg]);
+            opt = ToString(cx, vp[2 + optarg]);
             if (!opt)
                 return NULL;
         } else {
@@ -1789,7 +1789,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
             return false;
 
         /* root repstr: rdata is on the stack, so scanned by conservative gc. */
-        JSString *repstr = ValueToString_TestForStringInline(cx, args.rval());
+        JSString *repstr = ToString(cx, args.rval());
         if (!repstr)
             return false;
         rdata.repstr = repstr->ensureLinear(cx);
@@ -2095,7 +2095,7 @@ str_replace_flat_lambda(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata
     if (!Invoke(cx, rdata.args))
         return false;
 
-    JSString *repstr = js_ValueToString(cx, args.rval());
+    JSString *repstr = ToString(cx, args.rval());
     if (!repstr)
         return false;
 
@@ -2472,7 +2472,7 @@ js::str_split(JSContext *cx, uintN argc, Value *vp)
             if (!matcher.reset(reobj))
                 return false;
         } else {
-            JSString *sep = js_ValueToString(cx, vp[2]);
+            JSString *sep = ToString(cx, vp[2]);
             if (!sep)
                 return false;
             vp[2].setString(sep);
@@ -2587,7 +2587,7 @@ str_concat(JSContext *cx, uintN argc, Value *vp)
 
     Value *argv = JS_ARGV(cx, vp);
     for (uintN i = 0; i < argc; i++) {
-        JSString *str2 = js_ValueToString(cx, argv[i]);
+        JSString *str2 = ToString(cx, argv[i]);
         if (!str2)
             return false;
 
@@ -2890,7 +2890,7 @@ js_String(JSContext *cx, uintN argc, Value *vp)
 
     JSString *str;
     if (argc > 0) {
-        str = js_ValueToString(cx, argv[0]);
+        str = ToString(cx, argv[0]);
         if (!str)
             return false;
     } else {
@@ -3218,7 +3218,7 @@ js_ValueToPrintable(JSContext *cx, const Value &v, JSAutoByteString *bytes, bool
 {
     JSString *str;
 
-    str = (asSource ? js_ValueToSource : js_ValueToString)(cx, v);
+    str = (asSource ? js_ValueToSource : ToString)(cx, v);
     if (!str)
         return NULL;
     str = js_QuoteString(cx, str, 0);
@@ -3228,8 +3228,11 @@ js_ValueToPrintable(JSContext *cx, const Value &v, JSAutoByteString *bytes, bool
 }
 
 JSString *
-js_ValueToString(JSContext *cx, const Value &arg)
+js::ToStringSlow(JSContext *cx, const Value &arg)
 {
+    /* As with ToObjectSlow, callers must verify that |arg| isn't a string. */
+    JS_ASSERT(!arg.isString());
+
     Value v = arg;
     if (!ToPrimitive(cx, JSTYPE_STRING, &v))
         return NULL;
@@ -3288,7 +3291,7 @@ js_ValueToSource(JSContext *cx, const Value &v)
 
             return js_NewStringCopyN(cx, js_negzero_ucNstr, 2);
         }
-        return js_ValueToString(cx, v);
+        return ToString(cx, v);
     }
 
     Value rval = NullValue();
@@ -3301,7 +3304,7 @@ js_ValueToSource(JSContext *cx, const Value &v)
             return NULL;
     }
 
-    return js_ValueToString(cx, rval);
+    return ToString(cx, rval);
 }
 
 namespace js {

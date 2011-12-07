@@ -2456,9 +2456,9 @@ END_CASE(JSOP_BINDNAME)
 #define BITWISE_OP(OP)                                                        \
     JS_BEGIN_MACRO                                                            \
         int32_t i, j;                                                         \
-        if (!ValueToECMAInt32(cx, regs.sp[-2], &i))                           \
+        if (!ToInt32(cx, regs.sp[-2], &i))                                    \
             goto error;                                                       \
-        if (!ValueToECMAInt32(cx, regs.sp[-1], &j))                           \
+        if (!ToInt32(cx, regs.sp[-1], &j))                                    \
             goto error;                                                       \
         i = i OP j;                                                           \
         regs.sp--;                                                            \
@@ -2607,9 +2607,9 @@ END_CASE(JSOP_GE)
 #define SIGNED_SHIFT_OP(OP)                                                   \
     JS_BEGIN_MACRO                                                            \
         int32_t i, j;                                                         \
-        if (!ValueToECMAInt32(cx, regs.sp[-2], &i))                           \
+        if (!ToInt32(cx, regs.sp[-2], &i))                                    \
             goto error;                                                       \
-        if (!ValueToECMAInt32(cx, regs.sp[-1], &j))                           \
+        if (!ToInt32(cx, regs.sp[-1], &j))                                    \
             goto error;                                                       \
         i = i OP (j & 31);                                                    \
         regs.sp--;                                                            \
@@ -2629,10 +2629,10 @@ END_CASE(JSOP_RSH)
 BEGIN_CASE(JSOP_URSH)
 {
     uint32_t u;
-    if (!ValueToECMAUint32(cx, regs.sp[-2], &u))
+    if (!ToUint32(cx, regs.sp[-2], &u))
         goto error;
     int32_t j;
-    if (!ValueToECMAInt32(cx, regs.sp[-1], &j))
+    if (!ToInt32(cx, regs.sp[-1], &j))
         goto error;
 
     u >>= (j & 31);
@@ -2685,7 +2685,7 @@ BEGIN_CASE(JSOP_ADD)
             if (lIsString) {
                 lstr = lval.toString();
             } else {
-                lstr = js_ValueToString(cx, lval);
+                lstr = ToString(cx, lval);
                 if (!lstr)
                     goto error;
                 regs.sp[-2].setString(lstr);
@@ -2693,7 +2693,7 @@ BEGIN_CASE(JSOP_ADD)
             if (rIsString) {
                 rstr = rval.toString();
             } else {
-                rstr = js_ValueToString(cx, rval);
+                rstr = ToString(cx, rval);
                 if (!rstr)
                     goto error;
                 regs.sp[-1].setString(rstr);
@@ -2799,7 +2799,7 @@ END_CASE(JSOP_NOT)
 BEGIN_CASE(JSOP_BITNOT)
 {
     int32_t i;
-    if (!ValueToECMAInt32(cx, regs.sp[-1], &i))
+    if (!ToInt32(cx, regs.sp[-1], &i))
         goto error;
     i = ~i;
     regs.sp[-1].setInt32(i);
@@ -5124,7 +5124,7 @@ BEGIN_CASE(JSOP_XMLTAGEXPR)
     JS_ASSERT(!script->strictModeCode);
 
     Value rval = regs.sp[-1];
-    JSString *str = js_ValueToString(cx, rval);
+    JSString *str = ToString(cx, rval);
     if (!str)
         goto error;
     regs.sp[-1].setString(str);
@@ -5140,7 +5140,7 @@ BEGIN_CASE(JSOP_XMLELTEXPR)
     if (IsXML(rval)) {
         str = js_ValueToXMLString(cx, rval);
     } else {
-        str = js_ValueToString(cx, rval);
+        str = ToString(cx, rval);
         if (str)
             str = js_EscapeElementValue(cx, str);
     }
