@@ -79,9 +79,6 @@ public class AboutHomeContent extends LinearLayout {
 
     public AboutHomeContent(Context context, AttributeSet attrs) {
         super(context, attrs);
-
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        inflater.inflate(R.layout.abouthome_content, this);
     }
 
     private static final String LOGTAG = "GeckoAboutHome";
