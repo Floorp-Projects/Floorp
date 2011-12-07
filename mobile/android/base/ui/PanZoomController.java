@@ -43,6 +43,7 @@ import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.gfx.RectUtils;
+import org.mozilla.gecko.gfx.ViewportMetrics;
 import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
@@ -750,6 +751,36 @@ public class PanZoomController
             else
                 displacement += velocity;
         }
+    }
+
+    /* Returns the nearest viewport metrics with no overscroll visible. */
+    private ViewportMetrics getValidViewportMetrics() {
+        ViewportMetrics viewportMetrics = new ViewportMetrics(mController.getViewportMetrics());
+
+        /* First, we adjust the zoom factor so that we can make no overscrolled area visible. */
+        float zoomFactor = viewportMetrics.getZoomFactor();
+        FloatSize pageSize = viewportMetrics.getPageSize();
+        RectF viewport = viewportMetrics.getViewport();
+
+        float minZoomFactor = 0.0f;
+        if (viewport.width() > pageSize.width) {
+            float scaleFactor = viewport.width() / pageSize.width;
+            minZoomFactor = (float)Math.max(minZoomFactor, zoomFactor * scaleFactor);
+        }
+        if (viewport.height() > pageSize.height) {
+            float scaleFactor = viewport.height() / pageSize.height;
+            minZoomFactor = (float)Math.max(minZoomFactor, zoomFactor * scaleFactor);
+        }
+
+        if (!FloatUtils.fuzzyEquals(minZoomFactor, 0.0f)) {
+            PointF center = new PointF(viewport.width() / 2.0f, viewport.height() / 2.0f);
+            viewportMetrics.scaleTo(minZoomFactor, center);
+        }
+
+        /* Now we pan to the right origin. */
+        viewportMetrics.setViewport(viewportMetrics.getClampedViewport());
+
+        return viewportMetrics;
     }
 
     private class AxisX extends Axis {
