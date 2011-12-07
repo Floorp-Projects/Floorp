@@ -59,11 +59,6 @@ var TestObserver = {
             do_check_eq(expectedData[0], subject.queryElementAt(0, Ci.nsISupportsPRInt64));
             do_check_eq(expectedData[1], subject.queryElementAt(1, Ci.nsISupportsPRInt64));
             break;
-        case "before-expireOldEntries":
-        case "expireOldEntries":
-            do_check_true(subject instanceof Ci.nsISupportsPRInt64);
-            do_check_true(subject.data > 0);
-            break;
         default:
             do_throw("Unhandled notification: " + data + " / " + topic);
     }
@@ -83,15 +78,6 @@ function countAllEntries() {
     let numEntries = stmt.row.numEntries;
     stmt.finalize();
     return numEntries;
-}
-
-function triggerExpiration() {
-    // We can't easily fake a "daily idle" event, so for testing purposes form
-    // history listens for another notification to trigger an immediate
-    // expiration.
-    var os = Cc["@mozilla.org/observer-service;1"].
-             getService(Ci.nsIObserverService);
-    os.notifyObservers(null, "formhistory-expire-now", null);
 }
 
 function run_test() {
@@ -194,17 +180,6 @@ expectedNotification = "removeEntriesByTimeframe";
 expectedBeforeNotification = "before-" + expectedNotification;
 expectedData = [10, 99999999999];
 fh.removeEntriesByTimeframe(expectedData[0], expectedData[1]);
-do_check_eq(expectedNotification, null);
-do_check_eq(expectedBeforeNotification, null);
-
-/* ========== 9 ========== */
-testnum++;
-testdesc = "expireOldEntries";
-
-expectedNotification = "expireOldEntries";
-expectedBeforeNotification = "before-" + expectedNotification;
-expectedData = null; // TestObserver checks expiryDate > 0
-triggerExpiration();
 do_check_eq(expectedNotification, null);
 do_check_eq(expectedBeforeNotification, null);
 
