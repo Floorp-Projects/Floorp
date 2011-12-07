@@ -52,27 +52,11 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/TreePanel.jsm");
 Cu.import("resource:///modules/devtools/CssRuleView.jsm");
-
-const INSPECTOR_INVISIBLE_ELEMENTS = {
-  "head": true,
-  "base": true,
-  "basefont": true,
-  "isindex": true,
-  "link": true,
-  "meta": true,
-  "script": true,
-  "style": true,
-  "title": true,
-};
+Cu.import("resource:///modules/highlighter.jsm");
+Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 
 // Inspector notifications dispatched through the nsIObserverService.
 const INSPECTOR_NOTIFICATIONS = {
-  // Fires once the Inspector highlights an element in the page.
-  HIGHLIGHTING: "inspector-highlighting",
-
-  // Fires once the Inspector stops highlighting any element.
-  UNHIGHLIGHTING: "inspector-unhighlighting",
-
   // Fires once the Inspector completes the initialization and opens up on
   // screen.
   OPENED: "inspector-opened",
@@ -298,8 +282,11 @@ InspectorUI.prototype = {
 
     this.progressListener = new InspectorProgressListener(this);
 
+    this.chromeWin.addEventListener("keypress", this, false);
+
     // initialize the highlighter
-    this.initializeHighlighter();
+    this.highlighter = new Highlighter(this.chromeWin);
+    this.highlighterReady();
   },
 
   /**
@@ -333,17 +320,6 @@ InspectorUI.prototype = {
   initTools: function IUI_initTools()
   {
     // Extras go here.
-  },
-
-  /**
-   * Initialize highlighter.
-   */
-  initializeHighlighter: function IUI_initializeHighlighter()
-  {
-    this.highlighter = new Highlighter(this);
-    this.browser.addEventListener("keypress", this, true);
-    this.highlighter.highlighterContainer.addEventListener("keypress", this, true);
-    this.highlighterReady();
   },
 
   /**
@@ -419,8 +395,9 @@ InspectorUI.prototype = {
       this.tabbrowser.tabContainer.removeEventListener("TabSelect", this, false);
     }
 
+    this.chromeWin.removeEventListener("keypress", this, false);
+
     this.stopInspecting();
-    this.browser.removeEventListener("keypress", this, true);
 
     this.saveToolState(this.winID);
     this.toolsDo(function IUI_toolsHide(aTool) {
@@ -431,9 +408,6 @@ InspectorUI.prototype = {
     this.hideSidebar();
 
     if (this.highlighter) {
-      this.highlighter.highlighterContainer.removeEventListener("keypress",
-                                                                this,
-                                                                true);
       this.highlighter.destroy();
       this.highlighter = null;
     }
@@ -470,12 +444,10 @@ InspectorUI.prototype = {
       this.treePanel.closeEditor();
 
     this.inspectToolbutton.checked = true;
-    this.highlighter.attachInspectListeners();
 
     this.inspecting = true;
     this.toolsDim(true);
-    this.highlighter.veilContainer.removeAttribute("locked");
-    this.highlighter.nodeInfo.container.removeAttribute("locked");
+    this.highlighter.unlock();
   },
 
   /**
@@ -491,21 +463,15 @@ InspectorUI.prototype = {
     }
 
     this.inspectToolbutton.checked = false;
-    // Detach event listeners from content window and child windows to disable
-    // highlighting. We still want to be notified if the user presses "ESCAPE"
-    // to close the inspector, or "RETURN" to unlock the node, so we don't 
-    // remove the "keypress" event until the highlighter is removed.
-    this.highlighter.detachInspectListeners();
 
     this.inspecting = false;
     this.toolsDim(false);
-    if (this.highlighter.node) {
-      this.select(this.highlighter.node, true, true, !aPreventScroll);
+    if (this.highlighter.getNode()) {
+      this.select(this.highlighter.getNode(), true, true, !aPreventScroll);
     } else {
       this.select(null, true, true);
     }
-    this.highlighter.veilContainer.setAttribute("locked", true);
-    this.highlighter.nodeInfo.container.setAttribute("locked", true);
+    this.highlighter.lock();
   },
 
   /**
@@ -530,7 +496,7 @@ InspectorUI.prototype = {
     if (forceUpdate || aNode != this.selection) {
       this.selection = aNode;
       if (!this.inspecting) {
-        this.highlighter.highlightNode(this.selection);
+        this.highlighter.highlight(this.selection);
       }
     }
 
@@ -549,7 +515,7 @@ InspectorUI.prototype = {
    */
   nodeChanged: function IUI_nodeChanged(aUpdater)
   {
-    this.highlighter.highlight();
+    this.highlighter.invalidateSize();
     this.toolsOnChanged(aUpdater);
   },
 
@@ -561,6 +527,20 @@ InspectorUI.prototype = {
     // Setup the InspectorStore or restore state
     this.initializeStore();
 
+    let self = this;
+
+    this.highlighter.addListener("locked", function() {
+      self.stopInspecting();
+    });
+
+    this.highlighter.addListener("unlocked", function() {
+      self.startInspecting();
+    });
+
+    this.highlighter.addListener("nodeselected", function() {
+      self.select(self.highlighter.getNode(), false, false);
+    });
+
     if (this.store.getValue(this.winID, "inspecting")) {
       this.startInspecting();
     }
@@ -570,6 +550,8 @@ InspectorUI.prototype = {
     this.win.focus();
     Services.obs.notifyObservers({wrappedJSObject: this},
                                  INSPECTOR_NOTIFICATIONS.OPENED, null);
+
+    this.highlighter.highlight();
   },
 
   /**
@@ -633,74 +615,6 @@ InspectorUI.prototype = {
         switch (event.keyCode) {
           case this.chromeWin.KeyEvent.DOM_VK_ESCAPE:
             this.closeInspectorUI(false);
-            event.preventDefault();
-            event.stopPropagation();
-            break;
-          case this.chromeWin.KeyEvent.DOM_VK_RETURN:
-            this.toggleInspection();
-            event.preventDefault();
-            event.stopPropagation();
-            break;
-          case this.chromeWin.KeyEvent.DOM_VK_LEFT:
-            let node;
-            if (this.selection) {
-              node = this.selection.parentNode;
-            } else {
-              node = this.defaultSelection;
-            }
-            if (node && this.highlighter.isNodeHighlightable(node)) {
-              this.inspectNode(node, true);
-            }
-            event.preventDefault();
-            event.stopPropagation();
-            break;
-          case this.chromeWin.KeyEvent.DOM_VK_RIGHT:
-            if (this.selection) {
-              // Find the first child that is highlightable.
-              for (let i = 0; i < this.selection.childNodes.length; i++) {
-                node = this.selection.childNodes[i];
-                if (node && this.highlighter.isNodeHighlightable(node)) {
-                  break;
-                }
-              }
-            } else {
-              node = this.defaultSelection;
-            }
-            if (node && this.highlighter.isNodeHighlightable(node)) {
-              this.inspectNode(node, true);
-            }
-            event.preventDefault();
-            event.stopPropagation();
-            break;
-          case this.chromeWin.KeyEvent.DOM_VK_UP:
-            if (this.selection) {
-              // Find a previous sibling that is highlightable.
-              node = this.selection.previousSibling;
-              while (node && !this.highlighter.isNodeHighlightable(node)) {
-                node = node.previousSibling;
-              }
-            } else {
-              node = this.defaultSelection;
-            }
-            if (node && this.highlighter.isNodeHighlightable(node)) {
-              this.inspectNode(node, true);
-            }
-            event.preventDefault();
-            event.stopPropagation();
-            break;
-          case this.chromeWin.KeyEvent.DOM_VK_DOWN:
-            if (this.selection) {
-              // Find a next sibling that is highlightable.
-              node = this.selection.nextSibling;
-              while (node && !this.highlighter.isNodeHighlightable(node)) {
-                node = node.nextSibling;
-              }
-            } else {
-              node = this.defaultSelection;
-            }
-            if (node && this.highlighter.isNodeHighlightable(node)) {
-              this.inspectNode(node, true);
-            }
             event.preventDefault();
             event.stopPropagation();
             break;
@@ -826,76 +740,11 @@ InspectorUI.prototype = {
   inspectNode: function IUI_inspectNode(aNode, aScroll)
   {
     this.select(aNode, true, true);
-    this.highlighter.highlightNode(aNode, { scroll: aScroll });
-  },
-
-  /**
-   * Find an element from the given coordinates. This method descends through
-   * frames to find the element the user clicked inside frames.
-   *
-   * @param DOMDocument aDocument the document to look into.
-   * @param integer aX
-   * @param integer aY
-   * @returns Node|null the element node found at the given coordinates.
-   */
-  elementFromPoint: function IUI_elementFromPoint(aDocument, aX, aY)
-  {
-    let node = aDocument.elementFromPoint(aX, aY);
-    if (node && node.contentDocument) {
-      if (node instanceof Ci.nsIDOMHTMLIFrameElement) {
-        let rect = node.getBoundingClientRect();
-
-        // Gap between the iframe and its content window.
-        let [offsetTop, offsetLeft] = this.getIframeContentOffset(node);
-
-        aX -= rect.left + offsetLeft;
-        aY -= rect.top + offsetTop;
-
-        if (aX < 0 || aY < 0) {
-          // Didn't reach the content document, still over the iframe.
-          return node;
-        }
-      }
-      if (node instanceof Ci.nsIDOMHTMLIFrameElement ||
-          node instanceof Ci.nsIDOMHTMLFrameElement) {
-        let subnode = this.elementFromPoint(node.contentDocument, aX, aY);
-        if (subnode) {
-          node = subnode;
-        }
-      }
-    }
-    return node;
+    this.highlighter.highlight(aNode, aScroll);
   },
 
   ///////////////////////////////////////////////////////////////////////////
   //// Utility functions
-
-  /**
-   * Returns iframe content offset (iframe border + padding).
-   * Note: this function shouldn't need to exist, had the platform provided a
-   * suitable API for determining the offset between the iframe's content and
-   * its bounding client rect. Bug 626359 should provide us with such an API.
-   *
-   * @param aIframe
-   *        The iframe.
-   * @returns array [offsetTop, offsetLeft]
-   *          offsetTop is the distance from the top of the iframe and the
-   *            top of the content document.
-   *          offsetLeft is the distance from the left of the iframe and the
-   *            left of the content document.
-   */
-  getIframeContentOffset: function IUI_getIframeContentOffset(aIframe)
-  {
-    let style = aIframe.contentWindow.getComputedStyle(aIframe, null);
-
-    let paddingTop = parseInt(style.getPropertyValue("padding-top"));
-    let paddingLeft = parseInt(style.getPropertyValue("padding-left"));
-
-    let borderTop = parseInt(style.getPropertyValue("border-top-width"));
-    let borderLeft = parseInt(style.getPropertyValue("border-left-width"));
-
-    return [borderTop + paddingTop, borderLeft + paddingLeft];
-  },
 
   /**
    * Retrieve the unique ID of a window object.
@@ -1252,6 +1101,12 @@ InspectorUI.prototype = {
             this.getToolbarButtonId(tool.id)).removeAttribute("checked");
       }.bind(this));
     }
+    if (this.store.getValue(this.winID, "inspecting")) {
+      this.highlighter.unlock();
+    } else {
+      this.highlighter.lock();
+    }
+
     Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.STATE_RESTORED, null);
   },
 
