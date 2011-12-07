@@ -961,16 +961,36 @@ MarkChildren(JSTracer *trc, JSScript *script)
         script->types->trace(trc);
 }
 
+const Shape *
+MarkShapeChildrenAcyclic(JSTracer *trc, const Shape *shape)
+{
+    /*
+     * This function is used by the cycle collector to ensure that we use O(1)
+     * stack space when building the CC graph. It must avoid traversing through
+     * an unbounded number of shapes before reaching an object. (Objects are
+     * added to the CC graph, so reaching one terminates the recursion.)
+     *
+     * Traversing through shape->base() will use bounded space. All but one of
+     * the fields of BaseShape is an object, and objects terminate the
+     * recursion. An owned BaseShape may point to an unowned BaseShape, but
+     * unowned BaseShapes will not point to any other shapes. So the recursion
+     * is bounded.
+     */
+    MarkBaseShapeUnbarriered(trc, shape->base(), "base");
+    MarkIdUnbarriered(trc, shape->maybePropid(), "propid");
+    return shape->previous();
+}
+
 void
 MarkChildren(JSTracer *trc, const Shape *shape)
 {
-restart:
-    MarkBaseShapeUnbarriered(trc, shape->base(), "base");
-    MarkIdUnbarriered(trc, shape->maybePropid(), "propid");
-
-    shape = shape->previous();
-    if (shape)
-        goto restart;
+    /*
+     * We ignore the return value of MarkShapeChildrenAcyclic and use
+     * shape->previous() instead so that the return value has MarkablePtr type.
+     */
+    MarkShapeChildrenAcyclic(trc, shape);
+    if (shape->previous())
+        MarkShape(trc, shape->previous(), "parent");
 }
 
 void

@@ -197,6 +197,13 @@ void
 MarkChildren(JSTracer *trc, JSXML *xml);
 
 /*
+ * Marks all the children of a shape except the parent, which avoids using
+ * unbounded stack space. Returns the parent.
+ */
+const Shape *
+MarkShapeChildrenAcyclic(JSTracer *trc, const Shape *shape);
+
+/*
  * Use function overloading to decide which function should be called based on
  * the type of the object. The static type is used at compile time to link to
  * the corresponding Mark/IsMarked function.
