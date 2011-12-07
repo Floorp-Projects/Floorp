@@ -1707,32 +1707,39 @@ class TypedArrayTemplate
 
   protected:
     static NativeType
+    nativeFromDouble(double d)
+    {
+        if (!ArrayTypeIsFloatingPoint() && JS_UNLIKELY(JSDOUBLE_IS_NaN(d)))
+            return NativeType(int32(0));
+        if (TypeIsFloatingPoint<NativeType>())
+            return NativeType(d);
+        if (TypeIsUnsigned<NativeType>())
+            return NativeType(js_DoubleToECMAUint32(d));
+        return NativeType(js_DoubleToECMAInt32(d));
+    }
+
+    static NativeType
     nativeFromValue(JSContext *cx, const Value &v)
     {
         if (v.isInt32())
             return NativeType(v.toInt32());
 
-        if (v.isDouble()) {
-            double d = v.toDouble();
-            if (!ArrayTypeIsFloatingPoint() && JS_UNLIKELY(JSDOUBLE_IS_NaN(d)))
-                return NativeType(int32(0));
-            if (TypeIsFloatingPoint<NativeType>())
-                return NativeType(d);
-            if (TypeIsUnsigned<NativeType>())
-                return NativeType(js_DoubleToECMAUint32(d));
-            return NativeType(js_DoubleToECMAInt32(d));
-        }
+        if (v.isDouble())
+            return nativeFromDouble(v.toDouble());
 
-        if (v.isPrimitive() && !v.isMagic()) {
+        /*
+         * The condition guarantees that holes and undefined values
+         * are treated identically.
+         */
+        if (v.isPrimitive() && !v.isMagic() && !v.isUndefined()) {
             jsdouble dval;
             JS_ALWAYS_TRUE(ToNumber(cx, v, &dval));
-            return NativeType(dval);
+            return nativeFromDouble(dval);
         }
 
-        if (ArrayTypeIsFloatingPoint())
-            return NativeType(js_NaN);
-
-        return NativeType(int32(0));
+        return ArrayTypeIsFloatingPoint()
+               ? NativeType(js_NaN)
+               : NativeType(int32(0));
     }
 
     static bool
@@ -1751,10 +1758,13 @@ class TypedArrayTemplate
 
             const Value *src = ar->getDenseArrayElements();
 
+            /*
+             * It is valid to skip the hole check here because nativeFromValue
+             * treats a hole as undefined.
+             */
             for (uintN i = 0; i < len; ++i)
                 *dest++ = nativeFromValue(cx, *src++);
         } else {
-            // slow path
             Value v;
 
             for (uintN i = 0; i < len; ++i) {

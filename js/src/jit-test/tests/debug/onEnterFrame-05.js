@@ -2,7 +2,7 @@
 
 var g = newGlobal('new-compartment');
 g.eval("function f() { return 1; }\n");
-var N = g.N = RUNLOOP + 2;
+var N = g.N = 11;
 g.eval("function h() {\n" +
        "    for (var i = 0; i < N; i += f()) {}\n" +
        "}");

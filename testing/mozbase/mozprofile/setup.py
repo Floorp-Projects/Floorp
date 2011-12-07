@@ -42,12 +42,12 @@ import os
 import sys
 from setuptools import setup, find_packages
 
-version = '0.1b2'
+version = '0.1'
 
 # we only support python 2 right now
 assert sys.version_info[0] == 2
 
-deps = ["ManifestDestiny == 0.5.4"]
+deps = ["ManifestDestiny >= 0.5.4"]
 # version-dependent dependencies
 try:
     import json

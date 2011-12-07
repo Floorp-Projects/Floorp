@@ -1,4 +1,4 @@
-for (var i = 0; i < HOTLOOP+4; ++i) {
+for (var i = 0; i < 12; ++i) {
     var o;
 
     o = new Object(Object);
