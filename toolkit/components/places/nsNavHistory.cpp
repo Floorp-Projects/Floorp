@@ -258,7 +258,7 @@ void GetTagsSqlFragment(PRInt64 aTagsFolder,
     _sqlFragment.Assign(NS_LITERAL_CSTRING(
          "(SELECT GROUP_CONCAT(t_t.title, ',') "
            "FROM moz_bookmarks b_t "
-           "JOIN moz_bookmarks t_t ON t_t.id = b_t.parent  "
+           "JOIN moz_bookmarks t_t ON t_t.id = +b_t.parent  "
            "WHERE b_t.fk = ") + aRelation + NS_LITERAL_CSTRING(" "
            "AND t_t.parent = ") +
            nsPrintfCString("%lld", aTagsFolder) + NS_LITERAL_CSTRING(" "
