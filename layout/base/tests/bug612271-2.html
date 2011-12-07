@@ -8,7 +8,7 @@
   var t = document.querySelector("textarea");
   t.focus();
   t.selectionStart = t.selectionEnd = t.value.length;
-  sendKey('ENTER', "target");
+  sendKey('ENTER');
   document.body.appendChild(document.createTextNode(t.selectionStart + " - " + t.selectionEnd));
 </script>
 </body>

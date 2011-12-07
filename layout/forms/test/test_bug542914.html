@@ -59,13 +59,14 @@ function runTests(callback, type) {
 
   // Make sure that the control accepts input events without explicit initialization
   is(c.value, "", "Control is empty initially");
-  sendChar("a", c);
+  c.focus();
+  sendChar("a");
   is(c.value, "a", "Control accepts input without explicit initialization");
   // Make sure that the control retains its caret position
   c.focus();
   c.blur();
   c.focus();
-  sendChar("b", c);
+  sendChar("b");
   is(c.value, "ab", "Control retains caret position after being re-focused");
 
   var d = document.createElement("input");
@@ -76,8 +77,9 @@ function runTests(callback, type) {
   // Make sure dynamically injected inputs work as expected
   is(d.value, "", "Dynamic control's initial value should be empty");
   d.value = "new";
+  d.focus();
   is(d.value, "new", "Dynamic control's value can be set before initialization");
-  sendChar("x", d);
+  sendChar("x");
   is(d.value, "xnew", "Dynamic control accepts keyboard input without explicit initialization");
   $("display").removeChild(d);
   is(d.value, "xnew", "Dynamic control retains value after being removed from the document");

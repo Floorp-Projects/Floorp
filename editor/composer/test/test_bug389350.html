@@ -15,9 +15,7 @@ function runTest() {
   e.contentDocument.designMode='on';
   e.style.display='block';
   e.focus();
-  sendChar('a', e.contentDocument);
-  sendChar('b', e.contentDocument);
-  sendChar('c', e.contentDocument);
+  sendString('abc');
   var expected = "<head></head><body>abc</body>";
   var result = e.contentDocument.documentElement.innerHTML;
   is(result, expected, "iframe with designmode on had incorrect content");
