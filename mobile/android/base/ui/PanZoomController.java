@@ -112,7 +112,8 @@ public class PanZoomController
         0.99309f,   /* 15 */
     };
 
-    private Timer mFlingTimer;
+    /* The timer that handles flings or bounces. */
+    private Timer mAnimationTimer;
     /* Information about the X axis. */
     private AxisX mX;
     /* Information about the Y axis. */
@@ -251,10 +252,7 @@ public class PanZoomController
     private boolean onTouchStart(MotionEvent event) {
         // user is taking control of movement, so stop
         // any auto-movement we have going
-        if (mFlingTimer != null) {
-            mFlingTimer.cancel();
-            mFlingTimer = null;
-        }
+        stopAnimationTimer();
         mOverridePanning = false;
 
         switch (mState) {
@@ -477,16 +475,34 @@ public class PanZoomController
         mX.displace(); mY.displace();
         updatePosition();
 
-        if (mFlingTimer != null)
-            mFlingTimer.cancel();
+        stopAnimationTimer();
 
         boolean stopped = stopped();
         mX.startFling(stopped); mY.startFling(stopped);
 
-        mFlingTimer = new Timer();
-        mFlingTimer.scheduleAtFixedRate(new TimerTask() {
-            public void run() { mController.post(new FlingRunnable()); }
+        startAnimationTimer(new FlingRunnable());
+    }
+
+    /* Starts the fling or bounce animation. */
+    private void startAnimationTimer(final Runnable runnable) {
+        if (mAnimationTimer != null) {
+            Log.e(LOGTAG, "Attempted to start a new fling without canceling the old one!");
+            stopAnimationTimer();
+        }
+
+        mAnimationTimer = new Timer();
+        mAnimationTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() { mController.post(runnable); }
         }, 0, 1000L/60L);
+    }
+
+    /* Stops the fling or bounce animation. */
+    private void stopAnimationTimer() {
+        if (mAnimationTimer != null) {
+            mAnimationTimer.cancel();
+            mAnimationTimer = null;
+        }
     }
 
     private boolean stopped() {
@@ -557,11 +573,7 @@ public class PanZoomController
 
         private void stop() {
             mState = PanZoomState.NOTHING;
-
-            if (mFlingTimer != null) {
-                mFlingTimer.cancel();
-                mFlingTimer = null;
-            }
+            stopAnimationTimer();
 
             // Force a viewport synchronisation
             mController.setForceRedraw();
