@@ -177,15 +177,12 @@ var Browser = {
   startup: function startup() {
     var self = this;
     
-    try {
     sendMessageToJava({
       gecko: {
         type: "Gecko:Ready"
       }
     });
-    } catch(e) {
-	Cu.reportError("error sending message: " + e);
-    }
+
     try {
       messageManager.loadFrameScript("chrome://browser/content/Util.js", true);
       messageManager.loadFrameScript("chrome://browser/content/forms.js", true);
