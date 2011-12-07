@@ -4,7 +4,11 @@
               style="@style/Screen">
 
     <org.mozilla.gecko.BrowserToolbar android:id="@+id/browser_toolbar"
-                                      style="@style/BrowserToolbar"/>
+                                      style="@style/BrowserToolbar">
+
+        <include layout="@layout/browser_toolbar"/>
+
+    </org.mozilla.gecko.BrowserToolbar>
 
     <RelativeLayout android:id="@+id/gecko_layout"
                     android:layout_width="fill_parent"
@@ -21,7 +25,11 @@
                                             android:layout_width="fill_parent"
                                             android:layout_height="fill_parent"
                                             android:background="#ffffff"
-                                            android:isScrollContainer="true"/>
+                                            android:isScrollContainer="true">
+
+            <include layout="@layout/abouthome_content"/>
+
+        </org.mozilla.gecko.AboutHomeContent>
 
    </RelativeLayout>
 
