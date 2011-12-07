@@ -42,6 +42,7 @@
 #include <QObject>
 #include "nscore.h"
 #include <QThread>
+#include <QEventLoop>
 #include <sys/time.h>
 
 class QGraphicsView;
@@ -106,6 +107,7 @@ private:
   bool mSymbolsLoaded;
   bool mWidgetPainted;
   GeckoThread* mThread;
+  QEventLoop mLoop;
 };
 
 #endif
