@@ -133,7 +133,8 @@ public class PanZoomController
                          * similar to TOUCHING but after starting a pan */
         PANNING_HOLD_LOCKED, /* like PANNING_HOLD, but axis lock still in effect */
         PINCHING,       /* nth touch-start, where n > 1. this mode allows pan and zoom */
-        ANIMATED_ZOOM   /* animated zoom to a new rect */
+        ANIMATED_ZOOM,  /* animated zoom to a new rect */
+        BOUNCING,       /* bouncing back */
     }
 
     private PanZoomState mState;
@@ -142,10 +143,19 @@ public class PanZoomController
     private boolean mOverrideScrollAck;
     private boolean mOverrideScrollPending;
 
+    /* The current frame of the bounce-back animation, or -1 if the animation is not running. */
+    private int mBounceFrame;
+    /*
+     * The viewport metrics that represent the start and end of the bounce-back animation,
+     * respectively.
+     */
+    private ViewportMetrics mBounceStartMetrics, mBounceEndMetrics;
+
     public PanZoomController(LayerController controller) {
         mController = controller;
         mX = new AxisX(); mY = new AxisY();
         mState = PanZoomState.NOTHING;
+        mBounceFrame = -1;
 
         GeckoAppShell.registerGeckoEventListener("Browser:ZoomToRect", this);
         GeckoAppShell.registerGeckoEventListener("Browser:ZoomToPageWidth", this);
@@ -239,7 +249,7 @@ public class PanZoomController
                 mState = PanZoomState.NOTHING;
                 // fall through
             case NOTHING:
-                fling();
+                bounce();
                 break;
             }
         }
@@ -325,7 +335,7 @@ public class PanZoomController
             // the switch into TOUCHING might have happened while the page was
             // snapping back after overscroll. we need to finish the snap if that
             // was the case
-            fling();
+            bounce();
             return false;
         case PANNING:
         case PANNING_LOCKED:
@@ -359,7 +369,7 @@ public class PanZoomController
     private boolean onTouchCancel(MotionEvent event) {
         mState = PanZoomState.NOTHING;
         // ensure we snap back if we're overscrolled
-        fling();
+        bounce();
         return false;
     }
 
@@ -483,6 +493,24 @@ public class PanZoomController
         startAnimationTimer(new FlingRunnable());
     }
 
+    /* Performs a bounce-back animation to the given viewport metrics. */
+    private void bounce(ViewportMetrics metrics) {
+        stopAnimationTimer();
+
+        mBounceFrame = 0;
+        mState = PanZoomState.FLING;
+        mX.setFlingState(Axis.FlingStates.SNAPPING); mY.setFlingState(Axis.FlingStates.SNAPPING);
+        mBounceStartMetrics = mController.getViewportMetrics();
+        mBounceEndMetrics = metrics;
+
+        startAnimationTimer(new BounceRunnable());
+    }
+
+    /* Performs a bounce-back animation to the nearest valid viewport metrics. */
+    private void bounce() {
+        bounce(getValidViewportMetrics());
+    }
+
     /* Starts the fling or bounce animation. */
     private void startAnimationTimer(final Runnable runnable) {
         if (mAnimationTimer != null) {
@@ -538,47 +566,95 @@ public class PanZoomController
         mX.displacement = mY.displacement = 0;
     }
 
+    /* The callback that performs the bounce animation. */
+    private class BounceRunnable implements Runnable {
+        public void run() {
+            /*
+             * The pan/zoom controller might have signaled to us that it wants to abort the
+             * animation by setting the state to PanZoomState.NOTHING. Handle this case and bail
+             * out.
+             */
+            if (mState != PanZoomState.FLING) {
+                finishAnimation();
+                return;
+            }
+
+            /* Perform the next frame of the bounce-back animation. */
+            if (mBounceFrame < EASE_OUT_ANIMATION_FRAMES.length) {
+                advanceBounce();
+                return;
+            }
+
+            /* Finally, if there's nothing else to do, complete the animation and go to sleep. */
+            finishBounce();
+            finishAnimation();
+        }
+
+        /* Performs one frame of a bounce animation. */
+        private void advanceBounce() {
+            float t = EASE_OUT_ANIMATION_FRAMES[mBounceFrame];
+            ViewportMetrics newMetrics = mBounceStartMetrics.interpolate(mBounceEndMetrics, t);
+            mController.setViewportMetrics(newMetrics);
+            mController.notifyLayerClientOfGeometryChange();
+            mBounceFrame++;
+        }
+
+        /* Concludes a bounce animation and snaps the viewport into place. */
+        private void finishBounce() {
+            mController.setViewportMetrics(mBounceEndMetrics);
+            mController.notifyLayerClientOfGeometryChange();
+            mBounceFrame = -1;
+        }
+    }
+
     // The callback that performs the fling animation.
     private class FlingRunnable implements Runnable {
         public void run() {
-            mX.advanceFling(); mY.advanceFling();
-
-            if (!mOverridePanning) {
-                // If both X and Y axes are overscrolled, we have to wait until both axes have stopped
-                // to snap back to avoid a jarring effect.
-                boolean waitingToSnapX = mX.getFlingState() == Axis.FlingStates.WAITING_TO_SNAP;
-                boolean waitingToSnapY = mY.getFlingState() == Axis.FlingStates.WAITING_TO_SNAP;
-                if ((mX.getOverscroll() == Axis.Overscroll.PLUS || mX.getOverscroll() == Axis.Overscroll.MINUS) &&
-                    (mY.getOverscroll() == Axis.Overscroll.PLUS || mY.getOverscroll() == Axis.Overscroll.MINUS))
-                {
-                    if (waitingToSnapX && waitingToSnapY) {
-                        mX.startSnap(); mY.startSnap();
-                    }
-                } else {
-                    if (waitingToSnapX)
-                        mX.startSnap();
-                    if (waitingToSnapY)
-                        mY.startSnap();
-                }
+            /*
+             * The pan/zoom controller might have signaled to us that it wants to abort the
+             * animation by setting the state to PanZoomState.NOTHING. Handle this case and bail
+             * out.
+             */
+            if (mState != PanZoomState.FLING) {
+                finishAnimation();
+                return;
             }
 
-            mX.displace(); mY.displace();
-            updatePosition();
+            /* Advance flings, if necessary. */
+            boolean flingingX = mX.getFlingState() == Axis.FlingStates.FLINGING;
+            boolean flingingY = mY.getFlingState() == Axis.FlingStates.FLINGING;
+            if (flingingX)
+                mX.advanceFling();
+            if (flingingY)
+                mY.advanceFling();
 
-            if (mX.getFlingState() == Axis.FlingStates.STOPPED &&
-                    mY.getFlingState() == Axis.FlingStates.STOPPED) {
-                stop();
+            /* If we're still flinging in any direction, update the origin and finish here. */
+            if (flingingX || flingingY) {
+                mX.displace(); mY.displace();
+                updatePosition();
+                return;
             }
-        }
 
-        private void stop() {
-            mState = PanZoomState.NOTHING;
-            stopAnimationTimer();
-
-            // Force a viewport synchronisation
-            mController.setForceRedraw();
-            mController.notifyLayerClientOfGeometryChange();
+            /*
+             * Perform a bounce-back animation if overscrolled, unless panning is being overridden
+             * (which happens e.g. when the user is panning an iframe).
+             */
+            boolean overscrolledX = mX.getOverscroll() != Axis.Overscroll.NONE;
+            boolean overscrolledY = mY.getOverscroll() != Axis.Overscroll.NONE;
+            if (!mOverridePanning && (overscrolledX || overscrolledY))
+                bounce();
+            else
+                finishAnimation();
         }
+    }
+
+    private void finishAnimation() {
+        mState = PanZoomState.NOTHING;
+        stopAnimationTimer();
+
+        // Force a viewport synchronisation
+        mController.setForceRedraw();
+        mController.notifyLayerClientOfGeometryChange();
     }
 
     private float computeElasticity(float excess, float viewportLength) {
