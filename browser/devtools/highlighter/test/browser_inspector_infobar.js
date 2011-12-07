@@ -17,8 +17,8 @@ function test()
     waitForFocus(setupInfobarTest, content);
   }, true);
 
-  let style = "body{width:100%;height: 100%} div {position: absolute;height: 100px;width: 500px}#bottom {bottom: 0px}#vertical {height: 100%}";
-  let html = "<style>" + style + "</style><div id=vertical></div><div id=top class='class1 class2'></div><div id=bottom></div>"
+  let style = "body{width:100%;height: 100%} div {position: absolute;height: 100px;width: 500px}#bottom {bottom: 0px}#vertical {height: 100%}#farbottom{bottom: -200px}";
+  let html = "<style>" + style + "</style><div id=vertical></div><div id=top class='class1 class2'></div><div id=bottom></div><div id=farbottom></div>"
 
   content.location = "data:text/html," + encodeURIComponent(html);
 
@@ -29,6 +29,7 @@ function test()
       {node: doc.querySelector("#vertical"), position: "overlap", tag: "DIV", id: "#vertical", classes: ""},
       {node: doc.querySelector("#bottom"), position: "top", tag: "DIV", id: "#bottom", classes: ""},
       {node: doc.querySelector("body"), position: "overlap", tag: "BODY", id: "", classes: ""},
+      {node: doc.querySelector("#farbottom"), position: "top", tag: "DIV", id: "#farbottom", classes: ""},
     ]
 
     for (let i = 0; i < nodes.length; i++) {
@@ -47,10 +48,8 @@ function test()
 
     cursor = 0;
     executeSoon(function() {
-      Services.obs.addObserver(nodeSelected,
-        InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING, false);
-
       InspectorUI.inspectNode(nodes[0].node);
+      nodeSelected();
     });
   }
 
@@ -61,8 +60,6 @@ function test()
       cursor++;
       if (cursor >= nodes.length) {
 
-        Services.obs.removeObserver(nodeSelected,
-          InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
         Services.obs.addObserver(finishUp,
           InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
 
@@ -72,6 +69,7 @@ function test()
       } else {
         let node = nodes[cursor].node;
         InspectorUI.inspectNode(node);
+        nodeSelected();
       }
     });
   }
