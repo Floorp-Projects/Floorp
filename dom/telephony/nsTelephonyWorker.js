@@ -45,6 +45,7 @@ const DEBUG = true; // set to false to suppress debug messages
 const TELEPHONYWORKER_CONTRACTID = "@mozilla.org/telephony/worker;1";
 const TELEPHONYWORKER_CID        = Components.ID("{2d831c8d-6017-435b-a80c-e5d422810cea}");
 
+const DOM_CALL_READYSTATE_DISCONNECTED = "disconnected";
 
 function nsTelephonyWorker() {
   this.worker = new ChromeWorker("resource://gre/modules/ril_worker.js");
@@ -52,7 +53,13 @@ function nsTelephonyWorker() {
   this.worker.onmessage = this.onmessage.bind(this);
 
   this._callbacks = [];
-  this.initialState = {};
+  this.currentState = {
+    signalStrength: null,
+    operator:       null,
+    radioState:     null,
+    cardState:      null,
+    currentCalls:   {}
+  };
 }
 nsTelephonyWorker.prototype = {
 
@@ -86,35 +93,39 @@ nsTelephonyWorker.prototype = {
     debug("Received message: " + JSON.stringify(message));
     let value;
     switch (message.type) {
+      case "callstatechange":
       case "signalstrengthchange":
-        this.initialState.signalStrength = message.signalStrength;
-        value = message.signalStrength;
+        this.currentState.signalStrength = message.signalStrength;
         break;
       case "operatorchange":
-        this.initialState.operator = message.operator;
-        value = message.operator;
+        this.currentState.operator = message.operator;
         break;
-      case "onradiostatechange":
-        this.initialState.radioState = message.radioState;
-        value = message.radioState;
+      case "radiostatechange":
+        this.currentState.radioState = message.radioState;
         break;
       case "cardstatechange":
-        this.initialState.cardState = message.cardState;
-        value = message.cardState;
+        this.currentState.cardState = message.cardState;
         break;
       case "callstatechange":
-        this.initialState.callState = message.callState;
-        value = message.callState;
+        // Reuse the message object as the value here since there's more to
+        // the call state than just the callState integer.
+        if (message.callState == DOM_CALL_READYSTATE_DISCONNECTED) {
+          delete this.currentState.callState[message.callIndex];
+        } else {
+          this.currentState.callState[value.callIndex] = message;
+        }
         break;
       default:
         // Got some message from the RIL worker that we don't know about.
+        return;
     }
+    let methodname = "on" + message.type;
     this._callbacks.forEach(function (callback) {
       let method = callback[methodname];
       if (typeof method != "function") {
         return;
       }
-      method.call(callback, value);
+      method.call(callback, message);
     });
   },
 
@@ -124,11 +135,24 @@ nsTelephonyWorker.prototype = {
 
   // nsITelephone
 
-  initialState: null,
+  currentState: null,
 
   dial: function dial(number) {
     debug("Dialing " + number);
     this.worker.postMessage({type: "dial", number: number});
+  },
+
+  hangUp: function hangUp(callIndex) {
+    debug("Hanging up call no. " + callIndex);
+    this.worker.postMessage({type: "hangUp", callIndex: callIndex});
+  },
+
+  answerCall: function answerCall() {
+    this.worker.postMessage({type: "answerCall"});
+  },
+
+  rejectCall: function rejectCall() {
+    this.worker.postMessage({type: "rejectCall"});
   },
 
   _callbacks: null,
