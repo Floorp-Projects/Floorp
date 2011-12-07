@@ -50,27 +50,6 @@
  *  7 - FRAMED_LINK
  **/
 #define EXCLUDED_VISIT_TYPES "0, 4, 7, 8"
-/**
- * Trigger checks to ensure that at least one bookmark is still using a keyword
- * when any bookmark is deleted.  If there are no more bookmarks using it, the
- * keyword is deleted.
- */
-#define CREATE_KEYWORD_VALIDITY_TRIGGER NS_LITERAL_CSTRING( \
-  "CREATE TRIGGER moz_bookmarks_beforedelete_v1_trigger " \
-  "BEFORE DELETE ON moz_bookmarks FOR EACH ROW " \
-  "WHEN OLD.keyword_id NOT NULL " \
-  "BEGIN " \
-    "DELETE FROM moz_keywords " \
-    "WHERE id = OLD.keyword_id " \
-    "AND NOT EXISTS ( " \
-      "SELECT id " \
-      "FROM moz_bookmarks " \
-      "WHERE keyword_id = OLD.keyword_id " \
-      "AND id <> OLD.id " \
-      "LIMIT 1 " \
-    ");" \
-  "END" \
-)
 
 /**
  * This triggers update visit_count and last_visit_date based on historyvisits
