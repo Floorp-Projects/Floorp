@@ -7,7 +7,7 @@
 
 /* The tracer should properly parse JSOP_TABLESWITCHX instructions. */
 var x = 1;
-for (i = 0; i < HOTLOOP; i++) {
+for (i = 0; i < 8; i++) {
     switch (x) {
     case 2:
         try {} catch (e) {}

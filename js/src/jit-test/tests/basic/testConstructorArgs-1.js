@@ -3,7 +3,7 @@ function f(a, b) {
     assertEq(b, 'x');
 }
 
-for (var x = 0; x < RUNLOOP; ++x) {
+for (var x = 0; x < 9; ++x) {
     f.prototype = {};
     var obj = new f(x, 'x');
     assertEq(obj.a, x);

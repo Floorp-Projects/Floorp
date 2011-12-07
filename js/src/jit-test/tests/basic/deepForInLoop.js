@@ -1,5 +1,5 @@
 function deepForInLoop() {
-  // NB: the number of props set in C is arefully tuned to match HOTLOOP = 2.
+  // NB: the number of props set in C is arefully tuned to match 8 = 2.
   function C(){this.p = 1, this.q = 2}
   C.prototype = {p:1, q:2, r:3, s:4, t:5};
   var o = new C;

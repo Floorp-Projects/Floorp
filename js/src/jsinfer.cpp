@@ -2749,7 +2749,12 @@ TypeObject::getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force
 static inline void
 UpdatePropertyType(JSContext *cx, TypeSet *types, JSObject *obj, const Shape *shape, bool force)
 {
+    types->setOwnProperty(cx, false);
+    if (!shape->writable())
+        types->setOwnProperty(cx, true);
+
     if (shape->hasGetterValue() || shape->hasSetterValue()) {
+        types->setOwnProperty(cx, true);
         types->addType(cx, Type::UnknownType());
     } else if (shape->hasDefaultGetterOrIsMethod() && shape->hasSlot()) {
         const Value &value = obj->nativeGetSlot(shape->slot());
@@ -2758,11 +2763,10 @@ UpdatePropertyType(JSContext *cx, TypeSet *types, JSObject *obj, const Shape *sh
          * Don't add initial undefined types for singleton properties that are
          * not collated into the JSID_VOID property (see propertySet comment).
          */
-        if (!force && value.isUndefined())
-            return;
-
-        Type type = GetValueType(cx, value);
-        types->addType(cx, type);
+        if (force || !value.isUndefined()) {
+            Type type = GetValueType(cx, value);
+            types->addType(cx, type);
+        }
     }
 }
 
@@ -4409,17 +4413,21 @@ public:
         : TypeConstraint("clearDefiniteSetter"), object(object)
     {}
 
-    void newType(JSContext *cx, TypeSet *source, Type type) {
+    void newPropertyState(JSContext *cx, TypeSet *source)
+    {
         if (!object->newScript)
             return;
         /*
          * Clear out the newScript shape and definite property information from
-         * an object if the source type set could be a setter (its type set
-         * becomes unknown).
+         * an object if the source type set could be a setter or could be
+         * non-writable, both of which are indicated by the source type set
+         * being marked as configured.
          */
-        if (!(object->flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED) && type.isUnknown())
+        if (!(object->flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED) && source->isOwnProperty(true))
             object->clearNewScript(cx);
     }
+
+    void newType(JSContext *cx, TypeSet *source, Type type) {}
 };
 
 /*
@@ -4571,6 +4579,23 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
             if (id == id_prototype(cx) || id == id___proto__(cx) || id == id_constructor(cx))
                 return false;
 
+            /*
+             * Ensure that if the properties named here could have a setter or
+             * a permanent property in any transitive prototype, the definite
+             * properties get cleared from the shape.
+             */
+            JSObject *parent = type->proto;
+            while (parent) {
+                TypeObject *parentObject = parent->getType(cx);
+                if (parentObject->unknownProperties())
+                    return false;
+                TypeSet *parentTypes = parentObject->getProperty(cx, id, false);
+                if (!parentTypes || parentTypes->isOwnProperty(true))
+                    return false;
+                parentTypes->add(cx, cx->typeLifoAlloc().new_<TypeConstraintClearDefiniteSetter>(type));
+                parent = parent->getProto();
+            }
+
             unsigned slotSpan = obj->slotSpan();
             if (!DefineNativeProperty(cx, obj, id, UndefinedValue(), NULL, NULL,
                                       JSPROP_ENUMERATE, 0, 0, DNP_SKIP_TYPE)) {
@@ -4600,20 +4625,6 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
                 /* Maximum number of definite properties added. */
                 return false;
             }
-
-            /*
-             * Ensure that if the properties named here could have a setter in
-             * the direct prototype (and thus its transitive prototypes), the
-             * definite properties get cleared from the shape.
-             */
-            TypeObject *parentObject = type->proto->getType(cx);
-            if (parentObject->unknownProperties())
-                return false;
-            TypeSet *parentTypes = parentObject->getProperty(cx, id, false);
-            if (!parentTypes || parentTypes->unknown())
-                return false;
-            parentObject->getFromPrototypes(cx, id, parentTypes);
-            parentTypes->add(cx, cx->typeLifoAlloc().new_<TypeConstraintClearDefiniteSetter>(type));
         } else if (op == JSOP_FUNCALL && uses->u.which == GET_ARGC(pc) - 1) {
             /*
              * Passed as the first parameter to Function.call. Follow control

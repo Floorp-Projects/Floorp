@@ -78,6 +78,7 @@
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
+#include "jsstrinlines.h"
 
 #include "vm/Stack-inl.h"
 
@@ -2455,9 +2456,6 @@ date_toDateString(JSContext *cx, uintN argc, Value *vp)
 }
 
 #if JS_HAS_TOSOURCE
-#include <string.h>
-#include "jsnum.h"
-
 static JSBool
 date_toSource(JSContext *cx, uintN argc, Value *vp)
 {
@@ -2468,23 +2466,14 @@ date_toSource(JSContext *cx, uintN argc, Value *vp)
     if (!obj)
         return ok;
 
-    double utctime = obj->getDateUTCTime().toNumber();
-
-    ToCStringBuf cbuf;
-    char *numStr = NumberToCString(cx, &cbuf, utctime);
-    if (!numStr) {
-        JS_ReportOutOfMemory(cx);
+    StringBuffer sb(cx);
+    if (!sb.append("(new Date(") || !NumberValueToStringBuffer(cx, obj->getDateUTCTime(), sb) ||
+        !sb.append("))"))
+    {
         return false;
     }
 
-    char *bytes = JS_smprintf("(new %s(%s))", js_Date_str, numStr);
-    if (!bytes) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-
-    JSString *str = JS_NewStringCopyZ(cx, bytes);
-    cx->free_(bytes);
+    JSString *str = sb.finishString();
     if (!str)
         return false;
     args.rval().setString(str);

@@ -16,5 +16,5 @@ g.eval("(" + function () {
     } + ")();");
 
 function f(i) { debugger; }
-for (var i = 0; i < HOTLOOP + 2; i++)
+for (var i = 0; i < 10; i++)
     assertEq(f(i), i);

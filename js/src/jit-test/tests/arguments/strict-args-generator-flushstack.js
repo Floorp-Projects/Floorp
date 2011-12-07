@@ -8,7 +8,7 @@ function upToTen()
 {
   "use strict";
   eval("args = arguments;");
-  for (var i = 0; i < RUNLOOP; i++)
+  for (var i = 0; i < 9; i++)
     yield i;
 }
 
@@ -21,7 +21,7 @@ for (var v in gen)
   i++;
 }
 
-assertEq(i, RUNLOOP);
+assertEq(i, 9);
 
 assertEq(Object.prototype.toString.call(args), "[object Arguments]");
 assertEq(args.length, 0);

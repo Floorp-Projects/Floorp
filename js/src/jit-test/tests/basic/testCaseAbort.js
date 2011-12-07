@@ -14,6 +14,3 @@ function testCaseAbort()
   return "" + r;
 }
 assertEq(testCaseAbort(), "10");
-checkStats({
-  recorderAborted: 0
-});
