@@ -748,23 +748,8 @@ public class PanZoomController
                 setFlingState(FlingStates.WAITING_TO_SNAP);
         }
 
-        // Advances a fling animation by one step.
+        /* Advances a fling animation by one step. */
         public void advanceFling() {
-            switch (mFlingState) {
-            case FLINGING:
-                scroll();
-                return;
-            case WAITING_TO_SNAP:
-                // We don't do anything until the controller switches us into the snapping state.
-                return;
-            case SNAPPING:
-                snap();
-                return;
-            }
-        }
-
-        // Performs one frame of a scroll operation if applicable.
-        private void scroll() {
             // If we aren't overscrolled, just apply friction.
             float excess = getExcess();
             if (disableSnap || FloatUtils.fuzzyEquals(excess, 0.0f)) {
@@ -787,46 +772,6 @@ public class PanZoomController
                 velocity = 0.0f;
                 setFlingState(FlingStates.WAITING_TO_SNAP);
             }
-        }
-
-        // Starts a snap-into-place operation.
-        public void startSnap() {
-            switch (getOverscroll()) {
-            case MINUS:
-                mSnapFrame = 0;
-                mSnapEndPos = getExcess();
-                break;
-            case PLUS:
-                mSnapFrame = 0;
-                mSnapEndPos = -getExcess();
-                break;
-            default:
-                // no overscroll to deal with, so we're done
-                setFlingState(FlingStates.STOPPED);
-                return;
-            }
-
-            displacement = 0;
-            mSnapPos = 0.0f;
-            setFlingState(FlingStates.SNAPPING);
-        }
-
-        // Performs one frame of a snap-into-place operation.
-        private void snap() {
-            mSnapFrame++;
-            if (mSnapFrame == EASE_OUT_ANIMATION_FRAMES.length) {
-                mSnapFrame = -1;
-                displacement += mSnapEndPos - mSnapPos;
-                mSnapPos = mSnapEndPos;
-
-                setFlingState(FlingStates.STOPPED);
-                return;
-            }
-
-            float t = EASE_OUT_ANIMATION_FRAMES[mSnapFrame];
-            float newSnapPos = FloatUtils.interpolate(0.0f, mSnapEndPos, t);
-            displacement += newSnapPos - mSnapPos;
-            mSnapPos = newSnapPos;
         }
 
         // Performs displacement of the viewport position according to the current velocity.
