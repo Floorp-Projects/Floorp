@@ -632,6 +632,12 @@ JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fpArg)
     return &fp->callee();
 }
 
+JS_PUBLIC_API(JSFunction *)
+JS_GetScriptFunction(JSContext *cx, JSScript *script)
+{
+    return script->function();
+}
+
 JS_PUBLIC_API(JSObject *)
 JS_GetParentOrScopeChain(JSContext *cx, JSObject *obj)
 {
