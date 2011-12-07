@@ -336,7 +336,7 @@ nsNavHistoryResultNode::GetTags(nsAString& aTags) {
     "FROM ( "
       "SELECT t.title AS tag_title "
       "FROM moz_bookmarks b "
-      "JOIN moz_bookmarks t ON t.id = b.parent "
+      "JOIN moz_bookmarks t ON t.id = +b.parent "
       "WHERE b.fk = (SELECT id FROM moz_places WHERE url = :page_url) "
         "AND t.parent = :tags_folder "
       "ORDER BY t.title COLLATE NOCASE ASC "
