@@ -3892,6 +3892,20 @@ nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback,
 }
 
 NS_IMETHODIMP
+nsGlobalWindow::MozCancelRequestAnimationFrame(PRInt32 aHandle)
+{
+  FORWARD_TO_INNER(MozCancelRequestAnimationFrame, (aHandle),
+                   NS_ERROR_NOT_INITIALIZED);
+
+  if (!mDoc) {
+    return NS_OK;
+  }
+
+  mDoc->CancelFrameRequestCallback(aHandle);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsGlobalWindow::GetMozAnimationStartTime(PRInt64 *aTime)
 {
   FORWARD_TO_INNER(GetMozAnimationStartTime, (aTime), NS_ERROR_NOT_INITIALIZED);

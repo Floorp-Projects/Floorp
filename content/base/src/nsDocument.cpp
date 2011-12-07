@@ -8064,6 +8064,17 @@ nsIDocument::ScheduleFrameRequestCallback(nsIFrameRequestCallback* aCallback,
   return NS_OK;
 }
 
+void
+nsIDocument::CancelFrameRequestCallback(PRInt32 aHandle)
+{
+  // mFrameRequestCallbacks is stored sorted by handle
+  mFrameRequestCallbacks.RemoveElementSorted(aHandle);
+
+  // Not going to worry about unscheduling our refresh driver
+  // callback.  It'll just be a no-op when it happens, if we have no
+  // more frame request callbacks.
+}
+
 nsresult
 nsDocument::GetStateObject(nsIVariant** aState)
 {
