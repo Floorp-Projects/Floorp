@@ -1332,24 +1332,19 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
      */
     JS_ASSERT(fun->isInterpreted());
     JS_ASSERT(!fun->isFlatClosure());
-    JSObject *obj = fun;
 
+    JSObject *parent;
     if (fun->isNullClosure()) {
-        obj = CloneFunctionObjectIfNotSingleton(f.cx, fun, &f.fp()->scopeChain());
-        if (!obj)
-            THROWV(NULL);
+        parent = &f.fp()->scopeChain();
     } else {
-        JSObject *parent = GetScopeChainFast(f.cx, f.fp(), JSOP_DEFLOCALFUN,
-                                             JSOP_DEFLOCALFUN_LENGTH);
+        parent = GetScopeChainFast(f.cx, f.fp(), JSOP_DEFLOCALFUN,
+                                   JSOP_DEFLOCALFUN_LENGTH);
         if (!parent)
             THROWV(NULL);
-
-        if (obj->toFunction()->environment() != parent) {
-            obj = CloneFunctionObjectIfNotSingleton(f.cx, fun, parent);
-            if (!obj)
-                THROWV(NULL);
-        }
     }
+    JSObject *obj = CloneFunctionObjectIfNotSingleton(f.cx, fun, parent);
+    if (!obj)
+        THROWV(NULL);
 
     JS_ASSERT_IF(f.script()->compileAndGo, obj->getGlobal() == fun->getGlobal());
 

@@ -4207,24 +4207,19 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
     LOAD_FUNCTION(SLOTNO_LEN);
     JS_ASSERT(fun->isInterpreted());
     JS_ASSERT(!fun->isFlatClosure());
-    JSObject *obj = fun;
 
+    JSObject *parent;
     if (fun->isNullClosure()) {
-        obj = CloneFunctionObjectIfNotSingleton(cx, fun, &regs.fp()->scopeChain());
-        if (!obj)
-            goto error;
+        parent = &regs.fp()->scopeChain();
     } else {
-        JSObject *parent = GetScopeChainFast(cx, regs.fp(), JSOP_DEFLOCALFUN,
-                                             JSOP_DEFLOCALFUN_LENGTH);
+        parent = GetScopeChainFast(cx, regs.fp(), JSOP_DEFLOCALFUN,
+                                   JSOP_DEFLOCALFUN_LENGTH);
         if (!parent)
             goto error;
-
-        if (obj->toFunction()->environment() != parent) {
-            obj = CloneFunctionObjectIfNotSingleton(cx, fun, parent);
-            if (!obj)
-                goto error;
-        }
     }
+    JSObject *obj = CloneFunctionObjectIfNotSingleton(cx, fun, parent);
+    if (!obj)
+        goto error;
 
     JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
 
