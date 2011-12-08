@@ -686,7 +686,7 @@ var mozl10n = {};
 
 })(mozl10n);
 
-define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types/basic', 'gcli/types/javascript', 'gcli/types/node', 'gcli/cli', 'gcli/ui/display'], function(require, exports, module) {
+define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types/basic', 'gcli/types/javascript', 'gcli/types/node', 'gcli/cli', 'gcli/commands/help', 'gcli/ui/display'], function(require, exports, module) {
 
   // The API for use by command authors
   exports.addCommand = require('gcli/canon').addCommand;
@@ -699,6 +699,7 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
   require('gcli/types/javascript').startup();
   require('gcli/types/node').startup();
   require('gcli/cli').startup();
+  require('gcli/commands/help').startup();
 
   var Requisition = require('gcli/cli').Requisition;
   var Display = require('gcli/ui/display').Display;
@@ -1029,7 +1030,8 @@ canon.removeCommand = function removeCommand(commandOrName) {
  * @param name The name of the command to retrieve
  */
 canon.getCommand = function getCommand(name) {
-  return commands[name];
+  // '|| undefined' is to silence 'reference to undefined property' warnings
+  return commands[name] || undefined;
 };
 
 /**
@@ -1190,7 +1192,15 @@ exports.createEvent = function(name) {
 
 var dom = {};
 
+/**
+ * XHTML namespace
+ */
 dom.NS_XHTML = 'http://www.w3.org/1999/xhtml';
+
+/**
+ * XUL namespace
+ */
+dom.NS_XUL = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
 
 /**
  * Create an HTML or XHTML element depending on whether the document is HTML
@@ -1249,7 +1259,7 @@ dom.setInnerHtml = function(elem, html) {
     dom.clearElement(elem);
     html = '<div xmlns="' + dom.NS_XHTML + '">' + html + '</div>';
     var range = elem.ownerDocument.createRange();
-    var child = range.createContextualFragment(html).childNodes[0];
+    var child = range.createContextualFragment(html).firstChild;
     while (child.hasChildNodes()) {
       elem.appendChild(child.firstChild);
     }
@@ -4527,7 +4537,7 @@ Requisition.prototype.exec = function(input) {
   }).bind(this);
 
   try {
-    var context = new ExecutionContext(this.environment, this.document);
+    var context = new ExecutionContext(this);
     var reply = command.exec(args, context);
 
     if (reply != null && reply.isPromise) {
@@ -5012,9 +5022,10 @@ exports.Requisition = Requisition;
 /**
  * Functions and data related to the execution of a command
  */
-function ExecutionContext(environment, document) {
-  this.environment = environment;
-  this.document = document;
+function ExecutionContext(requisition) {
+  this.requisition = requisition;
+  this.environment = requisition.environment;
+  this.document = requisition.document;
 }
 
 ExecutionContext.prototype.createPromise = function() {
@@ -5035,6 +5046,269 @@ define('gcli/promise', ['require', 'exports', 'module' ], function(require, expo
   exports.Promise = Promise;
 
 });
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gcli/commands/help', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/util', 'gcli/l10n', 'gcli/ui/domtemplate', 'text!gcli/commands/help.css', 'text!gcli/commands/help_intro.html', 'text!gcli/commands/help_list.html', 'text!gcli/commands/help_man.html'], function(require, exports, module) {
+var help = exports;
+
+
+var canon = require('gcli/canon');
+var util = require('gcli/util');
+var l10n = require('gcli/l10n');
+
+var Templater = require('gcli/ui/domtemplate').Templater;
+
+var helpCss = require('text!gcli/commands/help.css');
+var helpStyle = undefined;
+var helpIntroHtml = require('text!gcli/commands/help_intro.html');
+var helpIntroTemplate = undefined;
+var helpListHtml = require('text!gcli/commands/help_list.html');
+var helpListTemplate = undefined;
+var helpManHtml = require('text!gcli/commands/help_man.html');
+var helpManTemplate = undefined;
+
+/**
+ * 'help' command
+ * We delay definition of helpCommandSpec until help.startup() to ensure that
+ * the l10n strings have been loaded
+ */
+var helpCommandSpec;
+
+/**
+ * Registration and de-registration.
+ */
+help.startup = function() {
+
+  helpCommandSpec = {
+    name: 'help',
+    description: l10n.lookup('helpDesc'),
+    manual: l10n.lookup('helpManual'),
+    params: [
+      {
+        name: 'search',
+        type: 'string',
+        description: l10n.lookup('helpSearchDesc'),
+        manual: l10n.lookup('helpSearchManual'),
+        defaultValue: null
+      }
+    ],
+    returnType: 'html',
+
+    exec: function(args, context) {
+      help.onFirstUseStartup(context.document);
+
+      var match = canon.getCommand(args.search);
+      if (match) {
+        var clone = helpManTemplate.cloneNode(true);
+        new Templater().processNode(clone, getManTemplateData(match, context));
+        return clone;
+      }
+
+      var parent = util.dom.createElement(context.document, 'div');
+      if (!args.search) {
+        parent.appendChild(helpIntroTemplate.cloneNode(true));
+      }
+      parent.appendChild(helpListTemplate.cloneNode(true));
+      new Templater().processNode(parent, getListTemplateData(args, context));
+      return parent;
+    }
+  };
+
+  canon.addCommand(helpCommandSpec);
+};
+
+help.shutdown = function() {
+  canon.removeCommand(helpCommandSpec);
+
+  helpListTemplate = undefined;
+  helpStyle.parentElement.removeChild(helpStyle);
+  helpStyle = undefined;
+};
+
+/**
+ * Called when the command is executed
+ */
+help.onFirstUseStartup = function(document) {
+  if (!helpIntroTemplate) {
+    helpIntroTemplate = util.dom.createElement(document, 'div');
+    util.dom.setInnerHtml(helpIntroTemplate, helpIntroHtml);
+  }
+  if (!helpListTemplate) {
+    helpListTemplate = util.dom.createElement(document, 'div');
+    util.dom.setInnerHtml(helpListTemplate, helpListHtml);
+  }
+  if (!helpManTemplate) {
+    helpManTemplate = util.dom.createElement(document, 'div');
+    util.dom.setInnerHtml(helpManTemplate, helpManHtml);
+  }
+  if (!helpStyle && helpCss != null) {
+    helpStyle = util.dom.importCss(helpCss, document);
+  }
+};
+
+/**
+ * Find an element within the passed element with the class gcli-help-command
+ * and update the requisition to contain this text.
+ */
+function updateCommand(element, context) {
+  context.requisition.update({
+    typed: element.querySelector('.gcli-help-command').textContent
+  });
+}
+
+/**
+ * Find an element within the passed element with the class gcli-help-command
+ * and execute this text.
+ */
+function executeCommand(element, context) {
+  context.requisition.exec({
+    visible: true,
+    typed: element.querySelector('.gcli-help-command').textContent
+  });
+}
+
+/**
+ * Create a block of data suitable to be passed to the help_list.html template
+ */
+function getListTemplateData(args, context) {
+  return {
+    onclick: function(ev) {
+      updateCommand(ev.currentTarget, context);
+    },
+
+    ondblclick: function(ev) {
+      executeCommand(ev.currentTarget, context);
+    },
+
+    getHeading: function() {
+      return args.search == null ?
+              'Available Commands:' :
+              'Commands starting with \'' + args.search + '\':';
+    },
+
+    getMatchingCommands: function() {
+      var matching = canon.getCommands().filter(function(command) {
+        if (args.search && command.name.indexOf(args.search) !== 0) {
+          // Filtered out because they don't match the search
+          return false;
+        }
+        if (!args.search && command.name.indexOf(' ') != -1) {
+          // We don't show sub commands with plain 'help'
+          return false;
+        }
+        return true;
+      });
+      matching.sort();
+      return matching;
+    }
+  };
+}
+
+/**
+ * Create a block of data suitable to be passed to the help_man.html template
+ */
+function getManTemplateData(command, context) {
+  return {
+    command: command,
+
+    onclick: function(ev) {
+      updateCommand(ev.currentTarget, context);
+    },
+
+    getTypeDescription: function(param) {
+      var input = '';
+      if (param.defaultValue === undefined) {
+        input = 'required';
+      }
+      else if (param.defaultValue === null) {
+        input = 'optional';
+      }
+      else {
+        input = param.defaultValue;
+      }
+      return '(' + param.type.name + ', ' + input + ')';
+    }
+  };
+}
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gcli/ui/domtemplate', ['require', 'exports', 'module' ], function(require, exports, module) {
+
+  Components.utils.import("resource:///modules/devtools/Templater.jsm");
+  exports.Templater = Templater;
+
+});
+define("text!gcli/commands/help.css", [], void 0);
+define("text!gcli/commands/help_intro.html", [], "\n" +
+  "<h2>Welcome to GCLI</h2>\n" +
+  "\n" +
+  "<p>GCLI is an experiment to create a highly usable JavaScript command line for developers.</p>\n" +
+  "\n" +
+  "<p>\n" +
+  "  Useful links:\n" +
+  "  <a target='_blank' href='https://github.com/joewalker/gcli'>source</a> (BSD),\n" +
+  "  <a target='_blank' href='https://github.com/joewalker/gcli/blob/master/docs/index.md'>documentation</a> (for users/embedders),\n" +
+  "  <a target='_blank' href='https://wiki.mozilla.org/DevTools/Features/GCLI'>Mozilla feature page</a> (for GCLI in the web console).\n" +
+  "</p>\n" +
+  "");
+
+define("text!gcli/commands/help_list.html", [], "\n" +
+  "<h3>${getHeading()}</h3>\n" +
+  "\n" +
+  "<table>\n" +
+  "  <tr foreach=\"command in ${getMatchingCommands()}\"\n" +
+  "      onclick=\"${onclick}\" ondblclick=\"${ondblclick}\">\n" +
+  "    <th class=\"gcli-help-name\">${command.name}</th>\n" +
+  "    <td class=\"gcli-help-arrow\">&#x2192;</td>\n" +
+  "    <td>\n" +
+  "      ${command.description}\n" +
+  "      <span class=\"gcli-out-shortcut gcli-help-command\">help ${command.name}</span>\n" +
+  "    </td>\n" +
+  "  </tr>\n" +
+  "</table>\n" +
+  "");
+
+define("text!gcli/commands/help_man.html", [], "\n" +
+  "<h3>${command.name}</h3>\n" +
+  "\n" +
+  "<h4 class=\"gcli-help-header\">\n" +
+  "  Synopsis:\n" +
+  "  <span class=\"gcli-help-synopsis\" onclick=\"${onclick}\">\n" +
+  "    <span class=\"gcli-help-command\">${command.name}</span>\n" +
+  "    <span foreach=\"param in ${command.params}\">\n" +
+  "      ${param.defaultValue !== undefined ? '[' + param.name + ']' : param.name}\n" +
+  "    </span>\n" +
+  "  </span>\n" +
+  "</h4>\n" +
+  "\n" +
+  "<h4 class=\"gcli-help-header\">Description:</h4>\n" +
+  "\n" +
+  "<p class=\"gcli-help-description\">\n" +
+  "  ${command.manual || command.description}\n" +
+  "</p>\n" +
+  "\n" +
+  "<h4 class=\"gcli-help-header\">Parameters:</h4>\n" +
+  "\n" +
+  "<ul class=\"gcli-help-parameter\">\n" +
+  "  <li if=\"${command.params.length === 0}\">None</li>\n" +
+  "  <li foreach=\"param in ${command.params}\">\n" +
+  "    <tt>${param.name}</tt> ${getTypeDescription(param)}\n" +
+  "    <br/>\n" +
+  "    ${param.manual || param.description}\n" +
+  "  </li>\n" +
+  "</ul>\n" +
+  "");
+
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
@@ -6983,18 +7257,6 @@ CommandMenu.prototype.onCommandChange = function(ev) {
 
 exports.CommandMenu = CommandMenu;
 
-
-});
-/*
- * Copyright 2009-2011 Mozilla Foundation and contributors
- * Licensed under the New BSD license. See LICENSE.txt or:
- * http://opensource.org/licenses/BSD-3-Clause
- */
-
-define('gcli/ui/domtemplate', ['require', 'exports', 'module' ], function(require, exports, module) {
-
-  Components.utils.import("resource:///modules/devtools/Templater.jsm");
-  exports.Templater = Templater;
 
 });
 define("text!gcli/ui/menu.css", [], void 0);
