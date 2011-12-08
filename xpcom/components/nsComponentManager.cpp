@@ -399,18 +399,7 @@ nsresult nsComponentManagerImpl::Init()
         cl->jar = true;
     }
 
-    for (PRUint32 i = 0; i < sModuleLocations->Length(); ++i) {
-        ComponentLocation& l = sModuleLocations->ElementAt(i);
-        if (!l.jar) {
-            RegisterManifestFile(l.type, l.location, false);
-            continue;
-        }
-
-        nsCOMPtr<nsIZipReader> reader = do_CreateInstance(kZipReaderCID, &rv);
-        rv = reader->Open(l.location);
-        if (NS_SUCCEEDED(rv))
-            RegisterJarManifest(l.type, reader, "chrome.manifest", false);
-    }
+    RereadChromeManifests(false);
 
     nsCategoryManager::GetSingleton()->SuppressNotifications(false);
 
@@ -902,12 +891,12 @@ nsComponentManagerImpl::ManifestCategory(ManifestProcessingContext& cx, int line
 }
 
 void
-nsComponentManagerImpl::RereadChromeManifests()
+nsComponentManagerImpl::RereadChromeManifests(bool aChromeOnly)
 {
     for (PRUint32 i = 0; i < sModuleLocations->Length(); ++i) {
         ComponentLocation& l = sModuleLocations->ElementAt(i);
         if (!l.jar) {
-            RegisterManifestFile(l.type, l.location, true);
+            RegisterManifestFile(l.type, l.location, aChromeOnly);
             continue;
         }
 
@@ -916,7 +905,7 @@ nsComponentManagerImpl::RereadChromeManifests()
         if (NS_SUCCEEDED(rv))
             rv = reader->Open(l.location);
         if (NS_SUCCEEDED(rv))
-            RegisterJarManifest(l.type, reader, "chrome.manifest", true);
+            RegisterJarManifest(l.type, reader, "chrome.manifest", aChromeOnly);
     }
 }
 
