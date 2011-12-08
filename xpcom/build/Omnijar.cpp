@@ -51,6 +51,7 @@ nsIFile *Omnijar::sPath[2] = { nsnull, nsnull };
 nsZipArchive *Omnijar::sReader[2] = { nsnull, nsnull };
 bool Omnijar::sInitialized = false;
 static bool sIsUnified = false;
+static bool sIsNested[2] = { false, false };
 
 static const char *sProp[2] =
     { NS_GRE_DIR, NS_XPCOM_CURRENT_PROCESS_DIR };
@@ -111,6 +112,14 @@ Omnijar::InitOne(nsIFile *aPath, Type aType)
         return;
     }
 
+    nsRefPtr<nsZipHandle> handle;
+    if (NS_SUCCEEDED(nsZipHandle::Init(zipReader, NS_STRINGIFY(OMNIJAR_NAME), getter_AddRefs(handle)))) {
+        zipReader = new nsZipArchive();
+        if (NS_FAILED(zipReader->OpenArchive(handle)))
+            return;
+        sIsNested[aType] = true;
+    }
+
     CleanUpOne(aType);
     sReader[aType] = zipReader;
     NS_IF_ADDREF(sReader[aType]);
@@ -142,12 +151,12 @@ Omnijar::GetReader(nsIFile *aPath)
     bool equals;
     nsresult rv;
 
-    if (sPath[GRE]) {
+    if (sPath[GRE] && !sIsNested[GRE]) {
         rv = sPath[GRE]->Equals(aPath, &equals);
         if (NS_SUCCEEDED(rv) && equals)
             return GetReader(GRE);
     }
-    if (sPath[APP]) {
+    if (sPath[APP] && !sIsNested[APP]) {
         rv = sPath[APP]->Equals(aPath, &equals);
         if (NS_SUCCEEDED(rv) && equals)
             return GetReader(APP);
@@ -173,8 +182,12 @@ Omnijar::GetURIString(Type aType, nsACString &result)
         NS_ENSURE_SUCCESS(rv, rv);
 
         result = "jar:";
+        if (sIsNested[aType])
+            result += "jar:";
         result += omniJarSpec;
         result += "!";
+        if (sIsNested[aType])
+            result += "/" NS_STRINGIFY(OMNIJAR_NAME) "!";
     } else {
         nsCOMPtr<nsIFile> dir;
         nsDirectoryService::gService->Get(SPROP(aType), NS_GET_IID(nsIFile), getter_AddRefs(dir));
