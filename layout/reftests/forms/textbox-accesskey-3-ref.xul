@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/"?>
+<window title="textbox access key tests (see bug 698185)"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	xmlns:html="http://www.w3.org/1999/xhtml">
+  <html:style type="text/css">
+    hbox {
+      margin-top: 0px;
+      padding-top: 0px;
+      font-size: 36px;
+    }
+    label, textbox {
+      -moz-appearance: none;
+      background: inherit;
+      border: none 0px;
+    }
+    label {
+      margin-top: 0px;
+      padding-top: 0px;
+      margin-bottom: 0px;
+      padding-bottom: 0px;
+    }
+    textbox {
+      margin-top: 12px;
+      padding-top: 8px;
+      margin-bottom: 5px;
+      padding-bottom: 9px;
+    }
+  </html:style>
+
+  <hbox align="baseline">
+    <!-- access key in LTR text that follows RTL text (mixed direction) -->
+    <label value="&#x627;&#x644;&#x639;&#x631;&#x628;&#x64a; hello world" accesskey="d"/>
+    <textbox value=""/>
+  </hbox>
+</window>
