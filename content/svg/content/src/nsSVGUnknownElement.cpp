@@ -77,6 +77,7 @@ DOMCI_NODE_DATA(SVGUnknownElement, nsSVGUnknownElement)
 NS_INTERFACE_TABLE_HEAD(nsSVGUnknownElement)
   NS_NODE_INTERFACE_TABLE3(nsSVGUnknownElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGUnknownElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGUnknownElementBase)
 //----------------------------------------------------------------------
 // Implementation
