@@ -80,7 +80,7 @@ public class AwesomeBar extends Activity {
 
         mAwesomeTabs = (AwesomeBarTabs) findViewById(R.id.awesomebar_tabs);
         mAwesomeTabs.setOnUrlOpenListener(new AwesomeBarTabs.OnUrlOpenListener() {
-            public void onUrlOpen(AwesomeBarTabs tabs, String url) {
+            public void onUrlOpen(String url) {
                 openUrlAndFinish(url);
             }
         });
