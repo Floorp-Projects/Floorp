@@ -284,6 +284,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_arginc(JSOp op);
     bool jsop_compare(JSOp op);
     bool jsop_getgname(JSAtom *atom);
+    bool jsop_callgname(JSAtom *atom);
     bool jsop_setgname(JSAtom *atom);
     bool jsop_getelem();
     bool jsop_getelem_dense();

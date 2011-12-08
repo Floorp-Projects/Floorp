@@ -697,18 +697,6 @@ MResumePoint::New(MBasicBlock *block, jsbytecode *pc, MResumePoint *parent)
     return resume;
 }
 
-MResumePoint *
-MResumePoint::NewUnwrapArgs(MBasicBlock *block, uint32 argc, jsbytecode *pc, MResumePoint *parent)
-{
-    JS_ASSERT(JSOp(*pc) == JSOP_CALL);
-
-    MResumePoint *resume = new MResumePoint(block, pc, parent);
-    if (!resume->init(block))
-        return NULL;
-    resume->inheritUnwrapArgs(block, argc);
-    return resume;
-}
-
 MResumePoint::MResumePoint(MBasicBlock *block, jsbytecode *pc, MResumePoint *caller)
   : MNode(block),
     stackDepth_(block->stackDepth()),
@@ -729,24 +717,13 @@ MResumePoint::init(MBasicBlock *block)
 void
 MResumePoint::inherit(MBasicBlock *block)
 {
-    for (size_t i = 0; i < stackDepth(); i++)
-        initOperand(i, block->getSlot(i));
-}
-
-void
-MResumePoint::inheritUnwrapArgs(MBasicBlock *block, uint32 argc)
-{
-    // Note: +1 for |this|.
-    JS_ASSERT(argc + 1 < stackDepth());
-
-    uint32 argStart = stackDepth() - argc - 1;
     for (size_t i = 0; i < stackDepth(); i++) {
-        MDefinition *defn = block->getSlot(i);
-        if (i >= argStart) {
-            MPassArg *arg = block->getSlot(i)->toPassArg();
-            defn = arg->getArgument();
-        }
-        initOperand(i, defn);
+        MDefinition *def = block->getSlot(i);
+        // We have to unwrap MPassArg: it's removed when inlining calls
+        // and LStackArg does not define a value.
+        if (def->isPassArg())
+            def = def->toPassArg()->getArgument();
+        initOperand(i, def);
     }
 }
 

@@ -44,6 +44,7 @@
 #include "ion/MIRGraph.h"
 #include "jsnum.h"
 #include "jsscope.h"
+#include "jsscopeinlines.h"
 
 using namespace js;
 using namespace js::ion;
@@ -404,13 +405,20 @@ CodeGeneratorX64::visitWriteBarrierT(LWriteBarrierT *barrier)
 }
 
 bool
-CodeGeneratorX64::visitGuardShape(LGuardShape *guard)
+CodeGeneratorX64::visitImplicitThis(LImplicitThis *lir)
 {
-    Register obj = ToRegister(guard->input());
-    masm.movq(ImmGCPtr(guard->mir()->shape()), ScratchReg);
-    masm.cmpq(Operand(obj, JSObject::offsetOfShape()), ScratchReg);
-    if (!bailoutIf(Assembler::NotEqual, guard->snapshot()))
+    Register callee = ToRegister(lir->callee());
+    Register value = ToRegister(lir->getDef(0));
+
+    // The implicit |this| is always |undefined| if the function's environment
+    // is the current global.
+    GlobalObject *global = gen->info().script()->global();
+    masm.cmpPtr(Operand(callee, JSFunction::offsetOfEnvironment()), ImmGCPtr(global));
+
+    // TODO: OOL stub path.
+    if (!bailoutIf(Assembler::NotEqual, lir->snapshot()))
         return false;
+
+    masm.moveValue(UndefinedValue(), value);
     return true;
 }
-

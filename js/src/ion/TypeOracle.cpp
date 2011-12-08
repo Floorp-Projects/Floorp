@@ -134,13 +134,17 @@ TypeInferenceOracle::parameterTypeSet(JSScript *script, size_t index)
 }
 
 TypeSet *
-TypeInferenceOracle::propertyRead(JSScript *script, jsbytecode *pc, TypeSet **barrier)
+TypeInferenceOracle::propertyRead(JSScript *script, jsbytecode *pc)
+{
+    return script->analysis()->pushedTypes(pc, 0);
+}
+
+TypeSet *
+TypeInferenceOracle::propertyReadBarrier(JSScript *script, jsbytecode *pc)
 {
     if (script->analysis()->typeBarriers(cx, pc))
-        *barrier = script->analysis()->bytecodeTypes(pc);
-    else
-        *barrier = NULL;
-    return script->analysis()->pushedTypes(pc, 0);
+        return script->analysis()->bytecodeTypes(pc);
+    return NULL;
 }
 
 bool

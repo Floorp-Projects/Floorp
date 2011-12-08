@@ -1628,6 +1628,32 @@ class MOsrValue : public MAryInstruction<1>
     }
 };
 
+// Determines the implicit |this| value for function calls.
+class MImplicitThis
+  : public MUnaryInstruction,
+    public ObjectPolicy
+{
+    MImplicitThis(MDefinition *callee)
+      : MUnaryInstruction(callee)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ImplicitThis);
+
+    static MImplicitThis *New(MDefinition *callee) {
+        return new MImplicitThis(callee);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *callee() const {
+        return getOperand(0);
+    }
+};
+
 // Returns obj->slots.
 class MSlots
   : public MUnaryInstruction,
@@ -1876,6 +1902,46 @@ class MGuardShape
     }
 };
 
+// Guard on an object's class.
+class MGuardClass
+  : public MUnaryInstruction,
+    public ObjectPolicy
+{
+    const Class *class_;
+
+    MGuardClass(MDefinition *obj, const Class *clasp)
+      : MUnaryInstruction(obj),
+        class_(clasp)
+    {
+        setIdempotent();
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(GuardClass);
+
+    static MGuardClass *New(MDefinition *obj, const Class *clasp) {
+        return new MGuardClass(obj, clasp);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *obj() const {
+        return getOperand(0);
+    }
+    const Class *getClass() const {
+        return class_;
+    }
+    bool congruentTo(MDefinition * const &ins) const {
+        if (!ins->isGuardClass())
+            return false;
+        if (getClass() != ins->toGuardClass()->getClass())
+            return false;
+        return MDefinition::congruentTo(ins);
+    }
+};
+
 // Load from vp[slot] (slots that are not inline in an object).
 class MLoadSlot
   : public MUnaryInstruction,
@@ -2026,7 +2092,6 @@ class MResumePoint : public MNode
     MResumePoint(MBasicBlock *block, jsbytecode *pc, MResumePoint *parent);
     bool init(MBasicBlock *state);
     void inherit(MBasicBlock *state);
-    void inheritUnwrapArgs(MBasicBlock *state, uint32 argc);
 
   protected:
     void setOperand(size_t index, MDefinition *operand) {
@@ -2036,8 +2101,6 @@ class MResumePoint : public MNode
 
   public:
     static MResumePoint *New(MBasicBlock *block, jsbytecode *pc, MResumePoint *parent);
-    static MResumePoint *NewUnwrapArgs(MBasicBlock *bloc, uint32 argc, jsbytecode *pc,
-                                       MResumePoint *parent);
 
     MNode::Kind kind() const {
         return MNode::ResumePoint;

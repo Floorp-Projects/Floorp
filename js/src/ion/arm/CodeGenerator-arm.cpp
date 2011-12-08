@@ -45,6 +45,7 @@
 #include "ion/MIRGraph.h"
 #include "jsnum.h"
 #include "jsscope.h"
+#include "jsscriptinlines.h"
 
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -1358,10 +1359,43 @@ CodeGeneratorARM::visitGuardShape(LGuardShape *guard)
 {
     Register obj = ToRegister(guard->input());
     Register tmp = ToRegister(guard->tempInt());
-    masm.ma_ldr(DTRAddr(obj, DtrOffImm(JSObject::offsetOfShape())), tmp, Offset);
-    masm.ma_cmp(tmp, ImmGCPtr(guard->mir()->shape()), Assembler::Always);
+    masm.ma_ldr(DTRAddr(obj, DtrOffImm(JSObject::offsetOfShape())), tmp);
+    masm.ma_cmp(tmp, ImmGCPtr(guard->mir()->shape()));
 
     if (!bailoutIf(Assembler::NotEqual, guard->snapshot()))
         return false;
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitGuardClass(LGuardClass *guard)
+{
+    Register obj = ToRegister(guard->input());
+    Register tmp = ToRegister(guard->tempInt());
+
+    masm.loadObjClass(obj, tmp);
+    masm.ma_cmp(tmp, Imm32((uint32)guard->mir()->getClass()));
+    if (!bailoutIf(Assembler::NotEqual, guard->snapshot()))
+        return false;
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitImplicitThis(LImplicitThis *lir)
+{
+    Register callee = ToRegister(lir->callee());
+    Register type = ToRegister(lir->getDef(TYPE_INDEX));
+    Register payload = ToRegister(lir->getDef(PAYLOAD_INDEX));
+
+    // The implicit |this| is always |undefined| if the function's environment
+    // is the current global.
+    masm.ma_ldr(DTRAddr(callee, DtrOffImm(JSFunction::offsetOfEnvironment())), type);
+    masm.ma_cmp(type, ImmGCPtr(gen->info().script()->global()));
+
+    // TODO: OOL stub path.
+    if (!bailoutIf(Assembler::NotEqual, lir->snapshot()))
+        return false;
+
+    masm.moveValue(UndefinedValue(), type, payload);
     return true;
 }
