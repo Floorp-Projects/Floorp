@@ -519,18 +519,14 @@ function testConstructionWithOutOfRangeValues(type, name) {
     }, "Construction of " + name + " with out-of-range offset");
 }
 
-function testConstructionWithNegativeOutOfRangeValues(type, name) {
-    try {
-        var buffer = new ArrayBuffer(-1);
-        testFailed("Construction of ArrayBuffer with negative size should throw exception");
-    } catch (e) {
-        testPassed("Construction of ArrayBuffer with negative size threw exception");
-    }
-    try {
-        var array = new type(-1);
-        testFailed("Construction of " + name + " with negative size should throw exception");
-    } catch (e) {
-        testPassed("Construction of " + name + " with negative size threw exception");
+function testConstructionWithNegativeOutOfRangeValues(type, name, elementSizeInBytes) {
+    if (elementSizeInBytes > 1) {
+        try {
+            var array = new type(-1);
+            testFailed("Construction of " + name + " with negative size should throw exception");
+        } catch (e) {
+            testPassed("Construction of " + name + " with negative size threw exception");
+        }
     }
     shouldThrowIndexSizeErr(function() {
         var buffer = new ArrayBuffer(4);
@@ -895,7 +891,7 @@ function runTests() {
                                        testCase.expectedValues);
     testConstructionWithNullBuffer(type, name);
     testConstructionWithOutOfRangeValues(type, name);
-    testConstructionWithNegativeOutOfRangeValues(type, name);
+    testConstructionWithNegativeOutOfRangeValues(type, name, testCase.elementSizeInBytes);
     testConstructionWithUnalignedOffset(type, name, testCase.elementSizeInBytes);
     testConstructionWithUnalignedLength(type, name, testCase.elementSizeInBytes);
     testConstructionOfHugeArray(type, name, testCase.elementSizeInBytes);

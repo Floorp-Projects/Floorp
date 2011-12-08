@@ -989,3 +989,34 @@ XPCWrappedNativeScope::DebugDump(PRInt16 depth)
     XPC_LOG_OUTDENT();
 #endif
 }
+
+size_t
+XPCWrappedNativeScope::SizeOfAllScopesIncludingThis(nsMallocSizeOfFun mallocSizeOf)
+{
+    XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
+    XPCAutoLock lock(rt->GetMapLock());
+
+    size_t n = 0;
+    for (XPCWrappedNativeScope *cur = gScopes; cur; cur = cur->mNext) {
+        n += cur->SizeOfIncludingThis(mallocSizeOf);
+    }
+    return n;
+}
+
+size_t
+XPCWrappedNativeScope::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
+{
+    size_t n = 0;
+    n += mallocSizeOf(this, sizeof(XPCWrappedNativeScope));
+    n += mWrappedNativeMap->SizeOfIncludingThis(mallocSizeOf);
+    n += mWrappedNativeProtoMap->SizeOfIncludingThis(mallocSizeOf);
+    n += mMainThreadWrappedNativeProtoMap->SizeOfIncludingThis(mallocSizeOf);
+
+    // There are other XPCWrappedNativeScope members that could be measured;
+    // the above ones have been seen by DMD to be worth measuring.  More stuff
+    // may be added later.
+
+    return n;
+}
+
+

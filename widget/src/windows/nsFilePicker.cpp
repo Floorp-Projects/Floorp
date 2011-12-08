@@ -56,9 +56,6 @@
 #include <windows.h>
 #include <shlobj.h>
 #include <shlwapi.h>
-
-// commdlg.h and cderr.h are needed to build with WIN32_LEAN_AND_MEAN
-#include <commdlg.h>
 #include <cderr.h>
 
 #include "nsString.h"
@@ -115,7 +112,8 @@ static void EnsureWindowVisible(HWND hwnd)
   }
 }
 
-// Callback hook which will ensure that the window is visible
+// Callback hook which will ensure that the window is visible. Currently
+// only in use on os <= XP.
 static UINT_PTR CALLBACK FilePickerHook(HWND hwnd, UINT msg,
                                         WPARAM wParam, LPARAM lParam) 
 {
@@ -138,8 +136,8 @@ static UINT_PTR CALLBACK FilePickerHook(HWND hwnd, UINT msg,
 }
 
 
-// Callback hook which will dynamically allocate a buffer large
-// enough for the file picker dialog.
+// Callback hook which will dynamically allocate a buffer large enough
+// for the file picker dialog.  Currently only in use on  os <= XP.
 static UINT_PTR CALLBACK MultiFilePickerHook(HWND hwnd, UINT msg,
                                              WPARAM wParam, LPARAM lParam)
 {
@@ -209,6 +207,29 @@ static UINT_PTR CALLBACK MultiFilePickerHook(HWND hwnd, UINT msg,
 
   return FilePickerHook(hwnd, msg, wParam, lParam);
 }
+  
+bool nsFilePicker::GetFileName(OPENFILENAMEW* ofn, PickerType aType)
+{
+  NS_ENSURE_ARG_POINTER(ofn);
+  bool result = false;
+  // This should be safe, we have mParentWidget ref'd
+  nsWindow* win = static_cast<nsWindow*>(mParentWidget.get());
+  if (win) {
+    win->PickerOpen();
+  }
+  MOZ_SEH_TRY {
+    if (aType == PICKER_TYPE_OPEN) 
+      result = ::GetOpenFileNameW(ofn);
+    else if (aType == PICKER_TYPE_SAVE)
+      result = ::GetSaveFileNameW(ofn);
+  } MOZ_SEH_EXCEPT(true) {
+    NS_ERROR("nsFilePicker GetFileName win32 call generated an exception! This is bad!");
+  }
+  if (win) {
+    win->PickerClosed();
+  }
+  return result;
+}
 
 NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 {
@@ -257,7 +278,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       browserInfo.lParam       = (LPARAM) initialDir.get();
       browserInfo.lpfn         = &BrowseCallbackProc;
     } else {
-    browserInfo.lParam         = nsnull;
+      browserInfo.lParam       = nsnull;
       browserInfo.lpfn         = nsnull;
     }
     browserInfo.iImage         = nsnull;
@@ -280,15 +301,22 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     nsString filterBuffer = mFilterList;
                                   
     if (!initialDir.IsEmpty()) {
+      // The initial directory
       ofn.lpstrInitialDir = initialDir.get();
     }
-    
+
+    // A string to be placed in the title bar of the dialog box
     ofn.lpstrTitle   = (LPCWSTR)mTitle.get();
+    // A buffer containing pairs of null-terminated filter strings
     ofn.lpstrFilter  = (LPCWSTR)filterBuffer.get();
+    // The index of the currently selected filter in the File Types control
     ofn.nFilterIndex = mSelectedType;
-    ofn.hwndOwner    = (HWND) (mParentWidget.get() ? mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW) : 0); 
+    // The file name used to initialize the File Name edit control
     ofn.lpstrFile    = fileBuffer;
+    // The max length of lpstrFile
     ofn.nMaxFile     = FILE_BUFFER_SIZE;
+    ofn.hwndOwner    = (HWND) (mParentWidget.get() ?
+      mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW) : 0); 
     ofn.Flags = OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT |
                 OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_ENABLESIZING | 
                 OFN_EXPLORER;
@@ -352,71 +380,62 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       ofn.Flags |= OFN_NOCHANGEDIR;
     }
     
-    MOZ_SEH_TRY {
-      if (mMode == modeOpen) {
-        // FILE MUST EXIST!
-        ofn.Flags |= OFN_FILEMUSTEXIST;
-        result = ::GetOpenFileNameW(&ofn);
+    if (mMode == modeOpen) {
+      // FILE MUST EXIST!
+      ofn.Flags |= OFN_FILEMUSTEXIST;
+      result = GetFileName(&ofn, PICKER_TYPE_OPEN);
+    }
+    else if (mMode == modeOpenMultiple) {
+      ofn.Flags |= OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT;
+
+      // The hook set here ensures that the buffer returned will always be
+      // large enough to hold all selected files.  The hook may modify the
+      // value of ofn.lpstrFile and deallocate the old buffer that it pointed
+      // to (fileBuffer). The hook assumes that the passed in value is heap 
+      // allocated and that the returned value should be freed by the caller.
+      // If the hook changes the buffer, it will deallocate the old buffer.
+      // This fix would be nice to have in Vista and up, but it would force
+      // the file picker to use the old style dialogs because hooks are not
+      // allowed in the new file picker UI.  We need to eventually move to
+      // the new Common File Dialogs for Vista and up.
+      if (nsWindow::GetWindowsVersion() < VISTA_VERSION) {
+        ofn.lpfnHook = MultiFilePickerHook;
+        fileBuffer.forget();
+        result = GetFileName(&ofn, PICKER_TYPE_OPEN);
+        fileBuffer = ofn.lpstrFile;
       }
-      else if (mMode == modeOpenMultiple) {
-        ofn.Flags |= OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT;
-
-        // The hook set here ensures that the buffer returned will always be
-        // large enough to hold all selected files.  The hook may modify the
-        // value of ofn.lpstrFile and deallocate the old buffer that it pointed
-        // to (fileBuffer). The hook assumes that the passed in value is heap 
-        // allocated and that the returned value should be freed by the caller.
-        // If the hook changes the buffer, it will deallocate the old buffer.
-        // This fix would be nice to have in Vista and up, but it would force
-        // the file picker to use the old style dialogs because hooks are not
-        // allowed in the new file picker UI.  We need to eventually move to
-        // the new Common File Dialogs for Vista and up.
-        if (nsWindow::GetWindowsVersion() < VISTA_VERSION) {
-          ofn.lpfnHook = MultiFilePickerHook;
-          fileBuffer.forget();
-          result = ::GetOpenFileNameW(&ofn);
-          fileBuffer = ofn.lpstrFile;
-        }
-        else {
-          result = ::GetOpenFileNameW(&ofn);
-        }
-      }
-      else if (mMode == modeSave) {
-        ofn.Flags |= OFN_NOREADONLYRETURN;
-
-        // Don't follow shortcuts when saving a shortcut, this can be used
-        // to trick users (bug 271732)
-        NS_ConvertUTF16toUTF8 ext(mDefault);
-        ext.Trim(" .", false, true); // watch out for trailing space and dots
-        ToLowerCase(ext);
-        if (StringEndsWith(ext, NS_LITERAL_CSTRING(".lnk")) ||
-            StringEndsWith(ext, NS_LITERAL_CSTRING(".pif")) ||
-            StringEndsWith(ext, NS_LITERAL_CSTRING(".url")))
-          ofn.Flags |= OFN_NODEREFERENCELINKS;
-
-        result = ::GetSaveFileNameW(&ofn);
-        if (!result) {
-          // Error, find out what kind.
-          if (::GetLastError() == ERROR_INVALID_PARAMETER 
-              || ::CommDlgExtendedError() == FNERR_INVALIDFILENAME
-              ) {
-            // probably the default file name is too long or contains illegal characters!
-            // Try again, without a starting file name.
-            ofn.lpstrFile[0] = 0;
-            result = ::GetSaveFileNameW(&ofn);
-          }
-        }
-      } 
       else {
-        NS_ERROR("unsupported mode"); 
+        result = GetFileName(&ofn, PICKER_TYPE_OPEN);
       }
     }
-    MOZ_SEH_EXCEPT(true) {
-      MessageBoxW(ofn.hwndOwner,
-                  0,
-                  L"The filepicker was unexpectedly closed by Windows.",
-                  MB_ICONERROR);
-      result = false;
+    else if (mMode == modeSave) {
+      ofn.Flags |= OFN_NOREADONLYRETURN;
+
+      // Don't follow shortcuts when saving a shortcut, this can be used
+      // to trick users (bug 271732)
+      NS_ConvertUTF16toUTF8 ext(mDefault);
+      ext.Trim(" .", false, true); // watch out for trailing space and dots
+      ToLowerCase(ext);
+      if (StringEndsWith(ext, NS_LITERAL_CSTRING(".lnk")) ||
+          StringEndsWith(ext, NS_LITERAL_CSTRING(".pif")) ||
+          StringEndsWith(ext, NS_LITERAL_CSTRING(".url")))
+        ofn.Flags |= OFN_NODEREFERENCELINKS;
+
+      result = GetFileName(&ofn, PICKER_TYPE_SAVE);
+      if (!result) {
+        // Error, find out what kind.
+        if (::GetLastError() == ERROR_INVALID_PARAMETER 
+            || ::CommDlgExtendedError() == FNERR_INVALIDFILENAME
+            ) {
+          // probably the default file name is too long or contains illegal characters!
+          // Try again, without a starting file name.
+          ofn.lpstrFile[0] = 0;
+          result = GetFileName(&ofn, PICKER_TYPE_SAVE);
+        }
+      }
+    } 
+    else {
+      NS_ERROR("unsupported mode"); 
     }
 
     if (result) {

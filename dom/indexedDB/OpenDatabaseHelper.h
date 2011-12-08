@@ -60,9 +60,9 @@ public:
                      bool aForDeletion)
     : HelperBase(aRequest), mOpenDBRequest(aRequest), mName(aName),
       mASCIIOrigin(aASCIIOrigin), mRequestedVersion(aRequestedVersion),
-      mForDeletion(aForDeletion), mCurrentVersion(0),
-      mDataVersion(DB_SCHEMA_VERSION), mDatabaseId(0), mLastObjectStoreId(0),
-      mLastIndexId(0), mState(eCreated), mResultCode(NS_OK)
+      mForDeletion(aForDeletion), mDatabaseId(nsnull), mCurrentVersion(0),
+      mLastObjectStoreId(0), mLastIndexId(0), mState(eCreated),
+      mResultCode(NS_OK)
   {
     NS_ASSERTION(!aForDeletion || !aRequestedVersion,
                  "Can't be for deletion and request a version!");
@@ -128,7 +128,6 @@ private:
   // Out-params.
   nsTArray<nsAutoPtr<ObjectStoreInfo> > mObjectStores;
   PRUint64 mCurrentVersion;
-  PRUint32 mDataVersion;
   nsString mDatabaseFilePath;
   PRInt64 mLastObjectStoreId;
   PRInt64 mLastIndexId;

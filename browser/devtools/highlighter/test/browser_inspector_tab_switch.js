@@ -263,6 +263,7 @@ function inspectorTabUnload1(evt)
 function test()
 {
   waitForExplicitFinish();
+  ignoreAllUncaughtExceptions();
 
   tab1 = gBrowser.addTab();
   gBrowser.selectedTab = tab1;

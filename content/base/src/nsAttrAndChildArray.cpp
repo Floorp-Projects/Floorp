@@ -367,31 +367,6 @@ nsAttrAndChildArray::AttrAt(PRUint32 aPos) const
 }
 
 nsresult
-nsAttrAndChildArray::SetAttr(nsIAtom* aLocalName, const nsAString& aValue)
-{
-  PRUint32 i, slotCount = AttrSlotCount();
-  for (i = 0; i < slotCount && AttrSlotIsTaken(i); ++i) {
-    if (ATTRS(mImpl)[i].mName.Equals(aLocalName)) {
-      ATTRS(mImpl)[i].mValue.SetTo(aValue);
-
-      return NS_OK;
-    }
-  }
-
-  NS_ENSURE_TRUE(slotCount < ATTRCHILD_ARRAY_MAX_ATTR_COUNT,
-                 NS_ERROR_FAILURE);
-
-  if (i == slotCount && !AddAttrSlot()) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  new (&ATTRS(mImpl)[i].mName) nsAttrName(aLocalName);
-  new (&ATTRS(mImpl)[i].mValue) nsAttrValue(aValue);
-
-  return NS_OK;
-}
-
-nsresult
 nsAttrAndChildArray::SetAndTakeAttr(nsIAtom* aLocalName, nsAttrValue& aValue)
 {
   PRUint32 i, slotCount = AttrSlotCount();

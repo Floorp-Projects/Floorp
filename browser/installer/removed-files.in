@@ -68,6 +68,10 @@ components/nsUrlClassifierTable.js
 components/nsXmlRpcClient.js
 components/pluginGlue.js
 components/sidebar.xpt
+#ifdef MOZ_B2G_RIL
+components/dom_telephony.xpt
+components/dom_system_b2g.xpt
+#endif
 components/WeaveCrypto.js
 components/WeaveCrypto.manifest
 components/xmlextras.xpt
@@ -230,6 +234,7 @@ greprefs/xpinstall.js
 install.rdf
 modules/ISO8601DateUtils.jsm
 modules/JSON.jsm
+modules/SpatialNavigation.js
 modules/utils.js
 mozilla-runtime@BIN_SUFFIX@
 old-homepage-default.properties
@@ -912,6 +917,12 @@ xpicleanup@BIN_SUFFIX@
   components/PlacesProtocolHandler.js
   components/storage-Legacy.js
   components/storage-mozStorage.js
+#ifdef MOZ_B2G_RIL
+  components/nsTelephonyWorker.manifest
+  components/nsTelephonyWorker.js
+  components/Telephony.manifest
+  components/Telephony.js
+#endif
   components/txEXSLTRegExFunctions.js
   components/Weave.js
   components/WebContentConverter.js
@@ -1129,6 +1140,10 @@ xpicleanup@BIN_SUFFIX@
   components/docshell.xpt
   components/dom.xpt
   components/dom_base.xpt
+#ifdef MOZ_B2G_RIL
+  components/dom_telephony.xpt
+  components/dom_system_b2g.xpt
+#endif
   components/dom_canvas.xpt
   components/dom_core.xpt
   components/dom_css.xpt
@@ -1298,6 +1313,7 @@ xpicleanup@BIN_SUFFIX@
     components/libimgicon.so
     dictionaries/PL.aff
     dictionaries/PL.dic
+    icons/document.png
     icons/mozicon16.xpm
     icons/mozicon50.xpm
     plugins/libnullplugin.so
@@ -1314,24 +1330,24 @@ xpicleanup@BIN_SUFFIX@
   js3250.dll
   plugins/npnul32.dll
   #if _MSC_VER != 1400
-    @BINPATH@/Microsoft.VC80.CRT.manifest
-    @BINPATH@/msvcm80.dll
-    @BINPATH@/msvcp80.dll
-    @BINPATH@/msvcr80.dll
+    Microsoft.VC80.CRT.manifest
+    msvcm80.dll
+    msvcp80.dll
+    msvcr80.dll
   #endif
   #if _MSC_VER != 1500
-    @BINPATH@/Microsoft.VC90.CRT.manifest
-    @BINPATH@/msvcm90.dll
-    @BINPATH@/msvcp90.dll
-    @BINPATH@/msvcr90.dll
+    Microsoft.VC90.CRT.manifest
+    msvcm90.dll
+    msvcp90.dll
+    msvcr90.dll
   #endif
   #if _MSC_VER != 1600
-    @BINPATH@/msvcp100.dll
-    @BINPATH@/msvcr100.dll
+    msvcp100.dll
+    msvcr100.dll
   #endif
   #if _MSC_VER != 1700
-    @BINPATH@/msvcp110.dll
-    @BINPATH@/msvcr110.dll
+    msvcp110.dll
+    msvcr110.dll
   #endif
   mozcrt19.dll
   mozcpp19.dll

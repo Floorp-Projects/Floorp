@@ -11,6 +11,7 @@ function test() {
     // Allow the in-page load handler to run first
     executeSoon(page_loaded);
   }, true);
+  expectUncaughtException();
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
 }
 

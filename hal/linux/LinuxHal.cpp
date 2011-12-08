@@ -66,9 +66,29 @@ GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
 {
   aBatteryInfo->level() = dom::battery::kDefaultLevel;
   aBatteryInfo->charging() = dom::battery::kDefaultCharging;
-  aBatteryInfo->remainingTime() = dom::battery::kUnknownRemainingTime;
+  aBatteryInfo->remainingTime() = dom::battery::kDefaultRemainingTime;
 }
 #endif // !MOZ_ENABLE_DBUS
+
+bool
+GetScreenEnabled()
+{
+  return true;
+}
+
+void
+SetScreenEnabled(bool enabled)
+{}
+
+double
+GetScreenBrightness()
+{
+  return 1;
+}
+
+void
+SetScreenBrightness(double brightness)
+{}
 
 } // hal_impl
 } // mozilla

@@ -125,7 +125,6 @@ public:
   NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD              Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint);
   NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, bool aRepaint);
-  NS_IMETHOD              ResizeClient(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, bool aRepaint);
   NS_IMETHOD              BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical);
   NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget *aWidget, bool aActivate);
   NS_IMETHOD              SetSizeMode(PRInt32 aMode);
@@ -306,6 +305,11 @@ public:
 #endif
 
   NS_IMETHOD              ReparentNativeWidget(nsIWidget* aNewParent);
+
+  // Open file picker tracking
+  void                    PickerOpen();
+  void                    PickerClosed();
+
 protected:
 
   // A magic number to identify the FAKETRACKPOINTSCROLLABLE window created
@@ -532,6 +536,7 @@ protected:
   bool                  mIsRTL;
   bool                  mFullscreenMode;
   bool                  mMousePresent;
+  bool                  mDestroyCalled;
   PRUint32              mBlurSuppressLevel;
   DWORD_PTR             mOldStyle;
   DWORD_PTR             mOldExStyle;
@@ -542,6 +547,7 @@ protected:
   nsSizeMode            mOldSizeMode;
   WindowHook            mWindowHook;
   DWORD                 mAssumeWheelIsZoomUntil;
+  PRUint32              mPickerDisplayCount;
   static bool           sDropShadowEnabled;
   static PRUint32       sInstanceCount;
   static TriStateBool   sCanQuit;

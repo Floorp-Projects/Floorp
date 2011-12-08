@@ -181,7 +181,7 @@ class StackSpace
     void mark(JSTracer *trc);
 
     /* We only report the committed size;  uncommitted size is uninteresting. */
-    JS_FRIEND_API(size_t) committedSize();
+    JS_FRIEND_API(size_t) sizeOfCommitted();
 };
 
 /*****************************************************************************/
@@ -311,10 +311,10 @@ class ContextStack
      * The 'stackLimit' overload updates 'stackLimit' if it changes.
      */
     bool pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
-                         JSObject &callee, JSFunction *fun, JSScript *script,
+                         JSFunction &callee, JSScript *script,
                          InitialFrameFlags initial);
     bool pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
-                         JSObject &callee, JSFunction *fun, JSScript *script,
+                         JSFunction &callee, JSScript *script,
                          InitialFrameFlags initial, Value **stackLimit);
     void popInlineFrame(FrameRegs &regs);
 

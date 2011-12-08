@@ -67,6 +67,12 @@ parent:
     sync GetCurrentBatteryInformation()
       returns (BatteryInformation aBatteryInfo);
 
+    sync GetScreenEnabled() returns (bool enabled);
+    SetScreenEnabled(bool enabled);
+
+    sync GetScreenBrightness() returns (double brightness);
+    SetScreenBrightness(double brightness);
+
     __delete__();
 };
 

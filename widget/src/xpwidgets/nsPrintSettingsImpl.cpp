@@ -1092,6 +1092,13 @@ nsPrintSettings::GetEffectivePageSize(double *aWidth, double *aHeight)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPrintSettings::GetPageRanges(nsTArray<PRInt32> &aPages)
+{
+  aPages.Clear();
+  return NS_OK;
+}
+
 nsresult 
 nsPrintSettings::_Clone(nsIPrintSettings **_retval)
 {

@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=706301
+-->
+<window title="Mozilla Bug 706301"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=706301"
+     target="_blank">Mozilla Bug 706301</a>
+  <iframe id="ifr" src="http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug706301.html" onload="doTest();" />
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 706301 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  function getLengthInChrome(nodelist) {
+
+    // Make sure the object is Xray wrapped.
+    ok(nodelist === XPCNativeWrapper(nodelist), "object passed from content to chrome " +
+                                                "should be Xray-wrapped.");
+
+    // Perform the operation.
+    Object.getOwnPropertyDescriptor(nodelist, 'length');
+    return nodelist['length'] == 0;
+  }
+
+  function finishTestInChrome() {
+    SimpleTest.finish();
+  }
+
+  function doTest() {
+
+    // Set up the callbacks for content.
+    $('ifr').contentWindow.wrappedJSObject.getLengthInChrome = getLengthInChrome;
+    $('ifr').contentWindow.wrappedJSObject.finishTestInChrome = finishTestInChrome;
+    $('ifr').contentWindow.wrappedJSObject.ok = ok;
+
+    // Kick off the test.
+    $('ifr').contentWindow.postMessage({}, '*');
+  }
+  ]]>
+  </script>
+</window>

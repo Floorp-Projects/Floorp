@@ -438,7 +438,7 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   }
   
   nsIntRect curBounds;
-  mWindow->GetBounds(curBounds);
+  mWindow->GetClientBounds(curBounds);
 
   nsWindowType type;
   mWindow->GetWindowType(type);
@@ -462,14 +462,16 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   // Child views are never attached to top level widgets, this is safe.
   if (changedPos) {
     if (changedSize && !aMoveOnly) {
-      mWindow->Resize(newBounds.x, newBounds.y, newBounds.width, newBounds.height,
-                      aInvalidateChangedSize);
+      mWindow->ResizeClient(newBounds.x, newBounds.y,
+                            newBounds.width, newBounds.height,
+                            aInvalidateChangedSize);
     } else {
-      mWindow->Move(newBounds.x, newBounds.y);
+      mWindow->MoveClient(newBounds.x, newBounds.y);
     }
   } else {
     if (changedSize && !aMoveOnly) {
-      mWindow->Resize(newBounds.width, newBounds.height, aInvalidateChangedSize);
+      mWindow->ResizeClient(newBounds.width, newBounds.height,
+                            aInvalidateChangedSize);
     } // else do nothing!
   }
 }

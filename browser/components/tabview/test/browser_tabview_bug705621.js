@@ -15,7 +15,7 @@ function test() {
     is(groupItemOne.getChildren().length, 1, "Group one has 1 tab item");
 
     let groupItemTwo = createGroupItemWithBlankTabs(win, 300, 300, 40, 1);
-    is(groupItemTwo.getChildren().length, 1, "Group two has 2 tab items");
+    is(groupItemTwo.getChildren().length, 1, "Group two has 1 tab item");
 
     whenTabViewIsHidden(function() {
       executeSoon(function() { 

@@ -237,31 +237,32 @@ WebappsRegistry.prototype = {
                                                     callbackID:  this.getCallbackId({ success: aSuccess, error: aError }) });
   },
 
-  handleEvent: function(aEvent) {
-    if (aEvent.type == "unload") {
-      // remove all callbacks and event handlers so we don't call anything on a cleared scope
-      try {
-        this._oninstall = null;
-        this._onuninstall = null;
-        this._onerror = null;
-        this._callbacks = [];
-      } catch(e) {
-        dump("WebappsRegistry error:" + e + "\n");
-      }
+  observe: function(aSubject, aTopic, aData) {
+    let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
+    if (wId == this.innerWindowID) {
+      Services.obs.removeObserver(this, "inner-window-destroyed");
+      this._oninstall = null;
+      this._onuninstall = null;
+      this._onerror = null;
+      this._callbacks = [];
+      this._window = null;
     }
   },
-  
+
   // nsIDOMGlobalPropertyInitializer implementation
   init: function(aWindow) {
     dump("DOMApplicationRegistry::init() " + aWindow + "\n");
     this._window = aWindow;
-    this._window.addEventListener("unload", this, false);
     this._window.appId = this._id;
     let from = Services.io.newURI(this._window.location.href, null, null);
     let perm = Services.perms.testExactPermission(from, "webapps-manage");
 
     //only pages with perm set and chrome or about pages can uninstall, enumerate all set oninstall an onuninstall
     this.hasPrivileges = perm == Ci.nsIPermissionManager.ALLOW_ACTION || from.schemeIs("chrome") || from.schemeIs("about");
+
+    Services.obs.addObserver(this, "inner-window-destroyed", false);
+    let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    this.innerWindowID = util.currentInnerWindowID;
   },
   
   classID: Components.ID("{fff440b3-fae2-45c1-bf03-3b5a2e432270}"),

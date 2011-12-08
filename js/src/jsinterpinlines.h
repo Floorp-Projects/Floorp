@@ -205,8 +205,6 @@ ScriptPrologue(JSContext *cx, StackFrame *fp, bool newType)
     }
 
     Probes::enterJSFun(cx, fp->maybeFun(), fp->script());
-    if (cx->compartment->debugMode())
-        ScriptDebugPrologue(cx, fp);
 
     return true;
 }
@@ -215,8 +213,6 @@ inline bool
 ScriptEpilogue(JSContext *cx, StackFrame *fp, bool ok)
 {
     Probes::exitJSFun(cx, fp->maybeFun(), fp->script());
-    if (cx->compartment->debugMode())
-        ok = ScriptDebugEpilogue(cx, fp, ok);
 
     /*
      * If inline-constructing, replace primitive rval with the new object
@@ -235,8 +231,6 @@ ScriptPrologueOrGeneratorResume(JSContext *cx, StackFrame *fp, bool newType)
 {
     if (!fp->isGeneratorFrame())
         return ScriptPrologue(cx, fp, newType);
-    if (cx->compartment->debugMode())
-        ScriptDebugPrologue(cx, fp);
     return true;
 }
 
@@ -245,8 +239,6 @@ ScriptEpilogueOrGeneratorYield(JSContext *cx, StackFrame *fp, bool ok)
 {
     if (!fp->isYielding())
         return ScriptEpilogue(cx, fp, ok);
-    if (cx->compartment->debugMode())
-        return ScriptDebugEpilogue(cx, fp, ok);
     return ok;
 }
 

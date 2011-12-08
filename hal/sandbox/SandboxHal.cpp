@@ -104,6 +104,34 @@ GetCurrentBatteryInformation(BatteryInformation* aBatteryInfo)
   Hal()->SendGetCurrentBatteryInformation(aBatteryInfo);
 }
 
+bool
+GetScreenEnabled()
+{
+  bool enabled = false;
+  Hal()->SendGetScreenEnabled(&enabled);
+  return enabled;
+}
+
+void
+SetScreenEnabled(bool enabled)
+{
+  Hal()->SendSetScreenEnabled(enabled);
+}
+
+double
+GetScreenBrightness()
+{
+  double brightness = 0;
+  Hal()->SendGetScreenBrightness(&brightness);
+  return brightness;
+}
+
+void
+SetScreenBrightness(double brightness)
+{
+  Hal()->SendSetScreenBrightness(brightness);
+}
+
 class HalParent : public PHalParent
                 , public BatteryObserver {
 public:
@@ -166,6 +194,34 @@ public:
 
   void Notify(const BatteryInformation& aBatteryInfo) {
     unused << SendNotifyBatteryChange(aBatteryInfo);
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvGetScreenEnabled(bool *enabled)
+  {
+    *enabled = hal::GetScreenEnabled();
+    return true;
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvSetScreenEnabled(const bool &enabled)
+  {
+    hal::SetScreenEnabled(enabled);
+    return true;
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvGetScreenBrightness(double *brightness)
+  {
+    *brightness = hal::GetScreenBrightness();
+    return true;
+  }
+
+  NS_OVERRIDE virtual bool
+  RecvSetScreenBrightness(const double &brightness)
+  {
+    hal::SetScreenBrightness(brightness);
+    return true;
   }
 };
 

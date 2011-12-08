@@ -223,6 +223,7 @@ ProcessOrDeferMessage(HWND hwnd,
     }
 
     case WM_DEVICECHANGE:
+    case WM_POWERBROADCAST:
     case WM_NCACTIVATE: // Intentional fall-through.
     case WM_SETCURSOR: {
       // Friggin unconventional return value...
@@ -693,7 +694,7 @@ RPCChannel::SpinInternalEventLoop()
 
     // Don't get wrapped up in here if the child connection dies.
     {
-      MonitorAutoLock lock(mMonitor);
+      MonitorAutoLock lock(*mMonitor);
       if (!Connected()) {
         return;
       }
@@ -730,7 +731,7 @@ RPCChannel::SpinInternalEventLoop()
 bool
 SyncChannel::WaitForNotify()
 {
-  mMonitor.AssertCurrentThreadOwns();
+  mMonitor->AssertCurrentThreadOwns();
 
   // Initialize global objects used in deferred messaging.
   Init();
@@ -738,7 +739,7 @@ SyncChannel::WaitForNotify()
   NS_ASSERTION(mTopFrame && !mTopFrame->mRPC,
                "Top frame is not a sync frame!");
 
-  MonitorAutoUnlock unlock(mMonitor);
+  MonitorAutoUnlock unlock(*mMonitor);
 
   bool retval = true;
 
@@ -768,7 +769,7 @@ SyncChannel::WaitForNotify()
       MSG msg = { 0 };
       // Don't get wrapped up in here if the child connection dies.
       {
-        MonitorAutoLock lock(mMonitor);
+        MonitorAutoLock lock(*mMonitor);
         if (!Connected()) {
           break;
         }
@@ -852,7 +853,7 @@ SyncChannel::WaitForNotify()
 bool
 RPCChannel::WaitForNotify()
 {
-  mMonitor.AssertCurrentThreadOwns();
+  mMonitor->AssertCurrentThreadOwns();
 
   if (!StackDepth() && !mBlockedOnParent) {
     // There is currently no way to recover from this condition.
@@ -865,7 +866,7 @@ RPCChannel::WaitForNotify()
   NS_ASSERTION(mTopFrame && mTopFrame->mRPC,
                "Top frame is not a sync frame!");
 
-  MonitorAutoUnlock unlock(mMonitor);
+  MonitorAutoUnlock unlock(*mMonitor);
 
   bool retval = true;
 
@@ -928,7 +929,7 @@ RPCChannel::WaitForNotify()
 
     // Don't get wrapped up in here if the child connection dies.
     {
-      MonitorAutoLock lock(mMonitor);
+      MonitorAutoLock lock(*mMonitor);
       if (!Connected()) {
         break;
       }
@@ -992,7 +993,7 @@ RPCChannel::WaitForNotify()
 void
 SyncChannel::NotifyWorkerThread()
 {
-  mMonitor.AssertCurrentThreadOwns();
+  mMonitor->AssertCurrentThreadOwns();
   NS_ASSERTION(mEvent, "No signal event to set, this is really bad!");
   if (!SetEvent(mEvent)) {
     NS_WARNING("Failed to set NotifyWorkerThread event!");

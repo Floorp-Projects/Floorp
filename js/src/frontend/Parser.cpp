@@ -533,7 +533,7 @@ js::CheckStrictParameters(JSContext *cx, TreeContext *tc)
 
     /* Start with lastVariable(), not lastArgument(), for destructuring. */
     for (Shape::Range r = tc->bindings.lastVariable(); !r.empty(); r.popFront()) {
-        jsid id = r.front().propid;
+        jsid id = r.front().propid();
         if (!JSID_IS_ATOM(id))
             continue;
 
@@ -932,8 +932,11 @@ Parser::newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
                        JSFUN_INTERPRETED | (kind == Expression ? JSFUN_LAMBDA : 0),
                        parent, atom);
     if (fun && !tc->compileAndGo()) {
-        fun->clearParent();
-        fun->clearType();
+        if (!fun->clearParent(context))
+            return NULL;
+        if (!fun->clearType(context))
+            return NULL;
+        fun->setEnvironment(NULL);
     }
     return fun;
 }
@@ -1169,7 +1172,7 @@ LeaveFunction(ParseNode *fn, TreeContext *funtc, PropertyName *funName = NULL,
      * we create it eagerly whenever parameters are (or might, in the case of
      * calls to eval) be assigned.
      */
-    if (funtc->inStrictMode() && funbox->object->getFunctionPrivate()->nargs > 0) {
+    if (funtc->inStrictMode() && funbox->object->toFunction()->nargs > 0) {
         AtomDeclsIter iter(&funtc->decls);
         Definition *dn;
 
@@ -1951,7 +1954,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
      * BytecodeEmitter.cpp:EmitEnterBlock so they don't tie up unused space
      * in the so-called "static" prototype Block.
      */
-    blockObj->setSlot(shape->slot, PrivateValue(pn));
+    blockObj->setSlot(shape->slot(), PrivateValue(pn));
     return true;
 }
 
@@ -1965,7 +1968,7 @@ PopStatement(TreeContext *tc)
         JS_ASSERT(!obj->isClonedBlock());
 
         for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {
-            JSAtom *atom = JSID_TO_ATOM(r.front().propid);
+            JSAtom *atom = JSID_TO_ATOM(r.front().propid());
 
             /* Beware the empty destructuring dummy. */
             if (atom == tc->parser->context->runtime->atomState.emptyAtom)
@@ -1973,14 +1976,7 @@ PopStatement(TreeContext *tc)
             tc->decls.remove(atom);
         }
 
-        /*
-         * js_CloneBlockObject requires obj's shape to be frozen. Compare
-         * Bindings::makeImmutable.
-         *
-         * (This is a second pass over the shapes, if obj has a dictionary, but
-         * that is rare.)
-         */
-        obj->lastProp->freezeIfDictionary();
+        JS_ASSERT(!obj->inDictionaryMode());
     }
     PopStatementTC(tc);
 }
@@ -2051,7 +2047,7 @@ DefineGlobal(ParseNode *pn, BytecodeEmitter *bce, PropertyName *name)
                 return true;
             }
 
-            def = GlobalScope::GlobalDef(shape->slot);
+            def = GlobalScope::GlobalDef(shape->slot());
         } else {
             def = GlobalScope::GlobalDef(name, funbox);
         }
@@ -3687,7 +3683,7 @@ Parser::letStatement()
             stmt->downScope = tc->topScopeStmt;
             tc->topScopeStmt = stmt;
 
-            obj->setParent(tc->blockChain());
+            obj->setStaticBlockScopeChain(tc->blockChain());
             blockbox->parent = tc->blockChainBox;
             tc->blockChainBox = blockbox;
             stmt->blockBox = blockbox;
@@ -7156,8 +7152,10 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             return NULL;
 
         if (!tc->compileAndGo()) {
-            reobj->clearParent();
-            reobj->clearType();
+            if (!reobj->clearParent(context))
+                return NULL;
+            if (!reobj->clearType(context))
+                return NULL;
         }
 
         pn->pn_objbox = tc->parser->newObjectBox(reobj);

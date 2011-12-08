@@ -178,6 +178,16 @@ function SessionStoreService() {
     this._prefBranch.addObserver("sessionstore.resume_from_crash", this, true);
     return this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
   });
+
+  XPCOMUtils.defineLazyGetter(this, "_max_tabs_undo", function () {
+    this._prefBranch.addObserver("sessionstore.max_tabs_undo", this, true);
+    return this._prefBranch.getIntPref("sessionstore.max_tabs_undo");
+  });
+
+  XPCOMUtils.defineLazyGetter(this, "_max_windows_undo", function () {
+    this._prefBranch.addObserver("sessionstore.max_windows_undo", this, true);
+    return this._prefBranch.getIntPref("sessionstore.max_windows_undo");
+  });
 }
 
 SessionStoreService.prototype = {
@@ -291,10 +301,6 @@ SessionStoreService.prototype = {
 
     // Do pref migration before we store any values and start observing changes
     this._migratePrefs();
-
-    // observe prefs changes so we can modify stored data to match
-    this._prefBranch.addObserver("sessionstore.max_tabs_undo", this, true);
-    this._prefBranch.addObserver("sessionstore.max_windows_undo", this, true);
     
     // this pref is only read at startup, so no need to observe it
     this._sessionhistory_max_entries =
@@ -642,11 +648,13 @@ SessionStoreService.prototype = {
       // if the user decreases the max number of closed tabs they want
       // preserved update our internal states to match that max
       case "sessionstore.max_tabs_undo":
+        this._max_tabs_undo = this._prefBranch.getIntPref("sessionstore.max_tabs_undo");
         for (let ix in this._windows) {
-          this._windows[ix]._closedTabs.splice(this._prefBranch.getIntPref("sessionstore.max_tabs_undo"), this._windows[ix]._closedTabs.length);
+          this._windows[ix]._closedTabs.splice(this._max_tabs_undo, this._windows[ix]._closedTabs.length);
         }
         break;
       case "sessionstore.max_windows_undo":
+        this._max_windows_undo = this._prefBranch.getIntPref("sessionstore.max_windows_undo");
         this._capClosedWindows();
         break;
       case "sessionstore.interval":
@@ -1094,10 +1102,9 @@ SessionStoreService.prototype = {
     var event = aWindow.document.createEvent("Events");
     event.initEvent("SSTabClosing", true, false);
     aTab.dispatchEvent(event);
-    
-    var maxTabsUndo = this._prefBranch.getIntPref("sessionstore.max_tabs_undo");
+
     // don't update our internal state if we don't have to
-    if (maxTabsUndo == 0) {
+    if (this._max_tabs_undo == 0) {
       return;
     }
     
@@ -1118,8 +1125,8 @@ SessionStoreService.prototype = {
         pos: aTab._tPos
       });
       var length = this._windows[aWindow.__SSi]._closedTabs.length;
-      if (length > maxTabsUndo)
-        this._windows[aWindow.__SSi]._closedTabs.splice(maxTabsUndo, length - maxTabsUndo);
+      if (length > this._max_tabs_undo)
+        this._windows[aWindow.__SSi]._closedTabs.splice(this._max_tabs_undo, length - this._max_tabs_undo);
     }
   },
 
@@ -1646,25 +1653,13 @@ SessionStoreService.prototype = {
     // Inspect extData for Panorama identifiers. If found, then we want to
     // inspect further. If there is a single group, then we can use this
     // window. If there are multiple groups then we won't use this window.
-    let data = this.getWindowValue(aWindow, "tabview-group");
-    if (data) {
-      data = JSON.parse(data);
+    let groupsData = this.getWindowValue(aWindow, "tabview-groups");
+    if (groupsData) {
+      groupsData = JSON.parse(groupsData);
 
-      // Multiple keys means multiple groups, which means we don't want to use this window.
-      if (Object.keys(data).length > 1) {
+      // If there are multiple groups, we don't want to use this window.
+      if (groupsData.totalNumber > 1)
         return [false, false];
-      }
-      else {
-        // If there is only one group, then we want to ensure that its group id
-        // is 0. This is how Panorama forces group merging when new tabs are opened.
-        //XXXzpao This is a hack and the proper fix really belongs in Panorama.
-        let groupKey = Object.keys(data)[0];
-        if (groupKey !== "0") {
-          data["0"] = data[groupKey];
-          delete data[groupKey];
-          this.setWindowValue(aWindow, "tabview-groups", JSON.stringify(data));
-        }
-      }
     }
 
     // Step 2 of processing:
@@ -2530,7 +2525,7 @@ SessionStoreService.prototype = {
       // at startup we don't accidentally add them to a popup window
       do {
         total.unshift(lastClosedWindowsCopy.shift())
-      } while (total[0].isPopup)
+      } while (total[0].isPopup && lastClosedWindowsCopy.length > 0)
     }
 #endif
 
@@ -4276,17 +4271,16 @@ SessionStoreService.prototype = {
    * resize such that we have at least one non-popup window.
    */
   _capClosedWindows : function sss_capClosedWindows() {
-    let maxWindowsUndo = this._prefBranch.getIntPref("sessionstore.max_windows_undo");
-    if (this._closedWindows.length <= maxWindowsUndo)
+    if (this._closedWindows.length <= this._max_windows_undo)
       return;
-    let spliceTo = maxWindowsUndo;
+    let spliceTo = this._max_windows_undo;
 #ifndef XP_MACOSX
     let normalWindowIndex = 0;
     // try to find a non-popup window in this._closedWindows
     while (normalWindowIndex < this._closedWindows.length &&
            !!this._closedWindows[normalWindowIndex].isPopup)
       normalWindowIndex++;
-    if (normalWindowIndex >= maxWindowsUndo)
+    if (normalWindowIndex >= this._max_windows_undo)
       spliceTo = normalWindowIndex + 1;
 #endif
     this._closedWindows.splice(spliceTo, this._closedWindows.length);
@@ -4537,7 +4531,8 @@ let gRestoreTabsProgressListener = {
   onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
     // Ignore state changes on browsers that we've already restored and state
     // changes that aren't applicable.
-    if (aBrowser.__SS_restoreState == TAB_STATE_RESTORING &&
+    if (aBrowser.__SS_restoreState &&
+        aBrowser.__SS_restoreState == TAB_STATE_RESTORING &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {

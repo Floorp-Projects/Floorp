@@ -54,6 +54,8 @@
 #include "mozIStorageFunction.h"
 #include "nsNetUtil.h"
 
+using namespace mozilla;
+
 // Temporary tables for a storage scope will be flushed if found older
 // then this time in seconds since the load
 #define TEMP_TABLE_MAX_AGE (10) // seconds
@@ -445,6 +447,28 @@ nsDOMStoragePersistentDB::Init(const nsString& aDatabaseName)
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+void
+nsDOMStoragePersistentDB::Close()
+{
+  // Null the statements, this will finalize them.
+  mCopyToTempTableStatement = nsnull;
+  mCopyBackToDiskStatement = nsnull;
+  mDeleteTemporaryTableStatement = nsnull;
+  mGetAllKeysStatement = nsnull;
+  mGetKeyValueStatement = nsnull;
+  mInsertKeyStatement = nsnull;
+  mSetSecureStatement = nsnull;
+  mRemoveKeyStatement = nsnull;
+  mRemoveOwnerStatement = nsnull;
+  mRemoveStorageStatement = nsnull;
+  mRemoveAllStatement = nsnull;
+  mGetOfflineExcludedUsageStatement = nsnull;
+  mGetFullUsageStatement = nsnull;
+
+  DebugOnly<nsresult> rv = mConnection->Close();
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 nsresult

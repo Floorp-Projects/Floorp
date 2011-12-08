@@ -174,11 +174,9 @@ class Bindings {
     uint16 nargs;
     uint16 nvars;
     uint16 nupvars;
-    bool hasExtensibleParents;
 
   public:
     inline Bindings(JSContext *cx);
-    inline ~Bindings();
 
     /*
      * Transfers ownership of bindings data from bindings into this fresh
@@ -210,6 +208,12 @@ class Bindings {
 
     /* Returns the shape lineage generated for these bindings. */
     inline js::Shape *lastShape() const;
+
+    /* See Scope::extensibleParents */
+    inline bool extensibleParents();
+    bool setExtensibleParents(JSContext *cx);
+
+    bool setParent(JSContext *cx, JSObject *obj);
 
     enum {
         /*
@@ -295,54 +299,6 @@ class Bindings {
     void makeImmutable();
 
     /*
-     * Sometimes call objects and run-time block objects need unique shapes, but
-     * sometimes they don't.
-     *
-     * Property cache entries only record the shapes of the first and last
-     * objects along the search path, so if the search traverses more than those
-     * two objects, then those first and last shapes must determine the shapes
-     * of everything else along the path. The js_PurgeScopeChain stuff takes
-     * care of making this work, but that suffices only because we require that
-     * start points with the same shape have the same successor object in the
-     * search path --- a cache hit means the starting shapes were equal, which
-     * means the seach path tail (everything but the first object in the path)
-     * was shared, which in turn means the effects of a purge will be seen by
-     * all affected starting search points.
-     *
-     * For call and run-time block objects, the "successor object" is the scope
-     * chain parent. Unlike prototype objects (of which there are usually few),
-     * scope chain parents are created frequently (possibly on every call), so
-     * following the shape-implies-parent rule blindly would lead one to give
-     * every call and block its own shape.
-     *
-     * In many cases, however, it's not actually necessary to give call and
-     * block objects their own shapes, and we can do better. If the code will
-     * always be used with the same global object, and none of the enclosing
-     * call objects could have bindings added to them at runtime (by direct eval
-     * calls or function statements), then we can use a fixed set of shapes for
-     * those objects. You could think of the shapes in the functions' bindings
-     * and compile-time blocks as uniquely identifying the global object(s) at
-     * the end of the scope chain.
-     *
-     * (In fact, some JSScripts we do use against multiple global objects (see
-     * bug 618497), and using the fixed shapes isn't sound there.)
-     *
-     * In deciding whether a call or block has any extensible parents, we
-     * actually only need to consider enclosing calls; blocks are never
-     * extensible, and the other sorts of objects that appear in the scope
-     * chains ('with' blocks, say) are not CacheableNonGlobalScopes.
-     *
-     * If the hasExtensibleParents flag is set, then Call objects created for
-     * the function this Bindings describes need unique shapes. If the flag is
-     * clear, then we can use lastBinding's shape.
-     *
-     * For blocks, we set the the OWN_SHAPE flag on the compiler-generated
-     * blocksto indicate that their clones need unique shapes.
-     */
-    void setExtensibleParents() { hasExtensibleParents = true; }
-    bool extensibleParents() const { return hasExtensibleParents; }
-
-    /*
      * These methods provide direct access to the shape path normally
      * encapsulated by js::Bindings. These methods may be used to make a
      * Shape::Range for iterating over the relevant shapes from youngest to
@@ -401,6 +357,29 @@ class ScriptOpcodeCounts
     operator void*() const {
         return counts;
     }
+};
+
+class DebugScript
+{
+    friend struct ::JSScript;
+
+    /*
+     * When non-zero, compile script in single-step mode. The top bit is set and
+     * cleared by setStepMode, as used by JSD. The lower bits are a count,
+     * adjusted by changeStepModeCount, used by the Debugger object. Only
+     * when the bit is clear and the count is zero may we compile the script
+     * without single-step support.
+     */
+    uint32          stepMode;
+
+    /* Number of breakpoint sites at opcodes in the script. */
+    uint32          numSites;
+
+    /*
+     * Array with all breakpoints installed at opcodes in the script, indexed
+     * by the offset of the opcode into the script.
+     */
+    BreakpointSite  *breakpoints[1];
 };
 
 } /* namespace js */
@@ -462,15 +441,6 @@ struct JSScript : public js::gc::Cell {
     uint16          nTypeSets;      /* number of type sets used in this script for
                                        dynamic type monitoring */
 
-    /*
-     * When non-zero, compile script in single-step mode. The top bit is set and
-     * cleared by setStepMode, as used by JSD. The lower bits are a count,
-     * adjusted by changeStepModeCount, used by the Debugger object. Only
-     * when the bit is clear and the count is zero may we compile the script
-     * without single-step support.
-     */
-    uint32          stepMode;
-
     uint32          lineno;     /* base line number of script */
 
     uint32          mainOffset; /* offset of main entry point from code, after
@@ -490,11 +460,9 @@ struct JSScript : public js::gc::Cell {
                                                    undefined properties in this
                                                    script */
     bool            hasSingletons:1;  /* script has singleton objects */
-    bool            hasFunction:1;       /* script has an associated function */
-    bool            isHeavyweightFunction:1; /* function is heavyweight */
-    bool            isOuterFunction:1;       /* function is heavyweight, with inner functions */
-    bool            isInnerFunction:1;       /* function is directly nested in a heavyweight
-                                              * outer function */
+    bool            isOuterFunction:1; /* function is heavyweight, with inner functions */
+    bool            isInnerFunction:1; /* function is directly nested in a heavyweight
+                                        * outer function */
     bool            isActiveEval:1;   /* script came from eval(), and is still active */
     bool            isCachedEval:1;   /* script came from eval(), and is in eval cache */
     bool            usedLazyArgs:1;   /* script has used lazy arguments at some point */
@@ -520,8 +488,10 @@ struct JSScript : public js::gc::Cell {
      * the script with 4 bytes. We use them to store tiny scripts like empty
      * scripts.
      */
+#if JS_BITS_PER_WORD == 64
 #define JS_SCRIPT_INLINE_DATA_LIMIT 4
     uint8           inlineData[JS_SCRIPT_INLINE_DATA_LIMIT];
+#endif
 
     const char      *filename;  /* source filename or null */
     JSAtom          **atoms;    /* maps immediate index to literal struct */
@@ -556,6 +526,18 @@ struct JSScript : public js::gc::Cell {
     /* Execution and profiling information for JIT code in the script. */
     js::ScriptOpcodeCounts pcCounters;
 
+  private:
+    js::DebugScript *debug;
+    JSFunction      *function_;
+  public:
+
+    /*
+     * Original compiled function for the script, if it has a function.
+     * NULL for global and eval scripts.
+     */
+    JSFunction *function() const { return function_; }
+    void setFunction(JSFunction *fun) { function_ = fun; }
+
 #ifdef JS_CRASH_DIAGNOSTICS
     /* All diagnostic fields must be multiples of Cell::CellSize. */
     uint32          cookie2[Cell::CellSize / sizeof(uint32)];
@@ -577,15 +559,15 @@ struct JSScript : public js::gc::Cell {
     js::types::TypeScript *types;
 
     /* Ensure the script has a TypeScript. */
-    inline bool ensureHasTypes(JSContext *cx, JSFunction *fun = NULL);
+    inline bool ensureHasTypes(JSContext *cx);
 
     /*
      * Ensure the script has scope and bytecode analysis information.
      * Performed when the script first runs, or first runs after a TypeScript
-     * GC purge. If fun/scope are NULL then the script must already have types
-     * with scope information.
+     * GC purge. If scope is NULL then the script must already have types with
+     * scope information.
      */
-    inline bool ensureRanAnalysis(JSContext *cx, JSFunction *fun = NULL, JSObject *scope = NULL);
+    inline bool ensureRanAnalysis(JSContext *cx, JSObject *scope);
 
     /* Ensure the script has type inference analysis information. */
     inline bool ensureRanInference(JSContext *cx);
@@ -603,7 +585,6 @@ struct JSScript : public js::gc::Cell {
     inline bool hasGlobal() const;
     inline bool hasClearedGlobal() const;
 
-    inline JSFunction *function() const;
     inline js::GlobalObject *global() const;
     inline js::types::TypeScriptNesting *nesting() const;
 
@@ -615,7 +596,7 @@ struct JSScript : public js::gc::Cell {
     }
 
   private:
-    bool makeTypes(JSContext *cx, JSFunction *fun);
+    bool makeTypes(JSContext *cx);
     bool makeAnalysis(JSContext *cx);
   public:
 
@@ -666,7 +647,7 @@ struct JSScript : public js::gc::Cell {
 
     /* Counter accessors. */
     js::OpcodeCounts getCounts(jsbytecode *pc) {
-        JS_ASSERT(unsigned(pc - code) < length);
+        JS_ASSERT(size_t(pc - code) < length);
         return pcCounters.counts[pc - code];
     }
 
@@ -780,7 +761,28 @@ struct JSScript : public js::gc::Cell {
     /* Attempt to change this->stepMode to |newValue|. */
     bool tryNewStepMode(JSContext *cx, uint32 newValue);
 
+    bool ensureHasDebug(JSContext *cx);
+
   public:
+    bool hasBreakpointsAt(jsbytecode *pc) { return !!getBreakpointSite(pc); }
+    bool hasAnyBreakpointsOrStepMode() { return !!debug; }
+
+    js::BreakpointSite *getBreakpointSite(jsbytecode *pc)
+    {
+        JS_ASSERT(size_t(pc - code) < length);
+        return debug ? debug->breakpoints[pc - code] : NULL;
+    }
+
+    js::BreakpointSite *getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc,
+                                                  js::GlobalObject *scriptGlobal);
+
+    void destroyBreakpointSite(JSRuntime *rt, jsbytecode *pc);
+
+    void clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSObject *handler);
+    void clearTraps(JSContext *cx);
+
+    void markTrapClosures(JSTracer *trc);
+
     /*
      * Set or clear the single-step flag. If the flag is set or the count
      * (adjusted by changeStepModeCount) is non-zero, then the script is in
@@ -797,13 +799,13 @@ struct JSScript : public js::gc::Cell {
      */
     bool changeStepModeCount(JSContext *cx, int delta);
 
-    bool stepModeEnabled() { return !!stepMode; }
+    bool stepModeEnabled() { return debug && !!debug->stepMode; }
 
 #ifdef DEBUG
-    uint32 stepModeCount() { return stepMode & stepCountMask; }
+    uint32 stepModeCount() { return debug ? (debug->stepMode & stepCountMask) : 0; }
 #endif
 
-    void finalize(JSContext *cx);
+    void finalize(JSContext *cx, bool background);
 
     static inline void writeBarrierPre(JSScript *script);
     static inline void writeBarrierPost(JSScript *script, void *addr);
@@ -921,15 +923,6 @@ enum LineOption {
 inline const char *
 CurrentScriptFileAndLine(JSContext *cx, uintN *linenop, LineOption = NOT_CALLED_FROM_JSOP_EVAL);
 
-}
-
-static JS_INLINE JSOp
-js_GetOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
-{
-    JSOp op = (JSOp) *pc;
-    if (op == JSOP_TRAP)
-        op = JS_GetTrapOpcode(cx, script, pc);
-    return op;
 }
 
 extern JSScript *

@@ -300,15 +300,6 @@ NS_IMETHODIMP nsBaseWidget::SetAttachedViewPtr(ViewWrapper* aViewWrapper)
    return NS_OK;
  }
 
-NS_METHOD nsBaseWidget::ResizeClient(PRInt32 aX,
-                                     PRInt32 aY,
-                                     PRInt32 aWidth,
-                                     PRInt32 aHeight,
-                                     bool aRepaint)
-{
-  return Resize(aX, aY, aWidth, aHeight, aRepaint);
-}
-
 //-------------------------------------------------------------------------
 //
 // Close this nsBaseWidget
@@ -919,6 +910,50 @@ NS_METHOD nsBaseWidget::SetWindowClass(const nsAString& xulWinType)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_METHOD nsBaseWidget::MoveClient(PRInt32 aX, PRInt32 aY)
+{
+  nsIntPoint clientOffset(GetClientOffset());
+  aX -= clientOffset.x;
+  aY -= clientOffset.y;
+  return Move(aX, aY);
+}
+
+NS_METHOD nsBaseWidget::ResizeClient(PRInt32 aWidth,
+                                     PRInt32 aHeight,
+                                     bool aRepaint)
+{
+  NS_ASSERTION((aWidth >=0) , "Negative width passed to ResizeClient");
+  NS_ASSERTION((aHeight >=0), "Negative height passed to ResizeClient");
+
+  nsIntRect clientBounds;
+  GetClientBounds(clientBounds);
+  aWidth = mBounds.width + (aWidth - clientBounds.width);
+  aHeight = mBounds.height + (aHeight - clientBounds.height);
+
+  return Resize(aWidth, aHeight, aRepaint);
+}
+
+NS_METHOD nsBaseWidget::ResizeClient(PRInt32 aX,
+                                     PRInt32 aY,
+                                     PRInt32 aWidth,
+                                     PRInt32 aHeight,
+                                     bool aRepaint)
+{
+  NS_ASSERTION((aWidth >=0) , "Negative width passed to ResizeClient");
+  NS_ASSERTION((aHeight >=0), "Negative height passed to ResizeClient");
+
+  nsIntRect clientBounds;
+  GetClientBounds(clientBounds);
+  aWidth = mBounds.width + (aWidth - clientBounds.width);
+  aHeight = mBounds.height + (aHeight - clientBounds.height);
+
+  nsIntPoint clientOffset(GetClientOffset());
+  aX -= clientOffset.x;
+  aY -= clientOffset.y;
+
+  return Resize(aX, aY, aWidth, aHeight, aRepaint);
+}
+
 //-------------------------------------------------------------------------
 //
 // Bounds
@@ -1201,7 +1236,7 @@ nsBaseWidget::debug_GuiEventToString(nsGUIEvent * aGuiEvent)
   nsAutoString eventName(NS_LITERAL_STRING("UNKNOWN"));
 
 #define _ASSIGN_eventName(_value,_name)\
-case _value: eventName.AssignWithConversion(_name) ; break
+case _value: eventName.AssignLiteral(_name) ; break
 
   switch(aGuiEvent->message)
   {
@@ -1257,7 +1292,7 @@ case _value: eventName.AssignWithConversion(_name) ; break
       
       sprintf(buf,"UNKNOWN: %d",aGuiEvent->message);
       
-      eventName.AssignWithConversion(buf);
+      CopyASCIItoUTF16(buf, eventName);
     }
     break;
   }
@@ -1405,7 +1440,7 @@ nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
   if (!debug_GetCachedBoolPref("nglayout.debug.event_dumping"))
     return;
 
-  nsCAutoString tempString; tempString.AssignWithConversion(debug_GuiEventToString(aGuiEvent).get());
+  NS_LossyConvertUTF16toASCII tempString(debug_GuiEventToString(aGuiEvent).get());
   
   fprintf(aFileOut,
           "%4d %-26s widget=%-8p name=%-12s id=%-8p refpt=%d,%d\n",

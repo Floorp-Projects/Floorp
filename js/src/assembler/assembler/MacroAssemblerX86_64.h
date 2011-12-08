@@ -431,6 +431,12 @@ public:
         return branchPtr(cond, Address(scratchRegister), right);
     }
 
+    Jump branchPtr(Condition cond, AbsoluteAddress left, ImmPtr right, RegisterID scratch)
+    {
+        move(ImmPtr(left.m_ptr), scratch);
+        return branchPtr(cond, Address(scratch), right);
+    }
+
     Jump branchPtr(Condition cond, Address left, RegisterID right)
     {
         m_assembler.cmpq_rm(right, left.offset, left.base);

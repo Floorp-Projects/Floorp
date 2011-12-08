@@ -25,20 +25,24 @@
       testStates(comboboxList, 0, 0, STATE_FOCUSABLE, 0);
 
       var opt1 = comboboxList.firstChild;
-      testStates(opt1, STATE_SELECTABLE | STATE_SELECTED | STATE_FOCUSABLE, 0,
-                 STATE_FOCUSED, 0);
+      testStates(opt1, STATE_SELECTABLE | STATE_SELECTED | STATE_FOCUSABLE,
+                 EXT_STATE_ACTIVE, STATE_FOCUSED, 0);
 
       var opt2 = comboboxList.lastChild;
       testStates(opt2, STATE_SELECTABLE | STATE_FOCUSABLE, 0, STATE_SELECTED, 0,
-                 STATE_FOCUSED, 0);
+                 STATE_FOCUSED, EXT_STATE_ACTIVE);
 
       // listbox
       var listbox = getAccessible("listbox");
       testStates(listbox, STATE_FOCUSABLE, 0,
-                 STATE_HASPOPUP | STATE_COLLAPSED | STATE_FOCUSED, 0);
+                 STATE_HASPOPUP | STATE_COLLAPSED | STATE_FOCUSED);
 
-      testStates(listbox.firstChild, STATE_SELECTABLE, 0,
-                 STATE_SELECTED | STATE_FOCUSED | STATE_FOCUSED, 0);
+      testStates(listbox.firstChild, STATE_SELECTABLE, EXT_STATE_ACTIVE,
+                 STATE_SELECTED | STATE_FOCUSED | STATE_FOCUSED);
+
+      testStates(listbox.lastChild, STATE_SELECTABLE, 0,
+                 STATE_SELECTED | STATE_FOCUSED | STATE_FOCUSED,
+                 0, 0, EXT_STATE_ACTIVE);
 
       SimpleTest.finish();
     }
@@ -59,6 +63,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=640716"
      title="mochitest for selects and lists">
     Mozilla Bug 640716
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=689847"
+     title="Expose active state on current item of selectable widgets">
+    Mozilla Bug 689847
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>

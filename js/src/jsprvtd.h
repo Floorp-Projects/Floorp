@@ -117,7 +117,6 @@ class JSWrapper;
 namespace js {
 
 struct ArgumentsData;
-struct FlatClosureData;
 struct Class;
 
 class RegExpObject;
@@ -218,8 +217,11 @@ class LifoAlloc;
 class PropertyCache;
 struct PropertyCacheEntry;
 
+class BaseShape;
+class UnownedBaseShape;
 struct Shape;
 struct EmptyShape;
+class ShapeKindArray;
 class Bindings;
 
 class MultiDeclRange;
@@ -232,8 +234,6 @@ typedef Vector<UpvarCookie, 8> UpvarCookies;
 
 class Breakpoint;
 class BreakpointSite;
-typedef HashMap<jsbytecode *, BreakpointSite *, DefaultHasher<jsbytecode *>, RuntimeAllocPolicy>
-    BreakpointSiteMap;
 class Debugger;
 class WatchpointMap;
 

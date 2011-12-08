@@ -10,6 +10,3 @@ function testUndefinedPropertyAccess() {
     return s;
 }
 assertEq(testUndefinedPropertyAccess(), "undefinedundefinedundefinedundefinedundefinedundefinedundefined111");
-checkStats({
-    traceCompleted: 3
-});

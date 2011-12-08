@@ -1675,19 +1675,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     }
   }
 
-  // Now let's add the download to history
-  nsCOMPtr<nsIDownloadHistory> dh(do_GetService(NS_DOWNLOADHISTORY_CONTRACTID));
-  if (dh) {
-    nsCOMPtr<nsIURI> referrer;
-    if (aChannel)
-      NS_GetReferrerFromChannel(aChannel, getter_AddRefs(referrer));
-
-    nsCOMPtr<nsIURI> target;
-    NS_NewFileURI(getter_AddRefs(target), mFinalFileDestination);
-
-    dh->AddDownload(mSourceUrl, referrer, mTimeDownloadStarted, target);
-  }
-
   return NS_OK;
 }
 
@@ -1984,6 +1971,18 @@ nsresult nsExternalAppHandler::InitializeDownload(nsITransfer* aTransfer)
   rv = aTransfer->Init(mSourceUrl, target, EmptyString(),
                        mMimeInfo, mTimeDownloadStarted, lf, this);
   if (NS_FAILED(rv)) return rv;
+
+  // Now let's add the download to history
+  nsCOMPtr<nsIDownloadHistory> dh(do_GetService(NS_DOWNLOADHISTORY_CONTRACTID));
+  if (dh) {
+    nsCOMPtr<nsIURI> referrer;
+    if (mRequest) {
+      nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
+      NS_GetReferrerFromChannel(channel, getter_AddRefs(referrer));
+    }
+
+    dh->AddDownload(mSourceUrl, referrer, mTimeDownloadStarted, target);
+  }
 
   return rv;
 }

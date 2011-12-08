@@ -48,12 +48,6 @@
 
 using namespace js;
 
-/* static */ inline bool
-PropertyCache::matchShape(JSContext *cx, JSObject *obj, uint32 shape)
-{
-    return obj->shape() == shape;
-}
-
 /*
  * This method is designed to inline the fast path in js_Interpret, so it makes
  * "just-so" restrictions on parameters, e.g. pobj and obj should not be the
@@ -75,23 +69,22 @@ PropertyCache::test(JSContext *cx, jsbytecode *pc, JSObject *&obj,
 {
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
 
-    uint32 kshape = obj->shape();
+    const Shape *kshape = obj->lastProperty();
     entry = &table[hash(pc, kshape)];
     PCMETER(pctestentry = entry);
     PCMETER(tests++);
     JS_ASSERT(&obj != &pobj);
-    JS_ASSERT(entry->kshape < SHAPE_OVERFLOW_BIT);
     if (entry->kpc == pc && entry->kshape == kshape) {
         JSObject *tmp;
         pobj = obj;
-        if (entry->vcapTag() == 1 &&
+        if (entry->vindex == 1 &&
             (tmp = pobj->getProto()) != NULL) {
             pobj = tmp;
         }
 
-        if (matchShape(cx, pobj, entry->vshape())) {
+        if (pobj->lastProperty() == entry->pshape) {
             PCMETER(pchits++);
-            PCMETER(!entry->vcapTag() || protopchits++);
+            PCMETER(!entry->vindex || protopchits++);
             atom = NULL;
             return;
         }
@@ -105,14 +98,15 @@ JS_ALWAYS_INLINE bool
 PropertyCache::testForSet(JSContext *cx, jsbytecode *pc, JSObject *obj,
                           PropertyCacheEntry **entryp, JSObject **obj2p, JSAtom **atomp)
 {
-    uint32 shape = obj->shape();
-    PropertyCacheEntry *entry = &table[hash(pc, shape)];
+    JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
+
+    const Shape *kshape = obj->lastProperty();
+    PropertyCacheEntry *entry = &table[hash(pc, kshape)];
     *entryp = entry;
     PCMETER(pctestentry = entry);
     PCMETER(tests++);
     PCMETER(settests++);
-    JS_ASSERT(entry->kshape < SHAPE_OVERFLOW_BIT);
-    if (entry->kpc == pc && entry->kshape == shape)
+    if (entry->kpc == pc && entry->kshape == kshape)
         return true;
 
     JSAtom *atom = fullTest(cx, pc, &obj, obj2p, entry);
@@ -122,36 +116,6 @@ PropertyCache::testForSet(JSContext *cx, jsbytecode *pc, JSObject *obj,
     PCMETER(setmisses++);
 
     *atomp = atom;
-    return false;
-}
-
-JS_ALWAYS_INLINE bool
-PropertyCache::testForInit(JSRuntime *rt, jsbytecode *pc, JSObject *obj,
-                           const js::Shape **shapep, PropertyCacheEntry **entryp)
-{
-    JS_ASSERT(obj->slotSpan() >= JSSLOT_FREE(obj->getClass()));
-    uint32 kshape = obj->shape();
-    PropertyCacheEntry *entry = &table[hash(pc, kshape)];
-    *entryp = entry;
-    PCMETER(pctestentry = entry);
-    PCMETER(tests++);
-    PCMETER(initests++);
-    JS_ASSERT(entry->kshape < SHAPE_OVERFLOW_BIT);
-
-    if (entry->kpc == pc &&
-        entry->kshape == kshape &&
-        entry->vshape() == rt->protoHazardShape) {
-        // If obj is not extensible, we cannot have a cache hit. This happens
-        // for sharp-variable expressions like (#1={x: Object.seal(#1#)}).
-        JS_ASSERT(obj->isExtensible());
-
-        PCMETER(pchits++);
-        PCMETER(inipchits++);
-        JS_ASSERT(entry->vcapTag() == 0);
-        *shapep = entry->vword.toShape();
-        JS_ASSERT((*shapep)->writable());
-        return true;
-    }
     return false;
 }
 

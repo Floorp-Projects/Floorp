@@ -1,4 +1,4 @@
-for (var i = 0; i < HOTLOOP + 2; i++)
+for (var i = 0; i < 10; i++)
     x = {a: function () { return 33; }, a: 4};
 
 try {

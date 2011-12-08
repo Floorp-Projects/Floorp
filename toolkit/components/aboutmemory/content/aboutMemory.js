@@ -365,9 +365,10 @@ function update()
   content.appendChild(div);
 }
 
-// There are two kinds of TreeNode.  Those that correspond to Reporters
-// have more properties.  The remainder are just scaffolding nodes for the
-// tree, whose values are derived from their children.
+// There are two kinds of TreeNode.
+// - Leaf TreeNodes correspond to Reporters and have more properties.  
+// - Non-leaf TreeNodes are just scaffolding nodes for the tree;  their values
+//   are derived from their children.
 function TreeNode(aName)
 {
   // Nb: _units is not needed, it's always UNITS_BYTES.
@@ -377,7 +378,7 @@ function TreeNode(aName)
   // - _amount (which is never |kUnknown|)
   // - _description
   //
-  // TreeNodes corresponding to Reporters have these properties added later:
+  // Leaf TreeNodes have these properties added later:
   // - _kind
   // - _nMerged (if > 1)
   // - _hasProblem (only defined if true)
@@ -418,8 +419,9 @@ function buildTree(aReporters, aTreeName)
   // build the tree but only fill the properties that we can with a top-down
   // traversal.
 
-  // Is there any reporter which matches aTreeName?  If not, we'll create a
-  // dummy one.
+  // There should always be at least one matching reporter when |aTreeName| is
+  // "explicit".  But there may be zero for "map" trees;  if that happens,
+  // bail.
   var foundReporter = false;
   for (var path in aReporters) {
     if (aReporters[path].treeNameMatches(aTreeName)) {
@@ -427,9 +429,8 @@ function buildTree(aReporters, aTreeName)
       break;
     }
   }
-
   if (!foundReporter) {
-    // We didn't find any reporters for this tree, so bail.
+    assert(aTreeName !== 'explicit');
     return null;
   }
 
@@ -473,7 +474,7 @@ function buildTree(aReporters, aTreeName)
     var path = aPrepath ? aPrepath + '/' + aT._name : aT._name;
     if (aT._kids.length === 0) {
       // Leaf node.  Must have a reporter.
-      assert(aT._kind !== undefined, "aT._kind !== undefined");
+      assert(aT._kind !== undefined, "aT._kind is undefined for leaf node");
       aT._description = getDescription(aReporters, path);
       var amount = getBytes(aReporters, path);
       if (amount !== kUnknown) {
@@ -483,35 +484,15 @@ function buildTree(aReporters, aTreeName)
         aT._hasProblem = true;
       }
     } else {
-      // Non-leaf node.  Get the size of the children.
+      // Non-leaf node.  Derive its size and description entirely from its
+      // children.
+      assert(aT._kind === undefined, "aT._kind is defined for non-leaf node");
       var childrenBytes = 0;
       for (var i = 0; i < aT._kids.length; i++) {
-        // Allow for kUnknown, treat it like 0.
         childrenBytes += fillInTree(aT._kids[i], path);
       }
-      if (aT._kind !== undefined) {
-        aT._description = getDescription(aReporters, path);
-        var amount = getBytes(aReporters, path);
-        if (amount !== kUnknown) {
-          // Non-leaf node with its own reporter.  Use the reporter and add
-          // an "other" child node.
-          aT._amount = amount;
-          var other = new TreeNode("other");
-          other._description = "All unclassified " + aT._name + " memory.",
-          other._amount = aT._amount - childrenBytes,
-          aT._kids.push(other);
-        } else {
-          // Non-leaf node with a reporter that returns kUnknown.
-          // Use the sum of the children and mark it as problematic.
-          aT._amount = childrenBytes;
-          aT._hasProblem = true;
-        }
-      } else {
-        // Non-leaf node without its own reporter.  Derive its size and
-        // description entirely from its children.
-        aT._amount = childrenBytes;
-        aT._description = "The sum of all entries below '" + aT._name + "'.";
-      }
+      aT._amount = childrenBytes;
+      aT._description = "The sum of all entries below '" + aT._name + "'.";
     }
     assert(aT._amount !== kUnknown, "aT._amount !== kUnknown");
     return aT._amount;
@@ -539,49 +520,46 @@ function buildTree(aReporters, aTreeName)
  * Do some work which only makes sense for the 'explicit' tree.
  */
 function fixUpExplicitTree(aT, aReporters) {
-  // Determine how many bytes are reported by heap reporters.  Be careful
-  // with non-leaf reporters;  if we count a non-leaf reporter we don't want
-  // to count any of its child reporters.
+  // Determine how many bytes are reported by heap reporters.
   var s = "";
   function getKnownHeapUsedBytes(aT)
   {
-    if (aT._kind === KIND_HEAP) {
-      return aT._amount;
+    var n = 0;
+    if (aT._kids.length === 0) {
+      // Leaf node.
+      assert(aT._kind !== undefined, "aT._kind is undefined for leaf node");
+      n = aT._kind === KIND_HEAP ? aT._amount : 0;
     } else {
-      var n = 0;
       for (var i = 0; i < aT._kids.length; i++) {
         n += getKnownHeapUsedBytes(aT._kids[i]);
       }
-      return n;
     }
+    return n;
   }
 
   // A special case:  compute the derived "heap-unclassified" value.  Don't
   // mark "heap-allocated" when we get its size because we want it to appear
   // in the "Other Measurements" list.
-  var heapUsedBytes = getBytes(aReporters, "heap-allocated", true);
-  var unknownHeapUsedBytes = 0;
-  var hasProblem = true;
-  if (heapUsedBytes !== kUnknown) {
-    unknownHeapUsedBytes = heapUsedBytes - getKnownHeapUsedBytes(aT);
-    hasProblem = false;
+  var heapAllocatedBytes = getBytes(aReporters, "heap-allocated", true);
+  var heapUnclassifiedT = new TreeNode("heap-unclassified");
+  if (heapAllocatedBytes !== kUnknown) {
+    heapUnclassifiedT._amount =
+      heapAllocatedBytes - getKnownHeapUsedBytes(aT);
+  } else {
+    heapUnclassifiedT._amount = 0;
+    heapUnclassifiedT._hasProblem = true;
   }
-  var heapUnclassified = new TreeNode("heap-unclassified");
   // This kindToString() ensures the "(Heap)" prefix is set without having to
   // set the _kind property, which would mean that there is a corresponding
   // Reporter for this TreeNode (which isn't true).
-  heapUnclassified._description =
+  heapUnclassifiedT._description =
       kindToString(KIND_HEAP) +
       "Memory not classified by a more specific reporter. This includes " +
-      "waste due to internal fragmentation in the heap allocator (caused " +
-      "when the allocator rounds up request sizes).";
-  heapUnclassified._amount = unknownHeapUsedBytes;
-  if (hasProblem) {
-    heapUnclassified._hasProblem = true;
-  }
+      "slop bytes due to internal fragmentation in the heap allocator "
+      "(caused when the allocator rounds up request sizes).";
 
-  aT._kids.push(heapUnclassified);
-  aT._amount += unknownHeapUsedBytes;
+  aT._kids.push(heapUnclassifiedT);
+  aT._amount += heapUnclassifiedT._amount;
 }
 
 /**

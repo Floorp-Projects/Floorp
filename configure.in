@@ -2671,8 +2671,8 @@ ia64*-hpux*)
         fi
 
         if test -n "$GNU_CC"; then
-            CFLAGS="$CFLAGS -mstackrealign"
-            CXXFLAGS="$CXXFLAGS -mstackrealign"
+            CFLAGS="$CFLAGS -mstackrealign -fno-keep-inline-dllexport"
+            CXXFLAGS="$CXXFLAGS -mstackrealign -fno-keep-inline-dllexport"
         else
             AC_DEFINE(HAVE_STDCALL)
         fi
@@ -4364,7 +4364,7 @@ MOZ_ARG_WITH_BOOL(system-nss,
     _USE_SYSTEM_NSS=1 )
 
 if test -n "$_USE_SYSTEM_NSS"; then
-    AM_PATH_NSS(3.13.1, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
+    AM_PATH_NSS(3.13.2, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSS"; then
@@ -4981,6 +4981,7 @@ cairo-gonk)
     TK_LIBS='$(MOZ_CAIRO_LIBS)'
     MOZ_WEBGL=1
     MOZ_PDF_PRINTING=1
+    MOZ_B2G_RIL=1
     ;;
 
 esac
@@ -7278,7 +7279,7 @@ dnl our own linker.
 if test "$OS_TARGET" = Android; then
     WRAP_LDFLAGS="${WRAP_LDFLAGS} -L$_objdir/dist/lib -lmozutils"
     if test "$MOZ_WIDGET_TOOLKIT" = android; then
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr"
+        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr,--wrap=getaddrinfo,--wrap=freeaddrinfo,--wrap=gai_strerror"
     fi
 fi
 
@@ -7572,6 +7573,18 @@ MOZ_ARG_ENABLE_BOOL(quantify,
 [  --enable-quantify       Enable Quantify support (Windows only) ],
     MOZ_QUANTIFY=1,
     MOZ_QUANTIFY= )
+
+dnl ========================================================
+dnl = Enable Radio Interface for B2G (Gonk usually)
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(b2g-ril,
+[  --enable-b2g-ril      Set compile flags necessary for testing B2G Radio Interface Layer via network sockets ],
+    MOZ_B2G_RIL=1,
+    MOZ_B2G_RIL= )
+if test -n "$MOZ_B2G_RIL"; then
+   AC_DEFINE(MOZ_B2G_RIL)
+fi
+AC_SUBST(MOZ_B2G_RIL)
 
 dnl ========================================================
 dnl = Support for demangling undefined symbols

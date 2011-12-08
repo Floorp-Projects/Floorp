@@ -39,14 +39,24 @@
 #include <pthread.h>
 #include "base/atomicops.h"
 #include "nscore.h"
+#include "mozilla/TimeStamp.h"
+
+using mozilla::TimeStamp;
+using mozilla::TimeDuration;
 
 // TODO Merge into Sampler.h
 
 extern pthread_key_t pkey_stack;
-extern pthread_key_t pkey_ticker;
 
 #define SAMPLER_INIT() mozilla_sampler_init();
 #define SAMPLER_DEINIT() mozilla_sampler_deinit();
+#define SAMPLER_START(entries, interval) mozilla_sampler_start(entries, interval);
+#define SAMPLER_STOP() mozilla_sampler_stop();
+#define SAMPLER_IS_ACTIVE() mozilla_sampler_is_active();
+#define SAMPLER_RESPONSIVENESS(time) mozilla_sampler_responsiveness(time)
+#define SAMPLER_GET_RESPONSIVENESS() mozilla_sampler_get_responsiveness()
+#define SAMPLER_SAVE() mozilla_sampler_save();
+#define SAMPLER_GET_PROFILE() mozilla_sampler_get_profile();
 #define SAMPLE_CHECKPOINT(name_space, info) mozilla::SamplerStackFrameRAII only_one_sampleraii_per_scope(FULLFUNCTION, name_space "::" info);
 #define SAMPLE_MARKER(info) mozilla_sampler_add_marker(info);
 
@@ -59,7 +69,7 @@ extern pthread_key_t pkey_ticker;
 //      memory stores from being reordered
 // Uses: pLinuxKernelMemoryBarrier
 # define STORE_SEQUENCER() base::subtle::MemoryBarrier();
-#elif ARCH_CPU_ARM_FAMILY
+#elif ARCH_CPU_X86_FAMILY
 # define STORE_SEQUENCER() asm volatile("" ::: "memory");
 #else
 # error "Memory clobber not supported for your platform."
@@ -71,6 +81,13 @@ inline void* mozilla_sampler_call_enter(const char *aInfo);
 inline void  mozilla_sampler_call_exit(void* handle);
 inline void  mozilla_sampler_add_marker(const char *aInfo);
 
+void mozilla_sampler_start(int aEntries, int aInterval);
+void mozilla_sampler_stop();
+bool mozilla_sampler_is_active();
+void mozilla_sampler_responsiveness(TimeStamp time);
+const float* mozilla_sampler_get_responsiveness();
+void mozilla_sampler_save();
+char* mozilla_sampler_get_profile();
 void mozilla_sampler_init();
 
 namespace mozilla {

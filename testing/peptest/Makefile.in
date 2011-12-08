@@ -52,6 +52,7 @@ PEPTEST_HARNESS = \
 
 PEPTEST_EXTRAS = \
   setup.py \
+  runtests.py \
   MANIFEST.in \
   README.md \
   $(NULL)
@@ -59,6 +60,14 @@ PEPTEST_EXTRAS = \
 PEPTEST_TESTS = \
   tests \
   $(NULL)
+
+_DEST_DIR = $(DEPTH)/_tests/peptest
+libs:: $(PEPTEST_HARNESS)
+	$(PYTHON) $(topsrcdir)/config/nsinstall.py $^ $(_DEST_DIR)
+libs:: $(PEPTEST_EXTRAS)
+	$(PYTHON) $(topsrcdir)/config/nsinstall.py $^ $(_DEST_DIR)
+libs:: $(PEPTEST_TESTS)
+	$(PYTHON) $(topsrcdir)/config/nsinstall.py $^ $(_DEST_DIR)
 
 stage-package: PKG_STAGE = $(DIST)/test-package-stage
 stage-package:

@@ -1,4 +1,4 @@
-// |jit-test| TMFLAGS: full,fragprofile,treevis; valgrind
+// |jit-test| valgrind
 
 function testRegExpTest() {
     var r = /abc/;

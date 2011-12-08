@@ -139,8 +139,6 @@ public:
   nsresult    SetCSSPropertyPixels(nsIDOMElement * aElement,
                                    const nsAString & aProperty,
                                    PRInt32 aIntValue);
-  nsresult    RemoveCSSProperty(nsIDOMElement * aElement,
-                                const nsAString & aProperty);
 
   /** gets the specified/computed style value of a CSS property for a given node (or its element
     * ancestor if it is not an element)

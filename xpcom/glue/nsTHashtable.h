@@ -258,7 +258,7 @@ public:
   size_t ShallowSizeOfExcludingThis(nsMallocSizeOfFun mallocSizeOf)
   {
     if (IsInitialized()) {
-      return PL_DHashTableShallowSizeOfExcludingThis(&mTable, mallocSizeOf);
+      return PL_DHashTableSizeOfExcludingThis(&mTable, nsnull, mallocSizeOf);
     }
     return 0;
   }

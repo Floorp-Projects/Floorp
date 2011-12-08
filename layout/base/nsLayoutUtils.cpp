@@ -3917,13 +3917,11 @@ nsLayoutUtils::IsReallyFixedPos(nsIFrame* aFrame)
 }
 
 nsLayoutUtils::SurfaceFromElementResult
-nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
+nsLayoutUtils::SurfaceFromElement(dom::Element* aElement,
                                   PRUint32 aSurfaceFlags)
 {
   SurfaceFromElementResult result;
   nsresult rv;
-
-  nsCOMPtr<nsINode> node = do_QueryInterface(aElement);
 
   bool forceCopy = (aSurfaceFlags & SFE_WANT_NEW_SURFACE) != 0;
   bool wantImageSurface = (aSurfaceFlags & SFE_WANT_IMAGE_SURFACE) != 0;
@@ -3934,11 +3932,8 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
   }
 
   // If it's a <canvas>, we may be able to just grab its internal surface
-  nsCOMPtr<nsIDOMHTMLCanvasElement> domCanvas = do_QueryInterface(aElement);
-  if (node && domCanvas) {
-    nsHTMLCanvasElement *canvas = static_cast<nsHTMLCanvasElement*>(domCanvas.get());
-    nsIntSize nssize = canvas->GetSize();
-    gfxIntSize size(nssize.width, nssize.height);
+  if (nsHTMLCanvasElement* canvas = nsHTMLCanvasElement::FromContent(aElement)) {
+    gfxIntSize size = canvas->GetSize();
 
     nsRefPtr<gfxASurface> surf;
 
@@ -3962,7 +3957,7 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
 
       nsRefPtr<gfxContext> ctx = new gfxContext(surf);
       // XXX shouldn't use the external interface, but maybe we can layerify this
-      rv = (static_cast<nsICanvasElementExternal*>(canvas))->RenderContextsExternal(ctx, gfxPattern::FILTER_NEAREST);
+      rv = canvas->RenderContextsExternal(ctx, gfxPattern::FILTER_NEAREST);
       if (NS_FAILED(rv))
         return result;
     }
@@ -3979,7 +3974,7 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
 
     result.mSurface = surf;
     result.mSize = size;
-    result.mPrincipal = node->NodePrincipal();
+    result.mPrincipal = aElement->NodePrincipal();
     result.mIsWriteOnly = canvas->IsWriteOnly();
 
     return result;
@@ -3987,12 +3982,9 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
 
 #ifdef MOZ_MEDIA
   // Maybe it's <video>?
-  nsCOMPtr<nsIDOMHTMLVideoElement> ve = do_QueryInterface(aElement);
-  if (node && ve) {
-    nsHTMLVideoElement *video = static_cast<nsHTMLVideoElement*>(ve.get());
-
-    unsigned short readyState;
-    if (NS_SUCCEEDED(ve->GetReadyState(&readyState)) &&
+  if (nsHTMLVideoElement* video = nsHTMLVideoElement::FromContent(aElement)) {
+    PRUint16 readyState;
+    if (NS_SUCCEEDED(video->GetReadyState(&readyState)) &&
         (readyState == nsIDOMHTMLMediaElement::HAVE_NOTHING ||
          readyState == nsIDOMHTMLMediaElement::HAVE_METADATA)) {
       result.mIsStillLoading = true;

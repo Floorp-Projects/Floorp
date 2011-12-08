@@ -59,14 +59,15 @@ ifeq ($(OS_ARCH),Linux)
 DEFINES += -DXP_LINUX
 endif
 
-CPPSRCS		= \
-		$(XPCOM_GLUE_SRC_LCPPSRCS) \
-		$(XPCOM_GLUENS_SRC_LCPPSRCS) \
-		nsXPComInit.cpp \
-		nsXPCOMStrings.cpp \
-		Services.cpp \
-		Omnijar.cpp \
-		$(NULL)
+CPPSRCS = \
+  $(XPCOM_GLUE_SRC_LCPPSRCS) \
+  $(XPCOM_GLUENS_SRC_LCPPSRCS) \
+  nsXPComInit.cpp \
+  nsXPCOMStrings.cpp \
+  Services.cpp \
+  Omnijar.cpp \
+  FileLocation.cpp \
+  $(NULL)
 
 SHARED_LIBRARY_LIBS = \
 		$(DEPTH)/chrome/src/$(LIB_PREFIX)chrome_s.$(LIB_SUFFIX) \
@@ -123,6 +124,7 @@ EXPORTS_mozilla = \
   Services.h \
   ServiceList.h \
   Omnijar.h \
+  FileLocation.h \
   $(NULL)
 
 

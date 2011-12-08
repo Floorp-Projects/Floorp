@@ -53,9 +53,7 @@ class nsNativeModuleLoader : public mozilla::ModuleLoader
     nsNativeModuleLoader() {}
     ~nsNativeModuleLoader() {}
 
-    NS_OVERRIDE virtual const mozilla::Module* LoadModule(nsILocalFile* aFile);
-    NS_OVERRIDE virtual const mozilla::Module* LoadModuleFromJAR(nsILocalFile* aJARFile,
-                                                                 const nsACString& aPath);
+    NS_OVERRIDE virtual const mozilla::Module* LoadModule(mozilla::FileLocation &aFile);
 
     nsresult Init();
 

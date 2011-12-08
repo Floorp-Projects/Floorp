@@ -38,7 +38,10 @@
 [scriptable, uuid(25db9b8e-8123-4de1-b36d-8bbbedf2cdf4)]
 interface nsIProfiler : nsISupports
 {
-  void StartProfiler();
+  void StartProfiler(in PRUint32 aInterval, in PRUint32 aEntries);
   void StopProfiler();
+  string GetProfile();
+  boolean IsActive();
+  void GetResponsivenessTimes(out PRUint32 aCount, [retval, array, size_is(aCount)] out float aResult);
 };
 
