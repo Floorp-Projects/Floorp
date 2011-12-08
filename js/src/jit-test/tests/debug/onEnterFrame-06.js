@@ -7,7 +7,7 @@ var dbg = Debugger(g1, g2);
 dbg.removeDebuggee(g2); // turn off debug mode in g2
 
 g1.eval("function f() { return 1; }\n");
-var N = g1.N = RUNLOOP + 2;
+var N = g1.N = 11;
 g1.eval("function h() {\n" +
        "    for (var i = 0; i < N; i += f()) {}\n" +
        "}");

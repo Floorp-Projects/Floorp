@@ -22,7 +22,7 @@ function g(i) {
 }
 
 function f() {
-    for (var i = 0; i < RUNLOOP * 2; i++) {
+    for (var i = 0; i < 9 * 2; i++) {
         g(i);
     }
 }

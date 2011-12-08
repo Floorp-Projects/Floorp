@@ -9,5 +9,5 @@ function foo(i) {
   else
     assertEq(y, "1,2,4,5,6");
 }
-for (var i = 0; i < HOTLOOP + 2; i++)
+for (var i = 0; i < 10; i++)
   foo(i);

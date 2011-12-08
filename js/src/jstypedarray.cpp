@@ -147,7 +147,7 @@ JSBool
 ArrayBuffer::class_constructor(JSContext *cx, uintN argc, Value *vp)
 {
     int32 nbytes = 0;
-    if (argc > 0 && !ValueToECMAInt32(cx, vp[2], &nbytes))
+    if (argc > 0 && !ToInt32(cx, vp[2], &nbytes))
         return false;
 
     JSObject *bufobj = create(cx, nbytes);
@@ -225,7 +225,7 @@ ArrayBuffer::create(JSContext *cx, int32 nbytes)
                                                    obj->getProto(), obj->getParent(),
                                                    gc::FINALIZE_OBJECT16);
     if (!empty)
-        return false;
+        return NULL;
     obj->setLastPropertyInfallible(empty);
 
     /*
@@ -1384,7 +1384,7 @@ class TypedArrayTemplate
                                                        gc::FINALIZE_OBJECT8,
                                                        BaseShape::NOT_EXTENSIBLE);
         if (!empty)
-            return false;
+            return NULL;
         obj->setLastPropertyInfallible(empty);
 
         JS_ASSERT(obj->numFixedSlots() == NUM_FIXED_SLOTS);
@@ -1454,7 +1454,7 @@ class TypedArrayTemplate
         int32_t length = -1;
 
         if (argc > 1) {
-            if (!ValueToInt32(cx, argv[1], &byteOffset))
+            if (!NonstandardToInt32(cx, argv[1], &byteOffset))
                 return NULL;
             if (byteOffset < 0) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1463,7 +1463,7 @@ class TypedArrayTemplate
             }
 
             if (argc > 2) {
-                if (!ValueToInt32(cx, argv[2], &length))
+                if (!NonstandardToInt32(cx, argv[2], &length))
                     return NULL;
                 if (length < 0) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1497,7 +1497,7 @@ class TypedArrayTemplate
         int32_t length = int32(getLength(tarray));
 
         if (args.length() > 0) {
-            if (!ValueToInt32(cx, args[0], &begin))
+            if (!NonstandardToInt32(cx, args[0], &begin))
                 return false;
             if (begin < 0) {
                 begin += length;
@@ -1508,7 +1508,7 @@ class TypedArrayTemplate
             }
 
             if (args.length() > 1) {
-                if (!ValueToInt32(cx, args[1], &end))
+                if (!NonstandardToInt32(cx, args[1], &end))
                     return false;
                 if (end < 0) {
                     end += length;
@@ -1549,7 +1549,7 @@ class TypedArrayTemplate
         int32_t off = 0;
 
         if (args.length() > 1) {
-            if (!ValueToInt32(cx, args[1], &off))
+            if (!NonstandardToInt32(cx, args[1], &off))
                 return false;
 
             if (off < 0 || uint32_t(off) > getLength(tarray)) {
@@ -1707,32 +1707,39 @@ class TypedArrayTemplate
 
   protected:
     static NativeType
+    nativeFromDouble(double d)
+    {
+        if (!ArrayTypeIsFloatingPoint() && JS_UNLIKELY(JSDOUBLE_IS_NaN(d)))
+            return NativeType(int32(0));
+        if (TypeIsFloatingPoint<NativeType>())
+            return NativeType(d);
+        if (TypeIsUnsigned<NativeType>())
+            return NativeType(js_DoubleToECMAUint32(d));
+        return NativeType(js_DoubleToECMAInt32(d));
+    }
+
+    static NativeType
     nativeFromValue(JSContext *cx, const Value &v)
     {
         if (v.isInt32())
             return NativeType(v.toInt32());
 
-        if (v.isDouble()) {
-            double d = v.toDouble();
-            if (!ArrayTypeIsFloatingPoint() && JS_UNLIKELY(JSDOUBLE_IS_NaN(d)))
-                return NativeType(int32(0));
-            if (TypeIsFloatingPoint<NativeType>())
-                return NativeType(d);
-            if (TypeIsUnsigned<NativeType>())
-                return NativeType(js_DoubleToECMAUint32(d));
-            return NativeType(js_DoubleToECMAInt32(d));
-        }
+        if (v.isDouble())
+            return nativeFromDouble(v.toDouble());
 
-        if (v.isPrimitive() && !v.isMagic()) {
+        /*
+         * The condition guarantees that holes and undefined values
+         * are treated identically.
+         */
+        if (v.isPrimitive() && !v.isMagic() && !v.isUndefined()) {
             jsdouble dval;
             JS_ALWAYS_TRUE(ToNumber(cx, v, &dval));
-            return NativeType(dval);
+            return nativeFromDouble(dval);
         }
 
-        if (ArrayTypeIsFloatingPoint())
-            return NativeType(js_NaN);
-
-        return NativeType(int32(0));
+        return ArrayTypeIsFloatingPoint()
+               ? NativeType(js_NaN)
+               : NativeType(int32(0));
     }
 
     static bool
@@ -1751,10 +1758,13 @@ class TypedArrayTemplate
 
             const Value *src = ar->getDenseArrayElements();
 
+            /*
+             * It is valid to skip the hole check here because nativeFromValue
+             * treats a hole as undefined.
+             */
             for (uintN i = 0; i < len; ++i)
                 *dest++ = nativeFromValue(cx, *src++);
         } else {
-            // slow path
             Value v;
 
             for (uintN i = 0; i < len; ++i) {

@@ -94,11 +94,3 @@ function testTypedArrayOther()
 testBasicTypedArrays();
 testSpecialTypedArrays();
 testTypedArrayOther();
-
-checkStats({
-    // Note! These are all inner tree growing aborts, because we change
-    // the array type in the inner loop of the tests.  This isn't ideal,
-    // and if we ever fix these to not report as aborts, this should go
-    // back to 0.
-    recorderAborted: 5
-});
