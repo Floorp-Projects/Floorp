@@ -130,6 +130,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitToInt32(MToInt32 *convert);
     bool visitTruncateToInt32(MTruncateToInt32 *truncate);
     bool visitCopy(MCopy *ins);
+    bool visitImplicitThis(MImplicitThis *ins);
     bool visitSlots(MSlots *ins);
     bool visitElements(MElements *ins);
     bool visitLoadSlot(MLoadSlot *ins);
@@ -139,6 +140,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitBoundsCheck(MBoundsCheck *ins);
     bool visitLoadElement(MLoadElement *ins);
     bool visitStoreElement(MStoreElement *ins);
+    bool visitGuardClass(MGuardClass *ins);
 };
 
 } // namespace ion

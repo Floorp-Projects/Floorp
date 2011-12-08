@@ -79,6 +79,7 @@
     _(Start)                        \
     _(OsrEntry)                     \
     _(OsrValue)                     \
+    _(ImplicitThis)                 \
     _(Slots)                        \
     _(Elements)                     \
     _(LoadSlotV)                    \
@@ -86,6 +87,7 @@
     _(StoreSlotV)                   \
     _(StoreSlotT)                   \
     _(GuardShape)                   \
+    _(GuardClass)                   \
     _(WriteBarrierV)                \
     _(WriteBarrierT)                \
     _(TypeBarrier)                  \

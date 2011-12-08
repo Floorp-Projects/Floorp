@@ -585,6 +585,14 @@ LIRGenerator::visitCopy(MCopy *ins)
     return false;
 }
 
+bool
+LIRGenerator::visitImplicitThis(MImplicitThis *ins)
+{
+    JS_ASSERT(ins->callee()->type() == MIRType_Object);
+
+    LImplicitThis *lir = new LImplicitThis(useRegister(ins->callee()));
+    return assignSnapshot(lir) && defineBox(lir, ins);
+}
 
 bool
 LIRGenerator::visitSlots(MSlots *ins)
@@ -766,6 +774,14 @@ LIRGenerator::visitStoreElement(MStoreElement *ins)
                                       useRegisterOrConstant(ins->index()),
                                       useRegisterOrConstant(ins->value())), ins);
     }
+}
+
+bool
+LIRGenerator::visitGuardClass(MGuardClass *ins)
+{
+    LDefinition tempInt = temp(LDefinition::INTEGER);
+    LGuardClass *guard = new LGuardClass(useRegister(ins->obj()), tempInt);
+    return assignSnapshot(guard) && add(guard, ins);
 }
 
 static void

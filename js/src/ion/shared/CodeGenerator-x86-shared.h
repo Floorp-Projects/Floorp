@@ -137,6 +137,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitNewArray(LNewArray *builder);
     virtual bool visitCallGeneric(LCallGeneric *call);
     virtual bool visitBoundsCheck(LBoundsCheck *lir);
+    virtual bool visitGuardShape(LGuardShape *guard);
+    virtual bool visitGuardClass(LGuardClass *guard);
 
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);
