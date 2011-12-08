@@ -18,15 +18,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=330705
       <![CDATA[
         SimpleTest.waitForExplicitFinish();
 
+        var isFocused = false;
+
+        function doTest() {
+          document.getElementsByTagName('box')[1].blur();
+          setTimeout(function () {
+            ok(isFocused,
+               "The first box element is still focused after blur() has been called on the second box element");
+            SimpleTest.finish();
+          }, 100);
+        }
+
         function onLoad() {
-          var isFocused = false;
           var box = document.getElementsByTagName('box')[0];
-          box.addEventListener('focus', function() { isFocused = true; }, true);
+          box.addEventListener('focus', function() {
+            isFocused = true;
+            setTimeout(doTest, 0);
+          }, true);
           box.addEventListener('blur', function() { isFocused = false;}, true);
           box.focus();
-          document.getElementsByTagName('box')[1].blur();
-          ok(isFocused == true, "The first box element is still focused after blur() has been called on the second box element");
-          SimpleTest.finish();
         }
 
         addLoadEvent(onLoad);
