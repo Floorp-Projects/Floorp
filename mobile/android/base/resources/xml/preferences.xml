@@ -9,14 +9,8 @@
 
         <!-- TODO: Default Search Engine -->
 
-        <!--ListPreference     android:key="general.useragent.locale"
-                            android:title="@string/pref_locale"
-                            android:defaultValue=""
-                            android:entries="@array/pref_homepage_entries"
-                            android:entryValues="@array/pref_homepage_values"
-                            android:persistent="false" /-->
-
         <!-- TODO: Sync -->
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_category_content">
