@@ -55,6 +55,7 @@ _CHROME_FILES = \
 	test_bug533845.xul \
 	test_bug551434.html \
 	bug551434_childframe.html \
+	test_bug708062.html \
 	test_chrome_content_integration.xul \
 	     chrome_content_integration_window.xul \
 	test_chrome_over_plugin.xul \
