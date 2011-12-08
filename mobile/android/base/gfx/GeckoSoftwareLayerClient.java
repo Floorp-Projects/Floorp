@@ -203,10 +203,15 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     }
 
     public Bitmap getBitmap() {
-        Bitmap b = Bitmap.createBitmap(mWidth, mHeight,
-                                       CairoUtils.cairoFormatTobitmapConfig(mFormat));
-        b.copyPixelsFromBuffer(mBuffer.asIntBuffer());
-        return b;
+        try {
+            Bitmap b = Bitmap.createBitmap(mWidth, mHeight,
+                                           CairoUtils.cairoFormatTobitmapConfig(mFormat));
+            b.copyPixelsFromBuffer(mBuffer.asIntBuffer());
+            return b;
+        } catch (OutOfMemoryError oom) {
+            Log.e(LOGTAG, "Unable to create bitmap", oom);
+            return null;
+        }
     }
 
     /** Returns the back buffer. This function is for Gecko to use. */
