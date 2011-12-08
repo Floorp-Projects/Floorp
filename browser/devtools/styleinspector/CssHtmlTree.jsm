@@ -214,7 +214,10 @@ CssHtmlTree.processTemplate = function CssHtmlTree_processTemplate(aTemplate,
   // All the templater does is to populate a given DOM tree with the given
   // values, so we need to clone the template first.
   let duplicated = aTemplate.cloneNode(true);
-  new Templater().processNode(duplicated, aData);
+
+  // See https://github.com/mozilla/domtemplate/blob/master/README.md
+  // for docs on the template() function
+  template(duplicated, aData, { allowEval: true });
   while (duplicated.firstChild) {
     aDestination.appendChild(duplicated.firstChild);
   }
