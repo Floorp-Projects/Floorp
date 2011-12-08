@@ -664,6 +664,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_GETGNAME:
         return jsop_getgname(info().getAtom(pc));
 
+      case JSOP_CALLGNAME:
+        return jsop_callgname(info().getAtom(pc));
+
       case JSOP_BINDGNAME:
         return pushConstant(ObjectValue(*script->global()));
 
@@ -1985,26 +1988,29 @@ IonBuilder::jsop_call_inline(uint32 argc, IonBuilder &inlineBuilder, InliningDat
     // |top| jumps into the callee subgraph -- save it for later use.
     MBasicBlock *top = current;
 
-    MResumePoint *inlineResumePoint = MResumePoint::NewUnwrapArgs(top, argc, pc, callerResumePoint_);
+    MResumePoint *inlineResumePoint = MResumePoint::New(top, pc, callerResumePoint_);
     if (!inlineResumePoint)
         return false;
 
-    // Gather up the arguments (including |this|) to the inline function.
+    // Gather up the arguments and |this| to the inline function.
     // Note that we leave the callee on the simulated stack for the
     // duration of the call.
     MDefinitionVector args;
-    if (!args.reserve(argc + 2))
+    if (!args.growByUninitialized(argc))
         return false;
-    for (uintN i = 0; i < argc; ++i) {
+
+    // Arguments are popped right-to-left so we have to fill |args| backwards.
+    for (uintN i = argc - 1; i < argc; i--) {
         MPassArg *passArg = top->pop()->toPassArg();
         JS_ASSERT(passArg->useCount() == 0);
         passArg->block()->discard(passArg);
         MDefinition *wrapped = passArg->getArgument();
-        args.infallibleAppend(wrapped);
+        args[i] = wrapped;
     }
 
     MPassArg *thisArg = top->pop()->toPassArg();
     MDefinition *thisDefn = thisArg->getArgument();
+    JS_ASSERT(thisArg->useCount() == 0);
     thisArg->block()->discard(thisArg);
 
     // Build the graph.
@@ -2045,6 +2051,8 @@ IonBuilder::jsop_call_inline(uint32 argc, IonBuilder &inlineBuilder, InliningDat
     if (retvalDefns.length() > 1) {
         // Need to create a phi to merge the returns together.
         MPhi *phi = MPhi::New(bottom->stackDepth());
+        bottom->addPhi(phi);
+
         for (MDefinition **it = retvalDefns.begin(), **end = retvalDefns.end(); it != end; ++it) {
             if (!phi->addInput(*it))
                 return false;
@@ -2569,8 +2577,8 @@ IonBuilder::jsop_getgname(JSAtom *atom)
     // If the property is permanent, a shape guard isn't necessary.
     JSValueType knownType = JSVAL_TYPE_UNKNOWN;
 
-    types::TypeSet *barrier;
-    types::TypeSet *types = oracle->propertyRead(script, pc, &barrier);
+    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::TypeSet *types = oracle->propertyRead(script, pc);
     if (types) {
         JSObject *singleton = types->getSingleton(cx);
 
@@ -2620,6 +2628,35 @@ IonBuilder::jsop_getgname(JSAtom *atom)
 
     current->push(load);
     return pushTypeBarrier(load, types, barrier);
+}
+
+bool
+IonBuilder::jsop_callgname(JSAtom *atom)
+{
+    // Push callee.
+    if (!jsop_getgname(atom))
+        return false;
+
+    if (!script->hasGlobal())
+        return abort("CALLGNAME non-compile-and-go");
+
+    // Fast path for functions whose global is statically known to be
+    // the current global.
+    types::TypeSet *types = oracle->propertyRead(script, pc);
+    if (types && types->hasGlobalObject(cx, script->global()))
+        return pushConstant(UndefinedValue()) && jsop_notearg();
+
+    // The callee must be a function for MImplicitThis.
+    MDefinition *callee = current->peek(-1);
+    MGuardClass *guard = MGuardClass::New(callee, &js::FunctionClass);
+    current->add(guard);
+
+    // Push implicit |this|.
+    MImplicitThis *this_ = MImplicitThis::New(callee);
+    current->add(this_);
+    current->push(this_);
+
+    return jsop_notearg();
 }
 
 bool
@@ -2719,8 +2756,8 @@ IonBuilder::jsop_getelem_dense()
     if (oracle->arrayProtoHasIndexedProperty())
         return abort("GETELEM Array proto has indexed properties");
 
-    types::TypeSet *barrier;
-    types::TypeSet *types = oracle->propertyRead(script, pc, &barrier);
+    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::TypeSet *types = oracle->propertyRead(script, pc);
     bool needsHoleCheck = !oracle->elementReadIsPacked(script, pc);
 
     MDefinition *id = current->pop();

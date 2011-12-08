@@ -181,13 +181,9 @@ MBasicBlock::inheritNonPredecessor(MBasicBlock *parent)
     copySlots(parent);
 
     // Create a resume point using our initial stack state.
-    entryResumePoint_ = new MResumePoint(this, pc(), callerResumePoint());
-    if (!entryResumePoint_->init(this))
+    entryResumePoint_ = MResumePoint::New(this, pc(), callerResumePoint());
+    if (!entryResumePoint_)
         return false;
-
-    for (size_t i = 0; i < stackDepth(); i++)
-        entryResumePoint()->initOperand(i, getSlot(i));
-
     return true;
 }
 

@@ -64,7 +64,7 @@ struct ImmWord
 
     explicit ImmWord(uintptr_t value) : value(value)
     { }
-    explicit ImmWord(void *ptr) : value(reinterpret_cast<uintptr_t>(ptr))
+    explicit ImmWord(const void *ptr) : value(reinterpret_cast<uintptr_t>(ptr))
     { }
 
     void *asPointer() {

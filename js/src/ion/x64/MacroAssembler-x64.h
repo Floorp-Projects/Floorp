@@ -223,12 +223,20 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void cmpPtr(const Register &lhs, const ImmWord rhs) {
         JS_ASSERT(lhs != ScratchReg);
         movq(rhs, ScratchReg);
-        return cmpq(lhs, ScratchReg);
+        cmpq(lhs, ScratchReg);
     }
     void cmpPtr(const Register &lhs, const ImmGCPtr rhs) {
         JS_ASSERT(lhs != ScratchReg);
         movq(rhs, ScratchReg);
-        return cmpq(lhs, ScratchReg);
+        cmpq(lhs, ScratchReg);
+    }
+    void cmpPtr(const Operand &lhs, const ImmGCPtr rhs) {
+        movq(rhs, ScratchReg);
+        cmpq(lhs, ScratchReg);
+    }
+    void cmpPtr(const Operand &lhs, const ImmWord rhs) {
+        movq(rhs, ScratchReg);
+        cmpq(lhs, ScratchReg);
     }
     void testPtr(const Register &lhs, const Register &rhs) {
         testq(lhs, rhs);

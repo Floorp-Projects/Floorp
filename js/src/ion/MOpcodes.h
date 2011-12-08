@@ -79,12 +79,14 @@ namespace ion {
     _(NewArray)                                                             \
     _(Start)                                                                \
     _(OsrEntry)                                                             \
+    _(ImplicitThis)                                                         \
     _(Slots)                                                                \
     _(Elements)                                                             \
     _(LoadSlot)                                                             \
     _(StoreSlot)                                                            \
     _(TypeBarrier)                                                          \
     _(GuardShape)                                                           \
+    _(GuardClass)                                                           \
     _(InitializedLength)                                                    \
     _(BoundsCheck)                                                          \
     _(LoadElement)                                                          \

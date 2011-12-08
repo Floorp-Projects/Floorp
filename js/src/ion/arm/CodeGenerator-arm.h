@@ -175,6 +175,8 @@ private:
     bool visitStoreSlotV(LStoreSlotV *load);
     bool visitStoreSlotT(LStoreSlotT *load);
     bool visitGuardShape(LGuardShape *guard);
+    bool visitGuardClass(LGuardClass *guard);
+    bool visitImplicitThis(LImplicitThis *lir);
 };
 
 typedef CodeGeneratorARM CodeGeneratorSpecific;

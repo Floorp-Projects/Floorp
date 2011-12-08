@@ -743,6 +743,25 @@ class LOsrValue : public LInstructionHelper<BOX_PIECES, 1, 0>
     }
 };
 
+// Determines the implicit |this| value for function calls.
+class LImplicitThis : public LInstructionHelper<BOX_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(ImplicitThis);
+    BOX_OUTPUT_ACCESSORS();
+
+    LImplicitThis(const LAllocation &callee) {
+        setOperand(0, callee);
+    }
+
+    const MImplicitThis *mir() const {
+        return mir_->toImplicitThis();
+    }
+    const LAllocation *callee() {
+        return getOperand(0);
+    }
+};
+
 // Load the "slots" member out of a JSObject.
 //   Input: JSObject pointer
 //   Output: slots pointer
@@ -1055,6 +1074,27 @@ class LTypeBarrier : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 1>
     }
     const LDefinition *temp() {
         return getTemp(0);
+    }
+};
+
+// Guard against an object's class.
+class LGuardClass : public LInstructionHelper<0, 1, 1>
+{
+  public:
+    LIR_HEADER(GuardClass);
+
+    LGuardClass(const LAllocation &in, const LDefinition &temp) {
+        setOperand(0, in);
+        setTemp(0, temp);
+    }
+    const MGuardClass *mir() const {
+        return mir_->toGuardClass();
+    }
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LAllocation *tempInt() {
+        return getTemp(0)->output();
     }
 };
 

@@ -88,9 +88,10 @@ class TypeOracle
     virtual types::TypeSet *globalPropertyTypeSet(JSScript *script, jsbytecode *pc, jsid id) {
         return NULL;
     }
-    virtual types::TypeSet *propertyRead(JSScript *script, jsbytecode *pc,
-                                         types::TypeSet **barrier) {
-        *barrier = NULL;
+    virtual types::TypeSet *propertyRead(JSScript *script, jsbytecode *pc) {
+        return NULL;
+    }
+    virtual types::TypeSet *propertyReadBarrier(JSScript *script, jsbytecode *pc) {
         return NULL;
     }
     virtual types::TypeSet *globalPropertyWrite(JSScript *script, jsbytecode *pc,
@@ -173,7 +174,8 @@ class TypeInferenceOracle : public TypeOracle
     types::TypeSet *thisTypeSet(JSScript *script);
     types::TypeSet *parameterTypeSet(JSScript *script, size_t index);
     types::TypeSet *globalPropertyTypeSet(JSScript *script, jsbytecode *pc, jsid id);
-    types::TypeSet *propertyRead(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
+    types::TypeSet *propertyRead(JSScript *script, jsbytecode *pc);
+    types::TypeSet *propertyReadBarrier(JSScript *script, jsbytecode *pc);
     types::TypeSet *globalPropertyWrite(JSScript *script, jsbytecode *pc, jsid id, bool *canSpecialize);
     types::TypeSet *returnTypeSet(JSScript *script, jsbytecode *pc, types::TypeSet **barrier);
     types::TypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc);
