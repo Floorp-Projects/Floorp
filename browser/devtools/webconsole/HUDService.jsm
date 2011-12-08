@@ -1837,10 +1837,13 @@ HUD_SERVICE.prototype =
 
     // Remove the HUDBox and the consolePanel if the Web Console is inside a
     // floating panel.
-    hud.HUDBox.parentNode.removeChild(hud.HUDBox);
-    if (hud.consolePanel) {
+    if (hud.consolePanel && hud.consolePanel.parentNode) {
       hud.consolePanel.parentNode.removeChild(hud.consolePanel);
+      hud.consolePanel.removeAttribute("hudId");
+      hud.consolePanel = null;
     }
+
+    hud.HUDBox.parentNode.removeChild(hud.HUDBox);
 
     if (hud.splitter.parentNode) {
       hud.splitter.parentNode.removeChild(hud.splitter);
@@ -3319,9 +3322,6 @@ HeadsUpDisplay.prototype = {
       }
 
       panel.removeEventListener("popuphidden", onPopupHidden, false);
-      if (panel.parentNode) {
-        panel.parentNode.removeChild(panel);
-      }
 
       let width = 0;
       try {
@@ -3333,24 +3333,12 @@ HeadsUpDisplay.prototype = {
         Services.prefs.setIntPref("devtools.webconsole.width", panel.clientWidth);
       }
 
-      /*
-       * Removed because of bug 674562
-       * Services.prefs.setIntPref("devtools.webconsole.top", panel.panelBox.y);
-       * Services.prefs.setIntPref("devtools.webconsole.left", panel.panelBox.x);
-       */
-
-      // Make sure we are not going to close again, drop the hudId reference of
-      // the panel.
-      panel.removeAttribute("hudId");
-
+      // Are we destroying the HUD or repositioning it?
       if (this.consoleWindowUnregisterOnHide) {
         HUDService.deactivateHUDForContext(this.tab, false);
-      }
-      else {
+      } else {
         this.consoleWindowUnregisterOnHide = true;
       }
-
-      this.consolePanel = null;
     }).bind(this);
 
     panel.addEventListener("popuphidden", onPopupHidden, false);
@@ -3488,13 +3476,14 @@ HeadsUpDisplay.prototype = {
 
     this.uiInOwnWindow = false;
     if (this.consolePanel) {
-      this.HUDBox.removeAttribute("flex");
-      this.HUDBox.removeAttribute("height");
-      this.HUDBox.style.height = height + "px";
-
       // must destroy the consolePanel
       this.consoleWindowUnregisterOnHide = false;
       this.consolePanel.hidePopup();
+      this.consolePanel.parentNode.removeChild(this.consolePanel);
+      this.consolePanel = null;   // remove this as we're not in panel anymore
+      this.HUDBox.removeAttribute("flex");
+      this.HUDBox.removeAttribute("height");
+      this.HUDBox.style.height = height + "px";
     }
 
     if (this.jsterm) {
@@ -6204,7 +6193,7 @@ HeadsUpDisplayUICommands = {
 
     if (hudRef && hud) {
       if (hudRef.consolePanel) {
-        HUDService.deactivateHUDForContext(gBrowser.selectedTab, false);
+        hudRef.consolePanel.hidePopup();
       }
       else {
         HUDService.storeHeight(hudId);

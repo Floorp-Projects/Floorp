@@ -80,6 +80,9 @@ const INSPECTOR_NOTIFICATIONS = {
   // Fires once the Inspector is closed.
   CLOSED: "inspector-closed",
 
+  // Fires once the Inspector is destroyed. Not fired on tab switch.
+  DESTROYED: "inspector-destroyed",
+
   // Fires when the Inspector is reopened after tab-switch.
   STATE_RESTORED: "inspector-state-restored",
 
@@ -1046,6 +1049,8 @@ InspectorUI.prototype = {
       return;
     }
 
+    let winId = new String(this.winID); // retain this to notify observers.
+
     this.closing = true;
     this.toolbar.hidden = true;
 
@@ -1104,6 +1109,8 @@ InspectorUI.prototype = {
     delete this.stylePanel;
     delete this.toolbar;
     Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.CLOSED, null);
+    if (!aKeepStore)
+      Services.obs.notifyObservers(null, INSPECTOR_NOTIFICATIONS.DESTROYED, winId);
   },
 
   /**

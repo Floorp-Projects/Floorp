@@ -68,9 +68,12 @@ nsNoDataProtocolContentPolicy::ShouldLoad(PRUint32 aContentType,
 
   // Don't block for TYPE_OBJECT since such URIs are sometimes loaded by the
   // plugin, so they don't necessarily open external apps
+  // TYPE_WEBSOCKET loads can only go to ws:// or wss://, so we don't need to
+  // concern ourselves with them.
   if (aContentType != TYPE_DOCUMENT &&
       aContentType != TYPE_SUBDOCUMENT &&
-      aContentType != TYPE_OBJECT) {
+      aContentType != TYPE_OBJECT &&
+      aContentType != TYPE_WEBSOCKET) {
 
     // The following are just quick-escapes for the most common cases
     // where we would allow the content to be loaded anyway.
