@@ -49,6 +49,7 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.provider.Browser;
 import android.util.AttributeSet;
+import android.util.Base64;
 import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
@@ -66,11 +67,17 @@ import android.widget.SimpleExpandableListAdapter;
 import android.widget.TabHost;
 import android.widget.TextView;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class AwesomeBarTabs extends TabHost {
     private static final String LOGTAG = "GeckoAwesomeBarTabs";
@@ -84,8 +91,9 @@ public class AwesomeBarTabs extends TabHost {
     private Context mContext;
     private OnUrlOpenListener mUrlOpenListener;
     private View.OnTouchListener mListTouchListener;
+    private JSONArray mSearchEngines;
 
-    private SimpleCursorAdapter mAllPagesAdapter;
+    private AwesomeBarCursorAdapter mAllPagesCursorAdapter;
     private SimpleCursorAdapter mBookmarksAdapter;
     private SimpleExpandableListAdapter mHistoryAdapter;
 
@@ -94,7 +102,8 @@ public class AwesomeBarTabs extends TabHost {
     private static final int MAX_RESULTS = 100;
 
     public interface OnUrlOpenListener {
-        public abstract void onUrlOpen(String url);
+        public void onUrlOpen(String url);
+        public void onSearch(String engine);
     }
 
     private class HistoryListAdapter extends SimpleExpandableListAdapter {
@@ -410,12 +419,114 @@ public class AwesomeBarTabs extends TabHost {
         }
     }
 
+    private class AwesomeBarCursorAdapter extends SimpleCursorAdapter {
+        private int mLayout;
+        private String[] mFrom;
+        private int[] mTo;
+        private String mSearchTerm;
+
+        public AwesomeBarCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {
+            super(context, layout, c, from, to);
+            mLayout = layout;
+            mTo = to;
+            mFrom = from;
+            mSearchTerm = "";
+        }
+
+        public void filter(String searchTerm) {
+            mSearchTerm = searchTerm;
+            getFilter().filter(searchTerm);
+        }
+
+        // Add the search engines to the number of reported results.
+        @Override
+        public int getCount() {
+            final int resultCount = super.getCount();
+
+            // don't show additional search engines if search field is empty
+            if (mSearchTerm.length() == 0)
+                return resultCount;
+
+            return resultCount + mSearchEngines.length();
+        }
+
+        // If an item is part of the cursor result set, return that entry.
+        // Otherwise, return the search engine data.
+        @Override
+        public Object getItem(int position) {
+            final int resultCount = super.getCount();
+            if (position < resultCount)
+                return super.getItem(position);
+
+            JSONObject engine;
+            String engineName = null;
+            try {
+                engine = mSearchEngines.getJSONObject(position - resultCount);
+                engineName = engine.getString("name");
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "error getting json arguments");
+            }
+
+            return engineName;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            final int resultCount = super.getCount();
+            if (position < resultCount)
+                return super.getView(position, convertView, parent);
+
+            View v;
+            if (convertView == null)
+                v = newView(mContext, null, parent);
+            else
+                v = convertView;
+            bindSearchEngineView(position - resultCount, v);
+
+            return v;
+        }
+
+        private Drawable getDrawableFromDataURI(String dataURI) {
+            String base64 = dataURI.substring(dataURI.indexOf(',') + 1);
+            byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
+            ByteArrayInputStream stream = new ByteArrayInputStream(bytes);
+            Drawable drawable = (Drawable) Drawable.createFromStream(stream, "src");
+            try {
+                stream.close();
+            } catch (IOException e) { }
+            return drawable;
+        }
+
+        private void bindSearchEngineView(int position, View view) {
+            String name;
+            String iconURI;
+            String searchText = getResources().getString(R.string.awesomebar_search_engine, mSearchTerm);
+            try {
+                JSONObject searchEngine = mSearchEngines.getJSONObject(position);
+                name = searchEngine.getString("name");
+                iconURI = searchEngine.getString("iconURI");
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "error getting json arguments");
+                return;
+            }
+
+            TextView titleView = (TextView) view.findViewById(R.id.title);
+            TextView urlView = (TextView) view.findViewById(R.id.url);
+            ImageView faviconView = (ImageView) view.findViewById(R.id.favicon);
+
+            titleView.setText(name);
+            urlView.setText(searchText);
+            faviconView.setImageDrawable(getDrawableFromDataURI(iconURI));
+        }
+    };
+
     public AwesomeBarTabs(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         Log.d(LOGTAG, "Creating AwesomeBarTabs");
 
         mContext = context;
+        mSearchEngines = new JSONArray();
 
         // Load layout into the custom view
         LayoutInflater inflater =
@@ -496,7 +607,7 @@ public class AwesomeBarTabs extends TabHost {
                       R.id.all_pages_list);
 
         // Load the list using a custom adapter so we can create the bitmaps
-        mAllPagesAdapter = new SimpleCursorAdapter(
+        mAllPagesCursorAdapter = new AwesomeBarCursorAdapter(
             mContext,
             R.layout.awesomebar_row,
             null,
@@ -506,9 +617,9 @@ public class AwesomeBarTabs extends TabHost {
             new int[] { R.id.title, R.id.url, R.id.favicon }
         );
 
-        mAllPagesAdapter.setViewBinder(new AwesomeCursorViewBinder());
+        mAllPagesCursorAdapter.setViewBinder(new AwesomeCursorViewBinder());
 
-        mAllPagesAdapter.setFilterQueryProvider(new FilterQueryProvider() {
+        mAllPagesCursorAdapter.setFilterQueryProvider(new FilterQueryProvider() {
             public Cursor runQuery(CharSequence constraint) {
                 ContentResolver resolver = mContext.getContentResolver();
 
@@ -535,7 +646,7 @@ public class AwesomeBarTabs extends TabHost {
             }
         });
 
-        allPagesList.setAdapter(mAllPagesAdapter);
+        allPagesList.setAdapter(mAllPagesCursorAdapter);
         allPagesList.setOnTouchListener(mListTouchListener);
     }
 
@@ -586,11 +697,19 @@ public class AwesomeBarTabs extends TabHost {
     }
 
     private void handleItemClick(ListView list, int position) {
-        Cursor cursor = (Cursor) list.getItemAtPosition(position);
-        String url = cursor.getString(cursor.getColumnIndexOrThrow(AwesomeBar.URL_KEY));
-
-        if (mUrlOpenListener != null)
-            mUrlOpenListener.onUrlOpen(url);
+        Object item = list.getItemAtPosition(position);
+        // If an AwesomeBar entry is clicked, item will be a Cursor containing
+        // the entry's data.  Otherwise, a search engine entry was clicked, and
+        // item will be a String containing the name of the search engine.
+        if (item instanceof Cursor) {
+            Cursor cursor = (Cursor) item;
+            String url = cursor.getString(cursor.getColumnIndexOrThrow(AwesomeBar.URL_KEY));
+            if (mUrlOpenListener != null)
+                mUrlOpenListener.onUrlOpen(url);
+        } else {
+            if (mUrlOpenListener != null)
+                mUrlOpenListener.onSearch((String)item);
+        }
     }
 
     public void setOnUrlOpenListener(OnUrlOpenListener listener) {
@@ -598,7 +717,7 @@ public class AwesomeBarTabs extends TabHost {
     }
 
     public void destroy() {
-        Cursor allPagesCursor = mAllPagesAdapter.getCursor();
+        Cursor allPagesCursor = mAllPagesCursorAdapter.getCursor();
         if (allPagesCursor != null)
             allPagesCursor.close();
 
@@ -624,6 +743,15 @@ public class AwesomeBarTabs extends TabHost {
         getTabWidget().setVisibility(tabsVisibility);
 
         // Perform the actual search
-        mAllPagesAdapter.getFilter().filter(searchTerm);
+        mAllPagesCursorAdapter.filter(searchTerm);
+    }
+
+    public void setSearchEngines(JSONArray engines) {
+        mSearchEngines = engines;
+        GeckoAppShell.getMainHandler().post(new Runnable() {
+            public void run() {
+                mAllPagesCursorAdapter.notifyDataSetChanged();
+            }
+        });
     }
 }
