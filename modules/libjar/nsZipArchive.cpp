@@ -1038,7 +1038,7 @@ nsZipCursor::~nsZipCursor()
   }
 }
 
-PRUint8* nsZipCursor::Read(PRUint32 *aBytesRead) {
+PRUint8* nsZipCursor::ReadOrCopy(PRUint32 *aBytesRead, bool aCopy) {
   int zerr;
   PRUint8 *buf = nsnull;
   bool verifyCRC = true;
@@ -1048,10 +1048,17 @@ PRUint8* nsZipCursor::Read(PRUint32 *aBytesRead) {
 MOZ_WIN_MEM_TRY_BEGIN
   switch (mItem->Compression()) {
   case STORED:
-    *aBytesRead = mZs.avail_in;
-    buf = mZs.next_in;
-    mZs.next_in += mZs.avail_in;
-    mZs.avail_in = 0;
+    if (!aCopy) {
+      *aBytesRead = mZs.avail_in;
+      buf = mZs.next_in;
+      mZs.next_in += mZs.avail_in;
+      mZs.avail_in = 0;
+    } else {
+      *aBytesRead = mZs.avail_in > mBufSize ? mBufSize : mZs.avail_in;
+      memcpy(mBuf, mZs.next_in, *aBytesRead);
+      mZs.avail_in -= *aBytesRead;
+      mZs.next_in += *aBytesRead;
+    }
     break;
   case DEFLATED:
     buf = mBuf;
