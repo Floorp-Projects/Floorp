@@ -355,11 +355,15 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
+  if (mParent)
+    return mParent;
+
   nsCOMPtr<nsIAccessible> accessibleParent(mGeckoAccessible->GetUnignoredParent());
   if (accessibleParent) {
     id nativeParent = GetNativeFromGeckoAccessible(accessibleParent);
-    if (nativeParent)
-      return GetClosestInterestingAccessible(nativeParent);
+    if (nativeParent) {
+      return mParent = GetClosestInterestingAccessible(nativeParent);
+    }
   }
   
   // GetUnignoredParent() returns null when there is no unignored accessible all the way up to
@@ -371,7 +375,8 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   id nativeParent = GetNativeFromGeckoAccessible(static_cast<nsIAccessible*>(root));
   NSAssert1 (nativeParent, @"!!! we can't find a parent for %@", self);
   
-  return GetClosestInterestingAccessible(nativeParent);
+  mParent = GetClosestInterestingAccessible(nativeParent);
+  return mParent;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
@@ -610,11 +615,18 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  [mChildren makeObjectsPerformSelector:@selector(invalidateParent)];
+
   // make room for new children
   [mChildren release];
   mChildren = nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (void)invalidateParent
+{
+  mParent = nil;
 }
 
 - (void)expire
