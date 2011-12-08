@@ -47,8 +47,10 @@
 #include "nsObjCExceptions.h"
 
 #include "nsIAccessible.h"
+#include "nsIAccessibleRelation.h"
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleEditableText.h"
+#include "Relation.h"
 
 #include "nsRootAccessible.h"
 
@@ -246,16 +248,20 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
     return [self window];
   if ([attribute isEqualToString: (NSString*) kTopLevelUIElementAttribute])
     return [self window];
-  if ([attribute isEqualToString:NSAccessibilityTitleAttribute] || 
-      [attribute isEqualToString:NSAccessibilityTitleUIElementAttribute])
+  if ([attribute isEqualToString:NSAccessibilityTitleAttribute])
     return [self title];
+  if ([attribute isEqualToString:NSAccessibilityTitleUIElementAttribute]) {
+    Relation rel = mGeckoAccessible->RelationByType(nsIAccessibleRelation::RELATION_LABELLED_BY);
+    nsAccessible* tempAcc = rel.Next();
+    return tempAcc ? GetNativeFromGeckoAccessible(tempAcc) : nil;
+  }
   if ([attribute isEqualToString:NSAccessibilityHelpAttribute])
     return [self help];
     
 #ifdef DEBUG
  NSLog (@"!!! %@ can't respond to attribute %@", self, attribute);
 #endif
-  return nil; // be nice and return empty string instead?
+  return nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
