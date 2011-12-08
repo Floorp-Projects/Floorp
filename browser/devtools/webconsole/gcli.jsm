@@ -5058,8 +5058,7 @@ var help = exports;
 var canon = require('gcli/canon');
 var util = require('gcli/util');
 var l10n = require('gcli/l10n');
-
-var Templater = require('gcli/ui/domtemplate').Templater;
+var domtemplate = require('gcli/ui/domtemplate');
 
 var helpCss = require('text!gcli/commands/help.css');
 var helpStyle = undefined;
@@ -5103,7 +5102,8 @@ help.startup = function() {
       var match = canon.getCommand(args.search);
       if (match) {
         var clone = helpManTemplate.cloneNode(true);
-        new Templater().processNode(clone, getManTemplateData(match, context));
+        domtemplate.template(clone, getManTemplateData(match, context),
+                { stack: 'help_man.html' });
         return clone;
       }
 
@@ -5112,7 +5112,8 @@ help.startup = function() {
         parent.appendChild(helpIntroTemplate.cloneNode(true));
       }
       parent.appendChild(helpListTemplate.cloneNode(true));
-      new Templater().processNode(parent, getListTemplateData(args, context));
+      domtemplate.template(parent, getListTemplateData(args, context),
+              { allowEval: true, stack: 'help_intro.html | help_list.html' });
       return parent;
     }
   };
@@ -5243,8 +5244,9 @@ function getManTemplateData(command, context) {
 
 define('gcli/ui/domtemplate', ['require', 'exports', 'module' ], function(require, exports, module) {
 
-  Components.utils.import("resource:///modules/devtools/Templater.jsm");
-  exports.Templater = Templater;
+  var obj = {};
+  Components.utils.import('resource:///modules/devtools/Templater.jsm', obj);
+  exports.template = obj.template;
 
 });
 define("text!gcli/commands/help.css", [], void 0);
@@ -6141,7 +6143,7 @@ var dom = require('gcli/util').dom;
 var Status = require('gcli/types').Status;
 
 var getField = require('gcli/ui/field').getField;
-var Templater = require('gcli/ui/domtemplate').Templater;
+var domtemplate = require('gcli/ui/domtemplate');
 
 var editorCss = require('text!gcli/ui/arg_fetch.css');
 var argFetchHtml = require('text!gcli/ui/arg_fetch.html');
@@ -6170,7 +6172,6 @@ function ArgFetcher(options) {
   // We cache the fields we create so we can destroy them later
   this.fields = [];
 
-  this.tmpl = new Templater();
   // Populated by template
   this.okElement = null;
 
@@ -6227,7 +6228,8 @@ ArgFetcher.prototype.onCommandChange = function(ev) {
     this.fields = [];
 
     var reqEle = this.reqTempl.cloneNode(true);
-    this.tmpl.processNode(reqEle, this);
+    domtemplate.template(reqEle, this,
+            { allowEval: true, stack: 'arg_fetch.html' });
     dom.clearElement(this.element);
     this.element.appendChild(reqEle);
 
@@ -6282,7 +6284,7 @@ ArgFetcher.prototype.getInputFor = function(assignment) {
     return newField.element;
   }
   catch (ex) {
-    // This is called from within Templater which can make tracing errors hard
+    // This is called from within template() which can make tracing errors hard
     // so we log here if anything goes wrong
     console.error(ex);
     return '';
@@ -7068,7 +7070,7 @@ var Conversion = require('gcli/types').Conversion;
 var Argument = require('gcli/argument').Argument;
 var canon = require('gcli/canon');
 
-var Templater = require('gcli/ui/domtemplate').Templater;
+var domtemplate = require('gcli/ui/domtemplate');
 
 var menuCss = require('text!gcli/ui/menu.css');
 var menuHtml = require('text!gcli/ui/menu.html');
@@ -7151,7 +7153,7 @@ Menu.prototype.show = function(items, error) {
   }
 
   var options = this.optTempl.cloneNode(true);
-  new Templater().processNode(options, this);
+  domtemplate.template(options, this, { allowEval: true, stack: 'menu.html' });
 
   dom.clearElement(this.element);
   this.element.appendChild(options);
