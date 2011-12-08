@@ -962,10 +962,10 @@ CodeGeneratorX86Shared::emitTruncateDouble(const FloatRegister &src, const Regis
 }
 
 Operand
-CodeGeneratorX86Shared::createArraySlotOperand(Register slots, const LAllocation *index)
+CodeGeneratorX86Shared::createArrayElementOperand(Register elements, const LAllocation *index)
 {
     if (index->isConstant())
-        return Operand(slots, ToInt32(index) * sizeof(js::Value));
+        return Operand(elements, ToInt32(index) * sizeof(js::Value));
 
-    return Operand(slots, ToRegister(index), TimesEight);
+    return Operand(elements, ToRegister(index), TimesEight);
 }

@@ -316,7 +316,7 @@ CodeGeneratorX64::visitStoreSlotT(LStoreSlotT *store)
 bool
 CodeGeneratorX64::visitLoadElementV(LLoadElementV *load)
 {
-    Operand source = createArraySlotOperand(ToRegister(load->slots()), load->index());
+    Operand source = createArrayElementOperand(ToRegister(load->elements()), load->index());
     Register dest = ToRegister(load->outputValue());
 
     masm.movq(source, dest);
@@ -333,7 +333,7 @@ CodeGeneratorX64::visitLoadElementV(LLoadElementV *load)
 bool
 CodeGeneratorX64::visitLoadElementT(LLoadElementT *load)
 {
-    Operand source = createArraySlotOperand(ToRegister(load->slots()), load->index());
+    Operand source = createArrayElementOperand(ToRegister(load->elements()), load->index());
     loadUnboxedValue(source, load->mir()->type(), load->output());
 
     JS_ASSERT(!load->mir()->needsHoleCheck());
@@ -343,7 +343,7 @@ CodeGeneratorX64::visitLoadElementT(LLoadElementT *load)
 bool
 CodeGeneratorX64::visitStoreElementV(LStoreElementV *store)
 {
-    Operand dest = createArraySlotOperand(ToRegister(store->slots()), store->index());
+    Operand dest = createArrayElementOperand(ToRegister(store->elements()), store->index());
     const ValueOperand value = ToValue(store, LStoreElementV::Value);
 
     masm.storeValue(value, dest);
@@ -353,13 +353,13 @@ CodeGeneratorX64::visitStoreElementV(LStoreElementV *store)
 bool
 CodeGeneratorX64::visitStoreElementT(LStoreElementT *store)
 {
-    Operand dest = createArraySlotOperand(ToRegister(store->slots()), store->index());
+    Operand dest = createArrayElementOperand(ToRegister(store->elements()), store->index());
 
     const LAllocation *value = store->value();
     MIRType valueType = store->mir()->value()->type();
-    MIRType slotType = store->mir()->slotType();
+    MIRType elementType = store->mir()->elementType();
 
-    storeUnboxedValue(value, valueType, dest, slotType);
+    storeUnboxedValue(value, valueType, dest, elementType);
     return true;
 }
 

@@ -1633,8 +1633,8 @@ class MSlots
   : public MUnaryInstruction,
     public ObjectPolicy
 {
-    MSlots(MDefinition *from)
-      : MUnaryInstruction(from)
+    MSlots(MDefinition *object)
+      : MUnaryInstruction(object)
     {
         setResultType(MIRType_Slots);
         setIdempotent();
@@ -1643,25 +1643,51 @@ class MSlots
   public:
     INSTRUCTION_HEADER(Slots);
 
-    static MSlots *New(MDefinition *from) {
-        return new MSlots(from);
+    static MSlots *New(MDefinition *object) {
+        return new MSlots(object);
     }
 
     TypePolicy *typePolicy() {
         return this;
     }
-    MDefinition *input() const {
+    MDefinition *object() const {
         return getOperand(0);
     }
 };
 
-// Load JSObject initializedLength field.
-class MInitializedLength
-    : public MUnaryInstruction,
-      public ObjectPolicy
+// Returns obj->elements.
+class MElements
+  : public MUnaryInstruction,
+    public ObjectPolicy
 {
-    MInitializedLength(MDefinition *object)
+    MElements(MDefinition *object)
       : MUnaryInstruction(object)
+    {
+        setResultType(MIRType_Elements);
+        setIdempotent();
+    }
+
+  public:
+    INSTRUCTION_HEADER(Elements);
+
+    static MElements *New(MDefinition *object) {
+        return new MElements(object);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+};
+
+// Load a dense array's initialized length from an elements vector.
+class MInitializedLength
+  : public MUnaryInstruction
+{
+    MInitializedLength(MDefinition *elements)
+      : MUnaryInstruction(elements)
     {
         setResultType(MIRType_Int32);
         setIdempotent();
@@ -1670,14 +1696,11 @@ class MInitializedLength
   public:
     INSTRUCTION_HEADER(InitializedLength);
 
-    static MInitializedLength *New(MDefinition *object) {
-        return new MInitializedLength(object);
+    static MInitializedLength *New(MDefinition *elements) {
+        return new MInitializedLength(elements);
     }
 
-    TypePolicy *typePolicy() {
-        return this;
-    }
-    MDefinition *input() const {
+    MDefinition *elements() const {
         return getOperand(0);
     }
 };
@@ -1713,7 +1736,7 @@ class MBoundsCheck
     }
 };
 
-// Load a value from a dense array's slots vector and does a hole check if the
+// Load a value from a dense array's element vector and does a hole check if the
 // array is not known to be packed.
 class MLoadElement
   : public MBinaryInstruction,
@@ -1721,27 +1744,27 @@ class MLoadElement
 {
     bool needsHoleCheck_;
 
-    MLoadElement(MDefinition *slots, MDefinition *index, bool needsHoleCheck)
-        : MBinaryInstruction(slots, index),
-          needsHoleCheck_(needsHoleCheck)
+    MLoadElement(MDefinition *elements, MDefinition *index, bool needsHoleCheck)
+      : MBinaryInstruction(elements, index),
+        needsHoleCheck_(needsHoleCheck)
     {
         setResultType(MIRType_Value);
         setIdempotent();
-        JS_ASSERT(slots->type() == MIRType_Slots);
+        JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(index->type() == MIRType_Int32);
     }
 
   public:
     INSTRUCTION_HEADER(LoadElement);
 
-    static MLoadElement *New(MDefinition *slots, MDefinition *index, bool needsHoleCheck) {
-        return new MLoadElement(slots, index, needsHoleCheck);
+    static MLoadElement *New(MDefinition *elements, MDefinition *index, bool needsHoleCheck) {
+        return new MLoadElement(elements, index, needsHoleCheck);
     }
 
     TypePolicy *typePolicy() {
         return this;
     }
-    MDefinition *slots() const {
+    MDefinition *elements() const {
         return getOperand(0);
     }
     MDefinition *index() const {
@@ -1763,30 +1786,30 @@ class MStoreElement
   : public MAryInstruction<3>,
     public ObjectPolicy
 {
-    MIRType slotType_;
+    MIRType elementType_;
     bool needsBarrier_;
 
-    MStoreElement(MDefinition *slots, MDefinition *index, MDefinition *value)
+    MStoreElement(MDefinition *elements, MDefinition *index, MDefinition *value)
       : needsBarrier_(false)
     {
-        initOperand(0, slots);
+        initOperand(0, elements);
         initOperand(1, index);
         initOperand(2, value);
-        JS_ASSERT(slots->type() == MIRType_Slots);
+        JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(index->type() == MIRType_Int32);
     }
 
   public:
     INSTRUCTION_HEADER(StoreElement);
 
-    static MStoreElement *New(MDefinition *slots, MDefinition *index, MDefinition *value) {
-        return new MStoreElement(slots, index, value);
+    static MStoreElement *New(MDefinition *elements, MDefinition *index, MDefinition *value) {
+        return new MStoreElement(elements, index, value);
     }
 
     TypePolicy *typePolicy() {
         return this;
     }
-    MDefinition *slots() const {
+    MDefinition *elements() const {
         return getOperand(0);
     }
     MDefinition *index() const {
@@ -1795,12 +1818,12 @@ class MStoreElement
     MDefinition *value() const {
         return getOperand(2);
     }
-    MIRType slotType() const {
-        return slotType_;
+    MIRType elementType() const {
+        return elementType_;
     }
-    void setSlotType(MIRType slotType) {
-        JS_ASSERT(slotType != MIRType_None);
-        slotType_ = slotType;
+    void setElementType(MIRType elementType) {
+        JS_ASSERT(elementType != MIRType_None);
+        elementType_ = elementType;
     }
     bool congruentTo(MDefinition * const &ins) const {
         return false;

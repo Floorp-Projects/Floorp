@@ -540,6 +540,7 @@ class LDefinition
             return LDefinition::BOX;
 #endif
           case MIRType_Slots:
+          case MIRType_Elements:
             // When we begin allocating slots vectors from the GC, this will
             // need to change to ::OBJECT.
             return LDefinition::POINTER;

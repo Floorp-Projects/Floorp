@@ -131,6 +131,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitTruncateToInt32(MTruncateToInt32 *truncate);
     bool visitCopy(MCopy *ins);
     bool visitSlots(MSlots *ins);
+    bool visitElements(MElements *ins);
     bool visitLoadSlot(MLoadSlot *ins);
     bool visitStoreSlot(MStoreSlot *ins);
     bool visitTypeBarrier(MTypeBarrier *ins);

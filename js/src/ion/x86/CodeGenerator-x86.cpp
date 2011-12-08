@@ -340,7 +340,7 @@ CodeGeneratorX86::visitStoreSlotT(LStoreSlotT *store)
 bool
 CodeGeneratorX86::visitLoadElementV(LLoadElementV *load)
 {
-    Operand source = createArraySlotOperand(ToRegister(load->slots()), load->index());
+    Operand source = createArrayElementOperand(ToRegister(load->elements()), load->index());
     Register type = ToRegister(load->getDef(TYPE_INDEX));
     Register payload = ToRegister(load->getDef(PAYLOAD_INDEX));
 
@@ -358,7 +358,7 @@ CodeGeneratorX86::visitLoadElementV(LLoadElementV *load)
 bool
 CodeGeneratorX86::visitLoadElementT(LLoadElementT *load)
 {
-    Operand source = createArraySlotOperand(ToRegister(load->slots()), load->index());
+    Operand source = createArrayElementOperand(ToRegister(load->elements()), load->index());
 
     if (load->mir()->type() == MIRType_Double)
         masm.movsd(source, ToFloatRegister(load->output()));
@@ -372,7 +372,7 @@ CodeGeneratorX86::visitLoadElementT(LLoadElementT *load)
 bool
 CodeGeneratorX86::visitStoreElementV(LStoreElementV *store)
 {
-    Operand dest = createArraySlotOperand(ToRegister(store->slots()), store->index());
+    Operand dest = createArrayElementOperand(ToRegister(store->elements()), store->index());
     const ValueOperand value = ToValue(store, LStoreElementV::Value);
 
     masm.storeValue(value, dest);
@@ -382,7 +382,7 @@ CodeGeneratorX86::visitStoreElementV(LStoreElementV *store)
 bool
 CodeGeneratorX86::visitStoreElementT(LStoreElementT *store)
 {
-    Operand dest = createArraySlotOperand(ToRegister(store->slots()), store->index());
+    Operand dest = createArrayElementOperand(ToRegister(store->elements()), store->index());
 
     const LAllocation *value = store->value();
     MIRType valueType = store->mir()->value()->type();
@@ -393,7 +393,7 @@ CodeGeneratorX86::visitStoreElementT(LStoreElementT *store)
     }
 
     // Store the type tag if needed.
-    if (valueType != store->mir()->slotType())
+    if (valueType != store->mir()->elementType())
         masm.storeTypeTag(ImmTag(MIRTypeToTag(valueType)), dest);
 
     // Store the payload.
