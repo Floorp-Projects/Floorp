@@ -2603,7 +2603,7 @@ IonBuilder::jsop_getgname(JSAtom *atom)
     // If we have a property typeset, the isOwnProperty call will trigger recompilation if
     // the property is deleted or reconfigured.
     if (!propertyTypes && shape->configurable()) {
-        MGuardShape *guard = MGuardShape::New(global, shape);
+        MGuardShape *guard = MGuardShape::New(global, globalObj->lastProperty());
         current->add(guard);
     }
 
@@ -2661,7 +2661,7 @@ IonBuilder::jsop_setgname(JSAtom *atom)
     // if the property is deleted or reconfigured. Without TI, we always need a shape guard
     // to guard against the property being reconfigured as non-writable.
     if (!propertyTypes) {
-        MGuardShape *guard = MGuardShape::New(global, shape);
+        MGuardShape *guard = MGuardShape::New(global, globalObj->lastProperty());
         current->add(guard);
     }
 
