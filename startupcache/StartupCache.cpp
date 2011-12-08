@@ -249,6 +249,26 @@ StartupCache::LoadArchive()
   return mArchive->OpenArchive(mFile);
 }
 
+namespace {
+
+nsresult
+GetBufferFromZipArchive(nsZipArchive *zip, bool doCRC, const char* id,
+                        char** outbuf, PRUint32* length)
+{
+  if (!zip)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  nsZipItemPtr<char> zipItem(zip, id, doCRC);
+  if (!zipItem)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  *outbuf = zipItem.Forget();
+  *length = zipItem.Length();
+  return NS_OK;
+}
+
+} /* anonymous namespace */
+
 // NOTE: this will not find a new entry until it has been written to disk!
 // Consumer should take ownership of the resulting buffer.
 nsresult
@@ -268,36 +288,19 @@ StartupCache::GetBuffer(const char* id, char** outbuf, PRUint32* length)
     }
   }
 
-  if (mArchive) {
-    nsZipItemPtr<char> zipItem(mArchive, id, true);
-    if (zipItem) {
-      *outbuf = zipItem.Forget();
-      *length = zipItem.Length();
-      return NS_OK;
-    } 
-  }
+  nsresult rv = GetBufferFromZipArchive(mArchive, true, id, outbuf, length);
+  if (NS_SUCCEEDED(rv))
+    return rv;
 
-  if (mozilla::Omnijar::GetReader(mozilla::Omnijar::APP)) {
-    // no need to checksum omnijarred entries
-    nsZipItemPtr<char> zipItem(mozilla::Omnijar::GetReader(mozilla::Omnijar::APP), id);
-    if (zipItem) {
-      *outbuf = zipItem.Forget();
-      *length = zipItem.Length();
-      return NS_OK;
-    } 
-  }
+  nsRefPtr<nsZipArchive> omnijar = mozilla::Omnijar::GetReader(mozilla::Omnijar::APP);
+  // no need to checksum omnijarred entries
+  rv = GetBufferFromZipArchive(omnijar, false, id, outbuf, length);
+  if (NS_SUCCEEDED(rv))
+    return rv;
 
-  if (mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE)) {
-    // no need to checksum omnijarred entries
-    nsZipItemPtr<char> zipItem(mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE), id);
-    if (zipItem) {
-      *outbuf = zipItem.Forget();
-      *length = zipItem.Length();
-      return NS_OK;
-    } 
-  }
-
-  return NS_ERROR_NOT_AVAILABLE;
+  omnijar = mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE);
+  // no need to checksum omnijarred entries
+  return GetBufferFromZipArchive(omnijar, false, id, outbuf, length);
 }
 
 // Makes a copy of the buffer, client retains ownership of inbuf.

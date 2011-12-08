@@ -183,7 +183,7 @@ nsHyphenationManager::LoadPatternListFromOmnijar(Omnijar::Type aType)
     return;
   }
 
-  nsZipArchive *zip = Omnijar::GetReader(aType);
+  nsRefPtr<nsZipArchive> zip = Omnijar::GetReader(aType);
   if (!zip) {
     return;
   }

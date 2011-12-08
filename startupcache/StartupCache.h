@@ -167,7 +167,7 @@ private:
   static void ThreadedWrite(void *aClosure);
 
   nsClassHashtable<nsCStringHashKey, CacheEntry> mTable;
-  nsAutoPtr<nsZipArchive> mArchive;
+  nsRefPtr<nsZipArchive> mArchive;
   nsCOMPtr<nsILocalFile> mFile;
   
   nsCOMPtr<nsIObserverService> mObserverService;

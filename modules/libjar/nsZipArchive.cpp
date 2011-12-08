@@ -792,14 +792,18 @@ PRInt64 nsZipArchive::SizeOfMapping()
 // nsZipArchive constructor and destructor
 //------------------------------------------
 
-nsZipArchive::nsZipArchive() :
-  mBuiltSynthetics(false)
+nsZipArchive::nsZipArchive()
+  : mRefCnt(0)
+  , mBuiltSynthetics(false)
 {
   MOZ_COUNT_CTOR(nsZipArchive);
 
   // initialize the table to NULL
   memset(mFiles, 0, sizeof(mFiles));
 }
+
+NS_IMPL_THREADSAFE_ADDREF(nsZipArchive)
+NS_IMPL_THREADSAFE_RELEASE(nsZipArchive)
 
 nsZipArchive::~nsZipArchive()
 {
