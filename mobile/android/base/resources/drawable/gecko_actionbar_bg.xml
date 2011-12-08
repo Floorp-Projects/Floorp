@@ -19,15 +19,4 @@
         </shape>
     </item>
 
-    <item android:right="20dp"
-          android:bottom="2dp">
-        <shape android:shape="rectangle">
-             <gradient android:type="linear"
-                       android:startColor="#d5d5d5"
-                       android:endColor="#fefefe"
-                       android:angle="90"/>
-             <corners android:topRightRadius="30dp"/>
-        </shape>
-    </item>
-
 </layer-list>

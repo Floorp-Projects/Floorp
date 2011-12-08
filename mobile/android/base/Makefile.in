@@ -358,6 +358,7 @@ MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/address_bar_bg.x
                          mobile/android/base/resources/drawable/awesomebar_tab_unselected.xml   \
                          mobile/android/base/resources/drawable/desktop_notification.png        \
                          mobile/android/base/resources/drawable/favicon.png                     \
+                         mobile/android/base/resources/drawable/gecko_actionbar_bg.xml          \
                          mobile/android/base/resources/drawable/progress_spinner.xml            \
                          mobile/android/base/resources/drawable/progress_spinner_1.png          \
                          mobile/android/base/resources/drawable/progress_spinner_2.png          \
