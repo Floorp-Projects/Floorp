@@ -4,7 +4,8 @@
                         android:enabled="false">
 
     <PreferenceCategory android:title="@string/pref_category_general">
-        <!-- TODO: About Firefox -->
+        <org.mozilla.gecko.LinkPreference android:title="@string/pref_about_firefox"
+                                          url="about:" />
 
         <!-- TODO: Default Search Engine -->
 
