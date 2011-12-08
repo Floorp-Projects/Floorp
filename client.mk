@@ -294,6 +294,10 @@ CONFIG_STATUS_DEPS := \
 	$(wildcard $(addsuffix confvars.sh,$(wildcard $(TOPSRCDIR)/*/))) \
 	$(NULL)
 
+CONFIGURE_ENV_ARGS += \
+  MAKE="$(MAKE)" \
+  $(NULL)
+
 # configure uses the program name to determine @srcdir@. Calling it without
 #   $(TOPSRCDIR) will set @srcdir@ to "."; otherwise, it is set to the full
 #   path of $(TOPSRCDIR).
