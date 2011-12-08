@@ -1,0 +1,43 @@
+diff --git a/media/libvpx/stdint.patch b/media/libvpx/stdint.patch
+new file mode 100644
+diff --git a/media/libvpx/vpx/vpx_integer.h b/media/libvpx/vpx/vpx_integer.h
+--- a/media/libvpx/vpx/vpx_integer.h
++++ b/media/libvpx/vpx/vpx_integer.h
+@@ -10,16 +10,18 @@
+ 
+ 
+ #ifndef VPX_INTEGER_H
+ #define VPX_INTEGER_H
+ 
+ /* get ptrdiff_t, size_t, wchar_t, NULL */
+ #include <stddef.h>
+ 
++#if !defined(VPX_DONT_DEFINE_STDINT_TYPES)
++
+ #if (defined(_MSC_VER) && (_MSC_VER < 1600)) || defined(VPX_EMULATE_INTTYPES)
+ typedef signed char  int8_t;
+ typedef signed short int16_t;
+ typedef signed int   int32_t;
+ 
+ typedef unsigned char  uint8_t;
+ typedef unsigned short uint16_t;
+ typedef unsigned int   uint32_t;
+@@ -47,16 +49,18 @@ typedef unsigned int   uintptr_t;
+ 
+ #if defined(__cplusplus) && !defined(__STDC_FORMAT_MACROS)
+ #define __STDC_FORMAT_MACROS
+ #endif
+ #include <stdint.h>
+ 
+ #endif
+ 
++#endif
++
+ /* VS2010 defines stdint.h, but not inttypes.h */
+ #if defined(_MSC_VER)
+ #define PRId64 "I64d"
+ #else
+ #include <inttypes.h>
+ #endif
+ 
+ #endif
