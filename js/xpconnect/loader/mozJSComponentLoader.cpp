@@ -1153,9 +1153,10 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
     nsCOMPtr<nsIFileURL> baseFileURL;
     if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsIURI> baseURI;
-        rv = jarURI->GetJARFile(getter_AddRefs(baseURI));
-        NS_ENSURE_SUCCESS(rv, rv);
-
+        while (jarURI) {
+            jarURI->GetJARFile(getter_AddRefs(baseURI));
+            jarURI = do_QueryInterface(baseURI, &rv);
+        }
         baseFileURL = do_QueryInterface(baseURI, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
     } else {
