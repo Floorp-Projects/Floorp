@@ -57,6 +57,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLConnection;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -292,13 +293,13 @@ public class Favicons {
 
             // due to android bug 6066, we must download the entire image before using it
             // http://code.google.com/p/android/issues/detail?id=6066
-            HttpURLConnection urlConnection = null;
+            URLConnection urlConnection = null;
             BufferedInputStream contentStream = null;
             ByteArrayInputStream byteStream = null;
             BitmapDrawable image = null;
 
             try {
-                urlConnection = (HttpURLConnection) faviconUrl.openConnection();
+                urlConnection = faviconUrl.openConnection();
                 int length = urlConnection.getContentLength();
                 contentStream = new BufferedInputStream(urlConnection.getInputStream(), length);
                 byte[] bytes = new byte[length];
@@ -313,8 +314,11 @@ public class Favicons {
             } catch (Exception e) {
                 Log.d(LOGTAG, "Error downloading favicon: " + e);
             } finally {
-                if (urlConnection != null)
-                    urlConnection.disconnect();
+                if (urlConnection != null && urlConnection instanceof HttpURLConnection) {
+                    HttpURLConnection httpConnection = (HttpURLConnection) urlConnection;
+                    httpConnection.disconnect();
+                }
+
                 try {
                     if (contentStream != null)
                         contentStream.close();
@@ -336,18 +340,9 @@ public class Favicons {
         @Override
         protected BitmapDrawable doInBackground(Void... unused) {
             BitmapDrawable image = null;
-            URL pageUrl = null;
 
             if (isCancelled())
                 return null;
-
-            // Handle the case of malformed URL
-            try {
-                pageUrl = new URL(mPageUrl);
-            } catch (MalformedURLException e) {
-                Log.d(LOGTAG, "The provided URL is not valid: " + e);
-                return null;
-            }
 
             URL faviconUrl = null;
 
@@ -355,6 +350,15 @@ public class Favicons {
             try {
                 // If favicon is empty, fallback to default favicon URI
                 if (mFaviconUrl == null || mFaviconUrl.length() == 0) {
+                    // Handle the case of malformed URL
+                    URL pageUrl = null;
+                    try {
+                        pageUrl = new URL(mPageUrl);
+                    } catch (MalformedURLException e) {
+                        Log.d(LOGTAG, "The provided URL is not valid: " + e);
+                        return null;
+                    }
+
                     faviconUrl = new URL(pageUrl.getProtocol(), pageUrl.getAuthority(), "/favicon.ico");
                     mFaviconUrl = faviconUrl.toString();
                 } else {
