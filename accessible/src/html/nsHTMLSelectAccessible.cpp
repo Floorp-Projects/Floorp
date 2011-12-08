@@ -151,6 +151,14 @@ nsHTMLSelectListAccessible::CurrentItem()
   return nsnull;
 }
 
+void
+nsHTMLSelectListAccessible::SetCurrentItem(nsAccessible* aItem)
+{
+  aItem->GetContent()->SetAttr(kNameSpaceID_None,
+                               nsGkAtoms::selected, NS_LITERAL_STRING("true"),
+                               true);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLSelectListAccessible: nsAccessible protected
 
@@ -684,6 +692,13 @@ nsAccessible*
 nsHTMLComboboxAccessible::CurrentItem()
 {
   return AreItemsOperable() ? mListAccessible->CurrentItem() : nsnull;
+}
+
+void
+nsHTMLComboboxAccessible::SetCurrentItem(nsAccessible* aItem)
+{
+  if (AreItemsOperable())
+    mListAccessible->SetCurrentItem(aItem);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

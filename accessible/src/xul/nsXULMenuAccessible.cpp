@@ -302,6 +302,22 @@ nsXULSelectableAccessible::CurrentItem()
   return nsnull;
 }
 
+void
+nsXULSelectableAccessible::SetCurrentItem(nsAccessible* aItem)
+{
+  if (!mSelectControl)
+    return;
+
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> itemElm =
+    do_QueryInterface(aItem->GetContent());
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelectControl =
+    do_QueryInterface(mSelectControl);
+  if (multiSelectControl)
+    multiSelectControl->SetCurrentItem(itemElm);
+  else
+    mSelectControl->SetSelectedItem(itemElm);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULMenuitemAccessible
 ////////////////////////////////////////////////////////////////////////////////
@@ -892,4 +908,10 @@ nsXULMenubarAccessible::CurrentItem()
     }
   }
   return nsnull;
+}
+
+void
+nsXULMenubarAccessible::SetCurrentItem(nsAccessible* aItem)
+{
+  NS_ERROR("nsXULMenubarAccessible::SetCurrentItem not implemented");
 }

@@ -67,6 +67,7 @@ public:
 
   // Widgets
   virtual nsAccessible* CurrentItem();
+  virtual void SetCurrentItem(nsAccessible* aItem);
 
 protected:
   // nsIDOMXULMultiSelectControlElement inherits from this, so we'll always have
@@ -170,6 +171,7 @@ public:
   virtual bool IsActiveWidget() const;
   virtual bool AreItemsOperable() const;
   virtual nsAccessible* CurrentItem();
+  virtual void SetCurrentItem(nsAccessible* aItem);
 };
 
 #endif  
