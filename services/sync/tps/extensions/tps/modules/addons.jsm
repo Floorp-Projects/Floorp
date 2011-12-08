@@ -57,7 +57,7 @@ function GetFileAsText(file)
 {
   let channel = Services.io.newChannel(file, null, null);
   let inputStream = channel.open();
-  if (channel instanceof CI.nsIHttpChannel && 
+  if (channel instanceof CI.nsIHttpChannel &&
       channel.responseStatus != 200) {
     return "";
   }
@@ -236,7 +236,7 @@ Addon.prototype = {
   onInstallFailed: function(addon) {
     Logger.logInfo('--------- event observed: addon onInstallFailed');
     Utils.nextTick(function() {
-      this.DumpError('Installation failed for addon ' + 
+      this.DumpError('Installation failed for addon ' +
         (addon.addon && addon.addon.id ? addon.addon.id : 'unknown'));
     }, this);
   },
@@ -244,7 +244,7 @@ Addon.prototype = {
   onDownloadFailed: function(addon) {
     Logger.logInfo('--------- event observed: addon onDownloadFailed');
     Utils.nextTick(function() {
-      this.DumpError('Download failed for addon ' + 
+      this.DumpError('Download failed for addon ' +
         (addon.addon && addon.addon.id ? addon.addon.id : 'unknown'));
     }, this);
   },
