@@ -46,7 +46,7 @@
 #include "Ion.h"
 #include "C1Spewer.h"
 #include "MIRGraph.h"
-#include "IonLIR.h"
+#include "LIR.h"
 #include "jsscriptinlines.h"
 #include "LinearScan.h"
 

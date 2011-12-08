@@ -45,7 +45,7 @@
 #include "MIR.h"
 #include "MIRGraph.h"
 #include "InlineList.h"
-#include "IonLIR.h"
+#include "LIR.h"
 #include "Lowering.h"
 #include "BitSet.h"
 

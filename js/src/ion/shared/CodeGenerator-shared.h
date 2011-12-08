@@ -44,7 +44,7 @@
 
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
-#include "ion/IonLIR.h"
+#include "ion/LIR.h"
 #include "ion/IonMacroAssembler.h"
 #include "ion/IonFrames.h"
 #include "ion/IonMacroAssembler.h"
