@@ -77,6 +77,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     virtual bool visitTruncateDToInt32(LTruncateDToInt32 *lir);
     virtual bool visitPointer(LPointer *lir);
     virtual bool visitSlots(LSlots *lir);
+    virtual bool visitElements(LElements *lir);
     virtual bool visitTypeBarrier(LTypeBarrier *lir);
     virtual bool visitDoubleToInt32(LDoubleToInt32 *lir);
     virtual bool visitInitializedLength(LInitializedLength *lir);

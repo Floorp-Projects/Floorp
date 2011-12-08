@@ -743,19 +743,19 @@ class LOsrValue : public LInstructionHelper<BOX_PIECES, 1, 0>
     }
 };
 
-// Load the "dslots" member out of a JSObject.
+// Load the "slots" member out of a JSObject.
 //   Input: JSObject pointer
-//   Output: dslots pointer
+//   Output: slots pointer
 class LSlots : public LInstructionHelper<1, 1, 0>
 {
   public:
     LIR_HEADER(Slots);
 
-    LSlots(const LAllocation &in) {
-        setOperand(0, in);
+    LSlots(const LAllocation &object) {
+        setOperand(0, object);
     }
 
-    const LAllocation *input() {
+    const LAllocation *object() {
         return getOperand(0);
     }
     const LDefinition *output() {
@@ -763,17 +763,37 @@ class LSlots : public LInstructionHelper<1, 1, 0>
     }
 };
 
-// Load the initializedLength member out of a JSObject.
+// Load the "elements" member out of a JSObject.
+//   Input: JSObject pointer
+//   Output: elements pointer
+class LElements : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(Elements);
+
+    LElements(const LAllocation &object) {
+        setOperand(0, object);
+    }
+
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
+// Load a dense array's initialized length from an elements vector.
 class LInitializedLength : public LInstructionHelper<1, 1, 0>
 {
   public:
     LIR_HEADER(InitializedLength);
 
-    LInitializedLength(const LAllocation &in) {
-        setOperand(0, in);
+    LInitializedLength(const LAllocation &elements) {
+        setOperand(0, elements);
     }
 
-    const LAllocation *input() {
+    const LAllocation *elements() {
         return getOperand(0);
     }
     const LDefinition *output() {
@@ -802,21 +822,21 @@ class LBoundsCheck : public LInstructionHelper<0, 2, 0>
     }
 };
 
-// Load a value from a dense array's slots. Bail out if it's the hole value.
+// Load a value from a dense array's elements vector. Bail out if it's the hole value.
 class LLoadElementV : public LInstructionHelper<BOX_PIECES, 2, 0>
 {
   public:
     LIR_HEADER(LoadElementV);
     BOX_OUTPUT_ACCESSORS();
 
-    LLoadElementV(const LAllocation &slots, const LAllocation &index) {
-        setOperand(0, slots);
+    LLoadElementV(const LAllocation &elements, const LAllocation &index) {
+        setOperand(0, elements);
         setOperand(1, index);
     }
     const MLoadElement *mir() const {
         return mir_->toLoadElement();
     }
-    const LAllocation *slots() {
+    const LAllocation *elements() {
         return getOperand(0);
     }
     const LAllocation *index() {
@@ -824,22 +844,23 @@ class LLoadElementV : public LInstructionHelper<BOX_PIECES, 2, 0>
     }
 };
 
-// Load a typed value from a dense array's slots. The array must be known to
-// be packed, so that we don't have to check for the hole value. This instruction
-// does not load the type tag and can directly load into a FP register.
+// Load a typed value from a dense array's elements vector. The array must be
+// known to be packed, so that we don't have to check for the hole value.
+// This instruction does not load the type tag and can directly load into a
+// FP register.
 class LLoadElementT : public LInstructionHelper<1, 2, 0>
 {
   public:
     LIR_HEADER(LoadElementT);
 
-    LLoadElementT(const LAllocation &slots, const LAllocation &index) {
-        setOperand(0, slots);
+    LLoadElementT(const LAllocation &elements, const LAllocation &index) {
+        setOperand(0, elements);
         setOperand(1, index);
     }
     const MLoadElement *mir() const {
         return mir_->toLoadElement();
     }
-    const LAllocation *slots() {
+    const LAllocation *elements() {
         return getOperand(0);
     }
     const LAllocation *index() {
@@ -850,14 +871,14 @@ class LLoadElementT : public LInstructionHelper<1, 2, 0>
     }
 };
 
-// Store a boxed value to a dense array's slots.
+// Store a boxed value to a dense array's element vector.
 class LStoreElementV : public LInstructionHelper<0, 2 + BOX_PIECES, 0>
 {
   public:
     LIR_HEADER(StoreElementV);
 
-    LStoreElementV(const LAllocation &slots, const LAllocation &index) {
-        setOperand(0, slots);
+    LStoreElementV(const LAllocation &elements, const LAllocation &index) {
+        setOperand(0, elements);
         setOperand(1, index);
     }
 
@@ -866,7 +887,7 @@ class LStoreElementV : public LInstructionHelper<0, 2 + BOX_PIECES, 0>
     const MStoreElement *mir() const {
         return mir_->toStoreElement();
     }
-    const LAllocation *slots() {
+    const LAllocation *elements() {
         return getOperand(0);
     }
     const LAllocation *index() {
@@ -874,16 +895,17 @@ class LStoreElementV : public LInstructionHelper<0, 2 + BOX_PIECES, 0>
     }
 };
 
-// Store a typed value to a dense array's slots. Compared to LStoreElementV,
-// this instruction can store doubles and constants directly, and does not
-// store the type tag if the array is monomorphic and known to be packed.
+// Store a typed value to a dense array's elements vector. Compared to
+// LStoreElementV, this instruction can store doubles and constants directly,
+// and does not store the type tag if the array is monomorphic and known to
+// be packed.
 class LStoreElementT : public LInstructionHelper<0, 3, 0>
 {
   public:
     LIR_HEADER(StoreElementT);
 
-    LStoreElementT(const LAllocation &slots, const LAllocation &index, const LAllocation &value) {
-        setOperand(0, slots);
+    LStoreElementT(const LAllocation &elements, const LAllocation &index, const LAllocation &value) {
+        setOperand(0, elements);
         setOperand(1, index);
         setOperand(2, value);
     }
@@ -891,7 +913,7 @@ class LStoreElementT : public LInstructionHelper<0, 3, 0>
     const MStoreElement *mir() const {
         return mir_->toStoreElement();
     }
-    const LAllocation *slots() {
+    const LAllocation *elements() {
         return getOperand(0);
     }
     const LAllocation *index() {

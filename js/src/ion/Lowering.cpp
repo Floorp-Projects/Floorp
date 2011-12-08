@@ -589,7 +589,13 @@ LIRGenerator::visitCopy(MCopy *ins)
 bool
 LIRGenerator::visitSlots(MSlots *ins)
 {
-    return define(new LSlots(useRegister(ins->input())), ins);
+    return define(new LSlots(useRegister(ins->object())), ins);
+}
+
+bool
+LIRGenerator::visitElements(MElements *ins)
+{
+    return define(new LElements(useRegister(ins->object())), ins);
 }
 
 bool
@@ -691,7 +697,8 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
 bool
 LIRGenerator::visitInitializedLength(MInitializedLength *ins)
 {
-    return define(new LInitializedLength(useRegister(ins->input())), ins);
+    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
+    return define(new LInitializedLength(useRegister(ins->elements())), ins);
 }
 
 bool
@@ -705,10 +712,13 @@ LIRGenerator::visitBoundsCheck(MBoundsCheck *ins)
 bool
 LIRGenerator::visitLoadElement(MLoadElement *ins)
 {
+    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
+    JS_ASSERT(ins->index()->type() == MIRType_Int32);
+
     switch (ins->type()) {
       case MIRType_Value:
       {
-        LLoadElementV *lir = new LLoadElementV(useRegister(ins->slots()),
+        LLoadElementV *lir = new LLoadElementV(useRegister(ins->elements()),
                                                useRegisterOrConstant(ins->index()));
         if (ins->fallible() && !assignSnapshot(lir))
             return false;
@@ -721,7 +731,7 @@ LIRGenerator::visitLoadElement(MLoadElement *ins)
 
       default:
         JS_ASSERT(!ins->fallible());
-        return define(new LLoadElementT(useRegister(ins->slots()),
+        return define(new LLoadElementT(useRegister(ins->elements()),
                                         useRegisterOrConstant(ins->index())), ins);
     }
 }
@@ -729,7 +739,7 @@ LIRGenerator::visitLoadElement(MLoadElement *ins)
 bool
 LIRGenerator::visitStoreElement(MStoreElement *ins)
 {
-    JS_ASSERT(ins->slots()->type() == MIRType_Slots);
+    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
     JS_ASSERT(ins->index()->type() == MIRType_Int32);
 
 #ifdef JSGC_INCREMENTAL
@@ -740,19 +750,19 @@ LIRGenerator::visitStoreElement(MStoreElement *ins)
     switch (ins->value()->type()) {
       case MIRType_Value:
       {
-        LInstruction *lir = new LStoreElementV(useRegister(ins->slots()),
+        LInstruction *lir = new LStoreElementV(useRegister(ins->elements()),
                                                useRegisterOrConstant(ins->index()));
         if (!useBox(lir, LStoreElementV::Value, ins->value()))
             return false;
         return add(lir, ins);
       }
       case MIRType_Double:
-        return add(new LStoreElementT(useRegister(ins->slots()),
+        return add(new LStoreElementT(useRegister(ins->elements()),
                                       useRegisterOrConstant(ins->index()),
                                       useRegister(ins->value())), ins);
 
       default:
-        return add(new LStoreElementT(useRegister(ins->slots()),
+        return add(new LStoreElementT(useRegister(ins->elements()),
                                       useRegisterOrConstant(ins->index()),
                                       useRegisterOrConstant(ins->value())), ins);
     }

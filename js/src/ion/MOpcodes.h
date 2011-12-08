@@ -80,6 +80,7 @@ namespace ion {
     _(Start)                                                                \
     _(OsrEntry)                                                             \
     _(Slots)                                                                \
+    _(Elements)                                                             \
     _(LoadSlot)                                                             \
     _(StoreSlot)                                                            \
     _(TypeBarrier)                                                          \
