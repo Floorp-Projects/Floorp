@@ -4349,7 +4349,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     tmp = (TableEntry *)
                           cx->malloc_((size_t)j * sizeof *table);
                     if (tmp) {
-                        VOUCH_DOES_NOT_REQUIRE_STACK();
                         MergeSort(table, size_t(j), tmp, CompareTableEntries);
                         Foreground::free_(tmp);
                         ok = true;

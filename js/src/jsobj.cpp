@@ -4975,26 +4975,12 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
     JSProperty *prop;
     const Shape *shape;
 
-    /*
-     * Find the global object. Use cx->fp() directly to avoid falling off
-     * trace; all JIT-elided stack frames have the same global object as
-     * cx->fp().
-     */
-    VOUCH_DOES_NOT_REQUIRE_STACK();
-    if (!start && (fp = cx->maybefp()) != NULL)
-        start = &fp->scopeChain();
-
     if (start) {
         obj = start->getGlobal();
+        OBJ_TO_INNER_OBJECT(cx, obj);
     } else {
-        obj = cx->globalObject;
-        if (!obj) {
-            vp->setUndefined();
-            return true;
-        }
+        obj = GetGlobalForScopeChain(cx);
     }
-
-    OBJ_TO_INNER_OBJECT(cx, obj);
     if (!obj)
         return false;
 
@@ -6755,7 +6741,6 @@ JSBool
 js_GetClassPrototype(JSContext *cx, JSObject *scopeobj, JSProtoKey protoKey,
                      JSObject **protop, Class *clasp)
 {
-    VOUCH_DOES_NOT_REQUIRE_STACK();
     JS_ASSERT(JSProto_Null <= protoKey);
     JS_ASSERT(protoKey < JSProto_LIMIT);
 
@@ -7383,8 +7368,6 @@ JS_FRIEND_API(void)
 js_DumpStackFrame(JSContext *cx, StackFrame *start)
 {
     /* This should only called during live debugging. */
-    VOUCH_DOES_NOT_REQUIRE_STACK();
-
     FrameRegsIter i(cx, StackIter::GO_THROUGH_SAVED);
     if (!start) {
         if (i.done()) {
