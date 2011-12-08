@@ -3572,10 +3572,8 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
     if (!clone)
         return NULL;
 
-    StackFrame *priv = js_FloatingFrameIfGenerator(cx, fp);
-
     /* Set the parent if necessary, as for call objects. */
-    JSObject *global = priv->scopeChain().getGlobal();
+    JSObject *global = fp->scopeChain().getGlobal();
     if (global != clone->getParent()) {
         JS_ASSERT(clone->getParent() == NULL);
         if (!clone->setParent(cx, global))
@@ -3586,7 +3584,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
     JS_ASSERT(clone->isClonedBlock());
     JS_ASSERT(clone->slotSpan() >= OBJ_BLOCK_COUNT(cx, proto) + BLOCK_RESERVED_SLOTS);
 
-    clone->setPrivate(priv);
+    clone->setPrivate(js_FloatingFrameIfGenerator(cx, fp));
     clone->setSlot(JSSLOT_BLOCK_DEPTH, proto->getSlot(JSSLOT_BLOCK_DEPTH));
 
     if (clone->lastProperty()->extensibleParents() && !clone->generateOwnShape(cx))
