@@ -1349,7 +1349,7 @@
         <parameter name="aEvent"/>
         <body><![CDATA[
           if (aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey ||
-              aEvent.getPreventDefault())
+              aEvent.defaultPrevented)
             return false;
 
           var elt = document.commandDispatcher.focusedElement;

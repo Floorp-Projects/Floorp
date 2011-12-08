@@ -98,12 +98,11 @@
 #include "nsSupportsPrimitives.h"
 #include "nsArrayEnumerator.h"
 #include "nsStringEnumerator.h"
+#include "mozilla/FileUtils.h"
 
 #include NEW_H     // for placement new
 
 #include "mozilla/Omnijar.h"
-#include "nsJAR.h"
-static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
 #include "prlog.h"
 
@@ -344,8 +343,7 @@ nsresult nsComponentManagerImpl::Init()
     mFactories.Init(CONTRACTID_HASHTABLE_INITIAL_SIZE);
     mContractIDs.Init(CONTRACTID_HASHTABLE_INITIAL_SIZE);
     mLoaderMap.Init();
-    mKnownFileModules.Init();
-    mKnownJARModules.Init();
+    mKnownModules.Init();
 
     nsCOMPtr<nsILocalFile> greDir =
         GetLocationFromDirectoryService(NS_GRE_DIR);
@@ -356,17 +354,17 @@ nsresult nsComponentManagerImpl::Init()
     InitializeModuleLocations();
 
     ComponentLocation* cl = sModuleLocations->InsertElementAt(0);
+    nsCOMPtr<nsILocalFile> lf = CloneAndAppend(appDir, NS_LITERAL_CSTRING("chrome.manifest"));
     cl->type = NS_COMPONENT_LOCATION;
-    cl->location = CloneAndAppend(appDir, NS_LITERAL_CSTRING("chrome.manifest"));
-    cl->jar = false;
+    cl->location.Init(lf);
 
     bool equals = false;
     appDir->Equals(greDir, &equals);
     if (!equals) {
         cl = sModuleLocations->InsertElementAt(0);
         cl->type = NS_COMPONENT_LOCATION;
-        cl->location = CloneAndAppend(greDir, NS_LITERAL_CSTRING("chrome.manifest"));
-        cl->jar = false;
+        lf = CloneAndAppend(greDir, NS_LITERAL_CSTRING("chrome.manifest"));
+        cl->location.Init(lf);
     }
 
     PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
@@ -384,33 +382,20 @@ nsresult nsComponentManagerImpl::Init()
     for (PRUint32 i = 0; i < sStaticModules->Length(); ++i)
         RegisterModule((*sStaticModules)[i], NULL);
 
-    nsCOMPtr<nsIFile> appOmnijar = mozilla::Omnijar::GetPath(mozilla::Omnijar::APP);
+    nsRefPtr<nsZipArchive> appOmnijar = mozilla::Omnijar::GetReader(mozilla::Omnijar::APP);
     if (appOmnijar) {
         cl = sModuleLocations->InsertElementAt(1); // Insert after greDir
         cl->type = NS_COMPONENT_LOCATION;
-        cl->location = do_QueryInterface(appOmnijar);
-        cl->jar = true;
+        cl->location.Init(appOmnijar, "chrome.manifest");
     }
-    nsCOMPtr<nsIFile> greOmnijar = mozilla::Omnijar::GetPath(mozilla::Omnijar::GRE);
+    nsRefPtr<nsZipArchive> greOmnijar = mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE);
     if (greOmnijar) {
         cl = sModuleLocations->InsertElementAt(0);
         cl->type = NS_COMPONENT_LOCATION;
-        cl->location = do_QueryInterface(greOmnijar);
-        cl->jar = true;
+        cl->location.Init(greOmnijar, "chrome.manifest");
     }
 
-    for (PRUint32 i = 0; i < sModuleLocations->Length(); ++i) {
-        ComponentLocation& l = sModuleLocations->ElementAt(i);
-        if (!l.jar) {
-            RegisterManifestFile(l.type, l.location, false);
-            continue;
-        }
-
-        nsCOMPtr<nsIZipReader> reader = do_CreateInstance(kZipReaderCID, &rv);
-        rv = reader->Open(l.location);
-        if (NS_SUCCEEDED(rv))
-            RegisterJarManifest(l.type, reader, "chrome.manifest", false);
-    }
+    RereadChromeManifests(false);
 
     nsCategoryManager::GetSingleton()->SuppressNotifications(false);
 
@@ -421,20 +406,23 @@ nsresult nsComponentManagerImpl::Init()
 
 void
 nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
-                                       nsILocalFile* aFile)
+                                       FileLocation* aFile)
 {
     ReentrantMonitorAutoEnter mon(mMon);
 
-    KnownModule* m = new KnownModule(aModule, aFile);
+    KnownModule* m;
     if (aFile) {
-        nsCOMPtr<nsIHashable> h = do_QueryInterface(aFile);
-        NS_ASSERTION(!mKnownFileModules.Get(h),
+        nsCString uri;
+        aFile->GetURIString(uri);
+        NS_ASSERTION(!mKnownModules.Get(uri),
                      "Must not register a binary module twice.");
 
-        mKnownFileModules.Put(h, m);
-    }
-    else
+        m = new KnownModule(aModule, *aFile);
+        mKnownModules.Put(uri, m);
+    } else {
+        m = new KnownModule(aModule);
         mKnownStaticModules.AppendElement(m);
+    }
 
     if (aModule->mCIDs) {
         const mozilla::Module::CIDEntry* entry;
@@ -521,262 +509,91 @@ CutExtension(nsCString& path)
         path.Cut(0, dotPos + 1);
 }
 
-static nsCString
-GetExtension(nsILocalFile* file)
-{
-    nsCString extension;
-    file->GetNativePath(extension);
-    CutExtension(extension);
-    return extension;
-}
-
-static already_AddRefed<nsIInputStream>
-LoadEntry(nsIZipReader* aReader, const char* aName)
-{
-    if (!aReader)
-        return NULL;
-
-    nsCOMPtr<nsIInputStream> is;
-    nsresult rv = aReader->GetInputStream(nsDependentCString(aName), getter_AddRefs(is));
-    if (NS_FAILED(rv))
-        return NULL;
-
-    return is.forget();
-}
-
 void
-nsComponentManagerImpl::RegisterJarManifest(NSLocationType aType, nsIZipReader* aReader,
-                                            const char* aPath, bool aChromeOnly)
+nsComponentManagerImpl::RegisterManifest(NSLocationType aType,
+                                         FileLocation &aFile,
+                                         bool aChromeOnly)
 {
-    nsCOMPtr<nsIInputStream> is = LoadEntry(aReader, aPath);
-    if (!is) {
-        if (NS_BOOTSTRAPPED_LOCATION != aType)
-            LogMessage("Could not find jar manifest entry '%s'.", aPath);
-        return;
+    PRUint32 len;
+    FileLocation::Data data;
+    nsAutoArrayPtr<char> buf;
+    nsresult rv = aFile.GetData(data);
+    if (NS_SUCCEEDED(rv)) {
+        rv = data.GetSize(&len);
     }
-
-    PRUint32 flen;
-    is->Available(&flen);
-
-    nsAutoArrayPtr<char> whole(new char[flen + 1]);
-    if (!whole)
-        return;
-
-    for (PRUint32 totalRead = 0; totalRead < flen; ) {
-        PRUint32 avail;
-        PRUint32 read;
-
-        if (NS_FAILED(is->Available(&avail)))
-            return;
-
-        if (avail > flen)
-            return;
-
-        if (NS_FAILED(is->Read(whole + totalRead, avail, &read)))
-            return;
-
-        totalRead += read;
+    if (NS_SUCCEEDED(rv)) {
+        buf = new char[len + 1];
+        rv = data.Copy(buf, len);
     }
-
-    whole[flen] = '\0';
-
-    ParseManifest(aType, aReader, aPath,
-                  whole, aChromeOnly);
-}
-
-namespace {
-struct AutoCloseFD
-{
-    AutoCloseFD()
-        : mFD(NULL)
-    { }
-    ~AutoCloseFD() {
-        if (mFD)
-            PR_Close(mFD);
+    if (NS_SUCCEEDED(rv)) {
+        buf[len] = '\0';
+        ParseManifest(aType, aFile, buf, aChromeOnly);
+    } else if (NS_BOOTSTRAPPED_LOCATION != aType) {
+        nsCString uri;
+        aFile.GetURIString(uri);
+        LogMessage("Could not read chrome manifest '%s'.", uri.get());
     }
-    operator PRFileDesc*() {
-        return mFD;
-    }
-
-    PRFileDesc** operator&() {
-        NS_ASSERTION(!mFD, "Re-opening a file");
-        return &mFD;
-    }
-
-    PRFileDesc* mFD;
-};
-
-} // anonymous namespace
-
-void
-nsComponentManagerImpl::RegisterManifestFile(NSLocationType aType,
-                                             nsILocalFile* aFile,
-                                             bool aChromeOnly)
-{
-    nsresult rv;
-
-    AutoCloseFD fd;
-    rv = aFile->OpenNSPRFileDesc(PR_RDONLY, 0444, &fd);
-    if (NS_FAILED(rv)) {
-        nsCAutoString path;
-        aFile->GetNativePath(path);
-        if (NS_BOOTSTRAPPED_LOCATION != aType)
-            LogMessage("Could not read chrome manifest file '%s'.", path.get());
-        return;
-    }
-
-    PRFileInfo64 fileInfo;
-    if (PR_SUCCESS != PR_GetOpenFileInfo64(fd, &fileInfo))
-        return;
-
-    if (fileInfo.size > PRInt64(PR_INT32_MAX))
-        return;
-
-    nsAutoArrayPtr<char> data(new char[PRInt32(fileInfo.size + 1)]);
-
-    for (PRInt32 totalRead = 0; totalRead < fileInfo.size; ) {
-        PRInt32 read = PR_Read(fd, data + totalRead, PRInt32(fileInfo.size));
-        if (read < 0)
-            return;
-        totalRead += read;
-    }
-
-    data[fileInfo.size] = '\0';
-    ParseManifest(aType, aFile, data, aChromeOnly);
-}
-
-#if defined(XP_WIN) || defined(XP_OS2)
-#define TRANSLATE_SLASHES
-static void
-TranslateSlashes(char* path)
-{
-    for (; *path; ++path) {
-        if ('/' == *path)
-            *path = '\\';
-    }
-}
-#endif
-
-static void
-AppendFileToManifestPath(nsCString& path,
-                         const char* file)
-{
-    PRInt32 i = path.RFindChar('/');
-    if (kNotFound == i)
-        path.Truncate(0);
-    else
-        path.Truncate(i + 1);
-
-    path.Append(file);
 }
 
 void
 nsComponentManagerImpl::ManifestManifest(ManifestProcessingContext& cx, int lineno, char *const * argv)
 {
     char* file = argv[0];
-
-    if (cx.mPath) {
-        nsCAutoString manifest(cx.mPath);
-        AppendFileToManifestPath(manifest, file);
-
-        RegisterJarManifest(cx.mType, cx.mReader, manifest.get(), cx.mChromeOnly);
-    }
-    else {
-#ifdef TRANSLATE_SLASHES
-        TranslateSlashes(file);
-#endif
-        nsCOMPtr<nsIFile> cfile;
-        cx.mFile->GetParent(getter_AddRefs(cfile));
-        nsCOMPtr<nsILocalFile> clfile = do_QueryInterface(cfile);
-
-        nsresult rv = clfile->AppendRelativeNativePath(nsDependentCString(file));
-        if (NS_FAILED(rv)) {
-            NS_WARNING("Couldn't append relative path?");
-            return;
-        }
-
-        RegisterManifestFile(cx.mType, clfile, cx.mChromeOnly);
-    }
+    FileLocation f(cx.mFile, file);
+    RegisterManifest(cx.mType, f, cx.mChromeOnly);
 }
 
 void
 nsComponentManagerImpl::ManifestBinaryComponent(ManifestProcessingContext& cx, int lineno, char *const * argv)
 {
-    if (cx.mPath) {
+    if (cx.mFile.IsZip()) {
         NS_WARNING("Cannot load binary components from a jar.");
-        LogMessageWithContext(cx.mFile, cx.mPath, lineno,
+        LogMessageWithContext(cx.mFile, lineno,
                               "Cannot load binary components from a jar.");
         return;
     }
 
-    char* file = argv[0];
+    FileLocation f(cx.mFile, argv[0]);
+    nsCString uri;
+    f.GetURIString(uri);
 
-#ifdef TRANSLATE_SLASHES
-    TranslateSlashes(file);
-#endif
-
-    nsCOMPtr<nsIFile> cfile;
-    cx.mFile->GetParent(getter_AddRefs(cfile));
-    nsCOMPtr<nsILocalFile> clfile = do_QueryInterface(cfile);
-
-    nsresult rv = clfile->AppendRelativeNativePath(nsDependentCString(file));
-    if (NS_FAILED(rv)) {
-        NS_WARNING("Couldn't append relative path?");
-        return;
-    }
-
-    nsCOMPtr<nsIHashable> h = do_QueryInterface(clfile);
-    NS_ASSERTION(h, "nsILocalFile doesn't implement nsIHashable");
-    if (mKnownFileModules.Get(h)) {
+    if (mKnownModules.Get(uri)) {
         NS_WARNING("Attempting to register a binary component twice.");
-        LogMessageWithContext(cx.mFile, cx.mPath, lineno,
+        LogMessageWithContext(cx.mFile, lineno,
                               "Attempting to register a binary component twice.");
         return;
     }
 
-    const mozilla::Module* m = mNativeModuleLoader.LoadModule(clfile);
+    const mozilla::Module* m = mNativeModuleLoader.LoadModule(f);
     // The native module loader should report an error here, we don't have to
     if (!m)
         return;
 
-    RegisterModule(m, clfile);
+    RegisterModule(m, &f);
 }
 
 void
 nsComponentManagerImpl::ManifestXPT(ManifestProcessingContext& cx, int lineno, char *const * argv)
 {
-    char* file = argv[0];
-
-    if (cx.mPath) {
-        nsCAutoString manifest(cx.mPath);
-        AppendFileToManifestPath(manifest, file);
-
-        nsCOMPtr<nsIInputStream> stream =
-            LoadEntry(cx.mReader, manifest.get());
-        if (!stream) {
-            NS_WARNING("Failed to load XPT file in a jar.");
-            return;
-        }
-
-        xptiInterfaceInfoManager::GetSingleton()
-            ->RegisterInputStream(stream);
+    FileLocation f(cx.mFile, argv[0]);
+    PRUint32 len;
+    FileLocation::Data data;
+    nsAutoArrayPtr<char> buf;
+    nsresult rv = f.GetData(data);
+    if (NS_SUCCEEDED(rv)) {
+        rv = data.GetSize(&len);
     }
-    else {
-#ifdef TRANSLATE_SLASHES
-        TranslateSlashes(file);
-#endif
-        nsCOMPtr<nsIFile> cfile;
-        cx.mFile->GetParent(getter_AddRefs(cfile));
-        nsCOMPtr<nsILocalFile> clfile = do_QueryInterface(cfile);
-
-        nsresult rv = clfile->AppendRelativeNativePath(nsDependentCString(file));
-        if (NS_FAILED(rv)) {
-            NS_WARNING("Couldn't append relative path?");
-            return;
-        }
-
+    if (NS_SUCCEEDED(rv)) {
+        buf = new char[len];
+        rv = data.Copy(buf, len);
+    }
+    if (NS_SUCCEEDED(rv)) {
         xptiInterfaceInfoManager::GetSingleton()
-            ->RegisterFile(clfile);
+            ->RegisterBuffer(buf, len);
+    } else {
+        nsCString uri;
+        f.GetURIString(uri);
+        LogMessage("Could not read '%s'.", uri.get());
     }
 }
 
@@ -788,7 +605,7 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& cx, int lin
 
     nsID cid;
     if (!cid.Parse(id)) {
-        LogMessageWithContext(cx.mFile, cx.mPath, lineno,
+        LogMessageWithContext(cx.mFile, lineno,
                               "Malformed CID: '%s'.", id);
         return;
     }
@@ -805,7 +622,7 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& cx, int lin
         else
             existing = "<unknown module>";
 
-        LogMessageWithContext(cx.mFile, cx.mPath, lineno,
+        LogMessageWithContext(cx.mFile, lineno,
                               "Trying to re-register CID '%s' already registered by %s.",
                               idstr,
                               existing.get());
@@ -813,42 +630,14 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& cx, int lin
     }
 
     KnownModule* km;
+    FileLocation fl(cx.mFile, file);
 
-    if (cx.mPath) {
-        nsCAutoString manifest(cx.mPath);
-        AppendFileToManifestPath(manifest, file);
-
-        nsCAutoString hash;
-        cx.mFile->GetNativePath(hash);
-        hash.AppendLiteral("|");
-        hash.Append(manifest);
-
-        km = mKnownJARModules.Get(hash);
-        if (!km) {
-            km = new KnownModule(cx.mFile, manifest);
-            mKnownJARModules.Put(hash, km);
-        }
-    }
-    else {
-#ifdef TRANSLATE_SLASHES
-        TranslateSlashes(file);
-#endif
-        nsCOMPtr<nsIFile> cfile;
-        cx.mFile->GetParent(getter_AddRefs(cfile));
-        nsCOMPtr<nsILocalFile> clfile = do_QueryInterface(cfile);
-
-        nsresult rv = clfile->AppendRelativeNativePath(nsDependentCString(file));
-        if (NS_FAILED(rv)) {
-            NS_WARNING("Couldn't append relative path?");
-            return;
-        }
-
-        nsCOMPtr<nsIHashable> h = do_QueryInterface(clfile);
-        km = mKnownFileModules.Get(h);
-        if (!km) {
-            km = new KnownModule(clfile);
-            mKnownFileModules.Put(h, km);
-        }
+    nsCString hash;
+    fl.GetURIString(hash);
+    km = mKnownModules.Get(hash);
+    if (!km) {
+        km = new KnownModule(fl);
+        mKnownModules.Put(hash, km);
     }
 
     void* place;
@@ -873,7 +662,7 @@ nsComponentManagerImpl::ManifestContract(ManifestProcessingContext& cx, int line
 
     nsID cid;
     if (!cid.Parse(id)) {
-        LogMessageWithContext(cx.mFile, cx.mPath, lineno,
+        LogMessageWithContext(cx.mFile, lineno,
                               "Malformed CID: '%s'.", id);
         return;
     }
@@ -881,7 +670,7 @@ nsComponentManagerImpl::ManifestContract(ManifestProcessingContext& cx, int line
     ReentrantMonitorAutoEnter mon(mMon);
     nsFactoryEntry* f = mFactories.Get(cid);
     if (!f) {
-        LogMessageWithContext(cx.mFile, cx.mPath, lineno,
+        LogMessageWithContext(cx.mFile, lineno,
                               "Could not map contract ID '%s' to CID %s because no implementation of the CID is registered.",
                               contract, id);
         return;
@@ -902,21 +691,11 @@ nsComponentManagerImpl::ManifestCategory(ManifestProcessingContext& cx, int line
 }
 
 void
-nsComponentManagerImpl::RereadChromeManifests()
+nsComponentManagerImpl::RereadChromeManifests(bool aChromeOnly)
 {
     for (PRUint32 i = 0; i < sModuleLocations->Length(); ++i) {
         ComponentLocation& l = sModuleLocations->ElementAt(i);
-        if (!l.jar) {
-            RegisterManifestFile(l.type, l.location, true);
-            continue;
-        }
-
-        nsresult rv;
-        nsCOMPtr<nsIZipReader> reader = do_CreateInstance(kZipReaderCID, &rv);
-        if (NS_SUCCEEDED(rv))
-            rv = reader->Open(l.location);
-        if (NS_SUCCEEDED(rv))
-            RegisterJarManifest(l.type, reader, "chrome.manifest", true);
+        RegisterManifest(l.type, l.location, aChromeOnly);
     }
 }
 
@@ -925,14 +704,8 @@ nsComponentManagerImpl::KnownModule::EnsureLoader()
 {
     if (!mLoader) {
         nsCString extension;
-        if (!mPath.IsEmpty()) {
-            extension = mPath;
-            CutExtension(extension);
-        }
-        else {
-            extension = GetExtension(mFile);
-        }
-
+        mFile.GetURIString(extension);
+        CutExtension(extension);
         mLoader = nsComponentManagerImpl::gComponentManager->LoaderForExtension(extension);
     }
     return !!mLoader;
@@ -947,10 +720,7 @@ nsComponentManagerImpl::KnownModule::Load()
         if (!EnsureLoader())
             return false;
 
-        if (!mPath.IsEmpty())
-            mModule = mLoader->LoadModuleFromJAR(mFile, mPath);
-        else
-            mModule = mLoader->LoadModule(mFile);
+        mModule = mLoader->LoadModule(mFile);
 
         if (!mModule) {
             mFailed = true;
@@ -974,14 +744,8 @@ nsCString
 nsComponentManagerImpl::KnownModule::Description() const
 {
     nsCString s;
-    if (!mPath.IsEmpty()) {
-        mFile->GetNativePath(s);
-        s.Insert(NS_LITERAL_CSTRING("jar:"), 0);
-        s.AppendLiteral("!/");
-        s.Append(mPath);
-    }
-    else if (mFile)
-        mFile->GetNativePath(s);
+    if (mFile)
+        mFile.GetURIString(s);
     else
         s = "<static module>";
     return s;
@@ -1002,8 +766,7 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     mContractIDs.Clear();
     mFactories.Clear(); // XXX release the objects, don't just clear
     mLoaderMap.Clear();
-    mKnownJARModules.Clear();
-    mKnownFileModules.Clear();
+    mKnownModules.Clear();
     mKnownStaticModules.Clear();
 
     mLoaderData.Clear();
@@ -2066,25 +1829,21 @@ nsComponentManagerImpl::RemoveBootstrappedManifestLocation(nsILocalFile* aLocati
   if (!cr)
     return NS_ERROR_FAILURE;
 
-  bool isJar = false;
   nsCOMPtr<nsILocalFile> manifest;
   nsString path;
   nsresult rv = aLocation->GetPath(path);
   if (NS_FAILED(rv))
     return rv;
 
-  if (Substring(path, path.Length() - 4).Equals(NS_LITERAL_STRING(".xpi"))) {
-    isJar = true;
-    manifest = aLocation;
-  } else {
-    manifest = CloneAndAppend(aLocation, NS_LITERAL_CSTRING("chrome.manifest"));
-  }
+  nsComponentManagerImpl::ComponentLocation elem;
+  elem.type = NS_BOOTSTRAPPED_LOCATION;
 
-  nsComponentManagerImpl::ComponentLocation elem = {
-    NS_BOOTSTRAPPED_LOCATION,
-    manifest,
-    isJar
-  };
+  if (Substring(path, path.Length() - 4).Equals(NS_LITERAL_STRING(".xpi"))) {
+    elem.location.Init(aLocation, "chrome.manifest");
+  } else {
+    nsCOMPtr<nsILocalFile> lf = CloneAndAppend(aLocation, NS_LITERAL_CSTRING("chrome.manifest"));
+    elem.location.Init(lf);
+  }
 
   // Remove reference.
   nsComponentManagerImpl::sModuleLocations->RemoveElement(elem, ComponentLocationComparator());
@@ -2100,12 +1859,11 @@ XRE_AddManifestLocation(NSLocationType aType, nsILocalFile* aLocation)
     nsComponentManagerImpl::ComponentLocation* c = 
         nsComponentManagerImpl::sModuleLocations->AppendElement();
     c->type = aType;
-    c->location = aLocation;
-    c->jar = false;
+    c->location.Init(aLocation);
 
     if (nsComponentManagerImpl::gComponentManager &&
         nsComponentManagerImpl::NORMAL == nsComponentManagerImpl::gComponentManager->mStatus)
-        nsComponentManagerImpl::gComponentManager->RegisterManifestFile(aType, aLocation, false);
+        nsComponentManagerImpl::gComponentManager->RegisterManifest(aType, c->location, false);
 
     return NS_OK;
 }
@@ -2116,21 +1874,13 @@ XRE_AddJarManifestLocation(NSLocationType aType, nsILocalFile* aLocation)
     nsComponentManagerImpl::InitializeModuleLocations();
     nsComponentManagerImpl::ComponentLocation* c = 
         nsComponentManagerImpl::sModuleLocations->AppendElement();
+
     c->type = aType;
-    c->location = aLocation;
-    c->jar = true;
+    c->location.Init(aLocation, "chrome.manifest");
 
-    if (!nsComponentManagerImpl::gComponentManager ||
-        nsComponentManagerImpl::NORMAL != nsComponentManagerImpl::gComponentManager->mStatus)
-        return NS_OK;
-
-    nsresult rv;
-    nsCOMPtr<nsIZipReader> reader = do_CreateInstance(kZipReaderCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = reader->Open(c->location);
-    if (NS_SUCCEEDED(rv))
-        nsComponentManagerImpl::gComponentManager->RegisterJarManifest(aType, reader, "chrome.manifest", false);
+    if (nsComponentManagerImpl::gComponentManager &&
+        nsComponentManagerImpl::NORMAL == nsComponentManagerImpl::gComponentManager->mStatus)
+        nsComponentManagerImpl::gComponentManager->RegisterManifest(aType, c->location, false);
 
     return NS_OK;
 }

@@ -171,6 +171,8 @@ class Thread {
   // Start new thread by calling the Run() method in the new thread.
   void Start();
 
+  void Join();
+
   inline const char* name() const {
     return name_;
   }
