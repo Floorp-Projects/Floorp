@@ -94,7 +94,7 @@ public class AwesomeBarTabs extends TabHost {
     private static final int MAX_RESULTS = 100;
 
     public interface OnUrlOpenListener {
-        public abstract void onUrlOpen(AwesomeBarTabs tabs, String url);
+        public abstract void onUrlOpen(String url);
     }
 
     private class HistoryListAdapter extends SimpleExpandableListAdapter {
@@ -582,7 +582,7 @@ public class AwesomeBarTabs extends TabHost {
         String url = (String) historyItem.get(AwesomeBar.URL_KEY);
 
         if (mUrlOpenListener != null)
-            mUrlOpenListener.onUrlOpen(this, url);
+            mUrlOpenListener.onUrlOpen(url);
     }
 
     private void handleItemClick(ListView list, int position) {
@@ -590,7 +590,7 @@ public class AwesomeBarTabs extends TabHost {
         String url = cursor.getString(cursor.getColumnIndexOrThrow(AwesomeBar.URL_KEY));
 
         if (mUrlOpenListener != null)
-            mUrlOpenListener.onUrlOpen(this, url);
+            mUrlOpenListener.onUrlOpen(url);
     }
 
     public void setOnUrlOpenListener(OnUrlOpenListener listener) {
