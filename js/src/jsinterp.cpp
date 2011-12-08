@@ -3083,11 +3083,6 @@ BEGIN_CASE(JSOP_LENGTH)
             }
         }
 
-        /*
-         * We do not impose the method read barrier if in an imacro,
-         * assuming any property gets it does (e.g., for 'toString'
-         * from JSOP_NEW) will not be leaked to the calling script.
-         */
         JSObject *obj;
         VALUE_TO_OBJECT(cx, vp, obj);
         JSObject *aobj = js_GetProtoIfDenseArray(obj);
