@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=707142
+-->
+<head>
+  <title>Test for Bug 707142</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=707142">Mozilla Bug 707142</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 707142 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var xhr = new XMLHttpRequest();
+xhr.onload = function() {
+  is(xhr.response["foo"], "bar", "Should have gotten bar on baseline");
+  
+  xhr.onload = function() {
+    is(xhr.response["foo"], "bar", "Should have gotten bar with BOM");
+
+    xhr.onload = function() {
+      is(xhr.response, null, "Should have gotten null response with UTF-16 JSON");
+
+      SimpleTest.finish();
+    };
+    xhr.open("GET", "file_bug707142_utf-16.json");
+    xhr.responseType = "json";
+    xhr.send();
+  };
+  xhr.open("GET", "file_bug707142_bom.json");
+  xhr.responseType = "json";
+  xhr.send();
+};
+xhr.open("GET", "file_bug707142_baseline.json");
+xhr.responseType = "json";
+xhr.send();
+
+</script>
+</pre>
+</body>
+</html>
