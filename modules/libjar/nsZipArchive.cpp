@@ -206,7 +206,7 @@ nsresult nsZipHandle::Init(nsILocalFile *file, nsZipHandle **ret)
   }
 
   handle->mMap = map;
-  handle->mFile = file;
+  handle->mFile.Init(file);
   handle->mLen = (PRUint32) size;
   handle->mFileData = buf;
   *ret = handle.forget().get();
@@ -228,6 +228,7 @@ nsresult nsZipHandle::Init(nsZipArchive *zip, const char *entry,
     return NS_ERROR_UNEXPECTED;
 
   handle->mMap = nsnull;
+  handle->mFile.Init(zip, entry);
   handle->mLen = handle->mBuf->Length();
   handle->mFileData = handle->mBuf->Buffer();
   *ret = handle.forget().get();
@@ -279,7 +280,8 @@ nsresult nsZipArchive::OpenArchive(nsZipHandle *aZipHandle)
     logFile->Create(nsIFile::DIRECTORY_TYPE, 0700);
 
     nsAutoString name;
-    aZipHandle->mFile->GetLeafName(name);
+    nsCOMPtr<nsILocalFile> file = aZipHandle->mFile.GetBaseFile();
+    file->GetLeafName(name);
     name.Append(NS_LITERAL_STRING(".log"));
     logFile->Append(name);
 
