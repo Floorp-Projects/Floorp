@@ -206,6 +206,11 @@ static JSClass global_class = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
+// We just use the same reporter as the component loader
+// XXX #include angels cry.
+extern void
+mozJSLoaderErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep);
+
 /* attribute JSContext safeJSContext; */
 NS_IMETHODIMP
 XPCJSContextStack::GetSafeJSContext(JSContext * *aSafeJSContext)
@@ -237,6 +242,8 @@ XPCJSContextStack::GetSafeJSContext(JSContext * *aSafeJSContext)
             if (mSafeJSContext) {
                 // scoped JS Request
                 JSAutoRequest req(mSafeJSContext);
+
+                JS_SetErrorReporter(mSafeJSContext, mozJSLoaderErrorReporter);
 
                 // Because we can run off the main thread, we create an MT
                 // global object. Our principal is the unique key.

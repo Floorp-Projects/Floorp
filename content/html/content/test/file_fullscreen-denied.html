@@ -22,11 +22,11 @@ Test DOM full-screen API.
 /** Test for Bug 545812 **/
 
 function ok(condition, msg) {
-  opener.ok(condition, msg);
+  opener.ok(condition, "[denied] " + msg);
 }
 
 function is(a, b, msg) {
-  opener.is(a, b, msg);
+  opener.is(a, b, "[denied] " + msg);
 }
 
 var fullscreendenied = false;

@@ -30,10 +30,3 @@ Function.prototype.toString = function () { loop(this, true); return "hah"; };
 
 // Fail hard if we don't handle the implicit call out of C to F.p.toString.
 C.call(obj, true);
-
-checkStats({
-    recorderStarted: 1,
-    recorderAborted: 0,
-    traceCompleted: 2,
-    traceTriggered: 4
-});

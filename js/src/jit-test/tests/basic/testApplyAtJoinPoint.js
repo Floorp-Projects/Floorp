@@ -8,5 +8,5 @@ function f() {
     return g.apply(null, isTrue ? ["happy"] : arguments);
 }
 
-for (var i = 0; i < HOTLOOP + 10; ++i)
+for (var i = 0; i < 18; ++i)
     assertEq(f("sad"), "happy");

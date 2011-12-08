@@ -3874,9 +3874,10 @@ nsGlobalWindow::GetMozPaintCount(PRUint64* aResult)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback)
+nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback,
+                                         PRInt32 *aHandle)
 {
-  FORWARD_TO_INNER(MozRequestAnimationFrame, (aCallback),
+  FORWARD_TO_INNER(MozRequestAnimationFrame, (aCallback, aHandle),
                    NS_ERROR_NOT_INITIALIZED);
 
   if (!mDoc) {
@@ -3887,7 +3888,20 @@ nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback)
     return NS_ERROR_XPC_BAD_CONVERT_JS;
   }
 
-  mDoc->ScheduleFrameRequestCallback(aCallback);
+  return mDoc->ScheduleFrameRequestCallback(aCallback, aHandle);
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::MozCancelRequestAnimationFrame(PRInt32 aHandle)
+{
+  FORWARD_TO_INNER(MozCancelRequestAnimationFrame, (aHandle),
+                   NS_ERROR_NOT_INITIALIZED);
+
+  if (!mDoc) {
+    return NS_OK;
+  }
+
+  mDoc->CancelFrameRequestCallback(aHandle);
   return NS_OK;
 }
 
@@ -4424,12 +4438,12 @@ nsGlobalWindow::SetFullScreen(bool aFullScreen)
   if (widget)
     widget->MakeFullScreen(aFullScreen);
 
-  if (!mFullScreen && mDocument) {
-    // Notify the document that we've left full-screen mode. This is so that
-    // if we're in full-screen mode and the user exits full-screen mode with
-    // the browser full-screen mode toggle keyboard-shortcut, we detect that
-    // and leave DOM API full-screen mode too.
-    mDocument->MozCancelFullScreen();
+  if (!mFullScreen) {
+    // Force exit from DOM full-screen mode. This is so that if we're in
+    // DOM full-screen mode and the user exits full-screen mode with
+    // the browser full-screen mode toggle keyboard-shortcut, we'll detect
+    // that and leave DOM API full-screen mode too.
+    nsIDocument::ExitFullScreen(false);
   }
 
   return NS_OK;

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <meta charset="utf-8">
+    <title>Test for bug 698291</title>
+  </head>
+  <body>
+    <iframe style="width: 50%" id="f" src="698291-1-frame.html"></iframe>
+    <script type="text/javascript">
+function expandFrame()
+{
+  document.getElementById("f").style.width="100%";
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", expandFrame, false);
+    </script>
+  </body>
+</html>

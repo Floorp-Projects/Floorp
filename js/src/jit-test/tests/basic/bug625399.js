@@ -3,5 +3,5 @@ function a(bb) {
     return;
     this.d = function() { bb; };
 }
-for (var i = 0; i <= RUNLOOP; i++)
+for (var i = 0; i <= 9; i++)
     a();

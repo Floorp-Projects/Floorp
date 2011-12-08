@@ -1542,30 +1542,18 @@ nsAccessible::State()
 
   if (!(state & states::UNAVAILABLE)) {
     state |= states::ENABLED | states::SENSITIVE;
+
+    // If the object is a current item of container widget then mark it as
+    // ACTIVE. This allows screen reader virtual buffer modes to know which
+    // descendant is the current one that would get focus if the user navigates
+    // to the container widget.
+    nsAccessible* widget = ContainerWidget();
+    if (widget && widget->CurrentItem() == this)
+      state |= states::ACTIVE;
   }
 
   if ((state & states::COLLAPSED) || (state & states::EXPANDED))
     state |= states::EXPANDABLE;
-
-  if (mRoleMapEntry) {
-    // If an object has an ancestor with the activedescendant property
-    // pointing at it, we mark it as ACTIVE even if it's not currently focused.
-    // This allows screen reader virtual buffer modes to know which descendant
-    // is the current one that would get focus if the user navigates to the container widget.
-    nsAutoString id;
-    if (nsCoreUtils::GetID(mContent, id)) {
-      nsIContent *ancestorContent = mContent;
-      nsAutoString activeID;
-      while ((ancestorContent = ancestorContent->GetParent()) != nsnull) {
-        if (ancestorContent->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_activedescendant, activeID)) {
-          if (id == activeID) {
-            state |= states::ACTIVE;
-          }
-          break;
-        }
-      }
-    }
-  }
 
   // For some reasons DOM node may have not a frame. We tract such accessibles
   // as invisible.
@@ -2955,15 +2943,18 @@ nsAccessible::ContainerWidget() const
   nsIAtom* idAttribute = mContent->GetIDAttributeName();
   if (idAttribute) {
     if (mContent->HasAttr(kNameSpaceID_None, idAttribute)) {
-      nsAccessible* parent = Parent();
-      do {
+      for (nsAccessible* parent = Parent(); parent; parent = parent->Parent()) {
         nsIContent* parentContent = parent->GetContent();
         if (parentContent &&
             parentContent->HasAttr(kNameSpaceID_None,
                                    nsGkAtoms::aria_activedescendant)) {
           return parent;
         }
-      } while ((parent = parent->Parent()));
+
+        // Don't cross DOM document boundaries.
+        if (parent->IsDocumentNode())
+          break;
+      }
     }
   }
   return nsnull;

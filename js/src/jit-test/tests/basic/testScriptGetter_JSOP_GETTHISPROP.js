@@ -7,5 +7,3 @@ var a = {
 	assertEq(s, 99);
     }};
 a.test();
-
-checkStats({recorderStarted: 1, recorderAborted: 0, traceCompleted: 1, traceTriggered: 1});
