@@ -2520,7 +2520,10 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::Ty
     if (type == JSVAL_TYPE_OBJECT && !observed->hasType(types::Type::AnyObjectType()))
         type = JSVAL_TYPE_UNKNOWN;
 
-    if (type == JSVAL_TYPE_UNKNOWN) {
+    switch (type) {
+      case JSVAL_TYPE_UNKNOWN:
+      case JSVAL_TYPE_UNDEFINED:
+      case JSVAL_TYPE_NULL:
         barrier = MTypeBarrier::New(ins, observed);
         current->add(barrier);
 
@@ -2528,7 +2531,8 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::Ty
             return pushConstant(UndefinedValue());
         if (type == JSVAL_TYPE_NULL)
             return pushConstant(NullValue());
-    } else {
+        break;
+      default:
         MUnbox::Mode mode = ins->isIdempotent() ? MUnbox::Fallible : MUnbox::TypeBarrier;
         barrier = MUnbox::New(ins, MIRTypeFromValueType(type), mode);
         current->add(barrier);
