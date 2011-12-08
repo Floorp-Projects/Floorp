@@ -41,7 +41,7 @@ function testReturnCommit()
     start: function() {
       is(span.inplaceEditor.input.value, "explicit initial", "Explicit initial value should be used.");
       span.inplaceEditor.input.value = "Test Value";
-      EventUtils.sendKey("return");
+      EventUtils.sendKey("return", span.inplaceEditor.input);
     },
     done: expectDone("Test Value", true, testBlurCommit)
   });
@@ -74,7 +74,7 @@ function testAdvanceCharCommit()
     start: function() {
       let input = span.inplaceEditor.input;
       for each (let ch in "Test:") {
-        EventUtils.sendChar(ch);
+        EventUtils.sendChar(ch, input);
       }
     },
     done: expectDone("Test", true, testEscapeCancel)
@@ -91,7 +91,7 @@ function testEscapeCancel()
     initial: "initial text",
     start: function() {
       span.inplaceEditor.input.value = "Test Value";
-      EventUtils.sendKey("escape");
+      EventUtils.sendKey("escape", span.inplaceEditor.input);
     },
     done: expectDone("initial text", false, finishTest)
   });

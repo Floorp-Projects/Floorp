@@ -62,20 +62,15 @@ var step1 =function() {
   // Navigate down and up.
   is(testWindow.document.body.scrollTop, 0,
      "Page1: Ensure we scrollpane is at the top before we start scrolling.");
-  testWindow.focus();
   sendKey('DOWN', testWindow);
-  SimpleTest.executeSoon(function() {
-    isnot(testWindow.document.body.scrollTop, 0,
-          "Page1: Ensure we can scroll down.");
-    sendKey('UP', testWindow);
-    SimpleTest.executeSoon(function() {
-      is(testWindow.document.body.scrollTop, 0,
-         "Page1: Ensure we can scroll up, back to the top.");  
-
-      // Nav to blue box page. This should fire step2.
-      testWindow.location = gTallBlueBoxURI;
-    });
-  });
+  sendKey('UP', testWindow);
+  setTimeout(function() {
+    is(testWindow.document.body.scrollTop, 0,
+       "Page1: Ensure we can scroll down and up, back to the top.");  
+    
+    // Nav to blue box page. This should fire step2.
+    testWindow.location = gTallBlueBoxURI;
+  }, 0);
 }
 
 
@@ -85,7 +80,6 @@ var step2 =function() {
   // Scroll around a bit.
   is(testWindow.document.body.scrollTop, 0,
      "Page2: Ensure we scrollpane is at the top before we start scrolling.");
-  testWindow.focus();
   sendKey('DOWN', testWindow);
   sendKey('DOWN', testWindow);
   sendKey('DOWN', testWindow);
@@ -105,7 +99,6 @@ var step3 =function() {
   // Check we can still scroll with the keys.
   is(testWindow.document.body.scrollTop, 0,
      "Page1Again: Ensure scroll pane at top before we scroll.");  
-  testWindow.focus();
   sendKey('DOWN', testWindow);
   setTimeout(function() {
     isnot(testWindow.document.body.scrollTop, 0,

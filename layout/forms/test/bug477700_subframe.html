@@ -14,7 +14,6 @@
       window.addEventListener("message",
         function(evt) {
           doIs(evt.data, "start", "Unexpected message");
-          $("target").focus();
           sendString("Test");
           var t = $("target");
           doIs(t.value, "Test", "Typing should work");

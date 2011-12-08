@@ -36,8 +36,12 @@ function onReload() {
 
 function doTest() {
   var bodyElement = window.frames[0].frameElement.contentDocument.body;
-  bodyElement.focus();
-  sendString('Still ', window.frames[0].frameElement.contentWindow);
+  sendChar('S', bodyElement);
+  sendChar('t', bodyElement);
+  sendChar('i', bodyElement);
+  sendChar('l', bodyElement);
+  sendChar('l', bodyElement);
+  sendChar(' ', bodyElement);
 
   is(bodyElement.innerHTML, "Still contentEditable", "Check we're contentEditable after reload");
 
