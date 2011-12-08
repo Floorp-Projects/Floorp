@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=708062
+-->
+<head>
+  <title>Test for Bug 708062</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body onload="doTest()">
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=708062">Mozilla Bug 708062</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<iframe id="f" style="width:100px;"
+        src="data:text/html,A<div id='d' style='position:fixed;width:170px;top:0;right:0;height:1px;background:yellow;'>"></iframe>
+<pre id="test">
+
+<script>
+function isBoundingClientRect(e, r, msg) {
+  var BCR = e.getBoundingClientRect();
+  is([BCR.left, BCR.top, BCR.right, BCR.bottom].join(','), r, msg);
+}
+
+function doTest() {
+  var f = document.getElementById('f');
+
+  var navigator1 = f.contentWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebNavigation);
+  var docShell = navigator1.QueryInterface(Components.interfaces.nsIDocShell);
+  var docviewer = docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+
+  var d = f.contentDocument.getElementById('d');
+
+  isBoundingClientRect(d, "-70,0,100,1", "initial rect");
+  docviewer.fullZoom = 2;
+  isBoundingClientRect(d, "-120,0,50,1", "after zooming in");
+  docviewer.fullZoom = 1;
+  isBoundingClientRect(d, "-70,0,100,1", "after zooming back out");
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>
