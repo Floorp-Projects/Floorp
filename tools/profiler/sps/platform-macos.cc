@@ -151,6 +151,9 @@ void Thread::Start() {
   ASSERT(data_->thread_ != kNoThread);
 }
 
+void Thread::Join() {
+  pthread_join(data_->thread_, NULL);
+}
 
 class Sampler::PlatformData : public Malloced {
  public:
@@ -191,6 +194,9 @@ class SamplerThread : public Thread {
   static void RemoveActiveSampler(Sampler* sampler) {
     ScopedLock lock(mutex_);
     SamplerRegistry::RemoveActiveSampler(sampler);
+    instance_->Join();
+    delete instance_;
+    instance_ = NULL;
     /*
     if (SamplerRegistry::GetState() == SamplerRegistry::HAS_NO_SAMPLERS) {
       RuntimeProfiler::StopRuntimeProfilerThreadBeforeShutdown(instance_);
@@ -296,6 +302,6 @@ void Sampler::Start() {
 
 void Sampler::Stop() {
   ASSERT(IsActive());
-  SamplerThread::RemoveActiveSampler(this);
   SetActive(false);
+  SamplerThread::RemoveActiveSampler(this);
 }

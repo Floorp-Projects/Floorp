@@ -7,7 +7,7 @@ Standards-Version: 3.7.2
 
 Package: xulrunner
 Architecture: any
-Depends: libasound2 (>> 1.0.14), libatk1.0-0 (>= 1.12.2), libc6 (>= 2.5.0-1), libcairo2 (>= 1.4.10), libdbus-1-3 (>= 0.94), libdbus-glib-1-2 (>= 0.74), libfontconfig1 (>= 2.4.1), libfreetype6 (>= 2.2.1), libgcc1 (>= 1:3.4.4), libgconf2-6 (>= 2.13.5), libglib2.0-0 (>= 2.12.12-1osso3), libgtk2.0-0 (>= 2:2.10.12-0osso15), libhildon1 (>= 1.0.11), libhildonmime0 (>= 1.10.0), liblocation0, libosso-gnomevfs2-0, libosso1 (>= 2.13), libpango1.0-0 (>= 1.16.4), libstdc++6 (>= 3.4.4), libx11-6, libxrender1, libxt6, zlib1g (>= 1:1.2.1)
+Depends: ${shlibs:Depends}
 Description: Web and JavaScript engine used by the Firefox Web browser
  The Mozilla runtime is the modern browser engine, also known as "Gecko," that powers Firefox and can be embedded by other applications
 XB-Maemo-Display-Name: Mozilla Runtime
