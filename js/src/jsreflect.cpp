@@ -321,7 +321,7 @@ class NodeBuilder
     }
 
     bool newObject(JSObject **dst) {
-        JSObject *nobj = NewNonFunction<WithProto::Class>(cx, &ObjectClass, NULL, NULL);
+        JSObject *nobj = NewBuiltinClassInstance(cx, &ObjectClass);
         if (!nobj)
             return false;
 
@@ -631,7 +631,7 @@ NodeBuilder::newNode(ASTType type, TokenPos *pos, JSObject **dst)
 
     Value tv;
 
-    JSObject *node = NewNonFunction<WithProto::Class>(cx, &ObjectClass, NULL, NULL);
+    JSObject *node = NewBuiltinClassInstance(cx, &ObjectClass);
     if (!node ||
         !setNodeLoc(node, pos) ||
         !atomValue(nodeTypeNames[type], &tv) ||
@@ -3143,7 +3143,7 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
         return JS_FALSE;
     }
 
-    JSString *src = js_ValueToString(cx, JS_ARGV(cx, vp)[0]);
+    JSString *src = ToString(cx, JS_ARGV(cx, vp)[0]);
     if (!src)
         return JS_FALSE;
 
@@ -3183,7 +3183,7 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
             }
 
             if (!prop.isNullOrUndefined()) {
-                JSString *str = js_ValueToString(cx, prop);
+                JSString *str = ToString(cx, prop);
                 if (!str)
                     return JS_FALSE;
 
@@ -3201,7 +3201,7 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
             /* config.line */
             if (!GetPropertyDefault(cx, config, ATOM_TO_JSID(cx->runtime->atomState.lineAtom),
                                     Int32Value(1), &prop) ||
-                !ValueToECMAUint32(cx, prop, &lineno)) {
+                !ToUint32(cx, prop, &lineno)) {
                 return JS_FALSE;
             }
         }
@@ -3264,7 +3264,7 @@ JS_BEGIN_EXTERN_C
 JS_PUBLIC_API(JSObject *)
 JS_InitReflect(JSContext *cx, JSObject *obj)
 {
-    JSObject *Reflect = NewNonFunction<WithProto::Class>(cx, &ObjectClass, NULL, obj);
+    JSObject *Reflect = NewObjectWithClassProto(cx, &ObjectClass, NULL, obj);
     if (!Reflect || !Reflect->setSingletonType(cx))
         return NULL;
 

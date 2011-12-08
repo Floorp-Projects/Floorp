@@ -211,12 +211,17 @@ function checkRect(x, y, width, height, color) {
 function fillLevel(target, level, size, color) {
   var numPixels = size * size;
   var pixels = new Uint8Array(numPixels * 4);
-  for (var jj = 0; jj < numPixels; ++jj) {
+  var pixelRow = new Uint8Array(size * 4);
+  for (var jj = 0; jj < size; ++jj) {
     var off = jj * 4;
-    pixels[off + 0] = color[0];
-    pixels[off + 1] = color[1];
-    pixels[off + 2] = color[2];
-    pixels[off + 3] = color[3];
+    pixelRow[off + 0] = color[0];
+    pixelRow[off + 1] = color[1];
+    pixelRow[off + 2] = color[2];
+    pixelRow[off + 3] = color[3];
+  }
+  for (var jj = 0; jj < size; ++jj) {
+    var off = jj * size * 4;
+    pixels.set(pixelRow, off);
   }
   gl.texImage2D(
       target, level, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE,

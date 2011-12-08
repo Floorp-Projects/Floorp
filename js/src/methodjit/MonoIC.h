@@ -156,8 +156,8 @@ struct SetGlobalNameIC : public GlobalNameIC
     /* SET only. */
     ValueRemat vr;              /* RHS value. */
 
-    void patchInlineShapeGuard(Repatcher &repatcher, int32 shape);
-    void patchExtraShapeGuard(Repatcher &repatcher, int32 shape);
+    void patchInlineShapeGuard(Repatcher &repatcher, const Shape *shape);
+    void patchExtraShapeGuard(Repatcher &repatcher, const Shape *shape);
 };
 
 void JS_FASTCALL GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic);
@@ -235,7 +235,6 @@ struct CallICInfo {
     uint32 slowJoinOffset  : 16;
 
     RegisterID funObjReg : 5;
-    RegisterID funPtrReg : 5;
     bool hit : 1;
     bool hasJsFunCheck : 1;
     bool typeMonitored : 1;

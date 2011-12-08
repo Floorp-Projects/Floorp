@@ -76,6 +76,8 @@
 #include "mozilla/Preferences.h"
 #include "nsDOMLists.h"
 #include "xpcpublic.h"
+#include "nsContentPolicyUtils.h"
+#include "nsContentErrors.h"
 
 using namespace mozilla;
 
@@ -400,10 +402,7 @@ nsWebSocket::nsWebSocket() : mKeepingAlive(false),
 nsWebSocket::~nsWebSocket()
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
-  if (mListenerManager) {
-    mListenerManager->Disconnect();
-    mListenerManager = nsnull;
-  }
+
   Disconnect();
   nsLayoutStatics::Release();
 }
@@ -1276,6 +1275,9 @@ nsWebSocket::Init(nsIPrincipal* aPrincipal,
   rv = ParseURL(PromiseFlatString(aURL));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIDocument> originDoc =
+    nsContentUtils::GetDocumentFromScriptContext(mScriptContext);
+
   // Don't allow https:// to open ws://
   if (!mSecure &&
       !Preferences::GetBool("network.websocket.allowInsecureFromHTTPS",
@@ -1283,8 +1285,6 @@ nsWebSocket::Init(nsIPrincipal* aPrincipal,
     // Confirmed we are opening plain ws:// and want to prevent this from a
     // secure context (e.g. https). Check the security context of the document
     // associated with this script, which is the same as associated with mOwner.
-    nsCOMPtr<nsIDocument> originDoc =
-      nsContentUtils::GetDocumentFromScriptContext(mScriptContext);
     if (originDoc && originDoc->GetSecurityInfo())
       return NS_ERROR_DOM_SECURITY_ERR;
   }
@@ -1300,6 +1300,23 @@ nsWebSocket::Init(nsIPrincipal* aPrincipal,
     if (!mRequestedProtocolList.IsEmpty())
       mRequestedProtocolList.Append(NS_LITERAL_CSTRING(", "));
     AppendUTF16toUTF8(protocolArray[index], mRequestedProtocolList);
+  }
+
+  // Check content policy.
+  PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_WEBSOCKET,
+                                 mURI,
+                                 mPrincipal,
+                                 originDoc,
+                                 EmptyCString(),
+                                 nsnull,
+                                 &shouldLoad,
+                                 nsContentUtils::GetContentPolicy(),
+                                 nsContentUtils::GetSecurityManager());
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_CP_REJECTED(shouldLoad)) {
+    // Disallowed by content policy.
+    return NS_ERROR_CONTENT_BLOCKED;
   }
 
   // the constructor should throw a SYNTAX_ERROR only if it fails to parse the

@@ -21,11 +21,11 @@ exit DOM full-screen mode.
 <script type="application/javascript">
 
 function ok(condition, msg) {
-  opener.ok(condition, msg);
+  opener.ok(condition, "[esc-exit] " + msg);
 }
 
 function is(a, b, msg) {
-  opener.is(a, b, msg);
+  opener.is(a, b, "[esc-exit] " + msg);
 }
 
 function finish() {
@@ -34,6 +34,7 @@ function finish() {
 
 function fullscreenchange1(event) {
   ok(document.mozFullScreen, "Should have entered full-screen mode");
+  is(document.mozFullScreenElement, document.body, "FSE should be doc");
   document.removeEventListener("mozfullscreenchange", fullscreenchange1, false);
   document.addEventListener("mozfullscreenchange", fullscreenchange2, false);
   ok(!document.getElementById("subdoc").contentWindow.escKeySent, "Should not yet have sent ESC key press.");

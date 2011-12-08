@@ -79,7 +79,7 @@ using mozilla::unused;
 
 #include "nsStringGlue.h"
 
-// NB: Keep these in sync with LayerController.java in embedding/android/.
+// NB: Keep these in sync with LayerController.java in mobile/android/base and embedding/android/.
 #define TILE_WIDTH      1024
 #define TILE_HEIGHT     2048
 
@@ -273,6 +273,8 @@ nsWindow::Create(nsIWidget *aParent,
 NS_IMETHODIMP
 nsWindow::Destroy(void)
 {
+    nsBaseWidget::mOnDestroyCalled = true;
+
     for (PRUint32 i = 0; i < mChildren.Length(); ++i) {
         // why do we still have children?
         ALOG("### Warning: Destroying window %p and reparenting child %p to null!", (void*)this, (void*)mChildren[i]);
@@ -284,6 +286,8 @@ nsWindow::Destroy(void)
 
     if (mParent)
         mParent->mChildren.RemoveElement(this);
+
+    nsBaseWidget::OnDestroy();
 
     return NS_OK;
 }
@@ -637,7 +641,10 @@ nsWindow::BringToFront()
         return;
     }
 
+    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+
     nsWindow *oldTop = nsnull;
+    nsWindow *newTop = this;
     if (!gTopLevelWindows.IsEmpty())
         oldTop = gTopLevelWindows[0];
 
@@ -649,11 +656,20 @@ nsWindow::BringToFront()
         DispatchEvent(&event);
     }
 
-    nsGUIEvent event(true, NS_ACTIVATE, this);
+    if (Destroyed()) {
+        // somehow the deactivate event handler destroyed this window.
+        // try to recover by grabbing the next window in line and activating
+        // that instead
+        if (gTopLevelWindows.IsEmpty())
+            return;
+        newTop = gTopLevelWindows[0];
+    }
+
+    nsGUIEvent event(true, NS_ACTIVATE, newTop);
     DispatchEvent(&event);
 
     // force a window resize
-    nsAppShell::gAppShell->ResendLastResizeEvent(this);
+    nsAppShell::gAppShell->ResendLastResizeEvent(newTop);
     RedrawAll();
 }
 
@@ -794,82 +810,6 @@ nsWindow::GetThebesSurface()
     // XXX this really wants to return already_AddRefed, but this only really gets used
     // on direct assignment to a gfxASurface
     return new gfxImageSurface(gfxIntSize(5,5), gfxImageSurface::ImageFormatRGB24);
-}
-
-
-class DrawToFileRunnable : public nsRunnable {
-public:
-    DrawToFileRunnable(nsWindow* win, const nsAString &path) {
-       mPath = path;
-       mWindow = win;
-   }
-    NS_IMETHOD Run() {
-        mWindow->DrawToFile(mPath);
-        return NS_OK;
-    }
-private:
-    nsString mPath;
-    nsRefPtr<nsWindow> mWindow;
-};
-
-bool
-nsWindow::DrawToFile(const nsAString &path)
-{
-    if (!IsTopLevel() || !mIsVisible) {
-        ALOG("### DrawToFile works only for a visible toplevel window!");
-        return PR_FALSE;
-    }
-
-    if (GetLayerManager(nsnull)->GetBackendType() != LayerManager::LAYERS_BASIC) {
-        ALOG("### DrawToFile works only for a basic layers!");
-        return PR_FALSE;
-    }
-
-    nsRefPtr<gfxImageSurface> imgSurface =
-        new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
-                            gfxImageSurface::ImageFormatARGB32);
-    
-    if (imgSurface->CairoStatus()) {
-        ALOG("### Failed to create a valid surface");
-        return PR_FALSE;
-    }
-
-    nsIntRect boundsRect(0, 0, mBounds.width, mBounds.height);
-    bool result = DrawTo(imgSurface, boundsRect);
-    NS_ENSURE_TRUE(result, PR_FALSE);
-
-    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance("@mozilla.org/image/encoder;2?type=image/png");
-    NS_ENSURE_TRUE(encoder, PR_FALSE);
-
-    encoder->InitFromData(imgSurface->Data(),
-                          imgSurface->Stride() * mBounds.height,
-                          mBounds.width,
-                          mBounds.height,
-                          imgSurface->Stride(),
-                          imgIEncoder::INPUT_FORMAT_HOSTARGB,
-                          EmptyString());
-
-    nsCOMPtr<nsILocalFile> file;
-    NS_NewLocalFile(path, true, getter_AddRefs(file));
-    NS_ENSURE_TRUE(file, PR_FALSE);
-
-    PRUint32 length;
-    encoder->Available(&length);
-
-    nsCOMPtr<nsIOutputStream> outputStream;
-    NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), file);
-    NS_ENSURE_TRUE(outputStream, PR_FALSE);
-
-    nsCOMPtr<nsIOutputStream> bufferedOutputStream;
-    NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream),
-                               outputStream, length);
-    NS_ENSURE_TRUE(bufferedOutputStream, PR_FALSE);
-
-    PRUint32 numWritten;
-    bufferedOutputStream->WriteFrom(encoder, length, &numWritten);
-    NS_ENSURE_SUCCESS(length == numWritten, PR_FALSE);
-
-    return PR_TRUE;
 }
 
 void
@@ -1024,14 +964,6 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             AndroidBridge::Bridge()->AcknowledgeEventSync();
             break;
 
-        case AndroidGeckoEvent::SAVE_STATE:
-            {
-                nsCOMPtr<nsIThread> thread;
-                nsRefPtr<DrawToFileRunnable> runnable = new DrawToFileRunnable(win, ae->Characters());
-                NS_NewThread(getter_AddRefs(thread), runnable);
-            }
-            break;
-
         default:
             break;
     }
@@ -1067,6 +999,7 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
     if (!mIsVisible)
         return false;
 
+    nsRefPtr<nsWindow> kungFuDeathGrip(this);
     nsEventStatus status;
     nsIntRect boundsRect(0, 0, mBounds.width, mBounds.height);
 
@@ -1329,6 +1262,7 @@ nsWindow::OnSizeChanged(const gfxIntSize& aSize)
 
     ALOG("nsWindow: %p OnSizeChanged [%d %d]", (void*)this, w, h);
 
+    nsRefPtr<nsWindow> kungFuDeathGrip(this);
     nsSizeEvent event(true, NS_SIZE, this);
     InitEvent(event);
 
@@ -1403,6 +1337,7 @@ nsWindow::OnMotionEvent(AndroidGeckoEvent *ae)
             return;
     }
 
+    nsRefPtr<nsWindow> kungFuDeathGrip(this);
     nsIntPoint pt(ae->P0());
     nsIntPoint offset = WidgetToScreenOffset();
 
@@ -1435,6 +1370,8 @@ send_again:
     // XXX add the double-click handling logic here
 
     DispatchEvent(&event);
+    if (Destroyed())
+        return;
 
     if (msg == NS_MOUSE_BUTTON_DOWN) {
         msg = NS_MOUSE_MOVE;
@@ -1484,7 +1421,10 @@ void nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
     }
 
     if (!mGestureFinished) {
+        nsRefPtr<nsWindow> kungFuDeathGrip(this);
         DispatchGestureEvent(msg, 0, pinchDelta, refPoint, ae->Time());
+        if (Destroyed())
+            return;
 
         // If the cumulative pinch delta goes past the threshold, treat this
         // as a pinch only, and not a swipe.
@@ -1511,6 +1451,8 @@ void nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
                 // Finish the pinch gesture, then fire the swipe event:
                 msg = NS_SIMPLE_GESTURE_MAGNIFY;
                 DispatchGestureEvent(msg, 0, pinchDist - mStartDist, refPoint, ae->Time());
+                if (Destroyed())
+                    return;
                 msg = NS_SIMPLE_GESTURE_SWIPE;
                 DispatchGestureEvent(msg, direction, 0, refPoint, ae->Time());
 
@@ -1713,6 +1655,7 @@ nsWindow::InitKeyEvent(nsKeyEvent& event, AndroidGeckoEvent& key)
 void
 nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
 {
+    nsRefPtr<nsWindow> kungFuDeathGrip(this);
     nsCOMPtr<nsIAtom> command;
     bool isDown = ae->Action() == AndroidKeyEvent::ACTION_DOWN;
     bool isLongPress = !!(ae->Flags() & AndroidKeyEvent::FLAG_LONG_PRESS);
@@ -1774,6 +1717,7 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
 void
 nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
 {
+    nsRefPtr<nsWindow> kungFuDeathGrip(this);
     PRUint32 msg;
     switch (ae->Action()) {
     case AndroidKeyEvent::ACTION_DOWN:
@@ -1816,6 +1760,8 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
     InitKeyEvent(event, *ae);
     DispatchEvent(&event, status);
 
+    if (Destroyed())
+        return;
     if (!firePress)
         return;
 
@@ -1863,6 +1809,7 @@ nsWindow::OnIMEAddRange(AndroidGeckoEvent *ae)
 void
 nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
 {
+    nsRefPtr<nsWindow> kungFuDeathGrip(this);
     switch (ae->Action()) {
     case AndroidGeckoEvent::IME_COMPOSITION_END:
         {
@@ -1908,9 +1855,8 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 compositionUpdate.data = event.theText;
                 mIMELastDispatchedComposingText = event.theText;
                 DispatchEvent(&compositionUpdate);
-                // XXX We must check whether this widget is destroyed or not
-                //     before dispatching next event.  However, Android's
-                //     nsWindow has never checked it...
+                if (Destroyed())
+                    return;
             }
 
             ALOGIME("IME: IME_SET_TEXT: l=%u, r=%u",
@@ -2031,6 +1977,8 @@ nsWindow::ResetInputState()
 
     // Cancel composition on Gecko side
     if (mIMEComposing) {
+        nsRefPtr<nsWindow> kungFuDeathGrip(this);
+
         nsTextEvent textEvent(true, NS_TEXT_TEXT, this);
         InitEvent(textEvent, nsnull);
         textEvent.theText = mIMEComposingText;
@@ -2085,6 +2033,8 @@ nsWindow::CancelIMEComposition()
 
     // Cancel composition on Gecko side
     if (mIMEComposing) {
+        nsRefPtr<nsWindow> kungFuDeathGrip(this);
+
         nsTextEvent textEvent(true, NS_TEXT_TEXT, this);
         InitEvent(textEvent, nsnull);
         DispatchEvent(&textEvent);
@@ -2125,6 +2075,7 @@ nsWindow::OnIMETextChange(PRUint32 aStart, PRUint32 aOldEnd, PRUint32 aNewEnd)
     // The more efficient way would have been passing the substring from index
     // aStart to index aNewEnd
 
+    nsRefPtr<nsWindow> kungFuDeathGrip(this);
     nsQueryContentEvent event(true, NS_QUERY_TEXT_CONTENT, this);
     InitEvent(event, nsnull);
     event.InitForQueryTextContent(0, PR_UINT32_MAX);
@@ -2145,6 +2096,7 @@ nsWindow::OnIMESelectionChange(void)
 {
     ALOGIME("IME: OnIMESelectionChange");
 
+    nsRefPtr<nsWindow> kungFuDeathGrip(this);
     nsQueryContentEvent event(true, NS_QUERY_SELECTED_TEXT, this);
     InitEvent(event, nsnull);
 

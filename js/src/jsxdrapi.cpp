@@ -691,10 +691,7 @@ JS_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
     XDRScriptState fstate(xdr);
 
     if (xdr->mode == JSXDR_ENCODE) {
-        JSFunction* fun = (*objp)->getFunctionPrivate();
-        if (!fun)
-            return false;
-
+        JSFunction* fun = (*objp)->toFunction();
         fstate.filename = fun->script()->filename;
     }
 

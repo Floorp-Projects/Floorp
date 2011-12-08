@@ -42,7 +42,7 @@
 
       <handler event="keypress" modifiers="shift any" group="system">
         <![CDATA[
-          if (!event.getPreventDefault() &&
+          if (!event.defaultPrevented &&
               (event.keyCode == KeyEvent.DOM_VK_UP ||
                event.keyCode == KeyEvent.DOM_VK_DOWN ||
                event.keyCode == KeyEvent.DOM_VK_PAGE_UP ||

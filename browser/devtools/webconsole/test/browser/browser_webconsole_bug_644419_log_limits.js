@@ -25,6 +25,7 @@ function onLoad(aEvent) {
 
   gHudId = HUDService.getHudIdByWindow(content);
   browser.addEventListener("load", testWebDevLimits, true);
+  expectUncaughtException();
   content.location = TEST_URI;
 }
 
@@ -70,6 +71,7 @@ function testJsLimits(aEvent) {
   for (let i = 0; i < 11; i++) {
     var script = content.document.createElement("script");
     script.text = "fubar" + i + ".bogus(6);";
+    expectUncaughtException();
     head.insertBefore(script, head.firstChild);
   }
 

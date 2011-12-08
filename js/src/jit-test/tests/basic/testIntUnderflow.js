@@ -7,9 +7,3 @@ function testIntUnderflow() {
     return (ival > -2147483648);
 }
 assertEq(testIntUnderflow(), false);
-checkStats({
-    recorderStarted: 2,
-    recorderAborted: 0,
-    traceCompleted: 2,
-    traceTriggered: 2,
-});

@@ -1,16 +1,9 @@
 # HG changeset patch
-# Parent 2dbd71999fe8a8da476ab6cc97716f7b7c294fb8
-# User Doug Sherk <dsherk@mozilla.com>
-Bug 693703: added additional logging information for mochitests, incl. image reference differences r=bjacob
-
-Added some code to print to dump output of WebGL mochitest failures. Also added
-special code to handle incorrect reference images. It will now provide the user
-with a way to compare the reference and actual drawings.
-
+# Parent 4ed0bad4933ba69927ee5f75cf67093d3e99566a
 diff --git a/content/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html b/content/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html
 --- a/content/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html
 +++ b/content/canvas/test/webgl/conformance/glsl/misc/glsl-function-nodes.html
-@@ -115,17 +115,18 @@ function init()
+@@ -117,17 +117,18 @@ function init()
      var bufFunction = new Uint8Array(width * height * 4);
      var bufMacro = new Uint8Array(width * height * 4);
  
@@ -148,7 +141,7 @@ diff --git a/content/canvas/test/webgl/resources/js-test-pre.js b/content/canvas
 +    
 +    testFailed(msg);
 +
-+    var data = 'REFTEST TEST-UNEXPECTED-FAIL | ' + msg + ' | image comparison (==)\n' +
++    var data = 'REFTEST TEST-DEBUG-INFO | ' + msg + ' | image comparison (==)\n' +
 +               'REFTEST   IMAGE 1 (TEST): ' + testData + '\n' +
 +               'REFTEST   IMAGE 2 (REFERENCE): ' + refData;
 +    dump('FAIL: ' + data + '\n');

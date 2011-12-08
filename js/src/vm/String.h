@@ -403,7 +403,7 @@ class JSString : public js::gc::Cell
 
     /* Only called by the GC for strings with the FINALIZE_STRING kind. */
 
-    inline void finalize(JSContext *cx);
+    inline void finalize(JSContext *cx, bool background);
 
     /* Gets the number of bytes that the chars take on the heap. */
 
@@ -462,8 +462,6 @@ class JSLinearString : public JSString
     JSLinearString &asLinear() const MOZ_DELETE;
 
   public:
-    void mark(JSTracer *trc);
-
     JS_ALWAYS_INLINE
     const jschar *chars() const {
         JS_ASSERT(JSString::isLinear());
@@ -628,7 +626,7 @@ class JSShortString : public JSInlineString
 
     /* Only called by the GC for strings with the FINALIZE_EXTERNAL_STRING kind. */
 
-    JS_ALWAYS_INLINE void finalize(JSContext *cx);
+    JS_ALWAYS_INLINE void finalize(JSContext *cx, bool background);
 };
 
 JS_STATIC_ASSERT(sizeof(JSShortString) == 2 * sizeof(JSString));
@@ -680,7 +678,7 @@ class JSExternalString : public JSFixedString
 
     /* Only called by the GC for strings with the FINALIZE_EXTERNAL_STRING kind. */
 
-    void finalize(JSContext *cx);
+    void finalize(JSContext *cx, bool background);
     void finalize();
 };
 

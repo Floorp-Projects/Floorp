@@ -51,7 +51,7 @@ inline bool
 js_ValueToAtom(JSContext *cx, const js::Value &v, JSAtom **atomp)
 {
     if (!v.isString()) {
-        JSString *str = js_ValueToString(cx, v);
+        JSString *str = js::ToStringSlow(cx, v);
         if (!str)
             return false;
         JS::Anchor<JSString *> anchor(str);
@@ -184,7 +184,7 @@ IdToString(JSContext *cx, jsid id)
         return JSID_TO_STRING(id);
     if (JS_LIKELY(JSID_IS_INT(id)))
         return js_IntToString(cx, JSID_TO_INT(id));
-    return js_ValueToString(cx, IdToValue(id));
+    return js::ToStringSlow(cx, IdToValue(id));
 }
 
 } // namespace js

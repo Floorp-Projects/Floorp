@@ -768,10 +768,10 @@ GfxInfo::AddCrashReportAnnotations()
 
   if (vendorID == 0) {
       /* if we didn't find a valid vendorID lets append the mDeviceID string to try to find out why */
-      note.Append(", ");
-      note.AppendWithConversion(mDeviceID);
-      note.Append(", ");
-      note.AppendWithConversion(mDeviceKeyDebug);
+      note.AppendLiteral(", ");
+      LossyAppendUTF16toASCII(mDeviceID, note);
+      note.AppendLiteral(", ");
+      LossyAppendUTF16toASCII(mDeviceKeyDebug, note);
   }
   note.Append("\n");
 
@@ -779,7 +779,7 @@ GfxInfo::AddCrashReportAnnotations()
     PRUint32 deviceID2, vendorID2;
     nsAutoString adapterDriverVersionString2;
 
-    note.Append("Has dual GPUs. GPU #2: ");
+    note.AppendLiteral("Has dual GPUs. GPU #2: ");
     GetAdapterDeviceID2(&deviceID2);
     GetAdapterVendorID2(&vendorID2);
     GetAdapterDriverVersion2(adapterDriverVersionString2);

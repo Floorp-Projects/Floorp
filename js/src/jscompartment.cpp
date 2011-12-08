@@ -49,7 +49,6 @@
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 #include "assembler/wtf/Platform.h"
-#include "assembler/jit/ExecutableAllocator.h"
 #include "yarr/BumpPointerAllocator.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
@@ -85,17 +84,9 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     jaegerCompartment_(NULL),
 #endif
     propertyTree(thisForCtor()),
-    emptyArgumentsShape(NULL),
-    emptyBlockShape(NULL),
-    emptyCallShape(NULL),
-    emptyDeclEnvShape(NULL),
-    emptyEnumeratorShape(NULL),
-    emptyWithShape(NULL),
-    initialRegExpShape(NULL),
-    initialStringShape(NULL),
+    emptyTypeObject(NULL),
     debugModeBits(rt->debugMode ? DebugFromC : 0),
     mathCache(NULL),
-    breakpointSites(rt),
     watchpointMap(NULL)
 {
     PodArrayZero(evalCache);
@@ -122,13 +113,15 @@ JSCompartment::init(JSContext *cx)
     activeAnalysis = activeInference = false;
     types.init(cx);
 
+    newObjectCache.reset();
+
     if (!crossCompartmentWrappers.init())
         return false;
 
     if (!scriptFilenameTable.init())
         return false;
 
-    return debuggees.init() && breakpointSites.init();
+    return debuggees.init();
 }
 
 #ifdef JS_METHODJIT
@@ -150,14 +143,14 @@ JSCompartment::ensureJaegerCompartmentExists(JSContext *cx)
 }
 
 void
-JSCompartment::getMjitCodeStats(size_t& method, size_t& regexp, size_t& unused) const
+JSCompartment::sizeOfCode(size_t *method, size_t *regexp, size_t *unused) const
 {
     if (jaegerCompartment_) {
-        jaegerCompartment_->execAlloc()->getCodeStats(method, regexp, unused);
+        jaegerCompartment_->execAlloc()->sizeOfCode(method, regexp, unused);
     } else {
-        method = 0;
-        regexp = 0;
-        unused = 0;
+        *method = 0;
+        *regexp = 0;
+        *unused = 0;
     }
 }
 #endif
@@ -261,7 +254,8 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
             JS_ASSERT(obj->isCrossCompartmentWrapper());
             if (global->getClass() != &dummy_class && obj->getParent() != global) {
                 do {
-                    obj->setParent(global);
+                    if (!obj->setParent(cx, global))
+                        return false;
                     obj = obj->getProto();
                 } while (obj && obj->isCrossCompartmentWrapper());
             }
@@ -315,7 +309,8 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     if (!crossCompartmentWrappers.put(GetProxyPrivate(wrapper), *vp))
         return false;
 
-    wrapper->setParent(global);
+    if (!wrapper->setParent(cx, global))
+        return false;
     return true;
 }
 
@@ -433,11 +428,11 @@ JSCompartment::markTypes(JSTracer *trc)
     }
 
     for (size_t thingKind = FINALIZE_OBJECT0;
-         thingKind < FINALIZE_FUNCTION_AND_OBJECT_LIMIT;
+         thingKind < FINALIZE_OBJECT_LIMIT;
          thingKind++) {
         for (CellIterUnderGC i(this, AllocKind(thingKind)); !i.done(); i.next()) {
             JSObject *object = i.get<JSObject>();
-            if (!object->isNewborn() && object->hasSingletonType())
+            if (object->hasSingletonType())
                 MarkRoot(trc, object, "mark_types_singleton");
         }
     }
@@ -460,24 +455,17 @@ JSCompartment::sweep(JSContext *cx, bool releaseTypes)
         }
     }
 
-    /* Remove dead empty shapes. */
-    if (emptyArgumentsShape && IsAboutToBeFinalized(cx, emptyArgumentsShape))
-        emptyArgumentsShape = NULL;
-    if (emptyBlockShape && IsAboutToBeFinalized(cx, emptyBlockShape))
-        emptyBlockShape = NULL;
-    if (emptyCallShape && IsAboutToBeFinalized(cx, emptyCallShape))
-        emptyCallShape = NULL;
-    if (emptyDeclEnvShape && IsAboutToBeFinalized(cx, emptyDeclEnvShape))
-        emptyDeclEnvShape = NULL;
-    if (emptyEnumeratorShape && IsAboutToBeFinalized(cx, emptyEnumeratorShape))
-        emptyEnumeratorShape = NULL;
-    if (emptyWithShape && IsAboutToBeFinalized(cx, emptyWithShape))
-        emptyWithShape = NULL;
+    /* Remove dead references held weakly by the compartment. */
 
-    if (initialRegExpShape && IsAboutToBeFinalized(cx, initialRegExpShape))
-        initialRegExpShape = NULL;
-    if (initialStringShape && IsAboutToBeFinalized(cx, initialStringShape))
-        initialStringShape = NULL;
+    sweepBaseShapeTable(cx);
+    sweepInitialShapeTable(cx);
+    sweepNewTypeObjectTable(cx, newTypeObjects);
+    sweepNewTypeObjectTable(cx, lazyTypeObjects);
+
+    if (emptyTypeObject && IsAboutToBeFinalized(cx, emptyTypeObject))
+        emptyTypeObject = NULL;
+
+    newObjectCache.reset();
 
     sweepBreakpoints(cx);
 
@@ -698,107 +686,50 @@ JSCompartment::removeDebuggee(JSContext *cx,
     }
 }
 
-BreakpointSite *
-JSCompartment::getBreakpointSite(jsbytecode *pc)
-{
-    BreakpointSiteMap::Ptr p = breakpointSites.lookup(pc);
-    return p ? p->value : NULL;
-}
-
-BreakpointSite *
-JSCompartment::getOrCreateBreakpointSite(JSContext *cx, JSScript *script, jsbytecode *pc,
-                                         GlobalObject *scriptGlobal)
-{
-    JS_ASSERT(script->code <= pc);
-    JS_ASSERT(pc < script->code + script->length);
-
-    BreakpointSiteMap::AddPtr p = breakpointSites.lookupForAdd(pc);
-    if (!p) {
-        BreakpointSite *site = cx->runtime->new_<BreakpointSite>(script, pc);
-        if (!site || !breakpointSites.add(p, pc, site)) {
-            js_ReportOutOfMemory(cx);
-            return NULL;
-        }
-    }
-
-    BreakpointSite *site = p->value;
-    if (site->scriptGlobal)
-        JS_ASSERT_IF(scriptGlobal, site->scriptGlobal == scriptGlobal);
-    else
-        site->scriptGlobal = scriptGlobal;
-
-    return site;
-}
-
 void
-JSCompartment::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSScript *script,
-                                  JSObject *handler)
+JSCompartment::clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSObject *handler)
 {
-    JS_ASSERT_IF(script, script->compartment() == this);
-
-    for (BreakpointSiteMap::Enum e(breakpointSites); !e.empty(); e.popFront()) {
-        BreakpointSite *site = e.front().value;
-        if (!script || site->script == script) {
-            Breakpoint *nextbp;
-            for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
-                nextbp = bp->nextInSite();
-                if ((!dbg || bp->debugger == dbg) && (!handler || bp->getHandler() == handler))
-                    bp->destroy(cx, &e);
-            }
-        }
+    for (gc::CellIter i(cx, this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
+        if (script->hasAnyBreakpointsOrStepMode())
+            script->clearBreakpointsIn(cx, dbg, handler);
     }
 }
 
 void
-JSCompartment::clearTraps(JSContext *cx, JSScript *script)
+JSCompartment::clearTraps(JSContext *cx)
 {
-    for (BreakpointSiteMap::Enum e(breakpointSites); !e.empty(); e.popFront()) {
-        BreakpointSite *site = e.front().value;
-        if (!script || site->script == script)
-            site->clearTrap(cx, &e);
+    for (gc::CellIter i(cx, this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
+        if (script->hasAnyBreakpointsOrStepMode())
+            script->clearTraps(cx);
     }
-}
-
-bool
-JSCompartment::markTrapClosuresIteratively(JSTracer *trc)
-{
-    bool markedAny = false;
-    JSContext *cx = trc->context;
-    for (BreakpointSiteMap::Range r = breakpointSites.all(); !r.empty(); r.popFront()) {
-        BreakpointSite *site = r.front().value;
-
-        // Put off marking trap state until we know the script is live.
-        if (site->trapHandler && !IsAboutToBeFinalized(cx, site->script)) {
-            if (site->trapClosure.isMarkable() &&
-                IsAboutToBeFinalized(cx, site->trapClosure))
-            {
-                markedAny = true;
-            }
-            MarkValue(trc, site->trapClosure, "trap closure");
-        }
-    }
-    return markedAny;
 }
 
 void
 JSCompartment::sweepBreakpoints(JSContext *cx)
 {
-    for (BreakpointSiteMap::Enum e(breakpointSites); !e.empty(); e.popFront()) {
-        BreakpointSite *site = e.front().value;
-        // clearTrap and nextbp are necessary here to avoid possibly
-        // reading *site or *bp after destroying it.
-        bool scriptGone = IsAboutToBeFinalized(cx, site->script);
-        bool clearTrap = scriptGone && site->hasTrap();
-        
-        Breakpoint *nextbp;
-        for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
-            nextbp = bp->nextInSite();
-            if (scriptGone || IsAboutToBeFinalized(cx, bp->debugger->toJSObject()))
-                bp->destroy(cx, &e);
+    if (JS_CLIST_IS_EMPTY(&cx->runtime->debuggerList))
+        return;
+
+    for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
+        if (!script->hasAnyBreakpointsOrStepMode())
+            continue;
+        bool scriptGone = IsAboutToBeFinalized(cx, script);
+        for (unsigned i = 0; i < script->length; i++) {
+            BreakpointSite *site = script->getBreakpointSite(script->code + i);
+            if (!site)
+                continue;
+            // nextbp is necessary here to avoid possibly reading *bp after
+            // destroying it.
+            Breakpoint *nextbp;
+            for (Breakpoint *bp = site->firstBreakpoint(); bp; bp = nextbp) {
+                nextbp = bp->nextInSite();
+                if (scriptGone || IsAboutToBeFinalized(cx, bp->debugger->toJSObject()))
+                    bp->destroy(cx);
+            }
         }
-        
-        if (clearTrap)
-            site->clearTrap(cx, &e);
     }
 }
 

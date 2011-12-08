@@ -365,7 +365,7 @@ AsyncExecuteStatements::executeStatement(sqlite3_stmt *aStatement)
     // lock the sqlite mutex so sqlite3_errmsg cannot change
     SQLiteMutexAutoLock lockedScope(mDBMutex);
 
-    int rc = stepStmt(aStatement);
+    int rc = mConnection->stepStatement(aStatement);
     // Stop if we have no more results.
     if (rc == SQLITE_DONE)
     {

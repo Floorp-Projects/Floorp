@@ -37,7 +37,7 @@
 # ***** END LICENSE BLOCK *****
 
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 try:
     here = os.path.dirname(os.path.abspath(__file__))
@@ -66,8 +66,7 @@ setup(name='mozInstall',
       author_email='mdas@mozilla.com',
       url='https://github.com/mozilla/mozbase',
       license='MPL',
-      py_modules=['mozinstall'],
-      packages=[],
+      packages=find_packages(exclude=['legacy']),
       include_package_data=True,
       zip_safe=False,
       install_requires=deps,

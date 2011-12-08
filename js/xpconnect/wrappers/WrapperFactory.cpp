@@ -397,8 +397,6 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     if (!wrapperObj || !xrayHolder)
         return wrapperObj;
 
-    // NB: The fact that the only wrappers to use ProxyExtra are XrayWrappers
-    // is relied on by XPCNativeWrapper.unwrap.
     js::SetProxyExtra(wrapperObj, 0, js::ObjectValue(*xrayHolder));
     return wrapperObj;
 }

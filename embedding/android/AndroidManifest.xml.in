@@ -34,11 +34,11 @@
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
  
     <application android:label="@MOZ_APP_DISPLAYNAME@"
-		 android:icon="@drawable/icon"
+                 android:icon="@drawable/icon"
 #if MOZILLA_OFFICIAL
-		 android:debuggable="false">
+                 android:debuggable="false">
 #else
-		 android:debuggable="true">
+                 android:debuggable="true">
 #endif
 
         <activity android:name="App"
@@ -113,7 +113,7 @@
           <intent-filter>
             <action android:name="org.mozilla.gecko.reportCrash" />
           </intent-filter>
-	</activity>
+        </activity>
 #endif
 
         <activity android:name="LauncherShortcuts"
@@ -123,6 +123,13 @@
             <intent-filter>
                 <action android:name="android.intent.action.CREATE_SHORTCUT" />
                 <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity android:name="org.mozilla.gecko.VideoPlayer"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation" 
+                  android:theme="@android:style/Theme.NoTitleBar" >
+            <intent-filter>
+                <action android:name="org.mozilla.gecko.PLAY_VIDEO" />
             </intent-filter>
         </activity>
     </application>

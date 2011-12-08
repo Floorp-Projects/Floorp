@@ -743,7 +743,7 @@ nsXHTMLContentSerializer::IsShorthandAttr(const nsIAtom* aAttrName,
 #ifdef MOZ_MEDIA
   // autoplay and controls
   if ((aElementName == nsGkAtoms::video || aElementName == nsGkAtoms::audio) &&
-    (aAttrName == nsGkAtoms::autoplay ||
+    (aAttrName == nsGkAtoms::autoplay || aAttrName == nsGkAtoms::muted ||
      aAttrName == nsGkAtoms::controls)) {
     return true;
   }

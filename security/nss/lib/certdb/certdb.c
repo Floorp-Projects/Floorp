@@ -39,7 +39,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.116 2011/08/05 01:13:14 wtc%google.com Exp $
+ * $Id: certdb.c,v 1.120 2011/11/17 00:20:20 bsmith%mozilla.com Exp $
  */
 
 #include "nssilock.h"
@@ -588,17 +588,6 @@ cert_ComputeCertType(CERTCertificate *cert)
 	}
 	if (findOIDinOIDSeqByTagNum(extKeyUsage, 
 				    SEC_OID_EXT_KEY_USAGE_SERVER_AUTH) ==
-	    SECSuccess){
-	    if (basicConstraintPresent == PR_TRUE &&
-		(basicConstraint.isCA)) {
-		nsCertType |= NS_CERT_TYPE_SSL_CA;
-	    } else {
-		nsCertType |= NS_CERT_TYPE_SSL_SERVER;
-	    }
-	}
-	/* Treat certs with step-up OID as also having SSL server type. */
-	if (findOIDinOIDSeqByTagNum(extKeyUsage, 
-				    SEC_OID_NS_KEY_USAGE_GOVT_APPROVED) ==
 	    SECSuccess){
 	    if (basicConstraintPresent == PR_TRUE &&
 		(basicConstraint.isCA)) {

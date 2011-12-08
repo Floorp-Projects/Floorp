@@ -206,7 +206,7 @@ nsresult nsZipHandle::Init(nsILocalFile *file, nsZipHandle **ret)
   }
 
   handle->mMap = map;
-  handle->mFile = file;
+  handle->mFile.Init(file);
   handle->mLen = (PRUint32) size;
   handle->mFileData = buf;
   *ret = handle.forget().get();
@@ -228,6 +228,7 @@ nsresult nsZipHandle::Init(nsZipArchive *zip, const char *entry,
     return NS_ERROR_UNEXPECTED;
 
   handle->mMap = nsnull;
+  handle->mFile.Init(zip, entry);
   handle->mLen = handle->mBuf->Length();
   handle->mFileData = handle->mBuf->Buffer();
   *ret = handle.forget().get();
@@ -279,7 +280,8 @@ nsresult nsZipArchive::OpenArchive(nsZipHandle *aZipHandle)
     logFile->Create(nsIFile::DIRECTORY_TYPE, 0700);
 
     nsAutoString name;
-    aZipHandle->mFile->GetLeafName(name);
+    nsCOMPtr<nsILocalFile> file = aZipHandle->mFile.GetBaseFile();
+    file->GetLeafName(name);
     name.Append(NS_LITERAL_STRING(".log"));
     logFile->Append(name);
 
@@ -792,14 +794,18 @@ PRInt64 nsZipArchive::SizeOfMapping()
 // nsZipArchive constructor and destructor
 //------------------------------------------
 
-nsZipArchive::nsZipArchive() :
-  mBuiltSynthetics(false)
+nsZipArchive::nsZipArchive()
+  : mRefCnt(0)
+  , mBuiltSynthetics(false)
 {
   MOZ_COUNT_CTOR(nsZipArchive);
 
   // initialize the table to NULL
   memset(mFiles, 0, sizeof(mFiles));
 }
+
+NS_IMPL_THREADSAFE_ADDREF(nsZipArchive)
+NS_IMPL_THREADSAFE_RELEASE(nsZipArchive)
 
 nsZipArchive::~nsZipArchive()
 {
@@ -1034,7 +1040,7 @@ nsZipCursor::~nsZipCursor()
   }
 }
 
-PRUint8* nsZipCursor::Read(PRUint32 *aBytesRead) {
+PRUint8* nsZipCursor::ReadOrCopy(PRUint32 *aBytesRead, bool aCopy) {
   int zerr;
   PRUint8 *buf = nsnull;
   bool verifyCRC = true;
@@ -1044,10 +1050,17 @@ PRUint8* nsZipCursor::Read(PRUint32 *aBytesRead) {
 MOZ_WIN_MEM_TRY_BEGIN
   switch (mItem->Compression()) {
   case STORED:
-    *aBytesRead = mZs.avail_in;
-    buf = mZs.next_in;
-    mZs.next_in += mZs.avail_in;
-    mZs.avail_in = 0;
+    if (!aCopy) {
+      *aBytesRead = mZs.avail_in;
+      buf = mZs.next_in;
+      mZs.next_in += mZs.avail_in;
+      mZs.avail_in = 0;
+    } else {
+      *aBytesRead = mZs.avail_in > mBufSize ? mBufSize : mZs.avail_in;
+      memcpy(mBuf, mZs.next_in, *aBytesRead);
+      mZs.avail_in -= *aBytesRead;
+      mZs.next_in += *aBytesRead;
+    }
     break;
   case DEFLATED:
     buf = mBuf;

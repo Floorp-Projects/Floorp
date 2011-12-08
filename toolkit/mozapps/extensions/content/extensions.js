@@ -1725,6 +1725,16 @@ var gHeader = {
     updateNavButtonVisibility();
   },
 
+  focusSearchBox: function() {
+    this._search.focus();
+  },
+
+  onKeyPress: function(aEvent) {
+    if (String.fromCharCode(aEvent.charCode) == "/") {
+      this.focusSearchBox();
+    }
+  },
+
   get shouldShowNavButtons() {
     var docshellItem = window.QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIWebNavigation)

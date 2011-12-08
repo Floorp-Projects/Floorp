@@ -393,7 +393,7 @@ class StackFrame
      */
 
     /* Used for Invoke, Interpret, trace-jit LeaveTree, and method-jit stubs. */
-    void initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
+    void initCallFrame(JSContext *cx, JSFunction &callee,
                        JSScript *script, uint32 nactual, StackFrame::Flags flags);
 
     /* Used for SessionInvoke. */
@@ -609,7 +609,10 @@ class StackFrame
     /*
      * Function
      *
-     * All function frames have an associated interpreted JSFunction.
+     * All function frames have an associated interpreted JSFunction. The
+     * function returned by fun() and maybeFun() is not necessarily the
+     * original canonical function which the frame's script was compiled
+     * against. To get this function, use maybeScriptFunction().
      */
 
     JSFunction* fun() const {
@@ -619,6 +622,15 @@ class StackFrame
 
     JSFunction* maybeFun() const {
         return isFunctionFrame() ? fun() : NULL;
+    }
+
+    JSFunction* maybeScriptFunction() const {
+        if (!isFunctionFrame())
+            return NULL;
+        const StackFrame *fp = this;
+        while (fp->isEvalFrame())
+            fp = fp->prev();
+        return fp->script()->function();
     }
 
     /*
@@ -766,10 +778,7 @@ class StackFrame
      * only be changed to something that is equivalent to the current callee in
      * terms of numFormalArgs etc. Prefer overwriteCallee since it checks.
      */
-    void overwriteCallee(JSObject &newCallee) {
-        JS_ASSERT(callee().getFunctionPrivate() == newCallee.getFunctionPrivate());
-        mutableCalleev().setObject(newCallee);
-    }
+    inline void overwriteCallee(JSObject &newCallee);
 
     Value &mutableCalleev() const {
         JS_ASSERT(isFunctionFrame());
@@ -819,14 +828,7 @@ class StackFrame
      *   !fp->hasCall() && fp->scopeChain().isCall()
      */
 
-    JSObject &scopeChain() const {
-        JS_ASSERT_IF(!(flags_ & HAS_SCOPECHAIN), isFunctionFrame());
-        if (!(flags_ & HAS_SCOPECHAIN)) {
-            scopeChain_ = callee().getParent();
-            flags_ |= HAS_SCOPECHAIN;
-        }
-        return *scopeChain_;
-    }
+    inline JSObject &scopeChain() const;
 
     bool hasCallObj() const {
         bool ret = !!(flags_ & HAS_CALL_OBJ);
@@ -875,12 +877,7 @@ class StackFrame
      * variables object to collect and discard the script's global variables.
      */
 
-    JSObject &varObj() {
-        JSObject *obj = &scopeChain();
-        while (!obj->isVarObj())
-            obj = obj->getParent();
-        return *obj;
-    }
+    inline JSObject &varObj();
 
     /*
      * Frame compartment
@@ -889,10 +886,7 @@ class StackFrame
      * compartment when the frame was pushed.
      */
 
-    JSCompartment *compartment() const {
-        JS_ASSERT_IF(isScriptFrame(), scopeChain().compartment() == script()->compartment());
-        return scopeChain().compartment();
-    }
+    inline JSCompartment *compartment() const;
 
     /* Annotation (will be removed after bug 546848) */
 

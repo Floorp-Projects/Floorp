@@ -98,9 +98,6 @@ class Bytecode
     /* Whether there are any incoming jumps to this instruction. */
     bool jumpTarget : 1;
 
-    /* There is a backwards jump to this instruction. */
-    bool loopHead : 1;
-
     /* Whether there is fallthrough to this instruction from a non-branching instruction. */
     bool fallthrough : 1;
 
@@ -201,23 +198,10 @@ class Bytecode
 };
 
 static inline unsigned
-GetBytecodeLength(jsbytecode *pc)
-{
-    JSOp op = (JSOp)*pc;
-    JS_ASSERT(op < JSOP_LIMIT);
-    JS_ASSERT(op != JSOP_TRAP);
-
-    if (js_CodeSpec[op].length != -1)
-        return js_CodeSpec[op].length;
-    return js_GetVariableBytecodeLength(pc);
-}
-
-static inline unsigned
 GetDefCount(JSScript *script, unsigned offset)
 {
     JS_ASSERT(offset < script->length);
     jsbytecode *pc = script->code + offset;
-    JS_ASSERT(JSOp(*pc) != JSOP_TRAP);
 
     if (js_CodeSpec[*pc].ndefs == -1)
         return js_GetEnterBlockStackDefs(NULL, script, pc);
@@ -252,7 +236,6 @@ GetUseCount(JSScript *script, unsigned offset)
 {
     JS_ASSERT(offset < script->length);
     jsbytecode *pc = script->code + offset;
-    JS_ASSERT(JSOp(*pc) != JSOP_TRAP);
 
     if (JSOp(*pc) == JSOP_PICK)
         return (pc[1] + 1);
@@ -268,8 +251,6 @@ GetUseCount(JSScript *script, unsigned offset)
 static inline bool
 ExtendedDef(jsbytecode *pc)
 {
-    JS_ASSERT(JSOp(*pc) != JSOP_TRAP);
-
     switch ((JSOp)*pc) {
       case JSOP_SETARG:
       case JSOP_INCARG:
@@ -313,8 +294,6 @@ ExtendedUse(jsbytecode *pc)
 static inline ptrdiff_t
 GetJumpOffset(jsbytecode *pc, jsbytecode *pc2)
 {
-    JS_ASSERT(JSOp(*pc) != JSOP_TRAP);
-
     uint32 type = JOF_OPTYPE(*pc);
     if (JOF_TYPE_IS_EXTENDED_JUMP(type))
         return GET_JUMPX_OFFSET(pc2);
@@ -339,33 +318,6 @@ ReverseCompareOp(JSOp op)
     }
 }
 
-/* Untrap a single PC, and retrap it at scope exit. */
-struct UntrapOpcode
-{
-    jsbytecode *pc;
-    bool trap;
-
-    UntrapOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
-        : pc(pc), trap(JSOp(*pc) == JSOP_TRAP)
-    {
-        if (trap)
-            *pc = JS_GetTrapOpcode(cx, script, pc);
-    }
-
-    void retrap()
-    {
-        if (trap) {
-            *pc = JSOP_TRAP;
-            trap = false;
-        }
-    }
-
-    ~UntrapOpcode()
-    {
-        retrap();
-    }
-};
-
 static inline unsigned
 FollowBranch(JSContext *cx, JSScript *script, unsigned offset)
 {
@@ -378,7 +330,6 @@ FollowBranch(JSContext *cx, JSScript *script, unsigned offset)
     unsigned targetOffset = offset + GetJumpOffset(pc, pc);
     if (targetOffset < offset) {
         jsbytecode *target = script->code + targetOffset;
-        UntrapOpcode untrap(cx, script, target);
         JSOp nop = JSOp(*target);
         if (nop == JSOP_GOTO || nop == JSOP_GOTOX)
             return targetOffset + GetJumpOffset(target, target);
@@ -397,7 +348,7 @@ static inline uint32 ArgSlot(uint32 arg) {
     return 2 + arg;
 }
 static inline uint32 LocalSlot(JSScript *script, uint32 local) {
-    return 2 + (script->hasFunction ? script->function()->nargs : 0) + local;
+    return 2 + (script->function() ? script->function()->nargs : 0) + local;
 }
 static inline uint32 TotalSlots(JSScript *script) {
     return LocalSlot(script, 0) + script->nfixed;
@@ -974,15 +925,14 @@ class ScriptAnalysis
     }
 
     types::TypeSet *bytecodeTypes(const jsbytecode *pc) {
-        JS_ASSERT(JSOp(*pc) == JSOP_TRAP || (js_CodeSpec[*pc].format & JOF_TYPESET));
+        JS_ASSERT(js_CodeSpec[*pc].format & JOF_TYPESET);
         return getCode(pc).observedTypes;
     }
 
     const SSAValue &poppedValue(uint32 offset, uint32 which) {
         JS_ASSERT(offset < script->length);
-        JS_ASSERT_IF(script->code[offset] != JSOP_TRAP,
-                     which < GetUseCount(script, offset) +
-                     (ExtendedUse(script->code + offset) ? 1 : 0));
+        JS_ASSERT(which < GetUseCount(script, offset) +
+                  (ExtendedUse(script->code + offset) ? 1 : 0));
         return getCode(offset).poppedValues[which];
     }
     const SSAValue &poppedValue(const jsbytecode *pc, uint32 which) {
@@ -997,9 +947,8 @@ class ScriptAnalysis
 
     types::TypeSet *pushedTypes(uint32 offset, uint32 which = 0) {
         JS_ASSERT(offset < script->length);
-        JS_ASSERT_IF(script->code[offset] != JSOP_TRAP,
-                     which < GetDefCount(script, offset) +
-                     (ExtendedDef(script->code + offset) ? 1 : 0));
+        JS_ASSERT(which < GetDefCount(script, offset) +
+                  (ExtendedDef(script->code + offset) ? 1 : 0));
         types::TypeSet *array = getCode(offset).pushedTypes;
         JS_ASSERT(array);
         return array + which;

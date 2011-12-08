@@ -3,6 +3,7 @@
 #include "jscntxt.h"
 
 #include "jscntxtinlines.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 

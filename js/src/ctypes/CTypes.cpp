@@ -112,6 +112,11 @@ namespace PointerType {
   static JSBool ContentsSetter(JSContext* cx, JSObject* obj, jsid idval, JSBool strict,
     jsval* vp);
   static JSBool IsNull(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Increment(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Decrement(JSContext* cx, uintN argc, jsval* vp);
+  // The following is not an instance function, since we don't want to expose arbitrary
+  // pointer arithmetic at this moment.
+  static JSBool OffsetBy(JSContext* cx, intN offset, jsval* vp);
 }
 
 namespace ArrayType {
@@ -337,6 +342,8 @@ static JSPropertySpec sPointerProps[] = {
 
 static JSFunctionSpec sPointerInstanceFunctions[] = {
   JS_FN("isNull", PointerType::IsNull, 0, CTYPESFN_FLAGS),
+  JS_FN("increment", PointerType::Increment, 0, CTYPESFN_FLAGS),
+  JS_FN("decrement", PointerType::Decrement, 0, CTYPESFN_FLAGS),
   JS_FS_END
 };
   
@@ -641,7 +648,7 @@ InitTypeConstructor(JSContext* cx,
                     JSObject*& typeProto,
                     JSObject*& dataProto)
 {
-  JSFunction* fun = JS_DefineFunction(cx, parent, spec.name, spec.call, 
+  JSFunction* fun = js::DefineFunctionWithReserved(cx, parent, spec.name, spec.call, 
                       spec.nargs, spec.flags);
   if (!fun)
     return false;
@@ -672,8 +679,7 @@ InitTypeConstructor(JSContext* cx,
 
   // Stash ctypes.{Pointer,Array,Struct}Type.prototype on a reserved slot of
   // the type constructor, for faster lookup.
-  if (!JS_SetReservedSlot(cx, obj, SLOT_FN_CTORPROTO, OBJECT_TO_JSVAL(typeProto)))
-    return false;
+  js::SetFunctionNativeReserved(obj, SLOT_FN_CTORPROTO, OBJECT_TO_JSVAL(typeProto));
 
   // Create an object to serve as the common ancestor for all CData objects
   // created from the given type constructor. This has ctypes.CData.prototype
@@ -725,13 +731,17 @@ InitInt64Class(JSContext* cx,
   if (!JS_FreezeObject(cx, ctor))
     return NULL;
 
-  // Stash ctypes.{Int64,UInt64}.prototype on a reserved slot of the 'join'
-  // function.
-  jsval join;
-  ASSERT_OK(JS_GetProperty(cx, ctor, "join", &join));
-  if (!JS_SetReservedSlot(cx, JSVAL_TO_OBJECT(join), SLOT_FN_INT64PROTO,
-         OBJECT_TO_JSVAL(prototype)))
+  // Redefine the 'join' function as an extended native and stash
+  // ctypes.{Int64,UInt64}.prototype in a reserved slot of the new function.
+  JS_ASSERT(clasp == &sInt64ProtoClass || clasp == &sUInt64ProtoClass);
+  JSNative native = (clasp == &sInt64ProtoClass) ? Int64::Join : UInt64::Join;
+  JSFunction* fun = js::DefineFunctionWithReserved(cx, ctor, "join", native,
+                      2, CTYPESFN_FLAGS);
+  if (!fun)
     return NULL;
+
+  js::SetFunctionNativeReserved(fun, SLOT_FN_INT64PROTO,
+    OBJECT_TO_JSVAL(prototype));
 
   if (!JS_FreezeObject(cx, prototype))
     return NULL;
@@ -3045,8 +3055,7 @@ CType::GetProtoFromCtor(JSContext* cx, JSObject* obj, CTypeProtoSlot slot)
 {
   // Get ctypes.{Pointer,Array,Struct}Type.prototype from a reserved slot
   // on the type constructor.
-  jsval protoslot;
-  ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FN_CTORPROTO, &protoslot));
+  jsval protoslot = js::GetFunctionNativeReserved(obj, SLOT_FN_CTORPROTO);
   JSObject* proto = JSVAL_TO_OBJECT(protoslot);
   JS_ASSERT(proto);
   JS_ASSERT(CType::IsCTypeProto(cx, proto));
@@ -3439,6 +3448,52 @@ PointerType::IsNull(JSContext* cx, uintN argc, jsval* vp)
   jsval result = BOOLEAN_TO_JSVAL(data == NULL);
   JS_SET_RVAL(cx, vp, result);
   return JS_TRUE;
+}
+
+JSBool
+PointerType::OffsetBy(JSContext* cx, intN offset, jsval* vp)
+{
+  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  if (!obj || !CData::IsCData(cx, obj)) {
+    JS_ReportError(cx, "not a CData");
+    return JS_FALSE;
+  }
+
+  JSObject* typeObj = CData::GetCType(cx, obj);
+  if (CType::GetTypeCode(cx, typeObj) != TYPE_pointer) {
+    JS_ReportError(cx, "not a PointerType");
+    return JS_FALSE;
+  }
+
+  JSObject* baseType = PointerType::GetBaseType(cx, typeObj);
+  if (!CType::IsSizeDefined(cx, baseType)) {
+    JS_ReportError(cx, "cannot modify pointer of undefined size");
+    return JS_FALSE;
+  }
+
+  size_t elementSize = CType::GetSize(cx, baseType);
+  char* data = static_cast<char*>(*static_cast<void**>(CData::GetData(cx, obj)));
+  void* address = data + offset * elementSize;
+
+  // Create a PointerType CData object containing the new address.
+  JSObject* result = CData::Create(cx, typeObj, NULL, &address, true);
+  if (!result)
+    return JS_FALSE;
+
+  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(result));
+  return JS_TRUE;
+}
+
+JSBool
+PointerType::Increment(JSContext* cx, uintN argc, jsval* vp)
+{
+  return OffsetBy(cx, 1, vp);
+}
+
+JSBool
+PointerType::Decrement(JSContext* cx, uintN argc, jsval* vp)
+{
+  return OffsetBy(cx, -1, vp);
 }
 
 JSBool
@@ -6291,8 +6346,7 @@ Int64::Join(JSContext* cx, uintN argc, jsval* vp)
   // Get Int64.prototype from the function's reserved slot.
   JSObject* callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
 
-  jsval slot;
-  ASSERT_OK(JS_GetReservedSlot(cx, callee, SLOT_FN_INT64PROTO, &slot));
+  jsval slot = js::GetFunctionNativeReserved(callee, SLOT_FN_INT64PROTO);
   JSObject* proto = JSVAL_TO_OBJECT(slot);
   JS_ASSERT(JS_GET_CLASS(cx, proto) == &sInt64ProtoClass);
 
@@ -6459,8 +6513,7 @@ UInt64::Join(JSContext* cx, uintN argc, jsval* vp)
   // Get UInt64.prototype from the function's reserved slot.
   JSObject* callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
 
-  jsval slot;
-  ASSERT_OK(JS_GetReservedSlot(cx, callee, SLOT_FN_INT64PROTO, &slot));
+  jsval slot = js::GetFunctionNativeReserved(callee, SLOT_FN_INT64PROTO);
   JSObject* proto = JSVAL_TO_OBJECT(slot);
   JS_ASSERT(JS_GET_CLASS(cx, proto) == &sUInt64ProtoClass);
 

@@ -457,30 +457,30 @@ mjit::Compiler::compileArrayPush(FrameEntry *thisValue, FrameEntry *arg)
     frame.pinReg(objReg);
 
     RegisterID slotsReg = frame.allocReg();
+    masm.loadPtr(Address(objReg, JSObject::offsetOfElements()), slotsReg);
 
     RegisterID lengthReg = frame.allocReg();
-    masm.load32(Address(objReg, offsetof(JSObject, privateData)), lengthReg);
+    masm.load32(Address(slotsReg, ObjectElements::offsetOfLength()), lengthReg);
 
     frame.unpinReg(objReg);
 
     Int32Key key = Int32Key::FromRegister(lengthReg);
 
     /* Test for 'length == initializedLength' */
-    Jump initlenGuard = masm.guardArrayExtent(JSObject::offsetOfInitializedLength(),
-                                              objReg, key, Assembler::NotEqual);
+    Jump initlenGuard = masm.guardArrayExtent(ObjectElements::offsetOfInitializedLength(),
+                                              slotsReg, key, Assembler::NotEqual);
     stubcc.linkExit(initlenGuard, Uses(3));
 
     /* Test for 'length < capacity' */
-    Jump capacityGuard = masm.guardArrayExtent(offsetof(JSObject, capacity),
-                                               objReg, key, Assembler::BelowOrEqual);
+    Jump capacityGuard = masm.guardArrayExtent(ObjectElements::offsetOfCapacity(),
+                                               slotsReg, key, Assembler::BelowOrEqual);
     stubcc.linkExit(capacityGuard, Uses(3));
 
-    masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), slotsReg);
     masm.storeValue(vr, BaseIndex(slotsReg, lengthReg, masm.JSVAL_SCALE));
 
     masm.bumpKey(key, 1);
-    masm.store32(lengthReg, Address(objReg, offsetof(JSObject, privateData)));
-    masm.store32(lengthReg, Address(objReg, JSObject::offsetOfInitializedLength()));
+    masm.store32(lengthReg, Address(slotsReg, ObjectElements::offsetOfLength()));
+    masm.store32(lengthReg, Address(slotsReg, ObjectElements::offsetOfInitializedLength()));
 
     stubcc.leave();
     stubcc.masm.move(Imm32(1), Registers::ArgReg1);
@@ -513,13 +513,12 @@ mjit::Compiler::compileArrayPopShift(FrameEntry *thisValue, bool isPacked, bool 
     frame.pinReg(objReg);
 
     RegisterID lengthReg = frame.allocReg();
-    masm.load32(Address(objReg, offsetof(JSObject, privateData)), lengthReg);
+    RegisterID slotsReg = frame.allocReg();
 
     JSValueType type = knownPushedType(0);
 
-    MaybeRegisterID slotsReg, dataReg, typeReg;
+    MaybeRegisterID dataReg, typeReg;
     if (!analysis->popGuaranteed(PC)) {
-        slotsReg = frame.allocReg();
         dataReg = frame.allocReg();
         if (type == JSVAL_TYPE_UNKNOWN || type == JSVAL_TYPE_DOUBLE)
             typeReg = frame.allocReg();
@@ -536,10 +535,13 @@ mjit::Compiler::compileArrayPopShift(FrameEntry *thisValue, bool isPacked, bool 
         frame.unpinKilledReg(objReg);
     }
 
+    masm.loadPtr(Address(objReg, JSObject::offsetOfElements()), slotsReg);
+    masm.load32(Address(slotsReg, ObjectElements::offsetOfLength()), lengthReg);
+
     /* Test for 'length == initializedLength' */
     Int32Key key = Int32Key::FromRegister(lengthReg);
-    Jump initlenGuard = masm.guardArrayExtent(JSObject::offsetOfInitializedLength(),
-                                              objReg, key, Assembler::NotEqual);
+    Jump initlenGuard = masm.guardArrayExtent(ObjectElements::offsetOfInitializedLength(),
+                                              slotsReg, key, Assembler::NotEqual);
     stubcc.linkExit(initlenGuard, Uses(3));
 
     /*
@@ -555,13 +557,12 @@ mjit::Compiler::compileArrayPopShift(FrameEntry *thisValue, bool isPacked, bool 
     masm.bumpKey(key, -1);
 
     if (dataReg.isSet()) {
-        masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), slotsReg.reg());
         Jump holeCheck;
         if (isArrayPop) {
-            BaseIndex slot(slotsReg.reg(), lengthReg, masm.JSVAL_SCALE);
+            BaseIndex slot(slotsReg, lengthReg, masm.JSVAL_SCALE);
             holeCheck = masm.fastArrayLoadSlot(slot, !isPacked, typeReg, dataReg.reg());
         } else {
-            holeCheck = masm.fastArrayLoadSlot(Address(slotsReg.reg()), !isPacked, typeReg, dataReg.reg());
+            holeCheck = masm.fastArrayLoadSlot(Address(slotsReg), !isPacked, typeReg, dataReg.reg());
             Address addr = frame.addressOf(frame.peek(-2));
             if (typeReg.isSet())
                 masm.storeValueFromComponents(typeReg.reg(), dataReg.reg(), addr);
@@ -570,11 +571,10 @@ mjit::Compiler::compileArrayPopShift(FrameEntry *thisValue, bool isPacked, bool 
         }
         if (!isPacked)
             stubcc.linkExit(holeCheck, Uses(3));
-        frame.freeReg(slotsReg.reg());
     }
 
-    masm.store32(lengthReg, Address(objReg, offsetof(JSObject, privateData)));
-    masm.store32(lengthReg, Address(objReg, JSObject::offsetOfInitializedLength()));
+    masm.store32(lengthReg, Address(slotsReg, ObjectElements::offsetOfLength()));
+    masm.store32(lengthReg, Address(slotsReg, ObjectElements::offsetOfInitializedLength()));
 
     if (!isArrayPop)
         INLINE_STUBCALL(stubs::ArrayShift, REJOIN_NONE);
@@ -583,6 +583,7 @@ mjit::Compiler::compileArrayPopShift(FrameEntry *thisValue, bool isPacked, bool 
     stubcc.masm.move(Imm32(0), Registers::ArgReg1);
     OOL_STUBCALL(stubs::SlowCall, REJOIN_FALLTHROUGH);
 
+    frame.freeReg(slotsReg);
     frame.freeReg(lengthReg);
     frame.popn(2);
 
@@ -668,22 +669,27 @@ mjit::Compiler::compileArrayConcat(types::TypeSet *thisTypes, types::TypeSet *ar
 
     /* Test for 'length == initializedLength' on both arrays. */
 
+    RegisterID slotsReg = frame.allocReg();
     RegisterID reg = frame.allocReg();
+
     Int32Key key = Int32Key::FromRegister(reg);
 
     RegisterID objReg = frame.tempRegForData(thisValue);
-    masm.load32(Address(objReg, offsetof(JSObject, privateData)), reg);
-    Jump initlenOneGuard = masm.guardArrayExtent(JSObject::offsetOfInitializedLength(),
-                                                 objReg, key, Assembler::NotEqual);
+    masm.loadPtr(Address(objReg, JSObject::offsetOfElements()), slotsReg);
+    masm.load32(Address(slotsReg, ObjectElements::offsetOfLength()), reg);
+    Jump initlenOneGuard = masm.guardArrayExtent(ObjectElements::offsetOfInitializedLength(),
+                                                 slotsReg, key, Assembler::NotEqual);
     stubcc.linkExit(initlenOneGuard, Uses(3));
 
     objReg = frame.tempRegForData(argValue);
-    masm.load32(Address(objReg, offsetof(JSObject, privateData)), reg);
-    Jump initlenTwoGuard = masm.guardArrayExtent(JSObject::offsetOfInitializedLength(),
-                                                 objReg, key, Assembler::NotEqual);
+    masm.loadPtr(Address(objReg, JSObject::offsetOfElements()), slotsReg);
+    masm.load32(Address(slotsReg, ObjectElements::offsetOfLength()), reg);
+    Jump initlenTwoGuard = masm.guardArrayExtent(ObjectElements::offsetOfInitializedLength(),
+                                                 slotsReg, key, Assembler::NotEqual);
     stubcc.linkExit(initlenTwoGuard, Uses(3));
 
     frame.freeReg(reg);
+    frame.freeReg(slotsReg);
     frame.syncAndForgetEverything();
 
     /*
@@ -766,7 +772,10 @@ mjit::Compiler::compileArrayWithArgs(uint32 argc)
      */
     JS_ASSERT(argc >= 2);
 
-    if (argc >= gc::GetGCKindSlots(gc::FINALIZE_OBJECT_LAST))
+    size_t maxArraySlots =
+        gc::GetGCKindSlots(gc::FINALIZE_OBJECT_LAST) - ObjectElements::VALUES_PER_HEADER;
+
+    if (argc > maxArraySlots)
         return Compile_InlineAbort;
 
     types::TypeObject *type = types::TypeScript::InitObject(cx, script, PC, JSProto_Array);
@@ -784,13 +793,15 @@ mjit::Compiler::compileArrayWithArgs(uint32 argc)
     Jump emptyFreeList = masm.getNewObject(cx, result, templateObject);
     stubcc.linkExit(emptyFreeList, Uses(0));
 
+    int offset = JSObject::offsetOfFixedElements();
+    masm.store32(Imm32(argc),
+                 Address(result, offset + ObjectElements::offsetOfInitializedLength()));
+
     for (unsigned i = 0; i < argc; i++) {
         FrameEntry *arg = frame.peek(-(int)argc + i);
-        frame.storeTo(arg, Address(result, JSObject::getFixedSlotOffset(i)), /* popped = */ true);
+        frame.storeTo(arg, Address(result, offset), /* popped = */ true);
+        offset += sizeof(Value);
     }
-
-    masm.storePtr(ImmIntPtr(intptr_t(argc)),
-                  Address(result, JSObject::offsetOfInitializedLength()));
 
     stubcc.leave();
 
@@ -831,8 +842,7 @@ mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew)
     if (!globalObj || globalObj != callee->getGlobal())
         return Compile_InlineAbort;
 
-    JSFunction *fun = callee->getFunctionPrivate();
-    Native native = fun->maybeNative();
+    Native native = callee->toFunction()->maybeNative();
 
     if (!native)
         return Compile_InlineAbort;

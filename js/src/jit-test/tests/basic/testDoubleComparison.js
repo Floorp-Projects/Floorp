@@ -11,6 +11,3 @@ function testDoubleComparison()
   return "finished";
 }
 assertEq(testDoubleComparison(), "finished");
-checkStats({
-  sideExitIntoInterpreter: 1
-});

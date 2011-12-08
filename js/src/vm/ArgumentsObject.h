@@ -131,14 +131,25 @@ struct ArgumentsData
  *     the ArgumentsData.  If you're simply looking to get arguments[i],
  *     however, use getElement or getElements to avoid spreading arguments
  *     object implementation details around too much.
+ *   STACK_FRAME_SLOT
+ *     Stores the function's stack frame for non-strict arguments objects until
+ *     the function returns, when it is replaced with null.  When an arguments
+ *     object is created on-trace its private is JS_ARGUMENTS_OBJECT_ON_TRACE,
+ *     and when the trace exits its private is replaced with the stack frame or
+ *     null, as appropriate. This slot is used by strict arguments objects as
+ *     well, but the slot is always null. Conceptually it would be better to
+ *     remove this oddity, but preserving it allows us to work with arguments
+ *     objects of either kind more abstractly, so we keep it for now.
  */
 class ArgumentsObject : public ::JSObject
 {
     static const uint32 INITIAL_LENGTH_SLOT = 0;
     static const uint32 DATA_SLOT = 1;
+    static const uint32 STACK_FRAME_SLOT = 2;
 
   public:
-    static const uint32 RESERVED_SLOTS = 2;
+    static const uint32 RESERVED_SLOTS = 3;
+    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
 
   private:
     /* Lower-order bit stolen from the length slot. */
@@ -159,8 +170,9 @@ class ArgumentsObject : public ::JSObject
     void initData(ArgumentsData *data);
 
   public:
-    /* Create an arguments object for the given callee function. */
-    static ArgumentsObject *create(JSContext *cx, uint32 argc, JSObject &callee);
+    /* Create an arguments object for the given callee function and frame. */
+    static ArgumentsObject *create(JSContext *cx, uint32 argc, JSObject &callee,
+                                   StackFrame *fp);
 
     /*
      * Return the initial length of the arguments.  This may differ from the
@@ -204,16 +216,12 @@ class ArgumentsObject : public ::JSObject
     inline void setStackFrame(js::StackFrame *frame);
 };
 
-/*
- * Non-strict arguments have a private: the function's stack frame until the
- * function returns, when it is replaced with null.
- */
 class NormalArgumentsObject : public ArgumentsObject
 {
     friend bool JSObject::isNormalArguments() const;
     friend struct EmptyShape; // for EmptyShape::getEmptyArgumentsShape
     friend ArgumentsObject *
-    ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee);
+    ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee, StackFrame *fp);
 
   public:
     /*
@@ -226,17 +234,11 @@ class NormalArgumentsObject : public ArgumentsObject
     inline void clearCallee();
 };
 
-/*
- * Technically strict arguments have a private, but it's always null.
- * Conceptually it would be better to remove this oddity, but preserving it
- * allows us to work with arguments objects of either kind more abstractly,
- * so we keep it for now.
- */
 class StrictArgumentsObject : public ArgumentsObject
 {
     friend bool JSObject::isStrictArguments() const;
     friend ArgumentsObject *
-    ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee);
+    ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee, StackFrame *fp);
 };
 
 } // namespace js

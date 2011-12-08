@@ -1963,6 +1963,8 @@
             else
               this.showTab(tab);
           }, this);
+
+          this.tabContainer.mTabstrip.ensureElementIsVisible(this.selectedTab, false);
         ]]>
         </body>
       </method>
@@ -2412,7 +2414,7 @@
           // _shouldFastFind (see findbar.xml).
           if (!gFindBarInitialized &&
               !(aEvent.ctrlKey || aEvent.metaKey) &&
-              !aEvent.getPreventDefault()) {
+              !aEvent.defaultPrevented) {
             let charCode = aEvent.charCode;
             if (charCode) {
               let char = String.fromCharCode(charCode);

@@ -5,8 +5,3 @@ assertEq(a.length, 11);
 for (i = 0; i < 10; i++)
     assertEq(a.hasOwnProperty(i), false);
 
-checkStats({
-    recorderAborted:0,
-    traceCompleted:2,
-    sideExitIntoInterpreter:2
-});

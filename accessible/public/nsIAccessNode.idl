@@ -54,7 +54,7 @@ interface nsIDOMCSSPrimitiveValue;
  * If the DOM node for this access node is "accessible",
  * then a QueryInterface to nsIAccessible will succeed.
  */
-[scriptable, uuid(bbbd5a68-bad2-48c1-ab09-beb6c34f03d9)]
+[scriptable, uuid(08bb2c50-1b30-11e1-bddb-0800200c9a66)]
 interface nsIAccessNode : nsISupports
 {
   /**
@@ -98,12 +98,6 @@ interface nsIAccessNode : nsISupports
    * @param aY - defines the y coordinate
   */
   void scrollToPoint(in unsigned long aCoordinateType, in long aX, in long aY);
-
-  /**
-   * A unique ID calculated for this DOM node, for the 
-   * purposes of caching and referencing this object.
-   */
-  [noscript] readonly attribute voidPtr uniqueID;
 
   /**
    * Retrieve the computed style value for this DOM node, if it is a DOM element.

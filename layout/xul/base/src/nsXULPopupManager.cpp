@@ -283,8 +283,7 @@ nsXULPopupManager::GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain)
   NS_ASSERTION(aWidgetChain, "null parameter");
   nsMenuChainItem* item = GetTopVisibleMenu();
   while (item) {
-    nsCOMPtr<nsIWidget> widget;
-    item->Frame()->GetWidget(getter_AddRefs(widget));
+    nsCOMPtr<nsIWidget> widget = item->Frame()->GetWidget();
     NS_ASSERTION(widget, "open popup has no widget");
     aWidgetChain->AppendElement(widget.get());
     // In the case when a menulist inside a panel is open, clicking in the
@@ -359,7 +358,9 @@ nsXULPopupManager::PopupMoved(nsIFrame* aFrame, nsIntPoint aPnt)
   // Don't do anything if the popup is already at the specified location. This
   // prevents recursive calls when a popup is positioned.
   nsIntPoint currentPnt = menuPopupFrame->ScreenPosition();
-  if (aPnt.x != currentPnt.x || aPnt.y != currentPnt.y) {
+  nsIWidget* widget = menuPopupFrame->GetWidget();
+  if ((aPnt.x != currentPnt.x || aPnt.y != currentPnt.y) || (widget &&
+      widget->GetClientOffset() != menuPopupFrame->GetLastClientOffset())) {
     // Update the popup's position using SetPopupPosition if the popup is
     // anchored and at the parent level as these maintain their position
     // relative to the parent window. Otherwise, just update the popup to
@@ -1464,8 +1465,7 @@ nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup)
   }
 
   // if the popup was just rolled up, don't reopen it
-  nsCOMPtr<nsIWidget> widget;
-  aPopup->GetWidget(getter_AddRefs(widget));
+  nsCOMPtr<nsIWidget> widget = aPopup->GetWidget();
   if (widget && widget->GetLastRollup() == aPopup->GetContent())
       return false;
 
@@ -1618,8 +1618,7 @@ nsXULPopupManager::SetCaptureState(nsIContent* aOldPopup)
 
   if (item) {
     nsMenuPopupFrame* popup = item->Frame();
-    nsCOMPtr<nsIWidget> widget;
-    popup->GetWidget(getter_AddRefs(widget));
+    nsCOMPtr<nsIWidget> widget = popup->GetWidget();
     if (widget) {
       widget->CaptureRollupEvents(this, true, popup->ConsumeOutsideClicks());
       mWidget = widget;

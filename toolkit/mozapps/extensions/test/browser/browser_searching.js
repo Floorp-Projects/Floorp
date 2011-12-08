@@ -39,6 +39,7 @@ function test() {
   requestLongerTimeout(2);
   // Turn on searching for this test
   Services.prefs.setIntPref(PREF_SEARCH_MAXRESULTS, 15);
+  Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
 
   waitForExplicitFinish();
 
@@ -620,6 +621,28 @@ add_test(function() {
     run_next_test();
   });
 });
+
+// Tests that compatible-by-default addons are shown if strict compatibility checking is disabled
+add_test(function() {
+  restart_manager(gManagerWindow, null, function(aWindow) {
+    gManagerWindow = aWindow;
+    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+
+    Services.prefs.setBoolPref(PREF_STRICT_COMPAT, false);
+    search("incompatible", false, function() {
+      var item = get_addon_item("remote5");
+      is_element_visible(item, "Incompatible addon should be visible");
+      isnot(item.getAttribute("notification"), "warning", "Compatibility warning should not be shown");
+  
+      var item = get_addon_item("remote6");
+      is(item, null, "Addon incompatible with the product should not be visible");
+  
+      Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
+      run_next_test();
+    });
+  });
+});
+
 
 // Tests that restarting the manager doesn't change search results
 add_test(function() {

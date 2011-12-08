@@ -192,7 +192,6 @@ Statistics::beginGC(JSCompartment *comp, Reason reason)
     Probes::GCStart(compartment);
 
     GCCrashData crashData;
-    crashData.isRegen = runtime->shapeGen & SHAPE_OVERFLOW_BIT;
     crashData.isCompartment = !!compartment;
     crash::SaveCrashData(crash::JS_CRASH_TAG_GC, &crashData, sizeof(crashData));
 }
@@ -277,8 +276,7 @@ Statistics::endGC()
     if (JSAccumulateTelemetryDataCallback cb = runtime->telemetryCallback) {
         (*cb)(JS_TELEMETRY_GC_REASON, triggerReason);
         (*cb)(JS_TELEMETRY_GC_IS_COMPARTMENTAL, compartment ? 1 : 0);
-        (*cb)(JS_TELEMETRY_GC_IS_SHAPE_REGEN,
-              runtime->shapeGen & SHAPE_OVERFLOW_BIT ? 1 : 0);
+        (*cb)(JS_TELEMETRY_GC_IS_SHAPE_REGEN, 0);
         (*cb)(JS_TELEMETRY_GC_MS, t(PHASE_GC));
         (*cb)(JS_TELEMETRY_GC_MARK_MS, t(PHASE_MARK));
         (*cb)(JS_TELEMETRY_GC_SWEEP_MS, t(PHASE_SWEEP));

@@ -392,6 +392,8 @@ nsWindow::nsWindow() : nsBaseWidget()
   mHideChrome           = false;
   mFullscreenMode       = false;
   mMousePresent         = false;
+  mDestroyCalled        = false;
+  mPickerDisplayCount   = 0;
   mWindowType           = eWindowType_child;
   mBorderStyle          = eBorderStyle_default;
   mPopupType            = ePopupTypeAny;
@@ -690,6 +692,12 @@ NS_METHOD nsWindow::Destroy()
 {
   // WM_DESTROY has already fired, avoid calling it twice
   if (mOnDestroyCalled)
+    return NS_OK;
+
+  // Don't destroy windows that have file pickers open, we'll tear these down
+  // later once the picker is closed.
+  mDestroyCalled = true;
+  if (mPickerDisplayCount)
     return NS_OK;
 
   // During the destruction of all of our children, make sure we don't get deleted.
@@ -1523,30 +1531,6 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeig
   return NS_OK;
 }
 
-// Resize the client area and position the widget within it's parent
-NS_METHOD nsWindow::ResizeClient(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
-{
-  NS_ASSERTION((aWidth >=0) , "Negative width passed to ResizeClient");
-  NS_ASSERTION((aHeight >=0), "Negative height passed to ResizeClient");
-
-  // Adjust our existing window bounds, based on the new client dims.
-  RECT client;
-  GetClientRect(mWnd, &client);
-  nsIntPoint dims(client.right - client.left, client.bottom - client.top);
-  aWidth = mBounds.width + (aWidth - dims.x);
-  aHeight = mBounds.height + (aHeight - dims.y);
-  
-  if (aX || aY) {
-    // offsets
-    nsIntRect bounds;
-    GetScreenBounds(bounds);
-    aX += bounds.x;
-    aY += bounds.y;
-    return Resize(aX, aY, aWidth, aHeight, aRepaint);
-  }
-  return Resize(aWidth, aHeight, aRepaint);
-}
-
 NS_IMETHODIMP
 nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVertical)
 {
@@ -1930,9 +1914,9 @@ NS_METHOD nsWindow::GetClientBounds(nsIntRect &aRect)
     RECT r;
     VERIFY(::GetClientRect(mWnd, &r));
 
-    // assign size
-    aRect.x = 0;
-    aRect.y = 0;
+    nsIntRect bounds;
+    GetBounds(bounds);
+    aRect.MoveTo(bounds.TopLeft() + GetClientOffset());
     aRect.width  = r.right - r.left;
     aRect.height = r.bottom - r.top;
 
@@ -9138,6 +9122,22 @@ LPARAM nsWindow::lParamToClient(LPARAM lParam)
   pt.y = GET_Y_LPARAM(lParam);
   ::ScreenToClient(mWnd, &pt);
   return MAKELPARAM(pt.x, pt.y);
+}
+
+void nsWindow::PickerOpen()
+{
+  mPickerDisplayCount++;
+}
+
+void nsWindow::PickerClosed()
+{
+  NS_ASSERTION(mPickerDisplayCount > 0, "mPickerDisplayCount out of sync!");
+  if (!mPickerDisplayCount)
+    return;
+  mPickerDisplayCount--;
+  if (!mPickerDisplayCount && mDestroyCalled) {
+    Destroy();
+  }
 }
 
 /**************************************************************

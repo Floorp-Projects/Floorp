@@ -119,6 +119,22 @@ function test_component(contractid) {
     do_check_true(dotEqualsComparator(val1IID, bIID.value));
   }
 
+  // Check that the given call (type mismatch) results in an exception being thrown.
+  function doTypedArrayMismatchTest(name, val1, val1Size, val2, val2Size) {
+    var comparator = arrayComparator(standardComparator);
+    var error = false;
+    try {
+      doIsTest(name, val1, val1Size, val2, val2Size, comparator);
+      
+      // An exception was not thrown as would have been expected.
+      do_check_true(false);
+    }
+    catch (e) {
+      // An exception was thrown as expected.
+      do_check_true(true);
+    }
+  }
+
   // Workaround for bug 687612 (inout parameters broken for dipper types).
   // We do a simple test of copying a into b, and ignore the rv.
   function doTestWorkaround(name, val1) {
@@ -165,13 +181,21 @@ function test_component(contractid) {
 
   // Test arrays.
   doIsTest("testShortArray", [2, 4, 6], 3, [1, 3, 5, 7], 4, arrayComparator(standardComparator));
-  doIsTest("testLongLongArray", [-10000000000], 1, [1, 3, 1234511234551], 3, arrayComparator(standardComparator));
+  doIsTest("testDoubleArray", [-10, -0.5], 2, [1, 3, 1e11, -8e-5 ], 4, arrayComparator(fuzzComparator));
+
   doIsTest("testStringArray", ["mary", "hat", "hey", "lid", "tell", "lam"], 6,
                               ["ids", "fleas", "woes", "wide", "has", "know", "!"], 7, arrayComparator(standardComparator));
   doIsTest("testWstringArray", ["沒有語言", "的偉大嗎?]"], 2,
                                ["we", "are", "being", "sooo", "international", "right", "now"], 7, arrayComparator(standardComparator));
   doIsTest("testInterfaceArray", [makeA(), makeA()], 2,
                                  [makeA(), makeA(), makeA(), makeA(), makeA(), makeA()], 6, arrayComparator(interfaceComparator));
+
+  // Test typed arrays and ArrayBuffer aliasing.
+  var arrayBuffer = new ArrayBuffer(16);
+  var int16Array = new Int16Array(arrayBuffer, 2, 3);
+  int16Array.set([-32768, 0, 32767]);
+  doIsTest("testShortArray", int16Array, 3, new Int16Array([1773, -32768, 32767, 7]), 4, arrayComparator(standardComparator));
+  doIsTest("testDoubleArray", new Float64Array([-10, -0.5]), 2, new Float64Array([0, 3.2, 1.0e10, -8.33 ]), 4, arrayComparator(fuzzComparator));
 
   // Test sized strings.
   var ssTests = ["Tis not possible, I muttered", "give me back my free hardcore!", "quoth the server:", "4〠4"];
@@ -186,4 +210,12 @@ function test_component(contractid) {
   // Test arrays of iids.
   doIs2Test("testInterfaceIsArray", [makeA(), makeA(), makeA(), makeA(), makeA()], 5, Ci['nsIXPCTestInterfaceA'],
                                     [makeB(), makeB(), makeB()], 3, Ci['nsIXPCTestInterfaceB']);
+
+  // Test incorrect (too big) array size parameter; this should throw NOT_ENOUGH_ELEMENTS.
+  doTypedArrayMismatchTest("testShortArray", Int16Array([-3, 7, 4]), 4,
+                                             Int16Array([1, -32, 6]), 3);
+
+  // Test type mismatch (int16 <-> uint16); this should throw BAD_CONVERT_JS.
+  doTypedArrayMismatchTest("testShortArray", Uint16Array([0, 7, 4, 3]), 4,
+                                             Uint16Array([1, 5, 6]), 3);
 }

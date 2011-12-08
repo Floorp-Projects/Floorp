@@ -70,7 +70,7 @@ interface nsIDOMMozURLProperty : nsISupports
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(8f577294-d572-4473-94b1-d2c5a74a2a74)]
+[scriptable, uuid(973e7219-40d5-4f94-b78d-53c2a0b8a13c)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -417,8 +417,13 @@ interface nsIDOMWindow : nsISupports
    *
    * @see <http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/RequestAnimationFrame/Overview.html>
    */
-  void
+  long
     mozRequestAnimationFrame(in nsIFrameRequestCallback aCallback);
+
+  /**
+   * Cancel a refresh callback.
+   */
+  void mozCancelRequestAnimationFrame(in long aHandle);
 
   /**
    * The current animation start time in milliseconds since the epoch.

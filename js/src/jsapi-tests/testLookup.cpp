@@ -5,6 +5,8 @@
 #include "tests.h"
 #include "jsfun.h"  // for js::IsInternalFunctionObject
 
+#include "jsobjinlines.h"
+
 BEGIN_TEST(testLookup_bug522590)
 {
     // Define a function that makes method-bearing objects.
@@ -26,7 +28,7 @@ BEGIN_TEST(testLookup_bug522590)
     JSObject *funobj = JSVAL_TO_OBJECT(r);
     CHECK(funobj->isFunction());
     CHECK(!js::IsInternalFunctionObject(funobj));
-    CHECK(funobj->getFunctionPrivate() != (JSFunction *) funobj);
+    CHECK(funobj->toFunction()->isClonedMethod());
 
     return true;
 }

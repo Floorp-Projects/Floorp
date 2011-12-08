@@ -1,0 +1,2 @@
+?package(fennec):needs="X11|text|vc|wm" section="Apps/Internet"\
+  title="fennec" command="/usr/bin/fennec"
