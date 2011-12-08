@@ -148,6 +148,7 @@ _BROWSER_TEST_FILES = \
 	browser_gcli_web.js \
 	browser_webconsole_bug_658368_time_methods.js \
 	browser_webconsole_bug_622303_persistent_filters.js \
+	browser_webconsole_window_zombie.js \
 	head.js \
 	$(NULL)
 
