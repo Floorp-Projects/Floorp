@@ -3471,6 +3471,14 @@ exports.unsetDocument = function() {
   doc = undefined;
 };
 
+/**
+ * Getter for the document that contains the nodes we're matching
+ * Most for changing things back to how they were for unit testing
+ */
+exports.getDocument = function() {
+  return doc;
+};
+
 
 /**
  * A CSS expression that refers to a single node
@@ -4051,7 +4059,15 @@ UnassignedAssignment.prototype.setUnassigned = function(args) {
  */
 function Requisition(environment, doc) {
   this.environment = environment;
-  this.document = doc || document;
+  this.document = doc;
+  if (this.document == null) {
+    try {
+      this.document = document;
+    }
+    catch (ex) {
+      // Ignore
+    }
+  }
 
   // The command that we are about to execute.
   // @see setCommandConversion()
@@ -4517,7 +4533,8 @@ Requisition.prototype.exec = function(input) {
   var outputObject = {
     command: command,
     args: args,
-    typed: this.toCanonicalString(),
+    typed: this.toString(),
+    canonical: this.toCanonicalString(),
     completed: false,
     start: new Date()
   };
