@@ -147,9 +147,6 @@ extern JS_PUBLIC_API(JSBool)
 JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
            JSTrapHandler handler, jsval closure);
 
-extern JS_PUBLIC_API(JSOp)
-JS_GetTrapOpcode(JSContext *cx, JSScript *script, jsbytecode *pc);
-
 extern JS_PUBLIC_API(void)
 JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
              JSTrapHandler *handlerp, jsval *closurep);
@@ -278,6 +275,9 @@ JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp);
+
+JS_PUBLIC_API(JSFunction *)
+JS_GetScriptFunction(JSContext *cx, JSScript *script);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetParentOrScopeChain(JSContext *cx, JSObject *obj);

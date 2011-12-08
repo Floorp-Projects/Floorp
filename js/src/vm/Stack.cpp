@@ -1042,7 +1042,7 @@ StackIter::settleOnNewState()
              * (see SplatApplyArgs), there is no efficient way to know how to
              * find the callee. Thus, calls to apply are lost completely.
              */
-            JSOp op = js_GetOpcode(cx_, fp_->script(), pc_);
+            JSOp op = JSOp(*pc_);
             if (op == JSOP_CALL || op == JSOP_FUNCALL) {
                 uintN argc = GET_ARGC(pc_);
                 DebugOnly<uintN> spoff = sp_ - fp_->base();

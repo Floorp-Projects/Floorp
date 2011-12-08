@@ -392,6 +392,8 @@ nsWindow::nsWindow() : nsBaseWidget()
   mHideChrome           = false;
   mFullscreenMode       = false;
   mMousePresent         = false;
+  mDestroyCalled        = false;
+  mPickerDisplayCount   = 0;
   mWindowType           = eWindowType_child;
   mBorderStyle          = eBorderStyle_default;
   mPopupType            = ePopupTypeAny;
@@ -690,6 +692,12 @@ NS_METHOD nsWindow::Destroy()
 {
   // WM_DESTROY has already fired, avoid calling it twice
   if (mOnDestroyCalled)
+    return NS_OK;
+
+  // Don't destroy windows that have file pickers open, we'll tear these down
+  // later once the picker is closed.
+  mDestroyCalled = true;
+  if (mPickerDisplayCount)
     return NS_OK;
 
   // During the destruction of all of our children, make sure we don't get deleted.
@@ -9114,6 +9122,22 @@ LPARAM nsWindow::lParamToClient(LPARAM lParam)
   pt.y = GET_Y_LPARAM(lParam);
   ::ScreenToClient(mWnd, &pt);
   return MAKELPARAM(pt.x, pt.y);
+}
+
+void nsWindow::PickerOpen()
+{
+  mPickerDisplayCount++;
+}
+
+void nsWindow::PickerClosed()
+{
+  NS_ASSERTION(mPickerDisplayCount > 0, "mPickerDisplayCount out of sync!");
+  if (!mPickerDisplayCount)
+    return;
+  mPickerDisplayCount--;
+  if (!mPickerDisplayCount && mDestroyCalled) {
+    Destroy();
+  }
 }
 
 /**************************************************************

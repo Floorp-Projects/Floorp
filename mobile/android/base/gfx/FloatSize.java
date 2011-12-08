@@ -69,5 +69,14 @@ public class FloatSize {
     public FloatSize scale(float factor) {
         return new FloatSize(width * factor, height * factor);
     }
+
+    /*
+     * Returns the size that represents a linear transition between this size and `to` at time `t`,
+     * which is on the scale [0, 1).
+     */
+    public FloatSize interpolate(FloatSize to, float t) {
+        return new FloatSize(FloatUtils.interpolate(width, to.width, t),
+                             FloatUtils.interpolate(height, to.height, t));
+    }
 }
 

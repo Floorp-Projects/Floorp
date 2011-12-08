@@ -768,7 +768,7 @@ nsSVGElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 bool
 nsSVGElement::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eSVG));
+  return !(aFlags & ~eCONTENT);
 }
 
 NS_IMETHODIMP

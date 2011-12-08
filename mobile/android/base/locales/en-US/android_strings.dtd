@@ -7,6 +7,7 @@
 <!ENTITY  awesomebar_all_pages_title "Top Sites">
 <!ENTITY  awesomebar_bookmarks_title "Bookmarks">
 <!ENTITY  awesomebar_history_title "History">
+<!ENTITY  awesomebar_search_engine "Search for \&quot;&#037;s\&quot;">
 
 <!ENTITY  crash_reporter_title "&brandShortName; Crash Reporter">
 <!ENTITY  crash_message "&brandShortName; has crashed. Your tabs should be listed on the &brandShortName; Start page when you restart.">
