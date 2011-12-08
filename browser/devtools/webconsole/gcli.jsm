@@ -686,7 +686,7 @@ var mozl10n = {};
 
 })(mozl10n);
 
-define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types/basic', 'gcli/types/javascript', 'gcli/types/node', 'gcli/cli', 'gcli/commands/help', 'gcli/ui/display'], function(require, exports, module) {
+define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types/basic', 'gcli/types/javascript', 'gcli/types/node', 'gcli/cli', 'gcli/commands/help', 'gcli/ui/console'], function(require, exports, module) {
 
   // The API for use by command authors
   exports.addCommand = require('gcli/canon').addCommand;
@@ -702,7 +702,7 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
   require('gcli/commands/help').startup();
 
   var Requisition = require('gcli/cli').Requisition;
-  var Display = require('gcli/ui/display').Display;
+  var Console = require('gcli/ui/console').Console;
 
   var cli = require('gcli/cli');
   var jstype = require('gcli/types/javascript');
@@ -740,15 +740,15 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
         opts.requisition = new Requisition(opts.environment, opts.chromeDocument);
       }
 
-      opts.display = new Display(opts);
+      opts.console = new Console(opts);
     },
 
     /**
      * Undo the effects of createView() to prevent memory leaks
      */
     removeView: function(opts) {
-      opts.display.destroy();
-      delete opts.display;
+      opts.console.destroy();
+      delete opts.console;
 
       opts.requisition.destroy();
       delete opts.requisition;
@@ -5314,7 +5314,7 @@ define("text!gcli/commands/help_man.html", [], "\n" +
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gcli/ui/display', ['require', 'exports', 'module' , 'gcli/ui/inputter', 'gcli/ui/arg_fetch', 'gcli/ui/menu', 'gcli/ui/focus'], function(require, exports, module) {
+define('gcli/ui/console', ['require', 'exports', 'module' , 'gcli/ui/inputter', 'gcli/ui/arg_fetch', 'gcli/ui/menu', 'gcli/ui/focus'], function(require, exports, module) {
 
 var Inputter = require('gcli/ui/inputter').Inputter;
 var ArgFetcher = require('gcli/ui/arg_fetch').ArgFetcher;
@@ -5322,10 +5322,10 @@ var CommandMenu = require('gcli/ui/menu').CommandMenu;
 var FocusManager = require('gcli/ui/focus').FocusManager;
 
 /**
- * Display is responsible for generating the UI for GCLI, this implementation
+ * Console is responsible for generating the UI for GCLI, this implementation
  * is a special case for use inside Firefox
  */
-function Display(options) {
+function Console(options) {
   this.hintElement = options.hintElement;
   this.gcliTerm = options.gcliTerm;
   this.consoleWrap = options.consoleWrap;
@@ -5370,7 +5370,7 @@ function Display(options) {
 /**
  * Avoid memory leaks
  */
-Display.prototype.destroy = function() {
+Console.prototype.destroy = function() {
   this.chromeWindow.removeEventListener('resize', this.resizer, false);
   delete this.resizer;
   delete this.chromeWindow;
@@ -5395,7 +5395,7 @@ Display.prototype.destroy = function() {
 /**
  * Called on chrome window resize, or on divider slide
  */
-Display.prototype.resizer = function() {
+Console.prototype.resizer = function() {
   // Bug 705109: There are several numbers hard-coded in this function.
   // This is simpler than calculating them, but error-prone when the UI setup,
   // the styling or display settings change.
@@ -5435,7 +5435,7 @@ Display.prototype.resizer = function() {
   }
 };
 
-exports.Display = Display;
+exports.Console = Console;
 
 });
 /*
