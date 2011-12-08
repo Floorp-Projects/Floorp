@@ -56,13 +56,17 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
-public class AwesomeBar extends Activity {
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+public class AwesomeBar extends Activity implements GeckoEventListener {
     private static final String LOGTAG = "GeckoAwesomeBar";
 
     static final String URL_KEY = "url";
     static final String TITLE_KEY = "title";
     static final String CURRENT_URL_KEY = "currenturl";
     static final String TYPE_KEY = "type";
+    static final String SEARCH_KEY = "search";
     static enum Type { ADD, EDIT };
 
     private String mType;
@@ -82,6 +86,10 @@ public class AwesomeBar extends Activity {
         mAwesomeTabs.setOnUrlOpenListener(new AwesomeBarTabs.OnUrlOpenListener() {
             public void onUrlOpen(String url) {
                 openUrlAndFinish(url);
+            }
+
+            public void onSearch(String engine) {
+                openSearchAndFinish(mText.getText().toString(), engine);
             }
         });
 
@@ -175,6 +183,20 @@ public class AwesomeBar extends Activity {
                 }
             }
         });
+
+        GeckoAppShell.registerGeckoEventListener("SearchEngines:Data", this);
+        GeckoAppShell.sendEventToGecko(new GeckoEvent("SearchEngines:Get", null));
+    }
+
+    public void handleMessage(String event, JSONObject message) {
+        try {
+            if (event.equals("SearchEngines:Data")) {
+                mAwesomeTabs.setSearchEngines(message.getJSONArray("searchEngines"));
+            }
+        } catch (Exception e) {
+            // do nothing
+            Log.i(LOGTAG, "handleMessage throws " + e + " for message: " + event);
+        }
     }
 
     @Override
@@ -209,14 +231,25 @@ public class AwesomeBar extends Activity {
         finish();
     }
 
+    private void finishWithResult(Intent intent) {
+        setResult(Activity.RESULT_OK, intent);
+        finish();
+        overridePendingTransition(0, 0);
+    }
+
     private void openUrlAndFinish(String url) {
         Intent resultIntent = new Intent();
         resultIntent.putExtra(URL_KEY, url);
         resultIntent.putExtra(TYPE_KEY, mType);
+        finishWithResult(resultIntent);
+    }
 
-        setResult(Activity.RESULT_OK, resultIntent);
-        finish();
-        overridePendingTransition(0, 0);
+    private void openSearchAndFinish(String url, String engine) {
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(URL_KEY, url);
+        resultIntent.putExtra(TYPE_KEY, mType);
+        resultIntent.putExtra(SEARCH_KEY, engine);
+        finishWithResult(resultIntent);
     }
 
     @Override
@@ -258,6 +291,7 @@ public class AwesomeBar extends Activity {
     public void onDestroy() {
         super.onDestroy();
         mAwesomeTabs.destroy();
+        GeckoAppShell.unregisterGeckoEventListener("SearchEngines:Data", this);
     }
 
     public static class AwesomeBarEditText extends EditText {
