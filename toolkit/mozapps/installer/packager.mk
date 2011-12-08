@@ -86,6 +86,7 @@ SDK           = $(SDK_PATH)$(PKG_BASENAME).sdk$(SDK_SUFFIX)
 ifndef LIBXUL_SDK
 JSSHELL_BINS  = \
   $(DIST)/bin/js$(BIN_SUFFIX) \
+  $(DIST)/bin/mozutils$(DLL_SUFFIX) \
   $(NULL)
 ifndef MOZ_NATIVE_NSPR
 JSSHELL_BINS += $(DIST)/bin/$(LIB_PREFIX)nspr4$(DLL_SUFFIX)
