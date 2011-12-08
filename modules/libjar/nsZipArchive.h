@@ -310,9 +310,24 @@ public:
    * @param   aBytesRead  Outparam for number of bytes read.
    * @return  data read or NULL if item is corrupted.
    */
-  PRUint8* Read(PRUint32 *aBytesRead);
+  PRUint8* Read(PRUint32 *aBytesRead) {
+    return ReadOrCopy(aBytesRead, false);
+  }
+
+  /**
+   * Performs a copy. It always uses aBuf(passed in constructor).
+   *
+   * @param   aBytesRead  Outparam for number of bytes read.
+   * @return  data read or NULL if item is corrupted.
+   */
+  PRUint8* Copy(PRUint32 *aBytesRead) {
+    return ReadOrCopy(aBytesRead, true);
+  }
 
 private:
+  /* Actual implementation for both Read and Copy above */
+  PRUint8* ReadOrCopy(PRUint32 *aBytesRead, bool aCopy);
+
   nsZipItem *mItem; 
   PRUint8  *mBuf; 
   PRUint32  mBufSize; 
