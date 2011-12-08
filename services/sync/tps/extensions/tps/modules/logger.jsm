@@ -101,14 +101,19 @@ var Logger =
   },
 
   AssertTrue: function(bool, msg, showPotentialError) {
-    if (!bool) {
-      let message = msg;
-      if (showPotentialError && this._potentialError) {
-        message += "; " + this._potentialError;
-        this._potentialError = null;
-      }
-      throw("ASSERTION FAILED! " + message);
+    if (bool) {
+      return;
     }
+
+    if (showPotentialError && this._potentialError) {
+      msg += "; " + this._potentialError;
+      this._potentialError = null;
+    }
+    throw("ASSERTION FAILED! " + msg);
+  },
+
+  AssertFalse: function(bool, msg, showPotentialError) {
+    return this.AssertTrue(!bool, msg, showPotentialError);
   },
 
   AssertEqual: function(val1, val2, msg) {
@@ -126,7 +131,7 @@ var Logger =
       var now = new Date()
       this.write(now.getFullYear() + "-" + (now.getMonth() < 9 ? '0' : '') +
           (now.getMonth() + 1) + "-" +
-          (now.getDate() < 9 ? '0' : '') + (now.getDate() + 1) + " " +
+          (now.getDate() < 10 ? '0' : '') + (now.getDate()) + " " +
           (now.getHours() < 10 ? '0' : '') + now.getHours() + ":" +
           (now.getMinutes() < 10 ? '0' : '') + now.getMinutes() + ":" +
           (now.getSeconds() < 10 ? '0' : '') + now.getSeconds() + " " +

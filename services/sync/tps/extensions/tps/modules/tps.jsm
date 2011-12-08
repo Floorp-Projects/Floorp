@@ -148,7 +148,7 @@ var TPS =
       }
     }
     catch(e) {
-      this.DumpError("Exception caught: " + e);
+      this.DumpError("Exception caught: " + Utils.exceptionStr(e));
       return;
     }
   },
@@ -479,7 +479,7 @@ var TPS =
       this._currentAction++;
     }
     catch(e) {
-      this.DumpError("Exception caught: " + e);
+      this.DumpError("Exception caught: " + Utils.exceptionStr(e));
       return;
     }
     this.RunNextTestAction();
@@ -538,7 +538,7 @@ var TPS =
       this._currentAction = 0;
     }
     catch(e) {
-      this.DumpError("Exception caught: " + e);
+      this.DumpError("Exception caught: " + Utils.exceptionStr(e));
       return;
     }
   },
