@@ -34,6 +34,7 @@ EXPORTS_mozilla += \
   Maybe.h \
   MemoryChecking.h \
   MemoryReporting.h \
+  MSIntTypes.h \
   Move.h \
   NullPtr.h \
   PodOperations.h \
