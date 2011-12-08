@@ -115,7 +115,7 @@ public class GeckoPreferences
             }
         }
     }
-    
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -133,6 +133,8 @@ public class GeckoPreferences
         setPreference(prefName, newValue);
         if (preference instanceof ListPreference)
             ((ListPreference)preference).setSummary((String)newValue);
+        if (preference instanceof LinkPreference)
+            finish();
         return true;
     }
 
