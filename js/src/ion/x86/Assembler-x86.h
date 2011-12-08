@@ -106,9 +106,9 @@ class Operand
         ADDRESS
     };
 
-    Kind kind_ : 3;
+    Kind kind_ : 4;
     int32 index_ : 5;
-    Scale scale_ : 2;
+    Scale scale_ : 3;
     int32 base_;
     int32 disp_;
 
