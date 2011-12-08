@@ -783,6 +783,13 @@ nsXMLHttpRequest::DetectCharset()
     mResponseCharset.AssignLiteral("UTF-8");
   }
 
+  if (mResponseType == XML_HTTP_RESPONSE_TYPE_JSON &&
+      !mResponseCharset.EqualsLiteral("UTF-8")) {
+    // The XHR spec says only UTF-8 is supported for responseType == "json"
+    LogMessage("JSONCharsetWarning", mOwner);
+    mResponseCharset.AssignLiteral("UTF-8");
+  }
+
   nsCOMPtr<nsICharsetConverterManager> ccm =
     do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -920,7 +927,7 @@ nsXMLHttpRequest::CreateResponseParsedJSON(JSContext* aCx)
   if (!aCx) {
     return NS_ERROR_FAILURE;
   }
-
+  // The Unicode converter has already zapped the BOM if there was one
   if (!JS_ParseJSON(aCx,
                     (jschar*)mResponseText.get(),
                     mResponseText.Length(), &mResultJSON)) {
@@ -973,7 +980,7 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseType(nsAString& aResponseType)
     aResponseType.AssignLiteral("text");
     break;
   case XML_HTTP_RESPONSE_TYPE_JSON:
-    aResponseType.AssignLiteral("moz-json");
+    aResponseType.AssignLiteral("json");
     break;
   case XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT:
     aResponseType.AssignLiteral("moz-chunked-text");
@@ -1015,7 +1022,7 @@ NS_IMETHODIMP nsXMLHttpRequest::SetResponseType(const nsAString& aResponseType)
     mResponseType = XML_HTTP_RESPONSE_TYPE_DOCUMENT;
   } else if (aResponseType.EqualsLiteral("text")) {
     mResponseType = XML_HTTP_RESPONSE_TYPE_TEXT;
-  } else if (aResponseType.EqualsLiteral("moz-json")) {
+  } else if (aResponseType.EqualsLiteral("json")) {
     mResponseType = XML_HTTP_RESPONSE_TYPE_JSON;
   } else if (aResponseType.EqualsLiteral("moz-chunked-text")) {
     if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
@@ -1104,9 +1111,15 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponse(JSContext *aCx, jsval *aResult)
     if (mState & XML_HTTP_REQUEST_DONE) {
       if (mResultJSON == JSVAL_VOID) {
         rv = CreateResponseParsedJSON(aCx);
-        NS_ENSURE_SUCCESS(rv, rv);
-
         mResponseText.Truncate();
+        if (NS_FAILED(rv)) {
+          // Per spec, errors aren't propagated. null is returned instead.
+          rv = NS_OK;
+          // It would be nice to log the error to the console. That's hard to
+          // do without calling window.onerror as a side effect, though.
+          JS_ClearPendingException(aCx);
+          mResultJSON = JSVAL_NULL;
+        }
       }
       *aResult = mResultJSON;
     } else {
