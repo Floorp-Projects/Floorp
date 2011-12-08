@@ -299,7 +299,7 @@ public:
     void ManifestContract(ManifestProcessingContext& cx, int lineno, char* const * argv);
     void ManifestCategory(ManifestProcessingContext& cx, int lineno, char* const * argv);
 
-    void RereadChromeManifests();
+    void RereadChromeManifests(bool aChromeOnly = true);
 
     // Shutdown
     enum {
