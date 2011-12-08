@@ -92,10 +92,10 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function () {
   return obj.NetUtil;
 });
 
-XPCOMUtils.defineLazyGetter(this, "Templater", function () {
+XPCOMUtils.defineLazyGetter(this, "template", function () {
   var obj = {};
   Cu.import("resource:///modules/devtools/Templater.jsm", obj);
-  return obj.Templater;
+  return obj.template;
 });
 
 XPCOMUtils.defineLazyGetter(this, "PropertyPanel", function () {
@@ -6865,6 +6865,8 @@ GcliTerm.prototype = {
           output + '</div>').firstChild;
     }
 
+    // See https://github.com/mozilla/domtemplate/blob/master/README.md
+    // for docs on the template() function
     let element = this.document.createRange().createContextualFragment(
       '<richlistitem xmlns="' + XUL_NS + '" clipboardText="${clipboardText}"' +
       '    timestamp="${timestamp}" id="${id}" class="hud-msg-node">' +
@@ -6879,7 +6881,7 @@ GcliTerm.prototype = {
 
     let hud = HUDService.getHudReferenceById(this.hudId);
     let timestamp = ConsoleUtils.timestamp();
-    new Templater().processNode(element, {
+    template(element, {
       iconContainerStyle: "margin-left=" + (hud.groupDepth * GROUP_INDENT) + "px",
       output: output,
       timestamp: timestamp,
