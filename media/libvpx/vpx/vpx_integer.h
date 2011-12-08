@@ -15,6 +15,8 @@
 /* get ptrdiff_t, size_t, wchar_t, NULL */
 #include <stddef.h>
 
+#if !defined(VPX_DONT_DEFINE_STDINT_TYPES)
+
 #if (defined(_MSC_VER) && (_MSC_VER < 1600)) || defined(VPX_EMULATE_INTTYPES)
 typedef signed char  int8_t;
 typedef signed short int16_t;
@@ -49,6 +51,8 @@ typedef unsigned int   uintptr_t;
 #define __STDC_FORMAT_MACROS
 #endif
 #include <stdint.h>
+
+#endif
 
 #endif
 
