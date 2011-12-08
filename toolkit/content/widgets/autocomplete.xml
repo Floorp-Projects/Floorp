@@ -441,7 +441,7 @@
             return;  // Let child buttons of autocomplete take input
 
           //XXXpch this is so bogus...
-          if (aEvent.getPreventDefault())
+          if (aEvent.defaultPrevented)
             return false;
 
           var cancel = false;

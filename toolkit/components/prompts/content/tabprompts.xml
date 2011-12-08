@@ -268,7 +268,7 @@
             <parameter name="event"/>
             <body>
             <![CDATA[
-                if (event.getPreventDefault())
+                if (event.defaultPrevented)
                     return;
 
                 event.stopPropagation();

@@ -130,7 +130,7 @@ function testPreventDefault() {
 
   parent.addEventListener("MozTouchDown", function(ev) {
     parent.removeEventListener("MozTouchDown", arguments.callee, false);
-    is(ev.getPreventDefault(), true, "preventDefault can be called");
+    is(ev.defaultPrevented, true, "preventDefault can be called");
     nextTest();
   }, false);
 
@@ -149,7 +149,7 @@ function testBlockPreventDefault() {
 
   parent.addEventListener("MozTouchDown", function(ev) {
     parent.removeEventListener("MozTouchDown", arguments.callee, false);
-    is(ev.getPreventDefault(), false, "aCancelableArg works");
+    is(ev.defaultPrevented, false, "aCancelableArg works");
     nextTest();
   }, false);
 

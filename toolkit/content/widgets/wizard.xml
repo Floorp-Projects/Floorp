@@ -408,7 +408,7 @@
         <parameter name="evt"/>
         <body>
         <![CDATA[
-          if (!evt.getPreventDefault())
+          if (!evt.defaultPrevented)
             this.advance();
         ]]>
         </body>
@@ -447,7 +447,7 @@
       <handler event="keypress" keycode="VK_RETURN"
                group="system" action="this._hitEnter(event)"/>
       <handler event="keypress" keycode="VK_ESCAPE" group="system">
-        if (!event.getPreventDefault())
+        if (!event.defaultPrevented)
           this.cancel();
       </handler>
     </handlers>
