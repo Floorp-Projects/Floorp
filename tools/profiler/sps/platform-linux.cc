@@ -39,9 +39,7 @@
 #include <string.h>
 #include <stdio.h>
 
-// Real time signals are not supported on android.
-// This behaves as a standard signal.
-#define SIGNAL_SAVE_PROFILE 42
+#define SIGNAL_SAVE_PROFILE SIGUSR2
 
 #define PATH_MAX_TOSTRING(x) #x
 #define PATH_MAX_STRING(x) PATH_MAX_TOSTRING(x)
@@ -193,9 +191,11 @@ static void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
   sActiveSampler->Tick(sample);
 }
 
+#ifndef XP_MACOSX
 void tgkill(pid_t tgid, pid_t tid, int signalno) {
   syscall(SYS_tgkill, tgid, tid, signalno);
 }
+#endif
 
 class Sampler::PlatformData : public Malloced {
  public:
@@ -203,16 +203,26 @@ class Sampler::PlatformData : public Malloced {
       : sampler_(sampler),
         signal_handler_installed_(false),
         vm_tgid_(getpid()),
+#ifndef XP_MACOSX
         vm_tid_(gettid()),
-        signal_sender_launched_(false) {
+#endif
+        signal_sender_launched_(false)
+#ifdef XP_MACOSX
+        , signal_receiver_(pthread_self())
+#endif
+  {
   }
 
   void SignalSender() {
     while (sampler_->IsActive()) {
       sampler_->HandleSaveRequest();
 
+#ifdef XP_MACOSX
+      pthread_kill(signal_receiver_, SIGPROF);
+#else
       // Glibc doesn't provide a wrapper for tgkill(2).
       tgkill(vm_tgid_, vm_tid_, SIGPROF);
+#endif
       // Convert ms to us and subtract 100 us to compensate delays
       // occuring during signal delivery.
 
@@ -240,6 +250,9 @@ class Sampler::PlatformData : public Malloced {
   pid_t vm_tid_;
   bool signal_sender_launched_;
   pthread_t signal_sender_thread_;
+#ifdef XP_MACOSX
+  pthread_t signal_receiver_;
+#endif
 };
 
 
