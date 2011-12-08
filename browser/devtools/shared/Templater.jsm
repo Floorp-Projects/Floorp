@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-var EXPORTED_SYMBOLS = [ "Templater" ];
+var EXPORTED_SYMBOLS = [ "Templater", "template" ];
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 const Node = Components.interfaces.nsIDOMNode;
