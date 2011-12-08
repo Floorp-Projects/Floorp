@@ -94,7 +94,6 @@ class TabChildGlobal : public nsDOMEventTargetWrapperCache,
 {
 public:
   TabChildGlobal(TabChild* aTabChild);
-  ~TabChildGlobal();
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TabChildGlobal, nsDOMEventTargetWrapperCache)
   NS_FORWARD_SAFE_NSIFRAMEMESSAGEMANAGER(mMessageManager)

@@ -97,11 +97,6 @@ nsEventSource::nsEventSource() :
 nsEventSource::~nsEventSource()
 {
   Close();
-
-  if (mListenerManager) {
-    mListenerManager->Disconnect();
-    mListenerManager = nsnull;
-  }
 }
 
 //-----------------------------------------------------------------------------

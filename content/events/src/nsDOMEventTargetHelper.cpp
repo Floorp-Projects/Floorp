@@ -90,6 +90,13 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMEventTargetHelper)
 
 NS_IMPL_DOMTARGET_DEFAULTS(nsDOMEventTargetHelper);
 
+nsDOMEventTargetHelper::~nsDOMEventTargetHelper()
+{
+  if (mListenerManager) {
+    mListenerManager->Disconnect();
+  }
+}
+
 NS_IMETHODIMP
 nsDOMEventTargetHelper::RemoveEventListener(const nsAString& aType,
                                             nsIDOMEventListener* aListener,
