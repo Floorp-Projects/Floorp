@@ -1240,6 +1240,11 @@ if test "$GMAKE" = ":"; then
 fi
 AC_SUBST(GMAKE)
 
+# MAKE will be set by client.mk, but still need this for standalone js builds
+if test -z "$MAKE"; then
+  MAKE=$GMAKE
+fi
+
 if test "$COMPILE_ENVIRONMENT"; then
 
 AC_PATH_XTRA
@@ -5388,8 +5393,8 @@ fi
 
 # Produce the js-config script at configure time; see the comments for
 # 'js-config' in Makefile.in.
-AC_MSG_RESULT(invoking make to create js-config script)
-$GMAKE js-config
+AC_MSG_RESULT(invoking $MAKE to create js-config script)
+$MAKE js-config
 
 # Build jsctypes if it's enabled.
 if test "$JS_HAS_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
