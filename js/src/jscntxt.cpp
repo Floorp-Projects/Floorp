@@ -755,7 +755,7 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
     for (FrameRegsIter iter(cx); !iter.done(); ++iter) {
         if (iter.fp()->isScriptFrame()) {
             report->filename = iter.fp()->script()->filename;
-            report->lineno = js_FramePCToLineNumber(cx, iter.fp(), iter.pc());
+            report->lineno = js_PCToLineNumber(cx, iter.fp()->script(), iter.pc());
             break;
         }
     }
