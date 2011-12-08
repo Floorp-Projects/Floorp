@@ -1220,7 +1220,7 @@ Tab.prototype = {
           this.browser.addEventListener("pagehide", function listener() {
             this.browser.removeEventListener("click", ErrorPageEventHandler, false);
             this.browser.removeEventListener("pagehide", listener, true);
-          }, true);
+          }.bind(this), true);
         }
 
         break;
@@ -1232,7 +1232,7 @@ Tab.prototype = {
           return;
 
         // ignore on frames
-        if (target.defaultView != this.browser.contentWindow)
+        if (target.ownerDocument.defaultView != this.browser.contentWindow)
           return;
 
         let json = {
