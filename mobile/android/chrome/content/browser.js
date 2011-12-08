@@ -1171,6 +1171,7 @@ Tab.prototype = {
     let zoom = (aReset ? this.getDefaultZoomLevel() : this._viewport.zoom);
     let xpos = (aReset ? win.scrollX * zoom : this._viewport.x);
     let ypos = (aReset ? win.scrollY * zoom : this._viewport.y);
+
     this.viewportExcess = { x: 0, y: 0 };
     this.viewport = { x: xpos, y: ypos,
                       offsetX: 0, offsetY: 0,
@@ -1474,8 +1475,8 @@ Tab.prototype = {
     if ("defaultZoom" in md && md.defaultZoom)
       return md.defaultZoom;
 
-    let browserWidth = this.browser.getBoundingClientRect().width;
-    return screen.width / browserWidth;
+    let browserWidth = parseInt(this.browser.style.width);
+    return gScreenWidth / browserWidth;
   },
 
   getPageZoomLevel: function getPageZoomLevel() {
