@@ -8,7 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=464848
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body>
+<body onload="gen.next();">
 <a target="_blank"
    href="https://bugzilla.mozilla.org/show_bug.cgi?id=464848">Mozilla Bug 464848</a>
 <p id="display">
@@ -19,6 +19,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=464848
 </div>
 <pre id="test">
 <script class="testbody" type="application/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+var gen = runTests();
+function continueTest() { gen.next(); }
+
+function runTests() {
 
 xhr = new XMLHttpRequest();
 xhr.open("GET", "file_XHRSendData_doc.xml", false);
@@ -176,12 +182,16 @@ for (var i = 0; i < testDOMFiles.length; i++) {
 try {
   for each(test in tests) {
     xhr = new XMLHttpRequest;
-    xhr.open("POST", "file_XHRSendData.sjs", false);
+    xhr.open("POST", "file_XHRSendData.sjs", !!test.resType);
     if (test.contentType)
       xhr.setRequestHeader("Content-Type", test.contentType);
-    if (test.resType)
+    if (test.resType) {
       xhr.responseType = test.resType;
+      xhr.onloadend = continueTest;
+    }
     xhr.send(test.body);
+    if (test.resType)
+      yield;
 
     if (test.resContentType) {
       is(xhr.getResponseHeader("Result-Content-Type"), test.resContentType,
@@ -233,6 +243,10 @@ function is_identical_arraybuffer(ab1, ab2) {
   is(String.fromCharCode.apply(String, u8v1),
      String.fromCharCode.apply(String, u8v2), "arraybuffer values not equal");
 }
+
+SimpleTest.finish();
+yield;
+} /* runTests */
 
 </script>
 </pre>
