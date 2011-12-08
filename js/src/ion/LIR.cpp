@@ -41,7 +41,7 @@
 
 #include "MIR.h"
 #include "MIRGraph.h"
-#include "IonLIR.h"
+#include "LIR.h"
 #include "IonLIR-inl.h"
 #include "IonSpewer.h"
 

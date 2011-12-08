@@ -43,7 +43,7 @@
 #include "IonAnalysis.h"
 #include "IonBuilder.h"
 #include "IonSpewer.h"
-#include "IonLIR.h"
+#include "LIR.h"
 #include "GreedyAllocator.h"
 #include "LICM.h"
 #include "ValueNumbering.h"

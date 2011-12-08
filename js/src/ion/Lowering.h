@@ -46,7 +46,7 @@
 // MIRGraph.
 
 #include "IonAllocPolicy.h"
-#include "IonLIR.h"
+#include "LIR.h"
 #include "MOpcodes.h"
 
 #if defined(JS_CPU_X86)

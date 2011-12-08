@@ -42,7 +42,7 @@
 #include <stdarg.h>
 
 #include "JSONSpewer.h"
-#include "IonLIR.h"
+#include "LIR.h"
 #include "TypeOracle.h"
 #include "MIR.h"
 
