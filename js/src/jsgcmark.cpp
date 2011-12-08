@@ -732,11 +732,22 @@ ScanLinearString(GCMarker *gcmarker, JSLinearString *str)
     }
 }
 
+/*
+ * The function tries to scan the whole rope tree using the marking stack as
+ * temporary storage. If that becomes full, the unscanned ropes are added to
+ * the delayed marking list. When the function returns, the marking stack is
+ * at the same depth as it was on entry.
+ *
+ * The function relies on the fact that a rope can only point to other ropes or
+ * linear strings, it cannot refer to other GC things of other types.
+ */
 static void
 ScanRope(GCMarker *gcmarker, JSRope *rope)
 {
-    JS_ASSERT(rope->JSString::isRope());
-    do {
+    unsigned savedTos = gcmarker->objStack.tos;
+    for (;;) {
+        JS_ASSERT(GetGCThingTraceKind(rope) == JSTRACE_STRING);
+        JS_ASSERT(rope->JSString::isRope());
         JS_COMPARTMENT_ASSERT_STR(gcmarker->runtime, rope);
         JS_ASSERT(rope->isMarked());
         JSRope *next = NULL;
@@ -755,16 +766,33 @@ ScanRope(GCMarker *gcmarker, JSRope *rope)
                 ScanLinearString(gcmarker, &left->asLinear());
             } else {
                 /*
-                 * Both children are ropes, set aside the right one to scan
-                 * it later.
+                 * When both children are ropes, set aside the right one to
+                 * scan it later.
                  */
-                if (next)
-                    gcmarker->pushRope(next);
+                if (next && !gcmarker->objStack.push(next))
+                    gcmarker->delayMarkingChildren(next);
                 next = &left->asRope();
             }
         }
-        rope = next;
-    } while (rope);
+        if (next) {
+            rope = next;
+        } else if (savedTos != gcmarker->objStack.tos) {
+            JS_ASSERT(savedTos < gcmarker->objStack.tos);
+            rope = static_cast<JSRope *>(gcmarker->objStack.pop());
+        } else {
+            break;
+        }
+    }
+    JS_ASSERT(savedTos == gcmarker->objStack.tos);
+ }
+
+static inline void
+ScanString(GCMarker *gcmarker, JSString *str)
+{
+    if (str->isLinear())
+        ScanLinearString(gcmarker, &str->asLinear());
+    else
+        ScanRope(gcmarker, &str->asRope());
 }
 
 static inline void
@@ -773,15 +801,12 @@ PushMarkStack(GCMarker *gcmarker, JSString *str)
     JS_COMPARTMENT_ASSERT_STR(gcmarker->runtime, str);
 
     /*
-     * We scan the string directly rather than pushing on the stack except
-     * when we have a rope and both its children are also ropes.
+     * As string can only refer to other strings we fully scan its GC graph
+     * using the explicit stack when navigating the rope tree to avoid
+     * dealing with strings on the stack in drainMarkStack.
      */
-    if (str->markIfUnmarked()) {
-        if (str->isLinear())
-            ScanLinearString(gcmarker, &str->asLinear());
-        else
-            ScanRope(gcmarker, &str->asRope());
-    }
+    if (str->markIfUnmarked())
+        ScanString(gcmarker, str);
 }
 
 static const uintN LARGE_OBJECT_CHUNK_SIZE = 2048;
@@ -1053,11 +1078,8 @@ GCMarker::drainMarkStack()
     rt->gcCheckCompartment = rt->gcCurrentCompartment;
 
     while (!isMarkStackEmpty()) {
-        while (!ropeStack.isEmpty())
-            ScanRope(this, ropeStack.pop());
-
         while (!objStack.isEmpty())
-            ScanObject(this, objStack.pop());
+            ScanObject(this, static_cast<JSObject *>(objStack.pop()));
 
         while (!typeStack.isEmpty())
             ScanTypeObject(this, typeStack.pop());
