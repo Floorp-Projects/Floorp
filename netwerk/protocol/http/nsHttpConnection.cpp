@@ -78,6 +78,7 @@ nsHttpConnection::nsHttpConnection()
     , mConsiderReusedAfterEpoch(0)
     , mCurrentBytesRead(0)
     , mMaxBytesRead(0)
+    , mTotalBytesRead(0)
     , mKeepAlive(true) // assume to keep-alive by default
     , mKeepAliveMask(true)
     , mSupportsPipelining(false) // assume low-grade server
@@ -85,11 +86,13 @@ nsHttpConnection::nsHttpConnection()
     , mCompletedProxyConnect(false)
     , mLastTransactionExpectedNoContent(false)
     , mIdleMonitoring(false)
+    , mHttp1xTransactionCount(0)
     , mNPNComplete(false)
     , mSetupNPNCalled(false)
     , mUsingSpdy(false)
     , mPriority(nsISupportsPriority::PRIORITY_NORMAL)
     , mReportedSpdy(false)
+    , mEverUsedSpdy(false)
 {
     LOG(("Creating nsHttpConnection @%x\n", this));
 
@@ -111,6 +114,24 @@ nsHttpConnection::~nsHttpConnection()
     // release our reference to the handler
     nsHttpHandler *handler = gHttpHandler;
     NS_RELEASE(handler);
+
+    if (!mEverUsedSpdy) {
+        LOG(("nsHttpConnection %p performed %d HTTP/1.x transactions\n",
+             this, mHttp1xTransactionCount));
+        mozilla::Telemetry::Accumulate(
+            mozilla::Telemetry::HTTP_REQUEST_PER_CONN, mHttp1xTransactionCount);
+    }
+
+    if (mTotalBytesRead) {
+        PRUint32 totalKBRead = static_cast<PRUint32>(mTotalBytesRead >> 10);
+        LOG(("nsHttpConnection %p read %dkb on connection spdy=%d\n",
+             this, totalKBRead, mEverUsedSpdy));
+        mozilla::Telemetry::Accumulate(
+            mEverUsedSpdy ?
+              mozilla::Telemetry::SPDY_KBREAD_PER_CONN :
+              mozilla::Telemetry::HTTP_KBREAD_PER_CONN,
+            totalKBRead);
+    }
 }
 
 nsresult
@@ -197,8 +218,8 @@ nsHttpConnection::EnsureNPNComplete()
          this, negotiatedNPN.get()));
     
     if (negotiatedNPN.Equals(NS_LITERAL_CSTRING("spdy/2"))) {
-
         mUsingSpdy = true;
+        mEverUsedSpdy = true;
         mIsReused = true;    /* all spdy streams are reused */
 
         // Wrap the old http transaction into the new spdy session
@@ -851,9 +872,12 @@ nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
 
     if (mUsingSpdy) {
         DontReuse();
+        // if !mSpdySession then mUsingSpdy must be false for canreuse()
         mUsingSpdy = false;
         mSpdySession = nsnull;
     }
+
+    mHttp1xTransactionCount += mTransaction->Http1xTransactionCount();
 
     mTransaction->Close(reason);
     mTransaction = nsnull;
@@ -1056,6 +1080,7 @@ nsHttpConnection::OnSocketReadable()
         }
         else {
             mCurrentBytesRead += n;
+            mTotalBytesRead += n;
             if (NS_FAILED(mSocketInCondition)) {
                 // continue waiting for the socket if necessary...
                 if (mSocketInCondition == NS_BASE_STREAM_WOULD_BLOCK)
