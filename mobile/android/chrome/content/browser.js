@@ -1235,13 +1235,24 @@ Tab.prototype = {
         if (target.ownerDocument.defaultView != this.browser.contentWindow)
           return;
 
+        // sanitize the rel string
+        let list = [];
+        if (target.rel) {
+          list = target.rel.toLowerCase().split(/\s+/);
+          let hash = {};
+          list.forEach(function(value) { hash[value] = true; });
+          list = [];
+          for (let rel in hash)
+            list.push("[" + rel + "]");
+        }
+
         let json = {
           type: "DOMLinkAdded",
           tabID: this.id,
           href: resolveGeckoURI(target.href),
           charset: target.ownerDocument.characterSet,
           title: target.title,
-          rel: target.rel
+          rel: list.join(" ")
         };
 
         // rel=icon can also have a sizes attribute

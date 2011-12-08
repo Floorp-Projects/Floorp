@@ -1130,7 +1130,7 @@ abstract public class GeckoApp
     }
 
     void handleLinkAdded(final int tabId, String rel, final String href) {
-        if (rel.indexOf("icon") != -1) {
+        if (rel.indexOf("[icon]") != -1) {
             final Tab tab = Tabs.getInstance().getTab(tabId);
             if (tab != null) {
                 tab.updateFaviconURL(href);
