@@ -100,7 +100,24 @@ ScriptEpilogueOrGeneratorYield(JSContext *cx, StackFrame *fp, bool ok);
 
 /* Implemented in jsdbgapi: */
 
-extern void
+/*
+ * Announce to the debugger that the thread has entered a new JavaScript frame,
+ * |fp|. Call whatever hooks have been registered to observe new frames, and
+ * return a JSTrapStatus code indication how execution should proceed:
+ *
+ * - JSTRAP_CONTINUE: Continue execution normally.
+ * 
+ * - JSTRAP_THROW: Throw an exception. ScriptDebugPrologue has set |cx|'s
+ *   pending exception to the value to be thrown.
+ *
+ * - JSTRAP_ERROR: Terminate execution (as is done when a script is terminated
+ *   for running too long). ScriptDebugPrologue has cleared |cx|'s pending
+ *   exception.
+ *
+ * - JSTRAP_RETURN: Return from the new frame immediately. ScriptDebugPrologue
+ *   has set |cx->fp()|'s return value appropriately.
+ */
+extern JSTrapStatus
 ScriptDebugPrologue(JSContext *cx, StackFrame *fp);
 
 extern bool

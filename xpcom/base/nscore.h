@@ -473,7 +473,6 @@ typedef PRUint32 nsrefcnt;
  * Static type annotations, enforced when static-checking is enabled:
  *
  * NS_STACK_CLASS: a class which must only be instantiated on the stack
- * NS_FINAL_CLASS: a class which may not be subclassed
  *
  * NS_MUST_OVERRIDE:
  *   a method which every immediate subclass of this class must
@@ -490,13 +489,11 @@ typedef PRUint32 nsrefcnt;
 #define NS_STACK_CLASS __attribute__((user("NS_stack")))
 #define NS_OKONHEAP    __attribute__((user("NS_okonheap")))
 #define NS_SUPPRESS_STACK_CHECK __attribute__((user("NS_suppress_stackcheck")))
-#define NS_FINAL_CLASS __attribute__((user("NS_final")))
 #define NS_MUST_OVERRIDE __attribute__((user("NS_must_override")))
 #else
 #define NS_STACK_CLASS
 #define NS_OKONHEAP
 #define NS_SUPPRESS_STACK_CHECK
-#define NS_FINAL_CLASS
 #define NS_MUST_OVERRIDE
 #endif
 

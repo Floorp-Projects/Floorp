@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % aboutDTD SYSTEM "chrome://global/locale/about.dtd" >
+%aboutDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
+<!ENTITY % fennecDTD SYSTEM "chrome://browser/locale/about.dtd">
+%fennecDTD;
+]>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 1998-1999
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Henrik Gemal <mozilla@gemal.dk>
+   -   Daniel Veditz <dveditz@netscape.com>
+   -   Alexey Chernyak <alexeyc@bigfoot.com>
+   -   Steffen Wilberg <steffen.wilberg@web.de>
+   -   Gavin Sharp <gavin@gavinsharp.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta name="viewport" content="width=480; initial-scale=.6667; user-scalable=no"/>
+  <title>&aboutPage.title;</title>
+  <link rel="stylesheet" href="chrome://browser/skin/header.css" type="text/css"/>
+  <link rel="stylesheet" href="chrome://browser/skin/aboutPage.css" type="text/css"/>
+</head>
+
+<body dir="&locale.dir;">
+  <div id="wrapper">
+    <div id="aboutLogoContainer">
+      <img src="about:logo" alt="&brandShortName;"/>
+#expand <p id="version">&about.version; __MOZ_APP_VERSION__</p>
+    </div>
+#ifdef MOZ_UPDATER
+    <button id="update" onclick="checkForUpdates();">&aboutPage.checkForUpdates.button;</button>
+    <span id="update-message-checking">&aboutPage.checkForUpdates.checking;</span>
+    <span id="update-message-none">&aboutPage.checkForUpdates.none;</span>
+    <span id="update-message-found">&aboutPage.checkForUpdates.found;</span>
+#endif
+
+    <ul id="aboutLinks">
+      <li><a id="faqURL">&aboutPage.faq.label;</a></li>
+      <li><a id="supportURL">&aboutPage.support.label;</a></li>
+      <li><a id="privacyURL">&aboutPage.privacyPolicy.label;</a></li>
+      <li><a href="about:rights">&aboutPage.rights.label;</a></li>
+      <li><a id="releaseNotesURL">&aboutPage.relNotes.label;</a></li>
+      <li><a id="creditsURL">&aboutPage.credits.label;</a></li>
+    </ul>
+
+    <div id="aboutDetails">
+      <p id="license"><a href="about:license">&aboutPage.licenseLink;</a>&aboutPage.licenseLinkSuffix; &logoTrademark;</p>
+      <p id="aboutUA"/>
+    </div>
+
+    <script type="application/javascript;version=1.8"><![CDATA[
+      let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils, Cr = Components.results;
+
+      // get URLs from prefs
+      try {
+        let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+
+        let links = [
+          {id: "releaseNotesURL", pref: "app.releaseNotesURL"},
+          {id: "supportURL",      pref: "app.support.baseURL"},
+          {id: "faqURL",          pref: "app.faqURL"},
+          {id: "privacyURL",      pref: "app.privacyURL"},
+          {id: "creditsURL",      pref: "app.creditsURL"},
+        ];
+
+        links.forEach(function (link) {
+          let url = formatter.formatURLPref(link.pref);
+          let element = document.getElementById(link.id);
+          element.setAttribute("href", url);
+        });
+      } catch (ex) {}
+
+      let ua = navigator.userAgent;
+      if (ua) {
+        let uaP = document.getElementById("aboutUA");
+        uaP.appendChild(document.createTextNode(ua));
+      }
+
+      Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+      Cu.import("resource://gre/modules/Services.jsm");
+
+#ifdef MOZ_UPDATER
+      let Updater = {
+        isChecking: false,
+        update: null,
+
+        get updateEnabled() {
+          try {
+            return Services.prefs.getBoolPref("app.update.enabled");
+          }
+          catch (e) { }
+          return false; // Mobile default is false
+        },
+
+        startUpdate: function() {
+          if (!this.update)
+            this.update = this.um.activeUpdate;
+
+          this.aus.pauseDownload();
+
+          let updateTimerCallback = this.aus.QueryInterface(Ci.nsITimerCallback);
+          updateTimerCallback.notify(null);
+        }
+      };
+
+      XPCOMUtils.defineLazyServiceGetter(Updater, "aus",
+                                         "@mozilla.org/updates/update-service;1",
+                                         "nsIApplicationUpdateService");
+      XPCOMUtils.defineLazyServiceGetter(Updater, "checker",
+                                         "@mozilla.org/updates/update-checker;1",
+                                         "nsIUpdateChecker");
+      XPCOMUtils.defineLazyServiceGetter(Updater, "um",
+                                         "@mozilla.org/updates/update-manager;1",
+                                         "nsIUpdateManager");
+
+      let UpdateCheckListener = {
+        onProgress: function(aRequest, aPosition, aTotalSize) {
+        },
+
+        onCheckComplete: function(aRequest, aUpdates, aUpdateCount) {
+          Updater.isChecking = false;
+
+          Updater.update = Updater.aus.selectUpdate(aUpdates, aUpdates.length);
+          if (!Updater.update || !Updater.aus.canApplyUpdates) {
+            showUpdateMessage(false);
+            return;
+          }
+
+          if (!Updater.update.appVersion || Services.vc.compare(Updater.update.appVersion, Services.appinfo.version) < 0) {
+            showUpdateMessage(false);
+            return;
+          }
+
+          showUpdateMessage(true);
+          Updater.startUpdate();
+        },
+
+        onError: function(aRequest, aUpdate) {
+          // Errors in the update check are treated as no updates found. If the
+          // update check fails repeatedly without a success the user will be
+          // notified with the normal app update user interface so this is safe.
+          Updater.isChecking = false;
+          showUpdateMessage(false);
+        },
+
+        QueryInterface: function(aIID) {
+          if (!aIID.equals(Ci.nsIUpdateCheckListener) && !aIID.equals(Ci.nsISupports))
+            throw Cr.NS_ERROR_NO_INTERFACE;
+          return this;
+        }
+      };
+
+      if (!Updater.updateEnabled)
+        document.getElementById("update").style.display = "none";
+
+      function checkForUpdates() {
+        Updater.isChecking = true;
+        showCheckingMessage();
+
+        Updater.checker.checkForUpdates(UpdateCheckListener, true);
+      }
+
+      let updateButton = document.getElementById("update");
+      let checkingSpan = document.getElementById("update-message-checking");
+      let noneSpan = document.getElementById("update-message-none");
+      let foundSpan = document.getElementById("update-message-found");
+
+      function showCheckingMessage() {
+        updateButton.style.display = "none";
+        noneSpan.style.display = "none";
+        foundSpan.style.display = "none";
+        checkingSpan.style.display = "block";
+      }
+
+      function showUpdateMessage(aHasUpdate) {
+        updateButton.style.display = "none";
+        checkingSpan.style.display = "none";
+        if (aHasUpdate) {
+          noneSpan.style.display = "none";
+          foundSpan.style.display = "block";
+        } else {
+          foundSpan.style.display = "none";
+          noneSpan.style.display = "block";
+        }
+
+        setTimeout(function() {
+          noneSpan.style.display = "none";
+          foundSpan.style.display = "none";
+          checkingSpan.style.display = "none";
+          updateButton.style.display = "block";
+        }, 2000);
+      }
+#endif
+    ]]></script>
+  </div>
+</body>
+</html>

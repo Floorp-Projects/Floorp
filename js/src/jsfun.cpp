@@ -1581,7 +1581,7 @@ fun_toString(JSContext *cx, uintN argc, Value *vp)
     JS_ASSERT(IsFunctionObject(vp[0]));
     uint32_t indent = 0;
 
-    if (argc != 0 && !ValueToECMAUint32(cx, vp[2], &indent))
+    if (argc != 0 && !ToUint32(cx, vp[2], &indent))
         return false;
 
     JSObject *obj = ToObject(cx, &vp[1]);
@@ -1976,7 +1976,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
         size_t args_length = 0;
         for (uintN i = 0; i < n; i++) {
             /* Collect the lengths for all the function-argument arguments. */
-            JSString *arg = js_ValueToString(cx, args[i]);
+            JSString *arg = ToString(cx, args[i]);
             if (!arg)
                 return false;
             args[i].setString(arg);
@@ -2084,7 +2084,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
     size_t length;
 
     if (args.length()) {
-        JSString *str = js_ValueToString(cx, args[args.length() - 1]);
+        JSString *str = ToString(cx, args[args.length() - 1]);
         if (!str)
             return false;
         strAnchor.set(str);

@@ -70,6 +70,26 @@ GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
 }
 #endif // !MOZ_ENABLE_DBUS
 
+bool
+GetScreenEnabled()
+{
+  return true;
+}
+
+void
+SetScreenEnabled(bool enabled)
+{}
+
+double
+GetScreenBrightness()
+{
+  return 1;
+}
+
+void
+SetScreenBrightness(double brightness)
+{}
+
 } // hal_impl
 } // mozilla
 

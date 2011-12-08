@@ -9,8 +9,8 @@ function counter(id, oldval, newval) {
     var obj = {x: 0, y: 0};
     var a = ['x', 'y'];
     obj.watch('z', counter);
-    for (var i = 0; i < HOTLOOP + 5 + 1; i++) {
-        obj.watch(a[+(i > HOTLOOP)], counter);
+    for (var i = 0; i < 14; i++) {
+        obj.watch(a[+(i > 8)], counter);
         obj.y = i;
     }
 })();

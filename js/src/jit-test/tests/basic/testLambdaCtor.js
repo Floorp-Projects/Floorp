@@ -1,14 +1,13 @@
 function testLambdaCtor() {
     var a = [];
-    for (var x = 0; x < RUNLOOP; ++x) {
+    for (var x = 0; x < 9; ++x) {
         var f = function(){};
         a[a.length] = new f;
     }
 
-    // This prints false until the upvar2 bug is fixed:
-    // print(a[HOTLOOP].__proto__ !== a[HOTLOOP-1].__proto__);
+    assertEq([8].__proto__ !== a[7].__proto__, true);
 
     // Assert that the last f was properly constructed.
-    return a[RUNLOOP-1].__proto__ === f.prototype;
+    return a[8].__proto__ === f.prototype;
 }
 assertEq(testLambdaCtor(), true);

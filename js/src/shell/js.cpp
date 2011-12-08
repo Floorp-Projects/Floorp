@@ -246,9 +246,9 @@ ReportException(JSContext *cx)
     }
 }
 
-class ToString {
+class ToStringHelper {
   public:
-    ToString(JSContext *aCx, jsval v, JSBool aThrow = JS_FALSE)
+    ToStringHelper(JSContext *aCx, jsval v, JSBool aThrow = JS_FALSE)
       : cx(aCx), mThrow(aThrow)
     {
         mStr = JS_ValueToString(cx, v);
@@ -256,7 +256,7 @@ class ToString {
             ReportException(cx);
         JS_AddNamedStringRoot(cx, &mStr, "Value ToString helper");
     }
-    ~ToString() {
+    ~ToStringHelper() {
         JS_RemoveStringRoot(cx, &mStr);
     }
     JSBool threw() { return !mStr; }
@@ -273,10 +273,10 @@ class ToString {
     JSAutoByteString mBytes;
 };
 
-class IdStringifier : public ToString {
+class IdStringifier : public ToStringHelper {
 public:
     IdStringifier(JSContext *cx, jsid id, JSBool aThrow = JS_FALSE)
-    : ToString(cx, IdToJsval(id), aThrow)
+    : ToStringHelper(cx, IdToJsval(id), aThrow)
     { }
 };
 
@@ -1813,7 +1813,7 @@ UpdateSwitchTableBounds(JSContext *cx, JSScript *script, uintN offset,
     jsint low, high, n;
 
     pc = script->code + offset;
-    op = js_GetOpcode(cx, script, pc);
+    op = JSOp(*pc);
     switch (op) {
       case JSOP_TABLESWITCHX:
         jmplen = JUMPX_OFFSET_LEN;
@@ -1872,7 +1872,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
             if (switchTableStart <= offset && offset < switchTableEnd) {
                 name = "case";
             } else {
-                JSOp op = js_GetOpcode(cx, script, script->code + offset);
+                JSOp op = JSOp(script->code[offset]);
                 JS_ASSERT(op == JSOP_LABEL || op == JSOP_LABELX);
             }
         }
@@ -1931,7 +1931,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
             break;
           }
           case SRC_SWITCH: {
-            JSOp op = js_GetOpcode(cx, script, script->code + offset);
+            JSOp op = JSOp(script->code[offset]);
             if (op == JSOP_GOTO || op == JSOP_GOTOX)
                 break;
             Sprint(sp, " length %u", uintN(js_GetSrcNoteOffset(sn, 0)));
@@ -2644,8 +2644,8 @@ ConvertArgs(JSContext *cx, uintN argc, jsval *vp)
     fprintf(gOutFile,
             "b %u, c %x (%c), i %ld, u %lu, j %ld\n",
             b, c, (char)c, i, u, j);
-    ToString obj2string(cx, obj2);
-    ToString valueString(cx, v);
+    ToStringHelper obj2string(cx, obj2);
+    ToStringHelper valueString(cx, v);
     JSAutoByteString strBytes;
     if (str)
         strBytes.encode(cx, str);
@@ -4358,7 +4358,7 @@ its_addProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     IdStringifier idString(cx, id);
     fprintf(gOutFile, "adding its property %s,", idString.getBytes());
-    ToString valueString(cx, *vp);
+    ToStringHelper valueString(cx, *vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
     return JS_TRUE;
 }
@@ -4371,7 +4371,7 @@ its_delProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     IdStringifier idString(cx, id);
     fprintf(gOutFile, "deleting its property %s,", idString.getBytes());
-    ToString valueString(cx, *vp);
+    ToStringHelper valueString(cx, *vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
     return JS_TRUE;
 }
@@ -4384,7 +4384,7 @@ its_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     IdStringifier idString(cx, id);
     fprintf(gOutFile, "getting its property %s,", idString.getBytes());
-    ToString valueString(cx, *vp);
+    ToStringHelper valueString(cx, *vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
     return JS_TRUE;
 }
@@ -4395,7 +4395,7 @@ its_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
     IdStringifier idString(cx, id);
     if (its_noisy) {
         fprintf(gOutFile, "setting its property %s,", idString.getBytes());
-        ToString valueString(cx, *vp);
+        ToStringHelper valueString(cx, *vp);
         fprintf(gOutFile, " new value %s\n", valueString.getBytes());
     }
 
@@ -4810,7 +4810,7 @@ env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
     IdStringifier idstr(cx, id, JS_TRUE);
     if (idstr.threw())
         return JS_FALSE;
-    ToString valstr(cx, *vp, JS_TRUE);
+    ToStringHelper valstr(cx, *vp, JS_TRUE);
     if (valstr.threw())
         return JS_FALSE;
 #if defined XP_WIN || defined HPUX || defined OSF1

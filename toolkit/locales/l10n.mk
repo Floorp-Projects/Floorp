@@ -96,14 +96,15 @@ clobber-%:
 
 
 PACKAGER_NO_LIBS = 1
-include $(MOZILLA_DIR)/toolkit/mozapps/installer/packager.mk
-
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/MacOS
 else
 STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)
 endif
+
+include $(MOZILLA_DIR)/toolkit/mozapps/installer/signing.mk
+include $(MOZILLA_DIR)/toolkit/mozapps/installer/packager.mk
 
 $(STAGEDIST): AB_CD:=en-US
 $(STAGEDIST): UNPACKAGE=$(call ESCAPE_SPACE,$(ZIP_IN))
@@ -175,6 +176,7 @@ endif
 	$(MAKE) clobber-zip AB_CD=$(AB_CD)
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	mv -f "$(DIST)/l10n-stage/$(PACKAGE)" "$(ZIP_OUT)"
+	if test -f "$(DIST)/l10n-stage/$(PACKAGE).asc"; then mv -f "$(DIST)/l10n-stage/$(PACKAGE).asc" "$(ZIP_OUT).asc"; fi
 
 repackage-zip-%: $(STAGEDIST)
 	@$(MAKE) repackage-zip AB_CD=$* ZIP_IN="$(ZIP_IN)"

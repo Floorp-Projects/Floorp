@@ -146,6 +146,10 @@ LOCAL_INCLUDES	+= \
 	$(NULL)
 endif
 
+ifdef MOZ_B2G_RIL #{
+SHARED_LIBRARY_LIBS	+= $(DEPTH)/dom/system/b2g/$(LIB_PREFIX)domsystemb2g_s.$(LIB_SUFFIX)
+endif #}
+
 ifdef MOZ_VORBIS
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/media/libvorbis/lib/$(LIB_PREFIX)vorbis.$(LIB_SUFFIX) \
@@ -289,5 +293,10 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/netwerk/base/src \
 		   -I$(topsrcdir)/content/svg/content/src \
 		   $(NULL)
+
+ifdef MOZ_B2G_RIL #{
+LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/system/b2g
+endif #}
+
 
 DEFINES += -D_IMPL_NS_LAYOUT

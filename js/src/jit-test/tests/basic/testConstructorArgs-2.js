@@ -4,7 +4,7 @@ function f(a, b, c) {
     assertEq(c, void 0);
 }
 
-for (var x = 0; x < RUNLOOP; ++x) {
+for (var x = 0; x < 9; ++x) {
     f.prototype = {};
     var obj = new f(x, 'x');  // fewer than f.length arguments
     assertEq(obj.a, x);

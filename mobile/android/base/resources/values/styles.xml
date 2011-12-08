@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Layout -->
+    <style name="Layout">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+    </style>
+
+    <!-- Horizontal Layout -->
+    <style name="Layout.Horizontal">
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <!-- Vertical Layout -->
+    <style name="Layout.Vertical">
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <!-- Screen -->
+    <style name="Screen" parent="Layout.Vertical">
+        <item name="android:background">#fff</item>
+    </style>
+
+    <!-- Transparent Screen -->
+    <style name="Screen.Transparent">
+        <item name="android:background">#00000000</item>
+    </style>
+
+    <!-- BrowserToolbar -->
+    <style name="BrowserToolbar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <!-- Address bar -->
+    <style name="AddressBar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">54dip</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:background">@drawable/address_bar_bg</item>
+    </style>
+
+    <!-- Address bar - Button -->
+    <style name="AddressBar.Button">
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <!-- Address bar - Image Button -->
+    <style name="AddressBar.ImageButton" parent="AddressBar.Button">
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <!-- Lists in AwesomeBar -->
+    <style name="AwesomeBarList" parent="android:style/Widget.ListView.White">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:layout_weight">1</item>
+    </style>
+</resources>

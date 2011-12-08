@@ -430,7 +430,7 @@ ThisToStringForStringProto(JSContext *cx, Value *vp)
         return NULL;
     }
 
-    JSString *str = js_ValueToString(cx, vp[1]);
+    JSString *str = ToStringSlow(cx, vp[1]);
     if (!str)
         return NULL;
     vp[1].setString(str);
@@ -470,34 +470,13 @@ str_toSource(JSContext *cx, uintN argc, Value *vp)
     if (!str)
         return false;
 
-    char buf[16];
-    size_t j = JS_snprintf(buf, sizeof buf, "(new String(");
-
-    JS::Anchor<JSString *> anchor(str);
-    size_t k = str->length();
-    const jschar *s = str->getChars(cx);
-    if (!s)
+    StringBuffer sb(cx);
+    if (!sb.append("(new String(") || !sb.append(str) || !sb.append("))"))
         return false;
 
-    size_t n = j + k + 2;
-    jschar *t = (jschar *) cx->malloc_((n + 1) * sizeof(jschar));
-    if (!t)
+    str = sb.finishString();
+    if (!str)
         return false;
-
-    size_t i;
-    for (i = 0; i < j; i++)
-        t[i] = buf[i];
-    for (j = 0; j < k; i++, j++)
-        t[i] = s[j];
-    t[i++] = ')';
-    t[i++] = ')';
-    t[i] = 0;
-
-    str = js_NewString(cx, t, n);
-    if (!str) {
-        cx->free_(t);
-        return false;
-    }
     args.rval().setString(str);
     return true;
 }
@@ -700,7 +679,7 @@ str_localeCompare(JSContext *cx, uintN argc, Value *vp)
     if (argc == 0) {
         vp->setInt32(0);
     } else {
-        JSString *thatStr = js_ValueToString(cx, vp[2]);
+        JSString *thatStr = ToString(cx, vp[2]);
         if (!thatStr)
             return false;
         if (cx->localeCallbacks && cx->localeCallbacks->localeCompare) {
@@ -1422,7 +1401,7 @@ class RegExpGuard
         /* Build RegExp from pattern string. */
         JSString *opt;
         if (optarg < argc) {
-            opt = js_ValueToString(cx, vp[2 + optarg]);
+            opt = ToString(cx, vp[2 + optarg]);
             if (!opt)
                 return NULL;
         } else {
@@ -1810,7 +1789,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
             return false;
 
         /* root repstr: rdata is on the stack, so scanned by conservative gc. */
-        JSString *repstr = ValueToString_TestForStringInline(cx, args.rval());
+        JSString *repstr = ToString(cx, args.rval());
         if (!repstr)
             return false;
         rdata.repstr = repstr->ensureLinear(cx);
@@ -2116,7 +2095,7 @@ str_replace_flat_lambda(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata
     if (!Invoke(cx, rdata.args))
         return false;
 
-    JSString *repstr = js_ValueToString(cx, args.rval());
+    JSString *repstr = ToString(cx, args.rval());
     if (!repstr)
         return false;
 
@@ -2182,8 +2161,8 @@ js::str_replace(JSContext *cx, uintN argc, Value *vp)
 
                 if (table.isObject() &&
                     JSOp(*pc) == JSOP_GETARG && GET_SLOTNO(pc) == 0 &&
-                    JSOp(*(pc + JSOP_GETARG_LENGTH)) == JSOP_GETELEM &&
-                    JSOp(*(pc + JSOP_GETARG_LENGTH + JSOP_GETELEM_LENGTH)) == JSOP_RETURN) {
+                    JSOp(pc[JSOP_GETARG_LENGTH]) == JSOP_GETELEM &&
+                    JSOp(pc[JSOP_GETARG_LENGTH + JSOP_GETELEM_LENGTH]) == JSOP_RETURN) {
                     Class *clasp = table.toObject().getClass();
                     if (clasp->isNative() &&
                         !clasp->ops.lookupProperty &&
@@ -2493,7 +2472,7 @@ js::str_split(JSContext *cx, uintN argc, Value *vp)
             if (!matcher.reset(reobj))
                 return false;
         } else {
-            JSString *sep = js_ValueToString(cx, vp[2]);
+            JSString *sep = ToString(cx, vp[2]);
             if (!sep)
                 return false;
             vp[2].setString(sep);
@@ -2608,7 +2587,7 @@ str_concat(JSContext *cx, uintN argc, Value *vp)
 
     Value *argv = JS_ARGV(cx, vp);
     for (uintN i = 0; i < argc; i++) {
-        JSString *str2 = js_ValueToString(cx, argv[i]);
+        JSString *str2 = ToString(cx, argv[i]);
         if (!str2)
             return false;
 
@@ -2911,7 +2890,7 @@ js_String(JSContext *cx, uintN argc, Value *vp)
 
     JSString *str;
     if (argc > 0) {
-        str = js_ValueToString(cx, argv[0]);
+        str = ToString(cx, argv[0]);
         if (!str)
             return false;
     } else {
@@ -3239,7 +3218,7 @@ js_ValueToPrintable(JSContext *cx, const Value &v, JSAutoByteString *bytes, bool
 {
     JSString *str;
 
-    str = (asSource ? js_ValueToSource : js_ValueToString)(cx, v);
+    str = (asSource ? js_ValueToSource : ToString)(cx, v);
     if (!str)
         return NULL;
     str = js_QuoteString(cx, str, 0);
@@ -3249,8 +3228,11 @@ js_ValueToPrintable(JSContext *cx, const Value &v, JSAutoByteString *bytes, bool
 }
 
 JSString *
-js_ValueToString(JSContext *cx, const Value &arg)
+js::ToStringSlow(JSContext *cx, const Value &arg)
 {
+    /* As with ToObjectSlow, callers must verify that |arg| isn't a string. */
+    JS_ASSERT(!arg.isString());
+
     Value v = arg;
     if (!ToPrimitive(cx, JSTYPE_STRING, &v))
         return NULL;
@@ -3309,7 +3291,7 @@ js_ValueToSource(JSContext *cx, const Value &v)
 
             return js_NewStringCopyN(cx, js_negzero_ucNstr, 2);
         }
-        return js_ValueToString(cx, v);
+        return ToString(cx, v);
     }
 
     Value rval = NullValue();
@@ -3322,7 +3304,7 @@ js_ValueToSource(JSContext *cx, const Value &v)
             return NULL;
     }
 
-    return js_ValueToString(cx, rval);
+    return ToString(cx, rval);
 }
 
 namespace js {

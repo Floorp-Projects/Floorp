@@ -112,6 +112,11 @@ namespace PointerType {
   static JSBool ContentsSetter(JSContext* cx, JSObject* obj, jsid idval, JSBool strict,
     jsval* vp);
   static JSBool IsNull(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Increment(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Decrement(JSContext* cx, uintN argc, jsval* vp);
+  // The following is not an instance function, since we don't want to expose arbitrary
+  // pointer arithmetic at this moment.
+  static JSBool OffsetBy(JSContext* cx, intN offset, jsval* vp);
 }
 
 namespace ArrayType {
@@ -337,6 +342,8 @@ static JSPropertySpec sPointerProps[] = {
 
 static JSFunctionSpec sPointerInstanceFunctions[] = {
   JS_FN("isNull", PointerType::IsNull, 0, CTYPESFN_FLAGS),
+  JS_FN("increment", PointerType::Increment, 0, CTYPESFN_FLAGS),
+  JS_FN("decrement", PointerType::Decrement, 0, CTYPESFN_FLAGS),
   JS_FS_END
 };
   
@@ -3441,6 +3448,52 @@ PointerType::IsNull(JSContext* cx, uintN argc, jsval* vp)
   jsval result = BOOLEAN_TO_JSVAL(data == NULL);
   JS_SET_RVAL(cx, vp, result);
   return JS_TRUE;
+}
+
+JSBool
+PointerType::OffsetBy(JSContext* cx, intN offset, jsval* vp)
+{
+  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  if (!obj || !CData::IsCData(cx, obj)) {
+    JS_ReportError(cx, "not a CData");
+    return JS_FALSE;
+  }
+
+  JSObject* typeObj = CData::GetCType(cx, obj);
+  if (CType::GetTypeCode(cx, typeObj) != TYPE_pointer) {
+    JS_ReportError(cx, "not a PointerType");
+    return JS_FALSE;
+  }
+
+  JSObject* baseType = PointerType::GetBaseType(cx, typeObj);
+  if (!CType::IsSizeDefined(cx, baseType)) {
+    JS_ReportError(cx, "cannot modify pointer of undefined size");
+    return JS_FALSE;
+  }
+
+  size_t elementSize = CType::GetSize(cx, baseType);
+  char* data = static_cast<char*>(*static_cast<void**>(CData::GetData(cx, obj)));
+  void* address = data + offset * elementSize;
+
+  // Create a PointerType CData object containing the new address.
+  JSObject* result = CData::Create(cx, typeObj, NULL, &address, true);
+  if (!result)
+    return JS_FALSE;
+
+  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(result));
+  return JS_TRUE;
+}
+
+JSBool
+PointerType::Increment(JSContext* cx, uintN argc, jsval* vp)
+{
+  return OffsetBy(cx, 1, vp);
+}
+
+JSBool
+PointerType::Decrement(JSContext* cx, uintN argc, jsval* vp)
+{
+  return OffsetBy(cx, -1, vp);
 }
 
 JSBool

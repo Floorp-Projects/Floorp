@@ -7279,7 +7279,7 @@ dnl our own linker.
 if test "$OS_TARGET" = Android; then
     WRAP_LDFLAGS="${WRAP_LDFLAGS} -L$_objdir/dist/lib -lmozutils"
     if test "$MOZ_WIDGET_TOOLKIT" = android; then
-        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr"
+        WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr,--wrap=getaddrinfo,--wrap=freeaddrinfo,--wrap=gai_strerror"
     fi
 fi
 

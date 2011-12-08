@@ -40,6 +40,8 @@
 
 /*
  * Double hashing implementation.
+ *
+ * Try to keep this file in sync with xpcom/glue/pldhash.cpp.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -96,7 +98,7 @@ using namespace js;
 #define DECREMENT_RECURSION_LEVEL(table_)                                     \
     JS_BEGIN_MACRO                                                            \
         if (RECURSION_LEVEL(table_) != IMMUTABLE_RECURSION_LEVEL) {           \
-            JSDHASH_ONELINE_ASSERT(RECURSION_LEVEL(table_) > 0);              \
+            JS_ASSERT(RECURSION_LEVEL(table_) > 0);                           \
             --RECURSION_LEVEL(table_);                                        \
         }                                                                     \
     JS_END_MACRO
@@ -781,6 +783,48 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
     DECREMENT_RECURSION_LEVEL(table);
 
     return i;
+}
+
+struct SizeOfEntryEnumeratorArg
+{
+    size_t total;
+    JSDHashSizeOfEntryFun sizeOfEntry;
+    JSMallocSizeOfFun mallocSizeOf;
+};
+
+static JSDHashOperator
+SizeOfEntryEnumerator(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
+                      void *arg)
+{
+    SizeOfEntryEnumeratorArg *e = (SizeOfEntryEnumeratorArg *)arg;
+    e->total += e->sizeOfEntry(hdr, e->mallocSizeOf);
+    return JS_DHASH_NEXT;
+}
+
+extern JS_PUBLIC_API(size_t)
+JS_DHashTableSizeOfExcludingThis(JSDHashTable *table,
+                                 JSDHashSizeOfEntryFun sizeOfEntry,
+                                 JSMallocSizeOfFun mallocSizeOf)
+{
+    size_t n = 0;
+    n += mallocSizeOf(table->entryStore,
+                      JS_DHASH_TABLE_SIZE(table) * table->entrySize +
+                      ENTRY_STORE_EXTRA);
+    if (sizeOfEntry) {
+        SizeOfEntryEnumeratorArg arg = { 0, sizeOfEntry, mallocSizeOf };
+        JS_DHashTableEnumerate(table, SizeOfEntryEnumerator, &arg);
+        n += arg.total;
+    }
+    return n;
+}
+
+extern JS_PUBLIC_API(size_t)
+JS_DHashTableSizeOfIncludingThis(JSDHashTable *table,
+                                 JSDHashSizeOfEntryFun sizeOfEntry,
+                                 JSMallocSizeOfFun mallocSizeOf)
+{
+    return mallocSizeOf(table, sizeof(JSDHashTable)) +
+           JS_DHashTableSizeOfExcludingThis(table, sizeOfEntry, mallocSizeOf);
 }
 
 #ifdef DEBUG

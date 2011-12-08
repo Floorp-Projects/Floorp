@@ -62,6 +62,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
 #include "xpcpublic.h"
+#include "nsCrossSiteListenerProxy.h"
 
 using namespace mozilla;
 
@@ -85,6 +86,7 @@ nsEventSource::nsEventSource() :
   mFrozen(false),
   mErrorLoadOnRedirect(false),
   mGoingToDispatchAllMessages(false),
+  mWithCredentials(false),
   mLastConvertionResult(NS_OK),
   mReadyState(nsIEventSource::CONNECTING),
   mScriptLine(0),
@@ -95,11 +97,6 @@ nsEventSource::nsEventSource() :
 nsEventSource::~nsEventSource()
 {
   Close();
-
-  if (mListenerManager) {
-    mListenerManager->Disconnect();
-    mListenerManager = nsnull;
-  }
 }
 
 //-----------------------------------------------------------------------------
@@ -162,6 +159,14 @@ nsEventSource::GetReadyState(PRInt32 *aReadyState)
 {
   NS_ENSURE_ARG_POINTER(aReadyState);
   *aReadyState = mReadyState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventSource::GetWithCredentials(bool *aWithCredentials)
+{
+  NS_ENSURE_ARG_POINTER(aWithCredentials);
+  *aWithCredentials = mWithCredentials;
   return NS_OK;
 }
 
@@ -230,7 +235,8 @@ NS_IMETHODIMP
 nsEventSource::Init(nsIPrincipal* aPrincipal,
                     nsIScriptContext* aScriptContext,
                     nsPIDOMWindow* aOwnerWindow,
-                    const nsAString& aURL)
+                    const nsAString& aURL,
+                    bool aWithCredentials)
 {
   NS_ENSURE_ARG(aPrincipal);
 
@@ -240,6 +246,7 @@ nsEventSource::Init(nsIPrincipal* aPrincipal,
 
   mPrincipal = aPrincipal;
   mScriptContext = aScriptContext;
+  mWithCredentials = aWithCredentials;
   if (aOwnerWindow) {
     mOwner = aOwnerWindow->IsOuterWindow() ?
       aOwnerWindow->GetCurrentInnerWindow() : aOwnerWindow;
@@ -290,8 +297,8 @@ nsEventSource::Init(nsIPrincipal* aPrincipal,
   rv = os->AddObserver(this, DOM_WINDOW_THAWED_TOPIC, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsXPIDLCString origin;
-  rv = mPrincipal->GetOrigin(getter_Copies(origin));
+  nsAutoString origin;
+  rv = nsContentUtils::GetUTFOrigin(srcURI, origin);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString spec;
@@ -376,7 +383,31 @@ nsEventSource::Initialize(nsISupports* aOwner,
   nsCOMPtr<nsIPrincipal> principal = scriptPrincipal->GetPrincipal();
   NS_ENSURE_STATE(principal);
 
-  return Init(principal, scriptContext, ownerWindow, urlParam);
+  bool withCredentialsParam = false;
+  if (aArgc >= 2) {
+    NS_ENSURE_TRUE(!JSVAL_IS_PRIMITIVE(aArgv[1]), NS_ERROR_INVALID_ARG);
+
+    JSObject *obj = JSVAL_TO_OBJECT(aArgv[1]);
+    NS_ASSERTION(obj, "obj shouldn't be null!!");
+
+    JSBool hasProperty = JS_FALSE;
+    NS_ENSURE_TRUE(JS_HasProperty(aContext, obj, "withCredentials",
+                                  &hasProperty), NS_ERROR_FAILURE);
+
+    if (hasProperty) {
+      jsval withCredentialsVal;
+      NS_ENSURE_TRUE(JS_GetProperty(aContext, obj, "withCredentials",
+                                    &withCredentialsVal), NS_ERROR_FAILURE);
+
+      JSBool withCredentials = JS_FALSE;
+      NS_ENSURE_TRUE(JS_ValueToBoolean(aContext, withCredentialsVal,
+                                       &withCredentials), NS_ERROR_FAILURE);
+      withCredentialsParam = !!withCredentials;
+    }
+  }
+
+  return Init(principal, scriptContext, ownerWindow,
+              urlParam, withCredentialsParam);
 }
 
 //-----------------------------------------------------------------------------
@@ -886,8 +917,13 @@ nsEventSource::InitChannelAndRequestEventSource()
   rv = SetupHttpChannel();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIStreamListener> listener =
+    new nsCORSListenerProxy(this, mPrincipal, mHttpChannel,
+                            mWithCredentials, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Start reading from the channel
-  return mHttpChannel->AsyncOpen(this, nsnull);
+  return mHttpChannel->AsyncOpen(listener, nsnull);
 }
 
 void
@@ -1173,15 +1209,12 @@ nsEventSource::CheckCanRequestSrc(nsIURI* aSrc)
     return false;
   }
 
-  bool isSameOrigin = false;
   bool isValidURI = false;
   bool isValidContentLoadPolicy = false;
   bool isValidProtocol = false;
 
   nsCOMPtr<nsIURI> srcToTest = aSrc ? aSrc : mSrc.get();
   NS_ENSURE_TRUE(srcToTest, false);
-
-  isSameOrigin = NS_SUCCEEDED(mPrincipal->CheckMayLoad(srcToTest, false));
 
   PRUint32 aCheckURIFlags =
     nsIScriptSecurityManager::DISALLOW_INHERIT_PRINCIPAL |
@@ -1222,8 +1255,7 @@ nsEventSource::CheckCanRequestSrc(nsIURI* aSrc)
                       targetURIScheme.EqualsLiteral("https");
   }
 
-  return isSameOrigin && isValidURI && isValidContentLoadPolicy &&
-         isValidProtocol;
+  return isValidURI && isValidContentLoadPolicy && isValidProtocol;
 }
 
 // static
@@ -1387,7 +1419,7 @@ nsEventSource::DispatchAllMessageEvents()
     rv = messageEvent->InitMessageEvent(message->mEventName,
                                         false, false,
                                         jsData,
-                                        NS_ConvertUTF8toUTF16(mOrigin),
+                                        mOrigin,
                                         message->mLastEventID, nsnull);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to init the message event!!!");

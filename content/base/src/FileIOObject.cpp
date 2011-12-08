@@ -88,12 +88,6 @@ FileIOObject::FileIOObject()
     mTotal(0), mTransferred(0)
 {}
 
-FileIOObject::~FileIOObject()
-{
-  if (mListenerManager)
-    mListenerManager->Disconnect();
-}
-
 void
 FileIOObject::StartProgressEventTimer()
 {

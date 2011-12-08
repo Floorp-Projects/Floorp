@@ -87,8 +87,10 @@
                                if (gContextMenu.shouldDisplay)
                                  document.popupNode = this.triggerNode;
                                return gContextMenu.shouldDisplay;"
-               onpopuphiding="if (event.target == this)
-                                gContextMenu = null;">
+               onpopuphiding="if (event.target != this)
+                                return;
+                              gContextMenu.hiding();
+                              gContextMenu = null;">
 #include browser-context.inc
     </menupopup>
   </popupset>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+    <ScrollView android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dip"
+                android:layout_alignParentTop="true">
+
+        <LinearLayout android:id="@+id/doorhanger_container"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:orientation="vertical"
+                      android:background="@drawable/doorhanger_popup_bg"/>
+
+    </ScrollView>
+
+    <ImageView android:layout_width="43dip"
+               android:layout_height="15dip"
+               android:layout_marginLeft="4dip"
+               android:layout_marginTop="10dip"
+               android:layout_alignParentTop="true"
+               android:src="@drawable/doorhanger_arrow"
+               android:scaleType="fitXY"/>
+
+</RelativeLayout>

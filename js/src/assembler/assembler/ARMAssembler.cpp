@@ -112,10 +112,10 @@ ARMWord ARMAssembler::getOp2RegScale(RegisterID reg, ARMWord scale)
     : // No clobbers.
     );
 #else
-    ARMWord lz = 0; // Accumulate leading zeroes.
+    lz = 0; // Accumulate leading zeroes.
     for (ARMWord s = 16; s > 0; s /= 2) {
         ARMWord mask = 0xffffffff << (32-lz-s);
-        if ((x & mask) == 0) {
+        if ((scale & mask) == 0) {
             lz += s;
         }
     }

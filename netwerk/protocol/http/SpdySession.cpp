@@ -128,7 +128,8 @@ SpdySession::Shutdown(nsAHttpTransaction *key,
 
 SpdySession::~SpdySession()
 {
-  LOG3(("SpdySession::~SpdySession %p", this));
+  LOG3(("SpdySession::~SpdySession %p mDownstreamState=%X",
+        this, mDownstreamState));
 
   inflateEnd(&mDownstreamZlib);
   deflateEnd(&mUpstreamZlib);
@@ -271,7 +272,7 @@ SpdySession::ActivateStream(SpdyStream *stream)
   mConcurrent++;
   if (mConcurrent > mConcurrentHighWater)
     mConcurrentHighWater = mConcurrent;
-  LOG3(("SpdySession::AddStream %p activating stream %p Currently %d"
+  LOG3(("SpdySession::AddStream %p activating stream %p Currently %d "
         "streams in session, high water mark is %d",
         this, stream, mConcurrent, mConcurrentHighWater));
 
@@ -1336,9 +1337,11 @@ SpdySession::WriteSegments(nsAHttpSegmentWriter *writer,
                                 8 - mFrameBufferUsed,
                                 countWritten);
     if (NS_FAILED(rv)) {
-      if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+      LOG3(("SpdySession %p buffering frame header read failure %x\n",
+            this, rv));
+      // maybe just blocked reading from network
+      if (rv == NS_BASE_STREAM_WOULD_BLOCK)
         ResumeRecv(nsnull);
-      }
       return rv;
     }
 
@@ -1479,8 +1482,10 @@ SpdySession::WriteSegments(nsAHttpSegmentWriter *writer,
     rv = writer->OnWriteSegment(trash, count, countWritten);
 
     if (NS_FAILED(rv)) {
+      LOG3(("SpdySession %p discard frame read failure %x\n", this, rv));
       // maybe just blocked reading from network
-      ResumeRecv(nsnull);
+      if (rv == NS_BASE_STREAM_WOULD_BLOCK)
+        ResumeRecv(nsnull);
       return rv;
     }
 
@@ -1502,8 +1507,11 @@ SpdySession::WriteSegments(nsAHttpSegmentWriter *writer,
                               mFrameDataSize - mFrameDataRead,
                               countWritten);
   if (NS_FAILED(rv)) {
+    LOG3(("SpdySession %p buffering control frame read failure %x\n",
+          this, rv));
     // maybe just blocked reading from network
-    ResumeRecv(nsnull);
+    if (rv == NS_BASE_STREAM_WOULD_BLOCK)
+      ResumeRecv(nsnull);
     return rv;
   }
 
@@ -1712,7 +1720,7 @@ SpdySession::ResumeRecv(nsAHttpTransaction *caller)
 bool
 SpdySession::IsPersistent()
 {
-  return PR_TRUE;
+  return true;
 }
 
 nsresult
@@ -1770,7 +1778,7 @@ bool
 SpdySession::IsDone()
 {
   NS_ABORT_IF_FALSE(false, "SpdySession::IsDone()");
-  return PR_FALSE;
+  return false;
 }
 
 nsresult

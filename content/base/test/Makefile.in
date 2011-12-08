@@ -494,6 +494,7 @@ _TEST_FILES2 = \
 		badHTTPResponseCode.eventsource^headers^ \
 		badMessageEvent.eventsource \
 		badMessageEvent.eventsource^headers^ \
+		file_restrictedEventSource.sjs \
 		forRemoval.resource \
 		forRemoval.resource^headers^ \
 		accesscontrol.resource \
@@ -510,6 +511,7 @@ _TEST_FILES2 = \
 		file_html_in_xhr2.html \
 		file_html_in_xhr3.html \
 		file_html_in_xhr.sjs \
+		test_bug647518.html \
 		test_bug664916.html \
 		test_bug666604.html \
 		test_bug675121.html \
@@ -528,6 +530,9 @@ _TEST_FILES2 = \
 		test_bug693875.html \
 		test_nodelist_holes.html \
 		test_xhr_abort_after_load.html \
+		test_bug702439.html \
+		test_bug702439.html^headers^ \
+		file_bug702439.html \
 		$(NULL)
 
 _CHROME_FILES =	\
