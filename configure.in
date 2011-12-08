@@ -7710,7 +7710,7 @@ dnl ========================================================
 AC_MSG_CHECKING([for gcc -pipe support])
 if test -n "$GNU_CC" -a -n "$GNU_CXX" -a -n "$GNU_AS"; then
     echo '#include <stdio.h>' > dummy-hello.c
-    echo 'int main() { printf("Hello World\n"); exit(0); }' >> dummy-hello.c
+    echo 'int main() { printf("Hello World"); exit(0); }' >> dummy-hello.c
     ${CC} -S dummy-hello.c -o dummy-hello.s 2>&5
     cat dummy-hello.s 2> /dev/null | ${AS_BIN} -o dummy-hello.S - 2>&5
     if test $? = 0; then
