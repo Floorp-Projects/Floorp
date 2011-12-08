@@ -80,6 +80,7 @@
     _(OsrEntry)                     \
     _(OsrValue)                     \
     _(Slots)                        \
+    _(Elements)                     \
     _(LoadSlotV)                    \
     _(LoadSlotT)                    \
     _(StoreSlotV)                   \

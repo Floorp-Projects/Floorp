@@ -277,8 +277,16 @@ CodeGenerator::visitPointer(LPointer *lir)
 bool
 CodeGenerator::visitSlots(LSlots *lir)
 {
-    Address slots(ToRegister(lir->input()), JSObject::offsetOfSlots());
+    Address slots(ToRegister(lir->object()), JSObject::offsetOfSlots());
     masm.loadPtr(slots, ToRegister(lir->output()));
+    return true;
+}
+
+bool
+CodeGenerator::visitElements(LElements *lir)
+{
+    Address elements(ToRegister(lir->object()), JSObject::offsetOfElements());
+    masm.loadPtr(elements, ToRegister(lir->output()));
     return true;
 }
 
@@ -350,7 +358,7 @@ CodeGenerator::generateBody()
 bool
 CodeGenerator::visitInitializedLength(LInitializedLength *lir)
 {
-    Address initLength(ToRegister(lir->input()), ObjectElements::offsetOfInitializedLength());
+    Address initLength(ToRegister(lir->elements()), ObjectElements::offsetOfInitializedLength());
     masm.load32(initLength, ToRegister(lir->output()));
     return true;
 }
