@@ -227,7 +227,8 @@ class CompartmentChecker
     }
 
     void check(StackFrame *fp) {
-        check(&fp->scopeChain());
+        if (fp)
+            check(&fp->scopeChain());
     }
 };
 
