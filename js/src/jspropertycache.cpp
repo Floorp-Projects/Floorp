@@ -119,7 +119,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
      * opcode format flags.
      */
     jsbytecode *pc;
-    JSScript *script = cx->stack.currentScript(&pc);
+    (void) cx->stack.currentScript(&pc);
     op = JSOp(*pc);
     cs = &js_CodeSpec[op];
 
