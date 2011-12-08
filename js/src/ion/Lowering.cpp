@@ -39,7 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "IonLIR.h"
+#include "LIR.h"
 #include "Lowering.h"
 #include "MIR.h"
 #include "MIRGraph.h"

@@ -44,7 +44,7 @@
 
 #include "MIR.h"
 #include "MIRGraph.h"
-#include "IonLIR.h"
+#include "LIR.h"
 
 namespace js {
 namespace ion {

@@ -46,7 +46,7 @@
 // MIRGraph.
 
 #include "ion/IonAllocPolicy.h"
-#include "ion/IonLIR.h"
+#include "ion/LIR.h"
 
 namespace js {
 namespace ion {

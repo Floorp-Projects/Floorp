@@ -39,7 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ion/IonLIR.h"
+#include "ion/LIR.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
 #include "Lowering-shared.h"

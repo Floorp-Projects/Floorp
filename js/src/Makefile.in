@@ -326,7 +326,7 @@ CPPSRCS +=	MIR.cpp \
 		Lowering.cpp \
 		Ion.cpp \
 		BitSet.cpp \
-		IonLIR.cpp \
+		LIR.cpp \
 		GreedyAllocator.cpp \
 		C1Spewer.cpp \
 		JSONSpewer.cpp \

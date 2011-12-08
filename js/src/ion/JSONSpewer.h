@@ -46,7 +46,7 @@
 
 #include "MIR.h"
 #include "MIRGraph.h"
-#include "IonLIR.h"
+#include "LIR.h"
 #include "LinearScan.h"
 
 namespace js {
