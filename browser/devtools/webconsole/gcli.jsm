@@ -1495,6 +1495,13 @@ exports.lookup = function(key) {
   }
 };
 
+/** @see propertyLookup in lib/gcli/l10n.js */
+exports.propertyLookup = Proxy.create({
+  get: function(rcvr, name) {
+    return exports.lookup(name);
+  }
+});
+
 /** @see lookupFormat in lib/gcli/l10n.js */
 exports.lookupFormat = function(key, swaps) {
   try {
@@ -5127,7 +5134,7 @@ help.startup = function() {
       if (match) {
         var clone = helpManTemplate.cloneNode(true);
         domtemplate.template(clone, getManTemplateData(match, context),
-                { stack: 'help_man.html' });
+                { allowEval: true, stack: 'help_man.html' });
         return clone;
       }
 
@@ -5200,6 +5207,9 @@ function executeCommand(element, context) {
  */
 function getListTemplateData(args, context) {
   return {
+    l10n: l10n.propertyLookup,
+    lang: context.document.defaultView.navigator.language,
+
     onclick: function(ev) {
       updateCommand(ev.currentTarget, context);
     },
@@ -5237,6 +5247,9 @@ function getListTemplateData(args, context) {
  */
 function getManTemplateData(command, context) {
   return {
+    l10n: l10n.propertyLookup,
+    lang: context.document.defaultView.navigator.language,
+
     command: command,
 
     onclick: function(ev) {
@@ -5275,15 +5288,12 @@ define('gcli/ui/domtemplate', ['require', 'exports', 'module' ], function(requir
 });
 define("text!gcli/commands/help.css", [], void 0);
 define("text!gcli/commands/help_intro.html", [], "\n" +
-  "<h2>Welcome to GCLI</h2>\n" +
-  "\n" +
-  "<p>GCLI is an experiment to create a highly usable JavaScript command line for developers.</p>\n" +
+  "<h2>${l10n.introHeader}</h2>\n" +
   "\n" +
   "<p>\n" +
-  "  Useful links:\n" +
-  "  <a target='_blank' href='https://github.com/joewalker/gcli'>source</a> (BSD),\n" +
-  "  <a target='_blank' href='https://github.com/joewalker/gcli/blob/master/docs/index.md'>documentation</a> (for users/embedders),\n" +
-  "  <a target='_blank' href='https://wiki.mozilla.org/DevTools/Features/GCLI'>Mozilla feature page</a> (for GCLI in the web console).\n" +
+  "  <a target=\"_blank\" href=\"https://developer.mozilla.org/AppLinks/WebConsoleHelp?locale=${lang}\">\n" +
+  "    ${l10n.introBody}\n" +
+  "  </a>\n" +
   "</p>\n" +
   "");
 
@@ -5307,7 +5317,7 @@ define("text!gcli/commands/help_man.html", [], "\n" +
   "<h3>${command.name}</h3>\n" +
   "\n" +
   "<h4 class=\"gcli-help-header\">\n" +
-  "  Synopsis:\n" +
+  "  ${l10n.helpManSynopsis}:\n" +
   "  <span class=\"gcli-help-synopsis\" onclick=\"${onclick}\">\n" +
   "    <span class=\"gcli-help-command\">${command.name}</span>\n" +
   "    <span foreach=\"param in ${command.params}\">\n" +
@@ -5316,16 +5326,16 @@ define("text!gcli/commands/help_man.html", [], "\n" +
   "  </span>\n" +
   "</h4>\n" +
   "\n" +
-  "<h4 class=\"gcli-help-header\">Description:</h4>\n" +
+  "<h4 class=\"gcli-help-header\">${l10n.helpManDescription}:</h4>\n" +
   "\n" +
   "<p class=\"gcli-help-description\">\n" +
   "  ${command.manual || command.description}\n" +
   "</p>\n" +
   "\n" +
-  "<h4 class=\"gcli-help-header\">Parameters:</h4>\n" +
+  "<h4 class=\"gcli-help-header\">${l10n.helpManParameters}:</h4>\n" +
   "\n" +
   "<ul class=\"gcli-help-parameter\">\n" +
-  "  <li if=\"${command.params.length === 0}\">None</li>\n" +
+  "  <li if=\"${command.params.length === 0}\">${l10n.helpManNone}</li>\n" +
   "  <li foreach=\"param in ${command.params}\">\n" +
   "    <tt>${param.name}</tt> ${getTypeDescription(param)}\n" +
   "    <br/>\n" +
