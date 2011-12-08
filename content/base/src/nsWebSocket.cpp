@@ -400,10 +400,7 @@ nsWebSocket::nsWebSocket() : mKeepingAlive(false),
 nsWebSocket::~nsWebSocket()
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
-  if (mListenerManager) {
-    mListenerManager->Disconnect();
-    mListenerManager = nsnull;
-  }
+
   Disconnect();
   nsLayoutStatics::Release();
 }
