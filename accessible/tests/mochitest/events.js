@@ -328,7 +328,7 @@ function eventQueue(aEventType)
     }
 
     // Check in timeout invoker didn't fire registered events.
-    window.setTimeout(function(aQueue) { aQueue.processNextInvoker(); }, 100,
+    window.setTimeout(function(aQueue) { aQueue.processNextInvoker(); }, 300,
                       this);
   }
 

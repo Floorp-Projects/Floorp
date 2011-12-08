@@ -37,6 +37,7 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.FloatUtils;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import org.json.JSONException;
@@ -117,5 +118,16 @@ public final class RectUtils {
         float x = Math.max(dest.left, Math.min(dest.right-width, rect.left));
         float y = Math.max(dest.top, Math.min(dest.bottom-height, rect.top));
         return new RectF(x, y, x+width, y+height);
+    }
+
+    /*
+     * Returns the rect that represents a linear transition between `from` and `to` at time `t`,
+     * which is on the scale [0, 1).
+     */
+    public static RectF interpolate(RectF from, RectF to, float t) {
+        return new RectF(FloatUtils.interpolate(from.left, to.left, t),
+                         FloatUtils.interpolate(from.top, to.top, t),
+                         FloatUtils.interpolate(from.right, to.right, t),
+                         FloatUtils.interpolate(from.bottom, to.bottom, t));
     }
 }

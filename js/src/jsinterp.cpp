@@ -161,13 +161,13 @@ js::GetBlockChain(JSContext *cx, StackFrame *fp)
      * If the debugger asks for the scope chain at a pc where we are about to
      * fix it up, advance target past the fixup. See bug 672804.
      */
-    JSOp op = js_GetOpcode(cx, script, target);
+    JSOp op = JSOp(*target);
     while (op == JSOP_NOP || op == JSOP_INDEXBASE || op == JSOP_INDEXBASE1 ||
            op == JSOP_INDEXBASE2 || op == JSOP_INDEXBASE3 ||
            op == JSOP_BLOCKCHAIN || op == JSOP_NULLBLOCKCHAIN)
     {
         target += js_CodeSpec[op].length;
-        op = js_GetOpcode(cx, script, target);
+        op = JSOp(*target);
     }
     JS_ASSERT(target >= start && target < start + script->length);
 
@@ -175,7 +175,7 @@ js::GetBlockChain(JSContext *cx, StackFrame *fp)
     uintN indexBase = 0;
     ptrdiff_t oplen;
     for (jsbytecode *pc = start; pc < target; pc += oplen) {
-        JSOp op = js_GetOpcode(cx, script, pc);
+        JSOp op = JSOp(*pc);
         const JSCodeSpec *cs = &js_CodeSpec[op];
         oplen = cs->length;
         if (oplen < 0)
@@ -212,12 +212,12 @@ js::GetBlockChainFast(JSContext *cx, StackFrame *fp, JSOp op, size_t oplen)
 {
     /* Assume that we're in a script frame. */
     jsbytecode *pc = fp->pcQuadratic(cx->stack);
-    JS_ASSERT(js_GetOpcode(cx, fp->script(), pc) == op);
+    JS_ASSERT(JSOp(*pc) == op);
 
     pc += oplen;
     op = JSOp(*pc);
 
-    /* The fast paths assume no JSOP_RESETBASE/INDEXBASE or JSOP_TRAP noise. */
+    /* The fast paths assume no JSOP_RESETBASE/INDEXBASE noise. */
     if (op == JSOP_NULLBLOCKCHAIN)
         return NULL;
     if (op == JSOP_BLOCKCHAIN)
@@ -1535,8 +1535,7 @@ TypeCheckNextBytecode(JSContext *cx, JSScript *script, unsigned n, const FrameRe
 {
 #ifdef DEBUG
     if (cx->typeInferenceEnabled() &&
-        *regs.pc != JSOP_TRAP &&
-        n == analyze::GetBytecodeLength(regs.pc)) {
+        n == GetBytecodeLength(regs.pc)) {
         TypeScript::CheckBytecode(cx, script, regs.pc, regs.sp);
     }
 #endif
@@ -1672,16 +1671,15 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 #define CHECK_PARTIAL_METHODJIT(status)                                       \
     JS_BEGIN_MACRO                                                            \
-        if (status == mjit::Jaeger_Unfinished) {                              \
+        switch (status) {                                                     \
+          case mjit::Jaeger_UnfinishedAtTrap:                                 \
+            interpMode = JSINTERP_SKIP_TRAP;                                  \
+            /* FALLTHROUGH */                                                 \
+          case mjit::Jaeger_Unfinished:                                       \
             op = (JSOp) *regs.pc;                                             \
             RESTORE_INTERP_VARS_CHECK_EXCEPTION();                            \
             DO_OP();                                                          \
-        } else if (status == mjit::Jaeger_UnfinishedAtTrap) {                 \
-            interpMode = JSINTERP_SKIP_TRAP;                                  \
-            JS_ASSERT(JSOp(*regs.pc) == JSOP_TRAP);                           \
-            op = JSOP_TRAP;                                                   \
-            RESTORE_INTERP_VARS_CHECK_EXCEPTION();                            \
-            DO_OP();                                                          \
+          default:;                                                           \
         }                                                                     \
     JS_END_MACRO
 
@@ -1729,10 +1727,12 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #define SET_SCRIPT(s)                                                         \
     JS_BEGIN_MACRO                                                            \
         script = (s);                                                         \
-        if (script->stepModeEnabled())                                        \
+        if (script->hasAnyBreakpointsOrStepMode())                            \
             ENABLE_INTERRUPTS();                                              \
-        if (script->pcCounters)                                             \
+        if (script->pcCounters)                                               \
             ENABLE_INTERRUPTS();                                              \
+        JS_ASSERT_IF(interpMode == JSINTERP_SKIP_TRAP,                        \
+                     script->hasAnyBreakpointsOrStepMode());                  \
     JS_END_MACRO
 
 #define CHECK_INTERRUPT_HANDLER()                                             \
@@ -1814,8 +1814,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     /* The REJOIN mode acts like the normal mode, except the prologue is skipped. */
     if (interpMode == JSINTERP_REJOIN)
         interpMode = JSINTERP_NORMAL;
-
-    JS_ASSERT_IF(interpMode == JSINTERP_SKIP_TRAP, JSOp(*regs.pc) == JSOP_TRAP);
 
     CHECK_INTERRUPT_HANDLER();
 
@@ -1903,6 +1901,32 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
             moreInterrupts = true;
         }
 
+        if (script->hasAnyBreakpointsOrStepMode())
+            moreInterrupts = true;
+
+        if (script->hasBreakpointsAt(regs.pc) && interpMode != JSINTERP_SKIP_TRAP) {
+            Value rval;
+            JSTrapStatus status = Debugger::onTrap(cx, &rval);
+            switch (status) {
+              case JSTRAP_ERROR:
+                goto error;
+              case JSTRAP_RETURN:
+                regs.fp()->setReturnValue(rval);
+                interpReturnOK = JS_TRUE;
+                goto forced_return;
+              case JSTRAP_THROW:
+                cx->setPendingException(rval);
+                goto error;
+              default:
+                break;
+            }
+            JS_ASSERT(status == JSTRAP_CONTINUE);
+            CHECK_INTERRUPT_HANDLER();
+            JS_ASSERT(rval.isInt32() && rval.toInt32() == op);
+        }
+
+        interpMode = JSINTERP_NORMAL;
+
 #if JS_THREADED_INTERP
         jumpTable = moreInterrupts ? interruptJumpTable : normalJumpTable;
         JS_EXTENSION_(goto *normalJumpTable[op]);
@@ -1916,6 +1940,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 /* No-ops for ease of decompilation. */
 ADD_EMPTY_CASE(JSOP_NOP)
 ADD_EMPTY_CASE(JSOP_UNUSED0)
+ADD_EMPTY_CASE(JSOP_UNUSED1)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
 #if JS_HAS_XML_SUPPORT
@@ -2064,7 +2089,7 @@ BEGIN_CASE(JSOP_STOP)
 
         RESTORE_INTERP_VARS();
 
-        JS_ASSERT(*regs.pc == JSOP_TRAP || *regs.pc == JSOP_NEW || *regs.pc == JSOP_CALL ||
+        JS_ASSERT(*regs.pc == JSOP_NEW || *regs.pc == JSOP_CALL ||
                   *regs.pc == JSOP_FUNCALL || *regs.pc == JSOP_FUNAPPLY);
 
         /* Resume execution in the calling frame. */
@@ -3600,7 +3625,7 @@ BEGIN_CASE(JSOP_CALLNAME)
         goto error;
     if (!prop) {
         /* Kludge to allow (typeof foo == "undefined") tests. */
-        JSOp op2 = js_GetOpcode(cx, script, regs.pc + JSOP_NAME_LENGTH);
+        JSOp op2 = JSOp(regs.pc[JSOP_NAME_LENGTH]);
         if (op2 == JSOP_TYPEOF) {
             PUSH_UNDEFINED();
             TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
@@ -3877,37 +3902,6 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
           : GET_JUMPX_OFFSET(pc2);
 }
 END_VARLEN_CASE
-}
-
-BEGIN_CASE(JSOP_TRAP)
-{
-    if (interpMode == JSINTERP_SKIP_TRAP) {
-        interpMode = JSINTERP_NORMAL;
-        op = JS_GetTrapOpcode(cx, script, regs.pc);
-        DO_OP();
-    }
-
-    Value rval;
-    JSTrapStatus status = Debugger::onTrap(cx, &rval);
-    switch (status) {
-      case JSTRAP_ERROR:
-        goto error;
-      case JSTRAP_RETURN:
-        regs.fp()->setReturnValue(rval);
-        interpReturnOK = JS_TRUE;
-        goto forced_return;
-      case JSTRAP_THROW:
-        cx->setPendingException(rval);
-        goto error;
-      default:
-        break;
-    }
-    JS_ASSERT(status == JSTRAP_CONTINUE);
-    CHECK_INTERRUPT_HANDLER();
-    JS_ASSERT(rval.isInt32());
-    op = (JSOp) rval.toInt32();
-    JS_ASSERT((uintN)op < (uintN)JSOP_LIMIT);
-    DO_OP();
 }
 
 BEGIN_CASE(JSOP_ARGUMENTS)
@@ -4277,7 +4271,7 @@ BEGIN_CASE(JSOP_LAMBDA)
 
                 if (op2 == JSOP_SETMETHOD) {
 #ifdef DEBUG
-                    op2 = js_GetOpcode(cx, script, pc2 + JSOP_SETMETHOD_LENGTH);
+                    op2 = JSOp(pc2[JSOP_SETMETHOD_LENGTH]);
                     JS_ASSERT(op2 == JSOP_POP || op2 == JSOP_POPV);
 #endif
                     const Value &lref = regs.sp[-1];
@@ -4360,7 +4354,7 @@ BEGIN_CASE(JSOP_GETTER)
 BEGIN_CASE(JSOP_SETTER)
 {
   do_getter_setter:
-    JSOp op2 = js_GetOpcode(cx, script, ++regs.pc);
+    JSOp op2 = JSOp(*++regs.pc);
     jsid id;
     Value rval;
     jsint i;
@@ -4618,7 +4612,7 @@ BEGIN_CASE(JSOP_INITELEM)
         JS_ASSERT(obj->isArray());
         JS_ASSERT(JSID_IS_INT(id));
         JS_ASSERT(jsuint(JSID_TO_INT(id)) < StackSpace::ARGS_LENGTH_MAX);
-        if (js_GetOpcode(cx, script, regs.pc + JSOP_INITELEM_LENGTH) == JSOP_ENDINIT &&
+        if (JSOp(regs.pc[JSOP_INITELEM_LENGTH]) == JSOP_ENDINIT &&
             !js_SetLengthProperty(cx, obj, (jsuint) (JSID_TO_INT(id) + 1))) {
             goto error;
         }
@@ -5510,7 +5504,7 @@ END_CASE(JSOP_ARRAYPUSH)
 
               case JSTRY_ITER: {
                 /* This is similar to JSOP_ENDITER in the interpreter loop. */
-                JS_ASSERT(js_GetOpcode(cx, regs.fp()->script(), regs.pc) == JSOP_ENDITER);
+                JS_ASSERT(JSOp(*regs.pc) == JSOP_ENDITER);
                 Value v = cx->getPendingException();
                 cx->clearPendingException();
                 ok = js_CloseIterator(cx, &regs.sp[-1].toObject());

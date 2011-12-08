@@ -999,13 +999,6 @@ TabChildGlobal::TabChildGlobal(TabChild* aTabChild)
                                               aTabChild->GetJSContext());
 }
 
-TabChildGlobal::~TabChildGlobal()
-{
-  if (mListenerManager) {
-    mListenerManager->Disconnect();
-  }
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(TabChildGlobal)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TabChildGlobal,

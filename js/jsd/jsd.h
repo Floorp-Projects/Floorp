@@ -187,7 +187,6 @@ struct JSDScript
     JSCList     links;      /* we are part of a JSCList */
     JSDContext* jsdc;       /* JSDContext for this jsdscript */
     JSScript*   script;     /* script we are wrapping */
-    JSFunction* function;   /* back pointer to owning function (can be NULL) */
     uintN       lineBase;   /* we cache this */
     uintN       lineExtent; /* we cache this */
     JSCList     hooks;      /* JSCList of JSDExecHooks for this script */

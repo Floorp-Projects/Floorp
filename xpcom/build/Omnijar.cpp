@@ -51,6 +51,7 @@ nsIFile *Omnijar::sPath[2] = { nsnull, nsnull };
 nsZipArchive *Omnijar::sReader[2] = { nsnull, nsnull };
 bool Omnijar::sInitialized = false;
 static bool sIsUnified = false;
+static bool sIsNested[2] = { false, false };
 
 static const char *sProp[2] =
     { NS_GRE_DIR, NS_XPCOM_CURRENT_PROCESS_DIR };
@@ -62,7 +63,7 @@ Omnijar::CleanUpOne(Type aType)
 {
     if (sReader[aType]) {
         sReader[aType]->CloseArchive();
-        delete sReader[aType];
+        NS_IF_RELEASE(sReader[aType]);
     }
     sReader[aType] = nsnull;
     NS_IF_RELEASE(sPath[aType]);
@@ -106,17 +107,22 @@ Omnijar::InitOne(nsIFile *aPath, Type aType)
         return;
     }
 
-    nsZipArchive* zipReader = new nsZipArchive();
-    if (!zipReader)
-        return;
-
+    nsRefPtr<nsZipArchive> zipReader = new nsZipArchive();
     if (NS_FAILED(zipReader->OpenArchive(file))) {
-        delete zipReader;
         return;
+    }
+
+    nsRefPtr<nsZipHandle> handle;
+    if (NS_SUCCEEDED(nsZipHandle::Init(zipReader, NS_STRINGIFY(OMNIJAR_NAME), getter_AddRefs(handle)))) {
+        zipReader = new nsZipArchive();
+        if (NS_FAILED(zipReader->OpenArchive(handle)))
+            return;
+        sIsNested[aType] = true;
     }
 
     CleanUpOne(aType);
     sReader[aType] = zipReader;
+    NS_IF_ADDREF(sReader[aType]);
     sPath[aType] = file;
     NS_IF_ADDREF(sPath[aType]);
 }
@@ -137,7 +143,7 @@ Omnijar::CleanUp()
     sInitialized = false;
 }
 
-nsZipArchive *
+already_AddRefed<nsZipArchive>
 Omnijar::GetReader(nsIFile *aPath)
 {
     NS_ABORT_IF_FALSE(IsInitialized(), "Omnijar not initialized");
@@ -145,15 +151,15 @@ Omnijar::GetReader(nsIFile *aPath)
     bool equals;
     nsresult rv;
 
-    if (sPath[GRE]) {
+    if (sPath[GRE] && !sIsNested[GRE]) {
         rv = sPath[GRE]->Equals(aPath, &equals);
         if (NS_SUCCEEDED(rv) && equals)
-            return sReader[GRE];
+            return GetReader(GRE);
     }
-    if (sPath[APP]) {
+    if (sPath[APP] && !sIsNested[APP]) {
         rv = sPath[APP]->Equals(aPath, &equals);
         if (NS_SUCCEEDED(rv) && equals)
-            return sReader[APP];
+            return GetReader(APP);
     }
     return nsnull;
 }
@@ -176,8 +182,12 @@ Omnijar::GetURIString(Type aType, nsACString &result)
         NS_ENSURE_SUCCESS(rv, rv);
 
         result = "jar:";
+        if (sIsNested[aType])
+            result += "jar:";
         result += omniJarSpec;
         result += "!";
+        if (sIsNested[aType])
+            result += "/" NS_STRINGIFY(OMNIJAR_NAME) "!";
     } else {
         nsCOMPtr<nsIFile> dir;
         nsDirectoryService::gService->Get(SPROP(aType), NS_GET_IID(nsIFile), getter_AddRefs(dir));
