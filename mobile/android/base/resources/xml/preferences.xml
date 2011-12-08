@@ -3,19 +3,22 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                         android:enabled="false">
 
+    <PreferenceCategory android:title="@string/pref_category_general">
+        <!-- TODO: About Firefox -->
+
+        <!-- TODO: Default Search Engine -->
+
+        <!--ListPreference     android:key="general.useragent.locale"
+                            android:title="@string/pref_locale"
+                            android:defaultValue=""
+                            android:entries="@array/pref_homepage_entries"
+                            android:entryValues="@array/pref_homepage_values"
+                            android:persistent="false" /-->
+
+        <!-- TODO: Sync -->
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/pref_category_content">
-
-        <CheckBoxPreference android:key="browser.ui.zoom.reflow"
-                            android:title="@string/pref_zoom_reflow"
-                            android:persistent="false" />
-
-        <CheckBoxPreference android:key="permissions.default.image"
-                            android:title="@string/pref_show_images"
-                            android:persistent="false" />
-
-        <CheckBoxPreference android:key="javascript.enabled"
-                            android:title="@string/pref_enable_js"
-                            android:persistent="false" />
 
         <CheckBoxPreference android:key="browser.menu.showCharacterEncoding"
                             android:title="@string/pref_char_encoding"
@@ -27,13 +30,6 @@
                             android:entries="@array/pref_homepage_entries"
                             android:entryValues="@array/pref_homepage_values"
                             android:persistent="false" />
-
-        <!--ListPreference     android:key="general.useragent.locale"
-                            android:title="@string/pref_locale"
-                            android:defaultValue=""
-                            android:entries="@array/pref_homepage_entries"
-                            android:entryValues="@array/pref_homepage_values"
-                            android:persistent="false" /-->
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_category_privacy">

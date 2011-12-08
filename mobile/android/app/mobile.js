@@ -414,12 +414,6 @@ pref("browser.ui.kinetic.exponentialC", 1400);
 pref("browser.ui.kinetic.polynomialC", 100);
 pref("browser.ui.kinetic.swipeLength", 160);
 
-// zooming
-pref("browser.ui.zoom.pageFitGranularity", 9); // don't zoom to fit by less than 1/9 (11%)
-pref("browser.ui.zoom.animationDuration", 200); // ms duration of double-tap zoom animation
-pref("browser.ui.zoom.reflow", false); // Change text wrapping on double-tap
-pref("browser.ui.zoom.reflow.fontSize", 720);
-
 pref("font.size.inflation.minTwips", 120);
 
 // pinch gesture
@@ -565,7 +559,6 @@ pref("services.sync.autoconnectDelay", 5);
 pref("services.sync.prefs.sync.browser.startup.homepage.title", true);
 pref("services.sync.prefs.sync.browser.startup.homepage", true);
 pref("services.sync.prefs.sync.browser.tabs.warnOnClose", true);
-pref("services.sync.prefs.sync.browser.ui.zoom.reflow", true);
 pref("services.sync.prefs.sync.devtools.errorconsole.enabled", true);
 pref("services.sync.prefs.sync.javascript.enabled", true);
 pref("services.sync.prefs.sync.lightweightThemes.isThemeSelected", true);
