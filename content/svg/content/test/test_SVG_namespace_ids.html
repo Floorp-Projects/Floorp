@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=589640
+-->
+<head>
+  <title>Test for Bug 589640</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script class="testbody" type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    function debug(message) {
+      document.getElementById('debug').appendChild(document.createTextNode(message + "\n"));
+    }
+
+    function runTests()
+    {
+      var svg = document.getElementById('svg1');
+      for (var el = 0; el < svg.children.length; el++) {
+        is(svg.children[el].id, svg.children[el].localName, svg.children[el].localName + " in the SVG namespace has a valid ID");
+        debug(svg.children[el].localName + '.id = ' + svg.children[el].id);
+      }
+
+      SimpleTest.finish();
+    }
+  </script>
+</head>
+<body onload="runTests()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=589640">Mozilla Bug 589640</a>
+<pre id="debug"></pre>
+<!-- NOTE: This test relies on the ids being the same as the element names -->
+<svg id="svg1">
+  <a id="a" />
+  <altGlyph id="altGlyph" />
+  <altGlyphDef id="altGlyphDef" />
+  <altGlyphItem id="altGlyphItem" />
+  <animate id="animate" />
+  <animateColor id="animateColor" />
+  <animateMotion id="animateMotion" />
+  <animateTransform id="animateTransform" />
+  <circle id="circle" />
+  <clipPath id="clipPath" />
+  <color-profile id="color-profile" />
+  <cursor id="cursor" />
+  <defs id="defs" />
+  <desc id="desc" />
+  <ellipse id="ellipse" />
+  <feBlend id="feBlend" />
+  <feColorMatrix id="feColorMatrix" />
+  <feComponentTransfer id="feComponentTransfer" />
+  <feComposite id="feComposite" />
+  <feConvolveMatrix id="feConvolveMatrix" />
+  <feDiffuseLighting id="feDiffuseLighting" />
+  <feDisplacementMap id="feDisplacementMap" />
+  <feDistantLight id="feDistantLight" />
+  <feFlood id="feFlood" />
+  <feFuncA id="feFuncA" />
+  <feFuncB id="feFuncB" />
+  <feFuncG id="feFuncG" />
+  <feFuncR id="feFuncR" />
+  <feGaussianBlur id="feGaussianBlur" />
+  <feImage id="feImage" />
+  <feMerge id="feMerge" />
+  <feMergeNode id="feMergeNode" />
+  <feMorphology id="feMorphology" />
+  <feOffset id="feOffset" />
+  <fePointLight id="fePointLight" />
+  <feSpecularLighting id="feSpecularLighting" />
+  <feSpotLight id="feSpotLight" />
+  <feTile id="feTile" />
+  <feTurbulence id="feTurbulence" />
+  <filter id="filter" />
+  <font id="font" />
+  <font-face id="font-face" />
+  <font-face-format id="font-face-format" />
+  <font-face-name id="font-face-name" />
+  <font-face-src id="font-face-src" />
+  <font-face-uri id="font-face-uri" />
+  <foreignObject id="foreignObject" />
+  <g id="g" />
+  <glyph id="glyph" />
+  <glyphRef id="glyphRef" />
+  <hkern id="hkern" />
+  <image id="image" />
+  <line id="line" />
+  <linearGradient id="linearGradient" />
+  <marker id="marker" />
+  <mask id="mask" />
+  <metadata id="metadata" />
+  <missing-glyph id="missing-glyph" />
+  <mpath id="mpath" />
+  <path id="path" />
+  <pattern id="pattern" />
+  <polygon id="polygon" />
+  <polyline id="polyline" />
+  <radialGradient id="radialGradient" />
+  <rect id="rect" />
+  <script id="script" />
+  <set id="set" />
+  <stop id="stop" />
+  <style id="style" />
+  <svg id="svg" />
+  <switch id="switch" />
+  <symbol id="symbol" />
+  <text id="text" />
+  <textPath id="textPath" />
+  <title id="title" />
+  <tref id="tref" />
+  <tspan id="tspan" />
+  <use id="use" />
+  <view id="view" />
+  <vkern id="vkern" />
+</svg>
+</body>
+</html>
