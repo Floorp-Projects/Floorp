@@ -42,6 +42,7 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.RectUtils;
@@ -214,6 +215,20 @@ public class ViewportMetrics {
         setOrigin(origin);
 
         mZoomFactor = newZoomFactor;
+    }
+
+    /*
+     * Returns the viewport metrics that represent a linear transition between `from` and `to` at
+     * time `t`, which is on the scale [0, 1). This function interpolates the viewport rect, the
+     * page size, the offset, and the zoom factor.
+     */
+    public ViewportMetrics interpolate(ViewportMetrics to, float t) {
+        ViewportMetrics result = new ViewportMetrics();
+        result.mPageSize = mPageSize.interpolate(to.mPageSize, t);
+        result.mZoomFactor = FloatUtils.interpolate(mZoomFactor, to.mZoomFactor, t);
+        result.mViewportRect = RectUtils.interpolate(mViewportRect, to.mViewportRect, t);
+        result.mViewportOffset = PointUtils.interpolate(mViewportOffset, to.mViewportOffset, t);
+        return result;
     }
 
     public String toJSON() {

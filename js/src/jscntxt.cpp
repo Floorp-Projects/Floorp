@@ -617,7 +617,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 
             /* Clear debugging state to remove GC roots. */
             for (CompartmentsIter c(rt); !c.done(); c.next())
-                c->clearTraps(cx, NULL);
+                c->clearTraps(cx);
             JS_ClearAllWatchPoints(cx);
         }
 

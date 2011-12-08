@@ -14,7 +14,7 @@
       onpopuphidden="testtag_finish()">
 <datepicker id="datepicker"/>
 <datepicker id="datepicker-popup" type="popup"/>
-<hbox onDOMMouseScroll="mouseScrolled = event.getPreventDefault();">
+<hbox onDOMMouseScroll="mouseScrolled = event.defaultPrevented;">
   <datepicker id="datepicker-grid" type="grid"/>
 </hbox>
 </hbox>

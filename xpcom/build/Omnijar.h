@@ -44,8 +44,8 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIFile.h"
+#include "nsZipArchive.h"
 
-class nsZipArchive;
 class nsIURI;
 
 namespace mozilla {
@@ -109,8 +109,8 @@ static inline already_AddRefed<nsIFile>
 GetPath(Type aType)
 {
     NS_ABORT_IF_FALSE(IsInitialized(), "Omnijar not initialized");
-    NS_IF_ADDREF(sPath[aType]);
-    return sPath[aType];
+    nsCOMPtr<nsIFile> path = sPath[aType];
+    return path.forget();
 }
 
 /**
@@ -128,18 +128,19 @@ HasOmnijar(Type aType)
  * Returns a nsZipArchive pointer for the omni.jar file for GRE or
  * APP. Returns nsnull in the same cases GetPath() would.
  */
-static inline nsZipArchive *
+static inline already_AddRefed<nsZipArchive>
 GetReader(Type aType)
 {
     NS_ABORT_IF_FALSE(IsInitialized(), "Omnijar not initialized");
-    return sReader[aType];
+    nsRefPtr<nsZipArchive> reader = sReader[aType];
+    return reader.forget();
 }
 
 /**
  * Returns a nsZipArchive pointer for the given path IAOI the given
  * path is the omni.jar for either GRE or APP.
  */
-static nsZipArchive *GetReader(nsIFile *aPath);
+static already_AddRefed<nsZipArchive> GetReader(nsIFile *aPath);
 
 /**
  * Returns the URI string corresponding to the omni.jar or directory

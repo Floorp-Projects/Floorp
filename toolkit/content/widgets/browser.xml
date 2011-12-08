@@ -1214,7 +1214,7 @@
     <handlers>
       <handler event="keypress" keycode="VK_F7" group="system">
         <![CDATA[
-          if (event.getPreventDefault() || !event.isTrusted)
+          if (event.defaultPrevented || !event.isTrusted)
             return;
 
           var isEnabled = this.mPrefs.getBoolPref("accessibility.browsewithcaret_shortcut.enabled");
@@ -1275,7 +1275,7 @@
       </handler>
       <handler event="dragover" group="system">
       <![CDATA[
-        if (!this.droppedLinkHandler || event.getPreventDefault())
+        if (!this.droppedLinkHandler || event.defaultPrevented)
           return;
 
         // For drags that appear to be internal text (for example, tab drags),
@@ -1296,7 +1296,7 @@
       </handler>
       <handler event="drop" group="system">
       <![CDATA[
-        if (!this.droppedLinkHandler || event.getPreventDefault())
+        if (!this.droppedLinkHandler || event.defaultPrevented)
           return;
 
         let name = { };

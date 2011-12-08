@@ -69,7 +69,7 @@ class nsDOMEventTargetHelper : public nsIDOMEventTarget
 {
 public:
   nsDOMEventTargetHelper() {}
-  virtual ~nsDOMEventTargetHelper() {}
+  virtual ~nsDOMEventTargetHelper();
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMEventTargetHelper)
 
