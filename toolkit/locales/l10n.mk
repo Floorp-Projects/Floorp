@@ -103,7 +103,7 @@ else
 STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)
 endif
 
-include $(topsrcdir)/toolkit/mozapps/installer/signing.mk
+include $(MOZILLA_DIR)/toolkit/mozapps/installer/signing.mk
 include $(MOZILLA_DIR)/toolkit/mozapps/installer/packager.mk
 
 $(STAGEDIST): AB_CD:=en-US
