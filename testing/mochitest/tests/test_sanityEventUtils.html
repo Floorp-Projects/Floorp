@@ -46,19 +46,17 @@ function starttest() {
       check = false;
       $("testKeyEvent").addEventListener("keypress", function() { check = true; }, false);
       $("testKeyEvent").focus();
-      sendChar("x");
+      sendChar("x", "testKeyEvent");
       is($("testKeyEvent").value, "x", "sendChar should work");
       is(check, true, "sendChar should dispatch keyPress");
       $("testKeyEvent").value = "";
     
-      $("testStrEvent").focus();
-      sendString("string");
+      sendString("string", "testStrEvent");
       is($("testStrEvent").value, "string", "sendString should work");
       $("testStrEvent").value = "";
     
       check = false;
-      $("testKeyEvent").focus();
-      sendKey("DOWN");
+      sendKey("DOWN", "testKeyEvent");
       is(check, true, "sendKey should dispatch keyPress");
     
       /* test synthesizeMouse* */
