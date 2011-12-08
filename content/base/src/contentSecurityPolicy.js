@@ -102,6 +102,7 @@ function ContentSecurityPolicy() {
   csp._MAPPINGS[cp.TYPE_MEDIA]             = cspr_sd.MEDIA_SRC;
   csp._MAPPINGS[cp.TYPE_FONT]              = cspr_sd.FONT_SRC;
   csp._MAPPINGS[cp.TYPE_XMLHTTPREQUEST]    = cspr_sd.XHR_SRC;
+  csp._MAPPINGS[cp.TYPE_WEBSOCKET]         = cspr_sd.XHR_SRC;
 
 
   /* These must go through the catch-all */

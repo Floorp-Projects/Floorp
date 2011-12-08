@@ -139,6 +139,7 @@ NS_CP_ContentTypeName(PRUint32 contentType)
     CASE_RETURN( TYPE_DTD               );
     CASE_RETURN( TYPE_FONT              );
     CASE_RETURN( TYPE_MEDIA             );
+    CASE_RETURN( TYPE_WEBSOCKET         );
    default:
     return "<Unknown Type>";
   }

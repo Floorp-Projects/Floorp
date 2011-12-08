@@ -39,6 +39,7 @@
 let doc;
 let salutation;
 let closing;
+let winId;
 
 function createDocument()
 {
@@ -182,11 +183,12 @@ function inspectNodesFromContextTestWhileOpen()
 
 function inspectNodesFromContextTestHighlight()
 {
+  winId = InspectorUI.winID;
   Services.obs.removeObserver(inspectNodesFromContextTestHighlight, InspectorUI.INSPECTOR_NOTIFICATIONS.HIGHLIGHTING);
-  Services.obs.addObserver(finishInspectorTests, InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED, false);
+  Services.obs.addObserver(finishInspectorTests, InspectorUI.INSPECTOR_NOTIFICATIONS.DESTROYED, false);
   is(InspectorUI.selection, closing, "InspectorUI.selection is header");
   executeSoon(function() {
-    InspectorUI.closeInspectorUI(true);
+    InspectorUI.closeInspectorUI();
   });
 }
 
@@ -196,11 +198,12 @@ function inspectNodesFromContextTestTrap()
   ok(false, "Inspector UI has been opened again. We Should Not Be Here!");
 }
 
-function finishInspectorTests()
+function finishInspectorTests(subject, topic, aWinIdString)
 {
   Services.obs.removeObserver(finishInspectorTests,
-    InspectorUI.INSPECTOR_NOTIFICATIONS.CLOSED);
+    InspectorUI.INSPECTOR_NOTIFICATIONS.DESTROYED);
 
+  is(parseInt(aWinIdString), winId, "winId of destroyed Inspector matches");
   ok(!InspectorUI.highlighter, "Highlighter is gone");
   ok(!InspectorUI.treePanel, "Inspector Tree Panel is closed");
   ok(!InspectorUI.inspecting, "Inspector is not inspecting");
@@ -211,6 +214,7 @@ function finishInspectorTests()
   is(InspectorUI.sidebarDeck.children.length, 0, "No items in the Sidebar deck");
   ok(!InspectorUI.toolbar, "toolbar is hidden");
 
+  Services.obs.removeObserver(inspectNodesFromContextTestTrap, InspectorUI.INSPECTOR_NOTIFICATIONS.OPENED);
   gBrowser.removeCurrentTab();
   finish();
 }
