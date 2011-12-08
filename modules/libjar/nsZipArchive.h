@@ -56,6 +56,7 @@
 #include "nsAutoPtr.h"
 #include "nsILocalFile.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/FileLocation.h"
 
 #if defined(XP_WIN) && defined(_MSC_VER)
 #define MOZ_WIN_MEM_TRY_BEGIN __try {
@@ -402,6 +403,7 @@ public:
 
 class nsZipHandle {
 friend class nsZipArchive;
+friend class mozilla::FileLocation;
 public:
   static nsresult Init(nsILocalFile *file, nsZipHandle **ret NS_OUTPARAM);
   static nsresult Init(nsZipArchive *zip, const char *entry,
@@ -415,7 +417,7 @@ public:
 protected:
   const PRUint8 * mFileData; /* pointer to mmaped file */
   PRUint32        mLen;      /* length of file and memory mapped area */
-  nsCOMPtr<nsILocalFile> mFile; /* source file if any, for logging */
+  mozilla::FileLocation mFile; /* source file if any, for logging */
 
 private:
   nsZipHandle();
