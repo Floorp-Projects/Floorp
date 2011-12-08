@@ -1,0 +1,2 @@
+CC=/usr/bin/gcc-4.2
+CXX=/usr/bin/g++-4.2
