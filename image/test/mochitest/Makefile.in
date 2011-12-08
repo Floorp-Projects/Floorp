@@ -104,6 +104,15 @@ _CHROME_FILES = imgutils.js \
                 animated-gif2.gif \
                 purple.gif \
                 test_svg_animatedGIF.html \
+                smil-event-begin.svg \
+                smil-event-beginEvent.svg \
+                smil-event-end.svg \
+                smil-event-endEvent.svg \
+                smil-event-repeat.svg \
+                smil-event-repeatEvent.svg \
+                smil-event-repeatN.svg \
+                smil-event-SVGLoad.svg \
+                test_smilEventsAllowedInImages.html \
                 test_bullet_animation.html \
                 test_background_image_anim.html \
                 filter.svg \
