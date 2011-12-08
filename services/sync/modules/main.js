@@ -49,6 +49,7 @@ let lazies = {
   "engines/prefs.js":     ["PrefsEngine"],
   "engines/passwords.js": ["PasswordEngine"],
   "engines/tabs.js":      ["TabEngine"],
+  "engines/apps.js":      ["AppsEngine"],
   "identity.js":          ["Identity", "ID"],
   "jpakeclient.js":       ["JPAKEClient"],
   "notifications.js":     ["Notifications", "Notification", "NotificationButton"],
