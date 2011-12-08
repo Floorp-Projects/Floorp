@@ -62,8 +62,7 @@ var hrefs = {
 
 function submitForm(idNum) {
   $("test"+idNum).setAttribute("onload", "frameLoaded(this)");
-  $("test" + idNum + "image").focus();
-  sendKey("return");
+  sendKey("return", "test" + idNum + "image");
 }
 
 function submitFormMouse(idNum) {

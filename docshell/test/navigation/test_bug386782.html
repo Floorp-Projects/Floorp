@@ -66,7 +66,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
       // WARNING: If the following test fails, give the setTimeout() in the onload()
       // a bit longer; the doc hasn't had enough time to setup its editor.
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyBeforeEdit, "Is doc setup yet");
-      sendString('EDITED ', gTest.window);
+      
+      sendChar('E', gTest.window.document.body);
+      sendChar('D', gTest.window.document.body);
+      sendChar('I', gTest.window.document.body);
+      sendChar('T', gTest.window.document.body);
+      sendChar('E', gTest.window.document.body);
+      sendChar('D', gTest.window.document.body);
+      sendChar(' ', gTest.window.document.body);
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterEdit, "Editing failed.");
 
       gTest.window.location = 'data:text/html;charset=utf-8,SomeOtherDocument';
@@ -96,7 +103,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
             
       // Check that we can still edit the page.
       gTest.window.document.body.focus();
-      sendString('TWICE ', gTest.window);
+      sendChar('T', gTest.window.document.body);
+      sendChar('W', gTest.window.document.body);
+      sendChar('I', gTest.window.document.body);
+      sendChar('C', gTest.window.document.body);
+      sendChar('E', gTest.window.document.body);
+      sendChar(' ', gTest.window.document.body);
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterSecondEdit, "Can we still edit?");
       
       gTest.window.close();

@@ -34,7 +34,7 @@ function runTests() {
   // record scrolltop
   scrollTopBefore = doc.body.scrollTop;
   // send up arrow key event
-  sendKey("UP");
+  sendKey("UP", doc.body);
 
   setTimeout("finish();", 0);
 }
