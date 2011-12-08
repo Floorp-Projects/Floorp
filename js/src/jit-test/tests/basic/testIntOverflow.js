@@ -7,9 +7,3 @@ function testIntOverflow() {
     return (ival < 2147483647);
 }
 assertEq(testIntOverflow(), false);
-checkStats({
-    recorderStarted: 1,
-    recorderAborted: 0,
-    traceCompleted: 1,
-    traceTriggered: 1,
-});

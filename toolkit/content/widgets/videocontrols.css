@@ -94,3 +94,17 @@ html|span.statActivity[seeking] > html|span.statActivitySeeking {
 .controlBar[size="small"] .scrubber {
   visibility: hidden;
 }
+
+/* Error description formatting */
+.errorLabel {
+  display: none;
+}
+
+[error="errorAborted"]         > [anonid="errorAborted"],
+[error="errorNetwork"]         > [anonid="errorNetwork"],
+[error="errorDecode"]          > [anonid="errorDecode"],
+[error="errorSrcNotSupported"] > [anonid="errorSrcNotSupported"],
+[error="errorNoSource"]        > [anonid="errorNoSource"],
+[error="errorGeneric"]         > [anonid="errorGeneric"] {
+  display: inline;
+}

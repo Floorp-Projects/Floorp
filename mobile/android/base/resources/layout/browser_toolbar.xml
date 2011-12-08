@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <RelativeLayout android:id="@+id/address_bar"
+                    style="@style/AddressBar">
+        
+        <Button android:id="@+id/awesome_bar"
+                style="@style/AddressBar.Button"
+                android:layout_width="fill_parent"
+                android:layout_marginRight="50dp"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentBottom="true"
+                android:layout_centerVertical="true"
+                android:singleLine="true"
+                android:gravity="center_vertical|left"
+                android:hint="@string/awesomebar_default_text"
+                android:textColor="#222222"
+                android:paddingLeft="42dip"
+                android:paddingRight="42dip"/>
+
+        <ImageButton android:id="@+id/favicon"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="21.33dip"
+                     android:layout_height="21.33dip"
+                     android:layout_marginLeft="15dip"
+                     android:layout_centerVertical="true"
+                     android:src="@drawable/favicon"
+                     android:layout_alignLeft="@id/awesome_bar"/>
+
+        <ImageButton android:id="@+id/tabs"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="65dip"
+                     android:layout_height="52dip"
+                     android:layout_alignParentRight="true"
+                     android:background="@drawable/tabs_button"
+                     android:gravity="center_vertical|left"
+                     android:src="@drawable/tabs_level"
+                     android:paddingTop="4dip"
+                     android:paddingLeft="26dip"
+                     android:paddingRight="15dip"/>
+
+        <TextSwitcher android:id="@+id/tabs_count"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="54dip"
+                     android:layout_height="wrap_content"
+                     android:layout_marginTop="15dip"
+                     android:layout_alignRight="@id/tabs"
+                     android:gravity="center_horizontal"
+                     android:visibility="gone"/>
+
+        <ImageButton android:id="@+id/stop"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="38dip"
+                     android:layout_height="38dip"
+                     android:layout_marginRight="15dip"
+                     android:layout_centerVertical="true"
+                     android:paddingLeft="22dip"
+                     android:src="@drawable/urlbar_stop"
+                     android:layout_alignRight="@id/awesome_bar"
+                     android:visibility="gone"/>
+
+        <ImageButton android:id="@+id/site_security"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="16dip"
+                     android:layout_height="16dip"
+                     android:layout_marginRight="15dip"
+                     android:layout_centerVertical="true"
+                     android:src="@drawable/site_security_level"
+                     android:layout_alignRight="@id/awesome_bar"/>
+
+    </RelativeLayout>
+
+</merge>

@@ -1,0 +1,115 @@
+# AboutRedirector.js
+component {433d2d75-5923-49b0-854d-f37267b03dc7} AboutRedirector.js
+contract @mozilla.org/network/protocol/about;1?what=empty {433d2d75-5923-49b0-854d-f37267b03dc7}
+component {842a6d11-b369-4610-ba66-c3b5217e82be} AboutRedirector.js
+contract @mozilla.org/network/protocol/about;1?what=fennec {842a6d11-b369-4610-ba66-c3b5217e82be}
+component {dd40c467-d206-4f22-9215-8fcc74c74e38} AboutRedirector.js
+contract @mozilla.org/network/protocol/about;1?what=firefox {dd40c467-d206-4f22-9215-8fcc74c74e38}
+component {3b988fbf-ec97-4e1c-a5e4-573d999edc9c} AboutRedirector.js
+contract @mozilla.org/network/protocol/about;1?what=rights {3b988fbf-ec97-4e1c-a5e4-573d999edc9c}
+component {972efe64-8ac0-4e91-bdb0-22835d987815} AboutRedirector.js
+contract @mozilla.org/network/protocol/about;1?what=certerror {972efe64-8ac0-4e91-bdb0-22835d987815}
+component {b071364f-ab68-4669-a9db-33fca168271a} AboutRedirector.js
+contract @mozilla.org/network/protocol/about;1?what=home {b071364f-ab68-4669-a9db-33fca168271a}
+component {7490b75b-0ed4-4b2f-b80c-75e7f9c75682} AboutRedirector.js
+contract @mozilla.org/network/protocol/about;1?what=dougt {7490b75b-0ed4-4b2f-b80c-75e7f9c75682}
+#ifdef MOZ_SAFE_BROWSING
+component {88fd40b6-c5c2-4120-9238-f2cb9ff98928} AboutRedirector.js
+contract @mozilla.org/network/protocol/about;1?what=blocked {88fd40b6-c5c2-4120-9238-f2cb9ff98928}
+#endif
+
+# DirectoryProvider.js
+component {ef0f7a87-c1ee-45a8-8d67-26f586e46a4b} DirectoryProvider.js
+contract @mozilla.org/browser/directory-provider;1 {ef0f7a87-c1ee-45a8-8d67-26f586e46a4b}
+category xpcom-directory-providers browser-directory-provider @mozilla.org/browser/directory-provider;1
+
+# Sidebar.js
+component {22117140-9c6e-11d3-aaf1-00805f8a4905} Sidebar.js
+contract @mozilla.org/sidebar;1 {22117140-9c6e-11d3-aaf1-00805f8a4905}
+category JavaScript-global-property sidebar @mozilla.org/sidebar;1
+category JavaScript-global-property external @mozilla.org/sidebar;1
+category wakeup-request Sidebar @mozilla.org/sidebar;1,nsISidebarExternal,getService,Sidebar:AddSearchProvider
+
+# SessionStore.js - temporarily disabled (bug 696203)
+# component {8c1f07d6-cba3-4226-a315-8bd43d67d032} SessionStore.js
+# contract @mozilla.org/browser/sessionstore;1 {8c1f07d6-cba3-4226-a315-8bd43d67d032}
+# category app-startup SessionStore service,@mozilla.org/browser/sessionstore;1
+
+# stylesheets
+category agent-style-sheets browser-content-stylesheet chrome://browser/skin/content.css
+category agent-style-sheets browser-cursor-stylesheet chrome://browser/content/cursor.css
+
+# ContentPermissionPrompt.js
+component {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5} ContentPermissionPrompt.js
+contract @mozilla.org/content-permission/prompt;1 {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5}
+
+# AlertsService.js
+component {fe33c107-82a4-41d6-8c64-5353267e04c9} AlertsService.js
+#ifndef ANDROID
+contract @mozilla.org/system-alerts-service;1 {fe33c107-82a4-41d6-8c64-5353267e04c9}
+#endif
+
+# ToasterAlertsService : alias to AlertsService
+contract @mozilla.org/toaster-alerts-service;1 {fe33c107-82a4-41d6-8c64-5353267e04c9}
+
+# XPIDialogService.js
+component {c1242012-27d8-477e-a0f1-0b098ffc329b} XPIDialogService.js
+contract @mozilla.org/addons/web-install-prompt;1 {c1242012-27d8-477e-a0f1-0b098ffc329b}
+
+# DownloadManagerUI.js
+component {93db15b1-b408-453e-9a2b-6619e168324a} DownloadManagerUI.js
+contract @mozilla.org/download-manager-ui;1 {93db15b1-b408-453e-9a2b-6619e168324a}
+
+# HelperAppDialog.js
+component {e9d277a0-268a-4ec2-bb8c-10fdf3e44611} HelperAppDialog.js
+contract @mozilla.org/helperapplauncherdialog;1 {e9d277a0-268a-4ec2-bb8c-10fdf3e44611}
+
+# PromptService.js
+component {9a61149b-2276-4a0a-b79c-be994ad106cf} PromptService.js
+contract @mozilla.org/prompter;1 {9a61149b-2276-4a0a-b79c-be994ad106cf}
+contract @mozilla.org/embedcomp/prompt-service;1 {9a61149b-2276-4a0a-b79c-be994ad106cf}
+category wakeup-request PromptService @mozilla.org/embedcomp/prompt-service;1,nsIPromptService,getService,Prompt:Call
+
+# BrowserCLH.js
+component {be623d20-d305-11de-8a39-0800200c9a66} BrowserCLH.js application={aa3c5121-dab2-40e2-81ca-7ea25febc110}
+contract @mozilla.org/browser/browser-clh;1 {be623d20-d305-11de-8a39-0800200c9a66}
+category command-line-handler x-browser @mozilla.org/browser/browser-clh;1
+
+# ContentDispatchChooser.js
+component {5a072a22-1e66-4100-afc1-07aed8b62fc5} ContentDispatchChooser.js
+contract @mozilla.org/content-dispatch-chooser;1 {5a072a22-1e66-4100-afc1-07aed8b62fc5}
+
+# AddonUpdateService.js
+component {93c8824c-9b87-45ae-bc90-5b82a1e4d877} AddonUpdateService.js
+contract @mozilla.org/browser/addon-update-service;1 {93c8824c-9b87-45ae-bc90-5b82a1e4d877}
+category update-timer AddonUpdateService @mozilla.org/browser/addon-update-service;1,getService,auto-addon-background-update-timer,extensions.autoupdate.interval,86400
+
+# FormAutoComplete.js
+component {cccd414c-3ec2-4cc5-9dc4-36c87cc3c4fe} FormAutoComplete.js
+contract @mozilla.org/satchel/form-autocomplete;1 {cccd414c-3ec2-4cc5-9dc4-36c87cc3c4fe}
+
+# LoginManagerPrompter.js
+component {97d12931-abe2-11df-94e2-0800200c9a66} LoginManagerPrompter.js
+contract @mozilla.org/login-manager/prompter;1 {97d12931-abe2-11df-94e2-0800200c9a66}
+
+# BlocklistPrompt.js
+component {4e6ea350-b09a-11df-94e2-0800200c9a66} BlocklistPrompt.js
+contract @mozilla.org/addons/blocklist-prompt;1 {4e6ea350-b09a-11df-94e2-0800200c9a66}
+
+#ifdef MOZ_SAFE_BROWSING
+# SafeBrowsing.js
+component {aadaed90-6c03-42d0-924a-fc61198ff283} SafeBrowsing.js
+contract @mozilla.org/safebrowsing/application;1 {aadaed90-6c03-42d0-924a-fc61198ff283}
+category app-startup SafeBrowsing service,@mozilla.org/safebrowsing/application;1
+#endif
+
+#ifdef MOZ_UPDATER
+# UpdatePrompt.js
+component {88b3eb21-d072-4e3b-886d-f89d8c49fe59} UpdatePrompt.js
+contract @mozilla.org/updates/update-prompt;1 {88b3eb21-d072-4e3b-886d-f89d8c49fe59}
+#endif
+
+# CapturePicker.js
+component {cb5a47f0-b58c-4fc3-b61a-358ee95f8238} CapturePicker.js
+contract @mozilla.org/capturepicker;1 {cb5a47f0-b58c-4fc3-b61a-358ee95f8238}
+

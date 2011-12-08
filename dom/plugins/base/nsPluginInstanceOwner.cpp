@@ -3313,8 +3313,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
       nsIDocument *doc = mContent ? mContent->OwnerDoc() : nsnull;
 #ifndef XP_MACOSX
       if (!windowless && doc && doc->IsFullScreenDoc()) {
-        NS_DispatchToCurrentThread(
-          NS_NewRunnableMethod(doc, &nsIDocument::CancelFullScreen));
+        nsIDocument::ExitFullScreen(true);
       }
 #endif
       // always create widgets in Twips, not pixels

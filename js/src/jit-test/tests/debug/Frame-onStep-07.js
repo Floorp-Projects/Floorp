@@ -5,7 +5,7 @@
 // least one 's' between them.
 
 var g = newGlobal('new-compartment');
-g.N = RUNLOOP + 2;
+g.N = 11;
 g.log = '';
 g.eval("function f() {\n" +
        "    for (var i = 0; i <= N; i++)\n" +
