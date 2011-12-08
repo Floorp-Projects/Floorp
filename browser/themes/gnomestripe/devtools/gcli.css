@@ -46,7 +46,6 @@
   height: 100%;
   vertical-align: middle;
   background-color: transparent;
-  font: 12px Consolas, "Lucida Console", monospace;
 }
 
 .gcliterm-input-node {
@@ -62,24 +61,6 @@
   padding-bottom: 2px;
   -moz-padding-start: 21px;
   -moz-padding-end: 4px;
-}
-
-.gcli-in-valid {
-  border-bottom: none;
-}
-
-.gcli-in-incomplete {
-  color: #DDD;
-  border-bottom: 1px dotted #999;
-}
-
-.gcli-in-error {
-  color: #DDD;
-  border-bottom: 1px dotted #F00;
-}
-
-.gcli-in-ontab {
-  color: #999;
 }
 
 .gcliterm-stack-node {
@@ -112,6 +93,12 @@
 .gcliterm-menu {
   display: -moz-box;
   -moz-box-flex: 1;
+  border-bottom-color: white;
+}
+
+.gcliterm-hint-scroll {
+  overflow-y: scroll;
+  border-bottom-color: threedshadow;
 }
 
 .gcliterm-hint-nospace {
@@ -173,6 +160,11 @@
 
 /* From: $GCLI/mozilla/gcli/ui/gcliterm-gnomestripe.css */
 
+.gcliterm-input-node,
+.gcliterm-complete-node {
+  font: 12px "DejaVu Sans Mono", monospace;
+}
+
 .gcli-out-shortcut {
   font-family: "DejaVu Sans Mono", monospace;
 }
@@ -207,7 +199,7 @@
 .gcli-af-required {
   font-size: 90%;
   color: #f66;
-  padding-left: 5px;
+  -moz-padding-start: 5px;
 }
 
 .gcli-af-error {
@@ -221,6 +213,10 @@
 
 .gcli-field {
   width: 100%;
+}
+
+.gcli-field-javascript {
+  margin-bottom: 0;
 }
 
 /* From: $GCLI/lib/gcli/ui/menu.css */
