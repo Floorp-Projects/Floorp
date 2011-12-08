@@ -97,6 +97,22 @@
       // disabled, too. See bug 429285.
       testAriaDisabledTree("group");
 
+      // aria-multiline
+      testStates("aria_multiline_textbox", 0, EXT_STATE_MULTI_LINE);
+
+      // aria-multiselectable
+      testStates("aria_multiselectable_listbox",
+                 STATE_MULTISELECTABLE | STATE_EXTSELECTABLE);
+
+      // aria-pressed
+      testStates("aria_pressed_button", STATE_PRESSED | STATE_CHECKABLE);
+
+      // aria-readonly
+      testStates("aria_readonly_textbox", STATE_READONLY);
+
+      // aria-selectable
+      testStates("aria_selectable_listitem", STATE_SELECTABLE | STATE_SELECTED);
+
       // active state caused by aria-activedescendant
       testStates("as_item1", 0, EXT_STATE_ACTIVE);
       testStates("as_item2", 0, 0, 0, EXT_STATE_ACTIVE);
@@ -193,6 +209,11 @@
      title="Expose active state on current item of selectable widgets">
     Mozilla Bug 689847
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=457226"
+     title="Mochitests for ARIA states">
+    Mozilla Bug 457226
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -224,6 +245,13 @@
 
   <div id="aria_mixed_checkbox" role="checkbox" aria-checked="mixed">
     I might agree
+  </div>
+  <div id="aria_multiline_textbox" role="textbox" aria-multiline="true"></div>
+  <div id="aria_multiselectable_listbox" role="listbox" aria-multiselectable="true"></div>
+  <div id="aria_pressed_button" role="button" aria-pressed="true">Button</div>
+  <div id="aria_readonly_textbox" role="textbox" aria-readonly="true">This text should be readonly</div>
+  <div role="listbox">
+    <div id="aria_selectable_listitem" role="option" aria-selected="true">Item1</div>
   </div>
 
   <!-- Test that aria-disabled state gets propagated to all descendants -->
