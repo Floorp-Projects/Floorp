@@ -142,7 +142,7 @@ enum BailoutKind
     Bailout_TypeBarrier
 };
 
-static const uint32 BAILOUT_KIND_BITS = 1;
+static const uint32 BAILOUT_KIND_BITS = 2;
 
 // Keep this arbitrarily small for now, for testing.
 static const uint32 BAILOUT_TABLE_SIZE = 16;
