@@ -92,7 +92,7 @@ js_json_parse(JSContext *cx, uintN argc, Value *vp)
     /* Step 1. */
     JSLinearString *linear;
     if (argc >= 1) {
-        JSString *str = js_ValueToString(cx, vp[2]);
+        JSString *str = ToString(cx, vp[2]);
         if (!str)
             return false;
         linear = str->ensureLinear(cx);
@@ -367,7 +367,7 @@ PreprocessValue(JSContext *cx, JSObject *holder, KeyType key, Value *vp, Stringi
                 return false;
             vp->setNumber(d);
         } else if (ObjectClassIs(obj, ESClass_String, cx)) {
-            JSString *str = js_ValueToString(cx, *vp);
+            JSString *str = ToStringSlow(cx, *vp);
             if (!str)
                 return false;
             vp->setString(str);
@@ -716,7 +716,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
                 return false;
             space = NumberValue(d);
         } else if (ObjectClassIs(spaceObj, ESClass_String, cx)) {
-            JSString *str = js_ValueToString(cx, space);
+            JSString *str = ToStringSlow(cx, space);
             if (!str)
                 return false;
             space = StringValue(str);

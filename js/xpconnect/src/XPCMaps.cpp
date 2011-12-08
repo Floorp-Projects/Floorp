@@ -135,6 +135,22 @@ JSObject2WrappedJSMap::~JSObject2WrappedJSMap()
         JS_DHashTableDestroy(mTable);
 }
 
+size_t
+JSObject2WrappedJSMap::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
+{
+    size_t n = 0;
+    n += mallocSizeOf(this, sizeof(JSObject2WrappedJSMap));
+    n += mTable ? JS_DHashTableSizeOfIncludingThis(mTable, SizeOfEntry, mallocSizeOf) : 0;
+    return n;
+}
+
+/* static */ size_t
+JSObject2WrappedJSMap::SizeOfEntry(JSDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf)
+{
+    return mallocSizeOf(((JSObject2WrappedJSMap::Entry*)hdr)->value,
+                        sizeof(nsXPCWrappedJS));
+}
+
 /***************************************************************************/
 // implement Native2WrappedNativeMap...
 
@@ -159,6 +175,22 @@ Native2WrappedNativeMap::~Native2WrappedNativeMap()
 {
     if (mTable)
         JS_DHashTableDestroy(mTable);
+}
+
+size_t
+Native2WrappedNativeMap::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
+{
+    size_t n = 0;
+    n += mallocSizeOf(this, sizeof(Native2WrappedNativeMap));
+    n += mTable ? JS_DHashTableSizeOfIncludingThis(mTable, SizeOfEntry, mallocSizeOf) : 0;
+    return n;
+}
+
+/* static */ size_t
+Native2WrappedNativeMap::SizeOfEntry(JSDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf)
+{
+    return mallocSizeOf(((Native2WrappedNativeMap::Entry*)hdr)->value,
+                         sizeof(XPCWrappedNative));
 }
 
 /***************************************************************************/
@@ -234,6 +266,22 @@ IID2NativeInterfaceMap::~IID2NativeInterfaceMap()
         JS_DHashTableDestroy(mTable);
 }
 
+size_t
+IID2NativeInterfaceMap::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
+{
+    size_t n = 0;
+    n += mallocSizeOf(this, sizeof(IID2NativeInterfaceMap));
+    n += mTable ? JS_DHashTableSizeOfIncludingThis(mTable, SizeOfEntry, mallocSizeOf) : 0;
+    return n;
+}
+
+/* static */ size_t
+IID2NativeInterfaceMap::SizeOfEntry(JSDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf)
+{
+    XPCNativeInterface *iface = ((IID2NativeInterfaceMap::Entry*)hdr)->value;
+    return iface->SizeOfIncludingThis(mallocSizeOf);
+}
+
 /***************************************************************************/
 // implement ClassInfo2NativeSetMap...
 
@@ -260,6 +308,16 @@ ClassInfo2NativeSetMap::~ClassInfo2NativeSetMap()
         JS_DHashTableDestroy(mTable);
 }
 
+size_t
+ClassInfo2NativeSetMap::ShallowSizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
+{
+    size_t n = 0;
+    n += mallocSizeOf(this, sizeof(ClassInfo2NativeSetMap));
+    // The second arg is NULL because this is a "shallow" measurement of the map.
+    n += mTable ? JS_DHashTableSizeOfIncludingThis(mTable, NULL, mallocSizeOf) : 0;
+    return n;
+}
+
 /***************************************************************************/
 // implement ClassInfo2WrappedNativeProtoMap...
 
@@ -284,6 +342,22 @@ ClassInfo2WrappedNativeProtoMap::~ClassInfo2WrappedNativeProtoMap()
 {
     if (mTable)
         JS_DHashTableDestroy(mTable);
+}
+
+size_t
+ClassInfo2WrappedNativeProtoMap::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
+{
+    size_t n = 0;
+    n += mallocSizeOf(this, sizeof(ClassInfo2WrappedNativeProtoMap));
+    n += mTable ? JS_DHashTableSizeOfIncludingThis(mTable, SizeOfEntry, mallocSizeOf) : 0;
+    return n;
+}
+
+/* static */ size_t
+ClassInfo2WrappedNativeProtoMap::SizeOfEntry(JSDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf)
+{
+    return mallocSizeOf(((ClassInfo2WrappedNativeProtoMap::Entry*)hdr)->value,
+                        sizeof(XPCWrappedNativeProto));
 }
 
 /***************************************************************************/
@@ -392,6 +466,22 @@ NativeSetMap::~NativeSetMap()
 {
     if (mTable)
         JS_DHashTableDestroy(mTable);
+}
+
+size_t
+NativeSetMap::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
+{
+    size_t n = 0;
+    n += mallocSizeOf(this, sizeof(NativeSetMap));
+    n += mTable ? JS_DHashTableSizeOfIncludingThis(mTable, SizeOfEntry, mallocSizeOf) : 0;
+    return n;
+}
+
+/* static */ size_t
+NativeSetMap::SizeOfEntry(JSDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf)
+{
+    XPCNativeSet *set = ((NativeSetMap::Entry*)hdr)->key_value;
+    return set->SizeOfIncludingThis(mallocSizeOf);
 }
 
 /***************************************************************************/

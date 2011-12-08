@@ -28,11 +28,11 @@ var keyList = [
 ];
 
 function ok(condition, msg) {
-  opener.ok(condition, msg);
+  opener.ok(condition, "[keys] " + msg);
 }
 
 function is(a, b, msg) {
-  opener.is(a, b, msg);
+  opener.is(a, b, "[keys] " + msg);
 }
 
 var gKeyTestIndex = 0;

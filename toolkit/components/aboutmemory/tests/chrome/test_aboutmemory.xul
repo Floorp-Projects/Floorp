@@ -78,11 +78,11 @@
     f("", "explicit/b/b",       HEAP,     75 * MB),
     f("", "explicit/b/c/a",     HEAP,     70 * MB),
     f("", "explicit/b/c/b",     HEAP,      2 * MB), // omitted
-    f("", "explicit/c",         NONHEAP, 100 * MB),
     f("", "explicit/c/d",       NONHEAP,  13 * MB), // subsumed by parent
-    f("", "explicit/g",         HEAP,      1 * MB), // internal, dup: merge
+    f("", "explicit/c/other",   NONHEAP,  77 * MB), // subsumed by parent
     f("", "explicit/g/a",       HEAP,      6 * MB),
     f("", "explicit/g/b",       HEAP,      5 * MB),
+    f("", "explicit/g/other",   HEAP,      4 * MB),
     f("", "other1",             OTHER,   111 * MB),
     f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 888)
   ];
@@ -99,7 +99,6 @@
      },
      { collectReports: function(cbObj, closure) {
           function f(p, k, u, a) { cbObj.callback("", p, k, u, a, "(desc)", closure); }
-          f("explicit/g",       HEAP,    BYTES,  14 * MB); // internal
           f("other3",           OTHER,   COUNT, 777);
           f("other2",           OTHER,   BYTES, 222 * MB);
           f("perc2",            OTHER,   PERCENTAGE, 10000);
@@ -154,7 +153,6 @@
     // kUnknown should be handled gracefully for "heap-allocated", non-leaf
     // reporters, leaf-reporters, "other" reporters, and duplicated reporters.
     f("3rd", "heap-allocated",  OTHER,   kUnknown),
-    f("3rd", "explicit/a",      HEAP,    kUnknown),
     f("3rd", "explicit/a/b",    HEAP,    333 * MB),
     f("3rd", "explicit/a/c",    HEAP,    444 * MB),
     f("3rd", "explicit/a/c",    HEAP,    kUnknown), // dup: merge
@@ -196,7 +194,7 @@ Explicit Allocations\n\
 │   └──20.00 MB (03.21%) -- g\n\
 │      └──20.00 MB (03.21%) -- h\n\
 │         └──20.00 MB (03.21%) -- i\n\
-├───15.00 MB (02.41%) -- g [2]\n\
+├───15.00 MB (02.41%) -- g\n\
 │   ├───6.00 MB (00.96%) -- a\n\
 │   ├───5.00 MB (00.80%) -- b\n\
 │   └───4.00 MB (00.64%) -- other\n\
@@ -248,7 +246,7 @@ Other Measurements\n\
 \n\
 Explicit Allocations\n\
 777.00 MB (100.0%) -- explicit\n\
-├──777.00 MB (100.0%) -- a [*]\n\
+├──777.00 MB (100.0%) -- a\n\
 │  ├──444.00 MB (57.14%) -- c [2]\n\
 │  ├──333.00 MB (42.86%) -- b\n\
 │  └────0.00 MB (00.00%) -- (1 omitted)\n\
@@ -281,7 +279,7 @@ Explicit Allocations\n\
 │   └──20,971,520 B (03.21%) -- g\n\
 │      └──20,971,520 B (03.21%) -- h\n\
 │         └──20,971,520 B (03.21%) -- i\n\
-├───15,728,640 B (02.41%) -- g [2]\n\
+├───15,728,640 B (02.41%) -- g\n\
 │   ├───6,291,456 B (00.96%) -- a\n\
 │   ├───5,242,880 B (00.80%) -- b\n\
 │   └───4,194,304 B (00.64%) -- other\n\
@@ -334,7 +332,7 @@ Other Measurements\n\
 \n\
 Explicit Allocations\n\
 814,743,552 B (100.0%) -- explicit\n\
-├──814,743,552 B (100.0%) -- a [*]\n\
+├──814,743,552 B (100.0%) -- a\n\
 │  ├──465,567,744 B (57.14%) -- c [2]\n\
 │  ├──349,175,808 B (42.86%) -- b\n\
 │  └────────────0 B (00.00%) -- d [*] [2]\n\

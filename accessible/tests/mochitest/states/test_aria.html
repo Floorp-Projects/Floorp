@@ -97,6 +97,10 @@
       // disabled, too. See bug 429285.
       testAriaDisabledTree("group");
 
+      // active state caused by aria-activedescendant
+      testStates("as_item1", 0, EXT_STATE_ACTIVE);
+      testStates("as_item2", 0, 0, 0, EXT_STATE_ACTIVE);
+
       // universal ARIA properties inherited from file input control
       var fileTextField = getAccessible("fileinput").firstChild;
       testStates(fileTextField,
@@ -184,6 +188,11 @@
      title="File input control should be propogate states to descendants">
     Mozilla Bug 699017
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=689847"
+     title="Expose active state on current item of selectable widgets">
+    Mozilla Bug 689847
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -227,6 +236,13 @@
       <div role="option" id="item4">Item 4</div>
     </div>
     <div role="slider" tabindex="0">A slider</div>
+  </div>
+
+  <!-- Test active state -->
+  <div id="as_listbox" tabindex="0" role="listbox"
+       aria-activedescendant="as_item1">
+    <div role="option" id="as_item1">Item 1</div>
+    <div role="option" id="as_item2">Item 2</div>
   </div>
 
   <!-- universal ARIA properties should be inherited by text field of file input -->

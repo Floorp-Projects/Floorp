@@ -43,11 +43,11 @@ Test plugins with DOM full-screen API:
 /** Test for Bug 545812 **/
 
 function ok(condition, msg) {
-  opener.ok(condition, msg);
+  opener.ok(condition, "[plugins] " + msg);
 }
 
 function is(a, b, msg) {
-  opener.is(a, b, msg);
+  opener.is(a, b, "[plugins] " + msg);
 }
 
 const isMacOs = navigator.appVersion.indexOf("Macintosh") != -1;
@@ -144,6 +144,7 @@ function fullScreenChange(event) {
   switch (fullScreenChangeCount) {
     case 0: {
       ok(document.mozFullScreen, "Request for full-screen with document containing windowless plugin should be granted");
+      is(document.mozFullScreenElement, document.body, "FSE should be body.");
       // Add windowed plugin to document, should cause full-screen mode to exit.
       document.body.appendChild(windowedPlugin);
       break;

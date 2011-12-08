@@ -51,7 +51,7 @@ interface nsIPrincipal;
 interface nsIScriptContext;
 interface nsPIDOMWindow;
 
-[scriptable, uuid(755e2d2d-a836-4539-83f4-16b51156341f)]
+[scriptable, uuid(a3d3181e-47c1-4f2e-b2c7-94775a86f5c5)]
 interface nsIEventSource : nsISupports
 {
   readonly attribute DOMString url;
@@ -61,6 +61,11 @@ interface nsIEventSource : nsISupports
   const unsigned short OPEN = 1;
   const unsigned short CLOSED = 2;
   readonly attribute long readyState;
+
+  // if true then cross-site Access-Control requests are made using credentials
+  // such as cookies and authorization headers. Never affects same-site
+  // requests.
+  readonly attribute boolean withCredentials;
 
   // event handler attributes
   attribute nsIDOMEventListener onopen;
@@ -83,9 +88,14 @@ interface nsIEventSource : nsISupports
    *                      null.
    * @param ownerWindow The associated window for the request. May be null.
    * @param url The EventSource's url. This must not be empty.
+   * @param withCredentials When set to true attempts to make cross-site
+   *                        Access-Control requests with credentials such as
+   *                        cookies and authorization headers. Never affects
+   *                        same-site requests.
    */
   [noscript] void init(in nsIPrincipal principal,
                        in nsIScriptContext scriptContext,
                        in nsPIDOMWindow ownerWindow,
-                       in DOMString url);
+                       in DOMString url,
+                       in boolean withCredentials);
 };

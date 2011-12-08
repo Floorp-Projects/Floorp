@@ -16,12 +16,3 @@ function testTableSwitch2() {
 }
 
 testTableSwitch2();
-
-if (HAVE_TM && jitstats.archIsIA32) {
-    checkStats({
-	recorderStarted: 1,
-	sideExitIntoInterpreter: 4,
-	recorderAborted: 0,
-	traceCompleted: 3
-    });
-}

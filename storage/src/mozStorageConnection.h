@@ -60,12 +60,9 @@ struct PRLock;
 class nsIFile;
 class nsIEventTarget;
 class nsIThread;
-class nsIMemoryReporter;
 
 namespace mozilla {
 namespace storage {
-
-class StorageMemoryReporter;
 
 class Connection : public mozIStorageConnection
                  , public nsIInterfaceRequestor
@@ -157,6 +154,27 @@ public:
    */
   nsCString getFilename();
 
+  /**
+   * Creates an sqlite3 prepared statement object from an SQL string.
+   *
+   * @param aSQL
+   *        The SQL statement string to compile.
+   * @param _stmt
+   *        New sqlite3_stmt object.
+   * @return the result from sqlite3_prepare_v2.
+   */
+  int prepareStatement(const nsCString &aSQL, sqlite3_stmt **_stmt);
+
+  /**
+   * Performs a sqlite3_step on aStatement, while properly handling SQLITE_LOCKED
+   * when not on the main thread by waiting until we are notified.
+   *
+   * @param aStatement
+   *        A pointer to a sqlite3_stmt object.
+   * @return the result from sqlite3_step.
+   */
+  int stepStatement(sqlite3_stmt* aStatement);
+
 private:
   ~Connection();
 
@@ -203,8 +221,6 @@ private:
 
   sqlite3 *mDBConn;
   nsCOMPtr<nsIFile> mDatabaseFile;
-
-  nsTArray<nsRefPtr<StorageMemoryReporter> > mMemoryReporters;
 
   /**
    * Lazily created thread for asynchronous statement execution.  Consumers

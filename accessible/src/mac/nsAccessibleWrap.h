@@ -83,8 +83,6 @@ class nsAccessibleWrap : public nsAccessible
     // to the user. it also has no native accessible object represented for it.
     bool IsIgnored();
     
-    PRInt32 GetUnignoredChildCount(bool aDeepCount);
-    
     bool HasPopup () {
       return (NativeState() & mozilla::a11y::states::HASPOPUP);
     }

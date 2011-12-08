@@ -8,7 +8,7 @@ var YAxisPoint = Point.bind(null, 0);
 assertEq(YAxisPoint.prototype, undefined);
 
 var oldPoint;
-for (var i = 0, sz = RUNLOOP; i < sz; oldPoint = point, i++)
+for (var i = 0, sz = 9; i < sz; oldPoint = point, i++)
 {
   var point = new YAxisPoint(5);
   assertEq(point === oldPoint, false);
@@ -18,9 +18,3 @@ for (var i = 0, sz = RUNLOOP; i < sz; oldPoint = point, i++)
   assertEq(Object.getOwnPropertyDescriptor(YAxisPoint, "prototype"), undefined);
 }
 
-checkStats({
-  recorderStarted: 1,
-  recorderAborted: 1,
-  traceTriggered: 0,
-  traceCompleted: 0,
-});

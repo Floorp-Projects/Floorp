@@ -1,0 +1,13 @@
+#filter substitution
+
+chrome.jar:
+% content branding %content/branding/
+% content browser %content/
+
+* content/shell.xul                     (content/shell.xul)
+  content/shell.js                      (content/shell.js)
+  content/touch.js                      (content/touch.js)
+  content/commandUtil.js                (content/commandUtil.js)
+
+% override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml
+  content/netError.xhtml                (content/netError.xhtml)

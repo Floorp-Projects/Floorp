@@ -391,9 +391,9 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  if (mChildren)
+  if (mChildren || !mGeckoAccessible->AreChildrenCached())
     return mChildren;
-    
+
   mChildren = [[NSMutableArray alloc] init];
   
   // get the array of children.

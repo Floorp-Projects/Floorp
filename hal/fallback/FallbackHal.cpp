@@ -69,5 +69,25 @@ GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
   aBatteryInfo->remainingTime() = dom::battery::kDefaultRemainingTime;
 }
 
+bool
+GetScreenEnabled()
+{
+  return true;
+}
+
+void
+SetScreenEnabled(bool enabled)
+{}
+
+double
+GetScreenBrightness()
+{
+  return 1;
+}
+
+void
+SetScreenBrightness(double brightness)
+{}
+
 } // hal_impl
 } // namespace mozilla
