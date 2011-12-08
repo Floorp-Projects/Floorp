@@ -598,9 +598,13 @@ abstract public class GeckoApp
                 mLastUri = lastHistoryEntry.mUri;
                 mLastTitle = lastHistoryEntry.mTitle;
                 Bitmap bitmap = mSoftwareLayerClient.getBitmap();
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
-                mLastScreen = bos.toByteArray();
+                if (bitmap != null) {
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
+                    mLastScreen = bos.toByteArray();
+                } else {
+                    mLastScreen = null;
+                }
             }
         }
     };
@@ -1101,15 +1105,7 @@ abstract public class GeckoApp
 
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     mBrowserToolbar.setTitle(tab.getDisplayTitle());
-                    Bitmap screencap = null;
-                    try {
-                        screencap = mSoftwareLayerClient.getBitmap();
-                    } catch (OutOfMemoryError oom) {
-                        Log.e(LOGTAG, "Unable to generate thumbnail", oom);
-                    }
-                    if (screencap != null) {
-                        tab.updateThumbnail(screencap);
-                    }
+                    tab.updateThumbnail(mSoftwareLayerClient.getBitmap());
                 }
                 onTabsChanged(tab);
             }
