@@ -101,6 +101,7 @@ nsHttpPipeline::nsHttpPipeline()
     , mPushBackBuf(nsnull)
     , mPushBackLen(0)
     , mPushBackMax(0)
+    , mHttp1xTransactionCount(0)
     , mReceivingFromProgress(0)
     , mSendingToProgress(0)
     , mSuppressSendEvents(true)
@@ -353,6 +354,12 @@ nsHttpPipeline::RequestHead()
     if (trans)
         return trans->RequestHead();
     return nsnull;
+}
+
+PRUint32
+nsHttpPipeline::Http1xTransactionCount()
+{
+  return mHttp1xTransactionCount;
 }
 
 //-----------------------------------------------------------------------------
@@ -614,6 +621,7 @@ nsHttpPipeline::WriteSegments(nsAHttpSegmentWriter *writer,
             NS_RELEASE(trans);
             mResponseQ.RemoveElementAt(0);
             mResponseIsPartial = false;
+            ++mHttp1xTransactionCount;
 
             // ask the connection manager to add additional transactions
             // to our pipeline.
