@@ -98,6 +98,7 @@
 #include "nsSupportsPrimitives.h"
 #include "nsArrayEnumerator.h"
 #include "nsStringEnumerator.h"
+#include "mozilla/FileUtils.h"
 
 #include NEW_H     // for placement new
 
@@ -573,30 +574,6 @@ nsComponentManagerImpl::RegisterJarManifest(NSLocationType aType, nsIZipReader* 
                   whole, aChromeOnly);
 }
 
-namespace {
-struct AutoCloseFD
-{
-    AutoCloseFD()
-        : mFD(NULL)
-    { }
-    ~AutoCloseFD() {
-        if (mFD)
-            PR_Close(mFD);
-    }
-    operator PRFileDesc*() {
-        return mFD;
-    }
-
-    PRFileDesc** operator&() {
-        NS_ASSERTION(!mFD, "Re-opening a file");
-        return &mFD;
-    }
-
-    PRFileDesc* mFD;
-};
-
-} // anonymous namespace
-
 void
 nsComponentManagerImpl::RegisterManifestFile(NSLocationType aType,
                                              nsILocalFile* aFile,
@@ -604,7 +581,7 @@ nsComponentManagerImpl::RegisterManifestFile(NSLocationType aType,
 {
     nsresult rv;
 
-    AutoCloseFD fd;
+    mozilla::AutoFDClose fd;
     rv = aFile->OpenNSPRFileDesc(PR_RDONLY, 0444, &fd);
     if (NS_FAILED(rv)) {
         nsCAutoString path;

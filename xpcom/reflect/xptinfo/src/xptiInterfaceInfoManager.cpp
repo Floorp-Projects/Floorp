@@ -46,6 +46,7 @@
 #include "nsArrayEnumerator.h"
 #include "mozilla/FunctionTimer.h"
 #include "nsDirectoryService.h"
+#include "mozilla/FileUtils.h"
 
 using namespace mozilla;
 
@@ -96,35 +97,10 @@ xptiInterfaceInfoManager::~xptiInterfaceInfoManager()
 #endif
 }
 
-namespace {
-
-struct AutoCloseFD
-{
-    AutoCloseFD()
-        : mFD(NULL)
-    { }
-    ~AutoCloseFD() {
-        if (mFD)
-            PR_Close(mFD);
-    }
-    operator PRFileDesc*() {
-        return mFD;
-    }
-
-    PRFileDesc** operator&() {
-        NS_ASSERTION(!mFD, "Re-opening a file");
-        return &mFD;
-    }
-
-    PRFileDesc* mFD;
-};
-
-} // anonymous namespace
-
 XPTHeader* 
 xptiInterfaceInfoManager::ReadXPTFile(nsILocalFile* aFile)
 {
-    AutoCloseFD fd;
+    mozilla::AutoFDClose fd;
     if (NS_FAILED(aFile->OpenNSPRFileDesc(PR_RDONLY, 0444, &fd)) || !fd)
         return NULL;
 
