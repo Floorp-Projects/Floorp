@@ -205,7 +205,6 @@ RES_LAYOUT_V11 = \
   $(NULL)
 
 RES_VALUES = \
-  res/values/arrays.xml \
   res/values/colors.xml \
   res/values/styles.xml \
   res/values/themes.xml \

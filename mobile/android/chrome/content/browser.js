@@ -2094,27 +2094,12 @@ var ErrorPageEventHandler = {
             }
             errorDoc.location.reload();
           } else if (target == errorDoc.getElementById("getMeOutOfHereButton")) {
-            errorDoc.location = this.getFallbackSafeURL();
+            errorDoc.location = "about:home";
           }
         }
         break;
       }
     }
-  },
-
-  getFallbackSafeURL: function getFallbackSafeURL() {
-    // Get the start page from the *default* pref branch, not the user's
-    let prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getDefaultBranch(null);
-    let url = "about:home";
-    try {
-      url = prefs.getComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString).data;
-      // If url is a pipe-delimited set of pages, just take the first one.
-      if (url.indexOf("|") != -1)
-        url = url.split("|")[0];
-    } catch(e) {
-      Cu.reportError("Couldn't get homepage pref: " + e);
-    }
-    return url;
   }
 };
 
