@@ -723,17 +723,21 @@ abstract public class GeckoApp
         });
     }
 
-    File getProfileDir() {
+    public File getProfileDir() {
+        // XXX: TO-DO read profiles.ini to get the default profile
+        return getProfileDir("default");
+    }
+
+    public File getProfileDir(final String profileName) {
         if (mProfileDir == null && !mUserDefinedProfile) {
             File mozDir = new File(GeckoAppShell.sHomeDir, "mozilla");
             File[] profiles = mozDir.listFiles(new FileFilter() {
                 public boolean accept(File pathname) {
-                    return pathname.getName().endsWith(".default");
+                    return pathname.getName().endsWith("." + profileName);
                 }
             });
             if (profiles.length == 1)
                 mProfileDir = profiles[0];
-            // XXX: TO-DO read profiles.ini to get the default profile
         }
         return mProfileDir;
     }
