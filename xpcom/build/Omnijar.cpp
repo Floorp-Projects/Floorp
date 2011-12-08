@@ -62,7 +62,7 @@ Omnijar::CleanUpOne(Type aType)
 {
     if (sReader[aType]) {
         sReader[aType]->CloseArchive();
-        delete sReader[aType];
+        NS_IF_RELEASE(sReader[aType]);
     }
     sReader[aType] = nsnull;
     NS_IF_RELEASE(sPath[aType]);
@@ -106,17 +106,14 @@ Omnijar::InitOne(nsIFile *aPath, Type aType)
         return;
     }
 
-    nsZipArchive* zipReader = new nsZipArchive();
-    if (!zipReader)
-        return;
-
+    nsRefPtr<nsZipArchive> zipReader = new nsZipArchive();
     if (NS_FAILED(zipReader->OpenArchive(file))) {
-        delete zipReader;
         return;
     }
 
     CleanUpOne(aType);
     sReader[aType] = zipReader;
+    NS_IF_ADDREF(sReader[aType]);
     sPath[aType] = file;
     NS_IF_ADDREF(sPath[aType]);
 }
@@ -137,7 +134,7 @@ Omnijar::CleanUp()
     sInitialized = false;
 }
 
-nsZipArchive *
+already_AddRefed<nsZipArchive>
 Omnijar::GetReader(nsIFile *aPath)
 {
     NS_ABORT_IF_FALSE(IsInitialized(), "Omnijar not initialized");
@@ -148,12 +145,12 @@ Omnijar::GetReader(nsIFile *aPath)
     if (sPath[GRE]) {
         rv = sPath[GRE]->Equals(aPath, &equals);
         if (NS_SUCCEEDED(rv) && equals)
-            return sReader[GRE];
+            return GetReader(GRE);
     }
     if (sPath[APP]) {
         rv = sPath[APP]->Equals(aPath, &equals);
         if (NS_SUCCEEDED(rv) && equals)
-            return sReader[APP];
+            return GetReader(APP);
     }
     return nsnull;
 }
