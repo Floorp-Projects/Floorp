@@ -45,6 +45,7 @@
 #include "jsmath.h"
 #include "json.h"
 
+#include "builtin/MapObject.h"
 #include "builtin/RegExp.h"
 #include "frontend/BytecodeEmitter.h"
 #include "vm/GlobalObject-inl.h"
@@ -311,7 +312,9 @@ GlobalObject::initStandardClasses(JSContext *cx)
            js_InitIteratorClasses(cx, this) &&
 #endif
            js_InitDateClass(cx, this) &&
-           js_InitProxyClass(cx, this);
+           js_InitProxyClass(cx, this) &&
+           js_InitMapClass(cx, this) &&
+           js_InitSetClass(cx, this);
 }
 
 void
