@@ -25,12 +25,6 @@
                             android:title="@string/pref_char_encoding"
                             android:persistent="false" />
 
-        <ListPreference     android:key="browser.startup.homepage"
-                            android:title="@string/pref_homepage"
-                            android:defaultValue="about:home"
-                            android:entries="@array/pref_homepage_entries"
-                            android:entryValues="@array/pref_homepage_values"
-                            android:persistent="false" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_category_privacy">
