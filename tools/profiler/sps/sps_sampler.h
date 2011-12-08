@@ -47,6 +47,7 @@ using mozilla::TimeDuration;
 // TODO Merge into Sampler.h
 
 extern pthread_key_t pkey_stack;
+extern bool stack_key_initialized;
 
 #define SAMPLER_INIT() mozilla_sampler_init();
 #define SAMPLER_DEINIT() mozilla_sampler_deinit();
@@ -194,7 +195,16 @@ public:
 
 inline void* mozilla_sampler_call_enter(const char *aInfo)
 {
+  // check if we've been initialized to avoid calling pthread_getspecific
+  // with a null pkey_stack which will return undefined results.
+  if (!stack_key_initialized)
+    return NULL;
+
   Stack *stack = (Stack*)pthread_getspecific(pkey_stack);
+  // we can't infer whether 'stack' has been initialized
+  // based on the value of stack_key_intiailized because
+  // 'stack' is only intialized when a thread is being
+  // profiled.
   if (!stack) {
     return stack;
   }
