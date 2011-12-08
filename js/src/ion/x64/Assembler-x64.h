@@ -133,9 +133,9 @@ class Operand
         SCALE
     };
 
-    Kind kind_ : 2;
+    Kind kind_ : 3;
     int32 base_ : 5;
-    Scale scale_ : 2;
+    Scale scale_ : 3;
     int32 disp_;
     int32 index_ : 5;
 
