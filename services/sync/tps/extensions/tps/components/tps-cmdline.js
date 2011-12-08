@@ -45,7 +45,7 @@ const TPS_CMDLINE_CONTRACTID         = "@mozilla.org/commandlinehandler/general-
 const TPS_CMDLINE_CLSID              = Components.ID('{4e5bd3f0-41d3-11df-9879-0800200c9a66}');
 const CATMAN_CONTRACTID              = "@mozilla.org/categorymanager;1";
 const nsISupports                    = Components.interfaces.nsISupports;
-  
+
 const nsICategoryManager             = Components.interfaces.nsICategoryManager;
 const nsICmdLineHandler              = Components.interfaces.nsICmdLineHandler;
 const nsICommandLine                 = Components.interfaces.nsICommandLine;
@@ -97,7 +97,7 @@ TPSCmdLineHandler.prototype =
     Components.utils.import("resource://tps/quit.js", TPS);
     let uri = cmdLine.resolveURI(uristr).spec;
     TPS.RunTestPhase(uri, phase, logfile);
-    
+
     //cmdLine.preventDefault = true;
   },
 

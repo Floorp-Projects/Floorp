@@ -1,7 +1,7 @@
-var gProfD;
+let gSyncProfile;
 
 do_load_httpd_js();
-gProfD = do_get_profile();
+gSyncProfile = do_get_profile();
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
