@@ -7010,7 +7010,7 @@ js_ClearNative(JSContext *cx, JSObject *obj)
         if (shape->isDataDescriptor() &&
             shape->writable() &&
             shape->hasDefaultSetter() &&
-            obj->containsSlot(shape->slot())) {
+            obj->containsSlot(shape->maybeSlot())) {
             obj->setSlot(shape->slot(), UndefinedValue());
         }
     }
