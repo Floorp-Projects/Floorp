@@ -48,8 +48,13 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "URIFixup",
   "@mozilla.org/docshell/urifixup;1", "nsIURIFixup");
+
+XPCOMUtils.defineLazyServiceGetter(this, "Haptic",
+  "@mozilla.org/widget/hapticfeedback;1", "nsIHapticFeedback");
+
 XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
   "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
+
 const kStateActive = 0x00000001; // :active pseudoclass for elements
 
 // TODO: Take into account ppi in these units?
@@ -1576,13 +1581,11 @@ var BrowserEventHandler = {
       // override so that Java can handle panning the main document.
       let data = JSON.parse(aData);
       if (this._firstScrollEvent) {
-        while (this._scrollableElement != null &&
-               !this._elementCanScroll(this._scrollableElement, data.x, data.y))
+        while (this._scrollableElement != null && !this._elementCanScroll(this._scrollableElement, data.x, data.y))
           this._scrollableElement = this._findScrollableElement(this._scrollableElement, false);
 
         let doc = BrowserApp.selectedBrowser.contentDocument;
-        if (this._scrollableElement == doc.body ||
-            this._scrollableElement == doc.documentElement) {
+        if (this._scrollableElement == doc.body || this._scrollableElement == doc.documentElement) {
           sendMessageToJava({ gecko: { type: "Panning:CancelOverride" } });
           return;
         }
@@ -1597,11 +1600,9 @@ var BrowserEventHandler = {
       this._cancelTapHighlight();
     } else if (aTopic == "Gesture:ShowPress") {
       let data = JSON.parse(aData);
-      let closest = ElementTouchHelper.elementFromPoint(BrowserApp.selectedBrowser.contentWindow,
-                                                        data.x, data.y);
+      let closest = ElementTouchHelper.elementFromPoint(BrowserApp.selectedBrowser.contentWindow, data.x, data.y);
       if (!closest)
-        closest = ElementTouchHelper.anyElementFromPoint(BrowserApp.selectedBrowser.contentWindow,
-                                                        data.x, data.y);
+        closest = ElementTouchHelper.anyElementFromPoint(BrowserApp.selectedBrowser.contentWindow, data.x, data.y);
       if (closest) {
         this._doTapHighlight(closest);
 
@@ -1613,8 +1614,7 @@ var BrowserEventHandler = {
         if (this._scrollableElement != null) {
           // Discard if it's the top-level scrollable, we let Java handle this
           let doc = BrowserApp.selectedBrowser.contentDocument;
-          if (this._scrollableElement != doc.body &&
-              this._scrollableElement != doc.documentElement)
+          if (this._scrollableElement != doc.body && this._scrollableElement != doc.documentElement)
             sendMessageToJava({ gecko: { type: "Panning:Override" } });
         }
       }
@@ -1688,6 +1688,9 @@ var BrowserEventHandler = {
   _highlightElement: null,
 
   _doTapHighlight: function _doTapHighlight(aElement) {
+    if (ElementTouchHelper.isElementClickable(aElement))
+      Haptic.performSimpleAction(Haptic.LongPress);
+
     DOMUtils.setContentState(aElement, kStateActive);
     this._highlightElement = aElement;
   },
@@ -1766,8 +1769,7 @@ var BrowserEventHandler = {
       }
 
       // Propagate up iFrames
-      if (!elem.parentNode && elem.documentElement &&
-          elem.documentElement.ownerDocument)
+      if (!elem.parentNode && elem.documentElement && elem.documentElement.ownerDocument)
         elem = elem.documentElement.ownerDocument.defaultView.frameElement;
       else
         elem = elem.parentNode;
@@ -1920,7 +1922,7 @@ const ElementTouchHelper = {
                                                false); /* don't flush layout */
 
     // if this element is clickable we return quickly
-    if (this._isElementClickable(target))
+    if (this.isElementClickable(target))
       return target;
 
     let target = null;
@@ -1932,7 +1934,7 @@ const ElementTouchHelper = {
     let threshold = Number.POSITIVE_INFINITY;
     for (let i = 0; i < nodes.length; i++) {
       let current = nodes[i];
-      if (!current.mozMatchesSelector || !this._isElementClickable(current))
+      if (!current.mozMatchesSelector || !this.isElementClickable(current))
         continue;
 
       let rect = current.getBoundingClientRect();
@@ -1951,7 +1953,7 @@ const ElementTouchHelper = {
     return target;
   },
 
-  _isElementClickable: function _isElementClickable(aElement) {
+  isElementClickable: function isElementClickable(aElement) {
     const selector = "a,:link,:visited,[role=button],button,input,select,textarea,label";
     for (let elem = aElement; elem; elem = elem.parentNode) {
       if (this._hasMouseListener(elem))
