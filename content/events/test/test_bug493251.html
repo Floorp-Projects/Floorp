@@ -60,8 +60,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=493251
 
   function dumpEvent(aEvent) {
     var detail = "target=" + aEvent.target + ", originalTarget=" +
-                 aEvent.originalTarget + ", getPreventDefault()=" +
-                 aEvent.getPreventDefault() + ", isTrusted=" + aEvent.isTrusted;
+                 aEvent.originalTarget + ", defaultPrevented=" +
+                 aEvent.defaultPrevented + ", isTrusted=" + aEvent.isTrusted;
     switch (aEvent.type) {
       case "keydown":
       case "keypress":
