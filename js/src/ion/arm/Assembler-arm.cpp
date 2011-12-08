@@ -531,8 +531,18 @@ Assembler::processDeferredData(IonCode *code, uint8 *data)
 {
     // Deferred Data is something like Pools for X86.
     // Since ARM have competent pools, this isn't actually used.
-
+    // Except of course, for SwitchTables.  Those are really shoehorned
+    // in and don't take up any space in the instruction stream, so dataSize()
+    // is still 0.
+    // NOTE: this means arm will in fact break if the for loop is removed.
     JS_ASSERT(dataSize() == 0);
+
+    for (size_t i = 0; i < data_.length(); i++) {
+        DeferredData *deferred = data_[i];
+        //Bind(code, deferred->label(), data + deferred->offset());
+        deferred->copy(code, data + deferred->offset());
+    }
+
 }
 
 // As far as I can tell, CodeLabels were supposed to be used in switch tables

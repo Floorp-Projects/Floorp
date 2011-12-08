@@ -1939,8 +1939,8 @@ check_backedge:
         ion::MethodStatus status =
             ion::CanEnterAtBranch(cx, script, regs.fp(), regs.pc);
         if (status == ion::Method_Compiled) {
-            bool ok = ion::SideCannon(cx, regs.fp(), regs.pc);
-            if (ok)
+            interpReturnOK = ion::SideCannon(cx, regs.fp(), regs.pc);
+            if (interpReturnOK)
                 goto jit_return;
         }
     }
