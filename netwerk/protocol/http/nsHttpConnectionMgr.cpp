@@ -50,6 +50,7 @@
 
 #include "nsISSLSocketControl.h"
 #include "prnetdb.h"
+#include "mozilla/Telemetry.h"
 
 using namespace mozilla;
 
@@ -660,6 +661,8 @@ nsHttpConnectionMgr::GetSpdyPreferred(nsConnectionEntry *aOriginalEntry)
              "Host %s cannot be confirmed to be joined "
              "with %s connections",
              preferred->mConnInfo->Host(), aOriginalEntry->mConnInfo->Host()));
+        mozilla::Telemetry::Accumulate(mozilla::Telemetry::SPDY_NPN_JOIN,
+                                       false);
         return nsnull;
     }
 
@@ -667,6 +670,7 @@ nsHttpConnectionMgr::GetSpdyPreferred(nsConnectionEntry *aOriginalEntry)
     LOG(("nsHttpConnectionMgr::GetSpdyPreferredConnection "
          "Host %s has cert valid for %s connections",
          preferred->mConnInfo->Host(), aOriginalEntry->mConnInfo->Host()));
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::SPDY_NPN_JOIN, true);
     return preferred;
 }
 

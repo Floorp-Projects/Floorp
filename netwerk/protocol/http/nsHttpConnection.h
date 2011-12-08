@@ -210,6 +210,7 @@ private:
     PRIntervalTime                  mConsiderReusedAfterEpoch;
     PRInt64                         mCurrentBytesRead;   // data read per activation
     PRInt64                         mMaxBytesRead;       // max read in 1 activation
+    PRInt64                         mTotalBytesRead;     // total data read
 
     nsRefPtr<nsIAsyncInputStream>   mInputOverflow;
 
@@ -221,6 +222,10 @@ private:
     bool                            mLastTransactionExpectedNoContent;
     bool                            mIdleMonitoring;
 
+    // The number of <= HTTP/1.1 transactions performed on this connection. This
+    // excludes spdy transactions.
+    PRUint32                        mHttp1xTransactionCount;
+
     // SPDY related
     bool                            mNPNComplete;
     bool                            mSetupNPNCalled;
@@ -228,6 +233,9 @@ private:
     nsRefPtr<mozilla::net::SpdySession> mSpdySession;
     PRInt32                         mPriority;
     bool                            mReportedSpdy;
+
+    // mUsingSpdy is cleared when mSpdySession is freed, this is permanent
+    bool                            mEverUsedSpdy;
 };
 
 #endif // nsHttpConnection_h__
