@@ -5405,7 +5405,6 @@ mv confdefs.h.save confdefs.h
 MAKEFILES="
   Makefile
   shell/Makefile
-  lirasm/Makefile
   jsapi-tests/Makefile
   tests/Makefile
   config/Makefile

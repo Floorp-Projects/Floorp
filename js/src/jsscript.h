@@ -359,6 +359,29 @@ class ScriptOpcodeCounts
     }
 };
 
+class DebugScript
+{
+    friend struct ::JSScript;
+
+    /*
+     * When non-zero, compile script in single-step mode. The top bit is set and
+     * cleared by setStepMode, as used by JSD. The lower bits are a count,
+     * adjusted by changeStepModeCount, used by the Debugger object. Only
+     * when the bit is clear and the count is zero may we compile the script
+     * without single-step support.
+     */
+    uint32          stepMode;
+
+    /* Number of breakpoint sites at opcodes in the script. */
+    uint32          numSites;
+
+    /*
+     * Array with all breakpoints installed at opcodes in the script, indexed
+     * by the offset of the opcode into the script.
+     */
+    BreakpointSite  *breakpoints[1];
+};
+
 } /* namespace js */
 
 static const uint32 JS_SCRIPT_COOKIE = 0xc00cee;
@@ -417,15 +440,6 @@ struct JSScript : public js::gc::Cell {
 
     uint16          nTypeSets;      /* number of type sets used in this script for
                                        dynamic type monitoring */
-
-    /*
-     * When non-zero, compile script in single-step mode. The top bit is set and
-     * cleared by setStepMode, as used by JSD. The lower bits are a count,
-     * adjusted by changeStepModeCount, used by the Debugger object. Only
-     * when the bit is clear and the count is zero may we compile the script
-     * without single-step support.
-     */
-    uint32          stepMode;
 
     uint32          lineno;     /* base line number of script */
 
@@ -513,6 +527,7 @@ struct JSScript : public js::gc::Cell {
     js::ScriptOpcodeCounts pcCounters;
 
   private:
+    js::DebugScript *debug;
     JSFunction      *function_;
   public:
 
@@ -632,7 +647,7 @@ struct JSScript : public js::gc::Cell {
 
     /* Counter accessors. */
     js::OpcodeCounts getCounts(jsbytecode *pc) {
-        JS_ASSERT(unsigned(pc - code) < length);
+        JS_ASSERT(size_t(pc - code) < length);
         return pcCounters.counts[pc - code];
     }
 
@@ -746,7 +761,28 @@ struct JSScript : public js::gc::Cell {
     /* Attempt to change this->stepMode to |newValue|. */
     bool tryNewStepMode(JSContext *cx, uint32 newValue);
 
+    bool ensureHasDebug(JSContext *cx);
+
   public:
+    bool hasBreakpointsAt(jsbytecode *pc) { return !!getBreakpointSite(pc); }
+    bool hasAnyBreakpointsOrStepMode() { return !!debug; }
+
+    js::BreakpointSite *getBreakpointSite(jsbytecode *pc)
+    {
+        JS_ASSERT(size_t(pc - code) < length);
+        return debug ? debug->breakpoints[pc - code] : NULL;
+    }
+
+    js::BreakpointSite *getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc,
+                                                  js::GlobalObject *scriptGlobal);
+
+    void destroyBreakpointSite(JSRuntime *rt, jsbytecode *pc);
+
+    void clearBreakpointsIn(JSContext *cx, js::Debugger *dbg, JSObject *handler);
+    void clearTraps(JSContext *cx);
+
+    void markTrapClosures(JSTracer *trc);
+
     /*
      * Set or clear the single-step flag. If the flag is set or the count
      * (adjusted by changeStepModeCount) is non-zero, then the script is in
@@ -763,10 +799,10 @@ struct JSScript : public js::gc::Cell {
      */
     bool changeStepModeCount(JSContext *cx, int delta);
 
-    bool stepModeEnabled() { return !!stepMode; }
+    bool stepModeEnabled() { return debug && !!debug->stepMode; }
 
 #ifdef DEBUG
-    uint32 stepModeCount() { return stepMode & stepCountMask; }
+    uint32 stepModeCount() { return debug ? (debug->stepMode & stepCountMask) : 0; }
 #endif
 
     void finalize(JSContext *cx, bool background);
@@ -887,15 +923,6 @@ enum LineOption {
 inline const char *
 CurrentScriptFileAndLine(JSContext *cx, uintN *linenop, LineOption = NOT_CALLED_FROM_JSOP_EVAL);
 
-}
-
-static JS_INLINE JSOp
-js_GetOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
-{
-    JSOp op = (JSOp) *pc;
-    if (op == JSOP_TRAP)
-        op = JS_GetTrapOpcode(cx, script, pc);
-    return op;
 }
 
 extern JSScript *

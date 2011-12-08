@@ -345,12 +345,12 @@ class Debugger {
 class BreakpointSite {
     friend class Breakpoint;
     friend struct ::JSCompartment;
+    friend struct ::JSScript;
     friend class Debugger;
 
   public:
     JSScript * const script;
     jsbytecode * const pc;
-    const JSOp realOpcode;
 
   private:
     /*
@@ -377,9 +377,8 @@ class BreakpointSite {
     bool inc(JSContext *cx);
     void dec(JSContext *cx);
     bool setTrap(JSContext *cx, JSTrapHandler handler, const Value &closure);
-    void clearTrap(JSContext *cx, BreakpointSiteMap::Enum *e = NULL,
-                   JSTrapHandler *handlerp = NULL, Value *closurep = NULL);
-    void destroyIfEmpty(JSRuntime *rt, BreakpointSiteMap::Enum *e);
+    void clearTrap(JSContext *cx, JSTrapHandler *handlerp = NULL, Value *closurep = NULL);
+    void destroyIfEmpty(JSRuntime *rt);
 };
 
 /*
@@ -416,7 +415,7 @@ class Breakpoint {
     static Breakpoint *fromDebuggerLinks(JSCList *links);
     static Breakpoint *fromSiteLinks(JSCList *links);
     Breakpoint(Debugger *debugger, BreakpointSite *site, JSObject *handler);
-    void destroy(JSContext *cx, BreakpointSiteMap::Enum *e = NULL);
+    void destroy(JSContext *cx);
     Breakpoint *nextInDebugger();
     Breakpoint *nextInSite();
     const HeapPtrObject &getHandler() const { return handler; }
@@ -486,7 +485,10 @@ Debugger::onEnterFrame(JSContext *cx, Value *vp)
 void
 Debugger::onLeaveFrame(JSContext *cx)
 {
-    if (!cx->compartment->getDebuggees().empty() || !cx->compartment->breakpointSites.empty())
+    /* Traps must be cleared from eval frames, see slowPathOnLeaveFrame. */
+    bool evalTraps = cx->fp()->isEvalFrame() &&
+                     cx->fp()->script()->hasAnyBreakpointsOrStepMode();
+    if (!cx->compartment->getDebuggees().empty() || evalTraps)
         slowPathOnLeaveFrame(cx);
 }
 

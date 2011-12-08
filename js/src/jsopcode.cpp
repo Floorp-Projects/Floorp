@@ -162,7 +162,7 @@ uintN
 js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
                         ptrdiff_t pcoff)
 {
-    JSOp op = js_GetOpcode(cx, script, pc);
+    JSOp op = JSOp(*pc);
     JS_ASSERT(js_CodeSpec[op].length >= 1 + pcoff + UINT16_LEN);
 
     /*
@@ -172,12 +172,12 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
     uintN span = js_CodeSpec[op].length;
     uintN base = 0;
     if (pc - script->code + span < script->length) {
-        JSOp next = js_GetOpcode(cx, script, pc + span);
+        JSOp next = JSOp(pc[span]);
         if (next == JSOP_RESETBASE) {
-            JS_ASSERT(js_GetOpcode(cx, script, pc - JSOP_INDEXBASE_LENGTH) == JSOP_INDEXBASE);
+            JS_ASSERT(JSOp(pc[-JSOP_INDEXBASE_LENGTH]) == JSOP_INDEXBASE);
             base = GET_INDEXBASE(pc - JSOP_INDEXBASE_LENGTH);
         } else if (next == JSOP_RESETBASE0) {
-            JSOp prev = js_GetOpcode(cx, script, pc - 1);
+            JSOp prev = JSOp(pc[-1]);
             JS_ASSERT(JSOP_INDEXBASE1 <= prev && prev <= JSOP_INDEXBASE3);
             base = (prev - JSOP_INDEXBASE1 + 1) << 16;
         }
@@ -186,11 +186,12 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
 }
 
 size_t
-js_GetVariableBytecodeLength(JSOp op, jsbytecode *pc)
+js_GetVariableBytecodeLength(jsbytecode *pc)
 {
     uintN jmplen, ncases;
     jsint low, high;
 
+    JSOp op = JSOp(*pc);
     JS_ASSERT(js_CodeSpec[op].length == -1);
     switch (op) {
       case JSOP_TABLESWITCHX:
@@ -224,7 +225,7 @@ js_GetVariableBytecodeLength(JSOp op, jsbytecode *pc)
 uintN
 js_GetVariableStackUses(JSOp op, jsbytecode *pc)
 {
-    JS_ASSERT(*pc == op || *pc == JSOP_TRAP);
+    JS_ASSERT(*pc == op);
     JS_ASSERT(js_CodeSpec[op].nuses == -1);
     switch (op) {
       case JSOP_POPN:
@@ -246,61 +247,9 @@ js_GetEnterBlockStackDefs(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     JSObject *obj;
 
-    JS_ASSERT(*pc == JSOP_ENTERBLOCK || *pc == JSOP_TRAP);
+    JS_ASSERT(*pc == JSOP_ENTERBLOCK);
     GET_OBJECT_FROM_BYTECODE(script, pc, 0, obj);
     return OBJ_BLOCK_COUNT(cx, obj);
-}
-
-AutoScriptUntrapper::AutoScriptUntrapper()
- : origScript(NULL), origCode(NULL)
-{}
-
-bool
-AutoScriptUntrapper::untrap(JSContext *cx, JSScript *script)
-{
-    JS_ASSERT(!origScript && !origCode);
-
-    BreakpointSiteMap &sites = script->compartment()->breakpointSites;
-    for (BreakpointSiteMap::Range r = sites.all(); !r.empty(); r.popFront()) {
-        BreakpointSite *site = r.front().value;
-        if (site->script == script) {
-            JS_ASSERT(size_t(site->pc - script->code) < script->length);
-            if (size_t(site->pc - script->code) >= script->length)
-                continue;
-            ptrdiff_t off = site->pc - script->code;
-            if (script->code[off] == site->realOpcode)
-                continue;
-            if (!origCode && !saveOriginal(script))
-                return false;
-            script->code[site->pc - script->code] = site->realOpcode;
-        }
-    }
-    if (origCode)
-        GetGSNCache(cx)->purge();
-    return true;
-}
-
-bool
-AutoScriptUntrapper::saveOriginal(JSScript *script)
-{
-    nbytes = script->length * sizeof(jsbytecode);
-
-    origCode = (jsbytecode *) OffTheBooks::malloc_(nbytes);
-    if (!origCode)
-        return false;
-
-    memcpy(origCode, script->code, nbytes);
-    origScript = script;
-    return true;
-}
-
-AutoScriptUntrapper::~AutoScriptUntrapper()
-{
-    JS_ASSERT(!!origCode == !!origScript);
-    if (origCode) {
-        memcpy(origScript->code, origCode, nbytes);
-        Foreground::free_(origCode);
-    }
 }
 
 static const char * countBaseNames[] = {
@@ -401,7 +350,7 @@ js_DumpPCCounts(JSContext *cx, JSScript *script, js::Sprinter *sp)
 
     jsbytecode *pc = script->code;
     while (pc < script->code + script->length) {
-        JSOp op = js_GetOpcode(cx, script, pc);
+        JSOp op = JSOp(*pc);
 
         int len = js_CodeSpec[op].length;
         jsbytecode *next = (len != -1) ? pc + len : pc + js_GetVariableBytecodeLength(pc);
@@ -578,10 +527,6 @@ JS_FRIEND_API(uintN)
 js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
                 uintN loc, JSBool lines, Sprinter *sp)
 {
-    AutoScriptUntrapper untrapper;
-    if (!untrapper.untrap(cx, script))
-        return 0;
-
     JSOp op = (JSOp)*pc;
     if (op >= JSOP_LIMIT) {
         char numBuf1[12], numBuf2[12];
@@ -4561,18 +4506,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 goto do_function;
                 break;
 
-              case JSOP_TRAP:
-                saveop = op = JS_GetTrapOpcode(cx, jp->script, pc);
-                *pc = op;
-                cs = &js_CodeSpec[op];
-                len = cs->length;
-                DECOMPILE_CODE(pc, len);
-                if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
-                    len += GetDecomposeLength(pc, js_CodeSpec[*pc].length);
-                *pc = JSOP_TRAP;
-                todo = -2;
-                break;
-
               case JSOP_HOLE:
                 todo = SprintPut(&ss->sprinter, "", 0);
                 break;
@@ -4936,9 +4869,6 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len,
               uintN pcdepth)
 {
     JSContext *cx = jp->sprinter.context;
-    AutoScriptUntrapper untrapper;
-    if (!untrapper.untrap(cx, script))
-        return false;
 
     uintN depth = StackDepth(script);
     JS_ASSERT(pcdepth <= depth);
@@ -5093,9 +5023,6 @@ js_DecompileFunction(JSPrinter *jp)
 
         /* Print the parameters. */
         jsbytecode *pc = script->main();
-        AutoScriptUntrapper untrapper;
-        if (!untrapper.untrap(jp->sprinter.context, script))
-            return JS_FALSE;;
         jsbytecode *endpc = pc + script->length;
         JSBool ok = JS_TRUE;
 
@@ -5294,9 +5221,6 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
                     jsbytecode *pc)
 {
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
-    AutoScriptUntrapper untrapper;
-    if (!untrapper.untrap(cx, script))
-        return NULL;
 
     JSOp op = (JSOp) *pc;
 
@@ -5468,7 +5392,7 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
     uintN pcdepth = 0;
     ptrdiff_t oplen;
     for (; pc < target; pc += oplen) {
-        JSOp op = js_GetOpcode(cx, script, pc);
+        JSOp op = JSOp(*pc);
         const JSCodeSpec *cs = &js_CodeSpec[op];
         oplen = cs->length;
         if (oplen < 0)
@@ -5492,7 +5416,7 @@ ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target,
             ptrdiff_t jmpoff = js_GetSrcNoteOffset(sn, 0);
             if (pc + jmpoff < target) {
                 pc += jmpoff;
-                op = js_GetOpcode(cx, script, pc);
+                op = JSOp(*pc);
                 JS_ASSERT(op == JSOP_GOTO || op == JSOP_GOTOX);
                 cs = &js_CodeSpec[op];
                 oplen = cs->length;
@@ -5555,22 +5479,11 @@ CallResultEscapes(jsbytecode *pc)
     return (*pc != JSOP_IFEQ);
 }
 
-size_t
-GetBytecodeLength(JSContext *cx, JSScript *script, jsbytecode *pc)
-{
-    JSOp op = js_GetOpcode(cx, script, pc);
-    JS_ASSERT(op < JSOP_LIMIT);
-    JS_ASSERT(op != JSOP_TRAP);
-    if (js_CodeSpec[op].length != -1)
-        return js_CodeSpec[op].length;
-    return js_GetVariableBytecodeLength(op, pc);
-}
-
 extern bool
 IsValidBytecodeOffset(JSContext *cx, JSScript *script, size_t offset)
 {
     // This could be faster (by following jump instructions if the target is <= offset).
-    for (BytecodeRange r(cx, script); !r.empty(); r.popFront()) {
+    for (BytecodeRange r(script); !r.empty(); r.popFront()) {
         size_t here = r.frontOffset();
         if (here >= offset)
             return here == offset;

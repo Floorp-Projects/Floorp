@@ -547,7 +547,7 @@
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
-          if (!aEvent.getPreventDefault()) {
+          if (!aEvent.defaultPrevented) {
             this._userSelecting = true;
             this._mayReverse = true;
             this.moveByOffset(aOffset, !aEvent.ctrlKey, aEvent.shiftKey);

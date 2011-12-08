@@ -37,6 +37,7 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.FloatUtils;
 import android.graphics.Point;
 import android.graphics.PointF;
 import java.lang.Math;
@@ -62,8 +63,8 @@ public final class PointUtils {
     * of each of the original points (weight = 1 returns endPoint, weight = 0 returns startPoint)
     */
    public static PointF interpolate(PointF startPoint, PointF endPoint, float weight) {
-       float x = (startPoint.x-endPoint.x)*weight + endPoint.x;
-       float y = (startPoint.y-endPoint.y)*weight + endPoint.y;
+       float x = FloatUtils.interpolate(startPoint.x, endPoint.x, weight);
+       float y = FloatUtils.interpolate(startPoint.y, endPoint.y, weight);
        return new PointF(x, y);
    }
 }

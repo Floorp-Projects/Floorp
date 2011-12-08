@@ -119,7 +119,7 @@ inline const char *
 CurrentScriptFileAndLine(JSContext *cx, uintN *linenop, LineOption opt)
 {
     if (opt == CALLED_FROM_JSOP_EVAL) {
-        JS_ASSERT(js_GetOpcode(cx, cx->fp()->script(), cx->regs().pc) == JSOP_EVAL);
+        JS_ASSERT(JSOp(*cx->regs().pc) == JSOP_EVAL);
         JS_ASSERT(*(cx->regs().pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
         *linenop = GET_UINT16(cx->regs().pc + JSOP_EVAL_LENGTH);
         return cx->fp()->script()->filename;
