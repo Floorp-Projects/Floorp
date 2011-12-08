@@ -92,6 +92,12 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function () {
   return obj.NetUtil;
 });
 
+XPCOMUtils.defineLazyGetter(this, "Templater", function () {
+  var obj = {};
+  Cu.import("resource:///modules/devtools/Templater.jsm", obj);
+  return obj.Templater;
+});
+
 XPCOMUtils.defineLazyGetter(this, "PropertyPanel", function () {
   var obj = {};
   try {
@@ -6854,14 +6860,36 @@ GcliTerm.prototype = {
 
     let output = aEvent.output.output;
     if (aEvent.output.command.returnType == "html" && typeof output == "string") {
-      let frag = this.document.createRange().createContextualFragment(
+      output = this.document.createRange().createContextualFragment(
           '<div xmlns="' + HTML_NS + '" xmlns:xul="' + XUL_NS + '">' +
-          output + '</div>');
-
-      output = this.document.createElementNS(HTML_NS, "div");
-      output.appendChild(frag);
+          output + '</div>').firstChild;
     }
-    this.writeOutput(output);
+
+    let element = this.document.createRange().createContextualFragment(
+      '<richlistitem xmlns="' + XUL_NS + '" clipboardText="${clipboardText}"' +
+      '    timestamp="${timestamp}" id="${id}" class="hud-msg-node">' +
+      '  <label class="webconsole-timestamp" value="${timestampString}"/>' +
+      '  <vbox class="webconsole-msg-icon-container" style="${iconContainerStyle}">' +
+      '    <image class="webconsole-msg-icon"/>' +
+      '    <spacer flex="1"/>' +
+      '  </vbox>' +
+      '  <hbox flex="1" class="gcliterm-msg-body">${output}</hbox>' +
+      '  <hbox align="start"><label value="1" class="webconsole-msg-repeat"/></hbox>' +
+      '</richlistitem>').firstChild;
+
+    let hud = HUDService.getHudReferenceById(this.hudId);
+    let timestamp = ConsoleUtils.timestamp();
+    new Templater().processNode(element, {
+      iconContainerStyle: "margin-left=" + (hud.groupDepth * GROUP_INDENT) + "px",
+      output: output,
+      timestamp: timestamp,
+      timestampString: ConsoleUtils.timestampString(timestamp),
+      clipboardText: output.innerText,
+      id: "console-msg-" + HUDService.sequenceId()
+    });
+
+    ConsoleUtils.setMessageType(element, CATEGORY_OUTPUT, SEVERITY_LOG);
+    ConsoleUtils.outputMessageNode(element, this.hudId);
   },
 
   /**
