@@ -85,9 +85,10 @@
 
 #include "jsarrayinlines.h"
 #include "jsinterpinlines.h"
+#include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
-#include "jsobjinlines.h"
+#include "jsstrinlines.h"
 
 #include "vm/BooleanObject-inl.h"
 #include "vm/NumberObject-inl.h"
@@ -597,7 +598,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
          * Convert id to a value and then to a string.  Decide early whether we
          * prefer get/set or old getter/setter syntax.
          */
-        JSString *s = js_ValueToString(cx, IdToValue(id));
+        JSString *s = ToString(cx, IdToValue(id));
         if (!s || !(idstr = s->ensureLinear(cx))) {
             ok = JS_FALSE;
             goto error;
@@ -843,25 +844,14 @@ obj_toStringHelper(JSContext *cx, JSObject *obj)
     if (obj->isProxy())
         return Proxy::obj_toString(cx, obj);
 
-    const char *clazz = obj->getClass()->name;
-    size_t nchars = 9 + strlen(clazz); /* 9 for "[object ]" */
-    jschar *chars = (jschar *) cx->malloc_((nchars + 1) * sizeof(jschar));
-    if (!chars)
+    StringBuffer sb(cx);
+    const char *className = obj->getClass()->name;
+    if (!sb.append("[object ") || !sb.appendInflated(className, strlen(className)) || 
+        !sb.append("]"))
+    {
         return NULL;
-
-    const char *prefix = "[object ";
-    nchars = 0;
-    while ((chars[nchars] = (jschar)*prefix) != 0)
-        nchars++, prefix++;
-    while ((chars[nchars] = (jschar)*clazz) != 0)
-        nchars++, clazz++;
-    chars[nchars++] = ']';
-    chars[nchars] = 0;
-
-    JSString *str = js_NewString(cx, chars, nchars);
-    if (!str)
-        cx->free_(chars);
-    return str;
+    }
+    return sb.finishString();
 }
 
 JSObject *
@@ -2648,7 +2638,7 @@ obj_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
     for (size_t i = 0, len = keys.length(); i < len; i++) {
          jsid id = keys[i];
          if (JSID_IS_INT(id)) {
-             JSString *str = js_ValueToString(cx, Int32Value(JSID_TO_INT(id)));
+             JSString *str = js_IntToString(cx, JSID_TO_INT(id));
              if (!str)
                  return false;
              vals[i].setString(str);

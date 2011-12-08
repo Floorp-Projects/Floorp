@@ -9,9 +9,9 @@ var x = 0;
 var y = 0;
 function f() {
     var a = [{}, this];
-    for (var i = 0; i < HOTLOOP + 5 + 1; i++) {
+    for (var i = 0; i < 14; i++) {
         print(shapeOf(this));
-        Object.prototype.watch.call(a[+(i > HOTLOOP)], "y", counter);
+        Object.prototype.watch.call(a[+(i > 8)], "y", counter);
         y++;
     }
 }

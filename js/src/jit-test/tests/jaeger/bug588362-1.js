@@ -1,4 +1,4 @@
-for (a = 0; a < HOTLOOP + 5; a++) {
+for (a = 0; a < 13; a++) {
     (function e() {
         yield eval()
     }())

@@ -729,7 +729,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
     /* Set the 'message' property. */
     JSString *message;
     if (args.length() != 0 && !args[0].isUndefined()) {
-        message = js_ValueToString(cx, args[0]);
+        message = ToString(cx, args[0]);
         if (!message)
             return false;
         args[0].setString(message);
@@ -745,7 +745,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
     /* Set the 'fileName' property. */
     JSString *filename;
     if (args.length() > 1) {
-        filename = js_ValueToString(cx, args[1]);
+        filename = ToString(cx, args[1]);
         if (!filename)
             return false;
         args[1].setString(filename);
@@ -762,7 +762,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
     /* Set the 'lineNumber' property. */
     uint32_t lineno;
     if (args.length() > 2) {
-        if (!ValueToECMAUint32(cx, args[2], &lineno))
+        if (!ToUint32(cx, args[2], &lineno))
             return false;
     } else {
         lineno = iter.done() ? 0 : js_FramePCToLineNumber(cx, iter.fp(), iter.pc());
@@ -776,68 +776,79 @@ Exception(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-/*
- * Convert to string.
- *
- * This method only uses JavaScript-modifiable properties name, message.  It
- * is left to the host to check for private data and report filename and line
- * number information along with this message.
- */
+/* ES5 15.11.4.4 (NB: with subsequent errata). */
 static JSBool
 exn_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    jsval v;
-    JSString *name, *message, *result;
-    jschar *chars, *cp;
-    size_t name_length, message_length, length;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    JSObject *obj = ToObject(cx, &vp[1]);
-    if (!obj)
-        return JS_FALSE;
-    if (!obj->getProperty(cx, cx->runtime->atomState.nameAtom, &v))
-        return JS_FALSE;
-    name = JSVAL_IS_STRING(v) ? JSVAL_TO_STRING(v) : cx->runtime->emptyString;
-    vp->setString(name);
-
-    if (!JS_GetProperty(cx, obj, js_message_str, &v))
-        return JS_FALSE;
-    message = JSVAL_IS_STRING(v) ? JSVAL_TO_STRING(v)
-                                 : cx->runtime->emptyString;
-
-    if (message->length() != 0) {
-        name_length = name->length();
-        message_length = message->length();
-        length = (name_length ? name_length + 2 : 0) + message_length;
-        cp = chars = (jschar *) cx->malloc_((length + 1) * sizeof(jschar));
-        if (!chars)
-            return JS_FALSE;
-
-        if (name_length) {
-            const jschar *name_chars = name->getChars(cx);
-            if (!name_chars)
-                return JS_FALSE;
-            js_strncpy(cp, name_chars, name_length);
-            cp += name_length;
-            *cp++ = ':'; *cp++ = ' ';
-        }
-        const jschar *message_chars = message->getChars(cx);
-        if (!message_chars)
-            return JS_FALSE;
-        js_strncpy(cp, message_chars, message_length);
-        cp += message_length;
-        *cp = 0;
-
-        result = js_NewString(cx, chars, length);
-        if (!result) {
-            cx->free_(chars);
-            return JS_FALSE;
-        }
-    } else {
-        result = name;
+    /* Step 2. */
+    if (!args.thisv().isObject()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_PROTOTYPE, "Error");
+        return false;
     }
 
-    vp->setString(result);
-    return JS_TRUE;
+    /* Step 1. */
+    JSObject &obj = args.thisv().toObject();
+
+    /* Step 3. */
+    Value nameVal;
+    if (!obj.getProperty(cx, cx->runtime->atomState.nameAtom, &nameVal))
+        return false;
+
+    /* Step 4. */
+    JSString *name;
+    if (nameVal.isUndefined()) {
+        name = CLASS_ATOM(cx, Error);
+    } else {
+        name = ToString(cx, nameVal);
+        if (!name)
+            return false;
+    }
+
+    /* Step 5. */
+    Value msgVal;
+    if (!obj.getProperty(cx, cx->runtime->atomState.messageAtom, &msgVal))
+        return false;
+
+    /* Step 6. */
+    JSString *message;
+    if (msgVal.isUndefined()) {
+        message = cx->runtime->emptyString;
+    } else {
+        message = ToString(cx, msgVal);
+        if (!message)
+            return false;
+    }
+
+    /* Step 7. */
+    if (name->empty() && message->empty()) {
+        args.rval().setString(CLASS_ATOM(cx, Error));
+        return true;
+    }
+
+    /* Step 8. */
+    if (name->empty()) {
+        args.rval().setString(message);
+        return true;
+    }
+
+    /* Step 9. */
+    if (message->empty()) {
+        args.rval().setString(name);
+        return true;
+    }
+
+    /* Step 10. */
+    StringBuffer sb(cx);
+    if (!sb.append(name) || !sb.append(": ") || !sb.append(message))
+        return false;
+
+    JSString *str = sb.finishString();
+    if (!str)
+        return false;
+    args.rval().setString(str);
+    return true;
 }
 
 #if JS_HAS_TOSOURCE
@@ -847,134 +858,75 @@ exn_toString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 exn_toSource(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *name, *message, *filename, *lineno_as_str, *result;
-    jsval localroots[3] = {JSVAL_NULL, JSVAL_NULL, JSVAL_NULL};
-    size_t lineno_length, name_length, message_length, filename_length, length;
-    jschar *chars, *cp;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    JSObject *obj = ToObject(cx, &vp[1]);
+    JSObject *obj = ToObject(cx, &args.thisv());
     if (!obj)
         return false;
-    if (!obj->getProperty(cx, cx->runtime->atomState.nameAtom, vp))
-        return false;
-    name = js_ValueToString(cx, *vp);
-    if (!name)
-        return false;
-    vp->setString(name);
 
+    Value nameVal;
+    JSString *name;
+    if (!obj->getProperty(cx, cx->runtime->atomState.nameAtom, &nameVal) ||
+        !(name = ToString(cx, nameVal)))
     {
-        AutoArrayRooter tvr(cx, ArrayLength(localroots), localroots);
-
-#ifdef __GNUC__
-        message = filename = NULL;
-#endif
-        if (!JS_GetProperty(cx, obj, js_message_str, &localroots[0]) ||
-            !(message = js_ValueToSource(cx, localroots[0]))) {
-            return false;
-        }
-        localroots[0] = STRING_TO_JSVAL(message);
-
-        if (!JS_GetProperty(cx, obj, js_fileName_str, &localroots[1]) ||
-            !(filename = js_ValueToSource(cx, localroots[1]))) {
-            return false;
-        }
-        localroots[1] = STRING_TO_JSVAL(filename);
-
-        if (!JS_GetProperty(cx, obj, js_lineNumber_str, &localroots[2]))
-            return false;
-        uint32_t lineno;
-        if (!ValueToECMAUint32(cx, localroots[2], &lineno))
-            return false;
-
-        if (lineno != 0) {
-            lineno_as_str = js_ValueToString(cx, localroots[2]);
-            if (!lineno_as_str)
-                return false;
-            lineno_length = lineno_as_str->length();
-        } else {
-            lineno_as_str = NULL;
-            lineno_length = 0;
-        }
-
-        /* Magic 8, for the characters in ``(new ())''. */
-        name_length = name->length();
-        message_length = message->length();
-        length = 8 + name_length + message_length;
-
-        filename_length = filename->length();
-        if (filename_length != 0) {
-            /* append filename as ``, {filename}'' */
-            length += 2 + filename_length;
-            if (lineno_as_str) {
-                /* append lineno as ``, {lineno_as_str}'' */
-                length += 2 + lineno_length;
-            }
-        } else {
-            if (lineno_as_str) {
-                /*
-                 * no filename, but have line number,
-                 * need to append ``, "", {lineno_as_str}''
-                 */
-                length += 6 + lineno_length;
-            }
-        }
-
-        cp = chars = (jschar *) cx->malloc_((length + 1) * sizeof(jschar));
-        if (!chars)
-            return false;
-
-        *cp++ = '('; *cp++ = 'n'; *cp++ = 'e'; *cp++ = 'w'; *cp++ = ' ';
-        const jschar *name_chars = name->getChars(cx);
-        if (!name_chars)
-            return false;
-        js_strncpy(cp, name_chars, name_length);
-        cp += name_length;
-        *cp++ = '(';
-        const jschar *message_chars = message->getChars(cx);
-        if (!message_chars)
-            return false;
-        if (message_length != 0) {
-            js_strncpy(cp, message_chars, message_length);
-            cp += message_length;
-        }
-
-        if (filename_length != 0) {
-            /* append filename as ``, {filename}'' */
-            *cp++ = ','; *cp++ = ' ';
-            const jschar *filename_chars = filename->getChars(cx);
-            if (!filename_chars)
-                return false;
-            js_strncpy(cp, filename_chars, filename_length);
-            cp += filename_length;
-        } else {
-            if (lineno_as_str) {
-                /*
-                 * no filename, but have line number,
-                 * need to append ``, "", {lineno_as_str}''
-                 */
-                *cp++ = ','; *cp++ = ' '; *cp++ = '"'; *cp++ = '"';
-            }
-        }
-        if (lineno_as_str) {
-            /* append lineno as ``, {lineno_as_str}'' */
-            *cp++ = ','; *cp++ = ' ';
-            const jschar *lineno_chars = lineno_as_str->getChars(cx);
-            if (!lineno_chars)
-                return false;
-            js_strncpy(cp, lineno_chars, lineno_length);
-            cp += lineno_length;
-        }
-
-        *cp++ = ')'; *cp++ = ')'; *cp = 0;
-
-        result = js_NewString(cx, chars, length);
-        if (!result) {
-            cx->free_(chars);
-            return false;
-        }
-        vp->setString(result);
-        return true;
+        return false;
     }
+
+    Value messageVal;
+    JSString *message;
+    if (!obj->getProperty(cx, cx->runtime->atomState.messageAtom, &messageVal) ||
+        !(message = js_ValueToSource(cx, messageVal)))
+    {
+        return false;
+    }
+
+    Value filenameVal;
+    JSString *filename;
+    if (!obj->getProperty(cx, cx->runtime->atomState.fileNameAtom, &filenameVal) ||
+        !(filename = js_ValueToSource(cx, filenameVal)))
+    {
+        return false;
+    }
+
+    Value linenoVal;
+    uint32_t lineno;
+    if (!obj->getProperty(cx, cx->runtime->atomState.lineNumberAtom, &linenoVal) ||
+        !ToUint32(cx, linenoVal, &lineno))
+    {
+        return false;
+    }
+
+    StringBuffer sb(cx);
+    if (!sb.append("(new ") || !sb.append(name) || !sb.append("("))
+        return false;
+
+    if (!sb.append(message))
+        return false;
+
+    if (!filename->empty()) {
+        if (!sb.append(", ") || !sb.append(filename))
+            return false;
+    }
+    if (lineno != 0) {
+        /* We have a line, but no filename, add empty string */
+        if (filename->empty() && !sb.append(", \"\""))
+                return false;
+
+        JSString *linenumber = ToString(cx, linenoVal);
+        if (!linenumber)
+            return false;
+        if (!sb.append(", ") || !sb.append(linenumber))
+            return false;
+    }
+
+    if (!sb.append("))"))
+        return false;
+
+    JSString *str = sb.finishString();
+    if (!str)
+        return false;
+    args.rval().setString(str);
+    return true;
 }
 #endif
 
@@ -1227,10 +1179,10 @@ js_ReportUncaughtException(JSContext *cx)
     AutoArrayRooter tvr(cx, ArrayLength(roots), roots);
 
     /*
-     * Because js_ValueToString below could error and an exception object
-     * could become unrooted, we must root exnObject.  Later, if exnObject is
-     * non-null, we need to root other intermediates, so allocate an operand
-     * stack segment to protect all of these values.
+     * Because ToString below could error and an exception object could become
+     * unrooted, we must root exnObject.  Later, if exnObject is non-null, we
+     * need to root other intermediates, so allocate an operand stack segment
+     * to protect all of these values.
      */
     if (JSVAL_IS_PRIMITIVE(exn)) {
         exnObject = NULL;
@@ -1243,12 +1195,12 @@ js_ReportUncaughtException(JSContext *cx)
     reportp = js_ErrorFromException(cx, exn);
 
     /* XXX L10N angels cry once again. see also everywhere else */
-    str = js_ValueToString(cx, exn);
+    str = ToString(cx, exn);
     JSAutoByteString bytesStorage;
     if (!str) {
         bytes = "unknown (can't convert to string)";
     } else {
-        roots[1] = STRING_TO_JSVAL(str);
+        roots[1] = StringValue(str);
         if (!bytesStorage.encode(cx, str))
             return false;
         bytes = bytesStorage.ptr();
@@ -1267,14 +1219,14 @@ js_ReportUncaughtException(JSContext *cx)
 
         if (!JS_GetProperty(cx, exnObject, js_fileName_str, &roots[3]))
             return false;
-        str = js_ValueToString(cx, roots[3]);
+        str = ToString(cx, roots[3]);
         if (!str || !filename.encode(cx, str))
             return false;
 
         if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, &roots[4]))
             return false;
         uint32_t lineno;
-        if (!ValueToECMAUint32(cx, roots[4], &lineno))
+        if (!ToUint32(cx, roots[4], &lineno))
             return false;
 
         reportp = &report;

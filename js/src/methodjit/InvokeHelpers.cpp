@@ -550,6 +550,9 @@ js_InternalThrow(VMFrame &f)
                     cx->clearPendingException();
                     return NULL;
 
+                case JSTRAP_CONTINUE:
+                  break;
+
                 case JSTRAP_RETURN:
                     cx->clearPendingException();
                     cx->fp()->setReturnValue(rval);
@@ -560,7 +563,7 @@ js_InternalThrow(VMFrame &f)
                     break;
 
                 default:
-                    break;
+                    JS_NOT_REACHED("bad onExceptionUnwind status");
                 }
             }
         }
@@ -576,6 +579,10 @@ js_InternalThrow(VMFrame &f)
         // rely on this property.
         JS_ASSERT(!f.fp()->finishedInInterpreter());
         UnwindScope(cx, 0, cx->isExceptionPending());
+
+        if (cx->compartment->debugMode())
+            js::ScriptDebugEpilogue(cx, f.fp(), false);
+
         ScriptEpilogue(f.cx, f.fp(), false);
 
         // Don't remove the last frame, this is the responsibility of
@@ -654,7 +661,19 @@ void JS_FASTCALL
 stubs::ScriptDebugPrologue(VMFrame &f)
 {
     Probes::enterJSFun(f.cx, f.fp()->maybeFun(), f.fp()->script());
-    js::ScriptDebugPrologue(f.cx, f.fp());
+    JSTrapStatus status = js::ScriptDebugPrologue(f.cx, f.fp());
+    switch (status) {
+      case JSTRAP_CONTINUE:
+        break;
+      case JSTRAP_RETURN:
+        *f.returnAddressLocation() = f.cx->jaegerCompartment()->forceReturnFromFastCall();
+        return;
+      case JSTRAP_ERROR:
+      case JSTRAP_THROW:
+        THROW();
+      default:
+        JS_NOT_REACHED("bad ScriptDebugPrologue status");
+    }
 }
 
 void JS_FASTCALL
@@ -889,8 +908,25 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
             return js_InternalThrow(f);
         fp->formalArgs()[-1].setObject(*obj);
 
-        if (script->debugMode || Probes::callTrackingActive(cx))
-            js::ScriptDebugPrologue(cx, fp);
+        if (Probes::callTrackingActive(cx))
+            Probes::enterJSFun(f.cx, f.fp()->maybeFun(), f.fp()->script());
+
+        if (script->debugMode) {
+            JSTrapStatus status = js::ScriptDebugPrologue(f.cx, f.fp());
+            switch (status) {
+              case JSTRAP_CONTINUE:
+                break;
+              case JSTRAP_RETURN:
+                *f.returnAddressLocation() = f.cx->jaegerCompartment()->forceReturnFromExternC();
+                return NULL;
+              case JSTRAP_THROW:
+              case JSTRAP_ERROR:
+                return js_InternalThrow(f);
+              default:
+                JS_NOT_REACHED("bad ScriptDebugPrologue status");
+            }
+        }
+
         break;
       }
 
@@ -915,6 +951,21 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         /* Construct the 'this' object for the frame if necessary. */
         if (!ScriptPrologueOrGeneratorResume(cx, fp, types::UseNewTypeAtEntry(cx, fp)))
             return js_InternalThrow(f);
+
+        /* 
+         * Having called ScriptPrologueOrGeneratorResume, we would normally call
+         * ScriptDebugPrologue here. But in debug mode, we only use JITted
+         * functions' invokeEntry entry point, whereas CheckArgumentTypes
+         * (REJOIN_CHECK_ARGUMENTS) and FunctionFramePrologue
+         * (REJOIN_FUNCTION_PROLOGUE) are only reachable via the other entry
+         * points. So we should never need either of these rejoin tails in debug
+         * mode.
+         *
+         * If we fix bug 699196 ("Debug mode code could use inline caches
+         * now"), then these cases will become reachable again.
+         */
+        JS_ASSERT(!cx->compartment->debugMode());
+
         break;
 
       case REJOIN_CALL_PROLOGUE:

@@ -29,7 +29,7 @@
       let objectStore = db.createObjectStore(objectStoreName,
                                              { autoIncrement: 1 });
 
-      request = objectStore.add(testString.value);
+      request = objectStore.put(testString.value);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
         testString.key = event.target.result;
@@ -40,7 +40,7 @@
         };
       };
 
-      request = objectStore.add(testInt.value);
+      request = objectStore.put(testInt.value);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
         testInt.key = event.target.result;

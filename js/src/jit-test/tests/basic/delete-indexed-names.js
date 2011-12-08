@@ -5,8 +5,3 @@ for (var i in o)
 for each (var i in a)
     assertEq(o.hasOwnProperty(i), false);
 
-checkStats({
-    recorderAborted:0,
-    traceCompleted:2,
-    sideExitIntoInterpreter:2
-});
