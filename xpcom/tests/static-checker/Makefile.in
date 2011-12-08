@@ -46,13 +46,6 @@ NEED_MDDEPDIR = 1
 
 include $(DEPTH)/config/autoconf.mk
 
-FINAL_FAILURE_TESTCASES = \
-  TestFinal.cpp \
-  TestFinalTemplate.cpp \
-  TestFinalFunction.cpp \
-  TestFinalGrandparentFunction.cpp \
-  $(NULL)
-
 STACK_FAILURE_TESTCASES = \
   TestStack.cpp \
   TestStackTemplate.cpp \
@@ -152,7 +145,6 @@ STATIC_INIT_WARNING_TESTCASES = \
   $(NULL)
 
 STATIC_FAILURE_TESTCASES = \
-  $(FINAL_FAILURE_TESTCASES) \
   $(FLOW_FAILURE_TESTCASES) \
   $(MUST_OVERRIDE_FAILURE_TESTCASES) \
   $(OVERRIDE_FAILURE_TESTCASES) \

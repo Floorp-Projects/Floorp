@@ -899,7 +899,7 @@ struct RuleCascadeData {
   RuleHash                 mRuleHash;
   RuleHash*
     mPseudoElementRuleHashes[nsCSSPseudoElements::ePseudo_PseudoElementCount];
-  nsTArray<nsCSSSelector*> mStateSelectors;
+  nsTArray<nsCSSRuleProcessor::StateSelector>  mStateSelectors;
   nsEventStates            mSelectorDocumentStates;
   PLDHashTable             mClassSelectors;
   PLDHashTable             mIdSelectors;
@@ -2367,22 +2367,26 @@ nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData)
   // code will be matching selectors that aren't real selectors in any
   // stylesheet (e.g., if there is a selector "body > p:hover > a", then
   // "body > p:hover" will be in |cascade->mStateSelectors|).  Note that
-  // |IsStateSelector| below determines which selectors are in
+  // |ComputeSelectorStateDependence| below determines which selectors are in
   // |cascade->mStateSelectors|.
   nsRestyleHint hint = nsRestyleHint(0);
   if (cascade) {
-    nsCSSSelector **iter = cascade->mStateSelectors.Elements(),
-                  **end = iter + cascade->mStateSelectors.Length();
+    StateSelector *iter = cascade->mStateSelectors.Elements(),
+                  *end = iter + cascade->mStateSelectors.Length();
     NodeMatchContext nodeContext(aData->mStateMask, false);
     for(; iter != end; ++iter) {
-      nsCSSSelector* selector = *iter;
+      nsCSSSelector* selector = iter->mSelector;
+      nsEventStates states = iter->mStates;
 
       nsRestyleHint possibleChange = RestyleHintForOp(selector->mOperator);
 
       // If hint already includes all the bits of possibleChange,
       // don't bother calling SelectorMatches, since even if it returns false
       // hint won't change.
+      // Also don't bother calling SelectorMatches if none of the
+      // states passed in are relevant here.
       if ((possibleChange & ~hint) &&
+          states.HasAtLeastOneOfStates(aData->mStateMask) &&
           SelectorMatches(aData->mElement, selector, nodeContext,
                           aData->mTreeMatchContext) &&
           SelectorMatchesTree(aData->mElement, selector->mNext,
@@ -2620,11 +2624,13 @@ nsCSSRuleProcessor::ClearRuleCascades()
 }
 
 
-// This function should return true only for selectors that need to be
-// checked by |HasStateDependentStyle|.
+// This function should return the set of states that this selector
+// depends on; this is used to implement HasStateDependentStyle.  It
+// does NOT recur down into things like :not and :-moz-any.
 inline
-bool IsStateSelector(nsCSSSelector& aSelector)
+nsEventStates ComputeSelectorStateDependence(nsCSSSelector& aSelector)
 {
+  nsEventStates states;
   for (nsPseudoClassList* pseudoClass = aSelector.mPseudoClassList;
        pseudoClass; pseudoClass = pseudoClass->mNext) {
     // Tree pseudo-elements overload mPseudoClassList for things that
@@ -2632,11 +2638,9 @@ bool IsStateSelector(nsCSSSelector& aSelector)
     if (pseudoClass->mType >= nsCSSPseudoClasses::ePseudoClass_Count) {
       continue;
     }
-    if (!sPseudoClassStates[pseudoClass->mType].IsEmpty()) {
-      return true;
-    }
+    states |= sPseudoClassStates[pseudoClass->mType];
   }
-  return false;
+  return states;
 }
 
 static bool
@@ -2684,8 +2688,12 @@ AddSelector(RuleCascadeData* aCascade,
     }
 
     // Build mStateSelectors.
-    if (IsStateSelector(*negation))
-      aCascade->mStateSelectors.AppendElement(aSelectorInTopLevel);
+    nsEventStates dependentStates = ComputeSelectorStateDependence(*negation);
+    if (!dependentStates.IsEmpty()) {
+      aCascade->mStateSelectors.AppendElement(
+        nsCSSRuleProcessor::StateSelector(dependentStates,
+                                          aSelectorInTopLevel));
+    }
 
     // Build mIDSelectors
     if (negation == aSelectorInTopLevel) {

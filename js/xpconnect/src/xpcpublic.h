@@ -237,6 +237,7 @@ struct IterateData
         runtimeThreadsTemporary(0),
         runtimeThreadsRegexpCode(0),
         runtimeThreadsStackCommitted(0),
+        xpconnect(0),
         gcHeapChunkTotal(0),
         gcHeapChunkCleanUnused(0),
         gcHeapChunkDirtyUnused(0),
@@ -264,6 +265,7 @@ struct IterateData
     PRInt64 runtimeThreadsTemporary;
     PRInt64 runtimeThreadsRegexpCode;
     PRInt64 runtimeThreadsStackCommitted;
+    PRInt64 xpconnect;
     PRInt64 gcHeapChunkTotal;
     PRInt64 gcHeapChunkCleanUnused;
     PRInt64 gcHeapChunkDirtyUnused;

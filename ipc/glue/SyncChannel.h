@@ -86,10 +86,6 @@ public:
         mTimeoutMs = (aTimeoutMs <= 0) ? kNoTimeout : aTimeoutMs;
     }
 
-    // Override the AsyncChannel handler so we can dispatch sync messages
-    NS_OVERRIDE virtual void OnMessageReceived(const Message& msg);
-    NS_OVERRIDE virtual void OnChannelError();
-
     static bool IsPumpingMessages() {
         return sIsPumpingMessages;
     }
@@ -98,6 +94,7 @@ public:
     }
 
 #ifdef OS_WIN
+public:
     struct NS_STACK_CLASS SyncStackFrame
     {
         SyncStackFrame(SyncChannel* channel, bool rpc);
@@ -135,19 +132,17 @@ protected:
 #endif // OS_WIN
 
 protected:
+    // Executed on the link thread
+    // Override the AsyncChannel handler so we can dispatch sync messages
+    NS_OVERRIDE virtual void OnMessageReceivedFromLink(const Message& msg);
+    NS_OVERRIDE virtual void OnChannelErrorFromLink();
+
     // Executed on the worker thread
     bool ProcessingSyncMessage() const {
         return mProcessingSyncMessage;
     }
 
     void OnDispatchMessage(const Message& aMsg);
-
-    NS_OVERRIDE
-    bool OnSpecialMessage(uint16 id, const Message& msg)
-    {
-        // SyncChannel doesn't care about any special messages yet
-        return AsyncChannel::OnSpecialMessage(id, msg);
-    }
 
     //
     // Return true if the wait ended because a notification was
@@ -172,7 +167,7 @@ protected:
 
     // On both
     bool AwaitingSyncReply() const {
-        mMonitor.AssertCurrentThreadOwns();
+        mMonitor->AssertCurrentThreadOwns();
         return mPendingReply != 0;
     }
 

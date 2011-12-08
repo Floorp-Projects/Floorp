@@ -28,6 +28,3 @@ assertEq(testConvertibleObjectEqUndefined(),
 	 x4(false) + x4(false) + x4(false) + x4(false) + x4(false) + x4(false) +
 	 x4(false) + x4(false) + x4(false) + x4(false) + "20");
 
-checkStats({
-  sideExitIntoInterpreter: 3
-});

@@ -67,13 +67,6 @@ class nsTString_CharT : public nsTSubstring_CharT
         : substring_type() {}
 
       explicit
-      nsTString_CharT( char_type c )
-        : substring_type()
-        {
-          Assign(c);
-        }
-
-      explicit
       nsTString_CharT( const char_type* data, size_type length = size_type(-1) )
         : substring_type()
         {

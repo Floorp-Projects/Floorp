@@ -36,14 +36,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nscore.h"
+#include "mozilla/Hal.h"
 #include "nsScreen.h"
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/Preferences.h"
+
+using namespace mozilla;
+
+/* static */ bool nsScreen::sInitialized = false;
+/* static */ bool nsScreen::sAllowScreenEnabledProperty = false;
+/* static */ bool nsScreen::sAllowScreenBrightnessProperty = false;
+
+/* static */ void
+nsScreen::Initialize()
+{
+  MOZ_ASSERT(!sInitialized);
+  sInitialized = true;
+  Preferences::AddBoolVarCache(&sAllowScreenEnabledProperty,
+                               "dom.screenEnabledProperty.enabled");
+  Preferences::AddBoolVarCache(&sAllowScreenBrightnessProperty,
+                               "dom.screenBrightnessProperty.enabled");
+}
 
 //
 //  Screen class implementation
@@ -51,6 +70,9 @@
 nsScreen::nsScreen(nsIDocShell* aDocShell)
   : mDocShell(aDocShell)
 {
+  if (!sInitialized) {
+    Initialize();
+  }
 }
 
 nsScreen::~nsScreen()
@@ -235,5 +257,71 @@ nsScreen::GetAvailRect(nsRect& aRect)
   aRect.height = nsPresContext::AppUnitsToIntCSSPixels(aRect.height);
   aRect.width = nsPresContext::AppUnitsToIntCSSPixels(aRect.width);
 
+  return NS_OK;
+}
+
+namespace {
+
+bool
+IsChromeType(nsIDocShell *aDocShell)
+{
+  nsCOMPtr<nsIDocShellTreeItem> ds = do_QueryInterface(aDocShell);
+  if (!ds) {
+    return false;
+  }
+
+  PRInt32 itemType;
+  ds->GetItemType(&itemType);
+  return itemType == nsIDocShellTreeItem::typeChrome;
+}
+
+} // anonymous namespace
+
+nsresult
+nsScreen::GetMozEnabled(bool *aEnabled)
+{
+  if (!sAllowScreenEnabledProperty || !IsChromeType(mDocShell)) {
+    *aEnabled = true;
+    return NS_OK;
+  }
+
+  *aEnabled = hal::GetScreenEnabled();
+  return NS_OK;
+}
+
+nsresult
+nsScreen::SetMozEnabled(bool aEnabled)
+{
+  if (!sAllowScreenEnabledProperty || !IsChromeType(mDocShell)) {
+    return NS_OK;
+  }
+
+  // TODO bug 707589: When the screen's state changes, all visible windows
+  // should fire a visibility change event.
+  hal::SetScreenEnabled(aEnabled);
+  return NS_OK;
+}
+
+nsresult
+nsScreen::GetMozBrightness(double *aBrightness)
+{
+  if (!sAllowScreenBrightnessProperty || !IsChromeType(mDocShell)) {
+    *aBrightness = 1;
+    return NS_OK;
+  }
+
+  *aBrightness = hal::GetScreenBrightness();
+  return NS_OK;
+}
+
+nsresult
+nsScreen::SetMozBrightness(double aBrightness)
+{
+  if (!sAllowScreenBrightnessProperty || !IsChromeType(mDocShell)) {
+    return NS_OK;
+  }
+
+  NS_ENSURE_TRUE(0 <= aBrightness && aBrightness <= 1, NS_ERROR_INVALID_ARG);
+  hal::SetScreenBrightness(aBrightness);
   return NS_OK;
 }

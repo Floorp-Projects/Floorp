@@ -609,7 +609,10 @@ class StackFrame
     /*
      * Function
      *
-     * All function frames have an associated interpreted JSFunction.
+     * All function frames have an associated interpreted JSFunction. The
+     * function returned by fun() and maybeFun() is not necessarily the
+     * original canonical function which the frame's script was compiled
+     * against. To get this function, use maybeScriptFunction().
      */
 
     JSFunction* fun() const {
@@ -619,6 +622,15 @@ class StackFrame
 
     JSFunction* maybeFun() const {
         return isFunctionFrame() ? fun() : NULL;
+    }
+
+    JSFunction* maybeScriptFunction() const {
+        if (!isFunctionFrame())
+            return NULL;
+        const StackFrame *fp = this;
+        while (fp->isEvalFrame())
+            fp = fp->prev();
+        return fp->script()->function();
     }
 
     /*

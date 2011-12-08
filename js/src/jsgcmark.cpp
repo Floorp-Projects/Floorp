@@ -699,16 +699,6 @@ PrintPropertyGetterOrSetter(JSTracer *trc, char *buf, size_t bufsize)
                     trc->debugPrintIndex ? js_setter_str : js_getter_str); 
 }
 
-#ifdef DEBUG
-static void
-PrintPropertyMethod(JSTracer *trc, char *buf, size_t bufsize)
-{
-    JS_ASSERT(trc->debugPrinter == PrintPropertyMethod);
-    Shape *shape = (Shape *)trc->debugPrintArg;
-    PrintPropertyId(buf, bufsize, shape->propid(), " method");
-}
-#endif /* DEBUG */
-
 static inline void
 ScanValue(GCMarker *gcmarker, const Value &v)
 {

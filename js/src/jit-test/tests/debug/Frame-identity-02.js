@@ -18,5 +18,5 @@ g.eval("(" + function () {
     } + ")();");
 
 function f() { debugger; }
-for (var i = 0; i < HOTLOOP + 2; i++)
+for (var i = 0; i < 10; i++)
     assertThrowsValue(f, i);
