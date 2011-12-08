@@ -306,7 +306,7 @@ let Content = {
             metaKey: aEvent.metaKey,
             keyCode: aEvent.keyCode,
             charCode: aEvent.charCode,
-            preventDefault: aEvent.getPreventDefault()
+            preventDefault: aEvent.defaultPrevented
           };
           sendAsyncMessage("Browser:KeyPress", eventData);
         });
@@ -854,7 +854,7 @@ var ContextHandler = {
   },
 
   onContextMenu: function ch_onContextMenu(aEvent) {
-    if (aEvent.getPreventDefault())
+    if (aEvent.defaultPrevented)
       return;
 
     let state = {

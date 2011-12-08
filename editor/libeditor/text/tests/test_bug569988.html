@@ -62,7 +62,7 @@ function onPromptFocus() {
   var listener = {
     handleEvent: function _hv(aEvent)
     {
-      var isPrevented = aEvent.getPreventDefault();
+      var isPrevented = aEvent.defaultPrevented;
       ok(!isPrevented, "ESC key event is prevented by editor");
       SpecialPowers.removeSystemEventListener(gPromptInput, "keypress",
                                               listener, false);
