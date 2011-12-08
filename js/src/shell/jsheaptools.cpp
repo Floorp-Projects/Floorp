@@ -14,7 +14,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is JavaScript shell workers.
+ * The Original Code is JavaScript heap tools.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Corporation.
@@ -22,7 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jason Orendorff <jorendorff@mozilla.com>
+ *   Jim Blandy <jimb@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
