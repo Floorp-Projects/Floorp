@@ -233,7 +233,9 @@ PRLogModuleInfo* nsPluginLogging::gPluginLog = nsnull;
 
 // #defines for plugin cache and prefs
 #define NS_PREF_MAX_NUM_CACHED_INSTANCES "browser.plugins.max_num_cached_plugins"
-#define DEFAULT_NUMBER_OF_STOPPED_INSTANCES 10
+// Raise this from '10' to '50' to work around a bug in Apple's current Java
+// plugins on OS X Lion and SnowLeopard.  See bug 705931.
+#define DEFAULT_NUMBER_OF_STOPPED_INSTANCES 50
 
 #ifdef CALL_SAFETY_ON
 // By default we run OOPP, so we don't want to cover up crashes.
