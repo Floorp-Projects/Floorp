@@ -1024,8 +1024,7 @@ toolbar[iconsize="small"] #feed-button {
 }
 
 /* Favicon */
-#page-proxy-favicon,
-#urlbar-throbber {
+#page-proxy-favicon {
   width: 16px;
   height: 16px;
 }
@@ -1042,10 +1041,6 @@ toolbar[iconsize="small"] #feed-button {
 
 #page-proxy-favicon[pageproxystate="invalid"] {
   opacity: 0.3;
-}
-
-#urlbar-throbber {
-  list-style-image: url("chrome://browser/skin/places/searching_16.png");
 }
 
 /* Identity indicator */
