@@ -113,29 +113,6 @@ already_AddRefed<nsIRunnable> newCompletionEvent(
   mozIStorageCompletionCallback *aCallback
 );
 
-
-/**
- * Performs a sqlite3_step on aStatement, while properly handling SQLITE_LOCKED
- * when not on the main thread by waiting until we are notified.
- *
- * @param aStatement
- *        A pointer to a sqlite3_stmt object.
- * @return the result from sqlite3_step.
- */
-int stepStmt(sqlite3_stmt *aStatement);
-
-/**
- * Obtains a prepared sqlite3_stmt object for aDatabase from aSQL.
- *
- * @param aDatabase
- *        The database the statement will execute on.
- * @param aSQL
- *        The SQL statement to compile.
- * @return the result from sqlite3_prepare_v2.
- */
-int prepareStmt(sqlite3 *aDatabase, const nsCString &aSQL,
-                sqlite3_stmt **_stmt);
-
 } // namespace storage
 } // namespace mozilla
 

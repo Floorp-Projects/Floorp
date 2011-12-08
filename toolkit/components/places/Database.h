@@ -45,9 +45,9 @@
 #include "mozilla/storage.h"
 #include "mozilla/storage/StatementCache.h"
 
-// This is the schema version, update it at any schema change and add a
+// This is the schema version. Update it at any schema change and add a
 // corresponding migrateVxx method below.
-#define DATABASE_SCHEMA_VERSION 13
+#define DATABASE_SCHEMA_VERSION 15
 
 // Fired after Places inited.
 #define TOPIC_PLACES_INIT_COMPLETE "places-init-complete"
@@ -288,8 +288,11 @@ protected:
   nsresult MigrateV9Up();
   nsresult MigrateV10Up();
   nsresult MigrateV11Up();
-  nsresult CheckAndUpdateGUIDs();
   nsresult MigrateV13Up();
+  nsresult MigrateV14Up();
+  nsresult MigrateV15Up();
+
+  nsresult CheckAndUpdateGUIDs();
 
 private:
   ~Database();

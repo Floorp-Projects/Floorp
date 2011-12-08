@@ -65,23 +65,17 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIOBSERVER
 
-  CheckQuotaHelper(IDBDatabase* aDatabase,
+  CheckQuotaHelper(nsPIDOMWindow* aWindow,
                    mozilla::Mutex& aMutex);
 
   bool PromptAndReturnQuotaIsDisabled();
 
   void Cancel();
 
-  PRUint32 WindowSerial()
-  {
-    return mWindowSerial;
-  }
-
 private:
   nsPIDOMWindow* mWindow;
-  PRUint32 mWindowSerial;
-  nsCString mOrigin;
 
+  nsCString mASCIIOrigin;
   mozilla::Mutex& mMutex;
   mozilla::CondVar mCondVar;
   PRUint32 mPromptResult;

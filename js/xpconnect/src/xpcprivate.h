@@ -815,6 +815,8 @@ public:
         return gNewDOMBindingsEnabled;
     }
 
+    size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
+
 private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect);
@@ -1607,6 +1609,12 @@ public:
     void
     DebugDump(PRInt16 depth);
 
+    static size_t
+    SizeOfAllScopesIncludingThis(nsMallocSizeOfFun mallocSizeOf);
+
+    size_t
+    SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
+
     JSBool
     IsValid() const {return mRuntime != nsnull;}
 
@@ -1630,7 +1638,7 @@ public:
     {
         JS_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_XPCONNECT_GLOBAL);
 
-        const js::Value &v = js::GetSlot(obj, JSCLASS_GLOBAL_SLOT_COUNT);
+        const js::Value &v = js::GetObjectSlot(obj, JSCLASS_GLOBAL_SLOT_COUNT);
         return v.isUndefined()
                ? nsnull
                : static_cast<XPCWrappedNativeScope *>(v.toPrivate());
@@ -1812,6 +1820,8 @@ public:
 
     static void DestroyInstance(XPCNativeInterface* inst);
 
+    size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
+
 protected:
     static XPCNativeInterface* NewInstance(XPCCallContext& ccx,
                                            nsIInterfaceInfo* aInfo);
@@ -1953,6 +1963,8 @@ public:
     void DebugDump(PRInt16 depth);
 
     static void DestroyInstance(XPCNativeSet* inst);
+
+    size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
 
 protected:
     static XPCNativeSet* NewInstance(XPCCallContext& ccx,
@@ -3327,7 +3339,14 @@ public:
 
     static JSBool JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
                                  JSUint32 count, const nsXPTType& type,
-                                 const nsID* iid, uintN* pErr);
+                                 const nsID* iid, nsresult* pErr);
+
+    static JSBool JSTypedArray2Native(XPCCallContext& ccx,
+                                      void** d,
+                                      JSObject* jsarray,
+                                      JSUint32 count,
+                                      const nsXPTType& type,
+                                      nsresult* pErr);
 
     static JSBool NativeStringWithSize2JS(JSContext* cx,
                                           jsval* d, const void* s,

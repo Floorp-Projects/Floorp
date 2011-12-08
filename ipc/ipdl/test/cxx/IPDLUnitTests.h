@@ -117,10 +117,7 @@ void IPDLUnitTestChildInit(IPC::Channel* transport,
                            base::ProcessHandle parent,
                            MessageLoop* worker);
 
-inline void QuitChild()
-{
-  XRE_ShutdownChildProcess();
-}
+void QuitChild();
 
 } // namespace _ipdltest
 } // namespace mozilla

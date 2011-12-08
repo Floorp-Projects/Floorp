@@ -90,12 +90,6 @@ ScriptAnalysis::addJump(JSContext *cx, unsigned offset,
     code->jumpTarget = true;
 
     if (offset < *currentOffset) {
-        jsbytecode *pc = script->code + offset;
-        UntrapOpcode untrap(cx, script, pc);
-
-        if (JSOp(*pc) == JSOP_TRACE || JSOp(*pc) == JSOP_NOTRACE)
-            code->loopHead = true;
-
         /* Scripts containing loops are never inlined. */
         isInlineable = false;
 
@@ -177,7 +171,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
     LifoAlloc &tla = cx->typeLifoAlloc();
 
     unsigned length = script->length;
-    unsigned nargs = script->hasFunction ? script->function()->nargs : 0;
+    unsigned nargs = script->function() ? script->function()->nargs : 0;
 
     numSlots = TotalSlots(script);
 
@@ -229,15 +223,16 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
     if (cx->compartment->debugMode())
         usesReturnValue_ = true;
 
+    bool heavyweight = script->function() && script->function()->isHeavyweight();
+
     isInlineable = true;
-    if (script->nClosedArgs || script->nClosedVars ||
-        (script->hasFunction && script->function()->isHeavyweight()) ||
+    if (script->nClosedArgs || script->nClosedVars || heavyweight ||
         script->usesEval || script->usesArguments || cx->compartment->debugMode()) {
         isInlineable = false;
     }
 
     modifiesArguments_ = false;
-    if (script->nClosedArgs || (script->hasFunction && script->function()->isHeavyweight()))
+    if (script->nClosedArgs || heavyweight)
         modifiesArguments_ = true;
 
     canTrackVars = true;
@@ -284,8 +279,6 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
         Bytecode *code = maybeCode(offset);
         jsbytecode *pc = script->code + offset;
 
-        UntrapOpcode untrap(cx, script, pc);
-
         JSOp op = (JSOp)*pc;
         JS_ASSERT(op < JSOP_LIMIT);
 
@@ -313,7 +306,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
         if (forwardCatch)
             code->inTryBlock = true;
 
-        if (untrap.trap) {
+        if (script->hasBreakpointsAt(pc)) {
             code->safePoint = true;
             isInlineable = canTrackVars = false;
         }
@@ -665,11 +658,10 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
             loop->hasSafePoints = true;
 
         jsbytecode *pc = script->code + offset;
-        UntrapOpcode untrap(cx, script, pc);
 
         JSOp op = (JSOp) *pc;
 
-        if ((op == JSOP_TRACE || op == JSOP_NOTRACE) && code->loop) {
+        if (op == JSOP_LOOPHEAD && code->loop) {
             /*
              * This is the head of a loop, we need to go and make sure that any
              * variables live at the head are live at the backedge and points prior.
@@ -816,7 +808,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 
 #ifdef DEBUG
                 JSOp nop = JSOp(script->code[targetOffset]);
-                JS_ASSERT(nop == JSOP_TRACE || nop == JSOP_NOTRACE || nop == JSOP_TRAP);
+                JS_ASSERT(nop == JSOP_LOOPHEAD);
 #endif
 
                 /*
@@ -857,7 +849,6 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                     } while (!maybeCode(entry));
 
                     jsbytecode *entrypc = script->code + entry;
-                    UntrapOpcode untrap(cx, script, entrypc);
 
                     if (JSOp(*entrypc) == JSOP_GOTO || JSOp(*entrypc) == JSOP_GOTOX)
                         loop->entry = entry + GetJumpOffset(entrypc, entrypc);
@@ -1158,7 +1149,6 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
     uint32 offset = 0;
     while (offset < script->length) {
         jsbytecode *pc = script->code + offset;
-        UntrapOpcode untrap(cx, script, pc);
         JSOp op = (JSOp)*pc;
 
         uint32 successorOffset = offset + GetBytecodeLength(pc);
@@ -1173,7 +1163,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             PodZero(stack + stackDepth, code->stackDepth - stackDepth);
         stackDepth = code->stackDepth;
 
-        if ((op == JSOP_TRACE || op == JSOP_NOTRACE) && code->loop) {
+        if (op == JSOP_LOOPHEAD && code->loop) {
             /*
              * Make sure there is a pending value array for phi nodes at the
              * loop head. We won't be able to clear these until we reach the
@@ -1751,7 +1741,6 @@ CrossScriptSSA::foldValue(const CrossSSAValue &cv)
 
     if (v.kind() == SSAValue::PUSHED) {
         jsbytecode *pc = frame.script->code + v.pushedOffset();
-        UntrapOpcode untrap(cx, frame.script, pc);
 
         switch (JSOp(*pc)) {
           case JSOP_THIS:
@@ -1782,7 +1771,6 @@ CrossScriptSSA::foldValue(const CrossSSAValue &cv)
                 uint32 offset = 0;
                 while (offset < callee->length) {
                     jsbytecode *pc = callee->code + offset;
-                    UntrapOpcode untrap(cx, callee, pc);
                     if (analysis->maybeCode(pc) && JSOp(*pc) == JSOP_RETURN)
                         return foldValue(CrossSSAValue(calleeFrame, analysis->poppedValue(pc, 0)));
                     offset += GetBytecodeLength(pc);
@@ -1841,7 +1829,6 @@ ScriptAnalysis::printSSA(JSContext *cx)
             continue;
 
         jsbytecode *pc = script->code + offset;
-        UntrapOpcode untrap(cx, script, pc);
 
         PrintBytecode(cx, script, pc);
 

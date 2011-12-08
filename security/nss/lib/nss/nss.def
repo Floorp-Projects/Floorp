@@ -1028,3 +1028,9 @@ NSS_GetVersion;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.13.2 { 	# NSS 3.13.2 release
+;+    global:
+PK11_ImportEncryptedPrivateKeyInfoAndReturnKey;
+;+    local:
+;+       *;
+;+};

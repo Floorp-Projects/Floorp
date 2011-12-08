@@ -992,7 +992,7 @@ function makePreview(row)
   }
 #endif
   else {
-    // fallback image for protocols not allowed (e.g., data: or javascript:)
+    // fallback image for protocols not allowed (e.g., javascript:)
     // or elements not [yet] handled (e.g., object, embed).
     document.getElementById("brokenimagecontainer").collapsed = false;
     document.getElementById("theimagecontainer").collapsed = true;
@@ -1228,8 +1228,6 @@ function selectImage()
 function checkProtocol(img)
 {
   var url = img[COL_IMAGE_ADDRESS];
-  if (/^data:/.test(url) && /^image\//.test(img[COL_IMAGE_NODE].type))
-    return true;
-  const regex = /^(https?|ftp|file|about|chrome|resource):/;
-  return regex.test(url);
+  return /^data:image\//i.test(url) ||
+    /^(https?|ftp|file|about|chrome|resource):/.test(url);
 }

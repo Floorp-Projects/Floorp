@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="application/javascript">
+      window.addEventListener('message', doContentTest);
+
+      function doContentTest() {
+
+        // This has always worked.
+        var nodelist1 = document.getElementsByTagName('details');
+        Object.getOwnPropertyDescriptor(nodelist1, 'length');
+        ok(nodelist1['length'] == 0, "Content should be able to get the length of " +
+                                     "its own nodelist after calling getOwnPropertyDescriptor.");
+
+        // This is bug 706301.
+        var nodelist2 = document.getElementsByTagName('section');
+        ok(getLengthInChrome(nodelist2), "Chrome should be able to get the length of " +
+                                         "content nodelist after calling getOwnPropertyDescriptor.");
+
+        // All done.
+        finishTestInChrome();
+      }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

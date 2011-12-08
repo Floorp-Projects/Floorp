@@ -46,11 +46,11 @@ function runTests()
       switch (aEvent.eventPhase) {
       case aEvent.CAPTURING_PHASE:
         capturingPhase.fired = true;
-        capturingPhase.prevented = aEvent.getPreventDefault();
+        capturingPhase.prevented = aEvent.defaultPrevented;
         break;
       case aEvent.BUBBLING_PHASE:
         bubblingPhase.fired = true;
-        bubblingPhase.prevented = aEvent.getPreventDefault();
+        bubblingPhase.prevented = aEvent.defaultPrevented;
         aEvent.preventDefault(); // prevent the browser default behavior
         break;
       default:

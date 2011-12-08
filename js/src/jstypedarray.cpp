@@ -73,8 +73,12 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
-/* slots can only be upto 255 */
-static const uint8 ARRAYBUFFER_RESERVED_SLOTS = 16;
+/*
+ * Allocate array buffers with the maximum number of fixed slots marked as
+ * reserved, so that the fixed slots may be used for the buffer's contents.
+ * The last fixed slot is kept for the object's private data.
+ */
+static const uint8 ARRAYBUFFER_RESERVED_SLOTS = JSObject::MAX_FIXED_SLOTS - 1;
 
 static bool
 ValueIsLength(JSContext *cx, const Value &v, jsuint *len)
@@ -143,7 +147,7 @@ JSBool
 ArrayBuffer::class_constructor(JSContext *cx, uintN argc, Value *vp)
 {
     int32 nbytes = 0;
-    if (argc > 0 && !ValueToECMAInt32(cx, vp[2], &nbytes))
+    if (argc > 0 && !ToInt32(cx, vp[2], &nbytes))
         return false;
 
     JSObject *bufobj = create(cx, nbytes);
@@ -159,26 +163,30 @@ JSObject::allocateArrayBufferSlots(JSContext *cx, uint32 size)
     /*
      * ArrayBuffer objects delegate added properties to another JSObject, so
      * their internal layout can use the object's fixed slots for storage.
+     * Set up the object to look like an array with an elements header.
      */
-    JS_ASSERT(isArrayBuffer() && !hasSlotsArray());
+    JS_ASSERT(isArrayBuffer() && !hasDynamicSlots() && !hasDynamicElements());
 
-    uint32 bytes = size + sizeof(Value);
-    if (size > sizeof(HeapValue) * ARRAYBUFFER_RESERVED_SLOTS - sizeof(HeapValue) ) {
-        HeapValue *tmpslots = (HeapValue *)cx->calloc_(bytes);
-        if (!tmpslots)
+    size_t usableSlots = ARRAYBUFFER_RESERVED_SLOTS - ObjectElements::VALUES_PER_HEADER;
+
+    if (size > sizeof(Value) * usableSlots) {
+        ObjectElements *newheader = (ObjectElements *)cx->calloc_(size + sizeof(ObjectElements));
+        if (!newheader)
             return false;
-        slots = tmpslots;
-        /*
-         * Note that |bytes| may not be a multiple of |sizeof(Value)|, so
-         * |capacity * sizeof(Value)| may underestimate the size by up to
-         * |sizeof(Value) - 1| bytes.
-         */
-        capacity = bytes / sizeof(HeapValue);
+        elements = newheader->elements();
     } else {
-        slots = fixedSlots();
-        memset(slots, 0, bytes);
+        elements = fixedElements();
+        memset(fixedSlots(), 0, size + sizeof(ObjectElements));
     }
-    *((uint32*)slots) = size;
+    getElementsHeader()->length = size;
+
+    /*
+     * Note that |bytes| may not be a multiple of |sizeof(Value)|, so
+     * |capacity * sizeof(Value)| may underestimate the size by up to
+     * |sizeof(Value) - 1| bytes.
+     */
+    getElementsHeader()->capacity = size / sizeof(Value);
+
     return true;
 }
 
@@ -186,7 +194,7 @@ static JSObject *
 DelegateObject(JSContext *cx, JSObject *obj)
 {
     if (!obj->getPrivate()) {
-        JSObject *delegate = NewNonFunction<WithProto::Given>(cx, &ObjectClass, obj->getProto(), NULL);
+        JSObject *delegate = NewObjectWithGivenProto(cx, &ObjectClass, obj->getProto(), NULL);
         obj->setPrivate(delegate);
         return delegate;
     }
@@ -199,6 +207,7 @@ ArrayBuffer::create(JSContext *cx, int32 nbytes)
     JSObject *obj = NewBuiltinClassInstance(cx, &ArrayBuffer::slowClass);
     if (!obj)
         return NULL;
+    JS_ASSERT(obj->getAllocKind() == gc::FINALIZE_OBJECT16);
 
     if (nbytes < 0) {
         /*
@@ -211,8 +220,13 @@ ArrayBuffer::create(JSContext *cx, int32 nbytes)
     }
 
     JS_ASSERT(obj->getClass() == &ArrayBuffer::slowClass);
-    obj->setSharedNonNativeMap();
-    obj->setClass(&ArrayBufferClass);
+
+    js::Shape *empty = EmptyShape::getInitialShape(cx, &ArrayBufferClass,
+                                                   obj->getProto(), obj->getParent(),
+                                                   gc::FINALIZE_OBJECT16);
+    if (!empty)
+        return NULL;
+    obj->setLastPropertyInfallible(empty);
 
     /*
      * The first 8 bytes hold the length.
@@ -831,7 +845,7 @@ TypedArray::lengthOffset()
 /* static */ int
 TypedArray::dataOffset()
 {
-    return offsetof(JSObject, privateData);
+    return JSObject::getPrivateDataOffset(NUM_FIXED_SLOTS);
 }
 
 /* Helper clamped uint8 type */
@@ -1331,6 +1345,7 @@ class TypedArrayTemplate
         JSObject *obj = NewBuiltinClassInstance(cx, slowClass());
         if (!obj)
             return NULL;
+        JS_ASSERT(obj->getAllocKind() == gc::FINALIZE_OBJECT8);
 
         /*
          * Specialize the type of the object on the current scripted location,
@@ -1363,11 +1378,16 @@ class TypedArrayTemplate
         JS_ASSERT(getDataOffset(obj) <= offsetData(obj, bufferByteLength));
 
         JS_ASSERT(obj->getClass() == slowClass());
-        obj->setSharedNonNativeMap();
-        obj->setClass(fastClass());
 
-        // FIXME Bug 599008: make it ok to call preventExtensions here.
-        obj->flags |= JSObject::NOT_EXTENSIBLE;
+        js::Shape *empty = EmptyShape::getInitialShape(cx, fastClass(),
+                                                       obj->getProto(), obj->getParent(),
+                                                       gc::FINALIZE_OBJECT8,
+                                                       BaseShape::NOT_EXTENSIBLE);
+        if (!empty)
+            return NULL;
+        obj->setLastPropertyInfallible(empty);
+
+        JS_ASSERT(obj->numFixedSlots() == NUM_FIXED_SLOTS);
 
         return obj;
     }
@@ -1434,7 +1454,7 @@ class TypedArrayTemplate
         int32_t length = -1;
 
         if (argc > 1) {
-            if (!ValueToInt32(cx, argv[1], &byteOffset))
+            if (!NonstandardToInt32(cx, argv[1], &byteOffset))
                 return NULL;
             if (byteOffset < 0) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1443,7 +1463,7 @@ class TypedArrayTemplate
             }
 
             if (argc > 2) {
-                if (!ValueToInt32(cx, argv[2], &length))
+                if (!NonstandardToInt32(cx, argv[2], &length))
                     return NULL;
                 if (length < 0) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1477,7 +1497,7 @@ class TypedArrayTemplate
         int32_t length = int32(getLength(tarray));
 
         if (args.length() > 0) {
-            if (!ValueToInt32(cx, args[0], &begin))
+            if (!NonstandardToInt32(cx, args[0], &begin))
                 return false;
             if (begin < 0) {
                 begin += length;
@@ -1488,7 +1508,7 @@ class TypedArrayTemplate
             }
 
             if (args.length() > 1) {
-                if (!ValueToInt32(cx, args[1], &end))
+                if (!NonstandardToInt32(cx, args[1], &end))
                     return false;
                 if (end < 0) {
                     end += length;
@@ -1529,7 +1549,7 @@ class TypedArrayTemplate
         int32_t off = 0;
 
         if (args.length() > 1) {
-            if (!ValueToInt32(cx, args[1], &off))
+            if (!NonstandardToInt32(cx, args[1], &off))
                 return false;
 
             if (off < 0 || uint32_t(off) > getLength(tarray)) {
@@ -1687,32 +1707,39 @@ class TypedArrayTemplate
 
   protected:
     static NativeType
+    nativeFromDouble(double d)
+    {
+        if (!ArrayTypeIsFloatingPoint() && JS_UNLIKELY(JSDOUBLE_IS_NaN(d)))
+            return NativeType(int32(0));
+        if (TypeIsFloatingPoint<NativeType>())
+            return NativeType(d);
+        if (TypeIsUnsigned<NativeType>())
+            return NativeType(js_DoubleToECMAUint32(d));
+        return NativeType(js_DoubleToECMAInt32(d));
+    }
+
+    static NativeType
     nativeFromValue(JSContext *cx, const Value &v)
     {
         if (v.isInt32())
             return NativeType(v.toInt32());
 
-        if (v.isDouble()) {
-            double d = v.toDouble();
-            if (!ArrayTypeIsFloatingPoint() && JS_UNLIKELY(JSDOUBLE_IS_NaN(d)))
-                return NativeType(int32(0));
-            if (TypeIsFloatingPoint<NativeType>())
-                return NativeType(d);
-            if (TypeIsUnsigned<NativeType>())
-                return NativeType(js_DoubleToECMAUint32(d));
-            return NativeType(js_DoubleToECMAInt32(d));
-        }
+        if (v.isDouble())
+            return nativeFromDouble(v.toDouble());
 
-        if (v.isPrimitive() && !v.isMagic()) {
+        /*
+         * The condition guarantees that holes and undefined values
+         * are treated identically.
+         */
+        if (v.isPrimitive() && !v.isMagic() && !v.isUndefined()) {
             jsdouble dval;
             JS_ALWAYS_TRUE(ToNumber(cx, v, &dval));
-            return NativeType(dval);
+            return nativeFromDouble(dval);
         }
 
-        if (ArrayTypeIsFloatingPoint())
-            return NativeType(js_NaN);
-
-        return NativeType(int32(0));
+        return ArrayTypeIsFloatingPoint()
+               ? NativeType(js_NaN)
+               : NativeType(int32(0));
     }
 
     static bool
@@ -1731,10 +1758,13 @@ class TypedArrayTemplate
 
             const Value *src = ar->getDenseArrayElements();
 
+            /*
+             * It is valid to skip the hole check here because nativeFromValue
+             * treats a hole as undefined.
+             */
             for (uintN i = 0; i < len; ++i)
                 *dest++ = nativeFromValue(cx, *src++);
         } else {
-            // slow path
             Value v;
 
             for (uintN i = 0; i < len; ++i) {

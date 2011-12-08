@@ -29,10 +29,3 @@ var obj = {
 
 loop(C.call(obj, false), false);
 C.call(obj, true);
-
-checkStats({
-    recorderStarted: 1,
-    recorderAborted: 0,
-    traceCompleted: 2,
-    traceTriggered: 4
-});

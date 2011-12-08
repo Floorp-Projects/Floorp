@@ -65,7 +65,18 @@ struct HasResultCodes
     };
 };
 
-class AsyncChannel : public Transport::Listener, protected HasResultCodes
+
+class RefCountedMonitor : public Monitor
+{
+public:
+    RefCountedMonitor() 
+        : Monitor("mozilla.ipc.AsyncChannel.mMonitor")
+    {}
+
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefCountedMonitor)
+};
+
+class AsyncChannel : protected HasResultCodes
 {
 protected:
     typedef mozilla::Monitor Monitor;
@@ -111,6 +122,16 @@ public:
     // i.e., mChannelState == ChannelConnected.
     bool Open(Transport* aTransport, MessageLoop* aIOLoop=0, Side aSide=Unknown);
     
+    // "Open" a connection to another thread in the same process.
+    //
+    // Returns true iff the transport layer was successfully connected,
+    // i.e., mChannelState == ChannelConnected.
+    //
+    // For more details on the process of opening a channel between
+    // threads, see the extended comment on this function
+    // in AsyncChannel.cpp.
+    bool Open(AsyncChannel *aTargetChan, MessageLoop *aTargetLoop, Side aSide);
+
     // Close the underlying transport channel.
     void Close();
 
@@ -125,15 +146,87 @@ public:
     void DispatchOnChannelConnected(int32 peer_pid);
 
     //
-    // These methods are called on the "IO" thread
+    // Each AsyncChannel is associated with either a ProcessLink or a
+    // ThreadLink via the field mLink.  The type of link is determined
+    // by whether this AsyncChannel is communicating with another
+    // process or another thread.  In the former case, file
+    // descriptors or a socket are used via the I/O queue.  In the
+    // latter case, messages are enqueued directly onto the target
+    // thread's work queue.
     //
 
-    // Implement the Transport::Listener interface
-    NS_OVERRIDE virtual void OnMessageReceived(const Message& msg);
-    NS_OVERRIDE virtual void OnChannelConnected(int32 peer_pid);
-    NS_OVERRIDE virtual void OnChannelError();
+    class Link {
+    protected:
+        AsyncChannel *mChan;
+
+    public:
+        Link(AsyncChannel *aChan);
+        virtual ~Link();
+
+        // n.b.: These methods all require that the channel monitor is
+        // held when they are invoked.
+        virtual void EchoMessage(Message *msg) = 0;
+        virtual void SendMessage(Message *msg) = 0;
+        virtual void SendClose() = 0;
+    };
+
+    class ProcessLink : public Link, public Transport::Listener {
+    protected:
+        Transport* mTransport;
+        MessageLoop* mIOLoop;       // thread where IO happens
+        Transport::Listener* mExistingListener; // channel's previous listener
+    
+        void OnCloseChannel();
+        void OnChannelOpened();
+        void OnEchoMessage(Message* msg);
+
+        void AssertIOThread() const
+        {
+            NS_ABORT_IF_FALSE(mIOLoop == MessageLoop::current(),
+                              "not on I/O thread!");
+        }
+
+    public:
+        ProcessLink(AsyncChannel *chan);
+        virtual ~ProcessLink();
+        void Open(Transport* aTransport, MessageLoop *aIOLoop, Side aSide);
+        
+        // Run on the I/O thread, only when using inter-process link.
+        // These methods acquire the monitor and forward to the
+        // similarly named methods in AsyncChannel below
+        // (OnMessageReceivedFromLink(), etc)
+        NS_OVERRIDE virtual void OnMessageReceived(const Message& msg);
+        NS_OVERRIDE virtual void OnChannelConnected(int32 peer_pid);
+        NS_OVERRIDE virtual void OnChannelError();
+
+        NS_OVERRIDE virtual void EchoMessage(Message *msg);
+        NS_OVERRIDE virtual void SendMessage(Message *msg);
+        NS_OVERRIDE virtual void SendClose();
+    };
+    
+    class ThreadLink : public Link {
+    protected:
+        AsyncChannel* mTargetChan;
+    
+    public:
+        ThreadLink(AsyncChannel *aChan, AsyncChannel *aTargetChan);
+        virtual ~ThreadLink();
+
+        NS_OVERRIDE virtual void EchoMessage(Message *msg);
+        NS_OVERRIDE virtual void SendMessage(Message *msg);
+        NS_OVERRIDE virtual void SendClose();
+    };
 
 protected:
+    // The "link" thread is either the I/O thread (ProcessLink) or the
+    // other actor's work thread (ThreadLink).  In either case, it is
+    // NOT our worker thread.
+    void AssertLinkThread() const
+    {
+        NS_ABORT_IF_FALSE(mWorkerLoop != MessageLoop::current(),
+                          "on worker thread but should not be!");
+    }
+
     // Can be run on either thread
     void AssertWorkerThread() const
     {
@@ -141,16 +234,26 @@ protected:
                           "not on worker thread!");
     }
 
-    void AssertIOThread() const
-    {
-        NS_ABORT_IF_FALSE(mIOLoop == MessageLoop::current(),
-                          "not on IO thread!");
-    }
-
     bool Connected() const {
-        mMonitor.AssertCurrentThreadOwns();
+        mMonitor->AssertCurrentThreadOwns();
         return ChannelConnected == mChannelState;
     }
+
+    // Return true if |msg| is a special message targeted at the IO
+    // thread, in which case it shouldn't be delivered to the worker.
+    virtual bool MaybeInterceptSpecialIOMessage(const Message& msg);
+    void ProcessGoodbyeMessage();
+
+    // Runs on the link thread. Invoked either from the I/O thread methods above
+    // or directly from the other actor if using a thread-based link.
+    // 
+    // n.b.: mMonitor is always held when these methods are invoked.
+    // In the case of a ProcessLink, it is acquired by the ProcessLink.
+    // In the case of a ThreadLink, it is acquired by the other actor, 
+    // which then invokes these methods directly.
+    virtual void OnMessageReceivedFromLink(const Message& msg);
+    virtual void OnChannelErrorFromLink();
+    void PostErrorNotifyTask();
 
     // Run on the worker thread
     void OnDispatchMessage(const Message& aMsg);
@@ -165,40 +268,25 @@ protected:
 
     // Run on the worker thread
 
-    void SendThroughTransport(Message* msg) const;
-
     void OnNotifyMaybeChannelError();
     virtual bool ShouldDeferNotifyMaybeError() const {
         return false;
     }
     void NotifyChannelClosed();
     void NotifyMaybeChannelError();
+    void OnOpenAsSlave(AsyncChannel *aTargetChan, Side aSide);
+    void CommonThreadOpenInit(AsyncChannel *aTargetChan, Side aSide);
 
     virtual void Clear();
 
-    // Run on the IO thread
-
-    void OnChannelOpened();
-    void OnCloseChannel();
-    void PostErrorNotifyTask();
-    void OnEchoMessage(Message* msg);
-
-    // Return true if |msg| is a special message targeted at the IO
-    // thread, in which case it shouldn't be delivered to the worker.
-    bool MaybeInterceptSpecialIOMessage(const Message& msg);
-    void ProcessGoodbyeMessage();
-
-    Transport* mTransport;
     AsyncListener* mListener;
     ChannelState mChannelState;
-    Monitor mMonitor;
-    MessageLoop* mIOLoop;       // thread where IO happens
+    nsRefPtr<RefCountedMonitor> mMonitor;
     MessageLoop* mWorkerLoop;   // thread where work is done
     bool mChild;                // am I the child or parent?
     CancelableTask* mChannelErrorTask; // NotifyMaybeChannelError runnable
-    Transport::Listener* mExistingListener; // channel's previous listener
+    Link *mLink;                // link to other thread/process
 };
-
 
 } // namespace ipc
 } // namespace mozilla

@@ -95,8 +95,8 @@ mjit::Compiler::tryBinaryConstantFold(JSContext *cx, FrameState &frame, JSOp op,
      * is infallible.
      */
     if (needInt) {
-        JS_ALWAYS_TRUE(ValueToECMAInt32(cx, L, &nL));
-        JS_ALWAYS_TRUE(ValueToECMAInt32(cx, R, &nR));
+        JS_ALWAYS_TRUE(ToInt32(cx, L, &nL));
+        JS_ALWAYS_TRUE(ToInt32(cx, R, &nR));
     } else {
         JS_ALWAYS_TRUE(ToNumber(cx, L, &dL));
         JS_ALWAYS_TRUE(ToNumber(cx, R, &dR));

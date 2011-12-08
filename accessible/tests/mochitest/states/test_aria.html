@@ -97,6 +97,18 @@
       // disabled, too. See bug 429285.
       testAriaDisabledTree("group");
 
+      // active state caused by aria-activedescendant
+      testStates("as_item1", 0, EXT_STATE_ACTIVE);
+      testStates("as_item2", 0, 0, 0, EXT_STATE_ACTIVE);
+
+      // universal ARIA properties inherited from file input control
+      var fileTextField = getAccessible("fileinput").firstChild;
+      testStates(fileTextField,
+                 STATE_BUSY | STATE_UNAVAILABLE | STATE_REQUIRED | STATE_HASPOPUP | STATE_INVALID);
+      var fileBrowseButton = getAccessible("fileinput").lastChild;
+      testStates(fileBrowseButton,
+                 STATE_BUSY | STATE_UNAVAILABLE | STATE_REQUIRED | STATE_HASPOPUP | STATE_INVALID);
+
       // offscreen test
       testStates("aria_offscreen_textbox", STATE_OFFSCREEN);
 
@@ -171,6 +183,16 @@
      title="aria-orientation should be applied to separator and slider roles">
     Mozilla Bug 681674
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=699017"
+     title="File input control should be propogate states to descendants">
+    Mozilla Bug 699017
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=689847"
+     title="Expose active state on current item of selectable widgets">
+    Mozilla Bug 689847
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -215,7 +237,22 @@
     </div>
     <div role="slider" tabindex="0">A slider</div>
   </div>
-  
+
+  <!-- Test active state -->
+  <div id="as_listbox" tabindex="0" role="listbox"
+       aria-activedescendant="as_item1">
+    <div role="option" id="as_item1">Item 1</div>
+    <div role="option" id="as_item2">Item 2</div>
+  </div>
+
+  <!-- universal ARIA properties should be inherited by text field of file input -->
+  <input type="file" id="fileinput"
+         aria-busy="true"
+         aria-disabled="true"
+         aria-required="true"
+         aria-haspopup="true"
+         aria-invalid="true">
+
   <div id="offscreen_log" role="log" class="offscreen">
     <div id="aria_offscreen_textbox" role="textbox" aria-readonly="true">This text should be offscreen</div>
   </div>

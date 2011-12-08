@@ -273,6 +273,25 @@ nsHTMLButtonAccessible::DoAction(PRUint8 aIndex)
 }
 
 PRUint64
+nsHTMLButtonAccessible::State()
+{
+  PRUint64 state = nsHyperTextAccessibleWrap::State();
+  if (state == states::DEFUNCT)
+    return state;
+
+  // Inherit states from input@type="file" suitable for the button. Note,
+  // no special processing for unavailable state since inheritance is supplied
+  // other code paths.
+  if (mParent && mParent->IsHTMLFileInput()) {
+    PRUint64 parentState = mParent->State();
+    state |= parentState & (states::BUSY | states::REQUIRED |
+                            states::HASPOPUP | states::INVALID);
+  }
+
+  return state;
+}
+
+PRUint64
 nsHTMLButtonAccessible::NativeState()
 {
   PRUint64 state = nsHyperTextAccessibleWrap::NativeState();
@@ -477,7 +496,25 @@ nsHTMLTextFieldAccessible::ApplyARIAState(PRUint64* aState)
   nsHyperTextAccessibleWrap::ApplyARIAState(aState);
 
   nsStateMapEntry::MapToStates(mContent, aState, eARIAAutoComplete);
+}
 
+PRUint64
+nsHTMLTextFieldAccessible::State()
+{
+  PRUint64 state = nsHyperTextAccessibleWrap::State();
+  if (state & states::DEFUNCT)
+    return state;
+
+  // Inherit states from input@type="file" suitable for the button. Note,
+  // no special processing for unavailable state since inheritance is supplied
+  // by other code paths.
+  if (mParent && mParent->IsHTMLFileInput()) {
+    PRUint64 parentState = mParent->State();
+    state |= parentState & (states::BUSY | states::REQUIRED |
+      states::HASPOPUP | states::INVALID);
+  }
+
+  return state;
 }
 
 PRUint64
@@ -616,6 +653,61 @@ nsHTMLTextFieldAccessible::ContainerWidget() const
 // nsHTMLGroupboxAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
+nsHTMLFileInputAccessible::
+nsHTMLFileInputAccessible(nsIContent* aContent, nsIWeakReference* aShell) :
+  nsHyperTextAccessibleWrap(aContent, aShell)
+{
+  mFlags |= eHTMLFileInputAccessible;
+}
+
+PRUint32
+nsHTMLFileInputAccessible::NativeRole()
+{
+  // JAWS wants a text container, others don't mind. No specific role in
+  // AT APIs.
+  return nsIAccessibleRole::ROLE_TEXT_CONTAINER;
+}
+
+nsresult
+nsHTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent)
+{
+  nsresult rv = nsHyperTextAccessibleWrap::HandleAccEvent(aEvent);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Redirect state change events for inherited states to child controls. Note,
+  // unavailable state is not redirected. That's a standard for unavailable
+  // state handling.
+  AccStateChangeEvent* event = downcast_accEvent(aEvent);
+  if (event &&
+      (event->GetState() == states::BUSY ||
+       event->GetState() == states::REQUIRED ||
+       event->GetState() == states::HASPOPUP ||
+       event->GetState() == states::INVALID)) {
+    nsAccessible* input = GetChildAt(0);
+    if (input && input->Role() == nsIAccessibleRole::ROLE_ENTRY) {
+      nsRefPtr<AccStateChangeEvent> childEvent =
+        new AccStateChangeEvent(input, event->GetState(),
+                                event->IsStateEnabled(),
+                                (event->IsFromUserInput() ? eFromUserInput : eNoUserInput));
+      nsEventShell::FireEvent(childEvent);
+    }
+
+    nsAccessible* button = GetChildAt(1);
+    if (button && button->Role() == nsIAccessibleRole::ROLE_PUSHBUTTON) {
+      nsRefPtr<AccStateChangeEvent> childEvent =
+        new AccStateChangeEvent(button, event->GetState(),
+                                event->IsStateEnabled(),
+                                (event->IsFromUserInput() ? eFromUserInput : eNoUserInput));
+      nsEventShell::FireEvent(childEvent);
+    }
+  }
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLGroupboxAccessible
+////////////////////////////////////////////////////////////////////////////////
+
 nsHTMLGroupboxAccessible::
   nsHTMLGroupboxAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
   nsHyperTextAccessibleWrap(aContent, aShell)
@@ -628,11 +720,11 @@ nsHTMLGroupboxAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_GROUPING;
 }
 
-nsIContent* nsHTMLGroupboxAccessible::GetLegend()
+nsIContent*
+nsHTMLGroupboxAccessible::GetLegend()
 {
-  nsresult count = 0;
-  nsIContent *legendContent = nsnull;
-  while ((legendContent = mContent->GetChildAt(count++)) != nsnull) {
+  for (nsIContent* legendContent = mContent->GetFirstChild(); legendContent;
+       legendContent = legendContent->GetNextSibling()) {
     if (legendContent->NodeInfo()->Equals(nsGkAtoms::legend,
                                           mContent->GetNameSpaceID())) {
       // Either XHTML namespace or no namespace
@@ -700,4 +792,107 @@ PRUint32
 nsHTMLLegendAccessible::NativeRole()
 {
   return nsIAccessibleRole::ROLE_LABEL;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLFigureAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+nsHTMLFigureAccessible::
+  nsHTMLFigureAccessible(nsIContent* aContent, nsIWeakReference* aShell) :
+  nsHyperTextAccessibleWrap(aContent, aShell)
+{
+}
+
+nsresult
+nsHTMLFigureAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
+{
+  nsresult rv = nsHyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Expose figure xml-role.
+  nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
+                         NS_LITERAL_STRING("figure"));
+  return NS_OK;
+}
+
+PRUint32
+nsHTMLFigureAccessible::NativeRole()
+{
+  return nsIAccessibleRole::ROLE_FIGURE;
+}
+
+nsresult
+nsHTMLFigureAccessible::GetNameInternal(nsAString& aName)
+{
+  nsresult rv = nsHyperTextAccessibleWrap::GetNameInternal(aName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!aName.IsEmpty())
+    return NS_OK;
+
+  nsIContent* captionContent = Caption();
+  if (captionContent) {
+    return nsTextEquivUtils::
+      AppendTextEquivFromContent(this, captionContent, &aName);
+  }
+
+  return NS_OK;
+}
+
+Relation
+nsHTMLFigureAccessible::RelationByType(PRUint32 aType)
+{
+  Relation rel = nsHyperTextAccessibleWrap::RelationByType(aType);
+  if (aType == nsIAccessibleRelation::RELATION_LABELLED_BY)
+    rel.AppendTarget(Caption());
+
+  return rel;
+}
+
+nsIContent*
+nsHTMLFigureAccessible::Caption() const
+{
+  for (nsIContent* childContent = mContent->GetFirstChild(); childContent;
+       childContent = childContent->GetNextSibling()) {
+    if (childContent->NodeInfo()->Equals(nsGkAtoms::figcaption,
+                                         mContent->GetNameSpaceID())) {
+      return childContent;
+    }
+  }
+
+  return nsnull;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTMLFigcaptionAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+nsHTMLFigcaptionAccessible::
+  nsHTMLFigcaptionAccessible(nsIContent* aContent, nsIWeakReference* aShell) :
+  nsHyperTextAccessibleWrap(aContent, aShell)
+{
+}
+
+PRUint32
+nsHTMLFigcaptionAccessible::NativeRole()
+{
+  return nsIAccessibleRole::ROLE_CAPTION;
+}
+
+Relation
+nsHTMLFigcaptionAccessible::RelationByType(PRUint32 aType)
+{
+  Relation rel = nsHyperTextAccessibleWrap::RelationByType(aType);
+  if (aType != nsIAccessibleRelation::RELATION_LABEL_FOR)
+    return rel;
+
+  nsAccessible* figure = Parent();
+  if (figure &&
+      figure->GetContent()->NodeInfo()->Equals(nsGkAtoms::figure,
+                                               mContent->GetNameSpaceID())) {
+    rel.AppendTarget(figure);
+  }
+
+  return rel;
 }

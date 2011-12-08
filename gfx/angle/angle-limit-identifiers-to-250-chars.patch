@@ -1,11 +1,11 @@
 # HG changeset patch
-# Parent e8b87ef36a1dae3bbd7abb13c4bb0a0bb8f5b58c
+# Parent 099e4d30cde1424e15dd9a72fb4b2589754ceaa0
 diff --git a/gfx/angle/README.mozilla b/gfx/angle/README.mozilla
 --- a/gfx/angle/README.mozilla
 +++ b/gfx/angle/README.mozilla
 @@ -2,16 +2,17 @@ This is the ANGLE project, from http://c
  
- Current revision: r802
+ Current revision: r885
  
  == Applied local patches ==
  

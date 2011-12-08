@@ -133,20 +133,6 @@ FunctionBox::scopeIsExtensible() const
     return tcflags & TCF_FUN_EXTENSIBLE_SCOPE;
 }
 
-bool
-FunctionBox::shouldUnbrand(uintN methods, uintN slowMethods) const
-{
-    if (slowMethods != 0) {
-        for (const FunctionBox *funbox = this; funbox; funbox = funbox->parent) {
-            if (!(funbox->tcflags & TCF_FUN_MODULE_PATTERN))
-                return true;
-            if (funbox->inLoop)
-                return true;
-        }
-    }
-    return false;
-}
-
 /* Add |node| to |parser|'s free node list. */
 void
 ParseNodeAllocator::freeNode(ParseNode *pn)

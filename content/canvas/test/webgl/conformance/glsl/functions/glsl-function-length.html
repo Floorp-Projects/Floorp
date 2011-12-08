@@ -25,6 +25,7 @@ GLSLGenerator.runFeatureTest({
   args: "$(type) value",
   baseArgs: "value$(field)",
   testFunc: "$(func)($(type))",
+  fragmentTolerance: 1,
   emuFuncs: [
     { type: "float",
       code: [

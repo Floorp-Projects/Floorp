@@ -78,6 +78,7 @@
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
+#include "jsstrinlines.h"
 
 #include "vm/Stack-inl.h"
 
@@ -1189,7 +1190,7 @@ date_parse(JSContext *cx, uintN argc, Value *vp)
         vp->setDouble(js_NaN);
         return true;
     }
-    str = js_ValueToString(cx, vp[2]);
+    str = ToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
     vp[2].setString(str);
@@ -1228,9 +1229,11 @@ SetUTCTime(JSContext *cx, JSObject *obj, jsdouble t, Value *vp = NULL)
 {
     JS_ASSERT(obj->isDate());
 
-    size_t slotCap = JS_MIN(obj->numSlots(), JSObject::DATE_CLASS_RESERVED_SLOTS);
-    for (size_t ind = JSObject::JSSLOT_DATE_COMPONENTS_START; ind < slotCap; ind++)
+    for (size_t ind = JSObject::JSSLOT_DATE_COMPONENTS_START;
+         ind < JSObject::DATE_CLASS_RESERVED_SLOTS;
+         ind++) {
         obj->setSlot(ind, UndefinedValue());
+    }
 
     obj->setDateUTCTime(DoubleValue(t));
     if (vp)
@@ -1256,12 +1259,6 @@ FillLocalTimes(JSContext *cx, JSObject *obj)
     JS_ASSERT(obj->isDate());
 
     jsdouble utcTime = obj->getDateUTCTime().toNumber();
-
-    /* Make sure there are slots to store the cached information. */
-    if (obj->numSlots() < JSObject::DATE_CLASS_RESERVED_SLOTS) {
-        if (!obj->growSlots(cx, JSObject::DATE_CLASS_RESERVED_SLOTS))
-            return false;
-    }
 
     if (!JSDOUBLE_IS_FINITE(utcTime)) {
         for (size_t ind = JSObject::JSSLOT_DATE_COMPONENTS_START;
@@ -2420,7 +2417,7 @@ date_toLocaleFormat(JSContext *cx, uintN argc, Value *vp)
     if (!obj)
         return ok;
 
-    JSString *fmt = js_ValueToString(cx, args[0]);
+    JSString *fmt = ToString(cx, args[0]);
     if (!fmt)
         return false;
 
@@ -2459,9 +2456,6 @@ date_toDateString(JSContext *cx, uintN argc, Value *vp)
 }
 
 #if JS_HAS_TOSOURCE
-#include <string.h>
-#include "jsnum.h"
-
 static JSBool
 date_toSource(JSContext *cx, uintN argc, Value *vp)
 {
@@ -2472,23 +2466,14 @@ date_toSource(JSContext *cx, uintN argc, Value *vp)
     if (!obj)
         return ok;
 
-    double utctime = obj->getDateUTCTime().toNumber();
-
-    ToCStringBuf cbuf;
-    char *numStr = NumberToCString(cx, &cbuf, utctime);
-    if (!numStr) {
-        JS_ReportOutOfMemory(cx);
+    StringBuffer sb(cx);
+    if (!sb.append("(new Date(") || !NumberValueToStringBuffer(cx, obj->getDateUTCTime(), sb) ||
+        !sb.append("))"))
+    {
         return false;
     }
 
-    char *bytes = JS_smprintf("(new %s(%s))", js_Date_str, numStr);
-    if (!bytes) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-
-    JSString *str = JS_NewStringCopyZ(cx, bytes);
-    cx->free_(bytes);
+    JSString *str = sb.finishString();
     if (!str)
         return false;
     args.rval().setString(str);
@@ -2526,7 +2511,7 @@ date_valueOf(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Convert to number only if the hint was given, otherwise favor string. */
-    JSString *str = js_ValueToString(cx, args[0]);
+    JSString *str = ToString(cx, args[0]);
     if (!str)
         return false;
     JSLinearString *linear_str = str->ensureLinear(cx);
@@ -2621,7 +2606,7 @@ js_Date(JSContext *cx, uintN argc, Value *vp)
             d = TIMECLIP(d);
         } else {
             /* the argument is a string; parse it. */
-            JSString *str = js_ValueToString(cx, args[0]);
+            JSString *str = ToString(cx, args[0]);
             if (!str)
                 return false;
             args[0].setString(str);
@@ -2696,8 +2681,6 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
     {
         return NULL;
     }
-    if (!cx->typeInferenceEnabled())
-        dateProto->brand(cx);
 
     if (!DefineConstructorAndPrototype(cx, global, JSProto_Date, ctor, dateProto))
         return NULL;
@@ -2709,7 +2692,7 @@ JS_FRIEND_API(JSObject *)
 js_NewDateObjectMsec(JSContext *cx, jsdouble msec_time)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, &DateClass);
-    if (!obj || !obj->ensureSlots(cx, JSObject::DATE_CLASS_RESERVED_SLOTS))
+    if (!obj)
         return NULL;
     if (!SetUTCTime(cx, obj, msec_time))
         return NULL;

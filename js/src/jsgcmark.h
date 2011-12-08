@@ -82,6 +82,9 @@ void
 MarkShape(JSTracer *trc, const MarkablePtr<const Shape> &shape, const char *name);
 
 void
+MarkBaseShapeUnbarriered(JSTracer *trc, BaseShape *shape, const char *name);
+
+void
 MarkTypeObjectUnbarriered(JSTracer *trc, types::TypeObject *type, const char *name);
 
 void
@@ -192,6 +195,13 @@ MarkChildren(JSTracer *trc, JSScript *script);
 
 void
 MarkChildren(JSTracer *trc, JSXML *xml);
+
+/*
+ * Marks all the children of a shape except the parent, which avoids using
+ * unbounded stack space. Returns the parent.
+ */
+const Shape *
+MarkShapeChildrenAcyclic(JSTracer *trc, const Shape *shape);
 
 /*
  * Use function overloading to decide which function should be called based on

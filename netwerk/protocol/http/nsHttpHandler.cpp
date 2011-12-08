@@ -174,6 +174,7 @@ nsHttpHandler::nsHttpHandler()
     , mReferrerLevel(0xff) // by default we always send a referrer
     , mFastFallbackToIPv4(false)
     , mIdleTimeout(10)
+    , mSpdyTimeout(180)
     , mMaxRequestAttempts(10)
     , mMaxRequestDelay(10)
     , mIdleSynTimeout(250)
@@ -198,6 +199,9 @@ nsHttpHandler::nsHttpHandler()
     , mSendSecureXSiteReferrer(true)
     , mEnablePersistentHttpsCaching(false)
     , mDoNotTrackEnabled(false)
+    , mEnableSpdy(false)
+    , mCoalesceSpdy(true)
+    , mUseAlternateProtocol(false)
 {
 #if defined(PR_LOGGING)
     gHttpLog = PR_NewLogModule("nsHttp");
@@ -1082,6 +1086,31 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("phishy-userpass-length"), &val);
         if (NS_SUCCEEDED(rv))
             mPhishyUserPassLength = (PRUint8) clamped(val, 0, 0xff);
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.enabled"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mEnableSpdy = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.coalesce-hostnames"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("spdy.coalesce-hostnames"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mCoalesceSpdy = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.use-alternate-protocol"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("spdy.use-alternate-protocol"),
+                                &cVar);
+        if (NS_SUCCEEDED(rv))
+            mUseAlternateProtocol = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.timeout"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("spdy.timeout"), &val);
+        if (NS_SUCCEEDED(rv))
+            mSpdyTimeout = (PRUint16) clamped(val, 1, 0xffff);
     }
 
     //

@@ -168,10 +168,7 @@ nsHTMLFormatConverter::CanConvert(const char *aFromDataFlavor, const char *aToDa
   if ( !_retval )
     return NS_ERROR_INVALID_ARG;
 
-    // STRING USE WARNING: reduce conversions here?
-  
   *_retval = false;
-  nsAutoString fromFlavor; fromFlavor.AssignWithConversion( aFromDataFlavor );
   if ( !nsCRT::strcmp(aFromDataFlavor, kHTMLMime) ) {
     if ( !nsCRT::strcmp(aToDataFlavor, kHTMLMime) )
       *_retval = true;

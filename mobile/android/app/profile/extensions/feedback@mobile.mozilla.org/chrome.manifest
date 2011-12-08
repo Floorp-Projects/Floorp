@@ -1,0 +1,5 @@
+content feedback content/
+skin    feedback classic/1.0 skin/
+locale  feedback en-US       locale/en-US/
+
+overlay	chrome://browser/content/browser.xul  chrome://feedback/content/overlay.xul

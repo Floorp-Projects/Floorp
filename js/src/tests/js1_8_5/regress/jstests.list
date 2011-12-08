@@ -1,6 +1,9 @@
 url-prefix ../../jsreftest.html?test=js1_8_5/regress/
 script no-array-comprehension-length-limit.js
+script regress-373843.js
 script regress-383902.js
+script regress-469758.js
+require-or(debugMode,skip) script regress-476088.js
 script regress-500528.js
 script regress-533876.js
 script regress-541255-0.js

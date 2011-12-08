@@ -66,7 +66,7 @@
 #include "cert.h"
 #include "sslproto.h"
 
-#define VERSIONSTRING "$Revision: 1.19 $ ($Date: 2010/02/16 18:56:47 $) $Author: wtc%google.com $"
+#define VERSIONSTRING "$Revision: 1.20 $ ($Date: 2011/11/05 23:09:28 $) $Author: wtc%google.com $"
 
 
 struct _DataBufferList;
@@ -1516,11 +1516,11 @@ int main(int argc,  char *argv[])
 {
   char *hostname=NULL;
   PRUint16 rendport=DEFPORT,port;
-  PRHostEnt hp;
+  PRAddrInfo *ai;
+  void *iter;
   PRStatus r;
   PRNetAddr na_client,na_server,na_rend;
   PRFileDesc *s_server,*s_client,*s_rend; /*rendezvous */
-  char netdbbuf[PR_NETDB_BUF_SIZE];
   int c_count=0;
   PLOptState *optstate;
   PLOptStatus status;
@@ -1591,14 +1591,14 @@ int main(int argc,  char *argv[])
       PR_fprintf(PR_STDOUT,"<BODY><PRE>\n");
     }
   PR_fprintf(PR_STDERR,"Looking up \"%s\"...\n", hostname);
-  r = PR_GetHostByName(hostname,netdbbuf,PR_NETDB_BUF_SIZE,&hp);
-  if (r) {
+  ai = PR_GetAddrInfoByName(hostname, PR_AF_UNSPEC, PR_AI_ADDRCONFIG);
+  if (!ai) {
     showErr("Host Name lookup failed\n");
     exit(5);
   }
 
-  PR_EnumerateHostEnt(0,&hp,0,&na_server);
-  PR_InitializeNetAddr(PR_IpAddrNull,port,&na_server);
+  iter = NULL;
+  iter = PR_EnumerateAddrInfo(iter, ai, port, &na_server);
   /* set up the port which the client will connect to */
 
   r = PR_InitializeNetAddr(PR_IpAddrAny,rendport,&na_rend);
@@ -1641,7 +1641,7 @@ int main(int argc,  char *argv[])
 	exit(7);
       }
 
-      s_server = PR_NewTCPSocket();
+      s_server = PR_OpenTCPSocket(na_server.raw.family);
       if (s_server == NULL) {
 	showErr("couldn't open new socket to connect to server \n");
 	exit(8);

@@ -16,6 +16,9 @@ public:
     TestRaceDeferralParent();
     virtual ~TestRaceDeferralParent();
 
+    static bool RunTestInProcesses() { return true; }
+    static bool RunTestInThreads() { return true; }
+
     void Main();
 
 protected:

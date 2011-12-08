@@ -75,6 +75,7 @@ struct MacroAssemblerTypedefs {
     typedef JSC::RepatchBuffer RepatchBuffer;
     typedef JSC::CodeLocationLabel CodeLocationLabel;
     typedef JSC::CodeLocationDataLabel32 CodeLocationDataLabel32;
+    typedef JSC::CodeLocationDataLabelPtr CodeLocationDataLabelPtr;
     typedef JSC::CodeLocationJump CodeLocationJump;
     typedef JSC::CodeLocationCall CodeLocationCall;
     typedef JSC::CodeLocationInstruction CodeLocationInstruction;

@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="XUL listbox element test.">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+  <![CDATA[
+    function doTest()
+    {
+      var id = "";
+      var listbox = null, acc = null;
+
+      //////////////////////////////////////////////////////////////////////////
+      // Simple listbox. There is no nsIAccessibleTable interface.
+
+      id = "listbox1";
+      acc = getAccessible(id);
+
+      // query nsIAccessibleTable
+      try {
+        acc.QueryInterface(nsIAccessibleTable);
+        ok(false,
+           id + " shouldn't implement nsIAccessibleTable interface.");
+      } catch(e) {
+        ok(true, id + " doesn't implement nsIAccessibleTable interface.");
+      }
+
+      // role
+      testRole(id, ROLE_LISTBOX);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox style="overflow: auto;">
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=418371"
+       title="implement the rest of methods of nsIAccessibleTable on xul:listbox">
+      Mozilla Bug 418371
+    </a>
+    <p id="display"></p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+  <vbox flex="1">
+    <label control="listbox1" value="listbox: "/>
+    <listbox id="listbox1">
+      <listitem label="item1" id="item1"/>
+      <listitem label="item2" id="item2"/>
+    </listbox>
+  </vbox>
+  </hbox>
+
+</window>
+

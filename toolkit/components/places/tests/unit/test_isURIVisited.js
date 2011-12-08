@@ -9,7 +9,9 @@ const SCHEMES = {
   "ftp://": true,
   "file:///": true,
   "about:": false,
-  "imap://": false,
+// nsIIOService.newURI() can throw if e.g. the app knows about imap://
+// but the account is not set up and so the URL is invalid for it.
+//  "imap://": false,
   "news://": false,
   "mailbox:": false,
   "moz-anno:favicon:http://": false,

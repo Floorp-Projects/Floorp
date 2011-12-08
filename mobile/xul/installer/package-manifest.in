@@ -82,6 +82,7 @@
 #ifdef ANDROID
 @BINPATH@/AndroidManifest.xml
 @BINPATH@/resources.arsc
+@BINPATH@/package-name.txt
 @BINPATH@/classes.dex
 @BINPATH@/@DLL_PREFIX@mozutils@DLL_SUFFIX@
 @BINPATH@/res/drawable
@@ -150,6 +151,10 @@
 @BINPATH@/components/docshell.xpt
 @BINPATH@/components/dom.xpt
 @BINPATH@/components/dom_base.xpt
+#ifdef MOZ_B2G_RIL
+@BINPATH@/components/dom_telephony.xpt
+@BINPATH@/components/dom_system_b2g.xpt
+#endif
 @BINPATH@/components/dom_battery.xpt
 @BINPATH@/components/dom_canvas.xpt
 @BINPATH@/components/dom_core.xpt
@@ -261,6 +266,9 @@
 @BINPATH@/components/widget.xpt
 #ifdef XP_MACOSX
 @BINPATH@/components/widget_cocoa.xpt
+#endif
+#ifdef ANDROID
+@BINPATH@/components/widget_android.xpt
 #endif
 @BINPATH@/components/windowds.xpt
 @BINPATH@/components/windowwatcher.xpt
@@ -384,6 +392,12 @@
 @BINPATH@/components/messageWakeupService.manifest
 @BINPATH@/components/nsFilePicker.js
 @BINPATH@/components/nsFilePicker.manifest
+#ifdef MOZ_B2G_RIL
+@BINPATH@/components/nsTelephonyWorker.manifest
+@BINPATH@/components/nsTelephonyWorker.js
+@BINPATH@/components/Telephony.manifest
+@BINPATH@/components/Telephony.js
+#endif
 #ifdef XP_MACOSX
 @BINPATH@/components/libalerts_s.dylib
 #endif

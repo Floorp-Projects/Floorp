@@ -219,6 +219,7 @@ struct State
 
     GLint unpackAlignment;
     GLint packAlignment;
+    bool packReverseRowOrder;
 };
 
 // Helper class to construct and cache vertex declarations
@@ -360,6 +361,9 @@ class Context
     void setPackAlignment(GLint alignment);
     GLint getPackAlignment() const;
 
+    void setPackReverseRowOrder(bool reverseRowOrder);
+    bool getPackReverseRowOrder() const;
+
     // These create  and destroy methods are merely pass-throughs to 
     // ResourceManager, which owns these object types
     GLuint createBuffer();
@@ -427,8 +431,8 @@ class Context
     void sync(bool block);   // flush/finish
 
 	// Draw the last segment of a line loop
-    void drawClosingLine(unsigned int first, unsigned int last);
-    void drawClosingLine(GLsizei count, GLenum type, const void *indices);
+    void drawClosingLine(unsigned int first, unsigned int last, int minIndex);
+    void drawClosingLine(GLsizei count, GLenum type, const void *indices, int minIndex);
 
     void recordInvalidEnum();
     void recordInvalidValue();

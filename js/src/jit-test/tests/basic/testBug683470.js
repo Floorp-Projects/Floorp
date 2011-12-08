@@ -11,5 +11,5 @@ f = (function() {
     } catch (e) {}
   }
 })
-trap(f, 54, undefined);
+trap(f, 52, undefined);
 f()

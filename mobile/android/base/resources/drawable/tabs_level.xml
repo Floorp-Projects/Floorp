@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<level-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:maxLevel="0" android:drawable="@android:color/transparent"/>
+    <item android:maxLevel="1" android:drawable="@drawable/tabs_plus"/>
+    <item android:minLevel="2" android:maxLevel="100" android:drawable="@drawable/tabs_more"/>
+
+</level-list>

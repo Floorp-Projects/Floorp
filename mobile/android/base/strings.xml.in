@@ -1,0 +1,78 @@
+#filter substitution
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE resources [
+#includesubst @BRANDPATH@
+#includesubst @STRINGSPATH@
+]>
+<resources>
+  <string name="splash_firstrun">&splash_firstrun;</string>
+  <string name="no_space_to_start_error">&no_space_to_start_error;</string>
+  <string name="error_loading_file">&error_loading_file;</string>
+
+  <string name="awesomebar_all_pages_title">&awesomebar_all_pages_title;</string>
+  <string name="awesomebar_bookmarks_title">&awesomebar_bookmarks_title;</string>
+  <string name="awesomebar_history_title">&awesomebar_history_title;</string>
+  <string name="awesomebar_search_engine">&awesomebar_search_engine;</string>
+
+  <string name="crash_reporter_title">&crash_reporter_title;</string>
+  <string name="crash_message">&crash_message;</string>
+  <string name="crash_help_message">&crash_help_message;</string>
+  <string name="crash_send_report_message">&crash_send_report_message;</string>
+  <string name="crash_include_url">&crash_include_url;</string>
+  <string name="crash_close_label">&crash_close_label;</string>
+  <string name="crash_restart_label">&crash_restart_label;</string>
+  <string name="sending_crash_report">&sending_crash_report;</string>
+  <string name="exit_label">&exit_label;</string>
+  <string name="continue_label">&continue_label;</string>
+
+  <string name="launcher_shortcuts_title">&launcher_shortcuts_title;</string>
+  <string name="launcher_shortcuts_empty">&launcher_shortcuts_empty;</string>
+  
+  <string name="choose_file">&choose_file;</string>
+
+  <string name="awesomebar_default_text">&awesomebar_default_text;</string>
+
+  <string name="quit">&quit;</string>
+  <string name="bookmarks_title">&bookmarks_title;</string>
+  <string name="bookmark_add">&bookmark_add;</string>
+  <string name="bookmark_remove">&bookmark_remove;</string>
+  <string name="bookmark_added">&bookmark_added;</string>
+  <string name="bookmark_removed">&bookmark_removed;</string>
+
+  <string name="history_today_section">&history_today_section;</string>
+  <string name="history_yesterday_section">&history_yesterday_section;</string>
+  <string name="history_week_section">&history_week_section;</string>
+  <string name="history_older_section">&history_older_section;</string>
+
+  <string name="share">&share;</string>
+  <string name="save_as_pdf">&save_as_pdf;</string>
+  <string name="agent_request_desktop">&agent_request_desktop;</string>
+  <string name="agent_request_mobile">&agent_request_mobile;</string>
+
+  <string name="preferences">&preferences;</string>
+  <string name="preferences_title">&preferences_title;</string>
+  <string name="pref_category_privacy">&pref_category_privacy;</string>
+  <string name="pref_category_content">&pref_category_content;</string>
+  <string name="pref_do_not_track">&pref_do_not_track;</string>
+  <string name="pref_telemetry">&pref_telemetry;</string>
+  <string name="pref_homepage">&pref_homepage;</string>
+  <string name="pref_homepage_start">&pref_homepage_start;</string>
+  <string name="pref_homepage_blank">&pref_homepage_blank;</string>
+  <string name="pref_homepage_current">&pref_homepage_current;</string>
+  <string name="pref_remember_signons">&pref_remember_signons;</string>
+  <string name="pref_locale">&pref_locale;</string>
+  <string name="pref_cookies">&pref_cookies;</string>
+  <string name="pref_zoom_reflow">&pref_zoom_reflow;</string>
+  <string name="pref_show_images">&pref_show_images;</string>
+  <string name="pref_enable_js">&pref_enable_js;</string>
+  <string name="pref_char_encoding">&pref_char_encoding;</string>
+  <string name="pref_clear_history">&pref_clear_history;</string>
+  <string name="pref_clear_history_confirm">&pref_clear_history_confirm;</string>
+  <string name="pref_clear_private_data">&pref_clear_private_data;</string>
+  <string name="pref_clear_private_data_confirm">&pref_clear_private_data_confirm;</string>
+
+  <string name="reload">&reload;</string>
+  <string name="forward">&forward;</string>
+  <string name="new_tab">&new_tab;</string>
+  <string name="addons">&addons;</string>
+</resources>

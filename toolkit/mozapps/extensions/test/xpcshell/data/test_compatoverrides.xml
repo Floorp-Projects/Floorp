@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<searchresults total_results="9">
+  <addon>
+    <name>Test addon 2</name>
+    <type id="1">Extension</type>
+    <guid>addon2@tests.mozilla.org</guid>
+    <version>1.0</version>
+  </addon>
+
+  <addon>
+    <name>Test addon 3</name>
+    <type id="1">Extension</type>
+    <guid>addon3@tests.mozilla.org</guid>
+    <version>1.0</version>
+  </addon>
+  <addon_compatibility hosted="true">
+    <name>Test addon 3</name>
+    <guid>addon3@tests.mozilla.org</guid>
+    <version_ranges>
+      <version_range type="incompatible">
+        <min_version>0.9</min_version>
+        <max_version>1.0</max_version>
+        <compatible_applications>
+          <application>
+            <name>XPCShell</name>
+            <appID>xpcshell@tests.mozilla.org</appID>
+            <min_version>1</min_version>
+            <max_version>2</max_version>
+          </application>
+        </compatible_applications>
+      </version_range>
+    </version_ranges>
+  </addon_compatibility>
+
+  <addon>
+    <name>Test addon 4</name>
+    <type id="1">Extension</type>
+    <guid>addon4@tests.mozilla.org</guid>
+    <version>1.0</version>
+  </addon>
+  <addon_compatibility hosted="true">
+    <name>Test addon 4</name>
+    <guid>addon4@tests.mozilla.org</guid>
+    <version_ranges>
+      <version_range type="incompatible">
+        <min_version>0.9</min_version>
+        <max_version>1.0</max_version>
+        <compatible_applications>
+          <application>
+            <name>XPCShell</name>
+            <appID>xpcshell@tests.mozilla.org</appID>
+            <min_version>1</min_version>
+            <max_version>2</max_version>
+          </application>
+        </compatible_applications>
+      </version_range>
+    </version_ranges>
+  </addon_compatibility>
+
+  <addon>
+    <name>Test addon 5</name>
+    <type id="1">Extension</type>
+    <guid>addon5@tests.mozilla.org</guid>
+    <version>1.0</version>
+  </addon>
+  <addon_compatibility hosted="true">
+    <name>Test addon 5</name>
+    <guid>addon5@tests.mozilla.org</guid>
+    <version_ranges>
+      <version_range type="incompatible">
+        <min_version>0.9</min_version>
+        <max_version>1.0</max_version>
+        <compatible_applications>
+          <application>
+            <name>Unknown App</name>
+            <appID>unknown-app@tests.mozilla.org</appID>
+            <min_version>1</min_version>
+            <max_version>2</max_version>
+          </application>
+        </compatible_applications>
+      </version_range>
+    </version_ranges>
+  </addon_compatibility>
+
+  <addon>
+    <name>Test addon 6</name>
+    <type id="1">Extension</type>
+    <guid>addon6@tests.mozilla.org</guid>
+    <version>1.0</version>
+  </addon>
+  <addon_compatibility hosted="true">
+    <name>Test addon 6</name>
+    <guid>addon6@tests.mozilla.org</guid>
+    <version_ranges>
+      <version_range type="incompatible">
+        <min_version>0.5</min_version>
+        <max_version>0.9</max_version>
+        <compatible_applications>
+          <application>
+            <name>XPCShell</name>
+            <appID>xpcshell@tests.mozilla.org</appID>
+            <min_version>1</min_version>
+            <max_version>2</max_version>
+          </application>
+        </compatible_applications>
+      </version_range>
+    </version_ranges>
+  </addon_compatibility>
+  
+  <addon>
+    <name>Test addon 7</name>
+    <type id="1">Extension</type>
+    <guid>addon7@tests.mozilla.org</guid>
+    <version>1.0</version>
+  </addon>
+  <addon_compatibility hosted="true">
+    <name>Test addon 7</name>
+    <guid>addon7@tests.mozilla.org</guid>
+    <version_ranges>
+      <version_range type="incompatible">
+        <min_version>0.5</min_version>
+        <max_version>1.0</max_version>
+        <compatible_applications>
+          <application>
+            <name>XPCShell</name>
+            <appID>xpcshell@tests.mozilla.org</appID>
+            <min_version>0.1</min_version>
+            <max_version>0.9</max_version>
+          </application>
+        </compatible_applications>
+      </version_range>
+    </version_ranges>
+  </addon_compatibility>
+  
+  <addon>
+    <name>Test addon 8</name>
+    <type id="1">Extension</type>
+    <guid>addon8@tests.mozilla.org</guid>
+    <version>1.0</version>
+  </addon>
+  <addon_compatibility hosted="true">
+    <name>Test addon 8</name>
+    <guid>addon8@tests.mozilla.org</guid>
+    <version_ranges>
+      <version_range type="incompatible">
+        <min_version>6</min_version>
+        <max_version>6.2</max_version>
+        <compatible_applications>
+          <application>
+            <name>XPCShell</name>
+            <appID>xpcshell@tests.mozilla.org</appID>
+            <min_version>0.9</min_version>
+            <max_version>9</max_version>
+          </application>
+        </compatible_applications>
+      </version_range>
+      <version_range type="incompatible">
+        <min_version>0.5</min_version>
+        <max_version>1.0</max_version>
+        <compatible_applications>
+          <application>
+            <name>XPCShell</name>
+            <appID>xpcshell@tests.mozilla.org</appID>
+            <min_version>0.1</min_version>
+            <max_version>9</max_version>
+          </application>
+          <application>
+            <name>Unknown app</name>
+            <appID>unknown-app@tests.mozilla.org</appID>
+            <min_version>0.1</min_version>
+            <max_version>9</max_version>
+          </application>
+        </compatible_applications>
+      </version_range>
+      <version_range type="incompatible">
+        <min_version>0.1</min_version>
+        <max_version>0.2</max_version>
+        <compatible_applications>
+          <application>
+            <name>XPCShell</name>
+            <appID>xpcshell@tests.mozilla.org</appID>
+            <min_version>0.1</min_version>
+            <max_version>0.9</max_version>
+          </application>
+        </compatible_applications>
+      </version_range>
+    </version_ranges>
+  </addon_compatibility>
+
+  <addon_compatibility hosted="false">
+    <name>Test addon 9</name>
+    <guid>addon9@tests.mozilla.org</guid>
+    <version_ranges>
+      <version_range type="incompatible">
+        <min_version>0.5</min_version>
+        <max_version>1.0</max_version>
+        <compatible_applications>
+          <application>
+            <name>XPCShell</name>
+            <appID>xpcshell@tests.mozilla.org</appID>
+            <min_version>1</min_version>
+            <max_version>2</max_version>
+          </application>
+        </compatible_applications>
+      </version_range>
+    </version_ranges>
+  </addon_compatibility>
+
+  <addon_compatibility hosted="false">
+    <name>Test addon 10</name>
+    <guid>addon10@tests.mozilla.org</guid>
+    <version_ranges>
+      <version_range type="compatible">
+        <min_version>0.5</min_version>
+        <max_version>1.0</max_version>
+        <compatible_applications>
+          <application>
+            <name>XPCShell</name>
+            <appID>xpcshell@tests.mozilla.org</appID>
+            <min_version>1</min_version>
+            <max_version>2</max_version>
+          </application>
+        </compatible_applications>
+      </version_range>
+    </version_ranges>
+  </addon_compatibility>
+
+</searchresults>

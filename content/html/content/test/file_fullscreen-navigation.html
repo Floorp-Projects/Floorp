@@ -34,14 +34,14 @@ function boom()
   e1.mozRequestFullScreen();
   setTimeout(
     function() {
-      opener.ok(document.mozFullScreen, "Request should be granted");
+      opener.ok(document.mozFullScreen, "[navigation] Request should be granted");
       frameWin.location = "data:text/html,<body text=blue onload='parent.b2()'>2";
     }, 0);
 }
 
 function b2()
 {
-  opener.ok(!document.mozFullScreen, "Should have left full-screen due to navigation.");
+  opener.ok(!document.mozFullScreen, "[navigation] Should have left full-screen due to navigation.");
   opener.nextTest();
 }
 

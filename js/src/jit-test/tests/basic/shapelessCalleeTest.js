@@ -1,6 +1,6 @@
 // The following functions use a delay line of length 2 to change the value
 // of the callee without exiting the traced loop. This is obviously tuned to
-// match the current HOTLOOP setting of 2.
+// match the current 8 setting of 2.
 function shapelessArgCalleeLoop(f, g, h, a)
 {
   for (var i = 0; i < 10; i++) {

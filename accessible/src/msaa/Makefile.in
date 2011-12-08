@@ -74,6 +74,7 @@ CPPSRCS = \
   CAccessibleTable.cpp \
   CAccessibleTableCell.cpp \
   CAccessibleValue.cpp \
+  Compatibility.cpp \
   $(NULL)
 
 EXPORTS = \

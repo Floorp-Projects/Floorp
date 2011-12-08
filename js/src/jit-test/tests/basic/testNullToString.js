@@ -11,8 +11,3 @@ function testNullToString()
     return a.join(",");
 }
 assertEq(testNullToString(), "null,null,null,null,null,null,null,null,null,null");
-checkStats({
-    recorderStarted: 2,
-    sideExitIntoInterpreter: 2,
-    recorderAborted: 0
-});

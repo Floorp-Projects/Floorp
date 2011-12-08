@@ -52,9 +52,8 @@ _BROWSER_TEST_FILES = \
 	                  browser_privileges.js \
 	                  browser_popupNode.js \
 	                  browser_popupNode_check.js \
-# Disabled until bug 652494 is resolved.
-#			  browser_sanityException.js \
-#			  browser_sanityException2.js \
+			  browser_sanityException.js \
+			  browser_sanityException2.js \
 # Disabled, these are only good for testing the harness' failure reporting
 #	                  browser_zz_fail_openwindow.js \
 #	                  browser_fail.js \
