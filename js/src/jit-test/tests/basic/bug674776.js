@@ -1,4 +1,4 @@
-// |jit-test| debug
+// |jit-test| slow; debug
 
 /* Make a lot of functions of the form:
 function x1(){x1();}
