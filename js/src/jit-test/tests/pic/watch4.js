@@ -2,8 +2,8 @@
 var hits = 0;
 var obj = {};
 obj.watch("x", function (id, oldval, newval) { hits++; return newval; });
-for (var i = 0; i < HOTLOOP + 2; i++) {
+for (var i = 0; i < 10; i++) {
     obj.x = 1;
     delete obj.x;
 }
-assertEq(hits, HOTLOOP + 2);
+assertEq(hits, 10);

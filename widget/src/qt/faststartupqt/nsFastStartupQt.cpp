@@ -63,7 +63,7 @@ nsFastStartup::symbolsLoadingFinished(bool preloaded)
 {
   mSymbolsLoaded = preloaded;
   if (mWidgetPainted && mSymbolsLoaded) {
-    qApp->quit();
+    mLoop.quit();
   }
 }
 
@@ -71,7 +71,7 @@ void nsFastStartup::painted()
 {
   mWidgetPainted = true;
   if (mWidgetPainted && mSymbolsLoaded) {
-    qApp->quit();
+    mLoop.quit();
   }
 }
 
@@ -159,7 +159,7 @@ nsFastStartup::CreateFastStartup(int& argc, char ** argv,
   // Start native loop in order to get view opened and painted once
   // Will block CreateFastStartup function and
   // exit when symbols are loaded and Static UI shown
-  qApp->exec();
+  mLoop.exec();
 
   return true;
 }

@@ -162,12 +162,6 @@ public:
     NS_OVERRIDE
     virtual bool OnSpecialMessage(uint16 id, const Message& msg);
 
-    // Override the SyncChannel handler so we can dispatch RPC
-    // messages.  Called on the IO thread only.
-    NS_OVERRIDE
-    virtual void OnMessageReceived(const Message& msg);
-    NS_OVERRIDE
-    virtual void OnChannelError();
 
     /**
      * If there is a pending RPC message, process all pending messages.
@@ -186,7 +180,11 @@ protected:
     void SpinInternalEventLoop();
 #endif
 
-  private:
+protected:
+    NS_OVERRIDE virtual void OnMessageReceivedFromLink(const Message& msg);
+    NS_OVERRIDE virtual void OnChannelErrorFromLink();
+
+private:
     // Called on worker thread only
 
     RPCListener* Listener() const {
@@ -325,7 +323,7 @@ protected:
 
     // Called from both threads
     size_t StackDepth() const {
-        mMonitor.AssertCurrentThreadOwns();
+        mMonitor->AssertCurrentThreadOwns();
         return mStack.size();
     }
 

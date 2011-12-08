@@ -137,6 +137,11 @@ interface nsIContentPolicy : nsISupports
    */
   const unsigned long TYPE_MEDIA = 15;  
 
+  /**
+   * Indicates a WebSocket load.
+   */
+  const unsigned long TYPE_WEBSOCKET = 16;
+
   /* Please update nsContentBlocker when adding new content types. */
 
   //////////////////////////////////////////////////////////////////////

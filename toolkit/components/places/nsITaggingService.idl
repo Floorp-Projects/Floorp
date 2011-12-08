@@ -41,7 +41,7 @@
 interface nsIURI;
 interface nsIVariant;
 
-[scriptable, uuid(e39cea60-7e6d-4c8b-80a3-997af1c2cbcb)]
+[scriptable, uuid(f816b4df-f733-4dbd-964d-8bfc92a475b2)]
 interface nsITaggingService : nsISupports
 {
   /**
@@ -95,6 +95,13 @@ interface nsITaggingService : nsISupports
    * Retrieves all tags used to tag URIs in the data-base (sorted by name).
    */
   readonly attribute nsIVariant allTags;
+
+  /**
+   * Whether any tags exist.
+   *
+   * @note This is faster than allTags.length, since doesn't need to sort tags.
+   */
+  readonly attribute boolean hasTags;
 };
 
 %{C++

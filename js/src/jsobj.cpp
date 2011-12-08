@@ -85,9 +85,10 @@
 
 #include "jsarrayinlines.h"
 #include "jsinterpinlines.h"
+#include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
-#include "jsobjinlines.h"
+#include "jsstrinlines.h"
 
 #include "vm/BooleanObject-inl.h"
 #include "vm/NumberObject-inl.h"
@@ -597,7 +598,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
          * Convert id to a value and then to a string.  Decide early whether we
          * prefer get/set or old getter/setter syntax.
          */
-        JSString *s = js_ValueToString(cx, IdToValue(id));
+        JSString *s = ToString(cx, IdToValue(id));
         if (!s || !(idstr = s->ensureLinear(cx))) {
             ok = JS_FALSE;
             goto error;
@@ -843,25 +844,14 @@ obj_toStringHelper(JSContext *cx, JSObject *obj)
     if (obj->isProxy())
         return Proxy::obj_toString(cx, obj);
 
-    const char *clazz = obj->getClass()->name;
-    size_t nchars = 9 + strlen(clazz); /* 9 for "[object ]" */
-    jschar *chars = (jschar *) cx->malloc_((nchars + 1) * sizeof(jschar));
-    if (!chars)
+    StringBuffer sb(cx);
+    const char *className = obj->getClass()->name;
+    if (!sb.append("[object ") || !sb.appendInflated(className, strlen(className)) || 
+        !sb.append("]"))
+    {
         return NULL;
-
-    const char *prefix = "[object ";
-    nchars = 0;
-    while ((chars[nchars] = (jschar)*prefix) != 0)
-        nchars++, prefix++;
-    while ((chars[nchars] = (jschar)*clazz) != 0)
-        nchars++, clazz++;
-    chars[nchars++] = ']';
-    chars[nchars] = 0;
-
-    JSString *str = js_NewString(cx, chars, nchars);
-    if (!str)
-        cx->free_(chars);
-    return str;
+    }
+    return sb.finishString();
 }
 
 JSObject *
@@ -1179,7 +1169,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
 
 #ifdef DEBUG
         jsbytecode *callerPC = caller->pcQuadratic(cx);
-        JS_ASSERT(callerPC && js_GetOpcode(cx, caller->script(), callerPC) == JSOP_EVAL);
+        JS_ASSERT(callerPC && JSOp(*callerPC) == JSOP_EVAL);
 #endif
     } else {
         JS_ASSERT(args.callee().getGlobal() == &scopeobj);
@@ -1318,7 +1308,7 @@ DirectEval(JSContext *cx, const CallArgs &args)
     StackFrame *caller = cx->fp();
     JS_ASSERT(caller->isScriptFrame());
     JS_ASSERT(IsBuiltinEvalForScope(&caller->scopeChain(), args.calleev()));
-    JS_ASSERT(js_GetOpcode(cx, cx->fp()->script(), cx->regs().pc) == JSOP_EVAL);
+    JS_ASSERT(JSOp(*cx->regs().pc) == JSOP_EVAL);
 
     AutoFunctionCallProbe callProbe(cx, args.callee().toFunction(), caller->script());
 
@@ -2648,7 +2638,7 @@ obj_getOwnPropertyNames(JSContext *cx, uintN argc, Value *vp)
     for (size_t i = 0, len = keys.length(); i < len; i++) {
          jsid id = keys[i];
          if (JSID_IS_INT(id)) {
-             JSString *str = js_ValueToString(cx, Int32Value(JSID_TO_INT(id)));
+             JSString *str = js_IntToString(cx, JSID_TO_INT(id));
              if (!str)
                  return false;
              vals[i].setString(str);
@@ -3183,7 +3173,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
         JS_ASSERT(script->code <= pc && pc < endpc);
 
         /* General case: a branch or equality op follows the access. */
-        op = js_GetOpcode(cx, script, pc);
+        op = JSOp(*pc);
         if (js_CodeSpec[op].format & JOF_DETECTING)
             return JS_TRUE;
 
@@ -3194,7 +3184,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
              * about JS1.2's revision of the equality operators here.
              */
             if (++pc < endpc) {
-                op = js_GetOpcode(cx, script, pc);
+                op = JSOp(*pc);
                 return *pc == JSOP_EQ || *pc == JSOP_NE;
             }
             return JS_FALSE;
@@ -3209,7 +3199,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
             GET_ATOM_FROM_BYTECODE(script, pc, 0, atom);
             if (atom == cx->runtime->atomState.typeAtoms[JSTYPE_VOID] &&
                 (pc += js_CodeSpec[op].length) < endpc) {
-                op = js_GetOpcode(cx, script, pc);
+                op = JSOp(*pc);
                 return op == JSOP_EQ || op == JSOP_NE ||
                        op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
             }
@@ -3245,7 +3235,7 @@ js_InferFlags(JSContext *cx, uintN defaultFlags)
     if (!script || !pc)
         return defaultFlags;
 
-    cs = &js_CodeSpec[js_GetOpcode(cx, script, pc)];
+    cs = &js_CodeSpec[*pc];
     format = cs->format;
     if (JOF_MODE(format) != JOF_NAME)
         flags |= JSRESOLVE_QUALIFIED;
@@ -5383,7 +5373,6 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
      * value to define, and just so addProperty can mutate its inout parameter.
      */
     Value valueCopy = value;
-    bool adding = false;
 
     if (!shape) {
         /* Add a new property, or replace an existing one of the same id. */
@@ -5410,8 +5399,6 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
                 if (!obj->methodReadBarrier(cx, *existingShape, &valueCopy))
                     return NULL;
             }
-        } else {
-            adding = true;
         }
 
         shape = obj->putProperty(cx, id, getter, setter, SHAPE_INVALID_SLOT,
@@ -5803,8 +5790,6 @@ static JS_ALWAYS_INLINE JSBool
 js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *pobj,
                    const Shape *shape, uintN getHow, Value *vp)
 {
-    int32 sample;
-
     JS_ASSERT(pobj->isNative());
 
     if (shape->hasSlot()) {
@@ -5829,7 +5814,6 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
             code->accessGetter = true;
     }
 
-    sample = cx->runtime->propertyRemovals;
     if (!shape->get(cx, receiver, obj, pobj, vp))
         return false;
 
@@ -5936,8 +5920,6 @@ js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsi
             uintN flags;
 
             op = (JSOp) *pc;
-            if (op == JSOP_TRAP)
-                op = JS_GetTrapOpcode(cx, cx->fp()->script(), pc);
             if (op == JSOP_GETXPROP) {
                 flags = JSREPORT_ERROR;
             } else {

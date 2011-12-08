@@ -73,6 +73,9 @@ import android.net.NetworkInfo;
 import android.graphics.drawable.*;
 import android.graphics.Bitmap;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 public class GeckoAppShell
 {
     private static final String LOG_FILE_NAME = "GeckoAppShell";
@@ -808,6 +811,18 @@ public class GeckoAppShell
             intent.setDataAndType(Uri.parse(aUriSpec), aMimeType);
         } else {
             Uri uri = Uri.parse(aUriSpec);
+            if ("vnd.youtube".equals(uri.getScheme())) {
+                // Special case youtube to fallback to our own player
+                String[] handlers = getHandlersForURL(aUriSpec, aAction);
+                if (handlers.length == 0) {
+                    intent = new Intent(VideoPlayer.VIDEO_ACTION);
+                    intent.setClassName(GeckoApp.mAppContext.getPackageName(),
+                                        "org.mozilla.gecko.VideoPlayer");
+                    intent.setData(uri);
+                    GeckoApp.mAppContext.startActivity(intent);
+                    return true;
+                }
+            }
             if ("sms".equals(uri.getScheme())) {
                 // Have a apecial handling for the SMS, as the message body
                 // is not extracted from the URI automatically
@@ -1630,10 +1645,6 @@ public class GeckoAppShell
     }
 
     // unused
-    public static String handleGeckoMessage(String message) {
-        return "";
-    }
-    // unused
     static void checkUriVisited(String uri) {}
     // unused
     static void markUriVisited(final String uri) {}
@@ -1643,6 +1654,27 @@ public class GeckoAppShell
      */
     public static void enableBatteryNotifications() {
         GeckoBatteryManager.enableNotifications();
+    }
+
+    public static String handleGeckoMessage(String message) {
+        //        
+        //        {"gecko": {
+        //                "type": "value",
+        //                "event_specific": "value",
+        //                ....
+        try {
+            JSONObject json = new JSONObject(message);
+            final JSONObject geckoObject = json.getJSONObject("gecko");
+            String type = geckoObject.getString("type");
+            
+            if (type.equals("Gecko:Ready")) {
+                onAppShellReady();
+            }
+        } catch (Exception e) {
+            Log.i(LOG_FILE_NAME, "handleGeckoMessage throws " + e);
+        }
+
+        return "";
     }
 
     public static void disableBatteryNotifications() {

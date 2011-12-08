@@ -8,8 +8,3 @@ function testObjectLength()
   return counter;
 }
 assertEq(testObjectLength(), 10000000);
-checkStats({
-  recorderStarted: 1,
-  recorderAborted: 0,
-  sideExitIntoInterpreter: 1
-});

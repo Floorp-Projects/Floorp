@@ -2,7 +2,7 @@ function f(del) {
     o = arguments;
     if (del)
         delete o[2];
-    for (var i = 0; i < HOTLOOP+2; ++i)
+    for (var i = 0; i < 10; ++i)
         assertEq(o[2] == undefined, del);
 }
 

@@ -198,6 +198,12 @@
         <stack flex="1">
             <vbox flex="1" class="statusOverlay" hidden="true">
                 <box class="statusIcon"/>
+                <label class="errorLabel" anonid="errorAborted">&error.aborted;</label>
+                <label class="errorLabel" anonid="errorNetwork">&error.network;</label>
+                <label class="errorLabel" anonid="errorDecode">&error.decode;</label>
+                <label class="errorLabel" anonid="errorSrcNotSupported">&error.srcNotSupported;</label>
+                <label class="errorLabel" anonid="errorNoSource">&error.noSource;</label>
+                <label class="errorLabel" anonid="errorGeneric">&error.generic;</label>
             </vbox>
 
             <vbox class="statsOverlay" hidden="true">
@@ -412,8 +418,9 @@
                         this.bufferBar.setAttribute("value", 0);
 
                     // Set the current status icon.
-                    if (this.video.error || this.video.networkState == this.video.NETWORK_NO_SOURCE) {
+                    if (this.hasError()) {
                         this.statusIcon.setAttribute("type", "error");
+                        this.updateErrorText();
                         this.setupStatusFader(true);
                     } else {
                         this.statusIcon.setAttribute("type", "throbber");
@@ -452,7 +459,7 @@
 
                     // If the video hits an error, suppress controls if it
                     // hasn't managed to do anything else yet.
-                    if (!this.firstFrameShown && (this.video.error || this.video.networkState == this.video.NETWORK_NO_SOURCE))
+                    if (!this.firstFrameShown && this.hasError())
                         enabled = false;
 
                     return enabled;
@@ -514,6 +521,8 @@
                             break;
                         case "loadstart":
                             this.maxCurrentTimeSeen = 0;
+                            this.controlsSpacer.removeAttribute("aria-label");
+                            this.statusOverlay.removeAttribute("error");
                             this.statusIcon.setAttribute("type", "throbber");
                             this.isAudioOnly = (this.video instanceof HTMLAudioElement);
                             this.setPlayButtonState(true);
@@ -586,8 +595,9 @@
                             // 2. The video's networkState is NETWORK_NO_SOURCE. This means we we're
                             //    loading from child source elements, but we were unable to select
                             //    any of the child elements for playback during resource selection.
-                            if (this.video.error || this.video.networkState == this.video.NETWORK_NO_SOURCE) {
+                            if (this.hasError()) {
                               this.statusIcon.setAttribute("type", "error");
+                              this.updateErrorText();
                               this.setupStatusFader(true);
                               // If video hasn't shown anything yet, disable the controls.
                               if (!this.firstFrameShown)
@@ -604,12 +614,52 @@
                         clearInterval(this.statsInterval);
                         this.statsInterval = null;
                     }
-                    for each (var event in this.videoEvents)
+                    for each (let event in this.videoEvents)
                         this.video.removeEventListener(event, this, false);
                     this.video.removeEventListener("media-showStatistics", this._handleCustomEventsBound, false);
-                    this.video.ownerDocument.removeEventListener("mozfullscreenchange", this.setFullscreenButtonState, false);
                     delete this._handleCustomEventsBound;
+                    this.video.ownerDocument.removeEventListener("mozfullscreenchange", this._setFullscreenButtonStateBound, false);
+                    delete this._setFullscreenButtonStateBound;
                     this.log("--- videocontrols terminated ---");
+                },
+
+                hasError : function () {
+                    return (this.video.error != null || this.video.networkState == this.video.NETWORK_NO_SOURCE);
+                },
+
+                updateErrorText : function () {
+                    let error;
+                    let v = this.video;
+                    // It is possible to have both v.networkState == NETWORK_NO_SOURCE
+                    // as well as v.error being non-null. In this case, we will show
+                    // the v.error.code instead of the v.networkState error.
+                    if (v.error) {
+                        switch (v.error.code) {
+                          case v.error.MEDIA_ERR_ABORTED:
+                              error = "errorAborted";
+                              break;
+                          case v.error.MEDIA_ERR_NETWORK:
+                              error = "errorNetwork";
+                              break;
+                          case v.error.MEDIA_ERR_DECODE:
+                              error = "errorDecode";
+                              break;
+                          case v.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                              error = "errorSrcNotSupported";
+                              break;
+                          default:
+                              error = "errorGeneric";
+                              break;
+                         }
+                    } else if (v.networkState == v.NETWORK_NO_SOURCE) {
+                        error = "errorNoSource";
+                    } else {
+                        return; // No error found.
+                    }
+
+                    let label = document.getAnonymousElementByAttribute(this.videocontrols, "anonid", error);
+                    this.controlsSpacer.setAttribute("aria-label", label.textContent);
+                    this.statusOverlay.setAttribute("error", error);
                 },
 
                 formatTime : function(aTime) {
@@ -738,10 +788,42 @@
                     this.startFade(this.volumeStack, isMouseOver);
                 },
 
+                _hideControlsTimeout : 0,
+                _hideControlsFn : function () {
+                    if (!Utils.scrubber.isDragging)
+                        Utils.startFade(Utils.controlBar, false);
+                },
+                HIDE_CONTROLS_TIMEOUT_MS : 2000,
+                onMouseMove : function (event) {
+                    // If the controls are static, don't change anything.
+                    if (!this.dynamicControls)
+                        return;
+
+                    clearTimeout(this._hideControlsTimeout);
+
+                    // Suppress fading out the controls until the video has rendered
+                    // its first frame. But since autoplay videos start off with no
+                    // controls, let them fade-out so the controls don't get stuck on.
+                    if (!this.firstFrameShown &&
+                        !(this.video.autoplay && this.video.mozAutoplayEnabled))
+                        return;
+
+                    this.startFade(this.controlBar, true);
+                    // Only hide the controls if the mouse cursor is not left on top of
+                    // the control bar. We only need to check the Y position of the cursor
+                    // since the controls span the width of the video and are always located
+                    // at the bottom of the video.
+                    if (event.clientY < this.controlBar.getBoundingClientRect().top) {
+                        this._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
+                    }
+                },
+
                 onMouseInOut : function (event) {
                     // If the controls are static, don't change anything.
                     if (!this.dynamicControls)
                         return;
+
+                    clearTimeout(this._hideControlsTimeout);
 
                     // Ignore events caused by transitions between child nodes.
                     // Note that the videocontrols element is the same
@@ -760,10 +842,13 @@
                         !(this.video.autoplay && this.video.mozAutoplayEnabled))
                         return;
 
-                    if (!isMouseOver)
+                    if (!isMouseOver) {
                         this.adjustControlSize();
 
-                    this.startFade(this.controlBar, isMouseOver);
+                        // Setting a timer here to handle the case where the mouse leaves
+                        // the video from hovering over the controls.
+                        this._hideControlsTimeout = setTimeout(this._hideControlsFn, this.HIDE_CONTROLS_TIMEOUT_MS);
+                    }
                 },
 
                 startFadeIn : function (element, immediate) {
@@ -775,11 +860,15 @@
                 },
 
                 startFade : function (element, fadeIn, immediate) {
-                    // Bug 493523, the scrubber doesn't call valueChanged while hidden,
-                    // so our dependent state (eg, timestamp in the thumb) will be stale.
-                    // As a workaround, update it manually when it first becomes unhidden.
-                    if (element.className == "controlBar" && fadeIn && element.hidden)
-                        this.scrubber.valueChanged("curpos", this.video.currentTime * 1000, false);
+                    if (element.className == "controlBar" && fadeIn) {
+                        clearTimeout(this._hideControlsTimeout);
+
+                        // Bug 493523, the scrubber doesn't call valueChanged while hidden,
+                        // so our dependent state (eg, timestamp in the thumb) will be stale.
+                        // As a workaround, update it manually when it first becomes unhidden.
+                        if (element.hidden)
+                            this.scrubber.valueChanged("curpos", this.video.currentTime * 1000, false);
+                    }
 
                     if (immediate)
                         element.setAttribute("immediate", true);
@@ -1184,13 +1273,13 @@
                     // Use the handleEvent() callback for all media events.
                     // The "error" event listener must capture, so that it can trap error events
                     // from the <source> children, which don't bubble.
-                    for each (var event in this.videoEvents)
+                    for each (let event in this.videoEvents)
                         this.video.addEventListener(event, this, (event == "error") ? true : false);
 
                     var self = this;
                     this.muteButton.addEventListener("command", function() { self.toggleMute(); }, false);
                     this.playButton.addEventListener("command", function() { self.togglePause(); }, false);
-                    this.controlsSpacer.addEventListener("click", function(e) { if (e.button == 0) { self.togglePause(); } }, false);
+                    this.controlsSpacer.addEventListener("click", function(e) { if (e.button == 0 && !self.hasError()) { self.togglePause(); } }, false);
                     this.fullscreenButton.addEventListener("command", function() { self.toggleFullscreen(); }, false );
                     if (!this.isAudioOnly) {
                       this.muteButton.addEventListener("mouseover",  function(e) { self.onVolumeMouseInOut(e); }, false);
@@ -1200,7 +1289,8 @@
                     }
 
                     this.videocontrols.addEventListener("transitionend", function(e) { self.onTransitionEnd(e); }, false);
-                    this.video.ownerDocument.addEventListener("mozfullscreenchange", this.setFullscreenButtonState, false);
+                    this._setFullscreenButtonStateBound = this.setFullscreenButtonState.bind(this);
+                    this.video.ownerDocument.addEventListener("mozfullscreenchange", this._setFullscreenButtonStateBound, false);
 
                     // Make the <video> element keyboard accessible.
                     this.video.setAttribute("tabindex", 0);
@@ -1223,6 +1313,10 @@
         <handler event="mouseout">
             if (!this.isTouchControl)
                 this.Utils.onMouseInOut(event);
+        </handler>
+        <handler event="mousemove">
+            if (!this.isTouchControl)
+                this.Utils.onMouseMove(event);
         </handler>
     </handlers>
   </binding>

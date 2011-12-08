@@ -404,7 +404,7 @@ Trap(JSContext *cx, JSObject *handler, Value fval, uintN argc, Value* argv, Valu
 static bool
 Trap1(JSContext *cx, JSObject *handler, Value fval, jsid id, Value *rval)
 {
-    JSString *str = js_ValueToString(cx, IdToValue(id));
+    JSString *str = ToString(cx, IdToValue(id));
     if (!str)
         return false;
     rval->setString(str);
@@ -414,7 +414,7 @@ Trap1(JSContext *cx, JSObject *handler, Value fval, jsid id, Value *rval)
 static bool
 Trap2(JSContext *cx, JSObject *handler, Value fval, jsid id, Value v, Value *rval)
 {
-    JSString *str = js_ValueToString(cx, IdToValue(id));
+    JSString *str = ToString(cx, IdToValue(id));
     if (!str)
         return false;
     rval->setString(str);
@@ -650,7 +650,7 @@ bool
 ScriptedProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *vp)
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
-    JSString *str = js_ValueToString(cx, IdToValue(id));
+    JSString *str = ToString(cx, IdToValue(id));
     if (!str)
         return false;
     AutoValueRooter tvr(cx, StringValue(str));
@@ -668,7 +668,7 @@ ScriptedProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, js
                           Value *vp)
 {
     JSObject *handler = GetProxyHandlerObject(cx, proxy);
-    JSString *str = js_ValueToString(cx, IdToValue(id));
+    JSString *str = ToString(cx, IdToValue(id));
     if (!str)
         return false;
     AutoValueRooter tvr(cx, StringValue(str));

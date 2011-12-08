@@ -85,7 +85,18 @@ def main(argv):
        }
 '''% (t, t) for t in unittests ])
 
-    parent_main_cases = '\n'.join([
+    parent_enabled_cases_proc = '\n'.join([
+'''    case %s: {
+        if (!%sParent::RunTestInProcesses()) {
+            passed("N/A to proc");
+            DeferredParentShutdown();
+            return;
+        }
+        break;
+       }
+''' % (t, t) for t in unittests ])
+
+    parent_main_cases_proc = '\n'.join([
 '''    case %s: {
         %sParent** parent =
         reinterpret_cast<%sParent**>(&gParentActor);
@@ -94,6 +105,37 @@ def main(argv):
         return (*parent)->Main();
         }
 '''% (t, t, t, t) for t in unittests ])
+
+    parent_enabled_cases_thread = '\n'.join([
+'''    case %s: {
+        if (!%sParent::RunTestInThreads()) {
+            passed("N/A to threads");
+            DeferredParentShutdown();
+            return;
+        }
+        break;
+       }
+''' % (t, t) for t in unittests ])
+
+    parent_main_cases_thread = '\n'.join([
+'''    case %s: {
+        %sParent** parent =
+        reinterpret_cast<%sParent**>(&gParentActor);
+        *parent = new %sParent();
+
+        %sChild** child =
+        reinterpret_cast<%sChild**>(&gChildActor);
+        *child = new %sChild();
+
+        mozilla::ipc::AsyncChannel *parentChannel = (*parent)->GetIPCChannel();
+        mozilla::ipc::AsyncChannel *childChannel = (*child)->GetIPCChannel();
+        mozilla::ipc::AsyncChannel::Side parentSide = 
+            mozilla::ipc::AsyncChannel::Parent;
+
+        (*parent)->Open(childChannel, childMessageLoop, parentSide);
+        return (*parent)->Main();
+        }
+'''% (t, t, t, t, t, t, t) for t in unittests ])
 
     child_delete_cases = '\n'.join([
 '''    case %s: {
@@ -121,7 +163,10 @@ def main(argv):
             STRING_TO_ENUMS=string_to_enums,
             ENUM_TO_STRINGS=enum_to_strings,
             PARENT_DELETE_CASES=parent_delete_cases,
-            PARENT_MAIN_CASES=parent_main_cases,
+            PARENT_ENABLED_CASES_PROC=parent_enabled_cases_proc,
+            PARENT_MAIN_CASES_PROC=parent_main_cases_proc,
+            PARENT_ENABLED_CASES_THREAD=parent_enabled_cases_thread,
+            PARENT_MAIN_CASES_THREAD=parent_main_cases_thread,
             CHILD_DELETE_CASES=child_delete_cases,
             CHILD_INIT_CASES=child_init_cases))
     templatefile.close()

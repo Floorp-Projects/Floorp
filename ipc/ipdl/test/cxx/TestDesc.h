@@ -25,6 +25,9 @@ public:
     TestDescParent() { }
     virtual ~TestDescParent() { }
 
+    static bool RunTestInProcesses() { return true; }
+    static bool RunTestInThreads() { return true; }
+
     void Main();
 
     NS_OVERRIDE

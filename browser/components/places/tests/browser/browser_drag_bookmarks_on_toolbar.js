@@ -83,7 +83,7 @@ function synthesizeDragWithDirection(aElement, aExpectedDragData, aDirection, aC
     }
 
     if (!aExpectedDragData.length)
-      ok(event.getPreventDefault(), "Drag has been canceled.");
+      ok(event.defaultPrevented, "Drag has been canceled.");
 
     event.preventDefault();
     event.stopPropagation();

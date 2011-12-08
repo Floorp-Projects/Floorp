@@ -10,8 +10,8 @@ var y = 0;
 (function () {
     var a = ['x', 'y'];
     this.watch('z', counter);
-    for (var i = 0; i < HOTLOOP + 5 + 1; i++) {
-        this.watch(a[+(i > HOTLOOP)], counter);
+    for (var i = 0; i < 14; i++) {
+        this.watch(a[+(i > 8)], counter);
         y = 1;
     }
 })();

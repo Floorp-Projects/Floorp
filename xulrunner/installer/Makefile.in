@@ -65,7 +65,9 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 INSTALL_SDK = 1
+ifndef MOZ_PLATFORM_MAEMO
 GENERATE_CACHE = 1
+endif
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
@@ -155,6 +157,14 @@ debian/xulrunner.service: $(srcdir)/debian/xulrunner.service.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
         $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
 
+debian/prerm: $(srcdir)/debian/prerm.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+        $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
+
+debian/postinst: $(srcdir)/debian/postinst.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+        $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
+
 package:
 	$(MAKE) package -C $(DEPTH)
 
@@ -165,8 +175,7 @@ deb: package debian/changelog debian/xulrunner.service debian/xulrunner.links
 	cp -pRL $(DEPTH)/dist/$(MOZ_BUILD_APP)/* $(DEBDESTDIR)/$(installdir)
 	$(NSINSTALL) -D $(DEBDESTDIR)/usr/share/dbus-1/services/
 	cp debian/$(MOZ_BUILD_APP).service $(DEBDESTDIR)/usr/share/dbus-1/services/org.mozilla.$(MOZ_BUILD_APP).service
-	rm $(DEBDESTDIR)/$(installdir)/xpidl
-	dh_shlibdeps; fakeroot dh_fixperms; fakeroot dh_installdeb; fakeroot dh_gencontrol; fakeroot dh_md5sums; dh_builddeb
+	dh_link; fakeroot dh_fixperms; fakeroot dh_installdeb; fakeroot dh_shlibdeps; fakeroot dh_gencontrol; fakeroot dh_md5sums; fakeroot dh_builddeb;
 endif
 
 DEB_BUILD_ARCH = $(shell dpkg-architecture -qDEB_BUILD_ARCH)

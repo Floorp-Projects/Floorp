@@ -108,7 +108,7 @@ JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug)
 
 namespace js {
 
-void
+JSTrapStatus
 ScriptDebugPrologue(JSContext *cx, StackFrame *fp)
 {
     JS_ASSERT(fp == cx->fp());
@@ -120,7 +120,25 @@ ScriptDebugPrologue(JSContext *cx, StackFrame *fp)
         if (JSInterpreterHook hook = cx->debugHooks->callHook)
             fp->setHookData(hook(cx, Jsvalify(fp), true, 0, cx->debugHooks->callHookData));
     }
-    Debugger::onEnterFrame(cx);
+
+    Value rval;
+    JSTrapStatus status = Debugger::onEnterFrame(cx, &rval);
+    switch (status) {
+      case JSTRAP_CONTINUE:
+        break;
+      case JSTRAP_THROW:
+        cx->setPendingException(rval);
+        break;
+      case JSTRAP_ERROR:
+        cx->clearPendingException();
+        break;
+      case JSTRAP_RETURN:
+        fp->setReturnValue(rval);
+        break;
+      default:
+        JS_NOT_REACHED("bad Debugger::onEnterFrame JSTrapStatus value");
+    }
+    return status;
 }
 
 bool
@@ -180,29 +198,24 @@ JS_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
 JS_PUBLIC_API(JSBool)
 JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc, JSTrapHandler handler, jsval closure)
 {
+    assertSameCompartment(cx, script, closure);
+
     if (!CheckDebugMode(cx))
         return false;
 
-    BreakpointSite *site = script->compartment()->getOrCreateBreakpointSite(cx, script, pc, NULL);
+    BreakpointSite *site = script->getOrCreateBreakpointSite(cx, pc, NULL);
     if (!site)
         return false;
     site->setTrap(cx, handler, closure);
     return true;
 }
 
-JS_PUBLIC_API(JSOp)
-JS_GetTrapOpcode(JSContext *cx, JSScript *script, jsbytecode *pc)
-{
-    BreakpointSite *site = script->compartment()->getBreakpointSite(pc);
-    return site ? site->realOpcode : JSOp(*pc);
-}
-
 JS_PUBLIC_API(void)
 JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
              JSTrapHandler *handlerp, jsval *closurep)
 {
-    if (BreakpointSite *site = script->compartment()->getBreakpointSite(pc)) {
-        site->clearTrap(cx, NULL, handlerp, closurep);
+    if (BreakpointSite *site = script->getBreakpointSite(pc)) {
+        site->clearTrap(cx, handlerp, closurep);
     } else {
         if (handlerp)
             *handlerp = NULL;
@@ -214,13 +227,13 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 JS_PUBLIC_API(void)
 JS_ClearScriptTraps(JSContext *cx, JSScript *script)
 {
-    script->compartment()->clearTraps(cx, script);
+    script->clearTraps(cx);
 }
 
 JS_PUBLIC_API(void)
 JS_ClearAllTrapsForCompartment(JSContext *cx)
 {
-    cx->compartment->clearTraps(cx, NULL);
+    cx->compartment->clearTraps(cx);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -605,7 +618,7 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fpArg, jsval *thisv)
 JS_PUBLIC_API(JSFunction *)
 JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp)
 {
-    return Valueify(fp)->maybeFun();
+    return Valueify(fp)->maybeScriptFunction();
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -617,6 +630,12 @@ JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fpArg)
 
     JS_ASSERT(fp->callee().isFunction());
     return &fp->callee();
+}
+
+JS_PUBLIC_API(JSFunction *)
+JS_GetScriptFunction(JSContext *cx, JSScript *script)
+{
+    return script->function();
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -1471,18 +1490,36 @@ JS_DefineProfilingFunctions(JSContext *cx, JSObject *obj)
 
 #include <valgrind/callgrind.h>
 
+/*
+ * Wrapper for callgrind macros to stop warnings coming from their expansions.
+ */ 
+#if (__GNUC__ >= 5) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
+# define WRAP_CALLGRIND(call)                                                 \
+    JS_BEGIN_MACRO                                                            \
+        _Pragma("GCC diagnostic push")                                        \
+        _Pragma("GCC diagnostic ignored \"-Wunused-but-set-variable\"")       \
+        call;                                                                 \
+        _Pragma("GCC diagnostic pop")                                         \
+    JS_END_MACRO
+#else
+# define WRAP_CALLGRIND(call)                                                 \
+    JS_BEGIN_MACRO                                                            \
+        call;                                                                 \
+    JS_END_MACRO
+#endif
+
 JS_FRIEND_API(JSBool)
 js_StartCallgrind()
 {
-    CALLGRIND_START_INSTRUMENTATION;
-    CALLGRIND_ZERO_STATS;
+    WRAP_CALLGRIND(CALLGRIND_START_INSTRUMENTATION);
+    WRAP_CALLGRIND(CALLGRIND_ZERO_STATS);
     return true;
 }
 
 JS_FRIEND_API(JSBool)
 js_StopCallgrind()
 {
-    CALLGRIND_STOP_INSTRUMENTATION;
+    WRAP_CALLGRIND(CALLGRIND_STOP_INSTRUMENTATION);
     return true;
 }
 
@@ -1490,9 +1527,9 @@ JS_FRIEND_API(JSBool)
 js_DumpCallgrind(const char *outfile)
 {
     if (outfile) {
-        CALLGRIND_DUMP_STATS_AT(outfile);
+        WRAP_CALLGRIND(CALLGRIND_DUMP_STATS_AT(outfile));
     } else {
-        CALLGRIND_DUMP_STATS;
+        WRAP_CALLGRIND(CALLGRIND_DUMP_STATS);
     }
 
     return true;

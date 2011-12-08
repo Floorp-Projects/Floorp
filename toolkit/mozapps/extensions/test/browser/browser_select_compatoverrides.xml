@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<searchresults total_results="1">
+  <addon_compatibility hosted="false">
+    <guid>addon1@tests.mozilla.org</guid>
+    <name>Addon1</name>
+    <version_ranges>
+      <version_range type="incompatible">
+        <min_version>1.0</min_version>
+        <max_version>2.0</max_version>
+        <compatible_applications>
+          <application>
+            <min_version>0.1</min_version>
+            <max_version>999.0</max_version>
+            <appID>toolkit@mozilla.org</appID>
+          </application>
+        </compatible_applications>
+      </version_range>
+    </version_ranges>
+  </addon_compatibility>
+</searchresults>

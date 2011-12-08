@@ -580,7 +580,7 @@ FrameState::computeAllocation(jsbytecode *target)
         return NULL;
 
     if (a->analysis->getCode(target).exceptionEntry || a->analysis->getCode(target).switchTarget ||
-        JSOp(*target) == JSOP_TRAP) {
+        a->script->hasBreakpointsAt(target)) {
         /* State must be synced at exception and switch targets, and at traps. */
 #ifdef DEBUG
         if (IsJaegerSpewChannelActive(JSpew_Regalloc)) {
@@ -1342,9 +1342,9 @@ FrameState::sync(Assembler &masm, Uses uses) const
         FrameEntry *backing = fe;
 
         if (!fe->isCopy()) {
-            if (fe->data.inRegister())
+            if (fe->data.inRegister() && !regstate(fe->data.reg()).isPinned())
                 avail.putReg(fe->data.reg());
-            if (fe->type.inRegister())
+            if (fe->type.inRegister() && !regstate(fe->type.reg()).isPinned())
                 avail.putReg(fe->type.reg());
         } else {
             backing = fe->copyOf();

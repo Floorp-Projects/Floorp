@@ -1,0 +1,116 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Session Store component.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Mark Finkle <mfinkle@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIDOMWindow;
+interface nsIDOMNode;
+
+/**
+ * nsISessionStore keeps track of the current browsing state.
+ *
+ * The nsISessionStore API operates mostly on browser windows and the browser
+ * tabs contained in them.
+ */
+
+[scriptable, uuid(766a09c1-d21b-4bf8-9fe3-8b34b716251a)]
+interface nsISessionStore : nsISupports
+{
+  /**
+   * Get the current browsing state.
+   * @returns a JSON string representing the session state.
+   */
+  AString getBrowserState();
+
+  /**
+   * Get the number of restore-able tabs for a browser window
+   */
+  unsigned long getClosedTabCount(in nsIDOMWindow aWindow);
+
+  /**
+   * Get closed tab data
+   *
+   * @param aWindow is the browser window for which to get closed tab data
+   * @returns a JSON string representing the list of closed tabs.
+   */
+  AString getClosedTabData(in nsIDOMWindow aWindow);
+
+  /**
+   * @param aWindow is the browser window to reopen a closed tab in.
+   * @param aIndex  is the index of the tab to be restored (FIFO ordered).
+   * @returns a reference to the reopened tab.
+   */
+  nsIDOMNode undoCloseTab(in nsIDOMWindow aWindow, in unsigned long aIndex);
+
+  /**
+   * @param aWindow is the browser window associated with the closed tab.
+   * @param aIndex  is the index of the closed tab to be removed (FIFO ordered).
+   */
+  nsIDOMNode forgetClosedTab(in nsIDOMWindow aWindow, in unsigned long aIndex);
+
+  /**
+   * @param aTab is the browser tab to get the value for.
+   * @param aKey is the value's name.
+   * 
+   * @returns A string value or an empty string if none is set.
+   */
+  AString getTabValue(in nsIDOMNode aTab, in AString aKey);
+
+  /**
+   * @param aTab         is the browser tab to set the value for.
+   * @param aKey         is the value's name.
+   * @param aStringValue is the value itself (use JSON.stringify/parse before setting JS objects).
+   */
+  void setTabValue(in nsIDOMNode aTab, in AString aKey, in AString aStringValue);
+
+  /**
+   * @param aTab is the browser tab to get the value for.
+   * @param aKey is the value's name.
+   */
+  void deleteTabValue(in nsIDOMNode aTab, in AString aKey);
+
+  /**
+   * @returns A boolean indicating we should restore previous browser session
+   */
+  boolean shouldRestore();
+
+  /**
+   * Restores the previous browser session using a fast, lightweight strategy
+   * @param aBringToFront should a restored tab be brought to the foreground?
+   */
+  void restoreLastSession(in boolean aBringToFront);
+};
