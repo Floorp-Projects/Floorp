@@ -227,8 +227,15 @@ public:
    */
   PRInt64 SizeOfMapping();
 
+  /*
+   * Refcounting
+   */
+  NS_METHOD_(nsrefcnt) AddRef(void);
+  NS_METHOD_(nsrefcnt) Release(void);
+
 private:
   //--- private members ---
+  nsrefcnt      mRefCnt; /* ref count */
 
   nsZipItem*    mFiles[ZIP_TABSIZE];
   PLArenaPool   mArena;
@@ -266,7 +273,7 @@ public:
   nsresult      FindNext(const char** aResult, PRUint16* aNameLen);
 
 private:
-  nsZipArchive* mArchive;
+  nsRefPtr<nsZipArchive> mArchive;
   char*         mPattern;
   nsZipItem*    mItem;
   PRUint16      mSlot;
