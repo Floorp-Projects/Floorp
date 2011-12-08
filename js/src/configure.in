@@ -5329,18 +5329,34 @@ mv confdefs.h.save confdefs.h
 MAKEFILES="
   Makefile
   shell/Makefile
-  jsapi-tests/Makefile
-  tests/Makefile
   config/Makefile
   config/autoconf.mk
   config/expandlibs_config.py
-  config/mkdepend/Makefile
 "
 
-if test -n "$JS_NATIVE_EDITLINE"; then
-   MAKEFILES="$MAKEFILES
-editline/Makefile
-"
+if test "$JS_NATIVE_EDITLINE"; then
+  MAKEFILES="$MAKEFILES
+    editline/Makefile
+  "
+fi
+
+if test ! "$COMPILER_DEPEND" -a ! "$MOZ_NATIVE_MAKEDEPEND"; then
+  MAKEFILES="$MAKEFILES
+    config/mkdepend/Makefile
+  "
+fi
+
+if test "$ENABLE_TESTS"; then
+  MAKEFILES="$MAKEFILES
+    jsapi-tests/Makefile
+    tests/Makefile
+  "
+fi
+
+if test "$DEHYDRA_PATH"; then
+  MAKEFILES="$MAKEFILES
+    analysis-tests/Makefile
+  "
 fi
 
 dnl
