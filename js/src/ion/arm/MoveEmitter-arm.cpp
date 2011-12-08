@@ -162,8 +162,7 @@ MoveEmitterARM::tempFloatReg()
         masm.reserveStack(sizeof(double));
         pushedAtDoubleSpill_ = masm.framePushed();
     }
-    //masm.ma_vstr(spilledFloatReg_, doubleSpillSlot().EDTRAddr());
-    JS_NOT_REACHED("add vfp-addrs to the union type");
+    masm.ma_vstr(spilledFloatReg_, doubleSpillSlot());
     return spilledFloatReg_;
 }
 
