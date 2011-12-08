@@ -13,7 +13,7 @@ function g(n) {
   return s;
 }
 
-// Do it twice with different initial values for 'i' to allow for HOTLOOP
+// Do it twice with different initial values for 'i' to allow for 8
 // being even or odd.
 
 var s = "";

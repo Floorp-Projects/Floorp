@@ -137,7 +137,7 @@ public class DoCommand {
     String ffxProvider = "org.mozilla.ffxcp";
     String fenProvider = "org.mozilla.fencp";
 
-    private final String prgVersion = "SUTAgentAndroid Version 1.02";
+    private final String prgVersion = "SUTAgentAndroid Version 1.03";
 
     public enum Command
         {
@@ -3149,9 +3149,15 @@ private void CancelNotification()
 
             RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
             outThrd.start();
-            outThrd.join(60000);
-            int nRet = pProc.exitValue();
-            sRet = "\nuninst complete [" + nRet + "]";
+            try {
+                outThrd.join(60000);
+                int nRet = pProc.exitValue();
+                sRet = "\nuninst complete [" + nRet + "]";
+                }
+            catch (IllegalThreadStateException itse) {
+                itse.printStackTrace();
+                sRet = "\nuninst command timed out";
+                }
             }
         catch (IOException e)
             {
@@ -3192,9 +3198,15 @@ private void CancelNotification()
 
             RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
             outThrd.start();
-            outThrd.join(90000);
-            int nRet = pProc.exitValue();
-            sRet = "\nmove complete [" + nRet + "]";
+            try {
+                outThrd.join(90000);
+                int nRet = pProc.exitValue();
+                sRet = "\nmove complete [" + nRet + "]";
+                }
+            catch (IllegalThreadStateException itse) {
+                itse.printStackTrace();
+                sRet = "\nmove command timed out";
+            }
             try
                 {
                 out.write(sRet.getBytes());
@@ -3209,9 +3221,15 @@ private void CancelNotification()
             pProc = Runtime.getRuntime().exec(theArgs);
             RedirOutputThread outThrd2 = new RedirOutputThread(pProc, out);
             outThrd2.start();
-            outThrd2.join(10000);
-            int nRet2 = pProc.exitValue();
-            sRet = "\npermission change complete [" + nRet2 + "]\n";
+            try {
+                outThrd2.join(10000);
+                int nRet2 = pProc.exitValue();
+                sRet = "\npermission change complete [" + nRet2 + "]\n";
+                }
+            catch (IllegalThreadStateException itse) {
+                itse.printStackTrace();
+                sRet = "\npermission change timed out";
+            }
             try {
                 out.write(sRet.getBytes());
                 out.flush();
@@ -3225,9 +3243,15 @@ private void CancelNotification()
             pProc = Runtime.getRuntime().exec(theArgs);
             RedirOutputThread outThrd3 = new RedirOutputThread(pProc, out);
             outThrd3.start();
-            outThrd3.join(60000);
-            int nRet3 = pProc.exitValue();
-            sRet = "\ninstallation complete [" + nRet3 + "]";
+            try {
+                outThrd3.join(60000);
+                int nRet3 = pProc.exitValue();
+                sRet = "\ninstallation complete [" + nRet3 + "]";
+                }
+            catch (IllegalThreadStateException itse) {
+                itse.printStackTrace();
+                sRet = "\npm install command timed out";
+            }
             try {
                 out.write(sRet.getBytes());
                 out.flush();
@@ -3241,9 +3265,15 @@ private void CancelNotification()
             pProc = Runtime.getRuntime().exec(theArgs);
             RedirOutputThread outThrd4 = new RedirOutputThread(pProc, out);
             outThrd4.start();
-            outThrd4.join(60000);
-            int nRet4 = pProc.exitValue();
-            sRet = "\ntmp file removed [" + nRet4 + "]";
+            try {
+                outThrd4.join(60000);
+                int nRet4 = pProc.exitValue();
+                sRet = "\ntmp file removed [" + nRet4 + "]";
+                }
+            catch (IllegalThreadStateException itse) {
+                itse.printStackTrace();
+                sRet = "\nrm command timed out";
+            }
             try {
                 out.write(sRet.getBytes());
                 out.flush();
@@ -3441,11 +3471,20 @@ private void CancelNotification()
         try
             {
             contextWrapper.startActivity(prgIntent);
+            FindProcThread findProcThrd = new FindProcThread(contextWrapper, sArgs[0]);
+            findProcThrd.start();
+            findProcThrd.join(7000);
+            if (!findProcThrd.bFoundIt && !findProcThrd.bStillRunning) {
+                sRet = "Unable to start " + sArgs[0] + "";
+                }
             }
         catch(ActivityNotFoundException anf)
             {
             anf.printStackTrace();
             }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         ctx = null;
         return (sRet);
@@ -3454,15 +3493,25 @@ private void CancelNotification()
     public String StartPrg(String [] progArray, OutputStream out)
         {
         String sRet = "";
+        int    lcv = 0;
 
         try
             {
             pProc = Runtime.getRuntime().exec(progArray);
             RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
             outThrd.start();
-            outThrd.join(10000);
-            int nRetCode = pProc.exitValue();
-            sRet = "return code [" + nRetCode + "]";
+            while (lcv < 30) {
+                try {
+                    outThrd.join(10000);
+                    int nRetCode = pProc.exitValue();
+                    sRet = "return code [" + nRetCode + "]";
+                    break;
+                    }
+                catch (IllegalThreadStateException itse) {
+                    lcv++;
+                    itse.printStackTrace();
+                    }
+                }
             }
         catch (IOException e)
             {
@@ -3571,9 +3620,21 @@ private void CancelNotification()
 
                 RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
                 outThrd.start();
-                outThrd.join(10000);
-                int nRetCode = pProc.exitValue();
-                sRet = "return code [" + nRetCode + "]";
+
+                lcv = 0;
+
+                while (lcv < 30) {
+                    try {
+                        outThrd.join(10000);
+                        int nRetCode = pProc.exitValue();
+                        sRet = "return code [" + nRetCode + "]";
+                        lcv = 30;
+                        }
+                    catch (IllegalThreadStateException itse) {
+                        lcv++;
+                        itse.printStackTrace();
+                        }
+                    }
                 }
             else
                 {
@@ -3672,6 +3733,7 @@ private void CancelNotification()
             "                               GMTxhh:mm x = +/- or a recognized Olsen string\n" +
             "tzget                        - returns the current timezone set on the device\n" +
             "rebt                         - reboot device\n" +
+            "adb ip|usb                   - set adb to use tcp/ip on port 5555 or usb\n" +
             "quit                         - disconnect SUTAgent\n" +
             "exit                         - close SUTAgent\n" +
             "ver                          - SUTAgent version\n" +

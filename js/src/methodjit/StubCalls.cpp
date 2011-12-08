@@ -300,7 +300,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname)
             return NULL;
         if (!prop) {
             /* Kludge to allow (typeof foo == "undefined") tests. */
-            JSOp op2 = js_GetOpcode(cx, f.script(), f.pc() + JSOP_NAME_LENGTH);
+            JSOp op2 = JSOp(f.pc()[JSOP_NAME_LENGTH]);
             if (op2 == JSOP_TYPEOF) {
                 f.regs.sp++;
                 f.regs.sp[-1].setUndefined();
@@ -565,10 +565,9 @@ stubs::BitOr(VMFrame &f)
 {
     int32_t i, j;
 
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-2], &i) ||
-        !ValueToECMAInt32(f.cx, f.regs.sp[-1], &j)) {
+    if (!ToInt32(f.cx, f.regs.sp[-2], &i) || !ToInt32(f.cx, f.regs.sp[-1], &j))
         THROW();
-    }
+
     i = i | j;
     f.regs.sp[-2].setInt32(i);
 }
@@ -578,10 +577,9 @@ stubs::BitXor(VMFrame &f)
 {
     int32_t i, j;
 
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-2], &i) ||
-        !ValueToECMAInt32(f.cx, f.regs.sp[-1], &j)) {
+    if (!ToInt32(f.cx, f.regs.sp[-2], &i) || !ToInt32(f.cx, f.regs.sp[-1], &j))
         THROW();
-    }
+
     i = i ^ j;
     f.regs.sp[-2].setInt32(i);
 }
@@ -591,10 +589,9 @@ stubs::BitAnd(VMFrame &f)
 {
     int32_t i, j;
 
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-2], &i) ||
-        !ValueToECMAInt32(f.cx, f.regs.sp[-1], &j)) {
+    if (!ToInt32(f.cx, f.regs.sp[-2], &i) || !ToInt32(f.cx, f.regs.sp[-1], &j))
         THROW();
-    }
+
     i = i & j;
     f.regs.sp[-2].setInt32(i);
 }
@@ -604,7 +601,7 @@ stubs::BitNot(VMFrame &f)
 {
     int32_t i;
 
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-1], &i))
+    if (!ToInt32(f.cx, f.regs.sp[-1], &i))
         THROW();
     i = ~i;
     f.regs.sp[-1].setInt32(i);
@@ -614,9 +611,9 @@ void JS_FASTCALL
 stubs::Lsh(VMFrame &f)
 {
     int32_t i, j;
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-2], &i))
+    if (!ToInt32(f.cx, f.regs.sp[-2], &i))
         THROW();
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-1], &j))
+    if (!ToInt32(f.cx, f.regs.sp[-1], &j))
         THROW();
     i = i << (j & 31);
     f.regs.sp[-2].setInt32(i);
@@ -626,9 +623,9 @@ void JS_FASTCALL
 stubs::Rsh(VMFrame &f)
 {
     int32_t i, j;
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-2], &i))
+    if (!ToInt32(f.cx, f.regs.sp[-2], &i))
         THROW();
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-1], &j))
+    if (!ToInt32(f.cx, f.regs.sp[-1], &j))
         THROW();
     i = i >> (j & 31);
     f.regs.sp[-2].setInt32(i);
@@ -638,10 +635,10 @@ void JS_FASTCALL
 stubs::Ursh(VMFrame &f)
 {
     uint32_t u;
-    if (!ValueToECMAUint32(f.cx, f.regs.sp[-2], &u))
+    if (!ToUint32(f.cx, f.regs.sp[-2], &u))
         THROW();
     int32_t j;
-    if (!ValueToECMAInt32(f.cx, f.regs.sp[-1], &j))
+    if (!ToInt32(f.cx, f.regs.sp[-1], &j))
         THROW();
 
     u >>= (j & 31);
@@ -983,7 +980,7 @@ stubs::Add(VMFrame &f)
             if (lIsString) {
                 lstr = lval.toString();
             } else {
-                lstr = js_ValueToString(cx, lval);
+                lstr = ToString(cx, lval);
                 if (!lstr)
                     THROW();
                 regs.sp[-2].setString(lstr);
@@ -991,7 +988,7 @@ stubs::Add(VMFrame &f)
             if (rIsString) {
                 rstr = rval.toString();
             } else {
-                rstr = js_ValueToString(cx, rval);
+                rstr = ToString(cx, rval);
                 if (!rstr)
                     THROW();
                 regs.sp[-1].setString(rstr);
@@ -1332,24 +1329,19 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
      */
     JS_ASSERT(fun->isInterpreted());
     JS_ASSERT(!fun->isFlatClosure());
-    JSObject *obj = fun;
 
+    JSObject *parent;
     if (fun->isNullClosure()) {
-        obj = CloneFunctionObjectIfNotSingleton(f.cx, fun, &f.fp()->scopeChain());
-        if (!obj)
-            THROWV(NULL);
+        parent = &f.fp()->scopeChain();
     } else {
-        JSObject *parent = GetScopeChainFast(f.cx, f.fp(), JSOP_DEFLOCALFUN,
-                                             JSOP_DEFLOCALFUN_LENGTH);
+        parent = GetScopeChainFast(f.cx, f.fp(), JSOP_DEFLOCALFUN,
+                                   JSOP_DEFLOCALFUN_LENGTH);
         if (!parent)
             THROWV(NULL);
-
-        if (obj->toFunction()->environment() != parent) {
-            obj = CloneFunctionObjectIfNotSingleton(f.cx, fun, parent);
-            if (!obj)
-                THROWV(NULL);
-        }
     }
+    JSObject *obj = CloneFunctionObjectIfNotSingleton(f.cx, fun, parent);
+    if (!obj)
+        THROWV(NULL);
 
     JS_ASSERT_IF(f.script()->compileAndGo, obj->getGlobal() == fun->getGlobal());
 
@@ -1475,7 +1467,7 @@ InlineGetProp(VMFrame &f)
     Value *vp = &f.regs.sp[-1];
 
     if (vp->isMagic(JS_LAZY_ARGUMENTS)) {
-        JS_ASSERT(js_GetOpcode(cx, f.script(), f.pc()) == JSOP_LENGTH);
+        JS_ASSERT(JSOp(*f.pc()) == JSOP_LENGTH);
         regs.sp[-1] = Int32Value(regs.fp()->numActualArgs());
         return true;
     }
@@ -2352,11 +2344,15 @@ void JS_FASTCALL
 stubs::AnyFrameEpilogue(VMFrame &f)
 {
     /*
-     * On the normal execution path, emitReturn inlines ScriptEpilogue.
-     * This function implements forced early returns, so it must have the
-     * same effect.
+     * On the normal execution path, emitReturn calls ScriptDebugEpilogue
+     * and inlines ScriptEpilogue. This function implements forced early
+     * returns, so it must have the same effect.
      */
-    if (!ScriptEpilogue(f.cx, f.fp(), true))
+    bool ok = true;
+    if (f.cx->compartment->debugMode())
+        ok = js::ScriptDebugEpilogue(f.cx, f.fp(), ok);
+    ok = ScriptEpilogue(f.cx, f.fp(), ok);
+    if (!ok)
         THROW();
     if (f.fp()->isNonEvalFunctionFrame())
         f.fp()->functionEpilogue();

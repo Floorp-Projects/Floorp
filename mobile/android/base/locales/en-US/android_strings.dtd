@@ -1,0 +1,75 @@
+
+<!ENTITY  splash_firstrun "Setting up &brandShortName;\u2026">
+
+<!ENTITY  no_space_to_start_error "There is not enough space available for &brandShortName; to start.">
+<!ENTITY  error_loading_file "An error occurred when trying to load files required to run &brandShortName;">
+
+<!ENTITY  awesomebar_all_pages_title "Top Sites">
+<!ENTITY  awesomebar_bookmarks_title "Bookmarks">
+<!ENTITY  awesomebar_history_title "History">
+<!ENTITY  awesomebar_search_engine "Search for \&quot;&#037;s\&quot;">
+
+<!ENTITY  crash_reporter_title "&brandShortName; Crash Reporter">
+<!ENTITY  crash_message "&brandShortName; has crashed. Your tabs should be listed on the &brandShortName; Start page when you restart.">
+<!ENTITY  crash_help_message "Please help us fix this problem!">
+<!ENTITY  crash_send_report_message "Send Mozilla a crash report">
+<!ENTITY  crash_include_url "Include page address">
+<!ENTITY  crash_close_label "Close">
+<!ENTITY  crash_restart_label "Restart &brandShortName;">
+<!ENTITY  sending_crash_report "Sending crash report\u2026">
+<!ENTITY  exit_label "Exit">
+<!ENTITY  continue_label "Continue">
+
+<!ENTITY  launcher_shortcuts_title "&brandShortName; Web Apps">
+<!ENTITY  launcher_shortcuts_empty "No web apps were found">
+
+<!ENTITY choose_file "Choose File">
+
+<!ENTITY awesomebar_default_text "Enter Search or Address">
+
+<!ENTITY bookmarks_title "Bookmarks">
+<!ENTITY bookmark_add "Bookmark">
+<!ENTITY bookmark_remove "Remove">
+<!ENTITY bookmark_added "Bookmark added">
+<!ENTITY bookmark_removed "Bookmark removed">
+
+<!ENTITY history_today_section "Today">
+<!ENTITY history_yesterday_section "Yesterday">
+<!ENTITY history_week_section "7 days ago">
+<!ENTITY history_older_section "Older than 7 days">
+
+<!ENTITY reload "Reload">
+<!ENTITY forward "Forward">
+
+<!ENTITY new_tab "New Tab">
+
+<!ENTITY preferences "Preferences">
+<!ENTITY preferences_title "Preferences">
+<!ENTITY pref_category_privacy "Privacy &amp; Security">
+<!ENTITY pref_category_content "Content">
+<!ENTITY pref_do_not_track "Tell sites not to track me">
+<!ENTITY pref_telemetry "Send performance data">
+<!ENTITY pref_homepage "Home page">
+<!ENTITY pref_homepage_start "Firefox Start">
+<!ENTITY pref_homepage_blank "Blank page">
+<!ENTITY pref_homepage_current "Current page">
+<!ENTITY pref_remember_signons "Remember passwords">
+<!ENTITY pref_locale "Language">
+<!ENTITY pref_cookies "Enable cookies">
+<!ENTITY pref_zoom_reflow "Reformat text on zoom">
+<!ENTITY pref_show_images "Show images">
+<!ENTITY pref_enable_js "Enable JavaScript">
+<!ENTITY pref_char_encoding "Show character encoding">
+<!ENTITY pref_clear_history "Clear history">
+<!ENTITY pref_clear_history_confirm "Browsing history will be deleted">
+<!ENTITY pref_clear_private_data "Clear private data">
+<!ENTITY pref_clear_private_data_confirm "Browsing settings, including passwords and cookies, will be deleted">
+
+<!ENTITY quit "Quit">
+
+<!ENTITY addons "Add-ons">
+
+<!ENTITY share "Share">
+<!ENTITY save_as_pdf "Save as PDF">
+<!ENTITY agent_request_desktop "Request Desktop Site">
+<!ENTITY agent_request_mobile "Request Mobile Site">

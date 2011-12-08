@@ -606,7 +606,6 @@ TypeSet::addCallProperty(JSContext *cx, JSScript *script, jsbytecode *pc, jsid i
      * outright ignored.
      */
     jsbytecode *callpc = script->analysis()->getCallPC(pc);
-    UntrapOpcode untrap(cx, script, callpc);
     if (JSOp(*callpc) == JSOP_NEW)
         return;
 
@@ -740,7 +739,6 @@ TypeSet::addPropagateThis(JSContext *cx, JSScript *script, jsbytecode *pc, Type 
 {
     /* Don't add constraints when the call will be 'new' (see addCallProperty). */
     jsbytecode *callpc = script->analysis()->getCallPC(pc);
-    UntrapOpcode untrap(cx, script, callpc);
     if (JSOp(*callpc) == JSOP_NEW)
         return;
 
@@ -1067,8 +1065,6 @@ UnknownPropertyAccess(JSScript *script, Type type)
 void
 TypeConstraintProp::newType(JSContext *cx, TypeSet *source, Type type)
 {
-    UntrapOpcode untrap(cx, script, pc);
-
     if (UnknownPropertyAccess(script, type)) {
         /*
          * Access on an unknown object. Reads produce an unknown result, writes
@@ -1101,8 +1097,6 @@ TypeConstraintProp::newType(JSContext *cx, TypeSet *source, Type type)
 void
 TypeConstraintCallProp::newType(JSContext *cx, TypeSet *source, Type type)
 {
-    UntrapOpcode untrap(cx, script, callpc);
-
     /*
      * For CALLPROP, we need to update not just the pushed types but also the
      * 'this' types of possible callees. If we can't figure out that set of
@@ -2014,7 +2008,6 @@ TypeCompartment::newAllocationSiteTypeObject(JSContext *cx, const AllocationSite
     }
 
     jsbytecode *pc = key.script->code + key.offset;
-    UntrapOpcode untrap(cx, key.script, pc);
 
     if (JSOp(*pc) == JSOP_NEWOBJECT) {
         /*
@@ -2061,8 +2054,6 @@ bool
 types::UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
-
-    UntrapOpcode untrap(cx, script, pc);
 
     /*
      * Make a heuristic guess at a use of JSOP_NEW that the constructed object
@@ -2246,7 +2237,6 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32 offset,
     JS_ASSERT(analysis->ranInference());
 
     jsbytecode *pc = script->code + offset;
-    UntrapOpcode untrap(cx, script, pc);
 
     JS_ASSERT_IF(returnOnly, js_CodeSpec[*pc].format & JOF_INVOKE);
 
@@ -2325,7 +2315,6 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
                 if (!script->analysis()->maybeCode(i))
                     continue;
                 jsbytecode *pc = script->code + i;
-                UntrapOpcode untrap(cx, script, pc);
                 if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
                     continue;
                 unsigned defCount = GetDefCount(script, i);
@@ -2749,7 +2738,12 @@ TypeObject::getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force
 static inline void
 UpdatePropertyType(JSContext *cx, TypeSet *types, JSObject *obj, const Shape *shape, bool force)
 {
+    types->setOwnProperty(cx, false);
+    if (!shape->writable())
+        types->setOwnProperty(cx, true);
+
     if (shape->hasGetterValue() || shape->hasSetterValue()) {
+        types->setOwnProperty(cx, true);
         types->addType(cx, Type::UnknownType());
     } else if (shape->hasDefaultGetterOrIsMethod() && shape->hasSlot()) {
         const Value &value = obj->nativeGetSlot(shape->slot());
@@ -2758,11 +2752,10 @@ UpdatePropertyType(JSContext *cx, TypeSet *types, JSObject *obj, const Shape *sh
          * Don't add initial undefined types for singleton properties that are
          * not collated into the JSID_VOID property (see propertySet comment).
          */
-        if (!force && value.isUndefined())
-            return;
-
-        Type type = GetValueType(cx, value);
-        types->addType(cx, type);
+        if (force || !value.isUndefined()) {
+            Type type = GetValueType(cx, value);
+            types->addType(cx, type);
+        }
     }
 }
 
@@ -3206,8 +3199,6 @@ GetInitializerType(JSContext *cx, JSScript *script, jsbytecode *pc)
     if (!script->hasGlobal())
         return NULL;
 
-    UntrapOpcode untrap(cx, script, pc);
-
     JSOp op = JSOp(*pc);
     JS_ASSERT(op == JSOP_NEWARRAY || op == JSOP_NEWOBJECT || op == JSOP_NEWINIT);
 
@@ -3268,7 +3259,7 @@ ScriptAnalysis::resolveNameAccess(JSContext *cx, jsid id, bool addDependency)
          * active frame counts for such scripts.
          */
         if (script->analysis()->addsScopeObjects() ||
-            js_GetOpcode(cx, script, script->code) == JSOP_GENERATOR) {
+            JSOp(*script->code) == JSOP_GENERATOR) {
             return access;
         }
 
@@ -4190,7 +4181,7 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
          */
         if (!detached &&
             (nesting->parent->analysis()->addsScopeObjects() ||
-             js_GetOpcode(cx, nesting->parent, nesting->parent->code) == JSOP_GENERATOR)) {
+             JSOp(*nesting->parent->code) == JSOP_GENERATOR)) {
             DetachNestingParent(script);
             detached = true;
         }
@@ -4203,7 +4194,6 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
         Bytecode *code = maybeCode(offset);
 
         jsbytecode *pc = script->code + offset;
-        UntrapOpcode untrap(cx, script, pc);
 
         if (code && !analyzeTypesBytecode(cx, offset, state)) {
             cx->compartment->types.setPendingNukeTypes(cx);
@@ -4321,7 +4311,6 @@ ScriptAnalysis::followEscapingArguments(JSContext *cx, SSAUseChain *use, Vector<
     uint32 which = use->u.which;
 
     JSOp op = JSOp(*pc);
-    JS_ASSERT(op != JSOP_TRAP);
 
     if (op == JSOP_POP || op == JSOP_POPN)
         return true;
@@ -4410,17 +4399,21 @@ public:
         : TypeConstraint("clearDefiniteSetter"), object(object)
     {}
 
-    void newType(JSContext *cx, TypeSet *source, Type type) {
+    void newPropertyState(JSContext *cx, TypeSet *source)
+    {
         if (!object->newScript)
             return;
         /*
          * Clear out the newScript shape and definite property information from
-         * an object if the source type set could be a setter (its type set
-         * becomes unknown).
+         * an object if the source type set could be a setter or could be
+         * non-writable, both of which are indicated by the source type set
+         * being marked as configured.
          */
-        if (!(object->flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED) && type.isUnknown())
+        if (!(object->flags & OBJECT_FLAG_NEW_SCRIPT_CLEARED) && source->isOwnProperty(true))
             object->clearNewScript(cx);
     }
+
+    void newType(JSContext *cx, TypeSet *source, Type type) {}
 };
 
 /*
@@ -4495,7 +4488,6 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
     while (nextOffset < script->length) {
         unsigned offset = nextOffset;
         jsbytecode *pc = script->code + offset;
-        UntrapOpcode untrap(cx, script, pc);
 
         JSOp op = JSOp(*pc);
 
@@ -4553,8 +4545,6 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
             return false;
 
         pc = script->code + uses->offset;
-        UntrapOpcode untrapUse(cx, script, pc);
-
         op = JSOp(*pc);
 
         JSObject *obj = *pbaseobj;
@@ -4571,6 +4561,23 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
                 return false;
             if (id == id_prototype(cx) || id == id___proto__(cx) || id == id_constructor(cx))
                 return false;
+
+            /*
+             * Ensure that if the properties named here could have a setter or
+             * a permanent property in any transitive prototype, the definite
+             * properties get cleared from the shape.
+             */
+            JSObject *parent = type->proto;
+            while (parent) {
+                TypeObject *parentObject = parent->getType(cx);
+                if (parentObject->unknownProperties())
+                    return false;
+                TypeSet *parentTypes = parentObject->getProperty(cx, id, false);
+                if (!parentTypes || parentTypes->isOwnProperty(true))
+                    return false;
+                parentTypes->add(cx, cx->typeLifoAlloc().new_<TypeConstraintClearDefiniteSetter>(type));
+                parent = parent->getProto();
+            }
 
             unsigned slotSpan = obj->slotSpan();
             if (!DefineNativeProperty(cx, obj, id, UndefinedValue(), NULL, NULL,
@@ -4601,20 +4608,6 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
                 /* Maximum number of definite properties added. */
                 return false;
             }
-
-            /*
-             * Ensure that if the properties named here could have a setter in
-             * the direct prototype (and thus its transitive prototypes), the
-             * definite properties get cleared from the shape.
-             */
-            TypeObject *parentObject = type->proto->getType(cx);
-            if (parentObject->unknownProperties())
-                return false;
-            TypeSet *parentTypes = parentObject->getProperty(cx, id, false);
-            if (!parentTypes || parentTypes->unknown())
-                return false;
-            parentObject->getFromPrototypes(cx, id, parentTypes);
-            parentTypes->add(cx, cx->typeLifoAlloc().new_<TypeConstraintClearDefiniteSetter>(type));
         } else if (op == JSOP_FUNCALL && uses->u.which == GET_ARGC(pc) - 1) {
             /*
              * Passed as the first parameter to Function.call. Follow control
@@ -4633,7 +4626,6 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
             if (calleev.kind() != SSAValue::PUSHED)
                 return false;
             jsbytecode *calleepc = script->code + calleev.pushedOffset();
-            UntrapOpcode untrapCallee(cx, script, calleepc);
             if (JSOp(*calleepc) != JSOP_CALLPROP || calleev.pushedIndex() != 0)
                 return false;
 
@@ -4795,7 +4787,6 @@ ScriptAnalysis::printTypes(JSContext *cx)
             continue;
 
         jsbytecode *pc = script->code + offset;
-        UntrapOpcode untrap(cx, script, pc);
 
         if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
             continue;
@@ -4874,7 +4865,6 @@ ScriptAnalysis::printTypes(JSContext *cx)
             continue;
 
         jsbytecode *pc = script->code + offset;
-        UntrapOpcode untrap(cx, script, pc);
 
         PrintBytecode(cx, script, pc);
 
@@ -4932,8 +4922,6 @@ MarkIteratorUnknownSlow(JSContext *cx)
     if (!script || !pc)
         return;
 
-    UntrapOpcode untrap(cx, script, pc);
-
     if (JSOp(*pc) != JSOP_ITER)
         return;
 
@@ -4977,7 +4965,7 @@ MarkIteratorUnknownSlow(JSContext *cx)
         jsbytecode *pc = script->code + i;
         if (!analysis->maybeCode(pc))
             continue;
-        if (js_GetOpcode(cx, script, pc) == JSOP_ITERNEXT)
+        if (JSOp(*pc) == JSOP_ITERNEXT)
             analysis->pushedTypes(pc, 0)->addType(cx, Type::UnknownType());
     }
 
@@ -5022,8 +5010,6 @@ TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, Type type)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
     AutoEnterTypeInference enter(cx);
-
-    UntrapOpcode untrap(cx, script, pc);
 
     /* Directly update associated type sets for applicable bytecodes. */
     if (js_CodeSpec[*pc].format & JOF_TYPESET) {
@@ -5127,8 +5113,6 @@ TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, Type type)
 void
 TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Value &rval)
 {
-    UntrapOpcode untrap(cx, script, pc);
-
     /* Allow the non-TYPESET scenario to simplify stubs used in compound opcodes. */
     if (!(js_CodeSpec[*pc].format & JOF_TYPESET))
         return;
@@ -5405,8 +5389,6 @@ NestingEpilogue(StackFrame *fp)
 static inline bool
 IgnorePushed(const jsbytecode *pc, unsigned index)
 {
-    JS_ASSERT(JSOp(*pc) != JSOP_TRAP);
-
     switch (JSOp(*pc)) {
       /* We keep track of the scopes pushed by BINDNAME separately. */
       case JSOP_BINDNAME:
@@ -5583,7 +5565,6 @@ JSScript::typeSetFunction(JSContext *cx, JSFunction *fun, bool singleton)
 TypeScript::CheckBytecode(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Value *sp)
 {
     AutoEnterTypeInference enter(cx);
-    UntrapOpcode untrap(cx, script, pc);
 
     if (js_CodeSpec[*pc].format & JOF_DECOMPOSE)
         return;

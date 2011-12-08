@@ -61,18 +61,18 @@
 
       try {
         objectStore.put({});
-        ok(false, "put with no key should throw!");
+        ok(true, "put with no key should not throw with autoIncrement!");
       }
       catch (e) {
-        ok(true, "put with no key threw");
+        ok(false, "put with no key threw with autoIncrement");
       }
 
       try {
         objectStore.put({});
-        ok(false, "put with no key should throw!");
+        ok(true, "put with no key should not throw with autoIncrement!");
       }
       catch (e) {
-        ok(true, "put with no key threw");
+        ok(false, "put with no key threw with autoIncrement");
       }
 
       try {
@@ -247,18 +247,18 @@
 
       try {
         objectStore.put({});
-        ok(false, "put with no key should throw!");
+        ok(true, "put with no key should not throw with autoIncrement!");
       }
       catch (e) {
-        ok(true, "put with no key threw");
+        ok(false, "put with no key threw with autoIncrement");
       }
 
       try {
         objectStore.put({});
-        ok(false, "put with no key should throw!");
+        ok(true, "put with no key should not throw with autoIncrement!");
       }
       catch (e) {
-        ok(true, "put with no key threw");
+        ok(false, "put with no key threw with autoIncrement");
       }
 
       try {

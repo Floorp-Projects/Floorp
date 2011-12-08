@@ -42,6 +42,7 @@ VPATH            = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE           = dom
 LIBRARY_NAME     = domtelephony_s
 XPIDL_MODULE     = dom_telephony
 LIBXUL_LIBRARY   = 1
@@ -49,24 +50,22 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-CPPSRCS = \
-  Radio.cpp \
-  $(NULL)
-
-LOCAL_INCLUDES = \
-  -I$(topsrcdir)/dom/base \
-  -I$(topsrcdir)/content/events/src \
-  $(NULL)
-
 XPIDLSRCS = \
   mozIDOMTelephony.idl \
+  nsITelephone.idl \
   $(NULL)
 
 EXTRA_COMPONENTS = \
   Telephony.manifest \
   Telephony.js \
+  nsTelephonyWorker.manifest \
+  nsTelephonyWorker.js \
   $(NULL)
 
-DIRS += worker-component
+EXTRA_JS_MODULES = \
+  ril_consts.js \
+  ril_worker.js \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+

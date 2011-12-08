@@ -320,7 +320,7 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv, const char *format
             break;
           case 'S':
           case 'W':
-            str = js_ValueToString(cx, *sp);
+            str = ToString(cx, *sp);
             if (!str)
                 return JS_FALSE;
             *sp = STRING_TO_JSVAL(str);
@@ -437,7 +437,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
         ok = (obj != NULL);
         break;
       case JSTYPE_STRING:
-        str = js_ValueToString(cx, v);
+        str = ToString(cx, v);
         ok = (str != NULL);
         if (ok)
             *vp = STRING_TO_JSVAL(str);
@@ -490,7 +490,7 @@ JS_ValueToString(JSContext *cx, jsval v)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, v);
-    return js_ValueToString(cx, v);
+    return ToString(cx, v);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -536,7 +536,7 @@ JS_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip)
     assertSameCompartment(cx, v);
 
     AutoValueRooter tvr(cx, v);
-    return ValueToECMAInt32(cx, tvr.value(), (int32_t *)ip);
+    return ToInt32(cx, tvr.value(), (int32_t *)ip);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -546,7 +546,7 @@ JS_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip)
     assertSameCompartment(cx, v);
 
     AutoValueRooter tvr(cx, v);
-    return ValueToECMAUint32(cx, tvr.value(), (uint32_t *)ip);
+    return ToUint32(cx, tvr.value(), (uint32_t *)ip);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -556,7 +556,7 @@ JS_ValueToInt32(JSContext *cx, jsval v, int32 *ip)
     assertSameCompartment(cx, v);
 
     AutoValueRooter tvr(cx, v);
-    return ValueToInt32(cx, tvr.value(), (int32_t *)ip);
+    return NonstandardToInt32(cx, tvr.value(), (int32_t *)ip);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -641,9 +641,6 @@ static JSBool js_NewRuntimeWasCalled = JS_FALSE;
 
 JSRuntime::JSRuntime()
   : atomsCompartment(NULL),
-#ifdef JS_THREADSAFE
-    atomsCompartmentIsLocked(false),
-#endif
     state(),
     cxCallback(NULL),
     compartmentCallback(NULL),
@@ -4197,7 +4194,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
             JS_ASSERT(shape->isEmptyShape());
             *idp = JSID_VOID;
         } else {
-            iterobj->setPrivate(const_cast<Shape *>(shape->previous()));
+            iterobj->setPrivate(const_cast<Shape *>(shape->previous().get()));
             *idp = shape->propid();
         }
     } else {

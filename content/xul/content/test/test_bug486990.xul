@@ -51,7 +51,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=486990
 
   function fooListener(evt) {
     evt.preventDefault();
-    prevented = evt.getPreventDefault();
+    prevented = evt.defaultPrevented;
     ++eventCount;
   };
 

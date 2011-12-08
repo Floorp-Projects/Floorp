@@ -815,6 +815,8 @@ public:
         return gNewDOMBindingsEnabled;
     }
 
+    size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
+
 private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect);
@@ -1607,6 +1609,12 @@ public:
     void
     DebugDump(PRInt16 depth);
 
+    static size_t
+    SizeOfAllScopesIncludingThis(nsMallocSizeOfFun mallocSizeOf);
+
+    size_t
+    SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
+
     JSBool
     IsValid() const {return mRuntime != nsnull;}
 
@@ -1812,6 +1820,8 @@ public:
 
     static void DestroyInstance(XPCNativeInterface* inst);
 
+    size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
+
 protected:
     static XPCNativeInterface* NewInstance(XPCCallContext& ccx,
                                            nsIInterfaceInfo* aInfo);
@@ -1953,6 +1963,8 @@ public:
     void DebugDump(PRInt16 depth);
 
     static void DestroyInstance(XPCNativeSet* inst);
+
+    size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
 
 protected:
     static XPCNativeSet* NewInstance(XPCCallContext& ccx,

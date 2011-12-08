@@ -41,6 +41,8 @@ ifndef CONFIG_DIR
 $(error CONFIG_DIR must be set before including makensis.mk)
 endif
 
+include $(MOZILLA_DIR)/toolkit/mozapps/installer/signing.mk
+
 ABS_CONFIG_DIR := $(shell pwd)/$(CONFIG_DIR)
 
 SFX_MODULE ?= $(error SFX_MODULE is not defined)
@@ -71,6 +73,9 @@ $(CONFIG_DIR)/setup.exe::
 ifeq ($(CONFIG_DIR),l10ngen)
 	cd $(CONFIG_DIR) && $(MAKENSISU) uninstaller.nsi
 endif
+ifdef MOZ_EXTERNAL_SIGNING_FORMAT
+	$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_EXTERNAL_SIGNING_FORMAT),-f $(f)) "$@"
+endif
 
 $(CONFIG_DIR)/7zSD.sfx:
 	$(CYGWIN_WRAPPER) upx --best -o $(CONFIG_DIR)/7zSD.sfx $(SFX_MODULE)
@@ -82,6 +87,9 @@ installer::
 	$(NSINSTALL) -D $(DIST)/$(PKG_INST_PATH)
 	cat $(CONFIG_DIR)/7zSD.sfx $(CONFIG_DIR)/app.tag $(CONFIG_DIR)/app.7z > "$(DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
 	chmod 0755 "$(DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
+ifdef MOZ_EXTERNAL_SIGNING_FORMAT
+	$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_EXTERNAL_SIGNING_FORMAT),-f $(f)) "$(DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe"
+endif
 
 # For building the uninstaller during the application build so it can be
 # included for mar file generation.

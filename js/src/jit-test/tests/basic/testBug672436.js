@@ -1,6 +1,6 @@
 try { new Error() } catch (e) {}
 
-const N = HOTLOOP + 10;
+const N = 18;
 
 var arr = [];
 for (var i = 0; i < N; ++i)

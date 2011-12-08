@@ -33,18 +33,18 @@ function testmath(funcname, args, expected) {
     // values at the front to get the loop body jitted, and then our
     // actual test value.
     var dummies_and_input = [];
-    for (i = 0; i < RUNLOOP; i++) {
+    for (i = 0; i < 9; i++) {
         var dummy_list = [];
         for (j = 0; j < arity; j++)
             dummy_list[j] = .0078125 * ((i + j) % 128);
         dummies_and_input[i] = dummy_list;
     }
-    dummies_and_input[RUNLOOP] = arg_value_list;
+    dummies_and_input[9] = arg_value_list;
 
     function testfunc() {
         // Map the function across the dummy values and the test input.
         mapfunc(dummies_and_input);
-        return dummies_and_input[RUNLOOP];
+        return dummies_and_input[9];
     }
 
     assertEq(close_enough(testfunc(), expected), true);

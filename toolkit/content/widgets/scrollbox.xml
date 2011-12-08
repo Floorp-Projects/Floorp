@@ -272,26 +272,21 @@
 
       <field name="_scrollAnim"><![CDATA[({
         scrollbox: this,
-        started: false,
+        requestHandle: 0, /* 0 indicates there is no pending request */
         start: function scrollAnim_start(distance) {
           this.distance = distance;
           this.startPos = this.scrollbox.scrollPosition;
           this.duration = Math.min(1000, Math.round(50 * Math.sqrt(Math.abs(distance))));
           this.startTime = window.mozAnimationStartTime;
 
-          if (!this.started) {
-            this.started = true;
-            window.mozRequestAnimationFrame(this);
-          }
+          if (!this.requestHandle)
+            this.requestHandle = window.mozRequestAnimationFrame(this);
         },
         stop: function scrollAnim_stop() {
-          this.started = false;
+          window.mozCancelRequestAnimationFrame(this.requestHandle);
+          this.requestHandle = 0;
         },
         sample: function scrollAnim_handleEvent(timeStamp) {
-          if (!this.started) {
-            // We've been stopped
-            return;
-          }
           const timePassed = timeStamp - this.startTime;
           const pos = timePassed >= this.duration ? 1 :
                       1 - Math.pow(1 - timePassed / this.duration, 4);
@@ -489,7 +484,8 @@
           let isVertical = event.axis == event.VERTICAL_AXIS;
 
           if (this._prevMouseScrolls.every(function(prev) prev == isVertical))
-            this.scrollByIndex(this._isRTLScrollbox ? -event.detail : event.detail);
+            this.scrollByIndex(isVertical && this._isRTLScrollbox ? -event.detail :
+                                                                    event.detail);
 
           if (this._prevMouseScrolls.length > 1)
             this._prevMouseScrolls.shift();
@@ -645,22 +641,17 @@
 
       <field name="_arrowScrollAnim"><![CDATA[({
         scrollbox: this,
-        started: false,
+        requestHandle: 0, /* 0 indicates there is no pending request */
         start: function arrowSmoothScroll_start() {
           this.lastFrameTime = window.mozAnimationStartTime;
-          if (!this.started) {
-            this.started = true;
-            window.mozRequestAnimationFrame(this);
-          }
+          if (!this.requestHandle)
+            this.requestHandle = window.mozRequestAnimationFrame(this);
         },
         stop: function arrowSmoothScroll_stop() {
-          this.started = false;
+          window.mozCancelRequestAnimationFrame(this.requestHandle);
+          this.requestHandle = 0;
         },
         sample: function arrowSmoothScroll_handleEvent(timeStamp) {
-          if (!this.started) {
-            // We've been stopped
-            return;
-          }
           const scrollIndex = this.scrollbox._scrollIndex;
           const timePassed = timeStamp - this.lastFrameTime;
           this.lastFrameTime = timeStamp;

@@ -1,0 +1,29 @@
+#literal #! /bin/sh
+#filter substitution
+# prerm script for moz
+#
+# see: dh_installdeb(1)
+
+set -e
+
+case "$1" in
+    remove|upgrade|deconfigure)
+    ;;
+
+    failed-upgrade)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+#ifdef MOZ_WIDGET_GTK
+gtk-update-icon-cache /usr/share/icons/hicolor
+#endif
+
+
+exit 0
+
+
