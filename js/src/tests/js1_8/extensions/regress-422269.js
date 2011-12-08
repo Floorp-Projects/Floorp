@@ -38,8 +38,8 @@
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 422269;
 var summary = 'Compile-time let block should not capture runtime references';
-var actual = 'No leak';
-var expect = 'No leak';
+var actual = 'referenced only by stack and closure';
+var expect = 'referenced only by stack and closure';
 
 
 //-----------------------------------------------------------------------------
@@ -56,31 +56,39 @@ function test()
   function f()
   {
     let m = {sin: Math.sin};
-    (function() { m.sin(1); })();
+    (function holder() { m.sin(1); })();
     return m;
   }
 
-  if (typeof countHeap == 'undefined')
+  if (typeof findReferences == 'undefined')
   {
     expect = actual = 'Test skipped';
-    print('Test skipped. Requires countHeap function.');
+    print('Test skipped. Requires findReferences function.');
   }
   else
   {
     var x = f();
-    f(); // overwrite the machine stack with new objects
-    gc();
-    var n = countHeap();
-    x = null;
-    // When running with the method JIT, null may not get stored to memory right away.
-    // Calling eval ensures that all values are stored out so that the old x is no
-    // longer rooted from the stack.
-    eval("");
-    gc();
+    var refs = findReferences(x);
 
-    var n2 = countHeap();
-    if (n2 >= n)
-      actual = "leak is detected, something roots the result of f";
+    // At this point, x should only be referenced from the stack --- the
+    // variable 'x' itself, and any random things the conservative scanner
+    // finds --- and possibly from the 'holder' closure, which could itself
+    // be held alive for random reasons. Remove those from the refs list, and 
+    // then complain if anything is left.
+    for (var edge in refs) {
+      // Remove references from roots, like the stack.
+      if (refs[edge].every(function (r) r === null))
+        delete refs[edge];
+      // Remove references from the closure, which could be held alive for
+      // random reasons.
+      else if (refs[edge].length === 1 &&
+               typeof refs[edge][0] === "function" &&
+               refs[edge][0].name === "holder")
+        delete refs[edge];
+    }
+
+    if (Object.keys(refs).length != 0)
+        actual = "unexpected references to the result of f: " + Object.keys(refs).join(", ");
   }
   reportCompare(expect, actual, summary);
 

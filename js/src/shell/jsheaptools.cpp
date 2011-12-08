@@ -551,32 +551,7 @@ ReferenceFinder::findReferences(JSObject *target)
     return result;
 }
 
-/*
- * findReferences(thing)
- *
- * Walk the entire heap, looking for references to |thing|, and return a
- * "references object" describing what we found.
- *
- * Each property of the references object describes one kind of reference. The
- * property's name is the label supplied to MarkObject, JS_CALL_TRACER, or what
- * have you, prefixed with "edge: " to avoid collisions with system properties
- * (like "toString" and "__proto__"). The property's value is an array of things
- * that refer to |thing| via that kind of reference. Ordinary references from
- * one object to another are named after the property name (with the "edge: "
- * prefix).
- *
- * Garbage collection roots appear as references from 'null'. We use the name
- * given to the root (with the "edge: " prefix) as the name of the reference.
- *
- * Note that the references object does record references from objects that are
- * only reachable via |thing| itself, not just the references reachable
- * themselves from roots that keep |thing| from being collected. (We could make
- * this distinction if it is useful.)
- *
- * If any references are found by the conservative scanner, the references
- * object will have a property named "edge: machine stack"; the referrers will
- * be 'null', because they are roots.
- */
+/* See help(findReferences). */
 JSBool
 FindReferences(JSContext *cx, uintN argc, jsval *vp)
 {
