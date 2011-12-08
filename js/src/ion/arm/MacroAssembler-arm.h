@@ -330,6 +330,8 @@ class MacroAssemblerARM : public Assembler
 
     void ma_vxfer(FloatRegister src, Register dest);
 
+    void ma_vdtr(LoadStore ls, Operand &addr, FloatRegister dest, Condition cc);
+
     void ma_vldr(VFPAddr addr, FloatRegister dest);
     void ma_vldr(const Operand &addr, FloatRegister dest);
 
@@ -473,17 +475,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // Extended unboxing API. If the payload is already in a register, returns
     // that register. Otherwise, provides a move to the given scratch register,
     // and returns that.
-    Register extractObject(const Address &address, Register scratch) {
-        JS_NOT_REACHED("NYI");
-        return scratch;
-    }
+    Register extractObject(const Address &address, Register scratch);
     Register extractObject(const ValueOperand &value, Register scratch) {
         return value.payloadReg();
     }
-    Register extractTag(const Address &address, Register scratch) {
-        JS_NOT_REACHED("NYI");
-        return scratch;
-    }
+    Register extractTag(const Address &address, Register scratch);
     Register extractTag(const ValueOperand &value, Register scratch) {
         return value.typeReg();
     }
