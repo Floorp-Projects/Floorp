@@ -151,7 +151,6 @@ js::GetBlockChain(JSContext *cx, StackFrame *fp)
     if (!fp->isScriptFrame())
         return NULL;
 
-    /* Assume that imacros don't affect blockChain */
     jsbytecode *target = fp->pcQuadratic(cx->stack);
 
     JSScript *script = fp->script();
