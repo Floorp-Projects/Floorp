@@ -516,8 +516,6 @@
                  ontextentered="this.handleCommand(param);"
                  ontextreverted="return this.handleRevert();"
                  pageproxystate="invalid"
-                 onsearchbegin="LocationBarHelpers._searchBegin();"
-                 onsearchcomplete="LocationBarHelpers._searchComplete();"
                  onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
                  onblur="setTimeout(function() document.getElementById('identity-box').style.MozUserFocus = '', 0);">
           <box id="notification-popup-box" hidden="true" align="center">
@@ -538,7 +536,6 @@
             <hbox id="identity-box-inner" align="center">
               <stack id="page-proxy-stack"
                      onclick="PageProxyClickHandler(event);">
-                <image id="urlbar-throbber" busy="false"/>
                 <image id="page-proxy-favicon" validate="never"
                        pageproxystate="invalid"
                        onerror="this.removeAttribute('src');"/>
