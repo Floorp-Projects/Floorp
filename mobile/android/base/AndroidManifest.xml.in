@@ -139,5 +139,9 @@
                   android:label="@string/preferences_title"
                   android:excludeFromRecents="true"/>
 
+        <provider android:name="org.mozilla.gecko.db.BrowserProvider"
+                  android:authorities="org.mozilla.gecko.providers.browser"
+                  android:exported="false"/>
+
     </application>
 </manifest> 
