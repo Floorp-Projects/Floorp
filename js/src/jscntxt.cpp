@@ -433,7 +433,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
         return NULL;
 
     JS_ASSERT(cx->findVersion() == JSVERSION_DEFAULT);
-    VOUCH_DOES_NOT_REQUIRE_STACK();
 
     if (!cx->busyArrays.init()) {
         Foreground::delete_(cx);
@@ -1474,7 +1473,6 @@ JSContext::~JSContext()
 #endif
 
     /* Free the stuff hanging off of cx. */
-    VOUCH_DOES_NOT_REQUIRE_STACK();
     if (parseMapPool_)
         Foreground::delete_<ParseMapPool>(parseMapPool_);
 
