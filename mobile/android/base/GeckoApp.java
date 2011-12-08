@@ -1272,6 +1272,7 @@ abstract public class GeckoApp
             GeckoActionBar actionBar = new GeckoActionBar();
             mBrowserToolbar = (BrowserToolbar) getLayoutInflater().inflate(R.layout.gecko_app_actionbar, null);
 
+            actionBar.setBackgroundDrawable(this, getResources().getDrawable(R.drawable.gecko_actionbar_bg));
             actionBar.setDisplayOptions(this, ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM |
                                                                              ActionBar.DISPLAY_SHOW_HOME |
                                                                              ActionBar.DISPLAY_SHOW_TITLE |
