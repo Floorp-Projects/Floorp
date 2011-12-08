@@ -1270,10 +1270,9 @@ dom.setInnerHtml = function(elem, html) {
 };
 
 /**
- * How to detect if we're in an XUL document (and therefore should create
- * elements in an XHTML namespace)
- * In a Mozilla XUL document, document.xmlVersion = null, however in Chrome
- * document.contentType = undefined.
+ * How to detect if we're in an XML document.
+ * In a Mozilla we check that document.xmlVersion = null, however in Chrome
+ * we use document.contentType = undefined.
  * @param doc The document element to work from (defaulted to the global
  * 'document' if missing
  */
@@ -5397,9 +5396,16 @@ Display.prototype.destroy = function() {
  * Called on chrome window resize, or on divider slide
  */
 Display.prototype.resizer = function() {
+  // Bug 705109: There are several numbers hard-coded in this function.
+  // This is simpler than calculating them, but error-prone when the UI setup,
+  // the styling or display settings change.
+
   var parentRect = this.consoleWrap.getBoundingClientRect();
+  // Magic number: 64 is the size of the toolbar above the output area
   var parentHeight = parentRect.bottom - parentRect.top - 64;
 
+  // Magic number: 100 is the size at which we decide the hints are too small
+  // to be useful, so we hide them
   if (parentHeight < 100) {
     this.hintElement.classList.add('gcliterm-hint-nospace');
   }
@@ -5410,20 +5416,14 @@ Display.prototype.resizer = function() {
     if (isMenuVisible) {
       this.menu.setMaxHeight(parentHeight);
 
-      // Magic numbers. We have 2 options - lots of complex dom math to derive
-      // the height of a menu item (19 pixels) and the vertical padding
-      // (22 pixels), or we could just hard-code. The former is *slightly* more
-      // resilient to refactoring (but still breaks with dom structure changes),
-      // the latter is simpler, faster and easier.
+      // Magic numbers: 19 = height of a menu item, 22 = total vertical padding
+      // of container
       var idealMenuHeight = (19 * this.menu.items.length) + 22;
-
       if (idealMenuHeight > parentHeight) {
-        this.hintElement.style.overflowY = 'scroll';
-        this.hintElement.style.borderBottomColor = 'threedshadow';
+        this.hintElement.classList.add('gcliterm-hint-scroll');
       }
       else {
-        this.hintElement.style.overflowY = null;
-        this.hintElement.style.borderBottomColor = 'white';
+        this.hintElement.classList.remove('gcliterm-hint-scroll');
       }
     }
     else {
@@ -6526,7 +6526,7 @@ function StringField(type, options) {
 
   this.element = dom.createElement(this.document, 'input');
   this.element.type = 'text';
-  this.element.className = 'gcli-field';
+  this.element.classList.add('gcli-field');
 
   this.onInputChange = this.onInputChange.bind(this);
   this.element.addEventListener('keyup', this.onInputChange, false);
@@ -6686,7 +6686,7 @@ function SelectionField(type, options) {
   this.items = [];
 
   this.element = dom.createElement(this.document, 'select');
-  this.element.className = 'gcli-field';
+  this.element.classList.add('gcli-field');
   this._addOption({
     name: l10n.lookupFormat('fieldSelectionSelect', [ options.name ])
   });
@@ -6761,8 +6761,8 @@ function JavascriptField(type, options) {
   this.input = dom.createElement(this.document, 'input');
   this.input.type = 'text';
   this.input.addEventListener('keyup', this.onInputChange, false);
-  this.input.style.marginBottom = '0';
-  this.input.className = 'gcli-field';
+  this.input.classList.add('gcli-field');
+  this.input.classList.add('gcli-field-javascript');
   this.element.appendChild(this.input);
 
   this.menu = new Menu({ document: this.document, field: true });
@@ -6954,18 +6954,18 @@ function ArrayField(type, options) {
 
   // <div class=gcliArrayParent save="${element}">
   this.element = dom.createElement(this.document, 'div');
-  this.element.className = 'gcliArrayParent';
+  this.element.classList.add('gcli-array-parent');
 
   // <button class=gcliArrayMbrAdd onclick="${_onAdd}" save="${addButton}">Add
   this.addButton = dom.createElement(this.document, 'button');
-  this.addButton.className = 'gcliArrayMbrAdd';
+  this.addButton.classList.add('gcli-array-member-add');
   this.addButton.addEventListener('click', this._onAdd, false);
   this.addButton.innerHTML = l10n.lookup('fieldArrayAdd');
   this.element.appendChild(this.addButton);
 
   // <div class=gcliArrayMbrs save="${mbrElement}">
   this.container = dom.createElement(this.document, 'div');
-  this.container.className = 'gcliArrayMbrs';
+  this.container.classList.add('gcli-array-members');
   this.element.appendChild(this.container);
 
   this.onInputChange = this.onInputChange.bind(this);
@@ -7008,7 +7008,7 @@ ArrayField.prototype.getConversion = function() {
 ArrayField.prototype._onAdd = function(ev, subConversion) {
   // <div class=gcliArrayMbr save="${element}">
   var element = dom.createElement(this.document, 'div');
-  element.className = 'gcliArrayMbr';
+  element.classList.add('gcli-array-member');
   this.container.appendChild(element);
 
   // ${field.element}
@@ -7026,7 +7026,7 @@ ArrayField.prototype._onAdd = function(ev, subConversion) {
 
   // <div class=gcliArrayMbrDel onclick="${_onDel}">
   var delButton = dom.createElement(this.document, 'button');
-  delButton.className = 'gcliArrayMbrDel';
+  delButton.classList.add('gcli-array-member-del');
   delButton.addEventListener('click', this._onDel, false);
   delButton.innerHTML = l10n.lookup('fieldArrayDel');
   element.appendChild(delButton);
