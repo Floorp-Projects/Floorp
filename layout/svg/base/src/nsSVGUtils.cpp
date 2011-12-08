@@ -461,21 +461,18 @@ nsSVGUtils::GetCTM(nsSVGElement *aElement, bool aScreenCTM)
   nsSVGElement *element = aElement;
   nsIContent *ancestor = aElement->GetFlattenedTreeParent();
 
-  while (ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG &&
+  while (ancestor && ancestor->IsSVG() &&
                      ancestor->Tag() != nsGkAtoms::foreignObject) {
-    // ignore unknown XML elements in the SVG namespace
-    if (ancestor->IsNodeOfType(nsINode::eSVG)) {
-      element = static_cast<nsSVGElement*>(ancestor);
-      matrix *= element->PrependLocalTransformTo(gfxMatrix()); // i.e. *A*ppend
-      if (!aScreenCTM && EstablishesViewport(element)) {
-        if (!element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG) &&
-            !element->NodeInfo()->Equals(nsGkAtoms::symbol, kNameSpaceID_SVG)) {
-          NS_ERROR("New (SVG > 1.1) SVG viewport establishing element?");
-          return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
-        }
-        // XXX spec seems to say x,y translation should be undone for IsInnerSVG
-        return matrix;
+    element = static_cast<nsSVGElement*>(ancestor);
+    matrix *= element->PrependLocalTransformTo(gfxMatrix()); // i.e. *A*ppend
+    if (!aScreenCTM && EstablishesViewport(element)) {
+      if (!element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG) &&
+          !element->NodeInfo()->Equals(nsGkAtoms::symbol, kNameSpaceID_SVG)) {
+        NS_ERROR("New (SVG > 1.1) SVG viewport establishing element?");
+        return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
       }
+      // XXX spec seems to say x,y translation should be undone for IsInnerSVG
+      return matrix;
     }
     ancestor = ancestor->GetFlattenedTreeParent();
   }
