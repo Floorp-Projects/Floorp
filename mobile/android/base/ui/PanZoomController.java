@@ -89,6 +89,9 @@ public class PanZoomController
     // The maximum velocity change factor between events, per ms, in %.
     // Direction changes are excluded.
     private static final float MAX_EVENT_ACCELERATION = 0.012f;
+    // The minimum amount of space that must be present for an axis to be considered scrollable,
+    // in pixels.
+    private static final float MIN_SCROLLABLE_DISTANCE = 0.5f;
 
     /* 16 precomputed frames of the _ease-out_ animation from the CSS Transitions specification. */
     private static final float[] EASE_OUT_ANIMATION_FRAMES = {
@@ -727,6 +730,14 @@ public class PanZoomController
             }
         }
 
+        /*
+         * Returns true if the page is zoomed in to some degree along this axis such that scrolling
+         * is possible. Otherwise, returns false.
+         */
+        private boolean scrollable() {
+            return getViewportLength() <= getPageLength() - MIN_SCROLLABLE_DISTANCE;
+        }
+
         // Applies resistance along the edges when tracking.
         public void applyEdgeResistance() {
             float excess = getExcess();
@@ -774,7 +785,7 @@ public class PanZoomController
 
         // Performs displacement of the viewport position according to the current velocity.
         public void displace() {
-            if (locked)
+            if (locked || !scrollable())
                 return;
 
             if (mFlingState == FlingStates.PANNING)
