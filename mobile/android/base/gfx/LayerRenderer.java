@@ -54,6 +54,7 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.opengl.GLSurfaceView;
+import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
@@ -69,17 +70,22 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private static final float BACKGROUND_COLOR_G = 0.81f;
     private static final float BACKGROUND_COLOR_B = 0.81f;
 
+    /*
+     * The amount of time a frame is allowed to take to render before we declare it a dropped
+     * frame.
+     */
+    private static final int MAX_FRAME_TIME = 16;   /* 1000 ms / 60 FPS */
+
     private final LayerView mView;
     private final SingleTileLayer mCheckerboardLayer;
     private final NinePatchTileLayer mShadowLayer;
-    private final TextLayer mFPSLayer;
+    private final TextLayer mFrameRateLayer;
     private final ScrollbarLayer mHorizScrollLayer;
     private final ScrollbarLayer mVertScrollLayer;
 
-    // FPS display
-    private long mFrameCountTimestamp;
-    private long mFrameTime;
-    private int mFrameCount;            // number of frames since last timestamp
+    // Dropped frames display
+    private int[] mFrameTimings;
+    private int mCurrentFrame, mFrameTimingsSum, mDroppedFrames;
 
     public LayerRenderer(LayerView view) {
         mView = view;
@@ -92,12 +98,12 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         CairoImage shadowImage = new BufferedCairoImage(controller.getShadowPattern());
         mShadowLayer = new NinePatchTileLayer(shadowImage);
 
-        mFPSLayer = TextLayer.create(new IntSize(64, 32), "-- FPS");
+        mFrameRateLayer = TextLayer.create(new IntSize(64, 32), "-- ms/--");
         mHorizScrollLayer = ScrollbarLayer.create(false);
         mVertScrollLayer = ScrollbarLayer.create(true);
 
-        mFrameCountTimestamp = System.currentTimeMillis();
-        mFrameCount = 0;
+        mFrameTimings = new int[60];
+        mCurrentFrame = mFrameTimingsSum = mDroppedFrames = 0;
     }
 
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -116,7 +122,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
      * this is going on.
      */
     public void onDrawFrame(GL10 gl) {
-        checkFPS();
+        long frameStartTime = SystemClock.uptimeMillis();
+
         TextureReaper.get().reap(gl);
 
         LayerController controller = mView.getController();
@@ -127,7 +134,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         if (rootLayer != null) rootLayer.update(gl);
         mShadowLayer.update(gl);
         mCheckerboardLayer.update(gl);
-        mFPSLayer.update(gl);
+        mFrameRateLayer.update(gl);
         mVertScrollLayer.update(gl);
         mHorizScrollLayer.update(gl);
 
@@ -165,9 +172,10 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             mHorizScrollLayer.draw(pageContext);
 
         /* Draw the FPS. */
+        updateDroppedFrames(frameStartTime);
         try {
             gl.glEnable(GL10.GL_BLEND);
-            mFPSLayer.draw(screenContext);
+            mFrameRateLayer.draw(screenContext);
         } finally {
             gl.glDisable(GL10.GL_BLEND);
         }
@@ -233,27 +241,25 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         /* TODO: Throw away tile images? */
     }
 
-    private void checkFPS() {
-        mFrameTime += mView.getRenderTime();
-        mFrameCount ++;
+    private void updateDroppedFrames(long frameStartTime) {
+        int frameElapsedTime = (int)(SystemClock.uptimeMillis() - frameStartTime);
 
-        if (System.currentTimeMillis() >= mFrameCountTimestamp + 1000) {
-            mFrameCountTimestamp = System.currentTimeMillis();
+        /* Update the running statistics. */
+        mFrameTimingsSum -= mFrameTimings[mCurrentFrame];
+        mFrameTimingsSum += frameElapsedTime;
+        mDroppedFrames -= (mFrameTimings[mCurrentFrame] + 1) / MAX_FRAME_TIME;
+        mDroppedFrames += (frameElapsedTime + 1) / MAX_FRAME_TIME;
 
-            // Extrapolate FPS based on time taken by frames drawn.
-            // XXX This doesn't take into account the vblank, so the FPS
-            //     can show higher than it actually is.
-            mFrameCount = (int)(mFrameCount * 1000000000L / mFrameTime);
+        mFrameTimings[mCurrentFrame] = (int)frameElapsedTime;
+        mCurrentFrame = (mCurrentFrame + 1) % mFrameTimings.length;
 
-            mFPSLayer.beginTransaction();
-            try {
-                mFPSLayer.setText(mFrameCount + " FPS");
-            } finally {
-                mFPSLayer.endTransaction();
-            }
+        int averageTime = mFrameTimingsSum / mFrameTimings.length;
 
-            mFrameCount = 0;
-            mFrameTime = 0;
+        mFrameRateLayer.beginTransaction();
+        try {
+            mFrameRateLayer.setText(averageTime + " ms/" + mDroppedFrames);
+        } finally {
+            mFrameRateLayer.endTransaction();
         }
     }
 }
