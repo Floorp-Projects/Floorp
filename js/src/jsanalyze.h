@@ -1055,7 +1055,6 @@ class ScriptAnalysis
 
     LoopAnalysis *getLoop(uint32 offset) {
         JS_ASSERT(offset < script->length);
-        JS_ASSERT(getCode(offset).loop);
         return getCode(offset).loop;
     }
     LoopAnalysis *getLoop(const jsbytecode *pc) { return getLoop(pc - script->code); }

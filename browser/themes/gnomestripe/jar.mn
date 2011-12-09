@@ -57,7 +57,6 @@ browser.jar:
   skin/classic/browser/places/organizer.css           (places/organizer.css)
 * skin/classic/browser/places/organizer.xml           (places/organizer.xml)
   skin/classic/browser/places/query.png               (places/query.png)
-  skin/classic/browser/places/searching_16.png        (places/searching_16.png)
   skin/classic/browser/places/starPage.png            (places/starPage.png)
   skin/classic/browser/places/tag.png                 (places/tag.png)
   skin/classic/browser/places/toolbarDropMarker.png   (places/toolbarDropMarker.png)

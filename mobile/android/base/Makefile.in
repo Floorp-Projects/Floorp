@@ -54,6 +54,11 @@ JAVAFILES = \
   AwesomeBarTabs.java \
   BrowserToolbar.java \
   ConfirmPreference.java \
+  db/BrowserContract.java \
+  db/AndroidBrowserDB.java \
+  db/BrowserDB.java \
+  db/BrowserProvider.java \
+  db/LocalBrowserDB.java \
   DoorHanger.java \
   DoorHangerPopup.java \
   Favicons.java \
@@ -72,6 +77,7 @@ JAVAFILES = \
   GeckoStateListDrawable.java \
   GeckoThread.java \
   GlobalHistory.java \
+  LinkPreference.java \
   PromptService.java \
   SurfaceLockInfo.java \
   Tab.java \
@@ -199,7 +205,6 @@ RES_LAYOUT_V11 = \
   $(NULL)
 
 RES_VALUES = \
-  res/values/arrays.xml \
   res/values/colors.xml \
   res/values/styles.xml \
   res/values/themes.xml \
@@ -352,6 +357,7 @@ MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/address_bar_bg.x
                          mobile/android/base/resources/drawable/awesomebar_tab_unselected.xml   \
                          mobile/android/base/resources/drawable/desktop_notification.png        \
                          mobile/android/base/resources/drawable/favicon.png                     \
+                         mobile/android/base/resources/drawable/gecko_actionbar_bg.xml          \
                          mobile/android/base/resources/drawable/progress_spinner.xml            \
                          mobile/android/base/resources/drawable/progress_spinner_1.png          \
                          mobile/android/base/resources/drawable/progress_spinner_2.png          \

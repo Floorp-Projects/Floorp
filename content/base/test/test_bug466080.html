@@ -86,14 +86,14 @@ function onWindowLoad() {
     ok(document.iframeWasLoaded, "Loading resource via src-attribute");
 
 
-    for each (test in alltests) {
+    function runTest(test) {
 
         var xhr =  new XMLHttpRequest();
-        
+
         var method = "GET";
         if (test.method != null) { method = test.method; }
-        xhr.open(method, test.url, false);
-        
+        xhr.open(method, test.url);
+
         xhr.withCredentials = test.withCredentials;
 
         netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -104,11 +104,20 @@ function onWindowLoad() {
             xhr.send();
         } catch(e) {
         }
-        var success = eval(xhr.status + test.status_check);
-        ok(success, test.error);
+
+        xhr.onloadend = function() {
+            var success = eval(xhr.status + test.status_check);
+            ok(success, test.error);
+
+            if (alltests.length == 0) {
+                SimpleTest.finish();
+            } else {
+                runTest(alltests.shift());
+            }
+        };
     }
-    
-    SimpleTest.finish();
+
+    runTest(alltests.shift());
 }
 
 SimpleTest.waitForExplicitFinish();

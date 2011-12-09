@@ -1444,12 +1444,6 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
 }
 
 uintN
-js_FramePCToLineNumber(JSContext *cx, StackFrame *fp, jsbytecode *pc)
-{
-    return js_PCToLineNumber(cx, fp->script(), pc);
-}
-
-uintN
 js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
     /* Cope with StackFrame.pc value prior to entering js_Interpret. */
@@ -1565,7 +1559,7 @@ namespace js {
 uintN
 CurrentLine(JSContext *cx)
 {
-    return js_FramePCToLineNumber(cx, cx->fp(), cx->regs().pc);
+    return js_PCToLineNumber(cx, cx->fp()->script(), cx->regs().pc);
 }
 
 const char *
@@ -1580,7 +1574,7 @@ CurrentScriptFileAndLineSlow(JSContext *cx, uintN *linenop)
         return NULL;
     }
 
-    *linenop = js_FramePCToLineNumber(cx, iter.fp(), iter.pc());
+    *linenop = js_PCToLineNumber(cx, iter.fp()->script(), iter.pc());
     return iter.fp()->script()->filename;
 }
 

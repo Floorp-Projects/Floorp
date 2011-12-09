@@ -589,6 +589,11 @@ public:
   virtual nsAccessible* CurrentItem();
 
   /**
+   * Set the current item of the widget.
+   */
+  virtual void SetCurrentItem(nsAccessible* aItem);
+
+  /**
    * Return container widget this accessible belongs to.
    */
   virtual nsAccessible* ContainerWidget() const;

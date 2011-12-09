@@ -2251,6 +2251,17 @@ if test "$_python_res" != 0; then
 fi
 AC_MSG_RESULT([yes])
 
+dnl Check for using a custom <stdint.h> implementation
+dnl ========================================================
+AC_MSG_CHECKING(for custom <stdint.h> implementation)
+if test "$MOZ_CUSTOM_STDINT_H"; then
+  AC_DEFINE_UNQUOTED(MOZ_CUSTOM_STDINT_H, "$MOZ_CUSTOM_STDINT_H")
+  AC_SUBST(MOZ_CUSTOM_STDINT_H)
+  AC_MSG_RESULT(using $MOZ_CUSTOM_STDINT_H)
+else
+  AC_MSG_RESULT(none specified)
+fi
+
 dnl Get mozilla version from central milestone file
 MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
 
@@ -3017,47 +3028,8 @@ else
   AC_MSG_RESULT(no)
 fi
 
-dnl Check for int16_t, int32_t, int64_t, int64, uint, uint_t, and uint16_t.
+dnl Check for int64, uint, and uint_t.
 dnl ========================================================
-AC_MSG_CHECKING(for int16_t)
-AC_CACHE_VAL(ac_cv_int16_t,
- [AC_TRY_COMPILE([#include <stdio.h>
-                  #include <sys/types.h>],
-                 [int16_t foo = 0;],
-                 [ac_cv_int16_t=true],
-                 [ac_cv_int16_t=false])])
-if test "$ac_cv_int16_t" = true ; then
-  AC_DEFINE(HAVE_INT16_T)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
-AC_MSG_CHECKING(for int32_t)
-AC_CACHE_VAL(ac_cv_int32_t,
- [AC_TRY_COMPILE([#include <stdio.h>
-                  #include <sys/types.h>],
-                 [int32_t foo = 0;],
-                 [ac_cv_int32_t=true],
-                 [ac_cv_int32_t=false])])
-if test "$ac_cv_int32_t" = true ; then
-  AC_DEFINE(HAVE_INT32_T)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
-AC_MSG_CHECKING(for int64_t)
-AC_CACHE_VAL(ac_cv_int64_t,
- [AC_TRY_COMPILE([#include <stdio.h>
-                  #include <sys/types.h>],
-                 [int64_t foo = 0;],
-                 [ac_cv_int64_t=true],
-                 [ac_cv_int64_t=false])])
-if test "$ac_cv_int64_t" = true ; then
-  AC_DEFINE(HAVE_INT64_T)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
 AC_MSG_CHECKING(for int64)
 AC_CACHE_VAL(ac_cv_int64,
  [AC_TRY_COMPILE([#include <stdio.h>
@@ -3093,19 +3065,6 @@ AC_CACHE_VAL(ac_cv_uint_t,
                  [ac_cv_uint_t=false])])
 if test "$ac_cv_uint_t" = true ; then
   AC_DEFINE(HAVE_UINT_T)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
-AC_MSG_CHECKING(for uint16_t)
-AC_CACHE_VAL(ac_cv_uint16_t,
- [AC_TRY_COMPILE([#include <stdio.h>
-                  #include <sys/types.h>],
-                 [uint16_t foo = 0;],
-                 [ac_cv_uint16_t=true],
-                 [ac_cv_uint16_t=false])])
-if test "$ac_cv_uint16_t" = true ; then
-  AC_DEFINE(HAVE_UINT16_T)
   AC_MSG_RESULT(yes)
 else
   AC_MSG_RESULT(no)
@@ -7751,7 +7710,7 @@ dnl ========================================================
 AC_MSG_CHECKING([for gcc -pipe support])
 if test -n "$GNU_CC" -a -n "$GNU_CXX" -a -n "$GNU_AS"; then
     echo '#include <stdio.h>' > dummy-hello.c
-    echo 'int main() { printf("Hello World\n"); exit(0); }' >> dummy-hello.c
+    echo 'int main() { printf("Hello World"); exit(0); }' >> dummy-hello.c
     ${CC} -S dummy-hello.c -o dummy-hello.s 2>&5
     cat dummy-hello.s 2> /dev/null | ${AS_BIN} -o dummy-hello.S - 2>&5
     if test $? = 0; then

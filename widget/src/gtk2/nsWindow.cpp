@@ -142,6 +142,7 @@ static const char sGconfAccessibilityKey[] = "/desktop/gnome/interface/accessibi
 #include "nsAutoPtr.h"
 
 extern "C" {
+#define PIXMAN_DONT_DEFINE_STDINT
 #include "pixman.h"
 }
 #include "gfxPlatformGtk.h"
