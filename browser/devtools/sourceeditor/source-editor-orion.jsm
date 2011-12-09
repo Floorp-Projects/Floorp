@@ -675,6 +675,47 @@ SourceEditor.prototype = {
   },
 
   /**
+   * Get the caret position.
+   *
+   * @return object
+   *         An object that holds two properties:
+   *         - line: the line number, counting from 0.
+   *         - col: the column number, counting from 0.
+   */
+  getCaretPosition: function SE_getCaretPosition()
+  {
+    let offset = this.getCaretOffset();
+    let line = this._model.getLineAtOffset(offset);
+    let lineStart = this._model.getLineStart(line);
+    let column = offset - lineStart;
+    return {line: line, col: column};
+  },
+
+  /**
+   * Set the caret position: line and column.
+   *
+   * @param number aLine
+   *        The new caret line location. Line numbers start from 0.
+   * @param number [aColumn=0]
+   *        Optional. The new caret column location. Columns start from 0.
+   */
+  setCaretPosition: function SE_setCaretPosition(aLine, aColumn)
+  {
+    this.setCaretOffset(this._model.getLineStart(aLine) + (aColumn || 0));
+  },
+
+  /**
+   * Get the line count.
+   *
+   * @return number
+   *         The number of lines in the document being edited.
+   */
+  getLineCount: function SE_getLineCount()
+  {
+    return this._model.getLineCount();
+  },
+
+  /**
    * Get the line delimiter used in the document being edited.
    *
    * @return string
