@@ -54,7 +54,7 @@ var Node = Components.interfaces.nsIDOMNode;
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/examiner', 'gclitest/testTokenize', 'gclitest/testSplit', 'gclitest/testCli', 'gclitest/testHistory', 'gclitest/testRequire', 'gclitest/testJs'], function(require, exports, module) {
+define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/examiner', 'gclitest/testTokenize', 'gclitest/testSplit', 'gclitest/testCli', 'gclitest/testExec', 'gclitest/testKeyboard', 'gclitest/testHistory', 'gclitest/testRequire', 'gclitest/testJs'], function(require, exports, module) {
 
   // We need to make sure GCLI is initialized before we begin testing it
   require('gcli/index');
@@ -67,11 +67,15 @@ define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/e
   examiner.addSuite('gclitest/testTokenize', require('gclitest/testTokenize'));
   examiner.addSuite('gclitest/testSplit', require('gclitest/testSplit'));
   examiner.addSuite('gclitest/testCli', require('gclitest/testCli'));
+  examiner.addSuite('gclitest/testExec', require('gclitest/testExec'));
+  examiner.addSuite('gclitest/testKeyboard', require('gclitest/testKeyboard'));
   examiner.addSuite('gclitest/testHistory', require('gclitest/testHistory'));
   examiner.addSuite('gclitest/testRequire', require('gclitest/testRequire'));
   examiner.addSuite('gclitest/testJs', require('gclitest/testJs'));
 
   examiner.run();
+  console.log('Completed test suite');
+  // examiner.log();
 
 });
 /*
@@ -165,6 +169,19 @@ examiner.toRemote = function() {
       return examiner.suites[suiteName].toRemote();
     }.bind(this))
   };
+};
+
+/**
+ * Output a test summary to console.log
+ */
+examiner.log = function() {
+  var remote = this.toRemote();
+  remote.suites.forEach(function(suite) {
+    console.log(suite.name);
+    suite.tests.forEach(function(test) {
+      console.log('- ' + test.name, test.status.name, test.message || '');
+    });
+  });
 };
 
 /**
@@ -299,8 +316,8 @@ Test.prototype.run = function() {
     this.status = stati.fail;
     this.messages.push('' + ex);
     console.error(ex);
-    if (console.trace) {
-      console.trace();
+    if (ex.stack) {
+      console.error(ex.stack);
     }
   }
 
@@ -703,11 +720,12 @@ exports.testJavascript = function() {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gclitest/commands', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types/basic', 'gcli/types'], function(require, exports, module) {
+define('gclitest/commands', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/util', 'gcli/types/basic', 'gcli/types'], function(require, exports, module) {
 var commands = exports;
 
 
 var canon = require('gcli/canon');
+var util = require('gcli/util');
 
 var SelectionType = require('gcli/types/basic').SelectionType;
 var DeferredType = require('gcli/types/basic').DeferredType;
@@ -725,6 +743,10 @@ commands.setup = function() {
 
   canon.addCommand(commands.tsv);
   canon.addCommand(commands.tsr);
+  canon.addCommand(commands.tse);
+  canon.addCommand(commands.tsj);
+  canon.addCommand(commands.tsb);
+  canon.addCommand(commands.tss);
   canon.addCommand(commands.tsu);
   canon.addCommand(commands.tsn);
   canon.addCommand(commands.tsnDif);
@@ -734,11 +756,16 @@ commands.setup = function() {
   canon.addCommand(commands.tsnExtend);
   canon.addCommand(commands.tselarr);
   canon.addCommand(commands.tsm);
+  canon.addCommand(commands.tsg);
 };
 
 commands.shutdown = function() {
   canon.removeCommand(commands.tsv);
   canon.removeCommand(commands.tsr);
+  canon.removeCommand(commands.tse);
+  canon.removeCommand(commands.tsj);
+  canon.removeCommand(commands.tsb);
+  canon.removeCommand(commands.tss);
   canon.removeCommand(commands.tsu);
   canon.removeCommand(commands.tsn);
   canon.removeCommand(commands.tsnDif);
@@ -748,14 +775,15 @@ commands.shutdown = function() {
   canon.removeCommand(commands.tsnExtend);
   canon.removeCommand(commands.tselarr);
   canon.removeCommand(commands.tsm);
+  canon.removeCommand(commands.tsg);
 
   types.deregisterType(commands.optionType);
   types.deregisterType(commands.optionValue);
 };
 
 
-commands.option1 = { };
-commands.option2 = { };
+commands.option1 = { type: types.getType('string') };
+commands.option2 = { type: types.getType('number') };
 
 commands.optionType = new SelectionType({
   name: 'optionType',
@@ -789,25 +817,62 @@ commands.optionValue = new DeferredType({
   }
 });
 
+commands.commandExec = util.createEvent('commands.commandExec');
+
+function createExec(name) {
+  return function(args, context) {
+    var data = {
+      command: commands[name],
+      args: args,
+      context: context
+    };
+    commands.commandExec(data);
+    return data;
+  };
+}
+
 commands.tsv = {
   name: 'tsv',
   params: [
     { name: 'optionType', type: 'optionType' },
     { name: 'optionValue', type: 'optionValue' }
   ],
-  exec: function(args, context) { }
+  exec: createExec('tsv')
 };
 
 commands.tsr = {
   name: 'tsr',
   params: [ { name: 'text', type: 'string' } ],
-  exec: function(args, context) { }
+  exec: createExec('tsr')
+};
+
+commands.tse = {
+  name: 'tse',
+  params: [ { name: 'node', type: 'node' } ],
+  exec: createExec('tse')
+};
+
+commands.tsj = {
+  name: 'tsj',
+  params: [ { name: 'javascript', type: 'javascript' } ],
+  exec: createExec('tsj')
+};
+
+commands.tsb = {
+  name: 'tsb',
+  params: [ { name: 'toggle', type: 'boolean' } ],
+  exec: createExec('tsb')
+};
+
+commands.tss = {
+  name: 'tss',
+  exec: createExec('tss')
 };
 
 commands.tsu = {
   name: 'tsu',
-  params: [ { name: 'num', type: 'number' } ],
-  exec: function(args, context) { }
+  params: [ { name: 'num', type: { name: 'number', max: 10, min: -5, step: 3 } } ],
+  exec: createExec('tsu')
 };
 
 commands.tsn = {
@@ -817,31 +882,31 @@ commands.tsn = {
 commands.tsnDif = {
   name: 'tsn dif',
   params: [ { name: 'text', type: 'string' } ],
-  exec: function(text) { }
+  exec: createExec('tsnDif')
 };
 
 commands.tsnExt = {
   name: 'tsn ext',
   params: [ { name: 'text', type: 'string' } ],
-  exec: function(text) { }
+  exec: createExec('tsnExt')
 };
 
 commands.tsnExte = {
   name: 'tsn exte',
   params: [ { name: 'text', type: 'string' } ],
-  exec: function(text) { }
+  exec: createExec('')
 };
 
 commands.tsnExten = {
   name: 'tsn exten',
   params: [ { name: 'text', type: 'string' } ],
-  exec: function(text) { }
+  exec: createExec('tsnExte')
 };
 
 commands.tsnExtend = {
   name: 'tsn extend',
   params: [ { name: 'text', type: 'string' } ],
-  exec: function(text) { }
+  exec: createExec('tsnExtend')
 };
 
 commands.tselarr = {
@@ -850,7 +915,7 @@ commands.tselarr = {
     { name: 'num', type: { name: 'selection', data: [ '1', '2', '3' ] } },
     { name: 'arr', type: { name: 'array', subtype: 'string' } },
   ],
-  exec: function(args, context) {}
+  exec: createExec('tselarr')
 };
 
 commands.tsm = {
@@ -862,7 +927,31 @@ commands.tsm = {
     { name: 'txt', type: 'string' },
     { name: 'num', type: { name: 'number', max: 42, min: 0 } },
   ],
-  exec: function(args, context) {}
+  exec: createExec('tsm')
+};
+
+commands.tsg = {
+  name: 'tsg',
+  hidden: true,
+  description: 'a param group test',
+  params: [
+    { name: 'solo', type: { name: 'selection', data: [ 'aaa', 'bbb', 'ccc' ] } },
+    {
+      group: 'First',
+      params: [
+        { name: 'txt1', type: 'string', defaultValue: null },
+        { name: 'boolean1', type: 'boolean' }
+      ]
+    },
+    {
+      group: 'Second',
+      params: [
+        { name: 'txt2', type: 'string', defaultValue: 'd' },
+        { name: 'num2', type: { name: 'number', defaultValue: 42 } }
+      ]
+    }
+  ],
+  exec: createExec('tsg')
 };
 
 
@@ -1218,6 +1307,278 @@ exports.testNestedCommand = function() {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
+define('gclitest/testExec', ['require', 'exports', 'module' , 'gcli/cli', 'gcli/types', 'gcli/canon', 'gclitest/commands', 'gcli/types/node', 'test/assert'], function(require, exports, module) {
+
+
+var Requisition = require('gcli/cli').Requisition;
+var Status = require('gcli/types').Status;
+var canon = require('gcli/canon');
+var commands = require('gclitest/commands');
+var nodetype = require('gcli/types/node');
+
+var test = require('test/assert');
+
+var actualExec;
+var actualOutput;
+
+exports.setup = function() {
+  commands.setup();
+  commands.commandExec.add(onCommandExec);
+  canon.commandOutputManager.addListener(onCommandOutput);
+};
+
+exports.shutdown = function() {
+  commands.shutdown();
+  commands.commandExec.remove(onCommandExec);
+  canon.commandOutputManager.removeListener(onCommandOutput);
+};
+
+function onCommandExec(ev) {
+  actualExec = ev;
+}
+
+function onCommandOutput(ev) {
+  actualOutput = ev.output;
+}
+
+function exec(command, expectedArgs) {
+  var environment = {};
+
+  var requisition = new Requisition(environment);
+  var reply = requisition.exec({ typed: command });
+
+  test.is(command.indexOf(actualExec.command.name), 0, 'Command name: ' + command);
+
+  if (reply !== true) {
+    test.ok(false, 'reply = false for command: ' + command);
+  }
+
+  if (expectedArgs == null) {
+    test.ok(false, 'expectedArgs == null for ' + command);
+    return;
+  }
+  if (actualExec.args == null) {
+    test.ok(false, 'actualExec.args == null for ' + command);
+    return;
+  }
+
+  test.is(Object.keys(expectedArgs).length, Object.keys(actualExec.args).length,
+          'Arg count: ' + command);
+  Object.keys(expectedArgs).forEach(function(arg) {
+    var expectedArg = expectedArgs[arg];
+    var actualArg = actualExec.args[arg];
+
+    if (Array.isArray(expectedArg)) {
+      if (!Array.isArray(actualArg)) {
+        test.ok(false, 'actual is not an array. ' + command + '/' + arg);
+        return;
+      }
+
+      test.is(expectedArg.length, actualArg.length,
+              'Array length: ' + command + '/' + arg);
+      for (var i = 0; i < expectedArg.length; i++) {
+        test.is(expectedArg[i], actualArg[i],
+                'Member: "' + command + '/' + arg + '/' + i);
+      }
+    }
+    else {
+      test.is(expectedArg, actualArg, 'Command: "' + command + '" arg: ' + arg);
+    }
+  });
+
+  test.is(environment, actualExec.context.environment, 'Environment');
+
+  test.is(false, actualOutput.error, 'output error is false');
+  test.is(command, actualOutput.typed, 'command is typed');
+  test.ok(typeof actualOutput.canonical === 'string', 'canonical exists');
+
+  test.is(actualExec.args, actualOutput.args, 'actualExec.args is actualOutput.args');
+}
+
+
+exports.testExec = function() {
+  exec('tss', {});
+
+  // Bug 707008 - GCLI defered types don't work properly
+  // exec('tsv option1 10', { optionType: commands.option1, optionValue: '10' });
+  // exec('tsv option2 10', { optionType: commands.option1, optionValue: 10 });
+
+  exec('tsr fred', { text: 'fred' });
+  exec('tsr fred bloggs', { text: 'fred bloggs' });
+  exec('tsr "fred bloggs"', { text: 'fred bloggs' });
+
+  exec('tsb', { toggle: false });
+  exec('tsb --toggle', { toggle: true });
+
+  exec('tsu 10', { num: 10 });
+  exec('tsu --num 10', { num: 10 });
+
+  // Bug 704829 - Enable GCLI Javascript parameters
+  // The answer to this should be 2
+  exec('tsj { 1 + 1 }', { javascript: '1 + 1' });
+
+  var origDoc = nodetype.getDocument();
+  nodetype.setDocument(mockDoc);
+  exec('tse :root', { node: mockBody });
+  nodetype.setDocument(origDoc);
+
+  exec('tsn dif fred', { text: 'fred' });
+  exec('tsn exten fred', { text: 'fred' });
+  exec('tsn extend fred', { text: 'fred' });
+
+  exec('tselarr 1', { num: '1', arr: [ ] });
+  exec('tselarr 1 a', { num: '1', arr: [ 'a' ] });
+  exec('tselarr 1 a b', { num: '1', arr: [ 'a', 'b' ] });
+
+  exec('tsm a 10 10', { abc: 'a', txt: '10', num: 10 });
+
+  // Bug 707009 - GCLI doesn't always fill in default parameters properly
+  // exec('tsg a', { solo: 'a', txt1: null, boolean1: false, txt2: 'd', num2: 42 });
+};
+
+var mockBody = {
+  style: {}
+};
+
+var mockDoc = {
+  querySelectorAll: function(css) {
+    if (css === ':root') {
+      return {
+        length: 1,
+        item: function(i) {
+          return mockBody;
+        }
+      };
+    }
+    throw new Error('mockDoc.querySelectorAll(\'' + css + '\') error');
+  }
+};
+
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gclitest/testKeyboard', ['require', 'exports', 'module' , 'gcli/cli', 'gcli/types', 'gcli/canon', 'gclitest/commands', 'gcli/types/node', 'test/assert'], function(require, exports, module) {
+
+
+var Requisition = require('gcli/cli').Requisition;
+var Status = require('gcli/types').Status;
+var canon = require('gcli/canon');
+var commands = require('gclitest/commands');
+var nodetype = require('gcli/types/node');
+
+var test = require('test/assert');
+
+
+exports.setup = function() {
+  commands.setup();
+};
+
+exports.shutdown = function() {
+  commands.shutdown();
+};
+
+var COMPLETES_TO = 'complete';
+var KEY_UPS_TO = 'keyup';
+var KEY_DOWNS_TO = 'keydown';
+
+function check(initial, action, after) {
+  var requisition = new Requisition();
+  requisition.update({
+    typed: initial,
+    cursor: { start: initial.length, end: initial.length }
+  });
+  var assignment = requisition.getAssignmentAt(initial.length);
+  switch (action) {
+    case COMPLETES_TO:
+      assignment.complete();
+      break;
+
+    case KEY_UPS_TO:
+      assignment.increment();
+      break;
+
+    case KEY_DOWNS_TO:
+      assignment.decrement();
+      break;
+  }
+
+  test.is(after, requisition.toString(), initial + ' + ' + action + ' -> ' + after);
+}
+
+exports.testComplete = function() {
+  check('tsela', COMPLETES_TO, 'tselarr ');
+  check('tsn di', COMPLETES_TO, 'tsn dif ');
+  check('tsg a', COMPLETES_TO, 'tsg aaa ');
+
+  check('{ wind', COMPLETES_TO, '{ window');
+  check('{ window.docum', COMPLETES_TO, '{ window.document');
+  check('{ window.document.titl', COMPLETES_TO, '{ window.document.title ');
+};
+
+exports.testIncrDecr = function() {
+  check('tsu -70', KEY_UPS_TO, 'tsu -5');
+  check('tsu -7', KEY_UPS_TO, 'tsu -5');
+  check('tsu -6', KEY_UPS_TO, 'tsu -5');
+  check('tsu -5', KEY_UPS_TO, 'tsu -3');
+  check('tsu -4', KEY_UPS_TO, 'tsu -3');
+  check('tsu -3', KEY_UPS_TO, 'tsu 0');
+  check('tsu -2', KEY_UPS_TO, 'tsu 0');
+  check('tsu -1', KEY_UPS_TO, 'tsu 0');
+  check('tsu 0', KEY_UPS_TO, 'tsu 3');
+  check('tsu 1', KEY_UPS_TO, 'tsu 3');
+  check('tsu 2', KEY_UPS_TO, 'tsu 3');
+  check('tsu 3', KEY_UPS_TO, 'tsu 6');
+  check('tsu 4', KEY_UPS_TO, 'tsu 6');
+  check('tsu 5', KEY_UPS_TO, 'tsu 6');
+  check('tsu 6', KEY_UPS_TO, 'tsu 9');
+  check('tsu 7', KEY_UPS_TO, 'tsu 9');
+  check('tsu 8', KEY_UPS_TO, 'tsu 9');
+  check('tsu 9', KEY_UPS_TO, 'tsu 10');
+  check('tsu 10', KEY_UPS_TO, 'tsu 10');
+  check('tsu 100', KEY_UPS_TO, 'tsu -5');
+
+  check('tsu -70', KEY_DOWNS_TO, 'tsu 10');
+  check('tsu -7', KEY_DOWNS_TO, 'tsu 10');
+  check('tsu -6', KEY_DOWNS_TO, 'tsu 10');
+  check('tsu -5', KEY_DOWNS_TO, 'tsu -5');
+  check('tsu -4', KEY_DOWNS_TO, 'tsu -5');
+  check('tsu -3', KEY_DOWNS_TO, 'tsu -5');
+  check('tsu -2', KEY_DOWNS_TO, 'tsu -3');
+  check('tsu -1', KEY_DOWNS_TO, 'tsu -3');
+  check('tsu 0', KEY_DOWNS_TO, 'tsu -3');
+  check('tsu 1', KEY_DOWNS_TO, 'tsu 0');
+  check('tsu 2', KEY_DOWNS_TO, 'tsu 0');
+  check('tsu 3', KEY_DOWNS_TO, 'tsu 0');
+  check('tsu 4', KEY_DOWNS_TO, 'tsu 3');
+  check('tsu 5', KEY_DOWNS_TO, 'tsu 3');
+  check('tsu 6', KEY_DOWNS_TO, 'tsu 3');
+  check('tsu 7', KEY_DOWNS_TO, 'tsu 6');
+  check('tsu 8', KEY_DOWNS_TO, 'tsu 6');
+  check('tsu 9', KEY_DOWNS_TO, 'tsu 6');
+  check('tsu 10', KEY_DOWNS_TO, 'tsu 9');
+  check('tsu 100', KEY_DOWNS_TO, 'tsu 10');
+
+  // Bug 707007 - GCLI increment and decrement operations cycle through
+  // selection options in the wrong order
+  check('tselarr 1', KEY_DOWNS_TO, 'tselarr 2');
+  check('tselarr 2', KEY_DOWNS_TO, 'tselarr 3');
+  check('tselarr 3', KEY_DOWNS_TO, 'tselarr 1');
+
+  check('tselarr 3', KEY_UPS_TO, 'tselarr 2');
+};
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
 define('gclitest/testHistory', ['require', 'exports', 'module' , 'test/assert', 'gcli/history'], function(require, exports, module) {
 
 var test = require('test/assert');
@@ -1544,6 +1905,8 @@ function undefine() {
   delete define.modules['gclitest/testSplit'];
   delete define.modules['gclitest/commands'];
   delete define.modules['gclitest/testCli'];
+  delete define.modules['gclitest/testExec'];
+  delete define.modules['gclitest/testKeyboard'];
   delete define.modules['gclitest/testHistory'];
   delete define.modules['gclitest/testRequire'];
   delete define.modules['gclitest/requirable'];
@@ -1556,6 +1919,8 @@ function undefine() {
   delete define.globalDomain.modules['gclitest/testSplit'];
   delete define.globalDomain.modules['gclitest/commands'];
   delete define.globalDomain.modules['gclitest/testCli'];
+  delete define.globalDomain.modules['gclitest/testExec'];
+  delete define.globalDomain.modules['gclitest/testKeyboard'];
   delete define.globalDomain.modules['gclitest/testHistory'];
   delete define.globalDomain.modules['gclitest/testRequire'];
   delete define.globalDomain.modules['gclitest/requirable'];
