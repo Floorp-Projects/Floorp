@@ -435,6 +435,8 @@ protected:
   void AppendUniversalRule(const RuleSelectorPair& aRuleInfo);
 
   PRInt32     mRuleCount;
+  // The hashtables are lazily initialized; we use a null .ops to
+  // indicate that they need initialization.
   PLDHashTable mIdTable;
   PLDHashTable mClassTable;
   PLDHashTable mTagTable;
@@ -447,6 +449,8 @@ protected:
   };
   EnumData* mEnumList;
   PRInt32   mEnumListSize;
+
+  bool mQuirksMode;
 
   inline EnumData ToEnumData(const RuleValueList& arr) {
     EnumData data = { arr.Elements(), arr.Elements() + arr.Length() };
@@ -473,7 +477,8 @@ protected:
 RuleHash::RuleHash(bool aQuirksMode)
   : mRuleCount(0),
     mUniversalRules(nsnull),
-    mEnumList(nsnull), mEnumListSize(0)
+    mEnumList(nsnull), mEnumListSize(0),
+    mQuirksMode(aQuirksMode)
 #ifdef RULE_HASH_STATS
     ,
     mUniversalSelectors(0),
@@ -491,18 +496,10 @@ RuleHash::RuleHash(bool aQuirksMode)
 {
   MOZ_COUNT_CTOR(RuleHash);
 
-  PL_DHashTableInit(&mTagTable, &RuleHash_TagTable_Ops, nsnull,
-                    sizeof(RuleHashTagTableEntry), 64);
-  PL_DHashTableInit(&mIdTable,
-                    aQuirksMode ? &RuleHash_IdTable_CIOps.ops
-                                : &RuleHash_IdTable_CSOps.ops,
-                    nsnull, sizeof(RuleHashTableEntry), 16);
-  PL_DHashTableInit(&mClassTable,
-                    aQuirksMode ? &RuleHash_ClassTable_CIOps.ops
-                                : &RuleHash_ClassTable_CSOps.ops,
-                    nsnull, sizeof(RuleHashTableEntry), 16);
-  PL_DHashTableInit(&mNameSpaceTable, &RuleHash_NameSpaceTable_Ops, nsnull,
-                    sizeof(RuleHashTableEntry), 16);
+  mTagTable.ops = nsnull;
+  mIdTable.ops = nsnull;
+  mClassTable.ops = nsnull;
+  mNameSpaceTable.ops = nsnull;
 }
 
 RuleHash::~RuleHash()
@@ -547,10 +544,18 @@ RuleHash::~RuleHash()
     delete [] mEnumList;
   }
   // delete arena for strings and small objects
-  PL_DHashTableFinish(&mIdTable);
-  PL_DHashTableFinish(&mClassTable);
-  PL_DHashTableFinish(&mTagTable);
-  PL_DHashTableFinish(&mNameSpaceTable);
+  if (mIdTable.ops) {
+    PL_DHashTableFinish(&mIdTable);
+  }
+  if (mClassTable.ops) {
+    PL_DHashTableFinish(&mClassTable);
+  }
+  if (mTagTable.ops) {
+    PL_DHashTableFinish(&mTagTable);
+  }
+  if (mNameSpaceTable.ops) {
+    PL_DHashTableFinish(&mNameSpaceTable);
+  }
 }
 
 void RuleHash::AppendRuleToTable(PLDHashTable* aTable, const void* aKey,
@@ -586,15 +591,31 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
 {
   nsCSSSelector *selector = aRuleInfo.mSelector;
   if (nsnull != selector->mIDList) {
+    if (!mIdTable.ops) {
+      PL_DHashTableInit(&mIdTable,
+                        mQuirksMode ? &RuleHash_IdTable_CIOps.ops
+                                    : &RuleHash_IdTable_CSOps.ops,
+                        nsnull, sizeof(RuleHashTableEntry), 16);
+    }
     AppendRuleToTable(&mIdTable, selector->mIDList->mAtom, aRuleInfo);
     RULE_HASH_STAT_INCREMENT(mIdSelectors);
   }
   else if (nsnull != selector->mClassList) {
+    if (!mClassTable.ops) {
+      PL_DHashTableInit(&mClassTable,
+                        mQuirksMode ? &RuleHash_ClassTable_CIOps.ops
+                                    : &RuleHash_ClassTable_CSOps.ops,
+                        nsnull, sizeof(RuleHashTableEntry), 16);
+    }
     AppendRuleToTable(&mClassTable, selector->mClassList->mAtom, aRuleInfo);
     RULE_HASH_STAT_INCREMENT(mClassSelectors);
   }
   else if (selector->mLowercaseTag) {
     RuleValue ruleValue(aRuleInfo, mRuleCount++);
+    if (!mTagTable.ops) {
+      PL_DHashTableInit(&mTagTable, &RuleHash_TagTable_Ops, nsnull,
+                        sizeof(RuleHashTagTableEntry), 16);
+    }
     AppendRuleToTagTable(&mTagTable, selector->mLowercaseTag, ruleValue);
     RULE_HASH_STAT_INCREMENT(mTagSelectors);
     if (selector->mCasedTag && 
@@ -604,6 +625,10 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
     }
   }
   else if (kNameSpaceID_Unknown != selector->mNameSpace) {
+    if (!mNameSpaceTable.ops) {
+      PL_DHashTableInit(&mNameSpaceTable, &RuleHash_NameSpaceTable_Ops, nsnull,
+                        sizeof(RuleHashTableEntry), 16);
+    }
     AppendRuleToTable(&mNameSpaceTable,
                       NS_INT32_TO_PTR(selector->mNameSpace), aRuleInfo);
     RULE_HASH_STAT_INCREMENT(mNameSpaceSelectors);
@@ -659,7 +684,7 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
     RULE_HASH_STAT_INCREMENT_LIST_COUNT(mUniversalRules, mElementUniversalCalls);
   }
   // universal rules within the namespace
-  if (kNameSpaceID_Unknown != nameSpace && mNameSpaceTable.entryCount) {
+  if (kNameSpaceID_Unknown != nameSpace && mNameSpaceTable.ops) {
     RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
                                            (PL_DHashTableOperate(&mNameSpaceTable, NS_INT32_TO_PTR(nameSpace),
                              PL_DHASH_LOOKUP));
@@ -668,7 +693,7 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
       RULE_HASH_STAT_INCREMENT_LIST_COUNT(entry->mRules, mElementNameSpaceCalls);
     }
   }
-  if (mTagTable.entryCount) {
+  if (mTagTable.ops) {
     RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
                                            (PL_DHashTableOperate(&mTagTable, tag, PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
@@ -676,7 +701,7 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
       RULE_HASH_STAT_INCREMENT_LIST_COUNT(entry->mRules, mElementTagCalls);
     }
   }
-  if (id && mIdTable.entryCount) {
+  if (id && mIdTable.ops) {
     RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
                                            (PL_DHashTableOperate(&mIdTable, id, PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
@@ -684,7 +709,7 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
       RULE_HASH_STAT_INCREMENT_LIST_COUNT(entry->mRules, mElementIdCalls);
     }
   }
-  if (mClassTable.entryCount) {
+  if (mClassTable.ops) {
     for (PRInt32 index = 0; index < classCount; ++index) {
       RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
                                              (PL_DHashTableOperate(&mClassTable, classList->AtomAt(index),
@@ -740,18 +765,29 @@ RuleHash::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
   size_t n = 0;
 
-  n += PL_DHashTableSizeOfExcludingThis(&mIdTable,
-                                        SizeOfRuleHashTableEntry,
-                                        aMallocSizeOf);
-  n += PL_DHashTableSizeOfExcludingThis(&mClassTable,
-                                        SizeOfRuleHashTableEntry,
-                                        aMallocSizeOf);
-  n += PL_DHashTableSizeOfExcludingThis(&mTagTable,
-                                        SizeOfRuleHashTableEntry,
-                                        aMallocSizeOf);
-  n += PL_DHashTableSizeOfExcludingThis(&mNameSpaceTable,
-                                        SizeOfRuleHashTableEntry,
-                                        aMallocSizeOf);
+  if (mIdTable.ops) {
+    n += PL_DHashTableSizeOfExcludingThis(&mIdTable,
+                                          SizeOfRuleHashTableEntry,
+                                          aMallocSizeOf);
+  }
+
+  if (mClassTable.ops) {
+    n += PL_DHashTableSizeOfExcludingThis(&mClassTable,
+                                          SizeOfRuleHashTableEntry,
+                                          aMallocSizeOf);
+  }
+
+  if (mTagTable.ops) {
+    n += PL_DHashTableSizeOfExcludingThis(&mTagTable,
+                                          SizeOfRuleHashTableEntry,
+                                          aMallocSizeOf);
+  }
+
+  if (mNameSpaceTable.ops) {
+    n += PL_DHashTableSizeOfExcludingThis(&mNameSpaceTable,
+                                          SizeOfRuleHashTableEntry,
+                                          aMallocSizeOf);
+  }
 
   n += mUniversalRules.SizeOf();
 
