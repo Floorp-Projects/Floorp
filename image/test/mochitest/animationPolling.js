@@ -1,5 +1,7 @@
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 var currentTest;
 var gIsRefImageLoaded = false;
+const gShouldOutputDebugInfo = false;
 
 function pollForSuccess()
 {
@@ -119,6 +121,9 @@ AnimationTest.prototype.preloadImage = function()
 
 AnimationTest.prototype.outputDebugInfo = function(message, id, dataUri)
 {
+  if (!gShouldOutputDebugInfo) {
+    return;
+  }
   var debugElement = document.getElementById(this.debugElementId);
   var newDataUriElement = document.createElement("a");
   newDataUriElement.setAttribute("id", id);
