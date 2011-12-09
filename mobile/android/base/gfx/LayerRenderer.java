@@ -67,6 +67,8 @@ import java.nio.ByteBuffer;
  * The layer renderer implements the rendering logic for a layer view.
  */
 public class LayerRenderer implements GLSurfaceView.Renderer {
+    private static final String LOGTAG = "GeckoLayerRenderer";
+
     private static final float BACKGROUND_COLOR_R = 0.81f;
     private static final float BACKGROUND_COLOR_G = 0.81f;
     private static final float BACKGROUND_COLOR_B = 0.81f;
@@ -86,6 +88,8 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private final TextLayer mFrameRateLayer;
     private final ScrollbarLayer mHorizScrollLayer;
     private final ScrollbarLayer mVertScrollLayer;
+    private final FadeRunnable mFadeRunnable;
+    private RenderContext mLastPageContext;
 
     // Dropped frames display
     private int[] mFrameTimings;
@@ -108,6 +112,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
         mHorizScrollLayer = ScrollbarLayer.create(false);
         mVertScrollLayer = ScrollbarLayer.create(true);
+        mFadeRunnable = new FadeRunnable();
 
         mFrameTimings = new int[60];
         mCurrentFrame = mFrameTimingsSum = mDroppedFrames = 0;
@@ -139,6 +144,20 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         LayerController controller = mView.getController();
         Layer rootLayer = controller.getRoot();
         RenderContext screenContext = createScreenContext(), pageContext = createPageContext();
+
+        if (!pageContext.fuzzyEquals(mLastPageContext)) {
+            // the viewport or page changed, so show the scrollbars again
+            // as per UX decision
+            mVertScrollLayer.unfade();
+            mHorizScrollLayer.unfade();
+            mFadeRunnable.scheduleStartFade(ScrollbarLayer.FADE_DELAY);
+        } else if (mFadeRunnable.timeToFade()) {
+            boolean stillFading = mVertScrollLayer.fade() | mHorizScrollLayer.fade();
+            if (stillFading) {
+                mFadeRunnable.scheduleNextFadeFrame();
+            }
+        }
+        mLastPageContext = pageContext;
 
         /* Update layers. */
         if (rootLayer != null) rootLayer.update(gl);
@@ -298,5 +317,41 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
                 mShowFrameRate = preferences.getBoolean("showFrameRate", false);
             }
         }).run();
+    }
+
+    class FadeRunnable implements Runnable {
+        private boolean mStarted;
+        private long mRunAt;
+
+        void scheduleStartFade(long delay) {
+            mRunAt = SystemClock.elapsedRealtime() + delay;
+            if (!mStarted) {
+                mView.postDelayed(this, delay);
+                mStarted = true;
+            }
+        }
+
+        void scheduleNextFadeFrame() {
+            if (mStarted) {
+                Log.e(LOGTAG, "scheduleNextFadeFrame() called while scheduled for starting fade");
+            }
+            mView.postDelayed(this, 1000L / 60L); // request another frame at 60fps
+        }
+
+        boolean timeToFade() {
+            return !mStarted;
+        }
+
+        public void run() {
+            long timeDelta = mRunAt - SystemClock.elapsedRealtime();
+            if (timeDelta > 0) {
+                // the run-at time was pushed back, so reschedule
+                mView.postDelayed(this, timeDelta);
+            } else {
+                // reached the run-at time, execute
+                mStarted = false;
+                mView.requestRender();
+            }
+        }
     }
 }
