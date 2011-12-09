@@ -61,10 +61,10 @@ struct AttributeRuleProcessorData;
 class nsPresContext;
 
 // IID for the nsIStyleRuleProcessor interface
-// {32612c0e-3d34-4a6f-89d9-464f6811ac13}
+// {c1d6001e-4fcb-4c40-bce1-5eba80bfd8f3}
 #define NS_ISTYLE_RULE_PROCESSOR_IID     \
-{ 0x32612c0e, 0x3d34, 0x4a6f, \
-  {0x89, 0xd9, 0x46, 0x4f, 0x68, 0x11, 0xac, 0x13} }
+{ 0xc1d6001e, 0x4fcb, 0x4c40, \
+  {0xbc, 0xe1, 0x5e, 0xba, 0x80, 0xbf, 0xd8, 0xf3} }
 
 
 /* The style rule processor interface is a mechanism to separate the matching
@@ -159,7 +159,8 @@ public:
    * Report the size of this style rule processor to about:memory.  A
    * processor may return 0.
    */
-  virtual PRInt64 SizeOf() const = 0;
+  virtual size_t SizeOfExcludingThis(nsMallocSizeOfFun mallocSizeOf) const = 0;
+  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf) const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIStyleRuleProcessor,

@@ -802,7 +802,7 @@ SizeOfEntryEnumerator(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
 }
 
 extern JS_PUBLIC_API(size_t)
-JS_DHashTableSizeOfExcludingThis(JSDHashTable *table,
+JS_DHashTableSizeOfExcludingThis(const JSDHashTable *table,
                                  JSDHashSizeOfEntryFun sizeOfEntry,
                                  JSMallocSizeOfFun mallocSizeOf)
 {
@@ -812,14 +812,15 @@ JS_DHashTableSizeOfExcludingThis(JSDHashTable *table,
                       ENTRY_STORE_EXTRA);
     if (sizeOfEntry) {
         SizeOfEntryEnumeratorArg arg = { 0, sizeOfEntry, mallocSizeOf };
-        JS_DHashTableEnumerate(table, SizeOfEntryEnumerator, &arg);
+        JS_DHashTableEnumerate(const_cast<JSDHashTable *>(table),
+                               SizeOfEntryEnumerator, &arg);
         n += arg.total;
     }
     return n;
 }
 
 extern JS_PUBLIC_API(size_t)
-JS_DHashTableSizeOfIncludingThis(JSDHashTable *table,
+JS_DHashTableSizeOfIncludingThis(const JSDHashTable *table,
                                  JSDHashSizeOfEntryFun sizeOfEntry,
                                  JSMallocSizeOfFun mallocSizeOf)
 {

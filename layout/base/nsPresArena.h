@@ -74,7 +74,7 @@ public:
   NS_HIDDEN_(void*) AllocateByCode(nsQueryFrame::FrameIID aCode, size_t aSize);
   NS_HIDDEN_(void)  FreeByCode(nsQueryFrame::FrameIID aCode, void* aPtr);
 
-  PRUint32 Size();
+  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
   /**
    * Get the poison value that can be used to fill a memory space with
