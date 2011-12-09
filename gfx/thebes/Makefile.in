@@ -216,6 +216,12 @@ CPPSRCS	= \
 	gfxSharedImageSurface.cpp \
 	$(NULL)
 
+ifdef MOZ_GRAPHITE
+CPPSRCS	+= \
+	gfxGraphiteShaper.cpp \
+	$(NULL)
+endif
+
 # Are we targeting x86 or x64?  If so, build gfxAlphaRecoverySSE2.cpp.
 ifneq (,$(INTEL_ARCHITECTURE))
 CPPSRCS += gfxAlphaRecoverySSE2.cpp
