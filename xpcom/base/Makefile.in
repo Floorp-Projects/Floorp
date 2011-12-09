@@ -92,6 +92,7 @@ EXPORTS		= \
 		nsTraceRefcntImpl.h \
 		nsWeakPtr.h \
 		nsInterfaceRequestorAgg.h \
+		dmd.h \
 		$(NULL)
 
 EXPORTS_NAMESPACES = mozilla

@@ -348,7 +348,7 @@ Service::shutdown()
   NS_IF_RELEASE(sXPConnect);
 }
 
-sqlite3_vfs* ConstructTelemetryVFS();
+sqlite3_vfs *ConstructTelemetryVFS();
 
 #ifdef MOZ_MEMORY
 
@@ -385,17 +385,17 @@ namespace {
 // from the standard ones -- they use int instead of size_t.  But we don't need
 // a wrapper for moz_free.
 
-static void* sqliteMemMalloc(int n)
+static void *sqliteMemMalloc(int n)
 {
   return ::moz_malloc(n);
 }
 
-static void* sqliteMemRealloc(void* p, int n)
+static void *sqliteMemRealloc(void *p, int n)
 {
   return ::moz_realloc(p, n);
 }
 
-static int sqliteMemSize(void* p)
+static int sqliteMemSize(void *p)
 {
   return ::moz_malloc_usable_size(p);
 }
@@ -410,12 +410,12 @@ static int sqliteMemRoundup(int n)
   return n <= 8 ? 8 : n;
 }
 
-static int sqliteMemInit(void* p)
+static int sqliteMemInit(void *p)
 {
   return 0;
 }
 
-static void sqliteMemShutdown(void* p)
+static void sqliteMemShutdown(void *p)
 {
 }
 
@@ -745,7 +745,7 @@ Service::SetQuotaForFilenamePattern(const nsACString &aPattern,
 }
 
 NS_IMETHODIMP
-Service::UpdateQutoaInformationForFile(nsIFile* aFile)
+Service::UpdateQutoaInformationForFile(nsIFile *aFile)
 {
   NS_ENSURE_ARG_POINTER(aFile);
 
