@@ -56,13 +56,6 @@
 
 using namespace mozilla::a11y;
 
-// These constants are only defined in OS X SDK 10.4, so we define them in order
-// to be able to use for earlier OS versions.
-const NSString *kInstanceDescriptionAttribute = @"AXDescription";       // NSAccessibilityDescriptionAttribute
-const NSString *kTopLevelUIElementAttribute   = @"AXTopLevelUIElement"; // NSAccessibilityTopLevelUIElementAttribute
-const NSString *kTextLinkSubrole              = @"AXTextLink";          // NSAccessibilitySecureTextFieldSubrole
-const NSString *kURLAttribute                 = @"AXURL";
-
 // converts a screen-global point in the cocoa coordinate system (with origo in the bottom-left corner
 // of the screen), into a top-left screen point, that gecko can use.
 static inline void
@@ -200,8 +193,8 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
                                                            NSAccessibilityFocusedAttribute,
                                                            NSAccessibilityHelpAttribute,
                                                            NSAccessibilityTitleUIElementAttribute,
-                                                           kTopLevelUIElementAttribute,
-                                                           kInstanceDescriptionAttribute,
+                                                           NSAccessibilityTopLevelUIElementAttribute,
+                                                           NSAccessibilityDescriptionAttribute,
                                                            nil];
   }
 
@@ -238,7 +231,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
     return [self value];
   if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute])
     return NSAccessibilityRoleDescription([self role], nil);
-  if ([attribute isEqualToString: (NSString*) kInstanceDescriptionAttribute])
+  if ([attribute isEqualToString:NSAccessibilityDescriptionAttribute])
     return [self customDescription];
   if ([attribute isEqualToString:NSAccessibilityFocusedAttribute])
     return [NSNumber numberWithBool:[self isFocused]];
@@ -246,7 +239,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
     return [self size];
   if ([attribute isEqualToString:NSAccessibilityWindowAttribute])
     return [self window];
-  if ([attribute isEqualToString: (NSString*) kTopLevelUIElementAttribute])
+  if ([attribute isEqualToString:NSAccessibilityTopLevelUIElementAttribute])
     return [self window];
   if ([attribute isEqualToString:NSAccessibilityTitleAttribute])
     return [self title];
