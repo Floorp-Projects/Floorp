@@ -49,6 +49,7 @@ import org.mozilla.gecko.gfx.TextureReaper;
 import org.mozilla.gecko.gfx.TextLayer;
 import org.mozilla.gecko.gfx.TileLayer;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -89,6 +90,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     // Dropped frames display
     private int[] mFrameTimings;
     private int mCurrentFrame, mFrameTimingsSum, mDroppedFrames;
+    private boolean mShowFrameRate;
 
     public LayerRenderer(LayerView view) {
         mView = view;
@@ -109,9 +111,12 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
 
         mFrameTimings = new int[60];
         mCurrentFrame = mFrameTimingsSum = mDroppedFrames = 0;
+        mShowFrameRate = false;
     }
 
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+        checkFrameRateMonitorEnabled();
+
         gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         gl.glClearDepthf(1.0f);             /* FIXME: Is this needed? */
         gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);
@@ -177,12 +182,14 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             mHorizScrollLayer.draw(pageContext);
 
         /* Draw the FPS. */
-        updateDroppedFrames(frameStartTime);
-        try {
-            gl.glEnable(GL10.GL_BLEND);
-            mFrameRateLayer.draw(screenContext);
-        } finally {
-            gl.glDisable(GL10.GL_BLEND);
+        if (mShowFrameRate) {
+            updateDroppedFrames(frameStartTime);
+            try {
+                gl.glEnable(GL10.GL_BLEND);
+                mFrameRateLayer.draw(screenContext);
+            } finally {
+                gl.glDisable(GL10.GL_BLEND);
+            }
         }
 
         PanningPerfAPI.recordFrameTime();
@@ -279,5 +286,17 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         } finally {
             mFrameRateLayer.endTransaction();
         }
+    }
+
+    private void checkFrameRateMonitorEnabled() {
+        /* Do this I/O off the main thread to minimize its impact on startup time. */
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Context context = mView.getContext();
+                SharedPreferences preferences = context.getSharedPreferences("GeckoApp", 0);
+                mShowFrameRate = preferences.getBoolean("showFrameRate", false);
+            }
+        }).run();
     }
 }
