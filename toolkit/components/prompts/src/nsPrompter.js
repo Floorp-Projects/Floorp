@@ -355,22 +355,17 @@ let PromptUtils = {
     getTabModalPrompt : function (domWin) {
         var promptBox = null;
 
-        // Given a content DOM window, returns the chrome window it's in.
-        function getChromeWindow(aWindow) {
-            var chromeWin = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                   .getInterface(Ci.nsIWebNavigation)
-                                   .QueryInterface(Ci.nsIDocShell)
-                                   .chromeEventHandler.ownerDocument.defaultView;
-            return chromeWin;
-        }
-
         try {
             // Get the topmost window, in case we're in a frame.
             var promptWin = domWin.top;
 
             // Get the chrome window for the content window we're using.
             // (Unwrap because we need a non-IDL property below.)
-            var chromeWin = getChromeWindow(promptWin).wrappedJSObject;
+            var chromeWin = promptWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                                     .getInterface(Ci.nsIWebNavigation)
+                                     .QueryInterface(Ci.nsIDocShell)
+                                     .chromeEventHandler.ownerDocument
+                                     .defaultView.wrappedJSObject;
 
             if (chromeWin.getTabModalPromptBox)
                 promptBox = chromeWin.getTabModalPromptBox(promptWin);

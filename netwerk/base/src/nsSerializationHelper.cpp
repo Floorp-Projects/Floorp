@@ -93,7 +93,7 @@ NS_DeserializeObject(const nsCSubstring& str, nsISupports** obj)
     return NS_ERROR_OUT_OF_MEMORY;
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream),
-                                         Substring(buf, buf + size));
+                                         Substring(buf, size));
   PR_Free(buf);
   NS_ENSURE_SUCCESS(rv, rv);
 

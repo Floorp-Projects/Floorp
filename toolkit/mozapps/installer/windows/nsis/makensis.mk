@@ -41,7 +41,7 @@ ifndef CONFIG_DIR
 $(error CONFIG_DIR must be set before including makensis.mk)
 endif
 
-include $(topsrcdir)/toolkit/mozapps/installer/signing.mk
+include $(MOZILLA_DIR)/toolkit/mozapps/installer/signing.mk
 
 ABS_CONFIG_DIR := $(shell pwd)/$(CONFIG_DIR)
 
