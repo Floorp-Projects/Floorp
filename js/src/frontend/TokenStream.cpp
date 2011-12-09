@@ -277,10 +277,10 @@ TokenStream::updateFlagsForEOL()
 }
 
 /* This gets the next char, normalizing all EOL sequences to '\n' as it goes. */
-int32
+int32_t
 TokenStream::getChar()
 {
-    int32 c;
+    int32_t c;
     if (JS_LIKELY(userbuf.hasRawChars())) {
         c = userbuf.getRawChar();
 
@@ -329,7 +329,7 @@ TokenStream::getChar()
  * it's an EOL, and (b) the line-related state (lineno, linebase) is not used
  * before it's ungotten.
  */
-int32
+int32_t
 TokenStream::getCharIgnoreEOL()
 {
     if (JS_LIKELY(userbuf.hasRawChars()))
@@ -340,7 +340,7 @@ TokenStream::getCharIgnoreEOL()
 }
 
 void
-TokenStream::ungetChar(int32 c)
+TokenStream::ungetChar(int32_t c)
 {
     if (c == EOF)
         return;
@@ -348,7 +348,7 @@ TokenStream::ungetChar(int32 c)
     userbuf.ungetRawChar();
     if (c == '\n') {
 #ifdef DEBUG
-        int32 c2 = userbuf.peekRawChar();
+        int32_t c2 = userbuf.peekRawChar();
         JS_ASSERT(TokenBuf::isRawEOLChar(c2));
 #endif
 
@@ -366,7 +366,7 @@ TokenStream::ungetChar(int32 c)
 }
 
 void
-TokenStream::ungetCharIgnoreEOL(int32 c)
+TokenStream::ungetCharIgnoreEOL(int32_t c)
 {
     if (c == EOF)
         return;
@@ -384,7 +384,7 @@ bool
 TokenStream::peekChars(intN n, jschar *cp)
 {
     intN i, j;
-    int32 c;
+    int32_t c;
 
     for (i = 0; i < n; i++) {
         c = getCharIgnoreEOL();
@@ -1093,7 +1093,7 @@ TokenStream::peekUnicodeEscape(int *result)
 }
 
 bool
-TokenStream::matchUnicodeEscapeIdStart(int32 *cp)
+TokenStream::matchUnicodeEscapeIdStart(int32_t *cp)
 {
     if (peekUnicodeEscape(cp) && IsIdentifierStart(*cp)) {
         skipChars(5);
@@ -1103,7 +1103,7 @@ TokenStream::matchUnicodeEscapeIdStart(int32 *cp)
 }
 
 bool
-TokenStream::matchUnicodeEscapeIdent(int32 *cp)
+TokenStream::matchUnicodeEscapeIdent(int32_t *cp)
 {
     if (peekUnicodeEscape(cp) && IsIdentifierPart(*cp)) {
         skipChars(5);
@@ -1276,7 +1276,7 @@ IsTokenSane(Token *tp)
 bool
 TokenStream::putIdentInTokenbuf(const jschar *identStart)
 {
-    int32 c, qc;
+    int32_t c, qc;
     const jschar *tmp = userbuf.addressOfNextRawChar();
     userbuf.setAddressOfNextRawChar(identStart);
 
@@ -1371,7 +1371,7 @@ enum FirstCharKind {
  * Space:   9, 11, 12: '\t', '\v', '\f'
  * EOL:     10, 13: '\n', '\r'
  */
-static const uint8 firstCharKinds[] = {
+static const uint8_t firstCharKinds[] = {
 /*         0        1        2        3        4        5        6        7        8        9    */
 /*   0+ */ _______, _______, _______, _______, _______, _______, _______, _______, _______,   Space,
 /*  10+ */     EOL,   Space,   Space,     EOL, _______, _______, _______, _______, _______, _______,
@@ -1608,7 +1608,7 @@ TokenStream::getTokenInternal()
 
                       default:
                         if ('0' <= c && c < '8') {
-                            int32 val = JS7_UNDEC(c);
+                            int32_t val = JS7_UNDEC(c);
 
                             c = peekChar();
                             /* Strict mode code allows only \0, then a non-digit. */
@@ -1624,7 +1624,7 @@ TokenStream::getTokenInternal()
                                 getChar();
                                 c = peekChar();
                                 if ('0' <= c && c < '8') {
-                                    int32 save = val;
+                                    int32_t save = val;
                                     val = 8 * val + JS7_UNDEC(c);
                                     if (val <= 0377)
                                         getChar();
@@ -2102,14 +2102,14 @@ TokenStream::getTokenInternal()
 #if JS_HAS_SHARP_VARS
       case '#':
       {
-        uint32 n;
+        uint32_t n;
 
         c = getCharIgnoreEOL();
         if (!JS7_ISDEC(c)) {
             ungetCharIgnoreEOL(c);
             goto badchar;
         }
-        n = (uint32)JS7_UNDEC(c);
+        n = (uint32_t)JS7_UNDEC(c);
         for (;;) {
             c = getChar();
             if (!JS7_ISDEC(c))
@@ -2120,7 +2120,7 @@ TokenStream::getTokenInternal()
                 goto error;
             }
         }
-        tp->setSharpNumber(uint16(n));
+        tp->setSharpNumber(uint16_t(n));
         if (cx->hasStrictOption() && (c == '=' || c == '#')) {
             char buf[20];
             JS_snprintf(buf, sizeof buf, "#%u%c", n, c);

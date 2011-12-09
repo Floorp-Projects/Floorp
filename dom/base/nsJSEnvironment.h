@@ -358,13 +358,13 @@ nsresult NS_CreateJSRuntime(nsIScriptRuntime **aRuntime);
 void NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 
 JSObject* NS_DOMReadStructuredClone(JSContext* cx,
-                                    JSStructuredCloneReader* reader, uint32 tag,
-                                    uint32 data, void* closure);
+                                    JSStructuredCloneReader* reader, uint32_t tag,
+                                    uint32_t data, void* closure);
 
 JSBool NS_DOMWriteStructuredClone(JSContext* cx,
                                   JSStructuredCloneWriter* writer,
                                   JSObject* obj, void *closure);
 
-void NS_DOMStructuredCloneError(JSContext* cx, uint32 errorid);
+void NS_DOMStructuredCloneError(JSContext* cx, uint32_t errorid);
 
 #endif /* nsJSEnvironment_h */

@@ -193,7 +193,7 @@ nsJSON::EncodeToStream(nsIOutputStream *aStream,
 }
 
 static JSBool
-WriteCallback(const jschar *buf, uint32 len, void *data)
+WriteCallback(const jschar *buf, uint32_t len, void *data)
 {
   nsJSONWriter *writer = static_cast<nsJSONWriter*>(data);
   nsresult rv =  writer->Write((const PRUnichar*)buf, (PRUint32)len);

@@ -53,10 +53,10 @@ namespace mjit {
 
 class FrameSize
 {
-    uint32 frameDepth_ : 16;
-    uint32 argc_;
+    uint32_t frameDepth_ : 16;
+    uint32_t argc_;
   public:
-    void initStatic(uint32 frameDepth, uint32 argc) {
+    void initStatic(uint32_t frameDepth, uint32_t argc) {
         JS_ASSERT(frameDepth > 0);
         frameDepth_ = frameDepth;
         argc_ = argc;
@@ -75,17 +75,17 @@ class FrameSize
         return frameDepth_ == 0;
     }
 
-    uint32 staticLocalSlots() const {
+    uint32_t staticLocalSlots() const {
         JS_ASSERT(isStatic());
         return frameDepth_;
     }
 
-    uint32 staticArgc() const {
+    uint32_t staticArgc() const {
         JS_ASSERT(isStatic());
         return argc_;
     }
 
-    uint32 getArgc(VMFrame &f) const {
+    uint32_t getArgc(VMFrame &f) const {
         return isStatic() ? staticArgc() : f.u.call.dynamicArgc;
     }
 
@@ -126,8 +126,8 @@ struct GlobalNameIC
      *   of this, x86 is the only platform which requires non-trivial patching
      *   code.
      */
-    int32 loadStoreOffset   : 15;
-    int32 shapeOffset       : 15;
+    int32_t loadStoreOffset   : 15;
+    int32_t shapeOffset       : 15;
     bool usePropertyCache   : 1;
 };
 
@@ -143,15 +143,15 @@ struct SetGlobalNameIC : public GlobalNameIC
     JSC::JITCode            extraStub;
 
     /* SET only, if we had to generate an out-of-line path. */
-    int32 inlineShapeJump : 10;   /* Offset into inline path for shape jump. */
-    int32 extraShapeGuard : 6;    /* Offset into stub for shape guard. */
+    int32_t inlineShapeJump : 10;   /* Offset into inline path for shape jump. */
+    int32_t extraShapeGuard : 6;    /* Offset into stub for shape guard. */
     bool objConst : 1;          /* True if the object is constant. */
     RegisterID objReg   : 5;    /* Register for object, if objConst is false. */
     RegisterID shapeReg : 5;    /* Register for shape; volatile. */
     bool hasExtraStub : 1;      /* Extra stub is preset. */
 
-    int32 fastRejoinOffset : 16;  /* Offset from fastPathStart to rejoin. */
-    int32 extraStoreOffset : 16;  /* Offset into store code. */
+    int32_t fastRejoinOffset : 16;  /* Offset from fastPathStart to rejoin. */
+    int32_t extraStoreOffset : 16;  /* Offset into store code. */
 
     /* SET only. */
     ValueRemat vr;              /* RHS value. */
@@ -216,23 +216,23 @@ struct CallICInfo {
     JSC::CodeLocationJump funJump;
 
     /* Offset to inline scripted call, from funGuard. */
-    uint32 hotJumpOffset   : 16;
-    uint32 joinPointOffset : 16;
+    uint32_t hotJumpOffset   : 16;
+    uint32_t joinPointOffset : 16;
 
     /* Out of line slow call. */
-    uint32 oolCallOffset   : 16;
+    uint32_t oolCallOffset   : 16;
 
     /* Jump to patch for out-of-line scripted calls. */
-    uint32 oolJumpOffset   : 16;
+    uint32_t oolJumpOffset   : 16;
 
     /* Label for out-of-line call to IC function. */
-    uint32 icCallOffset    : 16;
+    uint32_t icCallOffset    : 16;
 
     /* Offset for deep-fun check to rejoin at. */
-    uint32 hotPathOffset   : 16;
+    uint32_t hotPathOffset   : 16;
 
     /* Join point for all slow call paths. */
-    uint32 slowJoinOffset  : 16;
+    uint32_t slowJoinOffset  : 16;
 
     RegisterID funObjReg : 5;
     bool hit : 1;

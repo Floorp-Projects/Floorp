@@ -143,9 +143,9 @@ DefineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script)
             continue;
 
         GlobalSlotArray *globalUses = outer->globals();
-        uint32 nGlobalUses = globalUses->length;
-        for (uint32 i = 0; i < nGlobalUses; i++) {
-            uint32 index = globalUses->vector[i].slot;
+        uint32_t nGlobalUses = globalUses->length;
+        for (uint32_t i = 0; i < nGlobalUses; i++) {
+            uint32_t index = globalUses->vector[i].slot;
             JS_ASSERT(index < globalScope.defs.length());
             globalUses->vector[i].slot = globalScope.defs[index].knownSlot;
         }
@@ -157,7 +157,7 @@ DefineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *script)
 JSScript *
 frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerFrame,
                         JSPrincipals *principals, JSPrincipals *originPrincipals,
-                        uint32 tcflags,
+                        uint32_t tcflags,
                         const jschar *chars, size_t length,
                         const char *filename, uintN lineno, JSVersion version,
                         JSString *source /* = NULL */,
@@ -255,7 +255,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
      * Inline this->statements to emit as we go to save AST space. We must
      * generate our script-body blockid since we aren't calling Statements.
      */
-    uint32 bodyid;
+    uint32_t bodyid;
     if (!GenerateBlockId(&bce, bodyid))
         goto out;
     bce.bodyid = bodyid;

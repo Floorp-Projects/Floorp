@@ -554,7 +554,7 @@ nsXPConnect::BeginCycleCollection(nsCycleCollectionTraversalCallback &cb,
         JSRuntime* rt = JS_GetRuntime(mCycleCollectionContext->GetJSContext());
         if (!rt)
             NS_RUNTIMEABORT("Failed to get JS runtime!");
-        uint32 gcNumber = JS_GetGCParameter(rt, JSGC_NUMBER);
+        uint32_t gcNumber = JS_GetGCParameter(rt, JSGC_NUMBER);
         if (!gcNumber)
             NS_RUNTIMEABORT("Cannot cycle collect if GC has not run first!");
         gcHasRun = true;
@@ -1691,7 +1691,7 @@ nsXPConnect::ReparentWrappedNativeIfFound(JSContext * aJSContext,
 
 static JSDHashOperator
 MoveableWrapperFinder(JSDHashTable *table, JSDHashEntryHdr *hdr,
-                      uint32 number, void *arg)
+                      uint32_t number, void *arg)
 {
     nsTArray<nsRefPtr<XPCWrappedNative> > *array =
         static_cast<nsTArray<nsRefPtr<XPCWrappedNative> > *>(arg);

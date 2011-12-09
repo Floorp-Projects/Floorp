@@ -337,14 +337,14 @@ jsd_GetScriptProfileData(JSDContext* jsdc, JSDScript *script)
     return script->profileData;
 }
 
-uint32
+uint32_t
 jsd_GetScriptFlags(JSDContext *jsdc, JSDScript *script)
 {
     return script->flags;
 }
 
 void
-jsd_SetScriptFlags(JSDContext *jsdc, JSDScript *script, uint32 flags)
+jsd_SetScriptFlags(JSDContext *jsdc, JSDScript *script, uint32_t flags)
 {
     script->flags = flags;
 }

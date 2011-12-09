@@ -50,21 +50,21 @@ namespace mjit {
 
 #if defined DEBUG && defined JS_CPU_ARM
 static inline void
-CheckInstMask(void *addr, uint32 mask, uint32 expected)
+CheckInstMask(void *addr, uint32_t mask, uint32_t expected)
 {
-    uint32 inst = *static_cast<uint32 *>(addr);
+    uint32_t inst = *static_cast<uint32_t *>(addr);
     JS_ASSERT((inst & mask) == expected);
 }
 
 static inline void
-CheckIsLDR(JSC::CodeLocationLabel label, uint8 rd)
+CheckIsLDR(JSC::CodeLocationLabel label, uint8_t rd)
 {
     JS_ASSERT((rd & 0xf) == rd);
     CheckInstMask(label.executableAddress(), 0xfc50f000, 0xe4100000 | (rd << 12));
 }
 
 static inline void
-CheckIsBLX(JSC::CodeLocationLabel label, uint8 rsrc)
+CheckIsBLX(JSC::CodeLocationLabel label, uint8_t rsrc)
 {
     JS_ASSERT((rsrc & 0xf) == rsrc);
     CheckInstMask(label.executableAddress(), 0xfff000ff, 0xe1200030 | rsrc);

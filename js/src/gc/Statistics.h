@@ -117,7 +117,7 @@ struct Statistics {
   private:
     JSRuntime *runtime;
 
-    uint64 startupTime;
+    uint64_t startupTime;
 
     FILE *fp;
     bool fullFormat;
@@ -125,10 +125,10 @@ struct Statistics {
     Reason triggerReason;
     JSCompartment *compartment;
 
-    uint64 phaseStarts[PHASE_LIMIT];
-    uint64 phaseEnds[PHASE_LIMIT];
-    uint64 phaseTimes[PHASE_LIMIT];
-    uint64 totals[PHASE_LIMIT];
+    uint64_t phaseStarts[PHASE_LIMIT];
+    uint64_t phaseEnds[PHASE_LIMIT];
+    uint64_t phaseTimes[PHASE_LIMIT];
+    uint64_t totals[PHASE_LIMIT];
     unsigned int counts[STAT_LIMIT];
 
     double t(Phase phase);

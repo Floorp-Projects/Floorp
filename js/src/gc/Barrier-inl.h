@@ -191,7 +191,7 @@ HeapValue::set(JSCompartment *comp, const Value &v)
 }
 
 inline void
-HeapValue::boxNonDoubleFrom(JSValueType type, uint64 *out)
+HeapValue::boxNonDoubleFrom(JSValueType type, uint64_t *out)
 {
     pre();
     value.boxNonDoubleFrom(type, out);

@@ -413,12 +413,12 @@ inline __attribute__ ((unused)) void MUST_FLOW_THROUGH(const char *label) {}
 #ifdef JS_BASIC_STATS
 # include <stdio.h>
 typedef struct JSBasicStats {
-    uint32      num;
-    uint32      max;
+    uint32_t    num;
+    uint32_t    max;
     double      sum;
     double      sqsum;
-    uint32      logscale;           /* logarithmic scale: 0 (linear), 2, 10 */
-    uint32      hist[11];
+    uint32_t    logscale;           /* logarithmic scale: 0 (linear), 2, 10 */
+    uint32_t    hist[11];
 } JSBasicStats;
 # define JS_INIT_STATIC_BASIC_STATS  {0,0,0,0,0,{0,0,0,0,0,0,0,0,0,0,0}}
 # define JS_BASIC_STATS_INIT(bs)     memset((bs), 0, sizeof(JSBasicStats))
@@ -427,9 +427,9 @@ typedef struct JSBasicStats {
 # define JS_MeanAndStdDevBS(bs,sigma)                                         \
     JS_MeanAndStdDev((bs)->num, (bs)->sum, (bs)->sqsum, sigma)
 extern void
-JS_BasicStatsAccum(JSBasicStats *bs, uint32 val);
+JS_BasicStatsAccum(JSBasicStats *bs, uint32_t val);
 extern double
-JS_MeanAndStdDev(uint32 num, double sum, double sqsum, double *sigma);
+JS_MeanAndStdDev(uint32_t num, double sum, double sqsum, double *sigma);
 extern void
 JS_DumpBasicStats(JSBasicStats *bs, const char *title, FILE *fp);
 extern void

@@ -9,4 +9,4 @@ for (var i = 0; i < arr.length; ++i) {
     }
 }
 
-/* int32 getelem for dense array. */
+/* int32_t getelem for dense array. */
