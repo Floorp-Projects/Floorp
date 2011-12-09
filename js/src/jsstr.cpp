@@ -90,32 +90,39 @@ using namespace js::types;
 using namespace js::unicode;
 
 static JSLinearString *
-ArgToRootedString(JSContext *cx, uintN argc, Value *vp, uintN arg)
+ArgToRootedString(JSContext *cx, CallArgs &args, uintN argno)
 {
-    if (arg >= argc)
+    if (argno >= args.length())
         return cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
-    vp += 2 + arg;
 
-    if (!ToPrimitive(cx, JSTYPE_STRING, vp))
+    Value *arg = &args[argno];
+    if (!ToPrimitive(cx, JSTYPE_STRING, arg))
         return NULL;
 
     JSLinearString *str;
-    if (vp->isString()) {
-        str = vp->toString()->ensureLinear(cx);
-    } else if (vp->isBoolean()) {
-        str = cx->runtime->atomState.booleanAtoms[(int)vp->toBoolean()];
-    } else if (vp->isNull()) {
+    if (arg->isString()) {
+        str = arg->toString()->ensureLinear(cx);
+    } else if (arg->isBoolean()) {
+        str = cx->runtime->atomState.booleanAtoms[(int)arg->toBoolean()];
+    } else if (arg->isNull()) {
         str = cx->runtime->atomState.nullAtom;
-    } else if (vp->isUndefined()) {
+    } else if (arg->isUndefined()) {
         str = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
-    }
-    else {
-        str = NumberToString(cx, vp->toNumber());
+    } else {
+        str = NumberToString(cx, arg->toNumber());
         if (!str)
             return NULL;
-        vp->setString(str);
+        arg->setString(str);
     }
+
     return str;
+}
+
+static JSLinearString *
+ArgToRootedString(JSContext *cx, uintN argc, Value *vp, uintN argno)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return ArgToRootedString(cx, args, argno);
 }
 
 /*
@@ -238,68 +245,128 @@ str_escape(JSContext *cx, uintN argc, Value *vp)
     return JS_TRUE;
 }
 
+static inline bool
+Unhex4(const jschar *chars, jschar *result)
+{
+    jschar a = chars[0],
+           b = chars[1],
+           c = chars[2],
+           d = chars[3];
+
+    if (!(JS7_ISHEX(a) && JS7_ISHEX(b) && JS7_ISHEX(c) && JS7_ISHEX(d)))
+        return false;
+
+    *result = (((((JS7_UNHEX(a) << 4) + JS7_UNHEX(b)) << 4) + JS7_UNHEX(c)) << 4) + JS7_UNHEX(d);
+    return true;
+}
+
+static inline bool
+Unhex2(const jschar *chars, jschar *result)
+{
+    jschar a = chars[0],
+           b = chars[1];
+
+    if (!(JS7_ISHEX(a) && JS7_ISHEX(b)))
+        return false;
+
+    *result = (JS7_UNHEX(a) << 4) + JS7_UNHEX(b);
+    return true;
+}
+
 /* ES5 B.2.2 */
 static JSBool
 str_unescape(JSContext *cx, uintN argc, Value *vp)
 {
-    JSLinearString *str = ArgToRootedString(cx, argc, vp, 0);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    /* Step 1. */
+    JSLinearString *str = ArgToRootedString(cx, args, 0);
     if (!str)
         return false;
 
+    /* Step 2. */
     size_t length = str->length();
     const jschar *chars = str->chars();
 
-    /* Start by allocating the maximum required space for the new string. */
-    jschar *newchars = (jschar *) cx->malloc_((length + 1) * sizeof(jschar));
-    if (!newchars)
-        return false;
+    /* Step 3. */
+    StringBuffer sb(cx);
 
-    size_t ni = 0, i = 0;
-    bool escapeFound = false;
-    while (i < length) {
-        jschar ch = chars[i++];
-        if (ch == '%') {
-            /* Incomplete escapes are interpreted as literal characters. */
-            if (i + 1 < length &&
-                JS7_ISHEX(chars[i]) && JS7_ISHEX(chars[i + 1]))
-            {
-                ch = JS7_UNHEX(chars[i]) * 16 + JS7_UNHEX(chars[i + 1]);
-                i += 2;
-                escapeFound = true;
-            } else if (i + 4 < length && chars[i] == 'u' &&
-                       JS7_ISHEX(chars[i + 1]) && JS7_ISHEX(chars[i + 2]) &&
-                       JS7_ISHEX(chars[i + 3]) && JS7_ISHEX(chars[i + 4]))
-            {
-                ch = (((((JS7_UNHEX(chars[i + 1]) << 4)
-                        + JS7_UNHEX(chars[i + 2])) << 4)
-                      + JS7_UNHEX(chars[i + 3])) << 4)
-                    + JS7_UNHEX(chars[i + 4]);
-                i += 5;
-                escapeFound = true;
+    /*
+     * Note that the spec algorithm has been optimized to avoid building
+     * a string in the case where no escapes are present.
+     */
+
+    /* Step 4. */
+    size_t k = 0;
+    bool building = false;
+
+    while (true) {
+        /* Step 5. */
+        if (k == length) {
+            JSLinearString *result;
+            if (building) {
+                result = sb.finishString();
+                if (!result)
+                    return false;
+            } else {
+                result = str;
             }
-        }
-        newchars[ni++] = ch;
-    }
-    newchars[ni] = 0;
 
-    /* If escapes were found, shrink the string. */
-    if (escapeFound) {
-        JS_ASSERT(ni < length);
-        jschar *tmpchars = (jschar *) cx->realloc_(newchars, (ni + 1) * sizeof(jschar));
-        if (!tmpchars) {
-            cx->free_(newchars);
-            return false;
+            args.rval().setString(result);
+            return true;
         }
-        newchars = tmpchars;
-    }
 
-    JSString *retstr = js_NewString(cx, newchars, ni);
-    if (!retstr) {
-        cx->free_(newchars);
-        return false;
+        /* Step 6. */
+        jschar c = chars[k];
+
+        /* Step 7. */
+        if (c != '%')
+            goto step_18;
+
+        /* Step 8. */
+        if (k > length - 6)
+            goto step_14;
+
+        /* Step 9. */
+        if (chars[k + 1] != 'u')
+            goto step_14;
+
+#define ENSURE_BUILDING                             \
+    JS_BEGIN_MACRO                                  \
+        if (!building) {                            \
+            building = true;                        \
+            if (!sb.reserve(length))                \
+                return false;                       \
+            sb.infallibleAppend(chars, chars + k);  \
+        }                                           \
+    JS_END_MACRO
+
+        /* Step 10-13. */
+        if (Unhex4(&chars[k + 2], &c)) {
+            ENSURE_BUILDING;
+            k += 5;
+            goto step_18;
+        }
+
+      step_14:
+        /* Step 14. */
+        if (k > length - 3)
+            goto step_18;
+
+        /* Step 15-17. */
+        if (Unhex2(&chars[k + 1], &c)) {
+            ENSURE_BUILDING;
+            k += 2;
+        }
+
+      step_18:
+        if (building)
+            sb.infallibleAppend(c);
+
+        /* Step 19. */
+        k += 1;
     }
-    vp->setString(retstr);
-    return true;
+#undef ENSURE_BUILDING
 }
 
 #if JS_HAS_UNEVAL
@@ -3077,8 +3144,7 @@ StringBuffer::extractWellSized()
 
     /* For medium/big buffers, avoid wasting more than 1/4 of the memory. */
     JS_ASSERT(capacity >= length);
-    if (length > CharBuffer::sMaxInlineStorage &&
-        capacity - length > (length >> 2)) {
+    if (length > CharBuffer::sMaxInlineStorage && capacity - length > length / 4) {
         size_t bytes = sizeof(jschar) * (length + 1);
         JSContext *cx = context();
         jschar *tmp = (jschar *)cx->realloc_(buf, bytes);
