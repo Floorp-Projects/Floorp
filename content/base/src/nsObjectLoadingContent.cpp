@@ -105,7 +105,10 @@ static PRLogModuleInfo* gObjectLog = PR_NewLogModule("objlc");
 #define LOG(args) PR_LOG(gObjectLog, PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(gObjectLog, PR_LOG_DEBUG)
 
+#ifdef ANDROID
+#include "nsXULAppAPI.h"
 #include "mozilla/Preferences.h"
+#endif
 
 class nsAsyncInstantiateEvent : public nsRunnable {
 public:
@@ -425,14 +428,14 @@ IsSupportedImage(const nsCString& aMimeType)
 }
 
 static bool
-IsSupportedPlugin(const nsCString& aMIMEType, bool aHasBeenClickedToPlay)
+IsSupportedPlugin(const nsCString& aMIMEType)
 {
   nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
   nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
   if (!pluginHost) {
     return false;
   }
-  nsresult rv = pluginHost->IsPluginEnabledForType(aMIMEType.get(), aHasBeenClickedToPlay);
+  nsresult rv = pluginHost->IsPluginEnabledForType(aMIMEType.get());
   return NS_SUCCEEDED(rv);
 }
 
@@ -458,7 +461,7 @@ GetExtensionFromURI(nsIURI* uri, nsCString& ext)
  * in the given URI. The MIME type is returned in the mimeType out parameter.
  */
 static bool
-IsPluginEnabledByExtension(nsIURI* uri, nsCString& mimeType, bool aHasBeenClickedToPlay)
+IsPluginEnabledByExtension(nsIURI* uri, nsCString& mimeType)
 {
   nsCAutoString ext;
   GetExtensionFromURI(uri, ext);
@@ -474,8 +477,7 @@ IsPluginEnabledByExtension(nsIURI* uri, nsCString& mimeType, bool aHasBeenClicke
   }
 
   const char* typeFromExt;
-  if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForExtension(ext.get(), typeFromExt,
-                                                           aHasBeenClickedToPlay))) {
+  if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForExtension(ext.get(), typeFromExt))) {
     mimeType = typeFromExt;
     return true;
   }
@@ -490,9 +492,6 @@ nsObjectLoadingContent::nsObjectLoadingContent()
   , mUserDisabled(false)
   , mSuppressed(false)
   , mNetworkCreated(true)
-  // If plugins.click_to_play is false, plugins will just act like they've already
-  // been clicked to play
-  , mHasBeenClickedToPlay(!mozilla::Preferences::GetBool("plugins.click_to_play", false))
   , mFallbackReason(ePluginOtherState)
 {
 }
@@ -554,7 +553,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
       // Need to check IsSupportedPlugin() in addition to GetTypeOfContent()
       // because otherwise the default plug-in's catch-all behavior would
       // confuse things.
-      (IsSupportedPlugin(mContentType, mHasBeenClickedToPlay) && 
+      (IsSupportedPlugin(mContentType) && 
        GetTypeOfContent(mContentType) == eType_Plugin)) {
     // Set the type we'll use for dispatch on the channel.  Otherwise we could
     // end up trying to dispatch to a nsFrameLoader, which will complain that
@@ -574,7 +573,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
 
   if (mContentType.EqualsASCII(APPLICATION_OCTET_STREAM)) {
     nsCAutoString extType;
-    if (IsPluginEnabledByExtension(uri, extType, mHasBeenClickedToPlay)) {
+    if (IsPluginEnabledByExtension(uri, extType)) {
       mContentType = extType;
       chan->SetContentType(extType);
     }
@@ -1274,8 +1273,8 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
 
   nsCAutoString overrideType;
   if ((caps & eOverrideServerType) &&
-      ((!aTypeHint.IsEmpty() && IsSupportedPlugin(aTypeHint, mHasBeenClickedToPlay)) ||
-       (aURI && IsPluginEnabledByExtension(aURI, overrideType, mHasBeenClickedToPlay)))) {
+      ((!aTypeHint.IsEmpty() && IsSupportedPlugin(aTypeHint)) ||
+       (aURI && IsPluginEnabledByExtension(aURI, overrideType)))) {
     ObjectType newType;
     if (overrideType.IsEmpty()) {
       newType = GetTypeOfContent(aTypeHint);
@@ -1413,7 +1412,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
       return NS_OK;
     }
 
-    if (IsSupportedPlugin(aTypeHint, mHasBeenClickedToPlay)) {
+    if (IsSupportedPlugin(aTypeHint)) {
       mType = eType_Plugin;
 
       rv = TryInstantiate(aTypeHint, aURI);
@@ -1715,7 +1714,7 @@ nsObjectLoadingContent::GetTypeOfContent(const nsCString& aMIMEType)
     return eType_Document;
   }
 
-  if ((caps & eSupportPlugins) && IsSupportedPlugin(aMIMEType, mHasBeenClickedToPlay)) {
+  if ((caps & eSupportPlugins) && IsSupportedPlugin(aMIMEType)) {
     return eType_Plugin;
   }
 
@@ -1876,7 +1875,7 @@ nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
 
   nsCString typeToUse(aMIMEType);
   if (typeToUse.IsEmpty() && aURI) {
-    IsPluginEnabledByExtension(aURI, typeToUse, mHasBeenClickedToPlay);
+    IsPluginEnabledByExtension(aURI, typeToUse);
   }
 
   nsCOMPtr<nsIContent> thisContent = 
@@ -1963,6 +1962,12 @@ nsObjectLoadingContent::GetPluginSupportState(nsIContent* aContent,
 /* static */ PluginSupportState
 nsObjectLoadingContent::GetPluginDisabledState(const nsCString& aContentType)
 {
+#ifdef ANDROID
+  // if plugins are disabled, don't show the click to play message
+  if (!mozilla::Preferences::GetBool("plugin.disable", false) && 
+      XRE_GetProcessType() == GeckoProcessType_Content)
+    return ePluginClickToPlay;
+#endif
   nsCOMPtr<nsIPluginHost> pluginHostCOM(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID));
   nsPluginHost *pluginHost = static_cast<nsPluginHost*>(pluginHostCOM.get());
   if (!pluginHost) {
@@ -1972,8 +1977,6 @@ nsObjectLoadingContent::GetPluginDisabledState(const nsCString& aContentType)
   nsresult rv = pluginHost->IsPluginEnabledForType(aContentType.get());
   if (rv == NS_ERROR_PLUGIN_DISABLED)
     return ePluginDisabled;
-  if (rv == NS_ERROR_PLUGIN_CLICKTOPLAY)
-    return ePluginClickToPlay;
   if (rv == NS_ERROR_PLUGIN_BLOCKLISTED)
     return ePluginBlocklisted;
   return ePluginUnsupported;
@@ -2042,14 +2045,4 @@ nsObjectLoadingContent::PluginCrashed(nsIPluginTag* aPluginTag,
     NS_WARNING("failed to dispatch nsPluginCrashedEvent");
   }
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsObjectLoadingContent::PlayPlugin()
-{
-  if (!nsContentUtils::IsCallerChrome())
-    return NS_OK;
-
-  mHasBeenClickedToPlay = true;
-  return LoadObject(mURI, true, mContentType, true);
 }
