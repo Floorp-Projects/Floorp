@@ -540,10 +540,18 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_b(label, c);
     }
     void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
-        JS_NOT_REACHED("NYI");
+        ma_ldr(Operand(address.base, address.offset), ScratchRegister);
+        ma_cmp(ScratchRegister, imm);
+        ma_b(label, cond);
     }
     void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label *label) {
-        JS_NOT_REACHED("NYI");
+        movePtr(ptr, ScratchRegister);
+        ma_cmp(lhs, ScratchRegister);
+        ma_b(label, cond);
+    }
+    void branchPtr(Condition cond, Register lhs, ImmWord imm, Label *label) {
+        ma_cmp(lhs, Imm32(imm.value));
+        ma_b(label, cond);
     }
     void moveValue(const Value &val, Register type, Register data);
 
