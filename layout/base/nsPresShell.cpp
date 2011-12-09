@@ -661,12 +661,12 @@ PresShell::MemoryReporter::SizeEnumerator(PresShellPtrKey *aEntry,
   nsCAutoString stylePath = str + NS_LITERAL_CSTRING("/styledata");
   nsCAutoString textRunsPath = str + NS_LITERAL_CSTRING("/textruns");
 
-  PRUint32 arenasSize;
-  arenasSize = aShell->EstimateMemoryUsed();
-  arenasSize += aShell->mPresContext->EstimateMemoryUsed();
+  PRInt64 arenasSize =
+    aShell->SizeOfIncludingThis(LayoutMallocSizeOf) +
+    aShell->mPresContext->SizeOfIncludingThis(LayoutMallocSizeOf);
 
-  PRUint32 styleSize;
-  styleSize = aShell->StyleSet()->SizeOf();
+  PRInt64 styleSize =
+    aShell->StyleSet()->SizeOfIncludingThis(LayoutMallocSizeOf);
 
   PRInt64 textRunsSize = aShell->SizeOfTextRuns(LayoutMallocSizeOf);
 

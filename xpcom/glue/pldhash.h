@@ -588,7 +588,7 @@ typedef size_t
  * opaque.
  */
 NS_COM_GLUE size_t
-PL_DHashTableSizeOfExcludingThis(PLDHashTable *table,
+PL_DHashTableSizeOfExcludingThis(const PLDHashTable *table,
                                  PLDHashSizeOfEntryFun sizeOfEntry,
                                  nsMallocSizeOfFun mallocSizeOf);
 
@@ -596,7 +596,7 @@ PL_DHashTableSizeOfExcludingThis(PLDHashTable *table,
  * Like PL_DHashTableSizeOfExcludingThis, but includes sizeof(*this).
  */
 NS_COM_GLUE size_t
-PL_DHashTableSizeOfIncludingThis(PLDHashTable *table,
+PL_DHashTableSizeOfIncludingThis(const PLDHashTable *table,
                                  PLDHashSizeOfEntryFun sizeOfEntry,
                                  nsMallocSizeOfFun mallocSizeOf);
 

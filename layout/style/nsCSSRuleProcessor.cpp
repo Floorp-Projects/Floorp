@@ -145,14 +145,14 @@ struct RuleValue : RuleSelectorPair {
 // Uses any of the sets of ops below.
 struct RuleHashTableEntry : public PLDHashEntryHdr {
   // If you add members that have heap allocated memory be sure to change the
-  // logic in RuleHashTableSizeOfEnumerator.
+  // logic in SizeOfRuleHashTableEntry().
   // Auto length 1, because we always have at least one entry in mRules.
   nsAutoTArray<RuleValue, 1> mRules;
 };
 
 struct RuleHashTagTableEntry : public RuleHashTableEntry {
   // If you add members that have heap allocated memory be sure to change the
-  // logic in RuleHash::SizeOf.
+  // logic in RuleHash::SizeOf{In,Ex}cludingThis.
   nsCOMPtr<nsIAtom> mTag;
 };
 
@@ -425,7 +425,8 @@ public:
   void EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
                          NodeMatchContext& aNodeMatchContext);
 
-  PRInt64 SizeOf() const;
+  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
 protected:
   typedef nsTArray<RuleValue> RuleValueList;
@@ -727,43 +728,41 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
   }
 }
 
-static PLDHashOperator
-RuleHashTableSizeOfEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                              PRUint32 i, void* aClosure)
+static size_t
+SizeOfRuleHashTableEntry(PLDHashEntryHdr* aHdr, nsMallocSizeOfFun aMallocSizeOf)
 {
-  PRInt64* n = static_cast<PRInt64*>(aClosure);
   RuleHashTableEntry* entry = static_cast<RuleHashTableEntry*>(aHdr);
-
-  *n += entry->mRules.SizeOf();
-  // The size of the RuleHashTableEntry itself is accounted for already
-
-  return PL_DHASH_NEXT;
+  return entry->mRules.SizeOf();
 }
 
-PRInt64
-RuleHash::SizeOf() const
+size_t
+RuleHash::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
-  PRInt64 n = sizeof(*this);
+  size_t n = 0;
 
-  n += PL_DHASH_TABLE_SIZE(&mIdTable) * sizeof(RuleHashTableEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mIdTable),
-                         RuleHashTableSizeOfEnumerator, &n);
-
-  n += PL_DHASH_TABLE_SIZE(&mClassTable) * sizeof(RuleHashTableEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mClassTable),
-                         RuleHashTableSizeOfEnumerator, &n);
-
-  n += PL_DHASH_TABLE_SIZE(&mTagTable) * sizeof(RuleHashTagTableEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mTagTable),
-                         RuleHashTableSizeOfEnumerator, &n);
-
-  n += PL_DHASH_TABLE_SIZE(&mNameSpaceTable) * sizeof(RuleHashTableEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mNameSpaceTable),
-                         RuleHashTableSizeOfEnumerator, &n);
+  n += PL_DHashTableSizeOfExcludingThis(&mIdTable,
+                                        SizeOfRuleHashTableEntry,
+                                        aMallocSizeOf);
+  n += PL_DHashTableSizeOfExcludingThis(&mClassTable,
+                                        SizeOfRuleHashTableEntry,
+                                        aMallocSizeOf);
+  n += PL_DHashTableSizeOfExcludingThis(&mTagTable,
+                                        SizeOfRuleHashTableEntry,
+                                        aMallocSizeOf);
+  n += PL_DHashTableSizeOfExcludingThis(&mNameSpaceTable,
+                                        SizeOfRuleHashTableEntry,
+                                        aMallocSizeOf);
 
   n += mUniversalRules.SizeOf();
 
   return n;
+}
+
+size_t
+RuleHash::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  return aMallocSizeOf(this, sizeof(RuleHash)) +
+         SizeOfExcludingThis(aMallocSizeOf);
 }
 
 //--------------------------------
@@ -885,7 +884,7 @@ struct RuleCascadeData {
     }
   }
 
-  PRInt64 SizeOf() const;
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
   RuleHash                 mRuleHash;
   RuleHash*
@@ -915,53 +914,41 @@ struct RuleCascadeData {
   const bool mQuirksMode;
 };
 
-static PLDHashOperator
-SelectorsSizeOfEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                          PRUint32 i, void* aClosure)
+static size_t
+SizeOfSelectorsEntry(PLDHashEntryHdr* aHdr, nsMallocSizeOfFun aMallocSizeOf)
 {
-  PRInt64* n = (PRInt64*) aClosure;
-  AtomSelectorEntry* entry = (AtomSelectorEntry*)aHdr;
-
-  *n += entry->mSelectors.SizeOf();
-
-  return PL_DHASH_NEXT;
+  AtomSelectorEntry* entry = static_cast<AtomSelectorEntry*>(aHdr);
+  return entry->mSelectors.SizeOf();
 }
 
-PRInt64
-RuleCascadeData::SizeOf() const
+size_t
+RuleCascadeData::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
-  PRInt64 n = sizeof(*this);
+  size_t n = aMallocSizeOf(this, sizeof(RuleCascadeData));
 
-  n += mRuleHash.SizeOf();
+  n += mRuleHash.SizeOfExcludingThis(aMallocSizeOf);
   for (PRUint32 i = 0; i < ArrayLength(mPseudoElementRuleHashes); ++i) {
     if (mPseudoElementRuleHashes[i])
-      n += mPseudoElementRuleHashes[i]->SizeOf();
+      n += mPseudoElementRuleHashes[i]->SizeOfIncludingThis(aMallocSizeOf);
   }
 
   n += mStateSelectors.SizeOf();
 
-  n += PL_DHASH_TABLE_SIZE(&mIdSelectors) * sizeof(AtomSelectorEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mIdSelectors),
-                         SelectorsSizeOfEnumerator, &n);
-  n += PL_DHASH_TABLE_SIZE(&mClassSelectors) * sizeof(AtomSelectorEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mClassSelectors),
-                         SelectorsSizeOfEnumerator, &n);
+  n += PL_DHashTableSizeOfExcludingThis(&mIdSelectors,
+                                        SizeOfSelectorsEntry, aMallocSizeOf);
+  n += PL_DHashTableSizeOfExcludingThis(&mClassSelectors,
+                                        SizeOfSelectorsEntry, aMallocSizeOf);
 
   n += mPossiblyNegatedClassSelectors.SizeOf();
   n += mPossiblyNegatedIDSelectors.SizeOf();
 
-  n += PL_DHASH_TABLE_SIZE(&mAttributeSelectors) * sizeof(AtomSelectorEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mAttributeSelectors),
-                         SelectorsSizeOfEnumerator, &n);
-
-  n += PL_DHASH_TABLE_SIZE(&mAnonBoxRules) * sizeof(RuleHashTagTableEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mAnonBoxRules),
-                         RuleHashTableSizeOfEnumerator, &n);
-
+  n += PL_DHashTableSizeOfExcludingThis(&mAttributeSelectors,
+                                        SizeOfSelectorsEntry, aMallocSizeOf);
+  n += PL_DHashTableSizeOfExcludingThis(&mAnonBoxRules,
+                                        SizeOfRuleHashTableEntry, aMallocSizeOf);
 #ifdef MOZ_XUL
-  n += PL_DHASH_TABLE_SIZE(&mXULTreeRules) * sizeof(RuleHashTagTableEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mAnonBoxRules),
-                         RuleHashTableSizeOfEnumerator, &n);
+  n += PL_DHashTableSizeOfExcludingThis(&mXULTreeRules,
+                                        SizeOfRuleHashTableEntry, aMallocSizeOf);
 #endif
 
   n += mFontFaceRules.SizeOf();
@@ -2549,18 +2536,24 @@ nsCSSRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext)
   return (old != mRuleCascades);
 }
 
-/* virtual */ PRInt64
-nsCSSRuleProcessor::SizeOf() const
+/* virtual */ size_t
+nsCSSRuleProcessor::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
-  PRInt64 n = sizeof(*this);
-
+  size_t n = 0;
   n += mSheets.SizeOf();
   for (RuleCascadeData* cascade = mRuleCascades; cascade;
        cascade = cascade->mNext) {
-    n += cascade->SizeOf();
+    n += cascade->SizeOfIncludingThis(aMallocSizeOf);
   }
 
   return n;
+}
+
+/* virtual */ size_t
+nsCSSRuleProcessor::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  return aMallocSizeOf(this, sizeof(nsCSSRuleProcessor)) +
+         SizeOfExcludingThis(aMallocSizeOf);
 }
 
 // Append all the currently-active font face rules to aArray.  Return
