@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-var EXPORTED_SYMBOLS = [ "Templater" ];
+var EXPORTED_SYMBOLS = [ "Templater", "template" ];
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 const Node = Components.interfaces.nsIDOMNode;
@@ -45,11 +45,52 @@ const Node = Components.interfaces.nsIDOMNode;
 // WARNING: do not 'use_strict' without reading the notes in _envEval();
 
 /**
- * A templater that allows one to quickly template DOM nodes.
+ * Begin a new templating process.
+ * @param node A DOM element or string referring to an element's id
+ * @param data Data to use in filling out the template
+ * @param options Options to customize the template processing. One of:
+ * - allowEval: boolean (default false) Basic template interpolations are
+ * either property paths (e.g. ${a.b.c.d}), however if allowEval=true then we
+ * allow arbitrary JavaScript
  */
-function Templater() {
+function template(node, data, options) {
+  var template = new Templater(options || {});
+  template.processNode(node, data);
+  return template;
+}
+
+/**
+ * Construct a Templater object. Use template() in preference to this ctor.
+ * @deprecated Use template(node, data, options);
+ */
+function Templater(options) {
+  if (options == null) {
+    options = { allowEval: true };
+  }
+  this.options = options;
   this.stack = [];
 }
+
+/**
+ * Cached regex used to find ${...} sections in some text.
+ * Performance note: This regex uses ( and ) to capture the 'script' for
+ * further processing. Not all of the uses of this regex use this feature so
+ * if use of the capturing group is a performance drain then we should split
+ * this regex in two.
+ */
+Templater.prototype._templateRegion = /\$\{([^}]*)\}/g;
+
+/**
+ * Cached regex used to split a string using the unicode chars F001 and F002.
+ * See Templater._processTextNode() for details.
+ */
+Templater.prototype._splitSpecial = /\uF001|\uF002/;
+
+/**
+ * Cached regex used to detect if a script is capable of being interpreted
+ * using Template._property() or if we need to use Template._envEval()
+ */
+Templater.prototype._isPropertyScript = /^[a-zA-Z0-9.]*$/;
 
 /**
  * Recursive function to walk the tree processing the attributes as it goes.
@@ -111,7 +152,7 @@ Templater.prototype.processNode = function(node, data) {
             }
           } else {
             // Replace references in all other attributes
-            var newValue = value.replace(/\$\{[^}]*\}/g, function(path) {
+            var newValue = value.replace(this._templateRegion, function(path) {
               return this._envEval(path.slice(2, -1), data, value);
             }.bind(this));
             // Remove '_' prefix of attribute names so the DOM won't try
@@ -295,8 +336,8 @@ Templater.prototype._processTextNode = function(node, data) {
   // We can then split using \uF001 or \uF002 to get an array of strings
   // where scripts are prefixed with $.
   // \uF001 and \uF002 are just unicode chars reserved for private use.
-  value = value.replace(/\$\{([^}]*)\}/g, '\uF001$$$1\uF002');
-  var parts = value.split(/\uF001|\uF002/);
+  value = value.replace(this._templateRegion, '\uF001$$$1\uF002');
+  var parts = value.split(this._splitSpecial);
   if (parts.length > 1) {
     parts.forEach(function(part) {
       if (part === null || part === undefined || part === '') {
@@ -363,7 +404,7 @@ Templater.prototype._handleAsync = function(thing, siblingNode, inserter) {
  * @return The string stripped of ${ and }, or untouched if it does not match
  */
 Templater.prototype._stripBraces = function(str) {
-  if (!str.match(/\$\{.*\}/g)) {
+  if (!str.match(this._templateRegion)) {
     this._handleError('Expected ' + str + ' to match ${...}');
     return str;
   }
@@ -427,17 +468,26 @@ Templater.prototype._property = function(path, data, newValue) {
  * execution failed.
  */
 Templater.prototype._envEval = function(script, data, frame) {
-  with (data) {
-    try {
-      this.stack.push(frame);
-      return eval(script);
-    } catch (ex) {
-      this._handleError('Template error evaluating \'' + script + '\'' +
-          ' environment=' + Object.keys(data).join(', '), ex);
-      return script;
-    } finally {
-      this.stack.pop();
+  try {
+    this.stack.push(frame);
+    if (this._isPropertyScript.test(script)) {
+      return this._property(script, data);
+    } else {
+      if (!this.options.allowEval) {
+        this._handleError('allowEval is not set, however \'' + script + '\'' +
+            ' can not be resolved using a simple property path.');
+        return '${' + script + '}';
+      }
+      with (data) {
+        return eval(script);
+      }
     }
+  } catch (ex) {
+    this._handleError('Template error evaluating \'' + script + '\'' +
+        ' environment=' + Object.keys(data).join(', '), ex);
+    return '${' + script + '}';
+  } finally {
+    this.stack.pop();
   }
 };
 
