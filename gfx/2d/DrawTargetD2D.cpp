@@ -249,7 +249,7 @@ DrawTargetD2D::Flush()
 void
 DrawTargetD2D::AddDependencyOnSource(SourceSurfaceD2DTarget* aSource)
 {
-  if (aSource->mDrawTarget) {
+  if (aSource->mDrawTarget && !mDependingOnTargets.count(aSource->mDrawTarget)) {
     aSource->mDrawTarget->mDependentTargets.insert(this);
     mDependingOnTargets.insert(aSource->mDrawTarget);
   }
