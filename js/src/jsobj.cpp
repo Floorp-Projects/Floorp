@@ -79,7 +79,6 @@
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 
-#include "builtin/MapObject.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
@@ -7055,9 +7054,7 @@ js::ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp)
 
 #ifdef DEBUG
     if (thisv.isObject()) {
-        JS_ASSERT(thisv.toObject().getClass() != clasp ||
-                  !thisv.toObject().getProto() ||
-                  thisv.toObject().getProto()->getClass() != clasp);
+        JS_ASSERT(thisv.toObject().getClass() != clasp);
     } else if (thisv.isString()) {
         JS_ASSERT(clasp != &StringClass);
     } else if (thisv.isNumber()) {
