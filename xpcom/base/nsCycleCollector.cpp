@@ -1192,8 +1192,7 @@ public:
     }
     
     NS_IMETHOD Run() {
-        nsCOMPtr<nsIObserverService> obs =
-            do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+        nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
         if (obs) {
             obs->NotifyObservers(nsnull, "cycle-collector-fault",
                                  mReport.get());
