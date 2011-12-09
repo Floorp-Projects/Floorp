@@ -676,7 +676,7 @@ DrawTargetD2D::ClearRect(const Rect &aRect)
 {
   MarkChanged();
 
-  mRT->SetTransform(D2DMatrix(mTransform));
+  FlushTransformToRT();
   PopAllClips();
 
   AutoSaveRestoreClippedOut restoreClippedOut(this);
@@ -712,6 +712,7 @@ DrawTargetD2D::CopySurface(SourceSurface *aSurface,
                Float(aSourceRect.width), Float(aSourceRect.height));
 
   mRT->SetTransform(D2D1::IdentityMatrix());
+  mTransformDirty = true;
   mRT->PushAxisAlignedClip(D2DRect(dstRect), D2D1_ANTIALIAS_MODE_ALIASED);
   mRT->Clear(D2D1::ColorF(0, 0.0f));
   mRT->PopAxisAlignedClip();
@@ -1246,6 +1247,7 @@ DrawTargetD2D::PrepareForDrawing(ID2D1RenderTarget *aRT)
       // The transform of clips is relative to the world matrix, since we use the total
       // transform for the clips, make the world matrix identity.
       mRT->SetTransform(D2D1::IdentityMatrix());
+      mTransformDirty = true;
       for (std::vector<PushedClip>::iterator iter = mPushedClips.begin();
            iter != mPushedClips.end(); iter++) {
         D2D1_LAYER_OPTIONS options = D2D1_LAYER_OPTIONS_NONE;
@@ -1264,7 +1266,7 @@ DrawTargetD2D::PrepareForDrawing(ID2D1RenderTarget *aRT)
       }
     }
   }
-  mRT->SetTransform(D2DMatrix(mTransform));
+  FlushTransformToRT();
   MarkChanged();
 
   if (aRT == mTempRT) {
