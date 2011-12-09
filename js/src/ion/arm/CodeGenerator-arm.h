@@ -161,7 +161,6 @@ private:
     bool visitBox(LBox *box);
     bool visitBoxDouble(LBoxDouble *box);
     bool visitUnbox(LUnbox *unbox);
-    bool visitUnboxDouble(LUnboxDouble *ins);
     bool visitValue(LValue *value);
     bool visitOsrValue(LOsrValue *value);
     bool visitReturn(LReturn *ret);

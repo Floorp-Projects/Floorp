@@ -191,12 +191,27 @@ struct HeapLabel
 class OutOfLineCode : public TempObject
 {
     Label entry_;
+    Label rejoin_;
+    uint32 framePushed_;
 
   public:
+    OutOfLineCode()
+      : framePushed_(0)
+    { }
+
     virtual bool generate(CodeGeneratorShared *codegen) = 0;
 
     Label *entry() {
         return &entry_;
+    }
+    Label *rejoin() {
+        return &rejoin_;
+    }
+    void setFramePushed(uint32 framePushed) {
+        framePushed_ = framePushed;
+    }
+    uint32 framePushed() const {
+        return framePushed_;
     }
 };
 

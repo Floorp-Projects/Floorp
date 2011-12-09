@@ -96,7 +96,11 @@ bool
 LIRGeneratorX64::visitUnbox(MUnbox *unbox)
 {
     MDefinition *box = unbox->getOperand(0);
-    LUnbox *lir = new LUnbox(useRegister(box));
+    LUnboxBase *lir;
+    if (unbox->type() == MIRType_Double)
+        lir = new LUnboxDouble(useRegister(box));
+    else
+        lir = new LUnbox(useRegister(box));
 
     if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
         return false;

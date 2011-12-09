@@ -245,22 +245,6 @@ CodeGeneratorX86::visitDouble(LDouble *ins)
     return true;
 }
 
-bool
-CodeGeneratorX86::visitUnboxDouble(LUnboxDouble *ins)
-{
-    const ValueOperand box = ToValue(ins, LUnboxDouble::Input);
-    const LDefinition *result = ins->output();
-
-    MUnbox *mir = ins->mir();
-    if (mir->fallible()) {
-        Assembler::Condition cond = masm.testDouble(Assembler::NotEqual, box);
-        if (!bailoutIf(cond, ins->snapshot()))
-            return false;
-    }
-    masm.unboxDouble(box, ToFloatRegister(result));
-    return true;
-}
-
 Assembler::Condition
 CodeGeneratorX86::testStringTruthy(bool truthy, const ValueOperand &value)
 {
@@ -292,7 +276,7 @@ CodeGeneratorX86::visitLoadSlotT(LLoadSlotT *load)
     int32 offset = load->mir()->slot() * sizeof(js::Value);
 
     if (load->mir()->type() == MIRType_Double)
-        masm.movsd(Operand(base, offset), ToFloatRegister(load->output()));
+        masm.loadInt32OrDouble(Operand(base, offset), ToFloatRegister(load->output()));
     else
         masm.movl(Operand(base, offset + NUNBOX32_PAYLOAD_OFFSET), ToRegister(load->output()));
     return true;
@@ -361,7 +345,7 @@ CodeGeneratorX86::visitLoadElementT(LLoadElementT *load)
     Operand source = createArrayElementOperand(ToRegister(load->elements()), load->index());
 
     if (load->mir()->type() == MIRType_Double)
-        masm.movsd(source, ToFloatRegister(load->output()));
+        masm.loadInt32OrDouble(source, ToFloatRegister(load->output()));
     else
         masm.movl(masm.ToPayload(source), ToRegister(load->output()));
 

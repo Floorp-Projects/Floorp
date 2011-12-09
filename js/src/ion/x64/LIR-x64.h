@@ -68,12 +68,10 @@ class LBox : public LInstructionHelper<1, 1, 0>
 
 // Given an untyped input, guards on whether it's a specific type and returns
 // the unboxed payload.
-class LUnbox : public LInstructionHelper<1, 1, 0>
+class LUnboxBase : public LInstructionHelper<1, 1, 0>
 {
   public:
-    LIR_HEADER(Unbox);
-
-    LUnbox(const LAllocation &input)
+    LUnboxBase(const LAllocation &input)
     {
         setOperand(0, input);
     }
@@ -86,6 +84,24 @@ class LUnbox : public LInstructionHelper<1, 1, 0>
     MUnbox *mir() const {
         return mir_->toUnbox();
     }
+};
+
+class LUnbox : public LUnboxBase {
+  public:
+    LIR_HEADER(Unbox);
+
+    LUnbox(const LAllocation &input)
+      : LUnboxBase(input)
+    { }
+};
+
+class LUnboxDouble : public LUnboxBase {
+  public:
+    LIR_HEADER(UnboxDouble);
+
+    LUnboxDouble(const LAllocation &input)
+      : LUnboxBase(input)
+    { }
 };
 
 // Constant double.

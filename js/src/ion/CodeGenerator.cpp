@@ -426,3 +426,55 @@ CodeGenerator::generate()
     return true;
 }
 
+// An out-of-line path to convert a boxed int32 to a double.
+class ion::OutOfLineUnboxDouble : public OutOfLineCodeBase<CodeGenerator>
+{
+    LUnboxDouble *unboxDouble_;
+
+  public:
+    OutOfLineUnboxDouble(LUnboxDouble *unboxDouble)
+      : unboxDouble_(unboxDouble)
+    { }
+
+    bool accept(CodeGenerator *codegen) {
+        return codegen->visitOutOfLineUnboxDouble(this);
+    }
+
+    LUnboxDouble *unboxDouble() const {
+        return unboxDouble_;
+    }
+};
+
+bool
+CodeGenerator::visitUnboxDouble(LUnboxDouble *lir)
+{
+    const ValueOperand box = ToValue(lir, LUnboxDouble::Input);
+    const LDefinition *result = lir->output();
+
+    // Out-of-line path to convert int32 to double or bailout
+    // if this instruction is fallible.
+    OutOfLineUnboxDouble *ool = new OutOfLineUnboxDouble(lir);
+    if (!addOutOfLineCode(ool))
+        return false;
+
+    masm.branchTestDouble(Assembler::NotEqual, box, ool->entry());
+    masm.unboxDouble(box, ToFloatRegister(result));
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
+CodeGenerator::visitOutOfLineUnboxDouble(OutOfLineUnboxDouble *ool)
+{
+    LUnboxDouble *ins = ool->unboxDouble();
+    const ValueOperand value = ToValue(ins, LUnboxDouble::Input);
+
+    if (ins->mir()->fallible()) {
+        Assembler::Condition cond = masm.testInt32(Assembler::NotEqual, value);
+        if (!bailoutIf(cond, ins->snapshot()))
+            return false;
+    }
+    masm.int32ValueToDouble(value, ToFloatRegister(ins->output()));
+    masm.jump(ool->rejoin());
+    return true;
+}
