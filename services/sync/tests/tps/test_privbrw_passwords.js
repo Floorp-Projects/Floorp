@@ -76,7 +76,7 @@ var passwords_after_second_change = [
 
 Phase('phase1', [
   [Passwords.add, passwords_initial],
-  [Sync, SYNC_WIPE_SERVER]
+  [Sync]
 ]);
 
 Phase('phase2', [

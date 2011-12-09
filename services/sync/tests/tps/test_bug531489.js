@@ -43,7 +43,7 @@ var bookmarks_initial = {
 Phase('phase1', [
   [Bookmarks.add, bookmarks_initial],
   [Bookmarks.verify, bookmarks_initial],
-  [Sync, SYNC_WIPE_SERVER]
+  [Sync]
 ]);
 
 // Sync to profile2 and verify that all three bookmarks are present
