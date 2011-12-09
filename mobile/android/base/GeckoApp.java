@@ -114,7 +114,6 @@ abstract public class GeckoApp
 
     private IntentFilter mConnectivityFilter;
     private IntentFilter mBatteryFilter;
-    private IntentFilter mSmsFilter;
 
     private BroadcastReceiver mConnectivityReceiver;
     private BroadcastReceiver mSmsReceiver;
@@ -1391,11 +1390,11 @@ abstract public class GeckoApp
         batteryFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
         mBatteryReceiver = new GeckoBatteryManager();
         registerReceiver(mBatteryReceiver, batteryFilter);
-                
-        mSmsFilter = new IntentFilter();
-        mSmsFilter.addAction("android.provider.Telephony.SMS_RECEIVED");
+
+        IntentFilter smsFilter = new IntentFilter();
+        smsFilter.addAction("android.provider.Telephony.SMS_RECEIVED");
         mSmsReceiver = new GeckoSmsManager();
-        registerReceiver(mSmsReceiver, mSmsFilter);
+        registerReceiver(mSmsReceiver, smsFilter);
 
         final GeckoApp self = this;
  
@@ -1501,7 +1500,6 @@ abstract public class GeckoApp
         // onPause will be followed by either onResume or onStop.
         super.onPause();
 
-        unregisterReceiver(mSmsReceiver);
         unregisterReceiver(mConnectivityReceiver);
     }
 
@@ -1519,7 +1517,6 @@ abstract public class GeckoApp
         if (checkLaunchState(LaunchState.Launching))
             onNewIntent(getIntent());
 
-        registerReceiver(mSmsReceiver, mSmsFilter);
         registerReceiver(mConnectivityReceiver, mConnectivityFilter);
         if (mOwnActivityDepth > 0)
             mOwnActivityDepth--;
@@ -1595,6 +1592,7 @@ abstract public class GeckoApp
 
         super.onDestroy();
 
+        unregisterReceiver(mSmsReceiver);
         unregisterReceiver(mBatteryReceiver);
     }
 
