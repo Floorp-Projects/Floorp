@@ -76,6 +76,9 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
      */
     private static final int MAX_FRAME_TIME = 16;   /* 1000 ms / 60 FPS */
 
+    private static final int FRAME_RATE_METER_WIDTH = 64;
+    private static final int FRAME_RATE_METER_HEIGHT = 32;
+
     private final LayerView mView;
     private final SingleTileLayer mCheckerboardLayer;
     private final NinePatchTileLayer mShadowLayer;
@@ -98,7 +101,9 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         CairoImage shadowImage = new BufferedCairoImage(controller.getShadowPattern());
         mShadowLayer = new NinePatchTileLayer(shadowImage);
 
-        mFrameRateLayer = TextLayer.create(new IntSize(64, 32), "-- ms/--");
+        IntSize frameRateLayerSize = new IntSize(FRAME_RATE_METER_WIDTH, FRAME_RATE_METER_HEIGHT);
+        mFrameRateLayer = TextLayer.create(frameRateLayerSize, "-- ms/--");
+
         mHorizScrollLayer = ScrollbarLayer.create(false);
         mVertScrollLayer = ScrollbarLayer.create(true);
 
@@ -235,6 +240,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         mView.post(new Runnable() {
             public void run() {
                 mView.setViewportSize(new IntSize(width, height));
+                moveFrameRateLayer(width, height);
             }
         });
 
@@ -262,5 +268,16 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             mFrameRateLayer.endTransaction();
         }
     }
-}
 
+    /* Given the new dimensions for the surface, moves the frame rate layer appropriately. */
+    private void moveFrameRateLayer(int width, int height) {
+        mFrameRateLayer.beginTransaction();
+        try {
+            Point origin = new Point(width - FRAME_RATE_METER_WIDTH - 8,
+                                     height - FRAME_RATE_METER_HEIGHT + 8);
+            mFrameRateLayer.setOrigin(origin);
+        } finally {
+            mFrameRateLayer.endTransaction();
+        }
+    }
+}
