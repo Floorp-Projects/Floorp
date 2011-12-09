@@ -75,16 +75,17 @@ namespace mozilla {
                                                       TypeParent>(this);     \
   }
 
-class nsDOMMemoryReporter: public nsIMemoryReporter {
+class nsDOMMemoryMultiReporter: public nsIMemoryMultiReporter
+{
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIMEMORYREPORTER
+  NS_DECL_NSIMEMORYMULTIREPORTER
 
   static void Init();
 
 private:
   // Protect ctor, use Init() instead.
-  nsDOMMemoryReporter();
+  nsDOMMemoryMultiReporter();
 };
 
 #endif // nsDOMMemoryReporter_h__
