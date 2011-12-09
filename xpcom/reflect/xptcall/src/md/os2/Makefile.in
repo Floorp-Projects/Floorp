@@ -48,7 +48,7 @@ EXPORT_LIBRARY	= ../..
 MOZILLA_INTERNAL_API = 1
 
 CPPSRCS		= \
-		../win32/xptcinvoke_x86_gnu.cpp \
+		../unix/xptcinvoke_gcc_x86_unix.cpp \
 		xptcstubs_gcc_x86_os2.cpp \
 		$(NULL)
 LOCAL_INCLUDES = \
