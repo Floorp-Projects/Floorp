@@ -130,4 +130,11 @@ public final class RectUtils {
                          FloatUtils.interpolate(from.right, to.right, t),
                          FloatUtils.interpolate(from.bottom, to.bottom, t));
     }
+
+    public static boolean fuzzyEquals(RectF a, RectF b) {
+        return FloatUtils.fuzzyEquals(a.top, b.top)
+            && FloatUtils.fuzzyEquals(a.left, b.left)
+            && FloatUtils.fuzzyEquals(a.right, b.right)
+            && FloatUtils.fuzzyEquals(a.bottom, b.bottom);
+    }
 }

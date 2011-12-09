@@ -44,6 +44,7 @@ import android.graphics.RectF;
 import android.util.Log;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.microedition.khronos.opengles.GL10;
+import org.mozilla.gecko.FloatUtils;
 
 public abstract class Layer {
     private final ReentrantLock mTransactionLock;
@@ -190,6 +191,15 @@ public abstract class Layer {
             viewport = aViewport;
             pageSize = aPageSize;
             zoomFactor = aZoomFactor;
+        }
+
+        public boolean fuzzyEquals(RenderContext other) {
+            if (other == null) {
+                return false;
+            }
+            return RectUtils.fuzzyEquals(viewport, other.viewport)
+                && pageSize.fuzzyEquals(other.pageSize)
+                && FloatUtils.fuzzyEquals(zoomFactor, other.zoomFactor);
         }
     }
 }

@@ -50,15 +50,18 @@ import android.opengl.GLES11Ext;
 import android.util.Log;
 import java.nio.ByteBuffer;
 import javax.microedition.khronos.opengles.GL10;
+import org.mozilla.gecko.FloatUtils;
 
 /**
  * Draws a small rect. This is scaled to become a scrollbar.
  */
 public class ScrollbarLayer extends TileLayer {
+    public static final long FADE_DELAY = 500; // milliseconds before fade-out starts
+    private static final float FADE_AMOUNT = 0.03f; // how much (as a percent) the scrollbar should fade per frame
+
     private static final int PADDING = 1;   // gap between scrollbar and edge of viewport
     private static final int BAR_SIZE = 6;
     private static final int CAP_RADIUS = (BAR_SIZE / 2);
-    private static final int SCROLLBAR_COLOR = Color.argb(127, 0, 0, 0);
 
     private static final int[] CROPRECT_MIDPIXEL = new int[] { CAP_RADIUS, CAP_RADIUS, 1, 1 };
     private static final int[] CROPRECT_TOPCAP = new int[] { 0, CAP_RADIUS, BAR_SIZE, -CAP_RADIUS };
@@ -67,30 +70,80 @@ public class ScrollbarLayer extends TileLayer {
     private static final int[] CROPRECT_RIGHTCAP = new int[] { CAP_RADIUS, BAR_SIZE, CAP_RADIUS, -BAR_SIZE };
 
     private final boolean mVertical;
+    private final ByteBuffer mBuffer;
+    private final Bitmap mBitmap;
+    private final Canvas mCanvas;
+    private float mOpacity;
 
-    private ScrollbarLayer(CairoImage image, boolean vertical) {
+    private ScrollbarLayer(CairoImage image, boolean vertical, ByteBuffer buffer) {
         super(false, image);
         mVertical = vertical;
+        mBuffer = buffer;
+
+        mBitmap = Bitmap.createBitmap(image.getWidth(), image.getHeight(), Bitmap.Config.ARGB_8888);
+        mCanvas = new Canvas(mBitmap);
     }
 
     public static ScrollbarLayer create(boolean vertical) {
+        // just create an empty image for now, it will get drawn
+        // on demand anyway
         int imageSize = nextPowerOfTwo(BAR_SIZE);
+        ByteBuffer buffer = ByteBuffer.allocateDirect(imageSize * imageSize * 4);
+        CairoImage image = new BufferedCairoImage(buffer, imageSize, imageSize, CairoImage.FORMAT_ARGB32);
+        return new ScrollbarLayer(image, vertical, buffer);
+    }
 
-        Bitmap bitmap = Bitmap.createBitmap(imageSize, imageSize, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
+    /**
+     * Decrease the opacity of the scrollbar by one frame's worth.
+     * Return true if the opacity was decreased, or false if the scrollbars
+     * are already fully faded out.
+     */
+    public boolean fade() {
+        if (FloatUtils.fuzzyEquals(mOpacity, 0.0f)) {
+            return false;
+        }
+        beginTransaction();
+        try {
+            setOpacity(Math.max(mOpacity - FADE_AMOUNT, 0.0f));
+            invalidate();
+        } finally {
+            endTransaction();
+        }
+        return true;
+    }
+
+    /**
+     * Restore the opacity of the scrollbar to fully opaque.
+     * Return true if the opacity was changed, or false if the scrollbars
+     * are already fully opaque.
+     */
+    public boolean unfade() {
+        if (FloatUtils.fuzzyEquals(mOpacity, 1.0f)) {
+            return false;
+        }
+        beginTransaction();
+        try {
+            setOpacity(1.0f);
+            invalidate();
+        } finally {
+            endTransaction();
+        }
+        return true;
+    }
+
+    private void setOpacity(float opacity) {
+        mOpacity = opacity;
 
         Paint foregroundPaint = new Paint();
         foregroundPaint.setAntiAlias(true);
         foregroundPaint.setStyle(Paint.Style.FILL);
-        foregroundPaint.setColor(SCROLLBAR_COLOR);
-        canvas.drawColor(Color.argb(0, 0, 0, 0), PorterDuff.Mode.CLEAR);
-        canvas.drawCircle(CAP_RADIUS, CAP_RADIUS, CAP_RADIUS, foregroundPaint);
+        // use a (a,r,g,b) color of (127,0,0,0), and multiply the alpha by mOpacity for fading
+        foregroundPaint.setColor(Color.argb((int)Math.round(mOpacity * 127), 0, 0, 0));
 
-        ByteBuffer buffer = ByteBuffer.allocateDirect(imageSize * imageSize * 4);
-        bitmap.copyPixelsToBuffer(buffer.asIntBuffer());
-        CairoImage image = new BufferedCairoImage(buffer, imageSize, imageSize, CairoImage.FORMAT_ARGB32);
+        mCanvas.drawColor(Color.argb(0, 0, 0, 0), PorterDuff.Mode.CLEAR);
+        mCanvas.drawCircle(CAP_RADIUS, CAP_RADIUS, CAP_RADIUS, foregroundPaint);
 
-        return new ScrollbarLayer(image, vertical);
+        mBitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
     }
 
     @Override
