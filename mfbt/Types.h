@@ -45,6 +45,14 @@
 #ifndef mozilla_Types_h_
 #define mozilla_Types_h_
 
+/*
+ * Expose the standard integer types from <stdint.h> (and the integer type
+ * limit and constant macros, if the right __STDC_*_MACRO has been defined for
+ * each).  These are all usable throughout mfbt code, and throughout Mozilla
+ * code more generally.
+ */
+#include "mozilla/StdInt.h"
+
 /* 
  * mfbt is logically "lower level" than js/src, but needs basic
  * definitions of numerical types and macros for compiler/linker
@@ -58,18 +66,6 @@
  * happens.
  */
 #include "jstypes.h"
-
-/*
- * The numerical types provided by jstypes.h that are allowed within
- * mfbt code are
- *
- *   stddef types:  size_t, ptrdiff_t, etc.
- *   stdin [sic] types:  int8, uint32, etc.
- *
- * stdint types (int8_t etc.), are available for use here, but doing
- * so would change SpiderMonkey's and Gecko's contracts with
- * embedders: stdint types have not yet appeared in public APIs.
- */
 
 #define MOZ_EXPORT_API(type_)  JS_EXPORT_API(type_)
 #define MOZ_IMPORT_API(type_)  JS_IMPORT_API(type_)

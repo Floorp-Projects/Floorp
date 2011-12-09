@@ -108,6 +108,8 @@
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Preferences.h"
 
+#include "sampler.h"
+
 using namespace mozilla;
 
 const size_t gStackSize = 8192;
@@ -1185,6 +1187,7 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
   NS_TIME_FUNCTION_MIN_FMT(1.0, "%s (line %d) (url: %s, line: %d)", MOZ_FUNCTION_NAME,
                            __LINE__, aURL, aLineNo);
 
+  SAMPLE_LABEL("JS", "EvaluateStringWithValue");
   NS_ABORT_IF_FALSE(aScopeObject,
     "Shouldn't call EvaluateStringWithValue with null scope object.");
 
@@ -1387,6 +1390,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   NS_TIME_FUNCTION_MIN_FMT(1.0, "%s (line %d) (url: %s, line: %d)", MOZ_FUNCTION_NAME,
                            __LINE__, aURL, aLineNo);
 
+  SAMPLE_LABEL("JS", "EvaluateString");
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
   if (!mScriptsEnabled) {
@@ -1857,6 +1861,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
     NS_TIME_FUNCTION_FMT(1.0, "%s (line %d) (function: %s)", MOZ_FUNCTION_NAME, __LINE__, name);
   }
 #endif
+  SAMPLE_LABEL("JS", "CallEventHandler");
 
   JSAutoRequest ar(mContext);
   JSObject* target = nsnull;
@@ -3166,6 +3171,7 @@ void
 nsJSContext::GarbageCollectNow(bool shrinkingGC)
 {
   NS_TIME_FUNCTION_MIN(1.0);
+  SAMPLE_LABEL("GC", "GarbageCollectNow");
 
   KillGCTimer();
 
@@ -3191,6 +3197,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener)
     return;
   }
 
+  SAMPLE_LABEL("GC", "CycleCollectNow");
   NS_TIME_FUNCTION_MIN(1.0);
 
   KillCCTimer();

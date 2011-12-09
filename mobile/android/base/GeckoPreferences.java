@@ -115,7 +115,7 @@ public class GeckoPreferences
             }
         }
     }
-    
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -133,6 +133,8 @@ public class GeckoPreferences
         setPreference(prefName, newValue);
         if (preference instanceof ListPreference)
             ((ListPreference)preference).setSummary((String)newValue);
+        if (preference instanceof LinkPreference)
+            finish();
         return true;
     }
 
@@ -148,32 +150,12 @@ public class GeckoPreferences
             if (mPreferenceScreen == null)
                 return;
 
-            // set the current page URL for the "Home page" preference
-            final String[] homepageValues = getResources().getStringArray(R.array.pref_homepage_values);
-            final Preference homepagePref = mPreferenceScreen.findPreference("browser.startup.homepage");
-            GeckoAppShell.getMainHandler().post(new Runnable() {
-                public void run() {
-                    Tab tab = Tabs.getInstance().getSelectedTab();
-                    homepageValues[2] = tab.getURL();
-                    ((ListPreference)homepagePref).setEntryValues(homepageValues);
-                }
-            });
-
             final int length = jsonPrefs.length();
             for (int i = 0; i < length; i++) {
                 JSONObject jPref = jsonPrefs.getJSONObject(i);
                 final String prefName = jPref.getString("name");
                 final String prefType = jPref.getString("type");
                 final Preference pref = mPreferenceScreen.findPreference(prefName);
-
-                if (prefName.equals("browser.startup.homepage")) {
-                    final String value = jPref.getString("value");
-                    GeckoAppShell.getMainHandler().post(new Runnable() {
-                        public void run() {
-                            pref.setSummary(value);
-                        }
-                    });
-                }
 
                 if (pref instanceof CheckBoxPreference && "bool".equals(prefType)) {
                     final boolean value = jPref.getBoolean("value");

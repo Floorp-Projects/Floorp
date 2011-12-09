@@ -57,7 +57,7 @@ class StartupTimeline {
 public:
   enum Event {
     #define mozilla_StartupTimeline_Event(ev, z) ev,
-    #include __FILE__
+    #include "StartupTimeline.h"
     #undef mozilla_StartupTimeline_Event
     MAX_EVENT_ID
   };

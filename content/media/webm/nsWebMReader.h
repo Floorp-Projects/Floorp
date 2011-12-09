@@ -39,13 +39,18 @@
 #if !defined(nsWebMReader_h_)
 #define nsWebMReader_h_
 
+#include "mozilla/StdInt.h"
+
 #include "nsDeque.h"
 #include "nsBuiltinDecoderReader.h"
 #include "nsWebMBufferedParser.h"
 #include "nsAutoRef.h"
 #include "nestegg/nestegg.h"
+
+#define VPX_DONT_DEFINE_STDINT_TYPES
 #include "vpx/vpx_decoder.h"
 #include "vpx/vp8dx.h"
+
 #ifdef MOZ_TREMOR
 #include "tremor/ivorbiscodec.h"
 #else

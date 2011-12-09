@@ -1066,7 +1066,6 @@ NS_IMETHODIMP nsAccessible::TakeSelection()
   return NS_ERROR_FAILURE;
 }
 
-/* void takeFocus (); */
 NS_IMETHODIMP
 nsAccessible::TakeFocus()
 {
@@ -1078,30 +1077,16 @@ nsAccessible::TakeFocus()
 
   nsIContent* focusContent = mContent;
 
-  // If the current element can't take real DOM focus and if it has an ID and
-  // an ancestor with an aria-activedescendant attribute present, then set DOM
-  // focus to that ancestor and set aria-activedescendant on the ancestor to
-  // the ID of the desired element.
+  // If the accessible focus is managed by container widget then focus the
+  // widget and set the accessible as its current item.
   if (!frame->IsFocusable()) {
-    nsAutoString id;
-    if (nsCoreUtils::GetID(mContent, id)) {
-
-      nsIContent* ancestorContent = mContent;
-      while ((ancestorContent = ancestorContent->GetParent()) &&
-             !ancestorContent->HasAttr(kNameSpaceID_None,
-                                       nsGkAtoms::aria_activedescendant));
-
-      if (ancestorContent) {
-        nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
-        if (presShell) {
-          nsIFrame *frame = ancestorContent->GetPrimaryFrame();
-          if (frame && frame->IsFocusable()) {
-            focusContent = ancestorContent;
-            focusContent->SetAttr(kNameSpaceID_None,
-                                  nsGkAtoms::aria_activedescendant,
-                                  id, true);
-          }
-        }
+    nsAccessible* widget = ContainerWidget();
+    if (widget && widget->AreItemsOperable()) {
+      nsIContent* widgetElm = widget->GetContent();
+      nsIFrame* widgetFrame = widgetElm->GetPrimaryFrame();
+      if (widgetFrame && widgetFrame->IsFocusable()) {
+        focusContent = widgetElm;
+        widget->SetCurrentItem(this);
       }
     }
   }
@@ -2935,6 +2920,18 @@ nsAccessible::CurrentItem()
     }
   }
   return nsnull;
+}
+
+void
+nsAccessible::SetCurrentItem(nsAccessible* aItem)
+{
+  nsIAtom* id = aItem->GetContent()->GetID();
+  if (id) {
+    nsAutoString idStr;
+    id->ToString(idStr);
+    mContent->SetAttr(kNameSpaceID_None,
+                      nsGkAtoms::aria_activedescendant, idStr, true);
+  }
 }
 
 nsAccessible*

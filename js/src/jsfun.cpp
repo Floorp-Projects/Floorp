@@ -2289,12 +2289,7 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
      * Flat closures cannot yet be partial, that is, all upvars must be copied,
      * or the closure won't be flattened. Therefore they do not need to search
      * enclosing scope objects via JSOP_NAME, etc.
-     *
-     * FIXME: bug 545759 proposes to enable partial flat closures. Fixing this
-     * bug requires a GetScopeChainFast call here, along with JS_REQUIRES_STACK
-     * annotations on this function's prototype and definition.
      */
-    VOUCH_DOES_NOT_REQUIRE_STACK();
     JSObject *scopeChain = &cx->fp()->scopeChain();
 
     JSFunction *closure = js_AllocFlatClosure(cx, fun, scopeChain);

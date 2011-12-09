@@ -757,16 +757,16 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fpArg,
     if (!CheckDebugMode(cx))
         return false;
 
-    JSObject *scobj = JS_GetFrameScopeChain(cx, fpArg);
-    if (!scobj)
+    Env *env = JS_GetFrameScopeChain(cx, fpArg);
+    if (!env)
         return false;
 
-    js::AutoCompartment ac(cx, scobj);
+    js::AutoCompartment ac(cx, env);
     if (!ac.enter())
         return false;
 
     StackFrame *fp = Valueify(fpArg);
-    return EvaluateInScope(cx, scobj, fp, chars, length, filename, lineno, rval);
+    return EvaluateInEnv(cx, env, fp, chars, length, filename, lineno, rval);
 }
 
 JS_PUBLIC_API(JSBool)
