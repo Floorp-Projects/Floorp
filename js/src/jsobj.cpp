@@ -117,6 +117,8 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
+JS_STATIC_ASSERT(int32((JSObject::NELEMENTS_LIMIT - 1) * sizeof(Value)) == int64((JSObject::NELEMENTS_LIMIT - 1) * sizeof(Value)));
+
 Class js::ObjectClass = {
     js_Object_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
@@ -4969,32 +4971,17 @@ JSBool
 js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
                    Value *vp, Class *clasp)
 {
-    StackFrame *fp;
     JSObject *obj, *cobj, *pobj;
     jsid id;
     JSProperty *prop;
     const Shape *shape;
 
-    /*
-     * Find the global object. Use cx->fp() directly to avoid falling off
-     * trace; all JIT-elided stack frames have the same global object as
-     * cx->fp().
-     */
-    VOUCH_DOES_NOT_REQUIRE_STACK();
-    if (!start && (fp = cx->maybefp()) != NULL)
-        start = &fp->scopeChain();
-
     if (start) {
         obj = start->getGlobal();
+        OBJ_TO_INNER_OBJECT(cx, obj);
     } else {
-        obj = cx->globalObject;
-        if (!obj) {
-            vp->setUndefined();
-            return true;
-        }
+        obj = GetGlobalForScopeChain(cx);
     }
-
-    OBJ_TO_INNER_OBJECT(cx, obj);
     if (!obj)
         return false;
 
@@ -6755,7 +6742,6 @@ JSBool
 js_GetClassPrototype(JSContext *cx, JSObject *scopeobj, JSProtoKey protoKey,
                      JSObject **protop, Class *clasp)
 {
-    VOUCH_DOES_NOT_REQUIRE_STACK();
     JS_ASSERT(JSProto_Null <= protoKey);
     JS_ASSERT(protoKey < JSProto_LIMIT);
 
@@ -7010,7 +6996,7 @@ js_ClearNative(JSContext *cx, JSObject *obj)
         if (shape->isDataDescriptor() &&
             shape->writable() &&
             shape->hasDefaultSetter() &&
-            obj->containsSlot(shape->slot())) {
+            obj->containsSlot(shape->maybeSlot())) {
             obj->setSlot(shape->slot(), UndefinedValue());
         }
     }
@@ -7383,8 +7369,6 @@ JS_FRIEND_API(void)
 js_DumpStackFrame(JSContext *cx, StackFrame *start)
 {
     /* This should only called during live debugging. */
-    VOUCH_DOES_NOT_REQUIRE_STACK();
-
     FrameRegsIter i(cx, StackIter::GO_THROUGH_SAVED);
     if (!start) {
         if (i.done()) {

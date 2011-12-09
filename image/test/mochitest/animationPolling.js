@@ -1,7 +1,9 @@
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 var currentTest;
 var gIsRefImageLoaded = false;
+const gShouldOutputDebugInfo = false;
 
-function pollForSuccess ()
+function pollForSuccess()
 {
   if (!currentTest.isTestFinished) {
     if (!currentTest.reusingReferenceImage || (currentTest.reusingReferenceImage
@@ -23,9 +25,8 @@ function reuseImageCallback()
   gIsRefImageLoaded = true;
 }
 
-function failTest ()
-{    imageLoadCallback();
-
+function failTest()
+{
   if (currentTest.isTestFinished || currentTest.closeFunc) {
     return;
   }
@@ -120,6 +121,9 @@ AnimationTest.prototype.preloadImage = function()
 
 AnimationTest.prototype.outputDebugInfo = function(message, id, dataUri)
 {
+  if (!gShouldOutputDebugInfo) {
+    return;
+  }
   var debugElement = document.getElementById(this.debugElementId);
   var newDataUriElement = document.createElement("a");
   newDataUriElement.setAttribute("id", id);
@@ -203,7 +207,7 @@ AnimationTest.prototype.continueTest = function()
 
   this.takeReferenceSnapshot();
   this.setupPolledImage();
-  setTimeout(pollForSuccess, 10);
+  SimpleTest.executeSoon(pollForSuccess);
 };
 
 AnimationTest.prototype.setupPolledImage = function ()
@@ -212,7 +216,8 @@ AnimationTest.prototype.setupPolledImage = function ()
   if (!this.reusingImageAsReference) {
     this.enableDisplay(document.getElementById(this.imageElementId));
     var currentSnapshot = snapshotWindow(window, false);
-    var result = compareSnapshots(currentSnapshot, this.referenceSnapshot, true);
+    var result = compareSnapshots(currentSnapshot,
+                                  this.referenceSnapshot, true);
 
     this.currentSnapshotDataURI = currentSnapshot.toDataURL();
 
@@ -276,14 +281,14 @@ AnimationTest.prototype.takeReferenceSnapshot = function ()
   }
 
   if (this.reusingImageAsReference) {
-    // Show reference div, & take a snapshot
-    var referenceDiv = document.getElementById(this.imageElementId);
-    this.enableDisplay(referenceDiv);
+    // Show reference elem (which is actually our image), & take a snapshot
+    var referenceElem = document.getElementById(this.imageElementId);
+    this.enableDisplay(referenceElem);
 
     this.referenceSnapshot = snapshotWindow(window, false);
 
-    var snapResult = compareSnapshots(this.cleanSnapshot, this.referenceSnapshot,
-                                      false);
+    var snapResult = compareSnapshots(this.cleanSnapshot,
+                                      this.referenceSnapshot, false);
     if (!snapResult[0]) {
       if (this.blankWaitTime > 2000) {
         // if it took longer than two seconds to load the image, we probably
@@ -292,9 +297,9 @@ AnimationTest.prototype.takeReferenceSnapshot = function ()
         ok(snapResult[0],
            "Reference snapshot shouldn't match clean (non-image) snapshot");
       } else {
-        this.blankWaitTime += 20;
+        this.blankWaitTime += currentTest.pollFreq;
         // let's wait a bit and see if it clears up
-        setTimeout(referencePoller, 20);
+        setTimeout(referencePoller, currentTest.pollFreq);
         return;
       }
     }
@@ -314,7 +319,8 @@ AnimationTest.prototype.takeReferenceSnapshot = function ()
     this.enableDisplay(referenceDiv);
 
     this.referenceSnapshot = snapshotWindow(window, false);
-    var snapResult = compareSnapshots(this.cleanSnapshot, this.referenceSnapshot, false);
+    var snapResult = compareSnapshots(this.cleanSnapshot,
+                                      this.referenceSnapshot, false);
     if (!snapResult[0]) {
       if (this.blankWaitTime > 2000) {
         // if it took longer than two seconds to load the image, we probably

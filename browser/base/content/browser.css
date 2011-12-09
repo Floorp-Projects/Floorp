@@ -243,11 +243,6 @@ panel[noactions] > richlistbox > richlistitem[type~="action"] > .ac-url-box > .a
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-rich-result-popup");
 }
 
-#urlbar-throbber:not([busy="true"]),
-#urlbar-throbber[busy="true"] + #page-proxy-favicon {
-  display: none;
-}
-
 #urlbar-container[combined] > #urlbar > #urlbar-icons > #go-button,
 #urlbar[pageproxystate="invalid"] > #urlbar-icons > .urlbar-icon:not(#go-button),
 #urlbar[pageproxystate="valid"] > #urlbar-icons > #go-button,

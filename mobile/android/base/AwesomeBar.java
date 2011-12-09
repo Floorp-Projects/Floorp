@@ -63,7 +63,6 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
     private static final String LOGTAG = "GeckoAwesomeBar";
 
     static final String URL_KEY = "url";
-    static final String TITLE_KEY = "title";
     static final String CURRENT_URL_KEY = "currenturl";
     static final String TYPE_KEY = "type";
     static final String SEARCH_KEY = "search";
