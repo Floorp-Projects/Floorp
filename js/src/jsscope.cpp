@@ -656,9 +656,9 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
     /* Find or create a property tree node labeled by our arguments. */
     Shape *shape;
     {
-        BaseShape *nbase;
+        UnownedBaseShape *nbase;
         if (lastProperty()->base()->matchesGetterSetter(getter, setter)) {
-            nbase = lastProperty()->base();
+            nbase = lastProperty()->base()->unowned();
         } else {
             BaseShape base(getClass(), getParent(), lastProperty()->getObjectFlags(),
                            attrs, getter, setter);
@@ -842,7 +842,7 @@ JSObject::putProperty(JSContext *cx, jsid id,
          */
         BaseShape base(getClass(), getParent(), lastProperty()->getObjectFlags(),
                        attrs, getter, setter);
-        BaseShape *nbase = BaseShape::getUnowned(cx, base);
+        UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return NULL;
 
@@ -951,7 +951,7 @@ JSObject::removeProperty(JSContext *cx, jsid id)
         spare = js_NewGCShape(cx);
         if (!spare)
             return false;
-        new (spare) Shape(shape->base(), 0);
+        new (spare) Shape(shape->base()->unowned(), 0);
     }
 
     /* If shape has a slot, free its slot number. */
@@ -1063,7 +1063,7 @@ JSObject::generateOwnShape(JSContext *cx, Shape *newShape)
         newShape = js_NewGCShape(cx);
         if (!newShape)
             return false;
-        new (newShape) Shape(lastProperty()->base(), 0);
+        new (newShape) Shape(lastProperty()->base()->unowned(), 0);
     }
 
     PropertyTable &table = lastProperty()->table();
@@ -1093,7 +1093,7 @@ JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
     Shape *spare = js_NewGCShape(cx);
     if (!spare)
         return NULL;
-    new (spare) Shape(shape.base(), 0);
+    new (spare) Shape(shape.base()->unowned(), 0);
 
 #ifdef DEBUG
     JS_ASSERT(canHaveMethodBarrier());
@@ -1365,7 +1365,7 @@ EmptyShape::getInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSObje
     }
 
     BaseShape base(clasp, parent, objectFlags);
-    BaseShape *nbase = BaseShape::getUnowned(cx, base);
+    UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
     if (!nbase)
         return NULL;
 
