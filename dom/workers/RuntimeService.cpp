@@ -995,8 +995,7 @@ RuntimeService::Cleanup()
       Preferences::UnregisterCallback(PrefCallback, gPrefsToWatch[index], this);
     }
 
-    nsCOMPtr<nsIObserverService> obs =
-      do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     NS_WARN_IF_FALSE(obs, "Failed to get observer service?!");
 
     if (obs) {
