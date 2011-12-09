@@ -152,7 +152,7 @@ var history_not = [
 
 Phase('phase1', [
   [History.add, history1],
-  [Sync, SYNC_WIPE_SERVER],
+  [Sync],
 ]);
 
 Phase('phase2', [

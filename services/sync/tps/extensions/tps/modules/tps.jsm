@@ -40,11 +40,9 @@
   * listed symbols will exposed on import, and only when and where imported.
   */
 
-var EXPORTED_SYMBOLS = ["TPS"];
+let EXPORTED_SYMBOLS = ["TPS"];
 
-const CC = Components.classes;
-const CI = Components.interfaces;
-const CU = Components.utils;
+const {classes: CC, interfaces: CI, utils: CU} = Components;
 
 CU.import("resource://services-sync/service.js");
 CU.import("resource://services-sync/constants.js");
@@ -69,25 +67,29 @@ var prefs = CC["@mozilla.org/preferences-service;1"]
 var mozmillInit = {};
 CU.import('resource://mozmill/modules/init.js', mozmillInit);
 
-const ACTION_ADD = "add";
-const ACTION_VERIFY = "verify";
-const ACTION_VERIFY_NOT = "verify-not";
-const ACTION_MODIFY = "modify";
-const ACTION_SYNC = "sync";
-const ACTION_DELETE = "delete";
+const ACTION_ADD              = "add";
+const ACTION_VERIFY           = "verify";
+const ACTION_VERIFY_NOT       = "verify-not";
+const ACTION_MODIFY           = "modify";
+const ACTION_SYNC             = "sync";
+const ACTION_DELETE           = "delete";
 const ACTION_PRIVATE_BROWSING = "private-browsing";
-const ACTION_WIPE_SERVER = "wipe-server";
-const ACTION_SETSTATE = "set-state";
+const ACTION_WIPE_REMOTE      = "wipe-remote";
+const ACTION_WIPE_SERVER      = "wipe-server";
+const ACTION_SET_ENABLED      = "set-enabled";
+
 const ACTIONS = [ACTION_ADD, ACTION_VERIFY, ACTION_VERIFY_NOT,
                  ACTION_MODIFY, ACTION_SYNC, ACTION_DELETE,
-                 ACTION_PRIVATE_BROWSING, ACTION_WIPE_SERVER,
-                 ACTION_SETSTATE];
+                 ACTION_PRIVATE_BROWSING, ACTION_WIPE_REMOTE,
+                 ACTION_WIPE_SERVER, ACTION_SET_ENABLED];
 
-const SYNC_WIPE_SERVER = "wipe-server";
+const SYNC_WIPE_CLIENT  = "wipe-client";
+const SYNC_WIPE_REMOTE  = "wipe-remote";
+const SYNC_WIPE_SERVER  = "wipe-server";
 const SYNC_RESET_CLIENT = "reset-client";
-const SYNC_WIPE_CLIENT = "wipe-client";
+const SYNC_START_OVER   = "start-over";
 
-var TPS =
+let TPS =
 {
   _waitingForSync: false,
   _test: null,
@@ -100,6 +102,7 @@ var TPS =
   _tabsFinished: 0,
   _phaselist: {},
   _operations_pending: 0,
+  _loggedIn: false,
 
   DumpError: function (msg) {
     this._errors++;
@@ -131,6 +134,7 @@ var TPS =
             return;
           }
           break;
+
         case "weave:service:sync:finish":
           if (this._waitingForSync) {
             this._syncErrors = 0;
@@ -518,12 +522,24 @@ var TPS =
         this.DumpError("no profile defined for phase " + this._currentPhase);
         return;
       }
+      Logger.logInfo("Starting phase " + parseInt(phase, 10) + "/" +
+                     Object.keys(this._phaselist).length);
+
       Logger.logInfo("setting client.name to " + this.phases["phase" + this._currentPhase]);
       Weave.Svc.Prefs.set("client.name", this.phases["phase" + this._currentPhase]);
 
-      // wipe the server at the end of the final test phase
-      if (this.phases["phase" + (parseInt(this._currentPhase) + 1)] == undefined)
+      // TODO Phases should be defined in a data type that has strong
+      // ordering, not by lexical sorting.
+      let currentPhase = parseInt(this._currentPhase, 10);
+      // Reset everything at the beginning of the test.
+      if (currentPhase <= 1) {
+        this_phase.unshift([this.ResetData]);
+      }
+
+      // Wipe the server at the end of the final test phase.
+      if (currentPhase >= Object.keys(this.phases).length) {
         this_phase.push([this.WipeServer]);
+      }
 
       // Store account details as prefs so they're accessible to the mozmill
       // framework.
@@ -573,9 +589,77 @@ var TPS =
     Logger.logInfo("set privateBrowsingEnabled: " + options);
   },
 
+  /**
+   * Reset the client and server to an empty/pure state.
+   *
+   * All data on the server is wiped and replaced with new keys and local
+   * client data. The local client is configured such that it is in sync
+   * with the server and ready to handle changes.
+   *
+   * This is typically called at the beginning of every test to set up a clean
+   * slate.
+   *
+   * This executes synchronously and doesn't return until things are in a good
+   * state.
+   */
+  ResetData: function ResetData() {
+    this.Login(true);
+
+    Service.login();
+    Service.wipeServer();
+    Service.resetClient();
+    Service.login();
+  },
+
+  Login: function Login(force) {
+    if (this._loggedIn && !force) {
+      return;
+    }
+
+    let account = this.config.account;
+    if (!account) {
+      this.DumperError("No account information found! Did you use a valid " +
+                       "config file?");
+      return;
+    }
+
+    if (account["serverURL"]) {
+      Service.serverURL = account["serverURL"];
+    }
+
+    Logger.logInfo("Setting client credentials.");
+    if (account["admin-secret"]) {
+      // if admin-secret is specified, we'll dynamically create
+      // a new sync account
+      Weave.Svc.Prefs.set("admin-secret", account["admin-secret"]);
+      let suffix = account["account-suffix"];
+      Service.account = "tps" + suffix + "@mozilla.com";
+      Service.password = "tps" + suffix + "tps" + suffix;
+      Service.passphrase = Weave.Utils.generatePassphrase();
+      Service.createAccount(Service.account,
+                            Service.password,
+                            "dummy1", "dummy2");
+    } else if (account["username"] && account["password"] &&
+               account["passphrase"]) {
+      Service.account = account["username"];
+      Service.password = account["password"];
+      Service.passphrase = account["passphrase"];
+    } else {
+      this.DumpError("Must specify admin-secret, or " +
+                     "username/password/passphrase in the config file");
+      return;
+    }
+
+    Service.login();
+    Logger.AssertEqual(Weave.Status.service, Weave.STATUS_OK, "Weave status not OK");
+    Weave.Svc.Obs.notify("weave:service:setup-complete");
+    this._loggedIn = true;
+  },
+
   Sync: function TPS__Sync(options) {
     Logger.logInfo("executing Sync " + (options ? options : ""));
-    if (options == SYNC_WIPE_SERVER) {
+
+    if (options == SYNC_WIPE_REMOTE) {
       Weave.Svc.Prefs.set("firstSync", "wipeRemote");
     }
     else if (options == SYNC_WIPE_CLIENT) {
@@ -584,61 +668,24 @@ var TPS =
     else if (options == SYNC_RESET_CLIENT) {
       Weave.Svc.Prefs.set("firstSync", "resetClient");
     }
-    else {
+    else if (options) {
+      throw new Error("Unhandled options to Sync(): " + options);
+    } else {
       Weave.Svc.Prefs.reset("firstSync");
     }
-    if (this.config.account) {
-      let account = this.config.account;
-      if (account["serverURL"]) {
-        Weave.Service.serverURL = account["serverURL"];
-      }
-      if (account["admin-secret"]) {
-        // if admin-secret is specified, we'll dynamically create
-        // a new sync account
-        Weave.Svc.Prefs.set("admin-secret", account["admin-secret"]);
-        let suffix = account["account-suffix"];
-        Weave.Service.account = "tps" + suffix + "@mozilla.com";
-        Weave.Service.password = "tps" + suffix + "tps" + suffix;
-        Weave.Service.passphrase = Weave.Utils.generatePassphrase();
-        Weave.Service.createAccount(Weave.Service.account,
-                                    Weave.Service.password,
-                                    "dummy1", "dummy2");
-        Weave.Service.login();
-      }
-      else if (account["username"] && account["password"] &&
-               account["passphrase"]) {
-        Weave.Service.account = account["username"];
-        Weave.Service.password = account["password"];
-        Weave.Service.passphrase = account["passphrase"];
-        Weave.Service.login();
-      }
-      else {
-        this.DumpError("Must specify admin-secret, or " +
-          "username/password/passphrase in the config file");
-        return;
-      }
-    }
-    else {
-      this.DumpError("No account information found; did you use " +
-        "a valid config file?");
-      return;
-    }
-    Logger.AssertEqual(Weave.Status.service, Weave.STATUS_OK, "Weave status not OK");
-    Weave.Svc.Obs.notify("weave:service:setup-complete");
+
+    this.Login(false);
+
     this._waitingForSync = true;
     this.StartAsyncOperation();
+
     Weave.Service.sync();
   },
 
   WipeServer: function TPS__WipeServer() {
     Logger.logInfo("WipeServer()");
-    Weave.Service.login();
+    this.Login();
     Weave.Service.wipeServer();
-    Logger.AssertEqual(Weave.Status.service, Weave.STATUS_OK, "Weave status not OK");
-    this._waitingForSync = true;
-    this.StartAsyncOperation();
-    Weave.Service.sync();
-    return;
   },
 };
 
@@ -646,8 +693,8 @@ var Addons = {
   install: function Addons__install(addons) {
     TPS.HandleAddons(addons, ACTION_ADD);
   },
-  setState: function Addons__setState(addons, state) {
-    TPS.HandleAddons(addons, ACTION_SETSTATE, state);
+  setEnabled: function Addons__setEnabled(addons, state) {
+    TPS.HandleAddons(addons, ACTION_SET_ENABLED, state);
   },
   uninstall: function Addons__uninstall(addons) {
     TPS.HandleAddons(addons, ACTION_DELETE);

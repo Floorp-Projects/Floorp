@@ -55,7 +55,7 @@ var passwords_after_first_update = [
 
 Phase('phase1', [
   [Passwords.add, passwords_initial],
-  [Sync, SYNC_WIPE_SERVER],
+  [Sync]
 ]);
 
 Phase('phase2', [

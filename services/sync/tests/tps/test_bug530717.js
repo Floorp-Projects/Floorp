@@ -47,7 +47,7 @@ var prefs2 = [
 Phase('phase1', [
   [Prefs.modify, prefs1],
   [Prefs.verify, prefs1],
-  [Sync, SYNC_WIPE_SERVER],
+  [Sync]
 ]);
 
 // Sync profile2 and verify same prefs are present.

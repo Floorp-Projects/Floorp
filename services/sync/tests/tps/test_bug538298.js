@@ -65,7 +65,7 @@ var bookmarks_after_move = {
 Phase('phase1', [
   [Bookmarks.add, bookmarks_initial],
   [Bookmarks.verify, bookmarks_initial],
-  [Sync, SYNC_WIPE_SERVER]
+  [Sync]
 ]);
 
 // Sync to profile2 and verify that all four bookmarks are present.

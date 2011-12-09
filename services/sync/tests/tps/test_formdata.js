@@ -53,7 +53,7 @@ var formdata_delete = [
 Phase('phase1', [
   [Formdata.add, formdata1],
   [Formdata.verify, formdata1],
-  [Sync, SYNC_WIPE_SERVER],
+  [Sync]
 ]);
 
 Phase('phase2', [

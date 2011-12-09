@@ -64,7 +64,7 @@ var tabs3 = [
 
 Phase('phase1', [
   [Tabs.add, tabs1],
-  [Sync, SYNC_WIPE_SERVER]
+  [Sync]
 ]);
 
 Phase('phase2', [
