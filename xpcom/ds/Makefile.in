@@ -79,6 +79,8 @@ ifdef HAVE_CLOCK_MONOTONIC
 CPPSRCS += TimeStamp_posix.cpp
 else ifeq ($(OS_ARCH),Darwin)
 CPPSRCS += TimeStamp_darwin.cpp
+else ifeq ($(OS_ARCH),WINNT)
+CPPSRCS += TimeStamp_windows.cpp
 else
 CPPSRCS += TimeStamp.cpp
 endif

@@ -48,8 +48,13 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "URIFixup",
   "@mozilla.org/docshell/urifixup;1", "nsIURIFixup");
+
+XPCOMUtils.defineLazyServiceGetter(this, "Haptic",
+  "@mozilla.org/widget/hapticfeedback;1", "nsIHapticFeedback");
+
 XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
   "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
+
 const kStateActive = 0x00000001; // :active pseudoclass for elements
 
 // TODO: Take into account ppi in these units?
@@ -1220,7 +1225,7 @@ Tab.prototype = {
           this.browser.addEventListener("pagehide", function listener() {
             this.browser.removeEventListener("click", ErrorPageEventHandler, false);
             this.browser.removeEventListener("pagehide", listener, true);
-          }, true);
+          }.bind(this), true);
         }
 
         break;
@@ -1232,8 +1237,19 @@ Tab.prototype = {
           return;
 
         // ignore on frames
-        if (target.defaultView != this.browser.contentWindow)
+        if (target.ownerDocument.defaultView != this.browser.contentWindow)
           return;
+
+        // sanitize the rel string
+        let list = [];
+        if (target.rel) {
+          list = target.rel.toLowerCase().split(/\s+/);
+          let hash = {};
+          list.forEach(function(value) { hash[value] = true; });
+          list = [];
+          for (let rel in hash)
+            list.push("[" + rel + "]");
+        }
 
         let json = {
           type: "DOMLinkAdded",
@@ -1241,7 +1257,7 @@ Tab.prototype = {
           href: resolveGeckoURI(target.href),
           charset: target.ownerDocument.characterSet,
           title: target.title,
-          rel: target.rel
+          rel: list.join(" ")
         };
 
         // rel=icon can also have a sizes attribute
@@ -1565,13 +1581,11 @@ var BrowserEventHandler = {
       // override so that Java can handle panning the main document.
       let data = JSON.parse(aData);
       if (this._firstScrollEvent) {
-        while (this._scrollableElement != null &&
-               !this._elementCanScroll(this._scrollableElement, data.x, data.y))
+        while (this._scrollableElement != null && !this._elementCanScroll(this._scrollableElement, data.x, data.y))
           this._scrollableElement = this._findScrollableElement(this._scrollableElement, false);
 
         let doc = BrowserApp.selectedBrowser.contentDocument;
-        if (this._scrollableElement == doc.body ||
-            this._scrollableElement == doc.documentElement) {
+        if (this._scrollableElement == doc.body || this._scrollableElement == doc.documentElement) {
           sendMessageToJava({ gecko: { type: "Panning:CancelOverride" } });
           return;
         }
@@ -1586,11 +1600,9 @@ var BrowserEventHandler = {
       this._cancelTapHighlight();
     } else if (aTopic == "Gesture:ShowPress") {
       let data = JSON.parse(aData);
-      let closest = ElementTouchHelper.elementFromPoint(BrowserApp.selectedBrowser.contentWindow,
-                                                        data.x, data.y);
+      let closest = ElementTouchHelper.elementFromPoint(BrowserApp.selectedBrowser.contentWindow, data.x, data.y);
       if (!closest)
-        closest = ElementTouchHelper.anyElementFromPoint(BrowserApp.selectedBrowser.contentWindow,
-                                                        data.x, data.y);
+        closest = ElementTouchHelper.anyElementFromPoint(BrowserApp.selectedBrowser.contentWindow, data.x, data.y);
       if (closest) {
         this._doTapHighlight(closest);
 
@@ -1602,8 +1614,7 @@ var BrowserEventHandler = {
         if (this._scrollableElement != null) {
           // Discard if it's the top-level scrollable, we let Java handle this
           let doc = BrowserApp.selectedBrowser.contentDocument;
-          if (this._scrollableElement != doc.body &&
-              this._scrollableElement != doc.documentElement)
+          if (this._scrollableElement != doc.body && this._scrollableElement != doc.documentElement)
             sendMessageToJava({ gecko: { type: "Panning:Override" } });
         }
       }
@@ -1677,6 +1688,9 @@ var BrowserEventHandler = {
   _highlightElement: null,
 
   _doTapHighlight: function _doTapHighlight(aElement) {
+    if (ElementTouchHelper.isElementClickable(aElement))
+      Haptic.performSimpleAction(Haptic.LongPress);
+
     DOMUtils.setContentState(aElement, kStateActive);
     this._highlightElement = aElement;
   },
@@ -1755,8 +1769,7 @@ var BrowserEventHandler = {
       }
 
       // Propagate up iFrames
-      if (!elem.parentNode && elem.documentElement &&
-          elem.documentElement.ownerDocument)
+      if (!elem.parentNode && elem.documentElement && elem.documentElement.ownerDocument)
         elem = elem.documentElement.ownerDocument.defaultView.frameElement;
       else
         elem = elem.parentNode;
@@ -1909,7 +1922,7 @@ const ElementTouchHelper = {
                                                false); /* don't flush layout */
 
     // if this element is clickable we return quickly
-    if (this._isElementClickable(target))
+    if (this.isElementClickable(target))
       return target;
 
     let target = null;
@@ -1921,7 +1934,7 @@ const ElementTouchHelper = {
     let threshold = Number.POSITIVE_INFINITY;
     for (let i = 0; i < nodes.length; i++) {
       let current = nodes[i];
-      if (!current.mozMatchesSelector || !this._isElementClickable(current))
+      if (!current.mozMatchesSelector || !this.isElementClickable(current))
         continue;
 
       let rect = current.getBoundingClientRect();
@@ -1940,7 +1953,7 @@ const ElementTouchHelper = {
     return target;
   },
 
-  _isElementClickable: function _isElementClickable(aElement) {
+  isElementClickable: function isElementClickable(aElement) {
     const selector = "a,:link,:visited,[role=button],button,input,select,textarea,label";
     for (let elem = aElement; elem; elem = elem.parentNode) {
       if (this._hasMouseListener(elem))
@@ -2081,27 +2094,12 @@ var ErrorPageEventHandler = {
             }
             errorDoc.location.reload();
           } else if (target == errorDoc.getElementById("getMeOutOfHereButton")) {
-            errorDoc.location = this.getFallbackSafeURL();
+            errorDoc.location = "about:home";
           }
         }
         break;
       }
     }
-  },
-
-  getFallbackSafeURL: function getFallbackSafeURL() {
-    // Get the start page from the *default* pref branch, not the user's
-    let prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).getDefaultBranch(null);
-    let url = "about:home";
-    try {
-      url = prefs.getComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString).data;
-      // If url is a pipe-delimited set of pages, just take the first one.
-      if (url.indexOf("|") != -1)
-        url = url.split("|")[0];
-    } catch(e) {
-      Cu.reportError("Couldn't get homepage pref: " + e);
-    }
-    return url;
   }
 };
 

@@ -52,6 +52,11 @@ using std::string;
 
 pthread_key_t pkey_stack;
 pthread_key_t pkey_ticker;
+// We need to track whether we've been initialized otherwise
+// we end up using pkey_stack without initializing it.
+// Because pkey_stack is totally opaque to us we can't reuse
+// it as the flag itself.
+bool stack_key_initialized;
 
 TimeStamp sLastTracerEvent;
 
@@ -378,6 +383,7 @@ void mozilla_sampler_init()
     LOG("Failed to init.");
     return;
   }
+  stack_key_initialized = true;
 
   Stack *stack = new Stack();
   pthread_setspecific(pkey_stack, stack);

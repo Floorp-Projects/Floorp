@@ -136,7 +136,7 @@ SpdySession::~SpdySession()
   
   mStreamTransactionHash.Enumerate(Shutdown, this);
   Telemetry::Accumulate(Telemetry::SPDY_PARALLEL_STREAMS, mConcurrentHighWater);
-  Telemetry::Accumulate(Telemetry::SPDY_TOTAL_STREAMS, (mNextStreamID - 1) / 2);
+  Telemetry::Accumulate(Telemetry::SPDY_REQUEST_PER_CONN, (mNextStreamID - 1) / 2);
   Telemetry::Accumulate(Telemetry::SPDY_SERVER_INITIATED_STREAMS,
                         mServerPushedResources);
 }
@@ -1803,6 +1803,12 @@ SpdySession::RequestHead()
                     "SpdySession::RequestHead() "
                     "should not be called after SPDY is setup");
   return NULL;
+}
+
+PRUint32
+SpdySession::Http1xTransactionCount()
+{
+  return 0;
 }
 
 //-----------------------------------------------------------------------------

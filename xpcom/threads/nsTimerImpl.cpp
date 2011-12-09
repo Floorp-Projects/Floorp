@@ -44,6 +44,7 @@
 #include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 #include "prmem.h"
+#include "sampler.h"
 
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
@@ -375,6 +376,8 @@ void nsTimerImpl::Fire()
 {
   if (mCanceled)
     return;
+
+  SAMPLE_LABEL("Timer", "Fire");
 
   TimeStamp now = TimeStamp::Now();
 #ifdef DEBUG_TIMERS

@@ -203,6 +203,7 @@
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "sampler.h"
 
 #include "Layers.h"
 #include "nsPLDOMEvent.h"
@@ -3974,6 +3975,7 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
   NS_TIME_FUNCTION_MIN_FMT(1.0, "%s (line %d) (document: %s, type: %s)", MOZ_FUNCTION_NAME,
                            __LINE__, docURL__.get(), flushTypeNames[aType - 1]);
 #endif
+  SAMPLE_LABEL("layout", "FlushPendingNotifications");
 
 #ifdef ACCESSIBILITY
 #ifdef DEBUG
@@ -5421,6 +5423,7 @@ PresShell::Paint(nsIView*           aViewToPaint,
                            NSCoordToFloat(bounds__.YMost()));
 #endif
 
+  SAMPLE_LABEL("Paint", "PresShell::Paint");
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aViewToPaint, "null view");
   NS_ASSERTION(aWidgetToPaint, "Can't paint without a widget");
@@ -7203,6 +7206,7 @@ bool
 PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
 {
   NS_TIME_FUNCTION_WITH_DOCURL;
+  SAMPLE_LABEL("layout", "DoReflow");
 
   if (mReflowContinueTimer) {
     mReflowContinueTimer->Cancel();
