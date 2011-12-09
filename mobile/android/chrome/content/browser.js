@@ -1757,15 +1757,15 @@ var BrowserEventHandler = {
        * - It has overflow 'auto' or 'scroll'
        * - It's a textarea
        * - It's an HTML/BODY node
+       * - It's a select element showing multiple rows
        */
       if (checkElem) {
         if (((elem.scrollHeight > elem.clientHeight) ||
              (elem.scrollWidth > elem.clientWidth)) &&
             (elem.style.overflow == 'auto' ||
              elem.style.overflow == 'scroll' ||
-             elem.localName == 'textarea' ||
-             elem.localName == 'html' ||
-             elem.localName == 'body')) {
+             elem.mozMatchesSelector("html, body, textarea")) ||
+            (elem instanceof HTMLSelectElement && (elem.size > 1 || elem.multiple))) {
           scrollable = true;
           break;
         }
