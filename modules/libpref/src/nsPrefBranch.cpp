@@ -830,7 +830,7 @@ nsPrefLocalizedString::SetDataWithLength(PRUint32 aLength,
 {
   if (!aData)
     return SetData(EmptyString());
-  return SetData(Substring(aData, aData + aLength));
+  return SetData(Substring(aData, aLength));
 }
 
 //----------------------------------------------------------------------------

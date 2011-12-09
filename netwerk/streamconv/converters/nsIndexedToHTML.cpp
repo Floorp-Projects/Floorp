@@ -766,7 +766,7 @@ nsIndexedToHTML::FormatInputStream(nsIRequest* aRequest, nsISupports *aContext, 
 
     nsCOMPtr<nsIInputStream> inputData;
     if (buffer) {
-      rv = NS_NewCStringInputStream(getter_AddRefs(inputData), Substring(buffer, buffer + dstLength));
+      rv = NS_NewCStringInputStream(getter_AddRefs(inputData), Substring(buffer, dstLength));
       nsMemory::Free(buffer);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = mListener->OnDataAvailable(aRequest, aContext,

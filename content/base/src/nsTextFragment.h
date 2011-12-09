@@ -176,8 +176,7 @@ public:
     if (mState.mIs2b) {
       aString.Append(m2b, mState.mLength);
     } else {
-      AppendASCIItoUTF16(Substring(m1b, m1b + mState.mLength),
-                         aString);
+      AppendASCIItoUTF16(Substring(m1b, mState.mLength), aString);
     }
   }
 
@@ -190,7 +189,7 @@ public:
     if (mState.mIs2b) {
       aString.Append(m2b + aOffset, aLength);
     } else {
-      AppendASCIItoUTF16(Substring(m1b + aOffset, m1b + aOffset + aLength), aString);
+      AppendASCIItoUTF16(Substring(m1b + aOffset, aLength), aString);
     }
   }
 
