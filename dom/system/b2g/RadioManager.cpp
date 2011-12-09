@@ -107,7 +107,7 @@ PostToRIL(JSContext *cx, uintN argc, jsval *vp)
       return false;
     }
 
-    JSUint32 type = JS_GetTypedArrayType(obj);
+    uint32_t type = JS_GetTypedArrayType(obj);
     if (type != js::TypedArray::TYPE_INT8 &&
         type != js::TypedArray::TYPE_UINT8 &&
         type != js::TypedArray::TYPE_UINT8_CLAMPED) {

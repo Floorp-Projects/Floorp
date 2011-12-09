@@ -104,7 +104,7 @@ StackFrame::initPrev(JSContext *cx)
         prevpc_ = regs->pc;
         prevInline_ = regs->inlined();
         JS_ASSERT_IF(!prev_->isDummyFrame(),
-                     uint32(prevpc_ - prev_->script()->code) < prev_->script()->length);
+                     uint32_t(prevpc_ - prev_->script()->code) < prev_->script()->length);
     } else {
         prev_ = NULL;
 #ifdef DEBUG
@@ -145,7 +145,7 @@ StackFrame::resetInlinePrev(StackFrame *prevfp, jsbytecode *prevpc)
 
 inline void
 StackFrame::initCallFrame(JSContext *cx, JSFunction &callee,
-                          JSScript *script, uint32 nactual, StackFrame::Flags flagsArg)
+                          JSScript *script, uint32_t nactual, StackFrame::Flags flagsArg)
 {
     JS_ASSERT((flagsArg & ~(CONSTRUCTING |
                             LOWERED_CALL_APPLY |
@@ -217,7 +217,7 @@ StackFrame::initJitFrameCallerHalf(StackFrame *prev, StackFrame::Flags flags, vo
  * to the "late prologue".
  */
 inline void
-StackFrame::initJitFrameEarlyPrologue(JSFunction *fun, uint32 nactual)
+StackFrame::initJitFrameEarlyPrologue(JSFunction *fun, uint32_t nactual)
 {
     exec.fun = fun;
     args.nactual = nactual;
@@ -520,7 +520,7 @@ StackSpace::getStackLimit(JSContext *cx, MaybeReportError report)
 
 JS_ALWAYS_INLINE StackFrame *
 ContextStack::getCallFrame(JSContext *cx, MaybeReportError report, const CallArgs &args,
-                           JSFunction *fun, JSScript *script, /*StackFrame::Flags*/ uint32 *flags) const
+                           JSFunction *fun, JSScript *script, /*StackFrame::Flags*/ uint32_t *flags) const
 {
     JS_ASSERT(fun->script() == script);
     uintN nformal = fun->nargs;
@@ -568,7 +568,7 @@ ContextStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &ar
     /* Cannot assert callee == args.callee() since this is called from LeaveTree. */
     JS_ASSERT(script == callee.toFunction()->script());
 
-    /*StackFrame::Flags*/ uint32 flags = ToFrameFlags(initial);
+    /*StackFrame::Flags*/ uint32_t flags = ToFrameFlags(initial);
     StackFrame *fp = getCallFrame(cx, REPORT_ERROR, args, &callee, script, &flags);
     if (!fp)
         return false;
@@ -604,7 +604,7 @@ ContextStack::getFixupFrame(JSContext *cx, MaybeReportError report,
     JS_ASSERT(fun->script() == args.callee().toFunction()->script());
     JS_ASSERT(fun->script() == script);
 
-    /*StackFrame::Flags*/ uint32 flags = ToFrameFlags(initial);
+    /*StackFrame::Flags*/ uint32_t flags = ToFrameFlags(initial);
     StackFrame *fp = getCallFrame(cx, report, args, fun, script, &flags);
     if (!fp)
         return NULL;
@@ -693,7 +693,7 @@ struct STATIC_SKIP_INFERENCE CopyNonHoleArgsTo
     CopyNonHoleArgsTo(ArgumentsObject *argsobj, Value *dst) : argsobj(*argsobj), dst(dst) {}
     ArgumentsObject &argsobj;
     Value *dst;
-    bool operator()(uint32 argi, Value *src) {
+    bool operator()(uint32_t argi, Value *src) {
         if (argsobj.element(argi).isMagic(JS_ARGS_HOLE))
             return false;
         *dst++ = *src;
@@ -704,7 +704,7 @@ struct STATIC_SKIP_INFERENCE CopyNonHoleArgsTo
 } /* namespace detail */
 
 inline bool
-ArgumentsObject::getElement(uint32 i, Value *vp)
+ArgumentsObject::getElement(uint32_t i, Value *vp)
 {
     if (i >= initialLength())
         return false;
@@ -731,11 +731,11 @@ ArgumentsObject::getElement(uint32 i, Value *vp)
 }
 
 inline bool
-ArgumentsObject::getElements(uint32 start, uint32 count, Value *vp)
+ArgumentsObject::getElements(uint32_t start, uint32_t count, Value *vp)
 {
     JS_ASSERT(start + count >= start);
 
-    uint32 length = initialLength();
+    uint32_t length = initialLength();
     if (start > length || start + count > length)
         return false;
 

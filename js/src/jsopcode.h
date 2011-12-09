@@ -39,6 +39,7 @@
 
 #ifndef jsopcode_h___
 #define jsopcode_h___
+
 /*
  * JS bytecode definitions.
  */
@@ -81,20 +82,20 @@ typedef enum JSOp {
 #define JOF_LOOKUPSWITCH  5       /* lookup switch */
 #define JOF_QARG          6       /* quickened get/set function argument ops */
 #define JOF_LOCAL         7       /* var or block-local variable */
-#define JOF_SLOTATOM      8       /* uint16 slot + constant index */
+#define JOF_SLOTATOM      8       /* uint16_t slot + constant index */
 #define JOF_JUMPX         9       /* signed 32-bit jump offset immediate */
 #define JOF_TABLESWITCHX  10      /* extended (32-bit offset) table switch */
 #define JOF_LOOKUPSWITCHX 11      /* extended (32-bit offset) lookup switch */
 #define JOF_UINT24        12      /* extended unsigned 24-bit literal (index) */
-#define JOF_UINT8         13      /* uint8 immediate, e.g. top 8 bits of 24-bit
+#define JOF_UINT8         13      /* uint8_t immediate, e.g. top 8 bits of 24-bit
                                      atom index */
-#define JOF_INT32         14      /* int32 immediate operand */
+#define JOF_INT32         14      /* int32_t immediate operand */
 #define JOF_OBJECT        15      /* unsigned 16-bit object index */
-#define JOF_SLOTOBJECT    16      /* uint16 slot index + object index */
+#define JOF_SLOTOBJECT    16      /* uint16_t slot index + object index */
 #define JOF_REGEXP        17      /* unsigned 16-bit regexp index */
-#define JOF_INT8          18      /* int8 immediate operand */
-#define JOF_ATOMOBJECT    19      /* uint16 constant index + object index */
-#define JOF_UINT16PAIR    20      /* pair of uint16 immediates */
+#define JOF_INT8          18      /* int8_t immediate operand */
+#define JOF_ATOMOBJECT    19      /* uint16_t constant index + object index */
+#define JOF_UINT16PAIR    20      /* pair of uint16_t immediates */
 #define JOF_TYPEMASK      0x001f  /* mask for above immediate types */
 
 #define JOF_NAME          (1U<<5) /* name operation */
@@ -131,7 +132,7 @@ typedef enum JSOp {
 #define JOF_TMPSLOT_SHIFT 22
 #define JOF_TMPSLOT_MASK  (JS_BITMASK(2) << JOF_TMPSLOT_SHIFT)
 
-#define JOF_SHARPSLOT    (1U<<24) /* first immediate is uint16 stack slot no.
+#define JOF_SHARPSLOT    (1U<<24) /* first immediate is uint16_t stack slot no.
                                      that needs fixup when in global code (see
                                      js::frontend::CompileScript) */
 #define JOF_GNAME        (1U<<25) /* predicted global name */
@@ -155,7 +156,7 @@ typedef enum JSOp {
  * Immediate operand getters, setters, and bounds.
  */
 
-/* Common uint16 immediate format helpers. */
+/* Common uint16_t immediate format helpers. */
 #define UINT16_LEN              2
 #define UINT16_HI(i)            ((jsbytecode)((i) >> 8))
 #define UINT16_LO(i)            ((jsbytecode)(i))
@@ -167,11 +168,11 @@ typedef enum JSOp {
 #define JUMP_OFFSET_LEN         2
 #define JUMP_OFFSET_HI(off)     ((jsbytecode)((off) >> 8))
 #define JUMP_OFFSET_LO(off)     ((jsbytecode)(off))
-#define GET_JUMP_OFFSET(pc)     ((int16)GET_UINT16(pc))
+#define GET_JUMP_OFFSET(pc)     (int16_t(GET_UINT16(pc)))
 #define SET_JUMP_OFFSET(pc,off) ((pc)[1] = JUMP_OFFSET_HI(off),               \
                                  (pc)[2] = JUMP_OFFSET_LO(off))
-#define JUMP_OFFSET_MIN         ((int16)0x8000)
-#define JUMP_OFFSET_MAX         ((int16)0x7fff)
+#define JUMP_OFFSET_MIN         ((int16_t)0x8000)
+#define JUMP_OFFSET_MAX         ((int16_t)0x7fff)
 
 /*
  * When a short jump won't hold a relative offset, its 2-byte immediate offset
@@ -185,11 +186,11 @@ typedef enum JSOp {
  * found (via binary search) by its "before span-dependency optimization" pc
  * offset (from script main entry point).
  */
-#define GET_SPANDEP_INDEX(pc)   ((uint16)GET_UINT16(pc))
+#define GET_SPANDEP_INDEX(pc)   (uint16_t(GET_UINT16(pc)))
 #define SET_SPANDEP_INDEX(pc,i) ((pc)[1] = JUMP_OFFSET_HI(i),                 \
                                  (pc)[2] = JUMP_OFFSET_LO(i))
-#define SPANDEP_INDEX_MAX       ((uint16)0xfffe)
-#define SPANDEP_INDEX_HUGE      ((uint16)0xffff)
+#define SPANDEP_INDEX_MAX       ((uint16_t)0xfffe)
+#define SPANDEP_INDEX_HUGE      ((uint16_t)0xffff)
 
 /* Ultimately, if short jumps won't do, emit long (4-byte signed) offsets. */
 #define JUMPX_OFFSET_LEN        4
@@ -197,14 +198,14 @@ typedef enum JSOp {
 #define JUMPX_OFFSET_B2(off)    ((jsbytecode)((off) >> 16))
 #define JUMPX_OFFSET_B1(off)    ((jsbytecode)((off) >> 8))
 #define JUMPX_OFFSET_B0(off)    ((jsbytecode)(off))
-#define GET_JUMPX_OFFSET(pc)    ((int32)(((pc)[1] << 24) | ((pc)[2] << 16)    \
-                                         | ((pc)[3] << 8) | (pc)[4]))
+#define GET_JUMPX_OFFSET(pc)    (int32_t(((pc)[1] << 24) | ((pc)[2] << 16)    \
+                                          | ((pc)[3] << 8) | (pc)[4]))
 #define SET_JUMPX_OFFSET(pc,off)((pc)[1] = JUMPX_OFFSET_B3(off),              \
                                  (pc)[2] = JUMPX_OFFSET_B2(off),              \
                                  (pc)[3] = JUMPX_OFFSET_B1(off),              \
                                  (pc)[4] = JUMPX_OFFSET_B0(off))
-#define JUMPX_OFFSET_MIN        ((int32)0x80000000)
-#define JUMPX_OFFSET_MAX        ((int32)0x7fffffff)
+#define JUMPX_OFFSET_MIN        (int32_t(0x80000000))
+#define JUMPX_OFFSET_MAX        (int32_t(0x7fffffff))
 
 /*
  * A literal is indexed by a per-script atom or object maps. Most scripts
@@ -233,20 +234,20 @@ typedef enum JSOp {
                                  (pc)[2] = UINT24_MID(i),                     \
                                  (pc)[3] = UINT24_LO(i))
 
-#define GET_INT8(pc)            ((jsint)(int8)(pc)[1])
+#define GET_INT8(pc)            ((jsint)int8_t((pc)[1]))
 
-#define GET_INT32(pc)           ((jsint)(((uint32)((pc)[1]) << 24) |          \
-                                         ((uint32)((pc)[2]) << 16) |          \
-                                         ((uint32)((pc)[3]) << 8)  |          \
-                                         (uint32)(pc)[4]))
-#define SET_INT32(pc,i)         ((pc)[1] = (jsbytecode)((uint32)(i) >> 24),   \
-                                 (pc)[2] = (jsbytecode)((uint32)(i) >> 16),   \
-                                 (pc)[3] = (jsbytecode)((uint32)(i) >> 8),    \
-                                 (pc)[4] = (jsbytecode)(uint32)(i))
+#define GET_INT32(pc)           ((jsint)((uint32_t((pc)[1]) << 24) |          \
+                                         (uint32_t((pc)[2]) << 16) |          \
+                                         (uint32_t((pc)[3]) << 8)  |          \
+                                         uint32_t((pc)[4])))
+#define SET_INT32(pc,i)         ((pc)[1] = (jsbytecode)(uint32_t(i) >> 24),   \
+                                 (pc)[2] = (jsbytecode)(uint32_t(i) >> 16),   \
+                                 (pc)[3] = (jsbytecode)(uint32_t(i) >> 8),    \
+                                 (pc)[4] = (jsbytecode)uint32_t(i))
 
 /* Index limit is determined by SN_3BYTE_OFFSET_FLAG, see frontend/BytecodeEmitter.h. */
 #define INDEX_LIMIT_LOG2        23
-#define INDEX_LIMIT             ((uint32)1 << INDEX_LIMIT_LOG2)
+#define INDEX_LIMIT             (uint32_t(1) << INDEX_LIMIT_LOG2)
 
 /* Actual argument count operand format helpers. */
 #define ARGC_HI(argc)           UINT16_HI(argc)
@@ -266,14 +267,14 @@ typedef enum JSOp {
 #define SLOTNO_LIMIT            UINT16_LIMIT
 
 struct JSCodeSpec {
-    int8                length;         /* length including opcode byte */
-    int8                nuses;          /* arity, -1 if variadic */
-    int8                ndefs;          /* number of stack results */
-    uint8               prec;           /* operator precedence */
-    uint32              format;         /* immediate operand format */
+    int8_t              length;         /* length including opcode byte */
+    int8_t              nuses;          /* arity, -1 if variadic */
+    int8_t              ndefs;          /* number of stack results */
+    uint8_t             prec;           /* operator precedence */
+    uint32_t            format;         /* immediate operand format */
 
 #ifdef __cplusplus
-    uint32 type() const { return JOF_TYPE(format); }
+    uint32_t type() const { return JOF_TYPE(format); }
 #endif
 };
 

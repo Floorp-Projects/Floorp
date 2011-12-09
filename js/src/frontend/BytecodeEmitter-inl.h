@@ -60,7 +60,7 @@ TreeContext::TreeContext(Parser *prs)
 /*
  * For functions the tree context is constructed and destructed a second
  * time during code generation. To avoid a redundant stats update in such
- * cases, we store uint16(-1) in maxScopeDepth.
+ * cases, we store UINT16_MAX in maxScopeDepth.
  */
 inline
 TreeContext::~TreeContext()

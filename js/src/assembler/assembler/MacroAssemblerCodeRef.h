@@ -164,8 +164,8 @@ public:
     ptrdiff_t operator -(const MacroAssemblerCodePtr &other) const
     {
         JS_ASSERT(m_value);
-        return reinterpret_cast<uint8 *>(m_value) -
-               reinterpret_cast<uint8 *>(other.m_value);
+        return reinterpret_cast<uint8_t *>(m_value) -
+               reinterpret_cast<uint8_t *>(other.m_value);
     }
 
 private:

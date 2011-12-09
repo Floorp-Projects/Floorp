@@ -248,9 +248,9 @@ public:
         union {
             struct {
 #if WTF_CPU_BIG_ENDIAN || WTF_CPU_MIDDLE_ENDIAN
-                uint32 msb, lsb;
+                uint32_t msb, lsb;
 #else
-                uint32 lsb, msb;
+                uint32_t lsb, msb;
 #endif
             } s;
             uint64_t u64;

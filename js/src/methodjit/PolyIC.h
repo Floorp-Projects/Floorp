@@ -57,8 +57,8 @@ namespace mjit {
 namespace ic {
 
 /* Maximum number of stubs for a given callsite. */
-static const uint32 MAX_PIC_STUBS = 16;
-static const uint32 MAX_GETELEM_IC_STUBS = 17;
+static const uint32_t MAX_PIC_STUBS = 16;
+static const uint32_t MAX_GETELEM_IC_STUBS = 17;
 
 enum LookupStatus {
     Lookup_Error = 0,
@@ -84,7 +84,7 @@ struct BaseIC : public MacroAssemblerTypedefs {
     // Offset from start of stub to jump target of second shape guard as Nitro
     // asm data location. This is 0 if there is only one shape guard in the
     // last stub.
-    int32 secondShapeGuard;
+    int32_t secondShapeGuard;
 
     // Whether or not the callsite has been hit at least once.
     bool hit : 1;
@@ -97,7 +97,7 @@ struct BaseIC : public MacroAssemblerTypedefs {
     bool forcedTypeBarrier : 1;
 
     // Number of stubs generated.
-    uint32 stubsGenerated : 5;
+    uint32_t stubsGenerated : 5;
 
     // Opcode this was compiled for.
     JSOp op : 9;
@@ -260,9 +260,9 @@ struct GetElementIC : public BasePolyIC {
     // These offsets are used for string-key dependent stubs, such as named
     // property accesses. They are separated from the int-key dependent stubs,
     // in order to guarantee that the id type needs only one guard per type.
-    int32 atomGuard : 8;          // optional, non-zero if present
-    int32 firstShapeGuard : 11;    // always set
-    int32 secondShapeGuard : 11;   // optional, non-zero if present
+    int32_t atomGuard : 8;          // optional, non-zero if present
+    int32_t firstShapeGuard : 11;    // always set
+    int32_t secondShapeGuard : 11;   // optional, non-zero if present
 
     bool hasLastStringStub : 1;
     JITCode lastStringStub;
@@ -321,7 +321,7 @@ struct SetElementIC : public BaseIC {
     RegisterID objReg    : 5;
 
     // Information on how to rematerialize |objReg|.
-    int32 objRemat       : MIN_STATE_REMAT_BITS;
+    int32_t objRemat       : MIN_STATE_REMAT_BITS;
 
     // Offset from the start of the fast path to the inline shape guard.
     unsigned inlineShapeGuard : 6;
@@ -340,14 +340,14 @@ struct SetElementIC : public BaseIC {
 
     // A bitmask of registers that are volatile and must be preserved across
     // stub calls inside the IC.
-    uint32 volatileMask;
+    uint32_t volatileMask;
 
     // If true, then keyValue contains a constant index value >= 0. Otherwise,
     // keyReg contains a dynamic integer index in any range.
     bool hasConstantKey : 1;
     union {
         RegisterID keyReg;
-        int32      keyValue;
+        int32_t    keyValue;
     };
 
     // Rematerialize information about the value being stored.
@@ -365,8 +365,8 @@ struct SetElementIC : public BaseIC {
         inlineHoleGuardPatched = false;
     }
     void purge(Repatcher &repatcher);
-    LookupStatus attachTypedArray(VMFrame &f, JSObject *obj, int32 key);
-    LookupStatus attachHoleStub(VMFrame &f, JSObject *obj, int32 key);
+    LookupStatus attachTypedArray(VMFrame &f, JSObject *obj, int32_t key);
+    LookupStatus attachHoleStub(VMFrame &f, JSObject *obj, int32_t key);
     LookupStatus update(VMFrame &f, const Value &objval, const Value &idval);
     LookupStatus disable(JSContext *cx, const char *reason);
     LookupStatus error(JSContext *cx);
@@ -398,7 +398,7 @@ struct PICInfo : public BasePolyIC {
             bool hasTypeCheck   : 1;  // type check and reg are present
 
             // Reverse offset from slowPathStart to the type check slow path.
-            int32 typeCheckOffset;
+            int32_t typeCheckOffset;
         } get;
         ValueRemat vr;
     } u;
@@ -457,7 +457,7 @@ struct PICInfo : public BasePolyIC {
     bool typeMonitored : 1;
 
     // Offset from start of fast path to initial shape guard.
-    uint32 shapeGuard;
+    uint32_t shapeGuard;
 
     // Possible types of the RHS, for monitored SETPROP PICs.
     types::TypeSet *rhsTypes;

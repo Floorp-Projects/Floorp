@@ -45,7 +45,7 @@
    one character of the resulting string, with the first
    argument specifying the first character, and so on,
    from left to right.  An argument is converted to a
-   character by applying the operation ToUint16 and
+   character by applying the operation ToUint16_t and
    regarding the resulting 16bit integeras the Unicode
    encoding of a character.  If no arguments are supplied,
    the result is the empty string.

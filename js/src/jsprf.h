@@ -66,9 +66,9 @@ JS_BEGIN_EXTERN_C
 /*
 ** sprintf into a fixed size buffer. Guarantees that a NUL is at the end
 ** of the buffer. Returns the length of the written output, NOT including
-** the NUL, or (JSUint32)-1 if an error occurs.
+** the NUL, or (uint32_t)-1 if an error occurs.
 */
-extern JS_PUBLIC_API(JSUint32) JS_snprintf(char *out, JSUint32 outlen, const char *fmt, ...);
+extern JS_PUBLIC_API(uint32_t) JS_snprintf(char *out, uint32_t outlen, const char *fmt, ...);
 
 /*
 ** sprintf into a malloc'd buffer. Return a pointer to the malloc'd
@@ -96,19 +96,19 @@ extern JS_PUBLIC_API(char*) JS_sprintf_append(char *last, const char *fmt, ...);
 ** place into the output. "arg" is an opaque pointer used by the stuff
 ** function to hold any state needed to do the storage of the output
 ** data. The return value is a count of the number of characters fed to
-** the stuff function, or (JSUint32)-1 if an error occurs.
+** the stuff function, or (uint32_t)-1 if an error occurs.
 */
-typedef JSIntn (*JSStuffFunc)(void *arg, const char *s, JSUint32 slen);
+typedef JSIntn (*JSStuffFunc)(void *arg, const char *s, uint32_t slen);
 
-extern JS_PUBLIC_API(JSUint32) JS_sxprintf(JSStuffFunc f, void *arg, const char *fmt, ...);
+extern JS_PUBLIC_API(uint32_t) JS_sxprintf(JSStuffFunc f, void *arg, const char *fmt, ...);
 
 /*
 ** va_list forms of the above.
 */
-extern JS_PUBLIC_API(JSUint32) JS_vsnprintf(char *out, JSUint32 outlen, const char *fmt, va_list ap);
+extern JS_PUBLIC_API(uint32_t) JS_vsnprintf(char *out, uint32_t outlen, const char *fmt, va_list ap);
 extern JS_PUBLIC_API(char*) JS_vsmprintf(const char *fmt, va_list ap);
 extern JS_PUBLIC_API(char*) JS_vsprintf_append(char *last, const char *fmt, va_list ap);
-extern JS_PUBLIC_API(JSUint32) JS_vsxprintf(JSStuffFunc f, void *arg, const char *fmt, va_list ap);
+extern JS_PUBLIC_API(uint32_t) JS_vsxprintf(JSStuffFunc f, void *arg, const char *fmt, va_list ap);
 
 JS_END_EXTERN_C
 
