@@ -81,12 +81,11 @@ static id <mozAccessible, mozView> getNativeViewFromRootAccessible (nsAccessible
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
   
-  if ([attribute isEqualToString:NSAccessibilityMainAttribute]) {
+  if ([attribute isEqualToString:NSAccessibilityMainAttribute])
     return [NSNumber numberWithBool:[[self window] isMainWindow]];
-  }
-  if ([attribute isEqualToString:NSAccessibilityMinimizedAttribute]) {
+  if ([attribute isEqualToString:NSAccessibilityMinimizedAttribute])
     return [NSNumber numberWithBool:[[self window] isMiniaturized]];
-  }
+
   return [super accessibilityAttributeValue:attribute];
   
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
