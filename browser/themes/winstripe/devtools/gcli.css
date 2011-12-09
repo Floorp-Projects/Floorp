@@ -46,7 +46,6 @@
   height: 100%;
   vertical-align: middle;
   background-color: transparent;
-  font: 12px Consolas, "Lucida Console", monospace;
 }
 
 .gcliterm-input-node {
@@ -62,24 +61,6 @@
   padding-bottom: 2px;
   -moz-padding-start: 21px;
   -moz-padding-end: 4px;
-}
-
-.gcli-in-valid {
-  border-bottom: none;
-}
-
-.gcli-in-incomplete {
-  color: #DDD;
-  border-bottom: 1px dotted #999;
-}
-
-.gcli-in-error {
-  color: #DDD;
-  border-bottom: 1px dotted #F00;
-}
-
-.gcli-in-ontab {
-  color: #999;
 }
 
 .gcliterm-stack-node {
@@ -109,17 +90,45 @@
   border-bottom: 1px solid threedshadow;
 }
 
-.gcli-help-right {
-  text-align: right;
-}
-
 .gcliterm-menu {
   display: -moz-box;
   -moz-box-flex: 1;
+  border-bottom-color: white;
+}
+
+.gcliterm-hint-scroll {
+  overflow-y: scroll;
+  border-bottom-color: threedshadow;
 }
 
 .gcliterm-hint-nospace {
   display: none;
+}
+
+.gcliterm-msg-body {
+  margin-top: 0;
+  margin-bottom: 3px;
+  -moz-margin-start: 3px;
+  -moz-margin-end: 6px;
+}
+
+/* Extract from display.css, we only want these 2 rules */
+
+.gcli-out-shortcut {
+  border: 1px solid #999;
+  border-radius: 3px;
+  padding: 0 4px;
+  margin: 0 4px;
+  font-size: 70%;
+  color: #666;
+  cursor: pointer;
+  vertical-align: bottom;
+}
+
+.gcli-out-shortcut:before {
+  color: #66F;
+  content: '\bb';
+  padding: 0 2px;
 }
 
 /*
@@ -151,6 +160,15 @@
 
 /* From: $GCLI/mozilla/gcli/ui/gcliterm-winstripe.css */
 
+.gcliterm-input-node,
+.gcliterm-complete-node {
+  font: 12px Consolas, "Lucida Console", monospace;
+}
+
+.gcli-out-shortcut {
+  font-family: Consolas, Inconsolata, "Courier New", monospace;
+}
+
 /* From: $GCLI/lib/gcli/ui/arg_fetch.css */
 
 .gcli-argfetch {
@@ -181,7 +199,7 @@
 .gcli-af-required {
   font-size: 90%;
   color: #f66;
-  padding-left: 5px;
+  -moz-padding-start: 5px;
 }
 
 .gcli-af-error {
@@ -195,6 +213,10 @@
 
 .gcli-field {
   width: 100%;
+}
+
+.gcli-field-javascript {
+  margin-bottom: 0;
 }
 
 /* From: $GCLI/lib/gcli/ui/menu.css */
@@ -283,4 +305,46 @@
 .gcli-prompt {
   color: #66F;
   font-weight: bold;
+}
+
+/* From: $GCLI/lib/gcli/commands/help.css */
+
+.gcli-help-name {
+  text-align: end;
+}
+
+.gcli-help-arrow {
+  font-size: 70%;
+  color: #AAA;
+}
+
+.gcli-help-synopsis {
+  font-family: monospace;
+  font-weight: normal;
+  padding: 0 3px;
+  margin: 0 10px;
+  border: 1px solid #999;
+  border-radius: 3px;
+  color: #666;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.gcli-help-synopsis:before {
+  color: #66F;
+  content: '\bb';
+}
+
+.gcli-help-description {
+  margin: 0 20px;
+  padding: 0;
+}
+
+.gcli-help-parameter {
+  margin: 0 30px;
+  padding: 0;
+}
+
+.gcli-help-header {
+  margin: 10px 0 6px;
 }
