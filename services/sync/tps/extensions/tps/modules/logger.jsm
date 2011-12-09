@@ -128,14 +128,23 @@ var Logger =
       this.write(msg + "\n");
     }
     else {
-      var now = new Date()
-      this.write(now.getFullYear() + "-" + (now.getMonth() < 9 ? '0' : '') +
-          (now.getMonth() + 1) + "-" +
-          (now.getDate() < 10 ? '0' : '') + (now.getDate()) + " " +
-          (now.getHours() < 10 ? '0' : '') + now.getHours() + ":" +
-          (now.getMinutes() < 10 ? '0' : '') + now.getMinutes() + ":" +
-          (now.getSeconds() < 10 ? '0' : '') + now.getSeconds() + " " +
-          msg + "\n");
+      function pad(n, len) {
+        let s = "0000" + n;
+        return s.slice(-len);
+      }
+
+      let now = new Date();
+      let year    = pad(now.getFullYear(),     4);
+      let month   = pad(now.getMonth() + 1,    2);
+      let day     = pad(now.getDate(),         2);
+      let hour    = pad(now.getHours(),        2);
+      let minutes = pad(now.getMinutes(),      2);
+      let seconds = pad(now.getSeconds(),      2);
+      let ms      = pad(now.getMilliseconds(), 3);
+
+      this.write(year + "-" + month + "-" + day + " " +
+                 hour + ":" + minutes + ":" + seconds + "." + ms + " " +
+                 msg + "\n");
     }
   },
 
