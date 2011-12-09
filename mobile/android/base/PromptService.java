@@ -76,6 +76,11 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
 
     private PromptInput[] mInputs;
     private AlertDialog mDialog = null;
+    private static LayoutInflater mInflater;
+
+    PromptService() {
+        mInflater = LayoutInflater.from(GeckoApp.mAppContext);
+    }
 
     private class PromptButton {
         public String label = "";
@@ -189,8 +194,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             PromptListAdapter adapter = new PromptListAdapter(GeckoApp.mAppContext, resourceId, aMenuList);
             if (mSelected != null && mSelected.length > 0) {
                 if (aMultipleSelection) {
-                    LayoutInflater inflater = GeckoApp.mAppContext.getLayoutInflater();
-                    adapter.listView = (ListView) inflater.inflate(R.layout.select_dialog_list, null);
+                    adapter.listView = (ListView) mInflater.inflate(R.layout.select_dialog_list, null);
                     adapter.listView.setOnItemClickListener(this);
                     builder.setInverseBackgroundForced(true);
                     adapter.listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
@@ -432,8 +436,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
             if (item.isGroup) {
                 resourceId = R.layout.list_item_header;
             }
-            LayoutInflater inflater = GeckoApp.mAppContext.getLayoutInflater();
-            View row = inflater.inflate(resourceId, null);
+            View row = mInflater.inflate(resourceId, null);
             if (!item.isGroup){
                 try {
                     CheckedTextView ct = (CheckedTextView)row.findViewById(android.R.id.text1);

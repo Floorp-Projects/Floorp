@@ -75,16 +75,6 @@ struct PreserveRegsGuard
 static inline GlobalObject *
 GetGlobalForScopeChain(JSContext *cx)
 {
-    /*
-     * This is essentially GetScopeChain(cx)->getGlobal(), but without
-     * falling off trace.
-     *
-     * This use of cx->fp, possibly on trace, is deliberate:
-     * cx->fp->scopeChain->getGlobal() returns the same object whether we're on
-     * trace or not, since we do not trace calls across global objects.
-     */
-    VOUCH_DOES_NOT_REQUIRE_STACK();
-
     if (cx->hasfp())
         return cx->fp()->scopeChain().getGlobal();
 
@@ -152,7 +142,6 @@ class CompartmentChecker
   public:
     explicit CompartmentChecker(JSContext *cx) : context(cx), compartment(cx->compartment) {
         check(cx->hasfp() ? JS_GetGlobalForScopeChain(cx) : cx->globalObject);
-        VOUCH_DOES_NOT_REQUIRE_STACK();
     }
 
     /*
@@ -238,7 +227,8 @@ class CompartmentChecker
     }
 
     void check(StackFrame *fp) {
-        check(&fp->scopeChain());
+        if (fp)
+            check(&fp->scopeChain());
     }
 };
 

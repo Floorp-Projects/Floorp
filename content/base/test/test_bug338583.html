@@ -424,51 +424,55 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
     var xhr = SpecialPowers.createSystemXHR();
     xhr.withCredentials = true;
     // also, test mixed mode UI
-    xhr.open("GET", "https://example.com/tests/content/base/test/file_restrictedEventSource.sjs?test=user1_xhr", false, "user 1", "password 1");
+    xhr.open("GET", "https://example.com/tests/content/base/test/file_restrictedEventSource.sjs?test=user1_xhr", true, "user 1", "password 1");
     xhr.send();
-    ok(xhr.status == 200, "Failed to set credentials in test 5.c");
+    xhr.onloadend = function() {
+      ok(xhr.status == 200, "Failed to set credentials in test 5.c");
 
-    gEventSourceObj5_c = new EventSource("https://example.com/tests/content/base/test/file_restrictedEventSource.sjs?test=user1_evtsrc",
-                                         { withCredentials: true } );
-    ok(gEventSourceObj5_c.withCredentials, "Wrong withCredentials in test 5.c");
+      gEventSourceObj5_c = new EventSource("https://example.com/tests/content/base/test/file_restrictedEventSource.sjs?test=user1_evtsrc",
+                                           { withCredentials: true } );
+      ok(gEventSourceObj5_c.withCredentials, "Wrong withCredentials in test 5.c");
 
-    gEventSourceObj5_c.onmessage = function(e) {
-      ok(e.origin == "https://example.com", "Wrong Origin in test 5.c");
-      fn_onmessage(e);
+      gEventSourceObj5_c.onmessage = function(e) {
+        ok(e.origin == "https://example.com", "Wrong Origin in test 5.c");
+        fn_onmessage(e);
+      };
+      gEventSourceObj5_c.hits = [];
+      gEventSourceObj5_c.hits['fn_onmessage'] = 0;
+
+      setTimeout(function() {
+        ok(gEventSourceObj5_c.hits['fn_onmessage'] > 0, "Test 5.c failed");
+        gEventSourceObj5_c.close();
+        doTest5_d(test_id);
+      }, parseInt(3000*stress_factor));
     };
-    gEventSourceObj5_c.hits = [];
-    gEventSourceObj5_c.hits['fn_onmessage'] = 0;
-
-    setTimeout(function() {
-      ok(gEventSourceObj5_c.hits['fn_onmessage'] > 0, "Test 5.c failed");
-      gEventSourceObj5_c.close();
-      doTest5_d(test_id);
-    }, parseInt(3000*stress_factor));
   }
 
   function doTest5_d(test_id)
   {
     var xhr = SpecialPowers.createSystemXHR();
     xhr.withCredentials = true;
-    xhr.open("GET", "https://example.com/tests/content/base/test/file_restrictedEventSource.sjs?test=user2_xhr", false, "user 2", "password 2");
+    xhr.open("GET", "https://example.com/tests/content/base/test/file_restrictedEventSource.sjs?test=user2_xhr", true, "user 2", "password 2");
     xhr.send();
-    ok(xhr.status == 200, "Failed to set credentials in test 5.d");
-
-    gEventSourceObj5_d = new EventSource("https://example.com/tests/content/base/test/file_restrictedEventSource.sjs?test=user2_evtsrc");
-    ok(!gEventSourceObj5_d.withCredentials, "Wrong withCredentials in test 5.d");
-
-    gEventSourceObj5_d.onmessage = function(e) {
-      ok(e.origin == "https://example.com", "Wrong Origin in test 5.d");
-      fn_onmessage(e);
+    xhr.onloadend = function() {
+      ok(xhr.status == 200, "Failed to set credentials in test 5.d");
+  
+      gEventSourceObj5_d = new EventSource("https://example.com/tests/content/base/test/file_restrictedEventSource.sjs?test=user2_evtsrc");
+      ok(!gEventSourceObj5_d.withCredentials, "Wrong withCredentials in test 5.d");
+  
+      gEventSourceObj5_d.onmessage = function(e) {
+        ok(e.origin == "https://example.com", "Wrong Origin in test 5.d");
+        fn_onmessage(e);
+      };
+      gEventSourceObj5_d.hits = [];
+      gEventSourceObj5_d.hits['fn_onmessage'] = 0;
+  
+      setTimeout(function() {
+        ok(gEventSourceObj5_d.hits['fn_onmessage'] == 0, "Test 5.d failed");
+        gEventSourceObj5_d.close();
+        setTestHasFinished(test_id);
+      }, parseInt(3000*stress_factor));
     };
-    gEventSourceObj5_d.hits = [];
-    gEventSourceObj5_d.hits['fn_onmessage'] = 0;
-
-    setTimeout(function() {
-      ok(gEventSourceObj5_d.hits['fn_onmessage'] == 0, "Test 5.d failed");
-      gEventSourceObj5_d.close();
-      setTestHasFinished(test_id);
-    }, parseInt(3000*stress_factor));
   }
 
   function doTest5_e(test_id)
@@ -476,52 +480,56 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
     // credentials using the auth cache and cookies
     var xhr = SpecialPowers.createSystemXHR();
     xhr.withCredentials = true;
-    xhr.open("GET", "http://example.org/tests/content/base/test/file_restrictedEventSource.sjs?test=user1_xhr", false, "user 1", "password 1");
+    xhr.open("GET", "http://example.org/tests/content/base/test/file_restrictedEventSource.sjs?test=user1_xhr", true, "user 1", "password 1");
     xhr.send();
-    ok(xhr.status == 200, "Failed to set credentials in test 5.e");
+    xhr.onloadend = function() {
+      ok(xhr.status == 200, "Failed to set credentials in test 5.e");
 
-    gEventSourceObj5_e = new EventSource("http://example.org/tests/content/base/test/file_restrictedEventSource.sjs?test=user1_evtsrc",
-                                         { get withCredentials() { return true; } } );
-    ok(gEventSourceObj5_e.withCredentials, "Wrong withCredentials in test 5.e");
+      gEventSourceObj5_e = new EventSource("http://example.org/tests/content/base/test/file_restrictedEventSource.sjs?test=user1_evtsrc",
+                                           { get withCredentials() { return true; } } );
+      ok(gEventSourceObj5_e.withCredentials, "Wrong withCredentials in test 5.e");
 
-    gEventSourceObj5_e.onmessage = function(e) {
-      ok(e.origin == "http://example.org", "Wrong Origin in test 5.e");
-      fn_onmessage(e);
+      gEventSourceObj5_e.onmessage = function(e) {
+        ok(e.origin == "http://example.org", "Wrong Origin in test 5.e");
+        fn_onmessage(e);
+      };
+      gEventSourceObj5_e.hits = [];
+      gEventSourceObj5_e.hits['fn_onmessage'] = 0;
+
+      setTimeout(function() {
+        ok(gEventSourceObj5_e.hits['fn_onmessage'] > 0, "Test 5.e failed");
+        gEventSourceObj5_e.close();
+        doTest5_f(test_id);
+      }, parseInt(5000*stress_factor));
     };
-    gEventSourceObj5_e.hits = [];
-    gEventSourceObj5_e.hits['fn_onmessage'] = 0;
-
-    setTimeout(function() {
-      ok(gEventSourceObj5_e.hits['fn_onmessage'] > 0, "Test 5.e failed");
-      gEventSourceObj5_e.close();
-      doTest5_f(test_id);
-    }, parseInt(5000*stress_factor));
   }
 
   function doTest5_f(test_id)
   {
     var xhr = SpecialPowers.createSystemXHR();
     xhr.withCredentials = true;
-    xhr.open("GET", "http://example.org/tests/content/base/test/file_restrictedEventSource.sjs?test=user2_xhr", false, "user 2", "password 2");
+    xhr.open("GET", "http://example.org/tests/content/base/test/file_restrictedEventSource.sjs?test=user2_xhr", true, "user 2", "password 2");
     xhr.send();
-    ok(xhr.status == 200, "Failed to set credentials in test 5.f");
+    xhr.onloadend = function() {
+      ok(xhr.status == 200, "Failed to set credentials in test 5.f");
 
-    gEventSourceObj5_f = new EventSource("http://example.org/tests/content/base/test/file_restrictedEventSource.sjs?test=user2_evtsrc",
-                                         { });
-    ok(!gEventSourceObj5_f.withCredentials, "Wrong withCredentials in test 5.f");
+      gEventSourceObj5_f = new EventSource("http://example.org/tests/content/base/test/file_restrictedEventSource.sjs?test=user2_evtsrc",
+                                           { });
+      ok(!gEventSourceObj5_f.withCredentials, "Wrong withCredentials in test 5.f");
 
-    gEventSourceObj5_f.onmessage = function(e) {
-      ok(e.origin == "http://example.org", "Wrong Origin in test 5.f");
-      fn_onmessage(e);
+      gEventSourceObj5_f.onmessage = function(e) {
+        ok(e.origin == "http://example.org", "Wrong Origin in test 5.f");
+        fn_onmessage(e);
+      };
+      gEventSourceObj5_f.hits = [];
+      gEventSourceObj5_f.hits['fn_onmessage'] = 0;
+
+      setTimeout(function() {
+        ok(gEventSourceObj5_f.hits['fn_onmessage'] == 0, "Test 5.f failed");
+        gEventSourceObj5_f.close();
+        setTestHasFinished(test_id);
+      }, parseInt(3000*stress_factor));
     };
-    gEventSourceObj5_f.hits = [];
-    gEventSourceObj5_f.hits['fn_onmessage'] = 0;
-
-    setTimeout(function() {
-      ok(gEventSourceObj5_f.hits['fn_onmessage'] == 0, "Test 5.f failed");
-      gEventSourceObj5_f.close();
-      setTestHasFinished(test_id);
-    }, parseInt(3000*stress_factor));
   }
 
   function doTest6(test_id)

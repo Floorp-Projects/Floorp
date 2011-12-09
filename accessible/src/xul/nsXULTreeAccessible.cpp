@@ -279,6 +279,12 @@ nsXULTreeAccessible::CurrentItem()
   return nsnull;
 }
 
+void
+nsXULTreeAccessible::SetCurrentItem(nsAccessible* aItem)
+{
+  NS_ERROR("nsXULTreeAccessible::SetCurrentItem not implemented");
+}
+
 already_AddRefed<nsIArray>
 nsXULTreeAccessible::SelectedItems()
 {
