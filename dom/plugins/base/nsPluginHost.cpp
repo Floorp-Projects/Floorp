@@ -1330,11 +1330,11 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
 }
 
 nsresult
-nsPluginHost::IsPluginEnabledForType(const char* aMimeType)
+nsPluginHost::IsPluginEnabledForType(const char* aMimeType, bool aHasBeenClickedToPlay)
 {
   nsPluginTag *plugin = FindPluginForType(aMimeType, true);
   if (plugin)
-    return NS_OK;
+    return aHasBeenClickedToPlay ? NS_OK : NS_ERROR_PLUGIN_CLICKTOPLAY;
 
   // Pass false as the second arg so we can return NS_ERROR_PLUGIN_DISABLED
   // for disabled plug-ins.
@@ -1349,7 +1349,7 @@ nsPluginHost::IsPluginEnabledForType(const char* aMimeType)
       return NS_ERROR_PLUGIN_DISABLED;
   }
 
-  return NS_OK;
+  return aHasBeenClickedToPlay ? NS_OK : NS_ERROR_PLUGIN_CLICKTOPLAY;
 }
 
 // check comma delimitered extensions
@@ -1379,10 +1379,14 @@ static int CompareExtensions(const char *aExtensionList, const char *aExtension)
 
 nsresult
 nsPluginHost::IsPluginEnabledForExtension(const char* aExtension,
-                                          const char* &aMimeType)
+                                          const char* &aMimeType,
+                                          bool aHasBeenClickedToPlay)
 {
   nsPluginTag *plugin = FindPluginEnabledForExtension(aExtension, aMimeType);
-  return plugin ? NS_OK : NS_ERROR_FAILURE;
+  if (plugin)
+    return aHasBeenClickedToPlay ? NS_OK : NS_ERROR_PLUGIN_CLICKTOPLAY;
+
+  return NS_ERROR_FAILURE;
 }
 
 class DOMMimeTypeImpl : public nsIDOMMimeType {
@@ -2254,11 +2258,6 @@ nsresult nsPluginHost::ScanPluginsDirectoryList(nsISimpleEnumerator *dirEnum,
 
 nsresult nsPluginHost::LoadPlugins()
 {
-#ifdef ANDROID
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    return NS_OK;
-  }
-#endif
   // do not do anything if it is already done
   // use ReloadPlugins() to enforce loading
   if (mPluginsLoaded)
