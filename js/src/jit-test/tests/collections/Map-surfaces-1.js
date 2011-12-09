@@ -18,7 +18,7 @@ assertEq(Object.keys(Map.prototype).join(), "");
 assertEq(Map.prototype.constructor, Map);
 
 function checkMethod(name, arity) { 
-    var desc = Object.getOwnPropertyDescriptor(Map.prototype, "get");
+    var desc = Object.getOwnPropertyDescriptor(Map.prototype, name);
     assertEq(desc.enumerable, false);
     assertEq(desc.configurable, true);
     assertEq(desc.writable, true);
