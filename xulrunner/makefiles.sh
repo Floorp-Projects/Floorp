@@ -68,4 +68,9 @@ if [ "$OS_ARCH" = "WINNT" ]; then
   add_makefiles "
     xulrunner/tools/redit/Makefile
   "
+  if [ "$MOZILLA_OFFICIAL" -o "$ENABLE_TESTS" ]; then
+    add_makefiles "
+      embedding/tests/winEmbed/Makefile
+    "
+  fi
 fi

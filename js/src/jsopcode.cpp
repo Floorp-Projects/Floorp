@@ -580,8 +580,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
             if (op == JSOP_DOUBLE) {
                 v = script->getConst(index);
             } else {
-                JSAtom *atom;
-                JS_GET_SCRIPT_ATOM(script, pc, index, atom);
+                JSAtom *atom = script->getAtom(index);
                 v = STRING_TO_JSVAL(atom);
             }
         } else {
@@ -674,8 +673,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         uintN index = js_GetIndexFromBytecode(cx, script, pc, SLOTNO_LEN);
         jsval v;
         if (type == JOF_SLOTATOM) {
-            JSAtom *atom;
-            JS_GET_SCRIPT_ATOM(script, pc, index, atom);
+            JSAtom *atom = script->getAtom(index);
             v = STRING_TO_JSVAL(atom);
         } else {
             v = OBJECT_TO_JSVAL(script->getObject(index));
@@ -4351,7 +4349,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     tmp = (TableEntry *)
                           cx->malloc_((size_t)j * sizeof *table);
                     if (tmp) {
-                        VOUCH_DOES_NOT_REQUIRE_STACK();
                         MergeSort(table, size_t(j), tmp, CompareTableEntries);
                         Foreground::free_(tmp);
                         ok = true;

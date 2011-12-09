@@ -1,21 +1,14 @@
 # AboutRedirector.js
-component {433d2d75-5923-49b0-854d-f37267b03dc7} AboutRedirector.js
-contract @mozilla.org/network/protocol/about;1?what=empty {433d2d75-5923-49b0-854d-f37267b03dc7}
-component {842a6d11-b369-4610-ba66-c3b5217e82be} AboutRedirector.js
-contract @mozilla.org/network/protocol/about;1?what=fennec {842a6d11-b369-4610-ba66-c3b5217e82be}
-component {dd40c467-d206-4f22-9215-8fcc74c74e38} AboutRedirector.js
-contract @mozilla.org/network/protocol/about;1?what=firefox {dd40c467-d206-4f22-9215-8fcc74c74e38}
-component {3b988fbf-ec97-4e1c-a5e4-573d999edc9c} AboutRedirector.js
-contract @mozilla.org/network/protocol/about;1?what=rights {3b988fbf-ec97-4e1c-a5e4-573d999edc9c}
-component {972efe64-8ac0-4e91-bdb0-22835d987815} AboutRedirector.js
-contract @mozilla.org/network/protocol/about;1?what=certerror {972efe64-8ac0-4e91-bdb0-22835d987815}
-component {b071364f-ab68-4669-a9db-33fca168271a} AboutRedirector.js
-contract @mozilla.org/network/protocol/about;1?what=home {b071364f-ab68-4669-a9db-33fca168271a}
-component {7490b75b-0ed4-4b2f-b80c-75e7f9c75682} AboutRedirector.js
-contract @mozilla.org/network/protocol/about;1?what=dougt {7490b75b-0ed4-4b2f-b80c-75e7f9c75682}
+component {322ba47e-7047-4f71-aebf-cb7d69325cd9} AboutRedirector.js
+contract @mozilla.org/network/protocol/about;1?what= {322ba47e-7047-4f71-aebf-cb7d69325cd9}
+contract @mozilla.org/network/protocol/about;1?what=fennec {322ba47e-7047-4f71-aebf-cb7d69325cd9}
+contract @mozilla.org/network/protocol/about;1?what=firefox {322ba47e-7047-4f71-aebf-cb7d69325cd9}
+contract @mozilla.org/network/protocol/about;1?what=empty {322ba47e-7047-4f71-aebf-cb7d69325cd9}
+contract @mozilla.org/network/protocol/about;1?what=rights {322ba47e-7047-4f71-aebf-cb7d69325cd9}
+contract @mozilla.org/network/protocol/about;1?what=certerror {322ba47e-7047-4f71-aebf-cb7d69325cd9}
+contract @mozilla.org/network/protocol/about;1?what=home {322ba47e-7047-4f71-aebf-cb7d69325cd9}
 #ifdef MOZ_SAFE_BROWSING
-component {88fd40b6-c5c2-4120-9238-f2cb9ff98928} AboutRedirector.js
-contract @mozilla.org/network/protocol/about;1?what=blocked {88fd40b6-c5c2-4120-9238-f2cb9ff98928}
+contract @mozilla.org/network/protocol/about;1?what=blocked {322ba47e-7047-4f71-aebf-cb7d69325cd9}
 #endif
 
 # DirectoryProvider.js

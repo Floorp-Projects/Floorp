@@ -186,16 +186,6 @@ MarkObjectUnbarriered(JSTracer *trc, JSObject *obj, const char *name)
 }
 
 void
-MarkObjectWithPrinterUnbarriered(JSTracer *trc, JSObject *obj, JSTraceNamePrinter printer,
-                                 const void *arg, size_t index)
-{
-    JS_ASSERT(trc);
-    JS_ASSERT(obj);
-    JS_SET_TRACING_DETAILS(trc, printer, arg, index);
-    Mark(trc, obj);
-}
-
-void
 MarkObject(JSTracer *trc, const MarkablePtr<JSObject> &obj, const char *name)
 {
     MarkObjectUnbarriered(trc, obj.value, name);
@@ -719,30 +709,6 @@ MarkRootRange(JSTracer *trc, size_t len, jsid *vec, const char *name)
     MarkIdRangeUnbarriered(trc, len, vec, name);
 }
 
-static void
-PrintPropertyId(char *buf, size_t bufsize, jsid propid, const char *label)
-{
-    JS_ASSERT(!JSID_IS_VOID(propid));
-    if (JSID_IS_ATOM(propid)) {
-        size_t n = PutEscapedString(buf, bufsize, JSID_TO_ATOM(propid), 0);
-        if (n < bufsize)
-            JS_snprintf(buf + n, bufsize - n, " %s", label);
-    } else if (JSID_IS_INT(propid)) {
-        JS_snprintf(buf, bufsize, "%d %s", JSID_TO_INT(propid), label);
-    } else {
-        JS_snprintf(buf, bufsize, "<object> %s", label);
-    }
-}
-
-static void
-PrintPropertyGetterOrSetter(JSTracer *trc, char *buf, size_t bufsize)
-{
-    JS_ASSERT(trc->debugPrinter == PrintPropertyGetterOrSetter);
-    Shape *shape = (Shape *)trc->debugPrintArg;
-    PrintPropertyId(buf, bufsize, shape->propid(),
-                    trc->debugPrintIndex ? js_setter_str : js_getter_str); 
-}
-
 static inline void
 ScanValue(GCMarker *gcmarker, const Value &v)
 {
@@ -1047,15 +1013,10 @@ MarkChildren(JSTracer *trc, const Shape *shape)
 void
 MarkChildren(JSTracer *trc, BaseShape *base)
 {
-    if (base->hasGetterObject()) {
-        MarkObjectWithPrinterUnbarriered(trc, base->getterObject(),
-                                         PrintPropertyGetterOrSetter, base, 0);
-    }
-
-    if (base->hasSetterObject()) {
-        MarkObjectWithPrinterUnbarriered(trc, base->setterObject(),
-                                         PrintPropertyGetterOrSetter, base, 0);
-    }
+    if (base->hasGetterObject())
+        MarkObjectUnbarriered(trc, base->getterObject(), "getter");
+    if (base->hasSetterObject())
+        MarkObjectUnbarriered(trc, base->setterObject(), "setter");
 
     if (base->isOwned())
         MarkBaseShapeUnbarriered(trc, base->baseUnowned(), "base");

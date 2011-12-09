@@ -336,6 +336,12 @@ nsHttpTransaction::RequestHead()
     return mRequestHead;
 }
 
+PRUint32
+nsHttpTransaction::Http1xTransactionCount()
+{
+  return 1;
+}
+
 //----------------------------------------------------------------------------
 // nsHttpTransaction::nsAHttpTransaction
 //----------------------------------------------------------------------------

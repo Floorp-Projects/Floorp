@@ -1,4 +1,4 @@
-// |jit-test| mjitalways
+// |jit-test| slow; mjitalways
 
 var nlocals = 50;
 var localstr = "";
