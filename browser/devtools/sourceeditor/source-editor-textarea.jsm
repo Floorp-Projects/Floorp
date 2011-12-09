@@ -595,6 +595,41 @@ SourceEditor.prototype = {
   },
 
   /**
+   * Set the caret position: line and column.
+   *
+   * @param number aLine
+   *        The new caret line location. Line numbers start from 0.
+   * @param number [aColumn=0]
+   *        Optional. The new caret column location. Columns start from 0.
+   */
+  setCaretPosition: function SE_setCaretPosition(aLine, aColumn)
+  {
+    aColumn = aColumn || 0;
+
+    let text = this._textbox.value;
+    let i = 0, n = text.length, c0, c1;
+    let line = 0, col = 0;
+    while (i < n) {
+      c1 = text.charAt(i++);
+      if (line < aLine && (c1 == "\r" || (c0 != "\r" && c1 == "\n"))) {
+        // Count lines and reset the column only until we reach the desired line
+        // such that if the desired column is out of boundaries we will stop
+        // after the given number of characters from the line start.
+        line++;
+        col = 0;
+      } else {
+        col++;
+      }
+
+      if (line == aLine && col == aColumn) {
+        this.setCaretOffset(i);
+        return;
+      }
+      c0 = c1;
+    }
+  },
+
+  /**
    * Get the line delimiter used in the document being edited.
    *
    * @return string
