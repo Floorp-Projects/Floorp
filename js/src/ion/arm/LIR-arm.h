@@ -101,6 +101,9 @@ class LUnboxDouble : public LInstructionHelper<1, 2, 0>
     const LDefinition *output() {
         return getDef(0);
     }
+    MUnbox *mir() const {
+        return mir_->toUnbox();
+    }
 };
 
 // Constant double.

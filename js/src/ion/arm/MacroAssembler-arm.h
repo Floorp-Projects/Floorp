@@ -99,6 +99,9 @@ class MacroAssemblerARM : public Assembler
     uint32 framePushed() const {
         return framePushed_;
     }
+    void setFramePushed(uint32 framePushed) {
+        framePushed_ = framePushed;
+    }
 
     // somewhat direct wrappers for the low-level assembler funcitons
     // bitops

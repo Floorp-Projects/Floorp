@@ -45,6 +45,7 @@
 #define LIR_CPU_OPCODE_LIST(_)      \
     _(Box)                          \
     _(Unbox)                        \
+    _(UnboxDouble)                  \
     _(DivI)
 
 #endif // jsion_lir_opcodes_x64_h__

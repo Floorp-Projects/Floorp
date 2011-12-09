@@ -746,6 +746,9 @@ class AssemblerX86Shared
           case Operand::REG_DISP:
             masm.cvtsi2sd_mr(src.disp(), src.base(), dest.code());
             break;
+          case Operand::SCALE:
+            masm.cvtsi2sd_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            break;
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }
