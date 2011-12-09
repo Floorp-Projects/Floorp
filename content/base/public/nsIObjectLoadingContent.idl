@@ -51,7 +51,7 @@ interface nsIDOMClientRect;
 /**
  * This interface represents a content node that loads objects.
  */
-[scriptable, uuid(107e8048-d00f-4711-bd21-97184ccae0b1)]
+[scriptable, uuid(e5330f90-91a3-41d7-b29e-af38a23a6602)]
 interface nsIObjectLoadingContent : nsISupports
 {
   const unsigned long TYPE_LOADING  = 0;
@@ -125,4 +125,10 @@ interface nsIObjectLoadingContent : nsISupports
                                 in AString pluginDumpID,
                                 in AString browserDumpID,
                                 in boolean submittedCrashReport);
+
+  /**
+   * This method will play a plugin that has been stopped by the
+   * click-to-play plugins feature.
+   */
+  void playPlugin();
 };
