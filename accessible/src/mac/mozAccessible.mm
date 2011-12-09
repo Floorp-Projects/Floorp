@@ -354,9 +354,8 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   nsCOMPtr<nsIAccessible> accessibleParent(mGeckoAccessible->GetUnignoredParent());
   if (accessibleParent) {
     id nativeParent = GetNativeFromGeckoAccessible(accessibleParent);
-    if (nativeParent) {
+    if (nativeParent)
       return mParent = GetClosestInterestingAccessible(nativeParent);
-    }
   }
   
   // GetUnignoredParent() returns null when there is no unignored accessible all the way up to
@@ -368,8 +367,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   id nativeParent = GetNativeFromGeckoAccessible(static_cast<nsIAccessible*>(root));
   NSAssert1 (nativeParent, @"!!! we can't find a parent for %@", self);
   
-  mParent = GetClosestInterestingAccessible(nativeParent);
-  return mParent;
+  return mParent = GetClosestInterestingAccessible(nativeParent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
