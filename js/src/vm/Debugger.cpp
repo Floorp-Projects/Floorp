@@ -999,7 +999,7 @@ Debugger::onSingleStep(JSContext *cx, Value *vp)
      * be done with unit tests.
      */
     {
-        uint32 stepperCount = 0;
+        uint32_t stepperCount = 0;
         JSScript *trappingScript = fp->script();
         if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
             for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
@@ -1978,7 +1978,7 @@ DebuggerScript_getChildScripts(JSContext *cx, uintN argc, Value *vp)
          * It is not really a child script of this script, so skip it.
          */
         JSObjectArray *objects = script->objects();
-        for (uint32 i = script->savedCallerFun ? 1 : 0; i < objects->length; i++) {
+        for (uint32_t i = script->savedCallerFun ? 1 : 0; i < objects->length; i++) {
             JSObject *obj = objects->vector[i];
             if (obj->isFunction()) {
                 JSFunction *fun = static_cast<JSFunction *>(obj);
@@ -2584,7 +2584,7 @@ static JSBool
 DebuggerArguments_getArg(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    int32 i = (int32) args.callee().toFunction()->getExtendedSlot(0).toInt32();
+    int32_t i = args.callee().toFunction()->getExtendedSlot(0).toInt32();
 
     /* Check that the this value is an Arguments object. */
     if (!args.thisv().isObject()) {
@@ -2648,7 +2648,7 @@ DebuggerFrame_getArguments(JSContext *cx, uintN argc, Value *vp)
         }
 
         JS_ASSERT(fp->numActualArgs() <= 0x7fffffff);
-        int32 fargc = int32(fp->numActualArgs());
+        int32_t fargc = int32_t(fp->numActualArgs());
         if (!DefineNativeProperty(cx, argsobj, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
                                   Int32Value(fargc), NULL, NULL,
                                   JSPROP_PERMANENT | JSPROP_READONLY, 0, 0))
@@ -2656,7 +2656,7 @@ DebuggerFrame_getArguments(JSContext *cx, uintN argc, Value *vp)
             return false;
         }
 
-        for (int32 i = 0; i < fargc; i++) {
+        for (int32_t i = 0; i < fargc; i++) {
             JSFunction *getobj =
                 js_NewFunction(cx, NULL, DebuggerArguments_getArg, 0, 0, global, NULL,
                                JSFunction::ExtendedFinalizeKind);

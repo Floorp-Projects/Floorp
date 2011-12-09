@@ -338,7 +338,7 @@ GlobalObject::clear(JSContext *cx)
      * Mark global as cleared. If we try to execute any compile-and-go
      * scripts from here on, we will throw.
      */
-    int32 flags = getSlot(FLAGS).toInt32();
+    int32_t flags = getSlot(FLAGS).toInt32();
     flags |= FLAGS_CLEARED;
     setSlot(FLAGS, Int32Value(flags));
 

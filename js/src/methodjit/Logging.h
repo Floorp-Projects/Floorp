@@ -78,7 +78,7 @@ enum JaegerSpewChannel {
 void JMCheckLogging();
 
 struct ConditionalLog {
-    uint32 oldBits;
+    uint32_t oldBits;
     bool logging;
     ConditionalLog(bool logging);
     ~ConditionalLog();
@@ -92,10 +92,10 @@ void JaegerSpew(JaegerSpewChannel channel, const char *fmt, ...);
 #endif
 
 struct Profiler {
-    JSInt64 t_start;
-    JSInt64 t_stop;
+    int64_t t_start;
+    int64_t t_stop;
 
-    static inline JSInt64 now() {
+    static inline int64_t now() {
         return PRMJ_Now();
     }
 
@@ -107,12 +107,12 @@ struct Profiler {
         t_stop = now();
     }
 
-    inline uint32 time_ms() {
-        return uint32((t_stop - t_start) / PRMJ_USEC_PER_MSEC);
+    inline uint32_t time_ms() {
+        return uint32_t((t_stop - t_start) / PRMJ_USEC_PER_MSEC);
     }
 
-    inline uint32 time_us() {
-        return uint32(t_stop - t_start);
+    inline uint32_t time_us() {
+        return uint32_t(t_stop - t_start);
     }
 };
 

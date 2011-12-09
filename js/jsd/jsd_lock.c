@@ -66,7 +66,7 @@ struct JSDStaticLock
     PRLock*   lock;
     int       count;
 #ifdef DEBUG
-    uint16    sig;
+    uint16_t  sig;
 #endif
 };
 
@@ -103,7 +103,7 @@ void ASSERT_VALID_LOCK(JSDStaticLock* lock)
     JS_ASSERT(lock);
     JS_ASSERT(lock->lock);
     JS_ASSERT(lock->count >= 0);
-    JS_ASSERT(lock->sig == (uint16) JSD_LOCK_SIG);
+    JS_ASSERT(lock->sig == (uint16_t) JSD_LOCK_SIG);
 }    
 #else
 #define ASSERT_VALID_LOCK(x) ((void)0)
@@ -124,7 +124,7 @@ jsd_CreateLock()
         }
     }
 #ifdef DEBUG
-    if(lock) lock->sig = (uint16) JSD_LOCK_SIG;
+    if(lock) lock->sig = (uint16_t) JSD_LOCK_SIG;
 #endif
     return lock;
 }    

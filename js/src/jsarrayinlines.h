@@ -51,7 +51,7 @@ JSObject::markDenseArrayNotPacked(JSContext *cx)
 }
 
 inline void
-JSObject::ensureDenseArrayInitializedLength(JSContext *cx, uint32 index, uint32 extra)
+JSObject::ensureDenseArrayInitializedLength(JSContext *cx, uint32_t index, uint32_t extra)
 {
     /*
      * Ensure that the array's contents have been initialized up to index, and
@@ -59,7 +59,7 @@ JSObject::ensureDenseArrayInitializedLength(JSContext *cx, uint32 index, uint32 
      * for a write.
      */
     JS_ASSERT(index + extra <= getDenseArrayCapacity());
-    uint32 &initlen = getElementsHeader()->initializedLength;
+    uint32_t &initlen = getElementsHeader()->initializedLength;
     if (initlen < index)
         markDenseArrayNotPacked(cx);
 

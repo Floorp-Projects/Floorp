@@ -299,7 +299,7 @@ frontend::Emit3(JSContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1,
 }
 
 ptrdiff_t
-frontend::Emit5(JSContext *cx, BytecodeEmitter *bce, JSOp op, uint16 op1, uint16 op2)
+frontend::Emit5(JSContext *cx, BytecodeEmitter *bce, JSOp op, uint16_t op1, uint16_t op2)
 {
     ptrdiff_t offset = EmitCheck(cx, bce, 5);
 
@@ -824,7 +824,7 @@ OptimizeSpanDeps(JSContext *cx, BytecodeEmitter *bce)
     ptrdiff_t offset, growth, delta, top, pivot, span, length, target;
     JSBool done;
     JSOp op;
-    uint32 type;
+    uint32_t type;
     jssrcnote *sn, *snlimit;
     JSSrcNoteSpec *spec;
     uintN i, n, noteIndex;
@@ -1347,7 +1347,7 @@ frontend::SetStaticLevel(TreeContext *tc, uintN staticLevel)
 }
 
 bool
-frontend::GenerateBlockId(TreeContext *tc, uint32& blockid)
+frontend::GenerateBlockId(TreeContext *tc, uint32_t &blockid)
 {
     if (tc->blockidGen == JS_BIT(20)) {
         JS_ReportErrorNumber(tc->parser->context, js_GetErrorMessage, NULL,
@@ -1477,7 +1477,7 @@ CheckTypeSet(JSContext *cx, BytecodeEmitter *bce, JSOp op)
 }
 
 /*
- * Macro to emit a bytecode followed by a uint16 immediate operand stored in
+ * Macro to emit a bytecode followed by a uint16_t immediate operand stored in
  * big-endian order, used for arg and var numbers as well as for atomIndexes.
  * NB: We use cx and bce from our caller's lexical environment, and return
  * false on error.
@@ -1996,7 +1996,7 @@ EmitEnterBlock(JSContext *cx, ParseNode *pn, BytecodeEmitter *bce)
         Definition *dn = (Definition *) v.toPrivate();
         JS_ASSERT(dn->isDefn());
         JS_ASSERT(uintN(dn->frameSlot() + depth) < JS_BIT(16));
-        dn->pn_cookie.set(dn->pn_cookie.level(), uint16(dn->frameSlot() + depth));
+        dn->pn_cookie.set(dn->pn_cookie.level(), uint16_t(dn->frameSlot() + depth));
 #ifdef DEBUG
         for (ParseNode *pnu = dn->dn_uses; pnu; pnu = pnu->pn_link) {
             JS_ASSERT(pnu->pn_lexdef == dn);
@@ -2329,7 +2329,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return JS_TRUE;
     }
 
-    uint16 level = cookie.level();
+    uint16_t level = cookie.level();
     JS_ASSERT(bce->staticLevel >= level);
 
     const uintN skip = bce->staticLevel - level;
@@ -2508,7 +2508,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 }
 
 bool
-BytecodeEmitter::addGlobalUse(JSAtom *atom, uint32 slot, UpvarCookie *cookie)
+BytecodeEmitter::addGlobalUse(JSAtom *atom, uint32_t slot, UpvarCookie *cookie)
 {
     if (!globalMap.ensureMap(context()))
         return false;
@@ -2520,7 +2520,7 @@ BytecodeEmitter::addGlobalUse(JSAtom *atom, uint32 slot, UpvarCookie *cookie)
         return true;
     }
 
-    /* Don't bother encoding indexes >= uint16 */
+    /* Don't bother encoding indexes >= uint16_t */
     if (globalUses.length() >= UINT16_LIMIT) {
         cookie->makeFree();
         return true;
@@ -3172,7 +3172,7 @@ static JSBool
 EmitNumberOp(JSContext *cx, jsdouble dval, BytecodeEmitter *bce)
 {
     int32_t ival;
-    uint32 u;
+    uint32_t u;
     ptrdiff_t off;
     jsbytecode *pc;
 
@@ -3181,10 +3181,10 @@ EmitNumberOp(JSContext *cx, jsdouble dval, BytecodeEmitter *bce)
             return Emit1(cx, bce, JSOP_ZERO) >= 0;
         if (ival == 1)
             return Emit1(cx, bce, JSOP_ONE) >= 0;
-        if ((jsint)(int8)ival == ival)
-            return Emit2(cx, bce, JSOP_INT8, (jsbytecode)(int8)ival) >= 0;
+        if ((jsint)(int8_t)ival == ival)
+            return Emit2(cx, bce, JSOP_INT8, (jsbytecode)(int8_t)ival) >= 0;
 
-        u = (uint32)ival;
+        u = (uint32_t)ival;
         if (u < JS_BIT(16)) {
             EMIT_UINT16_IMM_OP(JSOP_UINT16, u);
         } else if (u < JS_BIT(24)) {
@@ -3280,7 +3280,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     JSBool ok, hasDefault, constPropagated;
     ptrdiff_t top, off, defaultOffset;
     ParseNode *pn2, *pn3, *pn4;
-    uint32 caseCount, tableLength;
+    uint32_t caseCount, tableLength;
     ParseNode **table;
     int32_t i, low, high;
     intN noteIndex;
@@ -3379,7 +3379,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 #define INTMAP_LENGTH   256
         jsbitmap intmap_space[INTMAP_LENGTH];
         jsbitmap *intmap = NULL;
-        int32 intmap_bitlen = 0;
+        int32_t intmap_bitlen = 0;
 
         low  = JSVAL_INT_MAX;
         high = JSVAL_INT_MIN;
@@ -3508,7 +3508,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * more than half-sparse.
          */
         if (switchOp == JSOP_TABLESWITCH) {
-            tableLength = (uint32)(high - low + 1);
+            tableLength = (uint32_t)(high - low + 1);
             if (tableLength >= JS_BIT(16) || tableLength > 2 * caseCount)
                 switchOp = JSOP_LOOKUPSWITCH;
         } else if (switchOp == JSOP_LOOKUPSWITCH) {
@@ -3648,7 +3648,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                         continue;
                     i = pn3->pn_pval->toInt32();
                     i -= low;
-                    JS_ASSERT((uint32)i < tableLength);
+                    JS_ASSERT((uint32_t)i < tableLength);
                     table[i] = pn3;
                 }
             }
@@ -4701,7 +4701,7 @@ EmitNewInit(JSContext *cx, BytecodeEmitter *bce, JSProtoKey key, ParseNode *pn, 
 }
 
 static bool
-EmitEndInit(JSContext *cx, BytecodeEmitter *bce, uint32 count)
+EmitEndInit(JSContext *cx, BytecodeEmitter *bce, uint32_t count)
 {
 #if JS_HAS_SHARP_VARS
     /* Emit an op for sharp array cleanup and decompilation. */
@@ -5321,7 +5321,7 @@ EmitXMLTag(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (Emit1(cx, bce, JSOP_ADD) < 0)
         return false;
 
-    uint32 i;
+    uint32_t i;
     for (pn2 = pn2->pn_next, i = 0; pn2; pn2 = pn2->pn_next, i++) {
         if (pn2->isKind(PNK_XMLCURLYEXPR) && Emit1(cx, bce, JSOP_STARTXMLEXPR) < 0)
             return false;
@@ -5522,7 +5522,7 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
      * destructuring for-in).
      */
     JS_ASSERT(pn->isOp(JSOP_ITER));
-    if (Emit2(cx, bce, JSOP_ITER, (uint8) pn->pn_iflags) < 0)
+    if (Emit2(cx, bce, JSOP_ITER, (uint8_t) pn->pn_iflags) < 0)
         return false;
 
     /* Annotate so the decompiler can find the loop-closing jump. */
@@ -6377,7 +6377,7 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - off) < 0)
         return false;
 
-    uint32 argc = pn->pn_count - 1;
+    uint32_t argc = pn->pn_count - 1;
     if (Emit3(cx, bce, pn->getOp(), ARGC_HI(argc), ARGC_LO(argc)) < 0)
         return false;
     CheckTypeSet(cx, bce, pn->getOp());
@@ -6777,7 +6777,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
             return false;
         uintN index = bce->objectList.index(objbox);
         if (FitsWithoutBigIndex(index))
-            EMIT_UINT16_IN_PLACE(offset, JSOP_NEWOBJECT, uint16(index));
+            EMIT_UINT16_IN_PLACE(offset, JSOP_NEWOBJECT, uint16_t(index));
     }
 
     return true;
@@ -6807,7 +6807,7 @@ EmitArray(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, jsint sharpnum)
          */
         JS_ASSERT(bce->stackDepth > 0);
         uintN saveDepth = bce->arrayCompDepth;
-        bce->arrayCompDepth = (uint32) (bce->stackDepth - 1);
+        bce->arrayCompDepth = (uint32_t) (bce->stackDepth - 1);
         if (!EmitTree(cx, bce, pn->pn_head))
             return false;
         bce->arrayCompDepth = saveDepth;
@@ -7676,7 +7676,7 @@ SetSrcNoteOffset(JSContext *cx, BytecodeEmitter *bce, uintN index, uintN which, 
 
 #ifdef DEBUG_srcnotesize
 #define NBINS 10
-static uint32 hist[NBINS];
+static uint32_t hist[NBINS];
 
 static void
 DumpSrcNoteSizeHist()
@@ -7768,10 +7768,10 @@ static JSBool
 NewTryNote(JSContext *cx, BytecodeEmitter *bce, JSTryNoteKind kind, uintN stackDepth, size_t start,
            size_t end)
 {
-    JS_ASSERT((uintN)(uint16)stackDepth == stackDepth);
+    JS_ASSERT((uintN)(uint16_t)stackDepth == stackDepth);
     JS_ASSERT(start <= end);
-    JS_ASSERT((size_t)(uint32)start == start);
-    JS_ASSERT((size_t)(uint32)end == end);
+    JS_ASSERT((size_t)(uint32_t)start == start);
+    JS_ASSERT((size_t)(uint32_t)end == end);
 
     TryNode *tryNode = cx->tempLifoAlloc().new_<TryNode>();
     if (!tryNode) {
@@ -7780,9 +7780,9 @@ NewTryNote(JSContext *cx, BytecodeEmitter *bce, JSTryNoteKind kind, uintN stackD
     }
 
     tryNode->note.kind = kind;
-    tryNode->note.stackDepth = (uint16)stackDepth;
-    tryNode->note.start = (uint32)start;
-    tryNode->note.length = (uint32)(end - start);
+    tryNode->note.stackDepth = (uint16_t)stackDepth;
+    tryNode->note.start = (uint32_t)start;
+    tryNode->note.length = (uint32_t)(end - start);
     tryNode->prev = bce->lastTryNode;
     bce->lastTryNode = tryNode;
     bce->ntrynotes++;
@@ -7939,7 +7939,7 @@ js_GetSrcNoteOffset(jssrcnote *sn, uintN which)
             sn += 2;
     }
     if (*sn & SN_3BYTE_OFFSET_FLAG) {
-        return (ptrdiff_t)(((uint32)(sn[0] & SN_3BYTE_OFFSET_MASK) << 16)
+        return (ptrdiff_t)(((uint32_t)(sn[0] & SN_3BYTE_OFFSET_MASK) << 16)
                            | (sn[1] << 8)
                            | sn[2]);
     }

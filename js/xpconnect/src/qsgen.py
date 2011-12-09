@@ -398,30 +398,30 @@ def substitute(template, vals):
 # From JSData2Native.
 argumentUnboxingTemplates = {
     'octet':
-        "    uint32 ${name}_u32;\n"
+        "    uint32_t ${name}_u32;\n"
         "    if (!JS_ValueToECMAUint32(cx, ${argVal}, &${name}_u32))\n"
         "        return JS_FALSE;\n"
         "    uint8 ${name} = (uint8) ${name}_u32;\n",
 
     'short':
-        "    int32 ${name}_i32;\n"
+        "    int32_t ${name}_i32;\n"
         "    if (!JS_ValueToECMAInt32(cx, ${argVal}, &${name}_i32))\n"
         "        return JS_FALSE;\n"
         "    int16 ${name} = (int16) ${name}_i32;\n",
 
     'unsigned short':
-        "    uint32 ${name}_u32;\n"
+        "    uint32_t ${name}_u32;\n"
         "    if (!JS_ValueToECMAUint32(cx, ${argVal}, &${name}_u32))\n"
         "        return JS_FALSE;\n"
         "    uint16 ${name} = (uint16) ${name}_u32;\n",
 
     'long':
-        "    int32 ${name};\n"
+        "    int32_t ${name};\n"
         "    if (!JS_ValueToECMAInt32(cx, ${argVal}, &${name}))\n"
         "        return JS_FALSE;\n",
 
     'unsigned long':
-        "    uint32 ${name};\n"
+        "    uint32_t ${name};\n"
         "    if (!JS_ValueToECMAUint32(cx, ${argVal}, &${name}))\n"
         "        return JS_FALSE;\n",
 
