@@ -686,7 +686,7 @@ var mozl10n = {};
 
 })(mozl10n);
 
-define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types/basic', 'gcli/types/javascript', 'gcli/types/node', 'gcli/cli', 'gcli/ui/display'], function(require, exports, module) {
+define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types/basic', 'gcli/types/javascript', 'gcli/types/node', 'gcli/cli', 'gcli/commands/help', 'gcli/ui/console'], function(require, exports, module) {
 
   // The API for use by command authors
   exports.addCommand = require('gcli/canon').addCommand;
@@ -699,9 +699,10 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
   require('gcli/types/javascript').startup();
   require('gcli/types/node').startup();
   require('gcli/cli').startup();
+  require('gcli/commands/help').startup();
 
   var Requisition = require('gcli/cli').Requisition;
-  var Display = require('gcli/ui/display').Display;
+  var Console = require('gcli/ui/console').Console;
 
   var cli = require('gcli/cli');
   var jstype = require('gcli/types/javascript');
@@ -739,15 +740,15 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/types
         opts.requisition = new Requisition(opts.environment, opts.chromeDocument);
       }
 
-      opts.display = new Display(opts);
+      opts.console = new Console(opts);
     },
 
     /**
      * Undo the effects of createView() to prevent memory leaks
      */
     removeView: function(opts) {
-      opts.display.destroy();
-      delete opts.display;
+      opts.console.destroy();
+      delete opts.console;
 
       opts.requisition.destroy();
       delete opts.requisition;
@@ -1029,7 +1030,8 @@ canon.removeCommand = function removeCommand(commandOrName) {
  * @param name The name of the command to retrieve
  */
 canon.getCommand = function getCommand(name) {
-  return commands[name];
+  // '|| undefined' is to silence 'reference to undefined property' warnings
+  return commands[name] || undefined;
 };
 
 /**
@@ -1190,7 +1192,15 @@ exports.createEvent = function(name) {
 
 var dom = {};
 
+/**
+ * XHTML namespace
+ */
 dom.NS_XHTML = 'http://www.w3.org/1999/xhtml';
+
+/**
+ * XUL namespace
+ */
+dom.NS_XUL = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
 
 /**
  * Create an HTML or XHTML element depending on whether the document is HTML
@@ -1246,12 +1256,19 @@ dom.importCss = function(cssText, doc) {
  */
 dom.setInnerHtml = function(elem, html) {
   if (dom.isXmlDocument(elem.ownerDocument)) {
-    dom.clearElement(elem);
-    html = '<div xmlns="' + dom.NS_XHTML + '">' + html + '</div>';
-    var range = elem.ownerDocument.createRange();
-    var child = range.createContextualFragment(html).childNodes[0];
-    while (child.hasChildNodes()) {
-      elem.appendChild(child.firstChild);
+    try {
+      dom.clearElement(elem);
+      html = '<div xmlns="' + dom.NS_XHTML + '">' + html + '</div>';
+      var range = elem.ownerDocument.createRange();
+      var child = range.createContextualFragment(html).firstChild;
+      while (child.hasChildNodes()) {
+        elem.appendChild(child.firstChild);
+      }
+    }
+    catch (ex) {
+      console.error('Bad XHTML', ex);
+      console.trace();
+      throw ex;
     }
   }
   else {
@@ -1260,10 +1277,9 @@ dom.setInnerHtml = function(elem, html) {
 };
 
 /**
- * How to detect if we're in an XUL document (and therefore should create
- * elements in an XHTML namespace)
- * In a Mozilla XUL document, document.xmlVersion = null, however in Chrome
- * document.contentType = undefined.
+ * How to detect if we're in an XML document.
+ * In a Mozilla we check that document.xmlVersion = null, however in Chrome
+ * we use document.contentType = undefined.
  * @param doc The document element to work from (defaulted to the global
  * 'document' if missing
  */
@@ -1478,6 +1494,13 @@ exports.lookup = function(key) {
     return key;
   }
 };
+
+/** @see propertyLookup in lib/gcli/l10n.js */
+exports.propertyLookup = Proxy.create({
+  get: function(rcvr, name) {
+    return exports.lookup(name);
+  }
+});
 
 /** @see lookupFormat in lib/gcli/l10n.js */
 exports.lookupFormat = function(key, swaps) {
@@ -3462,6 +3485,14 @@ exports.unsetDocument = function() {
   doc = undefined;
 };
 
+/**
+ * Getter for the document that contains the nodes we're matching
+ * Most for changing things back to how they were for unit testing
+ */
+exports.getDocument = function() {
+  return doc;
+};
+
 
 /**
  * A CSS expression that refers to a single node
@@ -4042,7 +4073,15 @@ UnassignedAssignment.prototype.setUnassigned = function(args) {
  */
 function Requisition(environment, doc) {
   this.environment = environment;
-  this.document = doc || document;
+  this.document = doc;
+  if (this.document == null) {
+    try {
+      this.document = document;
+    }
+    catch (ex) {
+      // Ignore
+    }
+  }
 
   // The command that we are about to execute.
   // @see setCommandConversion()
@@ -4508,7 +4547,8 @@ Requisition.prototype.exec = function(input) {
   var outputObject = {
     command: command,
     args: args,
-    typed: this.toCanonicalString(),
+    typed: this.toString(),
+    canonical: this.toCanonicalString(),
     completed: false,
     start: new Date()
   };
@@ -4527,7 +4567,7 @@ Requisition.prototype.exec = function(input) {
   }).bind(this);
 
   try {
-    var context = new ExecutionContext(this.environment, this.document);
+    var context = new ExecutionContext(this);
     var reply = command.exec(args, context);
 
     if (reply != null && reply.isPromise) {
@@ -5012,9 +5052,10 @@ exports.Requisition = Requisition;
 /**
  * Functions and data related to the execution of a command
  */
-function ExecutionContext(environment, document) {
-  this.environment = environment;
-  this.document = document;
+function ExecutionContext(requisition) {
+  this.requisition = requisition;
+  this.environment = requisition.environment;
+  this.document = requisition.document;
 }
 
 ExecutionContext.prototype.createPromise = function() {
@@ -5041,7 +5082,275 @@ define('gcli/promise', ['require', 'exports', 'module' ], function(require, expo
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gcli/ui/display', ['require', 'exports', 'module' , 'gcli/ui/inputter', 'gcli/ui/arg_fetch', 'gcli/ui/menu', 'gcli/ui/focus'], function(require, exports, module) {
+define('gcli/commands/help', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/util', 'gcli/l10n', 'gcli/ui/domtemplate', 'text!gcli/commands/help.css', 'text!gcli/commands/help_intro.html', 'text!gcli/commands/help_list.html', 'text!gcli/commands/help_man.html'], function(require, exports, module) {
+var help = exports;
+
+
+var canon = require('gcli/canon');
+var util = require('gcli/util');
+var l10n = require('gcli/l10n');
+var domtemplate = require('gcli/ui/domtemplate');
+
+var helpCss = require('text!gcli/commands/help.css');
+var helpStyle = undefined;
+var helpIntroHtml = require('text!gcli/commands/help_intro.html');
+var helpIntroTemplate = undefined;
+var helpListHtml = require('text!gcli/commands/help_list.html');
+var helpListTemplate = undefined;
+var helpManHtml = require('text!gcli/commands/help_man.html');
+var helpManTemplate = undefined;
+
+/**
+ * 'help' command
+ * We delay definition of helpCommandSpec until help.startup() to ensure that
+ * the l10n strings have been loaded
+ */
+var helpCommandSpec;
+
+/**
+ * Registration and de-registration.
+ */
+help.startup = function() {
+
+  helpCommandSpec = {
+    name: 'help',
+    description: l10n.lookup('helpDesc'),
+    manual: l10n.lookup('helpManual'),
+    params: [
+      {
+        name: 'search',
+        type: 'string',
+        description: l10n.lookup('helpSearchDesc'),
+        manual: l10n.lookup('helpSearchManual'),
+        defaultValue: null
+      }
+    ],
+    returnType: 'html',
+
+    exec: function(args, context) {
+      help.onFirstUseStartup(context.document);
+
+      var match = canon.getCommand(args.search);
+      if (match) {
+        var clone = helpManTemplate.cloneNode(true);
+        domtemplate.template(clone, getManTemplateData(match, context),
+                { allowEval: true, stack: 'help_man.html' });
+        return clone;
+      }
+
+      var parent = util.dom.createElement(context.document, 'div');
+      if (!args.search) {
+        parent.appendChild(helpIntroTemplate.cloneNode(true));
+      }
+      parent.appendChild(helpListTemplate.cloneNode(true));
+      domtemplate.template(parent, getListTemplateData(args, context),
+              { allowEval: true, stack: 'help_intro.html | help_list.html' });
+      return parent;
+    }
+  };
+
+  canon.addCommand(helpCommandSpec);
+};
+
+help.shutdown = function() {
+  canon.removeCommand(helpCommandSpec);
+
+  helpListTemplate = undefined;
+  helpStyle.parentElement.removeChild(helpStyle);
+  helpStyle = undefined;
+};
+
+/**
+ * Called when the command is executed
+ */
+help.onFirstUseStartup = function(document) {
+  if (!helpIntroTemplate) {
+    helpIntroTemplate = util.dom.createElement(document, 'div');
+    util.dom.setInnerHtml(helpIntroTemplate, helpIntroHtml);
+  }
+  if (!helpListTemplate) {
+    helpListTemplate = util.dom.createElement(document, 'div');
+    util.dom.setInnerHtml(helpListTemplate, helpListHtml);
+  }
+  if (!helpManTemplate) {
+    helpManTemplate = util.dom.createElement(document, 'div');
+    util.dom.setInnerHtml(helpManTemplate, helpManHtml);
+  }
+  if (!helpStyle && helpCss != null) {
+    helpStyle = util.dom.importCss(helpCss, document);
+  }
+};
+
+/**
+ * Find an element within the passed element with the class gcli-help-command
+ * and update the requisition to contain this text.
+ */
+function updateCommand(element, context) {
+  context.requisition.update({
+    typed: element.querySelector('.gcli-help-command').textContent
+  });
+}
+
+/**
+ * Find an element within the passed element with the class gcli-help-command
+ * and execute this text.
+ */
+function executeCommand(element, context) {
+  context.requisition.exec({
+    visible: true,
+    typed: element.querySelector('.gcli-help-command').textContent
+  });
+}
+
+/**
+ * Create a block of data suitable to be passed to the help_list.html template
+ */
+function getListTemplateData(args, context) {
+  return {
+    l10n: l10n.propertyLookup,
+    lang: context.document.defaultView.navigator.language,
+
+    onclick: function(ev) {
+      updateCommand(ev.currentTarget, context);
+    },
+
+    ondblclick: function(ev) {
+      executeCommand(ev.currentTarget, context);
+    },
+
+    getHeading: function() {
+      return args.search == null ?
+              'Available Commands:' :
+              'Commands starting with \'' + args.search + '\':';
+    },
+
+    getMatchingCommands: function() {
+      var matching = canon.getCommands().filter(function(command) {
+        if (args.search && command.name.indexOf(args.search) !== 0) {
+          // Filtered out because they don't match the search
+          return false;
+        }
+        if (!args.search && command.name.indexOf(' ') != -1) {
+          // We don't show sub commands with plain 'help'
+          return false;
+        }
+        return true;
+      });
+      matching.sort();
+      return matching;
+    }
+  };
+}
+
+/**
+ * Create a block of data suitable to be passed to the help_man.html template
+ */
+function getManTemplateData(command, context) {
+  return {
+    l10n: l10n.propertyLookup,
+    lang: context.document.defaultView.navigator.language,
+
+    command: command,
+
+    onclick: function(ev) {
+      updateCommand(ev.currentTarget, context);
+    },
+
+    getTypeDescription: function(param) {
+      var input = '';
+      if (param.defaultValue === undefined) {
+        input = 'required';
+      }
+      else if (param.defaultValue === null) {
+        input = 'optional';
+      }
+      else {
+        input = param.defaultValue;
+      }
+      return '(' + param.type.name + ', ' + input + ')';
+    }
+  };
+}
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gcli/ui/domtemplate', ['require', 'exports', 'module' ], function(require, exports, module) {
+
+  var obj = {};
+  Components.utils.import('resource:///modules/devtools/Templater.jsm', obj);
+  exports.template = obj.template;
+
+});
+define("text!gcli/commands/help.css", [], void 0);
+define("text!gcli/commands/help_intro.html", [], "\n" +
+  "<h2>${l10n.introHeader}</h2>\n" +
+  "\n" +
+  "<p>\n" +
+  "  <a target=\"_blank\" href=\"https://developer.mozilla.org/AppLinks/WebConsoleHelp?locale=${lang}\">\n" +
+  "    ${l10n.introBody}\n" +
+  "  </a>\n" +
+  "</p>\n" +
+  "");
+
+define("text!gcli/commands/help_list.html", [], "\n" +
+  "<h3>${getHeading()}</h3>\n" +
+  "\n" +
+  "<table>\n" +
+  "  <tr foreach=\"command in ${getMatchingCommands()}\"\n" +
+  "      onclick=\"${onclick}\" ondblclick=\"${ondblclick}\">\n" +
+  "    <th class=\"gcli-help-name\">${command.name}</th>\n" +
+  "    <td class=\"gcli-help-arrow\">&#x2192;</td>\n" +
+  "    <td>\n" +
+  "      ${command.description}\n" +
+  "      <span class=\"gcli-out-shortcut gcli-help-command\">help ${command.name}</span>\n" +
+  "    </td>\n" +
+  "  </tr>\n" +
+  "</table>\n" +
+  "");
+
+define("text!gcli/commands/help_man.html", [], "\n" +
+  "<h3>${command.name}</h3>\n" +
+  "\n" +
+  "<h4 class=\"gcli-help-header\">\n" +
+  "  ${l10n.helpManSynopsis}:\n" +
+  "  <span class=\"gcli-help-synopsis\" onclick=\"${onclick}\">\n" +
+  "    <span class=\"gcli-help-command\">${command.name}</span>\n" +
+  "    <span foreach=\"param in ${command.params}\">\n" +
+  "      ${param.defaultValue !== undefined ? '[' + param.name + ']' : param.name}\n" +
+  "    </span>\n" +
+  "  </span>\n" +
+  "</h4>\n" +
+  "\n" +
+  "<h4 class=\"gcli-help-header\">${l10n.helpManDescription}:</h4>\n" +
+  "\n" +
+  "<p class=\"gcli-help-description\">\n" +
+  "  ${command.manual || command.description}\n" +
+  "</p>\n" +
+  "\n" +
+  "<h4 class=\"gcli-help-header\">${l10n.helpManParameters}:</h4>\n" +
+  "\n" +
+  "<ul class=\"gcli-help-parameter\">\n" +
+  "  <li if=\"${command.params.length === 0}\">${l10n.helpManNone}</li>\n" +
+  "  <li foreach=\"param in ${command.params}\">\n" +
+  "    <tt>${param.name}</tt> ${getTypeDescription(param)}\n" +
+  "    <br/>\n" +
+  "    ${param.manual || param.description}\n" +
+  "  </li>\n" +
+  "</ul>\n" +
+  "");
+
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gcli/ui/console', ['require', 'exports', 'module' , 'gcli/ui/inputter', 'gcli/ui/arg_fetch', 'gcli/ui/menu', 'gcli/ui/focus'], function(require, exports, module) {
 
 var Inputter = require('gcli/ui/inputter').Inputter;
 var ArgFetcher = require('gcli/ui/arg_fetch').ArgFetcher;
@@ -5049,10 +5358,10 @@ var CommandMenu = require('gcli/ui/menu').CommandMenu;
 var FocusManager = require('gcli/ui/focus').FocusManager;
 
 /**
- * Display is responsible for generating the UI for GCLI, this implementation
+ * Console is responsible for generating the UI for GCLI, this implementation
  * is a special case for use inside Firefox
  */
-function Display(options) {
+function Console(options) {
   this.hintElement = options.hintElement;
   this.gcliTerm = options.gcliTerm;
   this.consoleWrap = options.consoleWrap;
@@ -5097,7 +5406,7 @@ function Display(options) {
 /**
  * Avoid memory leaks
  */
-Display.prototype.destroy = function() {
+Console.prototype.destroy = function() {
   this.chromeWindow.removeEventListener('resize', this.resizer, false);
   delete this.resizer;
   delete this.chromeWindow;
@@ -5122,10 +5431,17 @@ Display.prototype.destroy = function() {
 /**
  * Called on chrome window resize, or on divider slide
  */
-Display.prototype.resizer = function() {
+Console.prototype.resizer = function() {
+  // Bug 705109: There are several numbers hard-coded in this function.
+  // This is simpler than calculating them, but error-prone when the UI setup,
+  // the styling or display settings change.
+
   var parentRect = this.consoleWrap.getBoundingClientRect();
+  // Magic number: 64 is the size of the toolbar above the output area
   var parentHeight = parentRect.bottom - parentRect.top - 64;
 
+  // Magic number: 100 is the size at which we decide the hints are too small
+  // to be useful, so we hide them
   if (parentHeight < 100) {
     this.hintElement.classList.add('gcliterm-hint-nospace');
   }
@@ -5136,20 +5452,14 @@ Display.prototype.resizer = function() {
     if (isMenuVisible) {
       this.menu.setMaxHeight(parentHeight);
 
-      // Magic numbers. We have 2 options - lots of complex dom math to derive
-      // the height of a menu item (19 pixels) and the vertical padding
-      // (22 pixels), or we could just hard-code. The former is *slightly* more
-      // resilient to refactoring (but still breaks with dom structure changes),
-      // the latter is simpler, faster and easier.
+      // Magic numbers: 19 = height of a menu item, 22 = total vertical padding
+      // of container
       var idealMenuHeight = (19 * this.menu.items.length) + 22;
-
       if (idealMenuHeight > parentHeight) {
-        this.hintElement.style.overflowY = 'scroll';
-        this.hintElement.style.borderBottomColor = 'threedshadow';
+        this.hintElement.classList.add('gcliterm-hint-scroll');
       }
       else {
-        this.hintElement.style.overflowY = null;
-        this.hintElement.style.borderBottomColor = 'white';
+        this.hintElement.classList.remove('gcliterm-hint-scroll');
       }
     }
     else {
@@ -5161,7 +5471,7 @@ Display.prototype.resizer = function() {
   }
 };
 
-exports.Display = Display;
+exports.Console = Console;
 
 });
 /*
@@ -5582,8 +5892,9 @@ cliView.Inputter = Inputter;
  * - document (required) DOM document to be used in creating elements
  * - requisition (required) A GCLI Requisition object whose state is monitored
  * - completeElement (optional) An element to use
- * - completionPrompt (optional) The prompt to show before a completion.
- *   Defaults to '&#x00bb;' (double greater-than, a.k.a right guillemet).
+ * - completionPrompt (optional) The prompt - defaults to '\u00bb'
+ *   (double greater-than, a.k.a right guillemet). The prompt is used directly
+ *   in a TextNode, so HTML entities are not allowed.
  */
 function Completer(options) {
   this.document = options.document || document;
@@ -5606,7 +5917,7 @@ function Completer(options) {
 
   this.completionPrompt = typeof options.completionPrompt === 'string'
       ? options.completionPrompt
-      : '&#x00bb;';
+      : '\u00bb';
 
   if (options.inputBackgroundElement) {
     this.backgroundElement = options.inputBackgroundElement;
@@ -5714,50 +6025,85 @@ Completer.prototype.update = function(input) {
   var current = this.requisition.getAssignmentAt(input.cursor.start);
   var predictions = current.getPredictions();
 
-  var completion = '<span class="gcli-prompt">' + this.completionPrompt + '</span> ';
+  dom.clearElement(this.element);
+
+  // All this DOM manipulation is equivalent to the HTML below.
+  // It's not a template because it's very simple except appendMarkupStatus()
+  // which is complex due to a need to merge spans.
+  // Bug 707131 questions if we couldn't simplify this to use a template.
+  //
+  // <span class="gcli-prompt">${completionPrompt}</span>
+  // ${appendMarkupStatus()}
+  // ${prefix}
+  // <span class="gcli-in-ontab">${contents}</span>
+  // <span class="gcli-in-closebrace" if="${unclosedJs}">}<span>
+
+  var document = this.element.ownerDocument;
+  var prompt = document.createElement('span');
+  prompt.classList.add('gcli-prompt');
+  prompt.appendChild(document.createTextNode(this.completionPrompt + ' '));
+  this.element.appendChild(prompt);
+
   if (input.typed.length > 0) {
     var scores = this.requisition.getInputStatusMarkup(input.cursor.start);
-    completion += this.markupStatusScore(scores, input);
+    this.appendMarkupStatus(this.element, scores, input);
   }
 
   if (input.typed.length > 0 && predictions.length > 0) {
     var tab = predictions[0].name;
     var existing = current.getArg().text;
-    if (isStrictCompletion(existing, tab) && input.cursor.start === input.typed.length) {
-      // Display the suffix of the prediction as the completion.
+
+    var contents;
+    var prefix = null;
+
+    if (isStrictCompletion(existing, tab) &&
+            input.cursor.start === input.typed.length) {
+      // Display the suffix of the prediction as the completion
       var numLeadingSpaces = existing.match(/^(\s*)/)[0].length;
-      var suffix = tab.slice(existing.length - numLeadingSpaces);
-      completion += '<span class="gcli-in-ontab">' + suffix + '</span>';
+      contents = tab.slice(existing.length - numLeadingSpaces);
     } else {
       // Display the '-> prediction' at the end of the completer element
-      completion += ' &#xa0;<span class="gcli-in-ontab">&#x21E5; ' +
-          tab + '</span>';
+      prefix = ' \u00a0';         // aka &nbsp;
+      contents = '\u21E5 ' + tab; // aka &rarr; the right arrow
     }
+
+    if (prefix != null) {
+      this.element.appendChild(document.createTextNode(prefix));
+    }
+
+    var suffix = document.createElement('span');
+    suffix.classList.add('gcli-in-ontab');
+    suffix.appendChild(document.createTextNode(contents));
+    this.element.appendChild(suffix);
   }
 
-  // A hack to add a grey '}' to the end of the command line when we've opened
+  // Add a grey '}' to the end of the command line when we've opened
   // with a { but haven't closed it
   var command = this.requisition.commandAssignment.getValue();
-  if (command && command.name === '{') {
-    if (this.requisition.getAssignment(0).getArg().suffix.indexOf('}') === -1) {
-      completion += '<span class="gcli-in-closebrace">}</span>';
-    }
+  var unclosedJs = command && command.name === '{' &&
+          this.requisition.getAssignment(0).getArg().suffix.indexOf('}') === -1;
+  if (unclosedJs) {
+    var close = document.createElement('span');
+    close.classList.add('gcli-in-closebrace');
+    close.appendChild(document.createTextNode('}'));
+    this.element.appendChild(close);
   }
-
-  dom.setInnerHtml(this.element, completion);
 };
 
 /**
  * Mark-up an array of Status values with spans
  */
-Completer.prototype.markupStatusScore = function(scores, input) {
-  var completion = '';
+Completer.prototype.appendMarkupStatus = function(element, scores, input) {
   if (scores.length === 0) {
-    return completion;
+    return;
   }
 
+  var document = element.ownerDocument;
   var i = 0;
   var lastStatus = -1;
+  var span;
+  var contents = '';
+
   while (true) {
     if (lastStatus !== scores[i]) {
       var state = scores[i];
@@ -5765,25 +6111,27 @@ Completer.prototype.markupStatusScore = function(scores, input) {
         console.error('No state at i=' + i + '. scores.len=' + scores.length);
         state = Status.VALID;
       }
-      completion += '<span class="gcli-in-' + state.toString().toLowerCase() + '">';
+      span = document.createElement('span');
+      span.classList.add('gcli-in-' + state.toString().toLowerCase());
       lastStatus = scores[i];
     }
     var char = input.typed[i];
     if (char === ' ') {
-      char = '&#xa0;';
+      char = '\u00a0';
     }
-    completion += char;
+    contents += char;
     i++;
     if (i === input.typed.length) {
-      completion += '</span>';
+      span.appendChild(document.createTextNode(contents));
+      this.element.appendChild(span);
       break;
     }
     if (lastStatus !== scores[i]) {
-      completion += '</span>';
+      span.appendChild(document.createTextNode(contents));
+      this.element.appendChild(span);
+      contents = '';
     }
   }
-
-  return completion;
 };
 
 cliView.Completer = Completer;
@@ -5867,7 +6215,7 @@ var dom = require('gcli/util').dom;
 var Status = require('gcli/types').Status;
 
 var getField = require('gcli/ui/field').getField;
-var Templater = require('gcli/ui/domtemplate').Templater;
+var domtemplate = require('gcli/ui/domtemplate');
 
 var editorCss = require('text!gcli/ui/arg_fetch.css');
 var argFetchHtml = require('text!gcli/ui/arg_fetch.html');
@@ -5896,7 +6244,6 @@ function ArgFetcher(options) {
   // We cache the fields we create so we can destroy them later
   this.fields = [];
 
-  this.tmpl = new Templater();
   // Populated by template
   this.okElement = null;
 
@@ -5953,7 +6300,8 @@ ArgFetcher.prototype.onCommandChange = function(ev) {
     this.fields = [];
 
     var reqEle = this.reqTempl.cloneNode(true);
-    this.tmpl.processNode(reqEle, this);
+    domtemplate.template(reqEle, this,
+            { allowEval: true, stack: 'arg_fetch.html' });
     dom.clearElement(this.element);
     this.element.appendChild(reqEle);
 
@@ -6008,7 +6356,7 @@ ArgFetcher.prototype.getInputFor = function(assignment) {
     return newField.element;
   }
   catch (ex) {
-    // This is called from within Templater which can make tracing errors hard
+    // This is called from within template() which can make tracing errors hard
     // so we log here if anything goes wrong
     console.error(ex);
     return '';
@@ -6252,7 +6600,7 @@ function StringField(type, options) {
 
   this.element = dom.createElement(this.document, 'input');
   this.element.type = 'text';
-  this.element.className = 'gcli-field';
+  this.element.classList.add('gcli-field');
 
   this.onInputChange = this.onInputChange.bind(this);
   this.element.addEventListener('keyup', this.onInputChange, false);
@@ -6412,7 +6760,7 @@ function SelectionField(type, options) {
   this.items = [];
 
   this.element = dom.createElement(this.document, 'select');
-  this.element.className = 'gcli-field';
+  this.element.classList.add('gcli-field');
   this._addOption({
     name: l10n.lookupFormat('fieldSelectionSelect', [ options.name ])
   });
@@ -6487,8 +6835,8 @@ function JavascriptField(type, options) {
   this.input = dom.createElement(this.document, 'input');
   this.input.type = 'text';
   this.input.addEventListener('keyup', this.onInputChange, false);
-  this.input.style.marginBottom = '0';
-  this.input.className = 'gcli-field';
+  this.input.classList.add('gcli-field');
+  this.input.classList.add('gcli-field-javascript');
   this.element.appendChild(this.input);
 
   this.menu = new Menu({ document: this.document, field: true });
@@ -6680,18 +7028,18 @@ function ArrayField(type, options) {
 
   // <div class=gcliArrayParent save="${element}">
   this.element = dom.createElement(this.document, 'div');
-  this.element.className = 'gcliArrayParent';
+  this.element.classList.add('gcli-array-parent');
 
   // <button class=gcliArrayMbrAdd onclick="${_onAdd}" save="${addButton}">Add
   this.addButton = dom.createElement(this.document, 'button');
-  this.addButton.className = 'gcliArrayMbrAdd';
+  this.addButton.classList.add('gcli-array-member-add');
   this.addButton.addEventListener('click', this._onAdd, false);
   this.addButton.innerHTML = l10n.lookup('fieldArrayAdd');
   this.element.appendChild(this.addButton);
 
   // <div class=gcliArrayMbrs save="${mbrElement}">
   this.container = dom.createElement(this.document, 'div');
-  this.container.className = 'gcliArrayMbrs';
+  this.container.classList.add('gcli-array-members');
   this.element.appendChild(this.container);
 
   this.onInputChange = this.onInputChange.bind(this);
@@ -6734,7 +7082,7 @@ ArrayField.prototype.getConversion = function() {
 ArrayField.prototype._onAdd = function(ev, subConversion) {
   // <div class=gcliArrayMbr save="${element}">
   var element = dom.createElement(this.document, 'div');
-  element.className = 'gcliArrayMbr';
+  element.classList.add('gcli-array-member');
   this.container.appendChild(element);
 
   // ${field.element}
@@ -6752,7 +7100,7 @@ ArrayField.prototype._onAdd = function(ev, subConversion) {
 
   // <div class=gcliArrayMbrDel onclick="${_onDel}">
   var delButton = dom.createElement(this.document, 'button');
-  delButton.className = 'gcliArrayMbrDel';
+  delButton.classList.add('gcli-array-member-del');
   delButton.addEventListener('click', this._onDel, false);
   delButton.innerHTML = l10n.lookup('fieldArrayDel');
   element.appendChild(delButton);
@@ -6794,7 +7142,7 @@ var Conversion = require('gcli/types').Conversion;
 var Argument = require('gcli/argument').Argument;
 var canon = require('gcli/canon');
 
-var Templater = require('gcli/ui/domtemplate').Templater;
+var domtemplate = require('gcli/ui/domtemplate');
 
 var menuCss = require('text!gcli/ui/menu.css');
 var menuHtml = require('text!gcli/ui/menu.html');
@@ -6877,7 +7225,7 @@ Menu.prototype.show = function(items, error) {
   }
 
   var options = this.optTempl.cloneNode(true);
-  new Templater().processNode(options, this);
+  domtemplate.template(options, this, { allowEval: true, stack: 'menu.html' });
 
   dom.clearElement(this.element);
   this.element.appendChild(options);
@@ -6983,18 +7331,6 @@ CommandMenu.prototype.onCommandChange = function(ev) {
 
 exports.CommandMenu = CommandMenu;
 
-
-});
-/*
- * Copyright 2009-2011 Mozilla Foundation and contributors
- * Licensed under the New BSD license. See LICENSE.txt or:
- * http://opensource.org/licenses/BSD-3-Clause
- */
-
-define('gcli/ui/domtemplate', ['require', 'exports', 'module' ], function(require, exports, module) {
-
-  Components.utils.import("resource:///modules/devtools/Templater.jsm");
-  exports.Templater = Templater;
 
 });
 define("text!gcli/ui/menu.css", [], void 0);
