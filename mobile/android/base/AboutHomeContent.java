@@ -218,6 +218,8 @@ public class AboutHomeContent extends LinearLayout {
 
 }
 class AwesomeCursorViewBinder implements SimpleCursorAdapter.ViewBinder {
+    private static final String LOGTAG = "GeckoAwesomeCursorViewBinder";
+
     private boolean updateImage(View view, Cursor cursor, int faviconIndex) {
         byte[] b = cursor.getBlob(faviconIndex);
         ImageView favicon = (ImageView) view;
@@ -225,8 +227,13 @@ class AwesomeCursorViewBinder implements SimpleCursorAdapter.ViewBinder {
         if (b == null) {
             favicon.setImageResource(R.drawable.favicon);
         } else {
-            Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
-            favicon.setImageBitmap(bitmap);
+            try {
+                Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
+                favicon.setImageBitmap(bitmap);
+            } catch (OutOfMemoryError oom) {
+                Log.e(LOGTAG, "Unable to load thumbnail bitmap", oom);
+                favicon.setImageResource(R.drawable.favicon);
+            }
         }
 
         return true;
