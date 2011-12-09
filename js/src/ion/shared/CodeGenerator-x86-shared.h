@@ -148,12 +148,10 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 class OutOfLineBailout : public OutOfLineCodeBase<CodeGeneratorX86Shared>
 {
     LSnapshot *snapshot_;
-    uint32 frameSize_;
 
   public:
-    OutOfLineBailout(LSnapshot *snapshot, uint32 frameSize)
-      : snapshot_(snapshot),
-        frameSize_(frameSize)
+    OutOfLineBailout(LSnapshot *snapshot)
+      : snapshot_(snapshot)
     { }
 
     bool accept(CodeGeneratorX86Shared *codegen);

@@ -226,6 +226,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(tag, ImmType(JSVAL_TYPE_MAGIC));
         return cond;
     }
+    Condition testInt32(Condition cond, const Operand &operand) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(ToType(operand), ImmTag(JSVAL_TAG_INT32));
+        return cond;
+    }
     Condition testUndefined(Condition cond, const ValueOperand &value) {
         return testUndefined(cond, value.typeReg());
     }
@@ -428,6 +433,15 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void branchTestBooleanTruthy(bool truthy, const ValueOperand &operand, Label *label) {
         testl(operand.payloadReg(), operand.payloadReg());
         j(truthy ? NonZero : Zero, label);
+    }
+    void loadInt32OrDouble(const Operand &operand, const FloatRegister &dest) {
+        Label notInt32, end;
+        branchTestInt32(Assembler::NotEqual, operand, &notInt32);
+        cvtsi2sd(ToPayload(operand), dest);
+        jump(&end);
+        bind(&notInt32);
+        movsd(operand, dest);
+        bind(&end);
     }
 
     // Setup a call to C/C++ code, given the number of general arguments it

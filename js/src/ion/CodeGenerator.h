@@ -55,6 +55,8 @@
 namespace js {
 namespace ion {
 
+class OutOfLineUnboxDouble;
+
 class CodeGenerator : public CodeGeneratorSpecific
 {
     bool generateArgumentsChecks();
@@ -81,6 +83,9 @@ class CodeGenerator : public CodeGeneratorSpecific
     virtual bool visitTypeBarrier(LTypeBarrier *lir);
     virtual bool visitDoubleToInt32(LDoubleToInt32 *lir);
     virtual bool visitInitializedLength(LInitializedLength *lir);
+    virtual bool visitUnboxDouble(LUnboxDouble *lir);
+
+    bool visitOutOfLineUnboxDouble(OutOfLineUnboxDouble *ool);
 };
 
 } // namespace ion

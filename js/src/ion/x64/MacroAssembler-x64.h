@@ -290,7 +290,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     void splitTag(const ValueOperand &operand, const Register &dest) {
-        JS_ASSERT(operand.valueReg() != dest);
         splitTag(operand.valueReg(), dest);
     }
 
@@ -478,6 +477,16 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void branchTestBooleanTruthy(bool truthy, const ValueOperand &operand, Label *label) {
         testl(operand.valueReg(), operand.valueReg());
         j(truthy ? NonZero : Zero, label);
+    }
+    void loadInt32OrDouble(const Operand &operand, const FloatRegister &dest) {
+        Label notInt32, end;
+        movq(operand, ScratchReg);
+        branchTestInt32(Assembler::NotEqual, ValueOperand(ScratchReg), &notInt32);
+        cvtsi2sd(operand, dest);
+        jump(&end);
+        bind(&notInt32);
+        movsd(operand, dest);
+        bind(&end);
     }
 
     // Setup a call to C/C++ code, given the number of general arguments it

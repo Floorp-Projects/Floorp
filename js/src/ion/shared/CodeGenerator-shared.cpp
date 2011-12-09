@@ -63,6 +63,9 @@ bool
 CodeGeneratorShared::generateOutOfLineCode()
 {
     for (size_t i = 0; i < outOfLineCode_.length(); i++) {
+        masm.setFramePushed(outOfLineCode_[i]->framePushed());
+        masm.bind(outOfLineCode_[i]->entry());
+
         if (!outOfLineCode_[i]->generate(this))
             return false;
     }
@@ -73,6 +76,7 @@ CodeGeneratorShared::generateOutOfLineCode()
 bool
 CodeGeneratorShared::addOutOfLineCode(OutOfLineCode *code)
 {
+    code->setFramePushed(masm.framePushed());
     return outOfLineCode_.append(code);
 }
 

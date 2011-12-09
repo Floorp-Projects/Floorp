@@ -350,8 +350,6 @@ CodeGeneratorARM::bailoutFrom(Label *label, LSnapshot *snapshot)
 bool
 CodeGeneratorARM::visitOutOfLineBailout(OutOfLineBailout *ool)
 {
-    masm.bind(ool->entry());
-
     if (!deoptLabel_)
         deoptLabel_ = new HeapLabel();
     masm.ma_mov(Imm32(ool->snapshot()->snapshotOffset()), ScratchRegister);
@@ -1068,18 +1066,6 @@ CodeGeneratorARM::visitDouble(LDouble *ins)
 #endif
 }
 
-bool
-CodeGeneratorARM::visitUnboxDouble(LUnboxDouble *ins)
-{
-    const ValueOperand box = ToValue(ins, LUnboxDouble::Input);
-    const LDefinition *result = ins->output();
-
-    Assembler::Condition cond = masm.testDouble(Assembler::NotEqual, box);
-    if (!bailoutIf(cond, ins->snapshot()))
-        return false;
-    masm.unboxDouble(box, ToFloatRegister(result));
-    return true;
-}
 Register
 CodeGeneratorARM::splitTagForTest(const ValueOperand &value)
 {

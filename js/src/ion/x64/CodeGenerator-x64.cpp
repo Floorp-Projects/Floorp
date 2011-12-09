@@ -148,9 +148,6 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
           case MIRType_Int32:
             cond = masm.testInt32(Assembler::NotEqual, value);
             break;
-          case MIRType_Double:
-            cond = masm.testDouble(Assembler::NotEqual, value);
-            break;
           case MIRType_Object:
             cond = masm.testObject(Assembler::NotEqual, value);
             break;
@@ -165,9 +162,6 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
     switch (mir->type()) {
       case MIRType_Int32:
         masm.unboxInt32(value, ToRegister(result));
-        break;
-      case MIRType_Double:
-        masm.unboxDouble(value, ToFloatRegister(result));
         break;
       case MIRType_Object:
         masm.unboxObject(value, ToRegister(result));
@@ -220,7 +214,7 @@ CodeGeneratorX64::loadUnboxedValue(Operand source, MIRType type, const LDefiniti
 {
     switch (type) {
       case MIRType_Double:
-        masm.movsd(source, ToFloatRegister(dest));
+        masm.loadInt32OrDouble(source, ToFloatRegister(dest));
         break;
 
       case MIRType_Object:
