@@ -66,7 +66,7 @@ enum PluginSupportState {
   ePluginOutdated,     // The plugin is considered outdated, but not disabled
   ePluginOtherState,   // Something else (e.g. uninitialized or not a plugin)
   ePluginCrashed,
-  ePluginClickToPlay   // The plugin is disabled until the user clicks on it
+  ePluginClickToPlay
 };
 
 /**
@@ -409,9 +409,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // created using NS_FROM_PARSER_NETWORK flag. If the element is modified,
     // it may lose the flag.
     bool                        mNetworkCreated : 1;
-
-    // Used to keep track of whether or not a plugin has been clicked to play.
-    bool                        mHasBeenClickedToPlay : 1;
 
     // A specific state that caused us to fallback
     PluginSupportState          mFallbackReason;
