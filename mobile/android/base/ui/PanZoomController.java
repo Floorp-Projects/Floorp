@@ -466,16 +466,8 @@ public class PanZoomController
             }
         }
 
-        mX.setFlingState(Axis.FlingStates.PANNING);
-        mY.setFlingState(Axis.FlingStates.PANNING);
-
-        if (!mOverridePanning) {
-            mX.applyEdgeResistance();
-            mY.applyEdgeResistance();
-        }
-        mX.displace();
-        mY.displace();
-
+        mX.setFlingState(Axis.FlingStates.PANNING); mY.setFlingState(Axis.FlingStates.PANNING);
+        mX.displace(); mY.displace();
         updatePosition();
     }
 
@@ -730,8 +722,9 @@ public class PanZoomController
         // overscrolled on this axis, returns 0.
         private float getExcess() {
             switch (getOverscroll()) {
-            case MINUS:     return Math.min(-getOrigin(), getPageLength() - getViewportEnd());
-            case PLUS:      return Math.min(getOrigin(), getViewportEnd() - getPageLength());
+            case MINUS:     return -getOrigin();
+            case PLUS:      return getViewportEnd() - getPageLength();
+            case BOTH:      return getViewportEnd() - getPageLength() - getOrigin();
             default:        return 0.0f;
             }
         }
@@ -744,11 +737,13 @@ public class PanZoomController
             return getViewportLength() <= getPageLength() - MIN_SCROLLABLE_DISTANCE;
         }
 
-        // Applies resistance along the edges when tracking.
-        public void applyEdgeResistance() {
+        /*
+         * Returns the resistance, as a multiplier, that should be taken into account when
+         * tracking or pinching.
+         */
+        public float getEdgeResistance() {
             float excess = getExcess();
-            if (excess > 0.0f)
-                velocity *= SNAP_LIMIT - excess / getViewportLength();
+            return (excess > 0.0f) ? SNAP_LIMIT - excess / getViewportLength() : 1.0f;
         }
 
         /* Returns the velocity. If the axis is locked, returns 0. */
@@ -800,7 +795,7 @@ public class PanZoomController
                 return;
 
             if (mFlingState == FlingStates.PANNING)
-                displacement += lastTouchPos - touchPos;
+                displacement += (lastTouchPos - touchPos) * getEdgeResistance();
             else
                 displacement += velocity;
         }
@@ -865,8 +860,19 @@ public class PanZoomController
         if (mState == PanZoomState.ANIMATED_ZOOM)
             return false;
 
-        float newZoomFactor = mController.getZoomFactor() *
-                              (detector.getCurrentSpan() / detector.getPreviousSpan());
+        float spanRatio = detector.getCurrentSpan() / detector.getPreviousSpan();
+
+        /*
+         * Apply edge resistance if we're zoomed out smaller than the page size by scaling the zoom
+         * factor toward 1.0.
+         */
+        float resistance = Math.min(mX.getEdgeResistance(), mY.getEdgeResistance());
+        if (spanRatio > 1.0f)
+            spanRatio = 1.0f + (spanRatio - 1.0f) * resistance;
+        else
+            spanRatio = 1.0f - (1.0f - spanRatio) * resistance;
+
+        float newZoomFactor = mController.getZoomFactor() * spanRatio;
 
         mController.scrollBy(new PointF(mLastZoomFocus.x - detector.getFocusX(),
                                         mLastZoomFocus.y - detector.getFocusY()));
