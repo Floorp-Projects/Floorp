@@ -272,7 +272,9 @@ public:
   // changes.
   // For resources using the media cache, this returns true only when all
   // streams for the same resource are all suspended.
-  virtual bool IsSuspendedByCache() = 0;
+  // If aActiveStream is non-null, fills it with a pointer to a stream
+  // for this resource that is not suspended or ended.
+  virtual bool IsSuspendedByCache(nsMediaStream** aActiveStream) = 0;
   // Returns true if this stream has been suspended.
   virtual bool IsSuspended() = 0;
   // Reads only data which is cached in the media cache. If you try to read
@@ -404,7 +406,7 @@ public:
   virtual PRInt64 GetNextCachedData(PRInt64 aOffset);
   virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset);
   virtual bool    IsDataCachedToEndOfStream(PRInt64 aOffset);
-  virtual bool    IsSuspendedByCache();
+  virtual bool    IsSuspendedByCache(nsMediaStream** aActiveStream);
   virtual bool    IsSuspended();
 
   class Listener : public nsIStreamListener,
