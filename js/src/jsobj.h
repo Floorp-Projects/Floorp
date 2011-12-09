@@ -531,7 +531,7 @@ struct JSObject : js::gc::Cell
     inline bool nativeContains(JSContext *cx, const js::Shape &shape);
 
     /* Upper bound on the number of elements in an object. */
-    static const uint32 NELEMENTS_LIMIT = JS_BIT(29);
+    static const uint32 NELEMENTS_LIMIT = JS_BIT(28);
 
   private:
     js::HeapValue   *slots;     /* Slots for object properties. */

@@ -40,18 +40,7 @@
 
 /* API for the WOFF encoder and decoder */
 
-#ifdef _MSC_VER /* MS VC lacks inttypes.h
-                   but we can make do with a few definitons here */
-typedef signed char    int8_t;
-typedef short          int16_t;
-typedef int            int32_t;
-typedef unsigned char  uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int   uint32_t;
-typedef unsigned __int64  uint64_t;
-#else
-#include <inttypes.h>
-#endif
+#include "mozilla/StdInt.h"
 
 #include <stdio.h> /* only for FILE, needed for woffPrintStatus */
 

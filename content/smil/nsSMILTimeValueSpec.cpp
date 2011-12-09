@@ -322,6 +322,28 @@ nsSMILTimeValueSpec::GetTimedElement(Element* aElement)
   return &animElement->TimedElement();
 }
 
+// Indicates whether we're allowed to register an event-listener
+// when scripting is disabled.
+bool
+nsSMILTimeValueSpec::IsWhitelistedEvent()
+{
+  // The category of (SMIL-specific) "repeat(n)" events are allowed.
+  if (mParams.mType == nsSMILTimeValueSpecParams::REPEAT) {
+    return true;
+  }
+
+  // A specific list of other SMIL-related events are allowed, too.
+  if (mParams.mType == nsSMILTimeValueSpecParams::EVENT &&
+      (mParams.mEventSymbol == nsGkAtoms::repeat ||
+       mParams.mEventSymbol == nsGkAtoms::repeatEvent ||
+       mParams.mEventSymbol == nsGkAtoms::beginEvent ||
+       mParams.mEventSymbol == nsGkAtoms::endEvent)) {
+    return true;
+  }
+
+  return false;
+}
+
 void
 nsSMILTimeValueSpec::RegisterEventListener(Element* aTarget)
 {
@@ -334,10 +356,11 @@ nsSMILTimeValueSpec::RegisterEventListener(Element* aTarget)
   if (!aTarget)
     return;
 
-  // Don't listen for accessKey events if script is disabled. (see bug 704482)
-  if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY &&
-      !aTarget->GetOwnerDocument()->IsScriptEnabled())
+  // When script is disabled, only allow registration for whitelisted events.
+  if (!aTarget->GetOwnerDocument()->IsScriptEnabled() &&
+      !IsWhitelistedEvent()) {
     return;
+  }
 
   if (!mEventListener) {
     mEventListener = new EventListener(this);

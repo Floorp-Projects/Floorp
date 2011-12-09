@@ -5282,13 +5282,6 @@ JS_TriggerAllOperationCallbacks(JSRuntime *rt)
 JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx)
 {
-    /*
-     * The use of cx->fp below is safe. Rationale: Here we don't care if the
-     * interpreter state is stale. We just want to know if there *is* any
-     * interpreter state.
-     */
-    VOUCH_DOES_NOT_REQUIRE_STACK();
-
 #ifdef JS_THREADSAFE
     if (!cx->thread())
         return false;

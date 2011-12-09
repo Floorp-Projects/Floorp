@@ -508,7 +508,7 @@ struct Shape : public js::gc::Cell
         /* Number of fixed slots in objects with this shape. */
         FIXED_SLOTS_MAX        = 0x1f,
         FIXED_SLOTS_SHIFT      = 27,
-        FIXED_SLOTS_MASK       = FIXED_SLOTS_MAX << FIXED_SLOTS_SHIFT,
+        FIXED_SLOTS_MASK       = uint32(FIXED_SLOTS_MAX << FIXED_SLOTS_SHIFT),
 
         /* 
          * numLinearSearches starts at zero and is incremented initially on

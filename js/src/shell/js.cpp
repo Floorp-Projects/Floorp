@@ -4122,7 +4122,28 @@ static const char *const shell_help_messages[] = {
 "notes([fun])             Show source notes for functions",
 "stats([string ...])      Dump 'arena', 'atom', 'global' stats",
 "findReferences(target)\n"
-"  Walk the heap and return an object describing all references to target",
+"  Walk the entire heap, looking for references to |target|, and return a\n"
+"  \"references object\" describing what we found.\n"
+"\n"
+"  Each property of the references object describes one kind of reference. The\n"
+"  property's name is the label supplied to MarkObject, JS_CALL_TRACER, or what\n"
+"  have you, prefixed with \"edge: \" to avoid collisions with system properties\n"
+"  (like \"toString\" and \"__proto__\"). The property's value is an array of things\n"
+"  that refer to |thing| via that kind of reference. Ordinary references from\n"
+"  one object to another are named after the property name (with the \"edge: \"\n"
+"  prefix).\n"
+"\n"
+"  Garbage collection roots appear as references from 'null'. We use the name\n"
+"  given to the root (with the \"edge: \" prefix) as the name of the reference.\n"
+"\n"
+"  Note that the references object does record references from objects that are\n"
+"  only reachable via |thing| itself, not just the references reachable\n"
+"  themselves from roots that keep |thing| from being collected. (We could make\n"
+"  this distinction if it is useful.)\n"
+"\n"
+"  If any references are found by the conservative scanner, the references\n"
+"  object will have a property named \"edge: machine stack\"; the referrers will\n"
+"  be 'null', because they are roots.",
 #endif
 "dumpStack()              Dump the stack as an array of callees (youngest first)",
 #ifdef TEST_CVTARGS
