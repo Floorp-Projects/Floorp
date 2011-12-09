@@ -51,7 +51,7 @@ var bookmarks_initial_2 = {
 
 Phase('phase1', [
   [Bookmarks.add, bookmarks_initial_1],
-  [Sync, SYNC_WIPE_SERVER],
+  [Sync]
 ]);
 
 Phase('phase2', [

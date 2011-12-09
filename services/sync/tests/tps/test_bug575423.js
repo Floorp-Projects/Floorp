@@ -73,7 +73,7 @@ Phase('phase1', [
   [History.add, history1],
   [Sync],
   [History.add, history2],
-  [Sync, SYNC_WIPE_SERVER]
+  [Sync]
 ]);
 
 Phase('phase2', [
