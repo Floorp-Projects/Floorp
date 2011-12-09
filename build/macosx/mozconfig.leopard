@@ -1,10 +1,4 @@
-if test -z "$CC" ; then
-   CC=gcc-4.2
-fi
-
-if test -z "$CXX" ; then
-   CXX=g++-4.2
-fi
+. $topsrcdir/build/macosx/common
 
 # Mac builds don't nomally have to be handled as cross
 # compilation, but some of the libraries on the bots

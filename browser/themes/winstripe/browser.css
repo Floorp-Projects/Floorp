@@ -1489,8 +1489,7 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 
 /* page proxy icon */
 
-#page-proxy-favicon,
-#urlbar-throbber {
+#page-proxy-favicon {
   width: 16px;
   height: 16px;
 }
@@ -1507,10 +1506,6 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 
 #page-proxy-favicon[pageproxystate="invalid"] {
   opacity: 0.5;
-}
-
-#urlbar-throbber {
-  list-style-image: url("chrome://browser/skin/places/searching_16.png");
 }
 
 /* autocomplete */

@@ -44,19 +44,15 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
-import android.provider.Browser;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.URLConnection;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -64,6 +60,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import org.mozilla.gecko.db.BrowserDB;
 
 public class Favicons {
     private static final String LOGTAG = "GeckoFavicons";
@@ -235,51 +233,19 @@ public class Favicons {
             Log.d(LOGTAG, "Loading favicon from DB for URL = " + mPageUrl);
 
             ContentResolver resolver = mContext.getContentResolver();
+            BitmapDrawable favicon = BrowserDB.getFaviconForUrl(resolver, mPageUrl);
 
-            Cursor c = resolver.query(Browser.BOOKMARKS_URI,
-                                      new String[] { Browser.BookmarkColumns.FAVICON },
-                                      Browser.BookmarkColumns.URL + " = ?",
-                                      new String[] { mPageUrl },
-                                      null);
+            if (favicon != null)
+                Log.d(LOGTAG, "Loaded favicon from DB successfully for URL = " + mPageUrl);
 
-            if (!c.moveToFirst()) {
-                c.close();
-                return null;
-            }
-
-            int faviconIndex = c.getColumnIndexOrThrow(Browser.BookmarkColumns.FAVICON);
-            
-            byte[] b = c.getBlob(faviconIndex);
-            c.close();
-            if (b == null)
-                return null;
-
-            Bitmap bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
-
-            Log.d(LOGTAG, "Loaded favicon from DB successfully for URL = " + mPageUrl);
-
-            return new BitmapDrawable(bitmap);
+            return favicon;
         }
 
         // Runs in background thread
         private void saveFaviconToDb(BitmapDrawable favicon) {
-            Bitmap bitmap = favicon.getBitmap();
-
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-
-            ContentValues values = new ContentValues();
-            values.put(Browser.BookmarkColumns.FAVICON, stream.toByteArray());
-            values.put(Browser.BookmarkColumns.URL, mPageUrl);
-
-            ContentResolver resolver = mContext.getContentResolver();
-
             Log.d(LOGTAG, "Saving favicon on browser database for URL = " + mPageUrl);
-            resolver.update(Browser.BOOKMARKS_URI,
-                            values,
-                            Browser.BookmarkColumns.URL + " = ?",
-                            new String[] { mPageUrl });
-
+            ContentResolver resolver = mContext.getContentResolver();
+            BrowserDB.updateFaviconForUrl(resolver, mPageUrl, favicon);
 
             Log.d(LOGTAG, "Saving favicon URL for URL = " + mPageUrl);
             mDbHelper.setFaviconUrlForPageUrl(mPageUrl, mFaviconUrl);
@@ -292,13 +258,13 @@ public class Favicons {
 
             // due to android bug 6066, we must download the entire image before using it
             // http://code.google.com/p/android/issues/detail?id=6066
-            HttpURLConnection urlConnection = null;
+            URLConnection urlConnection = null;
             BufferedInputStream contentStream = null;
             ByteArrayInputStream byteStream = null;
             BitmapDrawable image = null;
 
             try {
-                urlConnection = (HttpURLConnection) faviconUrl.openConnection();
+                urlConnection = faviconUrl.openConnection();
                 int length = urlConnection.getContentLength();
                 contentStream = new BufferedInputStream(urlConnection.getInputStream(), length);
                 byte[] bytes = new byte[length];
@@ -313,8 +279,11 @@ public class Favicons {
             } catch (Exception e) {
                 Log.d(LOGTAG, "Error downloading favicon: " + e);
             } finally {
-                if (urlConnection != null)
-                    urlConnection.disconnect();
+                if (urlConnection != null && urlConnection instanceof HttpURLConnection) {
+                    HttpURLConnection httpConnection = (HttpURLConnection) urlConnection;
+                    httpConnection.disconnect();
+                }
+
                 try {
                     if (contentStream != null)
                         contentStream.close();
@@ -336,18 +305,9 @@ public class Favicons {
         @Override
         protected BitmapDrawable doInBackground(Void... unused) {
             BitmapDrawable image = null;
-            URL pageUrl = null;
 
             if (isCancelled())
                 return null;
-
-            // Handle the case of malformed URL
-            try {
-                pageUrl = new URL(mPageUrl);
-            } catch (MalformedURLException e) {
-                Log.d(LOGTAG, "The provided URL is not valid: " + e);
-                return null;
-            }
 
             URL faviconUrl = null;
 
@@ -355,6 +315,15 @@ public class Favicons {
             try {
                 // If favicon is empty, fallback to default favicon URI
                 if (mFaviconUrl == null || mFaviconUrl.length() == 0) {
+                    // Handle the case of malformed URL
+                    URL pageUrl = null;
+                    try {
+                        pageUrl = new URL(mPageUrl);
+                    } catch (MalformedURLException e) {
+                        Log.d(LOGTAG, "The provided URL is not valid: " + e);
+                        return null;
+                    }
+
                     faviconUrl = new URL(pageUrl.getProtocol(), pageUrl.getAuthority(), "/favicon.ico");
                     mFaviconUrl = faviconUrl.toString();
                 } else {

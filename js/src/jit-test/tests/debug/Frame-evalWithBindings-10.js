@@ -1,4 +1,5 @@
-// Direct eval code under evalWithbindings sees both the bindings and the enclosing scope.
+// Direct eval code under evalWithBindings sees both the bindings and the enclosing scope.
+
 var g = newGlobal('new-compartment');
 var dbg = new Debugger(g);
 var hits = 0;

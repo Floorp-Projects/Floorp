@@ -1478,11 +1478,6 @@ InlineGetProp(VMFrame &f)
 
     Value rval;
     do {
-        /*
-         * We do not impose the method read barrier if in an imacro,
-         * assuming any property gets it does (e.g., for 'toString'
-         * from JSOP_NEW) will not be leaked to the calling script.
-         */
         JSObject *aobj = js_GetProtoIfDenseArray(obj);
 
         PropertyCacheEntry *entry;
