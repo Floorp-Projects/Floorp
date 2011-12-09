@@ -934,7 +934,7 @@ public class PanZoomController
     }
 
     public boolean getRedrawHint() {
-        return (mState != PanZoomState.PINCHING);
+        return (mState == PanZoomState.NOTHING || mState == PanZoomState.FLING);
     }
 
     @Override
