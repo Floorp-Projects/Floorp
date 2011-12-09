@@ -45,9 +45,6 @@
 #include "gfxRect.h"
 #include "nsFont.h"
 
-// cairo doesn't support invert
-// #define GFX_HAS_INVERT
-
 // XXX fold this into nsStyleContext and group by nsStyleXXX struct
 
 // Indices into border/padding/margin arrays
@@ -235,9 +232,6 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 // See nsStyleColor
 #define NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR 1
 #define NS_STYLE_COLOR_INHERIT_FROM_BODY  2  /* Can't come from CSS directly */
-#ifdef GFX_HAS_INVERT
-#define NS_STYLE_COLOR_INVERT             3
-#endif
 
 // See nsStyleColor
 #define NS_COLOR_CURRENTCOLOR                   -1

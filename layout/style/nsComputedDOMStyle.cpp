@@ -2137,12 +2137,8 @@ nsComputedDOMStyle::DoGetOutlineColor()
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
 
   nscolor color;
-#ifdef GFX_HAS_INVERT
-  GetStyleOutline()->GetOutlineColor(color);
-#else
   if (!GetStyleOutline()->GetOutlineColor(color))
     color = GetStyleColor()->mColor;
-#endif
 
   SetToRGBAColor(val, color);
   return val;
