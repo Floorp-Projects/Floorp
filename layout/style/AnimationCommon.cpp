@@ -126,10 +126,18 @@ CommonAnimationManager::MediumFeaturesChanged(nsPresContext* aPresContext)
   return false;
 }
 
-/* virtual */ PRInt64
-CommonAnimationManager::SizeOf() const
+/* virtual */ size_t
+CommonAnimationManager::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
-  return sizeof(*this);
+  // XXX: could measure mProperytValuePairs here.  Bug 671299 may do this.
+  return 0;
+}
+
+/* virtual */ size_t
+CommonAnimationManager::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  return aMallocSizeOf(this, sizeof(CommonAnimationManager)) +
+         SizeOfExcludingThis(aMallocSizeOf);
 }
 
 /* static */ bool

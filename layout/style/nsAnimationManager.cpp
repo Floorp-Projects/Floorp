@@ -432,6 +432,21 @@ nsAnimationManager::RulesMatching(XULTreeRuleProcessorData* aData)
 }
 #endif
 
+/* virtual */ size_t
+nsAnimationManager::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  // XXX: various other members in nsAnimationManager could be measured here.
+  // Bug 671299 may do this.
+  return CommonAnimationManager::SizeOfExcludingThis(aMallocSizeOf);
+}
+
+/* virtual */ size_t
+nsAnimationManager::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  return aMallocSizeOf(this, sizeof(nsAnimationManager)) +
+         SizeOfExcludingThis(aMallocSizeOf);
+}
+
 nsIStyleRule*
 nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
                                        mozilla::dom::Element* aElement)

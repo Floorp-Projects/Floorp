@@ -715,6 +715,19 @@ nsTransitionManager::RulesMatching(XULTreeRuleProcessorData* aData)
 }
 #endif
 
+/* virtual */ size_t
+nsTransitionManager::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  return CommonAnimationManager::SizeOfExcludingThis(aMallocSizeOf);
+}
+
+/* virtual */ size_t
+nsTransitionManager::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  return aMallocSizeOf(this, sizeof(nsTransitionManager)) +
+         SizeOfExcludingThis(aMallocSizeOf);
+}
+
 struct TransitionEventInfo {
   nsCOMPtr<nsIContent> mElement;
   nsTransitionEvent mEvent;
