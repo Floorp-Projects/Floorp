@@ -1,0 +1,49 @@
+#include "stddef.gdh"
+
+table(glyph)
+gSpace = codepoint(" ");
+
+gA = codepoint("A");
+gB = codepoint("B");
+gC = codepoint("C");
+gF = codepoint("F");
+gI = codepoint("I");
+gL = codepoint("L");
+gP = codepoint("P");
+gS = codepoint("S");
+ga = codepoint("a");
+gs = codepoint("s");
+g1 = codepoint("1");
+g2 = codepoint("2");
+g3 = codepoint("3");
+g4 = codepoint("4");
+
+clsFail = codepoint("FAIL");
+clsPass = codepoint("PaSs");
+cls1234 = codepoint("1234");
+cls5678 = codepoint("5678");
+endtable
+
+table(substitution)
+
+pass(1)
+clsFail > cls1234;
+endpass;
+
+pass(2)
+cls1234 > @1 @1;
+endpass;
+
+pass(3)
+cls1234 cls1234 > @1 cls5678;
+endpass;
+
+pass(4)
+cls1234 cls5678 > _ clsFail;
+endpass;
+
+pass(5)
+gF gA gI gL > gP ga gS gs;
+endpass;
+
+endtable
