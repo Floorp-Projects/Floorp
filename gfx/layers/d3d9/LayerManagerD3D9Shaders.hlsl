@@ -42,6 +42,7 @@ VS_OUTPUT LayerQuadVS(const VS_INPUT aVertex)
   outp.vPosition.y = position.y + outp.vPosition.y * size.y;
   
   outp.vPosition = mul(mLayerTransform, outp.vPosition);
+  outp.vPosition = outp.vPosition / outp.vPosition.w;
   outp.vPosition = outp.vPosition - vRenderTargetOffset;
   
   // adjust our vertices to match d3d9's pixel coordinate system
