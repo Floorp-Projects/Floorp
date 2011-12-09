@@ -391,6 +391,12 @@
 @BINPATH@/components/messageWakeupService.manifest
 @BINPATH@/components/nsFilePicker.js
 @BINPATH@/components/nsFilePicker.manifest
+#ifdef MOZ_B2G_RIL
+@BINPATH@/components/nsTelephonyWorker.manifest
+@BINPATH@/components/nsTelephonyWorker.js
+@BINPATH@/components/Telephony.manifest
+@BINPATH@/components/Telephony.js
+#endif
 #ifdef XP_MACOSX
 @BINPATH@/components/libalerts_s.dylib
 #endif

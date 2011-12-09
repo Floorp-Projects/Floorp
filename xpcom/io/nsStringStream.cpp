@@ -204,7 +204,7 @@ nsStringInputStream::ShareData(const char *data, PRInt32 dataLen)
     if (dataLen < 0)
         dataLen = strlen(data);
 
-    mData.Rebind(data, data + dataLen);
+    mData.Rebind(data, dataLen);
     mOffset = 0;
     return NS_OK;
 }

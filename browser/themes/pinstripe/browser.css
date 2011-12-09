@@ -1106,8 +1106,7 @@ toolbar[mode="icons"] #zoom-in-button {
   height: 22px;
 }
 
-#page-proxy-favicon,
-#urlbar-throbber {
+#page-proxy-favicon {
   width: 16px;
   height: 16px;
   margin: 0px;
@@ -1125,10 +1124,6 @@ toolbar[mode="icons"] #zoom-in-button {
 
 #page-proxy-favicon[pageproxystate="invalid"] {
   opacity: 0.5;
-}
-
-#urlbar-throbber {
-  list-style-image: url("chrome://browser/skin/places/searching_16.png");
 }
 
 #wrapper-urlbar-container[place="palette"] {

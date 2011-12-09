@@ -13,14 +13,14 @@ if (typeof findReferences == "function") {
     assertEq(referencesVia(returnFlat(o), 'upvars[0]', o), true);
 
     function returnHeavy(y) { eval(''); return function heavy() { return y; }; }
-    assertEq(referencesVia(returnHeavy(o), 'parent; y', o), true);
-    assertEq(referencesVia(returnHeavy(o), 'parent; parent', this), true);
+    assertEq(referencesVia(returnHeavy(o), 'fun_callscope; y', o), true);
+    assertEq(referencesVia(returnHeavy(o), 'fun_callscope; shape; base; parent', this), true);
 
     function returnBlock(z) { eval(''); let(w = z) { return function block() { return w; }; }; }
-    assertEq(referencesVia(returnBlock(o), 'parent; w', o), true);
+    assertEq(referencesVia(returnBlock(o), 'fun_callscope; w', o), true);
 
     function returnWithObj(v) { with(v) return function withObj() { return u; }; }
-    assertEq(referencesVia(returnWithObj(o), 'parent; type; type_proto', o), true);
+    assertEq(referencesVia(returnWithObj(o), 'fun_callscope; type; type_proto', o), true);
 
     reportCompare(true, true);
 } else {

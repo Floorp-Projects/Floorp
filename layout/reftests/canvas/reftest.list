@@ -38,6 +38,7 @@ asserts-if(cocoaWidget,0-2) == size-change-1.html size-change-1-ref.html
 == text-not-in-doc-test.html text-not-in-doc-ref.html
 
 == text-bidi-ltr-test.html text-bidi-ltr-ref.html
+!= text-bidi-ltr-test.html text-bidi-ltr-notref.html # for bug 698185
 == text-bidi-rtl-test.html text-bidi-rtl-ref.html
 
 fails-if(Android) != text-font-lang.html text-font-lang-notref.html

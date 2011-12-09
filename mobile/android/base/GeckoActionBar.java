@@ -38,9 +38,14 @@
 package org.mozilla.gecko;
 
 import android.app.Activity;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 
 public class GeckoActionBar {
+
+    public static void setBackgroundDrawable(Activity activity, Drawable drawable) {
+         activity.getActionBar().setBackgroundDrawable(drawable);
+    }
 
     public static void setDisplayOptions(Activity activity, int options, int mask) {
          activity.getActionBar().setDisplayOptions(options, mask);

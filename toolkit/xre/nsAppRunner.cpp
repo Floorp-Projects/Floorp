@@ -2618,7 +2618,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 {
   NS_TIME_FUNCTION;
   SAMPLER_INIT();
-  SAMPLE_CHECKPOINT("Startup", "XRE_Main");
+  SAMPLE_LABEL("Startup", "XRE_Main");
 
   StartupTimeline::Record(StartupTimeline::MAIN);
 

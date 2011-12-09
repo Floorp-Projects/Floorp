@@ -626,15 +626,15 @@ struct MemoryReport {
 
 // This is just a wrapper for InfallibleTArray<MemoryReport> that implements
 // nsISupports, so it can be passed to nsIMemoryMultiReporter::CollectReports.
-class PRInt64Wrapper : public nsISupports {
+class MemoryReportsWrapper : public nsISupports {
 public:
     NS_DECL_ISUPPORTS
-    PRInt64Wrapper() : mValue(0) { }
-    PRInt64 mValue;
+    MemoryReportsWrapper(InfallibleTArray<MemoryReport> *r) : mReports(r) { }
+    InfallibleTArray<MemoryReport> *mReports;
 };
-NS_IMPL_ISUPPORTS0(PRInt64Wrapper)
+NS_IMPL_ISUPPORTS0(MemoryReportsWrapper)
 
-class NonHeapCountingCallback : public nsIMemoryMultiReporterCallback
+class MemoryReportCallback : public nsIMemoryMultiReporterCallback
 {
 public:
     NS_DECL_ISUPPORTS
@@ -642,29 +642,42 @@ public:
     NS_IMETHOD Callback(const nsACString &aProcess, const nsACString &aPath,
                         PRInt32 aKind, PRInt32 aUnits, PRInt64 aAmount,
                         const nsACString &aDescription,
-                        nsISupports *aWrappedExplicit)
+                        nsISupports *aWrappedMRs)
     {
         if (aKind == nsIMemoryReporter::KIND_NONHEAP &&
             PromiseFlatCString(aPath).Find("explicit") == 0 &&
-            aAmount != PRInt64(-1))
-        {
-            PRInt64Wrapper *wrappedPRInt64 =
-                static_cast<PRInt64Wrapper *>(aWrappedExplicit);
-            wrappedPRInt64->mValue += aAmount;
+            aAmount != PRInt64(-1)) {
+
+            MemoryReportsWrapper *wrappedMRs =
+                static_cast<MemoryReportsWrapper *>(aWrappedMRs);
+            MemoryReport mr(aPath, aAmount);
+            wrappedMRs->mReports->AppendElement(mr);
         }
         return NS_OK;
     }
 };
 NS_IMPL_ISUPPORTS1(
-  NonHeapCountingCallback
+  MemoryReportCallback
 , nsIMemoryMultiReporterCallback
 )
+
+// Is path1 a prefix, and thus a parent, of path2?  Eg. "a/b" is a parent of
+// "a/b/c", but "a/bb" is not.
+static bool
+isParent(const nsACString &path1, const nsACString &path2)
+{
+    if (path1.Length() >= path2.Length())
+        return false;
+
+    const nsACString& subStr = Substring(path2, 0, path1.Length());
+    return subStr.Equals(path1) && path2[path1.Length()] == '/';
+}
 
 NS_IMETHODIMP
 nsMemoryReporterManager::GetExplicit(PRInt64 *aExplicit)
 {
-    NS_ENSURE_ARG_POINTER(aExplicit);
-    *aExplicit = 0;
+    InfallibleTArray<MemoryReport> nonheap;
+    PRInt64 heapUsed = PRInt64(-1);
 
     // Get "heap-allocated" and all the KIND_NONHEAP measurements from vanilla
     // "explicit" reporters.
@@ -687,8 +700,8 @@ nsMemoryReporterManager::GetExplicit(PRInt64 *aExplicit)
         // We're only interested in NONHEAP explicit reporters and
         // the 'heap-allocated' reporter.
         if (kind == nsIMemoryReporter::KIND_NONHEAP &&
-            path.Find("explicit") == 0)
-        {
+            path.Find("explicit") == 0) {
+
             PRInt64 amount;
             rv = r->GetAmount(&amount);
             NS_ENSURE_SUCCESS(rv, rv);
@@ -696,19 +709,17 @@ nsMemoryReporterManager::GetExplicit(PRInt64 *aExplicit)
             // Just skip any NONHEAP reporters that fail, because
             // "heap-allocated" is the most important one.
             if (amount != PRInt64(-1)) {
-                *aExplicit += amount;
+                MemoryReport mr(path, amount);
+                nonheap.AppendElement(mr);
             }
         } else if (path.Equals("heap-allocated")) {
-            PRInt64 heapAllocated;
-            rv = r->GetAmount(&heapAllocated);
+            rv = r->GetAmount(&heapUsed);
             NS_ENSURE_SUCCESS(rv, rv);
             // If "heap-allocated" fails, we give up, because the result
             // would be horribly inaccurate.
-            if (heapAllocated == PRInt64(-1)) {
+            if (heapUsed == PRInt64(-1)) {
                 *aExplicit = PRInt64(-1);
                 return NS_OK;
-            } else {
-                *aExplicit += heapAllocated;
             }
         }
     }
@@ -716,15 +727,39 @@ nsMemoryReporterManager::GetExplicit(PRInt64 *aExplicit)
     // Get KIND_NONHEAP measurements from multi-reporters, too.
     nsCOMPtr<nsISimpleEnumerator> e2;
     EnumerateMultiReporters(getter_AddRefs(e2));
-    nsRefPtr<PRInt64Wrapper> wrappedNonHeapTotal = new PRInt64Wrapper();
-    nsRefPtr<NonHeapCountingCallback> cb = new NonHeapCountingCallback();
+    nsRefPtr<MemoryReportsWrapper> wrappedMRs =
+        new MemoryReportsWrapper(&nonheap);
+
+    // This callback adds only NONHEAP explicit reporters.
+    nsRefPtr<MemoryReportCallback> cb = new MemoryReportCallback();
 
     while (NS_SUCCEEDED(e2->HasMoreElements(&more)) && more) {
       nsCOMPtr<nsIMemoryMultiReporter> r;
       e2->GetNext(getter_AddRefs(r));
-      r->CollectReports(cb, wrappedNonHeapTotal);
+      r->CollectReports(cb, wrappedMRs);
     }
-    *aExplicit += wrappedNonHeapTotal->mValue;
+
+    // Ignore (by zeroing its amount) any reporter that is a child of another
+    // reporter.  Eg. if we have "explicit/a" and "explicit/a/b", zero the
+    // latter.  This is quadratic in the number of explicit NONHEAP reporters,
+    // but there shouldn't be many.
+    for (PRUint32 i = 0; i < nonheap.Length(); i++) {
+        const nsCString &iPath = nonheap[i].path;
+        for (PRUint32 j = i + 1; j < nonheap.Length(); j++) {
+            const nsCString &jPath = nonheap[j].path;
+            if (isParent(iPath, jPath)) {
+                nonheap[j].amount = 0;
+            } else if (isParent(jPath, iPath)) {
+                nonheap[i].amount = 0;
+            }
+        }
+    }
+
+    // Sum all the nonheap reporters and heapUsed.
+    *aExplicit = heapUsed;
+    for (PRUint32 i = 0; i < nonheap.Length(); i++) {
+        *aExplicit += nonheap[i].amount;
+    }
 
     return NS_OK;
 }

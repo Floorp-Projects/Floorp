@@ -76,7 +76,6 @@ browser.jar:
   skin/classic/browser/places/plus.png                      (places/plus.png)
   skin/classic/browser/places/plus-active.png               (places/plus-active.png)
   skin/classic/browser/places/starPage.png                  (places/starPage.png)
-  skin/classic/browser/places/searching_16.png              (places/searching_16.png)
   skin/classic/browser/places/starred48.png                 (places/starred48.png)
   skin/classic/browser/places/unstarred48.png               (places/unstarred48.png)
   skin/classic/browser/places/unfiledBookmarks.png          (places/unfiledBookmarks.png)

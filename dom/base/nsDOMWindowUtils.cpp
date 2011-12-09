@@ -83,6 +83,7 @@
 #include "nsIIOService.h"
 
 #include "mozilla/dom/Element.h"
+#include "sampler.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -729,6 +730,7 @@ nsDOMWindowUtils::Focus(nsIDOMElement* aElement)
 NS_IMETHODIMP
 nsDOMWindowUtils::GarbageCollect(nsICycleCollectorListener *aListener)
 {
+  SAMPLE_LABEL("GC", "GarbageCollect");
   // Always permit this in debug builds.
 #ifndef DEBUG
   if (!IsUniversalXPConnectCapable()) {
