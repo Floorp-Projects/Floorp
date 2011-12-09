@@ -1152,21 +1152,26 @@ Tab.prototype = {
     this._viewport.y = this.browser.contentWindow.scrollY +
                        this.viewportExcess.y;
 
+    // Transform coordinates based on zoom
+    this._viewport.x = Math.round(this._viewport.x * this._viewport.zoom);
+    this._viewport.y = Math.round(this._viewport.y * this._viewport.zoom);
+
+    /*
+     * Don't alter the page size until we hit DOMContentLoaded, because this causes the page size
+     * to jump around wildly during page load.
+     */
     let doc = this.browser.contentDocument;
-    let pageWidth = this._viewport.width;
-    let pageHeight = this._viewport.height;
-    if (doc != null) {
+    if (doc != null && doc.readyState === 'complete') {
+      let pageWidth = this._viewport.width, pageHeight = this._viewport.height;
       let body = doc.body || { scrollWidth: pageWidth, scrollHeight: pageHeight };
       let html = doc.documentElement || { scrollWidth: pageWidth, scrollHeight: pageHeight };
       pageWidth = Math.max(body.scrollWidth, html.scrollWidth);
       pageHeight = Math.max(body.scrollHeight, html.scrollHeight);
-    }
 
-    // Transform coordinates based on zoom
-    this._viewport.x = Math.round(this._viewport.x * this._viewport.zoom);
-    this._viewport.y = Math.round(this._viewport.y * this._viewport.zoom);
-    this._viewport.pageWidth = Math.round(pageWidth * this._viewport.zoom);
-    this._viewport.pageHeight = Math.round(pageHeight * this._viewport.zoom);
+      /* Transform the page width and height based on the zoom factor. */
+      this._viewport.pageWidth = Math.round(pageWidth * this._viewport.zoom);
+      this._viewport.pageHeight = Math.round(pageHeight * this._viewport.zoom);
+    }
 
     return this._viewport;
   },
