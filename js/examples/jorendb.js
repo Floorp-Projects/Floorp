@@ -42,7 +42,7 @@
 
 /*
  * jorendb is a simple command-line debugger for shell-js programs.  It is
- * intended as a demo of the Debug object (as there are no shell js programs to
+ * intended as a demo of the Debugger object (as there are no shell js programs to
  * speak of).
  *
  * To run it: $JS -d path/to/this/file/jorendb.js
@@ -71,7 +71,7 @@
             print("$" + i + " = " + dvrepr);
         }
 
-        Object.defineProperty(Debug.Frame.prototype, "num", {
+        Object.defineProperty(Debugger.Frame.prototype, "num", {
             configurable: true,
             enumerable: false,
             get: function () {
@@ -81,6 +81,17 @@
                     return f === null ? undefined : i;
                 }
             });
+
+        function framePosition(f) {
+            if (!f.script)
+                return f.type + " code";
+            return (f.script.url || f.type + " code") + ":" + f.script.getOffsetLine(f.offset);
+        }
+
+        function callDescription(f) {
+            return ((f.callee.name || '<anonymous>') + 
+                    "(" + f.arguments.map(dvToString).join(", ") + ")");
+        }
 
         function showFrame(f, n) {
             if (f === undefined || f === null) {
@@ -96,13 +107,11 @@
                     throw new Error("Internal error: frame not on stack");
             }
 
-            var me;
-            if (f.type === "call") {
-                me = f.callee.name + "(" + f.arguments.map(dvToString).join(", ") + ")";
-            } else {
-                me = f.type + " code";
-            }
-            print("#" + n + " in " + me);
+            var me = '#' + n;
+            if (f.type === "call")
+                me += ' ' + callDescription(f);
+            me += ' ' + framePosition(f);
+            print(me);
         }
 
         function saveExcursion(fn) {
@@ -147,7 +156,9 @@
                 }
             } else {
                 // This is the real deal.
-                var cv = saveExcursion(function () { return focusedFrame.eval(rest); });
+                var cv = saveExcursion(function () {
+                        return focusedFrame.eval(rest);
+                    });
                 if (cv === null) {
                     if (!dbg.enabled)
                         return [cv];
@@ -216,11 +227,13 @@
                     print("No stack.");
                     return;
                 }
-                for (var i = 0; i < n && f; i++)
+                for (var i = 0; i < n && f; i++) {
+                    if (!f.older) {
+                        print("There is no frame " + rest + ".");
+                        return;
+                    }
+                    f.older.younger = f;
                     f = f.older;
-                if (f === null) {
-                    print("There is no frame " + rest + ".");
-                    return;
                 }
                 focusedFrame = f;
                 showFrame(f, n);
@@ -248,13 +261,21 @@
             else if (focusedFrame.older === null)
                 print("Initial frame selected; you cannot go up.");
             else {
+                focusedFrame.older.younger = focusedFrame;
                 focusedFrame = focusedFrame.older;
                 showFrame();
             }
         }
 
         function downCommand() {
-            print("ugh");
+            if (focusedFrame === null)
+                print("No stack.");
+            else if (!focusedFrame.younger)
+                print("Youngest frame selected; you cannot go down.");
+            else {
+                focusedFrame = focusedFrame.younger;
+                showFrame();
+            }
         }
 
         function forcereturnCommand(rest) {
@@ -365,26 +386,24 @@
             }
         }
 
-        var dbg = new Debug(debuggeeGlobal);
-        dbg.hooks = {
-            debuggerHandler: function (frame) {
-                return saveExcursion(function () {
-                        topFrame = focusedFrame = frame;
-                        print("'debugger' statement hit.");
-                        showFrame();
-                        return repl();
-                    });
-            },
-            throw: function (frame, exc) {
-                return saveExcursion(function () {
-                        topFrame = focusedFrame = frame;
-                        print("Unwinding due to exception. (Type 'c' to continue unwinding.)");
-                        showFrame();
-                        print("Exception value is:");
-                        showDebuggeeValue(exc);
-                        return repl();
-                    });
-            }
+        var dbg = new Debugger(debuggeeGlobal);
+        dbg.onDebuggerStatement = function (frame) {
+            return saveExcursion(function () {
+                    topFrame = focusedFrame = frame;
+                    print("'debugger' statement hit.");
+                    showFrame();
+                    return repl();
+                });
+        };
+        dbg.onThrow = function (frame, exc) {
+            return saveExcursion(function () {
+                    topFrame = focusedFrame = frame;
+                    print("Unwinding due to exception. (Type 'c' to continue unwinding.)");
+                    showFrame();
+                    print("Exception value is:");
+                    showDebuggeeValue(exc);
+                    return repl();
+                });
         };
         repl();
     } + ")();"
