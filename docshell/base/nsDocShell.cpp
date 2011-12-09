@@ -4518,7 +4518,7 @@ nsDocShell::Create()
         Preferences::AddStrongObserver(this, "browser.xul.error_pages.enabled");
     }
 
-    nsCOMPtr<nsIObserverService> serv = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
     if (serv) {
         const char* msg = mItemType == typeContent ?
             NS_WEBNAVIGATION_CREATE : NS_CHROME_WEBNAVIGATION_CREATE;
@@ -4535,8 +4535,7 @@ nsDocShell::Destroy()
                  "Unexpected item type in docshell");
 
     if (!mIsBeingDestroyed) {
-        nsCOMPtr<nsIObserverService> serv =
-            do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+        nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
         if (serv) {
             const char* msg = mItemType == typeContent ?
                 NS_WEBNAVIGATION_DESTROY : NS_CHROME_WEBNAVIGATION_DESTROY;
