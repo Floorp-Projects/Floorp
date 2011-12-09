@@ -333,15 +333,11 @@ nsSMILTimeValueSpec::IsWhitelistedEvent()
   }
 
   // A specific list of other SMIL-related events are allowed, too.
-  // NOTE: "repeatEvent", "beginEvent", & "endEvent" aren't in nsGkAtoms --
-  // they're defined in nsDOMEvent.cpp -- so we need to use NS_NewAtom.
-  // (This could probably be optimized, but it's not a huge deal because
-  // we'll rarely hit this code.)
   if (mParams.mType == nsSMILTimeValueSpecParams::EVENT &&
       (mParams.mEventSymbol == nsGkAtoms::repeat ||
-       mParams.mEventSymbol == NS_NewAtom("repeatEvent") ||
-       mParams.mEventSymbol == NS_NewAtom("beginEvent") ||
-       mParams.mEventSymbol == NS_NewAtom("endEvent"))) {
+       mParams.mEventSymbol == nsGkAtoms::repeatEvent ||
+       mParams.mEventSymbol == nsGkAtoms::beginEvent ||
+       mParams.mEventSymbol == nsGkAtoms::endEvent)) {
     return true;
   }
 
