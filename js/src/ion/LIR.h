@@ -800,7 +800,7 @@ class LCallInstructionHelper : public LInstructionHelper<Defs, Operands, Temps>
     }
 };
 
-template <enum VMFunction::ReturnType DefType, size_t Defs, size_t Operands, size_t Temps>
+template <enum VMFunction::DataType DefType, size_t Defs, size_t Operands, size_t Temps>
 class LVMCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, Temps>
 {
   public:
@@ -818,22 +818,15 @@ class LVMCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, T
   private:
     static uint32 defMask() {
         switch (DefType) {
-          case VMFunction::ReturnValue:
-#if defined(JS_NUNBOX32)
-            JS_ASSERT(Defs == 2);
+          case VMFunction::Type_Value:
+            JS_ASSERT(Defs == BOX_PIECES);
             return Registers::JSCallMask;
-#elif defined(JS_PUNBOX64)
-            // Use the same mask as ReturnPointer.
-#endif
-          case VMFunction::ReturnBool:
-          case VMFunction::ReturnPointer:
+          case VMFunction::Type_Bool:
+          case VMFunction::Type_Object:
             JS_ASSERT(Defs == 1);
-            return Registers::JSCCallMask;
-          case VMFunction::ReturnNothing:
-            JS_ASSERT(Defs == 0);
-            return 0;
+            return Registers::CallMask;
           default:
-            JS_NOT_REACHED("Unknown ReturnType.");
+            JS_NOT_REACHED("unexpected return type (void)");
             return 0;
         }
         return 0;

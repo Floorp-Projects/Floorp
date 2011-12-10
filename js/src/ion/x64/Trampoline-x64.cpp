@@ -458,7 +458,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Reserve space for the outparameter.
     Register outReg = InvalidReg;
-    if (f.outParam == VMFunction::OutParam_Value) {
+    if (f.outParam == VMFunction::Type_Value) {
         outReg = regs.takeAny();
         masm.reserveStack(sizeof(Value));
         masm.movl(rsp, outReg);
@@ -486,37 +486,27 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Test for failure.
     Label exception;
-    if (f.failCond != VMFunction::FallibleNone) {
-        if (f.failCond == VMFunction::FalliblePointer)
-            masm.testq(rax, rax);
-        else // VMFunction::FallibleBool
-            masm.testl(rax, rax);
+    switch (f.failType()) {
+      case VMFunction::Type_Object:
+        masm.testq(rax, rax);
         masm.j(Assembler::Zero, &exception);
+        break;
+      case VMFunction::Type_Bool:
+        masm.testl(eax, eax);
+        masm.j(Assembler::Zero, &exception);
+        break;
+      default:
+        JS_NOT_REACHED("unknown failure kind");
+        break;
     }
 
     // Load the outparam and free any allocated stack.
-    if (f.outParam == VMFunction::OutParam_Value) {
-        JS_ASSERT(f.returnType == VMFunction::ReturnValue);
+    if (f.outParam == VMFunction::Type_Value) {
         masm.loadValue(Operand(esp, 0), JSReturnOperand);
         masm.freeStack(sizeof(Value));
     }
 
-    // TODO: Removed this as soon as we use retn.
-    switch (f.returnType) {
-      case VMFunction::ReturnNothing:
-        regs = GeneralRegisterSet::VolatileNot(GeneralRegisterSet());
-        break;
-      case VMFunction::ReturnBool:
-      case VMFunction::ReturnPointer:
-        regs = GeneralRegisterSet::VolatileNot(GeneralRegisterSet(Registers::JSCCallMask));
-        break;
-      case VMFunction::ReturnValue:
-        regs = GeneralRegisterSet::VolatileNot(GeneralRegisterSet(Registers::JSCallMask));
-        break;
-      default:
-        JS_NOT_REACHED("Unknown ReturnType.");
-        break;
-    }
+    regs = GeneralRegisterSet::Not(GeneralRegisterSet(Registers::JSCallMask | Registers::CallMask));
 
     // Pick a register which is not among the return registers.
     temp = regs.getAny();
@@ -528,10 +518,8 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     masm.push(temp);
     masm.ret();
 
-    if (f.failCond != VMFunction::FallibleNone) {
-        masm.bind(&exception);
-        masm.handleException();
-    }
+    masm.bind(&exception);
+    masm.handleException();
 
     Linker linker(masm);
     IonCode *wrapper = linker.newCode(cx);
