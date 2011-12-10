@@ -4226,7 +4226,7 @@ Parser::statement()
         return pn;
 
       case TOK_DEBUGGER:
-        pn = NullaryNode::create(PNK_DEBUGGER, tc);
+        pn = tc->parser->new_<DebuggerStatement>(tokenStream.currentToken().pos);
         if (!pn)
             return NULL;
         tc->flags |= TCF_FUN_HEAVYWEIGHT;

@@ -1059,6 +1059,13 @@ ParseNode::asContinueStatement()
     return *static_cast<ContinueStatement *>(this);
 }
 
+class DebuggerStatement : public ParseNode {
+  public:
+    DebuggerStatement(const TokenPos &pos)
+      : ParseNode(PNK_DEBUGGER, JSOP_NOP, PN_NULLARY, pos)
+    { }
+};
+
 ParseNode *
 CloneLeftHandSide(ParseNode *opn, TreeContext *tc);
 
