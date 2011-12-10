@@ -183,22 +183,13 @@ class LGoto : public LInstructionHelper<0, 0, 0>
     }
 };
 
-typedef LVMCallInstructionHelper<VMFunction::Type_Object, 1, 0, 0> LNewArrayBase;
-class LNewArray : public LNewArrayBase
+class LNewArray : public LVMCallInstructionHelper<LDefinition::OBJECT, 1, 0, 0>
 {
   public:
     LIR_HEADER(NewArray);
 
-    LNewArray()
-      : LNewArrayBase(function())
-    { }
-
     MNewArray *mir() const {
         return mir_->toNewArray();
-    }
-
-    static const VMFunction &function() {
-        return NewInitArrayVMFun;
     }
 };
 
