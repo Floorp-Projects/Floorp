@@ -811,11 +811,11 @@ public class PanZoomController
         RectF viewport = viewportMetrics.getViewport();
 
         float minZoomFactor = 0.0f;
-        if (viewport.width() > pageSize.width) {
+        if (viewport.width() > pageSize.width && pageSize.width > 0) {
             float scaleFactor = viewport.width() / pageSize.width;
             minZoomFactor = (float)Math.max(minZoomFactor, zoomFactor * scaleFactor);
         }
-        if (viewport.height() > pageSize.height) {
+        if (viewport.height() > pageSize.height && pageSize.height > 0) {
             float scaleFactor = viewport.height() / pageSize.height;
             minZoomFactor = (float)Math.max(minZoomFactor, zoomFactor * scaleFactor);
         }
