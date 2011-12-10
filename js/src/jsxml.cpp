@@ -1621,11 +1621,12 @@ ParseNodeToXML(Parser *parser, ParseNode *pn,
                 goto skip_child;
             xml_class = JSXML_CLASS_COMMENT;
         } else if (pn->isKind(PNK_XMLPI)) {
+            XMLProcessingInstruction &pi = pn->asXMLProcessingInstruction();
             if (IS_XML(str)) {
                 Value v = StringValue(str);
                 JSAutoByteString bytes;
                 if (js_ValueToPrintable(cx, v, &bytes)) {
-                    ReportCompileErrorNumber(cx, &parser->tokenStream, pn,
+                    ReportCompileErrorNumber(cx, &parser->tokenStream, &pi,
                                              JSREPORT_ERROR, JSMSG_RESERVED_ID, bytes.ptr());
                 }
                 goto fail;
@@ -1634,11 +1635,11 @@ ParseNodeToXML(Parser *parser, ParseNode *pn,
             if (flags & XSF_IGNORE_PROCESSING_INSTRUCTIONS)
                 goto skip_child;
 
-            qn = ParseNodeToQName(parser, pn, inScopeNSes, JS_FALSE);
+            qn = ParseNodeToQName(parser, &pi, inScopeNSes, JS_FALSE);
             if (!qn)
                 goto fail;
 
-            str = pn->pn_pidata ? pn->pn_pidata : cx->runtime->emptyString;
+            str = pi.data();
             xml_class = JSXML_CLASS_PROCESSING_INSTRUCTION;
         } else {
             /* CDATA section content, or element text. */

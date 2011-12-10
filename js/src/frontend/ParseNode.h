@@ -485,6 +485,7 @@ struct Definition;
 class LoopControlStatement;
 class BreakStatement;
 class ContinueStatement;
+class XMLProcessingInstruction;
 
 struct ParseNode {
   private:
@@ -617,15 +618,16 @@ struct ParseNode {
             AtomDefnMapPtr   defnMap;
             ParseNode        *tree;     /* sub-tree containing name uses */
         } nameset;
-        struct {                        /* PN_NULLARY variant for E4X XML PI */
-            PropertyName     *target;   /* target in <?target data?> */
-            JSAtom           *data;     /* data (or null) in <?target data?> */
-        } xmlpi;
         jsdouble        dval;           /* aligned numeric literal value */
         class {
             friend class LoopControlStatement;
             PropertyName     *label;    /* target of break/continue statement */
         } loopControl;
+        class {                         /* E4X <?target data?> XML PI */
+            friend class XMLProcessingInstruction;
+            PropertyName     *target;   /* non-empty */
+            JSAtom           *data;     /* may be empty, never null */
+        } xmlpi;
     } pn_u;
 
 #define pn_funbox       pn_u.name.funbox
@@ -656,8 +658,6 @@ struct ParseNode {
 #define pn_names        pn_u.nameset.defnMap
 #define pn_tree         pn_u.nameset.tree
 #define pn_dval         pn_u.dval
-#define pn_pitarget     pn_u.xmlpi.target
-#define pn_pidata       pn_u.xmlpi.data
 
   protected:
     void init(TokenKind type, JSOp op, ParseNodeArity arity) {
@@ -924,6 +924,9 @@ struct ParseNode {
     /* Casting operations. */
     inline BreakStatement &asBreakStatement();
     inline ContinueStatement &asContinueStatement();
+#if JS_HAS_XML_SUPPORT
+    inline XMLProcessingInstruction &asXMLProcessingInstruction();
+#endif
 };
 
 struct NullaryNode : public ParseNode {
@@ -1065,6 +1068,35 @@ class DebuggerStatement : public ParseNode {
       : ParseNode(PNK_DEBUGGER, JSOP_NOP, PN_NULLARY, pos)
     { }
 };
+
+#if JS_HAS_XML_SUPPORT
+class XMLProcessingInstruction : public ParseNode {
+  public:
+    XMLProcessingInstruction(PropertyName *target, JSAtom *data, const TokenPos &pos)
+      : ParseNode(PNK_XMLPI, JSOP_NOP, PN_NULLARY, pos)
+    {
+        pn_u.xmlpi.target = target;
+        pn_u.xmlpi.data = data;
+    }
+
+    PropertyName *target() const {
+        return pn_u.xmlpi.target;
+    }
+
+    JSAtom *data() const {
+        return pn_u.xmlpi.data;
+    }
+};
+
+inline XMLProcessingInstruction &
+ParseNode::asXMLProcessingInstruction()
+{
+    JS_ASSERT(isKind(PNK_XMLPI));
+    JS_ASSERT(isOp(JSOP_NOP));
+    JS_ASSERT(pn_arity == PN_NULLARY);
+    return *static_cast<XMLProcessingInstruction *>(this);
+}
+#endif
 
 ParseNode *
 CloneLeftHandSide(ParseNode *opn, TreeContext *tc);
