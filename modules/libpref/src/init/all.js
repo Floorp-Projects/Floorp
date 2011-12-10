@@ -1472,6 +1472,9 @@ pref("dom.max_script_run_time", 10);
 // resolved.
 pref("hangmonitor.timeout", 0);
 
+// If true, plugins will be click to play
+pref("plugins.click_to_play", false);
+
 #ifndef DEBUG
 // How long a plugin is allowed to process a synchronous IPC message
 // before we consider it "hung".
