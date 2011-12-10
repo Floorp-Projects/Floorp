@@ -537,6 +537,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         JS_NOT_REACHED("feature NYI");
     }
 
+    void Push(Register reg) {
+        JS_NOT_REACHED("feature NYI");
+    }
+
     template<typename T>
     void branchTestBooleanTruthy(bool b, const T & t, Label *label) {
         Condition c = testBooleanTruthy(b, t);
@@ -573,7 +577,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void linkExitFrame();
     void handleException();
-
 };
 
 typedef MacroAssemblerARMCompat MacroAssemblerSpecific;
