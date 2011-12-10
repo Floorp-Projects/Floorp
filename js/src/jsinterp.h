@@ -374,68 +374,53 @@ Debug_SetValueRangeToCrashOnTouch(HeapValue *vec, size_t len)
 #endif
 }
 
-/*
- * Contains information about a C function and wrapper used by Jitted code.
- */
+// Contains information about a virtual machine function that can be called
+// from JIT code. Functions described in this manner must conform to a simple
+// protocol: the return type must have a special "failure" value (for example,
+// false for bool, or NULL for Objects). If the function is designed to return
+// a value that does not meet this requirement - such as object-or-NULL, or an
+// integer, an optional, final outParam can be specified. In this case, the
+// return type must be boolean to indicate failure.
+//
+// All functions described by VMFunction take a JSContext * as a first
+// argument, and are treated as re-entrant into the VM and therefore fallible.
 struct VMFunction
 {
-    /*
-     * Should the last argument of the C function be considered as an extra
-     * returned value.
-     */
-    enum OutParam {
-        /* No extra return value given as argument. */
-        OutParam_None,
-        /*
-         * A Value reference is given as last argument to be initialized by
-         * the C function.
-         */
-        OutParam_Value
+    enum DataType {
+        Type_Void,
+        Type_Bool,
+        Type_Object,
+        Type_Value
     };
 
-    /*
-     * Determine how to check the returned value of the C function to
-     * determine if a failure happened during the execution of the function.
-     */
-    enum FallibleType {
-        /* Cannot fail. */
-        FallibleNone,
-        /* false for failure. */
-        FallibleBool,
-        /* NULL for failure. */
-        FalliblePointer
-    };
-
-    /* Kind of value returned by the wrapper of the C function. */
-    enum ReturnType {
-        ReturnNothing,
-        ReturnBool,
-        ReturnPointer,
-        ReturnValue
-    };
-
-    /* Address of the C function. */
+    // Address of the C function.
     void *wrapped;
 
-    /*
-     * Number of arguments expected, excluding JSContext * as an implicit
-     * first argument, and the outparam as an implicit last argument.
-     */
+    // Number of arguments expected, excluding JSContext * as an implicit
+    // first argument, and the outparam as an implicit last argument.
     uint32 explicitArgs;
-    OutParam outParam;
-    FallibleType failCond;
 
-    /*
-     * Identify which values are returned to the Jitted code. If and only if
-     * the outParam is set to OutParam_Value, then the returnType must be
-     * set to the ReturnValue.  Otherwise it should be either consistent
-     * with the FallibleType or ReturnNothing.
-     */
-    ReturnType returnType;
+    // The outparam may be any Type_*, and must be the final argument to the
+    // function, if not Void. outParam != Void implies that the return type
+    // has a boolean failure mode.
+    DataType outParam;
+
+    // Identify which values are returned to the Jitted code. If and only if
+    // the outParam is set to OutParam_Value, then the returnType must be
+    // set to the ReturnValue.  Otherwise it should be either consistent
+    // with the FallibleType or ReturnNothing.
+    DataType returnType;
 
     uint32 argc() const {
+        // JSContext * + args + (OutParam? *)
         return 1 + explicitArgs +
-               ((outParam == OutParam_None) ? 0 : 1);
+               ((outParam == Type_Void) ? 0 : 1);
+    }
+
+    DataType failType() const {
+        JS_ASSERT(returnType == Type_Object || returnType == Type_Bool);
+        JS_ASSERT_IF(outParam != Type_Void, returnType == Type_Bool);
+        return returnType;
     }
 };
 
@@ -445,9 +430,8 @@ NewInitArray(JSContext *cx, uint32 count, types::TypeObject *type);
 const VMFunction NewInitArrayVMFun = {
     JS_FUNC_TO_DATA_PTR(void *, NewInitArray),
     2, /* count, type */
-    VMFunction::OutParam_None,
-    VMFunction::FalliblePointer,
-    VMFunction::ReturnPointer
+    VMFunction::Type_Void,
+    VMFunction::Type_Object
 };
 
 }  /* namespace js */

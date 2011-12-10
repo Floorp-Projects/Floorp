@@ -183,7 +183,7 @@ class LGoto : public LInstructionHelper<0, 0, 0>
     }
 };
 
-typedef LVMCallInstructionHelper<VMFunction::ReturnPointer, 1, 0, 0> LNewArrayBase;
+typedef LVMCallInstructionHelper<VMFunction::Type_Object, 1, 0, 0> LNewArrayBase;
 class LNewArray : public LNewArrayBase
 {
   public:

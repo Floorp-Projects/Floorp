@@ -469,7 +469,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Reserve space for the outparameter.
     Register outReg = InvalidReg;
-    if (f.outParam == VMFunction::OutParam_Value) {
+    if (f.outParam == VMFunction::Type_Value) {
         outReg = regs.takeAny();
         masm.reserveStack(sizeof(Value));
         masm.movl(esp, outReg);
@@ -496,36 +496,19 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     masm.callWithABI(f.wrapped);
 
     // Test for failure.
+    JS_ASSERT(f.failType() == VMFunction::Type_Bool || f.failType() == VMFunction::Type_Object);
     Label exception;
-    if (f.failCond != VMFunction::FallibleNone) {
-        // Same code for both FalliblePointer and FallibleBool.
-        masm.testl(eax, eax);
-        masm.j(Assembler::Zero, &exception);
-    }
+    masm.testl(eax, eax);
+    masm.j(Assembler::Zero, &exception);
 
     // Load the outparam and free any allocated stack.
-    if (f.outParam == VMFunction::OutParam_Value) {
-        JS_ASSERT(f.returnType == VMFunction::ReturnValue);
+    if (f.outParam == VMFunction::Type_Value) {
         masm.loadValue(Operand(esp, 0), JSReturnOperand);
         masm.freeStack(sizeof(Value));
     }
 
-    // TODO: Removed this as soon as we use retn.
-    switch (f.returnType) {
-      case VMFunction::ReturnNothing:
-        regs = GeneralRegisterSet::VolatileNot(GeneralRegisterSet());
-        break;
-      case VMFunction::ReturnBool:
-      case VMFunction::ReturnPointer:
-        regs = GeneralRegisterSet::VolatileNot(GeneralRegisterSet(Registers::JSCCallMask));
-        break;
-      case VMFunction::ReturnValue:
-        regs = GeneralRegisterSet::VolatileNot(GeneralRegisterSet(Registers::JSCallMask));
-        break;
-      default:
-        JS_NOT_REACHED("Unknown ReturnType.");
-        break;
-    }
+    // TODO: Remove this as soon as we use retn.
+    regs = GeneralRegisterSet::Not(GeneralRegisterSet(Registers::JSCallMask | Registers::CallMask));
 
     // Pick a register which is not among the return registers.
     temp = regs.getAny();
@@ -537,10 +520,8 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     masm.push(temp);
     masm.ret();
 
-    if (f.failCond != VMFunction::FallibleNone) {
-        masm.bind(&exception);
-        masm.handleException();
-    }
+    masm.bind(&exception);
+    masm.handleException();
 
     Linker linker(masm);
     IonCode *wrapper = linker.newCode(cx);

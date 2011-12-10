@@ -125,7 +125,7 @@ class LIRGeneratorShared : public MInstructionVisitor
     template <size_t Ops, size_t Temps>
     inline bool defineReturn(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefinition *mir);
 
-    template <enum VMFunction::ReturnType DefType, size_t Defs, size_t Ops, size_t Temps>
+    template <enum VMFunction::DataType DefType, size_t Defs, size_t Ops, size_t Temps>
     inline bool defineVMReturn(MDefinition *mir,
                                LVMCallInstructionHelper<DefType, Defs, Ops, Temps> *lir);
 
