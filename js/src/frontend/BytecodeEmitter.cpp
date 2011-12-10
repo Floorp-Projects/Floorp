@@ -6013,18 +6013,16 @@ EmitWhile(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 }
 
 static bool
-EmitBreak(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+EmitBreak(JSContext *cx, BytecodeEmitter *bce, PropertyName *label)
 {
     StmtInfo *stmt = bce->topStmt;
-    JSAtom *atom = pn->pn_atom;
-
     SrcNoteType noteType;
     jsatomid labelIndex;
-    if (atom) {
-        if (!bce->makeAtomIndex(atom, &labelIndex))
+    if (label) {
+        if (!bce->makeAtomIndex(label, &labelIndex))
             return false;
 
-        while (stmt->type != STMT_LABEL || stmt->label != atom)
+        while (stmt->type != STMT_LABEL || stmt->label != label)
             stmt = stmt->down;
         noteType = SRC_BREAK2LABEL;
     } else {
@@ -6038,20 +6036,18 @@ EmitBreak(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 }
 
 static bool
-EmitContinue(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+EmitContinue(JSContext *cx, BytecodeEmitter *bce, PropertyName *label)
 {
     StmtInfo *stmt = bce->topStmt;
-    JSAtom *atom = pn->pn_atom;
-
     SrcNoteType noteType;
     jsatomid labelIndex;
-    if (atom) {
-        if (!bce->makeAtomIndex(atom, &labelIndex))
+    if (label) {
+        if (!bce->makeAtomIndex(label, &labelIndex))
             return false;
 
         /* Find the loop statement enclosed by the matching label. */
         StmtInfo *loop = NULL;
-        while (stmt->type != STMT_LABEL || stmt->label != atom) {
+        while (stmt->type != STMT_LABEL || stmt->label != label) {
             if (STMT_IS_LOOP(stmt))
                 loop = stmt;
             stmt = stmt->down;
@@ -6991,11 +6987,11 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_BREAK:
-        ok = EmitBreak(cx, bce, pn);
+        ok = EmitBreak(cx, bce, pn->asBreakStatement().label());
         break;
 
       case PNK_CONTINUE:
-        ok = EmitContinue(cx, bce, pn);
+        ok = EmitContinue(cx, bce, pn->asContinueStatement().label());
         break;
 
       case PNK_WITH:
