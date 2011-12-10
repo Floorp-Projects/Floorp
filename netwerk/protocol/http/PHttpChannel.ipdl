@@ -81,8 +81,7 @@ parent:
             PRUint64            startPos,
             nsCString           entityID,
             bool                chooseApplicationCache,
-            nsCString           appCacheClientID,
-            bool                allowSpdy);
+            nsCString           appCacheClientID);
 
   // Used to connect redirected-to channel on the parent with redirected-to
   // channel on the child.
