@@ -800,13 +800,10 @@ class LCallInstructionHelper : public LInstructionHelper<Defs, Operands, Temps>
     }
 };
 
-template <enum VMFunction::DataType DefType, size_t Defs, size_t Operands, size_t Temps>
+template <LDefinition::Type DefType, size_t Defs, size_t Operands, size_t Temps>
 class LVMCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, Temps>
 {
   public:
-    LVMCallInstructionHelper(const VMFunction &f) {
-        JS_ASSERT(f.returnType == DefType);
-    }
     virtual RegisterSet &spillRegs() const {
         static RegisterSet regs(
             GeneralRegisterSet::Not(GeneralRegisterSet(defMask())),

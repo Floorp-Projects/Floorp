@@ -93,9 +93,9 @@ LIRGenerator::visitNewArray(MNewArray *ins)
 {
     LNewArray *lir = new LNewArray();
 
-    if (!defineVMReturn(ins, lir))
+    if (!defineVMReturn(lir, ins))
         return false;
-    if (!assignSafepoint(ins, lir))
+    if (!assignSafepoint(lir, ins))
         return false;
 
     return true;
