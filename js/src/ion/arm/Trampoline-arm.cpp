@@ -45,6 +45,7 @@
 #include "ion/IonLinker.h"
 #include "ion/IonFrames.h"
 #include "ion/Bailouts.h"
+#include "ion/IonVMFunctions.h"
 
 using namespace js;
 using namespace js::ion;
@@ -556,7 +557,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Pick a register which is not among the return registers.
     regs = GeneralRegisterSet::Not(GeneralRegisterSet(Registers::JSCallMask | Registers::CallMask));
-    temp = regs;
+    temp = regs.takeAny();
 
     // Save the return address, remove the caller's arguments, then push the
     // return address back again.

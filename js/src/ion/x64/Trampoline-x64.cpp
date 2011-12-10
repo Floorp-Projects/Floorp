@@ -45,6 +45,7 @@
 #include "ion/IonLinker.h"
 #include "ion/IonFrames.h"
 #include "ion/Bailouts.h"
+#include "ion/IonVMFunctions.h"
 
 using namespace js;
 using namespace js::ion;
@@ -457,7 +458,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Reserve space for the outparameter.
     Register outReg = InvalidReg;
-    if (f.outParam == VMFunction::Type_Value) {
+    if (f.outParam == Type_Value) {
         outReg = regs.takeAny();
         masm.reserveStack(sizeof(Value));
         masm.movl(rsp, outReg);
@@ -486,11 +487,11 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     // Test for failure.
     Label exception;
     switch (f.failType()) {
-      case VMFunction::Type_Object:
+      case Type_Object:
         masm.testq(rax, rax);
         masm.j(Assembler::Zero, &exception);
         break;
-      case VMFunction::Type_Bool:
+      case Type_Bool:
         masm.testl(eax, eax);
         masm.j(Assembler::Zero, &exception);
         break;
@@ -500,7 +501,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     }
 
     // Load the outparam and free any allocated stack.
-    if (f.outParam == VMFunction::Type_Value) {
+    if (f.outParam == Type_Value) {
         masm.loadValue(Operand(esp, 0), JSReturnOperand);
         masm.freeStack(sizeof(Value));
     }

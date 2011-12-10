@@ -78,8 +78,8 @@ struct VMFunction
     DataType outParam;
 
     // Identify which values are returned to the Jitted code. If and only if
-    // the outParam is set to OutParam_Value, then the returnType must be
-    // set to the ReturnValue.  Otherwise it should be either consistent
+    // the outParam is set to Type_Value, then the returnType must be set to
+    // the ReturnValue.  Otherwise it should be either consistent
     // with the FallibleType or ReturnNothing.
     DataType returnType;
 
