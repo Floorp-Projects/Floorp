@@ -1863,21 +1863,27 @@ EmitIndexOp(JSContext *cx, JSOp op, uintN index, BytecodeEmitter *bce, JSOp *psu
     JS_END_MACRO
 
 static bool
-EmitAtomOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce, JSOp *psuffix = NULL)
+EmitAtomOp(JSContext *cx, JSAtom *atom, JSOp op, BytecodeEmitter *bce, JSOp *psuffix = NULL)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
 
-    if (op == JSOP_GETPROP &&
-        pn->pn_atom == cx->runtime->atomState.lengthAtom) {
+    if (op == JSOP_GETPROP && atom == cx->runtime->atomState.lengthAtom) {
         /* Specialize length accesses for the interpreter. */
         op = JSOP_LENGTH;
     }
 
     jsatomid index;
-    if (!bce->makeAtomIndex(pn->pn_atom, &index))
+    if (!bce->makeAtomIndex(atom, &index))
         return false;
 
     return EmitIndexOp(cx, op, index, bce, psuffix);
+}
+
+static bool
+EmitAtomOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce, JSOp *psuffix = NULL)
+{
+    JS_ASSERT(pn->pn_atom != NULL);
+    return EmitAtomOp(cx, pn->pn_atom, op, bce, psuffix);
 }
 
 static JSBool
@@ -5478,16 +5484,16 @@ EmitXMLTag(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 }
 
 static bool
-EmitXMLProcessingInstruction(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+EmitXMLProcessingInstruction(JSContext *cx, BytecodeEmitter *bce, XMLProcessingInstruction &pi)
 {
     JS_ASSERT(!bce->inStrictMode());
 
     jsatomid index;
-    if (!bce->makeAtomIndex(pn->pn_pidata, &index))
+    if (!bce->makeAtomIndex(pi.data(), &index))
         return false;
     if (!EmitIndexOp(cx, JSOP_QNAMEPART, index, bce))
         return false;
-    if (!EmitAtomOp(cx, pn, JSOP_XMLPI, bce))
+    if (!EmitAtomOp(cx, pi.target(), JSOP_XMLPI, bce))
         return false;
     return true;
 }
@@ -7594,7 +7600,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_XMLPI:
-        if (!EmitXMLProcessingInstruction(cx, bce, pn))
+        if (!EmitXMLProcessingInstruction(cx, bce, pn->asXMLProcessingInstruction()))
             return false;
         break;
 #endif /* JS_HAS_XML_SUPPORT */

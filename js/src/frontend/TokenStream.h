@@ -330,8 +330,8 @@ struct Token {
       private:
         friend struct Token;
         struct {                        /* pair for <?target data?> XML PI */
-            JSAtom       *data;         /* auxiliary atom table entry */
-            PropertyName *target;       /* main atom table entry */
+            PropertyName *target;       /* non-empty */
+            JSAtom       *data;         /* maybe empty, never null */
         } xmlpi;
         uint16_t        sharpNumber;    /* sharp variable number: #1# or #1= */
         jsdouble        number;         /* floating point number */
@@ -359,6 +359,9 @@ struct Token {
     }
 
     void setProcessingInstruction(PropertyName *target, JSAtom *data) {
+        JS_ASSERT(target);
+        JS_ASSERT(data);
+        JS_ASSERT(!target->empty());
         u.xmlpi.target = target;
         u.xmlpi.data = data;
     }

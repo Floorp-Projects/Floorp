@@ -273,11 +273,13 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
                 return JS_FALSE;
             break;
 
-          case PNK_XMLPI:
-            str = js_MakeXMLPIString(cx, pn2->pn_pitarget, pn2->pn_pidata);
+          case PNK_XMLPI: {
+            XMLProcessingInstruction &pi = pn2->asXMLProcessingInstruction();
+            str = js_MakeXMLPIString(cx, pi.target(), pi.data());
             if (!str)
                 return JS_FALSE;
             break;
+          }
 
           cantfold:
           default:

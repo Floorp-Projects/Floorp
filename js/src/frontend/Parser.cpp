@@ -6363,13 +6363,10 @@ Parser::xmlElementContent(ParseNode *pn)
             pn2->pn_xflags &= ~PNX_XMLROOT;
             pn->pn_xflags |= pn2->pn_xflags;
         } else if (tt == TOK_XMLPI) {
-            pn2 = NullaryNode::create(PNK_XMLPI, tc);
+            const Token &tok = tokenStream.currentToken();
+            pn2 = new_<XMLProcessingInstruction>(tok.xmlPITarget(), tok.xmlPIData(), tok.pos);
             if (!pn2)
                 return false;
-            const Token &tok = tokenStream.currentToken();
-            pn2->setOp(tok.t_op);
-            pn2->pn_pitarget = tok.xmlPITarget();
-            pn2->pn_pidata = tok.xmlPIData();
         } else {
             JS_ASSERT(tt == TOK_XMLCDATA || tt == TOK_XMLCOMMENT);
             pn2 = atomNode(tt == TOK_XMLCDATA ? PNK_XMLCDATA : PNK_XMLCOMMENT,
@@ -7053,14 +7050,14 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         break;
 
 #if JS_HAS_XML_SUPPORT
-      case TOK_XMLPI:
+      case TOK_XMLPI: {
         JS_ASSERT(!tc->inStrictMode());
-        pn = NullaryNode::create(PNK_XMLPI, tc);
+        const Token &tok = tokenStream.currentToken();
+        pn = new_<XMLProcessingInstruction>(tok.xmlPITarget(), tok.xmlPIData(), tok.pos);
         if (!pn)
             return NULL;
-        pn->pn_pitarget = tokenStream.currentToken().xmlPITarget();
-        pn->pn_pidata = tokenStream.currentToken().xmlPIData();
         break;
+      }
 #endif
 
       case TOK_NAME:
