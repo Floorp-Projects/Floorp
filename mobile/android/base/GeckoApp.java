@@ -730,12 +730,16 @@ abstract public class GeckoApp
     public File getProfileDir(final String profileName) {
         if (mProfileDir == null && !mUserDefinedProfile) {
             File mozDir = new File(GeckoAppShell.sHomeDir, "mozilla");
+            if (!mozDir.exists()) {
+                // Profile directory may have been deleted or not created yet.
+                return null;
+            }
             File[] profiles = mozDir.listFiles(new FileFilter() {
                 public boolean accept(File pathname) {
                     return pathname.getName().endsWith("." + profileName);
                 }
             });
-            if (profiles.length == 1)
+            if (profiles != null && profiles.length == 1)
                 mProfileDir = profiles[0];
         }
         return mProfileDir;
