@@ -40,7 +40,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "jscompartment.h"
-#include "jsinterp.h"
 #include "assembler/assembler/MacroAssembler.h"
 #include "ion/IonCompartment.h"
 #include "ion/IonLinker.h"

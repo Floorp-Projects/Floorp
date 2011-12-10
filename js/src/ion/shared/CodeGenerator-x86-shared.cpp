@@ -765,6 +765,9 @@ CodeGeneratorX86Shared::visitTableSwitch(LTableSwitch *ins)
 bool
 CodeGeneratorX86Shared::visitNewArray(LNewArray *ins)
 {
+    static const VMFunction NewInitArrayInfo =
+        FunctionInfo<JSObject *, uint32, types::TypeObject *, NewInitArray>();
+
     // ReturnReg is used for the returned value, so we don't care using it
     // because it would be erased by the function call.
     const Register type = ReturnReg;
@@ -772,7 +775,7 @@ CodeGeneratorX86Shared::visitNewArray(LNewArray *ins)
 
     pushArg(type);
     pushArg(Imm32(ins->mir()->count()));
-    if (!callVM(NewInitArrayVMFun, ins))
+    if (!callVM(NewInitArrayInfo, ins))
         return false;
     return true;
 }
