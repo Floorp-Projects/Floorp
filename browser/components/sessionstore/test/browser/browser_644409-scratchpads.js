@@ -38,11 +38,19 @@ function test() {
 function windowObserver(aSubject, aTopic, aData) {
   if (aTopic == "domwindowopened") {     
     let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-    win.addEventListener("load", function() {
+    win.addEventListener("load", function onLoad() {
+      win.removeEventListener("load", onLoad, false);
+
       if (win.Scratchpad) {
-        let state = win.Scratchpad.getState();
-        win.close();
-        addState(state);
+        win.Scratchpad.addObserver({
+          onReady: function() {
+            win.Scratchpad.removeObserver(this);
+
+            let state = win.Scratchpad.getState();
+            win.close();
+            addState(state);
+          },
+        });
       }
     }, false);
   }

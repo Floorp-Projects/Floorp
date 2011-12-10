@@ -57,8 +57,7 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
  * SourceEditor.THEMES to Orion CSS files.
  */
 const ORION_THEMES = {
-  textmate: ["chrome://browser/content/orion.css",
-             "chrome://browser/content/orion-mozilla.css"],
+  mozilla: ["chrome://browser/content/orion-mozilla.css"],
 };
 
 /**
@@ -71,6 +70,13 @@ const ORION_EVENTS = {
   Selection: "Selection",
 };
 
+/**
+ * Known Orion annotation types.
+ */
+const ORION_ANNOTATION_TYPES = {
+  currentBracket: "orion.annotation.currentBracket",
+  matchingBracket: "orion.annotation.matchingBracket",
+};
 
 var EXPORTED_SYMBOLS = ["SourceEditor"];
 
@@ -95,12 +101,17 @@ function SourceEditor() {
 SourceEditor.prototype = {
   _view: null,
   _iframe: null,
+  _model: null,
   _undoStack: null,
-  _lines_ruler: null,
+  _linesRuler: null,
   _styler: null,
+  _annotationStyler: null,
+  _annotationModel: null,
+  _dragAndDrop: null,
   _mode: null,
   _expandTab: null,
   _tabSize: null,
+  _iframeWindow: null,
 
   /**
    * The editor container element.
@@ -152,11 +163,7 @@ SourceEditor.prototype = {
 
     let onIframeLoad = (function() {
       this._iframe.removeEventListener("load", onIframeLoad, true);
-
-      Services.scriptloader.loadSubScript(ORION_SCRIPT,
-        this._iframe.contentWindow.wrappedJSObject, "utf8");
-
-      this._onLoad(aCallback);
+      this._onIframeLoad();
     }).bind(this);
 
     this._iframe.addEventListener("load", onIframeLoad, true);
@@ -166,20 +173,23 @@ SourceEditor.prototype = {
     aElement.appendChild(this._iframe);
     this.parentElement = aElement;
     this._config = aConfig;
+    this._onReadyCallback = aCallback;
   },
 
   /**
    * The editor iframe load event handler.
-   *
    * @private
-   * @param function [aCallback]
-   *        Optional function invoked when the editor completes loading.
    */
-  _onLoad: function SE__onLoad(aCallback)
+  _onIframeLoad: function SE__onIframeLoad()
   {
+    this._iframeWindow = this._iframe.contentWindow.wrappedJSObject;
+    let window = this._iframeWindow;
     let config = this._config;
-    let window = this._iframe.contentWindow.wrappedJSObject;
-    let textview = window.orion.textview;
+
+    Services.scriptloader.loadSubScript(ORION_SCRIPT, window, "utf8");
+
+    let TextModel = window.require("orion/textview/textModel").TextModel;
+    let TextView = window.require("orion/textview/textView").TextView;
 
     this._expandTab = typeof config.expandTab != "undefined" ?
                       config.expandTab : SourceEditor.DEFAULTS.EXPAND_TAB;
@@ -188,73 +198,74 @@ SourceEditor.prototype = {
     let theme = config.theme || SourceEditor.DEFAULTS.THEME;
     let stylesheet = theme in ORION_THEMES ? ORION_THEMES[theme] : theme;
 
-    this._view = new textview.TextView({
-      model: new textview.TextModel(config.placeholderText),
+    this._model = new TextModel(config.placeholderText);
+    this._view = new TextView({
+      model: this._model,
       parent: "editor",
       stylesheet: stylesheet,
       tabSize: this._tabSize,
+      expandTab: this._expandTab,
       readonly: config.readOnly,
+      themeClass: "mozilla" + (config.readOnly ? " readonly" : ""),
     });
 
+    let onOrionLoad = function() {
+      this._view.removeEventListener("Load", onOrionLoad);
+      this._onOrionLoad();
+    }.bind(this);
+
+    this._view.addEventListener("Load", onOrionLoad);
+
+    let KeyBinding = window.require("orion/textview/keyBinding").KeyBinding;
+    let TextDND = window.require("orion/textview/textDND").TextDND;
+    let LineNumberRuler = window.require("orion/textview/rulers").LineNumberRuler;
+    let UndoStack = window.require("orion/textview/undoStack").UndoStack;
+    let AnnotationModel = window.require("orion/textview/annotations").AnnotationModel;
+
+    this._annotationModel = new AnnotationModel(this._model);
+
     if (config.showLineNumbers) {
-      this._lines_ruler = new textview.LineNumberRuler(null, "left",
+      this._linesRuler = new LineNumberRuler(this._annotationModel, "left",
         {styleClass: "rulerLines"}, {styleClass: "rulerLine odd"},
         {styleClass: "rulerLine even"});
 
-      this._view.addRuler(this._lines_ruler);
+      this._view.addRuler(this._linesRuler);
     }
 
     this.setMode(config.mode || SourceEditor.DEFAULTS.MODE);
 
-    this._undoStack = new textview.UndoStack(this._view,
+    this._undoStack = new UndoStack(this._view,
       config.undoLimit || SourceEditor.DEFAULTS.UNDO_LIMIT);
 
-    this._initEditorFeatures();
+    this._dragAndDrop = new TextDND(this._view, this._undoStack);
+
+    this._view.setAction("tab", this._doTab.bind(this));
+
+    let shiftTabKey = new KeyBinding(Ci.nsIDOMKeyEvent.DOM_VK_TAB, false, true);
+    this._view.setAction("Unindent Lines", this._doUnindentLines.bind(this));
+    this._view.setKeyBinding(shiftTabKey, "Unindent Lines");
+    this._view.setAction("enter", this._doEnter.bind(this));
 
     (config.keys || []).forEach(function(aKey) {
-      let binding = new textview.KeyBinding(aKey.code, aKey.accel, aKey.shift,
-                                            aKey.alt);
+      let binding = new KeyBinding(aKey.code, aKey.accel, aKey.shift, aKey.alt);
       this._view.setKeyBinding(binding, aKey.action);
 
       if (aKey.callback) {
         this._view.setAction(aKey.action, aKey.callback);
       }
     }, this);
-
-    if (aCallback) {
-      let iframe = this._view._frame;
-      let document = iframe.contentDocument;
-      if (!document || document.readyState != "complete") {
-        let onIframeLoad = function () {
-          iframe.contentWindow.removeEventListener("load", onIframeLoad, false);
-          aCallback(this);
-        }.bind(this);
-        iframe.contentWindow.addEventListener("load", onIframeLoad, false);
-      } else {
-        aCallback(this);
-      }
-    }
   },
 
   /**
-   * Initialize the custom Orion editor features.
+   * The Orion "Load" event handler. This is called when the Orion editor
+   * completes the initialization.
    * @private
    */
-  _initEditorFeatures: function SE__initEditorFeatures()
+  _onOrionLoad: function SE__onOrionLoad()
   {
-    let window = this._iframe.contentWindow.wrappedJSObject;
-    let textview = window.orion.textview;
-
-    this._view.setAction("tab", this._doTab.bind(this));
-
-    let shiftTabKey = new textview.KeyBinding(Ci.nsIDOMKeyEvent.DOM_VK_TAB,
-                                              false, true);
-    this._view.setAction("Unindent Lines", this._doUnindentLines.bind(this));
-    this._view.setKeyBinding(shiftTabKey, "Unindent Lines");
-    this._view.setAction("enter", this._doEnter.bind(this));
-
-    if (this._expandTab) {
-      this._view.setAction("deletePrevious", this._doDeletePrevious.bind(this));
+    if (this._onReadyCallback) {
+      this._onReadyCallback(this);
+      this._onReadyCallback = null;
     }
   },
 
@@ -302,34 +313,9 @@ SourceEditor.prototype = {
       this._view.setSelection(newSelectionStart, newSelectionEnd);
 
       this.endCompoundChange();
-    } else {
-      this.setText(indent, selection.start, selection.end);
+      return true;
     }
 
-    return true;
-  },
-
-  /**
-   * The "deletePrevious" editor action implementation. This adds unindentation
-   * support to the Backspace key implementation.
-   * @private
-   */
-  _doDeletePrevious: function SE__doDeletePrevious()
-  {
-    let selection = this.getSelection();
-    if (selection.start == selection.end && this._expandTab) {
-      let model = this._model;
-      let lineIndex = model.getLineAtOffset(selection.start);
-      let lineStart = model.getLineStart(lineIndex);
-      let offset = selection.start - lineStart;
-      if (offset >= this._tabSize && (offset % this._tabSize) == 0) {
-        let text = this.getText(lineStart, selection.start);
-        if (!/[^ ]/.test(text)) {
-          this.setText("", selection.start - this._tabSize, selection.end);
-          return true;
-        }
-      }
-    }
     return false;
   },
 
@@ -357,7 +343,7 @@ SourceEditor.prototype = {
     for (let line, i = firstLine; i <= lastLine; i++) {
       line = model.getLine(i, true);
       if (line.indexOf(indent) != 0) {
-        return false;
+        return true;
       }
       lines.push(line.substring(indent.length));
     }
@@ -426,15 +412,6 @@ SourceEditor.prototype = {
   },
 
   /**
-   * Get the Orion Model, the TextModel object instance we use.
-   * @private
-   * @type object
-   */
-  get _model() {
-    return this._view.getModel();
-  },
-
-  /**
    * Get the editor element.
    *
    * @return nsIDOMElement
@@ -453,15 +430,12 @@ SourceEditor.prototype = {
    *        The event type you want to listen for.
    * @param function aCallback
    *        The function you want executed when the event is triggered.
-   * @param mixed [aData]
-   *        Optional data to pass to the callback when the event is triggered.
    */
   addEventListener:
-  function SE_addEventListener(aEventType, aCallback, aData)
+  function SE_addEventListener(aEventType, aCallback)
   {
     if (aEventType in ORION_EVENTS) {
-      this._view.addEventListener(ORION_EVENTS[aEventType], true,
-                                  aCallback, aData);
+      this._view.addEventListener(ORION_EVENTS[aEventType], aCallback);
     } else {
       throw new Error("SourceEditor.addEventListener() unknown event " +
                       "type " + aEventType);
@@ -478,15 +452,12 @@ SourceEditor.prototype = {
    *        The event type you have a listener for.
    * @param function aCallback
    *        The function you have as the event handler.
-   * @param mixed [aData]
-   *        The optional data passed to the callback.
    */
   removeEventListener:
-  function SE_removeEventListener(aEventType, aCallback, aData)
+  function SE_removeEventListener(aEventType, aCallback)
   {
     if (aEventType in ORION_EVENTS) {
-      this._view.removeEventListener(ORION_EVENTS[aEventType], true,
-                                     aCallback, aData);
+      this._view.removeEventListener(ORION_EVENTS[aEventType], aCallback);
     } else {
       throw new Error("SourceEditor.removeEventListener() unknown event " +
                       "type " + aEventType);
@@ -587,7 +558,7 @@ SourceEditor.prototype = {
    */
   hasFocus: function SE_hasFocus()
   {
-    return this._iframe.ownerDocument.activeElement === this._iframe;
+    return this._view.hasFocus();
   },
 
   /**
@@ -726,21 +697,41 @@ SourceEditor.prototype = {
       this._styler.destroy();
       this._styler = null;
     }
+    if (this._annotationStyler) {
+      this._annotationStyler.destroy();
+      this._annotationStyler = null;
+    }
 
-    let window = this._iframe.contentWindow.wrappedJSObject;
-    let TextStyler = window.examples.textview.TextStyler;
-    let TextMateStyler = window.orion.editor.TextMateStyler;
-    let HtmlGrammar = window.orion.editor.HtmlGrammar;
+    let window = this._iframeWindow;
 
     switch (aMode) {
       case SourceEditor.MODES.JAVASCRIPT:
       case SourceEditor.MODES.CSS:
-        this._styler = new TextStyler(this._view, aMode);
+        let TextStyler =
+          window.require("examples/textview/textStyler").TextStyler;
+
+        this._styler = new TextStyler(this._view, aMode, this._annotationModel);
+        this._styler.setFoldingEnabled(false);
+        this._styler.setHighlightCaretLine(true);
+
+        let AnnotationStyler =
+          window.require("orion/textview/annotations").AnnotationStyler;
+
+        this._annotationStyler =
+          new AnnotationStyler(this._view, this._annotationModel);
+        this._annotationStyler.
+          addAnnotationType(ORION_ANNOTATION_TYPES.matchingBracket);
+        this._annotationStyler.
+          addAnnotationType(ORION_ANNOTATION_TYPES.currentBracket);
         break;
 
       case SourceEditor.MODES.HTML:
       case SourceEditor.MODES.XML:
-        this._styler = new TextMateStyler(this._view, HtmlGrammar.grammar);
+        let TextMateStyler =
+          window.require("orion/editor/textMateStyler").TextMateStyler;
+        let HtmlGrammar =
+          window.require("orion/editor/htmlGrammar").HtmlGrammar;
+        this._styler = new TextMateStyler(this._view, new HtmlGrammar().grammar);
         break;
     }
 
@@ -765,7 +756,10 @@ SourceEditor.prototype = {
    */
   set readOnly(aValue)
   {
-    this._view.readonly = aValue;
+    this._view.setOptions({
+      readonly: aValue,
+      themeClass: "mozilla" + (aValue ? " readonly" : ""),
+    });
   },
 
   /**
@@ -774,7 +768,7 @@ SourceEditor.prototype = {
    */
   get readOnly()
   {
-    return this._view.readonly;
+    return this._view.getOptions("readonly");
   },
 
   /**
@@ -785,11 +779,16 @@ SourceEditor.prototype = {
     this._view.destroy();
     this.parentElement.removeChild(this._iframe);
     this.parentElement = null;
+    this._iframeWindow = null;
     this._iframe = null;
     this._undoStack = null;
     this._styler = null;
-    this._lines_ruler = null;
+    this._linesRuler = null;
+    this._dragAndDrop = null;
+    this._annotationModel = null;
+    this._annotationStyler = null;
     this._view = null;
+    this._model = null;
     this._config = null;
   },
 };
