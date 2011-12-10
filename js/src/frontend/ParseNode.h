@@ -478,6 +478,10 @@ enum ParseNodeArity {
 
 struct Definition;
 
+class LoopControlStatement;
+class BreakStatement;
+class ContinueStatement;
+
 struct ParseNode {
   private:
     uint32              pn_type   : 16, /* PNK_* type */
@@ -614,6 +618,10 @@ struct ParseNode {
             JSAtom           *data;     /* data (or null) in <?target data?> */
         } xmlpi;
         jsdouble        dval;           /* aligned numeric literal value */
+        class {
+            friend class LoopControlStatement;
+            PropertyName     *label;    /* target of break/continue statement */
+        } loopControl;
     } pn_u;
 
 #define pn_funbox       pn_u.name.funbox
@@ -903,6 +911,10 @@ struct ParseNode {
 
     bool getConstantValue(JSContext *cx, bool strictChecks, Value *vp);
     inline bool isConstant();
+
+    /* Casting operations. */
+    inline BreakStatement &asBreakStatement();
+    inline ContinueStatement &asContinueStatement();
 };
 
 struct NullaryNode : public ParseNode {
@@ -988,6 +1000,55 @@ struct LexicalScopeNode : public ParseNode {
         return (LexicalScopeNode *)ParseNode::create(kind, PN_NAME, tc);
     }
 };
+
+class LoopControlStatement : public ParseNode {
+  protected:
+    LoopControlStatement(ParseNodeKind kind, PropertyName *label,
+                         const TokenPtr &begin, const TokenPtr &end)
+      : ParseNode(kind, JSOP_NOP, PN_NULLARY, TokenPos::make(begin, end))
+    {
+        JS_ASSERT(kind == PNK_BREAK || kind == PNK_CONTINUE);
+        pn_u.loopControl.label = label;
+    }
+
+  public:
+    /* Label associated with this break/continue statement, if any. */
+    PropertyName *label() const {
+        return pn_u.loopControl.label;
+    }
+};
+
+class BreakStatement : public LoopControlStatement {
+  public:
+    BreakStatement(PropertyName *label, const TokenPtr &begin, const TokenPtr &end)
+      : LoopControlStatement(PNK_BREAK, label, begin, end)
+    { }
+};
+
+inline BreakStatement &
+ParseNode::asBreakStatement()
+{
+    JS_ASSERT(isKind(PNK_BREAK));
+    JS_ASSERT(isOp(JSOP_NOP));
+    JS_ASSERT(pn_arity == PN_NULLARY);
+    return *static_cast<BreakStatement *>(this);
+}
+
+class ContinueStatement : public LoopControlStatement {
+  public:
+    ContinueStatement(PropertyName *label, TokenPtr &begin, TokenPtr &end)
+      : LoopControlStatement(PNK_CONTINUE, label, begin, end)
+    { }
+};
+
+inline ContinueStatement &
+ParseNode::asContinueStatement()
+{
+    JS_ASSERT(isKind(PNK_CONTINUE));
+    JS_ASSERT(isOp(JSOP_NOP));
+    JS_ASSERT(pn_arity == PN_NULLARY);
+    return *static_cast<ContinueStatement *>(this);
+}
 
 ParseNode *
 CloneLeftHandSide(ParseNode *opn, TreeContext *tc);
