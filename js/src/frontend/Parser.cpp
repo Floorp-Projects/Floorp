@@ -1859,19 +1859,17 @@ Parser::condition()
 }
 
 static bool
-MatchLabel(JSContext *cx, TokenStream *ts, ParseNode *pn)
+MatchLabel(JSContext *cx, TokenStream *ts, PropertyName **label)
 {
     TokenKind tt = ts->peekTokenSameLine(TSF_OPERAND);
     if (tt == TOK_ERROR)
         return false;
-    PropertyName *label;
     if (tt == TOK_NAME) {
         (void) ts->getToken();
-        label = ts->currentToken().name();
+        *label = ts->currentToken().name();
     } else {
-        label = NULL;
+        *label = NULL;
     }
-    pn->pn_atom = label;
     return true;
 }
 
@@ -3952,13 +3950,15 @@ Parser::statement()
 
       case TOK_BREAK:
       {
-        pn = NullaryNode::create(PNK_BREAK, tc);
+        TokenPtr begin = tokenStream.currentToken().pos.begin;
+        PropertyName *label;
+        if (!MatchLabel(context, &tokenStream, &label))
+            return NULL;
+        TokenPtr end = tokenStream.currentToken().pos.end;
+        pn = new_<BreakStatement>(label, begin, end);
         if (!pn)
             return NULL;
-        if (!MatchLabel(context, &tokenStream, pn))
-            return NULL;
         StmtInfo *stmt = tc->topStmt;
-        JSAtom *label = pn->pn_atom;
         if (label) {
             for (; ; stmt = stmt->down) {
                 if (!stmt) {
@@ -3978,20 +3978,20 @@ Parser::statement()
                     break;
             }
         }
-        if (label)
-            pn->pn_pos.end = tokenStream.currentToken().pos.end;
         break;
       }
 
       case TOK_CONTINUE:
       {
-        pn = NullaryNode::create(PNK_CONTINUE, tc);
+        TokenPtr begin = tokenStream.currentToken().pos.begin;
+        PropertyName *label;
+        if (!MatchLabel(context, &tokenStream, &label))
+            return NULL;
+        TokenPtr end = tokenStream.currentToken().pos.begin;
+        pn = new_<ContinueStatement>(label, begin, end);
         if (!pn)
             return NULL;
-        if (!MatchLabel(context, &tokenStream, pn))
-            return NULL;
         StmtInfo *stmt = tc->topStmt;
-        JSAtom *label = pn->pn_atom;
         if (label) {
             for (StmtInfo *stmt2 = NULL; ; stmt = stmt->down) {
                 if (!stmt) {
@@ -4020,8 +4020,6 @@ Parser::statement()
                     break;
             }
         }
-        if (label)
-            pn->pn_pos.end = tokenStream.currentToken().pos.end;
         break;
       }
 
