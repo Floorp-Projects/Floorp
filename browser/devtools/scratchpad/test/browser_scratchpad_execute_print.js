@@ -7,11 +7,9 @@ function test()
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-
-    gScratchpadWindow = Scratchpad.openScratchpad();
-    gScratchpadWindow.addEventListener("load", runTests, false);
+  gBrowser.selectedBrowser.addEventListener("load", function onTabLoad() {
+    gBrowser.selectedBrowser.removeEventListener("load", onTabLoad, true);
+    openScratchpad(runTests);
   }, true);
 
   content.location = "data:text/html,<p>test run() and display() in Scratchpad";
@@ -19,8 +17,6 @@ function test()
 
 function runTests()
 {
-  gScratchpadWindow.removeEventListener("load", arguments.callee, false);
-
   let sp = gScratchpadWindow.Scratchpad;
 
   content.wrappedJSObject.foobarBug636725 = 1;
