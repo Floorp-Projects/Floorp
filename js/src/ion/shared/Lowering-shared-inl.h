@@ -147,15 +147,10 @@ LIRGeneratorShared::defineReturn(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir
     return true;
 }
 
-template <enum VMFunction::ReturnType DefType, size_t Defs, size_t Ops, size_t Temps> bool
+template <enum VMFunction::DataType DefType, size_t Defs, size_t Ops, size_t Temps> bool
 LIRGeneratorShared::defineVMReturn(MDefinition *mir,
                                    LVMCallInstructionHelper<DefType, Defs, Ops, Temps> *lir)
 {
-    if (DefType == VMFunction::ReturnNothing) {
-        lir->setMir(mir);
-        return add(lir);
-    }
-
     uint32 vreg = getVirtualRegister();
     if (vreg >= MAX_VIRTUAL_REGISTERS)
         return false;
@@ -163,7 +158,7 @@ LIRGeneratorShared::defineVMReturn(MDefinition *mir,
     LDefinition::Type type = LDefinition::BOX;
 
     switch (DefType) {
-      case VMFunction::ReturnValue:
+      case VMFunction::Type_Value:
         type = LDefinition::BOX;
 #if defined(JS_NUNBOX32)
         lir->setDef(TYPE_INDEX, LDefinition(vreg + VREG_TYPE_OFFSET, LDefinition::TYPE,
@@ -177,11 +172,11 @@ LIRGeneratorShared::defineVMReturn(MDefinition *mir,
         lir->setDef(0, LDefinition(vreg, type, LGeneralReg(JSCReturnReg)));
 #endif
         break;
-      case VMFunction::ReturnBool:
+      case VMFunction::Type_Bool:
         type = LDefinition::INTEGER;
         lir->setDef(0, LDefinition(vreg, type, LGeneralReg(ReturnReg)));
         break;
-      case VMFunction::ReturnPointer:
+      case VMFunction::Type_Object:
         type = LDefinition::OBJECT;
         lir->setDef(0, LDefinition(vreg, type, LGeneralReg(ReturnReg)));
         break;
