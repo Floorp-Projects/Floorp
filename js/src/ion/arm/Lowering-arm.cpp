@@ -230,7 +230,7 @@ LIRGeneratorARM::assignPostSnapshot(MInstruction *mir, LInstruction *ins)
 }
 
 bool
-LIRGeneratorARM::assignSafepoint(MInstruction *mir, LInstruction *ins)
+LIRGeneratorARM::assignSafepoint(LInstruction *ins, MInstruction *mir)
 {
     ins->setMir(mir);
     if (mir->isIdempotent()) {

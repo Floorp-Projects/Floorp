@@ -105,7 +105,6 @@ CodeGeneratorX86Shared::generateEpilogue()
     return true;
 }
 
-
 // Before doing any call to Cpp, you should ensure that volatile
 // registers are evicted by the register allocator.
 bool
@@ -114,6 +113,8 @@ CodeGeneratorX86Shared::callVM(const VMFunction &fun, LInstruction *ins)
     // Stack is:
     //    ... frame ...
     //    [args]
+    JS_ASSERT(pushedArgs_ == fun.explicitArgs);
+    pushedArgs_ = 0;
 
     // Generate the wrapper of the VM function.
     IonCompartment *ion = gen->cx->compartment->ionCompartment();
@@ -143,7 +144,6 @@ CodeGeneratorX86Shared::callVM(const VMFunction &fun, LInstruction *ins)
 
     // Stack is:
     //    ... frame ...
-
     return true;
 }
 
@@ -770,10 +770,9 @@ CodeGeneratorX86Shared::visitNewArray(LNewArray *ins)
     const Register type = ReturnReg;
     masm.movePtr(ImmWord(ins->mir()->type()), type);
 
-    JS_ASSERT(ins->function().explicitArgs == 2);
-    masm.Push(type);
-    masm.Push(Imm32(ins->mir()->count()));
-    if (!callVM(ins->function(), ins))
+    pushArg(type);
+    pushArg(Imm32(ins->mir()->count()));
+    if (!callVM(NewInitArrayVMFun, ins))
         return false;
     return true;
 }

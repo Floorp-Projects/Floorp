@@ -147,19 +147,15 @@ LIRGeneratorShared::defineReturn(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir
     return true;
 }
 
-template <enum VMFunction::DataType DefType, size_t Defs, size_t Ops, size_t Temps> bool
-LIRGeneratorShared::defineVMReturn(MDefinition *mir,
-                                   LVMCallInstructionHelper<DefType, Defs, Ops, Temps> *lir)
+template <size_t Defs, size_t Ops, size_t Temps> bool
+LIRGeneratorShared::defineVMReturn(LInstructionHelper<Defs, Ops, Temps> *lir, MDefinition *mir)
 {
     uint32 vreg = getVirtualRegister();
     if (vreg >= MAX_VIRTUAL_REGISTERS)
         return false;
 
-    LDefinition::Type type = LDefinition::BOX;
-
-    switch (DefType) {
-      case VMFunction::Type_Value:
-        type = LDefinition::BOX;
+    switch (mir->type()) {
+      case MIRType_Value:
 #if defined(JS_NUNBOX32)
         lir->setDef(TYPE_INDEX, LDefinition(vreg + VREG_TYPE_OFFSET, LDefinition::TYPE,
                                             LGeneralReg(JSReturnReg_Type)));
@@ -169,23 +165,15 @@ LIRGeneratorShared::defineVMReturn(MDefinition *mir,
         if (getVirtualRegister() >= MAX_VIRTUAL_REGISTERS)
             return false;
 #elif defined(JS_PUNBOX64)
-        lir->setDef(0, LDefinition(vreg, type, LGeneralReg(JSCReturnReg)));
+        lir->setDef(0, LDefinition(vreg, LDefinition::BOX, LGeneralReg(JSCReturnReg)));
 #endif
         break;
-      case VMFunction::Type_Bool:
-        type = LDefinition::INTEGER;
-        lir->setDef(0, LDefinition(vreg, type, LGeneralReg(ReturnReg)));
-        break;
-      case VMFunction::Type_Object:
-        type = LDefinition::OBJECT;
-        lir->setDef(0, LDefinition(vreg, type, LGeneralReg(ReturnReg)));
-        break;
       default:
-        JS_NOT_REACHED("Unknown/Unexpected ReturnType.");
-        return false;
+        LDefinition::Type type = LDefinition::TypeFrom(mir->type());
+        lir->setDef(0, LDefinition(vreg, type, LGeneralReg(ReturnReg)));
+        break;
     }
 
-    JS_ASSERT(LDefinition::TypeFrom(mir->type()) == type);
     mir->setVirtualRegister(vreg);
     lir->setMir(mir);
     return add(lir);
