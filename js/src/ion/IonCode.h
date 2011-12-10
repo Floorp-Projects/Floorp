@@ -138,7 +138,7 @@ class IonCode : public gc::Cell
 #define ION_DISABLED_SCRIPT ((IonScript *)0x1)
 
 class SnapshotWriter;
-class IonFrameInfo;
+struct IonFrameInfo;
 
 // An IonScript attaches Ion-generated information to a JSScript.
 struct IonScript
