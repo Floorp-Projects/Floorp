@@ -619,8 +619,6 @@ class NodeBuilder
 
     bool xmlComment(Value text, TokenPos *pos, Value *dst);
 
-    bool xmlPI(Value target, TokenPos *pos, Value *dst);
-
     bool xmlPI(Value target, Value content, TokenPos *pos, Value *dst);
 };
 
@@ -1568,12 +1566,6 @@ NodeBuilder::xmlComment(Value text, TokenPos *pos, Value *dst)
         return callback(cb, text, pos, dst);
 
     return newNode(AST_XMLCOMMENT, pos, "contents", text, dst);
-}
-
-bool
-NodeBuilder::xmlPI(Value target, TokenPos *pos, Value *dst)
-{
-    return xmlPI(target, NullValue(), pos, dst);
 }
 
 bool
@@ -2795,14 +2787,13 @@ ASTSerializer::xml(ParseNode *pn, Value *dst)
       case PNK_XMLCOMMENT:
         return builder.xmlComment(atomContents(pn->pn_atom), &pn->pn_pos, dst);
 
-      case PNK_XMLPI:
-        if (!pn->pn_pidata)
-            return builder.xmlPI(atomContents(pn->pn_pitarget), &pn->pn_pos, dst);
-        else
-            return builder.xmlPI(atomContents(pn->pn_pitarget),
-                                 atomContents(pn->pn_pidata),
-                                 &pn->pn_pos,
-                                 dst);
+      case PNK_XMLPI: {
+        XMLProcessingInstruction &pi = pn->asXMLProcessingInstruction();
+        return builder.xmlPI(atomContents(pi.target()),
+                             atomContents(pi.data()),
+                             &pi.pn_pos,
+                             dst);
+      }
 #endif
 
       default:
