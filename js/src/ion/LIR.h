@@ -57,6 +57,7 @@
 #include "shared/Assembler-shared.h"
 #include "Snapshots.h"
 #include "Bailouts.h"
+#include "IonVMFunctions.h"
 
 #if defined(JS_CPU_X86)
 # include "x86/StackAssignment-x86.h"
@@ -815,11 +816,11 @@ class LVMCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, T
   private:
     static uint32 defMask() {
         switch (DefType) {
-          case VMFunction::Type_Value:
+          case Type_Value:
             JS_ASSERT(Defs == BOX_PIECES);
             return Registers::JSCallMask;
-          case VMFunction::Type_Bool:
-          case VMFunction::Type_Object:
+          case Type_Bool:
+          case Type_Object:
             JS_ASSERT(Defs == 1);
             return Registers::CallMask;
           default:

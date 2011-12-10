@@ -51,10 +51,6 @@ namespace JSC {
 struct JSScript;
 
 namespace js {
-    struct VMFunction;
-}
-
-namespace js {
 namespace ion {
 
 // The maximum size of any buffer associated with an assembler or code object.
@@ -260,12 +256,14 @@ struct IonScript
     void copyFrameInfoTable(const IonFrameInfo *hf);
 };
 
+struct VMFunction;
+
 } // namespace ion
 
 namespace gc {
 
 inline bool
-IsMarked(JSContext *, const VMFunction *)
+IsMarked(JSContext *, const ion::VMFunction *)
 {
     // VMFunction are only static objects which are used by WeakMaps as keys.
     // It is considered as a root object which is always marked.

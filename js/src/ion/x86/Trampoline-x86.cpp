@@ -40,12 +40,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "jscompartment.h"
-#include "jsinterp.h"
 #include "assembler/assembler/MacroAssembler.h"
 #include "ion/IonCompartment.h"
 #include "ion/IonLinker.h"
 #include "ion/IonFrames.h"
 #include "ion/Bailouts.h"
+#include "ion/IonVMFunctions.h"
 
 using namespace js;
 using namespace js::ion;
@@ -469,7 +469,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Reserve space for the outparameter.
     Register outReg = InvalidReg;
-    if (f.outParam == VMFunction::Type_Value) {
+    if (f.outParam == Type_Value) {
         outReg = regs.takeAny();
         masm.reserveStack(sizeof(Value));
         masm.movl(esp, outReg);
@@ -496,13 +496,13 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     masm.callWithABI(f.wrapped);
 
     // Test for failure.
-    JS_ASSERT(f.failType() == VMFunction::Type_Bool || f.failType() == VMFunction::Type_Object);
+    JS_ASSERT(f.failType() == Type_Bool || f.failType() == Type_Object);
     Label exception;
     masm.testl(eax, eax);
     masm.j(Assembler::Zero, &exception);
 
     // Load the outparam and free any allocated stack.
-    if (f.outParam == VMFunction::Type_Value) {
+    if (f.outParam == Type_Value) {
         masm.loadValue(Operand(esp, 0), JSReturnOperand);
         masm.freeStack(sizeof(Value));
     }

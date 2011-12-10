@@ -514,7 +514,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Reserve space for the outparameter.
     Register outReg = InvalidReg;
-    if (f.outParam == VMFunction::Type_Value) {
+    if (f.outParam == Type_Value) {
         outReg = regs.takeAny();
         masm.reserveStack(sizeof(Value));
         masm.ma_mov(sp, outReg);
@@ -543,13 +543,13 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     masm.callWithABI(f.wrapped);
 
     // Test for failure.
-    JS_ASSERT(f.failType() == VMFunction::Type_Bool || f.failType() == VMFunction::Type_Object);
+    JS_ASSERT(f.failType() == Type_Bool || f.failType() == Type_Object);
     Label exception;
     masm.ma_cmp(r0, Imm32(0));
     masm.ma_b(&exception,Assembler::Zero);
 
     // Load the outparam and free any allocated stack.
-    if (f.outParam == VMFunction::Type_Value) {
+    if (f.outParam == Type_Value) {
         masm.ma_ldrd(EDtrAddr(sp, EDtrOffImm(0)), JSReturnReg_Data);
         masm.freeStack(sizeof(Value));
     }
