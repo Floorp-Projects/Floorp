@@ -571,10 +571,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetPath(const char **aPath)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetPrintMethod(PrintMethod &aMethod)
-{
-  return GetPrintMethod(mPrinter, aMethod);
-}
 /* static !! */
 nsresult nsDeviceContextSpecGTK::GetPrintMethod(const char *aPrinter, PrintMethod &aMethod)
 {
