@@ -8669,22 +8669,6 @@ nsHTMLEditRules::DidDeleteText(nsIDOMCharacterData *aTextNode,
 }
 
 NS_IMETHODIMP
-nsHTMLEditRules::WillDeleteRange(nsIDOMRange *aRange)
-{
-  if (!mListenerEnabled) {
-    return NS_OK;
-  }
-  // get the (collapsed) selection location
-  return UpdateDocChangeRange(aRange);
-}
-
-NS_IMETHODIMP
-nsHTMLEditRules::DidDeleteRange(nsIDOMRange *aRange)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection)
 {
   if (!mListenerEnabled) {
