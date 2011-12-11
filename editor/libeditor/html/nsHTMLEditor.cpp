@@ -5776,7 +5776,6 @@ nsHTMLEditor::GetBodyElement(nsIDOMHTMLElement** aBody)
   if (!htmlDoc) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  nsCOMPtr<nsIDOMHTMLElement> bodyElement; 
   return htmlDoc->GetBody(aBody);
 }
 
