@@ -121,23 +121,6 @@ nsDOMIterator::Init(nsIDOMNode* aNode)
   return mIter->Init(content);
 }
 
-void
-nsDOMIterator::ForEach(nsDomIterFunctor& functor) const
-{
-  nsCOMPtr<nsIDOMNode> node;
-  
-  // iterate through dom
-  while (!mIter->IsDone())
-  {
-    node = do_QueryInterface(mIter->GetCurrentNode());
-    if (!node)
-      return;
-
-    functor(node);
-    mIter->Next();
-  }
-}
-
 nsresult
 nsDOMIterator::AppendList(nsBoolDomIterFunctor& functor,
                           nsCOMArray<nsIDOMNode>& arrayOfNodes) const
