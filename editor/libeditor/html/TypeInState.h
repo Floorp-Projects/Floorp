@@ -74,12 +74,9 @@ public:
   // nsISelectionListener
   NS_DECL_NSISELECTIONLISTENER
 
-  nsresult SetProp(nsIAtom *aProp);
-  nsresult SetProp(nsIAtom *aProp, const nsString &aAttr);
   nsresult SetProp(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue);
 
   nsresult ClearAllProps();
-  nsresult ClearProp(nsIAtom *aProp);
   nsresult ClearProp(nsIAtom *aProp, const nsString &aAttr);
   
   //**************************************************************************
@@ -98,8 +95,6 @@ public:
   nsresult TakeRelativeFontSize(PRInt32 *outRelSize);
 
   nsresult GetTypingState(bool &isSet, bool &theSetting, nsIAtom *aProp);
-  nsresult GetTypingState(bool &isSet, bool &theSetting, nsIAtom *aProp, 
-                          const nsString &aAttr);
   nsresult GetTypingState(bool &isSet, bool &theSetting, nsIAtom *aProp, 
                           const nsString &aAttr, nsString* outValue);
 
