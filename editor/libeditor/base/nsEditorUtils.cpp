@@ -177,17 +177,6 @@ nsDOMSubtreeIterator::Init(nsIDOMRange* aRange)
   return mIter->Init(aRange);
 }
 
-nsresult
-nsDOMSubtreeIterator::Init(nsIDOMNode* aNode)
-{
-  nsresult res;
-  mIter = do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(mIter, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  return mIter->Init(content);
-}
-
 /******************************************************************************
  * some general purpose editor utils
  *****************************************************************************/

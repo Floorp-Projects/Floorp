@@ -222,7 +222,6 @@ class nsDOMSubtreeIterator : public nsDOMIterator
     virtual ~nsDOMSubtreeIterator();
 
     nsresult Init(nsIDOMRange* aRange);
-    nsresult Init(nsIDOMNode* aNode);
 };
 
 class nsTrivialFunctor : public nsBoolDomIterFunctor
