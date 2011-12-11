@@ -320,16 +320,6 @@ nsHTMLEditUtils::IsPre(nsIDOMNode *node)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// IsAddress: true if node an html address node
-//                  
-bool 
-nsHTMLEditUtils::IsAddress(nsIDOMNode *node)
-{
-  return nsEditor::NodeIsType(node, nsEditProperty::address);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
 // IsImage: true if node an html image node
 //                  
 bool 
