@@ -1671,6 +1671,9 @@ var BrowserEventHandler = {
         this._sendMouseEvent("mousemove", element, data.x, data.y);
         this._sendMouseEvent("mousedown", element, data.x, data.y);
         this._sendMouseEvent("mouseup",   element, data.x, data.y);
+
+        if (ElementTouchHelper.isElementClickable(element))
+          Haptic.performSimpleAction(Haptic.LongPress);
       }
       this._cancelTapHighlight();
     } else if (aTopic == "Gesture:DoubleTap") {
@@ -1732,9 +1735,6 @@ var BrowserEventHandler = {
   _highlightElement: null,
 
   _doTapHighlight: function _doTapHighlight(aElement) {
-    if (ElementTouchHelper.isElementClickable(aElement))
-      Haptic.performSimpleAction(Haptic.LongPress);
-
     DOMUtils.setContentState(aElement, kStateActive);
     this._highlightElement = aElement;
   },
