@@ -148,43 +148,6 @@ NS_IMETHODIMP EditAggregateTxn::AppendChild(EditTxn *aTxn)
   return NS_OK;
 }
 
-NS_IMETHODIMP EditAggregateTxn::GetCount(PRUint32 *aCount)
-{
-  if (!aCount) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aCount = mChildren.Length();
-  return NS_OK;
-}
-
-NS_IMETHODIMP EditAggregateTxn::GetTxnAt(PRInt32 aIndex, EditTxn **aTxn)
-{
-  // preconditions
-  NS_PRECONDITION(aTxn, "null out param");
-
-  if (!aTxn) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aTxn = nsnull; // initialize out param as soon as we know it's a valid pointer
-  // get the transaction at aIndex
-  PRUint32 txnCount = mChildren.Length();
-  if (0>aIndex || ((PRInt32)txnCount)<=aIndex) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  // ugh, this is all wrong - what a mess we have with editor transaction interfaces
-  *aTxn = mChildren[aIndex];
-  NS_ENSURE_TRUE(*aTxn, NS_ERROR_UNEXPECTED);
-  NS_ADDREF(*aTxn);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP EditAggregateTxn::SetName(nsIAtom *aName)
-{
-  mName = do_QueryInterface(aName);
-  return NS_OK;
-}
-
 NS_IMETHODIMP EditAggregateTxn::GetName(nsIAtom **aName)
 {
   if (aName && mName)

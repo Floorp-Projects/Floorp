@@ -43,11 +43,12 @@ import java.util.Queue;
 import java.util.Set;
 import java.lang.ref.SoftReference;
 
-import android.content.ContentValues;
+import android.content.ContentResolver;
 import android.database.Cursor;
 import android.os.Handler;
-import android.provider.Browser;
 import android.util.Log;
+
+import org.mozilla.gecko.db.BrowserDB;
 
 class GlobalHistory {
     private static final String LOGTAG = "GeckoGlobalHistory";
@@ -80,12 +81,7 @@ class GlobalHistory {
                     // the cache was wiped away, repopulate it
                     Log.w(LOGTAG, "Rebuilding visited link set...");
                     visitedSet = new HashSet<String>();
-                    Cursor c = GeckoApp.mAppContext.getContentResolver().query(Browser.BOOKMARKS_URI,
-                                    new String[] { Browser.BookmarkColumns.URL },
-                                    Browser.BookmarkColumns.BOOKMARK + "=0 AND " +
-                                    Browser.BookmarkColumns.VISITS + ">0",
-                                    null,
-                                    null);
+                    Cursor c = BrowserDB.getAllVisitedHistory(GeckoApp.mAppContext.getContentResolver());
                     if (c.moveToFirst()) {
                         do {
                             visitedSet.add(c.getString(0));
@@ -112,7 +108,7 @@ class GlobalHistory {
     }
 
     public void add(String uri) {
-        Browser.updateVisitedHistory(GeckoApp.mAppContext.getContentResolver(), uri, true);
+        BrowserDB.updateVisitedHistory(GeckoApp.mAppContext.getContentResolver(), uri);
         Set<String> visitedSet = mVisitedCache.get();
         if (visitedSet != null) {
             visitedSet.add(uri);
@@ -121,13 +117,8 @@ class GlobalHistory {
     }
 
     public void update(String uri, String title) {
-        ContentValues values = new ContentValues();
-        values.put(Browser.BookmarkColumns.TITLE, title);
-        GeckoApp.mAppContext.getContentResolver().update(
-                Browser.BOOKMARKS_URI,
-                values,
-                Browser.BookmarkColumns.URL + " = ?",
-                new String[] { uri });
+        ContentResolver resolver = GeckoApp.mAppContext.getContentResolver();
+        BrowserDB.updateHistoryTitle(resolver, uri, title);
     }
 
     public void checkUriVisited(final String uri) {

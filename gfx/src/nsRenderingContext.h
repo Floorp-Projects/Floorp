@@ -113,7 +113,6 @@ public:
     void FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
     void InvertRect(const nsRect& aRect);
-    void InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
     // Text
 

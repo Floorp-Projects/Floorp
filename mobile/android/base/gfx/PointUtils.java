@@ -67,5 +67,10 @@ public final class PointUtils {
        float y = FloatUtils.interpolate(startPoint.y, endPoint.y, weight);
        return new PointF(x, y);
    }
+
+   /* Computes the magnitude of the given vector. */
+   public static float distance(PointF point) {
+        return (float)Math.sqrt(point.x * point.x + point.y * point.y);
+   }
 }
 

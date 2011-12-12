@@ -259,7 +259,10 @@ moz_malloc_usable_size(void *ptr)
 
 #if defined(XP_MACOSX)
     return malloc_size(ptr);
-#elif defined(MOZ_MEMORY)
+#elif defined(MOZ_MEMORY) || defined(XP_LINUX)
+    // XXX: the |defined(XP_LINUX)| may be too lax;  some Linux installations
+    // might use a libc that doesn't have malloc_usable_size.  Let's fix this
+    // if/when it happens.
     return malloc_usable_size(ptr);
 #elif defined(XP_WIN)
     return _msize(ptr);

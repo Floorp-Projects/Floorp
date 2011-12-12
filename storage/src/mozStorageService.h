@@ -53,8 +53,6 @@
 #include "mozIStorageService.h"
 #include "mozIStorageServiceQuotaManagement.h"
 
-class nsIMemoryReporter;
-class nsIMemoryMultiReporter;
 class nsIXPConnect;
 struct sqlite3_vfs;
 
@@ -189,16 +187,11 @@ private:
 
   nsCOMPtr<nsIFile> mProfileStorageFile;
 
-  nsCOMPtr<nsIMemoryReporter> mStorageSQLiteReporter;
-  nsCOMPtr<nsIMemoryMultiReporter> mStorageSQLiteMultiReporter;
-
   static Service *gService;
 
   static nsIXPConnect *sXPConnect;
 
   static PRInt32 sSynchronousPref;
-
-  friend class ServiceMainThreadInitializer;
 };
 
 } // namespace storage

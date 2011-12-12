@@ -56,10 +56,12 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
     private LinearLayout mChoicesLayout;
     private TextView mTextView;
     private Button mButton;
-    private LayoutParams mLayoutParams;
+    static private LayoutParams mLayoutParams;
     public Tab mTab;
     // value used to identify the notification
     private String mValue;
+
+    static private LayoutInflater mInflater;
 
     private int mPersistence = 0;
     private long mTimeout = 0;
@@ -73,18 +75,19 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
         setOrientation(VERTICAL);
         setBackgroundResource(R.drawable.doorhanger_shadow_bg);
 
-        // Load layout into the custom view
-        LayoutInflater inflater =
-                (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        inflater.inflate(R.layout.doorhanger, this);
+        if (mInflater == null)
+            mInflater = LayoutInflater.from(mContext);
+
+        mInflater.inflate(R.layout.doorhanger, this);
         hide();
 
         mTextView = (TextView) findViewById(R.id.doorhanger_title);
         mChoicesLayout = (LinearLayout) findViewById(R.id.doorhanger_choices);
 
-        mLayoutParams = new LayoutParams(LayoutParams.FILL_PARENT,
-                                         LayoutParams.FILL_PARENT,
-                                         1.0f);
+        if (mLayoutParams == null)
+            mLayoutParams = new LayoutParams(LayoutParams.FILL_PARENT,
+                                             LayoutParams.FILL_PARENT,
+                                             1.0f);
     }
 
     public void addButton(String aText, int aCallback) {

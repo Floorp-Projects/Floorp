@@ -7902,11 +7902,7 @@ CSSParserImpl::ParseOutline()
 
   // Provide default values
   if ((found & 1) == 0) { // Provide default outline-color
-#ifdef GFX_HAS_INVERT
-    values[0].SetIntValue(NS_STYLE_COLOR_INVERT, eCSSUnit_Enumerated);
-#else
     values[0].SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
-#endif
   }
   if ((found & 2) == 0) { // Provide default outline-style
     values[1].SetIntValue(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);

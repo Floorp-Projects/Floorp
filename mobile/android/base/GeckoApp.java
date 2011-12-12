@@ -114,7 +114,6 @@ abstract public class GeckoApp
 
     private IntentFilter mConnectivityFilter;
     private IntentFilter mBatteryFilter;
-    private IntentFilter mSmsFilter;
 
     private BroadcastReceiver mConnectivityReceiver;
     private BroadcastReceiver mSmsReceiver;
@@ -723,17 +722,25 @@ abstract public class GeckoApp
         });
     }
 
-    File getProfileDir() {
+    public File getProfileDir() {
+        // XXX: TO-DO read profiles.ini to get the default profile
+        return getProfileDir("default");
+    }
+
+    public File getProfileDir(final String profileName) {
         if (mProfileDir == null && !mUserDefinedProfile) {
             File mozDir = new File(GeckoAppShell.sHomeDir, "mozilla");
+            if (!mozDir.exists()) {
+                // Profile directory may have been deleted or not created yet.
+                return null;
+            }
             File[] profiles = mozDir.listFiles(new FileFilter() {
                 public boolean accept(File pathname) {
-                    return pathname.getName().endsWith(".default");
+                    return pathname.getName().endsWith("." + profileName);
                 }
             });
-            if (profiles.length == 1)
+            if (profiles != null && profiles.length == 1)
                 mProfileDir = profiles[0];
-            // XXX: TO-DO read profiles.ini to get the default profile
         }
         return mProfileDir;
     }
@@ -1130,7 +1137,7 @@ abstract public class GeckoApp
     }
 
     void handleLinkAdded(final int tabId, String rel, final String href) {
-        if (rel.indexOf("icon") != -1) {
+        if (rel.indexOf("[icon]") != -1) {
             final Tab tab = Tabs.getInstance().getTab(tabId);
             if (tab != null) {
                 tab.updateFaviconURL(href);
@@ -1268,6 +1275,7 @@ abstract public class GeckoApp
             GeckoActionBar actionBar = new GeckoActionBar();
             mBrowserToolbar = (BrowserToolbar) getLayoutInflater().inflate(R.layout.gecko_app_actionbar, null);
 
+            actionBar.setBackgroundDrawable(this, getResources().getDrawable(R.drawable.gecko_actionbar_bg));
             actionBar.setDisplayOptions(this, ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM |
                                                                              ActionBar.DISPLAY_SHOW_HOME |
                                                                              ActionBar.DISPLAY_SHOW_TITLE |
@@ -1386,11 +1394,11 @@ abstract public class GeckoApp
         batteryFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
         mBatteryReceiver = new GeckoBatteryManager();
         registerReceiver(mBatteryReceiver, batteryFilter);
-                
-        mSmsFilter = new IntentFilter();
-        mSmsFilter.addAction("android.provider.Telephony.SMS_RECEIVED");
+
+        IntentFilter smsFilter = new IntentFilter();
+        smsFilter.addAction("android.provider.Telephony.SMS_RECEIVED");
         mSmsReceiver = new GeckoSmsManager();
-        registerReceiver(mSmsReceiver, mSmsFilter);
+        registerReceiver(mSmsReceiver, smsFilter);
 
         final GeckoApp self = this;
  
@@ -1496,7 +1504,6 @@ abstract public class GeckoApp
         // onPause will be followed by either onResume or onStop.
         super.onPause();
 
-        unregisterReceiver(mSmsReceiver);
         unregisterReceiver(mConnectivityReceiver);
     }
 
@@ -1514,7 +1521,6 @@ abstract public class GeckoApp
         if (checkLaunchState(LaunchState.Launching))
             onNewIntent(getIntent());
 
-        registerReceiver(mSmsReceiver, mSmsFilter);
         registerReceiver(mConnectivityReceiver, mConnectivityFilter);
         if (mOwnActivityDepth > 0)
             mOwnActivityDepth--;
@@ -1590,6 +1596,7 @@ abstract public class GeckoApp
 
         super.onDestroy();
 
+        unregisterReceiver(mSmsReceiver);
         unregisterReceiver(mBatteryReceiver);
     }
 

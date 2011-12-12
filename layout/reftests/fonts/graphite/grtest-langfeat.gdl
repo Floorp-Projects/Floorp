@@ -1,0 +1,62 @@
+#include "stddef.gdh"
+#define LG_USENG 1033
+
+table(glyph)
+clsFail = codepoint("FAIL");
+clsPass = codepoint("PaSs");
+endtable
+
+table (feature)
+
+failtopass 
+{
+  id = "FTPS";
+  name.LG_USENG = string("Pass substitution");
+  default = 0;
+}
+
+failtopass2 
+{
+  id = "FTP2";
+  name.LG_USENG = string("Pass substitution 2");
+  default = 0;
+}
+
+passtofail 
+{
+  id = "PTFL";
+  name.LG_USENG = string("Pass to fail substitution");
+  default = 0;
+}
+
+endtable
+
+table (language)
+
+french {
+  languages = ( "fr" );
+  failtopass = 1;
+}
+
+french2 {
+  languages = ( "fra" );
+  passtofail = 1;
+}
+
+endtable;
+
+table(substitution)
+
+pass(1)
+
+if (failtopass || failtopass2)
+clsFail > clsPass;
+endif;
+
+if (passtofail)
+clsPass > clsFail;
+endif;
+
+endpass;
+
+endtable

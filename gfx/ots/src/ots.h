@@ -183,7 +183,12 @@ class Buffer {
   F(vdmx, VDMX) \
   F(vorg, VORG) \
   F(vhea, VHEA) \
-  F(vmtx, VMTX)
+  F(vmtx, VMTX) \
+  F(silf, SILF) \
+  F(sill, SILL) \
+  F(glat, GLAT) \
+  F(gloc, GLOC) \
+  F(feat, FEAT)
 
 #define F(name, capname) struct OpenType##capname;
 FOR_EACH_TABLE_TYPE
@@ -201,6 +206,10 @@ struct OpenTypeFile {
   uint16_t search_range;
   uint16_t entry_selector;
   uint16_t range_shift;
+
+  // This is used to tell the relevant parsers whether to preserve the
+  // Graphite layout tables (currently _without_ any checking)
+  bool preserve_graphite;
 
 #define F(name, capname) OpenType##capname *name;
 FOR_EACH_TABLE_TYPE

@@ -138,144 +138,12 @@ GetStorageSQLiteMemoryUsed()
   return ::sqlite3_memory_used();
 }
 
-// We don't need an "explicit" reporter for total SQLite memory usage, because
-// the multi-reporter provides reports that add up to the total.  But it's
-// useful to have the total in the "Other Measurements" list in about:memory,
-// and more importantly, we also gather the total via telemetry.
-NS_MEMORY_REPORTER_IMPLEMENT(StorageSQLite,
-    "storage-sqlite",
-    KIND_OTHER,
+NS_MEMORY_REPORTER_IMPLEMENT(StorageSQLiteMemoryUsed,
+    "explicit/storage/sqlite",
+    KIND_HEAP,
     UNITS_BYTES,
     GetStorageSQLiteMemoryUsed,
     "Memory used by SQLite.")
-
-class StorageSQLiteMultiReporter : public nsIMemoryMultiReporter
-{
-private:
-  Service *mService;    // a weakref because Service contains a strongref to this
-  nsCString mStmtDesc;
-  nsCString mCacheDesc;
-  nsCString mSchemaDesc;
-
-public:
-  NS_DECL_ISUPPORTS
-
-  StorageSQLiteMultiReporter(Service *aService) 
-  : mService(aService)
-  {
-    NS_NAMED_LITERAL_CSTRING(mStmtDesc,
-      "Memory (approximate) used by all prepared statements used by "
-      "connections to this database.");
-
-    NS_NAMED_LITERAL_CSTRING(mCacheDesc,
-      "Memory (approximate) used by all pager caches used by connections "
-      "to this database.");
-
-    NS_NAMED_LITERAL_CSTRING(mSchemaDesc,
-      "Memory (approximate) used to store the schema for all databases "
-      "associated with connections to this database.");
-  }
-
-  // Warning: To get a Connection's measurements requires holding its lock.
-  // There may be a delay getting the lock if another thread is accessing the
-  // Connection.  This isn't very nice if CollectReports is called from the
-  // main thread!  But at the time of writing this function is only called when
-  // about:memory is loaded (not, for example, when telemetry pings occur) and
-  // any delays in that case aren't so bad.
-  NS_IMETHOD CollectReports(nsIMemoryMultiReporterCallback *aCallback,
-                            nsISupports *aClosure)
-  {
-    size_t totalConnSize = 0;
-    {
-      nsTArray<nsRefPtr<Connection> > connections;
-      mService->getConnections(connections);
-
-      for (PRUint32 i = 0; i < connections.Length(); i++) {
-        nsRefPtr<Connection> &conn = connections[i];
-
-        nsCString pathHead("explicit/storage/sqlite/");
-        pathHead.Append(conn->getFilename());
-        pathHead.AppendLiteral("/");
-
-        SQLiteMutexAutoLock lockedScope(conn->sharedDBMutex);
-
-        totalConnSize +=
-          doConnMeasurement(aCallback, aClosure, *conn.get(), pathHead,
-                            NS_LITERAL_CSTRING("stmt"), mStmtDesc,
-                            SQLITE_DBSTATUS_STMT_USED);
-        totalConnSize +=
-          doConnMeasurement(aCallback, aClosure, *conn.get(), pathHead,
-                            NS_LITERAL_CSTRING("cache"), mCacheDesc,
-                            SQLITE_DBSTATUS_CACHE_USED);
-        totalConnSize +=
-          doConnMeasurement(aCallback, aClosure, *conn.get(), pathHead,
-                            NS_LITERAL_CSTRING("schema"), mSchemaDesc,
-                            SQLITE_DBSTATUS_SCHEMA_USED);
-      }
-    }
-
-    PRInt64 other = ::sqlite3_memory_used() - totalConnSize;
-
-    aCallback->Callback(NS_LITERAL_CSTRING(""),
-                        NS_LITERAL_CSTRING("explicit/storage/sqlite/other"),
-                        nsIMemoryReporter::KIND_HEAP,
-                        nsIMemoryReporter::UNITS_BYTES, other,
-                        NS_LITERAL_CSTRING("All unclassified sqlite memory."),
-                        aClosure);
-
-    return NS_OK;
-  }
-
-private:
-  /**
-   * Passes a single SQLite memory statistic to a memory multi-reporter
-   * callback.
-   *
-   * @param aCallback
-   *        The callback.
-   * @param aClosure
-   *        The closure for the callback.
-   * @param aConn
-   *        The SQLite connection.
-   * @param aPathHead
-   *        Head of the path for the memory report.
-   * @param aKind
-   *        The memory report statistic kind, one of "stmt", "cache" or
-   *        "schema".
-   * @param aDesc
-   *        The memory report description.
-   * @param aOption
-   *        The SQLite constant for getting the measurement.
-   */
-  size_t doConnMeasurement(nsIMemoryMultiReporterCallback *aCallback,
-                           nsISupports *aClosure,
-                           sqlite3 *aConn,
-                           const nsACString &aPathHead,
-                           const nsACString &aKind,
-                           const nsACString &aDesc,
-                           int aOption)
-  {
-    nsCString path(aPathHead);
-    path.Append(aKind);
-    path.AppendLiteral("-used");
-
-    int curr = 0, max = 0;
-    int rc = ::sqlite3_db_status(aConn, aOption, &curr, &max, 0);
-    nsresult rv = convertResultCode(rc);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    aCallback->Callback(NS_LITERAL_CSTRING(""), path,
-                        nsIMemoryReporter::KIND_HEAP,
-                        nsIMemoryReporter::UNITS_BYTES, PRInt64(curr),
-                        aDesc, aClosure);
-    return curr;
-  }
-};
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(
-  StorageSQLiteMultiReporter,
-  nsIMemoryMultiReporter
-)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Helpers
@@ -283,12 +151,10 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(
 class ServiceMainThreadInitializer : public nsRunnable
 {
 public:
-  ServiceMainThreadInitializer(Service *aService,
-                               nsIObserver *aObserver,
+  ServiceMainThreadInitializer(nsIObserver *aObserver,
                                nsIXPConnect **aXPConnectPtr,
                                PRInt32 *aSynchronousPrefValPtr)
-  : mService(aService)
-  , mObserver(aObserver)
+  : mObserver(aObserver)
   , mXPConnectPtr(aXPConnectPtr)
   , mSynchronousPrefValPtr(aSynchronousPrefValPtr)
   {
@@ -323,18 +189,14 @@ public:
       Preferences::GetInt(PREF_TS_SYNCHRONOUS, PREF_TS_SYNCHRONOUS_DEFAULT);
     ::PR_ATOMIC_SET(mSynchronousPrefValPtr, synchronous);
 
-    // Create and register our SQLite memory reporters.  Registration can only
-    // happen on the main thread (otherwise you'll get cryptic crashes).
-    mService->mStorageSQLiteReporter = new NS_MEMORY_REPORTER_NAME(StorageSQLite);
-    mService->mStorageSQLiteMultiReporter = new StorageSQLiteMultiReporter(mService);
-    (void)::NS_RegisterMemoryReporter(mService->mStorageSQLiteReporter);
-    (void)::NS_RegisterMemoryMultiReporter(mService->mStorageSQLiteMultiReporter);
+    // Register our SQLite memory reporter.  Registration can only happen on
+    // the main thread (otherwise you'll get cryptic crashes).
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(StorageSQLiteMemoryUsed));
 
     return NS_OK;
   }
 
 private:
-  Service *mService;
   nsIObserver *mObserver;
   nsIXPConnect **mXPConnectPtr;
   PRInt32 *mSynchronousPrefValPtr;
@@ -420,16 +282,11 @@ Service::Service()
 , mSqliteVFS(nsnull)
 , mRegistrationMutex("Service::mRegistrationMutex")
 , mConnections()
-, mStorageSQLiteReporter(nsnull)
-, mStorageSQLiteMultiReporter(nsnull)
 {
 }
 
 Service::~Service()
 {
-  (void)::NS_UnregisterMemoryReporter(mStorageSQLiteReporter);
-  (void)::NS_UnregisterMemoryMultiReporter(mStorageSQLiteMultiReporter);
-
   int rc = sqlite3_vfs_unregister(mSqliteVFS);
   if (rc != SQLITE_OK)
     NS_WARNING("Failed to unregister sqlite vfs wrapper.");
@@ -491,7 +348,7 @@ Service::shutdown()
   NS_IF_RELEASE(sXPConnect);
 }
 
-sqlite3_vfs* ConstructTelemetryVFS();
+sqlite3_vfs *ConstructTelemetryVFS();
 
 #ifdef MOZ_MEMORY
 
@@ -528,17 +385,17 @@ namespace {
 // from the standard ones -- they use int instead of size_t.  But we don't need
 // a wrapper for moz_free.
 
-static void* sqliteMemMalloc(int n)
+static void *sqliteMemMalloc(int n)
 {
   return ::moz_malloc(n);
 }
 
-static void* sqliteMemRealloc(void* p, int n)
+static void *sqliteMemRealloc(void *p, int n)
 {
   return ::moz_realloc(p, n);
 }
 
-static int sqliteMemSize(void* p)
+static int sqliteMemSize(void *p)
 {
   return ::moz_malloc_usable_size(p);
 }
@@ -553,12 +410,12 @@ static int sqliteMemRoundup(int n)
   return n <= 8 ? 8 : n;
 }
 
-static int sqliteMemInit(void* p)
+static int sqliteMemInit(void *p)
 {
   return 0;
 }
 
-static void sqliteMemShutdown(void* p)
+static void sqliteMemShutdown(void *p)
 {
 }
 
@@ -615,7 +472,7 @@ Service::initialize()
 
   // Run the things that need to run on the main thread there.
   nsCOMPtr<nsIRunnable> event =
-    new ServiceMainThreadInitializer(this, this, &sXPConnect, &sSynchronousPref);
+    new ServiceMainThreadInitializer(this, &sXPConnect, &sSynchronousPref);
   if (event && ::NS_IsMainThread()) {
     (void)event->Run();
   }
@@ -888,7 +745,7 @@ Service::SetQuotaForFilenamePattern(const nsACString &aPattern,
 }
 
 NS_IMETHODIMP
-Service::UpdateQutoaInformationForFile(nsIFile* aFile)
+Service::UpdateQutoaInformationForFile(nsIFile *aFile)
 {
   NS_ENSURE_ARG_POINTER(aFile);
 

@@ -2795,8 +2795,6 @@ NODE_FOUND:
     parent->GetNodeName(parentTagName);
     // Note: Originally used IsRoot to stop at table cells,
     //  but that's too messy when you are trying to find the parent table
-    //bool isRoot;
-    //if (NS_FAILED(IsRootTag(parentTagName, isRoot)) || isRoot)
     if(parentTagName.LowerCaseEqualsLiteral("body"))
       break;
 
@@ -4195,28 +4193,6 @@ nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
   }
   return caretIsSet;
 }            
-
-
-
-NS_IMETHODIMP
-nsHTMLEditor::IsRootTag(nsString &aTag, bool &aIsTag)
-{
-  static char bodyTag[] = "body";
-  static char tdTag[] = "td";
-  static char thTag[] = "th";
-  static char captionTag[] = "caption";
-  if (aTag.EqualsIgnoreCase(bodyTag) ||
-      aTag.EqualsIgnoreCase(tdTag) ||
-      aTag.EqualsIgnoreCase(thTag) ||
-      aTag.EqualsIgnoreCase(captionTag) )
-  {
-    aIsTag = true;
-  }
-  else {
-    aIsTag = false;
-  }
-  return NS_OK;
-}
 
 ///////////////////////////////////////////////////////////////////////////
 // GetEnclosingTable: find ancestor who is a table, if any
@@ -5800,7 +5776,6 @@ nsHTMLEditor::GetBodyElement(nsIDOMHTMLElement** aBody)
   if (!htmlDoc) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  nsCOMPtr<nsIDOMHTMLElement> bodyElement; 
   return htmlDoc->GetBody(aBody);
 }
 

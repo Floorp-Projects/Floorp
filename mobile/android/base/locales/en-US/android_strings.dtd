@@ -45,8 +45,10 @@
 
 <!ENTITY preferences "Preferences">
 <!ENTITY preferences_title "Preferences">
+<!ENTITY pref_category_general "General">
 <!ENTITY pref_category_privacy "Privacy &amp; Security">
 <!ENTITY pref_category_content "Content">
+<!ENTITY pref_about_firefox "About &brandShortName;">
 <!ENTITY pref_do_not_track "Tell sites not to track me">
 <!ENTITY pref_telemetry "Send performance data">
 <!ENTITY pref_homepage "Home page">
@@ -54,11 +56,7 @@
 <!ENTITY pref_homepage_blank "Blank page">
 <!ENTITY pref_homepage_current "Current page">
 <!ENTITY pref_remember_signons "Remember passwords">
-<!ENTITY pref_locale "Language">
 <!ENTITY pref_cookies "Enable cookies">
-<!ENTITY pref_zoom_reflow "Reformat text on zoom">
-<!ENTITY pref_show_images "Show images">
-<!ENTITY pref_enable_js "Enable JavaScript">
 <!ENTITY pref_char_encoding "Show character encoding">
 <!ENTITY pref_clear_history "Clear history">
 <!ENTITY pref_clear_history_confirm "Browsing history will be deleted">
