@@ -201,7 +201,6 @@ private:
   nsTArray<nsCString>                   mDecoderList;
 
   nsresult Done();
-  nsresult SetCharsetCheckmark(nsString * aCharset, bool aValue);
 
   nsresult FreeResources();
 
@@ -824,31 +823,6 @@ nsresult nsCharsetMenu::Done()
   NS_IF_RELEASE(kNC_BookmarkSeparator);
   NS_IF_RELEASE(kRDF_type);
   NS_IF_RELEASE(mInner);
-
-  return res;
-}
-
-nsresult nsCharsetMenu::SetCharsetCheckmark(nsString * aCharset, 
-                                            bool aValue)
-{
-  nsresult res = NS_OK;
-  nsCOMPtr<nsIRDFContainer> container;
-  nsCOMPtr<nsIRDFResource> node;
-
-  res = NewRDFContainer(mInner, kNC_BrowserCharsetMenuRoot, getter_AddRefs(container));
-  if (NS_FAILED(res)) return res;
-
-  // find RDF node for given charset
-  res = mRDFService->GetUnicodeResource(*aCharset, getter_AddRefs(node));
-  if (NS_FAILED(res)) return res;
-
-  // set checkmark value
-  nsCOMPtr<nsIRDFLiteral> checkedLiteral;
-  nsAutoString checked; checked.AssignWithConversion((aValue == true) ? "true" : "false");
-  res = mRDFService->GetLiteral(checked.get(), getter_AddRefs(checkedLiteral));
-  if (NS_FAILED(res)) return res;
-  res = Assert(node, kNC_Checked, checkedLiteral, true);
-  if (NS_FAILED(res)) return res;
 
   return res;
 }
