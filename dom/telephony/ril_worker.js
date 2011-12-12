@@ -638,6 +638,19 @@ let RIL = {
   },
 
   /**
+   * Mute or unmute the radio.
+   *
+   * @param mute
+   *        Boolean to indicate whether to mute or unmute the radio.
+   */
+  setMute: function setMute(mute) {
+    Buf.newParcel(REQUEST_SET_MUTE);
+    Buf.writeUint32(1);
+    Buf.writeUint32(mute ? 1 : 0);
+    Buf.sendParcel();
+  },
+
+  /**
    * Answer an incoming call.
    */
   answerCall: function answerCall() {
@@ -867,7 +880,9 @@ RIL[REQUEST_BASEBAND_VERSION] = function REQUEST_BASEBAND_VERSION() {
   Phone.onBasebandVersion(version);
 },
 RIL[REQUEST_SEPARATE_CONNECTION] = null;
-RIL[REQUEST_SET_MUTE] = null;
+RIL[REQUEST_SET_MUTE] = function REQUEST_SET_MUTE(length) {
+  Phone.onSetMute();
+};
 RIL[REQUEST_GET_MUTE] = null;
 RIL[REQUEST_QUERY_CLIP] = null;
 RIL[REQUEST_LAST_DATA_CALL_FAIL_CAUSE] = null;
@@ -1248,6 +1263,9 @@ let Phone = {
   onRejectCall: function onRejectCall() {
   },
 
+  onSetMute: function onSetMute() {
+  },
+
   onSendSMS: function onSendSMS(messageRef, ackPDU, errorCode) {
     //TODO
   },
@@ -1297,6 +1315,18 @@ let Phone = {
     //TODO need to check whether call is holding/waiting/background
     // and then use REQUEST_HANGUP_WAITING_OR_BACKGROUND
     RIL.hangUp(options.callIndex);
+  },
+
+  /**
+   * Mute or unmute the radio.
+   *
+   * @param mute
+   *        Boolean to indicate whether to mute or unmute the radio.
+   */
+  setMute: function setMute(options) {
+    //TODO need to check whether call is holding/waiting/background
+    // and then use REQUEST_HANGUP_WAITING_OR_BACKGROUND
+    RIL.setMute(options.mute);
   },
 
   /**
