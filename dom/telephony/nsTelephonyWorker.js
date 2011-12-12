@@ -242,6 +242,33 @@ nsTelephonyWorker.prototype = {
     this.worker.postMessage({type: "rejectCall"});
   },
 
+  get microphoneMuted() {
+    return gAudioManager.microphoneMuted;
+  },
+  set microphoneMuted(value) {
+    if (value == this.microphoneMuted) {
+      return;
+    }
+    gAudioManager.phoneState = value ?
+      Ci.nsIAudioManager.PHONE_STATE_IN_COMMUNICATION :
+      Ci.nsIAudioManager.PHONE_STATE_IN_CALL;  //XXX why is this needed?
+    gAudioManager.microphoneMuted = value;
+  },
+
+  get speakerEnabled() {
+    return (gAudioManager.getForceForUse(Ci.nsIAudioManager.USE_COMMUNICATION)
+            == Ci.nsIAudioManager.FORCE_SPEAKER);
+  },
+  set speakerEnabled(value) {
+    if (value == this.speakerEnabled) {
+      return;
+    }
+    gAudioManager.phoneState = Ci.nsIAudioManager.PHONE_STATE_IN_CALL; // XXX why is this needed?
+    let force = value ? Ci.nsIAudioManager.FORCE_SPEAKER :
+                        Ci.nsIAudioManager.FORCE_NONE;
+    gAudioManager.setForceUse(Ci.nsIAudioManager.USE_COMMUNICATION, force);
+  },
+
   _callbacks: null,
 
   registerCallback: function registerCallback(callback) {
