@@ -142,10 +142,15 @@ public class Tab {
                     sMinDim = Math.min(metrics.widthPixels, metrics.heightPixels);
                 }
                 if (b != null) {
-                    Bitmap cropped = Bitmap.createBitmap(b, 0, 0, sMinDim, sMinDim);
-                    Bitmap bitmap = Bitmap.createScaledBitmap(cropped, kThumbnailSize, kThumbnailSize, false);
-                    mThumbnail = new BitmapDrawable(bitmap);
-                    saveThumbnailToDB((BitmapDrawable) mThumbnail);
+                    try {
+                        Bitmap cropped = Bitmap.createBitmap(b, 0, 0, sMinDim, sMinDim);
+                        Bitmap bitmap = Bitmap.createScaledBitmap(cropped, kThumbnailSize, kThumbnailSize, false);
+                        mThumbnail = new BitmapDrawable(bitmap);
+                        saveThumbnailToDB((BitmapDrawable) mThumbnail);
+                    } catch (OutOfMemoryError oom) {
+                        Log.e(LOGTAG, "Unable to create/scale bitmap", oom);
+                        mThumbnail = null;
+                    }
                 } else {
                     mThumbnail = null;
                 }
