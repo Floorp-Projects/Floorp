@@ -54,6 +54,7 @@ const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 const PREF_MAXRESULTS = "extensions.getAddons.maxResults";
 const PREF_CHECK_COMPATIBILITY_BASE = "extensions.checkCompatibility";
 const PREF_CHECK_UPDATE_SECURITY = "extensions.checkUpdateSecurity";
+const PREF_UPDATE_ENABLED = "extensions.update.enabled";
 const PREF_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault";
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_CACHE_ID_ENABLED = "extensions.%ID%.getAddons.cache.enabled";
@@ -757,7 +758,13 @@ var gViewController = {
         try {
           oldValue = Services.prefs.getBoolPref(PREF_AUTOUPDATE_DEFAULT);
         } catch(e) { }
-        Services.prefs.setBoolPref(PREF_AUTOUPDATE_DEFAULT, !oldValue);
+        var newValue = !oldValue; // toggle
+        Services.prefs.setBoolPref(PREF_AUTOUPDATE_DEFAULT, newValue);
+
+        // If the user wants us to auto-update add-ons, we also need to
+        // auto-check for updates.
+        if (newValue) // i.e. new value is true
+          Services.prefs.setBoolPref(PREF_UPDATE_ENABLED, true);
       }
     },
 
