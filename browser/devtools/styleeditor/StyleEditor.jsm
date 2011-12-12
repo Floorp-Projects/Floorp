@@ -1016,25 +1016,6 @@ StyleEditor.prototype = {
       }.bind(this)
     });
 
-    bindings.push({
-      action: "undo",
-      code: _("undo.commandkey"),
-      accel: true,
-      callback: function undo() {
-        this._sourceEditor.undo();
-      }.bind(this)
-    });
-
-    bindings.push({
-      action: "redo",
-      code: _("redo.commandkey"),
-      accel: true,
-      shift: true,
-      callback: function redo() {
-        this._sourceEditor.redo();
-      }.bind(this)
-    });
-
     return bindings;
   }
 };

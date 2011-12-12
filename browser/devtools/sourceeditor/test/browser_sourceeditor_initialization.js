@@ -88,6 +88,14 @@ function editorLoaded()
 
   is(editor.getText(), "code-editor", "redo() works");
 
+  EventUtils.synthesizeKey("VK_Z", {accelKey: true}, testWin);
+
+  is(editor.getText(), "source-editor", "Ctrl-Z (undo) works");
+
+  EventUtils.synthesizeKey("VK_Z", {accelKey: true, shiftKey: true}, testWin);
+
+  is(editor.getText(), "code-editor", "Ctrl-Shift-Z (redo) works");
+
   // Test selection methods.
 
   editor.setSelection(0, 4);
