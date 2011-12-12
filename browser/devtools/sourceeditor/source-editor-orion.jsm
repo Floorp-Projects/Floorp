@@ -42,6 +42,11 @@ const Cu = Components.utils;
 const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
+                                   "@mozilla.org/widget/clipboardhelper;1",
+                                   "nsIClipboardHelper");
 
 const ORION_SCRIPT = "chrome://browser/content/orion.js";
 const ORION_IFRAME = "data:text/html;charset=utf8,<!DOCTYPE html>" +
@@ -96,6 +101,8 @@ function SourceEditor() {
     Services.prefs.getIntPref(SourceEditor.PREFS.TAB_SIZE);
   SourceEditor.DEFAULTS.EXPAND_TAB =
     Services.prefs.getBoolPref(SourceEditor.PREFS.EXPAND_TAB);
+
+  this._onOrionSelection = this._onOrionSelection.bind(this);
 }
 
 SourceEditor.prototype = {
@@ -215,6 +222,9 @@ SourceEditor.prototype = {
     }.bind(this);
 
     this._view.addEventListener("Load", onOrionLoad);
+    if (Services.appinfo.OS == "Linux") {
+      this._view.addEventListener("Selection", this._onOrionSelection);
+    }
 
     let KeyBinding = window.require("orion/textview/keyBinding").KeyBinding;
     let TextDND = window.require("orion/textview/textDND").TextDND;
@@ -409,6 +419,25 @@ SourceEditor.prototype = {
     this.setText(this.getLineDelimiter() + prefix, selection.start,
                  selection.end);
     return true;
+  },
+
+  /**
+   * Orion Selection event handler for the X Window System users. This allows
+   * one to select text and have it copied into the X11 PRIMARY.
+   *
+   * @private
+   * @param object aEvent
+   *        The Orion Selection event object.
+   */
+  _onOrionSelection: function SE__onOrionSelection(aEvent)
+  {
+    let text = this.getText(aEvent.newValue.start, aEvent.newValue.end);
+    if (!text) {
+      return;
+    }
+
+    clipboardHelper.copyStringToClipboard(text,
+                                          Ci.nsIClipboard.kSelectionClipboard);
   },
 
   /**
@@ -817,6 +846,11 @@ SourceEditor.prototype = {
    */
   destroy: function SE_destroy()
   {
+    if (Services.appinfo.OS == "Linux") {
+      this._view.removeEventListener("Selection", this._onOrionSelection);
+    }
+    this._onOrionSelection = null;
+
     this._view.destroy();
     this.parentElement.removeChild(this._iframe);
     this.parentElement = null;
