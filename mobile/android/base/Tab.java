@@ -58,6 +58,7 @@ import org.mozilla.gecko.db.BrowserDB;
 public class Tab {
     public static enum AgentMode { MOBILE, DESKTOP };
     private static final String LOGTAG = "GeckoTab";
+    private static final int kThumbnailSize = 96;
 
     static int sMinDim = 0;
     private int mId;
@@ -141,7 +142,8 @@ public class Tab {
                     sMinDim = Math.min(metrics.widthPixels, metrics.heightPixels);
                 }
                 if (b != null) {
-                    Bitmap bitmap = Bitmap.createBitmap(b, 0, 0, sMinDim, sMinDim);
+                    Bitmap cropped = Bitmap.createBitmap(b, 0, 0, sMinDim, sMinDim);
+                    Bitmap bitmap = Bitmap.createScaledBitmap(cropped, kThumbnailSize, kThumbnailSize, false);
                     mThumbnail = new BitmapDrawable(bitmap);
                     saveThumbnailToDB((BitmapDrawable) mThumbnail);
                 } else {
@@ -407,5 +409,4 @@ public class Tab {
     public AgentMode getAgentMode() {
         return mAgentMode;
     }
-
 }

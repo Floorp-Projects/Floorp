@@ -563,21 +563,26 @@ abstract public class GeckoApp
         super.onSaveInstanceState(outState);
         if (mOwnActivityDepth > 0)
             return; // we're showing one of our own activities and likely won't get paged out
+
         if (outState == null)
             outState = new Bundle();
-        mRememberLastScreenRunnable.run();
+
+        new SessionSnapshotRunnable(null).run();
+
         outState.putString(SAVED_STATE_URI, mLastUri);
         outState.putString(SAVED_STATE_TITLE, mLastTitle);
         outState.putString(SAVED_STATE_VIEWPORT, mLastViewport);
         outState.putByteArray(SAVED_STATE_SCREEN, mLastScreen);
     }
 
-    Runnable mRememberLastScreenRunnable = new Runnable() {; 
-        public void run() {
-            synchronized (this) {
-                if (mUserDefinedProfile)
-                    return;
+    public class SessionSnapshotRunnable implements Runnable {
+        Tab mThumbnailTab;
+        SessionSnapshotRunnable(Tab thumbnailTab) {
+            mThumbnailTab = thumbnailTab;
+        }
 
+        public void run() {
+            synchronized (mSoftwareLayerClient) {
                 Tab tab = Tabs.getInstance().getSelectedTab();
                 if (tab == null)
                     return;
@@ -598,6 +603,10 @@ abstract public class GeckoApp
                 mLastTitle = lastHistoryEntry.mTitle;
                 Bitmap bitmap = mSoftwareLayerClient.getBitmap();
                 if (bitmap != null) {
+                    // Make a thumbnail for the given tab, if it's still selected
+                    if (tab == mThumbnailTab)
+                        mThumbnailTab.updateThumbnail(bitmap);
+
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
                     mLastScreen = bos.toByteArray();
@@ -606,7 +615,7 @@ abstract public class GeckoApp
                 }
             }
         }
-    };
+    }
 
     private void maybeCancelFaviconLoad(Tab tab) {
         long faviconLoadId = tab.getFaviconLoadId();
@@ -928,7 +937,7 @@ abstract public class GeckoApp
         mMainHandler.postAtFrontOfQueue(r);
     }
 
-    public class  AboutHomeRunnable implements Runnable {
+    public class AboutHomeRunnable implements Runnable {
         boolean mShow;
         AboutHomeRunnable(boolean show) {
             mShow = show;
@@ -1023,10 +1032,6 @@ abstract public class GeckoApp
     }
 
     void handleSelectTab(int tabId) {
-        Tab selTab = Tabs.getInstance().getSelectedTab();
-        if (selTab != null)
-            selTab.updateThumbnail(mSoftwareLayerClient.getBitmap());
-
         final Tab tab = Tabs.getInstance().selectTab(tabId);
         if (tab == null)
             return;
@@ -1084,6 +1089,9 @@ abstract public class GeckoApp
                 onTabsChanged(tab);
             }
         });
+
+        Runnable r = new SessionSnapshotRunnable(tab);
+        GeckoAppShell.getHandler().postDelayed(r, 500);
     }
 
     void handleShowToast(final String message, final String duration) {
@@ -1106,18 +1114,17 @@ abstract public class GeckoApp
 
         tab.updateTitle(title);
 
+        // Make the UI changes
         mMainHandler.post(new Runnable() {
             public void run() {
                 loadFavicon(tab);
 
-                if (Tabs.getInstance().isSelectedTab(tab)) {
+                if (Tabs.getInstance().isSelectedTab(tab))
                     mBrowserToolbar.setTitle(tab.getDisplayTitle());
-                    tab.updateThumbnail(mSoftwareLayerClient.getBitmap());
-                }
+
                 onTabsChanged(tab);
             }
         });
-        GeckoAppShell.getHandler().postDelayed(mRememberLastScreenRunnable, 500);
     }
 
     void handleTitleChanged(int tabId, String title) {
@@ -1502,7 +1509,8 @@ abstract public class GeckoApp
     {
         Log.i(LOGTAG, "pause");
 
-        GeckoAppShell.getHandler().post(mRememberLastScreenRunnable);
+        Runnable r = new SessionSnapshotRunnable(null);
+        GeckoAppShell.getHandler().post(r);
 
         GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.ACTIVITY_PAUSING));
         // The user is navigating away from this activity, but nothing
