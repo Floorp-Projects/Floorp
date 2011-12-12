@@ -886,11 +886,11 @@ abstract public class GeckoApp
                         if (sMenu != null)
                             sMenu.findItem(R.id.preferences).setEnabled(true);
                         Looper.myQueue().addIdleHandler(new UpdateIdleHandler());
+                        connectGeckoLayerClient();
                     }
                 });
                 setLaunchState(GeckoApp.LaunchState.GeckoRunning);
                 GeckoAppShell.sendPendingEventsToGecko();
-                connectGeckoLayerClient();
             } else if (event.equals("ToggleChrome:Hide")) {
                 mMainHandler.post(new Runnable() {
                     public void run() {
@@ -1327,13 +1327,18 @@ abstract public class GeckoApp
              * run experience, perhaps?
              */
             mLayerController = new LayerController(this);
-            mPlaceholderLayerClient = mUserDefinedProfile ?  null :
-                PlaceholderLayerClient.createInstance(this);
-            if (mPlaceholderLayerClient != null) {
-                mLayerController.setLayerClient(mPlaceholderLayerClient);
+            if (mUserDefinedProfile != true &&
+                GeckoApp.mAppContext.mLastScreen != null) {
+                mPlaceholderLayerClient = PlaceholderLayerClient.createInstance(this);
+                if (mPlaceholderLayerClient != null) {
+                    mLayerController.setLayerClient(mPlaceholderLayerClient);
+                    mGeckoLayout.addView(mLayerController.getView(), 0);
+                    if (mLastUri != null && mLastTitle != null) { 
+                        GeckoAppShell.sendEventToGecko(new GeckoEvent(mLastUri));
+                        mBrowserToolbar.setTitle(mLastTitle);
+                    }
+                }
             }
-
-            mGeckoLayout.addView(mLayerController.getView(), 0);
         }
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
@@ -2017,8 +2022,13 @@ abstract public class GeckoApp
 
 
     private void connectGeckoLayerClient() {
-        if (mPlaceholderLayerClient != null)
+        if (mPlaceholderLayerClient != null) {
             mPlaceholderLayerClient.destroy();
+        }
+        else {
+            // we didn't add a view before, add one now.
+            mGeckoLayout.addView(mLayerController.getView(), 0);
+        }
 
         LayerController layerController = getLayerController();
         layerController.setLayerClient(mSoftwareLayerClient);
