@@ -479,8 +479,10 @@ public class BrowserProvider extends ContentProvider {
                 values.put(Bookmarks.DATE_CREATED, now);
                 values.put(Bookmarks.DATE_MODIFIED, now);
 
-                // Generate GUID for new bookmark
-                values.put(Bookmarks.GUID, UUID.randomUUID().toString());
+                // Generate GUID for new bookmark. Don't override specified GUIDs.
+                if (!values.containsKey(Bookmarks.GUID)) {
+                  values.put(Bookmarks.GUID, UUID.randomUUID().toString());
+                }
 
                 if (!values.containsKey(Bookmarks.POSITION)) {
                     Log.d(LOGTAG, "Inserting bookmark with no position for URI");
@@ -509,8 +511,10 @@ public class BrowserProvider extends ContentProvider {
                 values.put(History.DATE_CREATED, now);
                 values.put(History.DATE_MODIFIED, now);
 
-                // Generate GUID for new history entry
-                values.put(History.GUID, UUID.randomUUID().toString());
+                // Generate GUID for new history entry. Don't override specified GUIDs.
+                if (!values.containsKey(History.GUID)) {
+                  values.put(History.GUID, UUID.randomUUID().toString());
+                }
 
                 String url = values.getAsString(History.URL);
 
@@ -884,8 +888,10 @@ public class BrowserProvider extends ContentProvider {
         int updated = db.update(TABLE_IMAGES, values, selection, selectionArgs);
 
         if (updated == 0) {
-            // Generate GUID for new image
-            values.put(Images.GUID, UUID.randomUUID().toString());
+            // Generate GUID for new image, if one is not already provided.
+            if (!values.containsKey(Images.GUID)) {
+              values.put(Images.GUID, UUID.randomUUID().toString());
+            }
             values.put(Images.DATE_CREATED, now);
             values.put(Images.DATE_MODIFIED, now);
 
