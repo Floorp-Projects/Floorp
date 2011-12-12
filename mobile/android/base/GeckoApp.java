@@ -222,6 +222,9 @@ abstract public class GeckoApp
     public ArrayList<PackageInfo> mPackageInfoCache = new ArrayList<PackageInfo>();
 
     String[] getPluginDirectories() {
+        // we don't support Honeycomb and later
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            return new String[0];
 
         Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - start of getPluginDirectories");
 
