@@ -518,7 +518,7 @@ public class PanZoomController
             stopAnimationTimer();
         }
 
-        mAnimationTimer = new Timer();
+        mAnimationTimer = new Timer("Animation Timer");
         mAnimationTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() { mController.post(runnable); }
