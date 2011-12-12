@@ -44,6 +44,7 @@ import android.graphics.RectF;
 import android.util.Log;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.microedition.khronos.opengles.GL10;
+import org.mozilla.gecko.FloatUtils;
 
 public abstract class Layer {
     private final ReentrantLock mTransactionLock;
@@ -167,6 +168,20 @@ public abstract class Layer {
         }
     }
 
+    /* Returns the power of two that is greater than or equal to value */
+    protected static int nextPowerOfTwo(int value) {
+        // code taken from http://acius2.blogspot.com/2007/11/calculating-next-power-of-2.html
+        if (0 == value--) {
+            return 1;
+        }
+        value = (value >> 1) | value;
+        value = (value >> 2) | value;
+        value = (value >> 4) | value;
+        value = (value >> 8) | value;
+        value = (value >> 16) | value;
+        return value + 1;
+    }
+
     public static class RenderContext {
         public final RectF viewport;
         public final FloatSize pageSize;
@@ -176,6 +191,15 @@ public abstract class Layer {
             viewport = aViewport;
             pageSize = aPageSize;
             zoomFactor = aZoomFactor;
+        }
+
+        public boolean fuzzyEquals(RenderContext other) {
+            if (other == null) {
+                return false;
+            }
+            return RectUtils.fuzzyEquals(viewport, other.viewport)
+                && pageSize.fuzzyEquals(other.pageSize)
+                && FloatUtils.fuzzyEquals(zoomFactor, other.zoomFactor);
         }
     }
 }

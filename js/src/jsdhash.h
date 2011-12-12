@@ -589,7 +589,7 @@ typedef size_t
  * opaque.
  */
 extern JS_PUBLIC_API(size_t)
-JS_DHashTableSizeOfExcludingThis(JSDHashTable *table,
+JS_DHashTableSizeOfExcludingThis(const JSDHashTable *table,
                                  JSDHashSizeOfEntryFun sizeOfEntry,
                                  JSMallocSizeOfFun mallocSizeOf);
 
@@ -597,7 +597,7 @@ JS_DHashTableSizeOfExcludingThis(JSDHashTable *table,
  * Like JS_DHashTableSizeOfExcludingThis, but includes sizeof(*this).
  */
 extern JS_PUBLIC_API(size_t)
-JS_DHashTableSizeOfIncludingThis(JSDHashTable *table,
+JS_DHashTableSizeOfIncludingThis(const JSDHashTable *table,
                                  JSDHashSizeOfEntryFun sizeOfEntry,
                                  JSMallocSizeOfFun mallocSizeOf);
 

@@ -441,3 +441,6 @@ patch -p3 < compile_errors.patch
 
 # Patch to fix MV clamping in the v0.9.7-p1 release.
 patch -p3 < bug696390.patch
+
+# Patch to permit vpx users to specify their own <stdint.h> types.
+patch -p3 < stdint.patch

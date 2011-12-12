@@ -53,6 +53,13 @@ namespace js {
  * String builder that eagerly checks for over-allocation past the maximum
  * string length.
  *
+ * Any operation which would exceed the maximum string length causes an
+ * exception report on the context and results in a failed return value.
+ *
+ * Well-sized extractions (which waste no more than 1/4 of their char
+ * buffer space) are guaranteed for strings built by this interface.
+ * See |extractWellSized|.
+ *
  * Note: over-allocation is not checked for when using the infallible
  * |replaceRawBuffer|, so the implementation of |finishString| also must check
  * for over-allocation.

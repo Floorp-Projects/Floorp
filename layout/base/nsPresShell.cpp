@@ -203,6 +203,7 @@
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "sampler.h"
 
 #include "Layers.h"
 #include "nsPLDOMEvent.h"
@@ -621,6 +622,8 @@ struct MemoryReporterData
 
 } // anonymous namespace
 
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(LayoutMallocSizeOf, "layout")
+
 /* static */ PLDHashOperator
 PresShell::MemoryReporter::SizeEnumerator(PresShellPtrKey *aEntry,
                                           void *userArg)
@@ -658,14 +661,14 @@ PresShell::MemoryReporter::SizeEnumerator(PresShellPtrKey *aEntry,
   nsCAutoString stylePath = str + NS_LITERAL_CSTRING("/styledata");
   nsCAutoString textRunsPath = str + NS_LITERAL_CSTRING("/textruns");
 
-  PRUint32 arenasSize;
-  arenasSize = aShell->EstimateMemoryUsed();
-  arenasSize += aShell->mPresContext->EstimateMemoryUsed();
+  PRInt64 arenasSize =
+    aShell->SizeOfIncludingThis(LayoutMallocSizeOf) +
+    aShell->mPresContext->SizeOfIncludingThis(LayoutMallocSizeOf);
 
-  PRUint32 styleSize;
-  styleSize = aShell->StyleSet()->SizeOf();
+  PRInt64 styleSize =
+    aShell->StyleSet()->SizeOfIncludingThis(LayoutMallocSizeOf);
 
-  PRInt64 textRunsSize = aShell->SizeOfTextRuns(MemoryReporterMallocSizeOf);
+  PRInt64 textRunsSize = aShell->SizeOfTextRuns(LayoutMallocSizeOf);
 
   data->callback->
     Callback(EmptyCString(), arenaPath, nsIMemoryReporter::KIND_HEAP,
@@ -686,6 +689,8 @@ PresShell::MemoryReporter::SizeEnumerator(PresShellPtrKey *aEntry,
 
   return PL_DHASH_NEXT;
 }
+
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(GfxTextrunWordCacheMallocSizeOf, "gfx/textrun-word-cache")
 
 NS_IMETHODIMP
 PresShell::MemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
@@ -708,7 +713,7 @@ PresShell::MemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
 
   // now total up cached runs that aren't otherwise accounted for
   PRInt64 textRunWordCacheSize =
-    gfxTextRunWordCache::MaybeSizeOfExcludingThis(MemoryReporterMallocSizeOf);
+    gfxTextRunWordCache::MaybeSizeOfExcludingThis(GfxTextrunWordCacheMallocSizeOf);
 
   aCb->Callback(EmptyCString(), kTextRunWordCachePath,
                 nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
@@ -3974,6 +3979,7 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
   NS_TIME_FUNCTION_MIN_FMT(1.0, "%s (line %d) (document: %s, type: %s)", MOZ_FUNCTION_NAME,
                            __LINE__, docURL__.get(), flushTypeNames[aType - 1]);
 #endif
+  SAMPLE_LABEL("layout", "FlushPendingNotifications");
 
 #ifdef ACCESSIBILITY
 #ifdef DEBUG
@@ -5421,6 +5427,7 @@ PresShell::Paint(nsIView*           aViewToPaint,
                            NSCoordToFloat(bounds__.YMost()));
 #endif
 
+  SAMPLE_LABEL("Paint", "PresShell::Paint");
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aViewToPaint, "null view");
   NS_ASSERTION(aWidgetToPaint, "Can't paint without a widget");
@@ -7203,6 +7210,7 @@ bool
 PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
 {
   NS_TIME_FUNCTION_WITH_DOCURL;
+  SAMPLE_LABEL("layout", "DoReflow");
 
   if (mReflowContinueTimer) {
     mReflowContinueTimer->Cancel();

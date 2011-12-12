@@ -44,16 +44,20 @@
 namespace mozilla {
 namespace gfx {
 
-SourceSurfaceD2DTarget::SourceSurfaceD2DTarget()
-  : mFormat(FORMAT_B8G8R8A8)
-  , mIsCopy(false)
+SourceSurfaceD2DTarget::SourceSurfaceD2DTarget(DrawTargetD2D* aDrawTarget,
+                                               ID3D10Texture2D* aTexture,
+                                               SurfaceFormat aFormat)
+  : mDrawTarget(aDrawTarget)
+  , mTexture(aTexture)
+  , mFormat(aFormat)
 {
 }
 
 SourceSurfaceD2DTarget::~SourceSurfaceD2DTarget()
 {
-  // Our drawtarget no longer needs to worry about us.
-  MarkIndependent();
+  // We don't need to do anything special here to notify our mDrawTarget. It must
+  // already have cleared its mSnapshot field, otherwise this object would
+  // be kept alive.
 }
 
 IntSize
@@ -115,12 +119,7 @@ SourceSurfaceD2DTarget::GetSRView()
 void
 SourceSurfaceD2DTarget::DrawTargetWillChange()
 {
-  // assert(!mIsCopy)
   RefPtr<ID3D10Texture2D> oldTexture = mTexture;
-
-  // It's important we set this here, that way DrawTargets that we are calling
-  // flush on will not try to remove themselves from our dependent surfaces.
-  mIsCopy = true;
 
   D3D10_TEXTURE2D_DESC desc;
   mTexture->GetDesc(&desc);
@@ -171,9 +170,10 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
 void
 SourceSurfaceD2DTarget::MarkIndependent()
 {
-  if (!mIsCopy) {
-    std::vector<SourceSurfaceD2DTarget*> *snapshots = &mDrawTarget->mSnapshots;
-    snapshots->erase(std::find(snapshots->begin(), snapshots->end(), this));
+  if (mDrawTarget) {
+    MOZ_ASSERT(mDrawTarget->mSnapshot == this);
+    mDrawTarget->mSnapshot = NULL;
+    mDrawTarget = NULL;
   }
 }
 

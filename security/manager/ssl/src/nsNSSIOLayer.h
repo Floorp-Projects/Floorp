@@ -153,12 +153,6 @@ public:
     mIsCertIssuerBlacklisted = true;
   }
 
-  void SetNegotiatedNPN(const char *value, PRUint32 length);
-  void SetHandshakeCompleted() { mHandshakeCompleted = true; }
-
-  bool GetJoined() { return mJoined; }
-  void SetSentClientCert() { mSentClientCert = true; }
-  
   // XXX: These are only used on for diagnostic purposes
   enum CertVerificationState {
     before_cert_verification,
@@ -213,12 +207,6 @@ protected:
   nsRefPtr<nsSSLStatus> mSSLStatus;
 
   nsresult ActivateSSL();
-
-  nsCString mNegotiatedNPN;
-  bool      mNPNCompleted;
-  bool      mHandshakeCompleted;
-  bool      mJoined;
-  bool      mSentClientCert;
 
 private:
   virtual void virtualDestroyNSSReference();

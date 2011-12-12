@@ -54,14 +54,14 @@ nsTDependentSubstring_CharT::Rebind( const substring_type& str, PRUint32 startPo
   }
 
 void
-nsTDependentSubstring_CharT::Rebind( const char_type* start, const char_type* end )
+nsTDependentSubstring_CharT::Rebind( const char_type* data, size_type length )
   {
-    NS_ASSERTION(start && end, "nsTDependentSubstring must wrap a non-NULL buffer");
+    NS_ASSERTION(data, "nsTDependentSubstring must wrap a non-NULL buffer");
 
     // If we currently own a buffer, release it.
     Finalize();
 
-    mData = const_cast<char_type*>(start);
-    mLength = end - start;
+    mData = const_cast<char_type*>(data);
+    mLength = length;
     SetDataFlags(F_NONE);
   }

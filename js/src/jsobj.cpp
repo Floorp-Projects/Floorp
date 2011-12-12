@@ -117,6 +117,8 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
+JS_STATIC_ASSERT(int32((JSObject::NELEMENTS_LIMIT - 1) * sizeof(Value)) == int64((JSObject::NELEMENTS_LIMIT - 1) * sizeof(Value)));
+
 Class js::ObjectClass = {
     js_Object_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
@@ -4871,14 +4873,32 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
 
     /*
      * Regenerate shapes for all of the scopes along the old prototype chain,
-     * in case any entries were filled by looking up through obj. Stop when an
+     * in case any entries were filled by looking up through obj. Stop when a
      * non-native object is found, prototype lookups will not be cached across
      * these.
+     *
+     * How this shape change is done is very delicate; the change can be made
+     * either by marking the object's prototype as uncacheable (such that the
+     * property cache and JIT'ed ICs cannot assume the shape determines the
+     * prototype) or by just generating a new shape for the object. Choosing
+     * the former is bad if the object is on the prototype chain of other
+     * objects, as the uncacheable prototype can inhibit iterator caches on
+     * those objects and slow down prototype accesses. Choosing the latter is
+     * bad if there are many similar objects to this one which will have their
+     * prototype mutated, as the generateOwnShape forces the object into
+     * dictionary mode and similar property lineages will be repeatedly cloned.
+     *
+     * :XXX: bug 707717 make this code less brittle.
      */
     JSObject *oldproto = obj;
     while (oldproto && oldproto->isNative()) {
-        if (!oldproto->setUncacheableProto(cx))
-            return false;
+        if (oldproto->hasSingletonType()) {
+            if (!oldproto->generateOwnShape(cx))
+                return false;
+        } else {
+            if (!oldproto->setUncacheableProto(cx))
+                return false;
+        }
         oldproto = oldproto->getProto();
     }
 
@@ -4969,32 +4989,17 @@ JSBool
 js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
                    Value *vp, Class *clasp)
 {
-    StackFrame *fp;
     JSObject *obj, *cobj, *pobj;
     jsid id;
     JSProperty *prop;
     const Shape *shape;
 
-    /*
-     * Find the global object. Use cx->fp() directly to avoid falling off
-     * trace; all JIT-elided stack frames have the same global object as
-     * cx->fp().
-     */
-    VOUCH_DOES_NOT_REQUIRE_STACK();
-    if (!start && (fp = cx->maybefp()) != NULL)
-        start = &fp->scopeChain();
-
     if (start) {
         obj = start->getGlobal();
+        OBJ_TO_INNER_OBJECT(cx, obj);
     } else {
-        obj = cx->globalObject;
-        if (!obj) {
-            vp->setUndefined();
-            return true;
-        }
+        obj = GetGlobalForScopeChain(cx);
     }
-
-    OBJ_TO_INNER_OBJECT(cx, obj);
     if (!obj)
         return false;
 
@@ -5916,44 +5921,47 @@ js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsi
          */
         jsbytecode *pc;
         if (vp->isUndefined() && ((pc = js_GetCurrentBytecodePC(cx)) != NULL)) {
-            JSOp op;
-            uintN flags;
+            JSOp op = (JSOp) *pc;
 
-            op = (JSOp) *pc;
             if (op == JSOP_GETXPROP) {
-                flags = JSREPORT_ERROR;
-            } else {
-                if (!cx->hasStrictOption() ||
-                    cx->stack.currentScript()->warnedAboutUndefinedProp ||
-                    (op != JSOP_GETPROP && op != JSOP_GETELEM)) {
-                    return JS_TRUE;
-                }
-
-                /*
-                 * XXX do not warn about missing __iterator__ as the function
-                 * may be called from JS_GetMethodById. See bug 355145.
-                 */
-                if (JSID_IS_ATOM(id, cx->runtime->atomState.iteratorAtom))
-                    return JS_TRUE;
-
-                /* Do not warn about tests like (obj[prop] == undefined). */
-                if (cx->resolveFlags == RESOLVE_INFER) {
-                    pc += js_CodeSpec[op].length;
-                    if (Detecting(cx, pc))
-                        return JS_TRUE;
-                } else if (cx->resolveFlags & JSRESOLVE_DETECTING) {
-                    return JS_TRUE;
-                }
-
-                flags = JSREPORT_WARNING | JSREPORT_STRICT;
-                cx->stack.currentScript()->warnedAboutUndefinedProp = true;
+                /* Undefined property during a name lookup, report an error. */
+                JSAutoByteString printable;
+                if (js_ValueToPrintable(cx, IdToValue(id), &printable))
+                    js_ReportIsNotDefined(cx, printable.ptr());
+                return false;
             }
+
+            if (!cx->hasStrictOption() ||
+                cx->stack.currentScript()->warnedAboutUndefinedProp ||
+                (op != JSOP_GETPROP && op != JSOP_GETELEM)) {
+                return JS_TRUE;
+            }
+
+            /*
+             * XXX do not warn about missing __iterator__ as the function
+             * may be called from JS_GetMethodById. See bug 355145.
+             */
+            if (JSID_IS_ATOM(id, cx->runtime->atomState.iteratorAtom))
+                return JS_TRUE;
+
+            /* Do not warn about tests like (obj[prop] == undefined). */
+            if (cx->resolveFlags == RESOLVE_INFER) {
+                pc += js_CodeSpec[op].length;
+                if (Detecting(cx, pc))
+                    return JS_TRUE;
+            } else if (cx->resolveFlags & JSRESOLVE_DETECTING) {
+                return JS_TRUE;
+            }
+
+            uintN flags = JSREPORT_WARNING | JSREPORT_STRICT;
+            cx->stack.currentScript()->warnedAboutUndefinedProp = true;
 
             /* Ok, bad undefined property reference: whine about it. */
             if (!js_ReportValueErrorFlags(cx, flags, JSMSG_UNDEFINED_PROP,
                                           JSDVG_IGNORE_STACK, IdToValue(id),
-                                          NULL, NULL, NULL)) {
-                return JS_FALSE;
+                                          NULL, NULL, NULL))
+            {
+                return false;
             }
         }
         return JS_TRUE;
@@ -6755,7 +6763,6 @@ JSBool
 js_GetClassPrototype(JSContext *cx, JSObject *scopeobj, JSProtoKey protoKey,
                      JSObject **protop, Class *clasp)
 {
-    VOUCH_DOES_NOT_REQUIRE_STACK();
     JS_ASSERT(JSProto_Null <= protoKey);
     JS_ASSERT(protoKey < JSProto_LIMIT);
 
@@ -7010,7 +7017,7 @@ js_ClearNative(JSContext *cx, JSObject *obj)
         if (shape->isDataDescriptor() &&
             shape->writable() &&
             shape->hasDefaultSetter() &&
-            obj->containsSlot(shape->slot())) {
+            obj->containsSlot(shape->maybeSlot())) {
             obj->setSlot(shape->slot(), UndefinedValue());
         }
     }
@@ -7383,8 +7390,6 @@ JS_FRIEND_API(void)
 js_DumpStackFrame(JSContext *cx, StackFrame *start)
 {
     /* This should only called during live debugging. */
-    VOUCH_DOES_NOT_REQUIRE_STACK();
-
     FrameRegsIter i(cx, StackIter::GO_THROUGH_SAVED);
     if (!start) {
         if (i.done()) {

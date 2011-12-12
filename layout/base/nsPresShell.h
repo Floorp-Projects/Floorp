@@ -134,14 +134,15 @@ public:
   void Push();
   void Pop();
 
-  PRUint32 Size() {
-    PRUint32 result = 0;
+  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
+    size_t n = 0;
     StackBlock *block = mBlocks;
     while (block) {
-      result += sizeof(StackBlock);
+      n += aMallocSizeOf(block, sizeof(StackBlock));
       block = block->mNext;
     }
-    return result;
+    n += aMallocSizeOf(mMarks, mMarkLength * sizeof(StackMark));
+    return n;
   }
 
 private:
@@ -880,14 +881,14 @@ private:
 
 public:
 
-  PRUint32 EstimateMemoryUsed() {
-    PRUint32 result = 0;
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
+    size_t n = 0;
 
-    result += sizeof(PresShell);
-    result += mStackArena.Size();
-    result += mFrameArena.Size();
+    n += aMallocSizeOf(this, sizeof(PresShell));
+    n += mStackArena.SizeOfExcludingThis(aMallocSizeOf);
+    n += mFrameArena.SizeOfExcludingThis(aMallocSizeOf);
 
-    return result;
+    return n;
   }
 
   size_t SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf);

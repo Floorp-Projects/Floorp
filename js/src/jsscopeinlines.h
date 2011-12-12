@@ -151,7 +151,7 @@ BaseShape::setOwned(UnownedBaseShape *unowned)
 }
 
 inline
-Shape::Shape(BaseShape *base, jsid propid, uint32 slot, uint32 nfixed,
+Shape::Shape(UnownedBaseShape *base, jsid propid, uint32 slot, uint32 nfixed,
              uintN attrs, uintN flags, intN shortid)
   : base_(base),
     propid_(propid),
@@ -181,7 +181,7 @@ Shape::Shape(const Shape *other)
 }
 
 inline
-Shape::Shape(BaseShape *base, uint32 nfixed)
+Shape::Shape(UnownedBaseShape *base, uint32 nfixed)
   : base_(base),
     propid_(JSID_EMPTY),
     slotInfo(SHAPE_INVALID_SLOT | (nfixed << FIXED_SLOTS_SHIFT)),
@@ -332,7 +332,7 @@ Shape::initDictionaryShape(const Shape &child, HeapPtrShape *dictp)
 }
 
 inline
-EmptyShape::EmptyShape(BaseShape *base, uint32 nfixed)
+EmptyShape::EmptyShape(UnownedBaseShape *base, uint32 nfixed)
   : js::Shape(base, nfixed)
 {
     /* Only empty shapes can be NON_NATIVE. */

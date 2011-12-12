@@ -69,6 +69,7 @@ CPPSRCS	= \
   gdef.cc \
   gpos.cc \
   gsub.cc \
+  graphite.cc \
   $(NULL)
 
 EXPORTS = \
