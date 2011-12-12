@@ -51,7 +51,6 @@ DEFINES += \
   -DMOZ_LINKER \
   -DLINKER_TEXT_BASE=0xB0001000 \
   -DLINKER_AREA_SIZE=0x01000000 \
-  -DANDROID_PACKAGE_NAME='"$(ANDROID_PACKAGE_NAME)"' \
   $(NULL)
 
 ifeq ($(CPU_ARCH),arm)
@@ -61,11 +60,6 @@ ifeq ($(CPU_ARCH),x86)
 DEFINES += -DANDROID_X86_LINKER
 endif
 endif
-
-CPPSRCS = \
-  nsGeckoUtils.cpp \
-  APKOpen.cpp \
-  $(NULL)
 
 CSRCS = \
   ba.c \
@@ -91,9 +85,5 @@ CSRCS = \
   res_state.c \
   rt.c \
   $(NULL)
-
-LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/components/startup
-
-EXPORTS = APKOpen.h
 
 include $(topsrcdir)/config/rules.mk

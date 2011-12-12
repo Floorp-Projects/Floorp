@@ -87,6 +87,7 @@ if [ ! "$LIBXUL_SDK" ]; then
     add_makefiles "
       other-licenses/android/Makefile
       other-licenses/skia-npapi/Makefile
+      mozglue/android/Makefile
     "
   fi
 fi
