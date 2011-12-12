@@ -55,6 +55,10 @@
 #include "nsIXULRuntime.h"
 #include "nsIGfxInfo.h"
 #include "npapi.h"
+#include "base/thread.h"
+#include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/CompositorParent.h"
+
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -70,6 +74,7 @@ static PRInt32 gNumWidgets;
 
 using namespace mozilla::layers;
 using namespace mozilla;
+using namespace base;
 
 nsIContent* nsBaseWidget::mLastRollup = nsnull;
 
@@ -839,6 +844,7 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
     mUseAcceleratedRendering = GetShouldAccelerate();
 
     if (mUseAcceleratedRendering) {
+
       nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(this);
       /**
        * XXX - On several OSes initialization is expected to fail for now.
@@ -849,6 +855,27 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
        */
       if (layerManager->Initialize()) {
         mLayerManager = layerManager;
+        // TODO Refactor me to support one compositor to many layer manager
+        bool useCompositor =
+          Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
+        if (useCompositor) {
+          Thread* compositorThread = new Thread("CompositorThread");
+          if (compositorThread->Start()) {
+            MessageLoop *parentMessageLoop = MessageLoop::current();
+            MessageLoop *childMessageLoop = compositorThread->message_loop();
+            CompositorParent *compositorParent = new CompositorParent();
+            CompositorChild *compositorChild = new CompositorChild();
+            mozilla::ipc::AsyncChannel *parentChannel = compositorParent->GetIPCChannel();
+            mozilla::ipc::AsyncChannel *childChannel = compositorChild->GetIPCChannel();
+            mozilla::ipc::AsyncChannel::Side childSide =
+              mozilla::ipc::AsyncChannel::Child;
+
+            compositorChild->Open(parentChannel, childMessageLoop, childSide);
+            compositorChild->CallInit();
+            LayerManager::LayersBackend be;
+            PLayersChild* shadowManager = compositorChild->SendPLayersConstructor(LayerManager::LAYERS_OPENGL);
+          }
+        }
       }
     }
     if (!mLayerManager) {

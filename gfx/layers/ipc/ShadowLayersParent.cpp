@@ -403,7 +403,9 @@ ShadowLayersParent::DeallocPLayer(PLayerParent* actor)
 RenderFrameParent*
 ShadowLayersParent::Frame()
 {
-  return static_cast<RenderFrameParent*>(Manager());
+  // Fix me, gives: error: ‘Manager’ was not declared in this scope
+  //return static_cast<RenderFrameParent*>(Manager());
+  return NULL;
 }
 
 void

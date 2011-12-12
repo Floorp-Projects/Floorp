@@ -130,13 +130,17 @@ endif
 
 EXPORTS_NAMESPACES = IPC mozilla/layers
 EXPORTS_IPC = ShadowLayerUtils.h
-EXPORTS_mozilla/layers =\
+EXPORTS_mozilla/layers = \
+        CompositorChild.h \
+        CompositorParent.h \
         ShadowLayers.h \
         ShadowLayersChild.h \
         ShadowLayersParent.h \
         $(NULL)
 
 CPPSRCS += \
+        CompositorChild.cpp \
+        CompositorParent.cpp \
         ShadowLayers.cpp \
         ShadowLayerChild.cpp \
         ShadowLayersChild.cpp \
