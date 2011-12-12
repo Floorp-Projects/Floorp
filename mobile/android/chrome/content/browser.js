@@ -1198,6 +1198,8 @@ Tab.prototype = {
   },
 
   sendViewportUpdate: function() {
+    if (BrowserApp.selectedTab != this)
+      return;
     sendMessageToJava({
       gecko: {
         type: "Viewport:Update",
