@@ -885,12 +885,11 @@ abstract public class GeckoApp
                     public void run() {
                         if (sMenu != null)
                             sMenu.findItem(R.id.preferences).setEnabled(true);
-                        Looper.myQueue().addIdleHandler(new UpdateIdleHandler());
-                        connectGeckoLayerClient();
                     }
                 });
                 setLaunchState(GeckoApp.LaunchState.GeckoRunning);
                 GeckoAppShell.sendPendingEventsToGecko();
+                connectGeckoLayerClient();
             } else if (event.equals("ToggleChrome:Hide")) {
                 mMainHandler.post(new Runnable() {
                     public void run() {
@@ -1327,18 +1326,13 @@ abstract public class GeckoApp
              * run experience, perhaps?
              */
             mLayerController = new LayerController(this);
-            if (mUserDefinedProfile != true &&
-                GeckoApp.mAppContext.mLastScreen != null) {
-                mPlaceholderLayerClient = PlaceholderLayerClient.createInstance(this);
-                if (mPlaceholderLayerClient != null) {
-                    mLayerController.setLayerClient(mPlaceholderLayerClient);
-                    mGeckoLayout.addView(mLayerController.getView(), 0);
-                    if (mLastUri != null && mLastTitle != null) { 
-                        GeckoAppShell.sendEventToGecko(new GeckoEvent(mLastUri));
-                        mBrowserToolbar.setTitle(mLastTitle);
-                    }
-                }
+            mPlaceholderLayerClient = mUserDefinedProfile ?  null :
+                PlaceholderLayerClient.createInstance(this);
+            if (mPlaceholderLayerClient != null) {
+                mLayerController.setLayerClient(mPlaceholderLayerClient);
             }
+
+            mGeckoLayout.addView(mLayerController.getView(), 0);
         }
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
@@ -1407,6 +1401,31 @@ abstract public class GeckoApp
         registerReceiver(mSmsReceiver, smsFilter);
 
         final GeckoApp self = this;
+ 
+        mMainHandler.postDelayed(new Runnable() {
+            public void run() {
+                
+                Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - pre checkLaunchState");
+
+                /*
+                  XXXX see bug 635342
+                   We want to disable this code if possible.  It is about 145ms in runtime
+                SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
+                String localeCode = settings.getString(getPackageName() + ".locale", "");
+                if (localeCode != null && localeCode.length() > 0)
+                    GeckoAppShell.setSelectedLocale(localeCode);
+                */
+
+                if (!checkLaunchState(LaunchState.Launched)) {
+                    return;
+                }
+
+                // it would be good only to do this if MOZ_UPDATER was defined 
+                long startTime = new Date().getTime();
+                checkAndLaunchUpdate();
+                Log.w(LOGTAG, "checking for an update took " + (new Date().getTime() - startTime) + "ms");
+            }
+        }, 50);
     }
 
     public void enableCameraView() {
@@ -1647,21 +1666,6 @@ abstract public class GeckoApp
 
     public void handleNotification(String action, String alertName, String alertCookie) {
         GeckoAppShell.handleNotification(action, alertName, alertCookie);
-    }
-
-    // it would be good only to do this if MOZ_UPDATER was defined 
-    private class UpdateIdleHandler implements MessageQueue.IdleHandler {
-        public boolean queueIdle() {
-            mMainHandler.post(new Runnable() {
-                    public void run() {
-                        long startTime = new Date().getTime();
-                        checkAndLaunchUpdate();
-                        Log.w(LOGTAG, "checking for an update took " + (new Date().getTime() - startTime) + "ms");
-                    }
-                });
-            // only need to run this once.
-            return false;
-        }
     }
 
     private void checkAndLaunchUpdate() {
@@ -2022,13 +2026,8 @@ abstract public class GeckoApp
 
 
     private void connectGeckoLayerClient() {
-        if (mPlaceholderLayerClient != null) {
+        if (mPlaceholderLayerClient != null)
             mPlaceholderLayerClient.destroy();
-        }
-        else {
-            // we didn't add a view before, add one now.
-            mGeckoLayout.addView(mLayerController.getView(), 0);
-        }
 
         LayerController layerController = getLayerController();
         layerController.setLayerClient(mSoftwareLayerClient);
@@ -2048,7 +2047,7 @@ abstract public class GeckoApp
                         // we really don't care.
                     }
                 }
-            }, "DNSPrefetcher Thread").start();
+            }).start();
     }
 }
 
