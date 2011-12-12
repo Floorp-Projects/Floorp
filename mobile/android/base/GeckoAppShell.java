@@ -146,6 +146,7 @@ public class GeckoAppShell
             new SynchronousQueue<Handler>();
         
         public void run() {
+            setName("GeckoLooper Thread");
             Looper.prepare();
             try {
                 mHandlerQueue.put(new Handler());
