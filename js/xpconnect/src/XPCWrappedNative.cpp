@@ -2325,8 +2325,6 @@ CallMethodHelper::GetArraySizeFromParam(uint8 paramIndex,
     if (NS_FAILED(rv))
         return Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
 
-    const nsXPTType& type = mMethodInfo->GetParam(paramIndex).GetType();
-
     *result = GetDispatchParam(paramIndex)->val.u32;
 
     return true;
@@ -2353,8 +2351,6 @@ CallMethodHelper::GetInterfaceTypeFromParam(uint8 paramIndex,
                                                          &paramIndex);
         if (NS_FAILED(rv))
             return Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
-
-        const nsXPTType& type = mMethodInfo->GetParam(paramIndex).GetType();
 
         nsID* p = (nsID*) GetDispatchParam(paramIndex)->val.p;
         if (!p)
