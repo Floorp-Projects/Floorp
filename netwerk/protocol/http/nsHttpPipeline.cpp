@@ -101,7 +101,6 @@ nsHttpPipeline::nsHttpPipeline()
     , mPushBackBuf(nsnull)
     , mPushBackLen(0)
     , mPushBackMax(0)
-    , mHttp1xTransactionCount(0)
     , mReceivingFromProgress(0)
     , mSendingToProgress(0)
     , mSuppressSendEvents(true)
@@ -129,7 +128,7 @@ nsHttpPipeline::AddTransaction(nsAHttpTransaction *trans)
         trans->SetConnection(this);
 
         if (mRequestQ.Length() == 1)
-            mConnection->ResumeSend(trans);
+            mConnection->ResumeSend();
     }
 
     return NS_OK;
@@ -168,19 +167,19 @@ nsHttpPipeline::OnHeadersAvailable(nsAHttpTransaction *trans,
 }
 
 nsresult
-nsHttpPipeline::ResumeSend(nsAHttpTransaction *trans)
+nsHttpPipeline::ResumeSend()
 {
     if (mConnection)
-        return mConnection->ResumeSend(trans);
+        return mConnection->ResumeSend();
     return NS_ERROR_UNEXPECTED;
 }
 
 nsresult
-nsHttpPipeline::ResumeRecv(nsAHttpTransaction *trans)
+nsHttpPipeline::ResumeRecv()
 {
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     NS_ASSERTION(mConnection, "no connection");
-    return mConnection->ResumeRecv(trans);
+    return mConnection->ResumeRecv();
 }
 
 void
@@ -356,12 +355,6 @@ nsHttpPipeline::RequestHead()
     return nsnull;
 }
 
-PRUint32
-nsHttpPipeline::Http1xTransactionCount()
-{
-  return mHttp1xTransactionCount;
-}
-
 //-----------------------------------------------------------------------------
 // nsHttpPipeline::nsAHttpConnection
 //-----------------------------------------------------------------------------
@@ -379,15 +372,6 @@ nsHttpPipeline::SetConnection(nsAHttpConnection *conn)
     PRInt32 i, count = mRequestQ.Length();
     for (i=0; i<count; ++i)
         Request(i)->SetConnection(this);
-}
-
-nsAHttpConnection *
-nsHttpPipeline::Connection()
-{
-    LOG(("nsHttpPipeline::Connection [this=%x conn=%x]\n", this, mConnection));
-
-    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
-    return mConnection;
 }
 
 void
@@ -621,7 +605,6 @@ nsHttpPipeline::WriteSegments(nsAHttpSegmentWriter *writer,
             NS_RELEASE(trans);
             mResponseQ.RemoveElementAt(0);
             mResponseIsPartial = false;
-            ++mHttp1xTransactionCount;
 
             // ask the connection manager to add additional transactions
             // to our pipeline.

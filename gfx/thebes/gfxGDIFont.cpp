@@ -43,6 +43,9 @@
 #include "gfxGDIShaper.h"
 #include "gfxUniscribeShaper.h"
 #include "gfxHarfBuzzShaper.h"
+#ifdef MOZ_GRAPHITE
+#include "gfxGraphiteShaper.h"
+#endif
 #include "gfxWindowsPlatform.h"
 #include "gfxContext.h"
 #include "gfxUnicodeProperties.h"
@@ -79,6 +82,11 @@ gfxGDIFont::gfxGDIFont(GDIFontEntry *aFontEntry,
       mSpaceGlyph(0),
       mNeedsBold(aNeedsBold)
 {
+#ifdef MOZ_GRAPHITE
+    if (FontCanSupportGraphite()) {
+        mGraphiteShaper = new gfxGraphiteShaper(this);
+    }
+#endif
     if (FontCanSupportHarfBuzz()) {
         mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
     }
@@ -159,7 +167,15 @@ gfxGDIFont::InitTextRun(gfxContext *aContext,
     // creating a "toy" font internally (see bug 544617)
     SetupCairoFont(aContext);
 
-    if (mHarfBuzzShaper) {
+#ifdef MOZ_GRAPHITE
+    if (mGraphiteShaper && gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
+        ok = mGraphiteShaper->InitTextRun(aContext, aTextRun, aString,
+                                          aRunStart, aRunLength, 
+                                          aRunScript);
+    }
+#endif
+
+    if (!ok && mHarfBuzzShaper) {
         if (gfxPlatform::GetPlatform()->UseHarfBuzzForScript(aRunScript)) {
             ok = mHarfBuzzShaper->InitTextRun(aContext, aTextRun, aString,
                                               aRunStart, aRunLength, 

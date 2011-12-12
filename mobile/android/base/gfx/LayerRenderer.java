@@ -49,11 +49,13 @@ import org.mozilla.gecko.gfx.TextureReaper;
 import org.mozilla.gecko.gfx.TextLayer;
 import org.mozilla.gecko.gfx.TileLayer;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.opengl.GLSurfaceView;
+import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
@@ -65,21 +67,34 @@ import java.nio.ByteBuffer;
  * The layer renderer implements the rendering logic for a layer view.
  */
 public class LayerRenderer implements GLSurfaceView.Renderer {
+    private static final String LOGTAG = "GeckoLayerRenderer";
+
     private static final float BACKGROUND_COLOR_R = 0.81f;
     private static final float BACKGROUND_COLOR_G = 0.81f;
     private static final float BACKGROUND_COLOR_B = 0.81f;
 
+    /*
+     * The amount of time a frame is allowed to take to render before we declare it a dropped
+     * frame.
+     */
+    private static final int MAX_FRAME_TIME = 16;   /* 1000 ms / 60 FPS */
+
+    private static final int FRAME_RATE_METER_WIDTH = 64;
+    private static final int FRAME_RATE_METER_HEIGHT = 32;
+
     private final LayerView mView;
     private final SingleTileLayer mCheckerboardLayer;
     private final NinePatchTileLayer mShadowLayer;
-    private final TextLayer mFPSLayer;
+    private final TextLayer mFrameRateLayer;
     private final ScrollbarLayer mHorizScrollLayer;
     private final ScrollbarLayer mVertScrollLayer;
+    private final FadeRunnable mFadeRunnable;
+    private RenderContext mLastPageContext;
 
-    // FPS display
-    private long mFrameCountTimestamp;
-    private long mFrameTime;
-    private int mFrameCount;            // number of frames since last timestamp
+    // Dropped frames display
+    private int[] mFrameTimings;
+    private int mCurrentFrame, mFrameTimingsSum, mDroppedFrames;
+    private boolean mShowFrameRate;
 
     public LayerRenderer(LayerView view) {
         mView = view;
@@ -92,15 +107,21 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         CairoImage shadowImage = new BufferedCairoImage(controller.getShadowPattern());
         mShadowLayer = new NinePatchTileLayer(shadowImage);
 
-        mFPSLayer = TextLayer.create(new IntSize(64, 32), "-- FPS");
+        IntSize frameRateLayerSize = new IntSize(FRAME_RATE_METER_WIDTH, FRAME_RATE_METER_HEIGHT);
+        mFrameRateLayer = TextLayer.create(frameRateLayerSize, "-- ms/--");
+
         mHorizScrollLayer = ScrollbarLayer.create(false);
         mVertScrollLayer = ScrollbarLayer.create(true);
+        mFadeRunnable = new FadeRunnable();
 
-        mFrameCountTimestamp = System.currentTimeMillis();
-        mFrameCount = 0;
+        mFrameTimings = new int[60];
+        mCurrentFrame = mFrameTimingsSum = mDroppedFrames = 0;
+        mShowFrameRate = false;
     }
 
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+        checkFrameRateMonitorEnabled();
+
         gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         gl.glClearDepthf(1.0f);             /* FIXME: Is this needed? */
         gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);
@@ -116,18 +137,33 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
      * this is going on.
      */
     public void onDrawFrame(GL10 gl) {
-        checkFPS();
+        long frameStartTime = SystemClock.uptimeMillis();
+
         TextureReaper.get().reap(gl);
 
         LayerController controller = mView.getController();
         Layer rootLayer = controller.getRoot();
         RenderContext screenContext = createScreenContext(), pageContext = createPageContext();
 
+        if (!pageContext.fuzzyEquals(mLastPageContext)) {
+            // the viewport or page changed, so show the scrollbars again
+            // as per UX decision
+            mVertScrollLayer.unfade();
+            mHorizScrollLayer.unfade();
+            mFadeRunnable.scheduleStartFade(ScrollbarLayer.FADE_DELAY);
+        } else if (mFadeRunnable.timeToFade()) {
+            boolean stillFading = mVertScrollLayer.fade() | mHorizScrollLayer.fade();
+            if (stillFading) {
+                mFadeRunnable.scheduleNextFadeFrame();
+            }
+        }
+        mLastPageContext = pageContext;
+
         /* Update layers. */
         if (rootLayer != null) rootLayer.update(gl);
         mShadowLayer.update(gl);
         mCheckerboardLayer.update(gl);
-        mFPSLayer.update(gl);
+        mFrameRateLayer.update(gl);
         mVertScrollLayer.update(gl);
         mHorizScrollLayer.update(gl);
 
@@ -165,11 +201,14 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
             mHorizScrollLayer.draw(pageContext);
 
         /* Draw the FPS. */
-        try {
-            gl.glEnable(GL10.GL_BLEND);
-            mFPSLayer.draw(screenContext);
-        } finally {
-            gl.glDisable(GL10.GL_BLEND);
+        if (mShowFrameRate) {
+            updateDroppedFrames(frameStartTime);
+            try {
+                gl.glEnable(GL10.GL_BLEND);
+                mFrameRateLayer.draw(screenContext);
+            } finally {
+                gl.glDisable(GL10.GL_BLEND);
+            }
         }
 
         PanningPerfAPI.recordFrameTime();
@@ -227,34 +266,92 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         mView.post(new Runnable() {
             public void run() {
                 mView.setViewportSize(new IntSize(width, height));
+                moveFrameRateLayer(width, height);
             }
         });
 
         /* TODO: Throw away tile images? */
     }
 
-    private void checkFPS() {
-        mFrameTime += mView.getRenderTime();
-        mFrameCount ++;
+    private void updateDroppedFrames(long frameStartTime) {
+        int frameElapsedTime = (int)(SystemClock.uptimeMillis() - frameStartTime);
 
-        if (System.currentTimeMillis() >= mFrameCountTimestamp + 1000) {
-            mFrameCountTimestamp = System.currentTimeMillis();
+        /* Update the running statistics. */
+        mFrameTimingsSum -= mFrameTimings[mCurrentFrame];
+        mFrameTimingsSum += frameElapsedTime;
+        mDroppedFrames -= (mFrameTimings[mCurrentFrame] + 1) / MAX_FRAME_TIME;
+        mDroppedFrames += (frameElapsedTime + 1) / MAX_FRAME_TIME;
 
-            // Extrapolate FPS based on time taken by frames drawn.
-            // XXX This doesn't take into account the vblank, so the FPS
-            //     can show higher than it actually is.
-            mFrameCount = (int)(mFrameCount * 1000000000L / mFrameTime);
+        mFrameTimings[mCurrentFrame] = (int)frameElapsedTime;
+        mCurrentFrame = (mCurrentFrame + 1) % mFrameTimings.length;
 
-            mFPSLayer.beginTransaction();
-            try {
-                mFPSLayer.setText(mFrameCount + " FPS");
-            } finally {
-                mFPSLayer.endTransaction();
+        int averageTime = mFrameTimingsSum / mFrameTimings.length;
+
+        mFrameRateLayer.beginTransaction();
+        try {
+            mFrameRateLayer.setText(averageTime + " ms/" + mDroppedFrames);
+        } finally {
+            mFrameRateLayer.endTransaction();
+        }
+    }
+
+    /* Given the new dimensions for the surface, moves the frame rate layer appropriately. */
+    private void moveFrameRateLayer(int width, int height) {
+        mFrameRateLayer.beginTransaction();
+        try {
+            Point origin = new Point(width - FRAME_RATE_METER_WIDTH - 8,
+                                     height - FRAME_RATE_METER_HEIGHT + 8);
+            mFrameRateLayer.setOrigin(origin);
+        } finally {
+            mFrameRateLayer.endTransaction();
+        }
+    }
+
+    private void checkFrameRateMonitorEnabled() {
+        /* Do this I/O off the main thread to minimize its impact on startup time. */
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Context context = mView.getContext();
+                SharedPreferences preferences = context.getSharedPreferences("GeckoApp", 0);
+                mShowFrameRate = preferences.getBoolean("showFrameRate", false);
             }
+        }).run();
+    }
 
-            mFrameCount = 0;
-            mFrameTime = 0;
+    class FadeRunnable implements Runnable {
+        private boolean mStarted;
+        private long mRunAt;
+
+        void scheduleStartFade(long delay) {
+            mRunAt = SystemClock.elapsedRealtime() + delay;
+            if (!mStarted) {
+                mView.postDelayed(this, delay);
+                mStarted = true;
+            }
+        }
+
+        void scheduleNextFadeFrame() {
+            if (mStarted) {
+                Log.e(LOGTAG, "scheduleNextFadeFrame() called while scheduled for starting fade");
+            }
+            mView.postDelayed(this, 1000L / 60L); // request another frame at 60fps
+        }
+
+        boolean timeToFade() {
+            return !mStarted;
+        }
+
+        public void run() {
+            long timeDelta = mRunAt - SystemClock.elapsedRealtime();
+            if (timeDelta > 0) {
+                // the run-at time was pushed back, so reschedule
+                mView.postDelayed(this, timeDelta);
+            } else {
+                // reached the run-at time, execute
+                mStarted = false;
+                mView.requestRender();
+            }
         }
     }
 }
-

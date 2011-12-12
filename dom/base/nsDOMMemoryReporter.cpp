@@ -39,73 +39,193 @@
 #include "nsGlobalWindow.h"
 
 
-nsDOMMemoryReporter::nsDOMMemoryReporter()
+nsDOMMemoryMultiReporter::nsDOMMemoryMultiReporter()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsDOMMemoryReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS1(nsDOMMemoryMultiReporter, nsIMemoryMultiReporter)
 
 /* static */
 void
-nsDOMMemoryReporter::Init()
+nsDOMMemoryMultiReporter::Init()
 {
   // The memory reporter manager is going to own this object.
-  NS_RegisterMemoryReporter(new nsDOMMemoryReporter());
+  NS_RegisterMemoryMultiReporter(new nsDOMMemoryMultiReporter());
 }
 
-NS_IMETHODIMP
-nsDOMMemoryReporter::GetProcess(nsACString &aProcess)
+static bool
+AppendWindowURI(nsGlobalWindow *aWindow, nsACString& aStr)
 {
-  // "" means the main process.
-  aProcess.Truncate();
-  return NS_OK;
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aWindow->GetExtantDocument());
+  nsCOMPtr<nsIURI> uri;
+
+  if (doc) {
+    uri = doc->GetDocumentURI();
+  }
+
+  if (!uri) {
+    nsIPrincipal *principal = aWindow->GetPrincipal();
+
+    if (principal) {
+      principal->GetURI(getter_AddRefs(uri));
+    }
+  }
+
+  if (!uri) {
+    return false;
+  }
+
+  nsCString spec;
+  uri->GetSpec(spec);
+
+  // A hack: replace forward slashes with '\\' so they aren't
+  // treated as path separators.  Users of the reporters
+  // (such as about:memory) have to undo this change.
+  spec.ReplaceChar('/', '\\');
+
+  aStr += spec;
+
+  return true;
 }
 
-NS_IMETHODIMP
-nsDOMMemoryReporter::GetPath(nsACString &aMemoryPath)
+static void
+CollectWindowMemoryUsage(nsGlobalWindow *aWindow,
+                         nsIMemoryMultiReporterCallback *aCb,
+                         nsISupports *aClosure)
 {
-  aMemoryPath.AssignLiteral("explicit/dom");
-  return NS_OK;
+  NS_NAMED_LITERAL_CSTRING(kWindowDesc,
+                           "Memory used by a window and the DOM within it.");
+
+  // DOM window objects fall into one of three categories:
+  // - "active" windows are currently either displayed in an active
+  //   tab, or a child of such a window.
+  // - "cached" windows are in the fastback cache.
+  // - "other" windows are closed (or navigated away from w/o being
+  //   cached) yet held alive by either a website or our code. The
+  //   latter case may be a memory leak, but not necessarily.
+  //
+  // For inner windows we show how much memory the window and its
+  // document etc use, and we report those per URI, where the URI is
+  // the document URI, if available, or the codebase of the principal
+  // in the window. In the case where we're unable to find a URI we're
+  // dealing with a chrome window with no document in it (or
+  // somesuch), and for that we make the URI be the string "[system]".
+  //
+  // For outer windows we simply group them all together and just show
+  // the combined count and amount of memory used, which is generally
+  // a constant amount per window (since all the actual data lives in
+  // the inner window).
+  //
+  // The path we give to the reporter callback for inner windows are
+  // as follows:
+  //
+  //   explicit/dom/window-objects/<category>/top=<top-outer-id> (inner=<top-inner-id>)/inner-window(id=<id>, uri=<uri>)
+  //
+  // Where:
+  // - <category> is active, cached, or other, as described above.
+  // - <top-outer-id> is the window id (nsPIDOMWindow::WindowID()) of
+  //   the top outer window (i.e. tab, or top level chrome window).
+  // - <top-inner-id> is the window id of the top window's inner
+  //   window.
+  // - <id> is the window id of the inner window in question.
+  // - <uri> is the URI per above description.
+  //
+  // Exposing the window ids is done to get logical grouping in
+  // about:memory, and also for debuggability since one can get to the
+  // nsGlobalWindow for a window id by calling the static method
+  // nsGlobalWindow::GetInnerWindowWithId(id) (or
+  // GetOuterWindowWithId(id) in a debugger.
+  //
+  // For outer windows we simply use:
+  // 
+  //   explicit/dom/window-objects/<category>/outer-windows
+  //
+  // Which gives us simple counts of how many outer windows (and their
+  // combined sizes) per category.
+
+  nsCAutoString str("explicit/dom/window-objects/");
+
+  nsIDocShell *docShell = aWindow->GetDocShell();
+
+  nsGlobalWindow *top = aWindow->GetTop();
+  PRInt64 windowSize = aWindow->SizeOf();
+
+  if (docShell && aWindow->IsFrozen()) {
+    str += NS_LITERAL_CSTRING("cached/");
+  } else if (docShell) {
+    str += NS_LITERAL_CSTRING("active/");
+  } else {
+    str += NS_LITERAL_CSTRING("other/");
+  }
+
+  if (aWindow->IsInnerWindow()) {
+    str += NS_LITERAL_CSTRING("top=");
+
+    if (top) {
+      str.AppendInt(top->WindowID());
+
+      nsGlobalWindow *topInner = top->GetCurrentInnerWindowInternal();
+      if (topInner) {
+        str += NS_LITERAL_CSTRING(" (inner=");
+        str.AppendInt(topInner->WindowID());
+        str += NS_LITERAL_CSTRING(")");
+      }
+    } else {
+      str += NS_LITERAL_CSTRING("none");
+    }
+
+    str += NS_LITERAL_CSTRING("/inner-window(id=");
+    str.AppendInt(aWindow->WindowID());
+    str += NS_LITERAL_CSTRING(", uri=");
+
+    if (!AppendWindowURI(aWindow, str)) {
+      str += NS_LITERAL_CSTRING("[system]");
+    }
+
+    str += NS_LITERAL_CSTRING(")");
+  } else {
+    // Combine all outer windows per section (active/cached/other) as
+    // they basically never contain anything of interest, and are
+    // always pretty much the same size.
+
+    str += NS_LITERAL_CSTRING("outer-windows");
+  }
+
+  aCb->Callback(EmptyCString(), str, nsIMemoryReporter::KIND_HEAP,
+                nsIMemoryReporter::UNITS_BYTES, windowSize, kWindowDesc,
+                aClosure);
 }
 
-NS_IMETHODIMP
-nsDOMMemoryReporter::GetKind(PRInt32* aKind)
-{
-  *aKind = KIND_HEAP;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMMemoryReporter::GetDescription(nsACString &aDescription)
-{
-  aDescription.AssignLiteral("Memory used by the DOM.");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMMemoryReporter::GetUnits(PRInt32* aUnits)
-{
-  *aUnits = UNITS_BYTES;
-  return NS_OK;
-}
+typedef nsTArray< nsRefPtr<nsGlobalWindow> > WindowArray;
 
 static
 PLDHashOperator
-GetWindowsMemoryUsage(const PRUint64& aId, nsGlobalWindow*& aWindow,
-                      void* aClosure)
+GetWindows(const PRUint64& aId, nsGlobalWindow*& aWindow, void* aClosure)
 {
-  *(PRInt64*)aClosure += aWindow->SizeOf();
+  ((WindowArray *)aClosure)->AppendElement(aWindow);
+
   return PL_DHASH_NEXT;
 }
 
 NS_IMETHODIMP
-nsDOMMemoryReporter::GetAmount(PRInt64* aAmount) {
-  *aAmount = 0;
+nsDOMMemoryMultiReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
+                                         nsISupports* aClosure)
+{
+  nsGlobalWindow::WindowByIdTable* windowsById =
+    nsGlobalWindow::GetWindowsTable();
+  NS_ENSURE_TRUE(windowsById, NS_OK);
 
-  nsGlobalWindow::WindowByIdTable* windows = nsGlobalWindow::GetWindowsTable();
-  NS_ENSURE_TRUE(windows, NS_OK);
+  // Hold on to every window in memory so that window objects can't be
+  // destroyed while we're calling the memory reporter callback.
+  WindowArray windows;
+  windowsById->Enumerate(GetWindows, &windows);
 
-  windows->Enumerate(GetWindowsMemoryUsage, aAmount);
+  // Collect window memory usage.
+  nsRefPtr<nsGlobalWindow> *w = windows.Elements();
+  nsRefPtr<nsGlobalWindow> *end = w + windows.Length();
+  for (; w != end; ++w) {
+    CollectWindowMemoryUsage(*w, aCb, aClosure);
+  }
 
   return NS_OK;
 }

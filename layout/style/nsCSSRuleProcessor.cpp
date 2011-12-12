@@ -145,14 +145,14 @@ struct RuleValue : RuleSelectorPair {
 // Uses any of the sets of ops below.
 struct RuleHashTableEntry : public PLDHashEntryHdr {
   // If you add members that have heap allocated memory be sure to change the
-  // logic in RuleHashTableSizeOfEnumerator.
+  // logic in SizeOfRuleHashTableEntry().
   // Auto length 1, because we always have at least one entry in mRules.
   nsAutoTArray<RuleValue, 1> mRules;
 };
 
 struct RuleHashTagTableEntry : public RuleHashTableEntry {
   // If you add members that have heap allocated memory be sure to change the
-  // logic in RuleHash::SizeOf.
+  // logic in RuleHash::SizeOf{In,Ex}cludingThis.
   nsCOMPtr<nsIAtom> mTag;
 };
 
@@ -425,7 +425,8 @@ public:
   void EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
                          NodeMatchContext& aNodeMatchContext);
 
-  PRInt64 SizeOf() const;
+  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
 protected:
   typedef nsTArray<RuleValue> RuleValueList;
@@ -434,6 +435,8 @@ protected:
   void AppendUniversalRule(const RuleSelectorPair& aRuleInfo);
 
   PRInt32     mRuleCount;
+  // The hashtables are lazily initialized; we use a null .ops to
+  // indicate that they need initialization.
   PLDHashTable mIdTable;
   PLDHashTable mClassTable;
   PLDHashTable mTagTable;
@@ -446,6 +449,8 @@ protected:
   };
   EnumData* mEnumList;
   PRInt32   mEnumListSize;
+
+  bool mQuirksMode;
 
   inline EnumData ToEnumData(const RuleValueList& arr) {
     EnumData data = { arr.Elements(), arr.Elements() + arr.Length() };
@@ -472,7 +477,8 @@ protected:
 RuleHash::RuleHash(bool aQuirksMode)
   : mRuleCount(0),
     mUniversalRules(nsnull),
-    mEnumList(nsnull), mEnumListSize(0)
+    mEnumList(nsnull), mEnumListSize(0),
+    mQuirksMode(aQuirksMode)
 #ifdef RULE_HASH_STATS
     ,
     mUniversalSelectors(0),
@@ -490,18 +496,10 @@ RuleHash::RuleHash(bool aQuirksMode)
 {
   MOZ_COUNT_CTOR(RuleHash);
 
-  PL_DHashTableInit(&mTagTable, &RuleHash_TagTable_Ops, nsnull,
-                    sizeof(RuleHashTagTableEntry), 64);
-  PL_DHashTableInit(&mIdTable,
-                    aQuirksMode ? &RuleHash_IdTable_CIOps.ops
-                                : &RuleHash_IdTable_CSOps.ops,
-                    nsnull, sizeof(RuleHashTableEntry), 16);
-  PL_DHashTableInit(&mClassTable,
-                    aQuirksMode ? &RuleHash_ClassTable_CIOps.ops
-                                : &RuleHash_ClassTable_CSOps.ops,
-                    nsnull, sizeof(RuleHashTableEntry), 16);
-  PL_DHashTableInit(&mNameSpaceTable, &RuleHash_NameSpaceTable_Ops, nsnull,
-                    sizeof(RuleHashTableEntry), 16);
+  mTagTable.ops = nsnull;
+  mIdTable.ops = nsnull;
+  mClassTable.ops = nsnull;
+  mNameSpaceTable.ops = nsnull;
 }
 
 RuleHash::~RuleHash()
@@ -546,10 +544,18 @@ RuleHash::~RuleHash()
     delete [] mEnumList;
   }
   // delete arena for strings and small objects
-  PL_DHashTableFinish(&mIdTable);
-  PL_DHashTableFinish(&mClassTable);
-  PL_DHashTableFinish(&mTagTable);
-  PL_DHashTableFinish(&mNameSpaceTable);
+  if (mIdTable.ops) {
+    PL_DHashTableFinish(&mIdTable);
+  }
+  if (mClassTable.ops) {
+    PL_DHashTableFinish(&mClassTable);
+  }
+  if (mTagTable.ops) {
+    PL_DHashTableFinish(&mTagTable);
+  }
+  if (mNameSpaceTable.ops) {
+    PL_DHashTableFinish(&mNameSpaceTable);
+  }
 }
 
 void RuleHash::AppendRuleToTable(PLDHashTable* aTable, const void* aKey,
@@ -585,15 +591,31 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
 {
   nsCSSSelector *selector = aRuleInfo.mSelector;
   if (nsnull != selector->mIDList) {
+    if (!mIdTable.ops) {
+      PL_DHashTableInit(&mIdTable,
+                        mQuirksMode ? &RuleHash_IdTable_CIOps.ops
+                                    : &RuleHash_IdTable_CSOps.ops,
+                        nsnull, sizeof(RuleHashTableEntry), 16);
+    }
     AppendRuleToTable(&mIdTable, selector->mIDList->mAtom, aRuleInfo);
     RULE_HASH_STAT_INCREMENT(mIdSelectors);
   }
   else if (nsnull != selector->mClassList) {
+    if (!mClassTable.ops) {
+      PL_DHashTableInit(&mClassTable,
+                        mQuirksMode ? &RuleHash_ClassTable_CIOps.ops
+                                    : &RuleHash_ClassTable_CSOps.ops,
+                        nsnull, sizeof(RuleHashTableEntry), 16);
+    }
     AppendRuleToTable(&mClassTable, selector->mClassList->mAtom, aRuleInfo);
     RULE_HASH_STAT_INCREMENT(mClassSelectors);
   }
   else if (selector->mLowercaseTag) {
     RuleValue ruleValue(aRuleInfo, mRuleCount++);
+    if (!mTagTable.ops) {
+      PL_DHashTableInit(&mTagTable, &RuleHash_TagTable_Ops, nsnull,
+                        sizeof(RuleHashTagTableEntry), 16);
+    }
     AppendRuleToTagTable(&mTagTable, selector->mLowercaseTag, ruleValue);
     RULE_HASH_STAT_INCREMENT(mTagSelectors);
     if (selector->mCasedTag && 
@@ -603,6 +625,10 @@ void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
     }
   }
   else if (kNameSpaceID_Unknown != selector->mNameSpace) {
+    if (!mNameSpaceTable.ops) {
+      PL_DHashTableInit(&mNameSpaceTable, &RuleHash_NameSpaceTable_Ops, nsnull,
+                        sizeof(RuleHashTableEntry), 16);
+    }
     AppendRuleToTable(&mNameSpaceTable,
                       NS_INT32_TO_PTR(selector->mNameSpace), aRuleInfo);
     RULE_HASH_STAT_INCREMENT(mNameSpaceSelectors);
@@ -658,7 +684,7 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
     RULE_HASH_STAT_INCREMENT_LIST_COUNT(mUniversalRules, mElementUniversalCalls);
   }
   // universal rules within the namespace
-  if (kNameSpaceID_Unknown != nameSpace && mNameSpaceTable.entryCount) {
+  if (kNameSpaceID_Unknown != nameSpace && mNameSpaceTable.ops) {
     RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
                                            (PL_DHashTableOperate(&mNameSpaceTable, NS_INT32_TO_PTR(nameSpace),
                              PL_DHASH_LOOKUP));
@@ -667,7 +693,7 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
       RULE_HASH_STAT_INCREMENT_LIST_COUNT(entry->mRules, mElementNameSpaceCalls);
     }
   }
-  if (mTagTable.entryCount) {
+  if (mTagTable.ops) {
     RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
                                            (PL_DHashTableOperate(&mTagTable, tag, PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
@@ -675,7 +701,7 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
       RULE_HASH_STAT_INCREMENT_LIST_COUNT(entry->mRules, mElementTagCalls);
     }
   }
-  if (id && mIdTable.entryCount) {
+  if (id && mIdTable.ops) {
     RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
                                            (PL_DHashTableOperate(&mIdTable, id, PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
@@ -683,7 +709,7 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
       RULE_HASH_STAT_INCREMENT_LIST_COUNT(entry->mRules, mElementIdCalls);
     }
   }
-  if (mClassTable.entryCount) {
+  if (mClassTable.ops) {
     for (PRInt32 index = 0; index < classCount; ++index) {
       RuleHashTableEntry *entry = static_cast<RuleHashTableEntry*>
                                              (PL_DHashTableOperate(&mClassTable, classList->AtomAt(index),
@@ -727,43 +753,52 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
   }
 }
 
-static PLDHashOperator
-RuleHashTableSizeOfEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                              PRUint32 i, void* aClosure)
+static size_t
+SizeOfRuleHashTableEntry(PLDHashEntryHdr* aHdr, nsMallocSizeOfFun aMallocSizeOf)
 {
-  PRInt64* n = static_cast<PRInt64*>(aClosure);
   RuleHashTableEntry* entry = static_cast<RuleHashTableEntry*>(aHdr);
-
-  *n += entry->mRules.SizeOf();
-  // The size of the RuleHashTableEntry itself is accounted for already
-
-  return PL_DHASH_NEXT;
+  return entry->mRules.SizeOf();
 }
 
-PRInt64
-RuleHash::SizeOf() const
+size_t
+RuleHash::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
-  PRInt64 n = sizeof(*this);
+  size_t n = 0;
 
-  n += PL_DHASH_TABLE_SIZE(&mIdTable) * sizeof(RuleHashTableEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mIdTable),
-                         RuleHashTableSizeOfEnumerator, &n);
+  if (mIdTable.ops) {
+    n += PL_DHashTableSizeOfExcludingThis(&mIdTable,
+                                          SizeOfRuleHashTableEntry,
+                                          aMallocSizeOf);
+  }
 
-  n += PL_DHASH_TABLE_SIZE(&mClassTable) * sizeof(RuleHashTableEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mClassTable),
-                         RuleHashTableSizeOfEnumerator, &n);
+  if (mClassTable.ops) {
+    n += PL_DHashTableSizeOfExcludingThis(&mClassTable,
+                                          SizeOfRuleHashTableEntry,
+                                          aMallocSizeOf);
+  }
 
-  n += PL_DHASH_TABLE_SIZE(&mTagTable) * sizeof(RuleHashTagTableEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mTagTable),
-                         RuleHashTableSizeOfEnumerator, &n);
+  if (mTagTable.ops) {
+    n += PL_DHashTableSizeOfExcludingThis(&mTagTable,
+                                          SizeOfRuleHashTableEntry,
+                                          aMallocSizeOf);
+  }
 
-  n += PL_DHASH_TABLE_SIZE(&mNameSpaceTable) * sizeof(RuleHashTableEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mNameSpaceTable),
-                         RuleHashTableSizeOfEnumerator, &n);
+  if (mNameSpaceTable.ops) {
+    n += PL_DHashTableSizeOfExcludingThis(&mNameSpaceTable,
+                                          SizeOfRuleHashTableEntry,
+                                          aMallocSizeOf);
+  }
 
   n += mUniversalRules.SizeOf();
 
   return n;
+}
+
+size_t
+RuleHash::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  return aMallocSizeOf(this, sizeof(RuleHash)) +
+         SizeOfExcludingThis(aMallocSizeOf);
 }
 
 //--------------------------------
@@ -885,7 +920,7 @@ struct RuleCascadeData {
     }
   }
 
-  PRInt64 SizeOf() const;
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
   RuleHash                 mRuleHash;
   RuleHash*
@@ -915,53 +950,41 @@ struct RuleCascadeData {
   const bool mQuirksMode;
 };
 
-static PLDHashOperator
-SelectorsSizeOfEnumerator(PLDHashTable* aTable, PLDHashEntryHdr* aHdr,
-                          PRUint32 i, void* aClosure)
+static size_t
+SizeOfSelectorsEntry(PLDHashEntryHdr* aHdr, nsMallocSizeOfFun aMallocSizeOf)
 {
-  PRInt64* n = (PRInt64*) aClosure;
-  AtomSelectorEntry* entry = (AtomSelectorEntry*)aHdr;
-
-  *n += entry->mSelectors.SizeOf();
-
-  return PL_DHASH_NEXT;
+  AtomSelectorEntry* entry = static_cast<AtomSelectorEntry*>(aHdr);
+  return entry->mSelectors.SizeOf();
 }
 
-PRInt64
-RuleCascadeData::SizeOf() const
+size_t
+RuleCascadeData::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
-  PRInt64 n = sizeof(*this);
+  size_t n = aMallocSizeOf(this, sizeof(RuleCascadeData));
 
-  n += mRuleHash.SizeOf();
+  n += mRuleHash.SizeOfExcludingThis(aMallocSizeOf);
   for (PRUint32 i = 0; i < ArrayLength(mPseudoElementRuleHashes); ++i) {
     if (mPseudoElementRuleHashes[i])
-      n += mPseudoElementRuleHashes[i]->SizeOf();
+      n += mPseudoElementRuleHashes[i]->SizeOfIncludingThis(aMallocSizeOf);
   }
 
   n += mStateSelectors.SizeOf();
 
-  n += PL_DHASH_TABLE_SIZE(&mIdSelectors) * sizeof(AtomSelectorEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mIdSelectors),
-                         SelectorsSizeOfEnumerator, &n);
-  n += PL_DHASH_TABLE_SIZE(&mClassSelectors) * sizeof(AtomSelectorEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mClassSelectors),
-                         SelectorsSizeOfEnumerator, &n);
+  n += PL_DHashTableSizeOfExcludingThis(&mIdSelectors,
+                                        SizeOfSelectorsEntry, aMallocSizeOf);
+  n += PL_DHashTableSizeOfExcludingThis(&mClassSelectors,
+                                        SizeOfSelectorsEntry, aMallocSizeOf);
 
   n += mPossiblyNegatedClassSelectors.SizeOf();
   n += mPossiblyNegatedIDSelectors.SizeOf();
 
-  n += PL_DHASH_TABLE_SIZE(&mAttributeSelectors) * sizeof(AtomSelectorEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mAttributeSelectors),
-                         SelectorsSizeOfEnumerator, &n);
-
-  n += PL_DHASH_TABLE_SIZE(&mAnonBoxRules) * sizeof(RuleHashTagTableEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mAnonBoxRules),
-                         RuleHashTableSizeOfEnumerator, &n);
-
+  n += PL_DHashTableSizeOfExcludingThis(&mAttributeSelectors,
+                                        SizeOfSelectorsEntry, aMallocSizeOf);
+  n += PL_DHashTableSizeOfExcludingThis(&mAnonBoxRules,
+                                        SizeOfRuleHashTableEntry, aMallocSizeOf);
 #ifdef MOZ_XUL
-  n += PL_DHASH_TABLE_SIZE(&mXULTreeRules) * sizeof(RuleHashTagTableEntry);
-  PL_DHashTableEnumerate(const_cast<PLDHashTable*>(&mAnonBoxRules),
-                         RuleHashTableSizeOfEnumerator, &n);
+  n += PL_DHashTableSizeOfExcludingThis(&mXULTreeRules,
+                                        SizeOfRuleHashTableEntry, aMallocSizeOf);
 #endif
 
   n += mFontFaceRules.SizeOf();
@@ -2549,18 +2572,24 @@ nsCSSRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext)
   return (old != mRuleCascades);
 }
 
-/* virtual */ PRInt64
-nsCSSRuleProcessor::SizeOf() const
+/* virtual */ size_t
+nsCSSRuleProcessor::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
-  PRInt64 n = sizeof(*this);
-
+  size_t n = 0;
   n += mSheets.SizeOf();
   for (RuleCascadeData* cascade = mRuleCascades; cascade;
        cascade = cascade->mNext) {
-    n += cascade->SizeOf();
+    n += cascade->SizeOfIncludingThis(aMallocSizeOf);
   }
 
   return n;
+}
+
+/* virtual */ size_t
+nsCSSRuleProcessor::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  return aMallocSizeOf(this, sizeof(nsCSSRuleProcessor)) +
+         SizeOfExcludingThis(aMallocSizeOf);
 }
 
 // Append all the currently-active font face rules to aArray.  Return

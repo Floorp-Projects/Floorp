@@ -67,11 +67,14 @@ NS_IMETHODIMP
 nsProfiler::GetProfile(char **aProfile)
 {
   char *profile = SAMPLER_GET_PROFILE();
-  PRUint32 len = strlen(profile);
-  char *profileStr = static_cast<char *>
-                       (nsMemory::Clone(profile, len * sizeof(char)));
-  *aProfile = profileStr;
-  free(profile);
+  if (profile) {
+    PRUint32 len = strlen(profile);
+    char *profileStr = static_cast<char *>
+                         (nsMemory::Clone(profile, (len + 1) * sizeof(char)));
+    profileStr[len] = '\0';
+    *aProfile = profileStr;
+    free(profile);
+  }
   return NS_OK;
 }
 

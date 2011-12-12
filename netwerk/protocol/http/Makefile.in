@@ -110,8 +110,6 @@ CPPSRCS = \
   HttpChannelParent.cpp \
   HttpChannelChild.cpp \
   HttpChannelParentListener.cpp \
-  SpdySession.cpp \
-  SpdyStream.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \

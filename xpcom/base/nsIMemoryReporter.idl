@@ -308,43 +308,45 @@ interface nsIMemoryReporterManager : nsISupports
 
 #define NS_MEMORY_REPORTER_NAME(_classname)  MemoryReporter_##_classname
 
-nsresult NS_RegisterMemoryReporter (nsIMemoryReporter *reporter);
-nsresult NS_RegisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter);
+nsresult NS_RegisterMemoryReporter(nsIMemoryReporter *reporter);
+nsresult NS_RegisterMemoryMultiReporter(nsIMemoryMultiReporter *reporter);
 
-nsresult NS_UnregisterMemoryReporter (nsIMemoryReporter *reporter);
-nsresult NS_UnregisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter);
+nsresult NS_UnregisterMemoryReporter(nsIMemoryReporter *reporter);
+nsresult NS_UnregisterMemoryMultiReporter(nsIMemoryMultiReporter *reporter);
+
+// Because DMD is not a tool that comes with the standard Valgrind
+// distribution, we have to #include our own local copy of dmd.h.  Ugly but
+// unavoidable.
+#ifdef MOZ_DMD
+#if MOZ_MEMORY
+#error "--disable-jemalloc should have been forced when --enable-dmd was specified"
+#endif
+#include "dmd.h"
+#endif
 
 namespace mozilla {
 
 /*
- * This function should be used by all traversal-based memory reporters.
+ * Functions generated via this macro should be used by all traversal-based
+ * memory reporters.
+ *
  * - On platforms where moz_malloc_usable_size() returns 0 it just returns
- *   |computedSize| (this happens on platforms where malloc_usable_size() or
- *   equivalent isn't available).
- * - Otherwise, it |returns moz_malloc_usable_size(p)|, but only after doing
+ *   |computedSize|.  This happens on platforms where malloc_usable_size() or
+ *   equivalent isn't available.
+ *
+ * - Otherwise, it returns |moz_malloc_usable_size(p)|, but only after doing
  *   some sanity checking -- it will assert if the usable size is too
  *   dissimilar to |computedSize|.  (However, this checking is skipped if
  *   |computedSize| is zero, which is useful if the computation is not worth
  *   the effort, e.g. because it's tricky and the |computedSize| would be
  *   small.)
- */
-size_t MemoryReporterMallocSizeOf(const void *ptr, size_t computedSize);
-
-/*
- * These functions are like MemoryReporterMallocSizeOf(), and should be used by
- * all counter-based memory reporters when incrementing/decrementing a counter.
- */
-size_t MemoryReporterMallocSizeOfForCounterInc(const void *ptr,
-                                               size_t computedSize);
-size_t MemoryReporterMallocSizeOfForCounterDec(const void *ptr,
-                                               size_t computedSize);
-
-/*
- * For the purposes of debugging, temporary profiling, and DMD integration, it
- * is sometimes useful to temporarily create multiple variants of
- * MemoryReporterMallocSizeOf(), with each one distinguished by a string
- * |name|.  This macro makes creating such variants easy.  |name| isn't used,
- * but it will be if extra debugging code is temporarily added.
+ *
+ * You might be wondering why we have a macro that creates multiple functions
+ * distinguished only by |name|, instead of a single MemoryReporterMallocSizeOf
+ * function.  It's mostly to help with DMD integration, though it sometimes
+ * also helps with debugging and temporary ad hoc profiling.  The |name| chosen
+ * doesn't matter greatly, but it's best to make it similar to the path used by
+ * the relevant memory reporter(s).
  */
 #define NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(fn, name)                        \
   size_t fn(const void *ptr, size_t computedSize)                             \
@@ -353,13 +355,30 @@ size_t MemoryReporterMallocSizeOfForCounterDec(const void *ptr,
       if (!usable) {                                                          \
           return computedSize;                                                \
       }                                                                       \
+      VALGRIND_DMD_REPORT(ptr, usable, name);                                 \
       NS_MEMORY_REPORTER_CHECK_SIZES(usable, computedSize);                   \
       return usable;                                                          \
   }
 
 /*
- * This is used by the MemoryReporterMallocSizeOf* functions for checking
- * usable against computedSize.
+ * Like NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN, but the created function sends an
+ * "unreport" message to DMD.
+ */
+#define NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN_UN(fn)                           \
+  size_t fn(const void *ptr, size_t computedSize)                             \
+  {                                                                           \
+      size_t usable = moz_malloc_usable_size((void*)ptr);                     \
+      if (!usable) {                                                          \
+          return computedSize;                                                \
+      }                                                                       \
+      VALGRIND_DMD_UNREPORT(ptr);                                             \
+      NS_MEMORY_REPORTER_CHECK_SIZES(usable, computedSize);                   \
+      return usable;                                                          \
+  }
+
+/*
+ * This is used by the NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN* macros for
+ * checking |usable| against |computedSize|.
  */
 #define NS_MEMORY_REPORTER_CHECK_SIZES(usable, computedSize)                  \
   do {                                                                        \
@@ -370,12 +389,28 @@ size_t MemoryReporterMallocSizeOfForCounterDec(const void *ptr,
     /* because that's what the default allocator on Mac uses).  Also, if */   \
     /* computedSize is 0 we don't check it against usable.               */   \
     NS_ASSERTION(usable >= computedSize,                                      \
-                 "MemoryReporterMallocSizeOf: computedSize is too big");      \
+                 "NS_MEMORY_REPORTER_CHECK_SIZES: computedSize is too big");  \
     NS_ASSERTION(usable < computedSize * 2 || usable <= 16 ||                 \
                  computedSize == 0,                                           \
-                 "MemoryReporterMallocSizeOf: computedSize is too small");    \
+                 "NS_MEMORY_REPORTER_CHECK_SIZES: computedSize is too small");\
   } while(0)
 
+#ifdef MOZ_DMD
+
+/*
+ * This runs all the memory reporters but does nothing with the results;  i.e.
+ * it does the minimal amount of work possible for DMD to do its thing.  Then
+ * it dumps the DMD output to stderr (or somewhere else, if one of
+ * DMD/Valgrind's logging options was used).
+ */
+void DMDCheckAndDump();
+
+#else
+
+#define VALGRIND_DMD_REPORT(ptr, usable, name)
+#define VALGRIND_DMD_UNREPORT(ptr)
+
+#endif  /* defined(MOZ_DMD) */
 }
 
 %}
