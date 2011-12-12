@@ -58,16 +58,29 @@ function editorLoaded()
   let onCopy = function() {
     editor.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED, onPaste);
 
-    EventUtils.synthesizeMouse(editor.editorElement, 2, 2, {}, testWin);
-    EventUtils.synthesizeMouse(editor.editorElement, 3, 3, {button: 1}, testWin);
+    EventUtils.synthesizeMouse(editor.editorElement, 10, 10, {}, testWin);
+    EventUtils.synthesizeMouse(editor.editorElement, 11, 11, {button: 1}, testWin);
   };
 
   let onPaste = function() {
     editor.removeEventListener(SourceEditor.EVENTS.TEXT_CHANGED, onPaste);
 
-    is(editor.getText(), expectedString + initialText, "middle-click paste works");
+    let text = editor.getText();
+    isnot(text.indexOf(expectedString), -1, "middle-click paste works");
+    isnot(text, initialText, "middle-click paste works (confirmed)");
 
-    executeSoon(testEnd);
+    executeSoon(doTestBug695032);
+  };
+
+  let doTestBug695032 = function() {
+    info("test for bug 695032 - editor selection should be placed in the X11 primary selection buffer");
+
+    let text = "foobarBug695032 test me, test me!";
+    editor.setText(text);
+
+    waitForSelection(text, function() {
+      EventUtils.synthesizeKey("a", {accelKey: true}, testWin);
+    }, testEnd, testEnd);
   };
 
   waitForSelection(expectedString, doCopy, onCopy, testEnd);
