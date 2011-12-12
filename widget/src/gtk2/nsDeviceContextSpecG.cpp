@@ -180,11 +180,6 @@ public:
   /* Does this device allow to set/change number of copies for an document ? */
   void SetCanChangeNumCopies( bool aCanSetNumCopies );
 
-  /* Does this device allow multiple devicecontext instances to be used in
-   * parallel (e.g. print while the device is already in use by print-preview
-   * or printing while another print job is in progress) ? */
-  void SetMultipleConcurrentDeviceContextsSupported( bool aCanUseMultipleInstances );
-  
 private:
   /* private helper methods */
   void SetBoolValue( const char *tagname, bool value );
@@ -370,11 +365,6 @@ void nsPrinterFeatures::SetSupportsJobTitleChange( bool aSupportsJobTitle )
 void nsPrinterFeatures::SetCanChangeNumCopies( bool aCanSetNumCopies )
 {
   SetBoolValue("can_change_num_copies", aCanSetNumCopies);
-}
-
-void nsPrinterFeatures::SetMultipleConcurrentDeviceContextsSupported( bool aCanUseMultipleInstances )
-{
-  SetBoolValue("can_use_multiple_devicecontexts_concurrently", aCanUseMultipleInstances);
 }
 
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
@@ -571,10 +561,6 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetPath(const char **aPath)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetPrintMethod(PrintMethod &aMethod)
-{
-  return GetPrintMethod(mPrinter, aMethod);
-}
 /* static !! */
 nsresult nsDeviceContextSpecGTK::GetPrintMethod(const char *aPrinter, PrintMethod &aMethod)
 {

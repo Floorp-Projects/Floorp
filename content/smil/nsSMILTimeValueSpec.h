@@ -93,6 +93,7 @@ protected:
   void UpdateReferencedElement(Element* aFrom, Element* aTo);
   void UnregisterFromReferencedElement(Element* aElement);
   nsSMILTimedElement* GetTimedElement(Element* aElement);
+  bool IsWhitelistedEvent();
   void RegisterEventListener(Element* aElement);
   void UnregisterEventListener(Element* aElement);
   nsEventListenerManager* GetEventListenerManager(Element* aElement);

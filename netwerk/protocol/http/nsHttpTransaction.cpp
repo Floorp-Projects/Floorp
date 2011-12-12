@@ -305,12 +305,6 @@ nsHttpTransaction::Init(PRUint8 caps,
     return NS_OK;
 }
 
-nsAHttpConnection *
-nsHttpTransaction::Connection()
-{
-    return mConnection;
-}
-
 nsHttpResponseHead *
 nsHttpTransaction::TakeResponseHead()
 {
@@ -1293,7 +1287,7 @@ NS_IMETHODIMP
 nsHttpTransaction::OnInputStreamReady(nsIAsyncInputStream *out)
 {
     if (mConnection) {
-        nsresult rv = mConnection->ResumeSend(this);
+        nsresult rv = mConnection->ResumeSend();
         if (NS_FAILED(rv))
             NS_ERROR("ResumeSend failed");
     }
@@ -1309,7 +1303,7 @@ NS_IMETHODIMP
 nsHttpTransaction::OnOutputStreamReady(nsIAsyncOutputStream *out)
 {
     if (mConnection) {
-        nsresult rv = mConnection->ResumeRecv(this);
+        nsresult rv = mConnection->ResumeRecv();
         if (NS_FAILED(rv))
             NS_ERROR("ResumeRecv failed");
     }

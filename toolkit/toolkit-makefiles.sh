@@ -268,12 +268,6 @@ MAKEFILES_libjar="
   modules/libjar/Makefile
 "
 
-MAKEFILES_libreg="
-  modules/libreg/Makefile
-  modules/libreg/include/Makefile
-  modules/libreg/src/Makefile
-"
-
 MAKEFILES_libpref="
   modules/libpref/Makefile
   modules/libpref/public/Makefile
@@ -562,7 +556,6 @@ add_makefiles "
   $MAKEFILES_smil
   $MAKEFILES_layout
   $MAKEFILES_libjar
-  $MAKEFILES_libreg
   $MAKEFILES_libpref
   $MAKEFILES_mathml
   $MAKEFILES_netwerk

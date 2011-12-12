@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test to ensure bidi is resolved correctly</title>
+</head>
+<body>
+<canvas id="c" width="256" height="64" style="direction:ltr"></canvas>
+<script type="text/javascript">
+  var canvas = document.getElementById('c');
+  var ctx = canvas.getContext('2d');
+
+  // Bug 698185 caused the RTL and trailing LTR runs to be lost
+  // var str = "hello\u05E9\u05DC\u05D5\u05DDgoodbye";
+  var str = "hello";
+
+  ctx.fillStyle = 'black';
+  ctx.font = '10px sans-serif';
+  ctx.fillText(str, 128, 32);
+
+</script>
+</body>
+</html>

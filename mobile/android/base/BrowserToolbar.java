@@ -62,42 +62,50 @@ import android.widget.TextSwitcher;
 import android.widget.ViewSwitcher.ViewFactory;
 
 public class BrowserToolbar extends LinearLayout {
-    final private Button mAwesomeBar;
-    final private ImageButton mTabs;
-    final public ImageButton mFavicon;
-    final public ImageButton mStop;
-    final public ImageButton mSiteSecurity;
-    final private AnimationDrawable mProgressSpinner;
-    final private TextSwitcher mTabsCount;
+    private Button mAwesomeBar;
+    private ImageButton mTabs;
+    public ImageButton mFavicon;
+    public ImageButton mStop;
+    public ImageButton mSiteSecurity;
+    private AnimationDrawable mProgressSpinner;
+    private TextSwitcher mTabsCount;
 
     final private Context mContext;
-    final private Handler mHandler;
-    final private int mColor;
-    final private int mCounterColor;
+    private Handler mHandler;
+    private boolean mInflated;
+    private int mColor;
+    private int mCounterColor;
 
-    final private int mDuration;
-    final private TranslateAnimation mSlideUpIn;
-    final private TranslateAnimation mSlideUpOut;
-    final private TranslateAnimation mSlideDownIn;
-    final private TranslateAnimation mSlideDownOut;
+    private int mDuration;
+    private TranslateAnimation mSlideUpIn;
+    private TranslateAnimation mSlideUpOut;
+    private TranslateAnimation mSlideDownIn;
+    private TranslateAnimation mSlideDownOut;
 
     private int mCount;
 
     public BrowserToolbar(Context context, AttributeSet attrs) {
         super(context, attrs);
-
         mContext = context;
+        mInflated = false;
+    }
+
+    @Override
+    protected void onFinishInflate () {
+        super.onFinishInflate();
+
+        // HACK: Without this, the onFinishInflate is called twice
+        // This issue is due to a bug when Android inflates a layout with a
+        // parent. Fixed in Honeycomb
+        if (mInflated)
+            return;
+
+        mInflated = true;
 
         // Get the device's highlight color
         ContextThemeWrapper wrapper = new ContextThemeWrapper(mContext, android.R.style.TextAppearance);
         TypedArray typedArray = wrapper.getTheme().obtainStyledAttributes(new int[] { android.R.attr.textColorHighlight });
         mColor = typedArray.getColor(typedArray.getIndex(0), 0);
-
-        // Load layout into the custom view
-        LayoutInflater inflater =
-                (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-        inflater.inflate(R.layout.browser_toolbar, this);
 
         mAwesomeBar = (Button) findViewById(R.id.awesome_bar);
         mAwesomeBar.setOnClickListener(new Button.OnClickListener() {
@@ -135,6 +143,7 @@ public class BrowserToolbar extends LinearLayout {
         mCounterColor = 0x99ffffff;
 
         mTabsCount = (TextSwitcher) findViewById(R.id.tabs_count);
+        mTabsCount.removeAllViews();
         mTabsCount.setFactory(new ViewFactory() {
             public View makeView() {
                 TextView text = new TextView(mContext);
@@ -142,11 +151,11 @@ public class BrowserToolbar extends LinearLayout {
                 text.setTextSize(16);
                 text.setTextColor(mCounterColor);
                 text.setTypeface(text.getTypeface(), Typeface.BOLD);
-                return text;
-            } 
-        });
-        mCount = 0;
+                return (View) text;
+            }
+        }); 
         mTabsCount.setText("0");
+        mCount = 0;
 
         mFavicon = (ImageButton) findViewById(R.id.favicon);
         mSiteSecurity = (ImageButton) findViewById(R.id.site_security);

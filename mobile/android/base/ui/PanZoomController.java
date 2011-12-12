@@ -89,6 +89,11 @@ public class PanZoomController
     // The maximum velocity change factor between events, per ms, in %.
     // Direction changes are excluded.
     private static final float MAX_EVENT_ACCELERATION = 0.012f;
+    // The minimum amount of space that must be present for an axis to be considered scrollable,
+    // in pixels.
+    private static final float MIN_SCROLLABLE_DISTANCE = 0.5f;
+    // The maximum amount we allow you to zoom into a page
+    private static final float MAX_ZOOM = 4.0f;
 
     /* 16 precomputed frames of the _ease-out_ animation from the CSS Transitions specification. */
     private static final float[] EASE_OUT_ANIMATION_FRAMES = {
@@ -461,16 +466,8 @@ public class PanZoomController
             }
         }
 
-        mX.setFlingState(Axis.FlingStates.PANNING);
-        mY.setFlingState(Axis.FlingStates.PANNING);
-
-        if (!mOverridePanning) {
-            mX.applyEdgeResistance();
-            mY.applyEdgeResistance();
-        }
-        mX.displace();
-        mY.displace();
-
+        mX.setFlingState(Axis.FlingStates.PANNING); mY.setFlingState(Axis.FlingStates.PANNING);
+        mX.displace(); mY.displace();
         updatePosition();
     }
 
@@ -626,12 +623,16 @@ public class PanZoomController
             if (flingingY)
                 mY.advanceFling();
 
-            /* If we're still flinging in any direction, update the origin and finish here. */
+            /* If we're still flinging in any direction, update the origin. */
             if (flingingX || flingingY) {
                 mX.displace(); mY.displace();
                 updatePosition();
-                return;
             }
+
+            /* If we're still flinging with an appreciable velocity, stop here. */
+            PointF velocityVector = new PointF(mX.getRealVelocity(), mY.getRealVelocity());
+            if (PointUtils.distance(velocityVector) >= STOPPED_THRESHOLD)
+                return;
 
             /*
              * Perform a bounce-back animation if overscrolled, unless panning is being overridden
@@ -721,17 +722,33 @@ public class PanZoomController
         // overscrolled on this axis, returns 0.
         private float getExcess() {
             switch (getOverscroll()) {
-            case MINUS:     return Math.min(-getOrigin(), getPageLength() - getViewportEnd());
-            case PLUS:      return Math.min(getOrigin(), getViewportEnd() - getPageLength());
+            case MINUS:     return -getOrigin();
+            case PLUS:      return getViewportEnd() - getPageLength();
+            case BOTH:      return getViewportEnd() - getPageLength() - getOrigin();
             default:        return 0.0f;
             }
         }
 
-        // Applies resistance along the edges when tracking.
-        public void applyEdgeResistance() {
+        /*
+         * Returns true if the page is zoomed in to some degree along this axis such that scrolling
+         * is possible. Otherwise, returns false.
+         */
+        private boolean scrollable() {
+            return getViewportLength() <= getPageLength() - MIN_SCROLLABLE_DISTANCE;
+        }
+
+        /*
+         * Returns the resistance, as a multiplier, that should be taken into account when
+         * tracking or pinching.
+         */
+        public float getEdgeResistance() {
             float excess = getExcess();
-            if (excess > 0.0f)
-                velocity *= SNAP_LIMIT - excess / getViewportLength();
+            return (excess > 0.0f) ? SNAP_LIMIT - excess / getViewportLength() : 1.0f;
+        }
+
+        /* Returns the velocity. If the axis is locked, returns 0. */
+        public float getRealVelocity() {
+            return locked ? 0.0f : velocity;
         }
 
         public void startFling(boolean stopped) {
@@ -774,11 +791,11 @@ public class PanZoomController
 
         // Performs displacement of the viewport position according to the current velocity.
         public void displace() {
-            if (locked)
+            if (locked || !scrollable())
                 return;
 
             if (mFlingState == FlingStates.PANNING)
-                displacement += lastTouchPos - touchPos;
+                displacement += (lastTouchPos - touchPos) * getEdgeResistance();
             else
                 displacement += velocity;
         }
@@ -794,11 +811,11 @@ public class PanZoomController
         RectF viewport = viewportMetrics.getViewport();
 
         float minZoomFactor = 0.0f;
-        if (viewport.width() > pageSize.width) {
+        if (viewport.width() > pageSize.width && pageSize.width > 0) {
             float scaleFactor = viewport.width() / pageSize.width;
             minZoomFactor = (float)Math.max(minZoomFactor, zoomFactor * scaleFactor);
         }
-        if (viewport.height() > pageSize.height) {
+        if (viewport.height() > pageSize.height && pageSize.height > 0) {
             float scaleFactor = viewport.height() / pageSize.height;
             minZoomFactor = (float)Math.max(minZoomFactor, zoomFactor * scaleFactor);
         }
@@ -806,6 +823,9 @@ public class PanZoomController
         if (!FloatUtils.fuzzyEquals(minZoomFactor, 0.0f)) {
             PointF center = new PointF(viewport.width() / 2.0f, viewport.height() / 2.0f);
             viewportMetrics.scaleTo(minZoomFactor, center);
+        } else if (zoomFactor > MAX_ZOOM) {
+            PointF center = new PointF(viewport.width() / 2.0f, viewport.height() / 2.0f);
+            viewportMetrics.scaleTo(MAX_ZOOM, center);
         }
 
         /* Now we pan to the right origin. */
@@ -840,8 +860,19 @@ public class PanZoomController
         if (mState == PanZoomState.ANIMATED_ZOOM)
             return false;
 
-        float newZoomFactor = mController.getZoomFactor() *
-                              (detector.getCurrentSpan() / detector.getPreviousSpan());
+        float spanRatio = detector.getCurrentSpan() / detector.getPreviousSpan();
+
+        /*
+         * Apply edge resistance if we're zoomed out smaller than the page size by scaling the zoom
+         * factor toward 1.0.
+         */
+        float resistance = Math.min(mX.getEdgeResistance(), mY.getEdgeResistance());
+        if (spanRatio > 1.0f)
+            spanRatio = 1.0f + (spanRatio - 1.0f) * resistance;
+        else
+            spanRatio = 1.0f - (1.0f - spanRatio) * resistance;
+
+        float newZoomFactor = mController.getZoomFactor() * spanRatio;
 
         mController.scrollBy(new PointF(mLastZoomFocus.x - detector.getFocusX(),
                                         mLastZoomFocus.y - detector.getFocusY()));
@@ -909,7 +940,7 @@ public class PanZoomController
     }
 
     public boolean getRedrawHint() {
-        return (mState != PanZoomState.PINCHING);
+        return (mState == PanZoomState.NOTHING || mState == PanZoomState.FLING);
     }
 
     @Override

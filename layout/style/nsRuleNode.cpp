@@ -5726,16 +5726,12 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
       if (parentOutline->GetOutlineColor(outlineColor))
         outline->SetOutlineColor(outlineColor);
       else {
-#ifdef GFX_HAS_INVERT
-        outline->SetOutlineInitialColor();
-#else
         // We want to inherit the color from the parent, not use the
         // color on the element where this chunk of style data will be
         // used.  We can ensure that the data for the parent are fully
         // computed (unlike for the element where this will be used, for
         // which the color could be specified on a more specific rule).
         outline->SetOutlineColor(parentContext->GetStyleColor()->mColor);
-#endif
       }
     } else {
       outline->SetOutlineInitialColor();

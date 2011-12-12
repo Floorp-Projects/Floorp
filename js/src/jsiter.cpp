@@ -72,6 +72,7 @@
 #include "jsxml.h"
 #endif
 
+#include "ds/Sort.h"
 #include "frontend/TokenStream.h"
 #include "vm/GlobalObject.h"
 
@@ -256,6 +257,36 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uint
     return true;
 }
 
+#ifdef JS_MORE_DETERMINISTIC
+
+struct SortComparatorIds
+{
+    JSContext   *const cx;
+
+    SortComparatorIds(JSContext *cx)
+      : cx(cx) {}
+
+    bool operator()(jsid a, jsid b, bool *lessOrEqualp)
+    {
+        /* Pick an arbitrary total order on jsids that is stable across executions. */
+        JSString *astr = IdToString(cx, a);
+	if (!astr)
+	    return false;
+        JSString *bstr = IdToString(cx, b);
+        if (!bstr)
+            return false;
+
+        int32 result;
+        if (!CompareStrings(cx, astr, bstr, &result))
+            return false;
+
+        *lessOrEqualp = (result <= 0);
+        return true;
+    }
+};
+
+#endif /* JS_MORE_DETERMINISTIC */
+
 static bool
 Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
 {
@@ -321,6 +352,35 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
         if ((flags & JSITER_OWNONLY) || pobj->isXML())
             break;
     } while ((pobj = pobj->getProto()) != NULL);
+
+#ifdef JS_MORE_DETERMINISTIC
+
+    /*
+     * In some cases the enumeration order for an object depends on the
+     * execution mode (interpreter vs. JIT), especially for native objects
+     * with a class enumerate hook (where resolving a property changes the
+     * resulting enumeration order). These aren't really bugs, but the
+     * differences can change the generated output and confuse correctness
+     * fuzzers, so we sort the ids if such a fuzzer is running.
+     *
+     * We don't do this in the general case because (a) doing so is slow,
+     * and (b) it also breaks the web, which expects enumeration order to
+     * follow the order in which properties are added, in certain cases.
+     * Since ECMA does not specify an enumeration order for objects, both
+     * behaviors are technically correct to do.
+     */
+
+    jsid *ids = props->begin();
+    size_t n = props->length();
+
+    Vector<jsid> tmp(cx);
+    if (!tmp.resizeUninitialized(n))
+        return false;
+
+    if (!MergeSort(ids, n, tmp.begin(), SortComparatorIds(cx)))
+        return false;
+
+#endif /* JS_MORE_DETERMINISTIC */
 
     return true;
 }

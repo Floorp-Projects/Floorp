@@ -174,7 +174,7 @@ NS_StringSetDataRange(nsAString &aStr,
     if (aDataLength == PR_UINT32_MAX)
       aStr.Replace(aCutOffset, aCutLength, nsDependentString(aData));
     else
-      aStr.Replace(aCutOffset, aCutLength, Substring(aData, aData + aDataLength));
+      aStr.Replace(aCutOffset, aCutLength, Substring(aData, aDataLength));
   }
   else
     aStr.Cut(aCutOffset, aCutLength);
@@ -333,7 +333,7 @@ NS_CStringSetDataRange(nsACString &aStr,
     if (aDataLength == PR_UINT32_MAX)
       aStr.Replace(aCutOffset, aCutLength, nsDependentCString(aData));
     else
-      aStr.Replace(aCutOffset, aCutLength, Substring(aData, aData + aDataLength));
+      aStr.Replace(aCutOffset, aCutLength, Substring(aData, aDataLength));
   }
   else
     aStr.Cut(aCutOffset, aCutLength);

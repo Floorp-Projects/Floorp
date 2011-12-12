@@ -224,9 +224,37 @@ function run_test() {
       do_check_eq(gDownloadLastDir.file, null);
       do_check_eq(gDownloadLastDir.getFile(uri1), null);
     }
+
+    { // check that disabling CPS works
+      Services.prefs.setBoolPref("browser.download.lastDir.savePerSite", false);
+
+      gDownloadLastDir.setFile(uri1, dir1);
+      do_check_eq(gDownloadLastDir.file.path, dir1.path);
+      do_check_eq(gDownloadLastDir.getFile(uri1).path, dir1.path);
+      do_check_eq(gDownloadLastDir.getFile(uri2).path, dir1.path);
+      do_check_eq(gDownloadLastDir.getFile(uri3).path, dir1.path);
+      do_check_eq(gDownloadLastDir.getFile(uri4).path, dir1.path);
+
+      gDownloadLastDir.setFile(uri2, dir2);
+      do_check_eq(gDownloadLastDir.file.path, dir2.path);
+      do_check_eq(gDownloadLastDir.getFile(uri1).path, dir2.path);
+      do_check_eq(gDownloadLastDir.getFile(uri2).path, dir2.path);
+      do_check_eq(gDownloadLastDir.getFile(uri3).path, dir2.path);
+      do_check_eq(gDownloadLastDir.getFile(uri4).path, dir2.path);
+
+      Services.prefs.clearUserPref("browser.download.lastDir.savePerSite");
+    }
+
+    { // check that passing null to setFile clears the stored value
+      gDownloadLastDir.setFile(uri3, dir3);
+      do_check_eq(gDownloadLastDir.getFile(uri3).path, dir3.path);
+      gDownloadLastDir.setFile(uri3, null);
+      do_check_eq(gDownloadLastDir.getFile(uri3), null);
+    }
   } finally {
     dir1.remove(true);
     dir2.remove(true);
     dir3.remove(true);
+    Services.prefs.clearUserPref("browser.download.lastDir.savePerSite");
   }
 }

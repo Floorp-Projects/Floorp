@@ -60,9 +60,12 @@ struct PRLock;
 class nsIFile;
 class nsIEventTarget;
 class nsIThread;
+class nsIMemoryReporter;
 
 namespace mozilla {
 namespace storage {
+
+class StorageMemoryReporter;
 
 class Connection : public mozIStorageConnection
                  , public nsIInterfaceRequestor
@@ -221,6 +224,8 @@ private:
 
   sqlite3 *mDBConn;
   nsCOMPtr<nsIFile> mDatabaseFile;
+
+  nsTArray<nsRefPtr<StorageMemoryReporter> > mMemoryReporters;
 
   /**
    * Lazily created thread for asynchronous statement execution.  Consumers

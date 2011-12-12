@@ -719,7 +719,7 @@ var PlacesUIUtils = {
     return aUrlString.substr(0, aUrlString.indexOf(":"));
   },
 
-  getBestTitle: function PUIU_getBestTitle(aNode) {
+  getBestTitle: function PUIU_getBestTitle(aNode, aDoNotCutTitle) {
     var title;
     if (!aNode.title && PlacesUtils.uriTypes.indexOf(aNode.type) != -1) {
       // if node title is empty, try to set the label using host and filename
@@ -729,9 +729,13 @@ var PlacesUIUtils = {
         var host = uri.host;
         var fileName = uri.QueryInterface(Ci.nsIURL).fileName;
         // if fileName is empty, use path to distinguish labels
-        title = host + (fileName ?
-                        (host ? "/" + this.ellipsis + "/" : "") + fileName :
-                        uri.path);
+        if (aDoNotCutTitle) {
+          title = host + uri.path;
+        } else {
+          title = host + (fileName ?
+                           (host ? "/" + this.ellipsis + "/" : "") + fileName :
+                           uri.path);
+        }
       }
       catch (e) {
         // Use (no title) for non-standard URIs (data:, javascript:, ...)

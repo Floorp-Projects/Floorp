@@ -342,7 +342,7 @@ js_GetIndexFromBytecode(JSContext *cx, JSScript *script, jsbytecode *pc,
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(*(pc) != JSOP_DOUBLE);                                      \
         uintN index_ = js_GetIndexFromBytecode(cx, (script), (pc), (pcoff));  \
-        JS_GET_SCRIPT_ATOM(script, pc, index_, atom);                         \
+        (atom) = (script)->getAtom(index_);                                   \
     JS_END_MACRO
 
 #define GET_DOUBLE_FROM_BYTECODE(script, pc, pcoff, dbl)                      \

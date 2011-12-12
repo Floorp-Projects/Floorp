@@ -1019,7 +1019,7 @@ static nsresult pref_InitInitialObjects()
 
     find = findPtr;
     while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
-      prefEntries.AppendElement(Substring(entryName, entryName + entryNameLen));
+      prefEntries.AppendElement(Substring(entryName, entryNameLen));
     }
 
     prefEntries.Sort();
@@ -1080,7 +1080,7 @@ static nsresult pref_InitInitialObjects()
     find = findPtr;
     prefEntries.Clear();
     while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
-      prefEntries.AppendElement(Substring(entryName, entryName + entryNameLen));
+      prefEntries.AppendElement(Substring(entryName, entryNameLen));
     }
     prefEntries.Sort();
     for (PRUint32 i = prefEntries.Length(); i--; ) {

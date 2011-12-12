@@ -372,3 +372,4 @@ MSG_DEF(JSMSG_DEBUG_COMPARTMENT_MISMATCH, 285, 2, JSEXN_TYPEERR, "{0}: descripto
 MSG_DEF(JSMSG_DEBUG_NOT_SCRIPT_FRAME, 286, 0, JSEXN_ERR, "stack frame is not running JavaScript code")
 MSG_DEF(JSMSG_CANT_WATCH_PROP,        287, 0, JSEXN_TYPEERR, "properties whose names are objects can't be watched")
 MSG_DEF(JSMSG_CSP_BLOCKED_EVAL,       288, 0, JSEXN_ERR, "call to eval() blocked by CSP")
+MSG_DEF(JSMSG_DEBUG_NO_SCOPE_OBJECT,  289, 0, JSEXN_TYPEERR, "declarative Environments don't have binding objects")

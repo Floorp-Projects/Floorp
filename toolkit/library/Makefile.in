@@ -112,7 +112,6 @@ LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 endif
 
 ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
-REQUIRES += libreg
 DEFINES += -DZLIB_DLL=1
 endif
 
@@ -165,7 +164,6 @@ STATIC_LIBS += \
   xpcom_core \
   ucvutil_s \
   chromium_s \
-  mozreg_s \
   snappy_s \
   $(NULL)
 
@@ -382,6 +380,10 @@ EXTRA_DSO_LDOPTS += \
   $(MOZ_APP_EXTRA_LIBS) \
   $(SQLITE_LIBS) \
   $(NULL)
+
+ifdef MOZ_GRAPHITE
+EXTRA_DSO_LDOPTS += $(MOZ_GRAPHITE_LIBS)
+endif
 
 ifdef MOZ_NATIVE_ZLIB
 EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
