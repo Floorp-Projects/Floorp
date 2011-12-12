@@ -36,16 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <pthread.h>
+#include <stdlib.h>
+#include "thread_helper.h"
 #include "nscore.h"
 #include "mozilla/TimeStamp.h"
 
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 
-// TODO Merge into Sampler.h
-
-extern pthread_key_t pkey_stack;
+extern mozilla::tls::key pkey_stack;
+extern mozilla::tls::key pkey_ticker;
 extern bool stack_key_initialized;
 
 #define SAMPLER_INIT() mozilla_sampler_init();
@@ -87,7 +87,22 @@ LinuxKernelMemoryBarrierFunc pLinuxKernelMemoryBarrier __attribute__((weak)) =
 
 # define STORE_SEQUENCER() pLinuxKernelMemoryBarrier()
 #elif defined(V8_HOST_ARCH_IA32) || defined(V8_HOST_ARCH_X64)
-# define STORE_SEQUENCER() asm volatile("" ::: "memory")
+# if defined(_MSC_VER)
+   // MSVC2005 has a name collision bug caused when both <intrin.h> and <windows.h> are included together.
+#  define _interlockedbittestandreset _interlockedbittestandreset_NAME_CHANGED_TO_AVOID_MSVS2005_ERROR
+#  define _interlockedbittestandset _interlockedbittestandset_NAME_CHANGED_TO_AVOID_MSVS2005_ERROR
+#  include <intrin.h>
+   // Even though MSVC2005 has the intrinsic _ReadWriteBarrier, it fails to link to it when it's
+   // not explicitly declared.
+#  pragma intrinsic(_ReadWriteBarrier)
+#  define STORE_SEQUENCER() _ReadWriteBarrier();
+# elif defined(__INTEL_COMPILER)
+#  define STORE_SEQUENCER() __memory_barrier();
+# elif __GNUC__
+#  define STORE_SEQUENCER() asm volatile("" ::: "memory");
+# else
+#  error "Memory clobber not supported for your compiler."
+# endif
 #else
 # error "Memory clobber not supported for your platform."
 #endif
@@ -181,7 +196,7 @@ public:
     // been written such that mStack is always consistent.
     mStack[mStackPointer] = aName;
     // Prevent the optimizer from re-ordering these instructions
-    asm("":::"memory");
+    STORE_SEQUENCER();
     mStackPointer++;
   }
   void pop()
@@ -198,15 +213,15 @@ public:
   }
 
   // Keep a list of active checkpoints
-  const char *mStack[1024];
+  char const * volatile mStack[1024];
   // Keep a list of active markers to be applied to the next sample taken
-  const char *mMarkers[1024];
-  sig_atomic_t mStackPointer;
-  sig_atomic_t mMarkerPointer;
-  sig_atomic_t mDroppedStackEntries;
+  char const * volatile mMarkers[1024];
+  volatile mozilla::sig_safe_t mStackPointer;
+  volatile mozilla::sig_safe_t mMarkerPointer;
+  volatile mozilla::sig_safe_t mDroppedStackEntries;
   // We don't want to modify _markers from within the signal so we allow
   // it to queue a clear operation.
-  sig_atomic_t mQueueClearMarker;
+  volatile mozilla::sig_safe_t mQueueClearMarker;
 };
 
 inline void* mozilla_sampler_call_enter(const char *aInfo)
@@ -216,7 +231,7 @@ inline void* mozilla_sampler_call_enter(const char *aInfo)
   if (!stack_key_initialized)
     return NULL;
 
-  Stack *stack = (Stack*)pthread_getspecific(pkey_stack);
+  Stack *stack = mozilla::tls::get<Stack>(pkey_stack);
   // we can't infer whether 'stack' has been initialized
   // based on the value of stack_key_intiailized because
   // 'stack' is only intialized when a thread is being
@@ -245,7 +260,7 @@ inline void mozilla_sampler_call_exit(void *aHandle)
 
 inline void mozilla_sampler_add_marker(const char *aMarker)
 {
-  Stack *stack = (Stack*)pthread_getspecific(pkey_stack);
+  Stack *stack = mozilla::tls::get<Stack>(pkey_stack);
   if (!stack) {
     return;
   }

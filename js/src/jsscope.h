@@ -653,13 +653,13 @@ struct Shape : public js::gc::Cell
         UNUSED_BITS     = 0x3C
     };
 
-    Shape(BaseShape *base, jsid id, uint32 slot, uint32 nfixed, uintN attrs, uintN flags, intN shortid);
+    Shape(UnownedBaseShape *base, jsid id, uint32 slot, uint32 nfixed, uintN attrs, uintN flags, intN shortid);
 
     /* Get a shape identical to this one, without parent/kids information. */
     Shape(const Shape *other);
 
     /* Used by EmptyShape (see jsscopeinlines.h). */
-    Shape(BaseShape *base, uint32 nfixed);
+    Shape(UnownedBaseShape *base, uint32 nfixed);
 
     /* Copy constructor disabled, to avoid misuse of the above form. */
     Shape(const Shape &other);
@@ -942,7 +942,7 @@ struct Shape : public js::gc::Cell
 
 struct EmptyShape : public js::Shape
 {
-    EmptyShape(BaseShape *base, uint32 nfixed);
+    EmptyShape(UnownedBaseShape *base, uint32 nfixed);
 
     /*
      * Lookup an initial shape matching the given parameters, creating an empty

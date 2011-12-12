@@ -188,12 +188,6 @@ class NS_STACK_CLASS nsAutoUpdateViewBatch
  * some helper classes for iterating the dom tree
  *****************************************************************************/
 
-class nsDomIterFunctor 
-{
-  public:
-    virtual void* operator()(nsIDOMNode* aNode)=0;
-};
-
 class nsBoolDomIterFunctor 
 {
   public:
@@ -208,7 +202,6 @@ class NS_STACK_CLASS nsDOMIterator
     
     nsresult Init(nsIDOMRange* aRange);
     nsresult Init(nsIDOMNode* aNode);
-    void ForEach(nsDomIterFunctor& functor) const;
     nsresult AppendList(nsBoolDomIterFunctor& functor,
                         nsCOMArray<nsIDOMNode>& arrayOfNodes) const;
   protected:
@@ -222,7 +215,6 @@ class nsDOMSubtreeIterator : public nsDOMIterator
     virtual ~nsDOMSubtreeIterator();
 
     nsresult Init(nsIDOMRange* aRange);
-    nsresult Init(nsIDOMNode* aNode);
 };
 
 class nsTrivialFunctor : public nsBoolDomIterFunctor

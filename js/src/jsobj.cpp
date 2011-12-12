@@ -4873,14 +4873,32 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
 
     /*
      * Regenerate shapes for all of the scopes along the old prototype chain,
-     * in case any entries were filled by looking up through obj. Stop when an
+     * in case any entries were filled by looking up through obj. Stop when a
      * non-native object is found, prototype lookups will not be cached across
      * these.
+     *
+     * How this shape change is done is very delicate; the change can be made
+     * either by marking the object's prototype as uncacheable (such that the
+     * property cache and JIT'ed ICs cannot assume the shape determines the
+     * prototype) or by just generating a new shape for the object. Choosing
+     * the former is bad if the object is on the prototype chain of other
+     * objects, as the uncacheable prototype can inhibit iterator caches on
+     * those objects and slow down prototype accesses. Choosing the latter is
+     * bad if there are many similar objects to this one which will have their
+     * prototype mutated, as the generateOwnShape forces the object into
+     * dictionary mode and similar property lineages will be repeatedly cloned.
+     *
+     * :XXX: bug 707717 make this code less brittle.
      */
     JSObject *oldproto = obj;
     while (oldproto && oldproto->isNative()) {
-        if (!oldproto->setUncacheableProto(cx))
-            return false;
+        if (oldproto->hasSingletonType()) {
+            if (!oldproto->generateOwnShape(cx))
+                return false;
+        } else {
+            if (!oldproto->setUncacheableProto(cx))
+                return false;
+        }
         oldproto = oldproto->getProto();
     }
 
@@ -5903,44 +5921,47 @@ js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsi
          */
         jsbytecode *pc;
         if (vp->isUndefined() && ((pc = js_GetCurrentBytecodePC(cx)) != NULL)) {
-            JSOp op;
-            uintN flags;
+            JSOp op = (JSOp) *pc;
 
-            op = (JSOp) *pc;
             if (op == JSOP_GETXPROP) {
-                flags = JSREPORT_ERROR;
-            } else {
-                if (!cx->hasStrictOption() ||
-                    cx->stack.currentScript()->warnedAboutUndefinedProp ||
-                    (op != JSOP_GETPROP && op != JSOP_GETELEM)) {
-                    return JS_TRUE;
-                }
-
-                /*
-                 * XXX do not warn about missing __iterator__ as the function
-                 * may be called from JS_GetMethodById. See bug 355145.
-                 */
-                if (JSID_IS_ATOM(id, cx->runtime->atomState.iteratorAtom))
-                    return JS_TRUE;
-
-                /* Do not warn about tests like (obj[prop] == undefined). */
-                if (cx->resolveFlags == RESOLVE_INFER) {
-                    pc += js_CodeSpec[op].length;
-                    if (Detecting(cx, pc))
-                        return JS_TRUE;
-                } else if (cx->resolveFlags & JSRESOLVE_DETECTING) {
-                    return JS_TRUE;
-                }
-
-                flags = JSREPORT_WARNING | JSREPORT_STRICT;
-                cx->stack.currentScript()->warnedAboutUndefinedProp = true;
+                /* Undefined property during a name lookup, report an error. */
+                JSAutoByteString printable;
+                if (js_ValueToPrintable(cx, IdToValue(id), &printable))
+                    js_ReportIsNotDefined(cx, printable.ptr());
+                return false;
             }
+
+            if (!cx->hasStrictOption() ||
+                cx->stack.currentScript()->warnedAboutUndefinedProp ||
+                (op != JSOP_GETPROP && op != JSOP_GETELEM)) {
+                return JS_TRUE;
+            }
+
+            /*
+             * XXX do not warn about missing __iterator__ as the function
+             * may be called from JS_GetMethodById. See bug 355145.
+             */
+            if (JSID_IS_ATOM(id, cx->runtime->atomState.iteratorAtom))
+                return JS_TRUE;
+
+            /* Do not warn about tests like (obj[prop] == undefined). */
+            if (cx->resolveFlags == RESOLVE_INFER) {
+                pc += js_CodeSpec[op].length;
+                if (Detecting(cx, pc))
+                    return JS_TRUE;
+            } else if (cx->resolveFlags & JSRESOLVE_DETECTING) {
+                return JS_TRUE;
+            }
+
+            uintN flags = JSREPORT_WARNING | JSREPORT_STRICT;
+            cx->stack.currentScript()->warnedAboutUndefinedProp = true;
 
             /* Ok, bad undefined property reference: whine about it. */
             if (!js_ReportValueErrorFlags(cx, flags, JSMSG_UNDEFINED_PROP,
                                           JSDVG_IGNORE_STACK, IdToValue(id),
-                                          NULL, NULL, NULL)) {
-                return JS_FALSE;
+                                          NULL, NULL, NULL))
+            {
+                return false;
             }
         }
         return JS_TRUE;

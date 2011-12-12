@@ -246,7 +246,6 @@ static void* SenderEntry(void* arg) {
 Sampler::Sampler(int interval, bool profiling)
     : interval_(interval),
       profiling_(profiling),
-      synchronous_(profiling),
       active_(false) {
   data_ = new PlatformData(this);
 }

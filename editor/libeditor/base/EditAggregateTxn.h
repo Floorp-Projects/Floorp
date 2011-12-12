@@ -64,19 +64,6 @@ public:
   /** append a transaction to this aggregate */
   NS_IMETHOD AppendChild(EditTxn *aTxn);
 
-  /** get the number of nested txns.  
-    * This is the number of top-level txns, it does not do recursive decent.
-    */
-  NS_IMETHOD GetCount(PRUint32 *aCount);
-
-  /** get the txn at index aIndex.
-    * returns NS_ERROR_UNEXPECTED if there is no txn at aIndex.
-    */
-  NS_IMETHOD GetTxnAt(PRInt32 aIndex, EditTxn **aTxn);
-
-  /** set the name assigned to this txn */
-  NS_IMETHOD SetName(nsIAtom *aName);
-
   /** get the name assigned to this txn */
   NS_IMETHOD GetName(nsIAtom **aName);
 
