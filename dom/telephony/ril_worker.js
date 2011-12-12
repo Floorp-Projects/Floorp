@@ -961,12 +961,16 @@ RIL[UNSOLICITED_STK_CALL_SETUP] = null;
 RIL[UNSOLICITED_SIM_SMS_STORAGE_FULL] = null;
 RIL[UNSOLICITED_SIM_REFRESH] = null;
 RIL[UNSOLICITED_CALL_RING] = function UNSOLICITED_CALL_RING() {
-  let info = {
-    isPresent:  Buf.readUint32(),
-    signalType: Buf.readUint32(),
-    alertPitch: Buf.readUint32(),
-    signal:     Buf.readUint32()
-  };
+  let info;
+  let isCDMA = false; //XXX TODO hard-code this for now
+  if (isCDMA) {
+    info = {
+      isPresent:  Buf.readUint32(),
+      signalType: Buf.readUint32(),
+      alertPitch: Buf.readUint32(),
+      signal:     Buf.readUint32()
+    };
+  }
   Phone.onCallRing(info);
 };
 RIL[UNSOLICITED_RESPONSE_SIM_STATUS_CHANGED] = null;
@@ -1140,7 +1144,7 @@ let Phone = {
                              callIndex:  callIndex,
                              number:     currentCall.number,
                              name:       currentCall.name});
-        delete this.currentCalls[currentCall];
+        delete this.currentCalls[callIndex];
         continue;
       }
 
@@ -1179,8 +1183,8 @@ let Phone = {
   },
 
   onCallRing: function onCallRing(info) {
-    debug("onCallRing " + JSON.stringify(info)); //DEBUG
-    RIL.getCurrentCalls();
+    // For now we don't need to do anything here because we'll also get a
+    // call state changed notification.
   },
 
   onNetworkStateChanged: function onNetworkStateChanged() {
