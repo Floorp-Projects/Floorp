@@ -165,7 +165,7 @@ public class CrashReporter extends Activity
             public void run() {
                 sendReport(mPendingMinidumpFile, mExtrasStringMap, mPendingExtrasFile);
             }
-            }, "CrashReporter Thread").start();
+        }).start();
     }
 
     public void onCloseClick(View v) {  // bound via crash_reporter.xml
