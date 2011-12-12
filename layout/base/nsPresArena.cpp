@@ -386,20 +386,27 @@ struct nsPresArena::State {
 
     list->mEntries.AppendElement(aPtr);
   }
+
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+  {
+    size_t n = aMallocSizeOf(this, sizeof(*this));
+
+    // The first PLArena is within the PLArenaPool, i.e. within |this|, so we
+    // don't measure it.  Subsequent PLArenas are by themselves and must be
+    // measured.
+    const PLArena *arena = mPool.first.next;
+    while (arena) {
+      n += aMallocSizeOf(arena, arena->limit - arena->base);
+      arena = arena->next;
+    }
+    return n;
+  }
 };
 
-PRUint32
-nsPresArena::Size()
+size_t
+nsPresArena::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
-  PLArena *arena = &mState->mPool.first;
-  PRUint32 result = 0;
-
-  while (arena) {
-    result += arena->limit - arena->base;
-    arena = arena->next;
-  }
-
-  return result;
+  return mState ? mState->SizeOfIncludingThis(aMallocSizeOf) : 0;
 }
 
 #else
@@ -426,8 +433,8 @@ struct nsPresArena::State
   }
 };
 
-PRUint32
-nsPresArena::Size()
+size_t
+nsPresArena::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
   return 0;
 }

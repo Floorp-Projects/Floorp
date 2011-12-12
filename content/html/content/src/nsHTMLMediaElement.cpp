@@ -1976,8 +1976,8 @@ nsresult nsHTMLMediaElement::FinishDecoderSetup(nsMediaDecoder* aDecoder)
 
   nsCAutoString src;
   GetCurrentSpec(src);
-  printf("*** nsHTMLElement::FinishDecoderSetup() mDecoder=%p src=%s\n",
-         aDecoder, src.get());
+  printf("*** nsHTMLElement::FinishDecoderSetup() mDecoder=%p stream=%p src=%s\n",
+         aDecoder, aDecoder->GetStream(), src.get());
   mDecoder = aDecoder;
   AddMediaElementToURITable();
 

@@ -52,19 +52,14 @@ ifneq (,$(filter windows cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += ../shell/src/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX)
 endif
 
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,unicharutil_external_s,$(LIBXUL_DIST)/lib)
-
-# migration requires mozreg
-LOCAL_INCLUDES += -I$(srcdir)/../migration/src
-SHARED_LIBRARY_LIBS += ../migration/src/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX)
-EXTRA_DSO_LDOPTS += $(LIBXUL_DIST)/lib/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX)
-
-# This has to come after the above chunk, because mozreg_s has dependencies on
-# stuff in MOZ_COMPONENT_LIBS.
 EXTRA_DSO_LDOPTS += \
+	$(call EXPAND_LIBNAME_PATH,unicharutil_external_s,$(LIBXUL_DIST)/lib) \
 	$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
+
+LOCAL_INCLUDES += -I$(srcdir)/../migration/src
+SHARED_LIBRARY_LIBS += ../migration/src/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX)
 
 # Mac: Need to link with CoreFoundation for Mac Migrators (PList reading code)
 # GTK2: Need to link with glib for GNOME shell service

@@ -45,6 +45,7 @@
 
 #include <vector>
 #include <sstream>
+#include <hash_set>
 
 namespace mozilla {
 namespace gfx {
@@ -148,12 +149,21 @@ private:
   friend class AutoSaveRestoreClippedOut;
   friend class SourceSurfaceD2DTarget;
 
+  typedef stdext::hash_set<DrawTargetD2D*> TargetSet;
+
   bool InitD2DRenderTarget();
   void PrepareForDrawing(ID2D1RenderTarget *aRT);
 
   // This function will mark the surface as changing, and make sure any
   // copy-on-write snapshots are notified.
   void MarkChanged();
+  void FlushTransformToRT() {
+    if (mTransformDirty) {
+      mRT->SetTransform(D2DMatrix(mTransform));
+      mTransformDirty = false;
+    }
+  }
+  void AddDependencyOnSource(SourceSurfaceD2DTarget* aSource);
 
   ID3D10BlendState *GetBlendStateForOperator(CompositionOp aOperator);
   ID2D1RenderTarget *GetRTForOperation(CompositionOp aOperator, const Pattern &aPattern);
@@ -194,13 +204,13 @@ private:
   };
   std::vector<PushedClip> mPushedClips;
   
-  // List of Snapshots of this surface, these need to be told when this
-  // surface is modified. Possibly vector is not the best choice here.
-  std::vector<SourceSurfaceD2DTarget*> mSnapshots;
+  // The latest snapshot of this surface. This needs to be told when this
+  // target is modified. We keep it alive as a cache.
+  RefPtr<SourceSurfaceD2DTarget> mSnapshot;
   // A list of targets we need to flush when we're modified.
-  std::vector<DrawTargetD2D*> mDependentTargets;
-  // A list of targets which have this object in their mDependentTargets array
-  std::vector<DrawTargetD2D*> mDependingOnTargets;
+  TargetSet mDependentTargets;
+  // A list of targets which have this object in their mDependentTargets set
+  TargetSet mDependingOnTargets;
 
   // True of the current clip stack is pushed to the main RT.
   bool mClipsArePushed;
