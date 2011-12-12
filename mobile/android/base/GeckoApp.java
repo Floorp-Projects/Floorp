@@ -1252,6 +1252,7 @@ abstract public class GeckoApp
     public void onCreate(Bundle savedInstanceState)
     {
         System.loadLibrary("mozutils");
+        mMainHandler = new Handler();
         Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - onCreate");
         if (savedInstanceState != null) {
             mLastUri = savedInstanceState.getString(SAVED_STATE_URI);
@@ -1259,6 +1260,18 @@ abstract public class GeckoApp
             mLastViewport = savedInstanceState.getString(SAVED_STATE_VIEWPORT);
             mLastScreen = savedInstanceState.getByteArray(SAVED_STATE_SCREEN);
         }
+        String uri = getIntent().getDataString();
+        String title = uri;
+        if (uri != null && uri.length() > 0) {
+            mLastUri = uri;
+            mLastTitle = title;
+        }
+
+        if (mLastUri == null || mLastUri.equals("") ||
+            mLastUri.equals("about:home")) {
+            showAboutHome();
+        }
+
         if (Build.VERSION.SDK_INT >= 9) {
             StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
                                        .detectDiskReads().detectDiskWrites().detectNetwork()
@@ -1341,8 +1354,6 @@ abstract public class GeckoApp
 
         if (sGREDir == null)
             sGREDir = new File(this.getApplicationInfo().dataDir);
-
-        mMainHandler = new Handler();
 
         if (!sTryCatchAttached) {
             sTryCatchAttached = true;
