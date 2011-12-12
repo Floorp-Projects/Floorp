@@ -1009,7 +1009,7 @@ public class GeckoInputConnection
         } catch (InterruptedException e) {}
     }
 
-    static private final Timer mIMETimer = new Timer();
+    static private final Timer mIMETimer = new Timer("GeckoInputConnection Timer");
 
     static private final int NOTIFY_IME_RESETINPUTSTATE = 0;
     static private final int NOTIFY_IME_SETOPENSTATE = 1;
