@@ -4643,37 +4643,30 @@ Parser::orExpr1()
 JS_ALWAYS_INLINE ParseNode *
 Parser::condExpr1()
 {
-    ParseNode *pn = orExpr1();
-    if (pn && tokenStream.isCurrentTokenType(TOK_HOOK)) {
-        ParseNode *pn1 = pn;
-        pn = TernaryNode::create(PNK_HOOK, tc);
-        if (!pn)
-            return NULL;
+    ParseNode *condition = orExpr1();
+    if (!condition || !tokenStream.isCurrentTokenType(TOK_HOOK))
+        return condition;
 
-        /*
-         * Always accept the 'in' operator in the middle clause of a ternary,
-         * where it's unambiguous, even if we might be parsing the init of a
-         * for statement.
-         */
-        uintN oldflags = tc->flags;
-        tc->flags &= ~TCF_IN_FOR_INIT;
-        ParseNode *pn2 = assignExpr();
-        tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
+    /*
+     * Always accept the 'in' operator in the middle clause of a ternary,
+     * where it's unambiguous, even if we might be parsing the init of a
+     * for statement.
+     */
+    uintN oldflags = tc->flags;
+    tc->flags &= ~TCF_IN_FOR_INIT;
+    ParseNode *thenExpr = assignExpr();
+    tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
+    if (!thenExpr)
+        return NULL;
 
-        if (!pn2)
-            return NULL;
-        MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_IN_COND);
-        ParseNode *pn3 = assignExpr();
-        if (!pn3)
-            return NULL;
-        pn->pn_pos.begin = pn1->pn_pos.begin;
-        pn->pn_pos.end = pn3->pn_pos.end;
-        pn->pn_kid1 = pn1;
-        pn->pn_kid2 = pn2;
-        pn->pn_kid3 = pn3;
-        tokenStream.getToken();     /* need to read one token past the end */
-    }
-    return pn;
+    MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_IN_COND);
+
+    ParseNode *elseExpr = assignExpr();
+    if (!elseExpr)
+        return NULL;
+
+    tokenStream.getToken(); /* read one token past the end */
+    return new_<ConditionalExpression>(condition, thenExpr, elseExpr);
 }
 
 bool
