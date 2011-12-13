@@ -766,7 +766,7 @@ bool
 CodeGeneratorX86Shared::visitNewArray(LNewArray *ins)
 {
     static const VMFunction NewInitArrayInfo =
-        FunctionInfo<JSObject *, uint32, types::TypeObject *, NewInitArray>();
+        FunctionInfo3<JSObject *, uint32, types::TypeObject *, NewInitArray>();
 
     // ReturnReg is used for the returned value, so we don't care using it
     // because it would be erased by the function call.
@@ -804,25 +804,54 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
     if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
         return false;
 
-    // Guard that objreg is a non-native function:
-    // Non-native iff (obj->flags & JSFUN_KINDMASK >= JSFUN_INTERPRETED).
-    masm.movl(Operand(objreg, offsetof(JSFunction, flags)), tokreg);
-    masm.andl(Imm32(JSFUN_KINDMASK), tokreg);
-    masm.cmpl(tokreg, Imm32(JSFUN_INTERPRETED));
-    if (!bailoutIf(Assembler::Below, call->snapshot()))
-        return false;
-
     // Save the calleeToken, which equals the function object.
     masm.mov(objreg, tokreg);
+
+    Label end, invoke;
+
+    // Guard that objreg is a non-native function:
+    // Non-native iff (obj->flags & JSFUN_KINDMASK >= JSFUN_INTERPRETED).
+    masm.movl(Operand(objreg, offsetof(JSFunction, flags)), nargsreg);
+    masm.andl(Imm32(JSFUN_KINDMASK), nargsreg);
+    masm.cmpl(nargsreg, Imm32(JSFUN_INTERPRETED));
+    // Forward conditional (unlikely) branch to handle native code.
+    masm.branch32(Assembler::Below, nargsreg, Imm32(JSFUN_INTERPRETED), &invoke);
 
     // Knowing that objreg is a non-native function, load the JSScript.
     masm.movePtr(Operand(objreg, offsetof(JSFunction, u.i.script_)), objreg);
     masm.movePtr(Operand(objreg, offsetof(JSScript, ion)), objreg);
 
-    // Bail if the callee is uncompiled.
-    masm.cmpPtr(objreg, ImmWord(ION_DISABLED_SCRIPT));
-    if (!bailoutIf(Assembler::BelowOrEqual, call->snapshot()))
-        return false;
+    // If the callee is uncompiled, invoke it in the interpreter.
+    Label compiled;
+    // Forward conditional (unlikely) branch to handle uncompiled code.
+    masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_DISABLED_SCRIPT), &invoke);
+    // Forward unconditional (likely) branch to handle compiled code.
+    masm.jmp(&compiled);
+    {
+        masm.bind(&invoke);
+
+        static const VMFunction InvokeFunctionInfo = 
+            FunctionInfo5<bool, JSFunction *, uint32, Value *, Value *, InvokeFunction>();
+
+        // Nestle %esp up to the argument vector.
+        if (unused_stack)
+            masm.addPtr(Imm32(unused_stack), StackPointer);
+
+        pushArg(StackPointer);          // argv.
+        pushArg(Imm32(call->nargs()));  // argc.
+        pushArg(tokreg);                // JSFunction *.
+
+        if (!callVM(InvokeFunctionInfo, call))
+            return false;
+
+        // Un-nestle %esp from the argument vector. No prefix was pushed.
+        if (unused_stack)
+            masm.subPtr(Imm32(unused_stack), StackPointer);
+
+        // Done with the call. Jump to the end.
+        masm.jump(&end);
+    }
+    masm.bind(&compiled);
 
     // Remember the size of the frame above this point, in case of bailout.
     uint32 stack_size = masm.framePushed() - unused_stack;
@@ -877,6 +906,8 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
         masm.addPtr(Imm32(restore_diff), StackPointer);
     else if (restore_diff < 0)
         masm.subPtr(Imm32(-restore_diff), StackPointer);
+
+    masm.bind(&end);
 
     return true;
 }

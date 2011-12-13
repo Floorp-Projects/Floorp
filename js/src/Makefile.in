@@ -322,30 +322,31 @@ VPATH +=	$(srcdir)/ion
 VPATH +=	$(srcdir)/ion/shared
 
 CPPSRCS +=	MIR.cpp \
-		IonBuilder.cpp \
-		MIRGraph.cpp \
-		IonAnalysis.cpp \
-		Lowering.cpp \
-		Ion.cpp \
+		Bailouts.cpp \
 		BitSet.cpp \
-		LIR.cpp \
-		GreedyAllocator.cpp \
 		C1Spewer.cpp \
-		JSONSpewer.cpp \
-		IonSpewer.cpp \
-		LICM.cpp \
-		ValueNumbering.cpp \
-		LinearScan.cpp \
-		MoveResolver.cpp \
+		CodeGenerator.cpp \
 		CodeGenerator-shared.cpp \
+		GreedyAllocator.cpp \
+		Ion.cpp \
+		IonAnalysis.cpp \
+		IonBuilder.cpp \
+		IonFrames.cpp \
+		IonMacroAssembler.cpp \
+		IonSpewer.cpp \
+		JSONSpewer.cpp \
+		LICM.cpp \
+		LinearScan.cpp \
+		LIR.cpp \
+		Lowering.cpp \
 		Lowering-shared.cpp \
+		MIRGraph.cpp \
+		MoveResolver.cpp \
+		Snapshots.cpp \
 		TypeOracle.cpp \
 		TypePolicy.cpp \
-		CodeGenerator.cpp \
-		IonMacroAssembler.cpp \
-		Snapshots.cpp \
-		Bailouts.cpp \
-		IonFrames.cpp \
+		ValueNumbering.cpp \
+		VMFunctions.cpp \
 		$(NULL)
 endif #ENABLE_ION
 ifeq (86, $(findstring 86,$(TARGET_CPU)))

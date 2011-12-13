@@ -45,7 +45,7 @@
 #include "ion/IonLinker.h"
 #include "ion/IonFrames.h"
 #include "ion/Bailouts.h"
-#include "ion/IonVMFunctions.h"
+#include "ion/VMFunctions.h"
 
 using namespace js;
 using namespace js::ion;

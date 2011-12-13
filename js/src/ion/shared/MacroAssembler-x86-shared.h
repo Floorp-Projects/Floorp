@@ -102,6 +102,10 @@ class MacroAssemblerX86Shared : public Assembler
         }
     }
 
+    void branch32(Condition cond, const Register &lhs, Imm32 imm, Label *label) {
+        cmpl(lhs, imm);
+        j(cond, label);
+    }
     void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
         testl(Operand(address.base, address.offset), imm);
         j(cond, label);

@@ -57,7 +57,7 @@
 #include "shared/Assembler-shared.h"
 #include "Snapshots.h"
 #include "Bailouts.h"
-#include "IonVMFunctions.h"
+#include "VMFunctions.h"
 
 #if defined(JS_CPU_X86)
 # include "x86/StackAssignment-x86.h"
