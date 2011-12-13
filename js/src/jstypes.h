@@ -54,9 +54,8 @@
 #ifndef jstypes_h___
 #define jstypes_h___
 
-#include "mozilla/StdInt.h"
+#include "mozilla/Util.h"
 
-#include <stddef.h>
 #include "js-config.h"
 
 /***********************************************************************
@@ -80,50 +79,11 @@
 **
 ***********************************************************************/
 
-#if defined(WIN32) || defined(XP_OS2)
-
-/* These also work for __MWERKS__ */
-# define JS_EXTERN_API(__type)  extern __declspec(dllexport) __type
-# define JS_EXPORT_API(__type)  __declspec(dllexport) __type
-# define JS_EXTERN_DATA(__type) extern __declspec(dllexport) __type
-# define JS_EXPORT_DATA(__type) __declspec(dllexport) __type
-
-#else /* Unix */
-
-# ifdef HAVE_VISIBILITY_ATTRIBUTE
-#  define JS_EXTERNAL_VIS __attribute__((visibility ("default")))
-# elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#  define JS_EXTERNAL_VIS __global
-# else
-#  define JS_EXTERNAL_VIS
-# endif
-
-# define JS_EXTERN_API(__type)  extern JS_EXTERNAL_VIS __type
-# define JS_EXPORT_API(__type)  JS_EXTERNAL_VIS __type
-# define JS_EXTERN_DATA(__type) extern JS_EXTERNAL_VIS __type
-# define JS_EXPORT_DATA(__type) JS_EXTERNAL_VIS __type
-
-#endif
-
-#ifdef _WIN32
-# if defined(__MWERKS__) || defined(__GNUC__)
-#  define JS_IMPORT_API(__x)    __x
-# else
-#  define JS_IMPORT_API(__x)    __declspec(dllimport) __x
-# endif
-#elif defined(XP_OS2)
-# define JS_IMPORT_API(__x)     __declspec(dllimport) __x
-#else
-# define JS_IMPORT_API(__x)     JS_EXPORT_API (__x)
-#endif
-
-#if defined(_WIN32) && !defined(__MWERKS__)
-# define JS_IMPORT_DATA(__x)      __declspec(dllimport) __x
-#elif defined(XP_OS2)
-# define JS_IMPORT_DATA(__x)      __declspec(dllimport) __x
-#else
-# define JS_IMPORT_DATA(__x)     JS_EXPORT_DATA (__x)
-#endif
+#define JS_EXTERN_API(type)  extern MOZ_EXPORT_API(type)
+#define JS_EXPORT_API(type)  MOZ_EXPORT_API(type)
+#define JS_EXPORT_DATA(type) MOZ_EXPORT_DATA(type)
+#define JS_IMPORT_API(type)  MOZ_IMPORT_API(type)
+#define JS_IMPORT_DATA(type) MOZ_IMPORT_DATA(type)
 
 /*
  * The linkage of JS API functions differs depending on whether the file is
@@ -132,20 +92,14 @@
  * should not. STATIC_JS_API is used to build JS as a static library.
  */
 #if defined(STATIC_JS_API)
-
-# define JS_PUBLIC_API(t)   t
-# define JS_PUBLIC_DATA(t)  t
-
+#  define JS_PUBLIC_API(t)   t
+#  define JS_PUBLIC_DATA(t)  t
 #elif defined(EXPORT_JS_API) || defined(STATIC_EXPORTABLE_JS_API)
-
-# define JS_PUBLIC_API(t)   JS_EXPORT_API(t)
-# define JS_PUBLIC_DATA(t)  JS_EXPORT_DATA(t)
-
+#  define JS_PUBLIC_API(t)   MOZ_EXPORT_API(t)
+#  define JS_PUBLIC_DATA(t)  MOZ_EXPORT_DATA(t)
 #else
-
-# define JS_PUBLIC_API(t)   JS_IMPORT_API(t)
-# define JS_PUBLIC_DATA(t)  JS_IMPORT_DATA(t)
-
+#  define JS_PUBLIC_API(t)   MOZ_IMPORT_API(t)
+#  define JS_PUBLIC_DATA(t)  MOZ_IMPORT_DATA(t)
 #endif
 
 #define JS_FRIEND_API(t)    JS_PUBLIC_API(t)
@@ -245,17 +199,8 @@
 ** DESCRIPTION:
 **      Macro shorthands for conditional C++ extern block delimiters.
 ***********************************************************************/
-#ifdef __cplusplus
-
-# define JS_BEGIN_EXTERN_C      extern "C" {
-# define JS_END_EXTERN_C        }
-
-#else
-
-# define JS_BEGIN_EXTERN_C
-# define JS_END_EXTERN_C
-
-#endif
+#define JS_BEGIN_EXTERN_C      MOZ_BEGIN_EXTERN_C
+#define JS_END_EXTERN_C        MOZ_END_EXTERN_C
 
 /***********************************************************************
 ** MACROS:      JS_BIT
