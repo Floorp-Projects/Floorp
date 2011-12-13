@@ -1261,8 +1261,10 @@ abstract public class GeckoApp
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
-        // Uncomment to run StrictMode tests:
-        // enableStrictMode();
+        // StrictMode is set by defaults resource flag |enableStrictMode|.
+        if (getResources().getBoolean(R.bool.enableStrictMode)) {
+            enableStrictMode();
+        }
 
         System.loadLibrary("mozutils");
         mMainHandler = new Handler();
