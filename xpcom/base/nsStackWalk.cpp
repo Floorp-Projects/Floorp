@@ -306,8 +306,6 @@ extern  SYMGETLINEFROMADDRPROC64 _SymGetLineFromAddr64;
 
 extern HANDLE hStackWalkMutex; 
 
-HANDLE GetCurrentPIDorHandle();
-
 bool EnsureSymInitialized();
 
 bool EnsureImageHlpInitialized();
@@ -1072,15 +1070,6 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr, PIMAGEHLP_MODULE
 }
 #endif
 
-HANDLE
-GetCurrentPIDorHandle()
-{
-    if (_SymGetModuleBase64)
-        return GetCurrentProcess();  // winxp and friends use process handle
-
-    return (HANDLE) GetCurrentProcessId(); // winme win98 win95 etc use process identifier
-}
-
 bool
 EnsureSymInitialized()
 {
@@ -1096,7 +1085,7 @@ EnsureSymInitialized()
         return false;
 
     _SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
-    retStat = _SymInitialize(GetCurrentPIDorHandle(), NULL, TRUE);
+    retStat = _SymInitialize(GetCurrentProcess(), NULL, TRUE);
     if (!retStat)
         PrintError("SymInitialize");
 
