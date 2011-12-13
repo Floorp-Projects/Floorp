@@ -100,10 +100,12 @@ TestSuite.prototype.loadTest = function(test) {
     log.log('TEST-END', test.name + ' ' + runTime + fThreshold);
   } catch (e) {
     log.error(test.name + ' | ' + e);
-    log.debug(test.name + ' | Traceback:');
-    lines = e.stack.split('\n');
-    for (let i = 0; i < lines.length - 1; ++i) {
-      log.debug('\t' + lines[i]);
+    if (e['stack'] !== undefined) {
+      log.debug(test.name + ' | Traceback:');
+      lines = e.stack.split('\n');
+      for (let i = 0; i < lines.length - 1; ++i) {
+        log.debug('\t' + lines[i]);
+      }
     }
   }
 };
