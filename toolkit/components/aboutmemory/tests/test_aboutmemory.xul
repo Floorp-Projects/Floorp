@@ -36,8 +36,10 @@
   while (e.hasMoreElements()) {
     var r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
     // Call collectReports, even though we don't use its results, just to
-    // test that the multi-reporter doesn't crash or anything.
+    // test that the multi-reporter doesn't crash or anything.  And likewise
+    // for the |explicitNonHeap| field.
     r.collectReports(function(){}, null);
+    dummy += r.explicitNonHeap;
     mgr.unregisterMultiReporter(r);
     realMultiReporters.push(r);
   }
@@ -78,8 +80,6 @@
     f("", "explicit/b/b",       HEAP,     75 * MB),
     f("", "explicit/b/c/a",     HEAP,     70 * MB),
     f("", "explicit/b/c/b",     HEAP,      2 * MB), // omitted
-    f("", "explicit/c",         NONHEAP, 100 * MB),
-    f("", "explicit/c/d",       NONHEAP,  13 * MB), // subsumed by parent
     f("", "explicit/g",         HEAP,      1 * MB), // internal, dup: merge
     f("", "explicit/g/a",       HEAP,      6 * MB),
     f("", "explicit/g/b",       HEAP,      5 * MB),
@@ -89,13 +89,16 @@
   var fakeMultiReporters = [
      { collectReports: function(cbObj, closure) {
           function f(p, k, u, a) { cbObj.callback("", p, k, u, a, "(desc)", closure); }
+          f("explicit/c",       NONHEAP, BYTES, 100 * MB),
+          f("explicit/c/d",     NONHEAP, BYTES,  13 * MB), // subsumed by parent
           f("explicit/c/d",     NONHEAP, BYTES,  10 * MB), // dup, subsumed by parent
           f("explicit/cc",      NONHEAP, BYTES,  13 * MB);
           f("explicit/cc",      NONHEAP, BYTES,  10 * MB); // dup
           f("explicit/d",       NONHEAP, BYTES, 499 * KB); // omitted
           f("explicit/e",       NONHEAP, BYTES, 100 * KB); // omitted
           f("explicit/f/g/h/i", HEAP,    BYTES,  20 * MB);
-       }
+       },
+       explicitNonHeap: (100 + 13 + 10)*MB + (499 + 100)*KB
      },
      { collectReports: function(cbObj, closure) {
           function f(p, k, u, a) { cbObj.callback("", p, k, u, a, "(desc)", closure); }
@@ -104,7 +107,8 @@
           f("other2",           OTHER,   BYTES, 222 * MB);
           f("perc2",            OTHER,   PERCENTAGE, 10000);
           f("perc1",            OTHER,   PERCENTAGE, 4567);
-       }
+       },
+       explicitNonHeap: 0
      },
      { collectReports: function(cbObj, closure) {
           // The amounts are given in pages, so multiply here by 4kb.
@@ -115,7 +119,8 @@
           f("map/vsize/a",      19);
           f("map/swap/b/c",     10);
           f("map/resident/a",   42);
-       }
+       },
+       explicitNonHeap: 0
      }
   ];
   for (var i = 0; i < fakeReporters.length; i++) {
