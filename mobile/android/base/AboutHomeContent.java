@@ -37,34 +37,39 @@
 
 package org.mozilla.gecko;
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.widget.*;
-import android.database.*;
-import android.view.*;
-import android.graphics.*;
-import android.content.*;
-import android.provider.Browser;
-import android.util.Log;
-import java.util.Date;
-import android.content.Intent;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.Bundle;
-import android.provider.Browser;
-import android.util.Log;
-import android.view.View;
-import android.widget.ListAdapter;
-import android.widget.GridView;
-import android.widget.SimpleCursorAdapter;
-import java.io.*;
-import java.util.zip.*;
-import android.os.Handler;
-import org.json.*;
-import android.util.AttributeSet;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+
+import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.AttributeSet;
+import android.util.Log;
+import android.view.Display;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 
 public class AboutHomeContent extends LinearLayout {
     public interface UriLoadCallback {
