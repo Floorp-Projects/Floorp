@@ -2788,7 +2788,8 @@ EmitNameOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool callContex
     if (op == JSOP_ARGUMENTS || op == JSOP_CALLEE) {
         if (Emit1(cx, bce, op) < 0)
             return JS_FALSE;
-        if (callContext && Emit1(cx, bce, JSOP_PUSH) < 0)
+        /* Need to provide |this| value for call */
+        if (callContext && Emit1(cx, bce, JSOP_UNDEFINED) < 0)
             return JS_FALSE;
     } else {
         if (!pn->pn_cookie.isFree()) {
@@ -6075,7 +6076,8 @@ EmitReturn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (!EmitTree(cx, bce, pn2))
             return false;
     } else {
-        if (Emit1(cx, bce, JSOP_PUSH) < 0)
+        /* No explicit return value provided */
+        if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
             return false;
     }
 
@@ -6355,9 +6357,9 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
      * in jsinterp.cpp for JSOP_LAMBDA followed by JSOP_{SET,INIT}PROP.
      *
      * Then (or in a call case that has no explicit reference-base
-     * object) we emit JSOP_PUSH to produce the |this| slot required
-     * for calls (which non-strict mode functions will box into the
-     * global object).
+     * object) we emit JSOP_UNDEFINED to produce the undefined |this| 
+     * value required for calls (which non-strict mode functions 
+     * will box into the global object).
      */
     ParseNode *pn2 = pn->pn_head;
     switch (pn2->getKind()) {
@@ -6379,16 +6381,16 @@ EmitCallOrNew(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
         JS_ASSERT(pn2->isOp(JSOP_XMLNAME));
         if (!EmitXMLName(cx, pn2, JSOP_CALLXMLNAME, bce))
             return false;
-        callop = true;          /* suppress JSOP_PUSH after */
+        callop = true;          /* suppress JSOP_UNDEFINED after */
         break;
 #endif
       default:
         if (!EmitTree(cx, bce, pn2))
             return false;
-        callop = false;             /* trigger JSOP_PUSH after */
+        callop = false;             /* trigger JSOP_UNDEFINED after */
         break;
     }
-    if (!callop && Emit1(cx, bce, JSOP_PUSH) < 0)
+    if (!callop && Emit1(cx, bce, JSOP_UNDEFINED) < 0)
         return false;
 
     /* Remember start of callable-object bytecode for decompilation hint. */
@@ -7027,7 +7029,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (!EmitTree(cx, bce, pn->pn_kid))
                 return JS_FALSE;
         } else {
-            if (Emit1(cx, bce, JSOP_PUSH) < 0)
+            if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
                 return JS_FALSE;
         }
         if (pn->pn_hidden && NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
