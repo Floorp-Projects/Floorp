@@ -129,6 +129,9 @@ public class BrowserProvider extends ContentProvider {
         map.put(Bookmarks.IS_FOLDER, Bookmarks.IS_FOLDER);
         map.put(Bookmarks.PARENT, Bookmarks.PARENT);
         map.put(Bookmarks.POSITION, Bookmarks.POSITION);
+        map.put(Bookmarks.TAGS, Bookmarks.TAGS);
+        map.put(Bookmarks.DESCRIPTION, Bookmarks.DESCRIPTION);
+        map.put(Bookmarks.KEYWORD, Bookmarks.KEYWORD);
         map.put(Bookmarks.DATE_CREATED, qualifyColumn(TABLE_BOOKMARKS, Bookmarks.DATE_CREATED));
         map.put(Bookmarks.DATE_MODIFIED, qualifyColumn(TABLE_BOOKMARKS, Bookmarks.DATE_MODIFIED));
         map.put(Bookmarks.GUID, qualifyColumn(TABLE_BOOKMARKS, Bookmarks.GUID));
@@ -225,6 +228,9 @@ public class BrowserProvider extends ContentProvider {
                     Bookmarks.IS_FOLDER + " INTEGER NOT NULL DEFAULT 0," +
                     Bookmarks.PARENT + " INTEGER," +
                     Bookmarks.POSITION + " INTEGER NOT NULL," +
+                    Bookmarks.KEYWORD + " TEXT," +
+                    Bookmarks.DESCRIPTION + " TEXT," +
+                    Bookmarks.TAGS + " TEXT," +
                     Bookmarks.DATE_CREATED + " INTEGER," +
                     Bookmarks.DATE_MODIFIED + " INTEGER," +
                     Bookmarks.GUID + " TEXT" +
