@@ -205,11 +205,12 @@ RES_LAYOUT_V11 = \
   $(NULL)
 
 RES_VALUES = \
+  res/values/defaults.xml \
   res/values/colors.xml \
   res/values/styles.xml \
   res/values/themes.xml \
   $(NULL)
- 
+
 RES_VALUES_V11 = \
   res/values-v11/styles.xml \
   res/values-v11/themes.xml \
@@ -431,10 +432,14 @@ $(RES_LAYOUT_V11): $(subst res/,$(srcdir)/resources/,$(RES_LAYOUT_V11))
 	$(NSINSTALL) -D res/layout-v11
 	$(NSINSTALL) $(srcdir)/resources/layout-v11/* res/layout-v11/
 
-$(RES_VALUES): $(subst res/,$(srcdir)/resources/,$(RES_VALUES))
+$(RES_VALUES): \
+		$(srcdir)/resources/values/colors.xml \
+		$(srcdir)/resources/values/styles.xml \
+		$(srcdir)/resources/values/themes.xml \
+		$(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/res/values/defaults.xml
 	$(NSINSTALL) -D res/values
 	$(NSINSTALL) $^  res/values
- 
+
 $(RES_VALUES_V11): $(subst res/,$(srcdir)/resources/,$(RES_VALUES_V11))
 	$(NSINSTALL) -D res/values-v11
 	$(NSINSTALL) $(srcdir)/resources/values-v11/*  res/values-v11
