@@ -39,7 +39,7 @@ package org.mozilla.gecko.db;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.UUID;
+import java.util.Random;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
@@ -63,6 +63,7 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 
 public class BrowserProvider extends ContentProvider {
@@ -190,6 +191,20 @@ public class BrowserProvider extends ContentProvider {
 
     static final String qualifyColumnValue(String table, String column) {
         return table + "." + column;
+    }
+
+    public static String generateGuid() {
+        byte[] encodedBytes = Base64.encode(generateRandomBytes(9), Base64.URL_SAFE);
+        return new String(encodedBytes);
+    }
+
+    private static byte[] generateRandomBytes(int length) {
+        byte[] bytes = new byte[length];
+
+        Random random = new Random(System.nanoTime());
+        random.nextBytes(bytes);
+
+        return bytes;
     }
 
     // This is available in Android >= 11. Implemented locally to be
@@ -604,7 +619,7 @@ public class BrowserProvider extends ContentProvider {
 
                 // Generate GUID for new bookmark. Don't override specified GUIDs.
                 if (!values.containsKey(Bookmarks.GUID)) {
-                  values.put(Bookmarks.GUID, UUID.randomUUID().toString());
+                  values.put(Bookmarks.GUID, generateGuid());
                 }
 
                 if (!values.containsKey(Bookmarks.POSITION)) {
@@ -637,7 +652,7 @@ public class BrowserProvider extends ContentProvider {
 
                 // Generate GUID for new history entry. Don't override specified GUIDs.
                 if (!values.containsKey(History.GUID)) {
-                  values.put(History.GUID, UUID.randomUUID().toString());
+                  values.put(History.GUID, generateGuid());
                 }
 
                 String url = values.getAsString(History.URL);
@@ -664,7 +679,7 @@ public class BrowserProvider extends ContentProvider {
                 values.put(History.DATE_MODIFIED, now);
 
                 // Generate GUID for new history entry
-                values.put(History.GUID, UUID.randomUUID().toString());
+                values.put(History.GUID, generateGuid());
 
                 String url = values.getAsString(Images.URL);
 
@@ -1085,7 +1100,7 @@ public class BrowserProvider extends ContentProvider {
         if (updated == 0 && insertIfNeeded) {
             // Generate GUID for new image, if one is not already provided.
             if (!values.containsKey(Images.GUID)) {
-              values.put(Images.GUID, UUID.randomUUID().toString());
+              values.put(Images.GUID, generateGuid());
             }
 
             values.put(Images.DATE_CREATED, now);
