@@ -1010,7 +1010,7 @@ MarkWordConservatively(JSTracer *trc, jsuword w)
      * original word. See bug 572678.
      */
 #ifdef JS_VALGRIND
-    VALGRIND_MAKE_MEM_DEFINED(&w, sizeof(w));
+    JS_SILENCE_UNUSED_VALUE_IN_EXPR(VALGRIND_MAKE_MEM_DEFINED(&w, sizeof(w)));
 #endif
 
     MarkIfGCThingWord(trc, w);

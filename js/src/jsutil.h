@@ -440,4 +440,28 @@ typedef size_t jsbitmap;
 #define JS_CLEAR_BIT(_map,_bit) ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] &=     \
                                  ~((jsbitmap)1<<((_bit)&(JS_BITS_PER_WORD-1))))
 
+/* Wrapper for various macros to stop warnings coming from their expansions. */
+#if defined(__clang__)
+# define JS_SILENCE_UNUSED_VALUE_IN_EXPR(expr)                                \
+    JS_BEGIN_MACRO                                                            \
+        _Pragma("clang diagnostic push")                                      \
+        _Pragma("clang diagnostic ignored \"-Wunused-value\"")                \
+        expr;                                                                 \
+        _Pragma("clang diagnostic pop")                                       \
+    JS_END_MACRO
+#elif (__GNUC__ >= 5) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
+# define JS_SILENCE_UNUSED_VALUE_IN_EXPR(expr)                                \
+    JS_BEGIN_MACRO                                                            \
+        _Pragma("GCC diagnostic push")                                        \
+        _Pragma("GCC diagnostic ignored \"-Wunused-but-set-variable\"")       \
+        expr;                                                                 \
+        _Pragma("GCC diagnostic pop")                                         \
+    JS_END_MACRO
+#else
+# define JS_SILENCE_UNUSED_VALUE_IN_EXPR(expr)                                \
+    JS_BEGIN_MACRO                                                            \
+        expr;                                                                 \
+    JS_END_MACRO
+#endif
+
 #endif /* jsutil_h___ */
