@@ -264,6 +264,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         subq(imm, dest);
     }
 
+    void branchPtr(Condition cond, Register lhs, ImmWord ptr, Label *label) {
+        cmpPtr(lhs, ptr);
+        j(cond, label);
+    }
     void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label *label) {
         cmpPtr(lhs, ptr);
         j(cond, label);

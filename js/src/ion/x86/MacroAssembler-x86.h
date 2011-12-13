@@ -297,6 +297,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         subl(imm, dest);
     }
 
+    void branchPtr(Condition cond, Register lhs, ImmWord ptr, Label *label) {
+        cmpl(lhs, ptr);
+        j(cond, label);
+    }
     void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label *label) {
         cmpl(lhs, ptr);
         j(cond, label);

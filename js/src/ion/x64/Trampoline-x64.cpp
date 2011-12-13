@@ -45,7 +45,7 @@
 #include "ion/IonLinker.h"
 #include "ion/IonFrames.h"
 #include "ion/Bailouts.h"
-#include "ion/IonVMFunctions.h"
+#include "ion/VMFunctions.h"
 
 using namespace js;
 using namespace js::ion;
@@ -461,7 +461,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     if (f.outParam == Type_Value) {
         outReg = regs.takeAny();
         masm.reserveStack(sizeof(Value));
-        masm.movl(rsp, outReg);
+        masm.movq(rsp, outReg);
     }
 
     Register temp = regs.getAny();
