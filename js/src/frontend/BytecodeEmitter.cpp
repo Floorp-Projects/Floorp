@@ -7447,7 +7447,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       case PNK_DEFSHARP:
       {
         JS_ASSERT(bce->hasSharps());
-        int sharpnum = pn->pn_num;
+        jsint sharpnum = pn->asDefSharpExpression().number();
         pn = pn->pn_kid;
         if (pn->isKind(PNK_RB)) {
             ok = EmitArray(cx, bce, pn, sharpnum);
@@ -7466,13 +7466,14 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
         if (!EmitTree(cx, bce, pn))
             return JS_FALSE;
-        EMIT_UINT16PAIR_IMM_OP(JSOP_DEFSHARP, bce->sharpSlotBase, (jsatomid) sharpnum);
+        EMIT_UINT16PAIR_IMM_OP(JSOP_DEFSHARP, bce->sharpSlotBase, jsatomid(sharpnum));
         break;
       }
 
       case PNK_USESHARP:
         JS_ASSERT(bce->hasSharps());
-        EMIT_UINT16PAIR_IMM_OP(JSOP_USESHARP, bce->sharpSlotBase, (jsatomid) pn->pn_num);
+        EMIT_UINT16PAIR_IMM_OP(JSOP_USESHARP, bce->sharpSlotBase,
+                               jsatomid(pn->asUseSharpExpression().number()));
         break;
 #endif /* JS_HAS_SHARP_VARS */
 

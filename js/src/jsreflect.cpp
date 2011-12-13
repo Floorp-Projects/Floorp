@@ -2622,13 +2622,16 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 
       case PNK_DEFSHARP:
       {
+        DefSharpExpression &defsharp = pn->asDefSharpExpression();
         Value expr;
-        return expression(pn->pn_kid, &expr) &&
-               builder.graphExpression(pn->pn_num, expr, &pn->pn_pos, dst);
+        return expression(&defsharp.expression(), &expr) &&
+               builder.graphExpression(defsharp.number(), expr, &defsharp.pn_pos, dst);
       }
 
-      case PNK_USESHARP:
-        return builder.graphIndexExpression(pn->pn_num, &pn->pn_pos, dst);
+      case PNK_USESHARP: {
+        UseSharpExpression &expr = pn->asUseSharpExpression();
+        return builder.graphIndexExpression(expr.number(), &expr.pn_pos, dst);
+      }
 
       case PNK_ARRAYCOMP:
         /* NB: it's no longer the case that pn_count could be 2. */
