@@ -141,7 +141,11 @@
 
         <provider android:name="org.mozilla.gecko.db.BrowserProvider"
                   android:authorities="org.mozilla.gecko.providers.browser"
-                  android:exported="false"/>
+                  android:permission="org.mozilla.gecko.permissions.BROWSER_PROVIDER"/>
 
     </application>
+
+    <permission android:name="org.mozilla.gecko.permissions.BROWSER_PROVIDER"
+                android:protectionLevel="signature"/>
+
 </manifest> 
