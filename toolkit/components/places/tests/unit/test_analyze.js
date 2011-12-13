@@ -1,8 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests sqlite_sta1 table exists, it should be created by analyze, but since
-// the tables are empty it won't contain any data.
+// Tests sqlite_sta1 table exists, it should be created by analyze.
+// Since the bookmark roots are created when the DB is created (bug 704855),
+// the table will contain data.
 
 function run_test() {
   do_test_pending();
@@ -19,7 +20,7 @@ function run_test() {
       do_throw("Unexpected error (" + aError.result + "): " + aError.message);
     },
     handleCompletion: function(aReason) {
-      do_check_false(this._gotResult);
+      do_check_true(this._gotResult);
        do_test_finished();
     }
   });
