@@ -56,6 +56,9 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
     private static final String URL_COLUMN_ID = "_id";
     private static final String URL_COLUMN_THUMBNAIL = "thumbnail";
 
+    // Only available on Android >= 11
+    private static final String URL_COLUMN_DELETED = "deleted";
+
     private static final Uri BOOKMARKS_CONTENT_URI_POST_11 = Uri.parse("content://com.android.browser/bookmarks");
 
     public Cursor filter(ContentResolver cr, CharSequence constraint, int limit) {
@@ -154,7 +157,7 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
         return (count == 1);
     }
 
-    public void addBookmark(ContentResolver cr, String title, String uri) {
+    public void addBookmarkPre11(ContentResolver cr, String title, String uri) {
         Cursor cursor = cr.query(Browser.BOOKMARKS_URI,
                                  new String[] { BookmarkColumns.URL },
                                  Browser.BookmarkColumns.URL + " = ?",
@@ -178,6 +181,28 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
         }
 
         cursor.close();
+    }
+
+    public void addBookmarkPost11(ContentResolver cr, String title, String uri) {
+        ContentValues values = new ContentValues();
+        values.put(Browser.BookmarkColumns.TITLE, title);
+        values.put(Browser.BookmarkColumns.URL, uri);
+        values.put(URL_COLUMN_DELETED, "0");
+
+        int updated = cr.update(BOOKMARKS_CONTENT_URI_POST_11,
+                                values,
+                                Browser.BookmarkColumns.URL + " = ?",
+                                new String[] { uri });
+
+        if (updated == 0)
+            cr.insert(BOOKMARKS_CONTENT_URI_POST_11, values);
+    }
+
+    public void addBookmark(ContentResolver cr, String title, String uri) {
+        if (Build.VERSION.SDK_INT >= 11)
+            addBookmarkPost11(cr, title, uri);
+        else
+            addBookmarkPre11(cr, title, uri);
     }
 
     public void removeBookmarkPre11(ContentResolver cr, String uri) {
