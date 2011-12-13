@@ -44,12 +44,15 @@ try:
 except IOError:
     description = ''
 
-version = "0.0"
+version = "0.1"
 
-dependencies = ['mozprofile',
+dependencies = ['ManifestDestiny',
+                'mozhttpd',
+                'mozlog',
+                'mozprofile >= 0.1',
                 'mozprocess',
                 'mozrunner >= 3.0b3',
-                'mozlog']
+               ]
 
 setup(name='peptest',
       version=version,
