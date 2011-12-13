@@ -2931,7 +2931,6 @@ Parser::letBlock(LetContext letContext)
         if (!semi)
             return NULL;
 
-        semi->pn_num = -1;
         semi->pn_kid = pnlet;
 
         letContext = LetExpresion;
@@ -6944,40 +6943,45 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 #endif
 
 #if JS_HAS_SHARP_VARS
-      case TOK_DEFSHARP:
-        pn = UnaryNode::create(PNK_DEFSHARP, tc);
-        if (!pn)
+      case TOK_DEFSHARP: {
+        if (!tc->ensureSharpSlots())
             return NULL;
-        pn->pn_num = tokenStream.currentToken().sharpNumber();
+        const Token &tok = tokenStream.currentToken();
+        TokenPtr begin = tok.pos.begin;
+        uint16_t number = tok.sharpNumber();
+
         tt = tokenStream.getToken(TSF_OPERAND);
-        pn->pn_kid = primaryExpr(tt, JS_FALSE);
-        if (!pn->pn_kid)
+        ParseNode *expr = primaryExpr(tt, false);
+        if (!expr)
             return NULL;
-        if (pn->pn_kid->isKind(PNK_USESHARP) ||
-            pn->pn_kid->isKind(PNK_DEFSHARP) ||
-            pn->pn_kid->isKind(PNK_STRING) ||
-            pn->pn_kid->isKind(PNK_NUMBER) ||
-            pn->pn_kid->isKind(PNK_TRUE) ||
-            pn->pn_kid->isKind(PNK_FALSE) ||
-            pn->pn_kid->isKind(PNK_NULL) ||
-            pn->pn_kid->isKind(PNK_THIS))
+        if (expr->isKind(PNK_USESHARP) ||
+            expr->isKind(PNK_DEFSHARP) ||
+            expr->isKind(PNK_STRING) ||
+            expr->isKind(PNK_NUMBER) ||
+            expr->isKind(PNK_TRUE) ||
+            expr->isKind(PNK_FALSE) ||
+            expr->isKind(PNK_NULL) ||
+            expr->isKind(PNK_THIS))
         {
-            reportErrorNumber(pn->pn_kid, JSREPORT_ERROR, JSMSG_BAD_SHARP_VAR_DEF);
+            reportErrorNumber(expr, JSREPORT_ERROR, JSMSG_BAD_SHARP_VAR_DEF);
             return NULL;
         }
-        if (!tc->ensureSharpSlots())
-            return NULL;
-        break;
-
-      case TOK_USESHARP:
-        /* Check for forward/dangling references at runtime, to allow eval. */
-        pn = NullaryNode::create(PNK_USESHARP, tc);
+        pn = new_<DefSharpExpression>(number, expr, begin, tokenStream.currentToken().pos.end);
         if (!pn)
             return NULL;
+        break;
+      }
+
+      case TOK_USESHARP: {
         if (!tc->ensureSharpSlots())
             return NULL;
-        pn->pn_num = tokenStream.currentToken().sharpNumber();
+        /* Check for forward/dangling references at runtime, to allow eval. */
+        const Token &tok = tokenStream.currentToken();
+        pn = new_<UseSharpExpression>(tok.sharpNumber(), tok.pos);
+        if (!pn)
+            return NULL;
         break;
+      }
 #endif /* JS_HAS_SHARP_VARS */
 
       case TOK_LP:
