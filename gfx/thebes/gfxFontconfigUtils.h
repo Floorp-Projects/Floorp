@@ -49,7 +49,7 @@
 #include <fontconfig/fontconfig.h>
 
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 class nsAutoRefTraits<FcPattern> : public nsPointerRefTraits<FcPattern>
 {
 public:
@@ -57,14 +57,14 @@ public:
     static void AddRef(FcPattern *ptr) { FcPatternReference(ptr); }
 };
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 class nsAutoRefTraits<FcFontSet> : public nsPointerRefTraits<FcFontSet>
 {
 public:
     static void Release(FcFontSet *ptr) { FcFontSetDestroy(ptr); }
 };
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 class nsAutoRefTraits<FcCharSet> : public nsPointerRefTraits<FcCharSet>
 {
 public:

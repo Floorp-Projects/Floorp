@@ -67,6 +67,7 @@
 # define NS_CycleCollectorForget     NS_CycleCollectorForget_P
 # define NS_CycleCollectorSuspect2   NS_CycleCollectorSuspect2_P
 # define NS_CycleCollectorForget2    NS_CycleCollectorForget2_P
+# define NS_IsCycleCollectorThread   NS_IsCycleCollectorThread_P
 #endif
 
 #include "nscore.h"
@@ -403,6 +404,9 @@ NS_CycleCollectorSuspect2(nsISupports *n);
 
 XPCOM_API(bool)
 NS_CycleCollectorForget2(nsPurpleBufferEntry *e);
+
+XPCOM_API(bool)
+NS_IsCycleCollectorThread();
 
 #endif
 

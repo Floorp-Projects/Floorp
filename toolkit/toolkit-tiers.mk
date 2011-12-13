@@ -237,9 +237,17 @@ ifdef APP_LIBXUL_DIRS
 tier_platform_dirs += $(APP_LIBXUL_DIRS)
 endif
 
+ifneq (WINNT,$(OS_ARCH))
+tier_platform_dirs += intl/uconv/datamodule
+endif
+
 tier_platform_dirs += toolkit/library
 
 tier_platform_dirs += xpcom/stub
+
+ifeq (WINNT,$(OS_ARCH))
+tier_platform_dirs += intl/uconv/datamodule
+endif
 
 ifdef NS_TRACE_MALLOC
 tier_platform_dirs += tools/trace-malloc

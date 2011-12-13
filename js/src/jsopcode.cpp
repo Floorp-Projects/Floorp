@@ -1917,7 +1917,7 @@ DecompileGroupAssignment(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
     const char *rval;
 
     LOAD_OP_DATA(pc);
-    LOCAL_ASSERT(op == JSOP_PUSH || op == JSOP_GETLOCAL);
+    LOCAL_ASSERT(op == JSOP_GETLOCAL);
 
     todo = Sprint(&ss->sprinter, "%s[", VarPrefix(sn));
     if (todo < 0 || !PushOff(ss, todo, JSOP_NOP))
@@ -1934,7 +1934,7 @@ DecompileGroupAssignment(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         if (pc == endpc)
             return pc;
         LOAD_OP_DATA(pc);
-        if (op != JSOP_PUSH && op != JSOP_GETLOCAL)
+        if (op != JSOP_GETLOCAL)
             break;
         if (!hole && SprintPut(&ss->sprinter, ", ", 2) < 0)
             return NULL;
@@ -2547,20 +2547,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     break;
                 }
                 break;
-
-              case JSOP_PUSH:
-#if JS_HAS_DESTRUCTURING
-                sn = js_GetSrcNote(jp->script, pc);
-                if (sn && SN_TYPE(sn) == SRC_GROUPASSIGN) {
-                    pc = DecompileGroupAssignment(ss, pc, endpc, sn, &todo);
-                    if (!pc)
-                        return NULL;
-                    LOCAL_ASSERT(*pc == JSOP_POPN);
-                    len = oplen = JSOP_POPN_LENGTH;
-                    goto end_groupassignment;
-                }
-#endif
-                /* FALL THROUGH */
 
               case JSOP_BINDNAME:
               case JSOP_BINDGNAME:
@@ -4193,8 +4179,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         LOCAL_ASSERT(*pc == JSOP_NULLBLOCKCHAIN);
                         pc += JSOP_NULLBLOCKCHAIN_LENGTH;
                     }
-                    LOCAL_ASSERT(*pc == JSOP_PUSH);
-                    pc += JSOP_PUSH_LENGTH;
+                    LOCAL_ASSERT(*pc == JSOP_UNDEFINED);
+                    pc += JSOP_UNDEFINED_LENGTH;
                     LOCAL_ASSERT(*pc == JSOP_CALL);
                     LOCAL_ASSERT(GET_ARGC(pc) == 0);
                     len = JSOP_CALL_LENGTH;
@@ -5224,10 +5210,6 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     /* None of these stack-writing ops generates novel values. */
     JS_ASSERT(op != JSOP_CASE && op != JSOP_CASEX &&
               op != JSOP_DUP && op != JSOP_DUP2);
-
-    /* JSOP_PUSH is used to generate undefined for group assignment holes. */
-    if (op == JSOP_PUSH)
-        return JS_strdup(cx, js_undefined_str);
 
     /*
      * |this| could convert to a very long object initialiser, so cite it by

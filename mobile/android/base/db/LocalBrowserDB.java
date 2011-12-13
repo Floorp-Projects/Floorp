@@ -41,10 +41,10 @@ import java.io.ByteArrayOutputStream;
 import java.util.Date;
 
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
-import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.ImageColumns;
 import org.mozilla.gecko.db.BrowserContract.Images;
+import org.mozilla.gecko.db.BrowserContract.URLColumns;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -238,6 +238,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         values.put(Browser.BookmarkColumns.TITLE, title);
         values.put(Bookmarks.URL, uri);
 
+        // Restore deleted record if possible
+        values.put(Bookmarks.IS_DELETED, 0);
+
         int updated = cr.update(appendProfile(Bookmarks.CONTENT_URI),
                                 values,
                                 Bookmarks.URL + " = ?",
@@ -288,10 +291,16 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         values.put(Images.FAVICON, stream.toByteArray());
         values.put(Images.URL, uri);
 
-        cr.update(appendProfile(Images.CONTENT_URI),
-                  values,
-                  Images.URL + " = ?",
-                  new String[] { uri });
+        // Restore deleted record if possible
+        values.put(Images.IS_DELETED, 0);
+
+        int updated = cr.update(appendProfile(Images.CONTENT_URI),
+                                values,
+                                Images.URL + " = ?",
+                                new String[] { uri });
+
+        if (updated == 0)
+            cr.insert(appendProfile(Images.CONTENT_URI), values);
     }
 
     public void updateThumbnailForUrl(ContentResolver cr, String uri,
@@ -305,10 +314,16 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         values.put(Images.THUMBNAIL, stream.toByteArray());
         values.put(Images.URL, uri);
 
-        cr.update(appendProfile(Images.CONTENT_URI),
-                  values,
-                  Images.URL + " = ?",
-                  new String[] { uri });
+        // Restore deleted record if possible
+        values.put(Images.IS_DELETED, 0);
+
+        int updated = cr.update(appendProfile(Images.CONTENT_URI),
+                                values,
+                                Images.URL + " = ?",
+                                new String[] { uri });
+
+        if (updated == 0)
+            cr.insert(appendProfile(Images.CONTENT_URI), values);
     }
 
     private static class LocalDBCursor extends CursorWrapper {
@@ -318,9 +333,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
         private String translateColumnName(String columnName) {
             if (columnName.equals(BrowserDB.URLColumns.URL)) {
-                columnName = CommonColumns.URL;
+                columnName = URLColumns.URL;
             } else if (columnName.equals(BrowserDB.URLColumns.TITLE)) {
-                columnName = CommonColumns.TITLE;
+                columnName = URLColumns.TITLE;
             } else if (columnName.equals(BrowserDB.URLColumns.FAVICON)) {
                 columnName = ImageColumns.FAVICON;
             } else if (columnName.equals(BrowserDB.URLColumns.THUMBNAIL)) {
