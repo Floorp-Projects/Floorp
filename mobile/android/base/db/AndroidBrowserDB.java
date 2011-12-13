@@ -290,30 +290,20 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
             BitmapDrawable thumbnail) {
         Bitmap bitmap = thumbnail.getBitmap();
 
-        Cursor cursor = cr.query(Browser.BOOKMARKS_URI,
-                                 new String[] { BookmarkColumns.URL },
-                                 Browser.BookmarkColumns.URL + " = ?",
-                                 new String[] { uri },
-                                 Browser.BookmarkColumns.URL);
-
         ContentValues values = new ContentValues();
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
+
         values.put(URL_COLUMN_THUMBNAIL, bos.toByteArray());
+        values.put(Browser.BookmarkColumns.URL, uri);
 
-        if (cursor.getCount() == 1) {
-            // entry exists, simply update image
-            cr.update(Browser.BOOKMARKS_URI,
-                      values,
-                      Browser.BookmarkColumns.URL + " = ?",
-                      new String[] { uri });
-        } else {
-            // add a new entry
-            values.put(Browser.BookmarkColumns.URL, uri);
+        int updated = cr.update(Browser.BOOKMARKS_URI,
+                                values,
+                                Browser.BookmarkColumns.URL + " = ?",
+                                new String[] { uri });
+
+        if (updated == 0)
             cr.insert(Browser.BOOKMARKS_URI, values);
-        }
-
-        cursor.close();
     }
 
     private static class AndroidDBCursor extends CursorWrapper {
