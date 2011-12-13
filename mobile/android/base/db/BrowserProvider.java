@@ -43,10 +43,10 @@ import java.util.UUID;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
-import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.db.BrowserContract.Schema;
+import org.mozilla.gecko.db.BrowserContract.URLColumns;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -85,6 +85,7 @@ public class BrowserProvider extends ContentProvider {
 
     // Image matches
     static final int IMAGES = 300;
+    static final int IMAGES_ID = 301;
 
     // Schema matches
     static final int SCHEMA = 400;
@@ -156,6 +157,7 @@ public class BrowserProvider extends ContentProvider {
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "images", IMAGES);
 
         map = IMAGES_PROJECTION_MAP;
+        map.put(Images._ID, qualifyColumn(TABLE_IMAGES, Images._ID));
         map.put(Images.URL, Images.URL);
         map.put(Images.FAVICON, Images.FAVICON);
         map.put(Images.FAVICON_URL, Images.FAVICON_URL);
@@ -250,6 +252,7 @@ public class BrowserProvider extends ContentProvider {
 
             Log.d(LOGTAG, "Creating " + TABLE_IMAGES + " table");
             db.execSQL("CREATE TABLE " + TABLE_IMAGES + " (" +
+                    Images._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                     Images.URL + " TEXT UNIQUE NOT NULL," +
                     Images.FAVICON + " BLOB," +
                     Images.FAVICON_URL + " TEXT," +
@@ -449,6 +452,19 @@ public class BrowserProvider extends ContentProvider {
             break;
         }
 
+        case IMAGES_ID:
+            Log.d(LOGTAG, "Delete on IMAGES_ID: " + uri);
+
+            selection = concatenateWhere(selection, TABLE_IMAGES + "._id = ?");
+            selectionArgs = appendSelectionArgs(selectionArgs,
+                    new String[] { Long.toString(ContentUris.parseId(uri)) });
+            // fall through
+        case IMAGES: {
+            Log.d(LOGTAG, "Deleting images: " + uri);
+            deleted = deleteImages(uri, selection, selectionArgs);
+            break;
+        }
+
         default:
             throw new UnsupportedOperationException("Unknown delete URI " + uri);
         }
@@ -514,7 +530,8 @@ public class BrowserProvider extends ContentProvider {
                 if ((isFolder == null || !isFolder) && imageValues != null
                         && !TextUtils.isEmpty(url)) {
                     Log.d(LOGTAG, "Inserting bookmark image for URL: " + url);
-                    updateImage(uri, imageValues, Images.URL + " = ?", new String[] { url });
+                    updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
+                            new String[] { url });
                 }
 
                 Log.d(LOGTAG, "Inserting bookmark in database with URL: " + url);
@@ -541,11 +558,29 @@ public class BrowserProvider extends ContentProvider {
 
                 if (imageValues != null) {
                     Log.d(LOGTAG, "Inserting history image for URL: " + url);
-                    updateImage(uri, imageValues, Images.URL + " = ?", new String[] { url });
+                    updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
+                            new String[] { url });
                 }
 
                 Log.d(LOGTAG, "Inserting history in database with URL: " + url);
                 id = db.insertOrThrow(TABLE_HISTORY, History.VISITS, values);
+                break;
+            }
+
+            case IMAGES: {
+                Log.d(LOGTAG, "Insert on IMAGES: " + uri);
+
+                long now = System.currentTimeMillis();
+                values.put(History.DATE_CREATED, now);
+                values.put(History.DATE_MODIFIED, now);
+
+                // Generate GUID for new history entry
+                values.put(History.GUID, UUID.randomUUID().toString());
+
+                String url = values.getAsString(Images.URL);
+
+                Log.d(LOGTAG, "Inserting image in database with URL: " + url);
+                id = db.insertOrThrow(TABLE_IMAGES, Images.URL, values);
                 break;
             }
 
@@ -628,7 +663,8 @@ public class BrowserProvider extends ContentProvider {
                 if (TextUtils.isEmpty(url))
                     throw new IllegalArgumentException("Images.URL is required");
 
-                updated = updateImage(uri, values, Images.URL + " = ?", new String[] { url });
+                updated = updateExistingImage(uri, values, Images.URL + " = ?",
+                        new String[] { url });
 
                 break;
             }
@@ -705,8 +741,17 @@ public class BrowserProvider extends ContentProvider {
                 break;
             }
 
+            case IMAGES_ID:
             case IMAGES: {
                 Log.d(LOGTAG, "Query is on images: " + uri);
+
+                if (match == IMAGES_ID) {
+                    Log.d(LOGTAG, "Query is IMAGES_ID: " + uri);
+                    selection = concatenateWhere(selection,
+                            qualifyColumnValue(TABLE_IMAGES, Images._ID) + " = ?");
+                    selectionArgs = appendSelectionArgs(selectionArgs,
+                            new String[] { Long.toString(ContentUris.parseId(uri)) });
+                }
 
                 qb.setProjectionMap(IMAGES_PROJECTION_MAP);
                 qb.setTables(TABLE_IMAGES);
@@ -769,7 +814,7 @@ public class BrowserProvider extends ContentProvider {
 
     int getUrlCount(SQLiteDatabase db, String table, String url) {
         Cursor c = db.query(table, new String[] { "COUNT(*)" },
-                CommonColumns.URL + " = ?", new String[] { url }, null, null,
+                URLColumns.URL + " = ?", new String[] { url }, null, null,
                 null);
 
         int count = 0;
@@ -830,7 +875,8 @@ public class BrowserProvider extends ContentProvider {
 
                 if (!TextUtils.isEmpty(url)) {
                     Log.d(LOGTAG, "Updating bookmark image for URL: " + url);
-                    updateImage(uri, imageValues, Images.URL + " = ?", new String[] { url });
+                    updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
+                            new String[] { url });
                 }
             }
         } finally {
@@ -884,7 +930,8 @@ public class BrowserProvider extends ContentProvider {
 
                 if (!TextUtils.isEmpty(url)) {
                     Log.d(LOGTAG, "Updating history image for URL: " + url);
-                    updateImage(uri, imageValues, Images.URL + " = ?", new String[] { url });
+                    updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
+                            new String[] { url });
                 }
             }
         } finally {
@@ -895,8 +942,20 @@ public class BrowserProvider extends ContentProvider {
         return updated;
     }
 
-    int updateImage(Uri uri, ContentValues values, String selection,
+    int updateOrInsertImage(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
+        return updateImage(uri, values, selection, selectionArgs,
+                true /* insert if needed */);
+    }
+
+    int updateExistingImage(Uri uri, ContentValues values, String selection,
+            String[] selectionArgs) {
+        return updateImage(uri, values, selection, selectionArgs,
+                false /* only update, no insert */);
+    }
+
+    int updateImage(Uri uri, ContentValues values, String selection,
+            String[] selectionArgs, boolean insertIfNeeded) {
         String url = values.getAsString(Images.URL);
 
         Log.d(LOGTAG, "Updating image for URL: " + url);
@@ -914,11 +973,12 @@ public class BrowserProvider extends ContentProvider {
         Log.d(LOGTAG, "Trying to update image for URL: " + url);
         int updated = db.update(TABLE_IMAGES, values, selection, selectionArgs);
 
-        if (updated == 0) {
+        if (updated == 0 && insertIfNeeded) {
             // Generate GUID for new image, if one is not already provided.
             if (!values.containsKey(Images.GUID)) {
               values.put(Images.GUID, UUID.randomUUID().toString());
             }
+
             values.put(Images.DATE_CREATED, now);
             values.put(Images.DATE_MODIFIED, now);
 
@@ -944,10 +1004,15 @@ public class BrowserProvider extends ContentProvider {
         return db.delete(TABLE_BOOKMARKS, selection, selectionArgs);
     }
 
-    int deleteUnusedImages(Uri uri) {
-        Log.d(LOGTAG, "Deleting all unused images for URI: " + uri);
+    int deleteImages(Uri uri, String selection, String[] selectionArgs) {
+        Log.d(LOGTAG, "Deleting images for URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
+        return db.delete(TABLE_IMAGES, selection, selectionArgs);
+    }
+
+    int deleteUnusedImages(Uri uri) {
+        Log.d(LOGTAG, "Deleting all unused images for URI: " + uri);
 
         String selection = Images.URL + " NOT IN (SELECT " + Bookmarks.URL +
                 " FROM " + TABLE_BOOKMARKS + " WHERE " + Bookmarks.URL +
@@ -955,6 +1020,6 @@ public class BrowserProvider extends ContentProvider {
                 History.URL + " FROM " + TABLE_HISTORY + " WHERE " +
                 History.URL + " IS NOT NULL)";
 
-        return db.delete(TABLE_IMAGES, selection, null);
+        return deleteImages(uri, selection, null);
     }
 }
