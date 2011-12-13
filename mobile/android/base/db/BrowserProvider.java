@@ -43,9 +43,11 @@ import java.util.UUID;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.db.BrowserContract.Schema;
+import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
 
 import android.content.ContentProvider;
@@ -69,6 +71,12 @@ public class BrowserProvider extends ContentProvider {
     static final String DATABASE_NAME = "browser.db";
 
     static final int DATABASE_VERSION = 1;
+
+    // Maximum age of deleted records to be cleaned up (20 days in ms)
+    static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
+
+    // Number of records marked as deleted to be removed
+    static final long DELETED_RECORDS_PURGE_LIMIT = 5;
 
     static final String TABLE_BOOKMARKS = "bookmarks";
     static final String TABLE_HISTORY = "history";
@@ -136,6 +144,7 @@ public class BrowserProvider extends ContentProvider {
         map.put(Bookmarks.DATE_CREATED, qualifyColumn(TABLE_BOOKMARKS, Bookmarks.DATE_CREATED));
         map.put(Bookmarks.DATE_MODIFIED, qualifyColumn(TABLE_BOOKMARKS, Bookmarks.DATE_MODIFIED));
         map.put(Bookmarks.GUID, qualifyColumn(TABLE_BOOKMARKS, Bookmarks.GUID));
+        map.put(Bookmarks.IS_DELETED, qualifyColumn(TABLE_BOOKMARKS, Bookmarks.IS_DELETED));
 
         // History
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "history", HISTORY);
@@ -152,6 +161,7 @@ public class BrowserProvider extends ContentProvider {
         map.put(History.DATE_CREATED, qualifyColumn(TABLE_HISTORY, History.DATE_CREATED));
         map.put(History.DATE_MODIFIED, qualifyColumn(TABLE_HISTORY, History.DATE_MODIFIED));
         map.put(History.GUID, qualifyColumn(TABLE_HISTORY, History.GUID));
+        map.put(History.IS_DELETED, qualifyColumn(TABLE_HISTORY, History.IS_DELETED));
 
         // Images
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "images", IMAGES);
@@ -165,6 +175,7 @@ public class BrowserProvider extends ContentProvider {
         map.put(Images.DATE_CREATED, qualifyColumn(TABLE_IMAGES, Images.DATE_CREATED));
         map.put(Images.DATE_MODIFIED, qualifyColumn(TABLE_IMAGES, Images.DATE_MODIFIED));
         map.put(Images.GUID, qualifyColumn(TABLE_IMAGES, Images.GUID));
+        map.put(Images.IS_DELETED, qualifyColumn(TABLE_IMAGES, Images.IS_DELETED));
 
         // Schema
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "schema", SCHEMA);
@@ -235,7 +246,8 @@ public class BrowserProvider extends ContentProvider {
                     Bookmarks.TAGS + " TEXT," +
                     Bookmarks.DATE_CREATED + " INTEGER," +
                     Bookmarks.DATE_MODIFIED + " INTEGER," +
-                    Bookmarks.GUID + " TEXT" +
+                    Bookmarks.GUID + " TEXT," +
+                    Bookmarks.IS_DELETED + " INTEGER NOT NULL DEFAULT 0" +
                     ");");
 
             Log.d(LOGTAG, "Creating " + TABLE_HISTORY + " table");
@@ -247,7 +259,8 @@ public class BrowserProvider extends ContentProvider {
                     History.DATE_LAST_VISITED + " INTEGER," +
                     History.DATE_CREATED + " INTEGER," +
                     History.DATE_MODIFIED + " INTEGER," +
-                    History.GUID + " TEXT" +
+                    History.GUID + " TEXT," +
+                    History.IS_DELETED + " INTEGER NOT NULL DEFAULT 0" +
                     ");");
 
             Log.d(LOGTAG, "Creating " + TABLE_IMAGES + " table");
@@ -259,7 +272,8 @@ public class BrowserProvider extends ContentProvider {
                     Images.THUMBNAIL + " BLOB," +
                     Images.DATE_CREATED + " INTEGER," +
                     Images.DATE_MODIFIED + " INTEGER," +
-                    Images.GUID + " TEXT" +
+                    Images.GUID + " TEXT," +
+                    Images.IS_DELETED + " INTEGER NOT NULL DEFAULT 0" +
                     ");");
 
             db.execSQL("CREATE INDEX images_url_index ON " + TABLE_IMAGES + "("
@@ -356,6 +370,61 @@ public class BrowserProvider extends ContentProvider {
             profile = uri.getQueryParameter(BrowserContract.PARAM_PROFILE);
 
         return getDatabaseHelperForProfile(profile).getWritableDatabase();
+    }
+
+    private void cleanupSomeDeletedRecords(Uri fromUri, Uri targetUri, String tableName) {
+        // we cleanup records marked as deleted that are older than a
+        // predefined max age. It's important not be too greedy here and
+        // remove only a few old deleted records at a time.
+
+        String profile = fromUri.getQueryParameter(BrowserContract.PARAM_PROFILE);
+
+        // The PARAM_SHOW_DELETED argument is necessary to return the records
+        // that were marked as deleted. We use PARAM_IS_SYNC here to ensure
+        // that we'll be actually deleting records instead of flagging them.
+        Uri uriWithArgs = targetUri.buildUpon()
+                .appendQueryParameter(BrowserContract.PARAM_PROFILE, profile)
+                .appendQueryParameter(BrowserContract.PARAM_LIMIT, String.valueOf(DELETED_RECORDS_PURGE_LIMIT))
+                .appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1")
+                .appendQueryParameter(BrowserContract.PARAM_IS_SYNC, "1")
+                .build();
+
+        Cursor cursor = null;
+
+        try {
+            long now = System.currentTimeMillis();
+            String isDeletedColumn = qualifyColumnValue(tableName, SyncColumns.IS_DELETED);
+            String dateModifiedColumn = qualifyColumnValue(tableName, SyncColumns.DATE_MODIFIED);
+
+            String selection = isDeletedColumn + " = 1 AND " +
+                    dateModifiedColumn + " <= " + (now - MAX_AGE_OF_DELETED_RECORDS);
+
+            cursor = query(uriWithArgs,
+                           new String[] { CommonColumns._ID },
+                           selection,
+                           null,
+                           null);
+
+            while (cursor.moveToNext()) {
+                Uri uriWithId = ContentUris.withAppendedId(uriWithArgs, cursor.getLong(0));
+                delete(uriWithId, null, null);
+
+                Log.d(LOGTAG, "Removed old deleted item with URI: " + uriWithId);
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+    }
+
+    private boolean isCallerSync(Uri uri) {
+        String isSync = uri.getQueryParameter(BrowserContract.PARAM_IS_SYNC);
+        return !TextUtils.isEmpty(isSync);
+    }
+
+    private boolean shouldShowDeleted(Uri uri) {
+        String showDeleted = uri.getQueryParameter(BrowserContract.PARAM_SHOW_DELETED);
+        return !TextUtils.isEmpty(showDeleted);
     }
 
     @Override
@@ -709,6 +778,11 @@ public class BrowserProvider extends ContentProvider {
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 }
 
+                if (!shouldShowDeleted(uri)) {
+                    String isDeletedColumn = qualifyColumnValue(TABLE_BOOKMARKS, Bookmarks.IS_DELETED);
+                    selection = concatenateWhere(isDeletedColumn + " = 0", selection);
+                }
+
                 if (TextUtils.isEmpty(sortOrder)) {
                     Log.d(LOGTAG, "Using default sort order on query: " + uri);
                     sortOrder = DEFAULT_BOOKMARKS_SORT_ORDER;
@@ -732,6 +806,11 @@ public class BrowserProvider extends ContentProvider {
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 }
 
+                if (!shouldShowDeleted(uri)) {
+                    String isDeletedColumn = qualifyColumnValue(TABLE_HISTORY, History.IS_DELETED);
+                    selection = concatenateWhere(isDeletedColumn + " = 0", selection);
+                }
+
                 if (TextUtils.isEmpty(sortOrder))
                     sortOrder = DEFAULT_HISTORY_SORT_ORDER;
 
@@ -751,6 +830,11 @@ public class BrowserProvider extends ContentProvider {
                             qualifyColumnValue(TABLE_IMAGES, Images._ID) + " = ?");
                     selectionArgs = appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
+                }
+
+                if (!shouldShowDeleted(uri)) {
+                    String isDeletedColumn = qualifyColumnValue(TABLE_IMAGES, Images.IS_DELETED);
+                    selection = concatenateWhere(isDeletedColumn + " = 0", selection);
                 }
 
                 qb.setProjectionMap(IMAGES_PROJECTION_MAP);
@@ -970,6 +1054,11 @@ public class BrowserProvider extends ContentProvider {
         if (values.containsKey(Images.FAVICON) || values.containsKey(Images.FAVICON_URL))
             values.put(Images.DATE_MODIFIED, now);
 
+        // Restore and update an existing image record marked as
+        // deleted if possible.
+        if (insertIfNeeded)
+            values.put(Images.IS_DELETED, 0);
+
         Log.d(LOGTAG, "Trying to update image for URL: " + url);
         int updated = db.update(TABLE_IMAGES, values, selection, selectionArgs);
 
@@ -994,31 +1083,65 @@ public class BrowserProvider extends ContentProvider {
         Log.d(LOGTAG, "Deleting history entry for URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
-        return db.delete(TABLE_HISTORY, selection, selectionArgs);
+
+        if (isCallerSync(uri)) {
+            return db.delete(TABLE_HISTORY, selection, selectionArgs);
+        } else {
+            Log.d(LOGTAG, "Marking history entry as deleted for URI: " + uri);
+
+            ContentValues values = new ContentValues();
+            values.put(History.IS_DELETED, 1);
+
+            cleanupSomeDeletedRecords(uri, History.CONTENT_URI, TABLE_HISTORY);
+            return updateHistory(uri, values, selection, selectionArgs);
+        }
     }
 
     int deleteBookmarks(Uri uri, String selection, String[] selectionArgs) {
         Log.d(LOGTAG, "Deleting bookmarks for URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
-        return db.delete(TABLE_BOOKMARKS, selection, selectionArgs);
+
+        if (isCallerSync(uri)) {
+            return db.delete(TABLE_BOOKMARKS, selection, selectionArgs);
+        } else {
+            Log.d(LOGTAG, "Marking bookmarks as deleted for URI: " + uri);
+
+            ContentValues values = new ContentValues();
+            values.put(Bookmarks.IS_DELETED, 1);
+
+            cleanupSomeDeletedRecords(uri, Bookmarks.CONTENT_URI, TABLE_BOOKMARKS);
+            return updateBookmarks(uri, values, selection, selectionArgs);
+        }
     }
 
     int deleteImages(Uri uri, String selection, String[] selectionArgs) {
         Log.d(LOGTAG, "Deleting images for URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
-        return db.delete(TABLE_IMAGES, selection, selectionArgs);
+
+        if (isCallerSync(uri)) {
+            return db.delete(TABLE_IMAGES, selection, null);
+        } else {
+            Log.d(LOGTAG, "Marking images as deleted for URI: " + uri);
+
+            ContentValues values = new ContentValues();
+            values.put(History.IS_DELETED, 1);
+
+            cleanupSomeDeletedRecords(uri, Images.CONTENT_URI, TABLE_IMAGES);
+            return updateExistingImage(uri, values, selection, null);
+        }
     }
 
     int deleteUnusedImages(Uri uri) {
         Log.d(LOGTAG, "Deleting all unused images for URI: " + uri);
 
         String selection = Images.URL + " NOT IN (SELECT " + Bookmarks.URL +
-                " FROM " + TABLE_BOOKMARKS + " WHERE " + Bookmarks.URL +
-                " IS NOT NULL) AND " + Images.URL + " NOT IN (SELECT " +
-                History.URL + " FROM " + TABLE_HISTORY + " WHERE " +
-                History.URL + " IS NOT NULL)";
+                " FROM " + TABLE_BOOKMARKS + " WHERE " + Bookmarks.URL + " IS NOT NULL AND " +
+                qualifyColumnValue(TABLE_BOOKMARKS, Bookmarks.IS_DELETED) + " = 0) AND " +
+                Images.URL + " NOT IN (SELECT " + History.URL + " FROM " + TABLE_HISTORY +
+                " WHERE " + History.URL + " IS NOT NULL AND " +
+                qualifyColumnValue(TABLE_HISTORY, History.IS_DELETED) + " = 0)";
 
         return deleteImages(uri, selection, null);
     }

@@ -50,6 +50,10 @@ public class BrowserContract {
 
     public static final String PARAM_LIMIT = "limit";
 
+    public static final String PARAM_IS_SYNC = "sync";
+
+    public static final String PARAM_SHOW_DELETED = "show_deleted";
+
     interface CommonColumns {
         public static final String _ID = "_id";
     }
@@ -60,6 +64,8 @@ public class BrowserContract {
         public static final String DATE_CREATED = "created";
 
         public static final String DATE_MODIFIED = "modified";
+
+        public static final String IS_DELETED = "deleted";
     }
 
     interface URLColumns {
