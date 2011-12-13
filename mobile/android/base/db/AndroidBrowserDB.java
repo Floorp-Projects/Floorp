@@ -144,12 +144,29 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
         return new AndroidDBCursor(c);
     }
 
+    public Cursor isBookmarkQueryPre11(ContentResolver cr, String uri) {
+        return cr.query(Browser.BOOKMARKS_URI,
+                        new String[] { BookmarkColumns.URL },
+                        Browser.BookmarkColumns.URL + " = ? and " + Browser.BookmarkColumns.BOOKMARK + " = ?",
+                        new String[] { uri, "1" },
+                        Browser.BookmarkColumns.URL);
+    }
+
+    public Cursor isBookmarkQueryPost11(ContentResolver cr, String uri) {
+        return cr.query(BOOKMARKS_CONTENT_URI_POST_11,
+                        new String[] { BookmarkColumns.URL },
+                        Browser.BookmarkColumns.URL + " = ?",
+                        new String[] { uri },
+                        Browser.BookmarkColumns.URL);
+    }
+
     public boolean isBookmark(ContentResolver cr, String uri) {
-        Cursor cursor = cr.query(Browser.BOOKMARKS_URI,
-                                 new String[] { BookmarkColumns.URL },
-                                 Browser.BookmarkColumns.URL + " = ? and " + Browser.BookmarkColumns.BOOKMARK + " = ?",
-                                 new String[] { uri, "1" },
-                                 Browser.BookmarkColumns.URL);
+        Cursor cursor;
+
+        if (Build.VERSION.SDK_INT >= 11)
+            cursor = isBookmarkQueryPost11(cr, uri);
+        else
+            cursor = isBookmarkQueryPre11(cr, uri);
 
         int count = cursor.getCount();
         cursor.close();
