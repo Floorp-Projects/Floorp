@@ -1787,6 +1787,12 @@ typedef void (*IterateCellCallback)(JSContext *cx, void *data, void *thing,
                                     JSGCTraceKind traceKind, size_t thingSize);
 
 /*
+ * This function calls |compartmentCallback| on every compartment.
+ */
+extern JS_FRIEND_API(void)
+IterateCompartments(JSContext *cx, void *data,
+                    IterateCompartmentCallback compartmentCallback);
+/*
  * This function calls |compartmentCallback| on every compartment,
  * |arenaCallback| on every in-use arena, and |cellCallback| on every in-use
  * cell in the GC heap.

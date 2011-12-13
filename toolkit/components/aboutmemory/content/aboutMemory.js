@@ -236,6 +236,9 @@ Reporter.prototype = {
   },
 
   treeNameMatches: function(aTreeName) {
+    // Nb: the '/' must be present, because we have a KIND_OTHER reporter
+    // called "explicit" which is not part of the "explicit" tree.
+    aTreeName += "/";
     return this._path.slice(0, aTreeName.length) === aTreeName;
   }
 };
