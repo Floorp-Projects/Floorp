@@ -284,6 +284,12 @@ RotaryStore.prototype = {
 
   createRecord: function(id, collection) {
     let record = new RotaryRecord(collection, id);
+
+    if (!(id in this.items)) {
+      record.deleted = true;
+      return record;
+    }
+
     record.denomination = this.items[id] || "Data for new record: " + id;
     return record;
   },
@@ -327,6 +333,12 @@ RotaryEngine.prototype = {
   _recordObj: RotaryRecord,
 
   _findDupe: function(item) {
+    // This is a semaphore used for testing proper reconciling on dupe
+    // detection.
+    if (item.id == "DUPE_INCOMING") {
+      return "DUPE_LOCAL";
+    }
+
     for (let [id, value] in Iterator(this._store.items)) {
       if (item.denomination == value) {
         return id;
