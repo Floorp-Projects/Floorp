@@ -306,11 +306,9 @@ enum reflectStatus {
 };
 
 enum reflectStatus
-ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
+ReflectHistogramAndSamples(JSContext *cx, JSObject *obj, Histogram *h,
+                           const Histogram::SampleSet &ss)
 {
-  Histogram::SampleSet ss;
-  h->SnapshotSample(&ss);
-
   // We don't want to reflect corrupt histograms.
   if (h->FindCorruption(ss) != Histogram::NO_INCONSISTENCIES) {
     return REFLECT_CORRUPT;
@@ -337,6 +335,14 @@ ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
     }
   }
   return REFLECT_OK;
+}
+
+enum reflectStatus
+ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
+{
+  Histogram::SampleSet ss;
+  h->SnapshotSample(&ss);
+  return ReflectHistogramAndSamples(cx, obj, h, ss);
 }
 
 JSBool
