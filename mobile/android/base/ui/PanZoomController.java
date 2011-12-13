@@ -560,7 +560,9 @@ public class PanZoomController
             GeckoAppShell.sendEventToGecko(e);
             mOverrideScrollAck = false;
         } else {
-            mController.scrollBy(new PointF(mX.displacement, mY.displacement));
+            synchronized (mController) {
+                mController.scrollBy(new PointF(mX.displacement, mY.displacement));
+            }
         }
 
         mX.displacement = mY.displacement = 0;
@@ -592,18 +594,22 @@ public class PanZoomController
 
         /* Performs one frame of a bounce animation. */
         private void advanceBounce() {
-            float t = EASE_OUT_ANIMATION_FRAMES[mBounceFrame];
-            ViewportMetrics newMetrics = mBounceStartMetrics.interpolate(mBounceEndMetrics, t);
-            mController.setViewportMetrics(newMetrics);
-            mController.notifyLayerClientOfGeometryChange();
-            mBounceFrame++;
+            synchronized (mController) {
+                float t = EASE_OUT_ANIMATION_FRAMES[mBounceFrame];
+                ViewportMetrics newMetrics = mBounceStartMetrics.interpolate(mBounceEndMetrics, t);
+                mController.setViewportMetrics(newMetrics);
+                mController.notifyLayerClientOfGeometryChange();
+                mBounceFrame++;
+            }
         }
 
         /* Concludes a bounce animation and snaps the viewport into place. */
         private void finishBounce() {
-            mController.setViewportMetrics(mBounceEndMetrics);
-            mController.notifyLayerClientOfGeometryChange();
-            mBounceFrame = -1;
+            synchronized (mController) {
+                mController.setViewportMetrics(mBounceEndMetrics);
+                mController.notifyLayerClientOfGeometryChange();
+                mBounceFrame = -1;
+            }
         }
     }
 
@@ -881,11 +887,14 @@ public class PanZoomController
         else
             spanRatio = 1.0f - (1.0f - spanRatio) * resistance;
 
-        float newZoomFactor = mController.getZoomFactor() * spanRatio;
+        synchronized (mController) {
+            float newZoomFactor = mController.getZoomFactor() * spanRatio;
 
-        mController.scrollBy(new PointF(mLastZoomFocus.x - detector.getFocusX(),
-                                        mLastZoomFocus.y - detector.getFocusY()));
-        mController.scaleWithFocus(newZoomFactor, new PointF(detector.getFocusX(), detector.getFocusY()));
+            mController.scrollBy(new PointF(mLastZoomFocus.x - detector.getFocusX(),
+                                            mLastZoomFocus.y - detector.getFocusY()));
+            PointF focus = new PointF(detector.getFocusX(), detector.getFocusY());
+            mController.scaleWithFocus(newZoomFactor, focus);
+        }
 
         mLastZoomFocus.set(detector.getFocusX(), detector.getFocusY());
 
