@@ -69,7 +69,7 @@ struct VMFunction
     void *wrapped;
 
     // Number of arguments expected, excluding JSContext * as an implicit
-    // first argument, and the outparam as an implicit last argument.
+    // first argument and an outparam as a possible implicit final argument.
     uint32 explicitArgs;
 
     // The outparam may be any Type_*, and must be the final argument to the
@@ -77,15 +77,21 @@ struct VMFunction
     // has a boolean failure mode.
     DataType outParam;
 
-    // Identify which values are returned to the Jitted code. If and only if
-    // the outParam is set to Type_Value, then the returnType must be set to
-    // the ReturnValue.  Otherwise it should be either consistent
-    // with the FallibleType or ReturnNothing.
+    // Return type of the C function.
+    // If the C function does not use an outparam, then returnType is also the
+    // return type of the entire wrapper. Otherwise, the wrapper returns a
+    // value of the same type as the outparam.
     DataType returnType;
 
     uint32 argc() const {
         // JSContext * + args + (OutParam? *)
         return 1 + explicitArgs + ((outParam == Type_Void) ? 0 : 1);
+    }
+
+    DataType wrapperReturnType() const {
+        if (outParam != Type_Void)
+            return outParam;
+        return returnType;
     }
 
     DataType failType() const {
@@ -98,8 +104,7 @@ struct VMFunction
                DataType returnType)
       : wrapped(wrapped), explicitArgs(explicitArgs), outParam(outParam),
         returnType(returnType)
-    {
-    }
+    { }
 };
 
 template <class> struct TypeToDataType { };
@@ -108,8 +113,9 @@ template <> struct TypeToDataType<JSObject *> { static const DataType result = T
 template <class> struct OutParamToDataType { static const DataType result = Type_Void; };
 template <> struct OutParamToDataType<Value *> { static const DataType result = Type_Value; };
 
+// VMFunction wrapper with 3 arguments.
 template <class R, class A1, class A2, R pf(JSContext *, A1, A2)>
-struct FunctionInfo : public VMFunction {
+struct FunctionInfo3 : public VMFunction {
     static inline DataType returnType() {
         return TypeToDataType<R>::result;
     }
@@ -117,13 +123,33 @@ struct FunctionInfo : public VMFunction {
         return OutParamToDataType<A2>::result;
     }
     static inline size_t explicitArgs() {
-        return 2 + (outParam() != Type_Void ? 1 : 0);
+        return 1 + (outParam() == Type_Void ? 1 : 0);
     }
-    FunctionInfo()
+    FunctionInfo3()
       : VMFunction(JS_FUNC_TO_DATA_PTR(void *, pf), explicitArgs(), outParam(),
                    returnType())
     { }
 };
+
+// VMFunction wrapper with 5 arguments.
+template <class R, class A1, class A2, class A3, class A4, R pf(JSContext *, A1, A2, A3, A4)>
+struct FunctionInfo5 : public VMFunction {
+    static inline DataType returnType() {
+        return TypeToDataType<R>::result;
+    }
+    static inline DataType outParam() {
+        return OutParamToDataType<A4>::result;
+    }
+    static inline size_t explicitArgs() {
+        return 3 + (outParam() == Type_Void ? 1 : 0);
+    }
+    FunctionInfo5()
+      : VMFunction(JS_FUNC_TO_DATA_PTR(void *, pf), explicitArgs(), outParam(),
+                   returnType())
+    { }
+};
+
+bool InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval);
 
 } // namespace ion
 } // namespace js
