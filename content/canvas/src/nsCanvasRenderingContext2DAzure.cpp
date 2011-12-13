@@ -1165,6 +1165,9 @@ nsCanvasRenderingContext2DAzure::Redraw()
     return NS_OK;
   }
 
+  if (mThebesSurface)
+      mThebesSurface->MarkDirty();
+
   nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
 
   HTMLCanvasElement()->InvalidateCanvasContent(nsnull);
@@ -1191,6 +1194,9 @@ nsCanvasRenderingContext2DAzure::Redraw(const mgfx::Rect &r)
     NS_ASSERTION(mDocShell, "Redraw with no canvas element or docshell!");
     return;
   }
+
+  if (mThebesSurface)
+      mThebesSurface->MarkDirty();
 
   nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
 
