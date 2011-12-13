@@ -250,6 +250,13 @@ public class BrowserProvider extends ContentProvider {
                     Bookmarks.IS_DELETED + " INTEGER NOT NULL DEFAULT 0" +
                     ");");
 
+            db.execSQL("CREATE INDEX bookmarks_url_index ON " + TABLE_BOOKMARKS + "("
+                    + Bookmarks.URL + ")");
+            db.execSQL("CREATE UNIQUE INDEX bookmarks_guid_index ON " + TABLE_BOOKMARKS + "("
+                    + Bookmarks.GUID + ")");
+            db.execSQL("CREATE INDEX bookmarks_modified_index ON " + TABLE_BOOKMARKS + "("
+                    + Bookmarks.DATE_MODIFIED + ")");
+
             Log.d(LOGTAG, "Creating " + TABLE_HISTORY + " table");
             db.execSQL("CREATE TABLE " + TABLE_HISTORY + "(" +
                     History._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -262,6 +269,15 @@ public class BrowserProvider extends ContentProvider {
                     History.GUID + " TEXT," +
                     History.IS_DELETED + " INTEGER NOT NULL DEFAULT 0" +
                     ");");
+
+            db.execSQL("CREATE INDEX history_url_index ON " + TABLE_HISTORY + "("
+                    + History.URL + ")");
+            db.execSQL("CREATE UNIQUE INDEX history_guid_index ON " + TABLE_HISTORY + "("
+                    + History.GUID + ")");
+            db.execSQL("CREATE INDEX history_modified_index ON " + TABLE_HISTORY + "("
+                    + History.DATE_MODIFIED + ")");
+            db.execSQL("CREATE INDEX history_visited_index ON " + TABLE_HISTORY + "("
+                    + History.DATE_LAST_VISITED + ")");
 
             Log.d(LOGTAG, "Creating " + TABLE_IMAGES + " table");
             db.execSQL("CREATE TABLE " + TABLE_IMAGES + " (" +
@@ -278,6 +294,10 @@ public class BrowserProvider extends ContentProvider {
 
             db.execSQL("CREATE INDEX images_url_index ON " + TABLE_IMAGES + "("
                     + Images.URL + ")");
+            db.execSQL("CREATE UNIQUE INDEX images_guid_index ON " + TABLE_IMAGES + "("
+                    + Images.GUID + ")");
+            db.execSQL("CREATE INDEX images_modified_index ON " + TABLE_IMAGES + "("
+                    + Images.DATE_MODIFIED + ")");
 
             // FIXME: Create default bookmarks here
         }
