@@ -1,4 +1,4 @@
-#
+# vim:set noet ts=8:
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -42,23 +42,55 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= ucvtw
-LIBRARY_NAME	= ucvtw_s
-FORCE_STATIC_LIB=1
-ifneq (WINNT,$(OS_TARGET))
+MODULE		= uconvd
+LIBRARY_NAME	= uconvd
+EXPORT_LIBRARY  = 1
+IS_COMPONENT	= 1
+MODULE_NAME	= UConvData
+ifeq (WINNT,$(OS_TARGET))
+FORCE_SHARED_LIB = 1
+else
 LIBXUL_LIBRARY = 1
 endif
+# To avoid conflict with OS/2 system uconv.dll
+SHORT_LIBNAME  = mzuconvd
 
 CPPSRCS		= \
-		nsBIG5ToUnicode.cpp \
-		nsUnicodeToBIG5.cpp \
-		nsBIG5HKSCSToUnicode.cpp \
-		nsUnicodeToBIG5HKSCS.cpp \
-		nsUnicodeToHKSCS.cpp \
+		nsUConvDataModule.cpp \
 		$(NULL)
 
-EXPORTS		= nsUCvTWCID.h
+LOCAL_INCLUDES	= -I$(srcdir)/../util \
+		  -I$(srcdir)/../ucvlatin \
+		  -I$(srcdir)/../ucvibm \
+		  -I$(srcdir)/../ucvja \
+		  -I$(srcdir)/../ucvtw2 \
+		  -I$(srcdir)/../ucvtw \
+		  -I$(srcdir)/../ucvko \
+		  -I$(srcdir)/../ucvcn \
+		  $(NULL)
 
-LOCAL_INCLUDES = -I$(srcdir)/../util
+EXTRA_DSO_LDOPTS += \
+  $(XPCOM_GLUE_LDOPTS) \
+  $(XPCOM_LIBS) \
+  $(MOZ_JS_LIBS) \
+  $(NSPR_LIBS) \
+  $(MOZALLOC_LIB) \
+  $(NULL)
+
+SHARED_LIBRARY_LIBS += \
+	../ucvlatin/$(LIB_PREFIX)ucvlatin_s.$(LIB_SUFFIX) \
+	../ucvibm/$(LIB_PREFIX)ucvibm_s.$(LIB_SUFFIX) \
+	../ucvja/$(LIB_PREFIX)ucvja_s.$(LIB_SUFFIX) \
+	../ucvtw2/$(LIB_PREFIX)ucvtw2_s.$(LIB_SUFFIX) \
+	../ucvtw/$(LIB_PREFIX)ucvtw_s.$(LIB_SUFFIX) \
+	../ucvko/$(LIB_PREFIX)ucvko_s.$(LIB_SUFFIX) \
+	../ucvcn/$(LIB_PREFIX)ucvcn_s.$(LIB_SUFFIX) \
+	$(NULL)
+
+ifdef FORCE_SHARED_LIB
+SHARED_LIBRARY_LIBS += \
+  ../util/external/$(LIB_PREFIX)ucvxutil_s.$(LIB_SUFFIX) \
+  $(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk

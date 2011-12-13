@@ -312,6 +312,7 @@ class XPCShellTests(object):
       On a remote system, this is more complex and we need to overload this function.
     """
     cmd = wrapCommand(cmd)
+    print cmd
     proc = Popen(cmd, stdout=stdout, stderr=stderr, 
                 env=env, cwd=cwd)
     return proc
