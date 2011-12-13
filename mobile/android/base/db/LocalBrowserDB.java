@@ -238,6 +238,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         values.put(Browser.BookmarkColumns.TITLE, title);
         values.put(Bookmarks.URL, uri);
 
+        // Restore deleted record if possible
+        values.put(Bookmarks.IS_DELETED, 0);
+
         int updated = cr.update(appendProfile(Bookmarks.CONTENT_URI),
                                 values,
                                 Bookmarks.URL + " = ?",
@@ -288,6 +291,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         values.put(Images.FAVICON, stream.toByteArray());
         values.put(Images.URL, uri);
 
+        // Restore deleted record if possible
+        values.put(Images.IS_DELETED, 0);
+
         int updated = cr.update(appendProfile(Images.CONTENT_URI),
                                 values,
                                 Images.URL + " = ?",
@@ -307,6 +313,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         ContentValues values = new ContentValues();
         values.put(Images.THUMBNAIL, stream.toByteArray());
         values.put(Images.URL, uri);
+
+        // Restore deleted record if possible
+        values.put(Images.IS_DELETED, 0);
 
         int updated = cr.update(appendProfile(Images.CONTENT_URI),
                                 values,
