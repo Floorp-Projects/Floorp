@@ -175,29 +175,18 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
     }
 
     public void addBookmarkPre11(ContentResolver cr, String title, String uri) {
-        Cursor cursor = cr.query(Browser.BOOKMARKS_URI,
-                                 new String[] { BookmarkColumns.URL },
-                                 Browser.BookmarkColumns.URL + " = ?",
-                                 new String[] { uri },
-                                 Browser.BookmarkColumns.URL);
-
         ContentValues values = new ContentValues();
         values.put(Browser.BookmarkColumns.BOOKMARK, "1");
         values.put(Browser.BookmarkColumns.TITLE, title);
+        values.put(Browser.BookmarkColumns.URL, uri);
 
-        if (cursor.getCount() == 1) {
-            // entry exists, update the bookmark flag
-            cr.update(Browser.BOOKMARKS_URI,
-                      values,
-                      Browser.BookmarkColumns.URL + " = ?",
-                      new String[] { uri });
-        } else {
-            // add a new entry
-            values.put(Browser.BookmarkColumns.URL, uri);
+        int updated = cr.update(Browser.BOOKMARKS_URI,
+                                values,
+                                Browser.BookmarkColumns.URL + " = ?",
+                                new String[] { uri });
+
+        if (updated == 0)
             cr.insert(Browser.BOOKMARKS_URI, values);
-        }
-
-        cursor.close();
     }
 
     public void addBookmarkPost11(ContentResolver cr, String title, String uri) {
