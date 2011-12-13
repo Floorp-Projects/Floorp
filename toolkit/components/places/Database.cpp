@@ -102,6 +102,9 @@
 // Old Sync GUID annotation.
 #define SYNCGUID_ANNO NS_LITERAL_CSTRING("sync/guid")
 
+// Places string bundle, contains internationalized bookmark root names.
+#define PLACES_BUNDLE "chrome://places/locale/places.properties"
+
 using namespace mozilla;
 
 namespace mozilla {
@@ -256,6 +259,77 @@ SetJournalMode(nsCOMPtr<mozIStorageConnection>& aDBConn,
 
   return JOURNAL_DELETE;
 }
+
+nsresult
+CreateRoot(nsCOMPtr<mozIStorageConnection>& aDBConn,
+           const nsCString& aRootName,
+           const nsXPIDLString& titleString)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // The position of the new item in its folder.
+  static PRInt32 itemPosition = 0;
+
+  // A single creation timestamp for all roots so that the root folder's
+  // last modification time isn't earlier than its childrens' creation time.
+  static PRTime timestamp = 0;
+  if (!timestamp)
+    timestamp = PR_Now();
+
+  // Create a new bookmark folder for the root.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = aDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "INSERT INTO moz_bookmarks "
+      "(type, position, title, dateAdded, lastModified, guid, parent) "
+    "VALUES (:item_type, :item_position, :item_title,"
+            ":date_added, :last_modified, GENERATE_GUID(),"
+            "IFNULL((SELECT id FROM moz_bookmarks WHERE parent = 0), 0))"
+  ), getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("item_type"),
+                             nsINavBookmarksService::TYPE_FOLDER);
+  if (NS_FAILED(rv)) return rv;
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("item_position"), itemPosition);
+  if (NS_FAILED(rv)) return rv;
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("item_title"),
+                                  NS_ConvertUTF16toUTF8(titleString));
+  if (NS_FAILED(rv)) return rv;
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("date_added"), timestamp);
+  if (NS_FAILED(rv)) return rv;
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("last_modified"), timestamp);
+  if (NS_FAILED(rv)) return rv;
+  rv = stmt->Execute();
+  if (NS_FAILED(rv)) return rv;
+
+  // Create an entry in moz_bookmarks_roots to link the folder to the root.
+  nsCOMPtr<mozIStorageStatement> newRootStmt;
+  rv = aDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "INSERT INTO moz_bookmarks_roots (root_name, folder_id) "
+    "VALUES (:root_name, "
+              "(SELECT id from moz_bookmarks WHERE "
+              " position = :item_position AND "
+              " parent = IFNULL((SELECT MIN(folder_id) FROM moz_bookmarks_roots), 0)))"
+  ), getter_AddRefs(newRootStmt));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = newRootStmt->BindUTF8StringByName(NS_LITERAL_CSTRING("root_name"),
+                                         aRootName);
+  if (NS_FAILED(rv)) return rv;
+  rv = newRootStmt->BindInt32ByName(NS_LITERAL_CSTRING("item_position"),
+                                    itemPosition);
+  if (NS_FAILED(rv)) return rv;
+  rv = newRootStmt->Execute();
+  if (NS_FAILED(rv)) return rv;
+
+  // The 'places' root is a folder containing the other roots.
+  // The first bookmark in a folder has position 0.
+  if (!aRootName.Equals("places"))
+    ++itemPosition;
+
+  return NS_OK;
+}
+
 
 } // Anonymous namespace
 
@@ -657,6 +731,11 @@ Database::InitSchema(bool* aDatabaseMigrated)
       // Firefox 11 uses schema version 14.
 
       // Schema Upgrades must add migration code here.
+
+      rv = UpdateBookmarkRootTitles();
+      // We don't want a broken localization to cause us to think
+      // the database is corrupt and needs to be replaced.
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
   else {
@@ -733,6 +812,10 @@ Database::InitSchema(bool* aDatabaseMigrated)
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_ITEMSANNOS_PLACEATTRIBUTE);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // Initialize the bookmark roots in the new DB.
+    rv = CreateBookmarkRoots();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Set the schema version to the current one.
@@ -748,6 +831,78 @@ Database::InitSchema(bool* aDatabaseMigrated)
   // AND TRY TO REPLACE IT.
   // DO NOT PUT HERE ANYTHING THAT IS NOT RELATED TO INITIALIZATION OR MODIFYING
   // THE DISK DATABASE.
+
+  return NS_OK;
+}
+
+nsresult
+Database::CreateBookmarkRoots()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    services::GetStringBundleService();
+  NS_ENSURE_STATE(bundleService);
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsresult rv = bundleService->CreateBundle(PLACES_BUNDLE, getter_AddRefs(bundle));
+  if (NS_FAILED(rv)) return rv;
+
+  nsXPIDLString rootTitle;
+  // The first root's title is an empty string.
+  rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("places"), rootTitle);
+  if (NS_FAILED(rv)) return rv;
+
+  // Fetch the internationalized folder name from the string bundle.
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BookmarksMenuFolderTitle").get(),
+                                 getter_Copies(rootTitle));
+  if (NS_FAILED(rv)) return rv;
+  rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("menu"), rootTitle);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BookmarksToolbarFolderTitle").get(),
+                                 getter_Copies(rootTitle));
+  if (NS_FAILED(rv)) return rv;
+  rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("toolbar"), rootTitle);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("TagsFolderTitle").get(),
+                                 getter_Copies(rootTitle));
+  if (NS_FAILED(rv)) return rv;
+  rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("tags"), rootTitle);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("UnsortedBookmarksFolderTitle").get(),
+                                 getter_Copies(rootTitle));
+  if (NS_FAILED(rv)) return rv;
+  rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("unfiled"), rootTitle);
+  if (NS_FAILED(rv)) return rv;
+
+#if DEBUG
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT "
+      "(SELECT COUNT(*) FROM moz_bookmarks), "
+      "(SELECT COUNT(*) FROM moz_bookmarks_roots), "
+      "(SELECT SUM(position) FROM moz_bookmarks WHERE "
+        "id IN (SELECT folder_id FROM moz_bookmarks_roots))"
+  ), getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) return rv;
+
+  bool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  if (NS_FAILED(rv)) return rv;
+  MOZ_ASSERT(hasResult);
+  PRInt32 bookmarkCount = 0;
+  rv = stmt->GetInt32(0, &bookmarkCount);
+  if (NS_FAILED(rv)) return rv;
+  PRInt32 rootCount = 0;
+  rv = stmt->GetInt32(1, &rootCount);
+  if (NS_FAILED(rv)) return rv;
+  PRInt32 positionSum = 0;
+  rv = stmt->GetInt32(2, &positionSum);
+  if (NS_FAILED(rv)) return rv;
+  MOZ_ASSERT(bookmarkCount == 5 && rootCount == 5 && positionSum == 6);
+#endif
 
   return NS_OK;
 }
@@ -778,6 +933,64 @@ Database::InitTempTriggers()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+Database::UpdateBookmarkRootTitles()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    services::GetStringBundleService();
+  NS_ENSURE_STATE(bundleService);
+
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsresult rv = bundleService->CreateBundle(PLACES_BUNDLE, getter_AddRefs(bundle));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<mozIStorageAsyncStatement> stmt;
+  rv = mMainConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
+    "UPDATE moz_bookmarks SET title = :new_title WHERE id = "
+      "(SELECT folder_id FROM moz_bookmarks_roots WHERE root_name = :root_name)"
+  ), getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
+  rv = stmt->NewBindingParamsArray(getter_AddRefs(paramsArray));
+  if (NS_FAILED(rv)) return rv;
+
+  const char *rootNames[] = { "menu", "toolbar", "tags", "unfiled" };
+  const char *titleStringIDs[] = {
+    "BookmarksMenuFolderTitle", "BookmarksToolbarFolderTitle",
+    "TagsFolderTitle", "UnsortedBookmarksFolderTitle"
+  };
+
+  for (PRUint32 i = 0; i < ArrayLength(rootNames); ++i) {
+    nsXPIDLString title;
+    rv = bundle->GetStringFromName(NS_ConvertASCIItoUTF16(titleStringIDs[i]).get(),
+                                   getter_Copies(title));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<mozIStorageBindingParams> params;
+    rv = paramsArray->NewBindingParams(getter_AddRefs(params));
+    if (NS_FAILED(rv)) return rv;
+    rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("root_name"),
+                                      nsDependentCString(rootNames[i]));
+    if (NS_FAILED(rv)) return rv;
+    rv = params->BindUTF8StringByName(NS_LITERAL_CSTRING("new_title"),
+                                      NS_ConvertUTF16toUTF8(title));
+    if (NS_FAILED(rv)) return rv;
+    rv = paramsArray->AddParams(params);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  rv = stmt->BindParameters(paramsArray);
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<mozIStoragePendingStatement> pendingStmt;
+  rv = stmt->ExecuteAsync(nsnull, getter_AddRefs(pendingStmt));
+  if (NS_FAILED(rv)) return rv;
 
   return NS_OK;
 }
