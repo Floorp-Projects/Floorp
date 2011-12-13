@@ -236,17 +236,17 @@ public class ViewportMetrics {
 
     public String toJSON() {
         try {
-            return new JSONStringer().object()
-                .key("x").value(mViewportRect.left)
-                .key("y").value(mViewportRect.top)
-                .key("width").value(mViewportRect.width())
-                .key("height").value(mViewportRect.height())
-                .key("pageWidth").value(mPageSize.width)
-                .key("pageHeight").value(mPageSize.height)
-                .key("offsetX").value(mViewportOffset.x)
-                .key("offsetY").value(mViewportOffset.y)
-                .key("zoom").value(mZoomFactor)
-                .endObject().toString();
+            JSONStringer object = new JSONStringer().object();
+            object.key("zoom").value(mZoomFactor);
+            object.key("offsetY").value(mViewportOffset.y);
+            object.key("offsetX").value(mViewportOffset.x);
+            object.key("pageHeight").value(mPageSize.height);
+            object.key("pageWidth").value(mPageSize.width);
+            object.key("height").value(mViewportRect.height());
+            object.key("width").value(mViewportRect.width());
+            object.key("y").value(mViewportRect.top);
+            object.key("x").value(mViewportRect.left);
+            return object.endObject().toString();
         } catch (JSONException je) {
             Log.e(LOGTAG, "Error serializing viewportmetrics", je);
             return "";
