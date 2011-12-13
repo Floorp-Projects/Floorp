@@ -50,6 +50,10 @@ public class BrowserContract {
 
     public static final String PARAM_LIMIT = "limit";
 
+    interface CommonColumns {
+        public static final String _ID = "_id";
+    }
+
     interface SyncColumns {
         public static final String GUID = "guid";
 
@@ -58,9 +62,7 @@ public class BrowserContract {
         public static final String DATE_MODIFIED = "modified";
     }
 
-    interface CommonColumns {
-        public static final String _ID = "_id";
-
+    interface URLColumns {
         public static final String URL = "url";
 
         public static final String TITLE = "title";
@@ -72,7 +74,7 @@ public class BrowserContract {
         public static final String THUMBNAIL = "thumbnail";
     }
 
-    public static final class Images implements ImageColumns, SyncColumns {
+    public static final class Images implements CommonColumns, ImageColumns, SyncColumns {
         private Images() {}
 
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "images");
@@ -82,7 +84,7 @@ public class BrowserContract {
         public static final String FAVICON_URL = "favicon_url";
     }
 
-    public static final class Bookmarks implements CommonColumns, ImageColumns, SyncColumns {
+    public static final class Bookmarks implements CommonColumns, URLColumns, ImageColumns, SyncColumns {
         private Bookmarks() {}
 
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "bookmarks");
@@ -104,7 +106,7 @@ public class BrowserContract {
         public static final String KEYWORD = "keyword";
     }
 
-    public static final class History implements CommonColumns, ImageColumns, SyncColumns {
+    public static final class History implements CommonColumns, URLColumns, ImageColumns, SyncColumns {
         private History() {}
 
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "history");
