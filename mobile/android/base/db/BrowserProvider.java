@@ -341,7 +341,22 @@ public class BrowserProvider extends ContentProvider {
                     ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
                     TABLE_HISTORY_JOIN_IMAGES);
 
+            createMobileBookmarksFolder(db);
+
             // FIXME: Create default bookmarks here
+        }
+
+        private void createMobileBookmarksFolder(SQLiteDatabase db) {
+            ContentValues values = new ContentValues();
+            values.put(Bookmarks.GUID, Bookmarks.MOBILE_FOLDER_GUID);
+            values.put(Bookmarks.IS_FOLDER, 1);
+            values.put(Bookmarks.POSITION, 0);
+
+            long now = System.currentTimeMillis();
+            values.put(Bookmarks.DATE_CREATED, now);
+            values.put(Bookmarks.DATE_MODIFIED, now);
+
+            db.insertOrThrow(TABLE_BOOKMARKS, Bookmarks.GUID, values);
         }
 
         @Override
