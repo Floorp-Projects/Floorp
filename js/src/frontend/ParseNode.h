@@ -41,6 +41,8 @@
 #ifndef ParseNode_h__
 #define ParseNode_h__
 
+#include "mozilla/Attributes.h"
+
 #include "jsscript.h"
 
 #include "frontend/ParseMaps.h"
@@ -61,7 +63,7 @@ namespace js {
 enum ParseNodeKind {
     PNK_SEMI,
     PNK_COMMA,
-    PNK_HOOK,
+    PNK_CONDITIONAL,
     PNK_COLON,
     PNK_OR,
     PNK_AND,
@@ -313,7 +315,8 @@ enum ParseNodeKind {
  * PNK_MULASSIGN,
  * PNK_DIVASSIGN,
  * PNK_MODASSIGN
- * PNK_HOOK     ternary     pn_kid1: cond, pn_kid2: then, pn_kid3: else
+ * PNK_CONDITIONAL ternary  (cond ? trueExpr : falseExpr)
+ *                          pn_kid1: cond, pn_kid2: then, pn_kid3: else
  * PNK_OR       binary      pn_left: first in || chain, pn_right: rest of chain
  * PNK_AND      binary      pn_left: first in && chain, pn_right: rest of chain
  * PNK_BITOR    binary      pn_left: left-assoc | expr, pn_right: ^ expr
@@ -486,6 +489,7 @@ class LoopControlStatement;
 class BreakStatement;
 class ContinueStatement;
 class XMLProcessingInstruction;
+class ConditionalExpression;
 
 struct ParseNode {
   private:
@@ -495,6 +499,8 @@ struct ParseNode {
                         pn_parens : 1,  /* this expr was enclosed in parens */
                         pn_used   : 1,  /* name node is on a use-chain */
                         pn_defn   : 1;  /* this node is a Definition */
+
+    void operator=(const ParseNode &other) MOZ_DELETE;
 
   public:
     ParseNode(ParseNodeKind kind, JSOp op, ParseNodeArity arity)
@@ -927,6 +933,7 @@ struct ParseNode {
 #if JS_HAS_XML_SUPPORT
     inline XMLProcessingInstruction &asXMLProcessingInstruction();
 #endif
+    inline ConditionalExpression &asConditionalExpression();
 };
 
 struct NullaryNode : public ParseNode {
@@ -1097,6 +1104,42 @@ ParseNode::asXMLProcessingInstruction()
     return *static_cast<XMLProcessingInstruction *>(this);
 }
 #endif
+
+class ConditionalExpression : public ParseNode {
+  public:
+    ConditionalExpression(ParseNode *condition, ParseNode *thenExpr, ParseNode *elseExpr)
+      : ParseNode(PNK_CONDITIONAL, JSOP_NOP, PN_TERNARY,
+                  TokenPos::make(condition->pn_pos.begin, elseExpr->pn_pos.end))
+    {
+        JS_ASSERT(condition);
+        JS_ASSERT(thenExpr);
+        JS_ASSERT(elseExpr);
+        pn_u.ternary.kid1 = condition;
+        pn_u.ternary.kid2 = thenExpr;
+        pn_u.ternary.kid3 = elseExpr;
+    }
+
+    ParseNode &condition() const {
+        return *pn_u.ternary.kid1;
+    }
+
+    ParseNode &thenExpression() const {
+        return *pn_u.ternary.kid2;
+    }
+
+    ParseNode &elseExpression() const {
+        return *pn_u.ternary.kid3;
+    }
+};
+
+inline ConditionalExpression &
+ParseNode::asConditionalExpression()
+{
+    JS_ASSERT(isKind(PNK_CONDITIONAL));
+    JS_ASSERT(isOp(JSOP_NOP));
+    JS_ASSERT(pn_arity == PN_TERNARY);
+    return *static_cast<ConditionalExpression *>(this);
+}
 
 ParseNode *
 CloneLeftHandSide(ParseNode *opn, TreeContext *tc);

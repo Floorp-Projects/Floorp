@@ -2402,7 +2402,7 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
                builder.sequenceExpression(exprs, &pn->pn_pos, dst);
       }
 
-      case PNK_HOOK:
+      case PNK_CONDITIONAL:
       {
         Value test, cons, alt;
 

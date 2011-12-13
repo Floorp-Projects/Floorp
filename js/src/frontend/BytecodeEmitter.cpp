@@ -6772,16 +6772,16 @@ EmitSyntheticStatements(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrd
 }
 
 static bool
-EmitConditionalExpression(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+EmitConditionalExpression(JSContext *cx, BytecodeEmitter *bce, ConditionalExpression &conditional)
 {
     /* Emit the condition, then branch if false to the else part. */
-    if (!EmitTree(cx, bce, pn->pn_kid1))
+    if (!EmitTree(cx, bce, &conditional.condition()))
         return false;
     ptrdiff_t noteIndex = NewSrcNote(cx, bce, SRC_COND);
     if (noteIndex < 0)
         return false;
     ptrdiff_t beq = EmitJump(cx, bce, JSOP_IFEQ, 0);
-    if (beq < 0 || !EmitTree(cx, bce, pn->pn_kid2))
+    if (beq < 0 || !EmitTree(cx, bce, &conditional.thenExpression()))
         return false;
 
     /* Jump around else, fixup the branch, emit else, fixup jump. */
@@ -6802,7 +6802,7 @@ EmitConditionalExpression(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      */
     JS_ASSERT(bce->stackDepth > 0);
     bce->stackDepth--;
-    if (!EmitTree(cx, bce, pn->pn_kid3))
+    if (!EmitTree(cx, bce, &conditional.elseExpression()))
         return false;
     CHECK_AND_SET_JUMP_OFFSET_AT(cx, bce, jmp);
     return SetSrcNoteOffset(cx, bce, noteIndex, 0, jmp - beq);
@@ -7227,8 +7227,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
         break;
 
-      case PNK_HOOK:
-        ok = EmitConditionalExpression(cx, bce, pn);
+      case PNK_CONDITIONAL:
+        ok = EmitConditionalExpression(cx, bce, pn->asConditionalExpression());
         break;
 
       case PNK_OR:
