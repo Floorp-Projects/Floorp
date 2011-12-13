@@ -1261,6 +1261,9 @@ abstract public class GeckoApp
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
+        // Uncomment to run StrictMode tests:
+        // enableStrictMode();
+
         System.loadLibrary("mozutils");
         mMainHandler = new Handler();
         Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - onCreate");
@@ -1280,13 +1283,6 @@ abstract public class GeckoApp
         if (mLastUri == null || mLastUri.equals("") ||
             mLastUri.equals("about:home")) {
             showAboutHome();
-        }
-
-        if (Build.VERSION.SDK_INT >= 9) {
-            StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
-                                       .detectDiskReads().detectDiskWrites().detectNetwork()
-                                       .penaltyLog().build());
-            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().penaltyLog().build());
         }
 
         super.onCreate(savedInstanceState);
@@ -1447,6 +1443,28 @@ abstract public class GeckoApp
                 Log.w(LOGTAG, "checking for an update took " + (new Date().getTime() - startTime) + "ms");
             }
         }, 50);
+    }
+
+    /**
+     * Enable Android StrictMode checks (for supported OS versions).
+     * http://developer.android.com/reference/android/os/StrictMode.html
+     */
+    private void enableStrictMode()
+    {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
+            return;
+        }
+
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                                  .detectAll()
+                                  .penaltyLog()
+                                  .penaltyDialog()
+                                  .build());
+
+        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                               .detectAll()
+                               .penaltyLog()
+                               .build());
     }
 
     public void enableCameraView() {
