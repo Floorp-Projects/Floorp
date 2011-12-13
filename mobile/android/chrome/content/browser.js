@@ -435,6 +435,16 @@ var BrowserApp = {
           name: prefName
         };
 
+        // The plugin pref is actually two separate prefs, so
+        // we need to handle it differently
+        if (prefName == "plugin.enable") {
+          // Use a string type for java's ListPreference
+          pref.type = "string";
+          pref.value = PluginHelper.getPluginPreference();
+          prefs.push(pref);
+          continue;
+        }
+
         try {
           switch (Services.prefs.getPrefType(prefName)) {
             case Ci.nsIPrefBranch.PREF_BOOL:
@@ -489,6 +499,13 @@ var BrowserApp = {
 
   setPreferences: function setPreferences(aPref) {
     let json = JSON.parse(aPref);
+
+    // The plugin pref is actually two separate prefs, so
+    // we need to handle it differently
+    if (json.name == "plugin.enable") {
+      PluginHelper.setPluginPreference(json.value);
+      return;
+    }
 
     // when sending to java, we normalized special preferences that use
     // integers and strings to represent booleans.  here, we convert them back
@@ -2923,6 +2940,32 @@ var PluginHelper = {
     for (let i = 0; i < plugins.length; i++) {
       let objLoadingContent = plugins[i].QueryInterface(Ci.nsIObjectLoadingContent);
       objLoadingContent.playPlugin();
+    }
+  },
+
+  getPluginPreference: function getPluginPreference() {
+    let pluginDisable = Services.prefs.getBoolPref("plugin.disable");
+    if (pluginDisable)
+      return "0";
+
+    let clickToPlay = Services.prefs.getBoolPref("plugins.click_to_play");
+    return clickToPlay ? "2" : "1";
+  },
+
+  setPluginPreference: function setPluginPreference(aValue) {
+    switch (aValue) {
+      case "0": // Enable Plugins = No
+        Services.prefs.setBoolPref("plugin.disable", true);
+        Services.prefs.clearUserPref("plugins.click_to_play");
+        break;
+      case "1": // Enable Plugins = Yes
+        Services.prefs.clearUserPref("plugin.disable");
+        Services.prefs.setBoolPref("plugins.click_to_play", false);
+        break;
+      case "2": // Enable Plugins = Tap to Play (default)
+        Services.prefs.clearUserPref("plugin.disable");
+        Services.prefs.clearUserPref("plugins.click_to_play");
+        break;
     }
   },
 
