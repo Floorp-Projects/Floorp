@@ -82,19 +82,15 @@ public class AboutHomeContent extends LinearLayout {
     }
 
     private static final String LOGTAG = "GeckoAboutHome";
-    private static final String TITLE_KEY = "title";
     private static final int NUMBER_OF_TOP_SITES = 3;
     private static final int kTileWidth = 122;
 
     private Cursor mCursor;
-    private Uri mUri;
-    private String mTitle;
 
     protected ListAdapter mGridAdapter;
     protected ArrayAdapter<String> mAddonAdapter;
     protected GridView mGrid;
     protected ListView mAddonList;
-    private Handler mHandler = new Handler();
 
     public void onActivityContentChanged(Activity activity) {
         mGrid = (GridView)findViewById(R.id.grid);
