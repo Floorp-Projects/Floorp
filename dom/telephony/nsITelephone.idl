@@ -48,7 +48,7 @@ interface nsITelephoneCallback : nsISupports {
   void onsignalstrengthchange(in jsval event);
 };
 
-[scriptable, uuid(3d3deb80-fa5e-4e05-9153-91ee614f67d5)]
+[scriptable, uuid(f6baa721-665e-403e-8a98-acaa0d8bf267)]
 interface nsITelephone : nsISupports {
 
   readonly attribute jsval currentState;
@@ -57,6 +57,8 @@ interface nsITelephone : nsISupports {
   void hangUp(in long callIndex);
   void answerCall();
   void rejectCall();
+  attribute bool microphoneMuted;
+  attribute bool speakerEnabled;
 
   void registerCallback(in nsITelephoneCallback callback);
   void unregisterCallback(in nsITelephoneCallback callback);

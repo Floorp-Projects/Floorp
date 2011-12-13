@@ -638,6 +638,19 @@ let RIL = {
   },
 
   /**
+   * Mute or unmute the radio.
+   *
+   * @param mute
+   *        Boolean to indicate whether to mute or unmute the radio.
+   */
+  setMute: function setMute(mute) {
+    Buf.newParcel(REQUEST_SET_MUTE);
+    Buf.writeUint32(1);
+    Buf.writeUint32(mute ? 1 : 0);
+    Buf.sendParcel();
+  },
+
+  /**
    * Answer an incoming call.
    */
   answerCall: function answerCall() {
@@ -867,7 +880,9 @@ RIL[REQUEST_BASEBAND_VERSION] = function REQUEST_BASEBAND_VERSION() {
   Phone.onBasebandVersion(version);
 },
 RIL[REQUEST_SEPARATE_CONNECTION] = null;
-RIL[REQUEST_SET_MUTE] = null;
+RIL[REQUEST_SET_MUTE] = function REQUEST_SET_MUTE(length) {
+  Phone.onSetMute();
+};
 RIL[REQUEST_GET_MUTE] = null;
 RIL[REQUEST_QUERY_CLIP] = null;
 RIL[REQUEST_LAST_DATA_CALL_FAIL_CAUSE] = null;
@@ -946,12 +961,16 @@ RIL[UNSOLICITED_STK_CALL_SETUP] = null;
 RIL[UNSOLICITED_SIM_SMS_STORAGE_FULL] = null;
 RIL[UNSOLICITED_SIM_REFRESH] = null;
 RIL[UNSOLICITED_CALL_RING] = function UNSOLICITED_CALL_RING() {
-  let info = {
-    isPresent:  Buf.readUint32(),
-    signalType: Buf.readUint32(),
-    alertPitch: Buf.readUint32(),
-    signal:     Buf.readUint32()
-  };
+  let info;
+  let isCDMA = false; //XXX TODO hard-code this for now
+  if (isCDMA) {
+    info = {
+      isPresent:  Buf.readUint32(),
+      signalType: Buf.readUint32(),
+      alertPitch: Buf.readUint32(),
+      signal:     Buf.readUint32()
+    };
+  }
   Phone.onCallRing(info);
 };
 RIL[UNSOLICITED_RESPONSE_SIM_STATUS_CHANGED] = null;
@@ -1125,7 +1144,7 @@ let Phone = {
                              callIndex:  callIndex,
                              number:     currentCall.number,
                              name:       currentCall.name});
-        delete this.currentCalls[currentCall];
+        delete this.currentCalls[callIndex];
         continue;
       }
 
@@ -1164,8 +1183,8 @@ let Phone = {
   },
 
   onCallRing: function onCallRing(info) {
-    debug("onCallRing " + JSON.stringify(info)); //DEBUG
-    RIL.getCurrentCalls();
+    // For now we don't need to do anything here because we'll also get a
+    // call state changed notification.
   },
 
   onNetworkStateChanged: function onNetworkStateChanged() {
@@ -1248,6 +1267,9 @@ let Phone = {
   onRejectCall: function onRejectCall() {
   },
 
+  onSetMute: function onSetMute() {
+  },
+
   onSendSMS: function onSendSMS(messageRef, ackPDU, errorCode) {
     //TODO
   },
@@ -1297,6 +1319,18 @@ let Phone = {
     //TODO need to check whether call is holding/waiting/background
     // and then use REQUEST_HANGUP_WAITING_OR_BACKGROUND
     RIL.hangUp(options.callIndex);
+  },
+
+  /**
+   * Mute or unmute the radio.
+   *
+   * @param mute
+   *        Boolean to indicate whether to mute or unmute the radio.
+   */
+  setMute: function setMute(options) {
+    //TODO need to check whether call is holding/waiting/background
+    // and then use REQUEST_HANGUP_WAITING_OR_BACKGROUND
+    RIL.setMute(options.mute);
   },
 
   /**

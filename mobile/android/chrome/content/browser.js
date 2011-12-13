@@ -540,10 +540,17 @@ var BrowserApp = {
     let args = JSON.parse(aData);
     let uri;
     if (args.engine) {
-      let engine = Services.search.getEngineByName(args.engine);
-      uri = engine.getSubmission(args.url).uri;
-    } else
+      let engine;
+      if (args.engine == "__default__")
+        engine = Services.search.currentEngine || Services.search.defaultEngine;
+      else
+        engine = Services.search.getEngineByName(args.engine);
+
+      if (engine)
+        uri = engine.getSubmission(args.url).uri;
+    } else {
       uri = URIFixup.createFixupURI(args.url, Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP);
+    }
     return uri ? uri.spec : args.url;
   },
 
@@ -1198,6 +1205,8 @@ Tab.prototype = {
   },
 
   sendViewportUpdate: function() {
+    if (BrowserApp.selectedTab != this)
+      return;
     sendMessageToJava({
       gecko: {
         type: "Viewport:Update",

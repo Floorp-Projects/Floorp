@@ -138,7 +138,7 @@
 
 template <class CharT> struct nsCharTraits {};
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 struct nsCharTraits<PRUnichar>
   {
     typedef PRUnichar char_type;
@@ -428,7 +428,7 @@ struct nsCharTraits<PRUnichar>
 #endif
   };
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 struct nsCharTraits<char>
   {
     typedef char           char_type;
@@ -722,7 +722,7 @@ struct nsCharSourceTraits<CharT*>
 
 #else
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 struct nsCharSourceTraits<const char*>
   {
     typedef ptrdiff_t difference_type;
@@ -758,7 +758,7 @@ struct nsCharSourceTraits<const char*>
  };
 
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 struct nsCharSourceTraits<const PRUnichar*>
   {
     typedef ptrdiff_t difference_type;
@@ -823,7 +823,7 @@ struct nsCharSinkTraits<CharT*>
 
 #else
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 struct nsCharSinkTraits<char*>
   {
     static
@@ -835,7 +835,7 @@ struct nsCharSinkTraits<char*>
       }
   };
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 struct nsCharSinkTraits<PRUnichar*>
   {
     static

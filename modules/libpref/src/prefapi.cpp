@@ -450,38 +450,6 @@ bool PREF_HasUserPref(const char *pref_name)
     return (PREF_HAS_USER_VALUE(pref) != 0);
 
 }
-nsresult PREF_GetCharPref(const char *pref_name, char * return_buffer, int * length, bool get_default)
-{
-    if (!gHashTable.ops)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    nsresult rv = NS_ERROR_UNEXPECTED;
-    char* stringVal;
-
-    PrefHashEntry* pref = pref_HashTableLookup(pref_name);
-
-    if (pref)
-    {
-        if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
-            stringVal = pref->defaultPref.stringVal;
-        else
-            stringVal = pref->userPref.stringVal;
-
-        if (stringVal)
-        {
-            if (*length <= 0)
-                *length = PL_strlen(stringVal) + 1;
-            else
-            {
-                PL_strncpy(return_buffer, stringVal, NS_MIN<size_t>(*length - 1, PL_strlen(stringVal) + 1));
-                return_buffer[*length - 1] = '\0';
-            }
-            rv = NS_OK;
-        }
-    }
-
-    return rv;
-}
 
 nsresult
 PREF_CopyCharPref(const char *pref_name, char ** return_buffer, bool get_default)

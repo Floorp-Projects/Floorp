@@ -200,6 +200,12 @@ COMPONENT_LIBS += \
   windowds \
   $(NULL)
 
+ifneq (WINNT,$(OS_ARCH))
+COMPONENT_LIBS += \
+  uconvd \
+  $(NULL)
+endif
+
 ifdef BUILD_CTYPES
 COMPONENT_LIBS += \
   jsctypes \
@@ -422,7 +428,10 @@ OS_LIBS += -lGLESv2
 endif
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-OS_LIBS += -lui
+OS_LIBS += \
+  -lui \
+  -lmedia \
+  $(NULL)
 endif
 
 EXTRA_DEPS += \
