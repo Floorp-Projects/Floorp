@@ -168,3 +168,16 @@ function setCleanState()
   let win = getDMWindow();
   if (win) win.close();
 }
+
+/**
+ * Clears history invoking callback when done.
+ */
+function waitForClearHistory(aCallback) {
+  Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  Services.obs.addObserver(function observeClearHistory(aSubject, aTopic) {
+    Services.obs.removeObserver(observeClearHistory, aTopic);
+    aCallback();
+  }, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
+  PlacesUtils.bhistory.removeAllPages();
+}
