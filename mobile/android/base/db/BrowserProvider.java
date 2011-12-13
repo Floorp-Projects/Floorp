@@ -46,6 +46,7 @@ import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Images;
+import org.mozilla.gecko.db.BrowserContract.Schema;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -53,6 +54,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
@@ -65,6 +67,8 @@ public class BrowserProvider extends ContentProvider {
     private static final String LOGTAG = "GeckoBrowserProvider";
 
     static final String DATABASE_NAME = "browser.db";
+
+    static final int DATABASE_VERSION = 1;
 
     static final String TABLE_BOOKMARKS = "bookmarks";
     static final String TABLE_HISTORY = "history";
@@ -81,6 +85,9 @@ public class BrowserProvider extends ContentProvider {
 
     // Image matches
     static final int IMAGES = 300;
+
+    // Schema matches
+    static final int SCHEMA = 400;
 
     static final String DEFAULT_BOOKMARKS_SORT_ORDER = Bookmarks.IS_FOLDER
             + " DESC, " + Bookmarks.POSITION + " ASC, " + Bookmarks._ID
@@ -101,6 +108,7 @@ public class BrowserProvider extends ContentProvider {
     static final HashMap<String, String> BOOKMARKS_PROJECTION_MAP = new HashMap<String, String>();
     static final HashMap<String, String> HISTORY_PROJECTION_MAP = new HashMap<String, String>();
     static final HashMap<String, String> IMAGES_PROJECTION_MAP = new HashMap<String, String>();
+    static final HashMap<String, String> SCHEMA_PROJECTION_MAP = new HashMap<String, String>();
 
     private HashMap<String, DatabaseHelper> mDatabasePerProfile;
 
@@ -152,6 +160,12 @@ public class BrowserProvider extends ContentProvider {
         map.put(Images.DATE_CREATED, qualifyColumn(TABLE_IMAGES, Images.DATE_CREATED));
         map.put(Images.DATE_MODIFIED, qualifyColumn(TABLE_IMAGES, Images.DATE_MODIFIED));
         map.put(Images.GUID, qualifyColumn(TABLE_IMAGES, Images.GUID));
+
+        // Schema
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "schema", SCHEMA);
+
+        map = SCHEMA_PROJECTION_MAP;
+        map.put(Schema.VERSION, Schema.VERSION);
     }
 
     static final String qualifyColumn(String table, String column) {
@@ -195,8 +209,6 @@ public class BrowserProvider extends ContentProvider {
     }
 
     final class DatabaseHelper extends SQLiteOpenHelper {
-        static final int DATABASE_VERSION = 1;
-
         public DatabaseHelper(Context context, String databasePath) {
             super(context, databasePath, null, DATABASE_VERSION);
         }
@@ -694,6 +706,15 @@ public class BrowserProvider extends ContentProvider {
                 qb.setTables(TABLE_IMAGES);
 
                 break;
+            }
+
+            case SCHEMA: {
+                Log.d(LOGTAG, "Query is on schema: " + uri);
+
+                MatrixCursor schemaCursor = new MatrixCursor(new String[] { Schema.VERSION });
+                schemaCursor.newRow().add(DATABASE_VERSION);
+
+                return schemaCursor;
             }
 
             default:
