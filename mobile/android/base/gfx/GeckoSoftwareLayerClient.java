@@ -103,7 +103,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
         mScreenSize = new IntSize(1, 1);
 
-        mBuffer = ByteBuffer.allocateDirect(mWidth * mHeight * 2);
+        mBuffer = GeckoAppShell.allocateDirectBuffer(mWidth * mHeight * 2);
 
         mCairoImage = new CairoImage() {
             @Override
@@ -117,6 +117,17 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         };
 
         mTileLayer = new SingleTileLayer(mCairoImage);
+    }
+
+
+    protected void finalize() throws Throwable {
+        try {
+            if (mBuffer != null)
+                GeckoAppShell.freeDirectBuffer(mBuffer);
+            mBuffer = null;
+        } finally {
+            super.finalize();
+        }
     }
 
     /** Attaches the root layer to the layer controller so that Gecko appears. */
