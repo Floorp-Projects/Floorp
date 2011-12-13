@@ -2881,7 +2881,8 @@ var gDetailView = {
     var xml = xhr.responseXML;
     var settings = xml.querySelectorAll(":root > setting");
 
-    for (var i = 0, first = true; i < settings.length; i++) {
+    var firstSetting = null;
+    for (var i = 0; i < settings.length; i++) {
       var setting = settings[i];
 
       // Remove setting description, for replacement later
@@ -2897,9 +2898,9 @@ var gDetailView = {
 
       rows.appendChild(setting);
       var visible = window.getComputedStyle(setting, null).getPropertyValue("display") != "none";
-      if (first && visible) {
+      if (!firstSetting && visible) {
         setting.setAttribute("first-row", true);
-        first = false;
+        firstSetting = setting;
       }
 
       // Add a new row containing the description
@@ -2916,7 +2917,20 @@ var gDetailView = {
       }
     }
 
-    Services.obs.notifyObservers(document, "addon-options-displayed", this._addon.id);
+	// Ensure the page has loaded and force the XBL bindings to be synchronously applied,
+	// then notify observers.
+    if (gViewController.viewPort.selectedPanel.hasAttribute("loading")) {
+      gDetailView.node.addEventListener("ViewChanged", function viewChangedEventListener() {
+        gDetailView.node.removeEventListener("ViewChanged", viewChangedEventListener, false);
+        if (firstSetting)
+          firstSetting.clientTop;
+        Services.obs.notifyObservers(document, "addon-options-displayed", gDetailView._addon.id);
+      }, false);
+    } else {
+      if (firstSetting)
+        firstSetting.clientTop;
+      Services.obs.notifyObservers(document, "addon-options-displayed", this._addon.id);
+    }
   },
 
   getSelectedAddon: function() {
