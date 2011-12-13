@@ -1861,7 +1861,9 @@ SessionStoreService.prototype = {
     var entry = { url: aEntry.URI.spec };
 
     try {
-      aHostSchemeData.push({ host: aEntry.URI.host, scheme: aEntry.URI.scheme });
+      // throwing is expensive, we know that about: pages will throw
+      if (entry.url.indexOf("about:") != 0)
+        aHostSchemeData.push({ host: aEntry.URI.host, scheme: aEntry.URI.scheme });
     }
     catch (ex) {
       // We just won't attempt to get cookies for this entry.
@@ -1959,22 +1961,24 @@ SessionStoreService.prototype = {
     }
     
     if (aEntry.childCount > 0) {
-      entry.children = [];
+      let children = [];
       for (var i = 0; i < aEntry.childCount; i++) {
         var child = aEntry.GetChildAt(i);
+
         if (child) {
-          entry.children.push(this._serializeHistoryEntry(child, aFullData,
-                                                          aIsPinned, aHostSchemeData));
-        }
-        else { // to maintain the correct frame order, insert a dummy entry 
-          entry.children.push({ url: "about:blank" });
-        }
-        // don't try to restore framesets containing wyciwyg URLs (cf. bug 424689 and bug 450595)
-        if (/^wyciwyg:\/\//.test(entry.children[i].url)) {
-          delete entry.children;
-          break;
+          // don't try to restore framesets containing wyciwyg URLs (cf. bug 424689 and bug 450595)
+          if (child.URI.schemeIs("wyciwyg")) {
+            children = [];
+            break;
+          }
+
+          children.push(this._serializeHistoryEntry(child, aFullData,
+                                                    aIsPinned, aHostSchemeData));
         }
       }
+
+      if (children.length)
+        entry.children = children;
     }
     
     return entry;

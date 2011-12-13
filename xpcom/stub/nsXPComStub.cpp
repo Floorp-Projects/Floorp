@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define XPCOM_MAKING_STUB
+
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
 #include "nsXPCOMStrings.h"
@@ -559,3 +561,12 @@ NS_CycleCollectorForget2(nsPurpleBufferEntry* e)
 {
   return NS_CycleCollectorForget2_P(e);
 }
+
+#ifdef XP_WIN
+#undef NS_IsCycleCollectorThread
+EXPORT_XPCOM_API(bool)
+NS_IsCycleCollectorThread()
+{
+  return NS_IsCycleCollectorThread_P();
+}
+#endif
