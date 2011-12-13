@@ -47,12 +47,16 @@ import android.database.CursorWrapper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
+import android.os.Build;
 import android.provider.Browser;
 import android.provider.Browser.BookmarkColumns;
 
 public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
     private static final String URL_COLUMN_ID = "_id";
     private static final String URL_COLUMN_THUMBNAIL = "thumbnail";
+
+    private static final Uri BOOKMARKS_CONTENT_URI_POST_11 = Uri.parse("content://com.android.browser/bookmarks");
 
     public Cursor filter(ContentResolver cr, CharSequence constraint, int limit) {
         Cursor c = cr.query(Browser.BOOKMARKS_URI,
@@ -176,7 +180,7 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
         cursor.close();
     }
 
-    public void removeBookmark(ContentResolver cr, String uri) {
+    public void removeBookmarkPre11(ContentResolver cr, String uri) {
         ContentValues values = new ContentValues();
         values.put(Browser.BookmarkColumns.BOOKMARK, "0");
 
@@ -184,6 +188,19 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
                   values,
                   Browser.BookmarkColumns.URL + " = ?",
                   new String[] { uri });
+    }
+
+    public void removeBookmarkPost11(ContentResolver cr, String uri) {
+        cr.delete(BOOKMARKS_CONTENT_URI_POST_11,
+                  Browser.BookmarkColumns.URL + " = ?",
+                  new String[] { uri });
+    }
+
+    public void removeBookmark(ContentResolver cr, String uri) {
+        if (Build.VERSION.SDK_INT >= 11)
+            removeBookmarkPost11(cr, uri);
+        else
+            removeBookmarkPre11(cr, uri);
     }
 
     public BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri) {
