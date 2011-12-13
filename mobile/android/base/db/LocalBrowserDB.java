@@ -65,9 +65,11 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     public static final int TRUNCATE_N_OLDEST = 5;
 
     private final String mProfile;
+    private long mMobileFolderId;
 
     public LocalBrowserDB(String profile) {
         mProfile = profile;
+        mMobileFolderId = -1;
     }
 
     private Uri appendProfileAndLimit(Uri uri, int limit) {
@@ -233,10 +235,38 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         return (count == 1);
     }
 
+    private long getMobileBookmarksFolderId(ContentResolver cr) {
+        if (mMobileFolderId >= 0)
+            return mMobileFolderId;
+
+        Cursor c = null;
+
+        try {
+            c = cr.query(appendProfile(Bookmarks.CONTENT_URI),
+                         new String[] { Bookmarks._ID },
+                         Bookmarks.GUID + " = ?",
+                         new String[] { Bookmarks.MOBILE_FOLDER_GUID },
+                         null);
+
+            if (c.moveToFirst())
+                mMobileFolderId = c.getLong(c.getColumnIndexOrThrow(Bookmarks._ID));
+        } finally {
+            if (c != null)
+                c.close();
+        }
+
+        return mMobileFolderId;
+    }
+
     public void addBookmark(ContentResolver cr, String title, String uri) {
+        long folderId = getMobileBookmarksFolderId(cr);
+        if (folderId < 0)
+            return;
+
         ContentValues values = new ContentValues();
         values.put(Browser.BookmarkColumns.TITLE, title);
         values.put(Bookmarks.URL, uri);
+        values.put(Bookmarks.PARENT, folderId);
 
         // Restore deleted record if possible
         values.put(Bookmarks.IS_DELETED, 0);

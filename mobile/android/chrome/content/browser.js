@@ -1160,10 +1160,10 @@ Tab.prototype = {
 
   get viewport() {
     // Update the viewport to current dimensions
-    this._viewport.x = this.browser.contentWindow.scrollX +
-                       this.viewportExcess.x;
-    this._viewport.y = this.browser.contentWindow.scrollY +
-                       this.viewportExcess.y;
+    this._viewport.x = (this.browser.contentWindow.scrollX +
+                        this.viewportExcess.x) || 0;
+    this._viewport.y = (this.browser.contentWindow.scrollY +
+                        this.viewportExcess.y) || 0;
 
     // Transform coordinates based on zoom
     this._viewport.x = Math.round(this._viewport.x * this._viewport.zoom);
@@ -1192,8 +1192,8 @@ Tab.prototype = {
   updateViewport: function(aReset) {
     let win = this.browser.contentWindow;
     let zoom = (aReset ? this.getDefaultZoomLevel() : this._viewport.zoom);
-    let xpos = (aReset ? win.scrollX * zoom : this._viewport.x);
-    let ypos = (aReset ? win.scrollY * zoom : this._viewport.y);
+    let xpos = ((aReset && win) ? win.scrollX * zoom : this._viewport.x);
+    let ypos = ((aReset && win) ? win.scrollY * zoom : this._viewport.y);
 
     this.viewportExcess = { x: 0, y: 0 };
     this.viewport = { x: xpos, y: ypos,

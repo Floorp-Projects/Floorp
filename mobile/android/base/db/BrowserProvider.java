@@ -83,6 +83,9 @@ public class BrowserProvider extends ContentProvider {
     static final String TABLE_HISTORY = "history";
     static final String TABLE_IMAGES = "images";
 
+    static final String VIEW_BOOKMARKS_WITH_IMAGES = "bookmarks_with_images";
+    static final String VIEW_HISTORY_WITH_IMAGES = "history_with_images";
+
     // Bookmark matches
     static final int BOOKMARKS = 100;
     static final int BOOKMARKS_ID = 101;
@@ -106,12 +109,20 @@ public class BrowserProvider extends ContentProvider {
     static final String DEFAULT_HISTORY_SORT_ORDER = History.DATE_LAST_VISITED + " DESC";
 
     static final String TABLE_BOOKMARKS_JOIN_IMAGES = TABLE_BOOKMARKS + " LEFT OUTER JOIN " +
-            TABLE_IMAGES + " ON " + qualifyColumnValue(TABLE_BOOKMARKS, Bookmarks.URL) +
-            " = " + qualifyColumnValue(TABLE_IMAGES, Images.URL);
+            "(SELECT " + Images.URL + ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
+            TABLE_IMAGES + ", " + TABLE_BOOKMARKS + " WHERE " +
+            qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " +
+            qualifyColumn(TABLE_IMAGES, Images.URL) + ") AS bookmark_images ON " +
+            qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " +
+            qualifyColumn("bookmark_images", Images.URL);
 
     static final String TABLE_HISTORY_JOIN_IMAGES = TABLE_HISTORY + " LEFT OUTER JOIN " +
-            TABLE_IMAGES + " ON " + qualifyColumnValue(TABLE_HISTORY, History.URL) +
-            " = " + qualifyColumnValue(TABLE_IMAGES, Images.URL);
+            "(SELECT " + Images.URL + ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
+            TABLE_IMAGES + ", " + TABLE_HISTORY + " WHERE " +
+            qualifyColumn(TABLE_HISTORY, History.URL) + " = " +
+            qualifyColumn(TABLE_IMAGES, Images.URL) + ") AS history_images ON " +
+            qualifyColumn(TABLE_HISTORY, History.URL) + " = " +
+            qualifyColumn("history_images", Images.URL);
 
     static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
@@ -131,7 +142,7 @@ public class BrowserProvider extends ContentProvider {
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks/folder/#", BOOKMARKS_FOLDER_ID);
 
         map = BOOKMARKS_PROJECTION_MAP;
-        map.put(Bookmarks._ID, qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID));
+        map.put(Bookmarks._ID, Bookmarks._ID);
         map.put(Bookmarks.TITLE, Bookmarks.TITLE);
         map.put(Bookmarks.URL, Bookmarks.URL);
         map.put(Bookmarks.FAVICON, Bookmarks.FAVICON);
@@ -142,41 +153,41 @@ public class BrowserProvider extends ContentProvider {
         map.put(Bookmarks.TAGS, Bookmarks.TAGS);
         map.put(Bookmarks.DESCRIPTION, Bookmarks.DESCRIPTION);
         map.put(Bookmarks.KEYWORD, Bookmarks.KEYWORD);
-        map.put(Bookmarks.DATE_CREATED, qualifyColumn(TABLE_BOOKMARKS, Bookmarks.DATE_CREATED));
-        map.put(Bookmarks.DATE_MODIFIED, qualifyColumn(TABLE_BOOKMARKS, Bookmarks.DATE_MODIFIED));
-        map.put(Bookmarks.GUID, qualifyColumn(TABLE_BOOKMARKS, Bookmarks.GUID));
-        map.put(Bookmarks.IS_DELETED, qualifyColumn(TABLE_BOOKMARKS, Bookmarks.IS_DELETED));
+        map.put(Bookmarks.DATE_CREATED, Bookmarks.DATE_CREATED);
+        map.put(Bookmarks.DATE_MODIFIED, Bookmarks.DATE_MODIFIED);
+        map.put(Bookmarks.GUID, Bookmarks.GUID);
+        map.put(Bookmarks.IS_DELETED, Bookmarks.IS_DELETED);
 
         // History
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "history", HISTORY);
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "history/#", HISTORY_ID);
 
         map = HISTORY_PROJECTION_MAP;
-        map.put(History._ID, qualifyColumn(TABLE_HISTORY, History._ID));
+        map.put(History._ID, History._ID);
         map.put(History.TITLE, History.TITLE);
         map.put(History.URL, History.URL);
         map.put(History.FAVICON, History.FAVICON);
         map.put(History.THUMBNAIL, History.THUMBNAIL);
         map.put(History.VISITS, History.VISITS);
         map.put(History.DATE_LAST_VISITED, History.DATE_LAST_VISITED);
-        map.put(History.DATE_CREATED, qualifyColumn(TABLE_HISTORY, History.DATE_CREATED));
-        map.put(History.DATE_MODIFIED, qualifyColumn(TABLE_HISTORY, History.DATE_MODIFIED));
-        map.put(History.GUID, qualifyColumn(TABLE_HISTORY, History.GUID));
-        map.put(History.IS_DELETED, qualifyColumn(TABLE_HISTORY, History.IS_DELETED));
+        map.put(History.DATE_CREATED, History.DATE_CREATED);
+        map.put(History.DATE_MODIFIED, History.DATE_MODIFIED);
+        map.put(History.GUID, History.GUID);
+        map.put(History.IS_DELETED, History.IS_DELETED);
 
         // Images
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "images", IMAGES);
 
         map = IMAGES_PROJECTION_MAP;
-        map.put(Images._ID, qualifyColumn(TABLE_IMAGES, Images._ID));
+        map.put(Images._ID, Images._ID);
         map.put(Images.URL, Images.URL);
         map.put(Images.FAVICON, Images.FAVICON);
         map.put(Images.FAVICON_URL, Images.FAVICON_URL);
         map.put(Images.THUMBNAIL, Images.THUMBNAIL);
-        map.put(Images.DATE_CREATED, qualifyColumn(TABLE_IMAGES, Images.DATE_CREATED));
-        map.put(Images.DATE_MODIFIED, qualifyColumn(TABLE_IMAGES, Images.DATE_MODIFIED));
-        map.put(Images.GUID, qualifyColumn(TABLE_IMAGES, Images.GUID));
-        map.put(Images.IS_DELETED, qualifyColumn(TABLE_IMAGES, Images.IS_DELETED));
+        map.put(Images.DATE_CREATED, Images.DATE_CREATED);
+        map.put(Images.DATE_MODIFIED, Images.DATE_MODIFIED);
+        map.put(Images.GUID, Images.GUID);
+        map.put(Images.IS_DELETED, Images.IS_DELETED);
 
         // Schema
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "schema", SCHEMA);
@@ -186,10 +197,6 @@ public class BrowserProvider extends ContentProvider {
     }
 
     static final String qualifyColumn(String table, String column) {
-        return table + "." + column + " AS " + column;
-    }
-
-    static final String qualifyColumnValue(String table, String column) {
         return table + "." + column;
     }
 
@@ -237,6 +244,16 @@ public class BrowserProvider extends ContentProvider {
         System.arraycopy(newValues, 0, result, originalValues.length, newValues.length);
 
         return result;
+    }
+
+    private static boolean hasImagesInProjection(String[] projection) {
+        for (int i = 0; i < projection.length; ++i) {
+            if (projection[i].equals(Images.FAVICON) ||
+                projection[i].equals(Images.THUMBNAIL))
+                return true;
+        }
+
+        return false;
     }
 
     final class DatabaseHelper extends SQLiteOpenHelper {
@@ -314,7 +331,32 @@ public class BrowserProvider extends ContentProvider {
             db.execSQL("CREATE INDEX images_modified_index ON " + TABLE_IMAGES + "("
                     + Images.DATE_MODIFIED + ")");
 
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_BOOKMARKS_WITH_IMAGES + " AS " +
+                    "SELECT " + qualifyColumn(TABLE_BOOKMARKS, "*") +
+                    ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
+                    TABLE_BOOKMARKS_JOIN_IMAGES);
+
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_HISTORY_WITH_IMAGES + " AS " +
+                    "SELECT " + qualifyColumn(TABLE_HISTORY, "*") +
+                    ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
+                    TABLE_HISTORY_JOIN_IMAGES);
+
+            createMobileBookmarksFolder(db);
+
             // FIXME: Create default bookmarks here
+        }
+
+        private void createMobileBookmarksFolder(SQLiteDatabase db) {
+            ContentValues values = new ContentValues();
+            values.put(Bookmarks.GUID, Bookmarks.MOBILE_FOLDER_GUID);
+            values.put(Bookmarks.IS_FOLDER, 1);
+            values.put(Bookmarks.POSITION, 0);
+
+            long now = System.currentTimeMillis();
+            values.put(Bookmarks.DATE_CREATED, now);
+            values.put(Bookmarks.DATE_MODIFIED, now);
+
+            db.insertOrThrow(TABLE_BOOKMARKS, Bookmarks.GUID, values);
         }
 
         @Override
@@ -428,11 +470,8 @@ public class BrowserProvider extends ContentProvider {
 
         try {
             long now = System.currentTimeMillis();
-            String isDeletedColumn = qualifyColumnValue(tableName, SyncColumns.IS_DELETED);
-            String dateModifiedColumn = qualifyColumnValue(tableName, SyncColumns.DATE_MODIFIED);
-
-            String selection = isDeletedColumn + " = 1 AND " +
-                    dateModifiedColumn + " <= " + (now - MAX_AGE_OF_DELETED_RECORDS);
+            String selection = SyncColumns.IS_DELETED + " = 1 AND " +
+                    SyncColumns.DATE_MODIFIED + " <= " + (now - MAX_AGE_OF_DELETED_RECORDS);
 
             cursor = query(uriWithArgs,
                            new String[] { CommonColumns._ID },
@@ -801,22 +840,18 @@ public class BrowserProvider extends ContentProvider {
 
                 if (match == BOOKMARKS_ID) {
                     Log.d(LOGTAG, "Query is BOOKMARKS_ID: " + uri);
-                    selection = concatenateWhere(selection,
-                            qualifyColumnValue(TABLE_BOOKMARKS, Bookmarks._ID) + " = ?");
+                    selection = concatenateWhere(selection, Bookmarks._ID + " = ?");
                     selectionArgs = appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 } else if (match == BOOKMARKS_FOLDER_ID) {
                     Log.d(LOGTAG, "Query is BOOKMARKS_FOLDER_ID: " + uri);
-                    selection = concatenateWhere(selection,
-                            qualifyColumnValue(TABLE_BOOKMARKS, Bookmarks.PARENT) + " = ?");
+                    selection = concatenateWhere(selection, Bookmarks.PARENT + " = ?");
                     selectionArgs = appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 }
 
-                if (!shouldShowDeleted(uri)) {
-                    String isDeletedColumn = qualifyColumnValue(TABLE_BOOKMARKS, Bookmarks.IS_DELETED);
-                    selection = concatenateWhere(isDeletedColumn + " = 0", selection);
-                }
+                if (!shouldShowDeleted(uri))
+                    selection = concatenateWhere(Bookmarks.IS_DELETED + " = 0", selection);
 
                 if (TextUtils.isEmpty(sortOrder)) {
                     Log.d(LOGTAG, "Using default sort order on query: " + uri);
@@ -824,7 +859,11 @@ public class BrowserProvider extends ContentProvider {
                 }
 
                 qb.setProjectionMap(BOOKMARKS_PROJECTION_MAP);
-                qb.setTables(TABLE_BOOKMARKS_JOIN_IMAGES);
+
+                if (hasImagesInProjection(projection))
+                    qb.setTables(VIEW_BOOKMARKS_WITH_IMAGES);
+                else
+                    qb.setTables(TABLE_BOOKMARKS);
 
                 break;
             }
@@ -835,22 +874,23 @@ public class BrowserProvider extends ContentProvider {
 
                 if (match == HISTORY_ID) {
                     Log.d(LOGTAG, "Query is HISTORY_ID: " + uri);
-                    selection = concatenateWhere(selection,
-                            qualifyColumnValue(TABLE_HISTORY, History._ID) + " = ?");
+                    selection = concatenateWhere(selection, History._ID + " = ?");
                     selectionArgs = appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 }
 
-                if (!shouldShowDeleted(uri)) {
-                    String isDeletedColumn = qualifyColumnValue(TABLE_HISTORY, History.IS_DELETED);
-                    selection = concatenateWhere(isDeletedColumn + " = 0", selection);
-                }
+                if (!shouldShowDeleted(uri))
+                    selection = concatenateWhere(History.IS_DELETED + " = 0", selection);
 
                 if (TextUtils.isEmpty(sortOrder))
                     sortOrder = DEFAULT_HISTORY_SORT_ORDER;
 
                 qb.setProjectionMap(HISTORY_PROJECTION_MAP);
-                qb.setTables(TABLE_HISTORY_JOIN_IMAGES);
+
+                if (hasImagesInProjection(projection))
+                    qb.setTables(VIEW_HISTORY_WITH_IMAGES);
+                else
+                    qb.setTables(TABLE_HISTORY);
 
                 break;
             }
@@ -861,16 +901,13 @@ public class BrowserProvider extends ContentProvider {
 
                 if (match == IMAGES_ID) {
                     Log.d(LOGTAG, "Query is IMAGES_ID: " + uri);
-                    selection = concatenateWhere(selection,
-                            qualifyColumnValue(TABLE_IMAGES, Images._ID) + " = ?");
+                    selection = concatenateWhere(selection, Images._ID + " = ?");
                     selectionArgs = appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 }
 
-                if (!shouldShowDeleted(uri)) {
-                    String isDeletedColumn = qualifyColumnValue(TABLE_IMAGES, Images.IS_DELETED);
-                    selection = concatenateWhere(isDeletedColumn + " = 0", selection);
-                }
+                if (!shouldShowDeleted(uri))
+                    selection = concatenateWhere(Images.IS_DELETED + " = 0", selection);
 
                 qb.setProjectionMap(IMAGES_PROJECTION_MAP);
                 qb.setTables(TABLE_IMAGES);
@@ -1173,10 +1210,10 @@ public class BrowserProvider extends ContentProvider {
 
         String selection = Images.URL + " NOT IN (SELECT " + Bookmarks.URL +
                 " FROM " + TABLE_BOOKMARKS + " WHERE " + Bookmarks.URL + " IS NOT NULL AND " +
-                qualifyColumnValue(TABLE_BOOKMARKS, Bookmarks.IS_DELETED) + " = 0) AND " +
+                qualifyColumn(TABLE_BOOKMARKS, Bookmarks.IS_DELETED) + " = 0) AND " +
                 Images.URL + " NOT IN (SELECT " + History.URL + " FROM " + TABLE_HISTORY +
                 " WHERE " + History.URL + " IS NOT NULL AND " +
-                qualifyColumnValue(TABLE_HISTORY, History.IS_DELETED) + " = 0)";
+                qualifyColumn(TABLE_HISTORY, History.IS_DELETED) + " = 0)";
 
         return deleteImages(uri, selection, null);
     }
