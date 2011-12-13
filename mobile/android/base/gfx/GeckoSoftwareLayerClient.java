@@ -209,7 +209,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             b.copyPixelsFromBuffer(mBuffer.asIntBuffer());
             return b;
         } catch (OutOfMemoryError oom) {
-            Log.e(LOGTAG, "Unable to create bitmap", oom);
+            Log.w(LOGTAG, "Unable to create bitmap", oom);
             return null;
         }
     }
