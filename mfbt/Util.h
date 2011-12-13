@@ -59,7 +59,7 @@
 MOZ_BEGIN_EXTERN_C
 
 extern MFBT_API(void)
-JS_Assert(const char *s, const char *file, JSIntn ln);
+JS_Assert(const char *s, const char *file, int ln);
 
 MOZ_END_EXTERN_C
 
