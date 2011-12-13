@@ -35,30 +35,23 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= ucvtw
-LIBRARY_NAME	= ucvtw_s
-FORCE_STATIC_LIB=1
-ifneq (WINNT,$(OS_TARGET))
-LIBXUL_LIBRARY = 1
-endif
+MODULE		= uconv
+LIBRARY_NAME	= ucvxutil_s
+EXPORT_LIBRARY = 1
+FORCE_STATIC_LIB = 1
 
-CPPSRCS		= \
-		nsBIG5ToUnicode.cpp \
-		nsUnicodeToBIG5.cpp \
-		nsBIG5HKSCSToUnicode.cpp \
-		nsUnicodeToBIG5HKSCS.cpp \
-		nsUnicodeToHKSCS.cpp \
-		$(NULL)
+MODULE_NAME	= nsExternalUCUtil
 
-EXPORTS		= nsUCvTWCID.h
+VPATH += $(srcdir)/..
 
-LOCAL_INCLUDES = -I$(srcdir)/../util
+include $(srcdir)/../objs.mk
 
 include $(topsrcdir)/config/rules.mk
+

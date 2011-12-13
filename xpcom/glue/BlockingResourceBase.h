@@ -345,6 +345,7 @@ private:
         return PR_SUCCESS;
     }
 
+public:
     /**
      * Shutdown
      * Free static members.
@@ -355,6 +356,8 @@ private:
         delete sDeadlockDetector;
         sDeadlockDetector = 0;
     }
+
+private:
 
 #  ifdef MOZILLA_INTERNAL_API
     // so it can call BlockingResourceBase::Shutdown()
