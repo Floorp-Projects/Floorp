@@ -269,10 +269,13 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
         values.put(Browser.BookmarkColumns.FAVICON, stream.toByteArray());
         values.put(Browser.BookmarkColumns.URL, uri);
 
-        cr.update(Browser.BOOKMARKS_URI,
-                  values,
-                  Browser.BookmarkColumns.URL + " = ?",
-                  new String[] { uri });
+        int updated = cr.update(Browser.BOOKMARKS_URI,
+                                values,
+                                Browser.BookmarkColumns.URL + " = ?",
+                                new String[] { uri });
+
+        if (updated == 0)
+            cr.insert(Browser.BOOKMARKS_URI, values);
     }
 
     public void updateThumbnailForUrl(ContentResolver cr, String uri,
