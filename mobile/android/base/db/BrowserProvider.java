@@ -540,37 +540,37 @@ public class BrowserProvider extends ContentProvider {
                 deleted = deleteBookmarks(uri, selection, selectionArgs);
                 deleteUnusedImages(uri);
                 break;
-        }
+            }
 
-        case HISTORY_ID:
-            Log.d(LOGTAG, "Delete on HISTORY_ID: " + uri);
+            case HISTORY_ID:
+                Log.d(LOGTAG, "Delete on HISTORY_ID: " + uri);
 
-            selection = concatenateWhere(selection, TABLE_HISTORY + "._id = ?");
-            selectionArgs = appendSelectionArgs(selectionArgs,
-                    new String[] { Long.toString(ContentUris.parseId(uri)) });
-            // fall through
-        case HISTORY: {
-            Log.d(LOGTAG, "Deleting history: " + uri);
-            deleted = deleteHistory(uri, selection, selectionArgs);
-            deleteUnusedImages(uri);
-            break;
-        }
+                selection = concatenateWhere(selection, TABLE_HISTORY + "._id = ?");
+                selectionArgs = appendSelectionArgs(selectionArgs,
+                        new String[] { Long.toString(ContentUris.parseId(uri)) });
+                // fall through
+            case HISTORY: {
+                Log.d(LOGTAG, "Deleting history: " + uri);
+                deleted = deleteHistory(uri, selection, selectionArgs);
+                deleteUnusedImages(uri);
+                break;
+            }
 
-        case IMAGES_ID:
-            Log.d(LOGTAG, "Delete on IMAGES_ID: " + uri);
+            case IMAGES_ID:
+                Log.d(LOGTAG, "Delete on IMAGES_ID: " + uri);
 
-            selection = concatenateWhere(selection, TABLE_IMAGES + "._id = ?");
-            selectionArgs = appendSelectionArgs(selectionArgs,
-                    new String[] { Long.toString(ContentUris.parseId(uri)) });
-            // fall through
-        case IMAGES: {
-            Log.d(LOGTAG, "Deleting images: " + uri);
-            deleted = deleteImages(uri, selection, selectionArgs);
-            break;
-        }
+                selection = concatenateWhere(selection, TABLE_IMAGES + "._id = ?");
+                selectionArgs = appendSelectionArgs(selectionArgs,
+                        new String[] { Long.toString(ContentUris.parseId(uri)) });
+                // fall through
+            case IMAGES: {
+                Log.d(LOGTAG, "Deleting images: " + uri);
+                deleted = deleteImages(uri, selection, selectionArgs);
+                break;
+            }
 
-        default:
-            throw new UnsupportedOperationException("Unknown delete URI " + uri);
+            default:
+                throw new UnsupportedOperationException("Unknown delete URI " + uri);
         }
 
         Log.d(LOGTAG, "Deleted " + deleted + " rows for URI: " + uri);
