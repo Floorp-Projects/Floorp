@@ -96,6 +96,12 @@ public class BrowserContract {
         public static final String PARENT = "parent";
 
         public static final String POSITION = "position";
+
+        public static final String TAGS = "tags";
+
+        public static final String DESCRIPTION = "description";
+
+        public static final String KEYWORD = "keyword";
     }
 
     public static final class History implements CommonColumns, ImageColumns, SyncColumns {
