@@ -92,6 +92,26 @@
   <div id="addons-list" style="display: none;">
   </div>
 
+  <div id="addons-details" style="display: none">
+    <div class="addon-item">
+      <img class="favicon"/>
+      <div class="inner">
+        <div class="details">
+          <div class="title"></div><div class="version"></div><div class="tag"></div>
+        </div>
+        <div class="description-full"></div>
+      </div>
+      <div class="buttons">
+        <button id="enable-btn" class="show-on-disable hide-on-enable hide-on-uninstall" onclick="Addons.enable();">&addonAction.enable;</button>
+        <button id="disable-btn" class="show-on-enable hide-on-disable hide-on-uninstall" onclick="Addons.disable();">&addonAction.disable;</button>
+        <button id="uninstall-btn" class="hide-on-uninstall" onclick="Addons.uninstall();">&addonAction.uninstall;</button>
+        <button id="cancel-btn" class="show-on-uninstall" onclick="Addons.cancelUninstall();">&addonAction.cancel;</button>
+      </div>
+      <div class="options-header">&aboutAddons.options;</div>
+      <div class="options-box"></div>
+    </div>
+  </div>
+
   <script type="application/javascript;version=1.8"><![CDATA[
     let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 
@@ -116,6 +136,8 @@
     }
 
     function init() {
+      window.addEventListener("popstate", onPopState, false);
+
       AddonManager.addInstallListener(Addons);
       Addons.getAddons();
     }
@@ -124,11 +146,34 @@
       AddonManager.removeInstallListener(Addons);
     }
 
+    function onPopState(aEvent) {
+      // Called when back/forward is used to change the state of the page
+      if (aEvent.state) {
+        // Show the detail page for an addon
+        Addons.showDetails(Addons._getElementForAddon(aEvent.state.id));
+      } else {
+        // Clear any previous detail addon
+        let detailItem = document.querySelector("#addons-details > .addon-item");
+        detailItem.addon = null;
+
+        // Hide the detail page and show the list
+        let details = document.querySelector("#addons-details");
+        details.style.display = "none";
+        let list = document.querySelector("#addons-list");
+        list.style.display = "block";
+      }
+    }
+
     var Addons = {
       _createItem: function _createItem(aAddon) {
         let outer = document.createElement("div");
         outer.setAttribute("addonID", aAddon.id);
         outer.className = "addon-item";
+        outer.setAttribute("role", "button");
+        outer.addEventListener("click", function() {
+          this.showDetails(outer);
+          history.pushState({ id: aAddon.id }, document.title);
+        }.bind(this), true);
 
         let img = document.createElement("img");
         img.className = "favicon";
@@ -138,15 +183,24 @@
         let inner = document.createElement("div");
         inner.className = "inner";
 
-        let titlePart = document.createElement("span");
+        let details = document.createElement("div");
+        details.className = "details";
+        inner.appendChild(details);
+
+        let titlePart = document.createElement("div");
         titlePart.textContent = aAddon.name;
         titlePart.className = "title";
-        inner.appendChild(titlePart);
+        details.appendChild(titlePart);
 
-        let versionPart = document.createElement("span");
+        let versionPart = document.createElement("div");
         versionPart.textContent = aAddon.version;
         versionPart.className = "version";
-        inner.appendChild(versionPart);
+        details.appendChild(versionPart);
+
+        let tagPart = document.createElement("div");
+        tagPart.textContent = gStringBundle.GetStringFromName("addonType." + aAddon.type);
+        tagPart.className = "tag";
+        details.appendChild(tagPart);
 
         if ("description" in aAddon) {
           let descPart = document.createElement("div");
@@ -156,56 +210,6 @@
         }
 
         outer.appendChild(inner);
-
-        let buttons = document.createElement("div");
-        buttons.className = "buttons";
-
-        let optionsBtn = document.createElement("button");
-        optionsBtn.className = "options-btn";
-        optionsBtn.textContent = gStringBundle.GetStringFromName("addonAction.options");
-        optionsBtn.setAttribute("disabled", "true"); // TODO (bug 696533)
-        optionsBtn.addEventListener("click", function() {
-          this.toggleOptions(outer);
-        }.bind(this), false)
-        buttons.appendChild(optionsBtn);
-
-        let enableBtn = document.createElement("button");
-        enableBtn.className = "show-on-disable hide-on-enable hide-on-uninstall";
-        enableBtn.textContent = gStringBundle.GetStringFromName("addonAction.enable");
-        if (aAddon.appDisabled)
-          enableBtn.setAttribute("disabled", "true");
-        enableBtn.addEventListener("click", function() {
-          this.enable(outer);
-        }.bind(this), false)
-        buttons.appendChild(enableBtn);
-
-        let disableBtn = document.createElement("button");
-        disableBtn.className = "show-on-enable hide-on-disable hide-on-uninstall";
-        disableBtn.textContent = gStringBundle.GetStringFromName("addonAction.disable");
-        disableBtn.addEventListener("click", function() {
-          this.disable(outer);
-        }.bind(this), false)
-        buttons.appendChild(disableBtn);
-
-        let uninstallBtn = document.createElement("button");
-        uninstallBtn.className = "hide-on-uninstall";
-        uninstallBtn.textContent = gStringBundle.GetStringFromName("addonAction.uninstall");
-        if (aAddon.scope == AddonManager.SCOPE_APPLICATION)
-          uninstallBtn.setAttribute("disabled", "true");
-        uninstallBtn.addEventListener("click", function() {
-          this.uninstall(outer);
-        }.bind(this), false)
-        buttons.appendChild(uninstallBtn);
-
-        let cancelUninstallBtn = document.createElement("button");
-        cancelUninstallBtn.className = "show-on-uninstall";
-        cancelUninstallBtn.textContent = gStringBundle.GetStringFromName("addonAction.cancel");
-        cancelUninstallBtn.addEventListener("click", function() {
-          this.cancelUninstall(outer);
-        }.bind(this), false)
-        buttons.appendChild(cancelUninstallBtn);
-
-        outer.appendChild(buttons);
         return outer;
       },
 
@@ -302,16 +306,92 @@
         return "";
       },
 
-      enable: function enable(aItem) {
-        if (!aItem.addon)
+      showDetails: function showDetails(aListItem) {
+        Services.console.logStringMessage("---- showing details")
+        let detailItem = document.querySelector("#addons-details > .addon-item");
+        detailItem.setAttribute("isDisabled", aListItem.getAttribute("isDisabled"));
+        detailItem.setAttribute("opType", aListItem.getAttribute("opType"));
+        detailItem.setAttribute("optionsURL", aListItem.getAttribute("optionsURL"));
+        detailItem.addon = aListItem.addon;
+        Services.console.logStringMessage("---- did step 1")
+
+        let addon = detailItem.addon;
+        document.querySelector("#addons-details > .addon-item .favicon").setAttribute("src", addon.iconURL);
+        document.querySelector("#addons-details > .addon-item .title").textContent = addon.name;
+        document.querySelector("#addons-details > .addon-item .version").textContent = addon.version;
+        document.querySelector("#addons-details > .addon-item .tag").textContent = gStringBundle.GetStringFromName("addonType." + addon.type);
+        document.querySelector("#addons-details > .addon-item .description-full").textContent = addon.description;
+        Services.console.logStringMessage("---- did step 2")
+
+        let enableBtn = document.getElementById("uninstall-btn");
+        if (addon.appDisabled)
+          enableBtn.setAttribute("disabled", "true");
+        else
+          enableBtn.removeAttribute("disabled");
+
+        let uninstallBtn = document.getElementById("uninstall-btn");
+        if (addon.scope == AddonManager.SCOPE_APPLICATION)
+          uninstallBtn.setAttribute("disabled", "true");
+        else
+          uninstallBtn.removeAttribute("disabled");
+
+        let box = document.querySelector("#addons-details > .addon-item .options-box");
+        box.innerHTML = "";
+
+        // Retrieve the extensions preferences
+        try {
+          let optionsURL = aListItem.getAttribute("optionsURL");
+          let xhr = new XMLHttpRequest();
+          xhr.open("GET", optionsURL, false);
+          xhr.send();
+          if (xhr.responseXML) {
+            let currentNode;
+            let nodeIterator = xhr.responseXML.createNodeIterator(xhr.responseXML, NodeFilter.SHOW_TEXT, null, false);
+            while (currentNode = nodeIterator.nextNode()) {
+              let trimmed = currentNode.nodeValue.replace(/^\s\s*/, "").replace(/\s\s*$/, "");
+              if (!trimmed.length)
+                currentNode.parentNode.removeChild(currentNode);
+            }
+    
+            // Only allow <setting> for now
+            let prefs = xhr.responseXML.querySelectorAll(":root > setting");
+            for (let i = 0; i < prefs.length; i++)
+              box.appendChild(prefs.item(i));
+  /*
+            // Send an event so add-ons can prepopulate any non-preference based
+            // settings
+            let event = document.createEvent("Events");
+            event.initEvent("AddonOptionsLoad", true, false);
+            this.dispatchEvent(event);
+    
+            // Also send a notification to match the behavior of desktop Firefox
+            let id = this.id.substring(17); // length of |urn:mozilla:item:|
+            Services.obs.notifyObservers(document, "addon-options-displayed", id);
+  */
+          }
+        } catch (e) {
+          Cu.reportError(e)
+        }
+
+        let list = document.querySelector("#addons-list");
+        list.style.display = "none";
+        let details = document.querySelector("#addons-details");
+        details.style.display = "block";
+        Services.console.logStringMessage("---- did step 3")
+      },
+
+      enable: function enable() {
+        let detailItem = document.querySelector("#addons-details > .addon-item");
+        if (!detailItem.addon)
           return;
 
         let opType;
-        if (aItem.addon.type == "search") {
-          aItem.setAttribute("isDisabled", false);
-          aItem.addon.engine.hidden = false;
+        let isDisabled;
+        if (detailItem.addon.type == "search") {
+          isDisabled = false;
+          detailItem.addon.engine.hidden = false;
           opType = "needs-enable";
-        } else if (aItem.addon.type == "theme") {
+        } else if (detailItem.addon.type == "theme") {
           // We can have only one theme enabled, so disable the current one if any
           let theme = null;
           let list = document.getElementById("addons-list");
@@ -326,98 +406,118 @@
           if (theme)
             this.disable(theme);
 
-          aItem.addon.userDisabled = false;
-          aItem.setAttribute("isDisabled", false);
+          detailItem.addon.userDisabled = false;
+          isDisabled = false;
         } else {
-          aItem.addon.userDisabled = false;
-          opType = this._getOpTypeForOperations(aItem.addon.pendingOperations);
+          detailItem.addon.userDisabled = false;
+          isDisabled = false;
+          opType = this._getOpTypeForOperations(detailItem.addon.pendingOperations);
     
-          if (aItem.addon.pendingOperations & AddonManager.PENDING_ENABLE) {
+          if (detailItem.addon.pendingOperations & AddonManager.PENDING_ENABLE) {
             this.showRestart();
           } else {
-            aItem.setAttribute("isDisabled", false);
-            if (aItem.getAttribute("opType") == "needs-disable")
+            if (detailItem.getAttribute("opType") == "needs-disable")
               this.hideRestart();
           }
         }
     
-        aItem.setAttribute("opType", opType);
+        detailItem.setAttribute("opType", opType);
+        detailItem.setAttribute("isDisabled", isDisabled);
+
+        // Sync to the list item
+        let listItem = this._getElementForAddon(detailItemaddon.id);
+        listItem.setAttribute("isDisabled", detailItem.getAttribute("isDisabled"));
+        listItem.setAttribute("opType", detailItem.getAttribute("opType"));
       },
 
-      disable: function disable(aItem) {
-        if (!aItem.addon)
+      disable: function disable() {
+        let detailItem = document.querySelector("#addons-details > .addon-item");
+        if (!detailItem.addon)
           return;
 
         let opType;
-        if (aItem.addon.type == "search") {
-          aItem.setAttribute("isDisabled", true);
-          aItem.addon.engine.hidden = true;
+        let isDisabled;
+        if (detailItem.addon.type == "search") {
+          isDisabled = true;
+          detailItem.addon.engine.hidden = true;
           opType = "needs-disable";
-        } else if (aItem.addon.type == "theme") {
-          aItem.addon.userDisabled = true;
-          aItem.setAttribute("isDisabled", true);
-        } else if (aItem.addon.type == "locale") {
-          aItem.addon.userDisabled = true;
-          aItem.setAttribute("isDisabled", true);
+        } else if (detailItem.addon.type == "theme") {
+          detailItem.addon.userDisabled = true;
+          isDisabled = true;
+        } else if (detailItem.addon.type == "locale") {
+          detailItem.addon.userDisabled = true;
+          isDisabled = true;
         } else {
-          aItem.addon.userDisabled = true;
-          opType = this._getOpTypeForOperations(aItem.addon.pendingOperations);
+          detailItem.addon.userDisabled = true;
+          opType = this._getOpTypeForOperations(detailItem.addon.pendingOperations);
+          isDisabled = !detailItem.addon.isActive;
     
-          if (aItem.addon.pendingOperations & AddonManager.PENDING_DISABLE) {
+          if (detailItem.addon.pendingOperations & AddonManager.PENDING_DISABLE) {
             this.showRestart();
           } else {
-            aItem.setAttribute("isDisabled", !aItem.addon.isActive);
-            if (aItem.getAttribute("opType") == "needs-enable")
+            if (detailItem.getAttribute("opType") == "needs-enable")
               this.hideRestart();
           }
         }
     
-        aItem.setAttribute("opType", opType);
+        detailItem.setAttribute("opType", opType);
+        detailItem.setAttribute("isDisabled", isDisabled);
+
+        // Sync to the list item
+        let listItem = this._getElementForAddon(detailItem.addon.id);
+        listItem.setAttribute("isDisabled", detailItem.getAttribute("isDisabled"));
+        listItem.setAttribute("opType", detailItem.getAttribute("opType"));
       },
     
-      uninstall: function uninstall(aItem) {
+      uninstall: function uninstall() {
         let list = document.getElementById("addons-list");
-        if (!aItem.addon) {
-          list.removeChild(aItem);
+        let detailItem = document.querySelector("#addons-details > .addon-item");
+        if (!detailItem.addon)
           return;
-        }
 
-        let opType;
-        if (aItem.addon.type == "search") {
+        let listItem = this._getElementForAddon(detailItem.addon.id);
+
+        if (detailItem.addon.type == "search") {
           // Make sure the engine isn't hidden before removing it, to make sure it's
           // visible if the user later re-adds it (works around bug 341833)
-          aItem.addon.engine.hidden = false;
-          Services.search.removeEngine(aItem.addon.engine);
+          detailItem.addon.engine.hidden = false;
+          Services.search.removeEngine(detailItem.addon.engine);
           // the search-engine-modified observer in browser.js will take care of
           // updating the list
         } else {
-          aItem.addon.uninstall();
-          opType = this._getOpTypeForOperations(aItem.addon.pendingOperations);
+          detailItem.addon.uninstall();
+          let opType = this._getOpTypeForOperations(detailItem.addon.pendingOperations);
 
-          if (aItem.addon.pendingOperations & AddonManager.PENDING_UNINSTALL) {
+          if (detailItem.addon.pendingOperations & AddonManager.PENDING_UNINSTALL) {
             this.showRestart();
 
             // A disabled addon doesn't need a restart so it has no pending ops and
             // can't be cancelled
-            if (!aItem.addon.isActive && opType == "")
+            if (!detailItem.addon.isActive && opType == "")
               opType = "needs-uninstall";
 
-            aItem.setAttribute("opType", opType);
+            detailItem.setAttribute("opType", opType);
+            listItem.setAttribute("opType", opType);
           } else {
-            list.removeChild(aItem);
+            list.removeChild(listItem);
+            history.back();
           }
         }
       },
     
-      cancelUninstall: function ev_cancelUninstall(aItem) {
-        if (!aItem.addon)
+      cancelUninstall: function ev_cancelUninstall() {
+        let detailItem = document.querySelector("#addons-details > .addon-item");
+        if (!detailItem.addon)
           return;
 
-        aItem.addon.cancelUninstall();
+        detailItem.addon.cancelUninstall();
         this.hideRestart();
     
-        let opType = this._getOpTypeForOperations(aItem.addon.pendingOperations);
-        aItem.setAttribute("opType", opType);
+        let opType = this._getOpTypeForOperations(detailItem.addon.pendingOperations);
+        detailItem.setAttribute("opType", opType);
+
+        let listItem = this._getElementForAddon(detailItem.addon.id);
+        listItem.setAttribute("opType", opType);
       },
 
       showRestart: function showRestart(aMode) {
