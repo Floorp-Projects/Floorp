@@ -929,11 +929,12 @@ InFreeList(ArenaHeader *aheader, uintptr_t addr)
 }
 
 /*
- * Returns CGCT_VALID and mark it if the w can be a  live GC thing and sets
- * thingKind accordingly. Otherwise returns the reason for rejection.
+ * Tests whether w is a (possibly dead) GC thing. Returns CGCT_VALID and
+ * details about the thing if so. On failure, returns the reason for rejection.
  */
 inline ConservativeGCTest
-MarkIfGCThingWord(JSTracer *trc, jsuword w)
+IsAddressableGCThing(JSRuntime *rt, jsuword w,
+                     gc::AllocKind *thingKindPtr, ArenaHeader **arenaHeader, void **thing)
 {
     /*
      * We assume that the compiler never uses sub-word alignment to store
@@ -959,7 +960,7 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
 
     Chunk *chunk = Chunk::fromAddress(addr);
 
-    if (!trc->runtime->gcChunkSet.has(chunk))
+    if (!rt->gcChunkSet.has(chunk))
         return CGCT_NOTCHUNK;
 
     /*
@@ -980,7 +981,7 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
     if (!aheader->allocated())
         return CGCT_FREEARENA;
 
-    JSCompartment *curComp = trc->runtime->gcCurrentCompartment;
+    JSCompartment *curComp = rt->gcCurrentCompartment;
     if (curComp && curComp != aheader->compartment)
         return CGCT_OTHERCOMPARTMENT;
 
@@ -994,20 +995,41 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
     uintptr_t shift = (offset - minOffset) % Arena::thingSize(thingKind);
     addr -= shift;
 
+    if (thing)
+        *thing = reinterpret_cast<void *>(addr);
+    if (arenaHeader)
+        *arenaHeader = aheader;
+    if (thingKindPtr)
+        *thingKindPtr = thingKind;
+    return CGCT_VALID;
+}
+
+/*
+ * Returns CGCT_VALID and mark it if the w can be a  live GC thing and sets
+ * thingKind accordingly. Otherwise returns the reason for rejection.
+ */
+inline ConservativeGCTest
+MarkIfGCThingWord(JSTracer *trc, jsuword w)
+{
+    void *thing;
+    ArenaHeader *aheader;
+    AllocKind thingKind;
+    ConservativeGCTest status = IsAddressableGCThing(trc->runtime, w, &thingKind, &aheader, &thing);
+    if (status != CGCT_VALID)
+        return status;
+
     /*
      * Check if the thing is free. We must use the list of free spans as at
      * this point we no longer have the mark bits from the previous GC run and
      * we must account for newly allocated things.
      */
-    if (InFreeList(aheader, addr))
+    if (InFreeList(aheader, uintptr_t(thing)))
         return CGCT_NOTLIVE;
-
-    void *thing = reinterpret_cast<void *>(addr);
 
 #ifdef DEBUG
     const char pattern[] = "machine_stack %lx";
-    char nameBuf[sizeof(pattern) - 3 + sizeof(addr) * 2];
-    JS_snprintf(nameBuf, sizeof(nameBuf), "machine_stack %lx", (unsigned long) addr);
+    char nameBuf[sizeof(pattern) - 3 + sizeof(thing) * 2];
+    JS_snprintf(nameBuf, sizeof(nameBuf), "machine_stack %lx", (unsigned long) thing);
     JS_SET_TRACING_NAME(trc, nameBuf);
 #endif
     MarkKind(trc, thing, MapAllocToTraceKind(thingKind));
@@ -1017,10 +1039,11 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
         GCMarker *marker = static_cast<GCMarker *>(trc);
         if (marker->conservativeDumpFileName)
             marker->conservativeRoots.append(thing);
-        if (shift)
+        if (jsuword(thing) != w)
             marker->conservativeStats.unaligned++;
     }
 #endif
+
     return CGCT_VALID;
 }
 
@@ -1159,6 +1182,12 @@ RecordNativeStackTopForGC(JSContext *cx)
 }
 
 } /* namespace js */
+
+bool
+js_IsAddressableGCThing(JSRuntime *rt, jsuword w, gc::AllocKind *thingKind, void **thing)
+{
+    return js::IsAddressableGCThing(rt, w, thingKind, NULL, thing) == CGCT_VALID;
+}
 
 #ifdef DEBUG
 static void
