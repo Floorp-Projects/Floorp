@@ -413,7 +413,7 @@ ifdef HAVE_CLOCK_MONOTONIC
 EXTRA_DSO_LDOPTS += $(REALTIME_LIBS)
 endif
 
-ifeq (,$(filter-out cocoa android windows,$(MOZ_WIDGET_TOOLKIT)))
+ifdef MOZ_ENABLE_SKIA
 EXTRA_DSO_LDOPTS += $(MOZ_SKIA_LIBS)
 endif
 
