@@ -1497,8 +1497,9 @@ PR_ParseTimeStringToExplodedTime(
           /* "-" is ignored at the beginning of a token if we have not yet
                  parsed a year (e.g., the second "-" in "30-AUG-1966"), or if
                  the character after the dash is not a digit. */         
-          if (*rest == '-' && ((rest > string && isalpha(rest[-1]) && year < 0)
-              || rest[1] < '0' || rest[1] > '9'))
+          if (*rest == '-' && ((rest > string &&
+              isalpha((unsigned char)rest[-1]) && year < 0) ||
+              rest[1] < '0' || rest[1] > '9'))
                 {
                   rest++;
                   goto SKIP_MORE;

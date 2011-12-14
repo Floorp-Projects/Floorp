@@ -93,6 +93,13 @@ public class BrowserContract {
     public static final class Bookmarks implements CommonColumns, URLColumns, ImageColumns, SyncColumns {
         private Bookmarks() {}
 
+        public static final String MOBILE_FOLDER_GUID = "mobile";
+        public static final String PLACES_FOLDER_GUID = "places";
+        public static final String MENU_FOLDER_GUID = "menu";
+        public static final String TAGS_FOLDER_GUID = "tags";
+        public static final String TOOLBAR_FOLDER_GUID = "toolbar";
+        public static final String UNFILED_FOLDER_GUID = "unfiled";
+
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "bookmarks");
 
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/bookmark";

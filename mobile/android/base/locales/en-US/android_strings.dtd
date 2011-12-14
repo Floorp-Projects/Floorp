@@ -62,6 +62,10 @@
 <!ENTITY pref_clear_history_confirm "Browsing history will be deleted">
 <!ENTITY pref_clear_private_data "Clear private data">
 <!ENTITY pref_clear_private_data_confirm "Browsing settings, including passwords and cookies, will be deleted">
+<!ENTITY pref_enable_flash "Enable Flash">
+<!ENTITY pref_enable_flash_yes "Yes">
+<!ENTITY pref_enable_flash_tap_to_play "Tap To Play">
+<!ENTITY pref_enable_flash_no "No">
 
 <!ENTITY quit "Quit">
 
