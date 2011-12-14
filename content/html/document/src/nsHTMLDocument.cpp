@@ -162,7 +162,6 @@ const PRInt32 kBackward = 1;
 
 //#define DEBUG_charset
 
-#define NS_USE_NEW_VIEW_SOURCE 1
 #define NS_USE_NEW_PLAIN_TEXT 1
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
@@ -657,8 +656,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   nsCAutoString contentType;
   aChannel->GetContentType(contentType);
 
-  bool viewSource = aCommand && !nsCRT::strcmp(aCommand, "view-source") &&
-    NS_USE_NEW_VIEW_SOURCE;
+  bool viewSource = aCommand && !nsCRT::strcmp(aCommand, "view-source");
   bool plainText = (contentType.EqualsLiteral(TEXT_PLAIN) ||
     contentType.EqualsLiteral(TEXT_CSS) ||
     contentType.EqualsLiteral(APPLICATION_JAVASCRIPT) ||

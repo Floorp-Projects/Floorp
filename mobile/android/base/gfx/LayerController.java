@@ -58,12 +58,13 @@ import android.view.GestureDetector;
 import android.view.ScaleGestureDetector;
 import android.view.View.OnTouchListener;
 import java.lang.Math;
-import java.util.ArrayList;
 
 /**
  * The layer controller manages a tile that represents the visible page. It does panning and
  * zooming natively by delegating to a panning/zooming controller. Touch events can be dispatched
  * to a higher-level view.
+ *
+ * Many methods require that the monitor be held, with a synchronized (controller) { ... } block.
  */
 public class LayerController {
     private static final String LOGTAG = "GeckoLayerController";
@@ -155,7 +156,8 @@ public class LayerController {
     }
 
     /**
-     * The view calls this to indicate that the viewport changed size.
+     * The view calls this function to indicate that the viewport changed size. It must hold the
+     * monitor while calling it.
      *
      * TODO: Refactor this to use an interface. Expose that interface only to the view and not
      * to the layer client. That way, the layer client won't be tempted to call this, which might
@@ -173,6 +175,7 @@ public class LayerController {
         mView.requestRender();
     }
 
+    /** Scrolls the viewport to the given point. You must hold the monitor while calling this. */
     public void scrollTo(PointF point) {
         mViewportMetrics.setOrigin(point);
         notifyLayerClientOfGeometryChange();
@@ -181,6 +184,7 @@ public class LayerController {
         mView.requestRender();
     }
 
+    /** Scrolls the viewport by the given offset. You must hold the monitor while calling this. */
     public void scrollBy(PointF point) {
         PointF origin = mViewportMetrics.getOrigin();
         origin.offset(point.x, point.y);
@@ -192,6 +196,7 @@ public class LayerController {
         mView.requestRender();
     }
 
+    /** Sets the current viewport. You must hold the monitor while calling this. */
     public void setViewport(RectF viewport) {
         mViewportMetrics.setViewport(viewport);
         notifyLayerClientOfGeometryChange();
@@ -200,6 +205,7 @@ public class LayerController {
         mView.requestRender();
     }
 
+    /** Sets the current page size. You must hold the monitor while calling this. */
     public void setPageSize(FloatSize size) {
         if (mViewportMetrics.getPageSize().fuzzyEquals(size))
             return;
@@ -215,7 +221,8 @@ public class LayerController {
     /**
      * Sets the entire viewport metrics at once. This function does not notify the layer client or
      * the pan/zoom controller, so you will need to call notifyLayerClientOfGeometryChange() or
-     * notifyPanZoomControllerOfGeometryChange() after calling this.
+     * notifyPanZoomControllerOfGeometryChange() after calling this. You must hold the monitor
+     * while calling this.
      */
     public void setViewportMetrics(ViewportMetrics viewport) {
         mViewportMetrics = new ViewportMetrics(viewport);
@@ -223,10 +230,15 @@ public class LayerController {
         mView.requestRender();
     }
 
+    /** Scales the viewport. You must hold the monitor while calling this. */
     public void scaleTo(float zoomFactor) {
         scaleWithFocus(zoomFactor, new PointF(0,0));
     }
 
+    /**
+     * Scales the viewport, keeping the given focus point in the same place before and after the
+     * scale operation. You must hold the monitor while calling this.
+     */
     public void scaleWithFocus(float zoomFactor, PointF focus) {
         mViewportMetrics.scaleTo(zoomFactor, focus);
 
@@ -237,6 +249,10 @@ public class LayerController {
         mView.requestRender();
     }
 
+    /**
+     * Sets the viewport origin and scales in one operation. You must hold the monitor while
+     * calling this.
+     */
     public void scaleWithOrigin(float zoomFactor, PointF origin) {
         mViewportMetrics.setOrigin(origin);
         scaleTo(zoomFactor);
@@ -258,9 +274,9 @@ public class LayerController {
     }
 
     /** Informs the pan/zoom controller that the viewport metrics changed. */
-    public void notifyPanZoomControllerOfGeometryChange(boolean abortFling) {
+    public void notifyPanZoomControllerOfGeometryChange(boolean abortAnimation) {
         if (mPanZoomController != null)
-            mPanZoomController.geometryChanged(abortFling);
+            mPanZoomController.geometryChanged(abortAnimation);
     }
 
     /**

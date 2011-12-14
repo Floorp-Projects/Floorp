@@ -65,6 +65,8 @@
 #define LOG(args...)  printf(args);
 #endif
 
+#define RIL_SOCKET_NAME "/dev/socket/rilproxy"
+
 using namespace base;
 using namespace std;
 
@@ -144,10 +146,10 @@ RilClient::OpenSocket()
     size_t namelen;
     int err;
     memset(&addr, 0, sizeof(addr));
-    strcpy(addr.sun_path, "/dev/socket/rilb2g");
+    strcpy(addr.sun_path, RIL_SOCKET_NAME);
     addr.sun_family = AF_LOCAL;
     mSocket.mFd = socket(AF_LOCAL, SOCK_STREAM, 0);
-    alen = strlen("/dev/socket/rilb2g") + offsetof(struct sockaddr_un, sun_path) + 1;
+    alen = strlen(RIL_SOCKET_NAME) + offsetof(struct sockaddr_un, sun_path) + 1;
 #else
     struct hostent *hp;
     struct sockaddr_in addr;

@@ -1191,7 +1191,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
     size_t length = linearStr->length();
 
     /*
-     * If the eval string starts with '(' and ends with ')', it may be JSON.
+     * If the eval string starts with '(' or '[' and ends with ')' or ']', it may be JSON.
      * Try the JSON parser first because it's much faster.  If the eval string
      * isn't JSON, JSON parsing will probably fail quickly, so little time
      * will be lost.
@@ -1202,8 +1202,9 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
      * JSON with eval and using strict mode, you deserve to be slow.
      */
     if (length > 2 &&
-        chars[0] == '(' && chars[length - 1] == ')' &&
-        (!caller || !caller->script()->strictModeCode))
+        ((chars[0] == '[' && chars[length - 1] == ']') ||
+        (chars[0] == '(' && chars[length - 1] == ')')) &&
+         (!caller || !caller->script()->strictModeCode))
     {
         /*
          * Remarkably, JavaScript syntax is not a superset of JSON syntax:
@@ -1218,7 +1219,8 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
                 break;
 
             if (cp == end) {
-                JSONParser parser(cx, chars + 1, length - 2,
+                bool isArray = (chars[0] == '[');
+                JSONParser parser(cx, isArray ? chars : chars + 1, isArray ? length : length - 2,
                                   JSONParser::StrictJSON, JSONParser::NoError);
                 Value tmp;
                 if (!parser.parse(&tmp))

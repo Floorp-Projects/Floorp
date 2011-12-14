@@ -103,7 +103,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
         mScreenSize = new IntSize(1, 1);
 
-        mBuffer = ByteBuffer.allocateDirect(mWidth * mHeight * 2);
+        mBuffer = GeckoAppShell.allocateDirectBuffer(mWidth * mHeight * 2);
 
         mCairoImage = new CairoImage() {
             @Override
@@ -117,6 +117,17 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         };
 
         mTileLayer = new SingleTileLayer(mCairoImage);
+    }
+
+
+    protected void finalize() throws Throwable {
+        try {
+            if (mBuffer != null)
+                GeckoAppShell.freeDirectBuffer(mBuffer);
+            mBuffer = null;
+        } finally {
+            super.finalize();
+        }
     }
 
     /** Attaches the root layer to the layer controller so that Gecko appears. */
@@ -151,28 +162,22 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             mGeckoViewport = new ViewportMetrics(viewportObject);
             mGeckoViewport.setSize(viewportSize);
 
-            mTileLayer.setOrigin(PointUtils.round(mGeckoViewport.getDisplayportOrigin()));
-            mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
+            LayerController controller = getLayerController();
+            synchronized (controller) {
+                PointF displayportOrigin = mGeckoViewport.getDisplayportOrigin();
+                mTileLayer.setOrigin(PointUtils.round(displayportOrigin));
+                mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
 
-            // Make sure LayerController metrics changes only happen in the
-            // UI thread.
-            final LayerController controller = getLayerController();
-
-            if (controller != null) {
-                controller.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (onlyUpdatePageSize) {
-                            // Don't adjust page size when zooming unless zoom levels are
-                            // approximately equal.
-                            if (FloatUtils.fuzzyEquals(controller.getZoomFactor(), mGeckoViewport.getZoomFactor()))
-                                controller.setPageSize(mGeckoViewport.getPageSize());
-                        } else {
-                            controller.setViewportMetrics(mGeckoViewport);
-                            controller.notifyPanZoomControllerOfGeometryChange(true);
-                        }
-                    }
-                });
+                if (onlyUpdatePageSize) {
+                    // Don't adjust page size when zooming unless zoom levels are
+                    // approximately equal.
+                    if (FloatUtils.fuzzyEquals(controller.getZoomFactor(),
+                            mGeckoViewport.getZoomFactor()))
+                        controller.setPageSize(mGeckoViewport.getPageSize());
+                } else {
+                    controller.setViewportMetrics(mGeckoViewport);
+                    controller.notifyPanZoomControllerOfGeometryChange(true);
+                }
             }
         } catch (JSONException e) {
             Log.e(LOGTAG, "Bad viewport description: " + viewportDescription);
@@ -209,7 +214,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             b.copyPixelsFromBuffer(mBuffer.asIntBuffer());
             return b;
         } catch (OutOfMemoryError oom) {
-            Log.e(LOGTAG, "Unable to create bitmap", oom);
+            Log.w(LOGTAG, "Unable to create bitmap", oom);
             return null;
         }
     }

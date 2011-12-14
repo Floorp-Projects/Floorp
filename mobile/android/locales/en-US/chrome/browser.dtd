@@ -11,18 +11,6 @@
 <!ENTITY newtab.label          "New Tab">
 <!ENTITY closetab.label        "Close Tab">
 
-<!ENTITY cut.label             "Cut">
-<!ENTITY copy.label            "Copy">
-<!ENTITY copyAll.label         "Copy All">
-<!ENTITY copylink.label        "Copy Link Location">
-<!ENTITY paste.label           "Paste">
-<!ENTITY pasteAndGo.label      "Paste &amp; Go">
-<!ENTITY delete.label          "Delete">
-<!ENTITY selectAll.label       "Select All">
-<!ENTITY noSuggestions.label   "(No suggestions)">
-<!ENTITY addToDictionary.label "Add to Dictionary">
-<!ENTITY inputMethod.label     "Select Input Method">
-
 <!ENTITY allPagesHeader.label      "All Pages">
 <!ENTITY bookmarksHeader.label     "Bookmarks">
 <!ENTITY historyHeader.label       "History">

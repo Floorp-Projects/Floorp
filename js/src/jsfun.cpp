@@ -697,15 +697,6 @@ CreateEvalCallObject(JSContext *cx, StackFrame *fp)
 
 } // namespace js
 
-JSObject * JS_FASTCALL
-js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSObject *scopeChain)
-{
-    JS_ASSERT(!js_IsNamedLambda(fun));
-    JS_ASSERT(scopeChain);
-    JS_ASSERT(callee);
-    return CallObject::create(cx, fun->script(), *scopeChain, callee);
-}
-
 void
 js_PutCallObject(StackFrame *fp)
 {
