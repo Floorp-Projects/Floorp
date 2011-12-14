@@ -1363,6 +1363,9 @@ js_GCThingIsMarked(void *thing, uintN color);
 extern void
 js_TraceStackFrame(JSTracer *trc, js::StackFrame *fp);
 
+extern bool
+js_IsAddressableGCThing(JSRuntime *rt, jsuword w, js::gc::AllocKind *thingKind, void **thing);
+
 namespace js {
 
 extern JS_REQUIRES_STACK void
