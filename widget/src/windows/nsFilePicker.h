@@ -129,6 +129,7 @@ protected:
   bool ShowXPFolderPicker(const nsString& aInitialDir);
   bool ShowFilePicker(const nsString& aInitialDir);
   bool ShowXPFilePicker(const nsString& aInitialDir);
+  void AppendXPFilter(const nsAString& aTitle, const nsAString& aFilter);
   void RememberLastUsedDirectory();
   bool IsPrivacyModeEnabled();
   bool IsDefaultPathLink();
@@ -138,7 +139,8 @@ protected:
   nsString               mTitle;
   PRInt16                mMode;
   nsCString              mFile;
-  nsString               mDefault;
+  nsString               mDefaultFilePath;
+  nsString               mDefaultFilename;
   nsString               mDefaultExtension;
   nsString               mFilterList;
   PRInt16                mSelectedType;
@@ -147,6 +149,39 @@ protected:
   nsString               mUnicodeFile;
   static PRUnichar      *mLastUsedUnicodeDirectory;
   DWORD                  mFDECookie;
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  class ComDlgFilterSpec
+  {
+  public:
+    ComDlgFilterSpec() :
+      mSpecList(nsnull),
+      mLength(0) {}
+    ~ComDlgFilterSpec() {
+      free(mSpecList);
+    }
+    
+    PRUint32 Length() {
+      return mLength;
+    }
+
+    bool IsEmpty() {
+      return (mLength == 0);
+    }
+
+    const COMDLG_FILTERSPEC* get() {
+      return mSpecList;
+    }
+    
+    void Append(const nsAString& aTitle, const nsAString& aFilter);
+  private:
+    COMDLG_FILTERSPEC* mSpecList;
+    nsAutoTArray<nsString, 2> mStrings;
+    PRUint32 mLength;
+  };
+
+  ComDlgFilterSpec mComFilterList;
+#endif
 };
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
