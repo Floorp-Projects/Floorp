@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=675884
+-->
+<head>
+  <title>Test for Bug 675884</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=675884">Mozilla Bug 675884</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 675884 **/
+
+var receivedEvent;
+document.addEventListener("hello", function(e) { receivedEvent = e; }, true);
+
+// Event
+var e;
+var ex = false;
+try {
+  e = new Event();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "First parameter is required!");
+ex = false;
+
+e = new Event("hello");
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new Event("hello", { bubbles: true, cancelable: true });
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+// CustomEvent
+
+try {
+  e = new CustomEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "First parameter is required!");
+ex = false;
+
+e = new CustomEvent("hello");
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new CustomEvent("hello", { bubbles: true, cancelable: true, detail: window });
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.detail, window , "Wrong event.detail!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new CustomEvent("hello", { cancelable: true, detail: window });
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.detail, window , "Wrong event.detail!");
+
+e = new CustomEvent("hello", { detail: 123 });
+is(e.detail, 123, "Wrong event.detail!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+
+var dict = { get detail() { return document.body } };
+e = new CustomEvent("hello", dict);
+is(e.detail, dict.detail, "Wrong event.detail!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+
+e = new CustomEvent("hello", 1234);
+is(e.detail, null, "Wrong event.detail!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+
+var dict = { get detail() { throw "foo"; } };
+
+try {
+  e = new CustomEvent("hello", dict);
+} catch (exp) {
+  ex = true;
+}
+ok(ex, "Should have thrown an exception!");
+ex = false;
+
+SimpleTest.finish();
+
+</script>
+</pre>
+</body>
+</html>
