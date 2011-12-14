@@ -68,6 +68,7 @@ static const DWORD kDialogTimerID = 9999;
 static const unsigned long kDialogTimerTimeout = 300;
 
 #define MAX_EXTENSION_LENGTH 10
+#define FILE_BUFFER_SIZE     4096 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helper classes
@@ -612,11 +613,12 @@ nsFilePicker::ShowFolderPicker(const nsString& aInitialDir)
  
   // initial strings
   dialog->SetTitle(mTitle.get());
-  if (!aInitialDir.IsEmpty()) {
+  if (!aInitialDir.IsEmpty() &&
+      nsToolkit::VistaCreateItemFromParsingNameInit()) {
     nsRefPtr<IShellItem> folder;
-    if (SUCCEEDED(SHCreateItemFromParsingName(aInitialDir.get(), NULL,
-                                              IID_IShellItem,
-                                              getter_AddRefs(folder)))) {
+    if (SUCCEEDED(nsToolkit::createItemFromParsingName(aInitialDir.get(), NULL,
+                                                       IID_IShellItem,
+                                                       getter_AddRefs(folder)))) {
       dialog->SetFolder(folder);
     }
   }
@@ -938,11 +940,12 @@ nsFilePicker::ShowFilePicker(const nsString& aInitialDir)
   }
 
   // initial location
-  if (!aInitialDir.IsEmpty()) {
+  if (!aInitialDir.IsEmpty() &&
+      nsToolkit::VistaCreateItemFromParsingNameInit()) {
     nsRefPtr<IShellItem> folder;
-    if (SUCCEEDED(SHCreateItemFromParsingName(aInitialDir.get(), NULL,
-                                              IID_IShellItem,
-                                              getter_AddRefs(folder)))) {
+    if (SUCCEEDED(nsToolkit::createItemFromParsingName(aInitialDir.get(), NULL,
+                                                       IID_IShellItem,
+                                                       getter_AddRefs(folder)))) {
       dialog->SetFolder(folder);
     }
   }
