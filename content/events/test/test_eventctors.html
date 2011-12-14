@@ -274,6 +274,101 @@ is(e.state, window, "persisted should be window");
 document.dispatchEvent(e);
 is(receivedEvent, e, "Wrong event!");
 
+// UIEvent
+
+try {
+  e = new UIEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "First parameter is required!");
+ex = false;
+
+e = new UIEvent("hello");
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.detail, 0, "detail should be 0");
+is(e.view, null, "view should be null");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+e = new UIEvent("hello",
+  { bubbles: true, cancelable: true, view: window, detail: 1});
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(e.bubbles, "Event should bubble!");
+ok(e.cancelable, "Event should be cancelable!");
+is(e.detail, 1, "detail should be 1");
+is(e.view, window, "view should be window");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+// UIEvent
+
+try {
+  e = new UIEvent();
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "First parameter is required!");
+ex = false;
+
+e = new MouseEvent("hello");
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+document.dispatchEvent(e);
+is(receivedEvent, e, "Wrong event!");
+
+var mouseEventProps =
+[ { screenX: 0 },
+  { screenY: 0 },
+  { clientX: 0 },
+  { clientY: 0 },
+  { ctrlKey: false },
+  { shiftKey: false },
+  { altKey: false },
+  { metaKey: false },
+  { button: 0 },
+  { relatedTarget: null }
+];
+
+var testProps =
+[
+  { screenX: 1 },
+  { screenY: 2 },
+  { clientX: 3 },
+  { clientY: 4 },
+  { ctrlKey: true },
+  { shiftKey: true },
+  { altKey: true },
+  { metaKey: true },
+  { button: 5 },
+  { relatedTarget: window }
+];
+
+var defaultMouseEventValues = {};
+for (var i = 0; i < mouseEventProps.length; ++i) {
+  for (prop in mouseEventProps[i]) {
+    ok(prop in e, "MouseEvent doesn't have property " + prop + "!");
+    defaultMouseEventValues[prop] = mouseEventProps[i][prop]; 
+  }
+}
+
+while (testProps.length) {
+  var p = testProps.shift();
+  e = new MouseEvent("foo", p);
+  for (var def in defaultMouseEventValues) {
+    if (!(def in p)) {
+      is(e[def], defaultMouseEventValues[def], "Wrong default value for " + def + "!");
+    } else {
+      is(e[def], p[def], "Wrong event init value for " + def + "!");
+    }
+  }
+}
 
 SimpleTest.finish();
 

@@ -113,3 +113,19 @@ interface nsIDOMMouseEvent : nsIDOMUIEvent
                                        in float pressure,
                                        in unsigned short inputSourceArg);
 };
+
+[scriptable, uuid(9495a977-5c9e-4b34-8d51-22bfd9b4fcf6)]
+interface nsIMouseEventInit : nsIUIEventInit
+{
+  attribute long screenX;
+  attribute long screenY;
+  attribute long clientX;
+  attribute long clientY;
+  attribute boolean ctrlKey;
+  attribute boolean shiftKey;
+  attribute boolean altKey;
+  attribute boolean metaKey;
+  attribute unsigned short button;
+  // attribute unsigned short buttons; is not supported yet.
+  attribute nsIDOMEventTarget relatedTarget;
+};
