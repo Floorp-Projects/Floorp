@@ -226,6 +226,7 @@ private:
         OP_MOV_OvEAX                    = 0xA3,
         OP_MOV_EAXIv                    = 0xB8,
         OP_GROUP2_EvIb                  = 0xC1,
+        OP_RET_Iz                       = 0xC2,
         OP_RET                          = 0xC3,
         OP_GROUP11_EvIb                 = 0xC6,
         OP_GROUP11_EvIz                 = 0xC7,
@@ -2295,11 +2296,20 @@ public:
         js::JaegerSpew(js::JSpew_Insns, IPFX "int3\n", MAYBE_PAD);
         m_formatter.oneByteOp(OP_INT3);
     }
-    
+
     void ret()
     {
         js::JaegerSpew(js::JSpew_Insns, IPFX "ret\n", MAYBE_PAD);
         m_formatter.oneByteOp(OP_RET);
+    }
+
+    void ret(int imm)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "ret        %d\n", MAYBE_PAD,
+                       imm);
+        m_formatter.oneByteOp(OP_RET_Iz);
+        m_formatter.immediate16(imm);
     }
 
     void predictNotTaken()

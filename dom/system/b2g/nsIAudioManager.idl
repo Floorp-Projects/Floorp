@@ -1,0 +1,90 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is B2G Audio Manager.
+ *
+ * The Initial Developer of the Original Code is
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Philipp von Weitershausen <philipp@weitershausen.de>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+[scriptable, builtinclass, uuid(d2124467-7209-4b2e-a91a-cf3f90681e3c)]
+interface nsIAudioManager : nsISupports
+{
+  /**
+   * Microphone muted?
+   */
+  attribute boolean microphoneMuted;
+
+  /**
+   * The master volume.
+   */
+  attribute float masterVolume;
+
+  /**
+   * Master volume muted?
+   */
+  attribute boolean masterMuted;
+
+  /**
+   * Set the phone's audio mode.
+   */
+  const long PHONE_STATE_INVALID          = -2;
+  const long PHONE_STATE_CURRENT          = -1;
+  const long PHONE_STATE_NORMAL           = 0;
+  const long PHONE_STATE_RINGTONE         = 1;
+  const long PHONE_STATE_IN_CALL          = 2;
+  const long PHONE_STATE_IN_COMMUNICATION = 3;
+
+  attribute long phoneState;
+
+  /**
+   * Configure a particular device ("force") to be used for one of the uses
+   * (communication, media playback, etc.)
+   */
+  const long FORCE_NONE            = 0; // the default
+  const long FORCE_SPEAKER         = 1;
+  const long FORCE_HEADPHONES      = 2;
+  const long FORCE_BT_SCO          = 3;
+  const long FORCE_BT_A2DP         = 4;
+  const long FORCE_WIRED_ACCESSORY = 5;
+  const long FORCE_BT_CAR_DOCK     = 6;
+  const long FORCE_BT_DESK_DOCK    = 7;
+
+  const long USE_COMMUNICATION     = 0;
+  const long USE_MEDIA             = 1;
+  const long USE_RECORD            = 2;
+  const long USE_DOCK              = 3;
+
+  void setForceForUse(in long usage, in long force);
+  long getForceForUse(in long usage);
+};

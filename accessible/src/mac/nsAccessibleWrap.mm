@@ -41,46 +41,49 @@
 
 #import "nsRoleMap.h"
 
-#import "mozAccessibleWrapper.h"
 #import "mozAccessible.h"
 #import "mozActionElements.h"
 #import "mozTextAccessible.h"
 
 nsAccessibleWrap::
   nsAccessibleWrap(nsIContent *aContent, nsIWeakReference *aShell) :
-  nsAccessible(aContent, aShell), mNativeWrapper(nsnull)
+  nsAccessible(aContent, aShell), mNativeObject(nil)
 {
 }
 
 nsAccessibleWrap::~nsAccessibleWrap()
 {
-  if (mNativeWrapper) {
-    delete mNativeWrapper;
-    mNativeWrapper = nsnull;
-  }
 }
 
 bool
 nsAccessibleWrap::Init () 
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
   if (!nsAccessible::Init())
     return false;
 
-  if (!mNativeWrapper && !AncestorIsFlat()) {
+  if (!mNativeObject && !AncestorIsFlat()) {
     // Create our native object using the class type specified in GetNativeType().
-    mNativeWrapper = new AccessibleWrapper (this, GetNativeType());
-    if (!mNativeWrapper)
+    mNativeObject = [[GetNativeType() alloc] initWithAccessible:this];
+    if(!mNativeObject)
       return false;
   }
 
   return true;
+  
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
 NS_IMETHODIMP
 nsAccessibleWrap::GetNativeInterface (void **aOutInterface) 
 {
-  if (mNativeWrapper) {
-    *aOutInterface = (void**)mNativeWrapper->getNativeObject();
+  NS_ENSURE_ARG_POINTER(aOutInterface);
+
+  *aOutInterface = nsnull;
+  
+  if (mNativeObject) {
+    *aOutInterface = static_cast<void*>(mNativeObject);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -141,9 +144,10 @@ nsAccessibleWrap::GetNativeType ()
 void
 nsAccessibleWrap::Shutdown ()
 {
-  if (mNativeWrapper) {
-    delete mNativeWrapper;
-    mNativeWrapper = nsnull;
+  if (mNativeObject) {
+    [mNativeObject expire];
+    [mNativeObject release];
+    mNativeObject = nil;
   }
   
   nsAccessible::Shutdown();
@@ -201,10 +205,9 @@ nsAccessibleWrap::InvalidateChildren()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (mNativeWrapper) {
-    mozAccessible *object = mNativeWrapper->getNativeObject();
-    [object invalidateChildren];
-  }
+  if (mNativeObject)
+    [mNativeObject invalidateChildren];
+
   nsAccessible::InvalidateChildren();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -215,7 +218,11 @@ nsAccessibleWrap::InvalidateChildren()
 bool 
 nsAccessibleWrap::IsIgnored() 
 {
-  return (mNativeWrapper == nsnull) || mNativeWrapper->isIgnored();
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+  
+  return (mNativeObject == nil) || [mNativeObject accessibilityIsIgnored];
+  
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
 void
