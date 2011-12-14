@@ -234,7 +234,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         // If a space is found before any dot or colon, we assume this is a search query
         boolean spacedOut = space > -1 && (space < colon || space < dot);
 
-        return spacedOut || (dot == -1);
+        return spacedOut || (dot == -1 && colon == -1);
     }
 
     private void updateGoButton(String text) {
