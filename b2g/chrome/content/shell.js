@@ -180,7 +180,7 @@ var shell = {
   doCommand: function shell_doCommand(cmd) {
     switch (cmd) {
       case 'cmd_close':
-        this.sendEvent(this.home.contentWindow, 'appclose');
+        this.home.contentWindow.postMessage('appclose', '*');
         break;
     }
   },
