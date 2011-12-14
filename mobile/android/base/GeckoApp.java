@@ -913,11 +913,6 @@ abstract public class GeckoApp
                 setLaunchState(GeckoApp.LaunchState.GeckoRunning);
                 GeckoAppShell.sendPendingEventsToGecko();
                 connectGeckoLayerClient();
-                GeckoAppShell.getHandler().post(new Runnable() {
-                    public void run() {
-                        Looper.myQueue().addIdleHandler(new UpdateIdleHandler());
-                    }
-                });
             } else if (event.equals("ToggleChrome:Hide")) {
                 mMainHandler.post(new Runnable() {
                     public void run() {
@@ -1435,7 +1430,32 @@ abstract public class GeckoApp
         mSmsReceiver = new GeckoSmsManager();
         registerReceiver(mSmsReceiver, smsFilter);
 
-        final GeckoApp self = this; 
+        final GeckoApp self = this;
+ 
+        mMainHandler.postDelayed(new Runnable() {
+            public void run() {
+                
+                Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - pre checkLaunchState");
+
+                /*
+                  XXXX see bug 635342
+                   We want to disable this code if possible.  It is about 145ms in runtime
+                SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
+                String localeCode = settings.getString(getPackageName() + ".locale", "");
+                if (localeCode != null && localeCode.length() > 0)
+                    GeckoAppShell.setSelectedLocale(localeCode);
+                */
+
+                if (!checkLaunchState(LaunchState.Launched)) {
+                    return;
+                }
+
+                // it would be good only to do this if MOZ_UPDATER was defined 
+                long startTime = new Date().getTime();
+                checkAndLaunchUpdate();
+                Log.w(LOGTAG, "checking for an update took " + (new Date().getTime() - startTime) + "ms");
+            }
+        }, 50);
     }
 
     /**
@@ -1698,21 +1718,6 @@ abstract public class GeckoApp
 
     public void handleNotification(String action, String alertName, String alertCookie) {
         GeckoAppShell.handleNotification(action, alertName, alertCookie);
-    }
-
-    // it would be good only to do this if MOZ_UPDATER was defined 
-    private class UpdateIdleHandler implements MessageQueue.IdleHandler {
-        public boolean queueIdle() {
-            mMainHandler.post(new Runnable() {
-                    public void run() {
-                        long startTime = new Date().getTime();
-                        checkAndLaunchUpdate();
-                        Log.w(LOGTAG, "checking for an update took " + (new Date().getTime() - startTime) + "ms");
-                    }
-                });
-            // only need to run this once.
-            return false;
-        }
     }
 
     private void checkAndLaunchUpdate() {

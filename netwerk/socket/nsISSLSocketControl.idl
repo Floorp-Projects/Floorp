@@ -42,11 +42,47 @@
 
 interface nsIInterfaceRequestor;
 
-[scriptable, uuid(a092097c-8386-4f1b-97b1-90eb70008c2d)]
+%{C++
+#include "nsTArray.h"
+class nsCString;
+%}
+[ref] native nsCStringTArrayRef(nsTArray<nsCString>);
+
+[scriptable, uuid(753f0f13-681d-4de3-a6c6-11aa7e0b3afd)]
 interface nsISSLSocketControl : nsISupports {
     attribute nsIInterfaceRequestor     notificationCallbacks;
 
     void proxyStartSSL();
     void StartTLS();
+
+    /* NPN (Next Protocol Negotiation) is a mechanism for
+       negotiating the protocol to be spoken inside the SSL
+       tunnel during the SSL handshake. The NPNList is the list
+       of offered client side protocols. setNPNList() needs to
+       be called before any data is read or written (including the
+       handshake to be setup correctly. */
+
+    [noscript] void setNPNList(in nsCStringTArrayRef aNPNList);
+
+    /* negotiatedNPN is '' if no NPN list was provided by the client,
+     * or if the server did not select any protocol choice from that
+     * list. That also includes the case where the server does not
+     * implement NPN.
+     *
+     * If negotiatedNPN is read before NPN has progressed to the point
+     * where this information is available NS_ERROR_NOT_CONNECTED is
+     * raised.
+     */
+    readonly attribute ACString negotiatedNPN;
+
+    /* Determine if a potential SSL connection to hostname:port with
+     * a desired NPN negotiated protocol of npnProtocol can use the socket
+     * associated with this object instead of making a new one.
+     */
+    boolean joinConnection(
+      in ACString npnProtocol, /* e.g. "spdy/2" */
+      in ACString hostname,
+      in long port);
+    
 };
 
