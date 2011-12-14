@@ -78,6 +78,34 @@ nsDOMHashChangeEvent::InitHashChangeEvent(const nsAString &aTypeArg,
   return NS_OK;
 }
 
+nsresult
+nsDOMHashChangeEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict,
+                                   JSContext* aCx, JSObject* aObj)
+{
+  nsCOMPtr<nsIHashChangeEventInit> eventInit = do_QueryInterface(aDict);
+  bool bubbles = false;
+  bool cancelable = false;
+  nsAutoString oldURL;
+  nsAutoString newURL;
+  if (eventInit) {
+    nsresult rv = eventInit->GetBubbles(&bubbles);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = eventInit->GetCancelable(&cancelable);
+    NS_ENSURE_SUCCESS(rv, rv);
+    JSBool found = JS_FALSE;
+    if (JS_HasProperty(aCx, aObj, "oldURL", &found) && found) {
+      rv = eventInit->GetOldURL(oldURL);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    found = JS_FALSE;
+    if (JS_HasProperty(aCx, aObj, "newURL", &found) && found) {
+      rv = eventInit->GetNewURL(newURL);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+  return InitHashChangeEvent(aType, bubbles, cancelable, oldURL, newURL);
+}
+
 nsresult NS_NewDOMHashChangeEvent(nsIDOMEvent** aInstancePtrResult,
                                 nsPresContext* aPresContext,
                                 nsEvent* aEvent)

@@ -411,12 +411,14 @@ nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
   NS_ENSURE_STATE(type.init(aCx, jsstr));
   
   nsCOMPtr<nsISupports> dict;
+  JSObject* obj = nsnull;
   if (aArgc >= 2 && !JSVAL_IS_PRIMITIVE(aArgv[1])) {
-    nsContentUtils::XPConnect()->WrapJS(aCx, JSVAL_TO_OBJECT(aArgv[1]),
+    obj = JSVAL_TO_OBJECT(aArgv[1]);
+    nsContentUtils::XPConnect()->WrapJS(aCx, obj,
                                         EventInitIID(),
                                         getter_AddRefs(dict));
   }
-  nsresult rv = InitFromCtor(type, dict);
+  nsresult rv = InitFromCtor(type, dict, aCx, obj);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetTrusted(trusted);
@@ -424,7 +426,8 @@ nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
 }
 
 nsresult
-nsDOMEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict)
+nsDOMEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict,
+                         JSContext* aCx, JSObject* aObj)
 {
   nsCOMPtr<nsIEventInit> eventInit = do_QueryInterface(aDict);
   bool bubbles = false;

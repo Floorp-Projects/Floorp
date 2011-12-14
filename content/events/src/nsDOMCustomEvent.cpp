@@ -79,7 +79,8 @@ nsDOMCustomEvent::InitCustomEvent(const nsAString& aType,
 }
 
 nsresult
-nsDOMCustomEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict)
+nsDOMCustomEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict,
+                               JSContext* aCx, JSObject* aObj)
 {
   nsCOMPtr<nsICustomEventInit> eventInit = do_QueryInterface(aDict);
   bool bubbles = false;

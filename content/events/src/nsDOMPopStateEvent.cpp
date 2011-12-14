@@ -83,6 +83,25 @@ nsDOMPopStateEvent::InitPopStateEvent(const nsAString &aTypeArg,
   return NS_OK;
 }
 
+nsresult
+nsDOMPopStateEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict,
+                                 JSContext* aCx, JSObject* aObj)
+{
+  nsCOMPtr<nsIPopStateEventInit> eventInit = do_QueryInterface(aDict);
+  bool bubbles = false;
+  bool cancelable = false;
+  nsCOMPtr<nsIVariant> state;
+  if (eventInit) {
+    nsresult rv = eventInit->GetBubbles(&bubbles);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = eventInit->GetCancelable(&cancelable);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = eventInit->GetState(getter_AddRefs(state));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return InitPopStateEvent(aType, bubbles, cancelable, state);
+}
+
 nsresult NS_NewDOMPopStateEvent(nsIDOMEvent** aInstancePtrResult,
                                 nsPresContext* aPresContext,
                                 nsEvent* aEvent)
