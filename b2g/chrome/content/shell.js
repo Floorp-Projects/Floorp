@@ -68,6 +68,7 @@ function startupHttpd(baseDir, port) {
   Services.scriptloader.loadSubScript(httpdURL, httpd);
   let server = new httpd.nsHttpServer();
   server.registerDirectory('/', new LocalFile(baseDir));
+  server.registerContentType('appcache', 'text/cache-manifest');
   server.start(port);
 }
 
@@ -114,6 +115,7 @@ var shell = {
 
     window.controllers.appendController(this);
     window.addEventListener('keypress', this);
+    window.addEventListener('MozApplicationManifest', this);
     this.home.addEventListener('load', this, true);
 
     try {
@@ -147,6 +149,7 @@ var shell = {
   stop: function shell_stop() {
     window.controllers.removeController(this);
     window.removeEventListener('keypress', this);
+    window.removeEventListener('MozApplicationManifest', this);
   },
 
   supportsCommand: function shell_supportsCommand(cmd) {
@@ -194,6 +197,29 @@ var shell = {
       case 'load':
         this.home.removeEventListener('load', this, true);
         this.sendEvent(window, 'ContentStart');
+        break;
+      case 'MozApplicationManifest':
+        try {
+          let contentWindow = evt.originalTarget.defaultView;
+          let documentElement = contentWindow.document.documentElement;
+          if (!documentElement)
+            return;
+
+          let manifest = documentElement.getAttribute("manifest");
+          if (!manifest)
+            return;
+
+          let documentURI = contentWindow.document.documentURIObject;
+          let manifestURI = Services.io.newURI(manifest, null, documentURI);
+          Services.perms.add(documentURI, 'offline-app',
+                             Ci.nsIPermissionManager.ALLOW_ACTION);
+
+          let updateService = Cc['@mozilla.org/offlinecacheupdate-service;1']
+                              .getService(Ci.nsIOfflineCacheUpdateService);
+          updateService.scheduleUpdate(manifestURI, documentURI, window);
+        } catch (e) {
+          dump('Error while creating offline cache: ' + e + '\n');
+        }
         break;
     }
   },
