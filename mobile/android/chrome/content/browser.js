@@ -205,6 +205,7 @@ var BrowserApp = {
     IndexedDB.init();
     XPInstallObserver.init();
     ConsoleAPI.init();
+    ClipboardHelper.init();
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -768,12 +769,6 @@ var NativeWindow = {
                function(aTarget) {
                  let url = NativeWindow.contextmenus._getLinkURL(aTarget);
                  BrowserApp.addTab(url, { selected: false });
-               });
-
-      this.add(Strings.browser.GetStringFromName("contextmenu.changeInputMethod"),
-               this.textContext,
-               function(aTarget) {
-                 Cc["@mozilla.org/imepicker;1"].getService(Ci.nsIIMEPicker).show();
                });
 
       this.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
@@ -2914,6 +2909,83 @@ var ConsoleAPI = {
     return aSourceURL;
   }
 };
+
+var ClipboardHelper = {
+  init: function() {
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copy"), ClipboardHelper.getCopyContext(false), ClipboardHelper.copy.bind(ClipboardHelper));
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyAll"), ClipboardHelper.getCopyContext(true), ClipboardHelper.copy.bind(ClipboardHelper));
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.selectAll"), NativeWindow.contextmenus.textContext, ClipboardHelper.select.bind(ClipboardHelper));
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.paste"), ClipboardHelper.pasteContext, ClipboardHelper.paste.bind(ClipboardHelper));
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.changeInputMethod"), NativeWindow.contextmenus.textContext, ClipboardHelper.inputMethod.bind(ClipboardHelper));
+  },
+
+  get clipboardHelper() {
+    delete this.clipboardHelper;
+    return this.clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+  },
+
+  get clipboard() {
+    delete this.clipboard;
+    return this.clipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
+  },
+
+  copy: function(aElement) {
+    let selectionStart = aElement.selectionStart;
+    let selectionEnd = aElement.selectionEnd;
+    if (selectionStart != selectionEnd) {
+      string = aElement.value.slice(selectionStart, selectionEnd);
+      this.clipboardHelper.copyString(string);
+    } else {
+      this.clipboardHelper.copyString(aElement.value);
+    }
+  },
+
+  select: function(aElement) {
+    if (!aElement || !(aElement instanceof Ci.nsIDOMNSEditableElement))
+      return;
+    let target = aElement.QueryInterface(Ci.nsIDOMNSEditableElement);
+    target.editor.selectAll();
+    target.focus();
+  },
+
+  paste: function(aElement) {
+    if (!aElement || !(aElement instanceof Ci.nsIDOMNSEditableElement))
+      return;
+    let target = aElement.QueryInterface(Ci.nsIDOMNSEditableElement);
+    target.editor.paste(Ci.nsIClipboard.kGlobalClipboard);
+    target.focus();  
+  },
+
+  inputMethod: function(aElement) {
+    Cc["@mozilla.org/imepicker;1"].getService(Ci.nsIIMEPicker).show();
+  },
+
+  getCopyContext: function(isCopyAll) {
+    return {
+      matches: function(aElement) {
+        if (NativeWindow.contextmenus.textContext.matches(aElement)) {
+          let selectionStart = aElement.selectionStart;
+          let selectionEnd = aElement.selectionEnd;
+          if (selectionStart != selectionEnd)
+            return true;
+          else if (isCopyAll)
+            return true;
+        }
+        return false;
+      }
+    }
+  },
+
+  pasteContext: {
+    matches: function(aElement) {
+      if (NativeWindow.contextmenus.textContext.matches(aElement)) {
+        let flavors = ["text/unicode"];
+        return ClipboardHelper.clipboard.hasDataMatchingFlavors(flavors, flavors.length, Ci.nsIClipboard.kGlobalClipboard);
+      }
+      return false;
+    }
+  }
+}
 
 var PluginHelper = {
   showDoorHanger: function(aTab) {
