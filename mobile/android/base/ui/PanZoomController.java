@@ -781,10 +781,11 @@ public class PanZoomController
             // If we aren't overscrolled, just apply friction.
             float excess = getExcess();
             if (disableSnap || FloatUtils.fuzzyEquals(excess, 0.0f)) {
-                float absvelocity = (float)
-                    Math.pow(Math.pow(velocity, FRICTION_FACTOR) * FRICTION,
+                float absvelocity = Math.abs(velocity);
+                absvelocity = (float)Math.pow(Math.pow(absvelocity, FRICTION_FACTOR) * FRICTION,
                              1 / FRICTION_FACTOR);
-                velocity = Math.copySign(absvelocity, velocity);
+                // Math.copySign doesn't exist on Android 2.2
+                velocity = (velocity < 0 ? -absvelocity : absvelocity);
 
                 if (Math.abs(velocity) < 0.1f) {
                     velocity = 0.0f;
