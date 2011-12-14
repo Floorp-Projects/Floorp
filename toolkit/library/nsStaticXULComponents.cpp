@@ -205,15 +205,8 @@
 #endif
 #endif
 
-#ifdef XP_WIN
-#define UCONV_DATA_MODULE
-#else
-#define UCONV_DATA_MODULE MODULE(nsUConvDataModule)
-#endif
-
 #define XUL_MODULES                          \
     MODULE(nsUConvModule)                    \
-    UCONV_DATA_MODULE                        \
     MODULE(nsI18nModule)                     \
     MODULE(nsChardetModule)                  \
     UNIVERSALCHARDET_MODULE                  \
