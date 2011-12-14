@@ -122,7 +122,6 @@ static char *sPopupAllowedEvents;
 
 nsDOMEvent::nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent)
 {
-  mPresContext = aPresContext;
   mPrivateDataDuplicated = false;
 
   if (aEvent) {
@@ -159,6 +158,15 @@ nsDOMEvent::nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent)
     mEvent->time = PR_Now();
   }
 
+  InitPresContextData(aPresContext);
+
+  NS_ASSERTION(mEvent->message != NS_PAINT, "Trying to create a DOM paint event!");
+}
+
+void
+nsDOMEvent::InitPresContextData(nsPresContext* aPresContext)
+{
+  mPresContext = aPresContext;
   // Get the explicit original target (if it's anonymous make it null)
   {
     nsCOMPtr<nsIContent> content = GetTargetFromFrame();
@@ -168,8 +176,6 @@ nsDOMEvent::nsDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent)
       mExplicitOriginalTarget = nsnull;
     }
   }
-
-  NS_ASSERTION(mEvent->message != NS_PAINT, "Trying to create a DOM paint event!");
 }
 
 nsDOMEvent::~nsDOMEvent() 
@@ -190,6 +196,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEvent)
   NS_INTERFACE_MAP_ENTRY(nsIPrivateDOMEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Event)
 NS_INTERFACE_MAP_END
 
@@ -370,6 +377,70 @@ nsDOMEvent::SetTrusted(bool aTrusted)
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
+                       PRUint32 aArgc, jsval* aArgv)
+{
+  NS_ENSURE_TRUE(aArgc >= 1, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
+
+  bool trusted = false;
+  nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aOwner);
+  if (w) {
+    nsCOMPtr<nsIDocument> d = do_QueryInterface(w->GetExtantDocument());
+    if (d) {
+      trusted = nsContentUtils::IsChromeDoc(d);
+      nsIPresShell* s = d->GetShell();
+      if (s) {
+        InitPresContextData(s->GetPresContext());
+      }
+    }
+  }
+
+  JSAutoRequest ar(aCx);
+  JSString* jsstr = JS_ValueToString(aCx, aArgv[0]);
+  if (!jsstr) {
+    return NS_ERROR_DOM_SYNTAX_ERR;
+  }
+
+  JS::Anchor<JSString*> deleteProtector(jsstr);
+  size_t length;
+  const jschar* chars = JS_GetStringCharsAndLength(aCx, jsstr, &length);
+  if (!chars) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsAutoString type;
+  type.Assign(chars, length);
+  deleteProtector.clear();
+  
+  nsCOMPtr<nsISupports> dict;
+  if (aArgc >= 2 && !JSVAL_IS_PRIMITIVE(aArgv[1])) {
+    nsContentUtils::XPConnect()->WrapJS(aCx, JSVAL_TO_OBJECT(aArgv[1]),
+                                        EventInitIID(),
+                                        getter_AddRefs(dict));
+  }
+  nsresult rv = InitFromCtor(type, dict);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  SetTrusted(trusted);
+  return NS_OK;
+}
+
+nsresult
+nsDOMEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict)
+{
+  nsCOMPtr<nsIEventInit> eventInit = do_QueryInterface(aDict);
+  bool bubbles = false;
+  bool cancelable = false;
+  if (eventInit) {
+    nsresult rv = eventInit->GetBubbles(&bubbles);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = eventInit->GetCancelable(&cancelable);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return InitEvent(aType, bubbles, cancelable);
 }
 
 NS_IMETHODIMP
