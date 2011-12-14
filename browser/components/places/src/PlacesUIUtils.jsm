@@ -50,6 +50,9 @@ var Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
+                                  "resource://gre/modules/PluralForm.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
   Cu.import("resource://gre/modules/PlacesUtils.jsm");
   return PlacesUtils;
@@ -77,6 +80,31 @@ var PlacesUIUtils = {
 
   getFormattedString: function PUIU_getFormattedString(key, params) {
     return bundle.formatStringFromName(key, params, params.length);
+  },
+
+  /**
+   * Get a localized plural string for the specified key name and numeric value
+   * substituting parameters.
+   *
+   * @param   aKey
+   *          String, key for looking up the localized string in the bundle
+   * @param   aNumber
+   *          Number based on which the final localized form is looked up
+   * @param   aParams
+   *          Array whose items will substitute #1, #2,... #n parameters
+   *          in the string.
+   *
+   * @see https://developer.mozilla.org/en/Localization_and_Plurals
+   * @return The localized plural string.
+   */
+  getPluralString: function PUIU_getPluralString(aKey, aNumber, aParams) {
+    let str = PluralForm.get(aNumber, bundle.GetStringFromName(aKey));
+
+    // Replace #1 with aParams[0], #2 with aParams[1], and so on.
+    return str.replace(/\#(\d+)/g, function (matchedId, matchedNumber) {
+      let param = aParams[parseInt(matchedNumber, 10) - 1];
+      return param !== undefined ? param : matchedId;
+    });
   },
 
   getString: function PUIU_getString(key) {
