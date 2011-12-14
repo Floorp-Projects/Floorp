@@ -893,7 +893,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
                 JS_snprintf(name, sizeof(name), "JS Object (%s - %s)",
                             clazz->name, si->GetJSClass()->name);
             } else if (clazz == &js::FunctionClass) {
-                JSFunction* fun = (JSFunction*) xpc_GetJSPrivate(obj);
+                JSFunction* fun = JS_GetObjectFunction(obj);
                 JSString* str = JS_GetFunctionId(fun);
                 if (str) {
                     NS_ConvertUTF16toUTF8 fname(JS_GetInternedStringChars(str));
@@ -920,15 +920,8 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
             JS_snprintf(name, sizeof(name), "JS %s", trace_types[traceKind]);
         }
 
-        if(traceKind == JSTRACE_OBJECT) {
-            JSObject *global = JS_GetGlobalForObject(NULL, static_cast<JSObject*>(p));
-            char fullname[100];
-            JS_snprintf(fullname, sizeof(fullname),
-                        "%s (global=%p)", name, global);
-            cb.DescribeGCedNode(isMarked, sizeof(JSObject), fullname);
-        } else {
-            cb.DescribeGCedNode(isMarked, sizeof(JSObject), name);
-        }
+        // Disable printing global for objects while we figure out ObjShrink fallout.
+        cb.DescribeGCedNode(isMarked, sizeof(JSObject), name);
     } else {
         cb.DescribeGCedNode(isMarked, sizeof(JSObject), "JS Object");
     }
