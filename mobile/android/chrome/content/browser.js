@@ -1397,8 +1397,12 @@ Tab.prototype = {
 
     let browser = BrowserApp.getBrowserForWindow(contentWin);
     let uri = browser.currentURI.spec;
-    let documentURI = browser.contentDocument.documentURIObject.spec;
-    let contentType = browser.contentDocument.contentType;
+    let documentURI = "";
+    let contentType = "";
+    if (browser.contentDocument) {
+      documentURI = browser.contentDocument.documentURIObject.spec;
+      contentType = browser.contentDocument.contentType;
+    }
 
     let message = {
       gecko: {
