@@ -205,6 +205,7 @@ var BrowserApp = {
     IndexedDB.init();
     XPInstallObserver.init();
     ConsoleAPI.init();
+    ClipboardHelper.init();
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -435,6 +436,16 @@ var BrowserApp = {
           name: prefName
         };
 
+        // The plugin pref is actually two separate prefs, so
+        // we need to handle it differently
+        if (prefName == "plugin.enable") {
+          // Use a string type for java's ListPreference
+          pref.type = "string";
+          pref.value = PluginHelper.getPluginPreference();
+          prefs.push(pref);
+          continue;
+        }
+
         try {
           switch (Services.prefs.getPrefType(prefName)) {
             case Ci.nsIPrefBranch.PREF_BOOL:
@@ -489,6 +500,13 @@ var BrowserApp = {
 
   setPreferences: function setPreferences(aPref) {
     let json = JSON.parse(aPref);
+
+    // The plugin pref is actually two separate prefs, so
+    // we need to handle it differently
+    if (json.name == "plugin.enable") {
+      PluginHelper.setPluginPreference(json.value);
+      return;
+    }
 
     // when sending to java, we normalized special preferences that use
     // integers and strings to represent booleans.  here, we convert them back
@@ -751,12 +769,6 @@ var NativeWindow = {
                function(aTarget) {
                  let url = NativeWindow.contextmenus._getLinkURL(aTarget);
                  BrowserApp.addTab(url, { selected: false });
-               });
-
-      this.add(Strings.browser.GetStringFromName("contextmenu.changeInputMethod"),
-               this.textContext,
-               function(aTarget) {
-                 Cc["@mozilla.org/imepicker;1"].getService(Ci.nsIIMEPicker).show();
                });
 
       this.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
@@ -1381,12 +1393,16 @@ Tab.prototype = {
 
     let browser = BrowserApp.getBrowserForWindow(contentWin);
     let uri = browser.currentURI.spec;
+    let documentURI = browser.contentDocument.documentURIObject.spec;
+    let contentType = browser.contentDocument.contentType;
 
     let message = {
       gecko: {
         type: "Content:LocationChange",
         tabID: this.id,
-        uri: uri
+        uri: uri,
+        documentURI: documentURI,
+        contentType: contentType
       }
     };
 
@@ -2898,6 +2914,83 @@ var ConsoleAPI = {
   }
 };
 
+var ClipboardHelper = {
+  init: function() {
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copy"), ClipboardHelper.getCopyContext(false), ClipboardHelper.copy.bind(ClipboardHelper));
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyAll"), ClipboardHelper.getCopyContext(true), ClipboardHelper.copy.bind(ClipboardHelper));
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.selectAll"), NativeWindow.contextmenus.textContext, ClipboardHelper.select.bind(ClipboardHelper));
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.paste"), ClipboardHelper.pasteContext, ClipboardHelper.paste.bind(ClipboardHelper));
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.changeInputMethod"), NativeWindow.contextmenus.textContext, ClipboardHelper.inputMethod.bind(ClipboardHelper));
+  },
+
+  get clipboardHelper() {
+    delete this.clipboardHelper;
+    return this.clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+  },
+
+  get clipboard() {
+    delete this.clipboard;
+    return this.clipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
+  },
+
+  copy: function(aElement) {
+    let selectionStart = aElement.selectionStart;
+    let selectionEnd = aElement.selectionEnd;
+    if (selectionStart != selectionEnd) {
+      string = aElement.value.slice(selectionStart, selectionEnd);
+      this.clipboardHelper.copyString(string);
+    } else {
+      this.clipboardHelper.copyString(aElement.value);
+    }
+  },
+
+  select: function(aElement) {
+    if (!aElement || !(aElement instanceof Ci.nsIDOMNSEditableElement))
+      return;
+    let target = aElement.QueryInterface(Ci.nsIDOMNSEditableElement);
+    target.editor.selectAll();
+    target.focus();
+  },
+
+  paste: function(aElement) {
+    if (!aElement || !(aElement instanceof Ci.nsIDOMNSEditableElement))
+      return;
+    let target = aElement.QueryInterface(Ci.nsIDOMNSEditableElement);
+    target.editor.paste(Ci.nsIClipboard.kGlobalClipboard);
+    target.focus();  
+  },
+
+  inputMethod: function(aElement) {
+    Cc["@mozilla.org/imepicker;1"].getService(Ci.nsIIMEPicker).show();
+  },
+
+  getCopyContext: function(isCopyAll) {
+    return {
+      matches: function(aElement) {
+        if (NativeWindow.contextmenus.textContext.matches(aElement)) {
+          let selectionStart = aElement.selectionStart;
+          let selectionEnd = aElement.selectionEnd;
+          if (selectionStart != selectionEnd)
+            return true;
+          else if (isCopyAll)
+            return true;
+        }
+        return false;
+      }
+    }
+  },
+
+  pasteContext: {
+    matches: function(aElement) {
+      if (NativeWindow.contextmenus.textContext.matches(aElement)) {
+        let flavors = ["text/unicode"];
+        return ClipboardHelper.clipboard.hasDataMatchingFlavors(flavors, flavors.length, Ci.nsIClipboard.kGlobalClipboard);
+      }
+      return false;
+    }
+  }
+}
+
 var PluginHelper = {
   showDoorHanger: function(aTab) {
     let message = Strings.browser.GetStringFromName("clickToPlayFlash.message");
@@ -2923,6 +3016,32 @@ var PluginHelper = {
     for (let i = 0; i < plugins.length; i++) {
       let objLoadingContent = plugins[i].QueryInterface(Ci.nsIObjectLoadingContent);
       objLoadingContent.playPlugin();
+    }
+  },
+
+  getPluginPreference: function getPluginPreference() {
+    let pluginDisable = Services.prefs.getBoolPref("plugin.disable");
+    if (pluginDisable)
+      return "0";
+
+    let clickToPlay = Services.prefs.getBoolPref("plugins.click_to_play");
+    return clickToPlay ? "2" : "1";
+  },
+
+  setPluginPreference: function setPluginPreference(aValue) {
+    switch (aValue) {
+      case "0": // Enable Plugins = No
+        Services.prefs.setBoolPref("plugin.disable", true);
+        Services.prefs.clearUserPref("plugins.click_to_play");
+        break;
+      case "1": // Enable Plugins = Yes
+        Services.prefs.clearUserPref("plugin.disable");
+        Services.prefs.setBoolPref("plugins.click_to_play", false);
+        break;
+      case "2": // Enable Plugins = Tap to Play (default)
+        Services.prefs.clearUserPref("plugin.disable");
+        Services.prefs.clearUserPref("plugins.click_to_play");
+        break;
     }
   },
 

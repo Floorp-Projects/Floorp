@@ -236,7 +236,11 @@ public class AboutHomeContent extends ScrollView {
             return is;
         File applicationPackage = new File(activity.getApplication().getPackageResourcePath());
         ZipFile zip = new ZipFile(applicationPackage);
+        if (zip == null)
+            return null;
         ZipEntry fileEntry = zip.getEntry("recommended-addons.json");
+        if (fileEntry == null)
+            return null;
         return zip.getInputStream(fileEntry);
     }
 
@@ -246,6 +250,8 @@ public class AboutHomeContent extends ScrollView {
                 try {
                     byte[] buf = new byte[32768];
                     InputStream fileStream = getRecommendedAddonsStream(activity);
+                    if (fileStream == null)
+                        return;
                     StringBuffer jsonString = new StringBuffer();
                     int read = 0;
                     while ((read = fileStream.read(buf, 0, 32768)) != -1) {

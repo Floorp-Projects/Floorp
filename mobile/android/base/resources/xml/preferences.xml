@@ -19,6 +19,12 @@
                             android:title="@string/pref_char_encoding"
                             android:persistent="false" />
 
+        <ListPreference     android:key="plugin.enable"
+                            android:title="@string/pref_enable_flash"
+                            android:entries="@array/pref_enable_flash_entries"
+                            android:entryValues="@array/pref_enable_flash_values"
+                            android:persistent="false" />
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_category_privacy">
