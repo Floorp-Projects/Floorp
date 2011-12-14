@@ -63,6 +63,8 @@ public:
 
   void SetMessage(nsIDOMMozSmsMessage* aMessage);
 
+  void Disconnect();
+
 private:
   PRInt32                       mListId;
   nsCOMPtr<nsIDOMMozSmsFilter>  mFilter;
