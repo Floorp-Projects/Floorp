@@ -167,9 +167,5 @@ public class LayerView extends GLSurfaceView {
             return System.nanoTime() - mRenderTime;
         }
     }
-
-    public int getMaxTextureSize() {
-        return mRenderer.getMaxTextureSize();
-    }
 }
 

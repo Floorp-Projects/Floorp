@@ -45,7 +45,8 @@ import java.nio.ByteBuffer;
 public abstract class CairoImage {
     public abstract ByteBuffer getBuffer();
 
-    public abstract IntSize getSize();
+    public abstract int getWidth();
+    public abstract int getHeight();
     public abstract int getFormat();
 
     public static final int FORMAT_INVALID = -1;
