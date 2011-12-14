@@ -514,6 +514,7 @@
 #include "nsIDOMSmsManager.h"
 #include "nsIDOMSmsMessage.h"
 #include "nsIDOMSmsEvent.h"
+#include "nsIPrivateDOMEvent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1574,6 +1575,19 @@ static const nsContractIDMapData kConstructorMap[] =
   NS_DEFINE_CONSTRUCTOR_DATA(EventSource, NS_EVENTSOURCE_CONTRACTID)
 };
 
+#define NS_DEFINE_EVENT_CTOR(_class)                        \
+  nsresult                                                  \
+  NS_DOM##_class##Ctor(nsISupports** aInstancePtrResult)    \
+  {                                                         \
+    nsIDOMEvent* e = nsnull;                                \
+    nsresult rv = NS_NewDOM##_class(&e, nsnull, nsnull);    \
+    *aInstancePtrResult = e;                                \
+    return rv;                                              \
+  }
+
+NS_DEFINE_EVENT_CTOR(Event)
+NS_DEFINE_EVENT_CTOR(CustomEvent)
+
 struct nsConstructorFuncMapData
 {
   PRInt32 mDOMClassInfoID;
@@ -1583,10 +1597,15 @@ struct nsConstructorFuncMapData
 #define NS_DEFINE_CONSTRUCTOR_FUNC_DATA(_class, _func)                        \
   { eDOMClassInfo_##_class##_id, _func },
 
+#define NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(_class)   \
+  { eDOMClassInfo_##_class##_id, NS_DOM##_class##Ctor },
+
 static const nsConstructorFuncMapData kConstructorFuncMap[] =
 {
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(File, nsDOMFileFile::NewFile)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozBlobBuilder, NS_NewBlobBuilder)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(Event)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(CustomEvent)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
