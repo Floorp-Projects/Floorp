@@ -100,12 +100,10 @@ BatteryManager::Init(nsPIDOMWindow *aWindow, nsIScriptContext* aScriptContext)
 
   hal::RegisterBatteryObserver(this);
 
-  hal::BatteryInformation* batteryInfo = new hal::BatteryInformation();
-  hal::GetCurrentBatteryInformation(batteryInfo);
+  hal::BatteryInformation batteryInfo;
+  hal::GetCurrentBatteryInformation(&batteryInfo);
 
-  UpdateFromBatteryInfo(*batteryInfo);
-
-  delete batteryInfo;
+  UpdateFromBatteryInfo(batteryInfo);
 }
 
 void
