@@ -25,7 +25,8 @@
                                             android:layout_width="fill_parent"
                                             android:layout_height="fill_parent"
                                             android:background="#ffffff"
-                                            android:isScrollContainer="true">
+                                            android:isScrollContainer="true"
+					    android:visibility="gone">
 
             <include layout="@layout/abouthome_content"/>
 
