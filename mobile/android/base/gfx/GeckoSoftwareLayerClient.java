@@ -72,8 +72,9 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     private static final String LOGTAG = "GeckoSoftwareLayerClient";
 
     private Context mContext;
-    private int mWidth, mHeight, mFormat;
+    private int mFormat;
     private IntSize mScreenSize, mViewportSize;
+    private IntSize mBufferSize;
     private ByteBuffer mBuffer;
     private final SingleTileLayer mTileLayer;
 
@@ -97,21 +98,15 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     public GeckoSoftwareLayerClient(Context context) {
         mContext = context;
 
-        mWidth = LayerController.TILE_WIDTH;
-        mHeight = LayerController.TILE_HEIGHT;
+        mScreenSize = new IntSize(0, 0);
+        mBufferSize = new IntSize(0, 0);
         mFormat = CairoImage.FORMAT_RGB16_565;
-
-        mScreenSize = new IntSize(1, 1);
-
-        mBuffer = GeckoAppShell.allocateDirectBuffer(mWidth * mHeight * 2);
 
         mCairoImage = new CairoImage() {
             @Override
             public ByteBuffer getBuffer() { return mBuffer; }
             @Override
-            public int getWidth() { return mWidth; }
-            @Override
-            public int getHeight() { return mHeight; }
+            public IntSize getSize() { return mBufferSize; }
             @Override
             public int getFormat() { return mFormat; }
         };
@@ -141,7 +136,6 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             layerController.notifyPanZoomControllerOfGeometryChange(false);
         }
 
-        geometryChanged();
         GeckoAppShell.registerGeckoEventListener("Viewport:Update", this);
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateLater", this);
     }
@@ -209,7 +203,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
     public Bitmap getBitmap() {
         try {
-            Bitmap b = Bitmap.createBitmap(mWidth, mHeight,
+            Bitmap b = Bitmap.createBitmap(mBufferSize.width, mBufferSize.height,
                                            CairoUtils.cairoFormatTobitmapConfig(mFormat));
             b.copyPixelsFromBuffer(mBuffer.asIntBuffer());
             return b;
@@ -241,9 +235,28 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         if (metrics.widthPixels != mScreenSize.width ||
             metrics.heightPixels != mScreenSize.height) {
             mScreenSize = new IntSize(metrics.widthPixels, metrics.heightPixels);
+            int maxSize = getLayerController().getView().getMaxTextureSize();
+
+            // XXX Introduce tiling to solve this?
+            if (mScreenSize.width > maxSize || mScreenSize.height > maxSize)
+                throw new RuntimeException("Screen size of " + mScreenSize + " larger than maximum texture size of " + maxSize);
+
+            // Round to next power of two until we use NPOT texture support
+            mBufferSize = new IntSize(Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.width + LayerController.MIN_BUFFER.width)),
+                                      Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.height + LayerController.MIN_BUFFER.height)));
+
+            // Free the old buffer first, if it exists
+            if (mBuffer != null) {
+                GeckoAppShell.freeDirectBuffer(mBuffer);
+                mBuffer = null;
+            }
+
+            // * 2 because it's a 16-bit buffer (so 2 bytes per pixel).
+            mBuffer = GeckoAppShell.allocateDirectBuffer(mBufferSize.getArea() * 2);
+
             Log.i(LOGTAG, "Screen-size changed to " + mScreenSize);
             GeckoEvent event = new GeckoEvent(GeckoEvent.SIZE_CHANGED,
-                                              LayerController.TILE_WIDTH, LayerController.TILE_HEIGHT,
+                                              mBufferSize.width, mBufferSize.height,
                                               metrics.widthPixels, metrics.heightPixels);
             GeckoAppShell.sendEventToGecko(event);
         }
@@ -289,7 +302,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         ViewportMetrics viewportMetrics =
             new ViewportMetrics(getLayerController().getViewportMetrics());
 
-        PointF viewportOffset = viewportMetrics.getOptimumViewportOffset();
+        PointF viewportOffset = viewportMetrics.getOptimumViewportOffset(mBufferSize);
         viewportMetrics.setViewportOffset(viewportOffset);
         viewportMetrics.setViewport(viewportMetrics.getClampedViewport());
 
