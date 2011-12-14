@@ -39,7 +39,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
+#include "nsFilePicker.h"
+
+#include <shlobj.h>
+#include <shlwapi.h>
+#include <cderr.h>
+
 #include "nsGUIEvent.h"
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
@@ -48,17 +53,10 @@
 #include "nsIPlatformCharset.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIPrivateBrowsingService.h"
-#include "nsFilePicker.h"
-#include "nsILocalFile.h"
 #include "nsIURL.h"
 #include "nsIStringBundle.h"
 #include "nsEnumeratorUtils.h"
 #include "nsCRT.h"
-#include <windows.h>
-#include <shlobj.h>
-#include <shlwapi.h>
-#include <cderr.h>
-
 #include "nsString.h"
 #include "nsToolkit.h"
 
@@ -163,11 +161,10 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 // nsIFilePicker
 
-NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
-
-nsFilePicker::nsFilePicker()
+nsFilePicker::nsFilePicker() :
+  mSelectedType(1)
 {
-  mSelectedType   = 1;
+   CoInitialize(NULL);
 }
 
 nsFilePicker::~nsFilePicker()
@@ -176,7 +173,32 @@ nsFilePicker::~nsFilePicker()
     NS_Free(mLastUsedUnicodeDirectory);
     mLastUsedUnicodeDirectory = nsnull;
   }
+  CoUninitialize();
 }
+
+NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+STDMETHODIMP nsFilePicker::QueryInterface(REFIID refiid, void** ppvResult)
+{
+  *ppvResult = NULL;
+  if (IID_IUnknown == refiid ||
+      refiid == __uuidof(IFileDialogEvents)) {
+    *ppvResult = this;
+  }
+
+  if (NULL != *ppvResult) {
+    ((LPUNKNOWN)*ppvResult)->AddRef();
+    return S_OK;
+  }
+
+  return E_NOINTERFACE;
+}
+#endif
+
+/*
+ * XP picker callbacks
+ */
 
 // Show - Display the file dialog
 int CALLBACK
@@ -307,8 +329,64 @@ MultiFilePickerHook(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   return FilePickerHook(hwnd, msg, wParam, lParam);
 }
 
+/*
+ * Vista+ callbacks
+ */
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+
+HRESULT
+nsFilePicker::OnFileOk(IFileDialog *pfd)
+{
+  return S_OK;
+}
+
+HRESULT
+nsFilePicker::OnFolderChanging(IFileDialog *pfd, IShellItem *psiFolder)
+{
+  return S_OK;
+}
+
+HRESULT
+nsFilePicker::OnFolderChange(IFileDialog *pfd)
+{
+  return S_OK;
+}
+
+HRESULT
+nsFilePicker::OnSelectionChange(IFileDialog *pfd)
+{
+  return S_OK;
+}
+
+HRESULT
+nsFilePicker::OnShareViolation(IFileDialog *pfd, IShellItem *psi, FDE_SHAREVIOLATION_RESPONSE *pResponse)
+{
+  return S_OK;
+}
+
+HRESULT
+nsFilePicker::OnTypeChange(IFileDialog *pfd)
+{
+  return S_OK;
+}
+
+HRESULT
+nsFilePicker::OnOverwrite(IFileDialog *pfd, IShellItem *psi, FDE_OVERWRITE_RESPONSE *pResponse)
+{
+  return S_OK;
+}
+
+#endif // MOZ_NTDDI_LONGHORN
+
+/*
+ * Folder picker invocation
+ */
+
+// Open the older XP style folder picker dialog. We end up in this call
+// on XP systems or when platform is built without the longhorn SDK.
 bool
-nsFilePicker::ShowFolderPicker(const nsString& aInitialDir)
+nsFilePicker::ShowXPFolderPicker(const nsString& aInitialDir)
 {
   bool result = false;
 
@@ -349,6 +427,20 @@ nsFilePicker::ShowFolderPicker(const nsString& aInitialDir)
   return result;
 }
 
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+
+bool
+nsFilePicker::ShowFolderPicker(const nsString& aInitialDir)
+{
+  return false;
+}
+
+#endif // MOZ_WINSDK_TARGETVER
+
+/*
+ * File open and save picker invocation
+ */
+
 bool
 nsFilePicker::FilePickerWrapper(OPENFILENAMEW* ofn, PickerType aType)
 {
@@ -369,7 +461,7 @@ nsFilePicker::FilePickerWrapper(OPENFILENAMEW* ofn, PickerType aType)
 }
 
 bool
-nsFilePicker::ShowFilePicker(const nsString& aInitialDir)
+nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
 {
   OPENFILENAMEW ofn = {0};
   ofn.lStructSize = sizeof(ofn);
@@ -414,16 +506,14 @@ nsFilePicker::ShowFilePicker(const nsString& aInitialDir)
 
   if (!mDefaultExtension.IsEmpty()) {
     ofn.lpstrDefExt = mDefaultExtension.get();
-  } else {
+  } else if (IsDefaultPathHtml()) {
     // Get file extension from suggested filename to detect if we are
     // saving an html file.
-    if (IsDefaultPathHtml()) {
-      // This is supposed to append ".htm" if user doesn't supply an
-      // extension but the behavior is sort of weird:
-      // - Often appends ".html" even if you have an extension
-      // - It obeys your extension if you put quotes around name
-      ofn.lpstrDefExt = htmExt.get();
-    }
+    // This is supposed to append ".htm" if user doesn't supply an
+    // extension but the behavior is sort of weird:
+    // - Often appends ".html" even if you have an extension
+    // - It obeys your extension if you put quotes around name
+    ofn.lpstrDefExt = htmExt.get();
   }
 
   // When possible, instead of using OFN_NOCHANGEDIR to ensure the current
@@ -565,6 +655,15 @@ nsFilePicker::ShowFilePicker(const nsString& aInitialDir)
   return true;
 }
 
+bool
+nsFilePicker::ShowFilePicker(const nsString& aInitialDir)
+{
+  return false;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIFilePicker impl.
+
 NS_IMETHODIMP
 nsFilePicker::ShowW(PRInt16 *aReturnVal)
 {
@@ -587,11 +686,25 @@ nsFilePicker::ShowW(PRInt16 *aReturnVal)
   mUnicodeFile.Truncate();
 
   bool result = false;
-  if (mMode == modeGetFolder) {
-    result = ShowFolderPicker(initialDir);
-  } else {
-    result = ShowFilePicker(initialDir);
-  }
+   if (mMode == modeGetFolder) {
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+    if (nsWindow::GetWindowsVersion() >= VISTA_VERSION)
+      result = ShowFolderPicker(initialDir);
+    else
+      result = ShowXPFolderPicker(initialDir);
+#else
+    result = ShowXPFolderPicker(initialDir);
+#endif  
+   } else {
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+    if (nsWindow::GetWindowsVersion() >= VISTA_VERSION)
+      result = ShowFilePicker(initialDir);
+    else
+      result = ShowXPFilePicker(initialDir);
+#else
+    result = ShowXPFilePicker(initialDir);
+#endif  
+   }
 
   // exit, and return returnCancel in aReturnVal
   if (!result)
