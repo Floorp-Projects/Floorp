@@ -168,15 +168,5 @@ public abstract class TileLayer extends Layer {
         gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, repeatMode);
         gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, repeatMode);
     }
-
-    protected static FloatBuffer createBuffer(float[] values) {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(values.length * 4);
-        byteBuffer.order(ByteOrder.nativeOrder());
-
-        FloatBuffer floatBuffer = byteBuffer.asFloatBuffer();
-        floatBuffer.put(values);
-        floatBuffer.position(0);
-        return floatBuffer;
-    }
 }
 

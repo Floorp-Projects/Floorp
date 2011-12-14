@@ -37,6 +37,7 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.gfx.BufferedCairoImage;
 import org.mozilla.gecko.gfx.CairoImage;
 import org.mozilla.gecko.gfx.IntSize;
@@ -56,6 +57,7 @@ import java.nio.IntBuffer;
 public class TextLayer extends SingleTileLayer {
     private final ByteBuffer mBuffer;
     private final IntSize mSize;
+    private boolean mFinalized = false;
 
     /*
      * This awkward pattern is necessary due to Java's restrictions on when one can call superclass
@@ -68,8 +70,18 @@ public class TextLayer extends SingleTileLayer {
         renderText(text);
     }
 
+    protected void finalize() throws Throwable {
+        try {
+            if (!mFinalized && mBuffer != null)
+                GeckoAppShell.freeDirectBuffer(mBuffer);
+            mFinalized = true;
+        } finally {
+            super.finalize();
+        }
+    }
+
     public static TextLayer create(IntSize size, String text) {
-        ByteBuffer buffer = ByteBuffer.allocateDirect(size.width * size.height * 4);
+        ByteBuffer buffer = GeckoAppShell.allocateDirectBuffer(size.width * size.height * 4);
         BufferedCairoImage image = new BufferedCairoImage(buffer, size.width, size.height,
                                                           CairoImage.FORMAT_ARGB32);
         return new TextLayer(buffer, image, size, text);
