@@ -312,9 +312,6 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
                uintN flags, JSObject *parent, JSAtom *atom,
                js::gc::AllocKind kind = JSFunction::FinalizeKind);
 
-extern void
-js_FinalizeFunction(JSContext *cx, JSFunction *fun);
-
 extern JSFunction * JS_FASTCALL
 js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent, JSObject *proto,
                        js::gc::AllocKind kind = JSFunction::FinalizeKind);
@@ -345,15 +342,8 @@ js_ValueToCallableObject(JSContext *cx, js::Value *vp, uintN flags);
 extern void
 js_ReportIsNotFunction(JSContext *cx, const js::Value *vp, uintN flags);
 
-extern JSObject * JS_FASTCALL
-js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSObject *scopeChain);
-
 extern void
 js_PutCallObject(js::StackFrame *fp);
-
-extern JSBool JS_FASTCALL
-js_PutCallObjectOnTrace(JSObject *scopeChain, uint32 nargs, js::Value *argv,
-                        uint32 nvars, js::Value *slots);
 
 namespace js {
 

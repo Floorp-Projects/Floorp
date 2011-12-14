@@ -456,11 +456,13 @@ abstract public class GeckoApp
         MenuItem forward = aMenu.findItem(R.id.forward);
         MenuItem share = aMenu.findItem(R.id.share);
         MenuItem agentMode = aMenu.findItem(R.id.agent_mode);
+        MenuItem saveAsPDF = aMenu.findItem(R.id.save_as_pdf);
 
         if (tab == null) {
             bookmark.setEnabled(false);
             forward.setEnabled(false);
             share.setEnabled(false);
+            saveAsPDF.setEnabled(false);
             return true;
         }
         
@@ -481,7 +483,11 @@ abstract public class GeckoApp
 
         // Don't share about:, chrome: and file: URIs
         String scheme = Uri.parse(tab.getURL()).getScheme();
-        share.setEnabled(!scheme.equals("about") && !scheme.equals("chrome") && !scheme.equals("file"));
+        share.setEnabled(!(scheme.equals("about") || scheme.equals("chrome") || scheme.equals("file")));
+
+        // Disable save as PDF for about:home and xul pages
+        saveAsPDF.setEnabled(!(tab.getURL().equals("about:home") ||
+                               tab.getContentType().equals("application/vnd.mozilla.xul+xml")));
 
         return true;
     }
@@ -667,7 +673,8 @@ abstract public class GeckoApp
         tab.setFaviconLoadId(id);
     }
 
-    void handleLocationChange(final int tabId, final String uri) {
+    void handleLocationChange(final int tabId, final String uri,
+                              final String documentURI, final String contentType) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
@@ -681,6 +688,8 @@ abstract public class GeckoApp
         
         String oldBaseURI = tab.getURL();
         tab.updateURL(uri);
+        tab.setDocumentURI(documentURI);
+        tab.setContentType(contentType);
 
         String baseURI = uri;
         if (baseURI.indexOf('#') != -1)
@@ -848,8 +857,10 @@ abstract public class GeckoApp
             } else if (event.equals("Content:LocationChange")) {
                 final int tabId = message.getInt("tabID");
                 final String uri = message.getString("uri");
+                final String documentURI = message.getString("documentURI");
+                final String contentType = message.getString("contentType");
                 Log.i(LOGTAG, "URI - " + uri);
-                handleLocationChange(tabId, uri);
+                handleLocationChange(tabId, uri, documentURI, contentType);
             } else if (event.equals("Content:SecurityChange")) {
                 final int tabId = message.getInt("tabID");
                 final String mode = message.getString("mode");
@@ -902,7 +913,11 @@ abstract public class GeckoApp
                 setLaunchState(GeckoApp.LaunchState.GeckoRunning);
                 GeckoAppShell.sendPendingEventsToGecko();
                 connectGeckoLayerClient();
-                Looper.myQueue().addIdleHandler(new UpdateIdleHandler());
+                GeckoAppShell.getHandler().post(new Runnable() {
+                    public void run() {
+                        Looper.myQueue().addIdleHandler(new UpdateIdleHandler());
+                    }
+                });
             } else if (event.equals("ToggleChrome:Hide")) {
                 mMainHandler.post(new Runnable() {
                     public void run() {
@@ -1436,7 +1451,6 @@ abstract public class GeckoApp
         StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
                                   .detectAll()
                                   .penaltyLog()
-                                  .penaltyDialog()
                                   .build());
 
         StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
