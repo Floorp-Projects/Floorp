@@ -77,8 +77,8 @@ public:
     // after a transaction returned NS_BASE_STREAM_WOULD_BLOCK from its
     // ReadSegments/WriteSegments methods.
     //
-    virtual nsresult ResumeSend() = 0;
-    virtual nsresult ResumeRecv() = 0;
+    virtual nsresult ResumeSend(nsAHttpTransaction *caller) = 0;
+    virtual nsresult ResumeRecv(nsAHttpTransaction *caller) = 0;
 
     //
     // called by the connection manager to close a transaction being processed
@@ -132,8 +132,8 @@ public:
 
 #define NS_DECL_NSAHTTPCONNECTION \
     nsresult OnHeadersAvailable(nsAHttpTransaction *, nsHttpRequestHead *, nsHttpResponseHead *, bool *reset); \
-    nsresult ResumeSend(); \
-    nsresult ResumeRecv(); \
+    nsresult ResumeSend(nsAHttpTransaction *); \
+    nsresult ResumeRecv(nsAHttpTransaction *); \
     void CloseTransaction(nsAHttpTransaction *, nsresult); \
     void GetConnectionInfo(nsHttpConnectionInfo **); \
     nsresult TakeTransport(nsISocketTransport **,    \

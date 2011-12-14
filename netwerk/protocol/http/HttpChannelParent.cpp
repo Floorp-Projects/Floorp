@@ -143,7 +143,8 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
                                  const PRUint64&            startPos,
                                  const nsCString&           entityID,
                                  const bool&                chooseApplicationCache,
-                                 const nsCString&           appCacheClientID)
+                                 const nsCString&           appCacheClientID,
+                                 const bool&                allowSpdy)
 {
   nsCOMPtr<nsIURI> uri(aURI);
   nsCOMPtr<nsIURI> originalUri(aOriginalURI);
@@ -203,6 +204,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
   httpChan->SetRedirectionLimit(redirectionLimit);
   httpChan->SetAllowPipelining(allowPipelining);
   httpChan->SetForceAllowThirdPartyCookie(forceAllowThirdPartyCookie);
+  httpChan->SetAllowSpdy(allowSpdy);
 
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChan =
     do_QueryInterface(mChannel);
