@@ -206,6 +206,7 @@ RES_LAYOUT_V11 = \
 
 RES_VALUES = \
   res/values/defaults.xml \
+  res/values/arrays.xml \
   res/values/colors.xml \
   res/values/styles.xml \
   res/values/themes.xml \
@@ -453,6 +454,7 @@ $(RES_VALUES): \
 		$(srcdir)/resources/values/colors.xml \
 		$(srcdir)/resources/values/styles.xml \
 		$(srcdir)/resources/values/themes.xml \
+		$(srcdir)/resources/values/arrays.xml \
 		$(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/res/values/defaults.xml
 	$(NSINSTALL) -D res/values
 	$(NSINSTALL) $^  res/values
