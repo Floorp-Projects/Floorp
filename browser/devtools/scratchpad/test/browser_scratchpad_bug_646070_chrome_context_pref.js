@@ -2,24 +2,21 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let gOldPref;
 let DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
 
 function test()
 {
   waitForExplicitFinish();
 
-  gOldPref = Services.prefs.getBoolPref(DEVTOOLS_CHROME_ENABLED);
   Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, true);
 
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
+  gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
+    gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
 
-    ok(Scratchpad, "Scratchpad variable exists");
+    ok(window.Scratchpad, "Scratchpad variable exists");
 
-    gScratchpadWindow = Scratchpad.openScratchpad();
-    gScratchpadWindow.addEventListener("load", runTests, false);
+    openScratchpad(runTests);
   }, true);
 
   content.location = "data:text/html,Scratchpad test for bug 646070 - chrome context preference";
@@ -27,8 +24,6 @@ function test()
 
 function runTests()
 {
-  gScratchpadWindow.removeEventListener("load", arguments.callee, false);
-
   let sp = gScratchpadWindow.Scratchpad;
   ok(sp, "Scratchpad object exists in new window");
 
@@ -50,7 +45,7 @@ function runTests()
   ok(!chromeContextCommand.hasAttribute("disabled"),
      "Chrome context command is disabled");
 
-  Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, gOldPref);
+  Services.prefs.clearUserPref(DEVTOOLS_CHROME_ENABLED);
 
   finish();
 }
