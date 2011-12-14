@@ -75,6 +75,15 @@ SmsCursor::SmsCursor(PRInt32 aListId, nsIDOMMozSmsFilter* aFilter, nsIDOMMozSmsR
 {
 }
 
+void
+SmsCursor::Disconnect()
+{
+  NS_ASSERTION(!mMessage, "mMessage shouldn't be set!");
+
+  mRequest = nsnull;
+  mListId = -1;
+}
+
 NS_IMETHODIMP
 SmsCursor::GetFilter(nsIDOMMozSmsFilter** aFilter)
 {
