@@ -57,6 +57,7 @@
 #endif
 
 #include "nsILocalFile.h"
+#include "nsITimer.h"
 #include "nsISimpleEnumerator.h"
 #include "nsCOMArray.h"
 #include "nsAutoPtr.h"
@@ -134,6 +135,11 @@ protected:
   bool IsPrivacyModeEnabled();
   bool IsDefaultPathLink();
   bool IsDefaultPathHtml();
+  void SetDialogHandle(HWND aWnd);
+  bool ClosePickerIfNeeded(bool aIsXPDialog);
+  static void PickerCallbackTimerFunc(nsITimer *aTimer, void *aPicker);
+  static UINT_PTR CALLBACK MultiFilePickerHook(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+  static UINT_PTR CALLBACK FilePickerHook(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
   nsCOMPtr<nsIWidget>    mParentWidget;
   nsString               mTitle;
@@ -148,7 +154,7 @@ protected:
   static char            mLastUsedDirectory[];
   nsString               mUnicodeFile;
   static PRUnichar      *mLastUsedUnicodeDirectory;
-  DWORD                  mFDECookie;
+  HWND                   mDlgWnd;
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   class ComDlgFilterSpec
@@ -161,11 +167,11 @@ protected:
       free(mSpecList);
     }
     
-    PRUint32 Length() {
+    const PRUint32 Length() {
       return mLength;
     }
 
-    bool IsEmpty() {
+    const bool IsEmpty() {
       return (mLength == 0);
     }
 
@@ -180,7 +186,8 @@ protected:
     PRUint32 mLength;
   };
 
-  ComDlgFilterSpec mComFilterList;
+  ComDlgFilterSpec       mComFilterList;
+  DWORD                  mFDECookie;
 #endif
 };
 

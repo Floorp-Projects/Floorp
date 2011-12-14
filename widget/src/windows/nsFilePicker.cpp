@@ -63,6 +63,10 @@
 PRUnichar *nsFilePicker::mLastUsedUnicodeDirectory;
 char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
 
+static const PRUnichar kDialogPtrProp[] = L"DialogPtrProperty";
+static const DWORD kDialogTimerID = 9999;
+static const unsigned long kDialogTimerTimeout = 300;
+
 #define MAX_EXTENSION_LENGTH 10
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -158,11 +162,44 @@ private:
   nsRefPtr<nsWindow> mWindow;
 };
 
+// Manages a simple callback timer
+class AutoTimerCallbackCancel
+{
+public:
+  AutoTimerCallbackCancel(nsFilePicker* aTarget,
+                          nsTimerCallbackFunc aCallbackFunc) {
+    Init(aTarget, aCallbackFunc);
+  }
+
+  ~AutoTimerCallbackCancel() {
+    if (mPickerCallbackTimer) {
+      mPickerCallbackTimer->Cancel();
+    }
+  }
+
+private:
+  void Init(nsFilePicker* aTarget,
+            nsTimerCallbackFunc aCallbackFunc) {
+    mPickerCallbackTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (!mPickerCallbackTimer) {
+      NS_WARNING("do_CreateInstance for timer failed??");
+      return;
+    }
+    mPickerCallbackTimer->InitWithFuncCallback(aCallbackFunc,
+                                               aTarget,
+                                               kDialogTimerTimeout,
+                                               nsITimer::TYPE_REPEATING_SLACK);
+  }
+  nsCOMPtr<nsITimer> mPickerCallbackTimer;
+    
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsIFilePicker
 
 nsFilePicker::nsFilePicker() :
   mSelectedType(1)
+  , mDlgWnd(NULL)
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   , mFDECookie(0)
 #endif
@@ -180,6 +217,7 @@ nsFilePicker::~nsFilePicker()
 }
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
+
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 STDMETHODIMP nsFilePicker::QueryInterface(REFIID refiid, void** ppvResult)
@@ -238,23 +276,54 @@ EnsureWindowVisible(HWND hwnd)
 
 // Callback hook which will ensure that the window is visible. Currently
 // only in use on os <= XP.
-static UINT_PTR CALLBACK
-FilePickerHook(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
+UINT_PTR CALLBACK
+nsFilePicker::FilePickerHook(HWND hwnd,
+                             UINT msg,
+                             WPARAM wParam,
+                             LPARAM lParam) 
 {
-  if (msg == WM_NOTIFY) {
-    LPOFNOTIFYW lpofn = (LPOFNOTIFYW) lParam;
-    if (!lpofn || !lpofn->lpOFN) {
-      return 0;
-    }
-    
-    if (CDN_INITDONE == lpofn->hdr.code) {
-      // The Window will be automatically moved to the last position after
-      // CDN_INITDONE.  We post a message to ensure the window will be visible
-      // so it will be done after the automatic last position window move.
-      PostMessage(hwnd, MOZ_WM_ENSUREVISIBLE, 0, 0);
-    }
-  } else if (msg == MOZ_WM_ENSUREVISIBLE) {
-    EnsureWindowVisible(GetParent(hwnd));
+  switch(msg) {
+    case WM_NOTIFY:
+      {
+        LPOFNOTIFYW lpofn = (LPOFNOTIFYW) lParam;
+        if (!lpofn || !lpofn->lpOFN) {
+          return 0;
+        }
+        
+        if (CDN_INITDONE == lpofn->hdr.code) {
+          // The Window will be automatically moved to the last position after
+          // CDN_INITDONE.  We post a message to ensure the window will be visible
+          // so it will be done after the automatic last position window move.
+          PostMessage(hwnd, MOZ_WM_ENSUREVISIBLE, 0, 0);
+        }
+      }
+      break;
+    case MOZ_WM_ENSUREVISIBLE:
+      EnsureWindowVisible(GetParent(hwnd));
+      break;
+    case WM_INITDIALOG:
+      {
+        OPENFILENAMEW* pofn = reinterpret_cast<OPENFILENAMEW*>(lParam);
+        SetProp(hwnd, kDialogPtrProp, (HANDLE)pofn->lCustData);
+        nsFilePicker* picker = reinterpret_cast<nsFilePicker*>(pofn->lCustData);
+        if (picker) {
+          picker->SetDialogHandle(hwnd);
+          SetTimer(hwnd, kDialogTimerID, kDialogTimerTimeout, NULL);
+        }
+      }
+      break;
+    case WM_TIMER:
+      {
+        // Check to see if our parent has been torn down, if so, we close too.
+        if (wParam == kDialogTimerID) {
+          nsFilePicker* picker = 
+            reinterpret_cast<nsFilePicker*>(GetProp(hwnd, kDialogPtrProp));
+          if (picker && picker->ClosePickerIfNeeded(true)) {
+            KillTimer(hwnd, kDialogTimerID);
+          }
+        }
+      }
+      break;
   }
   return 0;
 }
@@ -262,8 +331,11 @@ FilePickerHook(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 // Callback hook which will dynamically allocate a buffer large enough
 // for the file picker dialog.  Currently only in use on  os <= XP.
-static UINT_PTR CALLBACK
-MultiFilePickerHook(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+UINT_PTR CALLBACK
+nsFilePicker::MultiFilePickerHook(HWND hwnd,
+                                  UINT msg,
+                                  WPARAM wParam,
+                                  LPARAM lParam)
 {
   switch (msg) {
     case WM_INITDIALOG:
@@ -275,6 +347,15 @@ MultiFilePickerHook(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                      L"ComboBoxEx32", NULL );
         if(comboBox)
           SendMessage(comboBox, CB_LIMITTEXT, 0, 0);
+        // Store our nsFilePicker ptr for future use
+        OPENFILENAMEW* pofn = reinterpret_cast<OPENFILENAMEW*>(lParam);
+        SetProp(hwnd, kDialogPtrProp, (HANDLE)pofn->lCustData);
+        nsFilePicker* picker =
+          reinterpret_cast<nsFilePicker*>(pofn->lCustData);
+        if (picker) {
+          picker->SetDialogHandle(hwnd);
+          SetTimer(hwnd, kDialogTimerID, kDialogTimerTimeout, NULL);
+        }
       }
       break;
     case WM_NOTIFY:
@@ -327,6 +408,18 @@ MultiFilePickerHook(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
       }
       break;
+    case WM_TIMER:
+      {
+        // Check to see if our parent has been torn down, if so, we close too.
+        if (wParam == kDialogTimerID) {
+          nsFilePicker* picker =
+            reinterpret_cast<nsFilePicker*>(GetProp(hwnd, kDialogPtrProp));
+          if (picker && picker->ClosePickerIfNeeded(true)) {
+            KillTimer(hwnd, kDialogTimerID);
+          }
+        }
+      }
+      break;
   }
 
   return FilePickerHook(hwnd, msg, wParam, lParam);
@@ -374,6 +467,21 @@ nsFilePicker::OnShareViolation(IFileDialog *pfd,
 HRESULT
 nsFilePicker::OnTypeChange(IFileDialog *pfd)
 {
+  // Failures here result in errors due to security concerns.
+  nsRefPtr<IOleWindow> win;
+  pfd->QueryInterface(IID_IOleWindow, getter_AddRefs(win));
+  if (!win) {
+    NS_ERROR("Could not retrieve the IOleWindow interface for IFileDialog.");
+    return S_OK;
+  }
+  HWND hwnd = NULL;
+  win->GetWindow(&hwnd);
+  if (!hwnd) {
+    NS_ERROR("Could not retrieve the HWND for IFileDialog.");
+    return S_OK;
+  }
+  
+  SetDialogHandle(hwnd);
   return S_OK;
 }
 
@@ -386,6 +494,54 @@ nsFilePicker::OnOverwrite(IFileDialog *pfd,
 }
 
 #endif // MOZ_NTDDI_LONGHORN
+
+/*
+ * Close on parent close logic
+ */
+
+bool
+nsFilePicker::ClosePickerIfNeeded(bool aIsXPDialog)
+{
+  if (!mParentWidget || !mDlgWnd)
+    return false;
+
+  nsWindow *win = static_cast<nsWindow *>(mParentWidget.get());
+  // Note, the xp callbacks hand us an inner window, so we have to step up
+  // one to get the actual dialog.
+  HWND dlgWnd;
+  if (aIsXPDialog)
+    dlgWnd = GetParent(mDlgWnd);
+  else
+    dlgWnd = mDlgWnd;
+  if (IsWindow(dlgWnd) && IsWindowVisible(dlgWnd) && win->DestroyCalled()) {
+    PRUnichar className[64];
+    // Make sure we have the right window
+    if (GetClassNameW(dlgWnd, className, mozilla::ArrayLength(className)) &&
+        !wcscmp(className, L"#32770") &&
+        DestroyWindow(dlgWnd)) {
+      mDlgWnd = NULL;
+      return true;
+    }
+  }
+  return false;
+}
+
+void
+nsFilePicker::PickerCallbackTimerFunc(nsITimer *aTimer, void *aCtx)
+{
+  nsFilePicker* picker = (nsFilePicker*)aCtx;
+  if (picker->ClosePickerIfNeeded(false)) {
+    aTimer->Cancel();
+  }
+}
+
+void
+nsFilePicker::SetDialogHandle(HWND aWnd)
+{
+  if (!aWnd || mDlgWnd)
+    return;
+  mDlgWnd = aWnd;
+}
 
 /*
  * Folder picker invocation
@@ -412,6 +568,7 @@ nsFilePicker::ShowXPFolderPicker(const nsString& aInitialDir)
   browserInfo.ulFlags        = BIF_USENEWUI | BIF_RETURNONLYFSDIRS;
   browserInfo.hwndOwner      = adtw.get(); 
   browserInfo.iImage         = nsnull;
+  browserInfo.lParam         = reinterpret_cast<LPARAM>(this);
 
   if (!aInitialDir.IsEmpty()) {
     // the dialog is modal so that |initialDir.get()| will be valid in 
@@ -536,6 +693,7 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
   ofn.lpstrFile    = fileBuffer;
   ofn.nMaxFile     = FILE_BUFFER_SIZE;
   ofn.hwndOwner    = adtw.get();
+  ofn.lCustData    = reinterpret_cast<LPARAM>(this);
   ofn.Flags = OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT |
               OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_ENABLESIZING | 
               OFN_EXPLORER;
@@ -797,15 +955,18 @@ nsFilePicker::ShowFilePicker(const nsString& aInitialDir)
 
   // display
 
-  AutoDestroyTmpWindow adtw((HWND)(mParentWidget.get() ?
-    mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW) : NULL));
+  {
+    AutoDestroyTmpWindow adtw((HWND)(mParentWidget.get() ?
+      mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW) : NULL));
+    AutoTimerCallbackCancel atcc(this, PickerCallbackTimerFunc);
+    AutoWidgetPickerState awps(mParentWidget);
 
-  AutoWidgetPickerState awps(mParentWidget);
-  if (FAILED(dialog->Show(adtw.get()))) {
+    if (FAILED(dialog->Show(adtw.get()))) {
+      dialog->Unadvise(mFDECookie);
+      return false;
+    }
     dialog->Unadvise(mFDECookie);
-    return false;
   }
-  dialog->Unadvise(mFDECookie);
 
   // results
 
