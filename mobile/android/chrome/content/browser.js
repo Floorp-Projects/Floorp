@@ -1393,12 +1393,16 @@ Tab.prototype = {
 
     let browser = BrowserApp.getBrowserForWindow(contentWin);
     let uri = browser.currentURI.spec;
+    let documentURI = browser.contentDocument.documentURIObject.spec;
+    let contentType = browser.contentDocument.contentType;
 
     let message = {
       gecko: {
         type: "Content:LocationChange",
         tabID: this.id,
-        uri: uri
+        uri: uri,
+        documentURI: documentURI,
+        contentType: contentType
       }
     };
 
