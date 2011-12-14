@@ -82,8 +82,7 @@ public class ScrollbarLayer extends TileLayer {
         mVertical = vertical;
         mBuffer = buffer;
 
-        IntSize size = image.getSize();
-        mBitmap = Bitmap.createBitmap(size.width, size.height, Bitmap.Config.ARGB_8888);
+        mBitmap = Bitmap.createBitmap(image.getWidth(), image.getHeight(), Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
     }
 
@@ -101,7 +100,7 @@ public class ScrollbarLayer extends TileLayer {
     public static ScrollbarLayer create(boolean vertical) {
         // just create an empty image for now, it will get drawn
         // on demand anyway
-        int imageSize = IntSize.nextPowerOfTwo(BAR_SIZE);
+        int imageSize = nextPowerOfTwo(BAR_SIZE);
         ByteBuffer buffer = GeckoAppShell.allocateDirectBuffer(imageSize * imageSize * 4);
         CairoImage image = new BufferedCairoImage(buffer, imageSize, imageSize, CairoImage.FORMAT_ARGB32);
         return new ScrollbarLayer(image, vertical, buffer);
