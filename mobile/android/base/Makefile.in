@@ -230,6 +230,8 @@ RES_ANIM = \
   $(NULL)
 
 RES_DRAWABLE_NODPI = \
+  res/drawable-nodpi/abouthome_bg.png \
+  res/drawable-nodpi/abouthome_topsites_bg.png \
   res/drawable-nodpi/tabs_tray_bg.png \
   res/drawable-nodpi/tabs_tray_pressed_bg.png \
   $(NULL)
@@ -433,9 +435,7 @@ MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/crash_reporter.p
 RES_LAYOUT += res/layout/crash_reporter.xml
 endif
 
-MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/abouthome_bg.png                \
-                         mobile/android/base/resources/drawable/abouthome_bg_repeat.xml         \
-                         mobile/android/base/resources/drawable/abouthome_topsites_bg.png       \
+MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/abouthome_bg_repeat.xml         \
                          mobile/android/base/resources/drawable/abouthome_topsites_bg_repeat.xml \
                          mobile/android/base/resources/drawable/address_bar_bg.xml              \
                          mobile/android/base/resources/drawable/address_bar_bg_shadow.xml       \
