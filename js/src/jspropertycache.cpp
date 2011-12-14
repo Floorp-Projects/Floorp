@@ -185,7 +185,9 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
                         PropertyCacheEntry *entry)
 {
     JSObject *obj, *pobj, *tmp;
+#ifdef DEBUG
     JSScript *script = cx->stack.currentScript();
+#endif
 
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
     JS_ASSERT(uint32(pc - script->code) < script->length);
