@@ -61,4 +61,11 @@
         <item name="android:layout_height">fill_parent</item>
         <item name="android:layout_weight">1</item>
     </style>
+
+    <!-- Lists in TabsTray -->
+    <style name="TabsList" parent="android:style/Widget.ListView">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:layout_weight">1</item>
+    </style>
 </resources>

@@ -45,7 +45,6 @@ import android.content.Intent;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -84,13 +83,6 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
                 finishActivity();
             }
         });
-
-        // Adding a native divider for the add-tab
-        LinearLayout lastDivider = new LinearLayout(this);
-        lastDivider.setOrientation(LinearLayout.HORIZONTAL);
-        lastDivider.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, mList.getDividerHeight()));
-        lastDivider.setBackgroundDrawable(mList.getDivider());
-        addTab.addView(lastDivider, 0);
         
         LinearLayout container = (LinearLayout) findViewById(R.id.container);
         container.setOnClickListener(new Button.OnClickListener() {
@@ -211,19 +203,19 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
             if (view == null || tab == null)
                 return;
 
-            ImageView favicon = (ImageView) view.findViewById(R.id.favicon);
+            ImageView thumbnail = (ImageView) view.findViewById(R.id.thumbnail);
 
-            Drawable faviconImage = tab.getFavicon();
-            if (faviconImage != null)
-                favicon.setImageDrawable(faviconImage);
+            Drawable thumbnailImage = tab.getThumbnail();
+            if (thumbnailImage != null)
+                thumbnail.setImageDrawable(thumbnailImage);
             else
-                favicon.setImageResource(R.drawable.favicon);
+                thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
+
+            if (Tabs.getInstance().isSelectedTab(tab))
+                ((ImageView) view.findViewById(R.id.selected_indicator)).setVisibility(View.VISIBLE);
 
             TextView title = (TextView) view.findViewById(R.id.title);
             title.setText(tab.getDisplayTitle());
-
-            if (Tabs.getInstance().isSelectedTab(tab))
-                title.setTypeface(title.getTypeface(), Typeface.BOLD);
         }
 
         @Override    
