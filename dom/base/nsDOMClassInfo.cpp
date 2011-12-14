@@ -1587,6 +1587,10 @@ static const nsContractIDMapData kConstructorMap[] =
 
 NS_DEFINE_EVENT_CTOR(Event)
 NS_DEFINE_EVENT_CTOR(CustomEvent)
+NS_DEFINE_EVENT_CTOR(PopStateEvent)
+NS_DEFINE_EVENT_CTOR(HashChangeEvent)
+NS_DEFINE_EVENT_CTOR(PageTransitionEvent)
+NS_DEFINE_EVENT_CTOR(CloseEvent)
 
 struct nsConstructorFuncMapData
 {
@@ -1606,6 +1610,10 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozBlobBuilder, NS_NewBlobBuilder)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(Event)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(CustomEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(PopStateEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(HashChangeEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(PageTransitionEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(CloseEvent)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
