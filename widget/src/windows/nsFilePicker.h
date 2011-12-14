@@ -42,30 +42,49 @@
 #ifndef nsFilePicker_h__
 #define nsFilePicker_h__
 
+#include <windows.h>
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+// For Vista IFileDialog interfaces
+#if _WIN32_WINNT < _WIN32_WINNT_VISTA
+#define _WIN32_WINNT_bak _WIN32_WINNT
+#undef _WIN32_WINNT
+#define _WIN32_WINNT _WIN32_WINNT_VISTA
+#endif
+#endif
+
 #include "nsILocalFile.h"
 #include "nsISimpleEnumerator.h"
 #include "nsCOMArray.h"
 #include "nsAutoPtr.h"
-
 #include "nsICharsetConverterManager.h"
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
 #include "nsdefs.h"
-#include <windows.h>
 #include <commdlg.h>
+#include <shobjidl.h>
+
 /**
  * Native Windows FileSelector wrapper
  */
 
 class nsFilePicker : public nsBaseFilePicker
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+                     , public IFileDialogEvents
+#endif
 {
 public:
   nsFilePicker(); 
   virtual ~nsFilePicker();
 
   NS_DECL_ISUPPORTS
+  
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  // IUnknown's QueryInterface
+  STDMETHODIMP QueryInterface(REFIID refiid, void** ppvResult);
+#endif
 
-    // nsIFilePicker (less what's in nsBaseFilePicker)
+  // nsIFilePicker (less what's in nsBaseFilePicker)
   NS_IMETHOD GetDefaultString(nsAString& aDefaultString);
   NS_IMETHOD SetDefaultString(const nsAString& aDefaultString);
   NS_IMETHOD GetDefaultExtension(nsAString& aDefaultExtension);
@@ -78,6 +97,17 @@ public:
   NS_IMETHOD Show(PRInt16 *aReturnVal); 
   NS_IMETHOD ShowW(PRInt16 *aReturnVal); 
   NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  // IFileDialogEvents
+  HRESULT STDMETHODCALLTYPE OnFileOk(IFileDialog *pfd);
+  HRESULT STDMETHODCALLTYPE OnFolderChanging(IFileDialog *pfd, IShellItem *psiFolder);
+  HRESULT STDMETHODCALLTYPE OnFolderChange(IFileDialog *pfd);
+  HRESULT STDMETHODCALLTYPE OnSelectionChange(IFileDialog *pfd);
+  HRESULT STDMETHODCALLTYPE OnShareViolation(IFileDialog *pfd, IShellItem *psi, FDE_SHAREVIOLATION_RESPONSE *pResponse);
+  HRESULT STDMETHODCALLTYPE OnTypeChange(IFileDialog *pfd);
+  HRESULT STDMETHODCALLTYPE OnOverwrite(IFileDialog *pfd, IShellItem *psi, FDE_OVERWRITE_RESPONSE *pResponse);
+#endif
 
 protected:
   enum PickerType {
@@ -92,8 +122,10 @@ protected:
   static void GetQualifiedPath(const PRUnichar *aInPath, nsString &aOutPath);
   void GetFilterListArray(nsString& aFilterList);
   bool FilePickerWrapper(OPENFILENAMEW* ofn, PickerType aType);
-  bool ShowFilePicker(const nsString& aInitialDir);
   bool ShowFolderPicker(const nsString& aInitialDir);
+  bool ShowXPFolderPicker(const nsString& aInitialDir);
+  bool ShowFilePicker(const nsString& aInitialDir);
+  bool ShowXPFilePicker(const nsString& aInitialDir);
   void RememberLastUsedDirectory();
   bool IsPrivacyModeEnabled();
   bool IsDefaultPathLink();
@@ -112,5 +144,12 @@ protected:
   nsString               mUnicodeFile;
   static PRUnichar      *mLastUsedUnicodeDirectory;
 };
+
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+#if defined(_WIN32_WINNT_bak)
+#undef _WIN32_WINNT
+#define _WIN32_WINNT _WIN32_WINNT_bak
+#endif
+#endif
 
 #endif // nsFilePicker_h__
