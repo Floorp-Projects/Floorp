@@ -23,18 +23,18 @@ def main(args):
             except IndexError:
                 usage()
 
-            paths.append(path)
+            paths.append(os.path.abspath(path))
             continue
 
         if arg.startswith('-I'):
-            paths.append(args.pop(0)[2:])
+            paths.append(os.path.abspath(args.pop(0)[2:]))
             continue
 
         break
 
     script = args[0]
 
-    sys.path[0:0] = [os.path.dirname(script)] + paths
+    sys.path[0:0] = [os.path.abspath(os.path.dirname(script))] + paths
     sys.argv = args
     sys.argc = len(args)
 

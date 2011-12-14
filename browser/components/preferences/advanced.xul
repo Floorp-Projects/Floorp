@@ -110,8 +110,6 @@
                   type="bool"/>
 #endif
 
-      <preference id="extensions.update.enabled"       name="extensions.update.enabled"       type="bool"
-                  onchange="gAdvancedPane.updateAddonUpdateUI();"/>
       <preference id="browser.search.update"           name="browser.search.update"           type="bool"/>
 
       <!-- Encryption tab -->
@@ -330,10 +328,6 @@
 #endif
           <groupbox id="updateOthers">
             <caption label="&updateOthers.label;"/>
-            <checkbox id="enableAddonUpdate"
-                      label="&enableAddonsUpdate3.label;"
-                      accesskey="&enableAddonsUpdate3.accesskey;"
-                      preference="extensions.update.enabled"/>
             <checkbox id="enableSearchUpdate"
                       label="&enableSearchUpdate.label;"
                       accesskey="&enableSearchUpdate.accesskey;"

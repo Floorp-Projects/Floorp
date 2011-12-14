@@ -55,7 +55,9 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 
-struct AccessibleWrapper;
+#if defined(__OBJC__)
+@class mozAccessible;
+#endif
 
 class nsAccessibleWrap : public nsAccessible
 {
@@ -100,8 +102,14 @@ class nsAccessibleWrap : public nsAccessible
    */
   bool AncestorIsFlat();
 
-    // Wrapper around our native object.
-    AccessibleWrapper *mNativeWrapper;
+  /**
+   * mozAccessible object. If we are in Objective-C, we use the actual Obj-C class.
+   */
+#if defined(__OBJC__)
+  mozAccessible* mNativeObject;
+#else
+  id mNativeObject;  
+#endif
 };
 
 // Define unsupported wrap classes here

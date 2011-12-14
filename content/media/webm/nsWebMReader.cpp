@@ -72,7 +72,7 @@ static const double NS_PER_S = 1e9;
 // a full seek.
 static const int SEEK_DECODE_MARGIN = 250000;
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 class nsAutoRefTraits<NesteggPacketHolder> : public nsPointerRefTraits<NesteggPacketHolder>
 {
 public:

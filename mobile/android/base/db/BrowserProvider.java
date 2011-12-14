@@ -39,13 +39,16 @@ package org.mozilla.gecko.db;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.UUID;
+import java.util.Random;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Images;
+import org.mozilla.gecko.db.BrowserContract.Schema;
+import org.mozilla.gecko.db.BrowserContract.SyncColumns;
+import org.mozilla.gecko.db.BrowserContract.URLColumns;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -53,12 +56,14 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 
 public class BrowserProvider extends ContentProvider {
@@ -66,9 +71,20 @@ public class BrowserProvider extends ContentProvider {
 
     static final String DATABASE_NAME = "browser.db";
 
+    static final int DATABASE_VERSION = 1;
+
+    // Maximum age of deleted records to be cleaned up (20 days in ms)
+    static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
+
+    // Number of records marked as deleted to be removed
+    static final long DELETED_RECORDS_PURGE_LIMIT = 5;
+
     static final String TABLE_BOOKMARKS = "bookmarks";
     static final String TABLE_HISTORY = "history";
     static final String TABLE_IMAGES = "images";
+
+    static final String VIEW_BOOKMARKS_WITH_IMAGES = "bookmarks_with_images";
+    static final String VIEW_HISTORY_WITH_IMAGES = "history_with_images";
 
     // Bookmark matches
     static final int BOOKMARKS = 100;
@@ -81,6 +97,10 @@ public class BrowserProvider extends ContentProvider {
 
     // Image matches
     static final int IMAGES = 300;
+    static final int IMAGES_ID = 301;
+
+    // Schema matches
+    static final int SCHEMA = 400;
 
     static final String DEFAULT_BOOKMARKS_SORT_ORDER = Bookmarks.IS_FOLDER
             + " DESC, " + Bookmarks.POSITION + " ASC, " + Bookmarks._ID
@@ -89,18 +109,27 @@ public class BrowserProvider extends ContentProvider {
     static final String DEFAULT_HISTORY_SORT_ORDER = History.DATE_LAST_VISITED + " DESC";
 
     static final String TABLE_BOOKMARKS_JOIN_IMAGES = TABLE_BOOKMARKS + " LEFT OUTER JOIN " +
-            TABLE_IMAGES + " ON " + qualifyColumnValue(TABLE_BOOKMARKS, Bookmarks.URL) +
-            " = " + qualifyColumnValue(TABLE_IMAGES, Images.URL);
+            "(SELECT " + Images.URL + ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
+            TABLE_IMAGES + ", " + TABLE_BOOKMARKS + " WHERE " +
+            qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " +
+            qualifyColumn(TABLE_IMAGES, Images.URL) + ") AS bookmark_images ON " +
+            qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " +
+            qualifyColumn("bookmark_images", Images.URL);
 
     static final String TABLE_HISTORY_JOIN_IMAGES = TABLE_HISTORY + " LEFT OUTER JOIN " +
-            TABLE_IMAGES + " ON " + qualifyColumnValue(TABLE_HISTORY, History.URL) +
-            " = " + qualifyColumnValue(TABLE_IMAGES, Images.URL);
+            "(SELECT " + Images.URL + ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
+            TABLE_IMAGES + ", " + TABLE_HISTORY + " WHERE " +
+            qualifyColumn(TABLE_HISTORY, History.URL) + " = " +
+            qualifyColumn(TABLE_IMAGES, Images.URL) + ") AS history_images ON " +
+            qualifyColumn(TABLE_HISTORY, History.URL) + " = " +
+            qualifyColumn("history_images", Images.URL);
 
     static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
     static final HashMap<String, String> BOOKMARKS_PROJECTION_MAP = new HashMap<String, String>();
     static final HashMap<String, String> HISTORY_PROJECTION_MAP = new HashMap<String, String>();
     static final HashMap<String, String> IMAGES_PROJECTION_MAP = new HashMap<String, String>();
+    static final HashMap<String, String> SCHEMA_PROJECTION_MAP = new HashMap<String, String>();
 
     private HashMap<String, DatabaseHelper> mDatabasePerProfile;
 
@@ -113,7 +142,7 @@ public class BrowserProvider extends ContentProvider {
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "bookmarks/folder/#", BOOKMARKS_FOLDER_ID);
 
         map = BOOKMARKS_PROJECTION_MAP;
-        map.put(Bookmarks._ID, qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID));
+        map.put(Bookmarks._ID, Bookmarks._ID);
         map.put(Bookmarks.TITLE, Bookmarks.TITLE);
         map.put(Bookmarks.URL, Bookmarks.URL);
         map.put(Bookmarks.FAVICON, Bookmarks.FAVICON);
@@ -121,45 +150,68 @@ public class BrowserProvider extends ContentProvider {
         map.put(Bookmarks.IS_FOLDER, Bookmarks.IS_FOLDER);
         map.put(Bookmarks.PARENT, Bookmarks.PARENT);
         map.put(Bookmarks.POSITION, Bookmarks.POSITION);
-        map.put(Bookmarks.DATE_CREATED, qualifyColumn(TABLE_BOOKMARKS, Bookmarks.DATE_CREATED));
-        map.put(Bookmarks.DATE_MODIFIED, qualifyColumn(TABLE_BOOKMARKS, Bookmarks.DATE_MODIFIED));
-        map.put(Bookmarks.GUID, qualifyColumn(TABLE_BOOKMARKS, Bookmarks.GUID));
+        map.put(Bookmarks.TAGS, Bookmarks.TAGS);
+        map.put(Bookmarks.DESCRIPTION, Bookmarks.DESCRIPTION);
+        map.put(Bookmarks.KEYWORD, Bookmarks.KEYWORD);
+        map.put(Bookmarks.DATE_CREATED, Bookmarks.DATE_CREATED);
+        map.put(Bookmarks.DATE_MODIFIED, Bookmarks.DATE_MODIFIED);
+        map.put(Bookmarks.GUID, Bookmarks.GUID);
+        map.put(Bookmarks.IS_DELETED, Bookmarks.IS_DELETED);
 
         // History
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "history", HISTORY);
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "history/#", HISTORY_ID);
 
         map = HISTORY_PROJECTION_MAP;
-        map.put(History._ID, qualifyColumn(TABLE_HISTORY, History._ID));
+        map.put(History._ID, History._ID);
         map.put(History.TITLE, History.TITLE);
         map.put(History.URL, History.URL);
         map.put(History.FAVICON, History.FAVICON);
         map.put(History.THUMBNAIL, History.THUMBNAIL);
         map.put(History.VISITS, History.VISITS);
         map.put(History.DATE_LAST_VISITED, History.DATE_LAST_VISITED);
-        map.put(History.DATE_CREATED, qualifyColumn(TABLE_HISTORY, History.DATE_CREATED));
-        map.put(History.DATE_MODIFIED, qualifyColumn(TABLE_HISTORY, History.DATE_MODIFIED));
-        map.put(History.GUID, qualifyColumn(TABLE_HISTORY, History.GUID));
+        map.put(History.DATE_CREATED, History.DATE_CREATED);
+        map.put(History.DATE_MODIFIED, History.DATE_MODIFIED);
+        map.put(History.GUID, History.GUID);
+        map.put(History.IS_DELETED, History.IS_DELETED);
 
         // Images
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, "images", IMAGES);
 
         map = IMAGES_PROJECTION_MAP;
+        map.put(Images._ID, Images._ID);
         map.put(Images.URL, Images.URL);
         map.put(Images.FAVICON, Images.FAVICON);
         map.put(Images.FAVICON_URL, Images.FAVICON_URL);
         map.put(Images.THUMBNAIL, Images.THUMBNAIL);
-        map.put(Images.DATE_CREATED, qualifyColumn(TABLE_IMAGES, Images.DATE_CREATED));
-        map.put(Images.DATE_MODIFIED, qualifyColumn(TABLE_IMAGES, Images.DATE_MODIFIED));
-        map.put(Images.GUID, qualifyColumn(TABLE_IMAGES, Images.GUID));
+        map.put(Images.DATE_CREATED, Images.DATE_CREATED);
+        map.put(Images.DATE_MODIFIED, Images.DATE_MODIFIED);
+        map.put(Images.GUID, Images.GUID);
+        map.put(Images.IS_DELETED, Images.IS_DELETED);
+
+        // Schema
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "schema", SCHEMA);
+
+        map = SCHEMA_PROJECTION_MAP;
+        map.put(Schema.VERSION, Schema.VERSION);
     }
 
     static final String qualifyColumn(String table, String column) {
-        return table + "." + column + " AS " + column;
+        return table + "." + column;
     }
 
-    static final String qualifyColumnValue(String table, String column) {
-        return table + "." + column;
+    public static String generateGuid() {
+        byte[] encodedBytes = Base64.encode(generateRandomBytes(9), Base64.URL_SAFE);
+        return new String(encodedBytes);
+    }
+
+    private static byte[] generateRandomBytes(int length) {
+        byte[] bytes = new byte[length];
+
+        Random random = new Random(System.nanoTime());
+        random.nextBytes(bytes);
+
+        return bytes;
     }
 
     // This is available in Android >= 11. Implemented locally to be
@@ -194,9 +246,17 @@ public class BrowserProvider extends ContentProvider {
         return result;
     }
 
-    final class DatabaseHelper extends SQLiteOpenHelper {
-        static final int DATABASE_VERSION = 1;
+    private static boolean hasImagesInProjection(String[] projection) {
+        for (int i = 0; i < projection.length; ++i) {
+            if (projection[i].equals(Images.FAVICON) ||
+                projection[i].equals(Images.THUMBNAIL))
+                return true;
+        }
 
+        return false;
+    }
+
+    final class DatabaseHelper extends SQLiteOpenHelper {
         public DatabaseHelper(Context context, String databasePath) {
             super(context, databasePath, null, DATABASE_VERSION);
         }
@@ -213,10 +273,21 @@ public class BrowserProvider extends ContentProvider {
                     Bookmarks.IS_FOLDER + " INTEGER NOT NULL DEFAULT 0," +
                     Bookmarks.PARENT + " INTEGER," +
                     Bookmarks.POSITION + " INTEGER NOT NULL," +
+                    Bookmarks.KEYWORD + " TEXT," +
+                    Bookmarks.DESCRIPTION + " TEXT," +
+                    Bookmarks.TAGS + " TEXT," +
                     Bookmarks.DATE_CREATED + " INTEGER," +
                     Bookmarks.DATE_MODIFIED + " INTEGER," +
-                    Bookmarks.GUID + " TEXT" +
+                    Bookmarks.GUID + " TEXT," +
+                    Bookmarks.IS_DELETED + " INTEGER NOT NULL DEFAULT 0" +
                     ");");
+
+            db.execSQL("CREATE INDEX bookmarks_url_index ON " + TABLE_BOOKMARKS + "("
+                    + Bookmarks.URL + ")");
+            db.execSQL("CREATE UNIQUE INDEX bookmarks_guid_index ON " + TABLE_BOOKMARKS + "("
+                    + Bookmarks.GUID + ")");
+            db.execSQL("CREATE INDEX bookmarks_modified_index ON " + TABLE_BOOKMARKS + "("
+                    + Bookmarks.DATE_MODIFIED + ")");
 
             Log.d(LOGTAG, "Creating " + TABLE_HISTORY + " table");
             db.execSQL("CREATE TABLE " + TABLE_HISTORY + "(" +
@@ -227,24 +298,65 @@ public class BrowserProvider extends ContentProvider {
                     History.DATE_LAST_VISITED + " INTEGER," +
                     History.DATE_CREATED + " INTEGER," +
                     History.DATE_MODIFIED + " INTEGER," +
-                    History.GUID + " TEXT" +
+                    History.GUID + " TEXT," +
+                    History.IS_DELETED + " INTEGER NOT NULL DEFAULT 0" +
                     ");");
+
+            db.execSQL("CREATE INDEX history_url_index ON " + TABLE_HISTORY + "("
+                    + History.URL + ")");
+            db.execSQL("CREATE UNIQUE INDEX history_guid_index ON " + TABLE_HISTORY + "("
+                    + History.GUID + ")");
+            db.execSQL("CREATE INDEX history_modified_index ON " + TABLE_HISTORY + "("
+                    + History.DATE_MODIFIED + ")");
+            db.execSQL("CREATE INDEX history_visited_index ON " + TABLE_HISTORY + "("
+                    + History.DATE_LAST_VISITED + ")");
 
             Log.d(LOGTAG, "Creating " + TABLE_IMAGES + " table");
             db.execSQL("CREATE TABLE " + TABLE_IMAGES + " (" +
+                    Images._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                     Images.URL + " TEXT UNIQUE NOT NULL," +
                     Images.FAVICON + " BLOB," +
                     Images.FAVICON_URL + " TEXT," +
                     Images.THUMBNAIL + " BLOB," +
                     Images.DATE_CREATED + " INTEGER," +
                     Images.DATE_MODIFIED + " INTEGER," +
-                    Images.GUID + " TEXT" +
+                    Images.GUID + " TEXT," +
+                    Images.IS_DELETED + " INTEGER NOT NULL DEFAULT 0" +
                     ");");
 
             db.execSQL("CREATE INDEX images_url_index ON " + TABLE_IMAGES + "("
                     + Images.URL + ")");
+            db.execSQL("CREATE UNIQUE INDEX images_guid_index ON " + TABLE_IMAGES + "("
+                    + Images.GUID + ")");
+            db.execSQL("CREATE INDEX images_modified_index ON " + TABLE_IMAGES + "("
+                    + Images.DATE_MODIFIED + ")");
+
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_BOOKMARKS_WITH_IMAGES + " AS " +
+                    "SELECT " + qualifyColumn(TABLE_BOOKMARKS, "*") +
+                    ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
+                    TABLE_BOOKMARKS_JOIN_IMAGES);
+
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_HISTORY_WITH_IMAGES + " AS " +
+                    "SELECT " + qualifyColumn(TABLE_HISTORY, "*") +
+                    ", " + Images.FAVICON + ", " + Images.THUMBNAIL + " FROM " +
+                    TABLE_HISTORY_JOIN_IMAGES);
+
+            createMobileBookmarksFolder(db);
 
             // FIXME: Create default bookmarks here
+        }
+
+        private void createMobileBookmarksFolder(SQLiteDatabase db) {
+            ContentValues values = new ContentValues();
+            values.put(Bookmarks.GUID, Bookmarks.MOBILE_FOLDER_GUID);
+            values.put(Bookmarks.IS_FOLDER, 1);
+            values.put(Bookmarks.POSITION, 0);
+
+            long now = System.currentTimeMillis();
+            values.put(Bookmarks.DATE_CREATED, now);
+            values.put(Bookmarks.DATE_MODIFIED, now);
+
+            db.insertOrThrow(TABLE_BOOKMARKS, Bookmarks.GUID, values);
         }
 
         @Override
@@ -337,6 +449,58 @@ public class BrowserProvider extends ContentProvider {
         return getDatabaseHelperForProfile(profile).getWritableDatabase();
     }
 
+    private void cleanupSomeDeletedRecords(Uri fromUri, Uri targetUri, String tableName) {
+        // we cleanup records marked as deleted that are older than a
+        // predefined max age. It's important not be too greedy here and
+        // remove only a few old deleted records at a time.
+
+        String profile = fromUri.getQueryParameter(BrowserContract.PARAM_PROFILE);
+
+        // The PARAM_SHOW_DELETED argument is necessary to return the records
+        // that were marked as deleted. We use PARAM_IS_SYNC here to ensure
+        // that we'll be actually deleting records instead of flagging them.
+        Uri uriWithArgs = targetUri.buildUpon()
+                .appendQueryParameter(BrowserContract.PARAM_PROFILE, profile)
+                .appendQueryParameter(BrowserContract.PARAM_LIMIT, String.valueOf(DELETED_RECORDS_PURGE_LIMIT))
+                .appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1")
+                .appendQueryParameter(BrowserContract.PARAM_IS_SYNC, "1")
+                .build();
+
+        Cursor cursor = null;
+
+        try {
+            long now = System.currentTimeMillis();
+            String selection = SyncColumns.IS_DELETED + " = 1 AND " +
+                    SyncColumns.DATE_MODIFIED + " <= " + (now - MAX_AGE_OF_DELETED_RECORDS);
+
+            cursor = query(uriWithArgs,
+                           new String[] { CommonColumns._ID },
+                           selection,
+                           null,
+                           null);
+
+            while (cursor.moveToNext()) {
+                Uri uriWithId = ContentUris.withAppendedId(uriWithArgs, cursor.getLong(0));
+                delete(uriWithId, null, null);
+
+                Log.d(LOGTAG, "Removed old deleted item with URI: " + uriWithId);
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+    }
+
+    private boolean isCallerSync(Uri uri) {
+        String isSync = uri.getQueryParameter(BrowserContract.PARAM_IS_SYNC);
+        return !TextUtils.isEmpty(isSync);
+    }
+
+    private boolean shouldShowDeleted(Uri uri) {
+        String showDeleted = uri.getQueryParameter(BrowserContract.PARAM_SHOW_DELETED);
+        return !TextUtils.isEmpty(showDeleted);
+    }
+
     @Override
     public boolean onCreate() {
         Log.d(LOGTAG, "Creating BrowserProvider");
@@ -415,24 +579,37 @@ public class BrowserProvider extends ContentProvider {
                 deleted = deleteBookmarks(uri, selection, selectionArgs);
                 deleteUnusedImages(uri);
                 break;
-        }
+            }
 
-        case HISTORY_ID:
-            Log.d(LOGTAG, "Delete on HISTORY_ID: " + uri);
+            case HISTORY_ID:
+                Log.d(LOGTAG, "Delete on HISTORY_ID: " + uri);
 
-            selection = concatenateWhere(selection, TABLE_HISTORY + "._id = ?");
-            selectionArgs = appendSelectionArgs(selectionArgs,
-                    new String[] { Long.toString(ContentUris.parseId(uri)) });
-            // fall through
-        case HISTORY: {
-            Log.d(LOGTAG, "Deleting history: " + uri);
-            deleted = deleteHistory(uri, selection, selectionArgs);
-            deleteUnusedImages(uri);
-            break;
-        }
+                selection = concatenateWhere(selection, TABLE_HISTORY + "._id = ?");
+                selectionArgs = appendSelectionArgs(selectionArgs,
+                        new String[] { Long.toString(ContentUris.parseId(uri)) });
+                // fall through
+            case HISTORY: {
+                Log.d(LOGTAG, "Deleting history: " + uri);
+                deleted = deleteHistory(uri, selection, selectionArgs);
+                deleteUnusedImages(uri);
+                break;
+            }
 
-        default:
-            throw new UnsupportedOperationException("Unknown delete URI " + uri);
+            case IMAGES_ID:
+                Log.d(LOGTAG, "Delete on IMAGES_ID: " + uri);
+
+                selection = concatenateWhere(selection, TABLE_IMAGES + "._id = ?");
+                selectionArgs = appendSelectionArgs(selectionArgs,
+                        new String[] { Long.toString(ContentUris.parseId(uri)) });
+                // fall through
+            case IMAGES: {
+                Log.d(LOGTAG, "Deleting images: " + uri);
+                deleted = deleteImages(uri, selection, selectionArgs);
+                break;
+            }
+
+            default:
+                throw new UnsupportedOperationException("Unknown delete URI " + uri);
         }
 
         Log.d(LOGTAG, "Deleted " + deleted + " rows for URI: " + uri);
@@ -481,7 +658,7 @@ public class BrowserProvider extends ContentProvider {
 
                 // Generate GUID for new bookmark. Don't override specified GUIDs.
                 if (!values.containsKey(Bookmarks.GUID)) {
-                  values.put(Bookmarks.GUID, UUID.randomUUID().toString());
+                  values.put(Bookmarks.GUID, generateGuid());
                 }
 
                 if (!values.containsKey(Bookmarks.POSITION)) {
@@ -496,7 +673,8 @@ public class BrowserProvider extends ContentProvider {
                 if ((isFolder == null || !isFolder) && imageValues != null
                         && !TextUtils.isEmpty(url)) {
                     Log.d(LOGTAG, "Inserting bookmark image for URL: " + url);
-                    updateImage(uri, imageValues, Images.URL + " = ?", new String[] { url });
+                    updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
+                            new String[] { url });
                 }
 
                 Log.d(LOGTAG, "Inserting bookmark in database with URL: " + url);
@@ -513,7 +691,7 @@ public class BrowserProvider extends ContentProvider {
 
                 // Generate GUID for new history entry. Don't override specified GUIDs.
                 if (!values.containsKey(History.GUID)) {
-                  values.put(History.GUID, UUID.randomUUID().toString());
+                  values.put(History.GUID, generateGuid());
                 }
 
                 String url = values.getAsString(History.URL);
@@ -523,11 +701,29 @@ public class BrowserProvider extends ContentProvider {
 
                 if (imageValues != null) {
                     Log.d(LOGTAG, "Inserting history image for URL: " + url);
-                    updateImage(uri, imageValues, Images.URL + " = ?", new String[] { url });
+                    updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
+                            new String[] { url });
                 }
 
                 Log.d(LOGTAG, "Inserting history in database with URL: " + url);
                 id = db.insertOrThrow(TABLE_HISTORY, History.VISITS, values);
+                break;
+            }
+
+            case IMAGES: {
+                Log.d(LOGTAG, "Insert on IMAGES: " + uri);
+
+                long now = System.currentTimeMillis();
+                values.put(History.DATE_CREATED, now);
+                values.put(History.DATE_MODIFIED, now);
+
+                // Generate GUID for new history entry
+                values.put(History.GUID, generateGuid());
+
+                String url = values.getAsString(Images.URL);
+
+                Log.d(LOGTAG, "Inserting image in database with URL: " + url);
+                id = db.insertOrThrow(TABLE_IMAGES, Images.URL, values);
                 break;
             }
 
@@ -610,7 +806,8 @@ public class BrowserProvider extends ContentProvider {
                 if (TextUtils.isEmpty(url))
                     throw new IllegalArgumentException("Images.URL is required");
 
-                updated = updateImage(uri, values, Images.URL + " = ?", new String[] { url });
+                updated = updateExistingImage(uri, values, Images.URL + " = ?",
+                        new String[] { url });
 
                 break;
             }
@@ -643,17 +840,18 @@ public class BrowserProvider extends ContentProvider {
 
                 if (match == BOOKMARKS_ID) {
                     Log.d(LOGTAG, "Query is BOOKMARKS_ID: " + uri);
-                    selection = concatenateWhere(selection,
-                            qualifyColumnValue(TABLE_BOOKMARKS, Bookmarks._ID) + " = ?");
+                    selection = concatenateWhere(selection, Bookmarks._ID + " = ?");
                     selectionArgs = appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 } else if (match == BOOKMARKS_FOLDER_ID) {
                     Log.d(LOGTAG, "Query is BOOKMARKS_FOLDER_ID: " + uri);
-                    selection = concatenateWhere(selection,
-                            qualifyColumnValue(TABLE_BOOKMARKS, Bookmarks.PARENT) + " = ?");
+                    selection = concatenateWhere(selection, Bookmarks.PARENT + " = ?");
                     selectionArgs = appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 }
+
+                if (!shouldShowDeleted(uri))
+                    selection = concatenateWhere(Bookmarks.IS_DELETED + " = 0", selection);
 
                 if (TextUtils.isEmpty(sortOrder)) {
                     Log.d(LOGTAG, "Using default sort order on query: " + uri);
@@ -661,7 +859,11 @@ public class BrowserProvider extends ContentProvider {
                 }
 
                 qb.setProjectionMap(BOOKMARKS_PROJECTION_MAP);
-                qb.setTables(TABLE_BOOKMARKS_JOIN_IMAGES);
+
+                if (hasImagesInProjection(projection))
+                    qb.setTables(VIEW_BOOKMARKS_WITH_IMAGES);
+                else
+                    qb.setTables(TABLE_BOOKMARKS);
 
                 break;
             }
@@ -672,28 +874,54 @@ public class BrowserProvider extends ContentProvider {
 
                 if (match == HISTORY_ID) {
                     Log.d(LOGTAG, "Query is HISTORY_ID: " + uri);
-                    selection = concatenateWhere(selection,
-                            qualifyColumnValue(TABLE_HISTORY, History._ID) + " = ?");
+                    selection = concatenateWhere(selection, History._ID + " = ?");
                     selectionArgs = appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 }
+
+                if (!shouldShowDeleted(uri))
+                    selection = concatenateWhere(History.IS_DELETED + " = 0", selection);
 
                 if (TextUtils.isEmpty(sortOrder))
                     sortOrder = DEFAULT_HISTORY_SORT_ORDER;
 
                 qb.setProjectionMap(HISTORY_PROJECTION_MAP);
-                qb.setTables(TABLE_HISTORY_JOIN_IMAGES);
+
+                if (hasImagesInProjection(projection))
+                    qb.setTables(VIEW_HISTORY_WITH_IMAGES);
+                else
+                    qb.setTables(TABLE_HISTORY);
 
                 break;
             }
 
+            case IMAGES_ID:
             case IMAGES: {
                 Log.d(LOGTAG, "Query is on images: " + uri);
+
+                if (match == IMAGES_ID) {
+                    Log.d(LOGTAG, "Query is IMAGES_ID: " + uri);
+                    selection = concatenateWhere(selection, Images._ID + " = ?");
+                    selectionArgs = appendSelectionArgs(selectionArgs,
+                            new String[] { Long.toString(ContentUris.parseId(uri)) });
+                }
+
+                if (!shouldShowDeleted(uri))
+                    selection = concatenateWhere(Images.IS_DELETED + " = 0", selection);
 
                 qb.setProjectionMap(IMAGES_PROJECTION_MAP);
                 qb.setTables(TABLE_IMAGES);
 
                 break;
+            }
+
+            case SCHEMA: {
+                Log.d(LOGTAG, "Query is on schema: " + uri);
+
+                MatrixCursor schemaCursor = new MatrixCursor(new String[] { Schema.VERSION });
+                schemaCursor.newRow().add(DATABASE_VERSION);
+
+                return schemaCursor;
             }
 
             default:
@@ -742,7 +970,7 @@ public class BrowserProvider extends ContentProvider {
 
     int getUrlCount(SQLiteDatabase db, String table, String url) {
         Cursor c = db.query(table, new String[] { "COUNT(*)" },
-                CommonColumns.URL + " = ?", new String[] { url }, null, null,
+                URLColumns.URL + " = ?", new String[] { url }, null, null,
                 null);
 
         int count = 0;
@@ -803,7 +1031,8 @@ public class BrowserProvider extends ContentProvider {
 
                 if (!TextUtils.isEmpty(url)) {
                     Log.d(LOGTAG, "Updating bookmark image for URL: " + url);
-                    updateImage(uri, imageValues, Images.URL + " = ?", new String[] { url });
+                    updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
+                            new String[] { url });
                 }
             }
         } finally {
@@ -857,7 +1086,8 @@ public class BrowserProvider extends ContentProvider {
 
                 if (!TextUtils.isEmpty(url)) {
                     Log.d(LOGTAG, "Updating history image for URL: " + url);
-                    updateImage(uri, imageValues, Images.URL + " = ?", new String[] { url });
+                    updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
+                            new String[] { url });
                 }
             }
         } finally {
@@ -868,8 +1098,20 @@ public class BrowserProvider extends ContentProvider {
         return updated;
     }
 
-    int updateImage(Uri uri, ContentValues values, String selection,
+    int updateOrInsertImage(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
+        return updateImage(uri, values, selection, selectionArgs,
+                true /* insert if needed */);
+    }
+
+    int updateExistingImage(Uri uri, ContentValues values, String selection,
+            String[] selectionArgs) {
+        return updateImage(uri, values, selection, selectionArgs,
+                false /* only update, no insert */);
+    }
+
+    int updateImage(Uri uri, ContentValues values, String selection,
+            String[] selectionArgs, boolean insertIfNeeded) {
         String url = values.getAsString(Images.URL);
 
         Log.d(LOGTAG, "Updating image for URL: " + url);
@@ -884,14 +1126,20 @@ public class BrowserProvider extends ContentProvider {
         if (values.containsKey(Images.FAVICON) || values.containsKey(Images.FAVICON_URL))
             values.put(Images.DATE_MODIFIED, now);
 
+        // Restore and update an existing image record marked as
+        // deleted if possible.
+        if (insertIfNeeded)
+            values.put(Images.IS_DELETED, 0);
+
         Log.d(LOGTAG, "Trying to update image for URL: " + url);
         int updated = db.update(TABLE_IMAGES, values, selection, selectionArgs);
 
-        if (updated == 0) {
+        if (updated == 0 && insertIfNeeded) {
             // Generate GUID for new image, if one is not already provided.
             if (!values.containsKey(Images.GUID)) {
-              values.put(Images.GUID, UUID.randomUUID().toString());
+              values.put(Images.GUID, generateGuid());
             }
+
             values.put(Images.DATE_CREATED, now);
             values.put(Images.DATE_MODIFIED, now);
 
@@ -907,27 +1155,66 @@ public class BrowserProvider extends ContentProvider {
         Log.d(LOGTAG, "Deleting history entry for URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
-        return db.delete(TABLE_HISTORY, selection, selectionArgs);
+
+        if (isCallerSync(uri)) {
+            return db.delete(TABLE_HISTORY, selection, selectionArgs);
+        } else {
+            Log.d(LOGTAG, "Marking history entry as deleted for URI: " + uri);
+
+            ContentValues values = new ContentValues();
+            values.put(History.IS_DELETED, 1);
+
+            cleanupSomeDeletedRecords(uri, History.CONTENT_URI, TABLE_HISTORY);
+            return updateHistory(uri, values, selection, selectionArgs);
+        }
     }
 
     int deleteBookmarks(Uri uri, String selection, String[] selectionArgs) {
         Log.d(LOGTAG, "Deleting bookmarks for URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
-        return db.delete(TABLE_BOOKMARKS, selection, selectionArgs);
+
+        if (isCallerSync(uri)) {
+            return db.delete(TABLE_BOOKMARKS, selection, selectionArgs);
+        } else {
+            Log.d(LOGTAG, "Marking bookmarks as deleted for URI: " + uri);
+
+            ContentValues values = new ContentValues();
+            values.put(Bookmarks.IS_DELETED, 1);
+
+            cleanupSomeDeletedRecords(uri, Bookmarks.CONTENT_URI, TABLE_BOOKMARKS);
+            return updateBookmarks(uri, values, selection, selectionArgs);
+        }
+    }
+
+    int deleteImages(Uri uri, String selection, String[] selectionArgs) {
+        Log.d(LOGTAG, "Deleting images for URI: " + uri);
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+
+        if (isCallerSync(uri)) {
+            return db.delete(TABLE_IMAGES, selection, null);
+        } else {
+            Log.d(LOGTAG, "Marking images as deleted for URI: " + uri);
+
+            ContentValues values = new ContentValues();
+            values.put(History.IS_DELETED, 1);
+
+            cleanupSomeDeletedRecords(uri, Images.CONTENT_URI, TABLE_IMAGES);
+            return updateExistingImage(uri, values, selection, null);
+        }
     }
 
     int deleteUnusedImages(Uri uri) {
         Log.d(LOGTAG, "Deleting all unused images for URI: " + uri);
 
-        final SQLiteDatabase db = getWritableDatabase(uri);
-
         String selection = Images.URL + " NOT IN (SELECT " + Bookmarks.URL +
-                " FROM " + TABLE_BOOKMARKS + " WHERE " + Bookmarks.URL +
-                " IS NOT NULL) AND " + Images.URL + " NOT IN (SELECT " +
-                History.URL + " FROM " + TABLE_HISTORY + " WHERE " +
-                History.URL + " IS NOT NULL)";
+                " FROM " + TABLE_BOOKMARKS + " WHERE " + Bookmarks.URL + " IS NOT NULL AND " +
+                qualifyColumn(TABLE_BOOKMARKS, Bookmarks.IS_DELETED) + " = 0) AND " +
+                Images.URL + " NOT IN (SELECT " + History.URL + " FROM " + TABLE_HISTORY +
+                " WHERE " + History.URL + " IS NOT NULL AND " +
+                qualifyColumn(TABLE_HISTORY, History.IS_DELETED) + " = 0)";
 
-        return db.delete(TABLE_IMAGES, selection, null);
+        return deleteImages(uri, selection, null);
     }
 }

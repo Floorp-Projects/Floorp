@@ -174,8 +174,9 @@ NS_IMETHODIMP nsBMPEncoder::StartImageEncode(PRUint32 aWidth,
   return NS_OK;
 }
 
-// Returns the image buffer size
-NS_IMETHODIMP nsBMPEncoder::GetImageBufferSize(PRUint32 *aOutputSize)
+// Returns the number of bytes in the image buffer used.
+// For a BMP file, this is all bytes in the buffer.
+NS_IMETHODIMP nsBMPEncoder::GetImageBufferUsed(PRUint32 *aOutputSize)
 {
   NS_ENSURE_ARG_POINTER(aOutputSize);
   *aOutputSize = mImageBufferSize;
