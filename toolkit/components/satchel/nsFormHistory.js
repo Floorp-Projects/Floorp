@@ -359,8 +359,6 @@ FormHistory.prototype = {
     },
 
     get dbConnection() {
-        let connection;
-
         // Make sure dbConnection can't be called from now to prevent infinite loops.
         delete FormHistory.prototype.dbConnection;
 

@@ -1681,9 +1681,9 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_NOP)
           END_CASE(JSOP_NOP)
 
-          BEGIN_CASE(JSOP_PUSH)
+          BEGIN_CASE(JSOP_UNDEFINED)
             frame.push(UndefinedValue());
-          END_CASE(JSOP_PUSH)
+          END_CASE(JSOP_UNDEFINED)
 
           BEGIN_CASE(JSOP_POPV)
           BEGIN_CASE(JSOP_SETRVAL)

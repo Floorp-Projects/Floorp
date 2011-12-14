@@ -87,7 +87,6 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_executeNextRunnable(JNIEnv *, jclass);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited(JNIEnv *, jclass, jstring uri);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass, jdouble, jboolean, jdouble);
-    NS_EXPORT bool JNICALL Java_org_mozilla_gecko_GeckoAppShell_canCreateFixupURI(JNIEnv* jenv, jclass, jstring text);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsReceived(JNIEnv* jenv, jclass, jstring, jstring, jlong);
 }
 
@@ -244,18 +243,6 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass,
 
     nsCOMPtr<nsIRunnable> runnable = new NotifyBatteryChangeRunnable(aLevel, aCharging, aRemainingTime);
     NS_DispatchToMainThread(runnable);
-}
-
-NS_EXPORT bool JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_canCreateFixupURI(JNIEnv* jenv, jclass, jstring text)
-{
-    __android_log_print(ANDROID_LOG_INFO, "GeckoJNI", "%s", __PRETTY_FUNCTION__);
-
-    const jchar *textChars = jenv->GetStringChars(text, NULL);
-    NS_ConvertUTF16toUTF8 uriString(textChars);
-    jenv->ReleaseStringChars(text, textChars);
-
-    return AndroidBridge::Bridge()->CanCreateFixupURI(uriString);
 }
 
 NS_EXPORT void JNICALL

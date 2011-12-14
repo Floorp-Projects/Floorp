@@ -166,6 +166,36 @@ i?86-*android*)
     ;;
 esac
 
+dnl ========================================================
+dnl = Gonk is a fork of Android used for Mozilla's B2G project.
+dnl = Configuration is done largely by the top level config
+dnl = and the specified gonk directory doesn't matter here.
+dnl ========================================================
+
+AC_ARG_WITH(gonk,
+[  --with-gonk=DIR
+               location of gonk dir],
+    gonkdir=$withval)
+
+if test -n "$gonkdir" ; then
+    dnl Most things are directly configured by env vars when building for gonk
+
+    dnl prevent cross compile section from using these flags as host flags
+    if test -z "$HOST_CPPFLAGS" ; then
+        HOST_CPPFLAGS=" "
+    fi
+    if test -z "$HOST_CFLAGS" ; then
+        HOST_CFLAGS=" "
+    fi
+    if test -z "$HOST_CXXFLAGS" ; then
+        HOST_CXXFLAGS=" "
+    fi
+    if test -z "$HOST_LDFLAGS" ; then
+        HOST_LDFLAGS=" "
+    fi
+
+    AC_DEFINE(ANDROID)
+else
 case "$target" in
 *-android*|*-linuxandroid*)
     if test -z "$android_ndk" ; then
@@ -240,6 +270,7 @@ case "$target" in
     AC_DEFINE(ANDROID)
     ;;
 esac
+fi
 
 dnl ========================================================
 dnl =
@@ -1357,6 +1388,9 @@ case "$target" in
             else        
                 CPU_ARCH=i386
             fi
+            ;;
+        x86_64)
+            CPU_ARCH=x86_64
             ;;
         *)
             CPU_ARCH=ppc
@@ -3308,55 +3342,68 @@ dnl ========================================================
 dnl Generate output files.
 dnl ========================================================
 MAKEFILES="
-Makefile 
-config/Makefile
-config/autoconf.mk
-config/nsprincl.mk
-config/nsprincl.sh
-config/nspr-config
-lib/Makefile 
-lib/ds/Makefile 
-lib/libc/Makefile 
-lib/libc/include/Makefile 
-lib/libc/src/Makefile 
-lib/tests/Makefile
-pkg/Makefile
-pkg/linux/Makefile
-pkg/solaris/Makefile
-pkg/solaris/SUNWpr/Makefile
-pkg/solaris/SUNWprd/Makefile
-pr/Makefile 
-pr/include/Makefile 
-pr/include/md/Makefile 
-pr/include/obsolete/Makefile 
-pr/include/private/Makefile 
-pr/src/Makefile 
-pr/src/io/Makefile 
-pr/src/linking/Makefile 
-pr/src/malloc/Makefile 
-pr/src/md/Makefile 
-pr/src/md/${PR_MD_ARCH_DIR}/Makefile 
-pr/src/memory/Makefile 
-pr/src/misc/Makefile 
-pr/src/threads/Makefile 
-pr/tests/Makefile 
-pr/tests/dll/Makefile 
+    Makefile
+    config/Makefile
+    config/autoconf.mk
+    config/nsprincl.mk
+    config/nsprincl.sh
+    config/nspr-config
+    lib/Makefile
+    lib/ds/Makefile
+    lib/libc/Makefile
+    lib/libc/include/Makefile
+    lib/libc/src/Makefile
+    lib/tests/Makefile
+    pkg/Makefile
+    pr/Makefile
+    pr/include/Makefile
+    pr/include/md/Makefile
+    pr/include/obsolete/Makefile
+    pr/include/private/Makefile
+    pr/src/Makefile
+    pr/src/io/Makefile
+    pr/src/linking/Makefile
+    pr/src/malloc/Makefile
+    pr/src/md/Makefile
+    pr/src/md/${PR_MD_ARCH_DIR}/Makefile
+    pr/src/memory/Makefile
+    pr/src/misc/Makefile
+    pr/src/threads/Makefile
+    pr/tests/Makefile
+    pr/tests/dll/Makefile
 "
 
-dnl lib/tests/Makefile
-dnl pr/tests/w16gui/Makefile
-dnl tools/Makefile
+if test "$OS_TARGET" = "Linux"; then
+    MAKEFILES="$MAKEFILES
+        pkg/linux/Makefile
+    "
+elif test "$OS_TARGET" = "SunOS"; then
+    MAKEFILES="$MAKEFILES
+        pkg/solaris/Makefile
+        pkg/solaris/SUNWpr/Makefile
+        pkg/solaris/SUNWprd/Makefile
+    "
+fi
 
 if test -z "$USE_PTHREADS" && test -z "$USE_BTHREADS"; then
-    MAKEFILES="$MAKEFILES pr/src/threads/combined/Makefile"
+    MAKEFILES="$MAKEFILES
+        pr/src/threads/combined/Makefile
+    "
 elif test -n "$USE_PTHREADS"; then
-    MAKEFILES="$MAKEFILES pr/src/pthreads/Makefile"
+    MAKEFILES="$MAKEFILES
+        pr/src/pthreads/Makefile
+    "
 elif test -n "$USE_BTHREADS"; then
-    MAKEFILES="$MAKEFILES pr/src/bthreads/Makefile"
+    MAKEFILES="$MAKEFILES
+        pr/src/bthreads/Makefile
+    "
 fi
 
 if test -n "$USE_CPLUS"; then
-    MAKEFILES="$MAKEFILES pr/src/cplus/Makefile pr/src/cplus/tests/Makefile"
+    MAKEFILES="$MAKEFILES
+        pr/src/cplus/Makefile
+        pr/src/cplus/tests/Makefile
+    "
 fi
 
 echo $MAKEFILES > unallmakefiles

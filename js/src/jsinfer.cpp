@@ -3421,7 +3421,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
         /* Bytecodes pushing values of known type. */
       case JSOP_VOID:
-      case JSOP_PUSH:
+      case JSOP_UNDEFINED:
         pushed[0].addType(cx, Type::UndefinedType());
         break;
       case JSOP_ZERO:
