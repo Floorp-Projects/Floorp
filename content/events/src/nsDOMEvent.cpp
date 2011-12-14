@@ -61,6 +61,7 @@
 #include "nsIScriptError.h"
 #include "nsDOMPopStateEvent.h"
 #include "mozilla/Preferences.h"
+#include "nsJSUtils.h"
 
 using namespace mozilla;
 
@@ -405,15 +406,9 @@ nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
   }
 
   JS::Anchor<JSString*> deleteProtector(jsstr);
-  size_t length;
-  const jschar* chars = JS_GetStringCharsAndLength(aCx, jsstr, &length);
-  if (!chars) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
-  nsAutoString type;
-  type.Assign(chars, length);
-  deleteProtector.clear();
+  nsDependentJSString type;
+  NS_ENSURE_STATE(type.init(aCx, jsstr));
   
   nsCOMPtr<nsISupports> dict;
   if (aArgc >= 2 && !JSVAL_IS_PRIMITIVE(aArgv[1])) {
