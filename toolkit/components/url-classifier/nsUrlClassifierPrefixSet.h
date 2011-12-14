@@ -70,9 +70,6 @@ public:
   // if aReady is set, we will block until there are any entries
   // if not set, we will return in aReady whether we were ready or not
   NS_IMETHOD Probe(PRUint32 aPrefix, PRUint32 aKey, bool* aReady, bool* aFound);
-  // Return the estimated size of the set on disk and in memory,
-  // in bytes
-  NS_IMETHOD SizeOfIncludingThis(PRUint32* aSize);
   NS_IMETHOD IsEmpty(bool * aEmpty);
   NS_IMETHOD LoadFromFile(nsIFile* aFile);
   NS_IMETHOD StoreToFile(nsIFile* aFile);
@@ -80,6 +77,10 @@ public:
   NS_IMETHOD GetKey(PRUint32* aKey);
 
   NS_DECL_ISUPPORTS
+
+  // Return the estimated size of the set on disk and in memory,
+  // in bytes
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
 
 protected:
   static const PRUint32 DELTAS_LIMIT = 100;
