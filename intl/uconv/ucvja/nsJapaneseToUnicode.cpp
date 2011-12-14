@@ -42,7 +42,6 @@
 
 #include "nsICharsetConverterManager.h"
 #include "nsIServiceManager.h"
-#include "nsServiceManagerUtils.h"
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 #ifdef XP_OS2
