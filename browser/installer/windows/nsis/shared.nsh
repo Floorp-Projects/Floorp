@@ -394,7 +394,7 @@
   ClearErrors
   ReadRegStr $1 HKLM "Software\Classes\FirefoxHTML\ShellEx\IconHandler" ""
   ${Unless} ${Errors}
-    ReadRegStr $1 HKLM "Software\Classes\FirefoxHTML\" ""
+    ReadRegStr $1 HKLM "Software\Classes\FirefoxHTML\DefaultIcon" ""
     ${GetLongPath} "$INSTDIR\${FileMainEXE}" $2
     ${If} "$1" != "$2,1"
       WriteRegStr HKLM "Software\Classes\FirefoxHTML\DefaultIcon" "" "$2,1"
