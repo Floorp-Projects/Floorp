@@ -1955,6 +1955,7 @@ class MLoadSlot
     {
         setResultType(MIRType_Value);
         setIdempotent();
+        setNeverHoisted();
         JS_ASSERT(slots->type() == MIRType_Slots);
     }
 
