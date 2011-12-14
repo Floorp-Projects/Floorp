@@ -200,12 +200,6 @@ COMPONENT_LIBS += \
   windowds \
   $(NULL)
 
-ifneq (WINNT,$(OS_ARCH))
-COMPONENT_LIBS += \
-  uconvd \
-  $(NULL)
-endif
-
 ifdef BUILD_CTYPES
 COMPONENT_LIBS += \
   jsctypes \
