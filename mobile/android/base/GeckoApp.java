@@ -913,11 +913,7 @@ abstract public class GeckoApp
                 setLaunchState(GeckoApp.LaunchState.GeckoRunning);
                 GeckoAppShell.sendPendingEventsToGecko();
                 connectGeckoLayerClient();
-                GeckoAppShell.getHandler().post(new Runnable() {
-                    public void run() {
-                        Looper.myQueue().addIdleHandler(new UpdateIdleHandler());
-                    }
-                });
+                Looper.myQueue().addIdleHandler(new UpdateIdleHandler());
             } else if (event.equals("ToggleChrome:Hide")) {
                 mMainHandler.post(new Runnable() {
                     public void run() {
