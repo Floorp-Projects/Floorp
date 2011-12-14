@@ -54,7 +54,7 @@ endif
 
 DIRS		+= 2d ycbcr angle src qcms gl layers harfbuzz/src ots/src thebes ipc
 
-ifeq (,$(filter-out cocoa android windows,$(MOZ_WIDGET_TOOLKIT)))
+ifdef MOZ_ENABLE_SKIA
 DIRS        += skia
 endif
 
