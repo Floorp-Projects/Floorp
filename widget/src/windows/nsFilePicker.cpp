@@ -163,6 +163,9 @@ private:
 
 nsFilePicker::nsFilePicker() :
   mSelectedType(1)
+#if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
+  , mFDECookie(0)
+#endif
 {
    CoInitialize(NULL);
 }
@@ -183,7 +186,7 @@ STDMETHODIMP nsFilePicker::QueryInterface(REFIID refiid, void** ppvResult)
 {
   *ppvResult = NULL;
   if (IID_IUnknown == refiid ||
-      refiid == __uuidof(IFileDialogEvents)) {
+      refiid == IID_IFileDialogEvents) {
     *ppvResult = this;
   }
 
@@ -342,7 +345,8 @@ nsFilePicker::OnFileOk(IFileDialog *pfd)
 }
 
 HRESULT
-nsFilePicker::OnFolderChanging(IFileDialog *pfd, IShellItem *psiFolder)
+nsFilePicker::OnFolderChanging(IFileDialog *pfd,
+                               IShellItem *psiFolder)
 {
   return S_OK;
 }
@@ -360,7 +364,9 @@ nsFilePicker::OnSelectionChange(IFileDialog *pfd)
 }
 
 HRESULT
-nsFilePicker::OnShareViolation(IFileDialog *pfd, IShellItem *psi, FDE_SHAREVIOLATION_RESPONSE *pResponse)
+nsFilePicker::OnShareViolation(IFileDialog *pfd,
+                               IShellItem *psi,
+                               FDE_SHAREVIOLATION_RESPONSE *pResponse)
 {
   return S_OK;
 }
@@ -372,7 +378,9 @@ nsFilePicker::OnTypeChange(IFileDialog *pfd)
 }
 
 HRESULT
-nsFilePicker::OnOverwrite(IFileDialog *pfd, IShellItem *psi, FDE_OVERWRITE_RESPONSE *pResponse)
+nsFilePicker::OnOverwrite(IFileDialog *pfd,
+                          IShellItem *psi,
+                          FDE_OVERWRITE_RESPONSE *pResponse)
 {
   return S_OK;
 }
@@ -432,7 +440,52 @@ nsFilePicker::ShowXPFolderPicker(const nsString& aInitialDir)
 bool
 nsFilePicker::ShowFolderPicker(const nsString& aInitialDir)
 {
-  return false;
+  nsRefPtr<IFileOpenDialog> dialog;
+  if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC,
+                              IID_IFileOpenDialog,
+                              getter_AddRefs(dialog))))
+    return false;
+
+  // hook up event callbacks
+  dialog->Advise(this, &mFDECookie);
+
+  // options
+  FILEOPENDIALOGOPTIONS fos = 0;
+  fos |= FOS_PICKFOLDERS;
+  dialog->SetOptions(fos);
+ 
+  // initial strings
+  dialog->SetTitle(mTitle.get());
+  if (!aInitialDir.IsEmpty()) {
+    nsRefPtr<IShellItem> folder;
+    if (SUCCEEDED(SHCreateItemFromParsingName(aInitialDir.get(), NULL,
+                                              IID_IShellItem,
+                                              getter_AddRefs(folder)))) {
+      dialog->SetFolder(folder);
+    }
+  }
+
+  AutoDestroyTmpWindow adtw((HWND)(mParentWidget.get() ?
+    mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW) : NULL));
+ 
+  // display
+  nsRefPtr<IShellItem> item;
+  if (FAILED(dialog->Show(adtw.get())) ||
+      FAILED(dialog->GetResult(getter_AddRefs(item))) ||
+      !item) {
+    dialog->Unadvise(mFDECookie);
+    return false;
+  }
+  dialog->Unadvise(mFDECookie);
+ 
+  // results  
+  LPWSTR str = NULL;
+  if (FAILED(item->GetDisplayName(SIGDN_FILESYSPATH, &str)))
+    return false;
+  mUnicodeFile.Assign(str);
+  CoTaskMemFree(str);
+ 
+  return true;
 }
 
 #endif // MOZ_WINSDK_TARGETVER

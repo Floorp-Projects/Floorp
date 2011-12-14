@@ -50,6 +50,9 @@
 #define _WIN32_WINNT_bak _WIN32_WINNT
 #undef _WIN32_WINNT
 #define _WIN32_WINNT _WIN32_WINNT_VISTA
+#define _WIN32_IE_bak _WIN32_IE
+#undef _WIN32_IE
+#define _WIN32_IE _WIN32_IE_IE70
 #endif
 #endif
 
@@ -143,12 +146,15 @@ protected:
   static char            mLastUsedDirectory[];
   nsString               mUnicodeFile;
   static PRUnichar      *mLastUsedUnicodeDirectory;
+  DWORD                  mFDECookie;
 };
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
 #if defined(_WIN32_WINNT_bak)
 #undef _WIN32_WINNT
 #define _WIN32_WINNT _WIN32_WINNT_bak
+#undef _WIN32_IE
+#define _WIN32_IE _WIN32_IE_bak
 #endif
 #endif
 
