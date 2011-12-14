@@ -5645,9 +5645,17 @@ get_gtk_cursor(nsCursor aCursor)
         break;
     }
 
-    // if by now we don't have a xcursor, this means we have to make a
-    // custom one
-    if (newType != 0xff) {
+    // If by now we don't have a xcursor, this means we have to make a custom
+    // one. First, we try creating a named cursor based on the hash of our
+    // custom bitmap, as libXcursor has some magic to convert bitmapped cursors
+    // to themed cursors
+    if (newType != 0xFF && GtkCursors[newType].hash) {
+        gdkcursor = gdk_cursor_new_from_name(gdk_display_get_default(),
+                                             GtkCursors[newType].hash);
+    }
+
+    // If we still don't have a xcursor, we now really create a bitmap cursor
+    if (newType != 0xff && !gdkcursor) {
         GdkPixbuf * cursor_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 32, 32);
         if (!cursor_pixbuf)
             return NULL;
