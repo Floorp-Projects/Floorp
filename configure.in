@@ -8019,6 +8019,21 @@ AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_GMODULE_LIBS)
 
 dnl ========================================================
+dnl Graphics checks.
+dnl ========================================================
+
+if test "${OS_ARCH}" = "Darwin" -o "${OS_TARGET}" = "Android"; then
+MOZ_ENABLE_SKIA=1
+else
+MOZ_ENABLE_SKIA=
+fi
+
+MOZ_ARG_ENABLE_BOOL(skia,
+[  --enable-skia   Enable use of Skia],
+MOZ_ENABLE_SKIA=1,
+MOZ_ENABLE_SKIA=)
+
+dnl ========================================================
 dnl Check for cairo
 dnl ========================================================
 MOZ_CAIRO_CFLAGS='-I$(LIBXUL_DIST)/include/cairo'
@@ -8198,7 +8213,13 @@ AC_SUBST(MOZ_OTS_LIBS)
 dnl ========================================================
 dnl Skia 
 dnl ========================================================
-MOZ_SKIA_LIBS='$(DEPTH)/gfx/skia/$(LIB_PREFIX)skia.$(LIB_SUFFIX)'
+if test "$MOZ_ENABLE_SKIA"; then
+  MOZ_SKIA_LIBS='$(DEPTH)/gfx/skia/$(LIB_PREFIX)skia.$(LIB_SUFFIX)'
+  AC_DEFINE(MOZ_ENABLE_SKIA)
+else
+  MOZ_SKIA_LIBS=
+fi
+AC_SUBST(MOZ_ENABLE_SKIA)
 AC_SUBST(MOZ_SKIA_LIBS)
 
 dnl ========================================================

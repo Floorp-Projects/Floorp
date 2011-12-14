@@ -225,11 +225,9 @@ private:
             mFirstSeen(CallStack::kNone),
             mOrderedLT()        // FIXME bug 456272: set to empirical
         {                       // dep size?
-          MOZ_COUNT_CTOR(OrderingEntry);
         }
         ~OrderingEntry()
         {
-          MOZ_COUNT_DTOR(OrderingEntry);
         }
 
         CallStack mFirstSeen; // first site from which the resource appeared
@@ -369,7 +367,6 @@ public:
         mLock = PR_NewLock();
         if (!mLock)
             NS_RUNTIMEABORT("couldn't allocate deadlock detector lock");
-        MOZ_COUNT_CTOR(DeadlockDetector);
     }
 
     /**
@@ -381,7 +378,6 @@ public:
     {
         PL_HashTableDestroy(mOrdering);
         PR_DestroyLock(mLock);
-        MOZ_COUNT_DTOR(DeadlockDetector);
     }
 
     /**

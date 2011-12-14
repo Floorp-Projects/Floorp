@@ -412,16 +412,16 @@ function testEclipseBug362107()
   editor.setCaretOffset(16);
 
   EventUtils.synthesizeKey("VK_UP", {ctrlKey: true}, testWin);
-  is(editor.getCaretOffset(), 7, "Ctrl-Up works");
+  is(editor.getCaretOffset(), 9, "Ctrl-Up works");
 
   EventUtils.synthesizeKey("VK_UP", {ctrlKey: true}, testWin);
-  is(editor.getCaretOffset(), 0, "Ctrl-Up works twice");
+  is(editor.getCaretOffset(), 2, "Ctrl-Up works twice");
 
   EventUtils.synthesizeKey("VK_DOWN", {ctrlKey: true}, testWin);
-  is(editor.getCaretOffset(), 13, "Ctrl-Down works");
+  is(editor.getCaretOffset(), 9, "Ctrl-Down works");
 
   EventUtils.synthesizeKey("VK_DOWN", {ctrlKey: true}, testWin);
-  is(editor.getCaretOffset(), 20, "Ctrl-Down works twice");
+  is(editor.getCaretOffset(), 16, "Ctrl-Down works twice");
 }
 
 function testBug687577()

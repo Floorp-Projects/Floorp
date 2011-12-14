@@ -713,8 +713,8 @@ var PlacesOrganizer = {
           var itemsCountLabel = document.getElementById("itemsCountText");
           selectItemDesc.hidden = false;
           itemsCountLabel.value =
-            PlacesUIUtils.getFormattedString("detailsPane.multipleItems",
-                                             [aNodeList.length]);
+            PlacesUIUtils.getPluralString("detailsPane.itemsCountLabel",
+                                          aNodeList.length, [aNodeList.length]);
           infoBox.hidden = true;
           return;
         }
@@ -743,13 +743,9 @@ var PlacesOrganizer = {
       }
       else {
         selectItemDesc.hidden = false;
-        if (rowCount == 1)
-          itemsCountLabel.value = PlacesUIUtils.getString("detailsPane.oneItem");
-        else {
-          itemsCountLabel.value =
-            PlacesUIUtils.getFormattedString("detailsPane.multipleItems",
-                                             [rowCount]);
-        }
+        itemsCountLabel.value =
+          PlacesUIUtils.getPluralString("detailsPane.itemsCountLabel",
+                                        rowCount, [rowCount]);
       }
     }
   },
