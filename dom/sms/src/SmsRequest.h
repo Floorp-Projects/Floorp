@@ -120,14 +120,28 @@ private:
    */
   bool SetSuccessInternal(nsISupports* aObject);
 
+  /**
+   * Return the internal cursor that is saved when
+   * SetSuccess(nsIDOMMozSmsCursor*) is used.
+   * Returns null if this request isn't associated to an cursor.
+   */
+  nsIDOMMozSmsCursor* GetCursor();
+
   jsval     mResult;
   bool      mResultRooted;
   ErrorType mError;
   bool      mDone;
+  nsCOMPtr<nsIDOMMozSmsCursor> mCursor;
 
   NS_DECL_EVENT_HANDLER(success)
   NS_DECL_EVENT_HANDLER(error)
 };
+
+inline nsIDOMMozSmsCursor*
+SmsRequest::GetCursor()
+{
+  return mCursor;
+}
 
 } // namespace sms
 } // namespace dom

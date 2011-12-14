@@ -212,7 +212,14 @@ void
 SmsRequestManager::NotifyNoMessageInList(PRInt32 aRequestId)
 {
   // TODO: use Filter!
-  nsCOMPtr<nsIDOMMozSmsCursor> cursor = new SmsCursor(nsnull);
+  SmsRequest* request = GetRequest(aRequestId);
+
+  nsCOMPtr<nsIDOMMozSmsCursor> cursor = request->GetCursor();
+  if (!cursor) {
+    cursor = new SmsCursor(nsnull);
+  } else {
+    static_cast<SmsCursor*>(cursor.get())->Disconnect();
+  }
 
   NotifySuccess<nsIDOMMozSmsCursor*>(aRequestId, cursor);
 }
@@ -233,8 +240,13 @@ SmsRequestManager::NotifyCreateMessageList(PRInt32 aRequestId, PRInt32 aListId,
 void
 SmsRequestManager::NotifyGotNextMessage(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
 {
-  // TODO: implement
-  printf_stderr("\nHERE\n\n");
+  SmsRequest* request = GetRequest(aRequestId);
+
+  nsCOMPtr<SmsCursor> cursor = static_cast<SmsCursor*>(request->GetCursor());
+  NS_ASSERTION(cursor, "Request should have an cursor in that case!");
+  cursor->SetMessage(aMessage);
+
+  NotifySuccess<nsIDOMMozSmsCursor*>(aRequestId, cursor);
 }
 
 } // namespace sms
