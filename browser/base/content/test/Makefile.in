@@ -170,6 +170,7 @@ _BROWSER_FILES = \
                  browser_bug647886.js \
                  browser_bug655584.js \
                  browser_bug664672.js \
+                 browser_bug710878.js \
                  browser_canonizeURL.js \
                  browser_findbarClose.js \
                  browser_keywordBookmarklets.js \
