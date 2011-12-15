@@ -992,12 +992,12 @@ nsXBLPrototypeHandler::ReportKeyConflict(const PRUnichar* aKey, const PRUnichar*
   }
 
   const PRUnichar* params[] = { aKey, aModifiers };
-  nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  "XBL Prototype Handler", doc,
+                                  nsContentUtils::eXBL_PROPERTIES,
                                   aMessageName,
                                   params, ArrayLength(params),
-                                  nsnull, EmptyString(), mLineNumber, 0,
-                                  nsIScriptError::warningFlag,
-                                  "XBL Prototype Handler", doc);
+                                  nsnull, EmptyString(), mLineNumber);
 }
 
 bool
