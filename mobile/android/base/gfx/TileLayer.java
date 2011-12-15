@@ -39,6 +39,7 @@ package org.mozilla.gecko.gfx;
 
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.opengl.GLES20;
 import android.util.Log;
 import javax.microedition.khronos.opengles.GL10;
 import javax.microedition.khronos.opengles.GL11Ext;
@@ -58,27 +59,18 @@ public abstract class TileLayer extends Layer {
     private final ArrayList<Rect> mDirtyRects;
     private final CairoImage mImage;
     private final boolean mRepeat;
-    private final IntSize mSize;
+    private IntSize mSize;
     private int[] mTextureIDs;
 
     public TileLayer(boolean repeat, CairoImage image) {
         mRepeat = repeat;
         mImage = image;
-        mSize = new IntSize(image.getWidth(), image.getHeight());
+        mSize = new IntSize(0, 0);
         mDirtyRects = new ArrayList<Rect>();
-
-        /*
-         * Assert that the image has a power-of-two size. OpenGL ES < 2.0 doesn't support NPOT
-         * textures and OpenGL ES doesn't seem to let us efficiently slice up a NPOT bitmap.
-         */
-        int width = mImage.getWidth(), height = mImage.getHeight();
-        if ((width & (width - 1)) != 0 || (height & (height - 1)) != 0) {
-            throw new RuntimeException("TileLayer: NPOT images are unsupported (dimensions are " +
-                                       width + "x" + height + ")");
-        }
     }
 
-    public IntSize getSize() { return mSize; }
+    @Override
+    public IntSize getSize() { return mImage.getSize(); }
 
     protected boolean repeats() { return mRepeat; }
     protected int getTextureID() { return mTextureIDs[0]; }
@@ -101,12 +93,48 @@ public abstract class TileLayer extends Layer {
     }
 
     public void invalidate() {
-        invalidate(new Rect(0, 0, mSize.width, mSize.height));
+        IntSize bufferSize = mImage.getSize();
+        invalidate(new Rect(0, 0, bufferSize.width, bufferSize.height));
+    }
+
+    private void validateTexture() {
+        /* Calculate the ideal texture size. This must be a power of two if
+         * the texture is repeated or OpenGL ES 2.0 isn't supported, as
+         * OpenGL ES 2.0 is required for NPOT texture support (without
+         * extensions), but doesn't support repeating NPOT textures.
+         *
+         * XXX Currently, we don't pick a GLES 2.0 context, so always round.
+         */
+        IntSize bufferSize = mImage.getSize();
+        IntSize textureSize = bufferSize;
+
+        textureSize = bufferSize.nextPowerOfTwo();
+
+        if (!textureSize.equals(mSize)) {
+            mSize = textureSize;
+
+            // Delete the old texture
+            if (mTextureIDs != null) {
+                TextureReaper.get().add(mTextureIDs);
+                mTextureIDs = null;
+
+                // XXX This won't be freed until the next frame is drawn, so we
+                //     temporarily have a larger-than-necessary memory requirement.
+                //     Is this what we want?
+            }
+        }
     }
 
     @Override
     protected void performUpdates(GL10 gl) {
         super.performUpdates(gl);
+
+        // Reallocate the texture if the size has changed
+        validateTexture();
+
+        // Don't do any work if the image has an invalid size.
+        if (!mImage.getSize().isPositive())
+            return;
 
         if (mTextureIDs == null) {
             uploadFullTexture(gl);
@@ -119,43 +147,58 @@ public abstract class TileLayer extends Layer {
     }
 
     private void uploadFullTexture(GL10 gl) {
-        mTextureIDs = new int[1];
-        gl.glGenTextures(mTextureIDs.length, mTextureIDs, 0);
-
-        int cairoFormat = mImage.getFormat();
-        CairoGLInfo glInfo = new CairoGLInfo(cairoFormat);
-
-        bindAndSetGLParameters(gl);
-
-        gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width, mSize.height,
-                        0, glInfo.format, glInfo.type, mImage.getBuffer());
+        IntSize bufferSize = mImage.getSize();
+        uploadDirtyRect(gl, new Rect(0, 0, bufferSize.width, bufferSize.height));
     }
-
+ 
     private void uploadDirtyRect(GL10 gl, Rect dirtyRect) {
-        if (mTextureIDs == null)
-            throw new RuntimeException("uploadDirtyRect() called with null texture ID!");
+        boolean newlyCreated = false;
 
-        int width = mSize.width;
+        if (mTextureIDs == null) {
+            mTextureIDs = new int[1];
+            gl.glGenTextures(mTextureIDs.length, mTextureIDs, 0);
+            newlyCreated = true;
+        }
+
+        IntSize bufferSize = mImage.getSize();
+        Rect bufferRect = new Rect(0, 0, bufferSize.width, bufferSize.height);
+
         int cairoFormat = mImage.getFormat();
         CairoGLInfo glInfo = new CairoGLInfo(cairoFormat);
 
         bindAndSetGLParameters(gl);
+
+        if (newlyCreated || dirtyRect.equals(bufferRect)) {
+            if (mSize.equals(bufferSize)) {
+                gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width, mSize.height,
+                                0, glInfo.format, glInfo.type, mImage.getBuffer());
+                return;
+            } else {
+                gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width, mSize.height,
+                                0, glInfo.format, glInfo.type, null);
+                gl.glTexSubImage2D(gl.GL_TEXTURE_2D, 0, 0, 0, bufferSize.width, bufferSize.height,
+                                   glInfo.format, glInfo.type, mImage.getBuffer());
+                return;
+            }
+        }
 
         /*
          * Upload the changed rect. We have to widen to the full width of the texture
          * because we can't count on the device having support for GL_EXT_unpack_subimage,
          * and going line-by-line is too slow.
+         *
+         * XXX We should still use GL_EXT_unpack_subimage when available.
          */
         Buffer viewBuffer = mImage.getBuffer().slice();
         int bpp = CairoUtils.bitsPerPixelForCairoFormat(cairoFormat) / 8;
-        int position = dirtyRect.top * width * bpp;
+        int position = dirtyRect.top * bufferSize.width * bpp;
         if (position > viewBuffer.limit()) {
             Log.e(LOGTAG, "### Position outside tile! " + dirtyRect.top);
             return;
         }
 
         viewBuffer.position(position);
-        gl.glTexSubImage2D(gl.GL_TEXTURE_2D, 0, 0, dirtyRect.top, width, dirtyRect.height(),
+        gl.glTexSubImage2D(gl.GL_TEXTURE_2D, 0, 0, dirtyRect.top, bufferSize.width, dirtyRect.height(),
                            glInfo.format, glInfo.type, viewBuffer);
     }
 

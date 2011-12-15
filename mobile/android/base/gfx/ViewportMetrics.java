@@ -44,6 +44,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.gfx.FloatSize;
+import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.RectUtils;
 import org.json.JSONException;
@@ -64,8 +65,7 @@ public class ViewportMetrics {
     private float mZoomFactor;
 
     public ViewportMetrics() {
-        mPageSize = new FloatSize(LayerController.TILE_WIDTH,
-                                  LayerController.TILE_HEIGHT);
+        mPageSize = new FloatSize(1, 1);
         mViewportRect = new RectF(0, 0, 1, 1);
         mViewportOffset = new PointF(0, 0);
         mZoomFactor = 1.0f;
@@ -96,13 +96,13 @@ public class ViewportMetrics {
         mZoomFactor = zoom;
     }
 
-    public PointF getOptimumViewportOffset() {
+    public PointF getOptimumViewportOffset(IntSize displayportSize) {
         // XXX We currently always position the viewport in the centre of the
         //     displayport, but we might want to optimise this during panning
         //     to minimise checkerboarding.
         Point optimumOffset =
-            new Point((int)Math.round((LayerController.TILE_WIDTH - mViewportRect.width()) / 2),
-                      (int)Math.round((LayerController.TILE_HEIGHT - mViewportRect.height()) / 2));
+            new Point((int)Math.round((displayportSize.width - mViewportRect.width()) / 2),
+                      (int)Math.round((displayportSize.height - mViewportRect.height()) / 2));
 
         /* XXX Until bug #524925 is fixed, changing the viewport origin will
          * probably cause things to be slower than just having a smaller usable
