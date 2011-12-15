@@ -84,9 +84,9 @@ protected:
   virtual nsresult GetFeatureStatusImpl(PRInt32 aFeature, 
                                         PRInt32 *aStatus, 
                                         nsAString & aSuggestedDriverVersion, 
-                                        GfxDriverInfo* aDriverInfo = nsnull, 
+                                        const nsTArray<GfxDriverInfo>& aDriverInfo, 
                                         OperatingSystem* aOS = nsnull);
-  virtual const GfxDriverInfo* GetGfxDriverInfo();
+  virtual const nsTArray<GfxDriverInfo>& GetGfxDriverInfo();
 
 private:
   nsCString mVendor;
