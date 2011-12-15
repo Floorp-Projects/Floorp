@@ -1677,7 +1677,10 @@ JSVAL_IS_UNIVERSAL(jsval v)
 
 /* Property attributes, set in JSPropertySpec and passed to API functions. */
 #define JSPROP_ENUMERATE        0x01    /* property is visible to for/in loop */
-#define JSPROP_READONLY         0x02    /* not settable: assignment is no-op */
+#define JSPROP_READONLY         0x02    /* not settable: assignment is no-op.
+                                           This flag is only valid when neither
+                                           JSPROP_GETTER nor JSPROP_SETTER is
+                                           set. */
 #define JSPROP_PERMANENT        0x04    /* property cannot be deleted */
 #define JSPROP_GETTER           0x10    /* property holds getter function */
 #define JSPROP_SETTER           0x20    /* property holds setter function */
