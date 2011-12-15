@@ -845,36 +845,50 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
 
     if (mUseAcceleratedRendering) {
 
-      nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(this);
-      /**
-       * XXX - On several OSes initialization is expected to fail for now.
-       * If we'd get a none-basic layer manager they'd crash. This is ok though
-       * since on those platforms it will fail. Anyone implementing new
-       * platforms on LayerManagerOGL should ensure their widget is able to
-       * deal with it though!
-       */
-      if (layerManager->Initialize()) {
-        mLayerManager = layerManager;
-        // TODO Refactor me to support one compositor to many layer manager
-        bool useCompositor =
-          Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
-        if (useCompositor) {
-          Thread* compositorThread = new Thread("CompositorThread");
-          if (compositorThread->Start()) {
-            MessageLoop *parentMessageLoop = MessageLoop::current();
-            MessageLoop *childMessageLoop = compositorThread->message_loop();
-            CompositorParent *compositorParent = new CompositorParent();
-            CompositorChild *compositorChild = new CompositorChild();
-            mozilla::ipc::AsyncChannel *parentChannel = compositorParent->GetIPCChannel();
-            mozilla::ipc::AsyncChannel *childChannel = compositorChild->GetIPCChannel();
-            mozilla::ipc::AsyncChannel::Side childSide =
-              mozilla::ipc::AsyncChannel::Child;
+      // Try to use an async compositor first, if possible
+      bool useCompositor =
+        Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
+      if (useCompositor) {
+        CompositorChild *compositorChild = CompositorChild::CreateCompositor();
 
-            compositorChild->Open(parentChannel, childMessageLoop, childSide);
-            compositorChild->CallInit();
-            LayerManager::LayersBackend be;
-            PLayersChild* shadowManager = compositorChild->SendPLayersConstructor(LayerManager::LAYERS_OPENGL);
+        if (compositorChild) {
+          // e10s uses the parameter to pass in the shadow manager from the TabChild
+          // so we don't expect to see it there since this doesn't support e10s.
+          NS_ASSERTION(aShadowManager == NULL, "Async Compositor not supported with e10s");
+          WidgetDescriptor desc = MacChildViewWidget((uintptr_t)dynamic_cast<nsIWidget*>(this));
+          PLayersChild* shadowManager = compositorChild->SendPLayersConstructor(
+                                          LayerManager::LAYERS_OPENGL,
+                                          desc);
+
+          if (shadowManager) {
+            LayerManager* lm = CreateBasicLayerManager();
+            ShadowLayerForwarder* lf = lm->AsShadowForwarder();
+            if (!lf) {
+              delete lm;
+              delete compositorChild;
+            }
+            lf->SetShadowManager(shadowManager);
+            printf("Async layer manager\n");
+
+            mLayerManager = lm;
+          } else {
+            NS_WARNING("fail to construct LayersChild");
+            delete compositorChild;
           }
+        }
+      }
+
+      if (!mLayerManager) {
+        nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(this);
+        /**
+         * XXX - On several OSes initialization is expected to fail for now.
+         * If we'd get a none-basic layer manager they'd crash. This is ok though
+         * since on those platforms it will fail. Anyone implementing new
+         * platforms on LayerManagerOGL should ensure their widget is able to
+         * deal with it though!
+         */
+        if (layerManager->Initialize()) {
+          mLayerManager = layerManager;
         }
       }
     }

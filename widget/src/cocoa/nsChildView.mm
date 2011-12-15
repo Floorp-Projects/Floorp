@@ -94,6 +94,8 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 
+extern NSOpenGLContext* nsGLContext;
+
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
@@ -2554,11 +2556,13 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 #endif
 
-  if (mGeckoChild->GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_OPENGL) {
-    LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(mGeckoChild->GetLayerManager(nsnull));
-    manager->SetClippingRegion(paintEvent.region); 
+  if (mGeckoChild->GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_OPENGL ||
+      mGeckoChild->GetLayerManager(nsnull)->AsShadowManager() != NULL) {
+    //LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(mGeckoChild->GetLayerManager(nsnull));
+    //manager->SetClippingRegion(paintEvent.region);
     if (!mGLContext) {
-      mGLContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
+      //mGLContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
+      mGLContext = nsGLContext;
       [mGLContext retain];
     }
     mGeckoChild->DispatchWindowEvent(paintEvent);
@@ -2566,6 +2570,21 @@ NSEvent* gLastDragMouseDownEvent = nil;
     // Force OpenGL to refresh the very first time we draw. This works around a
     // Mac OS X bug that stops windows updating on OS X when we use OpenGL.
     if (!mDidForceRefreshOpenGL) {
+  // Create Cairo objects.
+  NSSize bufferSize = [self bounds].size;
+  nsRefPtr<gfxQuartzSurface> targetSurface =
+    new gfxQuartzSurface(aContext, gfxSize(bufferSize.width, bufferSize.height));
+  targetSurface->SetAllowUseAsSource(false);
+
+  nsRefPtr<gfxContext> targetContext = new gfxContext(targetSurface);
+
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
+  bool painted;
+  {
+    nsBaseWidget::AutoLayerManagerSetup *setupLayerManager = new nsBaseWidget::AutoLayerManagerSetup(mGeckoChild, targetContext, BasicLayerManager::BUFFER_NONE);
+    painted = mGeckoChild->DispatchWindowEvent(paintEvent);
+  }
+
       [self performSelector:@selector(forceRefreshOpenGL) withObject:nil afterDelay:0];
       mDidForceRefreshOpenGL = YES;
     }

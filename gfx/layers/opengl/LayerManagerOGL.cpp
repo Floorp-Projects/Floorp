@@ -786,7 +786,7 @@ LayerManagerOGL::Render()
                                  LOCAL_GL_ONE, LOCAL_GL_ONE);
   mGLContext->fEnable(LOCAL_GL_BLEND);
 
-  const nsIntRect *clipRect = mRoot->GetClipRect();
+  const nsIntRect *clipRect = NULL;// = mRoot->GetClipRect();
 
   if (clipRect) {
     nsIntRect r = *clipRect;
@@ -796,10 +796,24 @@ LayerManagerOGL::Render()
     mGLContext->fScissor(0, 0, width, height);
   }
 
-  mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
+  //mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
 
   mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
   mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
+
+  ShadowLayer *shadow = RootLayer()->GetLayer()->AsShadowLayer();
+  if (shadow) {
+    shadow->SetShadowVisibleRegion(nsIntRect(0, 0, width, height));
+    for (Layer* child = RootLayer()->GetLayer()->GetFirstChild(); child; child = child->GetNextSibling()) {
+      for (Layer* child2 = child->GetFirstChild(); child2; child2 = child2->GetNextSibling()) {
+      for (Layer* child3 = child2->GetFirstChild(); child3; child3 = child3->GetNextSibling()) {
+       child3->AsShadowLayer()->SetShadowVisibleRegion(nsIntRect(0, 0, width, height));
+      }
+       child2->AsShadowLayer()->SetShadowVisibleRegion(nsIntRect(0, 0, width, height));
+      }
+     child->AsShadowLayer()->SetShadowVisibleRegion(nsIntRect(0, 0, width, height));
+    }
+  }
 
   // Render our layers.
   RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO,
@@ -817,7 +831,7 @@ LayerManagerOGL::Render()
     mFPS.DrawFPS(mGLContext, GetCopy2DProgram());
   }
 
-  if (mGLContext->IsDoubleBuffered()) {
+  if (true || mGLContext->IsDoubleBuffered()) {
     mGLContext->SwapBuffers();
     mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
     return;

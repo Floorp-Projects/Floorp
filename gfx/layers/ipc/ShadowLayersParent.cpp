@@ -281,6 +281,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       MOZ_LAYERS_LOG(("[ParentSide] SetRoot"));
 
       mRoot = AsShadowLayer(edit.get_OpSetRoot())->AsContainer();
+      mLayerManager->SetRoot(mRoot);
       break;
     }
     case Edit::TOpInsertAfter: {
@@ -382,7 +383,9 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   // other's buffer contents.
   ShadowLayerManager::PlatformSyncBeforeReplyUpdate();
 
-  Frame()->ShadowLayersUpdated();
+  if (Frame()) {
+    Frame()->ShadowLayersUpdated();
+  }
 
   return true;
 }
