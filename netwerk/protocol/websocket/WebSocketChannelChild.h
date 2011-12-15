@@ -60,14 +60,13 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
 
   // nsIWebSocketChannel methods BaseWebSocketChannel didn't implement for us
   //
-  NS_SCRIPTABLE NS_IMETHOD AsyncOpen(nsIURI *aURI,
-                                     const nsACString &aOrigin,
-                                     nsIWebSocketListener *aListener,
-                                     nsISupports *aContext);
-  NS_SCRIPTABLE NS_IMETHOD Close(PRUint16 code, const nsACString & reason);
-  NS_SCRIPTABLE NS_IMETHOD SendMsg(const nsACString &aMsg);
-  NS_SCRIPTABLE NS_IMETHOD SendBinaryMsg(const nsACString &aMsg);
-  NS_SCRIPTABLE NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo);
+  NS_IMETHOD AsyncOpen(nsIURI *aURI, const nsACString &aOrigin,
+                       nsIWebSocketListener *aListener, nsISupports *aContext);
+  NS_IMETHOD Close(PRUint16 code, const nsACString & reason);
+  NS_IMETHOD SendMsg(const nsACString &aMsg);
+  NS_IMETHOD SendBinaryMsg(const nsACString &aMsg);
+  NS_IMETHOD SendBinaryStream(nsIInputStream *aStream, PRUint32 aLength);
+  NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo);
 
   void AddIPDLReference();
   void ReleaseIPDLReference();
