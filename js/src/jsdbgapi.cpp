@@ -670,7 +670,6 @@ JS_GetValidFrameCalleeObject(JSContext *cx, JSStackFrame *fp, jsval *vp)
     if (!Valueify(fp)->getValidCalleeObject(cx, &v))
         return false;
     *vp = v.isObject() ? v : JSVAL_VOID;
-    *vp = v;
     return true;
 }
 
