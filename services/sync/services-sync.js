@@ -17,6 +17,7 @@ pref("services.sync.scheduler.idleTime",             300);   // 5 minutes
 
 pref("services.sync.errorhandler.networkFailureReportTimeout", 604800); // 1 week
 
+pref("services.sync.engine.addons", true);
 pref("services.sync.engine.bookmarks", true);
 pref("services.sync.engine.history", true);
 pref("services.sync.engine.passwords", true);
