@@ -515,14 +515,21 @@ public:
     return *this;
   }
 
-  // @return The amount of memory taken used by this nsTArray, not including
+  // @return The amount of memory used by this nsTArray, excluding
   // sizeof(*this).
-  size_t SizeOf() const {
+  size_t SizeOfExcludingThis(nsMallocSizeOfFun mallocSizeOf) const {
     if (this->UsesAutoArrayBuffer() || Hdr() == EmptyHdr())
       return 0;
-    size_t usable = moz_malloc_usable_size(this->Hdr());
-    return usable ? usable : 
-      this->Capacity() * sizeof(elem_type) + sizeof(*this->Hdr());
+    return mallocSizeOf(this->Hdr(), 
+                        sizeof(nsTArrayHeader) +
+                        this->Capacity() * sizeof(elem_type));
+  }
+
+  // @return The amount of memory used by this nsTArray, including
+  // sizeof(*this).
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf) const {
+    return mallocSizeOf(this, sizeof(nsTArray)) +
+           SizeOfExcludingThis(mallocSizeOf);
   }
 
   //
