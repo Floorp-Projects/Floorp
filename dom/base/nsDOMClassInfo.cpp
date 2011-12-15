@@ -514,6 +514,7 @@
 #include "nsIDOMSmsManager.h"
 #include "nsIDOMSmsMessage.h"
 #include "nsIDOMSmsEvent.h"
+#include "nsIPrivateDOMEvent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1574,6 +1575,25 @@ static const nsContractIDMapData kConstructorMap[] =
   NS_DEFINE_CONSTRUCTOR_DATA(EventSource, NS_EVENTSOURCE_CONTRACTID)
 };
 
+#define NS_DEFINE_EVENT_CTOR(_class)                        \
+  nsresult                                                  \
+  NS_DOM##_class##Ctor(nsISupports** aInstancePtrResult)    \
+  {                                                         \
+    nsIDOMEvent* e = nsnull;                                \
+    nsresult rv = NS_NewDOM##_class(&e, nsnull, nsnull);    \
+    *aInstancePtrResult = e;                                \
+    return rv;                                              \
+  }
+
+NS_DEFINE_EVENT_CTOR(Event)
+NS_DEFINE_EVENT_CTOR(CustomEvent)
+NS_DEFINE_EVENT_CTOR(PopStateEvent)
+NS_DEFINE_EVENT_CTOR(HashChangeEvent)
+NS_DEFINE_EVENT_CTOR(PageTransitionEvent)
+NS_DEFINE_EVENT_CTOR(CloseEvent)
+NS_DEFINE_EVENT_CTOR(UIEvent)
+NS_DEFINE_EVENT_CTOR(MouseEvent)
+
 struct nsConstructorFuncMapData
 {
   PRInt32 mDOMClassInfoID;
@@ -1583,10 +1603,21 @@ struct nsConstructorFuncMapData
 #define NS_DEFINE_CONSTRUCTOR_FUNC_DATA(_class, _func)                        \
   { eDOMClassInfo_##_class##_id, _func },
 
+#define NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(_class)   \
+  { eDOMClassInfo_##_class##_id, NS_DOM##_class##Ctor },
+
 static const nsConstructorFuncMapData kConstructorFuncMap[] =
 {
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(File, nsDOMFileFile::NewFile)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozBlobBuilder, NS_NewBlobBuilder)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(Event)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(CustomEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(PopStateEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(HashChangeEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(PageTransitionEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(CloseEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(UIEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MouseEvent)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
