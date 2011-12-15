@@ -32,8 +32,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369370
         is(elements.length, 1, "looking for imagedoc img");
         var img = elements[0];
 
-        is(kidDoc.documentElement.clientWidth,  400, "Checking doc width");
-        is(kidDoc.documentElement.clientHeight, 300, "Checking doc height");
+        // Need to use innerWidth/innerHeight of the window
+        // since the containing image is absolutely positioned,
+        // causing clientHeight to be zero.
+        is(kidWin.innerWidth, 400, "Checking doc width");
+        is(kidWin.innerHeight, 300, "Checking doc height");
 
         // Image just loaded and is scaled to window size.
         is(img.width,  378, "image width");
@@ -71,8 +74,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369370
 
         is(img.width,  800, "image width");
         is(img.height, 600, "image height");
-        is(kidDoc.body.scrollLeft,  408, "Checking scrollLeft");
-        is(kidDoc.body.scrollTop,   316, "Checking scrollTop");
+        is(kidDoc.body.scrollLeft,  400, "Checking scrollLeft");
+        is(kidDoc.body.scrollTop,   300, "Checking scrollTop");
 
         // ========== test 4 ==========
         // Click there again to zoom out
