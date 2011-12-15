@@ -61,7 +61,6 @@ CompositorParent::AnswerInit()
 {
   CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::Composite);
   MessageLoop::current()->PostTask(FROM_HERE, composeTask);
-  printf("init\n");
   return true;
 }
 
@@ -71,11 +70,9 @@ CompositorParent::Composite()
   CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::Composite);
   MessageLoop::current()->PostTask(FROM_HERE, composeTask);
 
-  printf("enter compose\n");
   if (!mLayerManager)
     return;
 
-  printf("Compose\n");
   mLayerManager->EndEmptyTransaction();
 
 }

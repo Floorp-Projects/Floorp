@@ -171,8 +171,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 
 - (void)processPendingRedraws;
 
-- (void*)getGLContextPtr;
-
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
 
 // Called using performSelector:withObject:afterDelay:0 to release
@@ -532,10 +530,6 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
 #endif
       retVal = (void*)&mPluginCGContext;
       break;
-    }
-    case NS_NATIVE_OPENGL_VIEW_PTR:
-    {
-      retVal = [(ChildView*)mView getGLContextPtr];
     }
   }
 
@@ -2116,11 +2110,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-- (void*)getGLContextPtr
-{
-  return &mGLContext;
-}
-
 - (void)setGLContext:(NSOpenGLContext *)aGLContext
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -2579,14 +2568,22 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 #endif
 
-  printf("widget ref %p\n", mGeckoChild->GetLayerManager(nsnull)->AsShadowManager());
   LayerManager *layerManager = mGeckoChild->GetLayerManager(nsnull);
-  if (layerManager->GetBackendType() == LayerManager::LAYERS_OPENGL) {
-    LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(layerManager);
-    manager->SetClippingRegion(paintEvent.region);
+  if (layerManager->GetBackendType() == LayerManager::LAYERS_OPENGL ||
+      (layerManager->AsShadowManager() &&
+             layerManager->GetUserData(&compositor::sShadowNativeContext))) {
+    NSOpenGLContext *glContext;
+    if (layerManager->GetBackendType() == LayerManager::LAYERS_OPENGL) {
+      LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(layerManager);
+      manager->SetClippingRegion(paintEvent.region);
+      glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
+    } else {
+      ShadowNativeContextUserData *userData =
+        (ShadowNativeContextUserData*)layerManager->GetUserData(&compositor::sShadowNativeContext);
+      glContext = (NSOpenGLContext*)userData->GetNativeContext();
+    }
+
     if (!mGLContext) {
-      NSOpenGLContext *glContext =
-          (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
       [self setGLContext:glContext];
     }
     mGeckoChild->DispatchWindowEvent(paintEvent);
@@ -2599,23 +2596,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     }
 
     return;
-  } else if (layerManager->AsShadowManager() &&
-             layerManager->GetUserData(&compositor::sShadowNativeContext)) {
-    if (!mGLContext) {
-      ShadowNativeContextUserData *userData =
-        (ShadowNativeContextUserData*)layerManager->GetUserData(&compositor::sShadowNativeContext);
-      NSOpenGLContext *glContext = (NSOpenGLContext*)userData->GetNativeContext();
-      [self setGLContext:glContext];
-      printf("Set context\n");
-    }
-    mGeckoChild->DispatchWindowEvent(paintEvent);
-
-    // Force OpenGL to refresh the very first time we draw. This works around a
-    // Mac OS X bug that stops windows updating on OS X when we use OpenGL.
-    if (!mDidForceRefreshOpenGL) {
-      [self performSelector:@selector(forceRefreshOpenGL) withObject:nil afterDelay:0];
-      mDidForceRefreshOpenGL = YES;
-    }
   }
 
   // Create Cairo objects.

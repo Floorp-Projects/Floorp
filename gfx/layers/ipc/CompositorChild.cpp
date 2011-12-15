@@ -90,7 +90,6 @@ CompositorChild::CreateCompositor(LayerManager *aLayerManager)
 bool
 CompositorChild::RecvNativeContextCreated(const NativeContext &aNativeContext)
 {
-  printf("Got native context for %p\n", mLayerManager->AsShadowManager());
   void *nativeContext = (void*)aNativeContext.nativeContext();
   ShadowNativeContextUserData *userData = new ShadowNativeContextUserData(nativeContext);
   mLayerManager->AsShadowManager()->SetUserData(&sShadowNativeContext, userData);
