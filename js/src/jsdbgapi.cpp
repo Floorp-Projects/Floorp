@@ -861,15 +861,6 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
     }
     pd->alias = JSVAL_VOID;
 
-    if (obj->containsSlot(shape->slot())) {
-        for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {
-            const Shape &aprop = r.front();
-            if (&aprop != shape && aprop.slot() == shape->slot()) {
-                pd->alias = IdToJsval(aprop.propid());
-                break;
-            }
-        }
-    }
     return JS_TRUE;
 }
 
