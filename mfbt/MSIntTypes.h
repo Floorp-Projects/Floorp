@@ -40,7 +40,7 @@
 #pragma once
 #endif
 
-#include "stdint.h"
+#include <stdint.h>
 
 // 7.8 Format conversion of integer types
 
@@ -151,115 +151,8 @@ typedef struct {
 #define PRIxPTR     "Ix"
 #define PRIXPTR     "IX"
 
-// The fscanf macros for signed integers are:
-#define SCNd8       "d"
-#define SCNi8       "i"
-#define SCNdLEAST8  "d"
-#define SCNiLEAST8  "i"
-#define SCNdFAST8   "d"
-#define SCNiFAST8   "i"
-
-#define SCNd16       "hd"
-#define SCNi16       "hi"
-#define SCNdLEAST16  "hd"
-#define SCNiLEAST16  "hi"
-#define SCNdFAST16   "hd"
-#define SCNiFAST16   "hi"
-
-#define SCNd32       "ld"
-#define SCNi32       "li"
-#define SCNdLEAST32  "ld"
-#define SCNiLEAST32  "li"
-#define SCNdFAST32   "ld"
-#define SCNiFAST32   "li"
-
-#define SCNd64       "I64d"
-#define SCNi64       "I64i"
-#define SCNdLEAST64  "I64d"
-#define SCNiLEAST64  "I64i"
-#define SCNdFAST64   "I64d"
-#define SCNiFAST64   "I64i"
-
-#define SCNdMAX     "I64d"
-#define SCNiMAX     "I64i"
-
-#ifdef _WIN64 // [
-#  define SCNdPTR     "I64d"
-#  define SCNiPTR     "I64i"
-#else  // _WIN64 ][
-#  define SCNdPTR     "ld"
-#  define SCNiPTR     "li"
-#endif  // _WIN64 ]
-
-// The fscanf macros for unsigned integers are:
-#define SCNo8       "o"
-#define SCNu8       "u"
-#define SCNx8       "x"
-#define SCNX8       "X"
-#define SCNoLEAST8  "o"
-#define SCNuLEAST8  "u"
-#define SCNxLEAST8  "x"
-#define SCNXLEAST8  "X"
-#define SCNoFAST8   "o"
-#define SCNuFAST8   "u"
-#define SCNxFAST8   "x"
-#define SCNXFAST8   "X"
-
-#define SCNo16       "ho"
-#define SCNu16       "hu"
-#define SCNx16       "hx"
-#define SCNX16       "hX"
-#define SCNoLEAST16  "ho"
-#define SCNuLEAST16  "hu"
-#define SCNxLEAST16  "hx"
-#define SCNXLEAST16  "hX"
-#define SCNoFAST16   "ho"
-#define SCNuFAST16   "hu"
-#define SCNxFAST16   "hx"
-#define SCNXFAST16   "hX"
-
-#define SCNo32       "lo"
-#define SCNu32       "lu"
-#define SCNx32       "lx"
-#define SCNX32       "lX"
-#define SCNoLEAST32  "lo"
-#define SCNuLEAST32  "lu"
-#define SCNxLEAST32  "lx"
-#define SCNXLEAST32  "lX"
-#define SCNoFAST32   "lo"
-#define SCNuFAST32   "lu"
-#define SCNxFAST32   "lx"
-#define SCNXFAST32   "lX"
-
-#define SCNo64       "I64o"
-#define SCNu64       "I64u"
-#define SCNx64       "I64x"
-#define SCNX64       "I64X"
-#define SCNoLEAST64  "I64o"
-#define SCNuLEAST64  "I64u"
-#define SCNxLEAST64  "I64x"
-#define SCNXLEAST64  "I64X"
-#define SCNoFAST64   "I64o"
-#define SCNuFAST64   "I64u"
-#define SCNxFAST64   "I64x"
-#define SCNXFAST64   "I64X"
-
-#define SCNoMAX     "I64o"
-#define SCNuMAX     "I64u"
-#define SCNxMAX     "I64x"
-#define SCNXMAX     "I64X"
-
-#ifdef _WIN64 // [
-#  define SCNoPTR     "I64o"
-#  define SCNuPTR     "I64u"
-#  define SCNxPTR     "I64x"
-#  define SCNXPTR     "I64X"
-#else  // _WIN64 ][
-#  define SCNoPTR     "lo"
-#  define SCNuPTR     "lu"
-#  define SCNxPTR     "lx"
-#  define SCNXPTR     "lX"
-#endif  // _WIN64 ]
+// DO NOT SUPPORT THE scanf MACROS!  See the comment at the top of
+// IntegerPrintfMacros.h.
 
 #endif // __STDC_FORMAT_MACROS ]
 
