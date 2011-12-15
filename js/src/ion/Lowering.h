@@ -141,6 +141,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitLoadElement(MLoadElement *ins);
     bool visitStoreElement(MStoreElement *ins);
     bool visitGuardClass(MGuardClass *ins);
+    bool visitLoadProperty(MLoadProperty *ins);
 };
 
 } // namespace ion

@@ -3130,7 +3130,7 @@ BEGIN_CASE(JSOP_LENGTH)
                                     ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                                     : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
                                     &rval)
-            : !obj->getGeneric(cx, id, &rval))
+            : !GetProperty(cx, obj, atom, &rval))
         {
             goto error;
         }
@@ -5627,4 +5627,10 @@ js::NewInitArray(JSContext *cx, uint32 count, types::TypeObject *type)
         return NULL;
     obj->setType(type);
     return obj;
+}
+
+bool
+js::GetProperty(JSContext *cx, JSObject *obj, JSAtom *atom, Value *property)
+{
+    return obj->getGeneric(cx, ATOM_TO_JSID(atom), property);
 }

@@ -112,12 +112,9 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     // The following functions are exposed for use in platform-shared code.
-    void Push(const Register &reg) {
-        push(reg);
-        framePushed_ += STACK_SLOT_SIZE;
-    }
-    void Push(const Imm32 imm) {
-        push(imm);
+    template <typename T>
+    void Push(const T &t) {
+        push(t);
         framePushed_ += STACK_SLOT_SIZE;
     }
     void implicitPop(uint32 args) {

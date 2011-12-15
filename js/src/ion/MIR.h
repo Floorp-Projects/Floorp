@@ -2039,6 +2039,37 @@ class MStoreSlot
     }
 };
 
+// Load from vp[slot] (slots that are not inline in an object).
+class MLoadProperty
+  : public MUnaryInstruction,
+    public ObjectPolicy
+{
+    JSAtom *atom_;
+
+  public:
+    MLoadProperty(MDefinition *obj, JSAtom *atom)
+      : MUnaryInstruction(obj),
+        atom_(atom)
+    {
+        setResultType(MIRType_Value);
+    }
+
+    INSTRUCTION_HEADER(LoadProperty);
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *obj() const {
+        return getOperand(0);
+    }
+    JSAtom *atom() const {
+        return atom_;
+    }
+    bool congruentTo(MDefinition * const &) const {
+        return false;
+    }
+};
+
 // Given a value, guard that the value is in a particular TypeSet, then returns
 // that value.
 class MTypeBarrier : public MUnaryInstruction

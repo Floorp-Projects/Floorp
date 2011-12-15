@@ -315,6 +315,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void loadPtr(const Address &address, Register dest) {
         movl(Operand(address), dest);
     }
+
     void setStackArg(const Register &reg, uint32 arg) {
         movl(reg, Operand(esp, arg * STACK_SLOT_SIZE));
     }

@@ -282,6 +282,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void loadPtr(const Address &address, Register dest) {
         movq(Operand(address), dest);
     }
+
     void setStackArg(const Register &reg, uint32 arg) {
         uint32 disp = GetArgStackDisp(arg);
         movq(reg, Operand(rsp, disp));
