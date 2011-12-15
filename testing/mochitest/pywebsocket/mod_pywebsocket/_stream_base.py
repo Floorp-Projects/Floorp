@@ -43,10 +43,13 @@ from mod_pywebsocket import util
 
 
 # Exceptions
+
+
 class ConnectionTerminatedException(Exception):
     """This exception will be raised when a connection is terminated
     unexpectedly.
     """
+
     pass
 
 
@@ -54,22 +57,33 @@ class InvalidFrameException(ConnectionTerminatedException):
     """This exception will be raised when we received an invalid frame we
     cannot parse.
     """
+
     pass
 
 
-class BadOperationException(RuntimeError):
+class BadOperationException(Exception):
     """This exception will be raised when send_message() is called on
     server-terminated connection or receive_message() is called on
     client-terminated connection.
     """
+
     pass
 
 
-class UnsupportedFrameException(RuntimeError):
+class UnsupportedFrameException(Exception):
     """This exception will be raised when we receive a frame with flag, opcode
     we cannot handle. Handlers can just catch and ignore this exception and
     call receive_message() again to continue processing the next frame.
     """
+
+    pass
+
+
+class InvalidUTF8Exception(Exception):
+    """This exception will be raised when we receive a text frame which
+    contains invalid UTF-8 strings.
+    """
+
     pass
 
 
@@ -97,6 +111,13 @@ class StreamBase(object):
 
         bytes = self._request.connection.read(length)
         if not bytes:
+            # MOZILLA: Patrick McManus found we needed this for Python 2.5 to
+            # work.  Not sure which tests he meant: I found that
+            # content/base/test/test_websocket* all worked fine with 2.5 with
+            # the original Google code. JDuell
+            #raise ConnectionTerminatedException(
+            #    'Receiving %d byte failed. Peer (%r) closed connection' %
+            #    (length, (self._request.connection.remote_addr,)))
             raise ConnectionTerminatedException('connection terminated: read failed')
         return bytes
 
@@ -128,12 +149,6 @@ class StreamBase(object):
             bytes.append(new_bytes)
             length -= len(new_bytes)
         return ''.join(bytes)
-
-    def flushread(self):
-        try:
-          self._request.connection.flushread()
-        except:
-          pass
 
     def _read_until(self, delim_char):
         """Reads bytes until we encounter delim_char. The result will not
