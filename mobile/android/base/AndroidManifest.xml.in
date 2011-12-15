@@ -140,13 +140,13 @@
                   android:label="@string/preferences_title"
                   android:excludeFromRecents="true"/>
 
-        <provider android:name="org.mozilla.gecko.db.BrowserProvider"
-                  android:authorities="org.mozilla.gecko.providers.browser"
-                  android:permission="org.mozilla.gecko.permissions.BROWSER_PROVIDER"/>
+        <provider android:name="@ANDROID_PACKAGE_NAME@.db.BrowserProvider"
+                  android:authorities="@ANDROID_PACKAGE_NAME@.db.browser"
+                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 
     </application>
 
-    <permission android:name="org.mozilla.gecko.permissions.BROWSER_PROVIDER"
+    <permission android:name="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"
                 android:protectionLevel="signature"/>
 
 </manifest> 

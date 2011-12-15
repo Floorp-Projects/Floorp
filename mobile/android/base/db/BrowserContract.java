@@ -54,11 +54,11 @@ public class BrowserContract {
 
     public static final String PARAM_SHOW_DELETED = "show_deleted";
 
-    interface CommonColumns {
+    public interface CommonColumns {
         public static final String _ID = "_id";
     }
 
-    interface SyncColumns {
+    public interface SyncColumns {
         public static final String GUID = "guid";
 
         public static final String DATE_CREATED = "created";
@@ -68,13 +68,13 @@ public class BrowserContract {
         public static final String IS_DELETED = "deleted";
     }
 
-    interface URLColumns {
+    public interface URLColumns {
         public static final String URL = "url";
 
         public static final String TITLE = "title";
     }
 
-    interface ImageColumns {
+    public interface ImageColumns {
         public static final String FAVICON = "favicon";
 
         public static final String THUMBNAIL = "thumbnail";
