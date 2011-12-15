@@ -67,7 +67,7 @@ public:
   ~nsJSScriptTimeoutHandler();
 
   virtual const PRUnichar *GetHandlerText();
-  virtual void *GetScriptObject() {
+  virtual JSObject *GetScriptObject() {
     return mFunObj;
   }
   virtual void GetLocation(const char **aFileName, PRUint32 *aLineNo) {
