@@ -38,6 +38,8 @@
 
 #include "mozilla/Util.h"
 
+#include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/CompositorParent.h"
 #include "nsBaseWidget.h"
 #include "nsDeviceContext.h"
 #include "nsCOMPtr.h"
@@ -55,9 +57,6 @@
 #include "nsIXULRuntime.h"
 #include "nsIGfxInfo.h"
 #include "npapi.h"
-#include "base/thread.h"
-#include "mozilla/layers/CompositorChild.h"
-#include "mozilla/layers/CompositorParent.h"
 
 
 #ifdef DEBUG
@@ -74,7 +73,6 @@ static PRInt32 gNumWidgets;
 
 using namespace mozilla::layers;
 using namespace mozilla;
-using namespace base;
 
 nsIContent* nsBaseWidget::mLastRollup = nsnull;
 
@@ -849,19 +847,19 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
       bool useCompositor =
         Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
       if (useCompositor) {
-        CompositorChild *compositorChild = CompositorChild::CreateCompositor();
+        LayerManager* lm = CreateBasicLayerManager();
+        CompositorChild *compositorChild = CompositorChild::CreateCompositor(lm);
 
         if (compositorChild) {
           // e10s uses the parameter to pass in the shadow manager from the TabChild
           // so we don't expect to see it there since this doesn't support e10s.
           NS_ASSERTION(aShadowManager == NULL, "Async Compositor not supported with e10s");
-          WidgetDescriptor desc = MacChildViewWidget((uintptr_t)dynamic_cast<nsIWidget*>(this));
+          WidgetDescriptor desc = ViewWidget((uintptr_t)dynamic_cast<nsIWidget*>(this));
           PLayersChild* shadowManager = compositorChild->SendPLayersConstructor(
                                           LayerManager::LAYERS_OPENGL,
                                           desc);
 
           if (shadowManager) {
-            LayerManager* lm = CreateBasicLayerManager();
             ShadowLayerForwarder* lf = lm->AsShadowForwarder();
             if (!lf) {
               delete lm;

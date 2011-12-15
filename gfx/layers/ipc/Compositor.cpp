@@ -1,12 +1,11 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=8 et :
- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=2 et tw=80 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at:
+ * the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -14,10 +13,10 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Code.
+ * The Original Code is Mozilla Content App.
  *
  * The Initial Developer of the Original Code is
- *   The Mozilla Foundation
+ *   The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
@@ -38,52 +37,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PLayers;
+#ifndef mozilla_layers_Compositor_h
+#define mozilla_layers_Compositor_h
 
-using mozilla::LayersBackend;
-using mozilla::null_t;
+#include "Compositor.h"
+#include "CompositorChild.h"
+#include "nsDebug.h"
+
+class CompositorChild;
 
 namespace mozilla {
 namespace layers {
+namespace compositor {
 
-// The Compositor needs to know about the widget to initialize the LayerManager.
-struct ViewWidget {
-  uintptr_t widgetPtr;
-};
+int sShadowNativeContext = 0;
 
-// Gives platform specific information about the widget to initialize the LayerManager.
-union WidgetDescriptor {
-  ViewWidget;
-  null_t;
-};
+}
+}
+}
+#endif
 
-// Cocoa: The widget needs to have access to the native context for resizing
-struct NativeContext {
-  uintptr_t nativeContext;
-};
-
-/**
- * The PCompositor protocol is used to manage communication between
- * the main thread and the compositor thread context. It's primary
- * purpose is to manage the PLayers sub protocol.
- */
-rpc protocol PCompositor
-{
-  // Compositor can manage many Layer Manager (PLayers)
-  manages PLayers;
-
-parent:  
-
-  rpc Init();
-  async PLayers(LayersBackend backend, WidgetDescriptor widgetDescriptor);
-
-child:
-
-  // We create the LayerManager async thus we need to notify
-  // content that we have a native context to attach to the widget.
-  async NativeContextCreated(NativeContext aNativeContext);
-
-};
-
-} // layers
-} // mozilla

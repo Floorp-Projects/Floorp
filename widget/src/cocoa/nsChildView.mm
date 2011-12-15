@@ -43,6 +43,8 @@
 
 #include "mozilla/Util.h"
 
+#include "mozilla/layers/Compositor.h"
+
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
 #endif
@@ -94,13 +96,13 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 
-extern NSOpenGLContext* nsGLContext;
-
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
 using namespace mozilla::widget;
 using namespace mozilla;
+
+using compositor::ShadowNativeContextUserData;
 
 #undef DEBUG_UPDATE
 #undef INVALIDATE_DEBUGGING  // flash areas as they are invalidated
@@ -168,6 +170,8 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 - (BOOL)isRectObscuredBySubview:(NSRect)inRect;
 
 - (void)processPendingRedraws;
+
+- (void*)getGLContextPtr;
 
 - (void)drawRect:(NSRect)aRect inContext:(CGContextRef)aContext;
 
@@ -528,6 +532,10 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
 #endif
       retVal = (void*)&mPluginCGContext;
       break;
+    }
+    case NS_NATIVE_OPENGL_VIEW_PTR:
+    {
+      retVal = [(ChildView*)mView getGLContextPtr];
     }
   }
 
@@ -2108,6 +2116,21 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+- (void*)getGLContextPtr
+{
+  return &mGLContext;
+}
+
+- (void)setGLContext:(NSOpenGLContext *)aGLContext
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  mGLContext = aGLContext;
+  [mGLContext retain];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 - (void)dealloc
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -2556,40 +2579,43 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 #endif
 
-  if (mGeckoChild->GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_OPENGL ||
-      mGeckoChild->GetLayerManager(nsnull)->AsShadowManager() != NULL) {
-    //LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(mGeckoChild->GetLayerManager(nsnull));
-    //manager->SetClippingRegion(paintEvent.region);
+  printf("widget ref %p\n", mGeckoChild->GetLayerManager(nsnull)->AsShadowManager());
+  LayerManager *layerManager = mGeckoChild->GetLayerManager(nsnull);
+  if (layerManager->GetBackendType() == LayerManager::LAYERS_OPENGL) {
+    LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(layerManager);
+    manager->SetClippingRegion(paintEvent.region);
     if (!mGLContext) {
-      //mGLContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
-      mGLContext = nsGLContext;
-      [mGLContext retain];
+      NSOpenGLContext *glContext =
+          (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
+      [self setGLContext:glContext];
     }
     mGeckoChild->DispatchWindowEvent(paintEvent);
 
     // Force OpenGL to refresh the very first time we draw. This works around a
     // Mac OS X bug that stops windows updating on OS X when we use OpenGL.
     if (!mDidForceRefreshOpenGL) {
-  // Create Cairo objects.
-  NSSize bufferSize = [self bounds].size;
-  nsRefPtr<gfxQuartzSurface> targetSurface =
-    new gfxQuartzSurface(aContext, gfxSize(bufferSize.width, bufferSize.height));
-  targetSurface->SetAllowUseAsSource(false);
-
-  nsRefPtr<gfxContext> targetContext = new gfxContext(targetSurface);
-
-  nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  bool painted;
-  {
-    nsBaseWidget::AutoLayerManagerSetup *setupLayerManager = new nsBaseWidget::AutoLayerManagerSetup(mGeckoChild, targetContext, BasicLayerManager::BUFFER_NONE);
-    painted = mGeckoChild->DispatchWindowEvent(paintEvent);
-  }
-
       [self performSelector:@selector(forceRefreshOpenGL) withObject:nil afterDelay:0];
       mDidForceRefreshOpenGL = YES;
     }
 
     return;
+  } else if (layerManager->AsShadowManager() &&
+             layerManager->GetUserData(&compositor::sShadowNativeContext)) {
+    if (!mGLContext) {
+      ShadowNativeContextUserData *userData =
+        (ShadowNativeContextUserData*)layerManager->GetUserData(&compositor::sShadowNativeContext);
+      NSOpenGLContext *glContext = (NSOpenGLContext*)userData->GetNativeContext();
+      [self setGLContext:glContext];
+      printf("Set context\n");
+    }
+    mGeckoChild->DispatchWindowEvent(paintEvent);
+
+    // Force OpenGL to refresh the very first time we draw. This works around a
+    // Mac OS X bug that stops windows updating on OS X when we use OpenGL.
+    if (!mDidForceRefreshOpenGL) {
+      [self performSelector:@selector(forceRefreshOpenGL) withObject:nil afterDelay:0];
+      mDidForceRefreshOpenGL = YES;
+    }
   }
 
   // Create Cairo objects.

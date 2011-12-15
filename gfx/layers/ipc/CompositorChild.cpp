@@ -39,18 +39,21 @@
 
 #include "CompositorChild.h"
 #include "CompositorParent.h"
+#include "Compositor.h"
+#include "LayerManagerOGL.h"
 #include "mozilla/layers/ShadowLayersChild.h"
 #include "base/thread.h"
 
 using mozilla::layers::ShadowLayersChild;
+using namespace mozilla::layers::compositor;
 
 namespace mozilla {
 namespace layers {
 
-CompositorChild::CompositorChild(Thread *aCompositorThread)
+CompositorChild::CompositorChild(Thread *aCompositorThread, LayerManager *aLayerManager)
   : mCompositorThread(aCompositorThread)
+  , mLayerManager(aLayerManager)
 {
-
   MOZ_COUNT_CTOR(CompositorChild);
 }
 
@@ -60,14 +63,14 @@ CompositorChild::~CompositorChild()
 }
 
 CompositorChild*
-CompositorChild::CreateCompositor()
+CompositorChild::CreateCompositor(LayerManager *aLayerManager)
 {
   Thread* compositorThread = new Thread("CompositorThread");
   if (compositorThread->Start()) {
     MessageLoop *parentMessageLoop = MessageLoop::current();
     MessageLoop *childMessageLoop = compositorThread->message_loop();
     CompositorParent *compositorParent = new CompositorParent();
-    CompositorChild *compositorChild = new CompositorChild(compositorThread);
+    CompositorChild *compositorChild = new CompositorChild(compositorThread, aLayerManager);
     mozilla::ipc::AsyncChannel *parentChannel =
       compositorParent->GetIPCChannel();
     mozilla::ipc::AsyncChannel *childChannel =
@@ -77,16 +80,27 @@ CompositorChild::CreateCompositor()
 
     compositorChild->Open(parentChannel, childMessageLoop, childSide);
     compositorChild->CallInit();
+
     return compositorChild;
   }
 
   return NULL;
 }
 
+bool
+CompositorChild::RecvNativeContextCreated(const NativeContext &aNativeContext)
+{
+  printf("Got native context for %p\n", mLayerManager->AsShadowManager());
+  void *nativeContext = (void*)aNativeContext.nativeContext();
+  ShadowNativeContextUserData *userData = new ShadowNativeContextUserData(nativeContext);
+  mLayerManager->AsShadowManager()->SetUserData(&sShadowNativeContext, userData);
+  return true;
+}
+
 PLayersChild*
 CompositorChild::AllocPLayers(const LayersBackend &backend, const WidgetDescriptor &widget)
 {
-  return new ShadowLayersChild();
+  return new ShadowLayersChild();;
 }
 
 bool
