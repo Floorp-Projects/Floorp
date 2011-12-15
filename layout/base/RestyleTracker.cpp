@@ -166,7 +166,7 @@ RestyleTracker::ProcessOneRestyle(Element* aElement,
 }
 
 void
-RestyleTracker::ProcessRestyles()
+RestyleTracker::DoProcessRestyles()
 {
   SAMPLE_LABEL("CSS", "ProcessRestyles");
   // Make sure to not rebuild quote or counter lists while we're

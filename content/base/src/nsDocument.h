@@ -1187,6 +1187,10 @@ protected:
   // Whether we are currently in full-screen mode, as per the DOM API.
   bool mIsFullScreen:1;
 
+  // Whether we're currently under a FlushPendingNotifications call to
+  // our presshell.  This is used to handle flush reentry correctly.
+  bool mInFlush:1;
+
   PRUint8 mXMLDeclarationBits;
 
   nsInterfaceHashtable<nsVoidPtrHashKey, nsPIBoxObject> *mBoxObjectTable;
