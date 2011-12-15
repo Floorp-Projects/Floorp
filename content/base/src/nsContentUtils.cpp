@@ -2785,21 +2785,29 @@ nsresult nsContentUtils::FormatLocalizedString(PropertiesFile aFile,
 }
 
 /* static */ nsresult
-nsContentUtils::ReportToConsole(PropertiesFile aFile,
+nsContentUtils::ReportToConsole(PRUint32 aErrorFlags,
+                                const char *aCategory,
+                                nsIDocument* aDocument,
+                                PropertiesFile aFile,
                                 const char *aMessageName,
                                 const PRUnichar **aParams,
                                 PRUint32 aParamsLength,
                                 nsIURI* aURI,
                                 const nsAFlatString& aSourceLine,
                                 PRUint32 aLineNumber,
-                                PRUint32 aColumnNumber,
-                                PRUint32 aErrorFlags,
-                                const char *aCategory,
-                                PRUint64 aInnerWindowId)
+                                PRUint32 aColumnNumber)
 {
   NS_ASSERTION((aParams && aParamsLength) || (!aParams && !aParamsLength),
                "Supply either both parameters and their number or no"
                "parameters and 0.");
+
+  PRUint64 innerWindowID = 0;
+  if (aDocument) {
+    if (!aURI) {
+      aURI = aDocument->GetDocumentURI();
+    }
+    innerWindowID = aDocument->InnerWindowID();
+  }
 
   nsresult rv;
   if (!sConsoleService) { // only need to bother null-checking here
@@ -2830,38 +2838,11 @@ nsContentUtils::ReportToConsole(PropertiesFile aFile,
                                      aSourceLine.get(),
                                      aLineNumber, aColumnNumber,
                                      aErrorFlags, aCategory,
-                                     aInnerWindowId);
+                                     innerWindowID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIScriptError> logError = do_QueryInterface(errorObject);
   return sConsoleService->LogMessage(logError);
-}
-
-/* static */ nsresult
-nsContentUtils::ReportToConsole(PropertiesFile aFile,
-                                const char *aMessageName,
-                                const PRUnichar **aParams,
-                                PRUint32 aParamsLength,
-                                nsIURI* aURI,
-                                const nsAFlatString& aSourceLine,
-                                PRUint32 aLineNumber,
-                                PRUint32 aColumnNumber,
-                                PRUint32 aErrorFlags,
-                                const char *aCategory,
-                                nsIDocument* aDocument)
-{
-  nsIURI* uri = aURI;
-  PRUint64 innerWindowID = 0;
-  if (aDocument) {
-    if (!uri) {
-      uri = aDocument->GetDocumentURI();
-    }
-    innerWindowID = aDocument->InnerWindowID();
-  }
-
-  return ReportToConsole(aFile, aMessageName, aParams, aParamsLength, uri,
-                         aSourceLine, aLineNumber, aColumnNumber, aErrorFlags,
-                         aCategory, innerWindowID);
 }
 
 bool

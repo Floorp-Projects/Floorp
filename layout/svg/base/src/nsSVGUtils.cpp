@@ -390,13 +390,11 @@ nsSVGUtils::ReportToConsole(nsIDocument* doc,
                             const PRUnichar **aParams,
                             PRUint32 aParamsLength)
 {
-  return nsContentUtils::ReportToConsole(nsContentUtils::eSVG_PROPERTIES,
+  return nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                         "SVG", doc,
+                                         nsContentUtils::eSVG_PROPERTIES,
                                          aWarning,
-                                         aParams, aParamsLength,
-                                         nsnull,
-                                         EmptyString(), 0, 0,
-                                         nsIScriptError::warningFlag,
-                                         "SVG", doc);
+                                         aParams, aParamsLength);
 }
 
 float
