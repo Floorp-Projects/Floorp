@@ -1172,19 +1172,17 @@ mjit::Compiler::jsop_setelem_dense()
 
         /*
          * The sync call below can potentially clobber key.reg() and slotsReg.
-         * We pin them to avoid this. Additionally, the WriteBarrier stub can
+         * So we save and restore them. Additionally, the WriteBarrier stub can
          * clobber both registers. The rejoin call will restore key.reg() but
-         * not slotsReg. So we save slotsReg in the frame and restore it after
-         * the stub call.
+         * not slotsReg. So we restore it again after the stub call.
          */
         stubcc.masm.storePtr(slotsReg, FrameAddress(offsetof(VMFrame, scratch)));
-        frame.pinReg(slotsReg);
         if (!key.isConstant())
-            frame.pinReg(key.reg());
+            stubcc.masm.push(key.reg());
         frame.sync(stubcc.masm, Uses(3));
         if (!key.isConstant())
-            frame.unpinReg(key.reg());
-        frame.unpinReg(slotsReg);
+            stubcc.masm.pop(key.reg());
+        stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, scratch)), slotsReg);
 
         if (key.isConstant())
             stubcc.masm.lea(Address(slotsReg, key.index() * sizeof(Value)), Registers::ArgReg1);
