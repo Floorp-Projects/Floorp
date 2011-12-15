@@ -457,7 +457,7 @@ GLContextProviderCGL::CreateForWindow(nsIWidget *aWidget)
                                                         context);
     if (!glContext->Init()) {
         return nsnull;
-    }    
+    }
 
     return glContext.forget();
 }
