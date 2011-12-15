@@ -237,6 +237,18 @@ WebappsRegistry.prototype = {
                                                     callbackID:  this.getCallbackId({ success: aSuccess, error: aError }) });
   },
 
+  enumerateAll: function(aSuccess, aError) {
+    if (this.hasPrivileges) {
+      this.mm.sendAsyncMessage("Webapps:EnumerateAll", { from: this._window.location.href,
+                                                    origin: this._getOrigin(this._window.location.href),
+                                                    oid: this._id,
+                                                    callbackID:  this.getCallbackId({ success: aSuccess, error: aError }) });
+    } else {
+      if (aError)
+        aError.handleEvent(new RegistryError(Ci.mozIDOMApplicationRegistryError.PERMISSION_DENIED));
+    }
+  },
+
   observe: function(aSubject, aTopic, aData) {
     let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
     if (wId == this.innerWindowID) {
