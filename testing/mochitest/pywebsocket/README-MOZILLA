@@ -1,0 +1,51 @@
+This pywebsocket code is mostly unchanged from the source at
+
+  svn checkout http://pywebsocket.googlecode.com/svn/trunk/ pywebsocket-read-only
+
+The current Mozilla code is based on
+
+  svnversion:  553 (AKA pywebsocket version='0.6b1')
+
+--------------------------------------------------------------------------------
+STEPS TO UPDATE MOZILLA TO NEWER PYWEBSOCKET VERSION
+--------------------------------------------------------------------------------
+- Get new pywebsocket checkout from googlecode (into, for instance, 'src')
+
+  svn checkout http://pywebsocket.googlecode.com/svn/trunk/ pywebsocket-read-only
+
+- Export a version w/o SVN files:
+
+    svn export src dist
+
+- rsync new version into our tree, deleting files that aren't needed any more
+  (NOTE: this will blow away this file!  hg revert it or keep a copy.)
+
+    rsync -r --delete dist/ $MOZ_SRC/testing/mochitest/pywebsocket
+
+- Manually move the 'standalone.py' file from the mmod_pywebsocket/ directory to
+  the parent directory (not sure why we moved it: probably no reason)
+
+- hg add/rm appropriate files, and add/remove them from _MOD_PYWEBSOCKET_FILES
+  and/or _HANDSHAKE_FILES in testing/mochitest/Makefile.am
+
+- Edit the _normalize_path() function in dispatch.py and MAKE SURE THIS LINE IS
+  COMMENTED OUT:
+
+    # MOZILLA: do not normalize away symlinks in mochitest
+    # path = os.path.realpath(path)
+
+- There's also some code in mod_pywebsocket/_stream_base.py that may or may not
+  need to change to support Python 2.5:
+
+    #raise ConnectionTerminatedException(
+    #    'Receiving %d byte failed. Peer (%r) closed connection' %
+    #    (length, (self._request.connection.remote_addr,)))
+    raise ConnectionTerminatedException('connection terminated: read failed')
+
+- Test and make sure the code works:
+
+    make mochitest-plain TEST_PATH=content/base/test/test_websocket.html
+
+- If this doesn't take a look at the pywebsocket server log,
+  $OBJDIR/_tests/testing/mochitest/websock.log
+

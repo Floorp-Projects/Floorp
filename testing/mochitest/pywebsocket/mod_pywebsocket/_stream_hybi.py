@@ -28,7 +28,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-"""Stream class for IETF HyBi 07 WebSocket protocol.
+"""Stream class for IETF HyBi latest WebSocket protocol.
 """
 
 
@@ -41,15 +41,24 @@ from mod_pywebsocket import util
 from mod_pywebsocket._stream_base import BadOperationException
 from mod_pywebsocket._stream_base import ConnectionTerminatedException
 from mod_pywebsocket._stream_base import InvalidFrameException
+from mod_pywebsocket._stream_base import InvalidUTF8Exception
 from mod_pywebsocket._stream_base import StreamBase
 from mod_pywebsocket._stream_base import UnsupportedFrameException
 
 
-def is_control_opcode(opcode):
-    return (opcode >> 3) == 1
-
-
 _NOOP_MASKER = util.NoopMasker()
+
+
+class Frame(object):
+
+    def __init__(self, fin=1, rsv1=0, rsv2=0, rsv3=0,
+                 opcode=None, payload=''):
+        self.fin = fin
+        self.rsv1 = rsv1
+        self.rsv2 = rsv2
+        self.rsv3 = rsv3
+        self.opcode = opcode
+        self.payload = payload
 
 
 # Helper functions made public to be used for writing unittests for WebSocket
@@ -121,29 +130,61 @@ def _build_frame(header, body, mask):
     return header + masking_nonce + masker.mask(body)
 
 
-def create_text_frame(message, opcode=common.OPCODE_TEXT, fin=1, mask=False):
+def _filter_and_format_frame_object(frame, mask, frame_filters):
+    for frame_filter in frame_filters:
+        frame_filter.filter(frame)
+
+    header = create_header(
+        frame.opcode, len(frame.payload), frame.fin,
+        frame.rsv1, frame.rsv2, frame.rsv3, mask)
+    return _build_frame(header, frame.payload, mask)
+
+
+def create_binary_frame(
+    message, opcode=common.OPCODE_BINARY, fin=1, mask=False, frame_filters=[]):
+    """Creates a simple binary frame with no extension, reserved bit."""
+
+    frame = Frame(fin=fin, opcode=opcode, payload=message)
+    return _filter_and_format_frame_object(frame, mask, frame_filters)
+
+
+def create_text_frame(
+    message, opcode=common.OPCODE_TEXT, fin=1, mask=False, frame_filters=[]):
     """Creates a simple text frame with no extension, reserved bit."""
 
     encoded_message = message.encode('utf-8')
-    header = create_header(opcode, len(encoded_message), fin, 0, 0, 0, mask)
-    return _build_frame(header, encoded_message, mask)
+    return create_binary_frame(encoded_message, opcode, fin, mask,
+                               frame_filters)
 
 
-class FragmentedTextFrameBuilder(object):
+class FragmentedFrameBuilder(object):
     """A stateful class to send a message as fragments."""
 
-    def __init__(self, mask):
+    def __init__(self, mask, frame_filters=[]):
         """Constructs an instance."""
 
         self._mask = mask
+        self._frame_filters = frame_filters
 
         self._started = False
 
-    def build(self, message, end):
+        # Hold opcode of the first frame in messages to verify types of other
+        # frames in the message are all the same.
+        self._opcode = common.OPCODE_TEXT
+
+    def build(self, message, end, binary):
+        if binary:
+            frame_type = common.OPCODE_BINARY
+        else:
+            frame_type = common.OPCODE_TEXT
         if self._started:
+            if self._opcode != frame_type:
+                raise ValueError('Message types are different in frames for '
+                                 'the same message')
             opcode = common.OPCODE_CONTINUATION
         else:
-            opcode = common.OPCODE_TEXT
+            opcode = frame_type
+            self._opcode = frame_type
 
         if end:
             self._started = False
@@ -152,22 +193,31 @@ class FragmentedTextFrameBuilder(object):
             self._started = True
             fin = 0
 
-        return create_text_frame(message, opcode, fin, self._mask)
+        if binary:
+            return create_binary_frame(
+                message, opcode, fin, self._mask, self._frame_filters)
+        else:
+            return create_text_frame(
+                message, opcode, fin, self._mask, self._frame_filters)
 
 
-def create_ping_frame(body, mask=False):
-    header = create_header(common.OPCODE_PING, len(body), 1, 0, 0, 0, mask)
-    return _build_frame(header, body, mask)
+def _create_control_frame(opcode, body, mask, frame_filters):
+    frame = Frame(opcode=opcode, payload=body)
+
+    return _filter_and_format_frame_object(frame, mask, frame_filters)
 
 
-def create_pong_frame(body, mask=False):
-    header = create_header(common.OPCODE_PONG, len(body), 1, 0, 0, 0, mask)
-    return _build_frame(header, body, mask)
+def create_ping_frame(body, mask=False, frame_filters=[]):
+    return _create_control_frame(common.OPCODE_PING, body, mask, frame_filters)
 
 
-def create_close_frame(body, mask=False):
-    header = create_header(common.OPCODE_CLOSE, len(body), 1, 0, 0, 0, mask)
-    return _build_frame(header, body, mask)
+def create_pong_frame(body, mask=False, frame_filters=[]):
+    return _create_control_frame(common.OPCODE_PONG, body, mask, frame_filters)
+
+
+def create_close_frame(body, mask=False, frame_filters=[]):
+    return _create_control_frame(
+        common.OPCODE_CLOSE, body, mask, frame_filters)
 
 
 class StreamOptions(object):
@@ -176,7 +226,13 @@ class StreamOptions(object):
     def __init__(self):
         """Constructs StreamOptions."""
 
-        self.deflate = False
+        # Enables deflate-stream extension.
+        self.deflate_stream = False
+
+        # Filters applied to frames.
+        self.outgoing_frame_filters = []
+        self.incoming_frame_filters = []
+
         self.mask_send = False
         self.unmask_receive = True
 
@@ -197,8 +253,8 @@ class Stream(StreamBase):
 
         self._options = options
 
-        if self._options.deflate:
-            self._logger.debug('Deflated stream')
+        if self._options.deflate_stream:
+            self._logger.debug('Setup filter for deflate-stream')
             self._request = util.DeflateRequest(self._request)
 
         self._request.client_terminated = False
@@ -209,7 +265,8 @@ class Stream(StreamBase):
         # Holds the opcode of the first fragment.
         self._original_opcode = None
 
-        self._writer = FragmentedTextFrameBuilder(self._options.mask_send)
+        self._writer = FragmentedFrameBuilder(
+            self._options.mask_send, self._options.outgoing_frame_filters)
 
         self._ping_queue = deque()
 
@@ -266,29 +323,47 @@ class Stream(StreamBase):
 
         return opcode, bytes, fin, rsv1, rsv2, rsv3
 
-    def send_message(self, message, end=True):
+    def _receive_frame_as_frame_object(self):
+        opcode, bytes, fin, rsv1, rsv2, rsv3 = self._receive_frame()
+
+        return Frame(fin=fin, rsv1=rsv1, rsv2=rsv2, rsv3=rsv3,
+                     opcode=opcode, payload=bytes)
+
+    def send_message(self, message, end=True, binary=False):
         """Send message.
 
         Args:
-            message: unicode string to send.
+            message: text in unicode or binary in str to send.
+            binary: send message as binary frame.
 
         Raises:
             BadOperationException: when called on a server-terminated
-                connection.
+                connection or called with inconsistent message type or binary
+                parameter.
         """
 
         if self._request.server_terminated:
             raise BadOperationException(
                 'Requested send_message after sending out a closing handshake')
 
-        self._write(self._writer.build(message, end))
+        if binary and isinstance(message, unicode):
+            raise BadOperationException(
+                'Message for binary frame must be instance of str')
+
+        try:
+            self._write(self._writer.build(message, end, binary))
+        except ValueError, e:
+            raise BadOperationException(e)
 
     def receive_message(self):
-        """Receive a WebSocket frame and return its payload an unicode string.
+        """Receive a WebSocket frame and return its payload as a text in
+        unicode or a binary in str.
 
         Returns:
-            payload unicode string in a WebSocket frame. None iff received
-            closing handshake.
+            payload data of the frame
+            - as unicode instance if received text frame
+            - as str instance if received binary frame
+            or None iff received closing handshake.
         Raises:
             BadOperationException: when called on a client-terminated
                 connection.
@@ -297,8 +372,8 @@ class Stream(StreamBase):
             InvalidFrameException: when the frame contains invalid
                 data.
             UnsupportedFrameException: when the received frame has
-                flags, opcode we cannot handle. You can ignore this exception
-                and continue receiving the next frame.
+                flags, opcode we cannot handle. You can ignore this
+                exception and continue receiving the next frame.
         """
 
         if self._request.client_terminated:
@@ -310,15 +385,19 @@ class Stream(StreamBase):
             # mp_conn.read will block if no bytes are available.
             # Timeout is controlled by TimeOut directive of Apache.
 
-            opcode, bytes, fin, rsv1, rsv2, rsv3 = self._receive_frame()
-            if rsv1 or rsv2 or rsv3:
+            frame = self._receive_frame_as_frame_object()
+
+            for frame_filter in self._options.incoming_frame_filters:
+                frame_filter.filter(frame)
+
+            if frame.rsv1 or frame.rsv2 or frame.rsv3:
                 raise UnsupportedFrameException(
                     'Unsupported flag is set (rsv = %d%d%d)' %
-                    (rsv1, rsv2, rsv3))
+                    (frame.rsv1, frame.rsv2, frame.rsv3))
 
-            if opcode == common.OPCODE_CONTINUATION:
+            if frame.opcode == common.OPCODE_CONTINUATION:
                 if not self._received_fragments:
-                    if fin:
+                    if frame.fin:
                         raise InvalidFrameException(
                             'Received a termination frame but fragmentation '
                             'not started')
@@ -327,18 +406,18 @@ class Stream(StreamBase):
                             'Received an intermediate frame but '
                             'fragmentation not started')
 
-                if fin:
+                if frame.fin:
                     # End of fragmentation frame
-                    self._received_fragments.append(bytes)
+                    self._received_fragments.append(frame.payload)
                     message = ''.join(self._received_fragments)
                     self._received_fragments = []
                 else:
                     # Intermediate frame
-                    self._received_fragments.append(bytes)
+                    self._received_fragments.append(frame.payload)
                     continue
             else:
                 if self._received_fragments:
-                    if fin:
+                    if frame.fin:
                         raise InvalidFrameException(
                             'Received an unfragmented frame without '
                             'terminating existing fragmentation')
@@ -347,31 +426,38 @@ class Stream(StreamBase):
                             'New fragmentation started without terminating '
                             'existing fragmentation')
 
-                if fin:
+                if frame.fin:
                     # Unfragmented frame
-                    self._original_opcode = opcode
-                    message = bytes
 
-                    if is_control_opcode(opcode) and len(message) > 125:
+                    if (common.is_control_opcode(frame.opcode) and
+                        len(frame.payload) > 125):
                         raise InvalidFrameException(
                             'Application data size of control frames must be '
                             '125 bytes or less')
+
+                    self._original_opcode = frame.opcode
+                    message = frame.payload
                 else:
                     # Start of fragmentation frame
 
-                    if is_control_opcode(opcode):
+                    if common.is_control_opcode(frame.opcode):
                         raise InvalidFrameException(
                             'Control frames must not be fragmented')
 
-                    self._original_opcode = opcode
-                    self._received_fragments.append(bytes)
+                    self._original_opcode = frame.opcode
+                    self._received_fragments.append(frame.payload)
                     continue
 
             if self._original_opcode == common.OPCODE_TEXT:
                 # The WebSocket protocol section 4.4 specifies that invalid
                 # characters must be replaced with U+fffd REPLACEMENT
                 # CHARACTER.
-                return message.decode('utf-8', 'replace')
+                try:
+                    return message.decode('utf-8')
+                except UnicodeDecodeError, e:
+                    raise InvalidUTF8Exception(e)
+            elif self._original_opcode == common.OPCODE_BINARY:
+                return message
             elif self._original_opcode == common.OPCODE_CLOSE:
                 self._request.client_terminated = True
 
@@ -390,9 +476,13 @@ class Stream(StreamBase):
                         '!H', message[0:2])[0]
                     self._request.ws_close_reason = message[2:].decode(
                         'utf-8', 'replace')
+                    self._logger.debug(
+                        'Received close frame (code=%d, reason=%r)',
+                        self._request.ws_close_code,
+                        self._request.ws_close_reason)
 
-                self._logger.debug('Initiated flush read')
-                self.flushread()
+                # Drain junk data after the close frame if necessary.
+                self._drain_received_data()
 
                 if self._request.server_terminated:
                     self._logger.debug(
@@ -403,7 +493,13 @@ class Stream(StreamBase):
                 self._logger.debug(
                     'Received client-initiated closing handshake')
 
-                self._send_closing_handshake(common.STATUS_NORMAL, '')
+                code = common.STATUS_NORMAL
+                reason = ''
+                if hasattr(self._request, '_dispatcher'):
+                    dispatcher = self._request._dispatcher
+                    code, reason = dispatcher.passive_closing_handshake(
+                        self._request)
+                self._send_closing_handshake(code, reason)
                 self._logger.debug(
                     'Sent ack for client-initiated closing handshake')
                 return None
@@ -464,7 +560,9 @@ class Stream(StreamBase):
                 'less')
 
         frame = create_close_frame(
-            struct.pack('!H', code) + encoded_reason, self._options.mask_send)
+            struct.pack('!H', code) + encoded_reason,
+            self._options.mask_send,
+            self._options.outgoing_frame_filters)
 
         self._request.server_terminated = True
 
@@ -506,7 +604,10 @@ class Stream(StreamBase):
             raise ValueError(
                 'Application data size of control frames must be 125 bytes or '
                 'less')
-        frame = create_ping_frame(body, self._options.mask_send)
+        frame = create_ping_frame(
+            body,
+            self._options.mask_send,
+            self._options.outgoing_frame_filters)
         self._write(frame)
 
         self._ping_queue.append(body)
@@ -516,8 +617,31 @@ class Stream(StreamBase):
             raise ValueError(
                 'Application data size of control frames must be 125 bytes or '
                 'less')
-        frame = create_pong_frame(body, self._options.mask_send)
+        frame = create_pong_frame(
+            body,
+            self._options.mask_send,
+            self._options.outgoing_frame_filters)
         self._write(frame)
+
+    def _drain_received_data(self):
+        """Drains unread data in the receive buffer to avoid sending out TCP
+        RST packet. This is because when deflate-stream is enabled, some
+        DEFLATE block for flushing data may follow a close frame. If any data
+        remains in the receive buffer of a socket when the socket is closed,
+        it sends out TCP RST packet to the other peer.
+
+        Since mod_python's mp_conn object doesn't support non-blocking read,
+        we perform this only when pywebsocket is running in standalone mode.
+        """
+
+        # If self._options.deflate_stream is true, self._request is
+        # DeflateRequest, so we can get wrapped request object by
+        # self._request._request.
+        #
+        # Only _StandaloneRequest has _drain_received_data method.
+        if (self._options.deflate_stream and
+            ('_drain_received_data' in dir(self._request._request))):
+            self._request._request._drain_received_data()
 
 
 # vi:sts=4 sw=4 et
