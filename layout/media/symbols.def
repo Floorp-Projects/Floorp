@@ -76,4 +76,4 @@ vpx_codec_decode
 vpx_codec_destroy
 vpx_codec_get_frame
 vpx_codec_peek_stream_info
-vpx_codec_vp8_dx_algo
+vpx_codec_vp8_dx
