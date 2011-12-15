@@ -566,6 +566,13 @@ nsHtml5TreeBuilder::elementPopped(PRInt32 aNamespace, nsIAtom* aName, nsIContent
     treeOp->Init(eTreeOpProcessMeta, aElement);
     return;
   }
+  if (aName == nsHtml5Atoms::audio || aName == nsHtml5Atoms::video) {
+    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+    NS_ASSERTION(treeOp, "Tree op allocation failed.");
+    treeOp->Init(eTreeOpDoneCreatingElement, aElement);
+    return;
+  }   
+
   return;
 }
 
