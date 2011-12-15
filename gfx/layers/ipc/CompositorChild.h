@@ -42,6 +42,12 @@
 
 #include "mozilla/layers/PCompositorChild.h"
 
+namespace base {
+  class Thread;
+}
+
+using base::Thread;
+
 namespace mozilla {
 namespace layers {
 
@@ -49,12 +55,20 @@ class CompositorChild : public PCompositorChild
 {
 
 public:
-  CompositorChild();
   virtual ~CompositorChild();
 
+  static CompositorChild* CreateCompositor();
+
 protected:
-  virtual PLayersChild* AllocPLayers(const LayersBackend &backend);
+  CompositorChild(Thread* aCompositorThread);
+
+  virtual PLayersChild* AllocPLayers(const LayersBackend &backend, const WidgetDescriptor &widget);
   virtual bool DeallocPLayers(PLayersChild *aChild);
+
+private:
+  Thread *mCompositorThread;
+
+  DISALLOW_EVIL_CONSTRUCTORS(CompositorChild);
 };
 
 } // lauers

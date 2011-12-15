@@ -48,31 +48,22 @@ namespace layers {
 
 class CompositorParent : public PCompositorParent
 {
-
+  NS_INLINE_DECL_REFCOUNTING(CompositorParent)
 public:
-  CompositorParent() {}
-  virtual ~CompositorParent() {}
+  CompositorParent();
+  virtual ~CompositorParent();
 
-  bool AnswerInit() {
-    printf("Answer init\n");
-    return true;
-  }
+  bool AnswerInit();
 
 protected:
-  virtual PLayersParent* AllocPLayers(const LayersBackend &backend) {
-    printf("Alloc PLayers :)\n");
-    //ShadowLayerManager* slm = aLayerManager->AsShadowManager();
-    //if (!slm) {
-       return nsnull;
-    //}
+  virtual PLayersParent* AllocPLayers(const LayersBackend &backend, const WidgetDescriptor &widget);
 
-    //return new ShadowLayersParent(slm);
-  }
+  virtual bool DeallocPLayers(PLayersParent* aLayers);
 
-  virtual bool DeallocPLayers(PLayersParent* aLayers) {
-    delete aLayers;
-    return true;
-   }
+private:
+  void Composite();
+
+  DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };
 
 } // layers
