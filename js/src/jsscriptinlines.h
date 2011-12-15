@@ -134,6 +134,12 @@ CurrentScriptFileLineOrigin(JSContext *cx, const char **file, uintN *linenop, JS
 
 } // namespace js
 
+inline void
+JSScript::setFunction(JSFunction *fun)
+{
+    function_ = fun;
+}
+
 inline JSFunction *
 JSScript::getFunction(size_t index)
 {
