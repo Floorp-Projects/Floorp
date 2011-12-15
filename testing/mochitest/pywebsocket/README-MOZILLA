@@ -34,13 +34,8 @@ STEPS TO UPDATE MOZILLA TO NEWER PYWEBSOCKET VERSION
     # MOZILLA: do not normalize away symlinks in mochitest
     # path = os.path.realpath(path)
 
-- There's also some code in mod_pywebsocket/_stream_base.py that may or may not
-  need to change to support Python 2.5:
-
-    #raise ConnectionTerminatedException(
-    #    'Receiving %d byte failed. Peer (%r) closed connection' %
-    #    (length, (self._request.connection.remote_addr,)))
-    raise ConnectionTerminatedException('connection terminated: read failed')
+- We need to apply the patch to hybi.py that makes HSTS work: (attached at end
+  of this README)
 
 - Test and make sure the code works:
 
@@ -48,4 +43,54 @@ STEPS TO UPDATE MOZILLA TO NEWER PYWEBSOCKET VERSION
 
 - If this doesn't take a look at the pywebsocket server log,
   $OBJDIR/_tests/testing/mochitest/websock.log
+
+- Upgrade the svnversion number at top of this file to whatever version we're
+  now based off of.
+
+--------------------------------------------------------------------------------
+PATCH TO hybi.py for HSTS support:
+
+
+diff --git a/testing/mochitest/pywebsocket/mod_pywebsocket/handshake/hybi.py b/testing/mochitest/pywebsocket/mod_pywebsocket/handshake/hybi.py
+--- a/testing/mochitest/pywebsocket/mod_pywebsocket/handshake/hybi.py
++++ b/testing/mochitest/pywebsocket/mod_pywebsocket/handshake/hybi.py
+@@ -227,16 +227,19 @@ class Handshaker(object):
+ 
+     def _check_version(self):
+         unused_value = validate_mandatory_header(
+             self._request, common.SEC_WEBSOCKET_VERSION_HEADER,
+             str(common.VERSION_HYBI_LATEST), fail_status=426)
+ 
+     def _set_protocol(self):
+         self._request.ws_protocol = None
++        # MOZILLA
++        self._request.sts = None
++        # /MOZILLA
+ 
+         protocol_header = self._request.headers_in.get(
+             common.SEC_WEBSOCKET_PROTOCOL_HEADER)
+ 
+         if not protocol_header:
+             self._request.ws_requested_protocols = None
+             return
+ 
+@@ -311,16 +314,21 @@ class Handshaker(object):
+             response.append(format_header(
+                 common.SEC_WEBSOCKET_PROTOCOL_HEADER,
+                 self._request.ws_protocol))
+         if (self._request.ws_extensions is not None and
+             len(self._request.ws_extensions) != 0):
+             response.append(format_header(
+                 common.SEC_WEBSOCKET_EXTENSIONS_HEADER,
+                 format_extensions(self._request.ws_extensions)))
++        # MOZILLA: Add HSTS header if requested to
++        if self._request.sts is not None:
++            response.append(format_header("Strict-Transport-Security",
++                                          self._request.sts))
++        # /MOZILLA
+         response.append('\r\n')
+ 
+         raw_response = ''.join(response)
+         self._logger.debug('Opening handshake response: %r', raw_response)
+         self._request.connection.write(raw_response)
 

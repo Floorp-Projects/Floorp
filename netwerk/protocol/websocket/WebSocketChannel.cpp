@@ -372,9 +372,11 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(OutboundEnqueuer, nsIRunnable)
 // nsWSAdmissionManager
 //-----------------------------------------------------------------------------
 
-// Section 5.1 requires that a client rate limit its connects to a single
-// TCP session in the CONNECTING state (i.e. anything before the 101 upgrade
-// complete response comes back and an open javascript event is created)
+// Section 4.1 requires that only a single websocket at a time can be CONNECTING
+// to any given IP address (or hostname, if proxy doing DNS for us). This class
+// ensures that we delay connecting until any pending connection for the same
+// IP/addr is complete (i.e. until before the 101 upgrade complete response
+// comes back and an 'open' javascript event is created)
 
 class nsWSAdmissionManager
 {
@@ -414,6 +416,9 @@ public:
     // we could hash this, but the dataset is expected to be
     // small
 
+    // There may already be another WS channel connecting to this IP address, in
+    // which case we'll still create a new nsOpenConn but defer BeginOpen until
+    // that channel completes connecting.
     bool found = (IndexOf(aStr) >= 0);
     nsOpenConn *newdata = new nsOpenConn(aStr, ws);
     mData.AppendElement(newdata);
@@ -1938,34 +1943,60 @@ WebSocketChannel::AsyncOnChannelRedirect(
   rv = newChannel->GetURI(getter_AddRefs(newuri));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mAutoFollowRedirects) {
-    nsCAutoString spec;
-    if (NS_SUCCEEDED(newuri->GetSpec(spec)))
-      LOG(("WebSocketChannel: Redirect to %s denied by configuration\n",
-            spec.get()));
-    callback->OnRedirectVerifyCallback(NS_ERROR_FAILURE);
-    return NS_OK;
-  }
-
-  bool isHttps = false;
-  rv = newuri->SchemeIs("https", &isHttps);
+  // newuri is expected to be http or https
+  bool newuriIsHttps = false;
+  rv = newuri->SchemeIs("https", &newuriIsHttps);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mEncrypted && !isHttps) {
+  if (!mAutoFollowRedirects) {
+    // Even if redirects configured off, still allow them for HTTP Strict
+    // Transport Security (from ws://FOO to https://FOO (mapped to wss://FOO)
+
+    nsCOMPtr<nsIURI> clonedNewURI;
+    rv = newuri->Clone(getter_AddRefs(clonedNewURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = clonedNewURI->SetScheme(NS_LITERAL_CSTRING("ws"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> currentURI;
+    rv = GetURI(getter_AddRefs(currentURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // currentURI is expected to be ws or wss
+    bool currentIsHttps = false;
+    rv = currentURI->SchemeIs("wss", &currentIsHttps);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    bool uriEqual = false;
+    rv = clonedNewURI->Equals(currentURI, &uriEqual);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // It's only a HSTS redirect if we started with non-secure, are going to
+    // secure, and the new URI is otherwise the same as the old one.
+    if (!(!currentIsHttps && newuriIsHttps && uriEqual)) {
+      nsCAutoString newSpec;
+      rv = newuri->GetSpec(newSpec);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      LOG(("WebSocketChannel: Redirect to %s denied by configuration\n",
+           newSpec.get()));
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  if (mEncrypted && !newuriIsHttps) {
     nsCAutoString spec;
     if (NS_SUCCEEDED(newuri->GetSpec(spec)))
       LOG(("WebSocketChannel: Redirect to %s violates encryption rule\n",
            spec.get()));
-    callback->OnRedirectVerifyCallback(NS_ERROR_FAILURE);
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIHttpChannel> newHttpChannel = do_QueryInterface(newChannel, &rv);
-
   if (NS_FAILED(rv)) {
     LOG(("WebSocketChannel: Redirect could not QI to HTTP\n"));
-    callback->OnRedirectVerifyCallback(rv);
-    return NS_OK;
+    return rv;
   }
 
   nsCOMPtr<nsIHttpChannelInternal> newUpgradeChannel =
@@ -1973,21 +2004,26 @@ WebSocketChannel::AsyncOnChannelRedirect(
 
   if (NS_FAILED(rv)) {
     LOG(("WebSocketChannel: Redirect could not QI to HTTP Upgrade\n"));
-    callback->OnRedirectVerifyCallback(rv);
-    return NS_OK;
+    return rv;
   }
 
   // The redirect is likely OK
 
   newChannel->SetNotificationCallbacks(this);
-  mURI = newuri;
+
+  mEncrypted = newuriIsHttps;
+  newuri->Clone(getter_AddRefs(mURI));
+  if (mEncrypted)
+    rv = mURI->SetScheme(NS_LITERAL_CSTRING("wss"));
+  else
+    rv = mURI->SetScheme(NS_LITERAL_CSTRING("ws"));
+
   mHttpChannel = newHttpChannel;
   mChannel = newUpgradeChannel;
   rv = SetupRequest();
   if (NS_FAILED(rv)) {
     LOG(("WebSocketChannel: Redirect could not SetupRequest()\n"));
-    callback->OnRedirectVerifyCallback(rv);
-    return NS_OK;
+    return rv;
   }
 
   // We cannot just tell the callback OK right now due to the 1 connect at a
@@ -2004,8 +2040,8 @@ WebSocketChannel::AsyncOnChannelRedirect(
   rv = ApplyForAdmission();
   if (NS_FAILED(rv)) {
     LOG(("WebSocketChannel: Redirect failed due to DNS failure\n"));
-    callback->OnRedirectVerifyCallback(rv);
     mRedirectCallback = nsnull;
+    return rv;
   }
 
   return NS_OK;

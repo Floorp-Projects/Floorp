@@ -147,6 +147,8 @@ protected:
   // (and possibly collected).
   void DontKeepAliveAnyMore();
 
+  nsresult UpdateURI();
+
   nsCOMPtr<nsIWebSocketChannel> mChannel;
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnOpenListener;
@@ -156,6 +158,7 @@ protected:
 
   // related to the WebSocket constructor steps
   nsString mOriginalURL;
+  nsString mEffectiveURL;   // after redirects
   bool mSecure; // if true it is using SSL and the wss scheme,
                         // otherwise it is using the ws scheme with no SSL
 
