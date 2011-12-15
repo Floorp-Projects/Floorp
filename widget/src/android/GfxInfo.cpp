@@ -278,10 +278,19 @@ GfxInfo::AddOpenGLCrashReportAnnotations()
 const nsTArray<GfxDriverInfo>&
 GfxInfo::GetGfxDriverInfo()
 {
-  // Nothing here yet.
-  //if (!mDriverInfo->Length()) {
-  //
-  //}
+  if (!mDriverInfo->Length()) {
+    /* The following entry, when uncommented, will allow us to whitelist a
+     * specific device. See the long comment in GetFeatureStatusImpl for more
+     * info. */
+ // APPEND_TO_DRIVER_BLOCKLIST( DRIVER_OS_ALL,
+ //   my_vendor_id, my_device_id,
+ //   nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_NO_INFO,
+ //   DRIVER_LESS_THAN, GfxDriverInfo::allDevices );
+    APPEND_TO_DRIVER_BLOCKLIST2( DRIVER_OS_ALL,
+      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorAll), GfxDriverInfo::allDevices,
+      nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+      DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions );
+  }
   return *mDriverInfo;
 }
 
@@ -304,7 +313,12 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
       mSetCrashReportAnnotations = true;
     }
 
-    /* XXX: Use this code when we're ready to whitelist devices. */
+    /* The following code is an old way to whitelist devices when we're ready.
+     * It is staying here for reference. The best way to do this now is to add
+     * an entry in the list above. There is a dummy entry which will whitelist a
+     * device when uncommented and device/vendor IDs are inserted. It is
+     * preferred that we stop whitelisting and instead go to blocklisting, where
+     * everything is assumed to be okay as long as it's not in the blocklist. */
     // nsAutoString str;
     // /* Whitelist Galaxy S phones */
     // if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str)) {
@@ -312,8 +326,6 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
     //     status = FEATURE_BLOCKED_DEVICE;
     //   }
     // }
-
-    status = FEATURE_BLOCKED_DEVICE;
   }
 
   *aStatus = status;
