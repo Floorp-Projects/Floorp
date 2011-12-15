@@ -546,10 +546,6 @@ mjit::Compiler::performCompilation(JITScript **jitp)
 
     JaegerSpew(JSpew_Scripts, "successfully compiled (code \"%p\") (size \"%u\")\n",
                (*jitp)->code.m_code.executableAddress(), unsigned((*jitp)->code.m_size));
-
-    if (!*jitp)
-        return Compile_Abort;
-
     return Compile_Okay;
 }
 
