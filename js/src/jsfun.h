@@ -116,8 +116,9 @@ struct JSFunction : public JSObject
         } n;
         struct Scripted {
             JSScript    *script_; /* interpreted bytecode descriptor or null;
-                                     use the setter! */
-            JSObject    *env;     /* environment for new activations */
+                                     use the accessor! */
+            JSObject    *env_;    /* environment for new activations;
+                                     use the accessor! */
         } i;
         void            *nativeOrScript;
     } u;
@@ -167,8 +168,9 @@ struct JSFunction : public JSObject
      */
     inline JSObject *environment() const;
     inline void setEnvironment(JSObject *obj);
+    inline void initEnvironment(JSObject *obj);
 
-    static inline size_t offsetOfEnvironment() { return offsetof(JSFunction, u.i.env); }
+    static inline size_t offsetOfEnvironment() { return offsetof(JSFunction, u.i.env_); }
 
     inline void setJoinable();
 

@@ -66,6 +66,11 @@
 <!ENTITY pref_enable_flash_yes "Yes">
 <!ENTITY pref_enable_flash_tap_to_play "Tap To Play">
 <!ENTITY pref_enable_flash_no "No">
+<!ENTITY pref_font_size "Font size">
+<!ENTITY pref_font_size_small "Small">
+<!ENTITY pref_font_size_medium "Medium">
+<!ENTITY pref_font_size_large "Large">
+<!ENTITY pref_font_size_xlarge "Extra Large">
 
 <!ENTITY quit "Quit">
 

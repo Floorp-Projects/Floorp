@@ -280,7 +280,14 @@ template <class T>
 JS_ALWAYS_INLINE static void
 PodZero(T *t, size_t nelem)
 {
-    memset(t, 0, nelem * sizeof(T));
+    /*
+     * This function is often called with 'nelem' small; we use an
+     * inline loop instead of calling 'memset' with a non-constant
+     * length.  The compiler should inline the memset call with constant
+     * size, though.
+     */
+    for (size_t i = 0; i < nelem; ++i, ++t)
+        memset(t, 0, sizeof(T));
 }
 
 /*

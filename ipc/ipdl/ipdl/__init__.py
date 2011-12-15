@@ -30,12 +30,13 @@
 #
 # ***** END LICENSE BLOCK *****
 
-__all__ = [ 'gencxx', 'genipdl', 'parse', 'typecheck', 'writeifmodified' ]
+__all__ = [ 'gencxx', 'genipdl', 'parse', 'typecheck', 'writetofile' ]
 
-import os, sys
+import os, sys, errno
 from cStringIO import StringIO
 
 from ipdl.cgen import IPDLCodeGen
+from ipdl.mgen import DependGen
 from ipdl.lower import LowerToCxx
 from ipdl.parser import Parser
 from ipdl.type import TypeCheck
@@ -72,23 +73,32 @@ def gencxx(ipdlfilename, ast, outheadersdir, outcppdir):
                           + [ resolveCpp(cpp) for cpp in cpps ]):
         tempfile = StringIO()
         CxxCodeGen(tempfile).cgen(ast)
-        writeifmodified(tempfile.getvalue(), filename)
+        writetofile(tempfile.getvalue(), filename)
 
 
 def genipdl(ast, outdir):
     return IPDLCodeGen().cgen(ast)
 
 
-def writeifmodified(contents, file):
-    dir = os.path.dirname(file)
-    os.path.exists(dir) or os.makedirs(dir)
+def genm(ast, dir, filename):
+    tempfile = StringIO()
+    DependGen(tempfile).mgen(ast)
+    filename = dir + "/" + os.path.basename(filename) + ".depends"
+    writetofile(tempfile.getvalue(), filename)
 
-    oldcontents = None
-    if os.path.exists(file):
-        fd = open(file, 'rb')
-        oldcontents = fd.read()
-        fd.close()
-    if oldcontents != contents:
-        fd = open(file, 'wb')
-        fd.write(contents)
-        fd.close()
+
+def writetofile(contents, file):
+    dir = os.path.dirname(file)
+
+    # Guard against race condition by using Try instead
+    # of |os.path.exists(dir) or os.makedirs(dir)|
+    try:
+        os.makedirs(dir)
+    except OSError, ex:
+        if ex.errno != errno.EEXIST:
+            raise ex
+        # else directory already exists. silently ignore and continue
+
+    fd = open(file, 'wb')
+    fd.write(contents)
+    fd.close()
