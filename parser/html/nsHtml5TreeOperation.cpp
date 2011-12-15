@@ -233,23 +233,6 @@ nsHtml5TreeOperation::Append(nsIContent* aNode,
   return rv;
 }
 
-class nsDocElementCreatedNotificationRunner : public nsRunnable
-{
-public:
-  nsDocElementCreatedNotificationRunner(nsIDocument* aDoc)
-    : mDoc(aDoc)
-  {
-  }
-
-  NS_IMETHOD Run()
-  {
-    nsContentSink::NotifyDocElementCreated(mDoc);
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDocument> mDoc;
-};
-
 nsresult
 nsHtml5TreeOperation::AppendToDocument(nsIContent* aNode,
                                        nsHtml5TreeOpExecutor* aBuilder)
