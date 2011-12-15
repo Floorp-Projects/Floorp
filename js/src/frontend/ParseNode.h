@@ -1198,6 +1198,23 @@ ParseNode::asUseSharpExpression()
     return *static_cast<UseSharpExpression *>(this);
 }
 
+class ThisLiteral : public ParseNode {
+  public:
+    ThisLiteral(const TokenPos &pos) : ParseNode(PNK_THIS, JSOP_THIS, PN_NULLARY, pos) { }
+};
+
+class NullLiteral : public ParseNode {
+  public:
+    NullLiteral(const TokenPos &pos) : ParseNode(PNK_NULL, JSOP_NULL, PN_NULLARY, pos) { }
+};
+
+class BooleanLiteral : public ParseNode {
+  public:
+    BooleanLiteral(bool b, const TokenPos &pos)
+      : ParseNode(b ? PNK_TRUE : PNK_FALSE, b ? JSOP_TRUE : JSOP_FALSE, PN_NULLARY, pos)
+    { }
+};
+
 ParseNode *
 CloneLeftHandSide(ParseNode *opn, TreeContext *tc);
 

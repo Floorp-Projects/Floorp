@@ -6565,16 +6565,6 @@ Parser::parseXMLText(JSObject *chain, bool allowList)
 
 #endif /* JS_HAS_XMLSUPPORT */
 
-static ParseNode *
-PrimaryExprNode(ParseNodeKind kind, JSOp op, TreeContext *tc)
-{
-    ParseNode *pn = NullaryNode::create(kind, tc);
-    if (!pn)
-        return NULL;
-    pn->setOp(op);
-    return pn;
-}
-
 ParseNode *
 Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 {
@@ -7217,13 +7207,13 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         break;
 
       case TOK_TRUE:
-        return PrimaryExprNode(PNK_TRUE, JSOP_TRUE, tc);
+        return new_<BooleanLiteral>(true, tokenStream.currentToken().pos);
       case TOK_FALSE:
-        return PrimaryExprNode(PNK_FALSE, JSOP_FALSE, tc);
+        return new_<BooleanLiteral>(false, tokenStream.currentToken().pos);
       case TOK_THIS:
-        return PrimaryExprNode(PNK_THIS, JSOP_THIS, tc);
+        return new_<ThisLiteral>(tokenStream.currentToken().pos);
       case TOK_NULL:
-        return PrimaryExprNode(PNK_NULL, JSOP_NULL, tc);
+        return new_<NullLiteral>(tokenStream.currentToken().pos);
 
       case TOK_ERROR:
         /* The scanner or one of its subroutines reported the error. */
