@@ -118,12 +118,14 @@ class TPSTestRunner(object):
 
   def __init__(self, extensionDir, emailresults=False, testfile="sync.test",
                binary=None, config=None, rlock=None, mobile=False,
-               autolog=False, logfile="tps.log"):
+               autolog=False, logfile="tps.log",
+               ignore_unused_engines=False):
     self.extensions = []
     self.emailresults = emailresults
     self.testfile = testfile
     self.logfile = os.path.abspath(logfile)
     self.binary = binary
+    self.ignore_unused_engines = ignore_unused_engines
     self.config = config if config else {}
     self.repo = None
     self.changeset = None
@@ -212,14 +214,16 @@ class TPSTestRunner(object):
                                         addons = self.extensions)
 
       # create the test phase
-      phaselist.append(TPSTestPhase(phase,
-                                    profiles[profilename],
-                                    testname,
-                                    tmpfile.filename,
-                                    self.logfile,
-                                    self.env,
-                                    self.firefoxRunner,
-                                    self.log))
+      phaselist.append(TPSTestPhase(
+          phase,
+          profiles[profilename],
+          testname,
+          tmpfile.filename,
+          self.logfile,
+          self.env,
+          self.firefoxRunner,
+          self.log,
+          ignore_unused_engines=self.ignore_unused_engines))
 
     # sort the phase list by name
     phaselist = sorted(phaselist, key=lambda phase: phase.phase)
