@@ -2163,7 +2163,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
     if ((flags & JSFUN_KINDMASK) >= JSFUN_INTERPRETED) {
         JS_ASSERT(!native);
         fun->script().init(NULL);
-        fun->setEnvironment(parent);
+        fun->initEnvironment(parent);
     } else {
         fun->u.n.clasp = NULL;
         fun->u.n.native = native;

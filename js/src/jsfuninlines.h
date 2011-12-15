@@ -55,14 +55,21 @@ inline JSObject *
 JSFunction::environment() const
 {
     JS_ASSERT(isInterpreted());
-    return u.i.env;
+    return u.i.env_;
 }
 
 inline void
 JSFunction::setEnvironment(JSObject *obj)
 {
     JS_ASSERT(isInterpreted());
-    u.i.env = obj;
+    *(js::HeapPtrObject *)&u.i.env_ = obj;
+}
+
+inline void
+JSFunction::initEnvironment(JSObject *obj)
+{
+    JS_ASSERT(isInterpreted());
+    ((js::HeapPtrObject *)&u.i.env_)->init(obj);
 }
 
 inline void
