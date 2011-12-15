@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*global ok, is, isApproxVec, vec3, quat4, TiltVisualizer */
+/*global Cc, Ci, Cu */
 "use strict";
 
 function cloneUpdate(update) {
@@ -199,13 +200,13 @@ function test() {
       -0.08445550501346588, -0.980617880821228],
       translation: [0, 0, -6.5132155418396] }];
 
-  arcball3.mouseScroll(10);
+  arcball3.zoom(10);
   for (let i3 = 0; i3 < 10; i3++) {
     stack3.push(cloneUpdate(arcball3.update()));
   }
 
   ok(isExpectedUpdate(stack3, expect3),
-    "Mouse scroll events didn't create the expected transformation results.");
+    "Mouse zoom events didn't create the expected transformation results.");
 
   let stack4 = [];
   let expect4 = [
@@ -250,14 +251,14 @@ function test() {
       -0.08445733785629272, -0.980617105960846],
       translation: [0, 0, -8.784234046936035] }];
 
-  arcball3.keyDown(65);
-  arcball3.keyDown(68);
-  arcball3.keyDown(87);
-  arcball3.keyDown(83);
-  arcball3.keyDown(37);
-  arcball3.keyDown(39);
-  arcball3.keyDown(38);
-  arcball3.keyDown(40);
+  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_A);
+  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_D);
+  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_W);
+  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_S);
+  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_LEFT);
+  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_RIGHT);
+  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_UP);
+  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_DOWN);
   for (let i4 = 0; i4 < 10; i4++) {
     stack4.push(cloneUpdate(arcball3.update()));
   }
@@ -308,20 +309,185 @@ function test() {
       -0.0844573974609375, -0.980617105960846],
       translation: [0, 0, -9.576087951660156] }];
 
-  arcball3.keyUp(65);
-  arcball3.keyUp(68);
-  arcball3.keyUp(87);
-  arcball3.keyUp(83);
-  arcball3.keyUp(37);
-  arcball3.keyUp(39);
-  arcball3.keyUp(38);
-  arcball3.keyUp(40);
+  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_A);
+  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_D);
+  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_W);
+  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_S);
+  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_LEFT);
+  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_RIGHT);
+  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_UP);
+  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_DOWN);
   for (let i5 = 0; i5 < 10; i5++) {
     stack5.push(cloneUpdate(arcball3.update()));
   }
 
   ok(isExpectedUpdate(stack5, expect5),
     "Key up events didn't create the expected transformation results.");
+
+  let stack6 = [];
+  let expect6 = [
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, -9.618478775024414] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, -6.156630992889404] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 0.4590320587158203] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 9.913128852844238] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 21.921815872192383] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 36.22963333129883] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 52.60667037963867] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 70.84600067138672] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 90.76139831542969] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 112.18525695800781] }];
+
+  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_I);
+  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_ADD);
+  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_EQUALS);
+  for (let i6 = 0; i6 < 10; i6++) {
+    stack6.push(cloneUpdate(arcball3.update()));
+  }
+  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_I);
+  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_ADD);
+  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_EQUALS);
+
+  ok(isExpectedUpdate(stack6, expect6),
+    "Key zoom in events didn't create the expected transformation results.");
+
+  let stack7 = [];
+  let expect7 = [
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 134.96673583984375] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 151.97006225585938] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 163.77305603027344] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 170.895751953125] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 173.80618286132812] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 172.92556762695312] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 168.6330108642578] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 161.26971435546875] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 151.1427459716797] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 138.52847290039062] }];
+
+  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_O);
+  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_SUBTRACT);
+  for (let i7 = 0; i7 < 10; i7++) {
+    stack7.push(cloneUpdate(arcball3.update()));
+  }
+  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_O);
+  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_SUBTRACT);
+
+  ok(isExpectedUpdate(stack7, expect7),
+    "Key zoom out events didn't create the expected transformation results.");
+
+  let stack8 = [];
+  let expect8 = [
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 123.67562866210938] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 111.30806732177734] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 100.17726135253906] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 90.15953826904297] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 81.14358520507812] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 73.02922821044922] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 65.72630310058594] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 59.15367126464844] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 53.238304138183594] },
+    { rotation: [
+      -0.17158392071723938, 0.0426151417195797,
+      -0.0844573974609375, -0.980617105960846],
+      translation: [0, 0, 47.91447448730469] }];
+
+  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_R);
+  arcball3.keyDown(Ci.nsIDOMKeyEvent.DOM_VK_0);
+  for (let i8 = 0; i8 < 10; i8++) {
+    stack8.push(cloneUpdate(arcball3.update()));
+  }
+  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_R);
+  arcball3.keyUp(Ci.nsIDOMKeyEvent.DOM_VK_0);
+
+  ok(isExpectedUpdate(stack8, expect8),
+    "Key zoom reset events didn't create the expected transformation results.");
+
 
   arcball3.resize(123, 456);
   is(arcball3.width, 123,
