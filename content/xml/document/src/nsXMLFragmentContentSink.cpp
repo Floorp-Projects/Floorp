@@ -272,8 +272,7 @@ nsXMLFragmentContentSink::CloseElement(nsIContent* aContent)
 {
   // don't do fancy stuff in nsXMLContentSink
   if (mPreventScriptExecution && aContent->Tag() == nsGkAtoms::script &&
-      (aContent->GetNameSpaceID() == kNameSpaceID_XHTML ||
-       aContent->GetNameSpaceID() == kNameSpaceID_SVG)) {
+      (aContent->IsHTML() || aContent->IsSVG())) {
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aContent);
     NS_ASSERTION(sele, "script did QI correctly!");
     sele->PreventExecution();

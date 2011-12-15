@@ -47,8 +47,7 @@
 gfxFT2FontBase::gfxFT2FontBase(cairo_scaled_font_t *aScaledFont,
                                gfxFontEntry *aFontEntry,
                                const gfxFontStyle *aFontStyle)
-    : gfxFont(aFontEntry, aFontStyle),
-      mScaledFont(aScaledFont),
+    : gfxFont(aFontEntry, aFontStyle, kAntialiasDefault, aScaledFont),
       mSpaceGlyph(0),
       mHasMetrics(false)
 {

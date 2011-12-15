@@ -59,7 +59,7 @@ using namespace mozilla;
 
 gfxOS2Font::gfxOS2Font(gfxOS2FontEntry *aFontEntry, const gfxFontStyle *aFontStyle)
     : gfxFont(aFontEntry, aFontStyle),
-      mFontFace(nsnull), mScaledFont(nsnull),
+      mFontFace(nsnull),
       mMetrics(nsnull), mAdjustedSize(0),
       mHinting(FC_HINT_MEDIUM), mAntialias(FcTrue)
 {

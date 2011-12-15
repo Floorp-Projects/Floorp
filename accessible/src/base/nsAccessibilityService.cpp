@@ -1199,13 +1199,11 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 
   if (!newAcc) {
     // Create generic accessibles for SVG and MathML nodes.
-    if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
-        content->Tag() == nsGkAtoms::svg) {
+    if (content->IsSVG(nsGkAtoms::svg)) {
       newAcc = new nsEnumRoleAccessible(content, aWeakShell,
                                         nsIAccessibleRole::ROLE_DIAGRAM);
     }
-    else if (content->GetNameSpaceID() == kNameSpaceID_MathML &&
-             content->Tag() == nsGkAtoms::math) {
+    else if (content->IsMathML(nsGkAtoms::math)) {
       newAcc = new nsEnumRoleAccessible(content, aWeakShell,
                                         nsIAccessibleRole::ROLE_EQUATION);
     }

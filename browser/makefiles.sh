@@ -80,6 +80,7 @@ browser/fuel/public/Makefile
 browser/fuel/src/Makefile
 browser/installer/Makefile
 browser/locales/Makefile
+browser/modules/Makefile
 browser/themes/Makefile
 $MOZ_BRANDING_DIRECTORY/Makefile
 $MOZ_BRANDING_DIRECTORY/content/Makefile
@@ -93,9 +94,6 @@ if [ "$MOZ_SAFE_BROWSING" ]; then
 fi
 
 if [ "$MOZ_WIDGET_TOOLKIT" = "windows" ]; then
-  add_makefiles "
-    browser/components/wintaskbar/Makefile
-  "
   if [ "$MOZ_INSTALLER" ]; then
     add_makefiles "
       browser/installer/windows/Makefile
@@ -146,15 +144,11 @@ if [ "$ENABLE_TESTS" ]; then
     browser/devtools/styleinspector/test/browser/Makefile
     browser/devtools/webconsole/test/browser/Makefile
     browser/fuel/test/Makefile
+    browser/modules/test/Makefile
   "
   if [ "$MOZ_SAFE_BROWSING" ]; then
     add_makefiles "
       browser/components/safebrowsing/content/test/Makefile
-    "
-  fi
-  if [ "$MOZ_WIDGET_TOOLKIT" = "windows" ]; then
-    add_makefiles "
-      browser/components/wintaskbar/test/Makefile
     "
   fi
 fi
