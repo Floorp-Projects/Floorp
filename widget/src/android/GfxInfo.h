@@ -91,7 +91,6 @@ protected:
 private:
 
   void     AddOpenGLCrashReportAnnotations();
-  bool     mSetCrashReportAnnotations;
   nsString mRendererIDsString;
   nsString mAdapterRAMString;
 
