@@ -2224,8 +2224,10 @@ nsDOMClassInfo::RegisterExternalClasses()
     /* number of interfaces due to the terminating null */                    \
     for (size_t i = 0; i < count - 1; ++i) {                                  \
       if (!interface_list[i]) {                                               \
+        /* We are moving the element at index i+1 and successors, */          \
+        /* so we must move only count - (i+1) elements total. */              \
         memmove(&interface_list[i], &interface_list[i+1],                     \
-                sizeof(nsIID*) * (count - i));                                \
+                sizeof(nsIID*) * (count - (i+1)));                            \
         /* Make sure to examine the new pointer we ended up with at this */   \
         /* slot, since it may be null too */                                  \
         --i;                                                                  \
