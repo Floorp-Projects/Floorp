@@ -800,7 +800,7 @@ LayerManagerOGL::Render()
 
   mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
   mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
-
+/*
   ShadowLayer *shadow = RootLayer()->GetLayer()->AsShadowLayer();
   if (shadow) {
     shadow->SetShadowVisibleRegion(nsIntRect(0, 0, width, height));
@@ -814,7 +814,7 @@ LayerManagerOGL::Render()
      child->AsShadowLayer()->SetShadowVisibleRegion(nsIntRect(0, 0, width, height));
     }
   }
-
+*/
   // Render our layers.
   RootLayer()->RenderLayer(mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO,
                            nsIntPoint(0, 0));

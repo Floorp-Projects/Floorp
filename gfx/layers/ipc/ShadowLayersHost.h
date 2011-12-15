@@ -21,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Benoit Girard <bgirard@mozilla.com>
+ *   Ali Juma <ajuma@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,45 +37,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_layers_CompositorParent_h
-#define mozilla_layers_CompositorParent_h
-
-#include "mozilla/layers/PCompositorParent.h"
-#include "mozilla/layers/PLayersParent.h"
-#include "ShadowLayersHost.h"
-
-class LayerManager;
+#ifndef mozilla_layers_ShadowLayersHost_h
+#define mozilla_layers_ShadowLayersHost_h
 
 namespace mozilla {
+
+namespace layout {
+class RenderFrameParent;
+}
+
 namespace layers {
 
-class CompositorParent : public PCompositorParent,
-                         public ShadowLayersHost
+class CompositorParent;
+
+class ShadowLayersHost
 {
-  NS_INLINE_DECL_REFCOUNTING(CompositorParent)
+NS_INLINE_DECL_REFCOUNTING(ShadowLayersHost)
+
 public:
-  CompositorParent();
-  virtual ~CompositorParent();
-
-  bool AnswerInit();
-
-  virtual mozilla::layout::RenderFrameParent* GetRenderFrameParent() { return NULL; }
-  virtual CompositorParent* GetCompositorParent() { return this; }
-
-protected:
-  virtual PLayersParent* AllocPLayers(const LayersBackend &backend, const WidgetDescriptor &widget);
-
-  virtual bool DeallocPLayers(PLayersParent* aLayers);
-
-private:
-  void Composite();
-
-  LayerManager *mLayerManager;
-
-  DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
+  virtual mozilla::layout::RenderFrameParent* GetRenderFrameParent() = 0;
+  virtual CompositorParent* GetCompositorParent() = 0;
 };
 
 } // layers
 } // mozilla
 
-#endif // mozilla_layers_CompositorParent_h
+#endif // mozilla_layers_ShadowLayersHost_h
