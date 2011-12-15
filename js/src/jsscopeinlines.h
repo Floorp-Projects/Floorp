@@ -164,6 +164,7 @@ Shape::Shape(UnownedBaseShape *base, jsid propid, uint32 slot, uint32 nfixed,
     JS_ASSERT(base);
     JS_ASSERT(!JSID_IS_VOID(propid));
     JS_ASSERT_IF(isMethod(), !base->rawGetter);
+    JS_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
     kids.setNull();
 }
 

@@ -3508,6 +3508,15 @@ DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, const Value &value,
                    PropertyOp getter, StrictPropertyOp setter, uintN attrs,
                    uintN flags, intN tinyid)
 {
+    /*
+     * JSPROP_READONLY has no meaning when accessors are involved. Ideally we'd
+     * throw if this happens, but we've accepted it for long enough that it's
+     * not worth trying to make callers change their ways. Just flip it off on
+     * its way through the API layer so that we can enforce this internally.
+     */
+    if (attrs & (JSPROP_GETTER | JSPROP_SETTER))
+        attrs &= ~JSPROP_READONLY;
+
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id, value,
                             (attrs & JSPROP_GETTER)

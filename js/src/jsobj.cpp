@@ -1749,6 +1749,7 @@ PropDesc::initFromPropertyDescriptor(const PropertyDescriptor &desc)
 {
     pd.setUndefined();
     attrs = uint8(desc.attrs);
+    JS_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
     if (desc.attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         hasGet = true;
         get = ((desc.attrs & JSPROP_GETTER) && desc.getter)
@@ -2025,6 +2026,7 @@ PropDesc::initialize(JSContext* cx, const Value &origval, bool checkAccessors)
         hasGet = true;
         get = v;
         attrs |= JSPROP_GETTER | JSPROP_SHARED;
+        attrs &= ~JSPROP_READONLY;
         if (checkAccessors && !checkGetter(cx))
             return false;
     }
@@ -2036,6 +2038,7 @@ PropDesc::initialize(JSContext* cx, const Value &origval, bool checkAccessors)
         hasSet = true;
         set = v;
         attrs |= JSPROP_SETTER | JSPROP_SHARED;
+        attrs &= ~JSPROP_READONLY;
         if (checkAccessors && !checkSetter(cx))
             return false;
     }
@@ -2045,6 +2048,8 @@ PropDesc::initialize(JSContext* cx, const Value &origval, bool checkAccessors)
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INVALID_DESCRIPTOR);
         return false;
     }
+
+    JS_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
 
     return true;
 }
@@ -2352,9 +2357,9 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const jsid &id, const PropD
         if (desc.hasEnumerable)
             changed |= JSPROP_ENUMERATE;
         if (desc.hasGet)
-            changed |= JSPROP_GETTER | JSPROP_SHARED;
+            changed |= JSPROP_GETTER | JSPROP_SHARED | JSPROP_READONLY;
         if (desc.hasSet)
-            changed |= JSPROP_SETTER | JSPROP_SHARED;
+            changed |= JSPROP_SETTER | JSPROP_SHARED | JSPROP_READONLY;
 
         attrs = (desc.attrs & changed) | (shape->attributes() & ~changed);
         if (desc.hasGet) {
@@ -6696,6 +6701,8 @@ CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                 vp->setUndefined();
         }
     }
+
+    JS_ASSERT_IF(*attrsp & JSPROP_READONLY, !(*attrsp & (JSPROP_GETTER | JSPROP_SETTER)));
 
     /*
      * If obj's class has a stub (null) checkAccess hook, use the per-runtime
