@@ -8,7 +8,6 @@
 
 <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
 <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
 <script type="application/javascript"><![CDATA[
 
 // List of key codes, and whether they should cause a warning in full-screen mode.
@@ -246,12 +245,9 @@ window.addEventListener("keyup", keyHandler, true);
 window.addEventListener("keypress", keyHandler, true);
 
 function start() {
-  SimpleTest.waitForFocus(
-    function() {
-      gBrowser = document.getElementById("browser");
-      gBrowser.contentDocument.body.mozRequestFullScreen();
-      setTimeout(startNextTest, 0);
-    });
+  gBrowser = document.getElementById("browser");
+  gBrowser.contentDocument.body.mozRequestFullScreen();
+  setTimeout(startNextTest, 0);
 }
 
 ]]>
