@@ -2,6 +2,7 @@ from mod_pywebsocket import msgutil
 
 import time
 import sys
+import struct
 
 # see the list of tests in test_websocket.html
 
@@ -113,5 +114,23 @@ def web_socket_transfer_data(request):
                          msgutil.receive_message(request))
     msgutil.send_message(request, 
                          msgutil.receive_message(request))
+  elif request.ws_protocol == "test-44":
+    rcv = msgutil.receive_message(request)
+    # check we received correct binary msg
+    if len(rcv) == 3 \
+       and ord(rcv[0]) == 5 and ord(rcv[1]) == 0 and ord(rcv[2]) == 7:
+      # reply with binary msg 0x04
+      msgutil.send_message(request, struct.pack("cc", chr(0), chr(4)), True, True)
+    else:
+      msgutil.send_message(request, "incorrect binary msg received!")
+  elif request.ws_protocol == "test-45":
+    rcv = msgutil.receive_message(request)
+    # check we received correct binary msg
+    if rcv == "flob":
+      # send back same blob as binary msg
+      msgutil.send_message(request, rcv, True, True)
+    else:
+      msgutil.send_message(request, "incorrect binary msg received: '" + rcv + "'")
+
   while not request.client_terminated:
     msgutil.receive_message(request)
