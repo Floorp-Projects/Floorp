@@ -937,8 +937,10 @@ public class PanZoomController
         mController.notifyLayerClientOfGeometryChange();
         GeckoApp.mAppContext.showPluginViews();
 
-        /* Bounce back if overscrolled. */
-        bounce();
+        mState = PanZoomState.TOUCHING;
+        mX.velocity = mY.velocity = 0.0f;
+        mX.locked = mY.locked = false;
+        mLastEventTime = detector.getEventTime();
     }
 
     @Override
