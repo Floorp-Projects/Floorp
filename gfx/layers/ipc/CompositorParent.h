@@ -43,6 +43,8 @@
 #include "mozilla/layers/PCompositorParent.h"
 #include "mozilla/layers/PLayersParent.h"
 
+class LayerManager;
+
 namespace mozilla {
 namespace layers {
 
@@ -62,6 +64,8 @@ protected:
 
 private:
   void Composite();
+
+  LayerManager *mLayerManager;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };

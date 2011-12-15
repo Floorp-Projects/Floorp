@@ -327,6 +327,8 @@ typedef NSInteger NSEventGestureAxis;
 // If so, we shouldn't focus or unfocus a plugin.
 - (BOOL)isInFailingLeftClickThrough;
 
+- (void)setGLContext:(NSOpenGLContext *)aGLContext;
+
 // Simple gestures support
 //
 // XXX - The swipeWithEvent, beginGestureWithEvent, magnifyWithEvent,
@@ -434,7 +436,7 @@ public:
 
   NS_IMETHOD        SetCursor(nsCursor aCursor);
   NS_IMETHOD        SetCursor(imgIContainer* aCursor, PRUint32 aHotspotX, PRUint32 aHotspotY);
-  
+
   NS_IMETHOD        CaptureRollupEvents(nsIRollupListener * aListener, bool aDoCapture, bool aConsumeRollupEvent);
   NS_IMETHOD        SetTitle(const nsAString& title);
 
