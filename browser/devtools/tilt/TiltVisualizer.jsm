@@ -65,11 +65,11 @@ const INITIAL_Z_TRANSLATION = 400;
 
 const MOUSE_CLICK_THRESHOLD = 10;
 const ARCBALL_SENSITIVITY = 0.3;
-const ARCBALL_ZOOM_STEP = 0.1;
 const ARCBALL_ROTATION_STEP = 0.15;
 const ARCBALL_TRANSLATION_STEP = 35;
-const ARCBALL_SCROLL_MIN = -3000;
-const ARCBALL_SCROLL_MAX = 500;
+const ARCBALL_ZOOM_STEP = 0.1;
+const ARCBALL_ZOOM_MIN = -3000;
+const ARCBALL_ZOOM_MAX = 500;
 
 const TILT_CRAFTER = "resource:///modules/devtools/TiltWorkerCrafter.js";
 const TILT_PICKER = "resource:///modules/devtools/TiltWorkerPicker.js";
@@ -973,7 +973,7 @@ TiltVisualizer.Controller.prototype = {
     e.preventDefault();
     e.stopPropagation();
 
-    this.arcball.mouseScroll(e.detail);
+    this.arcball.zoom(e.detail);
   },
 
   /**
@@ -1003,8 +1003,8 @@ TiltVisualizer.Controller.prototype = {
     }
     if (code === e.DOM_VK_ESCAPE) {
       this.presenter.tiltUI.destroy(this.presenter.tiltUI.currentWindowId);
+      return;
     }
-
     this.arcball.keyUp(code);
   },
 
@@ -1080,12 +1080,7 @@ TiltVisualizer.Arcball = function TV_Arcball(
   this._mouseRelease = vec3.create();
   this._mouseMove = vec3.create();
   this._mouseLerp = vec3.create();
-
-  /**
-   * Other mouse flags: current pressed mouse button and the scroll amount.
-   */
   this._mouseButton = -1;
-  this._scrollValue = 0;
 
   /**
    * Object retaining the current pressed key codes.
@@ -1114,6 +1109,7 @@ TiltVisualizer.Arcball = function TV_Arcball(
   this._lastTrans = vec3.create();
   this._deltaTrans = vec3.create();
   this._currentTrans = vec3.create(aInitialTrans);
+  this._zoomAmount = 0;
 
   /**
    * Additional rotation and translation vectors.
@@ -1222,11 +1218,11 @@ TiltVisualizer.Arcball.prototype = {
       lastTrans[1] = currentTrans[1];
     }
 
-    let scrollValue = this._scrollValue;
+    let zoomAmount = this._zoomAmount;
     let keyCode = this._keyCode;
 
     // mouse wheel handles zooming
-    deltaTrans[2] = (scrollValue - currentTrans[2]) * ARCBALL_ZOOM_STEP;
+    deltaTrans[2] = (zoomAmount - currentTrans[2]) * ARCBALL_ZOOM_STEP;
     currentTrans[2] += deltaTrans[2];
 
     let addKeyRot = this._addKeyRot;
@@ -1258,6 +1254,19 @@ TiltVisualizer.Arcball.prototype = {
     }
     if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_DOWN]) {
       addKeyTrans[1] += ARCBALL_SENSITIVITY * ARCBALL_TRANSLATION_STEP;
+    }
+    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_I] ||
+        keyCode[Ci.nsIDOMKeyEvent.DOM_VK_ADD] ||
+        keyCode[Ci.nsIDOMKeyEvent.DOM_VK_EQUALS]) {
+      this.zoom(-ARCBALL_TRANSLATION_STEP);
+    }
+    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_O] ||
+        keyCode[Ci.nsIDOMKeyEvent.DOM_VK_SUBTRACT]) {
+      this.zoom(ARCBALL_TRANSLATION_STEP);
+    }
+    if (keyCode[Ci.nsIDOMKeyEvent.DOM_VK_R] ||
+        keyCode[Ci.nsIDOMKeyEvent.DOM_VK_0]) {
+      this._zoomAmount = 0;
     }
 
     // update the delta key rotations and translations
@@ -1369,16 +1378,17 @@ TiltVisualizer.Arcball.prototype = {
   },
 
   /**
-   * Function handling the mouseScroll event.
-   * Call this when the mouse wheel was scrolled.
+   * Function handling the arcball zoom amount.
+   * Call this, for example, when the mouse wheel was scrolled or zoom keys
+   * were pressed.
    *
-   * @param {Number} aScroll
-   *                 the mouse wheel direction and speed
+   * @param {Number} aZoom
+   *                 the zoom direction and speed
    */
-  mouseScroll: function TVA_mouseScroll(aScroll)
+  zoom: function TVA_zoom(aZoom)
   {
-    this._scrollValue = TiltMath.clamp(this._scrollValue - aScroll,
-      ARCBALL_SCROLL_MIN, ARCBALL_SCROLL_MAX);
+    this._zoomAmount = TiltMath.clamp(this._zoomAmount - aZoom,
+      ARCBALL_ZOOM_MIN, ARCBALL_ZOOM_MAX);
   },
 
   /**
