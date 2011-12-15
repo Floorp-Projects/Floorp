@@ -3885,6 +3885,7 @@ nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback,
   }
 
   if (!aCallback) {
+    mDoc->WarnOnceAbout(nsIDocument::eMozBeforePaint);
     return NS_ERROR_XPC_BAD_CONVERT_JS;
   }
 
@@ -3894,7 +3895,13 @@ nsGlobalWindow::MozRequestAnimationFrame(nsIFrameRequestCallback* aCallback,
 NS_IMETHODIMP
 nsGlobalWindow::MozCancelRequestAnimationFrame(PRInt32 aHandle)
 {
-  FORWARD_TO_INNER(MozCancelRequestAnimationFrame, (aHandle),
+  return MozCancelAnimationFrame(aHandle);
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::MozCancelAnimationFrame(PRInt32 aHandle)
+{
+  FORWARD_TO_INNER(MozCancelAnimationFrame, (aHandle),
                    NS_ERROR_NOT_INITIALIZED);
 
   if (!mDoc) {
