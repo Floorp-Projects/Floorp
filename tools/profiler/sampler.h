@@ -86,7 +86,7 @@
 #endif
 
 // Redefine the macros for platforms where SPS is supported.
-#if defined(ANDROID) || defined(XP_MACOSX) || defined(XP_WIN)
+#if defined(ANDROID) || defined(XP_LINUX) || defined(XP_MACOSX) || defined(XP_WIN)
 
 #include "sps_sampler.h"
 
@@ -106,6 +106,7 @@
 #define SAMPLER_GET_RESPONSIVENESS() NULL
 #define SAMPLE_LABEL(name_space, info)
 #define SAMPLE_MARKER(info)
-#endif
 
 #endif
+
+#endif // ifndef SAMPLER_H

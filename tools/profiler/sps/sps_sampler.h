@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <stdlib.h>
+#include <signal.h>
 #include "thread_helper.h"
 #include "nscore.h"
 #include "mozilla/TimeStamp.h"
