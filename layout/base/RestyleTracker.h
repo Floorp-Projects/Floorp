@@ -94,7 +94,13 @@ public:
   /**
    * Process the restyles we've been tracking.
    */
-  void ProcessRestyles();
+  void ProcessRestyles() {
+    // Fast-path the common case (esp. for the animation restyle
+    // tracker) of not having anything to do.
+    if (mPendingRestyles.Count()) {
+      DoProcessRestyles();
+    }
+  }
 
   // Return our ELEMENT_HAS_PENDING_(ANIMATION_)RESTYLE bit
   PRUint32 RestyleBit() const {
@@ -142,6 +148,11 @@ private:
   inline void ProcessOneRestyle(Element* aElement,
                                 nsRestyleHint aRestyleHint,
                                 nsChangeHint aChangeHint);
+
+  /**
+   * The guts of our restyle processing.
+   */
+  void DoProcessRestyles();
 
   typedef nsDataHashtable<nsISupportsHashKey, RestyleData> PendingRestyleTable;
   typedef nsAutoTArray< nsRefPtr<Element>, 32> RestyleRootArray;
