@@ -74,11 +74,17 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetAdapterDriverVersion2(nsAString & aAdapterDriverVersion);
   NS_SCRIPTABLE NS_IMETHOD GetAdapterDriverDate2(nsAString & aAdapterDriverDate);
   NS_SCRIPTABLE NS_IMETHOD GetIsGPU2Active(bool *aIsGPU2Active);
+
   using GfxInfoBase::GetFeatureStatus;
   using GfxInfoBase::GetFeatureSuggestedDriverVersion;
   using GfxInfoBase::GetWebGLParameter;
 
   virtual nsresult Init();
+
+#ifdef DEBUG
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIGFXINFODEBUG
+#endif
 
 protected:
 

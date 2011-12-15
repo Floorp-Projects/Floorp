@@ -67,10 +67,28 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
+#ifdef DEBUG
+NS_IMPL_ISUPPORTS_INHERITED1(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
+#endif
+
 GfxInfo::GfxInfo()
 {
 }
 
+static OperatingSystem
+OSXVersionToOperatingSystem(PRUint32 aOSXVersion)
+{
+  switch (aOSXVersion & MAC_OS_X_VERSION_MAJOR_MASK) {
+    case MAC_OS_X_VERSION_10_5_HEX:
+      return DRIVER_OS_OS_X_10_5;
+    case MAC_OS_X_VERSION_10_6_HEX:
+      return DRIVER_OS_OS_X_10_6;
+    case MAC_OS_X_VERSION_10_7_HEX:
+      return DRIVER_OS_OS_X_10_7;
+  }
+
+  return DRIVER_OS_UNKNOWN;
+}
 // The following three functions are derived from Chromium code
 static CFTypeRef SearchPortForProperty(io_registry_entry_t dspPort,
                                        CFStringRef propertyName)
@@ -157,6 +175,8 @@ GfxInfo::Init()
   GetDeviceInfo();
 
   AddCrashReportAnnotations();
+
+  mOSXVersion = nsToolkit::OSXVersion();
 
   return rv;
 }
@@ -364,21 +384,6 @@ GfxInfo::GetGfxDriverInfo()
   return *mDriverInfo;
 }
 
-static OperatingSystem
-OSXVersionToOperatingSystem(PRUint32 aOSXVersion)
-{
-  switch (aOSXVersion & MAC_OS_X_VERSION_MAJOR_MASK) {
-    case MAC_OS_X_VERSION_10_5_HEX:
-      return DRIVER_OS_OS_X_10_5;
-    case MAC_OS_X_VERSION_10_6_HEX:
-      return DRIVER_OS_OS_X_10_6;
-    case MAC_OS_X_VERSION_10_7_HEX:
-      return DRIVER_OS_OS_X_10_7;
-  }
-
-  return DRIVER_OS_UNKNOWN;
-}
-
 nsresult
 GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, 
                               PRInt32* aStatus,
@@ -389,7 +394,7 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
   NS_ENSURE_ARG_POINTER(aStatus);
   aSuggestedDriverVersion.SetIsVoid(true);
   *aStatus = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
-  OperatingSystem os = OSXVersionToOperatingSystem(nsToolkit::OSXVersion());
+  OperatingSystem os = OSXVersionToOperatingSystem(mOSXVersion);
   if (aOS)
     *aOS = os;
 
@@ -456,3 +461,37 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
 
   return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, &os);
 }
+
+#ifdef DEBUG
+
+// Implement nsIGfxInfoDebug
+
+/* void spoofVendorID (in DOMString aVendorID); */
+NS_IMETHODIMP GfxInfo::SpoofVendorID(const nsAString & aVendorID)
+{
+  mAdapterVendorID = aVendorID;
+  return NS_OK;
+}
+
+/* void spoofDeviceID (in unsigned long aDeviceID); */
+NS_IMETHODIMP GfxInfo::SpoofDeviceID(const nsAString & aDeviceID)
+{
+  mAdapterDeviceID = aDeviceID;
+  return NS_OK;
+}
+
+/* void spoofDriverVersion (in DOMString aDriverVersion); */
+NS_IMETHODIMP GfxInfo::SpoofDriverVersion(const nsAString & aDriverVersion)
+{
+  mDriverVersion = aDriverVersion;
+  return NS_OK;
+}
+
+/* void spoofOSVersion (in unsigned long aVersion); */
+NS_IMETHODIMP GfxInfo::SpoofOSVersion(PRUint32 aVersion)
+{
+  mOSXVersion = aVersion;
+  return NS_OK;
+}
+
+#endif
