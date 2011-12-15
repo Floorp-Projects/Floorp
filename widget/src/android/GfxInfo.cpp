@@ -188,47 +188,47 @@ GfxInfo::GetAdapterDriverDate2(nsAString & aAdapterDriverDate)
   return NS_ERROR_FAILURE;
 }
 
-/* readonly attribute unsigned long adapterVendorID; */
+/* readonly attribute DOMString adapterVendorID; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
+GfxInfo::GetAdapterVendorID(nsAString & aAdapterVendorID)
 {
   nsAutoString str;
   PRInt32 version; // the HARDWARE field isn't available on Android SDK < 8
   if (!mozilla::AndroidBridge::Bridge()->GetStaticIntField("android/os/Build$VERSION", "SDK_INT", &version))
     version = 0;
   if (version >= 8 && mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str)) {
-    *aAdapterVendorID = HashString(str);
+    aAdapterVendorID = str;
     return NS_OK;
   }
 
-  *aAdapterVendorID = 0;
+  aAdapterVendorID = NS_LITERAL_STRING("");
   return NS_OK;
 }
 
-/* readonly attribute unsigned long adapterVendorID2; */
+/* readonly attribute DOMString adapterVendorID2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterVendorID2(PRUint32 *aAdapterVendorID)
+GfxInfo::GetAdapterVendorID2(nsAString & aAdapterVendorID)
 {
   return NS_ERROR_FAILURE;
 }
 
-/* readonly attribute unsigned long adapterDeviceID; */
+/* readonly attribute DOMString adapterDeviceID; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
+GfxInfo::GetAdapterDeviceID(nsAString & aAdapterDeviceID)
 {
   nsAutoString str;
   if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "MODEL", str)) {
-    *aAdapterDeviceID = HashString(str);
+    aAdapterDeviceID = str;
     return NS_OK;
   }
 
-  *aAdapterDeviceID = 0;
+  aAdapterDeviceID = NS_LITERAL_STRING("");
   return NS_OK;
 }
 
-/* readonly attribute unsigned long adapterDeviceID2; */
+/* readonly attribute DOMString adapterDeviceID2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterDeviceID2(PRUint32 *aAdapterDeviceID)
+GfxInfo::GetAdapterDeviceID2(nsAString & aAdapterDeviceID)
 {
   return NS_ERROR_FAILURE;
 }
@@ -244,29 +244,30 @@ void
 GfxInfo::AddOpenGLCrashReportAnnotations()
 {
 #if defined(MOZ_CRASHREPORTER)
-  nsCAutoString deviceIDString, vendorIDString;
-  nsAutoString adapterDescriptionString;
-  PRUint32 deviceID, vendorID;
+  nsAutoString adapterDescriptionString, deviceID, vendorID;
+  nsCAutoString narrowDeviceID, narrowVendorID;
 
-  GetAdapterDeviceID(&deviceID);
-  GetAdapterVendorID(&vendorID);
+  GetAdapterDeviceID(deviceID);
+  GetAdapterVendorID(vendorID);
   GetAdapterDescription(adapterDescriptionString);
 
-  deviceIDString.AppendPrintf("%04x", deviceID);
-  vendorIDString.AppendPrintf("%04x", vendorID);
+  narrowDeviceID = NS_ConvertUTF16toUTF8(deviceID);
+  narrowVendorID = NS_ConvertUTF16toUTF8(vendorID);
 
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterVendorID"),
-      vendorIDString);
+                                     narrowVendorID);
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterDeviceID"),
-      deviceIDString);
+                                     narrowDeviceID);
 
   /* Add an App Note for now so that we get the data immediately. These
    * can go away after we store the above in the socorro db */
   nsCAutoString note;
   /* AppendPrintf only supports 32 character strings, mrghh. */
-  note.AppendPrintf("AdapterVendorID: %04x, ", vendorID);
-  note.AppendPrintf("AdapterDeviceID: %04x.", deviceID);
-  note.Append("\n");
+  note.Append("AdapterVendorID: ");
+  note.Append(narrowVendorID);
+  note.Append(", AdapterDeviceID: ");
+  note.Append(narrowDeviceID);
+  note.Append(".\n");
   note.AppendPrintf("AdapterDescription: '%s'.", NS_ConvertUTF16toUTF8(adapterDescriptionString).get());
   note.Append("\n");
 
