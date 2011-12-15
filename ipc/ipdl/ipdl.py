@@ -59,12 +59,15 @@ op.add_option('-o', '--outcpp-dir', dest='cppdir', default='.',
 A protocol Foo in the namespace bar will cause the sources
   cppdir/FooParent.cpp, cppdir/FooChild.cpp
 to be generated""")
+op.add_option('-m', '--dependencies', dest='emitdependencies', default=False, action='store_true',
+              help="Emit Makefile dependencies for incremental rebuilds")
 
 
 options, files = op.parse_args()
 _verbosity = options.verbosity
 headersdir = options.headersdir
 cppdir = options.cppdir
+emitdependencies = options.emitdependencies
 includedirs = [ os.path.abspath(incdir) for incdir in options.includedirs ]
 
 if not len(files):
@@ -106,13 +109,16 @@ for f in files:
         log(3, '  pretty printed code:')
         ipdl.genipdl(ast, codedir)
 
+    if emitdependencies == 1:
+        ipdl.genm(ast, cppdir, normalizedFilename(f))
+
 # Second pass: generate code
 for f in files:
     # Read from parser cache
     filename = normalizedFilename(f)
     ast = ipdl.parse(None, filename, includedirs=includedirs)
     ipdl.gencxx(filename, ast, headersdir, cppdir)
-    
+
     allprotocols.append('%sMsgStart' % ast.protocol.name)
 
 allprotocols.sort()
@@ -140,5 +146,5 @@ COMPILE_ASSERT(LastMsgIndex <= 65536, need_to_update_IPC_MESSAGE_MACRO);
 #endif // ifndef IPCMessageStart_h
 """
 
-ipdl.writeifmodified(ipcmsgstart.getvalue(),
+ipdl.writetofile(ipcmsgstart.getvalue(),
                      os.path.join(headersdir, 'IPCMessageStart.h'))
