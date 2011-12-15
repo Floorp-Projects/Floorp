@@ -387,74 +387,72 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
                               OperatingSystem* aOS /* = nsnull */)
 {
   NS_ENSURE_ARG_POINTER(aStatus);
-
   aSuggestedDriverVersion.SetIsVoid(true);
-
-  PRInt32 status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
-
+  *aStatus = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
   OperatingSystem os = OSXVersionToOperatingSystem(nsToolkit::OSXVersion());
-
-  // Many WebGL issues on 10.5, especially:
-  //   * bug 631258: WebGL shader paints using textures belonging to other processes on Mac OS 10.5
-  //   * bug 618848: Post process shaders and texture mapping crash OS X 10.5
-  if (aFeature == nsIGfxInfo::FEATURE_WEBGL_OPENGL &&
-      !nsToolkit::OnSnowLeopardOrLater())
-  {
-    status = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
-  }
-
-  // The code around the following has been moved into the global blocklist.
-#if 0
-    // CGL reports a list of renderers, some renderers are slow (e.g. software)
-    // and AFAIK we can't decide which one will be used among them, so let's implement this by returning NO_INFO
-    // if any not-known-to-be-bad renderer is found.
-    // The assumption that we make here is that the system will spontaneously use the best/fastest renderer in the list.
-    // Note that the presence of software renderer fallbacks means that slow software rendering may be automatically
-    // used, which seems to be the case in bug 611292 where the user had a Intel GMA 945 card (non programmable hardware).
-    // Therefore we need to explicitly blacklist non-OpenGL2 hardware, which could result in a software renderer
-    // being used.
-
-    for (PRUint32 i = 0; i < ArrayLength(mRendererIDs); ++i) {
-      switch (mRendererIDs[i]) {
-        case kCGLRendererATIRage128ID: // non-programmable
-        case kCGLRendererATIRadeonID: // non-programmable
-        case kCGLRendererATIRageProID: // non-programmable
-        case kCGLRendererATIRadeon8500ID: // no OpenGL 2 support, http://en.wikipedia.org/wiki/Radeon_R200
-        case kCGLRendererATIRadeon9700ID: // no OpenGL 2 support, http://en.wikipedia.org/wiki/Radeon_R200
-        case kCGLRendererATIRadeonX1000ID: // can't render to non-power-of-two texture backed framebuffers
-        case kCGLRendererIntel900ID: // non-programmable
-        case kCGLRendererGeForce2MXID: // non-programmable
-        case kCGLRendererGeForce3ID: // no OpenGL 2 support,
-                                     // http://en.wikipedia.org/wiki/Comparison_of_Nvidia_graphics_processing_units
-        case kCGLRendererGeForceFXID: // incomplete OpenGL 2 support with software fallbacks,
-                                      // http://en.wikipedia.org/wiki/Comparison_of_Nvidia_graphics_processing_units
-        case kCGLRendererVTBladeXP2ID: // Trident DX8 chip, assuming it's not GL2 capable
-        case kCGLRendererMesa3DFXID: // non-programmable
-        case kCGLRendererGenericFloatID: // software renderer
-        case kCGLRendererGenericID: // software renderer
-        case kCGLRendererAppleSWID: // software renderer
-          break;
-        default:
-          if (mRendererIDs[i])
-            foundGoodDevice = true;
-      }
-    }
-#endif
-
-  if (aFeature == nsIGfxInfo::FEATURE_WEBGL_MSAA) {
-    // Blacklist all ATI cards on OSX, except for
-    // 0x6760 and 0x9488
-    if (mAdapterVendorID == GfxDriverInfo::GetDeviceVendor(VendorATI) && 
-        (mAdapterDeviceID.LowerCaseEqualsLiteral("0x6760") ||
-         mAdapterDeviceID.LowerCaseEqualsLiteral("0x9488"))) {
-      *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
-      return NS_OK;
-    }
-  }
-
   if (aOS)
     *aOS = os;
-  *aStatus = status;
+
+  // Don't evaluate special cases when we're evaluating the downloaded blocklist.
+  if (!aDriverInfo.Length()) {
+    // Many WebGL issues on 10.5, especially:
+    //   * bug 631258: WebGL shader paints using textures belonging to other processes on Mac OS 10.5
+    //   * bug 618848: Post process shaders and texture mapping crash OS X 10.5
+    if (aFeature == nsIGfxInfo::FEATURE_WEBGL_OPENGL &&
+        !nsToolkit::OnSnowLeopardOrLater()) {
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
+      return NS_OK;
+    }
+
+    // The code around the following has been moved into the global blocklist.
+#if 0
+      // CGL reports a list of renderers, some renderers are slow (e.g. software)
+      // and AFAIK we can't decide which one will be used among them, so let's implement this by returning NO_INFO
+      // if any not-known-to-be-bad renderer is found.
+      // The assumption that we make here is that the system will spontaneously use the best/fastest renderer in the list.
+      // Note that the presence of software renderer fallbacks means that slow software rendering may be automatically
+      // used, which seems to be the case in bug 611292 where the user had a Intel GMA 945 card (non programmable hardware).
+      // Therefore we need to explicitly blacklist non-OpenGL2 hardware, which could result in a software renderer
+      // being used.
+
+      for (PRUint32 i = 0; i < ArrayLength(mRendererIDs); ++i) {
+        switch (mRendererIDs[i]) {
+          case kCGLRendererATIRage128ID: // non-programmable
+          case kCGLRendererATIRadeonID: // non-programmable
+          case kCGLRendererATIRageProID: // non-programmable
+          case kCGLRendererATIRadeon8500ID: // no OpenGL 2 support, http://en.wikipedia.org/wiki/Radeon_R200
+          case kCGLRendererATIRadeon9700ID: // no OpenGL 2 support, http://en.wikipedia.org/wiki/Radeon_R200
+          case kCGLRendererATIRadeonX1000ID: // can't render to non-power-of-two texture backed framebuffers
+          case kCGLRendererIntel900ID: // non-programmable
+          case kCGLRendererGeForce2MXID: // non-programmable
+          case kCGLRendererGeForce3ID: // no OpenGL 2 support,
+                                       // http://en.wikipedia.org/wiki/Comparison_of_Nvidia_graphics_processing_units
+          case kCGLRendererGeForceFXID: // incomplete OpenGL 2 support with software fallbacks,
+                                        // http://en.wikipedia.org/wiki/Comparison_of_Nvidia_graphics_processing_units
+          case kCGLRendererVTBladeXP2ID: // Trident DX8 chip, assuming it's not GL2 capable
+          case kCGLRendererMesa3DFXID: // non-programmable
+          case kCGLRendererGenericFloatID: // software renderer
+          case kCGLRendererGenericID: // software renderer
+          case kCGLRendererAppleSWID: // software renderer
+            break;
+          default:
+            if (mRendererIDs[i])
+              foundGoodDevice = true;
+        }
+      }
+#endif
+
+    if (aFeature == nsIGfxInfo::FEATURE_WEBGL_MSAA) {
+      // Blacklist all ATI cards on OSX, except for
+      // 0x6760 and 0x9488
+      if (mAdapterVendorID == GfxDriverInfo::GetDeviceVendor(VendorATI) && 
+          (mAdapterDeviceID.LowerCaseEqualsLiteral("0x6760") ||
+           mAdapterDeviceID.LowerCaseEqualsLiteral("0x9488"))) {
+        *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
+        return NS_OK;
+      }
+    }
+  }
 
   return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, &os);
 }

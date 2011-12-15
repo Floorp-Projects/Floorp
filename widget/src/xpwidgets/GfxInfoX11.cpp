@@ -264,23 +264,28 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
                               OperatingSystem* aOS /* = nsnull */)
 
 {
-    GetData();
-    *aStatus = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
-    aSuggestedDriverVersion.SetIsVoid(true);
+  NS_ENSURE_ARG_POINTER(aStatus);
+  *aStatus = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
+  aSuggestedDriverVersion.SetIsVoid(true);
+  OperatingSystem os = DRIVER_OS_LINUX;
+  if (aOS)
+    *aOS = os;
 
 #ifdef MOZ_PLATFORM_MAEMO
-    *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
-    // on Maemo, the glxtest probe doesn't build, and we don't really need GfxInfo anyway
-    return NS_OK;
+  *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
+  // on Maemo, the glxtest probe doesn't build, and we don't really need GfxInfo anyway
+  return NS_OK;
 #endif
 
-    OperatingSystem os = DRIVER_OS_LINUX;
+  // Don't evaluate any special cases if we're checking the downloaded blocklist.
+  if (!aDriverInfo.Length()) {
+    GetData();
 
     // Disable OpenGL layers when we don't have texture_from_pixmap because it regresses performance. 
     if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS && !mHasTextureFromPixmap) {
-        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
-        aSuggestedDriverVersion.AssignLiteral("<Anything with EXT_texture_from_pixmap support>");
-        return NS_OK;
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+      aSuggestedDriverVersion.AssignLiteral("<Anything with EXT_texture_from_pixmap support>");
+      return NS_OK;
     }
 
     // whitelist the linux test slaves' current configuration.
@@ -292,34 +297,32 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
         !strcmp(mRenderer.get(), "GeForce 9400/PCI/SSE2") &&
         !strcmp(mVersion.get(), "3.2.0 NVIDIA 190.42"))
     {
-        *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
-        return NS_OK;
+      *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
+      return NS_OK;
     }
 
     if (mIsMesa) {
-        if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(7,10,3)) {
-            *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
-            aSuggestedDriverVersion.AssignLiteral("Mesa 7.10.3");
-        }
+      if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(7,10,3)) {
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+        aSuggestedDriverVersion.AssignLiteral("Mesa 7.10.3");
+      }
     } else if (mIsNVIDIA) {
-        if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(257,21)) {
-            *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
-            aSuggestedDriverVersion.AssignLiteral("NVIDIA 257.21");
-        }
+      if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(257,21)) {
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+        aSuggestedDriverVersion.AssignLiteral("NVIDIA 257.21");
+      }
     } else if (mIsFGLRX) {
-        // FGLRX does not report a driver version number, so we have the OpenGL version instead.
-        // by requiring OpenGL 3, we effectively require recent drivers.
-        if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(3, 0)) {
-            *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
-        }
+      // FGLRX does not report a driver version number, so we have the OpenGL version instead.
+      // by requiring OpenGL 3, we effectively require recent drivers.
+      if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(3, 0)) {
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+      }
     } else {
-        // like on windows, let's block unknown vendors. Think of virtual machines.
-        // Also, this case is hit whenever the GLXtest probe failed to get driver info or crashed.
-        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+      // like on windows, let's block unknown vendors. Think of virtual machines.
+      // Also, this case is hit whenever the GLXtest probe failed to get driver info or crashed.
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
     }
-
-  if (aOS)
-    *aOS = os;
+  }
 
   return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, &os);
 }
