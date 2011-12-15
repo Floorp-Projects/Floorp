@@ -96,9 +96,13 @@ public:
   // (A resample performs the same operations as a sample but doesn't advance
   // the current time and doesn't check if the container is paused)
   void Resample() { DoSample(false); }
+
   void SetResampleNeeded()
   {
     if (!mRunningSample) {
+      if (!mResampleNeeded) {
+        FlagDocumentNeedsFlush();
+      }
       mResampleNeeded = true;
     }
   }
@@ -197,6 +201,8 @@ protected:
   // Methods for adding/removing time containers
   virtual nsresult AddChild(nsSMILTimeContainer& aChild);
   virtual void     RemoveChild(nsSMILTimeContainer& aChild);
+
+  void FlagDocumentNeedsFlush();
 
   // Members
   nsAutoRefCnt mRefCnt;
