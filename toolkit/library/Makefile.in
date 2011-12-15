@@ -603,3 +603,8 @@ ifdef ENABLE_TESTS
 DEFINES += -DENABLE_LAYOUTDEBUG
 endif
 endif
+
+ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_PROFILE_USE))
+# Wrap linker to measure peak virtual memory usage.
+LD := $(PYTHON) $(topsrcdir)/build/link.py $(CURDIR)/linker-vsize $(LD)
+endif
