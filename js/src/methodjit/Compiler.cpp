@@ -5449,11 +5449,13 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
 #ifdef JSGC_INCREMENTAL_MJ
             /* Write barrier. */
             if (cx->compartment->needsBarrier()) {
+                frame.pinReg(address.base);
                 stubcc.linkExit(masm.jump(), Uses(0));
                 stubcc.leave();
                 stubcc.masm.addPtr(Imm32(address.offset), address.base, Registers::ArgReg1);
                 OOL_STUBCALL(stubs::WriteBarrier, REJOIN_NONE);
                 stubcc.rejoin(Changes(0));
+                frame.unpinReg(address.base);
             }
 #endif
 
@@ -5490,9 +5492,9 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
             if (!isObject)
                 notObject = frame.testObject(Assembler::NotEqual, lhs);
 #ifdef JSGC_INCREMENTAL_MJ
-            frame.pinReg(reg);
             if (cx->compartment->needsBarrier() && propertyTypes->needsBarrier(cx)) {
                 /* Write barrier. */
+                frame.pinReg(reg);
                 Jump j = masm.testGCThing(Address(reg, JSObject::getFixedSlotOffset(slot)));
                 stubcc.linkExit(j, Uses(0));
                 stubcc.leave();
@@ -5500,8 +5502,8 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
                                    reg, Registers::ArgReg1);
                 OOL_STUBCALL(stubs::GCThingWriteBarrier, REJOIN_NONE);
                 stubcc.rejoin(Changes(0));
+                frame.unpinReg(reg);
             }
-            frame.unpinReg(reg);
 #endif
             if (!isObject) {
                 stubcc.linkExit(notObject.get(), Uses(2));
