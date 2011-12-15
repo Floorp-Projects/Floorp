@@ -36,7 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.gecko.db;
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.db;
 
 import java.io.File;
 import java.util.HashMap;
@@ -50,6 +51,7 @@ import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.db.BrowserContract.Schema;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
+import org.mozilla.gecko.db.BrowserContract;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
