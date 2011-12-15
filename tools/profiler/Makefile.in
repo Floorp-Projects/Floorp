@@ -78,7 +78,7 @@ EXTRA_JS_MODULES = \
   Profiler.jsm \
   $(NULL)
 
-ifneq (,$(filter Android Linux,$(OS_TARGET)))
+ifeq ($(OS_TARGET),Android)
 
 DEFINES += -DMOZ_ENABLE_PROFILER_SPS
 
