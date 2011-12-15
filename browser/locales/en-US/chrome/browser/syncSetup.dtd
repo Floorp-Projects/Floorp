@@ -88,6 +88,8 @@
 <!ENTITY engine.passwords.accesskey "P">
 <!ENTITY engine.prefs.label         "Preferences">
 <!ENTITY engine.prefs.accesskey     "S">
+<!ENTITY engine.addons.label        "Add-ons">
+<!ENTITY engine.addons.accesskey    "A">
 
 <!ENTITY choice2.merge.main.label      "Merge this computer's data with my &syncBrand.shortName.label; data">
 <!ENTITY choice2.merge.recommended.label "Recommended:">
