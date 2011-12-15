@@ -417,8 +417,9 @@ interface nsIDOMWindow : nsISupports
    *
    * @see <http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/RequestAnimationFrame/Overview.html>
    */
+  // Argument is optional only so we can warn when it's null
   long
-    mozRequestAnimationFrame(in nsIFrameRequestCallback aCallback);
+    mozRequestAnimationFrame([optional] in nsIFrameRequestCallback aCallback);
 
   /**
    * Cancel a refresh callback.
