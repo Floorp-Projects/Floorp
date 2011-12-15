@@ -1466,20 +1466,20 @@ public:
     // Public textrun API for general use
 
     bool IsClusterStart(PRUint32 aPos) {
-        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        NS_ASSERTION(aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].IsClusterStart();
     }
     bool IsLigatureGroupStart(PRUint32 aPos) {
-        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        NS_ASSERTION(aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].IsLigatureGroupStart();
     }
     bool CanBreakLineBefore(PRUint32 aPos) {
-        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        NS_ASSERTION(aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].CanBreakBefore() ==
             CompressedGlyph::FLAG_BREAK_TYPE_NORMAL;
     }
     bool CanHyphenateBefore(PRUint32 aPos) {
-        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        NS_ASSERTION(aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].CanBreakBefore() ==
             CompressedGlyph::FLAG_BREAK_TYPE_HYPHEN;
     }
