@@ -1376,11 +1376,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
     foundInterface = static_cast<nsIDOMWindowInternal*>(this);
     if (!sWarnedAboutWindowInternal) {
       sWarnedAboutWindowInternal = true;
-      nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
-                                      "nsIDOMWindowInternalWarning",
-                                      nsnull, 0, nsnull, EmptyString(), 0, 0,
-                                      nsIScriptError::warningFlag,
-                                      "Extensions", mWindowID);
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                      "Extensions", mDoc,
+                                      nsContentUtils::eDOM_PROPERTIES,
+                                      "nsIDOMWindowInternalWarning");
     }
   } else
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
@@ -5544,13 +5543,10 @@ static void
 ReportUseOfDeprecatedMethod(nsGlobalWindow* aWindow, const char* aWarning)
 {
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aWindow->GetExtantDocument());
-  nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
-                                  aWarning,
-                                  nsnull, 0,
-                                  nsnull,
-                                  EmptyString(), 0, 0,
-                                  nsIScriptError::warningFlag,
-                                  "DOM Events", doc);
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  "DOM Events", doc,
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  aWarning);
 }
 
 NS_IMETHODIMP
@@ -6402,13 +6398,10 @@ nsGlobalWindow::Close()
       // We're blocking the close operation
       // report localized error msg in JS console
       nsContentUtils::ReportToConsole(
-          nsContentUtils::eDOM_PROPERTIES,
-          "WindowCloseBlockedWarning",
-          nsnull, 0, // No params
-          nsnull,
-          EmptyString(), 0, 0, // No source, or column/line number
           nsIScriptError::warningFlag,
-          "DOM Window", mDoc);  // Better name for the category?
+          "DOM Window", mDoc,  // Better name for the category?
+          nsContentUtils::eDOM_PROPERTIES,
+          "WindowCloseBlockedWarning");
 
       return NS_OK;
     }

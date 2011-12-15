@@ -249,7 +249,7 @@ protected:
    */
   bool IsInner() const {
     const nsIContent *parent = GetFlattenedTreeParent();
-    return parent && parent->GetNameSpaceID() == kNameSpaceID_SVG &&
+    return parent && parent->IsSVG() &&
            parent->Tag() != nsGkAtoms::foreignObject;
   }
 

@@ -3035,15 +3035,12 @@ nsXULDocument::ResumeWalk()
                     const PRUnichar* params[] = { piProto->mTarget.get() };
 
                     nsContentUtils::ReportToConsole(
+                                        nsIScriptError::warningFlag,
+                                        "XUL Document", nsnull,
                                         nsContentUtils::eXUL_PROPERTIES,
                                         "PINotInProlog",
                                         params, ArrayLength(params),
-                                        overlayURI,
-                                        EmptyString(), /* source line */
-                                        0, /* line number */
-                                        0, /* column number */
-                                        nsIScriptError::warningFlag,
-                                        "XUL Document");
+                                        overlayURI);
                 }
 
                 nsIContent* parent = processingOverlayHookupNodes ?
@@ -3332,15 +3329,11 @@ nsXULDocument::ReportMissingOverlay(nsIURI* aURI)
 
     NS_ConvertUTF8toUTF16 utfSpec(spec);
     const PRUnichar* params[] = { utfSpec.get() };
-    nsContentUtils::ReportToConsole(nsContentUtils::eXUL_PROPERTIES,
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    "XUL Document", this,
+                                    nsContentUtils::eXUL_PROPERTIES,
                                     "MissingOverlay",
-                                    params, ArrayLength(params),
-                                    nsnull,
-                                    EmptyString(), /* source line */
-                                    0, /* line number */
-                                    0, /* column number */
-                                    nsIScriptError::warningFlag,
-                                    "XUL Document", this);
+                                    params, ArrayLength(params));
 }
 
 nsresult

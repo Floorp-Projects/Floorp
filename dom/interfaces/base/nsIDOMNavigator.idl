@@ -39,7 +39,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(B8EE0374-5F47-4ED0-B9B0-BDE3E6D81FF5)]
+[scriptable, uuid(a1ee08c1-0299-4908-a6ba-7cBc8da6531f)]
 interface nsIDOMNavigator : nsISupports
 {
   readonly attribute DOMString           appCodeName;
@@ -61,5 +61,52 @@ interface nsIDOMNavigator : nsISupports
   readonly attribute DOMString           doNotTrack;
 
   boolean                   javaEnabled();
-};
 
+  /**
+   * Pulse the device's vibrator, if it has one.  If the device does not have a
+   * vibrator, this function does nothing.  If the window is hidden, this
+   * function does nothing.
+   *
+   * mozVibrate takes one argument, which specifies either how long to vibrate
+   * for or gives a pattern of vibrator-on/vibrator-off timings.
+   *
+   * If a vibration pattern is in effect when this function is called, this
+   * call will overwrite the existing pattern, if this call successfully
+   * completes.
+   *
+   * We handle the argument to mozVibrate as follows.
+   *
+   * - If the argument is undefined or null, we throw
+   *   NS_ERROR_DOM_NOT_SUPPORTED_ERR.
+   *
+   * - If the argument is 0, the empty list, or a list containing entirely 0s,
+   *   we cancel any outstanding vibration pattern; that is, we stop the device
+   *   from vibrating.
+   *
+   * - Otherwise, if the argument X is not a list, we treat it as though it's
+   *   the singleton list [X] and then proceed as below.
+   *
+   * - If the argument is a list (or if we wrapped it as a list above), then we
+   *   try to convert each element in the list to an integer, by first
+   *   converting it to a number and then rounding.  If there is some element
+   *   that we can't convert to an integer, or if any of the integers are
+   *   negative, we throw NS_ERROR_DOM_NOT_SUPPORTED_ERR.
+   *
+   *   This list of integers specifies a vibration pattern.  Given a list of
+   *   numbers
+   *
+   *      [a_1, b_1, a_2, b_2, ..., a_n]
+   *
+   *   the device will vibrate for a_1 milliseconds, then be still for b_1
+   *   milliseconds, then vibrate for a_2 milliseconds, and so on.
+   *
+   *   The list may contain an even or an odd number of elements, but if you
+   *   pass an even number of elements (that is, if your list ends with b_n
+   *   instead of a_n), the final element doesn't specify anything meaningful.
+   *
+   *   We may throw NS_ERROR_DOM_NOT_SUPPORTED_ERR if the vibration pattern is
+   *   too long, or if any of its elements is too large.
+   */
+  [implicit_jscontext]
+  void mozVibrate(in jsval aPattern);
+};

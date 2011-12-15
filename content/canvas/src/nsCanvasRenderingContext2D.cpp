@@ -906,14 +906,11 @@ nsCanvasRenderingContext2D::SetStyleFromStringOrInterface(const nsAString& aStr,
     }
 
     nsContentUtils::ReportToConsole(
-        nsContentUtils::eDOM_PROPERTIES,
-        "UnexpectedCanvasVariantStyle",
-        nsnull, 0,
-        nsnull,
-        EmptyString(), 0, 0,
         nsIScriptError::warningFlag,
         "Canvas",
-        mCanvasElement ? HTMLCanvasElement()->OwnerDoc() : nsnull);
+        mCanvasElement ? HTMLCanvasElement()->OwnerDoc() : nsnull,
+        nsContentUtils::eDOM_PROPERTIES,
+        "UnexpectedCanvasVariantStyle");
 
     return NS_OK;
 }

@@ -42,10 +42,7 @@
 #include "xptc_gcc_x86_unix.h"
 
 extern "C" {
-#ifndef XP_WIN32
-static
-#endif
-void ATTRIBUTE_USED __attribute__ ((regparm(3)))
+static void ATTRIBUTE_USED __attribute__ ((regparm(3)))
 invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
 {
     for(PRUint32 i = paramCount; i >0; i--, d++, s++)
@@ -89,7 +86,7 @@ __asm__ (
    is what xptcstubs uses. */
 	".align 2\n\t"
 	".globl " SYMBOL_UNDERSCORE "NS_InvokeByIndex_P\n\t"
-#if !defined(XP_WIN32) && !defined(XP_OS2) && !defined(XP_MACOSX)
+#ifndef XP_MACOSX
 	".type  " SYMBOL_UNDERSCORE "NS_InvokeByIndex_P,@function\n"
 #endif
 	SYMBOL_UNDERSCORE "NS_InvokeByIndex_P:\n\t"
@@ -127,11 +124,7 @@ __asm__ (
 	"movl  %ebp, %esp\n\t"
 	"popl  %ebp\n\t"
 	"ret\n"
-#if defined(XP_WIN32) || defined(XP_OS2)
-	".section .drectve\n\t"
-	".ascii \" -export:NS_InvokeByIndex_P\"\n\t"
-	".text\n\t"
-#elif !defined(XP_MACOSX)
+#ifndef XP_MACOSX
 	".size " SYMBOL_UNDERSCORE "NS_InvokeByIndex_P, . -" SYMBOL_UNDERSCORE "NS_InvokeByIndex_P\n\t"
 #endif
 );

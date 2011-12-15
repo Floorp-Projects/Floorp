@@ -107,8 +107,6 @@ private:
   bool IsSmsAllowed() const;
   bool IsSmsSupported() const;
 
-  static bool sDoNotTrackEnabled;
-
   nsRefPtr<nsMimeTypeArray> mMimeTypes;
   nsRefPtr<nsPluginArray> mPlugins;
   nsRefPtr<nsGeolocation> mGeolocation;
