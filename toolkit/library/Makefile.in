@@ -318,8 +318,6 @@ STATIC_LIBS += thebes gl ycbcr
 
 COMPONENT_LIBS += profiler
 
-STATIC_LIBS += angle
-
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += gkwidget
 endif
@@ -402,6 +400,8 @@ endif
 ifdef MOZ_NATIVE_LIBVPX
 EXTRA_DSO_LDOPTS += $(MOZ_LIBVPX_LIBS)
 endif
+
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,gkmedias,$(DIST)/lib) 
 
 ifdef MOZ_SYDNEYAUDIO
 ifeq ($(OS_ARCH),Linux)
