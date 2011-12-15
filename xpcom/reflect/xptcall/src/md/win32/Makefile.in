@@ -47,44 +47,32 @@ LIBRARY_NAME	= xptcmd
 EXPORT_LIBRARY	= ../..
 MOZILLA_INTERNAL_API = 1
 
-#
-# The default is this buildable, but non-functioning code.
-#
-ifdef GNU_CXX
-CPPSRCS		= \
-		../unix/xptcinvoke_gcc_x86_unix.cpp \
-		xptcstubs.cpp \
-		$(NULL)
-LOCAL_INCLUDES	= -I$(srcdir)/../unix
-ifneq ($(TARGET_CPU),x86_64)
-DEFINES		+= -DMOZ_USE_STDCALL -DMOZ_NEED_LEADING_UNDERSCORE
-endif
-else
-
-ifneq ($(OS_TEST),x86_64)
-# FIXME: bug 413019
-OS_COMPILE_CXXFLAGS += -GL-
-endif
-
-CPPSRCS		= xptcinvoke.cpp xptcstubs.cpp
-
-endif
-
-
 LOCAL_INCLUDES += -I$(srcdir)/../../../../xptinfo/src
 
 
 include $(topsrcdir)/config/config.mk
 
-ifeq ($(TARGET_CPU),x86_64)
+ifneq ($(TARGET_CPU),x86_64)
+
 ifndef GNU_CXX
-CPPSRCS 	:= xptcinvoke_x86_64.cpp xptcstubs_x86_64.cpp
+# FIXME: bug 413019
+OS_COMPILE_CXXFLAGS += -GL-
+CPPSRCS         := xptcinvoke.cpp xptcstubs.cpp
+else  #!GNU_CXX
+CPPSRCS         := xptcinvoke_x86_gnu.cpp xptcstubs.cpp
+endif #!GNU_CXX
+
+else # !x86_64
+
+ifndef GNU_CXX
+CPPSRCS		:= xptcinvoke_x86_64.cpp xptcstubs_x86_64.cpp
 ASFILES		:= xptcinvoke_asm_x86_64.asm xptcstubs_asm_x86_64.asm
 else #!GNU_CXX
-CPPSRCS		:= xptcinvoke_x86_64.cpp  xptcstubs_x86_64_gnu.cpp
+CPPSRCS		:= xptcinvoke_x86_64.cpp xptcstubs_x86_64_gnu.cpp
 ASFILES		:= xptcinvoke_asm_x86_64_gnu.s
 endif #!GNU_CXX
-endif
+
+endif #!x86_64
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
