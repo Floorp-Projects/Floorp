@@ -12,7 +12,7 @@
 #include "base/port.h"    // Types that only need exist on certain systems
 
 #include "mozilla/Assertions.h"
-#include <stdint.h>
+#include "mozilla/IntegerPrintfMacros.h"
 
 // A type to represent a Unicode code-point value. As of Unicode 4.0,
 // such values require up to 21 bits.
@@ -35,15 +35,10 @@ const  int64_t kint64max  = (( int64_t) GG_LONGLONG(0x7FFFFFFFFFFFFFFF));
 
 // Platform- and hardware-dependent printf specifiers
 #  if defined(OS_POSIX)
-#    define __STDC_FORMAT_MACROS 1
-#    include <inttypes.h>           // for 64-bit integer format macros
 #    define PRId64L "I64d"
 #    define PRIu64L "I64u"
 #    define PRIx64L "I64x"
 #  elif defined(OS_WIN)
-#    define PRId64 "I64d"
-#    define PRIu64 "I64u"
-#    define PRIx64 "I64x"
 #    define PRId64L L"I64d"
 #    define PRIu64L L"I64u"
 #    define PRIx64L L"I64x"

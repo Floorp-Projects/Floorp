@@ -28,6 +28,7 @@ EXPORTS_mozilla += \
   FloatingPoint.h \
   GuardObjects.h \
   HashFunctions.h \
+  IntegerPrintfMacros.h \
   Likely.h \
   LinkedList.h \
   MathAlgorithms.h \

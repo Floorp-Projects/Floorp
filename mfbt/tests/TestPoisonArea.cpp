@@ -79,23 +79,14 @@
  *    at all.  Thus, it is not used here.
  */
 
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/NullPtr.h"
 
-// MAP_ANON(YMOUS) is not in any standard, and the C99 PRI* macros are
-// not in C++98.  Add defines as necessary.
-#define __STDC_FORMAT_MACROS
+// MAP_ANON(YMOUS) is not in any standard.  Add defines as necessary.
 #define _GNU_SOURCE 1
 #define _DARWIN_C_SOURCE 1
 
 #include <stddef.h>
-
-#ifndef _WIN32
-#include <inttypes.h>
-#else
-#define PRIxPTR "Ix"
-typedef unsigned int uint32_t;
-// MSVC defines uintptr_t in <crtdefs.h> which is brought in implicitly
-#endif
 
 #include <errno.h>
 #include <stdio.h>
