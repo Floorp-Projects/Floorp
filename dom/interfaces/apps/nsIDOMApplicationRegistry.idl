@@ -73,17 +73,67 @@ interface mozIDOMApplicationRegistryErrorCallback : nsISupports
   void handleEvent(in mozIDOMApplicationRegistryError error);
 };
 
-[scriptable, uuid(4070ea6f-dca1-4052-8bc6-7a9bcfc314ac)]
+[scriptable, uuid(ac63c0ba-1f33-4e3e-b9aa-6a3243a9adba)]
 interface mozIDOMApplicationRegistry : nsISupports
 {
+  /**
+   * Install a web app. onerror can be used to report errors,
+   * and oninstall if the caller is privileged.
+   *
+   * @param manifestUrl : the URL of the webapps manifest
+   * @param receipt : An opaque string used to track payment status
+   */
   void install(in DOMString manifestUrl,
 	       [optional] in DOMString receipt);
+
+  /**
+   * This call is only accessible to privileged callers.
+   *
+   * @param origin : the origin of the application to uninstall.
+   */
   void uninstall(in DOMString origin);
+
+  /**
+   * Enumerate apps : either return itself if caller is an app, or
+   * apps installed from a store if caller is a store
+   *
+   * @param success: the callback that will get the array of applications
+   * @param error: optional error callback
+   */
   void enumerate(in mozIDOMApplicationRegistryEnumerateCallback success,
 		 [optional] in mozIDOMApplicationRegistryErrorCallback error);
+
+  /**
+   * Enumerate all apps installed from all stores.
+   * Only usable by privileged callers.
+   *
+   * @param success: the callback that will get the array of applications
+   * @param error: optional error callback
+   */
+  void enumerateAll(in mozIDOMApplicationRegistryEnumerateCallback success,
+		 [optional] in mozIDOMApplicationRegistryErrorCallback error);
+
+  /**
+   * launch a webapp. Behavior is application dependant.
+   *
+   * @param origin : the origin of the application to launch
+   */
   void launch(in DOMString origin);
 
+  /**
+   * event listener to get notified of application installs. Only settable by
+   * privileged callers
+   */
   attribute nsIDOMEventListener oninstall;
+
+  /**
+   * event listener to get notified of application uninstalls. Only settable by
+   * privileged callers
+   */
   attribute nsIDOMEventListener onuninstall;
+
+  /**
+   * event listener to get notified of errors. 
+   */
   attribute nsIDOMEventListener onerror;
 };

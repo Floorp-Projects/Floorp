@@ -57,7 +57,7 @@ let DOMApplicationRegistry = {
   init: function() {
     this.mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
     let messages = ["Webapps:Install", "Webapps:Uninstall",
-                    "Webapps:Enumerate", "Webapps:Launch"];
+                    "Webapps:Enumerate", "Webapps:EnumerateAll", "Webapps:Launch"];
 
     messages.forEach((function(msgName) {
       this.mm.addMessageListener(msgName, this);
@@ -70,6 +70,14 @@ let DOMApplicationRegistry = {
       return;
 
     this._loadJSONAsync(this.appsFile, (function(aData) { this.webapps = aData; }).bind(this));
+
+    try {
+      let hosts = Services.prefs.getCharPref("dom.mozApps.whitelist")
+      hosts.split(",").forEach(function(aHost) {
+        Services.perms.add(Services.io.newURI(aHost, null, null), "webapps-manage",
+                           Ci.nsIPermissionManager.ALLOW_ACTION);
+      });
+    } catch(e) { }
   },
 
   _loadJSONAsync: function(aFile, aCallback) {
@@ -125,10 +133,10 @@ let DOMApplicationRegistry = {
         Services.obs.notifyObservers(this, "webapps-launch", JSON.stringify(msg));
         break;
       case "Webapps:Enumerate":
-        if (hasPrivileges)
-          this.enumerateAll(msg)
-        else
-          this.enumerate(msg);
+        this.enumerate(msg);
+        break;
+      case "Webapps:EnumerateAll":
+        this.enumerateAll(msg);
         break;
     }
   },
@@ -208,6 +216,11 @@ let DOMApplicationRegistry = {
     * Asynchronously reads a list of manifests
     */
   _readManifests: function(aData, aFinalCallback, aIndex) {
+    if (!aData.length) {
+      aFinalCallback(aData);
+      return;
+    }
+
     let index = aIndex || 0;
     let id = aData[index].id;
     let file = FileUtils.getFile("ProfD", ["webapps", id, "manifest.json"], true);
@@ -239,6 +252,7 @@ let DOMApplicationRegistry = {
   enumerate: function(aData) {
     aData.apps = [];
     let tmp = [];
+    let selfId;
 
     let id = this._appId(aData.origin);
     // if it's an app, add itself to the result
@@ -246,12 +260,13 @@ let DOMApplicationRegistry = {
       let app = this._cloneAppObject(this.webapps[id]);
       aData.apps.push(app);
       tmp.push({ id: id });
+      selfId = id;
     }
 
     // check if it's a store.
     let isStore = false;
     for (id in this.webapps) {
-      let app = this._cloneAppObject(this.webapps[id]);
+      let app = this.webapps[id];
       if (app.installOrigin == aData.origin) {
         isStore = true;
         break;
@@ -261,6 +276,8 @@ let DOMApplicationRegistry = {
     // add all the apps from this store
     if (isStore) {
       for (id in this.webapps) {
+        if (id == selfId)
+          continue;
         let app = this._cloneAppObject(this.webapps[id]);
         if (app.installOrigin == aData.origin) {
           aData.apps.push(app);
