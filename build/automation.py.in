@@ -398,6 +398,11 @@ user_pref("extensions.update.url", "http://%(server)s/extensions-dummy/updateURL
 user_pref("extensions.blocklist.url", "http://%(server)s/extensions-dummy/blocklistURL");
 // Make sure opening about:addons won't hit the network
 user_pref("extensions.webservice.discoverURL", "http://%(server)s/extensions-dummy/discoveryURL");
+// Make sure AddonRepository won't hit the network
+user_pref("extensions.getAddons.maxResults", 0);
+user_pref("extensions.getAddons.get.url", "http://%(server)s/extensions-dummy/repositoryGetURL");
+user_pref("extensions.getAddons.search.browseURL", "http://%(server)s/extensions-dummy/repositoryBrowseURL");
+user_pref("extensions.getAddons.search.url", "http://%(server)s/extensions-dummy/repositorySearchURL");
 """ % { "server" : self.webServer + ":" + str(self.httpPort) }
     prefs.append(part)
 
