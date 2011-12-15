@@ -275,15 +275,15 @@ public class AboutHomeContent extends ScrollView {
                                 for (int i = 0; i < array.length(); i++) {
                                     JSONObject jsonobj = array.getJSONObject(i);
                                     mAddonsAdapter.add(jsonobj.getString("name"));
-                                    Log.i("GeckoAddons", "addon #" + i +": " + jsonobj.getString("name"));
+                                    Log.i(LOGTAG, "addon #" + i +": " + jsonobj.getString("name"));
                                 }
                             } catch (Exception e) {
-                                Log.i("GeckoAddons", "error reading json file", e);
+                                Log.i(LOGTAG, "error reading json file", e);
                             }
                         }
                     });
                 } catch (Exception e) {
-                    Log.i("GeckoAddons", "error reading json file", e);
+                    Log.i(LOGTAG, "error reading json file", e);
                 }
             }
         });
