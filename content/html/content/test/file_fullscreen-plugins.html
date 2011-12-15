@@ -23,12 +23,11 @@ Test plugins with DOM full-screen API:
 </head>
 <body onload="scheduleTest();">
 
-
-<!-- Windowed plugin, focusing should revoke full-screen. -->
+<!-- Windowed plugin, should prevent first full-screen request. -->
 <embed id="windowed-plugin" type="application/x-test" style="width:200px;height:100px;" wmode="window"></embed>
 
-<!-- Windowless plugin, focusing should not revoke full-screen. -->
-<embed id="windowless-plugin" type="application/x-test" style="width:200px;height:100px;"></embed>
+<!-- Windowless plugin, should not prevent full-screen requests. -->
+<embed type="application/x-test" style="width:200px;height:100px;"></embed>
 
 
 <!-- iframe contents:
@@ -51,11 +50,9 @@ function is(a, b, msg) {
   opener.is(a, b, "[plugins] " + msg);
 }
 
-function e(id) {
-  return document.getElementById(id);
-}
-
 const isMacOs = navigator.appVersion.indexOf("Macintosh") != -1;
+
+document.addEventListener("mozfullscreenchange", isMacOs ? macFullScreenChange : fullScreenChange, false);
 
 var windowedPlugin = null;
 
@@ -73,14 +70,9 @@ function startTest() {
   ok(!document.mozFullScreen, "Should not be in full-screen mode initially");
   document.body.mozRequestFullScreen();
 
-  // Focus the windowed plugin. On MacOS we should still enter full-screen mode,
-  // on windows the pending request for full-screen should be denied.
-  e("windowed-plugin").focus();
-  
   if (isMacOs) {
     // Running on MacOS, all plugins are effectively windowless, request for full-screen should be granted.
     // Continue test in the (mac-specific) "mozfullscreenchange" handler.
-    document.addEventListener("mozfullscreenchange", macFullScreenChange, false);
     return;
   } else {
     // Non-MacOS, request should be denied, carry on the test after receiving error event.
@@ -90,25 +82,24 @@ function startTest() {
 
 function nonMacTest() {
   document.removeEventListener("mozfullscreenerror", nonMacTest, false);
-  ok(!document.mozFullScreen, "Request for full-screen with focused windowed plugin should be denied.");
+  ok(!document.mozFullScreen, "Request for full-screen from a document containing windowed plugin should be denied.");
 
-  // Focus a regular html element, and re-request full-screen, request should be granted.
-  e("windowless-plugin").focus();
-  document.addEventListener("mozfullscreenchange", nonMacTest2, false);
+  // Remove plugin in this document. Should still be a windowed plugin in sub-document.
+  windowedPlugin = document.getElementById("windowed-plugin");
+  windowedPlugin.parentNode.removeChild(windowedPlugin);
+
+  document.addEventListener("mozfullscreenerror", nonMacTest2, false);
   document.body.mozRequestFullScreen();
 }
 
 function nonMacTest2() {
-  document.removeEventListener("mozfullscreenchange", nonMacTest2, false);
-  ok(document.mozFullScreen, "Request for full-screen with non-plugin focused should be granted.");
-  // Focus a windowed plugin, full-screen should be revoked.
-  document.addEventListener("mozfullscreenchange", nonMacTest3, false);
-  e("windowed-plugin").focus();
-}
-
-function nonMacTest3() {
-  ok(!document.mozFullScreen, "Full-screen should have been revoked when windowed-plugin was focused.");
-  opener.nextTest();
+  document.removeEventListener("mozfullscreenerror", nonMacTest2, false);
+  ok(!document.mozFullScreen, "Request for full-screen from a document with subdocument containing windowed plugin should be denied.");
+  // Remove subdoc which contains windowed plugin, request full-screen, request should be granted.
+  // Continue test in "mozfullscreenchange" handler.
+  var f = document.getElementById("subdoc-plugin");
+  f.parentNode.removeChild(f);
+  document.body.mozRequestFullScreen();
 }
 
 var fullScreenChangeCount = 0;
@@ -123,18 +114,15 @@ function createWindowedPlugin() {
 function macFullScreenChange(event) {
   switch (fullScreenChangeCount) {
     case 0: {
-      ok(document.mozFullScreen, "Requests for full-screen with focused windowed plugins should be granted on MacOS");
+      ok(document.mozFullScreen, "Requests for full-screen on pages with plugins should be granted on MacOS");
       
       // Create a new windowed plugin, and add that to the document. Should *not* exit full-screen mode on MacOS.
       windowedPlugin = createWindowedPlugin();
       document.body.appendChild(windowedPlugin);
       
-      // Focus windowed plugin. Should not exit full-screen mode on MacOS.
-      windowedPlugin.focus();
-      
       setTimeout(
         function() {
-          ok(document.mozFullScreen, "Adding & focusing a windowed plugin to document should not cause full-screen to exit on MacOS.");
+          ok(document.mozFullScreen, "Adding windowed plugin to document should not cause full-screen to exit on MacOS.");
           document.mozCancelFullScreen();
         }, 0);
           
@@ -142,6 +130,52 @@ function macFullScreenChange(event) {
     }
     case 1: {
       ok(!document.mozFullScreen, "Should have left full-screen mode after calling document.mozCancelFullScreen().");
+      opener.nextTest();
+      break;
+    }
+    default: {
+      ok(false, "Should not receive any more fullscreenchange events!");
+    }
+  }
+  fullScreenChangeCount++;
+}
+
+function fullScreenChange(event) {
+  switch (fullScreenChangeCount) {
+    case 0: {
+      ok(document.mozFullScreen, "Request for full-screen with document containing windowless plugin should be granted");
+      is(document.mozFullScreenElement, document.body, "FSE should be body.");
+      // Add windowed plugin to document, should cause full-screen mode to exit.
+      document.body.appendChild(windowedPlugin);
+      break;
+    }
+    case 1: {
+      ok(!document.mozFullScreen, "Should have left full-screen mode after re-adding windowed plugin to document");
+      windowedPlugin.parentNode.removeChild(windowedPlugin);
+      document.body.mozRequestFullScreen();
+      break;
+    }
+    case 2: {
+      ok(document.mozFullScreen, "Should have reentered full-screen mode");
+      // Create a new windowed plugin, and add that to the document. Should exit full-screen mode.
+      windowedPlugin = createWindowedPlugin();
+      document.body.appendChild(windowedPlugin);
+      break;
+    }
+    case 3: {
+      ok(!document.mozFullScreen, "Should have left full-screen mode after adding windowed plugin created after going full-screen to document");
+      windowedPlugin.parentNode.removeChild(windowedPlugin);
+      windowedPlugin = createWindowedPlugin();
+      document.body.mozRequestFullScreen();
+      break;
+    }
+    case 4: {
+      ok(document.mozFullScreen, "Should have (again) reentered full-screen mode");
+      document.body.appendChild(windowedPlugin);
+      break;
+    }
+    case 5: {
+      ok(!document.mozFullScreen, "Should have left full-screen mode after adding windowed plugin created before going full-screen to document");
       opener.nextTest();
       break;
     }

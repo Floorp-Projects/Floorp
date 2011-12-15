@@ -8801,43 +8801,6 @@ nsDocument::FullScreenStackTop()
   return element;
 }
 
-static bool
-IsInFocusedTab(nsIDocument* aDoc)
-{
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (!fm) {
-    return false;
-  }
-
-  // Is there a focused DOMWindow?
-  nsCOMPtr<nsIDOMWindow> focusedWindow;
-  fm->GetFocusedWindow(getter_AddRefs(focusedWindow));
-  if (!focusedWindow) {
-    return false;
-  }
-
-  // Retreive the focused document.
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  focusedWindow->GetDocument(getter_AddRefs(domDocument));
-  nsCOMPtr<nsIDocument> focusedDoc = do_QueryInterface(domDocument);
-
-  // When the chrome document is focused, only grant requests from the
-  // chrome document.
-  if (nsContentUtils::IsChromeDoc(focusedDoc)) {
-    return aDoc == focusedDoc;
-  }      
-
-  // Find the common ancestor of aDoc and the focused document.
-  nsIDocument* commonAncestor = GetCommonAncestor(focusedDoc, aDoc);
-  if (commonAncestor == focusedDoc || commonAncestor == aDoc) {
-    // The focused document is either above or below aDoc in the
-    // doctree. It must be in the same tab (doctree branch).
-    return true;
-  }
-
-  return false;
-}
-
 void
 nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
 {
@@ -8869,25 +8832,6 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
     LogFullScreenDenied(true, "FullScreenDeniedNotDescendant", this);
     return;
   }
-  if (!IsInFocusedTab(this)) {
-    LogFullScreenDenied(true, "FullScreenDeniedNotFocusedTab", this);
-    return;
-  }
-  // Deny requests when a windowed plugin is focused.
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (!fm) {
-    NS_WARNING("Failed to retrieve focus manager in full-screen request.");
-    return;
-  }
-  nsCOMPtr<nsIDOMElement> focusedElement;
-  fm->GetFocusedElement(getter_AddRefs(focusedElement));
-  if (focusedElement) {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(focusedElement);
-    if (nsContentUtils::HasPluginWithUncontrolledEventDispatch(content)) {
-      LogFullScreenDenied(true, "FullScreenDeniedFocusedPlugin", this);
-      return;
-    }
-  }
 
   // Stores a list of documents which we must dispatch "mozfullscreenchange"
   // too. We're required by the spec to dispatch the events in root-to-leaf
@@ -8895,6 +8839,16 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
   // references to the documents we must dispatch to so that we get the order
   // as specified.
   nsAutoTArray<nsIDocument*, 8> changed;
+
+  // If another top-level window is full-screen. Exit it from full-screen.
+  nsCOMPtr<nsIDocument> fullScreenDoc(do_QueryReferent(sFullScreenDoc));
+  nsIDocument* commonAncestor = GetCommonAncestor(fullScreenDoc, this);
+  if (fullScreenDoc && !commonAncestor) {
+    // A document which doesn't have a common ancestor is full-screen, this
+    // must be in a separate browser window. Fully exit full-screen, to move
+    // the other browser window/doctree out of full-screen.
+    nsIDocument::ExitFullScreen(false);
+  }
 
   // Remember the root document, so that if a full-screen document is hidden
   // we can reset full-screen state in the remaining visible full-screen documents.
@@ -8920,6 +8874,8 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
       changed.AppendElement(parent);
       child = parent;
     } else {
+      NS_ASSERTION(!commonAncestor || child == commonAncestor,
+                   "Should finish loop at common ancestor (or null)");
       // We've reached either the root, or a point in the doctree where the
       // new full-screen element container is the same as the previous
       // full-screen element's container. No more changes need to be made
@@ -9030,6 +8986,10 @@ nsDocument::IsFullScreenEnabled(bool aCallerIsChrome, bool aLogFailure)
 
   if (!nsContentUtils::IsFullScreenApiEnabled()) {
     LogFullScreenDenied(aLogFailure, "FullScreenDeniedDisabled", this);
+    return false;
+  }
+  if (nsContentUtils::HasPluginWithUncontrolledEventDispatch(this)) {
+    LogFullScreenDenied(aLogFailure, "FullScreenDeniedPlugins", this);
     return false;
   }
   if (!IsVisible()) {
