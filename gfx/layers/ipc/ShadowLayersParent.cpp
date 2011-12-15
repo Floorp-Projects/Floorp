@@ -287,7 +287,9 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       MOZ_LAYERS_LOG(("[ParentSide] SetRoot"));
 
       mRoot = AsShadowLayer(edit.get_OpSetRoot())->AsContainer();
-      mLayerManager->SetRoot(mRoot);
+      if (mHost->GetCompositorParent()) {
+        mLayerManager->SetRoot(mRoot);
+      }
       break;
     }
     case Edit::TOpInsertAfter: {
