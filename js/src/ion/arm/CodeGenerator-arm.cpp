@@ -117,7 +117,9 @@ CodeGeneratorARM::generatePrologue()
 {
     // Note that this automatically sets MacroAssembler::framePushed().
     masm.reserveStack(frameSize());
-
+#ifdef DEBUG
+    masm.checkStackAlignment();
+#endif
     // Allocate returnLabel_ on the heap, so we don't run it's destructor and
     // assert-not-bound in debug mode on compilation failure.
     returnLabel_ = new HeapLabel();
@@ -1096,8 +1098,8 @@ CodeGeneratorARM::visitStackArg(LStackArg *arg)
     uint32 argslot = arg->argslot();
     int32 stack_offset = StackOffsetOfPassedArg(argslot);
 
-    masm.ma_str(val.typeReg(), DTRAddr(StackPointer, DtrOffImm(stack_offset)));
-    masm.ma_str(val.payloadReg(), DTRAddr(StackPointer, DtrOffImm(stack_offset+4)));
+    masm.ma_str(val.typeReg(), DTRAddr(StackPointer, DtrOffImm(stack_offset+4)));
+    masm.ma_str(val.payloadReg(), DTRAddr(StackPointer, DtrOffImm(stack_offset)));
     return true;
 }
 
@@ -1105,10 +1107,19 @@ bool
 CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
 {
 
+#ifdef DEBUG
+    masm.checkStackAlignment();
+#endif
     // Holds the function object.
-    const LAllocation *obj = call->getFunction();
+    const LAllocation *callee = call->getFunction();
+    Register calleereg  = ToRegister(callee);
+
+    // Holds the function object so we can modify it willy nilly.
+    const LAllocation *obj = call->getTempObject();
     Register objreg  = ToRegister(obj);
 
+    // Make the modifiable object reg a copy of the immutable function reg
+    masm.ma_mov(calleereg, objreg);
     // Holds the callee token. Initially undefined.
     const LAllocation *tok = call->getToken();
     Register tokreg  = ToRegister(tok);
@@ -1119,6 +1130,7 @@ CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
 
     uint32 callargslot  = call->argslot();
     uint32 unused_stack = StackOffsetOfPassedArg(callargslot);
+    JS_ASSERT((unused_stack & 0x7) == 0);
 
     // Guard that objreg is actually a function object.
     masm.loadObjClass(objreg, tokreg);
@@ -1150,9 +1162,9 @@ CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
     masm.ma_ldr(DTRAddr(objreg, DtrOffImm(offsetof(JSScript, ion))),
                 objreg);
 
-    masm.ma_cmp(objreg, Imm32(0));
+    masm.ma_cmp(objreg, Imm32((uint32)ION_DISABLED_SCRIPT));
     // Bail if the callee has not yet been JITted.
-    if (!bailoutIf(Assembler::Zero, call->snapshot()))
+    if (!bailoutIf(Assembler::BelowOrEqual, call->snapshot()))
         return false;
 
 
@@ -1169,7 +1181,9 @@ CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
     // Construct the IonFramePrefix.
     masm.ma_push(tokreg);
     masm.push(Imm32(size_descriptor));
-
+#ifdef DEBUG
+    masm.checkStackAlignment();
+#endif
     // Call the function, padding with |undefined| in case of insufficient args.
     {
         Label thunk, rejoin;
@@ -1209,19 +1223,17 @@ CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
         masm.bind(&rejoin);
 
     }
-#if 0
+
     // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
-    int prefix_garbage = 2 * sizeof(void *);
+    int prefix_garbage = sizeof(IonJSFrameLayout) - sizeof(void*);
     int restore_diff = prefix_garbage - unused_stack;
     
     if (restore_diff > 0)
-        masm.addPtr(Imm32(restore_diff), StackPointer);
+        masm.ma_add(Imm32(restore_diff), StackPointer);
     else if (restore_diff < 0)
-        masm.subPtr(Imm32(-restore_diff), StackPointer);
+        masm.ma_sub(Imm32(-restore_diff), StackPointer);
 
     return true;
-#endif
-    return false;
 }
 
 bool

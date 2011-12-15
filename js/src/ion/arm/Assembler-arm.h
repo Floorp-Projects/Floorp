@@ -106,6 +106,13 @@ static const FloatRegister d13 = {FloatRegisters::d13};
 static const FloatRegister d14 = {FloatRegisters::d14};
 static const FloatRegister d15 = {FloatRegisters::d15};
 
+// For maximal awesomeness, 8 should be sufficent.
+// ldrd/strd (dual-register load/store) operate in a single cycle
+// when the address they are dealing with is 8 byte aligned.
+// Also, the ARM abi wants the stack to be 8 byte aligned at
+// function boundaries.  I'm trying to make sure this is always true.
+static const uint32 StackAlignment = 8;
+
 class Instruction;
 class InstBranchImm;
 uint32 RM(Register r);
