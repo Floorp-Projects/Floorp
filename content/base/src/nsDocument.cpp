@@ -6226,7 +6226,15 @@ nsDocument::CreateEvent(const nsAString& aEventType, nsIDOMEvent** aReturn)
 void
 nsDocument::FlushPendingNotifications(mozFlushType aType)
 {
-  if ((!IsHTML() || aType > Flush_ContentAndNotify) &&
+  // We need to flush the sink for non-HTML documents (because the XML
+  // parser still does insertion with deferred notifications).  We
+  // also need to flush the sink if this is a layout-related flush, to
+  // make sure that layout is started as needed.  But we can skip that
+  // part if we have no presshell or if it's already done an initial
+  // reflow.
+  if ((!IsHTML() ||
+       (aType > Flush_ContentAndNotify && mPresShell &&
+        !mPresShell->DidInitialReflow())) &&
       (mParser || mWeakSink)) {
     nsCOMPtr<nsIContentSink> sink;
     if (mParser) {
