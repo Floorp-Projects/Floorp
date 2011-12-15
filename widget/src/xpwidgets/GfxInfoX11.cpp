@@ -246,29 +246,30 @@ static inline PRUint64 version(PRUint32 major, PRUint32 minor, PRUint32 revision
     return (PRUint64(major) << 32) + (PRUint64(minor) << 16) + PRUint64(revision);
 }
 
-static GfxDriverInfo gDriverInfo[] = {
-  GfxDriverInfo()
-};
-
-const GfxDriverInfo*
+const nsTArray<GfxDriverInfo>&
 GfxInfo::GetGfxDriverInfo()
 {
-  return &gDriverInfo[0];
+  // Nothing here yet.
+  //if (!mDriverInfo->Length()) {
+  //
+  //}
+  return *mDriverInfo;
 }
 
 nsresult
 GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, 
                               PRInt32 *aStatus, 
                               nsAString & aSuggestedDriverVersion, 
-                              GfxDriverInfo* aDriverInfo /* = nsnull */, 
+                              const nsTArray<GfxDriverInfo>& aDriverInfo, 
                               OperatingSystem* aOS /* = nsnull */)
 
 {
     GetData();
-    *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
+    *aStatus = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
     aSuggestedDriverVersion.SetIsVoid(true);
 
 #ifdef MOZ_PLATFORM_MAEMO
+    *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
     // on Maemo, the glxtest probe doesn't build, and we don't really need GfxInfo anyway
     return NS_OK;
 #endif
@@ -291,6 +292,7 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
         !strcmp(mRenderer.get(), "GeForce 9400/PCI/SSE2") &&
         !strcmp(mVersion.get(), "3.2.0 NVIDIA 190.42"))
     {
+        *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
         return NS_OK;
     }
 
