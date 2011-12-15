@@ -1504,6 +1504,12 @@ bool nsHTMLMediaElement::ParseAttribute(PRInt32 aNamespaceID,
                                               aResult);
 }
 
+void nsHTMLMediaElement::DoneCreatingElement()
+{
+   if (HasAttr(kNameSpaceID_None, nsGkAtoms::muted))
+     mMuted = true; 
+}
+
 nsresult nsHTMLMediaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                      nsIAtom* aPrefix, const nsAString& aValue,
                                      bool aNotify)
@@ -1515,9 +1521,6 @@ nsresult nsHTMLMediaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     return rv;
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::src) {
     Load();
-  }
-  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::muted) {
-    mMuted = true;
   }
   if (aNotify && aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::autoplay) {
