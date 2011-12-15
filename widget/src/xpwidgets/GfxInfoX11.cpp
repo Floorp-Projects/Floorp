@@ -434,32 +434,32 @@ GfxInfo::GetAdapterDriverDate2(nsAString & aAdapterDriverDate)
   return NS_ERROR_FAILURE;
 }
 
-/* readonly attribute unsigned long adapterVendorID; */
+/* readonly attribute DOMString adapterVendorID; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
+GfxInfo::GetAdapterVendorID(nsAString & aAdapterVendorID)
 {
-  *aAdapterVendorID = 0;
+  aAdapterVendorID.AssignLiteral("");
   return NS_OK;
 }
 
-/* readonly attribute unsigned long adapterVendorID2; */
+/* readonly attribute DOMString adapterVendorID2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterVendorID2(PRUint32 *aAdapterVendorID)
+GfxInfo::GetAdapterVendorID2(nsAString & aAdapterVendorID)
 {
   return NS_ERROR_FAILURE;
 }
 
-/* readonly attribute unsigned long adapterDeviceID; */
+/* readonly attribute DOMString adapterDeviceID; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
+GfxInfo::GetAdapterDeviceID(nsAString & aAdapterDeviceID)
 {
-  *aAdapterDeviceID = 0;
+  aAdapterDeviceID.AssignLiteral("");
   return NS_OK;
 }
 
-/* readonly attribute unsigned long adapterDeviceID2; */
+/* readonly attribute DOMString adapterDeviceID2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterDeviceID2(PRUint32 *aAdapterDeviceID)
+GfxInfo::GetAdapterDeviceID2(nsAString & aAdapterDeviceID)
 {
   return NS_ERROR_FAILURE;
 }
