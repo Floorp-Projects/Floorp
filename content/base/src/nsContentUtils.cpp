@@ -45,6 +45,7 @@
 
 #include "jsapi.h"
 #include "jsdbgapi.h"
+#include "jstypedarray.h"
 
 #include "nsJSUtils.h"
 #include "nsCOMPtr.h"
@@ -5254,6 +5255,29 @@ nsContentUtils::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
   }
 
   return rv;
+}
+
+nsresult
+nsContentUtils::CreateArrayBuffer(JSContext *aCx, const nsACString& aData,
+                                  JSObject** aResult)
+{
+  if (!aCx) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRInt32 dataLen = aData.Length();
+  *aResult = js_CreateArrayBuffer(aCx, dataLen);
+  if (!*aResult) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (dataLen > 0) {
+    JSObject *abuf = js::ArrayBuffer::getArrayBuffer(*aResult);
+    NS_ASSERTION(abuf, "What happened?");
+    memcpy(JS_GetArrayBufferData(abuf), aData.BeginReading(), dataLen);
+  }
+
+  return NS_OK;
 }
 
 void
