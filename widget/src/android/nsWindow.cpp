@@ -1994,6 +1994,11 @@ nsWindow::ResetInputState()
     }
 
     AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_RESETINPUTSTATE, 0);
+
+    // Send IME text/selection change notifications
+    OnIMETextChange(0, 0, 0);
+    OnIMESelectionChange();
+
     return NS_OK;
 }
 
