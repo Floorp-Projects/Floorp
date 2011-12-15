@@ -428,6 +428,10 @@
                       accesskey="&engine.tabs.accesskey;"
                       id="engine.tabs"
                       checked="true"/>
+            <checkbox label="&engine.addons.label;"
+                      accesskey="&engine.addons.accesskey;"
+                      id="engine.addons"
+                      checked="true"/>
           </vbox>
         </row>
       </rows>
