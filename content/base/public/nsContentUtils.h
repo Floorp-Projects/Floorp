@@ -1602,6 +1602,12 @@ public:
                       aAllowWrapping);
   }
 
+  /**
+   * Creates an arraybuffer from a binary string.
+   */
+  static nsresult CreateArrayBuffer(JSContext *aCx, const nsACString& aData,
+                                    JSObject** aResult);
+
   static void StripNullChars(const nsAString& aInStr, nsAString& aOutStr);
 
   /**
