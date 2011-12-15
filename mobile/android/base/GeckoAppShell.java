@@ -451,7 +451,7 @@ public class GeckoAppShell
     private static void geckoLoaded() {
         final LayerController layerController = GeckoApp.mAppContext.getLayerController();
         LayerView v = layerController.getView();
-        mInputConnection = new GeckoInputConnection(v);
+        mInputConnection = GeckoInputConnection.create(v);
         v.setInputConnectionHandler(mInputConnection);
 
         layerController.setOnTouchListener(new View.OnTouchListener() {
