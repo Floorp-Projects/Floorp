@@ -42,6 +42,10 @@ import android.graphics.drawable.Drawable;
 import android.view.View;
 
 public class GeckoActionBar {
+ 
+    public static void hide(Activity activity) {
+        activity.getActionBar().hide();
+    }
 
     public static void setBackgroundDrawable(Activity activity, Drawable drawable) {
          activity.getActionBar().setBackgroundDrawable(drawable);

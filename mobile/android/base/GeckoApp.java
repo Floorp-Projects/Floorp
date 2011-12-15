@@ -732,6 +732,7 @@ abstract public class GeckoApp
                     mBrowserToolbar.setFavicon(null);
                     mBrowserToolbar.setSecurityMode("unknown");
                     mDoorHangerPopup.updatePopup();
+                    mBrowserToolbar.setShadowVisibility(!(tab.getURL().startsWith("about:")));
                 }
             }
         });
@@ -1188,6 +1189,7 @@ abstract public class GeckoApp
                     mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
                     mBrowserToolbar.setProgressVisibility(tab.isLoading());
                     mDoorHangerPopup.updatePopup();
+                    mBrowserToolbar.setShadowVisibility(!(tab.getURL().startsWith("about:")));
                 }
             }
         });
@@ -1427,15 +1429,14 @@ abstract public class GeckoApp
         mAppContext = this;
 
         if (Build.VERSION.SDK_INT >= 11) {
-            GeckoActionBar actionBar = new GeckoActionBar();
             mBrowserToolbar = (BrowserToolbar) getLayoutInflater().inflate(R.layout.gecko_app_actionbar, null);
 
-            actionBar.setBackgroundDrawable(this, getResources().getDrawable(R.drawable.gecko_actionbar_bg));
-            actionBar.setDisplayOptions(this, ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM |
-                                                                             ActionBar.DISPLAY_SHOW_HOME |
-                                                                             ActionBar.DISPLAY_SHOW_TITLE |
-                                                                             ActionBar.DISPLAY_USE_LOGO);
-            actionBar.setCustomView(this, mBrowserToolbar);
+            GeckoActionBar.setBackgroundDrawable(this, getResources().getDrawable(R.drawable.gecko_actionbar_bg));
+            GeckoActionBar.setDisplayOptions(this, ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM |
+                                                                                  ActionBar.DISPLAY_SHOW_HOME |
+                                                                                  ActionBar.DISPLAY_SHOW_TITLE |
+                                                                                  ActionBar.DISPLAY_USE_LOGO);
+            GeckoActionBar.setCustomView(this, mBrowserToolbar);
         } else {
             mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
         }
