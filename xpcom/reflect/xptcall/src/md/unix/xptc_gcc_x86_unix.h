@@ -41,14 +41,6 @@
 // this may improve the static function calls, but may not.
 //
 
-// #define MOZ_USE_STDCALL
-
-#ifdef MOZ_USE_STDCALL
-#define ATTRIBUTE_STDCALL __attribute__ ((__stdcall__))
-#else
-#define ATTRIBUTE_STDCALL
-#endif
-
 #ifdef MOZ_NEED_LEADING_UNDERSCORE
 #define SYMBOL_UNDERSCORE "_"
 #else
