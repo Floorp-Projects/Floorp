@@ -83,6 +83,7 @@ ifneq (,$(filter Android Linux,$(OS_TARGET)))
 DEFINES += -DMOZ_ENABLE_PROFILER_SPS
 
 CPPSRCS += \
+  shared-libraries-linux.cc \
   platform-linux.cc \
   TableTicker.cpp \
   $(NULL)

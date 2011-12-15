@@ -41,70 +41,12 @@
 
 #define SIGNAL_SAVE_PROFILE SIGUSR2
 
-#define PATH_MAX_TOSTRING(x) #x
-#define PATH_MAX_STRING(x) PATH_MAX_TOSTRING(x)
-
 #if defined(__GLIBC__)
 // glibc doesn't implement gettid(2).
 #include <sys/syscall.h>
 pid_t gettid()
 {
   return (pid_t) syscall(SYS_gettid);
-}
-#endif
-
-#ifdef ENABLE_SPS_LEAF_DATA
-/* a crapy version of getline, because it's not included in bionic */
-static ssize_t getline(char **lineptr, size_t *n, FILE *stream)
-{
- char *ret;
- if (!*lineptr) {
-   *lineptr = (char*)malloc(4096);
- }
- ret = fgets(*lineptr, 4096, stream);
- if (!ret)
-   return 0;
- return strlen(*lineptr);
-}
-
-MapInfo getmaps(pid_t pid)
-{
- MapInfo info;
- char path[PATH_MAX];
- snprintf(path, PATH_MAX, "/proc/%d/maps", pid);
- FILE *maps = fopen(path, "r");
- char *line = NULL;
- int count = 0;
- size_t line_size = 0;
- while (maps && getline (&line, &line_size, maps) > 0) {
-   int ret;
-   //XXX: needs input sanitizing
-   unsigned long start;
-   unsigned long end;
-   char perm[6] = "";
-   unsigned long offset;
-   char name[PATH_MAX] = "";
-   ret = sscanf(line,
-                "%lx-%lx %6s %lx %*s %*x %" PATH_MAX_STRING(PATH_MAX) "s\n",
-                &start, &end, perm, &offset, name);
-   if (!strchr(perm, 'x')) {
-     // Ignore non executable entries
-     continue;
-   }
-   if (ret != 5 && ret != 4) {
-     LOG("Get maps line failed");
-     continue;
-   }
-   MapEntry entry(start, end, offset, name);
-   info.AddMapEntry(entry);
-   if (count > 10000) {
-     LOG("Get maps failed");
-     break;
-   }
-   count++;
- }
- free(line);
- return info;
 }
 #endif
 
