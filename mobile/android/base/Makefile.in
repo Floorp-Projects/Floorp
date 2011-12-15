@@ -204,6 +204,7 @@ RES_LAYOUT = \
 
 RES_LAYOUT_V11 = \
   res/layout-v11/awesomebar_search.xml \
+  res/layout-v11/awesomebar_search_actionbar.xml \
   res/layout-v11/gecko_app.xml \
   res/layout-v11/gecko_app_actionbar.xml \
   $(NULL)
@@ -256,12 +257,15 @@ RES_DRAWABLE_MDPI_V8 = \
   res/drawable-mdpi-v8/tabs_pressed.png \
   res/drawable-mdpi-v8/tabs_more.png \
   res/drawable-mdpi-v8/tabs_plus.png \
+  res/drawable-mdpi-v8/address_bar_texture.png \
   res/drawable-mdpi-v8/address_bar_url_bg.9.png \
+  res/drawable-mdpi-v8/address_bar_url_outline.9.png \
   res/drawable-mdpi-v8/doorhanger_arrow.png \
   res/drawable-mdpi-v8/doorhanger_bg.9.png \
   res/drawable-mdpi-v8/doorhanger_shadow_bg.9.png \
   res/drawable-mdpi-v8/doorhanger_popup_bg.9.png \
-  res/drawable-mdpi-v8/site_security_lock.png \
+  res/drawable-mdpi-v8/site_security_identified.png \
+  res/drawable-mdpi-v8/site_security_verified.png \
   res/drawable-mdpi-v8/urlbar_stop.png \
   $(NULL)
 
@@ -288,12 +292,15 @@ RES_DRAWABLE_HDPI_V8 = \
   res/drawable-hdpi-v8/tabs_pressed.png \
   res/drawable-hdpi-v8/tabs_more.png \
   res/drawable-hdpi-v8/tabs_plus.png \
+  res/drawable-hdpi-v8/address_bar_texture.png \
   res/drawable-hdpi-v8/address_bar_url_bg.9.png \
+  res/drawable-hdpi-v8/address_bar_url_outline.9.png \
   res/drawable-hdpi-v8/doorhanger_arrow.png \
   res/drawable-hdpi-v8/doorhanger_bg.9.png \
   res/drawable-hdpi-v8/doorhanger_shadow_bg.9.png \
   res/drawable-hdpi-v8/doorhanger_popup_bg.9.png \
-  res/drawable-hdpi-v8/site_security_lock.png \
+  res/drawable-hdpi-v8/site_security_identified.png \
+  res/drawable-hdpi-v8/site_security_verified.png \
   res/drawable-hdpi-v8/urlbar_stop.png \
   $(NULL)
 
@@ -324,11 +331,6 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/ic_menu_reload.png \
   res/drawable-mdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-mdpi-v11/ic_menu_share.png \
-  res/drawable-mdpi-v11/tabs_normal.png \
-  res/drawable-mdpi-v11/tabs_pressed.png \
-  res/drawable-mdpi-v11/tabs_more.png \
-  res/drawable-mdpi-v11/tabs_plus.png \
-  res/drawable-mdpi-v11/address_bar_url_bg.9.png \
   $(NULL)
 
 RES_DRAWABLE_HDPI_V11 = \
@@ -340,11 +342,6 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/ic_menu_reload.png \
   res/drawable-hdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-hdpi-v11/ic_menu_share.png \
-  res/drawable-hdpi-v11/tabs_normal.png \
-  res/drawable-hdpi-v11/tabs_pressed.png \
-  res/drawable-hdpi-v11/tabs_more.png \
-  res/drawable-hdpi-v11/tabs_plus.png \
-  res/drawable-hdpi-v11/address_bar_url_bg.9.png \
   $(NULL)
 
 RES_DRAWABLE_XHDPI_V11 = \
@@ -370,7 +367,57 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/tabs_pressed.png \
   res/drawable-xhdpi-v11/tabs_more.png \
   res/drawable-xhdpi-v11/tabs_plus.png \
+  res/drawable-xhdpi-v11/address_bar_texture.png \
   res/drawable-xhdpi-v11/address_bar_url_bg.9.png \
+  res/drawable-xhdpi-v11/address_bar_url_outline.9.png \
+  res/drawable-xhdpi-v11/urlbar_stop.png \
+  res/drawable-xhdpi-v11/site_security_identified.png \
+  res/drawable-xhdpi-v11/site_security_verified.png \
+  $(NULL)
+
+RES_DRAWABLE_LAND_MDPI_V14 = \
+  res/drawable-land-mdpi-v14/ic_awesomebar_go.png \
+  res/drawable-land-mdpi-v14/ic_awesomebar_search.png \
+  res/drawable-land-mdpi-v14/address_bar_texture.png \
+  res/drawable-land-mdpi-v14/address_bar_url_bg.9.png \
+  res/drawable-land-mdpi-v14/address_bar_url_outline.9.png \
+  res/drawable-land-mdpi-v14/tabs_normal.png \
+  res/drawable-land-mdpi-v14/tabs_pressed.png \
+  res/drawable-land-mdpi-v14/tabs_more.png \
+  res/drawable-land-mdpi-v14/tabs_plus.png \
+  res/drawable-land-mdpi-v14/urlbar_stop.png \
+  res/drawable-land-mdpi-v14/site_security_identified.png \
+  res/drawable-land-mdpi-v14/site_security_verified.png \
+  $(NULL)
+
+RES_DRAWABLE_LAND_HDPI_V14 = \
+  res/drawable-land-hdpi-v14/ic_awesomebar_go.png \
+  res/drawable-land-hdpi-v14/ic_awesomebar_search.png \
+  res/drawable-land-hdpi-v14/address_bar_texture.png \
+  res/drawable-land-hdpi-v14/address_bar_url_bg.9.png \
+  res/drawable-land-hdpi-v14/address_bar_url_outline.9.png \
+  res/drawable-land-hdpi-v14/tabs_normal.png \
+  res/drawable-land-hdpi-v14/tabs_pressed.png \
+  res/drawable-land-hdpi-v14/tabs_more.png \
+  res/drawable-land-hdpi-v14/tabs_plus.png \
+  res/drawable-land-hdpi-v14/urlbar_stop.png \
+  res/drawable-land-hdpi-v14/site_security_identified.png \
+  res/drawable-land-hdpi-v14/site_security_verified.png \
+  $(NULL)
+
+RES_DRAWABLE_LAND_XHDPI_V14 = \
+  res/drawable-land-xhdpi-v14/ic_awesomebar_go.png \
+  res/drawable-land-xhdpi-v14/ic_awesomebar_search.png \
+  res/drawable-land-xhdpi-v14/address_bar_texture.png \
+  res/drawable-land-xhdpi-v14/address_bar_url_bg.9.png \
+  res/drawable-land-xhdpi-v14/address_bar_url_outline.9.png \
+  res/drawable-land-xhdpi-v14/tabs_normal.png \
+  res/drawable-land-xhdpi-v14/tabs_pressed.png \
+  res/drawable-land-xhdpi-v14/tabs_more.png \
+  res/drawable-land-xhdpi-v14/tabs_plus.png \
+  res/drawable-land-xhdpi-v14/urlbar_stop.png \
+  res/drawable-land-xhdpi-v14/site_security_identified.png \
+  res/drawable-land-xhdpi-v14/site_security_verified.png \
   $(NULL)
 
 RES_COLOR = \
@@ -391,6 +438,7 @@ MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/abouthome_bg.png
                          mobile/android/base/resources/drawable/abouthome_topsites_bg.png       \
                          mobile/android/base/resources/drawable/abouthome_topsites_bg_repeat.xml \
                          mobile/android/base/resources/drawable/address_bar_bg.xml              \
+                         mobile/android/base/resources/drawable/address_bar_bg_shadow.xml       \
                          mobile/android/base/resources/drawable/address_bar_url_default.xml     \
                          mobile/android/base/resources/drawable/address_bar_url_pressed.xml     \
                          mobile/android/base/resources/drawable/autocomplete_list_bg.9.png      \
@@ -530,15 +578,27 @@ $(RES_DRAWABLE_HDPI_V11): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_HDPI_
 $(RES_DRAWABLE_XHDPI_V11): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_XHDPI_V11))
 	$(NSINSTALL) -D res/drawable-xhdpi-v11
 	$(NSINSTALL) $(srcdir)/resources/drawable-xhdpi-v11/* res/drawable-xhdpi-v11/
+ 
+$(RES_DRAWABLE_LAND_MDPI_V14): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_LAND_MDPI_V14))
+	$(NSINSTALL) -D res/drawable-land-mdpi-v14
+	$(NSINSTALL) $(srcdir)/resources/drawable-land-mdpi-v14/* res/drawable-land-mdpi-v14/
+
+$(RES_DRAWABLE_LAND_HDPI_V14): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_LAND_HDPI_V14))
+	$(NSINSTALL) -D res/drawable-land-hdpi-v14
+	$(NSINSTALL) $(srcdir)/resources/drawable-land-hdpi-v14/* res/drawable-land-hdpi-v14/
+
+$(RES_DRAWABLE_LAND_XHDPI_V14): $(subst res/,$(srcdir)/resources/,$(RES_DRAWABLE_LAND_XHDPI_V14))
+	$(NSINSTALL) -D res/drawable-land-xhdpi-v14
+	$(NSINSTALL) $(srcdir)/resources/drawable-land-xhdpi-v14/* res/drawable-land-xhdpi-v14/
 
 $(RES_COLOR): $(subst res/,$(srcdir)/resources/,$(RES_COLOR))
 	$(NSINSTALL) -D res/color
 	$(NSINSTALL) $^  res/color
 
-R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_DRAWABLE) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_COLOR) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
+R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_DRAWABLE) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
-gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_DRAWABLE) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_COLOR) res/values/strings.xml FORCE
+gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_DRAWABLE) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
 libs:: classes.dex package-name.txt

@@ -1,33 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    
-    <item>
-        <shape android:shape="rectangle">
-            <solid android:color="#999999"/>
-        </shape>
-     </item>
-    
-    <item android:bottom="1dp">
-        <shape android:shape="rectangle">
-            <solid android:color="#d5d5d5"/>
-        </shape>
-     </item>
 
-    <item android:bottom="2dp">
-        <shape android:shape="rectangle">
-            <solid android:color="#000000"/>
-        </shape>
-    </item>
-
-    <item android:right="20dp"
-          android:bottom="2dp">
-        <shape android:shape="rectangle">
-             <gradient android:type="linear"
-                       android:startColor="#d5d5d5"
-                       android:endColor="#fefefe"
-                       android:angle="90"/>
-             <corners android:topRightRadius="30dp"/>
-        </shape>
-    </item>
+    <item android:right="44dp">
+        <bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+            android:src="@drawable/address_bar_texture"
+            android:tileMode="repeat"
+            android:dither="false"/>
+     </item>
 
 </layer-list>

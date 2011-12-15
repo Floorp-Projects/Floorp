@@ -46,6 +46,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -69,8 +70,11 @@ public class TabsTray extends Activity implements GeckoApp.OnTabsChangedListener
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.tabs_tray);
+
+        if (Build.VERSION.SDK_INT >= 11) {
+            GeckoActionBar.hide(this);
+        }
 
         mWaitingForClose = false;
 
