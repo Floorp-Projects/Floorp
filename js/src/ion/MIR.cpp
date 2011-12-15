@@ -753,4 +753,3 @@ MToDouble::foldsTo(bool useValueNumbers)
 
     return this;
 }
-

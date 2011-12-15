@@ -230,6 +230,7 @@ class Assembler : public AssemblerX86Shared
     using AssemblerX86Shared::retarget;
     using AssemblerX86Shared::cmpl;
     using AssemblerX86Shared::call;
+    using AssemblerX86Shared::push;
 
     static void TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
 
@@ -242,6 +243,11 @@ class Assembler : public AssemblerX86Shared
     void executableCopy(uint8 *buffer);
 
     // Actual assembly emitting functions.
+
+    void push(const ImmGCPtr &ptr) {
+        push(Imm32(ptr.value));
+        writeDataRelocation(masm.currentOffset());
+    }
 
     void movl(const ImmGCPtr &ptr, const Register &dest) {
         masm.movl_i32r(ptr.value, dest.code());

@@ -785,6 +785,20 @@ LIRGenerator::visitGuardClass(MGuardClass *ins)
     return assignSnapshot(guard) && add(guard, ins);
 }
 
+bool
+LIRGenerator::visitLoadProperty(MLoadProperty *ins)
+{
+    LLoadPropertyGeneric *lir = new LLoadPropertyGeneric();
+    lir->setOperand(0, useRegister(ins->getOperand(0)));
+
+    if (!defineVMReturn(lir, ins))
+        return false;
+    if (!assignSafepoint(lir, ins))
+        return false;
+
+    return true;
+}
+
 static void
 SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint)
 {

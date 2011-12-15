@@ -81,7 +81,6 @@ static const FloatRegister InvalidFloatReg = { JSC::X86Registers::invalid_xmm };
 
 static const Register StackPointer = rsp;
 static const Register JSReturnReg = rcx;
-static const Register JSCReturnReg = rax;
 static const Register ReturnReg = rax;
 static const Register ScratchReg = r11;
 static const FloatRegister ScratchFloatReg = { JSC::X86Registers::xmm15 };
@@ -262,6 +261,7 @@ class Assembler : public AssemblerX86Shared
   public:
     using AssemblerX86Shared::j;
     using AssemblerX86Shared::jmp;
+    using AssemblerX86Shared::push;
 
     Assembler()
       : extendedJumpTable_(0)
@@ -279,6 +279,11 @@ class Assembler : public AssemblerX86Shared
     void executableCopy(uint8 *buffer);
 
     // Actual assembly emitting functions.
+
+    void push(const ImmGCPtr ptr) {
+        movq(ptr, ScratchReg);
+        push(ScratchReg);
+    }
 
     void movq(ImmWord word, const Register &dest) {
         masm.movq_i64r(word.value, dest.code());

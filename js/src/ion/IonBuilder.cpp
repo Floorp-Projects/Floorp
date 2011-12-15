@@ -696,6 +696,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_SETELEM:
         return jsop_setelem();
 
+      case JSOP_GETPROP:
+        return jsop_getprop(info().getAtom(pc));
+
       default:
 #ifdef DEBUG
         return abort("Unsupported opcode: %s (line %d)", js_CodeName[op], info().lineno(cx, pc));
@@ -2835,6 +2838,7 @@ IonBuilder::jsop_setelem_dense()
     current->add(elements);
 
     // Read and check length.
+
     MInitializedLength *initLength = MInitializedLength::New(elements);
     current->add(initLength);
 
@@ -2859,4 +2863,22 @@ IonBuilder::jsop_setelem_dense()
         store->setElementType(elementType);
 
     return resumeAfter(store);
+}
+
+bool
+IonBuilder::jsop_getprop(JSAtom *atom)
+{
+    MDefinition *obj = current->pop();
+
+    MLoadProperty *ins = new MLoadProperty(obj, atom);
+
+    current->add(ins);
+    current->push(ins);
+
+    if (!resumeAfter(ins))
+        return false;
+
+    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::TypeSet *types = oracle->propertyRead(script, pc);
+    return pushTypeBarrier(ins, types, barrier);
 }

@@ -816,11 +816,11 @@ class LVMCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, T
   private:
     static uint32 defMask() {
         switch (DefType) {
-          case Type_Value:
+          case LDefinition::BOX:
             JS_ASSERT(Defs == BOX_PIECES);
             return Registers::JSCallMask;
-          case Type_Bool:
-          case Type_Object:
+          case LDefinition::INTEGER:
+          case LDefinition::OBJECT:
             JS_ASSERT(Defs == 1);
             return Registers::CallMask;
           default:
