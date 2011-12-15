@@ -93,6 +93,7 @@ ifeq ($(OS_TARGET),Darwin)
 DEFINES += -DMOZ_ENABLE_PROFILER_SPS
 
 CPPSRCS += \
+  shared-libraries-macos.cc \
   platform-macos.cc \
   TableTicker.cpp \
   $(NULL)
