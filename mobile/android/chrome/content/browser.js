@@ -480,13 +480,13 @@ var BrowserApp = {
             pref.type = "bool";
             pref.value = pref.value == 0;
             break;
-          case "permissions.default.image":
-            pref.type = "bool";
-            pref.value = pref.value == 1;
-            break;
           case "browser.menu.showCharacterEncoding":
             pref.type = "bool";
             pref.value = pref.value == "true";
+            break;
+          case "font.size.inflation.minTwips":
+            pref.type = "string";
+            pref.value = pref.value.toString();
             break;
         }
 
@@ -520,13 +520,13 @@ var BrowserApp = {
         json.type = "int";
         json.value = (json.value ? 0 : 2);
         break;
-      case "permissions.default.image":
-        json.type = "int";
-        json.value = (json.value ? 1 : 2);
-        break;
       case "browser.menu.showCharacterEncoding":
         json.type = "string";
         json.value = (json.value ? "true" : "false");
+        break;
+      case "font.size.inflation.minTwips":
+        json.type = "int";
+        json.value = parseInt(json.value);
         break;
     }
 
