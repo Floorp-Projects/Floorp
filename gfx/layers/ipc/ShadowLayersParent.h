@@ -43,6 +43,7 @@
 
 #include "mozilla/layers/PLayersParent.h"
 #include "ShadowLayers.h"
+#include "ShadowLayersHost.h"
 
 namespace mozilla {
 
@@ -63,7 +64,7 @@ class ShadowLayersParent : public PLayersParent,
   typedef InfallibleTArray<EditReply> EditReplyArray;
 
 public:
-  ShadowLayersParent(ShadowLayerManager* aManager);
+  ShadowLayersParent(ShadowLayerManager* aManager, ShadowLayersHost* aHost);
   ~ShadowLayersParent();
 
   void Destroy();
@@ -86,6 +87,7 @@ private:
   RenderFrameParent* Frame();
 
   nsRefPtr<ShadowLayerManager> mLayerManager;
+  nsRefPtr<ShadowLayersHost> mHost;
   // Hold the root because it might be grafted under various
   // containers in the "real" layer tree
   nsRefPtr<ContainerLayer> mRoot;

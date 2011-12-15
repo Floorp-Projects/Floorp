@@ -108,7 +108,7 @@ CompositorParent::AllocPLayers(const LayersBackend &backend, const WidgetDescrip
 
     mLayerManager = layerManager;
 
-    return new ShadowLayersParent(slm);
+    return new ShadowLayersParent(slm, this);
   } else {
     NS_ERROR("Unsupported backend selected for Async Compositor");
     return NULL;
