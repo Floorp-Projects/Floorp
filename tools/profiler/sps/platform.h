@@ -40,6 +40,15 @@ public:
     , mName(strdup(aEntry.mName))
   {}
 
+  MapEntry& operator=(const MapEntry& aEntry)
+  {
+    mStart = aEntry.mStart;
+    mEnd = aEntry.mEnd;
+    mOffset = aEntry.mOffset;
+    mName = strdup(aEntry.mName);
+    return *this;
+  }
+
   ~MapEntry()
   {
     free(mName);
@@ -50,6 +59,8 @@ public:
   char* GetName() { return mName; }
 
 private:
+  explicit MapEntry() {}
+
   unsigned long mStart;
   unsigned long mEnd;
   unsigned long mOffset;
