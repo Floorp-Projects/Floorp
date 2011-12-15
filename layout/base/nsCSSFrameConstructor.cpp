@@ -9654,13 +9654,11 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
     const char *message =
       (display->mDisplay == NS_STYLE_DISPLAY_INLINE_BOX)
         ? "NeededToWrapXULInlineBox" : "NeededToWrapXUL";
-    nsContentUtils::ReportToConsole(nsContentUtils::eXUL_PROPERTIES,
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    "FrameConstructor", mDocument,
+                                    nsContentUtils::eXUL_PROPERTIES,
                                     message,
-                                    params, ArrayLength(params),
-                                    nsnull,
-                                    EmptyString(), 0, 0, // not useful
-                                    nsIScriptError::warningFlag,
-                                    "FrameConstructor", mDocument);
+                                    params, ArrayLength(params));
 
     nsRefPtr<nsStyleContext> blockSC = mPresShell->StyleSet()->
       ResolveAnonymousBoxStyle(nsCSSAnonBoxes::mozXULAnonymousBlock,

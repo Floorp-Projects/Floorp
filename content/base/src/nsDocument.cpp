@@ -4018,13 +4018,10 @@ nsDocument::BeginLoad()
 void
 nsDocument::ReportEmptyGetElementByIdArg()
 {
-  nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
-                                  "EmptyGetElementByIdParam",
-                                  nsnull, 0,
-                                  nsnull,
-                                  EmptyString(), 0, 0,
-                                  nsIScriptError::warningFlag,
-                                  "DOM", this);
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  "DOM", this,
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  "EmptyGetElementByIdParam");
 }
 
 Element*
@@ -5307,13 +5304,10 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
 
   if (!mHasWarnedAboutBoxObjects && !content->IsXUL()) {
     mHasWarnedAboutBoxObjects = true;
-    nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
-                                    "UseOfGetBoxObjectForWarning",
-                                    nsnull, 0,
-                                    nsnull,
-                                    EmptyString(), 0, 0,
-                                    nsIScriptError::warningFlag,
-                                    "BoxObjects", this);
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    "BoxObjects", this,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "UseOfGetBoxObjectForWarning");
   }
 
   *aResult = nsnull;
@@ -8197,13 +8191,10 @@ nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation)
     return;
   }
   mWarnedAbout |= (1 << aOperation);
-  nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
-                                  kWarnings[aOperation],
-                                  nsnull, 0,
-                                  nsnull,
-                                  EmptyString(), 0, 0,
-                                  nsIScriptError::warningFlag,
-                                  "DOM Core", this);
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  "DOM Core", this,
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  kWarnings[aOperation]);
 }
 
 nsresult
@@ -8717,12 +8708,10 @@ LogFullScreenDenied(bool aLogFailure, const char* aMessage, nsIDocument* aDoc)
                      true,
                      false);
   e->PostDOMEvent();
-  nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
-                                  aMessage,
-                                  nsnull, 0, nsnull,
-                                  EmptyString(), 0, 0,
-                                  nsIScriptError::warningFlag,
-                                  "DOM", aDoc);
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  "DOM", aDoc,
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  aMessage);
 }
 
 void
