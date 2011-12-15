@@ -86,6 +86,12 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(NULL)
 endif
 
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/gfx/angle/$(LIB_PREFIX)angle.$(LIB_SUFFIX) \
+	$(NULL)
+
+EXTRA_DSO_LDOPTS = $(MOZALLOC_LIB) $(NSPR_LIBS)
+
 ifeq (WINNT,$(OS_TARGET))
 DEFFILE = $(srcdir)/symbols.def
 endif

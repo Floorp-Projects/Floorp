@@ -318,8 +318,6 @@ STATIC_LIBS += thebes gl ycbcr
 
 COMPONENT_LIBS += profiler
 
-STATIC_LIBS += angle
-
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += gkwidget
 endif
