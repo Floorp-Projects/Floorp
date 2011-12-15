@@ -112,21 +112,6 @@ GfxInfo::GetDeviceInfo()
   }
 }
 
-// TODO dRdR FIXME
-static bool
-IsATIRadeonX1000(nsAString& aVendorID, nsAString& aDeviceID)
-{
-  if (aVendorID.LowerCaseEqualsLiteral("0x1002")) {
-    // this list is from the ATIRadeonX1000.kext Info.plist
-    const char * devices[] = {"0x7187", "0x7210", "0x71de", "0x7146", "0x7142", "0x7109", "0x71c5", "0x71c0", "0x7240", "0x7249", "0x7291"};
-    for (size_t i = 0; i < ArrayLength(devices); i++) {
-      if (aDeviceID.LowerCaseEqualsASCII(devices[i]))
-        return true;
-    }
-  }
-  return false;
-}
-
 nsresult
 GfxInfo::Init()
 {
@@ -369,6 +354,12 @@ GfxInfo::GetGfxDriverInfo()
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(DRIVER_OS_ALL,
       (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorATI), GfxDriverInfo::allDevices,
       nsIGfxInfo::FEATURE_WEBGL_MSAA, nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION);
+    IMPLEMENT_MAC_DRIVER_BLOCKLIST(DRIVER_OS_ALL,
+      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorATI), (GfxDeviceFamily*) GfxDriverInfo::GetDeviceFamily(RadeonX1000),
+      nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DEVICE);
+    IMPLEMENT_MAC_DRIVER_BLOCKLIST(DRIVER_OS_ALL,
+      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorNVIDIA), (GfxDeviceFamily*) GfxDriverInfo::GetDeviceFamily(Geforce7300GT), 
+      nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_BLOCKED_DEVICE);
   }
   return *mDriverInfo;
 }
@@ -412,13 +403,7 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
     status = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
   }
 
-  if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS) {
-    bool foundGoodDevice = false;
-
-    if (!IsATIRadeonX1000(mAdapterVendorID, mAdapterDeviceID)) {
-      foundGoodDevice = true;
-    }
-
+  // The code around the following has been moved into the global blocklist.
 #if 0
     // CGL reports a list of renderers, some renderers are slow (e.g. software)
     // and AFAIK we can't decide which one will be used among them, so let's implement this by returning NO_INFO
@@ -455,23 +440,6 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
       }
     }
 #endif
-    if (!foundGoodDevice)
-      status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
-  }
-
-  if (aFeature == nsIGfxInfo::FEATURE_WEBGL_OPENGL) {
-    // same comment as above for FEATURE_OPENGL_LAYERS.
-    bool foundGoodDevice = true;
-
-    // Blacklist the Geforce 7300 GT because of bug 678053
-    if (mAdapterVendorID.LowerCaseEqualsLiteral("0x10de") &&
-        mAdapterDeviceID.LowerCaseEqualsLiteral("0x0393")) {
-      foundGoodDevice = false;
-    }
-
-    if (!foundGoodDevice)
-      status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
-  }
 
   if (aFeature == nsIGfxInfo::FEATURE_WEBGL_MSAA) {
     // Blacklist all ATI cards on OSX, except for
