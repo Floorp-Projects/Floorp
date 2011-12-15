@@ -5737,62 +5737,73 @@ Parser::memberExpr(JSBool allowCallSyntax)
             if (!pn2)
                 return NULL;
 
-#if JS_HAS_XML_SUPPORT
-            tt = tokenStream.getToken(TSF_OPERAND | TSF_KEYWORD_IS_NAME);
-
-            /* Treat filters as 'with' statements for name deoptimization. */
-            ParseNode *oldWith = tc->innermostWith;
-            StmtInfo stmtInfo;
-            if (tt == TOK_LP) {
-                if (tc->inStrictMode()) {
-                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NAME_AFTER_DOT);
-                    return NULL;
-                }
-
-                tc->innermostWith = pn;
-                PushStatement(tc, &stmtInfo, STMT_WITH, -1);
-            }
-
-            pn3 = primaryExpr(tt, JS_TRUE);
-            if (!pn3)
+            tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
+            if (tt == TOK_ERROR)
                 return NULL;
+            if (tt == TOK_NAME) {
+#if JS_HAS_XML_SUPPORT
+                if (!tc->inStrictMode() && tokenStream.peekToken() == TOK_DBLCOLON) {
+                    pn3 = propertyQualifiedIdentifier();
+                    if (!pn3)
+                        return NULL;
 
-            if (tt == TOK_LP) {
-                tc->innermostWith = oldWith;
-                PopStatement(tc);
+                    JS_ASSERT(pn3->isKind(PNK_DBLCOLON));
+                    pn2->setKind(PNK_LB);
+                    pn2->setOp(JSOP_GETELEM);
+                    pn2->setArity(PN_BINARY);
+                    pn2->pn_left = pn;
+                    pn2->pn_right = pn3;
+                } else
+#endif
+                {
+                    pn2->setOp(JSOP_GETPROP);
+                    pn2->pn_expr = pn;
+                    pn2->pn_atom = tokenStream.currentToken().name();
+                }
             }
-
-            /* Check both tt and pn_type, to distinguish |x.(y)| and |x.y::z| from |x.y|. */
-            if (tt == TOK_NAME && pn3->isKind(PNK_NAME)) {
-                pn2->setOp(JSOP_GETPROP);
-                pn2->pn_expr = pn;
-                pn2->pn_atom = pn3->pn_atom;
-                freeTree(pn3);
-            } else {
+#if JS_HAS_XML_SUPPORT
+            else if (!tc->inStrictMode()) {
                 if (tt == TOK_LP) {
+                    /* Filters are effectively 'with', so deoptimize names. */
+                    tc->flags |= TCF_FUN_HEAVYWEIGHT;
+
+                    StmtInfo stmtInfo;
+                    ParseNode *oldWith = tc->innermostWith;
+                    tc->innermostWith = pn;
+                    PushStatement(tc, &stmtInfo, STMT_WITH, -1);
+
+                    pn3 = bracketedExpr();
+                    if (!pn3)
+                        return NULL;
+                    pn3->setInParens(true);
+                    MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_IN_PAREN);
+
+                    tc->innermostWith = oldWith;
+                    PopStatement(tc);
+
                     pn2->setKind(PNK_FILTER);
                     pn2->setOp(JSOP_FILTER);
-
-                    /* A filtering predicate is like a with statement. */
-                    tc->flags |= TCF_FUN_HEAVYWEIGHT;
-                } else if (pn3->isXMLPropertyIdentifier()) {
-                    JS_ASSERT(!tc->inStrictMode());
+                } else if (tt == TOK_AT || tt == TOK_STAR) {
+                    pn3 = starOrAtPropertyIdentifier(tt);
+                    if (!pn3)
+                        return NULL;
                     pn2->setKind(PNK_LB);
                     pn2->setOp(JSOP_GETELEM);
                 } else {
                     reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NAME_AFTER_DOT);
                     return NULL;
                 }
+
                 pn2->setArity(PN_BINARY);
                 pn2->pn_left = pn;
                 pn2->pn_right = pn3;
             }
-#else
-            MUST_MATCH_TOKEN_WITH_FLAGS(TOK_NAME, JSMSG_NAME_AFTER_DOT, TSF_KEYWORD_IS_NAME);
-            pn2->setOp(JSOP_GETPROP);
-            pn2->pn_expr = pn;
-            pn2->pn_atom = tokenStream.currentToken().name();
 #endif
+            else {
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NAME_AFTER_DOT);
+                return NULL;
+            }
+
             pn2->pn_pos.begin = pn->pn_pos.begin;
             pn2->pn_pos.end = tokenStream.currentToken().pos.end;
 #if JS_HAS_XML_SUPPORT
@@ -6559,6 +6570,176 @@ Parser::parseXMLText(JSObject *chain, bool allowList)
 
 #endif /* JS_HAS_XMLSUPPORT */
 
+bool
+Parser::checkForFunctionNode(PropertyName *name, ParseNode *node)
+{
+    /*
+     * In |a.ns::name|, |ns| refers to an in-scope variable, so |ns| can't be a
+     * keyword.  (Exception: |function::name| is the actual name property, not
+     * what E4X would expose.)  We parsed |ns| accepting a keyword as a name,
+     * so we must implement the keyword restriction manually in this case.
+     */
+    if (const KeywordInfo *ki = FindKeyword(name->charsZ(), name->length())) {
+        if (ki->tokentype != TOK_FUNCTION) {
+            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_KEYWORD_NOT_NS);
+            return false;
+        }
+
+        node->setArity(PN_NULLARY);
+        node->setKind(PNK_FUNCTION);
+    }
+
+    return true;
+}
+
+#if JS_HAS_XML_SUPPORT
+ParseNode *
+Parser::propertyQualifiedIdentifier()
+{
+    JS_ASSERT(!tc->inStrictMode());
+    JS_ASSERT(tokenStream.isCurrentTokenType(TOK_NAME));
+    JS_ASSERT(tokenStream.currentToken().t_op == JSOP_NAME);
+    JS_ASSERT(tokenStream.peekToken() == TOK_DBLCOLON);
+
+    /* Deoptimize QualifiedIdentifier properties to avoid tricky analysis. */
+    tc->flags |= TCF_FUN_HEAVYWEIGHT;
+
+    PropertyName *name = tokenStream.currentToken().name();
+    ParseNode *node = NameNode::create(PNK_NAME, name, tc);
+    if (!node)
+        return NULL;
+    node->setOp(JSOP_NAME);
+    node->pn_dflags |= PND_DEOPTIMIZED;
+
+    if (!checkForFunctionNode(name, node))
+        return NULL;
+
+    tokenStream.consumeKnownToken(TOK_DBLCOLON);
+    return qualifiedSuffix(node);
+}
+#endif
+
+ParseNode *
+Parser::identifierName(bool afterDot)
+{
+    JS_ASSERT(tokenStream.isCurrentTokenType(TOK_NAME));
+
+    PropertyName *name = tokenStream.currentToken().name();
+    ParseNode *node = NameNode::create(PNK_NAME, name, tc);
+    if (!node)
+        return NULL;
+    JS_ASSERT(tokenStream.currentToken().t_op == JSOP_NAME);
+    node->setOp(JSOP_NAME);
+
+    if ((tc->flags & (TCF_IN_FUNCTION | TCF_FUN_PARAM_ARGUMENTS)) == TCF_IN_FUNCTION &&
+        name == context->runtime->atomState.argumentsAtom) {
+        /*
+         * Flag arguments usage so we can avoid unsafe optimizations such
+         * as formal parameter assignment analysis (because of the hated
+         * feature whereby arguments alias formals). We do this even for
+         * a reference of the form foo.arguments, which ancient code may
+         * still use instead of arguments (more hate).
+         */
+        tc->noteArgumentsUse(node);
+
+        /*
+         * Bind early to JSOP_ARGUMENTS to relieve later code from having
+         * to do this work (new rule for the emitter to count on).
+         */
+        if (!afterDot && !(tc->flags & TCF_DECL_DESTRUCTURING)
+            && !tc->inStatement(STMT_WITH)) {
+            node->setOp(JSOP_ARGUMENTS);
+            node->pn_dflags |= PND_BOUND;
+        }
+    } else if ((!afterDot
+#if JS_HAS_XML_SUPPORT
+                || (!tc->inStrictMode() && tokenStream.peekToken() == TOK_DBLCOLON)
+#endif
+               ) && !(tc->flags & TCF_DECL_DESTRUCTURING))
+    {
+        /* In case this is a generator expression outside of any function. */
+        if (!tc->inFunction() && name == context->runtime->atomState.argumentsAtom)
+            tc->countArgumentsUse(node);
+
+        StmtInfo *stmt = LexicalLookup(tc, name, NULL);
+
+        MultiDeclRange mdl = tc->decls.lookupMulti(name);
+
+        Definition *dn;
+        if (!mdl.empty()) {
+            dn = mdl.front();
+        } else {
+            if (AtomDefnAddPtr p = tc->lexdeps->lookupForAdd(name)) {
+                dn = p.value();
+            } else {
+                /*
+                 * No definition before this use in any lexical scope.
+                 * Create a placeholder definition node to either:
+                 * - Be adopted when we parse the real defining
+                 *   declaration, or
+                 * - Be left as a free variable definition if we never
+                 *   see the real definition.
+                 */
+                dn = MakePlaceholder(node, tc);
+                if (!dn || !tc->lexdeps->add(p, name, dn))
+                    return NULL;
+
+                /*
+                 * In case this is a forward reference to a function,
+                 * we pessimistically set PND_FUNARG if the next token
+                 * is not a left parenthesis.
+                 *
+                 * If the definition eventually parsed into dn is not a
+                 * function, this flag won't hurt, and if we do parse a
+                 * function with pn's name, then the PND_FUNARG flag is
+                 * necessary for safe context->display-based optimiza-
+                 * tion of the closure's static link.
+                 */
+                if (tokenStream.peekToken() != TOK_LP)
+                    dn->pn_dflags |= PND_FUNARG;
+            }
+        }
+
+        JS_ASSERT(dn->isDefn());
+        LinkUseToDef(node, dn, tc);
+
+        /* Here we handle the backward function reference case. */
+        if (tokenStream.peekToken() != TOK_LP)
+            dn->pn_dflags |= PND_FUNARG;
+
+        node->pn_dflags |= (dn->pn_dflags & PND_FUNARG);
+        if (stmt && stmt->type == STMT_WITH)
+            node->pn_dflags |= PND_DEOPTIMIZED;
+    }
+
+#if JS_HAS_XML_SUPPORT
+    if (!tc->inStrictMode() && tokenStream.matchToken(TOK_DBLCOLON)) {
+        if (afterDot) {
+            if (!checkForFunctionNode(name, node))
+                return NULL;
+        }
+        node = qualifiedSuffix(node);
+        if (!node)
+            return NULL;
+    }
+#endif
+
+    return node;
+}
+
+#if JS_HAS_XML_SUPPORT
+ParseNode *
+Parser::starOrAtPropertyIdentifier(TokenKind tt)
+{
+    JS_ASSERT(tt == TOK_AT || tt == TOK_STAR);
+    if (tc->inStrictMode()) {
+        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
+        return NULL;
+    }
+    return (tt == TOK_AT) ? attributeIdentifier() : qualifiedIdentifier();
+}
+#endif
+
 ParseNode *
 Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 {
@@ -6981,25 +7162,16 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         break;
       }
 
-#if JS_HAS_XML_SUPPORT
-      case TOK_STAR:
-        if (tc->inStrictMode()) {
-            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
-            return NULL;
-        }
-        pn = qualifiedIdentifier();
+      case TOK_STRING:
+        pn = atomNode(PNK_STRING, JSOP_STRING);
         if (!pn)
             return NULL;
         break;
 
+#if JS_HAS_XML_SUPPORT
       case TOK_AT:
-        if (tc->inStrictMode()) {
-            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
-            return NULL;
-        }      
-        pn = attributeIdentifier();
-        if (!pn)
-            return NULL;
+      case TOK_STAR:
+        pn = starOrAtPropertyIdentifier(tt);
         break;
 
       case TOK_XMLSTAGO:
@@ -7007,9 +7179,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         if (!pn)
             return NULL;
         break;
-#endif /* JS_HAS_XML_SUPPORT */
 
-#if JS_HAS_XML_SUPPORT
       case TOK_XMLCDATA:
         JS_ASSERT(!tc->inStrictMode());
         pn = atomNode(PNK_XMLCDATA, JSOP_XMLCDATA);
@@ -7023,14 +7193,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         if (!pn)
             return NULL;
         break;
-#endif
-      case TOK_STRING:
-        pn = atomNode(PNK_STRING, JSOP_STRING);
-        if (!pn)
-            return NULL;
-        break;
 
-#if JS_HAS_XML_SUPPORT
       case TOK_XMLPI: {
         JS_ASSERT(!tc->inStrictMode());
         const Token &tok = tokenStream.currentToken();
@@ -7042,119 +7205,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 #endif
 
       case TOK_NAME:
-        pn = NameNode::create(PNK_NAME, tokenStream.currentToken().name(), tc);
-        if (!pn)
-            return NULL;
-        JS_ASSERT(tokenStream.currentToken().t_op == JSOP_NAME);
-        pn->setOp(JSOP_NAME);
-
-        if ((tc->flags & (TCF_IN_FUNCTION | TCF_FUN_PARAM_ARGUMENTS)) == TCF_IN_FUNCTION &&
-            pn->pn_atom == context->runtime->atomState.argumentsAtom) {
-            /*
-             * Flag arguments usage so we can avoid unsafe optimizations such
-             * as formal parameter assignment analysis (because of the hated
-             * feature whereby arguments alias formals). We do this even for
-             * a reference of the form foo.arguments, which ancient code may
-             * still use instead of arguments (more hate).
-             */
-            tc->noteArgumentsUse(pn);
-
-            /*
-             * Bind early to JSOP_ARGUMENTS to relieve later code from having
-             * to do this work (new rule for the emitter to count on).
-             */
-            if (!afterDot && !(tc->flags & TCF_DECL_DESTRUCTURING)
-                && !tc->inStatement(STMT_WITH)) {
-                pn->setOp(JSOP_ARGUMENTS);
-                pn->pn_dflags |= PND_BOUND;
-            }
-        } else if ((!afterDot
-#if JS_HAS_XML_SUPPORT
-                    || (!tc->inStrictMode() && tokenStream.peekToken() == TOK_DBLCOLON)
-#endif
-                   ) && !(tc->flags & TCF_DECL_DESTRUCTURING)) {
-            /* In case this is a generator expression outside of any function. */
-            if (!tc->inFunction() &&
-                pn->pn_atom == context->runtime->atomState.argumentsAtom) {
-                tc->countArgumentsUse(pn);
-            }
-
-            StmtInfo *stmt = LexicalLookup(tc, pn->pn_atom, NULL);
-
-            MultiDeclRange mdl = tc->decls.lookupMulti(pn->pn_atom);
-
-            Definition *dn;
-            if (!mdl.empty()) {
-                dn = mdl.front();
-            } else {
-                AtomDefnAddPtr p = tc->lexdeps->lookupForAdd(pn->pn_atom);
-                if (p) {
-                    dn = p.value();
-                } else {
-                    /*
-                     * No definition before this use in any lexical scope.
-                     * Create a placeholder definition node to either:
-                     * - Be adopted when we parse the real defining
-                     *   declaration, or
-                     * - Be left as a free variable definition if we never
-                     *   see the real definition.
-                     */
-                    dn = MakePlaceholder(pn, tc);
-                    if (!dn || !tc->lexdeps->add(p, dn->pn_atom, dn))
-                        return NULL;
-
-                    /*
-                     * In case this is a forward reference to a function,
-                     * we pessimistically set PND_FUNARG if the next token
-                     * is not a left parenthesis.
-                     *
-                     * If the definition eventually parsed into dn is not a
-                     * function, this flag won't hurt, and if we do parse a
-                     * function with pn's name, then the PND_FUNARG flag is
-                     * necessary for safe context->display-based optimiza-
-                     * tion of the closure's static link.
-                     */
-                    if (tokenStream.peekToken() != TOK_LP)
-                        dn->pn_dflags |= PND_FUNARG;
-                }
-            }
-
-            JS_ASSERT(dn->isDefn());
-            LinkUseToDef(pn, dn, tc);
-
-            /* Here we handle the backward function reference case. */
-            if (tokenStream.peekToken() != TOK_LP)
-                dn->pn_dflags |= PND_FUNARG;
-
-            pn->pn_dflags |= (dn->pn_dflags & PND_FUNARG);
-            if (stmt && stmt->type == STMT_WITH)
-                pn->pn_dflags |= PND_DEOPTIMIZED;
-        }
-
-#if JS_HAS_XML_SUPPORT
-        if (!tc->inStrictMode() && tokenStream.matchToken(TOK_DBLCOLON)) {
-            if (afterDot) {
-                /*
-                 * Here primaryExpr is called after . or .. followed by a name
-                 * followed by ::. This is the only case where a keyword after
-                 * . or .. is not treated as a property name.
-                 */
-                const KeywordInfo *ki = FindKeyword(pn->pn_atom->charsZ(), pn->pn_atom->length());
-                if (ki) {
-                    if (ki->tokentype != TOK_FUNCTION) {
-                        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_KEYWORD_NOT_NS);
-                        return NULL;
-                    }
-
-                    pn->setArity(PN_NULLARY);
-                    pn->setKind(PNK_FUNCTION);
-                }
-            }
-            pn = qualifiedSuffix(pn);
-            if (!pn)
-                return NULL;
-        }
-#endif
+        pn = identifierName(afterDot);
         break;
 
       case TOK_REGEXP:
