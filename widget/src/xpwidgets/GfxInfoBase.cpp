@@ -664,7 +664,7 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
 
     bool match = false;
 
-#if !defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(ANDROID)
     switch (info[i].mComparisonOp) {
     case DRIVER_LESS_THAN:
       match = driverVersion < info[i].mDriverVersion;
@@ -703,7 +703,7 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
     match = true;
 #endif
 
-    if (match) {
+    if (match || info[i].mDriverVersion == GfxDriverInfo::allDriverVersions) {
       if (info[i].mFeature == GfxDriverInfo::allFeatures ||
           info[i].mFeature == aFeature)
       {
