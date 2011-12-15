@@ -48,9 +48,9 @@ from SocketServer import ThreadingMixIn
 
 class EasyServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
     allow_reuse_address = True
-    
+
 class MozRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
-    docroot = os.getcwd()
+    docroot = os.getcwd() # current working directory at time of import
 
     def parse_request(self):
         retval = SimpleHTTPServer.SimpleHTTPRequestHandler.parse_request(self)
