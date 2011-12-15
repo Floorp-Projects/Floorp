@@ -51,6 +51,10 @@
 
 using namespace mozilla::widget;
 
+#ifdef DEBUG
+NS_IMPL_ISUPPORTS_INHERITED1(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
+#endif
+
 /* GetD2DEnabled and GetDwriteEnabled shouldn't be called until after gfxPlatform initialization
  * has occurred because they depend on it for information. (See bug 591561) */
 nsresult
@@ -329,3 +333,36 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
 
   return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, &os);
 }
+
+#ifdef DEBUG
+
+// Implement nsIGfxInfoDebug
+
+/* void spoofVendorID (in DOMString aVendorID); */
+NS_IMETHODIMP GfxInfo::SpoofVendorID(const nsAString & aVendorID)
+{
+  mAdapterVendorID = aVendorID;
+  return NS_OK;
+}
+
+/* void spoofDeviceID (in unsigned long aDeviceID); */
+NS_IMETHODIMP GfxInfo::SpoofDeviceID(const nsAString & aDeviceID)
+{
+  mAdapterDeviceID = aDeviceID;
+  return NS_OK;
+}
+
+/* void spoofDriverVersion (in DOMString aDriverVersion); */
+NS_IMETHODIMP GfxInfo::SpoofDriverVersion(const nsAString & aDriverVersion)
+{
+  mDriverVersion = aDriverVersion;
+  return NS_OK;
+}
+
+/* void spoofOSVersion (in unsigned long aVersion); */
+NS_IMETHODIMP GfxInfo::SpoofOSVersion(PRUint32 aVersion)
+{
+  return NS_OK;
+}
+
+#endif

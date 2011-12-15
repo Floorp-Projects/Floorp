@@ -79,6 +79,11 @@ public:
 
   virtual nsresult Init();
 
+#ifdef DEBUG
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIGFXINFODEBUG
+#endif
+
 protected:
 
   virtual nsresult GetFeatureStatusImpl(PRInt32 aFeature, 

@@ -41,15 +41,11 @@
 #define __mozilla_widget_GfxInfo_h__
 
 #include "GfxInfoBase.h"
-#include "nsIGfxInfoDebug.h"
 
 namespace mozilla {
 namespace widget {
 
 class GfxInfo : public GfxInfoBase
-#ifdef DEBUG
-              , public nsIGfxInfoDebug
-#endif
 {
 public:
   GfxInfo();
@@ -80,12 +76,12 @@ public:
   using GfxInfoBase::GetFeatureSuggestedDriverVersion;
   using GfxInfoBase::GetWebGLParameter;
 
+  virtual nsresult Init();
+
 #ifdef DEBUG
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIGFXINFODEBUG
 #endif
-
-  virtual nsresult Init();
 
 protected:
 
