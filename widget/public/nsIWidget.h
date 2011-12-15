@@ -110,7 +110,6 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #ifdef XP_MACOSX
 #define NS_NATIVE_PLUGIN_PORT_QD    100
 #define NS_NATIVE_PLUGIN_PORT_CG    101
-#define NS_NATIVE_OPENGL_VIEW_PTR   102
 #endif
 #ifdef XP_WIN
 #define NS_NATIVE_TSF_THREAD_MGR       100

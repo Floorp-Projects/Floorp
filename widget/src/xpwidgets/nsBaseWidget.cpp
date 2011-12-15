@@ -39,7 +39,6 @@
 #include "mozilla/Util.h"
 
 #include "mozilla/layers/CompositorChild.h"
-#include "mozilla/layers/CompositorParent.h"
 #include "nsBaseWidget.h"
 #include "nsDeviceContext.h"
 #include "nsCOMPtr.h"
@@ -57,7 +56,6 @@
 #include "nsIXULRuntime.h"
 #include "nsIGfxInfo.h"
 #include "npapi.h"
-
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -866,7 +864,6 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
               delete compositorChild;
             }
             lf->SetShadowManager(shadowManager);
-            printf("Async layer manager\n");
 
             mLayerManager = lm;
           } else {
