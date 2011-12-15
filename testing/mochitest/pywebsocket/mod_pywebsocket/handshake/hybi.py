@@ -28,7 +28,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-"""WebSocket HyBi 07 opening handshake processor."""
+"""WebSocket HyBi latest opening handshake processor."""
 
 
 # Note: request.connection.write is used in this module, even though mod_python
@@ -43,18 +43,19 @@ import os
 import re
 
 from mod_pywebsocket import common
-from mod_pywebsocket.stream import Stream
-from mod_pywebsocket.stream import StreamOptions
-from mod_pywebsocket import util
+from mod_pywebsocket.extensions import get_extension_processor
 from mod_pywebsocket.handshake._base import check_request_line
-from mod_pywebsocket.handshake._base import Extension
 from mod_pywebsocket.handshake._base import format_extensions
 from mod_pywebsocket.handshake._base import format_header
 from mod_pywebsocket.handshake._base import get_mandatory_header
-from mod_pywebsocket.handshake._base import HandshakeError
+from mod_pywebsocket.handshake._base import HandshakeException
 from mod_pywebsocket.handshake._base import parse_extensions
 from mod_pywebsocket.handshake._base import parse_token_list
 from mod_pywebsocket.handshake._base import validate_mandatory_header
+from mod_pywebsocket.handshake._base import validate_subprotocol
+from mod_pywebsocket.stream import Stream
+from mod_pywebsocket.stream import StreamOptions
+from mod_pywebsocket import util
 
 
 _BASE64_REGEX = re.compile('^[+/0-9A-Za-z]*=*$')
@@ -90,21 +91,14 @@ class Handshaker(object):
         self._request = request
         self._dispatcher = dispatcher
 
-    def do_handshake(self):
-        check_request_line(self._request)
-
-        validate_mandatory_header(
-            self._request,
-            common.UPGRADE_HEADER,
-            common.WEBSOCKET_UPGRADE_TYPE)
-
+    def _validate_connection_header(self):
         connection = get_mandatory_header(
             self._request, common.CONNECTION_HEADER)
 
         try:
             connection_tokens = parse_token_list(connection)
-        except HandshakeError, e:
-            raise HandshakeError(
+        except HandshakeException, e:
+            raise HandshakeException(
                 'Failed to parse %s: %s' % (common.CONNECTION_HEADER, e))
 
         connection_is_valid = False
@@ -113,55 +107,118 @@ class Handshaker(object):
                 connection_is_valid = True
                 break
         if not connection_is_valid:
-            raise HandshakeError(
+            raise HandshakeException(
                 '%s header doesn\'t contain "%s"' %
                 (common.CONNECTION_HEADER, common.UPGRADE_CONNECTION_TYPE))
+
+    def do_handshake(self):
+        self._request.ws_close_code = None
+        self._request.ws_close_reason = None
+
+        # Parsing.
+
+        check_request_line(self._request)
+
+        validate_mandatory_header(
+            self._request,
+            common.UPGRADE_HEADER,
+            common.WEBSOCKET_UPGRADE_TYPE)
+
+        self._validate_connection_header()
 
         self._request.ws_resource = self._request.uri
 
         unused_host = get_mandatory_header(self._request, common.HOST_HEADER)
 
-        self._get_origin()
         self._check_version()
-        self._set_protocol()
-        self._set_extensions()
 
-        key = self._get_key()
-        (accept, accept_binary) = compute_accept(key)
-        self._logger.debug('Sec-WebSocket-Accept: %r (%s)',
-                           accept, util.hexify(accept_binary))
+        # This handshake must be based on latest hybi. We are responsible to
+        # fallback to HTTP on handshake failure as latest hybi handshake
+        # specifies.
+        try:
+            self._get_origin()
+            self._set_protocol()
+            self._parse_extensions()
 
-        self._logger.debug('IETF HyBi 07 protocol')
-        self._request.ws_version = common.VERSION_HYBI07
-        stream_options = StreamOptions()
-        stream_options.deflate = self._request.ws_deflate
-        self._request.ws_stream = Stream(self._request, stream_options)
+            # Key validation, response generation.
 
-        self._request.ws_close_code = None
-        self._request.ws_close_reason = None
-
-        self._dispatcher.do_extra_handshake(self._request)
-
-        if self._request.ws_requested_protocols is not None:
-            if self._request.ws_protocol is None:
-                raise HandshakeError(
-                    'do_extra_handshake must choose one subprotocol from '
-                    'ws_requested_protocols and set it to ws_protocol')
-
-            # TODO(tyoshino): Validate selected subprotocol value.
-
+            key = self._get_key()
+            (accept, accept_binary) = compute_accept(key)
             self._logger.debug(
-                'Subprotocol accepted: %r',
-                self._request.ws_protocol)
-        else:
-            if self._request.ws_protocol is not None:
-                raise HandshakeError(
-                    'ws_protocol must be None when the client didn\'t request '
-                    'any subprotocol')
+                '%s: %r (%s)',
+                common.SEC_WEBSOCKET_ACCEPT_HEADER,
+                accept,
+                util.hexify(accept_binary))
 
-        self._send_handshake(accept)
+            self._logger.debug('IETF HyBi protocol')
+            self._request.ws_version = common.VERSION_HYBI_LATEST
 
-        self._logger.debug('Sent opening handshake response')
+            # Setup extension processors.
+
+            processors = []
+            if self._request.ws_requested_extensions is not None:
+                for extension_request in self._request.ws_requested_extensions:
+                    processor = get_extension_processor(extension_request)
+                    # Unknown extension requests are just ignored.
+                    if processor is not None:
+                        processors.append(processor)
+            self._request.ws_extension_processors = processors
+
+            # Extra handshake handler may modify/remove processors.
+            self._dispatcher.do_extra_handshake(self._request)
+
+            stream_options = StreamOptions()
+
+            self._request.ws_extensions = None
+            for processor in self._request.ws_extension_processors:
+                if processor is None:
+                    # Some processors may be removed by extra handshake
+                    # handler.
+                    continue
+
+                extension_response = processor.get_extension_response()
+                if extension_response is None:
+                    # Rejected.
+                    continue
+
+                if self._request.ws_extensions is None:
+                    self._request.ws_extensions = []
+                self._request.ws_extensions.append(extension_response)
+
+                processor.setup_stream_options(stream_options)
+
+            if self._request.ws_extensions is not None:
+                self._logger.debug(
+                    'Extensions accepted: %r',
+                    map(common.ExtensionParameter.name,
+                        self._request.ws_extensions))
+
+            self._request.ws_stream = Stream(self._request, stream_options)
+
+            if self._request.ws_requested_protocols is not None:
+                if self._request.ws_protocol is None:
+                    raise HandshakeException(
+                        'do_extra_handshake must choose one subprotocol from '
+                        'ws_requested_protocols and set it to ws_protocol')
+                validate_subprotocol(self._request.ws_protocol, hixie=False)
+
+                self._logger.debug(
+                    'Subprotocol accepted: %r',
+                    self._request.ws_protocol)
+            else:
+                if self._request.ws_protocol is not None:
+                    raise HandshakeException(
+                        'ws_protocol must be None when the client didn\'t '
+                        'request any subprotocol')
+
+            self._send_handshake(accept)
+
+            self._logger.debug('Sent opening handshake response')
+        except HandshakeException, e:
+            if not e.status:
+                # Fallback to 400 bad request by default.
+                e.status = 400
+            raise e
 
     def _get_origin(self):
         origin = self._request.headers_in.get(
@@ -170,7 +227,8 @@ class Handshaker(object):
 
     def _check_version(self):
         unused_value = validate_mandatory_header(
-            self._request, common.SEC_WEBSOCKET_VERSION_HEADER, '8')
+            self._request, common.SEC_WEBSOCKET_VERSION_HEADER,
+            str(common.VERSION_HYBI_LATEST), fail_status=426)
 
     def _set_protocol(self):
         self._request.ws_protocol = None
@@ -182,45 +240,25 @@ class Handshaker(object):
             self._request.ws_requested_protocols = None
             return
 
-        # TODO(tyoshino): Validate the header value.
+        self._request.ws_requested_protocols = parse_token_list(
+            protocol_header)
+        self._logger.debug('Subprotocols requested: %r',
+                           self._request.ws_requested_protocols)
 
-        requested_protocols = protocol_header.split(',')
-        self._request.ws_requested_protocols = [
-            s.strip() for s in requested_protocols]
-
-        self._logger.debug('Subprotocols requested: %r', requested_protocols)
-
-    def _set_extensions(self):
-        self._request.ws_deflate = False
-
+    def _parse_extensions(self):
         extensions_header = self._request.headers_in.get(
             common.SEC_WEBSOCKET_EXTENSIONS_HEADER)
         if not extensions_header:
             self._request.ws_requested_extensions = None
-            self._request.ws_extensions = None
             return
 
-        self._request.ws_extensions = []
-
-        requested_extensions = parse_extensions(extensions_header)
-
-        for extension in requested_extensions:
-            extension_name = extension.name()
-            # We now support only deflate-stream extension. Any other
-            # extension requests are just ignored for now.
-            if (extension_name == 'deflate-stream' and
-                len(extension.get_parameter_names()) == 0):
-                self._request.ws_extensions.append(extension)
-                self._request.ws_deflate = True
-
-        self._request.ws_requested_extensions = requested_extensions
+        self._request.ws_requested_extensions = parse_extensions(
+            extensions_header)
 
         self._logger.debug(
             'Extensions requested: %r',
-            map(Extension.name, self._request.ws_requested_extensions))
-        self._logger.debug(
-            'Extensions accepted: %r',
-            map(Extension.name, self._request.ws_extensions))
+            map(common.ExtensionParameter.name,
+                self._request.ws_requested_extensions))
 
     def _validate_key(self, key):
         # Validate
@@ -238,7 +276,7 @@ class Handshaker(object):
             pass
 
         if not key_is_valid:
-            raise HandshakeError(
+            raise HandshakeException(
                 'Illegal value for header %s: %r' %
                 (common.SEC_WEBSOCKET_KEY_HEADER, key))
 
@@ -250,8 +288,11 @@ class Handshaker(object):
 
         decoded_key = self._validate_key(key)
 
-        self._logger.debug('Sec-WebSocket-Key: %r (%s)',
-                           key, util.hexify(decoded_key))
+        self._logger.debug(
+            '%s: %r (%s)',
+            common.SEC_WEBSOCKET_KEY_HEADER,
+            key,
+            util.hexify(decoded_key))
 
         return key
 
@@ -266,13 +307,12 @@ class Handshaker(object):
             common.CONNECTION_HEADER, common.UPGRADE_CONNECTION_TYPE))
         response.append(format_header(
             common.SEC_WEBSOCKET_ACCEPT_HEADER, accept))
-        # TODO(tyoshino): Encode value of protocol and extensions if any
-        # special character that we have to encode by some manner.
         if self._request.ws_protocol is not None:
             response.append(format_header(
                 common.SEC_WEBSOCKET_PROTOCOL_HEADER,
                 self._request.ws_protocol))
-        if self._request.ws_extensions is not None:
+        if (self._request.ws_extensions is not None and
+            len(self._request.ws_extensions) != 0):
             response.append(format_header(
                 common.SEC_WEBSOCKET_EXTENSIONS_HEADER,
                 format_extensions(self._request.ws_extensions)))

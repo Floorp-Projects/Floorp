@@ -64,11 +64,12 @@ class StreamHixie75(StreamBase):
         self._request.client_terminated = False
         self._request.server_terminated = False
 
-    def send_message(self, message, end=True):
+    def send_message(self, message, end=True, binary=False):
         """Send message.
 
         Args:
             message: unicode string to send.
+            binary: not used in hixie75.
 
         Raises:
             BadOperationException: when called on a server-terminated
@@ -78,6 +79,10 @@ class StreamHixie75(StreamBase):
         if not end:
             raise BadOperationException(
                 'StreamHixie75 doesn\'t support send_message with end=False')
+
+        if binary:
+            raise BadOperationException(
+                'StreamHixie75 doesn\'t support send_message with binary=True')
 
         if self._request.server_terminated:
             raise BadOperationException(
