@@ -513,3 +513,28 @@ add_test(function() {
     browser.stop();
   });
 });
+
+// Test for Bug 703929 - Loading the discover view from a chrome XUL file fails when
+// the add-on manager is reopened.
+add_test(function() {
+  const url = "chrome://mochitests/content/" +  RELATIVE_DIR + "addon_about.xul";
+  Services.prefs.setCharPref(PREF_DISCOVERURL, url);
+
+  open_manager("addons://discover/", function(aWindow) {
+    gManagerWindow = aWindow;
+    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+
+    var browser = gManagerWindow.document.getElementById("discover-browser");
+    is(getURL(browser), url, "Loading a chrome XUL file should work");
+
+    restart_manager(gManagerWindow, "addons://discover/", function(aWindow) {
+      gManagerWindow = aWindow;
+      gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+
+      var browser = gManagerWindow.document.getElementById("discover-browser");
+      is(getURL(browser), url, "Should be able to load the chrome XUL file a second time");
+
+      close_manager(gManagerWindow, run_next_test);
+    });
+  });
+});
