@@ -77,3 +77,11 @@ vpx_codec_destroy
 vpx_codec_get_frame
 vpx_codec_peek_stream_info
 vpx_codec_vp8_dx
+ShInitialize
+ShFinalize
+ShGetObjectCode
+ShDestruct
+ShGetInfoLog
+ShCompile
+ShGetInfo
+ShConstructCompiler
