@@ -42,6 +42,7 @@ Components.utils.import("resource://services-sync/constants.js", Weave);
 let lazies = {
   "record.js":            ["CollectionKeys", "BulkKeyBundle", "SyncKeyBundle"],
   "engines.js":           ['Engines', 'Engine', 'SyncEngine', 'Store'],
+  "engines/addons.js":    ["AddonsEngine"],
   "engines/bookmarks.js": ['BookmarksEngine', 'BookmarksSharingManager'],
   "engines/clients.js":   ["Clients"],
   "engines/forms.js":     ["FormEngine"],

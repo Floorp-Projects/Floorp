@@ -31,6 +31,17 @@ pref("services.sync.jpake.firstMsgMaxTries", 300); // 5 minutes
 pref("services.sync.jpake.lastMsgMaxTries", 300);  // 5 minutes
 pref("services.sync.jpake.maxTries", 10);
 
+// Allow add-ons to be synced from non-trusted sources.
+pref("services.sync.addons.ignoreRepositoryChecking", false);
+
+// If true, add-on sync ignores changes to the user-enabled flag. This
+// allows people to have the same set of add-ons installed across all
+// profiles while maintaining different enabled states.
+pref("services.sync.addons.ignoreUserEnabledChanges", false);
+
+// Comma-delimited list of hostnames to trust for add-on install.
+pref("services.sync.addons.trustedSourceHostnames", "addons.mozilla.org");
+
 pref("services.sync.log.appender.console", "Warn");
 pref("services.sync.log.appender.dump", "Error");
 pref("services.sync.log.appender.file.level", "Trace");
@@ -50,5 +61,6 @@ pref("services.sync.log.logger.engine.history", "Debug");
 pref("services.sync.log.logger.engine.passwords", "Debug");
 pref("services.sync.log.logger.engine.prefs", "Debug");
 pref("services.sync.log.logger.engine.tabs", "Debug");
+pref("services.sync.log.logger.engine.addons", "Debug");
 pref("services.sync.log.logger.engine.apps", "Debug");
 pref("services.sync.log.cryptoDebug", false);
