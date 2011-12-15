@@ -362,7 +362,7 @@ class MacroAssemblerARM : public Assembler
     void ma_call(void *dest);
     void breakpoint();
     Condition compareDoubles(JSOp compare, FloatRegister lhs, FloatRegister rhs);
-
+    void checkStackAlignment();
     // Setup a call to C/C++ code, given the number of general arguments it
     // takes. Note that this only supports cdecl.
     //

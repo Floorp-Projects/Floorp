@@ -784,9 +784,13 @@ bool
 CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
 {
     // Holds the function object.
-    const LAllocation *obj = call->getFunction();
-    Register objreg  = ToRegister(obj);
+    const LAllocation *callee = call->getFunction();
+    Register calleereg  = ToRegister(callee);
 
+    // Holds the function object so we can modify it willy nilly.
+    const LAllocation *obj = call->getTempObject();
+    Register objreg  = ToRegister(obj);
+    masm.mov(calleereg, objreg);
     // Holds the callee token. Initially undefined.
     const LAllocation *tok = call->getToken();
     Register tokreg  = ToRegister(tok);

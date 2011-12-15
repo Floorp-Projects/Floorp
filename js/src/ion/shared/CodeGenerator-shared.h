@@ -129,6 +129,13 @@ class CodeGeneratorShared : public LInstructionVisitor
         int32 offset = masm.framePushed() -
                        (graph.localSlotCount() * STACK_SLOT_SIZE) -
                        (slot * sizeof(Value));
+        // Passed arguments go below A function's local stack storage.
+        // When arguments are being pushed, there is nothing important on the stack.
+        // Therefore, It is safe to push the arguments down arbitrarily.  Pushing
+        // by 8 is desirable since everything on the stack is a Value, which is 8
+        // bytes large.
+
+        offset &= ~7;
         JS_ASSERT(offset >= 0);
         return offset;
     }
