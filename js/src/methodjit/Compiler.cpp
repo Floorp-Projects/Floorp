@@ -7702,17 +7702,19 @@ mjit::Compiler::arrayPrototypeHasIndexedProperty()
 
     JSObject *proto;
     if (!js_GetClassPrototype(cx, NULL, JSProto_Array, &proto, NULL))
-        return false;
-
-    /*
-     * It is sufficient to check just Array.prototype; if Object.prototype is
-     * unknown or has an indexed property, those will be reflected in
-     * Array.prototype.
-     */
-    if (proto->getType(cx)->unknownProperties())
         return true;
-    types::TypeSet *arrayTypes = proto->getType(cx)->getProperty(cx, JSID_VOID, false);
-    return !arrayTypes || arrayTypes->knownNonEmpty(cx);
+
+    while (proto) {
+        types::TypeObject *type = proto->getType(cx);
+        if (type->unknownProperties())
+            return true;
+        types::TypeSet *indexTypes = type->getProperty(cx, JSID_VOID, false);
+        if (!indexTypes || indexTypes->isOwnProperty(cx, type, true) || indexTypes->knownNonEmpty(cx))
+            return true;
+        proto = proto->getProto();
+    }
+
+    return false;
 }
 
 /*
