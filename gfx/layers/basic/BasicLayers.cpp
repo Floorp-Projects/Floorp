@@ -1613,7 +1613,7 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
 
     if (!mTransactionIncomplete) {
       // Clear out target if we have a complete transaction.
-      mTarget = nsnull;
+      //mTarget = nsnull;
     }
   }
 
@@ -2355,6 +2355,7 @@ BasicShadowableThebesLayer::PaintBuffer(gfxContext* aContext,
                "Update outside of buffer rect!");
   NS_ABORT_IF_FALSE(IsSurfaceDescriptorValid(mBackBuffer),
                     "should have a back buffer by now");
+
   BasicManager()->PaintedThebesBuffer(BasicManager()->Hold(this),
                                       updatedRegion,
                                       mBuffer.BufferRect(),

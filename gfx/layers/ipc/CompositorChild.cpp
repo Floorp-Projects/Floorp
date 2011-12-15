@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set sw=4 ts=8 et tw=80 : */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=2 ts=2 et tw=80 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,36 +38,62 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "CompositorChild.h"
+#include "CompositorParent.h"
 #include "mozilla/layers/ShadowLayersChild.h"
+#include "base/thread.h"
 
 using mozilla::layers::ShadowLayersChild;
 
 namespace mozilla {
 namespace layers {
 
-CompositorChild::CompositorChild()
+CompositorChild::CompositorChild(Thread *aCompositorThread)
+  : mCompositorThread(aCompositorThread)
 {
-    
-    MOZ_COUNT_CTOR(CompositorChild);
-	printf("Alloc CompositorChild\n");
+
+  MOZ_COUNT_CTOR(CompositorChild);
 }
 
 CompositorChild::~CompositorChild()
 {
-    MOZ_COUNT_DTOR(CompositorChild);
+  MOZ_COUNT_DTOR(CompositorChild);
+}
+
+CompositorChild*
+CompositorChild::CreateCompositor()
+{
+  Thread* compositorThread = new Thread("CompositorThread");
+  if (compositorThread->Start()) {
+    MessageLoop *parentMessageLoop = MessageLoop::current();
+    MessageLoop *childMessageLoop = compositorThread->message_loop();
+    CompositorParent *compositorParent = new CompositorParent();
+    CompositorChild *compositorChild = new CompositorChild(compositorThread);
+    mozilla::ipc::AsyncChannel *parentChannel =
+      compositorParent->GetIPCChannel();
+    mozilla::ipc::AsyncChannel *childChannel =
+      compositorChild->GetIPCChannel();
+    mozilla::ipc::AsyncChannel::Side childSide =
+      mozilla::ipc::AsyncChannel::Child;
+
+    compositorChild->Open(parentChannel, childMessageLoop, childSide);
+    compositorChild->CallInit();
+    return compositorChild;
+  }
+
+  return NULL;
 }
 
 PLayersChild*
-CompositorChild::AllocPLayers(const LayersBackend &backend)
+CompositorChild::AllocPLayers(const LayersBackend &backend, const WidgetDescriptor &widget)
 {
-    return new ShadowLayersChild();
+  return new ShadowLayersChild();
 }
 
 bool
 CompositorChild::DeallocPLayers(PLayersChild* actor)
 {
-	delete actor;
-    return true;
+  delete actor;
+  return true;
 }
 
 } // namespace layers

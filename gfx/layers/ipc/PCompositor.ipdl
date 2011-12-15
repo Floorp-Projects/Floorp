@@ -41,9 +41,21 @@
 include protocol PLayers;
 
 using mozilla::LayersBackend;
+using mozilla::null_t;
 
 namespace mozilla {
 namespace layers {
+
+// The Compositor needs to know about the widget to initialize the LayerManager.
+struct MacChildViewWidget {
+  uintptr_t widgetPtr;
+};
+
+// Gives platform specific information about the widget to initialize the LayerManager.
+union WidgetDescriptor {
+  MacChildViewWidget;
+  null_t;
+};
 
 /**
  * The PCompositor protocol is used to manage communication between
@@ -58,7 +70,7 @@ rpc protocol PCompositor
 parent:  
 
   rpc Init();
-  async PLayers(LayersBackend backend);
+  async PLayers(LayersBackend backend, WidgetDescriptor widgetDescriptor);
 
 //parent:
 //  rpc PLayers();

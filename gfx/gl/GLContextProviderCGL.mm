@@ -48,6 +48,8 @@
 #include "prenv.h"
 #include "mozilla/Preferences.h"
 
+NSOpenGLContext* nsGLContext;
+
 namespace mozilla {
 namespace gl {
 
@@ -444,6 +446,7 @@ GLContextProviderCGL::CreateForWindow(nsIWidget *aWidget)
     if (!context) {
         return nsnull;
     }
+    nsGLContext = context;
 
     NSView *childView = (NSView *)aWidget->GetNativeData(NS_NATIVE_WIDGET);
     [context setView:childView];
