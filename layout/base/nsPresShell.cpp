@@ -2183,6 +2183,7 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
         NS_NewRunnableMethod(this, &PresShell::FireResizeEvent);
       if (NS_SUCCEEDED(NS_DispatchToCurrentThread(resizeEvent))) {
         mResizeEvent = resizeEvent;
+        mDocument->SetNeedStyleFlush();
       }
     }
   }
@@ -2864,6 +2865,7 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
         // we've hit a reflow root or the root frame
         if (!wasDirty) {
           mDirtyRoots.AppendElement(f);
+          mDocument->SetNeedLayoutFlush();
         }
 #ifdef DEBUG
         else {
@@ -3444,6 +3446,7 @@ PresShell::ScrollContentIntoView(nsIContent* aContent,
   mContentToScrollToFlags = aFlags;
 
   // Flush layout and attempt to scroll in the process.
+  currentDoc->SetNeedLayoutFlush();
   currentDoc->FlushPendingNotifications(Flush_InterruptibleLayout);
 
   // If mContentToScrollTo is non-null, that means we interrupted the reflow
@@ -3966,6 +3969,12 @@ PresShell::IsSafeToFlush() const
 void
 PresShell::FlushPendingNotifications(mozFlushType aType)
 {
+  /**
+   * VERY IMPORTANT: If you add some sort of new flushing to this
+   * method, make sure to add the relevant SetNeedLayoutFlush or
+   * SetNeedStyleFlush calls on the document.
+   */
+
 #ifdef NS_FUNCTION_TIMER
   NS_TIME_FUNCTION_DECLARE_DOCURL;
   static const char *flushTypeNames[] = {
@@ -4100,6 +4109,11 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
                                 mContentToScrollToFlags);
         mContentToScrollTo = nsnull;
       }
+    } else if (!mIsDestroying && mSuppressInterruptibleReflows &&
+               aType == Flush_InterruptibleLayout) {
+      // We suppressed this flush, but the document thinks it doesn't
+      // need to flush anymore.  Let it know what's really going on.
+      mDocument->SetNeedLayoutFlush();
     }
 
     if (aType >= Flush_Layout) {
@@ -7343,6 +7357,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
     mFramesToDirty.EnumerateEntries(&MarkFramesDirtyToRoot, target);
     NS_ASSERTION(NS_SUBTREE_DIRTY(target), "Why is the target not dirty?");
     mDirtyRoots.AppendElement(target);
+    mDocument->SetNeedLayoutFlush();
 
     // Clear mFramesToDirty after we've done the NS_SUBTREE_DIRTY(target)
     // assertion so that if it fails it's easier to see what's going on.
@@ -7465,8 +7480,11 @@ PresShell::ProcessReflowCommands(bool aInterruptible)
       // after DidDoReflow(), since that method can change whether there are
       // dirty roots around by flushing, and there's no point in posting a
       // reflow event just to have the flush revoke it.
-      if (!mDirtyRoots.IsEmpty())
+      if (!mDirtyRoots.IsEmpty()) {
         MaybeScheduleReflow();
+        // And tell our document that we might need flushing
+        mDocument->SetNeedLayoutFlush();
+      }
     }
   }
 

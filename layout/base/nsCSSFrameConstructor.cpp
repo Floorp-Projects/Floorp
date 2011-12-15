@@ -11703,6 +11703,11 @@ nsCSSFrameConstructor::PostRestyleEventInternal(bool aForLazyConstruction)
     mObservingRefreshDriver = mPresShell->GetPresContext()->RefreshDriver()->
       AddStyleFlushObserver(mPresShell);
   }
+
+  // Unconditionally flag our document as needing a flush.  The other
+  // option here would be a dedicated boolean to track whether we need
+  // to do so (set here and unset in ProcessPendingRestyles).
+  mPresShell->GetDocument()->SetNeedStyleFlush();
 }
 
 void
