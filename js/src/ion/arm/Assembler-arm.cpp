@@ -1210,7 +1210,7 @@ Assembler::as_extdtr(LoadStore ls, int size, bool IsSigned, Index mode,
         JS_NOT_REACHED("SAY WHAT?");
     }
     writeInst(extra_bits2 << 5 | extra_bits1 << 20 | 0x90 |
-              addr.encode() | RT(rt) | c, dest);
+              addr.encode() | RT(rt) | mode | c, dest);
     return;
 }
 

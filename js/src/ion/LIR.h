@@ -794,8 +794,8 @@ class LCallInstructionHelper : public LInstructionHelper<Defs, Operands, Temps>
     virtual RegisterSet &spillRegs() const {
         JS_ASSERT(Defs == BOX_PIECES);
         static RegisterSet regs(
-            GeneralRegisterSet::Not(GeneralRegisterSet(Registers::JSCallMask)),
-            FloatRegisterSet::All()
+                  GeneralRegisterSet::Not(GeneralRegisterSet(Registers::JSCallMask)),
+                  FloatRegisterSet::All()
         );
         return regs;
     }

@@ -1407,9 +1407,6 @@ MacroAssemblerARM::setupABICall(uint32 args)
     return stackForArgs;
 }
 
-// For maximal awesomeness, 8 should be sufficent.
-static const uint32 StackAlignment = 8;
-
 void
 MacroAssemblerARM::setupAlignedABICall(uint32 args)
 {
@@ -1464,7 +1461,16 @@ MacroAssemblerARM::setABIArg(uint32 arg, const Register &reg)
 {
     setABIArg(arg, MoveOperand(reg));
 }
-
+#ifdef DEBUG
+void MacroAssemblerARM::checkStackAlignment()
+{
+        Label good;
+        ma_tst(Imm32(StackAlignment - 1), sp);
+        ma_b(&good, Equal);
+        breakpoint();
+        bind(&good);
+}
+#endif
 void
 MacroAssemblerARM::callWithABI(void *fun)
 {
@@ -1482,13 +1488,7 @@ MacroAssemblerARM::callWithABI(void *fun)
     }
 
 #ifdef DEBUG
-    {
-        Label good;
-        ma_tst(Imm32(StackAlignment - 1), sp);
-        ma_b(&good, Equal);
-        breakpoint();
-        bind(&good);
-    }
+    checkStackAlignment();
 #endif
 
     ma_call(fun);

@@ -566,6 +566,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     // We still need to have the return address, so we use the pc to compute it.
     // Presently, I'm hard coding the value because I know exactly what code is being generated
     // but I'll set up a as_mov(Register, Label *) that will automatically do this.
+    masm.breakpoint();
     masm.ma_sub(pc, Imm32(128), temp);
     masm.ma_add(Imm32(sizeof(IonExitFrameLayout) + f.explicitArgs * sizeof(void *)), sp);
     masm.ma_push(temp);
