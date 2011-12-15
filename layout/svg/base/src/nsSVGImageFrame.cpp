@@ -383,8 +383,7 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
       // Grab root node (w/ sanity-check to make sure it exists & is <svg>)
       nsSVGSVGElement* rootSVGElem =
         static_cast<nsSVGSVGElement*>(imgRootFrame->GetContent());
-      if (!rootSVGElem || rootSVGElem->GetNameSpaceID() != kNameSpaceID_SVG ||
-          rootSVGElem->Tag() != nsGkAtoms::svg) {
+      if (!rootSVGElem || !rootSVGElem->IsSVG(nsGkAtoms::svg)) {
         NS_ABORT_IF_FALSE(false, "missing or non-<svg> root node!!");
         return false;
       }

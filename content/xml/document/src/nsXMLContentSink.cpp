@@ -1167,8 +1167,7 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName,
   }
   DidAddContent();
 
-  if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
-      content->Tag() == nsGkAtoms::svg) {
+  if (content->IsSVG(nsGkAtoms::svg)) {
     FlushTags();
     nsCOMPtr<nsIRunnable> event = new nsHtml5SVGLoadDispatcher(content);
     if (NS_FAILED(NS_DispatchToMainThread(event))) {
