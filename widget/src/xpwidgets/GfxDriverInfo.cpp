@@ -215,6 +215,23 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id)
       APPEND_DEVICE(0x03d2); /* C61 [GeForce 6100 nForce 400 (TM)] */
       APPEND_DEVICE(0x03d5); /* C61 [GeForce 6100 nForce 420 (TM)] */
       break;
+    case RadeonX1000:
+      // This list is from the ATIRadeonX1000.kext Info.plist
+      APPEND_DEVICE(0x7187);
+      APPEND_DEVICE(0x7210);
+      APPEND_DEVICE(0x71de);
+      APPEND_DEVICE(0x7146);
+      APPEND_DEVICE(0x7142);
+      APPEND_DEVICE(0x7109);
+      APPEND_DEVICE(0x71c5);
+      APPEND_DEVICE(0x71c0);
+      APPEND_DEVICE(0x7240);
+      APPEND_DEVICE(0x7249);
+      APPEND_DEVICE(0x7291);
+      break;
+    case Geforce7300GT:
+      APPEND_DEVICE(0x0393);
+      break;
     // This should never happen, but we get a warning if we don't handle this.
     case DeviceFamilyMax:
       NS_WARNING("Invalid DeviceFamily id");

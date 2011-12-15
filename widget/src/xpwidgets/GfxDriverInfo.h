@@ -88,6 +88,8 @@ enum DeviceFamily {
   IntelGMAX3000,
   IntelGMAX4500HD,
   NvidiaBlockD3D9Layers,
+  RadeonX1000,
+  Geforce7300GT,
   DeviceFamilyMax
 };
 
