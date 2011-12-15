@@ -274,30 +274,30 @@ GfxInfo::AddOpenGLCrashReportAnnotations()
 #endif
 }
 
-static GfxDriverInfo gDriverInfo[] = {
-  GfxDriverInfo()
-};
-
-const GfxDriverInfo*
+const nsTArray<GfxDriverInfo>&
 GfxInfo::GetGfxDriverInfo()
 {
-  return &gDriverInfo[0];
+  // Nothing here yet.
+  //if (!mDriverInfo->Length()) {
+  //
+  //}
+  return *mDriverInfo;
 }
 
 nsresult
 GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, 
                               PRInt32 *aStatus, 
                               nsAString & aSuggestedDriverVersion,
-                              GfxDriverInfo* aDriverInfo /* = nsnull */, 
+                              const nsTArray<GfxDriverInfo>& aDriverInfo, 
                               OperatingSystem* aOS /* = nsnull */)
 {
-  PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
+  PRInt32 status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
 
   aSuggestedDriverVersion.SetIsVoid(true);
 
   // For now, we don't implement the downloaded blacklist.
-  if (aDriverInfo) {
-    *aStatus = status;
+  if (aDriverInfo.Length()) {
+    *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
     return NS_OK;
   }
 
@@ -326,6 +326,12 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
     *aOS = os;
 
   // XXX disabled for now as this calls GetAdapterVendorID and friends, which currently crash on Android, see bug 700124
-  // return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, &os);
+  // FIXME: if this gets fixed, the line setting *aStatus must be removed
+#if 0
+  return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, &os);
+#else
+  if (status == nsIGfxInfo::FEATURE_STATUS_UNKNOWN)
+    *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
+#endif
   return NS_OK;
 }
