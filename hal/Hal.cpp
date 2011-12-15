@@ -47,12 +47,11 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
-#include "nsIObserver.h"
-#include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "nsIWebNavigation.h"
 #include "nsITabChild.h"
 #include "nsIDocShell.h"
+#include "mozilla/ClearOnShutdown.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::services;
@@ -110,39 +109,10 @@ WindowIsActive(nsIDOMWindow *window)
 
 nsAutoPtr<WindowIdentifier::IDArrayType> gLastIDToVibrate;
 
-// This observer makes sure we delete gLastIDToVibrate, so we don't
-// leak.
-class ShutdownObserver : public nsIObserver
-{
-public:
-  ShutdownObserver() {}
-  virtual ~ShutdownObserver() {}
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Observe(nsISupports *subject, const char *aTopic,
-                     const PRUnichar *aData)
-  {
-    MOZ_ASSERT(strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
-    gLastIDToVibrate = nsnull;
-    return NS_OK;
-  }
-};
-
-NS_IMPL_ISUPPORTS1(ShutdownObserver, nsIObserver);
-
 void InitLastIDToVibrate()
 {
   gLastIDToVibrate = new WindowIdentifier::IDArrayType();
-
-  nsCOMPtr<nsIObserverService> observerService = GetObserverService();
-  if (!observerService) {
-    NS_WARNING("Could not get observer service!");
-    return;
-  }
-
-  ShutdownObserver *obs = new ShutdownObserver();
-  observerService->AddObserver(obs, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  ClearOnShutdown(&gLastIDToVibrate);
 }
 
 } // anonymous namespace
