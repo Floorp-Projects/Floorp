@@ -43,7 +43,8 @@
 
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
-
+#include <windows.h>
+#include <shobjidl.h>
 #include <imm.h>
 
 // Avoid including windowsx.h to prevent macro pollution
@@ -53,15 +54,6 @@
 #ifndef GET_Y_LPARAM
 #define GET_Y_LPARAM(pt) (short(HIWORD(pt)))
 #endif
-
-// we used to use MAX_PATH
-// which works great for one file
-// but for multiple files, the format is
-// dirpath\0\file1\0file2\0...filen\0\0
-// and that can quickly be more than MAX_PATH (260)
-// see bug #172001 for more details
-#define FILE_BUFFER_SIZE 4096 
-
 
 /**
  * Makes sure exit/enter mouse messages are always dispatched.
@@ -121,12 +113,18 @@ public:
     static void Startup(HMODULE hModule);
     static void Shutdown();
     static void StartAllowingD3D9();
+    static bool VistaCreateItemFromParsingNameInit();
+
+    typedef HRESULT (WINAPI * SHCreateItemFromParsingNamePtr)(PCWSTR pszPath, IBindCtx *pbc, REFIID riid, void **ppv);
+    static SHCreateItemFromParsingNamePtr createItemFromParsingName;
 
 protected:
     static nsToolkit* gToolkit;
 
     nsCOMPtr<nsITimer> mD3D9Timer;
     MouseTrailer mMouseTrailer;
+    static const PRUnichar kSehllLibraryName[];
+    static HMODULE sShellDll;
 };
 
 #endif  // TOOLKIT_H

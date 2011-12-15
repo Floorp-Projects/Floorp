@@ -1096,13 +1096,16 @@ WebGLContext::MaybeRestoreContext()
     if (mContextLost || mAllowRestore)
         return;
 
+    bool isEGL = gl->GetContextType() == GLContext::ContextTypeEGL,
+         isANGLE = gl->IsANGLE();
+
     GLContext::ContextResetARB resetStatus = GLContext::CONTEXT_NO_ERROR;
     if (mHasRobustness) {
         gl->MakeCurrent();
         resetStatus = (GLContext::ContextResetARB) gl->fGetGraphicsResetStatus();
     // This call is safe as it does not actually interact with GL, so the
     // context does not have to be current.
-    } else if (gl->GetContextType() == GLContext::ContextTypeEGL) {
+    } else if (isEGL) {
         // Simulate a ARB_robustness guilty context loss for when we
         // get an EGL_CONTEXT_LOST error. It may not actually be guilty,
         // but we can't make any distinction, so we must assume the worst
@@ -1133,6 +1136,13 @@ WebGLContext::MaybeRestoreContext()
             break;
         case GLContext::CONTEXT_UNKNOWN_CONTEXT_RESET_ARB:
             NS_WARNING("WebGL content on the page might have caused the graphics card to reset");
+            if (isEGL && isANGLE) {
+                // If we're using ANGLE, we ONLY get back UNKNOWN context resets, including for guilty contexts.
+                // This means that we can't restore it or risk restoring a guilty context. Should this ever change,
+                // we can get rid of the whole IsANGLE() junk from GLContext.h since, as of writing, this is the
+                // only use for it. See ANGLE issue 261.
+                return;
+            }
             break;
     }
 

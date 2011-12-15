@@ -51,6 +51,8 @@ MODULE = test_extensionmanager
 
 ifneq (mobile,$(MOZ_BUILD_APP))
  DIRS +=  \
+    xpinstall \
+    browser \
     mochitest \
     $(NULL)
 endif

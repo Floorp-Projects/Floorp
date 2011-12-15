@@ -50,6 +50,7 @@ DIST_FILES = package-name.txt
 JAVAFILES = \
   AboutHomeContent.java \
   AlertNotification.java \
+  AutoCompletePopup.java \
   AwesomeBar.java \
   AwesomeBarTabs.java \
   BrowserToolbar.java \
@@ -174,6 +175,7 @@ DEFINES += -DMOZ_ANDROID_SHARED_ID="$(ANDROID_PACKAGE_NAME).sharedID"
 endif
 
 RES_LAYOUT = \
+  res/layout/autocomplete_list_item.xml \
   res/layout/awesomebar_header_row.xml \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_search.xml \
@@ -369,6 +371,7 @@ MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/abouthome_bg.png
                          mobile/android/base/resources/drawable/address_bar_bg.xml              \
                          mobile/android/base/resources/drawable/address_bar_url_default.xml     \
                          mobile/android/base/resources/drawable/address_bar_url_pressed.xml     \
+                         mobile/android/base/resources/drawable/autocomplete_list_bg.9.png      \
                          mobile/android/base/resources/drawable/awesomebar_tab_focus.xml        \
                          mobile/android/base/resources/drawable/awesomebar_tab_focus_selected.xml \
                          mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml    \

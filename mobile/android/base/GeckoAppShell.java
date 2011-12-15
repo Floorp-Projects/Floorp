@@ -1550,6 +1550,19 @@ public class GeckoAppShell
         GeckoSmsManager.send(aNumber, aMessage);
     }
 
+    public static boolean isTablet() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+            Configuration config = GeckoApp.mAppContext.getResources().getConfiguration();
+            // xlarge is defined by android as screens larger than 960dp x 720dp
+            // and should include most devices ~7in and up.
+            // http://developer.android.com/guide/practices/screens_support.html
+            if ((config.screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void emitGeckoAccessibilityEvent (int eventType, String role, String text, String description, boolean enabled, boolean checked, boolean password) {
         AccessibilityManager accessibilityManager =
             (AccessibilityManager) GeckoApp.mAppContext.getSystemService(Context.ACCESSIBILITY_SERVICE);
