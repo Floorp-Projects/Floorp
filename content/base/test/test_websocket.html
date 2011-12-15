@@ -120,7 +120,7 @@ function ignoreError(e)
 {
 }
 
-function CreateTestWS(ws_location, ws_protocol)
+function CreateTestWS(ws_location, ws_protocol, no_increment_test)
 {
   var ws;
 
@@ -134,7 +134,7 @@ function CreateTestWS(ws_location, ws_protocol)
 
     ws._testNumber = current_test;
     ws._receivedCloseEvent = false;
-    ok(true, "added testNumber: " + ws._testNumber +"\n");
+    ok(true, "Created websocket for test " + ws._testNumber +"\n");
 
     ws.onerror = function(e)
     {
@@ -149,7 +149,9 @@ function CreateTestWS(ws_location, ws_protocol)
     throw e;
   }
   finally {
-    current_test++;
+    if (!no_increment_test) {
+      current_test++;
+    }
   }
 
   all_ws.push(ws);
@@ -1138,8 +1140,59 @@ function test40()
 
 function test41()
 {
- // reserve test41 for HSTS - bug 664284
- doTest(42);
+  var ws = CreateTestWS("ws://example.com/tests/content/base/test/file_websocket", "test-41a", 1);
+
+  ws.onopen = function(e)
+  {
+    ok(true, "test 41a open");
+    ok(ws.url == "ws://example.com/tests/content/base/test/file_websocket",
+       "test 41a initial ws should not be redirected");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 41a close");
+
+    // establish a hsts policy for example.com
+    var wsb = CreateTestWS("wss://example.com/tests/content/base/test/file_websocket", "test-41b", 1);
+    wsb.onopen = function(e)
+    {
+      ok(true, "test 41b open");
+      wsb.close();
+    }
+
+    wsb.onclose = function(e)
+    {
+      ok(true, "test 41b close");
+
+      // try ws:// again, it should be done over wss:// now due to hsts
+      var wsc = CreateTestWS("ws://example.com/tests/content/base/test/file_websocket", "test-41c");
+   
+      wsc.onopen = function(e)
+      {
+        ok(true, "test 41c open");
+        ok(wsc.url == "wss://example.com/tests/content/base/test/file_websocket",
+           "test 41c ws should be redirected by hsts to wss");
+        wsc.close();
+      }
+
+      wsc.onclose = function(e)
+      {
+        ok(true, "test 41c close");
+
+        // clean up the STS state
+        netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+        const Cc = Components.classes;
+        const Ci = Components.interfaces;
+        var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+        var thehost = ios.newURI("http://example.com", null, null);
+        var stss = Cc["@mozilla.org/stsservice;1"].getService(Ci.nsIStrictTransportSecurityService);
+        stss.removeStsState(thehost);
+        doTest(42);
+       }
+     }
+  }
 }
 
 function test42()

@@ -304,6 +304,7 @@ nsWebSocket::OnStart(nsISupports *aContext)
   }
 
   mChannel->GetExtensions(mEstablishedExtensions);
+  UpdateURI();
 
   SetReadyState(nsIMozWebSocket::OPEN);
   return NS_OK;
@@ -1040,6 +1041,27 @@ nsWebSocket::DontKeepAliveAnyMore()
   mCheckMustKeepAlive = false;
 }
 
+nsresult
+nsWebSocket::UpdateURI()
+{
+  // Check for Redirections
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = mChannel->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString spec;
+  rv = uri->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  CopyUTF8toUTF16(spec, mEffectiveURL);
+
+  bool isWSS = false;
+  rv = uri->SchemeIs("wss", &isWSS);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mSecure = isWSS ? true : false;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsWebSocket::RemoveEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener,
@@ -1081,7 +1103,11 @@ nsWebSocket::AddEventListener(const nsAString& aType,
 NS_IMETHODIMP
 nsWebSocket::GetUrl(nsAString& aURL)
 {
-  aURL = mOriginalURL;
+  if (mEffectiveURL.IsEmpty()) {
+    aURL = mOriginalURL;
+  } else {
+    aURL = mEffectiveURL;
+  }
   return NS_OK;
 }
 

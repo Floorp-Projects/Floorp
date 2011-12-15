@@ -15,22 +15,19 @@ def web_socket_do_extra_handshake(request):
 
   if request.ws_protocol == "test-2.1":
     time.sleep(3)
-    pass
   elif request.ws_protocol == "test-9":
     time.sleep(3)
-    pass
   elif request.ws_protocol == "test-10":
     time.sleep(3)
-    pass
   elif request.ws_protocol == "test-19":
     raise ValueError('Aborting (test-19)')
   elif request.ws_protocol == "test-20" or request.ws_protocol == "test-17":
     time.sleep(3)
-    pass
   elif request.ws_protocol == "test-22":
     # The timeout is 5 seconds
     time.sleep(13)
-    pass
+  elif request.ws_protocol == "test-41b":
+    request.sts = "max-age=100"
   else:
     pass
 
