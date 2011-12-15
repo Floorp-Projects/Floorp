@@ -70,7 +70,7 @@ interface nsIDOMMozURLProperty : nsISupports
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(973e7219-40d5-4f94-b78d-53c2a0b8a13c)]
+[scriptable, uuid(f6e3b10d-d5f4-4fcd-aa4c-5f98626d428a)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -424,6 +424,8 @@ interface nsIDOMWindow : nsISupports
   /**
    * Cancel a refresh callback.
    */
+  void mozCancelAnimationFrame(in long aHandle);
+  // Backwards-compat shim for now to make Google maps work
   void mozCancelRequestAnimationFrame(in long aHandle);
 
   /**
