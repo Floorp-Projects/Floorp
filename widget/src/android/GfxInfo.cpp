@@ -88,8 +88,6 @@ GfxInfo::GetCleartypeParameters(nsAString & aCleartypeParams)
 nsresult
 GfxInfo::Init()
 {
-  mSetCrashReportAnnotations = false;
-
   mAdapterDescription.AssignASCII(mozilla::gl::GetVendor());
   if (mozilla::AndroidBridge::Bridge()) {
     nsAutoString str;
@@ -123,6 +121,8 @@ GfxInfo::Init()
     mAdapterDescription.Append(NS_LITERAL_STRING("'"));
     mAndroidSDKVersion = version;
   }
+
+  AddOpenGLCrashReportAnnotations();
 
   return GfxInfoBase::Init();
 }
@@ -311,11 +311,6 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
   // Don't evaluate special cases when evaluating the downlaoded blocklist.
   if (!aDriverInfo.Length()) {
     if (aFeature == FEATURE_OPENGL_LAYERS) {
-      if (!mSetCrashReportAnnotations) {
-        AddOpenGLCrashReportAnnotations();
-        mSetCrashReportAnnotations = true;
-      }
-
       /* The following code is an old way to whitelist devices when we're ready.
        * It is staying here for reference. The best way to do this now is to add
        * an entry in the list above. There is a dummy entry which will whitelist a
