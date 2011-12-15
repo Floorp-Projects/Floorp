@@ -666,6 +666,14 @@ public:
     }
 
     /**
+     * Returns true if the context is using ANGLE. This should only be overridden for an ANGLE
+     * implementation.
+     */
+    virtual bool IsANGLE() {
+        return false;
+    }
+
+    /**
      * The derived class is expected to provide information on whether or not it
      * supports robustness.
      */
@@ -1270,6 +1278,7 @@ public:
         ANGLE_framebuffer_multisample,
         OES_rgb8_rgba8,
         ARB_robustness,
+        EXT_robustness,
         Extensions_Max
     };
 

@@ -336,6 +336,8 @@ public:
     PRUint16 GetNumberOfMessagesForText(const nsAString& aText);
     void SendMessage(const nsAString& aNumber, const nsAString& aText);
 
+    bool IsTablet();
+
 protected:
     static AndroidBridge *sBridge;
 
@@ -411,6 +413,7 @@ protected:
     jmethodID jPostToJavaThread;
     jmethodID jInitCamera;
     jmethodID jCloseCamera;
+    jmethodID jIsTablet;
     jmethodID jEnableBatteryNotifications;
     jmethodID jDisableBatteryNotifications;
     jmethodID jGetCurrentBatteryInformation;

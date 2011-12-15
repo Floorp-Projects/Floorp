@@ -4,7 +4,6 @@
 
 // Tests that the discovery view loads properly
 
-const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 const MAIN_URL = "https://example.com/" + RELATIVE_DIR + "discovery.html";
 
 var gManagerWindow;
@@ -39,10 +38,6 @@ function test() {
   Services.prefs.setCharPref(PREF_DISCOVERURL, MAIN_URL);
   // Temporarily enable caching
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
-
-  registerCleanupFunction(function() {
-    Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, false);
-  });
 
   waitForExplicitFinish();
 

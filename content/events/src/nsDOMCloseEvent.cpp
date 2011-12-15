@@ -89,6 +89,34 @@ nsDOMCloseEvent::InitCloseEvent(const nsAString& aType,
 }
 
 nsresult
+nsDOMCloseEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict,
+                              JSContext* aCx, JSObject* aObj)
+{
+  nsCOMPtr<nsICloseEventInit> eventInit = do_QueryInterface(aDict);
+  bool bubbles = false;
+  bool cancelable = false;
+  bool wasClean = false;
+  PRUint16 code = 0;
+  nsAutoString reason;
+  if (eventInit) {
+    nsresult rv = eventInit->GetBubbles(&bubbles);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = eventInit->GetCancelable(&cancelable);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = eventInit->GetWasClean(&wasClean);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = eventInit->GetCode(&code);
+    NS_ENSURE_SUCCESS(rv, rv);
+    JSBool found = JS_FALSE;
+    if (JS_HasProperty(aCx, aObj, "reason", &found) && found) {
+      rv = eventInit->GetReason(reason);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+  return InitCloseEvent(aType, bubbles, cancelable, wasClean, code, reason);
+}
+
+nsresult
 NS_NewDOMCloseEvent(nsIDOMEvent** aInstancePtrResult,
                     nsPresContext* aPresContext,
                     nsEvent* aEvent) 
