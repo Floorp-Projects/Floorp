@@ -165,7 +165,7 @@ LIRGeneratorShared::defineVMReturn(LInstructionHelper<Defs, Ops, Temps> *lir, MD
         if (getVirtualRegister() >= MAX_VIRTUAL_REGISTERS)
             return false;
 #elif defined(JS_PUNBOX64)
-        lir->setDef(0, LDefinition(vreg, LDefinition::BOX, LGeneralReg(JSCReturnReg)));
+        lir->setDef(0, LDefinition(vreg, LDefinition::BOX, LGeneralReg(JSReturnReg)));
 #endif
         break;
       default:

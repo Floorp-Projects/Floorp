@@ -96,7 +96,8 @@
     _(LoadElementV)                 \
     _(LoadElementT)                 \
     _(StoreElementV)                \
-    _(StoreElementT)
+    _(StoreElementT)                \
+    _(LoadPropertyGeneric)
 
 #if defined(JS_CPU_X86)
 # include "x86/LOpcodes-x86.h"

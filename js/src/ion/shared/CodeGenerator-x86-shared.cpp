@@ -765,8 +765,8 @@ CodeGeneratorX86Shared::visitTableSwitch(LTableSwitch *ins)
 bool
 CodeGeneratorX86Shared::visitNewArray(LNewArray *ins)
 {
-    static const VMFunction NewInitArrayInfo =
-        FunctionInfo3<JSObject *, uint32, types::TypeObject *, NewInitArray>();
+    typedef JSObject *(*pf)(JSContext *, uint32, types::TypeObject *);
+    static const VMFunction NewInitArrayInfo = FunctionInfo<pf>(NewInitArray);
 
     // ReturnReg is used for the returned value, so we don't care using it
     // because it would be erased by the function call.
@@ -834,8 +834,8 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
     {
         masm.bind(&invoke);
 
-        static const VMFunction InvokeFunctionInfo = 
-            FunctionInfo5<bool, JSFunction *, uint32, Value *, Value *, InvokeFunction>();
+        typedef bool (*pf)(JSContext *, JSFunction *, uint32, Value *, Value *);
+        static const VMFunction InvokeFunctionInfo = FunctionInfo<pf>(InvokeFunction);
 
         // Nestle %esp up to the argument vector.
         if (unused_stack)
@@ -971,6 +971,20 @@ CodeGeneratorX86Shared::visitGuardClass(LGuardClass *guard)
     masm.loadBaseShape(obj, tmp);
     masm.cmpPtr(Operand(tmp, BaseShape::offsetOfClass()), ImmWord(guard->mir()->getClass()));
     if (!bailoutIf(Assembler::NotEqual, guard->snapshot()))
+        return false;
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitLoadPropertyGeneric(LLoadPropertyGeneric *ins)
+{
+    typedef bool (*pf)(JSContext *, JSObject *, JSAtom *, Value *);
+    static const VMFunction GetPropertyInfo = FunctionInfo<pf>(GetProperty);
+    const Register obj = ToRegister(ins->getOperand(0));
+
+    pushArg(ImmGCPtr(ins->mir()->atom()));
+    pushArg(obj);
+    if (!callVM(GetPropertyInfo, ins))
         return false;
     return true;
 }

@@ -377,6 +377,9 @@ Debug_SetValueRangeToCrashOnTouch(HeapValue *vec, size_t len)
 JSObject*
 NewInitArray(JSContext *cx, uint32 count, types::TypeObject *type);
 
+bool
+GetProperty(JSContext *cx, JSObject *obj, JSAtom *atom, Value *property);
+
 }  /* namespace js */
 
 #endif /* jsinterp_h___ */

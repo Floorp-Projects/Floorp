@@ -496,7 +496,6 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     masm.callWithABI(f.wrapped);
 
     // Test for failure.
-    JS_ASSERT(f.failType() == Type_Bool || f.failType() == Type_Object);
     Label exception;
     masm.testl(eax, eax);
     masm.j(Assembler::Zero, &exception);
