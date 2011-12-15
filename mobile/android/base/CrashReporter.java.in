@@ -331,6 +331,6 @@ public class CrashReporter extends Activity
     }
 
     private String unescape(String string) {
-        return string.replaceAll("\\\\", "\\").replaceAll("\\n", "\n").replaceAll("\\t", "\t");
+        return string.replaceAll("\\\\\\\\", "\\").replaceAll("\\\\n", "\n").replaceAll("\\\\t", "\t");
     }
 }
