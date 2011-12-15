@@ -634,15 +634,16 @@ inline void
 JSObject::copyDenseArrayElements(uintN dstStart, const js::Value *src, uintN count)
 {
     JS_ASSERT(dstStart + count <= getDenseArrayCapacity());
-    prepareElementRangeForOverwrite(dstStart, dstStart + count);
-    memcpy(elements + dstStart, src, count * sizeof(js::Value));
+    for (unsigned i = 0; i < count; ++i)
+        elements[dstStart + i] = src[i];
 }
 
 inline void
 JSObject::initDenseArrayElements(uintN dstStart, const js::Value *src, uintN count)
 {
     JS_ASSERT(dstStart + count <= getDenseArrayCapacity());
-    memcpy(elements + dstStart, src, count * sizeof(js::Value));
+    for (unsigned i = 0; i < count; ++i)
+        elements[dstStart + i].init(src[i]);
 }
 
 inline void
