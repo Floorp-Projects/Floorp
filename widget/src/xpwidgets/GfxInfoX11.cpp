@@ -279,48 +279,53 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
 
   // Don't evaluate any special cases if we're checking the downloaded blocklist.
   if (!aDriverInfo.Length()) {
-    GetData();
+    // Only check features relevant to Linux.
+    if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS ||
+        aFeature == nsIGfxInfo::FEATURE_WEBGL_OPENGL ||
+        aFeature == nsIGfxInfo::FEATURE_WEBGL_MSAA) {
+      GetData();
 
-    // Disable OpenGL layers when we don't have texture_from_pixmap because it regresses performance. 
-    if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS && !mHasTextureFromPixmap) {
-      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
-      aSuggestedDriverVersion.AssignLiteral("<Anything with EXT_texture_from_pixmap support>");
-      return NS_OK;
-    }
+      // Disable OpenGL layers when we don't have texture_from_pixmap because it regresses performance. 
+      if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS && !mHasTextureFromPixmap) {
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+        aSuggestedDriverVersion.AssignLiteral("<Anything with EXT_texture_from_pixmap support>");
+        return NS_OK;
+      }
 
-    // whitelist the linux test slaves' current configuration.
-    // this is necessary as they're still using the slightly outdated 190.42 driver.
-    // this isn't a huge risk, as at least this is the exact setting in which we do continuous testing,
-    // and this only affects GeForce 9400 cards on linux on this precise driver version, which is very few users.
-    // We do the same thing on Windows XP, see in widget/src/windows/GfxInfo.cpp
-    if (mIsNVIDIA &&
-        !strcmp(mRenderer.get(), "GeForce 9400/PCI/SSE2") &&
-        !strcmp(mVersion.get(), "3.2.0 NVIDIA 190.42"))
-    {
-      *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
-      return NS_OK;
-    }
+      // whitelist the linux test slaves' current configuration.
+      // this is necessary as they're still using the slightly outdated 190.42 driver.
+      // this isn't a huge risk, as at least this is the exact setting in which we do continuous testing,
+      // and this only affects GeForce 9400 cards on linux on this precise driver version, which is very few users.
+      // We do the same thing on Windows XP, see in widget/src/windows/GfxInfo.cpp
+      if (mIsNVIDIA &&
+          !strcmp(mRenderer.get(), "GeForce 9400/PCI/SSE2") &&
+          !strcmp(mVersion.get(), "3.2.0 NVIDIA 190.42"))
+      {
+        *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
+        return NS_OK;
+      }
 
-    if (mIsMesa) {
-      if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(7,10,3)) {
-        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
-        aSuggestedDriverVersion.AssignLiteral("Mesa 7.10.3");
+      if (mIsMesa) {
+        if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(7,10,3)) {
+          *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+          aSuggestedDriverVersion.AssignLiteral("Mesa 7.10.3");
+        }
+      } else if (mIsNVIDIA) {
+        if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(257,21)) {
+          *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+          aSuggestedDriverVersion.AssignLiteral("NVIDIA 257.21");
+        }
+      } else if (mIsFGLRX) {
+        // FGLRX does not report a driver version number, so we have the OpenGL version instead.
+        // by requiring OpenGL 3, we effectively require recent drivers.
+        if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(3, 0)) {
+          *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+        }
+      } else {
+        // like on windows, let's block unknown vendors. Think of virtual machines.
+        // Also, this case is hit whenever the GLXtest probe failed to get driver info or crashed.
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
       }
-    } else if (mIsNVIDIA) {
-      if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(257,21)) {
-        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
-        aSuggestedDriverVersion.AssignLiteral("NVIDIA 257.21");
-      }
-    } else if (mIsFGLRX) {
-      // FGLRX does not report a driver version number, so we have the OpenGL version instead.
-      // by requiring OpenGL 3, we effectively require recent drivers.
-      if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(3, 0)) {
-        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
-      }
-    } else {
-      // like on windows, let's block unknown vendors. Think of virtual machines.
-      // Also, this case is hit whenever the GLXtest probe failed to get driver info or crashed.
-      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
     }
   }
 
@@ -441,7 +446,8 @@ GfxInfo::GetAdapterDriverDate2(nsAString & aAdapterDriverDate)
 NS_IMETHODIMP
 GfxInfo::GetAdapterVendorID(nsAString & aAdapterVendorID)
 {
-  aAdapterVendorID.AssignLiteral("");
+  GetData();
+  CopyUTF8toUTF16(mVendor, aAdapterVendorID);
   return NS_OK;
 }
 
@@ -456,7 +462,8 @@ GfxInfo::GetAdapterVendorID2(nsAString & aAdapterVendorID)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDeviceID(nsAString & aAdapterDeviceID)
 {
-  aAdapterDeviceID.AssignLiteral("");
+  GetData();
+  CopyUTF8toUTF16(mRenderer, aAdapterDeviceID);
   return NS_OK;
 }
 
