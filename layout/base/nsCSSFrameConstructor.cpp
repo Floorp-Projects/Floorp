@@ -2417,7 +2417,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   }
   else
 #endif
-  if (aDocElement->GetNameSpaceID() == kNameSpaceID_SVG) {
+  if (aDocElement->IsSVG()) {
     if (aDocElement->Tag() == nsGkAtoms::svg) {
       contentFrame = NS_NewSVGOuterSVGFrame(mPresShell, styleContext);
       if (NS_UNLIKELY(!contentFrame)) {
