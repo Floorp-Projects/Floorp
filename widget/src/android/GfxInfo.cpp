@@ -301,36 +301,36 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
                               const nsTArray<GfxDriverInfo>& aDriverInfo, 
                               OperatingSystem* aOS /* = nsnull */)
 {
-  PRInt32 status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
-
+  NS_ENSURE_ARG_POINTER(aStatus);
   aSuggestedDriverVersion.SetIsVoid(true);
-
+  *aStatus = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
   OperatingSystem os = DRIVER_OS_ANDROID;
-
-  if (aFeature == FEATURE_OPENGL_LAYERS) {
-    if (!mSetCrashReportAnnotations) {
-      AddOpenGLCrashReportAnnotations();
-      mSetCrashReportAnnotations = true;
-    }
-
-    /* The following code is an old way to whitelist devices when we're ready.
-     * It is staying here for reference. The best way to do this now is to add
-     * an entry in the list above. There is a dummy entry which will whitelist a
-     * device when uncommented and device/vendor IDs are inserted. It is
-     * preferred that we stop whitelisting and instead go to blocklisting, where
-     * everything is assumed to be okay as long as it's not in the blocklist. */
-    // nsAutoString str;
-    // /* Whitelist Galaxy S phones */
-    // if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str)) {
-    //   if (str != NS_LITERAL_STRING("smdkc110")) {
-    //     status = FEATURE_BLOCKED_DEVICE;
-    //   }
-    // }
-  }
-
-  *aStatus = status;
   if (aOS)
     *aOS = os;
+
+  // Don't evaluate special cases when evaluating the downlaoded blocklist.
+  if (!aDriverInfo.Length()) {
+    if (aFeature == FEATURE_OPENGL_LAYERS) {
+      if (!mSetCrashReportAnnotations) {
+        AddOpenGLCrashReportAnnotations();
+        mSetCrashReportAnnotations = true;
+      }
+
+      /* The following code is an old way to whitelist devices when we're ready.
+       * It is staying here for reference. The best way to do this now is to add
+       * an entry in the list above. There is a dummy entry which will whitelist a
+       * device when uncommented and device/vendor IDs are inserted. It is
+       * preferred that we stop whitelisting and instead go to blocklisting, where
+       * everything is assumed to be okay as long as it's not in the blocklist. */
+      // nsAutoString str;
+      // /* Whitelist Galaxy S phones */
+      // if (mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str)) {
+      //   if (str != NS_LITERAL_STRING("smdkc110")) {
+      //     status = FEATURE_BLOCKED_DEVICE;
+      //   }
+      // }
+    }
+  }
 
   return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, &os);
 }
