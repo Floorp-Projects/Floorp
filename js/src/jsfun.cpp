@@ -1048,6 +1048,7 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
                     JSFunction *clone;
 
                     if (IsFunctionObject(v, &clone) &&
+                        clone->isInterpreted() &&
                         clone->script() == fun->script() &&
                         clone->methodObj() == thisp) {
                         /*
