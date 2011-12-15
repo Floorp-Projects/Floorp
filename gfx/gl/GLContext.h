@@ -527,7 +527,7 @@ struct THEBES_API ContextFormat
 class GLContext
     : public LibrarySymbolLoader
 {
-    THEBES_INLINE_DECL_THREADSAFE_REFCOUNTING(GLContext)
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GLContext)
 public:
     GLContext(const ContextFormat& aFormat,
               bool aIsOffscreen = false,
