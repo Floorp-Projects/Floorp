@@ -42,6 +42,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.IOException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -253,9 +254,19 @@ public class AboutHomeContent extends ScrollView {
                     if (fileStream == null)
                         return;
                     StringBuffer jsonString = new StringBuffer();
-                    int read = 0;
-                    while ((read = fileStream.read(buf, 0, 32768)) != -1) {
-                        jsonString.append(new String(buf, 0, read));
+                    try {
+                        int read = 0;
+                        while ((read = fileStream.read(buf, 0, 32768)) != -1) {
+                            jsonString.append(new String(buf, 0, read));
+                        }
+                    } finally {
+                        try {
+                            fileStream.close();
+                        } catch (IOException ioe) {
+                            // catch this here because we can continue even if the
+                            // close failed
+                            Log.i(LOGTAG, "error closing json file", ioe);
+                        }
                     }
                     final JSONArray array = new JSONObject(jsonString.toString()).getJSONArray("addons");
                     GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
@@ -264,15 +275,15 @@ public class AboutHomeContent extends ScrollView {
                                 for (int i = 0; i < array.length(); i++) {
                                     JSONObject jsonobj = array.getJSONObject(i);
                                     mAddonsAdapter.add(jsonobj.getString("name"));
-                                    Log.i("GeckoAddons", "addon #" + i +": " + jsonobj.getString("name"));
+                                    Log.i(LOGTAG, "addon #" + i +": " + jsonobj.getString("name"));
                                 }
                             } catch (Exception e) {
-                                Log.i("GeckoAddons", "error reading json file", e);
+                                Log.i(LOGTAG, "error reading json file", e);
                             }
                         }
                     });
                 } catch (Exception e) {
-                    Log.i("GeckoAddons", "error reading json file", e);
+                    Log.i(LOGTAG, "error reading json file", e);
                 }
             }
         });
