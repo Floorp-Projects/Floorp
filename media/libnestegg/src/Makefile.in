@@ -45,6 +45,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= nestegg
 LIBRARY_NAME	= nestegg
 FORCE_STATIC_LIB= 1
+ifeq (WINNT,$(OS_TARGET))
+VISIBILITY_FLAGS =
+endif
 
 CSRCS		= \
 		nestegg.c \
