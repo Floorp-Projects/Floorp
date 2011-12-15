@@ -109,7 +109,7 @@ private:
     JSObject2WrappedJSMap();    // no implementation
     JSObject2WrappedJSMap(int size);
 
-    static size_t SizeOfEntry(JSDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf);
+    static size_t SizeOfEntryExcludingThis(JSDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf, void *);
 
 private:
     JSDHashTable *mTable;
@@ -177,7 +177,7 @@ private:
     Native2WrappedNativeMap();    // no implementation
     Native2WrappedNativeMap(int size);
 
-    static size_t SizeOfEntry(JSDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf);
+    static size_t SizeOfEntryExcludingThis(JSDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf, void *);
 
 private:
     JSDHashTable *mTable;
@@ -296,7 +296,7 @@ private:
     IID2NativeInterfaceMap();    // no implementation
     IID2NativeInterfaceMap(int size);
 
-    static size_t SizeOfEntry(JSDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf);
+    static size_t SizeOfEntryExcludingThis(JSDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf, void *);
 
 private:
     JSDHashTable *mTable;
@@ -415,7 +415,7 @@ private:
     ClassInfo2WrappedNativeProtoMap();    // no implementation
     ClassInfo2WrappedNativeProtoMap(int size);
 
-    static size_t SizeOfEntry(JSDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf);
+    static size_t SizeOfEntryExcludingThis(JSDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf, void *);
 
 private:
     JSDHashTable *mTable;
@@ -488,7 +488,7 @@ private:
     NativeSetMap();    // no implementation
     NativeSetMap(int size);
 
-    static size_t SizeOfEntry(JSDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf);
+    static size_t SizeOfEntryExcludingThis(JSDHashEntryHdr *hdr, JSMallocSizeOfFun mallocSizeOf, void *);
 
 private:
     JSDHashTable *mTable;

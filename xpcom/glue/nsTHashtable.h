@@ -252,13 +252,35 @@ public:
   }
 
   /**
-   * The "Shallow" means that if the entries contain pointers to other objects,
-   * their size isn't included in the measuring.
+   * client must provide a <code>SizeOfEntryExcludingThisFun</code> function for
+   *   SizeOfExcludingThis.
+   * @param     aEntry the entry being enumerated
+   * @param     mallocSizeOf the function used to measure heap-allocated blocks
+   * @param     arg passed unchanged from <code>SizeOf{In,Ex}cludingThis</code>
+   * @return    summed size of the things pointed to by the entries
    */
-  size_t ShallowSizeOfExcludingThis(nsMallocSizeOfFun mallocSizeOf)
+  typedef size_t (* SizeOfEntryExcludingThisFun)(EntryType* aEntry,
+                                                 nsMallocSizeOfFun mallocSizeOf,
+                                                 void *arg);
+
+  /**
+   * Measure the size of the table's entry storage, and if
+   * |sizeOfEntryExcludingThis| is non-NULL, measure the size of things pointed
+   * to by entries.
+   * 
+   * @param     sizeOfEntryExcludingThis the
+   *            <code>SizeOfEntryExcludingThisFun</code> function to call
+   * @param     mallocSizeOf the function used to measure heap-allocated blocks
+   * @param     userArg a pointer to pass to the
+   *            <code>SizeOfEntryExcludingThisFun</code> function
+   * @return    the summed size of all the entries
+   */
+  size_t SizeOfExcludingThis(SizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
+                             nsMallocSizeOfFun mallocSizeOf, void *userArg = NULL)
   {
     if (IsInitialized()) {
-      return PL_DHashTableSizeOfExcludingThis(&mTable, nsnull, mallocSizeOf);
+      s_SizeOfArgs args = { sizeOfEntryExcludingThis, userArg };
+      return PL_DHashTableSizeOfExcludingThis(&mTable, s_SizeOfStub, mallocSizeOf, &args);
     }
     return 0;
   }
@@ -304,6 +326,24 @@ protected:
                                     PLDHashEntryHdr *entry,
                                     PRUint32         number,
                                     void            *arg);
+
+  /**
+   * passed internally during sizeOf counting.  Allocated on the stack.
+   *
+   * @param userFunc the SizeOfEntryExcludingThisFun passed to
+   *                 SizeOf{In,Ex}cludingThis by the client
+   * @param userArg the userArg passed unaltered
+   */
+  struct s_SizeOfArgs
+  {
+    SizeOfEntryExcludingThisFun userFunc;
+    void* userArg;
+  };
+  
+  static size_t s_SizeOfStub(PLDHashEntryHdr *entry,
+                             nsMallocSizeOfFun mallocSizeOf,
+                             void *arg);
+
 private:
   // copy constructor, not implemented
   nsTHashtable(nsTHashtable<EntryType>& toCopy);
@@ -430,6 +470,19 @@ nsTHashtable<EntryType>::s_EnumStub(PLDHashTable    *table,
   return (* reinterpret_cast<s_EnumArgs*>(arg)->userFunc)(
     reinterpret_cast<EntryType*>(entry),
     reinterpret_cast<s_EnumArgs*>(arg)->userArg);
+}
+
+template<class EntryType>
+size_t
+nsTHashtable<EntryType>::s_SizeOfStub(PLDHashEntryHdr *entry,
+                                      nsMallocSizeOfFun mallocSizeOf,
+                                      void *arg)
+{
+  // dereferences the function-pointer to the user's enumeration function
+  return (* reinterpret_cast<s_SizeOfArgs*>(arg)->userFunc)(
+    reinterpret_cast<EntryType*>(entry),
+    mallocSizeOf,
+    reinterpret_cast<s_SizeOfArgs*>(arg)->userArg);
 }
 
 #endif // nsTHashtable_h__

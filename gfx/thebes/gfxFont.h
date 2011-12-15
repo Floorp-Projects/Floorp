@@ -2273,9 +2273,10 @@ private:
             return details;
         }
 
-        PRUint32 SizeOf() {
-            return sizeof(DetailedGlyphStore) +
-                mDetails.SizeOf() + mOffsetToIndex.SizeOf();
+        size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) {
+            return aMallocSizeOf(this, sizeof(DetailedGlyphStore)) +
+                mDetails.SizeOfExcludingThis(aMallocSizeOf) +
+                mOffsetToIndex.SizeOfExcludingThis(aMallocSizeOf);
         }
 
     private:

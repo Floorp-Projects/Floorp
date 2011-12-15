@@ -245,8 +245,8 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
 
     // Returns the number of bytes on the heap taken up by this object, not
     // including sizeof(*this).
-    PRUint64 SizeOf() {
-      return mArray.SizeOf();
+    size_t SizeOfExcludingThis(nsMallocSizeOfFun mallocSizeOf) {
+      return mArray.SizeOfExcludingThis(mallocSizeOf);
     }
 
     //
