@@ -6226,7 +6226,15 @@ nsDocument::CreateEvent(const nsAString& aEventType, nsIDOMEvent** aReturn)
 void
 nsDocument::FlushPendingNotifications(mozFlushType aType)
 {
-  if ((!IsHTML() || aType > Flush_ContentAndNotify) &&
+  // We need to flush the sink for non-HTML documents (because the XML
+  // parser still does insertion with deferred notifications).  We
+  // also need to flush the sink if this is a layout-related flush, to
+  // make sure that layout is started as needed.  But we can skip that
+  // part if we have no presshell or if it's already done an initial
+  // reflow.
+  if ((!IsHTML() ||
+       (aType > Flush_ContentAndNotify && mPresShell &&
+        !mPresShell->DidInitialReflow())) &&
       (mParser || mWeakSink)) {
     nsCOMPtr<nsIContentSink> sink;
     if (mParser) {
@@ -6267,9 +6275,28 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
     mParentDocument->FlushPendingNotifications(parentType);
   }
 
-  nsCOMPtr<nsIPresShell> shell = GetShell();
-  if (shell) {
-    shell->FlushPendingNotifications(aType);
+  // We can optimize away getting our presshell and calling
+  // FlushPendingNotifications on it if we don't need a flush of the sort we're
+  // looking at.  The one exception is if mInFlush is true, because in that
+  // case we might have set mNeedStyleFlush and mNeedLayoutFlush to false
+  // already but the presshell hasn't actually done the corresponding work yet.
+  // So if mInFlush and reentering this code, we need to flush the presshell.
+  if (mNeedStyleFlush ||
+      (mNeedLayoutFlush && aType >= Flush_InterruptibleLayout) ||
+      aType >= Flush_Display ||
+      mInFlush) {
+    nsCOMPtr<nsIPresShell> shell = GetShell();
+    if (shell) {
+      mNeedStyleFlush = false;
+      mNeedLayoutFlush = mNeedLayoutFlush && (aType < Flush_InterruptibleLayout);
+      // mInFlush is a bitfield, so can't us AutoRestore here.  But we
+      // need to keep track of multi-level reentry correctly, so need
+      // to restore the old mInFlush value.
+      bool oldInFlush = mInFlush;
+      mInFlush = true;
+      shell->FlushPendingNotifications(aType);
+      mInFlush = oldInFlush;
+    }
   }
 }
 
@@ -6759,7 +6786,7 @@ nsDocument::CreateElem(const nsAString& aName, nsIAtom *aPrefix, PRInt32 aNamesp
 bool
 nsDocument::IsSafeToFlush() const
 {
-  nsCOMPtr<nsIPresShell> shell = GetShell();
+  nsIPresShell* shell = GetShell();
   if (!shell)
     return true;
 

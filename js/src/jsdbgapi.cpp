@@ -1490,36 +1490,18 @@ JS_DefineProfilingFunctions(JSContext *cx, JSObject *obj)
 
 #include <valgrind/callgrind.h>
 
-/*
- * Wrapper for callgrind macros to stop warnings coming from their expansions.
- */ 
-#if (__GNUC__ >= 5) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
-# define WRAP_CALLGRIND(call)                                                 \
-    JS_BEGIN_MACRO                                                            \
-        _Pragma("GCC diagnostic push")                                        \
-        _Pragma("GCC diagnostic ignored \"-Wunused-but-set-variable\"")       \
-        call;                                                                 \
-        _Pragma("GCC diagnostic pop")                                         \
-    JS_END_MACRO
-#else
-# define WRAP_CALLGRIND(call)                                                 \
-    JS_BEGIN_MACRO                                                            \
-        call;                                                                 \
-    JS_END_MACRO
-#endif
-
 JS_FRIEND_API(JSBool)
 js_StartCallgrind()
 {
-    WRAP_CALLGRIND(CALLGRIND_START_INSTRUMENTATION);
-    WRAP_CALLGRIND(CALLGRIND_ZERO_STATS);
+    JS_SILENCE_UNUSED_VALUE_IN_EXPR(CALLGRIND_START_INSTRUMENTATION);
+    JS_SILENCE_UNUSED_VALUE_IN_EXPR(CALLGRIND_ZERO_STATS);
     return true;
 }
 
 JS_FRIEND_API(JSBool)
 js_StopCallgrind()
 {
-    WRAP_CALLGRIND(CALLGRIND_STOP_INSTRUMENTATION);
+    JS_SILENCE_UNUSED_VALUE_IN_EXPR(CALLGRIND_STOP_INSTRUMENTATION);
     return true;
 }
 
@@ -1527,9 +1509,9 @@ JS_FRIEND_API(JSBool)
 js_DumpCallgrind(const char *outfile)
 {
     if (outfile) {
-        WRAP_CALLGRIND(CALLGRIND_DUMP_STATS_AT(outfile));
+        JS_SILENCE_UNUSED_VALUE_IN_EXPR(CALLGRIND_DUMP_STATS_AT(outfile));
     } else {
-        WRAP_CALLGRIND(CALLGRIND_DUMP_STATS);
+        JS_SILENCE_UNUSED_VALUE_IN_EXPR(CALLGRIND_DUMP_STATS);
     }
 
     return true;
