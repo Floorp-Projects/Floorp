@@ -40,10 +40,12 @@
 package org.mozilla.gecko;
 
 import android.app.Activity;
+import android.app.ActionBar;
 import android.content.Intent;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -56,6 +58,7 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -82,6 +85,23 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
 
         setContentView(R.layout.awesomebar_search);
 
+        if (Build.VERSION.SDK_INT >= 11) {
+            RelativeLayout actionBarLayout = (RelativeLayout) getLayoutInflater().inflate(R.layout.awesomebar_search_actionbar, null);
+
+            GeckoActionBar.setBackgroundDrawable(this, getResources().getDrawable(R.drawable.gecko_actionbar_bg));
+            GeckoActionBar.setDisplayOptions(this, ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM |
+                                                                                  ActionBar.DISPLAY_SHOW_HOME |
+                                                                                  ActionBar.DISPLAY_SHOW_TITLE |
+                                                                                  ActionBar.DISPLAY_USE_LOGO);
+            GeckoActionBar.setCustomView(this, actionBarLayout);
+
+            mGoButton = (ImageButton) actionBarLayout.findViewById(R.id.awesomebar_button);
+            mText = (AwesomeBarEditText) actionBarLayout.findViewById(R.id.awesomebar_text);
+        } else {
+            mGoButton = (ImageButton) findViewById(R.id.awesomebar_button);
+            mText = (AwesomeBarEditText) findViewById(R.id.awesomebar_text);
+        }
+
         mAwesomeTabs = (AwesomeBarTabs) findViewById(R.id.awesomebar_tabs);
         mAwesomeTabs.setOnUrlOpenListener(new AwesomeBarTabs.OnUrlOpenListener() {
             public void onUrlOpen(String url) {
@@ -93,14 +113,11 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
             }
         });
 
-        mGoButton = (ImageButton) findViewById(R.id.awesomebar_button);
         mGoButton.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
                 submitAndFinish(mText.getText().toString());
             }
         });
-
-        mText = (AwesomeBarEditText) findViewById(R.id.awesomebar_text);
 
         Resources resources = getResources();
         

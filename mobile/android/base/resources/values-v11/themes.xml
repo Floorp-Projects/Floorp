@@ -26,8 +26,8 @@
     </style>
     
     <style name="Gecko.Translucent" parent="@android:style/Theme.Translucent">
-        <item name="android:windowActionBar">false</item>
-        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">true</item>
+        <item name="android:windowNoTitle">false</item>
     </style>
     
 </resources>
