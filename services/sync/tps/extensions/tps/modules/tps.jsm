@@ -341,26 +341,28 @@ let TPS =
   },
 
   HandleAddons: function (addons, action, state) {
-    for (var i in addons) {
+    for each (let entry in addons) {
       Logger.logInfo("executing action " + action.toUpperCase() +
-                     " on addon " + JSON.stringify(addons[i]));
-      var addon = new Addon(this, addons[i]);
+                     " on addon " + JSON.stringify(entry));
+      let addon = new Addon(this, entry);
       switch(action) {
         case ACTION_ADD:
-          addon.Install();
+          addon.install();
           break;
         case ACTION_DELETE:
-          addon.Delete();
+          addon.uninstall();
           break;
         case ACTION_VERIFY:
-          Logger.AssertTrue(addon.Find(state), 'addon ' + addon.id + ' not found');
+          Logger.AssertTrue(addon.find(state), 'addon ' + addon.id + ' not found');
           break;
         case ACTION_VERIFY_NOT:
-          Logger.AssertTrue(!addon.Find(state), 'addon ' + addon.id + " is present, but it shouldn't be");
+          Logger.AssertFalse(addon.find(state), 'addon ' + addon.id + " is present, but it shouldn't be");
           break;
-        case ACTION_SETSTATE:
-          Logger.AssertTrue(addon.SetState(state), 'addon ' + addon.id + ' not found');
+        case ACTION_SET_ENABLED:
+          Logger.AssertTrue(addon.setEnabled(state), 'addon ' + addon.id + ' not found');
           break;
+        default:
+          throw new Error("Unknown action for add-on: " + action);
       }
     }
     Logger.logPass("executing action " + action.toUpperCase() +
