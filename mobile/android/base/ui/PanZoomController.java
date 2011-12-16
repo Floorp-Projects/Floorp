@@ -512,10 +512,15 @@ public class PanZoomController
     private void bounce(ViewportMetrics metrics) {
         stopAnimationTimer();
 
+        mBounceStartMetrics = new ViewportMetrics(mController.getViewportMetrics());
+        if (mBounceStartMetrics.fuzzyEquals(metrics)) {
+            mState = PanZoomState.NOTHING;
+            return;
+        }
+
         mBounceFrame = 0;
         mState = PanZoomState.FLING;
         mX.setFlingState(Axis.FlingStates.SNAPPING); mY.setFlingState(Axis.FlingStates.SNAPPING);
-        mBounceStartMetrics = new ViewportMetrics(mController.getViewportMetrics());
         mBounceEndMetrics = metrics;
 
         startAnimationTimer(new BounceRunnable());
