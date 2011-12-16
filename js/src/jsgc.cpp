@@ -92,6 +92,7 @@
 #include "vm/Debugger.h"
 #include "vm/String.h"
 
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 
 #include "vm/CallObject-inl.h"
@@ -2051,6 +2052,12 @@ MarkRuntime(JSTracer *trc)
     for (GCLocks::Range r = rt->gcLocksHash.all(); !r.empty(); r.popFront())
         gc_lock_traversal(r.front(), trc);
 
+    if (rt->scriptPCCounters) {
+        const ScriptOpcodeCountsVector &vec = *rt->scriptPCCounters;
+        for (size_t i = 0; i < vec.length(); i++)
+            MarkRoot(trc, vec[i].script, "scriptPCCounters");
+    }
+
     js_TraceAtomState(trc);
     rt->staticStrings.trace(trc);
 
@@ -2061,6 +2068,15 @@ MarkRuntime(JSTracer *trc)
     for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
         if (c->activeAnalysis)
             c->markTypes(trc);
+
+        /* Do not discard scripts with counters while profiling. */
+        if (rt->profilingScripts) {
+            for (CellIterUnderGC i(c, FINALIZE_SCRIPT); !i.done(); i.next()) {
+                JSScript *script = i.get<JSScript>();
+                if (script->pcCounters)
+                    MarkRoot(trc, script, "profilingScripts");
+            }
+        }
     }
 
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
@@ -3558,6 +3574,121 @@ VerifyBarriers(JSContext *cx, bool always)
 #endif /* JS_GC_ZEAL */
 
 } /* namespace gc */
+
+static void ReleaseAllJITCode(JSContext *cx)
+{
+#ifdef JS_METHODJIT
+    for (GCCompartmentsIter c(cx->runtime); !c.done(); c.next()) {
+        mjit::ClearAllFrames(c);
+        for (CellIter i(cx, c, FINALIZE_SCRIPT); !i.done(); i.next()) {
+            JSScript *script = i.get<JSScript>();
+            mjit::ReleaseScriptCode(cx, script);
+        }
+    }
+#endif
+}
+
+/*
+ * There are three possible PCCount profiling states:
+ *
+ * 1. None: Neither scripts nor the runtime have counter information.
+ * 2. Profile: Active scripts have counter information, the runtime does not.
+ * 3. Query: Scripts do not have counter information, the runtime does.
+ *
+ * When starting to profile scripts, counting begins immediately, with all JIT
+ * code discarded and recompiled with counters as necessary. Active interpreter
+ * frames will not begin profiling until they begin executing another script
+ * (via a call or return).
+ *
+ * The below API functions manage transitions to new states, according
+ * to the table below.
+ *
+ *                                  Old State
+ *                          -------------------------
+ * Function                 None      Profile   Query
+ * --------
+ * StartPCCountProfiling    Profile   Profile   Profile
+ * StopPCCountProfiling     None      Query     Query
+ * PurgePCCounts            None      None      None
+ */
+
+static void
+ReleaseScriptPCCounters(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+    JS_ASSERT(rt->scriptPCCounters);
+
+    ScriptOpcodeCountsVector &vec = *rt->scriptPCCounters;
+
+    for (size_t i = 0; i < vec.length(); i++)
+        vec[i].counters.destroy(cx);
+
+    cx->delete_(rt->scriptPCCounters);
+    rt->scriptPCCounters = NULL;
+}
+
+JS_FRIEND_API(void)
+StartPCCountProfiling(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+    AutoLockGC lock(rt);
+
+    if (rt->profilingScripts)
+        return;
+
+    if (rt->scriptPCCounters)
+        ReleaseScriptPCCounters(cx);
+
+    ReleaseAllJITCode(cx);
+
+    rt->profilingScripts = true;
+}
+
+JS_FRIEND_API(void)
+StopPCCountProfiling(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+    AutoLockGC lock(rt);
+
+    if (!rt->profilingScripts)
+        return;
+    JS_ASSERT(!rt->scriptPCCounters);
+
+    ReleaseAllJITCode(cx);
+
+    ScriptOpcodeCountsVector *vec = cx->new_<ScriptOpcodeCountsVector>(SystemAllocPolicy());
+    if (!vec)
+        return;
+
+    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+        for (CellIter i(cx, c, FINALIZE_SCRIPT); !i.done(); i.next()) {
+            JSScript *script = i.get<JSScript>();
+            if (script->pcCounters && script->types) {
+                ScriptOpcodeCountsPair info;
+                info.script = script;
+                info.counters.steal(script->pcCounters);
+                if (!vec->append(info))
+                    info.counters.destroy(cx);
+            }
+        }
+    }
+
+    rt->profilingScripts = false;
+    rt->scriptPCCounters = vec;
+}
+
+JS_FRIEND_API(void)
+PurgePCCounts(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+    AutoLockGC lock(rt);
+
+    if (!rt->scriptPCCounters)
+        return;
+    JS_ASSERT(!rt->profilingScripts);
+
+    ReleaseScriptPCCounters(cx);
+}
 
 } /* namespace js */
 
