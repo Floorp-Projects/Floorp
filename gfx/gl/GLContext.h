@@ -532,7 +532,8 @@ public:
     GLContext(const ContextFormat& aFormat,
               bool aIsOffscreen = false,
               GLContext *aSharedContext = nsnull)
-      : mOffscreenFBOsDirty(false),
+      : mFlushGuaranteesResolve(false),
+        mOffscreenFBOsDirty(false),
         mInitialized(false),
         mIsOffscreen(aIsOffscreen),
 #ifdef USE_GLES2
@@ -760,6 +761,23 @@ public:
 
     bool IsOffscreen() {
         return mIsOffscreen;
+    }
+
+protected:
+    bool mFlushGuaranteesResolve;
+
+public:
+    void SetFlushGuaranteesResolve(bool aFlushGuaranteesResolve) {
+        mFlushGuaranteesResolve = aFlushGuaranteesResolve;
+    }
+
+    void GuaranteeResolve() {
+        if (mFlushGuaranteesResolve) {
+            BlitDirtyFBOs();
+            fFlush();
+        } else {
+            fFinish();
+        }
     }
 
     /*
