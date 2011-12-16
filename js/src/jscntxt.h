@@ -650,6 +650,7 @@ struct JSRuntime
 
     JSWrapObjectCallback wrapObjectCallback;
     JSPreWrapCallback    preWrapObjectCallback;
+    js::PreserveWrapperCallback preserveWrapperCallback;
 
     /*
      * To ensure that cx->malloc does not cause a GC, we set this flag during
