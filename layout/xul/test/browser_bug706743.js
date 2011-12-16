@@ -2,6 +2,8 @@ function test() {
   waitForExplicitFinish();
   gBrowser.selectedTab = gBrowser.addTab();
 
+  SpecialPowers.setIntPref("ui.tooltipDelay", 0);
+
   let target;
   let doc;
   let win;
@@ -34,6 +36,8 @@ function test() {
   {
     document.removeEventListener("popupshown", onPopupShown, true);
     document.removeEventListener("popuphidden", onPopupHidden, true);
+
+    SpecialPowers.clearUserPref("ui.tooltipDelay");
 
     gBrowser.removeCurrentTab();
     finish();
@@ -101,7 +105,7 @@ function test() {
       EventUtils.synthesizeMouse(target, -5, -5, { type: "mousemove" }, win);
 
       setTimeout(testShowTooltipAgain, 0);
-    }, 600);
+    }, 100);
   }
 
   let onLoad = function (aEvent)
