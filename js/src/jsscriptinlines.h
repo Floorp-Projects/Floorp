@@ -132,6 +132,13 @@ CurrentScriptFileLineOrigin(JSContext *cx, const char **file, uintN *linenop, JS
     CurrentScriptFileLineOriginSlow(cx, file, linenop, origin);
 }
 
+inline void
+ScriptOpcodeCounts::destroy(JSContext *cx)
+{
+    if (counts)
+        cx->free_(counts);
+}
+
 } // namespace js
 
 inline void

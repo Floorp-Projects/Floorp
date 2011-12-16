@@ -776,6 +776,11 @@ JSScript::initCounts(JSContext *cx)
 
     JS_ASSERT(size_t(cursor - base) == bytes);
 
+    /* Enable interrupts in any interpreter frames running on this script. */
+    InterpreterFrames *frames;
+    for (frames = JS_THREAD_DATA(cx)->interpreterFrames; frames; frames = frames->older)
+        frames->enableInterruptsIfRunning(this);
+
     return true;
 }
 

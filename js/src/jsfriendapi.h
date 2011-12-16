@@ -442,6 +442,24 @@ SetPreserveWrapperCallback(JSRuntime *rt, PreserveWrapperCallback callback);
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
 
+JS_FRIEND_API(void)
+StartPCCountProfiling(JSContext *cx);
+
+JS_FRIEND_API(void)
+StopPCCountProfiling(JSContext *cx);
+
+JS_FRIEND_API(void)
+PurgePCCounts(JSContext *cx);
+
+JS_FRIEND_API(size_t)
+GetPCCountScriptCount(JSContext *cx);
+
+JS_FRIEND_API(JSString *)
+GetPCCountScriptSummary(JSContext *cx, size_t script);
+
+JS_FRIEND_API(JSString *)
+GetPCCountScriptContents(JSContext *cx, size_t script);
+
 } /* namespace js */
 #endif
 

@@ -681,11 +681,13 @@ JSRuntime::JSRuntime()
     gcBlackRootsData(NULL),
     gcGrayRootsTraceOp(NULL),
     gcGrayRootsData(NULL),
+    scriptPCCounters(NULL),
     NaNValue(UndefinedValue()),
     negativeInfinityValue(UndefinedValue()),
     positiveInfinityValue(UndefinedValue()),
     emptyString(NULL),
     debugMode(false),
+    profilingScripts(false),
     hadOutOfMemory(false),
     data(NULL),
 #ifdef JS_THREADSAFE
