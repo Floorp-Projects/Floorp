@@ -134,6 +134,7 @@ const STATE_FAILED          = "failed";
 
 // From updater/errors.h:
 const WRITE_ERROR        = 7;
+const UNEXPECTED_ERROR   = 8;
 const ELEVATION_CANCELED = 9;
 
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
@@ -1363,6 +1364,7 @@ UpdateService.prototype = {
                    createInstance(Ci.nsIUpdatePrompt);
 
     update.state = status;
+    this._submitTelemetryPing(status);
     if (status == STATE_SUCCEEDED) {
       update.statusText = gUpdateBundle.GetStringFromName("installSuccess");
 
@@ -1423,6 +1425,31 @@ UpdateService.prototype = {
       update.QueryInterface(Ci.nsIWritablePropertyBag);
       update.setProperty("patchingFailed", oldType);
       prompter.showUpdateError(update);
+    }
+  },
+
+  /**
+   * Submit the results of applying the update via telemetry.
+   *
+   * @param  status
+   *         The status of the update as read from the update.status file
+   */
+  _submitTelemetryPing: function AUS__submitTelemetryPing(status) {
+    try {
+      let parts = status.split(":");
+      if ((parts.length == 1 && status != STATE_SUCCEEDED) ||
+          (parts.length > 1  && parts[0] != STATE_FAILED)) {
+        // we only want to report success or failure
+        return;
+      }
+      let result = 0; // 0 means success
+      if (parts.length > 1) {
+        result = parseInt(parts[1]) || UNEXPECTED_ERROR;
+      }
+      Services.telemetry.getHistogramById("UPDATE_STATUS").add(result);
+    } catch(e) {
+      // Don't allow any exception to be propagated.
+      Components.utils.reportError(e);
     }
   },
 

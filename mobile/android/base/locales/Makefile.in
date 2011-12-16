@@ -47,7 +47,7 @@ include $(DEPTH)/config/autoconf.mk
 # http://code.google.com/p/android/issues/detail?id=3639
 AB_rCD = $(if $(filter he, $(AB_CD)),iw,$(if $(filter id, $(AB_CD)),in,$(subst -,-r,$(AB_CD))))
 
-STRINGSPATH = $(call MERGE_FILE,android_strings.dtd)
+STRINGSPATH = $(call core_abspath,$(call MERGE_FILE,android_strings.dtd))
 ifeq (,$(XPI_NAME))
 BRANDPATH = $(call core_abspath,$(DEPTH)/dist/bin/chrome/$(AB_CD)/locale/branding/brand.dtd)
 else

@@ -43,6 +43,7 @@
 #define jsion_frame_iterator_h__
 
 #include "jstypes.h"
+#include "IonCode.h"
 
 struct JSFunction;
 struct JSScript;

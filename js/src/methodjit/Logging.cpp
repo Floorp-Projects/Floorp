@@ -51,7 +51,7 @@
 #if defined(JS_METHODJIT_SPEW)
 
 static bool LoggingChecked = false;
-static uint32 LoggingBits = 0;
+static uint32_t LoggingBits = 0;
 
 static const char *ChannelNames[] =
 {
@@ -99,31 +99,31 @@ js::JMCheckLogging()
         /*NOTREACHED*/
     }
     if (strstr(env, "abort") || strstr(env, "aborts"))
-        LoggingBits |= (1 << uint32(JSpew_Abort));
+        LoggingBits |= (1 << uint32_t(JSpew_Abort));
     if (strstr(env, "scripts"))
-        LoggingBits |= (1 << uint32(JSpew_Scripts));
+        LoggingBits |= (1 << uint32_t(JSpew_Scripts));
     if (strstr(env, "profile"))
-        LoggingBits |= (1 << uint32(JSpew_Prof));
+        LoggingBits |= (1 << uint32_t(JSpew_Prof));
 #ifdef DEBUG
     if (strstr(env, "jsops"))
-        LoggingBits |= (1 << uint32(JSpew_JSOps));
+        LoggingBits |= (1 << uint32_t(JSpew_JSOps));
 #endif
     if (strstr(env, "insns"))
-        LoggingBits |= (1 << uint32(JSpew_Insns) | (1 << uint32(JSpew_JSOps)));
+        LoggingBits |= (1 << uint32_t(JSpew_Insns) | (1 << uint32_t(JSpew_JSOps)));
     if (strstr(env, "vmframe"))
-        LoggingBits |= (1 << uint32(JSpew_VMFrame));
+        LoggingBits |= (1 << uint32_t(JSpew_VMFrame));
     if (strstr(env, "pics"))
-        LoggingBits |= (1 << uint32(JSpew_PICs));
+        LoggingBits |= (1 << uint32_t(JSpew_PICs));
     if (strstr(env, "slowcalls"))
-        LoggingBits |= (1 << uint32(JSpew_SlowCalls));
+        LoggingBits |= (1 << uint32_t(JSpew_SlowCalls));
     if (strstr(env, "analysis"))
-        LoggingBits |= (1 << uint32(JSpew_Analysis));
+        LoggingBits |= (1 << uint32_t(JSpew_Analysis));
     if (strstr(env, "regalloc"))
-        LoggingBits |= (1 << uint32(JSpew_Regalloc));
+        LoggingBits |= (1 << uint32_t(JSpew_Regalloc));
     if (strstr(env, "recompile"))
-        LoggingBits |= (1 << uint32(JSpew_Recompile));
+        LoggingBits |= (1 << uint32_t(JSpew_Recompile));
     if (strstr(env, "inlin"))
-        LoggingBits |= (1 << uint32(JSpew_Inlining));
+        LoggingBits |= (1 << uint32_t(JSpew_Inlining));
     if (strstr(env, "full"))
         LoggingBits |= 0xFFFFFFFF;
 }
@@ -144,7 +144,7 @@ bool
 js::IsJaegerSpewChannelActive(JaegerSpewChannel channel)
 {
     JS_ASSERT(LoggingChecked);
-    return !!(LoggingBits & (1 << uint32(channel)));
+    return !!(LoggingBits & (1 << uint32_t(channel)));
 }
 
 void
@@ -152,7 +152,7 @@ js::JaegerSpew(JaegerSpewChannel channel, const char *fmt, ...)
 {
     JS_ASSERT(LoggingChecked);
 
-    if (!(LoggingBits & (1 << uint32(channel))))
+    if (!(LoggingBits & (1 << uint32_t(channel))))
         return;
 
     fprintf(stderr, "[jaeger] %-7s  ", ChannelNames[channel]);

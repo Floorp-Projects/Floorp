@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     class="reftest-wait">
+  <!-- Test to be sure that a zero-sized-in-one-dimension viewBox doesn't
+       make us fail assertions. -->
+  <script>
+    document.addEventListener("MozReftestInvalidate", waitAndFinish, false);
+
+    function waitAndFinish() {
+      // Sadly, MozReftestInvalidate fires sooner than PaintPattern here, so
+      // we need to wait a little bit to give PaintPattern a chance to hit
+      // this bug.
+      setTimeout(finish, 100);
+    }
+
+    function finish() {
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+  <pattern id="test" viewBox="0 0 0 1">
+    <rect/>
+  </pattern>
+  <rect width="200" height="200" fill="url(#test)"/>
+</svg>

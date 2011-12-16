@@ -86,6 +86,7 @@ CPPSRCS = \
   SQLCollations.cpp \
   VacuumManager.cpp \
   TelemetryVFS.cpp \
+  FileSystemModule.cpp \
   $(NULL)
 
 # For nsDependentJSString

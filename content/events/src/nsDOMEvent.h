@@ -49,13 +49,17 @@
 #include "nsGUIEvent.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
+#include "nsIJSNativeInitializer.h"
 
 class nsIContent;
 class nsPresContext;
+struct JSContext;
+struct JSObject;
  
 class nsDOMEvent : public nsIDOMEvent,
                    public nsIDOMNSEvent,
-                   public nsIPrivateDOMEvent
+                   public nsIPrivateDOMEvent,
+                   public nsIJSNativeInitializer
 {
 public:
 
@@ -218,6 +222,16 @@ public:
   NS_IMETHOD_(bool)    IsDispatchStopped();
   NS_IMETHOD_(nsEvent*)    GetInternalNSEvent();
   NS_IMETHOD    SetTrusted(bool aTrusted);
+
+  // nsIJSNativeInitializer
+  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
+                        PRUint32 aArgc, jsval* aArgv);
+
+  virtual const nsIID& EventInitIID() { return NS_GET_IID(nsIEventInit); }
+  virtual nsresult InitFromCtor(const nsAString& aType, nsISupports* aDict,
+                                JSContext* aCx, JSObject* aObj);
+
+  void InitPresContextData(nsPresContext* aPresContext);
 
   virtual void Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType);
   virtual bool Deserialize(const IPC::Message* aMsg, void** aIter);

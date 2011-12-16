@@ -55,6 +55,11 @@ namespace android {
 class FramebufferNativeWindow;
 }
 
+namespace widget {
+struct InputContext;
+struct InputContextAction;
+}
+
 class nsWindow : public nsBaseWidget
 {
 public:
@@ -117,11 +122,17 @@ public:
                         bool* aAllowRetaining = nsnull);
     gfxASurface* GetThebesSurface();
 
+    NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
+                                      const InputContextAction& aAction);
+    NS_IMETHOD_(InputContext) GetInputContext();
+
 protected:
     nsWindow* mParent;
     bool mVisible;
 
     void BringToTop();
+
+    InputContext mInputContext;
 };
 
 #endif /* nsWindow_h */

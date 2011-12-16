@@ -961,7 +961,7 @@ XPCWrappedNative::GatherProtoScriptableCreateInfo(nsIClassInfo* classInfo,
     if (classInfoHelper) {
         nsCOMPtr<nsIXPCScriptable> helper =
           dont_AddRef(static_cast<nsIXPCScriptable*>(classInfoHelper));
-        JSUint32 flags;
+        uint32_t flags;
         nsresult rv = classInfoHelper->GetScriptableFlags(&flags);
         if (NS_FAILED(rv))
             flags = 0;
@@ -979,7 +979,7 @@ XPCWrappedNative::GatherProtoScriptableCreateInfo(nsIClassInfo* classInfo,
     if (NS_SUCCEEDED(rv) && possibleHelper) {
         nsCOMPtr<nsIXPCScriptable> helper(do_QueryInterface(possibleHelper));
         if (helper) {
-            JSUint32 flags;
+            uint32_t flags;
             rv = helper->GetScriptableFlags(&flags);
             if (NS_FAILED(rv))
                 flags = 0;
@@ -1010,7 +1010,7 @@ XPCWrappedNative::GatherScriptableCreateInfo(nsISupports* obj,
     // Do the same for the wrapper specific scriptable
     nsCOMPtr<nsIXPCScriptable> helper(do_QueryInterface(obj));
     if (helper) {
-        JSUint32 flags;
+        uint32_t flags;
         nsresult rv = helper->GetScriptableFlags(&flags);
         if (NS_FAILED(rv))
             flags = 0;
@@ -2087,7 +2087,7 @@ class CallMethodHelper
     const PRUint32 mArgc;
 
     JS_ALWAYS_INLINE JSBool
-    GetArraySizeFromParam(uint8 paramIndex, JSUint32* result) const;
+    GetArraySizeFromParam(uint8 paramIndex, uint32_t* result) const;
 
     JS_ALWAYS_INLINE JSBool
     GetInterfaceTypeFromParam(uint8 paramIndex,
@@ -2279,7 +2279,7 @@ CallMethodHelper::~CallMethodHelper()
                 // Clean up the array contents if necessary.
                 if (dp->DoesValNeedCleanup()) {
                     // We need some basic information to properly destroy the array.
-                    JSUint32 array_count = 0;
+                    uint32_t array_count = 0;
                     nsXPTType datum_type;
                     if (!GetArraySizeFromParam(i, &array_count) ||
                         !NS_SUCCEEDED(mIFaceInfo->GetTypeForParam(mVTableIndex,
@@ -2293,7 +2293,7 @@ CallMethodHelper::~CallMethodHelper()
 
                     // Loop over the array contents. For each one, we create a
                     // dummy 'val' and pass it to the cleanup helper.
-                    for (JSUint32 k = 0; k < array_count; k++) {
+                    for (uint32_t k = 0; k < array_count; k++) {
                         nsXPTCMiniVariant v;
                         v.val.p = static_cast<void**>(p)[k];
                         CleanupParam(v, datum_type);
@@ -2314,7 +2314,7 @@ CallMethodHelper::~CallMethodHelper()
 
 JSBool
 CallMethodHelper::GetArraySizeFromParam(uint8 paramIndex,
-                                        JSUint32* result) const
+                                        uint32_t* result) const
 {
     nsresult rv;
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(paramIndex);
@@ -2324,8 +2324,6 @@ CallMethodHelper::GetArraySizeFromParam(uint8 paramIndex,
     rv = mIFaceInfo->GetSizeIsArgNumberForParam(mVTableIndex, &paramInfo, 0, &paramIndex);
     if (NS_FAILED(rv))
         return Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
-
-    const nsXPTType& type = mMethodInfo->GetParam(paramIndex).GetType();
 
     *result = GetDispatchParam(paramIndex)->val.u32;
 
@@ -2353,8 +2351,6 @@ CallMethodHelper::GetInterfaceTypeFromParam(uint8 paramIndex,
                                                          &paramIndex);
         if (NS_FAILED(rv))
             return Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
-
-        const nsXPTType& type = mMethodInfo->GetParam(paramIndex).GetType();
 
         nsID* p = (nsID*) GetDispatchParam(paramIndex)->val.p;
         if (!p)
@@ -2407,7 +2403,7 @@ CallMethodHelper::GatherAndConvertResults()
         nsXPTCVariant* dp = GetDispatchParam(i);
         jsval v = JSVAL_NULL;
         AUTO_MARK_JSVAL(mCallContext, &v);
-        JSUint32 array_count = 0;
+        uint32_t array_count = 0;
         nsXPTType datum_type;
         bool isArray = type.IsArray();
         bool isSizedString = isArray ?
@@ -2720,7 +2716,7 @@ CallMethodHelper::ConvertDependentParam(uint8 i)
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
     const nsXPTType& type = paramInfo.GetType();
     nsXPTType datum_type;
-    JSUint32 array_count = 0;
+    uint32_t array_count = 0;
     bool isArray = type.IsArray();
 
     bool isSizedString = isArray ?
@@ -3667,7 +3663,7 @@ ConstructSlimWrapper(XPCCallContext &ccx,
     nsISupports *identityObj = aHelper.GetCanonical();
     nsXPCClassInfo *classInfoHelper = aHelper.GetXPCClassInfo();
 
-    JSUint32 flagsInt;
+    uint32_t flagsInt;
     nsresult rv = classInfoHelper->GetScriptableFlags(&flagsInt);
     if (NS_FAILED(rv))
         flagsInt = 0;

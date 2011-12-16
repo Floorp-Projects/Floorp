@@ -68,6 +68,7 @@ var gRemote = false;
 var gIgnoreWindowSize = false;
 var gTotalChunks = 0;
 var gThisChunk = 0;
+var gContainingWindow = null;
 
 // "<!--CLEAR-->"
 const BLANK_URL_FOR_CLEARING = "data:text/html,%3C%21%2D%2DCLEAR%2D%2D%3E";
@@ -189,12 +190,10 @@ function FlushTestLog()
 
 function AllocateCanvas()
 {
-    var windowElem = document.documentElement;
-
     if (gRecycledCanvases.length > 0)
         return gRecycledCanvases.shift();
 
-    var canvas = document.createElementNS(XHTML_NS, "canvas");
+    var canvas = gContainingWindow.document.createElementNS(XHTML_NS, "canvas");
     var r = gBrowser.getBoundingClientRect();
     canvas.setAttribute("width", Math.ceil(r.width));
     canvas.setAttribute("height", Math.ceil(r.height));
@@ -236,8 +235,12 @@ function OnRefTestLoad()
     } catch (e) {
         gBrowserIsRemote = false;
     }
+    
+    if (gContainingWindow == null && window != null) {
+      gContainingWindow = window;
+    }
 
-    gBrowser = document.createElementNS(XUL_NS, "xul:browser");
+    gBrowser = gContainingWindow.document.createElementNS(XUL_NS, "xul:browser");
     gBrowser.setAttribute("id", "browser");
     gBrowser.setAttribute("type", "content-primary");
     gBrowser.setAttribute("remote", gBrowserIsRemote ? "true" : "false");
@@ -310,14 +313,12 @@ function InitAndStartRefTests()
     }
 
     try {
-        gWindowUtils = window.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIDOMWindowUtils);
+        gWindowUtils = gContainingWindow.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIDOMWindowUtils);
         if (gWindowUtils && !gWindowUtils.compareCanvases)
             gWindowUtils = null;
     } catch (e) {
         gWindowUtils = null;
     }
-
-    var windowElem = document.documentElement;
 
     gIOService = CC[IO_SERVICE_CONTRACTID].getService(CI.nsIIOService);
     gDebug = CC[DEBUG_CONTRACTID].getService(CI.nsIDebug2);
@@ -471,6 +472,8 @@ function BuildConditionSandbox(aURL) {
     // see if we have the test plugin available,
     // and set a sandox prop accordingly
     sandbox.haveTestPlugin = false;
+
+    var navigator = gContainingWindow.navigator;
     for (var i = 0; i < navigator.mimeTypes.length; i++) {
         if (navigator.mimeTypes[i].type == "application/x-test" &&
             navigator.mimeTypes[i].enabledPlugin != null &&
@@ -481,11 +484,11 @@ function BuildConditionSandbox(aURL) {
     }
 
     // Set a flag on sandbox if the windows default theme is active
-    var box = document.createElement("box");
+    var box = gContainingWindow.document.createElement("box");
     box.setAttribute("id", "_box_windowsDefaultTheme");
-    document.documentElement.appendChild(box);
-    sandbox.windowsDefaultTheme = (getComputedStyle(box, null).display == "none");
-    document.documentElement.removeChild(box);
+    gContainingWindow.document.documentElement.appendChild(box);
+    sandbox.windowsDefaultTheme = (gContainingWindow.getComputedStyle(box, null).display == "none");
+    gContainingWindow.document.documentElement.removeChild(box);
 
     var prefs = CC["@mozilla.org/preferences-service;1"].
                 getService(CI.nsIPrefBranch2);
@@ -506,7 +509,10 @@ function BuildConditionSandbox(aURL) {
     }
 
     sandbox.testPluginIsOOP = function () {
-        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+        try {
+          netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+        } catch (ex) {}
+
         var prefservice = Components.classes["@mozilla.org/preferences-service;1"]
                                     .getService(CI.nsIPrefBranch);
 
@@ -883,7 +889,7 @@ function Focus()
     }
 
     var fm = CC["@mozilla.org/focus-manager;1"].getService(CI.nsIFocusManager);
-    fm.activeWindow = window;
+    fm.activeWindow = gContainingWindow;
     try {
         var dock = CC["@mozilla.org/widget/macdocksupport;1"].getService(CI.nsIMacDockSupport);
         dock.activateApplication(true);
@@ -921,7 +927,7 @@ function StartCurrentTest()
     }
     else {
         var currentTest = gTotalTests - gURLs.length;
-        document.title = "reftest: " + currentTest + " / " + gTotalTests +
+        gContainingWindow.document.title = "reftest: " + currentTest + " / " + gTotalTests +
             " (" + Math.floor(100 * (currentTest / gTotalTests)) + "%)";
         StartCurrentURI(1);
     }
@@ -938,7 +944,7 @@ function StartCurrentURI(aState)
         gURLs[0].maxAsserts == 0) {
         // Pretend the document loaded --- RecordResult will notice
         // there's already a canvas for this URL
-        setTimeout(RecordResult, 0);
+        gContainingWindow.setTimeout(RecordResult, 0);
     } else {
         var currentTest = gTotalTests - gURLs.length;
         gDumpLog("REFTEST TEST-START | " + gCurrentURL + " | " + currentTest + " / " + gTotalTests +
@@ -1023,8 +1029,8 @@ function DoDrawWindow(ctx, x, y, w, h)
     if (gIgnoreWindowSize ||
         (0 <= testRect.left &&
          0 <= testRect.top &&
-         window.innerWidth >= testRect.right &&
-         window.innerHeight >= testRect.bottom)) {
+         gContainingWindow.innerWidth >= testRect.right &&
+         gContainingWindow.innerHeight >= testRect.bottom)) {
         // We can use the window's retained layer manager
         // because the window is big enough to display the entire
         // browser element
@@ -1046,13 +1052,13 @@ function DoDrawWindow(ctx, x, y, w, h)
             gDumpLog("REFTEST INFO | WARNING: USE_WIDGET_LAYERS disabled\n");
         }
         gDumpLog("REFTEST INFO | drawWindow flags = " + flagsStr +
-                 "; window size = " + window.innerWidth + "," + window.innerHeight +
+                 "; window size = " + gContainingWindow.innerWidth + "," + gContainingWindow.innerHeight +
                  "; test browser size = " + testRect.width + "," + testRect.height +
                  "\n");
     }
 
     LogInfo("DoDrawWindow " + x + "," + y + "," + w + "," + h);
-    ctx.drawWindow(window, x, y, w, h, "rgb(255,255,255)",
+    ctx.drawWindow(gContainingWindow, x, y, w, h, "rgb(255,255,255)",
                    gDrawWindowFlags);
 }
 

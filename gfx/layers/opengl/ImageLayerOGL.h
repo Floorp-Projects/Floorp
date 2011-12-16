@@ -97,7 +97,7 @@ private:
  * reference loop between an ImageContainerOGL and its active image.
  */
 class RecycleBin {
-  THEBES_INLINE_DECL_THREADSAFE_REFCOUNTING(RecycleBin)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RecycleBin)
 
   typedef mozilla::gl::GLContext GLContext;
 

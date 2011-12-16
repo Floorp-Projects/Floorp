@@ -36,41 +36,82 @@
  * ***** END LICENSE BLOCK ***** */
 
 html {
-  font-size: 24px;
+  font-size: 18px;
+  background-color: black;
 }
 
-.addons-header {
-  border-bottom: 3px solid black;
+body {
+  margin: 0;
+}
+
+#addons-header {
+  color: white;
+  padding: 8px;
+  font-size: 20px;
+  font-weight: bold;
+  text-transform: uppercase;
+  height: 44px;
+  border-bottom: 2px solid #d96016;
+  width: 100%;
+  display: -moz-box;
+  -moz-box-align: center;
+}
+
+#addons-list {
+  background-color: #0e1012;
 }
 
 .addon-item {
-  border-bottom: 1px solid black;
-  padding: 8px;
+  color: #656565;
+  background-color: #0e1012;
+  border-bottom: 3px solid black;
   position: relative;
+  padding-top: 8px;
 }
 
 .addon-item:last-child {
   border-bottom: 0;
 }
 
-.addon-item:not([optionsURL]) .options-btn {
-  visibility: hidden;
+.addon-item:not([optionsURL]) .options-header,
+.addon-item[optionsURL=""] .options-header,
+.addon-item:not([optionsURL]) .options-box,
+.addon-item[optionsURL=""] .options-box {
+  display: none;
 }
 
 /* Make room for the image */
 .inner {
-  -moz-margin-start: 48px;
+  -moz-margin-start: 56px;
+  -moz-margin-end: 8px;
+}
+
+.details {
+  display: -moz-box;
+  -moz-box-orient: horizontal;
+  width: 100%;
+}
+
+.details > div {
+  display: -moz-box;
+  -moz-box-align: end;
 }
 
 .title {
-  color: black;
+  font-size: 22px;
+  color: white;
+  font-weight: bold;
 }
 
 .version {
   /* The addon title is not localized, so keep the margin on the left side */
   margin-left: 12px;
   font-size: 18px;
-  color: gray;
+  -moz-box-flex: 1;
+}
+
+.tag {
+  text-align: end;
 }
 
 .description {
@@ -82,6 +123,31 @@ html {
 
 .buttons {
   padding-top: 8px;
+  display: -moz-box;
+  -moz-box-orient: horizontal;
+  width: 100%;
+}
+
+.buttons > button {
+  -moz-appearance: none;
+  color: white;
+  font-size: 18px !important;
+  border: 2px solid transparent;
+  border-top-color: black;
+  -moz-border-start-color: black;
+  background-image: none;
+  background-color: #17181a;
+  border-radius: 0px !important;
+  -moz-box-flex: 1;
+  padding: 20px 8px;
+}
+
+.buttons > button[disabled="true"] {
+  color: #b5b5b5;
+}
+
+.buttons:first-child {
+  -moz-border-start-color: transparent;
 }
 
 body[dir="ltr"] .favicon {
@@ -98,10 +164,4 @@ body[dir="ltr"] .favicon {
   width: 32px;
   height: 32px;
   position: absolute;
-}
-
-button {
-  color: black;
-  font-size: 28px !important;
-  padding: 5px;
 }

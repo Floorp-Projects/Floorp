@@ -217,7 +217,7 @@ js::GetGlobalForObjectCrossCompartment(JSObject *obj)
     return obj->getGlobal();
 }
 
-JS_FRIEND_API(uint32)
+JS_FRIEND_API(uint32_t)
 js::GetObjectSlotSpan(const JSObject *obj)
 {
     return obj->slotSpan();
@@ -303,6 +303,12 @@ js::SetFunctionNativeReserved(JSObject *fun, size_t which, const Value &val)
 {
     JS_ASSERT(fun->toFunction()->isNative());
     fun->toFunction()->setExtendedSlot(which, val);
+}
+
+void
+js::SetPreserveWrapperCallback(JSRuntime *rt, PreserveWrapperCallback callback)
+{
+    rt->preserveWrapperCallback = callback;
 }
 
 /*

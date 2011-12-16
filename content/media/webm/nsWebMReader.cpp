@@ -72,7 +72,7 @@ static const double NS_PER_S = 1e9;
 // a full seek.
 static const int SEEK_DECODE_MARGIN = 250000;
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 class nsAutoRefTraits<NesteggPacketHolder> : public nsPointerRefTraits<NesteggPacketHolder>
 {
 public:
@@ -161,7 +161,7 @@ nsWebMReader::~nsWebMReader()
 
 nsresult nsWebMReader::Init(nsBuiltinDecoderReader* aCloneDonor)
 {
-  if (vpx_codec_dec_init(&mVP8, &vpx_codec_vp8_dx_algo, NULL, 0)) {
+  if (vpx_codec_dec_init(&mVP8, vpx_codec_vp8_dx(), NULL, 0)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -669,7 +669,7 @@ bool nsWebMReader::DecodeVideoFrame(bool &aKeyframeSkip,
     vpx_codec_stream_info_t si;
     memset(&si, 0, sizeof(si));
     si.sz = sizeof(si);
-    vpx_codec_peek_stream_info(&vpx_codec_vp8_dx_algo, data, length, &si);
+    vpx_codec_peek_stream_info(vpx_codec_vp8_dx(), data, length, &si);
     if (aKeyframeSkip && (!si.is_kf || tstamp_usecs < aTimeThreshold)) {
       // Skipping to next keyframe...
       parsed++; // Assume 1 frame per chunk.

@@ -16,4 +16,4 @@ for (var i = 0; i < 3; i++) {
     }
 }
 
-/* int32 and string getelem for non-dense array. */
+/* int32_t and string getelem for non-dense array. */

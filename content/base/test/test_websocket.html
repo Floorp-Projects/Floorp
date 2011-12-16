@@ -8,7 +8,9 @@
 </head>
 <body onload="testWebSocket()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=472529">Mozilla Bug </a>
-<p id="display"></p>
+<p id="display">
+  <input id="fileList" type="file"></input>
+</p>
 <div id="content">
 </div>
 <pre id="test">
@@ -64,10 +66,13 @@
  * 40. negative test for wss:// with no cert
  * 41. HSTS
  * 42. non-char utf-8 sequences
+ * 43. Test setting binaryType attribute
+ * 44. Test sending/receving binary ArrayBuffer 
+ * 45. Test sending/receving binary Blob 
  */
 
 var first_test = 1;
-var last_test = 42;
+var last_test = 45;
 
 var current_test = first_test;
 
@@ -115,7 +120,7 @@ function ignoreError(e)
 {
 }
 
-function CreateTestWS(ws_location, ws_protocol)
+function CreateTestWS(ws_location, ws_protocol, no_increment_test)
 {
   var ws;
 
@@ -129,7 +134,7 @@ function CreateTestWS(ws_location, ws_protocol)
 
     ws._testNumber = current_test;
     ws._receivedCloseEvent = false;
-    ok(true, "added testNumber: " + ws._testNumber +"\n");
+    ok(true, "Created websocket for test " + ws._testNumber +"\n");
 
     ws.onerror = function(e)
     {
@@ -144,7 +149,9 @@ function CreateTestWS(ws_location, ws_protocol)
     throw e;
   }
   finally {
-    current_test++;
+    if (!no_increment_test) {
+      current_test++;
+    }
   }
 
   all_ws.push(ws);
@@ -1133,8 +1140,59 @@ function test40()
 
 function test41()
 {
- // reserve test41 for HSTS - bug 664284
- doTest(42);
+  var ws = CreateTestWS("ws://example.com/tests/content/base/test/file_websocket", "test-41a", 1);
+
+  ws.onopen = function(e)
+  {
+    ok(true, "test 41a open");
+    ok(ws.url == "ws://example.com/tests/content/base/test/file_websocket",
+       "test 41a initial ws should not be redirected");
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 41a close");
+
+    // establish a hsts policy for example.com
+    var wsb = CreateTestWS("wss://example.com/tests/content/base/test/file_websocket", "test-41b", 1);
+    wsb.onopen = function(e)
+    {
+      ok(true, "test 41b open");
+      wsb.close();
+    }
+
+    wsb.onclose = function(e)
+    {
+      ok(true, "test 41b close");
+
+      // try ws:// again, it should be done over wss:// now due to hsts
+      var wsc = CreateTestWS("ws://example.com/tests/content/base/test/file_websocket", "test-41c");
+   
+      wsc.onopen = function(e)
+      {
+        ok(true, "test 41c open");
+        ok(wsc.url == "wss://example.com/tests/content/base/test/file_websocket",
+           "test 41c ws should be redirected by hsts to wss");
+        wsc.close();
+      }
+
+      wsc.onclose = function(e)
+      {
+        ok(true, "test 41c close");
+
+        // clean up the STS state
+        netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+        const Cc = Components.classes;
+        const Ci = Components.interfaces;
+        var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+        var thehost = ios.newURI("http://example.com", null, null);
+        var stss = Cc["@mozilla.org/stsservice;1"].getService(Ci.nsIStrictTransportSecurityService);
+        stss.removeStsState(thehost);
+        doTest(42);
+       }
+     }
+  }
 }
 
 function test42()
@@ -1168,6 +1226,157 @@ function test42()
   }
 }
 
+function test43()
+{
+  var prots=["test-43"];
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", prots);
+  ws.onopen = function(e)
+  {
+    ok(true, "test 43 open");
+    // Test binaryType setting
+    ws.binaryType = "arraybuffer";
+    ws.binaryType = "blob";
+    try {
+        ws.binaryType = "";  // illegal
+        ok(false, "allowed ws.binaryType to be set to empty string"); 
+    } catch(e) {
+        ok(true, "prevented ws.binaryType to be set to empty string: " + e); 
+    }
+    try {
+        ws.binaryType = "ArrayBuffer";  // illegal
+        ok(false, "allowed ws.binaryType to be set to 'ArrayBuffer'"); 
+    } catch(e) {
+        ok(true, "prevented ws.binaryType to be set to 'ArrayBuffer' " + e); 
+    }
+    try {
+        ws.binaryType = "Blob";  // illegal
+        ok(false, "allowed ws.binaryType to be set to 'Blob'"); 
+    } catch(e) {
+        ok(true, "prevented ws.binaryType to be set to 'Blob' " + e); 
+    }
+    try {
+        ws.binaryType = "mcfoofluu";  // illegal
+        ok(false, "allowed ws.binaryType to be set to 'mcfoofluu'"); 
+    } catch(e) {
+        ok(true, "prevented ws.binaryType to be set to 'mcfoofluu'"); 
+    }
+    ws.close();
+  };
+
+  ws.onclose = function(e)
+  {
+    ok(true, "test 43 close");
+    doTest(44);
+  };
+}
+
+
+function test44()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-44");
+  ok(ws.readyState == 0, "bad readyState in test-44!");
+  ws.binaryType = "arraybuffer";
+  ws.onopen = function()
+  {
+    ok(ws.readyState == 1, "open bad readyState in test-44!");
+    var buf = new ArrayBuffer(3);
+    // create byte view
+    var view = new Uint8Array(buf);
+    view[0] = 5;
+    view[1] = 0; // null byte
+    view[2] = 7;
+    ws.send(buf);
+  }
+  ws.onmessage = function(e)
+  {
+    ok(e.data instanceof ArrayBuffer, "Should receive an arraybuffer!");
+    var view = new Uint8Array(e.data);
+    ok(view.length == 2 && view[0] == 0 && view[1] ==4, "testing Reply arraybuffer" );
+    ws.close();
+  }
+  ws.onclose = function(e)
+  {
+    ok(ws.readyState == 3, "onclose bad readyState in test-44!");
+    shouldCloseCleanly(e);
+    doTest(45);
+  }
+}
+
+function createDOMFile(fileName, fileData)
+{
+  // enablePrivilege is picky about where it's called? if I put it in global
+  // scope at start of  <script> it doesn't work...
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  // create File in profile dir 
+  var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
+                         .getService(Components.interfaces.nsIProperties);
+  var testFile = dirSvc.get("ProfD", Components.interfaces.nsIFile);
+  testFile.append(fileName);
+  var outStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
+                            .createInstance(Components.interfaces.nsIFileOutputStream);
+  outStream.init(testFile, 0x02 | 0x08 | 0x20, 0666, 0);
+  outStream.write(fileData, fileData.length);
+  outStream.close();
+
+  // Set filename into DOM <input> field, as if selected by user 
+  var fileList = document.getElementById('fileList');
+  fileList.value = testFile.path;
+
+  // return JS File object, aka Blob
+  return fileList.files[0];
+}
+
+function test45()
+{
+  var blobFile = createDOMFile("testBlobFile", "flob");
+
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-45");
+  ok(ws.readyState == 0, "bad readyState in test-45!");
+
+//  ws.binaryType = "blob";  // Don't need to specify: blob is the default
+
+  ws.onopen = function()
+  {
+    ok(ws.readyState == 1, "open bad readyState in test-45!");
+    ws.send(blobFile);
+  }
+
+  var test45blob;
+
+  ws.onmessage = function(e)
+  {
+    test45blob = e.data;
+    ok(test45blob instanceof Blob, "We should be receiving a Blob");
+
+    ws.close();
+  }
+
+  ws.onclose = function(e)
+  {
+    ok(ws.readyState == 3, "onclose bad readyState in test-45!");
+    shouldCloseCleanly(e);
+
+    // check blob contents
+    var reader = new FileReader();
+    reader.onload = function(event)
+    {
+      ok(reader.result == "flob", "response should be 'flob': got '" 
+         + reader.result + "'");
+    };
+    reader.onerror = function(event)
+    {
+      testFailed("Failed to read blob: error code = " + reader.error.code);
+    };
+    reader.onloadend = function(event)
+    {
+      doTest(46);
+    };
+
+    reader.readAsBinaryString(test45blob);
+  }
+}
 
 var ranAllTests = false;
 

@@ -69,22 +69,16 @@ PARALLEL_DIRS = \
   search \
   sessionstore \
   shell \
-  sidebar/src \
+  sidebar \
   tabview \
   migration \
   $(NULL)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows) 
-PARALLEL_DIRS += wintaskbar
-endif
 
 ifdef MOZ_SAFE_BROWSING
 PARALLEL_DIRS += safebrowsing
 endif
 
-ifdef ENABLE_TESTS
-DIRS += test/browser
-endif
+TEST_DIRS += test
 
 DIRS += build
 

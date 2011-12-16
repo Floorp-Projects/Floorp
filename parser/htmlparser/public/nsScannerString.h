@@ -482,7 +482,7 @@ SameFragment( const nsScannerIterator& a, const nsScannerIterator& b )
   /**
    * this class is needed in order to make use of the methods in nsAlgorithm.h
    */
-NS_SPECIALIZE_TEMPLATE
+template <>
 struct nsCharSourceTraits<nsScannerIterator>
   {
     typedef nsScannerIterator::difference_type difference_type;

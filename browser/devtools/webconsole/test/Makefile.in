@@ -1,0 +1,231 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is HUD test code.
+#
+# The Initial Developer of the Original Code is Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2010
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  David Dahl <ddahl@mozilla.com>
+#  Patrick Walton <pcwalton@mozilla.com>
+#  Mihai Șucan <mihai.sucan@gmail.com>
+#  Rob Campbell <rcampbell@mozilla.com>
+#  Sonny Piers <sonny.piers@gmail.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH			= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH			= @srcdir@
+relativesrcdir  = browser/devtools/webconsole/test
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+_BROWSER_TEST_FILES = \
+	browser_webconsole_notifications.js \
+	browser_webconsole_message_node_id.js \
+	browser_webconsole_bug_580030_errors_after_page_reload.js \
+	browser_webconsole_basic_net_logging.js \
+	browser_webconsole_bug_579412_input_focus.js \
+	browser_webconsole_bug_580001_closing_after_completion.js \
+	browser_webconsole_bug_580400_groups.js \
+	browser_webconsole_bug_588730_text_node_insertion.js \
+	browser_webconsole_bug_601667_filter_buttons.js \
+	browser_webconsole_bug_597136_external_script_errors.js \
+	browser_webconsole_bug_597136_network_requests_from_chrome.js \
+	browser_webconsole_completion.js \
+	browser_webconsole_console_logging_api.js \
+	browser_webconsole_consoleonpage.js \
+	browser_webconsole_chrome.js \
+	browser_webconsole_execution_scope.js \
+	browser_webconsole_history.js \
+	browser_webconsole_hud_getters.js \
+	browser_webconsole_js_input_and_output_styling.js \
+	browser_webconsole_js_input_expansion.js \
+	browser_webconsole_live_filtering_of_message_types.js \
+	browser_webconsole_live_filtering_on_search_strings.js \
+	browser_warn_user_about_replaced_api.js \
+	browser_webconsole_copying_multiple_messages_inserts_newlines_in_between.js \
+	browser_webconsole_bug_586388_select_all.js  \
+	browser_webconsole_bug_588967_input_expansion.js \
+	browser_webconsole_log_node_classes.js \
+	browser_webconsole_network_panel.js \
+	browser_webconsole_jsterm.js \
+	browser_webconsole_null_and_undefined_output.js \
+	browser_webconsole_output_order.js \
+	browser_webconsole_property_panel.js \
+	browser_webconsole_property_provider.js \
+	browser_webconsole_registries.js \
+	browser_webconsole_bug_587617_output_copy.js \
+	browser_webconsole_bug_585237_line_limit.js \
+	browser_webconsole_bug_581231_close_button.js \
+	browser_webconsole_bug_582201_duplicate_errors.js \
+	browser_webconsole_bug_580454_timestamp_l10n.js \
+	browser_webconsole_netlogging.js \
+	browser_webconsole_bug_583816_tab_focus.js \
+	browser_webconsole_bug_594477_clickable_output.js \
+	browser_webconsole_bug_589162_css_filter.js \
+	browser_webconsole_bug_597103_deactivateHUDForContext_unfocused_window.js \
+	browser_webconsole_bug_595350_multiple_windows_and_tabs.js \
+	browser_webconsole_bug_594497_history_arrow_keys.js \
+	browser_webconsole_bug_588342_document_focus.js \
+	browser_webconsole_bug_595934_message_categories.js \
+	browser_webconsole_bug_601352_scroll.js \
+	browser_webconsole_bug_592442_closing_brackets.js \
+	browser_webconsole_bug_593003_iframe_wrong_hud.js \
+	browser_webconsole_bug_601909_remember_height.js \
+	browser_webconsole_bug_613013_console_api_iframe.js \
+	browser_webconsole_bug_597756_reopen_closed_tab.js \
+	browser_webconsole_bug_600183_charset.js \
+	browser_webconsole_bug_601177_log_levels.js \
+	browser_webconsole_bug_597460_filter_scroll.js \
+	browser_webconsole_console_extras.js \
+	browser_webconsole_bug_598357_jsterm_output.js \
+	browser_webconsole_bug_603750_websocket.js \
+	browser_webconsole_abbreviate_source_url.js \
+	browser_webconsole_view_source.js \
+	browser_webconsole_bug_602572_log_bodies_checkbox.js \
+	browser_webconsole_bug_614793_jsterm_scroll.js \
+	browser_webconsole_bug_599725_response_headers.js \
+	browser_webconsole_bug_613642_maintain_scroll.js \
+	browser_webconsole_bug_613642_prune_scroll.js \
+	browser_webconsole_bug_618078_network_exceptions.js \
+	browser_webconsole_bug_613280_jsterm_copy.js \
+	browser_webconsole_bug_630733_response_redirect_headers.js \
+	browser_webconsole_bug_621644_jsterm_dollar.js \
+	browser_webconsole_bug_632817.js \
+	browser_webconsole_bug_611795.js \
+	browser_webconsole_bug_618311_close_panels.js \
+	browser_webconsole_bug_618311_private_browsing.js \
+	browser_webconsole_bug_626484_output_copy_order.js \
+	browser_webconsole_bug_632347_iterators_generators.js \
+	browser_webconsole_bug_642108_pruneTest.js \
+	browser_webconsole_bug_585956_console_trace.js \
+	browser_webconsole_bug_595223_file_uri.js \
+	browser_webconsole_bug_632275_getters_document_width.js \
+	browser_webconsole_bug_644419_log_limits.js \
+	browser_webconsole_bug_646025_console_file_location.js \
+	browser_webconsole_position_ui.js \
+	browser_webconsole_bug_642615_autocomplete.js \
+	browser_webconsole_bug_585991_autocomplete_popup.js \
+	browser_webconsole_bug_585991_autocomplete_keys.js \
+	browser_webconsole_bug_663443_panel_title.js \
+	browser_webconsole_bug_660806_history_nav.js \
+	browser_webconsole_bug_651501_document_body_autocomplete.js \
+	browser_webconsole_bug_653531_highlighter_console_helper.js \
+	browser_webconsole_bug_659907_console_dir.js \
+	browser_webconsole_bug_678816.js \
+	browser_webconsole_bug_664131_console_group.js \
+	browser_webconsole_bug_704295.js \
+	browser_gcli_inspect.js \
+	browser_gcli_integrate.js \
+	browser_gcli_require.js \
+	browser_gcli_web.js \
+	browser_webconsole_bug_658368_time_methods.js \
+	browser_webconsole_bug_622303_persistent_filters.js \
+	browser_webconsole_window_zombie.js \
+	head.js \
+	$(NULL)
+
+_BROWSER_TEST_PAGES = \
+	test-console.html \
+	test-network.html \
+	test-network-request.html \
+	test-mutation.html \
+	testscript.js \
+	test-filter.html \
+	test-observe-http-ajax.html \
+	test-data.json \
+	test-property-provider.html \
+	test-error.html \
+	test-duplicate-error.html \
+	test-image.png \
+	test-encoding-ISO-8859-1.html \
+	test-bug-593003-iframe-wrong-hud.html \
+	test-bug-593003-iframe-wrong-hud-iframe.html \
+	test-console-replaced-api.html \
+	test-own-console.html \
+	test-bug-595934-dom-events.html \
+	test-bug-595934-css-loader.html \
+	test-bug-595934-css-loader.css \
+	test-bug-595934-css-loader.css^headers^ \
+	test-bug-595934-dom-html.html \
+	test-bug-595934-imagemap.html \
+	test-bug-595934-html.html \
+	test-bug-595934-malformedxml.xhtml \
+	test-bug-595934-svg.xhtml \
+	test-bug-595934-workers.html \
+	test-bug-595934-workers.js \
+	test-bug-595934-dom-html-external.html \
+	test-bug-595934-dom-html-external.js \
+	test-bug-595934-dom-events-external2.html \
+	test-bug-595934-dom-events-external2.js \
+	test-bug-595934-canvas.html \
+	test-bug-595934-canvas.js \
+	test-bug-595934-css-parser.html \
+	test-bug-595934-css-parser.css \
+	test-bug-595934-canvas-css.html \
+	test-bug-595934-canvas-css.js \
+	test-bug-595934-malformedxml-external.html \
+	test-bug-595934-malformedxml-external.xml \
+	test-bug-595934-empty-getelementbyid.html \
+	test-bug-595934-empty-getelementbyid.js \
+	test-bug-595934-image.html \
+	test-bug-595934-image.jpg \
+	test-bug-597136-external-script-errors.html \
+	test-bug-597136-external-script-errors.js \
+	test-bug-613013-console-api-iframe.html \
+	test-bug-597756-reopen-closed-tab.html \
+	test-bug-600183-charset.html \
+	test-bug-600183-charset.html^headers^ \
+	test-bug-601177-log-levels.html \
+	test-bug-601177-log-levels.js \
+	test-console-extras.html \
+	test-bug-603750-websocket.html \
+	test-bug-603750-websocket.js \
+	test-bug-599725-response-headers.sjs \
+	test-bug-618078-network-exceptions.html \
+	test-bug-630733-response-redirect-headers.sjs \
+	test-bug-621644-jsterm-dollar.html \
+	test-bug-632347-iterators-generators.html \
+	test-bug-585956-console-trace.html \
+	test-bug-644419-log-limits.html \
+	test-bug-632275-getters.html \
+	test-bug-646025-console-file-location.html \
+	test-bug-678816-content.js \
+	test-file-location.js \
+	browser_gcli_inspect.html \
+	test-bug-658368-time-methods.html \
+	$(NULL)
+
+libs:: $(_BROWSER_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+
+libs:: $(_BROWSER_TEST_PAGES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

@@ -1096,14 +1096,11 @@ nsCanvasRenderingContext2DAzure::SetStyleFromStringOrInterface(const nsAString& 
   }
 
   nsContentUtils::ReportToConsole(
-    nsContentUtils::eDOM_PROPERTIES,
-    "UnexpectedCanvasVariantStyle",
-    nsnull, 0,
-    nsnull,
-    EmptyString(), 0, 0,
     nsIScriptError::warningFlag,
     "Canvas",
-    mCanvasElement ? HTMLCanvasElement()->OwnerDoc() : nsnull);
+    mCanvasElement ? HTMLCanvasElement()->OwnerDoc() : nsnull,
+    nsContentUtils::eDOM_PROPERTIES,
+    "UnexpectedCanvasVariantStyle");
 
   return NS_OK;
 }
@@ -1915,23 +1912,18 @@ nsCanvasRenderingContext2DAzure::CreatePattern(nsIDOMHTMLElement *image,
     if (size.width == 0 || size.height == 0) {
       return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
-  }
 
-  // Special case for Canvas, which could be an Azure canvas!
-  if (canvas) {
-    if (canvas->CountContexts() == 1) {
-      nsICanvasRenderingContextInternal *srcCanvas = canvas->GetContextAtIndex(0);
-
+    // Special case for Canvas, which could be an Azure canvas!
+    nsICanvasRenderingContextInternal *srcCanvas = canvas->GetContextAtIndex(0);
+    if (srcCanvas) {
       // This might not be an Azure canvas!
-      if (srcCanvas) {
-        RefPtr<SourceSurface> srcSurf = srcCanvas->GetSurfaceSnapshot();
+      RefPtr<SourceSurface> srcSurf = srcCanvas->GetSurfaceSnapshot();
 
-        nsRefPtr<nsCanvasPatternAzure> pat =
-          new nsCanvasPatternAzure(srcSurf, repeatMode, content->NodePrincipal(), canvas->IsWriteOnly(), false);
+      nsRefPtr<nsCanvasPatternAzure> pat =
+        new nsCanvasPatternAzure(srcSurf, repeatMode, content->NodePrincipal(), canvas->IsWriteOnly(), false);
 
-        *_retval = pat.forget().get();
-        return NS_OK;
-      }
+      *_retval = pat.forget().get();
+      return NS_OK;
     }
   }
 
@@ -3591,49 +3583,39 @@ nsCanvasRenderingContext2DAzure::DrawImage(nsIDOMElement *imgElt, float a1,
   double sx,sy,sw,sh;
   double dx,dy,dw,dh;
 
+  RefPtr<SourceSurface> srcSurf;
+  gfxIntSize imgSize;
+
   nsHTMLCanvasElement* canvas = nsHTMLCanvasElement::FromContent(content);
   if (canvas) {
     nsIntSize size = canvas->GetSize();
     if (size.width == 0 || size.height == 0) {
       return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
-  }
-    
-  RefPtr<SourceSurface> srcSurf;
 
-  gfxIntSize imgSize;
-  nsRefPtr<gfxASurface> imgsurf =
-    CanvasImageCache::Lookup(imgElt, HTMLCanvasElement(), &imgSize);
-
-  if (imgsurf) {
-    srcSurf = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mTarget, imgsurf);
-  }
-
-  // We know an Azure canvas always has an HTMLCanvasElement!
-  if (canvas == HTMLCanvasElement()) {
-    // Self-copy.
-    srcSurf = mTarget->Snapshot();
-    imgSize = gfxIntSize(mWidth, mHeight);
-  }
-
-  // Special case for Canvas, which could be an Azure canvas!
-  if (canvas) {
-    if (canvas->CountContexts() == 1) {
-      nsICanvasRenderingContextInternal *srcCanvas = canvas->GetContextAtIndex(0);
-
+    // Special case for Canvas, which could be an Azure canvas!
+    nsICanvasRenderingContextInternal *srcCanvas = canvas->GetContextAtIndex(0);
+    if (srcCanvas == this) {
+      // Self-copy.
+      srcSurf = mTarget->Snapshot();
+      imgSize = gfxIntSize(mWidth, mHeight);
+    } else if (srcCanvas) {
       // This might not be an Azure canvas!
-      if (srcCanvas) {
-        srcSurf = srcCanvas->GetSurfaceSnapshot();
+      srcSurf = srcCanvas->GetSurfaceSnapshot();
 
-        if (srcSurf && mCanvasElement) {
-          // Do security check here.
-          CanvasUtils::DoDrawImageSecurityCheck(HTMLCanvasElement(),
-                                                content->NodePrincipal(), canvas->IsWriteOnly(),
-                                                false);
-
-          imgSize = gfxIntSize(srcSurf->GetSize().width, srcSurf->GetSize().height);
-        }
+      if (srcSurf && mCanvasElement) {
+        // Do security check here.
+        CanvasUtils::DoDrawImageSecurityCheck(HTMLCanvasElement(),
+                                              content->NodePrincipal(), canvas->IsWriteOnly(),
+                                              false);
+        imgSize = gfxIntSize(srcSurf->GetSize().width, srcSurf->GetSize().height);
       }
+    }
+  } else {
+    gfxASurface* imgsurf =
+      CanvasImageCache::Lookup(imgElt, HTMLCanvasElement(), &imgSize);
+    if (imgsurf) {
+      srcSurf = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mTarget, imgsurf);
     }
   }
 
@@ -3654,7 +3636,6 @@ nsCanvasRenderingContext2DAzure::DrawImage(nsIDOMElement *imgElt, float a1,
       return NS_OK;
     }
 
-    imgsurf = res.mSurface.forget();
     imgSize = res.mSize;
 
     if (mCanvasElement) {
@@ -3665,10 +3646,10 @@ nsCanvasRenderingContext2DAzure::DrawImage(nsIDOMElement *imgElt, float a1,
 
     if (res.mImageRequest) {
       CanvasImageCache::NotifyDrawImage(imgElt, HTMLCanvasElement(),
-                                        res.mImageRequest, imgsurf, imgSize);
+                                        res.mImageRequest, res.mSurface, imgSize);
     }
 
-    srcSurf = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mTarget, imgsurf);
+    srcSurf = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mTarget, res.mSurface);
   }
 
   if (optional_argc == 0) {

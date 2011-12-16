@@ -765,7 +765,7 @@ FeedWriter.prototype = {
 #expand           if (fp.file.leafName != "__MOZ_APP_NAME__.exe") {
 #else
 #ifdef XP_MACOSX
-#expand           if (fp.file.leafName != "__MOZ_APP_DISPLAYNAME__.app") {
+#expand           if (fp.file.leafName != "__MOZ_MACBUNDLE_NAME__") {
 #else
 #expand           if (fp.file.leafName != "__MOZ_APP_NAME__-bin") {
 #endif

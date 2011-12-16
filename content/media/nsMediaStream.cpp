@@ -751,8 +751,6 @@ private:
 void
 nsMediaChannelStream::CacheClientNotifyDataEnded(nsresult aStatus)
 {
-  printf("*** nsMediaChannelStream::CacheClientNotifyDataEnded() mDecoder=%p\n", mDecoder);
-
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
   // NOTE: this can be called with the media cache lock held, so don't
   // block or do anything which might try to acquire a lock!
@@ -765,8 +763,6 @@ nsresult
 nsMediaChannelStream::CacheClientSeek(PRInt64 aOffset, bool aResume)
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
-
-  printf("*** nsMediaChannelStream::CacheClientSeek() mDecoder=%p aOffset=%lld aResume = %d\n", mDecoder, (long long)aOffset, aResume);
 
   CloseChannel();
 
@@ -787,8 +783,6 @@ nsMediaChannelStream::CacheClientSeek(PRInt64 aOffset, bool aResume)
 nsresult
 nsMediaChannelStream::CacheClientSuspend()
 {
-  printf("*** nsMediaChannelStream::CacheClientSuspend() mDecoder=%p\n", mDecoder);
-
   Suspend(false);
 
   mDecoder->NotifySuspendedStatusChanged();
@@ -798,8 +792,6 @@ nsMediaChannelStream::CacheClientSuspend()
 nsresult
 nsMediaChannelStream::CacheClientResume()
 {
-  printf("*** nsMediaChannelStream::CacheClientResume() mDecoder=%p\n", mDecoder);
-
   Resume();
 
   mDecoder->NotifySuspendedStatusChanged();
@@ -831,9 +823,9 @@ nsMediaChannelStream::EnsureCacheUpToDate()
 }
 
 bool
-nsMediaChannelStream::IsSuspendedByCache()
+nsMediaChannelStream::IsSuspendedByCache(nsMediaStream** aActiveStream)
 {
-  return mCacheStream.AreAllStreamsForResourceSuspended();
+  return mCacheStream.AreAllStreamsForResourceSuspended(aActiveStream);
 }
 
 bool
@@ -949,7 +941,13 @@ public:
   }
   virtual PRInt64 GetCachedDataEnd(PRInt64 aOffset) { return NS_MAX(aOffset, mSize); }
   virtual bool    IsDataCachedToEndOfStream(PRInt64 aOffset) { return true; }
-  virtual bool    IsSuspendedByCache() { return false; }
+  virtual bool    IsSuspendedByCache(nsMediaStream** aActiveStream)
+  {
+    if (aActiveStream) {
+      *aActiveStream = nsnull;
+    }
+    return false;
+  }
   virtual bool    IsSuspended() { return false; }
 
   nsresult GetCachedRanges(nsTArray<nsByteRange>& aRanges);

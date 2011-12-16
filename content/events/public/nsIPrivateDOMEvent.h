@@ -146,4 +146,8 @@ nsresult
 NS_NewDOMCustomEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsEvent* aEvent);
 nsresult
 NS_NewDOMSmsEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsEvent* aEvent);
+nsresult
+NS_NewDOMPopStateEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsEvent* aEvent);
+nsresult
+NS_NewDOMHashChangeEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsEvent* aEvent);
 #endif // nsIPrivateDOMEvent_h__

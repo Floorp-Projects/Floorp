@@ -72,6 +72,7 @@
 #include "jsxml.h"
 #endif
 
+#include "ds/Sort.h"
 #include "frontend/TokenStream.h"
 #include "vm/GlobalObject.h"
 
@@ -256,6 +257,36 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uint
     return true;
 }
 
+#ifdef JS_MORE_DETERMINISTIC
+
+struct SortComparatorIds
+{
+    JSContext   *const cx;
+
+    SortComparatorIds(JSContext *cx)
+      : cx(cx) {}
+
+    bool operator()(jsid a, jsid b, bool *lessOrEqualp)
+    {
+        /* Pick an arbitrary total order on jsids that is stable across executions. */
+        JSString *astr = IdToString(cx, a);
+	if (!astr)
+	    return false;
+        JSString *bstr = IdToString(cx, b);
+        if (!bstr)
+            return false;
+
+        int32_t result;
+        if (!CompareStrings(cx, astr, bstr, &result))
+            return false;
+
+        *lessOrEqualp = (result <= 0);
+        return true;
+    }
+};
+
+#endif /* JS_MORE_DETERMINISTIC */
+
 static bool
 Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
 {
@@ -321,6 +352,35 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
         if ((flags & JSITER_OWNONLY) || pobj->isXML())
             break;
     } while ((pobj = pobj->getProto()) != NULL);
+
+#ifdef JS_MORE_DETERMINISTIC
+
+    /*
+     * In some cases the enumeration order for an object depends on the
+     * execution mode (interpreter vs. JIT), especially for native objects
+     * with a class enumerate hook (where resolving a property changes the
+     * resulting enumeration order). These aren't really bugs, but the
+     * differences can change the generated output and confuse correctness
+     * fuzzers, so we sort the ids if such a fuzzer is running.
+     *
+     * We don't do this in the general case because (a) doing so is slow,
+     * and (b) it also breaks the web, which expects enumeration order to
+     * follow the order in which properties are added, in certain cases.
+     * Since ECMA does not specify an enumeration order for objects, both
+     * behaviors are technically correct to do.
+     */
+
+    jsid *ids = props->begin();
+    size_t n = props->length();
+
+    Vector<jsid> tmp(cx);
+    if (!tmp.resizeUninitialized(n))
+        return false;
+
+    if (!MergeSort(ids, n, tmp.begin(), SortComparatorIds(cx)))
+        return false;
+
+#endif /* JS_MORE_DETERMINISTIC */
 
     return true;
 }
@@ -435,7 +495,7 @@ NewIteratorObject(JSContext *cx, uintN flags)
 }
 
 NativeIterator *
-NativeIterator::allocateIterator(JSContext *cx, uint32 slength, const AutoIdVector &props)
+NativeIterator::allocateIterator(JSContext *cx, uint32_t slength, const AutoIdVector &props)
 {
     size_t plength = props.length();
     NativeIterator *ni = (NativeIterator *)
@@ -452,7 +512,7 @@ NativeIterator::allocateIterator(JSContext *cx, uint32 slength, const AutoIdVect
 }
 
 inline void
-NativeIterator::init(JSObject *obj, uintN flags, uint32 slength, uint32 key)
+NativeIterator::init(JSObject *obj, uintN flags, uint32_t slength, uint32_t key)
 {
     this->obj.init(obj);
     this->flags = flags;
@@ -476,7 +536,7 @@ RegisterEnumerator(JSContext *cx, JSObject *iterobj, NativeIterator *ni)
 
 static inline bool
 VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &keys,
-                    uint32 slength, uint32 key, Value *vp)
+                    uint32_t slength, uint32_t key, Value *vp)
 {
     JS_ASSERT(!(flags & JSITER_FOREACH));
 
@@ -576,7 +636,7 @@ bool
 GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
 {
     Vector<const Shape *, 8> shapes(cx);
-    uint32 key = 0;
+    uint32_t key = 0;
 
     bool keysOnly = (flags == JSITER_ENUMERATE);
 
@@ -935,7 +995,7 @@ js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id)
 }
 
 bool
-js_SuppressDeletedElement(JSContext *cx, JSObject *obj, uint32 index)
+js_SuppressDeletedElement(JSContext *cx, JSObject *obj, uint32_t index)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
@@ -945,20 +1005,20 @@ js_SuppressDeletedElement(JSContext *cx, JSObject *obj, uint32 index)
 }
 
 class IndexRangePredicate {
-    uint32 begin, end;
+    uint32_t begin, end;
 
   public:
-    IndexRangePredicate(uint32 begin, uint32 end) : begin(begin), end(end) {}
+    IndexRangePredicate(uint32_t begin, uint32_t end) : begin(begin), end(end) {}
 
     bool operator()(jsid id) {
         if (JSID_IS_INT(id)) {
             jsint i = JSID_TO_INT(id);
-            return i > 0 && begin <= uint32(i) && uint32(i) < end;
+            return i > 0 && begin <= uint32_t(i) && uint32_t(i) < end;
         }
 
         if (JS_LIKELY(JSID_IS_ATOM(id))) {
             JSAtom *atom = JSID_TO_ATOM(id);
-            uint32 index;
+            uint32_t index;
             return atom->isIndex(&index) && begin <= index && index < end;
         }
 
@@ -969,7 +1029,7 @@ class IndexRangePredicate {
 };
 
 bool
-js_SuppressDeletedElements(JSContext *cx, JSObject *obj, uint32 begin, uint32 end)
+js_SuppressDeletedElements(JSContext *cx, JSObject *obj, uint32_t begin, uint32_t end)
 {
     return SuppressDeletedPropertyHelper(cx, obj, IndexRangePredicate(begin, end));
 }

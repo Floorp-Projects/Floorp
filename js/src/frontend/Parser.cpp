@@ -116,11 +116,13 @@ using namespace js::frontend;
     JS_END_MACRO
 #define MUST_MATCH_TOKEN(tt, errno) MUST_MATCH_TOKEN_WITH_FLAGS(tt, errno, 0)
 
-Parser::Parser(JSContext *cx, JSPrincipals *prin, StackFrame *cfp, bool foldConstants)
+Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
+               StackFrame *cfp, bool foldConstants)
   : AutoGCRooter(cx, PARSER),
     context(cx),
-    tokenStream(cx),
+    tokenStream(cx, prin, originPrin),
     principals(NULL),
+    originPrincipals(NULL),
     callerFrame(cfp),
     callerVarObj(cfp ? &cfp->varObj() : NULL),
     allocator(cx),
@@ -132,7 +134,7 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, StackFrame *cfp, bool foldCons
 {
     cx->activeCompilations++;
     PodArrayZero(tempFreeList);
-    setPrincipals(prin);
+    setPrincipals(prin, originPrin);
     JS_ASSERT_IF(cfp, cfp->isScriptFrame());
 }
 
@@ -154,20 +156,24 @@ Parser::init(const jschar *base, size_t length, const char *filename, uintN line
 Parser::~Parser()
 {
     JSContext *cx = context;
-
     if (principals)
         JSPRINCIPALS_DROP(cx, principals);
+    if (originPrincipals)
+        JSPRINCIPALS_DROP(cx, originPrincipals);
     cx->tempLifoAlloc().release(tempPoolMark);
     cx->activeCompilations--;
 }
 
 void
-Parser::setPrincipals(JSPrincipals *prin)
+Parser::setPrincipals(JSPrincipals *prin, JSPrincipals *originPrin)
 {
-    JS_ASSERT(!principals);
-    if (prin)
-        JSPRINCIPALS_HOLD(context, prin);
+    JS_ASSERT(!principals && !originPrincipals);
     principals = prin;
+    if (principals)
+        JSPRINCIPALS_HOLD(context, principals);
+    originPrincipals = originPrin;
+    if (originPrincipals)
+        JSPRINCIPALS_HOLD(context, originPrincipals);
 }
 
 ObjectBox *
@@ -1242,7 +1248,7 @@ Parser::functionArguments(TreeContext &funtc, FunctionBox *funbox, ParseNode **l
                  * Adjust fun->nargs to count the single anonymous positional
                  * parameter that is to be destructured.
                  */
-                uint16 slot;
+                uint16_t slot;
                 if (!funtc.bindings.addDestructuring(context, &slot))
                     return false;
 
@@ -1303,7 +1309,7 @@ Parser::functionArguments(TreeContext &funtc, FunctionBox *funbox, ParseNode **l
                 }
 #endif
 
-                uint16 slot;
+                uint16_t slot;
                 if (!funtc.bindings.addArgument(context, name, &slot))
                     return false;
                 if (!DefineArg(funbox->node, name, slot, &funtc))
@@ -1839,10 +1845,8 @@ Parser::statements()
 ParseNode *
 Parser::condition()
 {
-    ParseNode *pn;
-
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_COND);
-    pn = parenExpr();
+    ParseNode *pn = parenExpr();
     if (!pn)
         return NULL;
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_COND);
@@ -1851,7 +1855,7 @@ Parser::condition()
     JS_ASSERT_IF(pn->isKind(PNK_ASSIGN), pn->isOp(JSOP_NOP));
     if (pn->isKind(PNK_ASSIGN) &&
         !pn->isInParens() &&
-        !reportErrorNumber(NULL, JSREPORT_WARNING | JSREPORT_STRICT, JSMSG_EQUAL_AS_ASSIGN, ""))
+        !reportErrorNumber(NULL, JSREPORT_WARNING | JSREPORT_STRICT, JSMSG_EQUAL_AS_ASSIGN))
     {
         return NULL;
     }
@@ -1859,19 +1863,17 @@ Parser::condition()
 }
 
 static bool
-MatchLabel(JSContext *cx, TokenStream *ts, ParseNode *pn)
+MatchLabel(JSContext *cx, TokenStream *ts, PropertyName **label)
 {
     TokenKind tt = ts->peekTokenSameLine(TSF_OPERAND);
     if (tt == TOK_ERROR)
         return false;
-    PropertyName *label;
     if (tt == TOK_NAME) {
         (void) ts->getToken();
-        label = ts->currentToken().name();
+        *label = ts->currentToken().name();
     } else {
-        label = NULL;
+        *label = NULL;
     }
-    pn->pn_atom = label;
     return true;
 }
 
@@ -1936,7 +1938,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
      * again to include script->nfixed.
      */
     pn->setOp(JSOP_GETLOCAL);
-    pn->pn_cookie.set(tc->staticLevel, uint16(n));
+    pn->pn_cookie.set(tc->staticLevel, uint16_t(n));
     pn->pn_dflags |= PND_LET | PND_BOUND;
 
     /*
@@ -3835,11 +3837,20 @@ Parser::statement()
         ParseNode *pn1 = condition();
         if (!pn1)
             return NULL;
+
         StmtInfo stmtInfo;
         PushStatement(tc, &stmtInfo, STMT_IF, -1);
         ParseNode *pn2 = statement();
         if (!pn2)
             return NULL;
+
+        if (pn2->isKind(PNK_SEMI) &&
+            !pn2->pn_kid &&
+            !reportErrorNumber(NULL, JSREPORT_WARNING | JSREPORT_STRICT, JSMSG_EMPTY_CONSEQUENT))
+        {
+            return NULL;
+        }
+
         ParseNode *pn3;
         if (tokenStream.matchToken(TOK_ELSE, TSF_OPERAND)) {
             stmtInfo.type = STMT_ELSE;
@@ -3952,13 +3963,15 @@ Parser::statement()
 
       case TOK_BREAK:
       {
-        pn = NullaryNode::create(PNK_BREAK, tc);
+        TokenPtr begin = tokenStream.currentToken().pos.begin;
+        PropertyName *label;
+        if (!MatchLabel(context, &tokenStream, &label))
+            return NULL;
+        TokenPtr end = tokenStream.currentToken().pos.end;
+        pn = new_<BreakStatement>(label, begin, end);
         if (!pn)
             return NULL;
-        if (!MatchLabel(context, &tokenStream, pn))
-            return NULL;
         StmtInfo *stmt = tc->topStmt;
-        JSAtom *label = pn->pn_atom;
         if (label) {
             for (; ; stmt = stmt->down) {
                 if (!stmt) {
@@ -3978,20 +3991,20 @@ Parser::statement()
                     break;
             }
         }
-        if (label)
-            pn->pn_pos.end = tokenStream.currentToken().pos.end;
         break;
       }
 
       case TOK_CONTINUE:
       {
-        pn = NullaryNode::create(PNK_CONTINUE, tc);
+        TokenPtr begin = tokenStream.currentToken().pos.begin;
+        PropertyName *label;
+        if (!MatchLabel(context, &tokenStream, &label))
+            return NULL;
+        TokenPtr end = tokenStream.currentToken().pos.begin;
+        pn = new_<ContinueStatement>(label, begin, end);
         if (!pn)
             return NULL;
-        if (!MatchLabel(context, &tokenStream, pn))
-            return NULL;
         StmtInfo *stmt = tc->topStmt;
-        JSAtom *label = pn->pn_atom;
         if (label) {
             for (StmtInfo *stmt2 = NULL; ; stmt = stmt->down) {
                 if (!stmt) {
@@ -4020,8 +4033,6 @@ Parser::statement()
                     break;
             }
         }
-        if (label)
-            pn->pn_pos.end = tokenStream.currentToken().pos.end;
         break;
       }
 
@@ -4933,8 +4944,8 @@ class CompExprTransplanter {
  */
 class GenexpGuard {
     TreeContext     *tc;
-    uint32          startYieldCount;
-    uint32          startArgumentsCount;
+    uint32_t        startYieldCount;
+    uint32_t        startArgumentsCount;
 
   public:
     explicit GenexpGuard(TreeContext *tc)

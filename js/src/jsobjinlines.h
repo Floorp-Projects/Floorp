@@ -86,7 +86,7 @@ JSObject::hasPrivate() const
 }
 
 inline void *&
-JSObject::privateRef(uint32 nfixed) const
+JSObject::privateRef(uint32_t nfixed) const
 {
     /*
      * The private pointer of an object can hold any word sized value.
@@ -160,7 +160,7 @@ JSObject::setProperty(JSContext *cx, js::PropertyName *name, js::Value *vp, JSBo
 }
 
 inline JSBool
-JSObject::setElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict)
+JSObject::setElement(JSContext *cx, uint32_t index, js::Value *vp, JSBool strict)
 {
     if (getOps()->setElement)
         return nonNativeSetElement(cx, index, vp, strict);
@@ -188,7 +188,7 @@ JSObject::setPropertyAttributes(JSContext *cx, js::PropertyName *name, uintN *at
 }
 
 inline JSBool
-JSObject::setElementAttributes(JSContext *cx, uint32 index, uintN *attrsp)
+JSObject::setElementAttributes(JSContext *cx, uint32_t index, uintN *attrsp)
 {
     js::ElementAttributesOp op = getOps()->setElementAttributes;
     return (op ? op : js_SetElementAttributes)(cx, this, index, attrsp);
@@ -249,7 +249,7 @@ JSObject::deleteProperty(JSContext *cx, js::PropertyName *name, js::Value *rval,
 }
 
 inline JSBool
-JSObject::deleteElement(JSContext *cx, uint32 index, js::Value *rval, JSBool strict)
+JSObject::deleteElement(JSContext *cx, uint32_t index, js::Value *rval, JSBool strict)
 {
     jsid id;
     if (!js::IndexToId(cx, index, &id))
@@ -365,7 +365,7 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
      * equivalent to this->setProperty(cx, shape.id, vp) except that any
      * watchpoint on the property is not triggered.
      */
-    uint32 slot = shape.slot();
+    uint32_t slot = shape.slot();
     js::Shape *newshape = methodShapeChange(cx, shape);
     if (!newshape)
         return NULL;
@@ -520,7 +520,7 @@ JSObject::prepareElementRangeForOverwrite(size_t start, size_t end)
         elements[i].js::HeapValue::~HeapValue();
 }
 
-inline uint32
+inline uint32_t
 JSObject::getArrayLength() const
 {
     JS_ASSERT(isArray());
@@ -528,7 +528,7 @@ JSObject::getArrayLength() const
 }
 
 inline void
-JSObject::setArrayLength(JSContext *cx, uint32 length)
+JSObject::setArrayLength(JSContext *cx, uint32_t length)
 {
     JS_ASSERT(isArray());
 
@@ -549,7 +549,7 @@ JSObject::setArrayLength(JSContext *cx, uint32 length)
 }
 
 inline void
-JSObject::setDenseArrayLength(uint32 length)
+JSObject::setDenseArrayLength(uint32_t length)
 {
     /* Variant of setArrayLength for use on dense arrays where the length cannot overflow int32. */
     JS_ASSERT(isDenseArray());
@@ -557,7 +557,7 @@ JSObject::setDenseArrayLength(uint32 length)
     getElementsHeader()->length = length;
 }
 
-inline uint32
+inline uint32_t
 JSObject::getDenseArrayInitializedLength()
 {
     JS_ASSERT(isDenseArray());
@@ -565,7 +565,7 @@ JSObject::getDenseArrayInitializedLength()
 }
 
 inline void
-JSObject::setDenseArrayInitializedLength(uint32 length)
+JSObject::setDenseArrayInitializedLength(uint32_t length)
 {
     JS_ASSERT(isDenseArray());
     JS_ASSERT(length <= getDenseArrayCapacity());
@@ -573,7 +573,7 @@ JSObject::setDenseArrayInitializedLength(uint32 length)
     getElementsHeader()->initializedLength = length;
 }
 
-inline uint32
+inline uint32_t
 JSObject::getDenseArrayCapacity()
 {
     JS_ASSERT(isDenseArray());
@@ -581,7 +581,7 @@ JSObject::getDenseArrayCapacity()
 }
 
 inline bool
-JSObject::ensureElements(JSContext *cx, uint32 capacity)
+JSObject::ensureElements(JSContext *cx, uint32_t capacity)
 {
     if (capacity > getDenseArrayCapacity())
         return growElements(cx, capacity);
@@ -634,15 +634,16 @@ inline void
 JSObject::copyDenseArrayElements(uintN dstStart, const js::Value *src, uintN count)
 {
     JS_ASSERT(dstStart + count <= getDenseArrayCapacity());
-    prepareElementRangeForOverwrite(dstStart, dstStart + count);
-    memcpy(elements + dstStart, src, count * sizeof(js::Value));
+    for (unsigned i = 0; i < count; ++i)
+        elements[dstStart + i] = src[i];
 }
 
 inline void
 JSObject::initDenseArrayElements(uintN dstStart, const js::Value *src, uintN count)
 {
     JS_ASSERT(dstStart + count <= getDenseArrayCapacity());
-    memcpy(elements + dstStart, src, count * sizeof(js::Value));
+    for (unsigned i = 0; i < count; ++i)
+        elements[dstStart + i].init(src[i]);
 }
 
 inline void
@@ -1065,7 +1066,7 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind,
 
 /* static */ inline JSObject *
 JSObject::createDenseArray(JSContext *cx, js::gc::AllocKind kind,
-                           js::Shape *shape, js::types::TypeObject *type, uint32 length)
+                           js::Shape *shape, js::types::TypeObject *type, uint32_t length)
 {
     JS_ASSERT(shape && type);
     JS_ASSERT(shape->getObjectClass() == &js::ArrayClass);
@@ -1082,7 +1083,7 @@ JSObject::createDenseArray(JSContext *cx, js::gc::AllocKind kind,
      */
     JS_ASSERT(js::gc::GetGCKindSlots(kind) >= js::ObjectElements::VALUES_PER_HEADER);
 
-    uint32 capacity = js::gc::GetGCKindSlots(kind) - js::ObjectElements::VALUES_PER_HEADER;
+    uint32_t capacity = js::gc::GetGCKindSlots(kind) - js::ObjectElements::VALUES_PER_HEADER;
 
     JSObject *obj = js_NewGCObject(cx, kind);
     if (!obj)
@@ -1133,7 +1134,7 @@ JSObject::principals(JSContext *cx)
     return cx->compartment ? cx->compartment->principals : NULL;
 }
 
-inline uint32
+inline uint32_t
 JSObject::slotSpan() const
 {
     if (inDictionaryMode())
@@ -1142,7 +1143,7 @@ JSObject::slotSpan() const
 }
 
 inline bool
-JSObject::containsSlot(uint32 slot) const
+JSObject::containsSlot(uint32_t slot) const
 {
     return slot < slotSpan();
 }
@@ -1237,7 +1238,7 @@ JSObject::inDictionaryMode() const
     return lastProperty()->inDictionary();
 }
 
-inline uint32
+inline uint32_t
 JSObject::propertyCount() const
 {
     return lastProperty()->entryCount();
@@ -1311,7 +1312,7 @@ JSObject::defineProperty(JSContext *cx, js::PropertyName *name, const js::Value 
 }
 
 inline JSBool
-JSObject::defineElement(JSContext *cx, uint32 index, const js::Value &value,
+JSObject::defineElement(JSContext *cx, uint32_t index, const js::Value &value,
                         JSPropertyOp getter /* = JS_PropertyStub */,
                         JSStrictPropertyOp setter /* = JS_StrictPropertyStub */,
                         uintN attrs /* = JSPROP_ENUMERATE */)
@@ -1330,7 +1331,7 @@ JSObject::defineSpecial(JSContext *cx, js::SpecialId sid, const js::Value &value
 }
 
 inline JSBool
-JSObject::lookupElement(JSContext *cx, uint32 index, JSObject **objp, JSProperty **propp)
+JSObject::lookupElement(JSContext *cx, uint32_t index, JSObject **objp, JSProperty **propp)
 {
     js::LookupElementOp op = getOps()->lookupElement;
     return (op ? op : js_LookupElement)(cx, this, index, objp, propp);
@@ -1343,7 +1344,7 @@ JSObject::lookupSpecial(JSContext *cx, js::SpecialId sid, JSObject **objp, JSPro
 }
 
 inline JSBool
-JSObject::getElement(JSContext *cx, JSObject *receiver, uint32 index, js::Value *vp)
+JSObject::getElement(JSContext *cx, JSObject *receiver, uint32_t index, js::Value *vp)
 {
     js::ElementIdOp op = getOps()->getElement;
     if (op)
@@ -1356,13 +1357,13 @@ JSObject::getElement(JSContext *cx, JSObject *receiver, uint32 index, js::Value 
 }
 
 inline JSBool
-JSObject::getElement(JSContext *cx, uint32 index, js::Value *vp)
+JSObject::getElement(JSContext *cx, uint32_t index, js::Value *vp)
 {
     return getElement(cx, this, index, vp);
 }
 
 inline JSBool
-JSObject::getElementIfPresent(JSContext *cx, JSObject *receiver, uint32 index, js::Value *vp,
+JSObject::getElementIfPresent(JSContext *cx, JSObject *receiver, uint32_t index, js::Value *vp,
                               bool *present)
 {
     js::ElementIfPresentOp op = getOps()->getElementIfPresent;
@@ -1412,7 +1413,7 @@ JSObject::getPropertyAttributes(JSContext *cx, js::PropertyName *name, uintN *at
 }
 
 inline JSBool
-JSObject::getElementAttributes(JSContext *cx, uint32 index, uintN *attrsp)
+JSObject::getElementAttributes(JSContext *cx, uint32_t index, uintN *attrsp)
 {
     jsid id;
     if (!js::IndexToId(cx, index, &id))

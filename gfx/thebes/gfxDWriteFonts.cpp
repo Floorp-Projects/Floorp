@@ -38,6 +38,9 @@
 #include "gfxDWriteFonts.h"
 #include "gfxDWriteShaper.h"
 #include "gfxHarfBuzzShaper.h"
+#ifdef MOZ_GRAPHITE
+#include "gfxGraphiteShaper.h"
+#endif
 #include "gfxDWriteFontList.h"
 #include "gfxContext.h"
 #include <dwrite.h>
@@ -121,7 +124,6 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
                              AntialiasOption anAAOption)
     : gfxFont(aFontEntry, aFontStyle, anAAOption)
     , mCairoFontFace(nsnull)
-    , mCairoScaledFont(nsnull)
     , mMetrics(nsnull)
     , mNeedsOblique(false)
     , mNeedsBold(aNeedsBold)
@@ -151,6 +153,12 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
 
     ComputeMetrics(anAAOption);
 
+#ifdef MOZ_GRAPHITE
+    if (FontCanSupportGraphite()) {
+        mGraphiteShaper = new gfxGraphiteShaper(this);
+    }
+#endif
+
     if (FontCanSupportHarfBuzz()) {
         mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
     }
@@ -161,8 +169,8 @@ gfxDWriteFont::~gfxDWriteFont()
     if (mCairoFontFace) {
         cairo_font_face_destroy(mCairoFontFace);
     }
-    if (mCairoScaledFont) {
-        cairo_scaled_font_destroy(mCairoScaledFont);
+    if (mScaledFont) {
+        cairo_scaled_font_destroy(mScaledFont);
     }
     delete mMetrics;
 }
@@ -562,7 +570,7 @@ gfxDWriteFont::CairoFontFace()
 cairo_scaled_font_t *
 gfxDWriteFont::CairoScaledFont()
 {
-    if (!mCairoScaledFont) {
+    if (!mScaledFont) {
         cairo_matrix_t sizeMatrix;
         cairo_matrix_t identityMatrix;
 
@@ -589,27 +597,27 @@ gfxDWriteFont::CairoScaledFont()
                 GetCairoAntialiasOption(mAntialiasOption));
         }
 
-        mCairoScaledFont = cairo_scaled_font_create(CairoFontFace(),
+        mScaledFont = cairo_scaled_font_create(CairoFontFace(),
                                                     &sizeMatrix,
                                                     &identityMatrix,
                                                     fontOptions);
         cairo_font_options_destroy(fontOptions);
 
-        cairo_dwrite_scaled_font_allow_manual_show_glyphs(mCairoScaledFont,
+        cairo_dwrite_scaled_font_allow_manual_show_glyphs(mScaledFont,
                                                           mAllowManualShowGlyphs);
 
         gfxDWriteFontEntry *fe =
             static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
-        cairo_dwrite_scaled_font_set_force_GDI_classic(mCairoScaledFont,
+        cairo_dwrite_scaled_font_set_force_GDI_classic(mScaledFont,
                                                        GetForceGDIClassic());
     }
 
     NS_ASSERTION(mAdjustedSize == 0.0 ||
-                 cairo_scaled_font_status(mCairoScaledFont) 
+                 cairo_scaled_font_status(mScaledFont) 
                    == CAIRO_STATUS_SUCCESS,
                  "Failed to make scaled font");
 
-    return mCairoScaledFont;
+    return mScaledFont;
 }
 
 gfxFont::RunMetrics

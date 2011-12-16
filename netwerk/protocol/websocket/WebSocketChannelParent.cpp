@@ -137,6 +137,18 @@ WebSocketChannelParent::RecvSendBinaryMsg(const nsCString& aMsg)
   return true;
 }
 
+bool
+WebSocketChannelParent::RecvSendBinaryStream(const InputStream& aStream,
+                                             const PRUint32& aLength)
+{
+  LOG(("WebSocketChannelParent::RecvSendBinaryStream() %p\n", this));
+  if (mChannel) {
+    nsresult rv = mChannel->SendBinaryStream(aStream, aLength);
+    NS_ENSURE_SUCCESS(rv, true);
+  }
+  return true;
+}
+
 NS_IMETHODIMP
 WebSocketChannelParent::GetInterface(const nsIID & iid, void **result NS_OUTPARAM)
 {

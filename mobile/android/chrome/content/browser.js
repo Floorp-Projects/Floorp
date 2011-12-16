@@ -201,13 +201,17 @@ var BrowserApp = {
 
     NativeWindow.init();
     Downloads.init();
+    FormAssistant.init();
     OfflineApps.init();
     IndexedDB.init();
     XPInstallObserver.init();
     ConsoleAPI.init();
+    ClipboardHelper.init();
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+    // Init FormHistory
+    Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
     let uri = "about:home";
     if ("arguments" in window && window.arguments[0])
@@ -261,6 +265,7 @@ var BrowserApp = {
 
   shutdown: function shutdown() {
     NativeWindow.uninit();
+    FormAssistant.uninit();
     OfflineApps.uninit();
     IndexedDB.uninit();
     ViewportHandler.uninit();
@@ -435,6 +440,16 @@ var BrowserApp = {
           name: prefName
         };
 
+        // The plugin pref is actually two separate prefs, so
+        // we need to handle it differently
+        if (prefName == "plugin.enable") {
+          // Use a string type for java's ListPreference
+          pref.type = "string";
+          pref.value = PluginHelper.getPluginPreference();
+          prefs.push(pref);
+          continue;
+        }
+
         try {
           switch (Services.prefs.getPrefType(prefName)) {
             case Ci.nsIPrefBranch.PREF_BOOL:
@@ -465,13 +480,13 @@ var BrowserApp = {
             pref.type = "bool";
             pref.value = pref.value == 0;
             break;
-          case "permissions.default.image":
-            pref.type = "bool";
-            pref.value = pref.value == 1;
-            break;
           case "browser.menu.showCharacterEncoding":
             pref.type = "bool";
             pref.value = pref.value == "true";
+            break;
+          case "font.size.inflation.minTwips":
+            pref.type = "string";
+            pref.value = pref.value.toString();
             break;
         }
 
@@ -490,6 +505,13 @@ var BrowserApp = {
   setPreferences: function setPreferences(aPref) {
     let json = JSON.parse(aPref);
 
+    // The plugin pref is actually two separate prefs, so
+    // we need to handle it differently
+    if (json.name == "plugin.enable") {
+      PluginHelper.setPluginPreference(json.value);
+      return;
+    }
+
     // when sending to java, we normalized special preferences that use
     // integers and strings to represent booleans.  here, we convert them back
     // to their actual types so we can store them.
@@ -498,13 +520,13 @@ var BrowserApp = {
         json.type = "int";
         json.value = (json.value ? 0 : 2);
         break;
-      case "permissions.default.image":
-        json.type = "int";
-        json.value = (json.value ? 1 : 2);
-        break;
       case "browser.menu.showCharacterEncoding":
         json.type = "string";
         json.value = (json.value ? "true" : "false");
+        break;
+      case "font.size.inflation.minTwips":
+        json.type = "int";
+        json.value = parseInt(json.value);
         break;
     }
 
@@ -540,10 +562,17 @@ var BrowserApp = {
     let args = JSON.parse(aData);
     let uri;
     if (args.engine) {
-      let engine = Services.search.getEngineByName(args.engine);
-      uri = engine.getSubmission(args.url).uri;
-    } else
+      let engine;
+      if (args.engine == "__default__")
+        engine = Services.search.currentEngine || Services.search.defaultEngine;
+      else
+        engine = Services.search.getEngineByName(args.engine);
+
+      if (engine)
+        uri = engine.getSubmission(args.url).uri;
+    } else {
       uri = URIFixup.createFixupURI(args.url, Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP);
+    }
     return uri ? uri.spec : args.url;
   },
 
@@ -744,12 +773,6 @@ var NativeWindow = {
                function(aTarget) {
                  let url = NativeWindow.contextmenus._getLinkURL(aTarget);
                  BrowserApp.addTab(url, { selected: false });
-               });
-
-      this.add(Strings.browser.GetStringFromName("contextmenu.changeInputMethod"),
-               this.textContext,
-               function(aTarget) {
-                 Cc["@mozilla.org/imepicker;1"].getService(Ci.nsIIMEPicker).show();
                });
 
       this.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
@@ -978,6 +1001,8 @@ function Tab(aURL, aParams) {
                      pageWidth: 1, pageHeight: 1, zoom: 1.0 };
   this.viewportExcess = { x: 0, y: 0 };
   this.userScrollPos = { x: 0, y: 0 };
+  this._pluginsToPlay = [];
+  this._pluginOverlayShowing = false;
 }
 
 Tab.prototype = {
@@ -1022,6 +1047,8 @@ Tab.prototype = {
     this.browser.addEventListener("DOMLinkAdded", this, true);
     this.browser.addEventListener("DOMTitleChanged", this, true);
     this.browser.addEventListener("scroll", this, true);
+    this.browser.addEventListener("PluginClickToPlay", this, true);
+    this.browser.addEventListener("pagehide", this, true);
     Services.obs.addObserver(this, "http-on-modify-request", false);
     this.browser.loadURI(aURL);
   },
@@ -1058,6 +1085,8 @@ Tab.prototype = {
     this.browser.removeEventListener("DOMLinkAdded", this, true);
     this.browser.removeEventListener("DOMTitleChanged", this, true);
     this.browser.removeEventListener("scroll", this, true);
+    this.browser.removeEventListener("PluginClickToPlay", this, true);
+    this.browser.removeEventListener("pagehide", this, true);
     BrowserApp.deck.removeChild(this.vbox);
     Services.obs.removeObserver(this, "http-on-modify-request", false);
     this.browser = null;
@@ -1147,26 +1176,31 @@ Tab.prototype = {
 
   get viewport() {
     // Update the viewport to current dimensions
-    this._viewport.x = this.browser.contentWindow.scrollX +
-                       this.viewportExcess.x;
-    this._viewport.y = this.browser.contentWindow.scrollY +
-                       this.viewportExcess.y;
-
-    let doc = this.browser.contentDocument;
-    let pageWidth = this._viewport.width;
-    let pageHeight = this._viewport.height;
-    if (doc != null) {
-      let body = doc.body || { scrollWidth: pageWidth, scrollHeight: pageHeight };
-      let html = doc.documentElement || { scrollWidth: pageWidth, scrollHeight: pageHeight };
-      pageWidth = Math.max(body.scrollWidth, html.scrollWidth);
-      pageHeight = Math.max(body.scrollHeight, html.scrollHeight);
-    }
+    this._viewport.x = (this.browser.contentWindow.scrollX +
+                        this.viewportExcess.x) || 0;
+    this._viewport.y = (this.browser.contentWindow.scrollY +
+                        this.viewportExcess.y) || 0;
 
     // Transform coordinates based on zoom
     this._viewport.x = Math.round(this._viewport.x * this._viewport.zoom);
     this._viewport.y = Math.round(this._viewport.y * this._viewport.zoom);
-    this._viewport.pageWidth = Math.round(pageWidth * this._viewport.zoom);
-    this._viewport.pageHeight = Math.round(pageHeight * this._viewport.zoom);
+
+    /*
+     * Don't alter the page size until we hit DOMContentLoaded, because this causes the page size
+     * to jump around wildly during page load.
+     */
+    let doc = this.browser.contentDocument;
+    if (doc != null && doc.readyState === 'complete') {
+      let pageWidth = this._viewport.width, pageHeight = this._viewport.height;
+      let body = doc.body || { scrollWidth: pageWidth, scrollHeight: pageHeight };
+      let html = doc.documentElement || { scrollWidth: pageWidth, scrollHeight: pageHeight };
+      pageWidth = Math.max(body.scrollWidth, html.scrollWidth);
+      pageHeight = Math.max(body.scrollHeight, html.scrollHeight);
+
+      /* Transform the page width and height based on the zoom factor. */
+      this._viewport.pageWidth = Math.round(pageWidth * this._viewport.zoom);
+      this._viewport.pageHeight = Math.round(pageHeight * this._viewport.zoom);
+    }
 
     return this._viewport;
   },
@@ -1174,8 +1208,8 @@ Tab.prototype = {
   updateViewport: function(aReset) {
     let win = this.browser.contentWindow;
     let zoom = (aReset ? this.getDefaultZoomLevel() : this._viewport.zoom);
-    let xpos = (aReset ? win.scrollX * zoom : this._viewport.x);
-    let ypos = (aReset ? win.scrollY * zoom : this._viewport.y);
+    let xpos = ((aReset && win) ? win.scrollX * zoom : this._viewport.x);
+    let ypos = ((aReset && win) ? win.scrollY * zoom : this._viewport.y);
 
     this.viewportExcess = { x: 0, y: 0 };
     this.viewport = { x: xpos, y: ypos,
@@ -1187,6 +1221,8 @@ Tab.prototype = {
   },
 
   sendViewportUpdate: function() {
+    if (BrowserApp.selectedTab != this)
+      return;
     sendMessageToJava({
       gecko: {
         type: "Viewport:Update",
@@ -1227,6 +1263,10 @@ Tab.prototype = {
             this.browser.removeEventListener("pagehide", listener, true);
           }.bind(this), true);
         }
+
+        // Show a plugin doorhanger if there are no clickable overlays showing
+        if (this._pluginsToPlay.length && !this._pluginOverlayShowing)
+          PluginHelper.showDoorHanger(this);
 
         break;
       }
@@ -1297,6 +1337,35 @@ Tab.prototype = {
         }
         break;
       }
+
+      case "PluginClickToPlay": {
+        let plugin = aEvent.target;
+        // Keep track of all the plugins on the current page
+        this._pluginsToPlay.push(plugin);
+        
+        let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");        
+        if (!overlay)
+          return;
+
+        // If the overlay is too small, hide the overlay and act like this
+        // is a hidden plugin object
+        if (PluginHelper.isTooSmall(plugin, overlay)) {
+          overlay.style.visibility = "hidden";
+          return;
+        }
+
+        // Play all the plugin objects when the user clicks on one
+        PluginHelper.addPluginClickCallback(plugin, "playAllPlugins", this);
+        this._pluginOverlayShowing = true;
+        break;
+      }
+
+      case "pagehide": {
+        // Reset plugin state when we leave the page
+        this._pluginsToPlay = [];
+        this._pluginOverlayShowing = false;
+        break;
+      }
     }
   },
 
@@ -1328,12 +1397,20 @@ Tab.prototype = {
 
     let browser = BrowserApp.getBrowserForWindow(contentWin);
     let uri = browser.currentURI.spec;
+    let documentURI = "";
+    let contentType = "";
+    if (browser.contentDocument) {
+      documentURI = browser.contentDocument.documentURIObject.spec;
+      contentType = browser.contentDocument.contentType;
+    }
 
     let message = {
       gecko: {
         type: "Content:LocationChange",
         tabID: this.id,
-        uri: uri
+        uri: uri,
+        documentURI: documentURI,
+        contentType: contentType
       }
     };
 
@@ -1627,6 +1704,9 @@ var BrowserEventHandler = {
         this._sendMouseEvent("mousemove", element, data.x, data.y);
         this._sendMouseEvent("mousedown", element, data.x, data.y);
         this._sendMouseEvent("mouseup",   element, data.x, data.y);
+
+        if (ElementTouchHelper.isElementClickable(element))
+          Haptic.performSimpleAction(Haptic.LongPress);
       }
       this._cancelTapHighlight();
     } else if (aTopic == "Gesture:DoubleTap") {
@@ -1688,9 +1768,6 @@ var BrowserEventHandler = {
   _highlightElement: null,
 
   _doTapHighlight: function _doTapHighlight(aElement) {
-    if (ElementTouchHelper.isElementClickable(aElement))
-      Haptic.performSimpleAction(Haptic.LongPress);
-
     DOMUtils.setContentState(aElement, kStateActive);
     this._highlightElement = aElement;
   },
@@ -1752,15 +1829,15 @@ var BrowserEventHandler = {
        * - It has overflow 'auto' or 'scroll'
        * - It's a textarea
        * - It's an HTML/BODY node
+       * - It's a select element showing multiple rows
        */
       if (checkElem) {
         if (((elem.scrollHeight > elem.clientHeight) ||
              (elem.scrollWidth > elem.clientWidth)) &&
             (elem.style.overflow == 'auto' ||
              elem.style.overflow == 'scroll' ||
-             elem.localName == 'textarea' ||
-             elem.localName == 'html' ||
-             elem.localName == 'body')) {
+             elem.mozMatchesSelector("html, body, textarea")) ||
+            (elem instanceof HTMLSelectElement && (elem.size > 1 || elem.multiple))) {
           scrollable = true;
           break;
         }
@@ -2103,8 +2180,99 @@ var ErrorPageEventHandler = {
   }
 };
 
-
 var FormAssistant = {
+  // Used to keep track of the element that corresponds to the current
+  // autocomplete suggestions
+  _currentInputElement: null,
+
+  init: function() {
+    Services.obs.addObserver(this, "FormAssist:AutoComplete", false);
+    Services.obs.addObserver(this, "FormAssist:Closed", false);
+
+    BrowserApp.deck.addEventListener("compositionstart", this, false);
+    BrowserApp.deck.addEventListener("compositionupdate", this, false);
+  },
+
+  uninit: function() {
+    Services.obs.removeObserver(this, "FormAssist:AutoComplete");
+    Services.obs.removeObserver(this, "FormAssist:Closed");
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "FormAssist:AutoComplete":
+        if (!this._currentInputElement)
+          break;
+
+        // Remove focus from the textbox to avoid some bad IME interactions
+        this._currentInputElement.blur();
+        this._currentInputElement.value = aData;
+        break;
+
+      case "FormAssist:Closed":
+        this._currentInputElement = null;
+        break;
+    }
+  },
+
+  handleEvent: function(aEvent) {
+   switch (aEvent.type) {
+      case "compositionstart":
+      case "compositionupdate":
+        let currentElement = aEvent.target;
+        if (!this._isAutocomplete(currentElement))
+          break;
+
+        // Keep track of input element so we can fill it in if the user
+        // selects an autocomplete suggestion
+        this._currentInputElement = currentElement;
+        let suggestions = this._getAutocompleteSuggestions(aEvent.data, currentElement);
+
+        let rect = currentElement.getBoundingClientRect();
+        let zoom = BrowserApp.selectedTab.viewport.zoom;
+
+        sendMessageToJava({
+          gecko: {
+            type:  "FormAssist:AutoComplete",
+            suggestions: suggestions,
+            rect: [rect.left, rect.top, rect.width, rect.height], 
+            zoom: zoom
+          }
+        });
+    }
+  },
+
+  _isAutocomplete: function (aElement) {
+    if (!(aElement instanceof HTMLInputElement) ||
+        (aElement.getAttribute("type") == "password") ||
+        (aElement.hasAttribute("autocomplete") &&
+         aElement.getAttribute("autocomplete").toLowerCase() == "off"))
+      return false;
+
+    return true;
+  },
+
+  /** Retrieve the autocomplete list from the autocomplete service for an element */
+  _getAutocompleteSuggestions: function(aSearchString, aElement) {
+    let results = Cc["@mozilla.org/satchel/form-autocomplete;1"].
+                  getService(Ci.nsIFormAutoComplete).
+                  autoCompleteSearch(aElement.name || aElement.id, aSearchString, aElement, null);
+
+    let suggestions = [];
+    if (results.matchCount > 0) {
+      for (let i = 0; i < results.matchCount; i++) {
+        let value = results.getValueAt(i);
+        // Do not show the value if it is the current one in the input field
+        if (value == aSearchString)
+          continue;
+
+        suggestions.push(value);
+      }
+    }
+
+    return suggestions;
+  },
+
   show: function(aList, aElement) {
     let data = JSON.parse(sendMessageToJava({ gecko: aList }));
     let selected = data.button;
@@ -2842,5 +3010,176 @@ var ConsoleAPI = {
       aSourceURL = aSourceURL.substring(slashIndex + 1);
 
     return aSourceURL;
+  }
+};
+
+var ClipboardHelper = {
+  init: function() {
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copy"), ClipboardHelper.getCopyContext(false), ClipboardHelper.copy.bind(ClipboardHelper));
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyAll"), ClipboardHelper.getCopyContext(true), ClipboardHelper.copy.bind(ClipboardHelper));
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.selectAll"), NativeWindow.contextmenus.textContext, ClipboardHelper.select.bind(ClipboardHelper));
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.paste"), ClipboardHelper.pasteContext, ClipboardHelper.paste.bind(ClipboardHelper));
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.changeInputMethod"), NativeWindow.contextmenus.textContext, ClipboardHelper.inputMethod.bind(ClipboardHelper));
+  },
+
+  get clipboardHelper() {
+    delete this.clipboardHelper;
+    return this.clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+  },
+
+  get clipboard() {
+    delete this.clipboard;
+    return this.clipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
+  },
+
+  copy: function(aElement) {
+    let selectionStart = aElement.selectionStart;
+    let selectionEnd = aElement.selectionEnd;
+    if (selectionStart != selectionEnd) {
+      string = aElement.value.slice(selectionStart, selectionEnd);
+      this.clipboardHelper.copyString(string);
+    } else {
+      this.clipboardHelper.copyString(aElement.value);
+    }
+  },
+
+  select: function(aElement) {
+    if (!aElement || !(aElement instanceof Ci.nsIDOMNSEditableElement))
+      return;
+    let target = aElement.QueryInterface(Ci.nsIDOMNSEditableElement);
+    target.editor.selectAll();
+    target.focus();
+  },
+
+  paste: function(aElement) {
+    if (!aElement || !(aElement instanceof Ci.nsIDOMNSEditableElement))
+      return;
+    let target = aElement.QueryInterface(Ci.nsIDOMNSEditableElement);
+    target.editor.paste(Ci.nsIClipboard.kGlobalClipboard);
+    target.focus();  
+  },
+
+  inputMethod: function(aElement) {
+    Cc["@mozilla.org/imepicker;1"].getService(Ci.nsIIMEPicker).show();
+  },
+
+  getCopyContext: function(isCopyAll) {
+    return {
+      matches: function(aElement) {
+        if (NativeWindow.contextmenus.textContext.matches(aElement)) {
+          let selectionStart = aElement.selectionStart;
+          let selectionEnd = aElement.selectionEnd;
+          if (selectionStart != selectionEnd)
+            return true;
+          else if (isCopyAll)
+            return true;
+        }
+        return false;
+      }
+    }
+  },
+
+  pasteContext: {
+    matches: function(aElement) {
+      if (NativeWindow.contextmenus.textContext.matches(aElement)) {
+        let flavors = ["text/unicode"];
+        return ClipboardHelper.clipboard.hasDataMatchingFlavors(flavors, flavors.length, Ci.nsIClipboard.kGlobalClipboard);
+      }
+      return false;
+    }
+  }
+}
+
+var PluginHelper = {
+  showDoorHanger: function(aTab) {
+    let message = Strings.browser.GetStringFromName("clickToPlayFlash.message");
+    let buttons = [
+      {
+        label: Strings.browser.GetStringFromName("clickToPlayFlash.yes"),
+        callback: function() {
+          PluginHelper.playAllPlugins(aTab);
+        }
+      },
+      {
+        label: Strings.browser.GetStringFromName("clickToPlayFlash.no"),
+        callback: function() {
+          // Do nothing
+        }
+      }
+    ]
+    NativeWindow.doorhanger.show(message, "ask-to-play-plugins", buttons, aTab.id);
+  },
+
+  playAllPlugins: function(aTab) {
+    let plugins = aTab._pluginsToPlay;
+    for (let i = 0; i < plugins.length; i++) {
+      let objLoadingContent = plugins[i].QueryInterface(Ci.nsIObjectLoadingContent);
+      objLoadingContent.playPlugin();
+    }
+  },
+
+  getPluginPreference: function getPluginPreference() {
+    let pluginDisable = Services.prefs.getBoolPref("plugin.disable");
+    if (pluginDisable)
+      return "0";
+
+    let clickToPlay = Services.prefs.getBoolPref("plugins.click_to_play");
+    return clickToPlay ? "2" : "1";
+  },
+
+  setPluginPreference: function setPluginPreference(aValue) {
+    switch (aValue) {
+      case "0": // Enable Plugins = No
+        Services.prefs.setBoolPref("plugin.disable", true);
+        Services.prefs.clearUserPref("plugins.click_to_play");
+        break;
+      case "1": // Enable Plugins = Yes
+        Services.prefs.clearUserPref("plugin.disable");
+        Services.prefs.setBoolPref("plugins.click_to_play", false);
+        break;
+      case "2": // Enable Plugins = Tap to Play (default)
+        Services.prefs.clearUserPref("plugin.disable");
+        Services.prefs.clearUserPref("plugins.click_to_play");
+        break;
+    }
+  },
+
+  // Mostly copied from /browser/base/content/browser.js
+  addPluginClickCallback: function (plugin, callbackName /*callbackArgs...*/) {
+    // XXX just doing (callback)(arg) was giving a same-origin error. bug?
+    let self = this;
+    let callbackArgs = Array.prototype.slice.call(arguments).slice(2);
+      plugin.addEventListener("click", function(evt) {
+      if (!evt.isTrusted)
+        return;
+      evt.preventDefault();
+      if (callbackArgs.length == 0)
+        callbackArgs = [ evt ];
+      (self[callbackName]).apply(self, callbackArgs);
+    }, true);
+
+    plugin.addEventListener("keydown", function(evt) {
+      if (!evt.isTrusted)
+        return;
+      if (evt.keyCode == evt.DOM_VK_RETURN) {
+        evt.preventDefault();
+        if (callbackArgs.length == 0)
+          callbackArgs = [ evt ];
+        evt.preventDefault();
+        (self[callbackName]).apply(self, callbackArgs);
+      }
+    }, true);
+  },
+
+  // Copied from /browser/base/content/browser.js
+  isTooSmall : function (plugin, overlay) {
+    // Is the <object>'s size too small to hold what we want to show?
+    let pluginRect = plugin.getBoundingClientRect();
+    // XXX bug 446693. The text-shadow on the submitted-report text at
+    //     the bottom causes scrollHeight to be larger than it should be.
+    let overflows = (overlay.scrollWidth > pluginRect.width) ||
+                    (overlay.scrollHeight - 5 > pluginRect.height);
+
+    return overflows;
   }
 };

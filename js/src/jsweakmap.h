@@ -203,13 +203,6 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
             /* If the entry is live, ensure its key and value are marked. */
             if (kp.isMarked(k)) {
                 markedAny |= vp.mark(v);
-            } else if (kp.overrideKeyMarking(k)) {
-                // We always mark wrapped natives. This will cause leaks.  Bug 680937
-                // will fix this so XPC wrapped natives are only marked during
-                // non-BLACK marking (ie grey marking).
-                kp.mark(k);
-                vp.mark(v);
-                markedAny = true;
             }
             JS_ASSERT_IF(kp.isMarked(k), vp.isMarked(v));
         }
@@ -263,7 +256,6 @@ class DefaultMarkPolicy<HeapValue> {
         js::gc::MarkValue(tracer, x, "WeakMap entry");
         return true;
     }
-    bool overrideKeyMarking(const HeapValue &k) { return false; }
 };
 
 template <>
@@ -280,13 +272,6 @@ class DefaultMarkPolicy<HeapPtrObject> {
             return false;
         js::gc::MarkObject(tracer, x, "WeakMap entry");
         return true;
-    }
-    bool overrideKeyMarking(const HeapPtrObject &k) {
-        // We only need to worry about extra marking of keys when
-        // we're doing a GC marking pass.
-        if (!IS_GC_MARKING_TRACER(tracer))
-            return false;
-        return k->getClass()->ext.isWrappedNative;
     }
 };
 
@@ -305,7 +290,6 @@ class DefaultMarkPolicy<HeapPtrScript> {
         js::gc::MarkScript(tracer, x, "WeakMap entry");
         return true;
     }
-    bool overrideKeyMarking(const HeapPtrScript &k) { return false; }
 };
 
 // Default trace policies

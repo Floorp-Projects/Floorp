@@ -536,26 +536,6 @@ nsresult imgFrame::ImageUpdated(const nsIntRect &aUpdateRect)
   return NS_OK;
 }
 
-PRInt32 imgFrame::GetX() const
-{
-  return mOffset.x;
-}
-
-PRInt32 imgFrame::GetY() const
-{
-  return mOffset.y;
-}
-
-PRInt32 imgFrame::GetWidth() const
-{
-  return mSize.width;
-}
-
-PRInt32 imgFrame::GetHeight() const
-{
-  return mSize.height;
-}
-
 nsIntRect imgFrame::GetRect() const
 {
   return nsIntRect(mOffset, mSize);

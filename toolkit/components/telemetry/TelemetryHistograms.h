@@ -271,6 +271,11 @@ HISTOGRAM(PLACES_EXPIRATION_STEPS_TO_CLEAN, 1, 10, 10, LINEAR, "PLACES: Expirati
 HISTOGRAM(PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS, 50, 500, 10, EXPONENTIAL, "PLACES: Time for first autocomplete result if > 50ms (ms)")
 
 /**
+ * Updater telemetry.
+ */
+HISTOGRAM(UPDATE_STATUS, 0, 16004, 18, LINEAR, "Updater: the status of the latest update performed")
+
+/**
  * Thunderbird-specific telemetry.
  */
 #ifdef MOZ_THUNDERBIRD

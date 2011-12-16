@@ -58,12 +58,6 @@ protected:
 
   nsresult GetDefaultBrowserMigratorKey(nsACString& key,
                                         nsCOMPtr<nsIBrowserProfileMigrator>& bpm);
-
-  /**
-   * Import profiles from ~/.firefox/
-   * @return true if any profiles imported.
-   */
-  bool ImportRegistryProfiles(const nsACString& aAppName);
 };
 
 #endif

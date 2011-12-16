@@ -112,6 +112,7 @@ _TEST_FILES = \
 		empty.js \
 		test_bug689564.html \
 		test_bug698929.html \
+		test_eventctors.html \
 		$(NULL)
 
 #bug 585630
@@ -144,6 +145,7 @@ _CHROME_FILES = \
 		window_bug617528.xul \
 		test_bug679494.xul \
 		file_bug679494.html \
+		test_eventctors.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

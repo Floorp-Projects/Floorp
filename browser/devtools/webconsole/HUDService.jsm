@@ -5223,7 +5223,7 @@ JSTerm.prototype = {
         break;
 
       case Ci.nsIDOMKeyEvent.DOM_VK_RETURN:
-        if (this.autocompletePopup.isOpen) {
+        if (this.autocompletePopup.isOpen && this.autocompletePopup.selectedIndex > -1) {
           this.acceptProposedCompletion();
         }
         else {
@@ -5439,13 +5439,10 @@ JSTerm.prototype = {
         popup.hidePopup();
       }
 
-      if (items.length > 0) {
-        popup.selectedIndex = 0;
-        if (items.length == 1) {
-          // onSelect is not fired when the popup is not open.
-          this.onAutocompleteSelect();
-        }
+      if (items.length == 1) {
+          popup.selectedIndex = 0;
       }
+      this.onAutocompleteSelect();
     }
 
     let accepted = false;

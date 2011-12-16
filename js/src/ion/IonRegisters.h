@@ -42,7 +42,7 @@
 #ifndef jsion_cpu_registers_h__
 #define jsion_cpu_registers_h__
 
-#include "jstypes.h"
+#include "IonTypes.h"
 #if defined(JS_CPU_X86)
 # include "x86/Architecture-x86.h"
 #elif defined(JS_CPU_X64)

@@ -147,7 +147,7 @@ NS_IMETHODIMP nsPNGEncoder::StartImageEncode(PRUint32 aWidth,
   mPNG = png_create_write_struct(PNG_LIBPNG_VER_STRING,
                                  nsnull,
                                  ErrorCallback,
-                                 ErrorCallback);
+                                 WarningCallback);
   if (! mPNG)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -206,11 +206,11 @@ NS_IMETHODIMP nsPNGEncoder::StartImageEncode(PRUint32 aWidth,
   return NS_OK;
 }
 
-// Returns the image buffer size
-NS_IMETHODIMP nsPNGEncoder::GetImageBufferSize(PRUint32 *aOutputSize)
+// Returns the number of bytes in the image buffer used.
+NS_IMETHODIMP nsPNGEncoder::GetImageBufferUsed(PRUint32 *aOutputSize)
 {
   NS_ENSURE_ARG_POINTER(aOutputSize);
-  *aOutputSize = mImageBufferSize;
+  *aOutputSize = mImageBufferUsed;
   return NS_OK;
 }
 
@@ -665,16 +665,35 @@ nsPNGEncoder::StripAlpha(const PRUint8* aSrc, PRUint8* aDest,
 }
 
 
-// nsPNGEncoder::ErrorCallback
+// nsPNGEncoder::WarningCallback
 
 void // static
-nsPNGEncoder::ErrorCallback(png_structp png_ptr,
+nsPNGEncoder::WarningCallback(png_structp png_ptr,
                             png_const_charp warning_msg)
 {
 #ifdef DEBUG
 	// XXX: these messages are probably useful callers...
         // use nsIConsoleService?
 	PR_fprintf(PR_STDERR, "PNG Encoder: %s\n", warning_msg);;
+#endif
+}
+
+
+// nsPNGEncoder::ErrorCallback
+
+void // static
+nsPNGEncoder::ErrorCallback(png_structp png_ptr,
+                            png_const_charp error_msg)
+{
+#ifdef DEBUG
+	// XXX: these messages are probably useful callers...
+        // use nsIConsoleService?
+	PR_fprintf(PR_STDERR, "PNG Encoder: %s\n", error_msg);;
+#endif
+#if PNG_LIBPNG_VER < 10500
+        longjmp(png_ptr->jmpbuf, 1);
+#else
+        png_longjmp(png_ptr, 1);
 #endif
 }
 

@@ -79,6 +79,25 @@ nsDOMCustomEvent::InitCustomEvent(const nsAString& aType,
 }
 
 nsresult
+nsDOMCustomEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict,
+                               JSContext* aCx, JSObject* aObj)
+{
+  nsCOMPtr<nsICustomEventInit> eventInit = do_QueryInterface(aDict);
+  bool bubbles = false;
+  bool cancelable = false;
+  nsCOMPtr<nsIVariant> detail;
+  if (eventInit) {
+    nsresult rv = eventInit->GetBubbles(&bubbles);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = eventInit->GetCancelable(&cancelable);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = eventInit->GetDetail(getter_AddRefs(detail));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return InitCustomEvent(aType, bubbles, cancelable, detail);
+}
+
+nsresult
 NS_NewDOMCustomEvent(nsIDOMEvent** aInstancePtrResult,
                      nsPresContext* aPresContext,
                      nsEvent* aEvent) 

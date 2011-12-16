@@ -305,6 +305,14 @@ public:
      */
     bool SanitizeDownloadedFonts();
 
+#ifdef MOZ_GRAPHITE
+    /**
+     * Whether to use the SIL Graphite rendering engine
+     * (for fonts that include Graphite tables)
+     */
+    bool UseGraphiteShaping();
+#endif
+
     /**
      * Whether to use the harfbuzz shaper (depending on script complexity).
      *
@@ -423,6 +431,9 @@ protected:
                                                
     PRInt8  mAllowDownloadableFonts;
     PRInt8  mDownloadableFontsSanitize;
+#ifdef MOZ_GRAPHITE
+    PRInt8  mGraphiteShapingEnabled;
+#endif
 
     // which scripts should be shaped with harfbuzz
     PRInt32 mUseHarfBuzzScripts;

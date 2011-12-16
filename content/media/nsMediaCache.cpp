@@ -1908,13 +1908,20 @@ nsMediaCacheStream::IsSeekable()
 }
 
 bool
-nsMediaCacheStream::AreAllStreamsForResourceSuspended()
+nsMediaCacheStream::AreAllStreamsForResourceSuspended(nsMediaStream** aActiveStream)
 {
   ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
   nsMediaCache::ResourceStreamIterator iter(mResourceID);
   while (nsMediaCacheStream* stream = iter.Next()) {
-    if (!stream->mCacheSuspended && !stream->mChannelEnded)
+    if (!stream->mCacheSuspended && !stream->mChannelEnded && !stream->mClosed) {
+      if (aActiveStream) {
+        *aActiveStream = stream->mClient;
+      }
       return false;
+	}
+  }
+  if (aActiveStream) {
+    *aActiveStream = nsnull;
   }
   return true;
 }

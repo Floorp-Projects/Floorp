@@ -29,7 +29,6 @@ function test() {
 
 function end_test() {
   close_manager(gManagerWindow, function() {
-    Services.prefs.clearUserPref("extensions.getAddons.search.url");
     Services.prefs.clearUserPref("extensions.checkUpdateSecurity");
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(aAddon) {

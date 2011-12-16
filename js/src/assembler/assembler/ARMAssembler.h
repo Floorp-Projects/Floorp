@@ -1740,11 +1740,11 @@ namespace JSC {
         int nextOffset() {
             return m_buffer.uncheckedSize();
         }
-        void putInst32(uint32 data) {
+        void putInst32(uint32_t data) {
             m_buffer.putInt(data);
         }
-        uint32 *editSrc(JmpSrc src) {
-            return (uint32*)(((char*)m_buffer.data()) + src.offset());
+        uint32_t *editSrc(JmpSrc src) {
+            return (uint32_t*)(((char*)m_buffer.data()) + src.offset());
         }
     }; // ARMAssembler
 

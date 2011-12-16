@@ -214,9 +214,9 @@ else
 endif
 
 profiledbuild::
-	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_GENERATE=1
-	$(MAKE) -C $(PGO_OBJDIR) stage-package
-	OBJDIR=${PGO_OBJDIR} JARLOG_DIR=${PGO_OBJDIR}/jarlog/en-US $(PROFILE_GEN_SCRIPT)
+	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_GENERATE=1 MOZ_PGO_INSTRUMENTED=1
+	$(MAKE) -C $(PGO_OBJDIR) stage-package MOZ_PGO_INSTRUMENTED=1
+	MOZ_PGO_INSTRUMENTED=1 OBJDIR=${PGO_OBJDIR} JARLOG_DIR=${PGO_OBJDIR}/jarlog/en-US $(PROFILE_GEN_SCRIPT)
 	$(MAKE) -f $(TOPSRCDIR)/client.mk maybe_clobber_profiledbuild
 	$(MAKE) -f $(TOPSRCDIR)/client.mk realbuild MOZ_PROFILE_USE=1
 

@@ -51,6 +51,20 @@
 #define ICON_STATUS_CHANGED 1 << 0
 #define ICON_STATUS_SAVED 1 << 1
 #define ICON_STATUS_ASSOCIATED 1 << 2
+#define ICON_STATUS_CACHED 1 << 3
+
+#define TO_CHARBUFFER(_buffer) \
+  reinterpret_cast<char*>(const_cast<PRUint8*>(_buffer))
+#define TO_INTBUFFER(_string) \
+  reinterpret_cast<PRUint8*>(const_cast<char*>(_string.get()))
+
+/**
+ * The maximum time we will keep a favicon around.  We always ask the cache, if
+ * we can, but default to this value if we do not get a time back, or the time
+ * is more in the future than this.
+ * Currently set to one week from now.
+ */
+#define MAX_FAVICON_EXPIRATION ((PRTime)7 * 24 * 60 * 60 * PR_USEC_PER_SEC)
 
 namespace mozilla {
 namespace places {
@@ -283,7 +297,7 @@ private:
 
 
 /**
- * Asynchronously tries to get the URL and data of a page's favicon.  
+ * Asynchronously tries to get the URL and data of a page's favicon.
  * If this succeeds, notifies the given observer.
  */
 class AsyncGetFaviconDataForPage : public AsyncFaviconHelperBase
@@ -317,6 +331,35 @@ public:
 
 private:
   nsCString mPageSpec;
+};
+
+class AsyncReplaceFaviconData : public AsyncFaviconHelperBase
+{
+public:
+  NS_DECL_NSIRUNNABLE
+
+  static nsresult start(IconData *aIcon);
+
+  AsyncReplaceFaviconData(IconData &aIcon,
+                          nsCOMPtr<nsIFaviconDataCallback>& aCallback);
+
+  virtual ~AsyncReplaceFaviconData();
+
+protected:
+  IconData mIcon;
+};
+
+class RemoveIconDataCacheEntry : public AsyncFaviconHelperBase
+{
+public:
+  NS_DECL_NSIRUNNABLE
+
+  RemoveIconDataCacheEntry(IconData &aIcon,
+                           nsCOMPtr<nsIFaviconDataCallback>& aCallback);
+  virtual ~RemoveIconDataCacheEntry();
+
+protected:
+  IconData mIcon;
 };
 
 /**

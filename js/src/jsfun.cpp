@@ -123,7 +123,7 @@ js_GetArgsValue(JSContext *cx, StackFrame *fp, Value *vp)
 }
 
 js::ArgumentsObject *
-ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee, StackFrame *fp)
+ArgumentsObject::create(JSContext *cx, uint32_t argc, JSObject &callee, StackFrame *fp)
 {
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
 
@@ -159,7 +159,7 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee, StackFrame
 
     ArgumentsObject *argsobj = obj->asArguments();
 
-    JS_ASSERT(UINT32_MAX > (uint64(argc) << PACKED_BITS_COUNT));
+    JS_ASSERT(UINT32_MAX > (uint64_t(argc) << PACKED_BITS_COUNT));
     argsobj->initInitialLength(argc);
     argsobj->initData(data);
     argsobj->setStackFrame(strict ? NULL : fp);
@@ -341,7 +341,7 @@ args_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
     uintN attrs = JSPROP_SHARED | JSPROP_SHADOWABLE;
     if (JSID_IS_INT(id)) {
-        uint32 arg = uint32(JSID_TO_INT(id));
+        uint32_t arg = uint32_t(JSID_TO_INT(id));
         if (arg >= argsobj->initialLength() || argsobj->element(arg).isMagic(JS_ARGS_HOLE))
             return true;
 
@@ -458,7 +458,7 @@ strictargs_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject 
     StrictPropertyOp setter = StrictArgSetter;
 
     if (JSID_IS_INT(id)) {
-        uint32 arg = uint32(JSID_TO_INT(id));
+        uint32_t arg = uint32_t(JSID_TO_INT(id));
         if (arg >= argsobj->initialLength() || argsobj->element(arg).isMagic(JS_ARGS_HOLE))
             return true;
 
@@ -509,7 +509,7 @@ strictargs_enumerate(JSContext *cx, JSObject *obj)
     if (!js_LookupProperty(cx, argsobj, ATOM_TO_JSID(cx->runtime->atomState.callerAtom), &pobj, &prop))
         return false;
 
-    for (uint32 i = 0, argc = argsobj->initialLength(); i < argc; i++) {
+    for (uint32_t i = 0, argc = argsobj->initialLength(); i < argc; i++) {
         if (!js_LookupProperty(cx, argsobj, INT_TO_JSID(i), &pobj, &prop))
             return false;
     }
@@ -697,15 +697,6 @@ CreateEvalCallObject(JSContext *cx, StackFrame *fp)
 
 } // namespace js
 
-JSObject * JS_FASTCALL
-js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSObject *scopeChain)
-{
-    JS_ASSERT(!js_IsNamedLambda(fun));
-    JS_ASSERT(scopeChain);
-    JS_ASSERT(callee);
-    return CallObject::create(cx, fun->script(), *scopeChain, callee);
-}
-
 void
 js_PutCallObject(StackFrame *fp)
 {
@@ -737,8 +728,8 @@ js_PutCallObject(StackFrame *fp)
 
         uintN n = bindings.countArgsAndVars();
         if (n > 0) {
-            uint32 nvars = bindings.countVars();
-            uint32 nargs = bindings.countArgs();
+            uint32_t nvars = bindings.countVars();
+            uint32_t nargs = bindings.countArgs();
             JS_ASSERT(fun->nargs == nargs);
             JS_ASSERT(nvars + nargs == n);
 
@@ -757,9 +748,9 @@ js_PutCallObject(StackFrame *fp)
                  * caches the return value in the slot, so we can't assert that
                  * it's undefined.
                  */
-                uint32 nclosed = script->nClosedArgs;
-                for (uint32 i = 0; i < nclosed; i++) {
-                    uint32 e = script->getClosedArg(i);
+                uint32_t nclosed = script->nClosedArgs;
+                for (uint32_t i = 0; i < nclosed; i++) {
+                    uint32_t e = script->getClosedArg(i);
 #ifdef JS_GC_ZEAL
                     callobj.setArg(e, fp->formalArg(e));
 #else
@@ -768,8 +759,8 @@ js_PutCallObject(StackFrame *fp)
                 }
 
                 nclosed = script->nClosedVars;
-                for (uint32 i = 0; i < nclosed; i++) {
-                    uint32 e = script->getClosedVar(i);
+                for (uint32_t i = 0; i < nclosed; i++) {
+                    uint32_t e = script->getClosedVar(i);
 #ifdef JS_GC_ZEAL
                     callobj.setVar(e, fp->slots()[e]);
 #else
@@ -836,8 +827,8 @@ JSBool
 GetCallArg(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     CallObject &callobj = obj->asCall();
-    JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
-    uintN i = (uint16) JSID_TO_INT(id);
+    JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
+    uintN i = (uint16_t) JSID_TO_INT(id);
 
     if (StackFrame *fp = callobj.maybeStackFrame())
         *vp = fp->formalArg(i);
@@ -850,8 +841,8 @@ JSBool
 SetCallArg(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
     CallObject &callobj = obj->asCall();
-    JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
-    uintN i = (uint16) JSID_TO_INT(id);
+    JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
+    uintN i = (uint16_t) JSID_TO_INT(id);
 
     if (StackFrame *fp = callobj.maybeStackFrame())
         fp->formalArg(i) = *vp;
@@ -872,8 +863,8 @@ JSBool
 GetCallUpvar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     CallObject &callobj = obj->asCall();
-    JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
-    uintN i = (uint16) JSID_TO_INT(id);
+    JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
+    uintN i = (uint16_t) JSID_TO_INT(id);
 
     *vp = callobj.getCallee()->toFunction()->getFlatClosureUpvar(i);
     return true;
@@ -883,8 +874,8 @@ JSBool
 SetCallUpvar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
     CallObject &callobj = obj->asCall();
-    JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
-    uintN i = (uint16) JSID_TO_INT(id);
+    JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
+    uintN i = (uint16_t) JSID_TO_INT(id);
 
     callobj.getCallee()->toFunction()->setFlatClosureUpvar(i, *vp);
     return true;
@@ -894,8 +885,8 @@ JSBool
 GetCallVar(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     CallObject &callobj = obj->asCall();
-    JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
-    uintN i = (uint16) JSID_TO_INT(id);
+    JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
+    uintN i = (uint16_t) JSID_TO_INT(id);
 
     if (StackFrame *fp = callobj.maybeStackFrame())
         *vp = fp->varSlot(i);
@@ -909,8 +900,8 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
     CallObject &callobj = obj->asCall();
 
-    JS_ASSERT((int16) JSID_TO_INT(id) == JSID_TO_INT(id));
-    uintN i = (uint16) JSID_TO_INT(id);
+    JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
+    uintN i = (uint16_t) JSID_TO_INT(id);
 
     if (StackFrame *fp = callobj.maybeStackFrame())
         fp->varSlot(i) = *vp;
@@ -1057,6 +1048,7 @@ StackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
                     JSFunction *clone;
 
                     if (IsFunctionObject(v, &clone) &&
+                        clone->isInterpreted() &&
                         clone->script() == fun->script() &&
                         clone->methodObj() == thisp) {
                         /*
@@ -1132,7 +1124,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     if (!fp)
         return true;
 
-    while (!fp->isFunctionFrame() || fp->fun() != fun || fp->isEvalFrame()) {
+    while (!fp->isFunctionFrame() || &fp->callee() != fun || fp->isEvalFrame()) {
         fp = fp->prev();
         if (!fp)
             return true;
@@ -1202,7 +1194,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
 /* NB: no sentinels at ends -- use ArrayLength to bound loops.
  * Properties censored into [[ThrowTypeError]] in strict mode. */
-static const uint16 poisonPillProps[] = {
+static const uint16_t poisonPillProps[] = {
     ATOM_OFFSET(arguments),
     ATOM_OFFSET(caller),
 };
@@ -1230,7 +1222,7 @@ fun_enumerate(JSContext *cx, JSObject *obj)
         return false;
 
     for (uintN i = 0; i < ArrayLength(poisonPillProps); i++) {
-        const uint16 offset = poisonPillProps[i];
+        const uint16_t offset = poisonPillProps[i];
         id = ATOM_TO_JSID(OFFSET_TO_ATOM(cx->runtime, offset));
         if (!obj->hasProperty(cx, id, &found, JSRESOLVE_QUALIFIED))
             return false;
@@ -1335,7 +1327,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     }
 
     for (uintN i = 0; i < ArrayLength(poisonPillProps); i++) {
-        const uint16 offset = poisonPillProps[i];
+        const uint16_t offset = poisonPillProps[i];
 
         if (JSID_IS_ATOM(id, OFFSET_TO_ATOM(cx->runtime, offset))) {
             JS_ASSERT(!IsInternalFunctionObject(obj));
@@ -1374,10 +1366,10 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
 {
     JSContext *cx;
     JSFunction *fun;
-    uint32 firstword;           /* flag telling whether fun->atom is non-null,
+    uint32_t firstword;           /* flag telling whether fun->atom is non-null,
                                    plus for fun->u.i.skipmin, fun->u.i.wrapper,
                                    and 14 bits reserved for future use */
-    uint32 flagsword;           /* word for argument count and fun->flags */
+    uint32_t flagsword;           /* word for argument count and fun->flags */
 
     cx = xdr->cx;
     JSScript *script;
@@ -1420,7 +1412,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
     if (xdr->mode == JSXDR_DECODE) {
         fun->nargs = flagsword >> 16;
         JS_ASSERT((flagsword & JSFUN_KINDMASK) >= JSFUN_INTERPRETED);
-        fun->flags = uint16(flagsword);
+        fun->flags = uint16_t(flagsword);
         fun->setScript(script);
         if (!script->typeSetFunction(cx, fun))
             return false;
@@ -1715,10 +1707,10 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp);
 
 }
 
-static const uint32 JSSLOT_BOUND_FUNCTION_THIS       = 0;
-static const uint32 JSSLOT_BOUND_FUNCTION_ARGS_COUNT = 1;
+static const uint32_t JSSLOT_BOUND_FUNCTION_THIS       = 0;
+static const uint32_t JSSLOT_BOUND_FUNCTION_ARGS_COUNT = 1;
 
-static const uint32 BOUND_FUNCTION_RESERVED_SLOTS = 2;
+static const uint32_t BOUND_FUNCTION_RESERVED_SLOTS = 2;
 
 inline bool
 JSFunction::initBoundFunction(JSContext *cx, const Value &thisArg,
@@ -1958,8 +1950,12 @@ Function(JSContext *cx, uintN argc, Value *vp)
     }
 
     Bindings bindings(cx);
+
+    const char *filename;
     uintN lineno;
-    const char *filename = CurrentScriptFileAndLine(cx, &lineno);
+    JSPrincipals *originPrincipals;
+    CurrentScriptFileLineOrigin(cx, &filename, &lineno, &originPrincipals);
+    JSPrincipals *principals = PrincipalsForCompiledCode(args, cx);
 
     uintN n = args.length() ? args.length() - 1 : 0;
     if (n > 0) {
@@ -2032,7 +2028,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
         }
 
         /* Initialize a tokenstream that reads from the given string. */
-        TokenStream ts(cx);
+        TokenStream ts(cx, principals, originPrincipals);
         if (!ts.init(collected_args, args_length, filename, lineno, cx->findVersion()))
             return false;
 
@@ -2061,7 +2057,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
                     }
                 }
 
-                uint16 dummy;
+                uint16_t dummy;
                 if (!bindings.addArgument(cx, name, &dummy))
                     return false;
 
@@ -2106,9 +2102,9 @@ Function(JSContext *cx, uintN argc, Value *vp)
     if (!fun)
         return false;
 
-    JSPrincipals *principals = PrincipalsForCompiledCode(args, cx);
-    bool ok = frontend::CompileFunctionBody(cx, fun, principals, &bindings, chars, length,
-                                            filename, lineno, cx->findVersion());
+    bool ok = frontend::CompileFunctionBody(cx, fun, principals, originPrincipals,
+                                            &bindings, chars, length, filename, lineno,
+                                            cx->findVersion());
     args.rval().setObject(*fun);
     return ok;
 }
@@ -2166,12 +2162,12 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
     fun = static_cast<JSFunction *>(funobj);
 
     /* Initialize all function members. */
-    fun->nargs = uint16(nargs);
+    fun->nargs = uint16_t(nargs);
     fun->flags = flags & (JSFUN_FLAGS_MASK | JSFUN_KINDMASK);
     if ((flags & JSFUN_KINDMASK) >= JSFUN_INTERPRETED) {
         JS_ASSERT(!native);
         fun->script().init(NULL);
-        fun->setEnvironment(parent);
+        fun->initEnvironment(parent);
     } else {
         fun->u.n.clasp = NULL;
         fun->u.n.native = native;
@@ -2270,7 +2266,7 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
     if (!closure)
         return closure;
 
-    uint32 nslots = fun->script()->bindings.countUpvars();
+    uint32_t nslots = fun->script()->bindings.countUpvars();
     if (nslots == 0)
         return closure;
 
@@ -2299,7 +2295,7 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
     uintN level = fun->script()->staticLevel;
     JSUpvarArray *uva = fun->script()->upvars();
 
-    for (uint32 i = 0, n = uva->length; i < n; i++)
+    for (uint32_t i = 0, n = uva->length; i < n; i++)
         closure->initFlatClosureUpvar(i, GetUpvar(cx, level, uva->vector[i]));
 
     return closure;

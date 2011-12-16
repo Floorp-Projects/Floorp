@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for crashes when the parent window of a file picker is closed via script</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var childWindow;
+
+function testStepOne() {
+  childWindow = window.open('window_picker_no_crash_child.html', 'childWindow', 'width=300,height=150');
+  SimpleTest.waitForFocus(testStepTwo, childWindow);
+}
+
+function testStepTwo() {
+  childWindow.document.form1.uploadbox.click();
+  // This should not crash the browser
+  childWindow.close();
+  setTimeout("testStepThree();", 5000);
+}
+
+function testStepThree() {
+  ok(true, "browser didn't crash");
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(testStepOne);
+</script>
+</body>
+</html>

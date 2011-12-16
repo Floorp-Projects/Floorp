@@ -522,17 +522,17 @@ TypeScript::StandardType(JSContext *cx, JSScript *script, JSProtoKey key)
 struct AllocationSiteKey {
     JSScript *script;
 
-    uint32 offset : 24;
+    uint32_t offset : 24;
     JSProtoKey kind : 8;
 
-    static const uint32 OFFSET_LIMIT = (1 << 23);
+    static const uint32_t OFFSET_LIMIT = (1 << 23);
 
     AllocationSiteKey() { PodZero(this); }
 
     typedef AllocationSiteKey Lookup;
 
-    static inline uint32 hash(AllocationSiteKey key) {
-        return (uint32) size_t(key.script->code + key.offset) ^ key.kind;
+    static inline uint32_t hash(AllocationSiteKey key) {
+        return uint32_t(size_t(key.script->code + key.offset)) ^ key.kind;
     }
 
     static inline bool match(const AllocationSiteKey &a, const AllocationSiteKey &b) {
@@ -544,7 +544,7 @@ struct AllocationSiteKey {
 TypeScript::InitObject(JSContext *cx, JSScript *script, const jsbytecode *pc, JSProtoKey kind)
 {
     /* :XXX: Limit script->length so we don't need to check the offset up front? */
-    uint32 offset = pc - script->code;
+    uint32_t offset = pc - script->code;
 
     if (!cx->typeInferenceEnabled() || !script->hasGlobal() || offset >= AllocationSiteKey::OFFSET_LIMIT)
         return GetTypeNewObject(cx, kind);
@@ -605,7 +605,7 @@ TypeScript::MonitorAssign(JSContext *cx, JSScript *script, jsbytecode *pc,
          * are only constructed for them when analyzed scripts depend on those
          * specific properties.
          */
-        uint32 i;
+        uint32_t i;
         if (js_IdIsIndex(id, &i))
             return;
         MarkTypeObjectUnknownProperties(cx, obj->type());
@@ -783,12 +783,12 @@ HashSetCapacity(unsigned count)
 
 /* Compute the FNV hash for the low 32 bits of v. */
 template <class T, class KEY>
-static inline uint32
+static inline uint32_t
 HashKey(T v)
 {
-    uint32 nv = KEY::keyBits(v);
+    uint32_t nv = KEY::keyBits(v);
 
-    uint32 hash = 84696351 ^ (nv & 0xff);
+    uint32_t hash = 84696351 ^ (nv & 0xff);
     hash = (hash * 16777619) ^ ((nv >> 8) & 0xff);
     hash = (hash * 16777619) ^ ((nv >> 16) & 0xff);
     return (hash * 16777619) ^ ((nv >> 24) & 0xff);
@@ -943,7 +943,7 @@ TypeSet::hasType(Type type)
 }
 
 inline void
-TypeSet::setBaseObjectCount(uint32 count)
+TypeSet::setBaseObjectCount(uint32_t count)
 {
     JS_ASSERT(count <= TYPE_FLAG_OBJECT_COUNT_LIMIT);
     flags = (flags & ~TYPE_FLAG_OBJECT_COUNT_MASK)
@@ -984,7 +984,7 @@ TypeSet::addType(JSContext *cx, Type type)
             return;
         if (type.isAnyObject())
             goto unknownObject;
-        uint32 objectCount = baseObjectCount();
+        uint32_t objectCount = baseObjectCount();
         TypeObjectKey *object = type.objectKey();
         TypeObjectKey **pentry = HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
                                      (cx->compartment, objectSet, objectCount, object);
@@ -1060,7 +1060,7 @@ inline unsigned
 TypeSet::getObjectCount()
 {
     JS_ASSERT(!unknownObject());
-    uint32 count = baseObjectCount();
+    uint32_t count = baseObjectCount();
     if (count > SET_ARRAY_SIZE)
         return HashSetCapacity(count);
     return count;
@@ -1123,14 +1123,14 @@ inline TypeObject::TypeObject(JSObject *proto, bool function, bool unknown)
     InferSpew(ISpewOps, "newObject: %s", TypeObjectString(this));
 }
 
-inline uint32
+inline uint32_t
 TypeObject::basePropertyCount() const
 {
     return (flags & OBJECT_FLAG_PROPERTY_COUNT_MASK) >> OBJECT_FLAG_PROPERTY_COUNT_SHIFT;
 }
 
 inline void
-TypeObject::setBasePropertyCount(uint32 count)
+TypeObject::setBasePropertyCount(uint32_t count)
 {
     JS_ASSERT(count <= OBJECT_FLAG_PROPERTY_COUNT_LIMIT);
     flags = (flags & ~OBJECT_FLAG_PROPERTY_COUNT_MASK)
@@ -1145,7 +1145,7 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
     JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == MakeTypeId(cx, id));
     JS_ASSERT(!unknownProperties());
 
-    uint32 propertyCount = basePropertyCount();
+    uint32_t propertyCount = basePropertyCount();
     Property **pprop = HashSetInsert<jsid,Property,Property>
                            (cx->compartment, propertySet, propertyCount, id);
     if (!pprop) {
@@ -1189,7 +1189,7 @@ TypeObject::maybeGetProperty(JSContext *cx, jsid id)
 inline unsigned
 TypeObject::getPropertyCount()
 {
-    uint32 count = basePropertyCount();
+    uint32_t count = basePropertyCount();
     if (count > SET_ARRAY_SIZE)
         return HashSetCapacity(count);
     return count;
@@ -1372,7 +1372,7 @@ JSScript::clearAnalysis()
 }
 
 inline void
-js::analyze::ScriptAnalysis::addPushedType(JSContext *cx, uint32 offset, uint32 which,
+js::analyze::ScriptAnalysis::addPushedType(JSContext *cx, uint32_t offset, uint32_t which,
                                            js::types::Type type)
 {
     js::types::TypeSet *pushed = pushedTypes(offset, which);

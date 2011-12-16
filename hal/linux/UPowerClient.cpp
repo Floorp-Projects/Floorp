@@ -48,14 +48,14 @@
  * We are specializing nsAutoRef class.
  */
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 class nsAutoRefTraits<DBusGProxy> : public nsPointerRefTraits<DBusGProxy>
 {
 public:
   static void Release(DBusGProxy* ptr) { g_object_unref(ptr); }
 };
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 class nsAutoRefTraits<GHashTable> : public nsPointerRefTraits<GHashTable>
 {
 public:

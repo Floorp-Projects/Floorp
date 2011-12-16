@@ -69,6 +69,25 @@ nsDOMPageTransitionEvent::InitPageTransitionEvent(const nsAString &aTypeArg,
   return NS_OK;
 }
 
+nsresult
+nsDOMPageTransitionEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict,
+                                       JSContext* aCx, JSObject* aObj)
+{
+  nsCOMPtr<nsIPageTransitionEventInit> eventInit = do_QueryInterface(aDict);
+  bool bubbles = false;
+  bool cancelable = false;
+  bool persisted = false;
+  if (eventInit) {
+    nsresult rv = eventInit->GetBubbles(&bubbles);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = eventInit->GetCancelable(&cancelable);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = eventInit->GetPersisted(&persisted);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return InitPageTransitionEvent(aType, bubbles, cancelable, persisted);
+}
+
 nsresult NS_NewDOMPageTransitionEvent(nsIDOMEvent** aInstancePtrResult,
                                       nsPresContext* aPresContext,
                                       nsEvent *aEvent) 

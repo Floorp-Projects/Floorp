@@ -33,6 +33,7 @@
 
 
 import array
+import errno
 
 # Import hash classes from a module available and recommended for each Python
 # version and re-export those symbol. Use sha and md5 module in Python 2.4, and
@@ -51,6 +52,7 @@ import StringIO
 import logging
 import os
 import re
+import socket
 import traceback
 import zlib
 
@@ -163,8 +165,8 @@ class NoopMasker(object):
 class RepeatedXorMasker(object):
     """A masking object that applies XOR on the string given to mask method
     with the masking bytes given to the constructor repeatedly. This object
-    remembers the position in the masking bytes the last mask method call ended
-    and resumes from that point on the next mask method call.
+    remembers the position in the masking bytes the last mask method call
+    ended and resumes from that point on the next mask method call.
     """
 
     def __init__(self, mask):
@@ -216,11 +218,11 @@ class DeflateRequest(object):
 
 
 class _Deflater(object):
-    def __init__(self):
+    def __init__(self, window_bits):
         self._logger = get_class_logger(self)
 
         self._compress = zlib.compressobj(
-            zlib.Z_DEFAULT_COMPRESSION, zlib.DEFLATED, -zlib.MAX_WBITS)
+            zlib.Z_DEFAULT_COMPRESSION, zlib.DEFLATED, -window_bits)
 
     def compress_and_flush(self, bytes):
         compressed_bytes = self._compress.compress(bytes)
@@ -292,6 +294,45 @@ class _Inflater(object):
         self._decompress = zlib.decompressobj(-zlib.MAX_WBITS)
 
 
+# Compresses/decompresses given octets using the method introduced in RFC1979.
+
+
+class _RFC1979Deflater(object):
+    """A compressor class that applies DEFLATE to given byte sequence and
+    flushes using the algorithm described in the RFC1979 section 2.1.
+    """
+
+    def __init__(self, window_bits, no_context_takeover):
+        self._deflater = None
+        if window_bits is None:
+            window_bits = zlib.MAX_WBITS
+        self._window_bits = window_bits
+        self._no_context_takeover = no_context_takeover
+
+    def filter(self, bytes):
+        if self._deflater is None or self._no_context_takeover:
+            self._deflater = _Deflater(self._window_bits)
+
+        # Strip last 4 octets which is LEN and NLEN field of a non-compressed
+        # block added for Z_SYNC_FLUSH.
+        return self._deflater.compress_and_flush(bytes)[:-4]
+
+
+class _RFC1979Inflater(object):
+    """A decompressor class for byte sequence compressed and flushed following
+    the algorithm described in the RFC1979 section 2.1.
+    """
+
+    def __init__(self):
+        self._inflater = _Inflater()
+
+    def filter(self, bytes):
+        # Restore stripped LEN and NLEN field of a non-compressed block added
+        # for Z_SYNC_FLUSH.
+        self._inflater.append(bytes + '\x00\x00\xff\xff')
+        return self._inflater.decompress(-1)
+
+
 class DeflateSocket(object):
     """A wrapper class for socket object to intercept send and recv to perform
     deflate compression and decompression transparently.
@@ -305,13 +346,13 @@ class DeflateSocket(object):
 
         self._logger = get_class_logger(self)
 
-        self._deflater = _Deflater()
+        self._deflater = _Deflater(zlib.MAX_WBITS)
         self._inflater = _Inflater()
 
     def recv(self, size):
         """Receives data from the socket specified on the construction up
-        to the specified size. Once any data is available, returns it even if
-        it's smaller than the specified size.
+        to the specified size. Once any data is available, returns it even
+        if it's smaller than the specified size.
         """
 
         # TODO(tyoshino): Allow call with size=0. It should block until any
@@ -346,7 +387,7 @@ class DeflateConnection(object):
 
         self._logger = get_class_logger(self)
 
-        self._deflater = _Deflater()
+        self._deflater = _Deflater(zlib.MAX_WBITS)
         self._inflater = _Inflater()
 
     def put_bytes(self, bytes):
@@ -388,15 +429,55 @@ class DeflateConnection(object):
     def write(self, bytes):
         self._connection.write(self._deflater.compress_and_flush(bytes))
 
-    def flushread(self):
-        self._connection.setblocking(0)
-        while True:
-            try:
-              data = self._connection.read(1)
-              self._logger.debug('flushing unused byte %r', data)
-              if len(data) < 1:
+
+def _is_ewouldblock_errno(error_number):
+    """Returns True iff error_number indicates that receive operation would
+    block. To make this portable, we check availability of errno and then
+    compare them.
+    """
+
+    for error_name in ['WSAEWOULDBLOCK', 'EWOULDBLOCK', 'EAGAIN']:
+        if (error_name in dir(errno) and
+            error_number == getattr(errno, error_name)):
+            return True
+    return False
+
+
+def drain_received_data(raw_socket):
+    # Set the socket non-blocking.
+    original_timeout = raw_socket.gettimeout()
+    raw_socket.settimeout(0.0)
+
+    drained_data = []
+
+    # Drain until the socket is closed or no data is immediately
+    # available for read.
+    while True:
+        try:
+            data = raw_socket.recv(1)
+            if not data:
                 break
+            drained_data.append(data)
+        except socket.error, e:
+            # e can be either a pair (errno, string) or just a string (or
+            # something else) telling what went wrong. We suppress only
+            # the errors that indicates that the socket blocks. Those
+            # exceptions can be parsed as a pair (errno, string).
+            try:
+                error_number, message = e
             except:
-              break
+                # Failed to parse socket.error.
+                raise e
+
+            if _is_ewouldblock_errno(error_number):
+                break
+            else:
+                raise e
+
+    # Rollback timeout value.
+    raw_socket.settimeout(original_timeout)
+
+    return ''.join(drained_data)
+
 
 # vi:sts=4 sw=4 et

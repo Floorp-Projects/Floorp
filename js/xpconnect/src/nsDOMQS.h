@@ -40,7 +40,7 @@
 #include "nsDOMClassInfoID.h"
 
 #define DEFINE_UNWRAP_CAST(_interface, _base, _bit)                           \
-NS_SPECIALIZE_TEMPLATE                                                        \
+template <>                                                                   \
 inline JSBool                                                                 \
 xpc_qsUnwrapThis<_interface>(JSContext *cx,                                   \
                              JSObject *obj,                                   \
@@ -62,7 +62,7 @@ xpc_qsUnwrapThis<_interface>(JSContext *cx,                                   \
     return true;                                                              \
 }                                                                             \
                                                                               \
-NS_SPECIALIZE_TEMPLATE                                                        \
+template <>                                                                   \
 inline nsresult                                                               \
 xpc_qsUnwrapArg<_interface>(JSContext *cx,                                    \
                             jsval v,                                          \
@@ -104,7 +104,7 @@ castToElement(nsIContent *content, jsval val, nsGenericElement **ppInterface,
     return true;
 }
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 inline JSBool
 xpc_qsUnwrapThis<nsGenericElement>(JSContext *cx,
                                    JSObject *obj,
@@ -135,7 +135,7 @@ xpc_qsUnwrapThis<nsGenericElement>(JSContext *cx,
     return ok;
 }
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 inline nsresult
 xpc_qsUnwrapArg<nsGenericElement>(JSContext *cx,
                                   jsval v,

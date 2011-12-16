@@ -84,7 +84,10 @@ public:
   virtual nsRestyleHint
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData);
   virtual bool MediumFeaturesChanged(nsPresContext* aPresContext);
-  virtual PRInt64 SizeOf() const { return sizeof(*this); }
+  virtual NS_MUST_OVERRIDE size_t
+    SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual NS_MUST_OVERRIDE size_t
+    SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const MOZ_OVERRIDE;
 
 private: 
   // These are not supported and are not implemented! 

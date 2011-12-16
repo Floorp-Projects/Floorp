@@ -52,7 +52,7 @@ namespace mjit {
 struct ImmTag : JSC::MacroAssembler::Imm32
 {
     ImmTag(JSValueTag mask)
-      : Imm32(int32(mask))
+      : Imm32(int32_t(mask))
     { }
 };
 
@@ -67,7 +67,7 @@ struct ImmType : ImmTag
 
 struct ImmPayload : JSC::MacroAssembler::Imm32
 {
-    ImmPayload(uint32 payload)
+    ImmPayload(uint32_t payload)
       : Imm32(payload)
     { }
 };
@@ -76,11 +76,11 @@ class NunboxAssembler : public JSC::MacroAssembler
 {
   public:
 #ifdef IS_BIG_ENDIAN
-    static const uint32 PAYLOAD_OFFSET = 4;
-    static const uint32 TAG_OFFSET     = 0;
+    static const uint32_t PAYLOAD_OFFSET = 4;
+    static const uint32_t TAG_OFFSET     = 0;
 #else
-    static const uint32 PAYLOAD_OFFSET = 0;
-    static const uint32 TAG_OFFSET     = 4;
+    static const uint32_t PAYLOAD_OFFSET = 0;
+    static const uint32_t TAG_OFFSET     = 4;
 #endif
 
   public:
@@ -102,7 +102,7 @@ class NunboxAssembler : public JSC::MacroAssembler
         return BaseIndex(address.base, address.index, address.scale, address.offset + TAG_OFFSET);
     }
 
-    void loadInlineSlot(RegisterID objReg, uint32 slot,
+    void loadInlineSlot(RegisterID objReg, uint32_t slot,
                         RegisterID typeReg, RegisterID dataReg) {
         Address address(objReg, JSObject::getFixedSlotOffset(slot));
         if (objReg == typeReg) {
@@ -345,7 +345,7 @@ class NunboxAssembler : public JSC::MacroAssembler
         loadPtr(payloadOf(privAddr), to);
     }
 
-    void loadObjPrivate(RegisterID base, RegisterID to, uint32 nfixed) {
+    void loadObjPrivate(RegisterID base, RegisterID to, uint32_t nfixed) {
         Address priv(base, JSObject::getPrivateDataOffset(nfixed));
         loadPtr(priv, to);
     }
