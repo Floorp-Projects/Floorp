@@ -1392,7 +1392,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
     mActualFormat = cf;
 
 #ifdef DEBUG
-    if (mDebugMode) {
+    if (DebugMode()) {
         printf_stderr("%s %dx%d offscreen FBO: r: %d g: %d b: %d a: %d depth: %d stencil: %d samples: %d\n",
                       firstTime ? "Created" : "Resized",
                       mOffscreenActualSize.width, mOffscreenActualSize.height,
