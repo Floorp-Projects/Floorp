@@ -881,6 +881,28 @@ private:
     GLuint mPrevReadFBOBinding;
     bool mOffscreenFBOsDirty;
 
+    void GetShaderPrecisionFormatNonES2(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision) {
+        switch (precisiontype) {
+            case LOCAL_GL_LOW_FLOAT:
+            case LOCAL_GL_MEDIUM_FLOAT:
+            case LOCAL_GL_HIGH_FLOAT:
+                // Assume IEEE 754 precision
+                range[0] = 127;
+                range[1] = 127;
+                *precision = 0;
+                break;
+            case LOCAL_GL_LOW_INT:
+            case LOCAL_GL_MEDIUM_INT:
+            case LOCAL_GL_HIGH_INT:
+                // Some (most) hardware only supports single-precision floating-point numbers,
+                // which can accurately represent integers up to +/-16777216
+                range[0] = 24;
+                range[1] = 24;
+                *precision = 0;
+                break;
+        }
+    }
+
     void BeforeGLDrawCall() {
         // Record and rebind if necessary
         mPrevDrawFBOBinding = GetBoundDrawFBO();
@@ -2328,6 +2350,17 @@ public:
     void fGetShaderInfoLog(GLuint shader, GLsizei bufSize, GLsizei* length, GLchar* infoLog) {
         BEFORE_GL_CALL;
         mSymbols.fGetShaderInfoLog(shader, bufSize, length, infoLog);
+        AFTER_GL_CALL;
+    }
+
+    void fGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision) {
+        BEFORE_GL_CALL;
+        if (mIsGLES2) {
+            mSymbols.fGetShaderPrecisionFormat(shadertype, precisiontype, range, precision);
+        } else {
+            // Fall back to automatic values because almost all desktop hardware supports the OpenGL standard precisions.
+            GetShaderPrecisionFormatNonES2(shadertype, precisiontype, range, precision);
+        }
         AFTER_GL_CALL;
     }
 
