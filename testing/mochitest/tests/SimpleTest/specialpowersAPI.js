@@ -527,6 +527,27 @@ SpecialPowersAPI.prototype = {
     Components.utils.forceGC();
   },
 
+  exactGC: function(win, callback) {
+    var self = this;
+    let count = 0;
+
+    function doPreciseGCandCC() {
+      function scheduledGCCallback() {
+        self.getDOMWindowUtils(win).cycleCollect();
+
+        if (++count < 2) {
+          doPreciseGCandCC();
+        } else {
+          callback();
+        }
+      }
+
+      Components.utils.schedulePreciseGC(scheduledGCCallback);
+    }
+
+    doPreciseGCandCC();
+  },
+
   hasContentProcesses: function() {
     try {
       var rt = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);

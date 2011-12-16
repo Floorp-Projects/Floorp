@@ -1,0 +1,75 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    denyUnlimitedQuota();
+
+    const READ_WRITE = IDBTransaction.READ_WRITE;
+    const DEFAULT_QUOTA_MB = 50;
+
+    const name = window.location.pathname;
+    const description = "My Test Database";
+
+    const objectStoreName = "Blobs";
+
+    const testData = { key: 0, value: {} };
+    const fileData = { key: 1, file: null };
+
+    let request = mozIndexedDB.open(name, 1, description);
+    request.onerror = errorHandler;
+    request.onupgradeneeded = grabEventAndContinueHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    let event = yield;
+
+    is(event.type, "upgradeneeded", "Got correct event type");
+     
+    let db = event.target.result;
+
+    let objectStore = db.createObjectStore(objectStoreName, { });
+    objectStore.add(testData.value, testData.key);
+
+    let usage = getUsageSync();
+
+    let size = (DEFAULT_QUOTA_MB + 1) * 1024 * 1024 - usage;
+
+    fileData.file = getNullFile("random.bin", size);
+
+    event = yield;
+
+    is(event.type, "success", "Got correct event type");
+
+    trans = db.transaction([objectStoreName], READ_WRITE);
+    objectStore = trans.objectStore(objectStoreName);
+
+    request = objectStore.add(fileData.file, fileData.key);
+    request.onerror = new ExpectError(IDBDatabaseException.UNKNOWN_ERR);
+    request.onsuccess = unexpectedSuccessHandler;
+    event = yield;
+
+    trans.oncomplete = grabEventAndContinueHandler;
+    event = yield;
+
+    is(event.type, "complete", "Got correct event type");
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="file.js"></script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>
