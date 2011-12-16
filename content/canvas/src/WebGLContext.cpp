@@ -599,8 +599,14 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     // if we want EGL, try it now
     if (!gl && (preferEGL || useANGLE) && !preferOpenGL) {
         gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
-        if (gl && !InitAndValidateGL()) {
-            gl = nsnull;
+        if (gl) {
+            if (InitAndValidateGL()) {
+                if (useANGLE) {
+                    gl->SetFlushGuaranteesResolve(true);
+                }
+            } else {
+                gl = nsnull;
+            }
         }
     }
 
