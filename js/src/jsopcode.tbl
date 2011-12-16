@@ -206,7 +206,7 @@ OPDEF(JSOP_SETCALL,   74, "setcall",    NULL,         1,  1,  2, 18,  JOF_BYTE)
 
 /*
  * JSOP_ITER sets up a for-in or for-each-in loop using the JSITER_* flag bits
- * in this op's uint8 immediate operand. It replaces the top of stack value
+ * in this op's uint8_t immediate operand. It replaces the top of stack value
  * with an iterator for that value.
  *
  * JSOP_MOREITER stores the next iterated value into cx->iterValue and pushes

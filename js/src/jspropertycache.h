@@ -70,7 +70,7 @@ struct PropertyCacheEntry
     const Shape         *kshape;        /* shape of direct (key) object */
     const Shape         *pshape;        /* shape of owning object */
     const Shape         *prop;          /* shape of accessed property */
-    uint16              vindex;         /* scope/proto chain indexing,
+    uint16_t            vindex;         /* scope/proto chain indexing,
                                          * see PCINDEX above */
 
     bool directHit() const { return vindex == 0; }
@@ -113,35 +113,35 @@ class PropertyCache
   public:
 #ifdef JS_PROPERTY_CACHE_METERING
     PropertyCacheEntry  *pctestentry;   /* entry of the last PC-based test */
-    uint32              fills;          /* number of cache entry fills */
-    uint32              nofills;        /* couldn't fill (e.g. default get) */
-    uint32              rofills;        /* set on read-only prop can't fill */
-    uint32              disfills;       /* fill attempts on disabled cache */
-    uint32              oddfills;       /* fill attempt after setter deleted */
-    uint32              add2dictfills;  /* fill attempt on dictionary object */
-    uint32              modfills;       /* fill that rehashed to a new entry */
-    uint32              brandfills;     /* scope brandings to type structural
+    uint32_t            fills;          /* number of cache entry fills */
+    uint32_t            nofills;        /* couldn't fill (e.g. default get) */
+    uint32_t            rofills;        /* set on read-only prop can't fill */
+    uint32_t            disfills;       /* fill attempts on disabled cache */
+    uint32_t            oddfills;       /* fill attempt after setter deleted */
+    uint32_t            add2dictfills;  /* fill attempt on dictionary object */
+    uint32_t            modfills;       /* fill that rehashed to a new entry */
+    uint32_t            brandfills;     /* scope brandings to type structural
                                            method fills */
-    uint32              noprotos;       /* resolve-returned non-proto pobj */
-    uint32              longchains;     /* overlong scope and/or proto chain */
-    uint32              recycles;       /* cache entries recycled by fills */
-    uint32              tests;          /* cache probes */
-    uint32              pchits;         /* fast-path polymorphic op hits */
-    uint32              protopchits;    /* pchits hitting immediate prototype */
-    uint32              initests;       /* cache probes from JSOP_INITPROP */
-    uint32              inipchits;      /* init'ing next property pchit case */
-    uint32              inipcmisses;    /* init'ing next property pc misses */
-    uint32              settests;       /* cache probes from JOF_SET opcodes */
-    uint32              addpchits;      /* adding next property pchit case */
-    uint32              setpchits;      /* setting existing property pchit */
-    uint32              setpcmisses;    /* setting/adding property pc misses */
-    uint32              setmisses;      /* JSOP_SET{NAME,PROP} total misses */
-    uint32              kpcmisses;      /* slow-path key id == atom misses */
-    uint32              kshapemisses;   /* slow-path key object misses */
-    uint32              vcapmisses;     /* value capability misses */
-    uint32              misses;         /* cache misses */
-    uint32              flushes;        /* cache flushes */
-    uint32              pcpurges;       /* shadowing purges on proto chain */
+    uint32_t            noprotos;       /* resolve-returned non-proto pobj */
+    uint32_t            longchains;     /* overlong scope and/or proto chain */
+    uint32_t            recycles;       /* cache entries recycled by fills */
+    uint32_t            tests;          /* cache probes */
+    uint32_t            pchits;         /* fast-path polymorphic op hits */
+    uint32_t            protopchits;    /* pchits hitting immediate prototype */
+    uint32_t            initests;       /* cache probes from JSOP_INITPROP */
+    uint32_t            inipchits;      /* init'ing next property pchit case */
+    uint32_t            inipcmisses;    /* init'ing next property pc misses */
+    uint32_t            settests;       /* cache probes from JOF_SET opcodes */
+    uint32_t            addpchits;      /* adding next property pchit case */
+    uint32_t            setpchits;      /* setting existing property pchit */
+    uint32_t            setpcmisses;    /* setting/adding property pc misses */
+    uint32_t            setmisses;      /* JSOP_SET{NAME,PROP} total misses */
+    uint32_t            kpcmisses;      /* slow-path key id == atom misses */
+    uint32_t            kshapemisses;   /* slow-path key object misses */
+    uint32_t            vcapmisses;     /* value capability misses */
+    uint32_t            misses;         /* cache misses */
+    uint32_t            flushes;        /* cache flushes */
+    uint32_t            pcpurges;       /* shadowing purges on proto chain */
 
 # define PCMETER(x)     x
 #else
@@ -159,7 +159,7 @@ class PropertyCache
         return (((jsuword(pc) >> SIZE_LOG2) ^ jsuword(pc) ^ ((jsuword)kshape >> 3)) & MASK);
     }
 
-    static inline bool matchShape(JSContext *cx, JSObject *obj, uint32 shape);
+    static inline bool matchShape(JSContext *cx, JSObject *obj, uint32_t shape);
 
     JS_REQUIRES_STACK JSAtom *fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp,
                                        JSObject **pobjp, PropertyCacheEntry *entry);

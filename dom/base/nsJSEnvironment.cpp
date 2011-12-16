@@ -2065,7 +2065,7 @@ nsJSContext::Serialize(nsIObjectOutputStream* aStream, JSScript* aScriptObject)
         // stream, when control returns here from ::JS_XDRScript, we'll have
         // one last buffer of data to write to aStream.
 
-        uint32 size;
+        uint32_t size;
         const char* data = reinterpret_cast<const char*>
                                            (::JS_XDRMemGetData(xdr, &size));
         NS_ASSERTION(data, "no decoded JSXDRState data!");
@@ -2130,7 +2130,7 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
         // the JSXDRState.  So we steal it back, nulling xdr's buffer so it
         // doesn't get passed to ::JS_free by ::JS_XDRDestroy.
 
-        uint32 junk;
+        uint32_t junk;
         data = (char*) ::JS_XDRMemGetData(xdr, &junk);
         if (data)
             ::JS_XDRMemSetData(xdr, NULL, 0);
@@ -2777,11 +2777,10 @@ TraceMallocOpenLogFile(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 TraceMallocChangeLogFD(JSContext *cx, uintN argc, jsval *vp)
 {
-    int32 fd, oldfd;
-
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
 
+    int32_t fd, oldfd;
     if (argc == 0) {
         oldfd = -1;
     } else {
@@ -2800,11 +2799,10 @@ TraceMallocChangeLogFD(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 TraceMallocCloseLogFD(JSContext *cx, uintN argc, jsval *vp)
 {
-    int32 fd;
-
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
 
+    int32_t fd;
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     if (argc == 0)
         return JS_TRUE;
@@ -3671,8 +3669,8 @@ ObjectPrincipalFinder(JSContext *cx, JSObject *obj)
 JSObject*
 NS_DOMReadStructuredClone(JSContext* cx,
                           JSStructuredCloneReader* reader,
-                          uint32 tag,
-                          uint32 data,
+                          uint32_t tag,
+                          uint32_t data,
                           void* closure)
 {
   // We don't currently support any extensions to structured cloning.
@@ -3693,7 +3691,7 @@ NS_DOMWriteStructuredClone(JSContext* cx,
 
 void
 NS_DOMStructuredCloneError(JSContext* cx,
-                           uint32 errorid)
+                           uint32_t errorid)
 {
   // We don't currently support any extensions to structured cloning.
   nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_DATA_CLONE_ERR);

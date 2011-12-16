@@ -275,7 +275,7 @@ class Event
 
     WorkerParent *recipient;
     Worker *child;
-    uint64 *data;
+    uint64_t *data;
     size_t nbytes;
 
   public:
@@ -307,7 +307,7 @@ class Event
     static EventType *createEvent(JSContext *cx, WorkerParent *recipient, Worker *child,
                                   jsval v)
     {
-        uint64 *data;
+        uint64_t *data;
         size_t nbytes;
         if (!JS_WriteStructuredClone(cx, v, &data, &nbytes, NULL, NULL))
             return NULL;

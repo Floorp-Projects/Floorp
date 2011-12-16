@@ -192,19 +192,19 @@ class LoopState : public MacroAssemblerTypedefs
         } kind;
         union {
             struct {
-                uint32 arraySlot;
-                uint32 valueSlot1;
-                uint32 valueSlot2;
-                int32 constant;
+                uint32_t arraySlot;
+                uint32_t valueSlot1;
+                uint32_t valueSlot2;
+                int32_t constant;
             } check;
             struct {
-                uint32 arraySlot;
-                uint32 temporary;
+                uint32_t arraySlot;
+                uint32_t temporary;
             } array;
             struct {
-                uint32 objectSlot;
-                uint32 propertySlot;
-                uint32 temporary;
+                uint32_t objectSlot;
+                uint32_t propertySlot;
+                uint32_t temporary;
                 jsid id;
             } property;
         } u;
@@ -221,12 +221,12 @@ class LoopState : public MacroAssemblerTypedefs
     static inline bool entryRedundant(const InvariantEntry &e0, const InvariantEntry &e1);
     bool checkRedundantEntry(const InvariantEntry &entry);
 
-    bool loopInvariantEntry(uint32 slot);
-    bool addHoistedCheck(InvariantArrayKind arrayKind, uint32 arraySlot,
-                         uint32 valueSlot1, uint32 valueSlot2, int32 constant);
-    void addNegativeCheck(uint32 valueSlot, int32 constant);
-    void addRangeCheck(uint32 valueSlot1, uint32 valueSlot2, int32 constant);
-    bool hasTestLinearRelationship(uint32 slot);
+    bool loopInvariantEntry(uint32_t slot);
+    bool addHoistedCheck(InvariantArrayKind arrayKind, uint32_t arraySlot,
+                         uint32_t valueSlot1, uint32_t valueSlot2, int32_t constant);
+    void addNegativeCheck(uint32_t valueSlot, int32_t constant);
+    void addRangeCheck(uint32_t valueSlot1, uint32_t valueSlot2, int32_t constant);
+    bool hasTestLinearRelationship(uint32_t slot);
 
     bool hasInvariants() { return !invariantEntries.empty(); }
     void restoreInvariants(jsbytecode *pc, Assembler &masm,
@@ -238,7 +238,7 @@ class LoopState : public MacroAssemblerTypedefs
     LoopState *outer;
 
     /* Offset from the outermost frame at which temporaries should be allocated. */
-    uint32 temporariesStart;
+    uint32_t temporariesStart;
 
     LoopState(JSContext *cx, analyze::CrossScriptSSA *ssa,
               Compiler *cc, FrameState *frame);
@@ -246,7 +246,7 @@ class LoopState : public MacroAssemblerTypedefs
 
     void setOuterPC(jsbytecode *pc)
     {
-        if (uint32(pc - outerScript->code) == lifetime->entry && lifetime->entry != lifetime->head)
+        if (uint32_t(pc - outerScript->code) == lifetime->entry && lifetime->entry != lifetime->head)
             reachedEntryPoint = true;
     }
 
@@ -255,12 +255,12 @@ class LoopState : public MacroAssemblerTypedefs
     /* Add a call with trailing jump/label, after which invariants need to be restored. */
     void addInvariantCall(Jump jump, Label label, bool ool, bool entry, unsigned patchIndex, Uses uses);
 
-    uint32 headOffset() { return lifetime->head; }
-    uint32 getLoopRegs() { return loopRegs.freeMask; }
+    uint32_t headOffset() { return lifetime->head; }
+    uint32_t getLoopRegs() { return loopRegs.freeMask; }
 
     Jump entryJump() { return entry; }
-    uint32 entryOffset() { return lifetime->entry; }
-    uint32 backedgeOffset() { return lifetime->backedge; }
+    uint32_t entryOffset() { return lifetime->entry; }
+    uint32_t backedgeOffset() { return lifetime->backedge; }
 
     /* Whether the payload of slot is carried around the loop in a register. */
     bool carriesLoopReg(FrameEntry *fe) { return alloc->hasAnyReg(frame.entrySlot(fe)); }
@@ -321,10 +321,10 @@ class LoopState : public MacroAssemblerTypedefs
      * invalid afterwards), and the rhs is invariant. This information is only
      * valid if the LHS/RHS are known integers.
      */
-    enum { UNASSIGNED = uint32(-1) };
-    uint32 testLHS;
-    uint32 testRHS;
-    int32 testConstant;
+    enum { UNASSIGNED = UINT32_MAX };
+    uint32_t testLHS;
+    uint32_t testRHS;
+    int32_t testConstant;
     bool testLessEqual;
 
     /*
@@ -333,8 +333,8 @@ class LoopState : public MacroAssemblerTypedefs
      * may or may not run after the initial entry into the loop.
      */
     struct Increment {
-        uint32 slot;
-        uint32 offset;
+        uint32_t slot;
+        uint32_t offset;
     };
     Vector<Increment, 4, CompilerAllocPolicy> increments;
 
@@ -366,7 +366,7 @@ class LoopState : public MacroAssemblerTypedefs
     void analyzeLoopBody(unsigned frame);
 
     bool definiteArrayAccess(const analyze::SSAValue &obj, const analyze::SSAValue &index);
-    bool getLoopTestAccess(const analyze::SSAValue &v, uint32 *pslot, int32 *pconstant);
+    bool getLoopTestAccess(const analyze::SSAValue &v, uint32_t *pslot, int32_t *pconstant);
 
     bool addGrowArray(types::TypeObject *object);
     bool addModifiedProperty(types::TypeObject *object, jsid id);
@@ -374,11 +374,11 @@ class LoopState : public MacroAssemblerTypedefs
     bool hasGrowArray(types::TypeObject *object);
     bool hasModifiedProperty(types::TypeObject *object, jsid id);
 
-    uint32 getIncrement(uint32 slot);
-    int32 adjustConstantForIncrement(jsbytecode *pc, uint32 slot);
+    uint32_t getIncrement(uint32_t slot);
+    int32_t adjustConstantForIncrement(jsbytecode *pc, uint32_t slot);
 
-    bool getEntryValue(const analyze::CrossSSAValue &v, uint32 *pslot, int32 *pconstant);
-    bool computeInterval(const analyze::CrossSSAValue &v, int32 *pmin, int32 *pmax);
+    bool getEntryValue(const analyze::CrossSSAValue &v, uint32_t *pslot, int32_t *pconstant);
+    bool computeInterval(const analyze::CrossSSAValue &v, int32_t *pmin, int32_t *pmax);
     bool valueFlowsToBitops(const analyze::SSAValue &v);
 };
 

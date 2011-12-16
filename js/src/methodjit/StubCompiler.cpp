@@ -176,7 +176,7 @@ StubCompiler::emitStubCall(void *ptr, RejoinState rejoin, Uses uses)
 }
 
 JSC::MacroAssembler::Call
-StubCompiler::emitStubCall(void *ptr, RejoinState rejoin, Uses uses, int32 slots)
+StubCompiler::emitStubCall(void *ptr, RejoinState rejoin, Uses uses, int32_t slots)
 {
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW CALL CODE ---- \n");
     masm.bumpStubCounter(cc.script, cc.PC, Registers::tempCallReg());
@@ -207,7 +207,7 @@ StubCompiler::emitStubCall(void *ptr, RejoinState rejoin, Uses uses, int32 slots
 }
 
 void
-StubCompiler::fixCrossJumps(uint8 *ncode, size_t offset, size_t total)
+StubCompiler::fixCrossJumps(uint8_t *ncode, size_t offset, size_t total)
 {
     JSC::LinkBuffer fast(ncode, total, JSC::METHOD_CODE);
     JSC::LinkBuffer slow(ncode + offset, total - offset, JSC::METHOD_CODE);
