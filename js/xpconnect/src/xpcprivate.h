@@ -46,6 +46,8 @@
 #ifndef xpcprivate_h___
 #define xpcprivate_h___
 
+#include "mozilla/Attributes.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -4024,8 +4026,8 @@ private:
     MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     // No copying or assignment allowed
-    AutoScriptEvaluate(const AutoScriptEvaluate &);
-    AutoScriptEvaluate & operator =(const AutoScriptEvaluate &);
+    AutoScriptEvaluate(const AutoScriptEvaluate &) MOZ_DELETE;
+    AutoScriptEvaluate & operator =(const AutoScriptEvaluate &) MOZ_DELETE;
 };
 
 /***************************************************************************/
