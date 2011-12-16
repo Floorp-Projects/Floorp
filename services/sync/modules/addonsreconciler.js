@@ -633,7 +633,9 @@ AddonsReconciler.prototype = {
           }
       }
 
-      this.saveState(null, null);
+      let cb = Async.makeSpinningCallback();
+      this.saveState(null, cb);
+      cb.wait();
     }
     catch (ex) {
       this._log.warn("Exception: " + Utils.exceptionStr(ex));
