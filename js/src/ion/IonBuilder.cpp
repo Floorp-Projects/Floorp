@@ -555,6 +555,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_DIV:
       	return jsop_binary(op);
 
+      case JSOP_POS:
+        return jsop_pos();
+
       case JSOP_NEG:
         return jsop_neg();
 
@@ -1951,6 +1954,21 @@ IonBuilder::jsop_binary(JSOp op)
     MDefinition *left = current->pop();
 
     return jsop_binary(op, left, right);
+}
+
+bool
+IonBuilder::jsop_pos()
+{
+    TypeOracle::Unary types = oracle->unaryOp(script, pc);
+    MDefinition *value = current->pop();
+    MInstruction *ins;
+    if (types.rval == MIRType_Int32)
+        ins = MToInt32::New(value);
+    else
+        ins = MToDouble::New(value);
+    current->add(ins);
+    current->push(ins);
+    return true;
 }
 
 bool
