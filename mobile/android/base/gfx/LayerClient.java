@@ -53,24 +53,24 @@ public abstract class LayerClient {
     }
 
     /**
-     * A utility function for calling TileLayer.beginTransaction with the
+     * A utility function for calling Layer.beginTransaction with the
      * appropriate LayerView.
      */
-    public void beginTransaction(TileLayer aTileLayer) {
+    public void beginTransaction(Layer aLayer) {
         if (mLayerController != null) {
             LayerView view = mLayerController.getView();
             if (view != null) {
-                aTileLayer.beginTransaction(view);
+                aLayer.beginTransaction(view);
                 return;
             }
         }
 
-        aTileLayer.beginTransaction();
+        aLayer.beginTransaction();
     }
 
     // Included for symmetry.
-    public void endTransaction(TileLayer aTileLayer) {
-        aTileLayer.endTransaction();
+    public void endTransaction(Layer aLayer) {
+        aLayer.endTransaction();
     }
 }
 
