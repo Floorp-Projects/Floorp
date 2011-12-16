@@ -35,12 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#filter substitution
 package org.mozilla.gecko.db;
 
 import android.net.Uri;
 
 public class BrowserContract {
-    public static final String AUTHORITY = "org.mozilla.gecko.providers.browser";
+    public static final String AUTHORITY = "@ANDROID_PACKAGE_NAME@.db.browser";
 
     public static final Uri AUTHORITY_URI = Uri.parse("content://" + AUTHORITY);
 
