@@ -193,6 +193,21 @@ class LNewArray : public LVMCallInstructionHelper<LDefinition::OBJECT, 1, 0, 0>
     }
 };
 
+class LCheckOverRecursed : public LInstructionHelper<0, 0, 1>
+{
+  public:
+    LIR_HEADER(CheckOverRecursed);
+
+    LCheckOverRecursed(const LDefinition &limitreg)
+    {
+        setTemp(0, limitreg);
+    }
+
+    const LAllocation *limitTemp() {
+        return getTemp(0)->output();
+    }
+};
+
 // Writes an argument for a function call to the frame's argument vector.
 class LStackArg : public LInstructionHelper<0, BOX_PIECES, 0>
 {

@@ -89,6 +89,16 @@ LIRGenerator::visitGoto(MGoto *ins)
 }
 
 bool
+LIRGenerator::visitCheckOverRecursed(MCheckOverRecursed *ins)
+{
+    LCheckOverRecursed *lir = new LCheckOverRecursed(temp(LDefinition::POINTER));
+
+    if (!assignSafepoint(lir, ins))
+        return false;
+    return add(lir);
+}
+
+bool
 LIRGenerator::visitNewArray(MNewArray *ins)
 {
     LNewArray *lir = new LNewArray();

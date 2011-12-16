@@ -1628,6 +1628,13 @@ class MOsrValue : public MAryInstruction<1>
     }
 };
 
+// Check the current frame for over-recursion past the global stack limit.
+class MCheckOverRecursed : public MAryInstruction<0>
+{
+  public:
+    INSTRUCTION_HEADER(CheckOverRecursed);
+};
+
 // Determines the implicit |this| value for function calls.
 class MImplicitThis
   : public MUnaryInstruction,
