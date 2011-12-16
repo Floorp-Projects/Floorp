@@ -44,8 +44,10 @@
 #include "nsThreadUtils.h"
 #include "prenv.h"
 #include "shared-libraries.h"
+#include "mozilla/StringBuilder.h"
 
 using std::string;
+using namespace mozilla;
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -158,7 +160,7 @@ public:
     }
   }
 
-  void ToString(string* profile)
+  void ToString(StringBuilder &profile)
   {
     if (mNeedsSharedLibraryInfo) {
       // Can't be called from signal because
@@ -166,10 +168,9 @@ public:
       mSharedLibraryInfo = SharedLibraryInfo::GetInfoForSelf();
     }
 
-    *profile = "";
     int oldReadPos = mReadPos;
     while (mReadPos != mWritePos) {
-      *profile += mEntries[mReadPos].TagToString(this);
+      profile.Append(mEntries[mReadPos].TagToString(this).c_str());
       mReadPos = (mReadPos + 1) % mEntrySize;
     }
     mReadPos = oldReadPos;
@@ -456,11 +457,11 @@ char* mozilla_sampler_get_profile() {
     return NULL;
   }
 
-  string profile;
-  t->GetProfile()->ToString(&profile);
+  StringBuilder profile;
+  t->GetProfile()->ToString(profile);
 
-  char *rtn = (char*)malloc( (strlen(profile.c_str())+1) * sizeof(char) );
-  strcpy(rtn, profile.c_str());
+  char *rtn = (char*)malloc( (profile.Length()+1) * sizeof(char) );
+  strcpy(rtn, profile.Buffer());
   return rtn;
 }
 
