@@ -298,7 +298,6 @@ SHELL_WRAPPER0(executeNextRunnable)
 SHELL_WRAPPER1(cameraCallbackBridge, jbyteArray)
 SHELL_WRAPPER1(notifyUriVisited, jstring)
 SHELL_WRAPPER3(notifyBatteryChange, jdouble, jboolean, jdouble);
-SHELL_WRAPPER1_WITH_RETURN(canCreateFixupURI, bool, jstring);
 SHELL_WRAPPER3(notifySmsReceived, jstring, jstring, jlong);
 
 static void * xul_handle = NULL;
@@ -704,7 +703,6 @@ loadLibs(const char *apkName)
   GETFUNC(cameraCallbackBridge);
   GETFUNC(notifyUriVisited);
   GETFUNC(notifyBatteryChange);
-  GETFUNC(canCreateFixupURI);
   GETFUNC(notifySmsReceived);
 #undef GETFUNC
   sStartupTimeline = (uint64_t *)__wrap_dlsym(xul_handle, "_ZN7mozilla15StartupTimeline16sStartupTimelineE");

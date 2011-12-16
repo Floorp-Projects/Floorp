@@ -44,6 +44,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= ogg
 LIBRARY_NAME	= ogg
 FORCE_STATIC_LIB= 1
+ifeq (WINNT,$(OS_TARGET))
+VISIBILITY_FLAGS =
+endif
 
 CSRCS		= \
 		ogg_bitwise.c \

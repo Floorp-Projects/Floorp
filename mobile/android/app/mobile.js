@@ -441,6 +441,8 @@ pref("plugin.disable", true);
 pref("dom.ipc.plugins.enabled", true);
 #endif
 
+pref("plugins.click_to_play", true);
+
 // process priority
 // higher values give content process less CPU time
 #if MOZ_PLATFORM_MAEMO == 5

@@ -66,6 +66,9 @@
 #include "harfbuzz/hb-unicode.h"
 #include "harfbuzz/hb-ot-tag.h"
 #include "gfxHarfBuzzShaper.h"
+#ifdef MOZ_GRAPHITE
+#include "gfxGraphiteShaper.h"
+#endif
 #include "gfxUnicodeProperties.h"
 #include "gfxFontconfigUtils.h"
 #include "gfxUserFontSet.h"
@@ -132,10 +135,10 @@ public:
     static void AddRef(T *aPtr) { g_object_ref(aPtr); }
 };
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 class nsAutoRefTraits<PangoFont> : public gfxGObjectRefTraits<PangoFont> { };
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 class nsAutoRefTraits<PangoCoverage>
     : public nsPointerRefTraits<PangoCoverage> {
 public:
@@ -229,6 +232,10 @@ protected:
     {
     }
 
+#ifdef MOZ_GRAPHITE
+    virtual void CheckForGraphiteTables();
+#endif
+
     // One pattern is the common case and some subclasses rely on successful
     // addition of the first element to the array.
     nsAutoTArray<nsCountedRef<FcPattern>,1> mPatterns;
@@ -279,6 +286,19 @@ gfxFcFontEntry::RealFaceName()
     }
     return gfxFontEntry::RealFaceName();
 }
+
+#ifdef MOZ_GRAPHITE
+void
+gfxFcFontEntry::CheckForGraphiteTables()
+{
+    FcChar8 *capability;
+    mHasGraphiteTables =
+        !mPatterns.IsEmpty() &&
+        FcPatternGetString(mPatterns[0],
+                           FC_CAPABILITY, 0, &capability) == FcResultMatch &&
+        FcStrStr(capability, gfxFontconfigUtils::ToFcChar8("ttable:Silf"));
+}
+#endif
 
 bool
 gfxFcFontEntry::ShouldUseHarfBuzz(PRInt32 aRunScript) {
@@ -2191,6 +2211,21 @@ gfxFcFont::InitTextRun(gfxContext *aContext,
                        bool aPreferPlatformShaping)
 {
     gfxFcFontEntry *fontEntry = static_cast<gfxFcFontEntry*>(GetFontEntry());
+
+#ifdef MOZ_GRAPHITE
+    if (FontCanSupportGraphite()) {
+        if (gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
+            if (!mGraphiteShaper) {
+                mGraphiteShaper = new gfxGraphiteShaper(this);
+            }
+            if (mGraphiteShaper->InitTextRun(aContext, aTextRun, aString,
+                                             aRunStart, aRunLength,
+                                             aRunScript)) {
+                return true;
+            }
+        }
+    }
+#endif
 
     if (fontEntry->ShouldUseHarfBuzz(aRunScript)) {
         if (!mHarfBuzzShaper) {

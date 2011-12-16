@@ -928,6 +928,7 @@ InspectorUI.prototype = {
       this.chromeDoc.getElementById("inspector-inspect-toolbutton");
 
     this.initTools();
+    this.chromeWin.Tilt.setup();
 
     if (this.treePanelEnabled) {
       this.treePanel = new TreePanel(this.chromeWin, this);
@@ -1190,6 +1191,7 @@ InspectorUI.prototype = {
     }
 
     this.breadcrumbs.update();
+    this.chromeWin.Tilt.update(aNode);
 
     this.toolsSelect(aScroll);
   },

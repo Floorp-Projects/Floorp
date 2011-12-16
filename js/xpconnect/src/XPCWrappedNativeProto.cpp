@@ -206,7 +206,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
     XPCLock* lock = nsnull;
     JSBool shared;
 
-    JSUint32 ciFlags;
+    uint32_t ciFlags;
     if (NS_FAILED(ClassInfo->GetFlags(&ciFlags)))
         ciFlags = 0;
 

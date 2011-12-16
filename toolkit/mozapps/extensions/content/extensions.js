@@ -54,6 +54,7 @@ const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 const PREF_MAXRESULTS = "extensions.getAddons.maxResults";
 const PREF_CHECK_COMPATIBILITY_BASE = "extensions.checkCompatibility";
 const PREF_CHECK_UPDATE_SECURITY = "extensions.checkUpdateSecurity";
+const PREF_UPDATE_ENABLED = "extensions.update.enabled";
 const PREF_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault";
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_CACHE_ID_ENABLED = "extensions.%ID%.getAddons.cache.enabled";
@@ -757,7 +758,13 @@ var gViewController = {
         try {
           oldValue = Services.prefs.getBoolPref(PREF_AUTOUPDATE_DEFAULT);
         } catch(e) { }
-        Services.prefs.setBoolPref(PREF_AUTOUPDATE_DEFAULT, !oldValue);
+        var newValue = !oldValue; // toggle
+        Services.prefs.setBoolPref(PREF_AUTOUPDATE_DEFAULT, newValue);
+
+        // If the user wants us to auto-update add-ons, we also need to
+        // auto-check for updates.
+        if (newValue) // i.e. new value is true
+          Services.prefs.setBoolPref(PREF_UPDATE_ENABLED, true);
       }
     },
 
@@ -1991,7 +1998,8 @@ var gDiscoverView = {
     // If there was an error loading the page or the new hostname is not the
     // same as the default hostname or the default scheme is secure and the new
     // scheme is insecure then show the error page
-    if (!Components.isSuccessCode(aStatus) ||
+    const NS_ERROR_PARSED_DATA_CACHED = 0x805D0021;
+    if (!(Components.isSuccessCode(aStatus) || aStatus == NS_ERROR_PARSED_DATA_CACHED) ||
         (aRequest && aRequest instanceof Ci.nsIHttpChannel && !aRequest.requestSucceeded)) {
       this.showError();
     } else {
@@ -2874,7 +2882,8 @@ var gDetailView = {
     var xml = xhr.responseXML;
     var settings = xml.querySelectorAll(":root > setting");
 
-    for (var i = 0, first = true; i < settings.length; i++) {
+    var firstSetting = null;
+    for (var i = 0; i < settings.length; i++) {
       var setting = settings[i];
 
       // Remove setting description, for replacement later
@@ -2890,9 +2899,9 @@ var gDetailView = {
 
       rows.appendChild(setting);
       var visible = window.getComputedStyle(setting, null).getPropertyValue("display") != "none";
-      if (first && visible) {
+      if (!firstSetting && visible) {
         setting.setAttribute("first-row", true);
-        first = false;
+        firstSetting = setting;
       }
 
       // Add a new row containing the description
@@ -2909,7 +2918,20 @@ var gDetailView = {
       }
     }
 
-    Services.obs.notifyObservers(document, "addon-options-displayed", this._addon.id);
+	// Ensure the page has loaded and force the XBL bindings to be synchronously applied,
+	// then notify observers.
+    if (gViewController.viewPort.selectedPanel.hasAttribute("loading")) {
+      gDetailView.node.addEventListener("ViewChanged", function viewChangedEventListener() {
+        gDetailView.node.removeEventListener("ViewChanged", viewChangedEventListener, false);
+        if (firstSetting)
+          firstSetting.clientTop;
+        Services.obs.notifyObservers(document, "addon-options-displayed", gDetailView._addon.id);
+      }, false);
+    } else {
+      if (firstSetting)
+        firstSetting.clientTop;
+      Services.obs.notifyObservers(document, "addon-options-displayed", this._addon.id);
+    }
   },
 
   getSelectedAddon: function() {

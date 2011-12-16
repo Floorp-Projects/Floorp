@@ -423,16 +423,28 @@ static PRInt64 GetHeapAllocated()
 
 static PRInt64 GetHeapZone0Committed()
 {
+#ifdef MOZ_DMD
+    // malloc_zone_statistics() crashes when run under DMD because Valgrind
+    // doesn't intercept it.  This measurement isn't important for DMD, so
+    // don't even try.
+    return (PRInt64) -1;
+#else
     malloc_statistics_t stats;
     malloc_zone_statistics(malloc_default_zone(), &stats);
     return stats.size_in_use;
+#endif
 }
 
 static PRInt64 GetHeapZone0Used()
 {
+#ifdef MOZ_DMD
+    // See comment in GetHeapZone0Committed above.
+    return (PRInt64) -1;
+#else
     malloc_statistics_t stats;
     malloc_zone_statistics(malloc_default_zone(), &stats);
     return stats.size_allocated;
+#endif
 }
 
 NS_MEMORY_REPORTER_IMPLEMENT(HeapZone0Committed,
@@ -859,9 +871,59 @@ NS_UnregisterMemoryMultiReporter (nsIMemoryMultiReporter *reporter)
 
 namespace mozilla {
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(MemoryReporterMallocSizeOf, "default")
+#ifdef MOZ_DMD
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(MemoryReporterMallocSizeOfForCounterInc, "default")
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(MemoryReporterMallocSizeOfForCounterDec, "default")
+class NullMultiReporterCallback : public nsIMemoryMultiReporterCallback
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD Callback(const nsACString &aProcess, const nsACString &aPath,
+                        PRInt32 aKind, PRInt32 aUnits, PRInt64 aAmount,
+                        const nsACString &aDescription,
+                        nsISupports *aData)
+    {
+        // Do nothing;  the reporter has already reported to DMD.
+        return NS_OK;
+    }
+};
+NS_IMPL_ISUPPORTS1(
+  NullMultiReporterCallback
+, nsIMemoryMultiReporterCallback
+)
+
+void
+DMDCheckAndDump()
+{
+    nsCOMPtr<nsIMemoryReporterManager> mgr =
+        do_GetService("@mozilla.org/memory-reporter-manager;1");
+
+    // Do vanilla reporters.
+    nsCOMPtr<nsISimpleEnumerator> e;
+    mgr->EnumerateReporters(getter_AddRefs(e));
+    bool more;
+    while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
+        nsCOMPtr<nsIMemoryReporter> r;
+        e->GetNext(getter_AddRefs(r));
+
+        // Just getting the amount is enough for the reporter to report to DMD.
+        PRInt64 amount;
+        (void)r->GetAmount(&amount);
+    }
+
+    // Do multi-reporters.
+    nsCOMPtr<nsISimpleEnumerator> e2;
+    mgr->EnumerateMultiReporters(getter_AddRefs(e2));
+    nsRefPtr<NullMultiReporterCallback> cb = new NullMultiReporterCallback();
+    while (NS_SUCCEEDED(e2->HasMoreElements(&more)) && more) {
+      nsCOMPtr<nsIMemoryMultiReporter> r;
+      e2->GetNext(getter_AddRefs(r));
+      r->CollectReports(cb, nsnull);
+    }
+
+    VALGRIND_DMD_CHECK_REPORTING;
+}
+
+#endif  /* defined(MOZ_DMD) */
 
 }

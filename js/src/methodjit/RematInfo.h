@@ -53,7 +53,7 @@ struct StateRemat {
     typedef JSC::MacroAssembler::RegisterID RegisterID;
     typedef JSC::MacroAssembler::Address Address;
 
-    static const int32 CONSTANT = -int(UINT16_LIMIT * sizeof(Value));
+    static const int32_t CONSTANT = -int(UINT16_LIMIT * sizeof(Value));
 
     // This union encodes the fastest rematerialization of a non-constant
     // value. The |offset| field can be used to recover information
@@ -63,10 +63,10 @@ struct StateRemat {
     //  3) A value in [fp, inf) is a local slot.
     union {
         RegisterID  reg_;
-        int32       offset_;
+        int32_t     offset_;
     };
 
-    static StateRemat FromInt32(int32 i32) {
+    static StateRemat FromInt32(int32_t i32) {
         StateRemat sr;
         sr.offset_ = i32;
         return sr;
@@ -85,7 +85,7 @@ struct StateRemat {
         return sr;
     }
 
-    // Minimum number of bits needed to compactly store the int32
+    // Minimum number of bits needed to compactly store the int32_t
     // representation in a struct or union. This prevents bloating the IC
     // structs by an extra 8 bytes in some cases. 16 bits are needed to encode
     // the largest local:
@@ -95,13 +95,13 @@ struct StateRemat {
 
     bool isConstant() const { return offset_ == CONSTANT; }
     bool inRegister() const { return offset_ >= 0 &&
-                                     offset_ <= int32(JSC::MacroAssembler::TotalRegisters); }
+                                     offset_ <= int32_t(JSC::MacroAssembler::TotalRegisters); }
     bool inMemory() const {
-        return offset_ >= int32(sizeof(StackFrame)) ||
+        return offset_ >= int32_t(sizeof(StackFrame)) ||
                offset_ < 0;
     }
 
-    int32 toInt32() const { return offset_; }
+    int32_t toInt32() const { return offset_; }
     Address address() const {
         JS_ASSERT(inMemory());
         return Address(JSFrameReg, offset_);
@@ -119,10 +119,10 @@ struct ValueRemat {
     union {
         struct {
             union {
-                int32       typeRemat_;
+                int32_t     typeRemat_;
                 JSValueType knownType_;
             } type;
-            int32   dataRemat_   : MIN_STATE_REMAT_BITS;
+            int32_t dataRemat_   : MIN_STATE_REMAT_BITS;
             bool    isTypeKnown_ : 1;
         } s;
         jsval v_;

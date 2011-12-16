@@ -283,7 +283,7 @@
             this.requestHandle = window.mozRequestAnimationFrame(this);
         },
         stop: function scrollAnim_stop() {
-          window.mozCancelRequestAnimationFrame(this.requestHandle);
+          window.mozCancelAnimationFrame(this.requestHandle);
           this.requestHandle = 0;
         },
         sample: function scrollAnim_handleEvent(timeStamp) {
@@ -648,7 +648,7 @@
             this.requestHandle = window.mozRequestAnimationFrame(this);
         },
         stop: function arrowSmoothScroll_stop() {
-          window.mozCancelRequestAnimationFrame(this.requestHandle);
+          window.mozCancelAnimationFrame(this.requestHandle);
           this.requestHandle = 0;
         },
         sample: function arrowSmoothScroll_handleEvent(timeStamp) {

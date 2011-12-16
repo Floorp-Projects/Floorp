@@ -1077,7 +1077,9 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
   if (nodeInfo->NamespaceID() == kNameSpaceID_XHTML) {
     if (nodeInfo->NameAtom() == nsGkAtoms::input ||
         nodeInfo->NameAtom() == nsGkAtoms::button ||
-        nodeInfo->NameAtom() == nsGkAtoms::menuitem) {
+        nodeInfo->NameAtom() == nsGkAtoms::menuitem ||
+        nodeInfo->NameAtom() == nsGkAtoms::audio || 
+        nodeInfo->NameAtom() == nsGkAtoms::video) {
       content->DoneCreatingElement();
     } else if (nodeInfo->NameAtom() == nsGkAtoms::head && !mCurrentHead) {
       mCurrentHead = content;
@@ -1167,8 +1169,7 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName,
   }
   DidAddContent();
 
-  if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
-      content->Tag() == nsGkAtoms::svg) {
+  if (content->IsSVG(nsGkAtoms::svg)) {
     FlushTags();
     nsCOMPtr<nsIRunnable> event = new nsHtml5SVGLoadDispatcher(content);
     if (NS_FAILED(NS_DispatchToMainThread(event))) {

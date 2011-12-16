@@ -5,9 +5,6 @@
 
 using namespace mozilla::a11y;
 
-extern const NSString *kInstanceDescriptionAttribute; // NSAccessibilityDescriptionAttribute
-extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevelUIElementAttribute
-
 @interface mozTextAccessible (Private)
 - (NSString*)subrole;
 - (NSString*)selectedText;
@@ -55,8 +52,8 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
                                                            NSAccessibilityWindowAttribute, // required
                                                            NSAccessibilityFocusedAttribute, // required
                                                            NSAccessibilityEnabledAttribute, // required
-                                                           kTopLevelUIElementAttribute, // required (on OS X 10.4+)
-                                                           kInstanceDescriptionAttribute, // required (on OS X 10.4+)
+                                                           NSAccessibilityTopLevelUIElementAttribute, // required
+                                                           NSAccessibilityDescriptionAttribute, // required
                                                            /* text-specific attributes */
                                                            NSAccessibilitySelectedTextAttribute, // required
                                                            NSAccessibilitySelectedTextRangeAttribute, // required
@@ -256,8 +253,8 @@ extern const NSString *kTopLevelUIElementAttribute;   // NSAccessibilityTopLevel
                                                            NSAccessibilityChildrenAttribute, // required
                                                            NSAccessibilityHelpAttribute,
                                                            // NSAccessibilityExpandedAttribute, // required
-                                                           kTopLevelUIElementAttribute, // required (on OS X 10.4+)
-                                                           kInstanceDescriptionAttribute, // required (on OS X 10.4+)
+                                                           NSAccessibilityTopLevelUIElementAttribute, // required
+                                                           NSAccessibilityDescriptionAttribute, // required
                                                            /* text-specific attributes */
                                                            NSAccessibilitySelectedTextAttribute, // required
                                                            NSAccessibilitySelectedTextRangeAttribute, // required

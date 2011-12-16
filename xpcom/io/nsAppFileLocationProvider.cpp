@@ -355,14 +355,6 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
     if (NS_FAILED(rv)) return rv;
     const char* prop = aLocal ? NS_WIN_LOCAL_APPDATA_DIR : NS_WIN_APPDATA_DIR;
     rv = directoryService->Get(prop, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
-    if (NS_SUCCEEDED(rv))
-        rv = localDir->Exists(&exists);
-    if (NS_FAILED(rv) || !exists)
-    {
-        // On some Win95 machines, NS_WIN_APPDATA_DIR does not exist - revert to NS_WIN_WINDOWS_DIR
-        localDir = nsnull;
-        rv = directoryService->Get(NS_WIN_WINDOWS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
-    }
     if (NS_FAILED(rv)) return rv;
 #elif defined(XP_UNIX)
     rv = NS_NewNativeLocalFile(nsDependentCString(PR_GetEnv("HOME")), true, getter_AddRefs(localDir));

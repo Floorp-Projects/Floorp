@@ -54,6 +54,10 @@
 namespace mozilla {
 namespace widget {
 
+#ifdef DEBUG
+NS_IMPL_ISUPPORTS_INHERITED1(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
+#endif
+
 // these global variables will be set when firing the glxtest process
 int glxtest_pipe = 0;
 pid_t glxtest_pid = 0;
@@ -246,78 +250,88 @@ static inline PRUint64 version(PRUint32 major, PRUint32 minor, PRUint32 revision
     return (PRUint64(major) << 32) + (PRUint64(minor) << 16) + PRUint64(revision);
 }
 
-static GfxDriverInfo gDriverInfo[] = {
-  GfxDriverInfo()
-};
-
-const GfxDriverInfo*
+const nsTArray<GfxDriverInfo>&
 GfxInfo::GetGfxDriverInfo()
 {
-  return &gDriverInfo[0];
+  // Nothing here yet.
+  //if (!mDriverInfo->Length()) {
+  //
+  //}
+  return *mDriverInfo;
 }
 
 nsresult
 GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, 
                               PRInt32 *aStatus, 
                               nsAString & aSuggestedDriverVersion, 
-                              GfxDriverInfo* aDriverInfo /* = nsnull */, 
+                              const nsTArray<GfxDriverInfo>& aDriverInfo, 
                               OperatingSystem* aOS /* = nsnull */)
 
 {
-    GetData();
-    *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
-    aSuggestedDriverVersion.SetIsVoid(true);
+  NS_ENSURE_ARG_POINTER(aStatus);
+  *aStatus = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
+  aSuggestedDriverVersion.SetIsVoid(true);
+  OperatingSystem os = DRIVER_OS_LINUX;
+  if (aOS)
+    *aOS = os;
 
 #ifdef MOZ_PLATFORM_MAEMO
-    // on Maemo, the glxtest probe doesn't build, and we don't really need GfxInfo anyway
-    return NS_OK;
+  *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
+  // on Maemo, the glxtest probe doesn't build, and we don't really need GfxInfo anyway
+  return NS_OK;
 #endif
 
-    OperatingSystem os = DRIVER_OS_LINUX;
+  // Don't evaluate any special cases if we're checking the downloaded blocklist.
+  if (!aDriverInfo.Length()) {
+    // Only check features relevant to Linux.
+    if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS ||
+        aFeature == nsIGfxInfo::FEATURE_WEBGL_OPENGL ||
+        aFeature == nsIGfxInfo::FEATURE_WEBGL_MSAA) {
+      GetData();
 
-    // Disable OpenGL layers when we don't have texture_from_pixmap because it regresses performance. 
-    if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS && !mHasTextureFromPixmap) {
+      // Disable OpenGL layers when we don't have texture_from_pixmap because it regresses performance. 
+      if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS && !mHasTextureFromPixmap) {
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
         aSuggestedDriverVersion.AssignLiteral("<Anything with EXT_texture_from_pixmap support>");
         return NS_OK;
-    }
+      }
 
-    // whitelist the linux test slaves' current configuration.
-    // this is necessary as they're still using the slightly outdated 190.42 driver.
-    // this isn't a huge risk, as at least this is the exact setting in which we do continuous testing,
-    // and this only affects GeForce 9400 cards on linux on this precise driver version, which is very few users.
-    // We do the same thing on Windows XP, see in widget/src/windows/GfxInfo.cpp
-    if (mIsNVIDIA &&
-        !strcmp(mRenderer.get(), "GeForce 9400/PCI/SSE2") &&
-        !strcmp(mVersion.get(), "3.2.0 NVIDIA 190.42"))
-    {
+      // whitelist the linux test slaves' current configuration.
+      // this is necessary as they're still using the slightly outdated 190.42 driver.
+      // this isn't a huge risk, as at least this is the exact setting in which we do continuous testing,
+      // and this only affects GeForce 9400 cards on linux on this precise driver version, which is very few users.
+      // We do the same thing on Windows XP, see in widget/src/windows/GfxInfo.cpp
+      if (mIsNVIDIA &&
+          !strcmp(mRenderer.get(), "GeForce 9400/PCI/SSE2") &&
+          !strcmp(mVersion.get(), "3.2.0 NVIDIA 190.42"))
+      {
+        *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
         return NS_OK;
-    }
+      }
 
-    if (mIsMesa) {
+      if (mIsMesa) {
         if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(7,10,3)) {
-            *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
-            aSuggestedDriverVersion.AssignLiteral("Mesa 7.10.3");
+          *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+          aSuggestedDriverVersion.AssignLiteral("Mesa 7.10.3");
         }
-    } else if (mIsNVIDIA) {
+      } else if (mIsNVIDIA) {
         if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(257,21)) {
-            *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
-            aSuggestedDriverVersion.AssignLiteral("NVIDIA 257.21");
+          *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+          aSuggestedDriverVersion.AssignLiteral("NVIDIA 257.21");
         }
-    } else if (mIsFGLRX) {
+      } else if (mIsFGLRX) {
         // FGLRX does not report a driver version number, so we have the OpenGL version instead.
         // by requiring OpenGL 3, we effectively require recent drivers.
         if (version(mMajorVersion, mMinorVersion, mRevisionVersion) < version(3, 0)) {
-            *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+          *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
         }
-    } else {
+      } else {
         // like on windows, let's block unknown vendors. Think of virtual machines.
         // Also, this case is hit whenever the GLXtest probe failed to get driver info or crashed.
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+      }
     }
-
-  if (aOS)
-    *aOS = os;
+  }
 
   return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, &os);
 }
@@ -432,32 +446,34 @@ GfxInfo::GetAdapterDriverDate2(nsAString & aAdapterDriverDate)
   return NS_ERROR_FAILURE;
 }
 
-/* readonly attribute unsigned long adapterVendorID; */
+/* readonly attribute DOMString adapterVendorID; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
+GfxInfo::GetAdapterVendorID(nsAString & aAdapterVendorID)
 {
-  *aAdapterVendorID = 0;
+  GetData();
+  CopyUTF8toUTF16(mVendor, aAdapterVendorID);
   return NS_OK;
 }
 
-/* readonly attribute unsigned long adapterVendorID2; */
+/* readonly attribute DOMString adapterVendorID2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterVendorID2(PRUint32 *aAdapterVendorID)
+GfxInfo::GetAdapterVendorID2(nsAString & aAdapterVendorID)
 {
   return NS_ERROR_FAILURE;
 }
 
-/* readonly attribute unsigned long adapterDeviceID; */
+/* readonly attribute DOMString adapterDeviceID; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
+GfxInfo::GetAdapterDeviceID(nsAString & aAdapterDeviceID)
 {
-  *aAdapterDeviceID = 0;
+  GetData();
+  CopyUTF8toUTF16(mRenderer, aAdapterDeviceID);
   return NS_OK;
 }
 
-/* readonly attribute unsigned long adapterDeviceID2; */
+/* readonly attribute DOMString adapterDeviceID2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterDeviceID2(PRUint32 *aAdapterDeviceID)
+GfxInfo::GetAdapterDeviceID2(nsAString & aAdapterDeviceID)
 {
   return NS_ERROR_FAILURE;
 }
@@ -469,6 +485,40 @@ GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active)
   return NS_ERROR_FAILURE;
 }
 
+#ifdef DEBUG
+
+// Implement nsIGfxInfoDebug
+// We don't support spoofing anything on Linux
+
+/* void spoofVendorID (in DOMString aVendorID); */
+NS_IMETHODIMP GfxInfo::SpoofVendorID(const nsAString & aVendorID)
+{
+  CopyUTF16toUTF8(aVendorID, mVendor);
+  return NS_OK;
+}
+
+/* void spoofDeviceID (in unsigned long aDeviceID); */
+NS_IMETHODIMP GfxInfo::SpoofDeviceID(const nsAString & aDeviceID)
+{
+  CopyUTF16toUTF8(aDeviceID, mRenderer);
+  return NS_OK;
+}
+
+/* void spoofDriverVersion (in DOMString aDriverVersion); */
+NS_IMETHODIMP GfxInfo::SpoofDriverVersion(const nsAString & aDriverVersion)
+{
+  CopyUTF16toUTF8(aDriverVersion, mVersion);
+  return NS_OK;
+}
+
+/* void spoofOSVersion (in unsigned long aVersion); */
+NS_IMETHODIMP GfxInfo::SpoofOSVersion(PRUint32 aVersion)
+{
+  // We don't support OS versioning on Linux. There's just "Linux".
+  return NS_OK;
+}
+
+#endif
 
 } // end namespace widget
 } // end namespace mozilla

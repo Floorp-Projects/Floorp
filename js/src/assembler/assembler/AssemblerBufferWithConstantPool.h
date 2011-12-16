@@ -231,7 +231,7 @@ public:
         correctDeltas(4, 4);
     }
 
-    uint32 * getPoolSpace(uint32_t insn, uint32_t constant, bool isReusable = false)
+    uint32_t *getPoolSpace(uint32_t insn, uint32_t constant, bool isReusable = false)
     {
         flushIfNoSpaceFor(4, 4);
 

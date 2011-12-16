@@ -269,7 +269,7 @@ enum {
     TYPE_FLAG_DEFINITE_MASK       = 0x0f000000,
     TYPE_FLAG_DEFINITE_SHIFT      = 24
 };
-typedef uint32 TypeFlags;
+typedef uint32_t TypeFlags;
 
 /* Flags and other state stored in TypeObject::flags */
 enum {
@@ -300,7 +300,7 @@ enum {
 
     /*
      * Some objects are not dense arrays, or are dense arrays whose length
-     * property does not fit in an int32.
+     * property does not fit in an int32_t.
      */
     OBJECT_FLAG_NON_DENSE_ARRAY       = 0x00010000,
 
@@ -343,7 +343,7 @@ enum {
       | OBJECT_FLAG_UNKNOWN_PROPERTIES
       | OBJECT_FLAG_SETS_MARKED_UNKNOWN
 };
-typedef uint32 TypeObjectFlags;
+typedef uint32_t TypeObjectFlags;
 
 /* Information about the set of types associated with an lvalue. */
 class TypeSet
@@ -519,10 +519,10 @@ class TypeSet
     bool propertyNeedsBarrier(JSContext *cx, jsid id);
 
   private:
-    uint32 baseObjectCount() const {
+    uint32_t baseObjectCount() const {
         return (flags & TYPE_FLAG_OBJECT_COUNT_MASK) >> TYPE_FLAG_OBJECT_COUNT_SHIFT;
     }
-    inline void setBaseObjectCount(uint32 count);
+    inline void setBaseObjectCount(uint32_t count);
 };
 
 /*
@@ -533,11 +533,11 @@ class TypeSet
  */
 struct TypeResult
 {
-    uint32 offset;
+    uint32_t offset;
     Type type;
     TypeResult *next;
 
-    TypeResult(uint32 offset, Type type)
+    TypeResult(uint32_t offset, Type type)
         : offset(offset), type(type), next(NULL)
     {}
 };
@@ -639,7 +639,7 @@ struct Property
     inline Property(jsid id);
     inline Property(const Property &o);
 
-    static uint32 keyBits(jsid id) { return (uint32) JSID_BITS(id); }
+    static uint32_t keyBits(jsid id) { return uint32_t(JSID_BITS(id)); }
     static jsid getKey(Property *p) { return p->id; }
 };
 
@@ -681,8 +681,8 @@ struct TypeNewScript
             FRAME_POP,
             DONE
         } kind;
-        uint32 offset;
-        Initializer(Kind kind, uint32 offset)
+        uint32_t offset;
+        Initializer(Kind kind, uint32_t offset)
           : kind(kind), offset(offset)
         {}
     };
@@ -752,8 +752,8 @@ struct TypeObject : gc::Cell
      * later, and we want to ensure in such cases that our time/space complexity
      * is linear, not worst-case cubic as it would otherwise be.
      */
-    uint32 contribution;
-    static const uint32 CONTRIBUTION_LIMIT = 2000;
+    uint32_t contribution;
+    static const uint32_t CONTRIBUTION_LIMIT = 2000;
 
     /*
      * If non-NULL, objects of this type have always been constructed using
@@ -879,8 +879,8 @@ struct TypeObject : gc::Cell
     static inline void readBarrier(TypeObject *type);
 
   private:
-    inline uint32 basePropertyCount() const;
-    inline void setBasePropertyCount(uint32 count);
+    inline uint32_t basePropertyCount() const;
+    inline void setBasePropertyCount(uint32_t count);
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(offsetof(TypeObject, proto) == offsetof(js::shadow::TypeObject, proto));
@@ -1008,7 +1008,7 @@ struct TypeScriptNesting
     const Value *varArray;
 
     /* Number of frames for this function on the stack. */
-    uint32 activeFrames;
+    uint32_t activeFrames;
 
     TypeScriptNesting() { PodZero(this); }
     ~TypeScriptNesting();
@@ -1229,7 +1229,7 @@ struct TypeCompartment
     void addPendingRecompile(JSContext *cx, JSScript *script);
 
     /* Monitor future effects on a bytecode. */
-    void monitorBytecode(JSContext *cx, JSScript *script, uint32 offset,
+    void monitorBytecode(JSContext *cx, JSScript *script, uint32_t offset,
                          bool returnOnly = false);
 
     /* Mark any type set containing obj as having a generic object type. */

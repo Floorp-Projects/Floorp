@@ -227,6 +227,9 @@ JS_GetFunctionNative(JSContext *cx, JSFunction *fun);
 extern JS_PUBLIC_API(JSPrincipals *)
 JS_GetScriptPrincipals(JSContext *cx, JSScript *script);
 
+extern JS_PUBLIC_API(JSPrincipals *)
+JS_GetScriptOriginPrincipals(JSContext *cx, JSScript *script);
+
 /*
  * Stack Frame Iterator
  *
@@ -389,9 +392,9 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
 typedef struct JSPropertyDesc {
     jsval           id;         /* primary id, atomized string, or int */
     jsval           value;      /* property value */
-    uint8           flags;      /* flags, see below */
-    uint8           spare;      /* unused */
-    uint16          slot;       /* argument/variable slot */
+    uint8_t         flags;      /* flags, see below */
+    uint8_t         spare;      /* unused */
+    uint16_t        slot;       /* argument/variable slot */
     jsval           alias;      /* alias id if JSPD_ALIAS flag */
 } JSPropertyDesc;
 
@@ -407,7 +410,7 @@ typedef struct JSPropertyDesc {
                                 /* throwing an exception */
 
 typedef struct JSPropertyDescArray {
-    uint32          length;     /* number of elements in array */
+    uint32_t        length;     /* number of elements in array */
     JSPropertyDesc  *array;     /* alloc'd by Get, freed by Put */
 } JSPropertyDescArray;
 

@@ -989,6 +989,9 @@ nsBindingManager::AddToAttachedQueue(nsXBLBinding* aBinding)
     PostProcessAttachedQueueEvent();
   }
 
+  // Make sure that flushes will flush out the new items as needed.
+  mDocument->SetNeedStyleFlush();
+
   return NS_OK;
 
 }

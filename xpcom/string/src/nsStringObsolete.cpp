@@ -593,7 +593,7 @@ GetFindInSetFilter( const CharT* set)
 // This template class is used by our code to access rickg's buffer routines.
 template <class CharT> struct nsBufferRoutines {};
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 struct nsBufferRoutines<char>
   {
     static
@@ -639,7 +639,7 @@ struct nsBufferRoutines<char>
       }
   };
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 struct nsBufferRoutines<PRUnichar>
   {
     static

@@ -221,11 +221,11 @@ NS_IMETHODIMP nsJPEGEncoder::StartImageEncode(PRUint32 aWidth,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// Returns the image buffer size
-NS_IMETHODIMP  nsJPEGEncoder::GetImageBufferSize(PRUint32 *aOutputSize)
+// Returns the number of bytes in the image buffer used.
+NS_IMETHODIMP nsJPEGEncoder::GetImageBufferUsed(PRUint32 *aOutputSize)
 {
   NS_ENSURE_ARG_POINTER(aOutputSize);
-  *aOutputSize = mImageBufferSize;
+  *aOutputSize = mImageBufferUsed;
   return NS_OK;
 }
 

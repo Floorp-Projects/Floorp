@@ -118,8 +118,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-  { 0x41fc0f2c, 0x65c2, 0x418e, \
-    { 0x89, 0x91, 0x5f, 0x0c, 0xa7, 0x01, 0x05, 0x34 } }
+  { 0x6ca77c11, 0xade7, 0x4715, \
+    { 0x82, 0xe0, 0xfe, 0xae, 0x42, 0xca, 0x5b, 0x1f } }
 /*
  * Window shadow styles
  * Also used for the -moz-window-shadow CSS property
@@ -477,14 +477,6 @@ class nsIWidget : public nsISupports {
                 nsDeviceContext  *aContext,
                 nsWidgetInitData *aInitData = nsnull,
                 bool             aForceUseIWidgetParent = false) = 0;
-
-    /**
-     * Set the event callback for a widget. If a device context is not
-     * provided then the existing device context will remain, it will
-     * not be nulled out.
-     */
-    NS_IMETHOD SetEventCallback(EVENT_CALLBACK aEventFunction,
-                                nsDeviceContext *aContext) = 0;
 
     /**
      * Attach to a top level widget. 

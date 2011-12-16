@@ -122,7 +122,6 @@ namespace ion {
 // 10 byte cost is more optimal than a bailout table. See IonFrames.h for more
 // detail.
 
-typedef uint32 BailoutId;
 static const BailoutId INVALID_BAILOUT_ID = BailoutId(-1);
 
 // Different kinds of bailouts. When extending this enum, make sure to check

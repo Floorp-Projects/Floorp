@@ -644,8 +644,9 @@ void nsBuiltinDecoder::NotifySuspendedStatusChanged()
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (!mStream)
     return;
-  bool suspended = mStream->IsSuspendedByCache();
-  printf("*** nsBuiltinDecoder::NotifySuspendedStatusChanged(%p), suspended=%d\n", this, suspended);
+  nsMediaStream* activeStream;
+  bool suspended = mStream->IsSuspendedByCache(&activeStream);
+  
   if (suspended && mElement) {
     // if this is an autoplay element, we need to kick off its autoplaying
     // now so we consume data and hopefully free up cache space

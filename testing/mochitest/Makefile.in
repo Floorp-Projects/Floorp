@@ -108,6 +108,7 @@ _MOD_PYWEBSOCKET_FILES = \
 		pywebsocket/mod_pywebsocket/__init__.py \
 		pywebsocket/mod_pywebsocket/common.py \
 		pywebsocket/mod_pywebsocket/dispatch.py \
+		pywebsocket/mod_pywebsocket/extensions.py \
 		pywebsocket/mod_pywebsocket/headerparserhandler.py \
 		pywebsocket/mod_pywebsocket/http_header_util.py \
 		pywebsocket/mod_pywebsocket/memorizingfile.py \
@@ -115,7 +116,7 @@ _MOD_PYWEBSOCKET_FILES = \
 		pywebsocket/mod_pywebsocket/stream.py \
 		pywebsocket/mod_pywebsocket/_stream_hixie75.py \
 		pywebsocket/mod_pywebsocket/msgutil.py \
-		pywebsocket/mod_pywebsocket/_stream_hybi06.py \
+		pywebsocket/mod_pywebsocket/_stream_hybi.py \
 		pywebsocket/mod_pywebsocket/_stream_base.py \
 		$(NULL)
 
@@ -124,7 +125,7 @@ _HANDSHAKE_FILES = \
 		pywebsocket/mod_pywebsocket/handshake/hybi00.py \
 		pywebsocket/mod_pywebsocket/handshake/_base.py \
 		pywebsocket/mod_pywebsocket/handshake/draft75.py \
-		pywebsocket/mod_pywebsocket/handshake/hybi06.py \
+		pywebsocket/mod_pywebsocket/handshake/hybi.py \
 		$(NULL)
 
 _DEST_DIR = $(DEPTH)/_tests/$(relativesrcdir)

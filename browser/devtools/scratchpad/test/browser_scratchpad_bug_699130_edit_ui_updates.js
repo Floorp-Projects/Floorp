@@ -13,9 +13,7 @@ function test()
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
     gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
-
-    gScratchpadWindow = Scratchpad.openScratchpad();
-    gScratchpadWindow.addEventListener("load", runTests, false);
+    openScratchpad(runTests);
   }, true);
 
   content.location = "data:text/html,test Edit menu updates Scratchpad - bug 699130";
@@ -23,8 +21,6 @@ function test()
 
 function runTests()
 {
-  gScratchpadWindow.removeEventListener("load", runTests, false);
-
   let sp = gScratchpadWindow.Scratchpad;
   let doc = gScratchpadWindow.document;
   let winUtils = gScratchpadWindow.QueryInterface(Ci.nsIInterfaceRequestor).

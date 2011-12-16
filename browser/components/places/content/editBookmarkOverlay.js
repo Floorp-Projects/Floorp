@@ -221,8 +221,9 @@ var gEditItemOverlay = {
         this._allTags = this._getCommonTags();
         this._initTextField("tagsField", this._allTags.join(", "), false);
         this._element("itemsCountText").value =
-          PlacesUIUtils.getFormattedString("detailsPane.multipleItems",
-                                           [this._itemIds.length]);
+          PlacesUIUtils.getPluralString("detailsPane.itemsCountLabel",
+                                        this._itemIds.length,
+                                        [this._itemIds.length]);
       }
 
       // tags selector

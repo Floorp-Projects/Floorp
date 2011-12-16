@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var a = document.getElementsByTagName("div");
+  a.__proto__ = Proxy.create({has: function() { throw new Error; }});
+  for (var p in a) {
+  }
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

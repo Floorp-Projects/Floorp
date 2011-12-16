@@ -101,7 +101,7 @@ TrampolineCompiler::compileTrampoline(Trampolines::TrampolinePtr *where,
     if (!ok) 
         return false;
     masm.finalize(buffer);
-    uint8 *result = (uint8*)buffer.finalizeCodeAddendum().dataLocation();
+    uint8_t *result = (uint8_t*)buffer.finalizeCodeAddendum().dataLocation();
     *where = JS_DATA_TO_FUNC_PTR(Trampolines::TrampolinePtr, result + masm.distanceOf(entry));
 
     return true;

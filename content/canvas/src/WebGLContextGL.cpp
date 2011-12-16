@@ -4355,9 +4355,18 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
         if (mEnabledExtensions[WebGL_OES_standard_derivatives])
             resources.OES_standard_derivatives = 1;
 
+        // notice that on Android, we always use SH_GLSL_OUTPUT, we never use the ESSL backend.
+        // see bug 709947, the reason is that 1) we dont really need a ESSL backend since the
+        // source is already ESSL, and 2) we ran into massive Android crashes when we used the ESSL backend.
+        // But if we wanted to use shader transformations on ES platforms, we would have to use the
+        // ESSL backend
         compiler = ShConstructCompiler((ShShaderType) shader->ShaderType(),
                                        SH_WEBGL_SPEC,
+#ifdef MOZ_WIDGET_ANDROID
+                                       SH_GLSL_OUTPUT,
+#else
                                        gl->IsGLES2() ? SH_ESSL_OUTPUT : SH_GLSL_OUTPUT,
+#endif
                                        &resources);
 
         // We're storing an actual instance of StripComments because, if we don't, the 

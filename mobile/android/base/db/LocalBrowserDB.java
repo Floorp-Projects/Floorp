@@ -41,10 +41,10 @@ import java.io.ByteArrayOutputStream;
 import java.util.Date;
 
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
-import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.ImageColumns;
 import org.mozilla.gecko.db.BrowserContract.Images;
+import org.mozilla.gecko.db.BrowserContract.URLColumns;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -65,9 +65,11 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     public static final int TRUNCATE_N_OLDEST = 5;
 
     private final String mProfile;
+    private long mMobileFolderId;
 
     public LocalBrowserDB(String profile) {
         mProfile = profile;
+        mMobileFolderId = -1;
     }
 
     private Uri appendProfileAndLimit(Uri uri, int limit) {
@@ -233,10 +235,41 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         return (count == 1);
     }
 
+    private long getMobileBookmarksFolderId(ContentResolver cr) {
+        if (mMobileFolderId >= 0)
+            return mMobileFolderId;
+
+        Cursor c = null;
+
+        try {
+            c = cr.query(appendProfile(Bookmarks.CONTENT_URI),
+                         new String[] { Bookmarks._ID },
+                         Bookmarks.GUID + " = ?",
+                         new String[] { Bookmarks.MOBILE_FOLDER_GUID },
+                         null);
+
+            if (c.moveToFirst())
+                mMobileFolderId = c.getLong(c.getColumnIndexOrThrow(Bookmarks._ID));
+        } finally {
+            if (c != null)
+                c.close();
+        }
+
+        return mMobileFolderId;
+    }
+
     public void addBookmark(ContentResolver cr, String title, String uri) {
+        long folderId = getMobileBookmarksFolderId(cr);
+        if (folderId < 0)
+            return;
+
         ContentValues values = new ContentValues();
         values.put(Browser.BookmarkColumns.TITLE, title);
         values.put(Bookmarks.URL, uri);
+        values.put(Bookmarks.PARENT, folderId);
+
+        // Restore deleted record if possible
+        values.put(Bookmarks.IS_DELETED, 0);
 
         int updated = cr.update(appendProfile(Bookmarks.CONTENT_URI),
                                 values,
@@ -288,10 +321,16 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         values.put(Images.FAVICON, stream.toByteArray());
         values.put(Images.URL, uri);
 
-        cr.update(appendProfile(Images.CONTENT_URI),
-                  values,
-                  Images.URL + " = ?",
-                  new String[] { uri });
+        // Restore deleted record if possible
+        values.put(Images.IS_DELETED, 0);
+
+        int updated = cr.update(appendProfile(Images.CONTENT_URI),
+                                values,
+                                Images.URL + " = ?",
+                                new String[] { uri });
+
+        if (updated == 0)
+            cr.insert(appendProfile(Images.CONTENT_URI), values);
     }
 
     public void updateThumbnailForUrl(ContentResolver cr, String uri,
@@ -305,10 +344,16 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         values.put(Images.THUMBNAIL, stream.toByteArray());
         values.put(Images.URL, uri);
 
-        cr.update(appendProfile(Images.CONTENT_URI),
-                  values,
-                  Images.URL + " = ?",
-                  new String[] { uri });
+        // Restore deleted record if possible
+        values.put(Images.IS_DELETED, 0);
+
+        int updated = cr.update(appendProfile(Images.CONTENT_URI),
+                                values,
+                                Images.URL + " = ?",
+                                new String[] { uri });
+
+        if (updated == 0)
+            cr.insert(appendProfile(Images.CONTENT_URI), values);
     }
 
     private static class LocalDBCursor extends CursorWrapper {
@@ -318,9 +363,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
         private String translateColumnName(String columnName) {
             if (columnName.equals(BrowserDB.URLColumns.URL)) {
-                columnName = CommonColumns.URL;
+                columnName = URLColumns.URL;
             } else if (columnName.equals(BrowserDB.URLColumns.TITLE)) {
-                columnName = CommonColumns.TITLE;
+                columnName = URLColumns.TITLE;
             } else if (columnName.equals(BrowserDB.URLColumns.FAVICON)) {
                 columnName = ImageColumns.FAVICON;
             } else if (columnName.equals(BrowserDB.URLColumns.THUMBNAIL)) {

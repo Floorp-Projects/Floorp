@@ -193,8 +193,7 @@ private:
 
     // various delays for tooltips
   enum {
-    kTooltipAutoHideTime = 5000,       // 5000ms = 5 seconds
-    kTooltipShowTime = 500             // 500ms = 0.5 seconds
+    kTooltipAutoHideTime = 5000        // 5000ms = 5 seconds
   };
 
   NS_IMETHOD AddTooltipListener();

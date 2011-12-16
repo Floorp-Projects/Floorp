@@ -43,6 +43,7 @@
 #define js_ion_type_oracle_h__
 
 #include "jsscript.h"
+#include "IonTypes.h"
 
 namespace js {
 namespace ion {

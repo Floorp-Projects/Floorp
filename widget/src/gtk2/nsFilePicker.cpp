@@ -390,51 +390,6 @@ nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
   return NS_ERROR_FAILURE;
 }
 
-bool
-confirm_overwrite_file(GtkWidget *parent, nsILocalFile* file)
-{
-  nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-  nsCOMPtr<nsIStringBundle> bundle;
-  nsresult rv = sbs->CreateBundle("chrome://global/locale/filepicker.properties",
-                                  getter_AddRefs(bundle));
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  nsAutoString leafName;
-  file->GetLeafName(leafName);
-  const PRUnichar *formatStrings[] =
-  {
-    leafName.get()
-  };
-
-  nsXPIDLString title, message;
-  bundle->GetStringFromName(NS_LITERAL_STRING("confirmTitle").get(),
-                            getter_Copies(title));
-  bundle->FormatStringFromName(NS_LITERAL_STRING("confirmFileReplacing").get(),
-                               formatStrings, ArrayLength(formatStrings),
-                               getter_Copies(message));
-
-  GtkWindow *parent_window = GTK_WINDOW(parent);
-  GtkWidget *dialog;
-  
-  dialog = gtk_message_dialog_new(parent_window,
-                                  GTK_DIALOG_DESTROY_WITH_PARENT,
-                                  GTK_MESSAGE_QUESTION,
-                                  GTK_BUTTONS_YES_NO,
-                                  "%s", NS_ConvertUTF16toUTF8(message).get());
-  gtk_window_set_title(GTK_WINDOW(dialog), NS_ConvertUTF16toUTF8(title).get());
-  if (parent_window && parent_window->group) {
-    gtk_window_group_add_window(parent_window->group, GTK_WINDOW(dialog));
-  }
-
-  bool result = (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES);
-
-  gtk_widget_destroy(dialog);
-
-  return result;
-}
-
 NS_IMETHODIMP
 nsFilePicker::Show(PRInt16 *aReturn)
 {

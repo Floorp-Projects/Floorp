@@ -91,7 +91,7 @@ using namespace js::gc;
 /*
  * Index limit must stay within 32 bits.
  */
-JS_STATIC_ASSERT(sizeof(uint32) * JS_BITS_PER_BYTE >= INDEX_LIMIT_LOG2 + 1);
+JS_STATIC_ASSERT(sizeof(uint32_t) * JS_BITS_PER_BYTE >= INDEX_LIMIT_LOG2 + 1);
 
 /* Verify JSOP_XXX_LENGTH constant definitions. */
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format)               \
@@ -150,7 +150,7 @@ Dup(const char *chars, DupBuffer *cb)
 static ptrdiff_t
 GetJumpOffset(jsbytecode *pc, jsbytecode *pc2)
 {
-    uint32 type;
+    uint32_t type;
 
     type = JOF_OPTYPE(*pc);
     if (JOF_TYPE_IS_EXTENDED_JUMP(type))
@@ -445,7 +445,7 @@ js_DumpScript(JSContext *cx, JSScript *script)
 }
 
 static char *
-QuoteString(Sprinter *sp, JSString *str, uint32 quote);
+QuoteString(Sprinter *sp, JSString *str, uint32_t quote);
 
 static bool
 ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
@@ -543,7 +543,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         Sprint(sp, "%4u", JS_PCToLineNumber(cx, script, pc));
     Sprint(sp, "  %s", js_CodeName[op]);
 
-    switch (uint32 type = JOF_TYPE(cs->format)) {
+    switch (uint32_t type = JOF_TYPE(cs->format)) {
       case JOF_BYTE:
           // Scan the trynotes to find the associated catch block
           // and make the try opcode look like a jump instruction
@@ -551,7 +551,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
           // based on this disassembled output.
           if (op == JSOP_TRY) {
               JSTryNoteArray *trynotes = script->trynotes();
-              uint32 i;
+              uint32_t i;
               for(i = 0; i < trynotes->length; i++) {
                   JSTryNote note = trynotes->vector[i];
                   if (note.kind == JSTRY_CATCH && note.start == loc + 1) {
@@ -644,7 +644,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         pc2 += UINT16_LEN;
         Sprint(sp, " offset %d npairs %u", intN(off), uintN(npairs));
         while (npairs) {
-            uint16 constIndex = GET_INDEX(pc2);
+            uint16_t constIndex = GET_INDEX(pc2);
             pc2 += INDEX_LEN;
             off = GetJumpOffset(pc, pc2);
             pc2 += jmplen;
@@ -864,7 +864,7 @@ const char js_EscapeMap[] = {
 #define DONT_ESCAPE     0x10000
 
 static char *
-QuoteString(Sprinter *sp, JSString *str, uint32 quote)
+QuoteString(Sprinter *sp, JSString *str, uint32_t quote)
 {
     /* Sample off first for later return value pointer computation. */
     JSBool dontEscape = (quote & DONT_ESCAPE) != 0;
@@ -1232,7 +1232,7 @@ PushOff(SprintStack *ss, ptrdiff_t off, JSOp op)
 }
 
 static ptrdiff_t
-PopOffPrec(SprintStack *ss, uint8 prec)
+PopOffPrec(SprintStack *ss, uint8_t prec)
 {
     uintN top;
     const JSCodeSpec *topcs;
@@ -1257,7 +1257,7 @@ PopOffPrec(SprintStack *ss, uint8 prec)
 }
 
 static const char *
-PopStrPrec(SprintStack *ss, uint8 prec)
+PopStrPrec(SprintStack *ss, uint8_t prec)
 {
     ptrdiff_t off;
 
@@ -1917,7 +1917,7 @@ DecompileGroupAssignment(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
     const char *rval;
 
     LOAD_OP_DATA(pc);
-    LOCAL_ASSERT(op == JSOP_PUSH || op == JSOP_GETLOCAL);
+    LOCAL_ASSERT(op == JSOP_GETLOCAL);
 
     todo = Sprint(&ss->sprinter, "%s[", VarPrefix(sn));
     if (todo < 0 || !PushOff(ss, todo, JSOP_NOP))
@@ -1934,7 +1934,7 @@ DecompileGroupAssignment(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
         if (pc == endpc)
             return pc;
         LOAD_OP_DATA(pc);
-        if (op != JSOP_PUSH && op != JSOP_GETLOCAL)
+        if (op != JSOP_GETLOCAL)
             break;
         if (!hole && SprintPut(&ss->sprinter, ", ", 2) < 0)
             return NULL;
@@ -2259,7 +2259,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
              * opcode at pc, so we don't decompile more than the error
              * expression.
              */
-            uint32 format = cs->format;
+            uint32_t format = cs->format;
             bool matchPC = false;
             if (StackFrame *fp = js_GetScriptedCaller(cx, NULL)) {
                 jsbytecode *npc = fp->pcQuadratic(cx);
@@ -2272,7 +2272,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
             }
             if ((matchPC || (pc == startpc && nuses != 0)) &&
                 format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_VARPROP)) {
-                uint32 mode = JOF_MODE(format);
+                uint32_t mode = JOF_MODE(format);
                 if (mode == JOF_NAME) {
                     /*
                      * JOF_NAME does not imply JOF_ATOM, so we must check for
@@ -2280,7 +2280,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                      * JSOP_GETARG or JSOP_GETLOCAL appropriately, instead of
                      * to JSOP_NAME.
                      */
-                    uint32 type = JOF_TYPE(format);
+                    uint32_t type = JOF_TYPE(format);
                     op = (type == JOF_QARG)
                          ? JSOP_GETARG
                          : (type == JOF_LOCAL)
@@ -2547,20 +2547,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     break;
                 }
                 break;
-
-              case JSOP_PUSH:
-#if JS_HAS_DESTRUCTURING
-                sn = js_GetSrcNote(jp->script, pc);
-                if (sn && SN_TYPE(sn) == SRC_GROUPASSIGN) {
-                    pc = DecompileGroupAssignment(ss, pc, endpc, sn, &todo);
-                    if (!pc)
-                        return NULL;
-                    LOCAL_ASSERT(*pc == JSOP_POPN);
-                    len = oplen = JSOP_POPN_LENGTH;
-                    goto end_groupassignment;
-                }
-#endif
-                /* FALL THROUGH */
 
               case JSOP_BINDNAME:
               case JSOP_BINDGNAME:
@@ -4193,8 +4179,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         LOCAL_ASSERT(*pc == JSOP_NULLBLOCKCHAIN);
                         pc += JSOP_NULLBLOCKCHAIN_LENGTH;
                     }
-                    LOCAL_ASSERT(*pc == JSOP_PUSH);
-                    pc += JSOP_PUSH_LENGTH;
+                    LOCAL_ASSERT(*pc == JSOP_UNDEFINED);
+                    pc += JSOP_UNDEFINED_LENGTH;
                     LOCAL_ASSERT(*pc == JSOP_NOTEARG);
                     pc += JSOP_NOTEARG_LENGTH;
                     LOCAL_ASSERT(*pc == JSOP_CALL);
@@ -4396,7 +4382,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     } else {
                         table[k].label = NULL;
                     }
-                    uint16 constIndex = GET_INDEX(pc2);
+                    uint16_t constIndex = GET_INDEX(pc2);
                     pc2 += INDEX_LEN;
                     off2 = GetJumpOffset(pc, pc2);
                     pc2 += jmplen;
@@ -5226,10 +5212,6 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
     /* None of these stack-writing ops generates novel values. */
     JS_ASSERT(op != JSOP_CASE && op != JSOP_CASEX &&
               op != JSOP_DUP && op != JSOP_DUP2);
-
-    /* JSOP_PUSH is used to generate undefined for group assignment holes. */
-    if (op == JSOP_PUSH)
-        return JS_strdup(cx, js_undefined_str);
 
     /*
      * |this| could convert to a very long object initialiser, so cite it by

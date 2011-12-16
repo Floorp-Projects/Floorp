@@ -418,7 +418,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
 
     /* 15.1.2.2 steps 6-8. */
     bool stripPrefix = true;
-    int32 radix = 0;
+    int32_t radix = 0;
     if (args.length() > 1) {
         if (!ToInt32(cx, args[1], &radix))
             return false;
@@ -537,16 +537,16 @@ ToCStringBuf::~ToCStringBuf()
 }
 
 JSString * JS_FASTCALL
-js_IntToString(JSContext *cx, int32 si)
+js_IntToString(JSContext *cx, int32_t si)
 {
-    uint32 ui;
+    uint32_t ui;
     if (si >= 0) {
         if (StaticStrings::hasInt(si))
             return cx->runtime->staticStrings.getInt(si);
         ui = si;
     } else {
-        ui = uint32(-si);
-        JS_ASSERT_IF(si == INT32_MIN, ui == uint32(INT32_MAX) + 1);
+        ui = uint32_t(-si);
+        JS_ASSERT_IF(si == INT32_MIN, ui == uint32_t(INT32_MAX) + 1);
     }
 
     JSCompartment *c = cx->compartment;
@@ -622,7 +622,7 @@ num_toStringHelper(JSContext *cx, Native native, uintN argc, Value *vp)
     if (!BoxedPrimitiveMethodGuard(cx, args, native, &d, &ok))
         return ok;
 
-    int32 base = 10;
+    int32_t base = 10;
     if (args.length() != 0 && !args[0].isUndefined()) {
         jsdouble d2;
         if (!ToInteger(cx, args[0], &d2))
@@ -633,7 +633,7 @@ num_toStringHelper(JSContext *cx, Native native, uintN argc, Value *vp)
             return false;
         }
 
-        base = int32(d2);
+        base = int32_t(d2);
     }
     JSString *str = js_NumberToStringWithBase(cx, d, base);
     if (!str) {
@@ -1176,7 +1176,7 @@ NumberToString(JSContext *cx, jsdouble d)
 }
 
 JSFixedString *
-IndexToString(JSContext *cx, uint32 index)
+IndexToString(JSContext *cx, uint32_t index)
 {
     if (StaticStrings::hasUint(index))
         return cx->runtime->staticStrings.getUint(index);
@@ -1298,10 +1298,10 @@ ToUint32Slow(JSContext *cx, const Value &v, uint32_t *out)
 
 }  /* namespace js */
 
-uint32
+uint32_t
 js_DoubleToECMAUint32(jsdouble d)
 {
-    int32 i;
+    int32_t i;
     JSBool neg;
     jsdouble two32;
 
@@ -1313,9 +1313,9 @@ js_DoubleToECMAUint32(jsdouble d)
      * manipulation bytecode stores the result as int, not uint. When the
      * result does not fit int Value, it will be stored as a negative double.
      */
-    i = (int32) d;
+    i = (int32_t) d;
     if ((jsdouble) i == d)
-        return (int32)i;
+        return (int32_t)i;
 
     neg = (d < 0);
     d = floor(neg ? -d : d);
@@ -1324,7 +1324,7 @@ js_DoubleToECMAUint32(jsdouble d)
     two32 = 4294967296.0;
     d = fmod(d, two32);
 
-    return (uint32) (d >= 0 ? d : d + two32);
+    return (uint32_t) (d >= 0 ? d : d + two32);
 }
 
 namespace js {
@@ -1345,7 +1345,7 @@ NonstandardToInt32Slow(JSContext *cx, const Value &v, int32_t *out)
                             JSDVG_SEARCH_STACK, v, NULL);
         return false;
     }
-    *out = (int32) floor(d + 0.5);  /* Round to nearest */
+    *out = (int32_t) floor(d + 0.5);  /* Round to nearest */
     return true;
 }
 
@@ -1365,7 +1365,7 @@ ValueToUint16Slow(JSContext *cx, const Value &v, uint16_t *out)
         return true;
     }
 
-    uint16 u = (uint16) d;
+    uint16_t u = (uint16_t) d;
     if ((jsdouble)u == d) {
         *out = u;
         return true;

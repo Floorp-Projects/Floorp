@@ -48,14 +48,14 @@
 namespace js {
 
 template<typename T> struct NumberTraits { };
-template<> struct NumberTraits<int32> {
-  static JS_ALWAYS_INLINE int32 NaN() { return 0; }
-  static JS_ALWAYS_INLINE int32 toSelfType(int32 i) { return i; }
-  static JS_ALWAYS_INLINE int32 toSelfType(jsdouble d) { return js_DoubleToECMAUint32(d); }
+template<> struct NumberTraits<int32_t> {
+  static JS_ALWAYS_INLINE int32_t NaN() { return 0; }
+  static JS_ALWAYS_INLINE int32_t toSelfType(int32_t i) { return i; }
+  static JS_ALWAYS_INLINE int32_t toSelfType(jsdouble d) { return js_DoubleToECMAUint32(d); }
 };
 template<> struct NumberTraits<jsdouble> {
   static JS_ALWAYS_INLINE jsdouble NaN() { return js_NaN; }
-  static JS_ALWAYS_INLINE jsdouble toSelfType(int32 i) { return i; }
+  static JS_ALWAYS_INLINE jsdouble toSelfType(int32_t i) { return i; }
   static JS_ALWAYS_INLINE jsdouble toSelfType(jsdouble d) { return d; }
 };
 

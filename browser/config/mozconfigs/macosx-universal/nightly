@@ -16,3 +16,5 @@ export MOZILLA_OFFICIAL=1
 
 export MOZ_TELEMETRY_REPORTING=1
 mk_add_options MOZ_MAKE_FLAGS="-j4"
+
+ac_add_options --with-macbundlename-prefix=Firefox

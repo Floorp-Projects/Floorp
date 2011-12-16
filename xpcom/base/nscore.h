@@ -384,17 +384,8 @@ typedef PRUint32 nsrefcnt;
 /* ------------------------------------------------------------------------ */
 /* Casting macros for hiding C++ features from older compilers */
 
-  /*
-    All our compiler support template specialization, but not all support the
-    |template <>| notation.  The compiler that don't understand this notation
-    just omit it for specialization.
-
-    Need to add an autoconf test for this.
-  */
-
   /* under VC++ (Windows), we don't have autoconf yet */
 #if defined(_MSC_VER) && (_MSC_VER>=1100)
-  #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
   #define HAVE_CPP_2BYTE_WCHAR_T
 #endif
 
@@ -409,12 +400,6 @@ typedef PRUint32 nsrefcnt;
   #else
     typedef PRUint16 PRUnichar;
   #endif
-#endif
-
-#ifdef HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
-  #define NS_SPECIALIZE_TEMPLATE  template <>
-#else
-  #define NS_SPECIALIZE_TEMPLATE
 #endif
 
 /*

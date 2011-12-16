@@ -532,7 +532,7 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_NOP:
         return true;
 
-      case JSOP_PUSH:
+      case JSOP_UNDEFINED:
         return pushConstant(UndefinedValue());
 
       case JSOP_IFEQ:

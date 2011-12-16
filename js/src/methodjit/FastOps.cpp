@@ -206,8 +206,8 @@ mjit::Compiler::jsop_bitop(JSOp op)
     ensureInteger(rhs, Uses(2));
 
     if (lhs->isConstant() && rhs->isConstant()) {
-        int32 L = lhs->getValue().toInt32();
-        int32 R = rhs->getValue().toInt32();
+        int32_t L = lhs->getValue().toInt32();
+        int32_t R = rhs->getValue().toInt32();
 
         frame.popn(2);
         switch (op) {
@@ -228,9 +228,9 @@ mjit::Compiler::jsop_bitop(JSOp op)
             return;
           case JSOP_URSH:
           {
-            uint32 unsignedL;
+            uint32_t unsignedL;
             ToUint32(cx, Int32Value(L), (uint32_t*)&unsignedL);  /* Can't fail. */
-            Value v = NumberValue(uint32(unsignedL >> (R & 31)));
+            Value v = NumberValue(uint32_t(unsignedL >> (R & 31)));
             JS_ASSERT(v.isInt32());
             frame.push(v);
             return;
@@ -257,7 +257,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
 
         reg = frame.ownRegForData(lhs);
         if (rhs->isConstant()) {
-            int32 rhsInt = rhs->getValue().toInt32();
+            int32_t rhsInt = rhs->getValue().toInt32();
             if (op == JSOP_BITAND)
                 masm.and32(Imm32(rhsInt), reg);
             else if (op == JSOP_BITXOR)
@@ -901,7 +901,7 @@ mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
 }
 
 bool
-mjit::Compiler::jsop_localinc(JSOp op, uint32 slot)
+mjit::Compiler::jsop_localinc(JSOp op, uint32_t slot)
 {
     restoreVarType();
 
@@ -964,7 +964,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot)
 }
 
 bool
-mjit::Compiler::jsop_arginc(JSOp op, uint32 slot)
+mjit::Compiler::jsop_arginc(JSOp op, uint32_t slot)
 {
     restoreVarType();
 
@@ -1266,7 +1266,7 @@ mjit::Compiler::convertForTypedArray(int atype, ValueRemat *vr, bool *allocated)
              * Allocate a register with the following properties:
              * 1) For byte arrays the value must be in a byte register.
              * 2) For Uint8ClampedArray the register must be writable.
-             * 3) If the value is definitely int32 (and the array is not
+             * 3) If the value is definitely int32_t (and the array is not
              *    Uint8ClampedArray) we don't have to allocate a new register.
              * 4) If id and value have the same backing (e.g. arr[i] = i) and
              *    we need a byte register, we have to allocate a new register
@@ -1951,7 +1951,7 @@ mjit::Compiler::jsop_getelem_typed(int atype)
     // that have been read out of it to figure out how to do the load.
 
     //                          Array contents
-    //                   Float     Uint32         Int32
+    //                   Float     Uint32_t         Int32
     // Observed types
     //
     // {int}             XXX       reg pair+test  reg
@@ -2033,14 +2033,14 @@ mjit::Compiler::jsop_getelem_typed(int atype)
                            atype == TypedArray::TYPE_UINT32);
     if (maybeReadFloat && type == JSVAL_TYPE_DOUBLE) {
         dataReg = frame.allocFPReg();
-        // Need an extra reg to convert uint32 to double.
+        // Need an extra reg to convert uint32_t to double.
         if (atype == TypedArray::TYPE_UINT32)
             tempReg = frame.allocReg();
     } else {
         dataReg = frame.allocReg();
         // loadFromTypedArray expects a type register for Uint32Array or
         // float arrays. Also allocate a type register if the result may not
-        // be int32 (due to reading out-of-bound values) or if there's a
+        // be int32_t (due to reading out-of-bound values) or if there's a
         // type barrier.
         if (maybeReadFloat || type != JSVAL_TYPE_INT32)
             typeReg = frame.allocReg();
@@ -2730,7 +2730,7 @@ mjit::Compiler::jsop_initelem()
         return;
     }
 
-    int32 idx = id->getValue().toInt32();
+    int32_t idx = id->getValue().toInt32();
 
     RegisterID objReg = frame.copyDataIntoReg(obj);
     masm.loadPtr(Address(objReg, JSObject::offsetOfElements()), objReg);

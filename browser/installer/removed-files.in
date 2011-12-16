@@ -72,6 +72,7 @@ components/sidebar.xpt
 components/dom_telephony.xpt
 components/dom_system_b2g.xpt
 #endif
+components/uconvd.dll
 components/WeaveCrypto.js
 components/WeaveCrypto.manifest
 components/xmlextras.xpt

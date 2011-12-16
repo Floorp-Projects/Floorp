@@ -54,6 +54,8 @@
 #ifndef jstypes_h___
 #define jstypes_h___
 
+#include "mozilla/StdInt.h"
+
 #include <stddef.h>
 #include "js-config.h"
 
@@ -274,7 +276,7 @@
 ** DESCRIPTION:
 ** Bit masking macros.  XXX n must be <= 31 to be portable
 ***********************************************************************/
-#define JS_BIT(n)       ((JSUint32)1 << (n))
+#define JS_BIT(n)       ((uint32_t)1 << (n))
 #define JS_BITMASK(n)   (JS_BIT(n) - 1)
 
 /***********************************************************************
@@ -323,8 +325,6 @@
 #endif
 
 
-#include "jsinttypes.h"
-
 JS_BEGIN_EXTERN_C
 
 /************************************************************************
@@ -361,7 +361,7 @@ typedef ptrdiff_t JSPtrdiff;
 **  A type for pointer difference. Variables of this type are suitable
 **      for storing a pointer or pointer sutraction.
 ************************************************************************/
-typedef JSUintPtr JSUptrdiff;
+typedef uintptr_t JSUptrdiff;
 
 /************************************************************************
 ** TYPES:       JSBool
@@ -386,15 +386,13 @@ typedef JSIntn JSBool;
 **  Use JSPackedBool within structs where bitfields are not desireable
 **      but minimum and consistent overhead matters.
 ************************************************************************/
-typedef JSUint8 JSPackedBool;
+typedef uint8_t JSPackedBool;
 
 /*
 ** A JSWord is an integer that is the same size as a void*
 */
-typedef JSIntPtr JSWord;
-typedef JSUintPtr JSUword;
-
-#include "jsotypes.h"
+typedef intptr_t JSWord;
+typedef uintptr_t JSUword;
 
 /***********************************************************************
 ** MACROS:      JS_LIKELY

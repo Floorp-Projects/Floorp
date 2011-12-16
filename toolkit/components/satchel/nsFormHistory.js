@@ -359,8 +359,6 @@ FormHistory.prototype = {
     },
 
     get dbConnection() {
-        let connection;
-
         // Make sure dbConnection can't be called from now to prevent infinite loops.
         delete FormHistory.prototype.dbConnection;
 
@@ -375,7 +373,7 @@ FormHistory.prototype = {
             this.log("Initialization failed: " + e);
             // If dbInit fails...
             if (e.result == Cr.NS_ERROR_FILE_CORRUPTED) {
-                this.dbCleanup(true);
+                this.dbCleanup();
                 FormHistory.prototype.dbConnection = this.dbOpen();
                 this.dbInit();
             } else {
@@ -885,23 +883,25 @@ FormHistory.prototype = {
      * Called when database creation fails. Finalizes database statements,
      * closes the database connection, deletes the database file.
      */
-    dbCleanup : function (backup) {
-        this.log("Cleaning up DB file - close & remove & backup=" + backup)
+    dbCleanup : function () {
+        this.log("Cleaning up DB file - close & remove & backup")
 
         // Create backup file
-        if (backup) {
-            let storage = Cc["@mozilla.org/storage/service;1"].
-                          getService(Ci.mozIStorageService);
-
-            let backupFile = this.dbFile.leafName + ".corrupt";
-            storage.backupDatabaseFile(this.dbFile, backupFile);
-        }
+        let storage = Cc["@mozilla.org/storage/service;1"].
+                      getService(Ci.mozIStorageService);
+        let backupFile = this.dbFile.leafName + ".corrupt";
+        storage.backupDatabaseFile(this.dbFile, backupFile);
 
         this._dbFinalize();
 
-        // Close the connection, ignore 'already closed' error
-        // FIXME (bug 696483): we should reportError in here.
-        try { this.dbConnection.close(); } catch(e) {}
+        if (this.dbConnection !== undefined) {
+            try {
+                this.dbConnection.close();
+            } catch (e) {
+                Components.utils.reportError(e);
+            }
+        }
+
         this.dbFile.remove(false);
     }
 };

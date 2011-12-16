@@ -96,7 +96,7 @@ static JSHashAllocOps defaultHashAllocOps = {
 };
 
 JS_PUBLIC_API(JSHashTable *)
-JS_NewHashTable(uint32 n, JSHashFunction keyHash,
+JS_NewHashTable(uint32_t n, JSHashFunction keyHash,
                 JSHashComparator keyCompare, JSHashComparator valueCompare,
                 JSHashAllocOps *allocOps, void *allocPriv)
 {
@@ -107,7 +107,7 @@ JS_NewHashTable(uint32 n, JSHashFunction keyHash,
         n = MINBUCKETSLOG2;
     } else {
         n = JS_CEILING_LOG2W(n);
-        if ((int32)n < 0)
+        if (int32_t(n) < 0)
             return NULL;
     }
 
@@ -138,7 +138,7 @@ JS_NewHashTable(uint32 n, JSHashFunction keyHash,
 JS_PUBLIC_API(void)
 JS_HashTableDestroy(JSHashTable *ht)
 {
-    uint32 i, n;
+    uint32_t i, n;
     JSHashEntry *he, **hep;
     JSHashAllocOps *allocOps = ht->allocOps;
     void *allocPriv = ht->allocPriv;
@@ -195,7 +195,7 @@ JS_HashTableRawLookup(JSHashTable *ht, JSHashNumber keyHash, const void *key)
 }
 
 static JSBool
-Resize(JSHashTable *ht, uint32 newshift)
+Resize(JSHashTable *ht, uint32_t newshift)
 {
     size_t nb, nentries, i;
     JSHashEntry **oldbuckets, *he, *next, **hep;
@@ -250,7 +250,7 @@ JS_PUBLIC_API(JSHashEntry *)
 JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **&hep,
                    JSHashNumber keyHash, const void *key, void *value)
 {
-    uint32 n;
+    uint32_t n;
     JSHashEntry *he;
 
     /* Grow the table if it is overloaded */
@@ -302,7 +302,7 @@ JS_HashTableAdd(JSHashTable *ht, const void *key, void *value)
 JS_PUBLIC_API(void)
 JS_HashTableRawRemove(JSHashTable *ht, JSHashEntry **hep, JSHashEntry *he)
 {
-    uint32 n;
+    uint32_t n;
 
     *hep = he->next;
     ht->allocOps->freeEntry(ht->allocPriv, he, HT_FREE_ENTRY);
@@ -356,7 +356,7 @@ JS_PUBLIC_API(int)
 JS_HashTableEnumerateEntries(JSHashTable *ht, JSHashEnumerator f, void *arg)
 {
     JSHashEntry *he, **hep, **bucket;
-    uint32 nlimit, n, nbuckets, newlog2;
+    uint32_t nlimit, n, nbuckets, newlog2;
     int rv;
 
     nlimit = ht->nentries;
@@ -405,8 +405,8 @@ JS_PUBLIC_API(void)
 JS_HashTableDumpMeter(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
 {
     double sqsum, mean, sigma;
-    uint32 nchains, nbuckets;
-    uint32 i, n, maxChain, maxChainLen;
+    uint32_t nchains, nbuckets;
+    uint32_t i, n, maxChain, maxChainLen;
     JSHashEntry *he;
 
     sqsum = 0;

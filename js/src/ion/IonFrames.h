@@ -42,7 +42,6 @@
 #ifndef jsion_frames_h__
 #define jsion_frames_h__
 
-#include "jstypes.h"
 #include "jsutil.h"
 #include "IonRegisters.h"
 #include "IonCode.h"
@@ -168,10 +167,6 @@ class MachineState
         return regs_[reg.code()];
     }
 };
-
-// Duplicated from Bailouts.h, which we can't include here.
-typedef uint32 BailoutId;
-typedef uint32 SnapshotOffset;
 
 class IonJSFrameLayout;
 

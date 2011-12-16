@@ -4,7 +4,7 @@ Universal manifests for Mozilla test harnesses
 
 What ManifestDestiny gives you:
 
-* manifests are (ordered) lists of tests
+* manifests are ordered lists of tests
 * tests may have an arbitrary number of key, value pairs
 * the parser returns an ordered list of test data structures, which
   are just dicts with some keys.  For example, a test with no
@@ -23,6 +23,14 @@ additional key, value metadata to each test.
 
 # Why have test manifests?
 
+It is desirable to have a unified format for test manifests for testing
+[mozilla-central](http://hg.mozilla.org/mozilla-central), etc.
+
+* It is desirable to be able to selectively enable or disable tests based on platform or other conditions. This should be easy to do. Currently, since many of the harnesses just crawl directories, there is no effective way of disabling a test except for removal from mozilla-central
+* It is desriable to do this in a universal way so that enabling and disabling tests as well as other tasks are easily accessible to a wider audience than just those intimately familiar with the specific test framework.
+* It is desirable to have other metadata on top of the test. For instance, let's say a test is marked as skipped. It would be nice to give the reason why.
+
+
 Most Mozilla test harnesses work by crawling a directory structure.
 While this is straight-forward, manifests offer several practical
 advantages::
@@ -37,8 +45,8 @@ advantages::
   removing it from the tree and a bug filed with the appropriate
   reason:
 
-   [test_broken.js]
-   disabled = https://bugzilla.mozilla.org/show_bug.cgi?id=123456
+     [test_broken.js]
+     disabled = https://bugzilla.mozilla.org/show_bug.cgi?id=123456
 
 * ability to run different (subsets of) tests on different
   platforms. Traditionally, we've done a bit of magic or had the test
@@ -46,8 +54,8 @@ advantages::
   can mark what platforms a test will or will not run on and change
   these without changing the test.
 
-   [test_works_on_windows_only.js]
-   run-if = os == 'win'
+     [test_works_on_windows_only.js]
+     run-if = os == 'win'
 
 * ability to markup tests with metadata. We have a large, complicated,
   and always changing infrastructure.  key, value metadata may be used
@@ -65,32 +73,32 @@ advantages::
 Manifests are .ini file with the section names denoting the path
 relative to the manifest:
 
- [foo.js]
- [bar.js]
- [fleem.js]
+    [foo.js]
+    [bar.js]
+    [fleem.js]
 
 The sections are read in order. In addition, tests may include
 arbitrary key, value metadata to be used by the harness.  You may also
 have a `[DEFAULT]` section that will give key, value pairs that will
 be inherited by each test unless overridden:
 
- [DEFAULT]
- type = restart
+    [DEFAULT]
+    type = restart
 
- [lilies.js]
- color = white
+    [lilies.js]
+    color = white
 
- [daffodils.js]
- color = yellow
- type = other
- # override type from DEFAULT
+    [daffodils.js]
+    color = yellow
+    type = other
+    # override type from DEFAULT
 
- [roses.js]
- color = red
+    [roses.js]
+    color = red
 
 You can also include other manifests:
 
- [include:subdir/anothermanifest.ini]
+    [include:subdir/anothermanifest.ini]
 
 Manifests are included relative to the directory of the manifest with
 the `[include:]` directive unless they are absolute paths.
@@ -109,7 +117,7 @@ terms).
 
 This data corresponds to a one-line manifest:
 
- [testToolbar/testBackForwardButtons.js]
+    [testToolbar/testBackForwardButtons.js]
 
 If additional key, values were specified, they would be in this dict
 as well.
@@ -128,13 +136,13 @@ integration layer.  This should allow whatever sort of logic is
 desired.  For instance, if in yourtestharness you wanted to run only on
 mondays for a certain class of tests:
 
- tests = []
- for test in manifests.tests:
-     if 'runOnDay' in test:
-        if calendar.day_name[calendar.weekday(*datetime.datetime.now().timetuple()[:3])].lower() == test['runOnDay'].lower():
-            tests.append(test)
-     else:
-        tests.append(test)
+    tests = []
+    for test in manifests.tests:
+        if 'runOnDay' in test:
+           if calendar.day_name[calendar.weekday(*datetime.datetime.now().timetuple()[:3])].lower() == test['runOnDay'].lower():
+               tests.append(test)
+        else:
+           tests.append(test)
 
 To recap:
 * the manifests allow you to specify test data
@@ -146,7 +154,7 @@ http://hg.mozilla.org/automation/ManifestDestiny/file/tip/manifestdestiny/tests/
 
 Additional manifest files may be included with an `[include:]` directive:
 
- [include:path-to-additional-file.manifest]
+    [include:path-to-additional-file.manifest]
 
 The path to included files is relative to the current manifest.
 
@@ -183,7 +191,7 @@ in particular.
 
 A test harness will normally call `TestManifest.active_tests`:
 
-   def active_tests(self, exists=True, disabled=True, **tags):
+    def active_tests(self, exists=True, disabled=True, **tags):
 
 The manifests are passed to the `__init__` or `read` methods with
 appropriate arguments.  `active_tests` then allows you to select the
@@ -216,7 +224,7 @@ files.  Run `manifestparser help create` for usage information.
 
 To copy tests and manifests from a source:
 
-  manifestparser [options] copy from_manifest to_directory -tag1 -tag2 --key1=value1 key2=value2 ...
+    manifestparser [options] copy from_manifest to_directory -tag1 -tag2 --key1=value1 key2=value2 ...
 
 
 # Upating Tests
@@ -224,7 +232,81 @@ To copy tests and manifests from a source:
 To update the tests associated with with a manifest from a source
 directory:
 
-  manifestparser [options] update manifest from_directory -tag1 -tag2 --key1=value1 --key2=value2 ...
+    manifestparser [options] update manifest from_directory -tag1 -tag2 --key1=value1 --key2=value2 ...
+
+
+# Usage example
+
+Here is an example of how to create manifests for a directory tree and
+update the tests listed in the manifests from an external source.
+
+## Creating Manifests
+
+Let's say you want to make a series of manifests for a given directory structure containing `.js` test files:
+
+    testing/mozmill/tests/firefox/
+    testing/mozmill/tests/firefox/testAwesomeBar/
+    testing/mozmill/tests/firefox/testPreferences/
+    testing/mozmill/tests/firefox/testPrivateBrowsing/
+    testing/mozmill/tests/firefox/testSessionStore/
+    testing/mozmill/tests/firefox/testTechnicalTools/
+    testing/mozmill/tests/firefox/testToolbar/
+    testing/mozmill/tests/firefox/restartTests
+
+You can use `manifestparser create` to do this:
+
+    $ manifestparser help create
+    Usage: manifestparser.py [options] create directory <directory> <...>
+
+         create a manifest from a list of directories
+
+    Options:
+      -p PATTERN, --pattern=PATTERN
+                            glob pattern for files
+      -i IGNORE, --ignore=IGNORE
+                            directories to ignore
+      -w IN_PLACE, --in-place=IN_PLACE
+                            Write .ini files in place; filename to write to
+
+We only want `.js` files and we want to skip the `restartTests` directory.
+We also want to write a manifest per directory, so I use the `--in-place`
+option to write the manifests:
+
+    manifestparser create . -i restartTests -p '*.js' -w manifest.ini
+
+This creates a manifest.ini per directory that we care about with the JS test files:
+
+    testing/mozmill/tests/firefox/manifest.ini
+    testing/mozmill/tests/firefox/testAwesomeBar/manifest.ini
+    testing/mozmill/tests/firefox/testPreferences/manifest.ini
+    testing/mozmill/tests/firefox/testPrivateBrowsing/manifest.ini
+    testing/mozmill/tests/firefox/testSessionStore/manifest.ini
+    testing/mozmill/tests/firefox/testTechnicalTools/manifest.ini
+    testing/mozmill/tests/firefox/testToolbar/manifest.ini
+
+The top-level `manifest.ini` merely has `[include:]` references to the sub manifests:
+
+    [include:testAwesomeBar/manifest.ini]
+    [include:testPreferences/manifest.ini]
+    [include:testPrivateBrowsing/manifest.ini]
+    [include:testSessionStore/manifest.ini]
+    [include:testTechnicalTools/manifest.ini]
+    [include:testToolbar/manifest.ini]
+
+Each sub-level manifest contains the (`.js`) test files relative to it.
+
+## Updating the tests from manifests
+
+You may need to update tests as given in manifests from a different source directory.
+`manifestparser update` was made for just this purpose:
+
+    Usage: manifestparser [options] update manifest directory -tag1 -tag2 --key1=value1 --key2=value2 ...
+
+        update the tests as listed in a manifest from a directory
+
+To update from a directory of tests in `~/mozmill/src/mozmill-tests/firefox/` run:
+
+    manifestparser update manifest.ini ~/mozmill/src/mozmill-tests/firefox/
 
 
 # Tests
@@ -252,20 +334,20 @@ Run `manifestparser help` for usage information.
 
 To create a manifest from a set of directories:
 
-  manifestparser [options] create directory <directory> <...> [create-options]
+    manifestparser [options] create directory <directory> <...> [create-options]
 
 To output a manifest of tests:
 
-  manifestparser [options] write manifest <manifest> <...> -tag1 -tag2 --key1=value1 --key2=value2 ...
+    manifestparser [options] write manifest <manifest> <...> -tag1 -tag2 --key1=value1 --key2=value2 ...
 
 To copy tests and manifests from a source:
 
-  manifestparser [options] copy from_manifest to_manifest -tag1 -tag2 --key1=value1 key2=value2 ...
+    manifestparser [options] copy from_manifest to_manifest -tag1 -tag2 --key1=value1 key2=value2 ...
 
 To update the tests associated with with a manifest from a source
 directory:
 
-  manifestparser [options] update manifest from_directory -tag1 -tag2 --key1=value1 --key2=value2 ...
+    manifestparser [options] update manifest from_directory -tag1 -tag2 --key1=value1 --key2=value2 ...
 
 
 # Design Considerations
@@ -307,6 +389,14 @@ through several design considerations.
   this end, it is a single file, as appropriate to mozilla-central,
   which is also a working python package deployed to PyPI for easy
   installation.
+
+
+# Developing ManifestDestiny
+
+ManifestDestiny is developed and maintained by Mozilla's
+[Automation and Testing Team](https://wiki.mozilla.org/Auto-tools).
+The project page is located at
+https://wiki.mozilla.org/Auto-tools/Projects/ManifestDestiny .
 
 
 # Historical Reference

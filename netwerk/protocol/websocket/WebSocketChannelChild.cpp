@@ -406,6 +406,17 @@ WebSocketChannelChild::SendBinaryMsg(const nsACString &aMsg)
 }
 
 NS_IMETHODIMP
+WebSocketChannelChild::SendBinaryStream(nsIInputStream *aStream,
+                                        PRUint32 aLength)
+{
+  LOG(("WebSocketChannelChild::SendBinaryStream() %p\n", this));
+
+  if (!mIPCOpen || !SendSendBinaryStream(IPC::InputStream(aStream), aLength))
+    return NS_ERROR_UNEXPECTED;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 WebSocketChannelChild::GetSecurityInfo(nsISupports **aSecurityInfo)
 {
   LOG(("WebSocketChannelChild::GetSecurityInfo() %p\n", this));

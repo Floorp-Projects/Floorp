@@ -81,7 +81,8 @@ protected:
                           PRUint32 aPixelWidth, bool aUseTransparency);
   void StripAlpha(const PRUint8* aSrc, PRUint8* aDest,
                   PRUint32 aPixelWidth);
-  static void ErrorCallback(png_structp png_ptr, png_const_charp warning_msg);
+  static void WarningCallback(png_structp png_ptr, png_const_charp warning_msg);
+  static void ErrorCallback(png_structp png_ptr, png_const_charp error_msg);
   static void WriteCallback(png_structp png, png_bytep data, png_size_t size);
   void NotifyListener();
 

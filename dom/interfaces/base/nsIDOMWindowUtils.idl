@@ -65,10 +65,11 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 interface nsIDOMWindow;
+interface nsIDOMBlob;
 interface nsIDOMFile;
 interface nsIFile;
 
-[scriptable, uuid(bf868921-0288-4799-a806-2fa642590197)]
+[scriptable, uuid(36adf309-e5c4-4912-9152-7fb151dc754a)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -925,5 +926,19 @@ interface nsIDOMWindowUtils : nsISupports {
    * clears the painted flags if they have.
    */
   boolean checkAndClearPaintedState(in nsIDOMElement aElement);
+
+  /*
+   * Get internal id of the stored blob.
+   */
+  long long getFileId(in nsIDOMBlob aBlob);
+
+  /*
+   * Get file ref count info for given database and file id.
+   *
+   */
+  boolean getFileReferences(in AString aDatabaseName, in long long aId,
+                            [optional] out long aRefCnt,
+                            [optional] out long aDBRefCnt,
+                            [optional] out long aSliceRefCnt);
 
 };

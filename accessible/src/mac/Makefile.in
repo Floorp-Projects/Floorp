@@ -75,7 +75,6 @@ EXPORTS = \
   nsApplicationAccessibleWrap.h \
   mozDocAccessible.h \
   mozAccessible.h \
-  mozAccessibleWrapper.h \
   mozAccessibleProtocol.h \
   mozActionElements.h \
   mozTextAccessible.h \

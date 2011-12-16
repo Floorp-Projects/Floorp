@@ -33,6 +33,9 @@ in HTTP RFC http://www.ietf.org/rfc/rfc2616.txt.
 """
 
 
+import urlparse
+
+
 _SEPARATORS = '()<>@,;:\\"/[]?={} \t'
 
 
@@ -78,7 +81,8 @@ def consume(state, amount=1):
 
 def consume_string(state, expected):
     """Given a parsing state and a expected string, consumes the string from
-    the head. Returns True if consumed successfully. Otherwise, returns False.
+    the head. Returns True if consumed successfully. Otherwise, returns
+    False.
     """
 
     pos = 0
@@ -208,6 +212,43 @@ def quote_if_necessary(s):
         return '"' + ''.join(result) + '"';
     else:
         return ''.join(result)
+
+
+def parse_uri(uri):
+    """Parse absolute URI then return host, port and resource."""
+
+    parsed = urlparse.urlsplit(uri)
+    if parsed.scheme != 'wss' and parsed.scheme != 'ws':
+        # |uri| must be a relative URI.
+        # TODO(toyoshim): Should validate |uri|.
+        return None, None, uri
+
+    if parsed.hostname is None:
+        return None, None, None
+
+    port = None
+    try:
+        port = parsed.port
+    except ValueError, e:
+        # port property cause ValueError on invalid null port description like
+        # 'ws://host:/path'.
+        return None, None, None
+
+    if port is None:
+        if parsed.scheme == 'ws':
+            port = 80
+        else:
+            port = 443
+
+    path = parsed.path
+    if not path:
+        path += '/'
+    if parsed.query:
+        path += '?' + parsed.query
+    if parsed.fragment:
+        path += '#' + parsed.fragment
+
+    return parsed.hostname, port, path
 
 
 # vi:sts=4 sw=4 et

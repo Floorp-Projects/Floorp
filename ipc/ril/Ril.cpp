@@ -65,8 +65,14 @@
 #define LOG(args...)  printf(args);
 #endif
 
+#define RIL_SOCKET_NAME "/dev/socket/rilproxy"
+
 using namespace base;
 using namespace std;
+
+// Network port to connect to for adb forwarded sockets when doing
+// desktop development.
+const uint32_t RIL_TEST_PORT = 6200;
 
 namespace mozilla {
 namespace ipc {
@@ -81,6 +87,7 @@ struct RilClient : public RefCounted<RilClient>,
                 , mMutex("RilClient.mMutex")
                 , mBlockedOnWrite(false)
                 , mCurrentRilRawData(NULL)
+                , mIOLoop(MessageLoopForIO::current())
     { }
     virtual ~RilClient() { }
 
@@ -108,6 +115,17 @@ static RefPtr<RilConsumer> sConsumer;
 // This code runs on the IO thread.
 //
 
+class RilReconnectTask : public Task {
+    virtual void Run();
+};
+
+void RilReconnectTask::Run() {
+    if (sClient->OpenSocket()) {
+        return;
+    }
+    sClient->mIOLoop->PostDelayedTask(FROM_HERE, new RilReconnectTask(), 1000);
+}
+
 class RilWriteTask : public Task {
     virtual void Run();
 };
@@ -122,10 +140,8 @@ ConnectToRil(Monitor* aMonitor, bool* aSuccess)
     MOZ_ASSERT(!sClient);
 
     sClient = new RilClient();
-    if (!(*aSuccess = sClient->OpenSocket())) {
-        sClient = nsnull;
-    }
-
+    sClient->mIOLoop->PostTask(FROM_HERE, new RilReconnectTask());
+    *aSuccess = true;
     {
         MonitorAutoLock lock(*aMonitor);
         lock.Notify();
@@ -144,21 +160,21 @@ RilClient::OpenSocket()
     size_t namelen;
     int err;
     memset(&addr, 0, sizeof(addr));
-    strcpy(addr.sun_path, "/dev/socket/rilb2g");
+    strcpy(addr.sun_path, RIL_SOCKET_NAME);
     addr.sun_family = AF_LOCAL;
     mSocket.mFd = socket(AF_LOCAL, SOCK_STREAM, 0);
-    alen = strlen("/dev/socket/rilb2g") + offsetof(struct sockaddr_un, sun_path) + 1;
+    alen = strlen(RIL_SOCKET_NAME) + offsetof(struct sockaddr_un, sun_path) + 1;
 #else
     struct hostent *hp;
     struct sockaddr_in addr;
     socklen_t alen;
 
     hp = gethostbyname("localhost");
-    if (hp == 0) return -1;
+    if (hp == 0) return false;
 
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = hp->h_addrtype;
-    addr.sin_port = htons(6200);
+    addr.sin_port = htons(RIL_TEST_PORT);
     memcpy(&addr.sin_addr, hp->h_addr, hp->h_length);
     mSocket.mFd = socket(hp->h_addrtype, SOCK_STREAM, 0);
     alen = sizeof(addr);
@@ -166,7 +182,7 @@ RilClient::OpenSocket()
 
     if (mSocket.mFd < 0) {
         LOG("Cannot create socket for RIL!\n");
-        return -1;
+        return false;
     }
 
     if (connect(mSocket.mFd, (struct sockaddr *) &addr, alen) < 0) {
@@ -174,7 +190,6 @@ RilClient::OpenSocket()
         close(mSocket.mFd);
         return false;
     }
-    LOG("Socket open for RIL\n");
 
     // Set close-on-exec bit.
     int flags = fcntl(mSocket.mFd, F_GETFD);
@@ -191,7 +206,6 @@ RilClient::OpenSocket()
     if (-1 == fcntl(mSocket.mFd, F_SETFL, O_NONBLOCK)) {
         return false;
     }
-    mIOLoop = MessageLoopForIO::current();
     if (!mIOLoop->WatchFileDescriptor(mSocket.mFd,
                                       true,
                                       MessageLoopForIO::WATCH_READ,
@@ -199,6 +213,7 @@ RilClient::OpenSocket()
                                       this)) {
         return false;
     }
+    LOG("Socket open for RIL\n");
     return true;
 }
 
@@ -221,6 +236,13 @@ RilClient::OnFileCanReadWithoutBlocking(int fd)
             int ret = read(fd, mIncoming->mData, 1024);
             if (ret <= 0) {
                 LOG("Cannot read from network, error %d\n", ret);
+                // At this point, assume that we can't actually access
+                // the socket anymore, and start a reconnect loop.
+                mIncoming.forget();
+                mReadWatcher.StopWatchingFileDescriptor();
+                mWriteWatcher.StopWatchingFileDescriptor();
+                close(mSocket.mFd);
+                mIOLoop->PostTask(FROM_HERE, new RilReconnectTask());
                 return;
             }
             mIncoming->mSize = ret;

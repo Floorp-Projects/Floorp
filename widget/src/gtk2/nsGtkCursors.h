@@ -46,6 +46,7 @@ typedef struct {
   const unsigned char *mask_bits;
   int hot_x;
   int hot_y;
+  const char *hash;
 } nsGtkCursor;
 
 /* MOZ_CURSOR_HAND_GRAB */
@@ -415,21 +416,23 @@ enum {
   MOZ_CURSOR_NONE
 };
 
-// create custom pixmap cursor
+// create custom pixmap cursor. The hash values must stay in sync with the
+// bitmap data above. To see the hash function, have a look at XcursorImageHash
+// in libXcursor
 static const nsGtkCursor GtkCursors[] = {
-  { moz_hand_grab_bits,      moz_hand_grab_mask_bits,      10, 10 },
-  { moz_hand_grabbing_bits,  moz_hand_grabbing_mask_bits,  10, 10 },
-  { moz_copy_bits,           moz_copy_mask_bits,           2,  2  },
-  { moz_alias_bits,          moz_alias_mask_bits,          2,  2  },
-  { moz_menu_bits,           moz_menu_mask_bits,           2,  2  },
-  { moz_spinning_bits,       moz_spinning_mask_bits,       2,  2  },
-  { moz_zoom_in_bits,        moz_zoom_in_mask_bits,        6,  6  },
-  { moz_zoom_out_bits,       moz_zoom_out_mask_bits,       6,  6  },
-  { moz_not_allowed_bits,    moz_not_allowed_mask_bits,    9,  9  },
-  { moz_vertical_text_bits,  moz_vertical_text_mask_bits,  8,  4  },
-  { moz_nesw_resize_bits,    moz_nesw_resize_mask_bits,    8,  8  },
-  { moz_nwse_resize_bits,    moz_nwse_resize_mask_bits,    8,  8  },
-  { moz_none_bits,           moz_none_mask_bits,           0,  0  }
+  { moz_hand_grab_bits,      moz_hand_grab_mask_bits,      10, 10, "5aca4d189052212118709018842178c0" },
+  { moz_hand_grabbing_bits,  moz_hand_grabbing_mask_bits,  10, 10, "208530c400c041818281048008011002" },
+  { moz_copy_bits,           moz_copy_mask_bits,           2,  2,  "08ffe1cb5fe6fc01f906f1c063814ccf" },
+  { moz_alias_bits,          moz_alias_mask_bits,          2,  2,  "0876e1c15ff2fc01f906f1c363074c0f" },
+  { moz_menu_bits,           moz_menu_mask_bits,           2,  2,  "08ffe1e65f80fcfdf9fff11263e74c48" },
+  { moz_spinning_bits,       moz_spinning_mask_bits,       2,  2,  "08e8e1c95fe2fc01f976f1e063a24ccd" },
+  { moz_zoom_in_bits,        moz_zoom_in_mask_bits,        6,  6,  "f41c0e382c94c0958e07017e42b00462" },
+  { moz_zoom_out_bits,       moz_zoom_out_mask_bits,       6,  6,  "f41c0e382c97c0938e07017e42800402" },
+  { moz_not_allowed_bits,    moz_not_allowed_mask_bits,    9,  9,  "03b6e0fcb3499374a867d041f52298f0" },
+  { moz_vertical_text_bits,  moz_vertical_text_mask_bits,  8,  4,  "048008013003cff3c00c801001200000" },
+  { moz_nesw_resize_bits,    moz_nesw_resize_mask_bits,    8,  8,  "50585d75b494802d0151028115016902" },
+  { moz_nwse_resize_bits,    moz_nwse_resize_mask_bits,    8,  8,  "38c5dff7c7b8962045400281044508d2" },
+  { moz_none_bits,           moz_none_mask_bits,           0,  0,  NULL }
 };
 
 #endif /* nsGtkCursors_h__ */

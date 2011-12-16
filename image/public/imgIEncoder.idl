@@ -44,7 +44,7 @@
 /**
  * imgIEncoder interface
  */
-[scriptable, uuid(d02e2d95-072d-4b91-8b8f-1300e45fcb2b)]
+[scriptable, uuid(4baa2d6e-fee7-42df-ae3f-5fbebc0c267c)]
 interface imgIEncoder : nsIAsyncInputStream
 {
   // Possible values for outputOptions. Multiple values are semicolon-separated.
@@ -159,8 +159,9 @@ interface imgIEncoder : nsIAsyncInputStream
 
   /*
    * Sometimes an encoder can contain another encoder and direct access
-   * to its buffer is necessary. 
+   * to its buffer is necessary.   It is only safe to assume that the buffer
+   * returned from getImageBuffer() is of size equal to getImageBufferUsed().
    */
-  [noscript] unsigned long getImageBufferSize();
+  [noscript] unsigned long getImageBufferUsed();
   [noscript] charPtr getImageBuffer();
 };

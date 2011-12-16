@@ -7,7 +7,6 @@
 
 const URI_EXTENSION_UPDATE_DIALOG = "chrome://mozapps/content/extensions/update.xul";
 
-const PREF_GETADDONS_CACHE_ENABLED    = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_BYIDS            = "extensions.getAddons.get.url";
 const PREF_MIN_PLATFORM_COMPAT        = "extensions.minCompatiblePlatformVersion";
 
@@ -34,10 +33,6 @@ function test() {
 
   run_next_test();
 }
-
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref(PREF_GETADDONS_CACHE_ENABLED);
-});
 
 function end_test() {
   // Test generates a lot of available installs so just cancel them all

@@ -196,7 +196,6 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
             JS_ASSERT(atom);
         }
 
-        PropertyName *name = atom->asPropertyName();
         jsid id = ATOM_TO_JSID(atom);
         if (entry && JS_LIKELY(!obj->getOps()->setProperty)) {
             uintN defineHow;
@@ -210,7 +209,7 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
             if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rval, strict))
                 THROW();
         } else {
-            if (!obj->setProperty(cx, name, &rval, strict))
+            if (!obj->setGeneric(cx, id, &rval, strict))
                 THROW();
         }
     } while (0);
@@ -387,7 +386,7 @@ stubs::GetElem(VMFrame &f)
     if (!obj)
         THROW();
 
-    uint32 index;
+    uint32_t index;
     if (IsDefinitelyIndex(rref, &index)) {
         if (obj->isDenseArray()) {
             if (index < obj->getDenseArrayInitializedLength()) {
@@ -643,7 +642,7 @@ stubs::Ursh(VMFrame &f)
 
     u >>= (j & 31);
 
-	if (!f.regs.sp[-2].setNumber(uint32(u)))
+	if (!f.regs.sp[-2].setNumber(uint32_t(u)))
         TypeScript::MonitorOverflow(f.cx, f.script(), f.pc());
 }
 
@@ -783,7 +782,7 @@ template void JS_FASTCALL stubs::DefFun<false>(VMFrame &f, JSFunction *fun);
             THROWV(JS_FALSE);                                                 \
         if (lval.isString() && rval.isString()) {                             \
             JSString *l = lval.toString(), *r = rval.toString();              \
-            int32 cmp;                                                        \
+            int32_t cmp;                                                      \
             if (!CompareStrings(cx, l, r, &cmp))                              \
                 THROWV(JS_FALSE);                                             \
             cond = cmp OP 0;                                                  \
@@ -1156,7 +1155,7 @@ stubs::RecompileForInline(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::Trap(VMFrame &f, uint32 trapTypes)
+stubs::Trap(VMFrame &f, uint32_t trapTypes)
 {
     Value rval;
 
@@ -1231,7 +1230,7 @@ stubs::Neg(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::NewInitArray(VMFrame &f, uint32 count)
+stubs::NewInitArray(VMFrame &f, uint32_t count)
 {
     JSObject *obj = NewDenseAllocatedArray(f.cx, count);
     if (!obj)
@@ -1270,7 +1269,7 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
 }
 
 void JS_FASTCALL
-stubs::InitElem(VMFrame &f, uint32 last)
+stubs::InitElem(VMFrame &f, uint32_t last)
 {
     JSContext *cx = f.cx;
     FrameRegs &regs = f.regs;
@@ -1308,10 +1307,10 @@ stubs::InitElem(VMFrame &f, uint32 last)
 }
 
 void JS_FASTCALL
-stubs::GetUpvar(VMFrame &f, uint32 ck)
+stubs::GetUpvar(VMFrame &f, uint32_t ck)
 {
     /* :FIXME: We can do better, this stub isn't needed. */
-    uint32 staticLevel = f.script()->staticLevel;
+    uint32_t staticLevel = f.script()->staticLevel;
     UpvarCookie cookie;
     cookie.fromInteger(ck);
     f.regs.sp[0] = GetUpvar(f.cx, staticLevel, cookie);
@@ -1611,7 +1610,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
 }
 
 void JS_FASTCALL
-stubs::Iter(VMFrame &f, uint32 flags)
+stubs::Iter(VMFrame &f, uint32_t flags)
 {
     if (!js_ValueToIterator(f.cx, flags, &f.regs.sp[-1]))
         THROW();
@@ -1684,7 +1683,7 @@ stubs::InitMethod(VMFrame &f, JSAtom *atom)
 }
 
 void JS_FASTCALL
-stubs::IterNext(VMFrame &f, int32 offset)
+stubs::IterNext(VMFrame &f, int32_t offset)
 {
     JS_ASSERT(f.regs.sp - offset >= f.fp()->base());
     JS_ASSERT(f.regs.sp[-offset].isObject());
@@ -1901,7 +1900,7 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
     JS_ASSERT(pc[0] == JSOP_LOOKUPSWITCH);
 
     pc += JUMP_OFFSET_LEN;
-    uint32 npairs = GET_UINT16(pc);
+    uint32_t npairs = GET_UINT16(pc);
     pc += UINT16_LEN;
 
     JS_ASSERT(npairs);
@@ -1910,7 +1909,7 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
         JSLinearString *str = lval.toString()->ensureLinear(f.cx);
         if (!str)
             THROWV(NULL);
-        for (uint32 i = 1; i <= npairs; i++) {
+        for (uint32_t i = 1; i <= npairs; i++) {
             Value rval = script->getConst(GET_INDEX(pc));
             pc += INDEX_LEN;
             if (rval.isString()) {
@@ -1926,7 +1925,7 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
         }
     } else if (lval.isNumber()) {
         double d = lval.toNumber();
-        for (uint32 i = 1; i <= npairs; i++) {
+        for (uint32_t i = 1; i <= npairs; i++) {
             Value rval = script->getConst(GET_INDEX(pc));
             pc += INDEX_LEN;
             if (rval.isNumber() && d == rval.toNumber()) {
@@ -1938,7 +1937,7 @@ stubs::LookupSwitch(VMFrame &f, jsbytecode *pc)
             pc += JUMP_OFFSET_LEN;
         }
     } else {
-        for (uint32 i = 1; i <= npairs; i++) {
+        for (uint32_t i = 1; i <= npairs; i++) {
             Value rval = script->getConst(GET_INDEX(pc));
             pc += INDEX_LEN;
             if (lval == rval) {
@@ -1965,7 +1964,7 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
     JSOp op = JSOp(*originalPC);
     JS_ASSERT(op == JSOP_TABLESWITCH || op == JSOP_TABLESWITCHX);
 
-    uint32 jumpOffset = js::analyze::GetJumpOffset(originalPC, pc);
+    uint32_t jumpOffset = js::analyze::GetJumpOffset(originalPC, pc);
     unsigned jumpLength = (op == JSOP_TABLESWITCHX) ? JUMPX_OFFSET_LEN : JUMP_OFFSET_LEN;
     pc += jumpLength;
 
@@ -1996,7 +1995,7 @@ stubs::TableSwitch(VMFrame &f, jsbytecode *origPc)
         tableIdx -= low;
         if ((jsuint) tableIdx < (jsuint)(high - low + 1)) {
             pc += jumpLength * tableIdx;
-            uint32 candidateOffset = js::analyze::GetJumpOffset(originalPC, pc);
+            uint32_t candidateOffset = js::analyze::GetJumpOffset(originalPC, pc);
             if (candidateOffset)
                 jumpOffset = candidateOffset;
         }
@@ -2169,7 +2168,7 @@ template void JS_FASTCALL stubs::DelElem<true>(VMFrame &f);
 template void JS_FASTCALL stubs::DelElem<false>(VMFrame &f);
 
 void JS_FASTCALL
-stubs::TypeBarrierHelper(VMFrame &f, uint32 which)
+stubs::TypeBarrierHelper(VMFrame &f, uint32_t which)
 {
     JS_ASSERT(which == 0 || which == 1);
 
@@ -2192,7 +2191,7 @@ stubs::TypeBarrierHelper(VMFrame &f, uint32 which)
 }
 
 void JS_FASTCALL
-stubs::StubTypeHelper(VMFrame &f, int32 which)
+stubs::StubTypeHelper(VMFrame &f, int32_t which)
 {
     const Value &result = f.regs.sp[which];
 
@@ -2354,7 +2353,7 @@ stubs::AnyFrameEpilogue(VMFrame &f)
 }
 
 template <bool Clamped>
-int32 JS_FASTCALL
+int32_t JS_FASTCALL
 stubs::ConvertToTypedInt(JSContext *cx, Value *vp)
 {
     JS_ASSERT(!vp->isInt32());
@@ -2373,7 +2372,7 @@ stubs::ConvertToTypedInt(JSContext *cx, Value *vp)
 
     JS_ASSERT(vp->isString());
 
-    int32 i32 = 0;
+    int32_t i32 = 0;
 #ifdef DEBUG
     bool success = 
 #endif
@@ -2383,8 +2382,8 @@ stubs::ConvertToTypedInt(JSContext *cx, Value *vp)
     return i32;
 }
 
-template int32 JS_FASTCALL stubs::ConvertToTypedInt<true>(JSContext *, Value *);
-template int32 JS_FASTCALL stubs::ConvertToTypedInt<false>(JSContext *, Value *);
+template int32_t JS_FASTCALL stubs::ConvertToTypedInt<true>(JSContext *, Value *);
+template int32_t JS_FASTCALL stubs::ConvertToTypedInt<false>(JSContext *, Value *);
 
 void JS_FASTCALL
 stubs::ConvertToTypedFloat(JSContext *cx, Value *vp)

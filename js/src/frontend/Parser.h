@@ -69,10 +69,11 @@ struct Parser : private AutoGCRooter
     TokenStream         tokenStream;
     void                *tempPoolMark;  /* initial JSContext.tempLifoAlloc mark */
     JSPrincipals        *principals;    /* principals associated with source */
+    JSPrincipals        *originPrincipals;   /* see jsapi.h 'originPrincipals' comment */
     StackFrame          *const callerFrame;  /* scripted caller frame for eval and dbgapi */
     JSObject            *const callerVarObj; /* callerFrame's varObj */
     ParseNodeAllocator  allocator;
-    uint32              functionCount;  /* number of functions in current unit */
+    uint32_t            functionCount;  /* number of functions in current unit */
     ObjectBox           *traceListHead; /* list of parsed object for GC tracing */
     TreeContext         *tc;            /* innermost tree context (stack-allocated) */
 
@@ -82,7 +83,8 @@ struct Parser : private AutoGCRooter
     /* Perform constant-folding; must be true when interfacing with the emitter. */
     bool                foldConstants;
 
-    Parser(JSContext *cx, JSPrincipals *prin = NULL, StackFrame *cfp = NULL, bool fold = true);
+    Parser(JSContext *cx, JSPrincipals *prin = NULL, JSPrincipals *originPrin = NULL,
+           StackFrame *cfp = NULL, bool fold = true);
     ~Parser();
 
     friend void AutoGCRooter::trace(JSTracer *trc);
@@ -98,7 +100,7 @@ struct Parser : private AutoGCRooter
     bool init(const jschar *base, size_t length, const char *filename, uintN lineno,
               JSVersion version);
 
-    void setPrincipals(JSPrincipals *prin);
+    void setPrincipals(JSPrincipals *prin, JSPrincipals *originPrin);
 
     const char *getFilename() const { return tokenStream.getFilename(); }
     JSVersion versionWithFlags() const { return tokenStream.versionWithFlags(); }

@@ -132,16 +132,21 @@
                   android:windowSoftInputMode="stateAlwaysVisible|adjustResize"/>
 
         <activity android:name="org.mozilla.gecko.TabsTray"
-                  android:theme="@style/Gecko.Translucent"/>
+                  android:theme="@style/Gecko.Translucent"
+                  android:launchMode="singleTask"/>
 
         <activity android:name="org.mozilla.gecko.GeckoPreferences"
                   android:theme="@style/Gecko.TitleBar"
                   android:label="@string/preferences_title"
                   android:excludeFromRecents="true"/>
 
-        <provider android:name="org.mozilla.gecko.db.BrowserProvider"
-                  android:authorities="org.mozilla.gecko.providers.browser"
-                  android:exported="false"/>
+        <provider android:name="@ANDROID_PACKAGE_NAME@.db.BrowserProvider"
+                  android:authorities="@ANDROID_PACKAGE_NAME@.db.browser"
+                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 
     </application>
+
+    <permission android:name="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"
+                android:protectionLevel="signature"/>
+
 </manifest> 

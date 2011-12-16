@@ -1,0 +1,99 @@
+#
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2011
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= layout
+LIBRARY_NAME	= gkmedias
+EXPORT_LIBRARY	= $(DIST)/lib
+ifeq (WINNT,$(OS_TARGET))
+FORCE_SHARED_LIB = 1
+endif
+
+SHARED_LIBRARY_LIBS =
+
+ifdef MOZ_VORBIS
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/media/libvorbis/lib/$(LIB_PREFIX)vorbis.$(LIB_SUFFIX) \
+	$(DEPTH)/media/libogg/src/$(LIB_PREFIX)ogg.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
+ifdef MOZ_TREMOR
+SHARED_LIBRARY_LIBS	+= \
+	$(DEPTH)/media/libtremor/lib/$(LIB_PREFIX)tremor.$(LIB_SUFFIX) \
+	$(DEPTH)/media/libogg/src/$(LIB_PREFIX)ogg.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
+ifdef MOZ_OGG
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/media/libtheora/lib/$(LIB_PREFIX)theora.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
+ifdef MOZ_WEBM
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/media/libnestegg/src/$(LIB_PREFIX)nestegg.$(LIB_SUFFIX) \
+	$(NULL)
+ifndef MOZ_NATIVE_LIBVPX
+SHARED_LIBRARY_LIBS 	+= $(DEPTH)/media/libvpx/$(LIB_PREFIX)vpx.$(LIB_SUFFIX)
+endif
+endif
+
+ifdef MOZ_SYDNEYAUDIO
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/media/libsydneyaudio/src/$(LIB_PREFIX)sydneyaudio.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/gfx/angle/$(LIB_PREFIX)angle.$(LIB_SUFFIX) \
+	$(NULL)
+
+EXTRA_DSO_LDOPTS = $(MOZALLOC_LIB) $(NSPR_LIBS)
+
+ifeq (WINNT,$(OS_TARGET))
+DEFFILE = $(srcdir)/symbols.def
+endif
+
+include $(topsrcdir)/config/rules.mk

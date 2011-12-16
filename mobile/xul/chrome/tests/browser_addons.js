@@ -80,6 +80,7 @@ function test() {
   Services.prefs.setCharPref(PREF_GETADDONS_UPDATE,              TESTROOT + "browser_upgrade.rdf");
   Services.prefs.setBoolPref(PREF_ADDONS_SECURITY, false);
   Services.prefs.setBoolPref(PREF_ADDONS_LOGGING, true);
+  Services.prefs.setIntPref(PREF_SEARCH_MAXRESULTS, 15);
   run_next_test();
 }
 
@@ -92,6 +93,7 @@ function end_test() {
   Services.prefs.clearUserPref(PREF_GETADDONS_UPDATE);
   Services.prefs.clearUserPref(PREF_ADDONS_SECURITY);
   Services.prefs.clearUserPref(PREF_ADDONS_LOGGING);
+  Services.prefs.clearUserPref(PREF_SEARCH_MAXRESULTS);
 }
 
 registerCleanupFunction(end_test);
