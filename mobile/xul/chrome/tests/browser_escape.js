@@ -98,7 +98,7 @@ function testReturnToOwner() {
   tab1 = Browser.addTab("about:blank", true);
   tab2 = Browser.addTab("about:blank", true, tab1);
   is(Browser.selectedTab, tab2, "tab2 is selected");
-  EventUtils.sendKey("ESCAPE", window);
+  EventUtils.sendKey("ESCAPE");
   is(Browser.selectedTab, tab1, "tab1 is selected");
   closeTabs();
   testContextMenu();
