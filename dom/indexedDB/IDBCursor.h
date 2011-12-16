@@ -88,7 +88,7 @@ public:
          const nsACString& aContinueQuery,
          const nsACString& aContinueToQuery,
          const Key& aKey,
-         JSAutoStructuredCloneBuffer& aCloneBuffer);
+         StructuredCloneReadInfo& aCloneReadInfo);
 
   // For INDEXKEY cursors.
   static
@@ -115,7 +115,7 @@ public:
          const nsACString& aContinueToQuery,
          const Key& aKey,
          const Key& aObjectKey,
-         JSAutoStructuredCloneBuffer& aCloneBuffer);
+         StructuredCloneReadInfo& aCloneReadInfo);
 
   enum Type
   {
@@ -169,7 +169,7 @@ protected:
 
   Key mKey;
   Key mObjectKey;
-  JSAutoStructuredCloneBuffer mCloneBuffer;
+  StructuredCloneReadInfo mCloneReadInfo;
   Key mContinueToKey;
 
   bool mHaveCachedKey;
