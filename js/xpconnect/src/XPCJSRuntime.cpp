@@ -58,6 +58,8 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 
+#include "nsContentUtils.h"
+
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif
@@ -2128,6 +2130,20 @@ AccumulateTelemetryCallback(int id, JSUint32 sample)
 
 bool XPCJSRuntime::gNewDOMBindingsEnabled;
 
+bool PreserveWrapper(JSContext *cx, JSObject *obj)
+{
+    JS_ASSERT(obj->getClass()->ext.isWrappedNative);
+    nsISupports *native = nsXPConnect::GetXPConnect()->GetNativeOfWrapper(cx, obj);
+    if (!native)
+        return false;
+    nsWrapperCache *wc;
+    nsresult rv = CallQueryInterface(native, &wc);
+    if (NS_FAILED(rv))
+        return false;
+    nsContentUtils::PreserveWrapper(native, wc);
+    return true;
+}
+
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
  : mXPConnect(aXPConnect),
    mJSRuntime(nsnull),
@@ -2190,6 +2206,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         JS_SetWrapObjectCallbacks(mJSRuntime,
                                   xpc::WrapperFactory::Rewrap,
                                   xpc::WrapperFactory::PrepareForWrapping);
+        js::SetPreserveWrapperCallback(mJSRuntime, PreserveWrapper);
+
 #ifdef MOZ_CRASHREPORTER
         JS_EnumerateDiagnosticMemoryRegions(DiagnosticMemoryCallback);
 #endif
