@@ -62,7 +62,7 @@ browser/components/privatebrowsing/src/Makefile
 browser/components/search/Makefile
 browser/components/sessionstore/Makefile
 browser/components/sessionstore/src/Makefile
-browser/components/sidebar/src/Makefile
+browser/components/sidebar/Makefile
 browser/components/shell/Makefile
 browser/components/shell/public/Makefile
 browser/components/shell/src/Makefile
@@ -125,7 +125,7 @@ if [ "$ENABLE_TESTS" ]; then
     browser/components/dirprovider/tests/Makefile
     browser/components/preferences/tests/Makefile
     browser/components/search/test/Makefile
-    browser/components/sessionstore/test/browser/Makefile
+    browser/components/sessionstore/test/Makefile
     browser/components/shell/test/Makefile
     browser/components/feeds/test/Makefile
     browser/components/feeds/test/chrome/Makefile
@@ -135,14 +135,14 @@ if [ "$ENABLE_TESTS" ]; then
     browser/components/privatebrowsing/test/Makefile
     browser/components/privatebrowsing/test/browser/Makefile
     browser/components/tabview/test/Makefile
-    browser/components/test/browser/Makefile
+    browser/components/test/Makefile
     browser/devtools/highlighter/test/Makefile
     browser/devtools/scratchpad/test/Makefile
     browser/devtools/shared/test/Makefile
     browser/devtools/sourceeditor/test/Makefile
     browser/devtools/styleeditor/test/Makefile
-    browser/devtools/styleinspector/test/browser/Makefile
-    browser/devtools/webconsole/test/browser/Makefile
+    browser/devtools/styleinspector/test/Makefile
+    browser/devtools/webconsole/test/Makefile
     browser/fuel/test/Makefile
     browser/modules/test/Makefile
   "
