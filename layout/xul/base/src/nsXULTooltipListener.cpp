@@ -63,6 +63,7 @@
 #include "nsIRootBox.h"
 #include "nsEventDispatcher.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
 
 
@@ -238,8 +239,10 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aEvent)
     if (mTooltipTimer) {
       mTargetNode = do_GetWeakReference(eventTarget);
       if (mTargetNode) {
-        nsresult rv = mTooltipTimer->InitWithFuncCallback(sTooltipCallback, this, 
-                                                          kTooltipShowTime, nsITimer::TYPE_ONE_SHOT);
+        nsresult rv =
+          mTooltipTimer->InitWithFuncCallback(sTooltipCallback, this,
+            LookAndFeel::GetInt(LookAndFeel::eIntID_TooltipDelay, 500),
+            nsITimer::TYPE_ONE_SHOT);
         if (NS_FAILED(rv)) {
           mTargetNode = nsnull;
           mSourceNode = nsnull;

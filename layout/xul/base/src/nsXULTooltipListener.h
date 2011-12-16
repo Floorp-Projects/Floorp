@@ -113,7 +113,6 @@ protected:
   // various constants for tooltips
   enum {
     kTooltipMouseMoveTolerance = 7,    // 7 pixel tolerance for mousemove event
-    kTooltipShowTime = 500             // 500ms = 0.5 seconds
   };
 
   // flag specifying if the tooltip has already been displayed by a MouseMove
