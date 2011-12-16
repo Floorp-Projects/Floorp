@@ -754,8 +754,10 @@ MacroAssemblerARM::ma_ldrsb(EDtrAddr addr, Register rt, Index mode, Condition cc
     as_extdtr(IsLoad, 8, true, mode, rt, addr, cc);
 }
 void
-MacroAssemblerARM::ma_ldrd(EDtrAddr addr, Register rt, Index mode, Condition cc)
+MacroAssemblerARM::ma_ldrd(EDtrAddr addr, Register rt, DebugOnly<Register> rt2, Index mode, Condition cc)
 {
+    JS_ASSERT(rt.code() & 1 == 0);
+    JS_ASSERT(rt2.value.code() == rt.code() + 1);
     as_extdtr(IsLoad, 64, true, mode, rt, addr, cc);
 }
 
@@ -1288,22 +1290,61 @@ MacroAssemblerARMCompat::storeValue(ValueOperand val, Operand dst) {
     ma_str(val.typeReg(), ToType(dst));
 }
 void
-MacroAssemblerARMCompat::loadValue(Operand src, ValueOperand val) {
-#if 0
+MacroAssemblerARMCompat::loadValue(Operand src, ValueOperand val)
+{
     Operand payload = ToPayload(src);
     Operand type = ToType(src);
-    
+    // TODO: copy this code into a generic function that acts on all sequences of memory accesses
+    if (((val.payloadReg().code() & 1) == 0) &&
+        val.typeReg().code() == val.payloadReg().code()+1)
+    {
+        // If the value we want is in two consecutive registers starting with an even register,
+        // they can be combined as a single ldrd.
+        int offset = src.disp();
+        if (offset < 256 && offset > -256) {
+            ma_ldrd(EDtrAddr(Register::FromCode(src.base()), EDtrOffImm(src.disp())), val.payloadReg(), val.typeReg());
+            return;
+        }
+    }
+    // if the value is lower than the type, then we may be able to use an ldm instruction
+
+    if (val.payloadReg().code() < val.typeReg().code()) {
+        if (src.disp() <= 4 && src.disp() >= -8 && (src.disp() & 3) == 0) {
+            // turns out each of the 4 value -8, -4, 0, 4 corresponds exactly with one of
+            // LDM{DB, DA, IA, IB}
+            DTMMode mode;
+            switch(src.disp()) {
+              case -8:
+                mode = DB;
+                break;
+              case -4:
+                mode = DA;
+                break;
+              case 0:
+                mode = IA;
+                break;
+              case 4:
+                mode = IB;
+                break;
+              default:
+                JS_NOT_REACHED("Bogus Offset for LoadValue as DTM");
+            }
+            startDataTransferM(IsLoad, Register::FromCode(src.base()), mode);
+            transferReg(val.payloadReg());
+            transferReg(val.typeReg());
+            finishDataTransfer();
+            return;
+        }
+    }
     // Ensure that loading the payload does not erase the pointer to the
     // Value in memory.
     if (Register::FromCode(type.base()) != val.payloadReg()) {
-        movl(payload, val.payloadReg());
-        movl(type, val.typeReg());
+        ma_ldr(payload, val.payloadReg());
+        ma_ldr(type, val.typeReg());
     } else {
-        movl(type, val.typeReg());
-        movl(payload, val.payloadReg());
+        ma_ldr(type, val.typeReg());
+        ma_ldr(payload, val.payloadReg());
     }
-#endif
-    JS_NOT_REACHED("loadValue NYI");
 }
 void
 MacroAssemblerARMCompat::pushValue(ValueOperand val) {
