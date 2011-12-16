@@ -380,10 +380,16 @@ ValueFromStringHelper(nsCSSProperty aPropID,
   // CSS values. Bug 501188 will provide a more complete fix.)
   bool isNegative = false;
   PRUint32 subStringBegin = 0;
-  PRInt32 absValuePos = nsSMILParserUtils::CheckForNegativeNumber(aString);
-  if (absValuePos > 0) {
-    isNegative = true;
-    subStringBegin = (PRUint32)absValuePos; // Start parsing after '-' sign
+
+  // NOTE: We need to opt-out 'stroke-dasharray' from the negative-number
+  // check.  Its values might look negative (e.g. by starting with "-1"), but
+  // they're more complicated than our simple negation logic here can handle.
+  if (aPropID != eCSSProperty_stroke_dasharray) {
+    PRInt32 absValuePos = nsSMILParserUtils::CheckForNegativeNumber(aString);
+    if (absValuePos > 0) {
+      isNegative = true;
+      subStringBegin = (PRUint32)absValuePos; // Start parsing after '-' sign
+    }
   }
   nsDependentSubstring subString(aString, subStringBegin);
   if (!nsStyleAnimation::ComputeValue(aPropID, aTargetElement, subString,
