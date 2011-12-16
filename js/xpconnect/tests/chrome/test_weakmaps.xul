@@ -61,26 +61,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668855
   let weakref = make_gray_loop();
 
 
-  /* Weak map entries where the key is a dead XPCWrappedNative key should be removed.
-
-     map2 is a weak map that is black, so its entries will be visited during the 
-     black marking phase.  We then use a new div element as key.  The div element is dead 
-     after dead_xpc_key returns, so the weak map entry should be removed.
-
-     The simple wrapper deoptimization for XPCWrappedNative weak map keys implemented in
-     Bug 655297 will end up marking the key black, keeping the entry from being collected.
-
-  */
-  let map2 = new WeakMap;
-
-  let dead_xpc_key = function () {
-    let div = document.createElement("div");
-    map2.set(div, 0);
-  };
-
-  dead_xpc_key();
-
-
   /* Combinations of live and dead gray maps/keys. */
   let basic_weak_ref = null;
   let basic_map_weak_ref = null;
@@ -203,6 +183,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668855
   chained_garbage_maps();
 
 
+  /* black weak map, chained garbage cycle involving DOM, XPCWN keys */
+  let wn_garbage_map = new WeakMap;
+
+  let wn_chained_garbage_maps = function () {
+    let dom0 = document.createElement("div");
+    let dom = dom0;
+    for(let i = 0; i < num_chains; i++) {
+      let new_dom = document.createElement("div");
+      wn_garbage_map.set(dom, {wn_val_child:new_dom});
+      dom = document.createElement("div");
+      new_dom.appendChild(dom);
+    };
+    // tie the knot
+    dom.appendChild(dom0);
+  };
+
+  wn_chained_garbage_maps();
+
+
+  /* The cycle collector shouldn't remove a live wrapped native key. */
+
+  let wn_live_map = new WeakMap;
+
+  let make_live_map = function () {
+    let live = get_live_dom();
+    wn_live_map.set(live, {});
+  }
+
+  make_live_map();
+
+
   /* set up for running precise GC/CC then checking the results */
 
   SimpleTest.waitForExplicitFinish();
@@ -220,14 +231,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668855
 
     ok(weak_ref_dead(weakref), "Garbage gray cycle should be collected.");
 
-    // this will fail without the XPCwrapped native key fix (Bug 680937)
-    todo_is(Cu.nondeterministicGetWeakMapKeys(map2).length, 0, "Dead XPCWrappedNative keys should be collected.");
-
     check_nested_cc_maps();
 
     is(Cu.nondeterministicGetWeakMapKeys(garbage_map).length, 0, "Chained garbage weak map entries should not leak.");
 
     check_basic_unit();
+
+    // fixed by Bug 680937
+    is(Cu.nondeterministicGetWeakMapKeys(wn_garbage_map).length, 0,
+       "Chained garbage WN weak map entries should not leak.");
+
+    // fixed by Bug 680937
+    is(Cu.nondeterministicGetWeakMapKeys(wn_live_map).length, 1,
+       "Live weak map wrapped native key should not be removed.");
 
     SimpleTest.finish();
   });
