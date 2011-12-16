@@ -53,10 +53,6 @@ CPPSRCS  = nsProfileMigrator.cpp \
            nsBrowserProfileMigratorUtils.cpp \
            $(NULL)
 
-ifneq ($(OS_ARCH),OS2)
-CPPSRCS += nsOperaProfileMigrator.cpp
-endif
-
 ifeq ($(OS_ARCH)_$(GNU_CXX),WINNT_)
 CPPSRCS += nsIEProfileMigrator.cpp \
            $(NULL)

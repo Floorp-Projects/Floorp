@@ -43,6 +43,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/storage.h"
 #include "nsDOMClassInfo.h"
+#include "nsDOMLists.h"
 #include "nsEventDispatcher.h"
 #include "nsJSUtils.h"
 #include "nsProxyRelease.h"
@@ -151,7 +152,8 @@ already_AddRefed<IDBDatabase>
 IDBDatabase::Create(nsIScriptContext* aScriptContext,
                     nsPIDOMWindow* aOwner,
                     already_AddRefed<DatabaseInfo> aDatabaseInfo,
-                    const nsACString& aASCIIOrigin)
+                    const nsACString& aASCIIOrigin,
+                    FileManager* aFileManager)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!aASCIIOrigin.IsEmpty(), "Empty origin!");
@@ -169,6 +171,7 @@ IDBDatabase::Create(nsIScriptContext* aScriptContext,
   db->mFilePath = databaseInfo->filePath;
   databaseInfo.swap(db->mDatabaseInfo);
   db->mASCIIOrigin = aASCIIOrigin;
+  db->mFileManager = aFileManager;
 
   IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
   NS_ASSERTION(mgr, "This should never be null!");

@@ -67,13 +67,13 @@ class Compiler : public BaseCompiler
     friend class StubCompiler;
 
     struct BranchPatch {
-        BranchPatch(const Jump &j, jsbytecode *pc, uint32 inlineIndex)
+        BranchPatch(const Jump &j, jsbytecode *pc, uint32_t inlineIndex)
           : jump(j), pc(pc), inlineIndex(inlineIndex)
         { }
 
         Jump jump;
         jsbytecode *pc;
-        uint32 inlineIndex;
+        uint32_t inlineIndex;
     };
 
 #if defined JS_MONOIC
@@ -133,7 +133,7 @@ class Compiler : public BaseCompiler
          * These members map to members in CallICInfo. See that structure for
          * more comments.
          */
-        uint32       callIndex;
+        uint32_t     callIndex;
         DataLabelPtr funGuard;
         Jump         funJump;
         Jump         hotJump;
@@ -212,7 +212,7 @@ class Compiler : public BaseCompiler
         Jump        shapeGuard;
         Jump        holeGuard;
         Int32Key    key;
-        uint32      volatileMask;
+        uint32_t    volatileMask;
     };
 
     struct PICGenInfo : public BaseICInfo {
@@ -284,24 +284,24 @@ class Compiler : public BaseCompiler
     };
 
     struct Defs {
-        Defs(uint32 ndefs)
+        Defs(uint32_t ndefs)
           : ndefs(ndefs)
         { }
-        uint32 ndefs;
+        uint32_t ndefs;
     };
 
     struct InternalCallSite {
-        uint32 returnOffset;
+        uint32_t returnOffset;
         DataLabelPtr inlinePatch;
-        uint32 inlineIndex;
+        uint32_t inlineIndex;
         jsbytecode *inlinepc;
         RejoinState rejoin;
         bool ool;
         Label loopJumpLabel;
         InvariantCodePatch loopPatch;
 
-        InternalCallSite(uint32 returnOffset,
-                         uint32 inlineIndex, jsbytecode *inlinepc,
+        InternalCallSite(uint32_t returnOffset,
+                         uint32_t inlineIndex, jsbytecode *inlinepc,
                          RejoinState rejoin, bool ool)
           : returnOffset(returnOffset),
             inlineIndex(inlineIndex), inlinepc(inlinepc),
@@ -321,7 +321,7 @@ class Compiler : public BaseCompiler
     };
 
     struct LoopEntry {
-        uint32 pcOffset;
+        uint32_t pcOffset;
         Label label;
     };
 
@@ -332,9 +332,9 @@ class Compiler : public BaseCompiler
 
     struct SlotType
     {
-        uint32 slot;
+        uint32_t slot;
         VarType vt;
-        SlotType(uint32 slot, VarType vt) : slot(slot), vt(vt) {}
+        SlotType(uint32_t slot, VarType vt) : slot(slot), vt(vt) {}
     };
 
     JSScript *outerScript;
@@ -365,7 +365,7 @@ public:
          * Index into inlineFrames or OUTER_FRAME, matches this frame's index
          * in the cross script SSA.
          */
-        uint32 inlineIndex;
+        uint32_t inlineIndex;
 
         /* Current types for non-escaping vars in the script. */
         VarType *varTypes;
@@ -422,10 +422,10 @@ private:
     js::Vector<CallPatchInfo, 64, CompilerAllocPolicy> callPatches;
     js::Vector<InternalCallSite, 64, CompilerAllocPolicy> callSites;
     js::Vector<DoublePatch, 16, CompilerAllocPolicy> doubleList;
-    js::Vector<uint32> fixedIntToDoubleEntries;
-    js::Vector<uint32> fixedDoubleToAnyEntries;
+    js::Vector<uint32_t> fixedIntToDoubleEntries;
+    js::Vector<uint32_t> fixedDoubleToAnyEntries;
     js::Vector<JumpTable, 16> jumpTables;
-    js::Vector<uint32, 16> jumpTableOffsets;
+    js::Vector<uint32_t, 16> jumpTableOffsets;
     js::Vector<LoopEntry, 16> loopEntries;
     StubCompiler stubcc;
     Label invokeLabel;
@@ -441,7 +441,7 @@ private:
     bool hasGlobalReallocation;
     bool oomInVector;       // True if we have OOM'd appending to a vector. 
     bool overflowICSpace;   // True if we added a constant pool in a reserved space.
-    uint32 gcNumber;
+    uint32_t gcNumber;
     enum { NoApplyTricks, LazyArgsObj } applyTricks;
     PCLengthEntry *pcLengths;
 
@@ -456,7 +456,7 @@ private:
 
     Label getLabel() { return masm.label(); }
     bool knownJump(jsbytecode *pc);
-    Label labelOf(jsbytecode *target, uint32 inlineIndex);
+    Label labelOf(jsbytecode *target, uint32_t inlineIndex);
     void addCallSite(const InternalCallSite &callSite);
     void addReturnSite();
     void inlineStubCall(void *stub, RejoinState rejoin, Uses uses);
@@ -475,7 +475,7 @@ private:
     }
 
     jsbytecode *inlinePC() { return PC; }
-    uint32 inlineIndex() { return a->inlineIndex; }
+    uint32_t inlineIndex() { return a->inlineIndex; }
 
     Assembler &getAssembler(bool ool) { return ool ? stubcc.masm : masm; }
 
@@ -504,7 +504,7 @@ private:
     CompileStatus generateMethod();
     CompileStatus generateEpilogue();
     CompileStatus finishThisUp(JITScript **jitp);
-    CompileStatus pushActiveFrame(JSScript *script, uint32 argc);
+    CompileStatus pushActiveFrame(JSScript *script, uint32_t argc);
     void popActiveFrame();
     void updatePCCounters(jsbytecode *pc, Label *start, bool *updated);
     void updatePCTypes(jsbytecode *pc, FrameEntry *fe);
@@ -522,15 +522,15 @@ private:
     void updateVarType();
     void updateJoinVarTypes();
     void restoreVarType();
-    JSValueType knownPushedType(uint32 pushed);
-    bool mayPushUndefined(uint32 pushed);
-    types::TypeSet *pushedTypeSet(uint32 which);
+    JSValueType knownPushedType(uint32_t pushed);
+    bool mayPushUndefined(uint32_t pushed);
+    types::TypeSet *pushedTypeSet(uint32_t which);
     bool monitored(jsbytecode *pc);
     bool hasTypeBarriers(jsbytecode *pc);
     bool testSingletonProperty(JSObject *obj, jsid id);
     bool testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testObject);
-    CompileStatus addInlineFrame(JSScript *script, uint32 depth, uint32 parent, jsbytecode *parentpc);
-    CompileStatus scanInlineCalls(uint32 index, uint32 depth);
+    CompileStatus addInlineFrame(JSScript *script, uint32_t depth, uint32_t parent, jsbytecode *parentpc);
+    CompileStatus scanInlineCalls(uint32_t index, uint32_t depth);
     CompileStatus checkAnalysis(JSScript *script);
 
     struct BarrierState {
@@ -546,13 +546,13 @@ private:
     BarrierState testBarrier(RegisterID typeReg, RegisterID dataReg,
                              bool testUndefined = false, bool testReturn = false,
                              bool force = false);
-    void finishBarrier(const BarrierState &barrier, RejoinState rejoin, uint32 which);
+    void finishBarrier(const BarrierState &barrier, RejoinState rejoin, uint32_t which);
 
     void testPushedType(RejoinState rejoin, int which, bool ool = true);
 
     /* Non-emitting helpers. */
-    void pushSyncedEntry(uint32 pushed);
-    uint32 fullAtomIndex(jsbytecode *pc);
+    void pushSyncedEntry(uint32_t pushed);
+    uint32_t fullAtomIndex(jsbytecode *pc);
     bool jumpInScript(Jump j, jsbytecode *pc);
     bool compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const Value &rhs);
     bool canUseApplyTricks();
@@ -594,29 +594,29 @@ private:
     bool startLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget);
     bool finishLoop(jsbytecode *head);
     void jsop_bindname(JSAtom *atom, bool usePropCache);
-    void jsop_setglobal(uint32 index);
+    void jsop_setglobal(uint32_t index);
     void jsop_getprop_slow(JSAtom *atom, bool usePropCache = true);
-    void jsop_getarg(uint32 slot);
-    void jsop_setarg(uint32 slot, bool popped);
+    void jsop_getarg(uint32_t slot);
+    void jsop_setarg(uint32_t slot, bool popped);
     void jsop_this();
     void emitReturn(FrameEntry *fe);
     void emitFinalReturn(Assembler &masm);
     void loadReturnValue(Assembler *masm, FrameEntry *fe);
     void emitReturnValue(Assembler *masm, FrameEntry *fe);
     void emitInlineReturnValue(FrameEntry *fe);
-    void dispatchCall(VoidPtrStubUInt32 stub, uint32 argc);
+    void dispatchCall(VoidPtrStubUInt32 stub, uint32_t argc);
     void interruptCheckHelper();
     void recompileCheckHelper();
-    void emitUncachedCall(uint32 argc, bool callingNew);
-    void checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedArgc,
+    void emitUncachedCall(uint32_t argc, bool callingNew);
+    void checkCallApplySpeculation(uint32_t callImmArgc, uint32_t speculatedArgc,
                                    FrameEntry *origCallee, FrameEntry *origThis,
                                    MaybeRegisterID origCalleeType, RegisterID origCalleeData,
                                    MaybeRegisterID origThisType, RegisterID origThisData,
                                    Jump *uncachedCallSlowRejoin, CallPatchInfo *uncachedCallPatch);
-    bool inlineCallHelper(uint32 argc, bool callingNew, FrameSize &callFrameSize);
+    bool inlineCallHelper(uint32_t argc, bool callingNew, FrameSize &callFrameSize);
     void fixPrimitiveReturn(Assembler *masm, FrameEntry *fe);
-    void jsop_getgname(uint32 index);
-    void jsop_getgname_slow(uint32 index);
+    void jsop_getgname(uint32_t index);
+    void jsop_getgname_slow(uint32_t index);
     void jsop_callgname_epilogue();
     void jsop_setgname(JSAtom *atom, bool usePropertyCache, bool popGuaranteed);
     void jsop_setgname_slow(JSAtom *atom, bool usePropertyCache);
@@ -639,7 +639,7 @@ private:
     bool jsop_xname(JSAtom *atom);
     void enterBlock(JSObject *obj);
     void leaveBlock();
-    void emitEval(uint32 argc);
+    void emitEval(uint32_t argc);
     void jsop_arguments(RejoinState rejoin);
     bool jsop_tableswitch(jsbytecode *pc);
 
@@ -680,8 +680,8 @@ private:
     bool booleanJumpScript(JSOp op, jsbytecode *target);
     bool jsop_ifneq(JSOp op, jsbytecode *target);
     bool jsop_andor(JSOp op, jsbytecode *target);
-    bool jsop_arginc(JSOp op, uint32 slot);
-    bool jsop_localinc(JSOp op, uint32 slot);
+    bool jsop_arginc(JSOp op, uint32_t slot);
+    bool jsop_localinc(JSOp op, uint32_t slot);
     bool jsop_newinit();
     bool jsop_regexp();
     void jsop_initmethod();
@@ -740,9 +740,9 @@ private:
 
     /* Fast builtins. */
     JSObject *pushedSingleton(unsigned pushed);
-    CompileStatus callArrayBuiltin(uint32 argc, bool callingNew);
-    CompileStatus inlineNativeFunction(uint32 argc, bool callingNew);
-    CompileStatus inlineScriptedFunction(uint32 argc, bool callingNew);
+    CompileStatus callArrayBuiltin(uint32_t argc, bool callingNew);
+    CompileStatus inlineNativeFunction(uint32_t argc, bool callingNew);
+    CompileStatus inlineScriptedFunction(uint32_t argc, bool callingNew);
     CompileStatus compileMathAbsInt(FrameEntry *arg);
     CompileStatus compileMathAbsDouble(FrameEntry *arg);
     CompileStatus compileMathSqrt(FrameEntry *arg);
@@ -755,8 +755,8 @@ private:
     CompileStatus compileArrayConcat(types::TypeSet *thisTypes, types::TypeSet *argTypes,
                                      FrameEntry *thisValue, FrameEntry *argValue);
     CompileStatus compileArrayPopShift(FrameEntry *thisv, bool isPacked, bool isArrayPop);
-    CompileStatus compileArrayWithLength(uint32 argc);
-    CompileStatus compileArrayWithArgs(uint32 argc);
+    CompileStatus compileArrayWithLength(uint32_t argc);
+    CompileStatus compileArrayWithArgs(uint32_t argc);
 
     enum RoundingMode { Floor, Round };
     CompileStatus compileRound(FrameEntry *arg, RoundingMode mode);

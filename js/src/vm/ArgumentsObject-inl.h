@@ -46,18 +46,18 @@
 namespace js {
 
 inline void
-ArgumentsObject::initInitialLength(uint32 length)
+ArgumentsObject::initInitialLength(uint32_t length)
 {
     JS_ASSERT(getFixedSlot(INITIAL_LENGTH_SLOT).isUndefined());
     initFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(length << PACKED_BITS_COUNT));
-    JS_ASSERT((getFixedSlot(INITIAL_LENGTH_SLOT).toInt32() >> PACKED_BITS_COUNT) == int32(length));
+    JS_ASSERT((getFixedSlot(INITIAL_LENGTH_SLOT).toInt32() >> PACKED_BITS_COUNT) == int32_t(length));
     JS_ASSERT(!hasOverriddenLength());
 }
 
-inline uint32
+inline uint32_t
 ArgumentsObject::initialLength() const
 {
-    uint32 argc = uint32(getFixedSlot(INITIAL_LENGTH_SLOT).toInt32()) >> PACKED_BITS_COUNT;
+    uint32_t argc = uint32_t(getFixedSlot(INITIAL_LENGTH_SLOT).toInt32()) >> PACKED_BITS_COUNT;
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
     return argc;
 }
@@ -65,7 +65,7 @@ ArgumentsObject::initialLength() const
 inline void
 ArgumentsObject::markLengthOverridden()
 {
-    uint32 v = getFixedSlot(INITIAL_LENGTH_SLOT).toInt32() | LENGTH_OVERRIDDEN_BIT;
+    uint32_t v = getFixedSlot(INITIAL_LENGTH_SLOT).toInt32() | LENGTH_OVERRIDDEN_BIT;
     setFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(v));
 }
 
@@ -90,7 +90,7 @@ ArgumentsObject::data() const
 }
 
 inline const js::Value &
-ArgumentsObject::element(uint32 i) const
+ArgumentsObject::element(uint32_t i) const
 {
     JS_ASSERT(i < initialLength());
     return data()->slots[i];
@@ -103,7 +103,7 @@ ArgumentsObject::elements() const
 }
 
 inline void
-ArgumentsObject::setElement(uint32 i, const js::Value &v)
+ArgumentsObject::setElement(uint32_t i, const js::Value &v)
 {
     JS_ASSERT(i < initialLength());
     data()->slots[i] = v;

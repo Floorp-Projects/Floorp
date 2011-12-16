@@ -639,13 +639,14 @@ JSCompartment::updateForDebugMode(JSContext *cx)
     }
 
     /*
-     * Discard JIT code for any scripts that change debugMode. This assumes
-     * that 'comp' is in the same thread as 'cx'.
+     * Discard JIT code and bytecode analyses for any scripts that change
+     * debugMode. This assumes that 'comp' is in the same thread as 'cx'.
      */
     for (gc::CellIter i(cx, this, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->debugMode != enabled) {
             mjit::ReleaseScriptCode(cx, script);
+            script->clearAnalysis();
             script->debugMode = enabled;
         }
     }

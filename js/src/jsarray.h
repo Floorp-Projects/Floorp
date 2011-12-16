@@ -53,7 +53,7 @@ const uintN MIN_SPARSE_INDEX = 256;
 
 namespace js {
 /* 2^32-2, inclusive */
-const uint32 MAX_ARRAY_INDEX = 4294967294u;
+const uint32_t MAX_ARRAY_INDEX = 4294967294u;
 }
 
 inline JSBool
@@ -110,7 +110,7 @@ NewDenseEmptyArray(JSContext *cx, JSObject *proto=NULL);
 
 /* Create a dense array with length and capacity == 'length', initialized length set to 0. */
 extern JSObject * JS_FASTCALL
-NewDenseAllocatedArray(JSContext *cx, uint length, JSObject *proto=NULL);
+NewDenseAllocatedArray(JSContext *cx, uint32_t length, JSObject *proto=NULL);
 
 /*
  * Create a dense array with length, capacity and initialized length == 'length', and filled with holes.
@@ -118,18 +118,18 @@ NewDenseAllocatedArray(JSContext *cx, uint length, JSObject *proto=NULL);
  * array elements.
  */
 extern JSObject * JS_FASTCALL
-NewDenseAllocatedEmptyArray(JSContext *cx, uint length, JSObject *proto=NULL);
+NewDenseAllocatedEmptyArray(JSContext *cx, uint32_t length, JSObject *proto=NULL);
 
 /*
  * Create a dense array with a set length, but without allocating space for the
  * contents. This is useful, e.g., when accepting length from the user.
  */
 extern JSObject * JS_FASTCALL
-NewDenseUnallocatedArray(JSContext *cx, uint length, JSObject *proto=NULL);
+NewDenseUnallocatedArray(JSContext *cx, uint32_t length, JSObject *proto=NULL);
 
 /* Create a dense array with a copy of vp. */
 extern JSObject *
-NewDenseCopiedArray(JSContext *cx, uint32 length, const Value *vp, JSObject *proto = NULL);
+NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *vp, JSObject *proto = NULL);
 
 /* Create a sparse array. */
 extern JSObject *
@@ -146,11 +146,11 @@ js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length);
 namespace js {
 
 extern JSBool
-array_defineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *value,
+array_defineElement(JSContext *cx, JSObject *obj, uint32_t index, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, uintN attrs);
 
 extern JSBool
-array_deleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict);
+array_deleteElement(JSContext *cx, JSObject *obj, uint32_t index, Value *rval, JSBool strict);
 
 /*
  * Copy 'length' elements from aobj to vp.

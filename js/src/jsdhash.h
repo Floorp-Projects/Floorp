@@ -38,6 +38,7 @@
 
 #ifndef jsdhash_h___
 #define jsdhash_h___
+
 /*
  * Double hashing, a la Knuth 6.
  *
@@ -79,7 +80,7 @@ JS_BEGIN_EXTERN_C
 #define JS_DHASH_GOLDEN_RATIO   0x9E3779B9U
 
 /* Primitive and forward-struct typedefs. */
-typedef uint32                  JSDHashNumber;
+typedef uint32_t                JSDHashNumber;
 typedef struct JSDHashEntryHdr  JSDHashEntryHdr;
 typedef struct JSDHashEntryStub JSDHashEntryStub;
 typedef struct JSDHashTable     JSDHashTable;
@@ -197,33 +198,33 @@ struct JSDHashEntryHdr {
 struct JSDHashTable {
     const JSDHashTableOps *ops;         /* virtual operations, see below */
     void                *data;          /* ops- and instance-specific data */
-    int16               hashShift;      /* multiplicative hash shift */
-    uint8               maxAlphaFrac;   /* 8-bit fixed point max alpha */
-    uint8               minAlphaFrac;   /* 8-bit fixed point min alpha */
-    uint32              entrySize;      /* number of bytes in an entry */
-    uint32              entryCount;     /* number of entries in table */
-    uint32              removedCount;   /* removed entry sentinels in table */
-    uint32              generation;     /* entry storage generation number */
+    int16_t             hashShift;      /* multiplicative hash shift */
+    uint8_t             maxAlphaFrac;   /* 8-bit fixed point max alpha */
+    uint8_t             minAlphaFrac;   /* 8-bit fixed point min alpha */
+    uint32_t            entrySize;      /* number of bytes in an entry */
+    uint32_t            entryCount;     /* number of entries in table */
+    uint32_t            removedCount;   /* removed entry sentinels in table */
+    uint32_t            generation;     /* entry storage generation number */
     char                *entryStore;    /* entry storage */
 #ifdef JS_DHASHMETER
     struct JSDHashStats {
-        uint32          searches;       /* total number of table searches */
-        uint32          steps;          /* hash chain links traversed */
-        uint32          hits;           /* searches that found key */
-        uint32          misses;         /* searches that didn't find key */
-        uint32          lookups;        /* number of JS_DHASH_LOOKUPs */
-        uint32          addMisses;      /* adds that miss, and do work */
-        uint32          addOverRemoved; /* adds that recycled a removed entry */
-        uint32          addHits;        /* adds that hit an existing entry */
-        uint32          addFailures;    /* out-of-memory during add growth */
-        uint32          removeHits;     /* removes that hit, and do work */
-        uint32          removeMisses;   /* useless removes that miss */
-        uint32          removeFrees;    /* removes that freed entry directly */
-        uint32          removeEnums;    /* removes done by Enumerate */
-        uint32          grows;          /* table expansions */
-        uint32          shrinks;        /* table contractions */
-        uint32          compresses;     /* table compressions */
-        uint32          enumShrinks;    /* contractions after Enumerate */
+        uint32_t        searches;       /* total number of table searches */
+        uint32_t        steps;          /* hash chain links traversed */
+        uint32_t        hits;           /* searches that found key */
+        uint32_t        misses;         /* searches that didn't find key */
+        uint32_t        lookups;        /* number of JS_DHASH_LOOKUPs */
+        uint32_t        addMisses;      /* adds that miss, and do work */
+        uint32_t        addOverRemoved; /* adds that recycled a removed entry */
+        uint32_t        addHits;        /* adds that hit an existing entry */
+        uint32_t        addFailures;    /* out-of-memory during add growth */
+        uint32_t        removeHits;     /* removes that hit, and do work */
+        uint32_t        removeMisses;   /* useless removes that miss */
+        uint32_t        removeFrees;    /* removes that freed entry directly */
+        uint32_t        removeEnums;    /* removes done by Enumerate */
+        uint32_t        grows;          /* table expansions */
+        uint32_t        shrinks;        /* table contractions */
+        uint32_t        compresses;     /* table compressions */
+        uint32_t        enumShrinks;    /* contractions after Enumerate */
     } stats;
 #endif
 };
@@ -241,7 +242,7 @@ struct JSDHashTable {
  * equal to 0; but note that jsdhash.c code will never call with 0 nbytes).
  */
 typedef void *
-(* JSDHashAllocTable)(JSDHashTable *table, uint32 nbytes);
+(* JSDHashAllocTable)(JSDHashTable *table, uint32_t nbytes);
 
 typedef void
 (* JSDHashFreeTable) (JSDHashTable *table, void *ptr);
@@ -343,7 +344,7 @@ struct JSDHashTableOps {
  * Default implementations for the above ops.
  */
 extern JS_PUBLIC_API(void *)
-JS_DHashAllocTable(JSDHashTable *table, uint32 nbytes);
+JS_DHashAllocTable(JSDHashTable *table, uint32_t nbytes);
 
 extern JS_PUBLIC_API(void)
 JS_DHashFreeTable(JSDHashTable *table, void *ptr);
@@ -399,8 +400,8 @@ JS_DHashGetStubOps(void);
  * the ops->allocTable callback.
  */
 extern JS_PUBLIC_API(JSDHashTable *)
-JS_NewDHashTable(const JSDHashTableOps *ops, void *data, uint32 entrySize,
-                 uint32 capacity);
+JS_NewDHashTable(const JSDHashTableOps *ops, void *data, uint32_t entrySize,
+                 uint32_t capacity);
 
 /*
  * Finalize table's data, free its entry storage (via table->ops->freeTable),
@@ -417,7 +418,7 @@ JS_DHashTableDestroy(JSDHashTable *table);
  */
 extern JS_PUBLIC_API(JSBool)
 JS_DHashTableInit(JSDHashTable *table, const JSDHashTableOps *ops, void *data,
-                  uint32 entrySize, uint32 capacity);
+                  uint32_t entrySize, uint32_t capacity);
 
 /*
  * Set maximum and minimum alpha for table.  The defaults are 0.75 and .25.
@@ -455,11 +456,11 @@ JS_DHashTableSetAlphaBounds(JSDHashTable *table,
 #define JS_DHASH_DEFAULT_MIN_ALPHA 0.25
 
 #define JS_DHASH_CAP(entryCount, maxAlpha)                                    \
-    ((uint32)((double)(entryCount) / (maxAlpha)))
+    ((uint32_t)((double)(entryCount) / (maxAlpha)))
 
 #define JS_DHASH_CAPACITY(entryCount, maxAlpha)                               \
     (JS_DHASH_CAP(entryCount, maxAlpha) +                                     \
-     (((JS_DHASH_CAP(entryCount, maxAlpha) * (uint8)(0x100 * (maxAlpha)))     \
+     (((JS_DHASH_CAP(entryCount, maxAlpha) * (uint8_t)(0x100 * (maxAlpha)))   \
        >> 8) < (entryCount)))
 
 #define JS_DHASH_DEFAULT_CAPACITY(entryCount)                                 \
@@ -573,10 +574,9 @@ JS_DHashTableRawRemove(JSDHashTable *table, JSDHashEntryHdr *entry);
  * the entry being enumerated, rather than returning JS_DHASH_REMOVE.
  */
 typedef JSDHashOperator
-(* JSDHashEnumerator)(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
-                      void *arg);
+(* JSDHashEnumerator)(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32_t number, void *arg);
 
-extern JS_PUBLIC_API(uint32)
+extern JS_PUBLIC_API(uint32_t)
 JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg);
 
 typedef size_t

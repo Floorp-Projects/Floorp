@@ -54,7 +54,7 @@ void
 SnapshotErrorStack();
 
 void
-SaveCrashData(uint64 tag, void *ptr, size_t size);
+SaveCrashData(uint64_t tag, void *ptr, size_t size);
 
 template<size_t size, unsigned char marker>
 class StackBuffer {

@@ -17,15 +17,16 @@ function expectSyntaxError(stmt) {
 
 function test(expr) {
     // Without extra parentheses, expect an error.
-    expectSyntaxError('if (' + expr + ') ;');
+    expectSyntaxError('if (' + expr + ') {};');
 
     // Extra parentheses silence the warning/error.
-    Function('if ((' + expr + ')) ;');
+    Function('if ((' + expr + ')) {};');
 }
 
 // Overparenthesized assignment in a condition should not be a strict error.
 test('a = 0');
 test('a = (f(), g)');
 test('a = b || c > d');
+expectSyntaxError('if (a == 0);');
 reportCompare('passed', 'passed', 'Overparenthesized assignment in a condition should not be a strict error.');
 

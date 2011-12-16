@@ -1,0 +1,96 @@
+This pywebsocket code is mostly unchanged from the source at
+
+  svn checkout http://pywebsocket.googlecode.com/svn/trunk/ pywebsocket-read-only
+
+The current Mozilla code is based on
+
+  svnversion:  553 (AKA pywebsocket version='0.6b1')
+
+--------------------------------------------------------------------------------
+STEPS TO UPDATE MOZILLA TO NEWER PYWEBSOCKET VERSION
+--------------------------------------------------------------------------------
+- Get new pywebsocket checkout from googlecode (into, for instance, 'src')
+
+  svn checkout http://pywebsocket.googlecode.com/svn/trunk/ pywebsocket-read-only
+
+- Export a version w/o SVN files:
+
+    svn export src dist
+
+- rsync new version into our tree, deleting files that aren't needed any more
+  (NOTE: this will blow away this file!  hg revert it or keep a copy.)
+
+    rsync -r --delete dist/ $MOZ_SRC/testing/mochitest/pywebsocket
+
+- Manually move the 'standalone.py' file from the mmod_pywebsocket/ directory to
+  the parent directory (not sure why we moved it: probably no reason)
+
+- hg add/rm appropriate files, and add/remove them from _MOD_PYWEBSOCKET_FILES
+  and/or _HANDSHAKE_FILES in testing/mochitest/Makefile.am
+
+- Edit the _normalize_path() function in dispatch.py and MAKE SURE THIS LINE IS
+  COMMENTED OUT:
+
+    # MOZILLA: do not normalize away symlinks in mochitest
+    # path = os.path.realpath(path)
+
+- We need to apply the patch to hybi.py that makes HSTS work: (attached at end
+  of this README)
+
+- Test and make sure the code works:
+
+    make mochitest-plain TEST_PATH=content/base/test/test_websocket.html
+
+- If this doesn't take a look at the pywebsocket server log,
+  $OBJDIR/_tests/testing/mochitest/websock.log
+
+- Upgrade the svnversion number at top of this file to whatever version we're
+  now based off of.
+
+--------------------------------------------------------------------------------
+PATCH TO hybi.py for HSTS support:
+
+
+diff --git a/testing/mochitest/pywebsocket/mod_pywebsocket/handshake/hybi.py b/testing/mochitest/pywebsocket/mod_pywebsocket/handshake/hybi.py
+--- a/testing/mochitest/pywebsocket/mod_pywebsocket/handshake/hybi.py
++++ b/testing/mochitest/pywebsocket/mod_pywebsocket/handshake/hybi.py
+@@ -227,16 +227,19 @@ class Handshaker(object):
+ 
+     def _check_version(self):
+         unused_value = validate_mandatory_header(
+             self._request, common.SEC_WEBSOCKET_VERSION_HEADER,
+             str(common.VERSION_HYBI_LATEST), fail_status=426)
+ 
+     def _set_protocol(self):
+         self._request.ws_protocol = None
++        # MOZILLA
++        self._request.sts = None
++        # /MOZILLA
+ 
+         protocol_header = self._request.headers_in.get(
+             common.SEC_WEBSOCKET_PROTOCOL_HEADER)
+ 
+         if not protocol_header:
+             self._request.ws_requested_protocols = None
+             return
+ 
+@@ -311,16 +314,21 @@ class Handshaker(object):
+             response.append(format_header(
+                 common.SEC_WEBSOCKET_PROTOCOL_HEADER,
+                 self._request.ws_protocol))
+         if (self._request.ws_extensions is not None and
+             len(self._request.ws_extensions) != 0):
+             response.append(format_header(
+                 common.SEC_WEBSOCKET_EXTENSIONS_HEADER,
+                 format_extensions(self._request.ws_extensions)))
++        # MOZILLA: Add HSTS header if requested to
++        if self._request.sts is not None:
++            response.append(format_header("Strict-Transport-Security",
++                                          self._request.sts))
++        # /MOZILLA
+         response.append('\r\n')
+ 
+         raw_response = ''.join(response)
+         self._logger.debug('Opening handshake response: %r', raw_response)
+         self._request.connection.write(raw_response)
+

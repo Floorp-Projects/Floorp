@@ -77,7 +77,6 @@ gfxGDIFont::gfxGDIFont(GDIFontEntry *aFontEntry,
     : gfxFont(aFontEntry, aFontStyle, anAAOption),
       mFont(NULL),
       mFontFace(nsnull),
-      mScaledFont(nsnull),
       mMetrics(nsnull),
       mSpaceGlyph(0),
       mNeedsBold(aNeedsBold)

@@ -60,17 +60,17 @@ class CallObject : public ::JSObject
      *
      * DeclEnv objects use SCOPE_CHAIN_SLOT and private in the same fashion.
      */
-    static const uint32 CALLEE_SLOT = 1;
-    static const uint32 ARGUMENTS_SLOT = 2;
+    static const uint32_t CALLEE_SLOT = 1;
+    static const uint32_t ARGUMENTS_SLOT = 2;
 
   public:
     /* Create a CallObject for the given callee function. */
     static CallObject *
     create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObject *callee);
 
-    static const uint32 RESERVED_SLOTS = 3;
+    static const uint32_t RESERVED_SLOTS = 3;
 
-    static const uint32 DECL_ENV_RESERVED_SLOTS = 1;
+    static const uint32_t DECL_ENV_RESERVED_SLOTS = 1;
     static const gc::AllocKind DECL_ENV_FINALIZE_KIND = gc::FINALIZE_OBJECT2;
 
     /* True if this is for a strict mode eval frame or for a function call. */

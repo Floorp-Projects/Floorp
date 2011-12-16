@@ -61,7 +61,7 @@ interface nsIFile;
  *
  * @threadsafe
  */
-[scriptable, uuid(ad035628-4ffb-42ff-a256-0ed9e410b859)]
+[scriptable, uuid(b2a4b534-f92e-4387-9bd9-d10408173925)]
 interface mozIStorageConnection : nsISupports {
   /**
    * The default size for SQLite database pages used by mozStorage for new
@@ -142,6 +142,12 @@ interface mozIStorageConnection : nsISupports {
    * operation.
    */
   readonly attribute long long lastInsertRowID;
+
+  /**
+   * affectedRows returns the number of database rows that were changed or
+   * inserted or deleted by last operation.
+   */
+  readonly attribute long affectedRows;
 
   /**
    * The last error SQLite error code.
@@ -384,4 +390,15 @@ interface mozIStorageConnection : nsISupports {
    *         If the system is short on storage space.
    */
   void setGrowthIncrement(in PRInt32 aIncrement, in AUTF8String aDatabaseName);
+
+  /**
+   * Enable a predefined virtual table implementation.
+   *
+   * @param aModuleName
+   *        The module to enable. Only "filesystem" is currently supported.
+   *
+   * @throws NS_ERROR_FAILURE
+   *         For unknown module names.
+   */
+  [noscript] void enableModule(in ACString aModuleName);
 };

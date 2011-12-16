@@ -16,7 +16,7 @@
               android:paddingRight="40dip"
               android:hint="@string/awesomebar_default_text"
               android:inputType="textUri"
-              android:imeOptions="actionGo"
+              android:imeOptions="actionSearch"
               android:singleLine="true"
               android:gravity="center_vertical|left">
              <requestFocus/>

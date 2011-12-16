@@ -152,7 +152,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
                     {
                         if (!pdata->lastCallStart)
                         {
-                            int64 now;
+                            int64_t now;
                             JSDProfileData *callerpdata;
                             
                             /* Get the time just the once, for consistency. */
@@ -162,7 +162,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
                             callerpdata = jsdc->callingFunctionPData;
                             if (callerpdata)
                             {
-                                int64 ll_delta;
+                                int64_t ll_delta;
                                 pdata->caller = callerpdata;
                                 /* We need to 'stop' the timer for the caller.
                                  * Use time since last return if appropriate. */
@@ -186,7 +186,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
                         /* make sure we're called for the return too. */
                         hookresult = JS_TRUE;
                     } else if (!pdata->recurseDepth && pdata->lastCallStart) {
-                        int64 now, ll_delta;
+                        int64_t now, ll_delta;
                         jsdouble delta;
                         now = JS_Now();
                         ll_delta = now - pdata->lastCallStart;

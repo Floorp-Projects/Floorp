@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-var summary = 'Do not assert: cursor == (uint8 *)copy->messageArgs[0] + argsCopySize';
+var summary = 'Do not assert: cursor == (uint8_t *)copy->messageArgs[0] + argsCopySize';
 var BUGNUMBER = 473709;
 var actual = '';
 var expect = '';

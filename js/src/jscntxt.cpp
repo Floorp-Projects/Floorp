@@ -744,7 +744,10 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
     }
 }
 
-/* The report must be initially zeroed. */
+/*
+ * The given JSErrorReport object have been zeroed and must not outlive
+ * cx->fp() (otherwise report->originPrincipals may become invalid).
+ */
 static void
 PopulateReportBlame(JSContext *cx, JSErrorReport *report)
 {
@@ -756,6 +759,7 @@ PopulateReportBlame(JSContext *cx, JSErrorReport *report)
         if (iter.fp()->isScriptFrame()) {
             report->filename = iter.fp()->script()->filename;
             report->lineno = js_PCToLineNumber(cx, iter.fp()->script(), iter.pc());
+            report->originPrincipals = iter.fp()->script()->originPrincipals;
             break;
         }
     }
