@@ -1,4 +1,6 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -11,14 +13,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Structured Clone Code.
+ * The Original Code is Mozilla.
  *
- * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * The Initial Developer of the Original Code is Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Kyle Huey <me@kylehuey.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,23 +35,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef StructuredCloneTags_h__
-#define StructuredCloneTags_h__
+#ifndef mozilla_storage_FileSystemModule_h
+#define mozilla_storage_FileSystemModule_h
 
-#include "jsapi.h"
+#include "nscore.h"
+
+struct sqlite3;
 
 namespace mozilla {
-namespace dom {
+namespace storage {
 
-enum StructuredCloneTags {
-  SCTAG_BASE = JS_SCTAG_USER_MIN,
-  SCTAG_DOM_BLOB,
-  SCTAG_DOM_FILE,
-  SCTAG_DOM_FILELIST,
-  SCTAG_DOM_MAX
-};
+NS_HIDDEN_(int) RegisterFileSystemModule(sqlite3* aDB, const char* aName);
 
-} // namespace dom
+} // namespace storage
 } // namespace mozilla
 
-#endif // StructuredCloneTags_h__
+#endif // mozilla_storage_FileSystemModule_h
