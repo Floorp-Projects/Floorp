@@ -2331,7 +2331,8 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const jsid &id, const PropD
             unchanged |= JSPROP_PERMANENT;
         if (!desc.hasEnumerable)
             unchanged |= JSPROP_ENUMERATE;
-        if (!desc.hasWritable)
+        /* Watch out for accessor -> data transformations here. */
+        if (!desc.hasWritable && shape->isDataDescriptor())
             unchanged |= JSPROP_READONLY;
 
         if (desc.hasValue)
