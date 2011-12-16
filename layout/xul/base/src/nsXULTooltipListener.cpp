@@ -48,6 +48,8 @@
 #include "nsIPopupBoxObject.h"
 #include "nsMenuPopupFrame.h"
 #include "nsIServiceManager.h"
+#include "nsIDragService.h"
+#include "nsIDragSession.h"
 #ifdef MOZ_XUL
 #include "nsITreeView.h"
 #endif
@@ -267,14 +269,38 @@ nsXULTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
       type.EqualsLiteral("keydown") ||
       type.EqualsLiteral("mousedown") ||
       type.EqualsLiteral("mouseup") ||
-      type.EqualsLiteral("dragstart"))
+      type.EqualsLiteral("dragstart")) {
     HideTooltip();
-  else if (type.EqualsLiteral("mousemove"))
-    MouseMove(aEvent);
-  else if (type.EqualsLiteral("mouseout"))
-    MouseOut(aEvent);
-  else if (type.EqualsLiteral("popuphiding"))
+    return NS_OK;
+  }
+
+  if (type.EqualsLiteral("popuphiding")) {
     DestroyTooltip();
+    return NS_OK;
+  }
+
+  // Note that mousemove, mouseover and mouseout might be
+  // fired even during dragging due to widget's bug.
+  nsCOMPtr<nsIDragService> dragService =
+    do_GetService("@mozilla.org/widget/dragservice;1");
+  NS_ENSURE_TRUE(dragService, NS_OK);
+  nsCOMPtr<nsIDragSession> dragSession;
+  dragService->GetCurrentSession(getter_AddRefs(dragSession));
+  if (dragSession) {
+    return NS_OK;
+  }
+
+  // Not dragging.
+
+  if (type.EqualsLiteral("mousemove")) {
+    MouseMove(aEvent);
+    return NS_OK;
+  }
+
+  if (type.EqualsLiteral("mouseout")) {
+    MouseOut(aEvent);
+    return NS_OK;
+  }
 
   return NS_OK;
 }
