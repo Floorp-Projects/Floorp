@@ -177,11 +177,6 @@ public:
     static bool sAccessibilityEnabled;
 #endif
 
-#ifdef MOZ_JAVA_COMPOSITOR
-    static void BindToTexture();
-    static bool HasDirectTexture();
-#endif
-
 protected:
     void BringToFront();
     nsWindow *FindTopLevel();

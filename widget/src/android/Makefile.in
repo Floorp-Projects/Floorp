@@ -61,8 +61,6 @@ CPPSRCS	= \
 	nsAppShell.cpp \
 	AndroidJavaWrappers.cpp \
 	AndroidBridge.cpp \
-	AndroidDirectTexture.cpp \
-	AndroidGraphicBuffer.cpp \
 	AndroidJNI.cpp \
 	nsWindow.cpp \
 	nsLookAndFeel.cpp \
