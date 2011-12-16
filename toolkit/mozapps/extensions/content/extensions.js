@@ -348,6 +348,7 @@ var gEventManager = {
 
     Services.prefs.addObserver(PREF_CHECK_COMPATIBILITY, this, false);
     Services.prefs.addObserver(PREF_CHECK_UPDATE_SECURITY, this, false);
+    Services.prefs.addObserver(PREF_UPDATE_ENABLED, this, false);
     Services.prefs.addObserver(PREF_AUTOUPDATE_DEFAULT, this, false);
 
     this.refreshGlobalWarning();
@@ -481,27 +482,34 @@ var gEventManager = {
       page.setAttribute("warning", "checkcompatibility");
       return;
     }
-    
+
     page.removeAttribute("warning");
   },
-  
+
   refreshAutoUpdateDefault: function() {
-    var defaultEnable = true;
+    var updateEnabled = true;
+    var autoUpdateDefault = true;
     try {
-      defaultEnable = Services.prefs.getBoolPref(PREF_AUTOUPDATE_DEFAULT);
+      updateEnabled = Services.prefs.getBoolPref(PREF_UPDATE_ENABLED);
+      autoUpdateDefault = Services.prefs.getBoolPref(PREF_AUTOUPDATE_DEFAULT);
     } catch(e) { }
-    document.getElementById("utils-autoUpdateDefault").setAttribute("checked",
-                                                                    defaultEnable);
-    document.getElementById("utils-resetAddonUpdatesToAutomatic").hidden = !defaultEnable;
-    document.getElementById("utils-resetAddonUpdatesToManual").hidden = defaultEnable;
+
+    // The checkbox needs to reflect that both prefs need to be true
+    // for updates to be checked for and applied automatically
+    document.getElementById("utils-autoUpdateDefault")
+            .setAttribute("checked", updateEnabled && autoUpdateDefault);
+
+    document.getElementById("utils-resetAddonUpdatesToAutomatic").hidden = !autoUpdateDefault;
+    document.getElementById("utils-resetAddonUpdatesToManual").hidden = autoUpdateDefault;
   },
-  
+
   observe: function(aSubject, aTopic, aData) {
     switch (aData) {
     case PREF_CHECK_COMPATIBILITY:
     case PREF_CHECK_UPDATE_SECURITY:
       this.refreshGlobalWarning();
       break;
+    case PREF_UPDATE_ENABLED:
     case PREF_AUTOUPDATE_DEFAULT:
       this.refreshAutoUpdateDefault();
       break;
@@ -754,17 +762,24 @@ var gViewController = {
     cmd_toggleAutoUpdateDefault: {
       isEnabled: function() true,
       doCommand: function() {
-        var oldValue = true;
+        var updateEnabled = true;
+        var autoUpdateDefault = true;
         try {
-          oldValue = Services.prefs.getBoolPref(PREF_AUTOUPDATE_DEFAULT);
+          updateEnabled = Services.prefs.getBoolPref(PREF_UPDATE_ENABLED);
+          autoUpdateDefault = Services.prefs.getBoolPref(PREF_AUTOUPDATE_DEFAULT);
         } catch(e) { }
-        var newValue = !oldValue; // toggle
-        Services.prefs.setBoolPref(PREF_AUTOUPDATE_DEFAULT, newValue);
 
-        // If the user wants us to auto-update add-ons, we also need to
-        // auto-check for updates.
-        if (newValue) // i.e. new value is true
+        if (!updateEnabled || !autoUpdateDefault) {
+          // One or both of the prefs is false, i.e. the checkbox is not checked.
+          // Now toggle both to true. If the user wants us to auto-update
+          // add-ons, we also need to auto-check for updates.
           Services.prefs.setBoolPref(PREF_UPDATE_ENABLED, true);
+          Services.prefs.setBoolPref(PREF_AUTOUPDATE_DEFAULT, true);
+        } else {
+          // Both prefs are true, i.e. the checkbox is checked.
+          // Toggle the auto pref to false, but don't touch the enabled check.
+          Services.prefs.setBoolPref(PREF_AUTOUPDATE_DEFAULT, false);
+        }
       }
     },
 
