@@ -39,7 +39,20 @@
 
 %{C++
 #include "jsapi.h"
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+class FileInfo;
+class FileManager;
+}
+}
+}
+
 %}
+
+[ptr] native FileInfo(mozilla::dom::indexedDB::FileInfo);
+[ptr] native FileManager(mozilla::dom::indexedDB::FileManager);
 
 interface nsIDOMFileError;
 interface nsIInputStream;
@@ -47,7 +60,7 @@ interface nsIURI;
 interface nsIPrincipal;
 interface nsIDOMBlob;
 
-[scriptable, builtinclass, uuid(d5237f31-443a-460b-9e42-449a135346f0)]
+[scriptable, builtinclass, uuid(f62c6887-e3bc-495a-802c-287e12e969a0)]
 interface nsIDOMBlob : nsISupports
 {
   readonly attribute unsigned long long size;
@@ -61,6 +74,18 @@ interface nsIDOMBlob : nsISupports
   [optional_argc] nsIDOMBlob mozSlice([optional] in long long start,
                                       [optional] in long long end,
                                       [optional] in DOMString contentType);
+
+  // Get internal id of stored file. Returns -1 if it is not a stored file.
+  // Intended only for testing. It can be called on any thread.
+  [notxpcom] long long getFileId();
+
+  // Called when the blob was successfully stored in a database or when
+  // the blob is initialized from a database. It can be called on any thread.
+  [notxpcom] void addFileInfo(in FileInfo aFileInfo);
+
+  // Called before the blob is stored in a database to decide if it can be
+  // shared or needs to be copied. It can be called on any thread.
+  [notxpcom] FileInfo getFileInfo(in FileManager aFileManager);
 };
 
 [scriptable, builtinclass, uuid(b096ef67-7b77-47f8-8e70-5d8ee36416bf)]

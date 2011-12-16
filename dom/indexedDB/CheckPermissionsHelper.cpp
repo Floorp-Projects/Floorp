@@ -205,9 +205,6 @@ CheckPermissionsHelper::Observe(nsISupports* aSubject,
   mPromptResult = nsDependentString(aData).ToInteger(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
-  NS_ASSERTION(mgr, "This should never be null!");
-
   rv = NS_DispatchToCurrentThread(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
