@@ -156,7 +156,7 @@ CanvasLayerD3D10::UpdateSurface()
     // need to sync on the d3d9 device
     if (mGLContext) {
       mGLContext->MakeCurrent();
-      mGLContext->fFinish();
+      mGLContext->GuaranteeResolve();
     }
     return;
   }
