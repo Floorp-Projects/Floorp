@@ -744,6 +744,24 @@ abstract public class GeckoApp
         });
     }
 
+    void handleLoadError(final int tabId, final String uri, final String title) {
+        final Tab tab = Tabs.getInstance().getTab(tabId);
+        if (tab == null)
+            return;
+    
+        // When a load error occurs, the URLBar can get corrupt so we reset it
+        mMainHandler.post(new Runnable() {
+            public void run() {
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    mBrowserToolbar.setTitle(tab.getDisplayTitle());
+                    mBrowserToolbar.setFavicon(tab.getFavicon());
+                    mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
+                    mBrowserToolbar.setProgressVisibility(tab.isLoading());
+                }
+            }
+        });
+    }
+
     public File getProfileDir() {
         // XXX: TO-DO read profiles.ini to get the default profile
         return getProfileDir("default");
@@ -880,6 +898,11 @@ abstract public class GeckoApp
                         handleDocumentStop(tabId);
                     }
                 }
+            } else if (event.equals("Content:LoadError")) {
+                final int tabId = message.getInt("tabID");
+                final String uri = message.getString("uri");
+                final String title = message.getString("title");
+                handleLoadError(tabId, uri, title);
             } else if (event.equals("onCameraCapture")) {
                 //GeckoApp.mAppContext.doCameraCapture(message.getString("path"));
                 doCameraCapture();
@@ -1423,6 +1446,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Content:LocationChange", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Content:SecurityChange", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Content:StateChange", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Content:LoadError", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:Added", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Tab:Closed", GeckoApp.mAppContext);
@@ -1653,6 +1677,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Content:LocationChange", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Content:SecurityChange", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Content:StateChange", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Content:LoadError", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("onCameraCapture", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Tab:Added", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Tab:Closed", GeckoApp.mAppContext);
@@ -1979,10 +2004,8 @@ abstract public class GeckoApp
                 String url = data.getStringExtra(AwesomeBar.URL_KEY);
                 AwesomeBar.Type type = AwesomeBar.Type.valueOf(data.getStringExtra(AwesomeBar.TYPE_KEY));
                 String searchEngine = data.getStringExtra(AwesomeBar.SEARCH_KEY);
-                if (url != null && url.length() > 0) {
-                    mBrowserToolbar.setProgressVisibility(true);
+                if (url != null && url.length() > 0)
                     loadRequest(url, type, searchEngine);
-                }
             }
             break;
         case CAMERA_CAPTURE_REQUEST:

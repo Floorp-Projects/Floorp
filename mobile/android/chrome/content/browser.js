@@ -332,20 +332,37 @@ var BrowserApp = {
     return null;
   },
 
-  loadURI: function loadURI(aURI, aParams) {
-    let browser = this.selectedBrowser;
-    if (!browser)
+  loadURI: function loadURI(aURI, aBrowser, aParams) {
+    aBrowser = aBrowser || this.selectedBrowser;
+    if (!aBrowser)
       return;
 
-    let flags = aParams.flags || Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+    let flags = "flags" in aParams ? aParams.flags : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
     let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
     let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
     let charset = "charset" in aParams ? aParams.charset : null;
-    browser.loadURIWithFlags(aURI, flags, referrerURI, charset, postData);
+
+    try {
+      aBrowser.loadURIWithFlags(aURI, flags, referrerURI, charset, postData);
+    } catch(e) {
+      let tab = this.getTabForBrowser(aBrowser);
+      if (tab) {
+        let message = {
+          gecko: {
+            type: "Content:LoadError",
+            tabID: tab.id,
+            uri: aBrowser.currentURI.spec,
+            title: aBrowser.contentTitle
+          }
+        };
+        sendMessageToJava(message);
+        dump("Handled load error: " + e)
+      }
+    }
   },
 
   addTab: function addTab(aURI, aParams) {
-    aParams = aParams || { selected: true };
+    aParams = aParams || { selected: true, flags: Ci.nsIWebNavigation.LOAD_FLAGS_NONE };
     let newTab = new Tab(aURI, aParams);
     this._tabs.push(newTab);
     if ("selected" in aParams && aParams.selected)
@@ -604,10 +621,19 @@ var BrowserApp = {
       browser.reload();
     } else if (aTopic == "Session:Stop") {
       browser.stop();
-    } else if (aTopic == "Tab:Add") {
-      let newTab = this.addTab(this.getSearchOrFixupURI(aData));
-    } else if (aTopic == "Tab:Load") {
-      browser.loadURI(this.getSearchOrFixupURI(aData));
+    } else if (aTopic == "Tab:Add" || aTopic == "Tab:Load") {
+      // Pass LOAD_FLAGS_DISALLOW_INHERIT_OWNER to prevent any loads from
+      // inheriting the currently loaded document's principal.
+      let params = {
+        selected: true,
+        flags: Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER
+      };
+
+      let url = this.getSearchOrFixupURI(aData);
+      if (aTopic == "Tab:Add")
+        this.addTab(url, params);
+      else
+        this.loadURI(url, browser, params);
     } else if (aTopic == "Tab:Select") {
       this.selectTab(this.getTabForId(parseInt(aData)));
     } else if (aTopic == "Tab:Close") {
@@ -963,7 +989,7 @@ nsBrowserAccess.prototype = {
 
     // Why does returning the browser.contentWindow not work here?
     Services.io.offline = false;
-    browser.loadURI(aURI.spec, null, null);
+    BrowserApp.loadURI(aURI.spec, browser);
     return null;
   },
 
@@ -1043,14 +1069,35 @@ Tab.prototype = {
                 Ci.nsIWebProgress.NOTIFY_SECURITY;
     this.browser.addProgressListener(this, flags);
     this.browser.sessionHistory.addSHistoryListener(this);
+
     this.browser.addEventListener("DOMContentLoaded", this, true);
     this.browser.addEventListener("DOMLinkAdded", this, true);
     this.browser.addEventListener("DOMTitleChanged", this, true);
     this.browser.addEventListener("scroll", this, true);
     this.browser.addEventListener("PluginClickToPlay", this, true);
     this.browser.addEventListener("pagehide", this, true);
+
     Services.obs.addObserver(this, "http-on-modify-request", false);
-    this.browser.loadURI(aURL);
+
+    let flags = "flags" in aParams ? aParams.flags : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+    let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
+    let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
+    let charset = "charset" in aParams ? aParams.charset : null;
+
+    try {
+      this.browser.loadURIWithFlags(aURL, flags, referrerURI, charset, postData);
+    } catch(e) {
+      let message = {
+        gecko: {
+          type: "Content:LoadError",
+          tabID: this.id,
+          uri: this.browser.currentURI.spec,
+          title: this.browser.contentTitle
+        }
+      };
+      sendMessageToJava(message);
+      dump("Handled load error: " + e)
+    }
   },
 
   setAgentMode: function(aMode) {
