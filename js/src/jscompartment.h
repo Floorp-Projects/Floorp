@@ -85,7 +85,7 @@ class NativeIterCache {
     /* Cached native iterators. */
     JSObject            *data[SIZE];
 
-    static size_t getIndex(uint32 key) {
+    static size_t getIndex(uint32_t key) {
         return size_t(key) % SIZE;
     }
 
@@ -103,11 +103,11 @@ class NativeIterCache {
         last = NULL;
     }
 
-    JSObject *get(uint32 key) const {
+    JSObject *get(uint32_t key) const {
         return data[getIndex(key)];
     }
 
-    void set(uint32 key, JSObject *iterobj) {
+    void set(uint32_t key, JSObject *iterobj) {
         data[getIndex(key)] = iterobj;
     }
 };
@@ -182,8 +182,8 @@ struct JS_FRIEND_API(JSCompartment) {
         return createBarrierTracer();
     }
 
-    uint32                       gcBytes;
-    uint32                       gcTriggerBytes;
+    uint32_t                     gcBytes;
+    uint32_t                     gcTriggerBytes;
     size_t                       gcLastBytes;
 
     bool                         hold;
@@ -308,7 +308,7 @@ struct JS_FRIEND_API(JSCompartment) {
     void purge(JSContext *cx);
 
     void setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind);
-    void reduceGCTriggerBytes(uint32 amount);
+    void reduceGCTriggerBytes(uint32_t amount);
 
     js::DtoaCache dtoaCache;
 

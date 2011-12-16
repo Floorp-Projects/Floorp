@@ -675,7 +675,7 @@ js_InitAtomMap(JSContext *cx, AtomIndexMap *indices, JSAtom **atoms)
 namespace js {
 
 bool
-IndexToIdSlow(JSContext *cx, uint32 index, jsid *idp)
+IndexToIdSlow(JSContext *cx, uint32_t index, jsid *idp)
 {
     JS_ASSERT(index > JSID_INT_MAX);
 

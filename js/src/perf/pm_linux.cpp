@@ -106,9 +106,9 @@ struct Impl
 static const struct
 {
     EventMask bit;
-    uint32 type;
-    uint32 config;
-    uint64 PerfMeasurement::* counter;
+    uint32_t type;
+    uint32_t config;
+    uint64_t PerfMeasurement::* counter;
     int Impl::* fd;
 } kSlots[PerfMeasurement::NUM_MEASURABLE_EVENTS] = {
 #define HW(mask, constant, fieldname)                                   \
@@ -247,9 +247,9 @@ Impl::stop(PerfMeasurement* counters)
         if (fd == -1)
             continue;
 
-        if (read(fd, buf, sizeof(buf)) == sizeof(uint64)) {
-            uint64 cur;
-            memcpy(&cur, buf, sizeof(uint64));
+        if (read(fd, buf, sizeof(buf)) == sizeof(uint64_t)) {
+            uint64_t cur;
+            memcpy(&cur, buf, sizeof(uint64_t));
             counters->*(kSlots[i].counter) += cur;
         }
 

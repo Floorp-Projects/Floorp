@@ -444,7 +444,7 @@ private:
       return false;
     }
 
-    uint32 id;
+    uint32_t id;
     if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "u", &id)) {
       return false;
     }
@@ -486,7 +486,7 @@ private:
       return false;
     }
 
-    uint32 id;
+    uint32_t id;
     if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "u", &id)) {
       return false;
     }

@@ -372,7 +372,7 @@ PushMarkStack(GCMarker *gcmarker, BaseShape *thing)
 static void
 MarkAtomRange(JSTracer *trc, size_t len, JSAtom **vec, const char *name)
 {
-    for (uint32 i = 0; i < len; i++) {
+    for (uint32_t i = 0; i < len; i++) {
         if (JSAtom *atom = vec[i]) {
             JS_SET_TRACING_INDEX(trc, name, i);
             Mark(trc, atom);
@@ -383,7 +383,7 @@ MarkAtomRange(JSTracer *trc, size_t len, JSAtom **vec, const char *name)
 void
 MarkObjectRange(JSTracer *trc, size_t len, HeapPtr<JSObject> *vec, const char *name)
 {
-    for (uint32 i = 0; i < len; i++) {
+    for (uint32_t i = 0; i < len; i++) {
         if (JSObject *obj = vec[i]) {
             JS_SET_TRACING_INDEX(trc, name, i);
             Mark(trc, obj);
@@ -842,8 +842,8 @@ MarkChildren(JSTracer *trc, JSObject *obj)
         clasp->trace(trc, obj);
 
     if (shape->isNative()) {
-        uint32 nslots = obj->slotSpan();
-        for (uint32 i = 0; i < nslots; i++) {
+        uint32_t nslots = obj->slotSpan();
+        for (uint32_t i = 0; i < nslots; i++) {
             JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
             MarkValueRaw(trc, obj->nativeGetSlot(i));
         }

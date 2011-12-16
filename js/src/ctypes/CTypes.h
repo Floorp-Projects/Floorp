@@ -267,10 +267,10 @@ struct FieldHashPolicy
   typedef JSFlatString* Key;
   typedef Key Lookup;
 
-  static uint32 hash(const Lookup &l) {
+  static uint32_t hash(const Lookup &l) {
     const jschar* s = l->chars();
     size_t n = l->length();
-    uint32 hash = 0;
+    uint32_t hash = 0;
     for (; n > 0; s++, n--)
       hash = hash * 33 + *s;
     return hash;

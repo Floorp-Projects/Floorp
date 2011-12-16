@@ -431,8 +431,8 @@ DaylightSavingTA(jsdouble t, JSContext *cx)
         t = MakeDate(day, TimeWithinDay(t));
     }
 
-    int64 timeMilliseconds = static_cast<int64>(t);
-    int64 offsetMilliseconds = cx->dstOffsetCache.getDSTOffsetMilliseconds(timeMilliseconds, cx);
+    int64_t timeMilliseconds = static_cast<int64_t>(t);
+    int64_t offsetMilliseconds = cx->dstOffsetCache.getDSTOffsetMilliseconds(timeMilliseconds, cx);
     return static_cast<jsdouble>(offsetMilliseconds);
 }
 
@@ -1294,8 +1294,8 @@ FillLocalTimes(JSContext *cx, JSObject *obj)
 
     obj->setSlot(JSObject::JSSLOT_DATE_LOCAL_YEAR, Int32Value(year));
 
-    uint64 yearTime = uint64(localTime - yearStartTime);
-    jsint yearSeconds = uint32(yearTime / 1000);
+    uint64_t yearTime = uint64_t(localTime - yearStartTime);
+    jsint yearSeconds = uint32_t(yearTime / 1000);
 
     jsint day = yearSeconds / jsint(SecondsPerDay);
 
@@ -2164,15 +2164,15 @@ new_explode(jsdouble timeval, PRMJTime *split, JSContext *cx)
 {
     jsint year = YearFromTime(timeval);
 
-    split->tm_usec = (int32) msFromTime(timeval) * 1000;
-    split->tm_sec = (int8) SecFromTime(timeval);
-    split->tm_min = (int8) MinFromTime(timeval);
-    split->tm_hour = (int8) HourFromTime(timeval);
-    split->tm_mday = (int8) DateFromTime(timeval);
-    split->tm_mon = (int8) MonthFromTime(timeval);
-    split->tm_wday = (int8) WeekDay(timeval);
+    split->tm_usec = int32_t(msFromTime(timeval)) * 1000;
+    split->tm_sec = int8_t(SecFromTime(timeval));
+    split->tm_min = int8_t(MinFromTime(timeval));
+    split->tm_hour = int8_t(HourFromTime(timeval));
+    split->tm_mday = int8_t(DateFromTime(timeval));
+    split->tm_mon = int8_t(MonthFromTime(timeval));
+    split->tm_wday = int8_t(WeekDay(timeval));
     split->tm_year = year;
-    split->tm_yday = (int16) DayWithinYear(timeval, year);
+    split->tm_yday = int16_t(DayWithinYear(timeval, year));
 
     /* not sure how this affects things, but it doesn't seem
        to matter. */
@@ -2805,17 +2805,17 @@ js_DateGetMsecSinceEpoch(JSContext *cx, JSObject *obj)
 #ifdef JS_THREADSAFE
 #include "prinrval.h"
 
-JS_FRIEND_API(uint32)
+JS_FRIEND_API(uint32_t)
 js_IntervalNow()
 {
-    return uint32(PR_IntervalToMilliseconds(PR_IntervalNow()));
+    return uint32_t(PR_IntervalToMilliseconds(PR_IntervalNow()));
 }
 
 #else /* !JS_THREADSAFE */
 
-JS_FRIEND_API(uint32)
+JS_FRIEND_API(uint32_t)
 js_IntervalNow()
 {
-    return uint32(PRMJ_Now() / PRMJ_USEC_PER_MSEC);
+    return uint32_t(PRMJ_Now() / PRMJ_USEC_PER_MSEC);
 }
 #endif

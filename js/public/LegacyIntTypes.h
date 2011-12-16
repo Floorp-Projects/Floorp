@@ -37,36 +37,32 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * This section typedefs the old 'native' types to the new PR<type>s.
- * These definitions are scheduled to be eliminated at the earliest
- * possible time. The NSPR API is implemented and documented using
- * the new definitions.
+ * This section typedefs the old 'native' types to the new <stdint.h> types.
+ * These redefinitions are provided solely to allow JSAPI users to more easily
+ * transition to <stdint.h> types.  They are not to be used in the JSAPI, and
+ * new JSAPI user code should not use them.  This mapping file may eventually
+ * be removed from SpiderMonkey, so don't depend on it in the long run.
  */
 
 /*
- * Note that we test for PROTYPES_H, not JSOTYPES_H.  This is to avoid
- * double-definitions of scalar types such as uint32, if NSPR's
- * protypes.h is also included.
+ * BEWARE: Comity with other implementers of these types is not guaranteed.
+ *         Indeed, if you use this header and third-party code defining these
+ *         types, *expect* to encounter either compile errors or link errors,
+ *         depending how these types are used and on the order of inclusion.
+ *         It is safest to use only the JSAPI <stdint.h>-style types,
+ *         customizing those types using MOZ_CUSTOM_STDINT_H if necessary.
  */
 #ifndef PROTYPES_H
 #define PROTYPES_H
 
-/* SVR4 typedef of uint is commonly found on UNIX machines. */
-#ifdef XP_UNIX
-#include <sys/types.h>
-#else
-typedef JSUintn uint;
-#endif
+#include "mozilla/StdInt.h"
 
-typedef JSUintn uintn;
-typedef JSUint64 uint64;
-typedef JSUint32 uint32;
-typedef JSUint16 uint16;
-typedef JSUint8 uint8;
+#include "js-config.h"
 
-#ifndef _XP_Core_
-typedef JSIntn intn;
-#endif
+typedef uint8_t uint8;
+typedef uint16_t uint16;
+typedef uint32_t uint32;
+typedef uint64_t uint64;
 
 /*
  * On AIX 4.3, sys/inttypes.h (which is included by sys/types.h, a very
@@ -76,21 +72,21 @@ typedef JSIntn intn;
  */
 #if defined(AIX) && defined(HAVE_SYS_INTTYPES_H)
 #include <sys/inttypes.h>
-#elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-typedef JSInt64 int64;
-
-/* Explicit signed keyword for bitfield types is required. */
-/* Some compilers may treat them as unsigned without it. */
-typedef signed int int32;
-typedef signed short int16;
-typedef signed char int8;
 #else
-typedef JSInt64 int64;
-
-/* /usr/include/model.h on HP-UX defines int8, int16, and int32 */
-typedef JSInt32 int32;
-typedef JSInt16 int16;
-typedef JSInt8 int8;
+typedef int8_t int8;
+typedef int16_t int16;
+typedef int32_t int32;
+typedef int64_t int64;
 #endif /* AIX && HAVE_SYS_INTTYPES_H */
+
+typedef uint8_t JSUint8;
+typedef uint16_t JSUint16;
+typedef uint32_t JSUint32;
+typedef uint64_t JSUint64;
+
+typedef int8_t JSInt8;
+typedef int16_t JSInt16;
+typedef int32_t JSInt32;
+typedef int64_t JSInt64;
 
 #endif /* !defined(PROTYPES_H) */

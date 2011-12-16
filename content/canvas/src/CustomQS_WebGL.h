@@ -43,21 +43,21 @@
 #include "jstypedarray.h"
 
 #define GET_INT32_ARG(var, index) \
-  int32 var; \
+  int32_t var; \
   do { \
     if (!JS_ValueToECMAInt32(cx, argv[index], &(var))) \
       return JS_FALSE; \
   } while (0)
 
 #define GET_UINT32_ARG(var, index) \
-  uint32 var; \
+  uint32_t var; \
   do { \
     if (!JS_ValueToECMAUint32(cx, argv[index], &(var))) \
       return JS_FALSE; \
   } while (0)
 
 #define GET_OPTIONAL_UINT32_ARG(var, index) \
-  uint32 var = 0; \
+  uint32_t var = 0; \
   do { \
     if (argc > index) \
       if (!JS_ValueToECMAUint32(cx, argv[index], &(var))) \
@@ -100,11 +100,11 @@ nsIDOMWebGLRenderingContext_BufferData(JSContext *cx, uintN argc, jsval *vp)
 
     jsval *argv = JS_ARGV(cx, vp);
 
-    int32 target;
+    int32_t target;
     JSObject *wa = 0;
     JSObject *wb = 0;
-    int32 size;
-    int32 usage;
+    int32_t size;
+    int32_t usage;
 
     if (!JS_ValueToECMAInt32(cx, argv[0], &target))
         return JS_FALSE;
@@ -173,8 +173,8 @@ nsIDOMWebGLRenderingContext_BufferSubData(JSContext *cx, uintN argc, jsval *vp)
 
     jsval *argv = JS_ARGV(cx, vp);
 
-    int32 target;
-    int32 offset;
+    int32_t target;
+    int32_t offset;
     JSObject *wa = 0;
     JSObject *wb = 0;
 
@@ -348,7 +348,7 @@ nsIDOMWebGLRenderingContext_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
                 xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 5);
                 return JS_FALSE;
             }
-            int32 int_width, int_height;
+            int32_t int_width, int_height;
             JSObject *obj_data = JSVAL_TO_OBJECT(js_data);
             if (!JS_ValueToECMAInt32(cx, js_width, &int_width) ||
                 !JS_ValueToECMAInt32(cx, js_height, &int_height))
@@ -469,7 +469,7 @@ nsIDOMWebGLRenderingContext_TexSubImage2D(JSContext *cx, uintN argc, jsval *vp)
                 xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 6);
                 return JS_FALSE;
             }
-            int32 int_width, int_height;
+            int32_t int_width, int_height;
             JSObject *obj_data = JSVAL_TO_OBJECT(js_data);
             if (!JS_ValueToECMAInt32(cx, js_width, &int_width) ||
                 !JS_ValueToECMAInt32(cx, js_height, &int_height))
@@ -693,7 +693,7 @@ helper_nsIDOMWebGLRenderingContext_UniformMatrix_x_fv(JSContext *cx, uintN argc,
         return JS_FALSE;
     }
 
-    int32 transpose;
+    int32_t transpose;
     if (!JS_ValueToECMAInt32(cx, argv[1], &transpose))
         return JS_FALSE;
 
@@ -758,7 +758,7 @@ helper_nsIDOMWebGLRenderingContext_VertexAttrib_x_fv(JSContext *cx, uintN argc, 
 
     jsval *argv = JS_ARGV(cx, vp);
 
-    uint32 location;
+    uint32_t location;
     if (!JS_ValueToECMAUint32(cx, argv[0], &location))
         return JS_FALSE;
 

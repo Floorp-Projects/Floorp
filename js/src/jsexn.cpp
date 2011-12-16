@@ -161,7 +161,7 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
     size_t i, argsArraySize, argsCopySize, argSize;
     size_t mallocSize;
     JSErrorReport *copy;
-    uint8 *cursor;
+    uint8_t *cursor;
 
 #define JS_CHARS_SIZE(jschars) ((js_strlen(jschars) + 1) * sizeof(jschar))
 
@@ -189,7 +189,7 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
      */
     mallocSize = sizeof(JSErrorReport) + argsArraySize + argsCopySize +
                  ucmessageSize + uclinebufSize + linebufSize + filenameSize;
-    cursor = (uint8 *)cx->malloc_(mallocSize);
+    cursor = (uint8_t *)cx->malloc_(mallocSize);
     if (!cursor)
         return NULL;
 
@@ -207,7 +207,7 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
             cursor += argSize;
         }
         copy->messageArgs[i] = NULL;
-        JS_ASSERT(cursor == (uint8 *)copy->messageArgs[0] + argsCopySize);
+        JS_ASSERT(cursor == (uint8_t *)copy->messageArgs[0] + argsCopySize);
     }
 
     if (report->ucmessage) {
@@ -240,7 +240,7 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
         copy->filename = (const char *)cursor;
         memcpy(cursor, report->filename, filenameSize);
     }
-    JS_ASSERT(cursor + filenameSize == (uint8 *)copy + mallocSize);
+    JS_ASSERT(cursor + filenameSize == (uint8_t *)copy + mallocSize);
 
     /* HOLD called by the destination error object. */
     copy->originPrincipals = report->originPrincipals;
@@ -1010,7 +1010,7 @@ InitErrorClass(JSContext *cx, GlobalObject *global, intN type, JSObject &proto)
                                                  JSFunction::ExtendedFinalizeKind);
     if (!ctor)
         return NULL;
-    ctor->setExtendedSlot(0, Int32Value(int32(type)));
+    ctor->setExtendedSlot(0, Int32Value(int32_t(type)));
 
     if (!LinkConstructorAndPrototype(cx, ctor, errorProto))
         return NULL;
@@ -1286,9 +1286,9 @@ js_CopyErrorObject(JSContext *cx, JSObject *errobj, JSObject *scope)
     assertSameCompartment(cx, scope);
     JSExnPrivate *priv = GetExnPrivate(errobj);
 
-    uint32 stackDepth = priv->stackDepth;
+    uint32_t stackDepth = priv->stackDepth;
     size_t valueCount = 0;
-    for (uint32 i = 0; i < stackDepth; i++)
+    for (uint32_t i = 0; i < stackDepth; i++)
         valueCount += priv->stackElems[i].argc;
 
     size_t size = offsetof(JSExnPrivate, stackElems) +
