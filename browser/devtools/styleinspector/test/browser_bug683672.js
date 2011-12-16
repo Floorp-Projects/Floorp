@@ -7,7 +7,7 @@
 let doc;
 let stylePanel;
 
-const TEST_URI = "http://example.com/browser/browser/devtools/styleinspector/test/browser/browser_bug683672.html";
+const TEST_URI = "http://example.com/browser/browser/devtools/styleinspector/test/browser_bug683672.html";
 
 Cu.import("resource:///modules/devtools/CssHtmlTree.jsm");
 
