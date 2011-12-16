@@ -360,7 +360,11 @@ INNER_UNMAKE_PACKAGE	= \
 endif
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 ifndef _APPNAME
-_APPNAME = $(MOZ_MACBUNDLE_NAME)
+ifdef MOZ_DEBUG
+_APPNAME	= $(MOZ_APP_DISPLAYNAME)Debug.app
+else
+_APPNAME	= $(MOZ_APP_DISPLAYNAME).app
+endif
 endif
 ifndef _BINPATH
 _BINPATH	= /$(_APPNAME)/Contents/MacOS

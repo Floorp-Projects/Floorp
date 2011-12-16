@@ -1,1 +1,1 @@
-CFBundleName = "%MAC_APP_NAME%";
+CFBundleName = "%APP_NAME%";
