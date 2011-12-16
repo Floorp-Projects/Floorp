@@ -1995,16 +1995,16 @@ private:
 class XPCNativeScriptableFlags
 {
 private:
-    JSUint32 mFlags;
+    uint32_t mFlags;
 
 public:
 
-    XPCNativeScriptableFlags(JSUint32 flags = 0) : mFlags(flags) {}
+    XPCNativeScriptableFlags(uint32_t flags = 0) : mFlags(flags) {}
 
-    JSUint32 GetFlags() const {return mFlags & ~XPC_WN_SJSFLAGS_MARK_FLAG;}
-    void     SetFlags(JSUint32 flags) {mFlags = flags;}
+    uint32_t GetFlags() const {return mFlags & ~XPC_WN_SJSFLAGS_MARK_FLAG;}
+    void     SetFlags(uint32_t flags) {mFlags = flags;}
 
-    operator JSUint32() const {return GetFlags();}
+    operator uint32_t() const {return GetFlags();}
 
     XPCNativeScriptableFlags(const XPCNativeScriptableFlags& r)
         {mFlags = r.GetFlags();}
@@ -2083,7 +2083,7 @@ public:
     JSClass*                        GetSlimJSClass()
         {if (mCanBeSlim) return GetJSClass(); return nsnull;}
 
-    XPCNativeScriptableShared(JSUint32 aFlags, char* aName,
+    XPCNativeScriptableShared(uint32_t aFlags, char* aName,
                               PRUint32 interfacesBitmap)
         : mFlags(aFlags),
           mCanBeSlim(false)
@@ -2257,7 +2257,7 @@ public:
     void**
     GetSecurityInfoAddr() {return &mSecurityInfo;}
 
-    JSUint32
+    uint32_t
     GetClassInfoFlags() const {return mClassInfoFlags;}
 
     QITableEntry*
@@ -2950,7 +2950,7 @@ private:
                                  uint16 methodIndex,
                                  uint8 paramIndex,
                                  nsXPTCMiniVariant* params,
-                                 JSUint32* result);
+                                 uint32_t* result);
 
     JSBool GetInterfaceTypeFromParam(JSContext* cx,
                                      const XPTMethodDescriptor* method,
@@ -2961,7 +2961,7 @@ private:
                                      nsID* result);
 
     void CleanupPointerArray(const nsXPTType& datum_type,
-                             JSUint32 array_count,
+                             uint32_t array_count,
                              void** arrayp);
 
     void CleanupPointerTypeObject(const nsXPTType& type,
@@ -3335,27 +3335,27 @@ public:
     static JSBool NativeArray2JS(XPCLazyCallContext& ccx,
                                  jsval* d, const void** s,
                                  const nsXPTType& type, const nsID* iid,
-                                 JSUint32 count, nsresult* pErr);
+                                 uint32_t count, nsresult* pErr);
 
     static JSBool JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
-                                 JSUint32 count, const nsXPTType& type,
+                                 uint32_t count, const nsXPTType& type,
                                  const nsID* iid, nsresult* pErr);
 
     static JSBool JSTypedArray2Native(XPCCallContext& ccx,
                                       void** d,
                                       JSObject* jsarray,
-                                      JSUint32 count,
+                                      uint32_t count,
                                       const nsXPTType& type,
                                       nsresult* pErr);
 
     static JSBool NativeStringWithSize2JS(JSContext* cx,
                                           jsval* d, const void* s,
                                           const nsXPTType& type,
-                                          JSUint32 count,
+                                          uint32_t count,
                                           nsresult* pErr);
 
     static JSBool JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
-                                          JSUint32 count, const nsXPTType& type,
+                                          uint32_t count, const nsXPTType& type,
                                           uintN* pErr);
 
     static nsresult JSValToXPCException(XPCCallContext& ccx,
@@ -3766,7 +3766,7 @@ public:
         { gLock = nsnull; gThreads = nsnull; gTLSIndex = BAD_TLS_INDEX; }
 
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
-    JSUint32  IncrementWrappedNativeThreadsafetyReportDepth()
+    uint32_t  IncrementWrappedNativeThreadsafetyReportDepth()
         {return ++mWrappedNativeThreadsafetyReportDepth;}
     void      ClearWrappedNativeThreadsafetyReportDepth()
         {mWrappedNativeThreadsafetyReportDepth = 0;}
@@ -3795,7 +3795,7 @@ private:
     AutoMarkingPtr*      mAutoRoots;
 
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
-    JSUint32             mWrappedNativeThreadsafetyReportDepth;
+    uint32_t             mWrappedNativeThreadsafetyReportDepth;
 #endif
     PRThread*            mThread;
 
@@ -3929,7 +3929,7 @@ xpc_PrintJSStack(JSContext* cx, JSBool showArgs, JSBool showLocals,
                  JSBool showThisProps);
 
 extern JSBool
-xpc_DumpEvalInJSStackFrame(JSContext* cx, JSUint32 frameno, const char* text);
+xpc_DumpEvalInJSStackFrame(JSContext* cx, uint32_t frameno, const char* text);
 
 extern JSBool
 xpc_DumpJSObject(JSObject* obj);

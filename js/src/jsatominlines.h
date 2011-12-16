@@ -120,7 +120,7 @@ js_InternNonIntElementId(JSContext *cx, JSObject *obj, const js::Value &idval,
 }
 
 inline bool
-js_Int32ToId(JSContext* cx, int32 index, jsid* id)
+js_Int32ToId(JSContext* cx, int32_t index, jsid* id)
 {
     if (INT_FITS_IN_JSID(index)) {
         *id = INT_TO_JSID(index);
@@ -145,7 +145,7 @@ namespace js {
  */
 template <typename T>
 inline mozilla::RangedPtr<T>
-BackfillIndexInCharBuffer(uint32 index, mozilla::RangedPtr<T> end)
+BackfillIndexInCharBuffer(uint32_t index, mozilla::RangedPtr<T> end)
 {
 #ifdef DEBUG
     /*
@@ -157,7 +157,7 @@ BackfillIndexInCharBuffer(uint32 index, mozilla::RangedPtr<T> end)
 #endif
 
     do {
-        uint32 next = index / 10, digit = index % 10;
+        uint32_t next = index / 10, digit = index % 10;
         *--end = '0' + digit;
         index = next;
     } while (index > 0);
@@ -166,14 +166,14 @@ BackfillIndexInCharBuffer(uint32 index, mozilla::RangedPtr<T> end)
 }
 
 inline bool
-IndexToId(JSContext *cx, uint32 index, jsid *idp)
+IndexToId(JSContext *cx, uint32_t index, jsid *idp)
 {
     if (index <= JSID_INT_MAX) {
         *idp = INT_TO_JSID(index);
         return true;
     }
 
-    extern bool IndexToIdSlow(JSContext *cx, uint32 index, jsid *idp);
+    extern bool IndexToIdSlow(JSContext *cx, uint32_t index, jsid *idp);
     return IndexToIdSlow(cx, index, idp);
 }
 

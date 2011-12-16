@@ -451,7 +451,7 @@ public class GeckoAppShell
     private static void geckoLoaded() {
         final LayerController layerController = GeckoApp.mAppContext.getLayerController();
         LayerView v = layerController.getView();
-        mInputConnection = new GeckoInputConnection(v);
+        mInputConnection = GeckoInputConnection.create(v);
         v.setInputConnectionHandler(mInputConnection);
 
         layerController.setOnTouchListener(new View.OnTouchListener() {
@@ -491,15 +491,6 @@ public class GeckoAppShell
     /*
      *  The Gecko-side API: API methods that Gecko calls
      */
-    public static void scheduleRedraw() {
-        // Redraw everything
-        Rect rect = new Rect(0, 0, LayerController.TILE_WIDTH, LayerController.TILE_HEIGHT);
-        GeckoEvent event = new GeckoEvent(GeckoEvent.DRAW, rect);
-        event.mNativeWindow = 0;
-        sendEventToGecko(event);
-    }
-
-
     public static void notifyIME(int type, int state) {
         mInputConnection.notifyIME(type, state);
     }
@@ -1548,6 +1539,19 @@ public class GeckoAppShell
 
     public static void sendMessage(String aNumber, String aMessage) {
         GeckoSmsManager.send(aNumber, aMessage);
+    }
+
+    public static boolean isTablet() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+            Configuration config = GeckoApp.mAppContext.getResources().getConfiguration();
+            // xlarge is defined by android as screens larger than 960dp x 720dp
+            // and should include most devices ~7in and up.
+            // http://developer.android.com/guide/practices/screens_support.html
+            if ((config.screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void emitGeckoAccessibilityEvent (int eventType, String role, String text, String description, boolean enabled, boolean checked, boolean password) {

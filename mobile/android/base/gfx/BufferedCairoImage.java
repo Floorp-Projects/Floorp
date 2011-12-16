@@ -46,21 +46,22 @@ import java.nio.ByteBuffer;
 /** A Cairo image that simply saves a buffer of pixel data. */
 public class BufferedCairoImage extends CairoImage {
     private ByteBuffer mBuffer;
-    private int mWidth, mHeight, mFormat;
+    private IntSize mSize;
+    private int mFormat;
     private boolean mNeedToFreeBuffer = false;
 
     /** Creates a buffered Cairo image from a byte buffer. */
     public BufferedCairoImage(ByteBuffer inBuffer, int inWidth, int inHeight, int inFormat) {
-        mBuffer = inBuffer; mWidth = inWidth; mHeight = inHeight; mFormat = inFormat;
+        mBuffer = inBuffer; mSize = new IntSize(inWidth, inHeight); mFormat = inFormat;
     }
 
     /** Creates a buffered Cairo image from an Android bitmap. */
     public BufferedCairoImage(Bitmap bitmap) {
         mFormat = CairoUtils.bitmapConfigToCairoFormat(bitmap.getConfig());
-        mWidth = bitmap.getWidth();
-        mHeight = bitmap.getHeight();
+        mSize = new IntSize(bitmap.getWidth(), bitmap.getHeight());
         mNeedToFreeBuffer = true;
-        mBuffer = GeckoAppShell.allocateDirectBuffer(mWidth * mHeight * 4);
+        // XXX Why is this * 4? Shouldn't it depend on mFormat?
+        mBuffer = GeckoAppShell.allocateDirectBuffer(mSize.getArea() * 4);
         bitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
     }
 
@@ -78,9 +79,7 @@ public class BufferedCairoImage extends CairoImage {
    @Override
     public ByteBuffer getBuffer() { return mBuffer; }
     @Override
-    public int getWidth() { return mWidth; }
-    @Override
-    public int getHeight() { return mHeight; }
+    public IntSize getSize() { return mSize; }
     @Override
     public int getFormat() { return mFormat; }
 }

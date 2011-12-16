@@ -43,6 +43,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE           = theora
 LIBRARY_NAME     = theora
 FORCE_STATIC_LIB = 1
+ifeq (WINNT,$(OS_TARGET))
+VISIBILITY_FLAGS =
+endif
 
 # The encoder is currently not included.
 DEFINES += -DTHEORA_DISABLE_ENCODE

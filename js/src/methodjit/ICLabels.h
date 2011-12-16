@@ -166,26 +166,26 @@ struct GetPropLabels : MacroAssemblerTypedefs {
 
   private:
     /* Offset from storeBack to beginning of 'mov dslots, addr' */
-    int32 dslotsLoadOffset : 8;
+    int32_t dslotsLoadOffset : 8;
 
     /* Offset from shapeGuard to end of shape comparison. */
-    int32 inlineShapeOffset : 8;
+    int32_t inlineShapeOffset : 8;
 
     /* Offset from storeBack to end of value load. */
-    int32 inlineValueLoadOffset : 8;
+    int32_t inlineValueLoadOffset : 8;
 
     /* 
      * Offset from lastStubStart to end of shape jump.
      * TODO: We can redefine the location of lastStubStart to be
      * after the jump -- at which point this is always 0.
      */
-    int32 stubShapeJumpOffset : 8;
+    int32_t stubShapeJumpOffset : 8;
 
     /* Offset from the shape guard start to the shape guard jump. */
-    int32 inlineShapeJumpOffset : 8;
+    int32_t inlineShapeJumpOffset : 8;
 
     /* Offset from the fast path to the type guard jump. */
-    int32 inlineTypeJumpOffset : 8;
+    int32_t inlineTypeJumpOffset : 8;
 };
 
 /* SetPropCompiler */
@@ -287,22 +287,22 @@ struct SetPropLabels : MacroAssemblerTypedefs {
     }
 
     /* Offset from storeBack to beginning of 'mov dslots, addr'. */
-    int32 dslotsLoadOffset : 8;
+    int32_t dslotsLoadOffset : 8;
 
     /* Offset from shapeGuard to end of shape comparison. */
-    int32 inlineShapeDataOffset : 8;
+    int32_t inlineShapeDataOffset : 8;
 
     /* 
      * Offset from lastStubStart to end of shape jump.
      * TODO: We can redefine the location of lastStubStart to be
      * after the jump -- at which point this is always 0.
      */
-    int32 stubShapeJumpOffset : 8;
+    int32_t stubShapeJumpOffset : 8;
 
-    int32 inlineValueStoreOffset : 8;
+    int32_t inlineValueStoreOffset : 8;
 
     /* Offset from shapeGuard to the end of the shape jump. */
-    int32 inlineShapeJumpOffset : 8;
+    int32_t inlineShapeJumpOffset : 8;
 };
 
 /* BindNameCompiler */
@@ -347,10 +347,10 @@ struct BindNameLabels : MacroAssemblerTypedefs {
 
   private:
     /* Offset from shapeGuard to end of shape jump. */
-    int32 inlineJumpOffset : 8;
+    int32_t inlineJumpOffset : 8;
 
     /* Offset from lastStubStart to end of the shape jump. */
-    int32 stubJumpOffset : 8;
+    int32_t stubJumpOffset : 8;
 };
 
 /* ScopeNameCompiler */
@@ -395,10 +395,10 @@ struct ScopeNameLabels : MacroAssemblerTypedefs {
 
   private:
     /* Offset from fastPathStart to end of shape jump. */
-    int32 inlineJumpOffset : 8;
+    int32_t inlineJumpOffset : 8;
 
     /* Offset from lastStubStart to end of the shape jump. */
-    int32 stubJumpOffset : 8;
+    int32_t stubJumpOffset : 8;
 };
 
 } /* namespace ic */

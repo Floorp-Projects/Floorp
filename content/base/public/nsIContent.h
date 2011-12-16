@@ -78,8 +78,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID \
-{ 0xed40a3e5, 0xd7ed, 0x473e, \
- { 0x85, 0xe3, 0x82, 0xc3, 0xf0, 0x41, 0xdb, 0x52 } }
+{ 0xdc68f070, 0x226d, 0x11e1, \
+ { 0xbf, 0xc2, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -327,12 +327,20 @@ public:
     return IsInNamespace(kNameSpaceID_SVG);
   }
 
+  inline bool IsSVG(nsIAtom* aTag) const {
+    return mNodeInfo->Equals(aTag, kNameSpaceID_SVG);
+  }
+
   inline bool IsXUL() const {
     return IsInNamespace(kNameSpaceID_XUL);
   }
 
   inline bool IsMathML() const {
     return IsInNamespace(kNameSpaceID_MathML);
+  }
+
+  inline bool IsMathML(nsIAtom* aTag) const {
+    return mNodeInfo->Equals(aTag, kNameSpaceID_MathML);
   }
 
   /**

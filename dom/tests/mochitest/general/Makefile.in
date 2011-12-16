@@ -72,6 +72,7 @@ _TEST_FILES = \
 		test_windowedhistoryframes.html \
 		test_focusrings.xul \
 		file_moving_xhr.html \
+		test_vibrator.html \
 		$(NULL)
 
 _CHROME_FILES = \

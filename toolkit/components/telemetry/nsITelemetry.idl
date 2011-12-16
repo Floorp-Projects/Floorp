@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Taras Glek <tglek@mozilla.com>
+ *   Vladan Djeric <vdjeric@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -65,6 +66,24 @@ interface nsITelemetry : nsISupports
    */
   [implicit_jscontext]
   readonly attribute jsval histogramSnapshots;
+
+  /*
+   * An object containing information about slow SQL prepared statements.
+   *
+   * {
+   *   mainThread: { "sqlString1": [<hit count>, <total time>], "sqlString2": [...], ... },
+   *   otherThreads: { "sqlString3": [<hit count>, <total time>], "sqlString4": [...], ... }
+   * }
+   *
+   * where:
+   *   mainThread: Slow statements that executed on the main thread
+   *   otherThreads: Slow statements that executed on a non-main thread
+   *   sqlString - String of the offending prepared statement
+   *   hit count - The number of times this statement required longer than the threshold time to execute
+   *   total time - The sum of all execution times above the threshold time for this statement
+   */
+  [implicit_jscontext]
+  readonly attribute jsval slowSQL;
 
   /** 
    * Create and return a histogram where bucket sizes increase exponentially. Parameters:

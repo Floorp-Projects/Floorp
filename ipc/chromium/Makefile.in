@@ -63,7 +63,6 @@ endif # }
 vpath %.cc \
   $(srcdir)/src/base \
   $(srcdir)/src/base/third_party/nspr \
-  $(srcdir)/src/base/third_party/nss \
   $(srcdir)/src/chrome/common \
   $(NULL)
 
@@ -98,7 +97,6 @@ CPPSRCS += \
   ref_counted.cc \
   revocable_store.cc \
   scoped_temp_dir.cc \
-  sha2.cc \
   simple_thread.cc \
   stats_table.cc \
   string_escape.cc \
@@ -130,7 +128,6 @@ CPPSRCS += \
   message_router.cc \
   notification_service.cc \
   task_queue.cc \
-  sha512.cc \
   $(NULL)
 
 ifdef OS_WIN # {

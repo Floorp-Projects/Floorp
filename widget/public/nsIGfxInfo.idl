@@ -64,11 +64,11 @@ interface nsIGfxInfo : nsISupports
   readonly attribute DOMString adapterDriver2;
   
   /* These types are inspired by DXGI_ADAPTER_DESC */
-  readonly attribute unsigned long adapterVendorID;
-  readonly attribute unsigned long adapterVendorID2;
+  readonly attribute DOMString adapterVendorID;
+  readonly attribute DOMString adapterVendorID2;
   
-  readonly attribute unsigned long adapterDeviceID;
-  readonly attribute unsigned long adapterDeviceID2;
+  readonly attribute DOMString adapterDeviceID;
+  readonly attribute DOMString adapterDeviceID2;
 
   /**
    * The amount of RAM in MB in the display adapter.
@@ -114,19 +114,22 @@ interface nsIGfxInfo : nsISupports
   /*
    * A set of return values from GetFeatureStatus
    */
+
   /* We don't explicitly block or discourage the feature. Which means we'll try getting it from the
    * hardware, and see what happens. */
   const long FEATURE_NO_INFO = 1;
+  /* We don't know the status of the feature yet. The analysis probably hasn't finished yet. */
+  const long FEATURE_STATUS_UNKNOWN = 2;
   /* This feature is blocked on this driver version. Updating driver will typically unblock it. */
-  const long FEATURE_BLOCKED_DRIVER_VERSION = 2;
+  const long FEATURE_BLOCKED_DRIVER_VERSION = 3;
   /* This feature is blocked on this device, regardless of driver version.
    * Typically means we hit too many driver crashes without a good reason to hope for them to
    * get fixed soon. */
-  const long FEATURE_BLOCKED_DEVICE = 3;
+  const long FEATURE_BLOCKED_DEVICE = 4;
   /* This feature is available and can be used, but is not suggested (e.g. shouldn't be used by default */
-  const long FEATURE_DISCOURAGED = 4;
+  const long FEATURE_DISCOURAGED = 5;
   /* This feature is blocked on this OS version. */
-  const long FEATURE_BLOCKED_OS_VERSION = 5;
+  const long FEATURE_BLOCKED_OS_VERSION = 6;
 
   /**
    * Ask about a feature, and return the status of that feature

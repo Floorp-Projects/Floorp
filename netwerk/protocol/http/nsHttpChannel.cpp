@@ -209,6 +209,18 @@ nsHttpChannel::Connect(bool firstTime)
             LOG(("nsHttpChannel::Connect() STS permissions found\n"));
             return AsyncCall(&nsHttpChannel::HandleAsyncRedirectChannelToHttps);
         }
+
+        // Check for a previous SPDY Alternate-Protocol directive
+        if (gHttpHandler->IsSpdyEnabled() && mAllowSpdy) {
+            nsCAutoString hostPort;
+
+            if (NS_SUCCEEDED(mURI->GetHostPort(hostPort)) &&
+                gHttpHandler->ConnMgr()->GetSpdyAlternateProtocol(hostPort)) {
+                LOG(("nsHttpChannel::Connect() Alternate-Protocol found\n"));
+                return AsyncCall(
+                    &nsHttpChannel::HandleAsyncRedirectChannelToHttps);
+            }
+        }
     }
 
     // ensure that we are using a valid hostname
@@ -507,6 +519,9 @@ nsHttpChannel::SetupTransaction()
         }
     }
 
+    if (!mAllowSpdy)
+        mCaps |= NS_HTTP_DISALLOW_SPDY;
+
     // use the URI path if not proxying (transparent proxying such as SSL proxy
     // does not count here). also, figure out what version we should be speaking.
     nsCAutoString buf, path;
@@ -634,6 +649,7 @@ nsHttpChannel::SetupTransaction()
         mCaps |=  NS_HTTP_STICKY_CONNECTION;
         mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
         mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
+        mCaps |=  NS_HTTP_DISALLOW_SPDY;
     }
 
     nsCOMPtr<nsIAsyncInputStream> responseStream;
@@ -4088,6 +4104,16 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
         // grab the security info from the connection object; the transaction
         // is guaranteed to own a reference to the connection.
         mSecurityInfo = mTransaction->SecurityInfo();
+    }
+
+    if (gHttpHandler->IsSpdyEnabled() && !mCachePump && NS_FAILED(mStatus) &&
+        (mLoadFlags & LOAD_REPLACE) && mOriginalURI && mAllowSpdy) {
+        // For sanity's sake we may want to cancel an alternate protocol
+        // redirection involving the original host name
+
+        nsCAutoString hostPort;
+        if (NS_SUCCEEDED(mOriginalURI->GetHostPort(hostPort)))
+            gHttpHandler->ConnMgr()->RemoveSpdyAlternateProtocol(hostPort);
     }
 
     // don't enter this block if we're reading from the cache...

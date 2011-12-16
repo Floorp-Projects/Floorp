@@ -55,7 +55,7 @@ let modules = {
     privileged: true,
     hide: true
   },
-  get firefox() this[fennec],
+  get firefox() this.fennec,
 
   // about:blank has some bad loading behavior we can avoid, if we use an alias
   empty: {

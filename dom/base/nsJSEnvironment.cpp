@@ -718,7 +718,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   // we'll tell the user about this and we'll give the user the option
   // of stopping the execution of the script.
   nsCOMPtr<nsIPrompt> prompt = GetPromptFromContext(ctx);
-  NS_ENSURE_TRUE(prompt, JS_TRUE);
+  NS_ENSURE_TRUE(prompt, JS_FALSE);
 
   // Check if we should offer the option to debug
   JSStackFrame* fp = ::JS_GetScriptedCaller(cx, NULL);
@@ -1302,6 +1302,14 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     // tricky...
   }
   else {
+    // If there is an outer script running, propagate the error upwards.
+    // Otherwise we may lose, e.g., the fact that an inner script evaluation
+    // was killed for taking too long and allow the outer script evaluation to
+    // continue.
+    if (mExecuteDepth > 0 || JS_IsRunning(mContext)) {
+      rv = NS_ERROR_FAILURE;
+    }
+
     if (aIsUndefined) {
       *aIsUndefined = true;
     }
@@ -1501,6 +1509,14 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     rv = JSValueToAString(mContext, val, aRetValue, aIsUndefined);
   }
   else {
+    // If there is an outer script running, propagate the error upwards.
+    // Otherwise we may lose, e.g., the fact that an inner script evaluation
+    // was killed for taking too long and allow the outer script evaluation to
+    // continue.
+    if (mExecuteDepth > 1 || JS_IsRunning(mContext)) {
+      rv = NS_ERROR_FAILURE;
+    }
+
     if (aIsUndefined) {
       *aIsUndefined = true;
     }
@@ -1638,6 +1654,14 @@ nsJSContext::ExecuteScript(JSScript* aScriptObject,
     rv = JSValueToAString(mContext, val, aRetValue, aIsUndefined);
   } else {
     ReportPendingException();
+
+    // If there is an outer script running, propagate the error upwards.
+    // Otherwise we may lose, e.g., the fact that an inner script evaluation
+    // was killed for taking too long and allow the outer script evaluation to
+    // continue.
+    if (mExecuteDepth > 1 || JS_IsRunning(mContext)) {
+      rv = NS_ERROR_FAILURE;
+    }
 
     if (aIsUndefined) {
       *aIsUndefined = true;
@@ -2041,7 +2065,7 @@ nsJSContext::Serialize(nsIObjectOutputStream* aStream, JSScript* aScriptObject)
         // stream, when control returns here from ::JS_XDRScript, we'll have
         // one last buffer of data to write to aStream.
 
-        uint32 size;
+        uint32_t size;
         const char* data = reinterpret_cast<const char*>
                                            (::JS_XDRMemGetData(xdr, &size));
         NS_ASSERTION(data, "no decoded JSXDRState data!");
@@ -2106,7 +2130,7 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
         // the JSXDRState.  So we steal it back, nulling xdr's buffer so it
         // doesn't get passed to ::JS_free by ::JS_XDRDestroy.
 
-        uint32 junk;
+        uint32_t junk;
         data = (char*) ::JS_XDRMemGetData(xdr, &junk);
         if (data)
             ::JS_XDRMemSetData(xdr, NULL, 0);
@@ -2753,11 +2777,10 @@ TraceMallocOpenLogFile(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 TraceMallocChangeLogFD(JSContext *cx, uintN argc, jsval *vp)
 {
-    int32 fd, oldfd;
-
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
 
+    int32_t fd, oldfd;
     if (argc == 0) {
         oldfd = -1;
     } else {
@@ -2776,11 +2799,10 @@ TraceMallocChangeLogFD(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 TraceMallocCloseLogFD(JSContext *cx, uintN argc, jsval *vp)
 {
-    int32 fd;
-
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return JS_FALSE;
 
+    int32_t fd;
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     if (argc == 0)
         return JS_TRUE;
@@ -3115,7 +3137,10 @@ nsJSContext::ScriptEvaluated(bool aTerminated)
 
   JS_MaybeGC(mContext);
 
-  if (aTerminated) {
+  // Be careful to not reset the operation callback if some outer script is
+  // still running. This would allow a script to bypass the slow script check
+  // simply by invoking nested scripts (e.g., through a plugin).
+  if (aTerminated && mExecuteDepth == 0 && !JS_IsRunning(mContext)) {
     mOperationCallbackTime = 0;
     mModalStateTime = 0;
   }
@@ -3644,8 +3669,8 @@ ObjectPrincipalFinder(JSContext *cx, JSObject *obj)
 JSObject*
 NS_DOMReadStructuredClone(JSContext* cx,
                           JSStructuredCloneReader* reader,
-                          uint32 tag,
-                          uint32 data,
+                          uint32_t tag,
+                          uint32_t data,
                           void* closure)
 {
   // We don't currently support any extensions to structured cloning.
@@ -3666,7 +3691,7 @@ NS_DOMWriteStructuredClone(JSContext* cx,
 
 void
 NS_DOMStructuredCloneError(JSContext* cx,
-                           uint32 errorid)
+                           uint32_t errorid)
 {
   // We don't currently support any extensions to structured cloning.
   nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_DATA_CLONE_ERR);

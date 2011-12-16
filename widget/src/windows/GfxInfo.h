@@ -41,15 +41,11 @@
 #define __mozilla_widget_GfxInfo_h__
 
 #include "GfxInfoBase.h"
-#include "nsIGfxInfoDebug.h"
 
 namespace mozilla {
 namespace widget {
 
 class GfxInfo : public GfxInfoBase
-#ifdef DEBUG
-              , public nsIGfxInfoDebug
-#endif
 {
 public:
   GfxInfo();
@@ -63,15 +59,15 @@ public:
   NS_SCRIPTABLE NS_IMETHOD GetCleartypeParameters(nsAString & aCleartypeParams);
   NS_SCRIPTABLE NS_IMETHOD GetAdapterDescription(nsAString & aAdapterDescription);
   NS_SCRIPTABLE NS_IMETHOD GetAdapterDriver(nsAString & aAdapterDriver);
-  NS_SCRIPTABLE NS_IMETHOD GetAdapterVendorID(PRUint32 *aAdapterVendorID);
-  NS_SCRIPTABLE NS_IMETHOD GetAdapterDeviceID(PRUint32 *aAdapterDeviceID);
+  NS_SCRIPTABLE NS_IMETHOD GetAdapterVendorID(nsAString & aAdapterVendorID);
+  NS_SCRIPTABLE NS_IMETHOD GetAdapterDeviceID(nsAString & aAdapterDeviceID);
   NS_SCRIPTABLE NS_IMETHOD GetAdapterRAM(nsAString & aAdapterRAM);
   NS_SCRIPTABLE NS_IMETHOD GetAdapterDriverVersion(nsAString & aAdapterDriverVersion);
   NS_SCRIPTABLE NS_IMETHOD GetAdapterDriverDate(nsAString & aAdapterDriverDate);
   NS_SCRIPTABLE NS_IMETHOD GetAdapterDescription2(nsAString & aAdapterDescription);
   NS_SCRIPTABLE NS_IMETHOD GetAdapterDriver2(nsAString & aAdapterDriver);
-  NS_SCRIPTABLE NS_IMETHOD GetAdapterVendorID2(PRUint32 *aAdapterVendorID);
-  NS_SCRIPTABLE NS_IMETHOD GetAdapterDeviceID2(PRUint32 *aAdapterDeviceID);
+  NS_SCRIPTABLE NS_IMETHOD GetAdapterVendorID2(nsAString & aAdapterVendorID);
+  NS_SCRIPTABLE NS_IMETHOD GetAdapterDeviceID2(nsAString & aAdapterDeviceID);
   NS_SCRIPTABLE NS_IMETHOD GetAdapterRAM2(nsAString & aAdapterRAM);
   NS_SCRIPTABLE NS_IMETHOD GetAdapterDriverVersion2(nsAString & aAdapterDriverVersion);
   NS_SCRIPTABLE NS_IMETHOD GetAdapterDriverDate2(nsAString & aAdapterDriverDate);
@@ -80,21 +76,21 @@ public:
   using GfxInfoBase::GetFeatureSuggestedDriverVersion;
   using GfxInfoBase::GetWebGLParameter;
 
+  virtual nsresult Init();
+
 #ifdef DEBUG
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIGFXINFODEBUG
 #endif
-
-  virtual nsresult Init();
 
 protected:
 
   virtual nsresult GetFeatureStatusImpl(PRInt32 aFeature, 
                                         PRInt32 *aStatus, 
                                         nsAString & aSuggestedDriverVersion, 
-                                        GfxDriverInfo* aDriverInfo = nsnull, 
+                                        const nsTArray<GfxDriverInfo>& aDriverInfo, 
                                         OperatingSystem* aOS = nsnull);
-  virtual const GfxDriverInfo* GetGfxDriverInfo();
+  virtual const nsTArray<GfxDriverInfo>& GetGfxDriverInfo();
 
 private:
 
@@ -105,16 +101,16 @@ private:
   nsString mDriverDate;
   nsString mDeviceKey;
   nsString mDeviceKeyDebug;
-  PRUint32 mAdapterVendorID;
-  PRUint32 mAdapterDeviceID;
+  nsString mAdapterVendorID;
+  nsString mAdapterDeviceID;
   PRUint32 mAdapterSubsysID;
   nsString mDeviceString2;
   nsString mDriverVersion2;
   nsString mDeviceID2;
   nsString mDriverDate2;
   nsString mDeviceKey2;
-  PRUint32 mAdapterVendorID2;
-  PRUint32 mAdapterDeviceID2;
+  nsString mAdapterVendorID2;
+  nsString mAdapterDeviceID2;
   PRUint32 mAdapterSubsysID2;
   PRUint32 mWindowsVersion;
   bool mHasDualGPU;

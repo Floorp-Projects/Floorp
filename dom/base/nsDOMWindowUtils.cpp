@@ -83,6 +83,8 @@
 #include "nsIIOService.h"
 
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/indexedDB/FileInfo.h"
+#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "sampler.h"
 
 using namespace mozilla::dom;
@@ -1922,3 +1924,51 @@ nsDOMWindowUtils::CheckAndClearPaintedState(nsIDOMElement* aElement, bool* aResu
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::GetFileId(nsIDOMBlob* aBlob, PRInt64* aResult)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  *aResult = aBlob->GetFileId();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName,
+                                    PRInt64 aId, PRInt32* aRefCnt,
+                                    PRInt32* aDBRefCnt, PRInt32* aSliceRefCnt,
+                                    bool* aResult)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  NS_ENSURE_TRUE(mWindow, NS_ERROR_FAILURE);
+
+  nsCString origin;
+  nsresult rv = indexedDB::IndexedDatabaseManager::GetASCIIOriginFromWindow(
+    mWindow, origin);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<indexedDB::IndexedDatabaseManager> mgr =
+    indexedDB::IndexedDatabaseManager::GetOrCreate();
+  NS_ENSURE_TRUE(mgr, NS_ERROR_FAILURE);
+
+  nsRefPtr<indexedDB::FileManager> fileManager =
+    mgr->GetOrCreateFileManager(origin, aDatabaseName);
+  NS_ENSURE_TRUE(fileManager, NS_ERROR_FAILURE);
+
+  nsRefPtr<indexedDB::FileInfo> fileInfo = fileManager->GetFileInfo(aId);
+  if (fileInfo) {
+    fileInfo->GetReferences(aRefCnt, aDBRefCnt, aSliceRefCnt);
+    *aRefCnt--;
+    *aResult = true;
+    return NS_OK;
+  }
+
+  *aRefCnt = *aDBRefCnt = *aSliceRefCnt = -1;
+  *aResult = false;
+  return NS_OK;
+}

@@ -25,11 +25,21 @@
                                             android:layout_width="fill_parent"
                                             android:layout_height="fill_parent"
                                             android:background="#ffffff"
-                                            android:isScrollContainer="true">
+                                            android:isScrollContainer="true"
+                                            android:visibility="gone">
 
             <include layout="@layout/abouthome_content"/>
 
         </org.mozilla.gecko.AboutHomeContent>
+
+        <org.mozilla.gecko.AutoCompletePopup android:id="@+id/autocomplete_popup"
+                                             style="@android:style/Widget.ListView.White"
+                                             android:layout_width="fill_parent"
+                                             android:layout_height="100dip"
+                                             android:background="@drawable/autocomplete_list_bg"
+                                             android:cacheColorHint="#ffffff"
+                                             android:listSelector="@android:drawable/list_selector_background"
+                                             android:visibility="gone"/>
 
    </RelativeLayout>
 

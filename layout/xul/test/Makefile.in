@@ -67,6 +67,7 @@ libs:: $(_CHROME_FILES)
 ifneq (mobile,$(MOZ_BUILD_APP))
 _BROWSER_FILES = \
 		browser_bug703210.js \
+		browser_bug706743.js \
 		$(NULL)
 
 libs::	$(_BROWSER_FILES)
