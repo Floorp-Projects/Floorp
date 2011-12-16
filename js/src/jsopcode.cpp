@@ -962,7 +962,7 @@ struct DecompiledOpcode
      * opcode. For opcodes with a NULL parent, this was emitted directly into
      * the permanent output at the given offset.
      */
-    int32 parentOffset;
+    int32_t parentOffset;
 
     /*
      * Surrounded by parentheses when printed, which parentOffset does not
@@ -1411,7 +1411,7 @@ PopStrPrec(SprintStack *ss, uint8_t prec, jsbytecode **ppc = NULL)
  * is printed into ss.
  */
 static const char *
-PopStrPrecDupe(SprintStack *ss, uint8 prec, jsbytecode **ppc = NULL)
+PopStrPrecDupe(SprintStack *ss, uint8_t prec, jsbytecode **ppc = NULL)
 {
     const char *str = PopStrPrec(ss, prec, ppc);
     return SprintDupeStr(ss, str);
@@ -5930,7 +5930,7 @@ GetPCCountJSON(JSContext *cx, const ScriptOpcodeCountsPair &info, StringBuffer &
             search = &decompiledOpcodes[search->parent - script->code];
         }
 
-        int32 printedOffset = search->parentOffset;
+        int32_t printedOffset = search->parentOffset;
         if (printedOffset != -1) {
             printedOffset += textBias;
             if (search->parenthesized)
