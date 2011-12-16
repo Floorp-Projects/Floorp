@@ -226,8 +226,9 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
 
   bool hasResult;
   while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-    nsRefPtr<ObjectStoreInfo>* element =
+    nsAutoPtr<ObjectStoreInfo>* element =
       aObjectStores.AppendElement(new ObjectStoreInfo());
+    NS_ENSURE_TRUE(element, NS_ERROR_OUT_OF_MEMORY);
 
     ObjectStoreInfo* info = element->get();
 
@@ -249,8 +250,8 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    info->nextAutoIncrementId = stmt->AsInt64(3);
-    info->comittedAutoIncrementId = info->nextAutoIncrementId;
+    info->autoIncrement = !!stmt->AsInt32(3);
+    info->databaseId = aDatabaseId;
 
     ObjectStoreInfoMap* mapEntry = infoMap.AppendElement();
     NS_ENSURE_TRUE(mapEntry, NS_ERROR_OUT_OF_MEMORY);
@@ -262,7 +263,8 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
 
   // Load index information
   rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT object_store_id, id, name, key_path, unique_index, multientry "
+    "SELECT object_store_id, id, name, key_path, unique_index, multientry, "
+           "object_store_autoincrement "
     "FROM object_store_index"
   ), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -296,6 +298,7 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
 
     indexInfo->unique = !!stmt->AsInt32(4);
     indexInfo->multiEntry = !!stmt->AsInt32(5);
+    indexInfo->autoIncrement = !!stmt->AsInt32(6);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -324,28 +327,35 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
 
 // static
 nsresult
-IDBFactory::SetDatabaseMetadata(DatabaseInfo* aDatabaseInfo,
-                                PRUint64 aVersion,
-                                ObjectStoreInfoArray& aObjectStores)
+IDBFactory::UpdateDatabaseMetadata(DatabaseInfo* aDatabaseInfo,
+                                   PRUint64 aVersion,
+                                   ObjectStoreInfoArray& aObjectStores)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aDatabaseInfo, "Null pointer!");
 
   ObjectStoreInfoArray objectStores;
-  objectStores.SwapElements(aObjectStores);
-
-#ifdef DEBUG
-  {
-    nsTArray<nsString> existingNames;
-    aDatabaseInfo->GetObjectStoreNames(existingNames);
-    NS_ASSERTION(existingNames.IsEmpty(), "Should be an empty DatabaseInfo");
+  if (!objectStores.SwapElements(aObjectStores)) {
+    NS_WARNING("Out of memory!");
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-#endif
+
+  nsAutoTArray<nsString, 10> existingNames;
+  if (!aDatabaseInfo->GetObjectStoreNames(existingNames)) {
+    NS_WARNING("Out of memory!");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Remove all the old ones.
+  for (PRUint32 index = 0; index < existingNames.Length(); index++) {
+    aDatabaseInfo->RemoveObjectStore(existingNames[index]);
+  }
 
   aDatabaseInfo->version = aVersion;
 
   for (PRUint32 index = 0; index < objectStores.Length(); index++) {
-    nsRefPtr<ObjectStoreInfo>& info = objectStores[index];
+    nsAutoPtr<ObjectStoreInfo>& info = objectStores[index];
+    NS_ASSERTION(info->databaseId == aDatabaseInfo->id, "Huh?!");
 
     if (!aDatabaseInfo->PutObjectStore(info)) {
       NS_WARNING("Out of memory!");

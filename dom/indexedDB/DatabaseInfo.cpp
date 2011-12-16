@@ -71,13 +71,14 @@ CloneObjectStoreInfo(const nsAString& aKey,
 {
   ObjectStoreInfoHash* hash = static_cast<ObjectStoreInfoHash*>(aUserArg);
 
-  nsRefPtr<ObjectStoreInfo> newInfo(new ObjectStoreInfo(*aData));
+  nsAutoPtr<ObjectStoreInfo> newInfo(new ObjectStoreInfo(*aData));
 
   if (!hash->Put(aKey, newInfo)) {
     NS_WARNING("Out of memory?");
     return PL_DHASH_STOP;
   }
 
+  newInfo.forget();
   return PL_DHASH_NEXT;
 }
 
@@ -91,23 +92,12 @@ DatabaseInfo::~DatabaseInfo()
   }
 }
 
-ObjectStoreInfo::ObjectStoreInfo(ObjectStoreInfo& aOther)
-: name(aOther.name),
-  id(aOther.id),
-  keyPath(aOther.keyPath),
-  indexes(aOther.indexes),
-  nextAutoIncrementId(aOther.nextAutoIncrementId),
-  comittedAutoIncrementId(aOther.comittedAutoIncrementId)
-{
-  // Doesn't copy the refcount
-  MOZ_COUNT_CTOR(ObjectStoreInfo);
-}
-
 #ifdef NS_BUILD_REFCNT_LOGGING
 
 IndexInfo::IndexInfo()
 : id(LL_MININT),
   unique(false),
+  autoIncrement(false),
   multiEntry(false)
 {
   MOZ_COUNT_CTOR(IndexInfo);
@@ -118,6 +108,7 @@ IndexInfo::IndexInfo(const IndexInfo& aOther)
   name(aOther.name),
   keyPath(aOther.keyPath),
   unique(aOther.unique),
+  autoIncrement(aOther.autoIncrement),
   multiEntry(aOther.multiEntry)
 {
   MOZ_COUNT_CTOR(IndexInfo);
@@ -130,8 +121,19 @@ IndexInfo::~IndexInfo()
 
 ObjectStoreInfo::ObjectStoreInfo()
 : id(0),
-  nextAutoIncrementId(0),
-  comittedAutoIncrementId(0)
+  autoIncrement(false),
+  databaseId(0)
+{
+  MOZ_COUNT_CTOR(ObjectStoreInfo);
+}
+
+ObjectStoreInfo::ObjectStoreInfo(ObjectStoreInfo& aOther)
+: name(aOther.name),
+  id(aOther.id),
+  keyPath(aOther.keyPath),
+  autoIncrement(aOther.autoIncrement),
+  databaseId(aOther.databaseId),
+  indexes(aOther.indexes)
 {
   MOZ_COUNT_CTOR(ObjectStoreInfo);
 }
@@ -204,6 +206,11 @@ DatabaseInfo::Remove(nsIAtom* aId)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  DatabaseInfo* info = nsnull;
+
+  DebugOnly<bool> got = Get(aId, &info);
+  NS_ASSERTION(got && info, "Don't know anything about this one!");
+
   if (gDatabaseHash) {
     gDatabaseHash->Remove(aId);
 
@@ -211,31 +218,6 @@ DatabaseInfo::Remove(nsIAtom* aId)
       delete gDatabaseHash;
       gDatabaseHash = nsnull;
     }
-  }
-}
-
-PLDHashOperator
-EnumerateDatabasesRemoveOrigin(nsISupports* aId,
-                               DatabaseInfo*& aDatabaseInfo,
-                               void* aUserArg)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  const nsACString* origin = static_cast<const nsACString*>(aUserArg);
-  return aDatabaseInfo->origin.Equals(*origin) ?
-    PL_DHASH_REMOVE :
-    PL_DHASH_NEXT;
-}
-
-// static
-void
-DatabaseInfo::RemoveAllForOrigin(const nsACString& aOrigin)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (gDatabaseHash) {
-    gDatabaseHash->Enumerate(EnumerateDatabasesRemoveOrigin,
-                             const_cast<nsACString*>(&aOrigin));
   }
 }
 
@@ -259,16 +241,17 @@ DatabaseInfo::ContainsStoreName(const nsAString& aName)
   return objectStoreHash && objectStoreHash->Get(aName, nsnull);
 }
 
-ObjectStoreInfo*
-DatabaseInfo::GetObjectStore(const nsAString& aName)
+bool
+DatabaseInfo::GetObjectStore(const nsAString& aName,
+                             ObjectStoreInfo** aInfo)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (objectStoreHash) {
-    return objectStoreHash->GetWeak(aName);
+    return objectStoreHash->Get(aName, aInfo);
   }
 
-  return nsnull;
+  return false;
 }
 
 bool
@@ -298,7 +281,7 @@ void
 DatabaseInfo::RemoveObjectStore(const nsAString& aName)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(GetObjectStore(aName), "Don't know about this one!");
+  NS_ASSERTION(GetObjectStore(aName, nsnull), "Don't know about this one!");
 
   if (objectStoreHash) {
     objectStoreHash->Remove(aName);

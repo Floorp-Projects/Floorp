@@ -60,7 +60,7 @@ namespace {
 PR_STATIC_ASSERT(JS_STRUCTURED_CLONE_VERSION == 1);
 
 // Major schema version. Bump for almost everything.
-const PRUint32 kMajorSchemaVersion = 11;
+const PRUint32 kMajorSchemaVersion = 10;
 
 // Minor schema version. Should almost always be 0 (maybe bump on release
 // branches if we have to).
@@ -170,6 +170,38 @@ CreateFileTables(mozIStorageConnection* aDBConn)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TRIGGER ai_object_data_insert_trigger "
+    "AFTER INSERT ON ai_object_data "
+    "FOR EACH ROW "
+    "WHEN NEW.file_ids IS NOT NULL "
+    "BEGIN "
+      "SELECT update_refcount(NULL, NEW.file_ids); "
+    "END;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TRIGGER ai_object_data_update_trigger "
+    "AFTER UPDATE OF file_ids ON ai_object_data "
+    "FOR EACH ROW "
+    "WHEN OLD.file_ids IS NOT NULL OR NEW.file_ids IS NOT NULL "
+    "BEGIN "
+      "SELECT update_refcount(OLD.file_ids, NEW.file_ids); "
+    "END;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TRIGGER ai_object_data_delete_trigger "
+    "AFTER DELETE ON ai_object_data "
+    "FOR EACH ROW WHEN OLD.file_ids IS NOT NULL "
+    "BEGIN "
+      "SELECT update_refcount(OLD.file_ids, NULL); "
+    "END;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TRIGGER file_update_trigger "
     "AFTER UPDATE ON file "
     "FOR EACH ROW WHEN NEW.refcount = 0 "
@@ -225,15 +257,31 @@ CreateTables(mozIStorageConnection* aDBConn)
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Table `ai_object_data`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE ai_object_data ("
+      "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+      "object_store_id INTEGER NOT NULL, "
+      "data BLOB NOT NULL, "
+      "file_ids TEXT, "
+      "UNIQUE (object_store_id, id), "
+      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Table `index`
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE object_store_index ("
-      "id INTEGER PRIMARY KEY, "
+      "id INTEGER, "
       "object_store_id INTEGER NOT NULL, "
       "name TEXT NOT NULL, "
       "key_path TEXT NOT NULL, "
       "unique_index INTEGER NOT NULL, "
-      "multientry INTEGER NOT NULL, "
+      "multientry INTEGER NOT NULL DEFAULT 0, "
+      "object_store_autoincrement INTERGER NOT NULL, "
+      "PRIMARY KEY (id), "
       "UNIQUE (object_store_id, name), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
         "CASCADE"
@@ -285,6 +333,53 @@ CreateTables(mozIStorageConnection* aDBConn)
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE INDEX unique_index_data_object_data_id_index "
     "ON unique_index_data (object_data_id);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Table `ai_index_data`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE ai_index_data ("
+      "index_id INTEGER NOT NULL, "
+      "value NOT NULL, "
+      "ai_object_data_id INTEGER NOT NULL, "
+      "PRIMARY KEY (index_id, value, ai_object_data_id), "
+      "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
+        "CASCADE, "
+      "FOREIGN KEY (ai_object_data_id) REFERENCES ai_object_data(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Need this to make cascading deletes from ai_object_data and object_store
+  // fast.
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX ai_index_data_ai_object_data_id_index "
+    "ON ai_index_data (ai_object_data_id);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Table `ai_unique_index_data`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE ai_unique_index_data ("
+      "index_id INTEGER NOT NULL, "
+      "value NOT NULL, "
+      "ai_object_data_id INTEGER NOT NULL, "
+      "UNIQUE (index_id, value), "
+      "PRIMARY KEY (index_id, value, ai_object_data_id), "
+      "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
+        "CASCADE, "
+      "FOREIGN KEY (ai_object_data_id) REFERENCES ai_object_data(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Need this to make cascading deletes from ai_object_data and object_store
+  // fast.
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX ai_unique_index_data_ai_object_data_id_index "
+    "ON ai_unique_index_data (ai_object_data_id);"
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -963,121 +1058,6 @@ UpgradeSchemaFrom9_0To10_0(mozIStorageConnection* aConnection)
   return NS_OK;
 }
 
-nsresult
-UpgradeSchemaFrom10_0To11_0(mozIStorageConnection* aConnection)
-{
-  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TEMPORARY TABLE temp_upgrade ("
-      "id, "
-      "object_store_id, "
-      "name, "
-      "key_path, "
-      "unique_index, "
-      "multientry"
-    ");"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "INSERT INTO temp_upgrade "
-      "SELECT id, object_store_id, name, key_path, "
-      "unique_index, multientry "
-      "FROM object_store_index;"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "DROP TABLE object_store_index;"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE object_store_index ("
-      "id INTEGER PRIMARY KEY, "
-      "object_store_id INTEGER NOT NULL, "
-      "name TEXT NOT NULL, "
-      "key_path TEXT NOT NULL, "
-      "unique_index INTEGER NOT NULL, "
-      "multientry INTEGER NOT NULL, "
-      "UNIQUE (object_store_id, name), "
-      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
-        "CASCADE"
-    ");"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "INSERT INTO object_store_index "
-      "SELECT id, object_store_id, name, key_path, "
-      "unique_index, multientry "
-      "FROM temp_upgrade;"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "DROP TABLE temp_upgrade;"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "INSERT INTO object_data (object_store_id, key_value, data, file_ids) "
-      "SELECT object_store_id, id, data, file_ids "
-      "FROM ai_object_data;"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "INSERT INTO index_data (index_id, value, object_data_key, object_data_id) "
-      "SELECT ai_index_data.index_id, ai_index_data.value, ai_index_data.ai_object_data_id, object_data.id "
-      "FROM ai_index_data "
-      "INNER JOIN object_store_index ON "
-        "object_store_index.id = ai_index_data.index_id "
-      "INNER JOIN object_data ON "
-        "object_data.object_store_id = object_store_index.object_store_id AND "
-        "object_data.key_value = ai_index_data.ai_object_data_id;"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "INSERT INTO unique_index_data (index_id, value, object_data_key, object_data_id) "
-      "SELECT ai_unique_index_data.index_id, ai_unique_index_data.value, ai_unique_index_data.ai_object_data_id, object_data.id "
-      "FROM ai_unique_index_data "
-      "INNER JOIN object_store_index ON "
-        "object_store_index.id = ai_unique_index_data.index_id "
-      "INNER JOIN object_data ON "
-        "object_data.object_store_id = object_store_index.object_store_id AND "
-        "object_data.key_value = ai_unique_index_data.ai_object_data_id;"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "UPDATE object_store "
-      "SET auto_increment = (SELECT max(id) FROM ai_object_data) + 1 "
-      "WHERE auto_increment;"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "DROP TABLE ai_unique_index_data;"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "DROP TABLE ai_index_data;"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "DROP TABLE ai_object_data;"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aConnection->SetSchemaVersion(MakeSchemaVersion(11, 0));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
 class VersionChangeEventsRunnable;
 
 class SetVersionHelper : public AsyncConnectionHelper,
@@ -1383,7 +1363,7 @@ OpenDatabaseHelper::DoDatabaseWork()
   }
 
   for (PRUint32 i = 0; i < mObjectStores.Length(); i++) {
-    nsRefPtr<ObjectStoreInfo>& objectStoreInfo = mObjectStores[i];
+    nsAutoPtr<ObjectStoreInfo>& objectStoreInfo = mObjectStores[i];
     for (PRUint32 j = 0; j < objectStoreInfo->indexes.Length(); j++) {
       IndexInfo& indexInfo = objectStoreInfo->indexes[j];
       mLastIndexId = NS_MAX(indexInfo.id, mLastIndexId);
@@ -1529,7 +1509,7 @@ OpenDatabaseHelper::CreateDatabaseConnection(
     }
     else  {
       // This logic needs to change next time we change the schema!
-      PR_STATIC_ASSERT(kSQLiteSchemaVersion == PRInt32((11 << 4) + 0));
+      PR_STATIC_ASSERT(kSQLiteSchemaVersion == PRInt32((10 << 4) + 0));
 
       while (schemaVersion != kSQLiteSchemaVersion) {
         if (schemaVersion == 4) {
@@ -1550,9 +1530,6 @@ OpenDatabaseHelper::CreateDatabaseConnection(
         }
         else if (schemaVersion == MakeSchemaVersion(9, 0)) {
           rv = UpgradeSchemaFrom9_0To10_0(connection);
-        }
-        else if (schemaVersion == MakeSchemaVersion(10, 0)) {
-          rv = UpgradeSchemaFrom10_0To11_0(connection);
         }
         else {
           NS_WARNING("Unable to open IndexedDB database, no upgrade path is "
@@ -1704,8 +1681,6 @@ OpenDatabaseHelper::Run()
         // Destroy the database now (we should have the only ref).
         mDatabase = nsnull;
 
-        DatabaseInfo::Remove(mDatabaseId);
-
         IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
         NS_ASSERTION(mgr, "This should never fail!");
 
@@ -1774,14 +1749,18 @@ OpenDatabaseHelper::EnsureSuccessResult()
 
       PRUint32 objectStoreCount = mObjectStores.Length();
       for (PRUint32 index = 0; index < objectStoreCount; index++) {
-        nsRefPtr<ObjectStoreInfo>& info = mObjectStores[index];
+        nsAutoPtr<ObjectStoreInfo>& info = mObjectStores[index];
+        NS_ASSERTION(info->databaseId == mDatabaseId, "Huh?!");
 
-        ObjectStoreInfo* otherInfo = dbInfo->GetObjectStore(info->name);
-        NS_ASSERTION(otherInfo, "ObjectStore not known!");
+        ObjectStoreInfo* otherInfo;
+        NS_ASSERTION(dbInfo->GetObjectStore(info->name, &otherInfo),
+                     "ObjectStore not known!");
 
         NS_ASSERTION(info->name == otherInfo->name &&
                      info->id == otherInfo->id &&
-                     info->keyPath == otherInfo->keyPath,
+                     info->keyPath == otherInfo->keyPath &&
+                     info->autoIncrement == otherInfo->autoIncrement &&
+                     info->databaseId == otherInfo->databaseId,
                      "Metadata mismatch!");
         NS_ASSERTION(dbInfo->ContainsStoreName(info->name),
                      "Object store names out of date!");
@@ -1800,6 +1779,8 @@ OpenDatabaseHelper::EnsureSuccessResult()
                        "Bad index keyPath!");
           NS_ASSERTION(indexInfo.unique == otherIndexInfo.unique,
                        "Bad index unique value!");
+          NS_ASSERTION(indexInfo.autoIncrement == otherIndexInfo.autoIncrement,
+                       "Bad index autoIncrement value!");
         }
       }
     }
@@ -1810,7 +1791,6 @@ OpenDatabaseHelper::EnsureSuccessResult()
     nsRefPtr<DatabaseInfo> newInfo(new DatabaseInfo());
 
     newInfo->name = mName;
-    newInfo->origin = mASCIIOrigin;
     newInfo->id = mDatabaseId;
     newInfo->filePath = mDatabaseFilePath;
 
@@ -1821,8 +1801,8 @@ OpenDatabaseHelper::EnsureSuccessResult()
 
     newInfo.swap(dbInfo);
 
-    nsresult rv = IDBFactory::SetDatabaseMetadata(dbInfo, mCurrentVersion,
-                                                  mObjectStores);
+    nsresult rv = IDBFactory::UpdateDatabaseMetadata(dbInfo, mCurrentVersion,
+                                                     mObjectStores);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     NS_ASSERTION(mObjectStores.IsEmpty(), "Should have swapped!");

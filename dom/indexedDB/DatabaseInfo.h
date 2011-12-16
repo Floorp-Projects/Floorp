@@ -46,14 +46,14 @@
 #include "Key.h"
 #include "IDBObjectStore.h"
 
-#include "nsRefPtrHashtable.h"
+#include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
 
 struct ObjectStoreInfo;
 
-typedef nsRefPtrHashtable<nsStringHashKey, ObjectStoreInfo>
+typedef nsClassHashtable<nsStringHashKey, ObjectStoreInfo>
         ObjectStoreInfoHash;
 
 class IDBDatabase;
@@ -77,15 +77,14 @@ private:
 
   static bool Put(DatabaseInfo* aInfo);
 
-public:
   static void Remove(nsIAtom* aId);
 
-  static void RemoveAllForOrigin(const nsACString& aOrigin);
-
+public:
   bool GetObjectStoreNames(nsTArray<nsString>& aNames);
   bool ContainsStoreName(const nsAString& aName);
 
-  ObjectStoreInfo* GetObjectStore(const nsAString& aName);
+  bool GetObjectStore(const nsAString& aName,
+                      ObjectStoreInfo** aInfo);
 
   bool PutObjectStore(ObjectStoreInfo* aInfo);
 
@@ -94,9 +93,8 @@ public:
   already_AddRefed<DatabaseInfo> Clone();
 
   nsString name;
-  nsCString origin;
   PRUint64 version;
-  nsCOMPtr<nsIAtom> id;
+  nsIAtom* id;
   nsString filePath;
   PRInt64 nextObjectStoreId;
   PRInt64 nextIndexId;
@@ -115,13 +113,14 @@ struct IndexInfo
   ~IndexInfo();
 #else
   IndexInfo()
-  : id(LL_MININT), unique(false), multiEntry(false) { }
+  : id(LL_MININT), unique(false), autoIncrement(false) { }
 #endif
 
   PRInt64 id;
   nsString name;
   nsString keyPath;
   bool unique;
+  bool autoIncrement;
   bool multiEntry;
 };
 
@@ -129,39 +128,19 @@ struct ObjectStoreInfo
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   ObjectStoreInfo();
-#else
-  ObjectStoreInfo()
-  : id(0), nextAutoIncrementId(0), comittedAutoIncrementId(0) { }
-#endif
-
   ObjectStoreInfo(ObjectStoreInfo& aOther);
-
-private:
-#ifdef NS_BUILD_REFCNT_LOGGING
   ~ObjectStoreInfo();
 #else
-  ~ObjectStoreInfo() {}
+  ObjectStoreInfo()
+  : id(0), autoIncrement(false), databaseId(0) { }
 #endif
-public:
 
-  // Constant members, can be gotten on any thread
   nsString name;
   PRInt64 id;
   nsString keyPath;
-
-  // Main-thread only members. This must *not* be touced on the database thread
+  bool autoIncrement;
+  nsIAtom* databaseId;
   nsTArray<IndexInfo> indexes;
-
-  // Database-thread members. After the ObjectStoreInfo has been initialized,
-  // these can *only* be touced on the database thread.
-  PRInt64 nextAutoIncrementId;
-  PRInt64 comittedAutoIncrementId;
-
-  // This is threadsafe since the ObjectStoreInfos are created on the database
-  // thread but then only used from the main thread. Ideal would be if we
-  // could transfer ownership from the database thread to the main thread, but
-  // we don't have that ability yet.
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ObjectStoreInfo)
 };
 
 struct IndexUpdateInfo
