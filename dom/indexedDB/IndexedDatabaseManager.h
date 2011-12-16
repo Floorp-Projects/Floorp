@@ -40,6 +40,7 @@
 #ifndef mozilla_dom_indexeddb_indexeddatabasemanager_h__
 #define mozilla_dom_indexeddb_indexeddatabasemanager_h__
 
+#include "mozilla/dom/indexedDB/FileManager.h"
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 #include "mozilla/dom/indexedDB/IDBDatabase.h"
 #include "mozilla/dom/indexedDB/IDBRequest.h"
@@ -103,6 +104,8 @@ public:
   // Returns true if we've begun the shutdown process.
   static bool IsShuttingDown();
 
+  static bool IsClosed();
+
   typedef void (*WaitingOnDatabasesCallback)(nsTArray<nsRefPtr<IDBDatabase> >&, void*);
 
   // Acquire exclusive access to the database given (waits for all others to
@@ -148,7 +151,8 @@ public:
   static PRUint32
   GetIndexedDBQuotaMB();
 
-  nsresult EnsureQuotaManagementForDirectory(nsIFile* aDirectory);
+  nsresult EnsureOriginIsInitialized(const nsACString& aOrigin,
+                                     nsIFile** aDirectory);
 
   // Determine if the quota is lifted for the Window the current thread is
   // using.
@@ -172,6 +176,26 @@ public:
 
   static nsresult
   GetASCIIOriginFromWindow(nsPIDOMWindow* aWindow, nsCString& aASCIIOrigin);
+
+  already_AddRefed<FileManager>
+  GetOrCreateFileManager(const nsACString& aOrigin,
+                         const nsAString& aDatabaseName);
+
+  void InvalidateFileManagersForOrigin(const nsACString& aOrigin);
+
+  void InvalidateFileManager(const nsACString& aOrigin,
+                             const nsAString& aDatabaseName);
+
+  nsresult AsyncDeleteFile(FileManager* aFileManager,
+                           PRInt64 aFileId);
+
+  static mozilla::Mutex& FileMutex()
+  {
+    IndexedDatabaseManager* mgr = Get();
+    NS_ASSERTION(mgr, "Must have a manager here!");
+
+    return mgr->mFileMutex;
+  }
 
 private:
   IndexedDatabaseManager();
@@ -250,10 +274,14 @@ private:
     // to the main thread in case of an error.
     inline nsresult RunInternal();
 
+    nsresult GetUsageForDirectory(nsIFile* aDirectory,
+                                  PRUint64* aUsage);
+
     nsCOMPtr<nsIURI> mURI;
     nsCString mOrigin;
     nsCOMPtr<nsIIndexedDatabaseUsageCallback> mCallback;
     PRUint64 mUsage;
+    PRUint64 mFileUsage;
     PRInt32 mCanceled;
   };
 
@@ -302,6 +330,19 @@ private:
     SynchronizedOp* mOp;
   };
 
+  class AsyncDeleteFileRunnable : public nsIRunnable
+  {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIRUNNABLE
+    AsyncDeleteFileRunnable(const nsAString& aFilePath)
+    : mFilePath(aFilePath)
+    { }
+
+  private:
+    nsString mFilePath;
+  };
+
   static nsresult DispatchHelper(AsyncConnectionHelper* aHelper);
 
   // Maintains a list of live databases per origin.
@@ -315,6 +356,12 @@ private:
 
   // A map of Windows to the corresponding quota helper.
   nsRefPtrHashtable<nsPtrHashKey<nsPIDOMWindow>, CheckQuotaHelper> mQuotaHelperHash;
+
+  // Maintains a list of all file managers per origin. The list is actually also
+  // a list of all origins that were successfully initialized. This list
+  // isn't protected by any mutex but it is only ever touched on the IO thread.
+  nsClassHashtable<nsCStringHashKey,
+                   nsTArray<nsRefPtr<FileManager> > > mFileManagers;
 
   // Maintains a list of origins that we're currently enumerating to gather
   // usage statistics.
@@ -333,10 +380,10 @@ private:
   // thread during GetOrCreate().
   nsCOMPtr<mozIStorageQuotaCallback> mQuotaCallbackSingleton;
 
-  // A list of all paths that are under SQLite's quota tracking system. This
-  // list isn't protected by any mutex but it is only ever touched on the IO
-  // thread.
-  nsTArray<nsCString> mTrackedQuotaPaths;
+  // Lock protecting FileManager.mFileInfos and nsDOMFileBase.mFileInfos
+  // It's s also used to atomically update FileInfo.mRefCnt, FileInfo.mDBRefCnt
+  // and FileInfo.mSliceRefCnt
+  mozilla::Mutex mFileMutex;
 };
 
 class AutoEnterWindow
