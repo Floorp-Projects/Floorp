@@ -52,20 +52,7 @@
 #include "nsPrintfCString.h"
 #include "nsStreamUtils.h"
 
-#define TO_CHARBUFFER(_buffer) \
-  reinterpret_cast<char*>(const_cast<PRUint8*>(_buffer))
-#define TO_INTBUFFER(_string) \
-  reinterpret_cast<PRUint8*>(const_cast<char*>(_string.get()))
-
 #define CONTENT_SNIFFING_SERVICES "content-sniffing-services"
-
-/**
- * The maximum time we will keep a favicon around.  We always ask the cache, if
- * we can, but default to this value if we do not get a time back, or the time
- * is more in the future than this.
- * Currently set to one week from now.
- */
-#define MAX_FAVICON_EXPIRATION ((PRTime)7 * 24 * 60 * 60 * PR_USEC_PER_SEC)
 
 using namespace mozilla::places;
 using namespace mozilla::storage;
@@ -92,7 +79,7 @@ FetchPageInfo(nsRefPtr<Database>& aDB,
                   "This should not be called on the main thread");
 
   // This query fragment finds the bookmarked uri we want to set the icon for,
-  // walking up to three redirect levels.  
+  // walking up to three redirect levels.
   nsCString redirectedBookmarksFragment =
     nsPrintfCString(1024,
       "SELECT h.url "
@@ -184,6 +171,61 @@ FetchPageInfo(nsRefPtr<Database>& aDB,
 }
 
 /**
+ * Stores information on a icon in the database.
+ *
+ * @param aDBConn
+ *        Database connection to history tables.
+ * @param aIcon
+ *        Icon that should be stored.
+ */
+nsresult
+SetIconInfo(nsRefPtr<Database>& aDB,
+            IconData& aIcon)
+{
+  NS_PRECONDITION(!NS_IsMainThread(),
+                  "This should not be called on the main thread");
+
+  // The 'multi-coalesce' here ensures that replacing a favicon without
+  // specifying a :guid parameter doesn't cause it to be allocated a new
+  // GUID.
+  nsCOMPtr<mozIStorageStatement> stmt = aDB->GetStatement(
+    "INSERT OR REPLACE INTO moz_favicons "
+      "(id, url, data, mime_type, expiration, guid) "
+    "VALUES ((SELECT id FROM moz_favicons WHERE url = :icon_url), "
+            ":icon_url, :data, :mime_type, :expiration, "
+            "COALESCE(:guid, "
+                     "(SELECT guid FROM moz_favicons "
+                      "WHERE url = :icon_url), "
+                     "GENERATE_GUID()))"
+  );
+  NS_ENSURE_STATE(stmt);
+  mozStorageStatementScoper scoper(stmt);
+  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"), aIcon.spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindBlobByName(NS_LITERAL_CSTRING("data"),
+                            TO_INTBUFFER(aIcon.data), aIcon.data.Length());
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("mime_type"), aIcon.mimeType);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("expiration"), aIcon.expiration);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Binding a GUID allows us to override the current (or generated) GUID.
+  if (aIcon.guid.IsEmpty()) {
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("guid"));
+  }
+  else {
+    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), aIcon.guid);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+/**
  * Fetches information on a icon from the Places database.
  *
  * @param aDBConn
@@ -198,6 +240,10 @@ FetchIconInfo(nsRefPtr<Database>& aDB,
   NS_PRECONDITION(_icon.spec.Length(), "Must have a non-empty spec!");
   NS_PRECONDITION(!NS_IsMainThread(),
                   "This should not be called on the main thread");
+
+  if (_icon.status & ICON_STATUS_CACHED) {
+    return NS_OK;
+  }
 
   nsCOMPtr<mozIStorageStatement> stmt = aDB->GetStatement(
     "SELECT id, expiration, data, mime_type "
@@ -449,9 +495,21 @@ AsyncFetchAndSetIconForPage::start(nsIURI* aFaviconURI,
   page.canAddToHistory = !!canAddToHistory;
 
   IconData icon;
-  icon.fetchMode = aFetchMode;
-  rv = aFaviconURI->GetSpec(icon.spec);
-  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsFaviconService* favicons = nsFaviconService::GetFaviconService();
+  NS_ENSURE_STATE(favicons);
+
+  UnassociatedIconHashKey* iconKey =
+    favicons->mUnassociatedIcons.GetEntry(aFaviconURI);
+
+  if (iconKey) {
+    icon = iconKey->iconData;
+    favicons->mUnassociatedIcons.RemoveEntry(aFaviconURI);
+  } else {
+    icon.fetchMode = aFetchMode;
+    rv = aFaviconURI->GetSpec(icon.spec);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // If the page url points to an image, the icon's url will be the same.
   // In future evaluate to store a resample of the image.  For now avoid that
@@ -725,50 +783,15 @@ AsyncAssociateIconToPage::Run()
 
   // If there is no entry for this icon, or the entry is obsolete, replace it.
   if (mIcon.id == 0 || (mIcon.status & ICON_STATUS_CHANGED)) {
-    // The 'multi-coalesce' here ensures that replacing a favicon without
-    // specifying a :guid parameter doesn't cause it to be allocated a new
-    // GUID.
-    nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      "INSERT OR REPLACE INTO moz_favicons "
-        "(id, url, data, mime_type, expiration, guid) "
-      "VALUES ((SELECT id FROM moz_favicons WHERE url = :icon_url), "
-              ":icon_url, :data, :mime_type, :expiration, "
-              "COALESCE(:guid, "
-                       "(SELECT guid FROM moz_favicons "
-                        "WHERE url = :icon_url), "
-                       "GENERATE_GUID()))"
-    );
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
-    rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"), mIcon.spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindBlobByName(NS_LITERAL_CSTRING("data"),
-                              TO_INTBUFFER(mIcon.data), mIcon.data.Length());
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("mime_type"), mIcon.mimeType);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("expiration"), mIcon.expiration);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Binding a GUID allows us to override the current (or generated) GUID.
-    if (mIcon.guid.IsEmpty()) {
-      rv = stmt->BindNullByName(NS_LITERAL_CSTRING("guid"));
-    }
-    else {
-      rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), mIcon.guid);
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = stmt->Execute();
+    rv = SetIconInfo(mDB, mIcon);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Get the new icon id.  Do this regardless mIcon.id, since other code
     // could have added a entry before us.  Indeed we interrupted the thread
     // after the previous call to FetchIconInfo.
+    mIcon.status = (mIcon.status & ~(ICON_STATUS_CACHED)) | ICON_STATUS_SAVED;
     rv = FetchIconInfo(mDB, mIcon);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    mIcon.status |= ICON_STATUS_SAVED;
   }
 
   // If the page does not have an id, try to insert a new one.
@@ -978,6 +1001,101 @@ AsyncGetFaviconDataForPage::Run()
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//// AsyncReplaceFaviconData
+
+// static
+nsresult
+AsyncReplaceFaviconData::start(IconData *aIcon)
+{
+  NS_ENSURE_ARG(aIcon);
+  NS_PRECONDITION(NS_IsMainThread(),
+                  "This should be called on the main thread.");
+
+  nsCOMPtr<nsIFaviconDataCallback> callback;
+  nsRefPtr<AsyncReplaceFaviconData> event =
+    new AsyncReplaceFaviconData(*aIcon, callback);
+
+  nsRefPtr<Database> DB = Database::GetDatabase();
+  NS_ENSURE_STATE(DB);
+  DB->DispatchToAsyncThread(event);
+
+  return NS_OK;
+}
+
+AsyncReplaceFaviconData::AsyncReplaceFaviconData(
+  IconData &aIcon
+, nsCOMPtr<nsIFaviconDataCallback>& aCallback
+) : AsyncFaviconHelperBase(aCallback)
+  , mIcon(aIcon)
+{
+}
+
+AsyncReplaceFaviconData::~AsyncReplaceFaviconData()
+{
+}
+
+NS_IMETHODIMP
+AsyncReplaceFaviconData::Run()
+{
+  NS_PRECONDITION(!NS_IsMainThread(),
+                  "This should not be called on the main thread");
+
+  IconData dbIcon;
+  dbIcon.spec.Assign(mIcon.spec);
+  nsresult rv = FetchIconInfo(mDB, dbIcon);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!dbIcon.id) {
+    return NS_OK;
+  }
+
+  rv = SetIconInfo(mDB, mIcon);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We can invalidate the cache version since we now persist the icon.
+  nsCOMPtr<nsIRunnable> event = new RemoveIconDataCacheEntry(mIcon, mCallback);
+  rv = NS_DispatchToMainThread(event);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// RemoveIconDataCacheEntry
+
+RemoveIconDataCacheEntry::RemoveIconDataCacheEntry(
+  IconData& aIcon
+, nsCOMPtr<nsIFaviconDataCallback>& aCallback
+)
+: AsyncFaviconHelperBase(aCallback)
+, mIcon(aIcon)
+{
+}
+
+RemoveIconDataCacheEntry::~RemoveIconDataCacheEntry()
+{
+}
+
+NS_IMETHODIMP
+RemoveIconDataCacheEntry::Run()
+{
+  NS_PRECONDITION(NS_IsMainThread(),
+                  "This should be called on the main thread");
+
+  nsCOMPtr<nsIURI> iconURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(iconURI), mIcon.spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsFaviconService* favicons = nsFaviconService::GetFaviconService();
+  NS_ENSURE_STATE(favicons);
+  favicons->mUnassociatedIcons.RemoveEntry(iconURI);
+
+  return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// NotifyIconObservers
