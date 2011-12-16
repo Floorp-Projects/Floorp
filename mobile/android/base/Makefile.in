@@ -72,6 +72,7 @@ FENNEC_JAVA_FILES = \
   db/AndroidBrowserDB.java \
   db/BrowserDB.java \
   db/LocalBrowserDB.java \
+  db/DBUtils.java \
   DoorHanger.java \
   DoorHangerPopup.java \
   Favicons.java \
@@ -149,6 +150,7 @@ FENNEC_PP_JAVA_FILES = \
   Restarter.java \
   db/BrowserContract.java \
   db/BrowserProvider.java \
+  db/PasswordsProvider.java \
   SmsManager.java \
   $(NULL)
 

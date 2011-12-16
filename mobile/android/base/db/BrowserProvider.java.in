@@ -56,6 +56,8 @@ import org.mozilla.gecko.db.BrowserContract.Schema;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.DBUtils;
+import org.mozilla.gecko.sync.Utils;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -206,52 +208,6 @@ public class BrowserProvider extends ContentProvider {
 
     static final String qualifyColumn(String table, String column) {
         return table + "." + column;
-    }
-
-    public static String generateGuid() {
-        byte[] encodedBytes = GeckoAppShell.encodeBase64(generateRandomBytes(9), GeckoAppShell.BASE64_URL_SAFE);
-        return new String(encodedBytes);
-    }
-
-    private static byte[] generateRandomBytes(int length) {
-        byte[] bytes = new byte[length];
-
-        Random random = new Random(System.nanoTime());
-        random.nextBytes(bytes);
-
-        return bytes;
-    }
-
-    // This is available in Android >= 11. Implemented locally to be
-    // compatible with older versions.
-    public static String concatenateWhere(String a, String b) {
-        if (TextUtils.isEmpty(a)) {
-            return b;
-        }
-
-        if (TextUtils.isEmpty(b)) {
-            return a;
-        }
-
-        return "(" + a + ") AND (" + b + ")";
-    }
-
-    // This is available in Android >= 11. Implemented locally to be
-    // compatible with older versions.
-    public static String[] appendSelectionArgs(String[] originalValues, String[] newValues) {
-        if (originalValues == null || originalValues.length == 0) {
-            return newValues;
-        }
-
-        if (newValues == null || newValues.length == 0) {
-            return originalValues;
-        }
-
-        String[] result = new String[originalValues.length + newValues.length];
-        System.arraycopy(originalValues, 0, result, 0, originalValues.length);
-        System.arraycopy(newValues, 0, result, originalValues.length, newValues.length);
-
-        return result;
     }
 
     private static boolean hasImagesInProjection(String[] projection) {
@@ -619,8 +575,8 @@ public class BrowserProvider extends ContentProvider {
             case BOOKMARKS_ID:
                 Log.d(LOGTAG, "Delete on BOOKMARKS_ID: " + uri);
 
-                selection = concatenateWhere(selection, TABLE_BOOKMARKS + "._id = ?");
-                selectionArgs = appendSelectionArgs(selectionArgs,
+                selection = DBUtils.concatenateWhere(selection, TABLE_BOOKMARKS + "._id = ?");
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case BOOKMARKS: {
@@ -633,8 +589,8 @@ public class BrowserProvider extends ContentProvider {
             case HISTORY_ID:
                 Log.d(LOGTAG, "Delete on HISTORY_ID: " + uri);
 
-                selection = concatenateWhere(selection, TABLE_HISTORY + "._id = ?");
-                selectionArgs = appendSelectionArgs(selectionArgs,
+                selection = DBUtils.concatenateWhere(selection, TABLE_HISTORY + "._id = ?");
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case HISTORY: {
@@ -647,8 +603,8 @@ public class BrowserProvider extends ContentProvider {
             case IMAGES_ID:
                 Log.d(LOGTAG, "Delete on IMAGES_ID: " + uri);
 
-                selection = concatenateWhere(selection, TABLE_IMAGES + "._id = ?");
-                selectionArgs = appendSelectionArgs(selectionArgs,
+                selection = DBUtils.concatenateWhere(selection, TABLE_IMAGES + "._id = ?");
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case IMAGES: {
@@ -707,7 +663,7 @@ public class BrowserProvider extends ContentProvider {
 
                 // Generate GUID for new bookmark. Don't override specified GUIDs.
                 if (!values.containsKey(Bookmarks.GUID)) {
-                  values.put(Bookmarks.GUID, generateGuid());
+                  values.put(Bookmarks.GUID, Utils.generateGuid());
                 }
 
                 if (!values.containsKey(Bookmarks.POSITION)) {
@@ -740,7 +696,7 @@ public class BrowserProvider extends ContentProvider {
 
                 // Generate GUID for new history entry. Don't override specified GUIDs.
                 if (!values.containsKey(History.GUID)) {
-                  values.put(History.GUID, generateGuid());
+                  values.put(History.GUID, Utils.generateGuid());
                 }
 
                 String url = values.getAsString(History.URL);
@@ -767,7 +723,7 @@ public class BrowserProvider extends ContentProvider {
                 values.put(History.DATE_MODIFIED, now);
 
                 // Generate GUID for new history entry
-                values.put(History.GUID, generateGuid());
+                values.put(History.GUID, Utils.generateGuid());
 
                 String url = values.getAsString(Images.URL);
 
@@ -825,8 +781,8 @@ public class BrowserProvider extends ContentProvider {
             case BOOKMARKS_ID:
                 Log.d(LOGTAG, "Update on BOOKMARKS_ID: " + uri);
 
-                selection = concatenateWhere(selection, TABLE_BOOKMARKS + "._id = ?");
-                selectionArgs = appendSelectionArgs(selectionArgs,
+                selection = DBUtils.concatenateWhere(selection, TABLE_BOOKMARKS + "._id = ?");
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case BOOKMARKS: {
@@ -838,8 +794,8 @@ public class BrowserProvider extends ContentProvider {
             case HISTORY_ID:
                 Log.d(LOGTAG, "Update on HISTORY_ID: " + uri);
 
-                selection = concatenateWhere(selection, TABLE_HISTORY + "._id = ?");
-                selectionArgs = appendSelectionArgs(selectionArgs,
+                selection = DBUtils.concatenateWhere(selection, TABLE_HISTORY + "._id = ?");
+                selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case HISTORY: {
@@ -887,17 +843,17 @@ public class BrowserProvider extends ContentProvider {
                 Log.d(LOGTAG, "Query is on bookmarks: " + uri);
 
                 if (match == BOOKMARKS_ID) {
-                    selection = concatenateWhere(selection, Bookmarks._ID + " = ?");
-                    selectionArgs = appendSelectionArgs(selectionArgs,
+                    selection = DBUtils.concatenateWhere(selection, Bookmarks._ID + " = ?");
+                    selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 } else if (match == BOOKMARKS_FOLDER_ID) {
-                    selection = concatenateWhere(selection, Bookmarks.PARENT + " = ?");
-                    selectionArgs = appendSelectionArgs(selectionArgs,
+                    selection = DBUtils.concatenateWhere(selection, Bookmarks.PARENT + " = ?");
+                    selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 }
 
                 if (!shouldShowDeleted(uri))
-                    selection = concatenateWhere(Bookmarks.IS_DELETED + " = 0", selection);
+                    selection = DBUtils.concatenateWhere(Bookmarks.IS_DELETED + " = 0", selection);
 
                 if (TextUtils.isEmpty(sortOrder)) {
                     sortOrder = DEFAULT_BOOKMARKS_SORT_ORDER;
@@ -920,13 +876,13 @@ public class BrowserProvider extends ContentProvider {
                 Log.d(LOGTAG, "Query is on history: " + uri);
 
                 if (match == HISTORY_ID) {
-                    selection = concatenateWhere(selection, History._ID + " = ?");
-                    selectionArgs = appendSelectionArgs(selectionArgs,
+                    selection = DBUtils.concatenateWhere(selection, History._ID + " = ?");
+                    selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 }
 
                 if (!shouldShowDeleted(uri))
-                    selection = concatenateWhere(History.IS_DELETED + " = 0", selection);
+                    selection = DBUtils.concatenateWhere(History.IS_DELETED + " = 0", selection);
 
                 if (TextUtils.isEmpty(sortOrder))
                     sortOrder = DEFAULT_HISTORY_SORT_ORDER;
@@ -946,13 +902,13 @@ public class BrowserProvider extends ContentProvider {
                 Log.d(LOGTAG, "Query is on images: " + uri);
 
                 if (match == IMAGES_ID) {
-                    selection = concatenateWhere(selection, Images._ID + " = ?");
-                    selectionArgs = appendSelectionArgs(selectionArgs,
+                    selection = DBUtils.concatenateWhere(selection, Images._ID + " = ?");
+                    selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 }
 
                 if (!shouldShowDeleted(uri))
-                    selection = concatenateWhere(Images.IS_DELETED + " = 0", selection);
+                    selection = DBUtils.concatenateWhere(Images.IS_DELETED + " = 0", selection);
 
                 qb.setProjectionMap(IMAGES_PROJECTION_MAP);
                 qb.setTables(TABLE_IMAGES);
@@ -1181,7 +1137,7 @@ public class BrowserProvider extends ContentProvider {
         if (updated == 0 && insertIfNeeded) {
             // Generate GUID for new image, if one is not already provided.
             if (!values.containsKey(Images.GUID)) {
-              values.put(Images.GUID, generateGuid());
+              values.put(Images.GUID, Utils.generateGuid());
             }
 
             values.put(Images.DATE_CREATED, now);
