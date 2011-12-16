@@ -290,7 +290,7 @@ class MacroAssemblerARM : public Assembler
     void ma_ldrh(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
     void ma_ldrsh(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
     void ma_ldrsb(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
-    void ma_ldrd(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
+    void ma_ldrd(EDtrAddr addr, Register rt, DebugOnly<Register> rt2, Index mode = Offset, Condition cc = Always);
     // specialty for moving N bits of data, where n == 8,16,32,64
     void ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                           Register rn, Register rm, Register rt,
