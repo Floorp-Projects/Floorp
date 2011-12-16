@@ -3494,15 +3494,16 @@ EndVerifyBarriers(JSContext *cx)
 
     JS_ASSERT(trc->number == rt->gcNumber);
 
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        c->gcIncrementalTracer = NULL;
+        c->needsBarrier_ = false;
+    }
+
     if (rt->gcIncrementalTracer->hasDelayedChildren())
         rt->gcIncrementalTracer->markDelayedChildren();
 
     rt->gcVerifyData = NULL;
     rt->gcIncrementalTracer = NULL;
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        c->gcIncrementalTracer = NULL;
-        c->needsBarrier_ = false;
-    }
 
     JS_TRACER_INIT(trc, cx, CheckAutorooter);
 
