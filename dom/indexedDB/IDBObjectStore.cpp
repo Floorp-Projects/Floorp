@@ -943,8 +943,8 @@ StructuredCloneReadString(JSStructuredCloneReader* aReader,
 JSObject*
 IDBObjectStore::StructuredCloneReadCallback(JSContext* aCx,
                                             JSStructuredCloneReader* aReader,
-                                            uint32 aTag,
-                                            uint32 aData,
+                                            uint32_t aTag,
+                                            uint32_t aData,
                                             void* aClosure)
 {
   if (aTag == SCTAG_DOM_BLOB || aTag == SCTAG_DOM_FILE) {
