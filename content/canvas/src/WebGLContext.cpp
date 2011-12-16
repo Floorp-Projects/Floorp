@@ -1285,6 +1285,17 @@ NS_INTERFACE_MAP_BEGIN(WebGLUniformLocation)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLUniformLocation)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_ADDREF(WebGLShaderPrecisionFormat)
+NS_IMPL_RELEASE(WebGLShaderPrecisionFormat)
+
+DOMCI_DATA(WebGLShaderPrecisionFormat, WebGLShaderPrecisionFormat)
+
+NS_INTERFACE_MAP_BEGIN(WebGLShaderPrecisionFormat)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLShaderPrecisionFormat)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLShaderPrecisionFormat)
+NS_INTERFACE_MAP_END
+
 NS_IMPL_ADDREF(WebGLActiveInfo)
 NS_IMPL_RELEASE(WebGLActiveInfo)
 
@@ -1398,6 +1409,30 @@ NS_IMETHODIMP
 WebGLActiveInfo::GetName(nsAString & aName)
 {
     aName = mName;
+    return NS_OK;
+}
+
+/* readonly attribute WebGLint rangeMin */
+NS_IMETHODIMP
+WebGLShaderPrecisionFormat::GetRangeMin(WebGLint *aRangeMin)
+{
+    *aRangeMin = mRangeMin;
+    return NS_OK;
+}
+
+/* readonly attribute WebGLint rangeMax */
+NS_IMETHODIMP
+WebGLShaderPrecisionFormat::GetRangeMax(WebGLint *aRangeMax)
+{
+    *aRangeMax = mRangeMax;
+    return NS_OK;
+}
+
+/* readonly attribute WebGLint precision */
+NS_IMETHODIMP
+WebGLShaderPrecisionFormat::GetPrecision(WebGLint *aPrecision)
+{
+    *aPrecision = mPrecision;
     return NS_OK;
 }
 

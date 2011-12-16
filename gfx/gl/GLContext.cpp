@@ -404,6 +404,18 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         }
 #endif
 
+        // Specially load this in because it's placed in a bizarre position in
+        // the ES2 symbol table (between shaderInfoLog and shaderSource).
+        SymLoadStruct symbols_shaderPrecisionFormat[] = {
+            { (PRFuncPtr*) &mSymbols.fGetShaderPrecisionFormat, { "GetShaderPrecisionFormat", NULL } },
+            { NULL, { NULL } },
+        };
+
+        if (mIsGLES2 && !LoadSymbols(&symbols_shaderPrecisionFormat[0], trygl, prefix)) {
+            NS_RUNTIMEABORT("OpenGL ES 2.0 supported, but has no GetShaderPrecisionFormat symbol.");
+            mInitialized = false;
+        }
+
         InitExtensions();
 
         NS_ASSERTION(!IsExtensionSupported(GLContext::ARB_pixel_buffer_object) ||
