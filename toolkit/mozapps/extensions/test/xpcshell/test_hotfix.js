@@ -6,6 +6,8 @@
 
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
+// Ignore any certificate requirements the app has set
+Services.prefs.setBoolPref("extensions.hotfix.cert.checkAttributes", false);
 
 do_load_httpd_js();
 var testserver;

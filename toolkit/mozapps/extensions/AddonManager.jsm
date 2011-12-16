@@ -56,6 +56,8 @@ const PREF_APP_UPDATE_AUTO            = "app.update.auto";
 const PREF_EM_HOTFIX_ID               = "extensions.hotfix.id";
 const PREF_EM_HOTFIX_LASTVERSION      = "extensions.hotfix.lastVersion";
 const PREF_EM_HOTFIX_URL              = "extensions.hotfix.url";
+const PREF_EM_CERT_CHECKATTRIBUTES    = "extensions.hotfix.cert.checkAttributes";
+const PREF_EM_HOTFIX_CERTS            = "extensions.hotfix.certs.";
 const PREF_MATCH_OS_LOCALE            = "intl.locale.matchOS";
 const PREF_SELECTED_LOCALE            = "general.useragent.locale";
 
@@ -70,6 +72,8 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 const VALID_TYPES_REGEXP = /^[\w\-]+$/;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
+var CertUtils = {};
+Components.utils.import("resource://gre/modules/CertUtils.jsm", CertUtils);
 
 var EXPORTED_SYMBOLS = [ "AddonManager", "AddonManagerPrivate" ];
 
@@ -831,6 +835,27 @@ var AddonManagerInternal = {
           LOG("Downloading hotfix version " + update.version);
           AddonManager.getInstallForURL(update.updateURL, function(aInstall) {
             aInstall.addListener({
+              onDownloadEnded: function(aInstall) {
+                try {
+                  if (!Services.prefs.getBoolPref(PREF_EM_CERT_CHECKATTRIBUTES))
+                    return;
+                }
+                catch (e) {
+                  // By default don't do certificate checks.
+                  return;
+                }
+
+                try {
+                  CertUtils.validateCert(aInstall.certificate,
+                                         CertUtils.readCertPrefs(PREF_EM_HOTFIX_CERTS));
+                }
+                catch (e) {
+                  WARN("The hotfix add-on was not signed by the expected " +
+                       "certificate and so will not be installed.");
+                  aInstall.cancel();
+                }
+              },
+
               onInstallEnded: function(aInstall) {
                 // Remember the last successfully installed version.
                 Services.prefs.setCharPref(PREF_EM_HOTFIX_LASTVERSION,
