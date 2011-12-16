@@ -40,7 +40,9 @@
 #ifndef __RECENTBADCERTS_H__
 #define __RECENTBADCERTS_H__
 
+#include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
+
 #include "nsIRecentBadCertsService.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
@@ -80,17 +82,8 @@ public:
   bool isUntrusted;
 
 private:
-  RecentBadCert(const RecentBadCert &other)
-  {
-    NS_NOTREACHED("RecentBadCert(const RecentBadCert &other) not implemented");
-    this->operator=(other);
-  }
-
-  RecentBadCert &operator=(const RecentBadCert &other)
-  {
-    NS_NOTREACHED("RecentBadCert &operator=(const RecentBadCert &other) not implemented");
-    return *this;
-  }
+  RecentBadCert(const RecentBadCert &other) MOZ_DELETE;
+  RecentBadCert &operator=(const RecentBadCert &other) MOZ_DELETE;
 };
 
 class nsRecentBadCertsService : public nsIRecentBadCertsService

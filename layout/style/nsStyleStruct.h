@@ -48,6 +48,8 @@
 #ifndef nsStyleStruct_h___
 #define nsStyleStruct_h___
 
+#include "mozilla/Attributes.h"
+
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsMargin.h"
@@ -179,9 +181,8 @@ public:
 private:
   ~nsStyleGradient() {}
 
-  // Not to be implemented
-  nsStyleGradient(const nsStyleGradient& aOther);
-  nsStyleGradient& operator=(const nsStyleGradient& aOther);
+  nsStyleGradient(const nsStyleGradient& aOther) MOZ_DELETE;
+  nsStyleGradient& operator=(const nsStyleGradient& aOther) MOZ_DELETE;
 };
 
 enum nsStyleImageType {
@@ -938,7 +939,7 @@ private:
 
   nscoord       mTwipsPerPixel;
 
-  nsStyleBorder& operator=(const nsStyleBorder& aOther); // Not to be implemented
+  nsStyleBorder& operator=(const nsStyleBorder& aOther) MOZ_DELETE;
 };
 
 
@@ -1064,7 +1065,7 @@ struct nsStyleList {
   PRUint8   mListStylePosition;         // [inherited]
 private:
   nsCOMPtr<imgIRequest> mListStyleImage; // [inherited]
-  nsStyleList& operator=(const nsStyleList& aOther); // Not to be implemented
+  nsStyleList& operator=(const nsStyleList& aOther) MOZ_DELETE;
 public:
   nsRect        mImageRegion;           // [inherited] the rect to use within an image
 };
