@@ -189,6 +189,7 @@ mjit::Compiler::checkAnalysis(JSScript *script)
         return Compile_Error;
 
     ScriptAnalysis *analysis = script->analysis();
+    analysis->assertMatchingDebugMode();
     if (analysis->failed()) {
         JaegerSpew(JSpew_Abort, "couldn't analyze bytecode; probably switchX or OOM\n");
         return Compile_Abort;

@@ -1894,6 +1894,12 @@ SSAValue::print() const
     }
 }
 
+void
+ScriptAnalysis::assertMatchingDebugMode()
+{
+    JS_ASSERT(!!script->compartment()->debugMode() == !!originalDebugMode_);
+}
+
 #endif  /* DEBUG */
 
 } /* namespace analyze */

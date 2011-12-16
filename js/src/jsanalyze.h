@@ -822,6 +822,11 @@ class ScriptAnalysis
     bool ranLifetimes_;
     bool ranInference_;
 
+#ifdef DEBUG
+    /* Whether the compartment was in debug mode when we performed the analysis. */
+    bool originalDebugMode_: 1;
+#endif
+
     /* --------- Bytecode analysis --------- */
 
     bool usesReturnValue_:1;
@@ -843,7 +848,13 @@ class ScriptAnalysis
 
   public:
 
-    ScriptAnalysis(JSScript *script) { PodZero(this); this->script = script; }
+    ScriptAnalysis(JSScript *script) { 
+        PodZero(this);
+        this->script = script;
+#ifdef DEBUG
+        this->originalDebugMode_ = script->compartment()->debugMode();
+#endif        
+    }
 
     bool ranBytecode() { return ranBytecode_; }
     bool ranSSA() { return ranSSA_; }
@@ -1164,6 +1175,13 @@ class ScriptAnalysis
     bool analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferenceState &state);
     bool followEscapingArguments(JSContext *cx, const SSAValue &v, Vector<SSAValue> *seen);
     bool followEscapingArguments(JSContext *cx, SSAUseChain *use, Vector<SSAValue> *seen);
+
+  public:
+#ifdef DEBUG
+    void assertMatchingDebugMode();
+#else
+    void assertMatchingDebugMode() { }
+#endif
 };
 
 /* Protect analysis structures from GC while they are being used. */
