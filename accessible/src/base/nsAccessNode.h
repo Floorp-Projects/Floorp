@@ -214,6 +214,10 @@ protected:
     static bool gIsFormFillEnabled;
 
 private:
+  nsAccessNode();
+  nsAccessNode(const nsAccessNode&);
+  nsAccessNode& operator =(const nsAccessNode&);
+  
   static nsApplicationAccessible *gApplicationAccessible;
 };
 
