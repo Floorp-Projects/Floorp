@@ -139,8 +139,8 @@ function run_test() {
   do_check_eq(pb.getBoolPref("UserPref.existing.bool"), false);
   pb.setIntPref("UserPref.existing.int", 24);
   do_check_eq(pb.getIntPref("UserPref.existing.int"), 24);
-  pb.setCharPref("UserPref.existing.char", "hej då!");
-  do_check_eq(pb.getCharPref("UserPref.existing.char"), "hej då!");
+  pb.setCharPref("UserPref.existing.char", "hej dÃ¥!");
+  do_check_eq(pb.getCharPref("UserPref.existing.char"), "hej dÃ¥!");
 
   // prefHasUserValue should return true now
   do_check_true(pb.prefHasUserValue("UserPref.existing.bool"));
@@ -355,7 +355,7 @@ function run_test() {
   do_check_eq(pb.getIntPref("int1"), 23);
   do_check_eq(pb.getIntPref("int2"), -1236);
   do_check_eq(pb.getCharPref("char1"), "_testPref");
-  do_check_eq(pb.getCharPref("char2"), "älskar");
+  do_check_eq(pb.getCharPref("char2"), "Ã¤lskar");
 
   // loading our former savePrefFile should allow us to read former prefs
   ps.readUserPrefs(savePrefFile);

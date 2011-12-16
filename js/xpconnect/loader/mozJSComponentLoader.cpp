@@ -640,6 +640,15 @@ class FileMapAutoCloser
  private:
     PRFileMap *mMap;
 };
+#else
+class ANSIFileAutoCloser
+{
+ public:
+    explicit ANSIFileAutoCloser(FILE *file) : mFile(file) {}
+    ~ANSIFileAutoCloser() { fclose(mFile); }
+ private:
+    FILE *mFile;
+};
 #endif
 
 class JSPrincipalsHolder
@@ -844,8 +853,8 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
 #else  /* HAVE_PR_MEMMAP */
 
             /**
-             * No memmap implementation, so fall back to using
-             * JS_CompileFileHandleForPrincipals().
+             * No memmap implementation, so fall back to 
+             * reading in the file
              */
 
             FILE *fileHandle;
@@ -855,9 +864,35 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
                 return NS_ERROR_FILE_NOT_FOUND;
             }
 
-            script = JS_CompileFileHandleForPrincipalsVersion(cx, global, nativePath.get(), fileHandle, jsPrincipals, JSVERSION_LATEST);
+            // Ensure file fclose
+            ANSIFileAutoCloser fileCloser(fileHandle);
 
-            /* JS will close the filehandle after compilation is complete. */
+            PRInt64 len;
+            rv = aComponentFile->GetFileSize(&len);
+            if (NS_FAILED(rv) || len < 0) {
+                NS_WARNING("Failed to get file size");
+                JS_SetOptions(cx, oldopts);
+                return NS_ERROR_FAILURE;
+            }
+
+            char *buf = (char *) malloc(len * sizeof(char));
+            if (!buf) {
+                JS_SetOptions(cx, oldopts);
+                return NS_ERROR_FAILURE;
+            }
+
+            size_t rlen = fread(buf, 1, len, fileHandle);
+            if (rlen != (PRUint64)len) {
+                free(buf);
+                JS_SetOptions(cx, oldopts);
+                NS_WARNING("Failed to read file");
+                return NS_ERROR_FAILURE;
+            }
+            script = JS_CompileScriptForPrincipalsVersion(cx, global, jsPrincipals, buf, rlen, nativePath.get(), 1,
+                                                          JSVERSION_LATEST);
+
+            free(buf);
+
 #endif /* HAVE_PR_MEMMAP */
         } else {
             nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
