@@ -35,46 +35,62 @@
  * ***** END LICENSE BLOCK ***** */
 
 function test() {
-  /** Test for Bug 464620 (injection on input) **/
+  /** Test for Bug 463206 **/
   
   waitForExplicitFinish();
   
   let testURL = "http://mochi.test:8888/browser/" +
-    "browser/components/sessionstore/test/browser/browser_464620_a.html";
+    "browser/components/sessionstore/test/browser_463206_sample.html";
   
   var frameCount = 0;
   let tab = gBrowser.addTab(testURL);
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
     // wait for all frames to load completely
-    if (frameCount++ < 4)
+    if (frameCount++ < 5)
       return;
-    this.removeEventListener("load", arguments.callee, true);
+    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
     
-    executeSoon(function() {
-      frameCount = 0;
-      let tab2 = gBrowser.duplicateTab(tab);
-      tab2.linkedBrowser.addEventListener("464620_a", function(aEvent) {
-        tab2.linkedBrowser.removeEventListener("464620_a", arguments.callee, true);
-        is(aEvent.data, "done", "XSS injection was attempted");
-        
-        // let form restoration complete and take into account the
-        // setTimeout(..., 0) in sss_restoreDocument_proxy
-        executeSoon(function() {
-          setTimeout(function() {
-            let win = tab2.linkedBrowser.contentWindow;
-            isnot(win.frames[0].document.location, testURL,
-                  "cross domain document was loaded");
-            ok(!/XXX/.test(win.frames[0].document.body.innerHTML),
-               "no content was injected");
-            
-            // clean up
-            gBrowser.removeTab(tab2);
-            gBrowser.removeTab(tab);
-            
-            finish();
-          }, 0);
-        });
-      }, true, true);
-    });
+    function typeText(aTextField, aValue) {
+      aTextField.value = aValue;
+      
+      let event = aTextField.ownerDocument.createEvent("UIEvents");
+      event.initUIEvent("input", true, true, aTextField.ownerDocument.defaultView, 0);
+      aTextField.dispatchEvent(event);
+    }
+    
+    let doc = tab.linkedBrowser.contentDocument;
+    typeText(doc.getElementById("out1"), Date.now());
+    typeText(doc.getElementsByName("1|#out2")[0], Math.random());
+    typeText(doc.defaultView.frames[0].frames[1].document.getElementById("in1"), new Date());
+    
+    frameCount = 0;
+    let tab2 = gBrowser.duplicateTab(tab);
+    tab2.linkedBrowser.addEventListener("load", function(aEvent) {
+      // wait for all frames to load completely
+      if (frameCount++ < 5)
+        return;
+      tab2.linkedBrowser.removeEventListener("load", arguments.callee, true);
+
+      let doc = tab2.linkedBrowser.contentDocument;
+      let win = tab2.linkedBrowser.contentWindow;
+      isnot(doc.getElementById("out1").value,
+            win.frames[1].document.getElementById("out1").value,
+            "text isn't reused for frames");
+      isnot(doc.getElementsByName("1|#out2")[0].value, "",
+            "text containing | and # is correctly restored");
+      is(win.frames[1].document.getElementById("out2").value, "",
+            "id prefixes can't be faked");
+      // Disabled for now, Bug 588077
+      // isnot(win.frames[0].frames[1].document.getElementById("in1").value, "",
+      //       "id prefixes aren't mixed up");
+      is(win.frames[1].frames[0].document.getElementById("in1").value, "",
+            "id prefixes aren't mixed up");
+      
+      // clean up
+      gBrowser.removeTab(tab2);
+      gBrowser.removeTab(tab);
+      
+      finish();
+    }, true);
   }, true);
 }

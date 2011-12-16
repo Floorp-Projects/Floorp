@@ -35,32 +35,37 @@
  * ***** END LICENSE BLOCK ***** */
 
 function test() {
-  /** Test for Bug 339445 **/
-  
+  /** Test for Bug 461743 **/
+
   waitForExplicitFinish();
-  
+
   let testURL = "http://mochi.test:8888/browser/" +
-    "browser/components/sessionstore/test/browser/browser_339445_sample.html";
-  
+    "browser/components/sessionstore/test/browser_461743_sample.html";
+
+  let frameCount = 0;
   let tab = gBrowser.addTab(testURL);
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    this.removeEventListener("load", arguments.callee, true);
-    let doc = tab.linkedBrowser.contentDocument;
-    is(doc.getElementById("storageTestItem").textContent, "PENDING",
-       "sessionStorage value has been set");
-    
+    // Wait for all frames to load completely.
+    if (frameCount++ < 2)
+      return;
+    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
     let tab2 = gBrowser.duplicateTab(tab);
-    tab2.linkedBrowser.addEventListener("load", function(aEvent) {
-      this.removeEventListener("load", arguments.callee, true);
-      let doc2 = tab2.linkedBrowser.contentDocument;
-      is(doc2.getElementById("storageTestItem").textContent, "SUCCESS",
-         "sessionStorage value has been duplicated");
-      
-      // clean up
-      gBrowser.removeTab(tab2);
-      gBrowser.removeTab(tab);
-      
-      finish();
-    }, true);
+    tab2.linkedBrowser.addEventListener("461743", function(aEvent) {
+      tab2.linkedBrowser.removeEventListener("461743", arguments.callee, true);
+      is(aEvent.data, "done", "XSS injection was attempted");
+
+      executeSoon(function() {
+        let iframes = tab2.linkedBrowser.contentWindow.frames;
+        let innerHTML = iframes[1].document.body.innerHTML;
+        isnot(innerHTML, Components.utils.reportError.toString(),
+              "chrome access denied!");
+
+        // Clean up.
+        gBrowser.removeTab(tab2);
+        gBrowser.removeTab(tab);
+
+        finish();
+      });
+    }, true, true);
   }, true);
 }
