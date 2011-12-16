@@ -918,7 +918,7 @@ class InitEvent : public Event
         if (!filename)
             return fail;
 
-        JSScript *script = JS_CompileFile(cx, child->getGlobal(), filename.ptr());
+        JSScript *script = JS_CompileUTF8File(cx, child->getGlobal(), filename.ptr());
         if (!script)
             return fail;
 
