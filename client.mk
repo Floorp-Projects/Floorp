@@ -171,6 +171,9 @@ endif # MOZ_BUILD_PROJECTS
 CONFIGURES := $(TOPSRCDIR)/configure
 CONFIGURES += $(TOPSRCDIR)/js/src/configure
 
+# Make targets that are going to be passed to the real build system
+OBJDIR_TARGETS = install export libs clean realclean distclean alldep maybe_clobber_profiledbuild upload sdk installer package package-compare stage-package source-package l10n-check
+
 #######################################################################
 # Rules
 
@@ -259,7 +262,7 @@ endif
 # loop through them.
 
 ifeq (,$(MOZ_CURRENT_PROJECT)$(if $(MOZ_BUILD_PROJECTS),,1))
-configure depend realbuild install export libs clean realclean distclean alldep preflight postflight maybe_clobber_profiledbuild upload sdk::
+configure depend realbuild preflight postflight $(OBJDIR_TARGETS)::
 	set -e; \
 	for app in $(MOZ_BUILD_PROJECTS); do \
 	  $(MAKE) -f $(TOPSRCDIR)/client.mk $@ MOZ_CURRENT_PROJECT=$$app; \
@@ -370,7 +373,7 @@ realbuild::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 # Other targets
 
 # Pass these target onto the real build system
-install export libs clean realclean distclean alldep maybe_clobber_profiledbuild upload sdk:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
+$(OBJDIR_TARGETS):: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	$(MOZ_MAKE) $@
 
 ####################################
@@ -429,4 +432,4 @@ echo-variable-%:
 # in parallel.
 .NOTPARALLEL:
 
-.PHONY: checkout real_checkout depend realbuild build profiledbuild maybe_clobber_profiledbuild export libs alldep install clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything configure preflight_all preflight postflight postflight_all upload sdk
+.PHONY: checkout real_checkout depend realbuild build profiledbuild cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything configure preflight_all preflight postflight postflight_all $(OBJDIR_TARGETS)
