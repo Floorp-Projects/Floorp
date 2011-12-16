@@ -426,7 +426,7 @@ class JSString : public js::gc::Cell
 
 class JSRope : public JSString
 {
-    enum UsingBarrier { WithBarrier, NoBarrier };
+    enum UsingBarrier { WithIncrementalBarrier, NoBarrier };
     template<UsingBarrier b>
     JSFlatString *flattenInternal(JSContext *cx);
 
