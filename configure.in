@@ -5705,6 +5705,7 @@ if test -n "$MOZ_WEBM"; then
                 [return 0;],
                 [AC_MSG_RESULT([yes])
                  MOZ_NATIVE_LIBVPX=1
+                 AC_DEFINE(MOZ_NATIVE_LIBVPX)
                  MOZ_LIBVPX_INCLUDES="-I${LIBVPX_DIR}/include"
                  MOZ_LIBVPX_LIBS="-L${LIBVPX_DIR}/lib -lvpx"],
                 [AC_MSG_RESULT([no])

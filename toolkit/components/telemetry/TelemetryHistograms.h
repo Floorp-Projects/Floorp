@@ -70,7 +70,7 @@ HISTOGRAM(CYCLE_COLLECTOR_COLLECTED, 1, 100000, 50, EXPONENTIAL, "Number of obje
 /**
  * GC telemetry
  */
-HISTOGRAM(GC_REASON, 0, 20, 20, LINEAR, "Reason (enum value) for initiating a GC")
+HISTOGRAM(GC_REASON, 1, 20, 20, LINEAR, "Reason (enum value) for initiating a GC")
 HISTOGRAM_BOOLEAN(GC_IS_COMPARTMENTAL, "Is it a compartmental GC?")
 HISTOGRAM_BOOLEAN(GC_IS_SHAPE_REGEN, "Is it a shape regenerating GC?")
 HISTOGRAM(GC_MS, 1, 10000, 50, EXPONENTIAL, "Time spent running JS GC (ms)")
@@ -273,7 +273,7 @@ HISTOGRAM(PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS, 50, 500, 10, EXPONENTIAL, "PLA
 /**
  * Updater telemetry.
  */
-HISTOGRAM(UPDATE_STATUS, 0, 16004, 18, LINEAR, "Updater: the status of the latest update performed")
+HISTOGRAM(UPDATE_STATUS, 1, 16004, 18, LINEAR, "Updater: the status of the latest update performed")
 
 /**
  * Thunderbird-specific telemetry.

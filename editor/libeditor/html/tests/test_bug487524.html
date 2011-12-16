@@ -31,7 +31,7 @@ function runTest() {
   range.setEnd(li1.nextSibling,0);
   selection.addRange(range);
 
-  sendKey('delete', li1);
+  sendKey('delete');
   is(doc.body.innerHTML,'<ul><li>two</li><ul><li>a</li></ul></ul>','delete 1st LI');
 
   var li2 = setupIframe(i1,'<ul><li id="li2">two</li><ul><li>a</li></ul></ul>','li2')
@@ -43,7 +43,7 @@ function runTest() {
   range.setEnd(li2.nextSibling.firstChild,0);
   selection.addRange(range);
 
-  sendKey('delete', li2);
+  sendKey('delete');
   is(doc.body.innerHTML,'<ul><ul><li>a</li></ul></ul>','delete 2nd LI');
 
   SimpleTest.finish();

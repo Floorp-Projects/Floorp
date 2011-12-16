@@ -643,7 +643,7 @@ function runTest(testNum) {
         // the username.
         uname.focus();
         doKey("right");
-        sendChar("X", uname);
+        sendChar("X");
         // Trigger the 'blur' event on uname
         pword.focus();
         checkACForm("sXingleuser5", "singlepass5");
@@ -722,14 +722,15 @@ function runTest(testNum) {
         pwmgr.removeLogin(login7);
 
         testNum = 699;
-        gNextTestWillOpenPopup = false;
+        gNextTestWillOpenPopup = true;
         break;
 
     case 700:
         // Turn our attention to form9 to test the dropdown - bug 497541
         uname = $_(9, "uname");
         pword = $_(9, "pword");
-        sendString("form9userAB", uname);
+        uname.focus();
+        sendString("form9userAB");
         gNextTestWillOpenPopup = true;
         break;
 
@@ -737,7 +738,7 @@ function runTest(testNum) {
         checkACForm("form9userAB", "");
         uname.focus();
         doKey("left");
-        sendChar("A", uname);
+        sendChar("A");
         gNextTestWillOpenPopup = false;
         break;
 
@@ -753,7 +754,8 @@ function runTest(testNum) {
 
     case 703:
         pwmgr.addLogin(login8C);
-        sendChar("z", uname);
+        uname.focus();
+        sendChar("z");
         gNextTestWillOpenPopup = false;
         break;
 

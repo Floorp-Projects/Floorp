@@ -93,7 +93,10 @@ SHARED_LIBRARY_LIBS 	+= \
 EXTRA_DSO_LDOPTS = $(MOZALLOC_LIB) $(NSPR_LIBS)
 
 ifeq (WINNT,$(OS_TARGET))
-DEFFILE = $(srcdir)/symbols.def
+DEFFILE = symbols.def
+
+symbols.def: symbols.def.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(ACDEFINES) $< > $@
 endif
 
 include $(topsrcdir)/config/rules.mk

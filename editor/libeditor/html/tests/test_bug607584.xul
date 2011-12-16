@@ -57,12 +57,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607584
         {
           var editor = this.mEditor.getEditor(this.mEditor.contentWindow);
           if (editor) {
+              this.mEditor.focus();
               editor instanceof Components.interfaces.nsIHTMLEditor;
               editor.returnInParagraphCreatesNewParagraph = true;
               editor.insertHTML("<p id='foo'>this is a paragraph carrying id 'foo'</p>");
               var p = editor.document.getElementById('foo')
               editor.beginningOfDocument();
-              sendKey("return", p);
+              sendKey("return");
               var firstP = p.parentNode.firstElementChild;
               var lastP  = p.parentNode.lastElementChild;
               var isOk = firstP.nodeName.toLowerCase() == "p" &&
