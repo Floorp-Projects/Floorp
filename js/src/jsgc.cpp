@@ -2096,8 +2096,7 @@ MarkRuntime(JSTracer *trc)
 void
 TriggerGC(JSRuntime *rt, gcstats::Reason reason)
 {
-    JS_ASSERT(!rt->gcRunning);
-    if (rt->gcIsNeeded)
+    if (rt->gcRunning || rt->gcIsNeeded)
         return;
 
     /*
