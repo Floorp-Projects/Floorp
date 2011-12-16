@@ -1248,7 +1248,7 @@ Parser::functionArguments(TreeContext &funtc, FunctionBox *funbox, ParseNode **l
                  * Adjust fun->nargs to count the single anonymous positional
                  * parameter that is to be destructured.
                  */
-                uint16 slot;
+                uint16_t slot;
                 if (!funtc.bindings.addDestructuring(context, &slot))
                     return false;
 
@@ -1309,7 +1309,7 @@ Parser::functionArguments(TreeContext &funtc, FunctionBox *funbox, ParseNode **l
                 }
 #endif
 
-                uint16 slot;
+                uint16_t slot;
                 if (!funtc.bindings.addArgument(context, name, &slot))
                     return false;
                 if (!DefineArg(funbox->node, name, slot, &funtc))
@@ -1938,7 +1938,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
      * again to include script->nfixed.
      */
     pn->setOp(JSOP_GETLOCAL);
-    pn->pn_cookie.set(tc->staticLevel, uint16(n));
+    pn->pn_cookie.set(tc->staticLevel, uint16_t(n));
     pn->pn_dflags |= PND_LET | PND_BOUND;
 
     /*
@@ -4944,8 +4944,8 @@ class CompExprTransplanter {
  */
 class GenexpGuard {
     TreeContext     *tc;
-    uint32          startYieldCount;
-    uint32          startArgumentsCount;
+    uint32_t        startYieldCount;
+    uint32_t        startArgumentsCount;
 
   public:
     explicit GenexpGuard(TreeContext *tc)

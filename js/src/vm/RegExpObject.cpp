@@ -323,7 +323,7 @@ JSBool
 js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
 {
     JSString *source = 0;
-    uint32 flagsword = 0;
+    uint32_t flagsword = 0;
 
     if (xdr->mode == JSXDR_ENCODE) {
         JS_ASSERT(objp);

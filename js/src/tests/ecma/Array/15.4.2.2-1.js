@@ -64,7 +64,7 @@
    This file tests cases where len is a number.
 
    The cases in this test need to be updated since the
-   ToUint32 description has changed.
+   ToUint32_t description has changed.
 
    Author:             christine@netscape.com
    Date:               7 october 1997

@@ -90,7 +90,7 @@ ReadScriptFromStream(JSContext *cx, nsIObjectInputStream *stream,
     // the JSXDRState.  So we steal it back, nulling xdr's buffer so it
     // doesn't get passed to ::JS_free by ::JS_XDRDestroy.
 
-    uint32 length;
+    uint32_t length;
     data = static_cast<char*>(JS_XDRMemGetData(xdr, &length));
     JS_XDRMemSetData(xdr, nsnull, 0);
     JS_XDRDestroy(xdr);
@@ -127,7 +127,7 @@ WriteScriptToStream(JSContext *cx, JSScript *script,
         // stream, when control returns here from ::JS_XDRScript, we'll have
         // one last buffer of data to write to aStream.
 
-        uint32 size;
+        uint32_t size;
         const char* data = reinterpret_cast<const char*>
                                            (JS_XDRMemGetData(xdr, &size));
         NS_ASSERTION(data, "no decoded JSXDRState data!");

@@ -108,14 +108,14 @@ ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
         stubs::GetGlobalName(f);
         return;
     }
-    uint32 slot = shape->slot();
+    uint32_t slot = shape->slot();
 
     /* Patch shape guard. */
     Repatcher repatcher(f.jit());
     repatcher.repatch(ic->fastPathStart.dataLabelPtrAtOffset(ic->shapeOffset), obj->lastProperty());
 
     /* Patch loads. */
-    uint32 index = obj->dynamicSlotIndex(slot);
+    uint32_t index = obj->dynamicSlotIndex(slot);
     JSC::CodeLocationLabel label = ic->fastPathStart.labelAtOffset(ic->loadStoreOffset);
     repatcher.patchAddressOffsetForValueLoad(label, index * sizeof(Value));
 
@@ -197,7 +197,7 @@ UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, const Sh
     Repatcher repatcher(f.jit());
     ic->patchInlineShapeGuard(repatcher, obj->lastProperty());
 
-    uint32 index = obj->dynamicSlotIndex(shape->slot());
+    uint32_t index = obj->dynamicSlotIndex(shape->slot());
     JSC::CodeLocationLabel label = ic->fastPathStart.labelAtOffset(ic->loadStoreOffset);
     repatcher.patchAddressOffsetForValueStore(label, index * sizeof(Value),
                                               ic->vr.isTypeKnown());
@@ -254,7 +254,7 @@ class EqualityICLinker : public LinkerHelper
 };
 
 /* Rough over-estimate of how much memory we need to unprotect. */
-static const uint32 INLINE_PATH_LENGTH = 64;
+static const uint32_t INLINE_PATH_LENGTH = 64;
 
 class EqualityCompiler : public BaseCompiler
 {
@@ -476,7 +476,7 @@ NativeStubLinker::init(JSContext *cx)
  */
 bool
 mjit::NativeStubEpilogue(VMFrame &f, Assembler &masm, NativeStubLinker::FinalJump *result,
-                         int32 initialFrameDepth, int32 vpOffset,
+                         int32_t initialFrameDepth, int32_t vpOffset,
                          MaybeRegisterID typeReg, MaybeRegisterID dataReg)
 {
     /* Reload fp, which may have been clobbered by restoreStackBase(). */
@@ -610,7 +610,7 @@ class CallCompiler : public BaseCompiler
         repatch.relink(oolCall, fptr);
     }
 
-    bool generateFullCallStub(JITScript *from, JSScript *script, uint32 flags)
+    bool generateFullCallStub(JITScript *from, JSScript *script, uint32_t flags)
     {
         /*
          * Create a stub that works with arity mismatches. Like the fast-path,
@@ -669,7 +669,7 @@ class CallCompiler : public BaseCompiler
         masm.loadPtr(FrameAddress(VMFrame::offsetOfRegsSp()), JSFrameReg);
 
         /* Compute the value of ncode to use at this call site. */
-        ncode = (uint8 *) f.jit()->code.m_code.executableAddress() + ic.call->codeOffset;
+        ncode = (uint8_t *) f.jit()->code.m_code.executableAddress() + ic.call->codeOffset;
         masm.storePtr(ImmPtr(ncode), Address(JSFrameReg, StackFrame::offsetOfNcode()));
 
         masm.jump(Registers::ReturnReg);
@@ -700,7 +700,7 @@ class CallCompiler : public BaseCompiler
                    (unsigned long) masm.size());
 
         if (f.regs.inlined()) {
-            JSC::LinkBuffer code((uint8 *) cs.executableAddress(), masm.size(), JSC::METHOD_CODE);
+            JSC::LinkBuffer code((uint8_t *) cs.executableAddress(), masm.size(), JSC::METHOD_CODE);
             code.patch(inlined, f.regs.inlined());
         }
 
@@ -885,7 +885,7 @@ class CallCompiler : public BaseCompiler
         RegisterID t0 = tempRegs.takeAnyReg().reg();
         masm.bumpStubCounter(f.script(), f.pc(), t0);
 
-        int32 storeFrameDepth = ic.frameSize.isStatic() ? initialFrameDepth : -1;
+        int32_t storeFrameDepth = ic.frameSize.isStatic() ? initialFrameDepth : -1;
         masm.setupFallibleABICall(cx->typeInferenceEnabled(), f.regs.pc, storeFrameDepth);
 
         /* Grab cx. */
@@ -906,7 +906,7 @@ class CallCompiler : public BaseCompiler
 #else
         RegisterID vpReg = Registers::ArgReg2;
 #endif
-        uint32 vpOffset = (uint32) ((char *) args.base() - (char *) f.fp());
+        uint32_t vpOffset = (uint32_t) ((char *) args.base() - (char *) f.fp());
         masm.addPtr(Imm32(vpOffset), JSFrameReg, vpReg);
 
         /* Compute argc. */
@@ -1007,7 +1007,7 @@ class CallCompiler : public BaseCompiler
         JSScript *script = fun->script();
         JS_ASSERT(script);
 
-        uint32 flags = callingNew ? StackFrame::CONSTRUCTING : 0;
+        uint32_t flags = callingNew ? StackFrame::CONSTRUCTING : 0;
 
         if (!ic.hit) {
             ic.hit = true;

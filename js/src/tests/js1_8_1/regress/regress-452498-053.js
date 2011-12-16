@@ -24,7 +24,7 @@ function test()
 
 // ------- Comment #53 From Jason Orendorff
 
-// Assertion failure: (slot) < (uint32)(obj)->dslots[-1]
+// Assertion failure: (slot) < (uint32_t)(obj)->dslots[-1]
 // at ../jsobj.cpp:5559
 // On the last line of BindLet, we have
 //    JS_SetReservedSlot(cx, blockObj, index, PRIVATE_TO_JSVAL(pn));

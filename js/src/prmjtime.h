@@ -39,15 +39,8 @@
 
 #ifndef prmjtime_h___
 #define prmjtime_h___
-/*
- * PR date stuff for mocha and java. Placed here temporarily not to break
- * Navigator and localize changes to mocha.
- */
-#include <time.h>
 
-#ifdef MOZILLA_CLIENT
-#include "jscompat.h"
-#endif
+#include <time.h>
 
 struct JSContext;
 
@@ -98,26 +91,26 @@ struct JSContext;
 class DSTOffsetCache {
   public:
     inline DSTOffsetCache();
-    JSInt64 getDSTOffsetMilliseconds(int64 localTimeMilliseconds, JSContext *cx);
+    int64_t getDSTOffsetMilliseconds(int64_t localTimeMilliseconds, JSContext *cx);
 
     inline void purge();
 
   private:
-    JSInt64 computeDSTOffsetMilliseconds(int64 localTimeSeconds);
+    int64_t computeDSTOffsetMilliseconds(int64_t localTimeSeconds);
 
-    JSInt64 offsetMilliseconds;
-    JSInt64 rangeStartSeconds, rangeEndSeconds;
+    int64_t offsetMilliseconds;
+    int64_t rangeStartSeconds, rangeEndSeconds;
 
-    JSInt64 oldOffsetMilliseconds;
-    JSInt64 oldRangeStartSeconds, oldRangeEndSeconds;
+    int64_t oldOffsetMilliseconds;
+    int64_t oldRangeStartSeconds, oldRangeEndSeconds;
 
-    static const JSInt64 MAX_UNIX_TIMET = 2145859200; /* time_t 12/31/2037 */
-    static const JSInt64 MILLISECONDS_PER_SECOND = 1000;
-    static const JSInt64 SECONDS_PER_MINUTE = 60;
-    static const JSInt64 SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
-    static const JSInt64 SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR;
+    static const int64_t MAX_UNIX_TIMET = 2145859200; /* time_t 12/31/2037 */
+    static const int64_t MILLISECONDS_PER_SECOND = 1000;
+    static const int64_t SECONDS_PER_MINUTE = 60;
+    static const int64_t SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
+    static const int64_t SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR;
 
-    static const JSInt64 RANGE_EXPANSION_AMOUNT = 30 * SECONDS_PER_DAY;
+    static const int64_t RANGE_EXPANSION_AMOUNT = 30 * SECONDS_PER_DAY;
 
   private:
     void sanityCheck();
@@ -131,16 +124,16 @@ typedef struct PRMJTime       PRMJTime;
  * Broken down form of 64 bit time value.
  */
 struct PRMJTime {
-    JSInt32 tm_usec;            /* microseconds of second (0-999999) */
-    JSInt8 tm_sec;              /* seconds of minute (0-59) */
-    JSInt8 tm_min;              /* minutes of hour (0-59) */
-    JSInt8 tm_hour;             /* hour of day (0-23) */
-    JSInt8 tm_mday;             /* day of month (1-31) */
-    JSInt8 tm_mon;              /* month of year (0-11) */
-    JSInt8 tm_wday;             /* 0=sunday, 1=monday, ... */
-    JSInt32 tm_year;            /* absolute year, AD */
-    JSInt16 tm_yday;            /* day of year (0 to 365) */
-    JSInt8 tm_isdst;            /* non-zero if DST in effect */
+    int32_t tm_usec;            /* microseconds of second (0-999999) */
+    int8_t tm_sec;              /* seconds of minute (0-59) */
+    int8_t tm_min;              /* minutes of hour (0-59) */
+    int8_t tm_hour;             /* hour of day (0-23) */
+    int8_t tm_mday;             /* day of month (1-31) */
+    int8_t tm_mon;              /* month of year (0-11) */
+    int8_t tm_wday;             /* 0=sunday, 1=monday, ... */
+    int32_t tm_year;            /* absolute year, AD */
+    int16_t tm_yday;            /* day of year (0 to 365) */
+    int8_t tm_isdst;            /* non-zero if DST in effect */
 };
 
 /* Some handy constants */
@@ -148,7 +141,7 @@ struct PRMJTime {
 #define PRMJ_USEC_PER_MSEC      1000L
 
 /* Return the current local time in micro-seconds */
-extern JSInt64
+extern int64_t
 PRMJ_Now(void);
 
 /* Release the resources associated with PRMJ_Now; don't call PRMJ_Now again */
@@ -160,7 +153,7 @@ PRMJ_NowShutdown(void);
 #endif
 
 /* get the difference between this time zone and  gmt timezone in seconds */
-extern JSInt32
+extern int32_t
 PRMJ_LocalGMTDifference(void);
 
 /* Format a time value into a buffer. Same semantics as strftime() */
