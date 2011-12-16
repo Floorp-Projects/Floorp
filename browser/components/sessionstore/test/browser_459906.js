@@ -40,7 +40,7 @@ function test() {
   waitForExplicitFinish();
 
   let testURL = "http://mochi.test:8888/browser/" +
-    "browser/components/sessionstore/test/browser/browser_459906_sample.html";
+    "browser/components/sessionstore/test/browser_459906_sample.html";
   let uniqueValue = "<b>Unique:</b> " + Date.now();
 
   var frameCount = 0;

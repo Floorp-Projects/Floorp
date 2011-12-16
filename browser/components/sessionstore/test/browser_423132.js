@@ -48,7 +48,7 @@ function test() {
   gPrefService.setIntPref("browser.sessionstore.interval", 0);
 
   const testURL = "http://mochi.test:8888/browser/" +
-    "browser/components/sessionstore/test/browser/browser_423132_sample.html";
+    "browser/components/sessionstore/test/browser_423132_sample.html";
 
   // open a new window
   let newWin = openDialog(location, "_blank", "chrome,all,dialog=no", "about:blank");
