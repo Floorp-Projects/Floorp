@@ -49,7 +49,7 @@
 
 class XPCCallContext;
 
-#define XPC_QS_NULL_INDEX  ((size_t) -1)
+#define XPC_QS_NULL_INDEX  ((uint16_t) -1)
 
 struct xpc_qsPropertySpec {
     const char *name;
@@ -76,8 +76,8 @@ struct xpc_qsHashEntry {
     const xpc_qsFunctionSpec *functions;
     // These last two fields index to other entries in the same table.
     // XPC_QS_NULL_ENTRY indicates there are no more entries in the chain.
-    size_t parentInterface;
-    size_t chain;
+    uint16_t parentInterface;
+    uint16_t chain;
 };
 
 inline nsISupports*

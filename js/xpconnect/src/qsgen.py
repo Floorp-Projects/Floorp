@@ -1235,6 +1235,9 @@ def writeDefiner(f, conf, interfaces):
     f.write("static const xpc_qsHashEntry tableData[] = {\n")
     f.write(",\n".join(entries))
     f.write("\n    };\n\n")
+    f.write("// Make sure our table indices aren't overflowed\n"
+            "PR_STATIC_ASSERT((sizeof(tableData) / sizeof(tableData[0])) < (1 << (8 * sizeof(tableData[0].parentInterface))));\n"
+            "PR_STATIC_ASSERT((sizeof(tableData) / sizeof(tableData[0])) < (1 << (8 * sizeof(tableData[0].chain))));\n\n")
 
     # the definer function (entry point to this quick stubs file)
     f.write("JSBool %s_DefineQuickStubs(" % conf.name)
