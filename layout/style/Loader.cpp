@@ -969,11 +969,12 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
     const PRUnichar *strings[] = { specUTF16.get(), ctypeUTF16.get() };
 
     nsCOMPtr<nsIURI> referrer = GetReferrerURI();
-    nsContentUtils::ReportToConsole(nsContentUtils::eCSS_PROPERTIES,
+    nsContentUtils::ReportToConsole(errorFlag,
+                                    "CSS Loader", mLoader->mDocument,
+                                    nsContentUtils::eCSS_PROPERTIES,
                                     errorMessage,
                                     strings, ArrayLength(strings),
-                                    referrer, EmptyString(), 0, 0, errorFlag,
-                                    "CSS Loader", mLoader->mDocument);
+                                    referrer);
 
     if (errorFlag == nsIScriptError::errorFlag) {
       LOG_WARN(("  Ignoring sheet with improper MIME type %s",

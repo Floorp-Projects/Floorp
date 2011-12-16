@@ -166,9 +166,9 @@ public:
     {
       // 64bit address plus '0x' plus null terminator.
       char address[21];
-      JSUint32 addressSize =
+      uint32_t addressSize =
         JS_snprintf(address, sizeof(address), "0x%llx", aWorkerPrivate);
-      if (addressSize != JSUint32(-1)) {
+      if (addressSize != uint32_t(-1)) {
         mAddressString.Assign(address, addressSize);
       }
       else {
@@ -227,8 +227,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(WorkerMemoryReporter, nsIMemoryMultiReporter)
 struct WorkerStructuredCloneCallbacks
 {
   static JSObject*
-  Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32 aTag,
-       uint32 aData, void* aClosure)
+  Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
+       uint32_t aData, void* aClosure)
   {
     // See if object is a nsIDOMFile pointer.
     if (aTag == DOMWORKER_SCTAG_FILE) {
@@ -326,7 +326,7 @@ struct WorkerStructuredCloneCallbacks
   }
 
   static void
-  Error(JSContext* aCx, uint32 /* aErrorId */)
+  Error(JSContext* aCx, uint32_t /* aErrorId */)
   {
     ThrowDOMExceptionForCode(aCx, DATA_CLONE_ERR);
   }
@@ -341,8 +341,8 @@ JSStructuredCloneCallbacks gWorkerStructuredCloneCallbacks = {
 struct MainThreadWorkerStructuredCloneCallbacks
 {
   static JSObject*
-  Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32 aTag,
-       uint32 aData, void* aClosure)
+  Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
+       uint32_t aData, void* aClosure)
   {
     AssertIsOnMainThread();
 
@@ -485,7 +485,7 @@ struct MainThreadWorkerStructuredCloneCallbacks
   }
 
   static void
-  Error(JSContext* aCx, uint32 aErrorId)
+  Error(JSContext* aCx, uint32_t aErrorId)
   {
     AssertIsOnMainThread();
 
@@ -502,8 +502,8 @@ JSStructuredCloneCallbacks gMainThreadWorkerStructuredCloneCallbacks = {
 struct ChromeWorkerStructuredCloneCallbacks
 {
   static JSObject*
-  Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32 aTag,
-       uint32 aData, void* aClosure)
+  Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
+       uint32_t aData, void* aClosure)
   {
     return WorkerStructuredCloneCallbacks::Read(aCx, aReader, aTag, aData,
                                                 aClosure);
@@ -517,7 +517,7 @@ struct ChromeWorkerStructuredCloneCallbacks
   }
 
   static void
-  Error(JSContext* aCx, uint32 aErrorId)
+  Error(JSContext* aCx, uint32_t aErrorId)
   {
     return WorkerStructuredCloneCallbacks::Error(aCx, aErrorId);
   }
@@ -532,8 +532,8 @@ JSStructuredCloneCallbacks gChromeWorkerStructuredCloneCallbacks = {
 struct MainThreadChromeWorkerStructuredCloneCallbacks
 {
   static JSObject*
-  Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32 aTag,
-       uint32 aData, void* aClosure)
+  Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
+       uint32_t aData, void* aClosure)
   {
     AssertIsOnMainThread();
 
@@ -573,7 +573,7 @@ struct MainThreadChromeWorkerStructuredCloneCallbacks
   }
 
   static void
-  Error(JSContext* aCx, uint32 aErrorId)
+  Error(JSContext* aCx, uint32_t aErrorId)
   {
     AssertIsOnMainThread();
 

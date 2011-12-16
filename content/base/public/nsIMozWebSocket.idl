@@ -44,6 +44,7 @@ interface nsIPrincipal;
 interface nsIScriptContext;
 interface nsPIDOMWindow;
 interface nsIDOMDOMStringList;
+interface nsIVariant;
 
 %{C++
 #include "nsTArray.h"
@@ -58,7 +59,7 @@ class nsString;
  * http://dev.w3.org/html5/websockets/
  *
  */
-[scriptable, uuid(5b124f54-7d46-4bc0-8507-e58ed22c19b9)]
+[scriptable, uuid(f463b9b5-1408-4057-9224-e4f5bc33f17b)]
 interface nsIMozWebSocket : nsISupports
 {
   readonly attribute DOMString url;
@@ -74,6 +75,10 @@ interface nsIMozWebSocket : nsISupports
 
   readonly attribute unsigned long bufferedAmount;
 
+  // "blob" by default: can set to "blob" or "arraybuffer": setting to other
+  // values will throw SYNTAX_ERR exception.
+  attribute DOMString binaryType;
+
   // event handler attributes
   attribute nsIDOMEventListener onopen;
   attribute nsIDOMEventListener onmessage;
@@ -81,13 +86,14 @@ interface nsIMozWebSocket : nsISupports
   attribute nsIDOMEventListener onclose;
 
   /**
-   * Transmits data using the connection.
-   *
-   * @param data The data to be transmited.
-   * @return if the connection is still established (and the data was queued or
-   *         sent successfully).
+   * Transmits data to other end of the connection.
+   * @param data The data to be transmitted.  Arraybuffers and Blobs are sent as
+   * binary data.  Strings are sent as UTF-8 text data.  Other types are
+   * converted to a String and sent as a String.
+   * @return if the connection is still established and the data was queued or
+   *         sent successfully.
    */
-  void send(in DOMString data);
+  void send(in nsIVariant data);
 
   /**
    * Closes the Web Socket connection or connection attempt, if any.

@@ -217,7 +217,7 @@ class ContextStack
 
     inline StackFrame *
     getCallFrame(JSContext *cx, MaybeReportError report, const CallArgs &args,
-                 JSFunction *fun, JSScript *script, /*StackFrame::Flags*/ uint32 *pflags) const;
+                 JSFunction *fun, JSScript *script, /*StackFrame::Flags*/ uint32_t *pflags) const;
 
     /* Make pop* functions private since only called by guard classes. */
     void popSegment();

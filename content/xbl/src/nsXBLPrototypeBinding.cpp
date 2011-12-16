@@ -2355,13 +2355,12 @@ nsXBLPrototypeBinding::ResolveBaseBinding()
       // Check the white list
       if (!CheckTagNameWhiteList(nameSpaceID, tagName)) {
         const PRUnichar* params[] = { display.get() };
-        nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
+        nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                        "XBL", nsnull,
+                                        nsContentUtils::eXBL_PROPERTIES,
                                        "InvalidExtendsBinding",
-                                        params, NS_ARRAY_LENGTH(params),
-                                        doc->GetDocumentURI(),
-                                        EmptyString(), 0, 0,
-                                        nsIScriptError::errorFlag,
-                                        "XBL");
+                                        params, ArrayLength(params),
+                                        doc->GetDocumentURI());
         NS_ASSERTION(!nsXBLService::IsChromeOrResourceURI(doc->GetDocumentURI()),
                      "Invalid extends value");
         return NS_ERROR_ILLEGAL_VALUE;

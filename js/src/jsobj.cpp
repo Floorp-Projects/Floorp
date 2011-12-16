@@ -117,7 +117,7 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
-JS_STATIC_ASSERT(int32((JSObject::NELEMENTS_LIMIT - 1) * sizeof(Value)) == int64((JSObject::NELEMENTS_LIMIT - 1) * sizeof(Value)));
+JS_STATIC_ASSERT(int32_t((JSObject::NELEMENTS_LIMIT - 1) * sizeof(Value)) == int64_t((JSObject::NELEMENTS_LIMIT - 1) * sizeof(Value)));
 
 Class js::ObjectClass = {
     js_Object_str,
@@ -714,7 +714,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
                 const jschar *start = vchars;
                 const jschar *end = vchars + vlength;
 
-                uint8 parenChomp = 0;
+                uint8_t parenChomp = 0;
                 if (vchars[0] == '(') {
                     vchars++;
                     parenChomp = 1;
@@ -966,7 +966,7 @@ EvalCacheHash(JSContext *cx, JSLinearString *str)
 
     if (n > 100)
         n = 100;
-    uint32 h;
+    uint32_t h;
     for (h = 0; n; s++, n--)
         h = JS_ROTATE_LEFT32(h, 4) ^ *s;
 
@@ -1242,12 +1242,14 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
 
     if (!esg.foundScript()) {
         uintN lineno;
-        const char *filename = CurrentScriptFileAndLine(cx, &lineno,
-                                                        evalType == DIRECT_EVAL
-                                                        ? CALLED_FROM_JSOP_EVAL
-                                                        : NOT_CALLED_FROM_JSOP_EVAL);
-        uint32 tcflags = TCF_COMPILE_N_GO | TCF_COMPILE_FOR_EVAL;
-        JSScript *compiled = frontend::CompileScript(cx, &scopeobj, caller, principals,
+        const char *filename;
+        JSPrincipals *originPrincipals;
+        CurrentScriptFileLineOrigin(cx, &filename, &lineno, &originPrincipals,
+                                    evalType == DIRECT_EVAL ? CALLED_FROM_JSOP_EVAL
+                                                            : NOT_CALLED_FROM_JSOP_EVAL);
+        uint32_t tcflags = TCF_COMPILE_N_GO | TCF_COMPILE_FOR_EVAL;
+        JSScript *compiled = frontend::CompileScript(cx, &scopeobj, caller,
+                                                     principals, originPrincipals,
                                                      tcflags, chars, length, filename,
                                                      lineno, cx->findVersion(), linearStr,
                                                      staticLevel);
@@ -1748,7 +1750,8 @@ void
 PropDesc::initFromPropertyDescriptor(const PropertyDescriptor &desc)
 {
     pd.setUndefined();
-    attrs = uint8(desc.attrs);
+    attrs = uint8_t(desc.attrs);
+    JS_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
     if (desc.attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         hasGet = true;
         get = ((desc.attrs & JSPROP_GETTER) && desc.getter)
@@ -2025,6 +2028,7 @@ PropDesc::initialize(JSContext* cx, const Value &origval, bool checkAccessors)
         hasGet = true;
         get = v;
         attrs |= JSPROP_GETTER | JSPROP_SHARED;
+        attrs &= ~JSPROP_READONLY;
         if (checkAccessors && !checkGetter(cx))
             return false;
     }
@@ -2036,6 +2040,7 @@ PropDesc::initialize(JSContext* cx, const Value &origval, bool checkAccessors)
         hasSet = true;
         set = v;
         attrs |= JSPROP_SETTER | JSPROP_SHARED;
+        attrs &= ~JSPROP_READONLY;
         if (checkAccessors && !checkSetter(cx))
             return false;
     }
@@ -2045,6 +2050,8 @@ PropDesc::initialize(JSContext* cx, const Value &origval, bool checkAccessors)
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INVALID_DESCRIPTOR);
         return false;
     }
+
+    JS_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
 
     return true;
 }
@@ -2352,9 +2359,9 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const jsid &id, const PropD
         if (desc.hasEnumerable)
             changed |= JSPROP_ENUMERATE;
         if (desc.hasGet)
-            changed |= JSPROP_GETTER | JSPROP_SHARED;
+            changed |= JSPROP_GETTER | JSPROP_SHARED | JSPROP_READONLY;
         if (desc.hasSet)
-            changed |= JSPROP_SETTER | JSPROP_SHARED;
+            changed |= JSPROP_SETTER | JSPROP_SHARED | JSPROP_READONLY;
 
         attrs = (desc.attrs & changed) | (shape->attributes() & ~changed);
         if (desc.hasGet) {
@@ -2421,7 +2428,7 @@ DefinePropertyOnArray(JSContext *cx, JSObject *obj, const jsid &id, const PropDe
         return JS_FALSE;
     }
 
-    uint32 index;
+    uint32_t index;
     if (js_IdIsIndex(id, &index)) {
         /*
         // Disabled until we support defining "length":
@@ -3231,7 +3238,7 @@ uintN
 js_InferFlags(JSContext *cx, uintN defaultFlags)
 {
     const JSCodeSpec *cs;
-    uint32 format;
+    uint32_t format;
     uintN flags = 0;
 
     jsbytecode *pc;
@@ -3277,7 +3284,7 @@ with_LookupProperty(JSContext *cx, JSObject *obj, PropertyName *name, JSObject *
 }
 
 static JSBool
-with_LookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
+with_LookupElement(JSContext *cx, JSObject *obj, uint32_t index, JSObject **objp,
                    JSProperty **propp)
 {
     jsid id;
@@ -3305,7 +3312,7 @@ with_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName 
 }
 
 static JSBool
-with_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp)
+with_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index, Value *vp)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
@@ -3332,7 +3339,7 @@ with_SetProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, JS
 }
 
 static JSBool
-with_SetElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict)
+with_SetElement(JSContext *cx, JSObject *obj, uint32_t index, Value *vp, JSBool strict)
 {
     return obj->getProto()->setElement(cx, index, vp, strict);
 }
@@ -3356,7 +3363,7 @@ with_GetPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uin
 }
 
 static JSBool
-with_GetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+with_GetElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, uintN *attrsp)
 {
     return obj->getProto()->getElementAttributes(cx, index, attrsp);
 }
@@ -3380,7 +3387,7 @@ with_SetPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, uin
 }
 
 static JSBool
-with_SetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+with_SetElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, uintN *attrsp)
 {
     return obj->getProto()->setElementAttributes(cx, index, attrsp);
 }
@@ -3404,7 +3411,7 @@ with_DeleteProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *rva
 }
 
 static JSBool
-with_DeleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict)
+with_DeleteElement(JSContext *cx, JSObject *obj, uint32_t index, Value *rval, JSBool strict)
 {
     return obj->getProto()->deleteElement(cx, index, rval, strict);
 }
@@ -3530,7 +3537,7 @@ js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth)
     return obj;
 }
 
-static const uint32 BLOCK_RESERVED_SLOTS = 2;
+static const uint32_t BLOCK_RESERVED_SLOTS = 2;
 static const gc::AllocKind BLOCK_FINALIZE_KIND = gc::FINALIZE_OBJECT4;
 
 JSObject *
@@ -3565,10 +3572,8 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
     if (!clone)
         return NULL;
 
-    StackFrame *priv = js_FloatingFrameIfGenerator(cx, fp);
-
     /* Set the parent if necessary, as for call objects. */
-    JSObject *global = priv->scopeChain().getGlobal();
+    JSObject *global = fp->scopeChain().getGlobal();
     if (global != clone->getParent()) {
         JS_ASSERT(clone->getParent() == NULL);
         if (!clone->setParent(cx, global))
@@ -3579,7 +3584,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
     JS_ASSERT(clone->isClonedBlock());
     JS_ASSERT(clone->slotSpan() >= OBJ_BLOCK_COUNT(cx, proto) + BLOCK_RESERVED_SLOTS);
 
-    clone->setPrivate(priv);
+    clone->setPrivate(js_FloatingFrameIfGenerator(cx, fp));
     clone->setSlot(JSSLOT_BLOCK_DEPTH, proto->getSlot(JSSLOT_BLOCK_DEPTH));
 
     if (clone->lastProperty()->extensibleParents() && !clone->generateOwnShape(cx))
@@ -3678,7 +3683,7 @@ JSObject::defineBlockVariable(JSContext *cx, jsid id, intN index)
      * Use JSPROP_ENUMERATE to aid the disassembler, and don't convert this
      * object to dictionary mode so that we can clone the block's shape later.
      */
-    uint32 slot = JSSLOT_FREE(&BlockClass) + index;
+    uint32_t slot = JSSLOT_FREE(&BlockClass) + index;
     const Shape *shape = addProperty(cx, id,
                                      block_getProperty, block_setProperty,
                                      slot, JSPROP_ENUMERATE | JSPROP_PERMANENT,
@@ -3702,7 +3707,7 @@ JSObject::nonNativeSetProperty(JSContext *cx, jsid id, js::Value *vp, JSBool str
 }
 
 JSBool
-JSObject::nonNativeSetElement(JSContext *cx, uint32 index, js::Value *vp, JSBool strict)
+JSObject::nonNativeSetElement(JSContext *cx, uint32_t index, js::Value *vp, JSBool strict)
 {
     if (JS_UNLIKELY(watched())) {
         jsid id;
@@ -4092,9 +4097,9 @@ JSObject::swap(JSContext *cx, JSObject *other)
 
 #if JS_HAS_XDR
 
-#define NO_PARENT_INDEX ((uint32)-1)
+#define NO_PARENT_INDEX UINT32_MAX
 
-uint32
+uint32_t
 FindObjectIndex(JSObjectArray *array, JSObject *obj)
 {
     size_t i;
@@ -4115,10 +4120,10 @@ JSBool
 js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
 {
     JSContext *cx;
-    uint32 parentId;
+    uint32_t parentId;
     JSObject *obj, *parent;
     uintN depth, count;
-    uint32 depthAndCount;
+    uint32_t depthAndCount;
     const Shape *shape;
 
     cx = xdr->cx;
@@ -4132,9 +4137,9 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
         parentId = JSScript::isValidOffset(xdr->script->objectsOffset)
                    ? FindObjectIndex(xdr->script->objects(), parent)
                    : NO_PARENT_INDEX;
-        depth = (uint16)OBJ_BLOCK_DEPTH(cx, obj);
-        count = (uint16)OBJ_BLOCK_COUNT(cx, obj);
-        depthAndCount = (uint32)(depth << 16) | count;
+        depth = uint16_t(OBJ_BLOCK_DEPTH(cx, obj));
+        count = uint16_t(OBJ_BLOCK_COUNT(cx, obj));
+        depthAndCount = uint32_t(depth << 16) | count;
     }
 #ifdef __GNUC__ /* suppress bogus gcc warnings */
     else count = 0;
@@ -4168,8 +4173,8 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
         return false;
 
     if (xdr->mode == JSXDR_DECODE) {
-        depth = (uint16)(depthAndCount >> 16);
-        count = (uint16)depthAndCount;
+        depth = uint16_t(depthAndCount >> 16);
+        count = uint16_t(depthAndCount);
         obj->setSlot(JSSLOT_BLOCK_DEPTH, Value(Int32Value(depth)));
 
         /*
@@ -4208,7 +4213,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
             JSAtom *atom = JSID_TO_ATOM(propid);
 
 #ifdef DEBUG
-            uint16 shortid = uint16(shape->shortid());
+            uint16_t shortid = uint16_t(shape->shortid());
             JS_ASSERT(shortid == i);
 #endif
 
@@ -4238,7 +4243,7 @@ Class js::BlockClass = {
 
 static bool
 DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
-                   const Value &v, uint32 attrs, bool &named)
+                   const Value &v, uint32_t attrs, bool &named)
 {
     jsid id = ATOM_TO_JSID(atom);
 
@@ -4253,7 +4258,7 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
 
         const Shape *shape = obj->nativeLookup(cx, id);
         if (!shape) {
-            uint32 slot = 2 * JSProto_LIMIT + key;
+            uint32_t slot = 2 * JSProto_LIMIT + key;
             if (!js_SetReservedSlot(cx, obj, slot, v))
                 return false;
             if (!obj->addProperty(cx, id, JS_PropertyStub, JS_StrictPropertyStub, slot, attrs, 0, 0))
@@ -4352,7 +4357,7 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
          * and (c) key is not the null key.
          */
         if (!(clasp->flags & JSCLASS_IS_ANONYMOUS) || !obj->isGlobal() || key == JSProto_Null) {
-            uint32 attrs = (clasp->flags & JSCLASS_IS_ANONYMOUS)
+            uint32_t attrs = (clasp->flags & JSCLASS_IS_ANONYMOUS)
                            ? JSPROP_READONLY | JSPROP_PERMANENT
                            : 0;
             if (!DefineStandardSlot(cx, obj, key, atom, ObjectValue(*proto), attrs, named))
@@ -4600,7 +4605,7 @@ JSObject::setLastProperty(JSContext *cx, const js::Shape *shape)
 }
 
 bool
-JSObject::setSlotSpan(JSContext *cx, uint32 span)
+JSObject::setSlotSpan(JSContext *cx, uint32_t span)
 {
     JS_ASSERT(inDictionaryMode());
     js::BaseShape *base = lastProperty()->base();
@@ -4618,7 +4623,7 @@ JSObject::setSlotSpan(JSContext *cx, uint32 span)
 }
 
 bool
-JSObject::growSlots(JSContext *cx, uint32 oldCount, uint32 newCount)
+JSObject::growSlots(JSContext *cx, uint32_t oldCount, uint32_t newCount)
 {
     JS_ASSERT(newCount > oldCount);
     JS_ASSERT(newCount >= SLOT_CAPACITY_MIN);
@@ -4694,7 +4699,7 @@ JSObject::growSlots(JSContext *cx, uint32 oldCount, uint32 newCount)
 }
 
 void
-JSObject::shrinkSlots(JSContext *cx, uint32 oldCount, uint32 newCount)
+JSObject::shrinkSlots(JSContext *cx, uint32_t oldCount, uint32_t newCount)
 {
     JS_ASSERT(newCount < oldCount);
     JS_ASSERT(!isDenseArray());
@@ -4751,33 +4756,33 @@ JSObject::growElements(JSContext *cx, uintN newcap)
     static const size_t CAPACITY_DOUBLING_MAX = 1024 * 1024;
     static const size_t CAPACITY_CHUNK = CAPACITY_DOUBLING_MAX / sizeof(Value);
 
-    uint32 oldcap = getDenseArrayCapacity();
+    uint32_t oldcap = getDenseArrayCapacity();
     JS_ASSERT(oldcap <= newcap);
 
     size_t oldSize = Probes::objectResizeActive() ? slotsAndStructSize() : 0;
 
-    uint32 nextsize = (oldcap <= CAPACITY_DOUBLING_MAX)
+    uint32_t nextsize = (oldcap <= CAPACITY_DOUBLING_MAX)
                       ? oldcap * 2
                       : oldcap + (oldcap >> 3);
 
-    uint32 actualCapacity = JS_MAX(newcap, nextsize);
+    uint32_t actualCapacity = JS_MAX(newcap, nextsize);
     if (actualCapacity >= CAPACITY_CHUNK)
         actualCapacity = JS_ROUNDUP(actualCapacity, CAPACITY_CHUNK);
     else if (actualCapacity < SLOT_CAPACITY_MIN)
         actualCapacity = SLOT_CAPACITY_MIN;
 
-    /* Don't let nelements get close to wrapping around uint32. */
+    /* Don't let nelements get close to wrapping around uint32_t. */
     if (actualCapacity >= NELEMENTS_LIMIT || actualCapacity < oldcap || actualCapacity < newcap) {
         JS_ReportOutOfMemory(cx);
         return false;
     }
 
-    uint32 initlen = getDenseArrayInitializedLength();
-    uint32 newAllocated = actualCapacity + ObjectElements::VALUES_PER_HEADER;
+    uint32_t initlen = getDenseArrayInitializedLength();
+    uint32_t newAllocated = actualCapacity + ObjectElements::VALUES_PER_HEADER;
 
     ObjectElements *newheader;
     if (hasDynamicElements()) {
-        uint32 oldAllocated = oldcap + ObjectElements::VALUES_PER_HEADER;
+        uint32_t oldAllocated = oldcap + ObjectElements::VALUES_PER_HEADER;
         newheader = (ObjectElements *)
             cx->realloc_(getElementsHeader(), oldAllocated * sizeof(Value),
                          newAllocated * sizeof(Value));
@@ -4807,7 +4812,7 @@ JSObject::shrinkElements(JSContext *cx, uintN newcap)
 {
     JS_ASSERT(isDenseArray());
 
-    uint32 oldcap = getDenseArrayCapacity();
+    uint32_t oldcap = getDenseArrayCapacity();
     JS_ASSERT(newcap <= oldcap);
 
     size_t oldSize = Probes::objectResizeActive() ? slotsAndStructSize() : 0;
@@ -4818,7 +4823,7 @@ JSObject::shrinkElements(JSContext *cx, uintN newcap)
 
     newcap = Max(newcap, SLOT_CAPACITY_MIN);
 
-    uint32 newAllocated = newcap + ObjectElements::VALUES_PER_HEADER;
+    uint32_t newAllocated = newcap + ObjectElements::VALUES_PER_HEADER;
 
     ObjectElements *newheader = (ObjectElements *)
         cx->realloc_(getElementsHeader(), newAllocated * sizeof(Value));
@@ -5099,9 +5104,9 @@ js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *paren
 }
 
 bool
-JSObject::allocSlot(JSContext *cx, uint32 *slotp)
+JSObject::allocSlot(JSContext *cx, uint32_t *slotp)
 {
-    uint32 slot = slotSpan();
+    uint32_t slot = slotSpan();
     JS_ASSERT(slot >= JSSLOT_FREE(getClass()));
 
     /*
@@ -5110,11 +5115,11 @@ JSObject::allocSlot(JSContext *cx, uint32 *slotp)
      */
     if (inDictionaryMode()) {
         PropertyTable &table = lastProperty()->table();
-        uint32 last = table.freelist;
+        uint32_t last = table.freelist;
         if (last != SHAPE_INVALID_SLOT) {
 #ifdef DEBUG
             JS_ASSERT(last < slot);
-            uint32 next = getSlot(last).toPrivateUint32();
+            uint32_t next = getSlot(last).toPrivateUint32();
             JS_ASSERT_IF(next != SHAPE_INVALID_SLOT, next < slot);
 #endif
 
@@ -5141,12 +5146,12 @@ JSObject::allocSlot(JSContext *cx, uint32 *slotp)
 }
 
 void
-JSObject::freeSlot(JSContext *cx, uint32 slot)
+JSObject::freeSlot(JSContext *cx, uint32_t slot)
 {
     JS_ASSERT(slot < slotSpan());
 
     if (inDictionaryMode()) {
-        uint32 &last = lastProperty()->table().freelist;
+        uint32_t &last = lastProperty()->table().freelist;
 
         /* Can't afford to check the whole freelist, but let's check the head. */
         JS_ASSERT_IF(last != SHAPE_INVALID_SLOT, last < slotSpan() && last != slot);
@@ -5214,7 +5219,7 @@ js_PurgeScopeChainHelper(JSContext *cx, JSObject *obj, jsid id)
 
 Shape *
 js_AddNativeProperty(JSContext *cx, JSObject *obj, jsid id,
-                     PropertyOp getter, StrictPropertyOp setter, uint32 slot,
+                     PropertyOp getter, StrictPropertyOp setter, uint32_t slot,
                      uintN attrs, uintN flags, intN shortid)
 {
     JS_ASSERT(!(flags & Shape::METHOD));
@@ -5261,7 +5266,7 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
 }
 
 JSBool
-js_DefineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *value,
+js_DefineElement(JSContext *cx, JSObject *obj, uint32_t index, const Value *value,
                  PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
     jsid id;
@@ -5588,7 +5593,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 }
 
 JS_FRIEND_API(JSBool)
-js_LookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp, JSProperty **propp)
+js_LookupElement(JSContext *cx, JSObject *obj, uint32_t index, JSObject **objp, JSProperty **propp)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
@@ -5849,7 +5854,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, bool 
     JS_ASSERT(obj->isNative());
 
     if (shape->hasSlot()) {
-        uint32 slot = shape->slot();
+        uint32_t slot = shape->slot();
         JS_ASSERT(obj->containsSlot(slot));
 
         /* If shape has a stub setter, just store *vp. */
@@ -5872,7 +5877,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, bool 
             return js_ReportGetterOnlyAssignment(cx);
     }
 
-    int32 sample = cx->runtime->propertyRemovals;
+    int32_t sample = cx->runtime->propertyRemovals;
     if (!shape->set(cx, obj, strict, vp))
         return false;
 
@@ -5891,7 +5896,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, bool 
 
 static JS_ALWAYS_INLINE JSBool
 js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id,
-                           uint32 getHow, Value *vp)
+                           uint32_t getHow, Value *vp)
 {
     JSObject *aobj, *obj2;
     JSProperty *prop;
@@ -5988,7 +5993,7 @@ js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsi
 }
 
 JSBool
-js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32 getHow, Value *vp)
+js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32_t getHow, Value *vp)
 {
     return js_GetPropertyHelperInline(cx, obj, obj, id, getHow, vp);
 }
@@ -6001,7 +6006,7 @@ js_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value 
 }
 
 JSBool
-js_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp)
+js_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index, Value *vp)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
@@ -6350,7 +6355,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
 }
 
 JSBool
-js_SetElementHelper(JSContext *cx, JSObject *obj, uint32 index, uintN defineHow,
+js_SetElementHelper(JSContext *cx, JSObject *obj, uint32_t index, uintN defineHow,
                     Value *vp, JSBool strict)
 {
     jsid id;
@@ -6378,7 +6383,7 @@ js_GetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 }
 
 JSBool
-js_GetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+js_GetElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, uintN *attrsp)
 {
     JSProperty *prop;
     if (!js_LookupElement(cx, obj, index, &obj, &prop))
@@ -6417,7 +6422,7 @@ js_SetAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 }
 
 JSBool
-js_SetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+js_SetElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, uintN *attrsp)
 {
     JSProperty *prop;
     if (!js_LookupElement(cx, obj, index, &obj, &prop))
@@ -6502,7 +6507,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
 }
 
 JSBool
-js_DeleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict)
+js_DeleteElement(JSContext *cx, JSObject *obj, uint32_t index, Value *rval, JSBool strict)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
@@ -6697,6 +6702,8 @@ CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
         }
     }
 
+    JS_ASSERT_IF(*attrsp & JSPROP_READONLY, !(*attrsp & (JSPROP_GETTER | JSPROP_SETTER)));
+
     /*
      * If obj's class has a stub (null) checkAccess hook, use the per-runtime
      * checkObjectAccess callback, if configured.
@@ -6873,7 +6880,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
     JSContext *cx;
     JSAtom *atom;
     Class *clasp;
-    uint32 classId, classDef;
+    uint32_t classId, classDef;
     JSProtoKey protoKey;
     JSObject *proto;
 
@@ -6954,7 +6961,7 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
     JS_ASSERT(trc->debugPrinter == js_PrintObjectSlotName);
 
     JSObject *obj = (JSObject *)trc->debugPrintArg;
-    uint32 slot = (uint32)trc->debugPrintIndex;
+    uint32_t slot = uint32_t(trc->debugPrintIndex);
 
     const Shape *shape;
     if (obj->isNative()) {
@@ -7027,7 +7034,7 @@ js_ClearNative(JSContext *cx, JSObject *obj)
 }
 
 bool
-js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 slot, Value *vp)
+js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32_t slot, Value *vp)
 {
     if (!obj->isNative()) {
         vp->setUndefined();
@@ -7040,7 +7047,7 @@ js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 slot, Value *vp)
 }
 
 bool
-js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 slot, const Value &v)
+js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32_t slot, const Value &v)
 {
     if (!obj->isNative())
         return true;
@@ -7259,7 +7266,7 @@ static void
 DumpProperty(JSObject *obj, const Shape &shape)
 {
     jsid id = shape.propid();
-    uint8 attrs = shape.attributes();
+    uint8_t attrs = shape.attributes();
 
     fprintf(stderr, "    ((Shape *) %p) ", (void *) &shape);
     if (attrs & JSPROP_ENUMERATE) fprintf(stderr, "enumerate ");
@@ -7285,7 +7292,7 @@ DumpProperty(JSObject *obj, const Shape &shape)
     else
         fprintf(stderr, "unknown jsid %p", (void *) JSID_BITS(id));
 
-    uint32 slot = shape.hasSlot() ? shape.maybeSlot() : SHAPE_INVALID_SLOT;
+    uint32_t slot = shape.hasSlot() ? shape.maybeSlot() : SHAPE_INVALID_SLOT;
     fprintf(stderr, ": slot %d", slot);
     if (obj->containsSlot(slot)) {
         fprintf(stderr, " = ");

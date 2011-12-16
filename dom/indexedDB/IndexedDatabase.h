@@ -60,7 +60,33 @@
 #define USING_INDEXEDDB_NAMESPACE \
   using namespace mozilla::dom::indexedDB;
 
+class nsIDOMBlob;
+
 BEGIN_INDEXEDDB_NAMESPACE
+
+class FileInfo;
+
+struct StructuredCloneReadInfo {
+  void Swap(StructuredCloneReadInfo& aCloneReadInfo) {
+    mCloneBuffer.swap(aCloneReadInfo.mCloneBuffer);
+    mFileInfos.SwapElements(aCloneReadInfo.mFileInfos);
+  }
+
+  JSAutoStructuredCloneBuffer mCloneBuffer;
+  nsTArray<nsRefPtr<FileInfo> > mFileInfos;
+};
+
+struct StructuredCloneWriteInfo {
+  void Swap(StructuredCloneWriteInfo& aCloneWriteInfo) {
+    mCloneBuffer.swap(aCloneWriteInfo.mCloneBuffer);
+    mBlobs.SwapElements(aCloneWriteInfo.mBlobs);
+    mOffsetToKeyProp = aCloneWriteInfo.mOffsetToKeyProp;
+  }
+
+  JSAutoStructuredCloneBuffer mCloneBuffer;
+  nsTArray<nsCOMPtr<nsIDOMBlob> > mBlobs;
+  PRUint64 mOffsetToKeyProp;
+};
 
 inline
 void

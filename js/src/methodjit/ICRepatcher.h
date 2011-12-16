@@ -94,7 +94,7 @@ class Repatcher : public JSC::RepatchBuffer
     }
 
     /* Patch the offset of a Value load emitted by loadValueWithAddressOffsetPatch. */
-    void patchAddressOffsetForValueLoad(CodeLocationLabel label, uint32 offset) {
+    void patchAddressOffsetForValueLoad(CodeLocationLabel label, uint32_t offset) {
 #if defined JS_CPU_X64 || defined JS_CPU_ARM || defined JS_CPU_SPARC
         repatch(label.dataLabel32AtOffset(0), offset);
 #elif defined JS_CPU_X86
@@ -114,7 +114,7 @@ class Repatcher : public JSC::RepatchBuffer
 #endif
     }
 
-    void patchAddressOffsetForValueStore(CodeLocationLabel label, uint32 offset, bool typeConst) {
+    void patchAddressOffsetForValueStore(CodeLocationLabel label, uint32_t offset, bool typeConst) {
 #if defined JS_CPU_ARM || defined JS_CPU_X64 || defined JS_CPU_SPARC
         (void) typeConst;
         repatch(label.dataLabel32AtOffset(0), offset);

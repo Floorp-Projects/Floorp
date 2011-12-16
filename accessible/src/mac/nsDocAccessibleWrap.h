@@ -48,12 +48,6 @@ public:
                       nsIWeakReference *aShell);
   virtual ~nsDocAccessibleWrap();
 
-  // nsIAccessNode
-
-  /**
-   * Creates the native accessible connected to this one.
-   */
-  virtual bool Init();
 };
 
 #endif

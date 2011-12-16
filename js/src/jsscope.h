@@ -206,28 +206,28 @@
 namespace js {
 
 /* Limit on the number of slotful properties in an object. */
-static const uint32 SHAPE_INVALID_SLOT = JS_BIT(24) - 1;
-static const uint32 SHAPE_MAXIMUM_SLOT = JS_BIT(24) - 2;
+static const uint32_t SHAPE_INVALID_SLOT = JS_BIT(24) - 1;
+static const uint32_t SHAPE_MAXIMUM_SLOT = JS_BIT(24) - 2;
 
 /*
  * Shapes use multiplicative hashing, _a la_ jsdhash.[ch], but specialized to
  * minimize footprint.
  */
 struct PropertyTable {
-    static const uint32 MIN_ENTRIES         = 7;
-    static const uint32 MIN_SIZE_LOG2       = 4;
-    static const uint32 MIN_SIZE            = JS_BIT(MIN_SIZE_LOG2);
+    static const uint32_t MIN_ENTRIES   = 7;
+    static const uint32_t MIN_SIZE_LOG2 = 4;
+    static const uint32_t MIN_SIZE      = JS_BIT(MIN_SIZE_LOG2);
 
     int             hashShift;          /* multiplicative hash shift */
 
-    uint32          entryCount;         /* number of entries in table */
-    uint32          removedCount;       /* removed entry sentinels in table */
-    uint32          freelist;           /* SHAPE_INVALID_SLOT or head of slot
+    uint32_t        entryCount;         /* number of entries in table */
+    uint32_t        removedCount;       /* removed entry sentinels in table */
+    uint32_t        freelist;           /* SHAPE_INVALID_SLOT or head of slot
                                            freelist in owning dictionary-mode
                                            object */
     js::Shape       **entries;          /* table of ptrs to shared tree nodes */
 
-    PropertyTable(uint32 nentries)
+    PropertyTable(uint32_t nentries)
       : hashShift(JS_DHASH_BITS - MIN_SIZE_LOG2),
         entryCount(nentries),
         removedCount(0),
@@ -241,7 +241,7 @@ struct PropertyTable {
     }
 
     /* By definition, hashShift = JS_DHASH_BITS - log2(capacity). */
-    uint32 capacity() const { return JS_BIT(JS_DHASH_BITS - hashShift); }
+    uint32_t capacity() const { return JS_BIT(JS_DHASH_BITS - hashShift); }
 
     /* Computes the size of the entries array for a given capacity. */
     static size_t sizeOfEntries(size_t cap) { return cap * sizeof(Shape *); }
@@ -257,7 +257,7 @@ struct PropertyTable {
 
     /* Whether we need to grow.  We want to do this if the load factor is >= 0.75 */
     bool needsToGrow() const {
-        uint32 size = capacity();
+        uint32_t size = capacity();
         return entryCount + removedCount >= size - (size >> 2);
     }
 
@@ -379,8 +379,8 @@ class BaseShape : public js::gc::Cell
   private:
     Class               *clasp;         /* Class of referring object. */
     HeapPtrObject       parent;         /* Parent of referring object. */
-    uint32              flags;          /* Vector of above flags. */
-    uint32              slotSpan_;      /* Object slot span for BaseShapes at
+    uint32_t            flags;          /* Vector of above flags. */
+    uint32_t            slotSpan_;      /* Object slot span for BaseShapes at
                                          * dictionary last properties. */
 
     union {
@@ -404,9 +404,9 @@ class BaseShape : public js::gc::Cell
   public:
     void finalize(JSContext *cx, bool background);
 
-    inline BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags);
-    inline BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags,
-                     uint8 attrs, PropertyOp rawGetter, StrictPropertyOp rawSetter);
+    inline BaseShape(Class *clasp, JSObject *parent, uint32_t objectFlags);
+    inline BaseShape(Class *clasp, JSObject *parent, uint32_t objectFlags,
+                     uint8_t attrs, PropertyOp rawGetter, StrictPropertyOp rawSetter);
 
     bool isOwned() const { return !!(flags & OWNED_SHAPE); }
 
@@ -431,8 +431,8 @@ class BaseShape : public js::gc::Cell
     PropertyTable &table() const { JS_ASSERT(table_ && isOwned()); return *table_; }
     void setTable(PropertyTable *table) { JS_ASSERT(isOwned()); table_ = table; }
 
-    uint32 slotSpan() const { JS_ASSERT(isOwned()); return slotSpan_; }
-    void setSlotSpan(uint32 slotSpan) { JS_ASSERT(isOwned()); slotSpan_ = slotSpan; }
+    uint32_t slotSpan() const { JS_ASSERT(isOwned()); return slotSpan_; }
+    void setSlotSpan(uint32_t slotSpan) { JS_ASSERT(isOwned()); slotSpan_ = slotSpan; }
 
     /* Lookup base shapes from the compartment's baseShapes table. */
     static UnownedBaseShape *getUnowned(JSContext *cx, const BaseShape &base);
@@ -503,12 +503,12 @@ struct Shape : public js::gc::Cell
     HeapPtrBaseShape    base_;
     HeapId              propid_;
 
-    JS_ENUM_HEADER(SlotInfo, uint32)
+    JS_ENUM_HEADER(SlotInfo, uint32_t)
     {
         /* Number of fixed slots in objects with this shape. */
         FIXED_SLOTS_MAX        = 0x1f,
         FIXED_SLOTS_SHIFT      = 27,
-        FIXED_SLOTS_MASK       = uint32(FIXED_SLOTS_MAX << FIXED_SLOTS_SHIFT),
+        FIXED_SLOTS_MASK       = uint32_t(FIXED_SLOTS_MAX << FIXED_SLOTS_SHIFT),
 
         /* 
          * numLinearSearches starts at zero and is incremented initially on
@@ -529,10 +529,10 @@ struct Shape : public js::gc::Cell
         SLOT_MASK              = JS_BIT(24) - 1
     } JS_ENUM_FOOTER(SlotInfo);
 
-    uint32              slotInfo;       /* mask of above info */
-    uint8               attrs;          /* attributes, see jsapi.h JSPROP_* */
-    uint8               flags;          /* flags, see below for defines */
-    int16               shortid_;       /* tinyid, or local arg/var index */
+    uint32_t            slotInfo;       /* mask of above info */
+    uint8_t             attrs;          /* attributes, see jsapi.h JSPROP_* */
+    uint8_t             flags;          /* flags, see below for defines */
+    int16_t             shortid_;       /* tinyid, or local arg/var index */
 
     HeapPtrShape        parent;        /* parent node, reverse for..in order */
     /* kids is valid when !inDictionary(), listp is valid when inDictionary(). */
@@ -631,7 +631,7 @@ struct Shape : public js::gc::Cell
     static bool setObjectParent(JSContext *cx, JSObject *obj, JSObject *proto, HeapPtrShape *listp);
     static bool setObjectFlag(JSContext *cx, BaseShape::Flag flag, JSObject *proto, HeapPtrShape *listp);
 
-    uint32 getObjectFlags() const { return base()->flags & BaseShape::OBJECT_FLAG_MASK; }
+    uint32_t getObjectFlags() const { return base()->flags & BaseShape::OBJECT_FLAG_MASK; }
     bool hasObjectFlag(BaseShape::Flag flag) const {
         JS_ASSERT(!(flag & ~BaseShape::OBJECT_FLAG_MASK));
         return !!(base()->flags & flag);
@@ -653,13 +653,14 @@ struct Shape : public js::gc::Cell
         UNUSED_BITS     = 0x3C
     };
 
-    Shape(UnownedBaseShape *base, jsid id, uint32 slot, uint32 nfixed, uintN attrs, uintN flags, intN shortid);
+    Shape(UnownedBaseShape *base, jsid id, uint32_t slot, uint32_t nfixed, uintN attrs,
+          uintN flags, intN shortid);
 
     /* Get a shape identical to this one, without parent/kids information. */
     Shape(const Shape *other);
 
     /* Used by EmptyShape (see jsscopeinlines.h). */
-    Shape(UnownedBaseShape *base, uint32 nfixed);
+    Shape(UnownedBaseShape *base, uint32_t nfixed);
 
     /* Copy constructor disabled, to avoid misuse of the above form. */
     Shape(const Shape &other);
@@ -745,12 +746,12 @@ struct Shape : public js::gc::Cell
                : UndefinedValue();
     }
 
-    void update(js::PropertyOp getter, js::StrictPropertyOp setter, uint8 attrs);
+    void update(js::PropertyOp getter, js::StrictPropertyOp setter, uint8_t attrs);
 
     inline JSDHashNumber hash() const;
     inline bool matches(const js::Shape *p) const;
     inline bool matchesParamsAfterId(BaseShape *base,
-                                     uint32 aslot, uintN aattrs, uintN aflags,
+                                     uint32_t aslot, uintN aattrs, uintN aflags,
                                      intN ashortid) const;
 
     bool get(JSContext* cx, JSObject *receiver, JSObject *obj, JSObject *pobj, js::Value* vp) const;
@@ -759,42 +760,42 @@ struct Shape : public js::gc::Cell
     BaseShape *base() const { return base_; }
 
     bool hasSlot() const { return (attrs & JSPROP_SHARED) == 0; }
-    uint32 slot() const { JS_ASSERT(hasSlot() && !hasMissingSlot()); return maybeSlot(); }
-    uint32 maybeSlot() const { return slotInfo & SLOT_MASK; }
+    uint32_t slot() const { JS_ASSERT(hasSlot() && !hasMissingSlot()); return maybeSlot(); }
+    uint32_t maybeSlot() const { return slotInfo & SLOT_MASK; }
 
     bool isEmptyShape() const {
         JS_ASSERT_IF(JSID_IS_EMPTY(propid_), hasMissingSlot());
         return JSID_IS_EMPTY(propid_);
     }
 
-    uint32 slotSpan() const {
+    uint32_t slotSpan() const {
         JS_ASSERT(!inDictionary());
-        uint32 free = JSSLOT_FREE(getObjectClass());
+        uint32_t free = JSSLOT_FREE(getObjectClass());
         return hasMissingSlot() ? free : Max(free, maybeSlot() + 1);
     }
 
-    void setSlot(uint32 slot) {
+    void setSlot(uint32_t slot) {
         JS_ASSERT(slot <= SHAPE_INVALID_SLOT);
         slotInfo = slotInfo & ~SLOT_MASK;
         slotInfo = slotInfo | slot;
     }
 
-    uint32 numFixedSlots() const {
+    uint32_t numFixedSlots() const {
         return (slotInfo >> FIXED_SLOTS_SHIFT);
     }
 
-    void setNumFixedSlots(uint32 nfixed) {
+    void setNumFixedSlots(uint32_t nfixed) {
         JS_ASSERT(nfixed < FIXED_SLOTS_MAX);
         slotInfo = slotInfo & ~FIXED_SLOTS_MASK;
         slotInfo = slotInfo | (nfixed << FIXED_SLOTS_SHIFT);
     }
 
-    uint32 numLinearSearches() const {
+    uint32_t numLinearSearches() const {
         return (slotInfo & LINEAR_SEARCHES_MASK) >> LINEAR_SEARCHES_SHIFT;
     }
 
     void incrementNumLinearSearches() {
-        uint32 count = numLinearSearches();
+        uint32_t count = numLinearSearches();
         JS_ASSERT(count < LINEAR_SEARCHES_MAX);
         slotInfo = slotInfo & ~LINEAR_SEARCHES_MASK;
         slotInfo = slotInfo | ((count + 1) << LINEAR_SEARCHES_SHIFT);
@@ -803,8 +804,8 @@ struct Shape : public js::gc::Cell
     jsid propid() const { JS_ASSERT(!isEmptyShape()); return maybePropid(); }
     jsid maybePropid() const { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
 
-    int16 shortid() const { JS_ASSERT(hasShortID()); return maybeShortid(); }
-    int16 maybeShortid() const { return shortid_; }
+    int16_t shortid() const { JS_ASSERT(hasShortID()); return maybeShortid(); }
+    int16_t maybeShortid() const { return shortid_; }
 
     /*
      * If SHORTID is set in shape->flags, we use shape->shortid rather
@@ -814,7 +815,7 @@ struct Shape : public js::gc::Cell
         return hasShortID() ? INT_TO_JSID(shortid()) : propid();
     }
 
-    uint8 attributes() const { return attrs; }
+    uint8_t attributes() const { return attrs; }
     bool configurable() const { return (attrs & JSPROP_PERMANENT) == 0; }
     bool enumerable() const { return (attrs & JSPROP_ENUMERATE) != 0; }
     bool writable() const {
@@ -888,12 +889,12 @@ struct Shape : public js::gc::Cell
     static bool setExtensibleParents(JSContext *cx, HeapPtrShape *listp);
     bool extensibleParents() const { return !!(base()->flags & BaseShape::EXTENSIBLE_PARENTS); }
 
-    uint32 entryCount() const {
+    uint32_t entryCount() const {
         if (hasTable())
             return table().entryCount;
 
         const js::Shape *shape = this;
-        uint32 count = 0;
+        uint32_t count = 0;
         for (js::Shape::Range r = shape->all(); !r.empty(); r.popFront())
             ++count;
         return count;
@@ -902,7 +903,7 @@ struct Shape : public js::gc::Cell
     bool isBigEnoughForAPropertyTable() const {
         JS_ASSERT(!hasTable());
         const js::Shape *shape = this;
-        uint32 count = 0;
+        uint32_t count = 0;
         for (js::Shape::Range r = shape->all(); !r.empty(); r.popFront()) {
             ++count;
             if (count >= PropertyTable::MIN_ENTRIES)
@@ -942,14 +943,14 @@ struct Shape : public js::gc::Cell
 
 struct EmptyShape : public js::Shape
 {
-    EmptyShape(UnownedBaseShape *base, uint32 nfixed);
+    EmptyShape(UnownedBaseShape *base, uint32_t nfixed);
 
     /*
      * Lookup an initial shape matching the given parameters, creating an empty
      * shape if none was found.
      */
     static Shape *getInitialShape(JSContext *cx, Class *clasp, JSObject *proto,
-                                  JSObject *parent, gc::AllocKind kind, uint32 objectFlags = 0);
+                                  JSObject *parent, gc::AllocKind kind, uint32_t objectFlags = 0);
 
     /*
      * Reinsert an alternate initial shape, to be returned by future
@@ -983,9 +984,10 @@ struct InitialShapeEntry
         Class *clasp;
         JSObject *proto;
         JSObject *parent;
-        uint32 nfixed;
-        uint32 baseFlags;
-        Lookup(Class *clasp, JSObject *proto, JSObject *parent, uint32 nfixed, uint32 baseFlags)
+        uint32_t nfixed;
+        uint32_t baseFlags;
+        Lookup(Class *clasp, JSObject *proto, JSObject *parent, uint32_t nfixed,
+               uint32_t baseFlags)
             : clasp(clasp), proto(proto), parent(parent),
               nfixed(nfixed), baseFlags(baseFlags)
         {}

@@ -39,11 +39,11 @@
 
 /* NOTE: this interface is only implemented in debug builds */
 
-[scriptable, uuid(0c19c88a-9ef1-4bb4-b0a2-86ab768e8bd6)]
+[scriptable, uuid(ca7b0bc7-c67c-4b79-8270-ed7ba002af08)]
 interface nsIGfxInfoDebug : nsISupports
 {
-  void spoofVendorID(in unsigned long aVendorID);
-  void spoofDeviceID(in unsigned long aDeviceID);
+  void spoofVendorID(in DOMString aVendorID);
+  void spoofDeviceID(in DOMString aDeviceID);
   
   void spoofDriverVersion(in DOMString aDriverVersion);
 

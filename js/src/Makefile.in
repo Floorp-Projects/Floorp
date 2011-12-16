@@ -204,12 +204,10 @@ INSTALLED_HEADERS = \
 		jsgcchunk.h \
 		jsgcstats.h \
 		jshash.h \
-		jsinttypes.h \
 		jslock.h \
 		json.h \
 		jsopcode.tbl \
 		jsopcode.h \
-		jsotypes.h \
 		jsproxy.h \
 		jsprf.h \
 		jspropertycache.h \
@@ -265,8 +263,12 @@ VPATH		+= \
 
 EXPORTS_NAMESPACES += js
 
+# If you add a header here, add it to js/src/jsapi-tests/testIntTypesABI.cpp so
+# that we ensure we don't over-expose our internal integer typedefs.  Note that
+# LegacyIntTypes.h below is deliberately exempted from this requirement.
 EXPORTS_js = \
 		HashTable.h \
+		LegacyIntTypes.h \
 		TemplateLib.h \
 		Utility.h \
 		Vector.h \
@@ -698,10 +700,6 @@ DIST_GARBAGE = config.cache config.log config.status \
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f
 	$(RM) $(DIST_GARBAGE)
-
-# our build system doesn't handle subdir srcs very gracefully today
-export::
-	$(MKDIR) -p nanojit
 
 DEFINES		+= -DEXPORT_JS_API
 

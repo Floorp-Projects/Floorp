@@ -39,6 +39,7 @@
 
 #ifndef jshash_h___
 #define jshash_h___
+
 /*
  * API to portable hash table code.
  */
@@ -49,7 +50,7 @@
 
 JS_BEGIN_EXTERN_C
 
-typedef uint32 JSHashNumber;
+typedef uint32_t JSHashNumber;
 typedef struct JSHashEntry JSHashEntry;
 typedef struct JSHashTable JSHashTable;
 
@@ -84,18 +85,18 @@ struct JSHashEntry {
 
 struct JSHashTable {
     JSHashEntry         **buckets;      /* vector of hash buckets */
-    uint32              nentries;       /* number of entries in table */
-    uint32              shift;          /* multiplicative hash shift */
+    uint32_t            nentries;       /* number of entries in table */
+    uint32_t            shift;          /* multiplicative hash shift */
     JSHashFunction      keyHash;        /* key hash function */
     JSHashComparator    keyCompare;     /* key comparison function */
     JSHashComparator    valueCompare;   /* value comparison function */
     JSHashAllocOps      *allocOps;      /* allocation operations */
     void                *allocPriv;     /* allocation private data */
 #ifdef JS_HASHMETER
-    uint32              nlookups;       /* total number of lookups */
-    uint32              nsteps;         /* number of hash chains traversed */
-    uint32              ngrows;         /* number of table expansions */
-    uint32              nshrinks;       /* number of table contractions */
+    uint32_t            nlookups;       /* total number of lookups */
+    uint32_t            nsteps;         /* number of hash chains traversed */
+    uint32_t            ngrows;         /* number of table expansions */
+    uint32_t            nshrinks;       /* number of table contractions */
 #endif
 };
 
@@ -104,7 +105,7 @@ struct JSHashTable {
  * If allocOps is null, use default allocator ops built on top of malloc().
  */
 extern JS_PUBLIC_API(JSHashTable *)
-JS_NewHashTable(uint32 n, JSHashFunction keyHash,
+JS_NewHashTable(uint32_t n, JSHashFunction keyHash,
                 JSHashComparator keyCompare, JSHashComparator valueCompare,
                 JSHashAllocOps *allocOps, void *allocPriv);
 

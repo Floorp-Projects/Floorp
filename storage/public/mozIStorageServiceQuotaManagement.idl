@@ -75,7 +75,7 @@ interface mozIStorageQuotaCallback : nsISupports
  * This is a temporary interface that should eventually merge with
  * mozIStorageService.
  */
-[scriptable, uuid(11def472-446f-4635-a1d8-8856e85aac50)]
+[scriptable, uuid(4d81faf5-fe01-428b-99b8-c94cba12fd72)]
 interface mozIStorageServiceQuotaManagement : nsISupports
 {
   /**
@@ -128,5 +128,5 @@ interface mozIStorageServiceQuotaManagement : nsISupports
    *        file does not exist then the file will be removed from tracking
    *        under the quota system.
    */
-  void updateQutoaInformationForFile(in nsIFile aFile);
+  void updateQuotaInformationForFile(in nsIFile aFile);
 };

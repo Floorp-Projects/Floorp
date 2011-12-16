@@ -86,7 +86,11 @@ enum StmtType {
     STMT_LIMIT
 };
 
-#define STMT_TYPE_IN_RANGE(t,b,e) ((uint)((t) - (b)) <= (uintN)((e) - (b)))
+inline bool
+STMT_TYPE_IN_RANGE(uint16_t type, StmtType begin, StmtType end)
+{
+    return begin <= type && type <= end;
+}
 
 /*
  * A comment on the encoding of the js::StmtType enum and type-testing macros:
@@ -126,9 +130,9 @@ enum StmtType {
 #define STMT_IS_LOOP(stmt)      STMT_TYPE_IS_LOOP((stmt)->type)
 
 struct StmtInfo {
-    uint16          type;           /* statement type */
-    uint16          flags;          /* flags, see below */
-    uint32          blockid;        /* for simplified dominance computation */
+    uint16_t        type;           /* statement type */
+    uint16_t        flags;          /* flags, see below */
+    uint32_t        blockid;        /* for simplified dominance computation */
     ptrdiff_t       update;         /* loop update offset (top if none) */
     ptrdiff_t       breaks;         /* offset of last break in loop */
     ptrdiff_t       continues;      /* offset of last continue in loop */
@@ -284,14 +288,14 @@ struct StmtInfo {
 struct BytecodeEmitter;
 
 struct TreeContext {                /* tree context for semantic checks */
-    uint32          flags;          /* statement state flags, see above */
-    uint32          bodyid;         /* block number of program/function body */
-    uint32          blockidGen;     /* preincremented block number generator */
-    uint32          parenDepth;     /* nesting depth of parens that might turn out
+    uint32_t        flags;          /* statement state flags, see above */
+    uint32_t        bodyid;         /* block number of program/function body */
+    uint32_t        blockidGen;     /* preincremented block number generator */
+    uint32_t        parenDepth;     /* nesting depth of parens that might turn out
                                        to be generator expressions */
-    uint32          yieldCount;     /* number of |yield| tokens encountered at
+    uint32_t        yieldCount;     /* number of |yield| tokens encountered at
                                        non-zero depth in current paren tree */
-    uint32          argumentsCount; /* number of |arguments| references encountered
+    uint32_t        argumentsCount; /* number of |arguments| references encountered
                                        at non-zero depth in current paren tree */
     StmtInfo        *topStmt;       /* top of statement info stack */
     StmtInfo        *topScopeStmt;  /* top lexical scope statement */
@@ -486,7 +490,7 @@ bool
 SetStaticLevel(TreeContext *tc, uintN staticLevel);
 
 bool
-GenerateBlockId(TreeContext *tc, uint32& blockid);
+GenerateBlockId(TreeContext *tc, uint32_t &blockid);
 
 } /* namespace frontend */
 
@@ -556,7 +560,7 @@ struct TryNode {
 };
 
 struct CGObjectList {
-    uint32              length;     /* number of emitted so far objects */
+    uint32_t            length;     /* number of emitted so far objects */
     ObjectBox           *lastbox;   /* last emitted object */
 
     CGObjectList() : length(0), lastbox(NULL) {}
@@ -583,10 +587,10 @@ struct GlobalScope {
         JSAtom        *atom;        // If non-NULL, specifies the property name to add.
         FunctionBox   *funbox;      // If non-NULL, function value for the property.
                                     // This value is only set/used if atom is non-NULL.
-        uint32        knownSlot;    // If atom is NULL, this is the known shape slot.
+        uint32_t      knownSlot;    // If atom is NULL, this is the known shape slot.
 
         GlobalDef() { }
-        GlobalDef(uint32 knownSlot) : atom(NULL), knownSlot(knownSlot) { }
+        GlobalDef(uint32_t knownSlot) : atom(NULL), knownSlot(knownSlot) { }
         GlobalDef(JSAtom *atom, FunctionBox *box) : atom(atom), funbox(box) { }
     };
 
@@ -661,11 +665,11 @@ struct BytecodeEmitter : public TreeContext
     OwnedAtomIndexMapPtr globalMap; /* per-script map of global name to globalUses vector */
 
     /* Vectors of pn_cookie slot values. */
-    typedef Vector<uint32, 8> SlotVector;
+    typedef Vector<uint32_t, 8> SlotVector;
     SlotVector      closedArgs;
     SlotVector      closedVars;
 
-    uint16          typesetCount;   /* Number of JOF_TYPESET opcodes generated */
+    uint16_t        typesetCount;   /* Number of JOF_TYPESET opcodes generated */
 
     BytecodeEmitter(Parser *parser, uintN lineno);
     bool init(JSContext *cx, TreeContext::InitBehavior ib = USED_AS_CODE_GENERATOR);
@@ -696,7 +700,7 @@ struct BytecodeEmitter : public TreeContext
      * If the global use can be cached, |cookie| will be set to |slot|.
      * Otherwise, |cookie| is set to the free cookie value.
      */
-    bool addGlobalUse(JSAtom *atom, uint32 slot, UpvarCookie *cookie);
+    bool addGlobalUse(JSAtom *atom, uint32_t slot, UpvarCookie *cookie);
 
     bool hasUpvarIndices() const {
         return upvarIndices.hasMap() && !upvarIndices->empty();
@@ -796,7 +800,7 @@ Emit3(JSContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1, jsbytecode o
  * Emit five bytecodes, an opcode with two 16-bit immediates.
  */
 ptrdiff_t
-Emit5(JSContext *cx, BytecodeEmitter *bce, JSOp op, uint16 op1, uint16 op2);
+Emit5(JSContext *cx, BytecodeEmitter *bce, JSOp op, uint16_t op1, uint16_t op2);
 
 /*
  * Emit (1 + extra) bytecodes, for N bytes of op and its immediate operand.
@@ -904,11 +908,11 @@ EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *body);
 
 /*
  * Source notes generated along with bytecode for decompiling and debugging.
- * A source note is a uint8 with 5 bits of type and 3 of offset from the pc of
- * the previous note. If 3 bits of offset aren't enough, extended delta notes
- * (SRC_XDELTA) consisting of 2 set high order bits followed by 6 offset bits
- * are emitted before the next note. Some notes have operand offsets encoded
- * immediately after them, in note bytes or byte-triples.
+ * A source note is a uint8_t with 5 bits of type and 3 of offset from the pc
+ * of the previous note. If 3 bits of offset aren't enough, extended delta
+ * notes (SRC_XDELTA) consisting of 2 set high order bits followed by 6 offset
+ * bits are emitted before the next note. Some notes have operand offsets
+ * encoded immediately after them, in note bytes or byte-triples.
  *
  *                 Source Note               Extended Delta
  *              +7-6-5-4-3+2-1-0+           +7-6-5+4-3-2-1-0+
@@ -947,7 +951,6 @@ enum SrcNoteType {
     SRC_WHILE       = 4,        /* JSOP_GOTO to for or while loop condition
                                    from before loop, else JSOP_NOP at top of
                                    do-while loop */
-    SRC_LOOPHEAD    = 4,        /* For JSOP_LOOPHEAD; includes distance to loop end */
     SRC_CONTINUE    = 5,        /* JSOP_GOTO is a continue, not a break;
                                    also used on JSOP_ENDINIT if extra comma
                                    at end of array literal: [1,2,,];
@@ -1113,9 +1116,9 @@ BytecodeEmitter::countFinalSourceNotes()
 
 struct JSSrcNoteSpec {
     const char      *name;      /* name for disassembly/debugging output */
-    int8            arity;      /* number of offset operands */
-    uint8           offsetBias; /* bias of offset(s) from annotated pc */
-    int8            isSpanDep;  /* 1 or -1 if offsets could span extended ops,
+    int8_t          arity;      /* number of offset operands */
+    uint8_t         offsetBias; /* bias of offset(s) from annotated pc */
+    int8_t          isSpanDep;  /* 1 or -1 if offsets could span extended ops,
                                    0 otherwise; sign tells span direction */
 };
 

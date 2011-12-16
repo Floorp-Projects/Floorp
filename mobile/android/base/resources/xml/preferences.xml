@@ -25,6 +25,12 @@
                             android:entryValues="@array/pref_enable_flash_values"
                             android:persistent="false" />
 
+        <ListPreference     android:key="font.size.inflation.minTwips"
+                            android:title="@string/pref_font_size"
+                            android:entries="@array/pref_font_size_entries"
+                            android:entryValues="@array/pref_font_size_values"
+                            android:persistent="false" />
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_category_privacy">

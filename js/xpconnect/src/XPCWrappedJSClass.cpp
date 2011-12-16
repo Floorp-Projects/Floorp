@@ -871,7 +871,7 @@ nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
                                            uint16 methodIndex,
                                            uint8 paramIndex,
                                            nsXPTCMiniVariant* nativeParams,
-                                           JSUint32* result)
+                                           uint32_t* result)
 {
     uint8 argnum;
     nsresult rv;
@@ -889,7 +889,7 @@ nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
                       "size_is references parameter of invalid type.");
 
     if (arg_param.IsIndirect())
-        *result = *(JSUint32*)nativeParams[argnum].val.p;
+        *result = *(uint32_t*)nativeParams[argnum].val.p;
     else
         *result = nativeParams[argnum].val.u32;
 
@@ -943,18 +943,18 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
 
 void
 nsXPCWrappedJSClass::CleanupPointerArray(const nsXPTType& datum_type,
-                                         JSUint32 array_count,
+                                         uint32_t array_count,
                                          void** arrayp)
 {
     if (datum_type.IsInterfacePointer()) {
         nsISupports** pp = (nsISupports**) arrayp;
-        for (JSUint32 k = 0; k < array_count; k++) {
+        for (uint32_t k = 0; k < array_count; k++) {
             nsISupports* p = pp[k];
             NS_IF_RELEASE(p);
         }
     } else {
         void** pp = (void**) arrayp;
-        for (JSUint32 k = 0; k < array_count; k++) {
+        for (uint32_t k = 0; k < array_count; k++) {
             void* p = pp[k];
             if (p) nsMemory::Free(p);
         }
@@ -1378,7 +1378,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         const nsXPTParamInfo& param = info->params[i];
         const nsXPTType& type = param.GetType();
         nsXPTType datum_type;
-        JSUint32 array_count;
+        uint32_t array_count;
         bool isArray = type.IsArray();
         jsval val = JSVAL_NULL;
         AUTO_MARK_JSVAL(ccx, &val);
@@ -1483,7 +1483,7 @@ pre_call_clean_up:
                 if (nsnull != (pp = *((void***)p))) {
 
                     // we need to get the array length and iterate the items
-                    JSUint32 array_count;
+                    uint32_t array_count;
                     nsXPTType datum_type;
 
                     if (NS_SUCCEEDED(mInfo->GetTypeForParam(methodIndex, &param,
@@ -1632,7 +1632,7 @@ pre_call_clean_up:
             jsval val;
             nsXPTCMiniVariant* pv;
             nsXPTType datum_type;
-            JSUint32 array_count;
+            uint32_t array_count;
             bool isArray = type.IsArray();
             bool isSizedString = isArray ?
                     false :
@@ -1710,7 +1710,7 @@ pre_call_clean_up:
                 void** pp;
                 if (nsnull != (pp = *((void***)p))) {
                     // we need to get the array length and iterate the items
-                    JSUint32 array_count;
+                    uint32_t array_count;
                     nsXPTType datum_type;
 
                     if (NS_SUCCEEDED(mInfo->GetTypeForParam(methodIndex, &param,

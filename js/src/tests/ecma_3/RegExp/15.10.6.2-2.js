@@ -154,7 +154,7 @@ addThis();
 /*
  * Now try some edge-case values. Thanks to the work done in
  * http://bugzilla.mozilla.org/show_bug.cgi?id=124339, |lastIndex|
- * is now stored as a double instead of a uint32 (unsigned integer).
+ * is now stored as a double instead of a uint32_t (unsigned integer).
  *
  * Note 2^32 -1 is the upper bound for uint32's, but doubles can go
  * all the way up to Number.MAX_VALUE. So that's why we need cases
@@ -270,7 +270,7 @@ expectedmatch = Array('Abc') // NOT null as before -
 /*
  * Now try some edge-case values. Thanks to the work done in
  * http://bugzilla.mozilla.org/show_bug.cgi?id=124339, |lastIndex|
- * is now stored as a double instead of a uint32 (unsigned integer).
+ * is now stored as a double instead of a uint32_t (unsigned integer).
  *
  * Note 2^32 -1 is the upper bound for uint32's, but doubles can go
  * all the way up to Number.MAX_VALUE. So that's why we need cases

@@ -211,8 +211,8 @@ private:
       return false;
     }
 
-    JSUint32 bufferLength = JS_GetArrayBufferByteLength(jsArrayBuffer);
-    uint8* arrayBuffer = JS_GetArrayBufferData(jsArrayBuffer);
+    uint32_t bufferLength = JS_GetArrayBufferByteLength(jsArrayBuffer);
+    uint8_t* arrayBuffer = JS_GetArrayBufferData(jsArrayBuffer);
 
     rv = fileReader->ReadAsArrayBuffer(blob, bufferLength, arrayBuffer);
     if (!EnsureSucceededOrThrow(aCx, rv)) {
