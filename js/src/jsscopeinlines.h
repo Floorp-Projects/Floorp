@@ -102,10 +102,14 @@ BaseShape::BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags,
     this->flags = objectFlags;
     this->rawGetter = rawGetter;
     this->rawSetter = rawSetter;
-    if ((attrs & JSPROP_GETTER) && rawGetter)
+    if ((attrs & JSPROP_GETTER) && rawGetter) {
         flags |= HAS_GETTER_OBJECT;
-    if ((attrs & JSPROP_SETTER) && rawSetter)
+        JSObject::writeBarrierPost(this->getterObj, &this->getterObj);
+    }
+    if ((attrs & JSPROP_SETTER) && rawSetter) {
         flags |= HAS_SETTER_OBJECT;
+        JSObject::writeBarrierPost(this->setterObj, &this->setterObj);
+    }
 }
 
 inline bool
