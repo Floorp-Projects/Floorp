@@ -180,20 +180,20 @@ libs:: $(srcdir)/blocklist.xml
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 
-APP_NAME = $(MOZ_APP_DISPLAYNAME)
+MAC_APP_NAME = $(MOZ_APP_DISPLAYNAME)
 
 ifdef MOZ_DEBUG
-APP_NAME := $(APP_NAME)Debug
+MAC_APP_NAME := $(MAC_APP_NAME)Debug
 endif
 
-LOWER_APP_NAME = $(shell echo $(APP_NAME) | tr '[A-Z]' '[a-z]')
+LOWER_MAC_APP_NAME = $(shell echo $(MAC_APP_NAME) | tr '[A-Z]' '[a-z]')
 
 AB_CD = $(MOZ_UI_LOCALE)
 
 AB := $(firstword $(subst -, ,$(AB_CD)))
 
 clean clobber repackage::
-	$(RM) -r $(DIST)/$(APP_NAME).app
+	$(RM) -r $(DIST)/$(MOZ_MACBUNDLE_NAME)
 
 ifdef LIBXUL_SDK
 APPFILES = Resources
@@ -202,26 +202,24 @@ APPFILES = MacOS
 endif
 
 libs repackage:: $(PROGRAM)
-	$(MKDIR) -p $(DIST)/$(APP_NAME).app/Contents/MacOS
-	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
-	$(MKDIR) -p $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
-	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
-	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" -e "s/%LOWER_APP_NAME%/$(LOWER_APP_NAME)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
-	sed -e "s/%APP_NAME%/$(APP_NAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj/InfoPlist.strings
-	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)
-	$(RM) $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)/mangle $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)/shlibsign
+	$(MKDIR) -p $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/MacOS
+	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(MOZ_MACBUNDLE_NAME) --exclude English.lproj
+	$(MKDIR) -p $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Resources/$(AB).lproj
+	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Resources/$(AB).lproj
+	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%MAC_APP_NAME%/$(MAC_APP_NAME)/" -e "s/%LOWER_MAC_APP_NAME%/$(LOWER_MAC_APP_NAME)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Info.plist
+	sed -e "s/%MAC_APP_NAME%/$(MAC_APP_NAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Resources/$(AB).lproj/InfoPlist.strings
+	rsync -a $(DIST)/bin/ $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/$(APPFILES)
+	$(RM) $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/$(APPFILES)/mangle $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/$(APPFILES)/shlibsign
 ifdef LIBXUL_SDK
-	cp $(LIBXUL_DIST)/bin/$(XR_STUB_NAME) $(DIST)/$(APP_NAME).app/Contents/MacOS/firefox
+	cp $(LIBXUL_DIST)/bin/$(XR_STUB_NAME) $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/MacOS/firefox
 else
-	$(RM) $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
-	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
+	$(RM) $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/MacOS/$(PROGRAM)
+	rsync -aL $(PROGRAM) $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/MacOS
 endif
-	-cp -L $(DIST)/bin/mangle $(DIST)/bin/shlibsign $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)
-	cp -RL $(DIST)/branding/firefox.icns $(DIST)/$(APP_NAME).app/Contents/Resources/firefox.icns
-	cp -RL $(DIST)/branding/document.icns $(DIST)/$(APP_NAME).app/Contents/Resources/document.icns
-	printf APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
-#       remove CVS dirs from packaged app
-	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
+	-cp -L $(DIST)/bin/mangle $(DIST)/bin/shlibsign $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/$(APPFILES)
+	cp -RL $(DIST)/branding/firefox.icns $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Resources/firefox.icns
+	cp -RL $(DIST)/branding/document.icns $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Resources/document.icns
+	printf APPLMOZB > $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/PkgInfo
 
 else
 ifdef LIBXUL_SDK
@@ -234,7 +232,7 @@ ifdef LIBXUL_SDK
 ifndef SKIP_COPY_XULRUNNER
 libs::
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-	rsync -a --copy-unsafe-links $(LIBXUL_DIST)/XUL.framework $(DIST)/$(APP_NAME).app/Contents/Frameworks
+	rsync -a --copy-unsafe-links $(LIBXUL_DIST)/XUL.framework $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Frameworks
 else
 	$(NSINSTALL) -D $(DIST)/bin/xulrunner
 	(cd $(LIBXUL_SDK)/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DIST)/bin/xulrunner && tar -xf -)

@@ -90,6 +90,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private final ScrollbarLayer mVertScrollLayer;
     private final FadeRunnable mFadeRunnable;
     private RenderContext mLastPageContext;
+    private int mMaxTextureSize;
 
     // Dropped frames display
     private int[] mFrameTimings;
@@ -122,12 +123,17 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         checkFrameRateMonitorEnabled();
 
-        gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        gl.glClearDepthf(1.0f);             /* FIXME: Is this needed? */
         gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);
-        gl.glShadeModel(GL10.GL_SMOOTH);    /* FIXME: Is this needed? */
         gl.glDisable(GL10.GL_DITHER);
         gl.glEnable(GL10.GL_TEXTURE_2D);
+
+        int maxTextureSizeResult[] = new int[1];
+        gl.glGetIntegerv(GL10.GL_MAX_TEXTURE_SIZE, maxTextureSizeResult, 0);
+        mMaxTextureSize = maxTextureSizeResult[0];
+    }
+
+    public int getMaxTextureSize() {
+        return mMaxTextureSize;
     }
 
     /**

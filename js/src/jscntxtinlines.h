@@ -100,7 +100,7 @@ class AutoNamespaceArray : protected AutoGCRooter {
         array.finish(context);
     }
 
-    uint32 length() const { return array.length; }
+    uint32_t length() const { return array.length; }
 
   public:
     friend void AutoGCRooter::trace(JSTracer *trc);

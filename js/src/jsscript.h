@@ -78,12 +78,12 @@ namespace js {
  */
 class UpvarCookie
 {
-    uint32 value;
+    uint32_t value;
 
-    static const uint32 FREE_VALUE = 0xfffffffful;
+    static const uint32_t FREE_VALUE = 0xfffffffful;
 
     void checkInvariants() {
-        JS_STATIC_ASSERT(sizeof(UpvarCookie) == sizeof(uint32));
+        JS_STATIC_ASSERT(sizeof(UpvarCookie) == sizeof(uint32_t));
         JS_STATIC_ASSERT(UPVAR_LEVEL_LIMIT < FREE_LEVEL);
     }
 
@@ -92,26 +92,26 @@ class UpvarCookie
      * All levels above-and-including FREE_LEVEL are reserved so that
      * FREE_VALUE can be used as a special value.
      */
-    static const uint16 FREE_LEVEL = 0x3fff;
+    static const uint16_t FREE_LEVEL = 0x3fff;
 
     /*
      * If a function has a higher static level than this limit, we will not
      * optimize it using UPVAR opcodes.
      */
-    static const uint16 UPVAR_LEVEL_LIMIT = 16;
-    static const uint16 CALLEE_SLOT = 0xffff;
-    static bool isLevelReserved(uint16 level) { return level >= FREE_LEVEL; }
+    static const uint16_t UPVAR_LEVEL_LIMIT = 16;
+    static const uint16_t CALLEE_SLOT = 0xffff;
+    static bool isLevelReserved(uint16_t level) { return level >= FREE_LEVEL; }
 
     bool isFree() const { return value == FREE_VALUE; }
-    uint32 asInteger() const { return value; }
+    uint32_t asInteger() const { return value; }
     /* isFree check should be performed before using these accessors. */
-    uint16 level() const { JS_ASSERT(!isFree()); return uint16(value >> 16); }
-    uint16 slot() const { JS_ASSERT(!isFree()); return uint16(value); }
+    uint16_t level() const { JS_ASSERT(!isFree()); return uint16_t(value >> 16); }
+    uint16_t slot() const { JS_ASSERT(!isFree()); return uint16_t(value); }
 
     void set(const UpvarCookie &other) { set(other.level(), other.slot()); }
-    void set(uint16 newLevel, uint16 newSlot) { value = (uint32(newLevel) << 16) | newSlot; }
+    void set(uint16_t newLevel, uint16_t newSlot) { value = (uint32_t(newLevel) << 16) | newSlot; }
     void makeFree() { set(0xffff, 0xffff); JS_ASSERT(isFree()); }
-    void fromInteger(uint32 u32) { value = u32; }
+    void fromInteger(uint32_t u32) { value = u32; }
 };
 
 }
@@ -120,43 +120,43 @@ class UpvarCookie
  * Exception handling record.
  */
 struct JSTryNote {
-    uint8           kind;       /* one of JSTryNoteKind */
-    uint8           padding;    /* explicit padding on uint16 boundary */
-    uint16          stackDepth; /* stack depth upon exception handler entry */
-    uint32          start;      /* start of the try statement or for-in loop
+    uint8_t         kind;       /* one of JSTryNoteKind */
+    uint8_t         padding;    /* explicit padding on uint16_t boundary */
+    uint16_t        stackDepth; /* stack depth upon exception handler entry */
+    uint32_t        start;      /* start of the try statement or for-in loop
                                    relative to script->main */
-    uint32          length;     /* length of the try statement or for-in loop */
+    uint32_t        length;     /* length of the try statement or for-in loop */
 };
 
 typedef struct JSTryNoteArray {
     JSTryNote       *vector;    /* array of indexed try notes */
-    uint32          length;     /* count of indexed try notes */
+    uint32_t        length;     /* count of indexed try notes */
 } JSTryNoteArray;
 
 typedef struct JSObjectArray {
     js::HeapPtrObject *vector;  /* array of indexed objects */
-    uint32          length;     /* count of indexed objects */
+    uint32_t        length;     /* count of indexed objects */
 } JSObjectArray;
 
 typedef struct JSUpvarArray {
     js::UpvarCookie *vector;    /* array of indexed upvar cookies */
-    uint32          length;     /* count of indexed upvar cookies */
+    uint32_t        length;     /* count of indexed upvar cookies */
 } JSUpvarArray;
 
 typedef struct JSConstArray {
     js::HeapValue   *vector;    /* array of indexed constant values */
-    uint32          length;
+    uint32_t        length;
 } JSConstArray;
 
 namespace js {
 
 struct GlobalSlotArray {
     struct Entry {
-        uint32      atomIndex;  /* index into atom table */
-        uint32      slot;       /* global obj slot number */
+        uint32_t    atomIndex;  /* index into atom table */
+        uint32_t    slot;       /* global obj slot number */
     };
     Entry           *vector;
-    uint32          length;
+    uint32_t        length;
 };
 
 struct Shape;
@@ -171,9 +171,9 @@ enum BindingKind { NONE, ARGUMENT, VARIABLE, CONSTANT, UPVAR };
  */
 class Bindings {
     HeapPtr<Shape> lastBinding;
-    uint16 nargs;
-    uint16 nvars;
-    uint16 nupvars;
+    uint16_t nargs;
+    uint16_t nvars;
+    uint16_t nupvars;
 
   public:
     inline Bindings(JSContext *cx);
@@ -192,9 +192,9 @@ class Bindings {
      */
     inline void clone(JSContext *cx, Bindings *bindings);
 
-    uint16 countArgs() const { return nargs; }
-    uint16 countVars() const { return nvars; }
-    uint16 countUpvars() const { return nupvars; }
+    uint16_t countArgs() const { return nargs; }
+    uint16_t countVars() const { return nvars; }
+    uint16_t countUpvars() const { return nupvars; }
 
     uintN countArgsAndVars() const { return nargs + nvars; }
 
@@ -251,12 +251,12 @@ class Bindings {
     bool addUpvar(JSContext *cx, JSAtom *name) {
         return add(cx, name, UPVAR);
     }
-    bool addArgument(JSContext *cx, JSAtom *name, uint16 *slotp) {
+    bool addArgument(JSContext *cx, JSAtom *name, uint16_t *slotp) {
         JS_ASSERT(name != NULL); /* not destructuring */
         *slotp = nargs;
         return add(cx, name, ARGUMENT);
     }
-    bool addDestructuring(JSContext *cx, uint16 *slotp) {
+    bool addDestructuring(JSContext *cx, uint16_t *slotp) {
         *slotp = nargs;
         return add(cx, NULL, ARGUMENT);
     }
@@ -370,10 +370,10 @@ class DebugScript
      * when the bit is clear and the count is zero may we compile the script
      * without single-step support.
      */
-    uint32          stepMode;
+    uint32_t        stepMode;
 
     /* Number of breakpoint sites at opcodes in the script. */
-    uint32          numSites;
+    uint32_t        numSites;
 
     /*
      * Array with all breakpoints installed at opcodes in the script, indexed
@@ -384,7 +384,7 @@ class DebugScript
 
 } /* namespace js */
 
-static const uint32 JS_SCRIPT_COOKIE = 0xc00cee;
+static const uint32_t JS_SCRIPT_COOKIE = 0xc00cee;
 
 struct JSScript : public js::gc::Cell {
     /*
@@ -398,10 +398,10 @@ struct JSScript : public js::gc::Cell {
      * are responsible for notifying the debugger after successfully creating any
      * kind (function or other) of new JSScript.
      */
-    static JSScript *NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
-                               uint32 nobjects, uint32 nupvars, uint32 nregexps,
-                               uint32 ntrynotes, uint32 nconsts, uint32 nglobals,
-                               uint16 nClosedArgs, uint16 nClosedVars, uint32 nTypeSets,
+    static JSScript *NewScript(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
+                               uint32_t nobjects, uint32_t nupvars, uint32_t nregexps,
+                               uint32_t ntrynotes, uint32_t nconsts, uint32_t nglobals,
+                               uint16_t nClosedArgs, uint16_t nClosedVars, uint32_t nTypeSets,
                                JSVersion version);
 
     static JSScript *NewScriptFromEmitter(JSContext *cx, js::BytecodeEmitter *bce);
@@ -411,39 +411,39 @@ struct JSScript : public js::gc::Cell {
      * Make sure that the cookie size does not affect the GC alignment
      * requirements.
      */
-    uint32          cookie1[Cell::CellSize / sizeof(uint32)];
+    uint32_t        cookie1[Cell::CellSize / sizeof(uint32_t)];
 #endif
     jsbytecode      *code;      /* bytecodes and their immediate operands */
-    uint8           *data;      /* pointer to variable-length data array */
+    uint8_t         *data;      /* pointer to variable-length data array */
 
-    uint32          length;     /* length of code vector */
+    uint32_t        length;     /* length of code vector */
   private:
-    uint16          version;    /* JS version under which script was compiled */
+    uint16_t        version;    /* JS version under which script was compiled */
 
   public:
-    uint16          nfixed;     /* number of slots besides stack operands in
+    uint16_t        nfixed;     /* number of slots besides stack operands in
                                    slot array */
     /*
      * Offsets to various array structures from the end of this script, or
      * JSScript::INVALID_OFFSET if the array has length 0.
      */
-    uint8           objectsOffset;  /* offset to the array of nested function,
+    uint8_t         objectsOffset;  /* offset to the array of nested function,
                                        block, scope, xml and one-time regexps
                                        objects */
-    uint8           upvarsOffset;   /* offset of the array of display ("up")
+    uint8_t         upvarsOffset;   /* offset of the array of display ("up")
                                        closure vars */
-    uint8           regexpsOffset;  /* offset to the array of to-be-cloned
+    uint8_t         regexpsOffset;  /* offset to the array of to-be-cloned
                                        regexps  */
-    uint8           trynotesOffset; /* offset to the array of try notes */
-    uint8           globalsOffset;  /* offset to the array of global slots */
-    uint8           constOffset;    /* offset to the array of constants */
+    uint8_t         trynotesOffset; /* offset to the array of try notes */
+    uint8_t         globalsOffset;  /* offset to the array of global slots */
+    uint8_t         constOffset;    /* offset to the array of constants */
 
-    uint16          nTypeSets;      /* number of type sets used in this script for
+    uint16_t        nTypeSets;      /* number of type sets used in this script for
                                        dynamic type monitoring */
 
-    uint32          lineno;     /* base line number of script */
+    uint32_t        lineno;     /* base line number of script */
 
-    uint32          mainOffset; /* offset of main entry point from code, after
+    uint32_t        mainOffset; /* offset of main entry point from code, after
                                    predef'ing prolog */
     bool            noScriptRval:1; /* no need for result value of last
                                        expression statement */
@@ -476,12 +476,12 @@ struct JSScript : public js::gc::Cell {
 #endif
     bool            callDestroyHook:1;/* need to call destroy hook */
 
-    uint32          natoms;     /* length of atoms array */
-    uint16          nslots;     /* vars plus maximum stack depth */
-    uint16          staticLevel;/* static level for display maintenance */
+    uint32_t        natoms;     /* length of atoms array */
+    uint16_t        nslots;     /* vars plus maximum stack depth */
+    uint16_t        staticLevel;/* static level for display maintenance */
 
-    uint16          nClosedArgs; /* number of args which are closed over. */
-    uint16          nClosedVars; /* number of vars which are closed over. */
+    uint16_t        nClosedArgs; /* number of args which are closed over. */
+    uint16_t        nClosedVars; /* number of vars which are closed over. */
 
     /*
      * To ensure sizeof(JSScript) % gc::Cell::CellSize  == 0 on we must pad
@@ -490,7 +490,7 @@ struct JSScript : public js::gc::Cell {
      */
 #if JS_BITS_PER_WORD == 64
 #define JS_SCRIPT_INLINE_DATA_LIMIT 4
-    uint8           inlineData[JS_SCRIPT_INLINE_DATA_LIMIT];
+    uint8_t         inlineData[JS_SCRIPT_INLINE_DATA_LIMIT];
 #endif
 
     const char      *filename;  /* source filename or null */
@@ -503,6 +503,7 @@ struct JSScript : public js::gc::Cell {
     js::Bindings    bindings;   /* names of top-level variables in this script
                                    (and arguments if this is a function script) */
     JSPrincipals    *principals;/* principals for this script */
+    JSPrincipals    *originPrincipals; /* see jsapi.h 'originPrincipals' comment */
     jschar          *sourceMap; /* source map file or null */
 
     /*
@@ -521,14 +522,14 @@ struct JSScript : public js::gc::Cell {
     /* Hash table chaining for JSCompartment::evalCache. */
     JSScript        *&evalHashLink() { return *globalObject.unsafeGetUnioned(); }
 
-    uint32          *closedSlots; /* vector of closed slots; args first, then vars. */
+    uint32_t        *closedSlots; /* vector of closed slots; args first, then vars. */
 
     /* Execution and profiling information for JIT code in the script. */
     js::ScriptOpcodeCounts pcCounters;
 
   private:
-    js::DebugScript *debug;
-    JSFunction      *function_;
+    js::DebugScript     *debug;
+    js::HeapPtrFunction function_;
   public:
 
     /*
@@ -536,11 +537,11 @@ struct JSScript : public js::gc::Cell {
      * NULL for global and eval scripts.
      */
     JSFunction *function() const { return function_; }
-    void setFunction(JSFunction *fun) { function_ = fun; }
+    void setFunction(JSFunction *fun);
 
 #ifdef JS_CRASH_DIAGNOSTICS
     /* All diagnostic fields must be multiples of Cell::CellSize. */
-    uint32          cookie2[Cell::CellSize / sizeof(uint32)];
+    uint32_t        cookie2[Cell::CellSize / sizeof(uint32_t)];
 #endif
 
 #ifdef DEBUG
@@ -548,8 +549,8 @@ struct JSScript : public js::gc::Cell {
      * Unique identifier within the compartment for this script, used for
      * printing analysis information.
      */
-    uint32 id_;
-    uint32 idpad;
+    uint32_t id_;
+    uint32_t idpad;
     unsigned id();
 #else
     unsigned id() { return 0; }
@@ -557,6 +558,12 @@ struct JSScript : public js::gc::Cell {
 
     /* Persistent type information retained across GCs. */
     js::types::TypeScript *types;
+
+#if JS_BITS_PER_WORD == 32
+  private:
+    void *padding_;
+  public:
+#endif
 
     /* Ensure the script has a TypeScript. */
     inline bool ensureHasTypes(JSContext *cx);
@@ -665,13 +672,13 @@ struct JSScript : public js::gc::Cell {
      */
     JS_FRIEND_API(size_t) dataSize();                               /* Size of all data sections */
     JS_FRIEND_API(size_t) dataSize(JSMallocSizeOfFun mallocSizeOf); /* Size of all data sections */
-    uint32 numNotes();  /* Number of srcnote slots in the srcnotes section */
+    uint32_t numNotes();  /* Number of srcnote slots in the srcnotes section */
 
     /* Script notes are allocated right after the code. */
     jssrcnote *notes() { return (jssrcnote *)(code + length); }
 
-    static const uint8 INVALID_OFFSET = 0xFF;
-    static bool isValidOffset(uint8 offset) { return offset != INVALID_OFFSET; }
+    static const uint8_t INVALID_OFFSET = 0xFF;
+    static bool isValidOffset(uint8_t offset) { return offset != INVALID_OFFSET; }
 
     JSObjectArray *objects() {
         JS_ASSERT(isValidOffset(objectsOffset));
@@ -736,12 +743,12 @@ struct JSScript : public js::gc::Cell {
      */
     inline bool isEmpty() const;
 
-    uint32 getClosedArg(uint32 index) {
+    uint32_t getClosedArg(uint32_t index) {
         JS_ASSERT(index < nClosedArgs);
         return closedSlots[index];
     }
 
-    uint32 getClosedVar(uint32 index) {
+    uint32_t getClosedVar(uint32_t index) {
         JS_ASSERT(index < nClosedVars);
         return closedSlots[nClosedArgs + index];
     }
@@ -749,8 +756,8 @@ struct JSScript : public js::gc::Cell {
     void copyClosedSlotsTo(JSScript *other);
 
   private:
-    static const uint32 stepFlagMask = 0x80000000U;
-    static const uint32 stepCountMask = 0x7fffffffU;
+    static const uint32_t stepFlagMask = 0x80000000U;
+    static const uint32_t stepCountMask = 0x7fffffffU;
 
     /*
      * Attempt to recompile with or without single-stepping support, as directed
@@ -759,7 +766,7 @@ struct JSScript : public js::gc::Cell {
     bool recompileForStepMode(JSContext *cx);
 
     /* Attempt to change this->stepMode to |newValue|. */
-    bool tryNewStepMode(JSContext *cx, uint32 newValue);
+    bool tryNewStepMode(JSContext *cx, uint32_t newValue);
 
     bool ensureHasDebug(JSContext *cx);
 
@@ -802,7 +809,7 @@ struct JSScript : public js::gc::Cell {
     bool stepModeEnabled() { return debug && !!debug->stepMode; }
 
 #ifdef DEBUG
-    uint32 stepModeCount() { return debug ? (debug->stepMode & stepCountMask) : 0; }
+    uint32_t stepModeCount() { return debug ? (debug->stepMode & stepCountMask) : 0; }
 #endif
 
     void finalize(JSContext *cx, bool background);
@@ -811,6 +818,7 @@ struct JSScript : public js::gc::Cell {
     static inline void writeBarrierPost(JSScript *script, void *addr);
 };
 
+/* If this fails, padding_ can be removed. */
 JS_STATIC_ASSERT(sizeof(JSScript) % js::gc::Cell::CellSize == 0);
 
 #define SHARP_NSLOTS            2       /* [#array, #depth] slots if the script
@@ -895,8 +903,8 @@ enum LineOption {
     NOT_CALLED_FROM_JSOP_EVAL
 };
 
-inline const char *
-CurrentScriptFileAndLine(JSContext *cx, uintN *linenop, LineOption = NOT_CALLED_FROM_JSOP_EVAL);
+inline void
+CurrentScriptFileLineOrigin(JSContext *cx, uintN *linenop, LineOption = NOT_CALLED_FROM_JSOP_EVAL);
 
 }
 

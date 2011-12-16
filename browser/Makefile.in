@@ -47,6 +47,7 @@ PARALLEL_DIRS = \
   components \
   fuel \
   locales \
+  modules \
   themes \
   $(NULL)
 

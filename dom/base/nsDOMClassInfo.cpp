@@ -7974,12 +7974,19 @@ nsNamedArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       }
 
       JSObject *proto = ::JS_GetPrototype(cx, realObj);
-      JSBool hasProp;
 
-      if (proto && ::JS_HasPropertyById(cx, proto, id, &hasProp) && hasProp) {
-        // We found the property we're resolving on the prototype,
-        // nothing left to do here then.
-        return NS_OK;
+      if (proto) {
+        JSBool hasProp;
+        if (!::JS_HasPropertyById(cx, proto, id, &hasProp)) {
+          *_retval = false;
+          return NS_ERROR_FAILURE;
+        }
+
+        if (hasProp) {
+          // We found the property we're resolving on the prototype,
+          // nothing left to do here then.
+          return NS_OK;
+        }
       }
     }
 

@@ -519,13 +519,11 @@ ReportUseOfDeprecatedMethod(nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
   nsAutoString type;
   aDOMEvent->GetType(type);
   const PRUnichar *strings[] = { type.get() };
-  nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  "DOM Events", doc,
+                                  nsContentUtils::eDOM_PROPERTIES,
                                   aWarning,
-                                  strings, ArrayLength(strings),
-                                  nsnull,
-                                  EmptyString(), 0, 0,
-                                  nsIScriptError::warningFlag,
-                                  "DOM Events", doc);
+                                  strings, ArrayLength(strings));
 }
 
 NS_IMETHODIMP

@@ -87,7 +87,7 @@ public:
     {
     }
 
-    LinkBuffer(uint8* ncode, size_t size, CodeKind kind)
+    LinkBuffer(uint8_t* ncode, size_t size, CodeKind kind)
         : m_executablePool(NULL)
         , m_code(ncode)
         , m_size(size)

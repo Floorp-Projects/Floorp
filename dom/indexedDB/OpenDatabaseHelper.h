@@ -102,6 +102,12 @@ public:
     return mDatabase;
   }
 
+  static
+  nsresult CreateDatabaseConnection(const nsAString& aName,
+                                    nsIFile* aDBFile,
+                                    nsIFile* aFileManagerDirectory,
+                                    mozIStorageConnection** aConnection);
+
 protected:
   // Methods only called on the main thread
   nsresult EnsureSuccessResult();
@@ -145,6 +151,8 @@ private:
   };
   OpenDatabaseState mState;
   nsresult mResultCode;
+
+  nsRefPtr<FileManager> mFileManager;
 };
 
 END_INDEXEDDB_NAMESPACE

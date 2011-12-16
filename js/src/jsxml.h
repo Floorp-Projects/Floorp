@@ -61,8 +61,8 @@ struct JSXMLArrayCursor;
 template<class T>
 struct JSXMLArray
 {
-    uint32              length;
-    uint32              capacity;
+    uint32_t            length;
+    uint32_t            capacity;
     js::HeapPtr<T>      *vector;
     JSXMLArrayCursor<T> *cursors;
 
@@ -74,7 +74,7 @@ struct JSXMLArray
 
     void finish(JSContext *cx);
 
-    bool setCapacity(JSContext *cx, uint32 capacity);
+    bool setCapacity(JSContext *cx, uint32_t capacity);
     void trim();
 };
 
@@ -84,7 +84,7 @@ struct JSXMLArrayCursor
     typedef js::HeapPtr<T> HeapPtrT;
 
     JSXMLArray<T>       *array;
-    uint32              index;
+    uint32_t            index;
     JSXMLArrayCursor<T> *next;
     JSXMLArrayCursor<T> **prevp;
     HeapPtrT            root;
@@ -186,14 +186,14 @@ typedef struct JSXMLElemVar {
 struct JSXML : js::gc::Cell {
 #ifdef DEBUG_notme
     JSCList             links;
-    uint32              serial;
+    uint32_t            serial;
 #endif
     js::HeapPtrObject   object;
     void                *domnode;       /* DOM node if mapped info item */
     js::HeapPtrXML      parent;
     js::HeapPtrObject   name;
-    uint32              xml_class;      /* discriminates u, below */
-    uint32              xml_flags;      /* flags, see below */
+    uint32_t            xml_class;      /* discriminates u, below */
+    uint32_t            xml_flags;      /* flags, see below */
 
     JSXMLListVar        list;
     JSXMLElemVar        elem;

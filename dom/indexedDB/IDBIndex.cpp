@@ -104,7 +104,7 @@ public:
 
   ~GetHelper()
   {
-    IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
+    IDBObjectStore::ClearStructuredCloneBuffer(mCloneReadInfo.mCloneBuffer);
   }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -113,12 +113,12 @@ public:
 
   void ReleaseMainThreadObjects()
   {
-    IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
+    IDBObjectStore::ClearStructuredCloneBuffer(mCloneReadInfo.mCloneBuffer);
     GetKeyHelper::ReleaseMainThreadObjects();
   }
 
 protected:
-  JSAutoStructuredCloneBuffer mCloneBuffer;
+  StructuredCloneReadInfo mCloneReadInfo;
 };
 
 class GetAllKeysHelper : public GetKeyHelper
@@ -154,8 +154,9 @@ public:
 
   ~GetAllHelper()
   {
-    for (PRUint32 index = 0; index < mCloneBuffers.Length(); index++) {
-      IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffers[index]);
+    for (PRUint32 index = 0; index < mCloneReadInfos.Length(); index++) {
+      IDBObjectStore::ClearStructuredCloneBuffer(
+        mCloneReadInfos[index].mCloneBuffer);
     }
   }
 
@@ -165,15 +166,16 @@ public:
 
   void ReleaseMainThreadObjects()
   {
-    for (PRUint32 index = 0; index < mCloneBuffers.Length(); index++) {
-      IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffers[index]);
+    for (PRUint32 index = 0; index < mCloneReadInfos.Length(); index++) {
+      IDBObjectStore::ClearStructuredCloneBuffer(
+        mCloneReadInfos[index].mCloneBuffer);
     }
     GetKeyHelper::ReleaseMainThreadObjects();
   }
 
 protected:
   const PRUint32 mLimit;
-  nsTArray<JSAutoStructuredCloneBuffer> mCloneBuffers;
+  nsTArray<StructuredCloneReadInfo> mCloneReadInfos;
 };
 
 class OpenKeyCursorHelper : public AsyncConnectionHelper
@@ -227,7 +229,7 @@ public:
 
   ~OpenCursorHelper()
   {
-    IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
+    IDBObjectStore::ClearStructuredCloneBuffer(mCloneReadInfo.mCloneBuffer);
   }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -250,7 +252,7 @@ private:
   // Out-params.
   Key mKey;
   Key mObjectKey;
-  JSAutoStructuredCloneBuffer mCloneBuffer;
+  StructuredCloneReadInfo mCloneReadInfo;
   nsCString mContinueQuery;
   nsCString mContinueToQuery;
   Key mRangeKey;
@@ -793,7 +795,7 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
 
   NS_NAMED_LITERAL_CSTRING(indexId, "index_id");
 
-  nsCString query = NS_LITERAL_CSTRING("SELECT data FROM ") + objectTable +
+  nsCString query = NS_LITERAL_CSTRING("SELECT data, file_ids FROM ") + objectTable +
                     NS_LITERAL_CSTRING(" INNER JOIN ") + joinTable +
                     NS_LITERAL_CSTRING(" ON ") + objectTable +
                     NS_LITERAL_CSTRING(".id = ") + joinTable +
@@ -818,8 +820,8 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   if (hasResult) {
-    rv = IDBObjectStore::GetStructuredCloneDataFromStatement(stmt, 0,
-                                                             mCloneBuffer);
+    rv = IDBObjectStore::GetStructuredCloneReadInfoFromStatement(stmt, 0, 1,
+      mDatabase->Manager(), mCloneReadInfo);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -830,9 +832,9 @@ nsresult
 GetHelper::GetSuccessResult(JSContext* aCx,
                             jsval* aVal)
 {
-  bool result = IDBObjectStore::DeserializeValue(aCx, mCloneBuffer, aVal);
+  bool result = IDBObjectStore::DeserializeValue(aCx, mCloneReadInfo, aVal);
 
-  mCloneBuffer.clear();
+  mCloneReadInfo.mCloneBuffer.clear();
 
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
   return NS_OK;
@@ -1003,7 +1005,7 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
     limitClause.AppendInt(mLimit);
   }
 
-  nsCString query = NS_LITERAL_CSTRING("SELECT data FROM ") + dataTableName +
+  nsCString query = NS_LITERAL_CSTRING("SELECT data, file_ids FROM ") + dataTableName +
                     NS_LITERAL_CSTRING(" INNER JOIN ") + indexTableName  +
                     NS_LITERAL_CSTRING(" ON ") + dataTableName +
                     NS_LITERAL_CSTRING(".id = ") + indexTableName +
@@ -1025,18 +1027,19 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mCloneBuffers.SetCapacity(50);
+  mCloneReadInfos.SetCapacity(50);
 
   bool hasResult;
   while(NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-    if (mCloneBuffers.Capacity() == mCloneBuffers.Length()) {
-      mCloneBuffers.SetCapacity(mCloneBuffers.Capacity() * 2);
+    if (mCloneReadInfos.Capacity() == mCloneReadInfos.Length()) {
+      mCloneReadInfos.SetCapacity(mCloneReadInfos.Capacity() * 2);
     }
 
-    JSAutoStructuredCloneBuffer* buffer = mCloneBuffers.AppendElement();
-    NS_ASSERTION(buffer, "This shouldn't fail!");
+    StructuredCloneReadInfo* readInfo = mCloneReadInfos.AppendElement();
+    NS_ASSERTION(readInfo, "This shouldn't fail!");
 
-    rv = IDBObjectStore::GetStructuredCloneDataFromStatement(stmt, 0, *buffer);
+    rv = IDBObjectStore::GetStructuredCloneReadInfoFromStatement(stmt, 0, 1,
+      mDatabase->Manager(), *readInfo);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -1048,12 +1051,12 @@ nsresult
 GetAllHelper::GetSuccessResult(JSContext* aCx,
                                jsval* aVal)
 {
-  NS_ASSERTION(mCloneBuffers.Length() <= mLimit, "Too many results!");
+  NS_ASSERTION(mCloneReadInfos.Length() <= mLimit, "Too many results!");
 
-  nsresult rv = ConvertCloneBuffersToArray(aCx, mCloneBuffers, aVal);
+  nsresult rv = ConvertCloneReadInfosToArray(aCx, mCloneReadInfos, aVal);
 
-  for (PRUint32 index = 0; index < mCloneBuffers.Length(); index++) {
-    mCloneBuffers[index].clear();
+  for (PRUint32 index = 0; index < mCloneReadInfos.Length(); index++) {
+    mCloneReadInfos[index].mCloneBuffer.clear();
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1317,9 +1320,10 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_NAMED_LITERAL_CSTRING(commaspace, ", ");
 
   nsCString data = objectTable + NS_LITERAL_CSTRING(".data");
+  nsCString fileIds = objectTable + NS_LITERAL_CSTRING(".file_ids");
 
   nsCString firstQuery = NS_LITERAL_CSTRING("SELECT ") + value + commaspace +
-                         keyValue + commaspace + data +
+                         keyValue + commaspace + data + commaspace + fileIds +
                          NS_LITERAL_CSTRING(" FROM ") + indexTable +
                          NS_LITERAL_CSTRING(" INNER JOIN ") + objectTable +
                          NS_LITERAL_CSTRING(" ON ") + indexTable + dot +
@@ -1359,13 +1363,14 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   rv = mObjectKey.SetFromStatement(stmt, 1);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = IDBObjectStore::GetStructuredCloneDataFromStatement(stmt, 2,
-                                                           mCloneBuffer);
+  rv = IDBObjectStore::GetStructuredCloneReadInfoFromStatement(stmt, 2, 3,
+    mDatabase->Manager(), mCloneReadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Now we need to make the query to get the next match.
   nsCAutoString queryStart = NS_LITERAL_CSTRING("SELECT ") + value +
                              commaspace + keyValue + commaspace + data +
+                             commaspace + fileIds +
                              NS_LITERAL_CSTRING(" FROM ") + indexTable +
                              NS_LITERAL_CSTRING(" INNER JOIN ") + objectTable +
                              NS_LITERAL_CSTRING(" ON ") + indexTable + dot +
@@ -1458,10 +1463,10 @@ OpenCursorHelper::GetSuccessResult(JSContext* aCx,
   nsRefPtr<IDBCursor> cursor =
     IDBCursor::Create(mRequest, mTransaction, mIndex, mDirection, mRangeKey,
                       mContinueQuery, mContinueToQuery, mKey, mObjectKey,
-                      mCloneBuffer);
+                      mCloneReadInfo);
   NS_ENSURE_TRUE(cursor, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  NS_ASSERTION(!mCloneBuffer.data(), "Should have swapped!");
+  NS_ASSERTION(!mCloneReadInfo.mCloneBuffer.data(), "Should have swapped!");
 
   return WrapNative(aCx, cursor, aVal);
 }

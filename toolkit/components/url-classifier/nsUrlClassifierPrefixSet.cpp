@@ -84,6 +84,9 @@ private:
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsPrefixSetReporter, nsIMemoryReporter)
 
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(StoragePrefixSetMallocSizeOf,
+                                     "storage/prefixset")
+
 nsPrefixSetReporter::nsPrefixSetReporter(nsUrlClassifierPrefixSet * aParent,
                                          const nsACString & aName)
 : mParent(aParent)
@@ -126,10 +129,8 @@ nsPrefixSetReporter::GetUnits(PRInt32 * aUnits)
 NS_IMETHODIMP
 nsPrefixSetReporter::GetAmount(PRInt64 * aAmount)
 {
-  PRUint32 size;
-  nsresult rv = mParent->SizeOfIncludingThis(&size);
-  *aAmount = size;
-  return rv;
+  *aAmount = mParent->SizeOfIncludingThis(StoragePrefixSetMallocSizeOf);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -333,16 +334,16 @@ nsUrlClassifierPrefixSet::Contains(PRUint32 aPrefix, bool * aFound)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsUrlClassifierPrefixSet::SizeOfIncludingThis(PRUint32 * aSize)
+size_t
+nsUrlClassifierPrefixSet::SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf)
 {
   MutexAutoLock lock(mPrefixSetLock);
-  size_t usable = moz_malloc_usable_size(this);
-  *aSize = (PRUint32)(usable ? usable : sizeof(*this));
-  *aSize += mDeltas.SizeOf();
-  *aSize += mIndexPrefixes.SizeOf();
-  *aSize += mIndexStarts.SizeOf();
-  return NS_OK;
+  size_t n = 0;
+  n += mallocSizeOf(this, sizeof(nsUrlClassifierPrefixSet));
+  n += mDeltas.SizeOf();
+  n += mIndexPrefixes.SizeOf();
+  n += mIndexStarts.SizeOf();
+  return n;
 }
 
 NS_IMETHODIMP

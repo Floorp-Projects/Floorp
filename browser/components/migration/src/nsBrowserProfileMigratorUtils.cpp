@@ -42,8 +42,6 @@
 #include "nsToolkitCompsCID.h"
 #include "nsIPlacesImportExportService.h"
 #include "nsIFile.h"
-#include "nsIInputStream.h"
-#include "nsILineInputStream.h"
 #include "nsIProperties.h"
 #include "nsIProfileMigrator.h"
 
@@ -163,57 +161,6 @@ GetProfilePath(nsIProfileStartup* aStartup, nsCOMPtr<nsIFile>& aProfileDir)
                   (void**) getter_AddRefs(aProfileDir));
     }
   }
-}
-
-nsresult 
-AnnotatePersonalToolbarFolder(nsIFile* aSourceBookmarksFile,
-                              nsIFile* aTargetBookmarksFile,
-                              const char* aToolbarFolderName)
-{
-  nsCOMPtr<nsIInputStream> fileInputStream;
-  nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream),
-                                           aSourceBookmarksFile);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIOutputStream> outputStream;
-  rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream),
-                                   aTargetBookmarksFile);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsILineInputStream> lineInputStream =
-    do_QueryInterface(fileInputStream, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString sourceBuffer;
-  nsCAutoString targetBuffer;
-  bool moreData = false;
-  PRUint32 bytesWritten = 0;
-  do {
-    lineInputStream->ReadLine(sourceBuffer, &moreData);
-    if (!moreData)
-      break;
-
-    PRInt32 nameOffset = sourceBuffer.Find(aToolbarFolderName);
-    if (nameOffset >= 0) {
-      // Found the personal toolbar name on a line, check to make sure it's
-      // actually a folder. 
-      NS_NAMED_LITERAL_CSTRING(folderPrefix, "<DT><H3 ");
-      PRInt32 folderPrefixOffset = sourceBuffer.Find(folderPrefix);
-      if (folderPrefixOffset >= 0)
-        sourceBuffer.Insert(NS_LITERAL_CSTRING("PERSONAL_TOOLBAR_FOLDER=\"true\" "), 
-                            folderPrefixOffset + folderPrefix.Length());
-    }
-
-    targetBuffer.Assign(sourceBuffer);
-    targetBuffer.Append("\r\n");
-    outputStream->Write(targetBuffer.get(), targetBuffer.Length(),
-                        &bytesWritten);
-  }
-  while (1);
-  
-  outputStream->Close();
-  
-  return NS_OK;
 }
 
 nsresult

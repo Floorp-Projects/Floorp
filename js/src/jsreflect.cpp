@@ -1601,7 +1601,7 @@ class ASTSerializer
     JSContext     *cx;
     Parser        *parser;
     NodeBuilder   builder;
-    uint32        lineno;
+    uint32_t      lineno;
 
     Value atomContents(JSAtom *atom) {
         return StringValue(atom ? atom : cx->runtime->atomState.emptyAtom);
@@ -1681,7 +1681,7 @@ class ASTSerializer
     bool xml(ParseNode *pn, Value *dst);
 
   public:
-    ASTSerializer(JSContext *c, bool l, char const *src, uint32 ln)
+    ASTSerializer(JSContext *c, bool l, char const *src, uint32_t ln)
         : cx(c), builder(c, l, src), lineno(ln) {
     }
 
@@ -3075,7 +3075,7 @@ bool
 ASTSerializer::functionArgs(ParseNode *pn, ParseNode *pnargs, ParseNode *pndestruct,
                             ParseNode *pnbody, NodeVector &args)
 {
-    uint32 i = 0;
+    uint32_t i = 0;
     ParseNode *arg = pnargs ? pnargs->pn_head : NULL;
     ParseNode *destruct = pndestruct ? pndestruct->pn_head : NULL;
     Value node;
@@ -3135,7 +3135,7 @@ ASTSerializer::functionBody(ParseNode *pn, TokenPos *pos, Value *dst)
 } /* namespace js */
 
 static JSBool
-reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
+reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
 {
     if (argc < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
@@ -3149,7 +3149,7 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
 
     char *filename = NULL;
     AutoReleaseNullablePtr filenamep(cx, filename);
-    uint32 lineno = 1;
+    uint32_t lineno = 1;
     bool loc = true;
 
     JSObject *builder = NULL;
@@ -3232,7 +3232,7 @@ reflect_parse(JSContext *cx, uint32 argc, jsval *vp)
     if (!chars)
         return JS_FALSE;
 
-    Parser parser(cx, NULL, NULL, false);
+    Parser parser(cx, NULL, NULL, NULL, false);
 
     if (!parser.init(chars, length, filename, lineno, cx->findVersion()))
         return JS_FALSE;

@@ -55,7 +55,7 @@ _BROWSER_FILES = \
   remote_forms.js \
   remote_formsZoom.js \
   remote_vkb.js \
-  $(warning browser_addons.js disabled due to failures - bug 710956) \
+  browser_addons.js \
   browser_addons_locales.js \
   browser_appmenu.js \
   browser_autocompletesearch.js \

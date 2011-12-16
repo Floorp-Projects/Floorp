@@ -545,7 +545,7 @@ public:
     {
         union {
             float f;
-            uint32 u32;
+            uint32_t u32;
         } u;
         u.f = imm.u.d;
         store32(Imm32(u.u32), address);
@@ -555,7 +555,7 @@ public:
     {
         union {
             float f;
-            uint32 u32;
+            uint32_t u32;
         } u;
         u.f = imm.u.d;
         store32(Imm32(u.u32), address);

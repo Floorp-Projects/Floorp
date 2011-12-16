@@ -1883,7 +1883,7 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
             }
             // fall through...
         case 2:     // argv[1] is nsresult for eResult
-            if (!JS_ValueToECMAInt32(cx, argv[1], (int32*) &eResult))
+            if (!JS_ValueToECMAInt32(cx, argv[1], (int32_t*) &eResult))
                 return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
             // ...fall through...
         case 1:     // argv[0] is string for eMsg
@@ -4296,7 +4296,7 @@ nsXPCComponents::SetProperty(nsIXPConnectWrappedNative *wrapper,
 
     if (id == rt->GetStringID(XPCJSRuntime::IDX_RETURN_CODE)) {
         nsresult rv;
-        if (JS_ValueToECMAUint32(cx, *vp, (uint32*)&rv)) {
+        if (JS_ValueToECMAUint32(cx, *vp, (uint32_t*)&rv)) {
             xpcc->SetPendingResult(rv);
             xpcc->SetLastResult(rv);
             return NS_SUCCESS_I_DID_SOMETHING;

@@ -42,9 +42,9 @@
 class nsIArray;
 
 #define NS_ISCRIPTTIMEOUTHANDLER_IID \
-{ /* {260C0DAB-0DCF-4c75-B820-46C31005718D} */ \
-  0x260c0dab, 0xdcf, 0x4c75, \
-  { 0xb8, 0x20, 0x46, 0xc3, 0x10, 0x5, 0x71, 0x8d } }
+{ /* {21ba4f96-30b8-4215-a75d-d438eb16a50c} */ \
+  0x21ba4f96, 0x30b8, 0x4215, \
+  { 0xa7, 0x5d, 0xd4, 0x38, 0xeb, 0x16, 0xa5, 0x0c } }
 
 /**
  * Abstraction of the script objects etc required to do timeouts in a
@@ -62,7 +62,7 @@ public:
   // Get a script object for the language suitable for passing back to
   // the language's context as an event handler.  If this returns nsnull,
   // GetHandlerText() will be called to get the string.
-  virtual void *GetScriptObject() = 0;
+  virtual JSObject *GetScriptObject() = 0;
 
   // Get the handler text of not a compiled object.
   virtual const PRUnichar *GetHandlerText() = 0;

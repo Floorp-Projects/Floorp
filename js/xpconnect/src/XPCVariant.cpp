@@ -217,7 +217,7 @@ XPCArrayHomogenizer::GetTypeForArray(XPCCallContext& ccx, JSObject* array,
     Type state = tUnk;
     Type type;
 
-    for (jsuint i = 0; i < length; i++) {
+    for (uint32_t i = 0; i < length; i++) {
         jsval val;
         if (!JS_GetElement(ccx, array, i, &val))
             return false;
@@ -359,7 +359,7 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 
     // Let's see if it is a js array object.
 
-    jsuint len;
+    uint32_t len;
 
     if (JS_IsArrayObject(ccx, jsobj) && JS_GetArrayLength(ccx, jsobj, &len)) {
         if (!len) {
