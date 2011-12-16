@@ -55,6 +55,7 @@
 #include "nsUnicharUtils.h"
 #include "nsISimpleEnumerator.h"
 #include "nsGUIEvent.h"
+#include "mozilla/LookAndFeel.h"
 
 // Interfaces needed to be included
 #include "nsPresContext.h"
@@ -103,6 +104,8 @@
 #include "nsEventListenerManager.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIConstraintValidation.h"
+
+using namespace mozilla;
 
 //
 // GetEventReceiver
@@ -1353,8 +1356,10 @@ ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
     if ( eventTarget )
       mPossibleTooltipNode = do_QueryInterface(eventTarget);
     if ( mPossibleTooltipNode ) {
-      nsresult rv = mTooltipTimer->InitWithFuncCallback(sTooltipCallback, this, kTooltipShowTime, 
-                                                        nsITimer::TYPE_ONE_SHOT);
+      nsresult rv =
+        mTooltipTimer->InitWithFuncCallback(sTooltipCallback, this,
+          LookAndFeel::GetInt(LookAndFeel::eIntID_TooltipDelay, 500),
+          nsITimer::TYPE_ONE_SHOT);
       if (NS_FAILED(rv))
         mPossibleTooltipNode = nsnull;
     }

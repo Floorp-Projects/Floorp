@@ -333,6 +333,9 @@ nsLookAndFeel::GetIntImpl(IntID aID, PRInt32 &aResult)
     case eIntID_SubmenuDelay:
       aResult = 200;
       break;
+    case eIntID_TooltipDelay:
+      aResult = 500;
+      break;
     case eIntID_MenusCanOverlapOSBar:
       // xul popups are not allowed to overlap the menubar.
       aResult = 0;
