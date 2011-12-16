@@ -55,6 +55,7 @@
 namespace js {
 namespace ion {
 
+class CheckOverRecursedFailure;
 class OutOfLineUnboxDouble;
 
 class CodeGenerator : public CodeGeneratorSpecific
@@ -85,6 +86,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     virtual bool visitInitializedLength(LInitializedLength *lir);
     virtual bool visitUnboxDouble(LUnboxDouble *lir);
 
+    bool visitCheckOverRecursed(LCheckOverRecursed *lir);
+    bool visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool);
     bool visitOutOfLineUnboxDouble(OutOfLineUnboxDouble *ool);
 };
 

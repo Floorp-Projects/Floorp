@@ -53,6 +53,7 @@
     _(TableSwitch)                  \
     _(Goto)                         \
     _(NewArray)                     \
+    _(CheckOverRecursed)            \
     _(CallGeneric)                  \
     _(StackArg)                     \
     _(BitNot)                       \
