@@ -231,6 +231,11 @@ IonBuilder::build()
         current->initSlot(info().localSlot(i), undef);
     }
 
+    // Guard against over-recursion.
+    MCheckOverRecursed *check = new MCheckOverRecursed;
+    current->add(check);
+    check->setResumePoint(current->entryResumePoint());
+
     current->makeStart(MStart::New(MStart::StartType_Default));
 
     // The type analysis phase attempts to insert unbox operations near
