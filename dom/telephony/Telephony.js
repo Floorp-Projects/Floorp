@@ -356,6 +356,20 @@ Telephony.prototype = {
     return call;
   },
 
+  get muted() {
+    return this.telephone.microphoneMuted;
+  },
+  set muted(value) {
+    this.telephone.microphoneMuted = value;
+  },
+
+  get speakerOn() {
+    return this.telephone.speakerEnabled;
+  },
+  set speakerOn(value) {
+    this.telephone.speakerEnabled = value;
+  },
+
   // Additional stuff that's useful.
 
   signalStrength: null,

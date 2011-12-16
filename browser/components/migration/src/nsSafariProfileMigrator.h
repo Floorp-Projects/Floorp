@@ -46,6 +46,9 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
+class nsIPrefBranch;
+class nsINavBookmarksService;
+class nsIRDFResource;
 class nsIRDFDataSource;
 
 class nsSafariProfileMigrator : public nsIBrowserProfileMigrator,

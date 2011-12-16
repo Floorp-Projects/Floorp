@@ -596,18 +596,6 @@ var gAdvancedPane = {
   },
 #endif
 
-  /**
-   * The Extensions checkbox and button are disabled only if the enable Addon
-   * update preference is locked.
-   */
-  updateAddonUpdateUI: function ()
-  {
-    var enabledPref = document.getElementById("extensions.update.enabled");
-    var enableAddonUpdate = document.getElementById("enableAddonUpdate");
-
-    enableAddonUpdate.disabled = enabledPref.locked;
-  },
-
   // ENCRYPTION TAB
 
   /*

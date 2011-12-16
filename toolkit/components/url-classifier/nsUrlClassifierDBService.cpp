@@ -3691,10 +3691,8 @@ nsUrlClassifierDBServiceWorker::LoadPrefixSet(nsCOMPtr<nsIFile> & aFile)
   }
 
 #ifdef DEBUG
-  PRUint32 size = 0;
-  rv = mPrefixSet->SizeOfIncludingThis(&size);
-  LOG(("SB tree done, size = %d bytes\n", size));
-  NS_ENSURE_SUCCESS(rv, rv);
+  LOG(("SB tree done, size = %d bytes\n",
+       mPrefixSet->SizeOfIncludingThis(moz_malloc_size_of)));
 #endif
 #if defined(PR_LOGGING)
   if (LOG_ENABLED()) {

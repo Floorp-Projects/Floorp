@@ -65,9 +65,9 @@ enum ConservativeGCTest
 
 struct ConservativeGCStats
 {
-    uint32  counter[gc::CGCT_END];  /* ConservativeGCTest classification
+    uint32_t counter[gc::CGCT_END]; /* ConservativeGCTest classification
                                        counters */
-    uint32  unaligned;              /* number of valid but not aligned on
+    uint32_t unaligned;             /* number of valid but not aligned on
                                        thing start pointers */ 
 
     void add(const ConservativeGCStats &another) {

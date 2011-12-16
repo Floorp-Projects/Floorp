@@ -581,7 +581,7 @@ nsSVGPatternFrame::ConstructCTM(const gfxRect &callerBBox,
 
   const nsSVGViewBoxRect viewBox = GetViewBox().GetAnimValue();
 
-  if (viewBox.height <= 0.0f && viewBox.width <= 0.0f) {
+  if (viewBox.height <= 0.0f || viewBox.width <= 0.0f) {
     return tCTM;
   }
 

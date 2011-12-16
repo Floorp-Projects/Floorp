@@ -118,14 +118,9 @@ public:
   static nsresult GetJumpListLink(IShellItem *pItem, nsCOMPtr<nsIJumpListLink>& aLink);
 
 protected:
-  typedef HRESULT (WINAPI * SHCreateItemFromParsingNamePtr)(PCWSTR pszPath, IBindCtx *pbc, REFIID riid, void **ppv);
-
   nsString mUriTitle;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsICryptoHash> mCryptoHash;
-  static const PRUnichar kSehllLibraryName[];
-  static HMODULE sShellDll;
-  static SHCreateItemFromParsingNamePtr createItemFromParsingName;
 };
 
 class JumpListShortcut : public JumpListItem, public nsIJumpListShortcut

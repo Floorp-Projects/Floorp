@@ -58,6 +58,7 @@ import org.mozilla.gecko.db.BrowserDB;
 public class Tab {
     public static enum AgentMode { MOBILE, DESKTOP };
     private static final String LOGTAG = "GeckoTab";
+    private static final int kThumbnailSize = 96;
 
     static int sMinDim = 0;
     private int mId;
@@ -74,6 +75,8 @@ public class Tab {
     private HashMap<String, DoorHanger> mDoorHangers;
     private long mFaviconLoadId;
     private AgentMode mAgentMode = AgentMode.MOBILE;
+    private String mDocumentURI;
+    private String mContentType;
 
     static class HistoryEntry {
         public final String mUri;   // must never be null
@@ -102,6 +105,8 @@ public class Tab {
         mBookmark = false;
         mDoorHangers = new HashMap<String, DoorHanger>();
         mFaviconLoadId = 0;
+        mDocumentURI = "";
+        mContentType = "";
     }
 
     public int getId() {
@@ -141,9 +146,15 @@ public class Tab {
                     sMinDim = Math.min(metrics.widthPixels, metrics.heightPixels);
                 }
                 if (b != null) {
-                    Bitmap bitmap = Bitmap.createBitmap(b, 0, 0, sMinDim, sMinDim);
-                    mThumbnail = new BitmapDrawable(bitmap);
-                    saveThumbnailToDB((BitmapDrawable) mThumbnail);
+                    try {
+                        Bitmap cropped = Bitmap.createBitmap(b, 0, 0, sMinDim, sMinDim);
+                        Bitmap bitmap = Bitmap.createScaledBitmap(cropped, kThumbnailSize, kThumbnailSize, false);
+                        mThumbnail = new BitmapDrawable(bitmap);
+                        saveThumbnailToDB((BitmapDrawable) mThumbnail);
+                    } catch (OutOfMemoryError oom) {
+                        Log.e(LOGTAG, "Unable to create/scale bitmap", oom);
+                        mThumbnail = null;
+                    }
                 } else {
                     mThumbnail = null;
                 }
@@ -173,6 +184,22 @@ public class Tab {
             Log.i(LOGTAG, "Updated url: " + url + " for tab with id: " + mId);
             updateBookmark();
         }
+    }
+
+    public void setDocumentURI(String documentURI) {
+        mDocumentURI = documentURI;
+    }
+
+    public String getDocumentURI() {
+        return mDocumentURI;
+    }
+
+    public void setContentType(String contentType) {
+        mContentType = contentType;
+    }
+
+    public String getContentType() {
+        return mContentType;
     }
 
     public void updateTitle(String title) {
@@ -407,5 +434,4 @@ public class Tab {
     public AgentMode getAgentMode() {
         return mAgentMode;
     }
-
 }

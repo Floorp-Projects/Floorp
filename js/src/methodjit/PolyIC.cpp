@@ -68,7 +68,7 @@ typedef JSC::MacroAssembler::Jump Jump;
 typedef JSC::MacroAssembler::Imm32 Imm32;
 
 /* Rough over-estimate of how much memory we need to unprotect. */
-static const uint32 INLINE_PATH_LENGTH = 64;
+static const uint32_t INLINE_PATH_LENGTH = 64;
 
 // Helper class to simplify LinkBuffer usage in PIC stub generators.
 // This guarantees correct OOM and refcount handling for buffers while they
@@ -103,7 +103,7 @@ class PICStubCompiler : public BaseCompiler
     JSScript *script;
     ic::PICInfo &pic;
     void *stub;
-    uint32 gcNumber;
+    uint32_t gcNumber;
 
   public:
     bool canCallHook;
@@ -231,7 +231,7 @@ class SetPropCompiler : public PICStubCompiler
         Repatcher repatcher(f.jit());
         SetPropLabels &labels = pic.setPropLabels();
 
-        int32 offset;
+        int32_t offset;
         if (obj->isFixedSlot(shape->slot())) {
             CodeLocationInstruction istr = labels.getDslotsLoad(pic.fastPathRejoin, pic.u.vr);
             repatcher.repatchLoadPtrToLEA(istr);
@@ -243,10 +243,10 @@ class SetPropCompiler : public PICStubCompiler
             // Because the offset is wrong, it's necessary to correct it
             // below.
             //
-            int32 diff = int32(JSObject::getFixedSlotOffset(0)) -
-                         int32(JSObject::offsetOfSlots());
+            int32_t diff = int32_t(JSObject::getFixedSlotOffset(0)) -
+                         int32_t(JSObject::offsetOfSlots());
             JS_ASSERT(diff != 0);
-            offset = (int32(shape->slot()) * sizeof(Value)) + diff;
+            offset = (int32_t(shape->slot()) * sizeof(Value)) + diff;
         } else {
             offset = obj->dynamicSlotIndex(shape->slot()) * sizeof(Value);
         }
@@ -404,7 +404,7 @@ class SetPropCompiler : public PICStubCompiler
             //      \===/    2. arguments and locals have different getters
             //              then we can rely on fun->nargs remaining invariant.
             JSFunction *fun = obj->asCall().getCalleeFunction();
-            uint16 slot = uint16(shape->shortid());
+            uint16_t slot = uint16_t(shape->shortid());
 
             /* Guard that the call object has a frame. */
             masm.loadObjPrivate(pic.objReg, pic.shapeReg, obj->numFixedSlots());
@@ -566,7 +566,7 @@ class SetPropCompiler : public PICStubCompiler
             if (clasp->ops.defineProperty)
                 return disable("ops define property hook");
 
-            uint32 index;
+            uint32_t index;
             if (js_IdIsIndex(id, &index))
                 return disable("index");
 
@@ -582,7 +582,7 @@ class SetPropCompiler : public PICStubCompiler
             }
 
             const Shape *initialShape = obj->lastProperty();
-            uint32 slots = obj->numDynamicSlots();
+            uint32_t slots = obj->numDynamicSlots();
 
             uintN flags = 0;
             PropertyOp getter = clasp->getProperty;
@@ -684,7 +684,7 @@ class SetPropCompiler : public PICStubCompiler
                 RecompilationMonitor monitor(cx);
                 JSFunction *fun = obj->asCall().getCalleeFunction();
                 JSScript *script = fun->script();
-                uint16 slot = uint16(shape->shortid());
+                uint16_t slot = uint16_t(shape->shortid());
                 if (!script->ensureHasTypes(cx))
                     return error();
                 {
@@ -1027,7 +1027,7 @@ class GetPropCompiler : public PICStubCompiler
          * correctly in ic::CallProp. Should we just move the store higher
          * up in the fast path, or put this offset in PICInfo?
          */
-        uint32 thisvOffset = uint32(f.regs.sp - f.fp()->slots()) - 1;
+        uint32_t thisvOffset = uint32_t(f.regs.sp - f.fp()->slots()) - 1;
         Address thisv(JSFrameReg, sizeof(StackFrame) + thisvOffset * sizeof(Value));
         masm.storeValueFromComponents(ImmType(JSVAL_TYPE_STRING),
                                       pic.objReg, thisv);
@@ -1124,7 +1124,7 @@ class GetPropCompiler : public PICStubCompiler
         Repatcher repatcher(f.jit());
         GetPropLabels &labels = pic.getPropLabels();
 
-        int32 offset;
+        int32_t offset;
         if (holder->isFixedSlot(shape->slot())) {
             CodeLocationInstruction istr = labels.getDslotsLoad(pic.fastPathRejoin);
             repatcher.repatchLoadPtrToLEA(istr);
@@ -1136,10 +1136,10 @@ class GetPropCompiler : public PICStubCompiler
             // Because the offset is wrong, it's necessary to correct it
             // below.
             //
-            int32 diff = int32(JSObject::getFixedSlotOffset(0)) -
-                         int32(JSObject::offsetOfSlots());
+            int32_t diff = int32_t(JSObject::getFixedSlotOffset(0)) -
+                         int32_t(JSObject::offsetOfSlots());
             JS_ASSERT(diff != 0);
-            offset  = (int32(shape->slot()) * sizeof(Value)) + diff;
+            offset  = (int32_t(shape->slot()) * sizeof(Value)) + diff;
         } else {
             offset = holder->dynamicSlotIndex(shape->slot()) * sizeof(Value);
         }
@@ -1187,7 +1187,7 @@ class GetPropCompiler : public PICStubCompiler
          * Use vp == sp (which for CALLPROP will actually be the original
          * sp + 1), to avoid clobbering stack values.
          */
-        int32 vpOffset = (char *) f.regs.sp - (char *) f.fp();
+        int32_t vpOffset = (char *) f.regs.sp - (char *) f.fp();
         if (shape->hasSlot()) {
             masm.loadObjProp(obj, holdObjReg, shape,
                              Registers::ClobberInCall, t0);
@@ -1196,7 +1196,7 @@ class GetPropCompiler : public PICStubCompiler
             masm.storeValue(UndefinedValue(), Address(JSFrameReg, vpOffset));
         }
 
-        int32 initialFrameDepth = f.regs.sp - f.fp()->slots();
+        int32_t initialFrameDepth = f.regs.sp - f.fp()->slots();
         masm.setupFallibleABICall(cx->typeInferenceEnabled(), f.regs.pc, initialFrameDepth);
 
         /* Grab cx. */
@@ -1625,7 +1625,7 @@ class ScopeNameCompiler : public PICStubCompiler
         masm.loadObjPrivate(pic.objReg, pic.shapeReg, getprop.holder->numFixedSlots());
 
         JSFunction *fun = getprop.holder->asCall().getCalleeFunction();
-        uint16 slot = uint16(shape->shortid());
+        uint16_t slot = uint16_t(shape->shortid());
 
         Jump skipOver;
         Jump escapedFrame = masm.branchTestPtr(Assembler::Zero, pic.shapeReg, pic.shapeReg);
@@ -2280,12 +2280,12 @@ BaseIC::spew(JSContext *cx, const char *event, const char *message)
 }
 
 /* Total length of scripts preceding a frame. */
-inline uint32 frameCountersOffset(JSContext *cx)
+inline uint32_t frameCountersOffset(JSContext *cx)
 {
-    uint32 offset = 0;
+    uint32_t offset = 0;
     if (cx->regs().inlined()) {
         offset += cx->fp()->script()->length;
-        uint32 index = cx->regs().inlined()->inlineIndex;
+        uint32_t index = cx->regs().inlined()->inlineIndex;
         InlineFrame *frames = cx->fp()->jit()->inlineFrames();
         for (unsigned i = 0; i < index; i++)
             offset += frames[i].fun->script()->length;
@@ -2303,7 +2303,7 @@ BaseIC::disable(JSContext *cx, const char *reason, void *stub)
 {
     JITScript *jit = cx->fp()->jit();
     if (jit->pcLengths) {
-        uint32 offset = frameCountersOffset(cx);
+        uint32_t offset = frameCountersOffset(cx);
         jit->pcLengths[offset].picsLength = 0;
     }
 
@@ -2318,7 +2318,7 @@ BaseIC::updatePCCounters(JSContext *cx, Assembler &masm)
 {
     JITScript *jit = cx->fp()->jit();
     if (jit->pcLengths) {
-        uint32 offset = frameCountersOffset(cx);
+        uint32_t offset = frameCountersOffset(cx);
         jit->pcLengths[offset].picsLength += masm.size();
     }
 }
@@ -2990,7 +2990,7 @@ SetElementIC::purge(Repatcher &repatcher)
 }
 
 LookupStatus
-SetElementIC::attachHoleStub(VMFrame &f, JSObject *obj, int32 keyval)
+SetElementIC::attachHoleStub(VMFrame &f, JSObject *obj, int32_t keyval)
 {
     JSContext *cx = f.cx;
 
@@ -3093,7 +3093,7 @@ SetElementIC::attachHoleStub(VMFrame &f, JSObject *obj, int32 keyval)
 
 #if defined JS_METHODJIT_TYPED_ARRAY
 LookupStatus
-SetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, int32 key)
+SetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, int32_t key)
 {
     // Right now, only one shape guard extension is supported.
     JS_ASSERT(!inlineShapeGuardPatched);
@@ -3188,10 +3188,10 @@ SetElementIC::update(VMFrame &f, const Value &objval, const Value &idval)
     if (!objval.isObject())
         return disable(f.cx, "primitive lval");
     if (!idval.isInt32())
-        return disable(f.cx, "non-int32 key");
+        return disable(f.cx, "non-int32_t key");
 
     JSObject *obj = &objval.toObject();
-    int32 key = idval.toInt32();
+    int32_t key = idval.toInt32();
 
     if (obj->isDenseArray())
         return attachHoleStub(f, obj, key);

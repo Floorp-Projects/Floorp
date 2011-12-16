@@ -42,7 +42,7 @@ VPATH      = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = chrome locales app
+DIRS = chrome components locales app
 
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/testing/testsuite-targets.mk

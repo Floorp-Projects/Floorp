@@ -1774,11 +1774,13 @@ private:
   void QuotesDirty() {
     NS_PRECONDITION(mUpdateCount != 0, "Instant quote updates are bad news");
     mQuotesDirty = true;
+    mDocument->SetNeedLayoutFlush();
   }
 
   void CountersDirty() {
     NS_PRECONDITION(mUpdateCount != 0, "Instant counter updates are bad news");
     mCountersDirty = true;
+    mDocument->SetNeedLayoutFlush();
   }
 
 public:

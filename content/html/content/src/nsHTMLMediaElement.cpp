@@ -398,6 +398,7 @@ NS_IMPL_URI_ATTR(nsHTMLMediaElement, Src, src)
 NS_IMPL_BOOL_ATTR(nsHTMLMediaElement, Controls, controls)
 NS_IMPL_BOOL_ATTR(nsHTMLMediaElement, Autoplay, autoplay)
 NS_IMPL_BOOL_ATTR(nsHTMLMediaElement, Loop, loop)
+NS_IMPL_BOOL_ATTR(nsHTMLMediaElement, DefaultMuted, muted)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLMediaElement, Preload, preload, NULL)
 
 /* readonly attribute nsIDOMHTMLMediaElement mozAutoplayEnabled; */
@@ -1504,6 +1505,12 @@ bool nsHTMLMediaElement::ParseAttribute(PRInt32 aNamespaceID,
                                               aResult);
 }
 
+void nsHTMLMediaElement::DoneCreatingElement()
+{
+   if (HasAttr(kNameSpaceID_None, nsGkAtoms::muted))
+     mMuted = true; 
+}
+
 nsresult nsHTMLMediaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                      nsIAtom* aPrefix, const nsAString& aValue,
                                      bool aNotify)
@@ -1515,9 +1522,6 @@ nsresult nsHTMLMediaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     return rv;
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::src) {
     Load();
-  }
-  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::muted) {
-    mMuted = true;
   }
   if (aNotify && aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::autoplay) {
@@ -1976,8 +1980,8 @@ nsresult nsHTMLMediaElement::FinishDecoderSetup(nsMediaDecoder* aDecoder)
 
   nsCAutoString src;
   GetCurrentSpec(src);
-  printf("*** nsHTMLElement::FinishDecoderSetup() mDecoder=%p src=%s\n",
-         aDecoder, src.get());
+  printf("*** nsHTMLElement::FinishDecoderSetup() mDecoder=%p stream=%p src=%s\n",
+         aDecoder, aDecoder->GetStream(), src.get());
   mDecoder = aDecoder;
   AddMediaElementToURITable();
 

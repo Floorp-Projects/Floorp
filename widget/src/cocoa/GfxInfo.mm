@@ -67,12 +67,28 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
+#ifdef DEBUG
+NS_IMPL_ISUPPORTS_INHERITED1(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
+#endif
+
 GfxInfo::GfxInfo()
-  : mAdapterVendorID(0),
-    mAdapterDeviceID(0)
 {
 }
 
+static OperatingSystem
+OSXVersionToOperatingSystem(PRUint32 aOSXVersion)
+{
+  switch (aOSXVersion & MAC_OS_X_VERSION_MAJOR_MASK) {
+    case MAC_OS_X_VERSION_10_5_HEX:
+      return DRIVER_OS_OS_X_10_5;
+    case MAC_OS_X_VERSION_10_6_HEX:
+      return DRIVER_OS_OS_X_10_6;
+    case MAC_OS_X_VERSION_10_7_HEX:
+      return DRIVER_OS_OS_X_10_7;
+  }
+
+  return DRIVER_OS_UNKNOWN;
+}
 // The following three functions are derived from Chromium code
 static CFTypeRef SearchPortForProperty(io_registry_entry_t dspPort,
                                        CFStringRef propertyName)
@@ -104,28 +120,14 @@ GfxInfo::GetDeviceInfo()
   io_registry_entry_t dsp_port = CGDisplayIOServicePort(kCGDirectMainDisplay);
   CFTypeRef vendor_id_ref = SearchPortForProperty(dsp_port, CFSTR("vendor-id"));
   if (vendor_id_ref) {
-    mAdapterVendorID = IntValueOfCFData((CFDataRef)vendor_id_ref);
+    mAdapterVendorID.AppendPrintf("0x%4x", IntValueOfCFData((CFDataRef)vendor_id_ref));
     CFRelease(vendor_id_ref);
   }
   CFTypeRef device_id_ref = SearchPortForProperty(dsp_port, CFSTR("device-id"));
   if (device_id_ref) {
-    mAdapterDeviceID = IntValueOfCFData((CFDataRef)device_id_ref);
+    mAdapterDeviceID.AppendPrintf("0x%4x", IntValueOfCFData((CFDataRef)device_id_ref));
     CFRelease(device_id_ref);
   }
-}
-
-static bool
-IsATIRadeonX1000(PRUint32 aVendorID, PRUint32 aDeviceID)
-{
-  if (aVendorID == 0x1002) {
-    // this list is from the ATIRadeonX1000.kext Info.plist
-    PRUint32 devices[] = {0x7187, 0x7210, 0x71DE, 0x7146, 0x7142, 0x7109, 0x71C5, 0x71C0, 0x7240, 0x7249, 0x7291};
-    for (size_t i = 0; i < ArrayLength(devices); i++) {
-      if (aDeviceID == devices[i])
-        return true;
-    }
-  }
-  return false;
 }
 
 nsresult
@@ -173,6 +175,8 @@ GfxInfo::Init()
   GetDeviceInfo();
 
   AddCrashReportAnnotations();
+
+  mOSXVersion = nsToolkit::OSXVersion();
 
   return rv;
 }
@@ -292,32 +296,32 @@ GfxInfo::GetAdapterDriverDate2(nsAString & aAdapterDriverDate)
   return NS_ERROR_FAILURE;
 }
 
-/* readonly attribute unsigned long adapterVendorID; */
+/* readonly attribute DOMString adapterVendorID; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterVendorID(PRUint32 *aAdapterVendorID)
+GfxInfo::GetAdapterVendorID(nsAString & aAdapterVendorID)
 {
-  *aAdapterVendorID = mAdapterVendorID;
+  aAdapterVendorID = mAdapterVendorID;
   return NS_OK;
 }
 
-/* readonly attribute unsigned long adapterVendorID2; */
+/* readonly attribute DOMString adapterVendorID2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterVendorID2(PRUint32 *aAdapterVendorID)
+GfxInfo::GetAdapterVendorID2(nsAString & aAdapterVendorID)
 {
   return NS_ERROR_FAILURE;
 }
 
-/* readonly attribute unsigned long adapterDeviceID; */
+/* readonly attribute DOMString adapterDeviceID; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterDeviceID(PRUint32 *aAdapterDeviceID)
+GfxInfo::GetAdapterDeviceID(nsAString & aAdapterDeviceID)
 {
-  *aAdapterDeviceID = mAdapterDeviceID;
+  aAdapterDeviceID = mAdapterDeviceID;
   return NS_OK;
 }
 
-/* readonly attribute unsigned long adapterDeviceID2; */
+/* readonly attribute DOMString adapterDeviceID2; */
 NS_IMETHODIMP
-GfxInfo::GetAdapterDeviceID2(PRUint32 *aAdapterDeviceID)
+GfxInfo::GetAdapterDeviceID2(nsAString & aAdapterDeviceID)
 {
   return NS_ERROR_FAILURE;
 }
@@ -333,167 +337,161 @@ void
 GfxInfo::AddCrashReportAnnotations()
 {
 #if defined(MOZ_CRASHREPORTER)
-  nsCAutoString deviceIDString, vendorIDString;
-  PRUint32 deviceID, vendorID;
+  nsString deviceID, vendorID;
+  nsCAutoString narrowDeviceID, narrowVendorID;
 
-  GetAdapterDeviceID(&deviceID);
-  GetAdapterVendorID(&vendorID);
-
-  deviceIDString.AppendPrintf("%04x", deviceID);
-  vendorIDString.AppendPrintf("%04x", vendorID);
+  GetAdapterDeviceID(deviceID);
+  CopyUTF16toUTF8(deviceID, narrowDeviceID);
+  GetAdapterVendorID(vendorID);
+  CopyUTF16toUTF8(vendorID, narrowVendorID);
 
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterVendorID"),
-      vendorIDString);
+                                     narrowVendorID);
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AdapterDeviceID"),
-      deviceIDString);
+                                     narrowDeviceID);
   /* Add an App Note for now so that we get the data immediately. These
    * can go away after we store the above in the socorro db */
   nsCAutoString note;
   /* AppendPrintf only supports 32 character strings, mrghh. */
-  note.AppendPrintf("AdapterVendorID: %04x, ", vendorID);
-  note.AppendPrintf("AdapterDeviceID: %04x", deviceID);
+  note.Append("AdapterVendorID: ");
+  note.Append(narrowVendorID);
+  note.Append(", AdapterDeviceID: ");
+  note.Append(narrowDeviceID);
   CrashReporter::AppendAppNotesToCrashReport(note);
 #endif
 }
 
-static GfxDriverInfo gDriverInfo[] = {
-  // We don't support checking driver versions on Mac.
-  #define IMPLEMENT_MAC_DRIVER_BLOCKLIST(os, vendor, device, features, blockOn) \
-    GfxDriverInfo(os, vendor, device, features, blockOn,                        \
-                  DRIVER_UNKNOWN_COMPARISON, V(0,0,0,0), ""),
+// We don't support checking driver versions on Mac.
+#define IMPLEMENT_MAC_DRIVER_BLOCKLIST(os, vendor, device, features, blockOn) \
+  APPEND_TO_DRIVER_BLOCKLIST(os, vendor, device, features, blockOn,           \
+                             DRIVER_UNKNOWN_COMPARISON, V(0,0,0,0), "")
 
-  // Example use of macro.
-  //IMPLEMENT_MAC_DRIVER_BLOCKLIST(DRIVER_OS_OS_X_10_7,
-  //  GfxDriverInfo::vendorATI, GfxDriverInfo::allDevices,
-  //  GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION)
 
-  // Block all ATI cards from using MSAA, except for two devices that have
-  // special exceptions in the GetFeatureStatusImpl() function.
-  IMPLEMENT_MAC_DRIVER_BLOCKLIST(DRIVER_OS_ALL,
-    GfxDriverInfo::vendorATI, GfxDriverInfo::allDevices,
-    nsIGfxInfo::FEATURE_WEBGL_MSAA, nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION)
-
-  GfxDriverInfo()
-};
-
-const GfxDriverInfo*
+const nsTArray<GfxDriverInfo>&
 GfxInfo::GetGfxDriverInfo()
 {
-  return &gDriverInfo[0];
-}
-
-static OperatingSystem
-OSXVersionToOperatingSystem(PRUint32 aOSXVersion)
-{
-  switch (aOSXVersion & MAC_OS_X_VERSION_MAJOR_MASK) {
-    case MAC_OS_X_VERSION_10_5_HEX:
-      return DRIVER_OS_OS_X_10_5;
-    case MAC_OS_X_VERSION_10_6_HEX:
-      return DRIVER_OS_OS_X_10_6;
-    case MAC_OS_X_VERSION_10_7_HEX:
-      return DRIVER_OS_OS_X_10_7;
+  if (!mDriverInfo->Length()) {
+    IMPLEMENT_MAC_DRIVER_BLOCKLIST(DRIVER_OS_ALL,
+      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorATI), GfxDriverInfo::allDevices,
+      nsIGfxInfo::FEATURE_WEBGL_MSAA, nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION);
+    IMPLEMENT_MAC_DRIVER_BLOCKLIST(DRIVER_OS_ALL,
+      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorATI), (GfxDeviceFamily*) GfxDriverInfo::GetDeviceFamily(RadeonX1000),
+      nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DEVICE);
+    IMPLEMENT_MAC_DRIVER_BLOCKLIST(DRIVER_OS_ALL,
+      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorNVIDIA), (GfxDeviceFamily*) GfxDriverInfo::GetDeviceFamily(Geforce7300GT), 
+      nsIGfxInfo::FEATURE_WEBGL_OPENGL, nsIGfxInfo::FEATURE_BLOCKED_DEVICE);
   }
-
-  return DRIVER_OS_UNKNOWN;
+  return *mDriverInfo;
 }
 
 nsresult
 GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature, 
                               PRInt32* aStatus,
                               nsAString& aSuggestedDriverVersion,
-                              GfxDriverInfo* aDriverInfo /* = nsnull */,
+                              const nsTArray<GfxDriverInfo>& aDriverInfo,
                               OperatingSystem* aOS /* = nsnull */)
 {
   NS_ENSURE_ARG_POINTER(aStatus);
-
   aSuggestedDriverVersion.SetIsVoid(true);
-
-  PRInt32 status = nsIGfxInfo::FEATURE_NO_INFO;
-
-  OperatingSystem os = OSXVersionToOperatingSystem(nsToolkit::OSXVersion());
-
-  // Many WebGL issues on 10.5, especially:
-  //   * bug 631258: WebGL shader paints using textures belonging to other processes on Mac OS 10.5
-  //   * bug 618848: Post process shaders and texture mapping crash OS X 10.5
-  if (aFeature == nsIGfxInfo::FEATURE_WEBGL_OPENGL &&
-      !nsToolkit::OnSnowLeopardOrLater())
-  {
-    status = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
-  }
-
-  if (aFeature == nsIGfxInfo::FEATURE_OPENGL_LAYERS) {
-    bool foundGoodDevice = false;
-
-    if (!IsATIRadeonX1000(mAdapterVendorID, mAdapterDeviceID)) {
-      foundGoodDevice = true;
-    }
-
-#if 0
-    // CGL reports a list of renderers, some renderers are slow (e.g. software)
-    // and AFAIK we can't decide which one will be used among them, so let's implement this by returning NO_INFO
-    // if any not-known-to-be-bad renderer is found.
-    // The assumption that we make here is that the system will spontaneously use the best/fastest renderer in the list.
-    // Note that the presence of software renderer fallbacks means that slow software rendering may be automatically
-    // used, which seems to be the case in bug 611292 where the user had a Intel GMA 945 card (non programmable hardware).
-    // Therefore we need to explicitly blacklist non-OpenGL2 hardware, which could result in a software renderer
-    // being used.
-
-    for (PRUint32 i = 0; i < ArrayLength(mRendererIDs); ++i) {
-      switch (mRendererIDs[i]) {
-        case kCGLRendererATIRage128ID: // non-programmable
-        case kCGLRendererATIRadeonID: // non-programmable
-        case kCGLRendererATIRageProID: // non-programmable
-        case kCGLRendererATIRadeon8500ID: // no OpenGL 2 support, http://en.wikipedia.org/wiki/Radeon_R200
-        case kCGLRendererATIRadeon9700ID: // no OpenGL 2 support, http://en.wikipedia.org/wiki/Radeon_R200
-        case kCGLRendererATIRadeonX1000ID: // can't render to non-power-of-two texture backed framebuffers
-        case kCGLRendererIntel900ID: // non-programmable
-        case kCGLRendererGeForce2MXID: // non-programmable
-        case kCGLRendererGeForce3ID: // no OpenGL 2 support,
-                                     // http://en.wikipedia.org/wiki/Comparison_of_Nvidia_graphics_processing_units
-        case kCGLRendererGeForceFXID: // incomplete OpenGL 2 support with software fallbacks,
-                                      // http://en.wikipedia.org/wiki/Comparison_of_Nvidia_graphics_processing_units
-        case kCGLRendererVTBladeXP2ID: // Trident DX8 chip, assuming it's not GL2 capable
-        case kCGLRendererMesa3DFXID: // non-programmable
-        case kCGLRendererGenericFloatID: // software renderer
-        case kCGLRendererGenericID: // software renderer
-        case kCGLRendererAppleSWID: // software renderer
-          break;
-        default:
-          if (mRendererIDs[i])
-            foundGoodDevice = true;
-      }
-    }
-#endif
-    if (!foundGoodDevice)
-      status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
-  }
-
-  if (aFeature == nsIGfxInfo::FEATURE_WEBGL_OPENGL) {
-    // same comment as above for FEATURE_OPENGL_LAYERS.
-    bool foundGoodDevice = true;
-
-    // Blacklist the Geforce 7300 GT because of bug 678053
-    if (mAdapterVendorID == 0x10de && mAdapterDeviceID == 0x0393) {
-      foundGoodDevice = false;
-    }
-
-    if (!foundGoodDevice)
-      status = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
-  }
-
-  if (aFeature == nsIGfxInfo::FEATURE_WEBGL_MSAA) {
-    // Blacklist all ATI cards on OSX, except for
-    // 0x6760 and 0x9488
-    if (mAdapterVendorID == GfxDriverInfo::vendorATI && 
-          (mAdapterDeviceID == 0x6760 || mAdapterDeviceID == 0x9488)) {
-      *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
-      return NS_OK;
-    }
-  }
-
+  *aStatus = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
+  OperatingSystem os = OSXVersionToOperatingSystem(mOSXVersion);
   if (aOS)
     *aOS = os;
-  *aStatus = status;
+
+  // Don't evaluate special cases when we're evaluating the downloaded blocklist.
+  if (!aDriverInfo.Length()) {
+    // Many WebGL issues on 10.5, especially:
+    //   * bug 631258: WebGL shader paints using textures belonging to other processes on Mac OS 10.5
+    //   * bug 618848: Post process shaders and texture mapping crash OS X 10.5
+    if (aFeature == nsIGfxInfo::FEATURE_WEBGL_OPENGL &&
+        !nsToolkit::OnSnowLeopardOrLater()) {
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
+      return NS_OK;
+    }
+
+    // The code around the following has been moved into the global blocklist.
+#if 0
+      // CGL reports a list of renderers, some renderers are slow (e.g. software)
+      // and AFAIK we can't decide which one will be used among them, so let's implement this by returning NO_INFO
+      // if any not-known-to-be-bad renderer is found.
+      // The assumption that we make here is that the system will spontaneously use the best/fastest renderer in the list.
+      // Note that the presence of software renderer fallbacks means that slow software rendering may be automatically
+      // used, which seems to be the case in bug 611292 where the user had a Intel GMA 945 card (non programmable hardware).
+      // Therefore we need to explicitly blacklist non-OpenGL2 hardware, which could result in a software renderer
+      // being used.
+
+      for (PRUint32 i = 0; i < ArrayLength(mRendererIDs); ++i) {
+        switch (mRendererIDs[i]) {
+          case kCGLRendererATIRage128ID: // non-programmable
+          case kCGLRendererATIRadeonID: // non-programmable
+          case kCGLRendererATIRageProID: // non-programmable
+          case kCGLRendererATIRadeon8500ID: // no OpenGL 2 support, http://en.wikipedia.org/wiki/Radeon_R200
+          case kCGLRendererATIRadeon9700ID: // no OpenGL 2 support, http://en.wikipedia.org/wiki/Radeon_R200
+          case kCGLRendererATIRadeonX1000ID: // can't render to non-power-of-two texture backed framebuffers
+          case kCGLRendererIntel900ID: // non-programmable
+          case kCGLRendererGeForce2MXID: // non-programmable
+          case kCGLRendererGeForce3ID: // no OpenGL 2 support,
+                                       // http://en.wikipedia.org/wiki/Comparison_of_Nvidia_graphics_processing_units
+          case kCGLRendererGeForceFXID: // incomplete OpenGL 2 support with software fallbacks,
+                                        // http://en.wikipedia.org/wiki/Comparison_of_Nvidia_graphics_processing_units
+          case kCGLRendererVTBladeXP2ID: // Trident DX8 chip, assuming it's not GL2 capable
+          case kCGLRendererMesa3DFXID: // non-programmable
+          case kCGLRendererGenericFloatID: // software renderer
+          case kCGLRendererGenericID: // software renderer
+          case kCGLRendererAppleSWID: // software renderer
+            break;
+          default:
+            if (mRendererIDs[i])
+              foundGoodDevice = true;
+        }
+      }
+#endif
+
+    if (aFeature == nsIGfxInfo::FEATURE_WEBGL_MSAA) {
+      // Blacklist all ATI cards on OSX, except for
+      // 0x6760 and 0x9488
+      if (mAdapterVendorID == GfxDriverInfo::GetDeviceVendor(VendorATI) && 
+          (mAdapterDeviceID.LowerCaseEqualsLiteral("0x6760") ||
+           mAdapterDeviceID.LowerCaseEqualsLiteral("0x9488"))) {
+        *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
+        return NS_OK;
+      }
+    }
+  }
 
   return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, &os);
 }
+
+#ifdef DEBUG
+
+// Implement nsIGfxInfoDebug
+
+/* void spoofVendorID (in DOMString aVendorID); */
+NS_IMETHODIMP GfxInfo::SpoofVendorID(const nsAString & aVendorID)
+{
+  mAdapterVendorID = aVendorID;
+  return NS_OK;
+}
+
+/* void spoofDeviceID (in unsigned long aDeviceID); */
+NS_IMETHODIMP GfxInfo::SpoofDeviceID(const nsAString & aDeviceID)
+{
+  mAdapterDeviceID = aDeviceID;
+  return NS_OK;
+}
+
+/* void spoofDriverVersion (in DOMString aDriverVersion); */
+NS_IMETHODIMP GfxInfo::SpoofDriverVersion(const nsAString & aDriverVersion)
+{
+  mDriverVersion = aDriverVersion;
+  return NS_OK;
+}
+
+/* void spoofOSVersion (in unsigned long aVersion); */
+NS_IMETHODIMP GfxInfo::SpoofOSVersion(PRUint32 aVersion)
+{
+  mOSXVersion = aVersion;
+  return NS_OK;
+}
+
+#endif

@@ -55,6 +55,7 @@
 #   David Dahl <ddahl@mozilla.com>
 #   Patrick Walton <pcwalton@mozilla.com>
 #   Mihai Sucan <mihai.sucan@gmail.com>
+#   Victor Porof <vporof@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -179,6 +180,12 @@ XPCOMUtils.defineLazyGetter(this, "InspectorUI", function() {
   return new tmp.InspectorUI(window);
 });
 
+XPCOMUtils.defineLazyGetter(this, "Tilt", function() {
+  let tmp = {};
+  Cu.import("resource:///modules/devtools/Tilt.jsm", tmp);
+  return new tmp.Tilt(window);
+});
+
 let gInitialPages = [
   "about:blank",
   "about:privatebrowsing",
@@ -200,7 +207,7 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
   if (WINTASKBAR_CONTRACTID in Cc &&
       Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
     let temp = {};
-    Cu.import("resource://gre/modules/WindowsPreviewPerTab.jsm", temp);
+    Cu.import("resource:///modules/WindowsPreviewPerTab.jsm", temp);
     let AeroPeek = temp.AeroPeek;
     return {
       onOpenWindow: function () {

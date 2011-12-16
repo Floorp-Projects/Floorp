@@ -1,0 +1,134 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    const READ_WRITE = IDBTransaction.READ_WRITE;
+
+    const name = window.location.pathname;
+    const description = "My Test Database";
+
+    const objectStoreName = "Blobs";
+
+    const fileData1 = { key: 1, file: getRandomFile("random1.bin", 110000) };
+    const fileData2 = { key: 2, file: getRandomFile("random2.bin", 120000) };
+    const fileData3 = { key: 3, file: getRandomFile("random3.bin", 130000) };
+
+    {
+      let request = mozIndexedDB.open(name, 1, description);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      is(event.type, "upgradeneeded", "Got correct event type");
+
+      let db = event.target.result;
+      db.onerror = errorHandler;
+
+      let objectStore = db.createObjectStore(objectStoreName, { });
+
+      objectStore.add(fileData1.file, fileData1.key);
+      objectStore.add(fileData2.file, fileData2.key);
+      objectStore.add(fileData3.file, fileData3.key);
+
+      event = yield;
+
+      is(event.type, "success", "Got correct event type");
+
+      let trans = db.transaction([objectStoreName], READ_WRITE);
+      trans.objectStore(objectStoreName).delete(fileData1.key);
+      trans.oncomplete = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.type, "complete", "Got correct event type");
+
+      is(getFileDBRefCount(name, 1), 0, "Correct db ref count");
+
+      fileData1.file = null;
+      fileData2.file = null;
+      fileData3.file = null;
+    }
+
+    scheduleGC();
+    yield;
+
+    ok(!hasFileInfo(name, 1), "Correct ref count");
+    ok(hasFileInfo(name, 2), "Correct ref count");
+    ok(hasFileInfo(name, 3), "Correct ref count");
+
+    {
+      let request = mozIndexedDB.open(name, 1, description);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      is(event.type, "success", "Got correct event type");
+
+      let db = event.target.result;
+      db.onerror = errorHandler;
+
+      trans = db.transaction([objectStoreName], READ_WRITE);
+      objectStore = trans.objectStore(objectStoreName);
+
+      request = objectStore.get(fileData2.key);
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      let result = event.target.result;
+      ok(result, "Got result");
+
+      objectStore.delete(fileData2.key);
+
+      trans.oncomplete = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.type, "complete", "Got correct event type");
+
+      is(getFileDBRefCount(name, 2), 0, "Correct db ref count");
+
+
+      trans = db.transaction([objectStoreName], READ_WRITE);
+      objectStore = trans.objectStore(objectStoreName);
+
+      objectStore.delete(fileData3.key);
+
+      trans.oncomplete = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.type, "complete", "Got correct event type");
+
+      is(getFileDBRefCount(name, 3), -1, "Correct db ref count");
+
+      event = null;
+      result = null;
+    }
+
+    scheduleGC();
+    yield;
+
+    ok(!hasFileInfo(name, 1), "Correct ref count");
+    ok(!hasFileInfo(name, 2), "Correct ref count");
+    ok(!hasFileInfo(name, 3), "Correct ref count");
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="file.js"></script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

@@ -2114,9 +2114,23 @@ if test -n "$MOZ_VALGRIND"; then
         AC_MSG_ERROR(
             [--enable-valgrind specified but Valgrind is not installed]))
     AC_DEFINE(MOZ_VALGRIND)
-    MOZ_VALGRIND=1
 fi
 AC_SUBST(MOZ_VALGRIND)
+
+dnl ========================================================
+dnl = Use DMD
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(dmd,
+[  --enable-dmd            Enable DMD; also disables jemalloc (default=no)],
+    MOZ_DMD=1,
+    MOZ_DMD= )
+if test -n "$MOZ_DMD"; then
+    MOZ_CHECK_HEADER([valgrind/valgrind.h], [],
+        AC_MSG_ERROR(
+            [--enable-dmd specified but Valgrind is not installed]))
+    AC_DEFINE(MOZ_DMD)
+fi
+AC_SUBST(MOZ_DMD)
 
 dnl ========================================================
 dnl jprof
@@ -3963,10 +3977,9 @@ AC_CACHE_CHECK(for modern C++ template specialization syntax support,
                                X<Y> y_x;,
                                ac_cv_cpp_modern_specialize_template_syntax=yes,
                                ac_cv_cpp_modern_specialize_template_syntax=no)])
-if test "$ac_cv_cpp_modern_specialize_template_syntax" = yes ; then
-  AC_DEFINE(HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX)
+if test "$ac_cv_cpp_modern_specialize_template_syntax" = no ; then
+  AC_MSG_ERROR([The C++ compiler does not support template specialization])
 fi
-
 
 dnl Some compilers support only full specialization, and some don't.
 AC_CACHE_CHECK(whether partial template specialization works,
@@ -4639,6 +4652,7 @@ USE_ARM_KUSER=
 BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
+MOZ_GRAPHITE=
 
 case "${target}" in
 *darwin*)
@@ -7095,7 +7109,7 @@ dnl = Enable trace malloc
 dnl ========================================================
 NS_TRACE_MALLOC=${MOZ_TRACE_MALLOC}
 MOZ_ARG_ENABLE_BOOL(trace-malloc,
-[  --enable-trace-malloc   Enable malloc tracing],
+[  --enable-trace-malloc   Enable malloc tracing; also disables jemalloc],
     NS_TRACE_MALLOC=1,
     NS_TRACE_MALLOC= )
 if test "$NS_TRACE_MALLOC"; then
@@ -7115,6 +7129,9 @@ MOZ_ARG_ENABLE_BOOL(jemalloc,
     MOZ_MEMORY=)
 
 if test "$NS_TRACE_MALLOC"; then
+    MOZ_MEMORY=
+fi
+if test "$MOZ_DMD"; then
     MOZ_MEMORY=
 fi
 
@@ -7707,35 +7724,12 @@ MOZ_ARG_HEADER(Compiler Options)
 dnl ========================================================
 dnl Check for gcc -pipe support
 dnl ========================================================
-AC_MSG_CHECKING([for gcc -pipe support])
-if test -n "$GNU_CC" -a -n "$GNU_CXX" -a -n "$GNU_AS"; then
-    echo '#include <stdio.h>' > dummy-hello.c
-    echo 'int main() { printf("Hello World"); exit(0); }' >> dummy-hello.c
-    ${CC} -S dummy-hello.c -o dummy-hello.s 2>&5
-    cat dummy-hello.s 2> /dev/null | ${AS_BIN} -o dummy-hello.S - 2>&5
-    if test $? = 0; then
-        _res_as_stdin="yes"
-    else
-        _res_as_stdin="no"
-    fi
-    if test "$_res_as_stdin" = "yes"; then
-        _SAVE_CFLAGS=$CFLAGS
-        CFLAGS="$CFLAGS -pipe"
-        AC_TRY_COMPILE( [ #include <stdio.h> ],
-            [printf("Hello World\n");],
-            [_res_gcc_pipe="yes"],
-            [_res_gcc_pipe="no"] )
-        CFLAGS=$_SAVE_CFLAGS
-    fi
-    if test "$_res_as_stdin" = "yes" -a "$_res_gcc_pipe" = "yes"; then
-        _res="yes";
-        CFLAGS="$CFLAGS -pipe"
-        CXXFLAGS="$CXXFLAGS -pipe"
-    else
-        _res="no"
-    fi
-    rm -f dummy-hello.c dummy-hello.s dummy-hello.S dummy-hello a.out
-    AC_MSG_RESULT([$_res])
+AC_MSG_CHECKING([for -pipe support])
+if test -n "$GNU_CC" -a -n "$GNU_CXX"; then
+    dnl Any gcc that supports firefox supports -pipe.
+    CFLAGS="$CFLAGS -pipe"
+    CXXFLAGS="$CXXFLAGS -pipe"
+    AC_MSG_RESULT([yes])
 else
     AC_MSG_RESULT([no])
 fi
@@ -8025,6 +8019,21 @@ AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_GMODULE_LIBS)
 
 dnl ========================================================
+dnl Graphics checks.
+dnl ========================================================
+
+if test "${OS_ARCH}" = "Darwin" -o "${OS_TARGET}" = "Android"; then
+MOZ_ENABLE_SKIA=1
+else
+MOZ_ENABLE_SKIA=
+fi
+
+MOZ_ARG_ENABLE_BOOL(skia,
+[  --enable-skia   Enable use of Skia],
+MOZ_ENABLE_SKIA=1,
+MOZ_ENABLE_SKIA=)
+
+dnl ========================================================
 dnl Check for cairo
 dnl ========================================================
 MOZ_CAIRO_CFLAGS='-I$(LIBXUL_DIST)/include/cairo'
@@ -8184,6 +8193,18 @@ MOZ_HARFBUZZ_LIBS='$(DEPTH)/gfx/harfbuzz/src/$(LIB_PREFIX)mozharfbuzz.$(LIB_SUFF
 AC_SUBST(MOZ_HARFBUZZ_LIBS)
 
 dnl ========================================================
+dnl SIL Graphite
+dnl ========================================================
+if test "$MOZ_GRAPHITE"; then
+  MOZ_GRAPHITE_LIBS='$(DEPTH)/gfx/graphite2/src/$(LIB_PREFIX)mozgraphite2.$(LIB_SUFFIX)'
+  AC_DEFINE(MOZ_GRAPHITE)
+else
+  MOZ_GRAPHITE_LIBS=
+fi
+AC_SUBST(MOZ_GRAPHITE)
+AC_SUBST(MOZ_GRAPHITE_LIBS)
+
+dnl ========================================================
 dnl OTS
 dnl ========================================================
 MOZ_OTS_LIBS='$(DEPTH)/gfx/ots/src/$(LIB_PREFIX)mozots.$(LIB_SUFFIX)'
@@ -8192,7 +8213,13 @@ AC_SUBST(MOZ_OTS_LIBS)
 dnl ========================================================
 dnl Skia 
 dnl ========================================================
-MOZ_SKIA_LIBS='$(DEPTH)/gfx/skia/$(LIB_PREFIX)skia.$(LIB_SUFFIX)'
+if test "$MOZ_ENABLE_SKIA"; then
+  MOZ_SKIA_LIBS='$(DEPTH)/gfx/skia/$(LIB_PREFIX)skia.$(LIB_SUFFIX)'
+  AC_DEFINE(MOZ_ENABLE_SKIA)
+else
+  MOZ_SKIA_LIBS=
+fi
+AC_SUBST(MOZ_ENABLE_SKIA)
 AC_SUBST(MOZ_SKIA_LIBS)
 
 dnl ========================================================
@@ -8444,6 +8471,26 @@ AC_SUBST(MOZ_OS2_TOOLS)
 
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
+
+dnl ========================================================
+dnl = Mac bundle name prefix
+dnl ========================================================
+MOZ_ARG_WITH_STRING(macbundlename-prefix,
+[  --with-macbundlename-prefix=prefix
+                          Prefix for MOZ_MACBUNDLE_NAME],
+[ MOZ_MACBUNDLE_NAME_PREFIX="$withval"])
+
+MOZ_MACBUNDLE_NAME=`echo $MOZ_APP_DISPLAYNAME | tr -d ' '`
+if test "$MOZ_MACBUNDLE_NAME_PREFIX"; then
+  MOZ_MACBUNDLE_NAME="${MOZ_MACBUNDLE_NAME_PREFIX}${MOZ_MACBUNDLE_NAME}"
+fi
+
+if test "$MOZ_DEBUG"; then
+  MOZ_MACBUNDLE_NAME=${MOZ_MACBUNDLE_NAME}Debug.app
+else
+  MOZ_MACBUNDLE_NAME=${MOZ_MACBUNDLE_NAME}.app
+fi
+AC_SUBST(MOZ_MACBUNDLE_NAME)
 
 # The following variables are available to branding and application
 # configuration ($BRANDING/configure.sh and $APPLICATION/confvars.sh):
@@ -8773,7 +8820,6 @@ HAVE_CPP_2BYTE_WCHAR_T
 HAVE_CPP_AMBIGUITY_RESOLVING_USING
 HAVE_CPP_CHAR16_T
 HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
-HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
 HAVE_CPP_PARTIAL_SPECIALIZATION
 HAVE_CPP_TROUBLE_COMPARING_TO_ZERO
 HAVE_STATVFS

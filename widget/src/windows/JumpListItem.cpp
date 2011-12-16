@@ -55,16 +55,12 @@
 #include "mozIAsyncFavicons.h"
 #include "mozilla/Preferences.h"
 #include "JumpListBuilder.h"
+#include "nsToolkit.h"
 
 namespace mozilla {
 namespace widget {
 
-// SHCreateItemFromParsingName is only available on vista and up. We only load this if we
-// need to call it on win7+.
-JumpListLink::SHCreateItemFromParsingNamePtr JumpListLink::createItemFromParsingName = nsnull;
-const PRUnichar JumpListLink::kSehllLibraryName[] =  L"shell32.dll";
 const char JumpListItem::kJumpListCacheDir[] = "jumpListCache";
-HMODULE JumpListLink::sShellDll = nsnull;
 
 // ISUPPORTS Impl's
 NS_IMPL_ISUPPORTS1(JumpListItem,
@@ -742,18 +738,11 @@ nsresult JumpListLink::GetShellItem(nsCOMPtr<nsIJumpListItem>& item, nsRefPtr<IS
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Load vista+ SHCreateItemFromParsingName
-  if (createItemFromParsingName == nsnull) {
-    if (sShellDll)
-      return NS_ERROR_UNEXPECTED;
-    sShellDll = ::LoadLibraryW(kSehllLibraryName);
-    if (sShellDll)
-      createItemFromParsingName = (SHCreateItemFromParsingNamePtr)GetProcAddress(sShellDll, "SHCreateItemFromParsingName");
-    if (createItemFromParsingName == nsnull)
-      return NS_ERROR_UNEXPECTED;
-  }
+  if (!nsToolkit::VistaCreateItemFromParsingNameInit())
+    return NS_ERROR_UNEXPECTED;
 
   // Create the IShellItem
-  if (FAILED(createItemFromParsingName(NS_ConvertASCIItoUTF16(spec).get(),
+  if (FAILED(nsToolkit::createItemFromParsingName(NS_ConvertASCIItoUTF16(spec).get(),
              NULL, IID_PPV_ARGS(&psi))))
     return NS_ERROR_INVALID_ARG;
 

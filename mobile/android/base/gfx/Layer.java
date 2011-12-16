@@ -44,6 +44,7 @@ import android.graphics.RectF;
 import android.util.Log;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.microedition.khronos.opengles.GL10;
+import org.mozilla.gecko.FloatUtils;
 
 public abstract class Layer {
     private final ReentrantLock mTransactionLock;
@@ -78,6 +79,9 @@ public abstract class Layer {
 
     /** Subclasses override this function to draw the layer. */
     public abstract void draw(RenderContext context);
+
+    /** Subclasses override this function to provide access to the size of the layer. */
+    public abstract IntSize getSize();
 
     /** Given the intrinsic size of the layer, returns the pixel boundaries of the layer rect. */
     protected RectF getBounds(RenderContext context, FloatSize size) {
@@ -176,6 +180,15 @@ public abstract class Layer {
             viewport = aViewport;
             pageSize = aPageSize;
             zoomFactor = aZoomFactor;
+        }
+
+        public boolean fuzzyEquals(RenderContext other) {
+            if (other == null) {
+                return false;
+            }
+            return RectUtils.fuzzyEquals(viewport, other.viewport)
+                && pageSize.fuzzyEquals(other.pageSize)
+                && FloatUtils.fuzzyEquals(zoomFactor, other.zoomFactor);
         }
     }
 }

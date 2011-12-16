@@ -345,6 +345,9 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
                          nsnull, getter_AddRefs(mIconRequest));
   if (NS_FAILED(rv)) return rv;
 
+  // We need to request the icon be decoded (bug 573583, bug 705516).
+  mIconRequest->RequestDecode();
+
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -381,10 +384,6 @@ NS_IMETHODIMP
 nsMenuItemIconX::OnStartContainer(imgIRequest*   aRequest,
                                   imgIContainer* aContainer)
 {
-  // Request a decode
-  NS_ABORT_IF_FALSE(aContainer, "who sent the notification then?");
-  aContainer->RequestDecode();
-
   return NS_OK;
 }
 

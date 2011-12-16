@@ -70,11 +70,13 @@ CPPSRCS = \
   testGetPropertyDefault.cpp \
   testIndexToString.cpp \
   testIntString.cpp \
+  testIntTypesABI.cpp \
   testIntern.cpp \
   testLookup.cpp \
   testLooselyEqual.cpp \
   testNewObject.cpp \
   testOps.cpp \
+  testOriginPrincipals.cpp \
   testParseJSON.cpp \
   testPropCache.cpp \
   testRegExp.cpp \

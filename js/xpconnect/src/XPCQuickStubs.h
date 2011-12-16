@@ -708,7 +708,7 @@ xpc_qsValueToInt64(JSContext *cx,
                    PRInt64 *result)
 {
     if (JSVAL_IS_INT(v)) {
-        int32 intval;
+        int32_t intval;
         if (!JS_ValueToECMAInt32(cx, v, &intval))
             return false;
         *result = static_cast<PRInt64>(intval);
@@ -744,7 +744,7 @@ xpc_qsValueToUint64(JSContext *cx,
                     PRUint64 *result)
 {
     if (JSVAL_IS_INT(v)) {
-        uint32 intval;
+        uint32_t intval;
         if (!JS_ValueToECMAUint32(cx, v, &intval))
             return false;
         *result = static_cast<PRUint64>(intval);

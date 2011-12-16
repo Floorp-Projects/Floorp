@@ -66,7 +66,7 @@ pref("extensions.getAddons.cache.enabled", true);
 pref("extensions.getAddons.maxResults", 15);
 pref("extensions.getAddons.get.url", "https://services.addons.mozilla.org/%LOCALE%/firefox/api/%API_VERSION%/search/guid:%IDS%?src=firefox&appOS=%OS%&appVersion=%VERSION%");
 pref("extensions.getAddons.search.browseURL", "https://addons.mozilla.org/%LOCALE%/firefox/search?q=%TERMS%");
-pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/firefox/api/%API_VERSION%/search/%TERMS%/all/%MAX_RESULTS%/%OS%/%VERSION%?src=firefox");
+pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/firefox/api/%API_VERSION%/search/%TERMS%/all/%MAX_RESULTS%/%OS%/%VERSION%/%COMPATIBILITY_MODE%?src=firefox");
 pref("extensions.webservice.discoverURL", "https://services.addons.mozilla.org/%LOCALE%/firefox/discovery/pane/%VERSION%/%OS%");
 
 // Blocklist preferences
@@ -945,6 +945,7 @@ pref("services.sync.prefs.sync.browser.safebrowsing.enabled", true);
 pref("services.sync.prefs.sync.browser.safebrowsing.malware.enabled", true);
 pref("services.sync.prefs.sync.browser.search.selectedEngine", true);
 pref("services.sync.prefs.sync.browser.search.update", true);
+pref("services.sync.prefs.sync.browser.sessionstore.restore_on_demand", true);
 pref("services.sync.prefs.sync.browser.startup.homepage", true);
 pref("services.sync.prefs.sync.browser.startup.page", true);
 pref("services.sync.prefs.sync.browser.tabs.autoHide", true);
@@ -1011,6 +1012,12 @@ pref("devtools.inspector.htmlHeight", 112);
 
 // Enable the style inspector
 pref("devtools.styleinspector.enabled", true);
+
+// Enable the Tilt inspector
+pref("devtools.tilt.enabled", true);
+
+// Enable the Tilt inspector even if WebGL capabilities are not detected
+pref("devtools.tilt.force-enabled", false);
 
 // Enable the rules view
 pref("devtools.ruleview.enabled", true);

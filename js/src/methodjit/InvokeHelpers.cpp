@@ -189,7 +189,7 @@ InlineReturn(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::SlowCall(VMFrame &f, uint32 argc)
+stubs::SlowCall(VMFrame &f, uint32_t argc)
 {
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
     if (!InvokeKernel(f.cx, args))
@@ -199,7 +199,7 @@ stubs::SlowCall(VMFrame &f, uint32 argc)
 }
 
 void JS_FASTCALL
-stubs::SlowNew(VMFrame &f, uint32 argc)
+stubs::SlowNew(VMFrame &f, uint32_t argc)
 {
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
     if (!InvokeConstructorKernel(f.cx, args))
@@ -240,7 +240,7 @@ stubs::HitStackQuota(VMFrame &f)
  * on fp->exec.fun.
  */
 void * JS_FASTCALL
-stubs::FixupArity(VMFrame &f, uint32 nactual)
+stubs::FixupArity(VMFrame &f, uint32_t nactual)
 {
     JSContext *cx = f.cx;
     StackFrame *oldfp = f.fp();
@@ -283,7 +283,7 @@ struct ResetStubRejoin {
 };
 
 void * JS_FASTCALL
-stubs::CompileFunction(VMFrame &f, uint32 argc)
+stubs::CompileFunction(VMFrame &f, uint32_t argc)
 {
     /*
      * Note: the stubRejoin kind for the frame was written before the call, and
@@ -306,7 +306,7 @@ stubs::CompileFunction(VMFrame &f, uint32 argc)
 
 static inline bool
 UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
-                   void **pret, bool *unjittable, uint32 argc)
+                   void **pret, bool *unjittable, uint32_t argc)
 {
     JSContext *cx = f.cx;
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
@@ -398,7 +398,7 @@ UncachedInlineCall(VMFrame &f, InitialFrameFlags initial,
 }
 
 void * JS_FASTCALL
-stubs::UncachedNew(VMFrame &f, uint32 argc)
+stubs::UncachedNew(VMFrame &f, uint32_t argc)
 {
     UncachedCallResult ucr;
     UncachedNewHelper(f, argc, &ucr);
@@ -406,7 +406,7 @@ stubs::UncachedNew(VMFrame &f, uint32 argc)
 }
 
 void
-stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
+stubs::UncachedNewHelper(VMFrame &f, uint32_t argc, UncachedCallResult *ucr)
 {
     ucr->init();
     JSContext *cx = f.cx;
@@ -424,7 +424,7 @@ stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
 }
 
 void * JS_FASTCALL
-stubs::UncachedCall(VMFrame &f, uint32 argc)
+stubs::UncachedCall(VMFrame &f, uint32_t argc)
 {
     UncachedCallResult ucr;
     UncachedCallHelper(f, argc, false, &ucr);
@@ -432,7 +432,7 @@ stubs::UncachedCall(VMFrame &f, uint32 argc)
 }
 
 void * JS_FASTCALL
-stubs::UncachedLoweredCall(VMFrame &f, uint32 argc)
+stubs::UncachedLoweredCall(VMFrame &f, uint32_t argc)
 {
     UncachedCallResult ucr;
     UncachedCallHelper(f, argc, true, &ucr);
@@ -440,7 +440,7 @@ stubs::UncachedLoweredCall(VMFrame &f, uint32 argc)
 }
 
 void JS_FASTCALL
-stubs::Eval(VMFrame &f, uint32 argc)
+stubs::Eval(VMFrame &f, uint32_t argc)
 {
     CallArgs args = CallArgsFromSp(argc, f.regs.sp);
 
@@ -460,7 +460,7 @@ stubs::Eval(VMFrame &f, uint32 argc)
 }
 
 void
-stubs::UncachedCallHelper(VMFrame &f, uint32 argc, bool lowered, UncachedCallResult *ucr)
+stubs::UncachedCallHelper(VMFrame &f, uint32_t argc, bool lowered, UncachedCallResult *ucr)
 {
     ucr->init();
 
@@ -739,7 +739,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
     RejoinState rejoin;
     if (jsrejoin & 0x1) {
         /* Rejoin after a scripted call finished. Restore f.regs.pc and f.regs.inlined (NULL) */
-        uint32 pcOffset = jsrejoin >> 1;
+        uint32_t pcOffset = jsrejoin >> 1;
         f.regs.pc = f.fp()->script()->code + pcOffset;
         f.regs.clearInlined();
         rejoin = REJOIN_SCRIPTED;
@@ -784,7 +784,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
                script->filename, script->lineno, OpcodeNames[op], js_PCToLineNumber(cx, script, pc));
 #endif
 
-    uint32 nextDepth = uint32(-1);
+    uint32_t nextDepth = UINT32_MAX;
     bool skipTrap = false;
 
     if ((cs->format & (JOF_INC | JOF_DEC)) &&
@@ -813,9 +813,9 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
     switch (rejoin) {
       case REJOIN_SCRIPTED: {
 #ifdef JS_NUNBOX32
-        uint64 rvalBits = ((uint64)returnType << 32) | (uint32)returnData;
+        uint64_t rvalBits = ((uint64_t)returnType << 32) | (uint32_t)returnData;
 #elif JS_PUNBOX64
-        uint64 rvalBits = (uint64)returnType | (uint64)returnData;
+        uint64_t rvalBits = (uint64_t)returnType | (uint64_t)returnData;
 #else
 #error "Unknown boxing format"
 #endif
@@ -970,7 +970,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
       case REJOIN_CALL_PROLOGUE_LOWERED_CALL:
       case REJOIN_CALL_PROLOGUE_LOWERED_APPLY:
         if (returnReg) {
-            uint32 argc = 0;
+            uint32_t argc = 0;
             if (rejoin == REJOIN_CALL_PROLOGUE)
                 argc = GET_ARGC(pc);
             else if (rejoin == REJOIN_CALL_PROLOGUE_LOWERED_CALL)
@@ -1121,7 +1121,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         JS_NOT_REACHED("Missing rejoin");
     }
 
-    if (nextDepth == uint32(-1))
+    if (nextDepth == UINT32_MAX)
         nextDepth = analysis->getCode(f.regs.pc).stackDepth;
     f.regs.sp = fp->base() + nextDepth;
 

@@ -67,36 +67,36 @@ struct CrashHeader
     char cookie[crash_cookie_len];
 
     /* id of the crash data, chosen from the enum above. */
-    uint64 id;
+    uint64_t id;
 
-    CrashHeader(uint64 id) : id(id) { memcpy(cookie, crash_cookie, crash_cookie_len); }
+    CrashHeader(uint64_t id) : id(id) { memcpy(cookie, crash_cookie, crash_cookie_len); }
 };
 
 struct CrashRegisters
 {
-    uint64 ip, sp, bp;
+    uint64_t ip, sp, bp;
 };
 
 const static int crash_buffer_size = 32 * 1024;
 
 struct CrashStack
 {
-    CrashStack(uint64 id) : header(id) {}
+    CrashStack(uint64_t id) : header(id) {}
 
     CrashHeader header;
-    uint64 snaptime;      /* Unix time when the stack was snapshotted. */
+    uint64_t snaptime;    /* Unix time when the stack was snapshotted. */
     CrashRegisters regs;  /* Register contents for the snapshot. */
-    uint64 stack_base;    /* Base address of stack at the time of snapshot. */
-    uint64 stack_len;     /* Extent of the stack. */
+    uint64_t stack_base;  /* Base address of stack at the time of snapshot. */
+    uint64_t stack_len;   /* Extent of the stack. */
     char stack[crash_buffer_size]; /* Contents of the stack. */
 };
 
 struct CrashRing
 {
-    CrashRing(uint64 id) : header(id), offset(0) { memset(buffer, 0, sizeof(buffer)); }
+    CrashRing(uint64_t id) : header(id), offset(0) { memset(buffer, 0, sizeof(buffer)); }
 
     CrashHeader header;
-    uint64 offset; /* Next byte to be written in the buffer. */
+    uint64_t offset; /* Next byte to be written in the buffer. */
     char buffer[crash_buffer_size];
 };
 

@@ -157,6 +157,7 @@ function test_component(contractid) {
   doTest("testDouble", -80.5, 15000.2, fuzzComparator);
   doTest("testChar", "a", "2");
   doTest("testString", "someString", "another string");
+  doTest("testWstring", "Why wasnt this", "turned on before? ಠ_ಠ");
   // TODO: Fix bug 687679 and use the second argument listed below
   doTest("testWchar", "z", "q");// "ア");
   doTestWorkaround("testDOMString", "Beware: ☠ s");

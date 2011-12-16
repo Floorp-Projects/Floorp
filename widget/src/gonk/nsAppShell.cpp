@@ -217,27 +217,33 @@ multitouchHandler(int fd, FdHandler *data)
     }
 }
 
-static void
-sendKeyEventWithMsg(PRUint32 keyCode, PRUint32 msg, const struct timeval &time)
+static nsEventStatus
+sendKeyEventWithMsg(PRUint32 keyCode,
+                    PRUint32 msg,
+                    const timeval &time,
+                    PRUint32 flags)
 {
     nsKeyEvent event(true, msg, NULL);
     event.keyCode = keyCode;
     event.time = timevalToMS(time);
-    nsWindow::DispatchInputEvent(event);
+    event.flags |= flags;
+    return nsWindow::DispatchInputEvent(event);
 }
 
 static void
-sendKeyEvent(PRUint32 keyCode, bool keyDown, const struct timeval &time)
+sendKeyEvent(PRUint32 keyCode, bool down, const timeval &time)
 {
-    sendKeyEventWithMsg(keyCode, keyDown ? NS_KEY_DOWN : NS_KEY_UP, time);
-    if (keyDown) {
-        // Send a key press event right after the key down event.
-        sendKeyEventWithMsg(keyCode, NS_KEY_PRESS, time);
+    nsEventStatus status =
+        sendKeyEventWithMsg(keyCode, down ? NS_KEY_DOWN : NS_KEY_UP, time, 0);
+    if (down) {
+        sendKeyEventWithMsg(keyCode, NS_KEY_PRESS, time,
+                            status == nsEventStatus_eConsumeNoDefault ?
+                            NS_EVENT_FLAG_NO_DEFAULT : 0);
     }
 }
 
 static void
-sendSpecialKeyEvent(nsIAtom *command, const struct timeval &time)
+sendSpecialKeyEvent(nsIAtom *command, const timeval &time)
 {
     nsCommandEvent event(true, nsGkAtoms::onAppCommand, command, NULL);
     event.time = timevalToMS(time);

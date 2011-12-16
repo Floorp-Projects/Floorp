@@ -195,7 +195,7 @@ MSG_DEF(JSMSG_PAREN_IN_PAREN,         108, 0, JSEXN_SYNTAXERR, "missing ) in par
 MSG_DEF(JSMSG_SEMI_BEFORE_STMNT,      109, 0, JSEXN_SYNTAXERR, "missing ; before statement")
 MSG_DEF(JSMSG_NO_RETURN_VALUE,        110, 1, JSEXN_TYPEERR, "function {0} does not always return a value")
 MSG_DEF(JSMSG_DUPLICATE_FORMAL,       111, 1, JSEXN_SYNTAXERR, "duplicate formal argument {0}")
-MSG_DEF(JSMSG_EQUAL_AS_ASSIGN,        112, 1, JSEXN_SYNTAXERR, "test for equality (==) mistyped as assignment (=)?{0}")
+MSG_DEF(JSMSG_EQUAL_AS_ASSIGN,        112, 0, JSEXN_SYNTAXERR, "test for equality (==) mistyped as assignment (=)?")
 MSG_DEF(JSMSG_OPTIMIZED_CLOSURE_LEAK, 113, 0, JSEXN_INTERNALERR, "can't access optimized closure")
 MSG_DEF(JSMSG_TOO_MANY_DEFAULTS,      114, 0, JSEXN_SYNTAXERR, "more than one switch default")
 MSG_DEF(JSMSG_TOO_MANY_CASES,         115, 0, JSEXN_INTERNALERR, "too many switch cases")
@@ -373,3 +373,4 @@ MSG_DEF(JSMSG_DEBUG_NOT_SCRIPT_FRAME, 286, 0, JSEXN_ERR, "stack frame is not run
 MSG_DEF(JSMSG_CANT_WATCH_PROP,        287, 0, JSEXN_TYPEERR, "properties whose names are objects can't be watched")
 MSG_DEF(JSMSG_CSP_BLOCKED_EVAL,       288, 0, JSEXN_ERR, "call to eval() blocked by CSP")
 MSG_DEF(JSMSG_DEBUG_NO_SCOPE_OBJECT,  289, 0, JSEXN_TYPEERR, "declarative Environments don't have binding objects")
+MSG_DEF(JSMSG_EMPTY_CONSEQUENT,       290, 0, JSEXN_SYNTAXERR, "mistyped ; after conditional?")

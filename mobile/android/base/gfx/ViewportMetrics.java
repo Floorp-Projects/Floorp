@@ -44,10 +44,12 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.gfx.FloatSize;
+import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.RectUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONStringer;
 import android.util.Log;
 
 /**
@@ -55,14 +57,15 @@ import android.util.Log;
  * the page viewport for the Gecko layer client to use.
  */
 public class ViewportMetrics {
+    private static final String LOGTAG = "GeckoViewportMetrics";
+
     private FloatSize mPageSize;
     private RectF mViewportRect;
     private PointF mViewportOffset;
     private float mZoomFactor;
 
     public ViewportMetrics() {
-        mPageSize = new FloatSize(LayerController.TILE_WIDTH,
-                                  LayerController.TILE_HEIGHT);
+        mPageSize = new FloatSize(1, 1);
         mViewportRect = new RectF(0, 0, 1, 1);
         mViewportOffset = new PointF(0, 0);
         mZoomFactor = 1.0f;
@@ -93,13 +96,13 @@ public class ViewportMetrics {
         mZoomFactor = zoom;
     }
 
-    public PointF getOptimumViewportOffset() {
+    public PointF getOptimumViewportOffset(IntSize displayportSize) {
         // XXX We currently always position the viewport in the centre of the
         //     displayport, but we might want to optimise this during panning
         //     to minimise checkerboarding.
         Point optimumOffset =
-            new Point((int)Math.round((LayerController.TILE_WIDTH - mViewportRect.width()) / 2),
-                      (int)Math.round((LayerController.TILE_HEIGHT - mViewportRect.height()) / 2));
+            new Point((int)Math.round((displayportSize.width - mViewportRect.width()) / 2),
+                      (int)Math.round((displayportSize.height - mViewportRect.height()) / 2));
 
         /* XXX Until bug #524925 is fixed, changing the viewport origin will
          * probably cause things to be slower than just having a smaller usable
@@ -232,16 +235,22 @@ public class ViewportMetrics {
     }
 
     public String toJSON() {
-        return "{ \"x\" : " + mViewportRect.left +
-               ", \"y\" : " + mViewportRect.top +
-               ", \"width\" : " + mViewportRect.width() +
-               ", \"height\" : " + mViewportRect.height() +
-               ", \"pageWidth\" : " + mPageSize.width +
-               ", \"pageHeight\" : " + mPageSize.height +
-               ", \"offsetX\" : " + mViewportOffset.x +
-               ", \"offsetY\" : " + mViewportOffset.y +
-               ", \"zoom\" : " + mZoomFactor +
-               " }";
+        try {
+            JSONStringer object = new JSONStringer().object();
+            object.key("zoom").value(mZoomFactor);
+            object.key("offsetY").value(mViewportOffset.y);
+            object.key("offsetX").value(mViewportOffset.x);
+            object.key("pageHeight").value(mPageSize.height);
+            object.key("pageWidth").value(mPageSize.width);
+            object.key("height").value(mViewportRect.height());
+            object.key("width").value(mViewportRect.width());
+            object.key("y").value(mViewportRect.top);
+            object.key("x").value(mViewportRect.left);
+            return object.endObject().toString();
+        } catch (JSONException je) {
+            Log.e(LOGTAG, "Error serializing viewportmetrics", je);
+            return "";
+        }
     }
 }
 

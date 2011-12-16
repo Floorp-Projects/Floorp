@@ -47,6 +47,15 @@
 #define PATH_MAX_TOSTRING(x) #x
 #define PATH_MAX_STRING(x) PATH_MAX_TOSTRING(x)
 
+#if defined(__GLIBC__)
+// glibc doesn't implement gettid(2).
+#include <sys/syscall.h>
+pid_t gettid()
+{
+  return (pid_t) syscall(SYS_gettid);
+}
+#endif
+
 #ifdef ENABLE_SPS_LEAF_DATA
 /* a crapy version of getline, because it's not included in bionic */
 static ssize_t getline(char **lineptr, size_t *n, FILE *stream)
@@ -194,7 +203,6 @@ class Sampler::PlatformData : public Malloced {
       : sampler_(sampler),
         signal_handler_installed_(false),
         vm_tgid_(getpid()),
-        // Glibc doesn't provide a wrapper for gettid(2).
         vm_tid_(gettid()),
         signal_sender_launched_(false) {
   }
@@ -246,7 +254,6 @@ static void* SenderEntry(void* arg) {
 Sampler::Sampler(int interval, bool profiling)
     : interval_(interval),
       profiling_(profiling),
-      synchronous_(profiling),
       active_(false) {
   data_ = new PlatformData(this);
 }

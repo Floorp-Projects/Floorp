@@ -82,7 +82,7 @@ JSObject::extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom)
 namespace js {
 
 inline
-BaseShape::BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags)
+BaseShape::BaseShape(Class *clasp, JSObject *parent, uint32_t objectFlags)
 {
     JS_ASSERT(!(objectFlags & ~OBJECT_FLAG_MASK));
     PodZero(this);
@@ -92,8 +92,8 @@ BaseShape::BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags)
 }
 
 inline
-BaseShape::BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags,
-                     uint8 attrs, js::PropertyOp rawGetter, js::StrictPropertyOp rawSetter)
+BaseShape::BaseShape(Class *clasp, JSObject *parent, uint32_t objectFlags,
+                     uint8_t attrs, js::PropertyOp rawGetter, js::StrictPropertyOp rawSetter)
 {
     JS_ASSERT(!(objectFlags & ~OBJECT_FLAG_MASK));
     PodZero(this);
@@ -102,10 +102,14 @@ BaseShape::BaseShape(Class *clasp, JSObject *parent, uint32 objectFlags,
     this->flags = objectFlags;
     this->rawGetter = rawGetter;
     this->rawSetter = rawSetter;
-    if ((attrs & JSPROP_GETTER) && rawGetter)
+    if ((attrs & JSPROP_GETTER) && rawGetter) {
         flags |= HAS_GETTER_OBJECT;
-    if ((attrs & JSPROP_SETTER) && rawSetter)
+        JSObject::writeBarrierPost(this->getterObj, &this->getterObj);
+    }
+    if ((attrs & JSPROP_SETTER) && rawSetter) {
         flags |= HAS_SETTER_OBJECT;
+        JSObject::writeBarrierPost(this->setterObj, &this->setterObj);
+    }
 }
 
 inline bool
@@ -130,9 +134,9 @@ BaseShape::adoptUnowned(UnownedBaseShape *other)
     JS_ASSERT(isOwned());
 
     JSObject *parent = this->parent;
-    uint32 flags = (this->flags & OBJECT_FLAG_MASK);
+    uint32_t flags = (this->flags & OBJECT_FLAG_MASK);
 
-    uint32 span = slotSpan();
+    uint32_t span = slotSpan();
     PropertyTable *table = &this->table();
 
     *this = *other;
@@ -151,19 +155,20 @@ BaseShape::setOwned(UnownedBaseShape *unowned)
 }
 
 inline
-Shape::Shape(BaseShape *base, jsid propid, uint32 slot, uint32 nfixed,
+Shape::Shape(UnownedBaseShape *base, jsid propid, uint32_t slot, uint32_t nfixed,
              uintN attrs, uintN flags, intN shortid)
   : base_(base),
     propid_(propid),
     slotInfo(slot | (nfixed << FIXED_SLOTS_SHIFT)),
-    attrs(uint8(attrs)),
-    flags(uint8(flags)),
-    shortid_(int16(shortid)),
+    attrs(uint8_t(attrs)),
+    flags(uint8_t(flags)),
+    shortid_(int16_t(shortid)),
     parent(NULL)
 {
     JS_ASSERT(base);
     JS_ASSERT(!JSID_IS_VOID(propid));
     JS_ASSERT_IF(isMethod(), !base->rawGetter);
+    JS_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
     kids.setNull();
 }
 
@@ -181,7 +186,7 @@ Shape::Shape(const Shape *other)
 }
 
 inline
-Shape::Shape(BaseShape *base, uint32 nfixed)
+Shape::Shape(UnownedBaseShape *base, uint32_t nfixed)
   : base_(base),
     propid_(JSID_EMPTY),
     slotInfo(SHAPE_INVALID_SLOT | (nfixed << FIXED_SLOTS_SHIFT)),
@@ -217,7 +222,7 @@ Shape::matches(const js::Shape *other) const
 }
 
 inline bool
-Shape::matchesParamsAfterId(BaseShape *base, uint32 aslot,
+Shape::matchesParamsAfterId(BaseShape *base, uint32_t aslot,
                             uintN aattrs, uintN aflags, intN ashortid) const
 {
     return base->unowned() == this->base()->unowned() &&
@@ -332,7 +337,7 @@ Shape::initDictionaryShape(const Shape &child, HeapPtrShape *dictp)
 }
 
 inline
-EmptyShape::EmptyShape(BaseShape *base, uint32 nfixed)
+EmptyShape::EmptyShape(UnownedBaseShape *base, uint32_t nfixed)
   : js::Shape(base, nfixed)
 {
     /* Only empty shapes can be NON_NATIVE. */

@@ -360,11 +360,7 @@ INNER_UNMAKE_PACKAGE	= \
 endif
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 ifndef _APPNAME
-ifdef MOZ_DEBUG
-_APPNAME	= $(MOZ_APP_DISPLAYNAME)Debug.app
-else
-_APPNAME	= $(MOZ_APP_DISPLAYNAME).app
-endif
+_APPNAME = $(MOZ_MACBUNDLE_NAME)
 endif
 ifndef _BINPATH
 _BINPATH	= /$(_APPNAME)/Contents/MacOS
@@ -571,8 +567,8 @@ FREEBL_64FPU	= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)freebl
 FREEBL_64INT	= $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(DLL_PREFIX)freebl_64int_3$(DLL_SUFFIX)
 
 SIGN_NSS	+= \
-  $(SIGN_CMD) $(SOFTOKN) && \
-  $(SIGN_CMD) $(NSSDBM) && \
+  if test -f $(SOFTOKN); then $(SIGN_CMD) $(SOFTOKN); fi && \
+  if test -f $(NSSDBM); then $(SIGN_CMD) $(NSSDBM); fi && \
   if test -f $(FREEBL); then $(SIGN_CMD) $(FREEBL); fi && \
   if test -f $(FREEBL_32FPU); then $(SIGN_CMD) $(FREEBL_32FPU); fi && \
   if test -f $(FREEBL_32INT); then $(SIGN_CMD) $(FREEBL_32INT); fi && \
@@ -581,7 +577,7 @@ SIGN_NSS	+= \
   if test -f $(FREEBL_64INT); then $(SIGN_CMD) $(FREEBL_64INT); fi;
 
 endif # MOZ_PSM
-endif # !CROSS_COMPILE
+endif # MOZ_CAN_RUN_PROGRAMS
 
 NO_PKG_FILES += \
 	core \

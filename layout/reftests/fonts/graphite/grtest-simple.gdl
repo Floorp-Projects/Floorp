@@ -1,0 +1,14 @@
+#include "stddef.gdh"
+
+table(glyph)
+clsFail = codepoint("FAIL");
+clsPass = codepoint("PaSs");
+endtable
+
+table(substitution)
+
+pass(1)
+clsFail > clsPass;
+endpass;
+
+endtable

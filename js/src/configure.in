@@ -3725,10 +3725,9 @@ AC_CACHE_CHECK(for modern C++ template specialization syntax support,
                                X<Y> y_x;,
                                ac_cv_cpp_modern_specialize_template_syntax=yes,
                                ac_cv_cpp_modern_specialize_template_syntax=no)])
-if test "$ac_cv_cpp_modern_specialize_template_syntax" = yes ; then
-  AC_DEFINE(HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX)
+if test "$ac_cv_cpp_modern_specialize_template_syntax" = no ; then
+  AC_MSG_ERROR([The C++ compiler does not support template specialization])
 fi
-
 
 dnl Some compilers support only full specialization, and some don't.
 AC_CACHE_CHECK(whether partial template specialization works,
@@ -4671,35 +4670,12 @@ MOZ_ARG_HEADER(Compiler Options)
 dnl ========================================================
 dnl Check for gcc -pipe support
 dnl ========================================================
-AC_MSG_CHECKING([for gcc -pipe support])
-if test -n "$GNU_CC" -a -n "$GNU_CXX" -a -n "$GNU_AS"; then
-    echo '#include <stdio.h>' > dummy-hello.c
-    echo 'int main() { printf("Hello World"); exit(0); }' >> dummy-hello.c
-    ${CC} -S dummy-hello.c -o dummy-hello.s 2>&5
-    cat dummy-hello.s 2> /dev/null | ${AS_BIN} -o dummy-hello.S - 2>&5
-    if test $? = 0; then
-        _res_as_stdin="yes"
-    else
-        _res_as_stdin="no"
-    fi
-    if test "$_res_as_stdin" = "yes"; then
-        _SAVE_CFLAGS=$CFLAGS
-        CFLAGS="$CFLAGS -pipe"
-        AC_TRY_COMPILE( [ #include <stdio.h> ],
-            [printf("Hello World\n");],
-            [_res_gcc_pipe="yes"],
-            [_res_gcc_pipe="no"] )
-        CFLAGS=$_SAVE_CFLAGS
-    fi
-    if test "$_res_as_stdin" = "yes" -a "$_res_gcc_pipe" = "yes"; then
-        _res="yes";
-        CFLAGS="$CFLAGS -pipe"
-        CXXFLAGS="$CXXFLAGS -pipe"
-    else
-        _res="no"
-    fi
-    rm -f dummy-hello.c dummy-hello.s dummy-hello.S dummy-hello a.out
-    AC_MSG_RESULT([$_res])
+AC_MSG_CHECKING([for -pipe support])
+if test -n "$GNU_CC" -a -n "$GNU_CXX"; then
+    dnl Any gcc that supports firefox supports -pipe.
+    CFLAGS="$CFLAGS -pipe"
+    CXXFLAGS="$CXXFLAGS -pipe"
+    AC_MSG_RESULT([yes])
 else
     AC_MSG_RESULT([no])
 fi

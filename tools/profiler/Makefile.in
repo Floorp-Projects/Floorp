@@ -51,6 +51,7 @@ include $(DEPTH)/config/autoconf.mk
 EXPORTS = \
   sampler.h \
   sps_sampler.h \
+  thread_helper.h \
   $(NULL)
 
 LOCAL_INCLUDES += \
@@ -77,7 +78,7 @@ EXTRA_JS_MODULES = \
   Profiler.jsm \
   $(NULL)
 
-ifeq ($(OS_TARGET),Android)
+ifneq (,$(filter Android Linux,$(OS_TARGET)))
 
 DEFINES += -DMOZ_ENABLE_PROFILER_SPS
 
@@ -95,6 +96,17 @@ CPPSRCS += \
   TableTicker.cpp \
   $(NULL)
 endif
+
+ifeq ($(OS_TARGET),WINNT)
+
+DEFINES += -DMOZ_ENABLE_PROFILER_SPS
+
+CPPSRCS += \
+  platform-win32.cc \
+  TableTicker.cpp \
+  $(NULL)
+endif
+
 
 
 include $(topsrcdir)/config/rules.mk

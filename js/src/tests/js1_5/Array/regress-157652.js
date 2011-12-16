@@ -45,7 +45,7 @@
  * How large can a JavaScript array be?
  * ECMA-262 Ed.3 Final, Section 15.4.2.2 : new Array(len)
  *
- * This states that |len| must be a a uint32 (unsigned 32-bit integer).
+ * This states that |len| must be a a uint32_t (unsigned 32-bit integer).
  * Note the UBound for uint32's is 2^32 -1 = 0xFFFFFFFF = 4,294,967,295.
  *
  * Check:

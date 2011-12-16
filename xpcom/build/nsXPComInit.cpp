@@ -152,6 +152,7 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/MapsMemoryReporter.h"
+#include "mozilla/AvailableMemoryTracker.h"
 
 using base::AtExitManager;
 using mozilla::ipc::BrowserProcessSubThread;
@@ -519,6 +520,8 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     nsDirectoryService::gService->RegisterCategoryProviders();
 
     mozilla::scache::StartupCache::GetSingleton();
+    mozilla::AvailableMemoryTracker::Init();
+
     NS_TIME_FUNCTION_MARK("Next: create services from category");
 
     // Notify observers of xpcom autoregistration start

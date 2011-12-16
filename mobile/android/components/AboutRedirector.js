@@ -21,6 +21,7 @@
  *   Ryan Flint <rflint@mozilla.com>
  *   Justin Dolske <dolske@mozilla.com>
  *   Gavin Sharp <gavin@gavinsharp.com>
+ *   Steffen Wilberg <steffen.wilberg@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,14 +48,20 @@ let modules = {
     privileged: true
   },
 
-  // about:fennec and about:firefox are aliases for about:
-  get fennec() this[""],
-  get firefox() this[""],
+  // about:fennec and about:firefox are aliases for about:,
+  // but hidden from about:about
+  fennec: {
+    uri: "chrome://browser/content/about.xhtml",
+    privileged: true,
+    hide: true
+  },
+  get firefox() this.fennec,
 
   // about:blank has some bad loading behavior we can avoid, if we use an alias
   empty: {
     uri: "about:blank",
-    privileged: false
+    privileged: false,
+    hide: true
   },
 
   rights: {
@@ -67,11 +74,13 @@ let modules = {
   },
   blocked: {
     uri: "chrome://browser/content/blockedSite.xhtml",
-    privileged: true
+    privileged: true,
+    hide: true
   },
   certerror: {
     uri: "chrome://browser/content/aboutCertError.xhtml",
-    privileged: true
+    privileged: true,
+    hide: true
   },
   home: {
     uri: "chrome://browser/content/aboutHome.xhtml",
@@ -91,7 +100,12 @@ AboutRedirector.prototype = {
 
   // nsIAboutModule
   getURIFlags: function(aURI) {
-    return Ci.nsIAboutModule.ALLOW_SCRIPT;
+    let flags;
+    let moduleInfo = this._getModuleInfo(aURI);
+    if (moduleInfo.hide)
+      flags = Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT;
+
+    return flags | Ci.nsIAboutModule.ALLOW_SCRIPT;
   },
 
   newChannel: function(aURI) {
@@ -103,6 +117,7 @@ AboutRedirector.prototype = {
     var channel = ios.newChannel(moduleInfo.uri, null, null);
     
     if (!moduleInfo.privileged) {
+      // drop chrome privileges
       let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].
                    getService(Ci.nsIScriptSecurityManager);
       let principal = secMan.getCodebasePrincipal(aURI);

@@ -2001,19 +2001,6 @@ _releasevariantvalue(NPVariant* variant)
   VOID_TO_NPVARIANT(*variant);
 }
 
-bool NP_CALLBACK
-_tostring(NPObject* npobj, NPVariant *result)
-{
-  NS_ERROR("Write me!");
-
-  if (!NS_IsMainThread()) {
-    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_tostring called from the wrong thread\n"));
-    return false;
-  }
-
-  return false;
-}
-
 void NP_CALLBACK
 _setexception(NPObject* npobj, const NPUTF8 *message)
 {

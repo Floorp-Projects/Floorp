@@ -20,11 +20,6 @@
 /* Define if a dyanmic_cast to void* gives the most derived object */
 #undef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 
-/* Define if the c++ compiler supports the modern template 
- * specialization syntax 
- */
-#undef HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
-
 /* Define if the c++ compiler supports partial template specialization */
 #undef HAVE_CPP_PARTIAL_SPECIALIZATION
 

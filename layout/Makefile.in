@@ -67,6 +67,7 @@ PARALLEL_DIRS += inspector/tests inspector/tests/chrome
 endif
 
 DIRS           += build
+DIRS           += media
 
 ifdef ENABLE_TESTS
 PARALLEL_DIRS += \

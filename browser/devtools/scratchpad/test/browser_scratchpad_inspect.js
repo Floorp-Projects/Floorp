@@ -2,19 +2,14 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Reference to the Scratchpad chrome window object.
-let gScratchpadWindow;
-
 function test()
 {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-
-    gScratchpadWindow = Scratchpad.openScratchpad();
-    gScratchpadWindow.addEventListener("load", runTests, false);
+  gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
+    gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
+    openScratchpad(runTests);
   }, true);
 
   content.location = "data:text/html,<title>foobarBug636725</title>" +
@@ -23,8 +18,6 @@ function test()
 
 function runTests()
 {
-  gScratchpadWindow.removeEventListener("load", arguments.callee, false);
-
   let sp = gScratchpadWindow.Scratchpad;
 
   sp.setText("document");
@@ -34,8 +27,8 @@ function runTests()
   let propPanel = document.querySelector(".scratchpad_propertyPanel");
   ok(propPanel, "property panel is open");
 
-  propPanel.addEventListener("popupshown", function() {
-    propPanel.removeEventListener("popupshown", arguments.callee, false);
+  propPanel.addEventListener("popupshown", function onPopupShown() {
+    propPanel.removeEventListener("popupshown", onPopupShown, false);
 
     let tree = propPanel.querySelector("tree");
     ok(tree, "property panel tree found");

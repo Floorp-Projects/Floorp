@@ -548,7 +548,7 @@ toolbarbutton.bookmark-item[open="true"] {
   -moz-padding-end: 2px;
 }
 
-.bookmark-item > .toolbarbutton-icon {
+.bookmark-item:not(#bookmarks-menu-button) > .toolbarbutton-icon {
   width: 16px;
   height: 16px;
 }

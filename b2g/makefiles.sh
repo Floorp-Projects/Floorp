@@ -42,6 +42,7 @@ security/manager/locales/Makefile
 b2g/app/Makefile
 $MOZ_BRANDING_DIRECTORY/Makefile
 b2g/chrome/Makefile
+b2g/components/Makefile
 b2g/installer/Makefile
 b2g/locales/Makefile
 b2g/Makefile"

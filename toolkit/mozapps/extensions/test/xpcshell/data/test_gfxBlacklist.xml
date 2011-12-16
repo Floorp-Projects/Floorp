@@ -54,5 +54,65 @@
       <driverVersion> 8.52.322.1111 </driverVersion>
       <driverVersionComparator> EQUAL </driverVersionComparator>
     </gfxBlacklistEntry>
+    <gfxBlacklistEntry>
+      <os>Darwin 9</os>
+      <vendor>0xabcd</vendor>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT2D </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+    <gfxBlacklistEntry>
+      <os>Linux</os>
+      <vendor>0xabcd</vendor>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT2D </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+    </gfxBlacklistEntry>
+    <gfxBlacklistEntry>
+      <os>Android</os>
+      <vendor>abcd</vendor>
+      <devices>
+        <device>wxyz</device>
+        <device>asdf</device>
+        <device>erty</device>
+      </devices>
+      <feature> DIRECT2D </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+      <driverVersion> 5 </driverVersion>
+      <driverVersionComparator> LESS_THAN_OR_EQUAL </driverVersionComparator>
+    </gfxBlacklistEntry>
+    <gfxBlacklistEntry>
+      <os>Android</os>
+      <vendor>dcdc</vendor>
+      <devices>
+        <device>uiop</device>
+        <device>vbnm</device>
+        <device>hjkl</device>
+      </devices>
+      <feature> DIRECT2D </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+      <driverVersion> 5 </driverVersion>
+      <driverVersionComparator> EQUAL </driverVersionComparator>
+    </gfxBlacklistEntry>
+    <gfxBlacklistEntry>
+      <os>Android</os>
+      <vendor>abab</vendor>
+      <devices>
+        <device>ghjk</device>
+        <device>cvbn</device>
+      </devices>
+      <feature> DIRECT2D </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+      <driverVersion> 7 </driverVersion>
+      <driverVersionComparator> GREATER_THAN_OR_EQUAL </driverVersionComparator>
+    </gfxBlacklistEntry>
   </gfxItems>
 </blocklist>

@@ -37,6 +37,7 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.gfx.CairoImage;
 import org.mozilla.gecko.gfx.CairoUtils;
 import android.graphics.Bitmap;
@@ -45,28 +46,40 @@ import java.nio.ByteBuffer;
 /** A Cairo image that simply saves a buffer of pixel data. */
 public class BufferedCairoImage extends CairoImage {
     private ByteBuffer mBuffer;
-    private int mWidth, mHeight, mFormat;
+    private IntSize mSize;
+    private int mFormat;
+    private boolean mNeedToFreeBuffer = false;
 
     /** Creates a buffered Cairo image from a byte buffer. */
     public BufferedCairoImage(ByteBuffer inBuffer, int inWidth, int inHeight, int inFormat) {
-        mBuffer = inBuffer; mWidth = inWidth; mHeight = inHeight; mFormat = inFormat;
+        mBuffer = inBuffer; mSize = new IntSize(inWidth, inHeight); mFormat = inFormat;
     }
 
     /** Creates a buffered Cairo image from an Android bitmap. */
     public BufferedCairoImage(Bitmap bitmap) {
         mFormat = CairoUtils.bitmapConfigToCairoFormat(bitmap.getConfig());
-        mWidth = bitmap.getWidth();
-        mHeight = bitmap.getHeight();
-        mBuffer = ByteBuffer.allocateDirect(mWidth * mHeight * 4);
+        mSize = new IntSize(bitmap.getWidth(), bitmap.getHeight());
+        mNeedToFreeBuffer = true;
+        // XXX Why is this * 4? Shouldn't it depend on mFormat?
+        mBuffer = GeckoAppShell.allocateDirectBuffer(mSize.getArea() * 4);
         bitmap.copyPixelsToBuffer(mBuffer.asIntBuffer());
     }
 
-    @Override
+     protected void finalize() throws Throwable {
+        try {
+            if (mNeedToFreeBuffer && mBuffer != null)
+                GeckoAppShell.freeDirectBuffer(mBuffer);
+            mNeedToFreeBuffer = false;
+            mBuffer = null;
+        } finally {
+            super.finalize();
+        }
+    }
+
+   @Override
     public ByteBuffer getBuffer() { return mBuffer; }
     @Override
-    public int getWidth() { return mWidth; }
-    @Override
-    public int getHeight() { return mHeight; }
+    public IntSize getSize() { return mSize; }
     @Override
     public int getFormat() { return mFormat; }
 }

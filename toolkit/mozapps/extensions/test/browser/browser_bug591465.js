@@ -73,7 +73,6 @@ function test() {
 
 
 function end_test() {
-  Services.prefs.clearUserPref(PREF_GETADDONS_GETSEARCHRESULTS);
   close_manager(gManagerWindow, finish);
 }
 

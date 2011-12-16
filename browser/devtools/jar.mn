@@ -2,7 +2,7 @@ browser.jar:
 *   content/browser/inspector.html                (highlighter/inspector.html)
     content/browser/NetworkPanel.xhtml            (webconsole/NetworkPanel.xhtml)
 *   content/browser/scratchpad.xul                (scratchpad/scratchpad.xul)
-*   content/browser/scratchpad.js                 (scratchpad/scratchpad.js)
+    content/browser/scratchpad.js                 (scratchpad/scratchpad.js)
 *   content/browser/styleeditor.xul               (styleeditor/styleeditor.xul)
     content/browser/splitview.css                 (styleeditor/splitview.css)
     content/browser/styleeditor.css               (styleeditor/styleeditor.css)
