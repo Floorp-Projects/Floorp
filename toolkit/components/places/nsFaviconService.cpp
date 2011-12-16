@@ -603,6 +603,72 @@ nsFaviconService::SetFaviconData(nsIURI* aFaviconURI, const PRUint8* aData,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFaviconService::ReplaceFaviconDataFromDataURL(nsIURI* aFaviconURI,
+                                               const nsAString& aDataURL,
+                                               PRTime aExpiration)
+{
+  NS_ENSURE_ARG(aFaviconURI);
+  NS_ENSURE_TRUE(aDataURL.Length() > 0, NS_ERROR_INVALID_ARG);
+  if (aExpiration == 0) {
+    aExpiration = PR_Now() + MAX_FAVICON_EXPIRATION;
+  }
+
+  if (mFaviconsExpirationRunning)
+    return NS_OK;
+
+  nsCOMPtr<nsIURI> dataURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(dataURI), aDataURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Use the data: protocol handler to convert the data.
+  nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIProtocolHandler> protocolHandler;
+  rv = ioService->GetProtocolHandler("data", getter_AddRefs(protocolHandler));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIChannel> channel;
+  rv = protocolHandler->NewChannel(dataURI, getter_AddRefs(channel));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Blocking stream is OK for data URIs.
+  nsCOMPtr<nsIInputStream> stream;
+  rv = channel->Open(getter_AddRefs(stream));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 available;
+  rv = stream->Available(&available);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (available == 0)
+    return NS_ERROR_FAILURE;
+
+  // Read all the decoded data.
+  PRUint8* buffer = static_cast<PRUint8*>
+                               (nsMemory::Alloc(sizeof(PRUint8) * available));
+  if (!buffer)
+    return NS_ERROR_OUT_OF_MEMORY;
+  PRUint32 numRead;
+  rv = stream->Read(TO_CHARBUFFER(buffer), available, &numRead);
+  if (NS_FAILED(rv) || numRead != available) {
+    nsMemory::Free(buffer);
+    return rv;
+  }
+
+  nsCAutoString mimeType;
+  rv = channel->GetContentType(mimeType);
+  if (NS_FAILED(rv)) {
+    nsMemory::Free(buffer);
+    return rv;
+  }
+
+  // ReplaceFaviconData can now do the dirty work.
+  rv = ReplaceFaviconData(aFaviconURI, buffer, available, mimeType, aExpiration);
+  nsMemory::Free(buffer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsFaviconService::SetFaviconDataFromDataURL(nsIURI* aFaviconURI,
