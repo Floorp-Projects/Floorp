@@ -699,10 +699,6 @@ distclean::
 	cat unallmakefiles | $(XARGS) rm -f
 	$(RM) $(DIST_GARBAGE)
 
-# our build system doesn't handle subdir srcs very gracefully today
-export::
-	$(MKDIR) -p nanojit
-
 DEFINES		+= -DEXPORT_JS_API
 
 # mfbt is always packed with us, so if we're building a shared object,
