@@ -723,6 +723,7 @@ JSRuntime::JSRuntime()
     trustedPrincipals_(NULL),
     wrapObjectCallback(NULL),
     preWrapObjectCallback(NULL),
+    preserveWrapperCallback(NULL),
     inOOMReport(0)
 {
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */

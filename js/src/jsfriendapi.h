@@ -168,6 +168,9 @@ JS_END_EXTERN_C
 
 namespace js {
 
+typedef bool
+(* PreserveWrapperCallback)(JSContext *cx, JSObject *obj);
+
 #ifdef DEBUG
  /*
   * DEBUG-only method to dump the complete object graph of heap-allocated things.
@@ -424,6 +427,9 @@ GetPropertyNames(JSContext *cx, JSObject *obj, uintN flags, js::AutoIdVector *pr
 
 JS_FRIEND_API(bool)
 StringIsArrayIndex(JSLinearString *str, jsuint *indexp);
+
+JS_FRIEND_API(void)
+SetPreserveWrapperCallback(JSRuntime *rt, PreserveWrapperCallback callback);
 
 /*
  * NB: these flag bits are encoded into the bytecode stream in the immediate
