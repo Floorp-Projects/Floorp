@@ -81,6 +81,8 @@ pref("extensions.blocklist.itemURL", "https://addons.mozilla.org/%LOCALE%/%APP%/
 
 pref("extensions.update.autoUpdateDefault", true);
 
+pref("extensions.hotfix.id", "firefox-hotfix@mozilla.org");
+
 // Disable add-ons installed into the shared user and shared system areas by
 // default. This does not include the application directory. See the SCOPE
 // constants in AddonManager.jsm for values to use here
