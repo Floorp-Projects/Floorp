@@ -70,7 +70,6 @@ CPPSRCS = \
   testGetPropertyDefault.cpp \
   testIndexToString.cpp \
   testIntString.cpp \
-  testIntTypesABI.cpp \
   testIntern.cpp \
   testLookup.cpp \
   testLooselyEqual.cpp \
