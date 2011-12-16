@@ -116,7 +116,6 @@ public:
   { }
 
   string TagToString(Profile *profile);
-  void WriteTag(Profile *profile, FILE* stream);
 
 private:
   union {
@@ -186,7 +185,8 @@ public:
 
     int oldReadPos = mReadPos;
     while (mReadPos != mWritePos) {
-      mEntries[mReadPos].WriteTag(this, stream);
+      string tag = mEntries[mReadPos].TagToString(this);
+      fwrite(tag.data(), 1, tag.length(), stream);
       mReadPos = (mReadPos + 1) % mEntrySize;
     }
     mReadPos = oldReadPos;
@@ -375,33 +375,6 @@ string ProfileEntry::TagToString(Profile *profile)
   }
 #endif
   return tag;
-}
-
-void ProfileEntry::WriteTag(Profile *profile, FILE *stream)
-{
-  fprintf(stream, "%c-%s\n", mTagName, mTagData);
-
-#ifdef ENABLE_SPS_LEAF_DATA
-  if (mLeafAddress) {
-    bool found = false;
-    SharedLibraryInfo& shlibInfo = profile->getSharedLibraryInfo();
-    unsigned long pc = (unsigned long)mLeafAddress;
-    // TODO Use binary sort (STL)
-    for (size_t i = 0; i < shlibInfo.GetSize(); i++) {
-      SharedLibrary &e = shlibInfo.GetEntry(i);
-      if (pc > e.GetStart() && pc < e.GetEnd()) {
-        if (e.GetName()) {
-          found = true;
-          fprintf(stream, "l-%s@%li\n", e.GetName(), pc - e.GetStart());
-          break;
-        }
-      }
-    }
-    if (!found) {
-      fprintf(stream, "l-???@%li\n", pc);
-    }
-  }
-#endif
 }
 
 #define PROFILE_DEFAULT_ENTRY 100000
