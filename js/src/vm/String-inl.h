@@ -93,6 +93,8 @@ JSRope::init(JSString *left, JSString *right, size_t length)
     d.lengthAndFlags = buildLengthAndFlags(length, ROPE_BIT);
     d.u1.left = left;
     d.s.u2.right = right;
+    JSString::writeBarrierPost(d.u1.left, &d.u1.left);
+    JSString::writeBarrierPost(d.s.u2.right, &d.s.u2.right);
 }
 
 JS_ALWAYS_INLINE JSRope *
@@ -113,6 +115,7 @@ JSDependentString::init(JSLinearString *base, const jschar *chars, size_t length
     d.lengthAndFlags = buildLengthAndFlags(length, DEPENDENT_BIT);
     d.u1.chars = chars;
     d.s.u2.base = base;
+    JSString::writeBarrierPost(d.s.u2.base, &d.s.u2.base);
 }
 
 JS_ALWAYS_INLINE JSDependentString *
