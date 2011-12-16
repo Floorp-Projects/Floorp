@@ -31,7 +31,8 @@
       objectStore.add(data).onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.target.result, 1, "Added entry");
+      let key = event.target.result;
+      ok(key, "Added entry");
       request.onsuccess = grabEventAndContinueHandler;
 
       event = yield;
@@ -44,17 +45,17 @@
       first.get("foo").onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is (event.target.result.id, 1, "Entry in first");
+      is (event.target.result.id, key, "Entry in first");
 
       second.get("foo").onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is (event.target.result.id, 1, "Entry in second");
+      is (event.target.result.id, key, "Entry in second");
 
       third.get("foo").onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is (event.target.result.id, 1, "Entry in third");
+      is (event.target.result.id, key, "Entry in third");
 
       finishTest();
       yield;

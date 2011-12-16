@@ -72,8 +72,7 @@ public:
 
   static already_AddRefed<IDBObjectStore>
   Create(IDBTransaction* aTransaction,
-         ObjectStoreInfo* aInfo,
-         nsIAtom* aDatabaseId);
+         const ObjectStoreInfo* aInfo);
 
   static bool
   IsValidKeyPath(JSContext* aCx, const nsAString& aKeyPath);
@@ -91,6 +90,7 @@ public:
   UpdateIndexes(IDBTransaction* aTransaction,
                 PRInt64 aObjectStoreId,
                 const Key& aObjectStoreKey,
+                bool aAutoIncrement,
                 bool aOverwrite,
                 PRInt64 aObjectDataId,
                 const nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
@@ -167,10 +167,8 @@ public:
     return mTransaction;
   }
 
-  ObjectStoreInfo* Info()
-  {
-    return mInfo;
-  }
+  nsresult ModifyValueForNewKey(StructuredCloneWriteInfo& aCloneWriteInfo,
+                                Key& aKey);
 
 protected:
   IDBObjectStore();
@@ -201,7 +199,6 @@ private:
   nsString mKeyPath;
   bool mAutoIncrement;
   nsCOMPtr<nsIAtom> mDatabaseId;
-  nsRefPtr<ObjectStoreInfo> mInfo;
   PRUint32 mStructuredCloneVersion;
 
   nsTArray<nsRefPtr<IDBIndex> > mCreatedIndexes;
