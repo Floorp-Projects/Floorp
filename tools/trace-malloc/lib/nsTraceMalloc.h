@@ -40,6 +40,8 @@
 #ifndef nsTraceMalloc_h___
 #define nsTraceMalloc_h___
 
+#include "mozilla/StdInt.h"
+
 #include <stdio.h> /* for FILE */
 #include "prtypes.h"
 
@@ -62,26 +64,26 @@ PR_BEGIN_EXTERN_C
  * Trace-malloc stats, traced via the 'Z' event at the end of a log file.
  */
 typedef struct nsTMStats {
-    uint32 calltree_maxstack;
-    uint32 calltree_maxdepth;
-    uint32 calltree_parents;
-    uint32 calltree_maxkids;
-    uint32 calltree_kidhits;
-    uint32 calltree_kidmisses;
-    uint32 calltree_kidsteps;
-    uint32 callsite_recurrences;
-    uint32 backtrace_calls;
-    uint32 backtrace_failures;
-    uint32 btmalloc_failures;
-    uint32 dladdr_failures;
-    uint32 malloc_calls;
-    uint32 malloc_failures;
-    uint32 calloc_calls;
-    uint32 calloc_failures;
-    uint32 realloc_calls;
-    uint32 realloc_failures;
-    uint32 free_calls;
-    uint32 null_free_calls;
+    uint32_t calltree_maxstack;
+    uint32_t calltree_maxdepth;
+    uint32_t calltree_parents;
+    uint32_t calltree_maxkids;
+    uint32_t calltree_kidhits;
+    uint32_t calltree_kidmisses;
+    uint32_t calltree_kidsteps;
+    uint32_t callsite_recurrences;
+    uint32_t backtrace_calls;
+    uint32_t backtrace_failures;
+    uint32_t btmalloc_failures;
+    uint32_t dladdr_failures;
+    uint32_t malloc_calls;
+    uint32_t malloc_failures;
+    uint32_t calloc_calls;
+    uint32_t calloc_failures;
+    uint32_t realloc_calls;
+    uint32_t realloc_failures;
+    uint32_t free_calls;
+    uint32_t null_free_calls;
 } nsTMStats;
 
 #define NS_TMSTATS_STATIC_INITIALIZER {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}

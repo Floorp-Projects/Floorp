@@ -1230,7 +1230,7 @@ nsSVGElement::GetCtx() const
 {
   nsIContent* ancestor = GetFlattenedTreeParent();
 
-  while (ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG) {
+  while (ancestor && ancestor->IsSVG()) {
     nsIAtom* tag = ancestor->Tag();
     if (tag == nsGkAtoms::foreignObject) {
       return nsnull;

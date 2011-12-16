@@ -41,10 +41,14 @@ interface nsIURI;
 interface nsIInterfaceRequestor;
 interface nsILoadGroup;
 interface nsIWebSocketListener;
+interface nsIInputStream;
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(e8ae0371-c28f-4d61-b257-514e014a4686)]
+/** 
+ *  You probably want nsI{Moz}WebSocket.idl
+ */
+[uuid(bb69e5d7-d9cd-4aab-9abe-98f80cf8b8b8)]
 interface nsIWebSocketChannel : nsISupports
 {
     /**
@@ -140,4 +144,12 @@ interface nsIWebSocketChannel : nsISupports
      * @param aMsg the data to send
      */
     void sendBinaryMsg(in ACString aMsg);
+
+    /** 
+     * Use to send a binary stream (Blob) to Websocket peer.
+     *
+     * @param aStream The input stream to be sent.  
+     */
+    void sendBinaryStream(in nsIInputStream aStream, 
+                          in unsigned long length);
 };

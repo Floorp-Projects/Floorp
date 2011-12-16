@@ -198,13 +198,13 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
 
     switch (type.TagPart()) {
-    case nsXPTType::T_I8    : *d = INT_TO_JSVAL((int32)*((int8*)s));                 break;
-    case nsXPTType::T_I16   : *d = INT_TO_JSVAL((int32)*((int16*)s));                break;
-    case nsXPTType::T_I32   : *d = INT_TO_JSVAL(*((int32*)s));                       break;
+    case nsXPTType::T_I8    : *d = INT_TO_JSVAL(int32_t(*((int8_t*)s)));             break;
+    case nsXPTType::T_I16   : *d = INT_TO_JSVAL(int32_t(*((int16_t*)s)));            break;
+    case nsXPTType::T_I32   : *d = INT_TO_JSVAL(*((int32_t*)s));                     break;
     case nsXPTType::T_I64   : *d = DOUBLE_TO_JSVAL(INT64_TO_DOUBLE(*((int64*)s)));   break;
-    case nsXPTType::T_U8    : *d = INT_TO_JSVAL((int32)*((uint8*)s));                break;
-    case nsXPTType::T_U16   : *d = INT_TO_JSVAL((int32)*((uint16*)s));               break;
-    case nsXPTType::T_U32   : *d = FIT_U32(*((uint32*)s));                           break;
+    case nsXPTType::T_U8    : *d = INT_TO_JSVAL(int32_t(*((uint8*)s)));              break;
+    case nsXPTType::T_U16   : *d = INT_TO_JSVAL(int32_t(*((uint16_t*)s)));           break;
+    case nsXPTType::T_U32   : *d = FIT_U32(*((uint32_t*)s));                         break;
     case nsXPTType::T_U64   : *d = DOUBLE_TO_JSVAL(UINT64_TO_DOUBLE(*((uint64*)s))); break;
     case nsXPTType::T_FLOAT : *d = DOUBLE_TO_JSVAL(*((float*)s));                    break;
     case nsXPTType::T_DOUBLE: *d = DOUBLE_TO_JSVAL(*((double*)s));                   break;
@@ -473,8 +473,8 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
     JSContext* cx = ccx.GetJSContext();
 
-    int32    ti;
-    uint32   tu;
+    int32_t  ti;
+    uint32_t tu;
     jsdouble td;
     JSBool   tb;
     JSBool isDOMString = true;
@@ -486,56 +486,56 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
     case nsXPTType::T_I8     :
         if (!JS_ValueToECMAInt32(cx, s, &ti))
             return false;
-        *((int8*)d)  = (int8) ti;
+        *((int8_t*)d)  = int8_t(ti);
         break;
     case nsXPTType::T_I16    :
         if (!JS_ValueToECMAInt32(cx, s, &ti))
             return false;
-        *((int16*)d)  = (int16) ti;
+        *((int16_t*)d)  = int16_t(ti);
         break;
     case nsXPTType::T_I32    :
-        if (!JS_ValueToECMAInt32(cx, s, (int32*)d))
+        if (!JS_ValueToECMAInt32(cx, s, (int32_t*)d))
             return false;
         break;
     case nsXPTType::T_I64    :
         if (JSVAL_IS_INT(s)) {
             if (!JS_ValueToECMAInt32(cx, s, &ti))
                 return false;
-            LL_I2L(*((int64*)d),ti);
+           *((int64_t*)d) = ti;
 
         } else {
             if (!JS_ValueToNumber(cx, s, &td))
                 return false;
-            LL_D2L(*((int64*)d),td);
+            *((int64_t*)d) = int64_t(td);
         }
         break;
     case nsXPTType::T_U8     :
         if (!JS_ValueToECMAUint32(cx, s, &tu))
             return false;
-        *((uint8*)d)  = (uint8) tu;
+        *((uint8_t*)d)  = uint8_t(tu);
         break;
     case nsXPTType::T_U16    :
         if (!JS_ValueToECMAUint32(cx, s, &tu))
             return false;
-        *((uint16*)d)  = (uint16) tu;
+        *((uint16_t*)d)  = uint16_t(tu);
         break;
     case nsXPTType::T_U32    :
-        if (!JS_ValueToECMAUint32(cx, s, (uint32*)d))
+        if (!JS_ValueToECMAUint32(cx, s, (uint32_t*)d))
             return false;
         break;
     case nsXPTType::T_U64    :
         if (JSVAL_IS_INT(s)) {
             if (!JS_ValueToECMAUint32(cx, s, &tu))
                 return false;
-            LL_UI2L(*((int64*)d),tu);
+            *((int64_t*)d) = tu;
         } else {
             if (!JS_ValueToNumber(cx, s, &td))
                 return false;
 #ifdef XP_WIN
             // Note: Win32 can't handle double to uint64 directly
-            *((uint64*)d) = (uint64)((int64) td);
+            *((uint64_t*)d) = uint64_t(int64_t(td));
 #else
-            LL_D2L(*((uint64*)d),td);
+            *((uint64_t*)d) = uint64_t(td);
 #endif
         }
         break;
@@ -582,10 +582,10 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 return false;
             }
             if (length == 0) {
-                *((uint16*)d) = 0;
+                *((uint16_t*)d) = 0;
                 break;
             }
-            *((uint16*)d) = (uint16) chars[0];
+            *((uint16_t*)d) = uint16_t(chars[0]);
             break;
         }
     case nsXPTType::T_JSVAL :
@@ -1610,7 +1610,7 @@ JSBool
 XPCConvert::NativeArray2JS(XPCLazyCallContext& lccx,
                            jsval* d, const void** s,
                            const nsXPTType& type, const nsID* iid,
-                           JSUint32 count, nsresult* pErr)
+                           uint32_t count, nsresult* pErr)
 {
     NS_PRECONDITION(s, "bad param");
     NS_PRECONDITION(d, "bad param");
@@ -1639,7 +1639,7 @@ XPCConvert::NativeArray2JS(XPCLazyCallContext& lccx,
     if (pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
 
-    JSUint32 i;
+    uint32_t i;
     jsval current = JSVAL_NULL;
     AUTO_MARK_JSVAL(ccx, &current);
 
@@ -1655,17 +1655,17 @@ XPCConvert::NativeArray2JS(XPCLazyCallContext& lccx,
     // XXX check IsPtr - esp. to handle array of nsID (as opposed to nsID*)
 
     switch (type.TagPart()) {
-    case nsXPTType::T_I8            : POPULATE(int8);           break;
-    case nsXPTType::T_I16           : POPULATE(int16);          break;
-    case nsXPTType::T_I32           : POPULATE(int32);          break;
-    case nsXPTType::T_I64           : POPULATE(int64);          break;
-    case nsXPTType::T_U8            : POPULATE(uint8);          break;
-    case nsXPTType::T_U16           : POPULATE(uint16);         break;
-    case nsXPTType::T_U32           : POPULATE(uint32);         break;
-    case nsXPTType::T_U64           : POPULATE(uint64);         break;
+    case nsXPTType::T_I8            : POPULATE(int8_t);         break;
+    case nsXPTType::T_I16           : POPULATE(int16_t);        break;
+    case nsXPTType::T_I32           : POPULATE(int32_t);        break;
+    case nsXPTType::T_I64           : POPULATE(int64_t);        break;
+    case nsXPTType::T_U8            : POPULATE(uint8_t);        break;
+    case nsXPTType::T_U16           : POPULATE(uint16_t);       break;
+    case nsXPTType::T_U32           : POPULATE(uint32_t);       break;
+    case nsXPTType::T_U64           : POPULATE(uint64_t);       break;
     case nsXPTType::T_FLOAT         : POPULATE(float);          break;
     case nsXPTType::T_DOUBLE        : POPULATE(double);         break;
-    case nsXPTType::T_BOOL          : POPULATE(bool);         break;
+    case nsXPTType::T_BOOL          : POPULATE(bool);           break;
     case nsXPTType::T_CHAR          : POPULATE(char);           break;
     case nsXPTType::T_WCHAR         : POPULATE(jschar);         break;
     case nsXPTType::T_VOID          : NS_ERROR("bad type"); goto failure;
@@ -1701,7 +1701,7 @@ static JSBool
 CheckTargetAndPopulate(const nsXPTType& type,
                        PRUint8 requiredType,
                        size_t typeSize,
-                       JSUint32 count,
+                       uint32_t count,
                        JSObject* tArr,
                        void** output,
                        nsresult* pErr)
@@ -1739,14 +1739,14 @@ CheckTargetAndPopulate(const nsXPTType& type,
 // are not accepted; create a properly typed array view on them
 // first. The element type of array must match the XPCOM
 // type in size, type and signedness exactly. As an exception,
-// Uint8ClampedArray is allowed for arrays of uint8.
+// Uint8ClampedArray is allowed for arrays of uint8_t.
 
 // static
 JSBool
 XPCConvert::JSTypedArray2Native(XPCCallContext& ccx,
                                 void** d,
                                 JSObject* jsArray,
-                                JSUint32 count,
+                                uint32_t count,
                                 const nsXPTType& type,
                                 nsresult* pErr)
 {
@@ -1756,7 +1756,7 @@ XPCConvert::JSTypedArray2Native(XPCCallContext& ccx,
 
     // Check the actual length of the input array against the
     // given size_is.
-    JSUint32 len = JS_GetTypedArrayLength(jsArray);
+    uint32_t len = JS_GetTypedArrayLength(jsArray);
     if (len < count) {
         if (pErr)
             *pErr = NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY;
@@ -1769,7 +1769,7 @@ XPCConvert::JSTypedArray2Native(XPCCallContext& ccx,
     switch (JS_GetTypedArrayType(jsArray)) {
     case js::TypedArray::TYPE_INT8:
         if (!CheckTargetAndPopulate(nsXPTType::T_I8, type,
-                                    sizeof(int8), count,
+                                    sizeof(int8_t), count,
                                     jsArray, &output, pErr)) {
             return false;
         }
@@ -1778,7 +1778,7 @@ XPCConvert::JSTypedArray2Native(XPCCallContext& ccx,
     case js::TypedArray::TYPE_UINT8:
     case js::TypedArray::TYPE_UINT8_CLAMPED:
         if (!CheckTargetAndPopulate(nsXPTType::T_U8, type,
-                                    sizeof(uint8), count,
+                                    sizeof(uint8_t), count,
                                     jsArray, &output, pErr)) {
             return false;
         }
@@ -1786,7 +1786,7 @@ XPCConvert::JSTypedArray2Native(XPCCallContext& ccx,
 
     case js::TypedArray::TYPE_INT16:
         if (!CheckTargetAndPopulate(nsXPTType::T_I16, type,
-                                    sizeof(int16), count,
+                                    sizeof(int16_t), count,
                                     jsArray, &output, pErr)) {
             return false;
         }
@@ -1794,7 +1794,7 @@ XPCConvert::JSTypedArray2Native(XPCCallContext& ccx,
 
     case js::TypedArray::TYPE_UINT16:
         if (!CheckTargetAndPopulate(nsXPTType::T_U16, type,
-                                    sizeof(uint16), count,
+                                    sizeof(uint16_t), count,
                                     jsArray, &output, pErr)) {
             return false;
         }
@@ -1802,7 +1802,7 @@ XPCConvert::JSTypedArray2Native(XPCCallContext& ccx,
 
     case js::TypedArray::TYPE_INT32:
         if (!CheckTargetAndPopulate(nsXPTType::T_I32, type,
-                                    sizeof(int32), count,
+                                    sizeof(int32_t), count,
                                     jsArray, &output, pErr)) {
             return false;
         }
@@ -1810,7 +1810,7 @@ XPCConvert::JSTypedArray2Native(XPCCallContext& ccx,
 
     case js::TypedArray::TYPE_UINT32:
         if (!CheckTargetAndPopulate(nsXPTType::T_U32, type,
-                                    sizeof(uint32), count,
+                                    sizeof(uint32_t), count,
                                     jsArray, &output, pErr)) {
             return false;
         }
@@ -1850,7 +1850,7 @@ XPCConvert::JSTypedArray2Native(XPCCallContext& ccx,
 // static
 JSBool
 XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
-                           JSUint32 count, const nsXPTType& type,
+                           uint32_t count, const nsXPTType& type,
                            const nsID* iid, nsresult* pErr)
 {
     NS_ABORT_IF_FALSE(d, "bad param");
@@ -1864,7 +1864,7 @@ XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
 
     JSObject* jsarray = nsnull;
     void* array = nsnull;
-    JSUint32 initedCount;
+    uint32_t initedCount;
     jsval current;
 
     // XXX add support for getting chars from strings
@@ -1901,7 +1901,7 @@ XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
         return false;
     }
 
-    JSUint32 len;
+    uint32_t len;
     if (!JS_GetArrayLength(cx, jsarray, &len) || len < count) {
         if (pErr)
             *pErr = NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY;
@@ -1935,14 +1935,14 @@ XPCConvert::JSArray2Native(XPCCallContext& ccx, void** d, jsval s,
     // XXX make extra space at end of char* and wchar* and null termintate
 
     switch (type.TagPart()) {
-    case nsXPTType::T_I8            : POPULATE(na, int8);           break;
-    case nsXPTType::T_I16           : POPULATE(na, int16);          break;
-    case nsXPTType::T_I32           : POPULATE(na, int32);          break;
-    case nsXPTType::T_I64           : POPULATE(na, int64);          break;
-    case nsXPTType::T_U8            : POPULATE(na, uint8);          break;
-    case nsXPTType::T_U16           : POPULATE(na, uint16);         break;
-    case nsXPTType::T_U32           : POPULATE(na, uint32);         break;
-    case nsXPTType::T_U64           : POPULATE(na, uint64);         break;
+    case nsXPTType::T_I8            : POPULATE(na, int8_t);         break;
+    case nsXPTType::T_I16           : POPULATE(na, int16_t);        break;
+    case nsXPTType::T_I32           : POPULATE(na, int32_t);        break;
+    case nsXPTType::T_I64           : POPULATE(na, int64_t);        break;
+    case nsXPTType::T_U8            : POPULATE(na, uint8_t);        break;
+    case nsXPTType::T_U16           : POPULATE(na, uint16_t);       break;
+    case nsXPTType::T_U32           : POPULATE(na, uint32_t);       break;
+    case nsXPTType::T_U64           : POPULATE(na, uint64_t);       break;
     case nsXPTType::T_FLOAT         : POPULATE(na, float);          break;
     case nsXPTType::T_DOUBLE        : POPULATE(na, double);         break;
     case nsXPTType::T_BOOL          : POPULATE(na, bool);           break;
@@ -1995,7 +1995,7 @@ JSBool
 XPCConvert::NativeStringWithSize2JS(JSContext* cx,
                                     jsval* d, const void* s,
                                     const nsXPTType& type,
-                                    JSUint32 count,
+                                    uint32_t count,
                                     nsresult* pErr)
 {
     NS_PRECONDITION(s, "bad param");
@@ -2037,7 +2037,7 @@ XPCConvert::NativeStringWithSize2JS(JSContext* cx,
 // static
 JSBool
 XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
-                                    JSUint32 count, const nsXPTType& type,
+                                    uint32_t count, const nsXPTType& type,
                                     nsresult* pErr)
 {
     NS_PRECONDITION(!JSVAL_IS_NULL(s), "bad param");
@@ -2045,7 +2045,7 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
 
     JSContext* cx = ccx.GetJSContext();
 
-    JSUint32 len;
+    uint32_t len;
 
     if (pErr)
         *pErr = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
@@ -2090,7 +2090,7 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
             if (len < count)
                 len = count;
 
-            JSUint32 alloc_len = (len + 1) * sizeof(char);
+            uint32_t alloc_len = (len + 1) * sizeof(char);
             char *buffer = static_cast<char *>(nsMemory::Alloc(alloc_len));
             if (!buffer) {
                 return false;
@@ -2142,7 +2142,7 @@ XPCConvert::JSStringWithSize2Native(XPCCallContext& ccx, void* d, jsval s,
             if (!(chars = JS_GetStringCharsZ(cx, str))) {
                 return false;
             }
-            JSUint32 alloc_len = (len + 1) * sizeof(jschar);
+            uint32_t alloc_len = (len + 1) * sizeof(jschar);
             if (!(*((void**)d) = nsMemory::Alloc(alloc_len))) {
                 // XXX should report error
                 return false;

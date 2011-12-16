@@ -105,9 +105,9 @@ namespace js { class FunctionExtended; }
 
 struct JSFunction : public JSObject
 {
-    uint16          nargs;        /* maximum number of specified arguments,
+    uint16_t        nargs;        /* maximum number of specified arguments,
                                      reflected as f.length/f.arity */
-    uint16          flags;        /* flags, see JSFUN_* below and in jsapi.h */
+    uint16_t        flags;        /* flags, see JSFUN_* below and in jsapi.h */
     union U {
         struct Native {
             js::Native  native;   /* native method pointer or null */
@@ -116,8 +116,9 @@ struct JSFunction : public JSObject
         } n;
         struct Scripted {
             JSScript    *script_; /* interpreted bytecode descriptor or null;
-                                     use the setter! */
-            JSObject    *env;     /* environment for new activations */
+                                     use the accessor! */
+            JSObject    *env_;    /* environment for new activations;
+                                     use the accessor! */
         } i;
         void            *nativeOrScript;
     } u;
@@ -133,8 +134,8 @@ struct JSFunction : public JSObject
     bool isFunctionPrototype() const { return flags & JSFUN_PROTOTYPE; }
     bool isInterpretedConstructor() const { return isInterpreted() && !isFunctionPrototype(); }
 
-    uint16 kind()            const { return flags & JSFUN_KINDMASK; }
-    void setKind(uint16 k) {
+    uint16_t kind()          const { return flags & JSFUN_KINDMASK; }
+    void setKind(uint16_t k) {
         JS_ASSERT(!(k & ~JSFUN_KINDMASK));
         flags = (flags & ~JSFUN_KINDMASK) | k;
     }
@@ -142,12 +143,12 @@ struct JSFunction : public JSObject
     /* Returns the strictness of this function, which must be interpreted. */
     inline bool inStrictMode() const;
 
-    void setArgCount(uint16 nargs) {
+    void setArgCount(uint16_t nargs) {
         JS_ASSERT(this->nargs == 0);
         this->nargs = nargs;
     }
 
-    /* uint16 representation bounds number of call object dynamic slots. */
+    /* uint16_t representation bounds number of call object dynamic slots. */
     enum { MAX_ARGS_AND_VARS = 2 * ((1U << 16) - 1) };
 
 #define JS_LOCAL_NAME_TO_ATOM(nameWord)  ((JSAtom *) ((nameWord) & ~(jsuword) 1))
@@ -167,8 +168,9 @@ struct JSFunction : public JSObject
      */
     inline JSObject *environment() const;
     inline void setEnvironment(JSObject *obj);
+    inline void initEnvironment(JSObject *obj);
 
-    static inline size_t offsetOfEnvironment() { return offsetof(JSFunction, u.i.env); }
+    static inline size_t offsetOfEnvironment() { return offsetof(JSFunction, u.i.env_); }
 
     inline void setJoinable();
 
@@ -252,13 +254,13 @@ struct JSFunction : public JSObject
      * into a vector of js::Values referenced from here. This is a private
      * pointer but is set only at creation and does not need to be barriered.
      */
-    static const uint32 FLAT_CLOSURE_UPVARS_SLOT = 0;
+    static const uint32_t FLAT_CLOSURE_UPVARS_SLOT = 0;
 
     static inline size_t getFlatClosureUpvarsOffset();
 
-    inline js::Value getFlatClosureUpvar(uint32 i) const;
-    inline void setFlatClosureUpvar(uint32 i, const js::Value &v);
-    inline void initFlatClosureUpvar(uint32 i, const js::Value &v);
+    inline js::Value getFlatClosureUpvar(uint32_t i) const;
+    inline void setFlatClosureUpvar(uint32_t i, const js::Value &v);
+    inline void initFlatClosureUpvar(uint32_t i, const js::Value &v);
 
   private:
     inline bool hasFlatClosureUpvars() const;
@@ -269,10 +271,10 @@ struct JSFunction : public JSObject
     inline void finalizeUpvars();
 
     /* Slot holding associated method property, needed for foo.caller handling. */
-    static const uint32 METHOD_PROPERTY_SLOT = 0;
+    static const uint32_t METHOD_PROPERTY_SLOT = 0;
 
     /* For cloned methods, slot holding the object this was cloned as a property from. */
-    static const uint32 METHOD_OBJECT_SLOT = 1;
+    static const uint32_t METHOD_OBJECT_SLOT = 1;
 
     /* Whether this is a function cloned from a method. */
     inline bool isClonedMethod() const;

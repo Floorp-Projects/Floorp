@@ -58,7 +58,6 @@ JAVAFILES = \
   db/BrowserContract.java \
   db/AndroidBrowserDB.java \
   db/BrowserDB.java \
-  db/BrowserProvider.java \
   db/LocalBrowserDB.java \
   DoorHanger.java \
   DoorHangerPopup.java \
@@ -116,6 +115,7 @@ PROCESSEDJAVAFILES = \
   LauncherShortcuts.java \
   NotificationHandler.java \
   Restarter.java \
+  db/BrowserProvider.java \
   $(NULL)
 
 
@@ -428,6 +428,7 @@ classes.dex: $(JAVAFILES) $(PROCESSEDJAVAFILES) R.java
 	$(DX) --dex --output=$@ classes
 
 AndroidManifest.xml $(PROCESSEDJAVAFILES) package-name.txt: % : %.in
+	mkdir -p db
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
 

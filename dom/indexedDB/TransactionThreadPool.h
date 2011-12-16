@@ -87,7 +87,7 @@ public:
   // committed, for aDatabase.
   void AbortTransactionsForDatabase(IDBDatabase* aDatabase);
 
-  // Returns true iff there are running or pending transactions for aDatabase.
+  // Returns true if there are running or pending transactions for aDatabase.
   bool HasTransactionsForDatabase(IDBDatabase* aDatabase);
 
 protected:

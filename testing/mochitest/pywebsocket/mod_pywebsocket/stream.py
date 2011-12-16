@@ -1,4 +1,4 @@
-# Copyright 2010, Google Inc.
+# Copyright 2011, Google Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,19 +35,22 @@
 from mod_pywebsocket._stream_base import BadOperationException
 from mod_pywebsocket._stream_base import ConnectionTerminatedException
 from mod_pywebsocket._stream_base import InvalidFrameException
+from mod_pywebsocket._stream_base import InvalidUTF8Exception
 from mod_pywebsocket._stream_base import UnsupportedFrameException
 from mod_pywebsocket._stream_hixie75 import StreamHixie75
-from mod_pywebsocket._stream_hybi06 import Stream
-from mod_pywebsocket._stream_hybi06 import StreamOptions
+from mod_pywebsocket._stream_hybi import Frame
+from mod_pywebsocket._stream_hybi import Stream
+from mod_pywebsocket._stream_hybi import StreamOptions
 
 # These methods are intended to be used by WebSocket client developers to have
 # their implementations receive broken data in tests.
-from mod_pywebsocket._stream_hybi06 import create_close_frame
-from mod_pywebsocket._stream_hybi06 import create_header
-from mod_pywebsocket._stream_hybi06 import create_length_header
-from mod_pywebsocket._stream_hybi06 import create_ping_frame
-from mod_pywebsocket._stream_hybi06 import create_pong_frame
-from mod_pywebsocket._stream_hybi06 import create_text_frame
+from mod_pywebsocket._stream_hybi import create_close_frame
+from mod_pywebsocket._stream_hybi import create_header
+from mod_pywebsocket._stream_hybi import create_length_header
+from mod_pywebsocket._stream_hybi import create_ping_frame
+from mod_pywebsocket._stream_hybi import create_pong_frame
+from mod_pywebsocket._stream_hybi import create_binary_frame
+from mod_pywebsocket._stream_hybi import create_text_frame
 
 
 # vi:sts=4 sw=4 et

@@ -53,8 +53,8 @@
 
 class nsIContent;
 class nsPresContext;
-class JSContext;
-class JSObject;
+struct JSContext;
+struct JSObject;
  
 class nsDOMEvent : public nsIDOMEvent,
                    public nsIDOMNSEvent,

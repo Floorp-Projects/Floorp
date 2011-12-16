@@ -110,7 +110,7 @@ nsTranscodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
             reinterpret_cast<nsIObjectOutputStream*>(xdr->userdata);
 
         // Flush xdr'ed data to the underlying object output stream.
-        uint32 size;
+        uint32_t size;
         char *data = (char*) ::JS_XDRMemGetData(xdr, &size);
 
         rv = stream->Write32(size);
@@ -143,7 +143,7 @@ nsTranscodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
                     rv = stream->ReadBytes(size, &data);
                 if (NS_SUCCEEDED(rv)) {
                     char *olddata;
-                    uint32 oldsize;
+                    uint32_t oldsize;
 
                     // Any decode-mode JSXDRState whose userdata points to an
                     // nsIObjectInputStream instance must use nsMemory to Alloc

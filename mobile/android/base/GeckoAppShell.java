@@ -451,7 +451,7 @@ public class GeckoAppShell
     private static void geckoLoaded() {
         final LayerController layerController = GeckoApp.mAppContext.getLayerController();
         LayerView v = layerController.getView();
-        mInputConnection = new GeckoInputConnection(v);
+        mInputConnection = GeckoInputConnection.create(v);
         v.setInputConnectionHandler(mInputConnection);
 
         layerController.setOnTouchListener(new View.OnTouchListener() {
@@ -491,15 +491,6 @@ public class GeckoAppShell
     /*
      *  The Gecko-side API: API methods that Gecko calls
      */
-    public static void scheduleRedraw() {
-        // Redraw everything
-        Rect rect = new Rect(0, 0, LayerController.TILE_WIDTH, LayerController.TILE_HEIGHT);
-        GeckoEvent event = new GeckoEvent(GeckoEvent.DRAW, rect);
-        event.mNativeWindow = 0;
-        sendEventToGecko(event);
-    }
-
-
     public static void notifyIME(int type, int state) {
         mInputConnection.notifyIME(type, state);
     }

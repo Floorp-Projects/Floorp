@@ -58,6 +58,8 @@
 #include "nsIAtom.h"
 #include "nsISupportsImpl.h"
 
+typedef struct _cairo_scaled_font cairo_scaled_font_t;
+
 #ifdef DEBUG
 #include <stdio.h>
 #endif
@@ -955,6 +957,7 @@ public:
 
 protected:
     nsAutoRefCnt mRefCnt;
+    cairo_scaled_font_t *mScaledFont;
 
     void NotifyReleased() {
         gfxFontCache *cache = gfxFontCache::GetCache();
@@ -969,7 +972,8 @@ protected:
     }
 
     gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
-            AntialiasOption anAAOption = kAntialiasDefault);
+            AntialiasOption anAAOption = kAntialiasDefault,
+            cairo_scaled_font_t *aScaledFont = nsnull);
 
 public:
     virtual ~gfxFont();
@@ -1466,20 +1470,20 @@ public:
     // Public textrun API for general use
 
     bool IsClusterStart(PRUint32 aPos) {
-        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        NS_ASSERTION(aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].IsClusterStart();
     }
     bool IsLigatureGroupStart(PRUint32 aPos) {
-        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        NS_ASSERTION(aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].IsLigatureGroupStart();
     }
     bool CanBreakLineBefore(PRUint32 aPos) {
-        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        NS_ASSERTION(aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].CanBreakBefore() ==
             CompressedGlyph::FLAG_BREAK_TYPE_NORMAL;
     }
     bool CanHyphenateBefore(PRUint32 aPos) {
-        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        NS_ASSERTION(aPos < mCharacterCount, "aPos out of range");
         return mCharacterGlyphs[aPos].CanBreakBefore() ==
             CompressedGlyph::FLAG_BREAK_TYPE_HYPHEN;
     }

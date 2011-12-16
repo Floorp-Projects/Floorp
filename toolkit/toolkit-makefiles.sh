@@ -881,7 +881,7 @@ if [ "$ENABLE_TESTS" ]; then
     testing/tools/screenshot/Makefile
     testing/xpcshell/Makefile
     testing/xpcshell/example/Makefile
-    toolkit/components/aboutmemory/tests/chrome/Makefile
+    toolkit/components/aboutmemory/tests/Makefile
     toolkit/components/alerts/test/Makefile
     toolkit/components/commandlines/test/Makefile
     toolkit/components/contentprefs/tests/Makefile
@@ -1049,7 +1049,7 @@ if [ "$ENABLE_TESTS" ]; then
       toolkit/components/downloads/test/browser/Makefile
       toolkit/components/passwordmgr/test/browser/Makefile
       toolkit/components/places/tests/browser/Makefile
-      toolkit/components/startup/tests/browser/Makefile
+      toolkit/components/startup/tests/Makefile
       toolkit/content/tests/browser/Makefile
       toolkit/content/tests/browser/common/Makefile
       toolkit/content/tests/browser/data/Makefile

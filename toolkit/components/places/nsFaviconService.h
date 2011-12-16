@@ -46,9 +46,14 @@
 #include "nsString.h"
 #include "nsDataHashtable.h"
 #include "nsServiceManagerUtils.h"
+#include "nsTHashtable.h"
 #include "nsToolkitCompsCID.h"
+#include "nsURIHashKey.h"
+#include "nsITimer.h"
 #include "Database.h"
 #include "mozilla/storage.h"
+
+#include "AsyncFaviconHelpers.h"
 
 // Favicons bigger than this size should not be saved to the db to avoid
 // bloating it with large image blobs.
@@ -62,8 +67,25 @@
 // forward class definitions
 class mozIStorageStatementCallback;
 
+class UnassociatedIconHashKey : public nsURIHashKey
+{
+public:
+  UnassociatedIconHashKey(const nsIURI* aURI)
+  : nsURIHashKey(aURI)
+  {
+  }
+  UnassociatedIconHashKey(const UnassociatedIconHashKey& aOther)
+  : nsURIHashKey(aOther)
+  {
+    NS_NOTREACHED("Do not call me!");
+  }
+  mozilla::places::IconData iconData;
+  PRTime created;
+};
+
 class nsFaviconService : public nsIFaviconService
                        , public mozIAsyncFavicons
+                       , public nsITimerCallback
 {
 public:
   nsFaviconService();
@@ -135,11 +157,14 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFAVICONSERVICE
   NS_DECL_MOZIASYNCFAVICONS
+  NS_DECL_NSITIMERCALLBACK
 
 private:
   ~nsFaviconService();
 
   nsRefPtr<mozilla::places::Database> mDB;
+
+  nsCOMPtr<nsITimer> mExpireUnassociatedIconsTimer;
 
   static nsFaviconService* gFaviconService;
 
@@ -163,6 +188,11 @@ private:
 
   PRUint32 mFailedFaviconSerial;
   nsDataHashtable<nsCStringHashKey, PRUint32> mFailedFavicons;
+
+  // AsyncFetchAndSetIconForPage needs access to the icon cache
+  friend class mozilla::places::AsyncFetchAndSetIconForPage;
+  friend class mozilla::places::RemoveIconDataCacheEntry;
+  nsTHashtable<UnassociatedIconHashKey> mUnassociatedIcons;
 
   // Caches the content of the default favicon if it's not already cached and
   // copies it into byteStr.
