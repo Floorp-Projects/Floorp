@@ -8,7 +8,6 @@
 #include "platform.h"
 #include "shared-libraries.h"
 
-#ifdef ENABLE_SPS_LEAF_DATA
 #ifndef __GLIBC__
 /* a crapy version of getline, because it's not included in bionic */
 static ssize_t getline(char **lineptr, size_t *n, FILE *stream)
@@ -64,4 +63,3 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
   free(line);
   return info;
 }
-#endif
