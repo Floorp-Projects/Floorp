@@ -94,7 +94,7 @@ ConvertCloneReadInfosToArrayInternal(
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
 
-    for (uint32 index = 0, count = aReadInfos.Length(); index < count;
+    for (uint32_t index = 0, count = aReadInfos.Length(); index < count;
          index++) {
       StructuredCloneReadInfo& readInfo = aReadInfos[index];
 
