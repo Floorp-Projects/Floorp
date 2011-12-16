@@ -51,6 +51,7 @@ endif
 EXTRA_JS_MODULES = \
 	openLocationLastURL.jsm \
 	NetworkPrioritizer.jsm \
+	offlineAppCache.jsm \
 	$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows) 
