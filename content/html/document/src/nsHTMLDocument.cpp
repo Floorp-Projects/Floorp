@@ -111,7 +111,6 @@
 #include "nsJSUtils.h"
 #include "nsIDocumentCharsetInfo.h"
 #include "nsIDocumentEncoder.h" //for outputting selection
-#include "nsICharsetResolver.h"
 #include "nsICachingChannel.h"
 #include "nsIJSContextStack.h"
 #include "nsIContentViewer.h"
@@ -209,13 +208,10 @@ MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 static void
 ReportUseOfDeprecatedMethod(nsHTMLDocument* aDoc, const char* aWarning)
 {
-  nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
-                                  aWarning,
-                                  nsnull, 0,
-                                  nsnull,
-                                  EmptyString(), 0, 0,
-                                  nsIScriptError::warningFlag,
-                                  "DOM Events", aDoc);
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  "DOM Events", aDoc,
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  aWarning);
 }
 
 static nsresult
@@ -1917,13 +1913,12 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
       (mParser && !mParser->IsInsertionPointDefined())) {
     if (mExternalScriptsBeingEvaluated) {
       // Instead of implying a call to document.open(), ignore the call.
-      nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                      "DOM Events", this,
+                                      nsContentUtils::eDOM_PROPERTIES,
                                       "DocumentWriteIgnored",
                                       nsnull, 0,
-                                      mDocumentURI,
-                                      EmptyString(), 0, 0,
-                                      nsIScriptError::warningFlag,
-                                      "DOM Events", this);
+                                      mDocumentURI);
       return NS_OK;
     }
     mWriteState = eDocumentClosed;
@@ -1934,13 +1929,12 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
   if (!mParser) {
     if (mExternalScriptsBeingEvaluated) {
       // Instead of implying a call to document.open(), ignore the call.
-      nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                      "DOM Events", this,
+                                      nsContentUtils::eDOM_PROPERTIES,
                                       "DocumentWriteIgnored",
                                       nsnull, 0,
-                                      mDocumentURI,
-                                      EmptyString(), 0, 0,
-                                      nsIScriptError::warningFlag,
-                                      "DOM Events", this);
+                                      mDocumentURI);
       return NS_OK;
     }
     nsCOMPtr<nsISupports> ignored;

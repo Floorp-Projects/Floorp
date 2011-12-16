@@ -68,12 +68,12 @@
 typedef union jsdpun {
     struct {
 #if defined(IS_LITTLE_ENDIAN) && !defined(FPU_IS_ARM_FPA)
-        uint32 lo, hi;
+        uint32_t lo, hi;
 #else
-        uint32 hi, lo;
+        uint32_t hi, lo;
 #endif
     } s;
-    uint64   u64;
+    uint64_t u64;
     jsdouble d;
 } jsdpun;
 
@@ -117,7 +117,7 @@ JSDOUBLE_IS_NEG(jsdouble d)
     return (u.s.hi & JSDOUBLE_HI32_SIGNBIT) != 0;
 }
 
-static inline uint32
+static inline uint32_t
 JS_HASH_DOUBLE(jsdouble d)
 {
     jsdpun u;
@@ -190,7 +190,7 @@ extern JSFixedString *
 NumberToString(JSContext *cx, jsdouble d);
 
 extern JSFixedString *
-IndexToString(JSContext *cx, uint32 index);
+IndexToString(JSContext *cx, uint32_t index);
 
 /*
  * Usually a small amount of static storage is enough, but sometimes we need
@@ -225,7 +225,7 @@ NumberToCString(JSContext *cx, ToCStringBuf *cbuf, jsdouble d, jsint base = 10);
  * The largest positive integer such that all positive integers less than it
  * may be precisely represented using the IEEE-754 double-precision format.
  */
-const double DOUBLE_INTEGRAL_PRECISION_LIMIT = uint64(1) << 53;
+const double DOUBLE_INTEGRAL_PRECISION_LIMIT = uint64_t(1) << 53;
 
 /*
  * Compute the positive integer of the given base described immediately at the
@@ -270,7 +270,7 @@ ToNumber(JSContext *cx, Value *vp)
 }
 
 /*
- * Convert a value to an int32 or uint32, according to the ECMA rules for
+ * Convert a value to an int32_t or uint32_t, according to the ECMA rules for
  * ToInt32 and ToUint32. Return converted value in *out on success, !ok on
  * failure.
  */
@@ -297,7 +297,7 @@ ToUint32(JSContext *cx, const js::Value &v, uint32_t *out)
 }
 
 /*
- * Convert a value to a number, then to an int32 if it fits by rounding to
+ * Convert a value to a number, then to an int32_t if it fits by rounding to
  * nearest. Return converted value in *out on success, !ok on failure. As a
  * side effect, *vp will be mutated to match *out.
  */
@@ -313,7 +313,7 @@ NonstandardToInt32(JSContext *cx, const js::Value &v, int32_t *out)
 }
 
 /*
- * Convert a value to a number, then to a uint16 according to the ECMA rules
+ * Convert a value to a number, then to a uint16_t according to the ECMA rules
  * for ToUint16. Return converted value on success, !ok on failure. v must be a
  * copy of a rooted value.
  */
@@ -321,10 +321,10 @@ JS_ALWAYS_INLINE bool
 ValueToUint16(JSContext *cx, const js::Value &v, uint16_t *out)
 {
     if (v.isInt32()) {
-        *out = (uint16_t)v.toInt32();
+        *out = uint16_t(v.toInt32());
         return true;
     }
-    extern bool ValueToUint16Slow(JSContext *, const js::Value &, uint16_t *);
+    extern bool ValueToUint16Slow(JSContext *cx, const js::Value &v, uint16_t *out);
     return ValueToUint16Slow(cx, v, out);
 }
 
@@ -343,14 +343,14 @@ ValueToUint16(JSContext *cx, const js::Value &v, uint16_t *out)
  *  5.  If Result(4) is greater than or equal to 2^31, return Result(4)- 2^32,
  *  otherwise return Result(4).
  */
-static inline int32
+static inline int32_t
 js_DoubleToECMAInt32(jsdouble d)
 {
 #if defined(__i386__) || defined(__i386) || defined(__x86_64__) || \
     defined(_M_IX86) || defined(_M_X64)
     jsdpun du, duh, two32;
-    uint32 di_h, u_tmp, expon, shift_amount;
-    int32 mask32;
+    uint32_t di_h, u_tmp, expon, shift_amount;
+    int32_t mask32;
 
     /*
      * Algorithm Outline
@@ -418,7 +418,7 @@ js_DoubleToECMAInt32(jsdouble d)
         du.d -= two32.d;
     }
 
-    return int32(du.d);
+    return int32_t(du.d);
 #elif defined (__arm__) && defined (__GNUC__)
     int32_t i;
     uint32_t    tmp0;
@@ -541,13 +541,13 @@ js_DoubleToECMAInt32(jsdouble d)
         );
     return i;
 #else
-    int32 i;
+    int32_t i;
     jsdouble two32, two31;
 
     if (!JSDOUBLE_IS_FINITE(d))
         return 0;
 
-    i = (int32) d;
+    i = (int32_t) d;
     if ((jsdouble) i == d)
         return i;
 
@@ -555,11 +555,11 @@ js_DoubleToECMAInt32(jsdouble d)
     two31 = 2147483648.0;
     d = fmod(d, two32);
     d = (d >= 0) ? floor(d) : ceil(d) + two32;
-    return (int32) (d >= two31 ? d - two32 : d);
+    return (int32_t) (d >= two31 ? d - two32 : d);
 #endif
 }
 
-uint32
+uint32_t
 js_DoubleToECMAUint32(jsdouble d);
 
 /*
@@ -623,16 +623,16 @@ ValueFitsInInt32(const Value &v, int32_t *pi)
  * consider this possibility when using this method.
  */
 static JS_ALWAYS_INLINE bool
-IsDefinitelyIndex(const Value &v, uint32 *indexp)
+IsDefinitelyIndex(const Value &v, uint32_t *indexp)
 {
     if (v.isInt32() && v.toInt32() >= 0) {
         *indexp = v.toInt32();
         return true;
     }
 
-    int32 i;
+    int32_t i;
     if (v.isDouble() && JSDOUBLE_IS_INT32(v.toDouble(), &i) && i >= 0) {
-        *indexp = uint32(i);
+        *indexp = uint32_t(i);
         return true;
     }
 

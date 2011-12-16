@@ -69,6 +69,7 @@
 #include "mozStorageStatementData.h"
 #include "StorageBaseStatementInternal.h"
 #include "SQLCollations.h"
+#include "FileSystemModule.h"
 
 #include "prlog.h"
 #include "prprf.h"
@@ -157,6 +158,19 @@ sqlite3_T_blob(sqlite3_context *aCtx,
 }
 
 #include "variantToSQLiteT_impl.h"
+
+////////////////////////////////////////////////////////////////////////////////
+//// Modules
+
+struct Module
+{
+  const char* name;
+  int (*registerFunc)(sqlite3*, const char*);
+};
+
+Module gModules[] = {
+  { "filesystem", RegisterFileSystemModule }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Local Functions
@@ -1130,6 +1144,16 @@ Connection::GetLastInsertRowID(PRInt64 *_id)
 }
 
 NS_IMETHODIMP
+Connection::GetAffectedRows(PRInt32 *_rows)
+{
+  if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
+
+  *_rows = ::sqlite3_changes(mDBConn);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 Connection::GetLastError(PRInt32 *_error)
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
@@ -1510,6 +1534,25 @@ Connection::SetGrowthIncrement(PRInt32 aChunkSize, const nsACString &aDatabaseNa
                                &aChunkSize);
 #endif
   return NS_OK;
+}
+
+NS_IMETHODIMP
+Connection::EnableModule(const nsACString& aModuleName)
+{
+  if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
+
+  for (size_t i = 0; i < ArrayLength(gModules); i++) {
+    struct Module* m = &gModules[i];
+    if (aModuleName.Equals(m->name)) {
+      int srv = m->registerFunc(mDBConn, m->name);
+      if (srv != SQLITE_OK)
+        return convertResultCode(srv);
+
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 } // namespace storage

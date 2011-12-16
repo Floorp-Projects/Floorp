@@ -201,6 +201,7 @@ var BrowserApp = {
 
     NativeWindow.init();
     Downloads.init();
+    FormAssistant.init();
     OfflineApps.init();
     IndexedDB.init();
     XPInstallObserver.init();
@@ -209,6 +210,8 @@ var BrowserApp = {
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+    // Init FormHistory
+    Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
     let uri = "about:home";
     if ("arguments" in window && window.arguments[0])
@@ -262,6 +265,7 @@ var BrowserApp = {
 
   shutdown: function shutdown() {
     NativeWindow.uninit();
+    FormAssistant.uninit();
     OfflineApps.uninit();
     IndexedDB.uninit();
     ViewportHandler.uninit();
@@ -476,13 +480,13 @@ var BrowserApp = {
             pref.type = "bool";
             pref.value = pref.value == 0;
             break;
-          case "permissions.default.image":
-            pref.type = "bool";
-            pref.value = pref.value == 1;
-            break;
           case "browser.menu.showCharacterEncoding":
             pref.type = "bool";
             pref.value = pref.value == "true";
+            break;
+          case "font.size.inflation.minTwips":
+            pref.type = "string";
+            pref.value = pref.value.toString();
             break;
         }
 
@@ -516,13 +520,13 @@ var BrowserApp = {
         json.type = "int";
         json.value = (json.value ? 0 : 2);
         break;
-      case "permissions.default.image":
-        json.type = "int";
-        json.value = (json.value ? 1 : 2);
-        break;
       case "browser.menu.showCharacterEncoding":
         json.type = "string";
         json.value = (json.value ? "true" : "false");
+        break;
+      case "font.size.inflation.minTwips":
+        json.type = "int";
+        json.value = parseInt(json.value);
         break;
     }
 
@@ -1393,8 +1397,12 @@ Tab.prototype = {
 
     let browser = BrowserApp.getBrowserForWindow(contentWin);
     let uri = browser.currentURI.spec;
-    let documentURI = browser.contentDocument.documentURIObject.spec;
-    let contentType = browser.contentDocument.contentType;
+    let documentURI = "";
+    let contentType = "";
+    if (browser.contentDocument) {
+      documentURI = browser.contentDocument.documentURIObject.spec;
+      contentType = browser.contentDocument.contentType;
+    }
 
     let message = {
       gecko: {
@@ -2172,8 +2180,99 @@ var ErrorPageEventHandler = {
   }
 };
 
-
 var FormAssistant = {
+  // Used to keep track of the element that corresponds to the current
+  // autocomplete suggestions
+  _currentInputElement: null,
+
+  init: function() {
+    Services.obs.addObserver(this, "FormAssist:AutoComplete", false);
+    Services.obs.addObserver(this, "FormAssist:Closed", false);
+
+    BrowserApp.deck.addEventListener("compositionstart", this, false);
+    BrowserApp.deck.addEventListener("compositionupdate", this, false);
+  },
+
+  uninit: function() {
+    Services.obs.removeObserver(this, "FormAssist:AutoComplete");
+    Services.obs.removeObserver(this, "FormAssist:Closed");
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "FormAssist:AutoComplete":
+        if (!this._currentInputElement)
+          break;
+
+        // Remove focus from the textbox to avoid some bad IME interactions
+        this._currentInputElement.blur();
+        this._currentInputElement.value = aData;
+        break;
+
+      case "FormAssist:Closed":
+        this._currentInputElement = null;
+        break;
+    }
+  },
+
+  handleEvent: function(aEvent) {
+   switch (aEvent.type) {
+      case "compositionstart":
+      case "compositionupdate":
+        let currentElement = aEvent.target;
+        if (!this._isAutocomplete(currentElement))
+          break;
+
+        // Keep track of input element so we can fill it in if the user
+        // selects an autocomplete suggestion
+        this._currentInputElement = currentElement;
+        let suggestions = this._getAutocompleteSuggestions(aEvent.data, currentElement);
+
+        let rect = currentElement.getBoundingClientRect();
+        let zoom = BrowserApp.selectedTab.viewport.zoom;
+
+        sendMessageToJava({
+          gecko: {
+            type:  "FormAssist:AutoComplete",
+            suggestions: suggestions,
+            rect: [rect.left, rect.top, rect.width, rect.height], 
+            zoom: zoom
+          }
+        });
+    }
+  },
+
+  _isAutocomplete: function (aElement) {
+    if (!(aElement instanceof HTMLInputElement) ||
+        (aElement.getAttribute("type") == "password") ||
+        (aElement.hasAttribute("autocomplete") &&
+         aElement.getAttribute("autocomplete").toLowerCase() == "off"))
+      return false;
+
+    return true;
+  },
+
+  /** Retrieve the autocomplete list from the autocomplete service for an element */
+  _getAutocompleteSuggestions: function(aSearchString, aElement) {
+    let results = Cc["@mozilla.org/satchel/form-autocomplete;1"].
+                  getService(Ci.nsIFormAutoComplete).
+                  autoCompleteSearch(aElement.name || aElement.id, aSearchString, aElement, null);
+
+    let suggestions = [];
+    if (results.matchCount > 0) {
+      for (let i = 0; i < results.matchCount; i++) {
+        let value = results.getValueAt(i);
+        // Do not show the value if it is the current one in the input field
+        if (value == aSearchString)
+          continue;
+
+        suggestions.push(value);
+      }
+    }
+
+    return suggestions;
+  },
+
   show: function(aList, aElement) {
     let data = JSON.parse(sendMessageToJava({ gecko: aList }));
     let selected = data.button;

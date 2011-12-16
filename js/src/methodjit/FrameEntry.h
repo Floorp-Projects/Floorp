@@ -76,12 +76,12 @@ class FrameEntry
     }
 
 #if defined JS_NUNBOX32
-    uint32 getPayload() const {
+    uint32_t getPayload() const {
         JS_ASSERT(isConstant());
         return v_.s.payload.u32;
     }
 #elif defined JS_PUNBOX64
-    uint64 getPayload() const {
+    uint64_t getPayload() const {
         JS_ASSERT(isConstant());
         return v_.asBits & JSVAL_PAYLOAD_MASK;
     }
@@ -90,7 +90,7 @@ class FrameEntry
     /* For a constant double FrameEntry, truncate to an int32. */
     void convertConstantDoubleToInt32(JSContext *cx) {
         JS_ASSERT(isType(JSVAL_TYPE_DOUBLE) && isConstant());
-        int32 value;
+        int32_t value;
         ToInt32(cx, getValue(), &value);
 
         Value newValue = Int32Value(value);
@@ -168,7 +168,7 @@ class FrameEntry
         knownType = type_;
     }
 
-    void track(uint32 index) {
+    void track(uint32_t index) {
         copied = 0;
         copy = NULL;
         index_ = index;
@@ -184,7 +184,7 @@ class FrameEntry
         }
     }
 
-    uint32 trackerIndex() {
+    uint32_t trackerIndex() {
         return index_;
     }
 
@@ -263,19 +263,19 @@ class FrameEntry
     jsval_layout v_;
     RematInfo  type;
     RematInfo  data;
-    uint32     index_;
+    uint32_t   index_;
     FrameEntry *copy;
     bool       tracked;
     bool       temporary;
 
     /* Number of copies of this entry. */
-    uint32     copied;
+    uint32_t   copied;
 
     /*
      * Offset of the last loop in which this entry was written or had a loop
      * register assigned.
      */
-    uint32     lastLoop;
+    uint32_t   lastLoop;
 };
 
 } /* namespace mjit */

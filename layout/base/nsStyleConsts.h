@@ -388,7 +388,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_CURSOR_EW_RESIZE               35
 #define NS_STYLE_CURSOR_NONE                    36
 
-// See nsStyleDisplay
+// See nsStyleVisibility
 #define NS_STYLE_DIRECTION_LTR                  0
 #define NS_STYLE_DIRECTION_RTL                  1
 #define NS_STYLE_DIRECTION_INHERIT              2
@@ -596,7 +596,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 // See nsStyleMargin
 #define NS_STYLE_MARGIN_SIZE_AUTO               0
 
-// See nsStyleDisplay
+// See nsStyleVisibility
 #define NS_STYLE_POINTER_EVENTS_NONE            0
 #define NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED  1
 #define NS_STYLE_POINTER_EVENTS_VISIBLEFILL     2
@@ -689,7 +689,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_VERTICAL_ALIGN_BOTTOM               18
 #define NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE 19
 
-// See nsStyleDisplay
+// See nsStyleVisibility
 #define NS_STYLE_VISIBILITY_HIDDEN              0
 #define NS_STYLE_VISIBILITY_VISIBLE             1
 #define NS_STYLE_VISIBILITY_COLLAPSE            2

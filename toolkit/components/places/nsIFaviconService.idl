@@ -151,6 +151,8 @@ interface nsIFaviconService : nsISupports
    *        Until this time, we won't try to load it again.
    * @throws NS_ERROR_FAILURE
    *         Thrown if the favicon is overbloated and won't be saved to the db.
+   *
+   * @deprecated Use mozIAsyncFavicons::replaceFaviconData
    */
   void setFaviconData(in nsIURI aFaviconURI,
                       [const,array,size_is(aDataLen)] in octet aData,
@@ -174,6 +176,8 @@ interface nsIFaviconService : nsISupports
    *        Until this time, we won't try to load it again.
    * @throws NS_ERROR_FAILURE
    *         Thrown if the favicon is overbloated and won't be saved to the db.
+   *
+   * @deprecated Use mozIAsyncFavicons::replaceFaviconDataFromDataURL
    */
   void setFaviconDataFromDataURL(in nsIURI aFaviconURI,
                                  in AString aDataURL,

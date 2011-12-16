@@ -894,9 +894,14 @@ FormHistory.prototype = {
 
         this._dbFinalize();
 
-        // Close the connection, ignore 'already closed' error
-        // FIXME (bug 696483): we should reportError in here.
-        try { this.dbConnection.close(); } catch(e) {}
+        if (this.dbConnection !== undefined) {
+            try {
+                this.dbConnection.close();
+            } catch (e) {
+                Components.utils.reportError(e);
+            }
+        }
+
         this.dbFile.remove(false);
     }
 };

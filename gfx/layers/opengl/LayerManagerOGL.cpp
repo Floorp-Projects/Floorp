@@ -1169,6 +1169,8 @@ LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
     nsCAutoString msg;
     msg.Append("Framebuffer not complete -- error 0x");
     msg.AppendInt(result, 16);
+    msg.Append(", mFBOTextureTarget 0x");
+    msg.AppendInt(mFBOTextureTarget, 16);
     NS_RUNTIMEABORT(msg.get());
   }
 

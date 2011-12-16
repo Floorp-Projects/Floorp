@@ -267,7 +267,7 @@ if (typeof reportCompare === "function")
     data_file.write('\n')
 
     def dump(data, name, file):
-        file.write('const uint16 ' + name + '[] = {\n')
+        file.write('const uint16_t ' + name + '[] = {\n')
 
         line = pad = ' ' * 4
         lines = []

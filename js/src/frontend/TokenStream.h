@@ -236,8 +236,8 @@ TokenKindIsDecl(TokenKind tt)
 }
 
 struct TokenPtr {
-    uint32              index;          /* index of char in physical line */
-    uint32              lineno;         /* physical line number */
+    uint32_t            index;          /* index of char in physical line */
+    uint32_t            lineno;         /* physical line number */
 
     bool operator==(const TokenPtr& bptr) const {
         return index == bptr.index && lineno == bptr.lineno;
@@ -333,7 +333,7 @@ struct Token {
             JSAtom       *data;         /* auxiliary atom table entry */
             PropertyName *target;       /* main atom table entry */
         } xmlpi;
-        uint16          sharpNumber;    /* sharp variable number: #1# or #1= */
+        uint16_t        sharpNumber;    /* sharp variable number: #1# or #1= */
         jsdouble        number;         /* floating point number */
         RegExpFlag      reflags;        /* regexp flags, use tokenbuf to access
                                            regexp chars */
@@ -368,7 +368,7 @@ struct Token {
         u.reflags = flags;
     }
 
-    void setSharpNumber(uint16 sharpNum) {
+    void setSharpNumber(uint16_t sharpNum) {
         u.sharpNumber = sharpNum;
     }
 
@@ -409,7 +409,7 @@ struct Token {
         return u.reflags;
     }
 
-    uint16 sharpNumber() const {
+    uint16_t sharpNumber() const {
         JS_ASSERT(type == TOK_DEFSHARP || type == TOK_USESHARP);
         return u.sharpNumber;
     }
@@ -484,7 +484,7 @@ class TokenStream
      * caller should JS_ARENA_MARK before calling |init| and JS_ARENA_RELEASE
      * after calling |close|.
      */
-    TokenStream(JSContext *);
+    TokenStream(JSContext *, JSPrincipals *principals, JSPrincipals *originPrincipals);
 
     /*
      * Create a new token stream from an input buffer.
@@ -767,7 +767,7 @@ class TokenStream
         }
 #endif
 
-        static bool isRawEOLChar(int32 c) {
+        static bool isRawEOLChar(int32_t c) {
             return (c == '\n' || c == '\r' || c == LINE_SEPARATOR || c == PARA_SEPARATOR);
         }
 
@@ -782,14 +782,14 @@ class TokenStream
 
     TokenKind getTokenInternal();     /* doesn't check for pushback or error flag. */
 
-    int32 getChar();
-    int32 getCharIgnoreEOL();
-    void ungetChar(int32 c);
-    void ungetCharIgnoreEOL(int32 c);
+    int32_t getChar();
+    int32_t getCharIgnoreEOL();
+    void ungetChar(int32_t c);
+    void ungetCharIgnoreEOL(int32_t c);
     Token *newToken(ptrdiff_t adjust);
-    bool peekUnicodeEscape(int32 *c);
-    bool matchUnicodeEscapeIdStart(int32 *c);
-    bool matchUnicodeEscapeIdent(int32 *c);
+    bool peekUnicodeEscape(int32_t *c);
+    bool matchUnicodeEscapeIdStart(int32_t *c);
+    bool matchUnicodeEscapeIdent(int32_t *c);
     bool peekChars(intN n, jschar *cp);
     bool getAtLine();
     bool getAtSourceMappingURL();
@@ -798,21 +798,21 @@ class TokenStream
     bool getXMLTextOrTag(TokenKind *ttp, Token **tpp);
     bool getXMLMarkup(TokenKind *ttp, Token **tpp);
 
-    bool matchChar(int32 expect) {
-        int32 c = getChar();
+    bool matchChar(int32_t expect) {
+        int32_t c = getChar();
         if (c == expect)
             return true;
         ungetChar(c);
         return false;
     }
 
-    void consumeKnownChar(int32 expect) {
-        mozilla::DebugOnly<int32> c = getChar();
+    void consumeKnownChar(int32_t expect) {
+        mozilla::DebugOnly<int32_t> c = getChar();
         JS_ASSERT(c == expect);
     }
 
-    int32 peekChar() {
-        int32 c = getChar();
+    int32_t peekChar() {
+        int32_t c = getChar();
         ungetChar(c);
         return c;
     }
@@ -825,7 +825,6 @@ class TokenStream
     void updateLineInfoForEOL();
     void updateFlagsForEOL();
 
-    JSContext           * const cx;
     Token               tokens[ntokens];/* circular token buffer */
     uintN               cursor;         /* index of last parsed token */
     uintN               lookahead;      /* count of lookahead tokens */
@@ -838,11 +837,13 @@ class TokenStream
     jschar              *sourceMap;     /* source map's filename or null */
     void                *listenerTSData;/* listener data for this TokenStream */
     CharBuffer          tokenbuf;       /* current token string buffer */
-    int8                oneCharTokens[128];  /* table of one-char tokens */
+    int8_t              oneCharTokens[128];  /* table of one-char tokens */
     JSPackedBool        maybeEOL[256];       /* probabilistic EOL lookup table */
     JSPackedBool        maybeStrSpecial[256];/* speeds up string scanning */
     JSVersion           version;        /* (i.e. to identify keywords) */
     bool                xml;            /* see JSOPTION_XML */
+    JSContext           *const cx;
+    JSPrincipals        *const originPrincipals;
 };
 
 struct KeywordInfo {
