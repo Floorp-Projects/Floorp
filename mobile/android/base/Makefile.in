@@ -55,7 +55,6 @@ JAVAFILES = \
   AwesomeBarTabs.java \
   BrowserToolbar.java \
   ConfirmPreference.java \
-  db/BrowserContract.java \
   db/AndroidBrowserDB.java \
   db/BrowserDB.java \
   db/LocalBrowserDB.java \
@@ -115,6 +114,7 @@ PROCESSEDJAVAFILES = \
   LauncherShortcuts.java \
   NotificationHandler.java \
   Restarter.java \
+  db/BrowserContract.java \
   db/BrowserProvider.java \
   $(NULL)
 
