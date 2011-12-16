@@ -43,7 +43,15 @@ import android.net.Uri;
 public class BrowserContract {
     public static final String AUTHORITY = "@ANDROID_PACKAGE_NAME@.db.browser";
 
+    public static final String PASSWORDS_AUTHORITY = "@ANDROID_PACKAGE_NAME@.db.passwords";
+
+    public static final String DELETED_PASSWORDS_AUTHORITY = "@ANDROID_PACKAGE_NAME@.db.deleted-passwords";
+
     public static final Uri AUTHORITY_URI = Uri.parse("content://" + AUTHORITY);
+    
+    public static final Uri PASSWORDS_AUTHORITY_URI = Uri.parse("content://" + PASSWORDS_AUTHORITY);
+
+    public static final Uri DELETED_PASSWORDS_AUTHORITY_URI = Uri.parse("content://" + DELETED_PASSWORDS_AUTHORITY);
 
     public static final String DEFAULT_PROFILE = "default";
 
@@ -140,5 +148,53 @@ public class BrowserContract {
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "schema");
 
         public static final String VERSION = "version";
+    }
+
+    public static final class Passwords implements CommonColumns, SyncColumns {
+        private Passwords() {}
+
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(PASSWORDS_AUTHORITY_URI, "passwords");
+
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/passwords";
+
+        public static final String ID = "id";
+
+        public static final String HOSTNAME = "hostname";
+
+        public static final String HTTP_REALM = "httpRealm";
+
+        public static final String FORM_SUBMIT_URL = "formSubmitURL";
+
+        public static final String USERNAME_FIELD = "usernameField";
+
+        public static final String PASSWORD_FIELD = "passwordField";
+
+        public static final String ENCRYPTED_USERNAME = "encryptedUsername";
+
+        public static final String ENCRYPTED_PASSWORD = "encryptedPassword";
+
+        public static final String ENC_TYPE = "encType";
+
+        public static final String TIME_CREATED = "timeCreated";
+
+        public static final String TIME_LAST_USED = "timeLastUsed";
+
+        public static final String TIME_PASSWORD_CHANGED = "timePasswordChanged";
+
+        public static final String TIMES_USED = "timesUsed";
+    }
+
+    public static final class DeletedPasswords implements CommonColumns, SyncColumns {
+        private DeletedPasswords() {}
+
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(DELETED_PASSWORDS_AUTHORITY_URI, "deleted-passwords");
+
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/deleted-passwords";
+
+        public static final String ID = "id";
+
+        public static final String GUID = "guid";
+
+        public static final String TIME_DELETED = "timeDeleted";
     }
 }
