@@ -60,6 +60,14 @@ bool InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Va
     return ok;
 }
 
+bool ReportOverRecursed(JSContext *cx)
+{
+    js_ReportOverRecursed(cx);
+
+    // Cause an InternalError.
+    return false;
+}
+
 } // namespace ion
 } // namespace js
 

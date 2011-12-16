@@ -85,7 +85,7 @@ CodeGeneratorX86Shared::generatePrologue()
     // Note that this automatically sets MacroAssembler::framePushed().
     masm.reserveStack(frameSize());
 
-    // Allocate returnLabel_ on the heap, so we don't run it's destructor and
+    // Allocate returnLabel_ on the heap, so we don't run its destructor and
     // assert-not-bound in debug mode on compilation failure.
     returnLabel_ = new HeapLabel();
 
