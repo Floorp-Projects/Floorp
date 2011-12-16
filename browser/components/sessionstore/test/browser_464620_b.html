@@ -1,40 +1,44 @@
 <!-- Testcase originally by <moz_bug_r_a4@yahoo.com> -->
 
-<title>Test for bug 464620 (injection on input)</title>
+<title>Test for bug 464620 (injection on DOM node insertion)</title>
 
+<iframe></iframe>
 <iframe></iframe>
 <iframe onload="setup()"></iframe>
 
 <script>
   var targetUrl = "http://mochi.test:8888/browser/" +
-    "browser/components/sessionstore/test/browser/browser_464620_xd.html";
+    "browser/components/sessionstore/test/browser_464620_xd.html";
   var firstPass;
   
   function setup() {
     if (firstPass !== undefined)
       return;
-    firstPass = frames[1].location.href == "about:blank";
+    firstPass = frames[2].location.href == "about:blank";
     if (firstPass) {
-      frames[0].location = 'data:text/html,<body onload="if (parent.firstPass) parent.step();"><input id="x" oninput="parent.xss()">XXX</body>';
+      frames[0].location = 'data:text/html,<body onload="parent.step()">a</body>';
+      frames[1].location = 'data:text/html,<body onload="document.designMode=\'on\';">XXX</body>';
     }
-    frames[1].location = targetUrl;
+    frames[2].location = targetUrl;
   }
   
   function step() {
-    var x = frames[0].document.getElementById("x");
-    if (x.value == "")
-      x.value = "ready";
-    x.style.display = "none";
     frames[0].document.designMode = "on";
+    if (firstPass)
+      return;
+    
+    var body = frames[0].document.body;
+    body.addEventListener("DOMNodeInserted", function() {
+      body.removeEventListener("DOMNodeInserted", arguments.callee, true);
+      xss();
+    }, true);
   }
   
   function xss() {
-    step();
-    
     var documentInjected = false;
-    document.getElementsByTagName("iframe")[0].onload =
+    document.getElementsByTagName("iframe")[1].onload =
       function() { documentInjected = true; };
-    frames[0].location = targetUrl;
+    frames[1].location = targetUrl;
     
     for (var c = 0; !documentInjected && c < 20; c++) {
       var r = new XMLHttpRequest();
@@ -45,7 +49,7 @@
     document.getElementById("state").textContent = "done";
     
     var event = document.createEvent("MessageEvent");
-    event.initMessageEvent("464620_a", true, false, "done", location.href, "", window);
+    event.initMessageEvent("464620_b", true, false, "done", location.href, "", window);
     document.dispatchEvent(event);
   }
 </script>

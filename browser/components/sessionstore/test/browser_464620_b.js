@@ -35,37 +35,46 @@
  * ***** END LICENSE BLOCK ***** */
 
 function test() {
-  /** Test for Bug 461743 **/
-
+  /** Test for Bug 464620 (injection on DOM node insertion) **/
+  
   waitForExplicitFinish();
-
+  
   let testURL = "http://mochi.test:8888/browser/" +
-    "browser/components/sessionstore/test/browser/browser_461743_sample.html";
-
-  let frameCount = 0;
+    "browser/components/sessionstore/test/browser_464620_b.html";
+  
+  var frameCount = 0;
   let tab = gBrowser.addTab(testURL);
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    // Wait for all frames to load completely.
-    if (frameCount++ < 2)
+    // wait for all frames to load completely
+    if (frameCount++ < 6)
       return;
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-    let tab2 = gBrowser.duplicateTab(tab);
-    tab2.linkedBrowser.addEventListener("461743", function(aEvent) {
-      tab2.linkedBrowser.removeEventListener("461743", arguments.callee, true);
-      is(aEvent.data, "done", "XSS injection was attempted");
-
-      executeSoon(function() {
-        let iframes = tab2.linkedBrowser.contentWindow.frames;
-        let innerHTML = iframes[1].document.body.innerHTML;
-        isnot(innerHTML, Components.utils.reportError.toString(),
-              "chrome access denied!");
-
-        // Clean up.
-        gBrowser.removeTab(tab2);
-        gBrowser.removeTab(tab);
-
-        finish();
-      });
-    }, true, true);
+    this.removeEventListener("load", arguments.callee, true);
+    
+    executeSoon(function() {
+      frameCount = 0;
+      let tab2 = gBrowser.duplicateTab(tab);
+      tab2.linkedBrowser.addEventListener("464620_b", function(aEvent) {
+        tab2.linkedBrowser.removeEventListener("464620_b", arguments.callee, true);
+        is(aEvent.data, "done", "XSS injection was attempted");
+        
+        // let form restoration complete and take into account the
+        // setTimeout(..., 0) in sss_restoreDocument_proxy
+        executeSoon(function() {
+          setTimeout(function() {
+            let win = tab2.linkedBrowser.contentWindow;
+            isnot(win.frames[1].document.location, testURL,
+                  "cross domain document was loaded");
+            ok(!/XXX/.test(win.frames[1].document.body.innerHTML),
+               "no content was injected");
+            
+            // clean up
+            gBrowser.removeTab(tab2);
+            gBrowser.removeTab(tab);
+            
+            finish();
+          }, 0);
+        });
+      }, true, true);
+    });
   }, true);
 }

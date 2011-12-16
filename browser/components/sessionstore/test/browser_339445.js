@@ -35,46 +35,32 @@
  * ***** END LICENSE BLOCK ***** */
 
 function test() {
-  /** Test for Bug 464620 (injection on DOM node insertion) **/
+  /** Test for Bug 339445 **/
   
   waitForExplicitFinish();
   
   let testURL = "http://mochi.test:8888/browser/" +
-    "browser/components/sessionstore/test/browser/browser_464620_b.html";
+    "browser/components/sessionstore/test/browser_339445_sample.html";
   
-  var frameCount = 0;
   let tab = gBrowser.addTab(testURL);
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    // wait for all frames to load completely
-    if (frameCount++ < 6)
-      return;
     this.removeEventListener("load", arguments.callee, true);
+    let doc = tab.linkedBrowser.contentDocument;
+    is(doc.getElementById("storageTestItem").textContent, "PENDING",
+       "sessionStorage value has been set");
     
-    executeSoon(function() {
-      frameCount = 0;
-      let tab2 = gBrowser.duplicateTab(tab);
-      tab2.linkedBrowser.addEventListener("464620_b", function(aEvent) {
-        tab2.linkedBrowser.removeEventListener("464620_b", arguments.callee, true);
-        is(aEvent.data, "done", "XSS injection was attempted");
-        
-        // let form restoration complete and take into account the
-        // setTimeout(..., 0) in sss_restoreDocument_proxy
-        executeSoon(function() {
-          setTimeout(function() {
-            let win = tab2.linkedBrowser.contentWindow;
-            isnot(win.frames[1].document.location, testURL,
-                  "cross domain document was loaded");
-            ok(!/XXX/.test(win.frames[1].document.body.innerHTML),
-               "no content was injected");
-            
-            // clean up
-            gBrowser.removeTab(tab2);
-            gBrowser.removeTab(tab);
-            
-            finish();
-          }, 0);
-        });
-      }, true, true);
-    });
+    let tab2 = gBrowser.duplicateTab(tab);
+    tab2.linkedBrowser.addEventListener("load", function(aEvent) {
+      this.removeEventListener("load", arguments.callee, true);
+      let doc2 = tab2.linkedBrowser.contentDocument;
+      is(doc2.getElementById("storageTestItem").textContent, "SUCCESS",
+         "sessionStorage value has been duplicated");
+      
+      // clean up
+      gBrowser.removeTab(tab2);
+      gBrowser.removeTab(tab);
+      
+      finish();
+    }, true);
   }, true);
 }

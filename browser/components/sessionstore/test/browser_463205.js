@@ -98,7 +98,7 @@ function test() {
 
     mainURL = testURL;
     frame1URL = "http://mochi.test:8888/browser/" +
-      "browser/components/sessionstore/test/browser/browser_463205_helper.html";
+      "browser/components/sessionstore/test/browser_463205_helper.html";
     frame2URL = rootDir + "browser_463205_helper.html";
     frame3URL = "data:text/html,mark2";
 

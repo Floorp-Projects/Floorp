@@ -39,7 +39,7 @@ function test() {
   
   waitForExplicitFinish();
   const baseURL = "http://mochi.test:8888/browser/" +
-    "browser/components/sessionstore/test/browser/browser_447951_sample.html#";
+    "browser/components/sessionstore/test/browser_447951_sample.html#";
     
   let tab = gBrowser.addTab();
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
