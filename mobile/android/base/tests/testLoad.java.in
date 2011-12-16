@@ -1,0 +1,96 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import com.jayway.android.robotium.solo.Solo;	
+import @ANDROID_PACKAGE_NAME@.*;
+
+import android.app.Activity;
+import android.test.ActivityInstrumentationTestCase2;
+import android.test.PerformanceTestCase;
+import android.util.Log;
+import android.widget.Button;
+import android.content.Intent;
+import java.util.HashMap;
+
+@SuppressWarnings("unused")
+public class testLoad extends ActivityInstrumentationTestCase2 {
+
+  @SuppressWarnings("unchecked")
+  public testLoad(Class activityClass) {
+    super(activityClass);
+    // TODO Auto-generated constructor stub
+  }
+  private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";	
+  private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
+  private Solo solo;    
+  private Activity activity;
+  private Driver driver;
+  private Actions actions;
+  private static Class<?> launcherActivityClass;
+
+  static{
+    try{
+      launcherActivityClass = Class.forName(LAUNCH_ACTIVITY_FULL_CLASSNAME);	
+    } catch (ClassNotFoundException e){
+      throw new RuntimeException(e);	
+    }	
+  }	
+
+  @SuppressWarnings("unchecked")	
+  public testLoad() throws ClassNotFoundException {
+    super(TARGET_PACKAGE_ID, launcherActivityClass);	
+  }	
+  
+  @Override 
+  protected void setUp() throws Exception
+  {
+    //Load config file
+    String configFile = FennecNativeDriver.getFile("/mnt/sdcard/robotium.config");
+    HashMap config = FennecNativeDriver.convertTextToTable(configFile);
+    
+    //Create the intent to be used with all the important arguments
+    Intent i = new Intent(Intent.ACTION_MAIN);
+    String argsList = "-no-remote -profile " + (String)config.get("profile");
+    i.putExtra("args", argsList);
+
+    //Start the activity
+    setActivityIntent(i);
+    activity = getActivity();
+
+    //Set up Robotium.solo and Driver objects
+    solo = new Solo(getInstrumentation(), getActivity());	
+    driver = new FennecNativeDriver(activity, solo);
+    actions = new FennecNativeActions(activity, solo, getInstrumentation());
+    driver.setLogFile((String)config.get("logfile"));
+  } 	
+
+  public void testLoad(){
+    // TODO: find a better way to not hardcode this url
+    String url = "http://mochi.test:8888/tests/robocop/robocop.html";
+    Element awesomebar = driver.findElement("awesome_bar");
+    awesomebar.click();
+
+    Element urlbar = driver.findElement("awesomebar_text");
+    actions.sendKeys(url);
+    driver.is(url, urlbar.getText(),"Awesomebar URL Correct");
+
+    //Select top item in the list.
+    actions.sendSpecialKey(Actions.SpecialKey.DOWN);
+    actions.sendKeys("\n");    
+    actions.waitForGeckoEvent("DOMContentLoaded");
+
+    awesomebar.click();
+    driver.is(url, urlbar.getText(), "Awesomebar URL is still correct");
+  }
+
+  @Override	
+  public void tearDown() throws Exception {	
+    try	{
+      solo.finalize();	
+    }catch (Throwable e){	
+      e.printStackTrace();	
+    }	
+    getActivity().finish();	
+    super.tearDown();	
+  }
+}
