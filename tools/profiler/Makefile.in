@@ -104,6 +104,7 @@ ifeq ($(OS_TARGET),WINNT)
 DEFINES += -DMOZ_ENABLE_PROFILER_SPS
 
 CPPSRCS += \
+  shared-libraries-win32.cc \
   platform-win32.cc \
   TableTicker.cpp \
   $(NULL)
