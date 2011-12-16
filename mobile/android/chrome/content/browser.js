@@ -1000,33 +1000,62 @@ function nsBrowserAccess() {
 }
 
 nsBrowserAccess.prototype = {
-  openURI: function browser_openURI(aURI, aOpener, aWhere, aContext) {
-    let isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow]),
 
-    dump("nsBrowserAccess::openURI");
-    let browser = BrowserApp.selectedBrowser;
-    if (!browser || isExternal) {
-      let tab = BrowserApp.addTab("about:blank");
-      BrowserApp.selectTab(tab);
-      browser = tab.browser;
+  _getBrowser: function _getBrowser(aURI, aOpener, aWhere, aContext) {
+    let isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+    if (isExternal && aURI && aURI.schemeIs("chrome"))
+      return null;
+
+    let loadflags = isExternal ?
+                      Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
+                      Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
+      switch (aContext) {
+        case Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL:
+          aWhere = Services.prefs.getIntPref("browser.link.open_external");
+          break;
+        default: // OPEN_NEW or an illegal value
+          aWhere = Services.prefs.getIntPref("browser.link.open_newwindow");
+      }
     }
 
-    // Why does returning the browser.contentWindow not work here?
+    let browser;
+    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW || aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
+      let tab = BrowserApp.addTab("about:blank", { selected: true });
+      browser = tab.browser;
+    } else { // OPEN_CURRENTWINDOW and illegal values
+      browser = BrowserApp.selectedBrowser;
+    }
+
     Services.io.offline = false;
-    BrowserApp.loadURI(aURI.spec, browser);
-    return null;
+    try {
+      let referrer;
+      if (aURI && browser) {
+        if (aOpener) {
+          let location = aOpener.location;
+          referrer = Services.io.newURI(location, null, null);
+        }
+        browser.loadURIWithFlags(aURI.spec, loadflags, referrer, null, null);
+      }
+    } catch(e) { }
+
+    return browser;
+  },
+
+  openURI: function browser_openURI(aURI, aOpener, aWhere, aContext) {
+    let browser = this._getBrowser(aURI, aOpener, aWhere, aContext);
+    return browser ? browser.QueryInterface(Ci.nsIFrameLoaderOwner) : null;
   },
 
   openURIInFrame: function browser_openURIInFrame(aURI, aOpener, aWhere, aContext) {
-    dump("nsBrowserAccess::openURIInFrame");
-    return null;
+    let browser = this._getBrowser(aURI, aOpener, aWhere, aContext);
+    return browser ? browser.QueryInterface(Ci.nsIFrameLoaderOwner) : null;
   },
 
   isTabContentWindow: function(aWindow) {
     return BrowserApp.getBrowserForWindow(aWindow) != null;
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow])
+  }
 };
 
 
