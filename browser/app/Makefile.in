@@ -203,9 +203,9 @@ endif
 
 libs repackage:: $(PROGRAM)
 	$(MKDIR) -p $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/MacOS
-	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(MOZ_MACBUNDLE_NAME) --exclude English.lproj
+	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(MOZ_MACBUNDLE_NAME) --exclude English.lproj
 	$(MKDIR) -p $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Resources/$(AB).lproj
-	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Resources/$(AB).lproj
+	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Resources/$(AB).lproj
 	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%MAC_APP_NAME%/$(MAC_APP_NAME)/" -e "s/%LOWER_MAC_APP_NAME%/$(LOWER_MAC_APP_NAME)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Info.plist
 	sed -e "s/%MAC_APP_NAME%/$(MAC_APP_NAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Resources/$(AB).lproj/InfoPlist.strings
 	rsync -a $(DIST)/bin/ $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/$(APPFILES)
@@ -220,8 +220,6 @@ endif
 	cp -RL $(DIST)/branding/firefox.icns $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Resources/firefox.icns
 	cp -RL $(DIST)/branding/document.icns $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Resources/document.icns
 	printf APPLMOZB > $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/PkgInfo
-#       remove CVS dirs from packaged app
-	find $(DIST)/$(MOZ_MACBUNDLE_NAME) -type d -name "CVS" -prune -exec rm -rf {} \;
 
 else
 ifdef LIBXUL_SDK
