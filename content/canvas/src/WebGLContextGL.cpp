@@ -5139,7 +5139,7 @@ WebGLContext::TexSubImage2D_dom(WebGLenum target, WebGLint level,
                               format, type,
                               isurf->Data(), byteLength,
                               -1,
-                              srcFormat, true);
+                              srcFormat, mPixelStorePremultiplyAlpha);
 }
 
 bool
