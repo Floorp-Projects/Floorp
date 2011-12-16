@@ -59,7 +59,7 @@ struct ObjectStoreInfo;
 
 class IDBFactory : public nsIIDBFactory
 {
-  typedef nsTArray<nsRefPtr<ObjectStoreInfo> > ObjectStoreInfoArray;
+  typedef nsTArray<nsAutoPtr<ObjectStoreInfo> > ObjectStoreInfoArray;
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIIDBFACTORY
@@ -90,9 +90,9 @@ public:
                           ObjectStoreInfoArray& aObjectStores);
 
   static nsresult
-  SetDatabaseMetadata(DatabaseInfo* aDatabaseInfo,
-                      PRUint64 aVersion,
-                      ObjectStoreInfoArray& aObjectStores);
+  UpdateDatabaseMetadata(DatabaseInfo* aDatabaseInfo,
+                         PRUint64 aVersion,
+                         ObjectStoreInfoArray& aObjectStores);
 
 private:
   IDBFactory();

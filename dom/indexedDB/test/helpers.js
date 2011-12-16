@@ -47,11 +47,6 @@ function continueToNextStep()
   });
 }
 
-function continueToNextStepSync()
-{
-  testGenerator.next();
-}
-
 function errorHandler(event)
 {
   ok(false, "indexedDB error, code " + event.target.errorCode);
@@ -80,7 +75,6 @@ ExpectError.prototype = {
     is(event.type, "error", "Got an error event");
     is(this._code, event.target.errorCode, "Expected error was thrown.");
     event.preventDefault();
-    event.stopPropagation();
     grabEventAndContinueHandler(event);
   }
 };
