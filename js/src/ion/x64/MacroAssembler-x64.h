@@ -238,6 +238,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         movq(rhs, ScratchReg);
         cmpq(lhs, ScratchReg);
     }
+    void cmpPtr(const Register &lhs, const Register &rhs) {
+        return cmpq(lhs, rhs);
+    }
     void testPtr(const Register &lhs, const Register &rhs) {
         testq(lhs, rhs);
     }
@@ -272,6 +275,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmpPtr(lhs, ptr);
         j(cond, label);
     }
+    void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
+        cmpPtr(lhs, rhs);
+        j(cond, label);
+    }
 
     void movePtr(ImmWord imm, Register dest) {
         movq(imm, dest);
@@ -281,6 +288,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void loadPtr(const Address &address, Register dest) {
         movq(Operand(address), dest);
+    }
+    void loadPtr(ImmWord imm, Register dest) {
+        movq(imm, ScratchReg);
+        movq(Operand(ScratchReg, 0x0), dest);
     }
 
     void setStackArg(const Register &reg, uint32 arg) {

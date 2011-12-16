@@ -214,6 +214,7 @@ struct ThreadData {
     // aligned to an Ion exit frame.
     uint8_t             *ionTop;
     JSContext           *ionJSContext;
+    jsuword             ionStackLimit;
 
     // This points to the most recent Ion activation running on the thread.
     ion::IonActivation  *ionActivation;
