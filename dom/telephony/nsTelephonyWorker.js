@@ -233,6 +233,16 @@ nsTelephonyWorker.prototype = {
     debug("Hanging up call no. " + callIndex);
     this.worker.postMessage({type: "hangUp", callIndex: callIndex});
   },
+  
+  startTone: function startTone(dtmfChar) {
+    debug("Sending Tone for " + dtmfChar);
+    this.worker.postMessage({type: "startTone", dtmfChar: dtmfChar});
+  },
+
+  stopTone: function stopTone() {
+    debug("Stopping Tone");
+    this.worker.postMessage({type: "stopTone"});
+  },
 
   answerCall: function answerCall() {
     this.worker.postMessage({type: "answerCall"});
