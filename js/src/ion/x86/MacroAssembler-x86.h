@@ -305,6 +305,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(lhs, ptr);
         j(cond, label);
     }
+    void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
+        cmpl(lhs, rhs);
+        j(cond, label);
+    }
 
     void movePtr(ImmWord imm, Register dest) {
         movl(Imm32(imm.value), dest);
@@ -314,6 +318,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void loadPtr(const Address &address, Register dest) {
         movl(Operand(address), dest);
+    }
+    void loadPtr(ImmWord imm, Register dest) {
+        movl(Operand(imm.asPointer()), dest);
     }
 
     void setStackArg(const Register &reg, uint32 arg) {

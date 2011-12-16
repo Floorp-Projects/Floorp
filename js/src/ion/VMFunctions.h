@@ -126,9 +126,28 @@ template <> struct OutParamToDataType<Value *> { static const DataType result = 
                    returnType())                                                        \
     { }
 
-
 template <typename Fun>
 struct FunctionInfo {
+};
+
+// VMFunction wrapper with no explicit arguments.
+template <class R>
+struct FunctionInfo<R (*)(JSContext *)> : public VMFunction {
+    typedef R (*pf)(JSContext *);
+
+    static inline DataType returnType() {
+        return TypeToDataType<R>::result;
+    }
+    static inline DataType outParam() {
+        return Type_Void;
+    }
+    static inline size_t explicitArgs() {
+        return 0;
+    }
+    FunctionInfo(pf fun)
+      : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(), outParam(),
+                   returnType())
+    { }
 };
 
 // Specialize the class for each number of argument used by VMFunction.  Keep it
@@ -152,6 +171,7 @@ struct FunctionInfo<R (*)(JSContext *, A1, A2, A3, A4)> : public VMFunction {
 };
 
 bool InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval);
+bool ReportOverRecursed(JSContext *cx);
 
 } // namespace ion
 } // namespace js

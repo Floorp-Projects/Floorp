@@ -197,8 +197,8 @@ uint32 ReflowTypeInfo(uint32 bailoutResult);
 // frames. The return value is how much stack to adjust before returning.
 // uint32 HandleException(JSContext *cx);
 
-}
-}
+} // namespace ion
+} // namespace js
 
 #endif // jsion_bailouts_h__
 
