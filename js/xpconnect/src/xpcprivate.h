@@ -3965,7 +3965,7 @@ private:
     nsCString mCategory;
     PRUint64 mOuterWindowID;
     PRUint64 mInnerWindowID;
-    PRUint64 mTimeStamp;
+    PRInt64 mTimeStamp;
 };
 
 /***************************************************************************/
