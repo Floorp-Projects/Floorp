@@ -78,10 +78,10 @@ public:
   bool                  mDispatchChromeOnly;
 };
 
-class nsLoadBlockingPLDOMEvent : public nsAsyncDOMEvent {
+class nsLoadBlockingAsyncDOMEvent : public nsAsyncDOMEvent {
 public:
-  nsLoadBlockingPLDOMEvent(nsINode *aEventNode, const nsAString& aEventType,
-                           bool aBubbles, bool aDispatchChromeOnly)
+  nsLoadBlockingAsyncDOMEvent(nsINode *aEventNode, const nsAString& aEventType,
+                              bool aBubbles, bool aDispatchChromeOnly)
     : nsAsyncDOMEvent(aEventNode, aEventType, aBubbles, aDispatchChromeOnly),
       mBlockedDoc(aEventNode->OwnerDoc())
   {
@@ -90,7 +90,7 @@ public:
     }
   }
 
-  nsLoadBlockingPLDOMEvent(nsINode *aEventNode, nsIDOMEvent *aEvent)
+  nsLoadBlockingAsyncDOMEvent(nsINode *aEventNode, nsIDOMEvent *aEvent)
     : nsAsyncDOMEvent(aEventNode, aEvent),
       mBlockedDoc(aEventNode->OwnerDoc())
   {
@@ -99,7 +99,7 @@ public:
     }
   }
   
-  ~nsLoadBlockingPLDOMEvent();
+  ~nsLoadBlockingAsyncDOMEvent();
 
   nsCOMPtr<nsIDocument> mBlockedDoc;
 };
