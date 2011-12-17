@@ -541,6 +541,8 @@ struct JSScript : public js::gc::Cell {
 	
 #ifdef JS_ION
     js::ion::IonScript *ion;          /* Information attached by Ion */
+#elif JS_BITS_PER_WORD == 32
+    void *padding_;
 #endif
 
   private:
@@ -828,7 +830,7 @@ struct JSScript : public js::gc::Cell {
     static inline void writeBarrierPost(JSScript *script, void *addr);
 };
 
-/* If this fails, padding_ can be removed. */
+/* If this fails, padding_ can be removed or added. */
 JS_STATIC_ASSERT(sizeof(JSScript) % js::gc::Cell::CellSize == 0);
 
 #define SHARP_NSLOTS            2       /* [#array, #depth] slots if the script
