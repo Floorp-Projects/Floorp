@@ -38,9 +38,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * PR assertion checker.
- */
+/* Various JS utility functions. */
+
+#include "mozilla/Attributes.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "jstypes.h"

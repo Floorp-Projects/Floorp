@@ -3866,13 +3866,6 @@ AC_CACHE_CHECK(for __attribute__((warn_unused_result)),
                                ac_cv_attribute_warn_unused=yes,
                                ac_cv_attribute_warn_unused=no)])
 
-AC_CACHE_CHECK(for __attribute__((noreturn)),
-               ac_cv_attribute_noreturn,
-               [AC_TRY_COMPILE([void f(void) __attribute__((noreturn));],
-                               [],
-                               ac_cv_attribute_noreturn=yes,
-                               ac_cv_attribute_noreturn=no)])
-
 dnl End of C++ language/feature checks
 AC_LANG_C
 
@@ -3926,12 +3919,6 @@ if test "$ac_cv_attribute_warn_unused" = yes ; then
   AC_DEFINE(NS_WARN_UNUSED_RESULT, [__attribute__((warn_unused_result))])
 else
   AC_DEFINE(NS_WARN_UNUSED_RESULT,)
-fi
-
-if test "$ac_cv_attribute_noreturn" = yes ; then
-  AC_DEFINE(NS_NORETURN, [__attribute__((noreturn))])
-else
-  AC_DEFINE(NS_NORETURN,)
 fi
 
 dnl We can't run TRY_COMPILE tests on Windows, so hard-code some
