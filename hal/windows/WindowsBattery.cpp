@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "Hal.h"
+#include "HalImpl.h"
 #include "nsITimer.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/battery/Constants.h"

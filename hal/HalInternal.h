@@ -21,7 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Chris Jones <jones.chris.g@gmail.com>
+ *   Mounir Lamouri <mounir.lamouri@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,14 +37,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_HalImpl_h
-#define mozilla_HalImpl_h
+#ifndef mozilla_HalInternal_h
+#define mozilla_HalInternal_h 1
 
-#define MOZ_HAL_NAMESPACE hal_impl
-#undef mozilla_Hal_h
-#undef mozilla_HalInternal_h
-#include "Hal.h"
-#include "HalInternal.h"
-#undef MOZ_HAL_NAMESPACE
+/*
+ * This file is included by HalImpl.h and HalSandbox.h with a mechanism similar
+ * to Hal.h. That means those headers set MOZ_HAL_NAMESPACE to specify in which
+ * namespace the internal functions should appear.
+ *
+ * The difference between Hal.h and HalInternal.h is that methods declared in
+ * HalInternal.h don't appear in the hal namespace. That also means this file
+ * should not be included except by HalInternal.h and HalSandbox.h.
+ */
 
-#endif // mozilla_HalImpl_h
+#ifndef MOZ_HAL_NAMESPACE
+# error "You shouldn't directly include HalInternal.h!"
+#endif
+
+namespace mozilla {
+namespace MOZ_HAL_NAMESPACE {
+
+/**
+ * Enables battery notifications from the backend.
+ */
+void EnableBatteryNotifications();
+
+/**
+ * Disables battery notifications from the backend.
+ */
+void DisableBatteryNotifications();
+
+} // namespace MOZ_HAL_NAMESPACE
+} // namespace mozilla
+
+#endif  // mozilla_HalInternal_h
