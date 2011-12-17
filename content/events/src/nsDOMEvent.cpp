@@ -63,6 +63,8 @@
 #include "mozilla/Preferences.h"
 #include "nsJSUtils.h"
 #include "DictionaryHelpers.h"
+#include "nsLayoutUtils.h"
+#include "nsIScrollableFrame.h"
 
 using namespace mozilla;
 
@@ -110,6 +112,12 @@ static const char* const sEventNames[] = {
   "MozTouchDown",
   "MozTouchMove",
   "MozTouchUp",
+  "touchstart",
+  "touchend",
+  "touchmove",
+  "touchcancel",
+  "touchenter",
+  "touchleave",
   "MozScrolledAreaChanged",
   "transitionend",
   "animationstart",
@@ -902,6 +910,13 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       isInputEvent = true;
       break;
     }
+    case NS_TOUCH_EVENT:
+    {
+      newEvent = new nsTouchEvent(false, msg, nsnull);
+      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
+      isInputEvent = true;
+      break;
+    }
     default:
     {
       NS_WARNING("Unknown event type!!!");
@@ -1165,6 +1180,92 @@ nsDOMEvent::Shutdown()
   }
 }
 
+nsIntPoint
+nsDOMEvent::GetScreenCoords(nsPresContext* aPresContext,
+                            nsEvent* aEvent,
+                            nsIntPoint aPoint)
+{
+  if (!aEvent || 
+       (aEvent->eventStructType != NS_MOUSE_EVENT &&
+        aEvent->eventStructType != NS_POPUP_EVENT &&
+        aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
+        aEvent->eventStructType != NS_MOZTOUCH_EVENT &&
+        aEvent->eventStructType != NS_TOUCH_EVENT &&
+        aEvent->eventStructType != NS_DRAG_EVENT &&
+        aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT)) {
+    return nsIntPoint(0, 0);
+  }
+
+  nsGUIEvent* guiEvent = static_cast<nsGUIEvent*>(aEvent);
+  if (!guiEvent->widget) {
+    return aPoint;
+  }
+
+  nsIntPoint offset = aPoint + guiEvent->widget->WidgetToScreenOffset();
+  nscoord factor = aPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel();
+  return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(offset.x * factor),
+                    nsPresContext::AppUnitsToIntCSSPixels(offset.y * factor));
+}
+
+//static
+nsIntPoint
+nsDOMEvent::GetPageCoords(nsPresContext* aPresContext,
+                          nsEvent* aEvent,
+                          nsIntPoint aPoint,
+                          nsIntPoint aDefaultPoint)
+{
+  nsIntPoint pagePoint = nsDOMEvent::GetClientCoords(aPresContext,
+                                                     aEvent,
+                                                     aPoint,
+                                                     aDefaultPoint);
+
+  // If there is some scrolling, add scroll info to client point.
+  if (aPresContext && aPresContext->GetPresShell()) {
+    nsIPresShell* shell = aPresContext->GetPresShell();
+    nsIScrollableFrame* scrollframe = shell->GetRootScrollFrameAsScrollable();
+    if (scrollframe) {
+      nsPoint pt = scrollframe->GetScrollPosition();
+      pagePoint += nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
+                              nsPresContext::AppUnitsToIntCSSPixels(pt.y));
+    }
+  }
+
+  return pagePoint;
+}
+
+// static
+nsIntPoint
+nsDOMEvent::GetClientCoords(nsPresContext* aPresContext,
+                            nsEvent* aEvent,
+                            nsIntPoint aPoint,
+                            nsIntPoint aDefaultPoint)
+{
+  if (!aEvent ||
+      (aEvent->eventStructType != NS_MOUSE_EVENT &&
+       aEvent->eventStructType != NS_POPUP_EVENT &&
+       aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
+       aEvent->eventStructType != NS_MOZTOUCH_EVENT &&
+       aEvent->eventStructType != NS_TOUCH_EVENT &&
+       aEvent->eventStructType != NS_DRAG_EVENT &&
+       aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
+      !aPresContext ||
+      !((nsGUIEvent*)aEvent)->widget) {
+    return aDefaultPoint;
+  }
+
+  nsPoint pt(0, 0);
+  nsIPresShell* shell = aPresContext->GetPresShell();
+  if (!shell) {
+    return nsIntPoint(0, 0);
+  }
+  nsIFrame* rootFrame = shell->GetRootFrame();
+  if (rootFrame)
+    pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, aPoint, rootFrame);
+
+  return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
+                    nsPresContext::AppUnitsToIntCSSPixels(pt.y));
+}
+
 // To be called ONLY by nsDOMEvent::GetType (which has the additional
 // logic for handling user-defined events).
 // static
@@ -1347,6 +1448,18 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_SVGScroll];
   case NS_SVG_ZOOM:
     return sEventNames[eDOMEvents_SVGZoom];
+  case NS_TOUCH_START:
+    return sEventNames[eDOMEvents_touchstart];
+  case NS_TOUCH_MOVE:
+    return sEventNames[eDOMEvents_touchmove];
+  case NS_TOUCH_END:
+    return sEventNames[eDOMEvents_touchend];
+  case NS_TOUCH_ENTER:
+    return sEventNames[eDOMEvents_touchenter];
+  case NS_TOUCH_LEAVE:
+    return sEventNames[eDOMEvents_touchleave];
+  case NS_TOUCH_CANCEL:
+    return sEventNames[eDOMEvents_touchcancel];
   case NS_SMIL_BEGIN:
     return sEventNames[eDOMEvents_beginEvent];
   case NS_SMIL_END:

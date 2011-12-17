@@ -449,29 +449,29 @@ WINDOW_ONLY_EVENT(deviceorientation,
                   NS_EVENT)
 
 TOUCH_EVENT(touchstart,
-            NS_USER_DEFINED_EVENT,
+            NS_TOUCH_START,
             EventNameType_All,
-            NS_INPUT_EVENT)
+            NS_TOUCH_EVENT)
 TOUCH_EVENT(touchend,
-            NS_USER_DEFINED_EVENT,
+            NS_TOUCH_END,
             EventNameType_All,
-            NS_INPUT_EVENT)
+            NS_TOUCH_EVENT)
 TOUCH_EVENT(touchmove,
-            NS_USER_DEFINED_EVENT,
+            NS_TOUCH_MOVE,
             EventNameType_All,
-            NS_INPUT_EVENT )
+            NS_TOUCH_EVENT )
 TOUCH_EVENT(touchenter,
-            NS_USER_DEFINED_EVENT,
+            NS_TOUCH_ENTER,
             EventNameType_All,
-            NS_INPUT_EVENT )
+            NS_TOUCH_EVENT )
 TOUCH_EVENT(touchleave,
-            NS_USER_DEFINED_EVENT,
+            NS_TOUCH_LEAVE,
             EventNameType_All,
-            NS_INPUT_EVENT)
+            NS_TOUCH_EVENT)
 TOUCH_EVENT(touchcancel,
-            NS_USER_DEFINED_EVENT,
+            NS_TOUCH_CANCEL,
             EventNameType_All,
-            NS_INPUT_EVENT)
+            NS_TOUCH_EVENT)
 
 DOCUMENT_ONLY_EVENT(readystatechange,
                     NS_READYSTATECHANGE,

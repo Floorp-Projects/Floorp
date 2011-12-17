@@ -104,6 +104,7 @@ class nsFocusEvent;
 class nsSelectionEvent;
 class nsContentCommandEvent;
 class nsMozTouchEvent;
+class nsTouchEvent;
 class nsFormEvent;
 class nsCommandEvent;
 class nsUIEvent;
