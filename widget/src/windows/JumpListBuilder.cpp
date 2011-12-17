@@ -637,6 +637,7 @@ NS_IMETHODIMP AsyncWriteIconToDisk::Run()
   rv = imgtool->EncodeScaledImage(container, mMimeTypeOfInputData,
                                   systemIconWidth,
                                   systemIconHeight,
+                                  EmptyString(),
                                   getter_AddRefs(iconStream));
   NS_ENSURE_SUCCESS(rv, rv);
 
