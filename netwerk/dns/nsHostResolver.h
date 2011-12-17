@@ -202,6 +202,7 @@ public:
      */
     static nsresult Create(PRUint32         maxCacheEntries,  // zero disables cache
                            PRUint32         maxCacheLifetime, // minutes
+                           PRUint32         lifetimeGracePeriod, // minutes
                            nsHostResolver **resolver);
     
     /**
@@ -250,7 +251,8 @@ public:
     };
 
 private:
-    nsHostResolver(PRUint32 maxCacheEntries=50, PRUint32 maxCacheLifetime=1);
+    nsHostResolver(PRUint32 maxCacheEntries = 50, PRUint32 maxCacheLifetime = 1,
+                   PRUint32 lifetimeGracePeriod = 0);
    ~nsHostResolver();
 
     nsresult Init();
@@ -267,6 +269,7 @@ private:
 
     PRUint32      mMaxCacheEntries;
     PRUint32      mMaxCacheLifetime;
+    PRUint32      mGracePeriod;
     Mutex         mLock;
     CondVar       mIdleThreadCV;
     PRUint32      mNumIdleThreads;
