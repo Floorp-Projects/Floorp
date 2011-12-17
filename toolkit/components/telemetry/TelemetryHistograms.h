@@ -294,7 +294,9 @@ HISTOGRAM(THUNDERBIRD_INDEXING_RATE_MSG_PER_S, 1, 100, 20, LINEAR, "Gloda: index
  * Firefox-specific telemetry.
  */
 #ifdef MOZ_PHOENIX
-HISTOGRAM(FX_CONTEXT_SEARCH_AND_TAB_SELECT, 0, 1, 2, BOOLEAN, "Firefox: Background tab was selected within 5 seconds of searching from the context menu")
+HISTOGRAM(FX_TAB_ANIM_OPEN_MS, 1, 3000, 10, EXPONENTIAL, "Firefox: Time taken by the tab opening animation")
+HISTOGRAM(FX_TAB_ANIM_CLOSE_MS, 1, 3000, 10, EXPONENTIAL, "Firefox: Time taken by the tab closing animation")
+HISTOGRAM_BOOLEAN(FX_CONTEXT_SEARCH_AND_TAB_SELECT, "Firefox: Background tab was selected within 5 seconds of searching from the context menu")
 #endif
 
 HISTOGRAM_BOOLEAN(INNERWINDOWS_WITH_MUTATION_LISTENERS, "Deleted or to-be-reused innerwindow which has had mutation event listeners.")
