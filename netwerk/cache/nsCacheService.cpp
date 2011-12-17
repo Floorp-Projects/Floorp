@@ -1105,9 +1105,6 @@ nsCacheService::Shutdown()
 
         mInitialized = false;
 
-        mObserver->Remove();
-        NS_RELEASE(mObserver);
-        
         // Clear entries
         ClearDoomList();
         ClearActiveEntries();
@@ -1115,6 +1112,9 @@ nsCacheService::Shutdown()
         // Make sure to wait for any pending cache-operations before
         // proceeding with destructive actions (bug #620660)
         (void) SyncWithCacheIOThread();
+        
+        mObserver->Remove();
+        NS_RELEASE(mObserver);
         
         // unregister memory reporter, before deleting the memory device, just
         // to be safe
