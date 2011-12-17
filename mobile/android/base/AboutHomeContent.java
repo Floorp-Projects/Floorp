@@ -236,13 +236,19 @@ public class AboutHomeContent extends ScrollView {
         if (is != null)
             return is;
         File applicationPackage = new File(activity.getApplication().getPackageResourcePath());
-        ZipFile zip = new ZipFile(applicationPackage);
-        if (zip == null)
-            return null;
-        ZipEntry fileEntry = zip.getEntry("recommended-addons.json");
-        if (fileEntry == null)
-            return null;
-        return zip.getInputStream(fileEntry);
+        ZipFile zip = null;
+        try {
+            zip = new ZipFile(applicationPackage);
+            if (zip == null)
+                return null;
+            ZipEntry fileEntry = zip.getEntry("recommended-addons.json");
+            if (fileEntry == null)
+                return null;
+            return zip.getInputStream(fileEntry);
+        } finally {
+            if (zip != null)
+                zip.close();
+        }
     }
 
     void readRecommendedAddons(final Activity activity) {
