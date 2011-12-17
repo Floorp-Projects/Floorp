@@ -365,9 +365,11 @@ HostDB_RemoveEntry(PLDHashTable *table,
 //----------------------------------------------------------------------------
 
 nsHostResolver::nsHostResolver(PRUint32 maxCacheEntries,
-                               PRUint32 maxCacheLifetime)
+                               PRUint32 maxCacheLifetime,
+                               PRUint32 lifetimeGracePeriod)
     : mMaxCacheEntries(maxCacheEntries)
     , mMaxCacheLifetime(maxCacheLifetime)
+    , mGracePeriod(lifetimeGracePeriod)
     , mLock("nsHostResolver.mLock")
     , mIdleThreadCV(mLock, "nsHostResolver.mIdleThreadCV")
     , mNumIdleThreads(0)
@@ -564,16 +566,24 @@ nsHostResolver::ResolveHost(const char            *host,
             // do we have a cached result that we can reuse?
             else if (!(flags & RES_BYPASS_CACHE) &&
                      he->rec->HasResult() &&
-                     NowInMinutes() <= he->rec->expiration) {
+                     NowInMinutes() <= he->rec->expiration + mGracePeriod) {
+                        
                 LOG(("using cached record\n"));
                 // put reference to host record on stack...
                 result = he->rec;
+
+                // For entries that are in the grace period, or all cached
+                // negative entries, use the cache but start a new lookup in
+                // the background
+                if (((NowInMinutes() > he->rec->expiration) ||
+                     he->rec->negative) && !he->rec->resolving) {
+                    LOG(("Using %s cache entry but starting async renewal",
+                         he->rec->negative ? "negative" :"positive"));
+                    IssueLookup(he->rec);
+                }
+                
                 if (he->rec->negative) {
                     status = NS_ERROR_UNKNOWN_HOST;
-                    if (!he->rec->resolving) 
-                        // return the cached failure to the caller, but try and refresh
-                        // the record in the background
-                        IssueLookup(he->rec);
                 }
             }
             // if the host name is an IP address literal and has been parsed,
@@ -611,6 +621,8 @@ nsHostResolver::ResolveHost(const char            *host,
                     rv = IssueLookup(he->rec);
                     if (NS_FAILED(rv))
                         PR_REMOVE_AND_INIT_LINK(callback);
+                    else
+                        LOG(("dns lookup blocking pending getaddrinfo query"));
                 }
                 else if (he->rec->onQueue) {
                     // Consider the case where we are on a pending queue of 
@@ -930,6 +942,7 @@ nsHostResolver::ThreadFunc(void *arg)
 nsresult
 nsHostResolver::Create(PRUint32         maxCacheEntries,
                        PRUint32         maxCacheLifetime,
+                       PRUint32         lifetimeGracePeriod,
                        nsHostResolver **result)
 {
 #if defined(PR_LOGGING)
@@ -938,7 +951,8 @@ nsHostResolver::Create(PRUint32         maxCacheEntries,
 #endif
 
     nsHostResolver *res = new nsHostResolver(maxCacheEntries,
-                                             maxCacheLifetime);
+                                             maxCacheLifetime,
+                                             lifetimeGracePeriod);
     if (!res)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(res);
