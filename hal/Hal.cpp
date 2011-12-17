@@ -194,95 +194,112 @@ CancelVibrate(const WindowIdentifier &id)
   }
 }
 
-class BatteryObserversManager
+template <class InfoType>
+class ObserversManager
 {
 public:
-  void AddObserver(BatteryObserver* aObserver) {
+  void AddObserver(Observer<InfoType>* aObserver) {
     if (!mObservers) {
-      mObservers = new ObserverList<BatteryInformation>();
+      mObservers = new ObserverList<InfoType>();
     }
 
     mObservers->AddObserver(aObserver);
 
     if (mObservers->Length() == 1) {
-      PROXY_IF_SANDBOXED(EnableBatteryNotifications());
+      EnableNotifications();
     }
   }
 
-  void RemoveObserver(BatteryObserver* aObserver) {
+  void RemoveObserver(Observer<InfoType>* aObserver) {
+    MOZ_ASSERT(mObservers);
     mObservers->RemoveObserver(aObserver);
 
     if (mObservers->Length() == 0) {
-      PROXY_IF_SANDBOXED(DisableBatteryNotifications());
+      DisableNotifications();
 
       delete mObservers;
       mObservers = 0;
 
-      delete mBatteryInfo;
-      mBatteryInfo = 0;
+      mHasValidCache = false;
     }
   }
 
-  void CacheBatteryInformation(const BatteryInformation& aBatteryInfo) {
-    if (mBatteryInfo) {
-      delete mBatteryInfo;
+  InfoType GetCurrentInformation() {
+    if (mHasValidCache) {
+      return mInfo;
     }
-    mBatteryInfo = new BatteryInformation(aBatteryInfo);
+
+    mHasValidCache = true;
+    GetCurrentInformationInternal(&mInfo);
+    return mInfo;
   }
 
-  bool HasCachedBatteryInformation() const {
-    return mBatteryInfo;
+  void CacheInformation(const InfoType& aInfo) {
+    mHasValidCache = true;
+    mInfo = aInfo;
   }
 
-  void GetCachedBatteryInformation(BatteryInformation* aBatteryInfo) const {
-    *aBatteryInfo = *mBatteryInfo;
-  }
-
-  void Broadcast(const BatteryInformation& aBatteryInfo) {
+  void BroadcastCachedInformation() {
     MOZ_ASSERT(mObservers);
-    mObservers->Broadcast(aBatteryInfo);
+    mObservers->Broadcast(mInfo);
   }
+
+protected:
+  virtual void EnableNotifications() = 0;
+  virtual void DisableNotifications() = 0;
+  virtual void GetCurrentInformationInternal(InfoType*) = 0;
 
 private:
-  ObserverList<BatteryInformation>* mObservers;
-  BatteryInformation*               mBatteryInfo;
+  ObserverList<InfoType>* mObservers;
+  InfoType                mInfo;
+  bool                    mHasValidCache;
+};
+
+class BatteryObserversManager : public ObserversManager<BatteryInformation>
+{
+protected:
+  void EnableNotifications() {
+    PROXY_IF_SANDBOXED(EnableBatteryNotifications());
+  }
+
+  void DisableNotifications() {
+    PROXY_IF_SANDBOXED(DisableBatteryNotifications());
+  }
+
+  void GetCurrentInformationInternal(BatteryInformation* aInfo) {
+    PROXY_IF_SANDBOXED(GetCurrentBatteryInformation(aInfo));
+  }
 };
 
 static BatteryObserversManager sBatteryObservers;
 
 void
-RegisterBatteryObserver(BatteryObserver* aBatteryObserver)
+RegisterBatteryObserver(BatteryObserver* aObserver)
 {
   AssertMainThread();
-  sBatteryObservers.AddObserver(aBatteryObserver);
+  sBatteryObservers.AddObserver(aObserver);
 }
 
 void
-UnregisterBatteryObserver(BatteryObserver* aBatteryObserver)
+UnregisterBatteryObserver(BatteryObserver* aObserver)
 {
   AssertMainThread();
-  sBatteryObservers.RemoveObserver(aBatteryObserver);
+  sBatteryObservers.RemoveObserver(aObserver);
 }
 
 void
-GetCurrentBatteryInformation(BatteryInformation* aBatteryInfo)
+GetCurrentBatteryInformation(BatteryInformation* aInfo)
 {
   AssertMainThread();
-
-  if (sBatteryObservers.HasCachedBatteryInformation()) {
-    sBatteryObservers.GetCachedBatteryInformation(aBatteryInfo);
-  } else {
-    PROXY_IF_SANDBOXED(GetCurrentBatteryInformation(aBatteryInfo));
-    sBatteryObservers.CacheBatteryInformation(*aBatteryInfo);
-  }
+  *aInfo = sBatteryObservers.GetCurrentInformation();
 }
 
-void NotifyBatteryChange(const BatteryInformation& aBatteryInfo)
+void
+NotifyBatteryChange(const BatteryInformation& aInfo)
 {
   AssertMainThread();
-
-  sBatteryObservers.CacheBatteryInformation(aBatteryInfo);
-  sBatteryObservers.Broadcast(aBatteryInfo);
+  sBatteryObservers.CacheInformation(aInfo);
+  sBatteryObservers.BroadcastCachedInformation();
 }
 
 bool GetScreenEnabled()
