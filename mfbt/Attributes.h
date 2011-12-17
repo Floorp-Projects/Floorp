@@ -61,14 +61,20 @@
  * for forward compatibility.
  */
 #if defined(__clang__)
-#  if __clang_major__ >= 3
+   /*
+    * Per Clang documentation, "Note that marketing version numbers should not
+    * be used to check for language features, as different vendors use different
+    * numbering schemes. Instead, use the feature checking macros."
+    */
+#  ifndef __has_extension
+#    define __has_extension __has_feature /* compatibility, for older versions of clang */
+#  endif
+#  if __has_extension(cxx_deleted_functions)
 #    define MOZ_HAVE_CXX11_DELETE
+#  endif
+#  if __has_extension(cxx_override_control)
 #    define MOZ_HAVE_CXX11_OVERRIDE
 #    define MOZ_HAVE_CXX11_FINAL         final
-#  elif __clang_major__ == 2
-#    if __clang_minor__ >= 9
-#      define MOZ_HAVE_CXX11_DELETE
-#    endif
 #  endif
 #elif defined(__GNUC__)
 #  if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
