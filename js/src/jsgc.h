@@ -967,7 +967,9 @@ MapAllocToTraceKind(AllocKind thingKind)
         JSTRACE_STRING,     /* FINALIZE_SHORT_STRING */
         JSTRACE_STRING,     /* FINALIZE_STRING */
         JSTRACE_STRING,     /* FINALIZE_EXTERNAL_STRING */
+#ifdef JS_ION
         JSTRACE_IONCODE,    /* FINALIZE_IONCODE */
+#endif
     };
     return map[thingKind];
 }
