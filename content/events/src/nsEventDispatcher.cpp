@@ -808,6 +808,9 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_MOZTOUCH_EVENT:
       return NS_NewDOMMozTouchEvent(aDOMEvent, aPresContext,
                                     static_cast<nsMozTouchEvent*>(aEvent));
+    case NS_TOUCH_EVENT:
+      return NS_NewDOMTouchEvent(aDOMEvent, aPresContext,
+                                 static_cast<nsTouchEvent*>(aEvent));
     case NS_TRANSITION_EVENT:
       return NS_NewDOMTransitionEvent(aDOMEvent, aPresContext,
                                       static_cast<nsTransitionEvent*>(aEvent));

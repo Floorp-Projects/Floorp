@@ -956,13 +956,20 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
                   aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT &&
                   aEvent->eventStructType != NS_GESTURENOTIFY_EVENT &&
                   aEvent->eventStructType != NS_MOZTOUCH_EVENT &&
+#ifdef MOZ_TOUCH
+                  aEvent->eventStructType != NS_TOUCH_EVENT &&
+#endif
                   aEvent->eventStructType != NS_QUERY_CONTENT_EVENT))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
   const nsGUIEvent* GUIEvent = static_cast<const nsGUIEvent*>(aEvent);
+#ifdef MOZ_TOUCH
+  return GetEventCoordinatesRelativeTo(aEvent,
+                                       GUIEvent->refPoint,
+                                       aFrame);
+#else
   if (!GUIEvent->widget)
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-
   /* If we walk up the frame tree and discover that any of the frames are
    * transformed, we need to do extra work to convert from the global
    * space to the local space.
@@ -973,7 +980,6 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
   for (nsIFrame* f = aFrame; f; f = GetCrossDocParentFrame(f)) {
     if (f->IsTransformed())
       transformFound = true;
-
     rootFrame = f;
   }
 
@@ -1004,6 +1010,68 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
    * so we can just subtract out the different.
    */
   return widgetToView - aFrame->GetOffsetToCrossDoc(rootFrame);
+#endif
+}
+
+nsPoint
+nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent,
+                                             const nsIntPoint aPoint,
+                                             nsIFrame* aFrame)
+{
+  if (!aFrame) {
+    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  }
+
+  const nsGUIEvent* GUIEvent = static_cast<const nsGUIEvent*>(aEvent);
+  nsIWidget* widget = GUIEvent->widget;
+  if (!widget) {
+    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  }
+
+  /* If we walk up the frame tree and discover that any of the frames are
+   * transformed, we need to do extra work to convert from the global
+   * space to the local space.
+   */
+  nsIFrame* rootFrame = aFrame;
+  bool transformFound = false;
+  for (nsIFrame* f = aFrame; f; f = GetCrossDocParentFrame(f)) {
+    if (f->IsTransformed()) {
+      transformFound = true;
+    }
+
+    rootFrame = f;
+  }
+
+  nsIView* rootView = rootFrame->GetView();
+  if (!rootView) {
+    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  }
+
+  nsPoint widgetToView = TranslateWidgetToView(rootFrame->PresContext(),
+                               widget, aPoint, rootView);
+
+  if (widgetToView == nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)) {
+    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  }
+
+  // Convert from root document app units to app units of the document aFrame
+  // is in.
+  PRInt32 rootAPD = rootFrame->PresContext()->AppUnitsPerDevPixel();
+  PRInt32 localAPD = aFrame->PresContext()->AppUnitsPerDevPixel();
+  widgetToView = widgetToView.ConvertAppUnits(rootAPD, localAPD);
+
+  /* If we encountered a transform, we can't do simple arithmetic to figure
+   * out how to convert back to aFrame's coordinates and must use the CTM.
+   */
+  if (transformFound) {
+    return TransformRootPointToFrame(aFrame, widgetToView);
+  }
+
+  /* Otherwise, all coordinate systems are translations of one another,
+   * so we can just subtract out the different.
+   */
+  nsPoint offset = aFrame->GetOffsetToCrossDoc(rootFrame);
+  return widgetToView - offset;
 }
 
 nsIFrame*

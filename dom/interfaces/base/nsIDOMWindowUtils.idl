@@ -68,8 +68,9 @@ interface nsIDOMWindow;
 interface nsIDOMBlob;
 interface nsIDOMFile;
 interface nsIFile;
+interface nsIDOMTouch;
 
-[scriptable, uuid(b9c1f815-c2f2-4607-a060-6a8566581927)]
+[scriptable, uuid(e01171b0-712a-47ce-8552-b7b2ef0a2507)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -226,6 +227,45 @@ interface nsIDOMWindowUtils : nsISupports {
                       in long aClickCount,
                       in long aModifiers,
                       [optional] in boolean aIgnoreRootScrollFrame);
+
+  /** Synthesize a touch event. The event types supported are:
+   *    touchstart, touchend, touchmove, and touchcancel
+   *
+   * Events are sent in coordinates offset by aX and aY from the window.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
+   * The event is dispatched via the toplevel window, so it could go to any
+   * window under the toplevel window, in some cases it could never reach this
+   * window at all.
+   *
+   * @param aType event type
+   * @param xs array of offsets in CSS pixels for each touch to be sent
+   * @param ys array of offsets in CSS pixels for each touch to be sent
+   * @param rxs array of radii in CSS pixels for each touch to be sent
+   * @param rys array of radii in CSS pixels for each touch to be sent
+   * @param rotationAngles array of angles in degrees for each touch to be sent
+   * @param forces array of forces (floats from 0 to 1) for each touch to be sent
+   * @param count number of touches in this set
+   * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   * @param aIgnoreRootScrollFrame whether the event should ignore viewport bounds
+   *                           during dispatch
+   *
+   * returns true if the page called prevent default on this touch event
+   */
+  boolean sendTouchEvent(in AString aType,
+                         [array, size_is(count)] in PRUint32 aIdentifiers,
+                         [array, size_is(count)] in PRInt32 aXs,
+                         [array, size_is(count)] in PRInt32 aYs,
+                         [array, size_is(count)] in PRUint32 aRxs,
+                         [array, size_is(count)] in PRUint32 aRys,
+                         [array, size_is(count)] in float aRotationAngles,
+                         [array, size_is(count)] in float aForces,
+                         in PRUint32 count,
+                         in long aModifiers,
+                         [optional] in boolean aIgnoreRootScrollFrame);
 
   /** The same as sendMouseEvent but ensures that the event is dispatched to
    *  this DOM window or one of its children.
