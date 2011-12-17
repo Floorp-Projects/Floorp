@@ -267,6 +267,16 @@ private:
     
     static void ThreadFunc(void *);
 
+    enum {
+        METHOD_HIT = 1,
+        METHOD_RENEWAL = 2,
+        METHOD_NEGATIVE_HIT = 3,
+        METHOD_LITERAL = 4,
+        METHOD_OVERFLOW = 5,
+        METHOD_NETWORK_FIRST = 6,
+        METHOD_NETWORK_SHARED = 7
+    };
+
     PRUint32      mMaxCacheEntries;
     PRUint32      mMaxCacheLifetime;
     PRUint32      mGracePeriod;

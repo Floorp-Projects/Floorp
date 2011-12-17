@@ -197,6 +197,12 @@ HISTOGRAM(CACHE_DISK_SEARCH, 1, 100, 100, LINEAR, "Time to search disk cache (ms
 HISTOGRAM(CACHE_OFFLINE_SEARCH, 1, 100, 100, LINEAR, "Time to search offline cache (ms)")
 HISTOGRAM(HTTP_DISK_CACHE_OVERHEAD, 1, 32000000, 100, EXPONENTIAL, "HTTP Disk cache memory overhead (bytes)")
 
+HISTOGRAM(DNS_LOOKUP_METHOD, 1, 7, 7, LINEAR, "DNS Lookup Type (hit, renewal, negative-hit, literal, overflow, network-first, network-shared)")
+HISTOGRAM(DNS_CLEANUP_AGE, 1, 1440, 50, EXPONENTIAL, "DNS Cache Entry Age at Removal Time (minutes)")
+HISTOGRAM(DNS_LOOKUP_TIME, 1, 60000, 50, EXPONENTIAL, "Time for a successful DNS OS resolution (msec)")
+HISTOGRAM(DNS_RENEWAL_TIME, 1, 60000, 50, EXPONENTIAL, "Time for a renewed DNS OS resolution (msec)")
+HISTOGRAM(DNS_FAILED_LOOKUP_TIME, 1, 60000, 50, EXPONENTIAL, "Time for an unsuccessful DNS OS resolution (msec)")
+
 HISTOGRAM(FIND_PLUGINS, 1, 3000, 10, EXPONENTIAL, "Time spent scanning filesystem for plugins (ms)")
 HISTOGRAM(CHECK_JAVA_ENABLED, 1, 3000, 10, EXPONENTIAL, "Time spent checking if Java is enabled (ms)")
 
