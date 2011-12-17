@@ -135,6 +135,14 @@ nsSVGForeignObjectFrame::AttributeChanged(PRInt32  aNameSpaceID,
   return NS_OK;
 }
 
+/* virtual */ void
+nsSVGForeignObjectFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+{
+  nsSVGForeignObjectFrameBase::DidSetStyleContext(aOldStyleContext);
+
+  UpdateGraphic();
+}
+
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
                                 nsHTMLReflowMetrics&     aDesiredSize,
