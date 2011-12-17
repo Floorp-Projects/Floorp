@@ -115,7 +115,7 @@
 #include "nsContentUtils.h"
 #include "nsContentList.h"
 #include "nsMutationEvent.h"
-#include "nsPLDOMEvent.h"
+#include "nsAsyncDOMEvent.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsPIDOMWindow.h"
 #include "nsDOMAttributeMap.h"
@@ -1458,7 +1458,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, bool aNotify)
         mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
         mozAutoSubtreeModified subtree(OwnerDoc(), this);
-        (new nsPLDOMEvent(this, mutation))->RunDOMEventWhenSafe();
+        (new nsAsyncDOMEvent(this, mutation))->RunDOMEventWhenSafe();
     }
 
     return NS_OK;

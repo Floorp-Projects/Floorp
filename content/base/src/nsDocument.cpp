@@ -72,7 +72,7 @@
 #include "nsCOMArray.h"
 
 #include "nsGUIEvent.h"
-#include "nsPLDOMEvent.h"
+#include "nsAsyncDOMEvent.h"
 
 #include "nsIDOMStyleSheet.h"
 #include "nsDOMAttribute.h"
@@ -7451,7 +7451,7 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
     PRInt32 realTargetCount = realTargets.Count();
     for (PRInt32 k = 0; k < realTargetCount; ++k) {
       nsMutationEvent mutation(true, NS_MUTATION_SUBTREEMODIFIED);
-      (new nsPLDOMEvent(realTargets[k], mutation))->RunDOMEventWhenSafe();
+      (new nsAsyncDOMEvent(realTargets[k], mutation))->RunDOMEventWhenSafe();
     }
   }
 }
@@ -7598,8 +7598,8 @@ nsDocument::SetReadyStateInternal(ReadyState rs)
     mLoadingTimeStamp = mozilla::TimeStamp::Now();
   }
 
-  nsRefPtr<nsPLDOMEvent> plevent =
-    new nsPLDOMEvent(this, NS_LITERAL_STRING("readystatechange"), false, false); 
+  nsRefPtr<nsAsyncDOMEvent> plevent =
+    new nsAsyncDOMEvent(this, NS_LITERAL_STRING("readystatechange"), false, false); 
   if (plevent) {
     plevent->RunDOMEventWhenSafe();
   }
@@ -8453,11 +8453,11 @@ nsIDocument::SizeOf() const
 static void
 DispatchFullScreenChange(nsIDocument* aTarget)
 {
-  nsRefPtr<nsPLDOMEvent> e =
-    new nsPLDOMEvent(aTarget,
-                     NS_LITERAL_STRING("mozfullscreenchange"),
-                     true,
-                     false);
+  nsRefPtr<nsAsyncDOMEvent> e =
+    new nsAsyncDOMEvent(aTarget,
+                        NS_LITERAL_STRING("mozfullscreenchange"),
+                        true,
+                        false);
   e->PostDOMEvent();
 }
 
@@ -8702,11 +8702,11 @@ LogFullScreenDenied(bool aLogFailure, const char* aMessage, nsIDocument* aDoc)
   if (!aLogFailure) {
     return;
   }
-  nsRefPtr<nsPLDOMEvent> e =
-    new nsPLDOMEvent(aDoc,
-                     NS_LITERAL_STRING("mozfullscreenerror"),
-                     true,
-                     false);
+  nsRefPtr<nsAsyncDOMEvent> e =
+    new nsAsyncDOMEvent(aDoc,
+                        NS_LITERAL_STRING("mozfullscreenerror"),
+                        true,
+                        false);
   e->PostDOMEvent();
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   "DOM", aDoc,

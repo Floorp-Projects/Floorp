@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsPLDOMEvent.h"
+#include "nsAsyncDOMEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMDocument.h"
@@ -44,7 +44,7 @@
 #include "nsEventDispatcher.h"
 #include "nsGUIEvent.h"
 
-nsPLDOMEvent::nsPLDOMEvent(nsINode *aEventNode, nsEvent &aEvent)
+nsAsyncDOMEvent::nsAsyncDOMEvent(nsINode *aEventNode, nsEvent &aEvent)
   : mEventNode(aEventNode), mDispatchChromeOnly(false)
 {
   bool trusted = NS_IS_TRUSTED_EVENT(&aEvent);
@@ -57,7 +57,7 @@ nsPLDOMEvent::nsPLDOMEvent(nsINode *aEventNode, nsEvent &aEvent)
   priv->SetTrusted(trusted);
 }
 
-NS_IMETHODIMP nsPLDOMEvent::Run()
+NS_IMETHODIMP nsAsyncDOMEvent::Run()
 {
   if (!mEventNode) {
     return NS_OK;
@@ -82,12 +82,12 @@ NS_IMETHODIMP nsPLDOMEvent::Run()
   return NS_OK;
 }
 
-nsresult nsPLDOMEvent::PostDOMEvent()
+nsresult nsAsyncDOMEvent::PostDOMEvent()
 {
   return NS_DispatchToCurrentThread(this);
 }
 
-void nsPLDOMEvent::RunDOMEventWhenSafe()
+void nsAsyncDOMEvent::RunDOMEventWhenSafe()
 {
   nsContentUtils::AddScriptRunner(this);
 }
