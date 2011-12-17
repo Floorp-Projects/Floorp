@@ -107,7 +107,7 @@
 #include "jsxml.h"
 #endif
 
-#ifdef JS_ION
+#ifdef JS_METHODJIT
 #include "ion/Ion.h"
 #endif
 
@@ -2383,11 +2383,9 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
         name = "script";
         break;
 
-#ifdef JS_ION
       case JSTRACE_IONCODE:
         name = "ioncode";
         break;
-#endif
 
       case JSTRACE_SHAPE:
         name = "shape";
@@ -2459,9 +2457,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
             break;
           }
 
-#ifdef JS_ION
           case JSTRACE_IONCODE:
-#endif
           case JSTRACE_SHAPE:
           case JSTRACE_BASE_SHAPE:
           case JSTRACE_TYPE_OBJECT:
