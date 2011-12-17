@@ -1118,7 +1118,7 @@ GCMarker::processMarkStackTop()
     if (tag == TypeTag) {
         ScanTypeObject(this, reinterpret_cast<types::TypeObject *>(addr));
     } else if (tag == IonCodeTag) {
-        MarkChildren(this, reinterpret_cast<IonCode *>(addr));
+        MarkChildren(this, reinterpret_cast<ion::IonCode *>(addr));
     } else {
         JS_ASSERT(tag == XmlTag);
         MarkChildren(this, reinterpret_cast<JSXML *>(addr));
