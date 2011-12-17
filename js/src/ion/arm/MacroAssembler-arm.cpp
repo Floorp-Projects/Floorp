@@ -756,7 +756,7 @@ MacroAssemblerARM::ma_ldrsb(EDtrAddr addr, Register rt, Index mode, Condition cc
 void
 MacroAssemblerARM::ma_ldrd(EDtrAddr addr, Register rt, DebugOnly<Register> rt2, Index mode, Condition cc)
 {
-    JS_ASSERT(rt.code() & 1 == 0);
+    JS_ASSERT((rt.code() & 1) == 0);
     JS_ASSERT(rt2.value.code() == rt.code() + 1);
     as_extdtr(IsLoad, 64, true, mode, rt, addr, cc);
 }
@@ -1035,6 +1035,12 @@ void
 MacroAssemblerARM::loadPtr(const Address &address, Register dest)
 {
     ma_ldr(DTRAddr(address.base, DtrOffImm(address.offset)), dest);
+}
+void
+MacroAssemblerARM::loadPtr(const ImmWord &imm, Register dest)
+{
+    movePtr(imm, ScratchRegister);
+    loadPtr(Address(ScratchRegister, 0x0), dest);
 }
 void
 MacroAssemblerARM::setStackArg(const Register &reg, uint32 arg)
