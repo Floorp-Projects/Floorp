@@ -119,6 +119,7 @@
 #include "nsILineIterator.h" // for ScrollContentIntoView
 #include "nsWeakPtr.h"
 #include "pldhash.h"
+#include "nsDOMTouchEvent.h"
 #include "nsIObserverService.h"
 #include "nsIDocShell.h"        // for reflow observation
 #include "nsIBaseWindow.h"
@@ -235,6 +236,8 @@ CapturingContentInfo nsIPresShell::gCaptureInfo =
   { false /* mAllowed */,     false /* mRetargetToElement */,
     false /* mPreventDrag */, nsnull /* mContent */ };
 nsIContent* nsIPresShell::gKeyDownTarget;
+nsInterfaceHashtable<nsUint32HashKey, nsIDOMTouch> nsIPresShell::gCaptureTouchList;
+bool nsIPresShell::gPreventMouseEvents = false;
 
 static PRUint32
 ChangeFlag(PRUint32 aFlags, bool aOnOff, PRUint32 aFlag)
@@ -5709,6 +5712,54 @@ PresShell::RecordMouseLocation(nsGUIEvent* aEvent)
   }
 }
 
+static void
+EvictTouchPoint(nsCOMPtr<nsIDOMTouch>& aTouch)
+{
+  nsIWidget *widget = nsnull;
+  // is there an easier/better way to dig out the widget?
+  nsCOMPtr<nsINode> node(do_QueryInterface(aTouch->GetTarget()));
+  if (!node) {
+    return;
+  }
+  nsIDocument* doc = node->GetCurrentDoc();
+  if (!doc) {
+    return;
+  }
+  nsIPresShell *presShell = doc->GetShell();
+  if (!presShell) {
+    return;
+  }
+  nsIFrame* frame = presShell->GetRootFrame();
+  if (!frame) {
+    return;
+  }
+  nsPoint *pt = new nsPoint(aTouch->mRefPoint.x, aTouch->mRefPoint.y);
+  widget = frame->GetView()->GetNearestWidget(pt);
+  if (!widget) {
+    return;
+  }
+  nsTouchEvent event(true, NS_TOUCH_END, widget);
+  event.isShift = false;
+  event.isControl = false;
+  event.isAlt = false;
+  event.isMeta = false;
+  event.widget = widget;
+  event.time = PR_IntervalNow();
+  event.touches.AppendElement(aTouch);
+
+  nsEventStatus status;
+  widget->DispatchEvent(&event, status);
+}
+
+static PLDHashOperator
+AppendToTouchList(const PRUint32& aKey, nsCOMPtr<nsIDOMTouch>& aData, void *aTouchList)
+{
+  nsTArray<nsCOMPtr<nsIDOMTouch> > *touches = static_cast<nsTArray<nsCOMPtr<nsIDOMTouch> > *>(aTouchList);
+  aData->mChanged = false;
+  touches->AppendElement(aData);
+  return PL_DHASH_NEXT;
+}
+
 nsresult
 PresShell::HandleEvent(nsIFrame        *aFrame,
                        nsGUIEvent*     aEvent,
@@ -5921,8 +5972,59 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
     // with a window-level mouse exit event since we want to start sending
     // mouse out events at the root EventStateManager.
     if (!captureRetarget && !isWindowLevelMouseExit) {
+#ifdef MOZ_TOUCH
+      nsPoint eventPoint;
+      if (aEvent->message == NS_TOUCH_START) {
+        // Add any new touches to the queue
+        nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
+        // if there is only one touch in this touchstart event, assume that it is
+        // the start of a new touch session and evict any old touches in the
+        // queue
+        if (touchEvent->touches.Length() == 1) {
+          nsTArray<nsCOMPtr<nsIDOMTouch> > touches;
+          gCaptureTouchList.Enumerate(&AppendToTouchList, (void *)&touches);
+          for (PRUint32 i = 0; i < touches.Length(); ++i) {
+            EvictTouchPoint(touches[i]);
+          }
+        }
+        for (PRUint32 i = 0; i < touchEvent->touches.Length(); ++i) {
+          nsIDOMTouch *touch = touchEvent->touches[i];
+          nsDOMTouch *domtouch = static_cast<nsDOMTouch*>(touch);
+          touch->mMessage = aEvent->message;
+
+          PRInt32 id = 0;
+          touch->GetIdentifier(&id);
+          if (!gCaptureTouchList.Get(id, nsnull)) {
+            // This event is a new touch. Mark it as a changedTouch and
+            // add it to the queue.
+            touch->mChanged = true;
+            gCaptureTouchList.Put(id, touch);
+
+            eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, touch->mRefPoint, frame);
+          } else {
+            // This touch is an old touch, we need to ensure that is not
+            // marked as changed and set its target correctly
+            touch->mChanged = false;
+            PRInt32 id;
+            touch->GetIdentifier(&id);
+
+            nsCOMPtr<nsIDOMTouch> oldTouch;
+            gCaptureTouchList.Get(id, getter_AddRefs(oldTouch));
+            if (oldTouch) {
+              nsCOMPtr<nsPIDOMEventTarget> targetPtr;
+              oldTouch->GetTarget(getter_AddRefs(targetPtr));
+              domtouch->SetTarget(targetPtr);
+              gCaptureTouchList.Put(id, touch);
+            }
+          }
+        }
+      } else {
+        eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
+      }
+#else
       nsPoint eventPoint
           = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
+#endif
       {
         bool ignoreRootScrollFrame = false;
         if (aEvent->eventStructType == NS_MOUSE_EVENT) {
@@ -6322,6 +6424,9 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
   nsresult rv = NS_OK;
 
   if (!NS_EVENT_NEEDS_FRAME(aEvent) || GetCurrentEventFrame()) {
+#ifdef MOZ_TOUCH
+    bool touchIsNew = false;
+#endif
     bool isHandlingUserInput = false;
 
     // XXX How about IME events and input events for plugins?
@@ -6364,6 +6469,84 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
       case NS_MOUSE_BUTTON_UP:
         isHandlingUserInput = true;
         break;
+#ifdef MOZ_TOUCH
+      case NS_TOUCH_CANCEL:
+      case NS_TOUCH_END: {
+        // Remove the changed touches
+        // need to make sure we only remove touches that are ending here
+        nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
+        nsTArray<nsCOMPtr<nsIDOMTouch> >  &touches = touchEvent->touches;
+        for (PRUint32 i = 0; i < touches.Length(); ++i) {
+          nsIDOMTouch *touch = touches[i];
+          nsDOMTouch *domtouch = static_cast<nsDOMTouch*>(touch);
+          if (!touch) {
+            continue;
+          }
+          touch->mMessage = aEvent->message;
+          touch->mChanged = true;
+          nsCOMPtr<nsIDOMTouch> oldTouch;
+
+          PRInt32 id;
+          touch->GetIdentifier(&id);
+
+          gCaptureTouchList.Get(id, getter_AddRefs(oldTouch));
+          if (!oldTouch) {
+            continue;
+          }
+          nsCOMPtr<nsPIDOMEventTarget> targetPtr;
+          oldTouch->GetTarget(getter_AddRefs(targetPtr));
+
+          mCurrentEventContent = do_QueryInterface(targetPtr);
+          domtouch->SetTarget(targetPtr);
+          gCaptureTouchList.Remove(id);
+        }
+        // add any touches left in the touch list, but ensure changed=false
+        gCaptureTouchList.Enumerate(&AppendToTouchList, (void *)&touches);
+        break;
+      }
+      case NS_TOUCH_MOVE: {
+        // Check for touches that changed. Mark them add to queue
+        nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
+        nsTArray<nsCOMPtr<nsIDOMTouch> > touches = touchEvent->touches;
+        bool haveChanged = false;
+        for (PRUint32 i = 0; i < touches.Length(); ++i) {
+          nsIDOMTouch *touch = touches[i];
+          nsDOMTouch *domtouch = static_cast<nsDOMTouch*>(touch);
+          if (!touch) {
+            continue;
+          }
+          PRInt32 id;
+          touch->GetIdentifier(&id);
+          touch->mMessage = aEvent->message;
+
+          nsCOMPtr<nsIDOMTouch> oldTouch;
+          gCaptureTouchList.Get(id, getter_AddRefs(oldTouch));
+          if (!oldTouch) {
+            continue;
+          }
+          if(domtouch->Equals(oldTouch)) {
+            touch->mChanged = true;
+            haveChanged = true;
+          }
+
+          nsCOMPtr<nsPIDOMEventTarget> targetPtr;
+          oldTouch->GetTarget(getter_AddRefs(targetPtr));
+          domtouch->SetTarget(targetPtr);
+
+          gCaptureTouchList.Put(id, touch);
+          // if we're moving from touchstart to touchmove for this touch
+          // we allow preventDefault to prevent mouse events
+          if (oldTouch->mMessage != touch->mMessage) {
+            touchIsNew = true;
+          }
+        }
+        // is nothing has changed, we should just return
+        if (!haveChanged) {
+          return NS_OK;
+        }
+        break;
+      }
+#endif
       case NS_DRAGDROP_DROP:
         nsCOMPtr<nsIDragSession> session = nsContentUtils::GetDragSession();
         if (session) {
@@ -6389,7 +6572,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
       if (me->isShift)
         aEvent->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH |
                          NS_EVENT_RETARGET_TO_NON_NATIVE_ANONYMOUS;
-    }                                
+    }
 
     nsAutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,
                                                           aEvent, mDocument);
@@ -6422,7 +6605,14 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
       // because they do not have a reliable refPoint.
       if (!IsSynthesizedMouseEvent(aEvent)) {
         nsPresShellEventCB eventCB(this);
+#ifdef MOZ_TOUCH
+        if (aEvent->eventStructType == NS_TOUCH_EVENT) {
+          DispatchTouchEvent(aEvent, aStatus, &eventCB, touchIsNew);
+        }
+        else if (mCurrentEventContent) {
+#else
         if (mCurrentEventContent) {
+#endif
           nsEventDispatcher::Dispatch(mCurrentEventContent, mPresContext,
                                       aEvent, nsnull, aStatus, &eventCB);
         }
@@ -6458,6 +6648,98 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
     }
   }
   return rv;
+}
+
+void
+PresShell::DispatchTouchEvent(nsEvent *aEvent,
+                              nsEventStatus* aStatus,
+                              nsPresShellEventCB* aEventCB,
+                              bool aTouchIsNew)
+{
+  nsresult rv = NS_OK;
+  // calling preventDefault on touchstart or the first touchmove for a
+  // point prevents mouse events
+  bool canPrevent = aEvent->message == NS_TOUCH_START ||
+              (aEvent->message == NS_TOUCH_MOVE && aTouchIsNew);
+  bool preventDefault = false;
+  nsEventStatus tmpStatus = nsEventStatus_eIgnore;
+  nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
+  // touch events should fire on all targets
+  if (aEvent->message != NS_TOUCH_START) {
+    nsTArray<nsCOMPtr<nsIDOMTouch> > touches = touchEvent->touches;
+    for (PRUint32 i = 0; i < touches.Length(); ++i) {
+      nsIDOMTouch *touch = touches[i];
+      if (!touch || !touch->mChanged) {
+        continue;
+      }
+      // copy the event
+      nsCOMPtr<nsPIDOMEventTarget> targetPtr;
+      touch->GetTarget(getter_AddRefs(targetPtr));
+      if (!targetPtr) {
+        continue;
+      }
+
+      nsTouchEvent newEvent(touchEvent);
+      newEvent.target = targetPtr;
+
+      nsCOMPtr<nsIContent> content(do_QueryInterface(targetPtr));
+      nsPresContext *context = nsContentUtils::GetContextForContent(content);
+      if (!context) {
+        context = mPresContext;
+      }
+      tmpStatus = nsEventStatus_eIgnore;
+      nsEventDispatcher::Dispatch(targetPtr, context,
+                                  &newEvent, nsnull, &tmpStatus, aEventCB);
+      if (nsEventStatus_eConsumeNoDefault == tmpStatus) {
+        preventDefault = true;
+      }
+    }
+  } else {
+    // touchevents need to have the target attribute set on each touch
+    nsTArray<nsCOMPtr<nsIDOMTouch> >  touches = touchEvent->touches;
+    for (PRUint32 i = 0; i < touches.Length(); ++i) {
+      nsIDOMTouch *touch = touches[i];
+      if (touch->mChanged) {
+        touch->SetTarget(mCurrentEventContent);
+      }
+    }
+
+    if (mCurrentEventContent) {
+      nsEventDispatcher::Dispatch(mCurrentEventContent, mPresContext,
+                                  aEvent, nsnull, &tmpStatus, aEventCB);
+    } else {
+      nsCOMPtr<nsIContent> targetContent;
+      rv = mCurrentEventFrame->GetContentForEvent(aEvent,
+                                                  getter_AddRefs(targetContent));
+      if (NS_SUCCEEDED(rv) && targetContent) {
+        nsEventDispatcher::Dispatch(targetContent, mPresContext, aEvent,
+                                    nsnull, &tmpStatus, aEventCB);
+      } else if (mDocument) {
+        nsEventDispatcher::Dispatch(mDocument, mPresContext, aEvent,
+                                    nsnull, &tmpStatus, nsnull);
+      }
+    }
+    if (nsEventStatus_eConsumeNoDefault == tmpStatus) {
+      preventDefault = true;
+    }
+
+    if (touchEvent->touches.Length() == 1) {
+      gPreventMouseEvents = false;
+    }
+  }
+
+  // if preventDefault was called on any of the events dispatched
+  // and this is touchstart, or the first touchmove, widget should consume
+  // other events that would be associated with this touch session
+  if (preventDefault && canPrevent) {
+    gPreventMouseEvents = true;
+  }
+
+  if (gPreventMouseEvents) {
+    *aStatus = nsEventStatus_eConsumeNoDefault;
+  } else {
+    *aStatus = nsEventStatus_eIgnore;
+  }
 }
 
 // Dispatch event to content only (NOT full processing)
@@ -8723,6 +9005,7 @@ void nsIPresShell::InitializeStatics()
   NS_ASSERTION(sLiveShells == nsnull, "InitializeStatics called multiple times!");
   sLiveShells = new nsTHashtable<PresShellPtrKey>();
   sLiveShells->Init();
+  gCaptureTouchList.Init();
 }
 
 void nsIPresShell::ReleaseStatics()

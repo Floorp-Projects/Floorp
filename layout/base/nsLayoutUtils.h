@@ -426,6 +426,20 @@ public:
                                                nsIFrame* aFrame);
 
   /**
+   * Get the coordinates of a given point relative to an event and a
+   * given frame.
+   * @param aEvent the event
+   * @param aPoint the point to get the coordinates relative to
+   * @param aFrame the frame to make coordinates relative to
+   * @return the point, or (NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE) if
+   * for some reason the coordinates for the mouse are not known (e.g.,
+   * the event is not a GUI event).
+   */
+  static nsPoint GetEventCoordinatesRelativeTo(const nsEvent* aEvent,
+                                               const nsIntPoint aPoint,
+                                               nsIFrame* aFrame);
+
+  /**
    * Get the popup frame of a given native mouse event.
    * @param aPresContext only check popups within aPresContext or a descendant
    * @param aEvent  the event.
