@@ -5494,6 +5494,15 @@ AC_SUBST(MOZ_DBUS_GLIB_CFLAGS)
 AC_SUBST(MOZ_DBUS_GLIB_LIBS)
 
 dnl ========================================================
+dnl = Enable Android History instead of Places
+dnl ========================================================
+if test -n "$MOZ_ANDROID_HISTORY"; then
+     dnl Do this if defined in confvars.sh
+     AC_DEFINE(MOZ_ANDROID_HISTORY)
+fi
+
+
+dnl ========================================================
 dnl = Build Personal Security Manager
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(crypto,
