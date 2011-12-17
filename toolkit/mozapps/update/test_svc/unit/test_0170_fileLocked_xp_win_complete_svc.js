@@ -185,6 +185,10 @@ ADDITIONAL_TEST_DIRS = [
 }];
 
 function run_test() {
+  if (!shouldRunServiceTest()) {
+    return;
+  }
+
   do_test_pending();
   do_register_cleanup(cleanupUpdaterTest);
 
