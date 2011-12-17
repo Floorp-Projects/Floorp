@@ -50,13 +50,6 @@
 
 class nsIDOMWindow;
 
-namespace mozilla {
-namespace dom {
-class TabChild;
-class PBrowserChild;
-}
-}
-
 // Only include this hunk of code once, and include it before
 // HalImpl.h and HalSandbox.h.
 namespace mozilla {
