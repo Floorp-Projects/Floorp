@@ -82,4 +82,9 @@
   <string name="forward">&forward;</string>
   <string name="new_tab">&new_tab;</string>
   <string name="addons">&addons;</string>
+
+  <string name="site_settings_title">&site_settings_title;</string>
+  <string name="site_settings_cancel">&site_settings_cancel;</string>
+  <string name="site_settings_clear">&site_settings_clear;</string>
+  <string name="site_settings_no_settings">&site_settings_no_settings;</string>
 </resources>
