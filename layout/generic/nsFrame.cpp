@@ -62,7 +62,7 @@
 #include "nsCRT.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMEvent.h"
-#include "nsPLDOMEvent.h"
+#include "nsAsyncDOMEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIPresShell.h"
 #include "prlog.h"
@@ -2128,10 +2128,10 @@ nsFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
   nsIContent* target = aContent ? aContent : mContent;
 
   if (target) {
-    nsRefPtr<nsPLDOMEvent> event =
-      new nsPLDOMEvent(target, aDOMEventName, true, false);
+    nsRefPtr<nsAsyncDOMEvent> event =
+      new nsAsyncDOMEvent(target, aDOMEventName, true, false);
     if (NS_FAILED(event->PostDOMEvent()))
-      NS_WARNING("Failed to dispatch nsPLDOMEvent");
+      NS_WARNING("Failed to dispatch nsAsyncDOMEvent");
   }
 }
 

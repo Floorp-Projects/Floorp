@@ -206,7 +206,7 @@
 #include "sampler.h"
 
 #include "Layers.h"
-#include "nsPLDOMEvent.h"
+#include "nsAsyncDOMEvent.h"
 
 #ifdef NS_FUNCTION_TIMER
 #define NS_TIME_FUNCTION_DECLARE_DOCURL                \
@@ -6364,9 +6364,9 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
           // Restricted key press while in DOM full-screen mode. Dispatch
           // an event to chrome so it knows to show a warning message
           // informing the user how to exit full-screen.
-          nsRefPtr<nsPLDOMEvent> e =
-            new nsPLDOMEvent(doc, NS_LITERAL_STRING("MozShowFullScreenWarning"),
-                             true, true);
+          nsRefPtr<nsAsyncDOMEvent> e =
+            new nsAsyncDOMEvent(doc, NS_LITERAL_STRING("MozShowFullScreenWarning"),
+                                true, true);
           e->PostDOMEvent();
         }
         // Else not full-screen mode or key code is unrestricted, fall
