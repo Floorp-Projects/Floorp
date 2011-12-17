@@ -455,6 +455,30 @@ let gServiceLaunchedCallbackLog = null;
 let gServiceLaunchedCallbackArgs = null;
 
 /**
+ * Helper function to check whether the maintenance service updater tests should
+ * run. See bug 711660 for more details.
+ *
+ * @return true if the test should run and false if it shouldn't.
+ */
+function shouldRunServiceTest() {
+  const REG_PATH = "SOFTWARE\\Mozilla\\MaintenanceService\\" +
+                   "3932ecacee736d366d6436db0f55bce4";
+
+  let key = AUS_Cc["@mozilla.org/windows-registry-key;1"].
+            createInstance(AUS_Ci.nsIWindowsRegKey);
+  try {
+    key.open(AUS_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE, REG_PATH,
+             AUS_Ci.nsIWindowsRegKey.ACCESS_READ | key.WOW64_64);
+  }
+  catch (e) {
+    logTestInfo("this test can only run on the buildbot build system at this " +
+                "time.");
+    return false;
+  }
+  return true;
+}
+
+/**
  * Helper function for updater tests for launching the updater using the
  * maintenance service to apply a mar file.
  *

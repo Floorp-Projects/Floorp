@@ -21,6 +21,10 @@ const CHECK_TIMEOUT_MILLI = 1000;
 const APP_TIMER_TIMEOUT = 15000;
 
 function run_test() {
+  if (!shouldRunServiceTest()) {
+    return;
+  }
+
   do_test_pending();
   do_register_cleanup(end_test);
 
