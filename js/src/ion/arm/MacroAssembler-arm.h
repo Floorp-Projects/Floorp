@@ -349,6 +349,7 @@ class MacroAssemblerARM : public Assembler
     void movePtr(ImmGCPtr imm, const Register dest);
     void load32(const Address &address, Register dest);
     void loadPtr(const Address &address, Register dest);
+    void loadPtr(const ImmWord &imm, Register dest);
     void setStackArg(const Register &reg, uint32 arg);
 
     void subPtr(Imm32 imm, const Register dest);
@@ -549,6 +550,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
         ma_ldr(Operand(address.base, address.offset), ScratchRegister);
         ma_cmp(ScratchRegister, imm);
+        ma_b(label, cond);
+    }
+    void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
+        ma_cmp(lhs, rhs);
         ma_b(label, cond);
     }
     void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label *label) {
