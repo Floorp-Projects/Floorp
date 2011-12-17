@@ -82,6 +82,8 @@
 
                 let expected = expectedResult(method, keypath, explicit, autoincrement, existing);
 
+                let valueJSON = JSON.stringify(value);
+
                 ok(true, "making call" + test);
 
                 // Make function call for throwing functions
@@ -94,13 +96,16 @@
                     ok(true, "did throw" + test);
                     ok(ex instanceof IDBDatabaseException, "Got a IDBDatabaseException" + test);
                     is(ex.code, IDBDatabaseException.DATA_ERR, "expect a DATA_ERR" + test);
+                    is(JSON.stringify(value), valueJSON, "call didn't modify value" + test);
                   }
                   continue;
                 }
 
                 // Make non-throwing function call
                 let req = store[method].apply(store, args);
-                req.onsuccess = req.onerror = grabEventAndContinueHandler
+                is(JSON.stringify(value), valueJSON, "call didn't modify value" + test);
+
+                req.onsuccess = req.onerror = grabEventAndContinueHandler;
                 let e = yield;
 
                 // Figure out what key we used
@@ -123,16 +128,7 @@
                 }
 
                 is(e.type, "success", "write should succeed" + test);
-                if (autoincrement && speccedNoKey) {
-                  todo_is(e.target.result, key, "(fix ai) write should return correct key" + test);
-                  key = e.target.result;
-                  if (keypath) {
-                    value.id = key;
-                  }
-                }
-                else {
-                  is(e.target.result, key, "write should return correct key" + test);
-                }
+                is(e.target.result, key, "write should return correct key" + test);
 
                 store.get(key).onsuccess = grabEventAndContinueHandler;
                 e = yield;
