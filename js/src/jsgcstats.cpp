@@ -149,10 +149,12 @@ GCMarker::dumpConservativeRoots()
             break;
           }
 # endif
+# ifdef JS_ION
           case JSTRACE_IONCODE: {
             fprintf(fp, "ioncode");
             break;
           }
+# endif
         }
         fputc('\n', fp);
     }
