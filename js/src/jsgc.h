@@ -99,7 +99,7 @@ const size_t ArenaMask = ArenaSize - 1;
  * This is the maximum number of arenas we allow in the FreeCommitted state
  * before we trigger a GC_SHRINK to release free arenas to the OS.
  */
-const static uint32_t FreeCommittedArenasThreshold = (32 << 20) / ArenaSize;
+const static uint32_t MaxFreeCommittedArenas = (32 << 20) / ArenaSize;
 
 /*
  * The mark bitmap has one bit per each GC cell. For multi-cell GC things this
@@ -749,7 +749,7 @@ struct Chunk {
     static inline void release(JSRuntime *rt, Chunk *chunk);
 
   private:
-    inline void init();
+    inline void init(JSRuntime *rt);
 
     /* Search for a decommitted arena to allocate. */
     jsuint findDecommittedArenaOffset();
