@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* Implementations of various C++ class and method modifier attributes. */
+/* Implementations of various class and method modifier attributes. */
 
 #ifndef mozilla_Attributes_h_
 #define mozilla_Attributes_h_
@@ -47,10 +47,6 @@
  * This header does not include any other headers so that it can be included by
  * code that is (only currently) mfbt-incompatible.
  */
-
-#ifndef __cplusplus
-#error "mozilla/Attributes.h is only relevant to C++ code."
-#endif
 
 /*
  * g++ requires -std=c++0x or -std=gnu++0x to support C++11 functionality
@@ -75,6 +71,9 @@
 #  if __has_extension(cxx_override_control)
 #    define MOZ_HAVE_CXX11_OVERRIDE
 #    define MOZ_HAVE_CXX11_FINAL         final
+#  endif
+#  if __has_attribute(noreturn)
+#    define MOZ_HAVE_NORETURN            __attribute__((noreturn))
 #  endif
 #elif defined(__GNUC__)
 #  if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
@@ -101,13 +100,37 @@
 #      endif
 #    endif
 #  endif
+#  define MOZ_HAVE_NORETURN              __attribute__((noreturn))
 #elif defined(_MSC_VER)
 #  if _MSC_VER >= 1400
 #    define MOZ_HAVE_CXX11_OVERRIDE
      /* MSVC currently spells "final" as "sealed". */
 #    define MOZ_HAVE_CXX11_FINAL         sealed
 #  endif
+#  define MOZ_HAVE_NORETURN              __declspec(noreturn)
 #endif
+
+/*
+ * MOZ_NORETURN, specified at the start of a function declaration, indicates
+ * that the given function does not return.  (The function definition does not
+ * need to be annotated.)
+ *
+ *   MOZ_NORETURN void abort(const char* msg);
+ *
+ * This modifier permits the compiler to optimize code assuming a call to such a
+ * function will never return.  It also enables the compiler to avoid spurious
+ * warnings about not initializing variables, or about any other seemingly-dodgy
+ * operations performed after the function returns.
+ *
+ * This modifier does not affect the corresponding function's linking behavior.
+ */
+#if defined(MOZ_HAVE_NORETURN)
+#  define MOZ_NORETURN          MOZ_HAVE_NORETURN
+#else
+#  define MOZ_NORETURN          /* no support */
+#endif
+
+#ifdef __cplusplus
 
 /*
  * MOZ_DELETE, specified immediately prior to the ';' terminating an undefined-
@@ -246,5 +269,7 @@
 #else
 #  define MOZ_FINAL             /* no support */
 #endif
+
+#endif /* __cplusplus */
 
 #endif  /* mozilla_Attributes_h_ */
