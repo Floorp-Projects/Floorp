@@ -238,11 +238,9 @@ public:
     if (IsString()) {
       rv = aStatement->BindStringByName(aParamName, ToString());
     }
-    else if (IsInteger()) {
-      rv = aStatement->BindInt64ByName(aParamName, ToInteger());
-    }
     else {
-      NS_NOTREACHED("Bad key!");
+      NS_ASSERTION(IsInteger(), "Bad key!");
+      rv = aStatement->BindInt64ByName(aParamName, ToInteger());
     }
 
     return NS_SUCCEEDED(rv) ? NS_OK : NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
