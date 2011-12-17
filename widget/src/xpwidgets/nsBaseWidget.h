@@ -51,6 +51,14 @@ class nsIContent;
 class nsAutoRollup;
 class gfxContext;
 
+namespace mozilla {
+namespace layers {
+class CompositorChild;
+}
+}
+
+using mozilla::layers::CompositorChild;
+
 /**
  * Common widget implementation used as base class for native
  * or crossplatform implementations of Widgets. 
@@ -269,6 +277,7 @@ protected:
   nsDeviceContext* mContext;
   nsRefPtr<LayerManager> mLayerManager;
   nsRefPtr<LayerManager> mBasicLayerManager;
+  nsRefPtr<CompositorChild> mCompositor;
   nscolor           mBackground;
   nscolor           mForeground;
   nsCursor          mCursor;

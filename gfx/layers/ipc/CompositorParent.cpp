@@ -45,6 +45,7 @@ namespace mozilla {
 namespace layers {
 
 CompositorParent::CompositorParent()
+  : mLayerManager(NULL)
 {
 
   MOZ_COUNT_CTOR(CompositorParent);
@@ -52,6 +53,7 @@ CompositorParent::CompositorParent()
 
 CompositorParent::~CompositorParent()
 {
+  printf("delete parent\n");
   delete mLayerManager;
   MOZ_COUNT_DTOR(CompositorParent);
 }
@@ -64,11 +66,21 @@ CompositorParent::AnswerInit()
   return true;
 }
 
+bool
+CompositorParent::AnswerStop()
+{
+  if (mLayerManager) {
+    delete mLayerManager;
+    mLayerManager = NULL;
+  }
+  return true;
+}
+
 void
 CompositorParent::Composite()
 {
   CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::Composite);
-  MessageLoop::current()->PostTask(FROM_HERE, composeTask);
+  MessageLoop::current()->PostDelayedTask(FROM_HERE, composeTask, 100);
 
   if (!mLayerManager)
     return;

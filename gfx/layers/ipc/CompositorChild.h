@@ -56,9 +56,11 @@ class LayerManager;
 
 class CompositorChild : public PCompositorChild
 {
-
+  NS_INLINE_DECL_REFCOUNTING(CompositorChild)
 public:
   virtual ~CompositorChild();
+
+  void Destroy();
 
   static CompositorChild* CreateCompositor(LayerManager *aLayerManager);
 
