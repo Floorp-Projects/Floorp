@@ -970,7 +970,7 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
   nsCOMPtr<nsINode> thisNode = do_QueryInterface(this);
 
   nsRefPtr<nsAsyncDOMEvent> event =
-    new nsLoadBlockingPLDOMEvent(thisNode, aEventType, false, false);
+    new nsLoadBlockingAsyncDOMEvent(thisNode, aEventType, false, false);
   event->PostDOMEvent();
   
   return NS_OK;
