@@ -424,12 +424,8 @@ struct JSRuntime
     size_t              gcMaxBytes;
     size_t              gcMaxMallocBytes;
     uint32_t            gcEmptyArenaPoolLifespan;
-
-    /*
-     * Number of the committed arenas in non-empty chunks. The counter is
-     * volatile as it is read without the GC lock, see comments in MaybeGC.
-     */
-    volatile uint32_t   gcNumArenasFreeCommitted;
+    /* We access this without the GC lock, however a race will not affect correctness */
+    volatile uint32_t   gcNumFreeArenas;
     uint32_t            gcNumber;
     js::GCMarker        *gcIncrementalTracer;
     void                *gcVerifyData;
