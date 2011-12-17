@@ -3203,6 +3203,32 @@ nsHttpChannel::InstallCacheListener(PRUint32 offset)
     NS_ASSERTION(mCacheEntry, "no cache entry");
     NS_ASSERTION(mListener, "no listener");
 
+    nsCacheStoragePolicy policy;
+    rv = mCacheEntry->GetStoragePolicy(&policy);
+    if (NS_FAILED(rv)) {
+        policy = nsICache::STORE_ON_DISK_AS_FILE;
+    }
+
+    // If the content is compressible and the server has not compressed it,
+    // mark the cache entry for compression.
+    if ((mResponseHead->PeekHeader(nsHttp::Content_Encoding) == nsnull) && (
+         policy != nsICache::STORE_ON_DISK_AS_FILE) && (
+         mResponseHead->ContentType().EqualsLiteral(TEXT_HTML) ||
+         mResponseHead->ContentType().EqualsLiteral(TEXT_PLAIN) ||
+         mResponseHead->ContentType().EqualsLiteral(TEXT_CSS) ||
+         mResponseHead->ContentType().EqualsLiteral(TEXT_JAVASCRIPT) ||
+         mResponseHead->ContentType().EqualsLiteral(TEXT_ECMASCRIPT) ||
+         mResponseHead->ContentType().EqualsLiteral(TEXT_XML) ||
+         mResponseHead->ContentType().EqualsLiteral(APPLICATION_JAVASCRIPT) ||
+         mResponseHead->ContentType().EqualsLiteral(APPLICATION_ECMASCRIPT) ||
+         mResponseHead->ContentType().EqualsLiteral(APPLICATION_XJAVASCRIPT) ||
+         mResponseHead->ContentType().EqualsLiteral(APPLICATION_XHTML_XML))) {
+        rv = mCacheEntry->SetMetaDataElement("uncompressed-len", "0"); 
+        if (NS_FAILED(rv)) {
+            LOG(("unable to mark cache entry for compression"));
+        }
+    } 
+      
     nsCOMPtr<nsIOutputStream> out;
     rv = mCacheEntry->OpenOutputStream(offset, getter_AddRefs(out));
     if (NS_FAILED(rv)) return rv;
@@ -3225,10 +3251,7 @@ nsHttpChannel::InstallCacheListener(PRUint32 offset)
     nsCOMPtr<nsIEventTarget> cacheIOTarget;
     serv->GetCacheIOTarget(getter_AddRefs(cacheIOTarget));
 
-    nsCacheStoragePolicy policy;
-    rv = mCacheEntry->GetStoragePolicy(&policy);
-
-    if (NS_FAILED(rv) || policy == nsICache::STORE_ON_DISK_AS_FILE ||
+    if (policy == nsICache::STORE_ON_DISK_AS_FILE ||
         !cacheIOTarget) {
         LOG(("nsHttpChannel::InstallCacheListener sync tee %p rv=%x policy=%d "
              "cacheIOTarget=%p", tee.get(), rv, policy, cacheIOTarget.get()));
