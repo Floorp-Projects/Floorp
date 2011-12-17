@@ -40,42 +40,26 @@
 #ifndef mozilla_Hal_h
 #define mozilla_Hal_h 1
 
+#include "mozilla/hal_sandbox/PHal.h"
 #include "base/basictypes.h"
 #include "mozilla/Types.h"
 #include "nsTArray.h"
 #include "prlog.h"
 #include "mozilla/dom/battery/Types.h"
 
-#ifndef MOZ_HAL_NAMESPACE
+/*
+ * Hal.h contains the public Hal API.
+ *
+ * By default, this file defines its functions in the hal namespace, but if
+ * MOZ_HAL_NAMESPACE is defined, we'll define our functions in that namespace.
+ *
+ * This is used by HalImpl.h and HalSandbox.h, which define copies of all the
+ * functions here in the hal_impl and hal_sandbox namespaces.
+ */
 
 class nsIDOMWindow;
 
-// Only include this hunk of code once, and include it before
-// HalImpl.h and HalSandbox.h.
-namespace mozilla {
-namespace hal {
-
-extern PRLogModuleInfo *sHalLog;
-#define HAL_LOG(msg) PR_LOG(sHalLog, PR_LOG_DEBUG, msg)
-
-class WindowIdentifier;
-
-} // namespace hal
-} // namespace mozilla
-
-// This goop plays some cpp tricks to ensure a uniform API across the
-// API entry point, "sandbox" implementations (for content processes),
-// and "impl" backends where the real work happens.  After this runs
-// through cpp, there will be three sets of identical APIs
-//   hal_impl:: --- the platform-specific implementation of an API.
-//   hal_sandbox:: --- forwards calls up to the parent process
-//   hal:: --- invokes sandboxed impl if in a sandboxed process,
-//             otherwise forwards to hal_impl
-//
-// External code should never invoke hal_impl:: or hal_sandbox:: code
-// directly.
-# include "HalImpl.h"
-# include "HalSandbox.h"
+#ifndef MOZ_HAL_NAMESPACE
 # define MOZ_HAL_NAMESPACE hal
 # define MOZ_DEFINED_HAL_NAMESPACE 1
 #endif
@@ -83,10 +67,15 @@ class WindowIdentifier;
 namespace mozilla {
 
 namespace hal {
-class BatteryInformation;
+
+class WindowIdentifier;
+
+extern PRLogModuleInfo *sHalLog;
+#define HAL_LOG(msg) PR_LOG(sHalLog, PR_LOG_DEBUG, msg)
+
 } // namespace hal
 
-namespace MOZ_HAL_NAMESPACE /*hal*/ {
+namespace MOZ_HAL_NAMESPACE {
 
 /**
  * Turn the default vibrator device on/off per the pattern specified
@@ -134,24 +123,6 @@ void RegisterBatteryObserver(BatteryObserver* aBatteryObserver);
  * @param aBatteryObserver The observer that should be removed.
  */
 void UnregisterBatteryObserver(BatteryObserver* aBatteryObserver);
-
-/**
- * Enables battery notifications from the backend.
- *
- * This method is semi-private in the sense of it is visible in the hal
- * namespace but should not be used. Calls to this method from the hal
- * namespace will produce a link error because it is not defined.
- */
-void EnableBatteryNotifications();
-
-/**
- * Disables battery notifications from the backend.
- *
- * This method is semi-private in the sense of it is visible in the hal
- * namespace but should not be used. Calls to this method from the hal
- * namespace will produce a link error because it is not defined.
- */
-void DisableBatteryNotifications();
 
 /**
  * Returns the current battery information.
