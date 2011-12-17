@@ -141,8 +141,13 @@ nsBaseWidget::~nsBaseWidget()
     static_cast<BasicLayerManager*>(mLayerManager.get())->ClearRetainerWidget();
   }
 
+  if (mCompositor) {
+    mCompositor->Destroy();
+  }
+
   if (mLayerManager) {
     mLayerManager->Destroy();
+    mLayerManager = NULL;
   }
 
 #ifdef NOISY_WIDGET_LEAKS
@@ -846,14 +851,14 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
         Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
       if (useCompositor) {
         LayerManager* lm = CreateBasicLayerManager();
-        CompositorChild *compositorChild = CompositorChild::CreateCompositor(lm);
+        mCompositor = CompositorChild::CreateCompositor(lm);
 
-        if (compositorChild) {
+        if (mCompositor) {
           // e10s uses the parameter to pass in the shadow manager from the TabChild
           // so we don't expect to see it there since this doesn't support e10s.
           NS_ASSERTION(aShadowManager == NULL, "Async Compositor not supported with e10s");
           WidgetDescriptor desc = ViewWidget((uintptr_t)dynamic_cast<nsIWidget*>(this));
-          PLayersChild* shadowManager = compositorChild->SendPLayersConstructor(
+          PLayersChild* shadowManager = mCompositor->SendPLayersConstructor(
                                           LayerManager::LAYERS_OPENGL,
                                           desc);
 
@@ -861,14 +866,14 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
             ShadowLayerForwarder* lf = lm->AsShadowForwarder();
             if (!lf) {
               delete lm;
-              delete compositorChild;
+              mCompositor = NULL;
             }
             lf->SetShadowManager(shadowManager);
 
             mLayerManager = lm;
           } else {
             NS_WARNING("fail to construct LayersChild");
-            delete compositorChild;
+            mCompositor = NULL;
           }
         }
       }

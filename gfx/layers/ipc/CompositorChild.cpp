@@ -59,7 +59,14 @@ CompositorChild::CompositorChild(Thread *aCompositorThread, LayerManager *aLayer
 
 CompositorChild::~CompositorChild()
 {
+  printf("del\n");
   MOZ_COUNT_DTOR(CompositorChild);
+}
+
+void
+CompositorChild::Destroy()
+{
+  CallStop();
 }
 
 CompositorChild*
@@ -105,6 +112,7 @@ CompositorChild::AllocPLayers(const LayersBackend &backend, const WidgetDescript
 bool
 CompositorChild::DeallocPLayers(PLayersChild* actor)
 {
+  printf("actor destroy\n");
   delete actor;
   return true;
 }
