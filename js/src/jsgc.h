@@ -1654,10 +1654,10 @@ struct GCMarker : public JSTracer {
         TypeTag,
         XmlTag,
         IonCodeTag,
-        LastTag = XmlTag
+        LastTag = IonCodeTag
     };
 
-    static const uintptr_t StackTagMask = 3;
+    static const uintptr_t StackTagMask = 7;
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(StackTagMask >= uintptr_t(LastTag));
