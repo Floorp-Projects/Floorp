@@ -65,6 +65,7 @@ EXPORTS_mozilla = \
 CPPSRCS = \
   Hal.cpp \
   SandboxHal.cpp \
+  WindowIdentifier.cpp \
   $(NULL)
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))

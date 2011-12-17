@@ -38,22 +38,19 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "Hal.h"
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/TabChild.h"
 #include "mozilla/Util.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Observer.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
-#include "nsPIDOMWindow.h"
 #include "mozilla/Services.h"
 #include "nsIWebNavigation.h"
 #include "nsITabChild.h"
 #include "nsIDocShell.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "WindowIdentifier.h"
 
-using namespace mozilla::dom;
 using namespace mozilla::services;
 
 #define PROXY_IF_SANDBOXED(_call)                 \
@@ -117,78 +114,10 @@ void InitLastIDToVibrate()
 
 } // anonymous namespace
 
-WindowIdentifier::WindowIdentifier()
-  : mWindow(nsnull)
-  , mIsEmpty(true)
-{
-}
-
-WindowIdentifier::WindowIdentifier(nsIDOMWindow *window)
-  : mWindow(window)
-  , mIsEmpty(false)
-{
-  mID.AppendElement(GetWindowID());
-}
-
-WindowIdentifier::WindowIdentifier(nsCOMPtr<nsIDOMWindow> &window)
-  : mWindow(window)
-  , mIsEmpty(false)
-{
-  mID.AppendElement(GetWindowID());
-}
-
-WindowIdentifier::WindowIdentifier(const nsTArray<uint64> &id, nsIDOMWindow *window)
-  : mID(id)
-  , mWindow(window)
-  , mIsEmpty(false)
-{
-  mID.AppendElement(GetWindowID());
-}
-
-WindowIdentifier::WindowIdentifier(const WindowIdentifier &other)
-  : mID(other.mID)
-  , mWindow(other.mWindow)
-  , mIsEmpty(other.mIsEmpty)
-{
-}
-
-const InfallibleTArray<uint64>&
-WindowIdentifier::AsArray() const
-{
-  MOZ_ASSERT(!mIsEmpty);
-  return mID;
-}
-
-bool
-WindowIdentifier::HasTraveledThroughIPC() const
-{
-  MOZ_ASSERT(!mIsEmpty);
-  return mID.Length() >= 2;
-}
-
 void
-WindowIdentifier::AppendProcessID()
+Vibrate(const nsTArray<uint32>& pattern, nsIDOMWindow* window)
 {
-  MOZ_ASSERT(!mIsEmpty);
-  mID.AppendElement(ContentChild::GetSingleton()->GetID());
-}
-
-uint64
-WindowIdentifier::GetWindowID() const
-{
-  MOZ_ASSERT(!mIsEmpty);
-  nsCOMPtr<nsPIDOMWindow> pidomWindow = do_QueryInterface(mWindow);
-  if (!pidomWindow) {
-    return uint64(-1);
-  }
-  return pidomWindow->WindowID();
-}
-
-nsIDOMWindow*
-WindowIdentifier::GetWindow() const
-{
-  MOZ_ASSERT(!mIsEmpty);
-  return mWindow;
+  Vibrate(pattern, WindowIdentifier(window));
 }
 
 void
@@ -221,6 +150,12 @@ Vibrate(const nsTArray<uint32>& pattern, const WindowIdentifier &id)
     // assert if it's used.
     hal_impl::Vibrate(pattern, WindowIdentifier());
   }
+}
+
+void
+CancelVibrate(nsIDOMWindow* window)
+{
+  CancelVibrate(WindowIdentifier(window));
 }
 
 void
