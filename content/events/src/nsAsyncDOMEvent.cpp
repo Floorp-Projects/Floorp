@@ -92,7 +92,7 @@ void nsAsyncDOMEvent::RunDOMEventWhenSafe()
   nsContentUtils::AddScriptRunner(this);
 }
 
-nsLoadBlockingPLDOMEvent::~nsLoadBlockingPLDOMEvent()
+nsLoadBlockingAsyncDOMEvent::~nsLoadBlockingAsyncDOMEvent()
 {
   if (mBlockedDoc) {
     mBlockedDoc->UnblockOnload(true);

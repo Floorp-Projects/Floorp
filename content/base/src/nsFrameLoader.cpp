@@ -400,8 +400,8 @@ nsFrameLoader::FireErrorEvent()
 {
   if (mOwnerContent) {
     nsRefPtr<nsAsyncDOMEvent> event =
-      new nsLoadBlockingPLDOMEvent(mOwnerContent, NS_LITERAL_STRING("error"),
-                                   false, false);
+      new nsLoadBlockingAsyncDOMEvent(mOwnerContent, NS_LITERAL_STRING("error"),
+                                      false, false);
     event->PostDOMEvent();
   }
 }
