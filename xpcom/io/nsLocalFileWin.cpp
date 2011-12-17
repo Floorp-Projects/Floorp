@@ -546,11 +546,12 @@ ReadDir(nsDir *dir, PRDirFlags flags, nsString& name)
 }
 
 static nsresult
-CloseDir(nsDir *d)
+CloseDir(nsDir *&d)
 {
     NS_ENSURE_ARG(d);
 
     BOOL isOk = FindClose(d->handle);
+    // PR_DELETE also nulls out the passed in pointer.
     PR_DELETE(d);
     return isOk ? NS_OK : ConvertWinError(GetLastError());
 }
@@ -608,8 +609,6 @@ class nsDirEnumerator : public nsISimpleEnumerator,
                     if (NS_FAILED(CloseDir(mDir)))
                         return NS_ERROR_FAILURE;
 
-                    mDir = nsnull;
-
                     *result = false;
                     return NS_OK;
                 }
@@ -666,7 +665,6 @@ class nsDirEnumerator : public nsISimpleEnumerator,
                 NS_ASSERTION(NS_SUCCEEDED(rv), "close failed");
                 if (NS_FAILED(rv))
                     return NS_ERROR_FAILURE;
-                mDir = nsnull;
             }
             return NS_OK;
         }
