@@ -90,7 +90,7 @@
 
 #include "nsLayoutUtils.h"
 #include "nsIView.h"
-#include "nsPLDOMEvent.h"
+#include "nsAsyncDOMEvent.h"
 
 #include "nsIURI.h"
 #include "nsIURL.h"
@@ -399,7 +399,7 @@ void
 nsFrameLoader::FireErrorEvent()
 {
   if (mOwnerContent) {
-    nsRefPtr<nsPLDOMEvent> event =
+    nsRefPtr<nsAsyncDOMEvent> event =
       new nsLoadBlockingPLDOMEvent(mOwnerContent, NS_LITERAL_STRING("error"),
                                    false, false);
     event->PostDOMEvent();

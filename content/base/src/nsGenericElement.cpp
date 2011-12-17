@@ -132,7 +132,7 @@
 #include "mozilla/css/StyleRule.h" /* For nsCSSSelectorList */
 #include "nsCSSRuleProcessor.h"
 #include "nsRuleProcessorData.h"
-#include "nsPLDOMEvent.h"
+#include "nsAsyncDOMEvent.h"
 #include "nsTextNode.h"
 #include "dombindings.h"
 
@@ -3650,7 +3650,7 @@ nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
       mutation.mRelatedNode = do_QueryInterface(this);
 
       mozAutoSubtreeModified subtree(OwnerDoc(), this);
-      (new nsPLDOMEvent(aKid, mutation))->RunDOMEventWhenSafe();
+      (new nsAsyncDOMEvent(aKid, mutation))->RunDOMEventWhenSafe();
     }
   }
 
@@ -3995,7 +3995,7 @@ nsGenericElement::FireNodeInserted(nsIDocument* aDoc,
       mutation.mRelatedNode = do_QueryInterface(aParent);
 
       mozAutoSubtreeModified subtree(aDoc, aParent);
-      (new nsPLDOMEvent(childContent, mutation))->RunDOMEventWhenSafe();
+      (new nsAsyncDOMEvent(childContent, mutation))->RunDOMEventWhenSafe();
     }
   }
 }
@@ -4670,7 +4670,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     mutation.mAttrChange = aModType;
 
     mozAutoSubtreeModified subtree(OwnerDoc(), this);
-    (new nsPLDOMEvent(this, mutation))->RunDOMEventWhenSafe();
+    (new nsAsyncDOMEvent(this, mutation))->RunDOMEventWhenSafe();
   }
 
   return NS_OK;
@@ -4884,7 +4884,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
     mozAutoSubtreeModified subtree(OwnerDoc(), this);
-    (new nsPLDOMEvent(this, mutation))->RunDOMEventWhenSafe();
+    (new nsAsyncDOMEvent(this, mutation))->RunDOMEventWhenSafe();
   }
 
   return NS_OK;
