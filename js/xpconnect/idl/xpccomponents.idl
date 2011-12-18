@@ -152,7 +152,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(a5213836-fd24-4b36-8916-fff222b23cf3)]
+[scriptable, uuid(6b1ca9d9-a941-4ba8-8421-af72f544e795)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -198,7 +198,11 @@ interface nsIXPCComponents_Utils : nsISupports
      * s.seven = res;
      * var thirtyFive = C.u.evalInSandbox("five * seven", s);
      */
-    void evalInSandbox(in AString source/*, obj */);
+    [implicit_jscontext,optional_argc]
+    jsval evalInSandbox(in AString source, in jsval sandbox,
+                        [optional] in jsval version,
+                        [optional] in jsval filename,
+                        [optional] in long lineNo);
 
 
     /*

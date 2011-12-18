@@ -3367,82 +3367,53 @@ ContextHolder::ContextHolderOperationCallback(JSContext *cx)
 
 /* void evalInSandbox(in AString source, in nativeobj sandbox); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
+nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
+                                     const JS::Value& sandboxVal,
+                                     const JS::Value& version,
+                                     const JS::Value& filenameVal,
+                                     PRInt32 lineNumber,
+                                     JSContext *cx,
+                                     PRUint8 optionalArgc,
+                                     JS::Value *retval)
 {
-    nsresult rv;
-
-    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-    if (NS_FAILED(rv))
-        return rv;
-
-    // get the xpconnect native call context
-    nsAXPCNativeCallContext *cc = nsnull;
-    xpc->GetCurrentNativeCallContext(&cc);
-    if (!cc)
-        return NS_ERROR_FAILURE;
-
-    // Get JSContext of current call
-    JSContext* cx;
-    rv = cc->GetJSContext(&cx);
-    if (NS_FAILED(rv) || !cx)
-        return NS_ERROR_FAILURE;
-
-    // get place for return value
-    jsval *rval = nsnull;
-    rv = cc->GetRetValPtr(&rval);
-    if (NS_FAILED(rv) || !rval)
-        return NS_ERROR_FAILURE;
-
-    // get argc and argv and verify arg count
-    PRUint32 argc;
-    rv = cc->GetArgc(&argc);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // The second argument is the sandbox object. It is required.
-    if (argc < 2)
-        return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
-
-    jsval *argv;
-    rv = cc->GetArgvPtr(&argv);
-    if (NS_FAILED(rv))
-        return rv;
-
     JSObject *sandbox;
-    JSString *jsVersionStr = NULL;
-    JSString *filenameStr = NULL;
-    PRInt32 lineNo = 0;
-
-    JSBool ok = JS_ConvertArguments(cx, argc, argv, "*o/SSi",
-                                    &sandbox, &jsVersionStr,
-                                    &filenameStr, &lineNo);
-
-    if (!ok || !sandbox)
+    if (!JS_ValueToObject(cx, sandboxVal, &sandbox) || !sandbox)
         return NS_ERROR_INVALID_ARG;
 
-    JSVersion jsVersion = JSVERSION_DEFAULT;
-
     // Optional third argument: JS version, as a string.
-    if (jsVersionStr) {
+    JSVersion jsVersion = JSVERSION_DEFAULT;
+    if (optionalArgc >= 1) {
+        JSString *jsVersionStr = JS_ValueToString(cx, version);
+        if (!jsVersionStr)
+            return NS_ERROR_INVALID_ARG;
+
         JSAutoByteString bytes(cx, jsVersionStr);
         if (!bytes)
             return NS_ERROR_INVALID_ARG;
+
         jsVersion = JS_StringToVersion(bytes.ptr());
         if (jsVersion == JSVERSION_UNKNOWN)
             return NS_ERROR_INVALID_ARG;
     }
 
-    JSAutoByteString filenameBytes;
-    nsXPIDLCString filename;
-
-
     // Optional fourth and fifth arguments: filename and line number.
-    if (filenameStr) {
+    nsXPIDLCString filename;
+    PRInt32 lineNo = (optionalArgc >= 3) ? lineNumber : 0;
+    if (optionalArgc >= 2) {
+        JSString *filenameStr = JS_ValueToString(cx, filenameVal);
+        if (!filenameStr)
+            return NS_ERROR_INVALID_ARG;
+
+        JSAutoByteString filenameBytes;
         if (!filenameBytes.encode(cx, filenameStr))
             return NS_ERROR_INVALID_ARG;
         filename = filenameBytes.ptr();
     } else {
         // Get the current source info from xpc.
+        nsresult rv;
+        nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID(), &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
         nsCOMPtr<nsIStackFrame> frame;
         xpc->GetCurrentJSStack(getter_AddRefs(frame));
         if (frame) {
@@ -3451,13 +3422,8 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
         }
     }
 
-    rv = xpc_EvalInSandbox(cx, sandbox, source, filename.get(), lineNo,
-                           jsVersion, false, rval);
-
-    if (NS_SUCCEEDED(rv) && !JS_IsExceptionPending(cx))
-        cc->SetReturnValueWasSet(true);
-
-    return rv;
+    return xpc_EvalInSandbox(cx, sandbox, source, filename.get(), lineNo,
+                             jsVersion, false, retval);
 }
 
 nsresult
