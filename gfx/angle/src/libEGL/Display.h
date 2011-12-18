@@ -122,6 +122,7 @@ class Display
     bool mDeviceLost;
 
     bool createDevice();
+    void initializeDevice();
     bool resetDevice();
 
     void initExtensionString();
