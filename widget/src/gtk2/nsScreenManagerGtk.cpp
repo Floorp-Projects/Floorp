@@ -45,10 +45,6 @@
 
 #define SCREEN_MANAGER_LIBRARY_LOAD_FAILED ((PRLibrary*)1)
 
-#ifdef MOZ_DFB
-#include <directfb.h>
-#endif
-
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
 // prototypes from Xinerama.h
@@ -81,23 +77,6 @@ root_window_event_filter(GdkXEvent *aGdkXEvent, GdkEvent *aGdkEvent,
       }
       break;
     default:
-      break;
-  }
-#endif
-
-#ifdef MOZ_DFB
-  DFBWindowEvent * dfbEvent = static_cast<DFBWindowEvent *> (aGdkXEvent);
-
-  switch (dfbEvent->type)
-  {
-      case DWET_POSITION :
-      case DWET_SIZE :
-          manager->Init();
-      break;
-
-          /* TODO: Need to find out PropertyNotify equivalent in
-           * DFB.. */
-      default :
       break;
   }
 #endif

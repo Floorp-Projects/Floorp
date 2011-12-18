@@ -58,10 +58,6 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
-#ifdef MOZ_DFB
-#include <gdk/gdkdirectfb.h>
-#endif /* MOZ_DFB */
-
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
 #endif /* MOZ_X11 */
@@ -417,14 +413,6 @@ private:
     nsRefPtr<nsShmImage>  mShmImage;
 #endif
     nsRefPtr<gfxASurface> mThebesSurface;
-
-#ifdef MOZ_DFB
-    int                    mDFBCursorX;
-    int                    mDFBCursorY;
-    PRUint32               mDFBCursorCount;
-    IDirectFB             *mDFB;
-    IDirectFBDisplayLayer *mDFBLayer;
-#endif
 
 #ifdef ACCESSIBILITY
     nsRefPtr<nsAccessible> mRootAccessible;
