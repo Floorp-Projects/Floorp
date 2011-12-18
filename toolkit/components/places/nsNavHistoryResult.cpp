@@ -4845,11 +4845,9 @@ nsNavHistoryResult::OnItemMoved(PRInt64 aItemId,
                                 const nsACString& aOldParentGUID,
                                 const nsACString& aNewParentGUID)
 {
-  { // scope for loop index for VC6's broken for loop scoping
-    ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(aOldParent,
-        OnItemMoved(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex,
-                    aItemType, aGUID, aOldParentGUID, aNewParentGUID));
-  }
+  ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(aOldParent,
+      OnItemMoved(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex,
+                  aItemType, aGUID, aOldParentGUID, aNewParentGUID));
   if (aNewParent != aOldParent) {
     ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(aNewParent,
         OnItemMoved(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex,
