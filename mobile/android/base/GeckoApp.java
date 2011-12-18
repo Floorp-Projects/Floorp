@@ -1000,8 +1000,8 @@ abstract public class GeckoApp
 
         public void run() {
             mAutoCompletePopup.hide();
-            if (mAboutHomeContent == null) {
-                mAboutHomeContent = (AboutHomeContent) findViewById(R.id.abouthome_content);
+            if (mAboutHomeContent == null && mShow) {
+                mAboutHomeContent = new AboutHomeContent(GeckoApp.mAppContext, null);
                 mAboutHomeContent.init(GeckoApp.mAppContext);
                 mAboutHomeContent.setUriLoadCallback(new AboutHomeContent.UriLoadCallback() {
                     public void callback(String url) {
@@ -1009,8 +1009,10 @@ abstract public class GeckoApp
                         loadUrl(url, AwesomeBar.Type.EDIT);
                     }
                 });
+                mGeckoLayout.addView(mAboutHomeContent);
             }
-            mAboutHomeContent.setVisibility(mShow ? View.VISIBLE : View.GONE);
+            if (mAboutHomeContent != null)
+                mAboutHomeContent.setVisibility(mShow ? View.VISIBLE : View.GONE);
         }
     }
 
