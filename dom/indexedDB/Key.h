@@ -43,6 +43,7 @@
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
 #include "mozIStorageStatement.h"
+#include "nsJSUtils.h"
 
 #include "xpcprivate.h"
 #include "XPCQuickStubs.h"
@@ -168,9 +169,11 @@ public:
                         jsval aVal)
   {
     if (JSVAL_IS_STRING(aVal)) {
-      jsval tempRoot = JSVAL_VOID;
-      SetFromString(xpc_qsAString(aCx, aVal, &tempRoot));
-      return NS_OK;
+      nsDependentJSString str;
+      if (!str.init(aCx, aVal)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      return SetFromString(str);
     }
 
     if (JSVAL_IS_INT(aVal)) {
