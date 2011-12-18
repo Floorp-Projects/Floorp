@@ -22,6 +22,7 @@
 //
 #include <GLES2/gl2.h>
 #include <EGL/egl.h>
+#include <EGL/eglext.h>
 
 #ifdef __cplusplus
 
@@ -44,9 +45,10 @@ extern "C" {
 #define ES_WINDOW_DEPTH         2 
 /// esCreateWindow flag - stencil buffer
 #define ES_WINDOW_STENCIL       4
-/// esCreateWindow flat - multi-sample buffer
+/// esCreateWindow flag - multi-sample buffer
 #define ES_WINDOW_MULTISAMPLE   8
-
+/// esCreateWindow flag - EGL_POST_SUB_BUFFER_NV supported.
+#define ES_WINDOW_POST_SUB_BUFFER_SUPPORTED 16
 
 ///
 // Types
@@ -88,6 +90,13 @@ typedef struct
 
 
 ///
+//  Extensions
+//
+
+extern PFNEGLPOSTSUBBUFFERNVPROC eglPostSubBufferNV;
+
+
+///
 //  Public Functions
 //
 
@@ -110,6 +119,7 @@ void ESUTIL_API esInitContext ( ESContext *esContext );
 ///         ES_WINDOW_DEPTH   - specifies that a depth buffer should be created
 ///         ES_WINDOW_STENCIL - specifies that a stencil buffer should be created
 ///         ES_WINDOW_MULTISAMPLE - specifies that a multi-sample buffer should be created
+///         ES_WINDOW_POST_SUB_BUFFER_SUPPORTED - specifies that EGL_POST_SUB_BUFFER_NV is supported.
 /// \return GL_TRUE if window creation is succesful, GL_FALSE otherwise
 GLboolean ESUTIL_API esCreateWindow ( ESContext *esContext, LPCTSTR title, GLint width, GLint height, GLuint flags );
 
