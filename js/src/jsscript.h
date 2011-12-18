@@ -513,7 +513,7 @@ struct JSScript : public js::gc::Cell {
     /*
      * A global object for the script.
      * - All scripts returned by JSAPI functions (JS_CompileScript,
-     *   JS_CompileFile, etc.) have a non-null globalObject.
+     *   JS_CompileUTF8File, etc.) have a non-null globalObject.
      * - A function script has a globalObject if the function comes from a
      *   compile-and-go script.
      * - Temporary scripts created by obj_eval, JS_EvaluateScript, and

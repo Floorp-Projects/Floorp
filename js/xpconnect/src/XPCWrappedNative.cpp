@@ -2457,13 +2457,7 @@ CallMethodHelper::GatherAndConvertResults()
         }
 
         if (paramInfo.IsRetval()) {
-            if (!mCallContext.GetReturnValueWasSet()) {
-                mCallContext.SetRetVal(v);
-            } else {
-                // really, this should assert TagPart() == nsXPTType::T_VOID
-                NS_ASSERTION(type.TagPart() != nsXPTType::T_JSVAL,
-                             "dropping declared return value");
-            }
+            mCallContext.SetRetVal(v);
         } else if (i < mArgc) {
             // we actually assured this before doing the invoke
             NS_ASSERTION(JSVAL_IS_OBJECT(mArgv[i]), "out var is not object");

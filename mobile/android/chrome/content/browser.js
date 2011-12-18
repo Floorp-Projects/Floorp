@@ -977,62 +977,33 @@ function nsBrowserAccess() {
 }
 
 nsBrowserAccess.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow]),
-
-  _getBrowser: function _getBrowser(aURI, aOpener, aWhere, aContext) {
-    let isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
-    if (isExternal && aURI && aURI.schemeIs("chrome"))
-      return null;
-
-    let loadflags = isExternal ?
-                      Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
-                      Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
-      switch (aContext) {
-        case Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL:
-          aWhere = Services.prefs.getIntPref("browser.link.open_external");
-          break;
-        default: // OPEN_NEW or an illegal value
-          aWhere = Services.prefs.getIntPref("browser.link.open_newwindow");
-      }
-    }
-
-    let browser;
-    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW || aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
-      let tab = BrowserApp.addTab("about:blank", { selected: true });
-      browser = tab.browser;
-    } else { // OPEN_CURRENTWINDOW and illegal values
-      browser = BrowserApp.selectedBrowser;
-    }
-
-    Services.io.offline = false;
-    try {
-      let referrer;
-      if (aURI && browser) {
-        if (aOpener) {
-          let location = aOpener.location;
-          referrer = Services.io.newURI(location, null, null);
-        }
-        browser.loadURIWithFlags(aURI.spec, loadflags, referrer, null, null);
-      }
-    } catch(e) { }
-
-    return browser;
-  },
-
   openURI: function browser_openURI(aURI, aOpener, aWhere, aContext) {
-    let browser = this._getBrowser(aURI, aOpener, aWhere, aContext);
-    return browser ? browser.QueryInterface(Ci.nsIFrameLoaderOwner) : null;
+    let isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+
+    dump("nsBrowserAccess::openURI");
+    let browser = BrowserApp.selectedBrowser;
+    if (!browser || isExternal) {
+      let tab = BrowserApp.addTab("about:blank");
+      BrowserApp.selectTab(tab);
+      browser = tab.browser;
+    }
+
+    // Why does returning the browser.contentWindow not work here?
+    Services.io.offline = false;
+    BrowserApp.loadURI(aURI.spec, browser);
+    return null;
   },
 
   openURIInFrame: function browser_openURIInFrame(aURI, aOpener, aWhere, aContext) {
-    let browser = this._getBrowser(aURI, aOpener, aWhere, aContext);
-    return browser ? browser.QueryInterface(Ci.nsIFrameLoaderOwner) : null;
+    dump("nsBrowserAccess::openURIInFrame");
+    return null;
   },
 
   isTabContentWindow: function(aWindow) {
     return BrowserApp.getBrowserForWindow(aWindow) != null;
-  }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow])
 };
 
 
@@ -1054,7 +1025,7 @@ function Tab(aURL, aParams) {
   this.create(aURL, aParams);
   this._metadata = null;
   this._viewport = { x: 0, y: 0, width: gScreenWidth, height: gScreenHeight, offsetX: 0, offsetY: 0,
-                     pageWidth: gScreenWidth, pageHeight: gScreenHeight, zoom: 1.0 };
+                     pageWidth: 1, pageHeight: 1, zoom: 1.0 };
   this.viewportExcess = { x: 0, y: 0 };
   this.userScrollPos = { x: 0, y: 0 };
   this._pluginsToPlay = [];
@@ -1292,7 +1263,7 @@ Tab.prototype = {
     this.viewport = { x: xpos, y: ypos,
                       offsetX: 0, offsetY: 0,
                       width: this._viewport.width, height: this._viewport.height,
-                      pageWidth: gScreenWidth, pageHeight: gScreenHeight,
+                      pageWidth: 1, pageHeight: 1,
                       zoom: zoom };
     this.sendViewportUpdate();
   },
