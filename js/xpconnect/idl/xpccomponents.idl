@@ -152,7 +152,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(6b1ca9d9-a941-4ba8-8421-af72f544e795)]
+[scriptable, uuid(90894460-26a2-44c2-a3fc-c96a5286614e)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -166,7 +166,7 @@ interface nsIXPCComponents_Utils : nsISupports
      * an exception handler.  If it is not a JS error object, the parameter
      * is converted to a string and reported as a new error.
      */
-    void reportError();
+    [implicit_jscontext] void reportError(in jsval error);
 
     /* lookupMethod is designed to be called from JavaScript only.
      *
@@ -351,7 +351,7 @@ interface nsIXPCComponents_Utils : nsISupports
 /**
 * interface of JavaScript's 'Components' object
 */
-[scriptable, uuid(9d654574-cb2c-4bd0-a0fd-c10443fe2135)]
+[scriptable, uuid(4676e9cf-2c07-423b-b161-26bb9d8067d3)]
 interface nsIXPCComponents : nsISupports
 {
     readonly attribute nsIXPCComponents_Interfaces      interfaces;
@@ -377,7 +377,7 @@ interface nsIXPCComponents : nsISupports
     jsval lookupMethod(in jsval obj, in jsval name);
 
     /* @deprecated Use Components.utils.reportError instead. */
-    [deprecated] void reportError();
+    [deprecated, implicit_jscontext] void reportError(in jsval error);
 
     /* 'lastResult' is accessible via JavaScript only */
     /* 'returnCode' is accessible via JavaScript only */
