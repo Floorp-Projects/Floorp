@@ -4296,7 +4296,6 @@ nsUrlClassifierDBService::GetTables(nsIUrlClassifierCallback* c)
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
-  nsresult rv;
   // The proxy callback uses the current thread.
   nsCOMPtr<nsIUrlClassifierCallback> proxyCallback =
     new UrlClassifierCallbackProxy(c);
@@ -4330,8 +4329,6 @@ nsUrlClassifierDBService::BeginUpdate(nsIUrlClassifierUpdateObserver *observer,
     return NS_ERROR_NOT_AVAILABLE;
 
   mInUpdate = true;
-
-  nsresult rv;
 
   // The proxy observer uses the current thread
   nsCOMPtr<nsIUrlClassifierUpdateObserver> proxyObserver =

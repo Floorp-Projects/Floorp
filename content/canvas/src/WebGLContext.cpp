@@ -496,8 +496,10 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         Preferences::GetBool("webgl.force_osmesa", false);
     bool preferEGL =
         Preferences::GetBool("webgl.prefer-egl", false);
+#ifdef XP_WIN
     bool preferOpenGL =
         Preferences::GetBool("webgl.prefer-native-gl", false);
+#endif
     bool forceEnabled =
         Preferences::GetBool("webgl.force-enabled", false);
     bool disabled =
