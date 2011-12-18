@@ -1229,32 +1229,17 @@ public class GeckoAppShell
         return accessibilityManager.isEnabled();
     }
 
-    public static void addPluginView(final View view,
-                                     final double x, final double y,
-                                     final double w, final double h) {
+    public static void addPluginView(View view,
+                                     double x, double y,
+                                     double w, double h)
+    {
         Log.i(LOGTAG, "addPluginView:" + view + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h ) ;
-        getMainHandler().post(new Runnable() {
-                public void run() {
-                    try {
-                        GeckoApp.mAppContext.addPluginView(view, x, y, w, h);
-                    } catch (Exception e) {
-                        Log.e(LOGTAG, "Failed to add plugin view: ", e);
-                    }
-                }
-            });
+        GeckoApp.mAppContext.addPluginView(view, x, y, w, h);
     }
 
-    public static void removePluginView(final View view) {
-        Log.i(LOGTAG, "removePluginView:" + view);
-        getMainHandler().post(new Runnable() {
-                public void run() {
-                    try {
-                        GeckoApp.mAppContext.removePluginView(view);
-                    } catch (Exception e) {
-                        Log.e(LOGTAG, "Failed to remove plugin view: ", e);
-                    }
-                }
-            });
+    public static void removePluginView(View view) {
+        Log.i(LOGTAG, "remove view:" + view);
+        GeckoApp.mAppContext.removePluginView(view);
     }
 
     public static Class<?> loadPluginClass(String className, String libName) {
