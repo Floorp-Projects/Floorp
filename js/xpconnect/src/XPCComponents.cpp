@@ -3640,13 +3640,17 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
  *                  [optional] in JSObject targetObj);
  */
 NS_IMETHODIMP
-nsXPCComponents_Utils::Import(const nsACString & registryLocation)
+nsXPCComponents_Utils::Import(const nsACString& registryLocation,
+                              const JS::Value& targetObj,
+                              JSContext* cx,
+                              PRUint8 optionalArgc,
+                              JS::Value* retval)
 {
     nsCOMPtr<xpcIJSModuleLoader> moduleloader =
         do_GetService(MOZJSCOMPONENTLOADER_CONTRACTID);
     if (!moduleloader)
         return NS_ERROR_FAILURE;
-    return moduleloader->Import(registryLocation);
+    return moduleloader->Import(registryLocation, targetObj, cx, optionalArgc, retval);
 }
 
 /* unload (in AUTF8String registryLocation);
