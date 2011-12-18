@@ -3581,14 +3581,13 @@ nsXPCComponents_Utils::Unload(const nsACString & registryLocation)
 
 /* xpcIJSWeakReference getWeakReference (); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::GetWeakReference(xpcIJSWeakReference **_retval)
+nsXPCComponents_Utils::GetWeakReference(const JS::Value &object, JSContext *cx,
+                                        xpcIJSWeakReference **_retval)
 {
-    nsRefPtr<xpcJSWeakReference> ref(new xpcJSWeakReference());
-    if (!ref)
-        return NS_ERROR_OUT_OF_MEMORY;
-    ref->Init();
-    *_retval = ref;
-    NS_ADDREF(*_retval);
+    nsRefPtr<xpcJSWeakReference> ref = new xpcJSWeakReference();
+    nsresult rv = ref->Init(cx, object);
+    NS_ENSURE_SUCCESS(rv, rv);
+    ref.forget(_retval);
     return NS_OK;
 }
 

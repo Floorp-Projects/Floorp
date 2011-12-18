@@ -152,7 +152,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(9e0b065d-a755-482d-ab1f-cc0f26a6fdcd)]
+[scriptable, uuid(b032a8f1-9149-4cbe-bee6-4ac5dfe7c80a)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -253,7 +253,8 @@ interface nsIXPCComponents_Utils : nsISupports
      *
      * Return a weak reference for the given JS object.
      */
-    xpcIJSWeakReference getWeakReference(/* in JSObject obj */);
+    [implicit_jscontext]
+    xpcIJSWeakReference getWeakReference(in jsval obj);
 
     /*
      * To be called from JS only.
