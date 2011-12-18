@@ -1068,7 +1068,7 @@ interface jsdIScript : jsdIEphemeral
  * jsdIValue adds a root for the underlying JavaScript value, so don't keep it
  * if you don't need to.
  */
-[scriptable, uuid(861c4d37-e115-4a52-9f76-273cb6b21c3b)]
+[scriptable, uuid(1cd3535b-4ddb-4202-9053-e0ec88f5c82b)]
 interface jsdIValue : jsdIEphemeral
 {
     /** Internal use only. */
@@ -1196,7 +1196,7 @@ interface jsdIValue : jsdIEphemeral
      * When called from another language this method returns an xpconnect
      * defined error code.
      */
-    void getWrappedValue();
+    [implicit_jscontext] jsval getWrappedValue();
 
     /**
      * If this is a function value, return its associated jsdIScript.
