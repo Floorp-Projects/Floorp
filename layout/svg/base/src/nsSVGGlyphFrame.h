@@ -232,6 +232,8 @@ protected:
                               gfxContext *aContext);
   void FillCharacters(CharacterIterator *aIter,
                       gfxContext *aContext);
+  void StrokeCharacters(CharacterIterator *aIter,
+                        gfxContext *aContext);
 
   void NotifyGlyphMetricsChange();
   bool GetGlobalTransform(gfxMatrix *aMatrix);
