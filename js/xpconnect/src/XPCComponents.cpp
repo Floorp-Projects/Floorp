@@ -3594,26 +3594,9 @@ nsXPCComponents_Utils::GetWeakReference(xpcIJSWeakReference **_retval)
 
 /* void forceGC (); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::ForceGC()
+nsXPCComponents_Utils::ForceGC(JSContext *cx)
 {
-    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-    if (!xpc)
-        return NS_ERROR_FAILURE;
-
-    // get the xpconnect native call context
-    nsAXPCNativeCallContext *cc = nsnull;
-    nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
-    if (!cc)
-        return rv;
-
-    // Get JSContext of current call
-    JSContext* cx;
-    cc->GetJSContext(&cx);
-    if (!cx)
-        return NS_ERROR_FAILURE;
-
     JS_GC(cx);
-
     return NS_OK;
 }
 
