@@ -2136,11 +2136,11 @@ bool PreserveWrapper(JSContext *cx, JSObject *obj)
     nsISupports *native = nsXPConnect::GetXPConnect()->GetNativeOfWrapper(cx, obj);
     if (!native)
         return false;
-    nsWrapperCache *wc;
-    nsresult rv = CallQueryInterface(native, &wc);
+    nsresult rv;
+    nsCOMPtr<nsINode> node = nsQueryInterfaceWithError(native, &rv);
     if (NS_FAILED(rv))
         return false;
-    nsContentUtils::PreserveWrapper(native, wc);
+    nsContentUtils::PreserveWrapper(native, node);
     return true;
 }
 
