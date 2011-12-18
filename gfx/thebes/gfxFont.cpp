@@ -1125,7 +1125,7 @@ struct GlyphBuffer {
         return &mGlyphBuffer[mNumGlyphs++];
     }
 
-    void Flush(cairo_t *aCR, gfxFont::DrawMode aDrawMode, bool aReverse,
+    void Flush(cairo_t *aCR, bool aDrawToPath, bool aReverse,
                bool aFinish = false) {
         // Ensure there's enough room for a glyph to be added to the buffer
         if (!aFinish && mNumGlyphs < GLYPH_BUFFER_SIZE) {
@@ -1139,20 +1139,10 @@ struct GlyphBuffer {
                 mGlyphBuffer[mNumGlyphs - 1 - i] = tmp;
             }
         }
-
-        if (aDrawMode == gfxFont::GLYPH_PATH) {
+        if (aDrawToPath)
             cairo_glyph_path(aCR, mGlyphBuffer, mNumGlyphs);
-        } else {
-            if (aDrawMode & gfxFont::GLYPH_FILL) {
-                cairo_show_glyphs(aCR, mGlyphBuffer, mNumGlyphs);
-            }
-
-            if (aDrawMode & gfxFont::GLYPH_STROKE) {
-                cairo_new_path(aCR);
-                cairo_glyph_path(aCR, mGlyphBuffer, mNumGlyphs);
-                cairo_stroke(aCR);
-            }
-        }
+        else
+            cairo_show_glyphs(aCR, mGlyphBuffer, mNumGlyphs);
 
         mNumGlyphs = 0;
     }
@@ -1188,11 +1178,9 @@ CalcXScale(gfxContext *aContext)
 
 void
 gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
-              gfxContext *aContext, DrawMode aDrawMode, gfxPoint *aPt,
+              gfxContext *aContext, bool aDrawToPath, gfxPoint *aPt,
               Spacing *aSpacing)
 {
-    NS_ASSERTION(aDrawMode <= gfxFont::GLYPH_PATH, "GLYPH_PATH cannot be used with GLYPH_FILL or GLYPH_STROKE");
-
     if (aStart >= aEnd)
         return;
 
@@ -1250,7 +1238,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
             }
             glyph->x = ToDeviceUnits(glyphX, devUnitsPerAppUnit);
             glyph->y = ToDeviceUnits(y, devUnitsPerAppUnit);
-            glyphs.Flush(cr, aDrawMode, isRTL);
+            glyphs.Flush(cr, aDrawToPath, isRTL);
             
             // synthetic bolding by multi-striking with 1-pixel offsets
             // at least once, more if there's room (large font sizes)
@@ -1266,7 +1254,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                                       devUnitsPerAppUnit);
                     doubleglyph->y = glyph->y;
                     strikeOffset += synBoldOnePixelOffset;
-                    glyphs.Flush(cr, aDrawMode, isRTL);
+                    glyphs.Flush(cr, aDrawToPath, isRTL);
                 } while (--strikeCount > 0);
             }
         } else {
@@ -1280,7 +1268,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                     if (glyphData->IsMissing()) {
                         // default ignorable characters will have zero advance width.
                         // we don't have to draw the hexbox for them
-                        if (aDrawMode != gfxFont::GLYPH_PATH && advance > 0) {
+                        if (!aDrawToPath && advance > 0) {
                             double glyphX = x;
                             if (isRTL) {
                                 glyphX -= advance;
@@ -1303,7 +1291,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                         }
                         glyph->x = ToDeviceUnits(glyphX, devUnitsPerAppUnit);
                         glyph->y = ToDeviceUnits(y + details->mYOffset, devUnitsPerAppUnit);
-                        glyphs.Flush(cr, aDrawMode, isRTL);
+                        glyphs.Flush(cr, aDrawToPath, isRTL);
 
                         if (IsSyntheticBold()) {
                             double strikeOffset = synBoldOnePixelOffset;
@@ -1318,7 +1306,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                                                   devUnitsPerAppUnit);
                                 doubleglyph->y = glyph->y;
                                 strikeOffset += synBoldOnePixelOffset;
-                                glyphs.Flush(cr, aDrawMode, isRTL);
+                                glyphs.Flush(cr, aDrawToPath, isRTL);
                             } while (--strikeCount > 0);
                         }
                     }
@@ -1347,7 +1335,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
     }
 
     // draw any remaining glyphs
-    glyphs.Flush(cr, aDrawMode, isRTL, true);
+    glyphs.Flush(cr, aDrawToPath, isRTL, true);
 
     *aPt = gfxPoint(x, y);
 }
@@ -3462,7 +3450,7 @@ gfxTextRun::ShrinkToLigatureBoundaries(PRUint32 *aStart, PRUint32 *aEnd)
 
 void
 gfxTextRun::DrawGlyphs(gfxFont *aFont, gfxContext *aContext,
-                       gfxFont::DrawMode aDrawMode, gfxPoint *aPt,
+                       bool aDrawToPath, gfxPoint *aPt,
                        PRUint32 aStart, PRUint32 aEnd,
                        PropertyProvider *aProvider,
                        PRUint32 aSpacingStart, PRUint32 aSpacingEnd)
@@ -3470,7 +3458,7 @@ gfxTextRun::DrawGlyphs(gfxFont *aFont, gfxContext *aContext,
     nsAutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
     bool haveSpacing = GetAdjustedSpacingArray(aStart, aEnd, aProvider,
         aSpacingStart, aSpacingEnd, &spacingBuffer);
-    aFont->Draw(this, aStart, aEnd, aContext, aDrawMode, aPt,
+    aFont->Draw(this, aStart, aEnd, aContext, aDrawToPath, aPt,
                 haveSpacing ? spacingBuffer.Elements() : nsnull);
 }
 
@@ -3528,7 +3516,7 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx,
     aCtx->Clip();
     gfxFloat direction = GetDirection();
     gfxPoint pt(aPt->x - direction*data.mPartAdvance, aPt->y);
-    DrawGlyphs(aFont, aCtx, gfxFont::GLYPH_FILL, &pt, data.mLigatureStart,
+    DrawGlyphs(aFont, aCtx, false, &pt, data.mLigatureStart,
                data.mLigatureEnd, aProvider, aStart, aEnd);
     aCtx->Restore();
 
@@ -3657,12 +3645,11 @@ gfxTextRun::AdjustAdvancesForSyntheticBold(gfxContext *aContext,
 }
 
 void
-gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, gfxFont::DrawMode aDrawMode,
+gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
                  PRUint32 aStart, PRUint32 aLength,
                  PropertyProvider *aProvider, gfxFloat *aAdvanceWidth)
 {
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Substring out of range");
-    NS_ASSERTION(aDrawMode <= gfxFont::GLYPH_PATH, "GLYPH_PATH cannot be used with GLYPH_FILL or GLYPH_STROKE");
 
     gfxFloat direction = GetDirection();
 
@@ -3687,8 +3674,7 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, gfxFont::DrawMode aDrawMode
     gfxRGBA currentColor;
     bool needToRestore = false;
 
-    if (aDrawMode == gfxFont::GLYPH_FILL && HasNonOpaqueColor(aContext, currentColor)
-                                         && HasSyntheticBold(this, aStart, aLength)) {
+    if (HasNonOpaqueColor(aContext, currentColor) && HasSyntheticBold(this, aStart, aLength)) {
         needToRestore = true;
         // measure text, use the bounding box
         gfxTextRun::Metrics metrics = MeasureText(aStart, aLength, gfxFont::LOOSE_INK_EXTENTS,
@@ -3706,21 +3692,47 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, gfxFont::DrawMode aDrawMode
         PRUint32 ligatureRunEnd = end;
         ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
         
-        if (aDrawMode == gfxFont::GLYPH_FILL) {
-            DrawPartialLigature(font, aContext, start, ligatureRunStart, &pt, aProvider);
-        }
-
-        DrawGlyphs(font, aContext, aDrawMode, &pt, ligatureRunStart,
+        DrawPartialLigature(font, aContext, start, ligatureRunStart, &pt, aProvider);
+        DrawGlyphs(font, aContext, false, &pt, ligatureRunStart,
                    ligatureRunEnd, aProvider, ligatureRunStart, ligatureRunEnd);
-
-        if (aDrawMode == gfxFont::GLYPH_FILL) {
-            DrawPartialLigature(font, aContext, ligatureRunEnd, end, &pt, aProvider);
-        }
+        DrawPartialLigature(font, aContext, ligatureRunEnd, end, &pt, aProvider);
     }
 
     // composite result when synthetic bolding used
     if (needToRestore) {
         syntheticBoldBuffer.PopAlpha();
+    }
+
+    if (aAdvanceWidth) {
+        *aAdvanceWidth = (pt.x - aPt.x)*direction;
+    }
+}
+
+void
+gfxTextRun::DrawToPath(gfxContext *aContext, gfxPoint aPt,
+                       PRUint32 aStart, PRUint32 aLength,
+                       PropertyProvider *aProvider, gfxFloat *aAdvanceWidth)
+{
+    NS_ASSERTION(aStart + aLength <= mCharacterCount, "Substring out of range");
+
+    gfxFloat direction = GetDirection();
+    gfxPoint pt = aPt;
+
+    GlyphRunIterator iter(this, aStart, aLength);
+    while (iter.NextRun()) {
+        gfxFont *font = iter.GetGlyphRun()->mFont;
+        PRUint32 start = iter.GetStringStart();
+        PRUint32 end = iter.GetStringEnd();
+        PRUint32 ligatureRunStart = start;
+        PRUint32 ligatureRunEnd = end;
+        ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
+        NS_ASSERTION(ligatureRunStart == start,
+                     "Can't draw path starting inside ligature");
+        NS_ASSERTION(ligatureRunEnd == end,
+                     "Can't end drawing path inside ligature");
+
+        DrawGlyphs(font, aContext, true, &pt, ligatureRunStart, ligatureRunEnd, aProvider,
+            ligatureRunStart, ligatureRunEnd);
     }
 
     if (aAdvanceWidth) {
