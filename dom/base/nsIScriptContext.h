@@ -53,7 +53,7 @@ class nsIArray;
 class nsIVariant;
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
-class nsScriptObjectHolder;
+template<class> class nsScriptObjectHolder;
 class nsIScriptObjectPrincipal;
 
 typedef void (*nsScriptTerminationFunc)(nsISupports* aRef);
@@ -74,8 +74,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x39b3ea7c, 0xdc26, 0x4756, \
-  { 0xa0, 0x3c, 0x13, 0xa0, 0x42, 0x03, 0x07, 0x6a } }
+{ 0xe22f85d1, 0xae90, 0x418a, \
+  { 0x83, 0xf0, 0xaf, 0x0d, 0xa3, 0x04, 0x92, 0x6a } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -151,7 +151,7 @@ public:
                                  const char* aURL,
                                  PRUint32 aLineNo,
                                  PRUint32 aVersion,
-                                 nsScriptObjectHolder &aScriptObject) = 0;
+                                 nsScriptObjectHolder<JSScript>& aScriptObject) = 0;
 
   /**
    * Execute a precompiled script object.
@@ -206,7 +206,7 @@ public:
                                        const char* aURL,
                                        PRUint32 aLineNo,
                                        PRUint32 aVersion,
-                                       nsScriptObjectHolder &aHandler) = 0;
+                                       nsScriptObjectHolder<JSObject>& aHandler) = 0;
 
   /**
    * Call the function object with given args and return its boolean result,
@@ -248,7 +248,7 @@ public:
   virtual nsresult BindCompiledEventHandler(nsISupports* aTarget,
                                             JSObject* aScope,
                                             JSObject* aHandler,
-                                            nsScriptObjectHolder& aBoundHandler) = 0;
+                                            nsScriptObjectHolder<JSObject>& aBoundHandler) = 0;
 
   /**
    * Compile a function that isn't used as an event handler.
@@ -380,7 +380,7 @@ public:
   /* Deserialize a script from a stream.
    */
   virtual nsresult Deserialize(nsIObjectInputStream* aStream,
-                               nsScriptObjectHolder &aResult) = 0;
+                               nsScriptObjectHolder<JSScript>& aResult) = 0;
 
   /**
    * JS only - this function need not be implemented by languages other
