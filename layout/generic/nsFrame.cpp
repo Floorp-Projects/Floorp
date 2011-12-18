@@ -1680,24 +1680,19 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   bool inTransform = aBuilder->IsInTransform();
   if ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
       disp->HasTransform()) {
-    if (nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder, this) ||
-        Preserves3DChildren()) {
+    // Transform dirtyRect into our frame's local coordinate space. Note that
+    // the new value is the bounds of the old value's transformed vertices, so
+    // the area covered by dirtyRect may increase here.
+    //
+    // Although we don't bother to check for and maintain the 1x1 size of the
+    // magic rect indicating a hit test point, in reality this is extremely
+    // unlikely to matter. The rect starts off with dimensions of 1x1 *app*
+    // units, and it would require a very large number of elements with
+    // transforms along a parent chain to noticably expand this by an entire
+    // device pixel.
+    if (Preserves3DChildren() || !nsDisplayTransform::UntransformRect(dirtyRect, this, nsPoint(0, 0), &dirtyRect)) {
+      // we have a singular transform - just grab the entire overflow rect
       dirtyRect = GetVisualOverflowRectRelativeToSelf();
-    } else {
-      // Transform dirtyRect into our frame's local coordinate space. Note that
-      // the new value is the bounds of the old value's transformed vertices, so
-      // the area covered by dirtyRect may increase here.
-      //
-      // Although we don't bother to check for and maintain the 1x1 size of the
-      // magic rect indicating a hit test point, in reality this is extremely
-      // unlikely to matter. The rect starts off with dimensions of 1x1 *app*
-      // units, and it would require a very large number of elements with
-      // transforms along a parent chain to noticably expand this by an entire
-      // device pixel.
-      if (!nsDisplayTransform::UntransformRect(dirtyRect, this, nsPoint(0, 0), &dirtyRect)) {
-        // we have a singular transform - just grab the entire overflow rect
-        dirtyRect = GetVisualOverflowRectRelativeToSelf();
-      }
     }
     inTransform = true;
   }

@@ -411,7 +411,12 @@ nsSVGGlyphFrame::PaintSVG(nsSVGRenderState *aContext,
     // there is a pattern or gradient on the text
     iter.Reset();
 
-    StrokeCharacters(&iter, gfx);
+    gfx->NewPath();
+    AddCharactersToPath(&iter, gfx);
+    gfx->Stroke();
+    // We need to clear the context's path so state doesn't leak
+    // out. See bug 337753.
+    gfx->NewPath();
   }
   gfx->Restore();
 
@@ -580,17 +585,18 @@ void
 nsSVGGlyphFrame::AddCharactersToPath(CharacterIterator *aIter,
                                      gfxContext *aContext)
 {
+  aIter->SetLineWidthForDrawing(aContext);
   if (aIter->SetupForDirectTextRunDrawing(aContext)) {
-    mTextRun->Draw(aContext, gfxPoint(0, 0), gfxFont::GLYPH_PATH, 0,
-                   mTextRun->GetLength(), nsnull, nsnull);
+    mTextRun->DrawToPath(aContext, gfxPoint(0, 0), 0,
+                         mTextRun->GetLength(), nsnull, nsnull);
     return;
   }
 
   PRUint32 i;
   while ((i = aIter->NextCluster()) != aIter->InvalidCluster()) {
     aIter->SetupForDrawing(aContext);
-    mTextRun->Draw(aContext, gfxPoint(0, 0), gfxFont::GLYPH_PATH, i,
-                   aIter->ClusterLength(), nsnull, nsnull);
+    mTextRun->DrawToPath(aContext, gfxPoint(0, 0), i, aIter->ClusterLength(),
+                         nsnull, nsnull);
   }
 }
 
@@ -621,7 +627,7 @@ nsSVGGlyphFrame::FillCharacters(CharacterIterator *aIter,
                                 gfxContext *aContext)
 {
   if (aIter->SetupForDirectTextRunDrawing(aContext)) {
-    mTextRun->Draw(aContext, gfxPoint(0, 0), gfxFont::GLYPH_FILL, 0,
+    mTextRun->Draw(aContext, gfxPoint(0, 0), 0,
                    mTextRun->GetLength(), nsnull, nsnull);
     return;
   }
@@ -629,27 +635,8 @@ nsSVGGlyphFrame::FillCharacters(CharacterIterator *aIter,
   PRUint32 i;
   while ((i = aIter->NextCluster()) != aIter->InvalidCluster()) {
     aIter->SetupForDrawing(aContext);
-    mTextRun->Draw(aContext, gfxPoint(0, 0), gfxFont::GLYPH_FILL, i,
-                   aIter->ClusterLength(), nsnull, nsnull);
-  }
-}
-
-void
-nsSVGGlyphFrame::StrokeCharacters(CharacterIterator *aIter,
-                                gfxContext *aContext)
-{
-  aIter->SetLineWidthForDrawing(aContext);
-  if (aIter->SetupForDirectTextRunDrawing(aContext)) {
-    mTextRun->Draw(aContext, gfxPoint(0, 0), gfxFont::GLYPH_STROKE, 0,
-                   mTextRun->GetLength(), nsnull, nsnull);
-    return;
-  }
-
-  PRUint32 i;
-  while ((i = aIter->NextCluster()) != aIter->InvalidCluster()) {
-    aIter->SetupForDrawing(aContext);
-    mTextRun->Draw(aContext, gfxPoint(0, 0), gfxFont::GLYPH_STROKE, i,
-                   aIter->ClusterLength(), nsnull, nsnull);
+    mTextRun->Draw(aContext, gfxPoint(0, 0), i, aIter->ClusterLength(),
+                   nsnull, nsnull);
   }
 }
 

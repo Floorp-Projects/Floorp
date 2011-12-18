@@ -955,18 +955,6 @@ public:
         kAntialiasSubpixel
     } AntialiasOption;
 
-    // Options for how the text should be drawn
-    typedef enum {
-        // GLYPH_FILL and GLYPH_STROKE draw into the current context
-        //  and may be used together with bitwise OR.
-        GLYPH_FILL = 1,
-        // Note: using GLYPH_STROKE will destroy the current path.
-        GLYPH_STROKE = 2,
-        // Appends glyphs to the current path. Can NOT be used with
-        //  GLYPH_FILL or GLYPH_STROKE.
-        GLYPH_PATH = 4
-    } DrawMode;
-
 protected:
     nsAutoRefCnt mRefCnt;
     cairo_scaled_font_t *mScaledFont;
@@ -1177,8 +1165,8 @@ public:
      * glyphs, before-spacing is inserted to the right of characters). There
      * are aEnd - aStart elements in this array, unless it's null to indicate
      * that there is no spacing.
-     * @param aDrawMode specifies whether the fill or stroke of the glyph should be
-     * drawn, or if it should be drawn into the current path
+     * @param aDrawToPath when true, add the glyph outlines to the current path
+     * instead of drawing the glyphs
      * 
      * Callers guarantee:
      * -- aStart and aEnd are aligned to cluster and ligature boundaries
@@ -1188,7 +1176,7 @@ public:
      * calls cairo_show_glyphs or cairo_glyph_path.
      */
     virtual void Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
-                      gfxContext *aContext, DrawMode aDrawMode, gfxPoint *aBaselineOrigin,
+                      gfxContext *aContext, bool aDrawToPath, gfxPoint *aBaselineOrigin,
                       Spacing *aSpacing);
     /**
      * Measure a run of characters. See gfxTextRun::Metrics.
@@ -1605,10 +1593,28 @@ public:
      * if they overlap (perhaps due to negative spacing).
      */
     void Draw(gfxContext *aContext, gfxPoint aPt,
-              gfxFont::DrawMode aDrawMode,
               PRUint32 aStart, PRUint32 aLength,
               PropertyProvider *aProvider,
               gfxFloat *aAdvanceWidth);
+
+    /**
+     * Renders a substring to a path. Uses only GetSpacing from aBreakProvider.
+     * The provided point is the baseline origin on the left of the string
+     * for LTR, on the right of the string for RTL.
+     * @param aAdvanceWidth if non-null, the advance width of the substring
+     * is returned here.
+     * 
+     * Drawing should respect advance widths in the way that Draw above does.
+     * 
+     * Glyphs should be drawn in logical content order.
+     * 
+     * UNLIKE Draw above, this cannot be used to render substrings that start or
+     * end inside a ligature.
+     */
+    void DrawToPath(gfxContext *aContext, gfxPoint aPt,
+                    PRUint32 aStart, PRUint32 aLength,
+                    PropertyProvider *aBreakProvider,
+                    gfxFloat *aAdvanceWidth);
 
     /**
      * Computes the ReflowMetrics for a substring.
@@ -2183,7 +2189,7 @@ private:
                                  Metrics *aMetrics);
 
     // **** drawing helper ****
-    void DrawGlyphs(gfxFont *aFont, gfxContext *aContext, gfxFont::DrawMode aDrawMode,
+    void DrawGlyphs(gfxFont *aFont, gfxContext *aContext, bool aDrawToPath,
                     gfxPoint *aPt, PRUint32 aStart, PRUint32 aEnd,
                     PropertyProvider *aProvider,
                     PRUint32 aSpacingStart, PRUint32 aSpacingEnd);
