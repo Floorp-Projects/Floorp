@@ -35,9 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Attributes.h"
+
 #include "nsIVersionComparator.h"
 
-class nsVersionComparatorImpl : public nsIVersionComparator
+class nsVersionComparatorImpl MOZ_FINAL : public nsIVersionComparator
 {
 public:
   NS_DECL_ISUPPORTS

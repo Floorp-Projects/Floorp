@@ -39,10 +39,12 @@
 #ifndef _NSUUIDGENERATOR_H_
 #define _NSUUIDGENERATOR_H_
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
+
 #include "nsIUUIDGenerator.h"
 
-class nsUUIDGenerator : public nsIUUIDGenerator {
+class nsUUIDGenerator MOZ_FINAL : public nsIUUIDGenerator {
 public:
     nsUUIDGenerator();
 
