@@ -37,5 +37,5 @@
 
 #include "nsIDOMSVGAnimationElement.idl"
 
-[scriptable, uuid(e847ef4c-0c4e-417a-b5e2-7e22dc42a233)]
+[scriptable, uuid(29d02159-1517-49dc-8a83-8824fb166c09)]
 interface nsIDOMSVGAnimateMotionElement : nsIDOMSVGAnimationElement { };
