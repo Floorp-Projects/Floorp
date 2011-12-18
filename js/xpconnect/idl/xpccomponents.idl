@@ -152,7 +152,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(d41d626c-c222-4c38-ba5f-6499baff3b11)]
+[scriptable, uuid(a5213836-fd24-4b36-8916-fff222b23cf3)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -231,8 +231,8 @@ interface nsIXPCComponents_Utils : nsISupports
      *
      * (This comment is duplicated from xpcIJSModuleLoader.)
      */
-    void /* JSObject */ import(in AUTF8String registryLocation
-                               /*, [optional] in JSObject targetObj */);
+    [implicit_jscontext,optional_argc]
+    jsval import(in AUTF8String aResourceURI, [optional] in jsval targetObj);
 
     /*
      * Unloads the JS module at 'registryLocation'. Existing references to the
