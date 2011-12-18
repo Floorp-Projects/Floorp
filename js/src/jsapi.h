@@ -351,14 +351,6 @@ class Value
     }
 
     JS_ALWAYS_INLINE
-    void setObjectOrUndefined(JSObject *arg) {
-        if (arg)
-            setObject(*arg);
-        else
-            setUndefined();
-    }
-
-    JS_ALWAYS_INLINE
     void swap(Value &rhs) {
         uint64_t tmp = rhs.data.asBits;
         rhs.data.asBits = data.asBits;
@@ -3941,22 +3933,22 @@ JS_CompileUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
                                        JSVersion version);
 
 extern JS_PUBLIC_API(JSScript *)
-JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename);
+JS_CompileUTF8File(JSContext *cx, JSObject *obj, const char *filename);
 
 extern JS_PUBLIC_API(JSScript *)
-JS_CompileFileHandle(JSContext *cx, JSObject *obj, const char *filename,
-                     FILE *fh);
+JS_CompileUTF8FileHandle(JSContext *cx, JSObject *obj, const char *filename,
+                         FILE *fh);
 
 extern JS_PUBLIC_API(JSScript *)
-JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
-                                  const char *filename, FILE *fh,
-                                  JSPrincipals *principals);
+JS_CompileUTF8FileHandleForPrincipals(JSContext *cx, JSObject *obj,
+                                      const char *filename, FILE *fh,
+                                      JSPrincipals *principals);
 
 extern JS_PUBLIC_API(JSScript *)
-JS_CompileFileHandleForPrincipalsVersion(JSContext *cx, JSObject *obj,
-                                         const char *filename, FILE *fh,
-                                         JSPrincipals *principals,
-                                         JSVersion version);
+JS_CompileUTF8FileHandleForPrincipalsVersion(JSContext *cx, JSObject *obj,
+                                             const char *filename, FILE *fh,
+                                             JSPrincipals *principals,
+                                             JSVersion version);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalFromScript(JSScript *script);

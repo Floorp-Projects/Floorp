@@ -1036,9 +1036,6 @@ public:
     NS_IMETHOD GetJSContext(JSContext **aResult);
     NS_IMETHOD GetArgc(PRUint32 *aResult);
     NS_IMETHOD GetArgvPtr(jsval **aResult);
-    NS_IMETHOD GetRetValPtr(jsval **aResult);
-    NS_IMETHOD GetReturnValueWasSet(bool *aResult);
-    NS_IMETHOD SetReturnValueWasSet(bool aValue);
     NS_IMETHOD GetCalleeInterface(nsIInterfaceInfo **aResult);
     NS_IMETHOD GetCalleeClassInfo(nsIClassInfo **aResult);
     NS_IMETHOD GetPreviousCallContext(nsAXPCNativeCallContext **aResult);
@@ -1100,7 +1097,6 @@ public:
     inline uintN                        GetArgc() const ;
     inline jsval*                       GetArgv() const ;
     inline jsval*                       GetRetVal() const ;
-    inline JSBool                       GetReturnValueWasSet() const ;
 
     inline PRUint16                     GetMethodIndex() const ;
     inline void                         SetMethodIndex(PRUint16 index) ;
@@ -1217,7 +1213,6 @@ private:
     jsval*                          mArgv;
     jsval*                          mRetVal;
 
-    JSBool                          mReturnValueWasSet;
     PRUint16                        mMethodIndex;
 
 #define XPCCCX_STRING_CACHE_SIZE 2
