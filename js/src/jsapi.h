@@ -351,14 +351,6 @@ class Value
     }
 
     JS_ALWAYS_INLINE
-    void setObjectOrUndefined(JSObject *arg) {
-        if (arg)
-            setObject(*arg);
-        else
-            setUndefined();
-    }
-
-    JS_ALWAYS_INLINE
     void swap(Value &rhs) {
         uint64_t tmp = rhs.data.asBits;
         rhs.data.asBits = data.asBits;
