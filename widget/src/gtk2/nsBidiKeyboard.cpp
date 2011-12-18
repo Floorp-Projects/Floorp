@@ -56,9 +56,6 @@ nsBidiKeyboard::nsBidiKeyboard()
 #if defined(MOZ_X11)
     if (!gtklib)
         gtklib = PR_LoadLibrary("libgtk-x11-2.0.so.0");
-#elif defined(MOZ_DFB)
-    if (!gtklib)
-        gtklib = PR_LoadLibrary("libgtk-directfb-2.0.so.0");
 #else
     return;
 #endif
