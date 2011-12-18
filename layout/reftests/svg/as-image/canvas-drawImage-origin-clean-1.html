@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <script type="text/javascript">
+      function go() {
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+        var image = document.getElementById("image");
+
+        // Draw the SVG image
+        ctx.drawImage(image, 0, 0);
+
+        try {
+          canvas.toDataURL();
+        } catch (ex) {
+          document.body.textContent = ex;
+        }
+      }
+    </script>
+  </head>
+  <body onload="go()">
+    <canvas id="canvas" width="200" height="200"></canvas>
+    <img id="image" src="lime100x100.svg" style="display: none">
+</body>
+</html>
