@@ -152,7 +152,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(90894460-26a2-44c2-a3fc-c96a5286614e)]
+[scriptable, uuid(9e0b065d-a755-482d-ab1f-cc0f26a6fdcd)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -260,6 +260,7 @@ interface nsIXPCComponents_Utils : nsISupports
      *
      * Force an immediate garbage collection cycle.
      */
+    [implicit_jscontext]
     void forceGC();
 
     /*
