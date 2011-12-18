@@ -138,8 +138,6 @@ public class GeckoAppShell
     public static native void notifySmsReceived(String aSender, String aBody, long aTimestamp);
     public static native ByteBuffer allocateDirectBuffer(long size);
     public static native void freeDirectBuffer(ByteBuffer buf);
-    public static native void bindWidgetTexture();
-    public static native boolean testDirectTexture();
 
     // A looper thread, accessed by GeckoAppShell.getHandler
     private static class LooperThread extends Thread {
@@ -426,14 +424,6 @@ public class GeckoAppShell
         GeckoAppShell.nativeInit();
 
         Log.i(LOGTAG, "post native init");
-
-        // If we have direct texture available, use it
-        if (GeckoAppShell.testDirectTexture()) {
-            Log.i(LOGTAG, "Using direct texture for widget layer");
-            GeckoApp.mAppContext.getSoftwareLayerClient().installWidgetLayer();
-        } else {
-            Log.i(LOGTAG, "Falling back to traditional texture upload");
-        }
 
         // Tell Gecko where the target byte buffer is for rendering
         GeckoAppShell.setSoftwareLayerClient(GeckoApp.mAppContext.getSoftwareLayerClient());
@@ -1239,32 +1229,17 @@ public class GeckoAppShell
         return accessibilityManager.isEnabled();
     }
 
-    public static void addPluginView(final View view,
-                                     final double x, final double y,
-                                     final double w, final double h) {
+    public static void addPluginView(View view,
+                                     double x, double y,
+                                     double w, double h)
+    {
         Log.i(LOGTAG, "addPluginView:" + view + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h ) ;
-        getMainHandler().post(new Runnable() {
-                public void run() {
-                    try {
-                        GeckoApp.mAppContext.addPluginView(view, x, y, w, h);
-                    } catch (Exception e) {
-                        Log.e(LOGTAG, "Failed to add plugin view: ", e);
-                    }
-                }
-            });
+        GeckoApp.mAppContext.addPluginView(view, x, y, w, h);
     }
 
-    public static void removePluginView(final View view) {
-        Log.i(LOGTAG, "removePluginView:" + view);
-        getMainHandler().post(new Runnable() {
-                public void run() {
-                    try {
-                        GeckoApp.mAppContext.removePluginView(view);
-                    } catch (Exception e) {
-                        Log.e(LOGTAG, "Failed to remove plugin view: ", e);
-                    }
-                }
-            });
+    public static void removePluginView(View view) {
+        Log.i(LOGTAG, "remove view:" + view);
+        GeckoApp.mAppContext.removePluginView(view);
     }
 
     public static Class<?> loadPluginClass(String className, String libName) {

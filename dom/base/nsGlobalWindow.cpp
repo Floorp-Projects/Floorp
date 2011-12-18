@@ -6884,7 +6884,7 @@ nsGlobalWindow::GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey)
 
 void
 nsGlobalWindow::CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
-                                         nsScriptObjectHolder& aHandler)
+                                         nsScriptObjectHolder<JSObject>& aHandler)
 {
   if (!mCachedXBLPrototypeHandlers.IsInitialized() &&
       !mCachedXBLPrototypeHandlers.Init()) {
@@ -6912,7 +6912,7 @@ nsGlobalWindow::CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
     }
   }
 
-  mCachedXBLPrototypeHandlers.Put(aKey, aHandler.getObject());
+  mCachedXBLPrototypeHandlers.Put(aKey, aHandler.get());
 }
 
 NS_IMETHODIMP
