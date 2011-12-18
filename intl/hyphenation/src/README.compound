@@ -18,6 +18,16 @@ Description:
 and NOHYPHEN with the comma separated character (or character sequence)
 list forbid the (extra) hyphens at the hyphen and apostrophe characters.
 
+Implicite NOHYPHEN declaration
+
+Without explicite NEXTLEVEL declaration, Hyphen 2.8 uses the
+previous settings, plus in UTF-8 encoding, endash (U+2013) and
+typographical apostrophe (U+2019) are NOHYPHEN characters, too.
+
+It's possible to enlarge the hyphenation distance from these
+NOHYPHEN characters by using COMPOUNDLEFTHYPHENMIN and
+COMPOUNDRIGHTHYPHENMIN attributes.
+
 Compound word hyphenation
 
 Hyphen library supports better compound word hyphenation and special
