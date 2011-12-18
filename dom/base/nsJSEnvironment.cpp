@@ -2151,12 +2151,6 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
     return aResult.set(result);
 }
 
-void
-nsJSContext::SetDefaultLanguageVersion(PRUint32 aVersion)
-{
-  ::JS_SetVersion(mContext, (JSVersion)aVersion);
-}
-
 nsIScriptGlobalObject *
 nsJSContext::GetGlobalObject()
 {
