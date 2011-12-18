@@ -384,11 +384,21 @@ public:
    * IsAttributeMapped should use this function as a default
    * handler.
    */
+  template<size_t N>
+  static bool
+  FindAttributeDependence(const nsIAtom* aAttribute,
+                          const MappedAttributeEntry* const (&aMaps)[N])
+  {
+    return FindAttributeDependence(aAttribute, aMaps, N);
+  }
+
+private:
   static bool
   FindAttributeDependence(const nsIAtom* aAttribute,
                           const MappedAttributeEntry* const aMaps[],
                           PRUint32 aMapCount);
 
+public:
   // nsIDOMNode method implementation
   NS_IMETHOD GetNodeName(nsAString& aNodeName);
   NS_IMETHOD GetLocalName(nsAString& aLocalName);
