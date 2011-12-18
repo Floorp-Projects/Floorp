@@ -59,19 +59,6 @@ public:
     NS_IMETHOD GetArgc(PRUint32 *aResult) = 0;
     NS_IMETHOD GetArgvPtr(jsval **aResult) = 0;
 
-    /**
-     * This may be NULL if the JS caller is ignoring the result of the call.
-     */
-    NS_IMETHOD GetRetValPtr(jsval **aResult) = 0;
-
-    /**
-     * Set this to indicate that the callee has directly set the return value
-     * (using RetValPtr and the JSAPI). If set then xpconnect will not attempt
-     * to overwrite it with the converted retval from the C++ callee.
-     */
-    NS_IMETHOD GetReturnValueWasSet(bool *aResult) = 0;
-    NS_IMETHOD SetReturnValueWasSet(bool aValue) = 0;
-
     // Methods added since mozilla 0.6....
 
     NS_IMETHOD GetCalleeInterface(nsIInterfaceInfo **aResult) = 0;
