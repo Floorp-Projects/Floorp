@@ -62,6 +62,7 @@ import android.text.SpannableString;
 import android.text.style.UnderlineSpan;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -161,6 +162,10 @@ public class AboutHomeContent extends ScrollView {
     }
 
     void init(final Activity activity) {
+        LayoutInflater inflater =
+            (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        
+        inflater.inflate(R.layout.abouthome_content, this);
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
                 if (mCursor != null)
