@@ -74,8 +74,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0xe22f85d1, 0xae90, 0x418a, \
-  { 0x83, 0xf0, 0xaf, 0x0d, 0xa3, 0x04, 0x92, 0x6a } }
+{ 0xb36103bd, 0x304e, 0x4ef2, \
+  { 0x81, 0x12, 0x83, 0x42, 0xe5, 0xbd, 0xf3, 0xd4 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -267,13 +267,6 @@ public:
                                    PRUint32 aVersion,
                                    bool aShared,
                                    JSObject** aFunctionObject) = 0;
-
-  /**
-   * Set the default scripting language version for this context, which must
-   * be a context specific to a particular scripting language.
-   *
-   **/
-  virtual void SetDefaultLanguageVersion(PRUint32 aVersion) = 0;
 
   /**
    * Return the global object.

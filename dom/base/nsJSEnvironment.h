@@ -126,7 +126,6 @@ public:
                                    bool aShared,
                                    JSObject** aFunctionObject);
 
-  virtual void SetDefaultLanguageVersion(PRUint32 aVersion);
   virtual nsIScriptGlobalObject *GetGlobalObject();
   virtual JSContext* GetNativeContext();
   virtual JSObject* GetNativeGlobal();
