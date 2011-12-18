@@ -164,6 +164,7 @@ _BROWSER_FILES = \
                  browser_bug599325.js \
                  browser_bug609700.js \
                  browser_bug616836.js \
+                 browser_bug623155.js \
                  browser_bug623893.js \
                  browser_bug624734.js \
                  browser_bug647886.js \
@@ -254,6 +255,7 @@ _BROWSER_FILES = \
                  browser_minimize.js \
 								 browser_aboutSyncProgress.js \
                  browser_middleMouse_inherit.js \
+                 redirect_bug623155.sjs \
                  $(NULL)
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
