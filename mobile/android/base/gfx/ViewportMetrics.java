@@ -234,13 +234,6 @@ public class ViewportMetrics {
         return result;
     }
 
-    public boolean fuzzyEquals(ViewportMetrics other) {
-        return mPageSize.fuzzyEquals(other.mPageSize)
-            && RectUtils.fuzzyEquals(mViewportRect, other.mViewportRect)
-            && FloatUtils.fuzzyEquals(mViewportOffset, other.mViewportOffset)
-            && FloatUtils.fuzzyEquals(mZoomFactor, other.mZoomFactor);
-    }
-
     public String toJSON() {
         try {
             JSONStringer object = new JSONStringer().object();
