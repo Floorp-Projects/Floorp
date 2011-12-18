@@ -338,9 +338,9 @@ public:
   bool operator< (const nsUrlClassifierEntry& entry) const {
     return (mTableId < entry.mTableId ||
             mChunkId < entry.mChunkId ||
-            mHavePartial && !entry.mHavePartial ||
+            (mHavePartial && !entry.mHavePartial) ||
             (mHavePartial && mPartialHash < entry.mPartialHash) ||
-            mHaveComplete && !entry.mHaveComplete ||
+            (mHaveComplete && !entry.mHaveComplete) ||
             (mHaveComplete && mCompleteHash < entry.mCompleteHash));
   }
 
