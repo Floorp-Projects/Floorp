@@ -158,20 +158,6 @@ extern "C" {
 
 #include "nsShmImage.h"
 
-#ifdef MOZ_DFB
-extern "C" {
-#ifdef MOZ_DIRECT_DEBUG
-#define DIRECT_ENABLE_DEBUG
-#endif
-
-#include <direct/debug.h>
-
-D_DEBUG_DOMAIN( ns_Window, "nsWindow", "nsWindow" );
-}
-#include "gfxDirectFBSurface.h"
-#define GDK_WINDOW_XWINDOW(_win) _win
-#endif
-
 using namespace mozilla;
 using namespace mozilla::widget;
 using mozilla::gl::GLContext;
@@ -449,16 +435,6 @@ nsWindow::nsWindow()
 
     mTransparencyBitmapWidth  = 0;
     mTransparencyBitmapHeight = 0;
-
-#ifdef MOZ_DFB
-    mDFBCursorX     = 0;
-    mDFBCursorY     = 0;
-
-    mDFBCursorCount = 0;
-
-    mDFB            = NULL;
-    mDFBLayer       = NULL;
-#endif
 }
 
 nsWindow::~nsWindow()
@@ -470,14 +446,6 @@ nsWindow::~nsWindow()
 
     delete[] mTransparencyBitmap;
     mTransparencyBitmap = nsnull;
-
-#ifdef MOZ_DFB
-    if (mDFBLayer)
-         mDFBLayer->Release( mDFBLayer );
-
-    if (mDFB)
-         mDFB->Release( mDFB );
-#endif
 
     Destroy();
 }
@@ -2256,17 +2224,6 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     nsRefPtr<gfxContext> ctx = new gfxContext(GetThebesSurface(cr));
 #endif
 
-#ifdef MOZ_DFB
-    gfxPlatformGtk::SetGdkDrawable(ctx->OriginalSurface(),
-                                   GDK_DRAWABLE(mGdkWindow));
-
-    // clip to the update region
-    gfxUtils::ClipToRegion(ctx, event.region);
-
-    BasicLayerManager::BufferMode layerBuffering =
-        BasicLayerManager::BUFFER_NONE;
-#endif
-
 #ifdef MOZ_X11
     nsIntRect boundsRect; // for translucent only
 
@@ -2598,68 +2555,6 @@ nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
     DispatchEvent(&event, status);
 }
 
-#ifdef MOZ_DFB
-void
-nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
-{
-    int cursorX = (int) aEvent->x_root;
-    int cursorY = (int) aEvent->y_root;
-
-    D_DEBUG_AT( ns_Window, "%s( %4d,%4d - [%d] )\n", __FUNCTION__, cursorX, cursorY, mDFBCursorCount );
-
-    D_ASSUME( mDFBLayer != NULL );
-
-    if (mDFBLayer)
-         mDFBLayer->GetCursorPosition( mDFBLayer, &cursorX, &cursorY );
-
-    mDFBCursorCount++;
-
-#if D_DEBUG_ENABLED
-    if (cursorX != (int) aEvent->x_root || cursorY != (int) aEvent->y_root)
-         D_DEBUG_AT( ns_Window, "  -> forward to %4d,%4d\n", cursorX, cursorY );
-#endif
-
-    if (cursorX == mDFBCursorX && cursorY == mDFBCursorY) {
-         D_DEBUG_AT( ns_Window, "  -> dropping %4d,%4d\n", cursorX, cursorY );
-
-         /* drop zero motion */
-         return;
-    }
-
-    mDFBCursorX = cursorX;
-    mDFBCursorY = cursorY;
-
-
-    // when we receive this, it must be that the gtk dragging is over,
-    // it is dropped either in or out of mozilla, clear the flag
-    sIsDraggingOutOf = false;
-
-    nsMouseEvent event(true, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
-
-    // should we move this into !synthEvent?
-    gdouble pressure = 0;
-    gdk_event_get_axis ((GdkEvent*)aEvent, GDK_AXIS_PRESSURE, &pressure);
-    // Sometime gdk generate 0 pressure value between normal values
-    // We have to ignore that and use last valid value
-    if (pressure)
-      mLastMotionPressure = pressure;
-    event.pressure = mLastMotionPressure;
-
-    event.refPoint = nsIntPoint(cursorX, cursorY) - WidgetToScreenOffset();
-
-    event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
-        ? true : false;
-    event.isControl = (aEvent->state & GDK_CONTROL_MASK)
-        ? true : false;
-    event.isAlt     = (aEvent->state & GDK_MOD1_MASK)
-        ? true : false;
-
-    event.time = aEvent->time;
-
-    nsEventStatus status;
-    DispatchEvent(&event, status);
-}
-#else
 void
 nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
 {
@@ -2753,7 +2648,6 @@ nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
     nsEventStatus status;
     DispatchEvent(&event, status);
 }
-#endif
 
 // If the automatic pointer grab on ButtonPress has deactivated before
 // ButtonRelease, and the mouse button is released while the pointer is not
@@ -4377,22 +4271,6 @@ nsWindow::Create(nsIWidget        *aParent,
                                &sAccessibilityEnabled);
             }
         }
-    }
-#endif
-
-#ifdef MOZ_DFB
-    if (!mDFB) {
-         DirectFBCreate( &mDFB );
-
-         D_ASSUME( mDFB != NULL );
-
-         if (mDFB)
-              mDFB->GetDisplayLayer( mDFB, DLID_PRIMARY, &mDFBLayer );
-
-         D_ASSUME( mDFBLayer != NULL );
-
-         if (mDFBLayer)
-              mDFBLayer->GetCursorPosition( mDFBLayer, &mDFBCursorX, &mDFBCursorY );
     }
 #endif
 
@@ -6803,10 +6681,6 @@ nsWindow::GetThebesSurface(cairo_t *cr)
 #endif
 #endif
 
-#endif
-#ifdef MOZ_DFB
-    // not supported
-    mThebesSurface = nsnull;
 #endif
 
     // if the surface creation is reporting an error, then

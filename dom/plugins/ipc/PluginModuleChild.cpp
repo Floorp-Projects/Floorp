@@ -584,9 +584,6 @@ PluginModuleChild::InitGraphics()
 #if defined(MOZ_X11)
     if (!sGtkLib)
          sGtkLib = PR_LoadLibrary("libgtk-x11-2.0.so.0");
-#elif defined(MOZ_DFB)
-    if (!sGtkLib)
-         sGtkLib = PR_LoadLibrary("libgtk-directfb-2.0.so.0");
 #endif
     if (sGtkLib) {
          s_gtk_init = (_gtk_init_fn)PR_FindFunctionSymbol(sGtkLib, "gtk_init");
