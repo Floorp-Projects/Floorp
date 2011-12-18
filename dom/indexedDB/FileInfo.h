@@ -144,9 +144,9 @@ private:                                                                      \
   PRInt##_bits mId;                                                           \
 };
 
-FILEINFO_SUBCLASS(16);
-FILEINFO_SUBCLASS(32);
-FILEINFO_SUBCLASS(64);
+FILEINFO_SUBCLASS(16)
+FILEINFO_SUBCLASS(32)
+FILEINFO_SUBCLASS(64)
 
 #undef FILEINFO_SUBCLASS
 
