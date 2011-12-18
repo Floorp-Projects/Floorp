@@ -44,6 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _CHROME_FILES = \
+	paint_listener.js \
 	test_bug370436.html \
 	test_bug396367-1.html \
 	test_bug396367-2.html \
@@ -62,10 +63,11 @@ _CHROME_FILES = \
 	     chrome_over_plugin_window.xul \
 	test_default_background.xul \
 	     default_background_window.xul \
-    test_leaf_layers_partition_browser_window.xul \
-    test_no_clip_iframe.xul \
-         no_clip_iframe_window.xul \
-         no_clip_iframe_subdoc.html \
+	test_leaf_layers_partition_browser_window.xul \
+	test_no_clip_iframe.xul \
+	     no_clip_iframe_window.xul \
+	     no_clip_iframe_subdoc.html \
+	test_prerendered_transforms.html \
 	test_printpreview.xul \
 	     printpreview_helper.xul \
 	test_printpreview_bug396024.xul \
