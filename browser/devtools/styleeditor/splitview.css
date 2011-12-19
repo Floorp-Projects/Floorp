@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Cedric Vivier <cedricv@neonux.com> (original author)
+ *   Paul Rouget <paul@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,17 +42,24 @@ box,
   -moz-box-orient: vertical;
 }
 
+.splitview-nav-container {
+  -moz-box-pack: center;
+}
+
+.splitview-controller,
 .splitview-main {
   -moz-box-flex: 0;
 }
 
 .splitview-controller {
-  min-height: 8em;
+  min-height: 3em;
   max-height: 14em;
 }
 
 .splitview-nav {
   display: -moz-box;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* only the active details pane is shown */
@@ -62,13 +70,16 @@ box,
   display: -moz-box;
 }
 
+.splitview-landscape-resizer {
+  cursor: ew-resize;
+}
+
 /* this is to keep in sync with SplitView.jsm's LANDSCAPE_MEDIA_QUERY */
 @media (min-aspect-ratio: 5/3) {
   .splitview-root {
     -moz-box-orient: horizontal;
   }
   .splitview-controller {
-    -moz-box-flex: 0;
     max-height: none;
   }
   .splitview-details {
@@ -93,4 +104,19 @@ ol.splitview-nav > li.splitview-filtered {
 .splitview-nav.splitview-all-filtered ~ .splitview-nav.placeholder.all-filtered,
 .splitview-nav:empty ~ .splitview-nav.placeholder.empty {
   display: -moz-box;
+}
+
+.splitview-portrait-resizer {
+  display: none;
+}
+
+/* portrait mode */
+@media (max-aspect-ratio: 5/3) {
+  #splitview-details-toolbar {
+    display: none;
+  }
+
+  .splitview-portrait-resizer {
+    display: -moz-box;
+  }
 }

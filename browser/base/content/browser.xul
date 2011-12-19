@@ -55,6 +55,7 @@
 
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/webconsole.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 
@@ -971,7 +972,9 @@
     <splitter id="devtools-side-splitter" hidden="true"/>
     <vbox id="devtools-sidebar-box" hidden="true"
           style="min-width: 18em; width: 22em; max-width: 42em;" persist="width">
-      <toolbar id="devtools-sidebar-toolbar" nowindowdrag="true"/>
+      <toolbar id="devtools-sidebar-toolbar"
+               class="devtools-toolbar"
+               nowindowdrag="true"/>
       <deck id="devtools-sidebar-deck" flex="1"/>
     </vbox>
     <vbox id="browser-border-end" hidden="true" layer="true"/>
@@ -987,6 +990,7 @@
 
   <vbox id="browser-bottombox" layer="true">
     <toolbar id="inspector-toolbar"
+             class="devtools-toolbar"
              nowindowdrag="true"
              hidden="true">
       <vbox flex="1">
@@ -1001,6 +1005,7 @@
                          tooltiptext="&inspectCloseButton.tooltiptext;"/>
 #endif
           <toolbarbutton id="inspector-inspect-toolbutton"
+                         class="devtools-toolbarbutton"
                          label="&inspectButton.label;"
                          accesskey="&inspectButton.accesskey;"
                          command="Inspector:Inspect"/>
@@ -1009,11 +1014,13 @@
                           clicktoscroll="true"/>
           <hbox id="inspector-tools">
             <toolbarbutton id="inspector-3D-button"
+                           class="devtools-toolbarbutton"
                            hidden="true"
                            label="&inspect3DButton.label;"
                            accesskey="&inspect3DButton.accesskey;"
                            command="Inspector:Tilt"/>
             <toolbarbutton id="inspector-style-button"
+                           class="devtools-toolbarbutton"
                            label="&inspectStyleButton.label;"
                            accesskey="&inspectStyleButton.accesskey;"
                            command="Inspector:Sidebar"/>
