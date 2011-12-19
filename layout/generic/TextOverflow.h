@@ -120,12 +120,15 @@ class TextOverflow {
    * @param aFramesToHide frames that should have their display items removed
    * @param aAlignmentEdges the outermost edges of all text and atomic
    *   inline-level frames that are inside the area between the markers
+   * @param aFoundVisibleTextOrAtomic is set to true if a text or atomic
+   *   inline-level frame is visible between the marker edges
    */
   void ExamineFrameSubtree(nsIFrame*       aFrame,
                            const nsRect&   aContentArea,
                            const nsRect&   aInsideMarkersArea,
                            FrameHashtable* aFramesToHide,
-                           AlignmentEdges* aAlignmentEdges);
+                           AlignmentEdges* aAlignmentEdges,
+                           bool*           aFoundVisibleTextOrAtomic);
 
   /**
    * ExamineFrameSubtree calls this to analyze a frame against the hypothetical
@@ -141,12 +144,15 @@ class TextOverflow {
    * @param aAlignmentEdges the outermost edges of all text and atomic
    *   inline-level frames that are inside the area between the markers
    *                       inside aInsideMarkersArea
+   * @param aFoundVisibleTextOrAtomic is set to true if a text or atomic
+   *   inline-level frame is visible between the marker edges
    */
   void AnalyzeMarkerEdges(nsIFrame*       aFrame,
                           const nsIAtom*  aFrameType,
                           const nsRect&   aInsideMarkersArea,
                           FrameHashtable* aFramesToHide,
-                          AlignmentEdges* aAlignmentEdges);
+                          AlignmentEdges* aAlignmentEdges,
+                          bool*           aFoundVisibleTextOrAtomic);
 
   /**
    * Clip or remove items given the final marker edges. ("clip" here just means
