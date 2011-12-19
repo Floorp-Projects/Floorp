@@ -3207,16 +3207,16 @@ var ClipboardHelper = {
 
 var PluginHelper = {
   showDoorHanger: function(aTab) {
-    let message = Strings.browser.GetStringFromName("clickToPlayFlash.message");
+    let message = Strings.browser.GetStringFromName("clickToPlayPlugins.message");
     let buttons = [
       {
-        label: Strings.browser.GetStringFromName("clickToPlayFlash.yes"),
+        label: Strings.browser.GetStringFromName("clickToPlayPlugins.yes"),
         callback: function() {
           PluginHelper.playAllPlugins(aTab);
         }
       },
       {
-        label: Strings.browser.GetStringFromName("clickToPlayFlash.no"),
+        label: Strings.browser.GetStringFromName("clickToPlayPlugins.no"),
         callback: function() {
           // Do nothing
         }
