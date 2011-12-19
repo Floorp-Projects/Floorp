@@ -421,6 +421,8 @@ abstract public class GeckoApp
         mSmsReceiver = new GeckoSmsManager();
         registerReceiver(mSmsReceiver, smsFilter);
 
+        GeckoSmsManager.init();
+
         if (!checkAndSetLaunchState(LaunchState.PreLaunch,
                                     LaunchState.Launching))
             return;
@@ -573,6 +575,8 @@ abstract public class GeckoApp
     public void onDestroy()
     {
         Log.i(LOG_FILE_NAME, "destroy");
+
+        GeckoSmsManager.shutdown();
 
         // Tell Gecko to shutting down; we'll end up calling System.exit()
         // in onXreExit.
