@@ -136,10 +136,11 @@ class THEBES_API ImageContainer {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageContainer)
 
 public:
-  ImageContainer() :
+  ImageContainer(void *aImplData = nsnull) :
     mReentrantMonitor("ImageContainer.mReentrantMonitor"),
     mPaintCount(0),
-    mPreviousImagePainted(false)
+    mPreviousImagePainted(false),
+    mImplData(aImplData)
   {}
 
   virtual ~ImageContainer() {}
@@ -199,6 +200,8 @@ public:
    * when accessing thread-shared state.
    */
   virtual already_AddRefed<gfxASurface> GetCurrentAsSurface(gfxIntSize* aSizeResult) = 0;
+
+  virtual void* ImplData() { return mImplData; }
 
   /**
    * Returns the layer manager for this container. This can only
@@ -291,11 +294,12 @@ protected:
   // image", and any other state which is shared between threads.
   ReentrantMonitor mReentrantMonitor;
 
-  ImageContainer(LayerManager* aManager) :
+  ImageContainer(LayerManager* aManager, void* aImplData = nsnull) :
     mManager(aManager),
     mReentrantMonitor("ImageContainer.mReentrantMonitor"),
     mPaintCount(0),
-    mPreviousImagePainted(false)
+    mPreviousImagePainted(false),
+    mImplData(aImplData)
   {}
 
   // Performs necessary housekeeping to ensure the painted frame statistics
@@ -318,6 +322,8 @@ protected:
 
   // Denotes whether the previous image was painted.
   bool mPreviousImagePainted;
+
+  void* mImplData;
 };
 
 /**
