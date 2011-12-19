@@ -129,3 +129,10 @@ pref(font.default.x-western,"sans-serif") == font-sans-serif.html font-default.h
 pref(font.default.x-western,"sans-serif") != font-serif.html font-default.html
 fails pref(font.default.x-western,true) == font-serif.html font-default.html
 fails pref(font.default.x-western,0) == font-serif.html font-default.html
+# reftest syntax: fuzzy
+fuzzy == fuzzy.html fuzzy-ref.html
+fuzzy != too-fuzzy.html fuzzy-ref.html
+fuzzy-if(true) == fuzzy.html fuzzy-ref.html
+fuzzy-if(false) == fuzzy-ref.html fuzzy-ref.html
+# When using 565 fuzzy.html and fuzzy-ref.html will compare as equal
+fails fuzzy-if(false) random-if(Android) == fuzzy.html fuzzy-ref.html
