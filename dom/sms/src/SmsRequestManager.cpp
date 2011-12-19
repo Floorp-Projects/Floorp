@@ -38,6 +38,7 @@
 #include "SmsRequestManager.h"
 #include "nsIDOMSmsMessage.h"
 #include "nsDOMEvent.h"
+#include "SmsCursor.h"
 
 /**
  * We have to use macros here because our leak analysis tool things we are
@@ -95,7 +96,6 @@ SmsRequestManager::CreateRequest(nsPIDOMWindow* aWindow,
     NS_ADDREF(*aRequest = request);
     return i;
   }
-
 
   mRequests.AppendObject(request);
   NS_ADDREF(*aRequest = request);
@@ -185,6 +185,15 @@ void
 SmsRequestManager::NotifySmsDeleteFailed(PRInt32 aRequestId, SmsRequest::ErrorType aError)
 {
   NotifyError(aRequestId, aError);
+}
+
+void
+SmsRequestManager::NotifyNoMessageInList(PRInt32 aRequestId)
+{
+  // TODO: use Filter!
+  nsCOMPtr<nsIDOMMozSmsCursor> cursor = new SmsCursor(nsnull);
+
+  NotifySuccess<nsIDOMMozSmsCursor*>(aRequestId, cursor);
 }
 
 } // namespace sms

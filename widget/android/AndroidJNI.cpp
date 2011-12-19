@@ -639,9 +639,42 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsDeleteFailed(JNIEnv* jenv, jclass,
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_notifyNoMessageInList(JNIEnv* jenv, jclass, jint, jlong)
+Java_org_mozilla_gecko_GeckoAppShell_notifyNoMessageInList(JNIEnv* jenv, jclass,
+                                                           jint aRequestId,
+                                                           jlong aProcessId)
 {
-  // TODO: implement
+    class NotifyNoMessageInListRunnable : public nsRunnable {
+    public:
+      NotifyNoMessageInListRunnable(PRInt32 aRequestId, PRUint64 aProcessId)
+        : mRequestId(aRequestId)
+        , mProcessId(aProcessId)
+      {}
+
+      NS_IMETHODIMP Run() {
+        if (mProcessId == 0) { // Parent process.
+          SmsRequestManager::GetInstance()->NotifyNoMessageInList(mRequestId);
+        } else { // Content process.
+          nsTArray<SmsParent*> spList;
+          SmsParent::GetAll(spList);
+
+          for (PRUint32 i=0; i<spList.Length(); ++i) {
+            unused << spList[i]->SendNotifyRequestNoMessageInList(mRequestId,
+                                                                  mProcessId);
+          }
+        }
+
+        return NS_OK;
+      }
+
+    private:
+      PRInt32               mRequestId;
+      PRUint64              mProcessId;
+    };
+
+
+    nsCOMPtr<nsIRunnable> runnable =
+      new NotifyNoMessageInListRunnable(aRequestId, aProcessId);
+    NS_DispatchToMainThread(runnable);
 }
 
 NS_EXPORT void JNICALL

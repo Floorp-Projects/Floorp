@@ -179,6 +179,18 @@ SmsChild::RecvNotifyRequestSmsDeleteFailed(const PRInt32& aError,
   return true;
 }
 
+bool
+SmsChild::RecvNotifyRequestNoMessageInList(const PRInt32& aRequestId,
+                                           const PRUint64& aProcessId)
+{
+  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
+    return true;
+  }
+
+  SmsRequestManager::GetInstance()->NotifyNoMessageInList(aRequestId);
+  return true;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

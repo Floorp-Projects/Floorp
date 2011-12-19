@@ -40,6 +40,7 @@
 #include "nsDOMString.h"
 #include "nsContentUtils.h"
 #include "nsIDOMSmsMessage.h"
+#include "nsIDOMSmsCursor.h"
 
 DOMCI_DATA(MozSmsRequest, mozilla::dom::sms::SmsRequest)
 
@@ -123,6 +124,29 @@ SmsRequest::UnrootResult()
 void
 SmsRequest::SetSuccess(nsIDOMMozSmsMessage* aMessage)
 {
+  SetSuccessInternal(aMessage);
+}
+
+void
+SmsRequest::SetSuccess(bool aResult)
+{
+  NS_PRECONDITION(!mDone, "mDone shouldn't have been set to true already!");
+  NS_PRECONDITION(mError == eNoError, "mError shouldn't have been set!");
+  NS_PRECONDITION(mResult == JSVAL_NULL, "mResult shouldn't have been set!");
+
+  mResult.setBoolean(aResult);
+  mDone = true;
+}
+
+void
+SmsRequest::SetSuccess(nsIDOMMozSmsCursor* aCursor)
+{
+  SetSuccessInternal(aCursor);
+}
+
+bool
+SmsRequest::SetSuccessInternal(nsISupports* aObject)
+{
   NS_PRECONDITION(!mDone, "mDone shouldn't have been set to true already!");
   NS_PRECONDITION(mError == eNoError, "mError shouldn't have been set!");
   NS_PRECONDITION(mResult == JSVAL_VOID, "mResult shouldn't have been set!");
@@ -137,29 +161,20 @@ SmsRequest::SetSuccess(nsIDOMMozSmsMessage* aMessage)
   JSAutoEnterCompartment ac;
   if (!ac.enter(cx, global)) {
     SetError(eInternalError);
-    return;
+    return false;
   }
 
   RootResult();
 
-  if (NS_FAILED(nsContentUtils::WrapNative(cx, global, aMessage, &mResult))) {
+  if (NS_FAILED(nsContentUtils::WrapNative(cx, global, aObject, &mResult))) {
     UnrootResult();
     mResult = JSVAL_VOID;
     SetError(eInternalError);
+    return false;
   }
 
   mDone = true;
-}
-
-void
-SmsRequest::SetSuccess(bool aResult)
-{
-  NS_PRECONDITION(!mDone, "mDone shouldn't have been set to true already!");
-  NS_PRECONDITION(mError == eNoError, "mError shouldn't have been set!");
-  NS_PRECONDITION(mResult == JSVAL_NULL, "mResult shouldn't have been set!");
-
-  mResult.setBoolean(aResult);
-  mDone = true;
+  return true;
 }
 
 void
