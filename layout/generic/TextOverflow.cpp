@@ -148,25 +148,17 @@ ClipMarker(nsDisplayListBuilder* aBuilder,
 }
 
 static void
-InflateLeft(nsRect* aRect, bool aInfinity, nscoord aDelta)
+InflateLeft(nsRect* aRect, nscoord aDelta)
 {
   nscoord xmost = aRect->XMost();
-  if (aInfinity) {
-    aRect->x = nscoord_MIN;
-  } else {
-    aRect->x -= aDelta;
-  }
+  aRect->x -= aDelta;
   aRect->width = NS_MAX(xmost - aRect->x, 0);
 }
 
 static void
-InflateRight(nsRect* aRect, bool aInfinity, nscoord aDelta)
+InflateRight(nsRect* aRect, nscoord aDelta)
 {
-  if (aInfinity) {
-    aRect->width = nscoord_MAX;
-  } else {
-    aRect->width = NS_MAX(aRect->width + aDelta, 0);
-  }
+  aRect->width = NS_MAX(aRect->width + aDelta, 0);
 }
 
 static bool
@@ -313,7 +305,8 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
     if (overflowRight) {
       mRight.mHasOverflow = true;
     }
-    if (isAtomic && (overflowLeft || overflowRight)) {
+    if (isAtomic && ((mLeft.mActive && overflowLeft) ||
+                     (mRight.mActive && overflowRight))) {
       aFramesToHide->PutEntry(aFrame);
     } else if (isAtomic || frameType == nsGkAtoms::textFrame) {
       AnalyzeMarkerEdges(aFrame, frameType, aInsideMarkersArea,
@@ -351,6 +344,15 @@ TextOverflow::AnalyzeMarkerEdges(nsIFrame*       aFrame,
       (rightOverlap > 0 && insideRightEdge)) {
     if (aFrameType == nsGkAtoms::textFrame &&
         aInsideMarkersArea.x < aInsideMarkersArea.XMost()) {
+      if (!mLeft.mActive) {
+        leftOverlap = 0;
+      }
+      if (!mRight.mActive) {
+        rightOverlap = 0;
+      }
+      if (leftOverlap == 0 && rightOverlap == 0) {
+        return;
+      }
       // a clipped text frame and there is some room between the markers
       nscoord snappedLeft, snappedRight;
       bool isFullyClipped =
@@ -368,7 +370,10 @@ TextOverflow::AnalyzeMarkerEdges(nsIFrame*       aFrame,
         aAlignmentEdges->Accumulate(snappedRect);
       }
     } else if (IsAtomicElement(aFrame, aFrameType)) {
-      aFramesToHide->PutEntry(aFrame);
+      if ((insideLeftEdge && mLeft.mActive) ||
+          (insideRightEdge && mRight.mActive)) {
+        aFramesToHide->PutEntry(aFrame);
+      }
     }
   } else if (!insideLeftEdge || !insideRightEdge) {
     // frame is outside
@@ -409,8 +414,8 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
   nsRect contentArea = mContentArea;
   const nscoord scrollAdjust = mCanHaveHorizontalScrollbar ?
     mBlock->PresContext()->AppUnitsPerDevPixel() : 0;
-  InflateLeft(&contentArea, suppressLeft, scrollAdjust);
-  InflateRight(&contentArea, suppressRight, scrollAdjust);
+  InflateLeft(&contentArea, scrollAdjust);
+  InflateRight(&contentArea, scrollAdjust);
   nsRect lineRect = aLine->GetScrollableOverflowArea();
   const bool leftOverflow =
     !suppressLeft && lineRect.x < contentArea.x;
@@ -424,6 +429,8 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
   PRUint32 pass = 0;
   bool guessLeft = leftOverflow;
   bool guessRight = rightOverflow;
+  mLeft.mActive = leftOverflow;
+  mRight.mActive = rightOverflow;
   do {
     // Setup marker strings as needed.
     if (guessLeft) {
@@ -449,8 +456,12 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
     // Calculate the area between the potential markers aligned at the
     // block's edge.
     nsRect insideMarkersArea = mContentArea;
-    InflateLeft(&insideMarkersArea, !guessLeft, -leftMarkerWidth);
-    InflateRight(&insideMarkersArea, !guessRight, -rightMarkerWidth);
+    if (guessLeft) {
+      InflateLeft(&insideMarkersArea, -leftMarkerWidth);
+    }
+    if (guessRight) {
+      InflateRight(&insideMarkersArea, -rightMarkerWidth);
+    }
 
     // Analyze the frames on aLine for the overflow situation at the content
     // edges and at the edges of the area between the markers.
@@ -471,6 +482,12 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
     }
     NS_ASSERTION(pass == 0, "2nd pass should never guess wrong");
   } while (++pass != 2);
+  if (!leftOverflow) {
+    mLeft.Reset();
+  }
+  if (!rightOverflow) {
+    mRight.Reset();
+  }
 }
 
 void
@@ -481,7 +498,10 @@ TextOverflow::ProcessLine(const nsDisplayListSet& aLists,
                mRight.mStyle->mType != NS_STYLE_TEXT_OVERFLOW_CLIP,
                "TextOverflow with 'clip' for both sides");
   mLeft.Reset();
+  mLeft.mActive = mLeft.mStyle->mType != NS_STYLE_TEXT_OVERFLOW_CLIP;
   mRight.Reset();
+  mRight.mActive = mRight.mStyle->mType != NS_STYLE_TEXT_OVERFLOW_CLIP;
+  
   FrameHashtable framesToHide;
   if (!framesToHide.Init(100)) {
     return;
@@ -510,10 +530,10 @@ TextOverflow::ProcessLine(const nsDisplayListSet& aLists,
   }
   nsRect insideMarkersArea = mContentArea;
   if (needLeft) {
-    InflateLeft(&insideMarkersArea, false, -mLeft.mWidth);
+    InflateLeft(&insideMarkersArea, -mLeft.mWidth);
   }
   if (needRight) {
-    InflateRight(&insideMarkersArea, false, -mRight.mWidth);
+    InflateRight(&insideMarkersArea, -mRight.mWidth);
   }
   if (!mCanHaveHorizontalScrollbar && alignmentEdges.mAssigned) {
     nsRect alignmentRect = nsRect(alignmentEdges.x, insideMarkersArea.y,
