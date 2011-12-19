@@ -107,13 +107,17 @@ class GlobalHistory {
         };
     }
 
-    public void add(String uri) {
-        BrowserDB.updateVisitedHistory(GeckoApp.mAppContext.getContentResolver(), uri);
+    public void addToGeckoOnly(String uri) {
         Set<String> visitedSet = mVisitedCache.get();
         if (visitedSet != null) {
             visitedSet.add(uri);
         }
         GeckoAppShell.notifyUriVisited(uri);
+    }
+
+    public void add(String uri) {
+        BrowserDB.updateVisitedHistory(GeckoApp.mAppContext.getContentResolver(), uri);
+        addToGeckoOnly(uri);
     }
 
     public void update(String uri, String title) {

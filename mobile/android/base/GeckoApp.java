@@ -1581,6 +1581,7 @@ abstract public class GeckoApp
                 long startTime = new Date().getTime();
                 checkAndLaunchUpdate();
                 Log.w(LOGTAG, "checking for an update took " + (new Date().getTime() - startTime) + "ms");
+                checkMigrateProfile();
             }
         }, 50);
     }
@@ -1921,6 +1922,17 @@ abstract public class GeckoApp
             Log.i(LOGTAG, "error reading update status", e);
         }
         return status;
+    }
+
+    private void checkMigrateProfile() {
+        File profileDir = getProfileDir();
+        if (profileDir != null) {
+            Log.i(LOGTAG, "checking profile migration in: " + profileDir.getAbsolutePath());
+            ProfileMigrator profileMigrator =
+                new ProfileMigrator(GeckoApp.mAppContext.getContentResolver(),
+                                    profileDir);
+            profileMigrator.launchBackground();
+        }
     }
 
     private SynchronousQueue<String> mFilePickerResult = new SynchronousQueue<String>();
