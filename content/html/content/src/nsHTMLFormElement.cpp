@@ -679,17 +679,20 @@ nsHTMLFormElement::DoSubmitOrReset(nsEvent* aEvent,
   // JBK Don't get form frames anymore - bug 34297
 
   // Submit or Reset the form
-  nsresult rv = NS_OK;
   if (NS_FORM_RESET == aMessage) {
-    rv = DoReset();
+    return DoReset();
   }
-  else if (NS_FORM_SUBMIT == aMessage) {
+
+  if (NS_FORM_SUBMIT == aMessage) {
     // Don't submit if we're not in a document.
-    if (doc) {
-      rv = DoSubmit(aEvent);
+    if (!doc) {
+      return NS_OK;
     }
+    return DoSubmit(aEvent);
   }
-  return rv;
+
+  MOZ_ASSERT(false);
+  return NS_OK;
 }
 
 nsresult
@@ -697,7 +700,7 @@ nsHTMLFormElement::DoReset()
 {
   // JBK walk the elements[] array instead of form frame controls - bug 34297
   PRUint32 numElements = GetElementCount();
-  for (PRUint32 elementX = 0; (elementX < numElements); elementX++) {
+  for (PRUint32 elementX = 0; elementX < numElements; ++elementX) {
     // Hold strong ref in case the reset does something weird
     nsCOMPtr<nsIFormControl> controlNode = GetElementAt(elementX);
     if (controlNode) {

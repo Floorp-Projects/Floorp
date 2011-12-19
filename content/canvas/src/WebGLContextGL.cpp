@@ -4355,9 +4355,18 @@ WebGLContext::CompileShader(nsIWebGLShader *sobj)
         if (mEnabledExtensions[WebGL_OES_standard_derivatives])
             resources.OES_standard_derivatives = 1;
 
+        // notice that on Android, we always use SH_GLSL_OUTPUT, we never use the ESSL backend.
+        // see bug 709947, the reason is that 1) we dont really need a ESSL backend since the
+        // source is already ESSL, and 2) we ran into massive Android crashes when we used the ESSL backend.
+        // But if we wanted to use shader transformations on ES platforms, we would have to use the
+        // ESSL backend
         compiler = ShConstructCompiler((ShShaderType) shader->ShaderType(),
                                        SH_WEBGL_SPEC,
+#ifdef MOZ_WIDGET_ANDROID
+                                       SH_GLSL_OUTPUT,
+#else
                                        gl->IsGLES2() ? SH_ESSL_OUTPUT : SH_GLSL_OUTPUT,
+#endif
                                        &resources);
 
         // We're storing an actual instance of StripComments because, if we don't, the 
@@ -4527,6 +4536,45 @@ WebGLContext::GetShaderInfoLog(nsIWebGLShader *sobj, nsAString& retval)
     log.SetLength(k);
 
     CopyASCIItoUTF16(log, retval);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+WebGLContext::GetShaderPrecisionFormat(WebGLenum shadertype, WebGLenum precisiontype, nsIWebGLShaderPrecisionFormat **retval)
+{
+    *retval = nsnull;
+    if (mContextLost)
+        return NS_OK;
+
+    switch (shadertype) {
+        case LOCAL_GL_FRAGMENT_SHADER:
+        case LOCAL_GL_VERTEX_SHADER:
+            break;
+        default:
+            return ErrorInvalidEnumInfo("getShaderPrecisionFormat: shadertype", shadertype);
+    }
+
+    switch (precisiontype) {
+        case LOCAL_GL_LOW_FLOAT:
+        case LOCAL_GL_MEDIUM_FLOAT:
+        case LOCAL_GL_HIGH_FLOAT:
+        case LOCAL_GL_LOW_INT:
+        case LOCAL_GL_MEDIUM_INT:
+        case LOCAL_GL_HIGH_INT:
+            break;
+        default:
+            return ErrorInvalidEnumInfo("getShaderPrecisionFormat: precisiontype", precisiontype);
+    }
+
+    MakeContextCurrent();
+
+    GLint range[2], precision;
+    gl->fGetShaderPrecisionFormat(shadertype, precisiontype, range, &precision);
+
+    WebGLShaderPrecisionFormat *retShaderPrecisionFormat
+        = new WebGLShaderPrecisionFormat(range[0], range[1], precision);
+    NS_ADDREF(*retval = retShaderPrecisionFormat);
 
     return NS_OK;
 }
@@ -5091,7 +5139,7 @@ WebGLContext::TexSubImage2D_dom(WebGLenum target, WebGLint level,
                               format, type,
                               isurf->Data(), byteLength,
                               -1,
-                              srcFormat, true);
+                              srcFormat, mPixelStorePremultiplyAlpha);
 }
 
 bool

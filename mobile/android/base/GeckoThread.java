@@ -64,16 +64,6 @@ public class GeckoThread extends Thread {
 
     public void run() {
         final GeckoApp app = GeckoApp.mAppContext;
-        Intent intent = mIntent;
-        String uri = intent.getDataString();
-        String title = uri;
-        if (!app.mUserDefinedProfile && (uri == null || uri.length() == 0)) {
-            uri = mUri;
-            title = mTitle;
-        }
-        if (uri == null || uri.equals("") || uri.equals("about:home")) {
-            app.showAboutHome();
-        }
         File cacheFile = GeckoAppShell.getCacheDir();
         File libxulFile = new File(cacheFile, "libxul.so");
 
@@ -106,18 +96,17 @@ public class GeckoThread extends Thread {
 
         // and then fire us up
 
-        final String activityTitle = title;
         app.mMainHandler.post(new Runnable() {
             public void run() {
-                app.mBrowserToolbar.setTitle(activityTitle);
+                app.mBrowserToolbar.setTitle(mTitle);
             }
         });
         try {
-            Log.w(LOGTAG, "RunGecko - URI = " + uri);
+            Log.w(LOGTAG, "RunGecko - URI = " + mUri);
 
             GeckoAppShell.runGecko(app.getApplication().getPackageResourcePath(),
-                                   intent.getStringExtra("args"),
-                                   uri);
+                                   mIntent.getStringExtra("args"),
+                                   mUri);
         } catch (Exception e) {
             Log.e(LOGTAG, "top level exception", e);
             StringWriter sw = new StringWriter();

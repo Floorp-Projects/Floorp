@@ -37,7 +37,7 @@
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 470310;
-var summary = 'Do not assert: (uint32)((atoms - script->atomMap.vector + ' + 
+var summary = 'Do not assert: (uint32_t)((atoms - script->atomMap.vector + ' + 
   '((uintN)(((regs.pc + 0)[1] << 8) | (regs.pc + 0)[2])))) < objects_->length';
 var actual = '';
 var expect = '';

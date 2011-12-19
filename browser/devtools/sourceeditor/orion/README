@@ -8,25 +8,11 @@ The Orion editor web site: http://www.eclipse.org/orion
 
 To upgrade Orion to a newer version see the UPGRADE file.
 
-Orion version: git clone from 2011-10-26
-               commit hash 0ab295660e1f7d33ca2bfb8558b3b7492d2c5aa5
-  + patch for Eclipse Bug 358623 - Drag and Drop support:
-    https://github.com/mihaisucan/orion.client/tree/bug-358623
-      see https://bugs.eclipse.org/bugs/show_bug.cgi?id=358623
-  + patch for Eclipse Bug 362286 - Monaco font line height:
-    https://github.com/mihaisucan/orion.client/tree/bug-362286
-      see https://bugs.eclipse.org/bugs/show_bug.cgi?id=362286
-  + patch for Eclipse Bug 362107 - Ctrl-Up/Down failure on Linux:
-    https://github.com/mihaisucan/orion.client/tree/bug-362107
-      see https://bugs.eclipse.org/bugs/show_bug.cgi?id=362107
-  + patch for Eclipse Bug 362428 - _getXToOffset() throws:
-    https://github.com/mihaisucan/orion.client/tree/bug-362428
-      see https://bugs.eclipse.org/bugs/show_bug.cgi?id=362428
-  + patch for Eclipse Bug 362835 - Pasted HTML shows twice:
-    https://github.com/mihaisucan/orion.client/tree/bug-362835
-      see https://bugs.eclipse.org/bugs/show_bug.cgi?id=362835
-  + patch for Eclipse Bug 363508 - Selection is broken after TextView hide/unhide
-    see https://bugs.eclipse.org/bugs/show_bug.cgi?id=363508
+Orion version: git clone from 2011-12-09
+               commit hash d8a6dc01d9c561d6eb99f03b64c8c78ce785c59d
+  + patch for Eclipse Bug 366312 - right-clicking outside of the selection causes the caret to move
+    https://github.com/mihaisucan/orion.client/tree/bug-366312
+      see https://bugs.eclipse.org/bugs/show_bug.cgi?id=366312
 
 # License
 

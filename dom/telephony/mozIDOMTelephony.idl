@@ -40,12 +40,17 @@
 interface nsIDOMEventListener;
 interface mozIDOMTelephonyCall;
 
-[scriptable, uuid(24371c72-1631-477d-b26e-f14db369bc22)]
+[scriptable, uuid(c7b0046b-ee80-447c-8a95-a389003891bc)]
 interface mozIDOMTelephony : nsIDOMEventTarget {
 
   readonly attribute jsval liveCalls;
   mozIDOMTelephonyCall dial(in DOMString number);
+  void startTone(in DOMString dtmfChar);
+  void stopTone();
   attribute nsIDOMEventListener onincoming;
+
+  attribute boolean muted;
+  attribute boolean speakerOn;
 
   //XXX philikon's additions
   attribute nsIDOMEventListener onoperatorchange;

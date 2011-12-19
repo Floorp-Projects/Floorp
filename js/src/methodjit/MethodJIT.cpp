@@ -136,7 +136,7 @@ StackFrame::methodjitStaticAsserts()
 
 #ifdef JS_METHODJIT_PROFILE_STUBS
 static const size_t STUB_CALLS_FOR_OP_COUNT = 255;
-static uint32 StubCallsForOp[STUB_CALLS_FOR_OP_COUNT];
+static uint32_t StubCallsForOp[STUB_CALLS_FOR_OP_COUNT];
 #endif
 
 extern "C" void JS_FASTCALL
@@ -1254,11 +1254,11 @@ mjit::JITScript::~JITScript()
     ic::GetElementIC *getElems_ = getElems();
     ic::SetElementIC *setElems_ = setElems();
     ic::PICInfo *pics_ = pics();
-    for (uint32 i = 0; i < nGetElems; i++)
+    for (uint32_t i = 0; i < nGetElems; i++)
         Destroy(getElems_[i]);
-    for (uint32 i = 0; i < nSetElems; i++)
+    for (uint32_t i = 0; i < nSetElems; i++)
         Destroy(setElems_[i]);
-    for (uint32 i = 0; i < nPICs; i++)
+    for (uint32_t i = 0; i < nPICs; i++)
         Destroy(pics_[i]);
 #endif
 
@@ -1280,7 +1280,7 @@ mjit::JITScript::~JITScript()
     }
 
     ic::CallICInfo *callICs_ = callICs();
-    for (uint32 i = 0; i < nCallICs; i++) {
+    for (uint32_t i = 0; i < nCallICs; i++) {
         callICs_[i].releasePools();
         if (callICs_[i].fastGuardedObject)
             callICs_[i].purgeGuardedObject();
@@ -1291,7 +1291,7 @@ mjit::JITScript::~JITScript()
         JS_STATIC_ASSERT(offsetof(ic::CallICInfo, links) == 0);
         ic::CallICInfo *ic = (ic::CallICInfo *) callers.next;
 
-        uint8 *start = (uint8 *)ic->funGuard.executableAddress();
+        uint8_t *start = (uint8_t *)ic->funGuard.executableAddress();
         JSC::RepatchBuffer repatch(JSC::JITCode(start - 32, 64));
 
         repatch.repatch(ic->funGuard, NULL);
@@ -1440,9 +1440,9 @@ JITScript::nativeToPC(void *returnAddress, CallSite **pinline) const
     }
 
     js::mjit::ic::CallICInfo &ic = callICs_[low];
-    JS_ASSERT((uint8*)ic.funGuard.executableAddress() + ic.joinPointOffset == returnAddress);
+    JS_ASSERT((uint8_t*)ic.funGuard.executableAddress() + ic.joinPointOffset == returnAddress);
 
-    if (ic.call->inlineIndex != uint32(-1)) {
+    if (ic.call->inlineIndex != UINT32_MAX) {
         if (pinline)
             *pinline = ic.call;
         InlineFrame *frame = &inlineFrames()[ic.call->inlineIndex];

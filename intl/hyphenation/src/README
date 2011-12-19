@@ -2,7 +2,7 @@ Hyphen - hyphenation library to use converted TeX hyphenation patterns
  
 (C) 1998 Raph Levien
 (C) 2001 ALTLinux, Moscow
-(C) 2006, 2007, 2008, 2010 László Németh
+(C) 2006, 2007, 2008, 2010, 2011 László Németh
  
 This was part of libHnj library by Raph Levien.
  
@@ -124,4 +124,4 @@ is released in binary form as jar files and in source form as zip files.
 See http://sourceforge.net/project/showfiles.php?group_id=119136
 
 László Németh
-<nemeth (at) openoffice (dot) org>
+<nemeth (at) numbertext (dot) org>

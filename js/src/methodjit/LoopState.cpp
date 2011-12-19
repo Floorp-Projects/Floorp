@@ -49,33 +49,33 @@ using namespace js::analyze;
 using namespace js::types;
 
 inline bool
-SafeAdd(int32 one, int32 two, int32 *res)
+SafeAdd(int32_t one, int32_t two, int32_t *res)
 {
     *res = one + two;
-    int64 ores = (int64)one + (int64)two;
-    if (ores == (int64)*res)
+    int64_t ores = (int64_t)one + (int64_t)two;
+    if (ores == (int64_t)*res)
         return true;
     JaegerSpew(JSpew_Analysis, "Overflow computing %d + %d\n", one, two);
     return false;
 }
 
 inline bool
-SafeSub(int32 one, int32 two, int32 *res)
+SafeSub(int32_t one, int32_t two, int32_t *res)
 {
     *res = one - two;
-    int64 ores = (int64)one - (int64)two;
-    if (ores == (int64)*res)
+    int64_t ores = (int64_t)one - (int64_t)two;
+    if (ores == (int64_t)*res)
         return true;
     JaegerSpew(JSpew_Analysis, "Overflow computing %d - %d\n", one, two);
     return false;
 }
 
 inline bool
-SafeMul(int32 one, int32 two, int32 *res)
+SafeMul(int32_t one, int32_t two, int32_t *res)
 {
     *res = one * two;
-    int64 ores = (int64)one * (int64)two;
-    if (ores == (int64)*res)
+    int64_t ores = (int64_t)one * (int64_t)two;
+    if (ores == (int64_t)*res)
         return true;
     JaegerSpew(JSpew_Analysis, "Overflow computing %d * %d\n", one, two);
     return false;
@@ -107,8 +107,8 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
 {
     this->lifetime = outerAnalysis->getLoop(head);
     JS_ASSERT(lifetime &&
-              lifetime->head == uint32(head - outerScript->code) &&
-              lifetime->entry == uint32(entryTarget - outerScript->code));
+              lifetime->head == uint32_t(head - outerScript->code) &&
+              lifetime->entry == uint32_t(entryTarget - outerScript->code));
 
     this->entry = entry;
 
@@ -116,12 +116,12 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
     analyzeLoopIncrements();
     for (unsigned i = 0; i < ssa->numFrames(); i++) {
         /* Only analyze this frame if it is nested within the loop itself. */
-        uint32 index = ssa->iterFrame(i).index;
+        uint32_t index = ssa->iterFrame(i).index;
         if (index != CrossScriptSSA::OUTER_FRAME) {
             unsigned pframe = index;
             while (ssa->getFrame(pframe).parent != CrossScriptSSA::OUTER_FRAME)
                 pframe = ssa->getFrame(pframe).parent;
-            uint32 offset = ssa->getFrame(pframe).parentpc - outerScript->code;
+            uint32_t offset = ssa->getFrame(pframe).parentpc - outerScript->code;
             JS_ASSERT(offset < outerScript->length);
             if (offset < lifetime->head || offset > lifetime->backedge)
                 continue;
@@ -284,7 +284,7 @@ LoopState::clearLoopRegisters()
 }
 
 bool
-LoopState::loopInvariantEntry(uint32 slot)
+LoopState::loopInvariantEntry(uint32_t slot)
 {
     if (slot == UNASSIGNED)
         return true;
@@ -295,7 +295,7 @@ LoopState::loopInvariantEntry(uint32 slot)
 
     if (slot == analyze::CalleeSlot() || outerAnalysis->slotEscapes(slot))
         return false;
-    return outerAnalysis->liveness(slot).firstWrite(lifetime) == uint32(-1);
+    return outerAnalysis->liveness(slot).firstWrite(lifetime) == UINT32_MAX;
 }
 
 inline bool
@@ -303,17 +303,17 @@ LoopState::entryRedundant(const InvariantEntry &e0, const InvariantEntry &e1)
 {
     JS_ASSERT(e0.isCheck() && e1.isCheck());
 
-    uint32 array0 = e0.u.check.arraySlot;
-    uint32 array1 = e1.u.check.arraySlot;
+    uint32_t array0 = e0.u.check.arraySlot;
+    uint32_t array1 = e1.u.check.arraySlot;
 
-    uint32 value01 = e0.u.check.valueSlot1;
-    uint32 value02 = e0.u.check.valueSlot2;
+    uint32_t value01 = e0.u.check.valueSlot1;
+    uint32_t value02 = e0.u.check.valueSlot2;
 
-    uint32 value11 = e1.u.check.valueSlot1;
-    uint32 value12 = e1.u.check.valueSlot2;
+    uint32_t value11 = e1.u.check.valueSlot1;
+    uint32_t value12 = e1.u.check.valueSlot2;
 
-    int32 c0 = e0.u.check.constant;
-    int32 c1 = e1.u.check.constant;
+    int32_t c0 = e0.u.check.constant;
+    int32_t c1 = e1.u.check.constant;
 
     /*
      * initialized lengths are always <= JSObject::NELEMENTS_LIMIT, check for
@@ -326,12 +326,12 @@ LoopState::entryRedundant(const InvariantEntry &e0, const InvariantEntry &e1)
      */
     if (e0.kind == InvariantEntry::RANGE_CHECK && e1.isBoundsCheck() &&
         value01 == value11 && value02 == value12) {
-        int32 constant;
+        int32_t constant;
         if (c1 >= 0)
             constant = c0;
         else if (!SafeAdd(c0, c1, &constant))
             return false;
-        return constant >= (int32) JSObject::NELEMENTS_LIMIT;
+        return constant >= (int32_t) JSObject::NELEMENTS_LIMIT;
     }
 
     /* Look for matching tests that differ only in their constants. */
@@ -385,8 +385,8 @@ LoopState::checkRedundantEntry(const InvariantEntry &entry)
 }
 
 bool
-LoopState::addHoistedCheck(InvariantArrayKind arrayKind, uint32 arraySlot,
-                           uint32 valueSlot1, uint32 valueSlot2, int32 constant)
+LoopState::addHoistedCheck(InvariantArrayKind arrayKind, uint32_t arraySlot,
+                           uint32_t valueSlot1, uint32_t valueSlot2, int32_t constant)
 {
 #ifdef DEBUG
     JS_ASSERT_IF(valueSlot1 == UNASSIGNED, valueSlot2 == UNASSIGNED);
@@ -430,8 +430,8 @@ LoopState::addHoistedCheck(InvariantArrayKind arrayKind, uint32 arraySlot,
             hasInvariantSlots = true;
     }
     if (!hasInvariantSlots) {
-        uint32 which = frame.allocTemporary();
-        if (which == uint32(-1))
+        uint32_t which = frame.allocTemporary();
+        if (which == UINT32_MAX)
             return false;
         FrameEntry *fe = frame.getTemporary(which);
 
@@ -450,7 +450,7 @@ LoopState::addHoistedCheck(InvariantArrayKind arrayKind, uint32 arraySlot,
 }
 
 void
-LoopState::addNegativeCheck(uint32 valueSlot, int32 constant)
+LoopState::addNegativeCheck(uint32_t valueSlot, int32_t constant)
 {
     JaegerSpew(JSpew_Analysis, "Nonnegative check %s + %d >= 0\n",
                frame.entryName(valueSlot), constant);
@@ -465,11 +465,11 @@ LoopState::addNegativeCheck(uint32 valueSlot, int32 constant)
 }
 
 void
-LoopState::addRangeCheck(uint32 valueSlot1, uint32 valueSlot2, int32 constant)
+LoopState::addRangeCheck(uint32_t valueSlot1, uint32_t valueSlot2, int32_t constant)
 {
     JaegerSpew(JSpew_Analysis, "Range check %d >= %s + %s\n",
                constant, frame.entryName(valueSlot1),
-               valueSlot2 == uint32(-1) ? "" : frame.entryName(valueSlot2));
+               valueSlot2 == UINT32_MAX ? "" : frame.entryName(valueSlot2));
 
     InvariantEntry entry;
     entry.kind = InvariantEntry::RANGE_CHECK;
@@ -487,7 +487,7 @@ LoopState::setLoopReg(AnyRegisterID reg, FrameEntry *fe)
     JS_ASSERT(alloc->loop(reg));
     loopRegs.takeReg(reg);
 
-    uint32 slot = frame.outerSlot(fe);
+    uint32_t slot = frame.outerSlot(fe);
     JaegerSpew(JSpew_Regalloc, "allocating loop register %s for %s\n",
                reg.name(), frame.entryName(fe));
 
@@ -528,8 +528,8 @@ LoopState::hoistArrayLengthCheck(InvariantArrayKind arrayKind, const CrossSSAVal
     if (skipAnalysis)
         return false;
 
-    uint32 objSlot;
-    int32 objConstant;
+    uint32_t objSlot;
+    int32_t objConstant;
     if (!getEntryValue(obj, &objSlot, &objConstant) || objSlot == UNASSIGNED || objConstant != 0)
         return false;
 
@@ -567,8 +567,8 @@ LoopState::hoistArrayLengthCheck(InvariantArrayKind arrayKind, const CrossSSAVal
      * Get an expression for the index 'index + indexConstant', where index
      * is the value of a slot at loop entry.
      */
-    uint32 indexSlot;
-    int32 indexConstant;
+    uint32_t indexSlot;
+    int32_t indexConstant;
     if (!getEntryValue(index, &indexSlot, &indexConstant)) {
         JaegerSpew(JSpew_Analysis, "Could not compute index in terms of loop entry state\n");
         return false;
@@ -609,7 +609,7 @@ LoopState::hoistArrayLengthCheck(InvariantArrayKind arrayKind, const CrossSSAVal
      * z + b + a < initlen(x)
      */
     if (indexSlot == testLHS && testLessEqual) {
-        int32 constant;
+        int32_t constant;
         if (!SafeAdd(testConstant, indexConstant, &constant))
             return false;
 
@@ -637,7 +637,7 @@ LoopState::hoistArrayLengthCheck(InvariantArrayKind arrayKind, const CrossSSAVal
      * y + z + a - b < initlen(x)
      */
     if (hasTestLinearRelationship(indexSlot)) {
-        int32 constant;
+        int32_t constant;
         if (!SafeSub(indexConstant, testConstant, &constant))
             return false;
 
@@ -657,8 +657,8 @@ LoopState::hoistArgsLengthCheck(const CrossSSAValue &index)
 
     JaegerSpew(JSpew_Analysis, "Trying to hoist argument range check\n");
 
-    uint32 indexSlot;
-    int32 indexConstant;
+    uint32_t indexSlot;
+    int32_t indexConstant;
     if (!getEntryValue(index, &indexSlot, &indexConstant)) {
         JaegerSpew(JSpew_Analysis, "Could not compute index in terms of loop entry state\n");
         return false;
@@ -684,7 +684,7 @@ LoopState::hoistArgsLengthCheck(const CrossSSAValue &index)
         for (unsigned i = 0; i < invariantEntries.length(); i++) {
             const InvariantEntry &entry = invariantEntries[i];
             if (entry.kind == InvariantEntry::INVARIANT_ARGS_LENGTH) {
-                uint32 slot = frame.outerSlot(frame.getTemporary(entry.u.array.temporary));
+                uint32_t slot = frame.outerSlot(frame.getTemporary(entry.u.array.temporary));
                 if (slot == testRHS)
                     found = true;
                 break;
@@ -702,7 +702,7 @@ LoopState::hoistArgsLengthCheck(const CrossSSAValue &index)
 }
 
 bool
-LoopState::hasTestLinearRelationship(uint32 slot)
+LoopState::hasTestLinearRelationship(uint32_t slot)
 {
     /*
      * Determine whether slot has a linear relationship with the loop test
@@ -713,8 +713,8 @@ LoopState::hasTestLinearRelationship(uint32 slot)
     if (testLHS == UNASSIGNED || testRHS != UNASSIGNED || testLessEqual)
         return false;
 
-    uint32 incrementOffset = getIncrement(slot);
-    if (incrementOffset == uint32(-1)) {
+    uint32_t incrementOffset = getIncrement(slot);
+    if (incrementOffset == UINT32_MAX) {
         /*
          * Variable is not always incremented in the loop, or is incremented
          * multiple times. Note that the nonDecreasing test done earlier
@@ -723,8 +723,8 @@ LoopState::hasTestLinearRelationship(uint32 slot)
         return false;
     }
 
-    uint32 decrementOffset = getIncrement(testLHS);
-    if (decrementOffset == uint32(-1))
+    uint32_t decrementOffset = getIncrement(testLHS);
+    if (decrementOffset == UINT32_MAX)
         return false;
 
     JSOp op = JSOp(outerScript->code[decrementOffset]);
@@ -744,8 +744,8 @@ LoopState::invariantArraySlots(const CrossSSAValue &obj)
 {
     JS_ASSERT(!skipAnalysis);
 
-    uint32 objSlot;
-    int32 objConstant;
+    uint32_t objSlot;
+    int32_t objConstant;
     if (!getEntryValue(obj, &objSlot, &objConstant) || objSlot == UNASSIGNED || objConstant != 0) {
         JS_NOT_REACHED("Bad value");
         return NULL;
@@ -782,8 +782,8 @@ LoopState::invariantArguments()
             return frame.getTemporary(entry.u.array.temporary);
     }
 
-    uint32 which = frame.allocTemporary();
-    if (which == uint32(-1))
+    uint32_t which = frame.allocTemporary();
+    if (which == UINT32_MAX)
         return NULL;
     FrameEntry *fe = frame.getTemporary(which);
 
@@ -803,8 +803,8 @@ LoopState::invariantLength(const CrossSSAValue &obj)
     if (skipAnalysis)
         return NULL;
 
-    uint32 objSlot;
-    int32 objConstant;
+    uint32_t objSlot;
+    int32_t objConstant;
     if (!getEntryValue(obj, &objSlot, &objConstant) || objSlot == UNASSIGNED || objConstant != 0)
         return NULL;
     TypeSet *objTypes = ssa->getValueTypes(obj);
@@ -819,8 +819,8 @@ LoopState::invariantLength(const CrossSSAValue &obj)
                 return frame.getTemporary(entry.u.array.temporary);
         }
 
-        uint32 which = frame.allocTemporary();
-        if (which == uint32(-1))
+        uint32_t which = frame.allocTemporary();
+        if (which == UINT32_MAX)
             return NULL;
         FrameEntry *fe = frame.getTemporary(which);
 
@@ -856,8 +856,8 @@ LoopState::invariantLength(const CrossSSAValue &obj)
         /* Recompile if object type changes. */
         objTypes->addFreeze(cx);
 
-        uint32 which = frame.allocTemporary();
-        if (which == uint32(-1))
+        uint32_t which = frame.allocTemporary();
+        if (which == UINT32_MAX)
             return NULL;
         FrameEntry *fe = frame.getTemporary(which);
 
@@ -892,8 +892,8 @@ LoopState::invariantLength(const CrossSSAValue &obj)
     }
     objTypes->addFreeze(cx);
 
-    uint32 which = frame.allocTemporary();
-    if (which == uint32(-1))
+    uint32_t which = frame.allocTemporary();
+    if (which == UINT32_MAX)
         return NULL;
     FrameEntry *fe = frame.getTemporary(which);
 
@@ -918,8 +918,8 @@ LoopState::invariantProperty(const CrossSSAValue &obj, jsid id)
     if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
         return NULL;
 
-    uint32 objSlot;
-    int32 objConstant;
+    uint32_t objSlot;
+    int32_t objConstant;
     if (!getEntryValue(obj, &objSlot, &objConstant) || objSlot == UNASSIGNED || objConstant != 0)
         return NULL;
 
@@ -949,8 +949,8 @@ LoopState::invariantProperty(const CrossSSAValue &obj, jsid id)
         return NULL;
     objTypes->addFreeze(cx);
 
-    uint32 which = frame.allocTemporary();
-    if (which == uint32(-1))
+    uint32_t which = frame.allocTemporary();
+    if (which == UINT32_MAX)
         return NULL;
     FrameEntry *fe = frame.getTemporary(which);
 
@@ -974,7 +974,7 @@ LoopState::cannotIntegerOverflow(const CrossSSAValue &pushed)
     if (skipAnalysis)
         return false;
 
-    int32 min, max;
+    int32_t min, max;
     if (computeInterval(pushed, &min, &max)) {
         JaegerSpew(JSpew_Analysis, "Integer operation fits in range [%d, %d]\n", min, max);
         return true;
@@ -992,8 +992,8 @@ LoopState::cannotIntegerOverflow(const CrossSSAValue &pushed)
     if (!analysis->integerOperation(cx, PC))
         return false;
 
-    uint32 baseSlot = UNASSIGNED;
-    int32 baseConstant = 0;
+    uint32_t baseSlot = UNASSIGNED;
+    int32_t baseConstant = 0;
     JSOp op = JSOp(*PC);
     switch (op) {
 
@@ -1023,8 +1023,8 @@ LoopState::cannotIntegerOverflow(const CrossSSAValue &pushed)
 
       case JSOP_ADD:
       case JSOP_SUB: {
-        uint32 lhs = UNASSIGNED, rhs = UNASSIGNED;
-        int32 lhsconstant = 0, rhsconstant = 0;
+        uint32_t lhs = UNASSIGNED, rhs = UNASSIGNED;
+        int32_t lhsconstant = 0, rhsconstant = 0;
         CrossSSAValue lcv(pushed.frame, analysis->poppedValue(PC, 1));
         CrossSSAValue rcv(pushed.frame, analysis->poppedValue(PC, 0));
         if (!getEntryValue(lcv, &lhs, &lhsconstant))
@@ -1071,7 +1071,7 @@ LoopState::cannotIntegerOverflow(const CrossSSAValue &pushed)
          * b + a >= INT_MIN
          */
         if (baseSlot == testLHS && !testLessEqual && testRHS == UNASSIGNED) {
-            int32 constant;
+            int32_t constant;
             if (!SafeAdd(testConstant, baseConstant, &constant))
                 return false;
 
@@ -1093,7 +1093,7 @@ LoopState::cannotIntegerOverflow(const CrossSSAValue &pushed)
      * z <= INT_MAX - (a + b)
      */
     if (baseSlot == testLHS && testLessEqual) {
-        int32 constant;
+        int32_t constant;
         if (!SafeAdd(testConstant, baseConstant, &constant))
             return false;
 
@@ -1123,7 +1123,7 @@ LoopState::cannotIntegerOverflow(const CrossSSAValue &pushed)
      * y + z <= INT_MAX + b - a
      */
     if (hasTestLinearRelationship(baseSlot)) {
-        int32 constant;
+        int32_t constant;
         if (!SafeSub(testConstant, baseConstant, &constant))
             return false;
 
@@ -1263,7 +1263,7 @@ LoopState::valueFlowsToBitops(const analyze::SSAValue &v)
           }
 
           case JSOP_SETLOCAL: {
-            uint32 slot = GetBytecodeSlot(outerScript, pc);
+            uint32_t slot = GetBytecodeSlot(outerScript, pc);
             if (!outerAnalysis->trackSlot(slot))
                 return false;
             SSAValue writev;
@@ -1331,12 +1331,12 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
                 masm.loadPayload(Address(T0, TypedArray::lengthOffset()), T0);
             }
 
-            int32 constant = entry.u.check.constant;
+            int32_t constant = entry.u.check.constant;
 
-            if (entry.u.check.valueSlot1 != uint32(-1)) {
+            if (entry.u.check.valueSlot1 != UINT32_MAX) {
                 constant += adjustConstantForIncrement(pc, entry.u.check.valueSlot1);
                 masm.loadPayload(frame.addressOf(entry.u.check.valueSlot1), T1);
-                if (entry.u.check.valueSlot2 != uint32(-1)) {
+                if (entry.u.check.valueSlot2 != UINT32_MAX) {
                     constant += adjustConstantForIncrement(pc, entry.u.check.valueSlot2);
                     Jump overflow = masm.branchAdd32(Assembler::Overflow,
                                                      frame.addressOf(entry.u.check.valueSlot2), T1);
@@ -1358,11 +1358,11 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
           }
 
           case InvariantEntry::RANGE_CHECK: {
-            int32 constant = 0;
+            int32_t constant = 0;
 
             constant += adjustConstantForIncrement(pc, entry.u.check.valueSlot1);
             masm.loadPayload(frame.addressOf(entry.u.check.valueSlot1), T0);
-            if (entry.u.check.valueSlot2 != uint32(-1)) {
+            if (entry.u.check.valueSlot2 != UINT32_MAX) {
                 constant += adjustConstantForIncrement(pc, entry.u.check.valueSlot2);
                 Jump overflow = masm.branchAdd32(Assembler::Overflow,
                                                  frame.addressOf(entry.u.check.valueSlot2), T0);
@@ -1391,7 +1391,7 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
 
           case InvariantEntry::DENSE_ARRAY_SLOTS:
           case InvariantEntry::DENSE_ARRAY_LENGTH: {
-            uint32 array = entry.u.array.arraySlot;
+            uint32_t array = entry.u.array.arraySlot;
             Jump notObject = masm.testObject(Assembler::NotEqual, frame.addressOf(array));
             jumps->append(notObject);
             masm.loadPayload(frame.addressOf(array), T0);
@@ -1410,7 +1410,7 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
 
           case InvariantEntry::TYPED_ARRAY_SLOTS:
           case InvariantEntry::TYPED_ARRAY_LENGTH: {
-            uint32 array = entry.u.array.arraySlot;
+            uint32_t array = entry.u.array.arraySlot;
             Jump notObject = masm.testObject(Assembler::NotEqual, frame.addressOf(array));
             jumps->append(notObject);
             masm.loadPayload(frame.addressOf(array), T0);
@@ -1442,7 +1442,7 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
           }
 
           case InvariantEntry::INVARIANT_PROPERTY: {
-            uint32 object = entry.u.property.objectSlot;
+            uint32_t object = entry.u.property.objectSlot;
             Jump notObject = masm.testObject(Assembler::NotEqual, frame.addressOf(object));
             jumps->append(notObject);
             masm.loadPayload(frame.addressOf(object), T0);
@@ -1482,7 +1482,7 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
  * at the start of the next loop iteration.
  */
 bool
-LoopState::getLoopTestAccess(const SSAValue &v, uint32 *pslot, int32 *pconstant)
+LoopState::getLoopTestAccess(const SSAValue &v, uint32_t *pslot, int32_t *pconstant)
 {
     *pslot = UNASSIGNED;
     *pconstant = 0;
@@ -1492,8 +1492,8 @@ LoopState::getLoopTestAccess(const SSAValue &v, uint32 *pslot, int32 *pconstant)
          * Getting the value of a variable at a previous offset. Check that it
          * is not updated before the start of the next loop iteration.
          */
-        uint32 slot;
-        uint32 offset;
+        uint32_t slot;
+        uint32_t offset;
         if (v.kind() == SSAValue::PHI) {
             slot = v.phiSlot();
             offset = v.phiOffset();
@@ -1503,7 +1503,7 @@ LoopState::getLoopTestAccess(const SSAValue &v, uint32 *pslot, int32 *pconstant)
         }
         if (outerAnalysis->slotEscapes(slot))
             return false;
-        if (outerAnalysis->liveness(slot).firstWrite(offset + 1, lifetime->backedge) != uint32(-1))
+        if (outerAnalysis->liveness(slot).firstWrite(offset + 1, lifetime->backedge) != UINT32_MAX)
             return false;
         *pslot = slot;
         *pconstant = 0;
@@ -1536,7 +1536,7 @@ LoopState::getLoopTestAccess(const SSAValue &v, uint32 *pslot, int32 *pconstant)
       case JSOP_ARGDEC: {
         if (!outerAnalysis->integerOperation(cx, pc))
             return false;
-        uint32 slot = GetBytecodeSlot(outerScript, pc);
+        uint32_t slot = GetBytecodeSlot(outerScript, pc);
         if (outerAnalysis->slotEscapes(slot))
             return false;
 
@@ -1606,10 +1606,10 @@ LoopState::analyzeLoopTest()
     }
 
     /* Reverse the condition if the RHS is modified by the loop. */
-    uint32 swapRHS;
-    int32 swapConstant;
+    uint32_t swapRHS;
+    int32_t swapConstant;
     if (getLoopTestAccess(two, &swapRHS, &swapConstant)) {
-        if (swapRHS != UNASSIGNED && outerAnalysis->liveness(swapRHS).firstWrite(lifetime) != uint32(-1)) {
+        if (swapRHS != UNASSIGNED && outerAnalysis->liveness(swapRHS).firstWrite(lifetime) != UINT32_MAX) {
             SSAValue tmp = one;
             one = two;
             two = tmp;
@@ -1617,13 +1617,13 @@ LoopState::analyzeLoopTest()
         }
     }
 
-    uint32 lhs;
-    int32 lhsConstant;
+    uint32_t lhs;
+    int32_t lhsConstant;
     if (!getLoopTestAccess(one, &lhs, &lhsConstant))
         return;
 
-    uint32 rhs = UNASSIGNED;
-    int32 rhsConstant = 0;
+    uint32_t rhs = UNASSIGNED;
+    int32_t rhsConstant = 0;
     CrossSSAValue rhsv(CrossScriptSSA::OUTER_FRAME, two);
     if (!getEntryValue(rhsv, &rhs, &rhsConstant))
         return;
@@ -1633,7 +1633,7 @@ LoopState::analyzeLoopTest()
     if (lhs == UNASSIGNED)
         return;
 
-    int32 constant;
+    int32_t constant;
     if (!SafeSub(rhsConstant, lhsConstant, &constant))
         return;
 
@@ -1665,12 +1665,12 @@ LoopState::analyzeLoopIncrements()
      * also handle the first basic block).
      */
 
-    for (uint32 slot = ArgSlot(0); slot < LocalSlot(outerScript, outerScript->nfixed); slot++) {
+    for (uint32_t slot = ArgSlot(0); slot < LocalSlot(outerScript, outerScript->nfixed); slot++) {
         if (outerAnalysis->slotEscapes(slot))
             continue;
 
-        uint32 offset = outerAnalysis->liveness(slot).onlyWrite(lifetime);
-        if (offset == uint32(-1) || offset < lifetime->lastBlock)
+        uint32_t offset = outerAnalysis->liveness(slot).onlyWrite(lifetime);
+        if (offset == UINT32_MAX || offset < lifetime->lastBlock)
             continue;
 
         jsbytecode *pc = outerScript->code + offset;
@@ -1718,8 +1718,8 @@ LoopState::definiteArrayAccess(const SSAValue &obj, const SSAValue &index)
     if (cc.arrayPrototypeHasIndexedProperty())
         return false;
 
-    uint32 objSlot;
-    int32 objConstant;
+    uint32_t objSlot;
+    int32_t objConstant;
     CrossSSAValue objv(CrossScriptSSA::OUTER_FRAME, obj);
     if (!getEntryValue(objv, &objSlot, &objConstant) || objSlot == UNASSIGNED || objConstant != 0)
         return false;
@@ -1742,8 +1742,8 @@ LoopState::definiteArrayAccess(const SSAValue &obj, const SSAValue &index)
         }
     }
 
-    uint32 indexSlot;
-    int32 indexConstant;
+    uint32_t indexSlot;
+    int32_t indexConstant;
     CrossSSAValue indexv(CrossScriptSSA::OUTER_FRAME, index);
     if (!getEntryValue(indexv, &indexSlot, &indexConstant))
         return false;
@@ -1775,7 +1775,7 @@ LoopState::analyzeLoopBody(unsigned frame)
      * we don't want to scribble on that frame when restoring invariants.
      */
     temporariesStart =
-        Max<uint32>(temporariesStart,
+        Max<uint32_t>(temporariesStart,
                     ssa->getFrame(frame).depth + VALUES_PER_STACK_FRAME * 2 + script->nslots);
 
     if (script->failedBoundsCheck || analysis->localsAliasStack())
@@ -1788,7 +1788,7 @@ LoopState::analyzeLoopBody(unsigned frame)
     unsigned offset = start;
     while (offset < end) {
         jsbytecode *pc = script->code + offset;
-        uint32 successorOffset = offset + GetBytecodeLength(pc);
+        uint32_t successorOffset = offset + GetBytecodeLength(pc);
 
         analyze::Bytecode *opinfo = analysis->maybeCode(offset);
         if (!opinfo) {
@@ -1978,7 +1978,7 @@ LoopState::analyzeLoopBody(unsigned frame)
 bool
 LoopState::addGrowArray(TypeObject *object)
 {
-    static const uint32 MAX_SIZE = 10;
+    static const uint32_t MAX_SIZE = 10;
     for (unsigned i = 0; i < growArrays.length(); i++) {
         if (growArrays[i] == object)
             return true;
@@ -1995,7 +1995,7 @@ LoopState::addGrowArray(TypeObject *object)
 bool
 LoopState::addModifiedProperty(TypeObject *object, jsid id)
 {
-    static const uint32 MAX_SIZE = 20;
+    static const uint32_t MAX_SIZE = 20;
     for (unsigned i = 0; i < modifiedProperties.length(); i++) {
         if (modifiedProperties[i].object == object && modifiedProperties[i].id == id)
             return true;
@@ -2038,18 +2038,18 @@ LoopState::hasModifiedProperty(TypeObject *object, jsid id)
     return false;
 }
 
-uint32
-LoopState::getIncrement(uint32 slot)
+uint32_t
+LoopState::getIncrement(uint32_t slot)
 {
     for (unsigned i = 0; i < increments.length(); i++) {
         if (increments[i].slot == slot)
             return increments[i].offset;
     }
-    return uint32(-1);
+    return UINT32_MAX;
 }
 
-int32
-LoopState::adjustConstantForIncrement(jsbytecode *pc, uint32 slot)
+int32_t
+LoopState::adjustConstantForIncrement(jsbytecode *pc, uint32_t slot)
 {
     /*
      * The only terms that can appear in a hoisted bounds check are either
@@ -2059,7 +2059,7 @@ LoopState::adjustConstantForIncrement(jsbytecode *pc, uint32 slot)
      * has not yet happened, such that 'slot + n' at this point is the value
      * of slot at the start of the next iteration.
      */
-    uint32 offset = getIncrement(slot);
+    uint32_t offset = getIncrement(slot);
 
     /*
      * Note the '<' here. If this PC is at one of the increment opcodes, then
@@ -2069,7 +2069,7 @@ LoopState::adjustConstantForIncrement(jsbytecode *pc, uint32 slot)
      * integer overflow, which will disable hoisted conditions involving the
      * variable anyways.
      */
-    if (offset == uint32(-1) || offset < uint32(pc - outerScript->code))
+    if (offset == UINT32_MAX || offset < uint32_t(pc - outerScript->code))
         return 0;
 
     switch (JSOp(outerScript->code[offset])) {
@@ -2090,7 +2090,7 @@ LoopState::adjustConstantForIncrement(jsbytecode *pc, uint32 slot)
 }
 
 bool
-LoopState::getEntryValue(const CrossSSAValue &iv, uint32 *pslot, int32 *pconstant)
+LoopState::getEntryValue(const CrossSSAValue &iv, uint32_t *pslot, int32_t *pconstant)
 {
     CrossSSAValue cv = ssa->foldValue(iv);
 
@@ -2144,11 +2144,11 @@ LoopState::getEntryValue(const CrossSSAValue &iv, uint32 *pslot, int32 *pconstan
       case JSOP_INCARG: {
         if (cv.frame != CrossScriptSSA::OUTER_FRAME || !analysis->integerOperation(cx, pc))
             return false;
-        uint32 slot = GetBytecodeSlot(outerScript, pc);
+        uint32_t slot = GetBytecodeSlot(outerScript, pc);
         if (outerAnalysis->slotEscapes(slot))
             return false;
-        uint32 write = outerAnalysis->liveness(slot).firstWrite(lifetime);
-        if (write != uint32(-1) && write < v.pushedOffset()) {
+        uint32_t write = outerAnalysis->liveness(slot).firstWrite(lifetime);
+        if (write != UINT32_MAX && write < v.pushedOffset()) {
             /* Variable has been modified since the start of the loop. */
             return false;
         }
@@ -2202,7 +2202,7 @@ LoopState::getEntryValue(const CrossSSAValue &iv, uint32 *pslot, int32 *pconstan
 }
 
 bool
-LoopState::computeInterval(const CrossSSAValue &cv, int32 *pmin, int32 *pmax)
+LoopState::computeInterval(const CrossSSAValue &cv, int32_t *pmin, int32_t *pmax)
 {
     JSScript *script = ssa->getFrame(cv.frame).script;
     ScriptAnalysis *analysis = script->analysis();
@@ -2237,14 +2237,14 @@ LoopState::computeInterval(const CrossSSAValue &cv, int32 *pmin, int32 *pmax)
       case JSOP_UINT24:
       case JSOP_INT8:
       case JSOP_INT32: {
-        int32 constant = GetBytecodeInteger(pc);
+        int32_t constant = GetBytecodeInteger(pc);
         *pmin = constant;
         *pmax = constant;
         return true;
       }
 
       case JSOP_BITAND: {
-        int32 lhsmin, lhsmax, rhsmin, rhsmax;
+        int32_t lhsmin, lhsmax, rhsmin, rhsmax;
         CrossSSAValue lhsv(cv.frame, analysis->poppedValue(pc, 1));
         CrossSSAValue rhsv(cv.frame, analysis->poppedValue(pc, 0));
         bool haslhs = computeInterval(lhsv, &lhsmin, &lhsmax);
@@ -2270,26 +2270,26 @@ LoopState::computeInterval(const CrossSSAValue &cv, int32 *pmin, int32 *pmax)
       }
 
       case JSOP_RSH: {
-        int32 rhsmin, rhsmax;
+        int32_t rhsmin, rhsmax;
         CrossSSAValue rhsv(cv.frame, analysis->poppedValue(pc, 0));
         if (!computeInterval(rhsv, &rhsmin, &rhsmax) || rhsmin != rhsmax)
             return false;
 
         /* Only use the bottom 5 bits. */
-        int32 shift = rhsmin & 0x1f;
+        int32_t shift = rhsmin & 0x1f;
         *pmin = -(1 << (31 - shift));
         *pmax = (1 << (31 - shift)) - 1;
         return true;
       }
 
       case JSOP_URSH: {
-        int32 rhsmin, rhsmax;
+        int32_t rhsmin, rhsmax;
         CrossSSAValue rhsv(cv.frame, analysis->poppedValue(pc, 0));
         if (!computeInterval(rhsv, &rhsmin, &rhsmax) || rhsmin != rhsmax)
             return false;
 
         /* Only use the bottom 5 bits. */
-        int32 shift = rhsmin & 0x1f;
+        int32_t shift = rhsmin & 0x1f;
         if (shift == 0)
             return false;
         *pmin = 0;
@@ -2298,19 +2298,19 @@ LoopState::computeInterval(const CrossSSAValue &cv, int32 *pmin, int32 *pmax)
       }
 
       case JSOP_MOD: {
-        int32 rhsmin, rhsmax;
+        int32_t rhsmin, rhsmax;
         CrossSSAValue rhsv(cv.frame, analysis->poppedValue(pc, 0));
         if (!computeInterval(rhsv, &rhsmin, &rhsmax) || rhsmin != rhsmax)
             return false;
 
-        int32 rhs = abs(rhsmax);
+        int32_t rhs = abs(rhsmax);
         *pmin = -(rhs - 1);
         *pmax = rhs - 1;
         return true;
       }
 
       case JSOP_ADD: {
-        int32 lhsmin, lhsmax, rhsmin, rhsmax;
+        int32_t lhsmin, lhsmax, rhsmin, rhsmax;
         CrossSSAValue lhsv(cv.frame, analysis->poppedValue(pc, 1));
         CrossSSAValue rhsv(cv.frame, analysis->poppedValue(pc, 0));
         if (!computeInterval(lhsv, &lhsmin, &lhsmax) || !computeInterval(rhsv, &rhsmin, &rhsmax))
@@ -2319,7 +2319,7 @@ LoopState::computeInterval(const CrossSSAValue &cv, int32 *pmin, int32 *pmax)
       }
 
       case JSOP_SUB: {
-        int32 lhsmin, lhsmax, rhsmin, rhsmax;
+        int32_t lhsmin, lhsmax, rhsmin, rhsmax;
         CrossSSAValue lhsv(cv.frame, analysis->poppedValue(pc, 1));
         CrossSSAValue rhsv(cv.frame, analysis->poppedValue(pc, 0));
         if (!computeInterval(lhsv, &lhsmin, &lhsmax) || !computeInterval(rhsv, &rhsmin, &rhsmax))
@@ -2328,13 +2328,13 @@ LoopState::computeInterval(const CrossSSAValue &cv, int32 *pmin, int32 *pmax)
       }
 
       case JSOP_MUL: {
-        int32 lhsmin, lhsmax, rhsmin, rhsmax;
+        int32_t lhsmin, lhsmax, rhsmin, rhsmax;
         CrossSSAValue lhsv(cv.frame, analysis->poppedValue(pc, 1));
         CrossSSAValue rhsv(cv.frame, analysis->poppedValue(pc, 0));
         if (!computeInterval(lhsv, &lhsmin, &lhsmax) || !computeInterval(rhsv, &rhsmin, &rhsmax))
             return false;
-        int32 nlhs = Max(abs(lhsmin), abs(lhsmax));
-        int32 nrhs = Max(abs(rhsmin), abs(rhsmax));
+        int32_t nlhs = Max(abs(lhsmin), abs(lhsmax));
+        int32_t nrhs = Max(abs(rhsmin), abs(rhsmax));
 
         if (!SafeMul(nlhs, nrhs, pmax))
             return false;

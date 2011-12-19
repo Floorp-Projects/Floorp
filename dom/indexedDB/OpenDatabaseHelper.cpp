@@ -45,6 +45,7 @@
 #include "nsEscape.h"
 #include "nsThreadUtils.h"
 #include "snappy/snappy.h"
+#include "test_quota.h"
 
 #include "IDBEvents.h"
 #include "IDBFactory.h"
@@ -59,7 +60,7 @@ namespace {
 PR_STATIC_ASSERT(JS_STRUCTURED_CLONE_VERSION == 1);
 
 // Major schema version. Bump for almost everything.
-const PRUint32 kMajorSchemaVersion = 9;
+const PRUint32 kMajorSchemaVersion = 11;
 
 // Minor schema version. Should almost always be 0 (maybe bump on release
 // branches if we have to).
@@ -95,24 +96,10 @@ PRUint32 GetMinorSchemaVersion(PRInt32 aSchemaVersion)
 }
 
 nsresult
-GetDatabaseFile(const nsACString& aASCIIOrigin,
-                const nsAString& aName,
-                nsIFile** aDatabaseFile)
+GetDatabaseFilename(const nsAString& aName,
+                    nsAString& aDatabaseFilename)
 {
-  NS_ASSERTION(!aASCIIOrigin.IsEmpty() && !aName.IsEmpty(), "Bad arguments!");
-
-  nsCOMPtr<nsIFile> dbFile;
-  nsresult rv = IDBFactory::GetDirectory(getter_AddRefs(dbFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ConvertASCIItoUTF16 originSanitized(aASCIIOrigin);
-  originSanitized.ReplaceChar(":/", '+');
-
-  rv = dbFile->Append(originSanitized);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString filename;
-  filename.AppendInt(HashString(aName));
+  aDatabaseFilename.AppendInt(HashString(aName));
 
   nsCString escapedName;
   if (!NS_Escape(NS_ConvertUTF16toUTF8(aName), escapedName, url_XPAlphas)) {
@@ -133,13 +120,65 @@ GetDatabaseFile(const nsACString& aASCIIOrigin,
     }
   }
 
-  filename.Append(NS_ConvertASCIItoUTF16(substring));
-  filename.AppendLiteral(".sqlite");
+  aDatabaseFilename.Append(NS_ConvertASCIItoUTF16(substring));
 
-  rv = dbFile->Append(filename);
+  return NS_OK;
+}
+
+nsresult
+CreateFileTables(mozIStorageConnection* aDBConn)
+{
+  // Table `file`
+  nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE file ("
+      "id INTEGER PRIMARY KEY, "
+      "refcount INTEGER NOT NULL"
+    ");"
+  ));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  dbFile.forget(aDatabaseFile);
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TRIGGER object_data_insert_trigger "
+    "AFTER INSERT ON object_data "
+    "FOR EACH ROW "
+    "WHEN NEW.file_ids IS NOT NULL "
+    "BEGIN "
+      "SELECT update_refcount(NULL, NEW.file_ids); "
+    "END;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TRIGGER object_data_update_trigger "
+    "AFTER UPDATE OF file_ids ON object_data "
+    "FOR EACH ROW "
+    "WHEN OLD.file_ids IS NOT NULL OR NEW.file_ids IS NOT NULL "
+    "BEGIN "
+      "SELECT update_refcount(OLD.file_ids, NEW.file_ids); "
+    "END;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TRIGGER object_data_delete_trigger "
+    "AFTER DELETE ON object_data "
+    "FOR EACH ROW WHEN OLD.file_ids IS NOT NULL "
+    "BEGIN "
+      "SELECT update_refcount(OLD.file_ids, NULL); "
+    "END;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TRIGGER file_update_trigger "
+    "AFTER UPDATE ON file "
+    "FOR EACH ROW WHEN NEW.refcount = 0 "
+    "BEGIN "
+      "DELETE FROM file WHERE id = OLD.id; "
+    "END;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -178,20 +217,8 @@ CreateTables(mozIStorageConnection* aDBConn)
       "object_store_id INTEGER NOT NULL, "
       "key_value DEFAULT NULL, "
       "data BLOB NOT NULL, "
+      "file_ids TEXT, "
       "UNIQUE (object_store_id, key_value), "
-      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
-        "CASCADE"
-    ");"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Table `ai_object_data`
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE ai_object_data ("
-      "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-      "object_store_id INTEGER NOT NULL, "
-      "data BLOB NOT NULL, "
-      "UNIQUE (object_store_id, id), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
         "CASCADE"
     ");"
@@ -201,14 +228,12 @@ CreateTables(mozIStorageConnection* aDBConn)
   // Table `index`
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE object_store_index ("
-      "id INTEGER, "
+      "id INTEGER PRIMARY KEY, "
       "object_store_id INTEGER NOT NULL, "
       "name TEXT NOT NULL, "
       "key_path TEXT NOT NULL, "
       "unique_index INTEGER NOT NULL, "
-      "multientry INTEGER NOT NULL DEFAULT 0, "
-      "object_store_autoincrement INTERGER NOT NULL, "
-      "PRIMARY KEY (id), "
+      "multientry INTEGER NOT NULL, "
       "UNIQUE (object_store_id, name), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
         "CASCADE"
@@ -263,51 +288,7 @@ CreateTables(mozIStorageConnection* aDBConn)
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Table `ai_index_data`
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE ai_index_data ("
-      "index_id INTEGER NOT NULL, "
-      "value NOT NULL, "
-      "ai_object_data_id INTEGER NOT NULL, "
-      "PRIMARY KEY (index_id, value, ai_object_data_id), "
-      "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
-        "CASCADE, "
-      "FOREIGN KEY (ai_object_data_id) REFERENCES ai_object_data(id) ON DELETE "
-        "CASCADE"
-    ");"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Need this to make cascading deletes from ai_object_data and object_store
-  // fast.
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX ai_index_data_ai_object_data_id_index "
-    "ON ai_index_data (ai_object_data_id);"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Table `ai_unique_index_data`
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE ai_unique_index_data ("
-      "index_id INTEGER NOT NULL, "
-      "value NOT NULL, "
-      "ai_object_data_id INTEGER NOT NULL, "
-      "UNIQUE (index_id, value), "
-      "PRIMARY KEY (index_id, value, ai_object_data_id), "
-      "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
-        "CASCADE, "
-      "FOREIGN KEY (ai_object_data_id) REFERENCES ai_object_data(id) ON DELETE "
-        "CASCADE"
-    ");"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Need this to make cascading deletes from ai_object_data and object_store
-  // fast.
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX ai_unique_index_data_ai_object_data_id_index "
-    "ON ai_unique_index_data (ai_object_data_id);"
-  ));
+  rv = CreateFileTables(aDBConn);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aDBConn->SetSchemaVersion(kSQLiteSchemaVersion);
@@ -961,127 +942,139 @@ UpgradeSchemaFrom8To9_0(mozIStorageConnection* aConnection)
 }
 
 nsresult
-CreateDatabaseConnection(const nsAString& aName,
-                         nsIFile* aDBFile,
-                         mozIStorageConnection** aConnection)
+UpgradeSchemaFrom9_0To10_0(mozIStorageConnection* aConnection)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-
-  NS_NAMED_LITERAL_CSTRING(quotaVFSName, "quota");
-
-  nsCOMPtr<mozIStorageServiceQuotaManagement> ss =
-    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(ss, NS_ERROR_FAILURE);
-
-  nsCOMPtr<mozIStorageConnection> connection;
-  nsresult rv = ss->OpenDatabaseWithVFS(aDBFile, quotaVFSName,
-                                        getter_AddRefs(connection));
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
-    // Nuke the database file.  The web services can recreate their data.
-    rv = aDBFile->Remove(false);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = ss->OpenDatabaseWithVFS(aDBFile, quotaVFSName,
-                                 getter_AddRefs(connection));
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Check to make sure that the database schema is correct.
-  PRInt32 schemaVersion;
-  rv = connection->GetSchemaVersion(&schemaVersion);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (schemaVersion > kSQLiteSchemaVersion) {
-    NS_WARNING("Unable to open IndexedDB database, schema is too high!");
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  bool vacuumNeeded = false;
-
-  if (schemaVersion != kSQLiteSchemaVersion) {
-    mozStorageTransaction transaction(connection, false,
-                                  mozIStorageConnection::TRANSACTION_IMMEDIATE);
-
-    if (!schemaVersion) {
-      // Brand new file, initialize our tables.
-      rv = CreateTables(connection);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      NS_ASSERTION(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)) &&
-                   schemaVersion == kSQLiteSchemaVersion,
-                   "CreateTables set a bad schema version!");
-
-      nsCOMPtr<mozIStorageStatement> stmt;
-      nsresult rv = connection->CreateStatement(NS_LITERAL_CSTRING(
-        "INSERT INTO database (name) "
-        "VALUES (:name)"
-      ), getter_AddRefs(stmt));
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), aName);
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-      rv = stmt->Execute();
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-    }
-    else  {
-      // This logic needs to change next time we change the schema!
-      PR_STATIC_ASSERT(kSQLiteSchemaVersion == PRInt32((9 << 4) + 0));
-
-      while (schemaVersion != kSQLiteSchemaVersion) {
-        if (schemaVersion == 4) {
-          rv = UpgradeSchemaFrom4To5(connection);
-        }
-        else if (schemaVersion == 5) {
-          rv = UpgradeSchemaFrom5To6(connection);
-        }
-        else if (schemaVersion == 6) {
-          rv = UpgradeSchemaFrom6To7(connection);
-        }
-        else if (schemaVersion == 7) {
-          rv = UpgradeSchemaFrom7To8(connection);
-        }
-        else if (schemaVersion == 8) {
-          rv = UpgradeSchemaFrom8To9_0(connection);
-          vacuumNeeded = true;
-        }
-#if 0
-        else if (schemaVersion == MakeSchemaVersion(9, 0)) {
-          // Upgrade.
-        }
-#endif
-        else {
-          NS_WARNING("Unable to open IndexedDB database, no upgrade path is "
-                     "available!");
-          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-        }
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = connection->GetSchemaVersion(&schemaVersion);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      NS_ASSERTION(schemaVersion == kSQLiteSchemaVersion, "Huh?!");
-    }
-
-    rv = transaction.Commit();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (vacuumNeeded) {
-    rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "VACUUM;"
-    ));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Turn on foreign key constraints.
-  rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "PRAGMA foreign_keys = ON;"
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "ALTER TABLE object_data ADD COLUMN file_ids TEXT;"
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  connection.forget(aConnection);
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "ALTER TABLE ai_object_data ADD COLUMN file_ids TEXT;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = CreateFileTables(aConnection);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->SetSchemaVersion(MakeSchemaVersion(10, 0));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+UpgradeSchemaFrom10_0To11_0(mozIStorageConnection* aConnection)
+{
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TEMPORARY TABLE temp_upgrade ("
+      "id, "
+      "object_store_id, "
+      "name, "
+      "key_path, "
+      "unique_index, "
+      "multientry"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO temp_upgrade "
+      "SELECT id, object_store_id, name, key_path, "
+      "unique_index, multientry "
+      "FROM object_store_index;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE object_store_index;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE object_store_index ("
+      "id INTEGER PRIMARY KEY, "
+      "object_store_id INTEGER NOT NULL, "
+      "name TEXT NOT NULL, "
+      "key_path TEXT NOT NULL, "
+      "unique_index INTEGER NOT NULL, "
+      "multientry INTEGER NOT NULL, "
+      "UNIQUE (object_store_id, name), "
+      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO object_store_index "
+      "SELECT id, object_store_id, name, key_path, "
+      "unique_index, multientry "
+      "FROM temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO object_data (object_store_id, key_value, data, file_ids) "
+      "SELECT object_store_id, id, data, file_ids "
+      "FROM ai_object_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO index_data (index_id, value, object_data_key, object_data_id) "
+      "SELECT ai_index_data.index_id, ai_index_data.value, ai_index_data.ai_object_data_id, object_data.id "
+      "FROM ai_index_data "
+      "INNER JOIN object_store_index ON "
+        "object_store_index.id = ai_index_data.index_id "
+      "INNER JOIN object_data ON "
+        "object_data.object_store_id = object_store_index.object_store_id AND "
+        "object_data.key_value = ai_index_data.ai_object_data_id;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO unique_index_data (index_id, value, object_data_key, object_data_id) "
+      "SELECT ai_unique_index_data.index_id, ai_unique_index_data.value, ai_unique_index_data.ai_object_data_id, object_data.id "
+      "FROM ai_unique_index_data "
+      "INNER JOIN object_store_index ON "
+        "object_store_index.id = ai_unique_index_data.index_id "
+      "INNER JOIN object_data ON "
+        "object_data.object_store_id = object_store_index.object_store_id AND "
+        "object_data.key_value = ai_unique_index_data.ai_object_data_id;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE object_store "
+      "SET auto_increment = (SELECT max(id) FROM ai_object_data) + 1 "
+      "WHERE auto_increment;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE ai_unique_index_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE ai_index_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE ai_object_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->SetSchemaVersion(MakeSchemaVersion(11, 0));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -1130,8 +1123,8 @@ protected:
 
 private:
   // In-params
-  nsRefPtr<OpenDatabaseHelper> mOpenHelper;
   nsRefPtr<IDBOpenDBRequest> mOpenRequest;
+  nsRefPtr<OpenDatabaseHelper> mOpenHelper;
   PRUint64 mRequestedVersion;
   PRUint64 mCurrentVersion;
 };
@@ -1345,40 +1338,39 @@ OpenDatabaseHelper::DoDatabaseWork()
 
   AutoEnterWindow autoWindow(window);
 
+  nsCOMPtr<nsIFile> dbDirectory;
+
+  IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
+  NS_ASSERTION(mgr, "This should never be null!");
+
+  nsresult rv = mgr->EnsureOriginIsInitialized(mASCIIOrigin,
+                                               getter_AddRefs(dbDirectory));
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsAutoString filename;
+  rv = GetDatabaseFilename(mName, filename);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  
   nsCOMPtr<nsIFile> dbFile;
-  nsresult rv = GetDatabaseFile(mASCIIOrigin, mName, getter_AddRefs(dbFile));
+  rv = dbDirectory->Clone(getter_AddRefs(dbFile));
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  rv = dbFile->Append(filename + NS_LITERAL_STRING(".sqlite"));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   rv = dbFile->GetPath(mDatabaseFilePath);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  nsCOMPtr<nsIFile> dbDirectory;
-  rv = dbFile->GetParent(getter_AddRefs(dbDirectory));
+  nsCOMPtr<nsIFile> fileManagerDirectory;
+  rv = dbDirectory->Clone(getter_AddRefs(fileManagerDirectory));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  bool exists;
-  rv = dbDirectory->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  if (exists) {
-    bool isDirectory;
-    rv = dbDirectory->IsDirectory(&isDirectory);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-    NS_ENSURE_TRUE(isDirectory, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
-  else {
-    rv = dbDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
-
-  IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
-  NS_ASSERTION(mgr, "This should never be null!");
-
-  rv = mgr->EnsureQuotaManagementForDirectory(dbDirectory);
+  rv = fileManagerDirectory->Append(filename);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsCOMPtr<mozIStorageConnection> connection;
-  rv = CreateDatabaseConnection(mName, dbFile, getter_AddRefs(connection));
+  rv = CreateDatabaseConnection(mName, dbFile, fileManagerDirectory,
+                                getter_AddRefs(connection));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   rv = IDBFactory::LoadDatabaseInformation(connection, mDatabaseId,
@@ -1391,7 +1383,7 @@ OpenDatabaseHelper::DoDatabaseWork()
   }
 
   for (PRUint32 i = 0; i < mObjectStores.Length(); i++) {
-    nsAutoPtr<ObjectStoreInfo>& objectStoreInfo = mObjectStores[i];
+    nsRefPtr<ObjectStoreInfo>& objectStoreInfo = mObjectStores[i];
     for (PRUint32 j = 0; j < objectStoreInfo->indexes.Length(); j++) {
       IndexInfo& indexInfo = objectStoreInfo->indexes[j];
       mLastIndexId = NS_MAX(indexInfo.id, mLastIndexId);
@@ -1422,6 +1414,178 @@ OpenDatabaseHelper::DoDatabaseWork()
     mState = eSetVersionPending;
   }
 
+  mFileManager = mgr->GetOrCreateFileManager(mASCIIOrigin, mName);
+  NS_ENSURE_TRUE(mFileManager, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  if (!mFileManager->IsDirectoryInited()) {
+    rv = mFileManager->InitDirectory(fileManagerDirectory, connection);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+
+  if (!mFileManager->Loaded()) {
+    rv = mFileManager->Load(connection);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+
+  return NS_OK;
+}
+
+// static
+nsresult
+OpenDatabaseHelper::CreateDatabaseConnection(
+                                        const nsAString& aName,
+                                        nsIFile* aDBFile,
+                                        nsIFile* aFileManagerDirectory,
+                                        mozIStorageConnection** aConnection)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+  NS_NAMED_LITERAL_CSTRING(quotaVFSName, "quota");
+
+  nsCOMPtr<mozIStorageServiceQuotaManagement> ss =
+    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(ss, NS_ERROR_FAILURE);
+
+  nsCOMPtr<mozIStorageConnection> connection;
+  nsresult rv = ss->OpenDatabaseWithVFS(aDBFile, quotaVFSName,
+                                        getter_AddRefs(connection));
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    // If we're just opening the database during origin initialization, then
+    // we don't want to erase any files. The failure here will fail origin
+    // initialization too.
+    if (aName.IsVoid()) {
+      return rv;
+    }
+
+    // Nuke the database file.  The web services can recreate their data.
+    rv = aDBFile->Remove(false);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    bool exists;
+    rv = aFileManagerDirectory->Exists(&exists);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (exists) {
+      bool isDirectory;
+      rv = aFileManagerDirectory->IsDirectory(&isDirectory);
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_TRUE(isDirectory, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+      rv = aFileManagerDirectory->Remove(true);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    rv = ss->OpenDatabaseWithVFS(aDBFile, quotaVFSName,
+                                 getter_AddRefs(connection));
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = connection->EnableModule(NS_LITERAL_CSTRING("filesystem"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Check to make sure that the database schema is correct.
+  PRInt32 schemaVersion;
+  rv = connection->GetSchemaVersion(&schemaVersion);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Unknown schema will fail origin initialization too
+  if (!schemaVersion && aName.IsVoid()) {
+    NS_WARNING("Unable to open IndexedDB database, schema is not set!");
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  if (schemaVersion > kSQLiteSchemaVersion) {
+    NS_WARNING("Unable to open IndexedDB database, schema is too high!");
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  bool vacuumNeeded = false;
+
+  if (schemaVersion != kSQLiteSchemaVersion) {
+    mozStorageTransaction transaction(connection, false,
+                                  mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+    if (!schemaVersion) {
+      // Brand new file, initialize our tables.
+      rv = CreateTables(connection);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      NS_ASSERTION(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)) &&
+                   schemaVersion == kSQLiteSchemaVersion,
+                   "CreateTables set a bad schema version!");
+
+      nsCOMPtr<mozIStorageStatement> stmt;
+      nsresult rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+        "INSERT INTO database (name) "
+        "VALUES (:name)"
+      ), getter_AddRefs(stmt));
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+      rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), aName);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+      rv = stmt->Execute();
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    }
+    else  {
+      // This logic needs to change next time we change the schema!
+      PR_STATIC_ASSERT(kSQLiteSchemaVersion == PRInt32((11 << 4) + 0));
+
+      while (schemaVersion != kSQLiteSchemaVersion) {
+        if (schemaVersion == 4) {
+          rv = UpgradeSchemaFrom4To5(connection);
+        }
+        else if (schemaVersion == 5) {
+          rv = UpgradeSchemaFrom5To6(connection);
+        }
+        else if (schemaVersion == 6) {
+          rv = UpgradeSchemaFrom6To7(connection);
+        }
+        else if (schemaVersion == 7) {
+          rv = UpgradeSchemaFrom7To8(connection);
+        }
+        else if (schemaVersion == 8) {
+          rv = UpgradeSchemaFrom8To9_0(connection);
+          vacuumNeeded = true;
+        }
+        else if (schemaVersion == MakeSchemaVersion(9, 0)) {
+          rv = UpgradeSchemaFrom9_0To10_0(connection);
+        }
+        else if (schemaVersion == MakeSchemaVersion(10, 0)) {
+          rv = UpgradeSchemaFrom10_0To11_0(connection);
+        }
+        else {
+          NS_WARNING("Unable to open IndexedDB database, no upgrade path is "
+                     "available!");
+          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+        }
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = connection->GetSchemaVersion(&schemaVersion);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      NS_ASSERTION(schemaVersion == kSQLiteSchemaVersion, "Huh?!");
+    }
+
+    rv = transaction.Commit();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (vacuumNeeded) {
+    rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "VACUUM;"
+    ));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Turn on foreign key constraints.
+  rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "PRAGMA foreign_keys = ON;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  connection.forget(aConnection);
   return NS_OK;
 }
 
@@ -1540,6 +1704,13 @@ OpenDatabaseHelper::Run()
         // Destroy the database now (we should have the only ref).
         mDatabase = nsnull;
 
+        DatabaseInfo::Remove(mDatabaseId);
+
+        IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
+        NS_ASSERTION(mgr, "This should never fail!");
+
+        mgr->InvalidateFileManager(mASCIIOrigin, mName);
+
         mState = eFiringEvents;
         break;
       }
@@ -1603,18 +1774,14 @@ OpenDatabaseHelper::EnsureSuccessResult()
 
       PRUint32 objectStoreCount = mObjectStores.Length();
       for (PRUint32 index = 0; index < objectStoreCount; index++) {
-        nsAutoPtr<ObjectStoreInfo>& info = mObjectStores[index];
-        NS_ASSERTION(info->databaseId == mDatabaseId, "Huh?!");
+        nsRefPtr<ObjectStoreInfo>& info = mObjectStores[index];
 
-        ObjectStoreInfo* otherInfo;
-        NS_ASSERTION(dbInfo->GetObjectStore(info->name, &otherInfo),
-                     "ObjectStore not known!");
+        ObjectStoreInfo* otherInfo = dbInfo->GetObjectStore(info->name);
+        NS_ASSERTION(otherInfo, "ObjectStore not known!");
 
         NS_ASSERTION(info->name == otherInfo->name &&
                      info->id == otherInfo->id &&
-                     info->keyPath == otherInfo->keyPath &&
-                     info->autoIncrement == otherInfo->autoIncrement &&
-                     info->databaseId == otherInfo->databaseId,
+                     info->keyPath == otherInfo->keyPath,
                      "Metadata mismatch!");
         NS_ASSERTION(dbInfo->ContainsStoreName(info->name),
                      "Object store names out of date!");
@@ -1633,8 +1800,6 @@ OpenDatabaseHelper::EnsureSuccessResult()
                        "Bad index keyPath!");
           NS_ASSERTION(indexInfo.unique == otherIndexInfo.unique,
                        "Bad index unique value!");
-          NS_ASSERTION(indexInfo.autoIncrement == otherIndexInfo.autoIncrement,
-                       "Bad index autoIncrement value!");
         }
       }
     }
@@ -1645,6 +1810,7 @@ OpenDatabaseHelper::EnsureSuccessResult()
     nsRefPtr<DatabaseInfo> newInfo(new DatabaseInfo());
 
     newInfo->name = mName;
+    newInfo->origin = mASCIIOrigin;
     newInfo->id = mDatabaseId;
     newInfo->filePath = mDatabaseFilePath;
 
@@ -1655,8 +1821,8 @@ OpenDatabaseHelper::EnsureSuccessResult()
 
     newInfo.swap(dbInfo);
 
-    nsresult rv = IDBFactory::UpdateDatabaseMetadata(dbInfo, mCurrentVersion,
-                                                     mObjectStores);
+    nsresult rv = IDBFactory::SetDatabaseMetadata(dbInfo, mCurrentVersion,
+                                                  mObjectStores);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
     NS_ASSERTION(mObjectStores.IsEmpty(), "Should have swapped!");
@@ -1669,7 +1835,8 @@ OpenDatabaseHelper::EnsureSuccessResult()
     IDBDatabase::Create(mOpenDBRequest->ScriptContext(),
                         mOpenDBRequest->Owner(),
                         dbInfo.forget(),
-                        mASCIIOrigin);
+                        mASCIIOrigin,
+                        mFileManager);
   if (!database) {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
@@ -1888,19 +2055,68 @@ DeleteDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_ASSERTION(!aConnection, "How did we get a connection here?");
 
-  nsCOMPtr<nsIFile> dbFile;
-  nsresult rv = GetDatabaseFile(mASCIIOrigin, mName, getter_AddRefs(dbFile));
+  nsCOMPtr<nsIFile> directory;
+  nsresult rv = IDBFactory::GetDirectoryForOrigin(mASCIIOrigin,
+                                                  getter_AddRefs(directory));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  NS_ASSERTION(dbFile, "What?");
+  NS_ASSERTION(directory, "What?");
+
+  nsAutoString filename;
+  rv = GetDatabaseFilename(mName, filename);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsCOMPtr<nsIFile> dbFile;
+  rv = directory->Clone(getter_AddRefs(dbFile));
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  rv = dbFile->Append(filename + NS_LITERAL_STRING(".sqlite"));
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   bool exists = false;
   rv = dbFile->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
+  int rc;
+
   if (exists) {
-    rv = dbFile->Remove(false);
+    nsString dbFilePath;
+    rv = dbFile->GetPath(dbFilePath);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    rc = sqlite3_quota_remove(NS_ConvertUTF16toUTF8(dbFilePath).get());
+    if (rc != SQLITE_OK) {
+      NS_WARNING("Failed to delete db file!");
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+  }
+
+  nsCOMPtr<nsIFile> fileManagerDirectory;
+  rv = directory->Clone(getter_AddRefs(fileManagerDirectory));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = fileManagerDirectory->Append(filename);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  rv = fileManagerDirectory->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  if (exists) {
+    bool isDirectory;
+    rv = fileManagerDirectory->IsDirectory(&isDirectory);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(isDirectory, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    nsString fileManagerDirectoryPath;
+    rv = fileManagerDirectory->GetPath(fileManagerDirectoryPath);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    rc = sqlite3_quota_remove(
+      NS_ConvertUTF16toUTF8(fileManagerDirectoryPath).get());
+    if (rc != SQLITE_OK) {
+      NS_WARNING("Failed to delete file directory!");
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
   }
 
   return NS_OK;

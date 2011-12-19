@@ -27,6 +27,9 @@
     <item android:id="@+id/preferences"
           android:title="@string/preferences" />
 
+    <item android:id="@+id/site_settings"
+          android:title="@string/site_settings_title" />
+
     <item android:id="@+id/addons"
           android:title="@string/addons"/>
 

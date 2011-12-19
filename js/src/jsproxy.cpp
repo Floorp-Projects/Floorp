@@ -150,7 +150,7 @@ ProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, V
 }
 
 bool
-ProxyHandler::getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *receiver, uint32 index, Value *vp, bool *present)
+ProxyHandler::getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *receiver, uint32_t index, Value *vp, bool *present)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
@@ -838,7 +838,7 @@ Proxy::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, Value *v
 }
 
 bool
-Proxy::getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *receiver, uint32 index,
+Proxy::getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *receiver, uint32_t index,
                            Value *vp, bool *present)
 {
     JS_CHECK_RECURSION(cx, return false);
@@ -976,7 +976,7 @@ proxy_LookupProperty(JSContext *cx, JSObject *obj, PropertyName *name, JSObject 
 }
 
 static JSBool
-proxy_LookupElement(JSContext *cx, JSObject *obj, uint32 index, JSObject **objp,
+proxy_LookupElement(JSContext *cx, JSObject *obj, uint32_t index, JSObject **objp,
                     JSProperty **propp)
 {
     jsid id;
@@ -1015,7 +1015,7 @@ proxy_DefineProperty(JSContext *cx, JSObject *obj, PropertyName *name, const Val
 }
 
 static JSBool
-proxy_DefineElement(JSContext *cx, JSObject *obj, uint32 index, const Value *value,
+proxy_DefineElement(JSContext *cx, JSObject *obj, uint32_t index, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
     jsid id;
@@ -1046,7 +1046,7 @@ proxy_GetProperty(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName
 }
 
 static JSBool
-proxy_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index, Value *vp)
+proxy_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index, Value *vp)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
@@ -1055,7 +1055,7 @@ proxy_GetElement(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index,
 }
 
 static JSBool
-proxy_GetElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver, uint32 index,
+proxy_GetElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver, uint32_t index,
                           Value *vp, bool *present)
 {
     return Proxy::getElementIfPresent(cx, obj, receiver, index, vp, present);
@@ -1082,7 +1082,7 @@ proxy_SetProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp, J
 }
 
 static JSBool
-proxy_SetElement(JSContext *cx, JSObject *obj, uint32 index, Value *vp, JSBool strict)
+proxy_SetElement(JSContext *cx, JSObject *obj, uint32_t index, Value *vp, JSBool strict)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
@@ -1115,7 +1115,7 @@ proxy_GetPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, ui
 }
 
 static JSBool
-proxy_GetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+proxy_GetElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, uintN *attrsp)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
@@ -1149,7 +1149,7 @@ proxy_SetPropertyAttributes(JSContext *cx, JSObject *obj, PropertyName *name, ui
 }
 
 static JSBool
-proxy_SetElementAttributes(JSContext *cx, JSObject *obj, uint32 index, uintN *attrsp)
+proxy_SetElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, uintN *attrsp)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
@@ -1183,7 +1183,7 @@ proxy_DeleteProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *rv
 }
 
 static JSBool
-proxy_DeleteElement(JSContext *cx, JSObject *obj, uint32 index, Value *rval, JSBool strict)
+proxy_DeleteElement(JSContext *cx, JSObject *obj, uint32_t index, Value *rval, JSBool strict)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
@@ -1615,8 +1615,8 @@ static JSFunctionSpec static_methods[] = {
     JS_FS_END
 };
 
-static const uint32 JSSLOT_CALLABLE_CALL = 0;
-static const uint32 JSSLOT_CALLABLE_CONSTRUCT = 1;
+static const uint32_t JSSLOT_CALLABLE_CALL = 0;
+static const uint32_t JSSLOT_CALLABLE_CONSTRUCT = 1;
 
 static JSBool
 callable_Call(JSContext *cx, uintN argc, Value *vp)

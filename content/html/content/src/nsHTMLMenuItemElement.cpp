@@ -471,7 +471,7 @@ nsHTMLMenuItemElement::WalkRadioGroup(Visitor* aVisitor)
     bool info2Empty = !info2.mValue || info2.mValue->IsEmptyString();
 
     if (info1Empty != info2Empty ||
-        info1.mValue && info2.mValue && !info1.mValue->Equals(*info2.mValue)) {
+        (info1.mValue && info2.mValue && !info1.mValue->Equals(*info2.mValue))) {
       continue;
     }
 

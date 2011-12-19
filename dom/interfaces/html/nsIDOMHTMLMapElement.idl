@@ -50,7 +50,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(c919bc49-bd49-4b89-ba70-5c74c4ef504a)]
+[scriptable, uuid(b99c31bc-76d0-43bc-a912-f839ec89c829)]
 interface nsIDOMHTMLMapElement : nsIDOMHTMLElement
 {
   readonly attribute nsIDOMHTMLCollection areas;

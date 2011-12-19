@@ -46,6 +46,7 @@
 #include "mozilla/dom/battery/Types.h"
 #include "mozilla/Observer.h"
 #include "mozilla/unused.h"
+#include "WindowIdentifier.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

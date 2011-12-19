@@ -52,7 +52,6 @@
 #include "nsIMutableArray.h"
 #include "nsIMIMEInfo.h"
 #include "nsColor.h"
-#include "nsIURIFixup.h"
 
 #include "nsIAndroidBridge.h"
 
@@ -183,8 +182,6 @@ public:
     void EmptyClipboard();
 
     bool ClipboardHasText();
-
-    bool CanCreateFixupURI(const nsACString& aURIText);
 
     void ShowAlertNotification(const nsAString& aImageUrl,
                                const nsAString& aAlertTitle,
@@ -339,6 +336,8 @@ public:
     PRUint16 GetNumberOfMessagesForText(const nsAString& aText);
     void SendMessage(const nsAString& aNumber, const nsAString& aText);
 
+    bool IsTablet();
+
 protected:
     static AndroidBridge *sBridge;
 
@@ -414,6 +413,7 @@ protected:
     jmethodID jPostToJavaThread;
     jmethodID jInitCamera;
     jmethodID jCloseCamera;
+    jmethodID jIsTablet;
     jmethodID jEnableBatteryNotifications;
     jmethodID jDisableBatteryNotifications;
     jmethodID jGetCurrentBatteryInformation;
@@ -433,9 +433,6 @@ protected:
     jclass jEGLDisplayImplClass;
     jclass jEGLContextClass;
     jclass jEGL10Class;
-
-    // Needed for canCreateFixupURI()
-    nsCOMPtr<nsIURIFixup> mURIFixup;
 
     // calls we've dlopened from libjnigraphics.so
     int (* AndroidBitmap_getInfo)(JNIEnv *env, jobject bitmap, void *info);

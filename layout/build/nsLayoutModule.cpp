@@ -131,6 +131,11 @@ using mozilla::dom::indexedDB::IndexedDatabaseManager;
 #ifdef MOZ_B2G_RIL
 #include "RadioManager.h"
 using mozilla::dom::telephony::RadioManager;
+#include "nsITelephone.h"
+#endif
+#ifdef MOZ_WIDGET_GONK
+#include "AudioManager.h"
+using mozilla::dom::telephony::AudioManager;
 #endif
 
 // Editor stuff
@@ -346,7 +351,9 @@ RadioInterfaceConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 }
 #endif
 
-#ifndef MOZ_WIDGET_GONK
+#ifdef MOZ_WIDGET_GONK
+NS_GENERIC_FACTORY_CONSTRUCTOR(AudioManager)
+#else
 #if defined(XP_UNIX)    || \
     defined(_WINDOWS)   || \
     defined(machintosh) || \
@@ -854,6 +861,9 @@ NS_DEFINE_NAMED_CID(INDEXEDDB_MANAGER_CID);
 NS_DEFINE_NAMED_CID(TELEPHONYRADIO_CID);
 NS_DEFINE_NAMED_CID(TELEPHONYRADIOINTERFACE_CID);
 #endif
+#ifdef MOZ_WIDGET_GONK
+NS_DEFINE_NAMED_CID(NS_AUDIOMANAGER_CID);
+#endif
 #ifdef ENABLE_EDITOR_API_LOG
 NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_CID);
 #else
@@ -993,6 +1003,9 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kTELEPHONYRADIO_CID, true, NULL, RadioManagerConstructor },
   { &kTELEPHONYRADIOINTERFACE_CID, true, NULL, RadioInterfaceConstructor },
 #endif
+#ifdef MOZ_WIDGET_GONK
+  { &kNS_AUDIOMANAGER_CID, true, NULL, AudioManagerConstructor },
+#endif
 #ifdef ENABLE_EDITOR_API_LOG
   { &kNS_HTMLEDITOR_CID, false, NULL, nsHTMLEditorLogConstructor },
 #else
@@ -1125,6 +1138,9 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #ifdef MOZ_B2G_RIL  
   { TELEPHONYRADIO_CONTRACTID, &kTELEPHONYRADIO_CID },
   { TELEPHONYRADIOINTERFACE_CONTRACTID, &kTELEPHONYRADIOINTERFACE_CID },
+#endif
+#ifdef MOZ_WIDGET_GONK
+  { NS_AUDIOMANAGER_CONTRACTID, &kNS_AUDIOMANAGER_CID },
 #endif
 #ifdef ENABLE_EDITOR_API_LOG
   { "@mozilla.org/editor/htmleditor;1", &kNS_HTMLEDITOR_CID },

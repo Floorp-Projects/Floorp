@@ -88,14 +88,12 @@
       event = yield;
 
       is(event.type, "abort", "Got a transaction abort event");
-      //todo(db.version, 1, "Correct version");
-      is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
+      is(db.version, 1, "Correct version");
+      is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
 
       event = yield;
       is(event.type, "error", "Got request error event");
       is(event.target.errorCode, IDBDatabaseException.ABORT_ERR, "Right error code");
-
-      db.close();
 
       let request = mozIndexedDB.open(window.location.pathname, 1);
       request.onerror = errorHandler;

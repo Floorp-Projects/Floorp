@@ -471,7 +471,7 @@ StackSpace::ensureSpaceSlow(JSContext *cx, MaybeReportError report, Value *from,
         } while (newCommit < request);
 
         /* The cast is safe because CAPACITY_BYTES is small. */
-        int32 size = static_cast<int32>(newCommit - commitEnd_) * sizeof(Value);
+        int32_t size = static_cast<int32_t>(newCommit - commitEnd_) * sizeof(Value);
 
         if (!VirtualAlloc(commitEnd_, size, MEM_COMMIT, PAGE_READWRITE)) {
             if (report)
@@ -682,7 +682,7 @@ ContextStack::pushInvokeFrame(JSContext *cx, const CallArgs &args,
     JSFunction *fun = callee.toFunction();
     JSScript *script = fun->script();
 
-    /*StackFrame::Flags*/ uint32 flags = ToFrameFlags(initial);
+    /*StackFrame::Flags*/ uint32_t flags = ToFrameFlags(initial);
     StackFrame *fp = getCallFrame(cx, REPORT_ERROR, args, fun, script, &flags);
     if (!fp)
         return false;

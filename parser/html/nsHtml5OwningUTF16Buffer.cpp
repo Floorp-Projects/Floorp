@@ -57,6 +57,15 @@ nsHtml5OwningUTF16Buffer::~nsHtml5OwningUTF16Buffer()
 {
   MOZ_COUNT_DTOR(nsHtml5OwningUTF16Buffer);
   DeleteBuffer();
+
+  // This is to avoid dtor recursion on 'next', bug 706932.
+  nsRefPtr<nsHtml5OwningUTF16Buffer> tail;
+  tail.swap(next);
+  while (tail && tail->mRefCnt == 1) {
+    nsRefPtr<nsHtml5OwningUTF16Buffer> tmp;
+    tmp.swap(tail->next);
+    tail.swap(tmp);
+  }
 }
 
 // static

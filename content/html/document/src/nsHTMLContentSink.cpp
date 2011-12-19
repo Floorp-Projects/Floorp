@@ -808,6 +808,8 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
       break;
 
     case eHTMLTag_button:
+    case eHTMLTag_audio:
+    case eHTMLTag_video:
       content->DoneCreatingElement();
       break;
       

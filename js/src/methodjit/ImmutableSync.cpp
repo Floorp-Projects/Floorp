@@ -59,7 +59,7 @@ ImmutableSync::~ImmutableSync()
 }
 
 bool
-ImmutableSync::init(JSContext *cx, const FrameState &frame, uint32 nentries)
+ImmutableSync::init(JSContext *cx, const FrameState &frame, uint32_t nentries)
 {
     this->cx = cx;
     this->frame = &frame;
@@ -85,11 +85,11 @@ ImmutableSync::doAllocReg()
     if (!avail.empty())
         return avail.takeAnyReg().reg();
 
-    uint32 lastResort = FrameState::InvalidIndex;
-    uint32 evictFromFrame = FrameState::InvalidIndex;
+    uint32_t lastResort = FrameState::InvalidIndex;
+    uint32_t evictFromFrame = FrameState::InvalidIndex;
 
     /* Find something to evict. */
-    for (uint32 i = 0; i < Registers::TotalRegisters; i++) {
+    for (uint32_t i = 0; i < Registers::TotalRegisters; i++) {
         RegisterID reg = RegisterID(i);
         if (!(Registers::maskReg(reg) & Registers::AvailRegs))
             continue;

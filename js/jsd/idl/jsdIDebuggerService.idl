@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -79,7 +78,7 @@ interface jsdIActivationCallback;
  * Debugger service. It is not a good idea to have more than one active client
  * of the debugger service.
  */
-[scriptable, uuid(aa232c7f-855f-4488-a92c-6f89adc668cc)]
+[scriptable, uuid(9be5b327-6818-464d-9695-f33885fd8377)]
 interface jsdIDebuggerService : nsISupports
 {
     /** Internal use only. */
@@ -375,13 +374,8 @@ interface jsdIDebuggerService : nsISupports
      * When called from another language this method returns an xpconnect
      * defined error code.
      */
-    jsdIValue wrapValue(/*in jsvalue value*/);
+    jsdIValue wrapValue(in jsval value);
 
-    /**
-     * The same as above but to be called from C++.
-     */
-    [noscript] jsdIValue wrapJSValue(in jsval value);
-    
     /* XXX these two routines are candidates for refactoring. The only problem
      * is that it is not clear where and how they should land.
      */
@@ -1068,7 +1062,7 @@ interface jsdIScript : jsdIEphemeral
  * jsdIValue adds a root for the underlying JavaScript value, so don't keep it
  * if you don't need to.
  */
-[scriptable, uuid(861c4d37-e115-4a52-9f76-273cb6b21c3b)]
+[scriptable, uuid(1cd3535b-4ddb-4202-9053-e0ec88f5c82b)]
 interface jsdIValue : jsdIEphemeral
 {
     /** Internal use only. */
@@ -1196,7 +1190,7 @@ interface jsdIValue : jsdIEphemeral
      * When called from another language this method returns an xpconnect
      * defined error code.
      */
-    void getWrappedValue();
+    [implicit_jscontext] jsval getWrappedValue();
 
     /**
      * If this is a function value, return its associated jsdIScript.

@@ -334,8 +334,8 @@ Load(JSContext *cx,
             JS_ReportError(cx, "cannot open file '%s' for reading", filename.ptr());
             return JS_FALSE;
         }
-        script = JS_CompileFileHandleForPrincipals(cx, obj, filename.ptr(), file,
-                                                   Environment(cx)->GetPrincipal());
+        script = JS_CompileUTF8FileHandleForPrincipals(cx, obj, filename.ptr(), file,
+                                                       Environment(cx)->GetPrincipal());
         fclose(file);
         if (!script)
             return JS_FALSE;
@@ -389,7 +389,7 @@ DumpXPC(JSContext *cx,
         uintN argc,
         jsval *vp)
 {
-    int32 depth = 2;
+    int32_t depth = 2;
 
     if (argc > 0) {
         if (!JS_ValueToInt32(cx, JS_ARGV(cx, vp)[0], &depth))
@@ -398,7 +398,7 @@ DumpXPC(JSContext *cx,
 
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
     if(xpc)
-        xpc->DebugDump((int16)depth);
+        xpc->DebugDump(int16_t(depth));
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }
@@ -425,7 +425,7 @@ GCZeal(JSContext *cx,
 {
   jsval* argv = JS_ARGV(cx, vp);
 
-  uint32 zeal;
+  uint32_t zeal;
   if (!JS_ValueToECMAUint32(cx, argv[0], &zeal))
     return JS_FALSE;
 
@@ -482,7 +482,7 @@ DumpHeap(JSContext *cx,
 
     vp = argv + 3;
     if (argc > 3 && *vp != JSVAL_NULL && *vp != JSVAL_VOID) {
-        uint32 depth;
+        uint32_t depth;
 
         if (!JS_ValueToECMAUint32(cx, *vp, &depth))
             return JS_FALSE;
@@ -619,8 +619,8 @@ ProcessFile(JSContext *cx,
         }
 
         JSScript* script =
-            JS_CompileFileHandleForPrincipals(cx, obj, filename, file,
-                                              env->GetPrincipal());
+            JS_CompileUTF8FileHandleForPrincipals(cx, obj, filename, file,
+                                                  env->GetPrincipal());
         if (script && !env->ShouldCompileOnly())
             (void)JS_ExecuteScript(cx, obj, script, &result);
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -92,6 +92,11 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
                                JSObject **aGlobal,
                                char **location,
                                jsval *exception);
+
+    nsresult ImportInto(const nsACString & aLocation,
+                        JSObject * targetObj,
+                        JSContext * callercx,
+                        JSObject * *_retval);
 
     nsCOMPtr<nsIComponentManager> mCompMgr;
     nsCOMPtr<nsIJSRuntimeService> mRuntimeService;

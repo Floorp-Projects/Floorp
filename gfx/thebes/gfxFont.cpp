@@ -1068,7 +1068,8 @@ gfxFont::RunMetrics::CombineWith(const RunMetrics& aOther, bool aOtherIsOnLeft)
 }
 
 gfxFont::gfxFont(gfxFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
-                 AntialiasOption anAAOption) :
+                 AntialiasOption anAAOption, cairo_scaled_font_t *aScaledFont) :
+    mScaledFont(aScaledFont),
     mFontEntry(aFontEntry), mIsValid(true),
     mApplySyntheticBold(false),
     mStyle(*aFontStyle),
@@ -4508,10 +4509,10 @@ gfxTextRun::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf)
                       GlyphStorageAllocCount(mCharacterCount, mFlags));
 
     if (mDetailedGlyphs) {
-        total += mDetailedGlyphs->SizeOf();
+        total += mDetailedGlyphs->SizeOfIncludingThis(aMallocSizeOf);
     }
 
-    total += mGlyphRuns.SizeOf();
+    total += mGlyphRuns.SizeOfExcludingThis(aMallocSizeOf);
 
     return total;
 }

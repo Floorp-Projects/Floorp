@@ -548,7 +548,7 @@ toolbarbutton.bookmark-item[open="true"] {
   -moz-padding-end: 2px;
 }
 
-.bookmark-item > .toolbarbutton-icon {
+.bookmark-item:not(#bookmarks-menu-button) > .toolbarbutton-icon {
   width: 16px;
   height: 16px;
 }
@@ -1714,15 +1714,21 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 .panel-promo-box {
-  margin: 8px -16px -16px -16px;
-  padding: 8px 16px;
-  background-color: #f1f5fb;
-  color: GrayText;
+  margin: 16px 0 -2px;
+}
+
+@media all and (-moz-windows-default-theme) {
+  .panel-promo-box {
+    margin: 8px -16px -16px;
+    padding: 8px 16px;
 %ifndef WINSTRIPE_AERO
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
 %endif
-  box-shadow: 0px 1px 2px rgb(204,214,234) inset;
+    background-color: #f1f5fb;
+    color: GrayText;
+    box-shadow: 0px 1px 2px rgb(204,214,234) inset;
+  }
 }
 
 .panel-promo-icon {

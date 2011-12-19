@@ -247,15 +247,15 @@ nsXBLContentSink::ReportUnexpectedElement(nsIAtom* aElementName,
 
   const PRUnichar* params[] = { elementName.get() };
 
-  return nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
+  return nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                         "XBL Content Sink",
+                                         mDocument,
+                                         nsContentUtils::eXBL_PROPERTIES,
                                          "UnexpectedElement",
                                          params, ArrayLength(params),
                                          nsnull,
                                          EmptyString() /* source line */,
-                                         aLineNumber, 0 /* column number */,
-                                         nsIScriptError::errorFlag,
-                                         "XBL Content Sink",
-                                         mDocument);
+                                         aLineNumber);
 }
 
 void
@@ -587,13 +587,13 @@ nsXBLContentSink::ConstructBinding(PRUint32 aLineNumber)
       mBinding = nsnull;
     }
   } else {
-    nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    "XBL Content Sink", nsnull,
+                                    nsContentUtils::eXBL_PROPERTIES,
                                     "MissingIdAttr", nsnull, 0,
                                     mDocumentURI,
                                     EmptyString(),
-                                    aLineNumber, 0,
-                                    nsIScriptError::errorFlag,
-                                    "XBL Content Sink");
+                                    aLineNumber);
   }
 
   return rv;
@@ -676,14 +676,14 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts, PRUint32 aLineNumber
     // Make sure the XBL doc is chrome or resource if we have a command
     // shorthand syntax.
     mState = eXBL_Error;
-    nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    "XBL Content Sink",
+                                    mDocument,
+                                    nsContentUtils::eXBL_PROPERTIES,
                                     "CommandNotInChrome", nsnull, 0,
                                     nsnull,
                                     EmptyString() /* source line */,
-                                    aLineNumber, 0 /* column number */,
-                                    nsIScriptError::errorFlag,
-                                    "XBL Content Sink",
-                                    mDocument);
+                                    aLineNumber);
     return; // Don't even make this handler.
   }
 

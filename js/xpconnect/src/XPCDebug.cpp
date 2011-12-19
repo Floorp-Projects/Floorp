@@ -155,7 +155,7 @@ static char* FormatJSFrame(JSContext* cx, JSStackFrame* fp,
 
         if (JS_GetProperty(cx, callObj, "arguments", &val) &&
             JSVAL_IS_OBJECT(val)) {
-            uint32 argCount;
+            uint32_t argCount;
             JSObject* argsObj = JSVAL_TO_OBJECT(val);
             if (JS_GetProperty(cx, argsObj, "length", &val) &&
                 JS_ValueToECMAUint32(cx, val, &argCount) &&
@@ -315,11 +315,11 @@ xpcDumpEvalErrorReporter(JSContext *cx, const char *message,
 }
 
 JSBool
-xpc_DumpEvalInJSStackFrame(JSContext* cx, JSUint32 frameno, const char* text)
+xpc_DumpEvalInJSStackFrame(JSContext* cx, uint32_t frameno, const char* text)
 {
     JSStackFrame* fp;
     JSStackFrame* iter = nsnull;
-    JSUint32 num = 0;
+    uint32_t num = 0;
 
     if (!cx || !text) {
         puts("invalid params passed to xpc_DumpEvalInJSStackFrame!");

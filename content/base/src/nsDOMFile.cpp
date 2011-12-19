@@ -298,6 +298,76 @@ nsDOMFileBase::GetInternalUrl(nsIPrincipal* aPrincipal, nsAString& aURL)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(PRInt64)
+nsDOMFileBase::GetFileId()
+{
+  PRInt64 id = -1;
+
+  if (IsStoredFile() && IsWholeFile()) {
+    if (!indexedDB::IndexedDatabaseManager::IsClosed()) {
+      indexedDB::IndexedDatabaseManager::FileMutex().Lock();
+    }
+
+    NS_ASSERTION(!mFileInfos.IsEmpty(),
+                 "A stored file must have at least one file info!");
+
+    nsRefPtr<indexedDB::FileInfo>& fileInfo = mFileInfos.ElementAt(0);
+    if (fileInfo) {
+      id =  fileInfo->Id();
+    }
+
+    if (!indexedDB::IndexedDatabaseManager::IsClosed()) {
+      indexedDB::IndexedDatabaseManager::FileMutex().Unlock();
+    }
+  }
+
+  return id;
+}
+
+NS_IMETHODIMP_(void)
+nsDOMFileBase::AddFileInfo(indexedDB::FileInfo* aFileInfo)
+{
+  if (indexedDB::IndexedDatabaseManager::IsClosed()) {
+    NS_ERROR("Shouldn't be called after shutdown!");
+    return;
+  }
+
+  nsRefPtr<indexedDB::FileInfo> fileInfo = aFileInfo;
+
+  MutexAutoLock lock(indexedDB::IndexedDatabaseManager::FileMutex());
+
+  NS_ASSERTION(!mFileInfos.Contains(aFileInfo),
+               "Adding the same file info agan?!");
+
+  nsRefPtr<indexedDB::FileInfo>* element = mFileInfos.AppendElement();
+  element->swap(fileInfo);
+}
+
+NS_IMETHODIMP_(indexedDB::FileInfo*)
+nsDOMFileBase::GetFileInfo(indexedDB::FileManager* aFileManager)
+{
+  if (indexedDB::IndexedDatabaseManager::IsClosed()) {
+    NS_ERROR("Shouldn't be called after shutdown!");
+    return nsnull;
+  }
+
+  // A slice created from a stored file must keep the file info alive.
+  // However, we don't support sharing of slices yet, so the slice must be
+  // copied again. That's why we have to ignore the first file info.
+  PRUint32 startIndex = IsStoredFile() && !IsWholeFile() ? 1 : 0;
+
+  MutexAutoLock lock(indexedDB::IndexedDatabaseManager::FileMutex());
+
+  for (PRUint32 i = startIndex; i < mFileInfos.Length(); i++) {
+    nsRefPtr<indexedDB::FileInfo>& fileInfo = mFileInfos.ElementAt(i);
+    if (fileInfo->Manager() == aFileManager) {
+      return fileInfo;
+    }
+  }
+
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsDOMFileBase::GetSendInfo(nsIInputStream** aBody,
                            nsACString& aContentType,

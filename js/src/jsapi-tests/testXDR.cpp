@@ -23,7 +23,7 @@ BEGIN_TEST(testXDR_bug506491)
     JSXDRState *w = JS_XDRNewMem(cx, JSXDR_ENCODE);
     CHECK(w);
     CHECK(JS_XDRScript(w, &script));
-    uint32 nbytes;
+    uint32_t nbytes;
     void *p = JS_XDRMemGetData(w, &nbytes);
     CHECK(p);
     void *frozen = JS_malloc(cx, nbytes);
@@ -63,7 +63,7 @@ BEGIN_TEST(testXDR_bug516827)
     JSXDRState *w = JS_XDRNewMem(cx, JSXDR_ENCODE);
     CHECK(w);
     CHECK(JS_XDRScript(w, &script));
-    uint32 nbytes;
+    uint32_t nbytes;
     void *p = JS_XDRMemGetData(w, &nbytes);
     CHECK(p);
     void *frozen = JS_malloc(cx, nbytes);

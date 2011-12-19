@@ -156,7 +156,7 @@ CanvasLayerD3D10::UpdateSurface()
     // need to sync on the d3d9 device
     if (mGLContext) {
       mGLContext->MakeCurrent();
-      mGLContext->fFinish();
+      mGLContext->GuaranteeResolve();
     }
     return;
   }
@@ -180,10 +180,6 @@ CanvasLayerD3D10::UpdateSurface()
     }
 
     mGLContext->MakeCurrent();
-
-    // We have to flush to ensure that any buffered GL operations are
-    // in the framebuffer before we read.
-    mGLContext->fFlush();
 
     PRUint32 currentFramebuffer = 0;
 

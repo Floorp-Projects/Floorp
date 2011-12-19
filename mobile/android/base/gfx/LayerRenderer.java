@@ -90,6 +90,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     private final ScrollbarLayer mVertScrollLayer;
     private final FadeRunnable mFadeRunnable;
     private RenderContext mLastPageContext;
+    private int mMaxTextureSize;
 
     // Dropped frames display
     private int[] mFrameTimings;
@@ -122,19 +123,21 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         checkFrameRateMonitorEnabled();
 
-        gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        gl.glClearDepthf(1.0f);             /* FIXME: Is this needed? */
         gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);
-        gl.glShadeModel(GL10.GL_SMOOTH);    /* FIXME: Is this needed? */
         gl.glDisable(GL10.GL_DITHER);
         gl.glEnable(GL10.GL_TEXTURE_2D);
+
+        int maxTextureSizeResult[] = new int[1];
+        gl.glGetIntegerv(GL10.GL_MAX_TEXTURE_SIZE, maxTextureSizeResult, 0);
+        mMaxTextureSize = maxTextureSizeResult[0];
+    }
+
+    public int getMaxTextureSize() {
+        return mMaxTextureSize;
     }
 
     /**
      * Called whenever a new frame is about to be drawn.
-     *
-     * FIXME: This is racy. Layers and page sizes can be modified by the pan/zoom controller while
-     * this is going on.
      */
     public void onDrawFrame(GL10 gl) {
         long frameStartTime = SystemClock.uptimeMillis();
@@ -142,63 +145,68 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         TextureReaper.get().reap(gl);
 
         LayerController controller = mView.getController();
-        Layer rootLayer = controller.getRoot();
-        RenderContext screenContext = createScreenContext(), pageContext = createPageContext();
+        RenderContext screenContext = createScreenContext();
 
-        if (!pageContext.fuzzyEquals(mLastPageContext)) {
-            // the viewport or page changed, so show the scrollbars again
-            // as per UX decision
-            mVertScrollLayer.unfade();
-            mHorizScrollLayer.unfade();
-            mFadeRunnable.scheduleStartFade(ScrollbarLayer.FADE_DELAY);
-        } else if (mFadeRunnable.timeToFade()) {
-            boolean stillFading = mVertScrollLayer.fade() | mHorizScrollLayer.fade();
-            if (stillFading) {
-                mFadeRunnable.scheduleNextFadeFrame();
+        synchronized (controller) {
+            Layer rootLayer = controller.getRoot();
+            RenderContext pageContext = createPageContext();
+
+            if (!pageContext.fuzzyEquals(mLastPageContext)) {
+                // the viewport or page changed, so show the scrollbars again
+                // as per UX decision
+                mVertScrollLayer.unfade();
+                mHorizScrollLayer.unfade();
+                mFadeRunnable.scheduleStartFade(ScrollbarLayer.FADE_DELAY);
+            } else if (mFadeRunnable.timeToFade()) {
+                boolean stillFading = mVertScrollLayer.fade() | mHorizScrollLayer.fade();
+                if (stillFading) {
+                    mFadeRunnable.scheduleNextFadeFrame();
+                }
             }
+            mLastPageContext = pageContext;
+
+            /* Update layers. */
+            if (rootLayer != null) rootLayer.update(gl);
+            mShadowLayer.update(gl);
+            mCheckerboardLayer.update(gl);
+            mFrameRateLayer.update(gl);
+            mVertScrollLayer.update(gl);
+            mHorizScrollLayer.update(gl);
+
+            /* Draw the background. */
+            gl.glClearColor(BACKGROUND_COLOR_R, BACKGROUND_COLOR_G, BACKGROUND_COLOR_B, 1.0f);
+            gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+
+            /* Draw the drop shadow, if we need to. */
+            Rect pageRect = getPageRect();
+            RectF untransformedPageRect = new RectF(0.0f, 0.0f, pageRect.width(),
+                                                    pageRect.height());
+            if (!untransformedPageRect.contains(controller.getViewport()))
+                mShadowLayer.draw(pageContext);
+
+            /* Draw the checkerboard. */
+            Rect scissorRect = transformToScissorRect(pageRect);
+            gl.glEnable(GL10.GL_SCISSOR_TEST);
+            gl.glScissor(scissorRect.left, scissorRect.top,
+                         scissorRect.width(), scissorRect.height());
+
+            mCheckerboardLayer.draw(screenContext);
+
+            /* Draw the layer the client added to us. */
+            if (rootLayer != null)
+                rootLayer.draw(pageContext);
+
+            gl.glDisable(GL10.GL_SCISSOR_TEST);
+
+            /* Draw the vertical scrollbar. */
+            IntSize screenSize = new IntSize(controller.getViewportSize());
+            if (pageRect.height() > screenSize.height)
+                mVertScrollLayer.draw(pageContext);
+
+            /* Draw the horizontal scrollbar. */
+            if (pageRect.width() > screenSize.width)
+                mHorizScrollLayer.draw(pageContext);
         }
-        mLastPageContext = pageContext;
-
-        /* Update layers. */
-        if (rootLayer != null) rootLayer.update(gl);
-        mShadowLayer.update(gl);
-        mCheckerboardLayer.update(gl);
-        mFrameRateLayer.update(gl);
-        mVertScrollLayer.update(gl);
-        mHorizScrollLayer.update(gl);
-
-        /* Draw the background. */
-        gl.glClearColor(BACKGROUND_COLOR_R, BACKGROUND_COLOR_G, BACKGROUND_COLOR_B, 1.0f);
-        gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
-
-        /* Draw the drop shadow, if we need to. */
-        Rect pageRect = getPageRect();
-        RectF untransformedPageRect = new RectF(0.0f, 0.0f, pageRect.width(), pageRect.height());
-        if (!untransformedPageRect.contains(controller.getViewport()))
-            mShadowLayer.draw(pageContext);
-
-        /* Draw the checkerboard. */
-        Rect scissorRect = transformToScissorRect(pageRect);
-        gl.glEnable(GL10.GL_SCISSOR_TEST);
-        gl.glScissor(scissorRect.left, scissorRect.top,
-                     scissorRect.width(), scissorRect.height());
-
-        mCheckerboardLayer.draw(screenContext);
-
-        /* Draw the layer the client added to us. */
-        if (rootLayer != null)
-            rootLayer.draw(pageContext);
-
-        gl.glDisable(GL10.GL_SCISSOR_TEST);
-
-        /* Draw the vertical scrollbar. */
-        IntSize screenSize = new IntSize(controller.getViewportSize());
-        if (pageRect.height() > screenSize.height)
-            mVertScrollLayer.draw(pageContext);
-
-        /* Draw the horizontal scrollbar. */
-        if (pageRect.width() > screenSize.width)
-            mHorizScrollLayer.draw(pageContext);
 
         /* Draw the FPS. */
         if (mShowFrameRate) {

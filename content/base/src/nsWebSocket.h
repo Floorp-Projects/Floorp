@@ -122,10 +122,20 @@ protected:
                                const PRUnichar **aFormatStrings,
                                PRUint32          aFormatStringsLen);
 
+  nsresult ConvertTextToUTF8(const nsString& aMessage, nsCString& buf);
+
+  // Get msg info out of JS variable being sent (string, arraybuffer, blob)
+  nsresult GetSendParams(nsIVariant *aData, nsCString &aStringOut,
+                         nsCOMPtr<nsIInputStream> &aStreamOut,
+                         bool &aIsBinary, PRUint32 &aOutgoingLength);
+
   nsresult CreateAndDispatchSimpleEvent(const nsString& aName);
-  nsresult CreateAndDispatchMessageEvent(const nsACString& aData);
+  nsresult CreateAndDispatchMessageEvent(const nsACString& aData,
+                                         bool isBinary);
   nsresult CreateAndDispatchCloseEvent(bool aWasClean, PRUint16 aCode,
                                        const nsString &aReason);
+  nsresult CreateResponseBlob(const nsACString& aData, JSContext *aCx,
+                              jsval &jsData);
 
   void SetReadyState(PRUint16 aNewReadyState);
 
@@ -137,7 +147,9 @@ protected:
   // (and possibly collected).
   void DontKeepAliveAnyMore();
 
-  nsCOMPtr<nsIWebSocketChannel> mWebSocketChannel;
+  nsresult UpdateURI();
+
+  nsCOMPtr<nsIWebSocketChannel> mChannel;
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnOpenListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
@@ -146,6 +158,7 @@ protected:
 
   // related to the WebSocket constructor steps
   nsString mOriginalURL;
+  nsString mEffectiveURL;   // after redirects
   bool mSecure; // if true it is using SSL and the wss scheme,
                         // otherwise it is using the ws scheme with no SSL
 
@@ -156,8 +169,8 @@ protected:
   bool mDisconnected;
 
   nsCString mClientReason;
-  PRUint16  mClientReasonCode;
   nsString  mServerReason;
+  PRUint16  mClientReasonCode;
   PRUint16  mServerReasonCode;
 
   nsCString mAsciiHost;  // hostname
@@ -175,6 +188,12 @@ protected:
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
   PRUint32 mOutgoingBufferedAmount;
+
+  enum
+  {
+    WS_BINARY_TYPE_ARRAYBUFFER,
+    WS_BINARY_TYPE_BLOB,
+  } mBinaryType;
 
   // Web Socket owner information:
   // - the script file name, UTF8 encoded.

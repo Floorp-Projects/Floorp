@@ -1,4 +1,4 @@
-# Copyright 2009, Google Inc.
+# Copyright 2011, Google Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -76,9 +76,9 @@ Installation:
        </IfModule>
 
 2. Tune Apache parameters for serving WebSocket. We'd like to note that at
-   least TimeOut directive from core features and RequestReadTimeout directive
-   from mod_reqtimeout should be modified not to kill connections in only a few
-   seconds of idle time.
+   least TimeOut directive from core features and RequestReadTimeout
+   directive from mod_reqtimeout should be modified not to kill connections
+   in only a few seconds of idle time.
 
 3. Verify installation. You can use example/console.html to poke the server.
 
@@ -93,10 +93,11 @@ specified in the handshake is considered as if it is a file path under
 For example, if the resource name is /example/chat, the handler defined in
 <websock_handlers>/example/chat_wsh.py is invoked.
 
-A WebSocket handler is composed of the following two functions:
+A WebSocket handler is composed of the following three functions:
 
     web_socket_do_extra_handshake(request)
     web_socket_transfer_data(request)
+    web_socket_passive_closing_handshake(request)
 
 where:
     request: mod_python request.
@@ -106,8 +107,8 @@ headers are successfully parsed and WebSocket properties (ws_location,
 ws_origin, and ws_resource) are added to request. A handler
 can reject the request by raising an exception.
 
-A request object has the following properties that you can use during the extra
-handshake (web_socket_do_extra_handshake):
+A request object has the following properties that you can use during the
+extra handshake (web_socket_do_extra_handshake):
 - ws_resource
 - ws_origin
 - ws_version
@@ -121,16 +122,17 @@ The last two are a bit tricky.
 
 For HyBi 06 and later, ws_protocol is always set to None when
 web_socket_do_extra_handshake is called. If ws_requested_protocols is not
-None, you must choose one subprotocol from this list and set it to ws_protocol.
+None, you must choose one subprotocol from this list and set it to
+ws_protocol.
 
 For Hixie 75 and HyBi 00, when web_socket_do_extra_handshake is called,
-ws_protocol is set to the value given by the client in Sec-WebSocket-Protocol
-(WebSocket-Protocol for Hixie 75) header or None if such header was not found
-in the opening handshake request. Finish extra handshake with ws_protocol
-untouched to accept the request subprotocol. Then, Sec-WebSocket-Protocol
-(or WebSocket-Protocol) header will be sent to the client in response with the
-same value as requested. Raise an exception in web_socket_do_extra_handshake to
-reject the requested subprotocol.
+ws_protocol is set to the value given by the client in
+Sec-WebSocket-Protocol (WebSocket-Protocol for Hixie 75) header or None if
+such header was not found in the opening handshake request. Finish extra
+handshake with ws_protocol untouched to accept the request subprotocol.
+Then, Sec-WebSocket-Protocol (or WebSocket-Protocol) header will be sent to
+the client in response with the same value as requested. Raise an exception
+in web_socket_do_extra_handshake to reject the requested subprotocol.
 
 web_socket_transfer_data is called after the handshake completed
 successfully. A handler can receive/send messages from/to the client
@@ -141,9 +143,9 @@ You can receive a message by the following statement.
 
     message = request.ws_stream.receive_message()
 
-This call blocks until any complete text frame arrives, and the payload data of
-the incoming frame will be stored into message. When you're using IETF HyBi 00
-or later protocol, receive_message() will return None on receiving
+This call blocks until any complete text frame arrives, and the payload data
+of the incoming frame will be stored into message. When you're using IETF
+HyBi 00 or later protocol, receive_message() will return None on receiving
 client-initiated closing handshake. When any error occurs, receive_message()
 will raise some exception.
 
@@ -157,8 +159,16 @@ web_socket_transfer_data cause connection close.
     request.ws_stream.close_connection()
 
 When you're using IETF HyBi 00 or later protocol, close_connection will wait
-for closing handshake acknowledgement coming from the client. When it couldn't
-receive a valid acknowledgement, raises an exception.
+for closing handshake acknowledgement coming from the client. When it
+couldn't receive a valid acknowledgement, raises an exception.
+
+web_socket_passive_closing_handshake is called after the server receives
+incoming closing frame from the client peer immediately. You can specify
+code and reason by return values. They are sent as a outgoing closing frame
+from the server. A request object has the following properties that you can
+use in web_socket_passive_closing_handshake.
+- ws_close_code
+- ws_close_reason
 
 A WebSocket handler must be thread-safe if the server (Apache or
 standalone.py) is configured to use threads.

@@ -125,7 +125,7 @@ ConstantFoldForIntArray(JSContext *cx, JSObject *tarray, ValueRemat *vr)
         v.setNumber(d);
     }
 
-    int32 i32 = 0;
+    int32_t i32 = 0;
     if (v.isDouble()) {
         i32 = (TypedArray::getType(tarray) == js::TypedArray::TYPE_UINT8_CLAMPED)
               ? js_TypedArray_uint8_clamp_double(v.toDouble())
@@ -152,7 +152,7 @@ ConstantFoldForIntArray(JSContext *cx, JSObject *tarray, ValueRemat *vr)
 // across any conversion process.
 static void
 GenConversionForIntArray(Assembler &masm, JSObject *tarray, const ValueRemat &vr,
-                         uint32 saveMask)
+                         uint32_t saveMask)
 {
     if (vr.isConstant()) {
         // Constants are always folded to ints up-front.
@@ -178,7 +178,7 @@ GenConversionForIntArray(Assembler &masm, JSObject *tarray, const ValueRemat &vr
         masm.storeArg(0, masm.vmFrameOffset(offsetof(VMFrame, cx)));
         masm.storeArgAddr(1, masm.addressOfExtra(vp));
 
-        typedef int32 (JS_FASTCALL *Int32CxVp)(JSContext *, Value *);
+        typedef int32_t (JS_FASTCALL *Int32CxVp)(JSContext *, Value *);
         Int32CxVp stub;
         if (TypedArray::getType(tarray) == js::TypedArray::TYPE_UINT8_CLAMPED)
             stub = stubs::ConvertToTypedInt<true>;
@@ -208,7 +208,7 @@ GenConversionForIntArray(Assembler &masm, JSObject *tarray, const ValueRemat &vr
 // Constants are left untouched. Any other value is placed into destReg.
 static void
 GenConversionForFloatArray(Assembler &masm, JSObject *tarray, const ValueRemat &vr,
-                           FPRegisterID destReg, uint32 saveMask)
+                           FPRegisterID destReg, uint32_t saveMask)
 {
     if (vr.isConstant()) {
         // Constants are always folded to doubles up-front.
@@ -234,7 +234,7 @@ GenConversionForFloatArray(Assembler &masm, JSObject *tarray, const ValueRemat &
         }
     }
 
-    // Generate a generic conversion call, if not known to be int32 or double.
+    // Generate a generic conversion call, if not known to be int32_t or double.
     if (!vr.isTypeKnown() ||
         (vr.knownType() != JSVAL_TYPE_INT32 &&
          vr.knownType() != JSVAL_TYPE_DOUBLE)) {
@@ -279,11 +279,11 @@ GenConversionForFloatArray(Assembler &masm, JSObject *tarray, const ValueRemat &
 template <typename T>
 static bool
 StoreToTypedArray(JSContext *cx, Assembler &masm, JSObject *tarray, T address,
-                  const ValueRemat &vrIn, uint32 saveMask)
+                  const ValueRemat &vrIn, uint32_t saveMask)
 {
     ValueRemat vr = vrIn;
 
-    uint32 type = TypedArray::getType(tarray);
+    uint32_t type = TypedArray::getType(tarray);
     switch (type) {
       case js::TypedArray::TYPE_INT8:
       case js::TypedArray::TYPE_UINT8:
@@ -329,12 +329,12 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, JSObject *tarray, T address,
             //   - won't clobber the key, object, or RHS type regs
             //   - is temporary, but
             //   - is not in saveMask, which contains live volatile registers.
-            uint32 allowMask = Registers::AvailRegs;
+            uint32_t allowMask = Registers::AvailRegs;
             if (singleByte)
                 allowMask &= Registers::SingleByteRegs;
 
             // Create a mask of registers we absolutely cannot clobber.
-            uint32 pinned = Assembler::maskAddress(address);
+            uint32_t pinned = Assembler::maskAddress(address);
             if (!vr.isTypeKnown())
                 pinned |= Registers::maskReg(vr.typeReg());
 
@@ -357,12 +357,12 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, JSObject *tarray, T address,
 
                     // If |vr|'s registers are part of the address, swapping is
                     // going to cause problems during the store.
-                    uint32 vrRegs = Registers::mask2Regs(vr.dataReg(), vr.typeReg());
-                    uint32 lhsMask = vrRegs & Assembler::maskAddress(address);
+                    uint32_t vrRegs = Registers::mask2Regs(vr.dataReg(), vr.typeReg());
+                    uint32_t lhsMask = vrRegs & Assembler::maskAddress(address);
 
                     // We'll also need to save any of the registers which won't
                     // be restored via |lhsMask| above.
-                    uint32 rhsMask = vrRegs & ~lhsMask;
+                    uint32_t rhsMask = vrRegs & ~lhsMask;
 
                     // Push them, but get the order right. We'll pop LHS first.
                     saveRHS.preserve(rhsMask);

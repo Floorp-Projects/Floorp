@@ -707,17 +707,10 @@ static void LogMessage(const char* aWarning, nsPIDOMWindow* aWindow)
   if (aWindow) {
     doc = do_QueryInterface(aWindow->GetExtantDocument());
   }
-  nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
-                                  aWarning,
-                                  nsnull,
-                                  0,
-                                  nsnull, // Response URL not kept around
-                                  EmptyString(),
-                                  0,
-                                  0,
-                                  nsIScriptError::warningFlag,
-                                  "DOM",
-                                  doc);
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  "DOM", doc,
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  aWarning);
 }
 
 /* readonly attribute nsIDOMDocument responseXML; */
@@ -937,29 +930,6 @@ nsXMLHttpRequest::CreateResponseParsedJSON(JSContext* aCx)
   return NS_OK;
 }
 
-nsresult
-nsXMLHttpRequest::CreateResponseArrayBuffer(JSContext *aCx)
-{
-  if (!aCx){
-    return NS_ERROR_FAILURE;
-  }
-
-  PRInt32 dataLen = mResponseBody.Length();
-  RootResultArrayBuffer();
-  mResultArrayBuffer = js_CreateArrayBuffer(aCx, dataLen);
-  if (!mResultArrayBuffer) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (dataLen > 0) {
-    JSObject *abuf = js::ArrayBuffer::getArrayBuffer(mResultArrayBuffer);
-    NS_ASSERTION(abuf, "What happened?");
-    memcpy(JS_GetArrayBufferData(abuf), mResponseBody.BeginReading(), dataLen);
-  }
-
-  return NS_OK;
-}
-
 /* attribute AString responseType; */
 NS_IMETHODIMP nsXMLHttpRequest::GetResponseType(nsAString& aResponseType)
 {
@@ -1078,7 +1048,9 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponse(JSContext *aCx, jsval *aResult)
         (mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER &&
          mInLoadProgressEvent)) {
       if (!mResultArrayBuffer) {
-         rv = CreateResponseArrayBuffer(aCx);
+         RootResultArrayBuffer();
+         rv = nsContentUtils::CreateArrayBuffer(aCx, mResponseBody,
+                                                &mResultArrayBuffer);
          NS_ENSURE_SUCCESS(rv, rv);
       }
       *aResult = OBJECT_TO_JSVAL(mResultArrayBuffer);
@@ -2719,8 +2691,8 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     // can run script that would try to restart this request, and that could end
     // up doing our AsyncOpen on a null channel if the reentered AsyncOpen fails.
     ChangeState(XML_HTTP_REQUEST_SENT);
-    if (!mUploadComplete &&
-        HasListenersFor(NS_LITERAL_STRING(UPLOADPROGRESS_STR)) ||
+    if ((!mUploadComplete &&
+         HasListenersFor(NS_LITERAL_STRING(UPLOADPROGRESS_STR))) ||
         (mUpload && mUpload->HasListenersFor(NS_LITERAL_STRING(PROGRESS_STR)))) {
       StartProgressEventTimer();
     }

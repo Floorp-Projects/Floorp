@@ -47,12 +47,19 @@ import android.database.CursorWrapper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
+import android.os.Build;
 import android.provider.Browser;
 import android.provider.Browser.BookmarkColumns;
 
 public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
     private static final String URL_COLUMN_ID = "_id";
     private static final String URL_COLUMN_THUMBNAIL = "thumbnail";
+
+    // Only available on Android >= 11
+    private static final String URL_COLUMN_DELETED = "deleted";
+
+    private static final Uri BOOKMARKS_CONTENT_URI_POST_11 = Uri.parse("content://com.android.browser/bookmarks");
 
     public Cursor filter(ContentResolver cr, CharSequence constraint, int limit) {
         Cursor c = cr.query(Browser.BOOKMARKS_URI,
@@ -137,12 +144,29 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
         return new AndroidDBCursor(c);
     }
 
+    public Cursor isBookmarkQueryPre11(ContentResolver cr, String uri) {
+        return cr.query(Browser.BOOKMARKS_URI,
+                        new String[] { BookmarkColumns.URL },
+                        Browser.BookmarkColumns.URL + " = ? and " + Browser.BookmarkColumns.BOOKMARK + " = ?",
+                        new String[] { uri, "1" },
+                        Browser.BookmarkColumns.URL);
+    }
+
+    public Cursor isBookmarkQueryPost11(ContentResolver cr, String uri) {
+        return cr.query(BOOKMARKS_CONTENT_URI_POST_11,
+                        new String[] { BookmarkColumns.URL },
+                        Browser.BookmarkColumns.URL + " = ?",
+                        new String[] { uri },
+                        Browser.BookmarkColumns.URL);
+    }
+
     public boolean isBookmark(ContentResolver cr, String uri) {
-        Cursor cursor = cr.query(Browser.BOOKMARKS_URI,
-                                 new String[] { BookmarkColumns.URL },
-                                 Browser.BookmarkColumns.URL + " = ? and " + Browser.BookmarkColumns.BOOKMARK + " = ?",
-                                 new String[] { uri, "1" },
-                                 Browser.BookmarkColumns.URL);
+        Cursor cursor;
+
+        if (Build.VERSION.SDK_INT >= 11)
+            cursor = isBookmarkQueryPost11(cr, uri);
+        else
+            cursor = isBookmarkQueryPre11(cr, uri);
 
         int count = cursor.getCount();
         cursor.close();
@@ -150,33 +174,44 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
         return (count == 1);
     }
 
-    public void addBookmark(ContentResolver cr, String title, String uri) {
-        Cursor cursor = cr.query(Browser.BOOKMARKS_URI,
-                                 new String[] { BookmarkColumns.URL },
-                                 Browser.BookmarkColumns.URL + " = ?",
-                                 new String[] { uri },
-                                 Browser.BookmarkColumns.URL);
-
+    public void addBookmarkPre11(ContentResolver cr, String title, String uri) {
         ContentValues values = new ContentValues();
         values.put(Browser.BookmarkColumns.BOOKMARK, "1");
         values.put(Browser.BookmarkColumns.TITLE, title);
+        values.put(Browser.BookmarkColumns.URL, uri);
 
-        if (cursor.getCount() == 1) {
-            // entry exists, update the bookmark flag
-            cr.update(Browser.BOOKMARKS_URI,
-                      values,
-                      Browser.BookmarkColumns.URL + " = ?",
-                      new String[] { uri });
-        } else {
-            // add a new entry
-            values.put(Browser.BookmarkColumns.URL, uri);
+        int updated = cr.update(Browser.BOOKMARKS_URI,
+                                values,
+                                Browser.BookmarkColumns.URL + " = ?",
+                                new String[] { uri });
+
+        if (updated == 0)
             cr.insert(Browser.BOOKMARKS_URI, values);
-        }
-
-        cursor.close();
     }
 
-    public void removeBookmark(ContentResolver cr, String uri) {
+    public void addBookmarkPost11(ContentResolver cr, String title, String uri) {
+        ContentValues values = new ContentValues();
+        values.put(Browser.BookmarkColumns.TITLE, title);
+        values.put(Browser.BookmarkColumns.URL, uri);
+        values.put(URL_COLUMN_DELETED, "0");
+
+        int updated = cr.update(BOOKMARKS_CONTENT_URI_POST_11,
+                                values,
+                                Browser.BookmarkColumns.URL + " = ?",
+                                new String[] { uri });
+
+        if (updated == 0)
+            cr.insert(BOOKMARKS_CONTENT_URI_POST_11, values);
+    }
+
+    public void addBookmark(ContentResolver cr, String title, String uri) {
+        if (Build.VERSION.SDK_INT >= 11)
+            addBookmarkPost11(cr, title, uri);
+        else
+            addBookmarkPre11(cr, title, uri);
+    }
+
+    public void removeBookmarkPre11(ContentResolver cr, String uri) {
         ContentValues values = new ContentValues();
         values.put(Browser.BookmarkColumns.BOOKMARK, "0");
 
@@ -184,6 +219,19 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
                   values,
                   Browser.BookmarkColumns.URL + " = ?",
                   new String[] { uri });
+    }
+
+    public void removeBookmarkPost11(ContentResolver cr, String uri) {
+        cr.delete(BOOKMARKS_CONTENT_URI_POST_11,
+                  Browser.BookmarkColumns.URL + " = ?",
+                  new String[] { uri });
+    }
+
+    public void removeBookmark(ContentResolver cr, String uri) {
+        if (Build.VERSION.SDK_INT >= 11)
+            removeBookmarkPost11(cr, uri);
+        else
+            removeBookmarkPre11(cr, uri);
     }
 
     public BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri) {
@@ -221,40 +269,33 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
         values.put(Browser.BookmarkColumns.FAVICON, stream.toByteArray());
         values.put(Browser.BookmarkColumns.URL, uri);
 
-        cr.update(Browser.BOOKMARKS_URI,
-                  values,
-                  Browser.BookmarkColumns.URL + " = ?",
-                  new String[] { uri });
+        int updated = cr.update(Browser.BOOKMARKS_URI,
+                                values,
+                                Browser.BookmarkColumns.URL + " = ?",
+                                new String[] { uri });
+
+        if (updated == 0)
+            cr.insert(Browser.BOOKMARKS_URI, values);
     }
 
     public void updateThumbnailForUrl(ContentResolver cr, String uri,
             BitmapDrawable thumbnail) {
         Bitmap bitmap = thumbnail.getBitmap();
 
-        Cursor cursor = cr.query(Browser.BOOKMARKS_URI,
-                                 new String[] { BookmarkColumns.URL },
-                                 Browser.BookmarkColumns.URL + " = ?",
-                                 new String[] { uri },
-                                 Browser.BookmarkColumns.URL);
-
         ContentValues values = new ContentValues();
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 0, bos);
+
         values.put(URL_COLUMN_THUMBNAIL, bos.toByteArray());
+        values.put(Browser.BookmarkColumns.URL, uri);
 
-        if (cursor.getCount() == 1) {
-            // entry exists, simply update image
-            cr.update(Browser.BOOKMARKS_URI,
-                      values,
-                      Browser.BookmarkColumns.URL + " = ?",
-                      new String[] { uri });
-        } else {
-            // add a new entry
-            values.put(Browser.BookmarkColumns.URL, uri);
+        int updated = cr.update(Browser.BOOKMARKS_URI,
+                                values,
+                                Browser.BookmarkColumns.URL + " = ?",
+                                new String[] { uri });
+
+        if (updated == 0)
             cr.insert(Browser.BOOKMARKS_URI, values);
-        }
-
-        cursor.close();
     }
 
     private static class AndroidDBCursor extends CursorWrapper {

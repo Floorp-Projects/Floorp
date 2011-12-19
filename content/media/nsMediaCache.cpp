@@ -1913,7 +1913,7 @@ nsMediaCacheStream::AreAllStreamsForResourceSuspended(nsMediaStream** aActiveStr
   ReentrantMonitorAutoEnter mon(gMediaCache->GetReentrantMonitor());
   nsMediaCache::ResourceStreamIterator iter(mResourceID);
   while (nsMediaCacheStream* stream = iter.Next()) {
-    if (!stream->mCacheSuspended && !stream->mChannelEnded) {
+    if (!stream->mCacheSuspended && !stream->mChannelEnded && !stream->mClosed) {
       if (aActiveStream) {
         *aActiveStream = stream->mClient;
       }
@@ -2173,7 +2173,6 @@ nsMediaCacheStream::Read(char* aBuffer, PRUint32 aCount, PRUint32* aBytes)
     }
 
     PRInt32 bytes;
-    PRUint32 channelBlock = PRUint32(mChannelOffset/BLOCK_SIZE);
     PRInt32 cacheBlock = streamBlock < mBlocks.Length() ? mBlocks[streamBlock] : -1;
     if (cacheBlock < 0) {
       // We don't have a complete cached block here.

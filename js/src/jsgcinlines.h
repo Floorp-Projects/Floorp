@@ -82,7 +82,7 @@ GetGCObjectKind(Class *clasp)
 {
     if (clasp == &FunctionClass)
         return JSFunction::FinalizeKind;
-    uint32 nslots = JSCLASS_RESERVED_SLOTS(clasp);
+    uint32_t nslots = JSCLASS_RESERVED_SLOTS(clasp);
     if (clasp->flags & JSCLASS_HAS_PRIVATE)
         nslots++;
     return GetGCObjectKind(nslots);
