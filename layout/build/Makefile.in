@@ -150,20 +150,6 @@ ifdef MOZ_B2G_RIL #{
 SHARED_LIBRARY_LIBS	+= $(DEPTH)/dom/system/b2g/$(LIB_PREFIX)domsystemb2g_s.$(LIB_SUFFIX)
 endif #}
 
-ifdef MOZ_VORBIS
-SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/media/libvorbis/lib/$(LIB_PREFIX)vorbis.$(LIB_SUFFIX) \
-	$(DEPTH)/media/libogg/src/$(LIB_PREFIX)ogg.$(LIB_SUFFIX) \
-	$(NULL)
-endif
-
-ifdef MOZ_TREMOR
-SHARED_LIBRARY_LIBS	+= \
-	$(DEPTH)/media/libtremor/lib/$(LIB_PREFIX)tremor.$(LIB_SUFFIX) \
-	$(DEPTH)/media/libogg/src/$(LIB_PREFIX)ogg.$(LIB_SUFFIX) \
-	$(NULL)
-endif
-
 ifdef MOZ_MEDIA
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/content/media/$(LIB_PREFIX)gkconmedia_s.$(LIB_SUFFIX) \
@@ -172,7 +158,6 @@ endif
 
 ifdef MOZ_OGG
 SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/media/libtheora/lib/$(LIB_PREFIX)theora.$(LIB_SUFFIX) \
 	$(DEPTH)/content/media/ogg/$(LIB_PREFIX)gkconogg_s.$(LIB_SUFFIX) \
 	$(NULL)
 endif
@@ -186,11 +171,7 @@ endif
 ifdef MOZ_WEBM
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/content/media/webm/$(LIB_PREFIX)gkconwebm_s.$(LIB_SUFFIX) \
-	$(DEPTH)/media/libnestegg/src/$(LIB_PREFIX)nestegg.$(LIB_SUFFIX) \
 	$(NULL)
-ifndef MOZ_NATIVE_LIBVPX
-SHARED_LIBRARY_LIBS 	+= $(DEPTH)/media/libvpx/$(LIB_PREFIX)vpx.$(LIB_SUFFIX)
-endif
 endif
 
 ifdef MOZ_WAVE
@@ -200,9 +181,6 @@ SHARED_LIBRARY_LIBS 	+= \
 endif
 
 ifdef MOZ_SYDNEYAUDIO
-SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/media/libsydneyaudio/src/$(LIB_PREFIX)sydneyaudio.$(LIB_SUFFIX) \
-	$(NULL)
 LOCAL_INCLUDES += -I$(DEPTH)/content/html/content/src
 endif
 

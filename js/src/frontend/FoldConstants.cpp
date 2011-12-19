@@ -143,7 +143,7 @@ FoldBinaryNumeric(JSContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
                   ParseNode *pn, TreeContext *tc)
 {
     jsdouble d, d2;
-    int32 i, j;
+    int32_t i, j;
 
     JS_ASSERT(pn1->isKind(PNK_NUMBER) && pn2->isKind(PNK_NUMBER));
     d = pn1->pn_dval;
@@ -243,7 +243,7 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
      * js_ConcatStrings.
      */
     ParseNode *pn2;
-    uint32 i, j;
+    uint32_t i, j;
     for (pn2 = pn1, i = j = 0; pn2; pn2 = pn2->pn_next, i++) {
         /* The parser already rejected end-tags with attributes. */
         JS_ASSERT(kind != PNK_XMLETAGO || i == 0);
@@ -435,7 +435,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
     switch (pn->getArity()) {
       case PN_FUNC:
       {
-        uint32 oldflags = tc->flags;
+        uint32_t oldflags = tc->flags;
         FunctionBox *oldlist = tc->functionList;
 
         tc->flags = pn->pn_funbox->tcflags;

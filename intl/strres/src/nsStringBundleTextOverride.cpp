@@ -302,7 +302,7 @@ nsPropertyEnumeratorByURL::HasMoreElements(bool * aResult)
     }
 
     if (!hasMore)
-        mCurrent = false;
+        mCurrent = nsnull;
     
     *aResult = mCurrent ? true : false;
     

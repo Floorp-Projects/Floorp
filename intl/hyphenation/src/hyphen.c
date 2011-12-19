@@ -226,118 +226,61 @@ hnj_add_trans (HyphenDict *dict, int state1, int state2, char ch)
 }
 
 #ifdef VERBOSE
-HashTab *global;
+HashTab *global[1];
 
 static char *
-get_state_str (int state)
+get_state_str (int state, int level)
 {
   int i;
   HashEntry *e;
 
   for (i = 0; i < HASH_SIZE; i++)
-    for (e = global->entries[i]; e; e = e->next)
+    for (e = global[level]->entries[i]; e; e = e->next)
       if (e->val == state)
 	return e->key;
   return NULL;
 }
 #endif
 
-HyphenDict *
-hnj_hyphen_load (const char *fn)
-{
-  HyphenDict *dict[2];
-  HashTab *hashtab;
-  FILE *f;
-  char buf[MAX_CHARS];
+void hnj_hyphen_load_line(char * buf, HyphenDict * dict, HashTab * hashtab) {
+  int i, j;
   char word[MAX_CHARS];
   char pattern[MAX_CHARS];
   char * repl;
   signed char replindex;
   signed char replcut;
-  int state_num = 0, last_state;
-  int i, j, k;
+  int state_num = 0;
+  int last_state;
   char ch;
   int found;
-  HashEntry *e;
-  int nextlevel = 0;
 
-  f = fopen (fn, "r");
-  if (f == NULL)
-    return NULL;
-
-// loading one or two dictionaries (separated by NEXTLEVEL keyword)
-for (k = 0; k == 0 || (k == 1 && nextlevel); k++) { 
-  hashtab = hnj_hash_new ();
-#ifdef VERBOSE
-  global = hashtab;
-#endif
-  hnj_hash_insert (hashtab, "", 0);
-  dict[k] = hnj_malloc (sizeof(HyphenDict));
-  dict[k]->num_states = 1;
-  dict[k]->states = hnj_malloc (sizeof(HyphenState));
-  dict[k]->states[0].match = NULL;
-  dict[k]->states[0].repl = NULL;
-  dict[k]->states[0].fallback_state = -1;
-  dict[k]->states[0].num_trans = 0;
-  dict[k]->states[0].trans = NULL;
-  dict[k]->nextlevel = NULL;
-  dict[k]->lhmin = 0;
-  dict[k]->rhmin = 0;
-  dict[k]->clhmin = 0;
-  dict[k]->crhmin = 0;
-  dict[k]->nohyphen = NULL;
-  dict[k]->nohyphenl = 0;
-
-  /* read in character set info */
-  if (k == 0) {
-    for (i=0;i<MAX_NAME;i++) dict[k]->cset[i]= 0;
-    if (fgets(dict[k]->cset,  sizeof(dict[k]->cset),f) != NULL) {
-      for (i=0;i<MAX_NAME;i++)
-        if ((dict[k]->cset[i] == '\r') || (dict[k]->cset[i] == '\n'))
-          dict[k]->cset[i] = 0;
-    } else {
-      dict[k]->cset[0] = 0;
-    }
-    dict[k]->utf8 = (strcmp(dict[k]->cset, "UTF-8") == 0);
-  } else {
-    strcpy(dict[k]->cset, dict[0]->cset);
-    dict[k]->utf8 = dict[0]->utf8;
-  }
-
-  while (fgets (buf, sizeof(buf), f) != NULL)
-    {
-      if (buf[0] != '%')
-	{
-	  if (strncmp(buf, "NEXTLEVEL", 9) == 0) {
-	    nextlevel = 1;
-	    break;
-	  } else if (strncmp(buf, "LEFTHYPHENMIN", 13) == 0) {
-	    dict[k]->lhmin = atoi(buf + 13);
-	    continue;
+	  if (strncmp(buf, "LEFTHYPHENMIN", 13) == 0) {
+	    dict->lhmin = atoi(buf + 13);
+	    return;
 	  } else if (strncmp(buf, "RIGHTHYPHENMIN", 14) == 0) {
-	    dict[k]->rhmin = atoi(buf + 14);
-	    continue;
+	    dict->rhmin = atoi(buf + 14);
+	    return;
 	  } else if (strncmp(buf, "COMPOUNDLEFTHYPHENMIN", 21) == 0) {
-	    dict[k]->clhmin = atoi(buf + 21);
-	    continue;
+	    dict->clhmin = atoi(buf + 21);
+	    return;
 	  } else if (strncmp(buf, "COMPOUNDRIGHTHYPHENMIN", 22) == 0) {
-	    dict[k]->crhmin = atoi(buf + 22);
-	    continue;
+	    dict->crhmin = atoi(buf + 22);
+	    return;
 	  } else if (strncmp(buf, "NOHYPHEN", 8) == 0) {
 	    char * space = buf + 8;
 	    while (*space != '\0' && (*space == ' ' || *space == '\t')) space++;
-	    if (*buf != '\0') dict[k]->nohyphen = hnj_strdup(space);
-	    if (dict[k]->nohyphen) {
-	        char * nhe = dict[k]->nohyphen + strlen(dict[k]->nohyphen) - 1;
+	    if (*buf != '\0') dict->nohyphen = hnj_strdup(space);
+	    if (dict->nohyphen) {
+	        char * nhe = dict->nohyphen + strlen(dict->nohyphen) - 1;
 	        *nhe = 0;
-	        for (nhe = nhe - 1; nhe > dict[k]->nohyphen; nhe--) {
+	        for (nhe = nhe - 1; nhe > dict->nohyphen; nhe--) {
 	                if (*nhe == ',') {
-	                    dict[k]->nohyphenl++;
+	                    dict->nohyphenl++;
 	                    *nhe = 0;
 	                }
 	        }
 	    }
-	    continue;
+	    return;
 	  } 
 	  j = 0;
 	  pattern[j] = '0';
@@ -382,7 +325,7 @@ for (k = 0; k == 0 || (k == 1 && nextlevel); k++) {
           } else {
             if (*word == '.') i++;
             /* convert UTF-8 char. positions of discretionary hyph. replacements to 8-bit */
-            if (dict[k]->utf8) {
+            if (dict->utf8) {
                 int pu = -1;        /* unicode character position */
                 int ps = -1;        /* unicode start position (original replindex) */
                 int pc = (*word == '.') ? 1: 0; /* 8-bit character position */
@@ -406,14 +349,14 @@ for (k = 0; k == 0 || (k == 1 && nextlevel); k++) {
 	  printf ("word %s pattern %s, j = %d  repl: %s\n", word, pattern + i, j, repl);
 #endif
 	  found = hnj_hash_lookup (hashtab, word);
-	  state_num = hnj_get_state (dict[k], hashtab, word);
-	  dict[k]->states[state_num].match = hnj_strdup (pattern + i);
-	  dict[k]->states[state_num].repl = repl;
-	  dict[k]->states[state_num].replindex = replindex;
+	  state_num = hnj_get_state (dict, hashtab, word);
+	  dict->states[state_num].match = hnj_strdup (pattern + i);
+	  dict->states[state_num].repl = repl;
+	  dict->states[state_num].replindex = replindex;
           if (!replcut) {
-            dict[k]->states[state_num].replcut = (signed char) strlen(word);
+            dict->states[state_num].replcut = (signed char) strlen(word);
           } else {
-            dict[k]->states[state_num].replcut = replcut;
+            dict->states[state_num].replcut = replcut;
           }
 
 	  /* now, put in the prefix transitions */
@@ -423,11 +366,85 @@ for (k = 0; k == 0 || (k == 1 && nextlevel); k++) {
 	      ch = word[j - 1];
 	      word[j - 1] = '\0';
 	      found = hnj_hash_lookup (hashtab, word);
-	      state_num = hnj_get_state (dict[k], hashtab, word);
-	      hnj_add_trans (dict[k], state_num, last_state, ch);
+	      state_num = hnj_get_state (dict, hashtab, word);
+	      hnj_add_trans (dict, state_num, last_state, ch);
 	    }
-	}
+}
+
+HyphenDict *
+hnj_hyphen_load (const char *fn)
+{
+  HyphenDict *dict[2];
+  HashTab *hashtab;
+  FILE *f;
+  char buf[MAX_CHARS];
+  int nextlevel = 0;
+  int i, j, k;
+  HashEntry *e;
+  int state_num = 0;
+
+  f = fopen (fn, "r");
+  if (f == NULL)
+    return NULL;
+
+// loading one or two dictionaries (separated by NEXTLEVEL keyword)
+for (k = 0; k < 2; k++) { 
+  hashtab = hnj_hash_new ();
+#ifdef VERBOSE
+  global[k] = hashtab;
+#endif
+  hnj_hash_insert (hashtab, "", 0);
+  dict[k] = hnj_malloc (sizeof(HyphenDict));
+  dict[k]->num_states = 1;
+  dict[k]->states = hnj_malloc (sizeof(HyphenState));
+  dict[k]->states[0].match = NULL;
+  dict[k]->states[0].repl = NULL;
+  dict[k]->states[0].fallback_state = -1;
+  dict[k]->states[0].num_trans = 0;
+  dict[k]->states[0].trans = NULL;
+  dict[k]->nextlevel = NULL;
+  dict[k]->lhmin = 0;
+  dict[k]->rhmin = 0;
+  dict[k]->clhmin = 0;
+  dict[k]->crhmin = 0;
+  dict[k]->nohyphen = NULL;
+  dict[k]->nohyphenl = 0;
+
+  /* read in character set info */
+  if (k == 0) {
+    for (i=0;i<MAX_NAME;i++) dict[k]->cset[i]= 0;
+    if (fgets(dict[k]->cset,  sizeof(dict[k]->cset),f) != NULL) {
+      for (i=0;i<MAX_NAME;i++)
+        if ((dict[k]->cset[i] == '\r') || (dict[k]->cset[i] == '\n'))
+          dict[k]->cset[i] = 0;
+    } else {
+      dict[k]->cset[0] = 0;
     }
+    dict[k]->utf8 = (strcmp(dict[k]->cset, "UTF-8") == 0);
+  } else {
+    strcpy(dict[k]->cset, dict[0]->cset);
+    dict[k]->utf8 = dict[0]->utf8;
+  }
+
+  if (k == 0 || nextlevel) {
+    while (fgets (buf, sizeof(buf), f) != NULL) {
+      if (strncmp(buf, "NEXTLEVEL", 9) == 0) {
+	nextlevel = 1;
+	break;
+      } else if (buf[0] != '%') hnj_hyphen_load_line(buf, dict[k], hashtab);
+    }
+  } else if (k == 1) {
+    /* default first level: hyphen and ASCII apostrophe */
+    if (!dict[0]->utf8) hnj_hyphen_load_line("NOHYPHEN '\n", dict[k], hashtab);
+    else hnj_hyphen_load_line("NOHYPHEN ',\xe2\x80\x93,\xe2\x80\x99\n", dict[k], hashtab);
+    strcpy(buf, "1-1/=,1,1\n"); // buf rewritten by hnj_hyphen_load here
+    hnj_hyphen_load_line(buf, dict[k], hashtab); /* remove hyphen */
+    hnj_hyphen_load_line("1'1\n", dict[k], hashtab); /* ASCII apostrophe */
+    if (dict[0]->utf8) {
+      hnj_hyphen_load_line("1\xe2\x80\x93" "1\n", dict[k], hashtab); /* endash */
+      hnj_hyphen_load_line("1\xe2\x80\x99" "1\n", dict[k], hashtab); /* apostrophe */
+    }
+  }
 
   /* Could do unioning of matches here (instead of the preprocessor script).
      If we did, the pseudocode would look something like this:
@@ -479,7 +496,20 @@ for (k = 0; k == 0 || (k == 1 && nextlevel); k++) {
   state_num = 0;
 }
   fclose(f);
-  if (k == 2) dict[0]->nextlevel = dict[1];
+  if (nextlevel) dict[0]->nextlevel = dict[1];
+  else {
+    dict[1] -> nextlevel = dict[0];
+    dict[1]->lhmin = dict[0]->lhmin;
+    dict[1]->rhmin = dict[0]->rhmin;
+    dict[1]->clhmin = (dict[0]->clhmin) ? dict[0]->clhmin : ((dict[0]->lhmin) ? dict[0]->lhmin : 3);
+    dict[1]->crhmin = (dict[0]->crhmin) ? dict[0]->crhmin : ((dict[0]->rhmin) ? dict[0]->rhmin : 3);
+#ifdef VERBOSE
+    HashTab *r = global[0];
+    global[0] = global[1];
+    global[1] = r;
+#endif
+    return dict[1];
+  }
   return dict[0];
 }
 
@@ -530,8 +560,13 @@ int hnj_hyphen_hyphenate (HyphenDict *dict,
   j = 0;
   prep_word[j++] = '.';
 
-  for (i = 0; i < word_size; i++)
+  for (i = 0; i < word_size; i++) {
+    if (word[i] <= '9' && word[i] >= '0') {
+      prep_word[j++] = '.';
+    } else {
       prep_word[j++] = word[i];
+    }
+  }
 
   prep_word[j++] = '.';
   prep_word[j] = '\0';
@@ -560,7 +595,7 @@ int hnj_hyphen_hyphenate (HyphenDict *dict,
 
 #ifdef VERBOSE
 	  char *state_str;
-	  state_str = get_state_str (state);
+	  state_str = get_state_str (state, 0);
 
 	  for (k = 0; k < i - strlen (state_str); k++)
 	    putchar (' ');
@@ -673,6 +708,9 @@ int hnj_hyphen_lhmin(int utf8, const char *word, int word_size, char * hyphens,
       i += hnj_ligature(word[2]);
     }
 
+    // ignore numbers
+    for (j = 0; word[j] <= '9' && word[j] >= '0'; j++) i--;
+
     for (j = 0; i < lhmin && word[j] != '\0'; i++) do {
       // check length of the non-standard part
       if (*rep && *pos && *cut && (*rep)[j]) {
@@ -699,9 +737,13 @@ int hnj_hyphen_lhmin(int utf8, const char *word, int word_size, char * hyphens,
 int hnj_hyphen_rhmin(int utf8, const char *word, int word_size, char * hyphens,
 	char *** rep, int ** pos, int ** cut, int rhmin)
 {
-    int i;
-    int j = word_size - 2;    
-    for (i = 1; i < rhmin && j > 0; j--) {
+    int i = 1;
+    int j;
+
+    // ignore numbers
+    for (j = word_size - 1; j > 0 && word[j] <= '9' && word[j] >= '0'; j--) i--;
+
+    for (j = word_size - 2; i < rhmin && j > 0; j--) {
       // check length of the non-standard part
       if (*rep && *pos && *cut && (*rep)[j]) {
         char * rh = strchr((*rep)[j], '=');
@@ -759,8 +801,15 @@ int hnj_hyphen_hyph_(HyphenDict *dict, const char *word, int word_size,
   j = 0;
   prep_word[j++] = '.';
   
-  for (i = 0; i < word_size; i++)
+  for (i = 0; i < word_size; i++) {
+    if (word[i] <= '9' && word[i] >= '0') {
+      prep_word[j++] = '.';
+    } else {
       prep_word[j++] = word[i];
+    }
+  }
+
+
 
   prep_word[j++] = '.';
   prep_word[j] = '\0';
@@ -789,7 +838,7 @@ int hnj_hyphen_hyph_(HyphenDict *dict, const char *word, int word_size,
 
 #ifdef VERBOSE
 	  char *state_str;
-	  state_str = get_state_str (state);
+	  state_str = get_state_str (state, 1);
 
 	  for (k = 0; k < i - strlen (state_str); k++)
 	    putchar (' ');
@@ -1036,6 +1085,9 @@ int hnj_hyphen_norm(const char *word, int word_size, char * hyphens,
     }
   }
   hyphens[j + 1] = '\0';
+#ifdef VERBOSE
+  printf ("nums: %s\n", hyphens);
+#endif
   return 0;
 }
 
@@ -1077,8 +1129,8 @@ int hnj_hyphen_hyphenate2 (HyphenDict *dict,
     for (nhi = 0; nhi <= dict->nohyphenl; nhi++) {
         char * nhy = (char *) strstr(word, nh);
         while (nhy) {
-            hyphens[nhy - word + strlen(nh) - 1] = 0;
-            if (nhy - word  - 1 >= 0) hyphens[nhy - word - 1] = 0;
+            hyphens[nhy - word + strlen(nh) - 1] = '0';
+            if (nhy - word  - 1 >= 0) hyphens[nhy - word - 1] = '0';
             nhy = (char *) strstr(nhy + 1, nh);
         }
         nh = nh + strlen(nh) + 1;
@@ -1087,6 +1139,9 @@ int hnj_hyphen_hyphenate2 (HyphenDict *dict,
 
   if (hyphword) hnj_hyphen_hyphword(word, word_size, hyphens, hyphword, rep, pos, cut);
   if (dict->utf8) return hnj_hyphen_norm(word, word_size, hyphens, rep, pos, cut);
+#ifdef VERBOSE
+  printf ("nums: %s\n", hyphens);
+#endif
   return 0;
 }
 
@@ -1096,8 +1151,10 @@ int hnj_hyphen_hyphenate3 (HyphenDict *dict,
 	char *hyphword, char *** rep, int ** pos, int ** cut,
 	int lhmin, int rhmin, int clhmin, int crhmin)
 {
-  lhmin = (lhmin > 0 ? lhmin : dict->lhmin);
-  rhmin = (rhmin > 0 ? rhmin : dict->rhmin);
+  lhmin = (lhmin > dict->lhmin) ? lhmin : dict->lhmin;
+  rhmin = (rhmin > dict->rhmin) ? rhmin : dict->rhmin;
+  clhmin = (clhmin > dict->clhmin) ? clhmin : dict->clhmin;
+  crhmin = (crhmin > dict->crhmin) ? crhmin : dict->crhmin;
   hnj_hyphen_hyph_(dict, word, word_size, hyphens, rep, pos, cut,
     clhmin, crhmin, 1, 1);
   hnj_hyphen_lhmin(dict->utf8, word, word_size, hyphens,

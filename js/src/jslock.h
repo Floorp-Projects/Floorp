@@ -240,11 +240,11 @@ class AutoLock {
 #endif
 
 class AutoAtomicIncrement {
-    int32 *p;
+    int32_t *p;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
-    AutoAtomicIncrement(int32 *p JS_GUARD_OBJECT_NOTIFIER_PARAM)
+    AutoAtomicIncrement(int32_t *p JS_GUARD_OBJECT_NOTIFIER_PARAM)
       : p(p) {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_ATOMIC_INCREMENT(p);

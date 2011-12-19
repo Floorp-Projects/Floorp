@@ -85,9 +85,6 @@ protected:
   // collections
   bool IsCollectionObject(IDataObject* inDataObj);
 
-  // gets shell version
-  PRUint64 GetShellVersion();
-
   // Create a bitmap for drag operations
   bool CreateDragImage(nsIDOMNode *aDOMNode,
                          nsIScriptableRegion *aRegion,

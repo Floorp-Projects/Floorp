@@ -42,15 +42,19 @@
 #include "nsIJSContextStack.h"
 
 #include "jsclone.h"
+#include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/storage.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
+#include "nsDOMFile.h"
+#include "nsDOMLists.h"
 #include "nsEventDispatcher.h"
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "snappy/snappy.h"
+#include "test_quota.h"
 
 #include "AsyncConnectionHelper.h"
 #include "IDBCursor.h"
@@ -59,6 +63,8 @@
 #include "IDBKeyRange.h"
 #include "IDBTransaction.h"
 #include "DatabaseInfo.h"
+
+#define FILE_COPY_BUFFER_SIZE 32768
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -70,21 +76,20 @@ public:
   AddHelper(IDBTransaction* aTransaction,
             IDBRequest* aRequest,
             IDBObjectStore* aObjectStore,
-            JSAutoStructuredCloneBuffer& aCloneBuffer,
+            StructuredCloneWriteInfo& aCloneWriteInfo,
             const Key& aKey,
             bool aOverwrite,
-            nsTArray<IndexUpdateInfo>& aIndexUpdateInfo,
-            PRUint64 aOffsetToKeyProp)
+            nsTArray<IndexUpdateInfo>& aIndexUpdateInfo)
   : AsyncConnectionHelper(aTransaction, aRequest), mObjectStore(aObjectStore),
-    mKey(aKey), mOverwrite(aOverwrite), mOffsetToKeyProp(aOffsetToKeyProp)
+    mKey(aKey), mOverwrite(aOverwrite)
   {
-    mCloneBuffer.swap(aCloneBuffer);
+    mCloneWriteInfo.Swap(aCloneWriteInfo);
     mIndexUpdateInfo.SwapElements(aIndexUpdateInfo);
   }
 
   ~AddHelper()
   {
-    IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
+    IDBObjectStore::ClearStructuredCloneBuffer(mCloneWriteInfo.mCloneBuffer);
   }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -94,7 +99,7 @@ public:
   void ReleaseMainThreadObjects()
   {
     mObjectStore = nsnull;
-    IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
+    IDBObjectStore::ClearStructuredCloneBuffer(mCloneWriteInfo.mCloneBuffer);
     AsyncConnectionHelper::ReleaseMainThreadObjects();
   }
 
@@ -103,11 +108,10 @@ private:
   nsRefPtr<IDBObjectStore> mObjectStore;
 
   // These may change in the autoincrement case.
-  JSAutoStructuredCloneBuffer mCloneBuffer;
+  StructuredCloneWriteInfo mCloneWriteInfo;
   Key mKey;
   const bool mOverwrite;
   nsTArray<IndexUpdateInfo> mIndexUpdateInfo;
-  PRUint64 mOffsetToKeyProp;
 };
 
 class GetHelper : public AsyncConnectionHelper
@@ -123,7 +127,7 @@ public:
 
   ~GetHelper()
   {
-    IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
+    IDBObjectStore::ClearStructuredCloneBuffer(mCloneReadInfo.mCloneBuffer);
   }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -134,7 +138,7 @@ public:
   {
     mObjectStore = nsnull;
     mKeyRange = nsnull;
-    IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
+    IDBObjectStore::ClearStructuredCloneBuffer(mCloneReadInfo.mCloneBuffer);
     AsyncConnectionHelper::ReleaseMainThreadObjects();
   }
 
@@ -145,7 +149,7 @@ protected:
 
 private:
   // Out-params.
-  JSAutoStructuredCloneBuffer mCloneBuffer;
+  StructuredCloneReadInfo mCloneReadInfo;
 };
 
 class DeleteHelper : public GetHelper
@@ -199,7 +203,7 @@ public:
 
   ~OpenCursorHelper()
   {
-    IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
+    IDBObjectStore::ClearStructuredCloneBuffer(mCloneReadInfo.mCloneBuffer);
   }
 
   nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -210,7 +214,7 @@ public:
   {
     mObjectStore = nsnull;
     mKeyRange = nsnull;
-    IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffer);
+    IDBObjectStore::ClearStructuredCloneBuffer(mCloneReadInfo.mCloneBuffer);
     AsyncConnectionHelper::ReleaseMainThreadObjects();
   }
 
@@ -222,7 +226,7 @@ private:
 
   // Out-params.
   Key mKey;
-  JSAutoStructuredCloneBuffer mCloneBuffer;
+  StructuredCloneReadInfo mCloneReadInfo;
   nsCString mContinueQuery;
   nsCString mContinueToQuery;
   Key mRangeKey;
@@ -312,8 +316,9 @@ public:
 
   ~GetAllHelper()
   {
-    for (PRUint32 index = 0; index < mCloneBuffers.Length(); index++) {
-      IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffers[index]);
+    for (PRUint32 index = 0; index < mCloneReadInfos.Length(); index++) {
+      IDBObjectStore::ClearStructuredCloneBuffer(
+        mCloneReadInfos[index].mCloneBuffer);
     }
   }
 
@@ -325,8 +330,9 @@ public:
   {
     mObjectStore = nsnull;
     mKeyRange = nsnull;
-    for (PRUint32 index = 0; index < mCloneBuffers.Length(); index++) {
-      IDBObjectStore::ClearStructuredCloneBuffer(mCloneBuffers[index]);
+    for (PRUint32 index = 0; index < mCloneReadInfos.Length(); index++) {
+      IDBObjectStore::ClearStructuredCloneBuffer(
+        mCloneReadInfos[index].mCloneBuffer);
     }
     AsyncConnectionHelper::ReleaseMainThreadObjects();
   }
@@ -339,7 +345,7 @@ protected:
 
 private:
   // Out-params.
-  nsTArray<JSAutoStructuredCloneBuffer> mCloneBuffers;
+  nsTArray<StructuredCloneReadInfo> mCloneReadInfos;
 };
 
 class CountHelper : public AsyncConnectionHelper
@@ -376,23 +382,18 @@ NS_STACK_CLASS
 class AutoRemoveIndex
 {
 public:
-  AutoRemoveIndex(IDBDatabase* aDatabase,
-                  const nsAString& aObjectStoreName,
+  AutoRemoveIndex(ObjectStoreInfo* aObjectStoreInfo,
                   const nsAString& aIndexName)
-  : mDatabase(aDatabase), mObjectStoreName(aObjectStoreName),
-    mIndexName(aIndexName)
+  : mObjectStoreInfo(aObjectStoreInfo), mIndexName(aIndexName)
   { }
 
   ~AutoRemoveIndex()
   {
-    if (mDatabase) {
-      ObjectStoreInfo* info;
-      if (mDatabase->Info()->GetObjectStore(mObjectStoreName, &info)) {
-        for (PRUint32 index = 0; index < info->indexes.Length(); index++) {
-          if (info->indexes[index].name == mIndexName) {
-            info->indexes.RemoveElementAt(index);
-            break;
-          }
+    if (mObjectStoreInfo) {
+      for (PRUint32 i = 0; i < mObjectStoreInfo->indexes.Length(); i++) {
+        if (mObjectStoreInfo->indexes[i].name == mIndexName) {
+          mObjectStoreInfo->indexes.RemoveElementAt(i);
+          break;
         }
       }
     }
@@ -400,12 +401,11 @@ public:
 
   void forget()
   {
-    mDatabase = nsnull;
+    mObjectStoreInfo = nsnull;
   }
 
 private:
-  IDBDatabase* mDatabase;
-  nsString mObjectStoreName;
+  ObjectStoreInfo* mObjectStoreInfo;
   nsString mIndexName;
 };
 
@@ -492,38 +492,13 @@ JSClass gDummyPropClass = {
   JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
-JSBool
-StructuredCloneWriteDummyProp(JSContext* aCx,
-                              JSStructuredCloneWriter* aWriter,
-                              JSObject* aObj,
-                              void* aClosure)
-{
-  if (JS_GET_CLASS(aCx, aObj) == &gDummyPropClass) {
-    PRUint64* closure = reinterpret_cast<PRUint64*>(aClosure);
-
-    NS_ASSERTION(*closure == 0, "We should not have been here before!");
-    *closure = js_GetSCOffset(aWriter);
-
-    PRUint64 value = 0;
-    return JS_WriteBytes(aWriter, &value, sizeof(value));
-  }
-
-  // try using the runtime callbacks
-  const JSStructuredCloneCallbacks* runtimeCallbacks =
-    aCx->runtime->structuredCloneCallbacks;
-  if (runtimeCallbacks) {
-    return runtimeCallbacks->write(aCx, aWriter, aObj, nsnull);
-  }
-
-  return JS_FALSE;
-}
-
 } // anonymous namespace
 
 // static
 already_AddRefed<IDBObjectStore>
 IDBObjectStore::Create(IDBTransaction* aTransaction,
-                       const ObjectStoreInfo* aStoreInfo)
+                       ObjectStoreInfo* aStoreInfo,
+                       nsIAtom* aDatabaseId)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -536,8 +511,9 @@ IDBObjectStore::Create(IDBTransaction* aTransaction,
   objectStore->mName = aStoreInfo->name;
   objectStore->mId = aStoreInfo->id;
   objectStore->mKeyPath = aStoreInfo->keyPath;
-  objectStore->mAutoIncrement = aStoreInfo->autoIncrement;
-  objectStore->mDatabaseId = aStoreInfo->databaseId;
+  objectStore->mAutoIncrement = !!aStoreInfo->nextAutoIncrementId;
+  objectStore->mDatabaseId = aDatabaseId;
+  objectStore->mInfo = aStoreInfo;
 
   return objectStore.forget();
 }
@@ -645,71 +621,25 @@ nsresult
 IDBObjectStore::UpdateIndexes(IDBTransaction* aTransaction,
                               PRInt64 aObjectStoreId,
                               const Key& aObjectStoreKey,
-                              bool aAutoIncrement,
                               bool aOverwrite,
                               PRInt64 aObjectDataId,
                               const nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
 {
-  NS_ASSERTION(!aAutoIncrement || aObjectDataId != LL_MININT,
-               "Bad objectData id!");
-
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv;
 
-  if (aObjectDataId == LL_MININT) {
-    stmt = aTransaction->GetCachedStatement(
-      "SELECT id "
-      "FROM object_data "
-      "WHERE object_store_id = :osid "
-      "AND key_value = :key_value"
-    );
-    NS_ENSURE_TRUE(stmt, NS_ERROR_FAILURE);
-
-    mozStorageStatementScoper scoper(stmt);
-
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), aObjectStoreId);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    NS_ASSERTION(!aObjectStoreKey.IsUnset(), "This shouldn't happen!");
-
-    rv = aObjectStoreKey.BindToStatement(stmt, NS_LITERAL_CSTRING("key_value"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool hasResult;
-    rv = stmt->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!hasResult) {
-      NS_ERROR("This is bad, we just added this value! Where'd it go?!");
-      return NS_ERROR_FAILURE;
-    }
-
-    aObjectDataId = stmt->AsInt64(0);
-  }
-
   NS_ASSERTION(aObjectDataId != LL_MININT, "Bad objectData id!");
 
-  NS_NAMED_LITERAL_CSTRING(indexId, "index_id");
   NS_NAMED_LITERAL_CSTRING(objectDataId, "object_data_id");
-  NS_NAMED_LITERAL_CSTRING(objectDataKey, "object_data_key");
-  NS_NAMED_LITERAL_CSTRING(value, "value");
 
   if (aOverwrite) {
-    stmt = aTransaction->IndexDataDeleteStatement(aAutoIncrement, false);
-    NS_ENSURE_TRUE(stmt, NS_ERROR_FAILURE);
+    stmt = aTransaction->GetCachedStatement(
+      "DELETE FROM unique_index_data "
+      "WHERE object_data_id = :object_data_id; "
+      "DELETE FROM index_data "
+      "WHERE object_data_id = :object_data_id");
 
-    mozStorageStatementScoper scoper2(stmt);
-
-    rv = stmt->BindInt64ByName(objectDataId, aObjectDataId);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = stmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    stmt = aTransaction->IndexDataDeleteStatement(aAutoIncrement, true);
-    NS_ENSURE_TRUE(stmt, NS_ERROR_FAILURE);
-
-    mozStorageStatementScoper scoper3(stmt);
+    mozStorageStatementScoper scoper(stmt);
 
     rv = stmt->BindInt64ByName(objectDataId, aObjectDataId);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -723,24 +653,33 @@ IDBObjectStore::UpdateIndexes(IDBTransaction* aTransaction,
     const IndexUpdateInfo& updateInfo = aUpdateInfoArray[i];
 
     // Insert new values.
-    stmt = aTransaction->IndexDataInsertStatement(aAutoIncrement,
-                                                  updateInfo.indexUnique);
+
+    stmt = updateInfo.indexUnique ?
+      aTransaction->GetCachedStatement(
+        "INSERT INTO unique_index_data "
+          "(index_id, object_data_id, object_data_key, value) "
+        "VALUES (:index_id, :object_data_id, :object_data_key, :value)") :
+      aTransaction->GetCachedStatement(
+        "INSERT OR IGNORE INTO index_data ("
+          "index_id, object_data_id, object_data_key, value) "
+        "VALUES (:index_id, :object_data_id, :object_data_key, :value)");
+
     NS_ENSURE_TRUE(stmt, NS_ERROR_FAILURE);
 
     mozStorageStatementScoper scoper4(stmt);
 
-    rv = stmt->BindInt64ByName(indexId, updateInfo.indexId);
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("index_id"),
+                               updateInfo.indexId);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = stmt->BindInt64ByName(objectDataId, aObjectDataId);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!aAutoIncrement) {
-      rv = aObjectStoreKey.BindToStatement(stmt, objectDataKey);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = aObjectStoreKey.BindToStatement(stmt,
+                                         NS_LITERAL_CSTRING("object_data_key"));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = updateInfo.value.BindToStatement(stmt, value);
+    rv = updateInfo.value.BindToStatement(stmt, NS_LITERAL_CSTRING("value"));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = stmt->Execute();
@@ -771,23 +710,26 @@ IDBObjectStore::UpdateIndexes(IDBTransaction* aTransaction,
 
 // static
 nsresult
-IDBObjectStore::GetStructuredCloneDataFromStatement(
+IDBObjectStore::GetStructuredCloneReadInfoFromStatement(
                                            mozIStorageStatement* aStatement,
-                                           PRUint32 aIndex,
-                                           JSAutoStructuredCloneBuffer& aBuffer)
+                                           PRUint32 aDataIndex,
+                                           PRUint32 aFileIdsIndex,
+                                           FileManager* aFileManager,
+                                           StructuredCloneReadInfo& aInfo)
 {
 #ifdef DEBUG
   {
-    PRInt32 valueType;
-    NS_ASSERTION(NS_SUCCEEDED(aStatement->GetTypeOfIndex(aIndex, &valueType)) &&
-                 valueType == mozIStorageStatement::VALUE_TYPE_BLOB,
+    PRInt32 type;
+    NS_ASSERTION(NS_SUCCEEDED(aStatement->GetTypeOfIndex(aDataIndex, &type)) &&
+                 type == mozIStorageStatement::VALUE_TYPE_BLOB,
                  "Bad value type!");
   }
 #endif
 
   const PRUint8* blobData;
   PRUint32 blobDataLength;
-  nsresult rv = aStatement->GetSharedBlob(aIndex, &blobDataLength, &blobData);
+  nsresult rv = aStatement->GetSharedBlob(aDataIndex, &blobDataLength,
+                                          &blobData);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   const char* compressed = reinterpret_cast<const char*>(blobData);
@@ -808,10 +750,38 @@ IDBObjectStore::GetStructuredCloneDataFromStatement(
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  return aBuffer.copy(reinterpret_cast<const uint64_t *>(uncompressed.get()),
-                      uncompressedLength) ?
-         NS_OK :
-         NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  JSAutoStructuredCloneBuffer& buffer = aInfo.mCloneBuffer;
+  if (!buffer.copy(reinterpret_cast<const uint64_t *>(uncompressed.get()),
+                   uncompressedLength)) {
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  bool isNull;
+  rv = aStatement->GetIsNull(aFileIdsIndex, &isNull);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  if (isNull) {
+    return NS_OK;
+  }
+
+  nsString ids;
+  rv = aStatement->GetString(aFileIdsIndex, ids);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsAutoTArray<PRInt64, 10> array;
+  rv = ConvertFileIdsToArray(ids, array);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  for (PRUint32 i = 0; i < array.Length(); i++) {
+    const PRInt64& id = array.ElementAt(i);
+
+    nsRefPtr<FileInfo> fileInfo = aFileManager->GetFileInfo(id);
+    NS_ASSERTION(fileInfo, "Null file info!");
+
+    aInfo.mFileInfos.AppendElement(fileInfo);
+  }
+
+  return NS_OK;
 }
 
 // static
@@ -826,32 +796,36 @@ IDBObjectStore::ClearStructuredCloneBuffer(JSAutoStructuredCloneBuffer& aBuffer)
 // static
 bool
 IDBObjectStore::DeserializeValue(JSContext* aCx,
-                                 JSAutoStructuredCloneBuffer& aBuffer,
-                                 jsval* aValue,
-                                 JSStructuredCloneCallbacks* aCallbacks,
-                                 void* aClosure)
+                                 StructuredCloneReadInfo& aCloneReadInfo,
+                                 jsval* aValue)
 {
   NS_ASSERTION(NS_IsMainThread(),
                "Should only be deserializing on the main thread!");
   NS_ASSERTION(aCx, "A JSContext is required!");
 
-  if (!aBuffer.data()) {
+  JSAutoStructuredCloneBuffer& buffer = aCloneReadInfo.mCloneBuffer;
+
+  if (!buffer.data()) {
     *aValue = JSVAL_VOID;
     return true;
   }
 
   JSAutoRequest ar(aCx);
 
-  return aBuffer.read(aCx, aValue, aCallbacks, aClosure);
+  JSStructuredCloneCallbacks callbacks = {
+    IDBObjectStore::StructuredCloneReadCallback,
+    nsnull,
+    nsnull
+  };
+
+  return buffer.read(aCx, aValue, &callbacks, &aCloneReadInfo);
 }
 
 // static
 bool
 IDBObjectStore::SerializeValue(JSContext* aCx,
-                               JSAutoStructuredCloneBuffer& aBuffer,
-                               jsval aValue,
-                               JSStructuredCloneCallbacks* aCallbacks,
-                               void* aClosure)
+                               StructuredCloneWriteInfo& aCloneWriteInfo,
+                               jsval aValue)
 {
   NS_ASSERTION(NS_IsMainThread(),
                "Should only be serializing on the main thread!");
@@ -859,43 +833,258 @@ IDBObjectStore::SerializeValue(JSContext* aCx,
 
   JSAutoRequest ar(aCx);
 
-  return aBuffer.write(aCx, aValue, aCallbacks, aClosure);
+  JSStructuredCloneCallbacks callbacks = {
+    nsnull,
+    StructuredCloneWriteCallback,
+    nsnull
+  };
+
+  JSAutoStructuredCloneBuffer& buffer = aCloneWriteInfo.mCloneBuffer;
+
+  return buffer.write(aCx, aValue, &callbacks, &aCloneWriteInfo);
+}
+
+static inline PRUint32
+SwapBytes(PRUint32 u)
+{
+#ifdef IS_BIG_ENDIAN
+  return ((u & 0x000000ffU) << 24) |                                          
+         ((u & 0x0000ff00U) << 8) |                                           
+         ((u & 0x00ff0000U) >> 8) |                                           
+         ((u & 0xff000000U) >> 24);
+#else
+  return u;
+#endif
 }
 
 static inline jsdouble
 SwapBytes(PRUint64 u)
 {
 #ifdef IS_BIG_ENDIAN
-    return ((u & 0x00000000000000ffLLU) << 56) |
-           ((u & 0x000000000000ff00LLU) << 40) |
-           ((u & 0x0000000000ff0000LLU) << 24) |
-            ((u & 0x00000000ff000000LLU) << 8) |
-            ((u & 0x000000ff00000000LLU) >> 8) |
-           ((u & 0x0000ff0000000000LLU) >> 24) |
-           ((u & 0x00ff000000000000LLU) >> 40) |
-           ((u & 0xff00000000000000LLU) >> 56);
+  return ((u & 0x00000000000000ffLLU) << 56) |
+         ((u & 0x000000000000ff00LLU) << 40) |
+         ((u & 0x0000000000ff0000LLU) << 24) |
+         ((u & 0x00000000ff000000LLU) << 8) |
+         ((u & 0x000000ff00000000LLU) >> 8) |
+         ((u & 0x0000ff0000000000LLU) >> 24) |
+         ((u & 0x00ff000000000000LLU) >> 40) |
+         ((u & 0xff00000000000000LLU) >> 56);
 #else
-     return jsdouble(u);
+  return jsdouble(u);
 #endif
 }
 
-nsresult
-IDBObjectStore::ModifyValueForNewKey(JSAutoStructuredCloneBuffer& aBuffer,
-                                     Key& aKey,
-                                     PRUint64 aOffsetToKeyProp)
+static inline bool
+StructuredCloneReadString(JSStructuredCloneReader* aReader,
+                          nsCString& aString)
 {
-  NS_ASSERTION(IsAutoIncrement() && aKey.IsInteger(), "Don't call me!");
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread");
+  PRUint32 length;
+  if (!JS_ReadBytes(aReader, &length, sizeof(PRUint32))) {
+    NS_WARNING("Failed to read length!");
+    return false;
+  }
+  length = SwapBytes(length);
 
-  // This is a duplicate of the js engine's byte munging here
-  union {
-    jsdouble d;
-    PRUint64 u;
-  } pun;
+  if (!EnsureStringLength(aString, length)) {
+    NS_WARNING("Out of memory?");
+    return false;
+  }
+  char* buffer = aString.BeginWriting();
 
-  pun.d = SwapBytes(aKey.ToInteger());
+  if (!JS_ReadBytes(aReader, buffer, length)) {
+    NS_WARNING("Failed to read type!");
+    return false;
+  }
 
-  memcpy((char*)aBuffer.data() + aOffsetToKeyProp, &pun.u, sizeof(PRUint64));
+  return true;
+}
+
+JSObject*
+IDBObjectStore::StructuredCloneReadCallback(JSContext* aCx,
+                                            JSStructuredCloneReader* aReader,
+                                            uint32_t aTag,
+                                            uint32_t aData,
+                                            void* aClosure)
+{
+  if (aTag == SCTAG_DOM_BLOB || aTag == SCTAG_DOM_FILE) {
+    StructuredCloneReadInfo* cloneReadInfo =
+      reinterpret_cast<StructuredCloneReadInfo*>(aClosure);
+
+    NS_ASSERTION(aData < cloneReadInfo->mFileInfos.Length(),
+                 "Bad blob index!");
+
+    nsRefPtr<FileInfo> fileInfo = cloneReadInfo->mFileInfos[aData];
+    nsRefPtr<FileManager> fileManager = fileInfo->Manager();
+    nsCOMPtr<nsIFile> directory = fileManager->GetDirectory();
+    if (!directory) {
+      return nsnull;
+    }
+
+    nsCOMPtr<nsIFile> nativeFile =
+      fileManager->GetFileForId(directory, fileInfo->Id());
+    if (!nativeFile) {
+      return nsnull;
+    }
+
+    PRUint64 size;
+    if (!JS_ReadBytes(aReader, &size, sizeof(PRUint64))) {
+      NS_WARNING("Failed to read size!");
+      return nsnull;
+    }
+    size = SwapBytes(size);
+
+    nsCString type;
+    if (!StructuredCloneReadString(aReader, type)) {
+      return nsnull;
+    }
+    NS_ConvertUTF8toUTF16 convType(type);
+
+    if (aTag == SCTAG_DOM_BLOB) {
+      nsCOMPtr<nsIDOMBlob> blob = new nsDOMFileFile(convType, size,
+                                                    nativeFile, fileInfo);
+
+      jsval wrappedBlob;
+      nsresult rv =
+        nsContentUtils::WrapNative(aCx, JS_GetGlobalForScopeChain(aCx), blob,
+                                   &NS_GET_IID(nsIDOMBlob), &wrappedBlob);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to wrap native!");
+        return nsnull;
+      }
+
+      return JSVAL_TO_OBJECT(wrappedBlob);
+    }
+
+    nsCString name;
+    if (!StructuredCloneReadString(aReader, name)) {
+      return nsnull;
+    }
+    NS_ConvertUTF8toUTF16 convName(name);
+
+    nsCOMPtr<nsIDOMFile> file = new nsDOMFileFile(convName, convType, size,
+                                                  nativeFile, fileInfo);
+
+    jsval wrappedFile;
+    nsresult rv =
+      nsContentUtils::WrapNative(aCx, JS_GetGlobalForScopeChain(aCx), file,
+                                 &NS_GET_IID(nsIDOMFile), &wrappedFile);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to wrap native!");
+      return nsnull;
+    }
+
+    return JSVAL_TO_OBJECT(wrappedFile);
+  }
+
+  const JSStructuredCloneCallbacks* runtimeCallbacks =
+    aCx->runtime->structuredCloneCallbacks;
+
+  if (runtimeCallbacks) {
+    return runtimeCallbacks->read(aCx, aReader, aTag, aData, nsnull);
+  }
+
+  return nsnull;
+}
+
+JSBool
+IDBObjectStore::StructuredCloneWriteCallback(JSContext* aCx,
+                                             JSStructuredCloneWriter* aWriter,
+                                             JSObject* aObj,
+                                             void* aClosure)
+{
+  StructuredCloneWriteInfo* cloneWriteInfo =
+    reinterpret_cast<StructuredCloneWriteInfo*>(aClosure);
+
+  if (JS_GET_CLASS(aCx, aObj) == &gDummyPropClass) {
+    NS_ASSERTION(cloneWriteInfo->mOffsetToKeyProp == 0,
+                 "We should not have been here before!");
+    cloneWriteInfo->mOffsetToKeyProp = js_GetSCOffset(aWriter);
+
+    PRUint64 value = 0;
+    return JS_WriteBytes(aWriter, &value, sizeof(value));
+  }
+
+  nsCOMPtr<nsIXPConnectWrappedNative> wrappedNative;
+  nsContentUtils::XPConnect()->
+    GetWrappedNativeOfJSObject(aCx, aObj, getter_AddRefs(wrappedNative));
+
+  if (wrappedNative) {
+    nsISupports* supports = wrappedNative->Native();
+
+    nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(supports);
+    if (blob) {
+      nsCOMPtr<nsIDOMFile> file = do_QueryInterface(blob);
+
+      PRUint64 size;
+      if (NS_FAILED(blob->GetSize(&size))) {
+        return false;
+      }
+      size = SwapBytes(size);
+
+      nsString type;
+      if (NS_FAILED(blob->GetType(type))) {
+        return false;
+      }
+      NS_ConvertUTF16toUTF8 convType(type);
+      PRUint32 convTypeLength = SwapBytes(convType.Length());
+
+      if (!JS_WriteUint32Pair(aWriter, file ? SCTAG_DOM_FILE : SCTAG_DOM_BLOB,
+                              cloneWriteInfo->mBlobs.Length()) ||
+          !JS_WriteBytes(aWriter, &size, sizeof(PRUint64)) ||
+          !JS_WriteBytes(aWriter, &convTypeLength, sizeof(PRUint32)) ||
+          !JS_WriteBytes(aWriter, convType.get(), convType.Length())) {
+        return false;
+      }
+
+      if (file) {
+        nsString name;
+        if (NS_FAILED(file->GetName(name))) {
+          return false;
+        }
+        NS_ConvertUTF16toUTF8 convName(name);
+        PRUint32 convNameLength = SwapBytes(convName.Length());
+
+        if (!JS_WriteBytes(aWriter, &convNameLength, sizeof(PRUint32)) ||
+            !JS_WriteBytes(aWriter, convName.get(), convName.Length())) {
+          return false;
+        }
+      }
+
+      cloneWriteInfo->mBlobs.AppendElement(blob);
+
+      return true;
+    }
+  }
+
+  // try using the runtime callbacks
+  const JSStructuredCloneCallbacks* runtimeCallbacks =
+    aCx->runtime->structuredCloneCallbacks;
+  if (runtimeCallbacks) {
+    return runtimeCallbacks->write(aCx, aWriter, aObj, nsnull);
+  }
+
+  return false;
+}
+
+nsresult
+IDBObjectStore::ConvertFileIdsToArray(const nsAString& aFileIds,
+                                      nsTArray<PRInt64>& aResult)
+{
+  nsCharSeparatedTokenizerTemplate<IgnoreWhitespace> tokenizer(aFileIds, ' ');
+
+  while (tokenizer.hasMoreTokens()) {
+    nsString token(tokenizer.nextToken());
+
+    NS_ASSERTION(!token.IsEmpty(), "Should be a valid id!");
+
+    nsresult rv;
+    PRInt32 id = token.ToInteger(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    PRInt64* element = aResult.AppendElement();
+    *element = id;
+  }
+
   return NS_OK;
 }
 
@@ -915,10 +1104,9 @@ nsresult
 IDBObjectStore::GetAddInfo(JSContext* aCx,
                            jsval aValue,
                            jsval aKeyVal,
-                           JSAutoStructuredCloneBuffer& aCloneBuffer,
+                           StructuredCloneWriteInfo& aCloneWriteInfo,
                            Key& aKey,
-                           nsTArray<IndexUpdateInfo>& aUpdateInfoArray,
-                           PRUint64* aOffsetToKeyProp)
+                           nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
 {
   nsresult rv;
 
@@ -949,15 +1137,10 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
   }
 
   // Figure out indexes and the index values to update here.
-  ObjectStoreInfo* info;
-  if (!mTransaction->Database()->Info()->GetObjectStore(mName, &info)) {
-    NS_ERROR("This should never fail!");
-  }
-
-  PRUint32 count = info->indexes.Length();
+  PRUint32 count = mInfo->indexes.Length();
   aUpdateInfoArray.SetCapacity(count); // Pretty good estimate
   for (PRUint32 indexesIndex = 0; indexesIndex < count; indexesIndex++) {
-    const IndexInfo& indexInfo = info->indexes[indexesIndex];
+    const IndexInfo& indexInfo = mInfo->indexes[indexesIndex];
 
     rv = AppendIndexUpdateInfo(indexInfo.id, indexInfo.keyPath,
                                indexInfo.unique, indexInfo.multiEntry,
@@ -1066,18 +1249,12 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
     }
   }
 
-  JSStructuredCloneCallbacks callbacks = {
-    nsnull,
-    StructuredCloneWriteDummyProp,
-    nsnull
-  };
-  *aOffsetToKeyProp = 0;
+  aCloneWriteInfo.mOffsetToKeyProp = 0;
 
   // We guard on rv being a success because we need to run the property
   // deletion code below even if we should not be serializing the value
   if (NS_SUCCEEDED(rv) && 
-      !IDBObjectStore::SerializeValue(aCx, aCloneBuffer, aValue, &callbacks,
-                                      aOffsetToKeyProp)) {
+      !IDBObjectStore::SerializeValue(aCx, aCloneWriteInfo, aValue)) {
     rv = NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
@@ -1118,28 +1295,22 @@ IDBObjectStore::AddOrPut(const jsval& aValue,
 
   jsval keyval = (aOptionalArgCount >= 1) ? aKey : JSVAL_VOID;
 
-  JSAutoStructuredCloneBuffer cloneBuffer;
+  StructuredCloneWriteInfo cloneWriteInfo;
   Key key;
   nsTArray<IndexUpdateInfo> updateInfo;
-  PRUint64 offset;
 
-  nsresult rv =
-    GetAddInfo(aCx, aValue, keyval, cloneBuffer, key, updateInfo, &offset);
+  nsresult rv = GetAddInfo(aCx, aValue, keyval, cloneWriteInfo, key,
+                           updateInfo);
   if (NS_FAILED(rv)) {
     return rv;
-  }
-
-  // Put requires a key, unless this is an autoIncrementing objectStore.
-  if (aOverwrite && !mAutoIncrement && key.IsUnset()) {
-    return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<AddHelper> helper =
-    new AddHelper(mTransaction, request, this, cloneBuffer, key, aOverwrite,
-                  updateInfo, offset);
+    new AddHelper(mTransaction, request, this, cloneWriteInfo, key, aOverwrite,
+                  updateInfo);
 
   rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -1210,20 +1381,24 @@ IDBObjectStore::GetTransaction(nsIIDBTransaction** aTransaction)
 }
 
 NS_IMETHODIMP
+IDBObjectStore::GetAutoIncrement(bool* aAutoIncrement)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  *aAutoIncrement = mAutoIncrement;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 IDBObjectStore::GetIndexNames(nsIDOMDOMStringList** aIndexNames)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  ObjectStoreInfo* info;
-  if (!mTransaction->Database()->Info()->GetObjectStore(mName, &info)) {
-    NS_ERROR("This should never fail!");
-  }
-
   nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
 
-  PRUint32 count = info->indexes.Length();
+  PRUint32 count = mInfo->indexes.Length();
   for (PRUint32 index = 0; index < count; index++) {
-    NS_ENSURE_TRUE(list->Add(info->indexes[index].name),
+    NS_ENSURE_TRUE(list->Add(mInfo->indexes[index].name),
                    NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
@@ -1455,15 +1630,10 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  ObjectStoreInfo* info;
-  if (!mTransaction->Database()->Info()->GetObjectStore(mName, &info)) {
-    NS_ERROR("This should never fail!");
-  }
-
   bool found = false;
-  PRUint32 indexCount = info->indexes.Length();
+  PRUint32 indexCount = mInfo->indexes.Length();
   for (PRUint32 index = 0; index < indexCount; index++) {
-    if (info->indexes[index].name == aName) {
+    if (mInfo->indexes[index].name == aName) {
       found = true;
       break;
     }
@@ -1513,23 +1683,17 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
     multiEntry = !!boolVal;
   }
 
-  DatabaseInfo* databaseInfo = mTransaction->Database()->Info();
+  DatabaseInfo* databaseInfo = mTransaction->DBInfo();
 
-  IndexInfo* indexInfo = info->indexes.AppendElement();
-  if (!indexInfo) {
-    NS_WARNING("Out of memory!");
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
+  IndexInfo* indexInfo = mInfo->indexes.AppendElement();
   indexInfo->id = databaseInfo->nextIndexId++;
   indexInfo->name = aName;
   indexInfo->keyPath = aKeyPath;
   indexInfo->unique = unique;
   indexInfo->multiEntry = multiEntry;
-  indexInfo->autoIncrement = mAutoIncrement;
 
   // Don't leave this in the list if we fail below!
-  AutoRemoveIndex autoRemove(mTransaction->Database(), mName, aName);
+  AutoRemoveIndex autoRemove(mInfo, aName);
 
 #ifdef DEBUG
   for (PRUint32 index = 0; index < mCreatedIndexes.Length(); index++) {
@@ -1568,16 +1732,11 @@ IDBObjectStore::Index(const nsAString& aName,
     return NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR;
   }
 
-  ObjectStoreInfo* info;
-  if (!mTransaction->Database()->Info()->GetObjectStore(mName, &info)) {
-    NS_ERROR("This should never fail!");
-  }
-
   IndexInfo* indexInfo = nsnull;
-  PRUint32 indexCount = info->indexes.Length();
+  PRUint32 indexCount = mInfo->indexes.Length();
   for (PRUint32 index = 0; index < indexCount; index++) {
-    if (info->indexes[index].name == aName) {
-      indexInfo = &(info->indexes[index]);
+    if (mInfo->indexes[index].name == aName) {
+      indexInfo = &(mInfo->indexes[index]);
       break;
     }
   }
@@ -1624,19 +1783,14 @@ IDBObjectStore::DeleteIndex(const nsAString& aName)
 
   NS_ASSERTION(mTransaction->IsOpen(), "Impossible!");
 
-  ObjectStoreInfo* info;
-  if (!mTransaction->Database()->Info()->GetObjectStore(mName, &info)) {
-    NS_ERROR("This should never fail!");
-  }
-
   PRUint32 index = 0;
-  for (; index < info->indexes.Length(); index++) {
-    if (info->indexes[index].name == aName) {
+  for (; index < mInfo->indexes.Length(); index++) {
+    if (mInfo->indexes[index].name == aName) {
       break;
     }
   }
 
-  if (index == info->indexes.Length()) {
+  if (index == mInfo->indexes.Length()) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
   }
 
@@ -1646,7 +1800,7 @@ IDBObjectStore::DeleteIndex(const nsAString& aName)
   nsresult rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  info->indexes.RemoveElementAt(index);
+  mInfo->indexes.RemoveElementAt(index);
 
   for (PRUint32 i = 0; i < mCreatedIndexes.Length(); i++) {
     if (mCreatedIndexes[i]->Name() == aName) {
@@ -1688,238 +1842,209 @@ IDBObjectStore::Count(const jsval& aKey,
   return NS_OK;
 }
 
+inline nsresult
+CopyData(nsIInputStream* aStream, quota_FILE* aFile)
+{
+  do {
+    char copyBuffer[FILE_COPY_BUFFER_SIZE];
+
+    PRUint32 numRead;
+    nsresult rv = aStream->Read(copyBuffer, FILE_COPY_BUFFER_SIZE, &numRead);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (numRead <= 0) {
+      break;
+    }
+
+    size_t numWrite = sqlite3_quota_fwrite(copyBuffer, 1, numRead, aFile);
+    NS_ENSURE_TRUE(numWrite == numRead, NS_ERROR_FAILURE);
+  } while (true);
+
+  // Flush and sync
+  NS_ENSURE_TRUE(sqlite3_quota_fflush(aFile, 1) == 0,
+                 NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  return NS_OK;
+}
+
 nsresult
 AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_PRECONDITION(aConnection, "Passed a null connection!");
 
   nsresult rv;
-  bool mayOverwrite = mOverwrite;
-  bool unsetKey = mKey.IsUnset();
-
-  bool autoIncrement = mObjectStore->IsAutoIncrement();
+  bool keyUnset = mKey.IsUnset();
   PRInt64 osid = mObjectStore->Id();
   const nsString& keyPath = mObjectStore->KeyPath();
 
-  if (unsetKey) {
-    NS_ASSERTION(autoIncrement, "Must have a key for non-autoIncrement!");
-
-    // Will need to add first and then set the key later.
-    mayOverwrite = false;
-  }
-
-  if (autoIncrement && !unsetKey) {
-    mayOverwrite = true;
-  }
-
-  nsCOMPtr<mozIStorageStatement> stmt;
-  if (!mOverwrite && !unsetKey) {
-    // Make sure the key doesn't exist already
-    NS_NAMED_LITERAL_CSTRING(id, "id");
-    NS_NAMED_LITERAL_CSTRING(osidStr, "osid");
-
-    nsCString table;
-    nsCString value;
-
-    if (autoIncrement) {
-      table.AssignLiteral("ai_object_data");
-      value = id;
-    }
-    else {
-      table.AssignLiteral("object_data");
-      value.AssignLiteral("key_value");
-    }
-
-    nsCString query = NS_LITERAL_CSTRING("SELECT data FROM ") + table +
-                      NS_LITERAL_CSTRING(" WHERE ") + value +
-                      NS_LITERAL_CSTRING(" = :") + id +
-                      NS_LITERAL_CSTRING(" AND object_store_id = :") + osidStr;
-
-    stmt = mTransaction->GetCachedStatement(query);
-    NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-    mozStorageStatementScoper scoper(stmt);
-
-    rv = stmt->BindInt64ByName(osidStr, osid);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-    rv = mKey.BindToStatement(stmt, NS_LITERAL_CSTRING("id"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool hasResult;
-    rv = stmt->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-    if (hasResult) {
-      return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
-    }
-  }
-
-  // Now we add it to the database (or update, depending on our variables).
-  stmt = mTransaction->AddStatement(true, mayOverwrite, autoIncrement);
+  // The "|| keyUnset" here is mostly a debugging tool. If a key isn't
+  // specified we should never have a collision and so it shouldn't matter
+  // if we allow overwrite or not. By not allowing overwrite we raise
+  // detectable errors rather than corrupting data
+  nsCOMPtr<mozIStorageStatement> stmt = !mOverwrite || keyUnset ?
+    mTransaction->GetCachedStatement(
+      "INSERT INTO object_data (object_store_id, key_value, data, file_ids) "
+      "VALUES (:osid, :key_value, :data, :file_ids)") :
+    mTransaction->GetCachedStatement(
+      "INSERT OR REPLACE INTO object_data (object_store_id, key_value, data, file_ids) "
+      "VALUES (:osid, :key_value, :data, :file_ids)");
   NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
 
-  NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
-
   rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), osid);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  if (!autoIncrement || mayOverwrite) {
-    NS_ASSERTION(!mKey.IsUnset(), "This shouldn't happen!");
+  NS_ASSERTION(!keyUnset || mObjectStore->IsAutoIncrement(),
+               "Should have key unless autoincrement");
 
-    rv = mKey.BindToStatement(stmt, keyValue);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  PRInt64 autoIncrementNum = 0;
 
-  NS_NAMED_LITERAL_CSTRING(data, "data");
-
-  // This will hold our compressed data until the end of the method. The
-  // BindBlobByName function will copy it.
-  nsAutoArrayPtr<char> compressed;
-
-  // This points to the compressed buffer.
-  const PRUint8* dataBuffer = nsnull;
-  size_t dataBufferLength = 0;
-
-  // If we're going to modify the buffer later to add a key property on an
-  // autoIncrement objectStore then we will wait to compress our data until we
-  // have the appropriate key value.
-  if (autoIncrement && !mOverwrite && !keyPath.IsEmpty() && unsetKey) {
-    rv = stmt->BindInt32ByName(data, 0);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
-  else {
-    // Compress the bytes before adding into the database.
-    const char* uncompressed =
-      reinterpret_cast<const char*>(mCloneBuffer.data());
-    size_t uncompressedLength = mCloneBuffer.nbytes();
-
-    size_t compressedLength = snappy::MaxCompressedLength(uncompressedLength);
-    compressed = new char[compressedLength];
-
-    snappy::RawCompress(uncompressed, uncompressedLength, compressed.get(),
-                        &compressedLength);
-
-    dataBuffer = reinterpret_cast<const PRUint8*>(compressed.get());
-    dataBufferLength = compressedLength;
-
-    rv = stmt->BindBlobByName(data, dataBuffer, dataBufferLength);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
-
-  rv = stmt->Execute();
-  if (NS_FAILED(rv)) {
-    if (mayOverwrite && rv == NS_ERROR_STORAGE_CONSTRAINT) {
-      scoper.Abandon();
-
-      rv = stmt->Reset();
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-      stmt = mTransaction->AddStatement(false, true, autoIncrement);
-      NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-      mozStorageStatementScoper scoper2(stmt);
-
-      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), osid);
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-      NS_ASSERTION(!mKey.IsUnset(), "This shouldn't happen!");
-
-      rv = mKey.BindToStatement(stmt, keyValue);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      NS_ASSERTION(dataBuffer && dataBufferLength, "These should be set!");
-
-      rv = stmt->BindBlobByName(data, dataBuffer, dataBufferLength);
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-      rv = stmt->Execute();
+  if (mObjectStore->IsAutoIncrement()) {
+    if (keyUnset) {
+      autoIncrementNum = mObjectStore->Info()->nextAutoIncrementId;
+      if (autoIncrementNum > (1LL << 53)) {
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      }
+      mKey.SetFromInteger(autoIncrementNum);
+    }
+    else if (mKey.IsInteger() &&
+             mKey.ToInteger() >= mObjectStore->Info()->nextAutoIncrementId) {
+      // XXX Once we support floats, we should use floor(mKey.ToFloat()) here
+      autoIncrementNum = mKey.ToInteger();
     }
 
-    if (NS_FAILED(rv)) {
-      return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
-    }
-  }
-
-  // If we are supposed to generate a key, get the new id.
-  if (autoIncrement && !mayOverwrite) {
-#ifdef DEBUG
-    PRInt64 oldKey = unsetKey ? 0 : mKey.ToInteger();
-#endif
-
-    PRInt64 newIntKey;
-    rv = aConnection->GetLastInsertRowID(&newIntKey);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-    rv = mKey.SetFromInteger(newIntKey);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-#ifdef DEBUG
-    NS_ASSERTION(mKey.IsInteger(), "Bad key value!");
-    if (!unsetKey) {
-      NS_ASSERTION(mKey.ToInteger() == oldKey, "Something went haywire!");
-    }
-#endif
-
-    if (!keyPath.IsEmpty() && unsetKey) {
+    if (keyUnset && !keyPath.IsEmpty()) {
       // Special case where someone put an object into an autoIncrement'ing
       // objectStore with no key in its keyPath set. We needed to figure out
       // which row id we would get above before we could set that properly.
-      rv = mObjectStore->ModifyValueForNewKey(mCloneBuffer, mKey,
-                                              mOffsetToKeyProp);
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-      scoper.Abandon();
-      rv = stmt->Reset();
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      // This is a duplicate of the js engine's byte munging here
+      union {
+        jsdouble d;
+        PRUint64 u;
+      } pun;
+    
+      pun.d = SwapBytes(static_cast<PRUint64>(mKey.ToInteger()));    
 
-      stmt = mTransaction->AddStatement(false, true, true);
-      NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      JSAutoStructuredCloneBuffer& buffer = mCloneWriteInfo.mCloneBuffer;
+      PRUint64 offsetToKeyProp = mCloneWriteInfo.mOffsetToKeyProp;
 
-      mozStorageStatementScoper scoper2(stmt);
-
-      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), osid);
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-      rv = mKey.BindToStatement(stmt, keyValue);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      NS_ASSERTION(!dataBuffer && !dataBufferLength, "These should be unset!");
-
-      const char* uncompressed =
-        reinterpret_cast<const char*>(mCloneBuffer.data());
-      size_t uncompressedLength = mCloneBuffer.nbytes();
-
-      size_t compressedLength =
-        snappy::MaxCompressedLength(uncompressedLength);
-      compressed = new char[compressedLength];
-
-      snappy::RawCompress(uncompressed, uncompressedLength, compressed.get(),
-                          &compressedLength);
-
-      dataBuffer = reinterpret_cast<const PRUint8*>(compressed.get());
-      dataBufferLength = compressedLength;
-
-      rv = stmt->BindBlobByName(data, dataBuffer, dataBufferLength);
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-      rv = stmt->Execute();
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      memcpy((char*)buffer.data() + offsetToKeyProp, &pun.u, sizeof(PRUint64));
     }
   }
 
+  mKey.BindToStatement(stmt, NS_LITERAL_CSTRING("key_value"));
+
+  // Compress the bytes before adding into the database.
+  const char* uncompressed =
+    reinterpret_cast<const char*>(mCloneWriteInfo.mCloneBuffer.data());
+  size_t uncompressedLength = mCloneWriteInfo.mCloneBuffer.nbytes();
+
+  size_t compressedLength = snappy::MaxCompressedLength(uncompressedLength);
+  // This will hold our compressed data until the end of the method. The
+  // BindBlobByName function will copy it.
+  nsAutoArrayPtr<char> compressed(new char[compressedLength]);
+
+  snappy::RawCompress(uncompressed, uncompressedLength, compressed.get(),
+                      &compressedLength);
+
+  const PRUint8* dataBuffer = reinterpret_cast<const PRUint8*>(compressed.get());
+  size_t dataBufferLength = compressedLength;
+
+  rv = stmt->BindBlobByName(NS_LITERAL_CSTRING("data"), dataBuffer,
+                            dataBufferLength);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  // Handle blobs
+  nsRefPtr<FileManager> fileManager = mDatabase->Manager();
+  nsCOMPtr<nsIFile> directory = fileManager->GetDirectory();
+  NS_ENSURE_TRUE(directory, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsAutoString fileIds;
+
+  for (PRUint32 index = 0; index < mCloneWriteInfo.mBlobs.Length(); index++) {
+    nsCOMPtr<nsIDOMBlob>& domBlob = mCloneWriteInfo.mBlobs[index];
+
+    PRInt64 id = -1;
+
+    // Check if it is a blob created from this db or the blob was already
+    // stored in this db
+    nsRefPtr<FileInfo> fileInfo = domBlob->GetFileInfo(fileManager);
+    if (fileInfo) {
+      id = fileInfo->Id();
+    }
+
+    if (id == -1) {
+      fileInfo = fileManager->GetNewFileInfo();
+      NS_ENSURE_TRUE(fileInfo, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+      id = fileInfo->Id();
+
+      mTransaction->OnNewFileInfo(fileInfo);
+
+      // Copy it
+      nsCOMPtr<nsIInputStream> inputStream;
+      rv = domBlob->GetInternalStream(getter_AddRefs(inputStream));
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+      nsCOMPtr<nsIFile> nativeFile = fileManager->GetFileForId(directory, id);
+      NS_ENSURE_TRUE(nativeFile, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+      nsString nativeFilePath;
+      rv = nativeFile->GetPath(nativeFilePath);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+      quota_FILE* file =
+        sqlite3_quota_fopen(NS_ConvertUTF16toUTF8(nativeFilePath).get(), "wb");
+      NS_ENSURE_TRUE(file, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+      rv = CopyData(inputStream, file);
+
+      NS_ENSURE_TRUE(sqlite3_quota_fclose(file) == 0,
+                     NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+      domBlob->AddFileInfo(fileInfo);
+    }
+
+    if (index) {
+      fileIds.Append(NS_LITERAL_STRING(" "));
+    }
+    fileIds.AppendInt(id);
+  }
+
+  if (fileIds.IsEmpty()) {
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("file_ids"));
+  } else {
+    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("file_ids"), fileIds);
+  }
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  rv = stmt->Execute();
+  if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
+    NS_ASSERTION(!keyUnset, "Generated key had a collision!?");
+    return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
+  }
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  PRInt64 objectDataId;
+  rv = aConnection->GetLastInsertRowID(&objectDataId);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
   // Update our indexes if needed.
   if (mOverwrite || !mIndexUpdateInfo.IsEmpty()) {
-    PRInt64 objectDataId = autoIncrement ? mKey.ToInteger() : LL_MININT;
-    rv = IDBObjectStore::UpdateIndexes(mTransaction, osid, mKey,
-                                       autoIncrement, mOverwrite,
+    rv = IDBObjectStore::UpdateIndexes(mTransaction, osid, mKey, mOverwrite,
                                        objectDataId, mIndexUpdateInfo);
     if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
       return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
     }
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+
+  if (autoIncrementNum) {
+    mObjectStore->Info()->nextAutoIncrementId = autoIncrementNum + 1;
   }
 
   return NS_OK;
@@ -1931,7 +2056,7 @@ AddHelper::GetSuccessResult(JSContext* aCx,
 {
   NS_ASSERTION(!mKey.IsUnset(), "Badness!");
 
-  mCloneBuffer.clear();
+  mCloneWriteInfo.mCloneBuffer.clear();
 
   return mKey.ToJSVal(aCx, aVal);
 }
@@ -1941,26 +2066,13 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
 {
   NS_ASSERTION(mKeyRange, "Must have a key range here!");
 
-  nsCString table;
-  nsCString value;
-  if (mObjectStore->IsAutoIncrement()) {
-    table.AssignLiteral("ai_object_data");
-    value.AssignLiteral("id");
-  }
-  else {
-    table.AssignLiteral("object_data");
-    value.AssignLiteral("key_value");
-  }
-
   nsCString keyRangeClause;
-  mKeyRange->GetBindingClause(value, keyRangeClause);
+  mKeyRange->GetBindingClause(NS_LITERAL_CSTRING("key_value"), keyRangeClause);
 
   NS_ASSERTION(!keyRangeClause.IsEmpty(), "Huh?!");
 
-  NS_NAMED_LITERAL_CSTRING(osid, "osid");
-
-  nsCString query = NS_LITERAL_CSTRING("SELECT data FROM ") + table +
-                    NS_LITERAL_CSTRING(" WHERE object_store_id = :") + osid +
+  nsCString query = NS_LITERAL_CSTRING("SELECT data, file_ids FROM object_data "
+                                       "WHERE object_store_id = :osid") +
                     keyRangeClause + NS_LITERAL_CSTRING(" LIMIT 1");
 
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
@@ -1968,7 +2080,7 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
 
   mozStorageStatementScoper scoper(stmt);
 
-  nsresult rv = stmt->BindInt64ByName(osid, mObjectStore->Id());
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mObjectStore->Id());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   rv = mKeyRange->BindToStatement(stmt);
@@ -1979,8 +2091,8 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   if (hasResult) {
-    rv = IDBObjectStore::GetStructuredCloneDataFromStatement(stmt, 0,
-                                                             mCloneBuffer);
+    rv = IDBObjectStore::GetStructuredCloneReadInfoFromStatement(stmt, 0, 1,
+      mDatabase->Manager(), mCloneReadInfo);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1991,9 +2103,9 @@ nsresult
 GetHelper::GetSuccessResult(JSContext* aCx,
                             jsval* aVal)
 {
-  bool result = IDBObjectStore::DeserializeValue(aCx, mCloneBuffer, aVal);
+  bool result = IDBObjectStore::DeserializeValue(aCx, mCloneReadInfo, aVal);
 
-  mCloneBuffer.clear();
+  mCloneReadInfo.mCloneBuffer.clear();
 
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
   return NS_OK;
@@ -2004,26 +2116,13 @@ DeleteHelper::DoDatabaseWork(mozIStorageConnection* /*aConnection */)
 {
   NS_ASSERTION(mKeyRange, "Must have a key range here!");
 
-  nsCString table;
-  nsCString value;
-  if (mObjectStore->IsAutoIncrement()) {
-    table.AssignLiteral("ai_object_data");
-    value.AssignLiteral("id");
-  }
-  else {
-    table.AssignLiteral("object_data");
-    value.AssignLiteral("key_value");
-  }
-
   nsCString keyRangeClause;
-  mKeyRange->GetBindingClause(value, keyRangeClause);
+  mKeyRange->GetBindingClause(NS_LITERAL_CSTRING("key_value"), keyRangeClause);
 
   NS_ASSERTION(!keyRangeClause.IsEmpty(), "Huh?!");
 
-  NS_NAMED_LITERAL_CSTRING(osid, "osid");
-
-  nsCString query = NS_LITERAL_CSTRING("DELETE FROM ") + table +
-                    NS_LITERAL_CSTRING(" WHERE object_store_id = :") + osid +
+  nsCString query = NS_LITERAL_CSTRING("DELETE FROM object_data "
+                                       "WHERE object_store_id = :osid") +
                     keyRangeClause;
 
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
@@ -2031,7 +2130,8 @@ DeleteHelper::DoDatabaseWork(mozIStorageConnection* /*aConnection */)
 
   mozStorageStatementScoper scoper(stmt);
 
-  nsresult rv = stmt->BindInt64ByName(osid, mObjectStore->Id());
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"),
+                                      mObjectStore->Id());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   rv = mKeyRange->BindToStatement(stmt);
@@ -2056,18 +2156,10 @@ ClearHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_PRECONDITION(aConnection, "Passed a null connection!");
 
-  nsCString table;
-  if (mObjectStore->IsAutoIncrement()) {
-    table.AssignLiteral("ai_object_data");
-  }
-  else {
-    table.AssignLiteral("object_data");
-  }
-
-  nsCString query = NS_LITERAL_CSTRING("DELETE FROM ") + table +
-                    NS_LITERAL_CSTRING(" WHERE object_store_id = :osid");
-
-  nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
+  nsCOMPtr<mozIStorageStatement> stmt =
+    mTransaction->GetCachedStatement(
+      NS_LITERAL_CSTRING("DELETE FROM object_data "
+                         "WHERE object_store_id = :osid"));
   NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
@@ -2085,45 +2177,33 @@ ClearHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 nsresult
 OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
-  nsCString table;
-  nsCString keyColumn;
-
-  if (mObjectStore->IsAutoIncrement()) {
-    table.AssignLiteral("ai_object_data");
-    keyColumn.AssignLiteral("id");
-  }
-  else {
-    table.AssignLiteral("object_data");
-    keyColumn.AssignLiteral("key_value");
-  }
-
-  NS_NAMED_LITERAL_CSTRING(id, "id");
+  NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
 
   nsCString keyRangeClause;
   if (mKeyRange) {
-    mKeyRange->GetBindingClause(keyColumn, keyRangeClause);
+    mKeyRange->GetBindingClause(keyValue, keyRangeClause);
   }
 
-  nsCAutoString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + keyColumn;
+  nsCAutoString directionClause;
   switch (mDirection) {
     case nsIIDBCursor::NEXT:
     case nsIIDBCursor::NEXT_NO_DUPLICATE:
-      directionClause += NS_LITERAL_CSTRING(" ASC");
+      directionClause.AssignLiteral(" ORDER BY key_value ASC");
       break;
 
     case nsIIDBCursor::PREV:
     case nsIIDBCursor::PREV_NO_DUPLICATE:
-      directionClause += NS_LITERAL_CSTRING(" DESC");
+      directionClause.AssignLiteral(" ORDER BY key_value DESC");
       break;
 
     default:
       NS_NOTREACHED("Unknown direction type!");
   }
 
-  nsCString firstQuery = NS_LITERAL_CSTRING("SELECT ") + keyColumn +
-                         NS_LITERAL_CSTRING(", data FROM ") + table +
-                         NS_LITERAL_CSTRING(" WHERE object_store_id = :") +
-                         id + keyRangeClause + directionClause +
+  nsCString firstQuery = NS_LITERAL_CSTRING("SELECT key_value, data, file_ids "
+                                            "FROM object_data "
+                                            "WHERE object_store_id = :id") +
+                         keyRangeClause + directionClause +
                          NS_LITERAL_CSTRING(" LIMIT 1");
 
   nsCOMPtr<mozIStorageStatement> stmt =
@@ -2132,7 +2212,8 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   mozStorageStatementScoper scoper(stmt);
 
-  nsresult rv = stmt->BindInt64ByName(id, mObjectStore->Id());
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"),
+                                      mObjectStore->Id());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   if (mKeyRange) {
@@ -2152,8 +2233,8 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   rv = mKey.SetFromStatement(stmt, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = IDBObjectStore::GetStructuredCloneDataFromStatement(stmt, 1,
-                                                           mCloneBuffer);
+  rv = IDBObjectStore::GetStructuredCloneReadInfoFromStatement(stmt, 1, 2,
+    mDatabase->Manager(), mCloneReadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Now we need to make the query to get the next match.
@@ -2166,14 +2247,14 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   switch (mDirection) {
     case nsIIDBCursor::NEXT:
     case nsIIDBCursor::NEXT_NO_DUPLICATE:
-      AppendConditionClause(keyColumn, currentKey, false, false,
+      AppendConditionClause(keyValue, currentKey, false, false,
                             keyRangeClause);
-      AppendConditionClause(keyColumn, currentKey, false, true,
+      AppendConditionClause(keyValue, currentKey, false, true,
                             continueToKeyRangeClause);
       if (mKeyRange && !mKeyRange->Upper().IsUnset()) {
-        AppendConditionClause(keyColumn, rangeKey, true,
+        AppendConditionClause(keyValue, rangeKey, true,
                               !mKeyRange->IsUpperOpen(), keyRangeClause);
-        AppendConditionClause(keyColumn, rangeKey, true,
+        AppendConditionClause(keyValue, rangeKey, true,
                               !mKeyRange->IsUpperOpen(),
                               continueToKeyRangeClause);
         mRangeKey = mKeyRange->Upper();
@@ -2182,13 +2263,13 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
     case nsIIDBCursor::PREV:
     case nsIIDBCursor::PREV_NO_DUPLICATE:
-      AppendConditionClause(keyColumn, currentKey, true, false, keyRangeClause);
-      AppendConditionClause(keyColumn, currentKey, true, true,
+      AppendConditionClause(keyValue, currentKey, true, false, keyRangeClause);
+      AppendConditionClause(keyValue, currentKey, true, true,
                            continueToKeyRangeClause);
       if (mKeyRange && !mKeyRange->Lower().IsUnset()) {
-        AppendConditionClause(keyColumn, rangeKey, false,
+        AppendConditionClause(keyValue, rangeKey, false,
                               !mKeyRange->IsLowerOpen(), keyRangeClause);
-        AppendConditionClause(keyColumn, rangeKey, false,
+        AppendConditionClause(keyValue, rangeKey, false,
                               !mKeyRange->IsLowerOpen(),
                               continueToKeyRangeClause);
         mRangeKey = mKeyRange->Lower();
@@ -2199,16 +2280,14 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       NS_NOTREACHED("Unknown direction type!");
   }
 
-  mContinueQuery = NS_LITERAL_CSTRING("SELECT ") + keyColumn +
-                   NS_LITERAL_CSTRING(", data FROM ") + table +
-                   NS_LITERAL_CSTRING(" WHERE object_store_id = :") + id +
-                   keyRangeClause + directionClause +
+  NS_NAMED_LITERAL_CSTRING(queryStart, "SELECT key_value, data, file_ids "
+                                       "FROM object_data "
+                                       "WHERE object_store_id = :id");
+
+  mContinueQuery = queryStart + keyRangeClause + directionClause +
                    NS_LITERAL_CSTRING(" LIMIT ");
 
-  mContinueToQuery = NS_LITERAL_CSTRING("SELECT ") + keyColumn +
-                     NS_LITERAL_CSTRING(", data FROM ") + table +
-                     NS_LITERAL_CSTRING(" WHERE object_store_id = :") + id +
-                     continueToKeyRangeClause + directionClause +
+  mContinueToQuery = queryStart + continueToKeyRangeClause + directionClause +
                      NS_LITERAL_CSTRING(" LIMIT ");
 
   return NS_OK;
@@ -2226,10 +2305,10 @@ OpenCursorHelper::GetSuccessResult(JSContext* aCx,
   nsRefPtr<IDBCursor> cursor =
     IDBCursor::Create(mRequest, mTransaction, mObjectStore, mDirection,
                       mRangeKey, mContinueQuery, mContinueToQuery, mKey,
-                      mCloneBuffer);
+                      mCloneReadInfo);
   NS_ENSURE_TRUE(cursor, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  NS_ASSERTION(!mCloneBuffer.data(), "Should have swapped!");
+  NS_ASSERTION(!mCloneReadInfo.mCloneBuffer.data(), "Should have swapped!");
 
   return WrapNative(aCx, cursor, aVal);
 }
@@ -2328,9 +2407,8 @@ CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsCOMPtr<mozIStorageStatement> stmt =
     mTransaction->GetCachedStatement(
     "INSERT INTO object_store_index (id, name, key_path, unique_index, "
-      "multientry, object_store_id, object_store_autoincrement) "
-    "VALUES (:id, :name, :key_path, :unique, :multientry, :osid, "
-      ":os_auto_increment)"
+      "multientry, object_store_id) "
+    "VALUES (:id, :name, :key_path, :unique, :multientry, :osid)"
   );
   NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -2359,10 +2437,6 @@ CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                              mIndex->ObjectStore()->Id());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("os_auto_increment"),
-                             mIndex->IsAutoIncrement() ? 1 : 0);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
   if (NS_FAILED(stmt->Execute())) {
     return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
   }
@@ -2387,22 +2461,10 @@ CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 nsresult
 CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
 {
-  nsCAutoString table;
-  nsCAutoString columns;
-  if (mIndex->IsAutoIncrement()) {
-    table.AssignLiteral("ai_object_data");
-    columns.AssignLiteral("id, data");
-  }
-  else {
-    table.AssignLiteral("object_data");
-    columns.AssignLiteral("id, data, key_value");
-  }
-
-  nsCString query = NS_LITERAL_CSTRING("SELECT ") + columns +
-                    NS_LITERAL_CSTRING(" FROM ") + table +
-                    NS_LITERAL_CSTRING(" WHERE object_store_id = :osid");
-
-  nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
+  nsCOMPtr<mozIStorageStatement> stmt =
+    mTransaction->GetCachedStatement(
+      NS_LITERAL_CSTRING("SELECT id, data, file_ids, key_value FROM object_data "
+                         "WHERE object_store_id = :osid"));
   NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
@@ -2435,12 +2497,21 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
   JSAutoRequest ar(cx);
 
   do {
-    JSAutoStructuredCloneBuffer buffer;
-    rv = IDBObjectStore::GetStructuredCloneDataFromStatement(stmt, 1, buffer);
+    StructuredCloneReadInfo cloneReadInfo;
+    rv = IDBObjectStore::GetStructuredCloneReadInfoFromStatement(stmt, 1, 2,
+      mDatabase->Manager(), cloneReadInfo);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    JSAutoStructuredCloneBuffer& buffer = cloneReadInfo.mCloneBuffer;
+
+    JSStructuredCloneCallbacks callbacks = {
+      IDBObjectStore::StructuredCloneReadCallback,
+      nsnull,
+      nsnull
+    };
+
     jsval clone;
-    if (!buffer.read(cx, &clone)) {
+    if (!buffer.read(cx, &clone, &callbacks, &cloneReadInfo)) {
       NS_WARNING("Failed to deserialize structured clone data!");
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
@@ -2457,17 +2528,11 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
     PRInt64 objectDataID = stmt->AsInt64(0);
 
     Key key;
-    if (!mIndex->IsAutoIncrement()) {
-      rv = key.SetFromStatement(stmt, 2);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else {
-      key.SetFromInteger(objectDataID);
-    }
+    rv = key.SetFromStatement(stmt, 3);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = IDBObjectStore::UpdateIndexes(mTransaction, mIndex->Id(),
-                                       key, mIndex->IsAutoIncrement(),
-                                       false, objectDataID, updateInfo);
+                                       key, false, objectDataID, updateInfo);
     NS_ENSURE_SUCCESS(rv, rv);
 
   } while (NS_SUCCEEDED(rv = stmt->ExecuteStep(&hasResult)) && hasResult);
@@ -2503,26 +2568,13 @@ DeleteIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 nsresult
 GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
-  nsCString table;
-  nsCString keyColumn;
-
-  if (mObjectStore->IsAutoIncrement()) {
-    table.AssignLiteral("ai_object_data");
-    keyColumn.AssignLiteral("id");
-  }
-  else {
-    table.AssignLiteral("object_data");
-    keyColumn.AssignLiteral("key_value");
-  }
-
-  NS_NAMED_LITERAL_CSTRING(osid, "osid");
   NS_NAMED_LITERAL_CSTRING(lowerKeyName, "lower_key");
   NS_NAMED_LITERAL_CSTRING(upperKeyName, "upper_key");
 
   nsCAutoString keyRangeClause;
   if (mKeyRange) {
     if (!mKeyRange->Lower().IsUnset()) {
-      keyRangeClause = NS_LITERAL_CSTRING(" AND ") + keyColumn;
+      keyRangeClause = NS_LITERAL_CSTRING(" AND key_value");
       if (mKeyRange->IsLowerOpen()) {
         keyRangeClause.AppendLiteral(" > :");
       }
@@ -2533,7 +2585,7 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     }
 
     if (!mKeyRange->Upper().IsUnset()) {
-      keyRangeClause += NS_LITERAL_CSTRING(" AND ") + keyColumn;
+      keyRangeClause += NS_LITERAL_CSTRING(" AND key_value");
       if (mKeyRange->IsUpperOpen()) {
         keyRangeClause.AppendLiteral(" < :");
       }
@@ -2550,19 +2602,21 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     limitClause.AppendInt(mLimit);
   }
 
-  nsCString query = NS_LITERAL_CSTRING("SELECT data FROM ") + table +
-                    NS_LITERAL_CSTRING(" WHERE object_store_id = :") + osid +
-                    keyRangeClause + NS_LITERAL_CSTRING(" ORDER BY ") +
-                    keyColumn + NS_LITERAL_CSTRING(" ASC") + limitClause;
+  nsCString query = NS_LITERAL_CSTRING("SELECT data, file_ids FROM object_data "
+                                       "WHERE object_store_id = :osid") +
+                    keyRangeClause +
+                    NS_LITERAL_CSTRING(" ORDER BY key_value ASC") +
+                    limitClause;
 
-  mCloneBuffers.SetCapacity(50);
+  mCloneReadInfos.SetCapacity(50);
 
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
   NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
 
-  nsresult rv = stmt->BindInt64ByName(osid, mObjectStore->Id());
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"),
+                                      mObjectStore->Id());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   if (mKeyRange) {
@@ -2578,17 +2632,18 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   bool hasResult;
   while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-    if (mCloneBuffers.Capacity() == mCloneBuffers.Length()) {
-      if (!mCloneBuffers.SetCapacity(mCloneBuffers.Capacity() * 2)) {
+    if (mCloneReadInfos.Capacity() == mCloneReadInfos.Length()) {
+      if (!mCloneReadInfos.SetCapacity(mCloneReadInfos.Capacity() * 2)) {
         NS_ERROR("Out of memory!");
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
     }
 
-    JSAutoStructuredCloneBuffer* buffer = mCloneBuffers.AppendElement();
-    NS_ASSERTION(buffer, "Shouldn't fail if SetCapacity succeeded!");
+    StructuredCloneReadInfo* readInfo = mCloneReadInfos.AppendElement();
+    NS_ASSERTION(readInfo, "Shouldn't fail if SetCapacity succeeded!");
 
-    rv = IDBObjectStore::GetStructuredCloneDataFromStatement(stmt, 0, *buffer);
+    rv = IDBObjectStore::GetStructuredCloneReadInfoFromStatement(stmt, 0, 1,
+      mDatabase->Manager(), *readInfo);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -2600,12 +2655,12 @@ nsresult
 GetAllHelper::GetSuccessResult(JSContext* aCx,
                                jsval* aVal)
 {
-  NS_ASSERTION(mCloneBuffers.Length() <= mLimit, "Too many results!");
+  NS_ASSERTION(mCloneReadInfos.Length() <= mLimit, "Too many results!");
 
-  nsresult rv = ConvertCloneBuffersToArray(aCx, mCloneBuffers, aVal);
+  nsresult rv = ConvertCloneReadInfosToArray(aCx, mCloneReadInfos, aVal);
 
-  for (PRUint32 index = 0; index < mCloneBuffers.Length(); index++) {
-    mCloneBuffers[index].clear();
+  for (PRUint32 index = 0; index < mCloneReadInfos.Length(); index++) {
+    mCloneReadInfos[index].mCloneBuffer.clear();
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2615,26 +2670,13 @@ GetAllHelper::GetSuccessResult(JSContext* aCx,
 nsresult
 CountHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
-  nsCString table;
-  nsCString keyColumn;
-
-  if (mObjectStore->IsAutoIncrement()) {
-    table.AssignLiteral("ai_object_data");
-    keyColumn.AssignLiteral("id");
-  }
-  else {
-    table.AssignLiteral("object_data");
-    keyColumn.AssignLiteral("key_value");
-  }
-
-  NS_NAMED_LITERAL_CSTRING(osid, "osid");
   NS_NAMED_LITERAL_CSTRING(lowerKeyName, "lower_key");
   NS_NAMED_LITERAL_CSTRING(upperKeyName, "upper_key");
 
   nsCAutoString keyRangeClause;
   if (mKeyRange) {
     if (!mKeyRange->Lower().IsUnset()) {
-      keyRangeClause = NS_LITERAL_CSTRING(" AND ") + keyColumn;
+      keyRangeClause = NS_LITERAL_CSTRING(" AND key_value");
       if (mKeyRange->IsLowerOpen()) {
         keyRangeClause.AppendLiteral(" > :");
       }
@@ -2645,7 +2687,7 @@ CountHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     }
 
     if (!mKeyRange->Upper().IsUnset()) {
-      keyRangeClause += NS_LITERAL_CSTRING(" AND ") + keyColumn;
+      keyRangeClause += NS_LITERAL_CSTRING(" AND key_value");
       if (mKeyRange->IsUpperOpen()) {
         keyRangeClause.AppendLiteral(" < :");
       }
@@ -2656,8 +2698,8 @@ CountHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     }
   }
 
-  nsCString query = NS_LITERAL_CSTRING("SELECT count(*) FROM ") + table +
-                    NS_LITERAL_CSTRING(" WHERE object_store_id = :") + osid +
+  nsCString query = NS_LITERAL_CSTRING("SELECT count(*) FROM object_data "
+                                       "WHERE object_store_id = :osid") +
                     keyRangeClause;
 
   nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
@@ -2665,7 +2707,8 @@ CountHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   mozStorageStatementScoper scoper(stmt);
 
-  nsresult rv = stmt->BindInt64ByName(osid, mObjectStore->Id());
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"),
+                                      mObjectStore->Id());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   if (mKeyRange) {

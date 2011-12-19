@@ -140,7 +140,6 @@
 #include "nsIDOMDOMStringList.h"
 #include "nsIDOMDOMTokenList.h"
 #include "nsIDOMDOMSettableTokenList.h"
-#include "nsIDOMNSElement.h"
 
 #include "nsDOMStringMap.h"
 
@@ -514,6 +513,7 @@
 #include "nsIDOMSmsManager.h"
 #include "nsIDOMSmsMessage.h"
 #include "nsIDOMSmsEvent.h"
+#include "nsIPrivateDOMEvent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1464,6 +1464,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLUniformLocation, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WebGLShaderPrecisionFormat, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLActiveInfo, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLExtension, nsDOMGenericSH,
@@ -1574,6 +1576,25 @@ static const nsContractIDMapData kConstructorMap[] =
   NS_DEFINE_CONSTRUCTOR_DATA(EventSource, NS_EVENTSOURCE_CONTRACTID)
 };
 
+#define NS_DEFINE_EVENT_CTOR(_class)                        \
+  nsresult                                                  \
+  NS_DOM##_class##Ctor(nsISupports** aInstancePtrResult)    \
+  {                                                         \
+    nsIDOMEvent* e = nsnull;                                \
+    nsresult rv = NS_NewDOM##_class(&e, nsnull, nsnull);    \
+    *aInstancePtrResult = e;                                \
+    return rv;                                              \
+  }
+
+NS_DEFINE_EVENT_CTOR(Event)
+NS_DEFINE_EVENT_CTOR(CustomEvent)
+NS_DEFINE_EVENT_CTOR(PopStateEvent)
+NS_DEFINE_EVENT_CTOR(HashChangeEvent)
+NS_DEFINE_EVENT_CTOR(PageTransitionEvent)
+NS_DEFINE_EVENT_CTOR(CloseEvent)
+NS_DEFINE_EVENT_CTOR(UIEvent)
+NS_DEFINE_EVENT_CTOR(MouseEvent)
+
 struct nsConstructorFuncMapData
 {
   PRInt32 mDOMClassInfoID;
@@ -1583,10 +1604,21 @@ struct nsConstructorFuncMapData
 #define NS_DEFINE_CONSTRUCTOR_FUNC_DATA(_class, _func)                        \
   { eDOMClassInfo_##_class##_id, _func },
 
+#define NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(_class)   \
+  { eDOMClassInfo_##_class##_id, NS_DOM##_class##Ctor },
+
 static const nsConstructorFuncMapData kConstructorFuncMap[] =
 {
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(File, nsDOMFileFile::NewFile)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozBlobBuilder, NS_NewBlobBuilder)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(Event)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(CustomEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(PopStateEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(HashChangeEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(PageTransitionEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(CloseEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(UIEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MouseEvent)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -2193,8 +2225,10 @@ nsDOMClassInfo::RegisterExternalClasses()
     /* number of interfaces due to the terminating null */                    \
     for (size_t i = 0; i < count - 1; ++i) {                                  \
       if (!interface_list[i]) {                                               \
+        /* We are moving the element at index i+1 and successors, */          \
+        /* so we must move only count - (i+1) elements total. */              \
         memmove(&interface_list[i], &interface_list[i+1],                     \
-                sizeof(nsIID*) * (count - i));                                \
+                sizeof(nsIID*) * (count - (i+1)));                            \
         /* Make sure to examine the new pointer we ended up with at this */   \
         /* slot, since it may be null too */                                  \
         --i;                                                                  \
@@ -2218,7 +2252,6 @@ nsDOMClassInfo::RegisterExternalClasses()
 #define DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES                                \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMElementCSSInlineStyle)                      \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                                \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSElement)                                  \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)                               \
     DOM_CLASSINFO_MAP_ENTRY(nsIInlineEventHandlers)                           \
     DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsITouchEventReceiver,                \
@@ -2395,7 +2428,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Element, nsIDOMElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
     DOM_CLASSINFO_MAP_ENTRY(nsIInlineEventHandlers)
@@ -2928,7 +2960,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(XULElement, nsIDOMXULElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMElementCSSInlineStyle)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
     DOM_CLASSINFO_MAP_ENTRY(nsIInlineEventHandlers)
@@ -3032,7 +3063,6 @@ nsDOMClassInfo::Init()
 #define DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES                           \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                          \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGElement)                           \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSElement)                            \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)                         \
     DOM_CLASSINFO_MAP_ENTRY(nsIInlineEventHandlers)                     \
     DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsITouchEventReceiver,          \
@@ -3979,7 +4009,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(MathMLElement, nsIDOMElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeSelector)
     DOM_CLASSINFO_MAP_ENTRY(nsIInlineEventHandlers)
@@ -4013,6 +4042,10 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(WebGLRenderbuffer, nsIWebGLRenderbuffer)
      DOM_CLASSINFO_MAP_ENTRY(nsIWebGLRenderbuffer)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WebGLShaderPrecisionFormat, nsIWebGLShaderPrecisionFormat)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebGLShaderPrecisionFormat)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(WebGLUniformLocation, nsIWebGLUniformLocation)
@@ -7941,12 +7974,19 @@ nsNamedArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       }
 
       JSObject *proto = ::JS_GetPrototype(cx, realObj);
-      JSBool hasProp;
 
-      if (proto && ::JS_HasPropertyById(cx, proto, id, &hasProp) && hasProp) {
-        // We found the property we're resolving on the prototype,
-        // nothing left to do here then.
-        return NS_OK;
+      if (proto) {
+        JSBool hasProp;
+        if (!::JS_HasPropertyById(cx, proto, id, &hasProp)) {
+          *_retval = false;
+          return NS_ERROR_FAILURE;
+        }
+
+        if (hasProp) {
+          // We found the property we're resolving on the prototype,
+          // nothing left to do here then.
+          return NS_OK;
+        }
       }
     }
 

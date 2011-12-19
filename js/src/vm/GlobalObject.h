@@ -118,10 +118,10 @@ class GlobalObject : public ::JSObject {
         JS_STATIC_ASSERT(JSCLASS_GLOBAL_SLOT_COUNT == RESERVED_SLOTS);
     }
 
-    static const int32 FLAGS_CLEARED = 0x1;
+    static const int32_t FLAGS_CLEARED = 0x1;
 
-    inline void setFlags(int32 flags);
-    inline void initFlags(int32 flags);
+    inline void setFlags(int32_t flags);
+    inline void initFlags(int32_t flags);
 
     friend JSObject *
     ::js_InitObjectClass(JSContext *cx, JSObject *obj);

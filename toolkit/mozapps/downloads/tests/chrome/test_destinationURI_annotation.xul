@@ -144,11 +144,7 @@ function endTest() {
     .getMostRecentWindow("Download:Manager")
     .close();
 
-  Cc["@mozilla.org/browser/nav-history-service;1"]
-    .getService(Ci.nsINavHistoryService)
-    .removeAllPages();
-
-  SimpleTest.finish();
+  waitForClearHistory(SimpleTest.finish);
 }
 
   ]]>

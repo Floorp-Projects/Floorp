@@ -41,8 +41,7 @@
 #ifndef js_template_lib_h__
 #define js_template_lib_h__
 
-#include "mozilla/Types.h"
-#include "jsstdint.h"
+#include "jstypes.h"
 
 /*
  * Library of reusable template meta-functions (that is, functions on types and
@@ -87,7 +86,7 @@ template <size_t i> struct CeilingLog2 {
 
 /* Round up to the nearest power of 2. */
 template <size_t i> struct RoundUpPow2 {
-    static const size_t result = 1u << CeilingLog2<i>::result;
+    static const size_t result = size_t(1) << CeilingLog2<i>::result;
 };
 template <> struct RoundUpPow2<0> {
     static const size_t result = 1;

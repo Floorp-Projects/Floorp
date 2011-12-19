@@ -591,7 +591,12 @@ unsigned char *
 AndroidGeckoSoftwareLayerClient::LockBufferBits()
 {
     AndroidBridge::AutoLocalJNIFrame(1);
-    return reinterpret_cast<unsigned char *>(JNI()->GetDirectBufferAddress(LockBuffer()));
+    jobject bufferObject = LockBuffer();
+
+    if (bufferObject != nsnull)
+        return reinterpret_cast<unsigned char *>(JNI()->GetDirectBufferAddress(bufferObject));
+
+    return nsnull;
 }
 
 void

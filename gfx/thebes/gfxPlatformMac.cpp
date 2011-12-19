@@ -92,13 +92,6 @@ DisableFontActivation()
         CTFontManagerSetAutoActivationSettingPtr(mainBundleID,
                                                  kAutoActivationDisabled);
     }
-
-    if (mainBundleID) {
-        ::CFRelease(mainBundleID);
-    }
-    if (mainBundle) {
-        ::CFRelease(mainBundle);
-    }
 }
 
 gfxPlatformMac::gfxPlatformMac()

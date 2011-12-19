@@ -58,12 +58,7 @@ function addWords(aLimit) {
     return;
   }
   getEdit().focus();
-  sendChar('a', editDoc());
-  sendChar('a', editDoc());
-  sendChar(' ', editDoc());
-  sendChar('O', editDoc());
-  sendChar('K', editDoc());
-  sendChar(' ', editDoc());
+  sendString('aa OK ');
   gMisspeltWords.push("aa");
   setTimeout(function() { addWords(aLimit-1); }, 0);
 }

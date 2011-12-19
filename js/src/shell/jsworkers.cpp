@@ -275,7 +275,7 @@ class Event
 
     WorkerParent *recipient;
     Worker *child;
-    uint64 *data;
+    uint64_t *data;
     size_t nbytes;
 
   public:
@@ -307,7 +307,7 @@ class Event
     static EventType *createEvent(JSContext *cx, WorkerParent *recipient, Worker *child,
                                   jsval v)
     {
-        uint64 *data;
+        uint64_t *data;
         size_t nbytes;
         if (!JS_WriteStructuredClone(cx, v, &data, &nbytes, NULL, NULL))
             return NULL;
@@ -918,7 +918,7 @@ class InitEvent : public Event
         if (!filename)
             return fail;
 
-        JSScript *script = JS_CompileFile(cx, child->getGlobal(), filename.ptr());
+        JSScript *script = JS_CompileUTF8File(cx, child->getGlobal(), filename.ptr());
         if (!script)
             return fail;
 
@@ -1137,12 +1137,12 @@ Worker::processOneEvent()
         event = current = events.pop();
     }
 
+    JS_SetRuntimeThread(runtime);
     JS_SetContextThread(context);
     JS_SetNativeStackQuota(context, gMaxStackSize);
 
     Event::Result result;
     {
-        JSAutoSetRuntimeThread asrt(JS_GetRuntime(context));
         JSAutoRequest ar(context);
         result = event->process(context);
     }
@@ -1159,7 +1159,6 @@ Worker::processOneEvent()
         }
     }
     if (result == Event::fail && !checkTermination()) {
-        JSAutoSetRuntimeThread asrt(JS_GetRuntime(context));
         JSAutoRequest ar(context);
         Event *err = ErrorEvent::create(context, this);
         if (err && !parent->post(err)) {
@@ -1175,6 +1174,7 @@ Worker::processOneEvent()
     if (event)
         event->destroy(context);
     JS_ClearContextThread(context);
+    JS_ClearRuntimeThread(runtime);
 
     {
         AutoLock hold2(lock);

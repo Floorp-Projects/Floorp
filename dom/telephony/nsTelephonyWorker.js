@@ -45,7 +45,47 @@ const DEBUG = true; // set to false to suppress debug messages
 const TELEPHONYWORKER_CONTRACTID = "@mozilla.org/telephony/worker;1";
 const TELEPHONYWORKER_CID        = Components.ID("{2d831c8d-6017-435b-a80c-e5d422810cea}");
 
-const DOM_CALL_READYSTATE_DISCONNECTED = "disconnected";
+const DOM_CALL_READYSTATE_DIALING        = "dialing";
+const DOM_CALL_READYSTATE_RINGING        = "ringing";
+const DOM_CALL_READYSTATE_BUSY           = "busy";
+const DOM_CALL_READYSTATE_CONNECTING     = "connecting";
+const DOM_CALL_READYSTATE_CONNECTED      = "connected";
+const DOM_CALL_READYSTATE_DISCONNECTING  = "disconnecting";
+const DOM_CALL_READYSTATE_DISCONNECTED   = "disconnected";
+const DOM_CALL_READYSTATE_INCOMING       = "incoming";
+const DOM_CALL_READYSTATE_HOLDING        = "holding";
+const DOM_CALL_READYSTATE_HELD           = "held";
+
+
+/**
+ * Fake nsIAudioManager implementation so that we can run the telephony
+ * code in a non-Gonk build.
+ */
+let FakeAudioManager = {
+  microphoneMuted: false,
+  masterVolume: 1.0,
+  masterMuted: false,
+  phoneState: Ci.nsIAudioManager.PHONE_STATE_CURRENT,
+  _forceForUse: {},
+  setForceForUse: function setForceForUse(usage, force) {
+    this._forceForUse[usage] = force;
+  },
+  getForceForUse: function setForceForUse(usage) {
+    return this._forceForUse[usage] || Ci.nsIAudioManager.FORCE_NONE;
+  }
+};
+
+XPCOMUtils.defineLazyGetter(this, "gAudioManager", function getAudioManager() {
+  try {
+    return Cc["@mozilla.org/telephony/audiomanager;1"]
+             .getService(Ci.nsIAudioManager);
+  } catch (ex) {
+    //TODO on the phone this should not fall back as silently.
+    debug("Using fake audio manager.");
+    return FakeAudioManager;
+  }
+});
+
 
 function nsTelephonyWorker() {
   this.worker = new ChromeWorker("resource://gre/modules/ril_worker.js");
@@ -88,12 +128,19 @@ nsTelephonyWorker.prototype = {
           event.lineno + ": " + event.message + "\n");
   },
 
+  /**
+   * Process the incoming message from the RIL worker:
+   * (1) Update the current state. This way any component that hasn't
+   *     been listening for callbacks can easily catch up by looking at
+   *     this.currentState.
+   * (2) Update state in related systems such as the audio.
+   * (3) Multiplex the message to telephone callbacks.
+   */
   onmessage: function onmessage(event) {
     let message = event.data;
     debug("Received message: " + JSON.stringify(message));
     let value;
     switch (message.type) {
-      case "callstatechange":
       case "signalstrengthchange":
         this.currentState.signalStrength = message.signalStrength;
         break;
@@ -107,13 +154,7 @@ nsTelephonyWorker.prototype = {
         this.currentState.cardState = message.cardState;
         break;
       case "callstatechange":
-        // Reuse the message object as the value here since there's more to
-        // the call state than just the callState integer.
-        if (message.callState == DOM_CALL_READYSTATE_DISCONNECTED) {
-          delete this.currentState.callState[message.callIndex];
-        } else {
-          this.currentState.callState[value.callIndex] = message;
-        }
+        this.handleCallState(message);
         break;
       default:
         // Got some message from the RIL worker that we don't know about.
@@ -127,6 +168,52 @@ nsTelephonyWorker.prototype = {
       }
       method.call(callback, message);
     });
+  },
+
+  /**
+   * Handle call state changes by updating our current state and
+   * the audio system.
+   */
+  handleCallState: function handleCallState(message) {
+    let currentCalls = this.currentState.currentCalls;
+    let oldState = currentCalls[message.callIndex];
+
+    // Update current state.
+    if (message.callState == DOM_CALL_READYSTATE_DISCONNECTED) {
+      delete currentCalls[message.callIndex];
+    } else {
+      currentCalls[message.callIndex] = message;
+    }
+
+    // Update the audio system.
+    //TODO this does not handle multiple concurrent calls yet.
+    switch (message.callState) {
+      case DOM_CALL_READYSTATE_DIALING:
+        this.worker.postMessage({type: "setMute", mute: false});
+        gAudioManager.phoneState = Ci.nsIAudioManager.PHONE_STATE_IN_CALL;
+        gAudioManager.setForceForUse(Ci.nsIAudioManager.USE_COMMUNICATION,
+                                     Ci.nsIAudioManager.FORCE_NONE);
+        break;
+      case DOM_CALL_READYSTATE_INCOMING:
+        gAudioManager.phoneState = Ci.nsIAudioManager.PHONE_STATE_RINGTONE;
+        break;
+      case DOM_CALL_READYSTATE_CONNECTED:
+        if (!oldState ||
+            oldState.callState == DOM_CALL_READYSTATE_INCOMING ||
+            oldState.callState == DOM_CALL_READYSTATE_CONNECTING) {
+          // It's an incoming call, so tweak the audio now. If it was an
+          // outgoing call, it would have been tweaked at dialing.
+          this.worker.postMessage({type: "setMute", mute: false});
+          gAudioManager.phoneState = Ci.nsIAudioManager.PHONE_STATE_IN_CALL;
+          gAudioManager.setForceForUse(Ci.nsIAudioManager.USE_COMMUNICATION,
+                                       Ci.nsIAudioManager.FORCE_NONE);
+        }
+        break;
+      case DOM_CALL_READYSTATE_DISCONNECTED:
+        this.worker.postMessage({type: "setMute", mute: true});
+        gAudioManager.phoneState = Ci.nsIAudioManager.PHONE_STATE_NORMAL;
+        break;
+    }
   },
 
   // nsIRadioWorker
@@ -146,6 +233,16 @@ nsTelephonyWorker.prototype = {
     debug("Hanging up call no. " + callIndex);
     this.worker.postMessage({type: "hangUp", callIndex: callIndex});
   },
+  
+  startTone: function startTone(dtmfChar) {
+    debug("Sending Tone for " + dtmfChar);
+    this.worker.postMessage({type: "startTone", dtmfChar: dtmfChar});
+  },
+
+  stopTone: function stopTone() {
+    debug("Stopping Tone");
+    this.worker.postMessage({type: "stopTone"});
+  },
 
   answerCall: function answerCall() {
     this.worker.postMessage({type: "answerCall"});
@@ -153,6 +250,33 @@ nsTelephonyWorker.prototype = {
 
   rejectCall: function rejectCall() {
     this.worker.postMessage({type: "rejectCall"});
+  },
+
+  get microphoneMuted() {
+    return gAudioManager.microphoneMuted;
+  },
+  set microphoneMuted(value) {
+    if (value == this.microphoneMuted) {
+      return;
+    }
+    gAudioManager.phoneState = value ?
+      Ci.nsIAudioManager.PHONE_STATE_IN_COMMUNICATION :
+      Ci.nsIAudioManager.PHONE_STATE_IN_CALL;  //XXX why is this needed?
+    gAudioManager.microphoneMuted = value;
+  },
+
+  get speakerEnabled() {
+    return (gAudioManager.getForceForUse(Ci.nsIAudioManager.USE_COMMUNICATION)
+            == Ci.nsIAudioManager.FORCE_SPEAKER);
+  },
+  set speakerEnabled(value) {
+    if (value == this.speakerEnabled) {
+      return;
+    }
+    gAudioManager.phoneState = Ci.nsIAudioManager.PHONE_STATE_IN_CALL; // XXX why is this needed?
+    let force = value ? Ci.nsIAudioManager.FORCE_SPEAKER :
+                        Ci.nsIAudioManager.FORCE_NONE;
+    gAudioManager.setForceUse(Ci.nsIAudioManager.USE_COMMUNICATION, force);
   },
 
   _callbacks: null,

@@ -62,7 +62,7 @@ function test()
   {
   }
 
-// Assertion failure: (uint32)(index_) < atoms_->length, at ../jsinterp.cpp:327
+// Assertion failure: (uint32_t)(index_) < atoms_->length, at ../jsinterp.cpp:327
 // Crash [@ js_FullTestPropertyCache] at null in opt, -j not required.
 
 // =====

@@ -113,8 +113,6 @@ const KEY_APP_SYSTEM_LOCAL            = "app-system-local";
 const KEY_APP_SYSTEM_SHARE            = "app-system-share";
 const KEY_APP_SYSTEM_USER             = "app-system-user";
 
-const CATEGORY_UPDATE_PARAMS          = "extension-update-params";
-
 const UNKNOWN_XPCOM_ABI               = "unknownABI";
 const XPI_PERMISSION                  = "install";
 
@@ -128,7 +126,6 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 const BRANCH_REGEXP                   = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 
 const DB_SCHEMA                       = 12;
-const REQ_VERSION                     = 2;
 
 #ifdef MOZ_COMPATIBILITY_NIGHTLY
 const PREF_EM_CHECK_COMPATIBILITY = PREF_EM_CHECK_COMPATIBILITY_BASE +
@@ -1132,33 +1129,7 @@ function verifyZipSigning(aZip, aPrincipal) {
  */
 function escapeAddonURI(aAddon, aUri, aUpdateType, aAppVersion)
 {
-  var addonStatus = aAddon.userDisabled || aAddon.softDisabled ? "userDisabled"
-                                                               : "userEnabled";
-
-  if (!aAddon.isCompatible)
-    addonStatus += ",incompatible";
-  if (aAddon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
-    addonStatus += ",blocklisted";
-  if (aAddon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED)
-    addonStatus += ",softblocked";
-
-  try {
-    var xpcomABI = Services.appinfo.XPCOMABI;
-  } catch (ex) {
-    xpcomABI = UNKNOWN_XPCOM_ABI;
-  }
-
-  let uri = aUri.replace(/%ITEM_ID%/g, aAddon.id);
-  uri = uri.replace(/%ITEM_VERSION%/g, aAddon.version);
-  uri = uri.replace(/%ITEM_STATUS%/g, addonStatus);
-  uri = uri.replace(/%APP_ID%/g, Services.appinfo.ID);
-  uri = uri.replace(/%APP_VERSION%/g, aAppVersion ? aAppVersion :
-                                                    Services.appinfo.version);
-  uri = uri.replace(/%REQ_VERSION%/g, REQ_VERSION);
-  uri = uri.replace(/%APP_OS%/g, Services.appinfo.OS);
-  uri = uri.replace(/%APP_ABI%/g, xpcomABI);
-  uri = uri.replace(/%APP_LOCALE%/g, getLocale());
-  uri = uri.replace(/%CURRENT_APP_VERSION%/g, Services.appinfo.version);
+  let uri = AddonManager.escapeAddonURI(aAddon, aUri, aAppVersion);
 
   // If there is an updateType then replace the UPDATE_TYPE string
   if (aUpdateType)
@@ -1181,27 +1152,7 @@ function escapeAddonURI(aAddon, aUri, aUpdateType, aAppVersion)
     compatMode = "strict";
   uri = uri.replace(/%COMPATIBILITY_MODE%/g, compatMode);
 
-  // Replace custom parameters (names of custom parameters must have at
-  // least 3 characters to prevent lookups for something like %D0%C8)
-  var catMan = null;
-  uri = uri.replace(/%(\w{3,})%/g, function(aMatch, aParam) {
-    if (!catMan) {
-      catMan = Cc["@mozilla.org/categorymanager;1"].
-               getService(Ci.nsICategoryManager);
-    }
-
-    try {
-      var contractID = catMan.getCategoryEntry(CATEGORY_UPDATE_PARAMS, aParam);
-      var paramHandler = Cc[contractID].getService(Ci.nsIPropertyBag2);
-      return paramHandler.getPropertyAsAString(aParam);
-    }
-    catch(e) {
-      return aMatch;
-    }
-  });
-
-  // escape() does not properly encode + symbols in any embedded FVF strings.
-  return uri.replace(/\+/g, "%2B");
+  return uri;
 }
 
 /**

@@ -131,7 +131,12 @@ public:
    * accumulate animationstart events at other points when style
    * contexts are created.
    */
-  void DispatchEvents();
+  void DispatchEvents() {
+    // Fast-path the common case: no events
+    if (!mPendingEvents.IsEmpty()) {
+      DoDispatchEvents();
+    }
+  }
 
 private:
   ElementAnimations* GetElementAnimations(mozilla::dom::Element *aElement,
@@ -148,6 +153,9 @@ private:
                                  nsCSSPseudoElements::Type aPseudoType);
 
   nsCSSKeyframesRule* KeyframesRuleFor(const nsSubstring& aName);
+
+  // The guts of DispatchEvents
+  void DoDispatchEvents();
 
   bool mKeyframesListIsDirty;
   nsDataHashtable<nsStringHashKey, nsCSSKeyframesRule*> mKeyframesRules;

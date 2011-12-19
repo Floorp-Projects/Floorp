@@ -60,6 +60,9 @@ public:
   // Forward to base class
   NS_FORWARD_TO_NSDOMUIEVENT
 
+  virtual const nsIID& EventInitIID() { return NS_GET_IID(nsIMouseEventInit); }
+  virtual nsresult InitFromCtor(const nsAString& aType, nsISupports* aDict,
+                                JSContext* aCx, JSObject* aObj);
 protected:
   // Specific implementation for a mouse event.
   virtual nsresult Which(PRUint32* aWhich);

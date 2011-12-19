@@ -8,6 +8,7 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="text/javascript" src="paint_listener.js"></script>
 
   <div id="container" xmlns="http://www.w3.org/1999/xhtml" style="height:400px; overflow:auto; background:gray">
     <div style="height:0">
@@ -32,50 +33,6 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-
-    var accumulatedRect = null;
-    var onpaint = function() {};
-
-    function paintListener(event) {
-      if (event.target != window)
-        return;
-      dump("got MozAfterPaint: " + event.boundingClientRect.left + "," + event.boundingClientRect.top + "," +
-           event.boundingClientRect.right + "," + event.boundingClientRect.bottom + "\n");
-      if (accumulatedRect) {
-        accumulatedRect[0] = Math.min(accumulatedRect[0], event.boundingClientRect.left);
-        accumulatedRect[1] = Math.min(accumulatedRect[1], event.boundingClientRect.top);
-        accumulatedRect[2] = Math.max(accumulatedRect[2], event.boundingClientRect.right);
-        accumulatedRect[3] = Math.max(accumulatedRect[3], event.boundingClientRect.bottom);
-      } else {
-        accumulatedRect = [event.boundingClientRect.left, event.boundingClientRect.top,
-                           event.boundingClientRect.right, event.boundingClientRect.bottom];
-      }
-      onpaint();
-    }
-    window.addEventListener("MozAfterPaint", paintListener, false);
-
-    function waitForAllPaintsFlushed(callback, subdoc) {
-      document.documentElement.getBoundingClientRect();
-      if (subdoc) {
-        subdoc.documentElement.getBoundingClientRect();
-      }
-      var CI = Components.interfaces;
-      var utils = window.QueryInterface(CI.nsIInterfaceRequestor)
-                  .getInterface(CI.nsIDOMWindowUtils);
-      if (!utils.isMozAfterPaintPending) {
-        dump("done...\n");
-        var result = accumulatedRect;
-        accumulatedRect = null;
-        onpaint = function() {};
-        if (!result) {
-          result = [0,0,0,0];
-        }
-        callback(result[0], result[1], result[2], result[3]);
-        return;
-      }
-      dump("waiting for paint...\n");
-      onpaint = function() { waitForAllPaintsFlushed(callback); };
-    }
 
     var Ci = Components.interfaces;
     var frame = document.getElementById("f");
@@ -118,7 +75,6 @@
       ref.style.visibility = "hidden";
       document.getElementById("container").style.height = "400px";
       waitForAllPaintsFlushed(function() {
-        dump("Scrolling\n");
         frame.contentWindow.scrollTo(0,80);
         waitForAllPaintsFlushed(function(x1, y1, x2, y2) {
           ok(x1 <= 1 && x2 >= 151 && y1 <= 0 && y2 >= 400,

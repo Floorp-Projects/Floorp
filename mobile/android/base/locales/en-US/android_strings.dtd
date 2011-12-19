@@ -62,6 +62,15 @@
 <!ENTITY pref_clear_history_confirm "Browsing history will be deleted">
 <!ENTITY pref_clear_private_data "Clear private data">
 <!ENTITY pref_clear_private_data_confirm "Browsing settings, including passwords and cookies, will be deleted">
+<!ENTITY pref_enable_flash "Enable Flash">
+<!ENTITY pref_enable_flash_yes "Yes">
+<!ENTITY pref_enable_flash_tap_to_play "Tap To Play">
+<!ENTITY pref_enable_flash_no "No">
+<!ENTITY pref_font_size "Font size">
+<!ENTITY pref_font_size_small "Small">
+<!ENTITY pref_font_size_medium "Medium">
+<!ENTITY pref_font_size_large "Large">
+<!ENTITY pref_font_size_xlarge "Extra Large">
 
 <!ENTITY quit "Quit">
 
@@ -71,3 +80,8 @@
 <!ENTITY save_as_pdf "Save as PDF">
 <!ENTITY agent_request_desktop "Request Desktop Site">
 <!ENTITY agent_request_mobile "Request Mobile Site">
+
+<!ENTITY site_settings_title        "Clear Site Settings">
+<!ENTITY site_settings_cancel       "Cancel">
+<!ENTITY site_settings_clear        "Clear">
+<!ENTITY site_settings_no_settings  "There are no settings to clear.">

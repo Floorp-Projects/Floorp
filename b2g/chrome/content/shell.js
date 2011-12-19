@@ -68,14 +68,23 @@ function startupHttpd(baseDir, port) {
   Services.scriptloader.loadSubScript(httpdURL, httpd);
   let server = new httpd.nsHttpServer();
   server.registerDirectory('/', new LocalFile(baseDir));
+  server.registerContentType('appcache', 'text/cache-manifest');
   server.start(port);
 }
 
-// XXX until we have a security model, just let the pre-installed
-// app used indexedDB.
-function allowIndexedDB(url) {
-  let uri = Services.io.newURI(url, null, null);
-  Services.perms.add(uri, 'indexedDB', Ci.nsIPermissionManager.ALLOW_ACTION);
+// FIXME Bug 707625
+// until we have a proper security model, add some rights to
+// the pre-installed web applications 
+function addPermissions(urls) {
+  let permissions = ['indexedDB', 'webapps-manage', 'offline-app'];
+  urls.forEach(function(url) {
+    let uri = Services.io.newURI(url, null, null);
+    let allow = Ci.nsIPermissionManager.ALLOW_ACTION;
+    
+    permissions.forEach(function(permission) {
+      Services.perms.add(uri, permission, allow);
+    });
+  });
 }
 
 
@@ -114,6 +123,7 @@ var shell = {
 
     window.controllers.appendController(this);
     window.addEventListener('keypress', this);
+    window.addEventListener('MozApplicationManifest', this);
     this.home.addEventListener('load', this, true);
 
     try {
@@ -133,7 +143,7 @@ var shell = {
         let baseHost = 'http://localhost';
         homeURL = homeURL.replace(baseDir, baseHost + ':' + SERVER_PORT);
       }
-      allowIndexedDB(homeURL);
+      addPermissions([homeURL]);
     } catch (e) {
       let msg = 'Fatal error during startup: [' + e + '[' + homeURL + ']';
       return alert(msg);
@@ -147,6 +157,7 @@ var shell = {
   stop: function shell_stop() {
     window.controllers.removeController(this);
     window.removeEventListener('keypress', this);
+    window.removeEventListener('MozApplicationManifest', this);
   },
 
   supportsCommand: function shell_supportsCommand(cmd) {
@@ -169,7 +180,7 @@ var shell = {
   doCommand: function shell_doCommand(cmd) {
     switch (cmd) {
       case 'cmd_close':
-        this.sendEvent(this.home.contentWindow, 'appclose');
+        this.home.contentWindow.postMessage('appclose', '*');
         break;
     }
   },
@@ -194,6 +205,40 @@ var shell = {
       case 'load':
         this.home.removeEventListener('load', this, true);
         this.sendEvent(window, 'ContentStart');
+        break;
+      case 'MozApplicationManifest':
+        try {
+          if (!Services.prefs.getBoolPref('browser.cache.offline.enable'))
+            return;
+
+          let contentWindow = evt.originalTarget.defaultView;
+          let documentElement = contentWindow.document.documentElement;
+          if (!documentElement)
+            return;
+
+          let manifest = documentElement.getAttribute("manifest");
+          if (!manifest)
+            return;
+
+          let documentURI = contentWindow.document.documentURIObject;
+          if (!Services.perms.testPermission(documentURI, 'offline-app')) {
+            if (Services.prefs.getBoolPref('browser.offline-apps.notify')) {
+              // FIXME Bug 710729 - Add a UI for offline cache notifications
+              return;
+            }
+            return;
+          }
+
+          Services.perms.add(documentURI, 'offline-app',
+                             Ci.nsIPermissionManager.ALLOW_ACTION);
+
+          let manifestURI = Services.io.newURI(manifest, null, documentURI);
+          let updateService = Cc['@mozilla.org/offlinecacheupdate-service;1']
+                              .getService(Ci.nsIOfflineCacheUpdateService);
+          updateService.scheduleUpdate(manifestURI, documentURI, window);
+        } catch (e) {
+          dump('Error while creating offline cache: ' + e + '\n');
+        }
         break;
     }
   },

@@ -175,7 +175,7 @@ nsSVGGraphicElement::IsAttributeMapped(const nsIAtom* name) const
     sGraphicsMap
   };
   
-  return FindAttributeDependence(name, map, ArrayLength(map)) ||
+  return FindAttributeDependence(name, map) ||
     nsSVGGraphicElementBase::IsAttributeMapped(name);
 }
 

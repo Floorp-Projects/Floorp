@@ -37,12 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_Hal_h
-# error "This is an internal file, don't include it"
-#endif
+#ifndef mozilla_hal_HalSandbox_h
+#define mozilla_hal_HalSandbox_h
 
-#undef mozilla_Hal_h
 #define MOZ_HAL_NAMESPACE hal_sandbox
+#undef mozilla_Hal_h
+#undef mozilla_HalInternal_h
 #include "Hal.h"
-#include "mozilla/hal_sandbox/PHal.h"
+#include "HalInternal.h"
 #undef MOZ_HAL_NAMESPACE
+
+#endif // mozilla_hal_HalSandbox_h

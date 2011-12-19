@@ -27,9 +27,9 @@ function runTest() {
   function test_end_bs(e) {
     const msg = "Deleting all text in contenteditable inline element";
     var before = e.parentNode.childNodes[0].nodeValue;
-    sendKey("right", e);
-    sendKey("back_space", e);
-    sendKey("back_space", e);
+    sendKey("right");
+    sendKey("back_space");
+    sendKey("back_space");
     is(e.parentNode.childNodes[0].nodeValue, before, msg + " with id=" + e.id);
     is(e.innerHTML, "", msg + " with id=" + e.id);
   }
@@ -43,8 +43,8 @@ function runTest() {
     var doc = e.contentDocument;
     doc.body.setAttribute("contenteditable", "true");
     doc.body.focus();
-    sendKey("right", doc.body);
-    sendKey("back_space", doc.body);
+    sendKey("right");
+    sendKey("back_space");
     is(doc.body.innerHTML, "<br>", msg + " with id=" + e.id);
   }
 

@@ -56,7 +56,7 @@ XBL_SerializeFunction(nsIScriptContext* aContext,
   if (!JS_XDRFunctionObject(xdr, &aFunctionObject)) {
     rv = NS_ERROR_FAILURE;
   } else {
-    uint32 size;
+    uint32_t size;
     const char* data = reinterpret_cast<const char*>
                                        (JS_XDRMemGetData(xdr, &size));
     NS_ASSERTION(data, "no decoded JSXDRState data!");
@@ -102,7 +102,7 @@ XBL_DeserializeFunction(nsIScriptContext* aContext,
       rv = NS_ERROR_FAILURE;
     }
 
-    uint32 junk;
+    uint32_t junk;
     data = static_cast<char*>(JS_XDRMemGetData(xdr, &junk));
     JS_XDRMemSetData(xdr, NULL, 0);
     JS_XDRDestroy(xdr);

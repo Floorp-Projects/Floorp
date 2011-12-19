@@ -1,0 +1,111 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import com.jayway.android.robotium.solo.Solo;
+import @ANDROID_PACKAGE_NAME@.*;
+
+import android.app.Activity;
+import android.test.ActivityInstrumentationTestCase2;
+import android.test.PerformanceTestCase;
+import android.util.Log;
+import android.widget.Button;
+import android.content.Intent;
+import java.util.HashMap;
+
+@SuppressWarnings("unused")
+public class testNewTab extends ActivityInstrumentationTestCase2 {
+
+  @SuppressWarnings("unchecked")
+  public testNewTab(Class activityClass) {
+    super(activityClass);
+    // TODO Auto-generated constructor stub
+  }
+  private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";	
+  private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
+  private Solo solo;    
+  private Activity activity;
+  private Actions actions;
+  private Driver driver;
+  private static Class<?> launcherActivityClass;
+
+  static{
+    try{
+      launcherActivityClass = Class.forName(LAUNCH_ACTIVITY_FULL_CLASSNAME);	
+    } catch (ClassNotFoundException e){
+      throw new RuntimeException(e);	
+    }	
+  }	
+
+  @SuppressWarnings("unchecked")	
+  public testNewTab() throws ClassNotFoundException {
+    super(TARGET_PACKAGE_ID, launcherActivityClass);	
+  }	
+  
+  @Override 
+  protected void setUp() throws Exception
+  {
+    // Load config file from sdcard (setup by python script)
+    String configFile = FennecNativeDriver.getFile("/mnt/sdcard/robotium.config");
+    HashMap config = FennecNativeDriver.convertTextToTable(configFile);
+
+    // Create the intent to be used with all the important arguments.
+    Intent i = new Intent(Intent.ACTION_MAIN);
+    String argsList = "-no-remote -profile " + (String)config.get("profile");
+    i.putExtra("args", argsList);
+
+    //Start the activity
+    setActivityIntent(i);
+    activity = getActivity();
+
+    //Set up Robotium.solo and Driver objects
+    solo = new Solo(getInstrumentation(), getActivity());
+    driver = new FennecNativeDriver(activity, solo);
+    actions = new FennecNativeActions(activity, solo, getInstrumentation());
+    driver.setLogFile((String)config.get("logfile"));
+  }
+
+  public void testNewTab(){
+    // TODO: find a better way to not hardcode this url
+    String url = "http://mochi.test:8888/tests/robocop/robocop.html";
+    Element tabs = driver.findElement("tabs");
+    //Add one tab
+    tabs.click();
+
+    Element urlbar = driver.findElement("awesomebar_text");
+    actions.sendKeys(url);
+    driver.is(url, urlbar.getText(),"Awesomebar url is fine");
+    actions.sendSpecialKey(Actions.SpecialKey.ENTER);
+    actions.waitForGeckoEvent("DOMContentLoaded");
+
+    try{Thread.sleep(5000);}catch(Throwable e){};
+    //See tab count
+    Element tabCount = driver.findElement("tabs_count");
+    driver.is("2", tabCount.getText(),"Number of tabs has increased");
+
+    //Click tab list
+    tabs.click();
+    Element addTab = driver.findElement("add_tab");
+
+    //Add another tab
+    addTab.click();
+    actions.sendKeys(url);
+    driver.is(url, urlbar.getText(),"URL is still fine");
+
+    actions.sendSpecialKey(Actions.SpecialKey.ENTER);
+    actions.waitForGeckoEvent("DOMContentLoaded");
+    //Check tab count another time.
+    driver.is("3", tabCount.getText(),"Number of tabs has increased");
+
+  }
+
+  @Override	
+  public void tearDown() throws Exception {	
+    try	{
+      solo.finalize();	
+    }catch (Throwable e){	
+      e.printStackTrace();	
+    }	
+    getActivity().finish();	
+    super.tearDown();	
+  }
+}

@@ -49,3 +49,9 @@ interface nsIDOMCustomEvent : nsIDOMEvent
                        in boolean    cancelableArg, 
                        in nsIVariant detailArg);
 };
+
+[scriptable, uuid(8c166794-06af-4eac-b76b-bc132e421b06)]
+interface nsICustomEventInit : nsIEventInit
+{
+  attribute nsIVariant detail;
+};

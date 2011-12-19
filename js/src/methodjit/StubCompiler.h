@@ -67,13 +67,13 @@ class StubCompiler
     };
 
     struct CrossJumpInScript {
-        CrossJumpInScript(Jump from, jsbytecode *pc, uint32 inlineIndex)
+        CrossJumpInScript(Jump from, jsbytecode *pc, uint32_t inlineIndex)
           : from(from), pc(pc), inlineIndex(inlineIndex)
         { }
 
         Jump from;
         jsbytecode *pc;
-        uint32 inlineIndex;
+        uint32_t inlineIndex;
     };
 
     JSContext *cx;
@@ -84,8 +84,8 @@ class StubCompiler
     Assembler masm;
 
   private:
-    uint32 generation;
-    uint32 lastGeneration;
+    uint32_t generation;
+    uint32_t lastGeneration;
 
     Vector<CrossPatch, 64, mjit::CompilerAllocPolicy> exits;
     Vector<CrossPatch, 64, mjit::CompilerAllocPolicy> joins;
@@ -99,7 +99,7 @@ class StubCompiler
         return masm.size();
     }
 
-    uint8 *buffer() {
+    uint8_t *buffer() {
         return masm.buffer();
     }
 
@@ -121,7 +121,7 @@ class StubCompiler
     void linkExitDirect(Jump j, Label L);
 
     void leave();
-    void leaveWithDepth(uint32 depth);
+    void leaveWithDepth(uint32_t depth);
 
     /*
      * Rejoins slow-path code back to the fast-path. The invalidation param
@@ -132,12 +132,12 @@ class StubCompiler
     void linkRejoin(Jump j);
 
     /* Finish all native code patching. */
-    void fixCrossJumps(uint8 *ncode, size_t offset, size_t total);
+    void fixCrossJumps(uint8_t *ncode, size_t offset, size_t total);
     bool jumpInScript(Jump j, jsbytecode *target);
     unsigned crossJump(Jump j, Label l);
 
     Call emitStubCall(void *ptr, RejoinState rejoin, Uses uses);
-    Call emitStubCall(void *ptr, RejoinState rejoin, Uses uses, int32 slots);
+    Call emitStubCall(void *ptr, RejoinState rejoin, Uses uses, int32_t slots);
 
     void patchJoin(unsigned i, bool script, Assembler::Address address, AnyRegisterID reg);
 };

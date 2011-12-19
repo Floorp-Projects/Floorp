@@ -173,7 +173,7 @@ MOZ_ARG_WITH_STRING(dist-dir,
     TOP_DIST=dist)
 AC_SUBST(TOP_DIST)
 
-dnl Default to MSVC for win32 and gcc-4.2 for darwin
+dnl Default to MSVC for win32
 dnl ==============================================================
 if test -z "$CROSS_COMPILE"; then
 case "$target" in
@@ -196,8 +196,9 @@ case "$target" in
     if test -z "$MIDL"; then MIDL=midl; fi
     ;;
 *-darwin*)
-    if test -z "$CC"; then CC=gcc-4.2; fi
-    if test -z "$CXX"; then CXX=g++-4.2; fi
+    # prefer gcc-4.2 to default cc on older xcode
+    MOZ_PATH_PROGS(CC, $CC gcc-4.2 gcc)
+    MOZ_PATH_PROGS(CXX, $CXX g++-4.2 g++)
     ;;
 esac
 fi
@@ -3703,10 +3704,9 @@ AC_CACHE_CHECK(for modern C++ template specialization syntax support,
                                X<Y> y_x;,
                                ac_cv_cpp_modern_specialize_template_syntax=yes,
                                ac_cv_cpp_modern_specialize_template_syntax=no)])
-if test "$ac_cv_cpp_modern_specialize_template_syntax" = yes ; then
-  AC_DEFINE(HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX)
+if test "$ac_cv_cpp_modern_specialize_template_syntax" = no ; then
+  AC_MSG_ERROR([The C++ compiler does not support template specialization])
 fi
-
 
 dnl Some compilers support only full specialization, and some don't.
 AC_CACHE_CHECK(whether partial template specialization works,
@@ -3866,13 +3866,6 @@ AC_CACHE_CHECK(for __attribute__((warn_unused_result)),
                                ac_cv_attribute_warn_unused=yes,
                                ac_cv_attribute_warn_unused=no)])
 
-AC_CACHE_CHECK(for __attribute__((noreturn)),
-               ac_cv_attribute_noreturn,
-               [AC_TRY_COMPILE([void f(void) __attribute__((noreturn));],
-                               [],
-                               ac_cv_attribute_noreturn=yes,
-                               ac_cv_attribute_noreturn=no)])
-
 dnl End of C++ language/feature checks
 AC_LANG_C
 
@@ -3926,12 +3919,6 @@ if test "$ac_cv_attribute_warn_unused" = yes ; then
   AC_DEFINE(NS_WARN_UNUSED_RESULT, [__attribute__((warn_unused_result))])
 else
   AC_DEFINE(NS_WARN_UNUSED_RESULT,)
-fi
-
-if test "$ac_cv_attribute_noreturn" = yes ; then
-  AC_DEFINE(NS_NORETURN, [__attribute__((noreturn))])
-else
-  AC_DEFINE(NS_NORETURN,)
 fi
 
 dnl We can't run TRY_COMPILE tests on Windows, so hard-code some

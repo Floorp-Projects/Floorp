@@ -56,7 +56,7 @@ js_GetSCOffset(JSStructuredCloneWriter* writer)
 namespace js {
 
 bool
-WriteStructuredClone(JSContext *cx, const Value &v, uint64 **bufp, size_t *nbytesp,
+WriteStructuredClone(JSContext *cx, const Value &v, uint64_t **bufp, size_t *nbytesp,
                      const JSStructuredCloneCallbacks *cb, void *cbClosure)
 {
     SCOutput out(cx);

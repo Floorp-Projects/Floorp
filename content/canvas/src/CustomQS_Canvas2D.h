@@ -173,7 +173,7 @@ CreateImageData(JSContext* cx,
     if (h == 0)
         h = 1;
 
-    CheckedInt<uint32> len = CheckedInt<uint32>(w) * h * 4;
+    CheckedInt<uint32_t> len = CheckedInt<uint32_t>(w) * h * 4;
     if (!len.valid()) {
         return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
     }
@@ -221,10 +221,10 @@ CreateImageData(JSContext* cx,
 }
 
 static bool
-GetImageDataDimensions(JSContext *cx, JSObject *dataObject, uint32 *width, uint32 *height)
+GetImageDataDimensions(JSContext *cx, JSObject *dataObject, uint32_t *width, uint32_t *height)
 {
     jsval temp;
-    int32 wi, hi;
+    int32_t wi, hi;
     
     // Need to check that dataObject is ImageData object. That's hard for the moment 
     // because they're just vanilla objects in our implementation.
@@ -241,8 +241,8 @@ GetImageDataDimensions(JSContext *cx, JSObject *dataObject, uint32 *width, uint3
     if (wi <= 0 || hi <= 0)
         return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
 
-    *width = (uint32)wi;
-    *height = (uint32)hi;
+    *width = uint32_t(wi);
+    *height = uint32_t(hi);
     return true;
 }
 
@@ -266,7 +266,7 @@ nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, uintN argc, jsval 
 
         JSObject *dataObject = JSVAL_TO_OBJECT(argv[0]);
 
-        uint32 data_width, data_height;
+        uint32_t data_width, data_height;
         if (!GetImageDataDimensions(cx, dataObject, &data_width, &data_height))
             return false;
 
@@ -392,7 +392,7 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
     // Grab width, height, and the dense array from the dataObject.
     js::AutoValueRooter tv(cx);
 
-    uint32 w, h;
+    uint32_t w, h;
     if (!GetImageDataDimensions(cx, dataObject, &w, &h))
         return JS_FALSE;
 

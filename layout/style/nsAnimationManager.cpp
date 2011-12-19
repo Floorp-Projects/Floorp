@@ -546,6 +546,9 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     // dispatch them the next time we get a refresh driver notification
     // or the next time somebody calls
     // nsPresShell::FlushPendingNotifications.
+    if (!mPendingEvents.IsEmpty()) {
+      mPresContext->Document()->SetNeedStyleFlush();
+    }
   }
 
   return GetAnimationRule(aElement, aStyleContext->GetPseudoType());
@@ -901,7 +904,7 @@ nsAnimationManager::WillRefresh(mozilla::TimeStamp aTime)
 }
 
 void
-nsAnimationManager::DispatchEvents()
+nsAnimationManager::DoDispatchEvents()
 {
   EventArray events;
   mPendingEvents.SwapElements(events);

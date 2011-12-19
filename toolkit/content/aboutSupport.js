@@ -249,8 +249,8 @@ function populateGraphicsSection() {
   if (gfxInfo) {
     let trGraphics = [];
     pushInfoRow(trGraphics, "adapterDescription", gfxInfo.adapterDescription);
-    pushInfoRow(trGraphics, "adapterVendorID", hexValueToString(gfxInfo.adapterVendorID));
-    pushInfoRow(trGraphics, "adapterDeviceID", hexValueToString(gfxInfo.adapterDeviceID));
+    pushInfoRow(trGraphics, "adapterVendorID", gfxInfo.adapterVendorID);
+    pushInfoRow(trGraphics, "adapterDeviceID", gfxInfo.adapterDeviceID);
     pushInfoRow(trGraphics, "adapterRAM", gfxInfo.adapterRAM);
     pushInfoRow(trGraphics, "adapterDrivers", gfxInfo.adapterDriver);
     pushInfoRow(trGraphics, "driverVersion", gfxInfo.adapterDriverVersion);
@@ -258,8 +258,8 @@ function populateGraphicsSection() {
 
 #ifdef XP_WIN
     pushInfoRow(trGraphics, "adapterDescription2", gfxInfo.adapterDescription2);
-    pushInfoRow(trGraphics, "adapterVendorID2", hexValueToString(gfxInfo.adapterVendorID2));
-    pushInfoRow(trGraphics, "adapterDeviceID2", hexValueToString(gfxInfo.adapterDeviceID2));
+    pushInfoRow(trGraphics, "adapterVendorID2", gfxInfo.adapterVendorID2);
+    pushInfoRow(trGraphics, "adapterDeviceID2", gfxInfo.adapterDeviceID2);
     pushInfoRow(trGraphics, "adapterRAM2", gfxInfo.adapterRAM2);
     pushInfoRow(trGraphics, "adapterDrivers2", gfxInfo.adapterDriver2);
     pushInfoRow(trGraphics, "driverVersion2", gfxInfo.adapterDriverVersion2);

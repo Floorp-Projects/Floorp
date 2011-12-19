@@ -40,6 +40,7 @@
 #ifndef mozilla_dom_ContentChild_h
 #define mozilla_dom_ContentChild_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/PContentChild.h"
 
 #include "nsTArray.h"
@@ -194,7 +195,7 @@ private:
      * Exit *now*.  Do not shut down XPCOM, do not pass Go, do not run
      * static destructors, do not collect $200.
      */
-    NS_NORETURN void QuickExit();
+    MOZ_NORETURN void QuickExit();
 
     InfallibleTArray<nsAutoPtr<AlertObserver> > mAlertObservers;
     nsRefPtr<ConsoleListener> mConsoleListener;

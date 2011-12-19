@@ -199,7 +199,7 @@ Quote(JSContext *cx, StringBuffer &sb, JSString *str)
             if (!sb.append("\\u00"))
                 return false;
             JS_ASSERT((c >> 4) < 10);
-            uint8 x = c >> 4, y = c % 16;
+            uint8_t x = c >> 4, y = c % 16;
             if (!sb.append('0' + x) || !sb.append(y < 10 ? '0' + y : 'a' + (y - 10)))
                 return false;
         }
@@ -234,19 +234,19 @@ class StringifyContext
     const StringBuffer &gap;
     JSObject * const replacer;
     const AutoIdVector &propertyList;
-    uint32 depth;
+    uint32_t depth;
     HashSet<JSObject *> objectStack;
 };
 
 static JSBool Str(JSContext *cx, const Value &v, StringifyContext *scx);
 
 static JSBool
-WriteIndent(JSContext *cx, StringifyContext *scx, uint32 limit)
+WriteIndent(JSContext *cx, StringifyContext *scx, uint32_t limit)
 {
     if (!scx->gap.empty()) {
         if (!scx->sb.append('\n'))
             return JS_FALSE;
-        for (uint32 i = 0; i < limit; i++) {
+        for (uint32_t i = 0; i < limit; i++) {
             if (!scx->sb.append(scx->gap.begin(), scx->gap.end()))
                 return JS_FALSE;
         }
@@ -285,9 +285,9 @@ class KeyStringifier {
 };
 
 template<>
-class KeyStringifier<uint32> {
+class KeyStringifier<uint32_t> {
   public:
-    static JSString *toString(JSContext *cx, uint32 index) {
+    static JSString *toString(JSContext *cx, uint32_t index) {
         return IndexToString(cx, index);
     }
 };
@@ -514,7 +514,7 @@ JA(JSContext *cx, JSObject *obj, StringifyContext *scx)
 
         /* Steps 7-10. */
         Value outputValue;
-        for (uint32 i = 0; i < length; i++) {
+        for (uint32_t i = 0; i < length; i++) {
             /*
              * Steps 8a-8c.  Again note how the call to the spec's Str method
              * is broken up into getting the property, running it past toJSON
@@ -730,7 +730,7 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
         jsdouble d;
         JS_ALWAYS_TRUE(ToInteger(cx, space, &d));
         d = JS_MIN(10, d);
-        if (d >= 1 && !gap.appendN(' ', uint32(d)))
+        if (d >= 1 && !gap.appendN(' ', uint32_t(d)))
             return false;
     } else if (space.isString()) {
         /* Step 7. */
@@ -791,10 +791,10 @@ Walk(JSContext *cx, JSObject *holder, jsid name, const Value &reviver, Value *vp
         JS_ASSERT(!obj->isProxy());
         if (obj->isArray()) {
             /* Step 2a(ii). */
-            uint32 length = obj->getArrayLength();
+            uint32_t length = obj->getArrayLength();
 
             /* Step 2a(i), 2a(iii-iv). */
-            for (uint32 i = 0; i < length; i++) {
+            for (uint32_t i = 0; i < length; i++) {
                 jsid id;
                 if (!IndexToId(cx, i, &id))
                     return false;

@@ -1587,26 +1587,17 @@ History::FetchPageInfo(VisitData& _place)
   return true;
 }
 
-PLDHashOperator
-History::SizeOfEnumerator(KeyClass* aEntry, void* aArg)
+/* static */ size_t
+History::SizeOfEntryExcludingThis(KeyClass* aEntry, nsMallocSizeOfFun aMallocSizeOf, void *)
 {
-  PRInt64 *size = reinterpret_cast<PRInt64*>(aArg);
-
-  // Don't add in sizeof(*aEntry); that's already accounted for in
-  // mObservers.SizeOf().
-  *size += aEntry->array.SizeOf();
-  return PL_DHASH_NEXT;
+  return aEntry->array.SizeOfExcludingThis(aMallocSizeOf);
 }
 
-PRInt64
+size_t
 History::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOfThis)
 {
-  PRInt64 size = aMallocSizeOfThis(this, sizeof(History)) +
-                 mObservers.ShallowSizeOfExcludingThis(aMallocSizeOfThis);
-  if (mObservers.IsInitialized()) {
-    mObservers.EnumerateEntries(SizeOfEnumerator, &size);
-  }
-  return size;
+  return aMallocSizeOfThis(this, sizeof(History)) +
+         mObservers.SizeOfExcludingThis(SizeOfEntryExcludingThis, aMallocSizeOfThis);
 }
 
 /* static */

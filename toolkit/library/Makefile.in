@@ -318,8 +318,6 @@ STATIC_LIBS += thebes gl ycbcr
 
 COMPONENT_LIBS += profiler
 
-STATIC_LIBS += angle
-
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += gkwidget
 endif
@@ -376,7 +374,6 @@ EXTRA_DSO_LDOPTS += \
   $(NSS_LIBS) \
   $(MOZ_CAIRO_LIBS) \
   $(MOZ_HARFBUZZ_LIBS) \
-  $(MOZ_OTS_LIBS) \
   $(MOZ_APP_EXTRA_LIBS) \
   $(SQLITE_LIBS) \
   $(NULL)
@@ -403,6 +400,8 @@ ifdef MOZ_NATIVE_LIBVPX
 EXTRA_DSO_LDOPTS += $(MOZ_LIBVPX_LIBS)
 endif
 
+EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,gkmedias,$(DIST)/lib) 
+
 ifdef MOZ_SYDNEYAUDIO
 ifeq ($(OS_ARCH),Linux)
 EXTRA_DSO_LDOPTS += $(MOZ_ALSA_LIBS)
@@ -413,7 +412,7 @@ ifdef HAVE_CLOCK_MONOTONIC
 EXTRA_DSO_LDOPTS += $(REALTIME_LIBS)
 endif
 
-ifeq (,$(filter-out cocoa android windows,$(MOZ_WIDGET_TOOLKIT)))
+ifdef MOZ_ENABLE_SKIA
 EXTRA_DSO_LDOPTS += $(MOZ_SKIA_LIBS)
 endif
 
@@ -422,7 +421,10 @@ OS_LIBS += -lGLESv2
 endif
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-OS_LIBS += -lui
+OS_LIBS += \
+  -lui \
+  -lmedia \
+  $(NULL)
 endif
 
 EXTRA_DEPS += \
@@ -599,4 +601,9 @@ ifdef MOZ_DEBUG
 ifdef ENABLE_TESTS
 DEFINES += -DENABLE_LAYOUTDEBUG
 endif
+endif
+
+ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_PROFILE_USE))
+# Wrap linker to measure peak virtual memory usage.
+LD := $(PYTHON) $(topsrcdir)/build/link.py $(CURDIR)/linker-vsize $(LD)
 endif
