@@ -40,6 +40,8 @@
 #ifndef js_utility_h__
 #define js_utility_h__
 
+#include "mozilla/Assertions.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -71,27 +73,19 @@ JS_BEGIN_EXTERN_C
  */
 #define JS_FREE_PATTERN 0xDA
 
-/* JS_ASSERT */
+#define JS_ASSERT(expr)           MOZ_ASSERT(expr)
+#define JS_ASSERT_IF(cond, expr)  MOZ_ASSERT_IF((cond), (expr))
+#define JS_NOT_REACHED(reason)    MOZ_NOT_REACHED(reason)
+#define JS_ALWAYS_TRUE(expr)      MOZ_ALWAYS_TRUE(expr)
+#define JS_ALWAYS_FALSE(expr)     MOZ_ALWAYS_FALSE(expr)
+
 #ifdef DEBUG
-# define JS_ASSERT(expr)                                                      \
-    ((expr) ? (void)0 : JS_Assert(#expr, __FILE__, __LINE__))
-# define JS_ASSERT_IF(cond, expr)                                             \
-    ((!(cond) || (expr)) ? (void)0 : JS_Assert(#expr, __FILE__, __LINE__))
-# define JS_NOT_REACHED(reason)                                               \
-    JS_Assert(reason, __FILE__, __LINE__)
-# define JS_ALWAYS_TRUE(expr) JS_ASSERT(expr)
-# define JS_ALWAYS_FALSE(expr) JS_ASSERT(!(expr))
 # ifdef JS_THREADSAFE
 #  define JS_THREADSAFE_ASSERT(expr) JS_ASSERT(expr)
 # else
 #  define JS_THREADSAFE_ASSERT(expr) ((void) 0)
 # endif
 #else
-# define JS_ASSERT(expr)         ((void) 0)
-# define JS_ASSERT_IF(cond,expr) ((void) 0)
-# define JS_NOT_REACHED(reason)
-# define JS_ALWAYS_TRUE(expr)    ((void) (expr))
-# define JS_ALWAYS_FALSE(expr)    ((void) (expr))
 # define JS_THREADSAFE_ASSERT(expr) ((void) 0)
 #endif
 

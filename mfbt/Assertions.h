@@ -70,8 +70,14 @@ JS_Assert(const char* s, const char* file, int ln);
 
 /*
  * MOZ_ASSERT() is a "strong" assertion of state, like libc's
- * assert().  If a MOZ_ASSERT() fails in a debug build, the process in
- * which it fails will stop running in a loud and dramatic way.
+ * assert().
+ *
+ *   MOZ_ASSERT(twoToThePowerOf(5) == 32);
+ *
+ * If a MOZ_ASSERT() fails in a debug build, the process in which it fails will
+ * stop running in a loud and dramatic way.  It has no effect in an optimized
+ * build.  This macro is designed to catch bugs during debugging, not "in the
+ * field".
  */
 #ifdef DEBUG
 #  define MOZ_ASSERT(expr_)                                      \
@@ -79,5 +85,57 @@ JS_Assert(const char* s, const char* file, int ln);
 #else
 #  define MOZ_ASSERT(expr_) ((void)0)
 #endif /* DEBUG */
+
+/*
+ * MOZ_ASSERT_IF(cond1, cond2) is equivalent to MOZ_ASSERT(cond2) if cond1 is
+ * true.
+ *
+ *   MOZ_ASSERT_IF(isPrime(num), num == 2 || isOdd(num));
+ *
+ * As with MOZ_ASSERT, MOZ_ASSERT_IF has effect only in debug builds.  It is
+ * designed to catch bugs during debugging, not "in the field".
+ */
+#ifdef DEBUG
+#  define MOZ_ASSERT_IF(cond, expr)  ((cond) ? MOZ_ASSERT(expr) : ((void)0))
+#else
+#  define MOZ_ASSERT_IF(cond, expr)  ((void)0)
+#endif
+
+/*
+ * MOZ_NOT_REACHED(reason) indicates that the given point can't be reached
+ * during execution: simply reaching that point in execution is a bug.  It takes
+ * as an argument an error message indicating the reason why that point should
+ * not have been reachable.
+ *
+ *   // ...in a language parser...
+ *   void handle(BooleanLiteralNode node)
+ *   {
+ *     if (node.isTrue())
+ *       handleTrueLiteral();
+ *     else if (node.isFalse())
+ *       handleFalseLiteral();
+ *     else
+ *       MOZ_NOT_REACHED("boolean literal that's not true or false?");
+ *   }
+ */
+#ifdef DEBUG
+#  define MOZ_NOT_REACHED(reason)    JS_Assert(reason, __FILE__, __LINE__)
+#else
+#  define MOZ_NOT_REACHED(reason)    ((void)0)
+#endif
+
+/*
+ * MOZ_ALWAYS_TRUE(expr) and MOZ_ALWAYS_FALSE(expr) always evaluate the provided
+ * expression, in debug builds and in release builds both.  Then, in debug
+ * builds only, the value of the expression is asserted either true or false
+ * using MOZ_ASSERT.
+ */
+#ifdef DEBUG
+#  define MOZ_ALWAYS_TRUE(expr)      MOZ_ASSERT((expr))
+#  define MOZ_ALWAYS_FALSE(expr)     MOZ_ASSERT(!(expr))
+#else
+#  define MOZ_ALWAYS_TRUE(expr)      ((void)(expr))
+#  define MOZ_ALWAYS_FALSE(expr)     ((void)(expr))
+#endif
 
 #endif /* mozilla_Assertions_h_ */
