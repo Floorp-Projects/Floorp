@@ -97,7 +97,7 @@ class ShadowableLayer;
  *       |                                  |
  *       +-> BasicImageLayer <--------------+
  */
-class BasicImplData : public ShadowImplData {
+class BasicImplData {
 public:
   BasicImplData() : mHidden(false),
     mClipToVisibleRegion(false), mOperator(gfxContext::OPERATOR_OVER)
@@ -195,13 +195,6 @@ static BasicImplData*
 ToData(Layer* aLayer)
 {
   return static_cast<BasicImplData*>(aLayer->ImplData());
-}
-
-template <typename T>
-static ShadowImplData*
-ToShadowData(T* aLayer)
-{
-  return static_cast<ShadowImplData*>(aLayer->ImplData());
 }
 
 template<class Container>
@@ -2037,56 +2030,58 @@ BasicLayerManager::CreateReadbackLayer()
   return layer.forget();
 }
 
-BasicShadowableLayer::BasicShadowableLayer()
+class BasicShadowableThebesLayer;
+class BasicShadowableLayer : public ShadowableLayer
 {
-  MOZ_COUNT_CTOR(BasicShadowableLayer);
-}
-
-BasicShadowableLayer::~BasicShadowableLayer()
-{
-  if (HasShadow()) {
-    PLayerChild::Send__delete__(GetShadow());
+public:
+  BasicShadowableLayer()
+  {
+    MOZ_COUNT_CTOR(BasicShadowableLayer);
   }
-  MOZ_COUNT_DTOR(BasicShadowableLayer);
-}
 
-void 
-BasicShadowableLayer::SetShadow(PLayerChild* aShadow)
-{
-  NS_ABORT_IF_FALSE(!mShadow, "can't have two shadows (yet)");
-  mShadow = aShadow;
-}
+  ~BasicShadowableLayer()
+  {
+    if (HasShadow()) {
+      PLayerChild::Send__delete__(GetShadow());
+    }
+    MOZ_COUNT_DTOR(BasicShadowableLayer);
+  }
 
-void 
-BasicShadowableLayer::SetBackBuffer(const SurfaceDescriptor& aBuffer)
-{
-  NS_RUNTIMEABORT("if this default impl is called, |aBuffer| leaks");
-}
+  void SetShadow(PLayerChild* aShadow)
+  {
+    NS_ABORT_IF_FALSE(!mShadow, "can't have two shadows (yet)");
+    mShadow = aShadow;
+  }
+
+  virtual void SetBackBuffer(const SurfaceDescriptor& aBuffer)
+  {
+    NS_RUNTIMEABORT("if this default impl is called, |aBuffer| leaks");
+  }
   
-void 
-BasicShadowableLayer::SetBackBufferYUVImage(gfxSharedImageSurface* aYBuffer,
-                                            gfxSharedImageSurface* aUBuffer,
-                                            gfxSharedImageSurface* aVBuffer)
-{
-  NS_RUNTIMEABORT("if this default impl is called, |aBuffer| leaks");
-}
+  virtual void SetBackBufferYUVImage(gfxSharedImageSurface* aYBuffer,
+                                     gfxSharedImageSurface* aUBuffer,
+                                     gfxSharedImageSurface* aVBuffer)
+  {
+    NS_RUNTIMEABORT("if this default impl is called, |aBuffer| leaks");
+  }
 
-void 
-BasicShadowableLayer::Disconnect()
-{
-  // This is an "emergency Disconnect()", called when the compositing
-  // process has died.  |mShadow| and our Shmem buffers are
-  // automatically managed by IPDL, so we don't need to explicitly
-  // free them here (it's hard to get that right on emergency
-  // shutdown anyway).
-  mShadow = nsnull;
-}
+  virtual void Disconnect()
+  {
+    // This is an "emergency Disconnect()", called when the compositing
+    // process has died.  |mShadow| and our Shmem buffers are
+    // automatically managed by IPDL, so we don't need to explicitly
+    // free them here (it's hard to get that right on emergency
+    // shutdown anyway).
+    mShadow = nsnull;
+  }
 
-template <typename T>
+  virtual BasicShadowableThebesLayer* AsThebes() { return nsnull; }
+};
+
 static ShadowableLayer*
-ToShadowable(T* aLayer)
+ToShadowable(Layer* aLayer)
 {
-  return ToShadowData(aLayer)->AsShadowableLayer();
+  return ToData(aLayer)->AsShadowableLayer();
 }
 
 // Some layers, like ReadbackLayers, can't be shadowed and shadowing

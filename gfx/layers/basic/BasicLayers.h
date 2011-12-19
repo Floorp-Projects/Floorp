@@ -59,7 +59,6 @@ class ShadowImageLayer;
 class ShadowCanvasLayer;
 class ShadowColorLayer;
 class ReadbackProcessor;
-class BasicShadowableThebesLayer;
 
 /**
  * This is a cairo/Thebes-only, main-thread-only implementation of layers.
@@ -271,31 +270,6 @@ private:
   void ForwardTransaction();
 
   LayerRefArray mKeepAlive;
-};
-
-class ShadowImplData
-{
-public:
-  virtual ShadowableLayer* AsShadowableLayer() = 0;
-};
-
-class BasicShadowableLayer : public ShadowableLayer
-{
-public:
-  BasicShadowableLayer();
-
-  ~BasicShadowableLayer();
-
-  void SetShadow(PLayerChild* aShadow);
-  virtual void SetBackBuffer(const SurfaceDescriptor& aBuffer);
-  
-  virtual void SetBackBufferYUVImage(gfxSharedImageSurface* aYBuffer,
-                                     gfxSharedImageSurface* aUBuffer,
-                                     gfxSharedImageSurface* aVBuffer);
-
-  virtual void Disconnect();
-
-  virtual BasicShadowableThebesLayer* AsThebes() { return nsnull; }
 };
 
 }
