@@ -89,6 +89,8 @@
 #include "nsGlobalWindow.h"
 #include "nsScriptNameSpaceManager.h"
 
+#include "nsJSPrincipals.h"
+
 #ifdef XP_MACOSX
 // AssertMacros.h defines 'check' and conflicts with AccessCheck.h
 #undef check
@@ -283,13 +285,15 @@ class ScriptErrorEvent : public nsRunnable
 {
 public:
   ScriptErrorEvent(nsIScriptGlobalObject* aScriptGlobal,
+                   nsIPrincipal* aScriptOriginPrincipal,
                    PRUint32 aLineNr, PRUint32 aColumn, PRUint32 aFlags,
                    const nsAString& aErrorMsg,
                    const nsAString& aFileName,
                    const nsAString& aSourceLine,
                    bool aDispatchEvent,
                    PRUint64 aInnerWindowID)
-  : mScriptGlobal(aScriptGlobal), mLineNr(aLineNr), mColumn(aColumn),
+    : mScriptGlobal(aScriptGlobal), mOriginPrincipal(aScriptOriginPrincipal),
+      mLineNr(aLineNr), mColumn(aColumn),
     mFlags(aFlags), mErrorMsg(aErrorMsg), mFileName(aFileName),
     mSourceLine(aSourceLine), mDispatchEvent(aDispatchEvent),
     mInnerWindowID(aInnerWindowID)
@@ -320,17 +324,11 @@ public:
           nsIPrincipal* p = sop->GetPrincipal();
           NS_ENSURE_STATE(p);
 
-          bool sameOrigin = mFileName.IsVoid();
+          bool sameOrigin = !mOriginPrincipal;
 
           if (p && !sameOrigin) {
-            nsCOMPtr<nsIURI> errorURI;
-            NS_NewURI(getter_AddRefs(errorURI), mFileName);
-            if (errorURI) {
-              // FIXME: Once error reports contain the origin of the
-              // error (principals) we should change this to do the
-              // security check based on the principals and not
-              // URIs. See bug 387476.
-              sameOrigin = NS_SUCCEEDED(p->CheckMayLoad(errorURI, false));
+            if (NS_FAILED(p->Subsumes(mOriginPrincipal, &sameOrigin))) {
+              sameOrigin = false;
             }
           }
 
@@ -342,13 +340,6 @@ public:
             NS_WARNING("Not same origin error!");
             errorevent.errorMsg = xoriginMsg.get();
             errorevent.lineNr = 0;
-            // FIXME: once the principal of the script is not tied to
-            // the filename, we can stop using the post-redirect
-            // filename if we want and remove this line.  Note that
-            // apparently we can't handle null filenames in the error
-            // event dispatching code.
-            static PRUnichar nullFilename[] = { PRUnichar(0) };
-            errorevent.fileName = nullFilename;
           }
 
           nsEventDispatcher::Dispatch(win, presContext, &errorevent, nsnull,
@@ -407,6 +398,7 @@ public:
 
 
   nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;
+  nsCOMPtr<nsIPrincipal>          mOriginPrincipal;
   PRUint32                        mLineNr;
   PRUint32                        mColumn;
   PRUint32                        mFlags;
@@ -502,8 +494,11 @@ NS_ScriptErrorReporter(JSContext *cx,
           innerWindowID = innerWin->WindowID();
         }
       }
+      JSPrincipals *prin = report->originPrincipals;
+      nsIPrincipal *principal =
+        prin ? static_cast<nsJSPrincipals*>(prin)->nsIPrincipalPtr : nsnull;
       nsContentUtils::AddScriptRunner(
-        new ScriptErrorEvent(globalObject, report->lineno,
+        new ScriptErrorEvent(globalObject, principal, report->lineno,
                              report->uctokenptr - report->uclinebuf,
                              report->flags, msg, fileName, sourceLine,
                              report->errorNumber != JSMSG_OUT_OF_MEMORY,
