@@ -185,6 +185,20 @@ public:
   virtual already_AddRefed<Image> GetCurrentImage() = 0;
 
   /**
+   * Make sure the current image is ready for rendering by this container.
+   * May only be called from the main thread.
+   */
+  virtual void Flush() {}
+
+  /**
+   * |Disconnect()| is used by ImageContainer hooked up over IPC.  It may 
+   * be called at any time, and may not be called at all.  Using an
+   * IPC-enabled layer after Destroy() (drawing etc.) results in a
+   * safe no-op; no crashy or uaf etc.
+   */
+  virtual void Disconnect() {}
+
+  /**
    * Get the current image as a gfxASurface. This is useful for fallback
    * rendering.
    * This can only be called from the main thread, since cairo objects
