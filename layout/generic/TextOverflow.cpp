@@ -286,7 +286,8 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
                                   const nsRect&   aContentArea,
                                   const nsRect&   aInsideMarkersArea,
                                   FrameHashtable* aFramesToHide,
-                                  AlignmentEdges* aAlignmentEdges)
+                                  AlignmentEdges* aAlignmentEdges,
+                                  bool*           aFoundVisibleTextOrAtomic)
 {
   const nsIAtom* frameType = aFrame->GetType();
   if (frameType == nsGkAtoms::brFrame ||
@@ -310,7 +311,8 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
       aFramesToHide->PutEntry(aFrame);
     } else if (isAtomic || frameType == nsGkAtoms::textFrame) {
       AnalyzeMarkerEdges(aFrame, frameType, aInsideMarkersArea,
-                         aFramesToHide, aAlignmentEdges);
+                         aFramesToHide, aAlignmentEdges,
+                         aFoundVisibleTextOrAtomic);
     }
   }
   if (isAtomic) {
@@ -320,7 +322,8 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
   nsIFrame* child = aFrame->GetFirstPrincipalChild();
   while (child) {
     ExamineFrameSubtree(child, aContentArea, aInsideMarkersArea,
-                        aFramesToHide, aAlignmentEdges);
+                        aFramesToHide, aAlignmentEdges,
+                        aFoundVisibleTextOrAtomic);
     child = child->GetNextSibling();
   }
 }
@@ -330,7 +333,8 @@ TextOverflow::AnalyzeMarkerEdges(nsIFrame*       aFrame,
                                  const nsIAtom*  aFrameType,
                                  const nsRect&   aInsideMarkersArea,
                                  FrameHashtable* aFramesToHide,
-                                 AlignmentEdges* aAlignmentEdges)
+                                 AlignmentEdges* aAlignmentEdges,
+                                 bool*           aFoundVisibleTextOrAtomic)
 {
   nsRect borderRect(aFrame->GetOffsetTo(mBlock), aFrame->GetSize());
   nscoord leftOverlap =
@@ -368,11 +372,14 @@ TextOverflow::AnalyzeMarkerEdges(nsIFrame*       aFrame,
           snappedRect.width -= snappedRight;
         }
         aAlignmentEdges->Accumulate(snappedRect);
+        *aFoundVisibleTextOrAtomic = true;
       }
     } else if (IsAtomicElement(aFrame, aFrameType)) {
-      if ((insideLeftEdge && mLeft.mActive) ||
-          (insideRightEdge && mRight.mActive)) {
+      if ((leftOverlap > 0 && insideLeftEdge && mLeft.mActive) ||
+          (rightOverlap > 0 && insideRightEdge && mRight.mActive)) {
         aFramesToHide->PutEntry(aFrame);
+      } else {
+        *aFoundVisibleTextOrAtomic = true;
       }
     }
   } else if (!insideLeftEdge || !insideRightEdge) {
@@ -383,6 +390,7 @@ TextOverflow::AnalyzeMarkerEdges(nsIFrame*       aFrame,
   } else {
     // frame is inside
     aAlignmentEdges->Accumulate(borderRect);
+    *aFoundVisibleTextOrAtomic = true;
   }
 }
 
@@ -465,11 +473,13 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
 
     // Analyze the frames on aLine for the overflow situation at the content
     // edges and at the edges of the area between the markers.
+    bool foundVisibleTextOrAtomic = false;
     PRInt32 n = aLine->GetChildCount();
     nsIFrame* child = aLine->mFirstChild;
     for (; n-- > 0; child = child->GetNextSibling()) {
       ExamineFrameSubtree(child, contentArea, insideMarkersArea,
-                          aFramesToHide, aAlignmentEdges);
+                          aFramesToHide, aAlignmentEdges,
+                          &foundVisibleTextOrAtomic);
     }
     if (guessLeft == mLeft.IsNeeded() && guessRight == mRight.IsNeeded()) {
       break;
