@@ -69,7 +69,6 @@
 
 #ifdef XP_MACOSX
 #include "nsVersionComparator.h"
-#include "MacQuirks.h"
 #include "MacLaunchHelper.h"
 #include "MacApplicationDelegate.h"
 #include "MacAutoreleasePool.h"
@@ -2592,10 +2591,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #ifdef DEBUG
   if (PR_GetEnv("XRE_MAIN_BREAK"))
     NS_BREAK();
-#endif
-
-#ifdef XP_MACOSX
-  TriggerQuirks();
 #endif
 
   // see bug 639842
