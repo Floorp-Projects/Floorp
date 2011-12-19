@@ -44,6 +44,7 @@
 
 class nsIDOMMozSmsFilter;
 class nsIDOMMozSmsMessage;
+class nsIDOMMozSmsRequest;
 
 namespace mozilla {
 namespace dom {
@@ -58,11 +59,21 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(SmsCursor)
 
   SmsCursor(nsIDOMMozSmsFilter* aFilter);
+  SmsCursor(nsIDOMMozSmsFilter* aFilter, nsIDOMMozSmsRequest* aRequest);
+
+  void SetMessage(nsIDOMMozSmsMessage* aMessage);
 
 private:
   nsCOMPtr<nsIDOMMozSmsFilter>  mFilter;
+  nsCOMPtr<nsIDOMMozSmsRequest> mRequest;
   nsCOMPtr<nsIDOMMozSmsMessage> mMessage;
 };
+
+inline void
+SmsCursor::SetMessage(nsIDOMMozSmsMessage* aMessage)
+{
+  mMessage = aMessage;
+}
 
 } // namespace sms
 } // namespace dom

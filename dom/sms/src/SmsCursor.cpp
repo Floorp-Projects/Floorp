@@ -40,6 +40,7 @@
 #include "nsDOMError.h"
 #include "nsIDOMSmsFilter.h"
 #include "nsIDOMSmsMessage.h"
+#include "nsIDOMSmsRequest.h"
 
 DOMCI_DATA(MozSmsCursor, mozilla::dom::sms::SmsCursor)
 
@@ -53,13 +54,19 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SmsCursor)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozSmsCursor)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_2(SmsCursor, mFilter, mMessage)
+NS_IMPL_CYCLE_COLLECTION_3(SmsCursor, mFilter, mRequest, mMessage)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SmsCursor)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(SmsCursor)
 
 SmsCursor::SmsCursor(nsIDOMMozSmsFilter* aFilter)
   : mFilter(aFilter)
+{
+}
+
+SmsCursor::SmsCursor(nsIDOMMozSmsFilter* aFilter, nsIDOMMozSmsRequest* aRequest)
+  : mFilter(aFilter)
+  , mRequest(aRequest)
 {
 }
 
@@ -73,8 +80,7 @@ SmsCursor::GetFilter(nsIDOMMozSmsFilter** aFilter)
 NS_IMETHODIMP
 SmsCursor::GetMessage(nsIDOMMozSmsMessage** aMessage)
 {
-  // TODO: implement
-  *aMessage = nsnull;
+  NS_IF_ADDREF(*aMessage = mMessage);
   return NS_OK;
 }
 

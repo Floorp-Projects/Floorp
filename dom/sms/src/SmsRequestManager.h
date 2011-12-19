@@ -69,12 +69,15 @@ public:
   void NotifySmsDeleted(PRInt32 aRequestId, bool aDeleted);
   void NotifySmsDeleteFailed(PRInt32 aRequestId, SmsRequest::ErrorType aError);
   void NotifyNoMessageInList(PRInt32 aRequestId);
+  void NotifyCreateMessageList(PRInt32 aRequestId, PRInt32 aListId, nsIDOMMozSmsMessage* aMessage);
 
 private:
   static SmsRequestManager* sInstance;
 
   nsresult DispatchTrustedEventToRequest(const nsAString& aEventName,
                                          nsIDOMMozSmsRequest* aRequest);
+  SmsRequest* GetRequest(PRInt32 aRequestId);
+
   template <class T>
   void NotifySuccess(PRInt32 aRequestId, T aParam);
   void NotifyError(PRInt32 aRequestId, SmsRequest::ErrorType aError);
