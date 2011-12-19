@@ -74,6 +74,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "essl_to_hlsl", "translator\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "translator_common", "..\src\compiler\translator_common.vcproj", "{5B3A6DB8-1E7E-40D7-92B9-DA8AAE619FAD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PostSubBuffer", "gles2_book\PostSubBuffer\PostSubBuffer.vcproj", "{667CE95F-5DD8-4495-8C18-5CA8A175B12D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{47C93F52-AB4E-4FF9-8D4F-B38CD60A183F} = {47C93F52-AB4E-4FF9-8D4F-B38CD60A183F}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -140,6 +145,10 @@ Global
 		{5B3A6DB8-1E7E-40D7-92B9-DA8AAE619FAD}.Debug|Win32.Build.0 = Debug|Win32
 		{5B3A6DB8-1E7E-40D7-92B9-DA8AAE619FAD}.Release|Win32.ActiveCfg = Release|Win32
 		{5B3A6DB8-1E7E-40D7-92B9-DA8AAE619FAD}.Release|Win32.Build.0 = Release|Win32
+		{667CE95F-5DD8-4495-8C18-5CA8A175B12D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{667CE95F-5DD8-4495-8C18-5CA8A175B12D}.Debug|Win32.Build.0 = Debug|Win32
+		{667CE95F-5DD8-4495-8C18-5CA8A175B12D}.Release|Win32.ActiveCfg = Release|Win32
+		{667CE95F-5DD8-4495-8C18-5CA8A175B12D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

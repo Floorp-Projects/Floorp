@@ -8627,40 +8627,6 @@ nsDocument::IsFullScreenDoc()
   return GetFullScreenElement() != nsnull;
 }
 
-static nsIDocument*
-GetCommonAncestor(nsIDocument* aDoc1, nsIDocument* aDoc2)
-{
-  if (!aDoc1 || !aDoc2) {
-    return nsnull;
-  }
-  nsIDocument* doc1 = aDoc1;
-  nsIDocument* doc2 = aDoc2;
-
-  nsAutoTArray<nsIDocument*, 30> parents1, parents2;
-  do {
-    parents1.AppendElement(doc1);
-    doc1 = doc1->GetParentDocument();
-  } while (doc1);
-  do {
-    parents2.AppendElement(doc2);
-    doc2 = doc2->GetParentDocument();
-  } while (doc2);
-
-  PRUint32 pos1 = parents1.Length();
-  PRUint32 pos2 = parents2.Length();
-  nsIDocument* parent = nsnull;
-  PRUint32 len;
-  for (len = NS_MIN(pos1, pos2); len > 0; --len) {
-    nsIDocument* child1 = parents1.ElementAt(--pos1);
-    nsIDocument* child2 = parents2.ElementAt(--pos2);
-    if (child1 != child2) {
-      break;
-    }
-    parent = child1;
-  }
-  return parent;
-}
-
 class nsCallRequestFullScreen : public nsRunnable
 {
 public:
@@ -8801,6 +8767,50 @@ nsDocument::FullScreenStackTop()
   return element;
 }
 
+// Returns true if aDoc is in the focused tab in the active window.
+static bool
+IsInActiveTab(nsIDocument* aDoc)
+{
+  nsCOMPtr<nsISupports> container = aDoc->GetContainer();
+  nsCOMPtr<nsIDocShell> docshell = do_QueryInterface(container);
+  if (!docshell) {
+    return false;
+  }
+
+  bool isActive = false;
+  docshell->GetIsActive(&isActive);
+  if (!isActive) {
+    return false;
+  }
+  
+  nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(container);
+  if (!dsti) {
+    return false;
+  }
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  dsti->GetRootTreeItem(getter_AddRefs(rootItem));
+  if (!rootItem) {
+    return false;
+  }
+  nsCOMPtr<nsIDOMWindow> rootWin = do_GetInterface(rootItem);
+  if (!rootWin) {
+    return false;
+  }
+
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    return false;
+  }
+
+  nsCOMPtr<nsIDOMWindow> activeWindow;
+  fm->GetActiveWindow(getter_AddRefs(activeWindow));
+  if (!activeWindow) {
+    return false;
+  }
+
+  return activeWindow == rootWin;
+}
+
 void
 nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
 {
@@ -8832,6 +8842,25 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
     LogFullScreenDenied(true, "FullScreenDeniedNotDescendant", this);
     return;
   }
+  if (!nsContentUtils::IsChromeDoc(this) && !IsInActiveTab(this)) {
+    LogFullScreenDenied(true, "FullScreenDeniedNotFocusedTab", this);
+    return;
+  }
+  // Deny requests when a windowed plugin is focused.
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    NS_WARNING("Failed to retrieve focus manager in full-screen request.");
+    return;
+  }
+  nsCOMPtr<nsIDOMElement> focusedElement;
+  fm->GetFocusedElement(getter_AddRefs(focusedElement));
+  if (focusedElement) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(focusedElement);
+    if (nsContentUtils::HasPluginWithUncontrolledEventDispatch(content)) {
+      LogFullScreenDenied(true, "FullScreenDeniedFocusedPlugin", this);
+      return;
+    }
+  }
 
   // Stores a list of documents which we must dispatch "mozfullscreenchange"
   // too. We're required by the spec to dispatch the events in root-to-leaf
@@ -8839,16 +8868,6 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
   // references to the documents we must dispatch to so that we get the order
   // as specified.
   nsAutoTArray<nsIDocument*, 8> changed;
-
-  // If another top-level window is full-screen. Exit it from full-screen.
-  nsCOMPtr<nsIDocument> fullScreenDoc(do_QueryReferent(sFullScreenDoc));
-  nsIDocument* commonAncestor = GetCommonAncestor(fullScreenDoc, this);
-  if (fullScreenDoc && !commonAncestor) {
-    // A document which doesn't have a common ancestor is full-screen, this
-    // must be in a separate browser window. Fully exit full-screen, to move
-    // the other browser window/doctree out of full-screen.
-    nsIDocument::ExitFullScreen(false);
-  }
 
   // Remember the root document, so that if a full-screen document is hidden
   // we can reset full-screen state in the remaining visible full-screen documents.
@@ -8874,8 +8893,6 @@ nsDocument::RequestFullScreen(Element* aElement, bool aWasCallerChrome)
       changed.AppendElement(parent);
       child = parent;
     } else {
-      NS_ASSERTION(!commonAncestor || child == commonAncestor,
-                   "Should finish loop at common ancestor (or null)");
       // We've reached either the root, or a point in the doctree where the
       // new full-screen element container is the same as the previous
       // full-screen element's container. No more changes need to be made
@@ -8986,10 +9003,6 @@ nsDocument::IsFullScreenEnabled(bool aCallerIsChrome, bool aLogFailure)
 
   if (!nsContentUtils::IsFullScreenApiEnabled()) {
     LogFullScreenDenied(aLogFailure, "FullScreenDeniedDisabled", this);
-    return false;
-  }
-  if (nsContentUtils::HasPluginWithUncontrolledEventDispatch(this)) {
-    LogFullScreenDenied(aLogFailure, "FullScreenDeniedPlugins", this);
     return false;
   }
   if (!IsVisible()) {

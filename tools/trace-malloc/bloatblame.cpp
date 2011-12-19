@@ -350,7 +350,6 @@ static void dump_graph(tmreader *tmr, PLHashTable *hashtbl, const char *varname,
     char *name;
     size_t namelen;
     char buf1[16], buf2[16], buf3[16], buf4[16];
-    static char NA[] = "N/A";
 
     count = hashtbl->nentries;
     table = (tmgraphnode**) malloc(count * sizeof(tmgraphnode*));
