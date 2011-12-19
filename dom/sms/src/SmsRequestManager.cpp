@@ -117,16 +117,22 @@ SmsRequestManager::DispatchTrustedEventToRequest(const nsAString& aEventName,
   return aRequest->DispatchEvent(event, &dummy);
 }
 
-template <class T>
-void
-SmsRequestManager::NotifySuccess(PRInt32 aRequestId, T aParam)
+SmsRequest*
+SmsRequestManager::GetRequest(PRInt32 aRequestId)
 {
   NS_ASSERTION(mRequests.Count() > aRequestId && mRequests[aRequestId],
                "Got an invalid request id or it has been already deleted!");
 
   // It's safe to use the static_cast here given that we did call
   // |new SmsRequest()|.
-  SmsRequest* request = static_cast<SmsRequest*>(mRequests[aRequestId]);
+  return static_cast<SmsRequest*>(mRequests[aRequestId]);
+}
+
+template <class T>
+void
+SmsRequestManager::NotifySuccess(PRInt32 aRequestId, T aParam)
+{
+  SmsRequest* request = GetRequest(aRequestId);
   request->SetSuccess(aParam);
 
   DispatchTrustedEventToRequest(SUCCESS_EVENT_NAME, request);
@@ -137,12 +143,7 @@ SmsRequestManager::NotifySuccess(PRInt32 aRequestId, T aParam)
 void
 SmsRequestManager::NotifyError(PRInt32 aRequestId, SmsRequest::ErrorType aError)
 {
-  NS_ASSERTION(mRequests.Count() > aRequestId && mRequests[aRequestId],
-               "Got an invalid request id or it has been already deleted!");
-
-  // It's safe to use the static_cast here given that we did call
-  // |new SmsRequest()|.
-  SmsRequest* request = static_cast<SmsRequest*>(mRequests[aRequestId]);
+  SmsRequest* request = GetRequest(aRequestId);
   request->SetError(aError);
 
   DispatchTrustedEventToRequest(ERROR_EVENT_NAME, request);
@@ -192,6 +193,19 @@ SmsRequestManager::NotifyNoMessageInList(PRInt32 aRequestId)
 {
   // TODO: use Filter!
   nsCOMPtr<nsIDOMMozSmsCursor> cursor = new SmsCursor(nsnull);
+
+  NotifySuccess<nsIDOMMozSmsCursor*>(aRequestId, cursor);
+}
+
+void
+SmsRequestManager::NotifyCreateMessageList(PRInt32 aRequestId, PRInt32 aListId,
+                                           nsIDOMMozSmsMessage* aMessage)
+{
+  // TODO: use Filter!
+  SmsRequest* request = GetRequest(aRequestId);
+
+  nsCOMPtr<SmsCursor> cursor = new SmsCursor(nsnull, request);
+  cursor->SetMessage(aMessage);
 
   NotifySuccess<nsIDOMMozSmsCursor*>(aRequestId, cursor);
 }
