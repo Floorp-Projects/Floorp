@@ -2076,7 +2076,15 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
     // -- sanity check the number of name records
     if (PRUint64(nameCount) * sizeof(NameRecord) + PRUint64(nameOffset) > dataLength)
         return NS_ERROR_FAILURE;
-    
+
+    // bug 496573 -- dummy names in case the font didn't contain English names
+    const nsString dummyNames[EOTFixedHeader::EOT_NUM_NAMES] = {
+        NS_LITERAL_STRING("Unknown"),
+        NS_LITERAL_STRING("Regular"),
+        EmptyString(),
+        dummyNames[EOTFixedHeader::EOT_FAMILY_NAME_INDEX]
+    };
+
     // -- iterate through name records, look for specific name ids with
     //    matching platform/encoding/etc. and store offset/lengths
     NameRecordData names[EOTFixedHeader::EOT_NUM_NAMES] = {0};
@@ -2094,54 +2102,49 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
                 PRUint32(nameRecord->languageID) != LANG_ID_MICROSOFT_EN_US)
             continue;
 
+        PRUint32 index;
         switch ((PRUint32)nameRecord->nameID) {
 
         case NAME_ID_FAMILY:
-            names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].offset = nameRecord->offset;
-            names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].length = nameRecord->length;
-            needNames &= ~(1 << EOTFixedHeader::EOT_FAMILY_NAME_INDEX);
+            index = EOTFixedHeader::EOT_FAMILY_NAME_INDEX;
             break;
 
         case NAME_ID_STYLE:
-            names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].offset = nameRecord->offset;
-            names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].length = nameRecord->length;
-            needNames &= ~(1 << EOTFixedHeader::EOT_STYLE_NAME_INDEX);
+            index = EOTFixedHeader::EOT_STYLE_NAME_INDEX;
             break;
 
         case NAME_ID_FULL:
-            names[EOTFixedHeader::EOT_FULL_NAME_INDEX].offset = nameRecord->offset;
-            names[EOTFixedHeader::EOT_FULL_NAME_INDEX].length = nameRecord->length;
-            needNames &= ~(1 << EOTFixedHeader::EOT_FULL_NAME_INDEX);
+            index = EOTFixedHeader::EOT_FULL_NAME_INDEX;
             break;
 
         case NAME_ID_VERSION:
-            names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].offset = nameRecord->offset;
-            names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].length = nameRecord->length;
-            needNames &= ~(1 << EOTFixedHeader::EOT_VERSION_NAME_INDEX);
+            index = EOTFixedHeader::EOT_VERSION_NAME_INDEX;
             break;
 
         default:
-            break;
+            continue;
         }
+
+        names[index].offset = nameRecord->offset;
+        names[index].length = nameRecord->length;
+        needNames &= ~(1 << index);
 
         if (needNames == 0)
             break;
     }
 
-    // the Version name is allowed to be null
-    if ((needNames & ~(1 << EOTFixedHeader::EOT_VERSION_NAME_INDEX)) != 0) {
-        return NS_ERROR_FAILURE;
-    }
-
     // -- expand buffer if needed to include variable-length portion
     PRUint32 eotVariableLength = 0;
-    eotVariableLength = (names[EOTFixedHeader::EOT_FAMILY_NAME_INDEX].length & (~1)) +
-                        (names[EOTFixedHeader::EOT_STYLE_NAME_INDEX].length & (~1)) +
-                        (names[EOTFixedHeader::EOT_FULL_NAME_INDEX].length & (~1)) +
-                        (names[EOTFixedHeader::EOT_VERSION_NAME_INDEX].length & (~1)) +
-                        EOTFixedHeader::EOT_NUM_NAMES * (2 /* size */ 
-                                                         + 2 /* padding */) +
-                        2 /* null root string size */;
+    for (i = 0; i < EOTFixedHeader::EOT_NUM_NAMES; i++) {
+        if (!(needNames & (1 << i))) {
+            eotVariableLength += names[i].length & (~1);
+        } else {
+            eotVariableLength += dummyNames[i].Length() * sizeof(PRUnichar);
+        }
+    }
+    eotVariableLength += EOTFixedHeader::EOT_NUM_NAMES * (2 /* size */ 
+                                                          + 2 /* padding */) +
+                         2 /* null root string size */;
 
     if (!aHeader->AppendElements(eotVariableLength))
         return NS_ERROR_OUT_OF_MEMORY;
@@ -2151,36 +2154,46 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
     PRUint32 strOffset, strLen;
 
     for (i = 0; i < EOTFixedHeader::EOT_NUM_NAMES; i++) {
-        PRUint32 namelen = names[i].length;
-        PRUint32 nameoff = names[i].offset;  // offset from base of string storage
+        if (!(needNames & (1 << i))) {
+            PRUint32 namelen = names[i].length;
+            PRUint32 nameoff = names[i].offset;  // offset from base of string storage
 
-        // sanity check the name string location
-        if (PRUint64(nameOffset) + PRUint64(nameStringsBase) +
-            PRUint64(nameoff) + PRUint64(namelen) > dataLength) {
-            return NS_ERROR_FAILURE;
+            // sanity check the name string location
+            if (PRUint64(nameOffset) + PRUint64(nameStringsBase) +
+                PRUint64(nameoff) + PRUint64(namelen) > dataLength) {
+                return NS_ERROR_FAILURE;
+            }
+
+            strOffset = nameOffset + nameStringsBase + nameoff;
+
+            // output 2-byte str size
+            strLen = namelen & (~1);  // UTF-16 string len must be even
+            *((PRUint16*) eotEnd) = PRUint16(strLen);
+            eotEnd += 2;
+
+            // length is number of UTF-16 chars, not bytes
+            CopySwapUTF16(reinterpret_cast<const PRUint16*>(aFontData + strOffset),
+                          reinterpret_cast<PRUint16*>(eotEnd),
+                          (strLen >> 1));
+        } else {
+            // bug 496573 -- English names are not present.
+            // supply an artificial one.
+            strLen = dummyNames[i].Length() * sizeof(PRUnichar);
+            *((PRUint16*) eotEnd) = PRUint16(strLen);
+            eotEnd += 2;
+
+            memcpy(eotEnd, dummyNames[i].BeginReading(), strLen);
         }
-
-        strOffset = nameOffset + nameStringsBase + nameoff;
-
-        // output 2-byte str size
-        strLen = namelen & (~1);  // UTF-16 string len must be even
-        *((PRUint16*) eotEnd) = PRUint16(strLen);
-        eotEnd += 2;
-
-        // length is number of UTF-16 chars, not bytes
-        CopySwapUTF16(reinterpret_cast<const PRUint16*>(aFontData + strOffset),
-                      reinterpret_cast<PRUint16*>(eotEnd),
-                      (strLen >> 1));
         eotEnd += strLen;
 
         // add 2-byte zero padding to the end of each string
         *eotEnd++ = 0;
         *eotEnd++ = 0;
 
-       // Note: Microsoft's WEFT tool produces name strings which
-       // include an extra null at the end of each string, in addition
-       // to the 2-byte zero padding that separates the string fields. 
-       // Don't think this is important to imitate...
+        // Note: Microsoft's WEFT tool produces name strings which
+        // include an extra null at the end of each string, in addition
+        // to the 2-byte zero padding that separates the string fields. 
+        // Don't think this is important to imitate...
     }
 
     // append null root string size
