@@ -1171,6 +1171,10 @@ LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
     msg.AppendInt(result, 16);
     msg.Append(", mFBOTextureTarget 0x");
     msg.AppendInt(mFBOTextureTarget, 16);
+    msg.Append(", aRect.width ");
+    msg.AppendInt(aRect.width);
+    msg.Append(", aRect.height ");
+    msg.AppendInt(aRect.height);
     NS_RUNTIMEABORT(msg.get());
   }
 

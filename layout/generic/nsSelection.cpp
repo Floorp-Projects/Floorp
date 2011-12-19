@@ -1626,7 +1626,7 @@ nsFrameSelection::AdjustForMaintainedSelection(nsIContent *aContent,
 
   // If aContent/aOffset is inside the maintained selection, or if it is on the
   // "anchor" side of the maintained selection, we need to do something.
-  if (relToStart < 0 && relToEnd > 0 ||
+  if ((relToStart < 0 && relToEnd > 0) ||
       (relToStart > 0 &&
        mDomSelections[index]->GetDirection() == eDirNext) ||
       (relToEnd < 0 &&

@@ -34,13 +34,13 @@
  *	Bas Schouten <bschouten@mozilla.com>
  */
 #include <dwrite.h>
-#include <D2d1.h>
+#include <d2d1.h>
 
 // DirectWrite is not available on all platforms.
 typedef HRESULT (WINAPI*DWriteCreateFactoryFunc)(
-  __in   DWRITE_FACTORY_TYPE factoryType,
-  __in   REFIID iid,
-  __out  IUnknown **factory
+  DWRITE_FACTORY_TYPE factoryType,
+  REFIID iid,
+  IUnknown **factory
 );
 
 /* cairo_scaled_font_t implementation */

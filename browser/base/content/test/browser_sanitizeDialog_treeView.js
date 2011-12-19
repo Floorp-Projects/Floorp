@@ -401,8 +401,9 @@ WindowHelper.prototype = {
     let key = aDelta < 0 ? "UP" : "DOWN";
     let abs = Math.abs(aDelta);
     let treechildren = this.getTree().treeBoxObject.treeBody;
+    treechildren.focus();
     for (let i = 0; i < abs; i++) {
-      EventUtils.sendKey(key, treechildren);
+      EventUtils.sendKey(key);
     }
   },
 

@@ -246,7 +246,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
 #ifdef EDITLINE
 extern "C" {
-extern JS_EXPORT_API(char)     *readline(const char *prompt);
+extern JS_EXPORT_API(char *)   readline(const char *prompt);
 extern JS_EXPORT_API(void)     add_history(char *line);
 }
 #endif
@@ -489,8 +489,8 @@ Load(JSContext *cx, uintN argc, jsval *vp)
                            filename.ptr());
             return false;
         }
-        JSScript *script = JS_CompileFileHandleForPrincipals(cx, obj, filename.ptr(),
-                                                             file, gJSPrincipals);
+        JSScript *script = JS_CompileUTF8FileHandleForPrincipals(cx, obj, filename.ptr(),
+                                                                 file, gJSPrincipals);
         fclose(file);
         if (!script)
             return false;
@@ -1049,8 +1049,8 @@ ProcessFile(JSContext *cx, JSObject *obj, const char *filename, FILE *file,
         ungetc(ch, file);
         DoBeginRequest(cx);
 
-        script = JS_CompileFileHandleForPrincipals(cx, obj, filename, file,
-                                                   gJSPrincipals);
+        script = JS_CompileUTF8FileHandleForPrincipals(cx, obj, filename, file,
+                                                       gJSPrincipals);
 
         if (script && !compileOnly)
             (void)JS_ExecuteScript(cx, obj, script, &result);

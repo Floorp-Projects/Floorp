@@ -40,7 +40,9 @@
 <!ENTITY connectionSettings.label        "Settings…">
 <!ENTITY connectionSettings.accesskey    "e">
 
-<!ENTITY offlineStorage.label            "Offline Storage">
+<!ENTITY httpCache.label                 "Cached Web Content">
+
+<!ENTITY offlineStorage2.label           "Offline Web Content and User Data">
 
 <!-- LOCALIZATION NOTE:
   The entities limitCacheSizeBefore.label and limitCacheSizeAfter.label appear on a single
@@ -53,6 +55,8 @@
 <!ENTITY limitCacheSizeAfter.label       "MB of space">
 <!ENTITY clearCacheNow.label             "Clear Now">
 <!ENTITY clearCacheNow.accesskey         "C">
+<!ENTITY clearOfflineAppCacheNow.label   "Clear Now">
+<!ENTITY clearOfflineAppCacheNow.accesskey "N">
 <!ENTITY overrideSmartCacheSize.label    "Override automatic cache management">
 <!ENTITY overrideSmartCacheSize.accesskey "O">
 
@@ -84,7 +88,7 @@
 <!ENTITY offlineNotifyExceptions.label   "Exceptions…">
 <!ENTITY offlineNotifyExceptions.accesskey "x">
 
-<!ENTITY offlineAppsList.label           "The following websites have stored data for offline use:">
+<!ENTITY offlineAppsList2.label          "The following websites are allowed to store data for offline use:">
 <!ENTITY offlineAppsList.height          "7em">
 <!ENTITY offlineAppsListRemove.label     "Remove…">
 <!ENTITY offlineAppsListRemove.accesskey "R">

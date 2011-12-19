@@ -275,24 +275,10 @@ EXPORTS_js = \
 		$(NULL)
 
 ###############################################
-# BEGIN include sources for low-level code shared with Gecko
+# BEGIN include sources for low-level code shared with mfbt
 #
-VPATH		+= \
-		$(srcdir)/../../mfbt \
-		$(NULL)
-
-EXPORTS_NAMESPACES += mozilla
-
-EXPORTS_mozilla = \
-		Attributes.h	\
-		GuardObjects.h \
-		MSStdInt.h \
-		RangedPtr.h \
-		RefPtr.h \
-		StdInt.h \
-		Types.h	\
-		Util.h \
-		$(NULL)
+VPATH += $(srcdir)/../../mfbt
+include $(srcdir)/../../mfbt/exported_headers.mk
 
 ifdef ENABLE_METHODJIT
 
@@ -726,6 +712,9 @@ endif
 ifdef JS_VERSION
 DEFINES		+= -DJS_VERSION=$(JS_VERSION)
 endif
+
+# We do not want to have obsolete NSPR functionality in threadsafe builds.
+DEFINES   += -DNO_NSPR_10_SUPPORT
 
 ifneq ($(findstring -L,$(NSPR_LIBS)),)
 NSPR_STATIC_PATH = $(subst -L,,$(findstring -L,$(NSPR_LIBS)))

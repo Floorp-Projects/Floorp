@@ -2331,7 +2331,8 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const jsid &id, const PropD
             unchanged |= JSPROP_PERMANENT;
         if (!desc.hasEnumerable)
             unchanged |= JSPROP_ENUMERATE;
-        if (!desc.hasWritable)
+        /* Watch out for accessor -> data transformations here. */
+        if (!desc.hasWritable && shape->isDataDescriptor())
             unchanged |= JSPROP_READONLY;
 
         if (desc.hasValue)
@@ -3196,7 +3197,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
              */
             if (++pc < endpc) {
                 op = JSOp(*pc);
-                return *pc == JSOP_EQ || *pc == JSOP_NE;
+                return op == JSOP_EQ || op == JSOP_NE;
             }
             return JS_FALSE;
 
@@ -7405,7 +7406,6 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
             fprintf(stderr, "no stack for cx = %p\n", (void*) cx);
             return;
         }
-        start = i.fp();
     } else {
         while (!i.done() && i.fp() != start)
             ++i;

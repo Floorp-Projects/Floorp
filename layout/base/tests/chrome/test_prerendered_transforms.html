@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that active transformed elements coming into view are prerendered so we don't have to redraw constantly</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body onload="startTest()">
+<div>
+<div id="t" style="position:absolute; left:0; top:500px; -moz-transform: translatex(-100px); width:200px; height:100px; background:yellow;">
+  <div style="text-align:right">Hello</div>
+  <div style="text-align:left">Kitty</div>
+</div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var t = document.getElementById("t");
+var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+               getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+function startTest() {
+  // Do a couple of transform changes to ensure we've triggered activity heuristics
+  waitForAllPaintsFlushed(function () {
+    t.style.MozTransform = "translatex(-75px)";
+    waitForAllPaintsFlushed(function () {
+      t.style.MozTransform = "translatex(-50px)";
+      waitForAllPaintsFlushed(function () {
+        // Clear paint state now and move again.
+        utils.checkAndClearPaintedState(t);
+        // Don't move to 0 since that might trigger some special case that turns off transforms.
+        t.style.MozTransform = "translatex(-1px)";
+        waitForAllPaintsFlushed(function () {
+          var painted = utils.checkAndClearPaintedState(t);
+          is(painted, false, "Transformed element should not have been painted");
+          SimpleTest.finish();
+        });
+      });
+    });
+  });
+}
+</script>
+</pre>
+</body>
+</html>

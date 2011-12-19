@@ -3042,6 +3042,13 @@ typedef ptrdiff_t GLintptr;
 
 #define LOCAL_GL_MAX_SAMPLES                      0x8D57
 
+#define LOCAL_GL_LOW_FLOAT                        0x8DF0
+#define LOCAL_GL_MEDIUM_FLOAT                     0x8DF1
+#define LOCAL_GL_HIGH_FLOAT                       0x8DF2
+#define LOCAL_GL_LOW_INT                          0x8DF3
+#define LOCAL_GL_MEDIUM_INT                       0x8DF4
+#define LOCAL_GL_HIGH_INT                         0x8DF5
+
 #define LOCAL_GL_GUILTY_CONTEXT_RESET_ARB                   0x8253
 #define LOCAL_GL_INNOCENT_CONTEXT_RESET_ARB                 0x8254
 #define LOCAL_GL_UNKNOWN_CONTEXT_RESET_ARB                  0x8255

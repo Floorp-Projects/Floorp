@@ -1757,6 +1757,9 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     Value *argv = regs.fp()->maybeFormalArgs();
     CHECK_INTERRUPT_HANDLER();
 
+    if (rt->profilingScripts)
+        ENABLE_INTERRUPTS();
+
     if (!entryFrame)
         entryFrame = regs.fp();
 
@@ -1868,6 +1871,12 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #endif /* !JS_THREADED_INTERP */
     {
         bool moreInterrupts = false;
+
+        if (cx->runtime->profilingScripts) {
+            if (!script->pcCounters)
+                script->initCounts(cx);
+            moreInterrupts = true;
+        }
 
         if (script->pcCounters) {
             OpcodeCounts counts = script->getCounts(regs.pc);
@@ -2096,14 +2105,12 @@ BEGIN_CASE(JSOP_STOP)
         if (JS_LIKELY(interpReturnOK)) {
             TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 
-            op = JSOp(*regs.pc);
-            len = JSOP_CALL_LENGTH;
-
             if (shiftResult) {
                 regs.sp[-2] = regs.sp[-1];
                 regs.sp--;
             }
 
+            len = JSOP_CALL_LENGTH;
             DO_NEXT_OP(len);
         }
 

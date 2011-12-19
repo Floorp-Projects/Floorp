@@ -48,11 +48,11 @@ var elm = document.getElementById(id);
 elm.focus();
 var x = document.body.offsetHeight;
 $(id).addEventListener("input", inputListener, false);
-sendChar('1',elm);
+sendChar('1');
 is(inputHappened, true, "How come no input?");
-sendChar('3',elm);
-sendKey('LEFT',elm)
-sendChar('2',elm);
+sendChar('3');
+sendKey('LEFT')
+sendChar('2');
 elm.blur();
 x = document.body.offsetHeight;
 is(elm.value, '123', id + " edit");
@@ -61,14 +61,14 @@ test_edit_cmds(id)
 id = 'bug446663_b'
 elm = document.getElementById(id);
 elm.focus();
-sendChar('1',elm);
+sendChar('1');
 elm.style.display = 'none'
 var x = document.body.offsetHeight;
 elm.style.display = 'inline'
 x = document.body.offsetHeight;
-sendChar('3',elm);
-sendKey('LEFT',elm)
-sendChar('2',elm);
+sendChar('3');
+sendKey('LEFT')
+sendChar('2');
 elm.blur();
 x = document.body.offsetHeight;
 is(elm.value, '123', id + " edit");

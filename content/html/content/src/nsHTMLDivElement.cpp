@@ -170,7 +170,7 @@ nsHTMLDivElement::IsAttributeMapped(const nsIAtom* aAttribute) const
       sDivAlignAttributeMap,
       sCommonAttributeMap
     };
-    return FindAttributeDependence(aAttribute, map, ArrayLength(map));
+    return FindAttributeDependence(aAttribute, map);
   }
   if (mNodeInfo->Equals(nsGkAtoms::marquee)) {  
     static const MappedAttributeEntry* const map[] = {
@@ -178,7 +178,7 @@ nsHTMLDivElement::IsAttributeMapped(const nsIAtom* aAttribute) const
       sBackgroundColorAttributeMap,
       sCommonAttributeMap
     };
-    return FindAttributeDependence(aAttribute, map, ArrayLength(map));
+    return FindAttributeDependence(aAttribute, map);
   }
 
   return nsGenericHTMLElement::IsAttributeMapped(aAttribute);

@@ -55,6 +55,8 @@ interface nsITelephone : nsISupports {
 
   void dial(in DOMString number);
   void hangUp(in long callIndex);
+  void startTone(in DOMString dtmfChar);
+  void stopTone();
   void answerCall();
   void rejectCall();
   attribute bool microphoneMuted;

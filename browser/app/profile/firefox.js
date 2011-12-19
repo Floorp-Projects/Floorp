@@ -81,6 +81,10 @@ pref("extensions.blocklist.itemURL", "https://addons.mozilla.org/%LOCALE%/%APP%/
 
 pref("extensions.update.autoUpdateDefault", true);
 
+pref("extensions.hotfix.id", "firefox-hotfix@mozilla.org");
+pref("extensions.hotfix.cert.checkAttributes", true);
+pref("extensions.hotfix.certs.1.sha1Fingerprint", "foo");
+
 // Disable add-ons installed into the shared user and shared system areas by
 // default. This does not include the application directory. See the SCOPE
 // constants in AddonManager.jsm for values to use here
@@ -1018,6 +1022,12 @@ pref("devtools.inspector.htmlHeight", 112);
 
 // Enable the style inspector
 pref("devtools.styleinspector.enabled", true);
+
+// Enable the Tilt inspector
+pref("devtools.tilt.enabled", true);
+
+// Enable the Tilt inspector even if WebGL capabilities are not detected
+pref("devtools.tilt.force-enabled", false);
 
 // Enable the rules view
 pref("devtools.ruleview.enabled", true);

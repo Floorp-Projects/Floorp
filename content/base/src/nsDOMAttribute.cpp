@@ -59,7 +59,7 @@
 #include "nsTextNode.h"
 #include "mozAutoDocUpdate.h"
 #include "nsMutationEvent.h"
-#include "nsPLDOMEvent.h"
+#include "nsAsyncDOMEvent.h"
 #include "nsWrapperCacheInlines.h"
 
 using namespace mozilla::dom;

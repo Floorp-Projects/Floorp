@@ -83,7 +83,7 @@ is($("target").value, "abc", "Typing should be limited by maxlength");
 $("target").value = "";
 sendString("ad");
 sendKey("left");
-sendString("bc")
+sendString("bc");
 is($("target").value, "abd", "Typing should be limited by maxlength again");
 
 </script>

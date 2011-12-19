@@ -177,6 +177,7 @@
           row.setAttribute("type", warning ? "warning" : "error");
           row.setAttribute("msg", aObject.errorMessage);
           row.setAttribute("category", aObject.category);
+          row.setAttribute("time", this.properFormatTime(aObject.timeStamp));
           if (aObject.lineNumber || aObject.sourceName) {
             row.setAttribute("href", aObject.sourceName);
             row.setAttribute("line", aObject.lineNumber);
@@ -217,7 +218,19 @@
           this.mCService.reset();
         ]]></body>
       </method>
-            
+
+      <method name="properFormatTime">
+        <parameter name="aTime"/>
+        <body><![CDATA[
+          const dateServ = Components.classes["@mozilla.org/intl/scriptabledateformat;1"]
+                                     .getService(Components.interfaces.nsIScriptableDateFormat);
+          let errorTime = new Date(aTime);
+          return dateServ.FormatDateTime("", dateServ.dateFormatShort, dateServ.timeFormatSeconds,
+              errorTime.getFullYear(), errorTime.getMonth() + 1, errorTime.getDate(),
+              errorTime.getHours(), errorTime.getMinutes(), errorTime.getSeconds());
+        ]]></body>
+      </method>
+
       <method name="copySelectedItem">
         <body><![CDATA[
           if (this.mSelectedItem) try {
@@ -340,6 +353,9 @@
           <xul:image class="console-icon" xbl:inherits="src,type"/>
         </xul:box>
         <xul:vbox class="console-row-content" xbl:inherits="selected" flex="1">
+          <xul:box class="console-row-time">
+            <xul:label class="label" xbl:inherits="value=time"/>
+          </xul:box>
           <xul:box class="console-row-msg" align="start">
             <xul:label class="label" xbl:inherits="value=typetext"/>
             <xul:description class="console-error-msg" xbl:inherits="xbl:text=msg" flex="1"/>
@@ -366,15 +382,18 @@
     </content>
 
     <implementation>
-      
       <method name="toString">
         <body><![CDATA[
-          var msg = this.getAttribute("typetext") + " " + this.getAttribute("msg");
-          
-          var strBundle = this._ConsoleBox.mStrBundle;
-          
+          let msg = "";
+          let strBundle = this._ConsoleBox.mStrBundle;
+
+          if (this.hasAttribute("time"))
+            msg += strBundle.getFormattedString("errTime", [this.getAttribute("time")]) + "\n";
+
+          msg += this.getAttribute("typetext") + " " + this.getAttribute("msg");
+
           if (this.hasAttribute("line") && this.hasAttribute("href")) {
-            msg += "\n" + strBundle.getFormattedString("errFile", 
+            msg += "\n" + strBundle.getFormattedString("errFile",
                                         [this.getAttribute("href")]) + "\n";
             if (this.hasAttribute("col")) {
               msg += strBundle.getFormattedString("errLineCol",
@@ -382,10 +401,10 @@
             } else
               msg += strBundle.getFormattedString("errLine", [this.getAttribute("line")]);
           }
-          
+
           if (this.hasAttribute("code"))
             msg += "\n" + strBundle.getString("errCode") + "\n" + this.getAttribute("code");
-          
+
           return msg;
         ]]></body>
       </method>

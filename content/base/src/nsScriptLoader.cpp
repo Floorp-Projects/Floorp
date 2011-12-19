@@ -1057,7 +1057,7 @@ DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsCString& oChars
 
 /* static */ nsresult
 nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const PRUint8* aData,
-                               PRUint32 aLength, const nsString& aHintCharset,
+                               PRUint32 aLength, const nsAString& aHintCharset,
                                nsIDocument* aDocument, nsString& aString)
 {
   if (!aLength) {

@@ -37,6 +37,7 @@
 #   Patrick Walton <pcwalton@mozilla.com>
 #   David Dahl <ddahl@mozilla.com>
 #   Frank Yan <fyan@mozilla.com>
+#   Victor Porof <vporof@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1007,6 +1008,11 @@
                           flex="1" orient="horizontal"
                           clicktoscroll="true"/>
           <hbox id="inspector-tools">
+            <toolbarbutton id="inspector-3D-button"
+                           hidden="true"
+                           label="&inspect3DButton.label;"
+                           accesskey="&inspect3DButton.accesskey;"
+                           command="Inspector:Tilt"/>
             <toolbarbutton id="inspector-style-button"
                            label="&inspectStyleButton.label;"
                            accesskey="&inspectStyleButton.accesskey;"

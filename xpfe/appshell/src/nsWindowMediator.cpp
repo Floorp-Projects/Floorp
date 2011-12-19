@@ -436,7 +436,7 @@ nsWindowMediator::CalculateZPosition(
     // locate inBelow. use topmost if it can't be found or isn't in the
     // z-order list
     info = GetInfoFor(inBelow);
-    if (!info || info->mYounger != info && info->mLower == info)
+    if (!info || (info->mYounger != info && info->mLower == info))
       info = mTopmostWindow;
     else
       found = true;
@@ -533,9 +533,9 @@ nsWindowMediator::SetZPosition(
   nsWindowInfo *inInfo,
                *belowInfo;
 
-  if (inPosition != nsIWindowMediator::zLevelTop &&
-      inPosition != nsIWindowMediator::zLevelBottom &&
-      inPosition != nsIWindowMediator::zLevelBelow ||
+  if ((inPosition != nsIWindowMediator::zLevelTop &&
+       inPosition != nsIWindowMediator::zLevelBottom &&
+       inPosition != nsIWindowMediator::zLevelBelow) ||
       !inWindow) {
     return NS_ERROR_INVALID_ARG;
   }

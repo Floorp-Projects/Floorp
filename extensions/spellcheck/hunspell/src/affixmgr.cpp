@@ -3705,7 +3705,7 @@ int  AffixMgr::parse_convtable(char * line, FileMgr * af, RepList ** rl, const c
            if (*piece != '\0') {
                switch(i) {
                   case 0: {
-                             if (strncmp(piece, keyword, sizeof(keyword)) != 0) {
+                             if (strncmp(piece, keyword, strlen(keyword)) != 0) {
                                  HUNSPELL_WARNING(stderr, "error: line %d: table is corrupt\n", af->getlinenum());
                                  delete *rl;
                                  *rl = NULL;

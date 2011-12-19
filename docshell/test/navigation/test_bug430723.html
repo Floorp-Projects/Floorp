@@ -62,15 +62,25 @@ var step1 =function() {
   // Navigate down and up.
   is(testWindow.document.body.scrollTop, 0,
      "Page1: Ensure we scrollpane is at the top before we start scrolling.");
+  testWindow.addEventListener("scroll", function () {
+    testWindow.removeEventListener("scroll", arguments.callee, true);
+    isnot(testWindow.document.body.scrollTop, 0,
+          "Page1: Ensure we can scroll down.");
+    SimpleTest.executeSoon(step1_2);
+  }, true);
   sendKey('DOWN', testWindow);
-  sendKey('UP', testWindow);
-  setTimeout(function() {
-    is(testWindow.document.body.scrollTop, 0,
-       "Page1: Ensure we can scroll down and up, back to the top.");  
-    
-    // Nav to blue box page. This should fire step2.
-    testWindow.location = gTallBlueBoxURI;
-  }, 0);
+
+  function step1_2() {
+    testWindow.addEventListener("scroll", function () {
+      testWindow.removeEventListener("scroll", arguments.callee, true);
+      is(testWindow.document.body.scrollTop, 0,
+         "Page1: Ensure we can scroll up, back to the top.");  
+
+      // Nav to blue box page. This should fire step2.
+      testWindow.location = gTallBlueBoxURI;
+    }, true);
+    sendKey('UP', testWindow);
+  }
 }
 
 
@@ -80,16 +90,22 @@ var step2 =function() {
   // Scroll around a bit.
   is(testWindow.document.body.scrollTop, 0,
      "Page2: Ensure we scrollpane is at the top before we start scrolling.");
+
+  var count = 0;
+  testWindow.addEventListener("scroll", function () {
+    if (++count < 4) {
+      SimpleTest.executeSoon(function () { sendKey('DOWN', testWindow); });
+    } else {
+      testWindow.removeEventListener("scroll", arguments.callee, true);
+
+      isnot(testWindow.document.body.scrollTop, 0,
+            "Page2: Ensure we could scroll.");
+
+      // Navigate backwards. This should fire step3.
+      testWindow.history.back();
+    }
+  }, true);
   sendKey('DOWN', testWindow);
-  sendKey('DOWN', testWindow);
-  sendKey('DOWN', testWindow);
-  setTimeout(function() {
-    isnot(testWindow.document.body.scrollTop, 0,
-          "Page2: Ensure we could scrol.");  
-    
-    // Navigate backwards. This should fire step3.
-    testWindow.history.back();
-  }, 0);
 }
 
 var step3 =function() {
@@ -99,14 +115,16 @@ var step3 =function() {
   // Check we can still scroll with the keys.
   is(testWindow.document.body.scrollTop, 0,
      "Page1Again: Ensure scroll pane at top before we scroll.");  
-  sendKey('DOWN', testWindow);
-  setTimeout(function() {
+  testWindow.addEventListener("scroll", function () {
+    testWindow.removeEventListener("scroll", arguments.callee, true);
+
     isnot(testWindow.document.body.scrollTop, 0,
           "Page2Again: Ensure we can still scroll.");  
-    
+
     testWindow.close();
     window.SimpleTest.finish();
-  }, 0);
+  }, true);
+  sendKey('DOWN', testWindow);
 }
 
 SimpleTest.waitForExplicitFinish();
