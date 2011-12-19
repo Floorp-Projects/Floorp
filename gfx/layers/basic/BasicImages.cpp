@@ -231,16 +231,25 @@ BasicPlanarYCbCrImage::GetAsSurface()
  * for the image objects. We use a ReentrantMonitor to synchronize access to
  * mImage.
  */
-class BasicImageContainer : public ImageContainer {
+class BasicImageContainer : public ImageContainer,
+                            public ShadowImplData
+{
 public:
   typedef gfxASurface::gfxImageFormat gfxImageFormat;
 
   BasicImageContainer() :
-    ImageContainer(nsnull),
+    ImageContainer(nsnull, static_cast<ShadowImplData*>(this)),
     mScaleHint(-1, -1),
     mOffscreenFormat(gfxASurface::ImageFormatUnknown),
     mDelayed(false)
   {}
+  BasicImageContainer(LayerManager* aManager) :
+    ImageContainer(aManager, static_cast<ShadowImplData*>(this)),
+    mScaleHint(-1, -1),
+    mOffscreenFormat(gfxASurface::ImageFormatUnknown),
+    mDelayed(false)
+  {}
+
   virtual already_AddRefed<Image> CreateImage(const Image::Format* aFormats,
                                               PRUint32 aNumFormats);
   virtual void SetDelayedConversion(bool aDelayed) { mDelayed = aDelayed; }
@@ -252,6 +261,8 @@ public:
   virtual void SetScaleHint(const gfxIntSize& aScaleHint);
   void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
   virtual LayerManager::LayersBackend GetBackendType() { return LayerManager::LAYERS_BASIC; }
+  
+  virtual ShadowableLayer* AsShadowableLayer() { return NULL; }
 
 protected:
   nsRefPtr<Image> mImage;
