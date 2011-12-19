@@ -40,41 +40,9 @@
 #ifndef mozilla_Util_h_
 #define mozilla_Util_h_
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
-
-/*
- * XXX: we're cheating here in order to avoid creating object files
- * for mfbt /just/ to provide a function like FatalError() to be used
- * by MOZ_ASSERT().  (It'll happen eventually, but for just ASSERT()
- * it isn't worth the pain.)  JS_Assert(), although unfortunately
- * named, is part of SpiderMonkey's stable, external API, so this
- * isn't quite as bad as it seems.
- *
- * Once mfbt needs object files, this unholy union with JS_Assert()
- * will be broken.
- *
- * JS_Assert is present even in release builds, for the benefit of applications
- * that build DEBUG and link against a non-DEBUG SpiderMonkey library.
- */
-MOZ_BEGIN_EXTERN_C
-
-extern MFBT_API(void)
-JS_Assert(const char *s, const char *file, int ln);
-
-MOZ_END_EXTERN_C
-
-/*
- * MOZ_ASSERT() is a "strong" assertion of state, like libc's
- * assert().  If a MOZ_ASSERT() fails in a debug build, the process in
- * which it fails will stop running in a loud and dramatic way.
- */
-#ifdef DEBUG
-#  define MOZ_ASSERT(expr_)                                      \
-     ((expr_) ? (void)0 : JS_Assert(#expr_, __FILE__, __LINE__))
-#else
-#  define MOZ_ASSERT(expr_) ((void)0)
-#endif  /* DEBUG */
 
 /*
  * MOZ_INLINE is a macro which expands to tell the compiler that the method
