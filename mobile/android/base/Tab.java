@@ -70,6 +70,8 @@ public class Tab {
     private Drawable mThumbnail;
     private List<HistoryEntry> mHistory;
     private int mHistoryIndex;
+    private int mParentId;
+    private boolean mExternal;
     private boolean mLoading;
     private boolean mBookmark;
     private HashMap<String, DoorHanger> mDoorHangers;
@@ -89,12 +91,14 @@ public class Tab {
     }
 
     public Tab() {
-        this(-1, "");
+        this(-1, "", false, -1);
     }
 
-    public Tab(int id, String url) {
+    public Tab(int id, String url, boolean external, int parentId) {
         mId = id;
         mUrl = url;
+        mExternal = external;
+        mParentId = parentId;
         mTitle = "";
         mFavicon = null;
         mFaviconUrl = null;
@@ -111,6 +115,10 @@ public class Tab {
 
     public int getId() {
         return mId;
+    }
+
+    public int getParentId() {
+        return mParentId;
     }
 
     public String getURL() {
@@ -176,6 +184,10 @@ public class Tab {
 
     public boolean isBookmark() {
         return mBookmark;
+    }
+
+    public boolean isExternal() {
+        return mExternal;
     }
 
     public void updateURL(String url) {
