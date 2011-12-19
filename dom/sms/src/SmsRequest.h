@@ -42,6 +42,7 @@
 #include "nsDOMEventTargetWrapperCache.h"
 
 class nsIDOMMozSmsMessage;
+class nsIDOMMozSmsCursor;
 
 namespace mozilla {
 namespace dom {
@@ -101,9 +102,21 @@ private:
   void SetSuccess(bool aResult);
 
   /**
+   * Set the object in a success state with the result being a SmsCursor.
+   */
+  void SetSuccess(nsIDOMMozSmsCursor* aCursor);
+
+  /**
    * Set the object in an error state with the error type being aError.
    */
   void SetError(ErrorType aError);
+
+  /**
+   * Set the object in a success state with the result being the nsISupports
+   * object in parameter.
+   * @return whether setting the object was a success
+   */
+  bool SetSuccessInternal(nsISupports* aObject);
 
   jsval     mResult;
   bool      mResultRooted;
