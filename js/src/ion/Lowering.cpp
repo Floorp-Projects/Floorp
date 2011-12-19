@@ -508,7 +508,7 @@ LIRGenerator::visitToDouble(MToDouble *convert)
         return redefine(convert, opd);
 
       default:
-        // Objects might not be idempotent.
+        // Objects might be effectful.
         // Strings are complicated - we don't handle them yet.
         JS_NOT_REACHED("unexpected type");
     }
@@ -544,7 +544,7 @@ LIRGenerator::visitToInt32(MToInt32 *convert)
 
       default:
         // Undefined coerces to NaN, not int32.
-        // Objects might not be idempotent.
+        // Objects might be effectful.
         // Strings are complicated - we don't handle them yet.
         JS_NOT_REACHED("unexpected type");
     }
@@ -581,7 +581,7 @@ LIRGenerator::visitTruncateToInt32(MTruncateToInt32 *truncate)
       }
 
       default:
-        // Objects might not be idempotent.
+        // Objects might be effectful.
         // Strings are complicated - we don't handle them yet.
         JS_NOT_REACHED("unexpected type");
     }

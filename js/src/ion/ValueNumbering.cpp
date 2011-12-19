@@ -70,7 +70,7 @@ ValueNumberer::lookupValue(MDefinition *ins)
 MDefinition *
 ValueNumberer::simplify(MDefinition *def, bool useValueNumbers)
 {
-    if (!def->isIdempotent())
+    if (def->isEffectful())
         return def;
 
     MDefinition *ins = def->foldsTo(useValueNumbers);
@@ -366,7 +366,7 @@ ValueNumberer::eliminateRedundancies()
             }
 
             // Instruction has side-effects and cannot be folded.
-            if (!ins->isIdempotent()) {
+            if (!ins->isMovable() || ins->isEffectful()) {
                 iter++;
                 continue;
             }
@@ -387,7 +387,8 @@ ValueNumberer::eliminateRedundancies()
 
             JS_ASSERT(!ins->hasUses());
             JS_ASSERT(ins->block() == block);
-            JS_ASSERT(ins->isIdempotent());
+            JS_ASSERT(!ins->isEffectful());
+            JS_ASSERT(ins->isMovable());
 
             iter = ins->block()->discardDefAt(iter);
         }

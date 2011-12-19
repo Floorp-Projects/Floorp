@@ -233,13 +233,13 @@ bool
 LIRGeneratorARM::assignSafepoint(LInstruction *ins, MInstruction *mir)
 {
     ins->setMir(mir);
-    if (mir->isIdempotent()) {
-        if (!ins->snapshot())
-            return assignSnapshot(ins);
-        return true;
-    } else {
+    if (mir->isEffectful()) {
         if (!ins->postSnapshot())
             return assignPostSnapshot(mir, ins);
+        return true;
+    } else {
+        if (!ins->snapshot())
+            return assignSnapshot(ins);
         return true;
     }
 }

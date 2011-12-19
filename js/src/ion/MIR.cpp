@@ -280,9 +280,8 @@ MConstant::MConstant(const js::Value &vp)
     constantPoolIndex_(0)
 {
     setResultType(MIRTypeFromValue(vp));
-    setIdempotent();
+    setMovable();
 }
-
 
 HashNumber
 MConstant::valueHash() const
@@ -488,12 +487,10 @@ MCall::addArg(size_t argnum, MPassArg *arg)
 void
 MBitNot::infer(const TypeOracle::Unary &u)
 {
-    if (u.ival == MIRType_Object) {
+    if (u.ival == MIRType_Object)
         specialization_ = MIRType_None;
-    } else {
+    else
         specialization_ = MIRType_Int32;
-        setIdempotent();
-    }
 }
 
 static inline bool
@@ -533,7 +530,6 @@ MBinaryBitwiseInstruction::infer(const TypeOracle::Binary &b)
         specialization_ = MIRType_None;
     } else {
         specialization_ = MIRType_Int32;
-        setIdempotent();
         setCommutative();
     }
 }
@@ -602,7 +598,6 @@ MBinaryArithInstruction::infer(const TypeOracle::Binary &b)
     JS_ASSERT(b.rval == MIRType_Int32 || b.rval == MIRType_Double);
     specialization_ = b.rval;
 
-    setIdempotent();
     setCommutative();
     setResultType(b.rval);
 }
@@ -610,10 +605,6 @@ MBinaryArithInstruction::infer(const TypeOracle::Binary &b)
 void
 MCompare::infer(const TypeOracle::Binary &b)
 {
-    // If neither operand is an object, then we are idempotent
-    if (b.lhs != MIRType_Object && b.rhs != MIRType_Object)
-        setIdempotent();
-
     // Set specialization
     if (b.lhs < MIRType_String && b.rhs < MIRType_String) {
         if (CoercesToDouble(b.lhs) || CoercesToDouble(b.rhs))

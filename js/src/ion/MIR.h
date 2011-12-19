@@ -75,8 +75,7 @@ MIRType MIRTypeFromValue(const js::Value &vp)
     _(EmittedAtUses)                                                            \
     _(LoopInvariant)                                                            \
     _(Commutative)                                                              \
-    _(Idempotent)    /* The instruction has no side-effects. */                 \
-    _(NeverHoisted)  /* Don't hoist, even if loop invariant */                  \
+    _(Movable)       /* Allow LICM and GVN to move this instruction */          \
     _(Lowered)       /* (Debug only) has a virtual register */                  \
     _(Guard)         /* Not removable if uses == 0 */                           \
                                                                                 \
@@ -184,6 +183,60 @@ class MNode : public TempObject
     inline void initOperand(size_t index, MDefinition *ins);
 };
 
+class AliasSet {
+  private:
+    uint32 flags_;
+
+  public:
+    enum Flag {
+        None_             = 0,
+        ObjectFields      = 1 << 0, // shape, class, slots, length etc.
+        Element           = 1 << 1, // A member of obj->elements.
+        Slot              = 1 << 2, // A member of obj->slots.
+        Last              = Slot,
+        Any               = Last | (Last - 1),
+
+        // Indicates load or store.
+        Store_            = 1 << 31
+    };
+    AliasSet(uint32 flags)
+      : flags_(flags)
+    { }
+
+  public:
+    inline bool isNone() const {
+        return flags_ == None_;
+    }
+    uint32 flags() const {
+        return flags_ & Any;
+    }
+    inline bool isStore() const {
+        return !!(flags_ & Store_);
+    }
+    inline bool isLoad() const {
+        return !isStore() && !isNone();
+    }
+    inline AliasSet operator |(const AliasSet &other) const {
+        return AliasSet(flags_ | other.flags_);
+    }
+    inline AliasSet operator &(const AliasSet &other) const {
+        return AliasSet(flags_ & other.flags_);
+    }
+    static AliasSet None() {
+        return AliasSet(None_);
+    }
+    static AliasSet Load(uint32 flags) {
+        JS_ASSERT(flags && !(flags & Store_));
+        return AliasSet(flags);
+    }
+    static AliasSet Store(uint32 flags) {
+        JS_ASSERT(flags && !(flags & Store_));
+        return AliasSet(flags | Store_);
+    }
+};
+
+static const unsigned NUM_ALIAS_SETS = sizeof(AliasSet) * 8;
+
 // An MDefinition is an SSA name.
 class MDefinition : public MNode
 {
@@ -206,6 +259,7 @@ class MDefinition : public MNode
     MIRType resultType_;           // Representation of result type.
     uint32 usedTypes_;             // Set of used types.
     uint32 flags_;                 // Bit flags.
+    MDefinition *dependency_;      // Implicit dependency (store, call, etc.) of this instruction.
 
   private:
     enum Flag {
@@ -236,7 +290,8 @@ class MDefinition : public MNode
         valueNumber_(0),
         resultType_(MIRType_None),
         usedTypes_(0),
-        flags_(0)
+        flags_(0),
+        dependency_(NULL)
     { }
 
     virtual Opcode op() const = 0;
@@ -319,7 +374,7 @@ class MDefinition : public MNode
         return !uses_.empty();
     }
 
-    virtual bool isControlInstruction() {
+    virtual bool isControlInstruction() const {
         return false;
     }
 
@@ -377,6 +432,20 @@ class MDefinition : public MNode
 
     void setResultType(MIRType type) {
         resultType_ = type;
+    }
+
+    MDefinition *dependency() const {
+        return dependency_;
+    }
+    void setDependency(MDefinition *dependency) {
+        dependency_ = dependency;
+    }
+    virtual AliasSet getAliasSet() const {
+        // Instructions are effectful by default.
+        return AliasSet::Store(AliasSet::Any);
+    }
+    bool isEffectful() const {
+        return getAliasSet().isStore();
     }
 };
 
@@ -553,6 +622,10 @@ class MConstant : public MAryInstruction<0>
 
     HashNumber valueHash() const;
     bool congruentTo(MDefinition * const &ins) const;
+
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 // A reference to a formal parameter.
@@ -596,6 +669,10 @@ class MControlInstruction : public MInstruction
     virtual size_t numSuccessors() const = 0;
     virtual MBasicBlock *getSuccessor(size_t i) const = 0;
     virtual void replaceSuccessor(size_t i, MBasicBlock *successor) = 0;
+
+    bool isControlInstruction() const {
+        return true;
+    }
 };
 
 class MTableSwitch
@@ -750,6 +827,9 @@ class MGoto : public MAryControlInstruction<0>
     MBasicBlock *target() {
         return successors_[0];
     }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 // Tests if the input instruction evaluates to true or false, and jumps to the
@@ -789,8 +869,8 @@ class MTest : public MAryControlInstruction<1>
         return getSuccessor(1);
     }
 
-    bool isControlInstruction() {
-        return true;
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
 };
 
@@ -824,6 +904,9 @@ class MReturn
 
     TypePolicy *typePolicy() {
         return this;
+    }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
 };
 
@@ -865,6 +948,10 @@ class MPrepareCall : public MAryInstruction<0>
 
     // Get the vector size for the upcoming call by looking at the call.
     uint32 argc() const;
+
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 class MVariadicInstruction : public MInstruction
@@ -940,6 +1027,9 @@ class MCall
     TypePolicy *typePolicy() {
         return this;
     }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::Any);
+    }
 };
 
 class MUnaryInstruction : public MAryInstruction<1>
@@ -1010,6 +1100,7 @@ class MCompare
         jsop_(jsop)
     {
         setResultType(MIRType_Boolean);
+        setMovable();
     }
 
   public:
@@ -1026,6 +1117,11 @@ class MCompare
     }
     TypePolicy *typePolicy() {
         return this;
+    }
+    virtual AliasSet getAliasSet() const {
+        if (specialization_ >= MIRType_Object)
+            return AliasSet::Store(AliasSet::Any);
+        return AliasSet::None();
     }
 };
 
@@ -1045,6 +1141,11 @@ class MCopy : public MUnaryInstruction
 
     HashNumber valueHash() const;
     bool congruentTo(MDefinition * const &ins) const;
+
+    virtual AliasSet getAliasSet() const {
+        JS_NOT_REACHED("Unexpected MCopy after building SSA");
+        return AliasSet::None();
+    }
 };
 
 // Takes a typed value and returns an untyped value.
@@ -1053,8 +1154,8 @@ class MBox : public MUnaryInstruction
     MBox(MDefinition *ins)
       : MUnaryInstruction(ins)
     {
-        setIdempotent();
         setResultType(MIRType_Value);
+        setMovable();
     }
 
   public:
@@ -1065,6 +1166,9 @@ class MBox : public MUnaryInstruction
         JS_ASSERT(ins->type() != MIRType_Value);
 
         return new MBox(ins);
+    }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
 };
 
@@ -1089,8 +1193,8 @@ class MUnbox : public MUnaryInstruction
     {
         JS_ASSERT(ins->type() == MIRType_Value);
         setResultType(type);
-        setIdempotent();
-        if (mode_ == TypeBarrier && !ins->isIdempotent())
+        setMovable();
+        if (mode_ == TypeBarrier && ins->isEffectful())
             setGuard();
     }
 
@@ -1116,6 +1220,9 @@ class MUnbox : public MUnaryInstruction
     }
     bool fallible() const {
         return mode() != Infallible;
+    }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
 };
 
@@ -1160,6 +1267,9 @@ class MPassArg
     TypePolicy *typePolicy() {
         return this;
     }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 // Converts a primitive (either typed or untyped) to a double. If the input is
@@ -1170,7 +1280,7 @@ class MToDouble : public MUnaryInstruction
       : MUnaryInstruction(def)
     {
         setResultType(MIRType_Double);
-        setIdempotent();
+        setMovable();
     }
 
   public:
@@ -1184,6 +1294,9 @@ class MToDouble : public MUnaryInstruction
     MDefinition *input() const {
         return getOperand(0);
     }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 // Converts a primitive (either typed or untyped) to an int32. If the input is
@@ -1195,7 +1308,7 @@ class MToInt32 : public MUnaryInstruction
       : MUnaryInstruction(def)
     {
         setResultType(MIRType_Int32);
-        setIdempotent();
+        setMovable();
     }
 
   public:
@@ -1210,6 +1323,10 @@ class MToInt32 : public MUnaryInstruction
     }
 
     MDefinition *foldsTo(bool useValueNumbers);
+
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 // Converts a value or typed input to a truncated int32, for use with bitwise
@@ -1220,7 +1337,7 @@ class MTruncateToInt32 : public MUnaryInstruction
       : MUnaryInstruction(def)
     {
         setResultType(MIRType_Int32);
-        setIdempotent();
+        setMovable();
     }
 
   public:
@@ -1233,6 +1350,9 @@ class MTruncateToInt32 : public MUnaryInstruction
     MDefinition *input() const {
         return getOperand(0);
     }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 class MBitNot
@@ -1244,6 +1364,7 @@ class MBitNot
       : MUnaryInstruction(input)
     {
         setResultType(MIRType_Int32);
+        setMovable();
     }
 
   public:
@@ -1256,6 +1377,12 @@ class MBitNot
 
     MDefinition *foldsTo(bool useValueNumbers);
     void infer(const TypeOracle::Unary &u);
+
+    virtual AliasSet getAliasSet() const {
+        if (specialization_ >= MIRType_Object)
+            return AliasSet::Store(AliasSet::Any);
+        return AliasSet::None();
+    }
 };
 
 class MBinaryBitwiseInstruction
@@ -1267,6 +1394,7 @@ class MBinaryBitwiseInstruction
       : MBinaryInstruction(left, right)
     {
         setResultType(MIRType_Int32);
+        setMovable();
     }
 
   public:
@@ -1278,6 +1406,12 @@ class MBinaryBitwiseInstruction
     virtual MDefinition *foldIfZero(size_t operand) = 0;
     virtual MDefinition *foldIfEqual()  = 0;
     void infer(const TypeOracle::Binary &b);
+
+    virtual AliasSet getAliasSet() const {
+        if (specialization_ >= MIRType_Object)
+            return AliasSet::Store(AliasSet::Any);
+        return AliasSet::None();
+    }
 };
 
 class MBitAnd : public MBinaryBitwiseInstruction
@@ -1431,7 +1565,9 @@ class MBinaryArithInstruction
   public:
     MBinaryArithInstruction(MDefinition *left, MDefinition *right)
       : MBinaryInstruction(left, right)
-    { }
+    {
+        setMovable();
+    }
 
     TypePolicy *typePolicy() {
         return this;
@@ -1451,6 +1587,12 @@ class MBinaryArithInstruction
     virtual double getIdentity() = 0;
 
     void infer(const TypeOracle::Binary &b);
+
+    virtual AliasSet getAliasSet() const {
+        if (specialization_ >= MIRType_Object)
+            return AliasSet::Store(AliasSet::Any);
+        return AliasSet::None();
+    }
 };
 
 class MAdd : public MBinaryArithInstruction
@@ -1593,6 +1735,10 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     MDefinition *foldsTo(bool useValueNumbers);
 
     bool congruentTo(MDefinition * const &ins) const;
+
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 // MIR representation of a Value on the OSR StackFrame.
@@ -1626,6 +1772,9 @@ class MOsrValue : public MAryInstruction<1>
     bool congruentTo(MDefinition *const &ins) const {
         return false;
     }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 // Check the current frame for over-recursion past the global stack limit.
@@ -1644,6 +1793,7 @@ class MImplicitThis
       : MUnaryInstruction(callee)
     {
         setResultType(MIRType_Value);
+        setMovable();
     }
 
   public:
@@ -1659,6 +1809,9 @@ class MImplicitThis
     MDefinition *callee() const {
         return getOperand(0);
     }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 // Returns obj->slots.
@@ -1670,7 +1823,7 @@ class MSlots
       : MUnaryInstruction(object)
     {
         setResultType(MIRType_Slots);
-        setIdempotent();
+        setMovable();
     }
 
   public:
@@ -1686,6 +1839,9 @@ class MSlots
     MDefinition *object() const {
         return getOperand(0);
     }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::ObjectFields);
+    }
 };
 
 // Returns obj->elements.
@@ -1697,7 +1853,7 @@ class MElements
       : MUnaryInstruction(object)
     {
         setResultType(MIRType_Elements);
-        setIdempotent();
+        setMovable();
     }
 
   public:
@@ -1713,6 +1869,9 @@ class MElements
     MDefinition *object() const {
         return getOperand(0);
     }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::ObjectFields);
+    }
 };
 
 // Load a dense array's initialized length from an elements vector.
@@ -1723,7 +1882,7 @@ class MInitializedLength
       : MUnaryInstruction(elements)
     {
         setResultType(MIRType_Int32);
-        setIdempotent();
+        setMovable();
     }
 
   public:
@@ -1736,6 +1895,9 @@ class MInitializedLength
     MDefinition *elements() const {
         return getOperand(0);
     }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::ObjectFields);
+    }
 };
 
 // Bailout if index >= length.
@@ -1745,8 +1907,8 @@ class MBoundsCheck
     MBoundsCheck(MDefinition *index, MDefinition *length)
       : MBinaryInstruction(index, length)
     {
-        setIdempotent();
         setGuard();
+        setMovable();
         JS_ASSERT(index->type() == MIRType_Int32);
         JS_ASSERT(length->type() == MIRType_Int32);
     }
@@ -1767,6 +1929,9 @@ class MBoundsCheck
     bool congruentTo(MDefinition * const &ins) const {
         return false;
     }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 // Load a value from a dense array's element vector and does a hole check if the
@@ -1782,7 +1947,7 @@ class MLoadElement
         needsHoleCheck_(needsHoleCheck)
     {
         setResultType(MIRType_Value);
-        setIdempotent();
+        setMovable();
         JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(index->type() == MIRType_Int32);
     }
@@ -1811,6 +1976,10 @@ class MLoadElement
     }
     bool congruentTo(MDefinition * const &ins) const {
         return false;
+    }
+
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::Element);
     }
 };
 
@@ -1867,6 +2036,11 @@ class MStoreElement
     void setNeedsBarrier(bool needsBarrier) {
         needsBarrier_ = needsBarrier;
     }
+    virtual AliasSet getAliasSet() const {
+        // StoreElement can update the initialized lenght, the array length
+        // or reallocate obj->elements.
+        return AliasSet::Store(AliasSet::Element | AliasSet::ObjectFields);
+    }
 };
 
 // Guard on an object's shape.
@@ -1880,8 +2054,8 @@ class MGuardShape
       : MUnaryInstruction(obj),
         shape_(shape)
     {
-        setIdempotent();
         setGuard();
+        setMovable();
     }
 
   public:
@@ -1907,6 +2081,9 @@ class MGuardShape
             return false;
         return MDefinition::congruentTo(ins);
     }
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::ObjectFields);
+    }
 };
 
 // Guard on an object's class.
@@ -1920,8 +2097,8 @@ class MGuardClass
       : MUnaryInstruction(obj),
         class_(clasp)
     {
-        setIdempotent();
         setGuard();
+        setMovable();
     }
 
   public:
@@ -1947,6 +2124,9 @@ class MGuardClass
             return false;
         return MDefinition::congruentTo(ins);
     }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::ObjectFields);
+    }
 };
 
 // Load from vp[slot] (slots that are not inline in an object).
@@ -1961,8 +2141,7 @@ class MLoadSlot
         slot_(slot)
     {
         setResultType(MIRType_Value);
-        setIdempotent();
-        setNeverHoisted();
+        setMovable();
         JS_ASSERT(slots->type() == MIRType_Slots);
     }
 
@@ -1988,6 +2167,9 @@ class MLoadSlot
         if (slot() != ins->toLoadSlot()->slot())
             return false;
         return MDefinition::congruentTo(ins);
+    }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::Slot);
     }
 };
 
@@ -2044,6 +2226,9 @@ class MStoreSlot
     void setNeedsBarrier(bool needsBarrier) {
         needsBarrier_ = needsBarrier;
     }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::Slot);
+    }
 };
 
 // Load from vp[slot] (slots that are not inline in an object).
@@ -2090,9 +2275,10 @@ class MTypeBarrier : public MUnaryInstruction
     {
         setResultType(MIRType_Value);
         setGuard();
-        bailoutKind_ = def->isIdempotent()
-                       ? Bailout_Normal
-                       : Bailout_TypeBarrier;
+        setMovable();
+        bailoutKind_ = def->isEffectful()
+                       ? Bailout_TypeBarrier
+                       : Bailout_Normal;
     }
 
   public:
@@ -2112,6 +2298,9 @@ class MTypeBarrier : public MUnaryInstruction
     }
     types::TypeSet *typeSet() const {
         return typeSet_;
+    }
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
 };
 

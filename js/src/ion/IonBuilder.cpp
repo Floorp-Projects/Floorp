@@ -2407,7 +2407,7 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
 // take snapshots for every guard. Instead, we capture stack state at
 // critical points:
 //   * (1) At the beginning of every basic block.
-//   * (2) After every non-idempotent operation.
+//   * (2) After every effectful operation.
 //
 // As long as these two properties are maintained, instructions can
 // be moved, hoisted, or, eliminated without problems, and ops without side
@@ -2432,7 +2432,7 @@ IonBuilder::resumeAfter(MInstruction *ins)
 bool
 IonBuilder::resumeAt(MInstruction *ins, jsbytecode *pc)
 {
-    JS_ASSERT(!ins->isIdempotent());
+    JS_ASSERT(ins->isEffectful());
 
     MResumePoint *resumePoint = MResumePoint::New(ins->block(), pc, callerResumePoint_);
     if (!resumePoint)
@@ -2501,10 +2501,10 @@ TestSingletonProperty(JSContext *cx, JSObject *obj, jsid id, bool *isKnownConsta
 bool
 IonBuilder::pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::TypeSet *observed)
 {
-    // If the instruction is idempotent, we'll resume the entire operation.
+    // If the instruction has no side effects, we'll resume the entire operation.
     // The actual type barrier will occur in the interpreter. If the
-    // instruction is not idempotent, even if it has a singleton type,
-    // there must be a resume point capturing the original def, and resuming
+    // instruction is effectful, even if it has a singleton type, there
+    // must be a resume point capturing the original def, and resuming
     // to that point will explicitly monitor the new type.
 
     if (!actual) {
@@ -2567,7 +2567,7 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::Ty
             return pushConstant(NullValue());
         break;
       default:
-        MUnbox::Mode mode = ins->isIdempotent() ? MUnbox::Fallible : MUnbox::TypeBarrier;
+        MUnbox::Mode mode = ins->isEffectful() ? MUnbox::TypeBarrier : MUnbox::Fallible;
         barrier = MUnbox::New(ins, MIRTypeFromValueType(type), mode);
         current->add(barrier);
     }
