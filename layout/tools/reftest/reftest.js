@@ -149,6 +149,7 @@ const EXPECTED_PASS = 0;
 const EXPECTED_FAIL = 1;
 const EXPECTED_RANDOM = 2;
 const EXPECTED_DEATH = 3;  // test must be skipped to avoid e.g. crash/hang
+const EXPECTED_FUZZY = 4;
 
 // types of preference value we might want to set for a specific test
 const PREF_BOOLEAN = 0;
@@ -686,16 +687,16 @@ function ReadManifest(aURL, inherited_status)
         var slow = false;
         var prefSettings = [];
         
-        while (items[0].match(/^(fails|needs-focus|random|skip|asserts|slow|require-or|silentfail|pref)/)) {
+        while (items[0].match(/^(fails|needs-focus|random|skip|asserts|slow|require-or|silentfail|pref|fuzzy)/)) {
             var item = items.shift();
             var stat;
             var cond;
-            var m = item.match(/^(fails|random|skip|silentfail)-if(\(.*\))$/);
+            var m = item.match(/^(fails|random|skip|silentfail|fuzzy)-if(\(.*\))$/);
             if (m) {
                 stat = m[1];
                 // Note: m[2] contains the parentheses, and we want them.
                 cond = Components.utils.evalInSandbox(m[2], sandbox);
-            } else if (item.match(/^(fails|random|skip)$/)) {
+            } else if (item.match(/^(fails|random|skip|fuzzy)$/)) {
                 stat = item;
                 cond = true;
             } else if (item == "needs-focus") {
@@ -777,6 +778,8 @@ function ReadManifest(aURL, inherited_status)
                     expected_status = EXPECTED_RANDOM;
                 } else if (stat == "skip") {
                     expected_status = EXPECTED_DEATH;
+                } else if (stat == "fuzzy") {
+                    expected_status = EXPECTED_FUZZY;
                 } else if (stat == "silentfail") {
                     allow_silent_fail = true;
                 }
@@ -1296,6 +1299,8 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
         true:  {s: "TEST-PASS" + randomMsg      , n: "Random"},
         false: {s: "TEST-KNOWN-FAIL" + randomMsg, n: "Random"}
     };
+    outputs[EXPECTED_FUZZY] = outputs[EXPECTED_PASS];
+
     var output;
 
     if (gURLs[0].type == TYPE_LOAD) {
@@ -1398,14 +1403,25 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
             var differences;
             // whether the two renderings match:
             var equal;
+            var maxDifference = {};
 
-            differences = gWindowUtils.compareCanvases(gCanvas1, gCanvas2, {});
+            differences = gWindowUtils.compareCanvases(gCanvas1, gCanvas2, maxDifference);
             equal = (differences == 0);
+
+            // what is expected on this platform (PASS, FAIL, or RANDOM)
+            var expected = gURLs[0].expected;
+
+            if (maxDifference.value > 0 && maxDifference.value <= 2) {
+                if (equal) {
+                    throw "Inconsistent result from compareCanvases.";
+                }
+                equal = expected == EXPECTED_FUZZY;
+                gDumpLog("REFTEST fuzzy match\n");
+            }
 
             // whether the comparison result matches what is in the manifest
             var test_passed = (equal == (gURLs[0].type == TYPE_REFTEST_EQUAL));
-            // what is expected on this platform (PASS, FAIL, or RANDOM)
-            var expected = gURLs[0].expected;
+
             output = outputs[expected][test_passed];
 
             ++gTestResults[output.n];
@@ -1423,11 +1439,12 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
             gDumpLog(result + "\n");
 
             if (!test_passed && expected == EXPECTED_PASS ||
+                !test_passed && expected == EXPECTED_FUZZY ||
                 test_passed && expected == EXPECTED_FAIL) {
                 if (!equal) {
                     gDumpLog("REFTEST   IMAGE 1 (TEST): " + gCanvas1.toDataURL() + "\n");
                     gDumpLog("REFTEST   IMAGE 2 (REFERENCE): " + gCanvas2.toDataURL() + "\n");
-                    gDumpLog("REFTEST number of differing pixels: " + differences + "\n");
+                    gDumpLog("REFTEST number of differing pixels: " + differences + " max difference: " + maxDifference.value + "\n");
                 } else {
                     gDumpLog("REFTEST   IMAGE: " + gCanvas1.toDataURL() + "\n");
                 }
