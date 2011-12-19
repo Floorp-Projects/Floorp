@@ -4,7 +4,7 @@
               style="@style/Screen">
 
     <RelativeLayout style="@style/AddressBar"
-                    android:background="@color/awesomebar_background">
+                    android:background="@drawable/tabs_tray_bg_repeat">
 
         <view class="org.mozilla.gecko.AwesomeBar$AwesomeBarEditText"
               android:id="@+id/awesomebar_text"
