@@ -2583,7 +2583,8 @@ RasterImage::Draw(gfxContext *aContext,
     mFrameDecodeFlags = DECODE_FLAGS_DEFAULT;
   }
 
-  if (!mDecoded) {
+  // We use !mDecoded && mHasSourceData to mean discarded.
+  if (!mDecoded && mHasSourceData) {
       mDrawStartTime = TimeStamp::Now();
   }
 
