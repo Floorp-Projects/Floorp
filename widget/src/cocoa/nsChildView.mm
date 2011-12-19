@@ -2569,23 +2569,17 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif
 
   LayerManager *layerManager = mGeckoChild->GetLayerManager(nsnull);
-  if (layerManager->GetBackendType() == LayerManager::LAYERS_OPENGL ||
-      (layerManager->AsShadowManager() &&
-             layerManager->GetUserData(&compositor::sShadowNativeContext))) {
+  if (layerManager->GetBackendType() == LayerManager::LAYERS_OPENGL) {
     NSOpenGLContext *glContext;
-    if (layerManager->GetBackendType() == LayerManager::LAYERS_OPENGL) {
-      LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(layerManager);
-      manager->SetClippingRegion(paintEvent.region);
-      glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
-    } else {
-      ShadowNativeContextUserData *userData =
-        (ShadowNativeContextUserData*)layerManager->GetUserData(&compositor::sShadowNativeContext);
-      glContext = (NSOpenGLContext*)userData->GetNativeContext();
-    }
+
+    LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(layerManager);
+    manager->SetClippingRegion(paintEvent.region);
+    glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
 
     if (!mGLContext) {
       [self setGLContext:glContext];
     }
+
     mGeckoChild->DispatchWindowEvent(paintEvent);
 
     // Force OpenGL to refresh the very first time we draw. This works around a
@@ -2596,6 +2590,17 @@ NSEvent* gLastDragMouseDownEvent = nil;
     }
 
     return;
+  } else if (layerManager->AsShadowManager() &&
+             layerManager->GetUserData(&compositor::sShadowNativeContext)) {
+    NSOpenGLContext *glContext;
+
+    ShadowNativeContextUserData *userData =
+        (ShadowNativeContextUserData*)layerManager->GetUserData(&compositor::sShadowNativeContext);
+      glContext = (NSOpenGLContext*)userData->GetNativeContext();
+
+    if (!mGLContext) {
+      [self setGLContext:glContext];
+    }
   }
 
   // Create Cairo objects.
@@ -2623,6 +2628,17 @@ NSEvent* gLastDragMouseDownEvent = nil;
     nsBaseWidget::AutoLayerManagerSetup
       setupLayerManager(mGeckoChild, targetContext, BasicLayerManager::BUFFER_NONE);
     painted = mGeckoChild->DispatchWindowEvent(paintEvent);
+  }
+
+  // Force OpenGL to refresh the very first time we draw. This works around a
+  // Mac OS X bug that stops windows updating on OS X when we use OpenGL.
+  if (painted && !mDidForceRefreshOpenGL &&
+      layerManager->AsShadowManager() &&
+      layerManager->GetUserData(&compositor::sShadowNativeContext)) {
+    if (!mDidForceRefreshOpenGL) {
+      [self performSelector:@selector(forceRefreshOpenGL) withObject:nil afterDelay:0];
+      mDidForceRefreshOpenGL = YES;
+    }
   }
 
   if (!painted && [self isOpaque]) {
