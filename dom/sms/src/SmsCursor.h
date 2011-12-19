@@ -42,7 +42,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 
-class nsIDOMMozSmsFilter;
 class nsIDOMMozSmsMessage;
 class nsIDOMMozSmsRequest;
 
@@ -58,8 +57,8 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS(SmsCursor)
 
-  SmsCursor(nsIDOMMozSmsFilter* aFilter);
-  SmsCursor(PRInt32 aListId, nsIDOMMozSmsFilter* aFilter, nsIDOMMozSmsRequest* aRequest);
+  SmsCursor();
+  SmsCursor(PRInt32 aListId, nsIDOMMozSmsRequest* aRequest);
 
   void SetMessage(nsIDOMMozSmsMessage* aMessage);
 
@@ -67,7 +66,6 @@ public:
 
 private:
   PRInt32                       mListId;
-  nsCOMPtr<nsIDOMMozSmsFilter>  mFilter;
   nsCOMPtr<nsIDOMMozSmsRequest> mRequest;
   nsCOMPtr<nsIDOMMozSmsMessage> mMessage;
 };

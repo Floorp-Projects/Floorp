@@ -38,7 +38,6 @@
 #include "SmsCursor.h"
 #include "nsIDOMClassInfo.h"
 #include "nsDOMError.h"
-#include "nsIDOMSmsFilter.h"
 #include "nsIDOMSmsMessage.h"
 #include "nsIDOMSmsRequest.h"
 #include "SmsRequest.h"
@@ -57,20 +56,18 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SmsCursor)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozSmsCursor)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_3(SmsCursor, mFilter, mRequest, mMessage)
+NS_IMPL_CYCLE_COLLECTION_2(SmsCursor, mRequest, mMessage)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(SmsCursor)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(SmsCursor)
 
-SmsCursor::SmsCursor(nsIDOMMozSmsFilter* aFilter)
+SmsCursor::SmsCursor()
   : mListId(-1)
-  , mFilter(aFilter)
 {
 }
 
-SmsCursor::SmsCursor(PRInt32 aListId, nsIDOMMozSmsFilter* aFilter, nsIDOMMozSmsRequest* aRequest)
+SmsCursor::SmsCursor(PRInt32 aListId, nsIDOMMozSmsRequest* aRequest)
   : mListId(aListId)
-  , mFilter(aFilter)
   , mRequest(aRequest)
 {
 }
@@ -82,13 +79,6 @@ SmsCursor::Disconnect()
 
   mRequest = nsnull;
   mListId = -1;
-}
-
-NS_IMETHODIMP
-SmsCursor::GetFilter(nsIDOMMozSmsFilter** aFilter)
-{
-  NS_ADDREF(*aFilter = mFilter);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

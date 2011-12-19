@@ -211,12 +211,11 @@ SmsRequestManager::NotifySmsDeleteFailed(PRInt32 aRequestId, SmsRequest::ErrorTy
 void
 SmsRequestManager::NotifyNoMessageInList(PRInt32 aRequestId)
 {
-  // TODO: use Filter!
   SmsRequest* request = GetRequest(aRequestId);
 
   nsCOMPtr<nsIDOMMozSmsCursor> cursor = request->GetCursor();
   if (!cursor) {
-    cursor = new SmsCursor(nsnull);
+    cursor = new SmsCursor();
   } else {
     static_cast<SmsCursor*>(cursor.get())->Disconnect();
   }
@@ -228,10 +227,9 @@ void
 SmsRequestManager::NotifyCreateMessageList(PRInt32 aRequestId, PRInt32 aListId,
                                            nsIDOMMozSmsMessage* aMessage)
 {
-  // TODO: use Filter!
   SmsRequest* request = GetRequest(aRequestId);
 
-  nsCOMPtr<SmsCursor> cursor = new SmsCursor(aListId, nsnull, request);
+  nsCOMPtr<SmsCursor> cursor = new SmsCursor(aListId, request);
   cursor->SetMessage(aMessage);
 
   NotifySuccess<nsIDOMMozSmsCursor*>(aRequestId, cursor);
