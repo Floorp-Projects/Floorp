@@ -402,6 +402,12 @@ public class PanZoomController
     }
 
     private void track(float x, float y, float lastX, float lastY, float timeDelta) {
+        if (FloatUtils.fuzzyEquals(timeDelta, 0)) {
+            // probably a duplicate event, ignore it. using a zero timeDelta will mess
+            // up our velocity
+            return;
+        }
+
         if (mState == PanZoomState.PANNING_LOCKED) {
             // check to see if we should break the axis lock
             double angle = Math.atan2(y - mY.firstTouchPos, x - mX.firstTouchPos); // range [-pi, pi]
