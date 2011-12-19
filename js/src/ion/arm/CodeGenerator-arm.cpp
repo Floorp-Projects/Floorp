@@ -1299,18 +1299,14 @@ CodeGeneratorARM::visitLoadSlotV(LLoadSlotV *load)
 bool
 CodeGeneratorARM::visitLoadSlotT(LLoadSlotT *load)
 {
-    JS_NOT_REACHED("loadslott NYI");
-#if 0
     Register base = ToRegister(load->input());
     int32 offset = load->mir()->slot() * sizeof(js::Value);
 
     if (load->mir()->type() == MIRType_Double)
-        masm.movsd(Operand(base, offset), ToFloatRegister(load->output()));
+        masm.loadInt32OrDouble(Operand(base, offset), ToFloatRegister(load->output()));
     else
-        masm.movl(Operand(base, offset + NUNBOX32_PAYLOAD_OFFSET), ToRegister(load->output()));
+        masm.ma_ldr(Operand(base, offset + NUNBOX32_PAYLOAD_OFFSET), ToRegister(load->output()));
     return true;
-#endif
-    return false;
 }
 bool
 CodeGeneratorARM::visitStoreSlotV(LStoreSlotV *store)

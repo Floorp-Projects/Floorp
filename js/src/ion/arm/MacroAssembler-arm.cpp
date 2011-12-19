@@ -925,7 +925,7 @@ MacroAssemblerARM::ma_vxfer(FloatRegister src, Register dest)
     as_vxfer(dest, InvalidReg, VFPRegister(src).singleOverlay(), FloatToCore);
 }
 void
-MacroAssemblerARM::ma_vdtr(LoadStore ls, Operand &addr, FloatRegister rt, Condition cc)
+MacroAssemblerARM::ma_vdtr(LoadStore ls, const Operand &addr, FloatRegister rt, Condition cc)
 {
     int off = addr.disp();
     JS_ASSERT((off & 3) == 0);
@@ -979,8 +979,7 @@ MacroAssemblerARM::ma_vldr(VFPAddr addr, FloatRegister dest)
 void
 MacroAssemblerARM::ma_vldr(const Operand &addr, FloatRegister dest)
 {
-    JS_ASSERT(addr.disp() < 1024 && addr.disp() > - 1024);
-    as_vdtr(IsLoad, dest, VFPAddr(Register::FromCode(addr.base()), VFPOffImm(addr.disp())));
+    ma_vdtr(IsLoad, addr, dest);
 }
 
 void
@@ -992,11 +991,7 @@ MacroAssemblerARM::ma_vstr(FloatRegister src, VFPAddr addr)
 void
 MacroAssemblerARM::ma_vstr(FloatRegister src, const Operand &addr)
 {
-    if (addr.disp() < 1024 && addr.disp() > - 1024) {
-        as_vdtr(IsStore, src, VFPAddr(Register::FromCode(addr.base()), VFPOffImm(addr.disp())));
-        return;
-    }
-    
+    ma_vdtr(IsStore, addr, src);
 }
 
 void
@@ -1080,6 +1075,21 @@ MacroAssemblerARM::compareDoubles(JSOp compare, FloatRegister lhs, FloatRegister
         JS_NOT_REACHED("Unrecognized comparison operation");
         return Assembler::VFP_Unordered;
     }
+}
+
+Operand ToPayload(Operand base) {
+    return base;
+}
+Operand ToType(Operand base) {
+    return Operand(Register::FromCode(base.base()),
+                   base.disp() + sizeof(void *));
+}
+
+Operand payloadOf(const Address &address) {
+    return Operand(address.base, address.offset);
+}
+Operand tagOf(const Address &address) {
+    return Operand(address.base, address.offset + 4);
 }
 
 Assembler::Condition
@@ -1217,6 +1227,24 @@ MacroAssemblerARMCompat::int32ValueToDouble(const ValueOperand &operand, const F
 }
 
 void
+MacroAssemblerARMCompat::loadInt32OrDouble(const Operand &src, const FloatRegister &dest)
+{
+    Label notInt32, end;
+
+    // If it's an int, convert it to double.
+    ma_ldr(ToType(src), ScratchRegister);
+    branchTestInt32(Assembler::NotEqual, ScratchRegister, &notInt32);
+    ma_ldr(ToPayload(src), ScratchRegister);
+    convertInt32ToDouble(ScratchRegister, dest);
+    ma_b(&end);
+
+    // Not an int, just load as double.
+    bind(&notInt32);
+    ma_vldr(src, dest);
+    bind(&end);
+}
+
+void
 MacroAssemblerARMCompat::loadStaticDouble(const double *dp, const FloatRegister &dest)
 {
     ma_mov(Imm32((uint32)dp), ScratchRegister);
@@ -1250,20 +1278,7 @@ MacroAssemblerARMCompat::testDoubleTruthy(bool truthy, const FloatRegister &reg)
     as_cmp(r0, O2Reg(r0), Overflow);
     return truthy ? NonZero : Zero;
 }
-Operand ToPayload(Operand base) {
-    return base;
-}
-Operand ToType(Operand base) {
-    return Operand(Register::FromCode(base.base()),
-                   base.disp() + sizeof(void *));
-}
 
-Operand payloadOf(const Address &address) {
-    return Operand(address.base, address.offset);
-}
-Operand tagOf(const Address &address) {
-    return Operand(address.base, address.offset + 4);
-}
 Register
 MacroAssemblerARMCompat::extractObject(const Address &address, Register scratch)
 {
