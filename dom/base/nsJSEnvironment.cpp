@@ -1389,6 +1389,7 @@ nsresult
 nsJSContext::EvaluateString(const nsAString& aScript,
                             JSObject* aScopeObject,
                             nsIPrincipal *aPrincipal,
+                            nsIPrincipal *aOriginPrincipal,
                             const char *aURL,
                             PRUint32 aLineNo,
                             PRUint32 aVersion,
@@ -1436,6 +1437,13 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     principal->GetJSPrincipals(mContext, &jsprin);
   }
 
+  JSPrincipals *originJSprin;
+  if (aOriginPrincipal) {
+    aOriginPrincipal->GetJSPrincipals(mContext, &originJSprin);
+  } else {
+    originJSprin = nsnull;
+  }
+
   // From here on, we must JSPRINCIPALS_DROP(jsprin) before returning...
 
   bool ok = false;
@@ -1443,6 +1451,9 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   nsresult rv = sSecurityManager->CanExecuteScripts(mContext, principal, &ok);
   if (NS_FAILED(rv)) {
     JSPRINCIPALS_DROP(mContext, jsprin);
+    if (originJSprin) {
+      JSPRINCIPALS_DROP(mContext, originJSprin);
+    }
     return NS_ERROR_FAILURE;
   }
 
@@ -1454,6 +1465,9 @@ nsJSContext::EvaluateString(const nsAString& aScript,
            do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
   if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext))) {
     JSPRINCIPALS_DROP(mContext, jsprin);
+    if (originJSprin) {
+      JSPRINCIPALS_DROP(mContext, originJSprin);
+    }
     return NS_ERROR_FAILURE;
   }
 
@@ -1479,11 +1493,14 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     if (!ac.enter(mContext, aScopeObject)) {
       stack->Pop(nsnull);
       JSPRINCIPALS_DROP(mContext, jsprin);
+      if (originJSprin) {
+        JSPRINCIPALS_DROP(mContext, originJSprin);
+      }
       return NS_ERROR_FAILURE;
     }
 
-    ok = JS_EvaluateUCScriptForPrincipalsVersion(
-      mContext, aScopeObject, jsprin,
+    ok = JS_EvaluateUCScriptForPrincipalsVersionOrigin(
+      mContext, aScopeObject, jsprin, originJSprin,
       static_cast<const jschar*>(PromiseFlatString(aScript).get()),
       aScript.Length(), aURL, aLineNo, vp, JSVersion(aVersion));
 
@@ -1498,6 +1515,9 @@ nsJSContext::EvaluateString(const nsAString& aScript,
 
   // Whew!  Finally done with these manually ref-counted things.
   JSPRINCIPALS_DROP(mContext, jsprin);
+  if (originJSprin) {
+    JSPRINCIPALS_DROP(mContext, originJSprin);
+  }
 
   // If all went well, convert val to a string if one is wanted.
   if (ok) {
