@@ -73,7 +73,7 @@ ion::SplitCriticalEdges(MIRGenerator *gen, MIRGraph &graph)
     return true;
 }
 
-// Instructions are useless if they are idempotent and unused.
+// Instructions are useless if they are unused and have no side effects.
 // This pass eliminates useless instructions.
 // The graph itself is unchanged.
 bool
@@ -84,10 +84,12 @@ ion::EliminateDeadCode(MIRGraph &graph)
     for (PostorderIterator block = graph.poBegin(); block != graph.poEnd(); block++) {
         // Remove unused instructions.
         for (MInstructionReverseIterator inst = block->rbegin(); inst != block->rend(); ) {
-            if (inst->isIdempotent() && !inst->hasUses() && !inst->isGuard())
+            if (!inst->isEffectful() && !inst->hasUses() && !inst->isGuard() &&
+                !inst->isControlInstruction()) {
                 inst = block->discardAt(inst);
-            else
+            } else {
                 inst++;
+            }
         }
     }
 

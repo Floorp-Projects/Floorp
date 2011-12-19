@@ -640,9 +640,9 @@ class LInstruction : public TempObject,
         return postSnapshot_;
     }
     LSnapshot *safepoint() const {
-        if (mir_->isIdempotent())
-            return snapshot_;
-        return postSnapshot_;
+        if (mir_->isEffectful())
+            return postSnapshot_;
+        return snapshot_;
     }
     void setMir(MDefinition *mir) {
         mir_ = mir;

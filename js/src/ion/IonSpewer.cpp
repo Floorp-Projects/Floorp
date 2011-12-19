@@ -195,6 +195,7 @@ ion::CheckLogging()
             "\n"
             "  aborts    Compilation abort messages\n"
             "  mir       MIR information\n"
+            "  alias     Alias analysis\n"
             "  gvn       Global Value Numbering\n"
             "  licm      Loop invariant code motion\n"
             "  regalloc  Register allocation\n"
@@ -211,6 +212,8 @@ ion::CheckLogging()
     }
     if (ContainsFlag(env, "aborts"))
         LoggingBits |= (1 << uint32(IonSpew_Abort));
+    if (ContainsFlag(env, "alias"))
+        LoggingBits |= (1 << uint32(IonSpew_Alias));
     if (ContainsFlag(env, "mir"))
         LoggingBits |= (1 << uint32(IonSpew_MIR));
     if (ContainsFlag(env, "gvn"))

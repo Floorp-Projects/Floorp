@@ -44,6 +44,7 @@
 #include "IonBuilder.h"
 #include "IonSpewer.h"
 #include "LIR.h"
+#include "AliasAnalysis.h"
 #include "GreedyAllocator.h"
 #include "LICM.h"
 #include "ValueNumbering.h"
@@ -554,6 +555,15 @@ TestCompiler(IonBuilder &builder, MIRGraph &graph)
     if (!ApplyTypeInformation(graph))
         return false;
     IonSpewPass("Apply types");
+
+    // Alias analysis is required for LICM and GVN so that we don't move
+    // loads across stores.
+    if (js_IonOptions.licm || js_IonOptions.gvn) {
+        AliasAnalysis analysis(graph);
+        if (!analysis.analyze())
+            return false;
+        IonSpewPass("Alias analysis");
+    }
 
     if (js_IonOptions.gvn) {
         ValueNumberer gvn(graph, js_IonOptions.gvnIsOptimistic);

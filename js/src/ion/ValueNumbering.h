@@ -61,6 +61,11 @@ class ValueNumberer
         }
 
         static bool match(const Key &k, const Lookup &l) {
+            // If one of the instructions depends on a store, and the
+            // other instruction does not depend on the same store,
+            // the instructions are not congruent.
+            if (k->dependency() != l->dependency())
+                return false;
             return k->congruentTo(l);
         }
     };
