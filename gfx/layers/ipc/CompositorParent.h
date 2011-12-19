@@ -60,6 +60,8 @@ public:
   bool AnswerInit();
   bool AnswerStop();
 
+  void RequestComposition();
+
   virtual mozilla::layout::RenderFrameParent* GetRenderFrameParent() { return NULL; }
   virtual CompositorParent* GetCompositorParent() { return this; }
 

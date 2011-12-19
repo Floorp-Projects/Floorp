@@ -42,7 +42,6 @@
 
 #include "mozilla/layers/PCompositorChild.h"
 
-
 namespace base {
   class Thread;
 }
@@ -53,6 +52,7 @@ namespace mozilla {
 namespace layers {
 
 class LayerManager;
+class CompositorParent;
 
 class CompositorChild : public PCompositorChild
 {
@@ -75,6 +75,7 @@ protected:
 private:
   Thread *mCompositorThread;
   LayerManager *mLayerManager;
+  nsRefPtr<CompositorParent> mCompositorParent;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorChild);
 };
