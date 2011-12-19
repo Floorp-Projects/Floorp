@@ -141,7 +141,7 @@ Loop::iterateLoopBlocks(MBasicBlock *current)
     for (MInstructionIterator i = current->begin(); i != current->end(); i++) {
         MInstruction *ins = *i;
 
-        if (ins->isIdempotent()) {
+        if (ins->isMovable() && !ins->isEffectful()) {
             if (!insertInWorklist(ins))
                 return LoopReturn_Error;
         }
@@ -204,6 +204,13 @@ Loop::hoistInstructions(InstructionQueue &toHoist)
     // Move all instructions to the preLoop_ block just before the control instruction.
     for (size_t i = 0; i < toHoist.length(); i++) {
         MInstruction *ins = toHoist[i];
+
+        // Loads may have an implicit dependency on either stores (effectful instructions) or
+        // control instructions so we should never move these.
+        JS_ASSERT(!ins->isControlInstruction());
+        JS_ASSERT(!ins->isEffectful());
+        JS_ASSERT(ins->isMovable());
+
         if (checkHotness(ins->block())) {
             ins->block()->remove(ins);
             preLoop_->insertBefore(preLoop_->lastIns(), ins);
@@ -222,6 +229,16 @@ Loop::isInLoop(MDefinition *ins)
 bool
 Loop::isLoopInvariant(MInstruction *ins)
 {
+    if (!isHoistable(ins))
+        return false;
+
+    // Don't hoist if this instruction depends on a store inside the loop.
+    if (ins->dependency() && isInLoop(ins->dependency())) {
+        if (IonSpewEnabled(IonSpew_LICM))
+            fprintf(IonSpewFile, "depends on store inside loop.\n");
+        return false;
+    }
+
     // An instruction is only loop invariant if it and all of its operands can
     // be safely hoisted into the loop preheader.
     for (size_t i = 0; i < ins->numOperands(); i ++) {

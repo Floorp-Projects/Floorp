@@ -115,7 +115,7 @@ class Loop
     MInstruction* popFromWorklist();
 
     inline bool isHoistable(const MDefinition *ins) const {
-        return ins->isIdempotent() && !ins->isNeverHoisted();
+        return ins->isMovable() && !ins->isEffectful();
     }
 
 };

@@ -57,6 +57,8 @@ namespace ion {
     _(Abort)                                \
     /* Information during MIR building */   \
     _(MIR)                                  \
+    /* Information during alias analysis */ \
+    _(Alias)                                \
     /* Information during GVN */            \
     _(GVN)                                  \
     /* Information during LICM */           \
