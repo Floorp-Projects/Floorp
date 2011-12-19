@@ -109,6 +109,7 @@ public class GeckoAppShell
     static private File sCacheFile = null;
     static private int sFreeSpace = -1;
     static File sHomeDir = null;
+    static private int sDensityDpi = 0;
 
     private static HashMap<String, ArrayList<GeckoEventListener>> mEventListeners;
 
@@ -928,9 +929,13 @@ public class GeckoAppShell
     }
 
     public static int getDpi() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        return metrics.densityDpi;
+        if (sDensityDpi == 0) {
+            DisplayMetrics metrics = new DisplayMetrics();
+            GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+            sDensityDpi = metrics.densityDpi;
+        }
+
+        return sDensityDpi;
     }
 
     public static void setFullScreen(boolean fullscreen) {
