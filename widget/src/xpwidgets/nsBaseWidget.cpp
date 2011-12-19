@@ -869,6 +869,7 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
               mCompositor = NULL;
             }
             lf->SetShadowManager(shadowManager);
+            lf->SetParentBackendType(LayerManager::LAYERS_OPENGL);
 
             mLayerManager = lm;
           } else {
