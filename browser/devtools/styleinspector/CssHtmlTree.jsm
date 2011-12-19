@@ -40,6 +40,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const Ci = Components.interfaces;
 const Cu = Components.utils;
 const FILTER_CHANGED_TIMEOUT = 300;
 
@@ -518,6 +519,9 @@ PropertyView.prototype = {
   // Property header node
   propertyHeader: null,
 
+  // Destination for property names
+  nameNode: null,
+
   // Destination for property values
   valueNode: null,
 
@@ -653,10 +657,22 @@ PropertyView.prototype = {
     this.propertyHeader.appendChild(this.matchedExpander);
     this.matchedExpander.setAttribute("class", "match expander");
 
-    let name = doc.createElementNS(HTML_NS, "div");
-    this.propertyHeader.appendChild(name);
-    name.setAttribute("class", "property-name");
-    name.textContent = this.name;
+    this.nameNode = doc.createElementNS(HTML_NS, "div");
+    this.propertyHeader.appendChild(this.nameNode);
+    this.nameNode.setAttribute("tabindex", "0");
+    this.nameNode.addEventListener("keydown", function(aEvent) {
+      let keyEvent = Ci.nsIDOMKeyEvent;
+      if (aEvent.keyCode == keyEvent.DOM_VK_F1) {
+        this.mdnLinkClick();
+      }
+      if (aEvent.keyCode == keyEvent.DOM_VK_RETURN ||
+          aEvent.keyCode == keyEvent.DOM_VK_SPACE) {
+        this.propertyRowClick(aEvent);
+      }
+    }.bind(this), false);
+
+    this.nameNode.setAttribute("class", "property-name");
+    this.nameNode.textContent = this.name;
 
     let helpcontainer = doc.createElementNS(HTML_NS, "td");
     this.element.appendChild(helpcontainer);
@@ -833,6 +849,7 @@ PropertyView.prototype = {
     if (aEvent.target.className != "helplink") {
       this.matchedExpanded = !this.matchedExpanded;
       this.refreshAllSelectors();
+      this.nameNode.focus();
       aEvent.preventDefault();
     }
   },
