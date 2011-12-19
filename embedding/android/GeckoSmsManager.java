@@ -55,6 +55,8 @@ import android.content.ContentUris;
 import android.net.Uri;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 
 import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
@@ -226,6 +228,28 @@ class Postman
   }
 }
 
+class SmsIOThread extends Thread {
+  private final static SmsIOThread sInstance = new SmsIOThread();
+
+  private Handler mHandler;
+
+  public static SmsIOThread getInstance() {
+    return sInstance;
+  }
+
+  public boolean execute(Runnable r) {
+    return mHandler.post(r);
+  }
+
+  public void run() {
+    Looper.prepare();
+
+    mHandler = new Handler();
+
+    Looper.loop();
+  }
+}
+
 public class GeckoSmsManager
   extends BroadcastReceiver
 {
@@ -243,6 +267,10 @@ public class GeckoSmsManager
   public final static int kNoSignalError = 1;
   public final static int kUnknownError  = 2;
   public final static int kInternalError = 3;
+
+  public static void init() {
+    SmsIOThread.getInstance().start();
+  }
 
   @Override
   public void onReceive(Context context, Intent intent) {
@@ -484,5 +512,9 @@ public class GeckoSmsManager
       Log.e("GeckoSmsManager", "Something went wrong when trying to write a sent message: " + e);
       return -1;
     }
+  }
+
+  public static void shutdown() {
+    SmsIOThread.getInstance().interrupt();
   }
 }
