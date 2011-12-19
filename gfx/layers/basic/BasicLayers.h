@@ -272,6 +272,12 @@ private:
   LayerRefArray mKeepAlive;
 };
 
+class ShadowImplData
+{
+public:
+  virtual ShadowableLayer* AsShadowableLayer() = 0;
+};
+
 }
 }
 

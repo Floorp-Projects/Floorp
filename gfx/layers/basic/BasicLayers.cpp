@@ -97,7 +97,7 @@ class ShadowableLayer;
  *       |                                  |
  *       +-> BasicImageLayer <--------------+
  */
-class BasicImplData {
+class BasicImplData : public ShadowImplData {
 public:
   BasicImplData() : mHidden(false),
     mClipToVisibleRegion(false), mOperator(gfxContext::OPERATOR_OVER)
@@ -195,6 +195,13 @@ static BasicImplData*
 ToData(Layer* aLayer)
 {
   return static_cast<BasicImplData*>(aLayer->ImplData());
+}
+
+template <typename T>
+static ShadowImplData*
+ToShadowData(T* aLayer)
+{
+  return static_cast<ShadowImplData*>(aLayer->ImplData());
 }
 
 template<class Container>
@@ -2078,10 +2085,11 @@ public:
   virtual BasicShadowableThebesLayer* AsThebes() { return nsnull; }
 };
 
+template <typename T>
 static ShadowableLayer*
-ToShadowable(Layer* aLayer)
+ToShadowable(T* aLayer)
 {
-  return ToData(aLayer)->AsShadowableLayer();
+  return ToShadowData(aLayer)->AsShadowableLayer();
 }
 
 // Some layers, like ReadbackLayers, can't be shadowed and shadowing
