@@ -582,22 +582,21 @@ var BrowserApp = {
     });
   },
 
-  getSearchOrFixupURI: function(aData) {
-    let args = JSON.parse(aData);
+  getSearchOrFixupURI: function(aParams) {
     let uri;
-    if (args.engine) {
+    if (aParams.engine) {
       let engine;
-      if (args.engine == "__default__")
+      if (aParams.engine == "__default__")
         engine = Services.search.currentEngine || Services.search.defaultEngine;
       else
-        engine = Services.search.getEngineByName(args.engine);
+        engine = Services.search.getEngineByName(aParams.engine);
 
       if (engine)
-        uri = engine.getSubmission(args.url).uri;
+        uri = engine.getSubmission(aParams.url).uri;
     } else {
-      uri = URIFixup.createFixupURI(args.url, Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP);
+      uri = URIFixup.createFixupURI(aParams.url, Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP);
     }
-    return uri ? uri.spec : args.url;
+    return uri ? uri.spec : aParams.url;
   },
 
   scrollToFocusedInput: function(aBrowser) {
@@ -629,14 +628,17 @@ var BrowserApp = {
     } else if (aTopic == "Session:Stop") {
       browser.stop();
     } else if (aTopic == "Tab:Add" || aTopic == "Tab:Load") {
+      let data = JSON.parse(aData);
+
       // Pass LOAD_FLAGS_DISALLOW_INHERIT_OWNER to prevent any loads from
       // inheriting the currently loaded document's principal.
       let params = {
         selected: true,
+        parentId: ("parentId" in data) ? data.parentId : -1,
         flags: Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_OWNER
       };
 
-      let url = this.getSearchOrFixupURI(aData);
+      let url = this.getSearchOrFixupURI(data);
       if (aTopic == "Tab:Add")
         this.addTab(url, params);
       else
@@ -807,7 +809,7 @@ var NativeWindow = {
                this.linkContext,
                function(aTarget) {
                  let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-                 BrowserApp.addTab(url, { selected: false });
+                 BrowserApp.addTab(url, { selected: false, parentId: BrowserApp.selectedTab.id });
                });
 
       this.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
@@ -1020,9 +1022,18 @@ nsBrowserAccess.prototype = {
       }
     }
 
+    let newTab = (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW || aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB);
+
+    let parentId = -1;
+    if (newTab && !isExternal) {
+      let parent = BrowserApp.getTabForBrowser(BrowserApp.getBrowserForWindow(aOpener));
+      if (parent)
+        parentId = parent.id;
+    }
+
     let browser;
-    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW || aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
-      let tab = BrowserApp.addTab("about:blank", { selected: true });
+    if (newTab) {
+      let tab = BrowserApp.addTab("about:blank", { external: isExternal, parentId: parentId, selected: true });
       browser = tab.browser;
     } else { // OPEN_CURRENTWINDOW and illegal values
       browser = BrowserApp.selectedBrowser;
@@ -1114,6 +1125,8 @@ Tab.prototype = {
         type: "Tab:Added",
         tabID: this.id,
         uri: aURL,
+        parentId: ("parentId" in aParams) ? aParams.parentId : -1,
+        external: ("external" in aParams) ? aParams.external : false,
         selected: ("selected" in aParams) ? aParams.selected : true
       }
     };
