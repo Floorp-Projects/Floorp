@@ -92,6 +92,8 @@ child:
 
     NotifyRequestNoMessageInList(PRInt32 aRequestId, PRUint64 aProcessId);
 
+    NotifyRequestCreateMessageList(PRInt32 aListId, SmsMessageData aMessageData, PRInt32 aRequestId, PRUint64 aProcessId);
+
 parent:
     sync HasSupport()
         returns (bool aHasSupport);

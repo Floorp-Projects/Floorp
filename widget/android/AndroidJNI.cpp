@@ -678,9 +678,66 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyNoMessageInList(JNIEnv* jenv, jclass,
 }
 
 NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_notifyListCreated(JNIEnv* jenv, jclass, jint, jint, jstring, jstring, jstring, jlong, jint, jlong)
+Java_org_mozilla_gecko_GeckoAppShell_notifyListCreated(JNIEnv* jenv, jclass,
+                                                       jint aListId,
+                                                       jint aMessageId,
+                                                       jstring aReceiver,
+                                                       jstring aSender,
+                                                       jstring aBody,
+                                                       jlong aTimestamp,
+                                                       jint aRequestId,
+                                                       jlong aProcessId)
 {
-  // TODO: implement
+    class NotifyCreateMessageListRunnable : public nsRunnable {
+    public:
+      NotifyCreateMessageListRunnable(PRInt32 aListId,
+                                      const SmsMessageData& aMessage,
+                                      PRInt32 aRequestId, PRUint64 aProcessId)
+        : mListId(aListId)
+        , mMessage(aMessage)
+        , mRequestId(aRequestId)
+        , mProcessId(aProcessId)
+      {}
+
+      NS_IMETHODIMP Run() {
+        if (mProcessId == 0) { // Parent process.
+          nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(mMessage);
+          SmsRequestManager::GetInstance()->NotifyCreateMessageList(mRequestId,
+                                                                    mListId,
+                                                                    message);
+        } else { // Content process.
+          nsTArray<SmsParent*> spList;
+          SmsParent::GetAll(spList);
+
+          for (PRUint32 i=0; i<spList.Length(); ++i) {
+            unused << spList[i]->SendNotifyRequestCreateMessageList(mListId,
+                                                                    mMessage,
+                                                                    mRequestId,
+                                                                    mProcessId);
+          }
+        }
+
+        return NS_OK;
+      }
+
+    private:
+      PRInt32        mListId;
+      SmsMessageData mMessage;
+      PRInt32        mRequestId;
+      PRUint64       mProcessId;
+    };
+
+
+    nsJNIString receiver = nsJNIString(aReceiver, jenv);
+    DeliveryState state = receiver.IsEmpty() ? eDeliveryState_Received
+                                             : eDeliveryState_Sent;
+
+    SmsMessageData message(aMessageId, state, nsJNIString(aSender, jenv),
+                           receiver, nsJNIString(aBody, jenv), aTimestamp);
+
+    nsCOMPtr<nsIRunnable> runnable =
+      new NotifyCreateMessageListRunnable(aListId, message, aRequestId, aProcessId);
+    NS_DispatchToMainThread(runnable);
 }
 
 #ifdef MOZ_JAVA_COMPOSITOR
