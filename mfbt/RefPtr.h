@@ -41,6 +41,7 @@
 #ifndef mozilla_RefPtr_h_
 #define mozilla_RefPtr_h_
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Util.h"
 
