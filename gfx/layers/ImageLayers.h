@@ -136,11 +136,10 @@ class THEBES_API ImageContainer {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageContainer)
 
 public:
-  ImageContainer(void *aImplData = nsnull) :
+  ImageContainer() :
     mReentrantMonitor("ImageContainer.mReentrantMonitor"),
     mPaintCount(0),
-    mPreviousImagePainted(false),
-    mImplData(aImplData)
+    mPreviousImagePainted(false)
   {}
 
   virtual ~ImageContainer() {}
@@ -185,20 +184,6 @@ public:
   virtual already_AddRefed<Image> GetCurrentImage() = 0;
 
   /**
-   * Make sure the current image is ready for rendering by this container.
-   * May only be called from the main thread.
-   */
-  virtual void Flush() {}
-
-  /**
-   * |Disconnect()| is used by ImageContainer hooked up over IPC.  It may 
-   * be called at any time, and may not be called at all.  Using an
-   * IPC-enabled layer after Destroy() (drawing etc.) results in a
-   * safe no-op; no crashy or uaf etc.
-   */
-  virtual void Disconnect() {}
-
-  /**
    * Get the current image as a gfxASurface. This is useful for fallback
    * rendering.
    * This can only be called from the main thread, since cairo objects
@@ -214,8 +199,6 @@ public:
    * when accessing thread-shared state.
    */
   virtual already_AddRefed<gfxASurface> GetCurrentAsSurface(gfxIntSize* aSizeResult) = 0;
-
-  virtual void* ImplData() { return mImplData; }
 
   /**
    * Returns the layer manager for this container. This can only
@@ -308,12 +291,11 @@ protected:
   // image", and any other state which is shared between threads.
   ReentrantMonitor mReentrantMonitor;
 
-  ImageContainer(LayerManager* aManager, void* aImplData = nsnull) :
+  ImageContainer(LayerManager* aManager) :
     mManager(aManager),
     mReentrantMonitor("ImageContainer.mReentrantMonitor"),
     mPaintCount(0),
-    mPreviousImagePainted(false),
-    mImplData(aImplData)
+    mPreviousImagePainted(false)
   {}
 
   // Performs necessary housekeeping to ensure the painted frame statistics
@@ -336,8 +318,6 @@ protected:
 
   // Denotes whether the previous image was painted.
   bool mPreviousImagePainted;
-
-  void* mImplData;
 };
 
 /**
