@@ -3197,7 +3197,7 @@ Detecting(JSContext *cx, jsbytecode *pc)
              */
             if (++pc < endpc) {
                 op = JSOp(*pc);
-                return *pc == JSOP_EQ || *pc == JSOP_NE;
+                return op == JSOP_EQ || op == JSOP_NE;
             }
             return JS_FALSE;
 
@@ -7406,7 +7406,6 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
             fprintf(stderr, "no stack for cx = %p\n", (void*) cx);
             return;
         }
-        start = i.fp();
     } else {
         while (!i.done() && i.fp() != start)
             ++i;

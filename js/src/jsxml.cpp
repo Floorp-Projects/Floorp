@@ -3047,22 +3047,17 @@ AddInScopeNamespace(JSContext *cx, JSXML *xml, JSObject *ns)
 static JSBool
 Append(JSContext *cx, JSXML *list, JSXML *xml)
 {
-    uint32_t i, j, k, n;
-    JSXML *kid;
-
     JS_ASSERT(list->xml_class == JSXML_CLASS_LIST);
-    i = list->xml_kids.length;
-    n = 1;
+
+    uint32_t i = list->xml_kids.length;
     if (xml->xml_class == JSXML_CLASS_LIST) {
         list->xml_target = xml->xml_target;
         list->xml_targetprop = xml->xml_targetprop;
-        n = JSXML_LENGTH(xml);
-        k = i + n;
-        if (!list->xml_kids.setCapacity(cx, k))
+        uint32_t n = JSXML_LENGTH(xml);
+        if (!list->xml_kids.setCapacity(cx, i + n))
             return JS_FALSE;
-        for (j = 0; j < n; j++) {
-            kid = XMLARRAY_MEMBER(&xml->xml_kids, j, JSXML);
-            if (kid)
+        for (uint32_t j = 0; j < n; j++) {
+            if (JSXML *kid = XMLARRAY_MEMBER(&xml->xml_kids, j, JSXML))
                 XMLARRAY_SET_MEMBER(&list->xml_kids, i + j, kid);
         }
         return JS_TRUE;
@@ -6921,7 +6916,6 @@ xml_text_helper(JSContext *cx, JSObject *obj, JSXML *xml, jsval *vp)
 {
     JSXML *list, *kid, *vxml;
     uint32_t i, n;
-    JSBool ok;
     JSObject *kidobj;
     jsval v;
 
@@ -6930,11 +6924,10 @@ xml_text_helper(JSContext *cx, JSObject *obj, JSXML *xml, jsval *vp)
         return JS_FALSE;
 
     if (xml->xml_class == JSXML_CLASS_LIST) {
-        ok = JS_TRUE;
         for (i = 0, n = xml->xml_kids.length; i < n; i++) {
             kid = XMLARRAY_MEMBER(&xml->xml_kids, i, JSXML);
             if (kid && kid->xml_class == JSXML_CLASS_ELEMENT) {
-                ok = js_EnterLocalRootScope(cx);
+                JSBool ok = js_EnterLocalRootScope(cx);
                 if (!ok)
                     break;
                 kidobj = js_GetXMLObject(cx, kid);

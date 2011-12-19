@@ -2560,10 +2560,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                      */
                     op = (JSOp) pc[oplen];
                     rval = PopStr(ss, op, &lastrvalpc);
-                    lval = PopStr(ss, op, &lastlvalpc);
+                    (void)PopStr(ss, op, &lastlvalpc);
+
                     /* Print only the right operand of the assignment-op. */
                     todo = SprintCString(&ss->sprinter, rval);
-                    op = saveop;
                 } else if (!inXML) {
                     rval = PopStrPrecDupe(ss, cs->prec + !!(cs->format & JOF_LEFTASSOC), &rvalpc);
                     lval = PopStrPrec(ss, cs->prec + !(cs->format & JOF_LEFTASSOC), &lvalpc);
@@ -4211,10 +4211,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               }
 
               case JSOP_GETELEM2:
-                op = JSOP_GETELEM;
                 (void) PopOff(ss, lastop);
                 /* FALL THROUGH */
-
               case JSOP_CALLELEM:
               case JSOP_GETELEM:
                 op = JSOP_NOP;          /* turn off parens */
