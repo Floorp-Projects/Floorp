@@ -59,6 +59,8 @@ public class BrowserDB {
 
         public void updateHistoryTitle(ContentResolver cr, String uri, String title);
 
+        public void updateHistoryDate(ContentResolver cr, String uri, long date);
+
         public Cursor getAllVisitedHistory(ContentResolver cr);
 
         public Cursor getRecentHistory(ContentResolver cr, int limit);
@@ -96,6 +98,10 @@ public class BrowserDB {
 
     public static void updateHistoryTitle(ContentResolver cr, String uri, String title) {
         sDb.updateHistoryTitle(cr, uri, title);
+    }
+
+    public static void updateHistoryDate(ContentResolver cr, String uri, long date) {
+        sDb.updateHistoryDate(cr, uri, date);
     }
 
     public static Cursor getAllVisitedHistory(ContentResolver cr) {
