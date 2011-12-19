@@ -45,7 +45,12 @@
 
 #include <vector>
 #include <sstream>
+
+#ifdef _MSC_VER
 #include <hash_set>
+#else
+#include <unordered_set>
+#endif
 
 namespace mozilla {
 namespace gfx {
@@ -149,7 +154,11 @@ private:
   friend class AutoSaveRestoreClippedOut;
   friend class SourceSurfaceD2DTarget;
 
+#ifdef _MSC_VER
   typedef stdext::hash_set<DrawTargetD2D*> TargetSet;
+#else
+  typedef std::unordered_set<DrawTargetD2D*> TargetSet;
+#endif
 
   bool InitD2DRenderTarget();
   void PrepareForDrawing(ID2D1RenderTarget *aRT);
