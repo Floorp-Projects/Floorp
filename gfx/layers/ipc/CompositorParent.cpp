@@ -77,16 +77,22 @@ CompositorParent::AnswerStop()
 }
 
 void
-CompositorParent::Composite()
+CompositorParent::RequestComposition()
 {
   CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::Composite);
-  MessageLoop::current()->PostDelayedTask(FROM_HERE, composeTask, 10);
+  MessageLoop::current()->PostTask(FROM_HERE, composeTask);
+}
 
-  if (!mLayerManager)
+void
+CompositorParent::Composite()
+{
+  if (!mLayerManager) {
+    CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::Composite);
+    MessageLoop::current()->PostDelayedTask(FROM_HERE, composeTask, 10);
     return;
+  }
 
   mLayerManager->EndEmptyTransaction();
-
 }
 
 PLayersParent*
