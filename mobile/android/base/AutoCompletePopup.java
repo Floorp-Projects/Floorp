@@ -68,6 +68,8 @@ public class AutoCompletePopup extends ListView {
 
     private static final String LOGTAG = "AutoCompletePopup";
 
+    private static int sMinWidth = 0;
+
     public AutoCompletePopup(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
@@ -132,7 +134,18 @@ public class AutoCompletePopup extends ListView {
         // If the textbox is smaller than the screen-width,
         // shrink the list's width
         if ((left + width) < viewport.width) 
-            listWidth = left + width;
+            listWidth = left < 0 ? left + width : width;
+
+        // Late initializing variable to allow DisplayMetrics not to be null and avoid NPE
+        if (sMinWidth == 0)
+            sMinWidth = 100 * GeckoAppShell.getDpi();
+
+        if (listWidth < sMinWidth) {
+            listWidth = sMinWidth;
+
+            if ((listLeft + listWidth) > viewport.width)
+                listLeft = (int)viewport.width - listWidth;
+        }
 
         // If the list is extending outside of the viewport
         // try moving above
