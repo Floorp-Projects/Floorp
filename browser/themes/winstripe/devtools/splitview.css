@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Cedric Vivier <cedricv@neonux.com> (original author)
+ *   Paul Rouget <paul@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,90 +36,124 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-.splitview-root {
-  margin-top: 4px;
-}
-
-.splitview-filter {
-  -moz-box-flex: 1;
-  -moz-margin-start: 1ex;
-  max-width: 25ex;
-}
-
 .splitview-nav-container {
-  -moz-box-pack: center;
-  margin: 4px;
-  border: 1px inset WindowFrame;
-  border-radius: 4px;
-  background-color: -moz-default-background-color;
-  color: -moz-default-color;
+  background-color: hsl(211,21%,26%);
+  color: white;
 }
 
-ol.splitview-nav {
-  overflow-x: hidden;
-  overflow-y: auto;
+.splitview-nav {
+  -moz-appearance: none;
+  margin: 0;
+  box-shadow: inset -1px 0 0 #222426;
+}
+
+.splitview-nav > li {
+  color: white;
+  background-clip: padding-box;
+  border-bottom: 1px solid hsla(210,40%,83%,.1);
+  box-shadow: inset 0 -1px 0 hsla(211,68%,6%,.3);
+  -moz-padding-end: 8px;
+  -moz-box-align: center;
+}
+
+.splitview-nav {
   list-style-image: none;
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-ol.splitview-nav > li {
-  display: -moz-box;
-  -moz-box-orient: vertical;
+.splitview-nav > li {
   outline: 0;
-  border-bottom: 1px solid ThreeDShadow;
-  padding: 2px;
-  padding-top: 4px;
   vertical-align: bottom;
-  color: black;
-  -moz-transition-property: background-color, max-height;
-  -moz-transition-duration: 1s;
-  max-height: 2048px; /* for slide transition */
-}
-ol.splitview-nav > li.splitview-active {
-  background-color: #eaf2fe;   /* same as orion.css's .line_caret */
-}
-ol.splitview-nav > li:hover,
-ol.splitview-nav > li:focus {
-  background-color: #f0f5fd;   /* slightly lighter .line_caret */
 }
 
-ol.splitview-nav > li.splitview-flash {
-  background-color: #faf0e1;   /* complement of .line_caret */
-}
-ol.splitview-nav > li.splitview-slide {
-  max-height: 0;
-  overflow: hidden;
-}
-
-.splitview-side-details {
-  margin: 2px;
-}
-
-.splitview-nav.splitview-all-filtered ~ .splitview-nav.placeholder.all-filtered,
-.splitview-nav:empty ~ .splitview-nav.placeholder.empty {
-  -moz-box-flex: 0;
+.placeholder {
+  -moz-box-flex: 1;
+  -moz-box-back: center;
   text-align: center;
 }
 
-.splitview-main .toolbar,
-.splitview-main .toolbar > * {
-  display: -moz-box;
-}
-.splitview-main .toolbar {
-  -moz-box-flex: 1;
-  -moz-box-orient: horizontal;
-  -moz-padding-start: 3px;
-}
-
-a {
-  color: -moz-hyperlinktext;
-  text-decoration: underline;
+.splitview-nav > li.splitview-active {
+  background-image: url(itemArrow-ltr.png),
+                    -moz-linear-gradient(left, black, black),
+                    -moz-linear-gradient(hsl(200,100%,33%), hsl(200,100%,25%));
+  background-repeat: no-repeat, no-repeat, repeat-x;
+  background-position: center right, top right, top left;
+  background-size: auto, 1px 100%, auto;
+  border-bottom: 1px solid hsla(210,8%,5%,.25);
+  box-shadow: inset 0 1px 0 hsla(210,40%,83%,.15),
+              inset 0 -1px 0 hsla(210,40%,83%,.05);
 }
 
-button {
-  margin: 0;
+.splitview-nav > li.splitview-active:-moz-locale-dir(rtl) {
+  background-image: url(itemArrow-rtl.png),
+                    -moz-linear-gradient(left, black, black),
+                    -moz-linear-gradient(hsl(200,100%,33%), hsl(200,100%,25%));
+  background-repeat: no-repeat, no-repeat, repeat-x;
+  background-position: center left, top left, top right;
+}
+
+/* Toolbars */
+
+.devtools-toolbar {
+  height: 26px;
+  background-origin: border-box;
+  background-clip: border-box;
+  border-top: 1px solid hsla(210,8%,5%,.5);
+  border-bottom: 1px solid hsla(210,8%,5%,.65);
+  padding: 3px;
+}
+
+.splitview-main > toolbar:-moz-locale-dir(ltr) {
+  border-right: 1px solid hsla(210,8%,5%,.5);
+}
+
+.splitview-main > toolbar:-moz-locale-dir(rtl) {
+  border-left: 1px solid hsla(210,8%,5%,.5);
+}
+
+.devtools-toolbarbutton {
+  font-size: 11px;
+  padding: 0 8px;
+  width: auto;
+  min-width: 48px;
+  min-height: 0;
+}
+
+
+/* Resizers */
+
+.splitview-landscape-resizer {
+  -moz-appearance: none;
+  width: 7px;
+  background-image: -moz-linear-gradient(left, black 1px, rgba(255,255,255,0.2) 1px);
+  background-size: 2px 10px;
+  background-clip: padding-box;
+  background-repeat: repeat-x;
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.05);
+  margin: 5px 0;
+  -moz-transform: translateX(-7px);
+}
+
+.splitview-landscape-resizer:-moz-locale-dir(rtl) {
+  -moz-transform: translateX(7px);
+}
+
+.splitview-portrait-resizer {
+  -moz-appearance: none;
+  background: -moz-linear-gradient(top, black 1px, rgba(255,255,255,0.2) 1px),
+              -moz-linear-gradient(top, hsl(209,18%,34%), hsl(210,24%,16%));
+  height: 12px;
+  background-size: 10px 2px, 100% 12px;
+  background-clip: content-box, border-box;
+  background-repeat: repeat-y, no-repeat;
+  background-position: center center;
+  padding: 2px 0;
+  border-top: 1px solid hsla(210,8%,5%,.5);
+  border-bottom: 1px solid hsla(210,8%,5%,.5);
 }
 
 /* limited width mode (hide search unless it has focus [search-on-type]) */
@@ -128,8 +163,6 @@ button {
     position: fixed;
     margin: 0;
     bottom: -4em;
-    -moz-transition-property: bottom;
-    -moz-transition-duration: 0.2s;
   }
   .splitview-filter[focused="true"] {
     bottom: 0;

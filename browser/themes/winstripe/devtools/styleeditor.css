@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Cedric Vivier <cedricv@neonux.com> (original author)
+ *   Paul Rouget <paul@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,136 +36,89 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-ol.splitview-nav:focus {
+.stylesheet-title,
+.stylesheet-name {
+  text-decoration: none;
+  color: hsl(210,30%,85%);
+}
+
+.stylesheet-name {
+  font-size: 13px;
+}
+
+.stylesheet-rule-count,
+.stylesheet-saveButton {
+  color: hsl(210,16%,53%);
+}
+
+.stylesheet-saveButton {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.splitview-active .stylesheet-title,
+.splitview-active .stylesheet-name {
+  color: hsl(0,0%,100%);
+}
+
+.splitview-active .stylesheet-rule-count,
+.splitview-active .stylesheet-saveButton {
+  color: hsl(205,50%,70%);
+}
+
+.splitview-nav:focus {
   outline: 0; /* focus ring is on the stylesheet name */
 }
 
-.splitview-nav > li:-moz-locale-dir(ltr),
-.splitview-nav > li hgroup:-moz-locale-dir(ltr) {
-  float: left;
-}
-.splitview-nav > li:-moz-locale-dir(rtl),
-.splitview-nav > li hgroup:-moz-locale-dir(rtl) {
-  float: right;
-}
-.splitview-nav > li > hgroup.stylesheet-info {
-  max-width: 66%;
-}
-.splitview-nav > li > hgroup .stylesheet-name {
-  display: inline-block;
-  width: 100%;
-  max-width: 34ex;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .splitview-nav > li.unsaved > hgroup .stylesheet-name {
   font-style: italic;
 }
-.splitview-nav > li.unsaved > hgroup .stylesheet-name:before:-moz-locale-dir(ltr),
-.splitview-nav > li.unsaved > hgroup .stylesheet-name:after:-moz-locale-dir(rtl) {
+
+.splitview-nav:-moz-locale-dir(ltr) > li.unsaved > hgroup .stylesheet-name:before,
+.splitview-nav:-moz-locale-dir(rtl) > li.unsaved > hgroup .stylesheet-name:after {
   font-style: italic;
-  content: "* ";
 }
 
-.splitview-nav > li > .stylesheet-enabled {
-  float: left;
-  width: 20px;
-  height: 20px;
-  -moz-margin-end: 6px;
-  border: 1px solid transparent;
-  background-image: url(eye-toggle.png);
-  background-position: center center;
+.stylesheet-enabled {
+  padding: 8px 0;
+  margin: 0 8px;
+  background-image: url(itemToggle.png);
   background-repeat: no-repeat;
+  background-clip: content-box;
+  background-position: 0 8px;
+  width: 24px;
+  height: 40px;
 }
-.splitview-nav > li > .stylesheet-enabled:-moz-locale-dir(rtl) {
-  float: right;
+
+.disabled > .stylesheet-enabled {
+  background-position: -24px 8px;
 }
-.splitview-nav > li.disabled > .stylesheet-enabled {
-  background-image: none;
-}
+
 .splitview-nav > li > .stylesheet-enabled:focus,
 .splitview-nav > li:hover > .stylesheet-enabled {
   outline: 0;
-  border: 1px inset WindowFrame;
-  -moz-margin-end: 6px;
 }
 
-.splitview-nav > li hgroup .stylesheet-title {
-  color: GrayText;
-  font-size: 0.8em;
-}
-.splitview-nav > li.error hgroup > .stylesheet-error-message {
+.stylesheet-error-message {
   color: red;
-  font-size: 0.8em;
 }
 
-.splitview-nav > li > .stylesheet-more {
-  position: relative;
-  right: 0;
-}
-.splitview-nav > li > .stylesheet-more:-moz-locale-dir(rtl) {
-  left: 0;
+.stylesheet-more > h3 {
+  font-size: 11px;
+  -moz-margin-end: 2px;
 }
 
-.splitview-nav > li hgroup.stylesheet-stats,
-.splitview-nav > li hgroup.stylesheet-actions {
-  position: absolute;
-  z-index: 2;
-  -moz-transition-property: left, right;
-  -moz-transition-duration: 0.2s;
-  -moz-transition-delay: 0.2s;
-  -moz-transition-timing-function: ease-in-out;
+.devtools-searchinput {
+  max-width: 25ex;
+  font-size: 11px;
 }
 
-.splitview-nav > li hgroup.stylesheet-stats {
-  z-index: 1;
-  -moz-transition-delay: 0.4s;
-  color: GrayText;
-  padding-left: 6px; /* Fitts */
-  padding-right: 6px;
-}
-.splitview-nav > li hgroup.stylesheet-actions a {
-  color: ButtonText;
-  padding-left: 6px; /* Fitts */
-  padding-right: 6px;
+.placeholder {
+  color: white;
 }
 
-.splitview-nav > li hgroup.stylesheet-actions:-moz-locale-dir(ltr),
-.splitview-nav > li:hover hgroup.stylesheet-stats:-moz-locale-dir(ltr),
-.splitview-nav > li:focus hgroup.stylesheet-stats:-moz-locale-dir(ltr),
-.splitview-nav > li.splitview-active hgroup.stylesheet-stats:-moz-locale-dir(ltr) {
-  right: -50ex;
-}
-.splitview-nav > li hgroup.stylesheet-actions:-moz-locale-dir(rtl),
-.splitview-nav > li:hover hgroup.stylesheet-stats:-moz-locale-dir(rtl),
-.splitview-nav > li:focus hgroup.stylesheet-stats:-moz-locale-dir(rtl),
-.splitview-nav > li.splitview-active hgroup.stylesheet-stats:-moz-locale-dir(rtl) {
-  left: -50ex;
-}
-.splitview-nav > li hgroup.stylesheet-stats:-moz-locale-dir(ltr),
-.splitview-nav > li:hover hgroup.stylesheet-actions:-moz-locale-dir(ltr),
-.splitview-nav > li:focus hgroup.stylesheet-actions:-moz-locale-dir(ltr),
-.splitview-nav > li.splitview-active hgroup.stylesheet-actions:-moz-locale-dir(ltr) {
-  right: 0;
-}
-.splitview-nav > li hgroup.stylesheet-stats:-moz-locale-dir(rtl),
-.splitview-nav > li:hover hgroup.stylesheet-actions:-moz-locale-dir(rtl),
-.splitview-nav > li:focus hgroup.stylesheet-actions:-moz-locale-dir(rtl),
-.splitview-nav > li.splitview-active hgroup.stylesheet-actions:-moz-locale-dir(rtl) {
-  left: 0;
-}
-
-.stylesheet-editor-input {
-  display: -moz-box;
-  -moz-box-flex: 1;
-  overflow: hidden;
-  min-height: 8em;
-  margin: 3px;
-  margin-top: 0;
-  border: 1px inset WindowFrame;
-  border-radius: 4px;
-  background-color: -moz-default-background-color;
+.placeholder a {
+  text-decoration: underline;
 }
 
 h1,
@@ -174,4 +128,29 @@ h3 {
   font-weight: normal;
   margin: 0;
   padding: 0;
+}
+
+/* portrait mode */
+@media (max-aspect-ratio: 5/3) {
+  .splitview-nav {
+    box-shadow: none;
+  }
+
+  .splitview-nav > li.splitview-active {
+    background-size: 0 0, 0 0, auto;
+  }
+
+  .stylesheet-enabled {
+    padding: 0;
+    background-position: 0 0;
+    height: 24px;
+  }
+
+  .disabled > .stylesheet-enabled {
+    background-position: -24px 0;
+  }
+
+  .splitview-nav > li > hgroup.stylesheet-info {
+    -moz-box-align: baseline;
+  }
 }
