@@ -89,33 +89,8 @@ JS_BEGIN_EXTERN_C
 # define JS_THREADSAFE_ASSERT(expr) ((void) 0)
 #endif
 
-/*
- * JS_STATIC_ASSERT
- *
- * A compile-time assert. "cond" must be a constant expression. The macro can
- * be used only in places where an "extern" declaration is allowed.
- */
-#ifdef __SUNPRO_CC
-/*
- * Sun Studio C++ compiler has a bug
- * "sizeof expression not accepted as size of array parameter"
- * It happens when js_static_assert() function is declared inside functions.
- * The bug number is 6688515. It is not public yet.
- * Therefore, for Sun Studio, declare js_static_assert as an array instead.
- */
-# define JS_STATIC_ASSERT(cond) extern char js_static_assert[(cond) ? 1 : -1]
-#else
-# ifdef __COUNTER__
-#  define JS_STATIC_ASSERT_GLUE1(x,y) x##y
-#  define JS_STATIC_ASSERT_GLUE(x,y) JS_STATIC_ASSERT_GLUE1(x,y)
-#  define JS_STATIC_ASSERT(cond)                                            \
-        typedef int JS_STATIC_ASSERT_GLUE(js_static_assert, __COUNTER__)[(cond) ? 1 : -1]
-# else
-#  define JS_STATIC_ASSERT(cond) extern void js_static_assert(int arg[(cond) ? 1 : -1])
-# endif
-#endif
-
-#define JS_STATIC_ASSERT_IF(cond, expr) JS_STATIC_ASSERT(!(cond) || (expr))
+#define JS_STATIC_ASSERT(cond)           MOZ_STATIC_ASSERT(cond, "JS_STATIC_ASSERT")
+#define JS_STATIC_ASSERT_IF(cond, expr)  MOZ_STATIC_ASSERT_IF(cond, expr, "JS_STATIC_ASSERT_IF")
 
 /*
  * Abort the process in a non-graceful manner. This will cause a core file,
