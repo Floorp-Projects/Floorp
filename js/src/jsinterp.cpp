@@ -2105,14 +2105,12 @@ BEGIN_CASE(JSOP_STOP)
         if (JS_LIKELY(interpReturnOK)) {
             TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 
-            op = JSOp(*regs.pc);
-            len = JSOP_CALL_LENGTH;
-
             if (shiftResult) {
                 regs.sp[-2] = regs.sp[-1];
                 regs.sp--;
             }
 
+            len = JSOP_CALL_LENGTH;
             DO_NEXT_OP(len);
         }
 
