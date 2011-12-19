@@ -98,7 +98,7 @@ void ScheduleMemoryPressureEvent()
   PR_ATOMIC_SET(&sMemoryPressurePending, 1);
 }
 
-};
+} // namespace mozilla
 
 //-----------------------------------------------------------------------------
 // Because we do not have our own nsIFactory, we have to implement nsIClassInfo

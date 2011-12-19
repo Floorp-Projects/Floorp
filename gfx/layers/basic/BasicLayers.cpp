@@ -1140,10 +1140,6 @@ BasicCanvasLayer::UpdateSurface(gfxASurface* aDestSurface)
 
     NS_ASSERTION(isurf->Stride() == mBounds.width * 4, "gfxImageSurface stride isn't what we expect!");
 
-    // We have to flush to ensure that any buffered GL operations are
-    // in the framebuffer before we read.
-    mGLContext->fFlush();
-
     PRUint32 currentFramebuffer = 0;
 
     mGLContext->fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, (GLint*)&currentFramebuffer);

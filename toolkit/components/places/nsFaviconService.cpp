@@ -1104,6 +1104,7 @@ nsFaviconService::OptimizeFaviconImage(const PRUint8* aData, PRUint32 aDataLen,
   rv = imgtool->EncodeScaledImage(container, aNewMimeType,
                                   mOptimizedIconDimension,
                                   mOptimizedIconDimension,
+                                  EmptyString(),
                                   getter_AddRefs(iconStream));
   NS_ENSURE_SUCCESS(rv, rv);
 

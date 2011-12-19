@@ -47,6 +47,9 @@
 #include "nsIOutputStream.h"
 #include "nsCRT.h"
 
+#define kMinDecompressReadBufLen 1024
+#define kMinCompressWriteBufLen  1024
+
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsCacheEntryDescriptor,
                               nsICacheEntryDescriptor,
                               nsICacheEntryInfo)
@@ -213,7 +216,25 @@ NS_IMETHODIMP nsCacheEntryDescriptor::GetDataSize(PRUint32 *result)
     nsCacheServiceAutoLock lock;
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
+    const char* val = mCacheEntry->GetMetaDataElement("uncompressed-len");
+    if (!val) {
+        *result = mCacheEntry->DataSize();
+    } else {
+        *result = atol(val);
+    }
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP nsCacheEntryDescriptor::GetStorageDataSize(PRUint32 *result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    nsCacheServiceAutoLock lock;
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     *result = mCacheEntry->DataSize();
+
     return NS_OK;
 }
 
@@ -276,8 +297,14 @@ nsCacheEntryDescriptor::OpenInputStream(PRUint32 offset, nsIInputStream ** resul
             return NS_ERROR_CACHE_READ_ACCESS_DENIED;
     }
 
-    nsInputStreamWrapper* cacheInput =
-        new nsInputStreamWrapper(this, offset);
+    nsInputStreamWrapper* cacheInput = nsnull;
+    const char *val;
+    val = mCacheEntry->GetMetaDataElement("uncompressed-len");
+    if (val) {
+        cacheInput = new nsDecompressInputStreamWrapper(this, offset);
+    } else {
+        cacheInput = new nsInputStreamWrapper(this, offset);
+    }
     if (!cacheInput) return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(*result = cacheInput);
@@ -299,8 +326,15 @@ nsCacheEntryDescriptor::OpenOutputStream(PRUint32 offset, nsIOutputStream ** res
             return NS_ERROR_CACHE_WRITE_ACCESS_DENIED;
     }
 
-    nsOutputStreamWrapper* cacheOutput =
-        new nsOutputStreamWrapper(this, offset);
+    nsOutputStreamWrapper* cacheOutput = nsnull;
+    PRInt32 compressionLevel = nsCacheService::CacheCompressionLevel();
+    const char *val;
+    val = mCacheEntry->GetMetaDataElement("uncompressed-len");
+    if ((compressionLevel > 0) && val) {
+        cacheOutput = new nsCompressOutputStreamWrapper(this, offset);
+    } else {
+        cacheOutput = new nsOutputStreamWrapper(this, offset);
+    }
     if (!cacheOutput) return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(*result = cacheOutput);
@@ -512,7 +546,7 @@ nsCacheEntryDescriptor::VisitMetaData(nsICacheMetaDataVisitor * visitor)
 
 
 /******************************************************************************
- * nsCacheInputStream - a wrapper for nsIInputstream keeps the cache entry
+ * nsCacheInputStream - a wrapper for nsIInputStream keeps the cache entry
  *                      open while referenced.
  ******************************************************************************/
 
@@ -587,9 +621,136 @@ nsInputStreamWrapper::IsNonBlocking(bool *result)
 
 
 /******************************************************************************
- * nsCacheOutputStream - a wrapper for nsIOutputstream to track the amount of
- *                       data written to a cache entry.
- *                     - also keeps the cache entry open while referenced.
+ * nsDecompressInputStreamWrapper - an input stream wrapper that decompresses
+ ******************************************************************************/
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheEntryDescriptor::nsDecompressInputStreamWrapper,
+                              nsIInputStream)
+
+NS_IMETHODIMP nsCacheEntryDescriptor::
+nsDecompressInputStreamWrapper::Read(char *    buf, 
+                                     PRUint32  count, 
+                                     PRUint32 *countRead)
+{
+    int zerr = Z_OK;
+    nsresult rv = NS_OK;
+
+    if (!mStreamInitialized) {
+        rv = InitZstream();
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+    }
+
+    mZstream.next_out = (Bytef*)buf;
+    mZstream.avail_out = count;
+
+    if (mReadBufferLen < count) {
+        // Allocate a buffer for reading from the input stream. This will
+        // determine the max number of compressed bytes read from the
+        // input stream at one time. Making the buffer size proportional
+        // to the request size is not necessary, but helps minimize the
+        // number of read requests to the input stream.
+        PRUint32 newBufLen = NS_MAX(count, (PRUint32)kMinDecompressReadBufLen);
+        unsigned char* newBuf;
+        newBuf = (unsigned char*)nsMemory::Realloc(mReadBuffer, 
+            newBufLen);
+        if (newBuf) {
+            mReadBuffer = newBuf;
+            mReadBufferLen = newBufLen;
+        }
+        if (!mReadBuffer) {
+            mReadBufferLen = 0;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+
+    // read and inflate data until the output buffer is full, or
+    // there is no more data to read
+    while (NS_SUCCEEDED(rv) &&
+           zerr == Z_OK && 
+           mZstream.avail_out > 0 &&
+           count > 0) {
+        if (mZstream.avail_in == 0) {
+            rv = nsInputStreamWrapper::Read((char*)mReadBuffer, 
+                                            mReadBufferLen, 
+                                            &mZstream.avail_in);
+            if (NS_FAILED(rv) || !mZstream.avail_in) {
+                break;
+            }
+            mZstream.next_in = mReadBuffer;
+        }
+        zerr = inflate(&mZstream, Z_NO_FLUSH);
+        if (zerr == Z_STREAM_END) {
+            // The compressed data may have been stored in multiple
+            // chunks/streams. To allow for this case, re-initialize 
+            // the inflate stream and continue decompressing from 
+            // the next byte.
+            Bytef * saveNextIn = mZstream.next_in;
+            unsigned int saveAvailIn = mZstream.avail_in;
+            Bytef * saveNextOut = mZstream.next_out;
+            unsigned int saveAvailOut = mZstream.avail_out;
+            inflateReset(&mZstream);
+            mZstream.next_in = saveNextIn;
+            mZstream.avail_in = saveAvailIn;
+            mZstream.next_out = saveNextOut;
+            mZstream.avail_out = saveAvailOut;
+            zerr = Z_OK;
+        } else if (zerr != Z_OK) {
+            rv = NS_ERROR_INVALID_CONTENT_ENCODING;
+        }
+    }
+    if (NS_SUCCEEDED(rv)) {
+        *countRead = count - mZstream.avail_out;
+    }
+    return rv;
+}
+
+nsresult nsCacheEntryDescriptor::
+nsDecompressInputStreamWrapper::Close()
+{
+    EndZstream();
+    if (mReadBuffer) {
+        nsMemory::Free(mReadBuffer);
+        mReadBuffer = 0;
+        mReadBufferLen = 0;
+    }
+    return nsInputStreamWrapper::Close();
+}
+
+nsresult nsCacheEntryDescriptor::
+nsDecompressInputStreamWrapper::InitZstream()
+{
+    // Initialize zlib inflate stream
+    mZstream.zalloc = Z_NULL;
+    mZstream.zfree = Z_NULL;
+    mZstream.opaque = Z_NULL;
+    mZstream.next_out = Z_NULL;
+    mZstream.avail_out = 0;
+    mZstream.next_in = Z_NULL;
+    mZstream.avail_in = 0;
+    if (inflateInit(&mZstream) != Z_OK) {
+        return NS_ERROR_FAILURE;
+    }
+    mStreamInitialized = PR_TRUE;
+    return NS_OK;
+}
+
+nsresult nsCacheEntryDescriptor::
+nsDecompressInputStreamWrapper::EndZstream()
+{
+    if (mStreamInitialized && !mStreamEnded) {
+        inflateEnd(&mZstream);
+        mStreamEnded = PR_TRUE;
+    }
+    return NS_OK;
+}
+
+
+/******************************************************************************
+ * nsOutputStreamWrapper - a wrapper for nsIOutputstream to track the amount of
+ *                         data written to a cache entry.
+ *                       - also keeps the cache entry open while referenced.
  ******************************************************************************/
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheEntryDescriptor::nsOutputStreamWrapper,
@@ -704,3 +865,144 @@ nsOutputStreamWrapper::IsNonBlocking(bool *result)
     *result = false;
     return NS_OK;
 }
+
+
+/******************************************************************************
+ * nsCompressOutputStreamWrapper - an output stream wrapper that compresses
+ *   data before it is written
+ ******************************************************************************/
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheEntryDescriptor::nsCompressOutputStreamWrapper,
+                              nsIOutputStream)
+
+NS_IMETHODIMP nsCacheEntryDescriptor::
+nsCompressOutputStreamWrapper::Write(const char * buf,
+                                     PRUint32     count,
+                                     PRUint32 *   result)
+{
+    int zerr = Z_OK;
+    nsresult rv = NS_OK;
+
+    if (!mStreamInitialized) {
+        rv = InitZstream();
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+    }
+
+    if (!mWriteBuffer) {
+        // Once allocated, this buffer is referenced by the zlib stream and
+        // cannot be grown. We use 2x(initial write request) to approximate
+        // a stream buffer size proportional to request buffers.
+        mWriteBufferLen = NS_MAX(count*2, (PRUint32)kMinCompressWriteBufLen);
+        mWriteBuffer = (unsigned char*)nsMemory::Alloc(mWriteBufferLen);
+        if (!mWriteBuffer) {
+            mWriteBufferLen = 0;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        mZstream.next_out = mWriteBuffer;
+        mZstream.avail_out = mWriteBufferLen;
+    }
+
+    // Compress (deflate) the requested buffer. Keep going
+    // until the entire buffer has been deflated.
+    mZstream.avail_in = count;
+    mZstream.next_in = (Bytef*)buf;
+    while (mZstream.avail_in > 0) {
+        zerr = deflate(&mZstream, Z_NO_FLUSH);
+        if (zerr == Z_STREAM_ERROR) {
+            return NS_ERROR_FAILURE;
+        }
+        // Note: Z_BUF_ERROR is non-fatal and sometimes expected here.
+
+        // If the compression stream output buffer is filled, write
+        // it out to the underlying stream wrapper.
+        if (mZstream.avail_out == 0) {
+            rv = WriteBuffer();
+            if (NS_FAILED(rv)) {
+                return rv;
+            }
+        }
+    }
+    *result = count;
+    mUncompressedCount += *result;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsCacheEntryDescriptor::
+nsCompressOutputStreamWrapper::Close()
+{
+    nsresult rv = NS_OK;
+    int zerr = 0;
+
+    if (mStreamInitialized) {
+        // complete compression of any data remaining in the zlib stream
+        do {
+            zerr = deflate(&mZstream, Z_FINISH);
+            rv = WriteBuffer();
+        } while (zerr == Z_OK && rv == NS_OK);
+        deflateEnd(&mZstream);
+    }
+
+    if (mDescriptor->CacheEntry()) {
+        nsCAutoString uncompressedLenStr;
+        rv = mDescriptor->GetMetaDataElement("uncompressed-len",
+                                             getter_Copies(uncompressedLenStr));
+        if (NS_SUCCEEDED(rv)) {
+            PRInt32 oldCount = uncompressedLenStr.ToInteger(&rv);
+            if (NS_SUCCEEDED(rv)) {
+                mUncompressedCount += oldCount;
+            }
+        }
+        uncompressedLenStr.Adopt(0);
+        uncompressedLenStr.AppendInt(mUncompressedCount);
+        rv = mDescriptor->SetMetaDataElement("uncompressed-len",
+            uncompressedLenStr.get());
+    }
+
+    if (mWriteBuffer) {
+        nsMemory::Free(mWriteBuffer);
+        mWriteBuffer = 0;
+        mWriteBufferLen = 0;
+    }
+
+    return nsOutputStreamWrapper::Close();
+}
+
+nsresult nsCacheEntryDescriptor::
+nsCompressOutputStreamWrapper::InitZstream()
+{
+    // Determine compression level: Aggressive compression
+    // may impact performance on mobile devices, while a
+    // lower compression level still provides substantial
+    // space savings for many text streams.
+    PRInt32 compressionLevel = nsCacheService::CacheCompressionLevel();
+
+    // Initialize zlib deflate stream
+    mZstream.zalloc = Z_NULL;
+    mZstream.zfree = Z_NULL;
+    mZstream.opaque = Z_NULL;
+    if (deflateInit2(&mZstream, compressionLevel, Z_DEFLATED,
+                     MAX_WBITS, 8, Z_DEFAULT_STRATEGY) != Z_OK) {
+        return NS_ERROR_FAILURE;
+    }
+    mZstream.next_in = Z_NULL;
+    mZstream.avail_in = 0;
+
+    mStreamInitialized = PR_TRUE;
+
+    return NS_OK;
+}
+
+nsresult nsCacheEntryDescriptor::
+nsCompressOutputStreamWrapper::WriteBuffer()
+{
+    PRUint32 bytesToWrite = mWriteBufferLen - mZstream.avail_out;
+    PRUint32 result = 0;
+    nsresult rv = nsCacheEntryDescriptor::nsOutputStreamWrapper::Write(
+        (const char *)mWriteBuffer, bytesToWrite, &result);
+    mZstream.next_out = mWriteBuffer;
+    mZstream.avail_out = mWriteBufferLen;
+    return rv;
+}
+

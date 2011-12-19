@@ -119,10 +119,6 @@ CanvasLayerD3D9::UpdateSurface()
 
     mGLContext->MakeCurrent();
 
-    // We have to flush to ensure that any buffered GL operations are
-    // in the framebuffer before we read.
-    mGLContext->fFlush();
-
     PRUint32 currentFramebuffer = 0;
 
     mGLContext->fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, (GLint*)&currentFramebuffer);

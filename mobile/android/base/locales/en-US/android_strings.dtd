@@ -80,3 +80,8 @@
 <!ENTITY save_as_pdf "Save as PDF">
 <!ENTITY agent_request_desktop "Request Desktop Site">
 <!ENTITY agent_request_mobile "Request Mobile Site">
+
+<!ENTITY site_settings_title        "Clear Site Settings">
+<!ENTITY site_settings_cancel       "Cancel">
+<!ENTITY site_settings_clear        "Clear">
+<!ENTITY site_settings_no_settings  "There are no settings to clear.">

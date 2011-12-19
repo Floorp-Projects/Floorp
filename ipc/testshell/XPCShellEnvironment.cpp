@@ -334,8 +334,8 @@ Load(JSContext *cx,
             JS_ReportError(cx, "cannot open file '%s' for reading", filename.ptr());
             return JS_FALSE;
         }
-        script = JS_CompileFileHandleForPrincipals(cx, obj, filename.ptr(), file,
-                                                   Environment(cx)->GetPrincipal());
+        script = JS_CompileUTF8FileHandleForPrincipals(cx, obj, filename.ptr(), file,
+                                                       Environment(cx)->GetPrincipal());
         fclose(file);
         if (!script)
             return JS_FALSE;
@@ -619,8 +619,8 @@ ProcessFile(JSContext *cx,
         }
 
         JSScript* script =
-            JS_CompileFileHandleForPrincipals(cx, obj, filename, file,
-                                              env->GetPrincipal());
+            JS_CompileUTF8FileHandleForPrincipals(cx, obj, filename, file,
+                                                  env->GetPrincipal());
         if (script && !env->ShouldCompileOnly())
             (void)JS_ExecuteScript(cx, obj, script, &result);
 

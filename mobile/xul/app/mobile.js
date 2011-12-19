@@ -108,6 +108,9 @@ pref("browser.cache.offline.capacity", 5120); // kilobytes
 pref("offline-apps.quota.max", 2048); // kilobytes
 pref("offline-apps.quota.warn", 1024); // kilobytes
 
+/* zlib compression level used for cache compression */
+pref("browser.cache.compression_level", 1);
+
 /* protocol warning prefs */
 pref("network.protocol-handler.warn-external.tel", false);
 pref("network.protocol-handler.warn-external.mailto", false);

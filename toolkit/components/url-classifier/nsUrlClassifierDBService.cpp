@@ -338,9 +338,9 @@ public:
   bool operator< (const nsUrlClassifierEntry& entry) const {
     return (mTableId < entry.mTableId ||
             mChunkId < entry.mChunkId ||
-            mHavePartial && !entry.mHavePartial ||
+            (mHavePartial && !entry.mHavePartial) ||
             (mHavePartial && mPartialHash < entry.mPartialHash) ||
-            mHaveComplete && !entry.mHaveComplete ||
+            (mHaveComplete && !entry.mHaveComplete) ||
             (mHaveComplete && mCompleteHash < entry.mCompleteHash));
   }
 
@@ -4296,7 +4296,6 @@ nsUrlClassifierDBService::GetTables(nsIUrlClassifierCallback* c)
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
-  nsresult rv;
   // The proxy callback uses the current thread.
   nsCOMPtr<nsIUrlClassifierCallback> proxyCallback =
     new UrlClassifierCallbackProxy(c);
@@ -4330,8 +4329,6 @@ nsUrlClassifierDBService::BeginUpdate(nsIUrlClassifierUpdateObserver *observer,
     return NS_ERROR_NOT_AVAILABLE;
 
   mInUpdate = true;
-
-  nsresult rv;
 
   // The proxy observer uses the current thread
   nsCOMPtr<nsIUrlClassifierUpdateObserver> proxyObserver =

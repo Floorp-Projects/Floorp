@@ -58,33 +58,15 @@ NS_METHOD nsPrivateTextRange::GetRangeStart(PRUint16* aRangeStart)
 	return NS_OK;
 }
 
-NS_METHOD nsPrivateTextRange::SetRangeStart(PRUint16 aRangeStart) 
-{
-	mRangeStart = aRangeStart;
-	return NS_OK;
-}
-
 NS_METHOD nsPrivateTextRange::GetRangeEnd(PRUint16* aRangeEnd)
 {
 	*aRangeEnd = mRangeEnd;
 	return NS_OK;
 }
 
-NS_METHOD nsPrivateTextRange::SetRangeEnd(PRUint16 aRangeEnd)
-{
-	mRangeEnd = aRangeEnd;
-	return NS_OK;
-}
-
 NS_METHOD nsPrivateTextRange::GetRangeType(PRUint16* aRangeType)
 {
 	*aRangeType = mRangeType;
-	return NS_OK;
-}
-
-NS_METHOD nsPrivateTextRange::SetRangeType(PRUint16 aRangeType)
-{
-	mRangeType = aRangeType;
 	return NS_OK;
 }
 

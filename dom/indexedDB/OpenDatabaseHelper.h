@@ -62,7 +62,7 @@ public:
       mASCIIOrigin(aASCIIOrigin), mRequestedVersion(aRequestedVersion),
       mForDeletion(aForDeletion), mDatabaseId(nsnull), mCurrentVersion(0),
       mLastObjectStoreId(0), mLastIndexId(0), mState(eCreated),
-      mResultCode(NS_OK)
+      mResultCode(NS_OK), mLoadDBMetadata(false)
   {
     NS_ASSERTION(!aForDeletion || !aRequestedVersion,
                  "Can't be for deletion and request a version!");
@@ -132,7 +132,7 @@ private:
   nsCOMPtr<nsIAtom> mDatabaseId;
 
   // Out-params.
-  nsTArray<nsAutoPtr<ObjectStoreInfo> > mObjectStores;
+  nsTArray<nsRefPtr<ObjectStoreInfo> > mObjectStores;
   PRUint64 mCurrentVersion;
   nsString mDatabaseFilePath;
   PRInt64 mLastObjectStoreId;
@@ -153,6 +153,9 @@ private:
   nsresult mResultCode;
 
   nsRefPtr<FileManager> mFileManager;
+
+  nsRefPtr<DatabaseInfo> mDBInfo;
+  bool mLoadDBMetadata;
 };
 
 END_INDEXEDDB_NAMESPACE

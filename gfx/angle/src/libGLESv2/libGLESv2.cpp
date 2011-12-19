@@ -2707,10 +2707,7 @@ GLenum __stdcall glGetError(void)
 
     if (context)
     {
-        if (context->isContextLost())
-            return GL_OUT_OF_MEMORY;
-        else
-            return context->getError();
+        return context->getError();
     }
 
     return GL_NO_ERROR;

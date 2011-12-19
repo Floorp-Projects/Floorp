@@ -681,11 +681,13 @@ JSRuntime::JSRuntime()
     gcBlackRootsData(NULL),
     gcGrayRootsTraceOp(NULL),
     gcGrayRootsData(NULL),
+    scriptPCCounters(NULL),
     NaNValue(UndefinedValue()),
     negativeInfinityValue(UndefinedValue()),
     positiveInfinityValue(UndefinedValue()),
     emptyString(NULL),
     debugMode(false),
+    profilingScripts(false),
     hadOutOfMemory(false),
     data(NULL),
 #ifdef JS_THREADSAFE
@@ -4754,15 +4756,15 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSBool bytes_are_utf8, JSObject *obj, c
 #endif
 
 static JSScript *
-CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
-                  const char* filename, FILE *fp)
+CompileUTF8FileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
+                      const char* filename, FILE *fp)
 {
     struct stat st;
     int ok = fstat(fileno(fp), &st);
     if (ok != 0)
         return NULL;
 
-    jschar *buf = NULL;
+    char *buf = NULL;
     size_t len = st.st_size;
     size_t i = 0;
     JSScript *script;
@@ -4776,7 +4778,7 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
         bool hitEOF = false;
         while (!hitEOF) {
             len *= 2;
-            jschar* tmpbuf = (jschar *) cx->realloc_(buf, len * sizeof(jschar));
+            char* tmpbuf = (char *) cx->realloc_(buf, len * sizeof(char));
             if (!tmpbuf) {
                 cx->free_(buf);
                 return NULL;
@@ -4789,11 +4791,11 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
                     hitEOF = true;
                     break;
                 }
-                buf[i++] = (jschar) (unsigned char) c;
+                buf[i++] = c;
             }
         }
     } else {
-        buf = (jschar *) cx->malloc_(len * sizeof(jschar));
+        buf = (char *) cx->malloc_(len * sizeof(char));
         if (!buf)
             return NULL;
 
@@ -4801,20 +4803,28 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
         // The |i < len| is necessary for files that lie about their length,
         // e.g. /dev/zero and /dev/random.  See bug 669434.
         while (i < len && (c = fast_getc(fp)) != EOF)
-            buf[i++] = (jschar) (unsigned char) c;
+            buf[i++] = c;
     }
 
     JS_ASSERT(i <= len);
     len = i;
-    uint32_t tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_SCRIPT_GLOBAL;
-    script = frontend::CompileScript(cx, obj, NULL, principals, NULL, tcflags,
-                                     buf, len, filename, 1, cx->findVersion());
+    size_t decodelen = len;
+    jschar *decodebuf = (jschar *)cx->malloc_(decodelen * sizeof(jschar));
+    if (JS_DecodeUTF8(cx, buf, len, decodebuf, &decodelen)) {
+        uint32_t tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_SCRIPT_GLOBAL;
+        script = frontend::CompileScript(cx, obj, NULL, principals, NULL,
+                                         tcflags, decodebuf, decodelen,
+                                         filename, 1, cx->findVersion());
+    } else {
+        script = NULL;
+    }
     cx->free_(buf);
+    cx->free_(decodebuf);
     return script;
 }
 
 JS_PUBLIC_API(JSScript *)
-JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
+JS_CompileUTF8File(JSContext *cx, JSObject *obj, const char *filename)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
@@ -4833,37 +4843,37 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
         }
     }
 
-    JSScript *script = CompileFileHelper(cx, obj, NULL, filename, fp);
+    JSScript *script = CompileUTF8FileHelper(cx, obj, NULL, filename, fp);
     if (fp != stdin)
         fclose(fp);
     return script;
 }
 
 JS_PUBLIC_API(JSScript *)
-JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj, const char *filename,
-                                  FILE *file, JSPrincipals *principals)
+JS_CompileUTF8FileHandleForPrincipals(JSContext *cx, JSObject *obj, const char *filename,
+                                      FILE *file, JSPrincipals *principals)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, principals);
     AutoLastFrameCheck lfc(cx);
 
-    return CompileFileHelper(cx, obj, principals, filename, file);
+    return CompileUTF8FileHelper(cx, obj, principals, filename, file);
 }
 
 JS_PUBLIC_API(JSScript *)
-JS_CompileFileHandleForPrincipalsVersion(JSContext *cx, JSObject *obj, const char *filename,
-                                         FILE *file, JSPrincipals *principals, JSVersion version)
+JS_CompileUTF8FileHandleForPrincipalsVersion(JSContext *cx, JSObject *obj, const char *filename,
+                                             FILE *file, JSPrincipals *principals, JSVersion version)
 {
     AutoVersionAPI ava(cx, version);
-    return JS_CompileFileHandleForPrincipals(cx, obj, filename, file, principals);
+    return JS_CompileUTF8FileHandleForPrincipals(cx, obj, filename, file, principals);
 }
 
 JS_PUBLIC_API(JSScript *)
-JS_CompileFileHandle(JSContext *cx, JSObject *obj, const char *filename, FILE *file)
+JS_CompileUTF8FileHandle(JSContext *cx, JSObject *obj, const char *filename, FILE *file)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
-    return JS_CompileFileHandleForPrincipals(cx, obj, filename, file, NULL);
+    return JS_CompileUTF8FileHandleForPrincipals(cx, obj, filename, file, NULL);
 }
 
 JS_PUBLIC_API(JSObject *)

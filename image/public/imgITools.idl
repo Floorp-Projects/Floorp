@@ -41,7 +41,7 @@
 interface nsIInputStream;
 interface imgIContainer;
 
-[scriptable, uuid(c395d8f1-c616-4a1b-adfd-747b4b1b2cbe)]
+[scriptable, uuid(1f19a2ce-cf5c-4a6b-8ba7-63785b45053f)]
 interface imgITools : nsISupports
 {
     /**
@@ -74,9 +74,12 @@ interface imgITools : nsISupports
      *        An image container.
      * @param aMimeType
      *        Type of encoded image desired (eg "image/png").
+     * @param outputOptions
+     *        Encoder-specific output options.
      */
     nsIInputStream encodeImage(in imgIContainer aContainer,
-                               in ACString aMimeType);
+                               in ACString aMimeType,
+                               [optional] in AString outputOptions);
 
     /**
      * encodeScaledImage
@@ -90,9 +93,12 @@ interface imgITools : nsISupports
      *        Type of encoded image desired (eg "image/png").
      * @param aWidth, aHeight
      *        The size (in pixels) desired for the resulting image.
+     * @param outputOptions
+     *        Encoder-specific output options.
      */
     nsIInputStream encodeScaledImage(in imgIContainer aContainer,
                                      in ACString aMimeType,
                                      in long aWidth,
-                                     in long aHeight);
+                                     in long aHeight,
+                                     [optional] in AString outputOptions);
 };

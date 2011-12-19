@@ -63,7 +63,7 @@
 #include "nsStyleContext.h"
 #include "nsIBoxObject.h"
 #include "nsGUIEvent.h"
-#include "nsPLDOMEvent.h"
+#include "nsAsyncDOMEvent.h"
 #include "nsIDOMDataContainerEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIPrivateDOMEvent.h"
@@ -4548,7 +4548,7 @@ nsTreeBodyFrame::FireRowCountChangedEvent(PRInt32 aIndex, PRInt32 aCount)
 
   privateEvent->SetTrusted(true);
 
-  nsRefPtr<nsPLDOMEvent> plevent = new nsPLDOMEvent(content, event);
+  nsRefPtr<nsAsyncDOMEvent> plevent = new nsAsyncDOMEvent(content, event);
   if (!plevent)
     return;
 
@@ -4635,7 +4635,7 @@ nsTreeBodyFrame::FireInvalidateEvent(PRInt32 aStartRowIdx, PRInt32 aEndRowIdx,
 
   privateEvent->SetTrusted(true);
 
-  nsRefPtr<nsPLDOMEvent> plevent = new nsPLDOMEvent(content, event);
+  nsRefPtr<nsAsyncDOMEvent> plevent = new nsAsyncDOMEvent(content, event);
   if (plevent)
     plevent->PostDOMEvent();
 }

@@ -2210,6 +2210,12 @@ public:
                                                  float aFactor,
                                                  const nsRect* aBoundsOverride = nsnull,
                                                  nsIFrame** aOutAncestor = nsnull);
+  /**
+   * Return true when we should try to prerender the entire contents of the
+   * transformed frame even when it's not completely visible (yet).
+   */
+  static bool ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBuilder,
+                                                nsIFrame* aFrame);
 
 private:
   nsDisplayWrapList mStoredList;

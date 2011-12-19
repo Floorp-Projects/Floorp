@@ -131,30 +131,30 @@ function run_test() {
 
   // Use chinese name to test utf-8, for bug #541943
   var chineseTheme = dummy("chinese0");
-  chineseTheme.name = "中文0";
-  chineseTheme.description = "中文1";
+  chineseTheme.name = "绗㈡亝0";
+  chineseTheme.description = "绗㈡亝1";
   ltm.currentTheme = chineseTheme;
   do_check_eq(ltm.usedThemes.length, 1);
-  do_check_eq(ltm.currentTheme.name, "中文0");
-  do_check_eq(ltm.currentTheme.description, "中文1");
-  do_check_eq(ltm.usedThemes[0].name, "中文0");
-  do_check_eq(ltm.usedThemes[0].description, "中文1");
-  do_check_eq(ltm.getUsedTheme("chinese0").name, "中文0");
-  do_check_eq(ltm.getUsedTheme("chinese0").description, "中文1");
+  do_check_eq(ltm.currentTheme.name, "绗㈡亝0");
+  do_check_eq(ltm.currentTheme.description, "绗㈡亝1");
+  do_check_eq(ltm.usedThemes[0].name, "绗㈡亝0");
+  do_check_eq(ltm.usedThemes[0].description, "绗㈡亝1");
+  do_check_eq(ltm.getUsedTheme("chinese0").name, "绗㈡亝0");
+  do_check_eq(ltm.getUsedTheme("chinese0").description, "绗㈡亝1");
 
   // This name used to break the usedTheme JSON causing all LWTs to be lost
   var chineseTheme1 = dummy("chinese1");
-  chineseTheme1.name = "植物大战僵尸~最爱";
-  chineseTheme1.description = "植物大战僵尸~最爱";
+  chineseTheme1.name = "鐪垫槣婀〉钄楀潓~閮斾咕";
+  chineseTheme1.description = "鐪垫槣婀〉钄楀潓~閮斾咕";
   ltm.currentTheme = chineseTheme1;
   do_check_neq(ltm.currentTheme, null);
   do_check_eq(ltm.usedThemes.length, 2);
-  do_check_eq(ltm.currentTheme.name, "植物大战僵尸~最爱");
-  do_check_eq(ltm.currentTheme.description, "植物大战僵尸~最爱");
-  do_check_eq(ltm.usedThemes[1].name, "中文0");
-  do_check_eq(ltm.usedThemes[1].description, "中文1");
-  do_check_eq(ltm.usedThemes[0].name, "植物大战僵尸~最爱");
-  do_check_eq(ltm.usedThemes[0].description, "植物大战僵尸~最爱");
+  do_check_eq(ltm.currentTheme.name, "鐪垫槣婀〉钄楀潓~閮斾咕");
+  do_check_eq(ltm.currentTheme.description, "鐪垫槣婀〉钄楀潓~閮斾咕");
+  do_check_eq(ltm.usedThemes[1].name, "绗㈡亝0");
+  do_check_eq(ltm.usedThemes[1].description, "绗㈡亝1");
+  do_check_eq(ltm.usedThemes[0].name, "鐪垫槣婀〉钄楀潓~閮斾咕");
+  do_check_eq(ltm.usedThemes[0].description, "鐪垫槣婀〉钄楀潓~閮斾咕");
 
   ltm.forgetUsedTheme("chinese0");
   do_check_eq(ltm.usedThemes.length, 1);
@@ -189,11 +189,11 @@ function run_test() {
 
   // Check whether parseTheme handles international characters right
   var chineseTheme2 = dummy();
-  chineseTheme2.name = "植物大战僵尸~最爱";
-  chineseTheme2.description = "植物大战僵尸~最爱";
+  chineseTheme2.name = "鐪垫槣婀〉钄楀潓~閮斾咕";
+  chineseTheme2.description = "鐪垫槣婀〉钄楀潓~閮斾咕";
   do_check_neq(roundtrip(chineseTheme2), null);
-  do_check_eq(roundtrip(chineseTheme2).name, "植物大战僵尸~最爱");
-  do_check_eq(roundtrip(chineseTheme2).description, "植物大战僵尸~最爱");
+  do_check_eq(roundtrip(chineseTheme2).name, "鐪垫槣婀〉钄楀潓~閮斾咕");
+  do_check_eq(roundtrip(chineseTheme2).description, "鐪垫槣婀〉钄楀潓~閮斾咕");
 
   data = dummy();
   data.unknownProperty = "Foo";

@@ -180,7 +180,7 @@ then
 fi
 MOZ_BUILD_ROOT=`pwd`
 
-dnl Default to MSVC for win32 and gcc-4.2 for darwin
+dnl Default to MSVC for win32 and gcc for darwin
 dnl ==============================================================
 if test -z "$CROSS_COMPILE"; then
 case "$target" in
@@ -203,8 +203,10 @@ case "$target" in
     if test -z "$MIDL"; then MIDL=midl; fi
     ;;
 *-darwin*)
-    if test -z "$CC"; then CC=gcc-4.2; fi
-    if test -z "$CXX"; then CXX=g++-4.2; fi
+    # we prefer gcc-4.2 over gcc on older darwin, so
+    # use that specific version if it's available.
+    MOZ_PATH_PROGS(CC, $CC gcc-4.2 gcc)
+    MOZ_PATH_PROGS(CXX, $CXX g++-4.2 g++)
     ;;
 esac
 fi
@@ -4139,13 +4141,6 @@ AC_CACHE_CHECK(for __attribute__((warn_unused_result)),
                                ac_cv_attribute_warn_unused=yes,
                                ac_cv_attribute_warn_unused=no)])
 
-AC_CACHE_CHECK(for __attribute__((noreturn)),
-               ac_cv_attribute_noreturn,
-               [AC_TRY_COMPILE([void f(void) __attribute__((noreturn));],
-                               [],
-                               ac_cv_attribute_noreturn=yes,
-                               ac_cv_attribute_noreturn=no)])
-
 dnl End of C++ language/feature checks
 AC_LANG_C
 
@@ -4199,12 +4194,6 @@ if test "$ac_cv_attribute_warn_unused" = yes ; then
   AC_DEFINE(NS_WARN_UNUSED_RESULT, [__attribute__((warn_unused_result))])
 else
   AC_DEFINE(NS_WARN_UNUSED_RESULT,)
-fi
-
-if test "$ac_cv_attribute_noreturn" = yes ; then
-  AC_DEFINE(NS_NORETURN, [__attribute__((noreturn))])
-else
-  AC_DEFINE(NS_NORETURN,)
 fi
 
 dnl We can't run TRY_COMPILE tests on Windows, so hard-code some
@@ -4652,7 +4641,7 @@ USE_ARM_KUSER=
 BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
-MOZ_GRAPHITE=
+MOZ_GRAPHITE=1
 
 case "${target}" in
 *darwin*)
@@ -5494,6 +5483,15 @@ AC_SUBST(MOZ_DBUS_GLIB_CFLAGS)
 AC_SUBST(MOZ_DBUS_GLIB_LIBS)
 
 dnl ========================================================
+dnl = Enable Android History instead of Places
+dnl ========================================================
+if test -n "$MOZ_ANDROID_HISTORY"; then
+     dnl Do this if defined in confvars.sh
+     AC_DEFINE(MOZ_ANDROID_HISTORY)
+fi
+
+
+dnl ========================================================
 dnl = Build Personal Security Manager
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(crypto,
@@ -5705,6 +5703,7 @@ if test -n "$MOZ_WEBM"; then
                 [return 0;],
                 [AC_MSG_RESULT([yes])
                  MOZ_NATIVE_LIBVPX=1
+                 AC_DEFINE(MOZ_NATIVE_LIBVPX)
                  MOZ_LIBVPX_INCLUDES="-I${LIBVPX_DIR}/include"
                  MOZ_LIBVPX_LIBS="-L${LIBVPX_DIR}/lib -lvpx"],
                 [AC_MSG_RESULT([no])
