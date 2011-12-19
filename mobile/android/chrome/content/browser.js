@@ -119,6 +119,12 @@ XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
   "@mozilla.org/xre/app-info;1", "nsICrashReporter");
 #endif
 
+XPCOMUtils.defineLazyGetter(this, "ContentAreaUtils", function() {
+  let ContentAreaUtils = {};
+  Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", ContentAreaUtils);
+  return ContentAreaUtils;
+});
+
 function resolveGeckoURI(aURI) {
   if (aURI.indexOf("chrome://") == 0) {
     let registry = Cc['@mozilla.org/chrome/chrome-registry;1'].getService(Ci["nsIChromeRegistry"]);
@@ -405,8 +411,6 @@ var BrowserApp = {
 
   saveAsPDF: function saveAsPDF(aBrowser) {
     // Create the final destination file location
-    let ContentAreaUtils = {};
-    Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", ContentAreaUtils);
     let fileName = ContentAreaUtils.getDefaultFileName(aBrowser.contentTitle, aBrowser.documentURI, null, null);
     fileName = fileName.trim() + ".pdf";
 
@@ -794,6 +798,8 @@ var NativeWindow = {
     init: function() {
       this.textContext = this.SelectorContext("input[type='text'],input[type='password'],textarea");
       this.linkContext = this.SelectorContext("a:not([href='']),area:not([href='']),link");
+      this.imageContext = this.SelectorContext("img");
+
       Services.obs.addObserver(this, "Gesture:LongPress", false);
 
       // TODO: These should eventually move into more appropriate classes
@@ -808,6 +814,21 @@ var NativeWindow = {
                this.SelectorContext("video:not(:-moz-full-screen)"),
                function(aTarget) {
                  aTarget.mozRequestFullScreen();
+               });
+
+      this.add(Strings.browser.GetStringFromName("contextmenu.saveImage"),
+               this.imageContext,
+               function(aTarget) {
+                 let imageCache = Cc["@mozilla.org/image/cache;1"].getService(Ci.imgICache);
+                 let props = imageCache.findEntryProperties(aTarget.currentURI, aTarget.ownerDocument.characterSet);
+                 var contentDisposition = "";
+                 var type = "";
+                 try {
+                    String(props.get("content-disposition", Ci.nsISupportsCString));
+                    String(props.get("type", Ci.nsISupportsCString));
+                 } catch(ex) { }
+                 var browser = BrowserApp.getBrowserForDocument(aTarget.ownerDocument);
+                 ContentAreaUtils.internalSave(aTarget.currentURI.spec, null, null, contentDisposition, type, false, "SaveImageTitle", null, browser.documentURI, true, null);
                });
     },
 
