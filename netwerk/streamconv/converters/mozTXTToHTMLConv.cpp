@@ -613,12 +613,12 @@ mozTXTToHTMLConv::ItMatchesDelimited(const PRUnichar * aInString,
 
   if
     (
-      (before == LT_IGNORE && (after == LT_IGNORE || after == LT_DELIMITER))
-        && textLen < aRepLen ||
-      (before != LT_IGNORE || after != LT_IGNORE && after != LT_DELIMITER)
-        && textLen < aRepLen + 1 ||
-      before != LT_IGNORE && after != LT_IGNORE && after != LT_DELIMITER
-        && textLen < aRepLen + 2
+      ((before == LT_IGNORE && (after == LT_IGNORE || after == LT_DELIMITER))
+        && textLen < aRepLen) ||
+      ((before != LT_IGNORE || (after != LT_IGNORE && after != LT_DELIMITER))
+        && textLen < aRepLen + 1) ||
+      (before != LT_IGNORE && after != LT_IGNORE && after != LT_DELIMITER
+        && textLen < aRepLen + 2)
     )
     return false;
 
@@ -627,28 +627,28 @@ mozTXTToHTMLConv::ItMatchesDelimited(const PRUnichar * aInString,
 
   if
     (
-      before == LT_ALPHA
-        && !nsCRT::IsAsciiAlpha(text0) ||
-      before == LT_DIGIT
-        && !nsCRT::IsAsciiDigit(text0) ||
-      before == LT_DELIMITER
+      (before == LT_ALPHA
+        && !nsCRT::IsAsciiAlpha(text0)) ||
+      (before == LT_DIGIT
+        && !nsCRT::IsAsciiDigit(text0)) ||
+      (before == LT_DELIMITER
         &&
         (
           nsCRT::IsAsciiAlpha(text0) ||
           nsCRT::IsAsciiDigit(text0) ||
           text0 == *rep
-        ) ||
-      after == LT_ALPHA
-        && !nsCRT::IsAsciiAlpha(textAfterPos) ||
-      after == LT_DIGIT
-        && !nsCRT::IsAsciiDigit(textAfterPos) ||
-      after == LT_DELIMITER
+        )) ||
+      (after == LT_ALPHA
+        && !nsCRT::IsAsciiAlpha(textAfterPos)) ||
+      (after == LT_DIGIT
+        && !nsCRT::IsAsciiDigit(textAfterPos)) ||
+      (after == LT_DELIMITER
         &&
         (
           nsCRT::IsAsciiAlpha(textAfterPos) ||
           nsCRT::IsAsciiDigit(textAfterPos) ||
           textAfterPos == *rep
-        ) ||
+        )) ||
         !Substring(Substring(aInString, aInString+aInLength),
                    (before == LT_IGNORE ? 0 : 1),
                    aRepLen).Equals(Substring(rep, rep+aRepLen),
@@ -754,7 +754,7 @@ mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, bool co
         (
           aLength <= PRInt32(delim) ||
           IsSpace(aInString[delim]) ||
-          aLength > PRInt32(delim + 1)
+          (aLength > PRInt32(delim + 1)
             &&
             (
               aInString[delim] == '.' ||
@@ -765,7 +765,7 @@ mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, bool co
               aInString[delim] == '!' ||
               aInString[delim] == '?'
             )
-            && IsSpace(aInString[delim + 1])
+            && IsSpace(aInString[delim + 1]))
         )
         && ItMatchesDelimited(aInString, aLength, NS_ConvertASCIItoUTF16(tagTXT).get(), tagLen, 
                               col0 ? LT_IGNORE : LT_DELIMITER, LT_IGNORE)
@@ -980,8 +980,8 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, bool 
       )
       &&
       (
-        2 < aInLength && nsCRT::IsAsciiDigit(aInString[2]) ||
-        3 < aInLength && aInString[2] == '-' && nsCRT::IsAsciiDigit(aInString[3])
+        (2 < aInLength && nsCRT::IsAsciiDigit(aInString[2])) ||
+        (3 < aInLength && aInString[2] == '-' && nsCRT::IsAsciiDigit(aInString[3]))
       )
     )
   {
@@ -991,8 +991,8 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, bool 
            &&
            (
              nsCRT::IsAsciiDigit(aInString[delimPos]) || 
-             aInString[delimPos] == '.' && delimPos + 1 < aInLength &&
-               nsCRT::IsAsciiDigit(aInString[delimPos + 1])
+             (aInString[delimPos] == '.' && delimPos + 1 < aInLength &&
+               nsCRT::IsAsciiDigit(aInString[delimPos + 1]))
            );
          delimPos++)
       ;

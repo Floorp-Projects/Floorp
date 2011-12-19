@@ -47,7 +47,7 @@ function closeSelect() {
   let selectui = document.getElementById("select-container");
   is(selectui.hidden, false, "Select UI should be open");
 
-  EventUtils.sendKey("ESCAPE", window);
+  EventUtils.sendKey("ESCAPE");
 
   waitFor(tapOnMultiSelect, function() { return document.getElementById("select-container").hidden == true; });
 }
@@ -70,7 +70,7 @@ function onUIReady() {
   is(selectui.hidden, false, "Select UI should be open");
   is(SelectHelperUI._selectedIndexes, 7, "Select UI should have the 8th option selected:" + SelectHelperUI._selectedIndexes);
 
-  EventUtils.sendKey("ESCAPE", window);
+  EventUtils.sendKey("ESCAPE");
 
   // Close our tab when finished
   Browser.closeTab(new_tab);

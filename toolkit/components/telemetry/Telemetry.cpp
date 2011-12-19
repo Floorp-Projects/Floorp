@@ -111,6 +111,17 @@ struct TelemetryHistogram {
   PRUint32 histogramType;
 };
 
+// Perform the checks at the beginning of HistogramGet at compile time, so
+// that if people add incorrect histogram definitions, they get compiler
+// errors.
+#define HISTOGRAM(id, min, max, bucket_count, histogram_type, b) \
+  PR_STATIC_ASSERT(nsITelemetry::HISTOGRAM_ ## histogram_type == nsITelemetry::HISTOGRAM_BOOLEAN || \
+                   (min < max && bucket_count > 2 && min >= 1));
+
+#include "TelemetryHistograms.h"
+
+#undef HISTOGRAM
+
 const TelemetryHistogram gHistograms[] = {
 #define HISTOGRAM(id, min, max, bucket_count, histogram_type, b) \
   { NULL, NS_STRINGIFY(id), min, max, bucket_count, nsITelemetry::HISTOGRAM_ ## histogram_type },

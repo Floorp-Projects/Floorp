@@ -55,6 +55,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsCRT.h"
 #include "nsIObserverService.h"
+#include "mozilla/Services.h"
 
 #define NS_INTERFACE_PREFIX "nsI"
 #define NS_DOM_INTERFACE_PREFIX "nsIDOM"
@@ -448,7 +449,7 @@ nsScriptNameSpaceManager::Init()
   // Initial filling of the has table has been done.
   // Now, listen for changes.
   nsCOMPtr<nsIObserverService> serv = 
-    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    mozilla::services::GetObserverService();
 
   if (serv) {
     serv->AddObserver(this, NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID, true);

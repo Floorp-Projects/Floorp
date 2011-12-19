@@ -234,12 +234,12 @@
             </hbox>
           </groupbox>
 
-          <!-- Cache/Offline apps -->
-          <groupbox id="offlineGroup">
-            <caption label="&offlineStorage.label;"/>
- 
+          <!-- Cache -->
+          <groupbox id="cacheGroup">
+            <caption label="&httpCache.label;"/>
+
             <hbox align="center">
-              <label id="actualCacheSize" flex="1"/>
+              <label id="actualDiskCacheSize" flex="1"/>
               <button id="clearCacheButton" icon="clear"
                       label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"
                       oncommand="gAdvancedPane.clearCache();"/>
@@ -260,6 +260,18 @@
                        aria-labelledby="useCacheBefore cacheSize useCacheAfter"/>
               <label id="useCacheAfter" flex="1">&limitCacheSizeAfter.label;</label>
             </hbox>
+          </groupbox>
+
+          <!-- Offline apps -->
+          <groupbox id="offlineGroup">
+            <caption label="&offlineStorage2.label;"/>
+
+            <hbox align="center">
+              <label id="actualAppCacheSize" flex="1"/>
+              <button id="clearOfflineAppCacheButton" icon="clear"
+                      label="&clearOfflineAppCacheNow.label;" accesskey="&clearOfflineAppCacheNow.accesskey;"
+                      oncommand="gAdvancedPane.clearOfflineAppCache();"/>
+            </hbox>
             <hbox align="center">
               <checkbox id="offlineNotify" flex="1"
                         label="&offlineNotify.label;" accesskey="&offlineNotify.accesskey;"
@@ -272,7 +284,7 @@
             </hbox>
             <hbox>
               <vbox flex="1">
-                <label id="offlineAppsListLabel">&offlineAppsList.label;</label>
+                <label id="offlineAppsListLabel">&offlineAppsList2.label;</label>
                 <listbox id="offlineAppsList"
                          style="height: &offlineAppsList.height;;"
                          flex="1"

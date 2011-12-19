@@ -368,13 +368,13 @@ function gatherTextUnder ( root )
       node = node.firstChild;
       depth++;
     } else {
-      // No children, try next sibling.
+      // No children, try next sibling (or parent next sibling).
+      while ( depth > 0 && !node.nextSibling ) {
+        node = node.parentNode;
+        depth--;
+      }
       if ( node.nextSibling ) {
         node = node.nextSibling;
-      } else {
-        // Last resort is our next oldest uncle/aunt.
-        node = node.parentNode.nextSibling;
-        depth--;
       }
     }
   }

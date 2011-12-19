@@ -231,8 +231,8 @@ my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
 
 #ifdef EDITLINE
 JS_BEGIN_EXTERN_C
-JS_EXTERN_API(char)    *readline(const char *prompt);
-JS_EXTERN_API(void)     add_history(char *line);
+extern JS_EXPORT_API(char *) readline(const char *prompt);
+extern JS_EXPORT_API(void)   add_history(char *line);
 JS_END_EXTERN_C
 #endif
 
@@ -476,7 +476,7 @@ Process(JSContext *cx, JSObject *obj, const char *filename, bool forceTTY)
         int64_t t1 = PRMJ_Now();
         oldopts = JS_GetOptions(cx);
         JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-        script = JS_CompileFileHandle(cx, obj, filename, file);
+        script = JS_CompileUTF8FileHandle(cx, obj, filename, file);
         JS_SetOptions(cx, oldopts);
         if (script && !compileOnly) {
             (void) JS_ExecuteScript(cx, obj, script, NULL);
@@ -775,7 +775,7 @@ Load(JSContext *cx, uintN argc, jsval *vp)
         errno = 0;
         uint32_t oldopts = JS_GetOptions(cx);
         JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-        JSScript *script = JS_CompileFile(cx, thisobj, filename.ptr());
+        JSScript *script = JS_CompileUTF8File(cx, thisobj, filename.ptr());
         JS_SetOptions(cx, oldopts);
         if (!script)
             return false;
@@ -2209,7 +2209,7 @@ DisassFile(JSContext *cx, uintN argc, jsval *vp)
 
     uint32_t oldopts = JS_GetOptions(cx);
     JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
-    JSScript *script = JS_CompileFile(cx, thisobj, filename.ptr());
+    JSScript *script = JS_CompileUTF8File(cx, thisobj, filename.ptr());
     JS_SetOptions(cx, oldopts);
     if (!script)
         return false;

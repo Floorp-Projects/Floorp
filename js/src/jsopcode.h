@@ -677,6 +677,11 @@ class OpcodeCounts
         JS_ASSERT(which < capacity);
         return counts[which];
     }
+
+    // Boolean conversion, for 'if (counters) ...'
+    operator void*() const {
+        return counts;
+    }
 };
 
 } /* namespace js */

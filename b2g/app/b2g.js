@@ -52,6 +52,9 @@ pref("browser.viewport.scaleRatio", -1);
 /* allow scrollbars to float above chrome ui */
 pref("ui.scrollbarsCanOverlapContent", 1);
 
+/* disable text selection */
+pref("browser.ignoreNativeFrameTextSelection", true);
+
 /* cache prefs */
 pref("browser.cache.disk.enable", false);
 pref("browser.cache.disk.capacity", 0); // kilobytes

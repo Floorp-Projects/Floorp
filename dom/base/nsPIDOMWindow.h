@@ -74,14 +74,14 @@ class nsIContent;
 class nsIDocument;
 class nsIScriptTimeoutHandler;
 struct nsTimeout;
-class nsScriptObjectHolder;
+template <class> class nsScriptObjectHolder;
 class nsXBLPrototypeHandler;
 class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x29e6cc54, 0x10da, 0x4a68, \
-  { 0xb7, 0x68, 0xfe, 0xa7, 0x71, 0x17, 0x93, 0x81 } }
+{ 0x1352de12, 0x7a07, 0x4610, \
+  { 0x93, 0xd5, 0xb8, 0x76, 0xfe, 0x93, 0x09, 0x50 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -488,7 +488,7 @@ public:
 
   virtual JSObject* GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey) = 0;
   virtual void CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
-                                        nsScriptObjectHolder& aHandler) = 0;
+                                        nsScriptObjectHolder<JSObject>& aHandler) = 0;
 
   /*
    * Get and set the currently focused element within the document. If

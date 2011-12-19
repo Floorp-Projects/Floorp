@@ -55,7 +55,6 @@ JAVAFILES = \
   AwesomeBarTabs.java \
   BrowserToolbar.java \
   ConfirmPreference.java \
-  db/BrowserContract.java \
   db/AndroidBrowserDB.java \
   db/BrowserDB.java \
   db/LocalBrowserDB.java \
@@ -115,6 +114,7 @@ PROCESSEDJAVAFILES = \
   LauncherShortcuts.java \
   NotificationHandler.java \
   Restarter.java \
+  db/BrowserContract.java \
   db/BrowserProvider.java \
   $(NULL)
 
@@ -191,6 +191,7 @@ RES_LAYOUT = \
   res/layout/notification_icon_text.xml \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
+  res/layout/site_setting_title.xml \
   res/layout/tabs_row.xml \
   res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \

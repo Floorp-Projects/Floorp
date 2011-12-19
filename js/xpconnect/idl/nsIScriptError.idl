@@ -43,7 +43,7 @@
 #include "nsISupports.idl"
 #include "nsIConsoleMessage.idl"
 
-[scriptable, uuid(b0196fc7-1913-441a-882a-453c0d8b89b8)]
+[scriptable, uuid(537ff844-c325-4047-92f5-e1c292d108bc)]
 interface nsIScriptError : nsIConsoleMessage
 {
     /** pseudo-flag for default case */
@@ -81,6 +81,15 @@ interface nsIScriptError : nsIConsoleMessage
      */
     readonly attribute string category;
 
+    /*
+       The time (in milliseconds from the Epoch) that the script error instance
+       was initialised, and thus the time when the error occurred.
+       Currently used to display date and time of the message in Error console.
+       The timestamp is initialized as JS_now/1000 so that it can be
+       compared to Date.now in Javascript.
+     */
+    readonly attribute long long timeStamp;
+
     void init(in wstring message,
               in wstring sourceName,
               in wstring sourceLine,
@@ -96,7 +105,7 @@ interface nsIScriptError : nsIConsoleMessage
  * An interface that nsIScriptError objects can implement to allow
  * them to be initialized with a window id.
  */
-[scriptable, uuid(4472646b-c928-4d76-9e7c-6b91da7f24cc)]
+[scriptable, uuid(444c5e66-a85d-4a3b-83ce-4c71882b09a3)]
 interface nsIScriptError2 : nsISupports {
     /* Get the window id this was initialized with.  Zero will be
        returned if init() was used instead of initWithWindowID(). */
@@ -105,10 +114,6 @@ interface nsIScriptError2 : nsISupports {
     /* Get the inner window id this was initialized with.  Zero will be
        returned if init() was used instead of initWithWindowID(). */
     readonly attribute unsigned long long innerWindowID;
-
-    /* Elapsed time, in milliseconds, from a platform-specific zero time to the
-       time the message was created. */
-    readonly attribute long long timeStamp;
 
     /* This should be called instead of nsIScriptError.init to
        initialize with a window id.  The window id should be for the

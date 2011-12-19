@@ -124,24 +124,24 @@ NS_STACK_CLASS
 class AutoRemoveObjectStore
 {
 public:
-  AutoRemoveObjectStore(IDBDatabase* aDatabase, const nsAString& aName)
-  : mDatabase(aDatabase), mName(aName)
+  AutoRemoveObjectStore(DatabaseInfo* aInfo, const nsAString& aName)
+  : mInfo(aInfo), mName(aName)
   { }
 
   ~AutoRemoveObjectStore()
   {
-    if (mDatabase) {
-      mDatabase->Info()->RemoveObjectStore(mName);
+    if (mInfo) {
+      mInfo->RemoveObjectStore(mName);
     }
   }
 
   void forget()
   {
-    mDatabase = nsnull;
+    mInfo = nsnull;
   }
 
 private:
-  IDBDatabase* mDatabase;
+  DatabaseInfo* mInfo;
   nsString mName;
 };
 
@@ -384,7 +384,7 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  DatabaseInfo* databaseInfo = Info();
+  DatabaseInfo* databaseInfo = transaction->DBInfo();
 
   nsString keyPath;
   keyPath.SetIsVoid(true);
@@ -446,25 +446,24 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
     }
   }
 
-  nsAutoPtr<ObjectStoreInfo> newInfo(new ObjectStoreInfo());
+  nsRefPtr<ObjectStoreInfo> newInfo(new ObjectStoreInfo());
 
   newInfo->name = aName;
   newInfo->id = databaseInfo->nextObjectStoreId++;
   newInfo->keyPath = keyPath;
-  newInfo->autoIncrement = autoIncrement;
-  newInfo->databaseId = mDatabaseId;
+  newInfo->nextAutoIncrementId = autoIncrement ? 1 : 0;
+  newInfo->comittedAutoIncrementId = newInfo->nextAutoIncrementId;
 
-  if (!Info()->PutObjectStore(newInfo)) {
+  if (!databaseInfo->PutObjectStore(newInfo)) {
     NS_WARNING("Put failed!");
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
-  ObjectStoreInfo* objectStoreInfo = newInfo.forget();
 
   // Don't leave this in the hash if we fail below!
-  AutoRemoveObjectStore autoRemove(this, aName);
+  AutoRemoveObjectStore autoRemove(databaseInfo, aName);
 
   nsRefPtr<IDBObjectStore> objectStore =
-    transaction->GetOrCreateObjectStore(aName, objectStoreInfo);
+    transaction->GetOrCreateObjectStore(aName, newInfo);
   NS_ENSURE_TRUE(objectStore, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<CreateObjectStoreHelper> helper =
@@ -491,9 +490,9 @@ IDBDatabase::DeleteObjectStore(const nsAString& aName)
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  DatabaseInfo* info = Info();
-  ObjectStoreInfo* objectStoreInfo;
-  if (!info->GetObjectStore(aName, &objectStoreInfo)) {
+  DatabaseInfo* info = transaction->DBInfo();
+  ObjectStoreInfo* objectStoreInfo = info->GetObjectStore(aName);
+  if (!objectStoreInfo) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
   }
 
@@ -502,9 +501,7 @@ IDBDatabase::DeleteObjectStore(const nsAString& aName)
   nsresult rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  info->RemoveObjectStore(aName);
-
-  transaction->ReleaseCachedObjectStore(aName);
+  transaction->RemoveObjectStore(aName);
 
   return NS_OK;
 }

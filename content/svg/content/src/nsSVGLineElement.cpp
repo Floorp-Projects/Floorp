@@ -161,7 +161,7 @@ nsSVGLineElement::IsAttributeMapped(const nsIAtom* name) const
     sMarkersMap
   };
   
-  return FindAttributeDependence(name, map, ArrayLength(map)) ||
+  return FindAttributeDependence(name, map) ||
     nsSVGLineElementBase::IsAttributeMapped(name);
 }
 

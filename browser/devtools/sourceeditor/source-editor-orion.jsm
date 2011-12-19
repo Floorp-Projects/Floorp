@@ -83,6 +83,28 @@ const ORION_ANNOTATION_TYPES = {
   matchingBracket: "orion.annotation.matchingBracket",
 };
 
+/**
+ * Default key bindings in the Orion editor.
+ */
+const DEFAULT_KEYBINDINGS = [
+  {
+    action: "undo",
+    code: Ci.nsIDOMKeyEvent.DOM_VK_Z,
+    accel: true,
+  },
+  {
+    action: "redo",
+    code: Ci.nsIDOMKeyEvent.DOM_VK_Z,
+    accel: true,
+    shift: true,
+  },
+  {
+    action: "Unindent Lines",
+    code: Ci.nsIDOMKeyEvent.DOM_VK_TAB,
+    shift: true,
+  },
+];
+
 var EXPORTED_SYMBOLS = ["SourceEditor"];
 
 /**
@@ -249,14 +271,14 @@ SourceEditor.prototype = {
 
     this._dragAndDrop = new TextDND(this._view, this._undoStack);
 
+    this._view.setAction("undo", this.undo.bind(this));
+    this._view.setAction("redo", this.redo.bind(this));
     this._view.setAction("tab", this._doTab.bind(this));
-
-    let shiftTabKey = new KeyBinding(Ci.nsIDOMKeyEvent.DOM_VK_TAB, false, true);
     this._view.setAction("Unindent Lines", this._doUnindentLines.bind(this));
-    this._view.setKeyBinding(shiftTabKey, "Unindent Lines");
     this._view.setAction("enter", this._doEnter.bind(this));
 
-    (config.keys || []).forEach(function(aKey) {
+    let keys = (config.keys || []).concat(DEFAULT_KEYBINDINGS);
+    keys.forEach(function(aKey) {
       let binding = new KeyBinding(aKey.code, aKey.accel, aKey.shift, aKey.alt);
       this._view.setKeyBinding(binding, aKey.action);
 

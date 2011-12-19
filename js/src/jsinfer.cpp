@@ -4174,15 +4174,17 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
             detached = true;
         }
 
-        /*
-         * Don't track for parents which add call objects or are generators,
-         * don't resolve NAME accesses into the parent.
-         */
-        if (!detached &&
-            (nesting->parent->analysis()->addsScopeObjects() ||
-             JSOp(*nesting->parent->code) == JSOP_GENERATOR)) {
-            DetachNestingParent(script);
-            detached = true;
+
+        if (!detached) {
+            /*
+             * Don't track for parents which add call objects or are generators,
+             * don't resolve NAME accesses into the parent.
+             */
+            if (nesting->parent->analysis()->addsScopeObjects() || 
+                JSOp(*nesting->parent->code) == JSOP_GENERATOR)
+            {
+                DetachNestingParent(script);
+            }
         }
     }
 
