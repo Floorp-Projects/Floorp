@@ -488,6 +488,9 @@ EGLBoolean __stdcall eglQuerySurface(EGLDisplay dpy, EGLSurface surface, EGLint 
           case EGL_WIDTH:
             *value = eglSurface->getWidth();
             break;
+          case EGL_POST_SUB_BUFFER_SUPPORTED_NV:
+            *value = eglSurface->isPostSubBufferSupported();
+            break;
           default:
             return error(EGL_BAD_ATTRIBUTE, EGL_FALSE);
         }
@@ -1166,6 +1169,43 @@ EGLBoolean __stdcall eglCopyBuffers(EGLDisplay dpy, EGLSurface surface, EGLNativ
     return EGL_FALSE;
 }
 
+EGLBoolean __stdcall eglPostSubBufferNV(EGLDisplay dpy, EGLSurface surface, EGLint x, EGLint y, EGLint width, EGLint height)
+{
+    EVENT("(EGLDisplay dpy = 0x%0.8p, EGLSurface surface = 0x%0.8p, EGLint x = %d, EGLint y = %d, EGLint width = %d, EGLint height = %d)", dpy, surface, x, y, width, height);
+
+    try
+    {
+        egl::Display *display = static_cast<egl::Display*>(dpy);
+        egl::Surface *eglSurface = static_cast<egl::Surface*>(surface);
+
+        if (!validateSurface(display, eglSurface))
+        {
+            return EGL_FALSE;
+        }
+
+        if (display->isDeviceLost())
+        {
+            return error(EGL_CONTEXT_LOST, EGL_FALSE);
+        }
+
+        if (surface == EGL_NO_SURFACE)
+        {
+            return error(EGL_BAD_SURFACE, EGL_FALSE);
+        }
+
+        if (eglSurface->postSubBuffer(x, y, width, height))
+        {
+            return success(EGL_TRUE);
+        }
+    }
+    catch(std::bad_alloc&)
+    {
+        return error(EGL_BAD_ALLOC, EGL_FALSE);
+    }
+
+    return EGL_FALSE;
+}
+
 __eglMustCastToProperFunctionPointerType __stdcall eglGetProcAddress(const char *procname)
 {
     EVENT("(const char *procname = \"%s\")", procname);
@@ -1181,6 +1221,7 @@ __eglMustCastToProperFunctionPointerType __stdcall eglGetProcAddress(const char 
         static const Extension eglExtensions[] =
         {
             {"eglQuerySurfacePointerANGLE", (__eglMustCastToProperFunctionPointerType)eglQuerySurfacePointerANGLE},
+            {"eglPostSubBufferNV", (__eglMustCastToProperFunctionPointerType)eglPostSubBufferNV},
             {"", NULL},
         };
 

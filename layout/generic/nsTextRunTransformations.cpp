@@ -103,8 +103,8 @@ size_t
 nsTransformedTextRun::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf)
 {
   size_t total = gfxTextRun::SizeOfExcludingThis(aMallocSizeOf);
-  total += mStyles.SizeOf();
-  total += mCapitalize.SizeOf();
+  total += mStyles.SizeOfExcludingThis(aMallocSizeOf);
+  total += mCapitalize.SizeOfExcludingThis(aMallocSizeOf);
   if (mOwnsFactory) {
     // It's not worth the effort to get all the sub-class cases right for a
     // small size in the fallback case.  So we use a |computedSize| of 0, which

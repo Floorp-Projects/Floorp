@@ -62,7 +62,6 @@ NS_ConstructAccessibilityService(nsISupports *aOuter, REFNSIID aIID, void **aRes
 }
 
 NS_DEFINE_NAMED_CID(NS_ACCESSIBILITY_SERVICE_CID);
-NS_DEFINE_NAMED_CID(NS_ACCESSIBLE_RETRIEVAL_CID);
 
 static const mozilla::Module::CIDEntry kA11yCIDs[] = {
     { &kNS_ACCESSIBILITY_SERVICE_CID, false, NULL, NS_ConstructAccessibilityService },

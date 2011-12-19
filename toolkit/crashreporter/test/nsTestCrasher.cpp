@@ -21,6 +21,8 @@ public:
 class B : A
 {
   void f() { }
+public:
+  void use() { }
 };
 
 void fcn( A* p )
@@ -32,6 +34,7 @@ void PureVirtualCall()
 {
   // generates a pure virtual function call
   B b;
+  b.use(); // make sure b's actually used
 }
 
 // Keep these in sync with CrashTestUtils.jsm!

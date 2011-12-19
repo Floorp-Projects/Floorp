@@ -159,6 +159,14 @@
             'gles2_book/TextureWrap/TextureWrap.c',
           ],
         },
+        {
+          'target_name': 'post_sub_buffer',
+          'type': 'executable',
+          'dependencies': ['es_util'],
+          'sources': [
+            'gles2_book/PostSubBuffer/PostSubBuffer.c',
+          ],
+        },
       ],
     }],
   ],
