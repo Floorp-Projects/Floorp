@@ -75,8 +75,7 @@ public:
   virtual ~ShutdownObserver()
   {}
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void ** aInstancePtr);
-  NS_INLINE_DECL_REFCOUNTING(ShutdownObserver)
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic,
                      const PRUnichar *aData)
@@ -94,9 +93,28 @@ private:
   SmartPtr *mPtr;
 };
 
-// This is horrible, but I don't see a better way.
+// Give the full namespace in the NS_IMPL macros because NS_IMPL_ADDREF/RELEASE
+// stringify the class name (using the "#" operator) and use this in
+// trace-malloc.  If we didn't fully-qualify the class name and someone else
+// had a refcounted class named "ShutdownObserver<SmartPtr>" in any namespace,
+// trace-malloc would assert (bug 711602).
+//
+// (Note that because macros happen before templates, trace-malloc sees this
+// class name as "ShutdownObserver<SmartPtr>"; therefore, it would also assert
+// if ShutdownObserver<T> had a different size than ShutdownObserver<S>.)
+
 template<class SmartPtr>
-NS_IMPL_QUERY_INTERFACE1(ShutdownObserver<SmartPtr>, nsIObserver)
+NS_IMPL_ADDREF(mozilla::ClearOnShutdown_Internal::
+                 ShutdownObserver<SmartPtr>)
+
+template<class SmartPtr>
+NS_IMPL_RELEASE(mozilla::ClearOnShutdown_Internal::
+                  ShutdownObserver<SmartPtr>)
+
+template<class SmartPtr>
+NS_IMPL_QUERY_INTERFACE1(mozilla::ClearOnShutdown_Internal::
+                           ShutdownObserver<SmartPtr>,
+                         nsIObserver)
 
 } // namespace ClearOnShutdown_Internal
 
