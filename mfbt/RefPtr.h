@@ -43,7 +43,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Util.h"
 
 /**
  * Helpers for defining and using refcounted objects.
