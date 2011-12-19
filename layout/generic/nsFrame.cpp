@@ -2444,14 +2444,14 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
 
 #ifdef XP_MACOSX
   if (me->isControl)
-    return NS_OK;//short ciruit. hard coded for mac due to time restraints.
+    return NS_OK;//short circuit. hard coded for mac due to time restraints.
   bool control = me->isMeta;
 #else
   bool control = me->isControl;
 #endif
 
   nsRefPtr<nsFrameSelection> fc = const_cast<nsFrameSelection*>(frameselection);
-  if (me->clickCount >1 )
+  if (me->clickCount > 1)
   {
     // These methods aren't const but can't actually delete anything,
     // so no need for nsWeakFrame.
@@ -2465,6 +2465,14 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
 
   if (!offsets.content)
     return NS_ERROR_FAILURE;
+
+  // On touchables devices, touch the screen is usually a pan action,
+  // so let reposition the caret if needed but do not select text
+  if (Preferences::GetBool("browser.ignoreNativeFrameTextSelection", false)) {
+    return fc->HandleClick(offsets.content, offsets.StartOffset(),
+                           offsets.EndOffset(), false, false,
+                           offsets.associateWithNext);
+  }
 
   // Let Ctrl/Cmd+mouse down do table selection instead of drag initiation
   nsCOMPtr<nsIContent>parentContent;
