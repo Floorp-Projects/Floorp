@@ -281,6 +281,8 @@ struct GLContextSymbols
     PFNGLGETSHADERIVPROC fGetShaderiv;
     typedef void (GLAPIENTRY * PFNGLGETSHADERINFOLOGPROC) (GLuint shader, GLsizei bufSize, GLsizei* length, GLchar* infoLog);
     PFNGLGETSHADERINFOLOGPROC fGetShaderInfoLog;
+    typedef void (GLAPIENTRY * PFNGETSHADERPRECISIONFORMAT) (GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision);
+    PFNGETSHADERPRECISIONFORMAT fGetShaderPrecisionFormat;
     typedef void (GLAPIENTRY * PFNGLGETSHADERSOURCEPROC) (GLint obj, GLsizei maxLength, GLsizei* length, GLchar* source);
     PFNGLGETSHADERSOURCEPROC fGetShaderSource;
     typedef void (GLAPIENTRY * PFNGLSHADERSOURCEPROC) (GLuint shader, GLsizei count, const GLchar** strings, const GLint* lengths);

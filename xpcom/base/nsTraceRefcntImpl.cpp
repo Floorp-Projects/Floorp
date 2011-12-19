@@ -495,7 +495,7 @@ static PRIntn DumpSerialNumbers(PLHashEntry* aHashEntry, PRIntn aIndex, void* aC
 }
 
 
-NS_SPECIALIZE_TEMPLATE
+template <>
 class nsDefaultComparator <BloatEntry*, BloatEntry*> {
   public:
     bool Equals(BloatEntry* const& aA, BloatEntry* const& aB) const {

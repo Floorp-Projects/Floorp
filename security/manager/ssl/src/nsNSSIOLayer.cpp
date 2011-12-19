@@ -169,7 +169,11 @@ nsNSSSocketInfo::nsNSSSocketInfo()
     mRememberClientAuthCertificate(false),
     mHandshakeStartTime(0),
     mPort(0),
-    mIsCertIssuerBlacklisted(false)
+    mIsCertIssuerBlacklisted(false),
+    mNPNCompleted(false),
+    mHandshakeCompleted(false),
+    mJoined(false),
+    mSentClientCert(false)
 {
 }
 
@@ -435,6 +439,89 @@ nsNSSSocketInfo::GetErrorMessage(PRUnichar** aText)
   return *aText != nsnull ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
+void
+nsNSSSocketInfo::SetNegotiatedNPN(const char *value, PRUint32 length)
+{
+  if (!value)
+    mNegotiatedNPN.Truncate();
+  else
+    mNegotiatedNPN.Assign(value, length);
+  mNPNCompleted = true;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetNegotiatedNPN(nsACString &aNegotiatedNPN)
+{
+  if (!mNPNCompleted)
+    return NS_ERROR_NOT_CONNECTED;
+
+  aNegotiatedNPN = mNegotiatedNPN;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::JoinConnection(const nsACString & npnProtocol,
+                                const nsACString & hostname,
+                                PRInt32 port,
+                                bool *_retval NS_OUTPARAM)
+{
+  *_retval = false;
+
+  // Different ports may not be joined together
+  if (port != mPort)
+    return NS_OK;
+
+  // Make sure NPN has been completed and matches requested npnProtocol
+  if (!mNPNCompleted || !mNegotiatedNPN.Equals(npnProtocol))
+    return NS_OK;
+
+  // If this is the same hostname then the certicate status does not
+  // need to be considered. They are joinable.
+  if (mHostName && hostname.Equals(mHostName)) {
+    *_retval = true;
+    return NS_OK;
+  }
+
+  // Before checking the server certificate we need to make sure the
+  // handshake has completed.
+  if (!mHandshakeCompleted || !SSLStatus() || !SSLStatus()->mServerCert)
+    return NS_OK;
+
+  // If the cert has error bits (e.g. it is untrusted) then do not join.
+  // The value of mHaveCertErrorBits is only reliable because we know that
+  // the handshake completed.
+  if (SSLStatus()->mHaveCertErrorBits)
+    return NS_OK;
+
+  // If the connection is using client certificates then do not join
+  // because the user decides on whether to send client certs to hosts on a
+  // per-domain basis.
+  if (mSentClientCert)
+    return NS_OK;
+
+  // Ensure that the server certificate covers the hostname that would
+  // like to join this connection
+
+  CERTCertificate *nssCert = nsnull;
+  CERTCertificateCleaner nsscertCleaner(nssCert);
+
+  nsCOMPtr<nsIX509Cert2> cert2 = do_QueryInterface(SSLStatus()->mServerCert);
+  if (cert2)
+    nssCert = cert2->GetCert();
+
+  if (!nssCert)
+    return NS_OK;
+
+  if (CERT_VerifyCertName(nssCert, PromiseFlatCString(hostname).get()) !=
+      SECSuccess)
+    return NS_OK;
+
+  // All tests pass - this is joinable
+  mJoined = true;
+  *_retval = true;
+  return NS_OK;
+}
+
 static nsresult
 formatPlainErrorMessage(nsXPIDLCString const & host, PRInt32 port,
                         PRErrorCode err, nsString &returnedMessage);
@@ -524,6 +611,36 @@ NS_IMETHODIMP
 nsNSSSocketInfo::StartTLS()
 {
   return ActivateSSL();
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::SetNPNList(nsTArray<nsCString> &protocolArray)
+{
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+  if (!mFd)
+    return NS_ERROR_FAILURE;
+
+  // the npn list is a concatenated list of 8 bit byte strings.
+  nsCString npnList;
+
+  for (PRUint32 index = 0; index < protocolArray.Length(); ++index) {
+    if (protocolArray[index].IsEmpty() ||
+        protocolArray[index].Length() > 255)
+      return NS_ERROR_ILLEGAL_VALUE;
+
+    npnList.Append(protocolArray[index].Length());
+    npnList.Append(protocolArray[index]);
+  }
+  
+  if (SSL_SetNextProtoNego(
+        mFd,
+        reinterpret_cast<const unsigned char *>(npnList.get()),
+        npnList.Length()) != SECSuccess)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
 }
 
 static NS_DEFINE_CID(kNSSCertificateCID, NS_X509CERT_CID);
@@ -2775,9 +2892,9 @@ public:
                          CERTCertificate * serverCert) 
     : mRV(SECFailure)
     , mErrorCodeToReport(SEC_ERROR_NO_MEMORY)
-    , mCANames(caNames)
     , mPRetCert(pRetCert)
     , mPRetKey(pRetKey)
+    , mCANames(caNames)
     , mSocketInfo(info)
     , mServerCert(serverCert)
   {
@@ -2785,12 +2902,12 @@ public:
 
   SECStatus mRV;                        // out
   PRErrorCode mErrorCodeToReport;       // out
+  CERTCertificate** const mPRetCert;    // in/out
+  SECKEYPrivateKey** const mPRetKey;    // in/out
 protected:
   virtual void RunOnTargetThread();
 private:
   CERTDistNames* const mCANames;        // in
-  CERTCertificate** const mPRetCert;    // in/out
-  SECKEYPrivateKey** const mPRetKey;    // in/out
   nsNSSSocketInfo * const mSocketInfo;  // in
   CERTCertificate * const mServerCert;  // in
 };
@@ -2833,6 +2950,18 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     return SECFailure;
   }
 
+  if (info->GetJoined()) {
+    // We refuse to send a client certificate when there are multiple hostnames
+    // joined on this connection, because we only show the user one hostname
+    // (mHostName) in the client certificate UI.
+
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("[%p] Not returning client cert due to previous join\n", socket));
+    *pRetCert = nsnull;
+    *pRetKey = nsnull;
+    return SECSuccess;
+  }
+
   // XXX: This should be done asynchronously; see bug 696976
   nsRefPtr<ClientAuthDataRunnable> runnable =
     new ClientAuthDataRunnable(caNames, pRetCert, pRetKey, info, serverCert);
@@ -2844,6 +2973,9 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
   
   if (runnable->mRV != SECSuccess) {
     PR_SetError(runnable->mErrorCodeToReport, 0);
+  } else if (*runnable->mPRetCert || *runnable->mPRetKey) {
+    // Make joinConnection prohibit joining after we've sent a client cert
+    info->SetSentClientCert();
   }
 
   return runnable->mRV;

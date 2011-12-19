@@ -39,7 +39,7 @@
 
 #include "nsIDOMXULSelectCntrlEl.idl"
 
-[scriptable, uuid(beb96a27-956d-4a10-8a99-69c19b746e69)]
+[scriptable, uuid(98c367ca-ac5b-493c-83e9-1b6a67aee57b)]
 interface nsIDOMXULMultiSelectControlElement : nsIDOMXULSelectControlElement
 {
   attribute DOMString selType;

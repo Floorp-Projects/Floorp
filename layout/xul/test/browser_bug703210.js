@@ -2,6 +2,8 @@ function test() {
   waitForExplicitFinish();
   gBrowser.selectedTab = gBrowser.addTab();
 
+  SpecialPowers.setIntPref("ui.tooltipDelay", 0);
+
   let doStopPropagation = function (aEvent)
   {
     aEvent.stopPropagation();
@@ -31,6 +33,8 @@ function test() {
     doc.removeEventListener("mouseout", doStopPropagation, true);
     document.removeEventListener("popupshown", onPopupShown, true);
     document.removeEventListener("popuphiding", onPopupHiding, true);
+
+    SpecialPowers.clearUserPref("ui.tooltipDelay");
 
     gBrowser.removeCurrentTab();
     finish();

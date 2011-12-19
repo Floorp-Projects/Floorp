@@ -3042,6 +3042,13 @@ typedef ptrdiff_t GLintptr;
 
 #define LOCAL_GL_MAX_SAMPLES                      0x8D57
 
+#define LOCAL_GL_LOW_FLOAT                        0x8DF0
+#define LOCAL_GL_MEDIUM_FLOAT                     0x8DF1
+#define LOCAL_GL_HIGH_FLOAT                       0x8DF2
+#define LOCAL_GL_LOW_INT                          0x8DF3
+#define LOCAL_GL_MEDIUM_INT                       0x8DF4
+#define LOCAL_GL_HIGH_INT                         0x8DF5
+
 #define LOCAL_GL_GUILTY_CONTEXT_RESET_ARB                   0x8253
 #define LOCAL_GL_INNOCENT_CONTEXT_RESET_ARB                 0x8254
 #define LOCAL_GL_UNKNOWN_CONTEXT_RESET_ARB                  0x8255
@@ -3059,6 +3066,10 @@ typedef ptrdiff_t GLintptr;
 #define LOCAL_WGL_NO_RESET_NOTIFICATION_ARB                 0x8261
 #define LOCAL_WGL_LOSE_CONTEXT_ON_RESET_ARB                 0x8252
 
+#define LOCAL_EGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_EXT   0x3138
+#define LOCAL_EGL_NO_RESET_NOTIFICATION_EXT                 0x31BE
+#define LOCAL_EGL_LOSE_CONTEXT_ON_RESET_EXT                 0x31BF
+
 #define LOCAL_GL_CONTEXT_MAJOR_VERSION_ARB                  0x2091
 #define LOCAL_GL_CONTEXT_MINOR_VERSION_ARB                  0x2092
 #define LOCAL_GL_CONTEXT_LAYER_PLANE_ARB                    0x2093
@@ -3070,6 +3081,8 @@ typedef ptrdiff_t GLintptr;
 #define LOCAL_WGL_CONTEXT_LAYER_PLANE_ARB                   0x2093
 #define LOCAL_WGL_CONTEXT_FLAGS_ARB                         0x2094
 #define LOCAL_WGL_CONTEXT_PROFILE_MASK_ARB                  0x9126
+
+#define LOCAL_EGL_CONTEXT_ROBUST_ACCESS_EXT                 0x30BF
 
 #define LOCAL_GL_CONTEXT_DEBUG_BIT_ARB                      0x0001
 #define LOCAL_GL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB         0x0002

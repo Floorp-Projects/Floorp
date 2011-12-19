@@ -202,7 +202,7 @@
                 <label class="errorLabel" anonid="errorNetwork">&error.network;</label>
                 <label class="errorLabel" anonid="errorDecode">&error.decode;</label>
                 <label class="errorLabel" anonid="errorSrcNotSupported">&error.srcNotSupported;</label>
-                <label class="errorLabel" anonid="errorNoSource">&error.noSource;</label>
+                <label class="errorLabel" anonid="errorNoSource">&error.noSource2;</label>
                 <label class="errorLabel" anonid="errorGeneric">&error.generic;</label>
             </vbox>
 

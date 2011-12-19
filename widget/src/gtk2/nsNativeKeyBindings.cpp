@@ -288,9 +288,11 @@ nsNativeKeyBindings::KeyPress(const nsNativeKeyEvent& aEvent,
     return true;
 
   nsKeyEvent *nativeKeyEvent = static_cast<nsKeyEvent*>(aEvent.nativeEvent);
-  if (!nativeKeyEvent || nativeKeyEvent->eventStructType != NS_KEY_EVENT &&
-      nativeKeyEvent->message != NS_KEY_PRESS)
+  if (!nativeKeyEvent ||
+      (nativeKeyEvent->eventStructType != NS_KEY_EVENT &&
+       nativeKeyEvent->message != NS_KEY_PRESS)) {
     return false;
+  }
 
   for (PRUint32 i = 0; i < nativeKeyEvent->alternativeCharCodes.Length(); ++i) {
     PRUint32 ch = nativeKeyEvent->isShift ?

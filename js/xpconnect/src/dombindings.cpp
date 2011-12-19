@@ -513,14 +513,14 @@ getExpandoObject(JSObject *obj)
     return v.isUndefined() ? NULL : v.toObjectOrNull();
 }
 
-static int32
+static int32_t
 IdToInt32(JSContext *cx, jsid id)
 {
     JSAutoRequest ar(cx);
 
     jsval idval;
     jsdouble array_index;
-    jsint i;
+    int32_t i;
     if (!::JS_IdToValue(cx, id, &idval) ||
         !::JS_ValueToNumber(cx, idval, &array_index) ||
         !::JS_DoubleIsInt32(array_index, &i)) {
@@ -530,7 +530,7 @@ IdToInt32(JSContext *cx, jsid id)
     return i;
 }
 
-static inline int32
+static inline int32_t
 GetArrayIndexFromId(JSContext *cx, jsid id)
 {
     if (NS_LIKELY(JSID_IS_INT(id)))
@@ -567,7 +567,7 @@ ListBase<LC>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, 
 {
     if (set) {
         if (hasIndexSetter) {
-            int32 index = GetArrayIndexFromId(cx, id);
+            int32_t index = GetArrayIndexFromId(cx, id);
             if (index >= 0) {
                 FillPropertyDescriptor(desc, proxy, JSVAL_VOID, false);
                 return true;
@@ -580,7 +580,7 @@ ListBase<LC>::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, 
         }
     } else {
         if (hasIndexGetter) {
-            int32 index = GetArrayIndexFromId(cx, id);
+            int32_t index = GetArrayIndexFromId(cx, id);
             if (index >= 0) {
                 IndexGetterType result;
                 if (!getItemAt(getListObject(proxy), PRUint32(index), result))
@@ -686,7 +686,7 @@ bool
 ListBase<LC>::defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc)
 {
     if (hasIndexSetter) {
-        int32 index = GetArrayIndexFromId(cx, id);
+        int32_t index = GetArrayIndexFromId(cx, id);
         if (index >= 0) {
             nsCOMPtr<nsISupports> ref;
             IndexSetterType value;
@@ -784,7 +784,7 @@ bool
 ListBase<LC>::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     if (hasIndexGetter) {
-        int32 index = GetArrayIndexFromId(cx, id);
+        int32_t index = GetArrayIndexFromId(cx, id);
         if (index >= 0) {
             IndexGetterType result;
             *bp = getItemAt(getListObject(proxy), PRUint32(index), result);
@@ -1021,7 +1021,7 @@ ListBase<LC>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, V
     bool getFromExpandoObject = true;
 
     if (hasIndexGetter) {
-        int32 index = GetArrayIndexFromId(cx, id);
+        int32_t index = GetArrayIndexFromId(cx, id);
         if (index >= 0) {
             IndexGetterType result;
             if (getItemAt(getListObject(proxy), PRUint32(index), result))

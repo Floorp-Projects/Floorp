@@ -41,7 +41,7 @@
 
 interface nsIArray;
 
-[scriptable, uuid(51464459-4e46-4f31-8745-4acfa7c1e2f2)]
+[scriptable, uuid(7902e243-9b00-4673-9288-1b7fc246a8f8)]
 interface nsIUrlClassifierPrefixSet : nsISupports
 {
   void setPrefixes([const, array, size_is(aLength)] in unsigned long aPrefixes,
@@ -51,7 +51,6 @@ interface nsIUrlClassifierPrefixSet : nsISupports
   boolean contains(in unsigned long aPrefix);
   boolean probe(in unsigned long aPrefix, in unsigned long aKey,
                 inout boolean aReady);
-  PRUint32 sizeOfIncludingThis();
   PRUint32 getKey();
   boolean isEmpty();
   void loadFromFile(in nsIFile aFile);

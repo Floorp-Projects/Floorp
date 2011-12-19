@@ -1,5 +1,5 @@
 
-// check correctness of truncation of doubles slightly outside the int32 range.
+// check correctness of truncation of doubles slightly outside the int32_t range.
 
 function truncate(x) {
   return x | 0;

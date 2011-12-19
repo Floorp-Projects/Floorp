@@ -796,13 +796,12 @@ bool
 nsXMLContentSerializer::IsJavaScript(nsIContent * aContent, nsIAtom* aAttrNameAtom,
                                      PRInt32 aAttrNamespaceID, const nsAString& aValueString)
 {
-  PRInt32 namespaceID = aContent->GetNameSpaceID();
   bool isHtml = aContent->IsHTML();
+  bool isXul = aContent->IsXUL();
+  bool isSvg = aContent->IsSVG();
 
   if (aAttrNamespaceID == kNameSpaceID_None &&
-      (isHtml ||
-       namespaceID == kNameSpaceID_XUL ||
-       namespaceID == kNameSpaceID_SVG) &&
+      (isHtml || isXul || isSvg) &&
       (aAttrNameAtom == nsGkAtoms::href ||
        aAttrNameAtom == nsGkAtoms::src)) {
 
@@ -822,10 +821,10 @@ nsXMLContentSerializer::IsJavaScript(nsIContent * aContent, nsIAtom* aAttrNameAt
   if (isHtml) {
     return nsContentUtils::IsEventAttributeName(aAttrNameAtom, EventNameType_HTML);
   }
-  else if (namespaceID == kNameSpaceID_XUL) {
+  else if (isXul) {
     return nsContentUtils::IsEventAttributeName(aAttrNameAtom, EventNameType_XUL);
   }
-  else if (namespaceID == kNameSpaceID_SVG) {
+  else if (isSvg) {
     return nsContentUtils::IsEventAttributeName(aAttrNameAtom,
                                                 EventNameType_SVGGraphic | EventNameType_SVGSVG);
   }

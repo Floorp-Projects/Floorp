@@ -111,7 +111,6 @@ function inspectorRuleTrap()
 function test()
 {
   waitForExplicitFinish();
-  ignoreAllUncaughtExceptions();
 
   tab1 = gBrowser.addTab();
   gBrowser.selectedTab = tab1;

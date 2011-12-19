@@ -125,6 +125,14 @@ interface nsIWebGLActiveInfo : nsISupports
     readonly attribute DOMString name;
 };
 
+[scriptable, builtinclass, uuid(76265e93-2e8f-40ca-b25b-eea5995e9641)]
+interface nsIWebGLShaderPrecisionFormat : nsISupports
+{
+    readonly attribute WebGLint rangeMin;
+    readonly attribute WebGLint rangeMax;
+    readonly attribute WebGLint precision;
+};
+
 [scriptable, builtinclass, uuid(d38b0467-623e-4c82-9140-5f14a3bd1bad)]
 interface nsIWebGLUniformLocation : nsISupports
 {
@@ -700,8 +708,7 @@ interface nsIDOMWebGLRenderingContext : nsISupports
   // Modified: void glGetShaderInfoLog(WebGLuint shader, WebGLsizei bufsize, WebGLsizei* length, char* infolog);
   DOMString getShaderInfoLog(in nsIWebGLShader shader);
 
-  // TBD
-  //void glGetShaderPrecisionFormat(WebGLenum shadertype, WebGLenum precisiontype, WebGLint* range, WebGLint* precision);
+  nsIWebGLShaderPrecisionFormat getShaderPrecisionFormat(in WebGLenum shadertype, in WebGLenum precisiontype);
 
   DOMString getShaderSource(in nsIWebGLShader shader);
 

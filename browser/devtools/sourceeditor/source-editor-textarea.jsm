@@ -231,7 +231,7 @@ SourceEditor.prototype = {
 
       let listeners = this._listeners[SourceEditor.EVENTS.SELECTION] || [];
       listeners.forEach(function(aListener) {
-        aListener.callback.call(null, sendEvent, aListener.data);
+        aListener.callback.call(null, sendEvent);
       }, this);
 
       this._lastSelection = selection;
@@ -256,7 +256,7 @@ SourceEditor.prototype = {
   {
     let listeners = this._listeners[SourceEditor.EVENTS.TEXT_CHANGED] || [];
     listeners.forEach(function(aListener) {
-      aListener.callback.call(null, aEvent, aListener.data);
+      aListener.callback.call(null, aEvent);
     }, this);
   },
 
@@ -279,16 +279,13 @@ SourceEditor.prototype = {
    *        The event type you want to listen for.
    * @param function aCallback
    *        The function you want executed when the event is triggered.
-   * @param mixed [aData]
-   *        Optional data to pass to the callback when the event is triggered.
    */
   addEventListener:
-  function SE_addEventListener(aEventType, aCallback, aData)
+  function SE_addEventListener(aEventType, aCallback)
   {
     const EVENTS = SourceEditor.EVENTS;
     let listener = {
       type: aEventType,
-      data: aData,
       callback: aCallback,
     };
 
@@ -316,24 +313,20 @@ SourceEditor.prototype = {
    *        The event type you have a listener for.
    * @param function aCallback
    *        The function you have as the event handler.
-   * @param mixed [aData]
-   *        The optional data passed to the callback.
    */
   removeEventListener:
-  function SE_removeEventListener(aEventType, aCallback, aData)
+  function SE_removeEventListener(aEventType, aCallback)
   {
     let listeners = this._listeners[aEventType];
     if (!listeners) {
-      throw new Error("SourceEditor.removeEventListener() called for an " +
-                      "unknown event.");
+      return;
     }
 
     const EVENTS = SourceEditor.EVENTS;
 
     this._listeners[aEventType] = listeners.filter(function(aListener) {
       let isSameListener = aListener.type == aEventType &&
-                           aListener.callback === aCallback &&
-                           aListener.data === aData;
+                           aListener.callback === aCallback;
       if (isSameListener && aListener.domType) {
         aListener.target.removeEventListener(aListener.domType,
                                              aListener.handler, false);
@@ -366,7 +359,7 @@ SourceEditor.prototype = {
     };
 
     aDOMEvent.preventDefault();
-    aListener.callback.call(null, sendEvent, aListener.data);
+    aListener.callback.call(null, sendEvent);
   },
 
   /**
@@ -599,6 +592,41 @@ SourceEditor.prototype = {
   setCaretOffset: function SE_setCaretOffset(aOffset)
   {
     this.setSelection(aOffset, aOffset);
+  },
+
+  /**
+   * Set the caret position: line and column.
+   *
+   * @param number aLine
+   *        The new caret line location. Line numbers start from 0.
+   * @param number [aColumn=0]
+   *        Optional. The new caret column location. Columns start from 0.
+   */
+  setCaretPosition: function SE_setCaretPosition(aLine, aColumn)
+  {
+    aColumn = aColumn || 0;
+
+    let text = this._textbox.value;
+    let i = 0, n = text.length, c0, c1;
+    let line = 0, col = 0;
+    while (i < n) {
+      c1 = text.charAt(i++);
+      if (line < aLine && (c1 == "\r" || (c0 != "\r" && c1 == "\n"))) {
+        // Count lines and reset the column only until we reach the desired line
+        // such that if the desired column is out of boundaries we will stop
+        // after the given number of characters from the line start.
+        line++;
+        col = 0;
+      } else {
+        col++;
+      }
+
+      if (line == aLine && col == aColumn) {
+        this.setCaretOffset(i);
+        return;
+      }
+      c0 = c1;
+    }
   },
 
   /**

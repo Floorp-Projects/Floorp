@@ -527,12 +527,13 @@ struct THEBES_API ContextFormat
 class GLContext
     : public LibrarySymbolLoader
 {
-    THEBES_INLINE_DECL_THREADSAFE_REFCOUNTING(GLContext)
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GLContext)
 public:
     GLContext(const ContextFormat& aFormat,
               bool aIsOffscreen = false,
               GLContext *aSharedContext = nsnull)
-      : mOffscreenFBOsDirty(false),
+      : mFlushGuaranteesResolve(false),
+        mOffscreenFBOsDirty(false),
         mInitialized(false),
         mIsOffscreen(aIsOffscreen),
 #ifdef USE_GLES2
@@ -666,6 +667,14 @@ public:
     }
 
     /**
+     * Returns true if the context is using ANGLE. This should only be overridden for an ANGLE
+     * implementation.
+     */
+    virtual bool IsANGLE() {
+        return false;
+    }
+
+    /**
      * The derived class is expected to provide information on whether or not it
      * supports robustness.
      */
@@ -752,6 +761,23 @@ public:
 
     bool IsOffscreen() {
         return mIsOffscreen;
+    }
+
+protected:
+    bool mFlushGuaranteesResolve;
+
+public:
+    void SetFlushGuaranteesResolve(bool aFlushGuaranteesResolve) {
+        mFlushGuaranteesResolve = aFlushGuaranteesResolve;
+    }
+
+    void GuaranteeResolve() {
+        if (mFlushGuaranteesResolve) {
+            BlitDirtyFBOs();
+            fFlush();
+        } else {
+            fFinish();
+        }
     }
 
     /*
@@ -872,6 +898,28 @@ private:
     GLuint mPrevDrawFBOBinding;
     GLuint mPrevReadFBOBinding;
     bool mOffscreenFBOsDirty;
+
+    void GetShaderPrecisionFormatNonES2(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision) {
+        switch (precisiontype) {
+            case LOCAL_GL_LOW_FLOAT:
+            case LOCAL_GL_MEDIUM_FLOAT:
+            case LOCAL_GL_HIGH_FLOAT:
+                // Assume IEEE 754 precision
+                range[0] = 127;
+                range[1] = 127;
+                *precision = 0;
+                break;
+            case LOCAL_GL_LOW_INT:
+            case LOCAL_GL_MEDIUM_INT:
+            case LOCAL_GL_HIGH_INT:
+                // Some (most) hardware only supports single-precision floating-point numbers,
+                // which can accurately represent integers up to +/-16777216
+                range[0] = 24;
+                range[1] = 24;
+                *precision = 0;
+                break;
+        }
+    }
 
     void BeforeGLDrawCall() {
         // Record and rebind if necessary
@@ -1270,6 +1318,7 @@ public:
         ANGLE_framebuffer_multisample,
         OES_rgb8_rgba8,
         ARB_robustness,
+        EXT_robustness,
         Extensions_Max
     };
 
@@ -1341,6 +1390,14 @@ protected:
 
     PRUint32 mDebugMode;
 
+    inline PRUint32 DebugMode() {
+#ifdef DEBUG
+        return mDebugMode;
+#else
+        return 0;
+#endif
+    }
+
     ContextFormat mCreationFormat;
     nsRefPtr<GLContext> mSharedContext;
 
@@ -1376,7 +1433,7 @@ protected:
         if (!mCreationFormat.samples)
             return false;
 
-        if (mDebugMode) {
+        if (DebugMode()) {
             printf_stderr("Requested level of multisampling is unavailable, continuing without multisampling\n");
         }
 
@@ -1468,7 +1525,7 @@ protected:
 public:
 
     void BeforeGLCall(const char* glFunction) {
-        if (mDebugMode) {
+        if (DebugMode()) {
             // since the static member variable sCurrentGLContext is not thread-local as it should,
             // we have to assert that we're in the main thread. Note that sCurrentGLContext is only used
             // for the OpenGL debug mode.
@@ -1478,7 +1535,7 @@ public:
                          "It needs to be patched by making GLContext::sCurrentGLContext be thread-local.\n");
                 NS_ABORT();
             }
-            if (mDebugMode & DebugTrace)
+            if (DebugMode() & DebugTrace)
                 printf_stderr("[gl:%p] > %s\n", this, glFunction);
             if (this != sCurrentGLContext) {
                 printf_stderr("Fatal: %s called on non-current context %p. "
@@ -1490,20 +1547,20 @@ public:
     }
 
     void AfterGLCall(const char* glFunction) {
-        if (mDebugMode) {
+        if (DebugMode()) {
             // calling fFinish() immediately after every GL call makes sure that if this GL command crashes,
             // the stack trace will actually point to it. Otherwise, OpenGL being an asynchronous API, stack traces
             // tend to be meaningless
             mSymbols.fFinish();
             mGLError = mSymbols.fGetError();
-            if (mDebugMode & DebugTrace)
+            if (DebugMode() & DebugTrace)
                 printf_stderr("[gl:%p] < %s [0x%04x]\n", this, glFunction, mGLError);
             if (mGLError != LOCAL_GL_NO_ERROR) {
                 printf_stderr("GL ERROR: %s generated GL error %s(0x%04x)\n", 
                               glFunction,
                               GLErrorToString(mGLError),
                               mGLError);
-                if (mDebugMode & DebugAbortOnError)
+                if (DebugMode() & DebugAbortOnError)
                     NS_ABORT();
             }
         }
@@ -1553,7 +1610,7 @@ public:
     GLenum fGetError() {
 #ifdef DEBUG
         // debug mode ends up eating the error in AFTER_GL_CALL
-        if (mDebugMode) {
+        if (DebugMode()) {
             GLenum err = mGLError;
             mGLError = LOCAL_GL_NO_ERROR;
             return err;
@@ -2319,6 +2376,17 @@ public:
     void fGetShaderInfoLog(GLuint shader, GLsizei bufSize, GLsizei* length, GLchar* infoLog) {
         BEFORE_GL_CALL;
         mSymbols.fGetShaderInfoLog(shader, bufSize, length, infoLog);
+        AFTER_GL_CALL;
+    }
+
+    void fGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision) {
+        BEFORE_GL_CALL;
+        if (mIsGLES2) {
+            mSymbols.fGetShaderPrecisionFormat(shadertype, precisiontype, range, precision);
+        } else {
+            // Fall back to automatic values because almost all desktop hardware supports the OpenGL standard precisions.
+            GetShaderPrecisionFormatNonES2(shadertype, precisiontype, range, precision);
+        }
         AFTER_GL_CALL;
     }
 

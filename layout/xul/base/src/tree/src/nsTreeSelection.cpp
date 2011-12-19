@@ -51,7 +51,7 @@
 #include "nsGUIEvent.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
-#include "nsPLDOMEvent.h"
+#include "nsAsyncDOMEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsAutoPtr.h"
 
@@ -686,10 +686,10 @@ NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(PRInt32 aIndex)
   NS_NAMED_LITERAL_STRING(DOMMenuItemActive, "DOMMenuItemActive");
   NS_NAMED_LITERAL_STRING(DOMMenuItemInactive, "DOMMenuItemInactive");
 
-  nsRefPtr<nsPLDOMEvent> event =
-    new nsPLDOMEvent(treeDOMNode,
+  nsRefPtr<nsAsyncDOMEvent> event =
+    new nsAsyncDOMEvent(treeDOMNode,
                      (aIndex != -1 ? DOMMenuItemActive : DOMMenuItemInactive),
-                     true, false);
+                      true, false);
   return event->PostDOMEvent();
 }
 
@@ -874,8 +874,8 @@ nsTreeSelection::FireOnSelectHandler()
   nsCOMPtr<nsINode> node(do_QueryInterface(elt));
   NS_ENSURE_STATE(node);
 
-  nsRefPtr<nsPLDOMEvent> event =
-    new nsPLDOMEvent(node, NS_LITERAL_STRING("select"), true, false);
+  nsRefPtr<nsAsyncDOMEvent> event =
+    new nsAsyncDOMEvent(node, NS_LITERAL_STRING("select"), true, false);
   event->RunDOMEventWhenSafe();
   return NS_OK;
 }

@@ -63,6 +63,7 @@
 #include "gc/Statistics.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
+#include "js/TemplateLib.h"
 
 struct JSCompartment;
 
@@ -98,7 +99,7 @@ const size_t ArenaMask = ArenaSize - 1;
  * This is the maximum number of arenas we allow in the FreeCommitted state
  * before we trigger a GC_SHRINK to release free arenas to the OS.
  */
-const static uint32 MaxFreeCommittedArenas = (32 << 20) / ArenaSize;
+const static uint32_t MaxFreeCommittedArenas = (32 << 20) / ArenaSize;
 
 /*
  * The mark bitmap has one bit per each GC cell. For multi-cell GC things this
@@ -413,7 +414,7 @@ struct ArenaHeader {
     size_t       nextDelayedMarking : JS_BITS_PER_WORD - 8 - 1;
 
     static void staticAsserts() {
-        /* We must be able to fit the allockind into uint8. */
+        /* We must be able to fit the allockind into uint8_t. */
         JS_STATIC_ASSERT(FINALIZE_LIMIT <= 255);
 
         /*
@@ -513,8 +514,8 @@ struct Arena {
     uint8_t     data[ArenaSize - sizeof(ArenaHeader)];
 
   private:
-    static JS_FRIEND_DATA(const uint32) ThingSizes[];
-    static JS_FRIEND_DATA(const uint32) FirstThingOffsets[];
+    static JS_FRIEND_DATA(const uint32_t) ThingSizes[];
+    static JS_FRIEND_DATA(const uint32_t) FirstThingOffsets[];
 
   public:
     static void staticAsserts();
@@ -575,16 +576,16 @@ struct ChunkInfo {
      * this offset to start our search iteration close to a decommitted arena
      * that we can allocate.
      */
-    uint32          lastDecommittedArenaOffset;
+    uint32_t        lastDecommittedArenaOffset;
 
     /* Number of free arenas, either committed or decommitted. */
-    uint32          numArenasFree;
+    uint32_t        numArenasFree;
 
     /* Number of free, committed arenas. */
-    uint32          numArenasFreeCommitted;
+    uint32_t        numArenasFreeCommitted;
 
     /* Number of GC cycles this chunk has survived. */
-    uint32          age;
+    uint32_t        age;
 };
 
 /*
@@ -625,16 +626,16 @@ const size_t ArenasPerChunk = ChunkBytesAvailable / BytesPerArenaWithHeader;
 struct ChunkBitmap {
     uintptr_t bitmap[ArenaBitmapWords * ArenasPerChunk];
 
-    JS_ALWAYS_INLINE void getMarkWordAndMask(const Cell *cell, uint32 color,
+    JS_ALWAYS_INLINE void getMarkWordAndMask(const Cell *cell, uint32_t color,
                                              uintptr_t **wordp, uintptr_t *maskp);
 
-    JS_ALWAYS_INLINE bool isMarked(const Cell *cell, uint32 color) {
+    JS_ALWAYS_INLINE bool isMarked(const Cell *cell, uint32_t color) {
         uintptr_t *word, mask;
         getMarkWordAndMask(cell, color, &word, &mask);
         return *word & mask;
     }
 
-    JS_ALWAYS_INLINE bool markIfUnmarked(const Cell *cell, uint32 color) {
+    JS_ALWAYS_INLINE bool markIfUnmarked(const Cell *cell, uint32_t color) {
         uintptr_t *word, mask;
         getMarkWordAndMask(cell, BLACK, &word, &mask);
         if (*word & mask)
@@ -653,7 +654,7 @@ struct ChunkBitmap {
         return true;
     }
 
-    JS_ALWAYS_INLINE void unmark(const Cell *cell, uint32 color) {
+    JS_ALWAYS_INLINE void unmark(const Cell *cell, uint32_t color) {
         uintptr_t *word, mask;
         getMarkWordAndMask(cell, color, &word, &mask);
         *word &= ~mask;
@@ -702,7 +703,7 @@ struct Chunk {
     Arena           arenas[ArenasPerChunk];
 
     /* Pad to full size to ensure cache alignment of ChunkInfo. */
-    uint8           padding[ChunkPadSize];
+    uint8_t         padding[ChunkPadSize];
 
     ChunkBitmap     bitmap;
     PerArenaBitmap  decommittedArenas;
@@ -785,7 +786,7 @@ class ChunkPool {
     void expire(JSRuntime *rt, bool releaseAll);
 
     /* Must be called either during the GC or with the GC lock taken. */
-    JS_FRIEND_API(int64) countDecommittedArenas(JSRuntime *rt);
+    JS_FRIEND_API(int64_t) countCleanDecommittedArenas(JSRuntime *rt);
 };
 
 inline uintptr_t
@@ -874,7 +875,7 @@ ArenaHeader::setNextDelayedMarking(Arena *arena)
 }
 
 JS_ALWAYS_INLINE void
-ChunkBitmap::getMarkWordAndMask(const Cell *cell, uint32 color,
+ChunkBitmap::getMarkWordAndMask(const Cell *cell, uint32_t color,
                                 uintptr_t **wordp, uintptr_t *maskp)
 {
     JS_ASSERT(cell->chunk() == Chunk::fromAddress(reinterpret_cast<uintptr_t>(this)));
@@ -885,7 +886,7 @@ ChunkBitmap::getMarkWordAndMask(const Cell *cell, uint32 color,
 }
 
 static void
-AssertValidColor(const void *thing, uint32 color)
+AssertValidColor(const void *thing, uint32_t color)
 {
 #ifdef DEBUG
     ArenaHeader *aheader = reinterpret_cast<const js::gc::Cell *>(thing)->arenaHeader();
@@ -894,21 +895,21 @@ AssertValidColor(const void *thing, uint32 color)
 }
 
 inline bool
-Cell::isMarked(uint32 color) const
+Cell::isMarked(uint32_t color) const
 {
     AssertValidColor(this, color);
     return chunk()->bitmap.isMarked(this, color);
 }
 
 bool
-Cell::markIfUnmarked(uint32 color) const
+Cell::markIfUnmarked(uint32_t color) const
 {
     AssertValidColor(this, color);
     return chunk()->bitmap.markIfUnmarked(this, color);
 }
 
 void
-Cell::unmark(uint32 color) const
+Cell::unmark(uint32_t color) const
 {
     JS_ASSERT(color != BLACK);
     AssertValidColor(this, color);
@@ -934,7 +935,7 @@ const size_t GC_ALLOCATION_THRESHOLD = 30 * 1024 * 1024;
 const float GC_HEAP_GROWTH_FACTOR = 3.0f;
 
 /* Perform a Full GC every 20 seconds if MaybeGC is called */
-static const int64 GC_IDLE_FULL_SPAN = 20 * 1000 * 1000;
+static const int64_t GC_IDLE_FULL_SPAN = 20 * 1000 * 1000;
 
 static inline JSGCTraceKind
 MapAllocToTraceKind(AllocKind thingKind)
@@ -1240,7 +1241,7 @@ struct GCPtrHasher
     static bool match(void *l, void *k) { return l == k; }
 };
 
-typedef HashMap<void *, uint32, GCPtrHasher, SystemAllocPolicy> GCLocks;
+typedef HashMap<void *, uint32_t, GCPtrHasher, SystemAllocPolicy> GCLocks;
 
 struct RootInfo {
     RootInfo() {}
@@ -1262,8 +1263,8 @@ struct WrapperHasher
     typedef Value Lookup;
 
     static HashNumber hash(Value key) {
-        uint64 bits = key.asRawBits();
-        return (uint32)bits ^ (uint32)(bits >> 32);
+        uint64_t bits = key.asRawBits();
+        return uint32_t(bits) ^ uint32_t(bits >> 32);
     }
 
     static bool match(const Value &l, const Value &k) { return l == k; }
@@ -1285,7 +1286,7 @@ extern JS_FRIEND_API(JSGCTraceKind)
 js_GetGCThingTraceKind(void *thing);
 
 extern JSBool
-js_InitGC(JSRuntime *rt, uint32 maxbytes);
+js_InitGC(JSRuntime *rt, uint32_t maxbytes);
 
 extern void
 js_FinishGC(JSRuntime *rt);
@@ -1303,7 +1304,7 @@ js_DumpNamedRoots(JSRuntime *rt,
                   void *data);
 #endif
 
-extern uint32
+extern uint32_t
 js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data);
 
 /* Table of pointers with count valid members. */
@@ -1593,53 +1594,72 @@ struct ConservativeGCThreadData {
 template<class T>
 struct MarkStack {
     T *stack;
-    uintN tos, limit;
+    T *tos;
+    T *limit;
 
     bool push(T item) {
         if (tos == limit)
             return false;
-        stack[tos++] = item;
+        *tos++ = item;
         return true;
     }
 
-    bool isEmpty() { return tos == 0; }
+    bool push(T item1, T item2, T item3) {
+        T *nextTos = tos + 3;
+        if (nextTos > limit)
+            return false;
+        tos[0] = item1;
+        tos[1] = item2;
+        tos[2] = item3;
+        tos = nextTos;
+        return true;
+    }
+
+    bool isEmpty() const {
+        return tos == stack;
+    }
 
     T pop() {
         JS_ASSERT(!isEmpty());
-        return stack[--tos];
+        return *--tos;
     }
 
-    T &peek() {
-        JS_ASSERT(!isEmpty());
-        return stack[tos-1];
-    }
-
-    MarkStack(void **buffer, size_t size)
-    {
-        tos = 0;
-        limit = size / sizeof(T) - 1;
-        stack = (T *)buffer;
-    }
+    template<size_t N>
+    MarkStack(T (&buffer)[N])
+      : stack(buffer),
+        tos(buffer),
+        limit(buffer + N) { }
 };
 
-struct LargeMarkItem
-{
-    JSObject *obj;
-    uintN markpos;
-
-    LargeMarkItem(JSObject *obj) : obj(obj), markpos(0) {}
-};
-
-static const size_t OBJECT_MARK_STACK_SIZE = 32768 * sizeof(JSObject *);
-static const size_t ROPES_MARK_STACK_SIZE = 1024 * sizeof(JSString *);
-static const size_t XML_MARK_STACK_SIZE = 1024 * sizeof(JSXML *);
-static const size_t TYPE_MARK_STACK_SIZE = 1024 * sizeof(types::TypeObject *);
-static const size_t LARGE_MARK_STACK_SIZE = 64 * sizeof(LargeMarkItem);
+static const size_t MARK_STACK_LENGTH = 32768;
 
 struct GCMarker : public JSTracer {
+    /*
+     * We use a common mark stack to mark GC things of different types and use
+     * the explicit tags to distinguish them when it cannot be deduced from
+     * the context of push or pop operation.
+     *
+     * Currently we need only 4 tags. However that can be extended to 8 if
+     * necessary as we tag only GC things.
+     */
+    enum StackTag {
+        ValueArrayTag,
+        ObjectTag,
+        TypeTag,
+        XmlTag,
+        LastTag = XmlTag
+    };
+
+    static const uintptr_t StackTagMask = 3;
+
+    static void staticAsserts() {
+        JS_STATIC_ASSERT(StackTagMask >= uintptr_t(LastTag));
+        JS_STATIC_ASSERT(StackTagMask <= gc::Cell::CellMask);
+    }
+
   private:
     /* The color is only applied to objects, functions and xml. */
-    uint32 color;
+    uint32_t color;
 
   public:
     /* Pointer to the top of the stack of arenas we are delaying marking on. */
@@ -1654,17 +1674,13 @@ struct GCMarker : public JSTracer {
     void dumpConservativeRoots();
 #endif
 
-    MarkStack<JSObject *> objStack;
-    MarkStack<JSRope *> ropeStack;
-    MarkStack<types::TypeObject *> typeStack;
-    MarkStack<JSXML *> xmlStack;
-    MarkStack<LargeMarkItem> largeStack;
+    MarkStack<uintptr_t> stack;
 
   public:
     explicit GCMarker(JSContext *cx);
     ~GCMarker();
 
-    uint32 getMarkColor() const {
+    uint32_t getMarkColor() const {
         return color;
     }
 
@@ -1683,36 +1699,37 @@ struct GCMarker : public JSTracer {
 
     void delayMarkingChildren(const void *thing);
 
+    bool hasDelayedChildren() const {
+        return !!unmarkedArenaStackTop;
+    }
+
     void markDelayedChildren();
 
     bool isMarkStackEmpty() {
-        return objStack.isEmpty() &&
-               ropeStack.isEmpty() &&
-               typeStack.isEmpty() &&
-               xmlStack.isEmpty() &&
-               largeStack.isEmpty();
+        return stack.isEmpty();
     }
 
     void drainMarkStack();
 
+    inline void processMarkStackTop();
+    
     void pushObject(JSObject *obj) {
-        if (!objStack.push(obj))
-            delayMarkingChildren(obj);
-    }
-
-    void pushRope(JSRope *rope) {
-        if (!ropeStack.push(rope))
-            delayMarkingChildren(rope);
+        pushTaggedPtr(ObjectTag, obj);
     }
 
     void pushType(types::TypeObject *type) {
-        if (!typeStack.push(type))
-            delayMarkingChildren(type);
+        pushTaggedPtr(TypeTag, type);
     }
 
     void pushXML(JSXML *xml) {
-        if (!xmlStack.push(xml))
-            delayMarkingChildren(xml);
+        pushTaggedPtr(XmlTag, xml);
+    }
+
+    void pushTaggedPtr(StackTag tag, void *ptr) {
+        uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
+        JS_ASSERT(!(addr & StackTagMask));
+        if (!stack.push(addr | uintptr_t(tag)))
+            delayMarkingChildren(ptr);
     }
 };
 

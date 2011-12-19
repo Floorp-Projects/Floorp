@@ -65,10 +65,11 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 interface nsIDOMWindow;
+interface nsIDOMBlob;
 interface nsIDOMFile;
 interface nsIFile;
 
-[scriptable, uuid(bf868921-0288-4799-a806-2fa642590197)]
+[scriptable, uuid(3af3c5ce-6f2a-47e7-acd0-555ed576fa82)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -926,4 +927,52 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   boolean checkAndClearPaintedState(in nsIDOMElement aElement);
 
+  /*
+   * Get internal id of the stored blob.
+   */
+  long long getFileId(in nsIDOMBlob aBlob);
+
+  /*
+   * Get file ref count info for given database and file id.
+   *
+   */
+  boolean getFileReferences(in AString aDatabaseName, in long long aId,
+                            [optional] out long aRefCnt,
+                            [optional] out long aDBRefCnt,
+                            [optional] out long aSliceRefCnt);
+
+  /**
+   * Begin opcode-level profiling of all JavaScript execution in the window's
+   * runtime.
+   */
+  void startPCCountProfiling();
+
+  /**
+   * Stop opcode-level profiling of JavaScript execution in the runtime, and
+   * collect all counts for use by getPCCount methods.
+   */
+  void stopPCCountProfiling();
+
+  /**
+   * Purge collected PC counters.
+   */
+  void purgePCCounts();
+
+  /**
+   * Get the number of scripts with opcode-level profiling information.
+   */
+  long getPCCountScriptCount();
+
+  /**
+   * Get a JSON string for a short summary of a script and the PC counts
+   * accumulated for it.
+   */
+  AString getPCCountScriptSummary(in long script);
+
+  /**
+   * Get a JSON string with full information about a profiled script,
+   * including the decompilation of the script and placement of decompiled
+   * operations within it, and PC counts for each operation.
+   */
+  AString getPCCountScriptContents(in long script);
 };

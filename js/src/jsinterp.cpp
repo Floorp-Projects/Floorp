@@ -443,8 +443,8 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
 
 #if JS_HAS_NO_SUCH_METHOD
 
-const uint32 JSSLOT_FOUND_FUNCTION  = 0;
-const uint32 JSSLOT_SAVED_ID        = 1;
+const uint32_t JSSLOT_FOUND_FUNCTION  = 0;
+const uint32_t JSSLOT_SAVED_ID        = 1;
 
 static void
 no_such_method_trace(JSTracer *trc, JSObject *obj)
@@ -1425,7 +1425,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, FrameRegs& regs,
                             JSObject *start, JSObject *found,
                             PropertyCacheEntry *entry)
 {
-    uint32 sample = cx->runtime->gcNumber;
+    uint32_t sample = cx->runtime->gcNumber;
     PropertyCacheEntry savedEntry = *entry;
 
     JSAtom *atom;
@@ -1757,6 +1757,9 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
     Value *argv = regs.fp()->maybeFormalArgs();
     CHECK_INTERRUPT_HANDLER();
 
+    if (rt->profilingScripts)
+        ENABLE_INTERRUPTS();
+
     if (!entryFrame)
         entryFrame = regs.fp();
 
@@ -1868,6 +1871,12 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 #endif /* !JS_THREADED_INTERP */
     {
         bool moreInterrupts = false;
+
+        if (cx->runtime->profilingScripts) {
+            if (!script->pcCounters)
+                script->initCounts(cx);
+            moreInterrupts = true;
+        }
 
         if (script->pcCounters) {
             OpcodeCounts counts = script->getCounts(regs.pc);
@@ -1995,9 +2004,9 @@ END_CASE(JSOP_LINENO)
 BEGIN_CASE(JSOP_BLOCKCHAIN)
 END_CASE(JSOP_BLOCKCHAIN)
 
-BEGIN_CASE(JSOP_PUSH)
+BEGIN_CASE(JSOP_UNDEFINED)
     PUSH_UNDEFINED();
-END_CASE(JSOP_PUSH)
+END_CASE(JSOP_UNDEFINED)
 
 BEGIN_CASE(JSOP_POP)
     regs.sp--;
@@ -2594,7 +2603,7 @@ END_CASE(JSOP_CASEX)
                 goto error;                                                   \
             if (lval.isString() && rval.isString()) {                         \
                 JSString *l = lval.toString(), *r = rval.toString();          \
-                int32 result;                                                 \
+                int32_t result;                                               \
                 if (!CompareStrings(cx, l, r, &result))                       \
                     goto error;                                               \
                 cond = result OP 0;                                           \
@@ -2662,7 +2671,7 @@ BEGIN_CASE(JSOP_URSH)
     u >>= (j & 31);
 
     regs.sp--;
-    if (!regs.sp[-1].setNumber(uint32(u)))
+    if (!regs.sp[-1].setNumber(uint32_t(u)))
         TypeScript::MonitorOverflow(cx, script, regs.pc);
 }
 END_CASE(JSOP_URSH)
@@ -2978,7 +2987,7 @@ END_CASE(JSOP_INCPROP)
 
 {
     int incr, incr2;
-    uint32 slot;
+    uint32_t slot;
     Value *vp;
 
     /* Position cases so the most frequent i++ does not need a jump. */
@@ -3068,7 +3077,7 @@ BEGIN_CASE(JSOP_LENGTH)
                 if (obj->isArguments()) {
                     ArgumentsObject *argsobj = obj->asArguments();
                     if (!argsobj->hasOverriddenLength()) {
-                        uint32 length = argsobj->initialLength();
+                        uint32_t length = argsobj->initialLength();
                         JS_ASSERT(length < INT32_MAX);
                         rval = Int32Value(int32_t(length));
                         break;
@@ -3334,7 +3343,7 @@ BEGIN_CASE(JSOP_GETELEM)
     JSObject *obj;
     VALUE_TO_OBJECT(cx, &lref, obj);
 
-    uint32 index;
+    uint32_t index;
     if (IsDefinitelyIndex(rref, &index)) {
         if (obj->isDenseArray()) {
             if (index < obj->getDenseArrayInitializedLength()) {
@@ -3921,7 +3930,7 @@ END_CASE(JSOP_ARGUMENTS)
 BEGIN_CASE(JSOP_GETARG)
 BEGIN_CASE(JSOP_CALLARG)
 {
-    uint32 slot = GET_ARGNO(regs.pc);
+    uint32_t slot = GET_ARGNO(regs.pc);
     JS_ASSERT(slot < regs.fp()->numFormalArgs());
     PUSH_COPY(argv[slot]);
     if (op == JSOP_CALLARG)
@@ -3931,7 +3940,7 @@ END_CASE(JSOP_GETARG)
 
 BEGIN_CASE(JSOP_SETARG)
 {
-    uint32 slot = GET_ARGNO(regs.pc);
+    uint32_t slot = GET_ARGNO(regs.pc);
     JS_ASSERT(slot < regs.fp()->numFormalArgs());
     argv[slot] = regs.sp[-1];
 }
@@ -3945,7 +3954,7 @@ BEGIN_CASE(JSOP_GETLOCAL)
      * method JIT, and a GETLOCAL followed by POP is not considered to be
      * a use of the variable.
      */
-     uint32 slot = GET_SLOTNO(regs.pc);
+     uint32_t slot = GET_SLOTNO(regs.pc);
      JS_ASSERT(slot < script->nslots);
      PUSH_COPY_SKIP_CHECK(regs.fp()->slots()[slot]);
 
@@ -3958,7 +3967,7 @@ END_CASE(JSOP_GETLOCAL)
 
 BEGIN_CASE(JSOP_CALLLOCAL)
 {
-    uint32 slot = GET_SLOTNO(regs.pc);
+    uint32_t slot = GET_SLOTNO(regs.pc);
     JS_ASSERT(slot < script->nslots);
     PUSH_COPY(regs.fp()->slots()[slot]);
     PUSH_UNDEFINED();
@@ -3967,7 +3976,7 @@ END_CASE(JSOP_CALLLOCAL)
 
 BEGIN_CASE(JSOP_SETLOCAL)
 {
-    uint32 slot = GET_SLOTNO(regs.pc);
+    uint32_t slot = GET_SLOTNO(regs.pc);
     JS_ASSERT(slot < script->nslots);
     regs.fp()->slots()[slot] = regs.sp[-1];
 }
@@ -3990,7 +3999,7 @@ END_CASE(JSOP_GETFCSLOT)
 BEGIN_CASE(JSOP_DEFCONST)
 BEGIN_CASE(JSOP_DEFVAR)
 {
-    uint32 index = GET_INDEX(regs.pc);
+    uint32_t index = GET_INDEX(regs.pc);
     PropertyName *name = atoms[index]->asPropertyName();
 
     JSObject *obj = &regs.fp()->varObj();
@@ -4211,7 +4220,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN)
 
     JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
 
-    uint32 slot = GET_SLOTNO(regs.pc);
+    uint32_t slot = GET_SLOTNO(regs.pc);
     regs.fp()->slots()[slot].setObject(*obj);
 }
 END_CASE(JSOP_DEFLOCALFUN)
@@ -4225,7 +4234,7 @@ BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
     if (!obj)
         goto error;
 
-    uint32 slot = GET_SLOTNO(regs.pc);
+    uint32_t slot = GET_SLOTNO(regs.pc);
     regs.fp()->slots()[slot].setObject(*obj);
 }
 END_CASE(JSOP_DEFLOCALFUN_FC)
@@ -4622,7 +4631,7 @@ END_CASE(JSOP_INITELEM)
 
 BEGIN_CASE(JSOP_DEFSHARP)
 {
-    uint32 slot = GET_UINT16(regs.pc);
+    uint32_t slot = GET_UINT16(regs.pc);
     JS_ASSERT(slot + 1 < regs.fp()->numFixed());
     const Value &lref = regs.fp()->slots()[slot];
     JSObject *obj;
@@ -4652,7 +4661,7 @@ END_CASE(JSOP_DEFSHARP)
 
 BEGIN_CASE(JSOP_USESHARP)
 {
-    uint32 slot = GET_UINT16(regs.pc);
+    uint32_t slot = GET_UINT16(regs.pc);
     JS_ASSERT(slot + 1 < regs.fp()->numFixed());
     const Value &lref = regs.fp()->slots()[slot];
     jsint i = (jsint) GET_UINT16(regs.pc + UINT16_LEN);
@@ -4679,7 +4688,7 @@ END_CASE(JSOP_USESHARP)
 
 BEGIN_CASE(JSOP_SHARPINIT)
 {
-    uint32 slot = GET_UINT16(regs.pc);
+    uint32_t slot = GET_UINT16(regs.pc);
     JS_ASSERT(slot + 1 < regs.fp()->numFixed());
     Value *vp = &regs.fp()->slots()[slot];
     Value rval = vp[1];
@@ -4781,7 +4790,7 @@ BEGIN_CASE(JSOP_SETLOCALPOP)
      * exception object.
      */
     JS_ASSERT((size_t) (regs.sp - regs.fp()->base()) >= 2);
-    uint32 slot = GET_UINT16(regs.pc);
+    uint32_t slot = GET_UINT16(regs.pc);
     JS_ASSERT(slot + 1 < script->nslots);
     POP_COPY_TO(regs.fp()->slots()[slot]);
 }
@@ -5297,7 +5306,7 @@ BEGIN_CASE(JSOP_YIELD)
 
 BEGIN_CASE(JSOP_ARRAYPUSH)
 {
-    uint32 slot = GET_UINT16(regs.pc);
+    uint32_t slot = GET_UINT16(regs.pc);
     JS_ASSERT(script->nfixed <= slot);
     JS_ASSERT(slot < script->nslots);
     JSObject *obj = &regs.fp()->slots()[slot].toObject();
@@ -5377,7 +5386,7 @@ END_CASE(JSOP_ARRAYPUSH)
 
   error:
     JS_ASSERT(&cx->regs() == &regs);
-    JS_ASSERT(uint32(regs.pc - script->code) < script->length);
+    JS_ASSERT(uint32_t(regs.pc - script->code) < script->length);
 
     if (!cx->isExceptionPending()) {
         /* This is an error, not a catchable exception, quit the frame ASAP. */
@@ -5385,7 +5394,7 @@ END_CASE(JSOP_ARRAYPUSH)
     } else {
         JSThrowHook handler;
         JSTryNote *tn, *tnlimit;
-        uint32 offset;
+        uint32_t offset;
 
         /* Restore atoms local in case we will resume. */
         atoms = script->atoms;
@@ -5423,7 +5432,7 @@ END_CASE(JSOP_ARRAYPUSH)
         if (!JSScript::isValidOffset(script->trynotesOffset))
             goto no_catch;
 
-        offset = (uint32)(regs.pc - script->main());
+        offset = (uint32_t)(regs.pc - script->main());
         tn = script->trynotes()->vector;
         tnlimit = tn + script->trynotes()->length;
         do {

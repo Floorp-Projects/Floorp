@@ -2226,32 +2226,32 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
      */
     if (!mSpecifiedTransform != !aOther.mSpecifiedTransform ||
         (mSpecifiedTransform && *mSpecifiedTransform != *aOther.mSpecifiedTransform))
-      NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame,
+      NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_NeedReflow,
                                          nsChangeHint_UpdateTransformLayer));
     
     for (PRUint8 index = 0; index < 3; ++index)
       if (mTransformOrigin[index] != aOther.mTransformOrigin[index]) {
-        NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame,
+        NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_NeedReflow,
                                            nsChangeHint_RepaintFrame));
         break;
       }
     
     for (PRUint8 index = 0; index < 2; ++index)
       if (mPerspectiveOrigin[index] != aOther.mPerspectiveOrigin[index]) {
-        NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame,
+        NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_NeedReflow,
                                            nsChangeHint_RepaintFrame));
         break;
       }
 
     if (mChildPerspective != aOther.mChildPerspective)
-      NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame,
+      NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_NeedReflow,
                                          nsChangeHint_RepaintFrame));
 
     if (mBackfaceVisibility != aOther.mBackfaceVisibility)
       NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
 
     if (mTransformStyle != aOther.mTransformStyle)
-      NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame,
+      NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_NeedReflow,
                                          nsChangeHint_RepaintFrame));
   }
 

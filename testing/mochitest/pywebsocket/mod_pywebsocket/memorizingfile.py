@@ -60,19 +60,35 @@ class MemorizingFile(object):
         self._file = file_
         self._memorized_lines = []
         self._max_memorized_lines = max_memorized_lines
+        self._buffered = False
+        self._buffered_line = None
 
     def __getattribute__(self, name):
         if name in ('_file', '_memorized_lines', '_max_memorized_lines',
-                    'readline', 'get_memorized_lines'):
+                    '_buffered', '_buffered_line', 'readline',
+                    'get_memorized_lines'):
             return object.__getattribute__(self, name)
         return self._file.__getattribute__(name)
 
-    def readline(self):
-        """Override file.readline and memorize the line read."""
+    def readline(self, size=-1):
+        """Override file.readline and memorize the line read.
 
-        line = self._file.readline()
-        if line and len(self._memorized_lines) < self._max_memorized_lines:
-            self._memorized_lines.append(line)
+        Note that even if size is specified and smaller than actual size,
+        the whole line will be read out from underlying file object by
+        subsequent readline calls.
+        """
+
+        if self._buffered:
+            line = self._buffered_line
+            self._buffered = False
+        else:
+            line = self._file.readline()
+            if line and len(self._memorized_lines) < self._max_memorized_lines:
+                self._memorized_lines.append(line)
+        if size >= 0 and size < len(line):
+            self._buffered = True
+            self._buffered_line = line[size:]
+            return line[:size]
         return line
 
     def get_memorized_lines(self):

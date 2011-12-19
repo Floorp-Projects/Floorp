@@ -58,13 +58,12 @@ public:
 
   NS_FORWARD_TO_NSDOMEVENT
 
+  virtual const nsIID& EventInitIID() { return NS_GET_IID(nsIHashChangeEventInit); }
+  virtual nsresult InitFromCtor(const nsAString& aType, nsISupports* aDict,
+                                JSContext* aCx, JSObject* aObj);
 protected:
   nsString mOldURL;
   nsString mNewURL;
 };
-
-nsresult NS_NewDOMHashChangeEvent(nsIDOMEvent** aInstancePtrResult,
-                                  nsPresContext* aPresContext,
-                                  nsEvent* aEvent);
 
 #endif // nsDOMHashChangeEvent_h__

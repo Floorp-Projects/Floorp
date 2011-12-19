@@ -1037,3 +1037,14 @@ shareuiinterface.h
 vpx/vpx_decoder.h
 vpx/vp8dx.h
 #endif
+#ifdef XP_WIN
+vpx/vpx_decoder.h
+vpx/vp8dx.h
+sydneyaudio/sydney_audio.h
+vorbis/codec.h
+theora/theoradec.h
+tremor/ivorbiscodec.h
+ogg/ogg.h
+ogg/os_types.h
+nestegg/nestegg.h
+#endif

@@ -189,12 +189,10 @@ nsMathMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   if (tag == nsGkAtoms::ms_ || tag == nsGkAtoms::mi_ ||
       tag == nsGkAtoms::mn_ || tag == nsGkAtoms::mo_ ||
       tag == nsGkAtoms::mtext_ || tag == nsGkAtoms::mspace_)
-    return FindAttributeDependence(aAttribute, tokenMap,
-                                   ArrayLength(tokenMap));
+    return FindAttributeDependence(aAttribute, tokenMap);
   if (tag == nsGkAtoms::mstyle_ ||
       tag == nsGkAtoms::math)
-    return FindAttributeDependence(aAttribute, mstyleMap,
-                                   ArrayLength(mstyleMap));
+    return FindAttributeDependence(aAttribute, mstyleMap);
 
   if (tag == nsGkAtoms::maction_ ||
       tag == nsGkAtoms::maligngroup_ ||
@@ -219,8 +217,7 @@ nsMathMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
       tag == nsGkAtoms::munder_ ||
       tag == nsGkAtoms::munderover_ ||
       tag == nsGkAtoms::none) {
-    return FindAttributeDependence(aAttribute, commonPresMap,
-                                   ArrayLength(commonPresMap));
+    return FindAttributeDependence(aAttribute, commonPresMap);
   }
 
   return false;

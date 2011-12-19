@@ -205,6 +205,28 @@ nsDOMUIEvent::InitUIEvent(const nsAString& typeArg,
   return NS_OK;
 }
 
+nsresult
+nsDOMUIEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict,
+                           JSContext* aCx, JSObject* aObj)
+{
+  nsCOMPtr<nsIUIEventInit> eventInit = do_QueryInterface(aDict);
+  bool bubbles = false;
+  bool cancelable = false;
+  nsCOMPtr<nsIDOMWindow> view;
+  PRInt32 detail = 0;
+  if (eventInit) {
+    nsresult rv = eventInit->GetBubbles(&bubbles);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = eventInit->GetCancelable(&cancelable);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = eventInit->GetView(getter_AddRefs(view));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = eventInit->GetDetail(&detail);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return InitUIEvent(aType, bubbles, cancelable, view, detail);
+}
+
 // ---- nsDOMNSUIEvent implementation -------------------
 nsIntPoint
 nsDOMUIEvent::GetPagePoint()

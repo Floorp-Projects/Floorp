@@ -123,8 +123,8 @@ ThrowHook(JSContext *cx, JSScript *, jsbytecode *, jsval *rval, void *closure)
 
 BEGIN_TEST(testDebugger_throwHook)
 {
-    uint32 newopts = JS_GetOptions(cx) | JSOPTION_METHODJIT | JSOPTION_METHODJIT_ALWAYS;
-    uint32 oldopts = JS_SetOptions(cx, newopts);
+    uint32_t newopts = JS_GetOptions(cx) | JSOPTION_METHODJIT | JSOPTION_METHODJIT_ALWAYS;
+    uint32_t oldopts = JS_SetOptions(cx, newopts);
 
     JSDebugHooks hooks = { 0 };
     hooks.throwHook = ThrowHook;
@@ -259,7 +259,7 @@ BEGIN_TEST(testDebugger_singleStepThrow)
         CHECK(JS_SetDebugModeForCompartment(cx, cx->compartment, true));
         CHECK(JS_SetInterrupt(rt, onStep, NULL));
 
-        uint32 opts = JS_GetOptions(cx);
+        uint32_t opts = JS_GetOptions(cx);
         opts |= JSOPTION_METHODJIT | JSOPTION_METHODJIT_ALWAYS;
         JS_SetOptions(cx, opts);
 

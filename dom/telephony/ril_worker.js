@@ -50,7 +50,7 @@
  *
  * The three objects in this file represent individual parts of this
  * communication chain:
- * 
+ *
  * - RILMessageEvent -> Buf -> RIL -> Phone -> postMessage()
  * - "message" event -> Phone -> RIL -> Buf -> postRILMessage()
  *
@@ -513,7 +513,7 @@ let RIL = {
 
   /**
    * Retrieve the ICC card's status.
-   * 
+   *
    * Response will call Phone.onICCStatus().
    */
   getICCStatus: function getICCStatus() {
@@ -522,7 +522,7 @@ let RIL = {
 
   /**
    * Enter a PIN to unlock the ICC.
-   * 
+   *
    * @param pin
    *        String containing the PIN.
    *
@@ -638,6 +638,19 @@ let RIL = {
   },
 
   /**
+   * Mute or unmute the radio.
+   *
+   * @param mute
+   *        Boolean to indicate whether to mute or unmute the radio.
+   */
+  setMute: function setMute(mute) {
+    Buf.newParcel(REQUEST_SET_MUTE);
+    Buf.writeUint32(1);
+    Buf.writeUint32(mute ? 1 : 0);
+    Buf.sendParcel();
+  },
+
+  /**
    * Answer an incoming call.
    */
   answerCall: function answerCall() {
@@ -668,6 +681,29 @@ let RIL = {
     Buf.writeUint32(2);
     Buf.writeString(smscPDU);
     Buf.writeString(pdu);
+    Buf.sendParcel();
+  },
+
+  /**
+   * Start a DTMF Tone.
+   *
+   * @param dtmfChar
+   *        DTMF signal to send, 0-9, *, +
+   */
+
+  startTone: function startTone(dtmfChar) {
+    Buf.newParcel(REQUEST_DTMF_START);
+    Buf.writeString(dtmfChar);
+    Buf.sendParcel();
+  },
+
+  stopTone: function stopTone() {
+    Buf.simpleRequest(REQUEST_DTMF_STOP);
+  },
+
+  sendTone: function sendTone(dtmfChar) {
+    Buf.newParcel(REQUEST_DTMF);
+    Buf.writeString(dtmfChar);
     Buf.sendParcel();
   },
 
@@ -819,7 +855,9 @@ RIL[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length) {
   Phone.onOperator(operator);
 };
 RIL[REQUEST_RADIO_POWER] = null;
-RIL[REQUEST_DTMF] = null;
+RIL[REQUEST_DTMF] = function REQUEST_DTMF() {
+  Phone.onSendTone();
+};
 RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS() {
   let messageRef = Buf.readUint32();
   let ackPDU = p.readString();
@@ -860,14 +898,20 @@ RIL[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELEC
 RIL[REQUEST_SET_NETWORK_SELECTION_AUTOMATIC] = null;
 RIL[REQUEST_SET_NETWORK_SELECTION_MANUAL] = null;
 RIL[REQUEST_QUERY_AVAILABLE_NETWORKS] = null;
-RIL[REQUEST_DTMF_START] = null;
-RIL[REQUEST_DTMF_STOP] = null;
+RIL[REQUEST_DTMF_START] = function REQUEST_DTMF_START() {
+  Phone.onStartTone();
+};
+RIL[REQUEST_DTMF_STOP] = function REQUEST_DTMF_STOP() {
+  Phone.onStopTone();
+};
 RIL[REQUEST_BASEBAND_VERSION] = function REQUEST_BASEBAND_VERSION() {
   let version = Buf.readString();
   Phone.onBasebandVersion(version);
 },
 RIL[REQUEST_SEPARATE_CONNECTION] = null;
-RIL[REQUEST_SET_MUTE] = null;
+RIL[REQUEST_SET_MUTE] = function REQUEST_SET_MUTE(length) {
+  Phone.onSetMute();
+};
 RIL[REQUEST_GET_MUTE] = null;
 RIL[REQUEST_QUERY_CLIP] = null;
 RIL[REQUEST_LAST_DATA_CALL_FAIL_CAUSE] = null;
@@ -946,12 +990,16 @@ RIL[UNSOLICITED_STK_CALL_SETUP] = null;
 RIL[UNSOLICITED_SIM_SMS_STORAGE_FULL] = null;
 RIL[UNSOLICITED_SIM_REFRESH] = null;
 RIL[UNSOLICITED_CALL_RING] = function UNSOLICITED_CALL_RING() {
-  let info = {
-    isPresent:  Buf.readUint32(),
-    signalType: Buf.readUint32(),
-    alertPitch: Buf.readUint32(),
-    signal:     Buf.readUint32()
-  };
+  let info;
+  let isCDMA = false; //XXX TODO hard-code this for now
+  if (isCDMA) {
+    info = {
+      isPresent:  Buf.readUint32(),
+      signalType: Buf.readUint32(),
+      alertPitch: Buf.readUint32(),
+      signal:     Buf.readUint32()
+    };
+  }
   Phone.onCallRing(info);
 };
 RIL[UNSOLICITED_RESPONSE_SIM_STATUS_CHANGED] = null;
@@ -1125,7 +1173,7 @@ let Phone = {
                              callIndex:  callIndex,
                              number:     currentCall.number,
                              name:       currentCall.name});
-        delete this.currentCalls[currentCall];
+        delete this.currentCalls[callIndex];
         continue;
       }
 
@@ -1164,8 +1212,8 @@ let Phone = {
   },
 
   onCallRing: function onCallRing(info) {
-    debug("onCallRing " + JSON.stringify(info)); //DEBUG
-    RIL.getCurrentCalls();
+    // For now we don't need to do anything here because we'll also get a
+    // call state changed notification.
   },
 
   onNetworkStateChanged: function onNetworkStateChanged() {
@@ -1248,10 +1296,21 @@ let Phone = {
   onRejectCall: function onRejectCall() {
   },
 
+  onSetMute: function onSetMute() {
+  },
+
+  onSendTone: function onSendTone() {
+  },
+
+  onStartTone: function onStartTone() {
+  },
+
+  onStopTone: function onStopTone() {
+  },
+
   onSendSMS: function onSendSMS(messageRef, ackPDU, errorCode) {
     //TODO
   },
-
 
   /**
    * Outgoing requests to the RIL. These can be triggered from the
@@ -1288,6 +1347,33 @@ let Phone = {
   },
 
   /**
+   * Send DTMF Tone
+   *
+   * @param dtmfChar
+   *        String containing the DTMF signal to send.
+   */
+  sendTone: function sendTone(options) {
+    RIL.sendTone(options.dtmfChar);
+  },
+
+  /**
+   * Start DTMF Tone
+   *
+   * @param dtmfChar
+   *        String containing the DTMF signal to send.
+   */
+  startTone: function startTone(options) {
+    RIL.startTone(options.dtmfChar);
+  },
+
+  /**
+   * Stop DTMF Tone
+   */
+  stopTone: function stopTone() {
+    RIL.stopTone();
+  },
+
+  /**
    * Hang up a call.
    *
    * @param callIndex
@@ -1297,6 +1383,18 @@ let Phone = {
     //TODO need to check whether call is holding/waiting/background
     // and then use REQUEST_HANGUP_WAITING_OR_BACKGROUND
     RIL.hangUp(options.callIndex);
+  },
+
+  /**
+   * Mute or unmute the radio.
+   *
+   * @param mute
+   *        Boolean to indicate whether to mute or unmute the radio.
+   */
+  setMute: function setMute(options) {
+    //TODO need to check whether call is holding/waiting/background
+    // and then use REQUEST_HANGUP_WAITING_OR_BACKGROUND
+    RIL.setMute(options.mute);
   },
 
   /**
@@ -1330,9 +1428,9 @@ let Phone = {
 
   /**
    * Handle incoming messages from the main UI thread.
-   * 
+   *
    * @param message
-   *        Object containing the message. Messages are supposed 
+   *        Object containing the message. Messages are supposed
    */
   handleDOMMessage: function handleMessage(message) {
     if (DEBUG) debug("Received DOM message " + JSON.stringify(message));

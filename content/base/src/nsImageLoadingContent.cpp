@@ -59,7 +59,7 @@
 #include "imgILoader.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
-#include "nsPLDOMEvent.h"
+#include "nsAsyncDOMEvent.h"
 
 #include "nsIPresShell.h"
 #include "nsEventStates.h"
@@ -969,8 +969,8 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
 
   nsCOMPtr<nsINode> thisNode = do_QueryInterface(this);
 
-  nsRefPtr<nsPLDOMEvent> event =
-    new nsLoadBlockingPLDOMEvent(thisNode, aEventType, false, false);
+  nsRefPtr<nsAsyncDOMEvent> event =
+    new nsLoadBlockingAsyncDOMEvent(thisNode, aEventType, false, false);
   event->PostDOMEvent();
   
   return NS_OK;

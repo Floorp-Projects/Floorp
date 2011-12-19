@@ -118,7 +118,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsHTMLFieldSetElement.h"
 #include "nsHTMLMenuElement.h"
-#include "nsPLDOMEvent.h"
+#include "nsAsyncDOMEvent.h"
 #include "nsIScriptError.h"
 
 #include "mozilla/Preferences.h"
@@ -1503,7 +1503,7 @@ nsGenericHTMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     sCommonAttributeMap
   };
   
-  return FindAttributeDependence(aAttribute, map, ArrayLength(map));
+  return FindAttributeDependence(aAttribute, map);
 }
 
 nsMapRuleToAttributesFunc
@@ -3470,17 +3470,15 @@ nsresult nsGenericHTMLElement::MozRequestFullScreen()
   // and it also makes it harder for bad guys' script to go full-screen and
   // spoof the browser chrome/window and phish logins etc.
   if (!nsContentUtils::IsRequestFullScreenAllowed()) {
-    nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
-                                    "FullScreenDeniedNotInputDriven",
-                                    nsnull, 0, nsnull,
-                                    EmptyString(), 0, 0,
-                                    nsIScriptError::warningFlag,
-                                    "DOM", OwnerDoc());
-    nsRefPtr<nsPLDOMEvent> e =
-      new nsPLDOMEvent(OwnerDoc(),
-                       NS_LITERAL_STRING("mozfullscreenerror"),
-                       true,
-                       false);
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    "DOM", OwnerDoc(),
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "FullScreenDeniedNotInputDriven");
+    nsRefPtr<nsAsyncDOMEvent> e =
+      new nsAsyncDOMEvent(OwnerDoc(),
+                          NS_LITERAL_STRING("mozfullscreenerror"),
+                          true,
+                          false);
     e->PostDOMEvent();
     return NS_OK;
   }

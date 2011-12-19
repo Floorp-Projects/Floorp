@@ -1,0 +1,106 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    const READ_WRITE = IDBTransaction.READ_WRITE;
+
+    const name = window.location.pathname;
+    const description = "My Test Database";
+
+    const objectStoreInfo = [
+      { name: "Blobs", options: { } },
+      { name: "Other Blobs", options: { } }
+    ];
+
+    const fileData = { key: 1, file: getRandomFile("random.bin", 100000) };
+
+    let request = mozIndexedDB.open(name, 1, description);
+    request.onerror = errorHandler;
+    request.onupgradeneeded = grabEventAndContinueHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    let event = yield;
+
+    is(event.type, "upgradeneeded", "Got correct event type");
+
+    let db = event.target.result;
+    db.onerror = errorHandler;
+
+    for each (let info in objectStoreInfo) {
+      let objectStore = db.createObjectStore(info.name, info.options);
+      objectStore.add(fileData.file, fileData.key);
+    }
+
+    event = yield;
+
+    is(event.type, "success", "Got correct event type");
+
+    let refResult;
+    for each (let info in objectStoreInfo) {
+      let objectStore = db.transaction([info.name])
+                          .objectStore(info.name);
+
+      request = objectStore.get(fileData.key);
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      let result = event.target.result;
+      verifyBlob(result, fileData.file, 1);
+      yield;
+
+      if (!refResult) {
+        refResult = result;
+        continue;
+      }
+
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      is(result.mozFullPath, refResult.mozFullPath, "The same os file");
+    }
+
+    for (let i = 1; i < objectStoreInfo.length; i++) {
+      let info = objectStoreInfo[i];
+
+      let objectStore = db.transaction([info.name], READ_WRITE)
+                          .objectStore(info.name);
+
+      request = objectStore.add(refResult, 2);
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.target.result, 2, "Got correct key");
+
+      request = objectStore.get(2);
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      let result = event.target.result;
+      verifyBlob(result, refResult, 1);
+      yield;
+
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      is(result.mozFullPath, refResult.mozFullPath, "The same os file");
+    }
+
+    is(bufferCache.length, 2, "Correct length");
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="file.js"></script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

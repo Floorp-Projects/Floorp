@@ -264,6 +264,7 @@ function nsPlacesAutoComplete()
       }
       stmt.bindParameters(params);
       stmt.executeAsync();
+      stmt.finalize();
       delete this._openPagesCache;
     }
 

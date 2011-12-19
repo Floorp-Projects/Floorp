@@ -41,6 +41,8 @@ fails == canvas-drawImage-scale-2b.html canvas-drawImage-scale-2-ref.html # XXX 
 == canvas-drawImage-slice-1a.html lime100x100-ref.html
 fails == canvas-drawImage-slice-1b.html lime100x100-ref.html # XXX all edges fuzzy
 
+== canvas-drawImage-origin-clean-1.html lime100x100-ref.html
+
 # Simple <img> tests
 == img-simple-1.html  lime100x100-ref.html
 == img-simple-2.html  lime100x100-ref.html

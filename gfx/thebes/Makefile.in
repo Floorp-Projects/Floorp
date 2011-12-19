@@ -379,6 +379,10 @@ CSRCS += woff.c
 
 DEFINES += -DIMPL_THEBES -DWOFF_MOZILLA_CLIENT
 
+ifeq (WINNT,$(OS_TARGET))
+DEFINES += -DOTS_DLL
+endif
+
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

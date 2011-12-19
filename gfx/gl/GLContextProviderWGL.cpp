@@ -572,6 +572,14 @@ GLContextProviderWGL::CreateForWindow(nsIWidget *aWidget)
                 shareContext = nsnull;
             }
         }
+    } else {
+        context = sWGLLibrary.fCreateContext(dc);
+        if (context &&
+            shareContext &&
+            !sWGLLibrary.fShareLists(shareContext->Context(), context))
+        {
+            shareContext = nsnull;
+        }
     }
 
     if (!context) {

@@ -74,7 +74,6 @@ _BROWSER_FILES = \
                  browser_tabview_bug597248.js \
                  browser_tabview_bug597360.js \
                  browser_tabview_bug597399.js \
-                 browser_tabview_bug597980.js \
                  browser_tabview_bug598375.js \
                  browser_tabview_bug598600.js \
                  browser_tabview_bug599048.js \
@@ -193,6 +192,8 @@ _BROWSER_FILES = \
                  test_bug600645.html \
                  test_bug644097.html \
                  $(NULL)
+
+# browser_tabview_bug597980.js is disabled for leaking, see bug 711907
 
 libs::	$(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

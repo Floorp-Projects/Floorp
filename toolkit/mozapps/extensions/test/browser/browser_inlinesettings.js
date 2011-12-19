@@ -16,8 +16,14 @@ MockFilePicker.reset();
 var observer = {
   lastData: null,
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "addon-options-displayed")
+    if (aTopic == "addon-options-displayed") {
       this.lastData = aData;
+      // Test if the binding has applied before the observers are notified. We test the second setting here,
+      // because the code operates on the first setting and we want to check it applies to all.
+      var setting = aSubject.querySelector("rows > setting[first-row] ~ setting");
+      var input = gManagerWindow.document.getAnonymousElementByAttribute(setting, "class", "setting-label");
+      isnot(input, null, "XBL binding should be applied");
+    }
   }
 };
 
@@ -463,10 +469,14 @@ add_test(function() {
         var grid = gManagerWindow.document.getElementById("detail-grid");
         var settings = grid.querySelectorAll("rows > setting");
         is(settings.length, 0, "Grid should not have settings children");
+        
+        observer.lastData = null;
 
         // enable
         var button = gManagerWindow.document.getElementById("detail-enable-btn");
         EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+
+        is(observer.lastData, "inlinesettings1@tests.mozilla.org", "Observer notification should have fired");
 
         settings = grid.querySelectorAll("rows > setting");
         is(settings.length, SETTINGS_ROWS, "Grid should have settings children");

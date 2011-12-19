@@ -55,7 +55,7 @@ const static int stack_snapshot_max_size = 32768;
 #include <windows.h>
 
 static bool
-GetStack(uint64 *stack, uint64 *stack_len, CrashRegisters *regs, char *buffer, size_t size)
+GetStack(uint64_t *stack, uint64_t *stack_len, CrashRegisters *regs, char *buffer, size_t size)
 {
     /* Try to figure out how big the stack is. */
     char dummy;
@@ -66,11 +66,11 @@ GetStack(uint64 *stack, uint64 *stack_len, CrashRegisters *regs, char *buffer, s
         return false;
 
     /* 256 is a fudge factor to account for the rest of GetStack's frame. */
-    uint64 p = uint64(&dummy) - 256;
-    uint64 len = stack_snapshot_max_size;
+    uint64_t p = uint64_t(&dummy) - 256;
+    uint64_t len = stack_snapshot_max_size;
 
-    if (p + len > uint64(info.BaseAddress) + info.RegionSize)
-        len = uint64(info.BaseAddress) + info.RegionSize - p;
+    if (p + len > uint64_t(info.BaseAddress) + info.RegionSize)
+        len = uint64_t(info.BaseAddress) + info.RegionSize - p;
 
     if (len > size)
         len = size;
@@ -81,7 +81,7 @@ GetStack(uint64 *stack, uint64 *stack_len, CrashRegisters *regs, char *buffer, s
     /* Get the register state. */
 #if defined(_MSC_VER) && JS_BITS_PER_WORD == 32
     /* ASM version for win2k that doesn't support RtlCaptureContext */
-    uint32 vip, vsp, vbp;
+    uint32_t vip, vsp, vbp;
     __asm {
     Label:
         mov [vbp], ebp;
@@ -118,13 +118,13 @@ GetStack(uint64 *stack, uint64 *stack_len, CrashRegisters *regs, char *buffer, s
 #include <sys/mman.h>
 
 static bool
-GetStack(uint64 *stack, uint64 *stack_len, CrashRegisters *regs, char *buffer, size_t size)
+GetStack(uint64_t *stack, uint64_t *stack_len, CrashRegisters *regs, char *buffer, size_t size)
 {
     /* 256 is a fudge factor to account for the rest of GetStack's frame. */
     char dummy;
-    uint64 p = uint64(&dummy) - 256;
-    uint64 pgsz = getpagesize();
-    uint64 len = stack_snapshot_max_size;
+    uint64_t p = uint64_t(&dummy) - 256;
+    uint64_t pgsz = getpagesize();
+    uint64_t len = stack_snapshot_max_size;
     p &= ~(pgsz - 1);
 
     /* Try to figure out how big the stack is. */
@@ -148,13 +148,13 @@ GetStack(uint64 *stack, uint64 *stack_len, CrashRegisters *regs, char *buffer, s
 	return false;
 
 #if JS_BITS_PER_WORD == 64
-    regs->sp = (uint64)context.uc_mcontext.gregs[REG_RSP];
-    regs->bp = (uint64)context.uc_mcontext.gregs[REG_RBP];
-    regs->ip = (uint64)context.uc_mcontext.gregs[REG_RIP];
+    regs->sp = (uint64_t)context.uc_mcontext.gregs[REG_RSP];
+    regs->bp = (uint64_t)context.uc_mcontext.gregs[REG_RBP];
+    regs->ip = (uint64_t)context.uc_mcontext.gregs[REG_RIP];
 #elif JS_BITS_PER_WORD == 32
-    regs->sp = (uint64)context.uc_mcontext.gregs[REG_ESP];
-    regs->bp = (uint64)context.uc_mcontext.gregs[REG_EBP];
-    regs->ip = (uint64)context.uc_mcontext.gregs[REG_EIP];
+    regs->sp = (uint64_t)context.uc_mcontext.gregs[REG_ESP];
+    regs->bp = (uint64_t)context.uc_mcontext.gregs[REG_EBP];
+    regs->ip = (uint64_t)context.uc_mcontext.gregs[REG_EIP];
 #endif
 
     memcpy(buffer, (void *)p, len);
@@ -165,7 +165,7 @@ GetStack(uint64 *stack, uint64 *stack_len, CrashRegisters *regs, char *buffer, s
 #else
 
 static bool
-GetStack(uint64 *stack, uint64 *stack_len, CrashRegisters *regs, char *buffer, size_t size)
+GetStack(uint64_t *stack, uint64_t *stack_len, CrashRegisters *regs, char *buffer, size_t size)
 {
     return false;
 }
@@ -175,12 +175,12 @@ GetStack(uint64 *stack, uint64 *stack_len, CrashRegisters *regs, char *buffer, s
 class Stack : private CrashStack
 {
 public:
-    Stack(uint64 id);
+    Stack(uint64_t id);
 
     bool snapshot();
 };
 
-Stack::Stack(uint64 id)
+Stack::Stack(uint64_t id)
   : CrashStack(id)
 {
 }
@@ -195,30 +195,30 @@ Stack::snapshot()
 class Ring : private CrashRing
 {
 public:
-    Ring(uint64 id);
+    Ring(uint64_t id);
 
-    void push(uint64 tag, void *data, size_t size);
+    void push(uint64_t tag, void *data, size_t size);
 
 private:
     size_t bufferSize() { return crash_buffer_size; }
     void copyBytes(void *data, size_t size);
 };
 
-Ring::Ring(uint64 id)
+Ring::Ring(uint64_t id)
   : CrashRing(id)
 {
 }
 
 void
-Ring::push(uint64 tag, void *data, size_t size)
+Ring::push(uint64_t tag, void *data, size_t size)
 {
-    uint64 t = time(NULL);
+    uint64_t t = time(NULL);
 
-    copyBytes(&tag, sizeof(uint64));
-    copyBytes(&t, sizeof(uint64));
+    copyBytes(&tag, sizeof(uint64_t));
+    copyBytes(&t, sizeof(uint64_t));
     copyBytes(data, size);
-    uint64 mysize = size;
-    copyBytes(&mysize, sizeof(uint64));
+    uint64_t mysize = size;
+    copyBytes(&mysize, sizeof(uint64_t));
 }
 
 void
@@ -260,7 +260,7 @@ SnapshotErrorStack()
 }
 
 void
-SaveCrashData(uint64 tag, void *ptr, size_t size)
+SaveCrashData(uint64_t tag, void *ptr, size_t size)
 {
     if (gInitialized)
         gRingBuffer.push(tag, ptr, size);

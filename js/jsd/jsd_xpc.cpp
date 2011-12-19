@@ -2437,34 +2437,13 @@ jsdValue::Refresh()
 }
 
 NS_IMETHODIMP
-jsdValue::GetWrappedValue()
+jsdValue::GetWrappedValue(JSContext* aCx, JS::Value* aRetval)
 {
     ASSERT_VALID_EPHEMERAL;
-    nsresult rv;
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID(), &rv);
-    if (NS_FAILED(rv))
-        return rv;
 
-    nsAXPCNativeCallContext *cc = nsnull;
-    rv = xpc->GetCurrentNativeCallContext(&cc);
-    if (NS_FAILED(rv))
-        return rv;
-
-    jsval *result;
-    rv = cc->GetRetValPtr(&result);
-    if (NS_FAILED(rv))
-        return rv;
-
-    if (result)
-    {
-        JSContext *cx;
-        rv = cc->GetJSContext(&cx);
-        if (NS_FAILED(rv))
-            return rv;
-        *result = JSD_GetValueWrappedJSVal (mCx, mValue);
-        if (!JS_WrapValue(cx, result))
-            return NS_ERROR_FAILURE;
-        cc->SetReturnValueWasSet(true);
+    *aRetval = JSD_GetValueWrappedJSVal(mCx, mValue);
+    if (!JS_WrapValue(aCx, aRetval)) {
+        return NS_ERROR_FAILURE;
     }
 
     return NS_OK;
@@ -3073,38 +3052,9 @@ jsdService::ClearAllBreakpoints (void)
 }
 
 NS_IMETHODIMP
-jsdService::WrapValue(jsdIValue **_rval)
+jsdService::WrapValue(const JS::Value &value, jsdIValue **_rval)
 {
     ASSERT_VALID_CONTEXT;
-
-    nsresult rv;
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService (nsIXPConnect::GetCID(), &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsAXPCNativeCallContext *cc = nsnull;
-    rv = xpc->GetCurrentNativeCallContext (&cc);
-    if (NS_FAILED(rv))
-        return rv;
-
-    PRUint32 argc;
-    rv = cc->GetArgc (&argc);
-    if (NS_FAILED(rv))
-        return rv;
-    if (argc < 1)
-        return NS_ERROR_INVALID_ARG;
-    
-    jsval    *argv;
-    rv = cc->GetArgvPtr (&argv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    return WrapJSValue(argv[0], _rval);
-}
-
-NS_IMETHODIMP
-jsdService::WrapJSValue(const jsval &value, jsdIValue** _rval)
-{
     JSDValue *jsdv = JSD_NewValue(mCx, value);
     if (!jsdv)
         return NS_ERROR_FAILURE;

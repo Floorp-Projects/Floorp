@@ -794,47 +794,51 @@ PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg)
     return i;
 }
 
-struct SizeOfEntryEnumeratorArg
+struct SizeOfEntryExcludingThisArg
 {
     size_t total;
-    PLDHashSizeOfEntryFun sizeOfEntry;
+    PLDHashSizeOfEntryExcludingThisFun sizeOfEntryExcludingThis;
     nsMallocSizeOfFun mallocSizeOf;
+    void *arg;      // the arg passed by the user
 };
 
 static PLDHashOperator
-SizeOfEntryEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                      PRUint32 number, void *arg)
+SizeOfEntryExcludingThisEnumerator(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                                   PRUint32 number, void *arg)
 {
-    SizeOfEntryEnumeratorArg *e = (SizeOfEntryEnumeratorArg *)arg;
-    e->total += e->sizeOfEntry(hdr, e->mallocSizeOf);
+    SizeOfEntryExcludingThisArg *e = (SizeOfEntryExcludingThisArg *)arg;
+    e->total += e->sizeOfEntryExcludingThis(hdr, e->mallocSizeOf, e->arg);
     return PL_DHASH_NEXT;
 }
 
 size_t
 PL_DHashTableSizeOfExcludingThis(const PLDHashTable *table,
-                                 PLDHashSizeOfEntryFun sizeOfEntry,
-                                 nsMallocSizeOfFun mallocSizeOf)
+                                 PLDHashSizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
+                                 nsMallocSizeOfFun mallocSizeOf,
+                                 void *arg /* = NULL */)
 {
     size_t n = 0;
     n += mallocSizeOf(table->entryStore,
                       PL_DHASH_TABLE_SIZE(table) * table->entrySize +
                       ENTRY_STORE_EXTRA);
-    if (sizeOfEntry) {
-        SizeOfEntryEnumeratorArg arg = { 0, sizeOfEntry, mallocSizeOf };
+    if (sizeOfEntryExcludingThis) {
+        SizeOfEntryExcludingThisArg arg2 = { 0, sizeOfEntryExcludingThis, mallocSizeOf, arg };
         PL_DHashTableEnumerate(const_cast<PLDHashTable *>(table),
-                               SizeOfEntryEnumerator, &arg);
-        n += arg.total;
+                               SizeOfEntryExcludingThisEnumerator, &arg2);
+        n += arg2.total;
     }
     return n;
 }
 
 size_t
 PL_DHashTableSizeOfIncludingThis(const PLDHashTable *table,
-                                 PLDHashSizeOfEntryFun sizeOfEntry,
-                                 nsMallocSizeOfFun mallocSizeOf)
+                                 PLDHashSizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
+                                 nsMallocSizeOfFun mallocSizeOf,
+                                 void *arg /* = NULL */)
 {
     return mallocSizeOf(table, sizeof(PLDHashTable)) +
-           PL_DHashTableSizeOfExcludingThis(table, sizeOfEntry, mallocSizeOf);
+           PL_DHashTableSizeOfExcludingThis(table, sizeOfEntryExcludingThis,
+                                            mallocSizeOf, arg);
 }
 
 #ifdef DEBUG

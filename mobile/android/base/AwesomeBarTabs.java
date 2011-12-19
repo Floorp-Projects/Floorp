@@ -475,11 +475,15 @@ public class AwesomeBarTabs extends TabHost {
 
         private Drawable getDrawableFromDataURI(String dataURI) {
             String base64 = dataURI.substring(dataURI.indexOf(',') + 1);
-            byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
-            ByteArrayInputStream stream = new ByteArrayInputStream(bytes);
-            Drawable drawable = (Drawable) Drawable.createFromStream(stream, "src");
+            Drawable drawable = null;
             try {
+                byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
+                ByteArrayInputStream stream = new ByteArrayInputStream(bytes);
+                drawable = (Drawable) Drawable.createFromStream(stream, "src");
+            
                 stream.close();
+            } catch (IllegalArgumentException e) {
+                Log.i(LOGTAG, "exception while decoding drawable: " + base64, e);
             } catch (IOException e) { }
             return drawable;
         }
@@ -503,7 +507,9 @@ public class AwesomeBarTabs extends TabHost {
 
             titleView.setText(name);
             urlView.setText(searchText);
-            faviconView.setImageDrawable(getDrawableFromDataURI(iconURI));
+            Drawable drawable = getDrawableFromDataURI(iconURI);
+            if (drawable != null)
+                faviconView.setImageDrawable(drawable);
         }
     };
 

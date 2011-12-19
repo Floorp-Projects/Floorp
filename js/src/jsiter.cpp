@@ -276,7 +276,7 @@ struct SortComparatorIds
         if (!bstr)
             return false;
 
-        int32 result;
+        int32_t result;
         if (!CompareStrings(cx, astr, bstr, &result))
             return false;
 
@@ -495,7 +495,7 @@ NewIteratorObject(JSContext *cx, uintN flags)
 }
 
 NativeIterator *
-NativeIterator::allocateIterator(JSContext *cx, uint32 slength, const AutoIdVector &props)
+NativeIterator::allocateIterator(JSContext *cx, uint32_t slength, const AutoIdVector &props)
 {
     size_t plength = props.length();
     NativeIterator *ni = (NativeIterator *)
@@ -512,7 +512,7 @@ NativeIterator::allocateIterator(JSContext *cx, uint32 slength, const AutoIdVect
 }
 
 inline void
-NativeIterator::init(JSObject *obj, uintN flags, uint32 slength, uint32 key)
+NativeIterator::init(JSObject *obj, uintN flags, uint32_t slength, uint32_t key)
 {
     this->obj.init(obj);
     this->flags = flags;
@@ -536,7 +536,7 @@ RegisterEnumerator(JSContext *cx, JSObject *iterobj, NativeIterator *ni)
 
 static inline bool
 VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &keys,
-                    uint32 slength, uint32 key, Value *vp)
+                    uint32_t slength, uint32_t key, Value *vp)
 {
     JS_ASSERT(!(flags & JSITER_FOREACH));
 
@@ -636,7 +636,7 @@ bool
 GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
 {
     Vector<const Shape *, 8> shapes(cx);
-    uint32 key = 0;
+    uint32_t key = 0;
 
     bool keysOnly = (flags == JSITER_ENUMERATE);
 
@@ -995,7 +995,7 @@ js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id)
 }
 
 bool
-js_SuppressDeletedElement(JSContext *cx, JSObject *obj, uint32 index)
+js_SuppressDeletedElement(JSContext *cx, JSObject *obj, uint32_t index)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
@@ -1005,20 +1005,20 @@ js_SuppressDeletedElement(JSContext *cx, JSObject *obj, uint32 index)
 }
 
 class IndexRangePredicate {
-    uint32 begin, end;
+    uint32_t begin, end;
 
   public:
-    IndexRangePredicate(uint32 begin, uint32 end) : begin(begin), end(end) {}
+    IndexRangePredicate(uint32_t begin, uint32_t end) : begin(begin), end(end) {}
 
     bool operator()(jsid id) {
         if (JSID_IS_INT(id)) {
             jsint i = JSID_TO_INT(id);
-            return i > 0 && begin <= uint32(i) && uint32(i) < end;
+            return i > 0 && begin <= uint32_t(i) && uint32_t(i) < end;
         }
 
         if (JS_LIKELY(JSID_IS_ATOM(id))) {
             JSAtom *atom = JSID_TO_ATOM(id);
-            uint32 index;
+            uint32_t index;
             return atom->isIndex(&index) && begin <= index && index < end;
         }
 
@@ -1029,7 +1029,7 @@ class IndexRangePredicate {
 };
 
 bool
-js_SuppressDeletedElements(JSContext *cx, JSObject *obj, uint32 begin, uint32 end)
+js_SuppressDeletedElements(JSContext *cx, JSObject *obj, uint32_t begin, uint32_t end)
 {
     return SuppressDeletedPropertyHelper(cx, obj, IndexRangePredicate(begin, end));
 }

@@ -641,9 +641,9 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
       // xbl:text set on us.
 
       if ((dstAttr == nsGkAtoms::text && dstNs == kNameSpaceID_XBL) ||
-          realElement->NodeInfo()->Equals(nsGkAtoms::html,
-                                          kNameSpaceID_XUL) &&
-          dstAttr == nsGkAtoms::value) {
+          (realElement->NodeInfo()->Equals(nsGkAtoms::html,
+                                           kNameSpaceID_XUL) &&
+           dstAttr == nsGkAtoms::value)) {
         // Flush out all our kids.
         PRUint32 childCount = realElement->GetChildCount();
         for (PRUint32 i = 0; i < childCount; i++)
@@ -2355,13 +2355,12 @@ nsXBLPrototypeBinding::ResolveBaseBinding()
       // Check the white list
       if (!CheckTagNameWhiteList(nameSpaceID, tagName)) {
         const PRUnichar* params[] = { display.get() };
-        nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
+        nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                        "XBL", nsnull,
+                                        nsContentUtils::eXBL_PROPERTIES,
                                        "InvalidExtendsBinding",
-                                        params, NS_ARRAY_LENGTH(params),
-                                        doc->GetDocumentURI(),
-                                        EmptyString(), 0, 0,
-                                        nsIScriptError::errorFlag,
-                                        "XBL");
+                                        params, ArrayLength(params),
+                                        doc->GetDocumentURI());
         NS_ASSERTION(!nsXBLService::IsChromeOrResourceURI(doc->GetDocumentURI()),
                      "Invalid extends value");
         return NS_ERROR_ILLEGAL_VALUE;

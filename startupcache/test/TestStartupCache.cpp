@@ -319,13 +319,14 @@ TestEarlyShutdown() {
 
 int main(int argc, char** argv)
 {
-  int rv = 0;
-  nsresult rv2;
   ScopedXPCOM xpcom("Startup Cache");
+  if (xpcom.failed())
+    return 1;
 
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   prefs->SetIntPref("hangmonitor.timeout", 0);
   
+  int rv = 0;
   if (NS_FAILED(TestStartupWriteRead()))
     rv = 1;
   if (NS_FAILED(TestWriteInvalidateRead()))

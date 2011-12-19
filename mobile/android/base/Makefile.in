@@ -50,14 +50,13 @@ DIST_FILES = package-name.txt
 JAVAFILES = \
   AboutHomeContent.java \
   AlertNotification.java \
+  AutoCompletePopup.java \
   AwesomeBar.java \
   AwesomeBarTabs.java \
   BrowserToolbar.java \
   ConfirmPreference.java \
-  db/BrowserContract.java \
   db/AndroidBrowserDB.java \
   db/BrowserDB.java \
-  db/BrowserProvider.java \
   db/LocalBrowserDB.java \
   DoorHanger.java \
   DoorHangerPopup.java \
@@ -115,6 +114,8 @@ PROCESSEDJAVAFILES = \
   LauncherShortcuts.java \
   NotificationHandler.java \
   Restarter.java \
+  db/BrowserContract.java \
+  db/BrowserProvider.java \
   $(NULL)
 
 
@@ -174,6 +175,7 @@ DEFINES += -DMOZ_ANDROID_SHARED_ID="$(ANDROID_PACKAGE_NAME).sharedID"
 endif
 
 RES_LAYOUT = \
+  res/layout/autocomplete_list_item.xml \
   res/layout/awesomebar_header_row.xml \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_search.xml \
@@ -189,13 +191,14 @@ RES_LAYOUT = \
   res/layout/notification_icon_text.xml \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
+  res/layout/site_setting_title.xml \
   res/layout/tabs_row.xml \
   res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \
   res/layout/select_dialog_list.xml \
   res/layout/abouthome_content.xml \
-  res/layout/abouthome_grid_box.xml \
-  res/layout/abouthome_addon_list_item.xml \
+  res/layout/abouthome_topsite_item.xml \
+  res/layout/abouthome_addon_row.xml \
   $(NULL)
 
 RES_LAYOUT_V11 = \
@@ -205,11 +208,13 @@ RES_LAYOUT_V11 = \
   $(NULL)
 
 RES_VALUES = \
+  res/values/defaults.xml \
+  res/values/arrays.xml \
   res/values/colors.xml \
   res/values/styles.xml \
   res/values/themes.xml \
   $(NULL)
- 
+
 RES_VALUES_V11 = \
   res/values-v11/styles.xml \
   res/values-v11/themes.xml \
@@ -223,6 +228,11 @@ RES_ANIM = \
   $(NULL)
 
 RES_DRAWABLE_MDPI_V8 = \
+  res/drawable-mdpi-v8/abouthome_icon.png \
+  res/drawable-mdpi-v8/abouthome_logo.png \
+  res/drawable-mdpi-v8/abouthome_separator.9.png \
+  res/drawable-mdpi-v8/abouthome_topsite_placeholder.png \
+  res/drawable-mdpi-v8/abouthome_topsite_shadow.9.png \
   res/drawable-mdpi-v8/ic_awesomebar_go.png \
   res/drawable-mdpi-v8/ic_awesomebar_search.png \
   res/drawable-mdpi-v8/ic_menu_bookmark_add.png \
@@ -245,6 +255,11 @@ RES_DRAWABLE_MDPI_V8 = \
   $(NULL)
 
 RES_DRAWABLE_HDPI_V8 = \
+  res/drawable-hdpi-v8/abouthome_icon.png \
+  res/drawable-hdpi-v8/abouthome_logo.png \
+  res/drawable-hdpi-v8/abouthome_separator.9.png \
+  res/drawable-hdpi-v8/abouthome_topsite_placeholder.png \
+  res/drawable-hdpi-v8/abouthome_topsite_shadow.9.png \
   res/drawable-hdpi-v8/ic_awesomebar_go.png \
   res/drawable-hdpi-v8/ic_awesomebar_search.png \
   res/drawable-hdpi-v8/ic_menu_bookmark_add.png \
@@ -317,6 +332,11 @@ RES_DRAWABLE_HDPI_V11 = \
   $(NULL)
 
 RES_DRAWABLE_XHDPI_V11 = \
+  res/drawable-xhdpi-v11/abouthome_icon.png \
+  res/drawable-xhdpi-v11/abouthome_logo.png \
+  res/drawable-xhdpi-v11/abouthome_separator.9.png \
+  res/drawable-xhdpi-v11/abouthome_topsite_placeholder.png \
+  res/drawable-xhdpi-v11/abouthome_topsite_shadow.9.png \
   res/drawable-xhdpi-v11/ic_awesomebar_go.png \
   res/drawable-xhdpi-v11/ic_awesomebar_search.png \
   res/drawable-xhdpi-v11/ic_menu_bookmark_add.png \
@@ -345,9 +365,14 @@ MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/crash_reporter.p
 RES_LAYOUT += res/layout/crash_reporter.xml
 endif
 
-MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/address_bar_bg.xml              \
+MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/abouthome_bg.png                \
+                         mobile/android/base/resources/drawable/abouthome_bg_repeat.xml         \
+                         mobile/android/base/resources/drawable/abouthome_topsites_bg.png       \
+                         mobile/android/base/resources/drawable/abouthome_topsites_bg_repeat.xml \
+                         mobile/android/base/resources/drawable/address_bar_bg.xml              \
                          mobile/android/base/resources/drawable/address_bar_url_default.xml     \
                          mobile/android/base/resources/drawable/address_bar_url_pressed.xml     \
+                         mobile/android/base/resources/drawable/autocomplete_list_bg.9.png      \
                          mobile/android/base/resources/drawable/awesomebar_tab_focus.xml        \
                          mobile/android/base/resources/drawable/awesomebar_tab_focus_selected.xml \
                          mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml    \
@@ -386,8 +411,6 @@ MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/address_bar_bg.x
                          mobile/android/base/resources/drawable/tabs_tray_bg.9.png              \
                          mobile/android/base/resources/drawable/checkerboard.png                \
                          mobile/android/base/resources/drawable/shadow.png                      \
-                         mobile/android/base/resources/drawable/rounded_grey_border.xml            \
-                         mobile/android/base/resources/drawable/rounded_grey_box.xml            \
                          $(NULL)
 
 
@@ -406,6 +429,7 @@ classes.dex: $(JAVAFILES) $(PROCESSEDJAVAFILES) R.java
 	$(DX) --dex --output=$@ classes
 
 AndroidManifest.xml $(PROCESSEDJAVAFILES) package-name.txt: % : %.in
+	mkdir -p db
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
 
@@ -431,10 +455,15 @@ $(RES_LAYOUT_V11): $(subst res/,$(srcdir)/resources/,$(RES_LAYOUT_V11))
 	$(NSINSTALL) -D res/layout-v11
 	$(NSINSTALL) $(srcdir)/resources/layout-v11/* res/layout-v11/
 
-$(RES_VALUES): $(subst res/,$(srcdir)/resources/,$(RES_VALUES))
+$(RES_VALUES): \
+		$(srcdir)/resources/values/colors.xml \
+		$(srcdir)/resources/values/styles.xml \
+		$(srcdir)/resources/values/themes.xml \
+		$(srcdir)/resources/values/arrays.xml \
+		$(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/res/values/defaults.xml
 	$(NSINSTALL) -D res/values
 	$(NSINSTALL) $^  res/values
- 
+
 $(RES_VALUES_V11): $(subst res/,$(srcdir)/resources/,$(RES_VALUES_V11))
 	$(NSINSTALL) -D res/values-v11
 	$(NSINSTALL) $(srcdir)/resources/values-v11/*  res/values-v11
