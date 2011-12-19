@@ -209,6 +209,8 @@ class TextOverflow {
     bool                           mHasOverflow;
     // True if mMarkerString and mWidth have been setup from style.
     bool                           mInitialized;
+    // True if the style is text-overflow:clip on this side.
+    bool                           mActive;
   };
 
   Marker mLeft;  // the horizontal left marker
