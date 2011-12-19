@@ -289,7 +289,8 @@ CssHtmlTree.prototype = {
             return false;
           }
           let propView = new PropertyView(this, aPropertyName);
-          fragment.appendChild(propView.build());
+          fragment.appendChild(propView.buildMain());
+          fragment.appendChild(propView.buildSelectorContainer());
           if (propView.visible) {
             this.numVisibleProperties++;
           }
@@ -611,7 +612,7 @@ PropertyView.prototype = {
    *
    * @return string
    */
-  get className()
+  get propertyHeaderClassName()
   {
     if (this.visible) {
       this.tree._darkStripe = !this.tree._darkStripe;
@@ -622,16 +623,31 @@ PropertyView.prototype = {
     return "property-view-hidden";
   },
 
-  build: function PropertyView_build()
+  /**
+   * Returns the className that should be assigned to the propertyView content
+   * container.
+   * @return string
+   */
+  get propertyContentClassName()
+  {
+    if (this.visible) {
+      let darkValue = this.tree._darkStripe ?
+                      "property-content darkrow" : "property-content";
+      return darkValue;
+    }
+    return "property-content-hidden";
+  },
+
+  buildMain: function PropertyView_buildMain()
   {
     let doc = this.tree.doc;
-    this.element = doc.createElementNS(HTML_NS, "div");
-    this.element.setAttribute("class", this.className);
+    this.element = doc.createElementNS(HTML_NS, "tr");
+    this.element.setAttribute("class", this.propertyHeaderClassName);
+    this.element.addEventListener("click", this.propertyRowClick.bind(this), false);
 
-    this.propertyHeader = doc.createElementNS(XUL_NS, "hbox");
+    this.propertyHeader = doc.createElementNS(HTML_NS, "td");
     this.element.appendChild(this.propertyHeader);
     this.propertyHeader.setAttribute("class", "property-header");
-    this.propertyHeader.addEventListener("click", this.propertyHeaderClick.bind(this), false);
 
     this.matchedExpander = doc.createElementNS(HTML_NS, "div");
     this.propertyHeader.appendChild(this.matchedExpander);
@@ -642,8 +658,8 @@ PropertyView.prototype = {
     name.setAttribute("class", "property-name");
     name.textContent = this.name;
 
-    let helpcontainer = doc.createElementNS(HTML_NS, "div");
-    this.propertyHeader.appendChild(helpcontainer);
+    let helpcontainer = doc.createElementNS(HTML_NS, "td");
+    this.element.appendChild(helpcontainer);
     helpcontainer.setAttribute("class", "helplink-container");
 
     let helplink = doc.createElementNS(HTML_NS, "a");
@@ -653,17 +669,26 @@ PropertyView.prototype = {
     helplink.textContent = CssHtmlTree.HELP_LINK_TITLE;
     helplink.addEventListener("click", this.mdnLinkClick.bind(this), false);
 
-    this.valueNode = doc.createElementNS(HTML_NS, "div");
-    this.propertyHeader.appendChild(this.valueNode);
+    this.valueNode = doc.createElementNS(HTML_NS, "td");
+    this.element.appendChild(this.valueNode);
     this.valueNode.setAttribute("class", "property-value");
     this.valueNode.setAttribute("dir", "ltr");
     this.valueNode.textContent = this.value;
 
-    this.matchedSelectorsContainer = doc.createElementNS(HTML_NS, "div");
-    this.element.appendChild(this.matchedSelectorsContainer);
-    this.matchedSelectorsContainer.setAttribute("class", "rulelink");
-
     return this.element;
+  },
+
+  buildSelectorContainer: function PropertyView_buildSelectorContainer()
+  {
+    let doc = this.tree.doc;
+    let element = doc.createElementNS(HTML_NS, "tr");
+    element.setAttribute("class", this.propertyContentClassName);
+    this.matchedSelectorsContainer = doc.createElementNS(HTML_NS, "td");
+    this.matchedSelectorsContainer.setAttribute("colspan", "0");
+    this.matchedSelectorsContainer.setAttribute("class", "rulelink");
+    element.appendChild(this.matchedSelectorsContainer);
+
+    return element;
   },
 
   /**
@@ -671,7 +696,8 @@ PropertyView.prototype = {
    */
   refresh: function PropertyView_refresh()
   {
-    this.element.className = this.className;
+    this.element.className = this.propertyHeaderClassName;
+    this.element.nextElementSibling.className = this.propertyContentClassName;
 
     if (this.prevViewedElement != this.tree.viewedElement) {
       this._matchedSelectorViews = null;
@@ -681,7 +707,7 @@ PropertyView.prototype = {
 
     if (!this.tree.viewedElement || !this.visible) {
       this.valueNode.innerHTML = "";
-      this.matchedSelectorsContainer.hidden = true;
+      this.matchedSelectorsContainer.parentNode.hidden = true;
       this.matchedSelectorsContainer.innerHTML = "";
       this.matchedExpander.removeAttribute("open");
       return;
@@ -698,12 +724,12 @@ PropertyView.prototype = {
   refreshMatchedSelectors: function PropertyView_refreshMatchedSelectors()
   {
     let hasMatchedSelectors = this.hasMatchedSelectors;
-    this.matchedSelectorsContainer.hidden = !hasMatchedSelectors;
+    this.matchedSelectorsContainer.parentNode.hidden = !hasMatchedSelectors;
 
     if (hasMatchedSelectors) {
-      this.propertyHeader.classList.add("expandable");
+      this.propertyHeader.parentNode.classList.add("expandable");
     } else {
-      this.propertyHeader.classList.remove("expandable");
+      this.propertyHeader.parentNode.classList.remove("expandable");
     }
 
     if (this.matchedExpanded && hasMatchedSelectors) {
@@ -802,7 +828,7 @@ PropertyView.prototype = {
    * event. If the class name is "helplink" then the event is allowed to bubble
    * to the mdn link icon.
    */
-  propertyHeaderClick: function PropertyView_propertyHeaderClick(aEvent)
+  propertyRowClick: function PropertyView_propertyRowClick(aEvent)
   {
     if (aEvent.target.className != "helplink") {
       this.matchedExpanded = !this.matchedExpanded;
