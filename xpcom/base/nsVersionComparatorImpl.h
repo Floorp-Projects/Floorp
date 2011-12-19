@@ -37,7 +37,7 @@
 
 #include "nsIVersionComparator.h"
 
-class nsVersionComparatorImpl MOZ_FINAL : public nsIVersionComparator
+class nsVersionComparatorImpl : public nsIVersionComparator
 {
 public:
   NS_DECL_ISUPPORTS

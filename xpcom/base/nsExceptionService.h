@@ -39,9 +39,7 @@
 #ifndef nsExceptionService_h__
 #define nsExceptionService_h__
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
-
 #include "nsIException.h"
 #include "nsIExceptionService.h"
 #include "nsIObserverService.h"
@@ -51,7 +49,7 @@
 class nsExceptionManager;
 
 /** Exception Service definition **/
-class nsExceptionService MOZ_FINAL : public nsIExceptionService, public nsIObserver
+class nsExceptionService : public nsIExceptionService, public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
