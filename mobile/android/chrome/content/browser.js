@@ -338,6 +338,8 @@ var BrowserApp = {
     if (!aBrowser)
       return;
 
+    aParams = aParams || {};
+
     let flags = "flags" in aParams ? aParams.flags : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
     let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
     let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
@@ -1037,6 +1039,8 @@ Tab.prototype = {
     if (this.browser)
       return;
 
+    aParams = aParams || { selected: true };
+
     this.vbox = document.createElement("vbox");
     this.vbox.align = "start";
     BrowserApp.deck.appendChild(this.vbox);
@@ -1047,14 +1051,14 @@ Tab.prototype = {
     this.browser.style.MozTransformOrigin = "0 0";
     this.vbox.appendChild(this.browser);
 
+    this.browser.stop();
+
     // Turn off clipping so we can buffer areas outside of the browser element.
     let frameLoader = this.browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     frameLoader.clipSubdocument = false;
 
-    this.browser.stop();
-
     this.id = ++gTabIDFactory;
-    aParams = aParams || { selected: true };
+
     let message = {
       gecko: {
         type: "Tab:Added",
