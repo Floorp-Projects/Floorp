@@ -9261,8 +9261,7 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
 
       bool is_undefined;
       scx->EvaluateString(nsDependentString(script), FastGetGlobalJSObject(),
-                          timeout->mPrincipal, timeout->mPrincipal,
-                          filename, lineNo,
+                          timeout->mPrincipal, filename, lineNo,
                           handler->GetScriptVersion(), nsnull,
                           &is_undefined);
     } else {
