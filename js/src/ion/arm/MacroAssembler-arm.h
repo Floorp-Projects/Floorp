@@ -333,7 +333,7 @@ class MacroAssemblerARM : public Assembler
 
     void ma_vxfer(FloatRegister src, Register dest);
 
-    void ma_vdtr(LoadStore ls, Operand &addr, FloatRegister dest, Condition cc);
+    void ma_vdtr(LoadStore ls, const Operand &addr, FloatRegister dest, Condition cc = Always);
 
     void ma_vldr(VFPAddr addr, FloatRegister dest);
     void ma_vldr(const Operand &addr, FloatRegister dest);
@@ -490,6 +490,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest);
     void int32ValueToDouble(const ValueOperand &operand, const FloatRegister &dest);
+    void loadInt32OrDouble(const Operand &src, const FloatRegister &dest);
 
     void loadStaticDouble(const double *dp, const FloatRegister &dest);
     // treat the value as a boolean, and set condition codes accordingly
