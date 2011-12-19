@@ -287,7 +287,8 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
                                   const nsRect&   aInsideMarkersArea,
                                   FrameHashtable* aFramesToHide,
                                   AlignmentEdges* aAlignmentEdges,
-                                  bool*           aFoundVisibleTextOrAtomic)
+                                  bool*           aFoundVisibleTextOrAtomic,
+                                  InnerClipEdges* aClippedMarkerEdges)
 {
   const nsIAtom* frameType = aFrame->GetType();
   if (frameType == nsGkAtoms::brFrame ||
@@ -312,7 +313,8 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
     } else if (isAtomic || frameType == nsGkAtoms::textFrame) {
       AnalyzeMarkerEdges(aFrame, frameType, aInsideMarkersArea,
                          aFramesToHide, aAlignmentEdges,
-                         aFoundVisibleTextOrAtomic);
+                         aFoundVisibleTextOrAtomic,
+                         aClippedMarkerEdges);
     }
   }
   if (isAtomic) {
@@ -323,7 +325,8 @@ TextOverflow::ExamineFrameSubtree(nsIFrame*       aFrame,
   while (child) {
     ExamineFrameSubtree(child, aContentArea, aInsideMarkersArea,
                         aFramesToHide, aAlignmentEdges,
-                        aFoundVisibleTextOrAtomic);
+                        aFoundVisibleTextOrAtomic,
+                        aClippedMarkerEdges);
     child = child->GetNextSibling();
   }
 }
@@ -334,7 +337,8 @@ TextOverflow::AnalyzeMarkerEdges(nsIFrame*       aFrame,
                                  const nsRect&   aInsideMarkersArea,
                                  FrameHashtable* aFramesToHide,
                                  AlignmentEdges* aAlignmentEdges,
-                                 bool*           aFoundVisibleTextOrAtomic)
+                                 bool*           aFoundVisibleTextOrAtomic,
+                                 InnerClipEdges* aClippedMarkerEdges)
 {
   nsRect borderRect(aFrame->GetOffsetTo(mBlock), aFrame->GetSize());
   nscoord leftOverlap =
@@ -344,43 +348,43 @@ TextOverflow::AnalyzeMarkerEdges(nsIFrame*       aFrame,
   bool insideLeftEdge = aInsideMarkersArea.x <= borderRect.XMost();
   bool insideRightEdge = borderRect.x <= aInsideMarkersArea.XMost();
 
+  if (leftOverlap > 0) {
+    aClippedMarkerEdges->AccumulateLeft(borderRect);
+    if (!mLeft.mActive) {
+      leftOverlap = 0;
+    }
+  }
+  if (rightOverlap > 0) {
+    aClippedMarkerEdges->AccumulateRight(borderRect);
+    if (!mRight.mActive) {
+      rightOverlap = 0;
+    }
+  }
+
   if ((leftOverlap > 0 && insideLeftEdge) ||
       (rightOverlap > 0 && insideRightEdge)) {
-    if (aFrameType == nsGkAtoms::textFrame &&
-        aInsideMarkersArea.x < aInsideMarkersArea.XMost()) {
-      if (!mLeft.mActive) {
-        leftOverlap = 0;
-      }
-      if (!mRight.mActive) {
-        rightOverlap = 0;
-      }
-      if (leftOverlap == 0 && rightOverlap == 0) {
-        return;
-      }
-      // a clipped text frame and there is some room between the markers
-      nscoord snappedLeft, snappedRight;
-      bool isFullyClipped =
-        IsFullyClipped(static_cast<nsTextFrame*>(aFrame),
-                       leftOverlap, rightOverlap, &snappedLeft, &snappedRight);
-      if (!isFullyClipped) {
-        nsRect snappedRect = borderRect;
-        if (leftOverlap > 0) {
-          snappedRect.x += snappedLeft;
-          snappedRect.width -= snappedLeft;
+    if (aFrameType == nsGkAtoms::textFrame) {
+      if (aInsideMarkersArea.x < aInsideMarkersArea.XMost()) {
+        // a clipped text frame and there is some room between the markers
+        nscoord snappedLeft, snappedRight;
+        bool isFullyClipped =
+          IsFullyClipped(static_cast<nsTextFrame*>(aFrame),
+                         leftOverlap, rightOverlap, &snappedLeft, &snappedRight);
+        if (!isFullyClipped) {
+          nsRect snappedRect = borderRect;
+          if (leftOverlap > 0) {
+            snappedRect.x += snappedLeft;
+            snappedRect.width -= snappedLeft;
+          }
+          if (rightOverlap > 0) {
+            snappedRect.width -= snappedRight;
+          }
+          aAlignmentEdges->Accumulate(snappedRect);
+          *aFoundVisibleTextOrAtomic = true;
         }
-        if (rightOverlap > 0) {
-          snappedRect.width -= snappedRight;
-        }
-        aAlignmentEdges->Accumulate(snappedRect);
-        *aFoundVisibleTextOrAtomic = true;
       }
-    } else if (IsAtomicElement(aFrame, aFrameType)) {
-      if ((leftOverlap > 0 && insideLeftEdge && mLeft.mActive) ||
-          (rightOverlap > 0 && insideRightEdge && mRight.mActive)) {
-        aFramesToHide->PutEntry(aFrame);
-      } else {
-        *aFoundVisibleTextOrAtomic = true;
-      }
+    } else {
+      aFramesToHide->PutEntry(aFrame);
     }
   } else if (!insideLeftEdge || !insideRightEdge) {
     // frame is outside
@@ -434,11 +438,14 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
     return;
   }
 
-  PRUint32 pass = 0;
+  int pass = 0;
+  bool retryEmptyLine = true;
   bool guessLeft = leftOverflow;
   bool guessRight = rightOverflow;
   mLeft.mActive = leftOverflow;
   mRight.mActive = rightOverflow;
+  bool clippedLeftMarker = false;
+  bool clippedRightMarker = false;
   do {
     // Setup marker strings as needed.
     if (guessLeft) {
@@ -450,9 +457,9 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
     
     // If there is insufficient space for both markers then keep the one on the
     // end side per the block's 'direction'.
-    nscoord rightMarkerWidth = mRight.mWidth;
-    nscoord leftMarkerWidth = mLeft.mWidth;
-    if (leftOverflow && rightOverflow &&
+    nscoord rightMarkerWidth = mRight.mActive ? mRight.mWidth : 0;
+    nscoord leftMarkerWidth = mLeft.mActive ? mLeft.mWidth : 0;
+    if (leftMarkerWidth && rightMarkerWidth &&
         leftMarkerWidth + rightMarkerWidth > contentArea.width) {
       if (mBlockIsRTL) {
         rightMarkerWidth = 0;
@@ -476,12 +483,52 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
     bool foundVisibleTextOrAtomic = false;
     PRInt32 n = aLine->GetChildCount();
     nsIFrame* child = aLine->mFirstChild;
+    InnerClipEdges clippedMarkerEdges;
     for (; n-- > 0; child = child->GetNextSibling()) {
       ExamineFrameSubtree(child, contentArea, insideMarkersArea,
                           aFramesToHide, aAlignmentEdges,
-                          &foundVisibleTextOrAtomic);
+                          &foundVisibleTextOrAtomic,
+                          &clippedMarkerEdges);
     }
-    if (guessLeft == mLeft.IsNeeded() && guessRight == mRight.IsNeeded()) {
+    if (!foundVisibleTextOrAtomic && retryEmptyLine) {
+      aAlignmentEdges->mAssigned = false;
+      aFramesToHide->Clear();
+      pass = -1;
+      if (mLeft.IsNeeded() && mLeft.mActive && !clippedLeftMarker) {
+        if (clippedMarkerEdges.mAssignedLeft &&
+            clippedMarkerEdges.mLeft - mContentArea.X() > 0) {
+          mLeft.mWidth = clippedMarkerEdges.mLeft - mContentArea.X();
+          NS_ASSERTION(mLeft.mWidth < mLeft.mIntrinsicWidth,
+                       "clipping a marker should make it strictly smaller");
+          clippedLeftMarker = true;
+        } else {
+          mLeft.mActive = guessLeft = false;
+        }
+        continue;
+      }
+      if (mRight.IsNeeded() && mRight.mActive && !clippedRightMarker) {
+        if (clippedMarkerEdges.mAssignedRight &&
+            mContentArea.XMost() - clippedMarkerEdges.mRight > 0) {
+          mRight.mWidth = mContentArea.XMost() - clippedMarkerEdges.mRight;
+          NS_ASSERTION(mRight.mWidth < mRight.mIntrinsicWidth,
+                       "clipping a marker should make it strictly smaller");
+          clippedRightMarker = true;
+        } else {
+          mRight.mActive = guessRight = false;
+        }
+        continue;
+      }
+      // The line simply has no visible content even without markers,
+      // so examine the line again without suppressing markers.
+      retryEmptyLine = false;
+      mLeft.mWidth = mLeft.mIntrinsicWidth;
+      mLeft.mActive = guessLeft = leftOverflow;
+      mRight.mWidth = mRight.mIntrinsicWidth;
+      mRight.mActive = guessRight = rightOverflow;
+      continue;
+    }
+    if (guessLeft == (mLeft.mActive && mLeft.IsNeeded()) &&
+        guessRight == (mRight.mActive && mRight.IsNeeded())) {
       break;
     } else {
       guessLeft = mLeft.IsNeeded();
@@ -492,10 +539,10 @@ TextOverflow::ExamineLineFrames(nsLineBox*      aLine,
     }
     NS_ASSERTION(pass == 0, "2nd pass should never guess wrong");
   } while (++pass != 2);
-  if (!leftOverflow) {
+  if (!leftOverflow || !mLeft.mActive) {
     mLeft.Reset();
   }
-  if (!rightOverflow) {
+  if (!rightOverflow || !mRight.mActive) {
     mRight.Reset();
   }
 }
@@ -647,9 +694,9 @@ TextOverflow::CreateMarkers(const nsLineBox* aLine,
                             const nsRect&    aInsideMarkersArea) const
 {
   if (aCreateLeft) {
-    nsRect markerRect = nsRect(aInsideMarkersArea.x - mLeft.mWidth,
+    nsRect markerRect = nsRect(aInsideMarkersArea.x - mLeft.mIntrinsicWidth,
                                aLine->mBounds.y,
-                               mLeft.mWidth, aLine->mBounds.height);
+                               mLeft.mIntrinsicWidth, aLine->mBounds.height);
     markerRect += mBuilder->ToReferenceFrame(mBlock);
     nsDisplayItem* marker = new (mBuilder)
       nsDisplayTextOverflowMarker(mBuilder, mBlock, markerRect,
@@ -665,7 +712,7 @@ TextOverflow::CreateMarkers(const nsLineBox* aLine,
   if (aCreateRight) {
     nsRect markerRect = nsRect(aInsideMarkersArea.XMost(),
                                aLine->mBounds.y,
-                               mRight.mWidth, aLine->mBounds.height);
+                               mRight.mIntrinsicWidth, aLine->mBounds.height);
     markerRect += mBuilder->ToReferenceFrame(mBlock);
     nsDisplayItem* marker = new (mBuilder)
       nsDisplayTextOverflowMarker(mBuilder, mBlock, markerRect,
@@ -696,6 +743,7 @@ TextOverflow::Marker::SetupString(nsIFrame* aFrame)
                     GetEllipsis(fm) : mStyle->mString;
   mWidth = nsLayoutUtils::GetStringWidth(aFrame, rc, mMarkerString.get(),
                                          mMarkerString.Length());
+  mIntrinsicWidth = mWidth;
   mInitialized = true;
 }
 
