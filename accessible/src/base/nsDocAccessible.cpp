@@ -1565,14 +1565,14 @@ nsDocAccessible::AddDependentIDsFor(nsAccessible* aRelProvider,
 
     if (relAttr == nsGkAtoms::_for) {
       if (!aRelProvider->GetContent()->IsHTML() ||
-          aRelProvider->GetContent()->Tag() != nsGkAtoms::label &&
-          aRelProvider->GetContent()->Tag() != nsGkAtoms::output)
+          (aRelProvider->GetContent()->Tag() != nsGkAtoms::label &&
+           aRelProvider->GetContent()->Tag() != nsGkAtoms::output))
         continue;
 
     } else if (relAttr == nsGkAtoms::control) {
       if (!aRelProvider->GetContent()->IsXUL() ||
-          aRelProvider->GetContent()->Tag() != nsGkAtoms::label &&
-          aRelProvider->GetContent()->Tag() != nsGkAtoms::description)
+          (aRelProvider->GetContent()->Tag() != nsGkAtoms::label &&
+           aRelProvider->GetContent()->Tag() != nsGkAtoms::description))
         continue;
     }
 

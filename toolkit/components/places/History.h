@@ -115,7 +115,7 @@ public:
    * Get the number of bytes of memory this History object is using,
    * including sizeof(*this))
    */
-  PRInt64 SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
 
   /**
    * Obtains a pointer to this service.
@@ -194,9 +194,12 @@ private:
   };
 
   /**
-   * Helper function for nsTHashtable::EnumerateEntries call in SizeOf().
+   * Helper function for nsTHashtable::SizeOfExcludingThis call in
+   * SizeOfIncludingThis().
    */
-  static PLDHashOperator SizeOfEnumerator(KeyClass* aEntry, void* aArg);
+  static size_t SizeOfEntryExcludingThis(KeyClass* aEntry,
+                                         nsMallocSizeOfFun aMallocSizeOf,
+                                         void*);
 
   nsTHashtable<KeyClass> mObservers;
 };

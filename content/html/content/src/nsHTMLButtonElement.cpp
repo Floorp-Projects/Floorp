@@ -378,8 +378,8 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           nsKeyEvent * keyEvent = (nsKeyEvent *)aVisitor.mEvent;
           if ((keyEvent->keyCode == NS_VK_RETURN &&
                NS_KEY_PRESS == aVisitor.mEvent->message) ||
-              keyEvent->keyCode == NS_VK_SPACE &&
-              NS_KEY_UP == aVisitor.mEvent->message) {
+              (keyEvent->keyCode == NS_VK_SPACE &&
+               NS_KEY_UP == aVisitor.mEvent->message)) {
             nsEventStatus status = nsEventStatus_eIgnore;
 
             nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),

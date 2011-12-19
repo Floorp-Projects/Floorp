@@ -948,7 +948,7 @@ nsHTMLEditor::GetBlockNodeParent(nsIDOMNode *aNode)
   if (!aNode)
   {
     NS_NOTREACHED("null node passed to GetBlockNodeParent()");
-    return false;
+    return nsnull;
   }
 
   nsCOMPtr<nsIDOMNode> p;
@@ -5680,7 +5680,7 @@ nsHTMLEditor::IsActiveInDOMWindow()
 nsIContent*
 nsHTMLEditor::GetActiveEditingHost()
 {
-  NS_ENSURE_TRUE(mDocWeak, false);
+  NS_ENSURE_TRUE(mDocWeak, nsnull);
 
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
   NS_ENSURE_TRUE(doc, nsnull);

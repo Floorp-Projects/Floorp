@@ -83,6 +83,7 @@
 #include "mozAutoDocUpdate.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
+#include "nsIScriptError.h"
 
 #ifdef MOZ_XUL
 #include "nsIDOMXULTextboxElement.h"
@@ -1181,6 +1182,24 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
          aFlags, mFocusedWindow.get(), newWindow.get(), mFocusedContent.get());
   printf(" In Active Window: %d In Focused Window: %d\n",
          isElementInActiveWindow, isElementInFocusedWindow);
+#endif
+
+  // Exit full-screen if we're focusing a windowed plugin on a non-MacOSX
+  // system. We don't control event dispatch to windowed plugins on non-MacOSX,
+  // so we can't display the "Press ESC to leave full-screen mode" warning on
+  // key input if a windowed plugin is focused, so just exit full-screen
+  // to guard against phishing.
+#ifndef XP_MACOSX
+  if (contentToFocus &&
+      nsContentUtils::GetRootDocument(contentToFocus->OwnerDoc())->IsFullScreenDoc() &&
+      nsContentUtils::HasPluginWithUncontrolledEventDispatch(contentToFocus)) {
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    "DOM",
+                                    contentToFocus->OwnerDoc(),
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "FocusedWindowedPluginWhileFullScreen");
+    nsIDocument::ExitFullScreen(true);
+  }
 #endif
 
   // if the FLAG_NOSWITCHFRAME flag is used, only allow the focus to be

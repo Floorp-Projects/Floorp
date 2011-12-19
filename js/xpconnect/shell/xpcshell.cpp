@@ -246,7 +246,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
 #ifdef EDITLINE
 extern "C" {
-extern JS_EXPORT_API(char)     *readline(const char *prompt);
+extern JS_EXPORT_API(char *)   readline(const char *prompt);
 extern JS_EXPORT_API(void)     add_history(char *line);
 }
 #endif

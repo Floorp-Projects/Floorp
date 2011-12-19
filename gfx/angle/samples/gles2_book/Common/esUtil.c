@@ -22,10 +22,16 @@
 #include <stdlib.h>
 #include <GLES2/gl2.h>
 #include <EGL/egl.h>
+#include <EGL/eglext.h>
 #include "esUtil.h"
 #include "esUtil_win.h"
 
 
+///
+//  Extensions
+//
+
+PFNEGLPOSTSUBBUFFERNVPROC eglPostSubBufferNV;
 
 
 ///
@@ -35,7 +41,7 @@
 //
 EGLBoolean CreateEGLContext ( EGLNativeWindowType hWnd, EGLDisplay* eglDisplay,
                               EGLContext* eglContext, EGLSurface* eglSurface,
-                              EGLint attribList[])
+                              EGLint* configAttribList, EGLint* surfaceAttribList)
 {
    EGLint numConfigs;
    EGLint majorVersion;
@@ -45,7 +51,7 @@ EGLBoolean CreateEGLContext ( EGLNativeWindowType hWnd, EGLDisplay* eglDisplay,
    EGLSurface surface;
    EGLConfig config;
    EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE, EGL_NONE };
-
+   
    // Get Display
    display = eglGetDisplay(GetDC(hWnd));
    if ( display == EGL_NO_DISPLAY )
@@ -59,6 +65,9 @@ EGLBoolean CreateEGLContext ( EGLNativeWindowType hWnd, EGLDisplay* eglDisplay,
       return EGL_FALSE;
    }
 
+   // Bind to extensions
+   eglPostSubBufferNV = (PFNEGLPOSTSUBBUFFERNVPROC) eglGetProcAddress("eglPostSubBufferNV");
+
    // Get configs
    if ( !eglGetConfigs(display, NULL, 0, &numConfigs) )
    {
@@ -66,13 +75,13 @@ EGLBoolean CreateEGLContext ( EGLNativeWindowType hWnd, EGLDisplay* eglDisplay,
    }
 
    // Choose config
-   if ( !eglChooseConfig(display, attribList, &config, 1, &numConfigs) )
+   if ( !eglChooseConfig(display, configAttribList, &config, 1, &numConfigs) )
    {
       return EGL_FALSE;
    }
 
    // Create a surface
-   surface = eglCreateWindowSurface(display, config, (EGLNativeWindowType)hWnd, NULL);
+   surface = eglCreateWindowSurface(display, config, (EGLNativeWindowType)hWnd, surfaceAttribList);
    if ( surface == EGL_NO_SURFACE )
    {
       return EGL_FALSE;
@@ -128,10 +137,11 @@ void ESUTIL_API esInitContext ( ESContext *esContext )
 //          ES_WINDOW_DEPTH       - specifies that a depth buffer should be created
 //          ES_WINDOW_STENCIL     - specifies that a stencil buffer should be created
 //          ES_WINDOW_MULTISAMPLE - specifies that a multi-sample buffer should be created
+//          ES_WINDOW_POST_SUB_BUFFER_SUPPORTED - specifies that EGL_POST_SUB_BUFFER_NV is supported.
 //
 GLboolean ESUTIL_API esCreateWindow ( ESContext *esContext, LPCTSTR title, GLint width, GLint height, GLuint flags )
 {
-   EGLint attribList[] =
+   EGLint configAttribList[] =
    {
        EGL_RED_SIZE,       5,
        EGL_GREEN_SIZE,     6,
@@ -141,6 +151,11 @@ GLboolean ESUTIL_API esCreateWindow ( ESContext *esContext, LPCTSTR title, GLint
        EGL_STENCIL_SIZE,   (flags & ES_WINDOW_STENCIL) ? 8 : EGL_DONT_CARE,
        EGL_SAMPLE_BUFFERS, (flags & ES_WINDOW_MULTISAMPLE) ? 1 : 0,
        EGL_NONE
+   };
+   EGLint surfaceAttribList[] =
+   {
+       EGL_POST_SUB_BUFFER_SUPPORTED_NV, flags & (ES_WINDOW_POST_SUB_BUFFER_SUPPORTED) ? EGL_TRUE : EGL_FALSE,
+       EGL_NONE, EGL_NONE
    };
    
    if ( esContext == NULL )
@@ -161,7 +176,8 @@ GLboolean ESUTIL_API esCreateWindow ( ESContext *esContext, LPCTSTR title, GLint
                             &esContext->eglDisplay,
                             &esContext->eglContext,
                             &esContext->eglSurface,
-                            attribList) )
+                            configAttribList,
+                            surfaceAttribList ) )
    {
       return GL_FALSE;
    }
