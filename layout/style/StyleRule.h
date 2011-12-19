@@ -47,8 +47,9 @@
 
 #include "mozilla/Attributes.h"
 
-//#include <stdio.h>
+#include "mozilla/Attributes.h"
 #include "mozilla/css/Rule.h"
+
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsCSSPseudoElements.h"
@@ -316,7 +317,7 @@ protected:
   friend class StyleRule;
 };
 
-class StyleRule : public Rule
+class StyleRule MOZ_FINAL : public Rule
 {
  public:
   StyleRule(nsCSSSelectorList* aSelector,
