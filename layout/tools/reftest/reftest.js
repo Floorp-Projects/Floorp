@@ -345,13 +345,9 @@ function InitAndStartRefTests()
         gThisChunk = 0;
     }
 
-    try {
-        gWindowUtils = gContainingWindow.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIDOMWindowUtils);
-        if (gWindowUtils && !gWindowUtils.compareCanvases)
-            gWindowUtils = null;
-    } catch (e) {
-        gWindowUtils = null;
-    }
+    gWindowUtils = gContainingWindow.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIDOMWindowUtils);
+    if (!gWindowUtils || !gWindowUtils.compareCanvases)
+        throw "nsIDOMWindowUtils inteface missing";
 
     gIOService = CC[IO_SERVICE_CONTRACTID].getService(CI.nsIIOService);
     gDebug = CC[DEBUG_CONTRACTID].getService(CI.nsIDebug2);
@@ -521,9 +517,9 @@ function BuildConditionSandbox(aURL) {
     }
 
     sandbox.layersGPUAccelerated =
-      gWindowUtils && gWindowUtils.layerManagerType != "Basic";
+      gWindowUtils.layerManagerType != "Basic";
     sandbox.layersOpenGL =
-      gWindowUtils && gWindowUtils.layerManagerType == "OpenGL";
+      gWindowUtils.layerManagerType == "OpenGL";
 
     // Shortcuts for widget toolkits.
     sandbox.Android = xr.OS == "Android";
@@ -1403,15 +1399,8 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
             // whether the two renderings match:
             var equal;
 
-            if (gWindowUtils) {
-                differences = gWindowUtils.compareCanvases(gCanvas1, gCanvas2, {});
-                equal = (differences == 0);
-            } else {
-                differences = -1;
-                var k1 = gCanvas1.toDataURL();
-                var k2 = gCanvas2.toDataURL();
-                equal = (k1 == k2);
-            }
+            differences = gWindowUtils.compareCanvases(gCanvas1, gCanvas2, {});
+            equal = (differences == 0);
 
             // whether the comparison result matches what is in the manifest
             var test_passed = (equal == (gURLs[0].type == TYPE_REFTEST_EQUAL));
