@@ -47,6 +47,7 @@
 #include "mozilla/unused.h"
 
 #include "mozilla/layout/RenderFrameParent.h"
+#include "CompositorParent.h"
 
 #include "gfxSharedImageSurface.h"
 
@@ -395,6 +396,9 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
     Frame()->ShadowLayersUpdated();
   }
 
+  if (mHost->GetCompositorParent()) {
+    mHost->GetCompositorParent()->RequestComposition();
+  }
   return true;
 }
 

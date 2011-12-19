@@ -59,7 +59,7 @@ CompositorChild::CompositorChild(Thread *aCompositorThread, LayerManager *aLayer
 
 CompositorChild::~CompositorChild()
 {
-  printf("del\n");
+  printf("del compositor child\n");
   MOZ_COUNT_DTOR(CompositorChild);
 }
 
@@ -76,7 +76,7 @@ CompositorChild::CreateCompositor(LayerManager *aLayerManager)
   if (compositorThread->Start()) {
     MessageLoop *parentMessageLoop = MessageLoop::current();
     MessageLoop *childMessageLoop = compositorThread->message_loop();
-    CompositorParent *compositorParent = new CompositorParent();
+    CompositorParent* compositorParent = new CompositorParent();
     CompositorChild *compositorChild = new CompositorChild(compositorThread, aLayerManager);
     mozilla::ipc::AsyncChannel *parentChannel =
       compositorParent->GetIPCChannel();
@@ -87,6 +87,7 @@ CompositorChild::CreateCompositor(LayerManager *aLayerManager)
 
     compositorChild->Open(parentChannel, childMessageLoop, childSide);
     compositorChild->CallInit();
+    compositorChild->mCompositorParent = compositorParent;
 
     return compositorChild;
   }
