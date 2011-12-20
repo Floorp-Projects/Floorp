@@ -510,10 +510,14 @@ function test14()
   ws.onclose = function(e)
   {
     shouldCloseCleanly(e);
-    doTest(15);
+    // Skip test 15 for now: broken
+    doTest(16);
   };
 }
 
+/*
+ * DISABLED: see comments for test-15 case in file_websocket_wsh.py
+ *
 function test15()
 {
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-15");
@@ -529,6 +533,7 @@ function test15()
   }
 
 }
+*/
 
 function test16()
 {
@@ -537,7 +542,6 @@ function test16()
   {
     ws.close();
     ok(!ws.send("client data"), "shouldn't send message after calling close()");
-    doTest(17);
   }
   ws.onmessage = function()
   {
@@ -549,6 +553,7 @@ function test16()
   }
   ws.onclose = function()
   {
+    doTest(17);
   }
 }
 
