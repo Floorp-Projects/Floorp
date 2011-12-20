@@ -4,6 +4,10 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
   <Description about="urn:mozilla:install-manifest">
     <em:id>reftest@mozilla.org</em:id>
+#ifdef BOOTSTRAP
+    <em:type>2</em:type>
+    <em:bootstrap>true</em:bootstrap>
+#endif
     <em:version>1.0</em:version>
     <em:targetApplication>
       <Description>
