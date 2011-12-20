@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<iframe src="data:text/html,<body style='font-size:100px; overflow:hidden'><p>Hello<p>Kitty<p>Hello<p>Kitty<p>Hello<p>Kitty<p>Hello<p>Kitty<p>Hello<p>Kitty<p>Hello<p>Kitty"
+        id="f" style="width:500px; height:500px; border-radius:100px; border:none;"></iframe>
+<script>
+var f = document.getElementById("f");
+var count = 0;
+function doTest() {
+  ++count;
+  f.contentWindow.scrollTo(0, count*20);
+  if (count == 4) {
+    document.documentElement.removeAttribute("class");
+  } else {
+    setTimeout(doTest, 20);
+  }
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

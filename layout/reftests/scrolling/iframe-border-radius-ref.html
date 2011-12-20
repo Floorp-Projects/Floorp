@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<html>
+<body onload="doTest()">
+<iframe src="data:text/html,<body style='font-size:100px; overflow:hidden'><p>Hello<p>Kitty<p>Hello<p>Kitty<p>Hello<p>Kitty<p>Hello<p>Kitty<p>Hello<p>Kitty<p>Hello<p>Kitty"
+        id="f" style="width:500px; height:500px; border-radius:100px; border:none;"></iframe>
+<script>
+var f = document.getElementById("f");
+function doTest() {
+  f.contentWindow.scrollTo(0, 80);
+}
+</script>
+</body>
+</html>
