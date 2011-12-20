@@ -1920,7 +1920,7 @@ static const char spinner_chars[] = { '/', '-', '\\', '|' };
 void
 tmEventHandler(tmreader * aReader, tmevent * aEvent)
 {
-    static event_count = 0;     /* for spinner */
+    static int event_count = 0;     /* for spinner */
     if ((event_count++ % SPINNER_UPDATE_FREQUENCY) == 0)
         printf("\rReading... %c", SPINNER_CHAR(event_count));
     

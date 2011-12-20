@@ -471,6 +471,8 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 
     // If we already have a gl context, then we just need to resize it
     if (gl) {
+        MakeContextCurrent();
+
         gl->ResizeOffscreen(gfxIntSize(width, height)); // Doesn't matter if it succeeds (soft-fail)
         // It's unlikely that we'll get a proper-sized context if we recreate if we didn't on resize
 
@@ -478,6 +480,9 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         mWidth = gl->OffscreenActualSize().width;
         mHeight = gl->OffscreenActualSize().height;
         mResetLayer = true;
+
+        gl->ClearSafely();
+
         return NS_OK;
     }
 
@@ -669,11 +674,13 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     // Make sure that we clear this out, otherwise
     // we'll end up displaying random memory
     gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, gl->GetOffscreenFBO());
+
     gl->fViewport(0, 0, mWidth, mHeight);
     gl->fClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     gl->fClearDepth(1.0f);
     gl->fClearStencil(0);
-    gl->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT);
+
+    gl->ClearSafely();
 
     reporter.SetSuccessful();
     return NS_OK;

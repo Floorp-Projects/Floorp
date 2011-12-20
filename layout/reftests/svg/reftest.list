@@ -13,6 +13,9 @@ include filters/reftest.list
 # smil / animation tests
 include smil/reftest.list
 
+# load only tests
+include load-only/reftest.list
+
 # Mozilla only tests (i.e. those containing XUL/XBL/etc.)
 include moz-only/reftest.list
 

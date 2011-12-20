@@ -167,6 +167,7 @@ public class ScrollbarLayer extends TileLayer {
 
         try {
             GLES11.glEnable(GL10.GL_BLEND);
+            GLES11.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
 
             Rect rect = RectUtils.round(mVertical ? getVerticalRect(context) : getHorizontalRect(context));
             GLES11.glBindTexture(GL10.GL_TEXTURE_2D, getTextureID());

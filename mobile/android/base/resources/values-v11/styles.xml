@@ -6,6 +6,21 @@
         Please refer to values/styles.xml for default styles.
     -->
 
+    <!-- BrowserToolbar -->
+    <style name="BrowserToolbar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <!-- Address bar -->
+    <style name="AddressBar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:background">@drawable/address_bar_bg</item>
+    </style>
+
     <!-- Lists in AwesomeBar -->
     <style name="AwesomeBarList" parent="android:style/Widget.Holo.ListView">
         <item name="android:layout_width">match_parent</item>

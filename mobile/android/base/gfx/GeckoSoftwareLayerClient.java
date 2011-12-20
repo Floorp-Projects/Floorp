@@ -169,6 +169,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
                             mGeckoViewport.getZoomFactor()))
                         controller.setPageSize(mGeckoViewport.getPageSize());
                 } else {
+                    Log.d(LOGTAG, "Received viewport update from gecko");
                     controller.setViewportMetrics(mGeckoViewport);
                     controller.notifyPanZoomControllerOfGeometryChange(true);
                 }

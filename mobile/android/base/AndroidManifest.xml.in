@@ -127,7 +127,7 @@
         </activity>
 
         <activity android:name="org.mozilla.gecko.AwesomeBar"
-                  android:theme="@style/Gecko.Light.NoActionBar"
+                  android:theme="@style/Gecko.Light"
                   android:configChanges="orientation"
                   android:windowSoftInputMode="stateAlwaysVisible|adjustResize"/>
 
