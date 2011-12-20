@@ -47,6 +47,7 @@
 #include "SmsRequestManager.h"
 #include "nsJSUtils.h"
 #include "nsContentUtils.h"
+#include "nsISmsDatabaseService.h"
 
 /**
  * We have to use macros here because our leak analysis tool things we are
@@ -206,6 +207,22 @@ SmsManager::Send(const jsval& aNumber, const nsAString& aMessage, jsval* aReturn
 
   aReturn->setObjectOrNull(JS_NewArrayObject(cx, size, requests));
   NS_ENSURE_TRUE(aReturn->isObject(), NS_ERROR_FAILURE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SmsManager::GetMessageMoz(PRInt32 aId, nsIDOMMozSmsRequest** aRequest)
+{
+  int requestId =
+    SmsRequestManager::GetInstance()->CreateRequest(mOwner, mScriptContext, aRequest);
+  NS_ASSERTION(*aRequest, "The request object must have been created!");
+
+  nsCOMPtr<nsISmsDatabaseService> smsDBService =
+    do_GetService(SMS_DATABASE_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsDBService, NS_ERROR_FAILURE);
+
+  smsDBService->GetMessageMoz(aId, requestId, 0);
 
   return NS_OK;
 }
