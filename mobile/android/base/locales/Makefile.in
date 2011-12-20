@@ -56,7 +56,7 @@ endif
 
 DEFINES += -DAB_CD=$(AB_CD)
 
-export realchrome:: ../res/values/strings.xml ;
+libs realchrome:: ../res/values/strings.xml ;
 
 chrome-%:: AB_CD=$*
 chrome-%:: 
