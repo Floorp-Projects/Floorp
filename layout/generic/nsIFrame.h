@@ -199,8 +199,8 @@ typedef PRUint64 nsFrameState;
 // e.g., it is absolutely positioned or floated
 #define NS_FRAME_OUT_OF_FLOW                        NS_FRAME_STATE_BIT(8)
 
-// If this bit is set, then the frame reflects content that may be selected
-#define NS_FRAME_SELECTED_CONTENT                   NS_FRAME_STATE_BIT(9)
+// This bit is available for re-use.
+//#define NS_FRAME_SELECTED_CONTENT                   NS_FRAME_STATE_BIT(9)
 
 // If this bit is set, then the frame is dirty and needs to be reflowed.
 // This bit is set when the frame is first created.
@@ -261,6 +261,7 @@ typedef PRUint64 nsFrameState;
 
 // Bits 20-31 and 60-63 of the frame state are reserved for implementations.
 #define NS_FRAME_IMPL_RESERVED                      nsFrameState(0xF0000000FFF00000)
+#define NS_FRAME_RESERVED                           ~NS_FRAME_IMPL_RESERVED
 
 // This bit is set on floats whose parent does not contain their
 // placeholder.  This can happen for two reasons:  (1) the float was
@@ -296,9 +297,6 @@ typedef PRUint64 nsFrameState;
 
 // This is only set during painting
 #define NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO    NS_FRAME_STATE_BIT(40)
-
-// Bits 0-19 and bits 32-59 of the frame state are reserved by this API.
-#define NS_FRAME_RESERVED                           ~NS_FRAME_IMPL_RESERVED
 
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
@@ -579,6 +577,12 @@ public:
   void Destroy() { DestroyFrom(this); }
 
 protected:
+  /**
+   * Return true if the frame is part of a Selection.
+   * Helper method to implement the public IsSelected() API.
+   */
+  virtual bool IsFrameSelected() const;
+
   /**
    * Implements Destroy(). Do not call this directly except from within a
    * DestroyFrom() implementation.
@@ -2305,25 +2309,13 @@ public:
    */
   virtual PRIntn GetSkipSides() const { return 0; }
 
-  /** Selection related calls
+  /**
+   * @returns true if this frame is selected.
    */
-  /** 
-   *  Called to set the selection status of the frame.
-   *  
-   *  This must be called on the primary frame, but all continuations
-   *  will be affected the same way.
-   *
-   *  This sets or clears NS_FRAME_SELECTED_CONTENT for each frame in the
-   *  continuation chain, if the frames are currently selectable.
-   *  The frames are unconditionally invalidated, if this selection type
-   *  is supported at all.
-   *  @param aSelected is it selected?
-   *  @param aType the selection type of the selection that you are setting on the frame
-   */
-  virtual void SetSelected(bool          aSelected,
-                           SelectionType aType);
-
-  NS_IMETHOD  GetSelected(bool *aSelected) const = 0;
+  bool IsSelected() const {
+    return (GetContent() && GetContent()->IsSelectionDescendant()) ?
+      IsFrameSelected() : false;
+  }
 
   /**
    *  called to discover where this frame, or a parent frame has user-select style
@@ -2352,10 +2344,7 @@ public:
    * GetConstFrameSelection returns an object which methods are safe to use for
    * example in nsIFrame code.
    */
-  const nsFrameSelection* GetConstFrameSelection();
-
-  /** EndSelection related calls
-   */
+  const nsFrameSelection* GetConstFrameSelection() const;
 
   /**
    *  called to find the previous/next character, word, or line  returns the actual 

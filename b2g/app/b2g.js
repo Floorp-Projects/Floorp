@@ -49,9 +49,6 @@ pref("browser.homescreenURL", "file:///data/local/homescreen.html,file:///system
 // Device pixel to CSS px ratio, in percent. Set to -1 to calculate based on display density.
 pref("browser.viewport.scaleRatio", -1);
 
-/* allow scrollbars to float above chrome ui */
-pref("ui.scrollbarsCanOverlapContent", 1);
-
 /* disable text selection */
 pref("browser.ignoreNativeFrameTextSelection", true);
 

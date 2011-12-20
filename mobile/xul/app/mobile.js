@@ -83,8 +83,6 @@ pref("layout.css.dpi", 160);
 pref("layout.css.dpi", 240);
 #endif
 #endif
-/* allow scrollbars to float above chrome ui */
-pref("ui.scrollbarsCanOverlapContent", 1);
 
 /* use long press to display a context menu */
 pref("ui.click_hold_context_menus", true);
