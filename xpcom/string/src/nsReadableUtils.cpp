@@ -1046,6 +1046,22 @@ EmptyCString()
     return sEmpty;
   }
 
+const nsAFlatString&
+NullString()
+  {
+    static const nsXPIDLString sNull;
+
+    return sNull;
+  }
+
+const nsAFlatCString&
+NullCString()
+  {
+    static const nsXPIDLCString sNull;
+
+    return sNull;
+  }
+
 PRInt32
 CompareUTF8toUTF16(const nsASingleFragmentCString& aUTF8String,
                    const nsASingleFragmentString& aUTF16String)
