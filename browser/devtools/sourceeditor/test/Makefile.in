@@ -50,6 +50,7 @@ _BROWSER_TEST_FILES = \
 		browser_bug687573_vscroll.js \
 		browser_bug687568_pagescroll.js \
 		browser_bug687580_drag_and_drop.js \
+		browser_bug684546_reset_undo.js \
 		browser_bug695035_middle_click_paste.js \
 		browser_bug687160_line_api.js \
 		head.js \
