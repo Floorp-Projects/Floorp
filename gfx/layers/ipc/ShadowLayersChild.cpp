@@ -47,7 +47,6 @@ namespace layers {
 void
 ShadowLayersChild::Destroy()
 {
-  printf("Destroy shadow layers\n");
   NS_ABORT_IF_FALSE(0 == ManagedPLayerChild().Length(),
                     "layers should have been cleaned up by now");
   PLayersChild::Send__delete__(this);

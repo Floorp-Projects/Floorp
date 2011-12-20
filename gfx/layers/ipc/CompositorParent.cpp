@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Benoit Girard <bgirard@mozilla.com>
+ *   Ali Juma <ajuma@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,7 +46,6 @@ namespace mozilla {
 namespace layers {
 
 CompositorParent::CompositorParent()
-  : mLayerManager(NULL)
 {
 
   MOZ_COUNT_CTOR(CompositorParent);
@@ -53,7 +53,6 @@ CompositorParent::CompositorParent()
 
 CompositorParent::~CompositorParent()
 {
-  printf("delete parent\n");
   MOZ_COUNT_DTOR(CompositorParent);
 }
 

@@ -75,13 +75,12 @@ protected:
 
 private:
   Thread *mCompositorThread;
-  LayerManager *mLayerManager;
-  nsRefPtr<CompositorParent> mCompositorParent;
+  nsRefPtr<LayerManager> mLayerManager;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorChild);
 };
 
-} // lauers
+} // layers
 } // mozilla
 
 #endif // mozilla_layers_CompositorChild_h

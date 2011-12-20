@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Benoit Girard <bgirard@mozilla.com>
+ *   Ali Juma <ajuma@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -59,13 +60,13 @@ CompositorChild::CompositorChild(Thread *aCompositorThread, LayerManager *aLayer
 
 CompositorChild::~CompositorChild()
 {
-  printf("del compositor child\n");
   MOZ_COUNT_DTOR(CompositorChild);
 }
 
 void
 CompositorChild::Destroy()
 {
+  mLayerManager = NULL;
   SendStop();
 }
 
@@ -112,7 +113,6 @@ CompositorChild::AllocPLayers(const LayersBackend &backend, const WidgetDescript
 bool
 CompositorChild::DeallocPLayers(PLayersChild* actor)
 {
-  printf("actor destroy\n");
   delete actor;
   return true;
 }
