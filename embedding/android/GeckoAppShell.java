@@ -1716,6 +1716,10 @@ public class GeckoAppShell
         GeckoSmsManager.deleteMessage(aMessageId, aRequestId, aProcessId);
     }
 
+    public static void createMessageList(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, int aDeliveryState, boolean aReverse, int aRequestId, long aProcessId) {
+        GeckoSmsManager.createMessageList(aStartDate, aEndDate, aNumbers, aNumbersCount, aDeliveryState, aReverse, aRequestId, aProcessId);
+    }
+
     public static boolean isTablet() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
             Configuration config = GeckoApp.mAppContext.getResources().getConfiguration();

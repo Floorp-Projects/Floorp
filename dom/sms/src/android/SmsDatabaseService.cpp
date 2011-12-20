@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "SmsFilter.h"
 #include "SmsDatabaseService.h"
 #include "AndroidBridge.h"
 
@@ -88,7 +89,13 @@ SmsDatabaseService::CreateMessageList(nsIDOMMozSmsFilter* aFilter,
                                       bool aReverse, PRInt32 aRequestId,
                                       PRUint64 aProcessId)
 {
-  // TODO: implement
+  if (!AndroidBridge::Bridge()) {
+    return NS_OK;
+  }
+
+  AndroidBridge::Bridge()->CreateMessageList(
+    static_cast<SmsFilter*>(aFilter)->GetData(), aReverse, aRequestId, aProcessId
+  );
   return NS_OK;
 }
 

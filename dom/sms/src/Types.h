@@ -45,8 +45,10 @@ namespace dom {
 namespace sms {
 
 // For SmsMessageDate.delivery.
+// Please keep the following files in sync with enum below:
+// embedding/android/GeckoSmsManager.java
 enum DeliveryState {
-  eDeliveryState_Sent,
+  eDeliveryState_Sent = 0,
   eDeliveryState_Received,
   eDeliveryState_Unknown,
   // This state should stay at the end.

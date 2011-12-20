@@ -50,6 +50,7 @@
 #include "nsWindow.h"
 #include "mozilla/Preferences.h"
 #include "nsThreadUtils.h"
+#include "mozilla/dom/sms/PSms.h"
 
 #ifdef DEBUG
 #define ALOG_BRIDGE(args...) ALOG(args)
@@ -171,6 +172,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jSaveSentMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "saveSentMessage", "(Ljava/lang/String;Ljava/lang/String;J)I");
     jGetMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMessage", "(IIJ)V");
     jDeleteMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "deleteMessage", "(IIJ)V");
+    jCreateMessageList = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "createMessageList", "(JJ[Ljava/lang/String;IIZIJ)V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -1382,6 +1384,31 @@ AndroidBridge::DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId, PRUint64 aP
     ALOG_BRIDGE("AndroidBridge::DeleteMessage");
 
     JNI()->CallStaticVoidMethod(mGeckoAppShellClass, jDeleteMessage, aMessageId, aRequestId, aProcessId);
+}
+
+void
+AndroidBridge::CreateMessageList(const dom::sms::SmsFilterData& aFilter, bool aReverse,
+                                 PRInt32 aRequestId, PRUint64 aProcessId)
+{
+    ALOG_BRIDGE("AndroidBridge::CreateMessageList");
+
+    AutoLocalJNIFrame jniFrame;
+
+    jobjectArray numbers =
+      (jobjectArray)JNI()->NewObjectArray(aFilter.numbers().Length(),
+                                          JNI()->FindClass("java/lang/String"),
+                                          JNI()->NewStringUTF(""));
+
+    for (PRUint32 i = 0; i < aFilter.numbers().Length(); ++i) {
+      JNI()->SetObjectArrayElement(numbers, i,
+                                   JNI()->NewStringUTF(NS_ConvertUTF16toUTF8(aFilter.numbers()[i]).get()));
+    }
+
+    JNI()->CallStaticVoidMethod(mGeckoAppShellClass, jCreateMessageList,
+                                aFilter.startDate(), aFilter.endDate(),
+                                numbers, aFilter.numbers().Length(),
+                                aFilter.delivery(), aReverse, aRequestId,
+                                aProcessId);
 }
 
 void *
