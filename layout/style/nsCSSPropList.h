@@ -1257,15 +1257,6 @@ CSS_PROP_COLUMN(
     offsetof(nsStyleColumn, mColumnCount),
     eStyleAnimType_Custom)
 CSS_PROP_COLUMN(
-    -moz-column-fill,
-    _moz_column_fill,
-    CSS_PROP_DOMPROP_PREFIXED(ColumnFill),
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HK,
-    kColumnFillKTable,
-    CSS_PROP_NO_OFFSET,
-    eStyleAnimType_None)
-CSS_PROP_COLUMN(
     -moz-column-width,
     _moz_column_width,
     CSS_PROP_DOMPROP_PREFIXED(ColumnWidth),
