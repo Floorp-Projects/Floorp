@@ -617,6 +617,7 @@ public class PanZoomController
             /* Finally, if there's nothing else to do, complete the animation and go to sleep. */
             finishBounce();
             finishAnimation();
+            mState = PanZoomState.NOTHING;
         }
 
         /* Performs one frame of a bounce animation. */
@@ -684,16 +685,17 @@ public class PanZoomController
              */
             boolean overscrolledX = mX.getOverscroll() != Axis.Overscroll.NONE;
             boolean overscrolledY = mY.getOverscroll() != Axis.Overscroll.NONE;
-            if (!mOverridePanning && (overscrolledX || overscrolledY))
+            if (!mOverridePanning && (overscrolledX || overscrolledY)) {
                 bounce();
-            else
+            } else {
                 finishAnimation();
+                mState = PanZoomState.NOTHING;
+            }
         }
     }
 
     private void finishAnimation() {
         Log.d(LOGTAG, "Finishing animation at " + mController.getViewportMetrics());
-        mState = PanZoomState.NOTHING;
         stopAnimationTimer();
 
         // Force a viewport synchronisation
