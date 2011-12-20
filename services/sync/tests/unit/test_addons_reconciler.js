@@ -3,7 +3,7 @@
 
 "use strict";
 
-Cu.import("resource://services-sync/AddonsReconciler.js");
+Cu.import("resource://services-sync/addonsreconciler.js");
 Cu.import("resource://services-sync/engines/addons.js");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 
