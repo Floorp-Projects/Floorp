@@ -259,5 +259,16 @@ public class ViewportMetrics {
             return "";
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuffer buff = new StringBuffer(128);
+        buff.append("v=").append(mViewportRect.toString())
+            .append(" p=").append(mPageSize.toString())
+            .append(" z=").append(mZoomFactor)
+            .append(" o=").append(mViewportOffset.x)
+            .append(',').append(mViewportOffset.y);
+        return buff.toString();
+    }
 }
 
