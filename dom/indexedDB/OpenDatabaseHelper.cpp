@@ -1020,9 +1020,25 @@ UpgradeSchemaFrom10_0To11_0(mozIStorageConnection* aConnection)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TRIGGER object_data_insert_trigger;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "INSERT INTO object_data (object_store_id, key_value, data, file_ids) "
       "SELECT object_store_id, id, data, file_ids "
       "FROM ai_object_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TRIGGER object_data_insert_trigger "
+    "AFTER INSERT ON object_data "
+    "FOR EACH ROW "
+    "WHEN NEW.file_ids IS NOT NULL "
+    "BEGIN "
+      "SELECT update_refcount(NULL, NEW.file_ids); "
+    "END;"
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1680,8 +1696,8 @@ OpenDatabaseHelper::DoDatabaseWork()
   mFileManager = mgr->GetOrCreateFileManager(mASCIIOrigin, mName);
   NS_ENSURE_TRUE(mFileManager, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  if (!mFileManager->IsDirectoryInited()) {
-    rv = mFileManager->InitDirectory(fileManagerDirectory, connection);
+  if (!mFileManager->Inited()) {
+    rv = mFileManager->Init(fileManagerDirectory, connection);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 

@@ -71,20 +71,12 @@ EnumerateToTArray(const PRUint64& aKey,
 } // anonymous namespace
 
 nsresult
-FileManager::Init()
+FileManager::Init(nsIFile* aDirectory,
+                  mozIStorageConnection* aConnection)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
   NS_ENSURE_TRUE(mFileInfos.Init(), NS_ERROR_OUT_OF_MEMORY);
-
-  return NS_OK;
-}
-
-nsresult
-FileManager::InitDirectory(nsIFile* aDirectory,
-                           mozIStorageConnection* aConnection)
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
   bool exists;
   nsresult rv = aDirectory->Exists(&exists);
@@ -142,7 +134,8 @@ FileManager::InitDirectory(nsIFile* aDirectory,
     if (flag) {
       rv = ss->UpdateQuotaInformationForFile(file);
       NS_ENSURE_SUCCESS(rv, rv);
-    } else {
+    }
+    else {
       rv = file->Remove(false);
       if (NS_FAILED(rv)) {
         NS_WARNING("Failed to remove orphaned file!");
@@ -156,9 +149,6 @@ FileManager::InitDirectory(nsIFile* aDirectory,
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aDirectory->GetPath(mDirectoryPath);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aDirectory->GetLeafName(mDirectoryName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
