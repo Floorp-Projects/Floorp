@@ -67,6 +67,7 @@ EXPORTS_mozilla/dom/sms = \
   Constants.h \
   Types.h \
   SmsMessage.h \
+  SmsRequestManager.h \
   $(NULL)
 
 CPPSRCS = \
@@ -81,6 +82,7 @@ CPPSRCS = \
   SmsChild.cpp \
   SmsDatabaseService.cpp \
   SmsRequest.cpp \
+  SmsRequestManager.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
