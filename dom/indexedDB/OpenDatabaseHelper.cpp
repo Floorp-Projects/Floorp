@@ -60,7 +60,7 @@ namespace {
 PR_STATIC_ASSERT(JS_STRUCTURED_CLONE_VERSION == 1);
 
 // Major schema version. Bump for almost everything.
-const PRUint32 kMajorSchemaVersion = 11;
+const PRUint32 kMajorSchemaVersion = 12;
 
 // Minor schema version. Should almost always be 0 (maybe bump on release
 // branches if we have to).
@@ -215,7 +215,7 @@ CreateTables(mozIStorageConnection* aDBConn)
     "CREATE TABLE object_data ("
       "id INTEGER PRIMARY KEY, "
       "object_store_id INTEGER NOT NULL, "
-      "key_value DEFAULT NULL, "
+      "key_value BLOB DEFAULT NULL, "
       "data BLOB NOT NULL, "
       "file_ids TEXT, "
       "UNIQUE (object_store_id, key_value), "
@@ -245,8 +245,8 @@ CreateTables(mozIStorageConnection* aDBConn)
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE index_data ("
       "index_id INTEGER NOT NULL, "
-      "value NOT NULL, "
-      "object_data_key NOT NULL, "
+      "value BLOB NOT NULL, "
+      "object_data_key BLOB NOT NULL, "
       "object_data_id INTEGER NOT NULL, "
       "PRIMARY KEY (index_id, value, object_data_key), "
       "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
@@ -268,8 +268,8 @@ CreateTables(mozIStorageConnection* aDBConn)
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE unique_index_data ("
       "index_id INTEGER NOT NULL, "
-      "value NOT NULL, "
-      "object_data_key NOT NULL, " // NONE affinity
+      "value BLOB NOT NULL, "
+      "object_data_key BLOB NOT NULL, "
       "object_data_id INTEGER NOT NULL, "
       "PRIMARY KEY (index_id, value, object_data_key), "
       "UNIQUE (index_id, value), "
@@ -1078,6 +1078,269 @@ UpgradeSchemaFrom10_0To11_0(mozIStorageConnection* aConnection)
   return NS_OK;
 }
 
+class EncodeKeysFunction : public mozIStorageFunction
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD
+  OnFunctionCall(mozIStorageValueArray* aArguments,
+                 nsIVariant** aResult)
+  {
+    PRUint32 argc;
+    nsresult rv = aArguments->GetNumEntries(&argc);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (argc != 1) {
+      NS_WARNING("Don't call me with the wrong number of arguments!");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    PRInt32 type;
+    rv = aArguments->GetTypeOfIndex(0, &type);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    Key key;
+    if (type == mozIStorageStatement::VALUE_TYPE_INTEGER) {
+      PRInt64 intKey;
+      aArguments->GetInt64(0, &intKey);
+      key.SetFromInteger(intKey);
+    }
+    else if (type == mozIStorageStatement::VALUE_TYPE_TEXT) {
+      nsString stringKey;
+      aArguments->GetString(0, stringKey);
+      key.SetFromString(stringKey);
+    }
+    else {
+      NS_WARNING("Don't call me with the wrong type of arguments!");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    const nsCString& buffer = key.GetBuffer();
+
+    std::pair<const void *, int> data(static_cast<const void*>(buffer.get()),
+                                      int(buffer.Length()));
+
+    nsCOMPtr<nsIVariant> result = new mozilla::storage::BlobVariant(data);
+
+    result.forget(aResult);
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS1(EncodeKeysFunction, mozIStorageFunction)
+
+nsresult
+UpgradeSchemaFrom11_0To12_0(mozIStorageConnection* aConnection)
+{
+  NS_NAMED_LITERAL_CSTRING(encoderName, "encode");
+
+  nsCOMPtr<mozIStorageFunction> encoder = new EncodeKeysFunction();
+
+  nsresult rv = aConnection->CreateFunction(encoderName, 1, encoder);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TEMPORARY TABLE temp_upgrade ("
+      "id INTEGER PRIMARY KEY, "
+      "object_store_id, "
+      "key_value, "
+      "data, "
+      "file_ids "
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO temp_upgrade "
+      "SELECT id, object_store_id, encode(key_value), data, file_ids "
+      "FROM object_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE object_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE object_data ("
+      "id INTEGER PRIMARY KEY, "
+      "object_store_id INTEGER NOT NULL, "
+      "key_value BLOB DEFAULT NULL, "
+      "data BLOB NOT NULL, "
+      "file_ids TEXT, "
+      "UNIQUE (object_store_id, key_value), "
+      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO object_data "
+      "SELECT id, object_store_id, key_value, data, file_ids "
+      "FROM temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TRIGGER object_data_insert_trigger "
+    "AFTER INSERT ON object_data "
+    "FOR EACH ROW "
+    "WHEN NEW.file_ids IS NOT NULL "
+    "BEGIN "
+      "SELECT update_refcount(NULL, NEW.file_ids); "
+    "END;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TRIGGER object_data_update_trigger "
+    "AFTER UPDATE OF file_ids ON object_data "
+    "FOR EACH ROW "
+    "WHEN OLD.file_ids IS NOT NULL OR NEW.file_ids IS NOT NULL "
+    "BEGIN "
+      "SELECT update_refcount(OLD.file_ids, NEW.file_ids); "
+    "END;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TRIGGER object_data_delete_trigger "
+    "AFTER DELETE ON object_data "
+    "FOR EACH ROW WHEN OLD.file_ids IS NOT NULL "
+    "BEGIN "
+      "SELECT update_refcount(OLD.file_ids, NULL); "
+    "END;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TEMPORARY TABLE temp_upgrade ("
+      "index_id, "
+      "value, "
+      "object_data_key, "
+      "object_data_id "
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO temp_upgrade "
+      "SELECT index_id, encode(value), encode(object_data_key), object_data_id "
+      "FROM index_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE index_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE index_data ("
+      "index_id INTEGER NOT NULL, "
+      "value BLOB NOT NULL, "
+      "object_data_key BLOB NOT NULL, "
+      "object_data_id INTEGER NOT NULL, "
+      "PRIMARY KEY (index_id, value, object_data_key), "
+      "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
+        "CASCADE, "
+      "FOREIGN KEY (object_data_id) REFERENCES object_data(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT OR IGNORE INTO index_data "
+      "SELECT index_id, value, object_data_key, object_data_id "
+      "FROM temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX index_data_object_data_id_index "
+    "ON index_data (object_data_id);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TEMPORARY TABLE temp_upgrade ("
+      "index_id, "
+      "value, "
+      "object_data_key, "
+      "object_data_id "
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO temp_upgrade "
+      "SELECT index_id, encode(value), encode(object_data_key), object_data_id "
+      "FROM unique_index_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE unique_index_data;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE unique_index_data ("
+      "index_id INTEGER NOT NULL, "
+      "value BLOB NOT NULL, "
+      "object_data_key BLOB NOT NULL, "
+      "object_data_id INTEGER NOT NULL, "
+      "PRIMARY KEY (index_id, value, object_data_key), "
+      "UNIQUE (index_id, value), "
+      "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
+        "CASCADE "
+      "FOREIGN KEY (object_data_id) REFERENCES object_data(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT INTO unique_index_data "
+      "SELECT index_id, value, object_data_key, object_data_id "
+      "FROM temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DROP TABLE temp_upgrade;"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX unique_index_data_object_data_id_index "
+    "ON unique_index_data (object_data_id);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->RemoveFunction(encoderName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aConnection->SetSchemaVersion(MakeSchemaVersion(12, 0));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 class VersionChangeEventsRunnable;
 
 class SetVersionHelper : public AsyncConnectionHelper,
@@ -1529,7 +1792,7 @@ OpenDatabaseHelper::CreateDatabaseConnection(
     }
     else  {
       // This logic needs to change next time we change the schema!
-      PR_STATIC_ASSERT(kSQLiteSchemaVersion == PRInt32((11 << 4) + 0));
+      PR_STATIC_ASSERT(kSQLiteSchemaVersion == PRInt32((12 << 4) + 0));
 
       while (schemaVersion != kSQLiteSchemaVersion) {
         if (schemaVersion == 4) {
@@ -1553,6 +1816,9 @@ OpenDatabaseHelper::CreateDatabaseConnection(
         }
         else if (schemaVersion == MakeSchemaVersion(10, 0)) {
           rv = UpgradeSchemaFrom10_0To11_0(connection);
+        }
+        else if (schemaVersion == MakeSchemaVersion(11, 0)) {
+          rv = UpgradeSchemaFrom11_0To12_0(connection);
         }
         else {
           NS_WARNING("Unable to open IndexedDB database, no upgrade path is "

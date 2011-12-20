@@ -457,6 +457,6 @@ IDBFactory::Cmp(const jsval& aFirst,
     return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
-  *_retval = first == second ? 0 : first < second ? -1 : 1;
+  *_retval = Key::CompareKeys(first, second);
   return NS_OK;
 }
