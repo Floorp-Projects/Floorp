@@ -917,7 +917,13 @@ public class PanZoomController
         if (mState == PanZoomState.ANIMATED_ZOOM)
             return false;
 
-        float spanRatio = detector.getCurrentSpan() / detector.getPreviousSpan();
+        float prevSpan = detector.getPreviousSpan();
+        if (FloatUtils.fuzzyEquals(prevSpan, 0.0f)) {
+            // let's eat this one to avoid setting the new zoom to infinity (bug 711453)
+            return true;
+        }
+
+        float spanRatio = detector.getCurrentSpan() / prevSpan;
 
         /*
          * Apply edge resistance if we're zoomed out smaller than the page size by scaling the zoom
