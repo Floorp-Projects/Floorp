@@ -5263,6 +5263,10 @@ JSTerm.prototype = {
             this.acceptProposedCompletion()) {
           aEvent.preventDefault();
         }
+        else {
+          this.updateCompleteNode(HUDService.getStr("Autocomplete.blank"));
+          aEvent.preventDefault();
+        }
         break;
 
       default:
