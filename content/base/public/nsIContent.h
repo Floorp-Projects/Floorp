@@ -902,8 +902,8 @@ public:
   virtual nsresult SetSMILOverrideStyleRule(mozilla::css::StyleRule* aStyleRule,
                                             bool aNotify) = 0;
 
-  nsresult LookupNamespaceURI(const nsAString& aNamespacePrefix,
-                              nsAString& aNamespaceURI) const;
+  nsresult LookupNamespaceURIInternal(const nsAString& aNamespacePrefix,
+                                      nsAString& aNamespaceURI) const;
 
   /**
    * If this content has independent selection, e.g., if this is input field
