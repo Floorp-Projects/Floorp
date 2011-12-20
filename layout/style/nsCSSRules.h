@@ -194,14 +194,9 @@ public:
 
 protected:
   friend class nsCSSFontFaceRule;
-  nsCSSValue mFamily;
-  nsCSSValue mStyle;
-  nsCSSValue mWeight;
-  nsCSSValue mStretch;
-  nsCSSValue mSrc;
-  nsCSSValue mUnicodeRange;
-  nsCSSValue mFontFeatureSettings;
-  nsCSSValue mFontLanguageOverride;
+#define CSS_FONT_DESC(name_, method_) nsCSSValue m##method_;
+#include "nsCSSFontDescList.h"
+#undef CSS_FONT_DESC
 
   static nsCSSValue nsCSSFontFaceStyleDecl::* const Fields[];  
   inline nsCSSFontFaceRule* ContainingRule();
