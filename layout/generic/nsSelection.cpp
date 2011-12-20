@@ -267,7 +267,6 @@ public:
 
   nsresult     StopAutoScrollTimer();
 
-
 private:
   friend class nsAutoScrollTimer;
 
@@ -1702,8 +1701,8 @@ nsFrameSelection::HandleDrag(nsIFrame *aFrame, nsPoint aPoint)
   if (!offsets.content)
     return;
 
-  if ((newFrame->GetStateBits() & NS_FRAME_SELECTED_CONTENT) &&
-       AdjustForMaintainedSelection(offsets.content, offsets.offset))
+  if (newFrame->IsSelected() &&
+      AdjustForMaintainedSelection(offsets.content, offsets.offset))
     return;
 
   // Adjust offsets according to maintained amount
@@ -1909,7 +1908,6 @@ printf(" * TakeFocus - moving into new cell\n");
     return NS_OK;
   return NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL);
 }
-
 
 
 SelectionDetails*
@@ -2478,8 +2476,7 @@ printf("HandleTableSelection: Mouse down event\n");
           // Check if new cell is already selected
           nsIFrame  *cellFrame = childContent->GetPrimaryFrame();
           if (!cellFrame) return NS_ERROR_NULL_POINTER;
-          result = cellFrame->GetSelected(&isSelected);
-          if (NS_FAILED(result)) return result;
+          isSelected = cellFrame->IsSelected();
         }
         else
         {
@@ -3377,6 +3374,16 @@ nsFrameSelection::GetDelayedCaretData()
   return nsnull;
 }
 
+void
+nsFrameSelection::DisconnectFromPresShell()
+{
+  StopAutoScrollTimer();
+  for (PRInt32 i = 0; i < nsISelectionController::NUM_SELECTIONTYPES; i++) {
+    mDomSelections[i]->Clear(nsnull);
+  }
+  mShell = nsnull;
+}
+
 //END nsISelection interface implementations
 
 #if 0
@@ -3405,6 +3412,11 @@ nsTypedSelection::nsTypedSelection(nsFrameSelection *aList)
 nsTypedSelection::~nsTypedSelection()
 {
   setAnchorFocusRange(-1);
+
+  PRUint32 count = mRanges.Length();
+  for (PRUint32 i = 0; i < count; ++i) {
+    mRanges[i].mRange->SetInSelection(false);
+  }
 
   if (mAutoScrollTimer) {
     mAutoScrollTimer->Stop();
@@ -3730,6 +3742,8 @@ nsTypedSelection::AddItem(nsIRange *aItem, PRInt32 *aOutIndex)
   if (mRanges.Length() == 0) {
     if (!mRanges.AppendElement(RangeData(aItem)))
       return NS_ERROR_OUT_OF_MEMORY;
+    aItem->SetInSelection(true);
+
     if (aOutIndex)
       *aOutIndex = 0;
     return NS_OK;
@@ -3767,6 +3781,7 @@ nsTypedSelection::AddItem(nsIRange *aItem, PRInt32 *aOutIndex)
     // The new range doesn't overlap any existing ranges
     if (!mRanges.InsertElementAt(startIndex, RangeData(aItem)))
       return NS_ERROR_OUT_OF_MEMORY;
+    aItem->SetInSelection(true);
     if (aOutIndex)
       *aOutIndex = startIndex;
     return NS_OK;
@@ -3788,6 +3803,9 @@ nsTypedSelection::AddItem(nsIRange *aItem, PRInt32 *aOutIndex)
   }
 
   // Remove all the overlapping ranges
+  for (PRInt32 i = startIndex; i < endIndex; ++i) {
+    mRanges[i].mRange->SetInSelection(false);
+  }
   mRanges.RemoveElementsAt(startIndex, endIndex - startIndex);
 
   nsTArray<RangeData> temp;
@@ -3810,6 +3828,10 @@ nsTypedSelection::AddItem(nsIRange *aItem, PRInt32 *aOutIndex)
   // Merge the leftovers back in to mRanges
   if (!mRanges.InsertElementsAt(startIndex, temp))
     return NS_ERROR_OUT_OF_MEMORY;
+
+  for (PRUint32 i = 0; i < temp.Length(); ++i) {
+    temp[i].mRange->SetInSelection(true);
+  }
 
   *aOutIndex = startIndex + insertionPoint;
   return NS_OK;
@@ -3837,6 +3859,7 @@ nsTypedSelection::RemoveItem(nsIRange *aItem)
     return NS_ERROR_INVALID_ARG;
 
   mRanges.RemoveElementAt(idx);
+  aItem->SetInSelection(false);
   return NS_OK;
 }
 
@@ -3860,8 +3883,9 @@ nsTypedSelection::Clear(nsPresContext* aPresContext)
 {
   setAnchorFocusRange(-1);
 
-  for (PRInt32 i = 0; i < (PRInt32)mRanges.Length(); i ++) {
-    selectFrames(aPresContext, mRanges[i].mRange, 0);
+  for (PRUint32 i = 0; i < mRanges.Length(); ++i) {
+    mRanges[i].mRange->SetInSelection(false);
+    selectFrames(aPresContext, mRanges[i].mRange, false);
   }
   mRanges.Clear();
 
@@ -4274,42 +4298,29 @@ nsTypedSelection::SelectAllFramesForContent(nsIContentIterator *aInnerIter,
                                   nsIContent *aContent,
                                   bool aSelected)
 {
-  if (!mFrameSelection)
-    return NS_OK; // nothing to do
-  nsIPresShell* shell = mFrameSelection->GetShell();
-  if (!shell)
-    return NS_OK;
-  nsresult result;
-  if (!aInnerIter)
-    return NS_ERROR_NULL_POINTER;
-  result = aInnerIter->Init(aContent);
+  nsresult result = aInnerIter->Init(aContent);
   nsIFrame *frame;
   if (NS_SUCCEEDED(result))
   {
     // First select frame of content passed in
     frame = aContent->GetPrimaryFrame();
-    if (frame)
-    {
-      frame->SetSelected(aSelected, mType);
-      if (mFrameSelection->GetTableCellSelection())
-      {
-        nsITableCellLayout *tcl = do_QueryFrame(frame);
-        if (tcl)
-        {
-          return NS_OK;
-        }
-      }
+    if (frame && frame->GetType() == nsGkAtoms::textFrame) {
+      nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
+      textFrame->SetSelectedRange(0, aContent->GetText()->GetLength(), aSelected, mType);
     }
     // Now iterated through the child frames and set them
-    while (!aInnerIter->IsDone())
-    {
+    while (!aInnerIter->IsDone()) {
       nsCOMPtr<nsIContent> innercontent =
         do_QueryInterface(aInnerIter->GetCurrentNode());
 
       frame = innercontent->GetPrimaryFrame();
-      if (frame)
-      {
-        frame->SetSelected(aSelected, mType);
+      if (frame) {
+        if (frame->GetType() == nsGkAtoms::textFrame) {
+          nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
+          textFrame->SetSelectedRange(0, innercontent->GetText()->GetLength(), aSelected, mType);
+        } else {
+          frame->InvalidateFrameSubtree();  // frame continuations?
+        }
       }
 
       aInnerIter->Next();
@@ -4321,21 +4332,23 @@ nsTypedSelection::SelectAllFramesForContent(nsIContentIterator *aInnerIter,
   return NS_ERROR_FAILURE;
 }
 
-
-
 //the idea of this helper method is to select, deselect "top to bottom" traversing through the frames
 nsresult
 nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIRange *aRange, bool aFlags)
 {
-  if (!mFrameSelection || !aPresContext)
+  if (!mFrameSelection || !aPresContext || !aPresContext->GetPresShell())
     return NS_OK; // nothing to do
-  nsIPresShell *presShell = aPresContext->GetPresShell();
-  if (!presShell)
-    return NS_OK;
 
-  nsCOMPtr<nsIDOMRange> domRange = do_QueryInterface(aRange);
-  if (!domRange || !aPresContext) 
-    return NS_ERROR_NULL_POINTER;
+  if (mFrameSelection->GetTableCellSelection()) {
+    nsINode* node = aRange->GetCommonAncestor();
+    nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+    nsIFrame* frame = content ? content->GetPrimaryFrame()
+                              : aPresContext->FrameManager()->GetRootFrame();
+    if (frame) {
+      frame->InvalidateFrameSubtree();
+    }
+    return NS_OK;
+  }
 
   nsresult result;
   nsCOMPtr<nsIContentIterator> iter = do_CreateInstance(
@@ -4348,8 +4361,7 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIRange *aRange, bo
                                               kCContentIteratorCID,
                                               &result);
 
-  if ((NS_SUCCEEDED(result)) && iter && inneriter)
-  {
+  if ((NS_SUCCEEDED(result)) && iter) {
     result = iter->Init(aRange);
 
     // loop through the content iterator for each content node
@@ -4360,8 +4372,7 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIRange *aRange, bo
     if (!content)
       return NS_ERROR_UNEXPECTED;
 
-    if (content->IsNodeOfType(nsINode::eTEXT))
-    {
+    if (content->IsNodeOfType(nsINode::eTEXT)) {
       nsIFrame* frame = content->GetPrimaryFrame();
       // The frame could be an SVG text frame, in which case we'll ignore
       // it.
@@ -4380,13 +4391,9 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIRange *aRange, bo
     }
 
     iter->First();
-
-    while (!iter->IsDone())
-    {
+    while (!iter->IsDone()) {
       content = do_QueryInterface(iter->GetCurrentNode());
-
       SelectAllFramesForContent(inneriter, content, aFlags);
-
       iter->Next();
     }
 
@@ -4412,6 +4419,7 @@ nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIRange *aRange, bo
   }
   return result;
 }
+
 
 // nsTypedSelection::LookUpSelection
 //
@@ -4785,13 +4793,7 @@ nsTypedSelection::AddRange(nsIRange* aRange)
 
   nsRefPtr<nsPresContext>  presContext;
   GetPresContext(getter_AddRefs(presContext));
-
-  // Ensure all frames are properly constructed for selectFrames, bug 602331.
-  nsIPresShell* presShell = presContext ? presContext->GetPresShell() : nsnull;
-  if (presShell) {
-    presShell->FlushPendingNotifications(Flush_Frames);
-  }
-  selectFrames(presContext, aRange, true);        
+  selectFrames(presContext, aRange, true);
 
   if (!mFrameSelection)
     return NS_OK;//nothing to do
@@ -4926,27 +4928,21 @@ nsTypedSelection::Collapse(nsINode* aParentNode, PRInt32 aOffset)
     return result;
 
 #ifdef DEBUG_SELECTION
-  if (aParentNode)
-  {
-    nsCOMPtr<nsIContent>content;
-    content = do_QueryInterface(aParentNode);
-    if (!content)
-      return NS_ERROR_FAILURE;
-
-    printf ("Sel. Collapse to %p %s %d\n", content.get(),
-            nsAtomCString(content->Tag()).get(), aOffset);
-  }
-  else {
-    printf ("Sel. Collapse set to null parent.\n");
+  if (aParentNode) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aParentNode);
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aParentNode);
+    printf ("Sel. Collapse to %p %s %d\n", aParentNode,
+            content ? nsAtomCString(content->Tag()).get()
+                    : (doc ? "DOCUMENT" : "???"),
+            aOffset);
   }
 #endif
 
-
   result = AddItem(range);
-  setAnchorFocusRange(0);
-  selectFrames(presContext, range, true);
   if (NS_FAILED(result))
     return result;
+  setAnchorFocusRange(0);
+  selectFrames(presContext, range, true);
   return mFrameSelection->NotifySelectionListeners(GetType());
 }
 
