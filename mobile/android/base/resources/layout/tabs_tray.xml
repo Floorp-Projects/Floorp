@@ -3,43 +3,32 @@
               android:id="@+id/container"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:orientation="vertical"
-              android:paddingTop="40dip">
+              android:orientation="vertical">
 
      <LinearLayout android:layout_width="match_parent"
                    android:layout_height="wrap_content"
-                   android:background="@drawable/tabs_tray_bg"
-                   android:orientation="vertical">
+                   android:orientation="vertical"
+                   android:background="@drawable/tabs_tray_bg_repeat">
 
          <ListView android:id="@+id/list"
-                   style="@style/AwesomeBarList"/>
+                   style="@style/TabsList"
+                   android:divider="@drawable/tabs_tray_list_divider"/>
+
+         <LinearLayout android:layout_width="match_parent"
+                       android:layout_height="2dp"
+                       android:background="@drawable/tabs_tray_list_divider"/>
 
          <LinearLayout android:id="@+id/add_tab"
                        android:layout_width="match_parent"
-                       android:layout_height="48dip"
-                       android:orientation="vertical"
-                       android:background="@android:drawable/list_selector_background">
+                       android:layout_height="50dip"
+                       android:orientation="horizontal"
+                       android:gravity="center|right"
+                       android:background="@drawable/tabs_tray_list_selector">
 
-                       <LinearLayout android:layout_width="match_parent"
-                                     android:layout_height="match_parent"
-                                     android:layout_weight="1"
-                                     android:orientation="horizontal"
-                                     android:gravity="center">
-
-                           <ImageView android:layout_width="32dip"
-                                      android:layout_height="32dip"
-                                      android:layout_marginRight="12dip"
-                                      android:src="@drawable/tab_new"/>
-                            
-                           <TextView android:layout_width="wrap_content"
-                                     android:layout_height="wrap_content"
-                                     android:textAppearance="?android:attr/textAppearanceMediumInverse"
-                                     android:textColor="?android:attr/textColorPrimaryInverse"
-                                     android:text="@string/new_tab"
-                                     android:singleLine="true"
-                                     android:ellipsize="middle"/>
-
-                       </LinearLayout>
+             <ImageView android:layout_width="20dip"
+                        android:layout_height="20dip"
+                        android:layout_marginRight="20dip"
+                        android:src="@drawable/tab_new"/>
 
          </LinearLayout>
 

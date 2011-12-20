@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources>
-    <string-array name="pref_enable_flash_entries">
-        <item>@string/pref_enable_flash_yes</item>
-        <item>@string/pref_enable_flash_tap_to_play</item>
-        <item>@string/pref_enable_flash_no</item>
+    <string-array name="pref_enable_plugins_entries">
+        <item>@string/pref_enable_plugins_yes</item>
+        <item>@string/pref_enable_plugins_tap_to_play</item>
+        <item>@string/pref_enable_plugins_no</item>
     </string-array>
-    <string-array name="pref_enable_flash_values">
+    <string-array name="pref_enable_plugins_values">
         <item>1</item>
         <item>2</item>
         <item>0</item>

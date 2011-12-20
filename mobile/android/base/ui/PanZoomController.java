@@ -275,6 +275,7 @@ public class PanZoomController
      */
 
     private boolean onTouchStart(MotionEvent event) {
+        Log.d(LOGTAG, "onTouchStart in state " + mState);
         // user is taking control of movement, so stop
         // any auto-movement we have going
         stopAnimationTimer();
@@ -306,6 +307,8 @@ public class PanZoomController
     }
 
     private boolean onTouchMove(MotionEvent event) {
+        Log.d(LOGTAG, "onTouchMove in state " + mState);
+
         switch (mState) {
         case NOTHING:
         case FLING:
@@ -341,6 +344,8 @@ public class PanZoomController
     }
 
     private boolean onTouchEnd(MotionEvent event) {
+        Log.d(LOGTAG, "onTouchEnd in " + mState);
+
         switch (mState) {
         case NOTHING:
         case FLING:
@@ -384,6 +389,8 @@ public class PanZoomController
     }
 
     private boolean onTouchCancel(MotionEvent event) {
+        Log.d(LOGTAG, "onTouchCancel in " + mState);
+
         mState = PanZoomState.NOTHING;
         // ensure we snap back if we're overscrolled
         bounce();
@@ -512,11 +519,17 @@ public class PanZoomController
     private void bounce(ViewportMetrics metrics) {
         stopAnimationTimer();
 
+        mBounceStartMetrics = new ViewportMetrics(mController.getViewportMetrics());
+        if (mBounceStartMetrics.fuzzyEquals(metrics)) {
+            mState = PanZoomState.NOTHING;
+            return;
+        }
+
         mBounceFrame = 0;
         mState = PanZoomState.FLING;
         mX.setFlingState(Axis.FlingStates.SNAPPING); mY.setFlingState(Axis.FlingStates.SNAPPING);
-        mBounceStartMetrics = new ViewportMetrics(mController.getViewportMetrics());
         mBounceEndMetrics = metrics;
+        Log.d(LOGTAG, "end bounce at " + mBounceEndMetrics);
 
         startAnimationTimer(new BounceRunnable());
     }
@@ -680,6 +693,7 @@ public class PanZoomController
     }
 
     private void finishAnimation() {
+        Log.d(LOGTAG, "Finishing animation at " + mController.getViewportMetrics());
         mState = PanZoomState.NOTHING;
         stopAnimationTimer();
 
@@ -842,6 +856,7 @@ public class PanZoomController
     /* Returns the nearest viewport metrics with no overscroll visible. */
     private ViewportMetrics getValidViewportMetrics() {
         ViewportMetrics viewportMetrics = new ViewportMetrics(mController.getViewportMetrics());
+        Log.d(LOGTAG, "generating valid viewport using " + viewportMetrics);
 
         /* First, we adjust the zoom factor so that we can make no overscrolled area visible. */
         float zoomFactor = viewportMetrics.getZoomFactor();
@@ -868,6 +883,7 @@ public class PanZoomController
 
         /* Now we pan to the right origin. */
         viewportMetrics.setViewport(viewportMetrics.getClampedViewport());
+        Log.d(LOGTAG, "generated valid viewport as " + viewportMetrics);
 
         return viewportMetrics;
     }
@@ -895,6 +911,8 @@ public class PanZoomController
      */
     @Override
     public boolean onScale(ScaleGestureDetector detector) {
+        Log.d(LOGTAG, "onScale in state " + mState);
+
         if (mState == PanZoomState.ANIMATED_ZOOM)
             return false;
 
@@ -926,6 +944,8 @@ public class PanZoomController
 
     @Override
     public boolean onScaleBegin(ScaleGestureDetector detector) {
+        Log.d(LOGTAG, "onScaleBegin in " + mState);
+
         if (mState == PanZoomState.ANIMATED_ZOOM)
             return false;
 
@@ -939,6 +959,8 @@ public class PanZoomController
 
     @Override
     public void onScaleEnd(ScaleGestureDetector detector) {
+        Log.d(LOGTAG, "onScaleEnd in " + mState);
+
         PointF o = mController.getOrigin();
         if (mState == PanZoomState.ANIMATED_ZOOM)
             return;

@@ -159,7 +159,7 @@ SVGOrientSMILType::Interpolate(const nsSMILValue& aStartVal,
   NS_PRECONDITION(aResult.mType   == this, "Unexpected result type.");
 
   if (aStartVal.mU.mOrient.mOrientType != nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_ANGLE ||
-      aStartVal.mU.mOrient.mOrientType != nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_ANGLE) {
+      aEndVal.mU.mOrient.mOrientType != nsIDOMSVGMarkerElement::SVG_MARKER_ORIENT_ANGLE) {
     // TODO: it would be nice to be able to handle auto angles too.
     return NS_ERROR_FAILURE;
   }
