@@ -62,7 +62,6 @@ import android.text.SpannableString;
 import android.text.style.UnderlineSpan;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -82,6 +81,8 @@ public class AboutHomeContent extends ScrollView {
     private static final int NUMBER_OF_COLS_PORTRAIT = 2;
     private static final int NUMBER_OF_COLS_LANDSCAPE = 3;
 
+    private boolean mInflated;
+
     private Cursor mCursor;
     UriLoadCallback mUriLoadCallback = null;
 
@@ -97,45 +98,50 @@ public class AboutHomeContent extends ScrollView {
 
     public AboutHomeContent(Context context, AttributeSet attrs) {
         super(context, attrs);
+        mInflated = false;
     }
 
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-        synchronized (this) {
-            if (mTopSitesGrid != null && mAddonsList != null)
-                return;
 
-            mTopSitesGrid = (GridView)findViewById(R.id.top_sites_grid);
-            mTopSitesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                    Cursor c = (Cursor) parent.getItemAtPosition(position);
+        // HACK: Without this, the onFinishInflate is called twice
+        // This issue is due to a bug when Android inflates a layout with a
+        // parent. Fixed in Honeycomb
+        if (mInflated)
+            return;
 
-                    String spec = c.getString(c.getColumnIndex(URLColumns.URL));
-                    Log.i(LOGTAG, "clicked: " + spec);
+        mInflated = true;
 
-                    if (mUriLoadCallback != null)
-                        mUriLoadCallback.callback(spec);
-                }
-            });
+        mTopSitesGrid = (GridView)findViewById(R.id.top_sites_grid);
+        mTopSitesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                Cursor c = (Cursor) parent.getItemAtPosition(position);
 
-            mAddonsList = (ListView) findViewById(R.id.recommended_addons_list);
+                String spec = c.getString(c.getColumnIndex(URLColumns.URL));
+                Log.i(LOGTAG, "clicked: " + spec);
 
-            TextView allTopSitesText = (TextView) findViewById(R.id.all_top_sites_text);
-            allTopSitesText.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    GeckoApp.mAppContext.showAwesomebar(AwesomeBar.Type.EDIT);
-                }
-            });
+                if (mUriLoadCallback != null)
+                    mUriLoadCallback.callback(spec);
+            }
+        });
 
-            TextView allAddonsText = (TextView) findViewById(R.id.all_addons_text);
-            allAddonsText.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    if (mUriLoadCallback != null)
-                        mUriLoadCallback.callback("about:addons");
-                }
-            });
-        }
+        mAddonsList = (ListView) findViewById(R.id.recommended_addons_list);
+
+        TextView allTopSitesText = (TextView) findViewById(R.id.all_top_sites_text);
+        allTopSitesText.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                GeckoApp.mAppContext.showAwesomebar(AwesomeBar.Type.EDIT);
+            }
+        });
+
+        TextView allAddonsText = (TextView) findViewById(R.id.all_addons_text);
+        allAddonsText.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (mUriLoadCallback != null)
+                    mUriLoadCallback.callback("about:addons");
+            }
+        });
     }
 
     private int getNumberOfTopSites() {
@@ -155,11 +161,7 @@ public class AboutHomeContent extends ScrollView {
     }
 
     void init(final Activity activity) {
-        LayoutInflater inflater =
-            (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-        inflater.inflate(R.layout.abouthome_content, this);
-        final Runnable generateCursorsRunnable = new Runnable() {
+        GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
                 if (mCursor != null)
                     activity.stopManagingCursor(mCursor);
@@ -191,14 +193,7 @@ public class AboutHomeContent extends ScrollView {
 
                 readRecommendedAddons(activity);
             }
-        };
-        Runnable finishInflateRunnable = new Runnable() {
-            public void run() {
-                onFinishInflate();
-                GeckoAppShell.getHandler().post(generateCursorsRunnable);
-            }
-        };
-        GeckoApp.mAppContext.mMainHandler.post(finishInflateRunnable);
+        });
     }
 
     public void setUriLoadCallback(UriLoadCallback uriLoadCallback) {
@@ -310,14 +305,14 @@ public class AboutHomeContent extends ScrollView {
             // This is to ensure that the GridView always has a size that shows
             // all items with no need for scrolling.
             int expandedHeightSpec = MeasureSpec.makeMeasureSpec(Integer.MAX_VALUE >> 2,
-                                                                 MeasureSpec.AT_MOST);
+                    MeasureSpec.AT_MOST);
             super.onMeasure(widthMeasureSpec, expandedHeightSpec);
         }
     }
 
     public class TopSitesCursorAdapter extends SimpleCursorAdapter {
         public TopSitesCursorAdapter(Context context, int layout, Cursor c,
-                                     String[] from, int[] to) {
+                String[] from, int[] to) {
             super(context, layout, c, from, to);
         }
 
@@ -389,7 +384,7 @@ public class AboutHomeContent extends ScrollView {
             // This is to ensure that the ListView always has a size that shows
             // all items with no need for scrolling.
             int expandedHeightSpec = MeasureSpec.makeMeasureSpec(Integer.MAX_VALUE >> 2,
-                                                                 MeasureSpec.AT_MOST);
+                    MeasureSpec.AT_MOST);
             super.onMeasure(widthMeasureSpec, expandedHeightSpec);
         }
     }
