@@ -3,7 +3,8 @@
 
 "use strict";
 
-Cu.import("resource://services-sync/addonsreconciler.js");
+Cu.import("resource://services-sync/AddonsReconciler.js");
+Cu.import("resource://services-sync/engines/addons.js");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 
 loadAddonTestFunctions();
@@ -12,6 +13,11 @@ startupManager();
 function run_test() {
   initTestLogging("Trace");
   Log4Moz.repository.getLogger("Sync.AddonsReconciler").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.AddonsReconciler").level =
+    Log4Moz.Level.Trace;
+
+  Svc.Prefs.set("engine.addons", true);
+  Engines.register(AddonsEngine);
 
   run_next_test();
 }
@@ -21,7 +27,7 @@ add_test(function test_defaults() {
 
   let reconciler = new AddonsReconciler();
 
-  do_check_true(reconciler._listening);
+  do_check_false(reconciler._listening);
   do_check_eq("object", typeof(reconciler.addons));
   do_check_eq(0, Object.keys(reconciler.addons).length);
   do_check_eq(0, reconciler._changes.length);
@@ -51,6 +57,7 @@ add_test(function test_install_detection() {
   _("Ensure that add-on installation results in appropriate side-effects.");
 
   let reconciler = new AddonsReconciler();
+  reconciler.startListening();
 
   let before = new Date();
   let addon = installAddon("test_bootstrap1_1");
@@ -90,6 +97,8 @@ add_test(function test_uninstall_detection() {
   _("Ensure that add-on uninstallation results in appropriate side-effects.");
 
   let reconciler = new AddonsReconciler();
+  reconciler.startListening();
+
   reconciler._addons = {};
   reconciler._changes = [];
 
