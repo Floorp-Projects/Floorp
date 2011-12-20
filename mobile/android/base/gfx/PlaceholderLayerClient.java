@@ -153,7 +153,6 @@ public class PlaceholderLayerClient extends LayerClient {
         if (mViewportUnknown)
             mViewport.setViewport(layerController.getViewport());
         layerController.setViewportMetrics(mViewport);
-        layerController.notifyPanZoomControllerOfGeometryChange(false);
 
         BufferedCairoImage image = new BufferedCairoImage(mBuffer, mWidth, mHeight, mFormat);
         SingleTileLayer tileLayer = new SingleTileLayer(image);
