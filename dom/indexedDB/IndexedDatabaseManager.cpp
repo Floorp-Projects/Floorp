@@ -734,12 +734,9 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
     rv = fileManagerDirectory->Append(dbBaseFilename);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsString voidString;
-    voidString.SetIsVoid(true);
-
     nsCOMPtr<mozIStorageConnection> connection;
     rv = OpenDatabaseHelper::CreateDatabaseConnection(
-      voidString, file, fileManagerDirectory, getter_AddRefs(connection));
+      NullString(), file, fileManagerDirectory, getter_AddRefs(connection));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<mozIStorageStatement> stmt;
