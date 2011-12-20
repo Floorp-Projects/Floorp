@@ -1064,8 +1064,9 @@ nsINode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                             nsAString& aNamespaceURI)
 {
   Element *element = GetNameSpaceElement();
-  if (!element || NS_FAILED(element->LookupNamespaceURI(aNamespacePrefix,
-                                                        aNamespaceURI))) {
+  if (!element ||
+      NS_FAILED(element->LookupNamespaceURIInternal(aNamespacePrefix,
+                                                    aNamespaceURI))) {
     SetDOMStringToNull(aNamespaceURI);
   }
 
@@ -1433,8 +1434,8 @@ nsIContent::GetEditingHost()
 }
 
 nsresult
-nsIContent::LookupNamespaceURI(const nsAString& aNamespacePrefix,
-                               nsAString& aNamespaceURI) const
+nsIContent::LookupNamespaceURIInternal(const nsAString& aNamespacePrefix,
+                                       nsAString& aNamespaceURI) const
 {
   if (aNamespacePrefix.EqualsLiteral("xml")) {
     // Special-case for xml prefix

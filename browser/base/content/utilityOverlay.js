@@ -241,7 +241,7 @@ function openLinkIn(url, where, params) {
     return;
   }
 
-  let loadInBackground = aInBackground;
+  let loadInBackground = where == "current" ? false : aInBackground;
   if (loadInBackground == null) {
     loadInBackground = aFromChrome ?
                          false :
@@ -298,6 +298,9 @@ function openLinkIn(url, where, params) {
     w.content.focus();
   else
     w.gBrowser.selectedBrowser.focus();
+
+  if (!loadInBackground && url == "about:blank")
+    w.focusAndSelectUrlBar();
 }
 
 // Used as an onclick handler for UI elements with link-like behavior.
