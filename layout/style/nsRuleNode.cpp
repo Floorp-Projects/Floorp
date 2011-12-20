@@ -6496,13 +6496,6 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
     column->mColumnRuleColorIsForeground = false;
   }
 
-  // column-fill: enum
-  SetDiscrete(*aRuleData->ValueForColumnFill(),
-                column->mColumnFill, canStoreInRuleTree,
-                SETDSC_ENUMERATED, parent->mColumnFill,
-                NS_STYLE_COLUMN_FILL_BALANCE,
-                0, 0, 0, 0);
-
   COMPUTE_END_RESET(Column, column)
 }
 
