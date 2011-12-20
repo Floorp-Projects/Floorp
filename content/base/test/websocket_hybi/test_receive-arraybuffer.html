@@ -39,7 +39,7 @@ function createArrayBufferContainingAllDistinctBytes()
     return array.buffer;
 }
 
-var ws = new MozWebSocket("ws://mochi.test:8888/tests/content/base/test/websocket_hybi/file_binary-frames");
+var ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/websocket_hybi/file_binary-frames");
 ws.binaryType = "arraybuffer";
 is(ws.binaryType, "arraybuffer", "should be equal to 'arraybuffer'");
 
