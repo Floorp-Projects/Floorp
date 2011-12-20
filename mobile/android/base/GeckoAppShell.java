@@ -38,6 +38,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.GeckoSoftwareLayerClient;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerView;
@@ -609,28 +610,97 @@ public class GeckoAppShell
 
     // "Installs" an application by creating a shortcut
     static void createShortcut(String aTitle, String aURI, String aIconData, String aType) {
-        Log.w(LOGTAG, "createShortcut for " + aURI + " [" + aTitle + "] > " + aType);
-
-        // the intent to be launched by the shortcut
-        Intent shortcutIntent = new Intent();
-        if (aType.equalsIgnoreCase("webapp")) {
-            shortcutIntent.setAction("org.mozilla.gecko.WEBAPP");
-            shortcutIntent.putExtra("args", "--webapp=" + aURI);
-        } else {
-            shortcutIntent.setAction("org.mozilla.gecko.BOOKMARK");
-            shortcutIntent.putExtra("args", "--url=" + aURI);
-        }
-        shortcutIntent.setClassName(GeckoApp.mAppContext,
-                                    GeckoApp.mAppContext.getPackageName() + ".App");
-
-        Intent intent = new Intent();
-        intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
-        intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aTitle);
         byte[] raw = Base64.decode(aIconData.substring(22), Base64.DEFAULT);
         Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
-        intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, bitmap);
-        intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
-        GeckoApp.mAppContext.sendBroadcast(intent);
+        createShortcut(aTitle, aURI, bitmap, aType);
+    }
+
+    public static void createShortcut(final String aTitle, final String aURI, final Bitmap aIcon, final String aType) {
+        getHandler().post(new Runnable() {
+            public void run() {
+                Log.w(LOGTAG, "createShortcut for " + aURI + " [" + aTitle + "] > " + aType);
+        
+                // the intent to be launched by the shortcut
+                Intent shortcutIntent = new Intent();
+                if (aType.equalsIgnoreCase("webapp")) {
+                    shortcutIntent.setAction("org.mozilla.gecko.WEBAPP");
+                    shortcutIntent.putExtra("args", aURI);
+                } else {
+                    shortcutIntent.setAction("org.mozilla.gecko.BOOKMARK");
+                    shortcutIntent.putExtra("args", aURI);
+                }
+                shortcutIntent.setClassName(GeckoApp.mAppContext,
+                                            GeckoApp.mAppContext.getPackageName() + ".App");
+        
+                Intent intent = new Intent();
+                intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
+                if (aTitle != null)
+                    intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aTitle);
+                else
+                    intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, aURI);
+                intent.putExtra(Intent.EXTRA_SHORTCUT_ICON, getLauncherIcon(aIcon));
+                intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
+                GeckoApp.mAppContext.sendBroadcast(intent);
+            }
+        });
+    }
+
+    static private Bitmap getLauncherIcon(Bitmap aSource) {
+        // The background images are 72px, but Android will resize as needed.
+        // Bigger is better than too small.
+        final int kIconSize = 72;
+        final int kOverlaySize = 32;
+        final int kOffset = 6;
+        final int kRadius = 5;
+
+        Bitmap bitmap = Bitmap.createBitmap(kIconSize, kIconSize, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+
+        // draw a base color
+        Paint paint = new Paint();
+        
+        if (aSource == null) {
+            float[] hsv = new float[3];
+            hsv[0] = 32.0f;
+            hsv[1] = 1.0f;
+            hsv[2] = 1.0f;
+            paint.setColor(Color.HSVToColor(hsv));
+            canvas.drawRoundRect(new RectF(kOffset, kOffset, kIconSize - kOffset, kIconSize - kOffset), kRadius, kRadius, paint);
+        } else {
+            int color = BitmapUtils.getDominantColor(aSource);
+            paint.setColor(color);
+            canvas.drawRoundRect(new RectF(kOffset, kOffset, kIconSize - kOffset, kIconSize - kOffset), kRadius, kRadius, paint);
+            paint.setColor(Color.argb(100, 255, 255, 255));
+            canvas.drawRoundRect(new RectF(kOffset, kOffset, kIconSize - kOffset, kIconSize - kOffset), kRadius, kRadius, paint);
+        }
+
+        // draw the overlay
+        Bitmap overlay = BitmapFactory.decodeResource(GeckoApp.mAppContext.getResources(), R.drawable.home_bg);
+        canvas.drawBitmap(overlay, null, new Rect(0,0,kIconSize, kIconSize), null);
+
+        // draw the bitmap
+        if (aSource == null)
+            aSource = BitmapFactory.decodeResource(GeckoApp.mAppContext.getResources(), R.drawable.home_star);
+
+        if (aSource.getWidth() < kOverlaySize || aSource.getHeight() < kOverlaySize) {
+            canvas.drawBitmap(aSource,
+                              null,
+                              new Rect(kIconSize/2 - kOverlaySize/2,
+                                       kIconSize/2 - kOverlaySize/2,
+                                       kIconSize/2 + kOverlaySize/2,
+                                       kIconSize/2 + kOverlaySize/2),
+                              null);
+        } else {
+            canvas.drawBitmap(aSource,
+                              null,
+                              new Rect(kIconSize/2 - aSource.getWidth()/2,
+                                       kIconSize/2 - aSource.getHeight()/2,
+                                       kIconSize/2 + aSource.getWidth()/2,
+                                       kIconSize/2 + aSource.getHeight()/2),
+                              null);
+        }
+
+        return bitmap;
     }
 
     static String[] getHandlersForMimeType(String aMimeType, String aAction) {
