@@ -81,6 +81,7 @@ public:
   static nsresult
   AppendIndexUpdateInfo(PRInt64 aIndexID,
                         const nsAString& aKeyPath,
+                        const nsTArray<nsString>& aKeyPathArray,
                         bool aUnique,
                         bool aMultiEntry,
                         JSContext* aCx,
@@ -159,7 +160,17 @@ public:
 
   const bool HasKeyPath() const
   {
-    return !mKeyPath.IsVoid();
+    return !mKeyPath.IsVoid() || !mKeyPathArray.IsEmpty();
+  }
+
+  bool UsesKeyPathArray() const
+  {
+    return !mKeyPathArray.IsEmpty();
+  }
+  
+  const nsTArray<nsString>& KeyPathArray() const
+  {
+    return mKeyPathArray;
   }
 
   IDBTransaction* Transaction()
@@ -199,6 +210,7 @@ private:
   PRInt64 mId;
   nsString mName;
   nsString mKeyPath;
+  nsTArray<nsString> mKeyPathArray;
   bool mAutoIncrement;
   nsCOMPtr<nsIAtom> mDatabaseId;
   nsRefPtr<ObjectStoreInfo> mInfo;

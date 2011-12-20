@@ -191,6 +191,28 @@ public:
     return NS_OK;
   }
 
+  nsresult AppendArrayItem(JSContext* aCx,
+                           bool aFirst,
+                           const jsval aVal)
+  {
+    if (aFirst) {
+      Unset();
+    }
+
+    nsresult rv = EncodeJSVal(aCx, aVal, aFirst ? eMaxType : 0);
+    if (NS_FAILED(rv)) {
+      Unset();
+      return rv;
+    }
+
+    return NS_OK;
+  }
+
+  void FinishArray()
+  {
+    TrimBuffer();
+  }
+
   const nsCString& GetBuffer() const
   {
     return mBuffer;
