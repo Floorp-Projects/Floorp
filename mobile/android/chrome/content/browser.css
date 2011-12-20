@@ -65,15 +65,6 @@ richlistitem {
   -moz-binding: url("chrome://browser/content/bindings.xml#richlistitem");
 }
 
-richlistitem[type="error"],
-richlistitem[type="warning"] {
-  -moz-binding: url("chrome://browser/content/bindings/console.xml#error");
-}
-
-richlistitem[type="message"]{
-  -moz-binding: url("chrome://browser/content/bindings/console.xml#message");
-}
-
 dialog {
   -moz-binding: url("chrome://browser/content/bindings/dialog.xml#dialog");
 }
