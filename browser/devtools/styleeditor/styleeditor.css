@@ -35,9 +35,85 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-.splitview-nav > li hgroup > .stylesheet-error-message {
+.stylesheet-error-message {
   display: none;
 }
-.splitview-nav > li.error hgroup > .stylesheet-error-message {
+
+li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   display: block;
+}
+
+.splitview-nav > li,
+.stylesheet-info,
+.stylesheet-more {
+  display: -moz-box;
+}
+
+.splitview-nav > li {
+  -moz-box-orient: horizontal;
+}
+
+.splitview-nav > li > hgroup {
+  display: -moz-box;
+  -moz-box-orient: vertical;
+  -moz-box-flex: 1;
+}
+
+.stylesheet-info > h1 {
+  -moz-box-flex: 1;
+}
+
+.stylesheet-name {
+  /* clip the text at the beginning */
+  display: -moz-box;
+  direction: rtl;
+  text-align: left;
+  overflow: hidden;
+}
+
+.splitview-nav > li > hgroup.stylesheet-info {
+  -moz-box-pack: center;
+}
+
+.splitview-nav:-moz-locale-dir(ltr) > li.unsaved > hgroup .stylesheet-name:before,
+.splitview-nav:-moz-locale-dir(rtl) > li.unsaved > hgroup .stylesheet-name:after {
+  content: "* ";
+}
+
+.stylesheet-enabled {
+  display: -moz-box;
+}
+
+.stylesheet-saveButton {
+  display: none;
+}
+
+.stylesheet-rule-count,
+li:hover > hgroup > .stylesheet-more > h3 >  .stylesheet-saveButton {
+  display: -moz-box;
+}
+
+.stylesheet-more > spacer {
+  -moz-box-flex: 1;
+}
+
+/* portrait mode */
+@media (max-aspect-ratio: 5/3) {
+  li:hover > hgroup > .stylesheet-more > .stylesheet-rule-count {
+    display: none;
+  }
+
+  .stylesheet-more {
+    -moz-box-flex: 1;
+    -moz-box-direction: reverse;
+  }
+
+  .splitview-nav > li > hgroup.stylesheet-info {
+    -moz-box-orient: horizontal;
+    -moz-box-flex: 1;
+  }
+
+  .stylesheet-more > spacer {
+    -moz-box-flex: 0;
+  }
 }
