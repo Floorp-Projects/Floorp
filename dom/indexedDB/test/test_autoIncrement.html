@@ -12,7 +12,8 @@
   <script type="text/javascript;version=1.7">
     function genCheck(key, value, test, options) {
       return function(event) {
-        is(event.target.result, key, "correct returned key in " + test);
+        is(JSON.stringify(event.target.result), JSON.stringify(key),
+           "correct returned key in " + test);
         if (options && options.store) {
           is(event.target.source, options.store, "correct store in " + test);
         }
@@ -121,6 +122,14 @@
       yield;
 
       trans = db.transaction("store1", RW);
+      trans.objectStore("store1").add({ explicit: 7 }, [100000]).onsuccess =
+        genCheck([100000], { explicit: 7 }, "seventh" + test);
+      yield;
+      trans.objectStore("store1").add({ explicit: 8 }).onsuccess =
+        genCheck(c1++, { explicit: 8 }, "eighth" + test);
+      yield;
+
+      trans = db.transaction("store1", RW);
       trans.objectStore("store1").add({ explicit: 9 }, -100000).onsuccess =
         genCheck(-100000, { explicit: 9 }, "ninth" + test);
       yield;
@@ -160,6 +169,15 @@
       trans = db.transaction("store2", RW);
       trans.objectStore("store2").add({ explicit: 7, id: "key" }).onsuccess =
         genCheck("key", { explicit: 7, id: "key" }, "seventh store2" + test);
+      yield;
+      trans.objectStore("store2").add({ explicit: 8 }).onsuccess =
+        genCheck(c2, { explicit: 8, id: c2 }, "eighth store2" + test);
+      c2++;
+      yield;
+
+      trans = db.transaction("store2", RW);
+      trans.objectStore("store2").add({ explicit: 7, id: [100000] }).onsuccess =
+        genCheck([100000], { explicit: 7, id: [100000] }, "seventh store2" + test);
       yield;
       trans.objectStore("store2").add({ explicit: 8 }).onsuccess =
         genCheck(c2, { explicit: 8, id: c2 }, "eighth store2" + test);

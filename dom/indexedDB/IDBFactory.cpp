@@ -49,6 +49,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDOMClassInfoID.h"
@@ -202,6 +203,13 @@ IDBFactory::GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
   return NS_OK;
 }
 
+inline
+bool
+IgnoreWhitespace(PRUnichar c)
+{
+  return false;
+}
+
 // static
 nsresult
 IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
@@ -245,8 +253,27 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
     else {
       NS_ASSERTION(columnType == mozIStorageStatement::VALUE_TYPE_TEXT,
                    "Should be a string");
-      rv = stmt->GetString(2, info->keyPath);
+      nsString keyPath;
+      rv = stmt->GetString(2, keyPath);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      if (!keyPath.IsEmpty() && keyPath.First() == ',') {
+        // We use a comma in the beginning to indicate that it's an array of
+        // key paths. This is to be able to tell a string-keypath from an
+        // array-keypath which contains only one item.
+        nsCharSeparatedTokenizerTemplate<IgnoreWhitespace>
+          tokenizer(keyPath, ',');
+        tokenizer.nextToken();
+        while (tokenizer.hasMoreTokens()) {
+          info->keyPathArray.AppendElement(tokenizer.nextToken());
+        }
+        NS_ASSERTION(!info->keyPathArray.IsEmpty(),
+                     "Should have at least one keypath");
+      }
+      else {
+        info->keyPath = keyPath;
+      }
+
     }
 
     info->nextAutoIncrementId = stmt->AsInt64(3);
@@ -291,8 +318,25 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
     rv = stmt->GetString(2, indexInfo->name);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = stmt->GetString(3, indexInfo->keyPath);
+    nsString keyPath;
+    rv = stmt->GetString(3, keyPath);
     NS_ENSURE_SUCCESS(rv, rv);
+    if (!keyPath.IsEmpty() && keyPath.First() == ',') {
+      // We use a comma in the beginning to indicate that it's an array of
+      // key paths. This is to be able to tell a string-keypath from an
+      // array-keypath which contains only one item.
+      nsCharSeparatedTokenizerTemplate<IgnoreWhitespace>
+        tokenizer(keyPath, ',');
+      tokenizer.nextToken();
+      while (tokenizer.hasMoreTokens()) {
+        indexInfo->keyPathArray.AppendElement(tokenizer.nextToken());
+      }
+      NS_ASSERTION(!indexInfo->keyPathArray.IsEmpty(),
+                   "Should have at least one keypath");
+    }
+    else {
+      indexInfo->keyPath = keyPath;
+    }
 
     indexInfo->unique = !!stmt->AsInt32(4);
     indexInfo->multiEntry = !!stmt->AsInt32(5);
@@ -457,6 +501,6 @@ IDBFactory::Cmp(const jsval& aFirst,
     return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
-  *_retval = first == second ? 0 : first < second ? -1 : 1;
+  *_retval = Key::CompareKeys(first, second);
   return NS_OK;
 }

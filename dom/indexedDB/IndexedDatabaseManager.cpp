@@ -56,6 +56,7 @@
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
 #include "test_quota.h"
+#include "xpcprivate.h"
 
 #include "AsyncConnectionHelper.h"
 #include "CheckQuotaHelper.h"
@@ -683,12 +684,15 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
   // are database files then we need to create file managers for them and also
   // tell SQLite about all of them.
 
-  nsAutoTArray<nsString, 20> subdirectories;
+  nsAutoTArray<nsString, 20> subdirsToProcess;
   nsAutoTArray<nsCOMPtr<nsIFile> , 20> unknownFiles;
 
   nsAutoPtr<nsTArray<nsRefPtr<FileManager> > > fileManagers(
     new nsTArray<nsRefPtr<FileManager> >());
 
+  nsTHashtable<nsStringHashKey> validSubdirs;
+  NS_ENSURE_TRUE(validSubdirs.Init(20), NS_ERROR_OUT_OF_MEMORY);
+  
   nsCOMPtr<nsISimpleEnumerator> entries;
   rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -711,7 +715,9 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (isDirectory) {
-      subdirectories.AppendElement(leafName);
+      if (!validSubdirs.GetEntry(leafName)) {
+        subdirsToProcess.AppendElement(leafName);
+      }
       continue;
     }
 
@@ -758,30 +764,24 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
 
     nsRefPtr<FileManager> fileManager = new FileManager(aOrigin, databaseName);
 
-    rv = fileManager->Init();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = fileManager->InitDirectory(fileManagerDirectory, connection);
+    rv = fileManager->Init(fileManagerDirectory, connection);
     NS_ENSURE_SUCCESS(rv, rv);
 
     fileManagers->AppendElement(fileManager);
 
     rv = ss->UpdateQuotaInformationForFile(file);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!validSubdirs.PutEntry(dbBaseFilename)) {
+      NS_WARNING("Out of memory?");
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRUint32 i = 0; i < subdirectories.Length(); i++) {
-    const nsString& subdirectory = subdirectories[i];
-    bool unknown = true;
-    for (PRUint32 j = 0; j < fileManagers->Length(); j++) {
-      nsRefPtr<FileManager>& fileManager = fileManagers->ElementAt(j);
-      if (fileManager->DirectoryName().Equals(subdirectory)) {
-        unknown = false;
-        break;
-      }
-    }
-    if (unknown) {
+  for (PRUint32 i = 0; i < subdirsToProcess.Length(); i++) {
+    const nsString& subdir = subdirsToProcess[i];
+    if (!validSubdirs.GetEntry(subdir)) {
       NS_WARNING("Unknown subdirectory found!");
       return NS_ERROR_UNEXPECTED;
     }
@@ -790,6 +790,8 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
   for (PRUint32 i = 0; i < unknownFiles.Length(); i++) {
     nsCOMPtr<nsIFile>& unknownFile = unknownFiles[i];
 
+    // Some temporary SQLite files could disappear, so we have to check if the
+    // unknown file still exists.
     bool exists;
     rv = unknownFile->Exists(&exists);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -798,6 +800,7 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
       nsString leafName;
       unknownFile->GetLeafName(leafName);
 
+      // The journal file may exists even after db has been correctly opened.
       if (!StringEndsWith(leafName, NS_LITERAL_STRING(".sqlite-journal"))) {
         NS_WARNING("Unknown file found!");
         return NS_ERROR_UNEXPECTED;
@@ -940,15 +943,31 @@ IndexedDatabaseManager::GetOrCreateFileManager(const nsACString& aOrigin,
   if (!fileManager) {
     fileManager = new FileManager(aOrigin, aDatabaseName);
 
-    if (NS_FAILED(fileManager->Init())) {
-      NS_WARNING("Failed to initialize file manager!");
-      return nsnull;
-    }
-
     array->AppendElement(fileManager);
   }
 
   return fileManager.forget();
+}
+
+already_AddRefed<FileManager>
+IndexedDatabaseManager::GetFileManager(const nsACString& aOrigin,
+                                       const nsAString& aDatabaseName)
+{
+  nsTArray<nsRefPtr<FileManager> >* array;
+  if (!mFileManagers.Get(aOrigin, &array)) {
+    return nsnull;
+  }
+
+  for (PRUint32 i = 0; i < array->Length(); i++) {
+    nsRefPtr<FileManager>& fileManager = array->ElementAt(i);
+
+    if (fileManager->DatabaseName().Equals(aDatabaseName)) {
+      nsRefPtr<FileManager> result = fileManager;
+      return result.forget();
+    }
+  }
+  
+  return nsnull;
 }
 
 void
@@ -1353,7 +1372,8 @@ IncrementUsage(PRUint64* aUsage, PRUint64 aDelta)
   if ((LL_MAXINT - *aUsage) <= aDelta) {
     NS_WARNING("Database sizes exceed max we can report!");
     *aUsage = LL_MAXINT;
-  } else {
+  }
+  else {
     *aUsage += aDelta;
   }
 }
@@ -1438,7 +1458,8 @@ IndexedDatabaseManager::AsyncUsageRunnable::GetUsageForDirectory(
     if (isDirectory) {
       if (aUsage == &mFileUsage) {
         NS_WARNING("Unknown directory found!");
-      } else {
+      }
+      else {
         rv = GetUsageForDirectory(file, &mFileUsage);
         NS_ENSURE_SUCCESS(rv, rv);
       }

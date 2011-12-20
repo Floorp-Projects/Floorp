@@ -2,21 +2,21 @@
     Copyright (c) 2006 Lawrence Oluyede <l.oluyede@gmail.com>
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal 
-    in the Software without restriction, including without limitation the rights 
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
-    copies of the Software, and to permit persons to whom the Software is 
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
     furnished to do so, subject to the following conditions:
 
-    The above copyright notice and this permission notice shall be included in all 
+    The above copyright notice and this permission notice shall be included in all
     copies or substantial portions of the Software.
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 */
 
@@ -35,7 +35,7 @@ function startsWith(str, prefix, start, end) {
     if (arguments.length < 2) {
         throw new TypeError('startsWith() requires at least 2 arguments');
     }
-        
+
     // check if start and end are null/undefined or a 'number'
     if ((start == null) || (isNaN(new Number(start)))) {
         start = 0;
@@ -43,7 +43,7 @@ function startsWith(str, prefix, start, end) {
     if ((end == null) || (isNaN(new Number(end)))) {
         end = Number.MAX_VALUE;
     }
-    
+
     // if it's an array
     if (typeof prefix == "object") {
         for (var i = 0, j = prefix.length; i < j; i++) {
@@ -54,7 +54,7 @@ function startsWith(str, prefix, start, end) {
         }
         return false;
     }
-    
+
     return _stringTailMatch(str, prefix, start, end, true);
 }
 
@@ -70,7 +70,7 @@ function endsWith(str, suffix, start, end) {
     if (arguments.length < 2) {
         throw new TypeError('endsWith() requires at least 2 arguments');
     }
-    
+
     // check if start and end are null/undefined or a 'number'
     if ((start == null) || (isNaN(new Number(start)))) {
         start = 0;
@@ -78,7 +78,7 @@ function endsWith(str, suffix, start, end) {
     if ((end == null) || (isNaN(new Number(end)))) {
         end = Number.MAX_VALUE;
     }
-    
+
     // if it's an array
     if (typeof suffix == "object") {
         for (var i = 0, j = suffix.length; i < j; i++) {
@@ -89,7 +89,7 @@ function endsWith(str, suffix, start, end) {
         }
         return false;
     }
-    
+
     return _stringTailMatch(str, suffix, start, end, false);
 }
 
@@ -101,10 +101,10 @@ function endsWith(str, suffix, start, end) {
 function _stringTailMatch(str, substr, start, end, fromStart) {
     var len = str.length;
     var slen = substr.length;
-    
+
     var indices = _adjustIndices(start, end, len);
     start = indices[0]; end = indices[1]; len = indices[2];
-    
+
     if (fromStart) {
         if (start + slen > len) {
             return false;
@@ -117,7 +117,7 @@ function _stringTailMatch(str, substr, start, end, fromStart) {
             start = end - slen;
         }
     }
-    
+
     if (end - start >= slen) {
         return str.substr(start, slen) == substr;
     }
@@ -131,12 +131,12 @@ function _adjustIndices(start, end, len)
 	} else if (end < 0) {
 	    end += len;
 	}
-    
+
     if (end < 0) {
         end = 0;
     }
 	if (start < 0) {
-	    start += len;   
+	    start += len;
 	}
 	if (start < 0) {
 		start = 0;

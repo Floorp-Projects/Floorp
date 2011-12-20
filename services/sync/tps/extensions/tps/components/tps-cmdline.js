@@ -45,7 +45,7 @@ const TPS_CMDLINE_CONTRACTID         = "@mozilla.org/commandlinehandler/general-
 const TPS_CMDLINE_CLSID              = Components.ID('{4e5bd3f0-41d3-11df-9879-0800200c9a66}');
 const CATMAN_CONTRACTID              = "@mozilla.org/categorymanager;1";
 const nsISupports                    = Components.interfaces.nsISupports;
-  
+
 const nsICategoryManager             = Components.interfaces.nsICategoryManager;
 const nsICmdLineHandler              = Components.interfaces.nsICmdLineHandler;
 const nsICommandLine                 = Components.interfaces.nsICommandLine;
@@ -77,15 +77,21 @@ TPSCmdLineHandler.prototype =
 
   /* nsICommandLineHandler */
   handle : function handler_handle(cmdLine) {
-    var uristr = cmdLine.handleFlagWithParam("tps", false);
+    let options = {};
+
+    let uristr = cmdLine.handleFlagWithParam("tps", false);
     if (uristr == null)
         return;
-    var phase = cmdLine.handleFlagWithParam("tpsphase", false);
+    let phase = cmdLine.handleFlagWithParam("tpsphase", false);
     if (phase == null)
         throw("must specify --tpsphase with --tps");
-    var logfile = cmdLine.handleFlagWithParam("tpslogfile", false);
+    let logfile = cmdLine.handleFlagWithParam("tpslogfile", false);
     if (logfile == null)
         logfile = "";
+
+    options.ignoreUnusedEngines = cmdLine.handleFlag("ignore-unused-engines",
+                                                     false);
+
 
     /* Ignore the platform's online/offline status while running tests. */
     var ios = Components.classes["@mozilla.org/network/io-service;1"]
@@ -96,14 +102,15 @@ TPSCmdLineHandler.prototype =
     Components.utils.import("resource://tps/tps.jsm");
     Components.utils.import("resource://tps/quit.js", TPS);
     let uri = cmdLine.resolveURI(uristr).spec;
-    TPS.RunTestPhase(uri, phase, logfile);
-    
+    TPS.RunTestPhase(uri, phase, logfile, options);
+
     //cmdLine.preventDefault = true;
   },
 
   helpInfo : "  -tps <file>               Run TPS tests with the given test file.\n" +
              "  -tpsphase <phase>         Run the specified phase in the TPS test.\n" +
-             "  -tpslogfile <file>        Logfile for TPS output.\n",
+             "  -tpslogfile <file>        Logfile for TPS output.\n" +
+             "  --ignore-unused-engines   Don't load engines not used in tests.\n",
 };
 
 

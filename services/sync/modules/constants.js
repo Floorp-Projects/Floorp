@@ -105,9 +105,11 @@ DEFAULT_MOBILE_GUID_FETCH_BATCH_SIZE:  50,
 
 // Default batch size for applying incoming records.
 DEFAULT_STORE_BATCH_SIZE:              1,
-HISTORY_STORE_BATCH_SIZE:              50, // same as MOBILE_BATCH_SIZE
-FORMS_STORE_BATCH_SIZE:                50, // same as MOBILE_BATCH_SIZE
-PASSWORDS_STORE_BATCH_SIZE:            50, // same as MOBILE_BATCH_SIZE
+HISTORY_STORE_BATCH_SIZE:              50,      // same as MOBILE_BATCH_SIZE
+FORMS_STORE_BATCH_SIZE:                50,      // same as MOBILE_BATCH_SIZE
+PASSWORDS_STORE_BATCH_SIZE:            50,      // same as MOBILE_BATCH_SIZE
+ADDONS_STORE_BATCH_SIZE:               1000000, // process all addons at once
+APPS_STORE_BATCH_SIZE:                 50,      // same as MOBILE_BATCH_SIZE
 
 // score thresholds for early syncs
 SINGLE_USER_THRESHOLD:                 1000,
@@ -167,7 +169,7 @@ ABORT_SYNC_COMMAND:                    "aborting sync, process commands said so"
 NO_SYNC_NODE_FOUND:                    "error.sync.reason.no_node_found",
 OVER_QUOTA:                            "error.sync.reason.over_quota",
 PROLONGED_SYNC_FAILURE:                "error.sync.prolonged_failure",
-SERVER_MAINTENANCE:                    "error.sync.reason.server_maintenance",
+SERVER_MAINTENANCE:                    "error.sync.reason.serverMaintenance",
 
 RESPONSE_OVER_QUOTA:                   "14",
 

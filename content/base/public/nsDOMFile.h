@@ -134,10 +134,6 @@ protected:
     return false;
   }
 
-  indexedDB::FileInfo*
-  GetFileInfoInternal(indexedDB::FileManager* aFileManager,
-                      PRUint32 aStartIndex);
-
   bool mIsFile;
   bool mImmutable;
   nsString mContentType;

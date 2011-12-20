@@ -34,9 +34,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
- /* This is a JavaScript module (JSM) to be imported via 
+ /* This is a JavaScript module (JSM) to be imported via
     Components.utils.import() and acts as a singleton.
-    Only the following listed symbols will exposed on import, and only when 
+    Only the following listed symbols will exposed on import, and only when
     and where imported. */
 
 var EXPORTED_SYMBOLS = ["Logger"];
@@ -101,19 +101,24 @@ var Logger =
   },
 
   AssertTrue: function(bool, msg, showPotentialError) {
-    if (!bool) {
-      let message = msg;
-      if (showPotentialError && this._potentialError) {
-        message += "; " + this._potentialError;
-        this._potentialError = null;
-      }
-      throw("ASSERTION FAILED! " + message);
+    if (bool) {
+      return;
     }
+
+    if (showPotentialError && this._potentialError) {
+      msg += "; " + this._potentialError;
+      this._potentialError = null;
+    }
+    throw("ASSERTION FAILED! " + msg);
+  },
+
+  AssertFalse: function(bool, msg, showPotentialError) {
+    return this.AssertTrue(!bool, msg, showPotentialError);
   },
 
   AssertEqual: function(val1, val2, msg) {
     if (val1 != val2)
-      throw("ASSERTION FAILED! " + msg + "; expected " + 
+      throw("ASSERTION FAILED! " + msg + "; expected " +
             JSON.stringify(val2) + ", got " + JSON.stringify(val1));
   },
 
@@ -123,14 +128,23 @@ var Logger =
       this.write(msg + "\n");
     }
     else {
-      var now = new Date()
-      this.write(now.getFullYear() + "-" + (now.getMonth() < 9 ? '0' : '') + 
-          (now.getMonth() + 1) + "-" + 
-          (now.getDate() < 9 ? '0' : '') + (now.getDate() + 1) + " " +
-          (now.getHours() < 10 ? '0' : '') + now.getHours() + ":" +
-          (now.getMinutes() < 10 ? '0' : '') + now.getMinutes() + ":" +
-          (now.getSeconds() < 10 ? '0' : '') + now.getSeconds() + " " + 
-          msg + "\n");
+      function pad(n, len) {
+        let s = "0000" + n;
+        return s.slice(-len);
+      }
+
+      let now = new Date();
+      let year    = pad(now.getFullYear(),     4);
+      let month   = pad(now.getMonth() + 1,    2);
+      let day     = pad(now.getDate(),         2);
+      let hour    = pad(now.getHours(),        2);
+      let minutes = pad(now.getMinutes(),      2);
+      let seconds = pad(now.getSeconds(),      2);
+      let ms      = pad(now.getMilliseconds(), 3);
+
+      this.write(year + "-" + month + "-" + day + " " +
+                 hour + ":" + minutes + ":" + seconds + "." + ms + " " +
+                 msg + "\n");
     }
   },
 

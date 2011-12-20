@@ -72,7 +72,7 @@ function run_test_1() {
     do_check_eq(install.name, "Test 1");
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
     do_check_true(install.addon.hasResource("install.rdf"));
-    do_check_eq(install.addon.syncGUID, null);
+    do_check_neq(install.addon.syncGUID, null);
     do_check_eq(install.addon.install, install);
     do_check_eq(install.addon.size, ADDON1_SIZE);
     do_check_true(hasFlag(install.addon.operationsRequiringRestart,

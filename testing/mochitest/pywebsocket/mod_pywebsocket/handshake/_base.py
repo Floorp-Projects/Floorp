@@ -61,6 +61,22 @@ class HandshakeException(Exception):
         self.status = status
 
 
+class VersionException(Exception):
+    """This exception will be raised when a version of client request does not
+    match with version the server supports.
+    """
+
+    def __init__(self, name, supported_versions=''):
+        """Construct an instance.
+
+        Args:
+            supported_version: a str object to show supported hybi versions.
+                               (e.g. '8, 13')
+        """
+        super(VersionException, self).__init__(name)
+        self.supported_versions = supported_versions
+
+
 def get_default_port(is_secure):
     if is_secure:
         return common.DEFAULT_WEB_SOCKET_SECURE_PORT
@@ -200,7 +216,7 @@ def parse_token_list(data):
     return token_list
 
 
-def _parse_extension_param(state, definition):
+def _parse_extension_param(state, definition, allow_quoted_string):
     param_name = http_header_util.consume_token(state)
 
     if param_name is None:
@@ -214,7 +230,11 @@ def _parse_extension_param(state, definition):
 
     http_header_util.consume_lwses(state)
 
-    param_value = http_header_util.consume_token_or_quoted_string(state)
+    if allow_quoted_string:
+        # TODO(toyoshim): Add code to validate that parsed param_value is token
+        param_value = http_header_util.consume_token_or_quoted_string(state)
+    else:
+        param_value = http_header_util.consume_token(state)
     if param_value is None:
         raise HandshakeException(
             'No valid parameter value found on the right-hand side of '
@@ -223,7 +243,7 @@ def _parse_extension_param(state, definition):
     definition.add_parameter(param_name, param_value)
 
 
-def _parse_extension(state):
+def _parse_extension(state, allow_quoted_string):
     extension_token = http_header_util.consume_token(state)
     if extension_token is None:
         return None
@@ -239,7 +259,7 @@ def _parse_extension(state):
         http_header_util.consume_lwses(state)
 
         try:
-            _parse_extension_param(state, extension)
+            _parse_extension_param(state, extension, allow_quoted_string)
         except HandshakeException, e:
             raise HandshakeException(
                 'Failed to parse Sec-WebSocket-Extensions header: '
@@ -249,7 +269,7 @@ def _parse_extension(state):
     return extension
 
 
-def parse_extensions(data):
+def parse_extensions(data, allow_quoted_string=False):
     """Parses Sec-WebSocket-Extensions header value returns a list of
     common.ExtensionParameter objects.
 
@@ -260,7 +280,7 @@ def parse_extensions(data):
 
     extension_list = []
     while True:
-        extension = _parse_extension(state)
+        extension = _parse_extension(state, allow_quoted_string)
         if extension is not None:
             extension_list.append(extension)
 

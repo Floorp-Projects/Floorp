@@ -6,6 +6,7 @@
  * here must be in strict JSON format, as it will get parsed by the Python
  * testrunner (no single quotes, extra comma's, etc).
  */
+EnableEngines(["history"]);
 
 var phases = { "phase1": "profile1",
                "phase2": "profile2",
@@ -99,12 +100,12 @@ var history_after_delete = [
 
 Phase('phase1', [
   [History.add, history1],
-  [Sync, SYNC_WIPE_SERVER]
+  [Sync]
 ]);
 
 Phase('phase2', [
   [History.add, history1],
-  [Sync, SYNC_WIPE_SERVER]
+  [Sync, SYNC_WIPE_REMOTE]
 ]);
 
 Phase('phase3', [

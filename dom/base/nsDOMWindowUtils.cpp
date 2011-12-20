@@ -1954,19 +1954,27 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<indexedDB::IndexedDatabaseManager> mgr =
-    indexedDB::IndexedDatabaseManager::GetOrCreate();
-  NS_ENSURE_TRUE(mgr, NS_ERROR_FAILURE);
+    indexedDB::IndexedDatabaseManager::Get();
 
-  nsRefPtr<indexedDB::FileManager> fileManager =
-    mgr->GetOrCreateFileManager(origin, aDatabaseName);
-  NS_ENSURE_TRUE(fileManager, NS_ERROR_FAILURE);
+  if (mgr) {
+    nsRefPtr<indexedDB::FileManager> fileManager =
+      mgr->GetFileManager(origin, aDatabaseName);
 
-  nsRefPtr<indexedDB::FileInfo> fileInfo = fileManager->GetFileInfo(aId);
-  if (fileInfo) {
-    fileInfo->GetReferences(aRefCnt, aDBRefCnt, aSliceRefCnt);
-    *aRefCnt--;
-    *aResult = true;
-    return NS_OK;
+    if (fileManager) {
+      nsRefPtr<indexedDB::FileInfo> fileInfo = fileManager->GetFileInfo(aId);
+
+      if (fileInfo) {
+        fileInfo->GetReferences(aRefCnt, aDBRefCnt, aSliceRefCnt);
+
+        if (*aRefCnt != -1) {
+          // We added an extra temp ref, so account for that accordingly.
+          (*aRefCnt)--;
+        }
+
+        *aResult = true;
+        return NS_OK;
+      }
+    }
   }
 
   *aRefCnt = *aDBRefCnt = *aSliceRefCnt = -1;
