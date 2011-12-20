@@ -87,4 +87,8 @@
   <string name="site_settings_cancel">&site_settings_cancel;</string>
   <string name="site_settings_clear">&site_settings_clear;</string>
   <string name="site_settings_no_settings">&site_settings_no_settings;</string>
+
+  <string name="contextmenu_open_new_tab">&contextmenu_open_new_tab;</string>
+  <string name="contextmenu_add_to_launcher">&contextmenu_add_to_launcher;</string>
+  <string name="contextmenu_share">&contextmenu_share;</string>
 </resources>

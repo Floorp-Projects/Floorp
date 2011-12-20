@@ -91,6 +91,9 @@
 #endif /* MOZ_XUL */
 #include "nsFrameManager.h"
 #include "nsFrameSelection.h"
+#ifdef DEBUG
+#include "nsIRange.h"
+#endif
 
 #include "nsBindingManager.h"
 #include "nsXBLBinding.h"
@@ -4933,6 +4936,11 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent,
 
   fprintf(out, " state=[%llx]", State().GetInternalValue());
   fprintf(out, " flags=[%08x]", static_cast<unsigned int>(GetFlags()));
+  if (IsCommonAncestorForRangeInSelection()) {
+    nsIRange::RangeHashTable* ranges =
+      static_cast<nsIRange::RangeHashTable*>(GetProperty(nsGkAtoms::range));
+    fprintf(out, " ranges:%d", ranges ? ranges->Count() : 0);
+  }
   fprintf(out, " primaryframe=%p", static_cast<void*>(GetPrimaryFrame()));
   fprintf(out, " refcount=%d<", mRefCnt.get());
 

@@ -42,23 +42,38 @@ package org.mozilla.gecko;
 import android.app.Activity;
 import android.app.ActionBar;
 import android.content.Intent;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.Configuration;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
+import android.widget.ListView;
+
+import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.db.BrowserDB;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -200,6 +215,10 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
                 }
             }
         });
+
+        registerForContextMenu(mAwesomeTabs.findViewById(R.id.all_pages_list));
+        registerForContextMenu(mAwesomeTabs.findViewById(R.id.bookmarks_list));
+        registerForContextMenu(mAwesomeTabs.findViewById(R.id.history_list));
 
         GeckoAppShell.registerGeckoEventListener("SearchEngines:Data", this);
         GeckoAppShell.sendEventToGecko(new GeckoEvent("SearchEngines:Get", null));
@@ -353,6 +372,71 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         super.onDestroy();
         mAwesomeTabs.destroy();
         GeckoAppShell.unregisterGeckoEventListener("SearchEngines:Data", this);
+    }
+
+    private Cursor mContextMenuCursor = null;
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, view, menuInfo);
+
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+        ListView list = (ListView) view;
+        Object selecteditem = list.getItemAtPosition(info.position);
+
+        if (!(selecteditem instanceof Cursor)) {
+            mContextMenuCursor = null;
+            return;
+        }
+
+        mContextMenuCursor = (Cursor) selecteditem;
+
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.awesomebar_contextmenu, menu);
+
+        String title = mContextMenuCursor.getString(mContextMenuCursor.getColumnIndexOrThrow(URLColumns.TITLE));
+        menu.setHeaderTitle(title);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        if (mContextMenuCursor == null)
+            return false;
+
+        AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+
+        switch (item.getItemId()) {
+            case R.id.open_new_tab: {
+                String url = mContextMenuCursor.getString(mContextMenuCursor.getColumnIndexOrThrow(URLColumns.URL));
+                GeckoApp.mAppContext.loadUrl(url, AwesomeBar.Type.ADD);
+                break;
+            }
+            case R.id.add_to_launcher: {
+                String url = mContextMenuCursor.getString(mContextMenuCursor.getColumnIndexOrThrow(URLColumns.URL));
+                byte[] b = (byte[]) mContextMenuCursor.getBlob(mContextMenuCursor.getColumnIndexOrThrow(URLColumns.FAVICON));
+                String title = mContextMenuCursor.getString(mContextMenuCursor.getColumnIndexOrThrow(URLColumns.TITLE));
+    
+                Bitmap bitmap = null;
+                if (b != null)
+                    bitmap = BitmapFactory.decodeByteArray(b, 0, b.length);
+    
+                GeckoAppShell.createShortcut(title, url, bitmap, "");
+                break;
+            }
+            case R.id.share: {
+                String url = mContextMenuCursor.getString(mContextMenuCursor.getColumnIndexOrThrow(URLColumns.URL));
+                String title = mContextMenuCursor.getString(mContextMenuCursor.getColumnIndexOrThrow(URLColumns.TITLE));
+                GeckoAppShell.openUriExternal(url, "text/plain", "", "",
+                                              Intent.ACTION_SEND, title);
+                break;
+            }
+            default: {
+                mContextMenuCursor = null;
+                return super.onContextItemSelected(item);
+            }
+        }
+        mContextMenuCursor = null;
+        return true;
     }
 
     public static class AwesomeBarEditText extends EditText {
