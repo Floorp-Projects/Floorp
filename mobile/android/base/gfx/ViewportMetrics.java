@@ -234,6 +234,13 @@ public class ViewportMetrics {
         return result;
     }
 
+    public boolean fuzzyEquals(ViewportMetrics other) {
+        return mPageSize.fuzzyEquals(other.mPageSize)
+            && RectUtils.fuzzyEquals(mViewportRect, other.mViewportRect)
+            && FloatUtils.fuzzyEquals(mViewportOffset, other.mViewportOffset)
+            && FloatUtils.fuzzyEquals(mZoomFactor, other.mZoomFactor);
+    }
+
     public String toJSON() {
         try {
             JSONStringer object = new JSONStringer().object();
@@ -251,6 +258,17 @@ public class ViewportMetrics {
             Log.e(LOGTAG, "Error serializing viewportmetrics", je);
             return "";
         }
+    }
+
+    @Override
+    public String toString() {
+        StringBuffer buff = new StringBuffer(128);
+        buff.append("v=").append(mViewportRect.toString())
+            .append(" p=").append(mPageSize.toString())
+            .append(" z=").append(mZoomFactor)
+            .append(" o=").append(mViewportOffset.x)
+            .append(',').append(mViewportOffset.y);
+        return buff.toString();
     }
 }
 

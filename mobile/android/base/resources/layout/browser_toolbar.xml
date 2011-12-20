@@ -7,7 +7,7 @@
         <Button android:id="@+id/awesome_bar"
                 style="@style/AddressBar.Button"
                 android:layout_width="fill_parent"
-                android:layout_marginRight="50dp"
+                android:layout_marginRight="48dp"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentBottom="true"
                 android:layout_centerVertical="true"
@@ -29,44 +29,48 @@
 
         <ImageButton android:id="@+id/tabs"
                      style="@style/AddressBar.ImageButton"
-                     android:layout_width="65dip"
-                     android:layout_height="52dip"
+                     android:layout_width="72dip"
                      android:layout_alignParentRight="true"
                      android:background="@drawable/tabs_button"
-                     android:gravity="center_vertical|left"
+                     android:gravity="center_vertical"
                      android:src="@drawable/tabs_level"
-                     android:paddingTop="4dip"
-                     android:paddingLeft="26dip"
-                     android:paddingRight="15dip"/>
+                     android:paddingLeft="35dip"
+                     android:paddingRight="13dip"/>
 
         <TextSwitcher android:id="@+id/tabs_count"
                      style="@style/AddressBar.ImageButton"
-                     android:layout_width="54dip"
+                     android:layout_width="50dip"
                      android:layout_height="wrap_content"
-                     android:layout_marginTop="15dip"
+                     android:layout_marginTop="4dp"
                      android:layout_alignRight="@id/tabs"
                      android:gravity="center_horizontal"
                      android:visibility="gone"/>
 
         <ImageButton android:id="@+id/stop"
                      style="@style/AddressBar.ImageButton"
-                     android:layout_width="38dip"
-                     android:layout_height="38dip"
+                     android:layout_width="24dip"
+                     android:layout_height="24dip"
                      android:layout_marginRight="15dip"
                      android:layout_centerVertical="true"
-                     android:paddingLeft="22dip"
                      android:src="@drawable/urlbar_stop"
                      android:layout_alignRight="@id/awesome_bar"
                      android:visibility="gone"/>
 
         <ImageButton android:id="@+id/site_security"
                      style="@style/AddressBar.ImageButton"
-                     android:layout_width="16dip"
-                     android:layout_height="16dip"
+                     android:layout_width="24dip"
+                     android:layout_height="24dip"
                      android:layout_marginRight="15dip"
                      android:layout_centerVertical="true"
                      android:src="@drawable/site_security_level"
                      android:layout_alignRight="@id/awesome_bar"/>
+
+         <ImageView android:id="@+id/shadow"
+                    android:layout_width="fill_parent"
+                    android:layout_height="2dp"
+                    android:layout_alignParentBottom="true"
+                    android:src="@drawable/address_bar_bg_shadow"
+                    android:visibility="gone"/>
 
     </RelativeLayout>
 
