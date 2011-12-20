@@ -121,6 +121,7 @@ browser.jar:
   skin/classic/browser/tabview/stack-expander.png           (tabview/stack-expander.png)
   skin/classic/browser/tabview/tabview.png                  (tabview/tabview.png)
   skin/classic/browser/tabview/tabview.css                  (tabview/tabview.css)
+* skin/classic/browser/devtools/common.css                  (devtools/common.css)
   skin/classic/browser/devtools/arrows.png                  (devtools/arrows.png)
   skin/classic/browser/devtools/goto-mdn.png                (devtools/goto-mdn.png)
   skin/classic/browser/devtools/csshtmltree.css             (devtools/csshtmltree.css)
@@ -155,7 +156,10 @@ browser.jar:
   skin/classic/browser/devtools/breadcrumbs/rtl-start-selected.png           (devtools/breadcrumbs/rtl-start-selected.png)
   skin/classic/browser/devtools/splitview.css               (devtools/splitview.css)
   skin/classic/browser/devtools/styleeditor.css             (devtools/styleeditor.css)
-  skin/classic/browser/devtools/eye-toggle.png              (devtools/eye-toggle.png)
+  skin/classic/browser/devtools/magnifying-glass.png	    (devtools/magnifying-glass.png)
+  skin/classic/browser/devtools/itemToggle.png		    (devtools/itemToggle.png)
+  skin/classic/browser/devtools/itemArrow-rtl.png	    (devtools/itemArrow-rtl.png)
+  skin/classic/browser/devtools/itemArrow-ltr.png	    (devtools/itemArrow-ltr.png)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-throbber.png
   skin/classic/browser/sync-16.png

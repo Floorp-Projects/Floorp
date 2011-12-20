@@ -65,7 +65,6 @@ public:
                         const nsAString &aCounty,
                         const nsAString &aRegion,
                         const nsAString &aCountry,
-                        const nsAString &aCountryCode,
                         const nsAString &aPostalCode);
 
     ~nsGeoPositionAddress();
@@ -77,7 +76,6 @@ public:
     const nsString mCounty;
     const nsString mRegion;
     const nsString mCountry;
-    const nsString mCountryCode;
     const nsString mPostalCode;
 };
 

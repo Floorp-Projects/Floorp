@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIObserverService.h"
+#include "mozilla/Services.h"
 #include "nsISupportsPrimitives.h"
 
 #include "nsXPCOMCID.h"
@@ -88,7 +89,7 @@ nsCategoryObserver::nsCategoryObserver(const char* aCategory,
 
   // Now, listen for changes
   nsCOMPtr<nsIObserverService> serv =
-    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    mozilla::services::GetObserverService();
   if (serv) {
     serv->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
     serv->AddObserver(this, NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID, false);
@@ -118,7 +119,7 @@ nsCategoryObserver::RemoveObservers() {
 
   mObserversRemoved = true;
   nsCOMPtr<nsIObserverService> obsSvc =
-    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    mozilla::services::GetObserverService();
   if (obsSvc) {
     obsSvc->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     obsSvc->RemoveObserver(this, NS_XPCOM_CATEGORY_ENTRY_ADDED_OBSERVER_ID);

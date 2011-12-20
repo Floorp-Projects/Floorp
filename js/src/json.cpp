@@ -193,7 +193,6 @@ Quote(JSContext *cx, StringBuffer &sb, JSString *str)
                          : 't';
            if (!sb.append('\\') || !sb.append(abbrev))
                return false;
-           mark = i + 1;
         } else {
             JS_ASSERT(c < ' ');
             if (!sb.append("\\u00"))

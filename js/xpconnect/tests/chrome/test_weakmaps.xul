@@ -214,6 +214,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668855
   make_live_map();
 
 
+  let dummy_test_map = new WeakMap;
+  // bug 711616: should be able to do this without crashing. JS warning is expected.
+  dummy_test_map.set(document.createElement("div").style, 1);
+
+  // JS warning is expected.
+  dummy_test_map.set(window.navigator, 1);
+
+
   /* set up for running precise GC/CC then checking the results */
 
   SimpleTest.waitForExplicitFinish();

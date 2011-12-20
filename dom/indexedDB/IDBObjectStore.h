@@ -72,7 +72,8 @@ public:
 
   static already_AddRefed<IDBObjectStore>
   Create(IDBTransaction* aTransaction,
-         const ObjectStoreInfo* aInfo);
+         ObjectStoreInfo* aInfo,
+         nsIAtom* aDatabaseId);
 
   static bool
   IsValidKeyPath(JSContext* aCx, const nsAString& aKeyPath);
@@ -80,6 +81,7 @@ public:
   static nsresult
   AppendIndexUpdateInfo(PRInt64 aIndexID,
                         const nsAString& aKeyPath,
+                        const nsTArray<nsString>& aKeyPathArray,
                         bool aUnique,
                         bool aMultiEntry,
                         JSContext* aCx,
@@ -90,7 +92,6 @@ public:
   UpdateIndexes(IDBTransaction* aTransaction,
                 PRInt64 aObjectStoreId,
                 const Key& aObjectStoreKey,
-                bool aAutoIncrement,
                 bool aOverwrite,
                 PRInt64 aObjectDataId,
                 const nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
@@ -159,7 +160,17 @@ public:
 
   const bool HasKeyPath() const
   {
-    return !mKeyPath.IsVoid();
+    return !mKeyPath.IsVoid() || !mKeyPathArray.IsEmpty();
+  }
+
+  bool UsesKeyPathArray() const
+  {
+    return !mKeyPathArray.IsEmpty();
+  }
+  
+  const nsTArray<nsString>& KeyPathArray() const
+  {
+    return mKeyPathArray;
   }
 
   IDBTransaction* Transaction()
@@ -167,8 +178,10 @@ public:
     return mTransaction;
   }
 
-  nsresult ModifyValueForNewKey(StructuredCloneWriteInfo& aCloneWriteInfo,
-                                Key& aKey);
+  ObjectStoreInfo* Info()
+  {
+    return mInfo;
+  }
 
 protected:
   IDBObjectStore();
@@ -197,8 +210,10 @@ private:
   PRInt64 mId;
   nsString mName;
   nsString mKeyPath;
+  nsTArray<nsString> mKeyPathArray;
   bool mAutoIncrement;
   nsCOMPtr<nsIAtom> mDatabaseId;
+  nsRefPtr<ObjectStoreInfo> mInfo;
   PRUint32 mStructuredCloneVersion;
 
   nsTArray<nsRefPtr<IDBIndex> > mCreatedIndexes;

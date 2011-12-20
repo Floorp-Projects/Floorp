@@ -120,7 +120,7 @@ function testCreateNew()
 
       aEditor.input.blur();
     });
-    EventUtils.sendKey("return", input);
+    EventUtils.sendKey("return", ruleDialog);
   });
 
   EventUtils.synthesizeMouse(elementRuleEditor.closeBrace, 1, 1,
@@ -148,11 +148,11 @@ function testEditProperty()
       });
 
       for each (let ch in "red;") {
-        EventUtils.sendChar(ch, input);
+        EventUtils.sendChar(ch, ruleDialog);
       }
     });
     for each (let ch in "border-color:") {
-      EventUtils.sendChar(ch, input);
+      EventUtils.sendChar(ch, ruleDialog);
     }
   });
 

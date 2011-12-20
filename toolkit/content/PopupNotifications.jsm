@@ -225,6 +225,10 @@ PopupNotifications.prototype = {
    *                     removed when they would have otherwise been dismissed
    *                     (i.e. any time the popup is closed due to user
    *                     interaction).
+   *        popupIconURL:
+   *                     A string. URL of the image to be displayed in the popup.
+   *                     Normally specified in CSS using list-style-image and the
+   *                     .popup-notification-icon[popupid=...] selector.
    * @returns the Notification object corresponding to the added notification.
    */
   show: function PopupNotifications_show(browser, id, message, anchorID,
@@ -401,6 +405,8 @@ PopupNotifications.prototype = {
         popupnotification.setAttribute("menucommand", "PopupNotifications._onMenuCommand(event);");
         popupnotification.setAttribute("closeitemcommand", "PopupNotifications._dismiss();event.stopPropagation();");
       }
+      if (n.options.popupIconURL)
+        popupnotification.setAttribute("icon", n.options.popupIconURL);
       popupnotification.notification = n;
 
       if (n.secondaryActions) {

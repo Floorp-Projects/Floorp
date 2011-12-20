@@ -34,7 +34,13 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE         = ots
 LIBRARY_NAME   = mozots
+FORCE_STATIC_LIB = 1
+
+ifeq (WINNT,$(OS_TARGET))
+VISIBILITY_FLAGS =
+else
 LIBXUL_LIBRARY = 1
+endif
 
 CSRCS =   \
   $(NULL)
@@ -77,17 +83,18 @@ EXPORTS = \
   ../include/ots-memory-stream.h  \
   $(NULL)
 
-LOCAL_INCLUDES  += -I$(srcdir) 
-
-FORCE_STATIC_LIB = 1
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DPACKAGE_VERSION="\"moz\""
 DEFINES += -DPACKAGE_BUGREPORT="\"http://bugzilla.mozilla.org/\""
 DEFINES += -DNOMINMAX
 
+ifeq (WINNT,$(OS_TARGET))
+DEFINES += -DOTS_DLL -DOTS_DLL_EXPORTS
+endif
+
 # Suppress ANSI strict warnings
 # because Googlers don't care about comma-at-end-of-enumerator errors.
 CXXFLAGS := $(filter-out -pedantic,$(CXXFLAGS))
 CFLAGS := $(filter-out -pedantic,$(CFLAGS))
+

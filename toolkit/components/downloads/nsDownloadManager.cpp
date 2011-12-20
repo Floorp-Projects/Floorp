@@ -1951,6 +1951,12 @@ nsDownloadManager::Observe(nsISupports *aSubject,
    // aborted downloads if the user's retention policy specifies it.
     if (GetRetentionBehavior() == 1)
       CleanUp();
+
+    // Null statements to finalize them.
+    mGetIdsForURIStatement = nsnull;
+    mUpdateDownloadStatement = nsnull;
+    mozilla::DebugOnly<nsresult> rv = mDBConn->Close();
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   } else if (strcmp(aTopic, "quit-application-requested") == 0 &&
              currDownloadCount) {
     nsCOMPtr<nsISupportsPRBool> cancelDownloads =

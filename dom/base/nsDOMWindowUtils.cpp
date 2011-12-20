@@ -60,6 +60,7 @@
 #include "nsGUIEvent.h"
 #include "nsIParser.h"
 #include "nsJSEnvironment.h"
+#include "nsJSUtils.h"
 
 #include "nsIViewManager.h"
 
@@ -1953,22 +1954,132 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<indexedDB::IndexedDatabaseManager> mgr =
-    indexedDB::IndexedDatabaseManager::GetOrCreate();
-  NS_ENSURE_TRUE(mgr, NS_ERROR_FAILURE);
+    indexedDB::IndexedDatabaseManager::Get();
 
-  nsRefPtr<indexedDB::FileManager> fileManager =
-    mgr->GetOrCreateFileManager(origin, aDatabaseName);
-  NS_ENSURE_TRUE(fileManager, NS_ERROR_FAILURE);
+  if (mgr) {
+    nsRefPtr<indexedDB::FileManager> fileManager =
+      mgr->GetFileManager(origin, aDatabaseName);
 
-  nsRefPtr<indexedDB::FileInfo> fileInfo = fileManager->GetFileInfo(aId);
-  if (fileInfo) {
-    fileInfo->GetReferences(aRefCnt, aDBRefCnt, aSliceRefCnt);
-    *aRefCnt--;
-    *aResult = true;
-    return NS_OK;
+    if (fileManager) {
+      nsRefPtr<indexedDB::FileInfo> fileInfo = fileManager->GetFileInfo(aId);
+
+      if (fileInfo) {
+        fileInfo->GetReferences(aRefCnt, aDBRefCnt, aSliceRefCnt);
+
+        if (*aRefCnt != -1) {
+          // We added an extra temp ref, so account for that accordingly.
+          (*aRefCnt)--;
+        }
+
+        *aResult = true;
+        return NS_OK;
+      }
+    }
   }
 
   *aRefCnt = *aDBRefCnt = *aSliceRefCnt = -1;
   *aResult = false;
+  return NS_OK;
+}
+
+static inline JSContext *
+GetJSContext()
+{
+  nsCOMPtr<nsIXPConnect> xpc = nsContentUtils::XPConnect();
+
+  // get the xpconnect native call context
+  nsAXPCNativeCallContext *cc = nsnull;
+  xpc->GetCurrentNativeCallContext(&cc);
+  if(!cc)
+    return NULL;
+
+  // Get JSContext of current call
+  JSContext* cx;
+  nsresult rv = cc->GetJSContext(&cx);
+  if(NS_FAILED(rv) || !cx)
+    return NULL;
+
+  return cx;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::StartPCCountProfiling()
+{
+  JSContext *cx = GetJSContext();
+  if (!cx)
+    return NS_ERROR_FAILURE;
+
+  js::StartPCCountProfiling(cx);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::StopPCCountProfiling()
+{
+  JSContext *cx = GetJSContext();
+  if (!cx)
+    return NS_ERROR_FAILURE;
+
+  js::StopPCCountProfiling(cx);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::PurgePCCounts()
+{
+  JSContext *cx = GetJSContext();
+  if (!cx)
+    return NS_ERROR_FAILURE;
+
+  js::PurgePCCounts(cx);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetPCCountScriptCount(PRInt32 *result)
+{
+  JSContext *cx = GetJSContext();
+  if (!cx)
+    return NS_ERROR_FAILURE;
+
+  *result = js::GetPCCountScriptCount(cx);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetPCCountScriptSummary(PRInt32 script, nsAString& result)
+{
+  JSContext *cx = GetJSContext();
+  if (!cx)
+    return NS_ERROR_FAILURE;
+
+  JSString *text = js::GetPCCountScriptSummary(cx, script);
+  if (!text)
+    return NS_ERROR_FAILURE;
+
+  nsDependentJSString str;
+  if (!str.init(cx, text))
+    return NS_ERROR_FAILURE;
+
+  result = str;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetPCCountScriptContents(PRInt32 script, nsAString& result)
+{
+  JSContext *cx = GetJSContext();
+  if (!cx)
+    return NS_ERROR_FAILURE;
+
+  JSString *text = js::GetPCCountScriptContents(cx, script);
+  if (!text)
+    return NS_ERROR_FAILURE;
+
+  nsDependentJSString str;
+  if (!str.init(cx, text))
+    return NS_ERROR_FAILURE;
+
+  result = str;
   return NS_OK;
 }

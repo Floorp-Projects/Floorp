@@ -586,6 +586,9 @@ nsSVGOuterSVGFrame::Paint(const nsDisplayListBuilder* aBuilder,
                           nsRenderingContext& aRenderingContext,
                           const nsRect& aDirtyRect, nsPoint aPt)
 {
+  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
+    return;
+
   // initialize Mozilla rendering context
   aRenderingContext.PushState();
 

@@ -98,6 +98,30 @@ class TextOverflow {
     bool mAssigned;
   };
 
+  struct InnerClipEdges {
+    InnerClipEdges() : mAssignedLeft(false), mAssignedRight(false) {}
+    void AccumulateLeft(const nsRect& aRect) {
+      if (NS_LIKELY(mAssignedLeft)) {
+        mLeft = NS_MAX(mLeft, aRect.X());
+      } else {
+        mLeft = aRect.X();
+        mAssignedLeft = true;
+      }
+    }
+    void AccumulateRight(const nsRect& aRect) {
+      if (NS_LIKELY(mAssignedRight)) {
+        mRight = NS_MIN(mRight, aRect.XMost());
+      } else {
+        mRight = aRect.XMost();
+        mAssignedRight = true;
+      }
+    }
+    nscoord mLeft;
+    nscoord mRight;
+    bool mAssignedLeft;
+    bool mAssignedRight;
+  };
+
   /**
    * Examines frames on the line to determine whether we should draw a left
    * and/or right marker, and if so, which frames should be completely hidden
@@ -120,12 +144,18 @@ class TextOverflow {
    * @param aFramesToHide frames that should have their display items removed
    * @param aAlignmentEdges the outermost edges of all text and atomic
    *   inline-level frames that are inside the area between the markers
+   * @param aFoundVisibleTextOrAtomic is set to true if a text or atomic
+   *   inline-level frame is visible between the marker edges
+   * @param aClippedMarkerEdges the innermost edges of all text and atomic
+   *   inline-level frames that are clipped by the current marker width
    */
   void ExamineFrameSubtree(nsIFrame*       aFrame,
                            const nsRect&   aContentArea,
                            const nsRect&   aInsideMarkersArea,
                            FrameHashtable* aFramesToHide,
-                           AlignmentEdges* aAlignmentEdges);
+                           AlignmentEdges* aAlignmentEdges,
+                           bool*           aFoundVisibleTextOrAtomic,
+                           InnerClipEdges* aClippedMarkerEdges);
 
   /**
    * ExamineFrameSubtree calls this to analyze a frame against the hypothetical
@@ -141,12 +171,18 @@ class TextOverflow {
    * @param aAlignmentEdges the outermost edges of all text and atomic
    *   inline-level frames that are inside the area between the markers
    *                       inside aInsideMarkersArea
+   * @param aFoundVisibleTextOrAtomic is set to true if a text or atomic
+   *   inline-level frame is visible between the marker edges
+   * @param aClippedMarkerEdges the innermost edges of all text and atomic
+   *   inline-level frames that are clipped by the current marker width
    */
   void AnalyzeMarkerEdges(nsIFrame*       aFrame,
                           const nsIAtom*  aFrameType,
                           const nsRect&   aInsideMarkersArea,
                           FrameHashtable* aFramesToHide,
-                          AlignmentEdges* aAlignmentEdges);
+                          AlignmentEdges* aAlignmentEdges,
+                          bool*           aFoundVisibleTextOrAtomic,
+                          InnerClipEdges* aClippedMarkerEdges);
 
   /**
    * Clip or remove items given the final marker edges. ("clip" here just means
@@ -199,8 +235,10 @@ class TextOverflow {
       mHasOverflow = false;
     }
 
-    // The intrinsic width of the marker string.
+    // The current width of the marker, the range is [0 .. mIntrinsicWidth].
     nscoord                        mWidth;
+    // The intrinsic width of the marker string.
+    nscoord                        mIntrinsicWidth;
     // The marker text.
     nsString                       mMarkerString;
     // The style for this side.
@@ -209,6 +247,9 @@ class TextOverflow {
     bool                           mHasOverflow;
     // True if mMarkerString and mWidth have been setup from style.
     bool                           mInitialized;
+    // True if the style is text-overflow:clip on this side and the marker
+    // won't cause the line to become empty.
+    bool                           mActive;
   };
 
   Marker mLeft;  // the horizontal left marker

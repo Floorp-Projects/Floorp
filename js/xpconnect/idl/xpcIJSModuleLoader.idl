@@ -48,7 +48,7 @@ struct JSObject;
 
 [ptr] native JSObjectPtr(JSObject);
 
-[scriptable, uuid(3f945a8e-58ca-47ba-a789-82d022e837fd)]
+[scriptable, uuid(243d1a31-db9f-47a1-9922-55a1ad5515fb)]
 interface xpcIJSModuleLoader : nsISupports
 {
   /**
@@ -81,8 +81,8 @@ interface xpcIJSModuleLoader : nsISupports
    *
    * (This comment is duplicated to nsIXPCComponents_Utils.)
    */
-  void /* JSObject */ import(in AUTF8String aResourceURI
-                             /* , [optional] in JSObject targetObj */);
+  [implicit_jscontext,optional_argc]
+  jsval import(in AUTF8String aResourceURI, [optional] in jsval targetObj);
 
   /**
    * Imports the JS module at aResourceURI to the JS object

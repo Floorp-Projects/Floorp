@@ -51,7 +51,7 @@
 #warning Please add support for your architecture in chromium_types.h
 #endif
 
-#ifdef _MSC_VER
+#ifdef _WIN32
  typedef __int32 Atomic32;
 #else
  typedef int32_t Atomic32;

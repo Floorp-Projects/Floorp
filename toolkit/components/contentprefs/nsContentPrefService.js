@@ -304,6 +304,8 @@ ContentPrefService.prototype = {
       this.__stmtUpdatePref = null;
     }
 
+    this._dbConnection.asyncClose();
+
     // Delete references to XPCOM components to make sure we don't leak them
     // (although we haven't observed leakage in tests).  Also delete references
     // in _observers and _genericObservers to avoid cycles with those that

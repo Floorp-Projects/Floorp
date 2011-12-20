@@ -1,0 +1,87 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    const READ_WRITE = IDBTransaction.READ_WRITE;
+
+    const name = window.location.pathname;
+    const description = "My Test Database";
+
+    const objectStoreName = "Blobs";
+
+    const blob = getRandomBlob(1000);
+    const file = getRandomFile("random.bin", 100000);
+
+    const objectData1 = { key: 1, object: { foo: blob, bar: blob } };
+    const objectData2 = { key: 2, object: { foo: file, bar: file } };
+
+    let request = mozIndexedDB.open(name, 1, description);
+    request.onerror = errorHandler;
+    request.onupgradeneeded = grabEventAndContinueHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    let event = yield;
+
+    is(event.type, "upgradeneeded", "Got correct event type");
+
+    let db = event.target.result;
+    db.onerror = errorHandler;
+
+    let objectStore = db.createObjectStore(objectStoreName, { });
+
+    objectStore.add(objectData1.object, objectData1.key);
+    objectStore.add(objectData2.object, objectData2.key);
+
+    event = yield;
+
+    is(event.type, "success", "Got correct event type");
+
+    objectStore = db.transaction([objectStoreName])
+                    .objectStore(objectStoreName);
+    request = objectStore.get(objectData1.key);
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    let result = event.target.result;
+
+    verifyBlob(result.foo, blob, 1);
+    yield;
+
+    verifyBlob(result.bar, blob, 1);
+    yield;
+
+    objectStore = db.transaction([objectStoreName])
+                    .objectStore(objectStoreName);
+    request = objectStore.get(objectData2.key);
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    result = event.target.result;
+
+    verifyBlob(result.foo, file, 2);
+    yield;
+
+    verifyBlob(result.bar, file, 2);
+    yield;
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="file.js"></script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

@@ -42,10 +42,9 @@
 #include "nsSVGGeometryFrame.h"
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsISVGChildFrame.h"
+#include "nsSVGUtils.h"
 #include "gfxContext.h"
 #include "gfxFont.h"
-#include "gfxRect.h"
-#include "gfxMatrix.h"
 #include "nsTextFragment.h"
 
 class nsSVGTextFrame;
@@ -136,9 +135,6 @@ public:
 
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
 
-  virtual void SetSelected(bool          aSelected,
-                           SelectionType aType);
-  NS_IMETHOD  GetSelected(bool *aSelected) const;
   NS_IMETHOD  IsSelectable(bool* aIsSelectable, PRUint8* aSelectStyle) const;
 
   NS_IMETHOD Init(nsIContent*      aContent,
@@ -182,7 +178,9 @@ public:
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD_(bool) IsDisplayContainer() { return false; }
-  NS_IMETHOD_(bool) HasValidCoveredRect() { return true; }
+  NS_IMETHOD_(bool) HasValidCoveredRect() {
+    return !(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD);
+  }
 
   // nsSVGGeometryFrame methods
   gfxMatrix GetCanvasTM();

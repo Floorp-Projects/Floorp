@@ -159,6 +159,10 @@ CanvasLayerOGL::MakeTexture()
   gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
 }
 
+/**
+ * Following UpdateSurface(), mTexture on context this->gl() should contain the data we want,
+ * unless mDelayedUpdates is true because of a too-large surface.
+ */
 void
 CanvasLayerOGL::UpdateSurface()
 {
@@ -176,14 +180,17 @@ CanvasLayerOGL::UpdateSurface()
   }
 #endif
 
-  mOGLManager->MakeCurrent();
-
   if (mCanvasGLContext &&
       mCanvasGLContext->GetContextType() == gl()->GetContextType())
   {
+    // Can texture share, just make sure it's resolved first
+    mCanvasGLContext->MakeCurrent();
+    mCanvasGLContext->GuaranteeResolve();
+
     if (gl()->BindOffscreenNeedsTexture(mCanvasGLContext) &&
         mTexture == 0)
     {
+      mOGLManager->MakeCurrent();
       MakeTexture();
     }
   } else {
@@ -205,6 +212,7 @@ CanvasLayerOGL::UpdateSurface()
       updatedAreaSurface = updatedAreaImageSurface;
     }
 
+    mOGLManager->MakeCurrent();
     mLayerProgram =
       gl()->UploadSurfaceToTexture(updatedAreaSurface,
                                    mBounds,
@@ -241,10 +249,6 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   nsIntRect drawRect = mBounds;
 
   if (useGLContext) {
-    mCanvasGLContext->MakeCurrent();
-    mCanvasGLContext->fFinish();
-
-    gl()->MakeCurrent();
     gl()->BindTex2DOffscreen(mCanvasGLContext);
     program = mOGLManager->GetBasicLayerProgram(CanUseOpaqueSurface(), true);
   } else if (mDelayedUpdates) {
@@ -259,7 +263,8 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
                                    true,
                                    drawRect.TopLeft());
   }
-  if (!program) { 
+
+  if (!program) {
     program = mOGLManager->GetColorTextureLayerProgram(mLayerProgram);
   }
 

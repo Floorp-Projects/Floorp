@@ -43,8 +43,7 @@
  * 21. see bug 572975 - same as test 17, but delete strong event listeners when
  *     receiving the message event;
  * 22. server takes too long to establish the ws connection;
- * 23. see bug 664692 - feature detection should detect MozWebSocket but not
- *     WebSocket on window object;
+ * 23. should detect WebSocket on window object;
  * 24. server rejects sub-protocol string
  * 25. ctor with valid empty sub-protocol array
  * 26. ctor with invalid sub-protocol array containing 1 empty element
@@ -69,10 +68,11 @@
  * 43. Test setting binaryType attribute
  * 44. Test sending/receving binary ArrayBuffer 
  * 45. Test sending/receving binary Blob 
+ * 46. Test that we don't dispatch incoming msgs once in CLOSING state
  */
 
 var first_test = 1;
-var last_test = 45;
+var last_test = 46;
 
 var current_test = first_test;
 
@@ -126,9 +126,9 @@ function CreateTestWS(ws_location, ws_protocol, no_increment_test)
 
   try {
     if (ws_protocol == undefined) {
-      ws = new MozWebSocket(ws_location);
+      ws = new WebSocket(ws_location);
     } else {
-      ws = new MozWebSocket(ws_location, ws_protocol);
+      ws = new WebSocket(ws_location, ws_protocol);
     }
 
 
@@ -510,10 +510,14 @@ function test14()
   ws.onclose = function(e)
   {
     shouldCloseCleanly(e);
-    doTest(15);
+    // Skip test 15 for now: broken
+    doTest(16);
   };
 }
 
+/*
+ * DISABLED: see comments for test-15 case in file_websocket_wsh.py
+ *
 function test15()
 {
   var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-15");
@@ -529,6 +533,7 @@ function test15()
   }
 
 }
+*/
 
 function test16()
 {
@@ -537,7 +542,6 @@ function test16()
   {
     ws.close();
     ok(!ws.send("client data"), "shouldn't send message after calling close()");
-    doTest(17);
   }
   ws.onmessage = function()
   {
@@ -549,6 +553,7 @@ function test16()
   }
   ws.onclose = function()
   {
+    doTest(17);
   }
 }
 
@@ -560,7 +565,7 @@ window._test17 = function()
 {
   waitTest17 = true;
 
-  var local_ws = new MozWebSocket("ws://sub1.test2.example.org/tests/content/base/test/file_websocket", "test-17");
+  var local_ws = new WebSocket("ws://sub1.test2.example.org/tests/content/base/test/file_websocket", "test-17");
   local_ws._testNumber = "local17";
   local_ws._testNumber = current_test++;
 
@@ -643,7 +648,7 @@ window._test20 = function()
 {
   waitTest20 = true;
 
-  var local_ws = new MozWebSocket("ws://sub1.test1.example.org/tests/content/base/test/file_websocket", "test-20");
+  var local_ws = new WebSocket("ws://sub1.test1.example.org/tests/content/base/test/file_websocket", "test-20");
   local_ws._testNumber = "local20";
   local_ws._testNumber = current_test++;
 
@@ -678,7 +683,7 @@ window._test21 = function()
 {
   waitTest21 = true;
 
-  var local_ws = new MozWebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-21");
+  var local_ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-21");
   local_ws._testNumber = current_test++;
   var received_message = false;
 
@@ -753,8 +758,7 @@ function test22()
 function test23()
 {
   current_test++;
-  is(false, "WebSocket" in window, "WebSocket shouldn't be available on window object");
-  is(true, "MozWebSocket" in window, "MozWebSocket should be available on window object");
+  is(true, "WebSocket" in window, "WebSocket should be available on window object");
   doTest(24);
 }
 
@@ -1375,6 +1379,28 @@ function test45()
     };
 
     reader.readAsBinaryString(test45blob);
+  }
+}
+
+function test46()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-46");
+  ok(ws.readyState == 0, "create bad readyState in test-46!");
+  ws.onopen = function()
+  {
+    ok(ws.readyState == 1, "open bad readyState in test-46!");
+    ws.close()
+    ok(ws.readyState == 2, "close must set readyState to 2 in test-46!");
+  }
+  ws.onmessage = function(e)
+  {
+    ok(false, "received message after calling close in test-46!");
+  }
+  ws.onclose = function(e)
+  {
+    ok(ws.readyState == 3, "onclose bad readyState in test-46!");
+    shouldCloseCleanly(e);
+    doTest(47);
   }
 }
 

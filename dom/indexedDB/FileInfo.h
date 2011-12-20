@@ -131,7 +131,7 @@ private:
 class FileInfo##_bits : public FileInfo                                       \
 {                                                                             \
 public:                                                                       \
-  FileInfo##_bits(FileManager* aFileManager, PRInt64 aId)                     \
+  FileInfo##_bits(FileManager* aFileManager, PRInt##_bits aId)                \
   : FileInfo(aFileManager), mId(aId)                                          \
   { }                                                                         \
                                                                               \
@@ -144,9 +144,9 @@ private:                                                                      \
   PRInt##_bits mId;                                                           \
 };
 
-FILEINFO_SUBCLASS(16);
-FILEINFO_SUBCLASS(32);
-FILEINFO_SUBCLASS(64);
+FILEINFO_SUBCLASS(16)
+FILEINFO_SUBCLASS(32)
+FILEINFO_SUBCLASS(64)
 
 #undef FILEINFO_SUBCLASS
 

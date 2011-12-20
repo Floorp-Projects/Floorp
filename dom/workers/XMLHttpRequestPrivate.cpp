@@ -1566,19 +1566,19 @@ XMLHttpRequestPrivate::GetAllResponseHeaders(JSContext* aCx)
   mWorkerPrivate->AssertIsOnWorkerThread();
 
   if (mCanceled) {
-    return false;
+    return nsnull;
   }
 
   if (!mProxy) {
     ThrowDOMExceptionForCode(aCx, INVALID_STATE_ERR);
-    return false;
+    return nsnull;
   }
 
   nsCString responseHeaders;
   nsRefPtr<GetAllResponseHeadersRunnable> runnable =
     new GetAllResponseHeadersRunnable(mWorkerPrivate, mProxy, responseHeaders);
   if (!runnable->Dispatch(aCx)) {
-    return false;
+    return nsnull;
   }
 
   return JS_NewStringCopyN(aCx, responseHeaders.get(),
@@ -1591,17 +1591,17 @@ XMLHttpRequestPrivate::GetResponseHeader(JSContext* aCx, JSString* aHeader)
   mWorkerPrivate->AssertIsOnWorkerThread();
 
   if (mCanceled) {
-    return false;
+    return nsnull;
   }
 
   if (!mProxy) {
     ThrowDOMExceptionForCode(aCx, INVALID_STATE_ERR);
-    return false;
+    return nsnull;
   }
 
   nsDependentJSString header;
   if (!header.init(aCx, aHeader)) {
-    return false;
+    return nsnull;
   }
 
   nsCString value;
@@ -1609,7 +1609,7 @@ XMLHttpRequestPrivate::GetResponseHeader(JSContext* aCx, JSString* aHeader)
     new GetResponseHeaderRunnable(mWorkerPrivate, mProxy,
                                   NS_ConvertUTF16toUTF8(header), value);
   if (!runnable->Dispatch(aCx)) {
-    return false;
+    return nsnull;
   }
 
   return JS_NewStringCopyN(aCx, value.get(), value.Length());

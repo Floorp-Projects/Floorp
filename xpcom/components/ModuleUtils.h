@@ -39,6 +39,7 @@
 #ifndef mozilla_GenericModule_h
 #define mozilla_GenericModule_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Module.h"
 
 #define NS_GENERIC_FACTORY_CONSTRUCTOR(_InstanceClass)                        \
@@ -134,7 +135,7 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
 
 namespace mozilla {
 
-class GenericModule : public nsIModule
+class GenericModule MOZ_FINAL : public nsIModule
 {
 public:
     GenericModule(const mozilla::Module* aData)

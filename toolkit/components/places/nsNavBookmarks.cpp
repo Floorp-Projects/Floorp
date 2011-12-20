@@ -273,8 +273,7 @@ nsNavBookmarks::Init()
     (void)os->AddObserver(this, TOPIC_PLACES_CONNECTION_CLOSED, true);
   }
 
-  PRUint16 dbStatus = mDB->GetDatabaseStatus();
-  nsresult rv = InitRoots(dbStatus != nsINavHistoryService::DATABASE_STATUS_OK);
+  nsresult rv = ReadRoots();
   NS_ENSURE_SUCCESS(rv, rv);
 
   mCanNotify = true;
@@ -297,7 +296,7 @@ nsNavBookmarks::Init()
 }
 
 nsresult
-nsNavBookmarks::InitRoots(bool aForceCreate)
+nsNavBookmarks::ReadRoots()
 {
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDB->MainConn()->CreateStatement(NS_LITERAL_CSTRING(
@@ -332,86 +331,8 @@ nsNavBookmarks::InitRoots(bool aForceCreate)
     }
   }
 
-  if (aForceCreate) {
-    nsNavHistory* history = nsNavHistory::GetHistoryService();
-    NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-    nsIStringBundle* bundle = history->GetBundle();
-    NS_ENSURE_TRUE(bundle, NS_ERROR_OUT_OF_MEMORY);
-
-    mozStorageTransaction transaction(mDB->MainConn(), false);
-
-    rv = CreateRoot(NS_LITERAL_CSTRING("places"), &mRoot, 0,
-                    nsnull, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = CreateRoot(NS_LITERAL_CSTRING("menu"), &mMenuRoot, mRoot, bundle,
-                    NS_LITERAL_STRING("BookmarksMenuFolderTitle").get());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = CreateRoot(NS_LITERAL_CSTRING("toolbar"), &mToolbarRoot, mRoot, bundle,
-                    NS_LITERAL_STRING("BookmarksToolbarFolderTitle").get());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = CreateRoot(NS_LITERAL_CSTRING("tags"), &mTagsRoot, mRoot, bundle,
-                    NS_LITERAL_STRING("TagsFolderTitle").get());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = CreateRoot(NS_LITERAL_CSTRING("unfiled"), &mUnfiledRoot, mRoot, bundle,
-                    NS_LITERAL_STRING("UnsortedBookmarksFolderTitle").get());
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = transaction.Commit();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!mBatching) {
-      ForceWALCheckpoint();
-    }
-  }
-
-  return NS_OK;
-}
-
-
-nsresult
-nsNavBookmarks::CreateRoot(const nsCString& name,
-                           PRInt64* _itemId,
-                           PRInt64 aParentId,
-                           nsIStringBundle* aBundle,
-                           const PRUnichar* aTitleStringId)
-{
-  nsresult rv;
-
-  if (*_itemId == 0) {
-    // The root does not exist.  Create a new untitled folder for it.
-    rv = CreateFolder(aParentId, EmptyCString(), DEFAULT_INDEX, _itemId);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Create a entry  in moz_bookmarks_roots to link the folder to the root.
-    nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      "INSERT INTO moz_bookmarks_roots (root_name, folder_id) "
-      "VALUES (:root_name, :item_id)"
-    );
-    NS_ENSURE_STATE(stmt);
-    mozStorageStatementScoper scoper(stmt);
-
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("root_name"), name);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"), *_itemId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Now set the title on the root.  Notice we do this regardless, to take in
-  // could title changes when schema changes.
-  if (aTitleStringId) {
-    nsXPIDLString title;
-    rv = aBundle->GetStringFromName(aTitleStringId, getter_Copies(title));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = SetItemTitle(*_itemId, NS_ConvertUTF16toUTF8(title));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  if (!mRoot || !mMenuRoot || !mToolbarRoot || !mTagsRoot || !mUnfiledRoot)
+    return NS_ERROR_FAILURE;
 
   return NS_OK;
 }
@@ -711,10 +632,6 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder,
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mBatching) {
-    ForceWALCheckpoint();
-  }
-
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavBookmarkObserver,
                    OnItemAdded(*aNewBookmarkId, aFolder, index, TYPE_BOOKMARK,
@@ -814,10 +731,6 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
   NS_ENSURE_SUCCESS(rv, rv);
 
   END_CRITICAL_BOOKMARK_CACHE_SECTION(bookmark.id);
-
-  if (!mBatching) {
-    ForceWALCheckpoint();
-  }
 
   nsCOMPtr<nsIURI> uri;
   if (bookmark.type == TYPE_BOOKMARK) {
@@ -974,10 +887,6 @@ nsNavBookmarks::CreateContainerWithID(PRInt64 aItemId,
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!mBatching) {
-    ForceWALCheckpoint();
-  }
 
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavBookmarkObserver,
@@ -1297,10 +1206,6 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!mBatching) {
-    ForceWALCheckpoint();
-  }
 
   // Call observers in reverse order to serve children before their parent.
   for (PRInt32 i = folderChildrenArray.Length() - 1; i >= 0; --i) {
@@ -2955,7 +2860,6 @@ nsNavBookmarks::OnEndUpdateBatch()
 {
   if (mBatching) {
     mBatching = false;
-    ForceWALCheckpoint();
   }
 
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,

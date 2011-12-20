@@ -96,6 +96,16 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
                   new String[] { uri });
     }
 
+    public void updateHistoryDate(ContentResolver cr, String uri, long date) {
+        ContentValues values = new ContentValues();
+        values.put(Browser.BookmarkColumns.DATE, date);
+
+        cr.update(Browser.BOOKMARKS_URI,
+                  values,
+                  Browser.BookmarkColumns.URL + " = ?",
+                  new String[] { uri });
+    }
+
     public Cursor getAllVisitedHistory(ContentResolver cr) {
         Cursor c = cr.query(Browser.BOOKMARKS_URI,
                             new String[] { Browser.BookmarkColumns.URL },

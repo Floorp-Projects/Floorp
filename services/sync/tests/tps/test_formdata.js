@@ -6,6 +6,7 @@
  * here must be in strict JSON format, as it will get parsed by the Python
  * testrunner (no single quotes, extra comma's, etc).
  */
+EnableEngines(["forms"]);
 
 var phases = { "phase1": "profile1",
                "phase2": "profile2",
@@ -53,7 +54,7 @@ var formdata_delete = [
 Phase('phase1', [
   [Formdata.add, formdata1],
   [Formdata.verify, formdata1],
-  [Sync, SYNC_WIPE_SERVER],
+  [Sync]
 ]);
 
 Phase('phase2', [

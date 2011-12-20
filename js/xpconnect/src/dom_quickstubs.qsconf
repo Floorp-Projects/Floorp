@@ -144,6 +144,27 @@ members = [
     'nsIDOMElement.getAttributeNS',
     'nsIDOMElement.onmouseenter',
     'nsIDOMElement.onmouseleave',
+    'nsIDOMElement.getElementsByClassName',
+    'nsIDOMElement.getClientRects',
+    'nsIDOMElement.getBoundingClientRect',
+    'nsIDOMElement.scrollTop',
+    'nsIDOMElement.scrollLeft',
+    'nsIDOMElement.scrollHeight',
+    'nsIDOMElement.scrollWidth',
+    'nsIDOMElement.clientTop',
+    'nsIDOMElement.clientLeft',
+    'nsIDOMElement.clientHeight',
+    'nsIDOMElement.clientWidth',
+    'nsIDOMElement.firstElementChild',
+    'nsIDOMElement.lastElementChild',
+    'nsIDOMElement.previousElementSibling',
+    'nsIDOMElement.nextElementSibling',
+    'nsIDOMElement.childElementCount',
+    'nsIDOMElement.children',
+    'nsIDOMElement.classList',
+    'nsIDOMElement.setCapture',
+    'nsIDOMElement.releaseCapture',
+    'nsIDOMElement.mozMatchesSelector',
     'nsIDOMNamedNodeMap.item',
     'nsIDOMNamedNodeMap.length',
     'nsIDOMNode.*',
@@ -156,7 +177,6 @@ members = [
     'nsIDOMDOMTokenList.*',
     'nsIDOMDOMSettableTokenList.*',
     'nsIDOMXULDocument.getBoxObjectFor',
-    'nsIDOMNSElement.*',
 
     # dom/interfaces/css
     'nsIDOMElementCSSInlineStyle.*',
@@ -420,7 +440,7 @@ members = [
     '-nsIXMLHttpRequest.upload',
 
     # WebSocket
-    'nsIMozWebSocket.*',
+    'nsIWebSocket.*',
 
     # webgl
     'nsIDOMWebGLRenderingContext.*',
@@ -473,6 +493,7 @@ irregularFilenames = {
     'nsIWebGLShaderArray': 'nsIDOMWebGLRenderingContext',
     'nsIWebGLFramebuffer': 'nsIDOMWebGLRenderingContext',
     'nsIWebGLRenderbuffer': 'nsIDOMWebGLRenderingContext',
+    'nsIWebGLShaderPrecisionFormat' : 'nsIDOMWebGLRenderingContext',
     'nsIWebGLActiveInfo': 'nsIDOMWebGLRenderingContext',
     'nsIWebGLUniformLocation': 'nsIDOMWebGLRenderingContext',
     'nsIWebGLExtension': 'nsIDOMWebGLRenderingContext',
@@ -681,98 +702,95 @@ customMethodCalls = {
         'setter_code': '    rv = self->SetPropertyValue(prop, arg0);',
         'canFail': True
         },
-    'nsIDOMNSElement_': {
-        'thisType': 'nsGenericElement'
-        },
-    'nsIDOMNSElement_GetScrollTop': {
+    'nsIDOMElement_GetScrollTop': {
         'thisType': 'nsGenericElement',
         'code': '    PRInt32 result = self->GetScrollTop();',
         'canFail': False
         },
-    'nsIDOMNSElement_SetScrollTop': {
+    'nsIDOMElement_SetScrollTop': {
         'thisType': 'nsGenericElement',
         'canFail': False
         },
-    'nsIDOMNSElement_GetScrollLeft': {
+    'nsIDOMElement_GetScrollLeft': {
         'thisType': 'nsGenericElement',
         'code': '    PRInt32 result = self->GetScrollLeft();',
         'canFail': False
         },
-    'nsIDOMNSElement_SetScrollLeft': {
+    'nsIDOMElement_SetScrollLeft': {
         'thisType': 'nsGenericElement',
         'canFail': False
         },
-    'nsIDOMNSElement_GetScrollHeight': {
+    'nsIDOMElement_GetScrollHeight': {
         'thisType': 'nsGenericElement',
         'code': '    PRInt32 result = self->GetScrollHeight();',
         'canFail': False
         },
-    'nsIDOMNSElement_GetScrollWidth': {
+    'nsIDOMElement_GetScrollWidth': {
         'thisType': 'nsGenericElement',
         'code': '    PRInt32 result = self->GetScrollWidth();',
         'canFail': False
         },
-    'nsIDOMNSElement_GetClientTop': {
+    'nsIDOMElement_GetClientTop': {
         'thisType': 'nsGenericElement',
         'code': '    PRInt32 result = self->GetClientTop();',
         'canFail': False
         },
-    'nsIDOMNSElement_SetClientTop': {
+    'nsIDOMElement_SetClientTop': {
         'thisType': 'nsGenericElement',
         'canFail': False
         },
-    'nsIDOMNSElement_GetClientLeft': {
+    'nsIDOMElement_GetClientLeft': {
         'thisType': 'nsGenericElement',
         'code': '    PRInt32 result = self->GetClientLeft();',
         'canFail': False
         },
-    'nsIDOMNSElement_SetClientLeft': {
+    'nsIDOMElement_SetClientLeft': {
         'thisType': 'nsGenericElement',
         'canFail': False
         },
-    'nsIDOMNSElement_GetClientHeight': {
+    'nsIDOMElement_GetClientHeight': {
         'thisType': 'nsGenericElement',
         'code': '    PRInt32 result = self->GetClientHeight();',
         'canFail': False
         },
-    'nsIDOMNSElement_GetClientWidth': {
+    'nsIDOMElement_GetClientWidth': {
         'thisType': 'nsGenericElement',
         'code': '    PRInt32 result = self->GetClientWidth();',
         'canFail': False
         },
-    'nsIDOMNSElement_GetFirstElementChild': {
+    'nsIDOMElement_GetFirstElementChild': {
         'thisType': 'nsGenericElement',
         'code': '    nsIContent *result = self->GetFirstElementChild();',
         'canFail': False
         },
-    'nsIDOMNSElement_GetLastElementChild': {
+    'nsIDOMElement_GetLastElementChild': {
         'thisType': 'nsGenericElement',
         'code': '    nsIContent *result = self->GetLastElementChild();',
         'canFail': False
         },
-    'nsIDOMNSElement_GetPreviousElementSibling': {
+    'nsIDOMElement_GetPreviousElementSibling': {
         'thisType': 'nsGenericElement',
         'code': '    nsIContent *result = self->GetPreviousElementSibling();',
         'canFail': False
         },
-    'nsIDOMNSElement_GetNextElementSibling': {
+    'nsIDOMElement_GetNextElementSibling': {
         'thisType': 'nsGenericElement',
         'code': '    nsIContent *result = self->GetNextElementSibling();',
         'canFail': False
         },
-    'nsIDOMNSElement_GetClassList': {
+    'nsIDOMElement_GetClassList': {
         'thisType': 'nsGenericElement',
         'code': '    nsIDOMDOMTokenList *result = self->GetClassList(&rv);'
         },
-    'nsIDOMNSElement_SetCapture': {
+    'nsIDOMElement_SetCapture': {
         'thisType': 'nsGenericElement',
         'canFail': False
         },
-    'nsIDOMNSElement_ReleaseCapture': {
+    'nsIDOMElement_ReleaseCapture': {
         'thisType': 'nsGenericElement',
         'canFail': False
         },
-    'nsIDOMNSElement_MozMatchesSelector': {
+    'nsIDOMElement_MozMatchesSelector': {
         'thisType': 'nsGenericElement',
         'code': '    bool result = self->MozMatchesSelector(arg0, &rv);',
         },

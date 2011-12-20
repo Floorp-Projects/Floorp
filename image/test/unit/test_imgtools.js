@@ -342,6 +342,94 @@ container = outParam.value;
 do_check_eq(container.width, 32);
 do_check_eq(container.height, 32);
 
+/* ========== 11 ========== */
+testnum++;
+testdesc = "test encoding an unscaled ICO with format options " +
+           "(format=bmp;bpp=32)";
+
+// we'll reuse the container from the previous test
+istream = imgTools.encodeImage(container,
+                               "image/vnd.microsoft.icon",
+                               "format=bmp;bpp=32");
+encodedBytes = streamToArray(istream);
+
+// Get bytes for exected result
+refName = "image4gif32x32bmp32bpp.ico";
+refFile = do_get_file(refName);
+istream = getFileInputStream(refFile);
+do_check_eq(istream.available(), 4286);
+referenceBytes = streamToArray(istream);
+
+// compare the encoder's output to the reference file.
+compareArrays(encodedBytes, referenceBytes);
+
+/* ========== 12 ========== */
+testnum++;
+testdesc = "test encoding a scaled ICO with format options " +
+           "(format=bmp;bpp=32)";
+
+// we'll reuse the container from the previous test
+istream = imgTools.encodeScaledImage(container,
+                                     "image/vnd.microsoft.icon",
+                                     16,
+                                     16,
+                                     "format=bmp;bpp=32");
+encodedBytes = streamToArray(istream);
+
+// Get bytes for exected result
+refName = "image4gif16x16bmp32bpp.ico";
+refFile = do_get_file(refName);
+istream = getFileInputStream(refFile);
+do_check_eq(istream.available(), 1150);
+referenceBytes = streamToArray(istream);
+
+// compare the encoder's output to the reference file.
+compareArrays(encodedBytes, referenceBytes);
+
+/* ========== 13 ========== */
+testnum++;
+testdesc = "test encoding an unscaled ICO with format options " +
+           "(format=bmp;bpp=24)";
+
+// we'll reuse the container from the previous test
+istream = imgTools.encodeImage(container,
+                               "image/vnd.microsoft.icon",
+                               "format=bmp;bpp=24");
+encodedBytes = streamToArray(istream);
+
+// Get bytes for exected result
+refName = "image4gif32x32bmp24bpp.ico";
+refFile = do_get_file(refName);
+istream = getFileInputStream(refFile);
+do_check_eq(istream.available(), 3262);
+referenceBytes = streamToArray(istream);
+
+// compare the encoder's output to the reference file.
+compareArrays(encodedBytes, referenceBytes);
+
+/* ========== 14 ========== */
+testnum++;
+testdesc = "test encoding a scaled ICO with format options " +
+           "(format=bmp;bpp=24)";
+
+// we'll reuse the container from the previous test
+istream = imgTools.encodeScaledImage(container,
+                                     "image/vnd.microsoft.icon",
+                                     16,
+                                     16,
+                                     "format=bmp;bpp=24");
+encodedBytes = streamToArray(istream);
+
+// Get bytes for exected result
+refName = "image4gif16x16bmp24bpp.ico";
+refFile = do_get_file(refName);
+istream = getFileInputStream(refFile);
+do_check_eq(istream.available(), 894);
+referenceBytes = streamToArray(istream);
+
+// compare the encoder's output to the reference file.
+compareArrays(encodedBytes, referenceBytes);
+
 
 /* ========== bug 363986 ========== */
 testnum = 363986;

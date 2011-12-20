@@ -47,6 +47,11 @@ function continueToNextStep()
   });
 }
 
+function continueToNextStepSync()
+{
+  testGenerator.next();
+}
+
 function errorHandler(event)
 {
   ok(false, "indexedDB error, code " + event.target.errorCode);
@@ -75,9 +80,40 @@ ExpectError.prototype = {
     is(event.type, "error", "Got an error event");
     is(this._code, event.target.errorCode, "Expected error was thrown.");
     event.preventDefault();
+    event.stopPropagation();
     grabEventAndContinueHandler(event);
   }
 };
+
+function compareKeys(k1, k2) {
+  let t = typeof k1;
+  if (t != typeof k2)
+    return false;
+
+  if (t !== "object")
+    return k1 === k2;
+
+  if (k1 instanceof Date) {
+    return (k2 instanceof Date) &&
+      k1.getTime() === k2.getTime();
+  }
+
+  if (k1 instanceof Array) {
+    if (!(k2 instanceof Array) ||
+        k1.length != k2.length)
+      return false;
+    
+    for (let i = 0; i < k1.length; ++i) {
+      if (!compareKeys(k1[i], k2[i]))
+        return false;
+    }
+    
+    return true;
+  }
+
+  return false;
+}
+
 
 function addPermission(type, allow, url)
 {
@@ -88,14 +124,16 @@ function addPermission(type, allow, url)
     uri = Components.classes["@mozilla.org/network/io-service;1"]
                     .getService(Components.interfaces.nsIIOService)
                     .newURI(url, null, null);
-  } else {
+  }
+  else {
     uri = SpecialPowers.getDocumentURIObject(window.document);
   }
 
   let permission;
   if (allow) {
     permission = Components.interfaces.nsIPermissionManager.ALLOW_ACTION;
-  } else {
+  }
+  else {
     permission = Components.interfaces.nsIPermissionManager.DENY_ACTION;
   }
 

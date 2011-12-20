@@ -194,7 +194,7 @@ protected:
   nsresult DispatchXULKeyCommand(nsIDOMEvent* aEvent);
   nsresult EnsureEventHandler(nsIScriptGlobalObject* aGlobal,
                               nsIScriptContext *aBoundContext, nsIAtom *aName,
-                              nsScriptObjectHolder &aHandler);
+                              nsScriptObjectHolder<JSObject>& aHandler);
   static PRInt32 KeyToMask(PRInt32 key);
   
   static PRInt32 kAccelKey;

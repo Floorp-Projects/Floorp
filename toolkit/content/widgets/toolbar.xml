@@ -111,7 +111,9 @@
             if (!toolbox)
               throw("toolboxid attribute points to a toolbox which doesn't exist");
 
-            toolbox.externalToolbars.push(this);
+            if (toolbox.externalToolbars.indexOf(this) == -1)
+              toolbox.externalToolbars.push(this);
+
             return this._toolbox = toolbox;
           }
 

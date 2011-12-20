@@ -263,35 +263,8 @@ private:
   /**
    * Locates the root items in the bookmarks folder hierarchy assigning folder
    * ids to the root properties that are exposed through the service interface.
-   * 
-   * @param aForceCreate
-   *        Whether the method should try creating the roots.  It should be set
-   *        to true if the database has just been created or upgraded.
-   *
-   * @note The creation of roots skips already existing entries.
    */
-  nsresult InitRoots(bool aForceCreate);
-
-  /**
-   * Tries to create a root folder with the given name.
-   *
-   * @param name
-   *        Name associated to the root.
-   * @param _itemId
-   *        if set CreateRoot will skip creation, otherwise will return the
-   *        newly created folder id.
-   * @param aParentId
-   *        Id of the parent that should cotain this root.
-   * @param aBundle
-   *        Stringbundle used to get the visible title of the root.
-   * @param aTitleStringId
-   *        Id of the title string in the stringbundle.
-   */
-  nsresult CreateRoot(const nsCString& name,
-                      PRInt64* _itemId,
-                      PRInt64 aParentId,
-                      nsIStringBundle* aBundle,
-                      const PRUnichar* aTitleStringId);
+  nsresult ReadRoots();
 
   nsresult AdjustIndices(PRInt64 aFolder,
                          PRInt32 aStartIndex,

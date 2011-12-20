@@ -62,6 +62,8 @@ const NS_DIRECTORY_SERVICE_CONTRACTID =
 const NS_OBSERVER_SERVICE_CONTRACTID =
           "@mozilla.org/observer-service;1";
 
+Components.utils.import("resource://gre/modules/FileUtils.jsm");        
+
 var gLoadTimeout = 0;
 var gTimeoutHook = null;
 var gRemote = false;
@@ -261,55 +263,59 @@ function InitAndStartRefTests()
 {
     /* These prefs are optional, so we don't need to spit an error to the log */
     try {
-      var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                  getService(Components.interfaces.nsIPrefBranch2);
+        var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                    getService(Components.interfaces.nsIPrefBranch2);
     } catch(e) {
-      gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | | EXCEPTION: " + e + "\n");
+        gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | | EXCEPTION: " + e + "\n");
     }
     
     /* set the gLoadTimeout */
     try {
-      gLoadTimeout = prefs.getIntPref("reftest.timeout");
+        gLoadTimeout = prefs.getIntPref("reftest.timeout");
     } catch(e) { 
-      gLoadTimeout = 5 * 60 * 1000; //5 minutes as per bug 479518
+        gLoadTimeout = 5 * 60 * 1000; //5 minutes as per bug 479518
     }
     
     /* Get the logfile for android tests */
     try {
-      logFile = prefs.getCharPref("reftest.logFile");
-      if (logFile) {
-        try {
-          var mfl = new MozillaFileLogger(logFile);
-          // Set to mirror to stdout as well as the file
-          gDumpLog = function (msg) {dump(msg); mfl.log(msg);};
+        logFile = prefs.getCharPref("reftest.logFile");
+        if (logFile) {
+            try {
+                var f = FileUtils.File(logFile);
+                var mfl = FileUtils.openFileOutputStream(f, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE);  
+                // Set to mirror to stdout as well as the file
+                gDumpLog = function (msg) {
+                    dump(msg); 
+                    mfl.write(msg, msg.length);
+                };
+            }
+            catch(e) {
+                // If there is a problem, just use stdout
+                gDumpLog = dump;
+            }
         }
-        catch(e) {
-          // If there is a problem, just use stdout
-          gDumpLog = dump;
-        }
-      }
     } catch(e) {}
     
     try {
-      gRemote = prefs.getBoolPref("reftest.remote");
+        gRemote = prefs.getBoolPref("reftest.remote");
     } catch(e) { 
-      gRemote = false;
+        gRemote = false;
     }
 
     try {
-      gIgnoreWindowSize = prefs.getBoolPref("reftest.ignoreWindowSize");
+        gIgnoreWindowSize = prefs.getBoolPref("reftest.ignoreWindowSize");
     } catch(e) {
-      gIgnoreWindowSize = false;
+        gIgnoreWindowSize = false;
     }
 
     /* Support for running a chunk (subset) of tests.  In separate try as this is optional */
     try {
-      gTotalChunks = prefs.getIntPref("reftest.totalChunks");
-      gThisChunk = prefs.getIntPref("reftest.thisChunk");
+        gTotalChunks = prefs.getIntPref("reftest.totalChunks");
+        gThisChunk = prefs.getIntPref("reftest.thisChunk");
     }
     catch(e) {
-      gTotalChunks = 0;
-      gThisChunk = 0;
+        gTotalChunks = 0;
+        gThisChunk = 0;
     }
 
     try {
@@ -326,10 +332,10 @@ function InitAndStartRefTests()
     RegisterProcessCrashObservers();
 
     if (gRemote) {
-      gServer = null;
+        gServer = null;
     } else {
-      gServer = CC["@mozilla.org/server/jshttp;1"].
-                    createInstance(CI.nsIHttpServer);
+        gServer = CC["@mozilla.org/server/jshttp;1"].
+                      createInstance(CI.nsIHttpServer);
     }
     try {
         if (gServer)
@@ -405,7 +411,6 @@ function StartTests()
 
 function OnRefTestUnload()
 {
-    MozillaFileLogger.close();
 }
 
 // Read all available data from an input stream and return it
@@ -993,7 +998,8 @@ function DoneTests()
 
     gDumpLog("REFTEST TEST-START | Shutdown\n");
     function onStopped() {
-        goQuitApplication();
+        let appStartup = CC["@mozilla.org/toolkit/app-startup;1"].getService(CI.nsIAppStartup);
+        appStartup.quit(CI.nsIAppStartup.eForceQuit);
     }
     if (gServer)
         gServer.stop(onStopped);

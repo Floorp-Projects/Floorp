@@ -77,7 +77,7 @@
     scheduleGC();
     yield;
 
-    is(getFileRefCount(name, 1), 1, "Correct ref count");
+    is(getFileRefCount(name, 1), 0, "Correct ref count");
 
     finishTest();
     yield;

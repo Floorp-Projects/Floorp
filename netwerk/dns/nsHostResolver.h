@@ -202,6 +202,7 @@ public:
      */
     static nsresult Create(PRUint32         maxCacheEntries,  // zero disables cache
                            PRUint32         maxCacheLifetime, // minutes
+                           PRUint32         lifetimeGracePeriod, // minutes
                            nsHostResolver **resolver);
     
     /**
@@ -250,7 +251,8 @@ public:
     };
 
 private:
-    nsHostResolver(PRUint32 maxCacheEntries=50, PRUint32 maxCacheLifetime=1);
+    nsHostResolver(PRUint32 maxCacheEntries = 50, PRUint32 maxCacheLifetime = 1,
+                   PRUint32 lifetimeGracePeriod = 0);
    ~nsHostResolver();
 
     nsresult Init();
@@ -265,8 +267,19 @@ private:
     
     static void ThreadFunc(void *);
 
+    enum {
+        METHOD_HIT = 1,
+        METHOD_RENEWAL = 2,
+        METHOD_NEGATIVE_HIT = 3,
+        METHOD_LITERAL = 4,
+        METHOD_OVERFLOW = 5,
+        METHOD_NETWORK_FIRST = 6,
+        METHOD_NETWORK_SHARED = 7
+    };
+
     PRUint32      mMaxCacheEntries;
     PRUint32      mMaxCacheLifetime;
+    PRUint32      mGracePeriod;
     Mutex         mLock;
     CondVar       mIdleThreadCV;
     PRUint32      mNumIdleThreads;

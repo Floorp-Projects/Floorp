@@ -71,6 +71,7 @@ CPPSRCS = \
   LazyIdleThread.cpp \
   OpenDatabaseHelper.cpp \
   TransactionThreadPool.cpp \
+  Key.cpp \
   $(NULL)
 
 EXPORTS_mozilla/dom/indexedDB = \

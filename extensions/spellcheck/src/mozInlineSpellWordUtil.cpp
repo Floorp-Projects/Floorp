@@ -969,7 +969,6 @@ WordSplitState::FindSpecialWord()
     if (protocol.EqualsIgnoreCase("http") ||
         protocol.EqualsIgnoreCase("https") ||
         protocol.EqualsIgnoreCase("news") ||
-        protocol.EqualsIgnoreCase("ftp") ||
         protocol.EqualsIgnoreCase("file") ||
         protocol.EqualsIgnoreCase("javascript") ||
         protocol.EqualsIgnoreCase("ftp")) {

@@ -917,6 +917,18 @@ public:
   }
 
   /**
+   * Returns true if |this| node is the common ancestor of the start/end
+   * nodes of a Range in a Selection or a descendant of such a common ancestor.
+   * This node is definitely not selected when |false| is returned, but it may
+   * or may not be selected when |true| is returned.
+   */
+  bool IsSelectionDescendant() const
+  {
+    return IsDescendantOfCommonAncestorForRangeInSelection() ||
+           IsCommonAncestorForRangeInSelection();
+  }
+
+  /**
    * Get the root content of an editor. So, this node must be a descendant of
    * an editor. Note that this should be only used for getting input or textarea
    * editor's root content. This method doesn't support HTML editors.
@@ -1201,6 +1213,11 @@ private:
     ElementHasName,
     // Set if the element might have a contenteditable attribute set.
     ElementMayHaveContentEditableAttr,
+    // Set if the node is the common ancestor of the start/end nodes of a Range
+    // that is in a Selection.
+    NodeIsCommonAncestorForRangeInSelection,
+    // Set if the node is a descendant of a node with the above bit set.
+    NodeIsDescendantOfCommonAncestorForRangeInSelection,
     // Guard value
     BooleanFlagCount
   };
@@ -1235,6 +1252,18 @@ public:
   bool HasName() const { return GetBoolFlag(ElementHasName); }
   bool MayHaveContentEditableAttr() const
     { return GetBoolFlag(ElementMayHaveContentEditableAttr); }
+  bool IsCommonAncestorForRangeInSelection() const
+    { return GetBoolFlag(NodeIsCommonAncestorForRangeInSelection); }
+  void SetCommonAncestorForRangeInSelection()
+    { SetBoolFlag(NodeIsCommonAncestorForRangeInSelection); }
+  void ClearCommonAncestorForRangeInSelection()
+    { ClearBoolFlag(NodeIsCommonAncestorForRangeInSelection); }
+  bool IsDescendantOfCommonAncestorForRangeInSelection() const
+    { return GetBoolFlag(NodeIsDescendantOfCommonAncestorForRangeInSelection); }
+  void SetDescendantOfCommonAncestorForRangeInSelection()
+    { SetBoolFlag(NodeIsDescendantOfCommonAncestorForRangeInSelection); }
+  void ClearDescendantOfCommonAncestorForRangeInSelection()
+    { ClearBoolFlag(NodeIsDescendantOfCommonAncestorForRangeInSelection); }
 
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }

@@ -290,20 +290,6 @@ nsHTMLSharedObjectElement::BindToTree(nsIDocument *aDocument,
     nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, start));
   }
 
-#ifndef XP_MACOSX
-  if (aDocument &&
-      aDocument->IsFullScreenDoc() &&
-      nsContentUtils::HasPluginWithUncontrolledEventDispatch(this)) {
-    // This content contains a windowed plugin for which we don't control
-    // event dispatch, and we're in full-screen mode. Exit full-screen mode
-    // to prevent phishing attacks.
-    nsIDocument::ExitFullScreen(true);
-    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                    "DOM", aDocument,
-                                    nsContentUtils::eDOM_PROPERTIES,
-                                    "AddedWindowedPluginWhileFullScreen");
-  }
-#endif
   return NS_OK;
 }
 
@@ -463,7 +449,7 @@ nsHTMLSharedObjectElement::IsAttributeMapped(const nsIAtom *aAttribute) const
     sImageAlignAttributeMap,
   };
 
-  return FindAttributeDependence(aAttribute, map, ArrayLength(map));
+  return FindAttributeDependence(aAttribute, map);
 }
 
 

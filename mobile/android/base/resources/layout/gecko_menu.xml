@@ -24,8 +24,11 @@
     <item android:id="@+id/agent_mode"
           android:title="@string/agent_request_desktop" />
 
-    <item android:id="@+id/preferences"
-          android:title="@string/preferences" />
+    <item android:id="@+id/settings"
+          android:title="@string/settings" />
+
+    <item android:id="@+id/site_settings"
+          android:title="@string/site_settings_title" />
 
     <item android:id="@+id/addons"
           android:title="@string/addons"/>

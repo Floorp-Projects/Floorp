@@ -49,7 +49,6 @@
 #include "mozilla/dom/Element.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsIDOMNSElement.h"
 #include "nsILinkHandler.h"
 #include "nsNodeUtils.h"
 #include "nsAttrAndChildArray.h"
@@ -228,7 +227,6 @@ private:
 };
 
 // Forward declare to allow being a friend
-class nsNSElementTearoff;
 class nsTouchEventReceiverTearoff;
 class nsInlineEventHandlersTearoff;
 
@@ -242,7 +240,6 @@ public:
   nsGenericElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~nsGenericElement();
 
-  friend class nsNSElementTearoff;
   friend class nsTouchEventReceiverTearoff;
   friend class nsInlineEventHandlersTearoff;
 
@@ -387,11 +384,21 @@ public:
    * IsAttributeMapped should use this function as a default
    * handler.
    */
+  template<size_t N>
+  static bool
+  FindAttributeDependence(const nsIAtom* aAttribute,
+                          const MappedAttributeEntry* const (&aMaps)[N])
+  {
+    return FindAttributeDependence(aAttribute, aMaps, N);
+  }
+
+private:
   static bool
   FindAttributeDependence(const nsIAtom* aAttribute,
                           const MappedAttributeEntry* const aMaps[],
                           PRUint32 aMapCount);
 
+public:
   // nsIDOMNode method implementation
   NS_IMETHOD GetNodeName(nsAString& aNodeName);
   NS_IMETHOD GetLocalName(nsAString& aLocalName);
@@ -425,37 +432,8 @@ public:
   }
 
   // nsIDOMElement method implementation
-  NS_IMETHOD GetTagName(nsAString& aTagName);
-  NS_IMETHOD GetAttribute(const nsAString& aName,
-                          nsAString& aReturn);
-  NS_IMETHOD SetAttribute(const nsAString& aName,
-                          const nsAString& aValue);
-  NS_IMETHOD RemoveAttribute(const nsAString& aName);
-  NS_IMETHOD GetAttributeNode(const nsAString& aName,
-                              nsIDOMAttr** aReturn);
-  NS_IMETHOD SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn);
-  NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn);
-  NS_IMETHOD GetElementsByTagName(const nsAString& aTagname,
-                                  nsIDOMNodeList** aReturn);
-  NS_IMETHOD GetAttributeNS(const nsAString& aNamespaceURI,
-                            const nsAString& aLocalName,
-                            nsAString& aReturn);
-  NS_IMETHOD SetAttributeNS(const nsAString& aNamespaceURI,
-                            const nsAString& aQualifiedName,
-                            const nsAString& aValue);
-  NS_IMETHOD RemoveAttributeNS(const nsAString& aNamespaceURI,
-                               const nsAString& aLocalName);
-  NS_IMETHOD GetAttributeNodeNS(const nsAString& aNamespaceURI,
-                                const nsAString& aLocalName,
-                                nsIDOMAttr** aReturn);
-  NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn);
-  NS_IMETHOD GetElementsByTagNameNS(const nsAString& aNamespaceURI,
-                                    const nsAString& aLocalName,
-                                    nsIDOMNodeList** aReturn);
-  NS_IMETHOD HasAttribute(const nsAString& aName, bool* aReturn);
-  NS_IMETHOD HasAttributeNS(const nsAString& aNamespaceURI,
-                            const nsAString& aLocalName,
-                            bool* aReturn);
+  NS_DECL_NSIDOMELEMENT
+
   nsresult CloneNode(bool aDeep, nsIDOMNode **aResult)
   {
     return nsNodeUtils::CloneNodeImpl(this, aDeep, true, aResult);
@@ -587,15 +565,8 @@ public:
   {
   }
 
-  // nsIDOMNSElement methods
-  nsresult GetElementsByClassName(const nsAString& aClasses,
-                                  nsIDOMNodeList** aReturn);
-  nsresult GetClientRects(nsIDOMClientRectList** aResult);
-  nsresult GetBoundingClientRect(nsIDOMClientRect** aResult);
   PRInt32 GetScrollTop();
-  void SetScrollTop(PRInt32 aScrollTop);
   PRInt32 GetScrollLeft();
-  void SetScrollLeft(PRInt32 aScrollLeft);
   PRInt32 GetScrollHeight();
   PRInt32 GetScrollWidth();
   PRInt32 GetClientTop()
@@ -618,35 +589,7 @@ public:
   nsIContent* GetLastElementChild();
   nsIContent* GetPreviousElementSibling();
   nsIContent* GetNextElementSibling();
-  nsresult GetChildElementCount(PRUint32* aResult)
-  {
-    nsContentList* list = GetChildrenList();
-    if (!list) {
-      *aResult = 0;
-
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    *aResult = list->Length(true);
-
-    return NS_OK;
-  }
-  nsresult GetChildren(nsIDOMNodeList** aResult)
-  {
-    nsContentList* list = GetChildrenList();
-    if (!list) {
-      *aResult = nsnull;
-
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    NS_ADDREF(*aResult = list);
-
-    return NS_OK;
-  }
   nsIDOMDOMTokenList* GetClassList(nsresult *aResult);
-  void SetCapture(bool aRetargetToElement);
-  void ReleaseCapture();
   bool MozMatchesSelector(const nsAString& aSelector, nsresult* aResult);
 
   /**
@@ -1037,27 +980,6 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
     return static_cast<nsXPCClassInfo*>(                                \
       NS_GetDOMClassInfoInstance(eDOMClassInfo_##_interface##_id));     \
   }
-
-/**
- * Yet another tearoff class for nsGenericElement
- * to implement additional interfaces
- */
-class nsNSElementTearoff : public nsIDOMNSElement
-{
-public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-
-  NS_DECL_NSIDOMNSELEMENT
-
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsNSElementTearoff)
-
-  nsNSElementTearoff(nsGenericElement *aContent) : mContent(aContent)
-  {
-  }
-
-private:
-  nsRefPtr<nsGenericElement> mContent;
-};
 
 /**
  * Tearoff class to implement nsITouchEventReceiver

@@ -77,12 +77,7 @@ public:
     return mDatabaseName;
   }
 
-  const nsAString& DirectoryName() const
-  {
-    return mDirectoryName;
-  }
-
-  bool IsDirectoryInited() const
+  bool Inited() const
   {
     return !mDirectoryPath.IsEmpty();
   }
@@ -97,10 +92,8 @@ public:
     return mInvalidated;
   }
 
-  nsresult Init();
-
-  nsresult InitDirectory(nsIFile* aDirectory,
-                         mozIStorageConnection* aConnection);
+  nsresult Init(nsIFile* aDirectory,
+                mozIStorageConnection* aConnection);
 
   nsresult Load(mozIStorageConnection* aConnection);
 
@@ -120,7 +113,6 @@ private:
   nsString mDatabaseName;
 
   nsString mDirectoryPath;
-  nsString mDirectoryName;
 
   PRInt64 mLastFileId;
 

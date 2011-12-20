@@ -40,7 +40,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(8792d77e-1dd2-11b2-ac7f-9bc9be4f2916)]
+[scriptable, uuid(837d0211-c448-4bb8-a9bf-922ba33b9d37)]
 interface mozIJSSubScriptLoader : nsISupports
 {
     /**
@@ -53,11 +53,9 @@ interface mozIJSSubScriptLoader : nsISupports
      *            defaults to the global object of the caller.
      * @param charset optionally specifies the character encoding of
      *                the file. If absent, the file is interpreted
-		      as ASCII.
+     *                as ASCII.
      * @retval rv the value returned by the sub-script
      */
-    void loadSubScript (in wstring url);
+    [implicit_jscontext]
+    jsval loadSubScript(in AString url, [optional] in jsval obj, [optional] in AString charset);
 };
-
-
-

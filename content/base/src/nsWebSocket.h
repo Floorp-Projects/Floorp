@@ -41,7 +41,7 @@
 #define nsWebSocket_h__
 
 #include "nsISupportsUtils.h"
-#include "nsIMozWebSocket.h"
+#include "nsIWebSocket.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIJSNativeInitializer.h"
@@ -70,7 +70,7 @@ class nsWSCloseEvent;
 class nsAutoCloseWS;
 
 class nsWebSocket: public nsDOMEventTargetWrapperCache,
-                   public nsIMozWebSocket,
+                   public nsIWebSocket,
                    public nsIJSNativeInitializer,
                    public nsIInterfaceRequestor,
                    public nsIWebSocketListener,
@@ -85,7 +85,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsWebSocket,
                                            nsDOMEventTargetWrapperCache)
-  NS_DECL_NSIMOZWEBSOCKET
+  NS_DECL_NSIWEBSOCKET
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIWEBSOCKETLISTENER
   NS_DECL_NSIREQUEST
@@ -129,6 +129,7 @@ protected:
                          nsCOMPtr<nsIInputStream> &aStreamOut,
                          bool &aIsBinary, PRUint32 &aOutgoingLength);
 
+  nsresult DoOnMessageAvailable(const nsACString & aMsg, bool isBinary);
   nsresult CreateAndDispatchSimpleEvent(const nsString& aName);
   nsresult CreateAndDispatchMessageEvent(const nsACString& aData,
                                          bool isBinary);

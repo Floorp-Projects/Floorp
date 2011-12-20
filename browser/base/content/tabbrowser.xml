@@ -616,7 +616,8 @@
 
               if (topLevel) {
                 // The document loaded correctly, clear the value if we should
-                if (this.mBrowser.userTypedClear > 0)
+                if (this.mBrowser.userTypedClear > 0 ||
+                    (aRequest && !Components.isSuccessCode(aRequest.status)))
                   this.mBrowser.userTypedValue = null;
 
                 // Clear out the missing plugins list since it's related to the
@@ -1264,8 +1265,10 @@
               setTimeout(function (tabContainer) {
                 if (t.pinned)
                   tabContainer._handleNewTab(t);
-                else
+                else {
+                  t._animStartTime = Date.now();
                   t.setAttribute("fadein", "true");
+                }
               }, 0, this.tabContainer);
             }
 
@@ -1525,6 +1528,8 @@
               this._endRemoveTab(aTab);
               return;
             }
+
+            aTab._animStartTime = Date.now();
 
             this._blurTab(aTab);
             aTab.style.maxWidth = ""; // ensure that fade-out transition happens
@@ -3256,6 +3261,14 @@
           return;
 
         var tab = event.target;
+
+        if (tab._animStartTime) {
+          Services.telemetry.getHistogramById(tab.closing ?
+                                              "FX_TAB_ANIM_CLOSE_MS" :
+                                              "FX_TAB_ANIM_OPEN_MS")
+                            .add(Date.now() - tab._animStartTime);
+          tab._animStartTime = 0;
+        }
 
         if (tab.getAttribute("fadein") == "true") {
           if (tab._fullyOpen)
