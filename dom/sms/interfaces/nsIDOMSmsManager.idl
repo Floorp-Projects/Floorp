@@ -51,7 +51,9 @@ interface nsIDOMMozSmsManager : nsIDOMEventTarget
   jsval send(in jsval number, in DOMString message);
 
   [binaryname(GetMessageMoz)] nsIDOMMozSmsRequest getMessage(in long id);
-  nsIDOMMozSmsRequest delete(in long id);
+
+  // The parameter can be either a message id or a SmsMessage.
+  nsIDOMMozSmsRequest delete(in jsval param);
 
   attribute nsIDOMEventListener onreceived;
   attribute nsIDOMEventListener onsent;

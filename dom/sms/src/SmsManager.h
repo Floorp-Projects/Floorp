@@ -72,6 +72,11 @@ private:
   nsresult Send(JSContext* aCx, JSObject* aGlobal, JSString* aNumber,
                 const nsAString& aMessage, jsval* aRequest);
 
+  /**
+   * Internal Delete() method used to delete a message.
+   */
+  nsresult Delete(PRInt32 aId, nsIDOMMozSmsRequest** aRequest);
+
   nsresult DispatchTrustedSmsEventToSelf(const nsAString& aEventName,
                                          nsIDOMMozSmsMessage* aMessage);
   NS_DECL_EVENT_HANDLER(received)
