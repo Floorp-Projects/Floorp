@@ -6530,8 +6530,9 @@ nsWindow::DispatchAccessibleEvent()
 void
 nsWindow::DispatchEventToRootAccessible(PRUint32 aEventType)
 {
-    if (!a11y::ShouldA11yBeEnabled())
+    if (!a11y::ShouldA11yBeEnabled()) {
         return;
+    }
 
     nsCOMPtr<nsIAccessibilityService> accService =
         do_GetService("@mozilla.org/accessibilityService;1");
