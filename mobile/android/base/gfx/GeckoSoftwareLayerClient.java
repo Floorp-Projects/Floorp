@@ -202,6 +202,8 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     }
 
     public Bitmap getBitmap() {
+        if (mBufferSize.width <= 0 || mBufferSize.height <= 0)
+            return null;
         try {
             Bitmap b = Bitmap.createBitmap(mBufferSize.width, mBufferSize.height,
                                            CairoUtils.cairoFormatTobitmapConfig(mFormat));
