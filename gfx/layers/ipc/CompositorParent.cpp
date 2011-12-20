@@ -54,12 +54,11 @@ CompositorParent::CompositorParent()
 CompositorParent::~CompositorParent()
 {
   printf("delete parent\n");
-  delete mLayerManager;
   MOZ_COUNT_DTOR(CompositorParent);
 }
 
 bool
-CompositorParent::AnswerInit()
+CompositorParent::RecvInit()
 {
   CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::Composite);
   MessageLoop::current()->PostTask(FROM_HERE, composeTask);
@@ -67,12 +66,8 @@ CompositorParent::AnswerInit()
 }
 
 bool
-CompositorParent::AnswerStop()
+CompositorParent::RecvStop()
 {
-  if (mLayerManager) {
-    delete mLayerManager;
-    mLayerManager = NULL;
-  }
   return true;
 }
 
