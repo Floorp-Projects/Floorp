@@ -59,6 +59,7 @@ let Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/DownloadUtils.jsm");
 Cu.import("resource://gre/modules/PluralForm.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const nsIDM = Ci.nsIDownloadManager;
 
@@ -738,6 +739,29 @@ var gDownloadDNDObserver =
     if (url)
       saveURL(url, name ? name : url, null, true, true);
   }
+}
+
+function pasteHandler() {
+  let trans = Cc["@mozilla.org/widget/transferable;1"].
+              createInstance(Ci.nsITransferable);
+  let flavors = ["text/x-moz-url", "text/unicode"];
+  flavors.forEach(trans.addDataFlavor);
+
+  Services.clipboard.getData(trans, Services.clipboard.kGlobalClipboard);
+
+  // Getting the data or creating the nsIURI might fail
+  try {
+    let data = {};
+    trans.getAnyTransferData({}, data, {});
+    let [url, name] = data.value.QueryInterface(Ci.nsISupportsString).data.split("\n");
+
+    if (!url)
+      return;
+
+    let uri = Services.io.newURI(url, null, null);
+
+    saveURL(uri.spec, name || uri.spec, null, true, true);
+  } catch (ex) {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
