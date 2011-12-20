@@ -57,9 +57,9 @@ TEST_FILES = \
   test_add_twice_failure.html \
   test_advance.html \
   test_autoIncrement_indexes.html \
+  test_autoIncrement.html \
   test_bfcache.html \
   test_clear.html \
-  test_cmp.html \
   test_complex_keyPaths.html \
   test_count.html \
   test_create_index.html \
@@ -78,6 +78,7 @@ TEST_FILES = \
   test_file_cross_database_copying.html \
   test_file_delete.html \
   test_file_os_delete.html \
+  test_file_put_get_object.html \
   test_file_put_get_values.html \
   test_file_resurrection_delete.html \
   test_file_resurrection_transaction_abort.html \
@@ -93,6 +94,7 @@ TEST_FILES = \
   test_indexes.html \
   test_indexes_bad_values.html \
   test_key_requirements.html \
+  test_keys.html \
   test_leaving_page.html \
   test_multientry.html \
   test_objectCursors.html \

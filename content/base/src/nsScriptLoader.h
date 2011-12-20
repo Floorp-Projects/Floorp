@@ -177,7 +177,7 @@ public:
    */
   static nsresult ConvertToUTF16(nsIChannel* aChannel, const PRUint8* aData,
                                  PRUint32 aLength,
-                                 const nsString& aHintCharset,
+                                 const nsAString& aHintCharset,
                                  nsIDocument* aDocument, nsString& aString);
 
   /**

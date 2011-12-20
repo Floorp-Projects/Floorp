@@ -244,6 +244,46 @@ public:
    */
   void Clear() { nsTHashtable<EntryType>::Clear(); }
 
+  /**
+   * client must provide a SizeOfEntryExcludingThisFun function for
+   *   SizeOfExcludingThis.
+   * @param     aKey the key being enumerated
+   * @param     aData Reference to data being enumerated.
+   * @param     mallocSizeOf the function used to measure heap-allocated blocks
+   * @param     userArg passed unchanged from SizeOf{In,Ex}cludingThis
+   * @return    summed size of the things pointed to by the entries
+   */
+  typedef size_t
+    (* SizeOfEntryExcludingThisFun)(KeyType           aKey,
+                                    const DataType    &aData,
+                                    nsMallocSizeOfFun mallocSizeOf,
+                                    void*             userArg);
+
+  /**
+   * Measure the size of the table's entry storage, and if
+   * |sizeOfEntryExcludingThis| is non-NULL, measure the size of things pointed
+   * to by entries.
+   * 
+   * @param     sizeOfEntryExcludingThis the
+   *            <code>SizeOfEntryExcludingThisFun</code> function to call
+   * @param     mallocSizeOf the function used to measure heap-allocated blocks
+   * @param     userArg a pointer to pass to the
+   *            <code>SizeOfEntryExcludingThisFun</code> function
+   * @return    the summed size of all the entries
+   */
+  size_t SizeOfExcludingThis(SizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
+                             nsMallocSizeOfFun mallocSizeOf, void *userArg = NULL)
+  {
+    if (IsInitialized()) {
+      s_SizeOfArgs args = { sizeOfEntryExcludingThis, userArg };
+      return PL_DHashTableSizeOfExcludingThis(&this->mTable,
+                                              s_SizeOfStub,
+                                              mallocSizeOf,
+                                              &args);
+    }
+    return 0;
+  }
+
 protected:
   /**
    * used internally during EnumerateRead.  Allocated on the stack.
@@ -271,6 +311,16 @@ protected:
                                     PLDHashEntryHdr   *hdr,
                                     PRUint32           number,
                                     void              *arg);
+
+  struct s_SizeOfArgs
+  {
+    SizeOfEntryExcludingThisFun func;
+    void* userArg;
+  };
+  
+  static size_t s_SizeOfStub(PLDHashEntryHdr *entry,
+                             nsMallocSizeOfFun mallocSizeOf,
+                             void *arg);
 };
 
 /**
@@ -364,6 +414,16 @@ nsBaseHashtable<KeyClass,DataType,UserDataType>::s_EnumStub
   return (eargs->func)(ent->GetKey(), ent->mData, eargs->userArg);
 }
 
+template<class KeyClass,class DataType,class UserDataType>
+size_t
+nsBaseHashtable<KeyClass,DataType,UserDataType>::s_SizeOfStub
+  (PLDHashEntryHdr *hdr, nsMallocSizeOfFun mallocSizeOf, void *arg)
+{
+  EntryType* ent = static_cast<EntryType*>(hdr);
+  s_SizeOfArgs* eargs = static_cast<s_SizeOfArgs*>(arg);
+
+  return (eargs->func)(ent->GetKey(), ent->mData, mallocSizeOf, eargs->userArg);
+}
 
 //
 // nsBaseHashtableMT  definitions

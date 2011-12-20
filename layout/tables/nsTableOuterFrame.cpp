@@ -371,14 +371,6 @@ nsTableOuterFrame::BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuilde
   return NS_OK;
 }
 
-void
-nsTableOuterFrame::SetSelected(bool          aSelected,
-                               SelectionType aType)
-{
-  nsFrame::SetSelected(aSelected, aType);
-  InnerTableFrame()->SetSelected(aSelected, aType);
-}
-
 nsIFrame*
 nsTableOuterFrame::GetParentStyleContextFrame()
 {

@@ -277,7 +277,6 @@ XPCCallContext::SetArgsAndResultPtr(uintN argc,
     mArgv   = argv;
     mRetVal = rval;
 
-    mReturnValueWasSet = false;
     mState = HAVE_ARGS;
 }
 
@@ -493,28 +492,6 @@ NS_IMETHODIMP
 XPCCallContext::GetArgvPtr(jsval * *aArgvPtr)
 {
     *aArgvPtr = mArgv;
-    return NS_OK;
-}
-
-/* readonly attribute JSValPtr RetValPtr; */
-NS_IMETHODIMP
-XPCCallContext::GetRetValPtr(jsval * *aRetValPtr)
-{
-    *aRetValPtr = mRetVal;
-    return NS_OK;
-}
-
-/* attribute bool ReturnValueWasSet; */
-NS_IMETHODIMP
-XPCCallContext::GetReturnValueWasSet(bool *aReturnValueWasSet)
-{
-    *aReturnValueWasSet = mReturnValueWasSet;
-    return NS_OK;
-}
-NS_IMETHODIMP
-XPCCallContext::SetReturnValueWasSet(bool aReturnValueWasSet)
-{
-    mReturnValueWasSet = aReturnValueWasSet;
     return NS_OK;
 }
 

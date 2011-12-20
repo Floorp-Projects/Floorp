@@ -118,7 +118,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsHTMLFieldSetElement.h"
 #include "nsHTMLMenuElement.h"
-#include "nsPLDOMEvent.h"
+#include "nsAsyncDOMEvent.h"
 #include "nsIScriptError.h"
 
 #include "mozilla/Preferences.h"
@@ -1503,7 +1503,7 @@ nsGenericHTMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
     sCommonAttributeMap
   };
   
-  return FindAttributeDependence(aAttribute, map, ArrayLength(map));
+  return FindAttributeDependence(aAttribute, map);
 }
 
 nsMapRuleToAttributesFunc
@@ -3474,11 +3474,11 @@ nsresult nsGenericHTMLElement::MozRequestFullScreen()
                                     "DOM", OwnerDoc(),
                                     nsContentUtils::eDOM_PROPERTIES,
                                     "FullScreenDeniedNotInputDriven");
-    nsRefPtr<nsPLDOMEvent> e =
-      new nsPLDOMEvent(OwnerDoc(),
-                       NS_LITERAL_STRING("mozfullscreenerror"),
-                       true,
-                       false);
+    nsRefPtr<nsAsyncDOMEvent> e =
+      new nsAsyncDOMEvent(OwnerDoc(),
+                          NS_LITERAL_STRING("mozfullscreenerror"),
+                          true,
+                          false);
     e->PostDOMEvent();
     return NS_OK;
   }

@@ -45,10 +45,10 @@
 #include <float.h>
 
 typedef HRESULT (WINAPI*D2D1CreateFactoryFunc)(
-    __in D2D1_FACTORY_TYPE factoryType,
-    __in REFIID iid,
-    __in_opt CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
-    __out void **factory
+    D2D1_FACTORY_TYPE factoryType,
+    REFIID iid,
+    CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
+    void **factory
 );
 
 #define CAIRO_INT_STATUS_SUCCESS (cairo_int_status_t)CAIRO_STATUS_SUCCESS
@@ -156,7 +156,7 @@ const cairo_font_face_backend_t _cairo_dwrite_font_face_backend = {
 
 void _cairo_dwrite_scaled_font_fini(void *scaled_font);
 
-cairo_warn cairo_int_status_t
+static cairo_warn cairo_int_status_t
 _cairo_dwrite_scaled_glyph_init(void			     *scaled_font,
 				cairo_scaled_glyph_t	     *scaled_glyph,
 				cairo_scaled_glyph_info_t    info);
@@ -962,6 +962,15 @@ _cairo_dwrite_scaled_font_init_glyph_surface(cairo_dwrite_scaled_font_t *scaled_
     glyph.x = -x1;
     glyph.y = -y1;
 
+    DWRITE_GLYPH_RUN run;
+    FLOAT advance = 0;
+    UINT16 index = (UINT16)glyph.index;
+    DWRITE_GLYPH_OFFSET offset;
+    double x = glyph.x;
+    double y = glyph.y;
+    RECT area;
+    DWRITE_MATRIX matrix;
+
     surface = (cairo_win32_surface_t *)
 	cairo_win32_surface_create_with_dib (CAIRO_FORMAT_RGB24, width, height);
 
@@ -973,12 +982,6 @@ _cairo_dwrite_scaled_font_init_glyph_surface(cairo_dwrite_scaled_font_t *scaled_
     if (status)
 	goto FAIL;
 
-    DWRITE_GLYPH_RUN run;
-    FLOAT advance = 0;
-    UINT16 index = (UINT16)glyph.index;
-    DWRITE_GLYPH_OFFSET offset;
-    double x = glyph.x;
-    double y = glyph.y;
     /**
      * We transform by the inverse transformation here. This will put our glyph
      * locations in the space in which we draw. Which is later transformed by
@@ -991,7 +994,6 @@ _cairo_dwrite_scaled_font_init_glyph_surface(cairo_dwrite_scaled_font_t *scaled_
     /** Y-axis is inverted */
     offset.ascenderOffset = -(FLOAT)y;
 
-    RECT area;
     area.top = 0;
     area.bottom = height;
     area.left = 0;
@@ -1006,7 +1008,7 @@ _cairo_dwrite_scaled_font_init_glyph_surface(cairo_dwrite_scaled_font_t *scaled_
     run.isSideways = FALSE;
     run.glyphOffsets = &offset;
 
-    DWRITE_MATRIX matrix = _cairo_dwrite_matrix_from_matrix(&scaled_font->mat);
+    matrix = _cairo_dwrite_matrix_from_matrix(&scaled_font->mat);
 
     status = _dwrite_draw_glyphs_to_gdi_surface_gdi (surface, &matrix, &run,
             RGB(0,0,0), scaled_font, area);

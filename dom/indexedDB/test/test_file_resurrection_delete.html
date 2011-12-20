@@ -22,8 +22,6 @@
     const fileData = { key: 1, file: getRandomFile("random.bin", 100000) };
 
     {
-      let file = getRandomFile("random1.bin", 100000);
-
       let request = mozIndexedDB.open(name, 1, description);
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
@@ -71,7 +69,7 @@
     scheduleGC();
     yield;
 
-    is(getFileRefCount(name, 1), 1, "Correct ref count");
+    is(getFileRefCount(name, 1), 0, "Correct ref count");
 
     {
       let request = mozIndexedDB.open(name, 1, description);
@@ -120,7 +118,7 @@
     scheduleGC();
     yield;
 
-    is(getFileRefCount(name, 1), 1, "Correct ref count");
+    is(getFileRefCount(name, 1), 0, "Correct ref count");
 
     finishTest();
     yield;

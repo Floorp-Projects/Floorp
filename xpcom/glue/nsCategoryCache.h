@@ -37,6 +37,8 @@
 #ifndef nsCategoryCache_h_
 #define nsCategoryCache_h_
 
+#include "mozilla/Attributes.h"
+
 #include "nsICategoryManager.h"
 #include "nsIObserver.h"
 #include "nsISimpleEnumerator.h"
@@ -62,7 +64,7 @@ class NS_NO_VTABLE nsCategoryListener {
     virtual void CategoryCleared() = 0;
 };
 
-class NS_COM_GLUE nsCategoryObserver : public nsIObserver {
+class NS_COM_GLUE nsCategoryObserver MOZ_FINAL : public nsIObserver {
   public:
     nsCategoryObserver(const char* aCategory,
                        nsCategoryListener* aCategoryListener);

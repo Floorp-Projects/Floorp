@@ -1714,15 +1714,21 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 .panel-promo-box {
-  margin: 8px -16px -16px -16px;
-  padding: 8px 16px;
-  background-color: #f1f5fb;
-  color: GrayText;
+  margin: 16px 0 -2px;
+}
+
+@media all and (-moz-windows-default-theme) {
+  .panel-promo-box {
+    margin: 8px -16px -16px;
+    padding: 8px 16px;
 %ifndef WINSTRIPE_AERO
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
 %endif
-  box-shadow: 0px 1px 2px rgb(204,214,234) inset;
+    background-color: #f1f5fb;
+    color: GrayText;
+    box-shadow: 0px 1px 2px rgb(204,214,234) inset;
+  }
 }
 
 .panel-promo-icon {
@@ -2654,23 +2660,12 @@ panel[dimmed="true"] {
 /* Highlighter toolbar */
 
 #inspector-toolbar {
-  -moz-appearance: none;
-  padding: 4px 3px;
   border-top: 1px solid hsla(211,68%,6%,.65) !important;
-  box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
-  background-image: -moz-linear-gradient(top, hsl(209,18%,34%), hsl(210,24%,16%));
 }
 
 #inspector-toolbar[treepanel-open] {
   padding-top: 0;
   -moz-padding-end: 0;
-}
-
-#devtools-sidebar-toolbar {
-  -moz-appearance: none;
-  padding: 4px 3px;
-  box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
-  background-image: -moz-linear-gradient(top, hsl(209,18%,34%), hsl(210,24%,16%));
 }
 
 #devtools-side-splitter {
@@ -2681,49 +2676,6 @@ panel[dimmed="true"] {
   background-color: transparent;
   -moz-margin-end: -3px;
   position: relative;
-}
-
-#inspector-inspect-toolbutton,
-#inspector-tools > toolbarbutton,
-#devtools-sidebar-toolbar > toolbarbutton {
-  -moz-appearance: none;
-  min-width: 78px;
-  min-height: 22px;
-  color: hsl(210,30%,85%);
-  text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
-  border: 1px solid hsla(211,68%,6%,.5);
-  border-radius: 3px;
-  background: -moz-linear-gradient(hsla(209,13%,54%,.35), hsla(209,13%,54%,.1) 85%, hsla(209,13%,54%,.2)) padding-box;
-  box-shadow: 0 1px 0 hsla(209,29%,72%,.15) inset, 0 0 0 1px hsla(209,29%,72%,.1) inset, 0 0 0 1px hsla(209,29%,72%,.1), 0 1px 0 hsla(210,16%,76%,.1);
-}
-
-#inspector-inspect-toolbutton > .toolbarbutton-icon,
-#inspector-tools > toolbarbutton  > .toolbarbutton-icon,
-#devtools-sidebar-toolbar > toolbarbutton > .toolbarbutton-icon {
-  margin: 0;
-}
-
-#inspector-inspect-toolbutton:not([checked]):hover:active,
-#inspector-tools > toolbarbutton:not([checked]):hover:active,
-#devtools-sidebar-toolbar > toolbarbutton:not([checked]):hover:active {
-  background-color: hsla(210,18%,9%,.1);
-  background-image: -moz-linear-gradient(hsla(209,13%,54%,.35), hsla(209,13%,54%,.1) 85%, hsla(209,13%,54%,.2));
-  box-shadow: 0 1px 3px hsla(211,68%,6%,.5) inset, 0 0 0 1px hsla(209,29%,72%,.1), 0 1px 0 hsla(210,16%,76%,.1);
-}
-
-#inspector-inspect-toolbutton[checked],
-#inspector-tools > toolbarbutton[checked],
-#devtools-sidebar-toolbar > toolbarbutton[checked] {
-  border-color: hsla(211,68%,6%,.6);
-  background: -moz-linear-gradient(hsla(211,68%,6%,.1), hsla(211,68%,6%,.2));
-  box-shadow: 0 1px 3px hsla(211,68%,6%,.5) inset, 0 0 0 1px hsla(209,29%,72%,.1), 0 1px 0 hsla(210,16%,76%,.1);
-  color: hsl(200,100%,60%) !important;
-}
-
-#inspector-inspect-toolbutton[checked]:hover:active,
-#inspector-tools > toolbarbutton[checked]:hover:active,
-#devtools-sidebar-toolbar > toolbarbutton[checked]:hover:active {
-  background-color: hsla(211,68%,6%,.2);
 }
 
 /* Highlighter - toolbar resizers */

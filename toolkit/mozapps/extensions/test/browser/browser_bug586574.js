@@ -3,7 +3,12 @@
  */
 
 // Bug 586574 - Provide way to set a default for automatic updates
+// Bug 710064 - Make the "Update Add-ons Automatically" checkbox state
+//              also depend on the extensions.update.enabled pref
 
+// TEST_PATH=toolkit/mozapps/extensions/test/browser/browser_bug586574.js make -C obj-ff mochitest-browser-chrome
+
+const PREF_UPDATE_ENABLED = "extensions.update.enabled";
 const PREF_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault";
 
 var gManagerWindow;
@@ -75,16 +80,17 @@ add_test(function() {
   gResetToAutomatic = gManagerWindow.document.getElementById("utils-resetAddonUpdatesToAutomatic");
   gResetToManual = gManagerWindow.document.getElementById("utils-resetAddonUpdatesToManual");
 
-  info("Ensuring default is set to true");
+  info("Ensuring default prefs are set to true");
+  Services.prefs.setBoolPref(PREF_UPDATE_ENABLED, true);
   Services.prefs.setBoolPref(PREF_AUTOUPDATE_DEFAULT, true);
 
   wait_for_popup(function() {
     is(gSetDefault.getAttribute("checked"), "true",
-       "Set Default menuitem should be checked");
+       "#1 Set Default menuitem should be checked");
     is_element_visible(gResetToAutomatic,
-                       "Reset to Automatic menuitem should be visible");
+                       "#1 Reset to Automatic menuitem should be visible");
     is_element_hidden(gResetToManual,
-                      "Reset to Manual menuitem should be hidden");
+                      "#1 Reset to Manual menuitem should be hidden");
 
     var listener = {
       onPropertyChanged: function(aAddon, aProperties) {
@@ -114,17 +120,20 @@ add_test(function() {
 
 
 add_test(function() {
+  info("Disabling extensions.update.enabled");
+  Services.prefs.setBoolPref(PREF_UPDATE_ENABLED, false);
+
   wait_for_popup(function() {
-    is(gSetDefault.getAttribute("checked"), "true",
-       "Set Default menuitem should be checked");
+    isnot(gSetDefault.getAttribute("checked"), "true",
+          "#2 Set Default menuitem should not be checked");
     is_element_visible(gResetToAutomatic,
-                       "Reset to Automatic menuitem should be visible");
+                       "#2 Reset to Automatic menuitem should be visible");
     is_element_hidden(gResetToManual,
-                      "Reset to Manual menuitem should be hidden");
+                      "#2 Reset to Manual menuitem should be hidden");
 
     wait_for_hide(run_next_test);
 
-    info("Clicking Set Default menuitem");
+    info("Clicking Set Default menuitem to reenable");
     EventUtils.synthesizeMouseAtCenter(gSetDefault, { }, gManagerWindow);
   });
 
@@ -134,13 +143,73 @@ add_test(function() {
 
 
 add_test(function() {
+  ok(Services.prefs.getBoolPref(PREF_UPDATE_ENABLED),
+     "extensions.update.enabled should be true after the previous test");
+  ok(Services.prefs.getBoolPref(PREF_AUTOUPDATE_DEFAULT),
+     "extensions.update.autoUpdateDefault should be true after the previous test");
+
+  info("Disabling both extensions.update.enabled and extensions.update.autoUpdateDefault");
+  Services.prefs.setBoolPref(PREF_UPDATE_ENABLED, false);
+  Services.prefs.setBoolPref(PREF_AUTOUPDATE_DEFAULT, false);
+
   wait_for_popup(function() {
     isnot(gSetDefault.getAttribute("checked"), "true",
-          "Set Default menuitem should not be checked");
+          "#3 Set Default menuitem should not be checked");
     is_element_hidden(gResetToAutomatic,
-                      "Reset to automatic menuitem should be hidden");
+                      "#3 Reset to automatic menuitem should be hidden");
     is_element_visible(gResetToManual,
-                       "Reset to manual menuitem should be visible");
+                       "#3 Reset to manual menuitem should be visible");
+
+    wait_for_hide(run_next_test);
+
+    info("Clicking Set Default menuitem to reenable");
+    EventUtils.synthesizeMouseAtCenter(gSetDefault, { }, gManagerWindow);
+  });
+
+  info("Opening utilities menu");
+  EventUtils.synthesizeMouseAtCenter(gUtilsBtn, { }, gManagerWindow);
+});
+
+
+add_test(function() {
+  ok(Services.prefs.getBoolPref(PREF_UPDATE_ENABLED),
+     "extensions.update.enabled should be true after the previous test");
+  ok(Services.prefs.getBoolPref(PREF_AUTOUPDATE_DEFAULT),
+     "extensions.update.autoUpdateDefault should be true after the previous test");
+
+  info("clicking the button to disable extensions.update.autoUpdateDefault");
+  wait_for_popup(function() {
+    is(gSetDefault.getAttribute("checked"), "true",
+       "#4 Set Default menuitem should be checked");
+    is_element_visible(gResetToAutomatic,
+                       "#4 Reset to Automatic menuitem should be visible");
+    is_element_hidden(gResetToManual,
+                      "#4 Reset to Manual menuitem should be hidden");
+
+    wait_for_hide(run_next_test);
+
+    info("Clicking Set Default menuitem to disable");
+    EventUtils.synthesizeMouseAtCenter(gSetDefault, { }, gManagerWindow);
+  });
+
+  info("Opening utilities menu");
+  EventUtils.synthesizeMouseAtCenter(gUtilsBtn, { }, gManagerWindow);
+});
+
+
+add_test(function() {
+  ok(Services.prefs.getBoolPref(PREF_UPDATE_ENABLED),
+     "extensions.update.enabled should be true after the previous test");
+  is(Services.prefs.getBoolPref(PREF_AUTOUPDATE_DEFAULT), false,
+     "extensions.update.autoUpdateDefault should be false after the previous test");
+
+  wait_for_popup(function() {
+    isnot(gSetDefault.getAttribute("checked"), "true",
+          "#5 Set Default menuitem should not be checked");
+    is_element_hidden(gResetToAutomatic,
+                      "#5 Reset to automatic menuitem should be hidden");
+    is_element_visible(gResetToManual,
+                       "#5 Reset to manual menuitem should be visible");
 
     var listener = {
       onPropertyChanged: function(aAddon, aProperties) {
@@ -173,11 +242,11 @@ add_test(function() {
 add_test(function() {
   wait_for_popup(function() {
     isnot(gSetDefault.getAttribute("checked"), "true",
-          "Set Default menuitem should not be checked");
+          "#6 Set Default menuitem should not be checked");
     is_element_hidden(gResetToAutomatic,
-                      "Reset to automatic menuitem should be hidden");
+                      "#6 Reset to automatic menuitem should be hidden");
     is_element_visible(gResetToManual,
-                       "Reset to manual menuitem should be visible");
+                       "#6 Reset to manual menuitem should be visible");
 
     wait_for_hide(run_next_test);
 
@@ -193,11 +262,11 @@ add_test(function() {
 add_test(function() {
   wait_for_popup(function() {
     is(gSetDefault.getAttribute("checked"), "true",
-       "Set Default menuitem should be checked");
+       "#7 Set Default menuitem should be checked");
     is_element_visible(gResetToAutomatic,
-                       "Reset to Automatic menuitem should be visible");
+                       "#7 Reset to Automatic menuitem should be visible");
     is_element_hidden(gResetToManual,
-                      "Reset to Manual menuitem should be hidden");
+                      "#7 Reset to Manual menuitem should be hidden");
 
     wait_for_hide(run_next_test);
 

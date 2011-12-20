@@ -50,16 +50,19 @@ interface nsIDOMDOMStringList;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-nsIIDBObjectStore
  * for more information.
  */
-[scriptable, builtinclass, uuid(adc6a1e2-9fd7-4d28-a7f9-9c653313124b)]
+[scriptable, builtinclass, uuid(e0d308ea-b804-4962-918a-28ec0aa4e42b)]
 interface nsIIDBObjectStore : nsISupports
 {
   readonly attribute DOMString name;
 
-  readonly attribute DOMString keyPath;
+  [implicit_jscontext]
+  readonly attribute jsval keyPath;
 
   readonly attribute nsIDOMDOMStringList indexNames;
 
   readonly attribute nsIIDBTransaction transaction;
+
+  readonly attribute boolean autoIncrement;
 
   // Success fires IDBTransactionEvent, result == value for key
   [implicit_jscontext]
@@ -109,7 +112,7 @@ interface nsIIDBObjectStore : nsISupports
   [implicit_jscontext]
   nsIIDBIndex
   createIndex([Null(Stringify)] in DOMString name,
-              [Null(Stringify)] in DOMString keyPath,
+              in jsval keyPath,
               [optional /* none */] in jsval options);
 
   // Returns object immediately

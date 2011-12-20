@@ -1547,7 +1547,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
                            const char *aURL,
                            PRUint32 aLineNo,
                            PRUint32 aVersion,
-                           nsScriptObjectHolder &aScriptObject)
+                           nsScriptObjectHolder<JSScript>& aScriptObject)
 {
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
@@ -1587,7 +1587,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
     if (script) {
       NS_ASSERTION(aScriptObject.getScriptTypeID()==JAVASCRIPT,
                    "Expecting JS script object holder");
-      rv = aScriptObject.setScript(script);
+      rv = aScriptObject.set(script);
     } else {
       rv = NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1745,7 +1745,7 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
                                  const nsAString& aBody,
                                  const char *aURL, PRUint32 aLineNo,
                                  PRUint32 aVersion,
-                                 nsScriptObjectHolder &aHandler)
+                                 nsScriptObjectHolder<JSObject>& aHandler)
 {
   NS_TIME_FUNCTION_MIN_FMT(1.0, "%s (line %d) (url: %s, line: %d)", MOZ_FUNCTION_NAME,
                            __LINE__, aURL, aLineNo);
@@ -1795,7 +1795,7 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
   JSObject *handler = ::JS_GetFunctionObject(fun);
   NS_ASSERTION(aHandler.getScriptTypeID()==JAVASCRIPT,
                "Expecting JS script object holder");
-  return aHandler.setObject(handler);
+  return aHandler.set(handler);
 }
 
 // XXX - note that CompileFunction doesn't yet play the nsScriptObjectHolder
@@ -1985,7 +1985,7 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, JSObject* aScope,
 nsresult
 nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, JSObject* aScope,
                                       JSObject* aHandler,
-                                      nsScriptObjectHolder& aBoundHandler)
+                                      nsScriptObjectHolder<JSObject>& aBoundHandler)
 {
   NS_ENSURE_ARG(aHandler);
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
@@ -2027,7 +2027,7 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, JSObject* aScope,
     funobj = NULL;
   }
 
-  aBoundHandler.setObject(funobj);
+  aBoundHandler.set(funobj);
 
   return rv;
 }
@@ -2083,7 +2083,7 @@ nsJSContext::Serialize(nsIObjectOutputStream* aStream, JSScript* aScriptObject)
 
 nsresult
 nsJSContext::Deserialize(nsIObjectInputStream* aStream,
-                         nsScriptObjectHolder &aResult)
+                         nsScriptObjectHolder<JSScript>& aResult)
 {
     NS_TIME_FUNCTION_MIN(1.0);
 
@@ -2148,13 +2148,7 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
     // code, which could happen for all sorts of reasons above.
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return aResult.setScript(result);
-}
-
-void
-nsJSContext::SetDefaultLanguageVersion(PRUint32 aVersion)
-{
-  ::JS_SetVersion(mContext, (JSVersion)aVersion);
+    return aResult.set(result);
 }
 
 nsIScriptGlobalObject *

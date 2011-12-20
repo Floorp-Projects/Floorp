@@ -51,14 +51,8 @@ public:
 	virtual ~nsPrivateTextRange(void);
 
 	NS_IMETHOD    GetRangeStart(PRUint16* aRangeStart);
-	NS_IMETHOD    SetRangeStart(PRUint16 aRangeStart);
-
 	NS_IMETHOD    GetRangeEnd(PRUint16* aRangeEnd);
-	NS_IMETHOD    SetRangeEnd(PRUint16 aRangeEnd);
-
 	NS_IMETHOD    GetRangeType(PRUint16* aRangeType);
-	NS_IMETHOD    SetRangeType(PRUint16 aRangeType);
-
 	NS_IMETHOD    GetRangeStyle(nsTextRangeStyle* aRangeStyle);
 
 protected:

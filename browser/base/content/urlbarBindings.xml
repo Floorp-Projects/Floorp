@@ -363,8 +363,6 @@
             } else {
               this.handleRevert();
               let params = { allowThirdPartyFixup: true, postData: postData };
-              if (altEnter)
-                params.inBackground = false;
               if (!this.valueIsTyped)
                 params.isUTF8 = true;
               openUILinkIn(url, where, params);
@@ -944,7 +942,7 @@
   <binding id="geolocation-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
     <content align="start">
       <xul:image class="popup-notification-icon"
-                 xbl:inherits="popupid"/>
+                 xbl:inherits="popupid,src=icon"/>
       <xul:vbox flex="1">
         <xul:description class="popup-notification-description"
                          xbl:inherits="xbl:text=label"/>
@@ -988,7 +986,7 @@
   <binding id="addon-progress-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
     <content align="start">
       <xul:image class="popup-notification-icon"
-                 xbl:inherits="popupid"/>
+                 xbl:inherits="popupid,src=icon"/>
       <xul:vbox flex="1">
         <xul:description class="popup-notification-description addon-progress-description"
                          xbl:inherits="xbl:text=label"/>

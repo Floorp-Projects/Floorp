@@ -92,6 +92,12 @@ pref("offline-apps.quota.max",        204800);
 // (in kilobytes)
 pref("offline-apps.quota.warn",        51200);
 
+// zlib compression level used for cache compression:
+// 0 => disable compression
+// 1 => best speed
+// 9 => best compression
+pref("browser.cache.compression_level", 5);
+
 // Whether or not indexedDB is enabled.
 pref("dom.indexedDB.enabled", true);
 // Space to allow indexedDB databases before prompting (in MB).
@@ -810,8 +816,8 @@ pref("network.ftp.control.qos", 0);
 // <ws>: WebSocket
 pref("network.websocket.enabled", true);
 
-// mobile might want to set this much smaller
-pref("network.websocket.max-message-size", 16000000);
+// 2147483647 == PR_INT32_MAX == ~2 GB  
+pref("network.websocket.max-message-size", 2147483647);
 
 // Should we automatically follow http 3xx redirects during handshake
 pref("network.websocket.auto-follow-http-redirects", false);

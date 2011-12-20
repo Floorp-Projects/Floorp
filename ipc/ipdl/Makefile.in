@@ -112,19 +112,15 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
--include $(ALL_IPDLSRCS:.ipdl=.ipdl.depends)
 
 # NB: the IPDL compiler manages .ipdl-->.h/.cpp dependencies itself,
 # which is why we don't have explicit .h/.cpp targets here
-export:: $(CPPSRCS)
-
-$(CPPSRCS) : $(ALL_IPDLSRCS)
+export:: $(ALL_IPDLSRCS)
 	$(PYTHON) $(topsrcdir)/config/pythonpath.py	\
 	  -I$(topsrcdir)/other-licenses/ply		\
 	  $(srcdir)/ipdl.py				\
 	  --outheaders-dir=_ipdlheaders			\
 	  --outcpp-dir=.				\
-	  --dependencies				\
 	  $(IPDLDIRS:%=-I$(topsrcdir)/%)		\
 	  $^
 

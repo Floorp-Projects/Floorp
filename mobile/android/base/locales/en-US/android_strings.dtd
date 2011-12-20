@@ -43,8 +43,8 @@
 
 <!ENTITY new_tab "New Tab">
 
-<!ENTITY preferences "Preferences">
-<!ENTITY preferences_title "Preferences">
+<!ENTITY settings "Settings">
+<!ENTITY settings_title "Settings">
 <!ENTITY pref_category_general "General">
 <!ENTITY pref_category_privacy "Privacy &amp; Security">
 <!ENTITY pref_category_content "Content">
@@ -62,10 +62,10 @@
 <!ENTITY pref_clear_history_confirm "Browsing history will be deleted">
 <!ENTITY pref_clear_private_data "Clear private data">
 <!ENTITY pref_clear_private_data_confirm "Browsing settings, including passwords and cookies, will be deleted">
-<!ENTITY pref_enable_flash "Enable Flash">
-<!ENTITY pref_enable_flash_yes "Yes">
-<!ENTITY pref_enable_flash_tap_to_play "Tap To Play">
-<!ENTITY pref_enable_flash_no "No">
+<!ENTITY pref_enable_plugins "Enable Plugins">
+<!ENTITY pref_enable_plugins_yes "Yes">
+<!ENTITY pref_enable_plugins_tap_to_play "Tap To Play">
+<!ENTITY pref_enable_plugins_no "No">
 <!ENTITY pref_font_size "Font size">
 <!ENTITY pref_font_size_small "Small">
 <!ENTITY pref_font_size_medium "Medium">
@@ -80,3 +80,12 @@
 <!ENTITY save_as_pdf "Save as PDF">
 <!ENTITY agent_request_desktop "Request Desktop Site">
 <!ENTITY agent_request_mobile "Request Mobile Site">
+
+<!ENTITY contextmenu_open_new_tab "Open in New Tab">
+<!ENTITY contextmenu_add_to_launcher "Add to Home Screen">
+<!ENTITY contextmenu_share "Share">
+
+<!ENTITY site_settings_title        "Clear Site Settings">
+<!ENTITY site_settings_cancel       "Cancel">
+<!ENTITY site_settings_clear        "Clear">
+<!ENTITY site_settings_no_settings  "There are no settings to clear.">

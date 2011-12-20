@@ -1292,6 +1292,12 @@ nsCanvasRenderingContext2DAzure::InitializeWithTarget(DrawTarget *target, PRInt3
   if (!target)
   {
     mTarget = gfxPlatform::GetPlatform()->CreateOffscreenDrawTarget(IntSize(1, 1), FORMAT_B8G8R8A8);
+    if (!mTarget) {
+      // SupportsAzure() is controlled by the "gfx.canvas.azure.prefer-skia"
+      // pref so that may be the reason rather than an OOM.
+      mValid = false;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   } else {
     mValid = true;
   }

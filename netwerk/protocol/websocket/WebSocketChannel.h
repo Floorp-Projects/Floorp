@@ -167,8 +167,9 @@ private:
 
   bool     IsPersistentFramePtr();
   nsresult ProcessInput(PRUint8 *buffer, PRUint32 count);
-  PRUint32 UpdateReadBuffer(PRUint8 *buffer, PRUint32 count,
-                            PRUint32 accumulatedFragments);
+  bool UpdateReadBuffer(PRUint8 *buffer, PRUint32 count,
+                        PRUint32 accumulatedFragments,
+                        PRUint32 *available);
 
 
   nsCOMPtr<nsIEventTarget>                 mSocketThread;
@@ -225,6 +226,12 @@ private:
   nsCString                       mScriptCloseReason;
 
   // These are for the read buffers
+  const static PRUint32 kIncomingBufferInitialSize = 16 * 1024;
+  // We're ok with keeping a buffer this size or smaller around for the life of
+  // the websocket.  If a particular message needs bigger than this we'll
+  // increase the buffer temporarily, then drop back down to this size.
+  const static PRUint32 kIncomingBufferStableSize = 128 * 1024;
+
   PRUint8                        *mFramePtr;
   PRUint8                        *mBuffer;
   PRUint8                         mFragmentOpcode;

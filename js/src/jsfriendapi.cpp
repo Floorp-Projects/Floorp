@@ -143,10 +143,10 @@ JS_WrapPropertyDescriptor(JSContext *cx, js::PropertyDescriptor *desc)
     return cx->compartment->wrap(cx, desc);
 }
 
-JS_FRIEND_API(void *)
-JS_TraceShapeChildrenAcyclic(JSTracer *trc, void *shape)
+JS_FRIEND_API(void)
+JS_TraceShapeCycleCollectorChildren(JSTracer *trc, void *shape)
 {
-    return (void *)MarkShapeChildrenAcyclic(trc, (const Shape *)shape);
+    MarkCycleCollectorChildren(trc, (const Shape *)shape);
 }
 
 AutoPreserveCompartment::AutoPreserveCompartment(JSContext *cx

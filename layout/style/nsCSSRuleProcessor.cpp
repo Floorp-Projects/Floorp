@@ -754,10 +754,10 @@ void RuleHash::EnumerateAllRules(Element* aElement, RuleProcessorData* aData,
 }
 
 static size_t
-SizeOfRuleHashTableEntry(PLDHashEntryHdr* aHdr, nsMallocSizeOfFun aMallocSizeOf)
+SizeOfRuleHashTableEntry(PLDHashEntryHdr* aHdr, nsMallocSizeOfFun aMallocSizeOf, void *)
 {
   RuleHashTableEntry* entry = static_cast<RuleHashTableEntry*>(aHdr);
-  return entry->mRules.SizeOf();
+  return entry->mRules.SizeOfExcludingThis(aMallocSizeOf);
 }
 
 size_t
@@ -789,7 +789,7 @@ RuleHash::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
                                           aMallocSizeOf);
   }
 
-  n += mUniversalRules.SizeOf();
+  n += mUniversalRules.SizeOfExcludingThis(aMallocSizeOf);
 
   return n;
 }
@@ -951,10 +951,10 @@ struct RuleCascadeData {
 };
 
 static size_t
-SizeOfSelectorsEntry(PLDHashEntryHdr* aHdr, nsMallocSizeOfFun aMallocSizeOf)
+SizeOfSelectorsEntry(PLDHashEntryHdr* aHdr, nsMallocSizeOfFun aMallocSizeOf, void *)
 {
   AtomSelectorEntry* entry = static_cast<AtomSelectorEntry*>(aHdr);
-  return entry->mSelectors.SizeOf();
+  return entry->mSelectors.SizeOfExcludingThis(aMallocSizeOf);
 }
 
 size_t
@@ -968,15 +968,15 @@ RuleCascadeData::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
       n += mPseudoElementRuleHashes[i]->SizeOfIncludingThis(aMallocSizeOf);
   }
 
-  n += mStateSelectors.SizeOf();
+  n += mStateSelectors.SizeOfExcludingThis(aMallocSizeOf);
 
   n += PL_DHashTableSizeOfExcludingThis(&mIdSelectors,
                                         SizeOfSelectorsEntry, aMallocSizeOf);
   n += PL_DHashTableSizeOfExcludingThis(&mClassSelectors,
                                         SizeOfSelectorsEntry, aMallocSizeOf);
 
-  n += mPossiblyNegatedClassSelectors.SizeOf();
-  n += mPossiblyNegatedIDSelectors.SizeOf();
+  n += mPossiblyNegatedClassSelectors.SizeOfExcludingThis(aMallocSizeOf);
+  n += mPossiblyNegatedIDSelectors.SizeOfExcludingThis(aMallocSizeOf);
 
   n += PL_DHashTableSizeOfExcludingThis(&mAttributeSelectors,
                                         SizeOfSelectorsEntry, aMallocSizeOf);
@@ -987,8 +987,8 @@ RuleCascadeData::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
                                         SizeOfRuleHashTableEntry, aMallocSizeOf);
 #endif
 
-  n += mFontFaceRules.SizeOf();
-  n += mKeyframesRules.SizeOf();
+  n += mFontFaceRules.SizeOfExcludingThis(aMallocSizeOf);
+  n += mKeyframesRules.SizeOfExcludingThis(aMallocSizeOf);
 
   return n;
 }
@@ -2576,7 +2576,7 @@ nsCSSRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext)
 nsCSSRuleProcessor::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
   size_t n = 0;
-  n += mSheets.SizeOf();
+  n += mSheets.SizeOfExcludingThis(aMallocSizeOf);
   for (RuleCascadeData* cascade = mRuleCascades; cascade;
        cascade = cascade->mNext) {
     n += cascade->SizeOfIncludingThis(aMallocSizeOf);

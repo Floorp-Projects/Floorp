@@ -785,47 +785,51 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
     return i;
 }
 
-struct SizeOfEntryEnumeratorArg
+struct SizeOfEntryExcludingThisArg
 {
     size_t total;
-    JSDHashSizeOfEntryFun sizeOfEntry;
+    JSDHashSizeOfEntryExcludingThisFun sizeOfEntryExcludingThis;
     JSMallocSizeOfFun mallocSizeOf;
+    void *arg;      // the arg passed by the user
 };
 
 static JSDHashOperator
-SizeOfEntryEnumerator(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32_t number,
-                      void *arg)
+SizeOfEntryExcludingThisEnumerator(JSDHashTable *table, JSDHashEntryHdr *hdr,
+                                   uint32_t number, void *arg)
 {
-    SizeOfEntryEnumeratorArg *e = (SizeOfEntryEnumeratorArg *)arg;
-    e->total += e->sizeOfEntry(hdr, e->mallocSizeOf);
+    SizeOfEntryExcludingThisArg *e = (SizeOfEntryExcludingThisArg *)arg;
+    e->total += e->sizeOfEntryExcludingThis(hdr, e->mallocSizeOf, e->arg);
     return JS_DHASH_NEXT;
 }
 
 extern JS_PUBLIC_API(size_t)
 JS_DHashTableSizeOfExcludingThis(const JSDHashTable *table,
-                                 JSDHashSizeOfEntryFun sizeOfEntry,
-                                 JSMallocSizeOfFun mallocSizeOf)
+                                 JSDHashSizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
+                                 JSMallocSizeOfFun mallocSizeOf,
+                                 void *arg /* = NULL */)
 {
     size_t n = 0;
     n += mallocSizeOf(table->entryStore,
                       JS_DHASH_TABLE_SIZE(table) * table->entrySize +
                       ENTRY_STORE_EXTRA);
-    if (sizeOfEntry) {
-        SizeOfEntryEnumeratorArg arg = { 0, sizeOfEntry, mallocSizeOf };
+    if (sizeOfEntryExcludingThis) {
+        SizeOfEntryExcludingThisArg arg2 = { 0, sizeOfEntryExcludingThis, mallocSizeOf, arg };
         JS_DHashTableEnumerate(const_cast<JSDHashTable *>(table),
-                               SizeOfEntryEnumerator, &arg);
-        n += arg.total;
+                               SizeOfEntryExcludingThisEnumerator, &arg2);
+        n += arg2.total;
     }
     return n;
 }
 
 extern JS_PUBLIC_API(size_t)
 JS_DHashTableSizeOfIncludingThis(const JSDHashTable *table,
-                                 JSDHashSizeOfEntryFun sizeOfEntry,
-                                 JSMallocSizeOfFun mallocSizeOf)
+                                 JSDHashSizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
+                                 JSMallocSizeOfFun mallocSizeOf,
+                                 void *arg /* = NULL */)
 {
     return mallocSizeOf(table, sizeof(JSDHashTable)) +
-           JS_DHashTableSizeOfExcludingThis(table, sizeOfEntry, mallocSizeOf);
+           JS_DHashTableSizeOfExcludingThis(table, sizeOfEntryExcludingThis,
+                                            mallocSizeOf, arg);
 }
 
 #ifdef DEBUG

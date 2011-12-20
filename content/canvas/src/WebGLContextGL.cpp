@@ -4541,6 +4541,45 @@ WebGLContext::GetShaderInfoLog(nsIWebGLShader *sobj, nsAString& retval)
 }
 
 NS_IMETHODIMP
+WebGLContext::GetShaderPrecisionFormat(WebGLenum shadertype, WebGLenum precisiontype, nsIWebGLShaderPrecisionFormat **retval)
+{
+    *retval = nsnull;
+    if (mContextLost)
+        return NS_OK;
+
+    switch (shadertype) {
+        case LOCAL_GL_FRAGMENT_SHADER:
+        case LOCAL_GL_VERTEX_SHADER:
+            break;
+        default:
+            return ErrorInvalidEnumInfo("getShaderPrecisionFormat: shadertype", shadertype);
+    }
+
+    switch (precisiontype) {
+        case LOCAL_GL_LOW_FLOAT:
+        case LOCAL_GL_MEDIUM_FLOAT:
+        case LOCAL_GL_HIGH_FLOAT:
+        case LOCAL_GL_LOW_INT:
+        case LOCAL_GL_MEDIUM_INT:
+        case LOCAL_GL_HIGH_INT:
+            break;
+        default:
+            return ErrorInvalidEnumInfo("getShaderPrecisionFormat: precisiontype", precisiontype);
+    }
+
+    MakeContextCurrent();
+
+    GLint range[2], precision;
+    gl->fGetShaderPrecisionFormat(shadertype, precisiontype, range, &precision);
+
+    WebGLShaderPrecisionFormat *retShaderPrecisionFormat
+        = new WebGLShaderPrecisionFormat(range[0], range[1], precision);
+    NS_ADDREF(*retval = retShaderPrecisionFormat);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 WebGLContext::GetShaderSource(nsIWebGLShader *sobj, nsAString& retval)
 {
     if (mContextLost)
@@ -5100,7 +5139,7 @@ WebGLContext::TexSubImage2D_dom(WebGLenum target, WebGLint level,
                               format, type,
                               isurf->Data(), byteLength,
                               -1,
-                              srcFormat, true);
+                              srcFormat, mPixelStorePremultiplyAlpha);
 }
 
 bool

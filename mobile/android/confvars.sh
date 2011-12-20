@@ -38,7 +38,7 @@
 MOZ_APP_BASENAME=Fennec
 MOZ_APP_VENDOR=Mozilla
 
-MOZ_APP_VERSION=11.0a1
+MOZ_APP_VERSION=12.0a1
 
 MOZ_BRANDING_DIRECTORY=mobile/android/branding/unofficial
 MOZ_OFFICIAL_BRANDING_DIRECTORY=mobile/android/branding/official
@@ -56,10 +56,9 @@ MOZ_XULRUNNER=
 MOZ_PLACES=1
 fi
 
-if test "$OS_TARGET" = "Android"; then
 MOZ_CAPTURE=1
 MOZ_RAW=1
-fi
+MOZ_ANDROID_HISTORY=1
 
 # Needed for building our components as part of libxul
 MOZ_APP_COMPONENT_LIBS="browsercomps"

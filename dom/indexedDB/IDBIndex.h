@@ -92,14 +92,19 @@ public:
     return mMultiEntry;
   }
 
-  bool IsAutoIncrement() const
-  {
-    return mAutoIncrement;
-  }
-
   const nsString& KeyPath() const
   {
     return mKeyPath;
+  }
+
+  bool UsesKeyPathArray() const
+  {
+    return !mKeyPathArray.IsEmpty();
+  }
+  
+  const nsTArray<nsString>& KeyPathArray() const
+  {
+    return mKeyPathArray;
   }
 
 private:
@@ -114,9 +119,9 @@ private:
   PRInt64 mId;
   nsString mName;
   nsString mKeyPath;
+  nsTArray<nsString> mKeyPathArray;
   bool mUnique;
   bool mMultiEntry;
-  bool mAutoIncrement;
 };
 
 END_INDEXEDDB_NAMESPACE

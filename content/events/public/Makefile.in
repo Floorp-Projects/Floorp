@@ -50,7 +50,7 @@ EXPORTS		= \
 		nsIPrivateDOMEvent.h \
 		nsIPrivateTextEvent.h \
 		nsIPrivateTextRange.h \
-		nsPLDOMEvent.h \
+		nsAsyncDOMEvent.h \
 		nsEventDispatcher.h \
 		nsEventStates.h \
 		nsEventNameList.h \

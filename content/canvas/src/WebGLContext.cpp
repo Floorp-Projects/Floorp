@@ -471,6 +471,8 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 
     // If we already have a gl context, then we just need to resize it
     if (gl) {
+        MakeContextCurrent();
+
         gl->ResizeOffscreen(gfxIntSize(width, height)); // Doesn't matter if it succeeds (soft-fail)
         // It's unlikely that we'll get a proper-sized context if we recreate if we didn't on resize
 
@@ -478,6 +480,9 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         mWidth = gl->OffscreenActualSize().width;
         mHeight = gl->OffscreenActualSize().height;
         mResetLayer = true;
+
+        gl->ClearSafely();
+
         return NS_OK;
     }
 
@@ -496,8 +501,10 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         Preferences::GetBool("webgl.force_osmesa", false);
     bool preferEGL =
         Preferences::GetBool("webgl.prefer-egl", false);
+#ifdef XP_WIN
     bool preferOpenGL =
         Preferences::GetBool("webgl.prefer-native-gl", false);
+#endif
     bool forceEnabled =
         Preferences::GetBool("webgl.force-enabled", false);
     bool disabled =
@@ -599,8 +606,14 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     // if we want EGL, try it now
     if (!gl && (preferEGL || useANGLE) && !preferOpenGL) {
         gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
-        if (gl && !InitAndValidateGL()) {
-            gl = nsnull;
+        if (gl) {
+            if (InitAndValidateGL()) {
+                if (useANGLE) {
+                    gl->SetFlushGuaranteesResolve(true);
+                }
+            } else {
+                gl = nsnull;
+            }
         }
     }
 
@@ -661,11 +674,13 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     // Make sure that we clear this out, otherwise
     // we'll end up displaying random memory
     gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, gl->GetOffscreenFBO());
+
     gl->fViewport(0, 0, mWidth, mHeight);
     gl->fClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     gl->fClearDepth(1.0f);
     gl->fClearStencil(0);
-    gl->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT | LOCAL_GL_STENCIL_BUFFER_BIT);
+
+    gl->ClearSafely();
 
     reporter.SetSuccessful();
     return NS_OK;
@@ -1285,6 +1300,17 @@ NS_INTERFACE_MAP_BEGIN(WebGLUniformLocation)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLUniformLocation)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_ADDREF(WebGLShaderPrecisionFormat)
+NS_IMPL_RELEASE(WebGLShaderPrecisionFormat)
+
+DOMCI_DATA(WebGLShaderPrecisionFormat, WebGLShaderPrecisionFormat)
+
+NS_INTERFACE_MAP_BEGIN(WebGLShaderPrecisionFormat)
+  NS_INTERFACE_MAP_ENTRY(nsIWebGLShaderPrecisionFormat)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLShaderPrecisionFormat)
+NS_INTERFACE_MAP_END
+
 NS_IMPL_ADDREF(WebGLActiveInfo)
 NS_IMPL_RELEASE(WebGLActiveInfo)
 
@@ -1398,6 +1424,30 @@ NS_IMETHODIMP
 WebGLActiveInfo::GetName(nsAString & aName)
 {
     aName = mName;
+    return NS_OK;
+}
+
+/* readonly attribute WebGLint rangeMin */
+NS_IMETHODIMP
+WebGLShaderPrecisionFormat::GetRangeMin(WebGLint *aRangeMin)
+{
+    *aRangeMin = mRangeMin;
+    return NS_OK;
+}
+
+/* readonly attribute WebGLint rangeMax */
+NS_IMETHODIMP
+WebGLShaderPrecisionFormat::GetRangeMax(WebGLint *aRangeMax)
+{
+    *aRangeMax = mRangeMax;
+    return NS_OK;
+}
+
+/* readonly attribute WebGLint precision */
+NS_IMETHODIMP
+WebGLShaderPrecisionFormat::GetPrecision(WebGLint *aPrecision)
+{
+    *aPrecision = mPrecision;
     return NS_OK;
 }
 

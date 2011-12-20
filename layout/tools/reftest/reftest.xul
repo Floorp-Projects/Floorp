@@ -49,8 +49,6 @@
         onunload="OnRefTestUnload();"
         style="background:white; overflow:hidden"
         >
-    <script type="application/ecmascript" src="quit.js" />
     <script type="application/ecmascript" src="reftest.js" />
-    <script type="application/ecmascript" src="MozillaLogger.js" />
     <!-- The reftest browser element is dynamically created, here -->
 </window>

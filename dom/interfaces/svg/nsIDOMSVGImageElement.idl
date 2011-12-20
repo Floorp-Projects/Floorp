@@ -41,7 +41,7 @@
 interface nsIDOMSVGAnimatedLength;
 interface nsIDOMSVGAnimatedPreserveAspectRatio;
 
-[scriptable, uuid(c06f8f78-d499-42ae-b186-15aa7552628d)]
+[scriptable, uuid(048da3ff-aa94-4988-8f5c-3aae4a630008)]
 interface nsIDOMSVGImageElement
   : nsIDOMSVGElement
 /*

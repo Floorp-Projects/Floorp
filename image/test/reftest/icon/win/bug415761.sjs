@@ -16,5 +16,6 @@ function handleRequest(request, response)
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "text/html");
   response.setHeader("Cache-Control", "no-cache");
+  response.write("<link rel=\"stylesheet\" href=\"ImageDocument.css\">");
   response.write("<img src=\"moz-icon:" + uri + "\">");
 }

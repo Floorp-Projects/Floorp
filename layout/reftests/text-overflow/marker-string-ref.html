@@ -24,6 +24,9 @@ html,body {
   margin-left:2em;
   position:relative;
 }
+span {
+  margin: 0 -0.5ch;
+}
 m {
   margin: 0;
   position:relative;
@@ -54,11 +57,11 @@ mr {
 
 <div class="test t1"><m>&nbsp;x</m></div>
 <div class="test rtl t1"><m>&nbsp;x</m></div>
-<div class="test t2"><m>Hello World</m></div>
-<div class="test rtl t2"><m>Hello World</m></div>
+<div class="test t2"><span>xx</span></div>
+<div class="test rtl t2"><span>xx</span></div>
 
-<div class="test t2" style="width:3ch"><m>Hel</m></div>
-<div class="test rtl t2" style="width:3ch"><m>Hel</m></div>
+<div class="test t2" style="width:3ch"><span>xx</span></div>
+<div class="test rtl t2" style="width:3ch"><span>xx</span></div>
 <div class="test"><m>X</m><mr>X</mr></div>
 <div class="test"><m>X</m><mr>X</mr></div>
 

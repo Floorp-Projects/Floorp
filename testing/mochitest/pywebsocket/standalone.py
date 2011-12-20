@@ -65,6 +65,7 @@ import BaseHTTPServer
 import CGIHTTPServer
 import SimpleHTTPServer
 import SocketServer
+import httplib
 import logging
 import logging.handlers
 import optparse
@@ -74,6 +75,8 @@ import select
 import socket
 import sys
 import threading
+import time
+
 
 _HAS_OPEN_SSL = False
 try:
@@ -97,13 +100,6 @@ _DEFAULT_REQUEST_QUEUE_SIZE = 128
 
 # 1024 is practically large enough to contain WebSocket handshake lines.
 _MAX_MEMORIZED_LINES = 1024
-
-
-def _print_warnings_if_any(dispatcher):
-    warnings = dispatcher.source_warnings()
-    if warnings:
-        for warning in warnings:
-            logging.warning('mod_pywebsocket: %s' % warning)
 
 
 class _StandaloneConnection(object):
@@ -165,6 +161,7 @@ class _StandaloneRequest(object):
         self._request_handler = request_handler
         self.connection = _StandaloneConnection(request_handler)
         self._use_tls = use_tls
+        self.headers_in = request_handler.headers
 
     def get_uri(self):
         """Getter to mimic request.uri."""
@@ -177,12 +174,6 @@ class _StandaloneRequest(object):
 
         return self._request_handler.command
     method = property(get_method)
-
-    def get_headers_in(self):
-        """Getter to mimic request.headers_in."""
-
-        return self._request_handler.headers
-    headers_in = property(get_headers_in)
 
     def is_https(self):
         """Mimic request.is_https()."""
@@ -216,6 +207,8 @@ class WebSocketServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
         if necessary.
         """
 
+        self._logger = util.get_class_logger(self)
+
         self.request_queue_size = options.request_queue_size
         self.__ws_is_shut_down = threading.Event()
         self.__ws_serving = False
@@ -235,8 +228,16 @@ class WebSocketServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
         self.server_name, self.server_port = self.server_address
         self._sockets = []
         if not self.server_name:
+            # On platforms that doesn't support IPv6, the first bind fails.
+            # On platforms that supports IPv6
+            # - If it binds both IPv4 and IPv6 on call with AF_INET6, the
+            #   first bind succeeds and the second fails (we'll see 'Address
+            #   already in use' error).
+            # - If it binds only IPv6 on call with AF_INET6, both call are
+            #   expected to succeed to listen both protocol.
             addrinfo_array = [
-                (self.address_family, self.socket_type, '', '', '')]
+                (socket.AF_INET6, socket.SOCK_STREAM, '', '', ''),
+                (socket.AF_INET, socket.SOCK_STREAM, '', '', '')]
         else:
             addrinfo_array = socket.getaddrinfo(self.server_name,
                                                 self.server_port,
@@ -244,12 +245,12 @@ class WebSocketServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
                                                 socket.SOCK_STREAM,
                                                 socket.IPPROTO_TCP)
         for addrinfo in addrinfo_array:
-            logging.info('Create socket on: %r', addrinfo)
+            self._logger.info('Create socket on: %r', addrinfo)
             family, socktype, proto, canonname, sockaddr = addrinfo
             try:
                 socket_ = socket.socket(family, socktype)
             except Exception, e:
-                logging.info('Skip by failure: %r', e)
+                self._logger.info('Skip by failure: %r', e)
                 continue
             if self.websocket_server_options.use_tls:
                 ctx = OpenSSL.SSL.Context(OpenSSL.SSL.SSLv23_METHOD)
@@ -265,11 +266,22 @@ class WebSocketServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
         sockets bind.
         """
 
-        for socket_, addrinfo in self._sockets:
-            logging.info('Bind on: %r', addrinfo)
+        failed_sockets = []
+
+        for socketinfo in self._sockets:
+            socket_, addrinfo = socketinfo
+            self._logger.info('Bind on: %r', addrinfo)
             if self.allow_reuse_address:
                 socket_.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            socket_.bind(self.server_address)
+            try:
+                socket_.bind(self.server_address)
+            except Exception, e:
+                self._logger.info('Skip by failure: %r', e)
+                socket_.close()
+                failed_sockets.append(socketinfo)
+
+        for socketinfo in failed_sockets:
+            self._sockets.remove(socketinfo)
 
     def server_activate(self):
         """Override SocketServer.TCPServer.server_activate to enable multiple
@@ -280,11 +292,11 @@ class WebSocketServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
 
         for socketinfo in self._sockets:
             socket_, addrinfo = socketinfo
-            logging.info('Listen on: %r', addrinfo)
+            self._logger.info('Listen on: %r', addrinfo)
             try:
                 socket_.listen(self.request_queue_size)
             except Exception, e:
-                logging.info('Skip by failure: %r', e)
+                self._logger.info('Skip by failure: %r', e)
                 socket_.close()
                 failed_sockets.append(socketinfo)
 
@@ -298,23 +310,23 @@ class WebSocketServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
 
         for socketinfo in self._sockets:
             socket_, addrinfo = socketinfo
-            logging.info('Close on: %r', addrinfo)
+            self._logger.info('Close on: %r', addrinfo)
             socket_.close()
 
     def fileno(self):
         """Override SocketServer.TCPServer.fileno."""
 
-        logging.critical('Not supported: fileno')
+        self._logger.critical('Not supported: fileno')
         return self._sockets[0][0].fileno()
 
     def handle_error(self, rquest, client_address):
         """Override SocketServer.handle_error."""
 
-        logging.error(
-            ('Exception in processing request from: %r' % (client_address,)) +
-            '\n' + util.get_stack_trace())
-        # Note: client_address is a tuple. To match it against %r, we need the
-        # trailing comma.
+        self._logger.error(
+            'Exception in processing request from: %r\n%s',
+            client_address,
+            util.get_stack_trace())
+        # Note: client_address is a tuple.
 
     def serve_forever(self, poll_interval=0.5):
         """Override SocketServer.BaseServer.serve_forever."""
@@ -325,8 +337,7 @@ class WebSocketServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
         if hasattr(self, '_handle_request_noblock'):
             handle_request = self._handle_request_noblock
         else:
-            logging.warning('mod_pywebsocket: fallback to blocking request '
-                            'handler')
+            self._logger.warning('Fallback to blocking request handler')
         try:
             while self.__ws_serving:
                 r, w, e = select.select(
@@ -349,6 +360,9 @@ class WebSocketServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
 class WebSocketRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
     """CGIHTTPRequestHandler specialized for WebSocket."""
 
+    # Use httplib.HTTPMessage instead of mimetools.Message.
+    MessageClass = httplib.HTTPMessage
+
     def setup(self):
         """Override SocketServer.StreamRequestHandler.setup to wrap rfile
         with MemorizingFile.
@@ -370,6 +384,8 @@ class WebSocketRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
             max_memorized_lines=_MAX_MEMORIZED_LINES)
 
     def __init__(self, request, client_address, server):
+        self._logger = util.get_class_logger(self)
+
         self._options = server.websocket_server_options
 
         # Overrides CGIHTTPServerRequestHandler.cgi_directories.
@@ -377,10 +393,6 @@ class WebSocketRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
         # Replace CGIHTTPRequestHandler.is_executable method.
         if self._options.is_executable_method is not None:
             self.is_executable = self._options.is_executable_method
-
-        self._request = _StandaloneRequest(self, self._options.use_tls)
-
-        _print_warnings_if_any(self._options.dispatcher)
 
         # This actually calls BaseRequestHandler.__init__.
         CGIHTTPServer.CGIHTTPRequestHandler.__init__(
@@ -406,79 +418,87 @@ class WebSocketRequestHandler(CGIHTTPServer.CGIHTTPRequestHandler):
             return False
         host, port, resource = http_header_util.parse_uri(self.path)
         if resource is None:
-            logging.info('mod_pywebsocket: invalid uri %r' % self.path)
+            self._logger.info('Invalid URI: %r', self.path)
+            self._logger.info('Fallback to CGIHTTPRequestHandler')
             return True
         server_options = self.server.websocket_server_options
         if host is not None:
             validation_host = server_options.validation_host
             if validation_host is not None and host != validation_host:
-                logging.info('mod_pywebsocket: invalid host %r '
-                             '(expected: %r)' % (host, validation_host))
+                self._logger.info('Invalid host: %r (expected: %r)',
+                                  host,
+                                  validation_host)
+                self._logger.info('Fallback to CGIHTTPRequestHandler')
                 return True
         if port is not None:
             validation_port = server_options.validation_port
             if validation_port is not None and port != validation_port:
-                logging.info('mod_pywebsocket: invalid port %r '
-                             '(expected: %r)' % (port, validation_port))
+                self._logger.info('Invalid port: %r (expected: %r)',
+                                  port,
+                                  validation_port)
+                self._logger.info('Fallback to CGIHTTPRequestHandler')
                 return True
         self.path = resource
+
+        request = _StandaloneRequest(self, self._options.use_tls)
 
         try:
             # Fallback to default http handler for request paths for which
             # we don't have request handlers.
             if not self._options.dispatcher.get_handler_suite(self.path):
-                logging.info('No handlers for request: %s' % self.path)
+                self._logger.info('No handler for resource: %r',
+                                  self.path)
+                self._logger.info('Fallback to CGIHTTPRequestHandler')
                 return True
+        except dispatch.DispatchException, e:
+            self._logger.info('%s', e)
+            self.send_error(e.status)
+            return False
 
+        # If any Exceptions without except clause setup (including
+        # DispatchException) is raised below this point, it will be caught
+        # and logged by WebSocketServer.
+
+        try:
             try:
                 handshake.do_handshake(
-                    self._request,
+                    request,
                     self._options.dispatcher,
                     allowDraft75=self._options.allow_draft75,
                     strict=self._options.strict)
-            except handshake.AbortedByUserException, e:
-                logging.info('mod_pywebsocket: %s' % e)
+            except handshake.VersionException, e:
+                self._logger.info('%s', e)
+                self.send_response(common.HTTP_STATUS_BAD_REQUEST)
+                self.send_header(common.SEC_WEBSOCKET_VERSION_HEADER,
+                                 e.supported_versions)
+                self.end_headers()
                 return False
-            try:
-                self._request._dispatcher = self._options.dispatcher
-                self._options.dispatcher.transfer_data(self._request)
-            except dispatch.DispatchException, e:
-                logging.warning('mod_pywebsocket: %s' % e)
+            except handshake.HandshakeException, e:
+                # Handshake for ws(s) failed.
+                self._logger.info('%s', e)
+                self.send_error(e.status)
                 return False
-            except handshake.AbortedByUserException, e:
-                logging.info('mod_pywebsocket: %s' % e)
-            except Exception, e:
-                # Catch exception in transfer_data.
-                # In this case, handshake has been successful, so just log
-                # the exception and return False.
-                logging.info('mod_pywebsocket: %s' % e)
-                logging.info(
-                    'mod_pywebsocket: %s' % util.get_stack_trace())
-        except dispatch.DispatchException, e:
-            logging.warning('mod_pywebsocket: %s' % e)
-            self.send_error(e.status)
-        except handshake.HandshakeException, e:
-            # Handshake for ws(s) failed. Assume http(s).
-            logging.info('mod_pywebsocket: %s' % e)
-            self.send_error(e.status)
-        except Exception, e:
-            logging.warning('mod_pywebsocket: %s' % e)
-            logging.warning('mod_pywebsocket: %s' % util.get_stack_trace())
+
+            request._dispatcher = self._options.dispatcher
+            self._options.dispatcher.transfer_data(request)
+        except handshake.AbortedByUserException, e:
+            self._logger.info('%s', e)
         return False
 
     def log_request(self, code='-', size='-'):
         """Override BaseHTTPServer.log_request."""
 
-        logging.info('"%s" %s %s',
-                     self.requestline, str(code), str(size))
+        self._logger.info('"%s" %s %s',
+                          self.requestline, str(code), str(size))
 
     def log_error(self, *args):
         """Override BaseHTTPServer.log_error."""
 
         # Despite the name, this method is for warnings than for errors.
         # For example, HTTP status code is logged by this method.
-        logging.warning('%s - %s' %
-                        (self.address_string(), (args[0] % args[1:])))
+        self._logger.warning('%s - %s',
+                             self.address_string(),
+                             args[0] % args[1:])
 
     def is_cgi(self):
         """Test whether self.path corresponds to a CGI script.
@@ -544,8 +564,9 @@ def _alias_handlers(dispatcher, websock_handlers_map_file):
         fp.close()
 
 
-def _main():
+def _build_option_parser():
     parser = optparse.OptionParser()
+
     parser.add_option('-H', '--server-host', '--server_host',
                       dest='server_host',
                       default='',
@@ -576,6 +597,13 @@ def _main():
                       default=None,
                       help=('WebSocket handlers scan directory. '
                             'Must be a directory under websock_handlers.'))
+    parser.add_option('--allow-handlers-outside-root-dir',
+                      '--allow_handlers_outside_root_dir',
+                      dest='allow_handlers_outside_root_dir',
+                      action='store_true',
+                      default=False,
+                      help=('Scans WebSocket handlers even if their canonical '
+                            'path is not under websock_handlers.'))
     parser.add_option('-d', '--document-root', '--document_root',
                       dest='document_root', default='.',
                       help='Document root directory.')
@@ -599,6 +627,15 @@ def _main():
                       choices=['debug', 'info', 'warning', 'warn', 'error',
                                'critical'],
                       help='Log level.')
+    parser.add_option('--thread-monitor-interval-in-sec',
+                      '--thread_monitor_interval_in_sec',
+                      dest='thread_monitor_interval_in_sec',
+                      type='int', default=-1,
+                      help=('If positive integer is specified, run a thread '
+                            'monitor to show the status of server threads '
+                            'periodically in the specified inteval in '
+                            'second. If non-positive integer is specified, '
+                            'disable the thread monitor.'))
     parser.add_option('--log-max', '--log_max', dest='log_max', type='int',
                       default=_DEFAULT_LOG_MAX_BYTES,
                       help='Log maximum bytes')
@@ -613,7 +650,39 @@ def _main():
     parser.add_option('-q', '--queue', dest='request_queue_size', type='int',
                       default=_DEFAULT_REQUEST_QUEUE_SIZE,
                       help='request queue size')
-    options = parser.parse_args()[0]
+
+    return parser
+
+
+class ThreadMonitor(threading.Thread):
+    daemon = True
+
+    def __init__(self, interval_in_sec):
+        threading.Thread.__init__(self, name='ThreadMonitor')
+
+        self._logger = util.get_class_logger(self)
+
+        self._interval_in_sec = interval_in_sec
+
+    def run(self):
+        while True:
+            thread_name_list = []
+            for thread in threading.enumerate():
+                thread_name_list.append(thread.name)
+            self._logger.info(
+                "%d active threads: %s",
+                threading.active_count(),
+                ', '.join(thread_name_list))
+            time.sleep(self._interval_in_sec)
+
+
+def _main(args=None):
+    parser = _build_option_parser()
+
+    options, args = parser.parse_args(args=args)
+    if args:
+        logging.critical('Unrecognized positional arguments: %r', args)
+        sys.exit(1)
 
     os.chdir(options.document_root)
 
@@ -653,14 +722,24 @@ def _main():
         options.scan_dir = options.websock_handlers
 
     try:
+        if options.thread_monitor_interval_in_sec > 0:
+            # Run a thread monitor to show the status of server threads for
+            # debugging.
+            ThreadMonitor(options.thread_monitor_interval_in_sec).start()
+
         # Share a Dispatcher among request handlers to save time for
         # instantiation.  Dispatcher can be shared because it is thread-safe.
-        options.dispatcher = dispatch.Dispatcher(options.websock_handlers,
-                                                 options.scan_dir)
+        options.dispatcher = dispatch.Dispatcher(
+            options.websock_handlers,
+            options.scan_dir,
+            options.allow_handlers_outside_root_dir)
         if options.websock_handlers_map_file:
             _alias_handlers(options.dispatcher,
                             options.websock_handlers_map_file)
-        _print_warnings_if_any(options.dispatcher)
+        warnings = options.dispatcher.source_warnings()
+        if warnings:
+            for warning in warnings:
+                logging.warning('mod_pywebsocket: %s' % warning)
 
         server = WebSocketServer(options)
         server.serve_forever()

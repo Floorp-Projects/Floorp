@@ -44,6 +44,7 @@ import android.graphics.drawable.*;
 import android.util.Log;
 
 import org.json.JSONObject;
+import org.json.JSONException;
 
 public class Tabs implements GeckoEventListener {
     private static final String LOGTAG = "GeckoTabs";
@@ -67,11 +68,16 @@ public class Tabs implements GeckoEventListener {
         return tabs.size();
     }
 
-    public Tab addTab(int id, String url) {
+    public Tab addTab(JSONObject params) throws JSONException {
+        int id = params.getInt("tabID");
         if (tabs.containsKey(id))
            return tabs.get(id);
 
-        Tab tab = new Tab(id, url);
+        String url = params.getString("uri");
+        Boolean external = params.getBoolean("external");
+        int parentId = params.getInt("parentId");
+
+        Tab tab = new Tab(id, url, external, parentId);
         tabs.put(id, tab);
         order.add(tab);
         Log.i(LOGTAG, "Added a tab with id: " + id + ", url: " + url);
@@ -125,6 +131,42 @@ public class Tabs implements GeckoEventListener {
            return null;
 
         return tabs.get(id);
+    }
+
+    /** Close tab and then select the default next tab */
+    public void closeTab(Tab tab) {
+        closeTab(tab, getNextTab(tab));
+    }
+
+    /** Close tab and then select nextTab */
+    public void closeTab(Tab tab, Tab nextTab) {
+        if (tab == null)
+            return;
+
+        GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", String.valueOf(nextTab.getId())));
+        GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Close", String.valueOf(tab.getId())));
+    }
+
+    /** Return the tab that will be selected by default after this one is closed */
+    public Tab getNextTab(Tab tab) {
+        Tab selectedTab = getSelectedTab();
+        if (selectedTab != tab)
+            return selectedTab;
+
+        int index = getIndexOf(tab);
+        Tab nextTab = getTabAt(index + 1);
+        if (nextTab == null)
+            nextTab = getTabAt(index - 1);
+
+        Tab parent = getTab(tab.getParentId());
+        if (parent != null) {
+            // If the next tab is a sibling, switch to it. Otherwise go back to the parent.
+            if (nextTab != null && nextTab.getParentId() == tab.getParentId())
+                return nextTab;
+            else
+                return parent;
+        }
+        return nextTab;
     }
 
     public HashMap<Integer, Tab> getTabs() {

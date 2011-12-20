@@ -105,6 +105,12 @@ using namespace mozilla;
 #define MEMORY_CACHE_CAPACITY_PREF  "browser.cache.memory.capacity"
 #define MEMORY_CACHE_MAX_ENTRY_SIZE_PREF "browser.cache.memory.max_entry_size"
 
+#define CACHE_COMPRESSION_LEVEL_PREF "browser.cache.compression_level"
+#define CACHE_COMPRESSION_LEVEL     1
+
+#define SANITIZE_ON_SHUTDOWN_PREF   "privacy.sanitize.sanitizeOnShutdown"
+#define CLEAR_ON_SHUTDOWN_PREF      "privacy.clearOnShutdown.cache"
+
 static const char * observerList[] = { 
     "profile-before-change",
     "profile-do-change",
@@ -122,7 +128,10 @@ static const char * prefList[] = {
     OFFLINE_CACHE_DIR_PREF,
     MEMORY_CACHE_ENABLE_PREF,
     MEMORY_CACHE_CAPACITY_PREF,
-    MEMORY_CACHE_MAX_ENTRY_SIZE_PREF
+    MEMORY_CACHE_MAX_ENTRY_SIZE_PREF,
+    CACHE_COMPRESSION_LEVEL_PREF,
+    SANITIZE_ON_SHUTDOWN_PREF,
+    CLEAR_ON_SHUTDOWN_PREF
 };
 
 // Cache sizes, in KB
@@ -149,6 +158,9 @@ public:
         , mMemoryCacheCapacity(-1)
         , mMemoryCacheMaxEntrySize(-1) // -1 means "no limit"
         , mInPrivateBrowsing(false)
+        , mCacheCompressionLevel(CACHE_COMPRESSION_LEVEL)
+        , mSanitizeOnShutdown(false)
+        , mClearCacheOnShutdown(false)
     {
     }
 
@@ -172,6 +184,10 @@ public:
     PRInt32         MemoryCacheCapacity();
     PRInt32         MemoryCacheMaxEntrySize()     { return mMemoryCacheMaxEntrySize; }
 
+    PRInt32         CacheCompressionLevel();
+
+    bool            SanitizeAtShutdown() { return mSanitizeOnShutdown && mClearCacheOnShutdown; }
+
     static PRUint32 GetSmartCacheSize(const nsAString& cachePath,
                                       PRUint32 currentSize);
 
@@ -193,6 +209,11 @@ private:
     PRInt32                 mMemoryCacheMaxEntrySize; // in kilobytes
 
     bool                    mInPrivateBrowsing;
+
+    PRInt32                 mCacheCompressionLevel;
+
+    bool                    mSanitizeOnShutdown;
+    bool                    mClearCacheOnShutdown;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheProfilePrefObserver, nsIObserver)
@@ -508,6 +529,24 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
             
             mMemoryCacheMaxEntrySize = NS_MAX(-1, newMaxSize);
             nsCacheService::SetMemoryCacheMaxEntrySize(mMemoryCacheMaxEntrySize);
+        } else if (!strcmp(CACHE_COMPRESSION_LEVEL_PREF, data.get())) {
+            mCacheCompressionLevel = CACHE_COMPRESSION_LEVEL;
+            (void)branch->GetIntPref(CACHE_COMPRESSION_LEVEL_PREF,
+                                     &mCacheCompressionLevel);
+            mCacheCompressionLevel = NS_MAX(0, mCacheCompressionLevel);
+            mCacheCompressionLevel = NS_MIN(9, mCacheCompressionLevel);
+        } else if (!strcmp(SANITIZE_ON_SHUTDOWN_PREF, data.get())) {
+            rv = branch->GetBoolPref(SANITIZE_ON_SHUTDOWN_PREF,
+                                     &mSanitizeOnShutdown);
+            if (NS_FAILED(rv))
+                return rv;
+            nsCacheService::SetDiskCacheEnabled(DiskCacheEnabled());
+        } else if (!strcmp(CLEAR_ON_SHUTDOWN_PREF, data.get())) {
+            rv = branch->GetBoolPref(CLEAR_ON_SHUTDOWN_PREF,
+                                     &mClearCacheOnShutdown);
+            if (NS_FAILED(rv))
+                return rv;
+            nsCacheService::SetDiskCacheEnabled(DiskCacheEnabled());
         }
     } else if (!strcmp(NS_PRIVATE_BROWSING_SWITCH_TOPIC, topic)) {
         if (!strcmp(NS_PRIVATE_BROWSING_ENTER, data.get())) {
@@ -797,6 +836,20 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
     (void) branch->GetIntPref(MEMORY_CACHE_MAX_ENTRY_SIZE_PREF,
                               &mMemoryCacheMaxEntrySize);
     mMemoryCacheMaxEntrySize = NS_MAX(-1, mMemoryCacheMaxEntrySize);
+
+    // read cache compression level pref
+    mCacheCompressionLevel = CACHE_COMPRESSION_LEVEL;
+    (void)branch->GetIntPref(CACHE_COMPRESSION_LEVEL_PREF,
+                             &mCacheCompressionLevel);
+    mCacheCompressionLevel = NS_MAX(0, mCacheCompressionLevel);
+    mCacheCompressionLevel = NS_MIN(9, mCacheCompressionLevel);
+
+    // read cache shutdown sanitization prefs
+    (void) branch->GetBoolPref(SANITIZE_ON_SHUTDOWN_PREF,
+                               &mSanitizeOnShutdown);
+    (void) branch->GetBoolPref(CLEAR_ON_SHUTDOWN_PREF,
+                               &mClearCacheOnShutdown);
+
     return rv;
 }
 
@@ -834,7 +887,7 @@ bool
 nsCacheProfilePrefObserver::DiskCacheEnabled()
 {
     if ((mDiskCacheCapacity == 0) || (!mDiskCacheParentDirectory))  return false;
-    return mDiskCacheEnabled;
+    return mDiskCacheEnabled && (!mSanitizeOnShutdown || !mClearCacheOnShutdown);
 }
 
 
@@ -930,6 +983,11 @@ nsCacheProfilePrefObserver::MemoryCacheCapacity()
     return capacity;
 }
 
+PRInt32
+nsCacheProfilePrefObserver::CacheCompressionLevel()
+{
+    return mCacheCompressionLevel;
+}
 
 /******************************************************************************
  * nsProcessRequestEvent
@@ -1068,6 +1126,9 @@ nsCacheService::Shutdown()
     nsCOMPtr<nsIThread> cacheIOThread;
     Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_SHUTDOWN> totalTimer;
 
+    bool shouldSanitize = false;
+    nsCOMPtr<nsILocalFile> parentDir;
+
     {
     nsCacheServiceAutoLock lock;
     NS_ASSERTION(mInitialized, 
@@ -1077,9 +1138,6 @@ nsCacheService::Shutdown()
 
         mInitialized = false;
 
-        mObserver->Remove();
-        NS_RELEASE(mObserver);
-        
         // Clear entries
         ClearDoomList();
         ClearActiveEntries();
@@ -1087,6 +1145,12 @@ nsCacheService::Shutdown()
         // Make sure to wait for any pending cache-operations before
         // proceeding with destructive actions (bug #620660)
         (void) SyncWithCacheIOThread();
+
+        // obtain the disk cache directory in case we need to sanitize it
+        parentDir = mObserver->DiskCacheParentDirectory();
+        shouldSanitize = mObserver->SanitizeAtShutdown();
+        mObserver->Remove();
+        NS_RELEASE(mObserver);
         
         // unregister memory reporter, before deleting the memory device, just
         // to be safe
@@ -1113,27 +1177,18 @@ nsCacheService::Shutdown()
     if (cacheIOThread)
         cacheIOThread->Shutdown();
 
-    bool finishDeleting = false;
-    nsresult rv;
-    nsCOMPtr<nsIPrefBranch2> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (!branch) {
-        NS_WARNING("Failed to get pref service!");
-    } else {
-        bool isSet;
-        rv = branch->GetBoolPref("privacy.sanitize.sanitizeOnShutdown", &isSet);
-        if (NS_SUCCEEDED(rv) && isSet) {
-            rv = branch->GetBoolPref("privacy.clearOnShutdown.cache", &isSet);
-            if (NS_SUCCEEDED(rv) && isSet) {
-                finishDeleting = true;
-            }
+    if (shouldSanitize) {
+        nsresult rv = parentDir->AppendNative(NS_LITERAL_CSTRING("Cache"));
+        if (NS_SUCCEEDED(rv)) {
+            bool exists;
+            if (NS_SUCCEEDED(parentDir->Exists(&exists)) && exists)
+                nsDeleteDir::DeleteDir(parentDir, false);
         }
-    }
-    if (finishDeleting) {
-      Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_SHUTDOWN_CLEAR_PRIVATE> timer;
-      nsDeleteDir::Shutdown(finishDeleting);
+        Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_SHUTDOWN_CLEAR_PRIVATE> timer;
+        nsDeleteDir::Shutdown(shouldSanitize);
     } else {
-      Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_DELETEDIR_SHUTDOWN> timer;
-      nsDeleteDir::Shutdown(finishDeleting);
+        Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_DELETEDIR_SHUTDOWN> timer;
+        nsDeleteDir::Shutdown(shouldSanitize);
     }
 }
 
@@ -2288,6 +2343,14 @@ nsCacheService::ValidateEntry(nsCacheEntry * entry)
     // XXX what else should be done?
 
     return rv;
+}
+
+
+PRInt32
+nsCacheService::CacheCompressionLevel()
+{
+    PRInt32 level = gService->mObserver->CacheCompressionLevel();
+    return level;
 }
 
 
