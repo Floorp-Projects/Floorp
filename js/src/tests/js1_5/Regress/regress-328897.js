@@ -51,7 +51,7 @@ if (typeof window == 'undefined')
 }
 else
 {
-  expect = /(Script error.|Permission denied for to get property XPCComponents.classes)/;
+  expect = /(Script error.|uncaught exception: Permission denied to get property UnnamedClass.classes)/;
 
   window._onerror = window.onerror;
   window.onerror = (function (msg, page, line) { 
