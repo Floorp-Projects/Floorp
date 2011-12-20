@@ -48,6 +48,7 @@
 #include "nsJSUtils.h"
 #include "nsContentUtils.h"
 #include "nsISmsDatabaseService.h"
+#include "nsIXPConnect.h"
 
 /**
  * We have to use macros here because our leak analysis tool things we are
@@ -227,7 +228,7 @@ SmsManager::GetMessageMoz(PRInt32 aId, nsIDOMMozSmsRequest** aRequest)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 SmsManager::Delete(PRInt32 aId, nsIDOMMozSmsRequest** aRequest)
 {
   int requestId =
@@ -241,6 +242,28 @@ SmsManager::Delete(PRInt32 aId, nsIDOMMozSmsRequest** aRequest)
   smsDBService->DeleteMessage(aId, requestId, 0);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+SmsManager::Delete(const jsval& aParam, nsIDOMMozSmsRequest** aRequest)
+{
+  if (aParam.isInt32()) {
+    return Delete(aParam.toInt32(), aRequest);
+  }
+
+  if (!aParam.isObject()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsIDOMMozSmsMessage> message =
+    do_QueryInterface(nsContentUtils::XPConnect()->GetNativeOfWrapper(
+          mScriptContext->GetNativeContext(), &aParam.toObject()));
+  NS_ENSURE_TRUE(message, NS_ERROR_INVALID_ARG);
+
+  PRInt32 id;
+  message->GetId(&id);
+
+  return Delete(id, aRequest);
 }
 
 NS_IMPL_EVENT_HANDLER(SmsManager, received)
