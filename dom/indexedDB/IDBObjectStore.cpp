@@ -55,6 +55,8 @@
 #include "nsThreadUtils.h"
 #include "snappy/snappy.h"
 #include "test_quota.h"
+#include "xpcprivate.h"
+#include "XPCQuickStubs.h"
 
 #include "AsyncConnectionHelper.h"
 #include "IDBCursor.h"
@@ -1908,10 +1910,10 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       }
       mKey.SetFromInteger(autoIncrementNum);
     }
-    else if (mKey.IsInteger() &&
-             mKey.ToInteger() >= mObjectStore->Info()->nextAutoIncrementId) {
+    else if (mKey.IsFloat() &&
+             mKey.ToFloat() >= mObjectStore->Info()->nextAutoIncrementId) {
       // XXX Once we support floats, we should use floor(mKey.ToFloat()) here
-      autoIncrementNum = mKey.ToInteger();
+      autoIncrementNum = floor(mKey.ToFloat());
     }
 
     if (keyUnset && !keyPath.IsEmpty()) {
@@ -1925,7 +1927,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
         PRUint64 u;
       } pun;
     
-      pun.d = SwapBytes(static_cast<PRUint64>(mKey.ToInteger()));    
+      pun.d = SwapBytes(static_cast<PRUint64>(autoIncrementNum));
 
       JSAutoStructuredCloneBuffer& buffer = mCloneWriteInfo.mCloneBuffer;
       PRUint64 offsetToKeyProp = mCloneWriteInfo.mOffsetToKeyProp;
