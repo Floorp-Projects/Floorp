@@ -112,6 +112,10 @@
          key="&selectAllCmd.key;"
          modifiers="accel"
          command="cmd_selectAllDownloads"/>
+    <key id="pasteKey"
+         key="V"
+         modifiers="accel"
+         oncommand="pasteHandler();"/>
   </keyset>
 
   <vbox id="contextMenuPalette" hidden="true">
