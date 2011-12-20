@@ -92,8 +92,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS11(WebSocketChannel,
                                nsIInterfaceRequestor,
                                nsIChannelEventSink)
 
-// An implementation of draft-ietf-hybi-thewebsocketprotocol-08
-#define SEC_WEBSOCKET_VERSION "8"
+// We implement RFC 6455, which uses Sec-WebSocket-Version: 13 on the wire.
+#define SEC_WEBSOCKET_VERSION "13"
 
 /*
  * About SSL unsigned certificates
@@ -1782,8 +1782,8 @@ WebSocketChannel::SetupRequest()
     NS_LITERAL_CSTRING(SEC_WEBSOCKET_VERSION), false);
 
   if (!mOrigin.IsEmpty())
-    mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Sec-WebSocket-Origin"),
-                                   mOrigin, false);
+    mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Origin"), mOrigin,
+                                   false);
 
   if (!mProtocol.IsEmpty())
     mHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Sec-WebSocket-Protocol"),
