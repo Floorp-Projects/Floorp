@@ -1457,7 +1457,7 @@ Tab.prototype = {
         let plugin = aEvent.target;
         // Keep track of all the plugins on the current page
         this._pluginsToPlay.push(plugin);
-        
+
         let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");        
         if (!overlay)
           return;
@@ -1476,9 +1476,12 @@ Tab.prototype = {
       }
 
       case "pagehide": {
-        // Reset plugin state when we leave the page
-        this._pluginsToPlay = [];
-        this._pluginOverlayShowing = false;
+        // Check to make sure it's top-level pagehide
+        if (aEvent.target.defaultView == this.browser.contentWindow) {
+          // Reset plugin state when we leave the page
+          this._pluginsToPlay = [];
+          this._pluginOverlayShowing = false;
+        }
         break;
       }
     }
@@ -3264,7 +3267,7 @@ var PluginHelper = {
     // XXX just doing (callback)(arg) was giving a same-origin error. bug?
     let self = this;
     let callbackArgs = Array.prototype.slice.call(arguments).slice(2);
-      plugin.addEventListener("click", function(evt) {
+    plugin.addEventListener("click", function(evt) {
       if (!evt.isTrusted)
         return;
       evt.preventDefault();
