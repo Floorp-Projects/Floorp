@@ -476,6 +476,32 @@ GetKeyFromValue(JSContext* aCx,
 }
 
 inline
+nsresult
+GetKeyFromValue(JSContext* aCx,
+                jsval aVal,
+                const nsTArray<nsString>& aKeyPathArray,
+                Key& aKey)
+{
+  NS_ASSERTION(!aKeyPathArray.IsEmpty(),
+               "Should not use empty keyPath array");
+  for (PRUint32 i = 0; i < aKeyPathArray.Length(); ++i) {
+    jsval key;
+    nsresult rv = GetJSValFromKeyPath(aCx, aVal, aKeyPathArray[i], key);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (NS_FAILED(aKey.AppendArrayItem(aCx, i == 0, key))) {
+      NS_ASSERTION(aKey.IsUnset(), "Encoding error should unset");
+      return NS_OK;
+    }
+  }
+
+  aKey.FinishArray();
+
+  return NS_OK;
+}
+
+
+inline
 already_AddRefed<IDBRequest>
 GenerateRequest(IDBObjectStore* aObjectStore)
 {
@@ -513,6 +539,7 @@ IDBObjectStore::Create(IDBTransaction* aTransaction,
   objectStore->mName = aStoreInfo->name;
   objectStore->mId = aStoreInfo->id;
   objectStore->mKeyPath = aStoreInfo->keyPath;
+  objectStore->mKeyPathArray = aStoreInfo->keyPathArray;
   objectStore->mAutoIncrement = !!aStoreInfo->nextAutoIncrementId;
   objectStore->mDatabaseId = aDatabaseId;
   objectStore->mInfo = aStoreInfo;
@@ -564,14 +591,31 @@ IDBObjectStore::IsValidKeyPath(JSContext* aCx,
 nsresult
 IDBObjectStore::AppendIndexUpdateInfo(PRInt64 aIndexID,
                                       const nsAString& aKeyPath,
+                                      const nsTArray<nsString>& aKeyPathArray,
                                       bool aUnique,
                                       bool aMultiEntry,
                                       JSContext* aCx,
-                                      jsval aObject,
+                                      jsval aVal,
                                       nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
 {
+  nsresult rv;
+  if (!aKeyPathArray.IsEmpty()) {
+    Key arrayKey;
+    rv = GetKeyFromValue(aCx, aVal, aKeyPathArray, arrayKey);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!arrayKey.IsUnset()) {
+      IndexUpdateInfo* updateInfo = aUpdateInfoArray.AppendElement();
+      updateInfo->indexId = aIndexID;
+      updateInfo->indexUnique = aUnique;
+      updateInfo->value = arrayKey;
+    }
+
+    return NS_OK;
+  }
+
   jsval key;
-  nsresult rv = GetJSValFromKeyPath(aCx, aObject, aKeyPath, key);
+  rv = GetJSValFromKeyPath(aCx, aVal, aKeyPath, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aMultiEntry && !JSVAL_IS_PRIMITIVE(key) &&
@@ -1128,7 +1172,12 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
   else if (!mAutoIncrement) {
     // Inline keys live on the object. Make sure that the value passed in is an
     // object.
-    rv = GetKeyFromValue(aCx, aValue, mKeyPath, aKey);
+    if (UsesKeyPathArray()) {
+      rv = GetKeyFromValue(aCx, aValue, mKeyPathArray, aKey);
+    }
+    else {
+      rv = GetKeyFromValue(aCx, aValue, mKeyPath, aKey);
+    }
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1145,8 +1194,9 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
     const IndexInfo& indexInfo = mInfo->indexes[indexesIndex];
 
     rv = AppendIndexUpdateInfo(indexInfo.id, indexInfo.keyPath,
-                               indexInfo.unique, indexInfo.multiEntry,
-                               aCx, aValue, aUpdateInfoArray);
+                               indexInfo.keyPathArray, indexInfo.unique,
+                               indexInfo.multiEntry, aCx, aValue,
+                               aUpdateInfoArray);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1364,11 +1414,38 @@ IDBObjectStore::GetName(nsAString& aName)
 }
 
 NS_IMETHODIMP
-IDBObjectStore::GetKeyPath(nsAString& aKeyPath)
+IDBObjectStore::GetKeyPath(JSContext* aCx,
+                           jsval* aVal)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  aKeyPath.Assign(mKeyPath);
+  if (UsesKeyPathArray()) {
+    JSObject* array = JS_NewArrayObject(aCx, mKeyPathArray.Length(), nsnull);
+    if (!array) {
+      NS_WARNING("Failed to make array!");
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    for (PRUint32 i = 0; i < mKeyPathArray.Length(); ++i) {
+      jsval val;
+      nsString tmp(mKeyPathArray[i]);
+      if (!xpc_qsStringToJsval(aCx, tmp, &val)) {
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      }
+
+      if (!JS_SetElement(aCx, array, i, &val)) {
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      }
+    }
+
+    *aVal = OBJECT_TO_JSVAL(array);
+  }
+  else {
+    nsString tmp(mKeyPath);
+    if (!xpc_qsStringToJsval(aCx, tmp, aVal)) {
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+  }
   return NS_OK;
 }
 
@@ -1613,17 +1690,69 @@ IDBObjectStore::OpenCursor(const jsval& aKey,
 
 NS_IMETHODIMP
 IDBObjectStore::CreateIndex(const nsAString& aName,
-                            const nsAString& aKeyPath,
+                            const jsval& aKeyPath,
                             const jsval& aOptions,
                             JSContext* aCx,
                             nsIIDBIndex** _retval)
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!IsValidKeyPath(aCx, aKeyPath)) {
-    return NS_ERROR_DOM_SYNTAX_ERR;
+  // Get KeyPath
+  nsString keyPath;
+  nsTArray<nsString> keyPathArray;
+
+  // See if this is a JS array.
+  if (!JSVAL_IS_PRIMITIVE(aKeyPath) &&
+      JS_IsArrayObject(aCx, JSVAL_TO_OBJECT(aKeyPath))) {
+
+    JSObject* obj = JSVAL_TO_OBJECT(aKeyPath);
+
+    jsuint length;
+    if (!JS_GetArrayLength(aCx, obj, &length)) {
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    if (!length) {
+      return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    keyPathArray.SetCapacity(length);
+
+    for (jsuint index = 0; index < length; index++) {
+      jsval val;
+      JSString* jsstr;
+      nsDependentJSString str;
+      if (!JS_GetElement(aCx, obj, index, &val) ||
+          !(jsstr = JS_ValueToString(aCx, val)) ||
+          !str.init(aCx, jsstr)) {
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      }
+
+      if (!IsValidKeyPath(aCx, str)) {
+        return NS_ERROR_DOM_SYNTAX_ERR;
+      }
+
+      keyPathArray.AppendElement(str);
+    }
+
+    NS_ASSERTION(!keyPathArray.IsEmpty(), "This shouldn't have happened!");
+  }
+  else {
+    JSString* jsstr;
+    nsDependentJSString str;
+    if (!(jsstr = JS_ValueToString(aCx, aKeyPath)) ||
+        !str.init(aCx, jsstr)) {
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    if (!IsValidKeyPath(aCx, str)) {
+      return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
+    keyPath = str;
   }
 
+  // Check name and current mode
   IDBTransaction* transaction = AsyncConnectionHelper::GetCurrentTransaction();
 
   if (!transaction ||
@@ -1685,12 +1814,17 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
     multiEntry = !!boolVal;
   }
 
+  if (multiEntry && !keyPathArray.IsEmpty()) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+
   DatabaseInfo* databaseInfo = mTransaction->DBInfo();
 
   IndexInfo* indexInfo = mInfo->indexes.AppendElement();
   indexInfo->id = databaseInfo->nextIndexId++;
   indexInfo->name = aName;
-  indexInfo->keyPath = aKeyPath;
+  indexInfo->keyPath = keyPath;
+  indexInfo->keyPathArray.SwapElements(keyPathArray);
   indexInfo->unique = unique;
   indexInfo->multiEntry = multiEntry;
 
@@ -1912,7 +2046,6 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     }
     else if (mKey.IsFloat() &&
              mKey.ToFloat() >= mObjectStore->Info()->nextAutoIncrementId) {
-      // XXX Once we support floats, we should use floor(mKey.ToFloat()) here
       autoIncrementNum = floor(mKey.ToFloat());
     }
 
@@ -2423,9 +2556,25 @@ CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mIndex->Name());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"),
-                              mIndex->KeyPath());
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  if (mIndex->UsesKeyPathArray()) {
+    // We use a comma in the beginning to indicate that it's an array of
+    // key paths. This is to be able to tell a string-keypath from an
+    // array-keypath which contains only one item.
+    // It also makes serializing easier :-)
+    nsAutoString keyPath;
+    const nsTArray<nsString>& keyPaths = mIndex->KeyPathArray();
+    for (PRUint32 i = 0; i < keyPaths.Length(); ++i) {
+      keyPath.Append(NS_LITERAL_STRING(",") + keyPaths[i]);
+    }
+    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"),
+                                keyPath);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+  else {
+    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"),
+                                mIndex->KeyPath());
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
 
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("unique"),
                              mIndex->IsUnique() ? 1 : 0);
@@ -2521,6 +2670,7 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
     nsTArray<IndexUpdateInfo> updateInfo;
     rv = IDBObjectStore::AppendIndexUpdateInfo(mIndex->Id(),
                                                mIndex->KeyPath(),
+                                               mIndex->KeyPathArray(),
                                                mIndex->IsUnique(),
                                                mIndex->IsMultiEntry(),
                                                tlsEntry->Context(),

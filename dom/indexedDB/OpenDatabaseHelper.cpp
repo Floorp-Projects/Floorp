@@ -216,8 +216,8 @@ CreateTables(mozIStorageConnection* aDBConn)
       "id INTEGER PRIMARY KEY, "
       "object_store_id INTEGER NOT NULL, "
       "key_value BLOB DEFAULT NULL, "
-      "data BLOB NOT NULL, "
       "file_ids TEXT, "
+      "data BLOB NOT NULL, "
       "UNIQUE (object_store_id, key_value), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
         "CASCADE"
@@ -1168,8 +1168,8 @@ UpgradeSchemaFrom11_0To12_0(mozIStorageConnection* aConnection)
       "id INTEGER PRIMARY KEY, "
       "object_store_id INTEGER NOT NULL, "
       "key_value BLOB DEFAULT NULL, "
-      "data BLOB NOT NULL, "
       "file_ids TEXT, "
+      "data BLOB NOT NULL, "
       "UNIQUE (object_store_id, key_value), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
         "CASCADE"
@@ -1179,7 +1179,7 @@ UpgradeSchemaFrom11_0To12_0(mozIStorageConnection* aConnection)
 
   rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "INSERT INTO object_data "
-      "SELECT id, object_store_id, key_value, data, file_ids "
+      "SELECT id, object_store_id, key_value, file_ids, data "
       "FROM temp_upgrade;"
   ));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1259,7 +1259,7 @@ UpgradeSchemaFrom11_0To12_0(mozIStorageConnection* aConnection)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "INSERT OR IGNORE INTO index_data "
+    "INSERT INTO index_data "
       "SELECT index_id, value, object_data_key, object_data_id "
       "FROM temp_upgrade;"
   ));
