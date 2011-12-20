@@ -360,7 +360,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         rv = scriptContext->EvaluateString(NS_ConvertUTF8toUTF16(script),
                                            globalJSObject, // obj
                                            principal,
-                                           principal,
                                            mURL.get(),     // url
                                            1,              // line no
                                            nsnull,

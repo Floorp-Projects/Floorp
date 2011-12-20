@@ -75,7 +75,6 @@ public:
   virtual nsresult EvaluateString(const nsAString& aScript,
                                   JSObject* aScopeObject,
                                   nsIPrincipal *principal,
-                                  nsIPrincipal *originPrincipal,
                                   const char *aURL,
                                   PRUint32 aLineNo,
                                   PRUint32 aVersion,
