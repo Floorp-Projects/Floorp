@@ -1684,7 +1684,7 @@ nsImageFrame::List(FILE* out, PRInt32 aIndent) const
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
-    fprintf(out, " [state=%016llx]", mState);
+    fprintf(out, " [state=%016llx]", (unsigned long long)mState);
   }
   fprintf(out, " [content=%p]", (void*)mContent);
   fprintf(out, " [sc=%p]", static_cast<void*>(mStyleContext));
