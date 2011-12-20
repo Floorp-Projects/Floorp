@@ -53,6 +53,7 @@
 const Cu = Components.utils;
 
 Cu.import("resource://services-sync/log4moz.js");
+Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 
@@ -151,11 +152,9 @@ function AddonsReconciler() {
   let level = Svc.Prefs.get("log.logger.addonsreconciler", "Debug");
   this._log.level = Log4Moz.Level[level];
 
-  AddonManager.addAddonListener(this);
-  AddonManager.addInstallListener(this);
-  this._listening = true;
-
-  Svc.Obs.add("xpcom-shutdown", this.stopListening.bind(this));
+  Svc.Obs.add("weave:engine:start-tracking", this.startListening, this);
+  Svc.Obs.add("weave:engine:stop-tracking", this.stopListening, this);
+  Svc.Obs.add("xpcom-shutdown", this.stopListening, this);
 };
 AddonsReconciler.prototype = {
   /** Flag indicating whether we are listening to AddonManager events. */
@@ -330,6 +329,23 @@ AddonsReconciler.prototype = {
   },
 
   /**
+   * Tells the instance to start listening for AddonManager changes.
+   *
+   * This is typically called automatically when Sync is loaded.
+   */
+  startListening: function startListening() {
+    let engine = Engines.get("addons");
+    if (!engine || !engine.enabled || this._listening) {
+      return;
+    }
+
+    this._log.info("Registering as Add-on Manager listener.");
+    AddonManager.addAddonListener(this);
+    AddonManager.addInstallListener(this);
+    this._listening = true;
+  },
+
+  /**
    * Tells the instance to stop listening for AddonManager changes.
    *
    * The reconciler should always be listening. This should only be called when
@@ -339,12 +355,14 @@ AddonsReconciler.prototype = {
    * is a best practice to call it yourself.
    */
   stopListening: function stopListening() {
-    if (this._listening) {
-      this._log.debug("Stopping listening and removing AddonManager listeners.");
-      AddonManager.removeInstallListener(this);
-      AddonManager.removeAddonListener(this);
-      this._listening = false;
+    if (!this._listening) {
+      return;
     }
+
+    this._log.debug("Stopping listening and removing AddonManager listeners.");
+    AddonManager.removeInstallListener(this);
+    AddonManager.removeAddonListener(this);
+    this._listening = false;
   },
 
   /**

@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 loadAddonTestFunctions();
 startupManager();
 Svc.Prefs.set("addons.ignoreRepositoryChecking", true);
+Svc.Prefs.set("engine.addons", true);
 
 Engines.register(AddonsEngine);
 let engine     = Engines.get("addons");
@@ -39,6 +40,8 @@ function cleanup_and_advance() {
 function run_test() {
   initTestLogging("Trace");
   Log4Moz.repository.getLogger("Sync.Engine.Addons").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.AddonsReconciler").level =
+    Log4Moz.Level.Trace;
 
   cleanup_and_advance();
 }
@@ -67,6 +70,8 @@ add_test(function test_not_tracking() {
 add_test(function test_track_install() {
   _("Ensure that installing an add-on notifies tracker.");
 
+  reconciler.startListening();
+
   Svc.Obs.notify("weave:engine:start-tracking");
 
   do_check_eq(0, tracker.score);
@@ -83,6 +88,8 @@ add_test(function test_track_install() {
 
 add_test(function test_track_uninstall() {
   _("Ensure that uninstalling an add-on notifies tracker.");
+
+  reconciler.startListening();
 
   let addon = installAddon("test_bootstrap1_1");
   let guid = addon.syncGUID;
@@ -101,6 +108,8 @@ add_test(function test_track_uninstall() {
 
 add_test(function test_track_user_disable() {
   _("Ensure that tracker sees disabling of add-on");
+
+  reconciler.startListening();
 
   let addon = installAddon("test_bootstrap1_1");
   do_check_false(addon.userDisabled);
@@ -142,6 +151,8 @@ add_test(function test_track_user_disable() {
 
 add_test(function test_track_enable() {
   _("Ensure that enabling a disabled add-on notifies tracker.");
+
+  reconciler.startListening();
 
   let addon = installAddon("test_bootstrap1_1");
   addon.userDisabled = true;
