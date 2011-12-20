@@ -424,6 +424,7 @@ ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 OS_LIBS += \
   -lui \
   -lmedia \
+  -lhardware_legacy \
   $(NULL)
 endif
 
