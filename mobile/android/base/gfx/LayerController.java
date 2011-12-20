@@ -281,8 +281,13 @@ public class LayerController {
 
     /** Aborts any pan/zoom animation that is currently in progress. */
     public void abortPanZoomAnimation() {
-        if (mPanZoomController != null)
-            mPanZoomController.abortAnimation();
+        if (mPanZoomController != null) {
+            mView.post(new Runnable() {
+                public void run() {
+                    mPanZoomController.abortAnimation();
+                }
+            });
+        }
     }
 
     /**

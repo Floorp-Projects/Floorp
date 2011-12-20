@@ -248,6 +248,7 @@ public class PanZoomController
         }
     }
 
+    /** This function must be called from the UI thread. */
     public void abortAnimation() {
         // this happens when gecko changes the viewport on us or if the device is rotated.
         // if that's the case, abort any animation in progress and re-zoom so that the page
@@ -1064,7 +1065,7 @@ public class PanZoomController
         return true;
     }
 
-    public boolean animatedZoomTo(RectF zoomToRect) {
+    private boolean animatedZoomTo(RectF zoomToRect) {
         GeckoApp.mAppContext.hidePluginViews();
 
         mState = PanZoomState.ANIMATED_ZOOM;
