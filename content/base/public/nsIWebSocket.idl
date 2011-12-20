@@ -53,14 +53,14 @@ class nsString;
 [ref] native nsStringTArrayRef(nsTArray<nsString>);
 
 /**
- * The nsIMozWebSocket interface enables Web applications to maintain
+ * The nsIWebSocket interface enables Web applications to maintain
  * bidirectional communications with server-side processes as described in:
  *
  * http://dev.w3.org/html5/websockets/
  *
  */
 [scriptable, uuid(f463b9b5-1408-4057-9224-e4f5bc33f17b)]
-interface nsIMozWebSocket : nsISupports
+interface nsIWebSocket : nsISupports
 {
   readonly attribute DOMString url;
   readonly attribute DOMString extensions;

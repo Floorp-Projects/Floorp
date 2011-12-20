@@ -43,8 +43,7 @@
  * 21. see bug 572975 - same as test 17, but delete strong event listeners when
  *     receiving the message event;
  * 22. server takes too long to establish the ws connection;
- * 23. see bug 664692 - feature detection should detect MozWebSocket but not
- *     WebSocket on window object;
+ * 23. should detect WebSocket on window object;
  * 24. server rejects sub-protocol string
  * 25. ctor with valid empty sub-protocol array
  * 26. ctor with invalid sub-protocol array containing 1 empty element
@@ -127,9 +126,9 @@ function CreateTestWS(ws_location, ws_protocol, no_increment_test)
 
   try {
     if (ws_protocol == undefined) {
-      ws = new MozWebSocket(ws_location);
+      ws = new WebSocket(ws_location);
     } else {
-      ws = new MozWebSocket(ws_location, ws_protocol);
+      ws = new WebSocket(ws_location, ws_protocol);
     }
 
 
@@ -566,7 +565,7 @@ window._test17 = function()
 {
   waitTest17 = true;
 
-  var local_ws = new MozWebSocket("ws://sub1.test2.example.org/tests/content/base/test/file_websocket", "test-17");
+  var local_ws = new WebSocket("ws://sub1.test2.example.org/tests/content/base/test/file_websocket", "test-17");
   local_ws._testNumber = "local17";
   local_ws._testNumber = current_test++;
 
@@ -649,7 +648,7 @@ window._test20 = function()
 {
   waitTest20 = true;
 
-  var local_ws = new MozWebSocket("ws://sub1.test1.example.org/tests/content/base/test/file_websocket", "test-20");
+  var local_ws = new WebSocket("ws://sub1.test1.example.org/tests/content/base/test/file_websocket", "test-20");
   local_ws._testNumber = "local20";
   local_ws._testNumber = current_test++;
 
@@ -684,7 +683,7 @@ window._test21 = function()
 {
   waitTest21 = true;
 
-  var local_ws = new MozWebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-21");
+  var local_ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-21");
   local_ws._testNumber = current_test++;
   var received_message = false;
 
@@ -759,8 +758,7 @@ function test22()
 function test23()
 {
   current_test++;
-  is(false, "WebSocket" in window, "WebSocket shouldn't be available on window object");
-  is(true, "MozWebSocket" in window, "MozWebSocket should be available on window object");
+  is(true, "WebSocket" in window, "WebSocket should be available on window object");
   doTest(24);
 }
 
