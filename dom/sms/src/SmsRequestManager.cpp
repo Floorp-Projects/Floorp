@@ -35,74 +35,65 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_sms_SmsRequest_h
-#define mozilla_dom_sms_SmsRequest_h
-
-#include "nsIDOMSmsRequest.h"
-#include "nsDOMEventTargetWrapperCache.h"
-
-class nsIDOMMozSmsMessage;
+#include "SmsRequestManager.h"
+#include "SmsRequest.h"
 
 namespace mozilla {
 namespace dom {
 namespace sms {
 
-class SmsRequest : public nsIDOMMozSmsRequest
-                 , public nsDOMEventTargetWrapperCache
+SmsRequestManager* SmsRequestManager::sInstance = nsnull;
+
+void
+SmsRequestManager::Init()
 {
-public:
-  friend class SmsRequestManager;
+  NS_PRECONDITION(!sInstance,
+                  "sInstance shouldn't be set. Did you call Init() twice?");
+  sInstance = new SmsRequestManager();
+}
 
-  enum ErrorType {
-    eNoError = 0,
-    eInternalError,
-  };
+void
+SmsRequestManager::Shutdown()
+{
+  NS_PRECONDITION(sInstance, "sInstance should be set. Did you call Init()?");
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMMOZSMSREQUEST
+  delete sInstance;
+  sInstance = nsnull;
+}
 
-  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetWrapperCache::)
+/* static */ SmsRequestManager*
+SmsRequestManager::GetInstance()
+{
+  return sInstance;
+}
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(SmsRequest,
-                                                         nsDOMEventTargetWrapperCache)
+PRInt32
+SmsRequestManager::CreateRequest(nsPIDOMWindow* aWindow,
+                                 nsIScriptContext* aScriptContext,
+                                 nsIDOMMozSmsRequest** aRequest)
+{
+  nsCOMPtr<nsIDOMMozSmsRequest> request =
+    new SmsRequest(aWindow, aScriptContext);
 
-private:
-  SmsRequest() MOZ_DELETE;
+  PRInt32 size = mRequests.Count();
 
-  SmsRequest(nsPIDOMWindow* aWindow, nsIScriptContext* aScriptContext);
-  ~SmsRequest();
+  // Look for empty slots.
+  for (PRInt32 i=0; i<size; ++i) {
+    if (mRequests[i]) {
+      continue;
+    }
 
-  /**
-   * Root mResult (jsval) to prevent garbage collection.
-   */
-  void RootResult();
+    mRequests.ReplaceObjectAt(request, i);
+    NS_ADDREF(*aRequest = request);
+    return i;
+  }
 
-  /**
-   * Unroot mResult (jsval) to allow garbage collection.
-   */
-  void UnrootResult();
 
-  /**
-   * Set the object in a success state with the result being aMessage.
-   */
-  void SetSuccess(nsIDOMMozSmsMessage* aMessage);
-
-  /**
-   * Set the object in an error state with the error type being aError.
-   */
-  void SetError(ErrorType aError);
-
-  jsval     mResult;
-  bool      mResultRooted;
-  ErrorType mError;
-  bool      mDone;
-
-  NS_DECL_EVENT_HANDLER(success)
-  NS_DECL_EVENT_HANDLER(error)
-};
+  mRequests.AppendObject(request);
+  NS_ADDREF(*aRequest = request);
+  return size;
+}
 
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
-
-#endif // mozilla_dom_sms_SmsRequest_h
