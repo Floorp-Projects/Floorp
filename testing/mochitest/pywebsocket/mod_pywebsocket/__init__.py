@@ -65,6 +65,12 @@ Installation:
 
        PythonOption mod_pywebsocket.allow_draft75 On
 
+   If you want to allow handlers whose canonical path is not under the root
+   directory (i.e. symbolic link is in root directory but its target is not),
+   configure as follows:
+
+       PythonOption mod_pywebsocket.allow_handlers_outside_root_dir On
+
    Example snippet of httpd.conf:
    (mod_pywebsocket is in /websock_lib, WebSocket handlers are in
    /websock_handlers, port is 80 for ws, 443 for wss.)
