@@ -1,26 +1,26 @@
 // ***** BEGIN LICENSE BLOCK *****
 // Version: MPL 1.1/GPL 2.0/LGPL 2.1
-// 
+//
 // The contents of this file are subject to the Mozilla Public License Version
 // 1.1 (the "License"); you may not use this file except in compliance with
 // the License. You may obtain a copy of the License at
 // http://www.mozilla.org/MPL/
-// 
+//
 // Software distributed under the License is distributed on an "AS IS" basis,
 // WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 // for the specific language governing rights and limitations under the
 // License.
-// 
+//
 // The Original Code is Mozilla Corporation Code.
-// 
+//
 // The Initial Developer of the Original Code is
 // Mikeal Rogers.
 // Portions created by the Initial Developer are Copyright (C) 2008
 // the Initial Developer. All Rights Reserved.
-// 
+//
 // Contributor(s):
 //  Mikeal Rogers <mikeal.rogers@gmail.com>
-// 
+//
 // Alternatively, the contents of this file may be used under the terms of
 // either the GNU General Public License Version 2 or later (the "GPL"), or
 // the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -32,7 +32,7 @@
 // and other provisions required by the GPL or the LGPL. If you do not delete
 // the provisions above, a recipient may use your version of this file under
 // the terms of any one of the MPL, the GPL or the LGPL.
-// 
+//
 // ***** END LICENSE BLOCK *****
 
 var EXPORTED_SYMBOLS = ["inspectElement"]
@@ -107,7 +107,7 @@ var getXPath = function (node, path) {
   }
   return path;
 };
-  
+
 function getXSPath(node){
   var xpArray = getXPath(node);
   var stringXpath = xpArray.join('/');
@@ -123,7 +123,7 @@ function getXULXpath (el, xml) {
 		pos = 0;
 		tempitem2 = el;
 		while(tempitem2) {
-			if (tempitem2.nodeType === 1 && tempitem2.nodeName === el.nodeName) { 
+			if (tempitem2.nodeType === 1 && tempitem2.nodeName === el.nodeName) {
 			  // If it is ELEMENT_NODE of the same name
 				pos += 1;
 			}
@@ -159,7 +159,7 @@ var getUniqueAttributesReduction = function (attributes, node) {
   for (var i in attributes) {
     if ( node.getAttribute(i) == attributes[i] || arrays.inArray(attributeToIgnore, i) || arrays.inArray(attributeToIgnore, attributes[i]) || i == 'id') {
       delete attributes[i];
-    } 
+    }
   }
   return attributes;
 }
@@ -177,32 +177,32 @@ var getLookupExpression = function (_document, elem) {
 
 var getLookupForElem = function (_document, elem) {
   if ( !elemIsAnonymous(elem) ) {
-    if (elem.id != "" && !withs.startsWith(elem.id, 'panel')) {  
+    if (elem.id != "" && !withs.startsWith(elem.id, 'panel')) {
       identifier = {'name':'id', 'value':elem.id};
     } else if ((elem.name != "") && (typeof(elem.name) != "undefined")) {
       identifier = {'name':'name', 'value':elem.name};
     } else {
       identifier = null;
     }
-    
+
     if (identifier) {
       var result = {'id':elementslib._byID, 'name':elementslib._byName}[identifier.name](_document, elem.parentNode, identifier.value);
       if ( typeof(result != 'array') ) {
         return identifier.name+'('+json2.JSON.stringify(identifier.value)+')';
       }
     }
-    
+
     // At this point there is either no identifier or it returns multiple
-    var parse = [n for each (n in elem.parentNode.childNodes) if 
+    var parse = [n for each (n in elem.parentNode.childNodes) if
                  (n.getAttribute && n != elem)
                  ];
     parse.unshift(dom.getAttributes(elem));
     var uniqueAttributes = parse.reduce(getUniqueAttributesReduction);
-    
+
     if (!result) {
-      var result = elementslib._byAttrib(elem.parentNode, uniqueAttributes);  
-    } 
-    
+      var result = elementslib._byAttrib(elem.parentNode, uniqueAttributes);
+    }
+
     if (!identifier && typeof(result) == 'array' ) {
       return json2.JSON.stringify(uniqueAttributes) + '['+arrays.indexOf(result, elem)+']'
     } else {
@@ -218,27 +218,27 @@ var getLookupForElem = function (_document, elem) {
         return identifier.name+'('+json2.JSON.stringify(identifier.value)+')' + '['+arrays.indexOf(result, elem)+']'
       }
     }
-    
+
   } else {
     // Handle Anonymous Nodes
-    var parse = [n for each (n in _document.getAnonymousNodes(elem.parentNode)) if 
+    var parse = [n for each (n in _document.getAnonymousNodes(elem.parentNode)) if
                  (n.getAttribute && n != elem)
                  ];
     parse.unshift(dom.getAttributes(elem));
     var uniqueAttributes = parse.reduce(getUniqueAttributesReduction);
-    if (uniqueAttributes.anonid && typeof(elementslib._byAnonAttrib(_document, 
+    if (uniqueAttributes.anonid && typeof(elementslib._byAnonAttrib(_document,
         elem.parentNode, {'anonid':uniqueAttributes.anonid})) != 'array') {
       uniqueAttributes = {'anonid':uniqueAttributes.anonid};
     }
-    
+
     if (objects.getLength(uniqueAttributes) == 0) {
       return 'anon(['+arrays.indexOf(_document.getAnonymousNodes(elem.parentNode), elem)+'])';
     } else if (arrays.inArray(uniqueAttributes, 'anonid')) {
       return 'anon({"anonid":"'+uniqueAttributes['anonid']+'"})';
     } else {
       return 'anon('+json2.JSON.stringify(uniqueAttributes)+')';
-    }    
-    
+    }
+
   }
   return 'broken '+elemIsAnonymous(elem)
 }
@@ -254,7 +254,7 @@ var removeHTMLTags = function(str){
 
 var isMagicAnonymousDiv = function (_document, node) {
   if (node.getAttribute && node.getAttribute('class') == 'anonymous-div') {
-    if (!arrays.inArray(node.parentNode.childNodes, node) && (_document.getAnonymousNodes(node) == null || 
+    if (!arrays.inArray(node.parentNode.childNodes, node) && (_document.getAnonymousNodes(node) == null ||
         !arrays.inArray(_document.getAnonymousNodes(node), node) ) ) {
           return true;
         }
@@ -263,7 +263,7 @@ var isMagicAnonymousDiv = function (_document, node) {
 }
 
 var copyToClipboard = function(str){
-  const gClipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"] .getService(Components.interfaces.nsIClipboardHelper); 
+  const gClipboardHelper = Components.classes["@mozilla.org/widget/clipboardhelper;1"] .getService(Components.interfaces.nsIClipboardHelper);
   gClipboardHelper.copyString(str);
 }
 
@@ -320,38 +320,38 @@ getDocumentStub = function( _document, _window) {
   return '';
 }
 
-var inspectElement = function(e){    
+var inspectElement = function(e){
   if (e.originalTarget != undefined) {
     target = e.originalTarget;
   } else {
     target = e.target;
   }
-  
+
   //Element highlighting
   try {
     if (this.lastEvent)
       this.lastEvent.target.style.outline = "";
   } catch(err) {}
-  
+
   this.lastEvent = e;
-  
+
   try {
      e.target.style.outline = "1px solid darkblue";
   } catch(err){}
 
   var _document = getDocument(target);
 
-  
+
   if (isMagicAnonymousDiv(_document, target)) {
     target = target.parentNode;
   }
-  
+
   var windowtype = _document.documentElement.getAttribute('windowtype');
   var _window = getTopWindow(_document);
   r = getControllerAndDocument(_document, _window);
-    
+
   // displayText = "Controller: " + r.controllerString + '\n\n';
-  if ( isNotAnonymous(target) ) {  
+  if ( isNotAnonymous(target) ) {
     // Logic for which identifier to use is duplicated above
     if (target.id != "" && !withs.startsWith(target.id, 'panel')) {
       elemText = "new elementslib.ID("+ r.documentString + ', "' + target.id + '")';
@@ -363,7 +363,7 @@ var inspectElement = function(e){
       var linkText = removeHTMLTags(target.innerHTML);
       elemText = "new elementslib.Link("+ r.documentString + ', "' + linkText + '")';
       var telem = new elementslib.Link(_document, linkText);
-    } 
+    }
   }
   // Fallback on XPath
   if (telem == undefined || telem.getNode() != target) {
@@ -371,7 +371,7 @@ var inspectElement = function(e){
       var stringXpath = getXSPath(target);
     } else {
       var stringXpath = getXULXpath(target, _document);
-    }      
+    }
     var telem = new elementslib.XPath(_document, stringXpath);
     if ( telem.getNode() == target ) {
       elemText = "new elementslib.XPath("+ r.documentString + ', "' + stringXpath + '")';
@@ -382,14 +382,14 @@ var inspectElement = function(e){
     var exp = getLookupExpression(_document, target);
     elemText = "new elementslib.Lookup("+ r.documentString + ", '" + exp + "')";
     var telem = new elementslib.Lookup(_document, exp);
-  } 
-  
-  return {'validation':( target == telem.getNode() ), 
-          'elementText':elemText, 
+  }
+
+  return {'validation':( target == telem.getNode() ),
+          'elementText':elemText,
           'elementType':telem.constructor.name,
           'controllerText':r.controllerString,
           'documentString':r.documentString,
-          }  
+          }
 }
 
 

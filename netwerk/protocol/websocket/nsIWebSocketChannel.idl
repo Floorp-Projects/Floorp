@@ -48,7 +48,7 @@ interface nsIInputStream;
 /** 
  *  You probably want nsI{Moz}WebSocket.idl
  */
-[uuid(bb69e5d7-d9cd-4aab-9abe-98f80cf8b8b8)]
+[uuid(ace34548-6dde-4570-b0b4-451aa6a877e0)]
 interface nsIWebSocketChannel : nsISupports
 {
     /**
@@ -123,13 +123,17 @@ interface nsIWebSocketChannel : nsISupports
     void close(in unsigned short aCode, in AUTF8String aReason);
     
     // section 7.4.1 defines these close codes
-    const unsigned short CLOSE_NORMAL         = 1000;
-    const unsigned short CLOSE_GOING_AWAY     = 1001;
-    const unsigned short CLOSE_PROTOCOL_ERROR = 1002;
-    const unsigned short CLOSE_UNSUPPORTED    = 1003;
-    const unsigned short CLOSE_TOO_LARGE      = 1004;
-    const unsigned short CLOSE_NO_STATUS      = 1005;
-    const unsigned short CLOSE_ABNORMAL       = 1006;
+    const unsigned short CLOSE_NORMAL               = 1000;
+    const unsigned short CLOSE_GOING_AWAY           = 1001;
+    const unsigned short CLOSE_PROTOCOL_ERROR       = 1002;
+    const unsigned short CLOSE_UNSUPPORTED_DATATYPE = 1003;
+    //  code 1004 is reserved
+    const unsigned short CLOSE_NO_STATUS            = 1005;
+    const unsigned short CLOSE_ABNORMAL             = 1006;
+    const unsigned short CLOSE_INVALID_PAYLOAD      = 1007;
+    const unsigned short CLOSE_POLICY_VIOLATION     = 1008;
+    const unsigned short CLOSE_TOO_LARGE            = 1009;
+    const unsigned short CLOSE_EXTENSION_MISSING    = 1010;
 
     /**
      * Use to send text message down the connection to WebSocket peer.

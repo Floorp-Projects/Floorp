@@ -816,8 +816,8 @@ pref("network.ftp.control.qos", 0);
 // <ws>: WebSocket
 pref("network.websocket.enabled", true);
 
-// mobile might want to set this much smaller
-pref("network.websocket.max-message-size", 16000000);
+// 2147483647 == PR_INT32_MAX == ~2 GB  
+pref("network.websocket.max-message-size", 2147483647);
 
 // Should we automatically follow http 3xx redirects during handshake
 pref("network.websocket.auto-follow-http-redirects", false);

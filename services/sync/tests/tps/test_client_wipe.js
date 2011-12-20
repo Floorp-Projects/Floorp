@@ -135,7 +135,7 @@ Phase('phase1', [
   [Bookmarks.add, bookmarks_initial],
   [Prefs.modify, prefs1],
   [Prefs.verify, prefs1],
-  [Sync, SYNC_WIPE_SERVER]
+  [Sync]
 ]);
 
 // Sync profile2 and verify same prefs,passwords and bookmarks are present.
