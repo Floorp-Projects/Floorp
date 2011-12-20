@@ -117,6 +117,15 @@ SmsIPCService::SaveSentMessage(const nsAString& aReceiver,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsIPCService::GetMessageMoz(PRInt32 aMessageId, PRInt32 aRequestId,
+                             PRUint64 aProcessId)
+{
+  GetSmsChild()->SendGetMessage(aMessageId, aRequestId,
+                                ContentChild::GetSingleton()->GetID());
+  return NS_OK;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
