@@ -223,7 +223,7 @@ LoginManagerStorage_mozStorage.prototype = {
      * necessary. Most of the work is done in _deferredInit.
      */
     init : function () {
-        this._dbStmts = [];
+        this._dbStmts = {};
 
         // Connect to the correct preferences branch.
         this._prefBranch = Services.prefs.getBranch("signon.");
@@ -1636,7 +1636,7 @@ LoginManagerStorage_mozStorage.prototype = {
         // Finalize all statements to free memory, avoid errors later
         for each (let stmt in this._dbStmts)
             stmt.finalize();
-        this._dbStmts = [];
+        this._dbStmts = {};
 
         // Close the connection, ignore 'already closed' error
         try { this._dbConnection.close() } catch(e) {}
