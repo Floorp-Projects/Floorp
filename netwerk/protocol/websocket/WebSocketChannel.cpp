@@ -692,14 +692,14 @@ WebSocketChannel::WebSocketChannel() :
   mOpenBlocked(0),
   mOpenRunning(0),
   mChannelWasOpened(0),
-  mMaxMessageSize(16000000),
+  mMaxMessageSize(PR_INT32_MAX),
   mStopOnClose(NS_OK),
   mServerCloseCode(CLOSE_ABNORMAL),
   mScriptCloseCode(0),
   mFragmentOpcode(kContinuation),
   mFragmentAccumulator(0),
   mBuffered(0),
-  mBufferSize(16384),
+  mBufferSize(kIncomingBufferInitialSize),
   mCurrentOut(nsnull),
   mCurrentOutSent(0),
   mCompressor(nsnull),
@@ -827,9 +827,10 @@ WebSocketChannel::IsPersistentFramePtr()
 // variable beacuse when transitioning from the stack to the persistent
 // read buffer we want to explicitly include them in the buffer instead
 // of as already existing data.
-PRUint32
+bool
 WebSocketChannel::UpdateReadBuffer(PRUint8 *buffer, PRUint32 count,
-                                   PRUint32 accumulatedFragments)
+                                   PRUint32 accumulatedFragments,
+                                   PRUint32 *available)
 {
   LOG(("WebSocketChannel::UpdateReadBuffer() %p [%p %u]\n",
          this, buffer, count));
@@ -853,17 +854,24 @@ WebSocketChannel::UpdateReadBuffer(PRUint8 *buffer, PRUint32 count,
     mFramePtr = mBuffer + accumulatedFragments;
   } else {
     // existing buffer is not sufficient, extend it
-    mBufferSize += count + 8192;
+    mBufferSize += count + 8192 + mBufferSize/3;
     LOG(("WebSocketChannel: update read buffer extended to %u\n", mBufferSize));
     PRUint8 *old = mBuffer;
-    mBuffer = (PRUint8 *)moz_xrealloc(mBuffer, mBufferSize);
+    mBuffer = (PRUint8 *)moz_realloc(mBuffer, mBufferSize);
+    if (!mBuffer) {
+      mBuffer = old;
+      return false;
+    }
     mFramePtr = mBuffer + (mFramePtr - old);
   }
 
   ::memcpy(mBuffer + mBuffered, buffer, count);
   mBuffered += count;
 
-  return mBuffered - (mFramePtr - mBuffer);
+  if (available)
+    *available = mBuffered - (mFramePtr - mBuffer);
+
+  return true;
 }
 
 nsresult
@@ -890,7 +898,10 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
     mFramePtr = buffer;
     avail = count;
   } else {
-    avail = UpdateReadBuffer(buffer, count, mFragmentAccumulator);
+    if (!UpdateReadBuffer(buffer, count, mFragmentAccumulator, &avail)) {
+      AbortSession(NS_ERROR_FILE_TOO_BIG);
+      return NS_ERROR_FILE_TOO_BIG;
+    }
   }
 
   PRUint8 *payload;
@@ -943,8 +954,6 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
     LOG(("WebSocketChannel::ProcessInput: payload %lld avail %lu\n",
          payloadLength, avail));
 
-    // we don't deal in > 31 bit websocket lengths.. and probably
-    // something considerably shorter (16MB by default)
     if (payloadLength + mFragmentAccumulator > mMaxMessageSize) {
       AbortSession(NS_ERROR_FILE_TOO_BIG);
       return NS_ERROR_FILE_TOO_BIG;
@@ -1163,21 +1172,34 @@ WebSocketChannel::ProcessInput(PRUint8 *buffer, PRUint32 count)
     if (mFragmentAccumulator) {
       LOG(("WebSocketChannel:: Setup Buffer due to fragment"));
 
-      UpdateReadBuffer(mFramePtr - mFragmentAccumulator,
-                       totalAvail + mFragmentAccumulator, 0);
+      if (!UpdateReadBuffer(mFramePtr - mFragmentAccumulator,
+                            totalAvail + mFragmentAccumulator, 0, nsnull)) {
+        AbortSession(NS_ERROR_ILLEGAL_VALUE);
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
 
       // UpdateReadBuffer will reset the frameptr to the beginning
       // of new saved state, so we need to skip past processed framgents
       mFramePtr += mFragmentAccumulator;
     } else if (totalAvail) {
       LOG(("WebSocketChannel:: Setup Buffer due to partial frame"));
-      UpdateReadBuffer(mFramePtr, totalAvail, 0);
+      if (!UpdateReadBuffer(mFramePtr, totalAvail, 0, nsnull)) {
+        AbortSession(NS_ERROR_ILLEGAL_VALUE);
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
     }
   } else if (!mFragmentAccumulator && !totalAvail) {
     // If we were working off a saved buffer state and there is no partial
     // frame or fragment in process, then revert to stack behavior
     LOG(("WebSocketChannel:: Internal buffering not needed anymore"));
     mBuffered = 0;
+
+    // release memory if we've been processing a large message
+    if (mBufferSize > kIncomingBufferStableSize) {
+      mBufferSize = kIncomingBufferStableSize;
+      moz_free(mBuffer);
+      mBuffer = (PRUint8 *)moz_xmalloc(mBufferSize);
+    }
   }
   return NS_OK;
 }
@@ -2163,7 +2185,7 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
     rv = prefService->GetIntPref("network.websocket.max-message-size", 
                                  &intpref);
     if (NS_SUCCEEDED(rv)) {
-      mMaxMessageSize = clamped(intpref, 1024, 1 << 30);
+      mMaxMessageSize = clamped(intpref, 1024, PR_INT32_MAX);
     }
     rv = prefService->GetIntPref("network.websocket.timeout.close", &intpref);
     if (NS_SUCCEEDED(rv)) {
