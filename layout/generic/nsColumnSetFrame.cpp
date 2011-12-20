@@ -416,22 +416,18 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState)
     expectedWidthLeftOver = extraSpace - (extraToColumns*numColumns);
   }
 
-  // If column-fill is set to 'balance', then we want to balance the columns.
-  if (colStyle->mColumnFill == NS_STYLE_COLUMN_FILL_BALANCE) {
+  // NOTE that the non-balancing behavior for non-auto computed height
+  // is not in the CSS3 columns draft as of 18 January 2001
+  if (aReflowState.ComputedHeight() == NS_INTRINSICSIZE) {
     // Balancing!
-
     if (numColumns <= 0) {
       // Hmm, auto column count, column width or available width is unknown,
       // and balancing is required. Let's just use one column then.
       numColumns = 1;
     }
-
-    colHeight = NS_MIN(mLastBalanceHeight,
-                       GetAvailableContentHeight(aReflowState));
+    colHeight = NS_MIN(mLastBalanceHeight, GetAvailableContentHeight(aReflowState));
   } else {
-    // This is the case when the column-fill property is set to 'auto'.
     // No balancing, so don't limit the column count
-
     numColumns = PR_INT32_MAX;
   }
 
