@@ -261,35 +261,39 @@ nsWebSocket::Disconnect()
 // nsWebSocket::nsIWebSocketListener methods:
 //-----------------------------------------------------------------------------
 
-NS_IMETHODIMP
-nsWebSocket::OnMessageAvailable(nsISupports *aContext, const nsACString & aMsg)
+nsresult
+nsWebSocket::DoOnMessageAvailable(const nsACString & aMsg, bool isBinary)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
   NS_ABORT_IF_FALSE(!mDisconnected, "Received message after disconnecting");
 
-  // Dispatch New Message
-  nsresult rv = CreateAndDispatchMessageEvent(aMsg, false);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to dispatch the message event");
+  if (mReadyState == nsIMozWebSocket::OPEN) {
+    // Dispatch New Message
+    nsresult rv = CreateAndDispatchMessageEvent(aMsg, isBinary);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to dispatch the message event");
+    }
+  } else {
+    // CLOSING should be the only other state where it's possible to get msgs
+    // from channel: Spec says to drop them.
+    NS_ASSERTION(mReadyState == nsIMozWebSocket::CLOSING,
+                 "Received message while CONNECTING or CLOSED");
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
+nsWebSocket::OnMessageAvailable(nsISupports *aContext, const nsACString & aMsg)
+{
+  return DoOnMessageAvailable(aMsg, false);
+}
+
+NS_IMETHODIMP
 nsWebSocket::OnBinaryMessageAvailable(nsISupports *aContext,
                                       const nsACString & aMsg)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
-  NS_ABORT_IF_FALSE(!mDisconnected, "Received message after disconnecting");
-
-  // Dispatch New Message
-  nsresult rv = CreateAndDispatchMessageEvent(aMsg, true);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to dispatch the message event");
-  }
-
-  return NS_OK;
+  return DoOnMessageAvailable(aMsg, true);
 }
 
 NS_IMETHODIMP

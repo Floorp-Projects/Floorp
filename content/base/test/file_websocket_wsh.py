@@ -134,6 +134,8 @@ def web_socket_transfer_data(request):
       msgutil.send_message(request, rcv, True, True)
     else:
       msgutil.send_message(request, "incorrect binary msg received: '" + rcv + "'")
+  elif request.ws_protocol == "test-46":
+    msgutil.send_message(request, "client must drop this if close was called")
 
   while not request.client_terminated:
     msgutil.receive_message(request)

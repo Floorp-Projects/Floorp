@@ -69,10 +69,11 @@
  * 43. Test setting binaryType attribute
  * 44. Test sending/receving binary ArrayBuffer 
  * 45. Test sending/receving binary Blob 
+ * 46. Test that we don't dispatch incoming msgs once in CLOSING state
  */
 
 var first_test = 1;
-var last_test = 45;
+var last_test = 46;
 
 var current_test = first_test;
 
@@ -1380,6 +1381,28 @@ function test45()
     };
 
     reader.readAsBinaryString(test45blob);
+  }
+}
+
+function test46()
+{
+  var ws = CreateTestWS("ws://mochi.test:8888/tests/content/base/test/file_websocket", "test-46");
+  ok(ws.readyState == 0, "create bad readyState in test-46!");
+  ws.onopen = function()
+  {
+    ok(ws.readyState == 1, "open bad readyState in test-46!");
+    ws.close()
+    ok(ws.readyState == 2, "close must set readyState to 2 in test-46!");
+  }
+  ws.onmessage = function(e)
+  {
+    ok(false, "received message after calling close in test-46!");
+  }
+  ws.onclose = function(e)
+  {
+    ok(ws.readyState == 3, "onclose bad readyState in test-46!");
+    shouldCloseCleanly(e);
+    doTest(47);
   }
 }
 
