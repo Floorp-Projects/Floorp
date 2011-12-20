@@ -81,6 +81,10 @@
 <!ENTITY agent_request_desktop "Request Desktop Site">
 <!ENTITY agent_request_mobile "Request Mobile Site">
 
+<!ENTITY contextmenu_open_new_tab "Open in New Tab">
+<!ENTITY contextmenu_add_to_launcher "Add to Home Screen">
+<!ENTITY contextmenu_share "Share">
+
 <!ENTITY site_settings_title        "Clear Site Settings">
 <!ENTITY site_settings_cancel       "Cancel">
 <!ENTITY site_settings_clear        "Clear">
