@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -35,74 +36,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_sms_SmsRequest_h
-#define mozilla_dom_sms_SmsRequest_h
+#ifndef mozilla_dom_sms_SmsRequestManager_h
+#define mozilla_dom_sms_SmsRequestManager_h
 
-#include "nsIDOMSmsRequest.h"
-#include "nsDOMEventTargetWrapperCache.h"
+#include "nsCOMArray.h"
 
-class nsIDOMMozSmsMessage;
+class nsIDOMMozSmsRequest;
+class nsPIDOMWindow;
+class nsIScriptContext;
 
 namespace mozilla {
 namespace dom {
 namespace sms {
 
-class SmsRequest : public nsIDOMMozSmsRequest
-                 , public nsDOMEventTargetWrapperCache
+class SmsRequestManager
 {
 public:
-  friend class SmsRequestManager;
+  static void Init();
+  static void Shutdown();
+  static SmsRequestManager* GetInstance();
 
-  enum ErrorType {
-    eNoError = 0,
-    eInternalError,
-  };
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMMOZSMSREQUEST
-
-  NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetWrapperCache::)
-
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(SmsRequest,
-                                                         nsDOMEventTargetWrapperCache)
+  PRInt32 CreateRequest(nsPIDOMWindow* aWindow,
+                        nsIScriptContext* aScriptContext,
+                        nsIDOMMozSmsRequest** aRequest);
 
 private:
-  SmsRequest() MOZ_DELETE;
+  static SmsRequestManager* sInstance;
 
-  SmsRequest(nsPIDOMWindow* aWindow, nsIScriptContext* aScriptContext);
-  ~SmsRequest();
-
-  /**
-   * Root mResult (jsval) to prevent garbage collection.
-   */
-  void RootResult();
-
-  /**
-   * Unroot mResult (jsval) to allow garbage collection.
-   */
-  void UnrootResult();
-
-  /**
-   * Set the object in a success state with the result being aMessage.
-   */
-  void SetSuccess(nsIDOMMozSmsMessage* aMessage);
-
-  /**
-   * Set the object in an error state with the error type being aError.
-   */
-  void SetError(ErrorType aError);
-
-  jsval     mResult;
-  bool      mResultRooted;
-  ErrorType mError;
-  bool      mDone;
-
-  NS_DECL_EVENT_HANDLER(success)
-  NS_DECL_EVENT_HANDLER(error)
+  nsCOMArray<nsIDOMMozSmsRequest> mRequests;
 };
 
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_sms_SmsRequest_h
+#endif // mozilla_dom_sms_SmsRequestManager_h
