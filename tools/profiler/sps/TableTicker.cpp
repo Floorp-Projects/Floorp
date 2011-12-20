@@ -46,6 +46,12 @@
 #include "shared-libraries.h"
 #include "mozilla/StringBuilder.h"
 
+// we eventually want to make this runtime switchable
+//#define USE_BACKTRACE
+#ifdef USE_BACKTRACE
+#include <execinfo.h>
+#endif
+
 using std::string;
 using namespace mozilla;
 
@@ -73,6 +79,7 @@ using namespace mozilla;
 #if _MSC_VER
 #define snprintf _snprintf
 #endif
+
 
 mozilla::tls::key pkey_stack;
 mozilla::tls::key pkey_ticker;
@@ -121,6 +128,7 @@ private:
   union {
     const char* mTagData;
     float mTagFloat;
+    Address mTagAddress;
   };
   Address mLeafAddress;
   char mTagName;
@@ -137,7 +145,7 @@ public:
   {
     mEntries = new ProfileEntry[mEntrySize];
     mNeedsSharedLibraryInfo = false;
-#ifdef ENABLE_SPS_LEAF_DATA
+#if defined(ENABLE_SPS_LEAF_DATA) || defined(USE_BACKTRACE)
     mNeedsSharedLibraryInfo = true;
 #endif
   }
@@ -306,6 +314,49 @@ void TableTicker::HandleSaveRequest()
   NS_DispatchToMainThread(runnable);
 }
 
+#ifdef USE_BACKTRACE
+static
+void doBacktrace(Profile &aProfile)
+{
+  void *array[100];
+  int count = backtrace (array, 100);
+
+  bool isSignal = true;
+#ifndef __i386__
+  // the test doesn't work for 64bit
+  isSignal = false;
+#endif
+  for (int i = count-1; i >= 0; i--) {
+    if( isSignal ) {
+      if( (intptr_t)array[i] == -1 ) { // signal frames have addresses of -1?
+        isSignal = false;
+      }
+      continue;
+    }
+    aProfile.addTag(ProfileEntry('l', (const char*)array[i]));
+  }
+  aProfile.addTag(ProfileEntry('s', "XRE_Main", 0));
+}
+#endif
+
+static
+void doSampleStackTrace(Stack *aStack, Profile &aProfile, TickSample *sample)
+{
+  // Sample
+  // 's' tag denotes the start of a sample block
+  // followed by 0 or more 'c' tags.
+  for (int i = 0; i < aStack->mStackPointer; i++) {
+    if (i == 0) {
+      Address pc = 0;
+      if (sample) {
+        pc = sample->pc;
+      }
+      aProfile.addTag(ProfileEntry('s', aStack->mStack[i], pc));
+    } else {
+      aProfile.addTag(ProfileEntry('c', aStack->mStack[i]));
+    }
+  }
+}
 
 void TableTicker::Tick(TickSample* sample)
 {
@@ -318,20 +369,11 @@ void TableTicker::Tick(TickSample* sample)
   }
   mStack->mQueueClearMarker = true;
 
-  // Sample
-  // 's' tag denotes the start of a sample block
-  // followed by 0 or more 'c' tags.
-  for (int i = 0; i < mStack->mStackPointer; i++) {
-    if (i == 0) {
-      Address pc = 0;
-      if (sample) {
-        pc = sample->pc;
-      }
-      mProfile.addTag(ProfileEntry('s', mStack->mStack[i], pc));
-    } else {
-      mProfile.addTag(ProfileEntry('c', mStack->mStack[i]));
-    }
-  }
+#ifdef USE_BACKTRACE
+  doBacktrace(mProfile);
+#else
+  doSampleStackTrace(mStack, mProfile, sample);
+#endif
 
   if (!sLastTracerEvent.IsNull()) {
     TimeDuration delta = sample->timestamp - sLastTracerEvent;
@@ -346,6 +388,27 @@ string ProfileEntry::TagToString(Profile *profile)
     char buff[50];
     snprintf(buff, 50, "%-40f", mTagFloat);
     tag += string(1, mTagName) + string("-") + string(buff) + string("\n");
+  } else if (mTagName == 'l') {
+    bool found = false;
+    char tagBuff[1024];
+    SharedLibraryInfo& shlibInfo = profile->getSharedLibraryInfo();
+    Address pc = mTagAddress;
+    // TODO Use binary sort (STL)
+    for (size_t i = 0; i < shlibInfo.GetSize(); i++) {
+      SharedLibrary &e = shlibInfo.GetEntry(i);
+      if (pc > (Address)e.GetStart() && pc < (Address)e.GetEnd()) {
+        if (e.GetName()) {
+          found = true;
+          snprintf(tagBuff, 1024, "l-%s@%p\n", e.GetName(), pc - e.GetStart());
+          tag += string(tagBuff);
+          break;
+        }
+      }
+    }
+    if (!found) {
+      snprintf(tagBuff, 1024, "l-???@%p\n", pc);
+      tag += string(tagBuff);
+    }
   } else {
     tag += string(1, mTagName) + string("-") + string(mTagData) + string("\n");
   }
