@@ -174,7 +174,7 @@ public class LayerController {
             mLayerClient.viewportSizeChanged();
 
         notifyLayerClientOfGeometryChange();
-        mPanZoomController.geometryChanged(true);
+        mPanZoomController.abortAnimation();
         mView.requestRender();
     }
 
@@ -183,7 +183,6 @@ public class LayerController {
         mViewportMetrics.setOrigin(point);
         Log.d(LOGTAG, "scrollTo: " + mViewportMetrics);
         notifyLayerClientOfGeometryChange();
-        mPanZoomController.geometryChanged(false);
         GeckoApp.mAppContext.repositionPluginViews(false);
         mView.requestRender();
     }
@@ -196,7 +195,6 @@ public class LayerController {
         Log.d(LOGTAG, "scrollBy: " + mViewportMetrics);
 
         notifyLayerClientOfGeometryChange();
-        mPanZoomController.geometryChanged(false);
         GeckoApp.mAppContext.repositionPluginViews(false);
         mView.requestRender();
     }
@@ -206,7 +204,6 @@ public class LayerController {
         mViewportMetrics.setViewport(viewport);
         Log.d(LOGTAG, "setViewport: " + mViewportMetrics);
         notifyLayerClientOfGeometryChange();
-        mPanZoomController.geometryChanged(false);
         GeckoApp.mAppContext.repositionPluginViews(false);
         mView.requestRender();
     }
@@ -221,7 +218,6 @@ public class LayerController {
 
         // Page size is owned by the LayerClient, so no need to notify it of
         // this change.
-        mPanZoomController.geometryChanged(false);
         mView.requestRender();
     }
 
@@ -283,10 +279,10 @@ public class LayerController {
             mLayerClient.geometryChanged();
     }
 
-    /** Informs the pan/zoom controller that the viewport metrics changed. */
-    public void notifyPanZoomControllerOfGeometryChange(boolean abortAnimation) {
+    /** Aborts any pan/zoom animation that is currently in progress. */
+    public void abortPanZoomAnimation() {
         if (mPanZoomController != null)
-            mPanZoomController.geometryChanged(abortAnimation);
+            mPanZoomController.abortAnimation();
     }
 
     /**

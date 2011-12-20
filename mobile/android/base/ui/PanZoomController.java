@@ -248,25 +248,23 @@ public class PanZoomController
         }
     }
 
-    public void geometryChanged(boolean abortAnimation) {
-        if (abortAnimation) {
-            // this happens when gecko changes the viewport on us or if the device is rotated.
-            // if that's the case, abort any animation in progress and re-zoom so that the page
-            // snaps to edges. for other cases (where the user's finger(s) are down) don't do
-            // anything special.
-            switch (mState) {
-            case FLING:
-                mX.velocity = mY.velocity = 0.0f;
-                mState = PanZoomState.NOTHING;
-                // fall through
-            case ANIMATED_ZOOM:
-                // the zoom that's in progress likely makes no sense any more (such as if
-                // the screen orientation changed) so abort it and start a new one to
-                // ensure the viewport doesn't contain out-of-bounds areas
-            case NOTHING:
-                bounce();
-                break;
-            }
+    public void abortAnimation() {
+        // this happens when gecko changes the viewport on us or if the device is rotated.
+        // if that's the case, abort any animation in progress and re-zoom so that the page
+        // snaps to edges. for other cases (where the user's finger(s) are down) don't do
+        // anything special.
+        switch (mState) {
+        case FLING:
+            mX.velocity = mY.velocity = 0.0f;
+            mState = PanZoomState.NOTHING;
+            // fall through
+        case ANIMATED_ZOOM:
+            // the zoom that's in progress likely makes no sense any more (such as if
+            // the screen orientation changed) so abort it and start a new one to
+            // ensure the viewport doesn't contain out-of-bounds areas
+        case NOTHING:
+            bounce();
+            break;
         }
     }
 
