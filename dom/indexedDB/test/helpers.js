@@ -124,14 +124,16 @@ function addPermission(type, allow, url)
     uri = Components.classes["@mozilla.org/network/io-service;1"]
                     .getService(Components.interfaces.nsIIOService)
                     .newURI(url, null, null);
-  } else {
+  }
+  else {
     uri = SpecialPowers.getDocumentURIObject(window.document);
   }
 
   let permission;
   if (allow) {
     permission = Components.interfaces.nsIPermissionManager.ALLOW_ACTION;
-  } else {
+  }
+  else {
     permission = Components.interfaces.nsIPermissionManager.DENY_ACTION;
   }
 

@@ -2152,7 +2152,8 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   if (fileIds.IsEmpty()) {
     rv = stmt->BindNullByName(NS_LITERAL_CSTRING("file_ids"));
-  } else {
+  }
+  else {
     rv = stmt->BindStringByName(NS_LITERAL_CSTRING("file_ids"), fileIds);
   }
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
