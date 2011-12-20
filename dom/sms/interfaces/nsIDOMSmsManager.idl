@@ -37,13 +37,17 @@
 #include "nsIDOMEventTarget.idl"
 
 interface nsIDOMEventListener;
-interface nsIDOMMozSmsRequest;
 
-[scriptable, function, uuid(1c1f23d7-5f4e-40bf-859b-82e8faa36041)]
+[scriptable, function, uuid(1b40f025-33b0-4a95-b7b1-89857bfb8d7c)]
 interface nsIDOMMozSmsManager : nsIDOMEventTarget
 {
   unsigned short      getNumberOfMessagesForText(in DOMString text);
-  nsIDOMMozSmsRequest send(in DOMString number, in DOMString message);
+
+  // The first parameter can be either a DOMString (only one number) or an array
+  // of DOMStrings.
+  // The method returns a SmsRequest object if one number has been passed.
+  // An array of SmsRequest objects otherwise.
+  jsval send(in jsval number, in DOMString message);
 
   attribute nsIDOMEventListener onreceived;
   attribute nsIDOMEventListener onsent;
