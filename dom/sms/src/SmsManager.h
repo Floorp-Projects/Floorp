@@ -66,6 +66,12 @@ public:
   void Shutdown();
 
 private:
+  /**
+   * Internal Send() method used to send one message.
+   */
+  nsresult Send(JSContext* aCx, JSObject* aGlobal, JSString* aNumber,
+                const nsAString& aMessage, jsval* aRequest);
+
   nsresult DispatchTrustedSmsEventToSelf(const nsAString& aEventName,
                                          nsIDOMMozSmsMessage* aMessage);
   NS_DECL_EVENT_HANDLER(received)
