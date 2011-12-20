@@ -4506,9 +4506,14 @@ MinimumFontSizeFor(nsPresContext* aPresContext, nscoord aContainerWidth)
   if (sFontSizeInflationEmPerLine == 0 && sFontSizeInflationMinTwips == 0) {
     return 0;
   }
+
+  // Clamp the container width to the device dimensions
+  nscoord iFrameWidth = aPresContext->GetVisibleArea().width;
+  nscoord effectiveContainerWidth = NS_MIN(iFrameWidth, aContainerWidth);
+
   nscoord byLine = 0, byInch = 0;
   if (sFontSizeInflationEmPerLine != 0) {
-    byLine = aContainerWidth / sFontSizeInflationEmPerLine;
+    byLine = effectiveContainerWidth / sFontSizeInflationEmPerLine;
   }
   if (sFontSizeInflationMinTwips != 0) {
     // REVIEW: Is this giving us app units and sizes *not* counting
@@ -4518,7 +4523,7 @@ MinimumFontSizeFor(nsPresContext* aPresContext, nscoord aContainerWidth)
     dx->GetClientRect(clientRect); // FIXME: GetClientRect looks expensive
     float deviceWidthInches =
       float(clientRect.width) / float(dx->AppUnitsPerPhysicalInch());
-    byInch = NSToCoordRound(aContainerWidth /
+    byInch = NSToCoordRound(effectiveContainerWidth /
                             (deviceWidthInches * 1440 /
                              sFontSizeInflationMinTwips ));
   }
