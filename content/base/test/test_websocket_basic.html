@@ -31,7 +31,7 @@ function finishWSTest() {
 
 function testWebSocket () {
   var url = "ws://mochi.test:8888/tests/content/base/test/file_websocket_basic";
-  ws = new MozWebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket_basic", "test");
+  ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket_basic", "test");
   is(ws.url, url, "Wrong Websocket.url!");
   ws.onopen = function(e) {
     for (var i = 0; i < params.length; ++i) {
@@ -56,7 +56,7 @@ function testWebSocket () {
 }
 
 function testWebSocket2() {
-  ws = new MozWebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket_basic", "test");
+  ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket_basic", "test");
   var testCount = 1000; // Send lots of messages
   var messageCount = 0;
   var testMessage = "test message";
@@ -86,7 +86,7 @@ function testWebSocket2() {
 }
 
 function testWebSocket3() {
-  ws = new MozWebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket_basic", "test");
+  ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket_basic", "test");
   var testCount = 100; // Send lots of messages
   var messageCount = 0;
   var testMessage = "test message";
@@ -118,7 +118,7 @@ function testWebSocket3() {
 }
 
 function testWebSocket4() {
-  ws = new MozWebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket_basic", "test");
+  ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket_basic", "test");
   // String length = (10,000 - 1) * 23 = 229,977 = almost 225 KiB.
   var longString = new Array(10000).join("-huge websocket message");
   ws.onopen = function(e) {
@@ -145,7 +145,7 @@ function testWebSocket4() {
 }
 
 function testWebSocket5() {
-  ws = new MozWebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket_basic", "test");
+  ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/file_websocket_basic", "test");
   ws.onopen = function(e) {
     this.close();
   }

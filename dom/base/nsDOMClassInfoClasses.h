@@ -500,7 +500,7 @@ DOMCI_CLASS(DesktopNotification)
 DOMCI_CLASS(DesktopNotificationCenter)
 
 // WebSocket
-DOMCI_CLASS(MozWebSocket)
+DOMCI_CLASS(WebSocket)
 DOMCI_CLASS(CloseEvent)
 
 DOMCI_CLASS(IDBFactory)
