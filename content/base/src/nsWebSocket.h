@@ -129,6 +129,7 @@ protected:
                          nsCOMPtr<nsIInputStream> &aStreamOut,
                          bool &aIsBinary, PRUint32 &aOutgoingLength);
 
+  nsresult DoOnMessageAvailable(const nsACString & aMsg, bool isBinary);
   nsresult CreateAndDispatchSimpleEvent(const nsString& aName);
   nsresult CreateAndDispatchMessageEvent(const nsACString& aData,
                                          bool isBinary);
