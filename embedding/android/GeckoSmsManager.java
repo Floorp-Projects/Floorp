@@ -260,8 +260,9 @@ public class GeckoSmsManager
   public final static String ACTION_SMS_DELIVERED = "org.mozilla.gecko.SMS_DELIVERED";
 
   /*
-   * Keep the following error codes in sync with |ErrorType| in:
-   * dom/sms/src/SmsRequest.h
+   * Make sure that the following error codes are in sync with |ErrorType| in:
+   * dom/sms/src/Types.h
+   * The error code are owned by the DOM.
    */
   public final static int kNoError       = 0;
   public final static int kNoSignalError = 1;
@@ -276,6 +277,17 @@ public class GeckoSmsManager
 
   private final static int kSmsTypeInbox      = 1;
   private final static int kSmsTypeSentbox    = 2;
+
+  /*
+   * Keep the following error codes in syng with |DeliveryState| in:
+   * dom/sms/src/Types.h
+   */
+  private final static int kDeliveryStateSent     = 0;
+  private final static int kDeliveryStateReceived = 1;
+  private final static int kDeliveryStateUnknown  = 2;
+  private final static int kDeliveryStateEndGuard = 3;
+
+  private final static String[] kRequiredMessageRows = new String[] { "_id", "address", "body", "date", "type" };
 
   public static void init() {
     SmsIOThread.getInstance().start();
@@ -548,9 +560,7 @@ public class GeckoSmsManager
           ContentResolver cr = GeckoApp.surfaceView.getContext().getContentResolver();
           Uri message = ContentUris.withAppendedId(kSmsContentUri, mMessageId);
 
-          cursor = cr.query(message,
-                            new String[] { "_id", "address", "body", "date", "type" },
-                            null, null, null);
+          cursor = cr.query(message, kRequiredMessageRows, null, null, null);
           if (cursor == null || cursor.getCount() == 0) {
             throw new NotFoundException();
           }
@@ -652,6 +662,101 @@ public class GeckoSmsManager
     if (!SmsIOThread.getInstance().execute(new DeleteMessageRunnable(aMessageId, aRequestId, aProcessId))) {
       Log.e("GeckoSmsManager", "Failed to add GetMessageRunnable to the SmsIOThread");
       GeckoAppShell.notifySmsDeleteFailed(kUnknownError, aRequestId, aProcessId);
+    }
+  }
+
+  public static void createMessageList(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, int aDeliveryState, boolean aReverse, int aRequestId, long aProcessId) {
+    class CreateMessageListRunnable implements Runnable {
+      private long     mStartDate;
+      private long     mEndDate;
+      private String[] mNumbers;
+      private int      mNumbersCount;
+      private int      mDeliveryState;
+      private boolean  mReverse;
+      private int      mRequestId;
+      private long     mProcessId;
+
+      CreateMessageListRunnable(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, int aDeliveryState, boolean aReverse, int aRequestId, long aProcessId) {
+        mStartDate = aStartDate;
+        mEndDate = aEndDate;
+        mNumbers = aNumbers;
+        mNumbersCount = aNumbersCount;
+        mDeliveryState = aDeliveryState;
+        mReverse = aReverse;
+        mRequestId = aRequestId;
+        mProcessId = aProcessId;
+      }
+
+      @Override
+      public void run() {
+        class UnexpectedDeliveryStateException extends Exception { };
+
+        Cursor c = null;
+
+        try {
+          // TODO: should use the |selectionArgs| argument in |ContentResolver.query()|.
+          ArrayList<String> restrictions = new ArrayList<String>();
+
+          if (mStartDate != 0) {
+            restrictions.add("date >= " + mStartDate);
+          }
+
+          if (mEndDate != 0) {
+            restrictions.add("date <= " + mEndDate);
+          }
+
+          if (mNumbersCount > 0) {
+            String numberRestriction = "address IN ('" + mNumbers[0] + "'";
+
+            for (int i=1; i<mNumbersCount; ++i) {
+              numberRestriction += ", '" + mNumbers[i] + "'";
+            }
+            numberRestriction += ")";
+
+            restrictions.add(numberRestriction);
+          }
+
+          if (mDeliveryState != kDeliveryStateUnknown) {
+            if (mDeliveryState == kDeliveryStateSent) {
+              restrictions.add("type = " + kSmsTypeSentbox);
+            } else if (mDeliveryState == kDeliveryStateReceived) {
+              restrictions.add("type = " + kSmsTypeInbox);
+            } else {
+              throw new UnexpectedDeliveryStateException();
+            }
+          }
+
+          String restrictionText = restrictions.size() > 0 ? restrictions.get(0) : "";
+
+          for (int i=1; i<restrictions.size(); ++i) {
+            restrictionText += " AND " + restrictions.get(i);
+          }
+
+          ContentResolver cr = GeckoApp.surfaceView.getContext().getContentResolver();
+          c = cr.query(kSmsContentUri, kRequiredMessageRows, restrictionText, null,
+                       mReverse ? "date DESC" : "date ASC");
+
+          // TODO: store the cursor
+          // TODO: create a list id
+          // TODO: send a notification
+        } catch (UnexpectedDeliveryStateException e) {
+          Log.e("GeckoSmsManager", "Unexcepted delivery state type: " + e);
+          // TODO: send an error notification
+        } catch (Exception e) {
+          Log.e("GeckoSmsManager", "Error while trying to create a message list cursor: " + e);
+          // TODO: send an error notification
+        } finally {
+          // TODO: remove when close will be callable from the DOM side.
+          if (c != null) {
+            c.close();
+          }
+        }
+      }
+    }
+
+    if (!SmsIOThread.getInstance().execute(new CreateMessageListRunnable(aStartDate, aEndDate, aNumbers, aNumbersCount, aDeliveryState, aReverse, aRequestId, aProcessId))) {
+      Log.e("GeckoSmsManager", "Failed to add CreateMessageListRunnable to the SmsIOThread");
+      // TODO: send an error notification
     }
   }
 
