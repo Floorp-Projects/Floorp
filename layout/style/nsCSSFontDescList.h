@@ -19,9 +19,6 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
- *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
- *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
  * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -36,58 +33,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* enum types for CSS properties and their values */
- 
-#ifndef nsCSSProperty_h___
-#define nsCSSProperty_h___
-
-/*
-   Declare the enum list using the magic of preprocessing
-   enum values are "eCSSProperty_foo" (where foo is the property)
-
-   To change the list of properties, see nsCSSPropList.h
-
- */
-enum nsCSSProperty {
-  eCSSProperty_UNKNOWN = -1,
-
-  #define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,     \
-                   stylestruct_, stylestructoffset_, animtype_)              \
-    eCSSProperty_##id_,
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP
-
-  eCSSProperty_COUNT_no_shorthands,
-  // Make the count continue where it left off:
-  eCSSProperty_COUNT_DUMMY = eCSSProperty_COUNT_no_shorthands - 1,
-
-  #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_) eCSSProperty_##id_,
-  #include "nsCSSPropList.h"
-  #undef CSS_PROP_SHORTHAND
-
-  eCSSProperty_COUNT,
-
-  // Some of the values below could probably overlap with each other and
-  // with eCSSProperty_COUNT if we had a need for them to do so.
-
-  // Extra values for use in the values of the 'transition-property'
-  // property.
-  eCSSPropertyExtra_no_properties,
-  eCSSPropertyExtra_all_properties,
-
-  // Extra dummy values for nsCSSParser internal use.
-  eCSSPropertyExtra_x_none_value,
-  eCSSPropertyExtra_x_auto_value
-};
-
-// The "descriptors" that can appear in a @font-face rule.
-// They have the syntax of properties but different value rules.
-enum nsCSSFontDesc {
-  eCSSFontDesc_UNKNOWN = -1,
-#define CSS_FONT_DESC(name_, method_) eCSSFontDesc_##method_,
-#include "nsCSSFontDescList.h"
-#undef CSS_FONT_DESC
-  eCSSFontDesc_COUNT
-};
-
-#endif /* nsCSSProperty_h___ */
+CSS_FONT_DESC(font-family, Family)
+CSS_FONT_DESC(font-style, Style)
+CSS_FONT_DESC(font-weight, Weight)
+CSS_FONT_DESC(font-stretch, Stretch)
+CSS_FONT_DESC(src, Src)
+CSS_FONT_DESC(unicode-range, UnicodeRange)
+CSS_FONT_DESC(-moz-font-feature-settings, FontFeatureSettings)
+CSS_FONT_DESC(-moz-font-language-override, FontLanguageOverride)
