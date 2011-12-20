@@ -729,7 +729,9 @@ var PlacesUIUtils = {
           }
         }
       }
-      aWindow.openUILinkIn(aNode.uri, aWhere);
+      aWindow.openUILinkIn(aNode.uri, aWhere, {
+        inBackground: Services.prefs.getBoolPref("browser.tabs.loadBookmarksInBackground")
+      });
     }
   },
 
