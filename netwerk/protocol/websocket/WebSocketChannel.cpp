@@ -2373,6 +2373,11 @@ WebSocketChannel::SendMsgCommon(const nsACString *aMsg, bool aIsBinary,
     return NS_ERROR_NOT_CONNECTED;
   }
 
+  if (aLength > mMaxMessageSize) {
+    LOG(("WebSocketChannel:: Error: message too big\n"));
+    return NS_ERROR_FILE_TOO_BIG;
+  }
+
   return mSocketThread->Dispatch(
     aStream ? new OutboundEnqueuer(this, new OutboundMessage(aStream, aLength))
             : new OutboundEnqueuer(this,
