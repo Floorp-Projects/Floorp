@@ -62,7 +62,8 @@ public:
 
   void Destroy();
 
-  static CompositorChild* CreateCompositor(LayerManager *aLayerManager);
+  static CompositorChild* CreateCompositor(LayerManager *aLayerManager,
+                                           CompositorParent *aCompositorParent);
 
 protected:
   CompositorChild(Thread* aCompositorThread, LayerManager *aLayerManager);

@@ -66,28 +66,27 @@ CompositorChild::~CompositorChild()
 void
 CompositorChild::Destroy()
 {
-  CallStop();
+  SendStop();
 }
 
 CompositorChild*
-CompositorChild::CreateCompositor(LayerManager *aLayerManager)
+CompositorChild::CreateCompositor(LayerManager *aLayerManager,
+                                  CompositorParent *aCompositorParent)
 {
   Thread* compositorThread = new Thread("CompositorThread");
   if (compositorThread->Start()) {
     MessageLoop *parentMessageLoop = MessageLoop::current();
     MessageLoop *childMessageLoop = compositorThread->message_loop();
-    CompositorParent* compositorParent = new CompositorParent();
     CompositorChild *compositorChild = new CompositorChild(compositorThread, aLayerManager);
     mozilla::ipc::AsyncChannel *parentChannel =
-      compositorParent->GetIPCChannel();
+      aCompositorParent->GetIPCChannel();
     mozilla::ipc::AsyncChannel *childChannel =
       compositorChild->GetIPCChannel();
     mozilla::ipc::AsyncChannel::Side childSide =
       mozilla::ipc::AsyncChannel::Child;
 
     compositorChild->Open(parentChannel, childMessageLoop, childSide);
-    compositorChild->CallInit();
-    compositorChild->mCompositorParent = compositorParent;
+    compositorChild->SendInit();
 
     return compositorChild;
   }

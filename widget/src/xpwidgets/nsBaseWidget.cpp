@@ -39,6 +39,7 @@
 #include "mozilla/Util.h"
 
 #include "mozilla/layers/CompositorChild.h"
+#include "mozilla/layers/CompositorParent.h"
 #include "nsBaseWidget.h"
 #include "nsDeviceContext.h"
 #include "nsCOMPtr.h"
@@ -141,13 +142,14 @@ nsBaseWidget::~nsBaseWidget()
     static_cast<BasicLayerManager*>(mLayerManager.get())->ClearRetainerWidget();
   }
 
-  if (mCompositor) {
-    mCompositor->Destroy();
-  }
 
   if (mLayerManager) {
     mLayerManager->Destroy();
     mLayerManager = NULL;
+  }
+
+  if (mCompositor) {
+    mCompositor->Destroy();
   }
 
 #ifdef NOISY_WIDGET_LEAKS
@@ -836,7 +838,8 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
         Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
       if (useCompositor) {
         LayerManager* lm = CreateBasicLayerManager();
-        mCompositor = CompositorChild::CreateCompositor(lm);
+        mCompositorParent = new CompositorParent();
+        mCompositor = CompositorChild::CreateCompositor(lm, mCompositorParent);
 
         if (mCompositor) {
           // e10s uses the parameter to pass in the shadow manager from the TabChild

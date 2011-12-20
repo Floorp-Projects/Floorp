@@ -74,8 +74,8 @@ rpc protocol PCompositor
 
 parent:  
 
-  rpc Init();
-  rpc Stop();
+  sync Init();
+  sync Stop();
 
   async PLayers(LayersBackend backend, WidgetDescriptor widgetDescriptor);
 
