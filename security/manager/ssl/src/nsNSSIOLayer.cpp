@@ -2249,6 +2249,20 @@ static PRStatus PR_CALLBACK PSMConnectcontinue(PRFileDesc *fd, PRInt16 out_flags
   return fd->lower->methods->connectcontinue(fd, out_flags);
 }
 
+static PRIntn PSMAvailable(void)
+{
+  // This is called through PR_Available(), but is not implemented in PSM
+  PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+  return -1;
+}
+
+static PRInt64 PSMAvailable64(void)
+{
+  // This is called through PR_Available(), but is not implemented in PSM
+  PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+  return -1;
+}
+
 nsresult nsSSLIOLayerHelpers::Init()
 {
   if (!nsSSLIOLayerInitialized) {
@@ -2256,8 +2270,8 @@ nsresult nsSSLIOLayerHelpers::Init()
     nsSSLIOLayerIdentity = PR_GetUniqueIdentity("NSS layer");
     nsSSLIOLayerMethods  = *PR_GetDefaultIOMethods();
 
-    nsSSLIOLayerMethods.available = (PRAvailableFN)_PSM_InvalidInt;
-    nsSSLIOLayerMethods.available64 = (PRAvailable64FN)_PSM_InvalidInt64;
+    nsSSLIOLayerMethods.available = (PRAvailableFN)PSMAvailable;
+    nsSSLIOLayerMethods.available64 = (PRAvailable64FN)PSMAvailable64;
     nsSSLIOLayerMethods.fsync = (PRFsyncFN)_PSM_InvalidStatus;
     nsSSLIOLayerMethods.seek = (PRSeekFN)_PSM_InvalidInt;
     nsSSLIOLayerMethods.seek64 = (PRSeek64FN)_PSM_InvalidInt64;
