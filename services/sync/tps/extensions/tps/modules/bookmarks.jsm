@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
- /* This is a JavaScript module (JSM) to be imported via 
-  * Components.utils.import() and acts as a singleton. Only the following 
+ /* This is a JavaScript module (JSM) to be imported via
+  * Components.utils.import() and acts as a singleton. Only the following
   * listed symbols will exposed on import, and only when and where imported.
   */
 
@@ -167,7 +167,7 @@ PlacesItem.prototype = {
    */
   GetPlacesNodeId: function (folder, type, title, uri) {
     let node_id = -1;
-  
+
     let options = PlacesUtils.history.getNewQueryOptions();
     let query = PlacesUtils.history.getNewQuery();
     query.setFolders([folder], 1);
@@ -184,7 +184,7 @@ PlacesItem.prototype = {
       }
     }
     rootNode.containerOpen = false;
-    
+
     return node_id;
   },
 
@@ -195,7 +195,7 @@ PlacesItem.prototype = {
    *
    * @param itemName The name of the other object; this may be any kind of
    *        places item
-   * @param relativePos The relative position of the other object.  If -1, 
+   * @param relativePos The relative position of the other object.  If -1,
    *        it means the other object should precede this one, if +1,
    *        the other object should come after this one
    * @return true if this object is immediately adjacent to the other object,
@@ -209,9 +209,9 @@ PlacesItem.prototype = {
     let other_pos = PlacesUtils.bookmarks.getItemIndex(other_id);
     let this_pos = PlacesUtils.bookmarks.getItemIndex(this.props.item_id);
     if (other_pos + relativePos != this_pos) {
-      Logger.logPotentialError("Invalid position - " + 
+      Logger.logPotentialError("Invalid position - " +
        (this.props.title ? this.props.title : this.props.folder) +
-      " not " + (relativePos == 1 ? "after " : "before ") + itemName + 
+      " not " + (relativePos == 1 ? "after " : "before ") + itemName +
       " for " + this.toString());
       return false;
     }
@@ -248,8 +248,8 @@ PlacesItem.prototype = {
     let folder_id = PlacesUtils.bookmarks[this._bookmarkFolders[folder_parts[0]]];
     for (let i = 1; i < folder_parts.length; i++) {
       let subfolder_id = this.GetPlacesNodeId(
-        folder_id, 
-        CI.nsINavHistoryResultNode.RESULT_TYPE_FOLDER, 
+        folder_id,
+        CI.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
         folder_parts[i]);
       if (subfolder_id == -1) {
         return -1;
@@ -278,11 +278,11 @@ PlacesItem.prototype = {
     let folder_id = PlacesUtils.bookmarks[this._bookmarkFolders[folder_parts[0]]];
     for (let i = 1; i < folder_parts.length; i++) {
       let subfolder_id = this.GetPlacesNodeId(
-        folder_id, 
-        CI.nsINavHistoryResultNode.RESULT_TYPE_FOLDER, 
+        folder_id,
+        CI.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
         folder_parts[i]);
       if (subfolder_id == -1) {
-        folder_id = PlacesUtils.bookmarks.createFolder(folder_id, 
+        folder_id = PlacesUtils.bookmarks.createFolder(folder_id,
                                                  folder_parts[i], -1);
       }
       else {
@@ -322,13 +322,13 @@ PlacesItem.prototype = {
   CheckDescription: function(expectedDescription) {
     if (expectedDescription != null) {
       let description = "";
-      if (PlacesUtils.annotations.itemHasAnnotation(this.props.item_id, 
+      if (PlacesUtils.annotations.itemHasAnnotation(this.props.item_id,
           "bookmarkProperties/description")) {
         description = PlacesUtils.annotations.getItemAnnotation(
           this.props.item_id, "bookmarkProperties/description");
       }
       if (description != expectedDescription) {
-        Logger.logPotentialError("Invalid description, expected: " + 
+        Logger.logPotentialError("Invalid description, expected: " +
           expectedDescription + ", actual: " + description + " for " +
           this.toString());
         return false;
@@ -379,7 +379,7 @@ PlacesItem.prototype = {
   SetLocation: function(location) {
     if (location != null) {
       let newfolder_id = this.GetOrCreateFolder(location);
-      Logger.AssertTrue(newfolder_id != -1, "Location " + location + 
+      Logger.AssertTrue(newfolder_id != -1, "Location " + location +
                         " doesn't exist; can't change item's location");
       PlacesUtils.bookmarks.moveItem(this.props.item_id, newfolder_id, -1);
       this.props.folder_id = newfolder_id;
@@ -398,10 +398,10 @@ PlacesItem.prototype = {
   SetDescription: function(description) {
     if (description != null) {
       if (description != "")
-        PlacesUtils.annotations.setItemAnnotation(this.props.item_id, 
-                                      "bookmarkProperties/description", 
-                                      description, 
-                                      0, 
+        PlacesUtils.annotations.setItemAnnotation(this.props.item_id,
+                                      "bookmarkProperties/description",
+                                      description,
+                                      0,
                                       PlacesUtils.annotations.EXPIRE_NEVER);
       else
         PlacesUtils.annotations.removeItemAnnotation(this.props.item_id,
@@ -424,13 +424,13 @@ PlacesItem.prototype = {
     if (position != null) {
       let newposition = -1;
       if (position != -1) {
-        newposition = this.GetPlacesNodeId(this.props.folder_id, 
+        newposition = this.GetPlacesNodeId(this.props.folder_id,
                                            null, position);
         Logger.AssertTrue(newposition != -1, "position " + position +
                           " is invalid; unable to change position");
         newposition = PlacesUtils.bookmarks.getItemIndex(newposition);
       }
-      PlacesUtils.bookmarks.moveItem(this.props.item_id, 
+      PlacesUtils.bookmarks.moveItem(this.props.item_id,
                                this.props.folder_id, newposition);
     }
   },
@@ -489,13 +489,13 @@ Bookmark.prototype = {
    */
   SetLoadInSidebar: function(loadInSidebar) {
     if (loadInSidebar == true)
-      PlacesUtils.annotations.setItemAnnotation(this.props.item_id, 
-                                    "bookmarkProperties/loadInSidebar", 
-                                    true, 
-                                    0, 
+      PlacesUtils.annotations.setItemAnnotation(this.props.item_id,
+                                    "bookmarkProperties/loadInSidebar",
+                                    true,
+                                    0,
                                     PlacesUtils.annotations.EXPIRE_NEVER);
     else if (loadInSidebar == false)
-      PlacesUtils.annotations.removeItemAnnotation(this.props.item_id, 
+      PlacesUtils.annotations.removeItemAnnotation(this.props.item_id,
                                        "bookmarkProperties/loadInSidebar");
   },
 
@@ -561,9 +561,9 @@ Bookmark.prototype = {
     Logger.AssertTrue(this.props.folder_id != -1, "Unable to create " +
       "bookmark, error creating folder " + this.props.location);
     let bookmarkURI = Services.io.newURI(this.props.uri, null, null);
-    this.props.item_id = PlacesUtils.bookmarks.insertBookmark(this.props.folder_id, 
-                                                        bookmarkURI, 
-                                                        -1, 
+    this.props.item_id = PlacesUtils.bookmarks.insertBookmark(this.props.folder_id,
+                                                        bookmarkURI,
+                                                        -1,
                                                         this.props.title);
     this.SetKeyword(this.props.keyword);
     this.SetDescription(this.props.description);
@@ -607,7 +607,7 @@ Bookmark.prototype = {
       return -1;
     }
     let bookmarkTitle = this.props.title;
-    this.props.item_id = this.GetPlacesNodeId(this.props.folder_id, 
+    this.props.item_id = this.GetPlacesNodeId(this.props.folder_id,
                                               null,
                                               bookmarkTitle,
                                               this.props.uri);
@@ -628,13 +628,13 @@ Bookmark.prototype = {
       }
     }
     let loadInSidebar = PlacesUtils.annotations.itemHasAnnotation(
-      this.props.item_id, 
+      this.props.item_id,
       "bookmarkProperties/loadInSidebar");
     if (loadInSidebar)
       loadInSidebar = PlacesUtils.annotations.getItemAnnotation(
-        this.props.item_id, 
+        this.props.item_id,
         "bookmarkProperties/loadInSidebar");
-    if (this.props.loadInSidebar != null && 
+    if (this.props.loadInSidebar != null &&
         loadInSidebar != this.props.loadInSidebar) {
       Logger.logPotentialError("Incorrect loadInSidebar setting - expected: " +
         this.props.loadInSidebar + ", actual: " + loadInSidebar +
@@ -659,8 +659,8 @@ Bookmark.prototype = {
         return -1;
       }
     }
-    if (!this.CheckPosition(this.props.before, 
-                            this.props.after, 
+    if (!this.CheckPosition(this.props.before,
+                            this.props.after,
                             this.props.last_item_pos))
       return -1;
     return this.props.item_id;
@@ -680,7 +680,7 @@ Bookmark.prototype = {
     PlacesUtils.bookmarks.removeItem(this.props.item_id);
   },
 };
-      
+
 extend(Bookmark, PlacesItem);
 
 /**
@@ -706,8 +706,8 @@ BookmarkFolder.prototype = {
     this.props.folder_id = this.GetOrCreateFolder(this.props.location);
     Logger.AssertTrue(this.props.folder_id != -1, "Unable to create " +
       "folder, error creating parent folder " + this.props.location);
-    this.props.item_id = PlacesUtils.bookmarks.createFolder(this.props.folder_id, 
-                                                      this.props.folder, 
+    this.props.item_id = PlacesUtils.bookmarks.createFolder(this.props.folder_id,
+                                                      this.props.folder,
                                                       -1);
     this.SetDescription(this.props.description);
     return this.props.folder_id;
@@ -716,7 +716,7 @@ BookmarkFolder.prototype = {
   /**
    * Find
    *
-   * Locates the bookmark folder which corresponds to this object's 
+   * Locates the bookmark folder which corresponds to this object's
    * properties.
    *
    * @return the folder id if the folder was found, otherwise -1
@@ -728,13 +728,13 @@ BookmarkFolder.prototype = {
       return -1;
     }
     this.props.item_id = this.GetPlacesNodeId(
-                              this.props.folder_id, 
-                              CI.nsINavHistoryResultNode.RESULT_TYPE_FOLDER, 
+                              this.props.folder_id,
+                              CI.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
                               this.props.folder);
     if (!this.CheckDescription(this.props.description))
       return -1;
-    if (!this.CheckPosition(this.props.before, 
-                            this.props.after, 
+    if (!this.CheckPosition(this.props.before,
+                            this.props.after,
                             this.props.last_item_pos))
       return -1;
     return this.props.item_id;
@@ -802,10 +802,10 @@ Livemark.prototype = {
     if (this.props.siteUri != null)
       siteURI = Services.io.newURI(this.props.siteUri, null, null);
     this.props.item_id = PlacesUtils.livemarks.createLivemark(
-        this.props.folder_id, 
-        this.props.livemark, 
+        this.props.folder_id,
+        this.props.livemark,
         siteURI,
-        Services.io.newURI(this.props.feedUri, null, null), 
+        Services.io.newURI(this.props.feedUri, null, null),
         -1);
     return this.props.item_id;
   },
@@ -813,7 +813,7 @@ Livemark.prototype = {
   /**
    * Find
    *
-   * Locates the livemark which corresponds to this object's 
+   * Locates the livemark which corresponds to this object's
    * properties.
    *
    * @return the item id if the livemark was found, otherwise -1
@@ -825,8 +825,8 @@ Livemark.prototype = {
       return -1;
     }
     this.props.item_id = this.GetPlacesNodeId(
-                              this.props.folder_id, 
-                              CI.nsINavHistoryResultNode.RESULT_TYPE_FOLDER, 
+                              this.props.folder_id,
+                              CI.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
                               this.props.livemark);
     if (!PlacesUtils.livemarks.isLivemark(this.props.item_id)) {
       Logger.logPotentialError("livemark folder found, but it's just a regular folder, for " +
@@ -852,8 +852,8 @@ Livemark.prototype = {
         return -1;
       }
     }
-    if (!this.CheckPosition(this.props.before, 
-                            this.props.after, 
+    if (!this.CheckPosition(this.props.before,
+                            this.props.after,
                             this.props.last_item_pos))
       return -1;
     return this.props.item_id;
@@ -956,7 +956,7 @@ Separator.prototype = {
   /**
    * Find
    *
-   * Locates the bookmark separator which corresponds to this object's 
+   * Locates the bookmark separator which corresponds to this object's
    * properties.
    *
    * @return the item id if the separator was found, otherwise -1
@@ -974,11 +974,11 @@ Separator.prototype = {
     }
     let expected_pos = -1;
     if (this.props.before) {
-      other_id = this.GetPlacesNodeId(this.props.folder_id, 
-                                      null, 
+      other_id = this.GetPlacesNodeId(this.props.folder_id,
+                                      null,
                                       this.props.before);
       if (other_id == -1) {
-        Logger.logPotentialError("Can't find places item " + this.props.before + 
+        Logger.logPotentialError("Can't find places item " + this.props.before +
           " for locating separator");
         return -1;
       }
@@ -993,9 +993,9 @@ Separator.prototype = {
       Logger.logPotentialError("No separator found at position " + expected_pos);
     }
     else {
-      if (PlacesUtils.bookmarks.getItemType(this.props.item_id) != 
+      if (PlacesUtils.bookmarks.getItemType(this.props.item_id) !=
           PlacesUtils.bookmarks.TYPE_SEPARATOR) {
-        Logger.logPotentialError("Places item at position " + expected_pos + 
+        Logger.logPotentialError("Places item at position " + expected_pos +
           " is not a separator");
         return -1;
       }

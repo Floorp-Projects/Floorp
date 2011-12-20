@@ -49,9 +49,10 @@ CU.import("resource://services-sync/service.js");
 CU.import("resource://services-sync/util.js");
 var utils = {}; CU.import('resource://mozmill/modules/utils.js', utils);
 
-const SYNC_WIPE_SERVER = "wipe-server";
 const SYNC_RESET_CLIENT = "reset-client";
-const SYNC_WIPE_CLIENT = "wipe-client";
+const SYNC_WIPE_CLIENT  = "wipe-client";
+const SYNC_WIPE_REMOTE  = "wipe-remote";
+const SYNC_WIPE_SERVER  = "wipe-server";
 
 var prefs = CC["@mozilla.org/preferences-service;1"]
             .getService(CI.nsIPrefBranch);
@@ -110,7 +111,7 @@ var TPS = {
   Sync: function TPS__Sync(options) {
     Logger.logInfo('Mozmill starting sync operation: ' + options);
     switch(options) {
-      case SYNC_WIPE_SERVER:
+      case SYNC_WIPE_REMOTE:
         Weave.Svc.Prefs.set("firstSync", "wipeRemote");
         break;
       case SYNC_WIPE_CLIENT:
@@ -127,10 +128,15 @@ var TPS = {
       return "Sync status not ok: " + Weave.Status.service;
     }
 
-    this._waitingForSync = true;
     this._syncErrors = 0;
-    Weave.Service.sync();
-    utils.waitFor(syncFinishedCallback, null, 20000, 500, TPS);
+
+    if (options == SYNC_WIPE_SERVER) {
+      Weave.Service.wipeServer();
+    } else {
+      this._waitingForSync = true;
+      Weave.Service.sync();
+      utils.waitFor(syncFinishedCallback, null, 20000, 500, TPS);
+    }
     return this._syncErrors;
   },
 };

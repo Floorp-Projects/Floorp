@@ -45,19 +45,19 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 function canQuitApplication()
 {
-  try 
+  try
   {
     var cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
       .createInstance(Components.interfaces.nsISupportsPRBool);
     Services.obs.notifyObservers(cancelQuit, "quit-application-requested", null);
-    
-    // Something aborted the quit process. 
+
+    // Something aborted the quit process.
     if (cancelQuit.data)
     {
       return false;
     }
   }
-  catch (ex) 
+  catch (ex)
   {
   }
   return true;

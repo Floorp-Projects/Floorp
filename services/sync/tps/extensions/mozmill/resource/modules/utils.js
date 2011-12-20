@@ -1,28 +1,28 @@
 // ***** BEGIN LICENSE BLOCK *****
 // Version: MPL 1.1/GPL 2.0/LGPL 2.1
-// 
+//
 // The contents of this file are subject to the Mozilla Public License Version
 // 1.1 (the "License"); you may not use this file except in compliance with
 // the License. You may obtain a copy of the License at
 // http://www.mozilla.org/MPL/
-// 
+//
 // Software distributed under the License is distributed on an "AS IS" basis,
 // WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
 // for the specific language governing rights and limitations under the
 // License.
-// 
+//
 // The Original Code is Mozilla Corporation Code.
-// 
+//
 // The Initial Developer of the Original Code is
 // Adam Christian.
 // Portions created by the Initial Developer are Copyright (C) 2008
 // the Initial Developer. All Rights Reserved.
-// 
+//
 // Contributor(s):
 //  Adam Christian <adam.christian@gmail.com>
 //  Mikeal Rogers <mikeal.rogers@gmail.com>
 //  Henrik Skupin <hskupin@mozilla.com>
-// 
+//
 // Alternatively, the contents of this file may be used under the terms of
 // either the GNU General Public License Version 2 or later (the "GPL"), or
 // the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -34,12 +34,12 @@
 // and other provisions required by the GPL or the LGPL. If you do not delete
 // the provisions above, a recipient may use your version of this file under
 // the terms of any one of the MPL, the GPL or the LGPL.
-// 
+//
 // ***** END LICENSE BLOCK *****
 
-var EXPORTED_SYMBOLS = ["openFile", "saveFile", "saveAsFile", "genBoiler", 
+var EXPORTED_SYMBOLS = ["openFile", "saveFile", "saveAsFile", "genBoiler",
                         "getFile", "Copy", "getChromeWindow", "getWindows", "runEditor",
-                        "runFile", "getWindowByTitle", "getWindowByType", "tempfile", 
+                        "runFile", "getWindowByTitle", "getWindowByType", "tempfile",
                         "getMethodInWindows", "getPreference", "setPreference",
                         "sleep", "assert", "unwrapNode", "TimeoutError", "waitFor",
                         "takeScreenshot",
@@ -129,11 +129,11 @@ var checkChrome = function() {
        loc = window.top.document.location.href;
    } catch (e) {}
 
-   if (/^chrome:\/\//.test(loc)) { return true; } 
+   if (/^chrome:\/\//.test(loc)) { return true; }
    else { return false; }
 }
 
- 
+
  var runFile = function(w){
    //define the interface
    var nsIFilePicker = Components.interfaces.nsIFilePicker;
@@ -152,28 +152,28 @@ var checkChrome = function() {
      paramObj.files.push(thefile.path);
    }
  };
- 
+
  var saveFile = function(w, content, filename){
    //define the file interface
    var file = Components.classes["@mozilla.org/file/local;1"]
                         .createInstance(Components.interfaces.nsILocalFile);
    //point it at the file we want to get at
    file.initWithPath(filename);
-   
+
    // file is nsIFile, data is a string
    var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
                             .createInstance(Components.interfaces.nsIFileOutputStream);
 
    // use 0x02 | 0x10 to open file for appending.
-   foStream.init(file, 0x02 | 0x08 | 0x20, 0666, 0); 
+   foStream.init(file, 0x02 | 0x08 | 0x20, 0666, 0);
    // write, create, truncate
    // In a c file operation, we have no need to set file mode with or operation,
    // directly using "r" or "w" usually.
-   
+
    foStream.write(content, content.length);
    foStream.close();
  };
- 
+
   var saveAsFile = function(w, content){
      //define the interface
      var nsIFilePicker = Components.interfaces.nsIFilePicker;
@@ -186,7 +186,7 @@ var checkChrome = function() {
      //if we got a file
      if ((res == nsIFilePicker.returnOK) || (res == nsIFilePicker.returnReplace)){
        var thefile = fp.file;
-              
+
        //forcing the user to save as a .js file
        if (thefile.path.indexOf(".js") == -1){
          //define the file interface
@@ -196,13 +196,13 @@ var checkChrome = function() {
          file.initWithPath(thefile.path+".js");
          var thefile = file;
        }
-       
+
        // file is nsIFile, data is a string
        var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
                                .createInstance(Components.interfaces.nsIFileOutputStream);
 
        // use 0x02 | 0x10 to open file for appending.
-       foStream.init(thefile, 0x02 | 0x08 | 0x20, 0666, 0); 
+       foStream.init(thefile, 0x02 | 0x08 | 0x20, 0666, 0);
        // write, create, truncate
        // In a c file operation, we have no need to set file mode with or operation,
        // directly using "r" or "w" usually.
@@ -211,7 +211,7 @@ var checkChrome = function() {
        return thefile.path;
      }
   };
-  
+
  var openFile = function(w){
     //define the interface
     var nsIFilePicker = Components.interfaces.nsIFilePicker;
@@ -230,7 +230,7 @@ var checkChrome = function() {
       return {path:thefile.path, data:data};
     }
   };
-  
+
  var getFile = function(path){
    //define the file interface
    var file = Components.classes["@mozilla.org/file/local;1"]
@@ -244,7 +244,7 @@ var checkChrome = function() {
    var sstream = Components.classes["@mozilla.org/scriptableinputstream;1"]
                            .createInstance(Components.interfaces.nsIScriptableInputStream);
    fstream.init(file, -1, 0, 0);
-   sstream.init(fstream); 
+   sstream.init(fstream);
 
    //pull the contents of the file out
    var str = sstream.read(4096);
@@ -259,7 +259,7 @@ var checkChrome = function() {
    //data = data.replace(/\r|\n|\r\n/g, "");
    return data;
  };
- 
+
 /**
  * Called to get the state of an individual preference.
  *
@@ -356,7 +356,7 @@ function assert(callback, message, thisObject) {
 
   return true;
 }
-	   
+	
 /**
  * Unwraps a node which is wrapped into a XPCNativeWrapper or XrayWrapper
  *
@@ -367,7 +367,7 @@ function unwrapNode(aNode) {
   var node = aNode;
   if (node) {
     // unwrap is not available on older branches (3.5 and 3.6) - Bug 533596
-    if ("unwrap" in XPCNativeWrapper) {	   
+    if ("unwrap" in XPCNativeWrapper) {	
       node = XPCNativeWrapper.unwrap(node);
     }
     else if (node.wrappedJSObject != null) {
@@ -430,14 +430,14 @@ function waitFor(callback, message, timeout, interval, thisObject) {
 /**
  * Calculates the x and y chrome offset for an element
  * See https://developer.mozilla.org/en/DOM/window.innerHeight
- * 
+ *
  * Note this function will not work if the user has custom toolbars (via extension) at the bottom or left/right of the screen
  */
 function getChromeOffset(elem) {
   var win = elem.ownerDocument.defaultView;
   // Calculate x offset
   var chromeWidth = 0;
-  if (win["name"] != "sidebar") { 
+  if (win["name"] != "sidebar") {
     chromeWidth = win.outerWidth - win.innerWidth;
   }
 
@@ -447,7 +447,7 @@ function getChromeOffset(elem) {
   if (chromeHeight > 0) {
     // window.innerHeight doesn't include the addon or find bar, so account for these if present
     var addonbar = win.document.getElementById("addon-bar");
-    if (addonbar) { 
+    if (addonbar) {
       chromeHeight -= addonbar.scrollHeight;
     }
     var findbar = win.document.getElementById("FindToolbar");
@@ -456,11 +456,11 @@ function getChromeOffset(elem) {
     }
   }
 
-  return {'x':chromeWidth, 'y':chromeHeight}; 
+  return {'x':chromeWidth, 'y':chromeHeight};
 }
 
 /**
- * Takes a screenshot of the specified DOM node 
+ * Takes a screenshot of the specified DOM node
  */
 function takeScreenshot(node, name, highlights) {
   var rect, win, width, height, left, top, needsOffset;
@@ -491,7 +491,7 @@ function takeScreenshot(node, name, highlights) {
   var ctx = canvas.getContext("2d");
   // Draws the DOM contents of the window to the canvas
   ctx.drawWindow(win, left, top, width, height, "rgb(255,255,255)");
-  
+
   // This section is for drawing a red rectangle around each element passed in via the highlights array
   if (highlights) {
     ctx.lineWidth = "2";
@@ -521,7 +521,7 @@ function takeScreenshot(node, name, highlights) {
   // if there is a name save the file, else return dataURL
   if (name) {
     return saveCanvas(canvas, name);
-  } 
+  }
   return canvas.toDataURL("image/png","");
 }
 
@@ -537,19 +537,19 @@ function saveCanvas(canvas, name) {
   file.append(name + ".png");
   file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0666);
 
-  // create a data url from the canvas and then create URIs of the source and targets  
+  // create a data url from the canvas and then create URIs of the source and targets
   var io = Components.classes["@mozilla.org/network/io-service;1"]
                               .getService(Components.interfaces.nsIIOService);
   var source = io.newURI(canvas.toDataURL("image/png", ""), "UTF8", null);
   var target = io.newFileURI(file)
- 
+
   // prepare to save the canvas data
   var persist = Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
                                    .createInstance(Components.interfaces.nsIWebBrowserPersist);
 
   persist.persistFlags = Components.interfaces.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
   persist.persistFlags |= Components.interfaces.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
- 
+
   // save the canvas data to the file
   persist.saveURI(source, null, null, null, null, file);
 
