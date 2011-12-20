@@ -57,8 +57,8 @@ public:
   CompositorParent();
   virtual ~CompositorParent();
 
-  bool AnswerInit();
-  bool AnswerStop();
+  bool RecvInit();
+  bool RecvStop();
 
   void RequestComposition();
 
@@ -73,7 +73,7 @@ protected:
 private:
   void Composite();
 
-  LayerManager *mLayerManager;
+  nsRefPtr<LayerManager> mLayerManager;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };
