@@ -37,8 +37,9 @@
 #include "nsIDOMEventTarget.idl"
 
 interface nsIDOMEventListener;
+interface nsIDOMMozSmsRequest;
 
-[scriptable, function, uuid(1b40f025-33b0-4a95-b7b1-89857bfb8d7c)]
+[scriptable, function, uuid(8bebc119-845c-4ae1-96e7-7b7ee970485b)]
 interface nsIDOMMozSmsManager : nsIDOMEventTarget
 {
   unsigned short      getNumberOfMessagesForText(in DOMString text);
@@ -48,6 +49,8 @@ interface nsIDOMMozSmsManager : nsIDOMEventTarget
   // The method returns a SmsRequest object if one number has been passed.
   // An array of SmsRequest objects otherwise.
   jsval send(in jsval number, in DOMString message);
+
+  [binaryname(GetMessageMoz)] nsIDOMMozSmsRequest getMessage(in long id);
 
   attribute nsIDOMEventListener onreceived;
   attribute nsIDOMEventListener onsent;
