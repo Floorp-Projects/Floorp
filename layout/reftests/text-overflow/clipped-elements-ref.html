@@ -25,32 +25,32 @@ select[size="4"],iframe,textarea,hr { height:10px; margin:0; }
 <body>
 
 <div style="position:absolute; top:0; left:0;">
-  <div class="test">&#x2026;</div>
-  <div class="test">&#x2026;</div>
+  <div class="test"><fieldset style="display:inline;"></fieldset></div>
+  <div class="test"><fieldset style="display:inline-block;"></fieldset></div>
   <div class="test"><fieldset style="display:block;"></fieldset></div>
 
-  <div class="test">&#x2026;</div>
-  <div class="test">&#x2026;</div>
+  <div class="test"><input type="button"></div>
+  <div class="test"><input type="button" style="display:inline-block;"></div>
   <div class="test"><input type="button" style="display:list-item;"></div>
   <div class="test"><input type="button" style="display:block;"></div>
 
-  <div class="test">&#x2026;</div>
-  <div class="test">&#x2026;</div>
+  <div class="test"><input type="text"></div>
+  <div class="test"><input type="text" style="display:inline-block;"></div>
   <div class="test"><input type="text" style="display:block;"></div>
 
-  <div class="test">&#x2026;</div>
-  <div class="test">&#x2026;</div>
+  <div class="test"><textarea></textarea></div>
+  <div class="test"><textarea style="display:inline-block;"></textarea></div>
   <div class="test"><textarea style="display:block;"></textarea></div>
 
-  <div class="test">&#x2026;</div>
+  <div class="test"><select size="1" style=""><option>&nbsp;<option>&nbsp;</select></div>
   <div class="test"><select size="1" style="display:block;"><option>&nbsp;<option>&nbsp;</select></div>
 
-  <div class="test">&#x2026;</div>
+  <div class="test"><select size="4" style=""><option>&nbsp;<option>&nbsp;</select></div>
   <div class="test"><select size="4" style="display:block;"><option>&nbsp;<option>&nbsp;</select></div>
 </div>
 
 <div style="position:absolute; top:0; left:100px;">
-  <div class="test">&#x2026;</div>
+  <div class="test"><iframe src="about:blank" style=""></iframe></div>
   <div class="test"><iframe src="about:blank" style="display:block"></iframe></div>
 
   <div class="test" style="text-align:left">&nbsp;&#x2026;</div>
@@ -58,12 +58,12 @@ select[size="4"],iframe,textarea,hr { height:10px; margin:0; }
   <div class="test"><img style="display:block;" src="../image/big.png"></div>
 
   <div class="test"><x style="display:inline-block; height:100px; width:100%; background:lime">&#x2026;</x></div>
-  <div class="test">&#x2026;</div>
+  <div class="test"><hr style="display:inline-block;vertical-align:top"></div>
   <div class="test"><hr style="display:block;"></div>
 
   <div class="test">&#x2026;</div>
-  <div class="test">&#x2026;</div>
-  <div class="test">&#x2026;</div>
+  <div class="test"><span style="display:inline-block;"></span></div>
+  <div class="test"></div>
   <div class="test"><span style="display:list-item;"></span></div>
   <div class="test"><span style="display:block;"></span></div>
   <div class="test rel">1<span style="position:relative;"></span></div>

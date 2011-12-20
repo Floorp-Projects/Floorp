@@ -40,7 +40,7 @@
 
 interface nsIDOMSVGAnimatedLength;
 
-[scriptable, uuid(19eff2bb-224a-41dc-b3bb-c135c9d17d35)]
+[scriptable, uuid(578f6b8f-1e40-43e4-95a5-422fbd093006)]
 interface nsIDOMSVGRectElement
   : nsIDOMSVGElement
 /*

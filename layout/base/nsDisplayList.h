@@ -217,8 +217,8 @@ public:
   void SetIncludeAllOutOfFlows() { mIncludeAllOutOfFlows = true; }
   bool GetIncludeAllOutOfFlows() const { return mIncludeAllOutOfFlows; }
   /**
-   * Calling this setter makes us exclude all leaf frames that does
-   * not have the NS_FRAME_SELECTED_CONTENT bit.
+   * Calling this setter makes us exclude all leaf frames that aren't
+   * selected.
    */
   void SetSelectedFramesOnly() { mSelectedFramesOnly = true; }
   bool GetSelectedFramesOnly() { return mSelectedFramesOnly; }
@@ -2210,6 +2210,12 @@ public:
                                                  float aFactor,
                                                  const nsRect* aBoundsOverride = nsnull,
                                                  nsIFrame** aOutAncestor = nsnull);
+  /**
+   * Return true when we should try to prerender the entire contents of the
+   * transformed frame even when it's not completely visible (yet).
+   */
+  static bool ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBuilder,
+                                                nsIFrame* aFrame);
 
 private:
   nsDisplayWrapList mStoredList;

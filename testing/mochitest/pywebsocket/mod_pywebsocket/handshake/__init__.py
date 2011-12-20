@@ -36,12 +36,15 @@ successfully established.
 
 import logging
 
+from mod_pywebsocket import common
 from mod_pywebsocket.handshake import draft75
 from mod_pywebsocket.handshake import hybi00
 from mod_pywebsocket.handshake import hybi
-# Export AbortedByUserException and HandshakeException symbol from this module.
+# Export AbortedByUserException, HandshakeException, and VersionException
+# symbol from this module.
 from mod_pywebsocket.handshake._base import AbortedByUserException
 from mod_pywebsocket.handshake._base import HandshakeException
+from mod_pywebsocket.handshake._base import VersionException
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +65,7 @@ def do_handshake(request, dispatcher, allowDraft75=False, strict=False):
     handshake.
     """
 
-    _LOGGER.debug('Opening handshake resource: %r', request.uri)
+    _LOGGER.debug('Client\'s opening handshake resource: %r', request.uri)
     # To print mimetools.Message as escaped one-line string, we converts
     # headers_in to dict object. Without conversion, if we use %r, it just
     # prints the type and address, and if we use %s, it prints the original
@@ -76,7 +79,7 @@ def do_handshake(request, dispatcher, allowDraft75=False, strict=False):
     # header values. While MpTable_Type doesn't have such __str__ but just
     # __repr__ which formats itself as well as dictionary object.
     _LOGGER.debug(
-        'Opening handshake request headers: %r', dict(request.headers_in))
+        'Client\'s opening handshake headers: %r', dict(request.headers_in))
 
     handshakers = []
     handshakers.append(
@@ -88,21 +91,26 @@ def do_handshake(request, dispatcher, allowDraft75=False, strict=False):
             ('IETF Hixie 75', draft75.Handshaker(request, dispatcher, strict)))
 
     for name, handshaker in handshakers:
-        _LOGGER.info('Trying %s protocol', name)
+        _LOGGER.debug('Trying %s protocol', name)
         try:
             handshaker.do_handshake()
+            _LOGGER.info('Established (%s protocol)', name)
             return
         except HandshakeException, e:
-            _LOGGER.info(
+            _LOGGER.debug(
                 'Failed to complete opening handshake as %s protocol: %r',
                 name, e)
             if e.status:
                 raise e
         except AbortedByUserException, e:
             raise
+        except VersionException, e:
+            raise
 
+    # TODO(toyoshim): Add a test to cover the case all handshakers fail.
     raise HandshakeException(
-        'Failed to complete opening handshake for all available protocols')
+        'Failed to complete opening handshake for all available protocols',
+        status=common.HTTP_STATUS_BAD_REQUEST)
 
 
 # vi:sts=4 sw=4 et

@@ -62,7 +62,9 @@ const MEM_HISTOGRAMS = {
   "explicit/images/content/used/uncompressed":
     "MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED",
   "heap-allocated": "MEMORY_HEAP_ALLOCATED",
-  "page-faults-hard": "PAGE_FAULTS_HARD"
+  "page-faults-hard": "PAGE_FAULTS_HARD",
+  "low-memory-events-virtual": "LOW_MEMORY_EVENTS_VIRTUAL",
+  "low-memory-events-physical": "LOW_MEMORY_EVENTS_PHYSICAL"
 };
 // Seconds of idle time before pinging.
 // On idle-daily a gather-telemetry notification is fired, during it probes can

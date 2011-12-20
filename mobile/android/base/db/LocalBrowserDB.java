@@ -181,6 +181,16 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                   new String[] { uri });
     }
 
+    public void updateHistoryDate(ContentResolver cr, String uri, long date) {
+        ContentValues values = new ContentValues();
+        values.put(History.DATE_LAST_VISITED, date);
+
+        cr.update(appendProfile(History.CONTENT_URI),
+                  values,
+                  History.URL + " = ?",
+                  new String[] { uri });
+    }
+
     public Cursor getAllVisitedHistory(ContentResolver cr) {
         Cursor c = cr.query(appendProfile(History.CONTENT_URI),
                             new String[] { History.URL },

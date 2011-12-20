@@ -91,13 +91,15 @@
 #endif /* MOZ_XUL */
 #include "nsFrameManager.h"
 #include "nsFrameSelection.h"
+#ifdef DEBUG
+#include "nsIRange.h"
+#endif
 
 #include "nsBindingManager.h"
 #include "nsXBLBinding.h"
 #include "nsIXBLService.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIBoxObject.h"
-#include "nsIDOMNSElement.h"
 #include "nsClientRect.h"
 #include "nsSVGUtils.h"
 #include "nsLayoutUtils.h"
@@ -132,7 +134,7 @@
 #include "mozilla/css/StyleRule.h" /* For nsCSSSelectorList */
 #include "nsCSSRuleProcessor.h"
 #include "nsRuleProcessorData.h"
-#include "nsPLDOMEvent.h"
+#include "nsAsyncDOMEvent.h"
 #include "nsTextNode.h"
 #include "dombindings.h"
 
@@ -1062,8 +1064,9 @@ nsINode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                             nsAString& aNamespaceURI)
 {
   Element *element = GetNameSpaceElement();
-  if (!element || NS_FAILED(element->LookupNamespaceURI(aNamespacePrefix,
-                                                        aNamespaceURI))) {
+  if (!element ||
+      NS_FAILED(element->LookupNamespaceURIInternal(aNamespacePrefix,
+                                                    aNamespaceURI))) {
     SetDOMStringToNull(aNamespaceURI);
   }
 
@@ -1431,8 +1434,8 @@ nsIContent::GetEditingHost()
 }
 
 nsresult
-nsIContent::LookupNamespaceURI(const nsAString& aNamespacePrefix,
-                               nsAString& aNamespaceURI) const
+nsIContent::LookupNamespaceURIInternal(const nsAString& aNamespacePrefix,
+                                       nsAString& aNamespaceURI) const
 {
   if (aNamespacePrefix.EqualsLiteral("xml")) {
     // Special-case for xml prefix
@@ -1709,41 +1712,56 @@ nsGenericElement::GetNextElementSibling()
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetFirstElementChild(nsIDOMElement** aResult)
+nsGenericElement::GetChildElementCount(PRUint32* aResult)
+{
+  *aResult = GetChildrenList()->Length(true);
+  return NS_OK;
+}
+
+// readonly attribute nsIDOMNodeList children
+NS_IMETHODIMP
+nsGenericElement::GetChildElements(nsIDOMNodeList** aResult)
+{
+  NS_ADDREF(*aResult = GetChildrenList());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetFirstElementChild(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
 
-  nsIContent *result = mContent->GetFirstElementChild();
+  nsIContent *result = GetFirstElementChild();
 
   return result ? CallQueryInterface(result, aResult) : NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetLastElementChild(nsIDOMElement** aResult)
+nsGenericElement::GetLastElementChild(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
 
-  nsIContent *result = mContent->GetLastElementChild();
+  nsIContent *result = GetLastElementChild();
 
   return result ? CallQueryInterface(result, aResult) : NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetPreviousElementSibling(nsIDOMElement** aResult)
+nsGenericElement::GetPreviousElementSibling(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
 
-  nsIContent *result = mContent->GetPreviousElementSibling();
+  nsIContent *result = GetPreviousElementSibling();
 
   return result ? CallQueryInterface(result, aResult) : NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetNextElementSibling(nsIDOMElement** aResult)
+nsGenericElement::GetNextElementSibling(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
 
-  nsIContent *result = mContent->GetNextElementSibling();
+  nsIContent *result = GetNextElementSibling();
 
   return result ? CallQueryInterface(result, aResult) : NS_OK;
 }
@@ -1762,18 +1780,6 @@ nsGenericElement::GetChildrenList()
   return slots->mChildrenList;
 }
 
-NS_IMETHODIMP
-nsNSElementTearoff::GetChildElementCount(PRUint32* aResult)
-{
-  return mContent->GetChildElementCount(aResult);
-}
-
-NS_IMETHODIMP
-nsNSElementTearoff::GetChildren(nsIDOMNodeList** aResult)
-{
-  return mContent->GetChildren(aResult);
-}
-
 nsIDOMDOMTokenList*
 nsGenericElement::GetClassList(nsresult *aResult)
 {
@@ -1790,7 +1796,6 @@ nsGenericElement::GetClassList(nsresult *aResult)
     }
 
     slots->mClassList = new nsDOMTokenList(this, classAttr);
-    NS_ENSURE_TRUE(slots->mClassList, nsnull);
   }
 
   *aResult = NS_OK;
@@ -1799,12 +1804,12 @@ nsGenericElement::GetClassList(nsresult *aResult)
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetClassList(nsIDOMDOMTokenList** aResult)
+nsGenericElement::GetClassList(nsIDOMDOMTokenList** aResult)
 {
   *aResult = nsnull;
 
   nsresult rv;
-  nsIDOMDOMTokenList* list = mContent->GetClassList(&rv);
+  nsIDOMDOMTokenList* list = GetClassList(&rv);
   NS_ENSURE_TRUE(list, rv);
 
   NS_ADDREF(*aResult = list);
@@ -1812,61 +1817,29 @@ nsNSElementTearoff::GetClassList(nsIDOMDOMTokenList** aResult)
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsGenericElement::SetCapture(bool aRetargetToElement)
 {
   // If there is already an active capture, ignore this request. This would
   // occur if a splitter, frame resizer, etc had already captured and we don't
   // want to override those.
   if (nsIPresShell::GetCapturingContent())
-    return;
+    return NS_OK;
 
   nsIPresShell::SetCapturingContent(this, CAPTURE_PREVENTDRAG |
     (aRetargetToElement ? CAPTURE_RETARGETTOELEMENT : 0));
-}
-
-NS_IMETHODIMP
-nsNSElementTearoff::SetCapture(bool aRetargetToElement)
-{
-  mContent->SetCapture(aRetargetToElement);
 
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsGenericElement::ReleaseCapture()
 {
   if (nsIPresShell::GetCapturingContent() == this) {
     nsIPresShell::SetCapturingContent(nsnull, 0);
   }
-}
-
-NS_IMETHODIMP
-nsNSElementTearoff::ReleaseCapture()
-{
-  mContent->ReleaseCapture();
 
   return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-
-NS_IMPL_CYCLE_COLLECTION_1(nsNSElementTearoff, mContent)
-
-NS_INTERFACE_MAP_BEGIN(nsNSElementTearoff)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSElement)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsNSElementTearoff)
-NS_INTERFACE_MAP_END_AGGREGATED(mContent)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNSElementTearoff)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsNSElementTearoff)
-
-NS_IMETHODIMP
-nsNSElementTearoff::GetElementsByClassName(const nsAString& aClasses,
-                                           nsIDOMNodeList** aReturn)
-{
-  return mContent->GetElementsByClassName(aClasses, aReturn);
 }
 
 nsIFrame*
@@ -1956,14 +1929,14 @@ nsGenericElement::GetScrollTop()
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetScrollTop(PRInt32* aScrollTop)
+nsGenericElement::GetScrollTop(PRInt32* aScrollTop)
 {
-  *aScrollTop = mContent->GetScrollTop();
+  *aScrollTop = GetScrollTop();
 
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsGenericElement::SetScrollTop(PRInt32 aScrollTop)
 {
   nsIScrollableFrame* sf = GetScrollFrame();
@@ -1972,13 +1945,6 @@ nsGenericElement::SetScrollTop(PRInt32 aScrollTop)
     pt.y = nsPresContext::CSSPixelsToAppUnits(aScrollTop);
     sf->ScrollTo(pt, nsIScrollableFrame::INSTANT);
   }
-}
-
-NS_IMETHODIMP
-nsNSElementTearoff::SetScrollTop(PRInt32 aScrollTop)
-{
-  mContent->SetScrollTop(aScrollTop);
-
   return NS_OK;
 }
 
@@ -1993,14 +1959,14 @@ nsGenericElement::GetScrollLeft()
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetScrollLeft(PRInt32* aScrollLeft)
+nsGenericElement::GetScrollLeft(PRInt32* aScrollLeft)
 {
-  *aScrollLeft = mContent->GetScrollLeft();
+  *aScrollLeft = GetScrollLeft();
 
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsGenericElement::SetScrollLeft(PRInt32 aScrollLeft)
 {
   nsIScrollableFrame* sf = GetScrollFrame();
@@ -2009,13 +1975,6 @@ nsGenericElement::SetScrollLeft(PRInt32 aScrollLeft)
     pt.x = nsPresContext::CSSPixelsToAppUnits(aScrollLeft);
     sf->ScrollTo(pt, nsIScrollableFrame::INSTANT);
   }
-}
-
-NS_IMETHODIMP
-nsNSElementTearoff::SetScrollLeft(PRInt32 aScrollLeft)
-{
-  mContent->SetScrollLeft(aScrollLeft);
-
   return NS_OK;
 }
 
@@ -2038,9 +1997,9 @@ nsGenericElement::GetScrollHeight()
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetScrollHeight(PRInt32* aScrollHeight)
+nsGenericElement::GetScrollHeight(PRInt32* aScrollHeight)
 {
-  *aScrollHeight = mContent->GetScrollHeight();
+  *aScrollHeight = GetScrollHeight();
 
   return NS_OK;
 }
@@ -2064,9 +2023,9 @@ nsGenericElement::GetScrollWidth()
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetScrollWidth(PRInt32 *aScrollWidth)
+nsGenericElement::GetScrollWidth(PRInt32 *aScrollWidth)
 {
-  *aScrollWidth = mContent->GetScrollWidth();
+  *aScrollWidth = GetScrollWidth();
 
   return NS_OK;
 }
@@ -2094,41 +2053,38 @@ nsGenericElement::GetClientAreaRect()
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetClientTop(PRInt32 *aClientTop)
+nsGenericElement::GetClientTop(PRInt32 *aClientTop)
 {
-  *aClientTop = mContent->GetClientTop();
+  *aClientTop = GetClientTop();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetClientLeft(PRInt32 *aClientLeft)
+nsGenericElement::GetClientLeft(PRInt32 *aClientLeft)
 {
-  *aClientLeft = mContent->GetClientLeft();
+  *aClientLeft = GetClientLeft();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetClientHeight(PRInt32 *aClientHeight)
+nsGenericElement::GetClientHeight(PRInt32 *aClientHeight)
 {
-  *aClientHeight = mContent->GetClientHeight();
+  *aClientHeight = GetClientHeight();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetClientWidth(PRInt32 *aClientWidth)
+nsGenericElement::GetClientWidth(PRInt32 *aClientWidth)
 {
-  *aClientWidth = mContent->GetClientWidth();
+  *aClientWidth = GetClientWidth();
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericElement::GetBoundingClientRect(nsIDOMClientRect** aResult)
 {
   // Weak ref, since we addref it below
   nsClientRect* rect = new nsClientRect();
-  if (!rect)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   NS_ADDREF(*aResult = rect);
   
   nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
@@ -2144,26 +2100,18 @@ nsGenericElement::GetBoundingClientRect(nsIDOMClientRect** aResult)
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetBoundingClientRect(nsIDOMClientRect** aResult)
-{
-  return mContent->GetBoundingClientRect(aResult);
-}
-
-nsresult
 nsGenericElement::GetElementsByClassName(const nsAString& aClasses,
                                          nsIDOMNodeList** aReturn)
 {
   return nsContentUtils::GetElementsByClassName(this, aClasses, aReturn);
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericElement::GetClientRects(nsIDOMClientRectList** aResult)
 {
   *aResult = nsnull;
 
   nsRefPtr<nsClientRectList> rectList = new nsClientRectList();
-  if (!rectList)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
   if (!frame) {
@@ -2181,11 +2129,6 @@ nsGenericElement::GetClientRects(nsIDOMClientRectList** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNSElementTearoff::GetClientRects(nsIDOMClientRectList** aResult)
-{
-  return mContent->GetClientRects(aResult);
-}
 
 //----------------------------------------------------------------------
 
@@ -3650,7 +3593,7 @@ nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
       mutation.mRelatedNode = do_QueryInterface(this);
 
       mozAutoSubtreeModified subtree(OwnerDoc(), this);
-      (new nsPLDOMEvent(aKid, mutation))->RunDOMEventWhenSafe();
+      (new nsAsyncDOMEvent(aKid, mutation))->RunDOMEventWhenSafe();
     }
   }
 
@@ -3995,7 +3938,7 @@ nsGenericElement::FireNodeInserted(nsIDocument* aDoc,
       mutation.mRelatedNode = do_QueryInterface(aParent);
 
       mozAutoSubtreeModified subtree(aDoc, aParent);
-      (new nsPLDOMEvent(childContent, mutation))->RunDOMEventWhenSafe();
+      (new nsAsyncDOMEvent(childContent, mutation))->RunDOMEventWhenSafe();
     }
   }
 }
@@ -4366,7 +4309,6 @@ NS_INTERFACE_MAP_BEGIN(nsGenericElement)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   NS_INTERFACE_MAP_ENTRY(nsINode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSElement, new nsNSElementTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNodeSelector,
@@ -4670,7 +4612,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     mutation.mAttrChange = aModType;
 
     mozAutoSubtreeModified subtree(OwnerDoc(), this);
-    (new nsPLDOMEvent(this, mutation))->RunDOMEventWhenSafe();
+    (new nsAsyncDOMEvent(this, mutation))->RunDOMEventWhenSafe();
   }
 
   return NS_OK;
@@ -4884,7 +4826,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
     mozAutoSubtreeModified subtree(OwnerDoc(), this);
-    (new nsPLDOMEvent(this, mutation))->RunDOMEventWhenSafe();
+    (new nsAsyncDOMEvent(this, mutation))->RunDOMEventWhenSafe();
   }
 
   return NS_OK;
@@ -4994,6 +4936,11 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent,
 
   fprintf(out, " state=[%llx]", State().GetInternalValue());
   fprintf(out, " flags=[%08x]", static_cast<unsigned int>(GetFlags()));
+  if (IsCommonAncestorForRangeInSelection()) {
+    nsIRange::RangeHashTable* ranges =
+      static_cast<nsIRange::RangeHashTable*>(GetProperty(nsGkAtoms::range));
+    fprintf(out, " ranges:%d", ranges ? ranges->Count() : 0);
+  }
   fprintf(out, " primaryframe=%p", static_cast<void*>(GetPrimaryFrame()));
   fprintf(out, " refcount=%d<", mRefCnt.get());
 
@@ -5521,12 +5468,12 @@ nsGenericElement::MozMatchesSelector(const nsAString& aSelector, nsresult* aResu
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::MozMatchesSelector(const nsAString& aSelector, bool* aReturn)
+nsGenericElement::MozMatchesSelector(const nsAString& aSelector, bool* aReturn)
 {
   NS_PRECONDITION(aReturn, "Null out param?");
 
   nsresult rv;
-  *aReturn = mContent->MozMatchesSelector(aSelector, &rv);
+  *aReturn = MozMatchesSelector(aSelector, &rv);
 
   return rv;
 }
@@ -5585,6 +5532,30 @@ nsGenericElement::SizeOf() const
 #undef DOCUMENT_ONLY_EVENT
 #undef TOUCH_EVENT
 #undef EVENT
+
+NS_IMETHODIMP
+nsGenericElement::GetOnmouseenter(JSContext* cx, JS::Value* vp)
+{
+  return nsINode::GetOnmouseenter(cx, vp);
+}
+
+NS_IMETHODIMP
+nsGenericElement::SetOnmouseenter(JSContext* cx, const JS::Value& v)
+{
+  return nsINode::SetOnmouseenter(cx, v);
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetOnmouseleave(JSContext* cx, JS::Value* vp)
+{
+  return nsINode::GetOnmouseleave(cx, vp);
+}
+
+NS_IMETHODIMP
+nsGenericElement::SetOnmouseleave(JSContext* cx, const JS::Value& v)
+{
+  return nsINode::SetOnmouseleave(cx, v);
+}
 
 bool
 nsINode::Contains(const nsINode* aOther) const

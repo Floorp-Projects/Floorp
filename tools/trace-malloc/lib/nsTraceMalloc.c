@@ -68,6 +68,7 @@
 #include "plstr.h"
 #include "nsStackWalk.h"
 #include "nsTraceMallocCallbacks.h"
+#include "nsTypeInfo.h"
 
 #if defined(XP_MACOSX)
 
@@ -1750,7 +1751,6 @@ allocation_enumerator(PLHashEntry *he, PRIntn i, void *arg)
     FILE *ofp = (FILE*) arg;
     callsite *site = (callsite*) he->value;
 
-    extern const char* nsGetTypeName(const void* ptr);
     unsigned long *p, *end;
 
     fprintf(ofp, "%p <%s> (%lu)\n",

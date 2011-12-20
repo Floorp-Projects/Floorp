@@ -300,13 +300,6 @@ XPCCallContext::GetRetVal() const
     return mRetVal;
 }
 
-inline JSBool
-XPCCallContext::GetReturnValueWasSet() const
-{
-    CHECK_STATE(READY_TO_CALL);
-    return mReturnValueWasSet;
-}
-
 inline void
 XPCCallContext::SetRetVal(jsval val)
 {

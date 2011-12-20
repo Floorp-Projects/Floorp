@@ -77,9 +77,7 @@ class nsRange : public nsIRange,
                 public nsStubMutationObserver
 {
 public:
-  nsRange()
-  {
-  }
+  nsRange(){}
   virtual ~nsRange();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -116,14 +114,13 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
   NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
 
 private:
   // no copy's or assigns
   nsRange(const nsRange&);
   nsRange& operator=(const nsRange&);
 
-  nsINode* IsValidBoundary(nsINode* aNode);
- 
   /**
    * Cut or delete the range's contents.
    *
@@ -157,16 +154,17 @@ public:
                                      bool *outNodeBefore,
                                      bool *outNodeAfter);
 
+  static bool IsNodeSelected(nsINode* aNode, PRUint32 aStartOffset,
+                             PRUint32 aEndOffset);
+
 protected:
+  // CharacterDataChanged set aNotInsertedYet to true to disable an assertion
+  // and suppress re-registering a range common ancestor node since
+  // the new text node of a splitText hasn't been inserted yet.
+  // CharacterDataChanged does the re-registering when needed.
   void DoSetRange(nsINode* aStartN, PRInt32 aStartOffset,
                   nsINode* aEndN, PRInt32 aEndOffset,
-                  nsINode* aRoot
-#ifdef DEBUG
-                  // CharacterDataChanged use this to disable an assertion since
-                  // the new text node of a splitText hasn't been inserted yet.
-                  , bool aNotInsertedYet = false
-#endif
-                  );
+                  nsINode* aRoot, bool aNotInsertedYet = false);
 };
 
 // Make a new nsIDOMRange object

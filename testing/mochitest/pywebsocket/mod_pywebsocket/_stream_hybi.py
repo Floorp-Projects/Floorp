@@ -298,9 +298,11 @@ class Stream(StreamBase):
                 'Mask bit on the received frame did\'nt match masking '
                 'configuration for received frames')
 
-        # The spec doesn't disallow putting a value in 0x0-0xFFFF into the
-        # 8-octet extended payload length field (or 0x0-0xFD in 2-octet field).
-        # So, we don't check the range of extended_payload_length.
+        # The Hybi-13 and later specs disallow putting a value in 0x0-0xFFFF
+        # into the 8-octet extended payload length field (or 0x0-0xFD in
+        # 2-octet field).
+        valid_length_encoding = True
+        length_encoding_bytes = 1
         if payload_length == 127:
             extended_payload_length = self.receive_bytes(8)
             payload_length = struct.unpack(
@@ -308,10 +310,23 @@ class Stream(StreamBase):
             if payload_length > 0x7FFFFFFFFFFFFFFF:
                 raise InvalidFrameException(
                     'Extended payload length >= 2^63')
+            if self._request.ws_version >= 13 and payload_length < 0x10000:
+                valid_length_encoding = False
+                length_encoding_bytes = 8
         elif payload_length == 126:
             extended_payload_length = self.receive_bytes(2)
             payload_length = struct.unpack(
                 '!H', extended_payload_length)[0]
+            if self._request.ws_version >= 13 and payload_length < 126:
+                valid_length_encoding = False
+                length_encoding_bytes = 2
+
+        if not valid_length_encoding:
+            self._logger.warning(
+                'Payload length is not encoded using the minimal number of '
+                'bytes (%d is encoded using %d bytes)',
+                payload_length,
+                length_encoding_bytes)
 
         if mask == 1:
             masking_nonce = self.receive_bytes(4)

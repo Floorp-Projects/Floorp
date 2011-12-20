@@ -52,7 +52,7 @@
 #include "cairo-list-private.h"
 
 /* describes the type of the currently applied clip so that we can pop it */
-struct d2d_clip;
+struct d2d_clip_t;
 
 #define MAX_OPERATORS CAIRO_OPERATOR_HSL_LUMINOSITY + 1
 
@@ -114,7 +114,7 @@ struct _cairo_d2d_surface {
     cairo_format_t format;
 
     cairo_clip_t clip;
-    d2d_clip *d2d_clip;
+    d2d_clip_t *d2d_clip;
 
 
     /** Mask layer used by surface_mask to push opacity masks */
@@ -162,10 +162,10 @@ struct _cairo_d2d_surface_entry
 };
 
 typedef HRESULT (WINAPI*D2D1CreateFactoryFunc)(
-    __in D2D1_FACTORY_TYPE factoryType,
-    __in REFIID iid,
-    __in_opt CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
-    __out void **factory
+    D2D1_FACTORY_TYPE factoryType,
+    REFIID iid,
+    CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
+    void **factory
 );
 
 typedef HRESULT (WINAPI*D3D10CreateDevice1Func)(

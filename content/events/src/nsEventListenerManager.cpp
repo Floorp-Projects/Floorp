@@ -579,7 +579,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
   nsIScriptContext *context = listener->GetEventContext();
   nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner =
     do_QueryInterface(mTarget);
-  nsScriptObjectHolder handler(context);
+  nsScriptObjectHolder<JSObject> handler(context);
 
   if (handlerOwner) {
     result = handlerOwner->GetCompiledEventHandler(aListenerStruct->mTypeAtom,
@@ -699,10 +699,10 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
 
   if (handler) {
     // Bind it
-    nsScriptObjectHolder boundHandler(context);
+    nsScriptObjectHolder<JSObject> boundHandler(context);
     context->BindCompiledEventHandler(mTarget, listener->GetEventScope(),
-                                      handler.getObject(), boundHandler);
-    listener->SetHandler(boundHandler.getObject());
+                                      handler.get(), boundHandler);
+    listener->SetHandler(boundHandler.get());
   }
 
   return result;

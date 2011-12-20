@@ -49,6 +49,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDOMClassInfoID.h"
@@ -202,6 +203,13 @@ IDBFactory::GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
   return NS_OK;
 }
 
+inline
+bool
+IgnoreWhitespace(PRUnichar c)
+{
+  return false;
+}
+
 // static
 nsresult
 IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
@@ -226,9 +234,8 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
 
   bool hasResult;
   while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-    nsAutoPtr<ObjectStoreInfo>* element =
+    nsRefPtr<ObjectStoreInfo>* element =
       aObjectStores.AppendElement(new ObjectStoreInfo());
-    NS_ENSURE_TRUE(element, NS_ERROR_OUT_OF_MEMORY);
 
     ObjectStoreInfo* info = element->get();
 
@@ -246,12 +253,31 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
     else {
       NS_ASSERTION(columnType == mozIStorageStatement::VALUE_TYPE_TEXT,
                    "Should be a string");
-      rv = stmt->GetString(2, info->keyPath);
+      nsString keyPath;
+      rv = stmt->GetString(2, keyPath);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      if (!keyPath.IsEmpty() && keyPath.First() == ',') {
+        // We use a comma in the beginning to indicate that it's an array of
+        // key paths. This is to be able to tell a string-keypath from an
+        // array-keypath which contains only one item.
+        nsCharSeparatedTokenizerTemplate<IgnoreWhitespace>
+          tokenizer(keyPath, ',');
+        tokenizer.nextToken();
+        while (tokenizer.hasMoreTokens()) {
+          info->keyPathArray.AppendElement(tokenizer.nextToken());
+        }
+        NS_ASSERTION(!info->keyPathArray.IsEmpty(),
+                     "Should have at least one keypath");
+      }
+      else {
+        info->keyPath = keyPath;
+      }
+
     }
 
-    info->autoIncrement = !!stmt->AsInt32(3);
-    info->databaseId = aDatabaseId;
+    info->nextAutoIncrementId = stmt->AsInt64(3);
+    info->comittedAutoIncrementId = info->nextAutoIncrementId;
 
     ObjectStoreInfoMap* mapEntry = infoMap.AppendElement();
     NS_ENSURE_TRUE(mapEntry, NS_ERROR_OUT_OF_MEMORY);
@@ -263,8 +289,7 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
 
   // Load index information
   rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT object_store_id, id, name, key_path, unique_index, multientry, "
-           "object_store_autoincrement "
+    "SELECT object_store_id, id, name, key_path, unique_index, multientry "
     "FROM object_store_index"
   ), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -293,12 +318,28 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
     rv = stmt->GetString(2, indexInfo->name);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = stmt->GetString(3, indexInfo->keyPath);
+    nsString keyPath;
+    rv = stmt->GetString(3, keyPath);
     NS_ENSURE_SUCCESS(rv, rv);
+    if (!keyPath.IsEmpty() && keyPath.First() == ',') {
+      // We use a comma in the beginning to indicate that it's an array of
+      // key paths. This is to be able to tell a string-keypath from an
+      // array-keypath which contains only one item.
+      nsCharSeparatedTokenizerTemplate<IgnoreWhitespace>
+        tokenizer(keyPath, ',');
+      tokenizer.nextToken();
+      while (tokenizer.hasMoreTokens()) {
+        indexInfo->keyPathArray.AppendElement(tokenizer.nextToken());
+      }
+      NS_ASSERTION(!indexInfo->keyPathArray.IsEmpty(),
+                   "Should have at least one keypath");
+    }
+    else {
+      indexInfo->keyPath = keyPath;
+    }
 
     indexInfo->unique = !!stmt->AsInt32(4);
     indexInfo->multiEntry = !!stmt->AsInt32(5);
-    indexInfo->autoIncrement = !!stmt->AsInt32(6);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -327,42 +368,33 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
 
 // static
 nsresult
-IDBFactory::UpdateDatabaseMetadata(DatabaseInfo* aDatabaseInfo,
-                                   PRUint64 aVersion,
-                                   ObjectStoreInfoArray& aObjectStores)
+IDBFactory::SetDatabaseMetadata(DatabaseInfo* aDatabaseInfo,
+                                PRUint64 aVersion,
+                                ObjectStoreInfoArray& aObjectStores)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aDatabaseInfo, "Null pointer!");
 
   ObjectStoreInfoArray objectStores;
-  if (!objectStores.SwapElements(aObjectStores)) {
-    NS_WARNING("Out of memory!");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  objectStores.SwapElements(aObjectStores);
 
-  nsAutoTArray<nsString, 10> existingNames;
-  if (!aDatabaseInfo->GetObjectStoreNames(existingNames)) {
-    NS_WARNING("Out of memory!");
-    return NS_ERROR_OUT_OF_MEMORY;
+#ifdef DEBUG
+  {
+    nsTArray<nsString> existingNames;
+    aDatabaseInfo->GetObjectStoreNames(existingNames);
+    NS_ASSERTION(existingNames.IsEmpty(), "Should be an empty DatabaseInfo");
   }
-
-  // Remove all the old ones.
-  for (PRUint32 index = 0; index < existingNames.Length(); index++) {
-    aDatabaseInfo->RemoveObjectStore(existingNames[index]);
-  }
+#endif
 
   aDatabaseInfo->version = aVersion;
 
   for (PRUint32 index = 0; index < objectStores.Length(); index++) {
-    nsAutoPtr<ObjectStoreInfo>& info = objectStores[index];
-    NS_ASSERTION(info->databaseId == aDatabaseInfo->id, "Huh?!");
+    nsRefPtr<ObjectStoreInfo>& info = objectStores[index];
 
     if (!aDatabaseInfo->PutObjectStore(info)) {
       NS_WARNING("Out of memory!");
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    info.forget();
   }
 
   return NS_OK;
@@ -469,6 +501,6 @@ IDBFactory::Cmp(const jsval& aFirst,
     return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
-  *_retval = first == second ? 0 : first < second ? -1 : 1;
+  *_retval = Key::CompareKeys(first, second);
   return NS_OK;
 }

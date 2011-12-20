@@ -1672,6 +1672,7 @@ InspectorUI.prototype = {
     btn = this.chromeDoc.createElement("toolbarbutton");
     let buttonId = this.getToolbarButtonId(aRegObj.id);
     btn.setAttribute("id", buttonId);
+    btn.setAttribute("class", "devtools-toolbarbutton");
     btn.setAttribute("label", aRegObj.label);
     btn.setAttribute("tooltiptext", aRegObj.tooltiptext);
     btn.setAttribute("accesskey", aRegObj.accesskey);
@@ -1733,6 +1734,7 @@ InspectorUI.prototype = {
 
     btn.id = buttonId;
     btn.setAttribute("label", aRegObj.label);
+    btn.setAttribute("class", "devtools-toolbarbutton");
     btn.setAttribute("tooltiptext", aRegObj.tooltiptext);
     btn.setAttribute("accesskey", aRegObj.accesskey);
     btn.setAttribute("image", aRegObj.icon || "");

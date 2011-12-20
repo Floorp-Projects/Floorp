@@ -42,7 +42,7 @@
 #include "nsIScriptContext.h"
 #include "nsAString.h"
 
-class nsScriptObjectHolder;
+template<class> class nsScriptObjectHolder;
 
 #define NS_ISCRIPTOBJECTOWNER_IID \
 { /* 8f6bca7e-ce42-11d1-b724-00600891d8c9 */ \
@@ -94,8 +94,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptObjectOwner,
 class nsIAtom;
 
 #define NS_ISCRIPTEVENTHANDLEROWNER_IID \
-{ 0x1e2be5d2, 0x381a, 0x46dc, \
- { 0xae, 0x97, 0xa5, 0x5f, 0x45, 0xfd, 0x36, 0x63 } }
+{ 0xc8f35f71, 0x07d1, 0x4ff3, \
+  { 0xa3, 0x2f, 0x65, 0xcb, 0x35, 0x64, 0xac, 0xe0 } }
 
 /**
  * Associate a compiled event handler with its target object, which owns it
@@ -124,7 +124,7 @@ public:
                                        const nsAString& aBody,
                                        const char* aURL,
                                        PRUint32 aLineNo,
-                                       nsScriptObjectHolder &aHandler) = 0;
+                                       nsScriptObjectHolder<JSObject>& aHandler) = 0;
 
   /**
    * Retrieve an already-compiled event handler that can be bound to a
@@ -134,7 +134,7 @@ public:
    * @param aHandler the holder for the compiled event handler.
    */
   virtual nsresult GetCompiledEventHandler(nsIAtom *aName,
-                                           nsScriptObjectHolder &aHandler) = 0;
+                                           nsScriptObjectHolder<JSObject>& aHandler) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptEventHandlerOwner,

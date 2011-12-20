@@ -83,8 +83,6 @@ pref("layout.css.dpi", 160);
 pref("layout.css.dpi", 240);
 #endif
 #endif
-/* allow scrollbars to float above chrome ui */
-pref("ui.scrollbarsCanOverlapContent", 1);
 
 /* use long press to display a context menu */
 pref("ui.click_hold_context_menus", true);
@@ -107,6 +105,9 @@ pref("browser.cache.offline.enable", true);
 pref("browser.cache.offline.capacity", 5120); // kilobytes
 pref("offline-apps.quota.max", 2048); // kilobytes
 pref("offline-apps.quota.warn", 1024); // kilobytes
+
+/* zlib compression level used for cache compression */
+pref("browser.cache.compression_level", 1);
 
 /* protocol warning prefs */
 pref("network.protocol-handler.warn-external.tel", false);
@@ -557,7 +558,7 @@ pref("font.default.x-western", "SwissA");
 #ifdef MOZ_SERVICES_SYNC
 // sync service
 pref("services.sync.client.type", "mobile");
-pref("services.sync.registerEngines", "Tab,Bookmarks,Form,History,Password,Prefs");
+pref("services.sync.registerEngines", "Tab,Bookmarks,Form,History,Password,Prefs,Addons");
 pref("services.sync.autoconnectDelay", 5);
 
 // prefs to sync by default

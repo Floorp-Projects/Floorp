@@ -1474,9 +1474,6 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsContainerFrame* aOuter,
   , mCollapsedResizer(false)
   , mShouldBuildLayer(false)
 {
-  // lookup if we're allowed to overlap the content from the look&feel object
-  mScrollbarsCanOverlapContent =
-    LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollbarsCanOverlapContent) != 0;
   mScrollingActive = IsAlwaysActive();
 }
 
@@ -1879,32 +1876,35 @@ AppendToTop(nsDisplayListBuilder* aBuilder, nsDisplayList* aDest,
   }  
 }
 
-nsresult
-nsGfxScrollFrameInner::AppendScrollPartsTo(nsDisplayListBuilder*          aBuilder,
-                                           const nsRect&                  aDirtyRect,
-                                           const nsDisplayListSet&        aLists,
-                                           const nsDisplayListCollection& aDest,
-                                           bool&                        aCreateLayer)
+void
+nsGfxScrollFrameInner::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
+                                           const nsRect&           aDirtyRect,
+                                           const nsDisplayListSet& aLists,
+                                           bool&                   aCreateLayer,
+                                           bool                    aPositioned)
 {
-  nsresult rv = NS_OK;
-  bool hasResizer = HasResizer();
   for (nsIFrame* kid = mOuter->GetFirstPrincipalChild(); kid; kid = kid->GetNextSibling()) {
-    if (kid != mScrolledFrame) {
-      if (kid == mResizerBox && hasResizer) {
-        // skip the resizer as this will be drawn later on top of the scrolled content
-        continue;
-      }
-      rv = mOuter->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aDest,
-                                            nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
-      NS_ENSURE_SUCCESS(rv, rv);
-      // DISPLAY_CHILD_FORCE_STACKING_CONTEXT put everything into the
-      // PositionedDescendants list.
-      ::AppendToTop(aBuilder, aLists.BorderBackground(),
-                    aDest.PositionedDescendants(), kid,
-                    aCreateLayer);
-    }
+    if (kid == mScrolledFrame ||
+        (kid->GetStyleDisplay()->IsPositioned() != aPositioned))
+      continue;
+
+    nsDisplayListCollection partList;
+    mOuter->BuildDisplayListForChild(aBuilder, kid, aDirtyRect, partList,
+                                     nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
+
+    // Don't append textarea resizers to the positioned descendants because
+    // we don't want them to float on top of overlapping elements.
+    bool appendToPositioned = aPositioned && !(kid == mResizerBox && !mIsRoot);
+
+    nsDisplayList* dest = appendToPositioned ?
+      aLists.PositionedDescendants() : aLists.BorderBackground();
+
+    // DISPLAY_CHILD_FORCE_STACKING_CONTEXT put everything into
+    // partList.PositionedDescendants().
+    ::AppendToTop(aBuilder, dest,
+                  partList.PositionedDescendants(), kid,
+                  aCreateLayer);
   }
-  return rv;
 }
 
 bool
@@ -1984,15 +1984,15 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   bool createLayersForScrollbars = mIsRoot &&
     mOuter->PresContext()->IsRootContentDocument();
 
-  nsDisplayListCollection scrollParts;
-  if (!mScrollbarsCanOverlapContent) {
-    // Now display the scrollbars and scrollcorner. These parts are drawn
-    // in the border-background layer, on top of our own background and
-    // borders and underneath borders and backgrounds of later elements
-    // in the tree.
-    AppendScrollPartsTo(aBuilder, aDirtyRect, aLists,
-                        scrollParts, createLayersForScrollbars);
-  }
+  // Now display the scrollbars and scrollcorner. These parts are drawn
+  // in the border-background layer, on top of our own background and
+  // borders and underneath borders and backgrounds of later elements
+  // in the tree.
+  // Note that this does not apply for overlay scrollbars; those are drawn
+  // in the positioned-elements layer on top of everything else by the call
+  // to AppendScrollPartsTo(..., true) further down.
+  AppendScrollPartsTo(aBuilder, aDirtyRect, aLists, createLayersForScrollbars,
+                      false);
 
   // Overflow clipping can never clip frames outside our subtree, so there
   // is no need to worry about whether we are a moving frame that might clip
@@ -2062,25 +2062,9 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                             true, mIsRoot);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mScrollbarsCanOverlapContent) {
-    AppendScrollPartsTo(aBuilder, aDirtyRect, aLists,
-                       scrollParts, createLayersForScrollbars);
-  }
-
-  if (HasResizer()) {
-    rv = mOuter->BuildDisplayListForChild(aBuilder, mResizerBox, aDirtyRect, scrollParts,
-                                          nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
-    NS_ENSURE_SUCCESS(rv, rv);
-    // DISPLAY_CHILD_FORCE_STACKING_CONTEXT puts everything into the
-    // PositionedDescendants list.
-    // The resizer is positioned and has maximum z-index; we put it in
-    // PositionedDescendants() for the root frame to ensure that it appears
-    // above all content, bug 631337.
-    ::AppendToTop(aBuilder,
-                  mIsRoot ? aLists.PositionedDescendants() : aLists.Content(),
-                  scrollParts.PositionedDescendants(), mResizerBox,
-                  createLayersForScrollbars);
-  }
+  // Now display overlay scrollbars and the resizer, if we have one.
+  AppendScrollPartsTo(aBuilder, aDirtyRect, aLists, createLayersForScrollbars,
+                      true);
 
   return NS_OK;
 }

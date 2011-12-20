@@ -124,24 +124,24 @@ NS_STACK_CLASS
 class AutoRemoveObjectStore
 {
 public:
-  AutoRemoveObjectStore(IDBDatabase* aDatabase, const nsAString& aName)
-  : mDatabase(aDatabase), mName(aName)
+  AutoRemoveObjectStore(DatabaseInfo* aInfo, const nsAString& aName)
+  : mInfo(aInfo), mName(aName)
   { }
 
   ~AutoRemoveObjectStore()
   {
-    if (mDatabase) {
-      mDatabase->Info()->RemoveObjectStore(mName);
+    if (mInfo) {
+      mInfo->RemoveObjectStore(mName);
     }
   }
 
   void forget()
   {
-    mDatabase = nsnull;
+    mInfo = nsnull;
   }
 
 private:
-  IDBDatabase* mDatabase;
+  DatabaseInfo* mInfo;
   nsString mName;
 };
 
@@ -384,10 +384,11 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  DatabaseInfo* databaseInfo = Info();
+  DatabaseInfo* databaseInfo = transaction->DBInfo();
 
   nsString keyPath;
   keyPath.SetIsVoid(true);
+  nsTArray<nsString> keyPathArray;
   bool autoIncrement = false;
 
   if (!JSVAL_IS_VOID(aOptions) && !JSVAL_IS_NULL(aOptions)) {
@@ -399,6 +400,7 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
     NS_ASSERTION(JSVAL_IS_OBJECT(aOptions), "Huh?!");
     JSObject* options = JSVAL_TO_OBJECT(aOptions);
 
+    // Get keyPath
     jsval val;
     if (!JS_GetPropertyById(aCx, options, nsDOMClassInfo::sKeyPath_id, &val)) {
       NS_WARNING("JS_GetPropertyById failed!");
@@ -406,17 +408,55 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
     }
 
     if (!JSVAL_IS_VOID(val) && !JSVAL_IS_NULL(val)) {
-      JSString* str = JS_ValueToString(aCx, val);
-      if (!str) {
-        NS_WARNING("JS_ValueToString failed!");
-        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      if (!JSVAL_IS_PRIMITIVE(val) &&
+          JS_IsArrayObject(aCx, JSVAL_TO_OBJECT(val))) {
+    
+        JSObject* obj = JSVAL_TO_OBJECT(val);
+    
+        jsuint length;
+        if (!JS_GetArrayLength(aCx, obj, &length)) {
+          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+        }
+    
+        if (!length) {
+          return NS_ERROR_DOM_SYNTAX_ERR;
+        }
+    
+        keyPathArray.SetCapacity(length);
+    
+        for (jsuint index = 0; index < length; index++) {
+          jsval val;
+          JSString* jsstr;
+          nsDependentJSString str;
+          if (!JS_GetElement(aCx, obj, index, &val) ||
+              !(jsstr = JS_ValueToString(aCx, val)) ||
+              !str.init(aCx, jsstr)) {
+            return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+          }
+    
+          if (!IDBObjectStore::IsValidKeyPath(aCx, str)) {
+            return NS_ERROR_DOM_SYNTAX_ERR;
+          }
+    
+          keyPathArray.AppendElement(str);
+        }
+    
+        NS_ASSERTION(!keyPathArray.IsEmpty(), "This shouldn't have happened!");
       }
-      nsDependentJSString dependentKeyPath;
-      if (!dependentKeyPath.init(aCx, str)) {
-        NS_WARNING("Initializing keyPath failed!");
-        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      else {
+        JSString* jsstr;
+        nsDependentJSString str;
+        if (!(jsstr = JS_ValueToString(aCx, val)) ||
+            !str.init(aCx, jsstr)) {
+          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+        }
+    
+        if (!IDBObjectStore::IsValidKeyPath(aCx, str)) {
+          return NS_ERROR_DOM_SYNTAX_ERR;
+        }
+    
+        keyPath = str;
       }
-      keyPath = dependentKeyPath;
     }
 
     if (!JS_GetPropertyById(aCx, options, nsDOMClassInfo::sAutoIncrement_id,
@@ -437,34 +477,30 @@ IDBDatabase::CreateObjectStore(const nsAString& aName,
     return NS_ERROR_DOM_INDEXEDDB_CONSTRAINT_ERR;
   }
 
-  if (!keyPath.IsVoid()) {
-    if (keyPath.IsEmpty() && autoIncrement) {
-      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-    }
-    if (!IDBObjectStore::IsValidKeyPath(aCx, keyPath)) {
-      return NS_ERROR_DOM_SYNTAX_ERR;
-    }
+  if (autoIncrement &&
+      ((!keyPath.IsVoid() && keyPath.IsEmpty()) || !keyPathArray.IsEmpty())) {
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
-  nsAutoPtr<ObjectStoreInfo> newInfo(new ObjectStoreInfo());
+  nsRefPtr<ObjectStoreInfo> newInfo(new ObjectStoreInfo());
 
   newInfo->name = aName;
   newInfo->id = databaseInfo->nextObjectStoreId++;
   newInfo->keyPath = keyPath;
-  newInfo->autoIncrement = autoIncrement;
-  newInfo->databaseId = mDatabaseId;
+  newInfo->keyPathArray = keyPathArray;
+  newInfo->nextAutoIncrementId = autoIncrement ? 1 : 0;
+  newInfo->comittedAutoIncrementId = newInfo->nextAutoIncrementId;
 
-  if (!Info()->PutObjectStore(newInfo)) {
+  if (!databaseInfo->PutObjectStore(newInfo)) {
     NS_WARNING("Put failed!");
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
-  ObjectStoreInfo* objectStoreInfo = newInfo.forget();
 
   // Don't leave this in the hash if we fail below!
-  AutoRemoveObjectStore autoRemove(this, aName);
+  AutoRemoveObjectStore autoRemove(databaseInfo, aName);
 
   nsRefPtr<IDBObjectStore> objectStore =
-    transaction->GetOrCreateObjectStore(aName, objectStoreInfo);
+    transaction->GetOrCreateObjectStore(aName, newInfo);
   NS_ENSURE_TRUE(objectStore, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<CreateObjectStoreHelper> helper =
@@ -491,9 +527,9 @@ IDBDatabase::DeleteObjectStore(const nsAString& aName)
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  DatabaseInfo* info = Info();
-  ObjectStoreInfo* objectStoreInfo;
-  if (!info->GetObjectStore(aName, &objectStoreInfo)) {
+  DatabaseInfo* info = transaction->DBInfo();
+  ObjectStoreInfo* objectStoreInfo = info->GetObjectStore(aName);
+  if (!objectStoreInfo) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_FOUND_ERR;
   }
 
@@ -502,9 +538,7 @@ IDBDatabase::DeleteObjectStore(const nsAString& aName)
   nsresult rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  info->RemoveObjectStore(aName);
-
-  transaction->ReleaseCachedObjectStore(aName);
+  transaction->RemoveObjectStore(aName);
 
   return NS_OK;
 }
@@ -749,11 +783,30 @@ CreateObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mObjectStore->Name());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  rv = mObjectStore->HasKeyPath() ?
-    stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"),
-                           mObjectStore->KeyPath()) :
-    stmt->BindNullByName(NS_LITERAL_CSTRING("key_path"));
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  if (mObjectStore->UsesKeyPathArray()) {
+    // We use a comma in the beginning to indicate that it's an array of
+    // key paths. This is to be able to tell a string-keypath from an
+    // array-keypath which contains only one item.
+    // It also makes serializing easier :-)
+    nsAutoString keyPath;
+    const nsTArray<nsString>& keyPaths = mObjectStore->KeyPathArray();
+    for (PRUint32 i = 0; i < keyPaths.Length(); ++i) {
+      keyPath.Append(NS_LITERAL_STRING(",") + keyPaths[i]);
+    }
+    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"),
+                                keyPath);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+  else if (mObjectStore->HasKeyPath()) {
+    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"),
+                                mObjectStore->KeyPath());
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+  else {
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("key_path"));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+
 
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);

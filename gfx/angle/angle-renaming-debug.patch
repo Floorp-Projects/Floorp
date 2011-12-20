@@ -1,9 +1,10 @@
 # HG changeset patch
-# Parent b6f65ca6027d397ca50783d7164a6a8fa59eef4c
+# Parent 7e7cd80ef724c094b88ed8bb35f3af0ce9a9cfee
+
 diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
 --- a/gfx/angle/Makefile.in
 +++ b/gfx/angle/Makefile.in
-@@ -73,17 +73,17 @@ CPPSRCS = \
+@@ -75,17 +75,17 @@ CPPSRCS = \
          parseConst.cpp \
          ParseHelper.cpp \
          PoolAlloc.cpp \
@@ -22,6 +23,51 @@ diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
          BuiltInFunctionEmulator.cpp \
          $(NULL)
  
+diff --git a/gfx/angle/angle-renaming-debug.patch b/gfx/angle/angle-renaming-debug.patch
+--- a/gfx/angle/angle-renaming-debug.patch
++++ b/gfx/angle/angle-renaming-debug.patch
+@@ -1,14 +1,14 @@
+ # HG changeset patch
+-# Parent b6f65ca6027d397ca50783d7164a6a8fa59eef4c
++# Parent 1879d857ef07dc5797704516caea99b231d7590a
+ diff --git a/gfx/angle/Makefile.in b/gfx/angle/Makefile.in
+ --- a/gfx/angle/Makefile.in
+ +++ b/gfx/angle/Makefile.in
+-@@ -73,17 +73,17 @@ CPPSRCS = \
++@@ -75,17 +75,17 @@ CPPSRCS = \
+          parseConst.cpp \
+          ParseHelper.cpp \
+          PoolAlloc.cpp \
+          QualifierAlive.cpp \
+          RemoveTree.cpp \
+          ShaderLang.cpp \
+          SymbolTable.cpp \
+          VariableInfo.cpp \
+@@ -163,22 +163,22 @@ diff --git a/gfx/angle/src/compiler/prep
+  #include <stdlib.h>
+  #include <stdio.h>
+  #include <string.h>
+  
+ -#include "compiler/debug.h"
+ +#include "compiler/compilerdebug.h"
+  #include "compiler/preprocessor/slglobals.h"
+  
++ #include "../../../../../memory/mozalloc/mozalloc.h"
++ 
+  #undef malloc
+  #undef realloc
+  #undef free
+  
+- ///////////////////////////////////////////////////////////////////////////////////////////////
+- ////////////////////////////////////////// String table: //////////////////////////////////////
+ diff --git a/gfx/angle/src/compiler/preprocessor/tokens.c b/gfx/angle/src/compiler/preprocessor/tokens.c
+ --- a/gfx/angle/src/compiler/preprocessor/tokens.c
+ +++ b/gfx/angle/src/compiler/preprocessor/tokens.c
+ @@ -45,17 +45,17 @@ NVIDIA HAS BEEN ADVISED OF THE POSSIBILI
+  // tokens.c
+  //
+  
+  #include <stdlib.h>
 diff --git a/gfx/angle/src/compiler/OutputGLSLBase.cpp b/gfx/angle/src/compiler/OutputGLSLBase.cpp
 --- a/gfx/angle/src/compiler/OutputGLSLBase.cpp
 +++ b/gfx/angle/src/compiler/OutputGLSLBase.cpp

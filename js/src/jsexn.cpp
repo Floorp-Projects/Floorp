@@ -803,6 +803,7 @@ Exception(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 exn_toString(JSContext *cx, uintN argc, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Step 2. */
@@ -881,6 +882,7 @@ exn_toString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 exn_toSource(JSContext *cx, uintN argc, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
     CallArgs args = CallArgsFromVp(argc, vp);
 
     JSObject *obj = ToObject(cx, &args.thisv());

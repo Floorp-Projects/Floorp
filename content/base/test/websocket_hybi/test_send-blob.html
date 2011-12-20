@@ -68,7 +68,7 @@ function createBlobContainingAllDistinctBytes()
     return createDOMFile("allchars", binaryString);
 }
 
-var ws = new MozWebSocket("ws://mochi.test:8888/tests/content/base/test/websocket_hybi/file_check-binary-messages");
+var ws = new WebSocket("ws://mochi.test:8888/tests/content/base/test/websocket_hybi/file_check-binary-messages");
 var closeEvent;
 
 ws.onopen = function()

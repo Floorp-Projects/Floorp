@@ -333,12 +333,12 @@ void BuiltInFunctionEmulator::OutputEmulatedFunctionDefinition(
     out << "// BEGIN: Generated code for built-in function emulation\n\n";
     if (withPrecision) {
         out << "#if defined(GL_FRAGMENT_PRECISION_HIGH)\n"
-            << "#define webgl_emulation_precision highp\n"
+            << "#define webgl_emu_precision highp\n"
             << "#else\n"
-            << "#define webgl_emulation_precision mediump\n"
+            << "#define webgl_emu_precision mediump\n"
             << "#endif\n\n";
     } else {
-        out << "#define webgl_emulation_precision\n\n";
+        out << "#define webgl_emu_precision\n\n";
     }
     for (size_t i = 0; i < mFunctions.size(); ++i) {
         out << mFunctionSource[mFunctions[i]] << "\n\n";

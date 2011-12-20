@@ -92,7 +92,6 @@ jmethodID AndroidLocation::jGetTimeMethod = 0;
 jclass AndroidAddress::jAddressClass = 0;
 jmethodID AndroidAddress::jGetAddressLineMethod;
 jmethodID AndroidAddress::jGetAdminAreaMethod;
-jmethodID AndroidAddress::jGetCountryCodeMethod;
 jmethodID AndroidAddress::jGetCountryNameMethod;
 jmethodID AndroidAddress::jGetFeatureNameMethod;
 jmethodID AndroidAddress::jGetLocalityMethod;
@@ -223,7 +222,6 @@ AndroidAddress::InitAddressClass(JNIEnv *jEnv)
 
     jGetAddressLineMethod = getMethod("getAddressLine", "(I)Ljava/lang/String;");
     jGetAdminAreaMethod = getMethod("getAdminArea", "()Ljava/lang/String;");
-    jGetCountryCodeMethod = getMethod("getCountryCode", "()Ljava/lang/String;");
     jGetCountryNameMethod = getMethod("getCountryName", "()Ljava/lang/String;");
     jGetFeatureNameMethod = getMethod("getFeatureName", "()Ljava/lang/String;");
     jGetLocalityMethod  = getMethod("getLocality", "()Ljava/lang/String;");
@@ -243,7 +241,6 @@ AndroidAddress::CreateGeoPositionAddress(JNIEnv *jenv, jobject jobj)
     nsJNIString city(static_cast<jstring>(jenv->CallObjectMethod(jobj, jGetLocalityMethod)), jenv);
     nsJNIString county(static_cast<jstring>(jenv->CallObjectMethod(jobj, jGetSubAdminAreaMethod)), jenv);
     nsJNIString country(static_cast<jstring>(jenv->CallObjectMethod(jobj, jGetCountryNameMethod)), jenv);
-    nsJNIString countryCode(static_cast<jstring>(jenv->CallObjectMethod(jobj, jGetCountryCodeMethod)), jenv);
     nsJNIString premises(static_cast<jstring>(jenv->CallObjectMethod(jobj, jGetPremisesMethod)), jenv);
     nsJNIString postalCode(static_cast<jstring>(jenv->CallObjectMethod(jobj, jGetPostalCodeMethod)), jenv);
     nsJNIString region(static_cast<jstring>(jenv->CallObjectMethod(jobj, jGetAdminAreaMethod, 0)), jenv);
@@ -257,7 +254,6 @@ AndroidAddress::CreateGeoPositionAddress(JNIEnv *jenv, jobject jobj)
                   NS_LossyConvertUTF16toASCII(county).get(),
                   NS_LossyConvertUTF16toASCII(region).get(),
                   NS_LossyConvertUTF16toASCII(country).get(),
-                  NS_LossyConvertUTF16toASCII(countryCode).get(),
                   NS_LossyConvertUTF16toASCII(postalCode).get());
 #endif
 
@@ -268,7 +264,6 @@ AndroidAddress::CreateGeoPositionAddress(JNIEnv *jenv, jobject jobj)
                                     county,
                                     region,
                                     country,
-                                    countryCode,
                                     postalCode);
 }
 

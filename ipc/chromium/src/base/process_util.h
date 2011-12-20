@@ -65,7 +65,7 @@ enum ProcessArchitecture {
   PROCESS_ARCH_ARM = 0x8
 };
 
-static ProcessArchitecture GetCurrentProcessArchitecture()
+static inline ProcessArchitecture GetCurrentProcessArchitecture()
 {
   base::ProcessArchitecture currentArchitecture;
 #if defined(ARCH_CPU_X86)

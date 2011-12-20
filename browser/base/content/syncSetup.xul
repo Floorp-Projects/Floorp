@@ -120,7 +120,7 @@
               onpageshow="gSyncSetup.onPageShow()">
     <vbox align="center" flex="1">
       <description style="padding: 0 7em;">
-        &setup.pickSetupType.description;
+        &setup.pickSetupType.description2;
       </description>
       <spacer flex="3"/>
       <button id="newAccount"
@@ -427,6 +427,10 @@
             <checkbox label="&engine.tabs.label;"
                       accesskey="&engine.tabs.accesskey;"
                       id="engine.tabs"
+                      checked="true"/>
+            <checkbox label="&engine.addons.label;"
+                      accesskey="&engine.addons.accesskey;"
+                      id="engine.addons"
                       checked="true"/>
           </vbox>
         </row>

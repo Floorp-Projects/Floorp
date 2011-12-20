@@ -344,25 +344,42 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         { (PRFuncPtr*) &mSymbols.fDeleteFramebuffers, { "DeleteFramebuffers", "DeleteFramebuffersEXT", NULL } },
         { (PRFuncPtr*) &mSymbols.fDeleteRenderbuffers, { "DeleteRenderbuffers", "DeleteRenderbuffersEXT", NULL } },
 
-        { mIsGLES2 ? (PRFuncPtr*) &mSymbols.fClearDepthf : (PRFuncPtr*) &mSymbols.fClearDepth,
-          { mIsGLES2 ? "ClearDepthf" : "ClearDepth", NULL } },
-        { mIsGLES2 ? (PRFuncPtr*) &mSymbols.fDepthRangef : (PRFuncPtr*) &mSymbols.fDepthRange,
-          { mIsGLES2 ? "DepthRangef" : "DepthRange", NULL } },
-
-        // XXX FIXME -- we shouldn't be using glReadBuffer!
-        { mIsGLES2 ? (PRFuncPtr*) NULL : (PRFuncPtr*) &mSymbols.fReadBuffer,
-          { mIsGLES2 ? NULL : "ReadBuffer", NULL } },
-
-        { mIsGLES2 ? (PRFuncPtr*) NULL : (PRFuncPtr*) &mSymbols.fMapBuffer,
-          { mIsGLES2 ? NULL : "MapBuffer", NULL } },
-        { mIsGLES2 ? (PRFuncPtr*) NULL : (PRFuncPtr*) &mSymbols.fUnmapBuffer,
-          { mIsGLES2 ? NULL : "UnmapBuffer", NULL } },
-
         { NULL, { NULL } },
 
     };
 
     mInitialized = LoadSymbols(&symbols[0], trygl, prefix);
+
+    // Load OpenGL ES 2.0 symbols, or desktop if we aren't using ES 2.
+    if (mInitialized) {
+        if (mIsGLES2) {
+            SymLoadStruct symbols_ES2[] = {
+                { (PRFuncPtr*) &mSymbols.fGetShaderPrecisionFormat, { "GetShaderPrecisionFormat", NULL } },
+                { (PRFuncPtr*) &mSymbols.fClearDepthf, { "ClearDepthf", NULL } },
+                { (PRFuncPtr*) &mSymbols.fDepthRangef, { "DepthRangef", NULL } },
+                { NULL, { NULL } },
+            };
+
+            if (!LoadSymbols(&symbols_ES2[0], trygl, prefix)) {
+                NS_RUNTIMEABORT("OpenGL ES 2.0 supported, but symbols could not be loaded.");
+                mInitialized = false;
+            }
+        } else {
+            SymLoadStruct symbols_desktop[] = {
+                { (PRFuncPtr*) &mSymbols.fClearDepth, { "ClearDepth", NULL } },
+                { (PRFuncPtr*) &mSymbols.fDepthRange, { "DepthRange", NULL } },
+                { (PRFuncPtr*) &mSymbols.fReadBuffer, { "ReadBuffer", NULL } },
+                { (PRFuncPtr*) &mSymbols.fMapBuffer, { "MapBuffer", NULL } },
+                { (PRFuncPtr*) &mSymbols.fUnmapBuffer, { "UnmapBuffer", NULL } },
+                { NULL, { NULL } },
+            };
+
+            if (!LoadSymbols(&symbols_desktop[0], trygl, prefix)) {
+                NS_RUNTIMEABORT("Desktop symbols failed to load.");
+                mInitialized = false;
+            }
+        }
+    }
 
     const char *glVendorString;
 
@@ -1069,8 +1086,10 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
 
     const bool useDrawMSFBO = (samples > 0);
 
-    if (!useDrawMSFBO && !aUseReadFBO)
+    if (!useDrawMSFBO && !aUseReadFBO) {
+        // Early out, as no FBO resize work is necessary.
         return true;
+    }
 
     const bool firstTime = (mOffscreenDrawFBO == 0 && mOffscreenReadFBO == 0);
 
@@ -1375,7 +1394,7 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
     mActualFormat = cf;
 
 #ifdef DEBUG
-    if (mDebugMode) {
+    if (DebugMode()) {
         printf_stderr("%s %dx%d offscreen FBO: r: %d g: %d b: %d a: %d depth: %d stencil: %d samples: %d\n",
                       firstTime ? "Created" : "Resized",
                       mOffscreenActualSize.width, mOffscreenActualSize.height,
@@ -1384,20 +1403,11 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
     }
 #endif
 
-    // We're good, and the framebuffer is already attached, so let's
-    // clear out our new framebuffer; otherwise we'll end up displaying
-    // random memory.  We saved all of these things earlier so that we
-    // can restore them.
-    fViewport(0, 0, aSize.width, aSize.height);
-
     // Make sure we know that the buffers are new and thus dirty:
     ForceDirtyFBOs();
 
-    // Clear the new framebuffer with the full viewport
-    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, GetOffscreenFBO());
-    ClearSafely();
-
-    // Ok, now restore the GL state back to what it was before the resize took place.
+    // We're good, and the framebuffer is already attached.
+    // Now restore the GL state back to what it was before the resize took place.
     BindDrawFBO(curBoundFramebufferDraw);
     BindReadFBO(curBoundFramebufferRead);
     fBindTexture(LOCAL_GL_TEXTURE_2D, curBoundTexture);
@@ -1405,7 +1415,9 @@ GLContext::ResizeOffscreenFBO(const gfxIntSize& aSize, const bool aUseReadFBO, c
 
     // -don't- restore the viewport the first time through this, since
     // the previous one isn't valid.
-    if (!firstTime)
+    if (firstTime)
+        fViewport(0, 0, aSize.width, aSize.height); // XXX This is coming out in 711642
+    else
         fViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
     return true;

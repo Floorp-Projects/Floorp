@@ -246,7 +246,7 @@ nsSVGMarkerElement::IsAttributeMapped(const nsIAtom* name) const
     sViewportsMap
   };
 
-  return FindAttributeDependence(name, map, ArrayLength(map)) ||
+  return FindAttributeDependence(name, map) ||
     nsSVGMarkerElementBase::IsAttributeMapped(name);
 }
 

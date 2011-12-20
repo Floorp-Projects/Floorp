@@ -97,6 +97,7 @@ _TEST_FILES = \
   head.js \
   browser_bug557956.js \
   browser_bug616841.js \
+  browser_hotfix.js \
   browser_updatessl.js \
   browser_installssl.js \
   browser_newaddon.js \
@@ -127,6 +128,10 @@ _TEST_RESOURCES = \
   browser_eula.xml \
   browser_purchase.xml \
   discovery.html \
+  signed_hotfix.rdf \
+  signed_hotfix.xpi \
+  unsigned_hotfix.rdf \
+  unsigned_hotfix.xpi \
   more_options.xul \
   options.xul \
   redirect.sjs \

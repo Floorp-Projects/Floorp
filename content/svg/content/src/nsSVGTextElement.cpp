@@ -359,7 +359,7 @@ nsSVGTextElement::IsAttributeMapped(const nsIAtom* name) const
     sFontSpecificationMap
   };
 
-  return FindAttributeDependence(name, map, ArrayLength(map)) ||
+  return FindAttributeDependence(name, map) ||
     nsSVGTextElementBase::IsAttributeMapped(name);
 }
 

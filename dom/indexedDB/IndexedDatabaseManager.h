@@ -181,6 +181,10 @@ public:
   GetOrCreateFileManager(const nsACString& aOrigin,
                          const nsAString& aDatabaseName);
 
+  already_AddRefed<FileManager>
+  GetFileManager(const nsACString& aOrigin,
+                 const nsAString& aDatabaseName);
+
   void InvalidateFileManagersForOrigin(const nsACString& aOrigin);
 
   void InvalidateFileManager(const nsACString& aOrigin,

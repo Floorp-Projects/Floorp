@@ -63,11 +63,8 @@
 // whitespace, we may need to reframe it (or its ancestors).
 #define NS_REFRAME_IF_WHITESPACE (1 << (NODE_TYPE_SPECIFIC_BITS_OFFSET + 1))
 
-// This bit is set to indicate that the text may be part of a selection.
-#define NS_TEXT_IN_SELECTION (1 << (NODE_TYPE_SPECIFIC_BITS_OFFSET + 2))
-
 // Make sure we have enough space for those bits
-PR_STATIC_ASSERT(NODE_TYPE_SPECIFIC_BITS_OFFSET + 2 < 32);
+PR_STATIC_ASSERT(NODE_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
 
 class nsIDOMAttr;
 class nsIDOMEventListener;

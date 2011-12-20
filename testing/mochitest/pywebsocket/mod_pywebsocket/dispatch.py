@@ -54,13 +54,14 @@ _PASSIVE_CLOSING_HANDSHAKE_HANDLER_NAME = (
 class DispatchException(Exception):
     """Exception in dispatching WebSocket request."""
 
-    def __init__(self, name, status=404):
+    def __init__(self, name, status=common.HTTP_STATUS_NOT_FOUND):
         super(DispatchException, self).__init__(name)
         self.status = status
 
 
 def _default_passive_closing_handshake_handler(request):
     """Default web_socket_passive_closing_handshake handler."""
+
     return common.STATUS_NORMAL, ''
 
 
@@ -76,15 +77,21 @@ def _normalize_path(path):
     """
 
     path = path.replace('\\', os.path.sep)
-
-    # MOZILLA: do not normalize away symlinks in mochitest
-    #path = os.path.realpath(path)
-
+    path = os.path.realpath(path)
     path = path.replace('\\', '/')
     return path
 
 
 def _create_path_to_resource_converter(base_dir):
+    """Returns a function that converts the path of a WebSocket handler source
+    file to a resource string by removing the path to the base directory from
+    its head, removing _SOURCE_SUFFIX from its tail, and replacing path
+    separators in it with '/'.
+
+    Args:
+        base_dir: the path to the base directory.
+    """
+
     base_dir = _normalize_path(base_dir)
 
     base_len = len(base_dir)
@@ -93,7 +100,9 @@ def _create_path_to_resource_converter(base_dir):
     def converter(path):
         if not path.endswith(_SOURCE_SUFFIX):
             return None
-        path = _normalize_path(path)
+        # _normalize_path must not be used because resolving symlink breaks
+        # following path check.
+        path = path.replace('\\', '/')
         if not path.startswith(base_dir):
             return None
         return path[base_len:-suffix_len]
@@ -169,7 +178,9 @@ class Dispatcher(object):
     This class maintains a map from resource name to handlers.
     """
 
-    def __init__(self, root_dir, scan_dir=None):
+    def __init__(
+        self, root_dir, scan_dir=None,
+        allow_handlers_outside_root_dir=True):
         """Construct an instance.
 
         Args:
@@ -181,6 +192,8 @@ class Dispatcher(object):
                       root_dir is used as scan_dir. scan_dir can be useful
                       in saving scan time when root_dir contains many
                       subdirectories.
+            allow_handlers_outside_root_dir: Scans handler files even if their
+                      canonical path is not under root_dir.
         """
 
         self._logger = util.get_class_logger(self)
@@ -193,7 +206,8 @@ class Dispatcher(object):
                 os.path.realpath(root_dir)):
             raise DispatchException('scan_dir:%s must be a directory under '
                                     'root_dir:%s.' % (scan_dir, root_dir))
-        self._source_handler_files_in_dir(root_dir, scan_dir)
+        self._source_handler_files_in_dir(
+            root_dir, scan_dir, allow_handlers_outside_root_dir)
 
     def add_resource_path_alias(self,
                                 alias_resource_path, existing_resource_path):
@@ -247,7 +261,7 @@ class Dispatcher(object):
                             _DO_EXTRA_HANDSHAKE_HANDLER_NAME,
                             request.ws_resource),
                     e)
-            raise handshake.HandshakeException(e, 403)
+            raise handshake.HandshakeException(e, common.HTTP_STATUS_FORBIDDEN)
 
     def transfer_data(self, request):
         """Let a handler transfer_data with a WebSocket client.
@@ -288,8 +302,9 @@ class Dispatcher(object):
             self._logger.debug('%s', e)
             request.ws_stream.close_connection(common.STATUS_UNSUPPORTED)
         except stream.InvalidUTF8Exception, e:
-            self._logger_debug('%s', e)
-            request.ws_stream.close_connection(common.STATUS_INVALID_UTF8)
+            self._logger.debug('%s', e)
+            request.ws_stream.close_connection(
+                common.STATUS_INVALID_FRAME_PAYLOAD)
         except msgutil.ConnectionTerminatedException, e:
             self._logger.debug('%s', e)
         except Exception, e:
@@ -322,23 +337,45 @@ class Dispatcher(object):
         handler_suite = self._handler_suite_map.get(resource)
         if handler_suite and fragment:
             raise DispatchException('Fragment identifiers MUST NOT be used on '
-                                    'WebSocket URIs', 400);
+                                    'WebSocket URIs',
+                                    common.HTTP_STATUS_BAD_REQUEST)
         return handler_suite
 
-    def _source_handler_files_in_dir(self, root_dir, scan_dir):
+    def _source_handler_files_in_dir(
+        self, root_dir, scan_dir, allow_handlers_outside_root_dir):
         """Source all the handler source files in the scan_dir directory.
 
         The resource path is determined relative to root_dir.
         """
 
+        # We build a map from resource to handler code assuming that there's
+        # only one path from root_dir to scan_dir and it can be obtained by
+        # comparing realpath of them.
+
+        # Here we cannot use abspath. See
+        # https://bugs.webkit.org/show_bug.cgi?id=31603
+
         convert = _create_path_to_resource_converter(root_dir)
-        for path in _enumerate_handler_file_paths(scan_dir):
+        scan_realpath = os.path.realpath(scan_dir)
+        root_realpath = os.path.realpath(root_dir)
+        for path in _enumerate_handler_file_paths(scan_realpath):
+            if (not allow_handlers_outside_root_dir and
+                (not os.path.realpath(path).startswith(root_realpath))):
+                self._logger.debug(
+                    'Canonical path of %s is not under root directory' %
+                    path)
+                continue
             try:
                 handler_suite = _source_handler_file(open(path).read())
             except DispatchException, e:
                 self._source_warnings.append('%s: %s' % (path, e))
                 continue
-            self._handler_suite_map[convert(path)] = handler_suite
+            resource = convert(path)
+            if resource is None:
+                self._logger.debug(
+                    'Path to resource conversion on %s failed' % path)
+            else:
+                self._handler_suite_map[convert(path)] = handler_suite
 
 
 # vi:sts=4 sw=4 et

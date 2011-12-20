@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/open_new_tab"
+          android:title="@string/contextmenu_open_new_tab"/>
+
+    <item android:id="@+id/share"
+          android:title="@string/contextmenu_share"/>
+
+    <item android:id="@+id/add_to_launcher"
+          android:title="@string/contextmenu_add_to_launcher"/>
+
+</menu>

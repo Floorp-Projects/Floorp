@@ -36,6 +36,7 @@ _available_processors = {}
 
 
 class ExtensionProcessorInterface(object):
+
     def get_extension_response(self):
         return None
 
@@ -131,7 +132,9 @@ class DeflateFrameExtensionProcessor(ExtensionProcessorInterface):
         return response
 
     def setup_stream_options(self, stream_options):
+
         class _OutgoingFilter(object):
+
             def __init__(self, parent):
                 self._parent = parent
 
@@ -139,6 +142,7 @@ class DeflateFrameExtensionProcessor(ExtensionProcessorInterface):
                 self._parent._outgoing_filter(frame)
 
         class _IncomingFilter(object):
+
             def __init__(self, parent):
                 self._parent = parent
 

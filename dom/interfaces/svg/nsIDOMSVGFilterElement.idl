@@ -40,7 +40,7 @@ interface nsIDOMSVGAnimatedLength;
 interface nsIDOMSVGAnimatedEnumeration;
 interface nsIDOMSVGAnimatedInteger;
 
-[scriptable, uuid(e8bdae49-70af-46ed-9c06-b11a7173f68f)]
+[scriptable, uuid(d4ffe017-20da-44eb-8111-9e814be8d313)]
 interface nsIDOMSVGFilterElement
   : nsIDOMSVGElement
 /*

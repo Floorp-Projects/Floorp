@@ -1,7 +1,7 @@
-var gProfD;
+let gSyncProfile;
 
 do_load_httpd_js();
-gProfD = do_get_profile();
+gSyncProfile = do_get_profile();
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -17,7 +17,7 @@ else
 let XULAppInfo = {
   vendor: "Mozilla",
   name: "XPCShell",
-  ID: "{3e3ba16c-1675-4e88-b9c8-afef81b3d2ef}",
+  ID: "xpcshell@tests.mozilla.org",
   version: "1",
   appBuildID: "20100621",
   platformVersion: "",
@@ -26,7 +26,8 @@ let XULAppInfo = {
   logConsoleErrors: true,
   OS: OS,
   XPCOMABI: "noarch-spidermonkey",
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo, Ci.nsIXULRuntime])
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo, Ci.nsIXULRuntime]),
+  invalidateCachesOnRestart: function invalidateCachesOnRestart() { }
 };
 
 let XULAppInfoFactory = {
