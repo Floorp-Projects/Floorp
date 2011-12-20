@@ -49,8 +49,8 @@
   <string name="agent_request_desktop">&agent_request_desktop;</string>
   <string name="agent_request_mobile">&agent_request_mobile;</string>
 
-  <string name="preferences">&preferences;</string>
-  <string name="preferences_title">&preferences_title;</string>
+  <string name="settings">&settings;</string>
+  <string name="settings_title">&settings_title;</string>
   <string name="pref_category_general">&pref_category_general;</string>
   <string name="pref_category_privacy">&pref_category_privacy;</string>
   <string name="pref_category_content">&pref_category_content;</string>
