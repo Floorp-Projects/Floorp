@@ -137,5 +137,10 @@ add_test(function test_get_changed_ids() {
 function run_test() {
   initTestLogging("Trace");
   Log4Moz.repository.getLogger("Sync.Engine.Addons").level = Log4Moz.Level.Trace;
+  Log4Moz.repository.getLogger("Sync.AddonsRepository").level =
+    Log4Moz.Level.Trace;
+
+  reconciler.startListening();
+
   advance_test();
 }
