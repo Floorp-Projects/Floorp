@@ -45,6 +45,8 @@
 #include "nsIDOMSmsMessage.h"
 #include "nsIDOMSmsRequest.h"
 #include "SmsRequestManager.h"
+#include "nsJSUtils.h"
+#include "nsContentUtils.h"
 
 /**
  * We have to use macros here because our leak analysis tool things we are
@@ -128,19 +130,82 @@ SmsManager::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult
   return NS_OK;
 }
 
-NS_IMETHODIMP
-SmsManager::Send(const nsAString& aNumber, const nsAString& aMessage, nsIDOMMozSmsRequest** aRequest)
+nsresult
+SmsManager::Send(JSContext* aCx, JSObject* aGlobal, JSString* aNumber,
+                 const nsAString& aMessage, jsval* aRequest)
 {
   nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(smsService, NS_OK);
+  if (!smsService) {
+    NS_ERROR("No SMS Service!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMMozSmsRequest> request;
 
   int requestId =
-    SmsRequestManager::GetInstance()->CreateRequest(mOwner, mScriptContext, aRequest);
-  NS_ASSERTION(*aRequest, "The request object must have been created!");
+    SmsRequestManager::GetInstance()->CreateRequest(mOwner, mScriptContext,
+                                                    getter_AddRefs(request));
+  NS_ASSERTION(request, "The request object must have been created!");
 
-  NS_ADDREF(*aRequest);
+  nsDependentJSString number;
+  number.init(aCx, aNumber);
 
-  smsService->Send(aNumber, aMessage, requestId, 0);
+  smsService->Send(number, aMessage, requestId, 0);
+
+  nsresult rv = nsContentUtils::WrapNative(aCx, aGlobal, request, aRequest);
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Failed to create the js value!");
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SmsManager::Send(const jsval& aNumber, const nsAString& aMessage, jsval* aReturn)
+{
+  JSContext* cx = mScriptContext->GetNativeContext();
+  NS_ASSERTION(cx, "Failed to get a context!");
+
+  if (!aNumber.isString() &&
+      !(aNumber.isObject() && JS_IsArrayObject(cx, &aNumber.toObject()))) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  JSObject* global = mScriptContext->GetNativeGlobal();
+  NS_ASSERTION(global, "Failed to get global object!");
+
+  JSAutoRequest ar(cx);
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(cx, global)) {
+    NS_ERROR("Failed to enter the js compartment!");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aNumber.isString()) {
+    return Send(cx, global, aNumber.toString(), aMessage, aReturn);
+  }
+
+  // Must be an array then.
+  JSObject& numbers = aNumber.toObject();
+
+  jsuint size;
+  JS_ALWAYS_TRUE(JS_GetArrayLength(cx, &numbers, &size));
+
+  jsval* requests = new jsval[size];
+
+  for (jsuint i=0; i<size; ++i) {
+    jsval number;
+    if (!JS_GetElement(cx, &numbers, i, &number)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    nsresult rv = Send(cx, global, number.toString(), aMessage, &requests[i]);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  aReturn->setObjectOrNull(JS_NewArrayObject(cx, size, requests));
+  NS_ENSURE_TRUE(aReturn->isObject(), NS_ERROR_FAILURE);
 
   return NS_OK;
 }

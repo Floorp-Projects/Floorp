@@ -88,6 +88,7 @@ CPPSRCS = \
 
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/content/events/src \
+  -I$(topsrcdir)/dom/base \
   $(NULL)
 
 # Add VPATH to LOCAL_INCLUDES so we are going to include the correct backend
