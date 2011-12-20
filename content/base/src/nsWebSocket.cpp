@@ -168,8 +168,8 @@ nsWebSocket::CloseConnection()
   // reference until the end of the method
   nsRefPtr<nsWebSocket> kungfuDeathGrip = this;
 
-  if (mReadyState == nsIMozWebSocket::CONNECTING) {
-    SetReadyState(nsIMozWebSocket::CLOSED);
+  if (mReadyState == nsIWebSocket::CONNECTING) {
+    SetReadyState(nsIWebSocket::CLOSED);
     if (mChannel) {
       mChannel->Close(mClientReasonCode, mClientReason);
     }
@@ -177,10 +177,10 @@ nsWebSocket::CloseConnection()
     return NS_OK;
   }
 
-  SetReadyState(nsIMozWebSocket::CLOSING);
+  SetReadyState(nsIWebSocket::CLOSING);
 
   if (mDisconnected) {
-    SetReadyState(nsIMozWebSocket::CLOSED);
+    SetReadyState(nsIWebSocket::CLOSED);
     Disconnect();
     return NS_OK;
   }
@@ -202,7 +202,7 @@ nsWebSocket::ConsoleError()
     NS_ConvertUTF8toUTF16 specUTF16(targetSpec);
     const PRUnichar *formatStrings[] = { specUTF16.get() };
 
-    if (mReadyState < nsIMozWebSocket::OPEN) {
+    if (mReadyState < nsIWebSocket::OPEN) {
       PrintErrorOnConsole("chrome://global/locale/appstrings.properties",
                           NS_LITERAL_STRING("connectionFailure").get(),
                           formatStrings, ArrayLength(formatStrings));
@@ -261,35 +261,39 @@ nsWebSocket::Disconnect()
 // nsWebSocket::nsIWebSocketListener methods:
 //-----------------------------------------------------------------------------
 
-NS_IMETHODIMP
-nsWebSocket::OnMessageAvailable(nsISupports *aContext, const nsACString & aMsg)
+nsresult
+nsWebSocket::DoOnMessageAvailable(const nsACString & aMsg, bool isBinary)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
   NS_ABORT_IF_FALSE(!mDisconnected, "Received message after disconnecting");
 
-  // Dispatch New Message
-  nsresult rv = CreateAndDispatchMessageEvent(aMsg, false);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to dispatch the message event");
+  if (mReadyState == nsIWebSocket::OPEN) {
+    // Dispatch New Message
+    nsresult rv = CreateAndDispatchMessageEvent(aMsg, isBinary);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to dispatch the message event");
+    }
+  } else {
+    // CLOSING should be the only other state where it's possible to get msgs
+    // from channel: Spec says to drop them.
+    NS_ASSERTION(mReadyState == nsIWebSocket::CLOSING,
+                 "Received message while CONNECTING or CLOSED");
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
+nsWebSocket::OnMessageAvailable(nsISupports *aContext, const nsACString & aMsg)
+{
+  return DoOnMessageAvailable(aMsg, false);
+}
+
+NS_IMETHODIMP
 nsWebSocket::OnBinaryMessageAvailable(nsISupports *aContext,
                                       const nsACString & aMsg)
 {
-  NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
-  NS_ABORT_IF_FALSE(!mDisconnected, "Received message after disconnecting");
-
-  // Dispatch New Message
-  nsresult rv = CreateAndDispatchMessageEvent(aMsg, true);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to dispatch the message event");
-  }
-
-  return NS_OK;
+  return DoOnMessageAvailable(aMsg, true);
 }
 
 NS_IMETHODIMP
@@ -306,7 +310,7 @@ nsWebSocket::OnStart(nsISupports *aContext)
   mChannel->GetExtensions(mEstablishedExtensions);
   UpdateURI();
 
-  SetReadyState(nsIMozWebSocket::OPEN);
+  SetReadyState(nsIWebSocket::OPEN);
   return NS_OK;
 }
 
@@ -320,7 +324,7 @@ nsWebSocket::OnStop(nsISupports *aContext, nsresult aStatusCode)
   mClosedCleanly = NS_SUCCEEDED(aStatusCode);
 
   if (aStatusCode == NS_BASE_STREAM_CLOSED &&
-      mReadyState >= nsIMozWebSocket::CLOSING) {
+      mReadyState >= nsIWebSocket::CLOSING) {
     // don't generate an error event just because of an unclean close
     aStatusCode = NS_OK;
   }
@@ -332,7 +336,7 @@ nsWebSocket::OnStop(nsISupports *aContext, nsresult aStatusCode)
       NS_WARNING("Failed to dispatch the error event");
   }
 
-  SetReadyState(nsIMozWebSocket::CLOSED);
+  SetReadyState(nsIWebSocket::CLOSED);
   Disconnect();
 
   return NS_OK;
@@ -405,7 +409,7 @@ nsWebSocket::nsWebSocket() : mKeepingAlive(false),
                              mDisconnected(false),
                              mClientReasonCode(0),
                              mServerReasonCode(nsIWebSocketChannel::CLOSE_ABNORMAL),
-                             mReadyState(nsIMozWebSocket::CONNECTING),
+                             mReadyState(nsIWebSocket::CONNECTING),
                              mOutgoingBufferedAmount(0),
                              mBinaryType(WS_BINARY_TYPE_BLOB),
                              mScriptLine(0),
@@ -448,15 +452,15 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsWebSocket,
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChannel)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-DOMCI_DATA(MozWebSocket, nsWebSocket)
+DOMCI_DATA(WebSocket, nsWebSocket)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsWebSocket)
-  NS_INTERFACE_MAP_ENTRY(nsIMozWebSocket)
+  NS_INTERFACE_MAP_ENTRY(nsIWebSocket)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIWebSocketListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozWebSocket)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebSocket)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetWrapperCache)
 
 NS_IMPL_ADDREF_INHERITED(nsWebSocket, nsDOMEventTargetWrapperCache)
@@ -846,13 +850,13 @@ nsWebSocket::SetReadyState(PRUint16 aNewReadyState)
     return;
   }
 
-  NS_ABORT_IF_FALSE((aNewReadyState == nsIMozWebSocket::OPEN)    ||
-                    (aNewReadyState == nsIMozWebSocket::CLOSING) ||
-                    (aNewReadyState == nsIMozWebSocket::CLOSED),
+  NS_ABORT_IF_FALSE((aNewReadyState == nsIWebSocket::OPEN)    ||
+                    (aNewReadyState == nsIWebSocket::CLOSING) ||
+                    (aNewReadyState == nsIWebSocket::CLOSED),
                     "unexpected readyState");
 
-  if (aNewReadyState == nsIMozWebSocket::OPEN) {
-    NS_ABORT_IF_FALSE(mReadyState == nsIMozWebSocket::CONNECTING,
+  if (aNewReadyState == nsIWebSocket::OPEN) {
+    NS_ABORT_IF_FALSE(mReadyState == nsIWebSocket::CONNECTING,
                       "unexpected readyState transition");
     mReadyState = aNewReadyState;
 
@@ -864,15 +868,15 @@ nsWebSocket::SetReadyState(PRUint16 aNewReadyState)
     return;
   }
 
-  if (aNewReadyState == nsIMozWebSocket::CLOSING) {
-    NS_ABORT_IF_FALSE((mReadyState == nsIMozWebSocket::CONNECTING) ||
-                      (mReadyState == nsIMozWebSocket::OPEN),
+  if (aNewReadyState == nsIWebSocket::CLOSING) {
+    NS_ABORT_IF_FALSE((mReadyState == nsIWebSocket::CONNECTING) ||
+                      (mReadyState == nsIWebSocket::OPEN),
                       "unexpected readyState transition");
     mReadyState = aNewReadyState;
     return;
   }
 
-  if (aNewReadyState == nsIMozWebSocket::CLOSED) {
+  if (aNewReadyState == nsIWebSocket::CLOSED) {
     mReadyState = aNewReadyState;
 
     // The close event must be dispatched asynchronously.
@@ -989,7 +993,7 @@ nsWebSocket::UpdateMustKeepAlive()
   if (mListenerManager) {
     switch (mReadyState)
     {
-      case nsIMozWebSocket::CONNECTING:
+      case nsIWebSocket::CONNECTING:
       {
         if (mListenerManager->HasListenersFor(NS_LITERAL_STRING("open")) ||
             mListenerManager->HasListenersFor(NS_LITERAL_STRING("message")) ||
@@ -1000,8 +1004,8 @@ nsWebSocket::UpdateMustKeepAlive()
       }
       break;
 
-      case nsIMozWebSocket::OPEN:
-      case nsIMozWebSocket::CLOSING:
+      case nsIWebSocket::OPEN:
+      case nsIWebSocket::CLOSING:
       {
         if (mListenerManager->HasListenersFor(NS_LITERAL_STRING("message")) ||
             mListenerManager->HasListenersFor(NS_LITERAL_STRING("error")) ||
@@ -1012,7 +1016,7 @@ nsWebSocket::UpdateMustKeepAlive()
       }
       break;
 
-      case nsIMozWebSocket::CLOSED:
+      case nsIWebSocket::CLOSED:
       {
         shouldKeepAlive =
           (!mTriggeredCloseEvent &&
@@ -1097,7 +1101,7 @@ nsWebSocket::AddEventListener(const nsAString& aType,
 }
 
 //-----------------------------------------------------------------------------
-// nsWebSocket::nsIMozWebSocket methods:
+// nsWebSocket::nsIWebSocket methods:
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
@@ -1213,7 +1217,7 @@ nsWebSocket::Send(nsIVariant *aData)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
 
-  if (mReadyState == nsIMozWebSocket::CONNECTING) {
+  if (mReadyState == nsIWebSocket::CONNECTING) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
@@ -1227,12 +1231,12 @@ nsWebSocket::Send(nsIVariant *aData)
   // Always increment outgoing buffer len, even if closed
   mOutgoingBufferedAmount += msgLen;
 
-  if (mReadyState == nsIMozWebSocket::CLOSING ||
-      mReadyState == nsIMozWebSocket::CLOSED) {
+  if (mReadyState == nsIWebSocket::CLOSING ||
+      mReadyState == nsIWebSocket::CLOSED) {
     return NS_OK;
   }
 
-  NS_ASSERTION(mReadyState == nsIMozWebSocket::OPEN,
+  NS_ASSERTION(mReadyState == nsIWebSocket::OPEN,
                "Unknown state in nsWebSocket::Send");
 
   if (msgStream) {
@@ -1406,12 +1410,12 @@ nsWebSocket::Close(PRUint16 code, const nsAString & reason, PRUint8 argc)
   if (argc >= 2)
     mClientReason = utf8Reason;
   
-  if (mReadyState == nsIMozWebSocket::CLOSING ||
-      mReadyState == nsIMozWebSocket::CLOSED) {
+  if (mReadyState == nsIWebSocket::CLOSING ||
+      mReadyState == nsIWebSocket::CLOSED) {
     return NS_OK;
   }
 
-  if (mReadyState == nsIMozWebSocket::CONNECTING) {
+  if (mReadyState == nsIWebSocket::CONNECTING) {
     // FailConnection() can release the object, so we keep a reference
     // before calling it
     nsRefPtr<nsWebSocket> kungfuDeathGrip = this;
@@ -1420,7 +1424,7 @@ nsWebSocket::Close(PRUint16 code, const nsAString & reason, PRUint8 argc)
     return NS_OK;
   }
 
-  // mReadyState == nsIMozWebSocket::OPEN
+  // mReadyState == nsIWebSocket::OPEN
   CloseConnection();
 
   return NS_OK;
