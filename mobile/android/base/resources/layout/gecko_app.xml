@@ -3,12 +3,7 @@
               android:id="@+id/main_layout"
               style="@style/Screen">
 
-    <org.mozilla.gecko.BrowserToolbar android:id="@+id/browser_toolbar"
-                                      style="@style/BrowserToolbar">
-
-        <include layout="@layout/browser_toolbar"/>
-
-    </org.mozilla.gecko.BrowserToolbar>
+    <include layout="@layout/browser_toolbar"/>
 
     <RelativeLayout android:id="@+id/gecko_layout"
                     android:layout_width="fill_parent"
