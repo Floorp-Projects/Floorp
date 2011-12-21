@@ -455,8 +455,6 @@ RES_MENU = \
   res/menu/awesomebar_contextmenu.xml \
   $(NULL)
 
-AB_rCD = $(shell echo $(AB_CD) | sed -e s/-/-r/)
-
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 
 ifdef MOZ_CRASHREPORTER
