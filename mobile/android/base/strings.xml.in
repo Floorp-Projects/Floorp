@@ -3,6 +3,7 @@
 <!DOCTYPE resources [
 #includesubst @BRANDPATH@
 #includesubst @STRINGSPATH@
+#includesubst @SYNCSTRINGSPATH@
 ]>
 <resources>
 #include ../sync/strings.xml.in
