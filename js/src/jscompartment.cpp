@@ -619,8 +619,11 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b, AutoDebugModeGC &dmgc)
 
     debugModeBits = (debugModeBits & ~unsigned(DebugFromC)) | (b ? DebugFromC : 0);
     JS_ASSERT(debugMode() == enabledAfter);
-    if (enabledBefore != enabledAfter)
+    if (enabledBefore != enabledAfter) {
         updateForDebugMode(cx->runtime->defaultFreeOp(), dmgc);
+        if (!enabledAfter)
+            cx->runtime->debugScopes->onCompartmentLeaveDebugMode(this);
+    }
     return true;
 }
 
@@ -692,6 +695,7 @@ JSCompartment::removeDebuggee(FreeOp *fop,
         debugModeBits &= ~DebugFromJS;
         if (wasEnabled && !debugMode()) {
             AutoDebugModeGC dmgc(rt);
+            fop->runtime()->debugScopes->onCompartmentLeaveDebugMode(this);
             updateForDebugMode(fop, dmgc);
         }
     }

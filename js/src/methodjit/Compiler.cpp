@@ -3815,7 +3815,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
     if (script->function()) {
         types::TypeScriptNesting *nesting = script->nesting();
         if (script->function()->isHeavyweight() || script->needsArgsObj() ||
-            (nesting && nesting->children))
+            (nesting && nesting->children) || debugMode())
         {
             prepareStubCall(Uses(fe ? 1 : 0));
             INLINE_STUBCALL(stubs::FunctionFrameEpilogue, REJOIN_NONE);
@@ -7028,7 +7028,7 @@ mjit::Compiler::enterBlock(StaticBlockObject *block)
     /* For now, don't bother doing anything for this opcode. */
     frame.syncAndForgetEverything();
     masm.move(ImmPtr(block), Registers::ArgReg1);
-    INLINE_STUBCALL(stubs::EnterBlock, REJOIN_NONE);
+    INLINE_STUBCALL(stubs::EnterBlock, REJOIN_FALLTHROUGH);
     if (*PC == JSOP_ENTERBLOCK)
         frame.enterBlock(StackDefs(script, PC));
 }

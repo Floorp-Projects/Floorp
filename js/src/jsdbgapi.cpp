@@ -576,9 +576,7 @@ JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fpArg)
     if (!ac.enter())
         return NULL;
 
-    /* Force creation of argument and call objects if not yet created */
-    (void) JS_GetFrameCallObject(cx, Jsvalify(fp));
-    return GetScopeChain(cx, fp);
+    return GetDebugScopeForFrame(cx, fp);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -587,23 +585,29 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fpArg)
     StackFrame *fp = Valueify(fpArg);
     JS_ASSERT(cx->stack.space().containsSlow(fp));
 
-    if (!fp->compartment()->debugMode())
-        return NULL;
-
     if (!fp->isFunctionFrame())
         return NULL;
 
-    js::AutoCompartment ac(cx, fp->scopeChain());
-    if (!ac.enter())
-        return NULL;
+    JSObject *o = GetDebugScopeForFrame(cx, fp);
 
     /*
-     * XXX ill-defined: null return here means error was reported, unlike a
-     *     null returned above or in the #else
+     * Given that fp is a function frame and GetDebugScopeForFrame always fills
+     * in missing scopes, we can expect to find fp's CallObject on 'o'. Note:
+     *  - GetDebugScopeForFrame wraps every ScopeObject (missing or not) with
+     *    a DebugScopeObject proxy.
+     *  - If fp is an eval-in-function, then fp has no callobj of its own and
+     *    JS_GetFrameCallObject will return the innermost function's callobj.
      */
-    if (!fp->hasCallObj() && fp->isNonEvalFunctionFrame())
-        return CallObject::createForFunction(cx, fp);
-    return &fp->callObj();
+    while (o) {
+        ScopeObject &scope = o->asDebugScope().scope();
+        if (scope.isCall()) {
+            JS_ASSERT_IF(cx->compartment->debugMode() && fp->isNonEvalFunctionFrame(),
+                         fp == scope.asCall().maybeStackFrame());
+            return o;
+        }
+        o = o->enclosingScope();
+    }
+    return NULL;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -662,6 +666,14 @@ JS_PUBLIC_API(JSObject *)
 JS_GetFrameCalleeObject(JSContext *cx, JSStackFrame *fp)
 {
     return Valueify(fp)->maybeCalleev().toObjectOrNull();
+}
+
+JS_PUBLIC_API(const char *)
+JS_GetDebugClassName(JSObject *obj)
+{
+    if (obj->isDebugScope())
+        return obj->asDebugScope().scope().getClass()->name;
+    return obj->getClass()->name;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -846,28 +858,53 @@ JS_PUBLIC_API(JSBool)
 JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
 {
     assertSameCompartment(cx, obj);
+    uint32_t i = 0;
+    JSPropertyDesc *pd = NULL;
 
-    Class *clasp = obj->getClass();
+    if (obj->isDebugScope()) {
+        AutoIdVector props(cx);
+        if (!Proxy::enumerate(cx, obj, props))
+            return false;
+
+        pd = (JSPropertyDesc *)cx->calloc_(props.length() * sizeof(JSPropertyDesc));
+        if (!pd)
+            return false;
+
+        for (i = 0; i < props.length(); ++i) {
+            if (!js_AddRoot(cx, &pd[i].id, NULL))
+                goto bad;
+            pd[i].id = IdToValue(props[i]);
+            if (!js_AddRoot(cx, &pd[i].value, NULL))
+                goto bad;
+            if (!Proxy::get(cx, obj, obj, props[i], &pd[i].value))
+                goto bad;
+        }
+
+        pda->length = props.length();
+        pda->array = pd;
+        return true;
+    }
+
+    Class *clasp;
+    clasp = obj->getClass();
     if (!obj->isNative() || (clasp->flags & JSCLASS_NEW_ENUMERATE)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_CANT_DESCRIBE_PROPS, clasp->name);
-        return JS_FALSE;
+        return false;
     }
     if (!clasp->enumerate(cx, obj))
-        return JS_FALSE;
+        return false;
 
     /* Return an empty pda early if obj has no own properties. */
     if (obj->nativeEmpty()) {
         pda->length = 0;
         pda->array = NULL;
-        return JS_TRUE;
+        return true;
     }
 
-    uint32_t n = obj->propertyCount();
-    JSPropertyDesc *pd = (JSPropertyDesc *) cx->malloc_(size_t(n) * sizeof(JSPropertyDesc));
+    pd = (JSPropertyDesc *)cx->malloc_(obj->propertyCount() * sizeof(JSPropertyDesc));
     if (!pd)
-        return JS_FALSE;
-    uint32_t i = 0;
+        return false;
     for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {
         if (!js_AddRoot(cx, &pd[i].id, NULL))
             goto bad;
@@ -878,18 +915,18 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
             goto bad;
         if ((pd[i].flags & JSPD_ALIAS) && !js_AddRoot(cx, &pd[i].alias, NULL))
             goto bad;
-        if (++i == n)
+        if (++i == obj->propertyCount())
             break;
     }
     pda->length = i;
     pda->array = pd;
-    return JS_TRUE;
+    return true;
 
 bad:
     pda->length = i + 1;
     pda->array = pd;
     JS_PutPropertyDescArray(cx, pda);
-    return JS_FALSE;
+    return false;
 }
 
 JS_PUBLIC_API(void)
@@ -906,6 +943,8 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
             js_RemoveRoot(cx->runtime, &pd[i].alias);
     }
     cx->free_(pd);
+    pda->array = NULL;
+    pda->length = 0;
 }
 
 /************************************************************************/

@@ -326,32 +326,15 @@ template<JSBool strict>
 void JS_FASTCALL
 stubs::DefFun(VMFrame &f, JSFunction *fun_)
 {
-    RootedVarFunction fun(f.cx, fun_);
-
-    JSContext *cx = f.cx;
-    StackFrame *fp = f.fp();
-
     /*
      * A top-level function defined in Global or Eval code (see ECMA-262
      * Ed. 3), or else a SpiderMonkey extension: a named function statement in
      * a compound statement (not at the top statement level of global code, or
      * at the top level of a function body).
      */
-    JSObject *obj = fun;
-
-    RootedVarObject obj2(f.cx);
-    if (fun->isNullClosure()) {
-        /*
-         * Even a null closure needs a parent for principals finding.
-         * FIXME: bug 476950, although debugger users may also demand some kind
-         * of scope link for debugger-assisted eval-in-frame.
-         */
-        obj2 = fp->scopeChain();
-    } else {
-        obj2 = GetScopeChain(cx, fp);
-        if (!obj2)
-            THROW();
-    }
+    JSContext *cx = f.cx;
+    StackFrame *fp = f.fp();
+    RootedVarFunction fun(f.cx, fun_);
 
     /*
      * If static link is not current scope, clone fun's object to link to the
@@ -362,11 +345,14 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
      * windows, and user-defined JS functions precompiled and then shared among
      * requests in server-side JS.
      */
-    if (obj->toFunction()->environment() != obj2) {
-        obj = CloneFunctionObjectIfNotSingleton(cx, fun, obj2);
-        if (!obj)
+    HandleObject scopeChain = f.fp()->scopeChain();
+    if (fun->environment() != scopeChain) {
+        fun = CloneFunctionObjectIfNotSingleton(cx, fun, scopeChain);
+        if (!fun)
             THROW();
-        JS_ASSERT_IF(f.script()->compileAndGo, obj->global() == fun->global());
+    } else {
+        JS_ASSERT(f.script()->compileAndGo);
+        JS_ASSERT(f.fp()->isGlobalFrame() || f.fp()->isEvalInFunction());
     }
 
     /*
@@ -391,7 +377,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
     if (!parent->lookupProperty(cx, name, &pobj, &prop))
         THROW();
 
-    Value rval = ObjectValue(*obj);
+    Value rval = ObjectValue(*fun);
 
     do {
         /* Steps 5d, 5f. */
@@ -1011,22 +997,11 @@ JSObject * JS_FASTCALL
 stubs::Lambda(VMFrame &f, JSFunction *fun_)
 {
     RootedVarFunction fun(f.cx, fun_);
-
-    RootedVarObject parent(f.cx);
-    if (fun->isNullClosure()) {
-        parent = f.fp()->scopeChain();
-    } else {
-        parent = GetScopeChain(f.cx, f.fp());
-        if (!parent)
-            THROWV(NULL);
-    }
-
-    JSObject *obj = CloneFunctionObjectIfNotSingleton(f.cx, fun, parent);
-    if (!obj)
+    fun = CloneFunctionObjectIfNotSingleton(f.cx, fun, f.fp()->scopeChain());
+    if (!fun)
         THROWV(NULL);
 
-    JS_ASSERT_IF(f.script()->compileAndGo, obj->global() == fun->global());
-    return obj;
+    return fun;
 }
 
 void JS_FASTCALL
@@ -1232,9 +1207,11 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
 {
     FrameRegs &regs = f.regs;
     StackFrame *fp = f.fp();
-    StaticBlockObject &blockObj = obj->asStaticBlock();
-
     JS_ASSERT(!f.regs.inlined());
+
+    StaticBlockObject &blockObj = obj->asStaticBlock();
+    if (!fp->pushBlock(f.cx, blockObj))
+        THROW();
 
     if (*regs.pc == JSOP_ENTERBLOCK) {
         JS_ASSERT(fp->base() + blockObj.stackDepth() == regs.sp);
@@ -1243,53 +1220,19 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
         JS_ASSERT(vp <= fp->slots() + fp->script()->nslots);
         SetValueRangeToUndefined(regs.sp, vp);
         regs.sp = vp;
+    } else if (*regs.pc == JSOP_ENTERLET0) {
+        JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() + blockObj.slotCount()
+                  == regs.sp);
+    } else if (*regs.pc == JSOP_ENTERLET1) {
+        JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() + blockObj.slotCount()
+                  == regs.sp - 1);
     }
-
-#ifdef DEBUG
-    JSContext *cx = f.cx;
-    JS_ASSERT(fp->maybeBlockChain() == blockObj.enclosingBlock());
-
-    /*
-     * The young end of fp->scopeChain() may omit blocks if we haven't closed
-     * over them, but if there are any closure blocks on fp->scopeChain(), they'd
-     * better be (clones of) ancestors of the block we're entering now;
-     * anything else we should have popped off fp->scopeChain() when we left its
-     * static scope.
-     */
-    JSObject *obj2 = fp->scopeChain();
-    while (obj2->isWith())
-        obj2 = &obj2->asWith().enclosingScope();
-    if (obj2->isBlock() &&
-        obj2->getPrivate() == js_FloatingFrameIfGenerator(cx, fp)) {
-        JSObject &youngestProto = obj2->asClonedBlock().staticBlock();
-        StaticBlockObject *parent = &blockObj;
-        while ((parent = parent->enclosingBlock()) != &youngestProto)
-            JS_ASSERT(parent);
-    }
-#endif
-
-    fp->setBlockChain(&blockObj);
 }
 
 void JS_FASTCALL
 stubs::LeaveBlock(VMFrame &f)
 {
-    JSContext *cx = f.cx;
-    StackFrame *fp = f.fp();
-
-    StaticBlockObject &blockObj = fp->blockChain();
-    JS_ASSERT(blockObj.stackDepth() <= StackDepth(fp->script()));
-
-    /*
-     * If we're about to leave the dynamic scope of a block that has been
-     * cloned onto fp->scopeChain(), clear its private data, move its locals from
-     * the stack into the clone, and pop it off the chain.
-     */
-    JSObject &obj = *fp->scopeChain();
-    if (obj.getProto() == &blockObj)
-        obj.asClonedBlock().put(cx);
-
-    fp->setBlockChain(blockObj.enclosingBlock());
+    f.fp()->popBlock(f.cx);
 }
 
 inline void *
@@ -1707,7 +1650,7 @@ stubs::FunctionFramePrologue(VMFrame &f)
 void JS_FASTCALL
 stubs::FunctionFrameEpilogue(VMFrame &f)
 {
-    f.fp()->functionEpilogue();
+    f.fp()->functionEpilogue(f.cx);
 }
 
 void JS_FASTCALL
@@ -1725,7 +1668,7 @@ stubs::AnyFrameEpilogue(VMFrame &f)
     if (!ok)
         THROW();
     if (f.fp()->isNonEvalFunctionFrame())
-        f.fp()->functionEpilogue();
+        f.fp()->functionEpilogue(f.cx);
 }
 
 template <bool Clamped>

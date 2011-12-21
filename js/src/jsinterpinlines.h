@@ -423,7 +423,7 @@ inline bool
 DefVarOrConstOperation(JSContext *cx, HandleObject varobj, PropertyName *dn, unsigned attrs)
 {
     JS_ASSERT(varobj->isVarObj());
-    JS_ASSERT(!varobj->getOps()->defineProperty);
+    JS_ASSERT(!varobj->getOps()->defineProperty || varobj->isDebugScope());
 
     JSProperty *prop;
     JSObject *obj2;
@@ -432,9 +432,8 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, PropertyName *dn, uns
 
     /* Steps 8c, 8d. */
     if (!prop || (obj2 != varobj && varobj->isGlobal())) {
-        if (!DefineNativeProperty(cx, varobj, dn, UndefinedValue(),
-                                  JS_PropertyStub, JS_StrictPropertyStub, attrs, 0, 0))
-        {
+        if (!varobj->defineProperty(cx, dn, UndefinedValue(), JS_PropertyStub,
+                                    JS_StrictPropertyStub, attrs)) {
             return false;
         }
     } else {
@@ -532,6 +531,49 @@ InterpreterFrames::enableInterruptsIfRunning(JSScript *script)
 {
     if (script == regs->fp()->script())
         enabler.enableInterrupts();
+}
+
+inline void
+AssertValidEvalFrameScopeChainAtExit(StackFrame *fp)
+{
+#ifdef DEBUG
+    JS_ASSERT(fp->isEvalFrame());
+
+    JS_ASSERT(!fp->hasBlockChain());
+    JSObject &scope = *fp->scopeChain();
+
+    if (fp->isStrictEvalFrame())
+        JS_ASSERT(scope.asCall().maybeStackFrame() == fp);
+    else if (fp->isDebuggerFrame())
+        JS_ASSERT(!scope.isScope());
+    else if (fp->isDirectEvalFrame())
+        JS_ASSERT(scope == *fp->prev()->scopeChain());
+    else
+        JS_ASSERT(scope.isGlobal());
+#endif
+}
+
+inline void
+AssertValidFunctionScopeChainAtExit(StackFrame *fp)
+{
+#ifdef DEBUG
+    JS_ASSERT(fp->isFunctionFrame());
+    if (fp->isGeneratorFrame() || fp->isYielding())
+        return;
+
+    if (fp->isEvalFrame()) {
+        AssertValidEvalFrameScopeChainAtExit(fp);
+        return;
+    }
+
+    JS_ASSERT(!fp->hasBlockChain());
+    JSObject &scope = *fp->scopeChain();
+
+    if (fp->fun()->isHeavyweight())
+        JS_ASSERT(scope.asCall().maybeStackFrame() == fp);
+    else if (scope.isCall() || scope.isBlock())
+        JS_ASSERT(scope.asScope().maybeStackFrame() != fp);
+#endif
 }
 
 static JS_ALWAYS_INLINE bool

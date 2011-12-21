@@ -1338,6 +1338,10 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     }
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
     script->hasSingletons = bce->hasSingletons;
+#ifdef JS_METHODJIT
+    if (cx->compartment->debugMode())
+        script->debugMode = true;
+#endif
 
     if (bce->sc->inFunction) {
         if (bce->sc->funArgumentsHasLocalBinding()) {

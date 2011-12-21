@@ -937,6 +937,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
            HandleObject scopeobj)
 {
     JS_ASSERT((evalType == INDIRECT_EVAL) == (caller == NULL));
+    JS_ASSERT_IF(evalType == INDIRECT_EVAL, scopeobj->isGlobal());
     AssertInnerizedScopeChain(cx, *scopeobj);
 
     if (!scopeobj->global().isRuntimeCodeGenEnabled(cx)) {
@@ -1132,14 +1133,10 @@ DirectEval(JSContext *cx, const CallArgs &args)
 
     AutoFunctionCallProbe callProbe(cx, args.callee().toFunction(), caller->script());
 
-    RootedVarObject scopeChain(cx, GetScopeChain(cx, caller));
-    if (!scopeChain)
-        return false;
-
     if (!WarnOnTooManyArgs(cx, args))
         return false;
 
-    return EvalKernel(cx, args, DIRECT_EVAL, caller, scopeChain);
+    return EvalKernel(cx, args, DIRECT_EVAL, caller, caller->scopeChain());
 }
 
 bool
