@@ -272,8 +272,12 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
     // container (we fetch values from the core since they may use units that
     // depend on style data, and style changes could have occurred in the
     // core since our last visit there)
-    nscoord leftSpace = NS_MAX(onePixel, coreData.leftSpace);
-    nscoord rightSpace = NS_MAX(onePixel, coreData.rightSpace);
+    nscoord leftSpace = NS_MAX(onePixel,
+                               NS_MATHML_IS_RTL(mPresentationData.flags) ?
+                               coreData.trailingSpace : coreData.leadingSpace);
+    nscoord rightSpace = NS_MAX(onePixel,
+                                NS_MATHML_IS_RTL(mPresentationData.flags) ?
+                                coreData.leadingSpace : coreData.trailingSpace);
 
     //////////////////
     // Get shifts
@@ -422,8 +426,8 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
     nscoord slashMinHeight = slashRatio *
       NS_MIN(2 * mLineThickness, slashMaxWidthConstant);
 
-    nscoord leftSpace = NS_MAX(padding, coreData.leftSpace);
-    nscoord rightSpace = NS_MAX(padding, coreData.rightSpace);
+    nscoord leadingSpace = NS_MAX(padding, coreData.leadingSpace);
+    nscoord trailingSpace = NS_MAX(padding, coreData.trailingSpace);
     nscoord delta;
     
     //           ___________
@@ -484,11 +488,16 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
     }
 
     // Set horizontal bounding metrics
-    mBoundingMetrics.leftBearing = leftSpace + bmNum.leftBearing;
-    mBoundingMetrics.rightBearing =
-      leftSpace + bmNum.width + mLineRect.width + bmDen.rightBearing;
+    if (NS_MATHML_IS_RTL(mPresentationData.flags)) {
+      mBoundingMetrics.leftBearing = trailingSpace + bmDen.leftBearing;
+      mBoundingMetrics.rightBearing = trailingSpace + bmDen.width + mLineRect.width + bmNum.rightBearing;
+    } else {
+      mBoundingMetrics.leftBearing = leadingSpace + bmNum.leftBearing;
+      mBoundingMetrics.rightBearing = leadingSpace + bmNum.width + mLineRect.width + bmDen.rightBearing;
+    }
     mBoundingMetrics.width =
-      leftSpace + bmNum.width + mLineRect.width + bmDen.width + rightSpace;
+      leadingSpace + bmNum.width + mLineRect.width + bmDen.width +
+      trailingSpace;
 
     // Set aDesiredSize
     aDesiredSize.ascent = mBoundingMetrics.ascent + padding;
@@ -505,20 +514,20 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
 
       // place numerator
       dx = MirrorIfRTL(aDesiredSize.width, sizeNum.width,
-                       leftSpace);
+                       leadingSpace);
       dy = aDesiredSize.ascent - numShift - sizeNum.ascent;
       FinishReflowChild(frameNum, presContext, nsnull, sizeNum, dx, dy, 0);
 
       // place the fraction bar
       dx = MirrorIfRTL(aDesiredSize.width, mLineRect.width,
-                       leftSpace + bmNum.width);
+                       leadingSpace + bmNum.width);
       dy = aDesiredSize.ascent - mBoundingMetrics.ascent;
       mLineRect.SetRect(dx, dy,
                         mLineRect.width, aDesiredSize.height - 2 * padding);
 
       // place denominator
       dx = MirrorIfRTL(aDesiredSize.width, sizeDen.width,
-                       leftSpace + bmNum.width + mLineRect.width);
+                       leadingSpace + bmNum.width + mLineRect.width);
       dy = aDesiredSize.ascent + denShift - sizeDen.ascent;
       FinishReflowChild(frameDen, presContext, nsnull, sizeDen, dx, dy, 0);
     }
