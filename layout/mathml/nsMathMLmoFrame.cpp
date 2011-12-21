@@ -760,7 +760,10 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
 
     // let the MathMLChar stretch itself...
     nsresult res = mMathMLChar.Stretch(PresContext(), aRenderingContext,
-                                       aStretchDirection, container, charSize, stretchHint);
+                                       aStretchDirection, container, charSize,
+                                       stretchHint,
+                                       NS_MATHML_IS_RTL(mPresentationData.
+                                                        flags));
     if (NS_FAILED(res)) {
       // gracefully handle cases where stretching the char failed (i.e., GetBoundingMetrics failed)
       // clear our 'form' to behave as if the operator wasn't in the dictionary
