@@ -490,6 +490,12 @@ var BrowserApp = {
           pref.value = PluginHelper.getPluginPreference();
           prefs.push(pref);
           continue;
+        } else if (prefName == MasterPassword.pref) {
+          // Master password is not a "real" pref
+          pref.type = "bool";
+          pref.value = MasterPassword.enabled;
+          prefs.push(pref);
+          continue;
         }
 
         try {
@@ -552,6 +558,11 @@ var BrowserApp = {
     if (json.name == "plugin.enable") {
       PluginHelper.setPluginPreference(json.value);
       return;
+    } else if(json.name == MasterPassword.pref) {
+      if (MasterPassword.enabled)
+        MasterPassword.removePassword(json.value);
+      else
+        MasterPassword.setPassword(json.value);
     }
 
     // when sending to java, we normalized special preferences that use
@@ -3481,5 +3492,83 @@ var PermissionsHelper = {
     } else {
       Services.perms.remove(aURI.host, aType);
     }
+  }
+}
+
+var MasterPassword = {
+  pref: "privacy.masterpassword.enabled",
+  get _secModuleDB() {
+    delete this._secModuleDB;
+    return this._secModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(Ci.nsIPKCS11ModuleDB);
+  },
+
+  get _pk11DB() {
+    delete this._pk11DB;
+    return this._pk11DB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(Ci.nsIPK11TokenDB);
+  },
+
+  get enabled() {
+    let slot = this._secModuleDB.findSlotByName(this._tokenName);
+    if (slot) {
+      let status = slot.status;
+      return status != Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED && status != Ci.nsIPKCS11Slot.SLOT_READY;
+    }
+    return false;
+  },
+
+  setPassword: function setPassword(aPassword) {
+    try {
+      let status;
+      let slot = this._secModuleDB.findSlotByName(this._tokenName);
+      if (slot)
+        status = slot.status;
+      else
+        return false;
+
+      let token = this._pk11DB.findTokenByName(this._tokenName);
+
+      if (status == Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED)
+        token.initPassword(aPassword);
+      else if (status == Ci.nsIPKCS11Slot.SLOT_READY)
+        token.changePassword("", aPassword);
+
+      this.updatePref();
+      return true;
+    } catch(e) {
+      dump("MasterPassword.setPassword: " + e);
+    }
+    return false;
+  },
+
+  removePassword: function removePassword(aOldPassword) {
+    try {
+      let token = this._pk11DB.getInternalKeyToken();
+      if (token.checkPassword(aOldPassword)) {
+        token.changePassword(aOldPassword, "");
+        this.updatePref();
+        return true;
+      }
+    } catch(e) {
+      dump("MasterPassword.removePassword: " + e + "\n");
+    }
+    NativeWindow.toast.show(Strings.browser.GetStringFromName("masterPassword.incorrect"), "short");
+    return false;
+  },
+
+  updatePref: function() {
+    var prefs = [];
+    let pref = {
+      name: this.pref,
+      type: "bool",
+      value: this.enabled
+    };
+    prefs.push(pref);
+
+    sendMessageToJava({
+      gecko: {
+        type: "Preferences:Data",
+        preferences: prefs
+      }
+    });
   }
 }
