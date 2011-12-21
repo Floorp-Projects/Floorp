@@ -608,7 +608,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/MobileComponents.manifest
 @BINPATH@/components/MobileComponents.xpt
 @BINPATH@/components/PromptService.js
-; disabled (bug 696203) @BINPATH@/components/SessionStore.js
+@BINPATH@/components/SessionStore.js
 @BINPATH@/components/Sidebar.js
 @BINPATH@/components/OpenWebapps.js
 #ifdef MOZ_SAFE_BROWSING

@@ -46,10 +46,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = MobileComponents
 XPIDL_MODULE = MobileComponents
 
-# disabled (bug 696203)
-#XPIDLSRCS = \
-#        SessionStore.idl \
-#        $(NULL)
+XPIDLSRCS = \
+        SessionStore.idl \
+        $(NULL)
 
 EXTRA_PP_COMPONENTS = \
         MobileComponents.manifest \
@@ -58,7 +57,7 @@ EXTRA_PP_COMPONENTS = \
         DirectoryProvider.js\
         HelperAppDialog.js \
         Sidebar.js \
-        $(NULL SessionStore.js is disabled - bug 696203) \
+        SessionStore.js \
         $(NULL)
 
 EXTRA_COMPONENTS = \
