@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/SyncTextFrame" >
+    <TextView
+        style="@style/SyncTextTitle"
+        android:text="@string/sync_title_connect" />
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="2dp"
+        android:background="#FFFFFF" />
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:indeterminateOnly="true" />
+    <TextView
+        style="@style/SyncTextItem"
+        android:text="@string/sync_jpake_subtitle_waiting" />
+    <Button
+        style="@style/SyncButtonCommon"
+        android:onClick="cancelClickHandler"
+        android:text="@string/sync_button_cancel" />
+</TableLayout>

@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 #   Vladimir Vukicevic <vladimir@pobox.com>
+#   Richard Newman <rnewman@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,7 +48,15 @@ DIRS = locales
 
 DIST_FILES = package-name.txt
 
+SYNC_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/java-sources.mn | tr '\n' ' ';)
+SYNC_PP_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/preprocess-sources.mn | tr '\n' ' ';)
+SYNC_RES_DRAWABLE=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-resources.mn | tr '\n' ' ';)
+SYNC_RES_LAYOUT=$(shell cat $(topsrcdir)/mobile/android/sync/android-layout-resources.mn | tr '\n' ' ';)
+SYNC_RES_VALUES=$(shell cat $(topsrcdir)/mobile/android/sync/android-values-resources.mn | tr '\n' ' ';)
+SYNC_RES_XML=$(shell cat $(topsrcdir)/mobile/android/sync/android-xml-resources.mn | tr '\n' ' ';)
+
 JAVAFILES = \
+  $(SYNC_JAVA_FILES) \
   AboutHomeContent.java \
   AlertNotification.java \
   AutoCompletePopup.java \
@@ -113,6 +122,7 @@ JAVAFILES = \
   $(NULL)
 
 PROCESSEDJAVAFILES = \
+  $(SYNC_PP_JAVA_FILES) \
   App.java \
   LauncherShortcuts.java \
   NotificationHandler.java \
@@ -178,6 +188,7 @@ DEFINES += -DMOZ_ANDROID_SHARED_ID="$(ANDROID_PACKAGE_NAME).sharedID"
 endif
 
 RES_LAYOUT = \
+  $(SYNC_RES_LAYOUT) \
   res/layout/autocomplete_list_item.xml \
   res/layout/awesomebar_header_row.xml \
   res/layout/awesomebar_row.xml \
@@ -212,6 +223,7 @@ RES_LAYOUT_V11 = \
   $(NULL)
 
 RES_VALUES = \
+  $(SYNC_RES_VALUES) \
   res/values/defaults.xml \
   res/values/arrays.xml \
   res/values/colors.xml \
@@ -224,7 +236,11 @@ RES_VALUES_V11 = \
   res/values-v11/themes.xml \
   $(NULL)
 
-RES_XML = res/xml/preferences.xml
+RES_XML = \
+	res/xml/preferences.xml \
+	res/xml/sync_syncadapter.xml \
+	$(SYNC_RES_XML) \
+	$(NULL)
 
 RES_ANIM = \
   res/anim/grow_fade_in.xml \
@@ -449,7 +465,9 @@ MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/crash_reporter.p
 RES_LAYOUT += res/layout/crash_reporter.xml
 endif
 
-MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/abouthome_bg_repeat.xml         \
+MOZ_ANDROID_DRAWABLES += \
+                         $(SYNC_RES_DRAWABLE)                                                   \
+                         mobile/android/base/resources/drawable/abouthome_bg_repeat.xml         \
                          mobile/android/base/resources/drawable/abouthome_topsites_bg_repeat.xml \
                          mobile/android/base/resources/drawable/address_bar_bg.xml              \
                          mobile/android/base/resources/drawable/address_bar_bg_shadow.xml       \
@@ -506,13 +524,23 @@ include $(topsrcdir)/config/android-common.mk
 
 # Note that we're going to set up a dependency directly between embed_android.dex and the java files
 # Instead of on the .class files, since more than one .class file might be produced per .java file
+# Sync dependencies are provided in a single jar. Sync classes themselves are delivered as source,
+# because Android resource classes must be compiled together in order to avoid overlapping resource
+# indices.
 classes.dex: $(JAVAFILES) $(PROCESSEDJAVAFILES) R.java
 	$(NSINSTALL) -D classes
 	$(JAVAC) $(JAVAC_FLAGS) -Xlint:unchecked -Xlint:deprecation -d classes  $(addprefix $(srcdir)/,$(JAVAFILES)) $(PROCESSEDJAVAFILES) R.java
 	$(DX) --dex --output=$@ classes
 
+# This needs to be preprocessed to match Fennec's browser authority.
+# Right now this leaves the preprocessed file in base/resources. Doing a direct
+# copy didn't seem to work. This needs fixing.
+$(topsrcdir)/mobile/android/base/resources/xml/sync_syncadapter.xml:
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $(topsrcdir)/mobile/android/base/resources/xml/sync_syncadapter.xml.in > $@
+
 AndroidManifest.xml $(PROCESSEDJAVAFILES) package-name.txt: % : %.in
-	mkdir -p db
+	mkdir -p db sync/repositories/android
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
 
@@ -539,6 +567,7 @@ $(RES_LAYOUT_V11): $(subst res/,$(srcdir)/resources/,$(RES_LAYOUT_V11))
 	$(NSINSTALL) $(srcdir)/resources/layout-v11/* res/layout-v11/
 
 $(RES_VALUES): \
+		$(subst res/,$(srcdir)/resources/,$(SYNC_RES_VALUES)) \
 		$(srcdir)/resources/values/colors.xml \
 		$(srcdir)/resources/values/styles.xml \
 		$(srcdir)/resources/values/themes.xml \
@@ -553,7 +582,7 @@ $(RES_VALUES_V11): $(subst res/,$(srcdir)/resources/,$(RES_VALUES_V11))
 
 $(RES_XML): $(subst res/,$(srcdir)/resources/,$(RES_XML))
 	$(NSINSTALL) -D res/xml
-	$(NSINSTALL) $(srcdir)/resources/xml/* res/xml/
+	$(NSINSTALL) $(srcdir)/resources/xml/*.xml res/xml/
 
 $(RES_ANIM): $(subst res/,$(srcdir)/resources/,$(RES_ANIM))
 	$(NSINSTALL) -D res/anim
@@ -611,10 +640,10 @@ $(RES_MENU): $(subst res/,$(srcdir)/resources/,$(RES_MENU))
 	$(NSINSTALL) -D res/menu
 	$(NSINSTALL) $^  res/menu
 
-R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_DRAWABLE) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) $(RES_MENU) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
+R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_DRAWABLE) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) $(RES_MENU) res/drawable/sync_icon.png res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko
 
-gecko.ap_: AndroidManifest.xml res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_DRAWABLE) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) $(RES_MENU) res/values/strings.xml FORCE
+gecko.ap_: AndroidManifest.xml res/drawable/sync_icon.png res/drawable/icon.png res/drawable-hdpi/icon.png $(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_DRAWABLE) $(RES_VALUES) $(RES_VALUES_V11) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_MDPI_V8) $(RES_DRAWABLE_HDPI_V8) $(RES_DRAWABLE_MDPI_V9) $(RES_DRAWABLE_HDPI_V9) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_COLOR) $(RES_MENU) res/values/strings.xml FORCE
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
 
 libs:: classes.dex package-name.txt
