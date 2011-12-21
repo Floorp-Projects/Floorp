@@ -97,6 +97,8 @@ public class AboutHomeContent extends ScrollView {
 
     public AboutHomeContent(Context context, AttributeSet attrs) {
         super(context, attrs);
+        setScrollContainer(true);
+        setBackgroundResource(R.drawable.abouthome_bg_repeat);
     }
 
     @Override
