@@ -1133,14 +1133,12 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                     rv = location->GetFilename(getter_Copies(sourceName));
                                 }
 
-                                nsCOMPtr<nsIScriptError2> scriptError2 =
-                                    do_QueryInterface(scriptError);
-                                rv = scriptError2->InitWithWindowID(newMessage.get(),
-                                                                    NS_ConvertASCIItoUTF16(sourceName).get(),
-                                                                    nsnull,
-                                                                    lineNumber, 0, 0,
-                                                                    "XPConnect JavaScript",
-                                                                    nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
+                                rv = scriptError->InitWithWindowID(newMessage.get(),
+                                                                   NS_ConvertASCIItoUTF16(sourceName).get(),
+                                                                   nsnull,
+                                                                   lineNumber, 0, 0,
+                                                                   "XPConnect JavaScript",
+                                                                   nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
                                 if (NS_FAILED(rv))
                                     scriptError = nsnull;
                             }
