@@ -1,0 +1,25 @@
+        <activity
+            android:icon="@drawable/sync_ic_launcher"
+            android:label="@string/sync_app_name"
+            android:launchMode="singleTask"
+            android:name="org.mozilla.gecko.sync.setup.activities.SetupSyncActivity" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="sync" android:host="org.mozilla.android" android:path="/setup"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:clearTaskOnLaunch="true"
+            android:launchMode="singleTask"
+            android:name="org.mozilla.gecko.sync.setup.activities.AccountActivity"
+            android:windowSoftInputMode="adjustResize"/>
+        <activity
+            android:name="org.mozilla.gecko.sync.setup.activities.SetupFailureActivity" />
+        <activity
+            android:name="org.mozilla.gecko.sync.setup.activities.SetupSuccessActivity" />
+        <activity
+            android:name="org.mozilla.gecko.sync.setup.activities.SetupWaitingActivity" />
