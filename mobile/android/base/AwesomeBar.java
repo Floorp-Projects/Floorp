@@ -163,6 +163,11 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
                 InputMethodManager imm =
                         (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 
+                if (keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN) {
+                    submitAndFinish(mText.getText().toString());
+                    return true;
+                }
+
                 // If input method is in fullscreen mode, we want to dismiss
                 // it instead of closing awesomebar straight away.
                 if (!imm.isFullscreenMode() && keyCode == KeyEvent.KEYCODE_BACK) {

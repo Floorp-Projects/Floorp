@@ -221,64 +221,59 @@ public class AboutHomeContent extends ScrollView {
         super.onConfigurationChanged(newConfig);
     }
 
-    InputStream getProfileRecommendedAddonsStream() {
-        try {
-            File profileDir = GeckoApp.mAppContext.getProfileDir();
-            if (profileDir == null)
-                return null;
-            File recommendedAddonsFile = new File(profileDir, "recommended-addons.json");
-            if (!recommendedAddonsFile.exists())
-                return null;
-            return new FileInputStream(recommendedAddonsFile);
-        } catch (FileNotFoundException fnfe) {
-            // ignore
-        }
-        return null;
-    }
-
-    InputStream getRecommendedAddonsStream(Activity activity) throws Exception{
-        InputStream is = getProfileRecommendedAddonsStream();
-        if (is != null)
-            return is;
-        File applicationPackage = new File(activity.getApplication().getPackageResourcePath());
-        ZipFile zip = null;
-        try {
-            zip = new ZipFile(applicationPackage);
-            if (zip == null)
-                return null;
-            ZipEntry fileEntry = zip.getEntry("recommended-addons.json");
-            if (fileEntry == null)
-                return null;
-            return zip.getInputStream(fileEntry);
-        } finally {
-            if (zip != null)
-                zip.close();
-        }
-    }
-
     void readRecommendedAddons(final Activity activity) {
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
+                byte[] buf = new byte[32768];
+                InputStream fileStream = null;
+                ZipFile zip = null;
+                StringBuffer jsonString = null;
+                File profileDir = GeckoApp.mAppContext.getProfileDir();
                 try {
-                    byte[] buf = new byte[32768];
-                    InputStream fileStream = getRecommendedAddonsStream(activity);
+                    if (profileDir != null) {
+                        try {
+                            File recommendedAddonsFile = new File(profileDir, "recommended-addons.json");
+                            if (recommendedAddonsFile.exists()) {
+                                fileStream = new FileInputStream(recommendedAddonsFile);
+                            }
+                        } catch (FileNotFoundException fnfe) {}
+                    }
+                    if (fileStream == null) {
+                        Log.i("Addons", "filestream is null");
+                        File applicationPackage = new File(activity.getApplication().getPackageResourcePath());
+                        zip = new ZipFile(applicationPackage);
+                        if (zip == null)
+                            return;
+                        ZipEntry fileEntry = zip.getEntry("recommended-addons.json");
+                        if (fileEntry == null)
+                            return;
+                        fileStream = zip.getInputStream(fileEntry);
+                    }
+
                     if (fileStream == null)
                         return;
-                    StringBuffer jsonString = new StringBuffer();
-                    try {
-                        int read = 0;
-                        while ((read = fileStream.read(buf, 0, 32768)) != -1) {
-                            jsonString.append(new String(buf, 0, read));
-                        }
-                    } finally {
-                        try {
-                            fileStream.close();
-                        } catch (IOException ioe) {
-                            // catch this here because we can continue even if the
-                            // close failed
-                            Log.i(LOGTAG, "error closing json file", ioe);
-                        }
+                    jsonString = new StringBuffer();
+                    int read = 0;
+                    while ((read = fileStream.read(buf, 0, 32768)) != -1) {
+                        jsonString.append(new String(buf, 0, read));
                     }
+                } catch (IOException ioe) {
+                    Log.i(LOGTAG, "error reading recommended addons file", ioe);
+                } finally {
+                    try {
+                        if (fileStream != null)
+                            fileStream.close();
+                        if (zip != null)
+                            zip.close();
+                    } catch (IOException ioe) {
+                        // catch this here because we can continue even if the
+                        // close failed
+                        Log.i(LOGTAG, "error closing json file", ioe);
+                    }
+                } 
+                if (jsonString == null)
+                    return;
+                try {
                     final JSONArray array = new JSONObject(jsonString.toString()).getJSONArray("addons");
                     GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
                         public void run() {
