@@ -337,7 +337,7 @@ var Scratchpad = {
       let contentWindow = this.gBrowser.selectedBrowser.contentWindow;
 
       let scriptError = Cc["@mozilla.org/scripterror;1"].
-                        createInstance(Ci.nsIScriptError2);
+                        createInstance(Ci.nsIScriptError);
 
       scriptError.initWithWindowID(ex.message + "\n" + ex.stack, ex.fileName,
                                    "", ex.lineNumber, 0, scriptError.errorFlag,
