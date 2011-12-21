@@ -12,14 +12,12 @@ chrome.jar:
 * skin/browser.css                          (browser.css)
 * skin/content.css                          (content.css)
   skin/config.css                           (config.css)
-  skin/header.css                           (header.css)
   skin/touchcontrols.css                    (touchcontrols.css)
   skin/netError.css                         (netError.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 % override chrome://global/skin/netError.css chrome://browser/skin/netError.css
 
-  skin/images/aboutBackground.jpg           (images/aboutBackground.jpg)
   skin/images/addons-32.png                 (images/addons-32.png)
   skin/images/arrowleft-16.png              (images/arrowleft-16.png)
   skin/images/arrowright-16.png             (images/arrowright-16.png)
@@ -32,7 +30,7 @@ chrome.jar:
   skin/images/throbber.png                  (images/throbber.png)
   skin/images/alert-addons-30.png           (images/alert-addons-30.png)
   skin/images/alert-downloads-30.png        (images/alert-downloads-30.png)
-  skin/images/forward-default-hdpi.png        (images/forward-default-hdpi.png)
+  skin/images/forward-default-hdpi.png      (images/forward-default-hdpi.png)
   skin/images/remotetabs-32.png             (images/remotetabs-32.png)
   skin/images/sidebarbutton-active-hdpi.png (images/sidebarbutton-active-hdpi.png)
   skin/images/search-clear-30.png           (images/search-clear-30.png)
@@ -41,6 +39,11 @@ chrome.jar:
   skin/images/mute-hdpi.png                 (images/mute-hdpi.png)
   skin/images/unmute-hdpi.png               (images/unmute-hdpi.png)
   skin/images/scrubber-hdpi.png             (images/scrubber-hdpi.png)
+  skin/images/about-bg-lightblue.png        (images/about-bg-lightblue.png)
+  skin/images/about-bg-darkblue.png         (images/about-bg-darkblue.png)
+  skin/images/about-btn-darkgrey.png        (images/about-btn-darkgrey.png)
+  skin/images/logo-hdpi.png                 (images/logo-hdpi.png)
+  skin/images/wordmark-hdpi.png             (images/wordmark-hdpi.png)
 
 chrome.jar:
 % skin browser classic/1.0 %skin/gingerbread/ os=Android osversion=2.3 osversion=2.3.3 osversion=2.3.4 osversion=2.3.5 osversion=2.3.6 osversion=2.3.7
@@ -51,14 +54,12 @@ chrome.jar:
 * skin/gingerbread/browser.css                          (gingerbread/browser.css)
 * skin/gingerbread/content.css                          (gingerbread/content.css)
   skin/gingerbread/config.css                           (config.css)
-  skin/gingerbread/header.css                           (header.css)
   skin/gingerbread/touchcontrols.css                    (touchcontrols.css)
   skin/gingerbread/netError.css                         (netError.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 % override chrome://global/skin/netError.css chrome://browser/skin/netError.css
 
-  skin/gingerbread/images/aboutBackground.jpg           (gingerbread/images/aboutBackground.jpg)
   skin/gingerbread/images/urlbar-bg.png                 (gingerbread/images/urlbar-bg.png)
   skin/gingerbread/images/addons-32.png                 (images/addons-32.png)
   skin/gingerbread/images/arrowleft-16.png              (gingerbread/images/arrowleft-16.png)
@@ -68,7 +69,7 @@ chrome.jar:
   skin/gingerbread/images/throbber.png                  (gingerbread/images/throbber.png)
   skin/gingerbread/images/alert-addons-30.png           (gingerbread/images/alert-addons-30.png)
   skin/gingerbread/images/alert-downloads-30.png        (gingerbread/images/alert-downloads-30.png)
-  skin/gingerbread/images/forward-default-hdpi.png        (gingerbread/images/forward-default-hdpi.png)
+  skin/gingerbread/images/forward-default-hdpi.png      (gingerbread/images/forward-default-hdpi.png)
   skin/gingerbread/images/remotetabs-32.png             (gingerbread/images/remotetabs-32.png)
   skin/gingerbread/images/search-clear-30.png           (gingerbread/images/search-clear-30.png)
   skin/gingerbread/images/play-hdpi.png                 (gingerbread/images/play-hdpi.png)
@@ -79,6 +80,11 @@ chrome.jar:
   skin/gingerbread/images/errorpage-warning.png         (images/errorpage-warning.png)
   skin/gingerbread/images/errorpage-larry-white.png     (images/errorpage-larry-white.png)
   skin/gingerbread/images/errorpage-larry-black.png     (images/errorpage-larry-black.png)
+  skin/gingerbread/about-bg-lightblue.png               (images/about-bg-lightblue.png)
+  skin/gingerbread/about-bg-darkblue.png                (images/about-bg-darkblue.png)
+  skin/gingerbread/about-btn-darkgrey.png               (images/about-btn-darkgrey.png)
+  skin/gingerbread/logo-hdpi.png                        (images/logo-hdpi.png)
+  skin/gingerbread/wordmark-hdpi.png                    (images/wordmark-hdpi.png)
 
 chrome.jar:
 % skin browser classic/1.0 %skin/honeycomb/ os=Android osversion>=3.0
@@ -89,14 +95,12 @@ chrome.jar:
 * skin/honeycomb/browser.css                          (honeycomb/browser.css)
 * skin/honeycomb/content.css                          (content.css)
   skin/honeycomb/config.css                           (config.css)
-  skin/honeycomb/header.css                           (header.css)
   skin/honeycomb/touchcontrols.css                    (touchcontrols.css)
   skin/honeycomb/netError.css                         (netError.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 % override chrome://global/skin/netError.css chrome://browser/skin/netError.css
 
-  skin/honeycomb/images/aboutBackground.jpg           (honeycomb/images/aboutBackground.jpg)
   skin/honeycomb/images/addons-32.png                 (images/addons-32.png)
   skin/honeycomb/images/arrowleft-16.png              (honeycomb/images/arrowleft-16.png)
   skin/honeycomb/images/arrowright-16.png             (honeycomb/images/arrowright-16.png)
@@ -105,7 +109,7 @@ chrome.jar:
   skin/honeycomb/images/throbber.png                  (honeycomb/images/throbber.png)
   skin/honeycomb/images/alert-addons-30.png           (honeycomb/images/alert-addons-30.png)
   skin/honeycomb/images/alert-downloads-30.png        (honeycomb/images/alert-downloads-30.png)
-  skin/honeycomb/images/forward-default-hdpi.png        (honeycomb/images/forward-default-hdpi.png)
+  skin/honeycomb/images/forward-default-hdpi.png      (honeycomb/images/forward-default-hdpi.png)
   skin/honeycomb/images/remotetabs-32.png             (honeycomb/images/remotetabs-32.png)
   skin/honeycomb/images/sidebarbutton-active-hdpi.png (honeycomb/images/sidebarbutton-active-hdpi.png)
   skin/honeycomb/images/search-clear-30.png           (honeycomb/images/search-clear-30.png)
@@ -117,3 +121,8 @@ chrome.jar:
   skin/honeycomb/images/errorpage-warning.png         (images/errorpage-warning.png)
   skin/honeycomb/images/errorpage-larry-white.png     (images/errorpage-larry-white.png)
   skin/honeycomb/images/errorpage-larry-black.png     (images/errorpage-larry-black.png)
+  skin/honeycomb/about-bg-lightblue.png               (images/about-bg-lightblue.png)
+  skin/honeycomb/about-bg-darkblue.png                (images/about-bg-darkblue.png)
+  skin/honeycomb/about-btn-darkgrey.png               (images/about-btn-darkgrey.png)
+  skin/honeycomb/logo-hdpi.png                        (images/logo-hdpi.png)
+  skin/honeycomb/wordmark-hdpi.png                    (images/wordmark-hdpi.png)

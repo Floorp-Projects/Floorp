@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Gavin Sharp <gavin@gavinsharp.com>
+ *   Steffen Wilberg <steffen.wilberg@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,71 +36,102 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#aboutLogoContainer {
-  width: 300px;
+body {
+  -moz-text-size-adjust: none;
+  font-family: "Droid Sans",helvetica,arial,clean,sans-serif;
+  font-size: 23px;
+  color: #222222;
+  background-image: url("chrome://browser/skin/about-bg-lightblue.png");
+}
+
+#header {
+  height: 80px;
+}
+
+#wordmark {
+  margin: 30px 0 0 15px;
+  width: 123px;
+  height: 36px;
+  background: url("chrome://browser/skin/wordmark-hdpi.png") no-repeat;
 }
 
 #version {
-  font-weight: bold;
-  color: #909090;
-  margin: -24px 20px 0 118px;
+  margin: 0 0 0 15px;
+  font-size: 15px;
 }
 
-#update {
-  float: right;
-  padding: 8px;
-  margin-top: -32px;
+#banner {
+  margin: 0 -10px;
+  height: 150px;
+  background-image: url("chrome://browser/skin/about-bg-darkblue.png");
 }
 
-body[dir="rtl"] #update {
-  float: left;
+#logo {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 375px;
+  height: 300px;
+  background: url("chrome://browser/skin/logo-hdpi.png") no-repeat;
+}
+
+#updateBox {
+  position: relative;
+  top: 40px;
+  margin: 0 auto;
+  width: 60%; /* looks much larger!? */
+  padding: 20px 1em;
+  text-align: center;
+  background-image: url("chrome://browser/skin/about-btn-darkgrey.png");
+  background-size: contain;
+  border-bottom-width: 4px;
+  border-bottom-style: solid;
+  border-bottom-color: #3A3F44;
+  border-radius: 8px;
+  box-shadow: 0 5px 5px rgba(0, 0, 0, 0.3);
 }
 
 #update-message-checking,
 #update-message-none,
 #update-message-found {
   display: none;
-  float: right;
-  padding: 8px;
-  margin-top: -32px;
-}
-
-body[dir="rtl"] #update-message-checking,
-body[dir="rtl"] #update-message-none,
-body[dir="rtl"] #update-message-found {
-  float: left;
 }
 
 #aboutLinks {
-  background-color: white;
-  padding: 5px;
-  border: 2px solid #e6e5e3;
-  font-size: 24px;
+  margin: 0 -10px 15px -10px;
+  padding: 0;
 }
 
 #aboutLinks > li {
-  clear: both;
-  border-bottom: 2px solid #e6e5e3;
-  list-style: none;
-  -moz-padding-end: 16px;
-}
-
-#aboutLinks > li:last-child {
-  border-bottom: 0;
+  line-height: 3;
+  border-top: 1px solid white;
+  border-bottom: 1px solid #C1C7CC;
 }
 
 #aboutLinks > li > a {
-  padding: 16px;
+  padding-left: 25px;
   display: block;
-  color: #3a3834;
-  background: url("images/arrowright-16.png") right center no-repeat;
-}
-
-body[dir="rtl"] #aboutLinks > li > a {
-  background: url("images/arrowleft-16.png") left center no-repeat;
 }
 
 #aboutDetails {
-  margin-top: 15px;
-  font-size: 18px;
+  padding-left: 15px;
+  font-size: 15px;
+}
+
+.top-border {
+  border-bottom: 1px solid #C1C7CC;
+}
+
+.bottom-border {
+  border-top: 1px solid white;
+}
+
+a, span {
+  text-decoration: none;
+  color: #222222;
+}
+
+#updateBox > a,
+#updateBox > span {
+  color: #e5f2ff;
 }
