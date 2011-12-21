@@ -529,7 +529,7 @@ PuppetWidget::DispatchPaintEvent()
   nsIntRect dirtyRect = mDirtyRegion.GetBounds();
   nsPaintEvent event(true, NS_PAINT, this);
   event.refPoint.x = dirtyRect.x;
-  event.refPoint.x = dirtyRect.y;
+  event.refPoint.y = dirtyRect.y;
   event.region = mDirtyRegion;
   event.willSendDidPaint = true;
 
