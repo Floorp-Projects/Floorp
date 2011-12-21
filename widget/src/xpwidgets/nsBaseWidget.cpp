@@ -145,10 +145,10 @@ nsBaseWidget::~nsBaseWidget()
 
   if (mLayerManager) {
     mLayerManager->Destroy();
-    mLayerManager = NULL;
   }
 
   if (mCompositor) {
+    mLayerManager = NULL;
     mCompositor->Destroy();
   }
 
