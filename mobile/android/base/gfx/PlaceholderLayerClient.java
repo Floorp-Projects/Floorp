@@ -128,17 +128,6 @@ public class PlaceholderLayerClient extends LayerClient {
         return true;
     }
 
-    void showScreenshot() {
-        BufferedCairoImage image = new BufferedCairoImage(mBuffer, mWidth, mHeight, mFormat);
-        SingleTileLayer tileLayer = new SingleTileLayer(image);
-
-        beginTransaction(tileLayer);
-        tileLayer.setOrigin(PointUtils.round(mViewport.getDisplayportOrigin()));
-        endTransaction(tileLayer);
-
-        getLayerController().setRoot(tileLayer);
-    }
-
     @Override
     public void geometryChanged() { /* no-op */ }
     @Override
