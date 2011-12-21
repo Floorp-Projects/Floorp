@@ -5693,45 +5693,46 @@ CheckForImmediatelyAppliedLambda(ParseNode *pn)
 ParseNode *
 Parser::memberExpr(JSBool allowCallSyntax)
 {
-    ParseNode *pn, *pn2, *pn3;
+    ParseNode *lhs;
 
     JS_CHECK_RECURSION(context, return NULL);
 
     /* Check for new expression first. */
     TokenKind tt = tokenStream.getToken(TSF_OPERAND);
     if (tt == TOK_NEW) {
-        pn = ListNode::create(PNK_NEW, tc);
-        if (!pn)
+        lhs = ListNode::create(PNK_NEW, tc);
+        if (!lhs)
             return NULL;
-        pn2 = memberExpr(JS_FALSE);
-        if (!pn2)
+        ParseNode *ctorExpr = memberExpr(JS_FALSE);
+        if (!ctorExpr)
             return NULL;
-        pn2 = CheckForImmediatelyAppliedLambda(pn2);
-        pn->setOp(JSOP_NEW);
-        pn->initList(pn2);
-        pn->pn_pos.begin = pn2->pn_pos.begin;
+        ctorExpr = CheckForImmediatelyAppliedLambda(ctorExpr);
+        lhs->setOp(JSOP_NEW);
+        lhs->initList(ctorExpr);
+        lhs->pn_pos.begin = ctorExpr->pn_pos.begin;
 
-        if (tokenStream.matchToken(TOK_LP) && !argumentList(pn))
+        if (tokenStream.matchToken(TOK_LP) && !argumentList(lhs))
             return NULL;
-        if (pn->pn_count > ARGC_LIMIT) {
+        if (lhs->pn_count > ARGC_LIMIT) {
             JS_ReportErrorNumber(context, js_GetErrorMessage, NULL,
                                  JSMSG_TOO_MANY_CON_ARGS);
             return NULL;
         }
-        pn->pn_pos.end = pn->last()->pn_pos.end;
+        lhs->pn_pos.end = lhs->last()->pn_pos.end;
     } else {
-        pn = primaryExpr(tt, JS_FALSE);
-        if (!pn)
+        lhs = primaryExpr(tt, JS_FALSE);
+        if (!lhs)
             return NULL;
 
-        if (pn->isXMLNameOp()) {
-            pn = new_<UnaryNode>(PNK_XMLUNARY, JSOP_XMLNAME, pn->pn_pos, pn);
-            if (!pn)
+        if (lhs->isXMLNameOp()) {
+            lhs = new_<UnaryNode>(PNK_XMLUNARY, JSOP_XMLNAME, lhs->pn_pos, lhs);
+            if (!lhs)
                 return NULL;
         }
     }
 
     while ((tt = tokenStream.getToken()) > TOK_EOF) {
+        ParseNode *pn2;
         if (tt == TOK_DOT) {
             pn2 = NameNode::create(PNK_DOT, NULL, tc);
             if (!pn2)
@@ -5743,7 +5744,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
             if (tt == TOK_NAME) {
 #if JS_HAS_XML_SUPPORT
                 if (!tc->inStrictMode() && tokenStream.peekToken() == TOK_DBLCOLON) {
-                    pn3 = propertyQualifiedIdentifier();
+                    ParseNode *pn3 = propertyQualifiedIdentifier();
                     if (!pn3)
                         return NULL;
 
@@ -5751,25 +5752,26 @@ Parser::memberExpr(JSBool allowCallSyntax)
                     pn2->setKind(PNK_LB);
                     pn2->setOp(JSOP_GETELEM);
                     pn2->setArity(PN_BINARY);
-                    pn2->pn_left = pn;
+                    pn2->pn_left = lhs;
                     pn2->pn_right = pn3;
                 } else
 #endif
                 {
                     pn2->setOp(JSOP_GETPROP);
-                    pn2->pn_expr = pn;
+                    pn2->pn_expr = lhs;
                     pn2->pn_atom = tokenStream.currentToken().name();
                 }
             }
 #if JS_HAS_XML_SUPPORT
             else if (!tc->inStrictMode()) {
+                ParseNode *pn3;
                 if (tt == TOK_LP) {
                     /* Filters are effectively 'with', so deoptimize names. */
                     tc->flags |= TCF_FUN_HEAVYWEIGHT;
 
                     StmtInfo stmtInfo;
                     ParseNode *oldWith = tc->innermostWith;
-                    tc->innermostWith = pn;
+                    tc->innermostWith = lhs;
                     PushStatement(tc, &stmtInfo, STMT_WITH, -1);
 
                     pn3 = bracketedExpr();
@@ -5795,7 +5797,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 }
 
                 pn2->setArity(PN_BINARY);
-                pn2->pn_left = pn;
+                pn2->pn_left = lhs;
                 pn2->pn_right = pn3;
             }
 #endif
@@ -5804,7 +5806,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 return NULL;
             }
 
-            pn2->pn_pos.begin = pn->pn_pos.begin;
+            pn2->pn_pos.begin = lhs->pn_pos.begin;
             pn2->pn_pos.end = tokenStream.currentToken().pos.end;
 #if JS_HAS_XML_SUPPORT
         } else if (tt == TOK_DBLDOT) {
@@ -5817,7 +5819,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
             if (!pn2)
                 return NULL;
             tt = tokenStream.getToken(TSF_OPERAND | TSF_KEYWORD_IS_NAME);
-            pn3 = primaryExpr(tt, JS_TRUE);
+            ParseNode *pn3 = primaryExpr(tt, JS_TRUE);
             if (!pn3)
                 return NULL;
             if (pn3->isKind(PNK_NAME) && !pn3->isInParens()) {
@@ -5829,21 +5831,21 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 return NULL;
             }
             pn2->setOp(JSOP_DESCENDANTS);
-            pn2->pn_left = pn;
+            pn2->pn_left = lhs;
             pn2->pn_right = pn3;
-            pn2->pn_pos.begin = pn->pn_pos.begin;
+            pn2->pn_pos.begin = lhs->pn_pos.begin;
             pn2->pn_pos.end = tokenStream.currentToken().pos.end;
 #endif
         } else if (tt == TOK_LB) {
             pn2 = BinaryNode::create(PNK_LB, tc);
             if (!pn2)
                 return NULL;
-            pn3 = expr();
+            ParseNode *pn3 = expr();
             if (!pn3)
                 return NULL;
 
             MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_IN_INDEX);
-            pn2->pn_pos.begin = pn->pn_pos.begin;
+            pn2->pn_pos.begin = lhs->pn_pos.begin;
             pn2->pn_pos.end = tokenStream.currentToken().pos.end;
 
             /*
@@ -5861,7 +5863,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
                         pn2->setKind(PNK_DOT);
                         pn2->setOp(JSOP_GETPROP);
                         pn2->setArity(PN_NAME);
-                        pn2->pn_expr = pn;
+                        pn2->pn_expr = lhs;
                         pn2->pn_atom = pn3->pn_atom;
                         break;
                     }
@@ -5870,7 +5872,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
                     pn3->pn_dval = index;
                 }
                 pn2->setOp(JSOP_GETELEM);
-                pn2->pn_left = pn;
+                pn2->pn_left = lhs;
                 pn2->pn_right = pn3;
             } while (0);
         } else if (allowCallSyntax && tt == TOK_LP) {
@@ -5879,9 +5881,9 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 return NULL;
             pn2->setOp(JSOP_CALL);
 
-            pn = CheckForImmediatelyAppliedLambda(pn);
-            if (pn->isOp(JSOP_NAME)) {
-                if (pn->pn_atom == context->runtime->atomState.evalAtom) {
+            lhs = CheckForImmediatelyAppliedLambda(lhs);
+            if (lhs->isOp(JSOP_NAME)) {
+                if (lhs->pn_atom == context->runtime->atomState.evalAtom) {
                     /* Select JSOP_EVAL and flag tc as heavyweight. */
                     pn2->setOp(JSOP_EVAL);
                     tc->noteCallsEval();
@@ -5893,16 +5895,16 @@ Parser::memberExpr(JSBool allowCallSyntax)
                     if (!tc->inStrictMode())
                         tc->noteHasExtensibleScope();
                 }
-            } else if (pn->isOp(JSOP_GETPROP)) {
+            } else if (lhs->isOp(JSOP_GETPROP)) {
                 /* Select JSOP_FUNAPPLY given foo.apply(...). */
-                if (pn->pn_atom == context->runtime->atomState.applyAtom)
+                if (lhs->pn_atom == context->runtime->atomState.applyAtom)
                     pn2->setOp(JSOP_FUNAPPLY);
-                else if (pn->pn_atom == context->runtime->atomState.callAtom)
+                else if (lhs->pn_atom == context->runtime->atomState.callAtom)
                     pn2->setOp(JSOP_FUNCALL);
             }
 
-            pn2->initList(pn);
-            pn2->pn_pos.begin = pn->pn_pos.begin;
+            pn2->initList(lhs);
+            pn2->pn_pos.begin = lhs->pn_pos.begin;
 
             if (!argumentList(pn2))
                 return NULL;
@@ -5914,14 +5916,14 @@ Parser::memberExpr(JSBool allowCallSyntax)
             pn2->pn_pos.end = tokenStream.currentToken().pos.end;
         } else {
             tokenStream.ungetToken();
-            return pn;
+            return lhs;
         }
 
-        pn = pn2;
+        lhs = pn2;
     }
     if (tt == TOK_ERROR)
         return NULL;
-    return pn;
+    return lhs;
 }
 
 ParseNode *
