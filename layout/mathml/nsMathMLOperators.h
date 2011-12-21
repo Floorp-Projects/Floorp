@@ -81,12 +81,13 @@ enum {
   NS_MATHML_OPERATOR_MOVABLELIMITS      = 1<<9,
   NS_MATHML_OPERATOR_SYMMETRIC          = 1<<10,
   NS_MATHML_OPERATOR_INTEGRAL           = 1<<11,
+  NS_MATHML_OPERATOR_MIRRORABLE         = 1<<12,
 
   // Additional bits not stored in the dictionary
-  NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE   = 1<<12,
-  NS_MATHML_OPERATOR_MAXSIZE_ABSOLUTE   = 1<<13,
-  NS_MATHML_OPERATOR_LSPACE_ATTR     = 1<<14,
-  NS_MATHML_OPERATOR_RSPACE_ATTR    = 1<<15
+  NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE   = 1<<13,
+  NS_MATHML_OPERATOR_MAXSIZE_ABSOLUTE   = 1<<14,
+  NS_MATHML_OPERATOR_LSPACE_ATTR     = 1<<15,
+  NS_MATHML_OPERATOR_RSPACE_ATTR    = 1<<16
 };
 
 #define NS_MATHML_OPERATOR_SIZE_INFINITY NS_IEEEPositiveInfinity()
@@ -149,6 +150,10 @@ public:
   // Return true if the operator exists and is stretchy or largeop
   static bool
   IsMutableOperator(const nsString& aOperator);
+
+  // Helper functions used by the nsMathMLChar class.
+  static bool
+  IsMirrorableOperator(const nsString& aOperator);
 
   // Helper function used by the nsMathMLChar class.
   static nsStretchDirection GetStretchyDirection(const nsString& aOperator);
@@ -229,6 +234,9 @@ public:
 
 #define NS_MATHML_OPERATOR_IS_INTEGRAL(_flags) \
   (NS_MATHML_OPERATOR_INTEGRAL == ((_flags) & NS_MATHML_OPERATOR_INTEGRAL))
+
+#define NS_MATHML_OPERATOR_IS_MIRRORABLE(_flags) \
+  (NS_MATHML_OPERATOR_MIRRORABLE == ((_flags) & NS_MATHML_OPERATOR_MIRRORABLE))
 
 #define NS_MATHML_OPERATOR_MINSIZE_IS_ABSOLUTE(_flags) \
   (NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE == ((_flags) & NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE))

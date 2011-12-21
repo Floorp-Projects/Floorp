@@ -357,23 +357,25 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   containerSize.ascent = delta + axisHeight;
   containerSize.descent = delta - axisHeight;
 
+  bool isRTL = NS_MATHML_IS_RTL(mPresentationData.flags);
+
   /////////////////
   // opening fence ...
   ReflowChar(aPresContext, *aReflowState.rendContext, mOpenChar,
              NS_MATHML_OPERATOR_FORM_PREFIX, font->mScriptLevel, 
-             axisHeight, leading, em, containerSize, ascent, descent);
+             axisHeight, leading, em, containerSize, ascent, descent, isRTL);
   /////////////////
   // separators ...
   for (i = 0; i < mSeparatorsCount; i++) {
     ReflowChar(aPresContext, *aReflowState.rendContext, &mSeparatorsChar[i],
                NS_MATHML_OPERATOR_FORM_INFIX, font->mScriptLevel,
-               axisHeight, leading, em, containerSize, ascent, descent);
+               axisHeight, leading, em, containerSize, ascent, descent, isRTL);
   }
   /////////////////
   // closing fence ...
   ReflowChar(aPresContext, *aReflowState.rendContext, mCloseChar,
              NS_MATHML_OPERATOR_FORM_POSTFIX, font->mScriptLevel,
-             axisHeight, leading, em, containerSize, ascent, descent);
+             axisHeight, leading, em, containerSize, ascent, descent, isRTL);
 
   //////////////////
   // Adjust the origins of each child.
@@ -384,7 +386,6 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   nsBoundingMetrics bm;
   bool firstTime = true;
   nsMathMLChar *leftChar, *rightChar;
-  bool isRTL = NS_MATHML_IS_RTL(mPresentationData.flags);
   if (isRTL) {
     leftChar = mCloseChar;
     rightChar = mOpenChar;
@@ -499,7 +500,8 @@ nsMathMLmfencedFrame::ReflowChar(nsPresContext*      aPresContext,
                                  nscoord              em,
                                  nsBoundingMetrics&   aContainerSize,
                                  nscoord&             aAscent,
-                                 nscoord&             aDescent)
+                                 nscoord&             aDescent,
+                                 bool                 aRTL)
 {
   if (aMathMLChar && 0 < aMathMLChar->Length()) {
     nscoord leftSpace;
@@ -510,7 +512,8 @@ nsMathMLmfencedFrame::ReflowChar(nsPresContext*      aPresContext,
     nsBoundingMetrics charSize;
     nsresult res = aMathMLChar->Stretch(aPresContext, aRenderingContext,
                                         NS_STRETCH_DIRECTION_VERTICAL,
-                                        aContainerSize, charSize);
+                                        aContainerSize, charSize,
+                                        NS_STRETCH_NORMAL, aRTL);
 
     if (NS_STRETCH_DIRECTION_UNSUPPORTED != aMathMLChar->GetStretchDirection()) {
       // has changed... so center the char around the axis
