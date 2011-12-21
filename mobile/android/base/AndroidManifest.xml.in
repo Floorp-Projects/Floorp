@@ -137,7 +137,7 @@
 
         <activity android:name="org.mozilla.gecko.GeckoPreferences"
                   android:theme="@style/Gecko.TitleBar"
-                  android:label="@string/preferences_title"
+                  android:label="@string/settings_title"
                   android:excludeFromRecents="true"/>
 
         <provider android:name="@ANDROID_PACKAGE_NAME@.db.BrowserProvider"
