@@ -67,7 +67,7 @@ class CompactBufferReader
     uint32 readVariableLength() {
         uint32 val = 0;
         uint32 shift = 0;
-        uint byte;
+        uint8 byte;
         while (true) {
             JS_ASSERT(shift < 32);
             byte = readByte();
