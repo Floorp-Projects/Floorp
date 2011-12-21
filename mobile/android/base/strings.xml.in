@@ -3,8 +3,10 @@
 <!DOCTYPE resources [
 #includesubst @BRANDPATH@
 #includesubst @STRINGSPATH@
+#includesubst @SYNCSTRINGSPATH@
 ]>
 <resources>
+#include ../sync/strings.xml.in
   <string name="splash_firstrun">&splash_firstrun;</string>
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
