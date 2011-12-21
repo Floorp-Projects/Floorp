@@ -6527,7 +6527,6 @@ HUDConsoleObserver = {
     }
 
     if (!(aSubject instanceof Ci.nsIScriptError) ||
-        !(aSubject instanceof Ci.nsIScriptError2) ||
         !aSubject.outerWindowID) {
       return;
     }

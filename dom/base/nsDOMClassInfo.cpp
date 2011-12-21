@@ -1728,7 +1728,7 @@ PrintWarningOnConsole(JSContext *cx, const char *stringBundleProperty)
     return;
   }
 
-  nsCOMPtr<nsIScriptError2> scriptError =
+  nsCOMPtr<nsIScriptError> scriptError =
     do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
   if (!scriptError) {
     return;
@@ -1761,9 +1761,8 @@ PrintWarningOnConsole(JSContext *cx, const char *stringBundleProperty)
                                               "DOM:HTML",
                                               nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx));
 
-  if (NS_SUCCEEDED(rv)){
-    nsCOMPtr<nsIScriptError> logError = do_QueryInterface(scriptError);
-    consoleService->LogMessage(logError);
+  if (NS_SUCCEEDED(rv)) {
+    consoleService->LogMessage(scriptError);
   }
 }
 
