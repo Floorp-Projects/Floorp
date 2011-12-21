@@ -450,7 +450,7 @@ abstract public class GeckoApp
         }
 
         if (!sIsGeckoReady)
-            aMenu.findItem(R.id.preferences).setEnabled(false);
+            aMenu.findItem(R.id.settings).setEnabled(false);
 
         Tab tab = Tabs.getInstance().getSelectedTab();
         MenuItem bookmark = aMenu.findItem(R.id.bookmark);
@@ -540,7 +540,7 @@ abstract public class GeckoApp
             case R.id.save_as_pdf:
                 GeckoAppShell.sendEventToGecko(new GeckoEvent("SaveAs:PDF", null));
                 return true;
-            case R.id.preferences:
+            case R.id.settings:
                 intent = new Intent(this, GeckoPreferences.class);
                 startActivity(intent);
                 return true;
@@ -938,7 +938,7 @@ abstract public class GeckoApp
                 mMainHandler.post(new Runnable() {
                     public void run() {
                         if (sMenu != null)
-                            sMenu.findItem(R.id.preferences).setEnabled(true);
+                            sMenu.findItem(R.id.settings).setEnabled(true);
                     }
                 });
                 setLaunchState(GeckoApp.LaunchState.GeckoRunning);
