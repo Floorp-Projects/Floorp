@@ -445,11 +445,13 @@ nsMathMLContainerFrame::Stretch(nsRenderingContext& aRenderingContext,
           nsEmbellishData coreData;
           GetEmbellishDataFrom(mEmbellishData.coreFrame, coreData);
 
-          mBoundingMetrics.width += coreData.leftSpace + coreData.rightSpace;
+          mBoundingMetrics.width +=
+            coreData.leadingSpace + coreData.trailingSpace;
           aDesiredStretchSize.width = mBoundingMetrics.width;
           aDesiredStretchSize.mBoundingMetrics.width = mBoundingMetrics.width;
 
-          nscoord dx = coreData.leftSpace;
+          nscoord dx = (NS_MATHML_IS_RTL(mPresentationData.flags) ?
+                        coreData.trailingSpace : coreData.leadingSpace);
           if (dx != 0) {
             mBoundingMetrics.leftBearing += dx;
             mBoundingMetrics.rightBearing += dx;
@@ -1528,8 +1530,8 @@ nsMathMLContainerFrame::TransmitAutomaticDataForMrowLikeElement()
     mEmbellishData.flags = 0;
     mEmbellishData.coreFrame = nsnull;
     mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
-    mEmbellishData.leftSpace = 0;
-    mEmbellishData.rightSpace = 0;
+    mEmbellishData.leadingSpace = 0;
+    mEmbellishData.trailingSpace = 0;
   }
 
   if (childFrame || embellishedOpFound) {

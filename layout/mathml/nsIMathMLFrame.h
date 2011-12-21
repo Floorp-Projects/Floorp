@@ -255,15 +255,15 @@ struct nsEmbellishData {
   // the 'form' may also depend on the position of the outermost
   // embellished ancestor, the set up of these values may require
   // looking up the position of our ancestors.
-  nscoord leftSpace;
-  nscoord rightSpace;
+  nscoord leadingSpace;
+  nscoord trailingSpace;
 
   nsEmbellishData() {
     flags = 0;
     coreFrame = nsnull;
     direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
-    leftSpace = 0;
-    rightSpace = 0;
+    leadingSpace = 0;
+    trailingSpace = 0;
   }
 };
 

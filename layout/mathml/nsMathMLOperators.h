@@ -85,8 +85,8 @@ enum {
   // Additional bits not stored in the dictionary
   NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE   = 1<<12,
   NS_MATHML_OPERATOR_MAXSIZE_ABSOLUTE   = 1<<13,
-  NS_MATHML_OPERATOR_LEFTSPACE_ATTR     = 1<<14,
-  NS_MATHML_OPERATOR_RIGHTSPACE_ATTR    = 1<<15
+  NS_MATHML_OPERATOR_LSPACE_ATTR     = 1<<14,
+  NS_MATHML_OPERATOR_RSPACE_ATTR    = 1<<15
 };
 
 #define NS_MATHML_OPERATOR_SIZE_INFINITY NS_IEEEPositiveInfinity()
@@ -129,20 +129,21 @@ public:
   LookupOperator(const nsString&       aOperator,
                  const nsOperatorFlags aForm,
                  nsOperatorFlags*      aFlags,
-                 float*                aLeftSpace,
-                 float*                aRightSpace);
+                 float*                aLeadingSpace,
+                 float*                aTrailingSpace);
 
    // LookupOperators:
    // Helper to return all the forms under which an operator is listed in the
    // Operator Dictionary. The caller must pass arrays of size 4, and use 
-   // aFlags[NS_MATHML_OPERATOR_FORM_{INFIX|POSTFIX|PREFIX}], aLeftSpace[], etc,
-   // to access the attributes of the operator under a particular form. If the
-   // operator wasn't found under a form, its entry aFlags[form] is set to zero.
+   // aFlags[NS_MATHML_OPERATOR_FORM_{INFIX|POSTFIX|PREFIX}],
+   // aLeadingSpace[], etc, to access the attributes of the operator under a
+   // particular form. If the operator wasn't found under a form, its entry
+   // aFlags[form] is set to zero.
    static void
    LookupOperators(const nsString&       aOperator,
                    nsOperatorFlags*      aFlags,
-                   float*                aLeftSpace,
-                   float*                aRightSpace);
+                   float*                aLeadingSpace,
+                   float*                aTrailingSpace);
 
   // IsMutableOperator:
   // Return true if the operator exists and is stretchy or largeop
@@ -235,10 +236,10 @@ public:
 #define NS_MATHML_OPERATOR_MAXSIZE_IS_ABSOLUTE(_flags) \
   (NS_MATHML_OPERATOR_MAXSIZE_ABSOLUTE == ((_flags) & NS_MATHML_OPERATOR_MAXSIZE_ABSOLUTE))
 
-#define NS_MATHML_OPERATOR_HAS_LEFTSPACE_ATTR(_flags) \
-  (NS_MATHML_OPERATOR_LEFTSPACE_ATTR == ((_flags) & NS_MATHML_OPERATOR_LEFTSPACE_ATTR))
+#define NS_MATHML_OPERATOR_HAS_LSPACE_ATTR(_flags) \
+  (NS_MATHML_OPERATOR_LSPACE_ATTR == ((_flags) & NS_MATHML_OPERATOR_LSPACE_ATTR))
 
-#define NS_MATHML_OPERATOR_HAS_RIGHTSPACE_ATTR(_flags) \
-  (NS_MATHML_OPERATOR_RIGHTSPACE_ATTR == ((_flags) & NS_MATHML_OPERATOR_RIGHTSPACE_ATTR))
+#define NS_MATHML_OPERATOR_HAS_RSPACE_ATTR(_flags) \
+  (NS_MATHML_OPERATOR_RSPACE_ATTR == ((_flags) & NS_MATHML_OPERATOR_RSPACE_ATTR))
 
 #endif /* nsMathMLOperators_h___ */
