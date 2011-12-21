@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  style="@style/SyncTextFrame" >
+
+  <TextView
+    style="@style/SyncTextTitle"
+    android:text="@string/sync_title_connect" />
+
+  <View
+    android:layout_height="2dp"
+    android:background="#FFFFFF" />
+
+  <TextView
+    style="@style/SyncTextItem"
+    android:text="@string/sync_subtitle_account" />
+
+  <EditText android:id="@+id/username"
+    style="@style/SyncEditItem"
+    android:hint="@string/sync_input_username" />
+
+  <EditText android:id="@+id/password"
+    style="@style/SyncEditItem"
+    android:password="true"
+    android:hint="@string/sync_input_password" />
+
+  <EditText android:id="@+id/key"
+    style="@style/SyncEditItem"
+    android:hint="@string/sync_input_key" />
+
+  <CheckBox android:id="@+id/checkbox_server"
+    android:text="@string/sync_checkbox_server" />
+
+  <EditText android:id="@+id/server"
+    style="@style/SyncEditItem"
+    android:hint="@string/sync_input_server" />
+
+  <LinearLayout
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="horizontal" >
+
+    <Button
+      style="@style/SyncButtonCommon"
+      android:onClick="cancelClickHandler"
+      android:text="@string/sync_button_cancel" />
+
+    <Button
+      style="@style/SyncButtonCommon"
+      android:onClick="connectClickHandler"
+      android:text="@string/sync_button_connect" />
+
+  </LinearLayout>
+
+</TableLayout>

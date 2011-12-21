@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- TextView Styles -->
+  <style name="SyncTextFrame" parent="@android:style/TextAppearance">
+    <item name="android:layout_width">wrap_content</item>
+    <item name="android:layout_height">fill_parent</item>
+    <item name="android:padding">20dp</item>
+    <item name="android:layout_gravity">center</item>
+    <item name="android:background">#82818A</item>
+    <item name="android:orientation">vertical</item>
+  </style>
+  <style name="SyncTextItem" parent="@android:style/TextAppearance.Medium">
+    <item name="android:gravity">center</item>
+    <item name="android:layout_gravity">center_vertical</item>
+    <item name="android:layout_height">wrap_content</item>
+    <item name="android:layout_width">fill_parent</item>
+    <item name="android:textSize">15dp</item>
+  </style>
+  <style name="SyncTextTitle" parent="@style/SyncTextItem">
+    <item name="android:textSize">20dp</item>
+    <item name="android:gravity">center</item>
+    <item name="android:paddingBottom">10dp</item>
+  </style>
+  <!-- EditView Styles -->
+  <style name="SyncEditItem" parent="@android:style/Widget.EditText">
+    <item name="android:layout_height">wrap_content</item>
+    <item name="android:layout_width">fill_parent</item>
+    <item name="android:singleLine">true</item>
+  </style>
+  <style name="SyncButtonCommon">
+    <item name="android:layout_height">wrap_content</item>
+    <item name="android:layout_width">wrap_content</item>
+  </style>
+</resources>
