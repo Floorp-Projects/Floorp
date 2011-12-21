@@ -1223,7 +1223,13 @@ Tab.prototype = {
     this.browser.removeEventListener("scroll", this, true);
     this.browser.removeEventListener("PluginClickToPlay", this, true);
     this.browser.removeEventListener("pagehide", this, true);
+
+    // Make sure the previously selected panel remains selected. The selected panel of a deck is
+    // not stable when panels are removed.
+    let selectedPanel = BrowserApp.deck.selectedPanel;
     BrowserApp.deck.removeChild(this.vbox);
+    BrowserApp.deck.selectedPanel = selectedPanel;
+
     Services.obs.removeObserver(this, "http-on-modify-request", false);
     this.browser = null;
     this.vbox = null;
