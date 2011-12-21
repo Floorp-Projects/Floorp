@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 #   Vladimir Vukicevic <vladimir@pobox.com>
+#   Richard Newman <rnewman@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -236,6 +237,7 @@ RES_VALUES_V11 = \
 
 RES_XML = \
 	res/xml/preferences.xml \
+	res/xml/sync_syncadapter.xml \
 	$(SYNC_RES_XML) \
 	$(NULL)
 
@@ -525,6 +527,13 @@ classes.dex: $(JAVAFILES) $(PROCESSEDJAVAFILES) R.java
 	$(JAVAC) $(JAVAC_FLAGS) -Xlint:unchecked -Xlint:deprecation -d classes  $(addprefix $(srcdir)/,$(JAVAFILES)) $(PROCESSEDJAVAFILES) R.java
 	$(DX) --dex --output=$@ classes
 
+# This needs to be preprocessed to match Fennec's browser authority.
+# Right now this leaves the preprocessed file in base/resources. Doing a direct
+# copy didn't seem to work. This needs fixing.
+$(topsrcdir)/mobile/android/base/resources/xml/sync_syncadapter.xml:
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $(topsrcdir)/mobile/android/base/resources/xml/sync_syncadapter.xml.in > $@
+
 AndroidManifest.xml $(PROCESSEDJAVAFILES) package-name.txt: % : %.in
 	mkdir -p db sync/repositories/android
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
@@ -568,7 +577,7 @@ $(RES_VALUES_V11): $(subst res/,$(srcdir)/resources/,$(RES_VALUES_V11))
 
 $(RES_XML): $(subst res/,$(srcdir)/resources/,$(RES_XML))
 	$(NSINSTALL) -D res/xml
-	$(NSINSTALL) $(srcdir)/resources/xml/* res/xml/
+	$(NSINSTALL) $(srcdir)/resources/xml/*.xml res/xml/
 
 $(RES_ANIM): $(subst res/,$(srcdir)/resources/,$(RES_ANIM))
 	$(NSINSTALL) -D res/anim
