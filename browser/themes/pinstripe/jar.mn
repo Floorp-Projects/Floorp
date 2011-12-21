@@ -160,6 +160,7 @@ browser.jar:
   skin/classic/browser/devtools/itemToggle.png		    (devtools/itemToggle.png)
   skin/classic/browser/devtools/itemArrow-rtl.png	    (devtools/itemArrow-rtl.png)
   skin/classic/browser/devtools/itemArrow-ltr.png	    (devtools/itemArrow-ltr.png)
+  skin/classic/browser/devtools/background-noise-toolbar.png (devtools/background-noise-toolbar.png)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-throbber.png
   skin/classic/browser/sync-16.png
