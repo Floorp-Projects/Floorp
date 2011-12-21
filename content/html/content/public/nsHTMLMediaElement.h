@@ -356,6 +356,16 @@ protected:
   class MediaLoadListener;
 
   /**
+   * Logs a warning message to the web console to report various failures.
+   * aMsg is the localized message identifier, aParams is the parameters to
+   * be substituted into the localized message, and aParamCount is the number
+   * of parameters in aParams.
+   */
+  void ReportLoadError(const char* aMsg,
+                       const PRUnichar** aParams = nsnull,
+                       PRUint32 aParamCount = 0);
+
+  /**
    * Changes mHasPlayedOrSeeked to aValue. If mHasPlayedOrSeeked changes
    * we'll force a reflow so that the video frame gets reflowed to reflect
    * the poster hiding or showing immediately.
