@@ -306,6 +306,17 @@ JS_GetFrameCalleeObject(JSContext *cx, JSStackFrame *fp);
 
 /************************************************************************/
 
+/*
+ * This is almost JS_GetClass(obj)->name except that certain debug-only
+ * proxies are made transparent. In particular, this function turns the class
+ * of any scope (returned via JS_GetFrameScopeChain or JS_GetFrameCalleeObject)
+ * from "Proxy" to "Call", "Block", "With" etc.
+ */
+extern JS_PUBLIC_API(const char *)
+JS_GetDebugClassName(JSObject *obj);
+
+/************************************************************************/
+
 extern JS_PUBLIC_API(const char *)
 JS_GetScriptFilename(JSContext *cx, JSScript *script);
 

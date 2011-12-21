@@ -78,7 +78,7 @@ ScopeObject::setEnclosingScope(JSContext *cx, HandleObject obj)
 inline StackFrame *
 ScopeObject::maybeStackFrame() const
 {
-    JS_ASSERT(!isStaticBlock());
+    JS_ASSERT(!isStaticBlock() && !isWith());
     return reinterpret_cast<StackFrame *>(JSObject::getPrivate());
 }
 
@@ -264,12 +264,20 @@ inline void
 StaticBlockObject::setAliased(unsigned i, bool aliased)
 {
     slotValue(i).init(this, i, BooleanValue(aliased));
+    if (aliased)
+        JSObject::setPrivate(reinterpret_cast<void *>(1));
 }
 
 inline bool
 StaticBlockObject::isAliased(unsigned i)
 {
     return slotValue(i).isTrue();
+}
+
+inline bool
+StaticBlockObject::needsClone() const
+{
+    return JSObject::getPrivate() != NULL;
 }
 
 inline bool
@@ -347,6 +355,13 @@ JSObject::asClonedBlock()
 {
     JS_ASSERT(isClonedBlock());
     return *static_cast<js::ClonedBlockObject *>(this);
+}
+
+inline js::DebugScopeObject &
+JSObject::asDebugScope()
+{
+    JS_ASSERT(isDebugScope());
+    return *static_cast<js::DebugScopeObject *>(this);
 }
 
 #endif /* CallObject_inl_h___ */

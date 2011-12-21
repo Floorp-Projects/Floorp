@@ -275,7 +275,11 @@ JSObject::getParent() const
 inline JSObject *
 JSObject::enclosingScope()
 {
-    return isScope() ? &asScope().enclosingScope() : getParent();
+    return isScope()
+           ? &asScope().enclosingScope()
+           : isDebugScope()
+           ? &asDebugScope().enclosingScope()
+           : getParent();
 }
 
 inline bool
@@ -743,8 +747,10 @@ inline bool JSObject::setDelegate(JSContext *cx)
     return setFlag(cx, js::BaseShape::DELEGATE, GENERATE_SHAPE);
 }
 
-inline bool JSObject::isVarObj() const
+inline bool JSObject::isVarObj()
 {
+    if (isDebugScope())
+        return asDebugScope().scope().isVarObj();
     return lastProperty()->hasObjectFlag(js::BaseShape::VAROBJ);
 }
 
@@ -818,6 +824,13 @@ inline bool JSObject::isString() const { return hasClass(&js::StringClass); }
 inline bool JSObject::isTypedArray() const { return IsTypedArrayClass(getClass()); }
 inline bool JSObject::isWeakMap() const { return hasClass(&js::WeakMapClass); }
 inline bool JSObject::isWith() const { return hasClass(&js::WithClass); }
+
+inline bool
+JSObject::isDebugScope() const
+{
+    extern bool js_IsDebugScopeSlow(const JSObject *obj);
+    return getClass() == &js::ObjectProxyClass && js_IsDebugScopeSlow(this);
+}
 
 #if JS_HAS_XML_SUPPORT
 inline bool JSObject::isNamespace() const { return hasClass(&js::NamespaceClass); }

@@ -107,186 +107,6 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
-/*
- * We can't determine in advance which local variables can live on the stack and
- * be freed when their dynamic scope ends, and which will be closed over and
- * need to live in the heap.  So we place variables on the stack initially, note
- * when they are closed over, and copy those that are out to the heap when we
- * leave their dynamic scope.
- *
- * The bytecode compiler produces a tree of block objects accompanying each
- * JSScript representing those lexical blocks in the script that have let-bound
- * variables associated with them.  These block objects are never modified, and
- * never become part of any function's scope chain.  Their parent slots point to
- * the innermost block that encloses them, or are NULL in the outermost blocks
- * within a function or in eval or global code.
- *
- * When we are in the static scope of such a block, blockChain points to its
- * compiler-allocated block object; otherwise, it is NULL.
- *
- * scopeChain is the current scope chain, including 'call' and 'block' objects
- * for those function calls and lexical blocks whose static scope we are
- * currently executing in, and 'with' objects for with statements; the chain is
- * typically terminated by a global object.  However, as an optimization, the
- * young end of the chain omits block objects we have not yet cloned.  To create
- * a closure, we clone the missing blocks from blockChain (which is always
- * current), place them at the head of scopeChain, and use that for the
- * closure's scope chain.  If we never close over a lexical block, we never
- * place a mutable clone of it on scopeChain.
- *
- * This lazy cloning is implemented in GetScopeChain, which is also used in
- * some other cases --- entering 'with' blocks, for example.
- */
-JSObject *
-js::GetScopeChain(JSContext *cx, StackFrame *fp)
-{
-    StaticBlockObject *sharedBlock = fp->maybeBlockChain();
-
-    if (!sharedBlock) {
-        /*
-         * Don't force a call object for a lightweight function call, but do
-         * insist that there is a call object for a heavyweight function call.
-         */
-        JS_ASSERT_IF(fp->isNonEvalFunctionFrame() && fp->fun()->isHeavyweight(),
-                     fp->hasCallObj());
-        return fp->scopeChain();
-    }
-
-    Root<StaticBlockObject*> sharedBlockRoot(cx, &sharedBlock);
-
-    /*
-     * We have one or more lexical scopes to reflect into fp->scopeChain, so
-     * make sure there's a call object at the current head of the scope chain,
-     * if this frame is a call frame.
-     *
-     * Also, identify the innermost compiler-allocated block we needn't clone.
-     */
-    RootedVarObject limitBlock(cx), limitClone(cx);
-    if (fp->isNonEvalFunctionFrame() && !fp->hasCallObj()) {
-        JS_ASSERT_IF(fp->scopeChain()->isClonedBlock(), fp->scopeChain()->getPrivate() != fp);
-        if (!CallObject::createForFunction(cx, fp))
-            return NULL;
-
-        /* We know we must clone everything on blockChain. */
-        limitBlock = limitClone = NULL;
-    } else {
-        /*
-         * scopeChain includes all blocks whose static scope we're within that
-         * have already been cloned.  Find the innermost such block.  Its
-         * prototype should appear on blockChain; we'll clone blockChain up
-         * to, but not including, that prototype.
-         */
-        limitClone = fp->scopeChain();
-        while (limitClone->isWith())
-            limitClone = &limitClone->asWith().enclosingScope();
-        JS_ASSERT(limitClone);
-
-        /*
-         * It may seem like we don't know enough about limitClone to be able
-         * to just grab its prototype as we do here, but it's actually okay.
-         *
-         * If limitClone is a block object belonging to this frame, then its
-         * prototype is the innermost entry in blockChain that we have already
-         * cloned, and is thus the place to stop when we clone below.
-         *
-         * Otherwise, there are no blocks for this frame on scopeChain, and we
-         * need to clone the whole blockChain.  In this case, limitBlock can
-         * point to any object known not to be on blockChain, since we simply
-         * loop until we hit limitBlock or NULL.  If limitClone is a block, it
-         * isn't a block from this function, since blocks can't be nested
-         * within themselves on scopeChain (recursion is dynamic nesting, not
-         * static nesting).  If limitClone isn't a block, its prototype won't
-         * be a block either.  So we can just grab limitClone's prototype here
-         * regardless of its type or which frame it belongs to.
-         */
-        limitBlock = limitClone->getProto();
-
-        /* If the innermost block has already been cloned, we are done. */
-        if (limitBlock == sharedBlock)
-            return fp->scopeChain();
-    }
-
-    /*
-     * Special-case cloning the innermost block; this doesn't have enough in
-     * common with subsequent steps to include in the loop.
-     *
-     * create() leaves the clone's enclosingScope unset. We set it below.
-     */
-    RootedVar<ClonedBlockObject *> innermostNewChild(cx);
-    innermostNewChild = ClonedBlockObject::create(cx, sharedBlockRoot, fp);
-    if (!innermostNewChild)
-        return NULL;
-
-    /*
-     * Clone our way towards outer scopes until we reach the innermost
-     * enclosing function, or the innermost block we've already cloned.
-     */
-    RootedVar<ClonedBlockObject *> newChild(cx, innermostNewChild);
-    for (;;) {
-        JS_ASSERT(newChild->getProto() == sharedBlock);
-        sharedBlock = sharedBlock->enclosingBlock();
-
-        /* Sometimes limitBlock will be NULL, so check that first.  */
-        if (sharedBlock == limitBlock || !sharedBlock)
-            break;
-
-        /* As in the call above, we don't know the real parent yet.  */
-        RootedVar<ClonedBlockObject *> clone(cx, ClonedBlockObject::create(cx, sharedBlockRoot, fp));
-        if (!clone)
-            return NULL;
-
-        if (!newChild->setEnclosingScope(cx, clone))
-            return NULL;
-        newChild = clone;
-    }
-    if (!newChild->setEnclosingScope(cx, fp->scopeChain()))
-        return NULL;
-
-    /*
-     * If we found a limit block belonging to this frame, then we should have
-     * found it in blockChain.
-     */
-    JS_ASSERT_IF(limitBlock &&
-                 limitBlock->isClonedBlock() &&
-                 limitClone->getPrivate() == js_FloatingFrameIfGenerator(cx, fp),
-                 sharedBlock);
-
-    /* Place our newly cloned blocks at the head of the scope chain.  */
-    fp->setScopeChainNoCallObj(*innermostNewChild);
-    return innermostNewChild;
-}
-
-JSObject *
-js::GetScopeChain(JSContext *cx)
-{
-    /*
-     * Note: we don't need to expand inline frames here, because frames are
-     * only inlined when the caller and callee share the same scope chain.
-     */
-    StackFrame *fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE);
-    if (!fp) {
-        /*
-         * There is no code active on this context. In place of an actual
-         * scope chain, use the context's global object, which is set in
-         * js_InitFunctionAndObjectClasses, and which represents the default
-         * scope chain for the embedding. See also js_FindClassObject.
-         *
-         * For embeddings that use the inner and outer object hooks, the inner
-         * object represents the ultimate global object, with the outer object
-         * acting as a stand-in.
-         */
-        JSObject *obj = cx->globalObject;
-        if (!obj) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
-            return NULL;
-        }
-
-        OBJ_TO_INNER_OBJECT(cx, obj);
-        return obj;
-    }
-    return GetScopeChain(cx, fp);
-}
-
 /* Some objects (e.g., With) delegate 'this' to another object. */
 static inline JSObject *
 CallThisObjectHook(JSContext *cx, JSObject *obj, Value *argv)
@@ -650,6 +470,7 @@ js::ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const V
                   ExecuteType type, StackFrame *evalInFrame, Value *result)
 {
     JS_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
+    JS_ASSERT_IF(type == EXECUTE_GLOBAL, !scopeChain.isScope());
 
     JS::Root<JSScript*> scriptRoot(cx, &script);
 
@@ -678,7 +499,7 @@ js::ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const V
     bool ok = RunScript(cx, script, fp);
 
     if (fp->isStrictEvalFrame())
-        js_PutCallObject(fp);
+        js_PutCallObject(fp, fp->callObj());
 
     Probes::stopExecution(cx, script);
 
@@ -919,59 +740,38 @@ EnterWith(JSContext *cx, int stackIndex)
         sp[-1].setObject(*obj);
     }
 
-    RootedVarObject parent(cx, GetScopeChain(cx, fp));
-    if (!parent)
-        return JS_FALSE;
-
-    JSObject *withobj = WithObject::create(cx, fp, obj, parent,
+    JSObject *withobj = WithObject::create(cx, obj, fp->scopeChain(),
                                            sp + stackIndex - fp->base());
     if (!withobj)
         return JS_FALSE;
 
-    fp->setScopeChainNoCallObj(*withobj);
+    fp->setScopeChain(*withobj);
     return JS_TRUE;
-}
-
-static void
-LeaveWith(JSContext *cx)
-{
-    WithObject &withobj = cx->fp()->scopeChain()->asWith();
-    JS_ASSERT(withobj.maybeStackFrame() == js_FloatingFrameIfGenerator(cx, cx->fp()));
-    withobj.setStackFrame(NULL);
-    cx->fp()->setScopeChainNoCallObj(withobj.enclosingScope());
-}
-
-bool
-js::IsActiveWithOrBlock(JSContext *cx, JSObject &obj, uint32_t stackDepth)
-{
-    return (obj.isWith() || obj.isBlock()) &&
-           obj.getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp()) &&
-           obj.asNestedScope().stackDepth() >= stackDepth;
 }
 
 /* Unwind block and scope chains to match the given depth. */
 void
 js::UnwindScope(JSContext *cx, uint32_t stackDepth)
 {
-    JS_ASSERT(cx->fp()->base() + stackDepth <= cx->regs().sp);
-
     StackFrame *fp = cx->fp();
-    StaticBlockObject *block = fp->maybeBlockChain();
-    while (block) {
-        if (block->stackDepth() < stackDepth)
-            break;
-        block = block->enclosingBlock();
-    }
-    fp->setBlockChain(block);
+    JS_ASSERT(fp->base() + stackDepth <= cx->regs().sp);
 
-    for (;;) {
-        JSObject &scopeChain = *fp->scopeChain();
-        if (!IsActiveWithOrBlock(cx, scopeChain, stackDepth))
+    for (ScopeIter si(fp); !si.done(); si = si.enclosing()) {
+        switch (si.type()) {
+          case ScopeIter::Block:
+            if (si.staticBlock().stackDepth() < stackDepth)
+                return;
+            fp->popBlock(cx);
             break;
-        if (scopeChain.isClonedBlock())
-            scopeChain.asClonedBlock().put(cx);
-        else
-            LeaveWith(cx);
+          case ScopeIter::With:
+            if (si.scope().asWith().stackDepth() < stackDepth)
+                return;
+            fp->popWith(cx);
+            break;
+          case ScopeIter::Call:
+          case ScopeIter::StrictEvalScope:
+            break;
+        }
     }
 }
 
@@ -1866,8 +1666,8 @@ END_CASE(JSOP_ENTERWITH)
 
 BEGIN_CASE(JSOP_LEAVEWITH)
     JS_ASSERT(regs.sp[-1].toObject() == *regs.fp()->scopeChain());
+    regs.fp()->popWith(cx);
     regs.sp--;
-    LeaveWith(cx);
 END_CASE(JSOP_LEAVEWITH)
 
 BEGIN_CASE(JSOP_RETURN)
@@ -1887,8 +1687,7 @@ BEGIN_CASE(JSOP_STOP)
     if (entryFrame != regs.fp())
   inline_return:
     {
-        JS_ASSERT(!regs.fp()->hasBlockChain());
-        JS_ASSERT(!IsActiveWithOrBlock(cx, *regs.fp()->scopeChain(), 0));
+        AssertValidFunctionScopeChainAtExit(regs.fp());
 
         if (cx->compartment->debugMode())
             interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
@@ -3148,20 +2947,6 @@ BEGIN_CASE(JSOP_DEFFUN)
     RootedVarFunction &fun = rootFunction0;
     fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
 
-    RootedVarObject &obj2 = rootObject0;
-    if (fun->isNullClosure()) {
-        /*
-         * Even a null closure needs a parent for principals finding.
-         * FIXME: bug 476950, although debugger users may also demand some kind
-         * of scope link for debugger-assisted eval-in-frame.
-         */
-        obj2 = regs.fp()->scopeChain();
-    } else {
-        obj2 = GetScopeChain(cx, regs.fp());
-        if (!obj2)
-            goto error;
-    }
-
     /*
      * If static link is not current scope, clone fun's object to link to the
      * current scope via parent. We do this to enable sharing of compiled
@@ -3171,10 +2956,14 @@ BEGIN_CASE(JSOP_DEFFUN)
      * windows, and user-defined JS functions precompiled and then shared among
      * requests in server-side JS.
      */
-    if (fun->environment() != obj2) {
-        fun = CloneFunctionObjectIfNotSingleton(cx, fun, obj2);
+    HandleObject scopeChain = regs.fp()->scopeChain();
+    if (fun->environment() != scopeChain) {
+        fun = CloneFunctionObjectIfNotSingleton(cx, fun, scopeChain);
         if (!fun)
             goto error;
+    } else {
+        JS_ASSERT(script->compileAndGo);
+        JS_ASSERT(regs.fp()->isGlobalFrame() || regs.fp()->isEvalInFunction());
     }
 
     /*
@@ -3257,27 +3046,12 @@ BEGIN_CASE(JSOP_LAMBDA)
     /* Load the specified function object literal. */
     RootedVarFunction &fun = rootFunction0;
     fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
-    JSObject *obj = fun;
 
-    /* do-while(0) so we can break instead of using a goto. */
-    do {
-        RootedVarObject &parent = rootObject0;
-        if (fun->isNullClosure()) {
-            parent = regs.fp()->scopeChain();
-        } else {
-            parent = GetScopeChain(cx, regs.fp());
-            if (!parent)
-                goto error;
-        }
-
-        obj = CloneFunctionObjectIfNotSingleton(cx, fun, parent);
-        if (!obj)
-            goto error;
-    } while (0);
+    JSFunction *obj = CloneFunctionObjectIfNotSingleton(cx, fun, regs.fp()->scopeChain());
+    if (!obj)
+        goto error;
 
     JS_ASSERT(obj->getProto());
-    JS_ASSERT_IF(script->hasGlobal(), obj->getProto() == fun->getProto());
-
     PUSH_OBJECT(*obj);
 }
 END_CASE(JSOP_LAMBDA)
@@ -3824,7 +3598,7 @@ BEGIN_CASE(JSOP_ENDFILTER)
     bool cond = !regs.sp[-1].isMagic();
     if (cond) {
         /* Exit the "with" block left from the previous iteration. */
-        LeaveWith(cx);
+        regs.fp()->popWith(cx);
     }
     if (!js_StepXMLListFilter(cx, cond))
         goto error;
@@ -3957,7 +3731,10 @@ BEGIN_CASE(JSOP_ENTERLET0)
 BEGIN_CASE(JSOP_ENTERLET1)
 {
     StaticBlockObject &blockObj = script->getObject(GET_UINT32_INDEX(regs.pc))->asStaticBlock();
-    JS_ASSERT(regs.fp()->maybeBlockChain() == blockObj.enclosingBlock());
+
+    /* Clone block iff there are any closed-over variables. */
+    if (!regs.fp()->pushBlock(cx, blockObj))
+        goto error;
 
     if (op == JSOP_ENTERBLOCK) {
         JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() == regs.sp);
@@ -3973,31 +3750,6 @@ BEGIN_CASE(JSOP_ENTERLET1)
         JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() + blockObj.slotCount()
                   == regs.sp - 1);
     }
-
-#ifdef DEBUG
-    JS_ASSERT(regs.fp()->maybeBlockChain() == blockObj.enclosingBlock());
-
-    /*
-     * The young end of fp->scopeChain may omit blocks if we haven't closed
-     * over them, but if there are any closure blocks on fp->scopeChain, they'd
-     * better be (clones of) ancestors of the block we're entering now;
-     * anything else we should have popped off fp->scopeChain when we left its
-     * static scope.
-     */
-    JSObject *obj2 = regs.fp()->scopeChain();
-    while (obj2->isWith())
-        obj2 = &obj2->asWith().enclosingScope();
-    if (obj2->isBlock() &&
-        obj2->getPrivate() == js_FloatingFrameIfGenerator(cx, regs.fp()))
-    {
-        StaticBlockObject &youngestProto = obj2->asClonedBlock().staticBlock();
-        StaticBlockObject *parent = &blockObj;
-        while ((parent = parent->enclosingBlock()) != &youngestProto)
-            JS_ASSERT(parent);
-    }
-#endif
-
-    regs.fp()->setBlockChain(&blockObj);
 }
 END_CASE(JSOP_ENTERBLOCK)
 
@@ -4005,29 +3757,19 @@ BEGIN_CASE(JSOP_LEAVEBLOCK)
 BEGIN_CASE(JSOP_LEAVEFORLETIN)
 BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
 {
-    StaticBlockObject &blockObj = regs.fp()->blockChain();
-    JS_ASSERT(blockObj.stackDepth() <= StackDepth(script));
+    DebugOnly<uint32_t> blockDepth = regs.fp()->blockChain().stackDepth();
 
-    /*
-     * If we're about to leave the dynamic scope of a block that has been
-     * cloned onto fp->scopeChain, clear its private data, move its locals from
-     * the stack into the clone, and pop it off the chain.
-     */
-    JSObject &scope = *regs.fp()->scopeChain();
-    if (scope.getProto() == &blockObj)
-        scope.asClonedBlock().put(cx);
-
-    regs.fp()->setBlockChain(blockObj.enclosingBlock());
+    regs.fp()->popBlock(cx);
 
     if (op == JSOP_LEAVEBLOCK) {
         /* Pop the block's slots. */
         regs.sp -= GET_UINT16(regs.pc);
-        JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() == regs.sp);
+        JS_ASSERT(regs.fp()->base() + blockDepth == regs.sp);
     } else if (op == JSOP_LEAVEBLOCKEXPR) {
         /* Pop the block's slots maintaining the topmost expr. */
         Value *vp = &regs.sp[-1];
         regs.sp -= GET_UINT16(regs.pc);
-        JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() == regs.sp - 1);
+        JS_ASSERT(regs.fp()->base() + blockDepth == regs.sp - 1);
         regs.sp[-1] = *vp;
     } else {
         /* Another op will pop; nothing to do here. */
@@ -4261,22 +4003,15 @@ END_CASE(JSOP_ARRAYPUSH)
     interpReturnOK = ScriptEpilogueOrGeneratorYield(cx, regs.fp(), interpReturnOK);
     regs.fp()->setFinishedInInterpreter();
 
-    /*
-     * At this point we are inevitably leaving an interpreted function or a
-     * top-level script, and returning to one of:
-     * (a) an "out of line" call made through Invoke;
-     * (b) a js_Execute activation;
-     * (c) a generator (SendToGenerator, jsiter.c).
-     *
-     * We must not be in an inline frame. The check above ensures that for the
-     * error case and for a normal return, the code jumps directly to parent's
-     * frame pc.
-     */
+#ifdef DEBUG
     JS_ASSERT(entryFrame == regs.fp());
-    if (!regs.fp()->isGeneratorFrame()) {
-        JS_ASSERT(!IsActiveWithOrBlock(cx, *regs.fp()->scopeChain(), 0));
-        JS_ASSERT(!regs.fp()->hasBlockChain());
-    }
+    if (regs.fp()->isFunctionFrame())
+        AssertValidFunctionScopeChainAtExit(regs.fp());
+    else if (regs.fp()->isEvalFrame())
+        AssertValidEvalFrameScopeChainAtExit(regs.fp());
+    else if (!regs.fp()->isGeneratorFrame())
+        JS_ASSERT(!regs.fp()->scopeChain()->isScope());
+#endif
 
 #ifdef JS_METHODJIT
     /*

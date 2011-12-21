@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=99 ft=cpp:
+ * vim: set ts=4 sw=4 et tw=99 ft=cpp:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -653,6 +653,12 @@ Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, Value *rval)
         rval->setNull();
         return true;
     }
+
+    /*
+     * DebuggerEnv should only wrap a debug scope chain obtained (transitively)
+     * from GetDebugScopeFor(Frame|Function).
+     */
+    JS_ASSERT(!env->isScope());
 
     JSObject *envobj;
     ObjectWeakMap::AddPtr p = environments.lookupForAdd(env);
@@ -2588,6 +2594,8 @@ class BytecodeRangeWithLineNumbers : private BytecodeRange
         if (!SN_IS_TERMINATOR(sn))
             snpc += SN_DELTA(sn);
         updateLine();
+        while (frontPC() != script->main())
+            popFront();
     }
 
     void popFront() {
@@ -2664,8 +2672,9 @@ class FlowGraphSummary : public Vector<size_t> {
         if (!growBy(script->length))
             return false;
         FlowGraphSummary &self = *this;
-        self[0] = MultipleEdges;
-        for (size_t i = 1; i < script->length; i++)
+        unsigned mainOffset = script->main() - script->code;
+        self[mainOffset] = MultipleEdges;
+        for (size_t i = mainOffset + 1; i < script->length; i++)
             self[i] = NoEdges;
 
         size_t prevLine = script->lineno;
@@ -3039,15 +3048,6 @@ DebuggerFrame_getType(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static Env *
-Frame_GetEnv(JSContext *cx, StackFrame *fp)
-{
-    assertSameCompartment(cx, fp);
-    if (fp->isNonEvalFunctionFrame() && !fp->hasCallObj() && !CallObject::createForFunction(cx, fp))
-        return NULL;
-    return GetScopeChain(cx, fp);
-}
-
 static JSBool
 DebuggerFrame_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -3058,7 +3058,7 @@ DebuggerFrame_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
         AutoCompartment ac(cx, fp->scopeChain());
         if (!ac.enter())
             return false;
-        env = Frame_GetEnv(cx, fp);
+        env = GetDebugScopeForFrame(cx, fp);
         if (!env)
             return false;
     }
@@ -3236,9 +3236,9 @@ DebuggerFrame_getScript(JSContext *cx, unsigned argc, Value *vp)
 
     JSObject *scriptObject = NULL;
     if (fp->isFunctionFrame() && !fp->isEvalFrame()) {
-        JSFunction *callee = fp->callee().toFunction();
-        if (callee->isInterpreted()) {
-            scriptObject = debug->wrapScript(cx, RootedVar<JSScript*>(cx, callee->script()));
+        JSFunction &callee = fp->callee();
+        if (callee.isInterpreted()) {
+            scriptObject = debug->wrapScript(cx, RootedVar<JSScript*>(cx, callee.script()));
             if (!scriptObject)
                 return false;
         }
@@ -3363,11 +3363,9 @@ DebuggerFrame_setOnPop(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-namespace js {
-
 JSBool
-EvaluateInEnv(JSContext *cx, Handle<Env*> env, StackFrame *fp, const jschar *chars,
-              unsigned length, const char *filename, unsigned lineno, Value *rval)
+js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, StackFrame *fp, const jschar *chars,
+                  unsigned length, const char *filename, unsigned lineno, Value *rval)
 {
     assertSameCompartment(cx, env, fp);
 
@@ -3399,8 +3397,6 @@ EvaluateInEnv(JSContext *cx, Handle<Env*> env, StackFrame *fp, const jschar *cha
         return false;
 
     return ExecuteKernel(cx, script, *env, fp->thisValue(), EXECUTE_DEBUG, fp, rval);
-}
-
 }
 
 enum EvalBindingsMode { WithoutBindings, WithBindings };
@@ -3455,7 +3451,7 @@ DebuggerFrameEval(JSContext *cx, unsigned argc, Value *vp, EvalBindingsMode mode
     if (!ac.enter())
         return false;
 
-    RootedVar<Env*> env(cx, JS_GetFrameScopeChain(cx, Jsvalify(fp)));
+    RootedVar<Env *> env(cx, GetDebugScopeForFrame(cx, fp));
     if (!env)
         return false;
 
@@ -3729,7 +3725,17 @@ DebuggerObject_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    RootedVar<Env*> env(cx, obj->toFunction()->environment());
+    RootedVar<Env*> env(cx);
+    {
+        AutoCompartment ac(cx, obj);
+        if (!ac.enter())
+            return false;
+
+        env = GetDebugScopeForFunction(cx, obj->toFunction());
+        if (!env)
+            return false;
+    }
+
     return dbg->wrapEnvironment(cx, env, &args.rval());
 }
 
@@ -4225,7 +4231,8 @@ DebuggerEnv_checkThis(JSContext *cx, const CallArgs &args, const char *fnname)
     if (!envobj)                                                              \
         return false;                                                         \
     RootedVar<Env*> env(cx, static_cast<Env *>(envobj->getPrivate()));        \
-    JS_ASSERT(env)
+    JS_ASSERT(env);                                                           \
+    JS_ASSERT(!env->isScope())
 
 #define THIS_DEBUGENV_OWNER(cx, argc, vp, fnname, args, envobj, env, dbg)     \
     THIS_DEBUGENV(cx, argc, vp, fnname, args, envobj, env);                   \
@@ -4238,6 +4245,18 @@ DebuggerEnv_construct(JSContext *cx, unsigned argc, Value *vp)
     return false;
 }
 
+static bool
+IsDeclarative(Env *env)
+{
+    return env->isDebugScope() && env->asDebugScope().isForDeclarative();
+}
+
+static bool
+IsWith(Env *env)
+{
+    return env->isDebugScope() && env->asDebugScope().scope().isWith();
+}
+
 static JSBool
 DebuggerEnv_getType(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -4245,9 +4264,9 @@ DebuggerEnv_getType(JSContext *cx, unsigned argc, Value *vp)
 
     /* Don't bother switching compartments just to check env's class. */
     const char *s;
-    if (env->isCall() || env->isBlock() || env->isDeclEnv())
+    if (IsDeclarative(env))
         s = "declarative";
-    else if (env->isWith())
+    else if (IsWith(env))
         s = "with";
     else
         s = "object";
@@ -4278,11 +4297,14 @@ DebuggerEnv_getObject(JSContext *cx, unsigned argc, Value *vp)
      * Don't bother switching compartments just to check env's class and
      * possibly get its proto.
      */
-    if (env->isCall() || env->isBlock() || env->isDeclEnv()) {
+    if (IsDeclarative(env)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_NO_SCOPE_OBJECT);
         return false;
     }
-    JSObject *obj = env->isWith() ? env->getProto() : env;
+
+    JSObject *obj = IsWith(env)
+                    ? &env->asDebugScope().scope().asWith().object()
+                    : env;
 
     Value rval = ObjectValue(*obj);
     if (!dbg->wrapDebuggeeValue(cx, &rval))
