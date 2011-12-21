@@ -132,6 +132,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
   public Object syncMonitor = new Object();
   private SyncResult syncResult;
 
+  public boolean shouldPerformSync = false;
+
   @Override
   public void onPerformSync(final Account account,
                             final Bundle extras,
@@ -143,6 +145,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
     Log.i(LOG_TAG, "Got onPerformSync. Extras bundle is " + extras);
     Log.d(LOG_TAG, "Extras clusterURL: " + extras.getString("clusterURL"));
     Log.i(LOG_TAG, "Account name: " + account.name);
+    if (!shouldPerformSync) {
+      Log.i(LOG_TAG, "Not performing sync.");
+      return;
+    }
     Log.i(LOG_TAG, "XXX CLEARING AUTH TOKEN XXX");
     invalidateAuthToken(account);
 
