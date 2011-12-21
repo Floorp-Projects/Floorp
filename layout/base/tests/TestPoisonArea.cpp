@@ -619,6 +619,7 @@ TestPage(const char *pagelabel, uintptr_t pageaddr, int should_succeed)
       case 2: *(volatile unsigned char *)opaddr = 0; break;
       default: abort();
       }
+      (void)scratch;
       _exit(0);
     } else {
       int status;

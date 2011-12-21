@@ -4691,10 +4691,8 @@ nsTypedSelection::DoAutoScroll(nsIFrame *aFrame, nsPoint& aPoint)
 {
   NS_PRECONDITION(aFrame, "Need a frame");
 
-  nsresult result = NS_OK;
-
   if (mAutoScrollTimer)
-    result = mAutoScrollTimer->Stop();
+    (void)mAutoScrollTimer->Stop();
 
   nsPresContext* presContext = aFrame->PresContext();
   nsRootPresContext* rootPC = presContext->GetRootPresContext();

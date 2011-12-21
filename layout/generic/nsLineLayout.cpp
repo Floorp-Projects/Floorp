@@ -1801,20 +1801,17 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 
     // Compute the logical height of the frame
     nscoord logicalHeight;
-    nscoord topLeading;
     PerSpanData* frameSpan = pfd->mSpan;
     if (frameSpan) {
       // For span frames the logical-height and top-leading was
       // pre-computed when the span was reflowed.
       logicalHeight = frameSpan->mLogicalHeight;
-      topLeading = frameSpan->mTopLeading;
     }
     else {
       // For other elements the logical height is the same as the
       // frames height plus its margins.
       logicalHeight = pfd->mBounds.height + pfd->mMargin.top +
         pfd->mMargin.bottom;
-      topLeading = 0;
     }
 
     // Get vertical-align property
@@ -2042,7 +2039,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
                pfd->mAscent, pfd->mBounds.height,
                pfd->mBorderPadding.top, pfd->mBorderPadding.bottom,
                logicalHeight,
-               pfd->mSpan ? topLeading : 0,
+               frameSpan ? frameSpan->mTopLeading : 0,
                pfd->mBounds.y, minY, maxY);
 #endif
       }

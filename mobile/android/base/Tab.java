@@ -92,15 +92,15 @@ public class Tab {
     }
 
     public Tab() {
-        this(-1, "", false, -1);
+        this(-1, "", false, -1, "");
     }
 
-    public Tab(int id, String url, boolean external, int parentId) {
+    public Tab(int id, String url, boolean external, int parentId, String title) {
         mId = id;
         mUrl = url;
         mExternal = external;
         mParentId = parentId;
-        mTitle = "";
+        mTitle = title;
         mFavicon = null;
         mFaviconUrl = null;
         mSecurityMode = "unknown";

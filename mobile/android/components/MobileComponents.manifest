@@ -23,10 +23,10 @@ category JavaScript-global-property sidebar @mozilla.org/sidebar;1
 category JavaScript-global-property external @mozilla.org/sidebar;1
 category wakeup-request Sidebar @mozilla.org/sidebar;1,nsISidebarExternal,getService,Sidebar:AddSearchProvider
 
-# SessionStore.js - temporarily disabled (bug 696203)
-# component {8c1f07d6-cba3-4226-a315-8bd43d67d032} SessionStore.js
-# contract @mozilla.org/browser/sessionstore;1 {8c1f07d6-cba3-4226-a315-8bd43d67d032}
-# category app-startup SessionStore service,@mozilla.org/browser/sessionstore;1
+# SessionStore.js
+component {8c1f07d6-cba3-4226-a315-8bd43d67d032} SessionStore.js
+contract @mozilla.org/browser/sessionstore;1 {8c1f07d6-cba3-4226-a315-8bd43d67d032}
+category app-startup SessionStore service,@mozilla.org/browser/sessionstore;1
 
 # stylesheets
 category agent-style-sheets browser-content-stylesheet chrome://browser/skin/content.css
