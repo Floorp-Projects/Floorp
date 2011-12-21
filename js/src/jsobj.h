@@ -711,8 +711,6 @@ struct JSObject : js::gc::Cell
 
     inline uint32_t slotSpan() const;
 
-    inline bool containsSlot(uint32_t slot) const;
-
     void rollbackProperties(JSContext *cx, uint32_t slotSpan);
 
 #ifdef DEBUG
