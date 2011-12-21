@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Mihai Sucan <mihai.sucan@gmail.com> (original author)
+ *   Kenny Heaton <kennyheaton@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -148,8 +149,7 @@ SourceEditor.prototype = {
       aConfig.undoLimit || SourceEditor.DEFAULTS.UNDO_LIMIT;
 
     // Make sure that the transactions stack is clean.
-    this._editor.transactionManager.clear();
-    this._editor.resetModificationCount();
+    this.resetUndo();
 
     // Add the edit action listener so we can fire the SourceEditor TextChanged
     // events.
@@ -404,6 +404,15 @@ SourceEditor.prototype = {
     let canRedo = {};
     this._editor.canRedo(isEnabled, canRedo);
     return canRedo.value;
+  },
+
+  /**
+   * Reset the Undo stack
+   */
+  resetUndo: function SE_resetUndo()
+  {
+    this._editor.transactionManager.clear();
+    this._editor.resetModificationCount();
   },
 
   /**
