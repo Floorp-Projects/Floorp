@@ -62,7 +62,7 @@ class DeferredJumpTable : public DeferredData
         void **jumpData = (void **)buffer;
 
         // For every case write the pointer to the start in the table
-        for (uint j = 0; j < lswitch->mir()->numCases(); j++) { 
+        for (size_t j = 0; j < lswitch->mir()->numCases(); j++) { 
             LBlock *caseblock = lswitch->mir()->getCase(j)->lir();
             Label *caseheader = caseblock->label();
 

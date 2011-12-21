@@ -1602,7 +1602,7 @@ GetArgStackDisp(uint32 arg)
 
 class DoubleEncoder {
     uint32 rep(bool b, uint32 count) {
-        uint ret = 0;
+        uint32 ret = 0;
         for (uint32 i = 0; i < count; i++)
             ret = (ret << 1) | b;
         return ret;
