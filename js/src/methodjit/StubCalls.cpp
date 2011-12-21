@@ -1873,8 +1873,8 @@ stubs::LeaveBlock(VMFrame &f)
      * the stack into the clone, and pop it off the chain.
      */
     JSObject &obj = fp->scopeChain();
-    if (obj.getProto() == &blockObj && !obj.asClonedBlock().put(cx, JS_TRUE))
-        THROW();
+    if (obj.getProto() == &blockObj)
+        obj.asClonedBlock().put(cx);
 
     fp->setBlockChain(blockObj.enclosingBlock());
 }

@@ -2081,7 +2081,7 @@ MarkWeakReferences(GCMarker *gcmarker)
     JS_ASSERT(gcmarker->isMarkStackEmpty());
 }
 
-JS_REQUIRES_STACK void
+void
 MarkRuntime(JSTracer *trc)
 {
     JSRuntime *rt = trc->runtime;
