@@ -88,7 +88,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_582201_duplicate_errors.js \
 	browser_webconsole_bug_580454_timestamp_l10n.js \
 	browser_webconsole_netlogging.js \
-	browser_webconsole_bug_583816_tab_focus.js \
+	browser_webconsole_bug_583816_No_input_and_Tab_key_pressed.js \
 	browser_webconsole_bug_594477_clickable_output.js \
 	browser_webconsole_bug_589162_css_filter.js \
 	browser_webconsole_bug_597103_deactivateHUDForContext_unfocused_window.js \
