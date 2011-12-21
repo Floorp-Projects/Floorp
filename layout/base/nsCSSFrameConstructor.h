@@ -1201,6 +1201,8 @@ private:
     FindInputData(Element* aElement, nsStyleContext* aStyleContext);
   static const FrameConstructionData*
     FindObjectData(Element* aElement, nsStyleContext* aStyleContext);
+  static const FrameConstructionData*
+    FindCanvasData(Element* aElement, nsStyleContext* aStyleContext);
 
   /* Construct a frame from the given FrameConstructionItem.  This function
      will handle adding the frame to frame lists, processing children, setting
