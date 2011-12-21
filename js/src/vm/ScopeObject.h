@@ -250,7 +250,7 @@ class ClonedBlockObject : public BlockObject
      * When this block's stack slots are about to be popped, 'put' must be
      * called to copy the slot values into this block's object slots.
      */
-    bool put(JSContext *cx, JSBool normalUnwind);
+    void put(JSContext *cx);
 
     /* Assuming 'put' has been called, return the value of the ith let var. */
     const Value &closedSlot(unsigned i);

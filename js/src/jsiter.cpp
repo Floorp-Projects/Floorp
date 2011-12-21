@@ -866,7 +866,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, Value *vp)
 }
 
 #if JS_HAS_GENERATORS
-static JS_REQUIRES_STACK JSBool
+static JSBool
 CloseGenerator(JSContext *cx, JSObject *genobj);
 #endif
 
@@ -1270,7 +1270,7 @@ Class js::GeneratorClass = {
  * from the activation in fp, so we can steal away fp->callobj and fp->argsobj
  * if they are non-null.
  */
-JS_REQUIRES_STACK JSObject *
+JSObject *
 js_NewGenerator(JSContext *cx)
 {
     FrameRegs &stackRegs = cx->regs();
@@ -1340,7 +1340,7 @@ typedef enum JSGeneratorOp {
  * Start newborn or restart yielding generator and perform the requested
  * operation inside its frame.
  */
-static JS_REQUIRES_STACK JSBool
+static JSBool
 SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
                 JSGenerator *gen, const Value &arg)
 {
@@ -1446,7 +1446,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
     return JS_FALSE;
 }
 
-static JS_REQUIRES_STACK JSBool
+static JSBool
 CloseGenerator(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isGenerator());

@@ -3185,7 +3185,7 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
  * access is "object-detecting" in the sense used by web scripts, e.g., when
  * checking whether document.all is defined.
  */
-JS_REQUIRES_STACK JSBool
+JSBool
 Detecting(JSContext *cx, jsbytecode *pc)
 {
     jsbytecode *endpc;
