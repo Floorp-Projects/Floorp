@@ -1,3 +1,9 @@
+== dir-1.html dir-1-ref.html
+== dir-2.html dir-2-ref.html
+== dir-3.html dir-3-ref.html
+== dir-4.html dir-4-ref.html
+== dir-5.html dir-5-ref.html
+fails == dir-6.html dir-6-ref.html
 == dynamic-mi.xhtml dynamic-mi-ref.xhtml
 == mfenced-1.xhtml mfenced-1-ref.xhtml
 == mfenced-2a.xhtml mfenced-2-ref.xhtml
