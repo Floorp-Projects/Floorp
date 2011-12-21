@@ -505,16 +505,19 @@ public class GeckoAppShell
      *  The Gecko-side API: API methods that Gecko calls
      */
     public static void notifyIME(int type, int state) {
-        mInputConnection.notifyIME(type, state);
+        if (mInputConnection != null)
+            mInputConnection.notifyIME(type, state);
     }
 
     public static void notifyIMEEnabled(int state, String typeHint,
                                         String actionHint, boolean landscapeFS) {
-        mInputConnection.notifyIMEEnabled(state, typeHint, actionHint, landscapeFS);
+        if (mInputConnection != null)
+            mInputConnection.notifyIMEEnabled(state, typeHint, actionHint, landscapeFS);
     }
 
     public static void notifyIMEChange(String text, int start, int end, int newEnd) {
-        mInputConnection.notifyIMEChange(text, start, end, newEnd);
+        if (mInputConnection != null)
+            mInputConnection.notifyIMEChange(text, start, end, newEnd);
     }
 
     private static CountDownLatch sGeckoPendingAcks = null;
