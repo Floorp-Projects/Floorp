@@ -743,7 +743,7 @@ class MTableSwitch
         return defaultCase_;
     }
 
-    MBasicBlock *getCase(uint32 i) const {
+    MBasicBlock *getCase(size_t i) const {
         JS_ASSERT(i < cases_.length());
         return cases_[i];
     }

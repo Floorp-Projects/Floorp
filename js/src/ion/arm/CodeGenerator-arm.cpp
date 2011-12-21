@@ -800,7 +800,7 @@ CodeGeneratorARM::visitTableSwitch(LTableSwitch *ins)
     masm.align(1 << TimesFour);
     masm.bind(label->src());
 
-    for (uint j=0; j<ins->mir()->numCases(); j++) {
+    for (size_t j=0; j<ins->mir()->numCases(); j++) {
         LBlock *caseblock = ins->mir()->getCase(j)->lir();
 
         masm.jmp(caseblock->label());
