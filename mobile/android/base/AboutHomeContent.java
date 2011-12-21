@@ -215,8 +215,10 @@ public class AboutHomeContent extends ScrollView {
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
-        mTopSitesGrid.setNumColumns(getNumberOfColumns());
-        mTopSitesAdapter.notifyDataSetChanged();
+        if (mTopSitesGrid != null) 
+            mTopSitesGrid.setNumColumns(getNumberOfColumns());
+        if (mTopSitesAdapter != null)
+            mTopSitesAdapter.notifyDataSetChanged();
 
         super.onConfigurationChanged(newConfig);
     }
