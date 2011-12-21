@@ -196,6 +196,7 @@ endif
 RES_LAYOUT = \
   $(SYNC_RES_LAYOUT) \
   res/layout/autocomplete_list_item.xml \
+  res/layout/awesomebar.xml \
   res/layout/awesomebar_header_row.xml \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_search.xml \
@@ -222,10 +223,8 @@ RES_LAYOUT = \
   $(NULL)
 
 RES_LAYOUT_V11 = \
-  res/layout-v11/awesomebar_search.xml \
-  res/layout-v11/awesomebar_search_actionbar.xml \
+  res/layout-v11/awesomebar.xml \
   res/layout-v11/gecko_app.xml \
-  res/layout-v11/gecko_app_actionbar.xml \
   $(NULL)
 
 RES_VALUES = \
