@@ -106,6 +106,7 @@ public class GeckoAppShell
     static public final int WPL_STATE_START = 0x00000001;
     static public final int WPL_STATE_STOP = 0x00000010;
     static public final int WPL_STATE_IS_DOCUMENT = 0x00020000;
+    static public final int WPL_STATE_IS_NETWORK = 0x00040000;
 
     static private File sCacheFile = null;
     static private int sFreeSpace = -1;
