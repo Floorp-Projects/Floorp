@@ -360,6 +360,10 @@ class AssemblerX86Shared
     void ret() {
         masm.ret();
     }
+    void retn(Imm32 n) {
+        // Remove the size of the return address which is included in the frame.
+        masm.ret(n.value - sizeof(void *));
+    }
     void call(Label *label) {
         if (label->bound()) {
             masm.linkJump(masm.call(), JmpDst(label->offset()));
