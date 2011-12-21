@@ -16,6 +16,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=36619
   <input id='a' type='file'>
 </div>
 <button id='b' onclick="document.getElementById('a').click();">Show Filepicker</button>
+<button id='c' onmousedown="document.getElementById('a').click();">Show Filepicker</button>
+<button id='d' onmouseup="document.getElementById('a').click();">Show Filepicker</button>
 <pre id="test">
 <script type="application/javascript">
 
@@ -36,7 +38,7 @@ SpecialPowers.pushPrefEnv({'set': [
     // Tests that a click on 'b' calls the show method.
     var b = document.getElementById('b');
     b.focus(); // Be sure the element is visible.
-    synthesizeMouse(b, 2, 2, {});
+    synthesizeMouseAtCenter(b, {});
     SimpleTest.executeSoon(function() {
       ok(MockFilePicker.shown, "File picker show method should have been called");
       MockFilePicker.reset();
@@ -45,9 +47,21 @@ SpecialPowers.pushPrefEnv({'set': [
       document.getElementById("a").click();
       SimpleTest.executeSoon(function() {
         ok(!MockFilePicker.shown, "File picker show method should not have been called");
-        MockFilePicker.cleanup();
+        MockFilePicker.reset();
 
-        SimpleTest.finish();
+        synthesizeMouseAtCenter(document.getElementById('c'), {});
+        SimpleTest.executeSoon(function() {
+          ok(!MockFilePicker.shown, "File picker show method should have been called");
+          MockFilePicker.reset();
+
+          synthesizeMouseAtCenter(document.getElementById('d'), {});
+          SimpleTest.executeSoon(function() {
+            ok(MockFilePicker.shown, "File picker show method should have been called");
+
+            MockFilePicker.cleanup();
+            SimpleTest.finish();
+          });
+        });
       });
     });
   });
