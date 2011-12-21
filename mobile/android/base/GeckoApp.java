@@ -1846,6 +1846,18 @@ abstract public class GeckoApp
 
             if (Build.VERSION.SDK_INT >= 11) {
                 mBrowserToolbar = (BrowserToolbar) getLayoutInflater().inflate(R.layout.gecko_app_actionbar, null);
+
+                Tab tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null) {
+                    mBrowserToolbar.setTitle(tab.getDisplayTitle());
+                    mBrowserToolbar.setFavicon(tab.getFavicon());
+                    mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
+                    mBrowserToolbar.setProgressVisibility(tab.isLoading());
+                    mBrowserToolbar.setShadowVisibility(!(tab.getURL().startsWith("about:")));
+                    mBrowserToolbar.updateTabs(Tabs.getInstance().getCount());
+                }
+
+                GeckoActionBar.setBackgroundDrawable(this, getResources().getDrawable(R.drawable.gecko_actionbar_bg));
                 GeckoActionBar.setCustomView(mAppContext, mBrowserToolbar);
             }
         }
