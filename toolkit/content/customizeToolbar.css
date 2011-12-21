@@ -20,8 +20,9 @@
  the Initial Developer. All Rights Reserved.
 
  Contributor(s):
-   David Hyatt (hyatt@apple.com)
-   Blake Ross (blaker@netscape.com)
+   David Hyatt <hyatt@apple.com>
+   Blake Ross <blaker@netscape.com>
+   Jared Wein <jwein@mozilla.com>
 
  Alternatively, the contents of this file may be used under the terms of
  either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,17 +42,27 @@
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
 
 #palette-box {
-  overflow: auto; 
-  margin: 0px 15px 10px 15px;
+  overflow: auto;
+  display: block;
+  min-height: 3em;
 }
 
-#palette-box > hbox > toolbarpaletteitem {
-  padding-top: 8px;
-  padding-bottom: 8px;
+#palette-box > toolbarpaletteitem {
+  width: 110px;
+  height: 94px;
+  overflow: hidden;
+  display: inline-block;
 }
 
-#palette-box > hbox {
-  min-height: 8em;
+.toolbarpaletteitem-box {
+  -moz-box-pack: center;
+  -moz-box-flex: 1;
+  width: 110px;
+  max-width: 110px;
+}
+
+toolbarpaletteitem > label {
+  text-align: center;
 }
 
 #main-box > box {
