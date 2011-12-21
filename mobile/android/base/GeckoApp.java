@@ -111,6 +111,7 @@ abstract public class GeckoApp
     public Handler mMainHandler;
     private File mProfileDir;
     private static boolean sIsGeckoReady = false;
+    private static int mOrientation;
 
     private IntentFilter mConnectivityFilter;
     private IntentFilter mBatteryFilter;
@@ -1594,6 +1595,8 @@ abstract public class GeckoApp
                 checkMigrateProfile();
             }
         }, 50);
+
+        mOrientation = getResources().getConfiguration().orientation;
     }
 
     /**
@@ -1802,14 +1805,21 @@ abstract public class GeckoApp
 
 
     @Override
-    public void onConfigurationChanged(android.content.res.Configuration newConfig)
+    public void onConfigurationChanged(Configuration newConfig)
     {
         Log.i(LOGTAG, "configuration changed");
 
-        // hide the autocomplete list on rotation
-        mAutoCompletePopup.hide();
-
         super.onConfigurationChanged(newConfig);
+
+        if (mOrientation != newConfig.orientation) {
+            mOrientation = newConfig.orientation;
+            mAutoCompletePopup.hide();
+
+            if (Build.VERSION.SDK_INT >= 11) {
+                mBrowserToolbar = (BrowserToolbar) getLayoutInflater().inflate(R.layout.gecko_app_actionbar, null);
+                GeckoActionBar.setCustomView(mAppContext, mBrowserToolbar);
+            }
+        }
     }
 
     @Override
