@@ -5732,39 +5732,36 @@ Parser::memberExpr(JSBool allowCallSyntax)
     }
 
     while ((tt = tokenStream.getToken()) > TOK_EOF) {
-        ParseNode *pn2;
+        ParseNode *nextMember;
         if (tt == TOK_DOT) {
-            pn2 = NameNode::create(PNK_DOT, NULL, tc);
-            if (!pn2)
-                return NULL;
-
             tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
             if (tt == TOK_ERROR)
                 return NULL;
             if (tt == TOK_NAME) {
 #if JS_HAS_XML_SUPPORT
                 if (!tc->inStrictMode() && tokenStream.peekToken() == TOK_DBLCOLON) {
-                    ParseNode *pn3 = propertyQualifiedIdentifier();
-                    if (!pn3)
+                    ParseNode *propertyId = propertyQualifiedIdentifier();
+                    if (!propertyId)
                         return NULL;
 
-                    JS_ASSERT(pn3->isKind(PNK_DBLCOLON));
-                    pn2->setKind(PNK_LB);
-                    pn2->setOp(JSOP_GETELEM);
-                    pn2->setArity(PN_BINARY);
-                    pn2->pn_left = lhs;
-                    pn2->pn_right = pn3;
+                    nextMember = new_<XMLDoubleColonProperty>(lhs, propertyId,
+                                                              lhs->pn_pos.begin,
+                                                              tokenStream.currentToken().pos.end);
+                    if (!nextMember)
+                        return NULL;
                 } else
 #endif
                 {
-                    pn2->setOp(JSOP_GETPROP);
-                    pn2->pn_expr = lhs;
-                    pn2->pn_atom = tokenStream.currentToken().name();
+                    nextMember = new_<PropertyAccess>(lhs, tokenStream.currentToken().name(),
+                                                      lhs->pn_pos.begin,
+                                                      tokenStream.currentToken().pos.end);
+                    if (!nextMember)
+                        return NULL;
                 }
             }
 #if JS_HAS_XML_SUPPORT
             else if (!tc->inStrictMode()) {
-                ParseNode *pn3;
+                TokenPtr begin = lhs->pn_pos.begin;
                 if (tt == TOK_LP) {
                     /* Filters are effectively 'with', so deoptimize names. */
                     tc->flags |= TCF_FUN_HEAVYWEIGHT;
@@ -5774,40 +5771,38 @@ Parser::memberExpr(JSBool allowCallSyntax)
                     tc->innermostWith = lhs;
                     PushStatement(tc, &stmtInfo, STMT_WITH, -1);
 
-                    pn3 = bracketedExpr();
-                    if (!pn3)
+                    ParseNode *filter = bracketedExpr();
+                    if (!filter)
                         return NULL;
-                    pn3->setInParens(true);
+                    filter->setInParens(true);
                     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_IN_PAREN);
 
                     tc->innermostWith = oldWith;
                     PopStatement(tc);
 
-                    pn2->setKind(PNK_FILTER);
-                    pn2->setOp(JSOP_FILTER);
-                } else if (tt == TOK_AT || tt == TOK_STAR) {
-                    pn3 = starOrAtPropertyIdentifier(tt);
-                    if (!pn3)
+                    nextMember =
+                        new_<XMLFilterExpression>(lhs, filter,
+                                                  begin, tokenStream.currentToken().pos.end);
+                    if (!nextMember)
                         return NULL;
-                    pn2->setKind(PNK_LB);
-                    pn2->setOp(JSOP_GETELEM);
+                } else if (tt == TOK_AT || tt == TOK_STAR) {
+                    ParseNode *propertyId = starOrAtPropertyIdentifier(tt);
+                    if (!propertyId)
+                        return NULL;
+                    nextMember = new_<XMLProperty>(lhs, propertyId,
+                                                   begin, tokenStream.currentToken().pos.end);
+                    if (!nextMember)
+                        return NULL;
                 } else {
                     reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NAME_AFTER_DOT);
                     return NULL;
                 }
-
-                pn2->setArity(PN_BINARY);
-                pn2->pn_left = lhs;
-                pn2->pn_right = pn3;
             }
 #endif
             else {
                 reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NAME_AFTER_DOT);
                 return NULL;
             }
-
-            pn2->pn_pos.begin = lhs->pn_pos.begin;
-            pn2->pn_pos.end = tokenStream.currentToken().pos.end;
 #if JS_HAS_XML_SUPPORT
         } else if (tt == TOK_DBLDOT) {
             if (tc->inStrictMode()) {
@@ -5815,8 +5810,8 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 return NULL;
             }
 
-            pn2 = BinaryNode::create(PNK_DBLDOT, tc);
-            if (!pn2)
+            nextMember = BinaryNode::create(PNK_DBLDOT, tc);
+            if (!nextMember)
                 return NULL;
             tt = tokenStream.getToken(TSF_OPERAND | TSF_KEYWORD_IS_NAME);
             ParseNode *pn3 = primaryExpr(tt, JS_TRUE);
@@ -5830,62 +5825,62 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NAME_AFTER_DOT);
                 return NULL;
             }
-            pn2->setOp(JSOP_DESCENDANTS);
-            pn2->pn_left = lhs;
-            pn2->pn_right = pn3;
-            pn2->pn_pos.begin = lhs->pn_pos.begin;
-            pn2->pn_pos.end = tokenStream.currentToken().pos.end;
+            nextMember->setOp(JSOP_DESCENDANTS);
+            nextMember->pn_left = lhs;
+            nextMember->pn_right = pn3;
+            nextMember->pn_pos.begin = lhs->pn_pos.begin;
+            nextMember->pn_pos.end = tokenStream.currentToken().pos.end;
 #endif
         } else if (tt == TOK_LB) {
-            pn2 = BinaryNode::create(PNK_LB, tc);
-            if (!pn2)
+            nextMember = BinaryNode::create(PNK_LB, tc);
+            if (!nextMember)
                 return NULL;
             ParseNode *pn3 = expr();
             if (!pn3)
                 return NULL;
 
             MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_IN_INDEX);
-            pn2->pn_pos.begin = lhs->pn_pos.begin;
-            pn2->pn_pos.end = tokenStream.currentToken().pos.end;
+            nextMember->pn_pos.begin = lhs->pn_pos.begin;
+            nextMember->pn_pos.end = tokenStream.currentToken().pos.end;
 
             /*
-             * Optimize o['p'] to o.p by rewriting pn2, but avoid rewriting
-             * o['0'] to use JSOP_GETPROP, to keep fast indexing disjoint in
-             * the interpreter from fast property access. However, if the
-             * bracketed string is a uint32, we rewrite pn3 to be a number
-             * instead of a string.
+             * Optimize o['p'] to o.p by rewriting nextMember, but don't
+             * rewrite o['0'] to use JSOP_GETPROP, to keep fast indexing
+             * disjoint in the interpreter from fast property access. However,
+             * if the bracketed string is a uint32_t, we rewrite pn3 to be a
+             * number instead of a string.
              */
             do {
                 if (pn3->isKind(PNK_STRING)) {
                     jsuint index;
 
                     if (!js_IdIsIndex(ATOM_TO_JSID(pn3->pn_atom), &index)) {
-                        pn2->setKind(PNK_DOT);
-                        pn2->setOp(JSOP_GETPROP);
-                        pn2->setArity(PN_NAME);
-                        pn2->pn_expr = lhs;
-                        pn2->pn_atom = pn3->pn_atom;
+                        nextMember->setKind(PNK_DOT);
+                        nextMember->setOp(JSOP_GETPROP);
+                        nextMember->setArity(PN_NAME);
+                        nextMember->pn_expr = lhs;
+                        nextMember->pn_atom = pn3->pn_atom;
                         break;
                     }
                     pn3->setKind(PNK_NUMBER);
                     pn3->setOp(JSOP_DOUBLE);
                     pn3->pn_dval = index;
                 }
-                pn2->setOp(JSOP_GETELEM);
-                pn2->pn_left = lhs;
-                pn2->pn_right = pn3;
+                nextMember->setOp(JSOP_GETELEM);
+                nextMember->pn_left = lhs;
+                nextMember->pn_right = pn3;
             } while (0);
         } else if (allowCallSyntax && tt == TOK_LP) {
-            pn2 = ListNode::create(PNK_LP, tc);
-            if (!pn2)
+            nextMember = ListNode::create(PNK_LP, tc);
+            if (!nextMember)
                 return NULL;
-            pn2->setOp(JSOP_CALL);
+            nextMember->setOp(JSOP_CALL);
 
             lhs = CheckForImmediatelyAppliedLambda(lhs);
             if (lhs->isOp(JSOP_NAME)) {
                 if (lhs->pn_atom == context->runtime->atomState.evalAtom) {
                     /* Select JSOP_EVAL and flag tc as heavyweight. */
-                    pn2->setOp(JSOP_EVAL);
+                    nextMember->setOp(JSOP_EVAL);
                     tc->noteCallsEval();
                     tc->flags |= TCF_FUN_HEAVYWEIGHT;
                     /*
@@ -5898,28 +5893,28 @@ Parser::memberExpr(JSBool allowCallSyntax)
             } else if (lhs->isOp(JSOP_GETPROP)) {
                 /* Select JSOP_FUNAPPLY given foo.apply(...). */
                 if (lhs->pn_atom == context->runtime->atomState.applyAtom)
-                    pn2->setOp(JSOP_FUNAPPLY);
+                    nextMember->setOp(JSOP_FUNAPPLY);
                 else if (lhs->pn_atom == context->runtime->atomState.callAtom)
-                    pn2->setOp(JSOP_FUNCALL);
+                    nextMember->setOp(JSOP_FUNCALL);
             }
 
-            pn2->initList(lhs);
-            pn2->pn_pos.begin = lhs->pn_pos.begin;
+            nextMember->initList(lhs);
+            nextMember->pn_pos.begin = lhs->pn_pos.begin;
 
-            if (!argumentList(pn2))
+            if (!argumentList(nextMember))
                 return NULL;
-            if (pn2->pn_count > ARGC_LIMIT) {
+            if (nextMember->pn_count > ARGC_LIMIT) {
                 JS_ReportErrorNumber(context, js_GetErrorMessage, NULL,
                                      JSMSG_TOO_MANY_FUN_ARGS);
                 return NULL;
             }
-            pn2->pn_pos.end = tokenStream.currentToken().pos.end;
+            nextMember->pn_pos.end = tokenStream.currentToken().pos.end;
         } else {
             tokenStream.ungetToken();
             return lhs;
         }
 
-        lhs = pn2;
+        lhs = nextMember;
     }
     if (tt == TOK_ERROR)
         return NULL;
