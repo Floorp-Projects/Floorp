@@ -790,6 +790,7 @@ JSRuntime::JSRuntime()
     profilingScripts(false),
     alwaysPreserveCode(false),
     hadOutOfMemory(false),
+    debugScopes(NULL),
     data(NULL),
 #ifdef JS_THREADSAFE
     gcLock(NULL),
@@ -879,19 +880,27 @@ JSRuntime::init(uint32_t maxbytes)
     if (!scriptFilenameTable.init())
         return false;
 
+    debugScopes = this->new_<DebugScopes>(this);
+    if (!debugScopes || !debugScopes->init()) {
+        Foreground::delete_(debugScopes);
+        return false;
+    }
+
     nativeStackBase = GetNativeStackBase();
     return true;
 }
 
 JSRuntime::~JSRuntime()
 {
+    JS_ASSERT(onOwnerThread());
+
+    delete_(debugScopes);
+
     /*
      * Even though all objects in the compartment are dead, we may have keep
      * some filenames around because of gcKeepAtoms.
      */
     FreeScriptFilenames(this);
-
-    JS_ASSERT(onOwnerThread());
 
 #ifdef DEBUG
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */

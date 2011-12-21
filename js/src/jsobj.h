@@ -261,6 +261,7 @@ class BlockObject;
 class BooleanObject;
 class ClonedBlockObject;
 class DataViewObject;
+class DebugScopeObject;
 class DeclEnvObject;
 class ElementIteratorObject;
 class GlobalObject;
@@ -360,7 +361,7 @@ struct JSObject : public js::ObjectImpl
     inline bool setWatched(JSContext *cx);
 
     /* See StackFrame::varObj. */
-    inline bool isVarObj() const;
+    inline bool isVarObj();
     inline bool setVarObj(JSContext *cx);
 
     /*
@@ -961,6 +962,7 @@ struct JSObject : public js::ObjectImpl
     inline bool isStrictArguments() const;
 
     /* Subtypes of Proxy. */
+    inline bool isDebugScope() const;
     inline bool isWrapper() const;
     inline bool isFunctionProxy() const;
     inline bool isCrossCompartmentWrapper() const;
@@ -974,6 +976,7 @@ struct JSObject : public js::ObjectImpl
     inline js::ClonedBlockObject &asClonedBlock();
     inline js::DataViewObject &asDataView();
     inline js::DeclEnvObject &asDeclEnv();
+    inline js::DebugScopeObject &asDebugScope();
     inline js::GlobalObject &asGlobal();
     inline js::NestedScopeObject &asNestedScope();
     inline js::NormalArgumentsObject &asNormalArguments();
