@@ -2015,7 +2015,7 @@ struct SortComparatorFunction {
     SortComparatorFunction(JSContext *cx, const Value &fval, InvokeArgsGuard &ag)
       : cx(cx), fval(fval), ag(ag) { }
 
-    bool JS_REQUIRES_STACK operator()(const Value &a, const Value &b, bool *lessOrEqualp);
+    bool operator()(const Value &a, const Value &b, bool *lessOrEqualp);
 };
 
 bool

@@ -46,7 +46,7 @@
 
 using namespace js;
 
-JS_REQUIRES_STACK PropertyCacheEntry *
+PropertyCacheEntry *
 PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *pobj,
                     const Shape *shape)
 {
@@ -176,7 +176,7 @@ GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs
     return atom;
 }
 
-JS_REQUIRES_STACK JSAtom *
+JSAtom *
 PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject **pobjp,
                         PropertyCacheEntry *entry)
 {
