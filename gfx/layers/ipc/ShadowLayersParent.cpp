@@ -144,6 +144,7 @@ ShadowLayersParent::Destroy()
       static_cast<ShadowLayerParent*>(ManagedPLayerParent()[i]);
     slp->Destroy();
   }
+  mHost = NULL;
 }
 
 bool
@@ -418,7 +419,11 @@ ShadowLayersParent::DeallocPLayer(PLayerParent* actor)
 RenderFrameParent*
 ShadowLayersParent::Frame()
 {
-  return mHost->GetRenderFrameParent();
+  if (mDestroyed) {
+    return NULL;
+  } else {
+    return mHost->GetRenderFrameParent();
+  }
 }
 
 void
