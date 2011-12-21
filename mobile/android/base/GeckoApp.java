@@ -902,7 +902,7 @@ abstract public class GeckoApp
                 final int tabId = message.getInt("tabID");
                 int state = message.getInt("state");
                 Log.i(LOGTAG, "State - " + state);
-                if ((state & GeckoAppShell.WPL_STATE_IS_DOCUMENT) != 0) {
+                if ((state & GeckoAppShell.WPL_STATE_IS_NETWORK) != 0) {
                     if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
                         Log.i(LOGTAG, "Got a document start");
                         handleDocumentStart(tabId);

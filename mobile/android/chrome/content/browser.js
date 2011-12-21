@@ -1526,8 +1526,8 @@ Tab.prototype = {
   },
 
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
-      // Filter optimization: Only really send DOCUMENT state changes to Java listener
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
+      // Filter optimization: Only really send NETWORK state changes to Java listener
       let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
       let uri = "";
       if (browser)
