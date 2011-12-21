@@ -238,7 +238,12 @@ ifdef CPP_UNIT_TESTS
 CPPSRCS += $(CPP_UNIT_TESTS)
 SIMPLE_PROGRAMS += $(CPP_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
 INCLUDES += -I$(DIST)/include/testing
-LIBS += $(XPCOM_GLUE_LDOPTS) $(NSPR_LIBS) $(MOZ_JS_LIBS)
+LIBS += $(XPCOM_GLUE_LDOPTS) $(NSPR_LIBS)
+ifdef JS_SHARED_LIBRARY
+ifdef MOZ_SHARK
+LIBS += $(MOZ_JS_LIBS)
+endif
+endif
 
 # ...and run them the usual way
 check::
