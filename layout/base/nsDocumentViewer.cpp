@@ -3771,13 +3771,9 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
 
   // Now, locate the current page we are on and
   // and the page of the page number
-  nscoord gap = 0;
   nsIFrame* pageFrame = seqFrame->GetFirstPrincipalChild();
   while (pageFrame != nsnull) {
     nsRect pageRect = pageFrame->GetRect();
-    if (pageNum == 1) {
-      gap = pageRect.y;
-    }
     if (pageRect.Contains(pageRect.x, pt.y)) {
       currentPage = pageFrame;
     }

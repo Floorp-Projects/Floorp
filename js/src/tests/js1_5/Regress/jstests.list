@@ -149,7 +149,7 @@ script regress-326453.js
 script regress-326467.js
 script regress-328012.js
 script regress-328664.js
-script regress-328897.js
+fails-if(browserIsRemote) script regress-328897.js
 script regress-329383.js
 skip-if(Android) script regress-329530.js
 skip-if(Android) script regress-330352.js

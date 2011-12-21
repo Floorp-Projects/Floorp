@@ -491,22 +491,24 @@ nsPresContext::GetFontPreferences()
     mMinimumFontSizePref = CSSPointsToAppUnits(size);
   }
 
+  nsFont* fontTypes[] = {
+    &mDefaultVariableFont,
+    &mDefaultFixedFont,
+    &mDefaultSerifFont,
+    &mDefaultSansSerifFont,
+    &mDefaultMonospaceFont,
+    &mDefaultCursiveFont,
+    &mDefaultFantasyFont
+  };
+  PR_STATIC_ASSERT(NS_ARRAY_LENGTH(fontTypes) == eDefaultFont_COUNT);
+
   // get attributes specific to each generic font
   nsCAutoString generic_dot_langGroup;
-  for (PRInt32 eType = eDefaultFont_Variable; eType < eDefaultFont_COUNT; ++eType) {
+  for (PRUint32 eType = 0; eType < ArrayLength(fontTypes); ++eType) {
     generic_dot_langGroup.Assign(kGenericFont[eType]);
     generic_dot_langGroup.Append(langGroup);
 
-    nsFont* font;
-    switch (eType) {
-      case eDefaultFont_Variable:  font = &mDefaultVariableFont;  break;
-      case eDefaultFont_Fixed:     font = &mDefaultFixedFont;     break;
-      case eDefaultFont_Serif:     font = &mDefaultSerifFont;     break;
-      case eDefaultFont_SansSerif: font = &mDefaultSansSerifFont; break;
-      case eDefaultFont_Monospace: font = &mDefaultMonospaceFont; break;
-      case eDefaultFont_Cursive:   font = &mDefaultCursiveFont;   break;
-      case eDefaultFont_Fantasy:   font = &mDefaultFantasyFont;   break;
-    }
+    nsFont* font = fontTypes[eType];
 
     // set the default variable font (the other fonts are seen as 'generic' fonts
     // in GFX and will be queried there when hunting for alternative fonts)

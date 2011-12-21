@@ -45,7 +45,7 @@
 #include "nsCRT.h"
 #include "nsUTF8Utils.h"
 #include <fcntl.h>
-#if defined(NS_WIN32)
+#if defined(XP_WIN)
 #include <io.h>
 #else
 #include <unistd.h>

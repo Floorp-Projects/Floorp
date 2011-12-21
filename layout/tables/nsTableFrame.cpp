@@ -5544,7 +5544,6 @@ nsTableFrame::CalcBCBorders()
 
   BCMapCellIterator iter(this, damageArea);
   for (iter.First(info); !iter.mAtEnd; iter.Next(info)) {
-    bool bottomRowSpan = false;
     // see if lastTopBorder, lastBottomBorder need to be reset
     if (iter.IsNewRow()) {
       gotRowBorder = false;
@@ -5561,7 +5560,6 @@ nsTableFrame::CalcBCBorders()
       if (lastBottomBorder.rowIndex > (info.GetCellEndRowIndex() + 1)) {
         // the bottom border's left edge butts against the middle of a rowspan
         lastBottomBorder.Reset(info.GetCellEndRowIndex() + 1, info.mRowSpan);
-        bottomRowSpan = true;
       }
     }
 
@@ -7058,8 +7056,9 @@ BCPaintBorderIterator::VerticalSegmentOwnsCorner()
 {
   mozilla::css::Side cornerOwnerSide = NS_SIDE_TOP;
   bool bevel = false;
-  nscoord cornerSubWidth;
-  cornerSubWidth = (mBCData) ? mBCData->GetCorner(cornerOwnerSide, bevel) : 0;
+  if (mBCData) {
+    mBCData->GetCorner(cornerOwnerSide, bevel);
+  }
   // unitialized ownerside, bevel
   return  (NS_SIDE_TOP == cornerOwnerSide) ||
           (NS_SIDE_BOTTOM == cornerOwnerSide);
