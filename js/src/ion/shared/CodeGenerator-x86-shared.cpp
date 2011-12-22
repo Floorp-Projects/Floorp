@@ -838,8 +838,7 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
         static const VMFunction InvokeFunctionInfo = FunctionInfo<pf>(InvokeFunction);
 
         // Nestle %esp up to the argument vector.
-        if (unusedStack)
-            masm.addPtr(Imm32(unusedStack), StackPointer);
+        masm.freeStack(unusedStack);
 
         pushArg(StackPointer);          // argv.
         pushArg(Imm32(call->nargs()));  // argc.
@@ -849,8 +848,7 @@ CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
             return false;
 
         // Un-nestle %esp from the argument vector. No prefix was pushed.
-        if (unusedStack)
-            masm.subPtr(Imm32(unusedStack), StackPointer);
+        masm.reserveStack(unusedStack);
 
         // Done with the call. Jump to the end.
         masm.jump(&end);
