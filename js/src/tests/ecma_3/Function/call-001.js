@@ -42,7 +42,7 @@
  * SUMMARY: Applying Function.prototype.call to the Function object itself
  *
  *
- * ECMA-262 15.3.4.4 Function.prototype.call (thisArg [,arg1 [,arg2,…] ] )
+ * ECMA-262 15.3.4.4 Function.prototype.call (thisArg [,arg1 [,arg2,â€¦] ] )
  *
  * When applied to the Function object itself, thisArg should be ignored.
  * As explained by Waldemar (waldemar@netscape.com):
