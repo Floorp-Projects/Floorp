@@ -967,6 +967,7 @@ public class PanZoomController
         mState = PanZoomState.PINCHING;
         mLastZoomFocus = new PointF(detector.getFocusX(), detector.getFocusY());
         GeckoApp.mAppContext.hidePluginViews();
+        GeckoApp.mAppContext.mAutoCompletePopup.hide();
         cancelTouch();
 
         return true;
@@ -1083,6 +1084,7 @@ public class PanZoomController
 
     private boolean animatedZoomTo(RectF zoomToRect) {
         GeckoApp.mAppContext.hidePluginViews();
+        GeckoApp.mAppContext.mAutoCompletePopup.hide();
 
         mState = PanZoomState.ANIMATED_ZOOM;
         final float startZoom = mController.getZoomFactor();
