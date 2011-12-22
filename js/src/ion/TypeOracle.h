@@ -71,6 +71,11 @@ enum MIRType
 class TypeOracle
 {
   public:
+    struct UnaryTypes {
+        types::TypeSet *inTypes;
+        types::TypeSet *outTypes;
+    };
+
     struct Unary {
         MIRType ival;
         MIRType rval;
@@ -82,6 +87,7 @@ class TypeOracle
     };
 
   public:
+    virtual UnaryTypes unaryTypes(JSScript *script, jsbytecode *pc) = 0;
     virtual Unary unaryOp(JSScript *script, jsbytecode *pc) = 0;
     virtual Binary binaryOp(JSScript *script, jsbytecode *pc) = 0;
     virtual types::TypeSet *thisTypeSet(JSScript *script) { return NULL; }
@@ -143,6 +149,12 @@ class TypeOracle
 class DummyOracle : public TypeOracle
 {
   public:
+    UnaryTypes unaryTypes(JSScript *script, jsbytecode *pc) {
+        UnaryTypes u;
+        u.inTypes = NULL;
+        u.outTypes = NULL;
+        return u;
+    }
     Unary unaryOp(JSScript *script, jsbytecode *pc) {
         Unary u;
         u.ival = MIRType_Int32;
@@ -170,6 +182,7 @@ class TypeInferenceOracle : public TypeOracle
 
     bool init(JSContext *cx, JSScript *script);
 
+    UnaryTypes unaryTypes(JSScript *script, jsbytecode *pc);
     Unary unaryOp(JSScript *script, jsbytecode *pc);
     Binary binaryOp(JSScript *script, jsbytecode *pc);
     types::TypeSet *thisTypeSet(JSScript *script);

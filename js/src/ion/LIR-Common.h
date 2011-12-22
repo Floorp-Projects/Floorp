@@ -831,6 +831,24 @@ class LInitializedLength : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Read length field of an object element.
+class LArrayLength : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(ArrayLength);
+
+    LArrayLength(const LAllocation &elements) {
+        setOperand(0, elements);
+    }
+
+    const LAllocation *elements() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
 // Bailout if index >= length.
 class LBoundsCheck : public LInstructionHelper<0, 2, 0>
 {
@@ -1037,6 +1055,24 @@ class LStoreSlotT : public LInstructionHelper<0, 2, 0>
     }
     const LAllocation *value() {
         return getOperand(1);
+    }
+};
+
+// Read length field of a JSString*.
+class LStringLength : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(StringLength);
+
+    LStringLength(const LAllocation &string) {
+        setOperand(0, string);
+    }
+
+    const LAllocation *string() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
     }
 };
 

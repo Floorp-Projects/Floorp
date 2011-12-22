@@ -405,7 +405,6 @@ CodeGenerator::visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool)
 
 #ifdef JS_CPU_ARM
     // XXX: callVM has not yet been implemented for ARM.
-    masm.breakpoint();
     return true;
 #else
     typedef bool (*pf)(JSContext *);
@@ -438,6 +437,26 @@ CodeGenerator::generateBody()
     }
     return true;
 }
+
+bool
+CodeGenerator::visitArrayLength(LArrayLength *lir)
+{
+    Address length(ToRegister(lir->elements()), ObjectElements::offsetOfLength());
+    masm.load32(length, ToRegister(lir->output()));
+    return true;
+}
+
+bool
+CodeGenerator::visitStringLength(LStringLength *lir)
+{
+    Address lengthAndFlags(ToRegister(lir->string()), JSString::offsetOfLengthAndFlags());
+    Register output = ToRegister(lir->output());
+
+    masm.loadPtr(lengthAndFlags, output);
+    masm.rshiftPtr(Imm32(JSString::LENGTH_SHIFT), output);
+    return true;
+}
+
 
 bool
 CodeGenerator::visitInitializedLength(LInitializedLength *lir)
