@@ -531,6 +531,7 @@ nl_types.h
 NodeInfo.h
 nss.h
 nssilock.h
+nsswitch.h
 objbase.h
 objidl.h
 Objsafe.h
@@ -750,6 +751,7 @@ sys/sysctl.h
 sys/sysinfo.h
 sys/sysmp.h
 sys/syssgi.h
+sys/system_properties.h
 sys/systeminfo.h
 sys/timeb.h
 sys/time.h
