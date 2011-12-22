@@ -135,13 +135,7 @@ SmsRequestManager::NotifySuccessWithMessage(PRInt32 aRequestId,
 }
 
 void
-SmsRequestManager::NotifySmsSent(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
-{
-  NotifySuccessWithMessage(aRequestId, aMessage);
-}
-
-void
-SmsRequestManager::NotifySmsSendFailed(PRInt32 aRequestId, SmsRequest::ErrorType aError)
+SmsRequestManager::NotifyError(PRInt32 aRequestId, SmsRequest::ErrorType aError)
 {
   NS_ASSERTION(mRequests.Count() > aRequestId && mRequests[aRequestId],
                "Got an invalid request id or it has been already deleted!");
@@ -157,9 +151,28 @@ SmsRequestManager::NotifySmsSendFailed(PRInt32 aRequestId, SmsRequest::ErrorType
 }
 
 void
+SmsRequestManager::NotifySmsSent(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
+{
+  NotifySuccessWithMessage(aRequestId, aMessage);
+}
+
+void
+SmsRequestManager::NotifySmsSendFailed(PRInt32 aRequestId, SmsRequest::ErrorType aError)
+{
+  NotifyError(aRequestId, aError);
+}
+
+void
 SmsRequestManager::NotifyGotSms(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
 {
   NotifySuccessWithMessage(aRequestId, aMessage);
+}
+
+void
+SmsRequestManager::NotifyGetSmsFailed(PRInt32 aRequestId,
+                                      SmsRequest::ErrorType aError)
+{
+  NotifyError(aRequestId, aError);
 }
 
 } // namespace sms
