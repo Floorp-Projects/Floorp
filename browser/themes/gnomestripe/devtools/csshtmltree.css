@@ -23,6 +23,7 @@
  *   Mihai Șucan <mihai.sucan@gmail.com>
  *   Michael Ratcliffe <mratcliffe@mozilla.com>
  *   Dão Gottwald <dao@mozilla.com>
+ *   Rob Campbell <rcampbell@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -227,6 +228,10 @@
 
 .ruleview-code {
   padding: 2px 5px;
+}
+
+.ruleview-ruleopen {
+  -moz-padding-end: 5px;
 }
 
 .ruleview-propertylist {
