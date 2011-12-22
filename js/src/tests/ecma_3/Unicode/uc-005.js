@@ -47,7 +47,7 @@
  *    js> function f\u02B1 () {}
  *
  *    js> f\u02B1.toSource();
- *    function f¦() {}
+ *    function fÂ¦() {}
  *
  *    js> f\u02B1.toSource().toSource();
  *    (new String("function f\xB1() {}"))
@@ -58,7 +58,7 @@
  *
  *    js> f\u02B1.toString();
  *
- *    function f¦() {
+ *    function fÂ¦() {
  *    }
  *
  *    js> f\u02B1.toString().toSource();
