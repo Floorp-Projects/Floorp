@@ -135,6 +135,21 @@ SmsChild::RecvNotifyRequestGotSms(const SmsMessageData& aMessage,
   return true;
 }
 
+bool
+SmsChild::RecvNotifyRequestGetSmsFailed(const PRInt32& aError,
+                                        const PRInt32& aRequestId,
+                                        const PRUint64& aProcessId)
+{
+  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
+    return true;
+  }
+
+  SmsRequestManager::GetInstance()->NotifyGetSmsFailed(aRequestId,
+                                                       SmsRequest::ErrorType(aError));
+
+  return true;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
