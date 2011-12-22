@@ -66,8 +66,15 @@ class IonCommonFrameLayout
     size_t prevFrameLocalSize() const {
         return descriptor_ >> FRAMETYPE_BITS;
     }
+    void setFrameDescriptor(size_t size, FrameType type) {
+        descriptor_ = (size << FRAMETYPE_BITS) | type;
+    }
     uint8 *returnAddress() const {
         JS_NOT_REACHED("ReturnAddress NYI");
+        return NULL;
+    }
+    uint8 **returnAddressPtr() {
+        JS_NOT_REACHED("NYI");
         return NULL;
     }
 };
@@ -84,8 +91,11 @@ class IonJSFrameLayout : public IonEntryFrameLayout
     void *calleeToken() const {
         return calleeToken_;
     }
-    void setCalleeToken(void *value) {
+    void replaceCalleeToken(void *value) {
         calleeToken_ = value;
+    }
+    void setInvalidationRecord(InvalidationRecord *record) {
+        replaceCalleeToken(InvalidationRecordToToken(record));
     }
 
     static size_t offsetOfCalleeToken() {
