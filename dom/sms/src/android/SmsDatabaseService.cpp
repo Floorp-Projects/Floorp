@@ -103,7 +103,11 @@ NS_IMETHODIMP
 SmsDatabaseService::GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId,
                                          PRUint64 aProcessId)
 {
-  // TODO: implement
+  if (!AndroidBridge::Bridge()) {
+    return NS_OK;
+  }
+
+  AndroidBridge::Bridge()->GetNextMessageInList(aListId, aRequestId, aProcessId);
   return NS_OK;
 }
 

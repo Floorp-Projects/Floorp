@@ -206,6 +206,20 @@ SmsChild::RecvNotifyRequestCreateMessageList(const PRInt32& aListId,
   return true;
 }
 
+bool
+SmsChild::RecvNotifyRequestGotNextMessage(const SmsMessageData& aMessageData,
+                                          const PRInt32& aRequestId,
+                                          const PRUint64& aProcessId)
+{
+  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
+    return true;
+  }
+
+  nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(aMessageData);
+  SmsRequestManager::GetInstance()->NotifyGotNextMessage(aRequestId, message);
+  return true;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

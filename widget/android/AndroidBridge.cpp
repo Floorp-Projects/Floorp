@@ -173,6 +173,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jGetMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getMessage", "(IIJ)V");
     jDeleteMessage = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "deleteMessage", "(IIJ)V");
     jCreateMessageList = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "createMessageList", "(JJ[Ljava/lang/String;IIZIJ)V");
+    jGetNextMessageinList = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getNextMessageInList", "(IIJ)V");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -1409,6 +1410,14 @@ AndroidBridge::CreateMessageList(const dom::sms::SmsFilterData& aFilter, bool aR
                                 numbers, aFilter.numbers().Length(),
                                 aFilter.delivery(), aReverse, aRequestId,
                                 aProcessId);
+}
+
+void
+AndroidBridge::GetNextMessageInList(PRInt32 aListId, PRInt32 aRequestId, PRUint64 aProcessId)
+{
+    ALOG_BRIDGE("AndroidBridge::GetNextMessageInList");
+
+    JNI()->CallStaticVoidMethod(mGeckoAppShellClass, jGetNextMessageinList, aListId, aRequestId, aProcessId);
 }
 
 void *

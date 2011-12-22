@@ -72,6 +72,7 @@ public:
   void NotifySmsDeleteFailed(PRInt32 aRequestId, SmsRequest::ErrorType aError);
   void NotifyNoMessageInList(PRInt32 aRequestId);
   void NotifyCreateMessageList(PRInt32 aRequestId, PRInt32 aListId, nsIDOMMozSmsMessage* aMessage);
+  void NotifyGotNextMessage(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage);
 
 private:
   static SmsRequestManager* sInstance;

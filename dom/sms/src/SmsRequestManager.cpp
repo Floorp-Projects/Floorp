@@ -230,6 +230,13 @@ SmsRequestManager::NotifyCreateMessageList(PRInt32 aRequestId, PRInt32 aListId,
   NotifySuccess<nsIDOMMozSmsCursor*>(aRequestId, cursor);
 }
 
+void
+SmsRequestManager::NotifyGotNextMessage(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
+{
+  // TODO: implement
+  printf_stderr("\nHERE\n\n");
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
