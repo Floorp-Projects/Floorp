@@ -531,6 +531,7 @@ public:
         FORCED_RESIZE = 16,
         ACTIVITY_START = 17,
         BROADCAST = 19,
+        VIEWPORT = 20,
         dummy_java_enum_list_end
     };
 
