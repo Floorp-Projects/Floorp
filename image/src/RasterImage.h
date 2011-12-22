@@ -344,11 +344,6 @@ public:
     kDisposeRestorePrevious // Restore the previous (composited) frame
   };
 
-  // Progressive decoding knobs
-  static void SetDecodeBytesAtATime(PRUint32 aBytesAtATime);
-  static void SetMaxMSBeforeYield(PRUint32 aMaxMS);
-  static void SetMaxBytesForSyncDecode(PRUint32 aMaxBytes);
-
   const char* GetURIString() { return mURIString.get();}
 
 private:
