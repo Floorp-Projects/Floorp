@@ -615,7 +615,7 @@ static bool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
                        nsPresContext* aPresContext,
                        bool& aCanStoreInRuleTree)
 {
-  bool    result = true;
+  bool result = true;
   if (aValue.GetUnit() == eCSSUnit_Null) {
     result = false;
   }
@@ -669,42 +669,39 @@ static bool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
            (aValue.GetUnit() == eCSSUnit_Number)) {
     aCoord.SetFactorValue(aValue.GetFloatValue());
   }
-  else if (((aMask & SETCOORD_INITIAL_AUTO) != 0) &&
-           (aValue.GetUnit() == eCSSUnit_Initial)) {
-    aCoord.SetAutoValue();
-  }
-  else if (((aMask & SETCOORD_INITIAL_ZERO) != 0) &&
-           (aValue.GetUnit() == eCSSUnit_Initial)) {
-    aCoord.SetCoordValue(0);
-  }
-  else if (((aMask & SETCOORD_INITIAL_FACTOR_ZERO) != 0) &&
-           (aValue.GetUnit() == eCSSUnit_Initial)) {
-    aCoord.SetFactorValue(0.0f);
-  }
-  else if (((aMask & SETCOORD_INITIAL_NONE) != 0) &&
-           (aValue.GetUnit() == eCSSUnit_Initial)) {
-    aCoord.SetNoneValue();
-  }
-  else if (((aMask & SETCOORD_INITIAL_NORMAL) != 0) &&
-           (aValue.GetUnit() == eCSSUnit_Initial)) {
-    aCoord.SetNormalValue();
-  }
-  else if (((aMask & SETCOORD_INITIAL_HALF) != 0) &&
-           (aValue.GetUnit() == eCSSUnit_Initial)) {
-    aCoord.SetPercentValue(0.5f);
-  }
-  else if (((aMask & SETCOORD_INITIAL_HUNDRED_PCT) != 0) &&
-           (aValue.GetUnit() == eCSSUnit_Initial)) {
-    aCoord.SetPercentValue(1.0f);
-  }
-  else if (((aMask & SETCOORD_INITIAL_FACTOR_ONE) != 0) &&
-           (aValue.GetUnit() == eCSSUnit_Initial)) {
-    aCoord.SetFactorValue(1.0f);
-  }
   else if (((aMask & SETCOORD_STORE_CALC) != 0) &&
            (aValue.IsCalcUnit())) {
     SpecifiedCalcToComputedCalc(aValue, aCoord, aStyleContext,
                                 aCanStoreInRuleTree);
+  }
+  else if (aValue.GetUnit() == eCSSUnit_Initial) {
+    if ((aMask & SETCOORD_INITIAL_AUTO) != 0) {
+      aCoord.SetAutoValue();
+    }
+    else if ((aMask & SETCOORD_INITIAL_ZERO) != 0) {
+      aCoord.SetCoordValue(0);
+    }
+    else if ((aMask & SETCOORD_INITIAL_FACTOR_ZERO) != 0) {
+      aCoord.SetFactorValue(0.0f);
+    }
+    else if ((aMask & SETCOORD_INITIAL_NONE) != 0) {
+      aCoord.SetNoneValue();
+    }
+    else if ((aMask & SETCOORD_INITIAL_NORMAL) != 0) {
+      aCoord.SetNormalValue();
+    }
+    else if ((aMask & SETCOORD_INITIAL_HALF) != 0) {
+      aCoord.SetPercentValue(0.5f);
+    }
+    else if ((aMask & SETCOORD_INITIAL_HUNDRED_PCT) != 0) {
+      aCoord.SetPercentValue(1.0f);
+    }
+    else if ((aMask & SETCOORD_INITIAL_FACTOR_ONE) != 0) {
+      aCoord.SetFactorValue(1.0f);
+    }
+    else {
+      result = false;  // didn't set anything
+    }
   }
   else {
     result = false;  // didn't set anything
