@@ -853,6 +853,65 @@ public class GeckoSmsManager
     }
   }
 
+  public static void getNextMessageInList(int aListId, int aRequestId, long aProcessId) {
+    class GetNextMessageInListRunnable implements Runnable {
+      private int mListId;
+      private int mRequestId;
+      private long mProcessId;
+
+      GetNextMessageInListRunnable(int aListId, int aRequestId, long aProcessId) {
+        mListId = aListId;
+        mRequestId = aRequestId;
+        mProcessId = aProcessId;
+      }
+
+      @Override
+      public void run() {
+        class UnexpectedDeliveryStateException extends Exception { };
+
+        try {
+          Cursor cursor = MessagesListManager.getInstance().get(mListId);
+
+          if (!cursor.moveToNext()) {
+            MessagesListManager.getInstance().remove(mListId);
+            GeckoAppShell.notifyNoMessageInList(mRequestId, mProcessId);
+            return;
+          }
+
+          int type = cursor.getInt(cursor.getColumnIndex("type"));
+          String sender = "";
+          String receiver = "";
+
+          if (type == kSmsTypeInbox) {
+            sender = cursor.getString(cursor.getColumnIndex("address"));
+          } else if (type == kSmsTypeSentbox) {
+            receiver = cursor.getString(cursor.getColumnIndex("address"));
+          } else {
+            throw new UnexpectedDeliveryStateException();
+          }
+
+          int listId = MessagesListManager.getInstance().add(cursor);
+          GeckoAppShell.notifyGotNextMessage(cursor.getInt(cursor.getColumnIndex("_id")),
+                                             receiver, sender,
+                                             cursor.getString(cursor.getColumnIndex("body")),
+                                             cursor.getLong(cursor.getColumnIndex("date")),
+                                             mRequestId, mProcessId);
+        } catch (UnexpectedDeliveryStateException e) {
+          Log.e("GeckoSmsManager", "Unexcepted delivery state type: " + e);
+          // TODO: send an error notification
+        } catch (Exception e) {
+          Log.e("GeckoSmsManager", "Error while trying to get the next message of a list: " + e);
+          // TODO: send an error notification
+        }
+      }
+    }
+
+    if (!SmsIOThread.getInstance().execute(new GetNextMessageInListRunnable(aListId, aRequestId, aProcessId))) {
+      Log.e("GeckoSmsManager", "Failed to add GetNextMessageInListRunnable to the SmsIOThread");
+      // TODO: send an error notification
+    }
+  }
+
   public static void shutdown() {
     SmsIOThread.getInstance().interrupt();
     MessagesListManager.getInstance().clear();
