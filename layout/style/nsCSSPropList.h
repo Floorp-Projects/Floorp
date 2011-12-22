@@ -699,16 +699,60 @@ CSS_PROP_BORDER(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 #endif
-CSS_PROP_BORDER(
+CSS_PROP_SHORTHAND(
     -moz-border-image,
     border_image,
     CSS_PROP_DOMPROP_PREFIXED(BorderImage),
-    CSS_PROPERTY_PARSE_FUNCTION |
+    CSS_PROPERTY_PARSE_FUNCTION)
+CSS_PROP_BORDER(
+    -moz-border-image-source,
+    border_image_source,
+    CSS_PROP_DOMPROP_PREFIXED(BorderImageSource),
+    CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
-        CSS_PROPERTY_START_IMAGE_LOADS |
-        CSS_PROPERTY_IMAGE_IS_IN_ARRAY_0,
+        CSS_PROPERTY_START_IMAGE_LOADS,
+    VARIANT_HUO,
+    nsnull,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_BORDER(
+    -moz-border-image-slice,
+    border_image_slice,
+    CSS_PROP_DOMPROP_PREFIXED(BorderImageSlice),
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     0,
-    kBorderImageKTable,
+    kBorderImageSliceKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_BORDER(
+    -moz-border-image-width,
+    border_image_width,
+    CSS_PROP_DOMPROP_PREFIXED(BorderImageWidth),
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    0,
+    nsnull,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_BORDER(
+    -moz-border-image-outset,
+    border_image_outset,
+    CSS_PROP_DOMPROP_PREFIXED(BorderImageOutset),
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    0,
+    nsnull,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_BORDER(
+    -moz-border-image-repeat,
+    border_image_repeat,
+    CSS_PROP_DOMPROP_PREFIXED(BorderImageRepeat),
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
+    0,
+    kBorderImageRepeatKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_SHORTHAND(
