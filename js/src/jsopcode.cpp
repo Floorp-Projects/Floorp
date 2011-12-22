@@ -3348,11 +3348,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                  */
                 Vector<const char *> rhsExprs(cx);
                 if (!rhsExprs.resize(atoms.length()))
-                    return false;
+                    return NULL;
                 for (size_t i = 0; i < rhsExprs.length(); ++i) {
                     rhsExprs[i] = GetStr(ss, letDepth + i);
                     if (!rhsExprs[i])
-                        return false;
+                        return NULL;
                 }
 
                 /* Build the let head starting at headBegin. */
@@ -3364,15 +3364,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                  */
                 if (groupAssign) {
                     if (Sprint(&ss->sprinter, "[") < 0)
-                        return false;
+                        return NULL;
                     for (size_t i = 0; i < atoms.length(); ++i) {
                         if (i && Sprint(&ss->sprinter, ", ") < 0)
-                            return false;
+                            return NULL;
                         if (!QuoteString(&ss->sprinter, atoms[i], 0))
-                            return false;
+                            return NULL;
                     }
                     if (Sprint(&ss->sprinter, "] = [") < 0)
-                        return false;
+                        return NULL;
                 }
 
                 for (size_t i = 0; i < atoms.length(); ++i) {
@@ -3381,31 +3381,31 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         continue;
 
                     if (i && Sprint(&ss->sprinter, ", ") < 0)
-                        return false;
+                        return NULL;
 
                     if (groupAssign) {
                         if (SprintCString(&ss->sprinter, rhs) < 0)
-                            return false;
+                            return NULL;
                     } else if (!strncmp(rhs, DestructuredString, DestructuredStringLength)) {
                         if (SprintCString(&ss->sprinter, rhs + DestructuredStringLength) < 0)
-                            return false;
+                            return NULL;
                     } else {
                         JS_ASSERT(atoms[i] != cx->runtime->atomState.emptyAtom);
                         if (!QuoteString(&ss->sprinter, atoms[i], 0))
-                            return false;
+                            return NULL;
                         if (*rhs) {
                             uint8_t prec = js_CodeSpec[ss->opcodes[letDepth + i]].prec;
                             const char *fmt = prec && prec < js_CodeSpec[JSOP_SETLOCAL].prec
                                               ? " = (%s)"
                                               : " = %s";
                             if (Sprint(&ss->sprinter, fmt, rhs) < 0)
-                                return false;
+                                return NULL;
                         }
                     }
                 }
 
                 if (groupAssign && Sprint(&ss->sprinter, "]") < 0)
-                    return false;
+                    return NULL;
 
                 /* Clone the let head chars before clobbering the stack. */
                 DupBuffer head(cx);
