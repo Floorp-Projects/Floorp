@@ -7135,18 +7135,18 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   // Number of properties we care about
   size_t nValues = 0;
 
-  size_t backColorIndex = size_t(-1);
-
   nsCSSValue* values[NS_ARRAY_LENGTH(backgroundValues) +
                      NS_ARRAY_LENGTH(borderValues) +
                      NS_ARRAY_LENGTH(paddingValues)];
 
+  nsCSSProperty properties[NS_ARRAY_LENGTH(backgroundValues) +
+                           NS_ARRAY_LENGTH(borderValues) +
+                           NS_ARRAY_LENGTH(paddingValues)];
+
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) {
     for (PRUint32 i = 0, i_end = ArrayLength(backgroundValues);
          i < i_end; ++i) {
-      if (backgroundValues[i] == eCSSProperty_background_color) {
-        backColorIndex = nValues;
-      }
+      properties[nValues] = backgroundValues[i];
       values[nValues++] = ruleData.ValueFor(backgroundValues[i]);
     }
   }
@@ -7154,6 +7154,7 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BORDER) {
     for (PRUint32 i = 0, i_end = ArrayLength(borderValues);
          i < i_end; ++i) {
+      properties[nValues] = borderValues[i];
       values[nValues++] = ruleData.ValueFor(borderValues[i]);
     }
   }
@@ -7161,6 +7162,7 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_PADDING) {
     for (PRUint32 i = 0, i_end = ArrayLength(paddingValues);
          i < i_end; ++i) {
+      properties[nValues] = paddingValues[i];
       values[nValues++] = ruleData.ValueFor(paddingValues[i]);
     }
   }
@@ -7211,11 +7213,14 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
                 values[i]->GetUnit() != eCSSUnit_Dummy && // see above
                 values[i]->GetUnit() != eCSSUnit_DummyInherit) {
               // If author colors are not allowed, only claim to have
-              // author-specified rules if we're looking at the background
-              // color and it's set to transparent.  Anything else should get
-              // set to a dummy value instead.
+              // author-specified rules if we're looking at a non-color
+              // property or if we're looking at the background color and it's
+              // set to transparent.  Anything else should get set to a dummy
+              // value instead.
               if (aAuthorColorsAllowed ||
-                  (i == backColorIndex &&
+                  !nsCSSProps::PropHasFlags(properties[i],
+                     CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED) ||
+                  (properties[i] == eCSSProperty_background_color &&
                    !values[i]->IsNonTransparentColor())) {
                 return true;
               }

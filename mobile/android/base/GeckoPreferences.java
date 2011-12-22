@@ -41,16 +41,24 @@ package org.mozilla.gecko;
 import java.lang.CharSequence;
 import java.util.ArrayList;
 
+import android.app.Dialog;
+import android.text.Editable;
+import android.app.AlertDialog;
 import android.os.Build;
 import android.os.Bundle;
 import android.content.res.Resources;
 import android.content.Context;
 import android.preference.*;
 import android.preference.Preference.*;
+import android.text.InputType;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.text.TextWatcher;
+import android.content.DialogInterface;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -128,9 +136,17 @@ public class GeckoPreferences
         return super.onOptionsItemSelected(item);
     }
 
+    final private int DIALOG_CREATE_MASTER_PASSWORD = 0;
+    final private int DIALOG_REMOVE_MASTER_PASSWORD = 1;
+
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         String prefName = preference.getKey();
+        if (prefName.equals("privacy.masterpassword.enabled")) {
+            showDialog((Boolean)newValue ? DIALOG_CREATE_MASTER_PASSWORD : DIALOG_REMOVE_MASTER_PASSWORD);
+            return false;
+        }
+
         setPreference(prefName, newValue);
         if (preference instanceof ListPreference) {
             // We need to find the entry for the new value
@@ -141,6 +157,123 @@ public class GeckoPreferences
         if (preference instanceof LinkPreference)
             finish();
         return true;
+    }
+
+    private EditText getTextBox(int aHintText) {
+        EditText input = new EditText(GeckoApp.mAppContext);
+        int inputtype = InputType.TYPE_CLASS_TEXT;
+        inputtype |= InputType.TYPE_TEXT_VARIATION_PASSWORD | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
+        input.setInputType(inputtype);
+
+        String hint = getResources().getString(aHintText);
+        input.setHint(aHintText);
+        return input;
+    }
+
+    private AlertDialog mDialog = null;
+
+    private class PasswordTextWatcher implements TextWatcher {
+        EditText input1 = null;
+        EditText input2 = null;
+
+        PasswordTextWatcher(EditText aInput1, EditText aInput2) {
+            input1 = aInput1;
+            input2 = aInput2;
+        }
+
+        public void afterTextChanged(Editable s) {
+            if (mDialog == null)
+                return;
+
+            String text1 = input1.getText().toString();
+            String text2 = input2.getText().toString();
+            mDialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(text1.equals(text2));
+        }
+
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+        public void onTextChanged(CharSequence s, int start, int before, int count) { }
+    }
+
+    protected Dialog onCreateDialog(int id) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LinearLayout linearLayout = new LinearLayout(this);
+        linearLayout.setOrientation(LinearLayout.VERTICAL);
+        switch(id) {
+            case DIALOG_CREATE_MASTER_PASSWORD:
+                final EditText input1 = getTextBox(R.string.masterpassword_password);
+                final EditText input2 = getTextBox(R.string.masterpassword_confirm);
+                PasswordTextWatcher watcher = new PasswordTextWatcher(input1, input2);
+                input1.addTextChangedListener((TextWatcher)watcher);
+                input2.addTextChangedListener((TextWatcher)watcher);
+                linearLayout.addView(input1);
+                linearLayout.addView(input2);
+
+                builder.setTitle(R.string.masterpassword_create_title)
+                       .setView((View)linearLayout)
+                       .setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {  
+                            public void onClick(DialogInterface dialog, int which) {
+                                JSONObject jsonPref = new JSONObject();
+                                try {
+                                    jsonPref.put("name", "privacy.masterpassword.enabled");
+                                    jsonPref.put("type", "string");
+                                    jsonPref.put("value", input1.getText().toString());
+                    
+                                    GeckoEvent event = new GeckoEvent("Preferences:Set", jsonPref.toString());
+                                    GeckoAppShell.sendEventToGecko(event);
+                                } catch(Exception ex) {
+                                    Log.e(LOGTAG, "Error setting masterpassword", ex);
+                                }
+                                mDialog = null;
+                                input1.setText("");
+                                input2.setText("");
+                                return;
+                            }
+                        })
+                        .setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {  
+                            public void onClick(DialogInterface dialog, int which) {
+                                mDialog = null;
+                                input1.setText("");
+                                input2.setText("");
+                                return;
+                            }
+                        });
+                break;
+            case DIALOG_REMOVE_MASTER_PASSWORD:
+                final EditText input = getTextBox(R.string.masterpassword_password);
+                linearLayout.addView(input);
+
+                builder.setTitle(R.string.masterpassword_remove_title)
+                       .setView((View)linearLayout)
+                       .setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {  
+                            public void onClick(DialogInterface dialog, int which) {
+                                try {
+                                    JSONObject jsonPref = new JSONObject();
+                                    jsonPref.put("name", "privacy.masterpassword.enabled");
+                                    jsonPref.put("type", "string");
+                                    jsonPref.put("value", input.getText().toString());
+                        
+                                    GeckoEvent event = new GeckoEvent("Preferences:Set", jsonPref.toString());
+                                    GeckoAppShell.sendEventToGecko(event);
+                                } catch(Exception ex) {
+                                    Log.e(LOGTAG, "Error setting masterpassword", ex);
+                                }
+                                input.setText("");
+                                mDialog = null;
+                                return;
+                            }
+                        })
+                       .setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {  
+                            public void onClick(DialogInterface dialog, int which) {
+                                mDialog = null;
+                                input.setText("");
+                                return;
+                            }
+                        });
+                break;
+            default:
+                return null;
+        }
+        return mDialog = builder.create();
     }
 
     private void refresh(JSONArray jsonPrefs) {

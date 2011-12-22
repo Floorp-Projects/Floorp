@@ -130,23 +130,21 @@ Decoder::Finish()
     // Log data errors to the error console
     nsCOMPtr<nsIConsoleService> consoleService =
       do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-    nsCOMPtr<nsIScriptError2> errorObject =
+    nsCOMPtr<nsIScriptError> errorObject =
       do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
 
     if (consoleService && errorObject && !HasDecoderError()) {
       nsAutoString msg(NS_LITERAL_STRING("Image corrupt or truncated: ") +
                        NS_ConvertASCIItoUTF16(mImage.GetURIString()));
 
-      errorObject->InitWithWindowID
-        (msg.get(),
-         NS_ConvertUTF8toUTF16(mImage.GetURIString()).get(),
-         nsnull,
-         0, 0, nsIScriptError::errorFlag,
-         "Image", mImage.InnerWindowID()
-         );
-  
-      nsCOMPtr<nsIScriptError> error = do_QueryInterface(errorObject);
-      consoleService->LogMessage(error);
+      if (NS_SUCCEEDED(errorObject->InitWithWindowID(
+                         msg.get(),
+                         NS_ConvertUTF8toUTF16(mImage.GetURIString()).get(),
+                         nsnull, 0, 0, nsIScriptError::errorFlag,
+                         "Image", mImage.InnerWindowID()
+                       ))) {
+        consoleService->LogMessage(errorObject);
+      }
     }
 
     // If we only have a data error, see if things are worth salvaging

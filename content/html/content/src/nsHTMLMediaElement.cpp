@@ -90,6 +90,8 @@
 #include "nsIDOMNotifyAudioAvailableEvent.h"
 #include "nsMediaFragmentURIParser.h"
 #include "nsURIHashKey.h"
+#include "nsContentUtils.h"
+#include "nsIScriptError.h"
 
 #ifdef MOZ_OGG
 #include "nsOggDecoder.h"
@@ -282,6 +284,20 @@ nsHTMLMediaElement::MediaLoadListener::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
+void nsHTMLMediaElement::ReportLoadError(const char* aMsg,
+                                         const PRUnichar** aParams,
+                                         PRUint32 aParamCount)
+{
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  "Media",
+                                  OwnerDoc(),
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  aMsg,
+                                  aParams,
+                                  aParamCount);
+}
+
+
 NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
   nsContentUtils::UnregisterShutdownObserver(this);
@@ -306,6 +322,21 @@ NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* 
     if (element)
       element->NotifyLoadError();
     return status;
+  }
+
+  nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(aRequest);
+  bool succeeded;
+  if (hc && NS_SUCCEEDED(hc->GetRequestSucceeded(&succeeded)) && !succeeded) {
+    element->NotifyLoadError();
+    PRUint32 responseStatus = 0;
+    hc->GetResponseStatus(&responseStatus);
+    nsAutoString code;
+    code.AppendInt(responseStatus);
+    nsAutoString src;
+    element->GetCurrentSrc(src);
+    const PRUnichar* params[] = { code.get(), src.get() };
+    element->ReportLoadError("MediaLoadHttpError", params, ArrayLength(params));
+    return NS_BINDING_ABORTED;
   }
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
@@ -664,6 +695,9 @@ void nsHTMLMediaElement::SelectResource()
         mIsRunningSelectResource = false;
         return;
       }
+    } else {
+      const PRUnichar* params[] = { src.get() };
+      ReportLoadError("MediaLoadInvalidURI", params, ArrayLength(params));
     }
     NoSupportedMediaSourceError();
   } else {
@@ -722,12 +756,14 @@ void nsHTMLMediaElement::LoadFromSourceChildren()
       mLoadWaitStatus = WAITING_FOR_SOURCE;
       mNetworkState = nsIDOMHTMLMediaElement::NETWORK_NO_SOURCE;
       ChangeDelayLoadStatus(false);
+      ReportLoadError("MediaLoadExhaustedCandidates");
       return;
     }
 
     // Must have src attribute.
     nsAutoString src;
     if (!child->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
+      ReportLoadError("MediaLoadSourceMissingSrc");
       DispatchAsyncSourceError(child);
       continue;
     }
@@ -737,6 +773,8 @@ void nsHTMLMediaElement::LoadFromSourceChildren()
     if (child->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type) &&
         GetCanPlay(type) == CANPLAY_NO) {
       DispatchAsyncSourceError(child);
+      const PRUnichar* params[] = { type.get(), src.get() };
+      ReportLoadError("MediaLoadUnsupportedType", params, ArrayLength(params));
       continue;
     }
     LOG(PR_LOG_DEBUG, ("%p Trying load from <source>=%s type=%s", this,
@@ -746,6 +784,8 @@ void nsHTMLMediaElement::LoadFromSourceChildren()
     NewURIFromString(src, getter_AddRefs(uri));
     if (!uri) {
       DispatchAsyncSourceError(child);
+      const PRUnichar* params[] = { src.get() };
+      ReportLoadError("MediaLoadInvalidURI", params, ArrayLength(params));
       continue;
     }
 
@@ -1951,6 +1991,11 @@ nsresult nsHTMLMediaElement::InitializeDecoderForChannel(nsIChannel *aChannel,
 
   nsRefPtr<nsMediaDecoder> decoder = CreateDecoder(mimeType);
   if (!decoder) {
+    nsAutoString src;
+    GetCurrentSrc(src);
+    NS_ConvertUTF8toUTF16 mimeUTF16(mimeType);
+    const PRUnichar* params[] = { mimeUTF16.get(), src.get() };
+    ReportLoadError("MediaLoadUnsupportedMimeType", params, ArrayLength(params));
     return NS_ERROR_FAILURE;
   }
 
@@ -2120,6 +2165,11 @@ void nsHTMLMediaElement::NetworkError()
 
 void nsHTMLMediaElement::DecodeError()
 {
+  nsAutoString src;
+  GetCurrentSrc(src);
+  const PRUnichar* params[] = { src.get() };
+  ReportLoadError("MediaLoadDecodeError", params, ArrayLength(params));
+
   if (mDecoder) {
     RemoveMediaElementFromURITable();
     mDecoder->Shutdown();

@@ -2651,7 +2651,7 @@ ConvertArgs(JSContext *cx, uintN argc, jsval *vp)
         strBytes.encode(cx, str);
     JSString *tmpstr = JS_DecompileFunction(cx, fun, 4);
     JSAutoByteString func;
-    if (!tmpstr || !func.encode(cx, tmpstr));
+    if (!tmpstr || !func.encode(cx, tmpstr))
         ReportException(cx);
     fprintf(gOutFile,
             "d %g, I %g, S %s, W %s, obj %s, fun %s\n"
