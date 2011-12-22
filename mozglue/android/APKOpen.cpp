@@ -298,6 +298,7 @@ SHELL_WRAPPER3(notifySmsDeleted, jboolean, jint, jlong);
 SHELL_WRAPPER3(notifySmsDeleteFailed, jint, jint, jlong);
 SHELL_WRAPPER2(notifyNoMessageInList, jint, jlong);
 SHELL_WRAPPER8(notifyListCreated, jint, jint, jstring, jstring, jstring, jlong, jint, jlong);
+SHELL_WRAPPER7(notifyGotNextMessage, jint, jstring, jstring, jstring, jlong, jint, jlong);
 
 static void * xul_handle = NULL;
 static time_t apk_mtime = 0;
@@ -695,6 +696,7 @@ loadLibs(const char *apkName)
   GETFUNC(notifySmsDeleteFailed);
   GETFUNC(notifyNoMessageInList);
   GETFUNC(notifyListCreated);
+  GETFUNC(notifyGotNextMessage);
 #undef GETFUNC
   sStartupTimeline = (uint64_t *)__wrap_dlsym(xul_handle, "_ZN7mozilla15StartupTimeline16sStartupTimelineE");
   gettimeofday(&t1, 0);

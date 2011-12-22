@@ -132,6 +132,7 @@ public class GeckoAppShell
     public static native void notifySmsDeleteFailed(int aError, int aRequestId, long aProcessId);
     public static native void notifyNoMessageInList(int aRequestId, long aProcessId);
     public static native void notifyListCreated(int aListId, int aMessageId, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
+    public static native void notifyGotNextMessage(int aMessageId, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
 
     // A looper thread, accessed by GeckoAppShell.getHandler
     private static class LooperThread extends Thread {
@@ -1720,6 +1721,10 @@ public class GeckoAppShell
 
     public static void createMessageList(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, int aDeliveryState, boolean aReverse, int aRequestId, long aProcessId) {
         GeckoSmsManager.createMessageList(aStartDate, aEndDate, aNumbers, aNumbersCount, aDeliveryState, aReverse, aRequestId, aProcessId);
+    }
+
+    public static void getNextMessageInList(int aListId, int aRequestId, long aProcessId) {
+        GeckoSmsManager.getNextMessageInList(aListId, aRequestId, aProcessId);
     }
 
     public static boolean isTablet() {
