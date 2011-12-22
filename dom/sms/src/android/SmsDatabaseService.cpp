@@ -63,7 +63,11 @@ NS_IMETHODIMP
 SmsDatabaseService::GetMessageMoz(PRInt32 aMessageId, PRInt32 aRequestId,
                                   PRUint64 aProcessId)
 {
-  // TODO: implement
+  if (!AndroidBridge::Bridge()) {
+    return NS_OK;
+  }
+
+  AndroidBridge::Bridge()->GetMessage(aMessageId, aRequestId, aProcessId);
   return NS_OK;
 }
 

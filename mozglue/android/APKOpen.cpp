@@ -234,6 +234,24 @@ Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one
   return f_ ## name(jenv, jc, one, two, three, four, five, six); \
 }
 
+#define SHELL_WRAPPER7(name,type1,type2,type3,type4,type5,type6,type7) \
+typedef void (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven); \
+static name ## _t f_ ## name; \
+extern "C" NS_EXPORT void JNICALL \
+Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven) \
+{ \
+  f_ ## name(jenv, jc, one, two, three, four, five, six, seven); \
+}
+
+#define SHELL_WRAPPER7_WITH_RETURN(name, return_type, type1, type2, type3, type4, type5, type6, type7) \
+typedef return_type (*name ## _t)(JNIEnv *, jclass, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven); \
+static name ## _t f_ ## name; \
+extern "C" NS_EXPORT return_type JNICALL \
+Java_org_mozilla_gecko_GeckoAppShell_ ## name(JNIEnv *jenv, jclass jc, type1 one, type2 two, type3 three, type4 four, type5 five, type6 six, type7 seven) \
+{ \
+  return f_ ## name(jenv, jc, one, two, three, four, five, six, seven); \
+}
+
 SHELL_WRAPPER0(nativeInit)
 SHELL_WRAPPER1(nativeRun, jstring)
 SHELL_WRAPPER1(notifyGeckoOfEvent, jobject)
@@ -256,6 +274,7 @@ SHELL_WRAPPER3_WITH_RETURN(saveMessageInSentbox, jint, jstring, jstring, jlong);
 SHELL_WRAPPER6(notifySmsSent, jint, jstring, jstring, jlong, jint, jlong);
 SHELL_WRAPPER4(notifySmsDelivered, jint, jstring, jstring, jlong);
 SHELL_WRAPPER3(notifySmsSendFailed, jint, jint, jlong);
+SHELL_WRAPPER7(notifyGetSms, jint, jstring, jstring, jstring, jlong, jint, jlong);
 
 static void * xul_handle = NULL;
 static time_t apk_mtime = 0;
@@ -647,6 +666,7 @@ loadLibs(const char *apkName)
   GETFUNC(notifySmsSent);
   GETFUNC(notifySmsDelivered);
   GETFUNC(notifySmsSendFailed);
+  GETFUNC(notifyGetSms);
 #undef GETFUNC
   sStartupTimeline = (uint64_t *)__wrap_dlsym(xul_handle, "_ZN7mozilla15StartupTimeline16sStartupTimelineE");
   gettimeofday(&t1, 0);
