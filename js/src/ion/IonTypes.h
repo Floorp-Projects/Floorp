@@ -44,6 +44,9 @@
 
 #include <jstypes.h>
 
+namespace js {
+namespace ion {
+
 typedef uint32_t uint32;
 typedef int32_t int32;
 typedef uint16_t uint16;
@@ -53,6 +56,9 @@ typedef int8_t int8;
 
 typedef uint32 SnapshotOffset;
 typedef uint32 BailoutId;
+
+} // namespace ion
+} // namespace js
 
 #endif // jsion_types_h_
 
