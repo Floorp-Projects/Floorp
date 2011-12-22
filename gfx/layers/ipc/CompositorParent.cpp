@@ -46,6 +46,7 @@ namespace mozilla {
 namespace layers {
 
 CompositorParent::CompositorParent()
+  : mStopped(false)
 {
 
   MOZ_COUNT_CTOR(CompositorParent);
@@ -54,6 +55,20 @@ CompositorParent::CompositorParent()
 CompositorParent::~CompositorParent()
 {
   MOZ_COUNT_DTOR(CompositorParent);
+}
+
+void
+CompositorParent::Destroy()
+{
+  size_t numChildren = ManagedPLayersParent().Length();
+  NS_ABORT_IF_FALSE(0 == numChildren || 1 == numChildren,
+                    "compositor must only have 0 or 1 layer manager");
+
+  if (numChildren) {
+    ShadowLayersParent* layers =
+      static_cast<ShadowLayersParent*>(ManagedPLayersParent()[0]);
+    layers->Destroy();
+  }
 }
 
 bool
@@ -67,6 +82,8 @@ CompositorParent::RecvInit()
 bool
 CompositorParent::RecvStop()
 {
+  mStopped = true;
+  Destroy();
   return true;
 }
 
@@ -80,6 +97,10 @@ CompositorParent::RequestComposition()
 void
 CompositorParent::Composite()
 {
+  if (mStopped) {
+    return;
+  }
+
   if (!mLayerManager) {
     CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::Composite);
     MessageLoop::current()->PostDelayedTask(FROM_HERE, composeTask, 10);
