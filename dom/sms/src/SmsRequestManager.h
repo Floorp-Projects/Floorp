@@ -66,14 +66,15 @@ public:
   void NotifySmsSendFailed(PRInt32 aRequestId, SmsRequest::ErrorType aError);
   void NotifyGotSms(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage);
   void NotifyGetSmsFailed(PRInt32 aRequestId, SmsRequest::ErrorType aError);
+  void NotifySmsDeleted(PRInt32 aRequestId, bool aDeleted);
 
 private:
   static SmsRequestManager* sInstance;
 
   nsresult DispatchTrustedEventToRequest(const nsAString& aEventName,
                                          nsIDOMMozSmsRequest* aRequest);
-  void NotifySuccessWithMessage(PRInt32 aRequestId,
-                                nsIDOMMozSmsMessage* aMessage);
+  template <class T>
+  void NotifySuccess(PRInt32 aRequestId, T aParam);
   void NotifyError(PRInt32 aRequestId, SmsRequest::ErrorType aError);
 
   nsCOMArray<nsIDOMMozSmsRequest> mRequests;

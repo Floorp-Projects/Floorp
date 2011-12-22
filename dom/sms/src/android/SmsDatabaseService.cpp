@@ -75,7 +75,11 @@ NS_IMETHODIMP
 SmsDatabaseService::DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId,
                                   PRUint64 aProcessId)
 {
-  // TODO: implement
+  if (!AndroidBridge::Bridge()) {
+    return NS_OK;
+  }
+
+  AndroidBridge::Bridge()->DeleteMessage(aMessageId, aRequestId, aProcessId);
   return NS_OK;
 }
 

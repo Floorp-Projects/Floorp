@@ -128,6 +128,7 @@ public class GeckoAppShell
     public static native void notifySmsSendFailed(int aError, int aRequestId, long aProcessId);
     public static native void notifyGetSms(int aId, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId, long aProcessId);
     public static native void notifyGetSmsFailed(int aError, int aRequestId, long aProcessId);
+    public static native void notifySmsDeleted(boolean aDeleted, int aRequestId, long aProcessId);
 
     // A looper thread, accessed by GeckoAppShell.getHandler
     private static class LooperThread extends Thread {
@@ -1708,6 +1709,10 @@ public class GeckoAppShell
 
     public static void getMessage(int aMessageId, int aRequestId, long aProcessId) {
         GeckoSmsManager.getMessage(aMessageId, aRequestId, aProcessId);
+    }
+
+    public static void deleteMessage(int aMessageId, int aRequestId, long aProcessId) {
+        GeckoSmsManager.deleteMessage(aMessageId, aRequestId, aProcessId);
     }
 
     public static boolean isTablet() {
