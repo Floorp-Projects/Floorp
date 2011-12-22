@@ -10,7 +10,7 @@ from tests import TestCase
 
 def split_path_into_dirs(path):
     dirs = [path]
-   
+
     while True:
         path, tail = os.path.split(path)
         if not tail:
@@ -23,16 +23,19 @@ class XULInfo:
         self.abi = abi
         self.os = os
         self.isdebug = isdebug
+        self.browserIsRemote = False
 
     def as_js(self):
         """Return JS that when executed sets up variables so that JS expression
         predicates on XUL build info evaluate properly."""
 
-        return 'var xulRuntime = { OS: "%s", XPCOMABI: "%s", shell: true }; var isDebugBuild=%s; var Android=%s;' % (
+        return ('var xulRuntime = { OS: "%s", XPCOMABI: "%s", shell: true };' +
+                'var isDebugBuild=%s; var Android=%s; var browserIsRemote=%s') % (
             self.os,
             self.abi,
             str(self.isdebug).lower(),
-            str(self.os == "Android").lower())
+            str(self.os == "Android").lower(),
+            str(self.browserIsRemote).lower())
 
     @classmethod
     def create(cls, jsdir):
