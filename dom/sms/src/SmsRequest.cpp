@@ -212,6 +212,7 @@ SmsRequest::SetError(ErrorType aError)
 
   mDone = true;
   mError = aError;
+  mCursor = nsnull;
 }
 
 NS_IMETHODIMP

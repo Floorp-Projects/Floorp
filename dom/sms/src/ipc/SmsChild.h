@@ -59,6 +59,7 @@ public:
   NS_OVERRIDE virtual bool RecvNotifyRequestNoMessageInList(const PRInt32& aRequestId, const PRUint64& aProcessId);
   NS_OVERRIDE virtual bool RecvNotifyRequestCreateMessageList(const PRInt32& aListId, const SmsMessageData& aMessage, const PRInt32& aRequestId, const PRUint64& aProcessId);
   NS_OVERRIDE virtual bool RecvNotifyRequestGotNextMessage(const SmsMessageData& aMessage, const PRInt32& aRequestId, const PRUint64& aProcessId);
+  NS_OVERRIDE virtual bool RecvNotifyRequestReadListFailed(const PRInt32& aError, const PRInt32& aRequestId, const PRUint64& aProcessId);
 };
 
 } // namespace sms
