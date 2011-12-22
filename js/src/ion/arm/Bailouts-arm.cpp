@@ -143,6 +143,23 @@ class BailoutStack
     }
 };
 
+class InvalidationBailoutStack
+{
+  public:
+    uint8 *sp() const {
+        JS_NOT_REACHED("NYI");
+        return NULL;
+    }
+    uint8 *fp() const {
+        JS_NOT_REACHED("NYI");
+        return NULL;
+    }
+    MachineState machine() {
+        JS_NOT_REACHED("NYI");
+        return MachineState(NULL, NULL);
+    }
+};
+
 } // namespace ion
 } // namespace js
 
@@ -170,3 +187,14 @@ ion::FrameRecoveryFromBailout(IonCompartment *ion, BailoutStack *bailout)
     return FrameRecovery::FromBailoutId(fp, sp, bailout->machine(), bailoutId);
 }
 
+FrameRecovery
+ion::FrameRecoveryFromInvalidation(IonCompartment *ion, InvalidationBailoutStack *bailout)
+{
+    IonJSFrameLayout *fp = (IonJSFrameLayout *) bailout->fp();
+    InvalidationRecord *record = CalleeTokenToInvalidationRecord(fp->calleeToken());
+    const IonFrameInfo *exitInfo = record->ionScript->getFrameInfo(record->returnAddress);
+    SnapshotOffset snapshotOffset = exitInfo->snapshotOffset;
+
+    return FrameRecovery::FromSnapshot(bailout->fp(), bailout->sp(), bailout->machine(),
+                                       snapshotOffset);
+}

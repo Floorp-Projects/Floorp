@@ -63,7 +63,7 @@ class IonCommonFrameLayout
     size_t prevFrameLocalSize() const {
         return descriptor_ >> FRAMETYPE_BITS;
     }
-    void setFrameDescriptor(uintptr_t size, FrameType type) {
+    void setFrameDescriptor(size_t size, FrameType type) {
         descriptor_ = (size << FRAMETYPE_BITS) | type;
     }
     uint8 *returnAddress() const {
