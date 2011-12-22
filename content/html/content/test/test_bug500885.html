@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500885
 <script type="text/javascript">
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.reset();
+MockFilePicker.init();
 MockFilePicker.returnValue = MockFilePicker.returnOK;
 
 function test() {
@@ -47,7 +47,10 @@ function test() {
     is(domActivateEvents, 1, "click on button should fire 1 DOMActivate event");
 
   } finally {
-    SimpleTest.executeSoon(SimpleTest.finish);
+    SimpleTest.executeSoon(function() {
+      MockFilePicker.cleanup();
+      SimpleTest.finish();
+    });
   }
 }
 

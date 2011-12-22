@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.reset();
+MockFilePicker.init();
 
 /**
  * TestCase for bug 564387
@@ -54,7 +54,7 @@ function test() {
 
     registerCleanupFunction(function () {
       mockTransferRegisterer.unregister();
-      MockFilePicker.reset();
+      MockFilePicker.cleanup();
       destDir.remove(true);
     });
 
