@@ -181,6 +181,12 @@ SmsRequestManager::NotifySmsDeleted(PRInt32 aRequestId, bool aDeleted)
   NotifySuccess<bool>(aRequestId, aDeleted);
 }
 
+void
+SmsRequestManager::NotifySmsDeleteFailed(PRInt32 aRequestId, SmsRequest::ErrorType aError)
+{
+  NotifyError(aRequestId, aError);
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

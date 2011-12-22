@@ -80,6 +80,9 @@ child:
     NotifyRequestSmsDeleted(bool aDeleted, PRInt32 aRequestId,
                             PRUint64 aProcessId);
 
+    NotifyRequestSmsDeleteFailed(PRInt32 aError, PRInt32 aRequestId,
+                                 PRUint64 aProcessId);
+
 parent:
     sync HasSupport()
         returns (bool aHasSupport);
