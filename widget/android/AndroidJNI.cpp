@@ -98,6 +98,7 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyGetSms(JNIEnv* jenv, jclass, jint, jstring, jstring, jstring, jlong, jint, jlong);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyGetSmsFailed(JNIEnv* jenv, jclass, jint, jint, jlong);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsDeleted(JNIEnv* jenv, jclass, jboolean, jint, jlong);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsDeleteFailed(JNIEnv* jenv, jclass, jint, jint, jlong);
 
 #ifdef MOZ_JAVA_COMPOSITOR
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass);
@@ -588,6 +589,50 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsDeleted(JNIEnv* jenv, jclass,
 
     nsCOMPtr<nsIRunnable> runnable =
       new NotifySmsDeletedRunnable(aDeleted, aRequestId, aProcessId);
+    NS_DispatchToMainThread(runnable);
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_notifySmsDeleteFailed(JNIEnv* jenv, jclass,
+                                                           jint aError,
+                                                           jint aRequestId,
+                                                           jlong aProcessId)
+{
+    class NotifySmsDeleteFailedRunnable : public nsRunnable {
+    public:
+      NotifySmsDeleteFailedRunnable(SmsRequest::ErrorType aError,
+                                    PRInt32 aRequestId, PRUint64 aProcessId)
+        : mError(aError)
+        , mRequestId(aRequestId)
+        , mProcessId(aProcessId)
+      {}
+
+      NS_IMETHODIMP Run() {
+        if (mProcessId == 0) { // Parent process.
+          SmsRequestManager::GetInstance()->NotifySmsDeleteFailed(mRequestId, mError);
+        } else { // Content process.
+          nsTArray<SmsParent*> spList;
+          SmsParent::GetAll(spList);
+
+          for (PRUint32 i=0; i<spList.Length(); ++i) {
+            unused << spList[i]->SendNotifyRequestSmsDeleteFailed(mError,
+                                                                  mRequestId,
+                                                                  mProcessId);
+          }
+        }
+
+        return NS_OK;
+      }
+
+    private:
+      SmsRequest::ErrorType mError;
+      PRInt32               mRequestId;
+      PRUint64              mProcessId;
+    };
+
+
+    nsCOMPtr<nsIRunnable> runnable =
+      new NotifySmsDeleteFailedRunnable(SmsRequest::ErrorType(aError), aRequestId, aProcessId);
     NS_DispatchToMainThread(runnable);
 }
 
