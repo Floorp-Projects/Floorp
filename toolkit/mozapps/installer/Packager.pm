@@ -37,9 +37,11 @@ my($lineno)           = 0;    # line # of package file for error text
 my($debug)            = 0;    # controls amount of debug output
 my($dirflag)          = 0;    # flag: are we copying a directory?
 my($help)             = 0;    # flag: if set, print usage
+my($fatal_warnings)   = 0;    # flag: whether package warnings (missing files or invalid entries) are fatal
 my($flat)             = 0;    # copy everything into the package dir, not into separate
                               #   component dirs
-
+my($delayed_error)    = 0;    # flag: whether an error was found while reading the manifest but we still
+                              # chose to finish reading it 
 #
 # Copy
 #
@@ -47,7 +49,7 @@ my($flat)             = 0;    # copy everything into the package dir, not into s
 #
 
 sub Copy {
-  ($srcdir, $destdir, $package, $os, $flat, $help, $debug, @components) = @_;
+  ($srcdir, $destdir, $package, $os, $flat, $fatal_warnings, $help, $debug, @components) = @_;
 
   check_arguments();
 
@@ -147,13 +149,15 @@ sub Copy {
 
     # if we hit this, it's either a file in the package file that is
     # not in the src directory, or it is not a valid entry.
-    print "Warning: package error or possible missing or unnecessary file: $line ($package, $lineno).\n";
+    delayed_die_or_warn("package error or possible missing or unnecessary file: $line ($package, $lineno).");
 
   } # LINE
 
   close (MANIFEST);
   chdir ($saved_cwd);
-
+  if ($delayed_error) {
+    die "Error: found error(s) while packaging, see above for details.\n"
+  }
 }
 
 #
@@ -440,6 +444,20 @@ sub do_component
   }
 }
 
+#
+# Print error (and die later) or warn, based on whether $fatal_warnings is set.
+#
+sub delayed_die_or_warn
+{
+  my ($msg) = $_[0];
+
+  if ($fatal_warnings) {
+    warn "Error: $msg\n";
+    $delayed_error = 1;
+  } else {
+    warn "Warning: $msg\n";
+  }
+}
 
 #
 # Check that arguments to script are valid.
