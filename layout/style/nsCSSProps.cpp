@@ -657,10 +657,15 @@ const PRInt32 nsCSSProps::kBorderColorKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
-const PRInt32 nsCSSProps::kBorderImageKTable[] = {
-  eCSSKeyword_stretch, NS_STYLE_BORDER_IMAGE_STRETCH,
-  eCSSKeyword_repeat, NS_STYLE_BORDER_IMAGE_REPEAT,
-  eCSSKeyword_round, NS_STYLE_BORDER_IMAGE_ROUND,
+const PRInt32 nsCSSProps::kBorderImageRepeatKTable[] = {
+  eCSSKeyword_stretch, NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH,
+  eCSSKeyword_repeat, NS_STYLE_BORDER_IMAGE_REPEAT_REPEAT,
+  eCSSKeyword_round, NS_STYLE_BORDER_IMAGE_REPEAT_ROUND,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const PRInt32 nsCSSProps::kBorderImageSliceKTable[] = {
+  eCSSKeyword_fill, NS_STYLE_BORDER_IMAGE_SLICE_FILL,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -1670,7 +1675,11 @@ static const nsCSSProperty gBorderSubpropTable[] = {
   eCSSProperty_border_right_colors,
   eCSSProperty_border_bottom_colors,
   eCSSProperty_border_left_colors,
-  eCSSProperty_border_image,
+  eCSSProperty_border_image_source,
+  eCSSProperty_border_image_slice,
+  eCSSProperty_border_image_width,
+  eCSSProperty_border_image_outset,
+  eCSSProperty_border_image_repeat,
   eCSSProperty_UNKNOWN
 };
 
@@ -2057,6 +2066,15 @@ static const nsCSSProperty gTransitionSubpropTable[] = {
   eCSSProperty_transition_duration,
   eCSSProperty_transition_timing_function,
   eCSSProperty_transition_delay,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gBorderImageSubpropTable[] = {
+  eCSSProperty_border_image_source,
+  eCSSProperty_border_image_slice,
+  eCSSProperty_border_image_width,
+  eCSSProperty_border_image_outset,
+  eCSSProperty_border_image_repeat,
   eCSSProperty_UNKNOWN
 };
 

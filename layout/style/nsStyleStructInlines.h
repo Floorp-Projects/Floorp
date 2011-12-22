@@ -51,23 +51,23 @@
 inline void
 nsStyleBorder::SetBorderImage(imgIRequest* aImage)
 {
-  mBorderImage = aImage;
+  mBorderImageSource = aImage;
   mSubImages.Clear();
 }
 
 inline imgIRequest*
 nsStyleBorder::GetBorderImage() const
 {
-  NS_ABORT_IF_FALSE(!mBorderImage || mImageTracked,
+  NS_ABORT_IF_FALSE(!mBorderImageSource || mImageTracked,
                     "Should be tracking any images we're going to use!");
-  return mBorderImage;
+  return mBorderImageSource;
 }
 
 inline bool nsStyleBorder::IsBorderImageLoaded() const
 {
   PRUint32 status;
-  return mBorderImage &&
-         NS_SUCCEEDED(mBorderImage->GetImageStatus(&status)) &&
+  return mBorderImageSource &&
+         NS_SUCCEEDED(mBorderImageSource->GetImageStatus(&status)) &&
          (status & imgIRequest::STATUS_LOAD_COMPLETE) &&
          !(status & imgIRequest::STATUS_ERROR);
 }

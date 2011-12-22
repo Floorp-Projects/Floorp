@@ -51,7 +51,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[builtinclass, scriptable, uuid(0a6fc4c6-a62a-4f52-9ab6-3d398b958843)]
+[builtinclass, scriptable, uuid(b477527a-a6f4-4f86-a16b-563e602e930a)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        background;
@@ -766,5 +766,20 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozTextSizeAdjust;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozBorderImageSource;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozBorderImageSlice;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozBorderImageWidth;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozBorderImageOutset;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozBorderImageRepeat;
                                         // raises(DOMException) on setting
 };
