@@ -247,6 +247,20 @@ SmsRequestManager::NotifyGotNextMessage(PRInt32 aRequestId, nsIDOMMozSmsMessage*
   NotifySuccess<nsIDOMMozSmsCursor*>(aRequestId, cursor);
 }
 
+void
+SmsRequestManager::NotifyReadMessageListFailed(PRInt32 aRequestId,
+                                               SmsRequest::ErrorType aError)
+{
+  SmsRequest* request = GetRequest(aRequestId);
+
+  nsCOMPtr<nsIDOMMozSmsCursor> cursor = request->GetCursor();
+  if (cursor) {
+    static_cast<SmsCursor*>(cursor.get())->Disconnect();
+  }
+
+  NotifyError(aRequestId, aError);
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

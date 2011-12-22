@@ -102,6 +102,7 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyNoMessageInList(JNIEnv* jenv, jclass, jint, jlong);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyListCreated(JNIEnv* jenv, jclass, jint, jint, jstring, jstring, jstring, jlong, jint, jlong);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyGotNextMessage(JNIEnv* jenv, jclass, jint, jstring, jstring, jstring, jlong, jint, jlong);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyReadingMessageListFailed(JNIEnv* jenv, jclass, jint, jint, jlong);
 
 #ifdef MOZ_JAVA_COMPOSITOR
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass);
@@ -795,6 +796,50 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyGotNextMessage(JNIEnv* jenv, jclass,
 
     nsCOMPtr<nsIRunnable> runnable =
       new NotifyGotNextMessageRunnable(message, aRequestId, aProcessId);
+    NS_DispatchToMainThread(runnable);
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_notifyReadingMessageListFailed(JNIEnv* jenv, jclass,
+                                                                    jint aError,
+                                                                    jint aRequestId,
+                                                                    jlong aProcessId)
+{
+    class NotifyReadListFailedRunnable : public nsRunnable {
+    public:
+      NotifyReadListFailedRunnable(SmsRequest::ErrorType aError,
+                                    PRInt32 aRequestId, PRUint64 aProcessId)
+        : mError(aError)
+        , mRequestId(aRequestId)
+        , mProcessId(aProcessId)
+      {}
+
+      NS_IMETHODIMP Run() {
+        if (mProcessId == 0) { // Parent process.
+          SmsRequestManager::GetInstance()->NotifyReadMessageListFailed(mRequestId, mError);
+        } else { // Content process.
+          nsTArray<SmsParent*> spList;
+          SmsParent::GetAll(spList);
+
+          for (PRUint32 i=0; i<spList.Length(); ++i) {
+            unused << spList[i]->SendNotifyRequestReadListFailed(mError,
+                                                                 mRequestId,
+                                                                 mProcessId);
+          }
+        }
+
+        return NS_OK;
+      }
+
+    private:
+      SmsRequest::ErrorType mError;
+      PRInt32               mRequestId;
+      PRUint64              mProcessId;
+    };
+
+
+    nsCOMPtr<nsIRunnable> runnable =
+      new NotifyReadListFailedRunnable(SmsRequest::ErrorType(aError), aRequestId, aProcessId);
     NS_DispatchToMainThread(runnable);
 }
 
