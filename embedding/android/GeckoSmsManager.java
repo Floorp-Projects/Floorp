@@ -45,6 +45,8 @@ import android.util.Log;
 import android.app.PendingIntent;
 import android.app.Activity;
 
+import android.database.Cursor;
+
 import android.content.Intent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -257,8 +259,6 @@ public class GeckoSmsManager
   public final static String ACTION_SMS_SENT      = "org.mozilla.gecko.SMS_SENT";
   public final static String ACTION_SMS_DELIVERED = "org.mozilla.gecko.SMS_DELIVERED";
 
-  private final static int kMaxMessageSize = 160;
-
   /*
    * Keep the following error codes in sync with |ErrorType| in:
    * dom/sms/src/SmsRequest.h
@@ -267,6 +267,14 @@ public class GeckoSmsManager
   public final static int kNoSignalError = 1;
   public final static int kUnknownError  = 2;
   public final static int kInternalError = 3;
+
+  private final static int kMaxMessageSize    = 160;
+
+  private final static Uri kSmsContentUri     = Uri.parse("content://sms");
+  private final static Uri kSmsSentContentUri = Uri.parse("content://sms/sent");
+
+  private final static int kSmsTypeInbox      = 1;
+  private final static int kSmsTypeSentbox    = 2;
 
   public static void init() {
     SmsIOThread.getInstance().start();
@@ -494,7 +502,7 @@ public class GeckoSmsManager
       values.put("date", aDate);
 
       ContentResolver cr = GeckoApp.surfaceView.getContext().getContentResolver();
-      Uri uri = cr.insert(Uri.parse("content://sms/sent"), values);
+      Uri uri = cr.insert(kSmsSentContentUri, values);
 
       long id = ContentUris.parseId(uri);
 
@@ -511,6 +519,95 @@ public class GeckoSmsManager
     } catch (Exception e) {
       Log.e("GeckoSmsManager", "Something went wrong when trying to write a sent message: " + e);
       return -1;
+    }
+  }
+
+  public static void getMessage(int aMessageId, int aRequestId, long aProcessId) {
+    class GetMessageRunnable implements Runnable {
+      private int mMessageId;
+      private int mRequestId;
+      private long mProcessId;
+
+      GetMessageRunnable(int aMessageId, int aRequestId, long aProcessId) {
+        mMessageId = aMessageId;
+        mRequestId = aRequestId;
+        mProcessId = aProcessId;
+      }
+
+      @Override
+      public void run() {
+        class NotFoundException extends Exception { }
+        class UnmatchingIdException extends Exception { }
+        class TooManyResultsException extends Exception { }
+        class InvalidTypeException extends Exception { }
+
+        Cursor cursor = null;
+
+        try {
+          ContentResolver cr = GeckoApp.surfaceView.getContext().getContentResolver();
+          Uri message = ContentUris.withAppendedId(kSmsContentUri, mMessageId);
+
+          cursor = cr.query(message,
+                            new String[] { "_id", "address", "body", "date", "type" },
+                            null, null, null);
+          if (cursor == null || cursor.getCount() == 0) {
+            throw new NotFoundException();
+          }
+
+          if (cursor.getCount() != 1) {
+            throw new TooManyResultsException();
+          }
+
+          cursor.moveToFirst();
+
+          if (cursor.getInt(cursor.getColumnIndex("_id")) != mMessageId) {
+            throw new UnmatchingIdException();
+          }
+
+          int type = cursor.getInt(cursor.getColumnIndex("type"));
+          String sender = "";
+          String receiver = "";
+
+          if (type == kSmsTypeInbox) {
+            sender = cursor.getString(cursor.getColumnIndex("address"));
+          } else if (type == kSmsTypeSentbox) {
+            receiver = cursor.getString(cursor.getColumnIndex("address"));
+          } else {
+            throw new InvalidTypeException();
+          }
+
+          GeckoAppShell.notifyGetSms(cursor.getInt(cursor.getColumnIndex("_id")),
+                                     receiver, sender,
+                                     cursor.getString(cursor.getColumnIndex("body")),
+                                     cursor.getLong(cursor.getColumnIndex("date")),
+                                     mRequestId, mProcessId);
+        } catch (NotFoundException e) {
+          // TODO: send failure notification
+          Log.i("GeckoSmsManager", "Message id " + mMessageId + " not found");
+        } catch (UnmatchingIdException e) {
+          // TODO: send failure notification
+          Log.e("GeckoSmsManager", "Requested message id (" + mMessageId +
+                                   ") is different from the one we got.");
+        } catch (TooManyResultsException e) {
+          // TODO: send failure notification
+          Log.e("GeckoSmsManager", "Get too many results for id " + mMessageId);
+        } catch (InvalidTypeException e) {
+          // TODO: send failure notification
+          Log.i("GeckoSmsManager", "Message has an invalid type, we ignore it.");
+        } catch (Exception e) {
+          // TODO: send failure notification
+          Log.e("GeckoSmsManager", "Error while trying to get message: " + e);
+        } finally {
+          if (cursor != null) {
+            cursor.close();
+          }
+        }
+      }
+    }
+
+    if (!SmsIOThread.getInstance().execute(new GetMessageRunnable(aMessageId, aRequestId, aProcessId))) {
+      // TODO: send failure notification
+      Log.e("GeckoSmsManager", "Failed to add GetMessageRunnable to the SmsIOThread");
     }
   }
 

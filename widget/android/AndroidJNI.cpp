@@ -95,6 +95,7 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsSent(JNIEnv* jenv, jclass, jint, jstring, jstring, jlong, jint, jlong);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsDelivered(JNIEnv* jenv, jclass, jint, jstring, jstring, jlong);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsSendFailed(JNIEnv* jenv, jclass, jint, jint, jlong);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyGetSms(JNIEnv* jenv, jclass, jint, jstring, jstring, jstring, jlong, jint, jlong);
 
 #ifdef MOZ_JAVA_COMPOSITOR
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass);
@@ -443,6 +444,60 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsSendFailed(JNIEnv* jenv, jclass,
 
     nsCOMPtr<nsIRunnable> runnable =
       new NotifySmsSendFailedRunnable(SmsRequest::ErrorType(aError), aRequestId, aProcessId);
+    NS_DispatchToMainThread(runnable);
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_notifyGetSms(JNIEnv* jenv, jclass,
+                                                  jint aId,
+                                                  jstring aReceiver,
+                                                  jstring aSender,
+                                                  jstring aBody,
+                                                  jlong aTimestamp,
+                                                  jint aRequestId,
+                                                  jlong aProcessId)
+{
+    class NotifyGetSmsRunnable : public nsRunnable {
+    public:
+      NotifyGetSmsRunnable(const SmsMessageData& aMessageData,
+                            PRInt32 aRequestId, PRUint64 aProcessId)
+        : mMessageData(aMessageData)
+        , mRequestId(aRequestId)
+        , mProcessId(aProcessId)
+      {}
+
+      NS_IMETHODIMP Run() {
+        if (mProcessId == 0) { // Parent process.
+          nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(mMessageData);
+          SmsRequestManager::GetInstance()->NotifyGotSms(mRequestId, message);
+        } else { // Content process.
+          nsTArray<SmsParent*> spList;
+          SmsParent::GetAll(spList);
+
+          for (PRUint32 i=0; i<spList.Length(); ++i) {
+            unused << spList[i]->SendNotifyRequestGotSms(mMessageData,
+                                                         mRequestId,
+                                                         mProcessId);
+          }
+        }
+
+        return NS_OK;
+      }
+
+    private:
+      SmsMessageData mMessageData;
+      PRInt32        mRequestId;
+      PRUint64       mProcessId;
+    };
+
+    nsJNIString receiver = nsJNIString(aReceiver, jenv);
+    DeliveryState state = receiver.IsEmpty() ? eDeliveryState_Received
+                                             : eDeliveryState_Sent;
+
+    SmsMessageData message(aId, state, nsJNIString(aSender, jenv), receiver,
+                           nsJNIString(aBody, jenv), aTimestamp);
+
+    nsCOMPtr<nsIRunnable> runnable = new NotifyGetSmsRunnable(message, aRequestId, aProcessId);
     NS_DispatchToMainThread(runnable);
 }
 
