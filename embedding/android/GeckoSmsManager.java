@@ -640,18 +640,18 @@ public class GeckoSmsManager
 
           GeckoAppShell.notifySmsDeleted(count == 1, mRequestId, mProcessId);
         } catch (TooManyResultsException e) {
-          // TODO: Notify failure
           Log.e("GeckoSmsManager", "Delete more than one message? " + e);
+          GeckoAppShell.notifySmsDeleteFailed(kUnknownError, mRequestId, mProcessId);
         } catch (Exception e) {
-          // TODO: Notify failure
           Log.e("GeckoSmsManager", "Error while trying to delete a message: " + e);
+          GeckoAppShell.notifySmsDeleteFailed(kUnknownError, mRequestId, mProcessId);
         }
       }
     }
 
     if (!SmsIOThread.getInstance().execute(new DeleteMessageRunnable(aMessageId, aRequestId, aProcessId))) {
       Log.e("GeckoSmsManager", "Failed to add GetMessageRunnable to the SmsIOThread");
-      // TODO: Notify failure
+      GeckoAppShell.notifySmsDeleteFailed(kUnknownError, aRequestId, aProcessId);
     }
   }
 
