@@ -64,12 +64,15 @@ public:
 
   void NotifySmsSent(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage);
   void NotifySmsSendFailed(PRInt32 aRequestId, SmsRequest::ErrorType aError);
+  void NotifyGotSms(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage);
 
 private:
   static SmsRequestManager* sInstance;
 
   nsresult DispatchTrustedEventToRequest(const nsAString& aEventName,
                                          nsIDOMMozSmsRequest* aRequest);
+  void NotifySuccessWithMessage(PRInt32 aRequestId,
+                                nsIDOMMozSmsMessage* aMessage);
 
   nsCOMArray<nsIDOMMozSmsRequest> mRequests;
 };

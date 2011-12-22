@@ -118,7 +118,8 @@ SmsRequestManager::DispatchTrustedEventToRequest(const nsAString& aEventName,
 }
 
 void
-SmsRequestManager::NotifySmsSent(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
+SmsRequestManager::NotifySuccessWithMessage(PRInt32 aRequestId,
+                                            nsIDOMMozSmsMessage* aMessage)
 {
   NS_ASSERTION(mRequests.Count() > aRequestId && mRequests[aRequestId],
                "Got an invalid request id or it has been already deleted!");
@@ -131,6 +132,12 @@ SmsRequestManager::NotifySmsSent(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessa
   DispatchTrustedEventToRequest(SUCCESS_EVENT_NAME, request);
 
   mRequests.ReplaceObjectAt(nsnull, aRequestId);
+}
+
+void
+SmsRequestManager::NotifySmsSent(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
+{
+  NotifySuccessWithMessage(aRequestId, aMessage);
 }
 
 void
@@ -147,6 +154,12 @@ SmsRequestManager::NotifySmsSendFailed(PRInt32 aRequestId, SmsRequest::ErrorType
   DispatchTrustedEventToRequest(ERROR_EVENT_NAME, request);
 
   mRequests.ReplaceObjectAt(nsnull, aRequestId);
+}
+
+void
+SmsRequestManager::NotifyGotSms(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
+{
+  NotifySuccessWithMessage(aRequestId, aMessage);
 }
 
 } // namespace sms

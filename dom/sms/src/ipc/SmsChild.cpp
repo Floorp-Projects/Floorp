@@ -120,6 +120,21 @@ SmsChild::RecvNotifyRequestSmsSendFailed(const PRInt32& aError,
   return true;
 }
 
+bool
+SmsChild::RecvNotifyRequestGotSms(const SmsMessageData& aMessage,
+                                  const PRInt32& aRequestId,
+                                  const PRUint64& aProcessId)
+{
+  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
+    return true;
+  }
+
+  nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(aMessage);
+  SmsRequestManager::GetInstance()->NotifyGotSms(aRequestId, message);
+
+  return true;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
