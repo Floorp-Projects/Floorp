@@ -152,6 +152,17 @@ SmsRequest::SetSuccess(nsIDOMMozSmsMessage* aMessage)
 }
 
 void
+SmsRequest::SetSuccess(bool aResult)
+{
+  NS_PRECONDITION(!mDone, "mDone shouldn't have been set to true already!");
+  NS_PRECONDITION(mError == eNoError, "mError shouldn't have been set!");
+  NS_PRECONDITION(mResult == JSVAL_NULL, "mResult shouldn't have been set!");
+
+  mResult.setBoolean(aResult);
+  mDone = true;
+}
+
+void
 SmsRequest::SetError(ErrorType aError)
 {
   NS_PRECONDITION(!mDone, "mDone shouldn't have been set to true already!");

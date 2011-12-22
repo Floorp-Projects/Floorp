@@ -96,6 +96,11 @@ private:
   void SetSuccess(nsIDOMMozSmsMessage* aMessage);
 
   /**
+   * Set the object in a success state with the result being a boolean.
+   */
+  void SetSuccess(bool aResult);
+
+  /**
    * Set the object in an error state with the error type being aError.
    */
   void SetError(ErrorType aError);

@@ -338,6 +338,7 @@ public:
     void SendMessage(const nsAString& aNumber, const nsAString& aText, PRInt32 aRequestId, PRUint64 aProcessId);
     PRInt32 SaveSentMessage(const nsAString& aRecipient, const nsAString& aBody, PRUint64 aDate);
     void GetMessage(PRInt32 aMessageId, PRInt32 aRequestId, PRUint64 aProcessId);
+    void DeleteMessage(PRInt32 aMessageId, PRInt32 aRequestId, PRUint64 aProcessId);
 
     bool IsTablet();
 
@@ -430,6 +431,7 @@ protected:
     jmethodID jSendMessage;
     jmethodID jSaveSentMessage;
     jmethodID jGetMessage;
+    jmethodID jDeleteMessage;
 
     // stuff we need for CallEglCreateWindowSurface
     jclass jEGLSurfaceImplClass;

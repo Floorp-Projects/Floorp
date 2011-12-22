@@ -612,6 +612,49 @@ public class GeckoSmsManager
     }
   }
 
+  public static void deleteMessage(int aMessageId, int aRequestId, long aProcessId) {
+    class DeleteMessageRunnable implements Runnable {
+      private int mMessageId;
+      private int mRequestId;
+      private long mProcessId;
+
+      DeleteMessageRunnable(int aMessageId, int aRequestId, long aProcessId) {
+        mMessageId = aMessageId;
+        mRequestId = aRequestId;
+        mProcessId = aProcessId;
+      }
+
+      @Override
+      public void run() {
+        class TooManyResultsException extends Exception { }
+
+        try {
+          ContentResolver cr = GeckoApp.surfaceView.getContext().getContentResolver();
+          Uri message = ContentUris.withAppendedId(kSmsContentUri, mMessageId);
+
+          int count = cr.delete(message, null, null);
+
+          if (count > 1) {
+            throw new TooManyResultsException();
+          }
+
+          GeckoAppShell.notifySmsDeleted(count == 1, mRequestId, mProcessId);
+        } catch (TooManyResultsException e) {
+          // TODO: Notify failure
+          Log.e("GeckoSmsManager", "Delete more than one message? " + e);
+        } catch (Exception e) {
+          // TODO: Notify failure
+          Log.e("GeckoSmsManager", "Error while trying to delete a message: " + e);
+        }
+      }
+    }
+
+    if (!SmsIOThread.getInstance().execute(new DeleteMessageRunnable(aMessageId, aRequestId, aProcessId))) {
+      Log.e("GeckoSmsManager", "Failed to add GetMessageRunnable to the SmsIOThread");
+      // TODO: Notify failure
+    }
+  }
+
   public static void shutdown() {
     SmsIOThread.getInstance().interrupt();
   }
