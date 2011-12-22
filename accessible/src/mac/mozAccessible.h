@@ -130,6 +130,11 @@
 // invalidates and removes all our children from our cached array.
 - (void)invalidateChildren;
 
+/** 
+ * Append a child if they are already cached.
+ */
+- (void)appendChild:(nsAccessible*)aAccessible;
+
 // invalidates the cached parent, used by invalidateChildren.
 - (void)invalidateParent;
 
