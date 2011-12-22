@@ -68,6 +68,7 @@ EXPORTS_mozilla/dom/sms = \
   Types.h \
   SmsMessage.h \
   SmsRequestManager.h \
+  SmsRequest.h \
   $(NULL)
 
 CPPSRCS = \

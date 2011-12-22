@@ -53,8 +53,15 @@ class SmsRequest : public nsIDOMMozSmsRequest
 public:
   friend class SmsRequestManager;
 
+  /**
+   * All SMS related errors that could apply to SmsRequest objects.
+   * Make sure to keep this list in sync with the list in:
+   * embedding/android/GeckoSmsManager.java
+   */
   enum ErrorType {
     eNoError = 0,
+    eNoSignalError,
+    eUnknownError,
     eInternalError,
   };
 
