@@ -62,15 +62,16 @@
 <!ENTITY pref_clear_history_confirm "Browsing history will be deleted">
 <!ENTITY pref_clear_private_data "Clear private data">
 <!ENTITY pref_clear_private_data_confirm "Browsing settings, including passwords and cookies, will be deleted">
-<!ENTITY pref_enable_plugins "Enable Plugins">
+<!ENTITY pref_enable_plugins "Enable plugins">
 <!ENTITY pref_enable_plugins_yes "Yes">
-<!ENTITY pref_enable_plugins_tap_to_play "Tap To Play">
+<!ENTITY pref_enable_plugins_tap_to_play "Tap to play">
 <!ENTITY pref_enable_plugins_no "No">
 <!ENTITY pref_font_size "Font size">
 <!ENTITY pref_font_size_small "Small">
 <!ENTITY pref_font_size_medium "Medium">
 <!ENTITY pref_font_size_large "Large">
 <!ENTITY pref_font_size_xlarge "Extra Large">
+<!ENTITY pref_use_master_password "Use master password">
 
 <!ENTITY quit "Quit">
 
@@ -89,3 +90,11 @@
 <!ENTITY site_settings_cancel       "Cancel">
 <!ENTITY site_settings_clear        "Clear">
 <!ENTITY site_settings_no_settings  "There are no settings to clear.">
+
+<!ENTITY masterpassword_create_title "Create Master Password">
+<!ENTITY masterpassword_remove_title "Remove Master Password">
+<!ENTITY masterpassword_password "Password">
+<!ENTITY masterpassword_confirm "Confirm password">
+
+<!ENTITY button_ok "OK">
+<!ENTITY button_cancel "Cancel">

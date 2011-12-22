@@ -1001,9 +1001,44 @@ NS_IMETHODIMP nsCocoaWindow::IsEnabled(bool *aState)
   return NS_OK;
 }
 
+#define kWindowPositionSlop 20
+
 NS_IMETHODIMP nsCocoaWindow::ConstrainPosition(bool aAllowSlop,
                                                PRInt32 *aX, PRInt32 *aY)
 {
+  if (!mWindow || ![mWindow screen]) {
+    return NS_OK;
+  }
+
+  nsIntRect screenBounds(
+    nsCocoaUtils::CocoaRectToGeckoRect([[mWindow screen] visibleFrame]));
+
+  if (aAllowSlop) {
+    if (*aX < screenBounds.x - mBounds.width + kWindowPositionSlop) {
+      *aX = screenBounds.x - mBounds.width + kWindowPositionSlop;
+    } else if (*aX >= screenBounds.x + screenBounds.width - kWindowPositionSlop) {
+      *aX = screenBounds.x + screenBounds.width - kWindowPositionSlop;
+    }
+
+    if (*aY < screenBounds.y - mBounds.height + kWindowPositionSlop) {
+      *aY = screenBounds.y - mBounds.height + kWindowPositionSlop;
+    } else if (*aY >= screenBounds.y + screenBounds.height - kWindowPositionSlop) {
+      *aY = screenBounds.y + screenBounds.height - kWindowPositionSlop;
+    }
+  } else {
+    if (*aX < screenBounds.x) {
+      *aX = screenBounds.x;
+    } else if (*aX >= screenBounds.x + screenBounds.width - mBounds.width) {
+      *aX = screenBounds.x + screenBounds.width - mBounds.width;
+    }
+
+    if (*aY < screenBounds.y) {
+      *aY = screenBounds.y;
+    } else if (*aY >= screenBounds.y + screenBounds.height - mBounds.height) {
+      *aY = screenBounds.y + screenBounds.height - mBounds.height;
+    }
+  }
+
   return NS_OK;
 }
 

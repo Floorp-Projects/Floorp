@@ -7283,9 +7283,10 @@ AddonInternal.prototype = {
    *         A JS object containing the cached metadata
    */
   importMetadata: function(aObj) {
-    ["targetApplications", "userDisabled", "softDisabled", "existingAddonID",
-     "sourceURI", "releaseNotesURI", "installDate", "updateDate",
-     "applyBackgroundUpdates", "compatibilityOverrides"].forEach(function(aProp) {
+    ["syncGUID", "targetApplications", "userDisabled", "softDisabled",
+     "existingAddonID", "sourceURI", "releaseNotesURI", "installDate",
+     "updateDate", "applyBackgroundUpdates", "compatibilityOverrides"]
+    .forEach(function(aProp) {
       if (!(aProp in aObj))
         return;
 

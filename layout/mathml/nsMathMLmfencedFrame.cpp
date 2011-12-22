@@ -357,23 +357,25 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   containerSize.ascent = delta + axisHeight;
   containerSize.descent = delta - axisHeight;
 
+  bool isRTL = NS_MATHML_IS_RTL(mPresentationData.flags);
+
   /////////////////
   // opening fence ...
   ReflowChar(aPresContext, *aReflowState.rendContext, mOpenChar,
              NS_MATHML_OPERATOR_FORM_PREFIX, font->mScriptLevel, 
-             axisHeight, leading, em, containerSize, ascent, descent);
+             axisHeight, leading, em, containerSize, ascent, descent, isRTL);
   /////////////////
   // separators ...
   for (i = 0; i < mSeparatorsCount; i++) {
     ReflowChar(aPresContext, *aReflowState.rendContext, &mSeparatorsChar[i],
                NS_MATHML_OPERATOR_FORM_INFIX, font->mScriptLevel,
-               axisHeight, leading, em, containerSize, ascent, descent);
+               axisHeight, leading, em, containerSize, ascent, descent, isRTL);
   }
   /////////////////
   // closing fence ...
   ReflowChar(aPresContext, *aReflowState.rendContext, mCloseChar,
              NS_MATHML_OPERATOR_FORM_POSTFIX, font->mScriptLevel,
-             axisHeight, leading, em, containerSize, ascent, descent);
+             axisHeight, leading, em, containerSize, ascent, descent, isRTL);
 
   //////////////////
   // Adjust the origins of each child.
@@ -383,13 +385,26 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   nscoord dx = 0;
   nsBoundingMetrics bm;
   bool firstTime = true;
-  if (mOpenChar) {
-    PlaceChar(mOpenChar, ascent, bm, dx);
+  nsMathMLChar *leftChar, *rightChar;
+  if (isRTL) {
+    leftChar = mCloseChar;
+    rightChar = mOpenChar;
+  } else {
+    leftChar = mOpenChar;
+    rightChar = mCloseChar;
+  }
+
+  if (leftChar) {
+    PlaceChar(leftChar, ascent, bm, dx);
     aDesiredSize.mBoundingMetrics = bm;
     firstTime = false;
   }
 
-  childFrame = firstChild;
+  if (isRTL) {
+    childFrame = this->GetLastChild(nsIFrame::kPrincipalList);
+  } else {
+    childFrame = firstChild;
+  }
   while (childFrame) {
     nsHTMLReflowMetrics childSize;
     GetReflowAndBoundingMetricsFor(childFrame, childSize, bm);
@@ -405,16 +420,21 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
     dx += childSize.width;
 
     if (i < mSeparatorsCount) {
-      PlaceChar(&mSeparatorsChar[i], ascent, bm, dx);
+      PlaceChar(&mSeparatorsChar[isRTL ? mSeparatorsCount - 1 - i : i],
+                ascent, bm, dx);
       aDesiredSize.mBoundingMetrics += bm;
     }
     i++;
 
-    childFrame = childFrame->GetNextSibling();
+    if (isRTL) {
+      childFrame = childFrame->GetPrevSibling();
+    } else {
+      childFrame = childFrame->GetNextSibling();
+    }
   }
 
-  if (mCloseChar) {
-    PlaceChar(mCloseChar, ascent, bm, dx);
+  if (rightChar) {
+    PlaceChar(rightChar, ascent, bm, dx);
     if (firstTime)
       aDesiredSize.mBoundingMetrics  = bm;
     else  
@@ -480,7 +500,8 @@ nsMathMLmfencedFrame::ReflowChar(nsPresContext*      aPresContext,
                                  nscoord              em,
                                  nsBoundingMetrics&   aContainerSize,
                                  nscoord&             aAscent,
-                                 nscoord&             aDescent)
+                                 nscoord&             aDescent,
+                                 bool                 aRTL)
 {
   if (aMathMLChar && 0 < aMathMLChar->Length()) {
     nscoord leftSpace;
@@ -491,7 +512,8 @@ nsMathMLmfencedFrame::ReflowChar(nsPresContext*      aPresContext,
     nsBoundingMetrics charSize;
     nsresult res = aMathMLChar->Stretch(aPresContext, aRenderingContext,
                                         NS_STRETCH_DIRECTION_VERTICAL,
-                                        aContainerSize, charSize);
+                                        aContainerSize, charSize,
+                                        NS_STRETCH_NORMAL, aRTL);
 
     if (NS_STRETCH_DIRECTION_UNSUPPORTED != aMathMLChar->GetStretchDirection()) {
       // has changed... so center the char around the axis

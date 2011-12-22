@@ -106,6 +106,7 @@ public class GeckoAppShell
     static public final int WPL_STATE_START = 0x00000001;
     static public final int WPL_STATE_STOP = 0x00000010;
     static public final int WPL_STATE_IS_DOCUMENT = 0x00020000;
+    static public final int WPL_STATE_IS_NETWORK = 0x00040000;
 
     static private File sCacheFile = null;
     static private int sFreeSpace = -1;
@@ -140,6 +141,8 @@ public class GeckoAppShell
     public static native void notifySmsReceived(String aSender, String aBody, long aTimestamp);
     public static native ByteBuffer allocateDirectBuffer(long size);
     public static native void freeDirectBuffer(ByteBuffer buf);
+    public static native void bindWidgetTexture();
+    public static native boolean testDirectTexture();
 
     // A looper thread, accessed by GeckoAppShell.getHandler
     private static class LooperThread extends Thread {
@@ -427,6 +430,14 @@ public class GeckoAppShell
 
         Log.i(LOGTAG, "post native init");
 
+        // If we have direct texture available, use it
+        if (GeckoAppShell.testDirectTexture()) {
+            Log.i(LOGTAG, "Using direct texture for widget layer");
+            GeckoApp.mAppContext.getSoftwareLayerClient().installWidgetLayer();
+        } else {
+            Log.i(LOGTAG, "Falling back to traditional texture upload");
+        }
+
         // Tell Gecko where the target byte buffer is for rendering
         GeckoAppShell.setSoftwareLayerClient(GeckoApp.mAppContext.getSoftwareLayerClient());
 
@@ -494,16 +505,19 @@ public class GeckoAppShell
      *  The Gecko-side API: API methods that Gecko calls
      */
     public static void notifyIME(int type, int state) {
-        mInputConnection.notifyIME(type, state);
+        if (mInputConnection != null)
+            mInputConnection.notifyIME(type, state);
     }
 
     public static void notifyIMEEnabled(int state, String typeHint,
                                         String actionHint, boolean landscapeFS) {
-        mInputConnection.notifyIMEEnabled(state, typeHint, actionHint, landscapeFS);
+        if (mInputConnection != null)
+            mInputConnection.notifyIMEEnabled(state, typeHint, actionHint, landscapeFS);
     }
 
     public static void notifyIMEChange(String text, int start, int end, int newEnd) {
-        mInputConnection.notifyIMEChange(text, start, end, newEnd);
+        if (mInputConnection != null)
+            mInputConnection.notifyIMEChange(text, start, end, newEnd);
     }
 
     private static CountDownLatch sGeckoPendingAcks = null;
