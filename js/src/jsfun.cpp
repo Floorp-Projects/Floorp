@@ -2199,16 +2199,18 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
 
     clone->nargs = fun->nargs;
     clone->flags = fun->flags & ~JSFUN_EXTENDED;
-    clone->u = fun->toFunction()->u;
+    if (fun->isInterpreted()) {
+        clone->initScript(fun->script());
+        clone->initEnvironment(parent);
+    } else {
+        clone->u.n = fun->u.n;
+    }
     clone->atom = fun->atom;
 
     if (kind == JSFunction::ExtendedFinalizeKind) {
         clone->flags |= JSFUN_EXTENDED;
         clone->initializeExtended();
     }
-
-    if (clone->isInterpreted())
-        clone->setEnvironment(parent);
 
     if (cx->compartment == fun->compartment()) {
         /*
