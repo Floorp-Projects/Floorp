@@ -220,6 +220,20 @@ SmsChild::RecvNotifyRequestGotNextMessage(const SmsMessageData& aMessageData,
   return true;
 }
 
+bool
+SmsChild::RecvNotifyRequestReadListFailed(const PRInt32& aError,
+                                          const PRInt32& aRequestId,
+                                          const PRUint64& aProcessId)
+{
+  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
+    return true;
+  }
+
+  SmsRequestManager::GetInstance()->NotifyReadMessageListFailed(aRequestId,
+                                                                SmsRequest::ErrorType(aError));
+  return true;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
