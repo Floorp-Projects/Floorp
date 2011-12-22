@@ -65,6 +65,7 @@ public:
   void NotifySmsSent(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage);
   void NotifySmsSendFailed(PRInt32 aRequestId, SmsRequest::ErrorType aError);
   void NotifyGotSms(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage);
+  void NotifyGetSmsFailed(PRInt32 aRequestId, SmsRequest::ErrorType aError);
 
 private:
   static SmsRequestManager* sInstance;
@@ -73,6 +74,7 @@ private:
                                          nsIDOMMozSmsRequest* aRequest);
   void NotifySuccessWithMessage(PRInt32 aRequestId,
                                 nsIDOMMozSmsMessage* aMessage);
+  void NotifyError(PRInt32 aRequestId, SmsRequest::ErrorType aError);
 
   nsCOMArray<nsIDOMMozSmsRequest> mRequests;
 };

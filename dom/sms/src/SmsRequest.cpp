@@ -195,6 +195,9 @@ SmsRequest::GetError(nsAString& aError)
     case eNoSignalError:
       aError.AssignLiteral("NoSignalError");
       break;
+    case eNotFoundError:
+      aError.AssignLiteral("NotFoundError");
+      break;
     case eUnknownError:
       aError.AssignLiteral("UnknownError");
       break;

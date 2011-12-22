@@ -265,8 +265,9 @@ public class GeckoSmsManager
    */
   public final static int kNoError       = 0;
   public final static int kNoSignalError = 1;
-  public final static int kUnknownError  = 2;
-  public final static int kInternalError = 3;
+  public final static int kNotFoundError = 2;
+  public final static int kUnknownError  = 3;
+  public final static int kInternalError = 4;
 
   private final static int kMaxMessageSize    = 160;
 
@@ -582,21 +583,21 @@ public class GeckoSmsManager
                                      cursor.getLong(cursor.getColumnIndex("date")),
                                      mRequestId, mProcessId);
         } catch (NotFoundException e) {
-          // TODO: send failure notification
           Log.i("GeckoSmsManager", "Message id " + mMessageId + " not found");
+          GeckoAppShell.notifyGetSmsFailed(kNotFoundError, mRequestId, mProcessId);
         } catch (UnmatchingIdException e) {
-          // TODO: send failure notification
           Log.e("GeckoSmsManager", "Requested message id (" + mMessageId +
                                    ") is different from the one we got.");
+          GeckoAppShell.notifyGetSmsFailed(kUnknownError, mRequestId, mProcessId);
         } catch (TooManyResultsException e) {
-          // TODO: send failure notification
           Log.e("GeckoSmsManager", "Get too many results for id " + mMessageId);
+          GeckoAppShell.notifyGetSmsFailed(kUnknownError, mRequestId, mProcessId);
         } catch (InvalidTypeException e) {
-          // TODO: send failure notification
           Log.i("GeckoSmsManager", "Message has an invalid type, we ignore it.");
+          GeckoAppShell.notifyGetSmsFailed(kNotFoundError, mRequestId, mProcessId);
         } catch (Exception e) {
-          // TODO: send failure notification
           Log.e("GeckoSmsManager", "Error while trying to get message: " + e);
+          GeckoAppShell.notifyGetSmsFailed(kUnknownError, mRequestId, mProcessId);
         } finally {
           if (cursor != null) {
             cursor.close();
@@ -606,8 +607,8 @@ public class GeckoSmsManager
     }
 
     if (!SmsIOThread.getInstance().execute(new GetMessageRunnable(aMessageId, aRequestId, aProcessId))) {
-      // TODO: send failure notification
       Log.e("GeckoSmsManager", "Failed to add GetMessageRunnable to the SmsIOThread");
+      GeckoAppShell.notifyGetSmsFailed(kUnknownError, aRequestId, aProcessId);
     }
   }
 
