@@ -192,6 +192,12 @@ SmsRequest::GetError(nsAString& aError)
     case eNoError:
       SetDOMStringToNull(aError);
       break;
+    case eNoSignalError:
+      aError.AssignLiteral("NoSignalError");
+      break;
+    case eUnknownError:
+      aError.AssignLiteral("UnknownError");
+      break;
     case eInternalError:
       aError.AssignLiteral("InternalError");
       break;

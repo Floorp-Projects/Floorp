@@ -42,6 +42,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/dom/ContentChild.h"
 #include "SmsRequestManager.h"
+#include "SmsRequest.h"
 
 namespace mozilla {
 namespace dom {
@@ -100,6 +101,21 @@ SmsChild::RecvNotifyRequestSmsSent(const SmsMessageData& aMessage,
 
   nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(aMessage);
   SmsRequestManager::GetInstance()->NotifySmsSent(aRequestId, message);
+
+  return true;
+}
+
+bool
+SmsChild::RecvNotifyRequestSmsSendFailed(const PRInt32& aError,
+                                         const PRInt32& aRequestId,
+                                         const PRUint64& aProcessId)
+{
+  if (ContentChild::GetSingleton()->GetID() != aProcessId) {
+    return true;
+  }
+
+  SmsRequestManager::GetInstance()->NotifySmsSendFailed(aRequestId,
+                                                        SmsRequest::ErrorType(aError));
 
   return true;
 }

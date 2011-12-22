@@ -255,6 +255,7 @@ SHELL_WRAPPER0_WITH_RETURN(testDirectTexture, bool);
 SHELL_WRAPPER3_WITH_RETURN(saveMessageInSentbox, jint, jstring, jstring, jlong);
 SHELL_WRAPPER6(notifySmsSent, jint, jstring, jstring, jlong, jint, jlong);
 SHELL_WRAPPER4(notifySmsDelivered, jint, jstring, jstring, jlong);
+SHELL_WRAPPER3(notifySmsSendFailed, jint, jint, jlong);
 
 static void * xul_handle = NULL;
 static time_t apk_mtime = 0;
@@ -645,6 +646,7 @@ loadLibs(const char *apkName)
   GETFUNC(saveMessageInSentbox);
   GETFUNC(notifySmsSent);
   GETFUNC(notifySmsDelivered);
+  GETFUNC(notifySmsSendFailed);
 #undef GETFUNC
   sStartupTimeline = (uint64_t *)__wrap_dlsym(xul_handle, "_ZN7mozilla15StartupTimeline16sStartupTimelineE");
   gettimeofday(&t1, 0);

@@ -98,10 +98,16 @@ class Envelope
    */
   protected boolean[] mFailing;
 
+  /**
+   * Error type (only for sent).
+   */
+  protected int       mError;
+
   public Envelope(int aId, int aParts) {
     mId = aId;
     mMessageId = -1;
     mMessageTimestamp = 0;
+    mError = GeckoSmsManager.kNoError;
 
     int size = Envelope.SubParts.values().length;
     mRemainingParts = new int[size];
@@ -148,6 +154,14 @@ class Envelope
 
   public void setMessageTimestamp(long aMessageTimestamp) {
     mMessageTimestamp = aMessageTimestamp;
+  }
+
+  public int getError() {
+    return mError;
+  }
+
+  public void setError(int aError) {
+    mError = aError;
   }
 }
 
@@ -221,6 +235,15 @@ public class GeckoSmsManager
 
   private final static int kMaxMessageSize = 160;
 
+  /*
+   * Keep the following error codes in sync with |ErrorType| in:
+   * dom/sms/src/SmsRequest.h
+   */
+  public final static int kNoError       = 0;
+  public final static int kNoSignalError = 1;
+  public final static int kUnknownError  = 2;
+  public final static int kInternalError = 3;
+
   @Override
   public void onReceive(Context context, Intent intent) {
     if (intent.getAction().equals(ACTION_SMS_RECEIVED)) {
@@ -276,9 +299,21 @@ public class GeckoSmsManager
  
 
       if (getResultCode() != Activity.RESULT_OK) {
-        // TODO: manage error types.
-        Log.i("GeckoSmsManager", "SMS part sending failed!");
+        switch (getResultCode()) {
+          case SmsManager.RESULT_ERROR_NULL_PDU:
+            envelope.setError(kInternalError);
+            break;
+          case SmsManager.RESULT_ERROR_NO_SERVICE:
+          case SmsManager.RESULT_ERROR_RADIO_OFF:
+            envelope.setError(kNoSignalError);
+            break;
+          case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+          default:
+            envelope.setError(kUnknownError);
+            break;
+        }
         envelope.markAsFailed(part);
+        Log.i("GeckoSmsManager", "SMS part sending failed!");
       }
 
       if (envelope.arePartsRemaining(part)) {
@@ -287,7 +322,9 @@ public class GeckoSmsManager
 
       if (envelope.isFailing(part)) {
         if (part == Envelope.SubParts.SENT_PART) {
-          // TODO: inform about the send failure.
+          GeckoAppShell.notifySmsSendFailed(envelope.getError(),
+                                            bundle.getInt("requestId"),
+                                            bundle.getLong("processId"));
           Log.i("GeckoSmsManager", "SMS sending failed!");
         } else {
           // It seems unlikely to get a result code for a failure to deliver.
@@ -334,11 +371,6 @@ public class GeckoSmsManager
   }
 
   public static void send(String aNumber, String aMessage, int aRequestId, long aProcessId) {
-    /*
-     * TODO:
-     * This is a basic send method that doesn't handle errors and doesn't listen to
-     * delivered messages.
-     */
     int envelopeId = Postman.kUnknownEnvelopeId;
 
     try {
@@ -419,6 +451,8 @@ public class GeckoSmsManager
       if (envelopeId != Postman.kUnknownEnvelopeId) {
         Postman.getInstance().destroyEnvelope(envelopeId);
       }
+
+      GeckoAppShell.notifySmsSendFailed(kUnknownError, aRequestId, aProcessId);
     }
   }
 

@@ -66,6 +66,7 @@
 #include "mozilla/dom/sms/Types.h"
 #include "mozilla/dom/sms/PSms.h"
 #include "mozilla/dom/sms/SmsRequestManager.h"
+#include "mozilla/dom/sms/SmsRequest.h"
 #include "mozilla/dom/sms/SmsParent.h"
 #include "nsISmsDatabaseService.h"
 
@@ -93,6 +94,7 @@ extern "C" {
     NS_EXPORT PRInt32 JNICALL Java_org_mozilla_gecko_GeckoAppShell_saveMessageInSentbox(JNIEnv* jenv, jclass, jstring, jstring, jlong);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsSent(JNIEnv* jenv, jclass, jint, jstring, jstring, jlong, jint, jlong);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsDelivered(JNIEnv* jenv, jclass, jint, jstring, jstring, jlong);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsSendFailed(JNIEnv* jenv, jclass, jint, jint, jlong);
 
 #ifdef MOZ_JAVA_COMPOSITOR
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass);
@@ -397,6 +399,50 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsDelivered(JNIEnv* jenv, jclass,
                            nsJNIString(aBody, jenv), aTimestamp);
 
     nsCOMPtr<nsIRunnable> runnable = new NotifySmsDeliveredRunnable(message);
+    NS_DispatchToMainThread(runnable);
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_notifySmsSendFailed(JNIEnv* jenv, jclass,
+                                                         jint aError,
+                                                         jint aRequestId,
+                                                         jlong aProcessId)
+{
+    class NotifySmsSendFailedRunnable : public nsRunnable {
+    public:
+      NotifySmsSendFailedRunnable(SmsRequest::ErrorType aError,
+                                  PRInt32 aRequestId, PRUint64 aProcessId)
+        : mError(aError)
+        , mRequestId(aRequestId)
+        , mProcessId(aProcessId)
+      {}
+
+      NS_IMETHODIMP Run() {
+        if (mProcessId == 0) { // Parent process.
+          SmsRequestManager::GetInstance()->NotifySmsSendFailed(mRequestId, mError);
+        } else { // Content process.
+          nsTArray<SmsParent*> spList;
+          SmsParent::GetAll(spList);
+
+          for (PRUint32 i=0; i<spList.Length(); ++i) {
+            unused << spList[i]->SendNotifyRequestSmsSendFailed(mError,
+                                                                mRequestId,
+                                                                mProcessId);
+          }
+        }
+
+        return NS_OK;
+      }
+
+    private:
+      SmsRequest::ErrorType mError;
+      PRInt32               mRequestId;
+      PRUint64              mProcessId;
+    };
+
+
+    nsCOMPtr<nsIRunnable> runnable =
+      new NotifySmsSendFailedRunnable(SmsRequest::ErrorType(aError), aRequestId, aProcessId);
     NS_DispatchToMainThread(runnable);
 }
 
