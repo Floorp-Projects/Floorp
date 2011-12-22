@@ -2115,7 +2115,7 @@ nsresult nsBuiltinDecoderStateMachine::ScheduleStateMachine(PRInt64 aUsecs) {
   if (mState == DECODER_STATE_SHUTDOWN) {
     return NS_ERROR_FAILURE;
   }
-  aUsecs = PR_MAX(aUsecs, 0);
+  aUsecs = NS_MAX(aUsecs, 0);
 
   TimeStamp timeout = TimeStamp::Now() + UsecsToDuration(aUsecs);
   if (!mTimeout.IsNull()) {
