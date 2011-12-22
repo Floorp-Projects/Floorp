@@ -53,6 +53,7 @@ _BROWSER_TEST_FILES = \
 	browser_tilt_05_destruction-esc.js \
 	browser_tilt_05_destruction.js \
 	browser_tilt_arcball.js \
+	browser_tilt_controller.js \
 	browser_tilt_gl01.js \
 	browser_tilt_gl02.js \
 	browser_tilt_gl03.js \
