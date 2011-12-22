@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "SmsRequestManager.h"
-#include "SmsRequest.h"
 #include "nsIDOMSmsMessage.h"
 #include "nsDOMEvent.h"
 
@@ -130,6 +129,22 @@ SmsRequestManager::NotifySmsSent(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessa
   request->SetSuccess(aMessage);
 
   DispatchTrustedEventToRequest(SUCCESS_EVENT_NAME, request);
+
+  mRequests.ReplaceObjectAt(nsnull, aRequestId);
+}
+
+void
+SmsRequestManager::NotifySmsSendFailed(PRInt32 aRequestId, SmsRequest::ErrorType aError)
+{
+  NS_ASSERTION(mRequests.Count() > aRequestId && mRequests[aRequestId],
+               "Got an invalid request id or it has been already deleted!");
+
+  // It's safe to use the static_cast here given that we did call
+  // |new SmsRequest()|.
+  SmsRequest* request = static_cast<SmsRequest*>(mRequests[aRequestId]);
+  request->SetError(aError);
+
+  DispatchTrustedEventToRequest(ERROR_EVENT_NAME, request);
 
   mRequests.ReplaceObjectAt(nsnull, aRequestId);
 }

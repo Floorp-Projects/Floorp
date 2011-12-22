@@ -40,6 +40,7 @@
 #define mozilla_dom_sms_SmsRequestManager_h
 
 #include "nsCOMArray.h"
+#include "SmsRequest.h"
 
 class nsIDOMMozSmsRequest;
 class nsPIDOMWindow;
@@ -62,6 +63,7 @@ public:
                         nsIDOMMozSmsRequest** aRequest);
 
   void NotifySmsSent(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage);
+  void NotifySmsSendFailed(PRInt32 aRequestId, SmsRequest::ErrorType aError);
 
 private:
   static SmsRequestManager* sInstance;
