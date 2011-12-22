@@ -117,9 +117,9 @@ SmsRequestManager::DispatchTrustedEventToRequest(const nsAString& aEventName,
   return aRequest->DispatchEvent(event, &dummy);
 }
 
+template <class T>
 void
-SmsRequestManager::NotifySuccessWithMessage(PRInt32 aRequestId,
-                                            nsIDOMMozSmsMessage* aMessage)
+SmsRequestManager::NotifySuccess(PRInt32 aRequestId, T aParam)
 {
   NS_ASSERTION(mRequests.Count() > aRequestId && mRequests[aRequestId],
                "Got an invalid request id or it has been already deleted!");
@@ -127,7 +127,7 @@ SmsRequestManager::NotifySuccessWithMessage(PRInt32 aRequestId,
   // It's safe to use the static_cast here given that we did call
   // |new SmsRequest()|.
   SmsRequest* request = static_cast<SmsRequest*>(mRequests[aRequestId]);
-  request->SetSuccess(aMessage);
+  request->SetSuccess(aParam);
 
   DispatchTrustedEventToRequest(SUCCESS_EVENT_NAME, request);
 
@@ -153,7 +153,7 @@ SmsRequestManager::NotifyError(PRInt32 aRequestId, SmsRequest::ErrorType aError)
 void
 SmsRequestManager::NotifySmsSent(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
 {
-  NotifySuccessWithMessage(aRequestId, aMessage);
+  NotifySuccess<nsIDOMMozSmsMessage*>(aRequestId, aMessage);
 }
 
 void
@@ -165,7 +165,7 @@ SmsRequestManager::NotifySmsSendFailed(PRInt32 aRequestId, SmsRequest::ErrorType
 void
 SmsRequestManager::NotifyGotSms(PRInt32 aRequestId, nsIDOMMozSmsMessage* aMessage)
 {
-  NotifySuccessWithMessage(aRequestId, aMessage);
+  NotifySuccess<nsIDOMMozSmsMessage*>(aRequestId, aMessage);
 }
 
 void
@@ -173,6 +173,12 @@ SmsRequestManager::NotifyGetSmsFailed(PRInt32 aRequestId,
                                       SmsRequest::ErrorType aError)
 {
   NotifyError(aRequestId, aError);
+}
+
+void
+SmsRequestManager::NotifySmsDeleted(PRInt32 aRequestId, bool aDeleted)
+{
+  NotifySuccess<bool>(aRequestId, aDeleted);
 }
 
 } // namespace sms
