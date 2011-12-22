@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!DOCTYPE html [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % aboutDTD SYSTEM "chrome://global/locale/about.dtd" >
-%aboutDTD;
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
 %globalDTD;
 <!ENTITY % fennecDTD SYSTEM "chrome://browser/locale/about.dtd">
@@ -58,39 +55,58 @@
 <head>
   <meta name="viewport" content="width=480; initial-scale=.6667; user-scalable=no"/>
   <title>&aboutPage.title;</title>
-  <link rel="stylesheet" href="chrome://browser/skin/header.css" type="text/css"/>
   <link rel="stylesheet" href="chrome://browser/skin/aboutPage.css" type="text/css"/>
 </head>
 
 <body dir="&locale.dir;">
-  <div id="wrapper">
-    <div id="aboutLogoContainer">
-      <img src="about:logo" alt="&brandShortName;"/>
-#expand <p id="version">&about.version; __MOZ_APP_VERSION__</p>
-    </div>
+  <div id="header">
+    <div id="wordmark"></div>
+#expand <p id="version">__MOZ_APP_VERSION__</p>
+  </div>
+
+  <div id="banner">
+    <div id="logo"></div>
 #ifdef MOZ_UPDATER
-    <button id="update" onclick="checkForUpdates();">&aboutPage.checkForUpdates.button;</button>
-    <span id="update-message-checking">&aboutPage.checkForUpdates.checking;</span>
-    <span id="update-message-none">&aboutPage.checkForUpdates.none;</span>
-    <span id="update-message-found">&aboutPage.checkForUpdates.found;</span>
+    <div id="updateBox">
+      <a id="updateLink" href="" onclick="checkForUpdates();">&aboutPage.checkForUpdates.link;</a>
+      <span id="update-message-checking">&aboutPage.checkForUpdates.checking;</span>
+      <span id="update-message-none">&aboutPage.checkForUpdates.none;</span>
+      <span id="update-message-found">&aboutPage.checkForUpdates.found;</span>
+    </div>
 #endif
+  </div>
 
     <ul id="aboutLinks">
+      <div class="top-border"></div>
       <li><a id="faqURL">&aboutPage.faq.label;</a></li>
       <li><a id="supportURL">&aboutPage.support.label;</a></li>
       <li><a id="privacyURL">&aboutPage.privacyPolicy.label;</a></li>
       <li><a href="about:rights">&aboutPage.rights.label;</a></li>
       <li><a id="releaseNotesURL">&aboutPage.relNotes.label;</a></li>
       <li><a id="creditsURL">&aboutPage.credits.label;</a></li>
+      <div class="bottom-border"></div>
     </ul>
 
     <div id="aboutDetails">
-      <p id="license"><a href="about:license">&aboutPage.licenseLink;</a>&aboutPage.licenseLinkSuffix; &logoTrademark;</p>
-      <p id="aboutUA"/>
+      <p id="license"><b><a href="about:license">&aboutPage.licenseLink;</a>&aboutPage.licenseLinkSuffix;</b> &logoTrademark;</p>
     </div>
 
     <script type="application/javascript;version=1.8"><![CDATA[
       let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils, Cr = Components.results;
+      Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+      Cu.import("resource://gre/modules/Services.jsm");
+
+      // Include the build date if this is an "a#" (nightly or aurora) build
+#expand const version = "__MOZ_APP_VERSION__";
+      if (/a\d+$/.test(version)) {
+        let buildID = Services.appinfo.appBuildID;
+        let buildDate = buildID.slice(0,4) + "-" + buildID.slice(4,6) + "-" + buildID.slice(6,8);
+        let br = document.createElement("br");
+        let versionPara = document.getElementById("version");
+        versionPara.appendChild(br);
+        let date = document.createTextNode("(" + buildDate + ")");
+        versionPara.appendChild(date);
+      }
 
       // get URLs from prefs
       try {
@@ -111,15 +127,6 @@
         });
       } catch (ex) {}
 
-      let ua = navigator.userAgent;
-      if (ua) {
-        let uaP = document.getElementById("aboutUA");
-        uaP.appendChild(document.createTextNode(ua));
-      }
-
-      Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-      Cu.import("resource://gre/modules/Services.jsm");
-
 #ifdef MOZ_UPDATER
       let Updater = {
         isChecking: false,
@@ -130,7 +137,7 @@
             return Services.prefs.getBoolPref("app.update.enabled");
           }
           catch (e) { }
-          return false; // Mobile default is false
+          return true; // Mobile default is true
         },
 
         startUpdate: function() {
@@ -192,7 +199,7 @@
       };
 
       if (!Updater.updateEnabled)
-        document.getElementById("update").style.display = "none";
+        document.getElementById("updateBox").style.display = "none";
 
       function checkForUpdates() {
         Updater.isChecking = true;
@@ -201,20 +208,20 @@
         Updater.checker.checkForUpdates(UpdateCheckListener, true);
       }
 
-      let updateButton = document.getElementById("update");
+      let updateLink = document.getElementById("updateLink");
       let checkingSpan = document.getElementById("update-message-checking");
       let noneSpan = document.getElementById("update-message-none");
       let foundSpan = document.getElementById("update-message-found");
 
       function showCheckingMessage() {
-        updateButton.style.display = "none";
+        updateLink.style.display = "none";
         noneSpan.style.display = "none";
         foundSpan.style.display = "none";
         checkingSpan.style.display = "block";
       }
 
       function showUpdateMessage(aHasUpdate) {
-        updateButton.style.display = "none";
+        updateLink.style.display = "none";
         checkingSpan.style.display = "none";
         if (aHasUpdate) {
           noneSpan.style.display = "none";
@@ -228,11 +235,10 @@
           noneSpan.style.display = "none";
           foundSpan.style.display = "none";
           checkingSpan.style.display = "none";
-          updateButton.style.display = "block";
+          updateLink.style.display = "block";
         }, 2000);
       }
 #endif
     ]]></script>
-  </div>
 </body>
 </html>

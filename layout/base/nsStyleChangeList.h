@@ -43,6 +43,8 @@
 #ifndef nsStyleChangeList_h___
 #define nsStyleChangeList_h___
 
+#include "mozilla/Attributes.h"
+
 #include "nsError.h"
 #include "nsChangeHint.h"
 
@@ -95,7 +97,7 @@ protected:
   nsStyleChangeData   mBuffer[kStyleChangeBufferSize];
 
 private:
-  nsStyleChangeList(const nsStyleChangeList&); // not implemented
+  nsStyleChangeList(const nsStyleChangeList&) MOZ_DELETE;
 };
 
 

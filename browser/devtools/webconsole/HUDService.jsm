@@ -5263,6 +5263,10 @@ JSTerm.prototype = {
             this.acceptProposedCompletion()) {
           aEvent.preventDefault();
         }
+        else {
+          this.updateCompleteNode(HUDService.getStr("Autocomplete.blank"));
+          aEvent.preventDefault();
+        }
         break;
 
       default:
@@ -6523,7 +6527,6 @@ HUDConsoleObserver = {
     }
 
     if (!(aSubject instanceof Ci.nsIScriptError) ||
-        !(aSubject instanceof Ci.nsIScriptError2) ||
         !aSubject.outerWindowID) {
       return;
     }

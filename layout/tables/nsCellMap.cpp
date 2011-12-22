@@ -2586,13 +2586,10 @@ void nsCellMap::Dump(bool aIsBorderCollapse) const
         if (cd->IsOrig()) {
           printf("C%d,%d  ", rowIndex, colIndex);
         } else {
-          nsTableCellFrame* cell = nsnull;
           if (cd->IsRowSpan()) {
-            cell = GetCellFrame(rowIndex, colIndex, *cd, true);
             printf("R ");
           }
           if (cd->IsColSpan()) {
-            cell = GetCellFrame(rowIndex, colIndex, *cd, false);
             printf("C ");
           }
           if (!(cd->IsRowSpan() && cd->IsColSpan())) {

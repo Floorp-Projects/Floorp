@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Assertions.h"
+
 #include "nsAtomTable.h"
 #include "nsStaticAtom.h"
 #include "nsString.h"
@@ -406,16 +408,17 @@ GetAtomHashEntry(const PRUnichar* aString, PRUint32 aLength)
 class CheckStaticAtomSizes
 {
   CheckStaticAtomSizes() {
-    PR_STATIC_ASSERT((sizeof(nsFakeStringBuffer<1>().mRefCnt) ==
-                      sizeof(nsStringBuffer().mRefCount)) &&
-                     (sizeof(nsFakeStringBuffer<1>().mSize) ==
-                      sizeof(nsStringBuffer().mStorageSize)) &&
-                     (offsetof(nsFakeStringBuffer<1>, mRefCnt) ==
-                      offsetof(nsStringBuffer, mRefCount)) &&
-                     (offsetof(nsFakeStringBuffer<1>, mSize) ==
-                      offsetof(nsStringBuffer, mStorageSize)) &&
-                     (offsetof(nsFakeStringBuffer<1>, mStringData) ==
-                      sizeof(nsStringBuffer)));
+    MOZ_STATIC_ASSERT((sizeof(nsFakeStringBuffer<1>().mRefCnt) ==
+                       sizeof(nsStringBuffer().mRefCount)) &&
+                      (sizeof(nsFakeStringBuffer<1>().mSize) ==
+                       sizeof(nsStringBuffer().mStorageSize)) &&
+                      (offsetof(nsFakeStringBuffer<1>, mRefCnt) ==
+                       offsetof(nsStringBuffer, mRefCount)) &&
+                      (offsetof(nsFakeStringBuffer<1>, mSize) ==
+                       offsetof(nsStringBuffer, mStorageSize)) &&
+                      (offsetof(nsFakeStringBuffer<1>, mStringData) ==
+                       sizeof(nsStringBuffer)),
+                      "mocked-up strings' representations should be compatible");
   }
 };
 

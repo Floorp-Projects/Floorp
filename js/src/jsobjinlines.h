@@ -1142,17 +1142,11 @@ JSObject::slotSpan() const
     return lastProperty()->slotSpan();
 }
 
-inline bool
-JSObject::containsSlot(uint32_t slot) const
-{
-    return slot < slotSpan();
-}
-
 inline js::HeapValue &
 JSObject::nativeGetSlotRef(uintN slot)
 {
     JS_ASSERT(isNative());
-    JS_ASSERT(containsSlot(slot));
+    JS_ASSERT(slot < slotSpan());
     return getSlotRef(slot);
 }
 
@@ -1160,7 +1154,7 @@ inline const js::Value &
 JSObject::nativeGetSlot(uintN slot) const
 {
     JS_ASSERT(isNative());
-    JS_ASSERT(containsSlot(slot));
+    JS_ASSERT(slot < slotSpan());
     return getSlot(slot);
 }
 
@@ -1184,7 +1178,7 @@ inline void
 JSObject::nativeSetSlot(uintN slot, const js::Value &value)
 {
     JS_ASSERT(isNative());
-    JS_ASSERT(containsSlot(slot));
+    JS_ASSERT(slot < slotSpan());
     return setSlot(slot, value);
 }
 

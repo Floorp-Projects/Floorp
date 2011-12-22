@@ -46,6 +46,8 @@
 #ifndef xpcprivate_h___
 #define xpcprivate_h___
 
+#include "mozilla/Attributes.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -3936,8 +3938,7 @@ xpc_InstallJSDebuggerKeywordHandler(JSRuntime* rt);
 
 // Definition of nsScriptError, defined here because we lack a place to put
 // XPCOM objects associated with the JavaScript engine.
-class nsScriptError : public nsIScriptError,
-                      public nsIScriptError2 {
+class nsScriptError : public nsIScriptError {
 public:
     nsScriptError();
 
@@ -3948,7 +3949,6 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONSOLEMESSAGE
     NS_DECL_NSISCRIPTERROR
-    NS_DECL_NSISCRIPTERROR2
 
 private:
     nsString mMessage;
@@ -4026,8 +4026,8 @@ private:
     MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     // No copying or assignment allowed
-    AutoScriptEvaluate(const AutoScriptEvaluate &);
-    AutoScriptEvaluate & operator =(const AutoScriptEvaluate &);
+    AutoScriptEvaluate(const AutoScriptEvaluate &) MOZ_DELETE;
+    AutoScriptEvaluate & operator =(const AutoScriptEvaluate &) MOZ_DELETE;
 };
 
 /***************************************************************************/

@@ -40,6 +40,8 @@
 #ifndef jscompartment_h___
 #define jscompartment_h___
 
+#include "mozilla/Attributes.h"
+
 #include "jsclist.h"
 #include "jscntxt.h"
 #include "jsfun.h"
@@ -486,9 +488,8 @@ class AutoCompartment
     void leave();
 
   private:
-    // Prohibit copying.
-    AutoCompartment(const AutoCompartment &);
-    AutoCompartment & operator=(const AutoCompartment &);
+    AutoCompartment(const AutoCompartment &) MOZ_DELETE;
+    AutoCompartment & operator=(const AutoCompartment &) MOZ_DELETE;
 };
 
 /*

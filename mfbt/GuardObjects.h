@@ -41,8 +41,7 @@
 #ifndef mozilla_GuardObjects_h
 #define mozilla_GuardObjects_h
 
-#include "mozilla/Types.h"
-#include "mozilla/Util.h"
+#include "mozilla/Assertions.h"
 
 namespace mozilla {
   /**

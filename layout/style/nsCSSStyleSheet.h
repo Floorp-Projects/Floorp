@@ -134,9 +134,9 @@ struct ChildSheetListBuilder;
  { 0x84, 0x67, 0x80, 0x3f, 0xb3, 0x2a, 0xf2, 0x0a } }
 
 
-class nsCSSStyleSheet : public nsIStyleSheet,
-                        public nsIDOMCSSStyleSheet,
-                        public nsICSSLoaderObserver
+class nsCSSStyleSheet MOZ_FINAL : public nsIStyleSheet,
+                                  public nsIDOMCSSStyleSheet,
+                                  public nsICSSLoaderObserver
 {
 public:
   nsCSSStyleSheet();

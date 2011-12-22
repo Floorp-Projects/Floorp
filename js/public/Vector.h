@@ -41,6 +41,8 @@
 #ifndef jsvector_h_
 #define jsvector_h_
 
+#include "mozilla/Attributes.h"
+
 #include "TemplateLib.h"
 #include "Utility.h"
 
@@ -274,8 +276,8 @@ class Vector : private AllocPolicy
     bool entered;
 #endif
 
-    Vector(const Vector &);
-    Vector &operator=(const Vector &);
+    Vector(const Vector &) MOZ_DELETE;
+    Vector &operator=(const Vector &) MOZ_DELETE;
 
     /* private accessors */
 

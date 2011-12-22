@@ -45,6 +45,7 @@ import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerRenderer;
 import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.gfx.SingleTileLayer;
+import org.mozilla.gecko.gfx.WidgetTileLayer;
 import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
@@ -76,7 +77,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     private IntSize mScreenSize, mViewportSize;
     private IntSize mBufferSize;
     private ByteBuffer mBuffer;
-    private final SingleTileLayer mTileLayer;
+    private Layer mTileLayer;
 
     /* The viewport rect that Gecko is currently displaying. */
     private ViewportMetrics mGeckoViewport;
@@ -125,6 +126,10 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         }
     }
 
+    public void installWidgetLayer() {
+        mTileLayer = new WidgetTileLayer(mCairoImage);
+    }
+
     /** Attaches the root layer to the layer controller so that Gecko appears. */
     @Override
     public void setLayerController(LayerController layerController) {
@@ -133,7 +138,6 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         layerController.setRoot(mTileLayer);
         if (mGeckoViewport != null) {
             layerController.setViewportMetrics(mGeckoViewport);
-            layerController.notifyPanZoomControllerOfGeometryChange(false);
         }
 
         GeckoAppShell.registerGeckoEventListener("Viewport:Update", this);
@@ -171,7 +175,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
                 } else {
                     Log.d(LOGTAG, "Received viewport update from gecko");
                     controller.setViewportMetrics(mGeckoViewport);
-                    controller.notifyPanZoomControllerOfGeometryChange(true);
+                    controller.abortPanZoomAnimation();
                 }
             }
         } catch (JSONException e) {
@@ -189,7 +193,9 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             updateViewport(metadata, !mUpdateViewportOnEndDraw);
             mUpdateViewportOnEndDraw = false;
             Rect rect = new Rect(x, y, x + width, y + height);
-            mTileLayer.invalidate(rect);
+
+            if (mTileLayer instanceof SingleTileLayer)
+                ((SingleTileLayer)mTileLayer).invalidate(rect);
         } finally {
             endTransaction(mTileLayer);
         }
@@ -203,6 +209,8 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     }
 
     public Bitmap getBitmap() {
+        if (mBufferSize.width <= 0 || mBufferSize.height <= 0)
+            return null;
         try {
             Bitmap b = Bitmap.createBitmap(mBufferSize.width, mBufferSize.height,
                                            CairoUtils.cairoFormatTobitmapConfig(mFormat));
