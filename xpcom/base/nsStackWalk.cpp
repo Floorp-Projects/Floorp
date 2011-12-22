@@ -58,7 +58,20 @@ static CriticalAddress gCriticalAddress;
 #include <dlfcn.h>
 #endif
 
-#if defined(XP_MACOSX) && (defined(__i386) || defined(__ppc__) || defined(HAVE__UNWIND_BACKTRACE))
+#define NSSTACKWALK_SUPPORTS_MACOSX \
+    (defined(XP_MACOSX) && \
+     (defined(__i386) || defined(__ppc__) || defined(HAVE__UNWIND_BACKTRACE)))
+
+#define NSSTACKWALK_SUPPORTS_LINUX \
+    (defined(linux) && \
+     ((defined(__GNUC__) && (defined(__i386) || defined(PPC))) || \
+      defined(HAVE__UNWIND_BACKTRACE)))
+
+#define NSSTACKWALK_SUPPORTS_SOLARIS \
+    (defined(__sun) && \
+     (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386)))
+
+#if NSSTACKWALK_SUPPORTS_MACOSX
 #include <pthread.h>
 #include <errno.h>
 #include <CoreServices/CoreServices.h>
@@ -1251,7 +1264,7 @@ NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
 
 // WIN32 x86 stack walking code
 // i386 or PPC Linux stackwalking code or Solaris
-#elif HAVE_DLADDR && (HAVE__UNWIND_BACKTRACE || (defined(linux) && defined(__GNUC__) && (defined(__i386) || defined(PPC))) || (defined(__sun) && (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386))) || (defined(XP_MACOSX) && (defined(__ppc__) || defined(__i386))))
+#elif HAVE_DLADDR && (HAVE__UNWIND_BACKTRACE || NSSTACKWALK_SUPPORTS_LINUX || NSSTACKWALK_SUPPORTS_SOLARIS || NSSTACKWALK_SUPPORTS_MACOSX)
 
 #include <stdlib.h>
 #include <string.h>
@@ -1294,7 +1307,7 @@ void DemangleSymbol(const char * aSymbol,
 }
 
 
-#if defined(__sun) && (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386))
+#if NSSTACKWALK_SUPPORTS_SOLARIS
 
 /*
  * Stack walking code for Solaris courtesy of Bart Smaalder's "memtrak".
@@ -1533,7 +1546,8 @@ NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
 
 #else // not __sun-specific
 
-#if (defined(linux) && defined(__GNUC__) && (defined(__i386) || defined(PPC))) || (defined(XP_MACOSX) && (defined(__i386) || defined(__ppc__))) // i386 or PPC Linux or Mac stackwalking code
+#define X86_OR_PPC (defined(__i386) || defined(PPC) || defined(__ppc__))
+#if X86_OR_PPC && (NSSTACKWALK_SUPPORTS_MACOSX || NSSTACKWALK_SUPPORTS_LINUX) // i386 or PPC Linux or Mac stackwalking code
 
 #if __GLIBC__ > 2 || __GLIBC_MINOR > 1
 #define HAVE___LIBC_STACK_END 1
