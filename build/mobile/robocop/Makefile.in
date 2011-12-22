@@ -1,0 +1,136 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Android sutagent for testing.
+#
+# The Initial Developer of the Original Code is
+#   Mozilla Foundation
+# Portions created by the Initial Developer are Copyright (C) 2011
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Clint Talbert <ctalbert@mozilla.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH       = ../../..
+topsrcdir   = @top_srcdir@
+srcdir      = @srcdir@
+VPATH       = @srcdir@
+TESTPATH    = $(topsrcdir)/mobile/android/base/tests
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = robocop
+
+ROBOTIUM_PATH = $(srcdir)/robotium-solo-3.0.jar
+
+JAVAFILES = \
+  R.java \
+
+_JAVA_HARNESS = \
+  Driver.java \
+  Element.java \
+  Actions.java \
+  FennecNativeElement.java \
+  RoboCopException.java \
+  FennecNativeDriver.java \
+  FennecNativeActions.java \
+
+_JAVA_TESTS = $(patsubst $(TESTPATH)/%.in,%,$(wildcard $(TESTPATH)/*.java.in))
+
+_ROBOCOP_TOOLS = \
+  $(TESTPATH)/robocop.ini \
+  parse_ids.py \
+  $(NULL)
+
+GARBAGE += \
+  AndroidManifest.xml \
+  _JAVA_TESTS \
+  _JAVA_HARNESS \
+  classes.dex \
+  robocop.apk \
+  robocop.ap_ \
+  robocop-unsigned-unaligned.apk \
+  robocop-unaligned.apk \
+  $(NULL)
+
+DEFINES += \
+  -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
+  $(NULL)
+
+GARBAGE_DIRS += res
+
+JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar:$(ROBOTIUM_PATH)
+
+include $(topsrcdir)/config/rules.mk
+
+# Override rules.mk java flags with the android specific ones
+include $(topsrcdir)/config/android-common.mk
+
+$(_JAVA_HARNESS): % : %.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
+
+AndroidManifest.xml: % : %.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
+
+$(_JAVA_TESTS): % : $(TESTPATH)/%.in
+	$(NSINSTALL) -D $(DEPTH)/mobile/android/base/tests
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $(DEPTH)/mobile/android/base/tests/$@
+
+$(_ROBOCOP_TOOLS):
+	cp $(TESTPATH)/robocop.ini robocop.ini
+	cp $(srcdir)/parse_ids.txt parse_ids.txt
+
+tools:: robocop.apk
+
+classes.dex: robocop.ap_
+classes.dex: $(_ROBOCOP_TOOLS)
+classes.dex: $(_JAVA_HARNESS)
+classes.dex: $(_JAVA_TESTS)
+classes.dex: $(TEST_FILES)
+	$(NSINSTALL) -D classes
+	$(JAVAC) $(JAVAC_FLAGS) -d classes $(JAVAFILES) $(_JAVA_HARNESS) $(addprefix $(DEPTH)/mobile/android/base/tests/,$(_JAVA_TESTS))
+	$(DX) --dex --output=$@ classes $(ROBOTIUM_PATH)
+
+robocop.ap_: AndroidManifest.xml
+	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -I . -S res -F $@ -J ./
+
+robocop-unsigned-unaligned.apk: robocop.ap_ classes.dex
+	$(APKBUILDER) $@ -v $(APKBUILDER_FLAGS) -z robocop.ap_ -f classes.dex
+
+robocop-unaligned.apk: robocop-unsigned-unaligned.apk
+	cp robocop-unsigned-unaligned.apk $@
+	jarsigner -keystore ~/.android/debug.keystore -storepass android -keypass android $@ androiddebugkey
+
+robocop.apk: robocop-unaligned.apk
+	$(ZIPALIGN) -f -v 4 robocop-unaligned.apk $@
+	cp $(TESTPATH)/robocop.ini robocop.ini
+	cp $(srcdir)/parse_ids.py parse_ids.py
+
+export::
+	$(NSINSTALL) -D res
+	@(cd $(srcdir)/res && tar $(TAR_CREATE_FLAGS) - *) | (cd $(DEPTH)/build/mobile/robocop/res && tar -xf -)
+
