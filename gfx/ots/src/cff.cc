@@ -57,7 +57,7 @@ bool ParseIndex(ots::Buffer *table, ots::CFFIndex *index) {
   }
   if (index->count == 0) {
     // An empty INDEX.
-    index->offset_to_next = table->offset() + sizeof(index->count);
+    index->offset_to_next = table->offset();
     return true;
   }
 
