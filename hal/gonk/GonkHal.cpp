@@ -148,7 +148,7 @@ NS_IMETHODIMP
 VibratorRunnable::Observe(nsISupports *subject, const char *topic,
                           const PRUnichar *data)
 {
-  MOZ_ASSERT(strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
+  MOZ_ASSERT(strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
   MonitorAutoLock lock(mMonitor);
   mShuttingDown = true;
   mMonitor.Notify();
