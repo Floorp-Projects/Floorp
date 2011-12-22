@@ -87,7 +87,7 @@ private:
   RenderFrameParent* Frame();
 
   nsRefPtr<ShadowLayerManager> mLayerManager;
-  nsRefPtr<ShadowLayersHost> mHost;
+  ShadowLayersHost* mHost;
   // Hold the root because it might be grafted under various
   // containers in the "real" layer tree
   nsRefPtr<ContainerLayer> mRoot;

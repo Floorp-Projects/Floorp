@@ -66,6 +66,8 @@ public:
   virtual mozilla::layout::RenderFrameParent* GetRenderFrameParent() { return NULL; }
   virtual CompositorParent* GetCompositorParent() { return this; }
 
+  void Destroy();
+
 protected:
   virtual PLayersParent* AllocPLayers(const LayersBackend &backend, const WidgetDescriptor &widget);
 
@@ -75,6 +77,7 @@ private:
   void Composite();
 
   nsRefPtr<LayerManager> mLayerManager;
+  bool mStopped;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };
