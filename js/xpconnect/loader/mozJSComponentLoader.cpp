@@ -41,6 +41,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Attributes.h"
+
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
 #endif
@@ -319,8 +321,8 @@ private:
     char*      mBuf;
 
     // prevent copying and assignment
-    JSCLContextHelper(const JSCLContextHelper &); // not implemented
-    const JSCLContextHelper& operator=(const JSCLContextHelper &); // not implemented
+    JSCLContextHelper(const JSCLContextHelper &) MOZ_DELETE;
+    const JSCLContextHelper& operator=(const JSCLContextHelper &) MOZ_DELETE;
 };
 
 
@@ -334,9 +336,9 @@ public:
 private:
     JSContext* mContext;
     JSErrorReporter mOldReporter;
-    // prevent copying and assignment
-    JSCLAutoErrorReporterSetter(const JSCLAutoErrorReporterSetter &); // not implemented
-    const JSCLAutoErrorReporterSetter& operator=(const JSCLAutoErrorReporterSetter &); // not implemented
+
+    JSCLAutoErrorReporterSetter(const JSCLAutoErrorReporterSetter &) MOZ_DELETE;
+    const JSCLAutoErrorReporterSetter& operator=(const JSCLAutoErrorReporterSetter &) MOZ_DELETE;
 };
 
 static nsresult

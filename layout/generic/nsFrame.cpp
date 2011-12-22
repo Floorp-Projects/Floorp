@@ -42,6 +42,7 @@
 
 /* base class of all rendering objects */
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Util.h"
 
 #include "nsCOMPtr.h"
@@ -8074,7 +8075,7 @@ struct DR_FrameTypeInfo
   char        mName[32];
   nsTArray<DR_Rule*> mRules;
 private:
-  DR_FrameTypeInfo& operator=(const DR_FrameTypeInfo&); // NOT USED
+  DR_FrameTypeInfo& operator=(const DR_FrameTypeInfo&) MOZ_DELETE;
 };
 
 DR_FrameTypeInfo::DR_FrameTypeInfo(nsIAtom* aFrameType, 

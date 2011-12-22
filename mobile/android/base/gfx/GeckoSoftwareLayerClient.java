@@ -45,6 +45,7 @@ import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerRenderer;
 import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.gfx.SingleTileLayer;
+import org.mozilla.gecko.gfx.WidgetTileLayer;
 import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
@@ -76,7 +77,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     private IntSize mScreenSize, mViewportSize;
     private IntSize mBufferSize;
     private ByteBuffer mBuffer;
-    private final SingleTileLayer mTileLayer;
+    private Layer mTileLayer;
 
     /* The viewport rect that Gecko is currently displaying. */
     private ViewportMetrics mGeckoViewport;
@@ -123,6 +124,10 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         } finally {
             super.finalize();
         }
+    }
+
+    public void installWidgetLayer() {
+        mTileLayer = new WidgetTileLayer(mCairoImage);
     }
 
     /** Attaches the root layer to the layer controller so that Gecko appears. */
@@ -188,7 +193,9 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             updateViewport(metadata, !mUpdateViewportOnEndDraw);
             mUpdateViewportOnEndDraw = false;
             Rect rect = new Rect(x, y, x + width, y + height);
-            mTileLayer.invalidate(rect);
+
+            if (mTileLayer instanceof SingleTileLayer)
+                ((SingleTileLayer)mTileLayer).invalidate(rect);
         } finally {
             endTransaction(mTileLayer);
         }
