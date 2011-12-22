@@ -47,7 +47,6 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.util.ArrayList;
 
 /**
  * Base class for tile layers, which encapsulate the logic needed to draw textured tiles in OpenGL
@@ -56,7 +55,7 @@ import java.util.ArrayList;
 public abstract class TileLayer extends Layer {
     private static final String LOGTAG = "GeckoTileLayer";
 
-    private final ArrayList<Rect> mDirtyRects;
+    private final Rect mDirtyRect;
     private final CairoImage mImage;
     private final boolean mRepeat;
     private IntSize mSize;
@@ -66,7 +65,9 @@ public abstract class TileLayer extends Layer {
         mRepeat = repeat;
         mImage = image;
         mSize = new IntSize(0, 0);
-        mDirtyRects = new ArrayList<Rect>();
+
+        IntSize bufferSize = mImage.getSize();
+        mDirtyRect = new Rect();
     }
 
     @Override
@@ -89,7 +90,7 @@ public abstract class TileLayer extends Layer {
     public void invalidate(Rect rect) {
         if (!inTransaction())
             throw new RuntimeException("invalidate() is only valid inside a transaction");
-        mDirtyRects.add(rect);
+        mDirtyRect.union(rect);
     }
 
     public void invalidate() {
@@ -136,22 +137,24 @@ public abstract class TileLayer extends Layer {
         if (!mImage.getSize().isPositive())
             return;
 
-        if (mTextureIDs == null) {
+        // If we haven't allocated a texture, assume the whole region is dirty
+        if (mTextureIDs == null)
             uploadFullTexture(gl);
-        } else {
-            for (Rect dirtyRect : mDirtyRects)
-                uploadDirtyRect(gl, dirtyRect);
-        }
+        else
+            uploadDirtyRect(gl, mDirtyRect);
 
-        mDirtyRects.clear();
+        mDirtyRect.setEmpty();
     }
 
     private void uploadFullTexture(GL10 gl) {
         IntSize bufferSize = mImage.getSize();
         uploadDirtyRect(gl, new Rect(0, 0, bufferSize.width, bufferSize.height));
     }
- 
+
     private void uploadDirtyRect(GL10 gl, Rect dirtyRect) {
+        if (dirtyRect.isEmpty())
+            return;
+
         boolean newlyCreated = false;
 
         if (mTextureIDs == null) {
@@ -168,7 +171,7 @@ public abstract class TileLayer extends Layer {
 
         bindAndSetGLParameters(gl);
 
-        if (newlyCreated || dirtyRect.equals(bufferRect)) {
+        if (newlyCreated || dirtyRect.contains(bufferRect)) {
             if (mSize.equals(bufferSize)) {
                 gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width, mSize.height,
                                 0, glInfo.format, glInfo.type, mImage.getBuffer());
@@ -198,7 +201,8 @@ public abstract class TileLayer extends Layer {
         }
 
         viewBuffer.position(position);
-        gl.glTexSubImage2D(gl.GL_TEXTURE_2D, 0, 0, dirtyRect.top, bufferSize.width, dirtyRect.height(),
+        gl.glTexSubImage2D(gl.GL_TEXTURE_2D, 0, 0, dirtyRect.top, bufferSize.width,
+                           Math.min(bufferSize.height - dirtyRect.top, dirtyRect.height()),
                            glInfo.format, glInfo.type, viewBuffer);
     }
 
