@@ -99,6 +99,8 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyGetSmsFailed(JNIEnv* jenv, jclass, jint, jint, jlong);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsDeleted(JNIEnv* jenv, jclass, jboolean, jint, jlong);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsDeleteFailed(JNIEnv* jenv, jclass, jint, jint, jlong);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyNoMessageInList(JNIEnv* jenv, jclass, jint, jlong);
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyListCreated(JNIEnv* jenv, jclass, jint, jint, jstring, jstring, jstring, jlong, jint, jlong);
 
 #ifdef MOZ_JAVA_COMPOSITOR
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass);
@@ -634,6 +636,18 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsDeleteFailed(JNIEnv* jenv, jclass,
     nsCOMPtr<nsIRunnable> runnable =
       new NotifySmsDeleteFailedRunnable(SmsRequest::ErrorType(aError), aRequestId, aProcessId);
     NS_DispatchToMainThread(runnable);
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_notifyNoMessageInList(JNIEnv* jenv, jclass, jint, jlong)
+{
+  // TODO: implement
+}
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_notifyListCreated(JNIEnv* jenv, jclass, jint, jint, jstring, jstring, jstring, jlong, jint, jlong)
+{
+  // TODO: implement
 }
 
 #ifdef MOZ_JAVA_COMPOSITOR
