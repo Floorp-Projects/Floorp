@@ -58,6 +58,7 @@
 #include "ImageLogging.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Preferences.h"
 #include "ImageLayers.h"
 
 #include "nsPNGDecoder.h"
@@ -84,25 +85,24 @@ static PRLogModuleInfo *gCompressedImageAccountingLog = PR_NewLogModule ("Compre
 #define gCompressedImageAccountingLog
 #endif
 
-// Tweakable progressive decoding parameters
-static PRUint32 gDecodeBytesAtATime = 200000;
-static PRUint32 gMaxMSBeforeYield = 400;
-static PRUint32 gMaxBytesForSyncDecode = 150000;
+// Tweakable progressive decoding parameters.  These are initialized to 0 here
+// because otherwise, we have to initialize them in a static initializer, which
+// makes us slower to start up.
+static bool gInitializedPrefCaches = false;
+static PRUint32 gDecodeBytesAtATime = 0;
+static PRUint32 gMaxMSBeforeYield = 0;
+static PRUint32 gMaxBytesForSyncDecode = 0;
 
-void
-RasterImage::SetDecodeBytesAtATime(PRUint32 aBytesAtATime)
+static void
+InitPrefCaches()
 {
-  gDecodeBytesAtATime = aBytesAtATime;
-}
-void
-RasterImage::SetMaxMSBeforeYield(PRUint32 aMaxMS)
-{
-  gMaxMSBeforeYield = aMaxMS;
-}
-void
-RasterImage::SetMaxBytesForSyncDecode(PRUint32 aMaxBytes)
-{
-  gMaxBytesForSyncDecode = aMaxBytes;
+  Preferences::AddUintVarCache(&gDecodeBytesAtATime,
+                               "image.mem.decode_bytes_at_a_time", 200000);
+  Preferences::AddUintVarCache(&gMaxMSBeforeYield,
+                               "image.mem.max_ms_before_yield", 400);
+  Preferences::AddUintVarCache(&gMaxBytesForSyncDecode,
+                               "image.mem.max_bytes_for_sync_decode", 150000);
+  gInitializedPrefCaches = true;
 }
 
 /* We define our own error checking macros here for 2 reasons:
@@ -216,6 +216,11 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker) :
 
   // Statistics
   num_containers++;
+
+  // Register our pref observers if we haven't yet.
+  if (NS_UNLIKELY(!gInitializedPrefCaches)) {
+    InitPrefCaches();
+  }
 }
 
 //******************************************************************************
