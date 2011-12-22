@@ -7,11 +7,13 @@
   <style type="text/css">
 
   div {
+    border-width: 7px;
+    border-style: solid;
     background: red; /* fail if this shows through */
     background-image: url('3x3multicolor.png'); /* fail if this shows through */
-    -moz-border-image: url('3x3multicolor.png') 1 1 1 1 / 7px;
-    -khtml-border-image: url('3x3multicolor.png') 1 1 1 1 / 7px;
-    border-image: url('3x3multicolor.png') 1 1 1 1 / 7px;
+    -moz-border-image: url('3x3multicolor.png') 1 1 1 1 fill;
+    -khtml-border-image: url('3x3multicolor.png') 1 1 1 1 fill;
+    border-image: url('3x3multicolor.png') 1 1 1 1 fill;
   }
 
   </style>
