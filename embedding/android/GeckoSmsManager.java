@@ -252,6 +252,71 @@ class SmsIOThread extends Thread {
   }
 }
 
+class MessagesListManager
+{
+  private static final MessagesListManager sInstance = new MessagesListManager();
+
+  public static MessagesListManager getInstance() {
+    return sInstance;
+  }
+
+  private ArrayList<Cursor> mCursors = new ArrayList<Cursor>(0);
+
+  public int add(Cursor aCursor) {
+    int size = mCursors.size();
+
+    for (int i=0; i<size; ++i) {
+      if (mCursors.get(i) == null) {
+        mCursors.set(i, aCursor);
+        return i;
+      }
+    }
+
+    mCursors.add(aCursor);
+    return size;
+  }
+
+  public Cursor get(int aId) {
+    if (aId < 0 || mCursors.size() <= aId) {
+      Log.e("GeckoSmsManager", "Trying to get an unknown list!");
+      return null;
+    }
+
+    Cursor cursor = mCursors.get(aId);
+    if (cursor == null) {
+      Log.e("GeckoSmsManager", "Trying to get an empty list!");
+    }
+
+    return cursor;
+  }
+
+  public void remove(int aId) {
+    if (aId < 0 || mCursors.size() <= aId) {
+      Log.e("GeckoSmsManager", "Trying to destroy an unknown list!");
+      return;
+    }
+
+    Cursor cursor = mCursors.set(aId, null);
+    if (cursor == null) {
+      Log.e("GeckoSmsManager", "Trying to destroy an empty list!");
+      return;
+    }
+
+    cursor.close();
+  }
+
+  public void clear() {
+    for (int i=0; i<mCursors.size(); ++i) {
+      Cursor c = mCursors.get(i);
+      if (c != null) {
+        c.close();
+      }
+    }
+
+    mCursors.clear();
+  }
+}
+
 public class GeckoSmsManager
   extends BroadcastReceiver
 {
@@ -690,8 +755,10 @@ public class GeckoSmsManager
       @Override
       public void run() {
         class UnexpectedDeliveryStateException extends Exception { };
+        class InvalidTypeException extends Exception { }
 
-        Cursor c = null;
+        Cursor cursor = null;
+        boolean closeCursor = true;
 
         try {
           // TODO: should use the |selectionArgs| argument in |ContentResolver.query()|.
@@ -716,14 +783,14 @@ public class GeckoSmsManager
             restrictions.add(numberRestriction);
           }
 
-          if (mDeliveryState != kDeliveryStateUnknown) {
-            if (mDeliveryState == kDeliveryStateSent) {
-              restrictions.add("type = " + kSmsTypeSentbox);
-            } else if (mDeliveryState == kDeliveryStateReceived) {
-              restrictions.add("type = " + kSmsTypeInbox);
-            } else {
-              throw new UnexpectedDeliveryStateException();
-            }
+          if (mDeliveryState == kDeliveryStateUnknown) {
+            restrictions.add("type IN ('" + kSmsTypeSentbox + "', '" + kSmsTypeInbox + "')");
+          } else if (mDeliveryState == kDeliveryStateSent) {
+            restrictions.add("type = " + kSmsTypeSentbox);
+          } else if (mDeliveryState == kDeliveryStateReceived) {
+            restrictions.add("type = " + kSmsTypeInbox);
+          } else {
+            throw new UnexpectedDeliveryStateException();
           }
 
           String restrictionText = restrictions.size() > 0 ? restrictions.get(0) : "";
@@ -733,12 +800,36 @@ public class GeckoSmsManager
           }
 
           ContentResolver cr = GeckoApp.surfaceView.getContext().getContentResolver();
-          c = cr.query(kSmsContentUri, kRequiredMessageRows, restrictionText, null,
-                       mReverse ? "date DESC" : "date ASC");
+          cursor = cr.query(kSmsContentUri, kRequiredMessageRows, restrictionText, null,
+                            mReverse ? "date DESC" : "date ASC");
 
-          // TODO: store the cursor
-          // TODO: create a list id
-          // TODO: send a notification
+          if (cursor.getCount() == 0) {
+            GeckoAppShell.notifyNoMessageInList(mRequestId, mProcessId);
+            return;
+          }
+
+          cursor.moveToFirst();
+
+          int type = cursor.getInt(cursor.getColumnIndex("type"));
+          String sender = "";
+          String receiver = "";
+
+          if (type == kSmsTypeInbox) {
+            sender = cursor.getString(cursor.getColumnIndex("address"));
+          } else if (type == kSmsTypeSentbox) {
+            receiver = cursor.getString(cursor.getColumnIndex("address"));
+          } else {
+            throw new UnexpectedDeliveryStateException();
+          }
+
+          int listId = MessagesListManager.getInstance().add(cursor);
+          closeCursor = false;
+          GeckoAppShell.notifyListCreated(listId,
+                                          cursor.getInt(cursor.getColumnIndex("_id")),
+                                          receiver, sender,
+                                          cursor.getString(cursor.getColumnIndex("body")),
+                                          cursor.getLong(cursor.getColumnIndex("date")),
+                                          mRequestId, mProcessId);
         } catch (UnexpectedDeliveryStateException e) {
           Log.e("GeckoSmsManager", "Unexcepted delivery state type: " + e);
           // TODO: send an error notification
@@ -746,9 +837,11 @@ public class GeckoSmsManager
           Log.e("GeckoSmsManager", "Error while trying to create a message list cursor: " + e);
           // TODO: send an error notification
         } finally {
-          // TODO: remove when close will be callable from the DOM side.
-          if (c != null) {
-            c.close();
+          // Close the cursor if MessagesListManager isn't taking care of it.
+          // We could also just check if it is in the MessagesListManager list but
+          // that would be less efficient.
+          if (cursor != null && closeCursor) {
+            cursor.close();
           }
         }
       }
@@ -762,5 +855,6 @@ public class GeckoSmsManager
 
   public static void shutdown() {
     SmsIOThread.getInstance().interrupt();
+    MessagesListManager.getInstance().clear();
   }
 }
