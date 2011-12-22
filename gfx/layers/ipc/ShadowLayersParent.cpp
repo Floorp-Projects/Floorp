@@ -144,7 +144,6 @@ ShadowLayersParent::Destroy()
       static_cast<ShadowLayerParent*>(ManagedPLayerParent()[i]);
     slp->Destroy();
   }
-  mHost = NULL;
 }
 
 bool

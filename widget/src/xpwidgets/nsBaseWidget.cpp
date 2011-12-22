@@ -142,13 +142,12 @@ nsBaseWidget::~nsBaseWidget()
     static_cast<BasicLayerManager*>(mLayerManager.get())->ClearRetainerWidget();
   }
 
-
   if (mLayerManager) {
     mLayerManager->Destroy();
+    mLayerManager = NULL;
   }
 
   if (mCompositor) {
-    mLayerManager = NULL;
     mCompositor->Destroy();
   }
 
