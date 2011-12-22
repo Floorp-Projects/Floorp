@@ -289,15 +289,17 @@ GetCurrentBatteryInformation(hal::BatteryInformation *aBatteryInfo)
 {
   FILE *capacityFile = fopen("/sys/class/power_supply/battery/capacity", "r");
   double capacity = dom::battery::kDefaultLevel * 100;
-  if (capacityFile)
+  if (capacityFile) {
     fscanf(capacityFile, "%lf", &capacity);
-  fclose(capacityFile);
+    fclose(capacityFile);
+  }
 
   FILE *chargingFile = fopen("/sys/class/power_supply/battery/charging_source", "r");
   int chargingSrc = 1;
-  if (chargingFile)
+  if (chargingFile) {
     fscanf(chargingFile, "%d", &chargingSrc);
-  fclose(chargingFile);
+    fclose(chargingFile);
+  }
 
   aBatteryInfo->level() = capacity / 100;
   aBatteryInfo->charging() = chargingSrc == 1;
