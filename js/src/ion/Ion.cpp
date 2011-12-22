@@ -468,28 +468,48 @@ IonScript::getFrameInfo(ptrdiff_t disp) const
     JS_ASSERT(frameInfoEntries_ > 0);
 
     const IonFrameInfo *table = frameInfoTable();
+    if (frameInfoEntries_ == 1) {
+        JS_ASSERT(disp == table[0].displacement);
+        return &table[0];
+    }
+
     size_t minEntry = 0;
-    size_t limitEntry = frameInfoEntries_;
-    size_t guess;
+    size_t maxEntry = frameInfoEntries_ - 1;
+    ptrdiff_t min = table[minEntry].displacement;
+    ptrdiff_t max = table[maxEntry].displacement;
 
-    while (true) {
-        JS_ASSERT(minEntry < limitEntry);
-        JS_ASSERT(table[minEntry].displacement <= disp && disp <= table[limitEntry - 1].displacement);
+    // Raise if the element is not in the list.
+    JS_ASSERT(min <= disp && disp <= max);
 
-        guess = (minEntry + limitEntry) / 2;
-        ptrdiff_t guessDisp = table[guess].displacement;
+    // Approximate the location of the FrameInfo.
+    size_t guess = (disp - min) * (maxEntry - minEntry) / (max - min) + minEntry;
+    ptrdiff_t guessDisp = table[guess].displacement;
 
-        if (guessDisp == disp)
-            break;
+    if (table[guess].displacement == disp)
+        return &table[guess];
 
-        if (guessDisp > disp) {
-            limitEntry = guess;
-        } else {
-            minEntry = guess + 1;
+    // Doing a linear scan from the guess should be more efficient in case of
+    // small group which are equally distributed on the code.
+    //
+    // such as:  <...      ...    ...  ...  .   ...    ...>
+    if (guessDisp > disp) {
+        while (--guess >= minEntry) {
+            guessDisp = table[guess].displacement;
+            JS_ASSERT(guessDisp >= disp);
+            if (guessDisp == disp)
+                return &table[guess];
+        }
+    } else {
+        while (++guess <= maxEntry) {
+            guessDisp = table[guess].displacement;
+            JS_ASSERT(guessDisp <= disp);
+            if (guessDisp == disp)
+                return &table[guess];
         }
     }
 
-    return &table[guess];
+    JS_NOT_REACHED("displacement not found.");
+    return NULL;
 }
 
 
