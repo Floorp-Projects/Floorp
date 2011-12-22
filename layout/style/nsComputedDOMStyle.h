@@ -260,7 +260,13 @@ private:
   nsIDOMCSSValue* DoGetBorderTopLeftRadius();
   nsIDOMCSSValue* DoGetBorderTopRightRadius();
   nsIDOMCSSValue* DoGetFloatEdge();
-  nsIDOMCSSValue* DoGetBorderImage();
+
+  /* Border Image */
+  nsIDOMCSSValue* DoGetBorderImageSource();
+  nsIDOMCSSValue* DoGetBorderImageSlice();
+  nsIDOMCSSValue* DoGetBorderImageWidth();
+  nsIDOMCSSValue* DoGetBorderImageOutset();
+  nsIDOMCSSValue* DoGetBorderImageRepeat();
 
   /* Box Shadow */
   nsIDOMCSSValue* DoGetBoxShadow();
