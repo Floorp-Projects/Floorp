@@ -456,6 +456,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         bind(&end);
     }
 
+    void rshiftPtr(Imm32 imm, const Register &dest) {
+        shrl(imm, dest);
+    }
+
     // Setup a call to C/C++ code, given the number of general arguments it
     // takes. Note that this only supports cdecl.
     //

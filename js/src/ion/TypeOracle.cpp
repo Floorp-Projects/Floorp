@@ -84,6 +84,17 @@ TypeInferenceOracle::getMIRType(TypeSet *types)
     }
 }
 
+TypeOracle::UnaryTypes
+TypeInferenceOracle::unaryTypes(JSScript *script, jsbytecode *pc)
+{
+    JS_ASSERT(script == this->script);
+
+    UnaryTypes res;
+    res.inTypes = script->analysis()->poppedTypes(pc, 0);
+    res.outTypes = script->analysis()->pushedTypes(pc, 0);
+    return res;
+}
+
 TypeOracle::Unary
 TypeInferenceOracle::unaryOp(JSScript *script, jsbytecode *pc)
 {

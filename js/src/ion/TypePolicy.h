@@ -158,6 +158,14 @@ class ObjectPolicy : public BoxInputsPolicy
     bool adjustInputs(MInstruction *def);
 };
 
+// Single-string input. If the input is a Value, it is unboxed.
+class StringPolicy : public BoxInputsPolicy
+{
+  public:
+    void specializeInputs(MInstruction *ins, TypeAnalysis *analyzer);
+    bool adjustInputs(MInstruction *def);
+};
+
 static inline bool
 CoercesToDouble(MIRType type)
 {

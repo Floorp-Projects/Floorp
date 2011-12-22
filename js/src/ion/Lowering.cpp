@@ -714,6 +714,13 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
 }
 
 bool
+LIRGenerator::visitArrayLength(MArrayLength *ins)
+{
+    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
+    return define(new LArrayLength(useRegister(ins->elements())), ins);
+}
+
+bool
 LIRGenerator::visitInitializedLength(MInitializedLength *ins)
 {
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);
@@ -807,6 +814,13 @@ LIRGenerator::visitLoadProperty(MLoadProperty *ins)
         return false;
 
     return true;
+}
+
+bool
+LIRGenerator::visitStringLength(MStringLength *ins)
+{
+    JS_ASSERT(ins->string()->type() == MIRType_String);
+    return define(new LStringLength(useRegister(ins->string())), ins);
 }
 
 static void

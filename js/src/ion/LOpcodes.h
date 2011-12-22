@@ -98,7 +98,9 @@
     _(LoadElementT)                 \
     _(StoreElementV)                \
     _(StoreElementT)                \
-    _(LoadPropertyGeneric)
+    _(LoadPropertyGeneric)          \
+    _(ArrayLength)                  \
+    _(StringLength)
 
 #if defined(JS_CPU_X86)
 # include "x86/LOpcodes-x86.h"

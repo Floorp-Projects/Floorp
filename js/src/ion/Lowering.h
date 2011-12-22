@@ -137,12 +137,14 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitLoadSlot(MLoadSlot *ins);
     bool visitStoreSlot(MStoreSlot *ins);
     bool visitTypeBarrier(MTypeBarrier *ins);
+    bool visitArrayLength(MArrayLength *ins);
     bool visitInitializedLength(MInitializedLength *ins);
     bool visitBoundsCheck(MBoundsCheck *ins);
     bool visitLoadElement(MLoadElement *ins);
     bool visitStoreElement(MStoreElement *ins);
     bool visitGuardClass(MGuardClass *ins);
     bool visitLoadProperty(MLoadProperty *ins);
+    bool visitStringLength(MStringLength *ins);
 };
 
 } // namespace ion
