@@ -704,6 +704,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_SETELEM:
         return jsop_setelem();
 
+      case JSOP_LENGTH:
+        return jsop_length();
+
       case JSOP_GETPROP:
         return jsop_getprop(info().getAtom(pc));
 
@@ -2886,6 +2889,56 @@ IonBuilder::jsop_setelem_dense()
         store->setElementType(elementType);
 
     return resumeAfter(store);
+}
+
+bool
+IonBuilder::jsop_length()
+{
+    if (jsop_length_fastPath())
+        return true;
+    return jsop_getprop(info().getAtom(pc));
+}
+
+bool
+IonBuilder::jsop_length_fastPath()
+{
+    TypeOracle::UnaryTypes sig = oracle->unaryTypes(script, pc);
+    if (!sig.inTypes || !sig.outTypes)
+        return false;
+
+    if (sig.outTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
+        return false;
+
+    switch (sig.inTypes->getKnownTypeTag(cx)) {
+      case JSVAL_TYPE_STRING: {
+        MDefinition *obj = current->pop();
+        MStringLength *ins = new MStringLength(obj);
+        current->add(ins);
+        current->push(ins);
+        return true;
+      }
+
+      case JSVAL_TYPE_OBJECT: {
+        if (sig.inTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY))
+            return false;
+
+        MDefinition *obj = current->pop();
+        MElements *elements = MElements::New(obj);
+        current->add(elements);
+
+        // Read length.
+        MArrayLength *length = new MArrayLength(elements);
+        current->add(length);
+        current->push(length);
+
+        return true;
+      }
+
+      default:
+        break;
+    }
+
+    return false;
 }
 
 bool

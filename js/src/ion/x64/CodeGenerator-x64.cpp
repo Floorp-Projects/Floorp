@@ -151,6 +151,9 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
           case MIRType_Object:
             cond = masm.testObject(Assembler::NotEqual, value);
             break;
+          case MIRType_String:
+            cond = masm.testString(Assembler::NotEqual, value);
+            break;
           default:
             JS_NOT_REACHED("NYI");
             return false;
@@ -165,6 +168,9 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
         break;
       case MIRType_Object:
         masm.unboxObject(value, ToRegister(result));
+        break;
+      case MIRType_String:
+        masm.unboxString(value, ToRegister(result));
         break;
       default:
         JS_NOT_REACHED("NYI");

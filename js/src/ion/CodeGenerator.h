@@ -83,6 +83,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     virtual bool visitElements(LElements *lir);
     virtual bool visitTypeBarrier(LTypeBarrier *lir);
     virtual bool visitDoubleToInt32(LDoubleToInt32 *lir);
+    virtual bool visitArrayLength(LArrayLength *lir);
+    virtual bool visitStringLength(LStringLength *lir);
     virtual bool visitInitializedLength(LInitializedLength *lir);
     virtual bool visitUnboxDouble(LUnboxDouble *lir);
 

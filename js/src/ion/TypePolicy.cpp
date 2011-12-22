@@ -301,6 +301,25 @@ ObjectPolicy::adjustInputs(MInstruction *def)
 }
 
 void
+StringPolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analyzer)
+{
+    analyzer->preferType(ins->getOperand(0), MIRType_String);
+}
+
+bool
+StringPolicy::adjustInputs(MInstruction *def)
+{
+    MDefinition *in = def->getOperand(0);
+    if (in->type() == MIRType_String)
+        return true;
+
+    MUnbox *replace = MUnbox::New(in, MIRType_String, MUnbox::Fallible);
+    def->block()->insertBefore(def, replace);
+    def->replaceOperand(0, replace);
+    return true;
+}
+
+void
 CallPolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analysis)
 {
     analysis->preferType(ins->getOperand(0), MIRType_Object);
