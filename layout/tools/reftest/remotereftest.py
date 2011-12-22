@@ -111,6 +111,10 @@ class RemoteOptions(ReftestOptions):
                     help = "name of the pidfile to generate")
         defaults["pidFile"] = ""
 
+        self.add_option("--bootstrap", action="store_true", dest = "bootstrap",
+                    help = "test with a bootstrap addon required for native Fennec")
+        defaults["bootstrap"] = False
+
         self.add_option("--dm_trans", action="store",
                     type = "string", dest = "dm_trans",
                     help = "the transport to use to communicate with device: [adb|sut]; default=sut")
@@ -290,13 +294,13 @@ class RemoteReftest(RefTest):
         localAutomation.UNIXISH = False
         hostos = sys.platform
         if (hostos == 'mac' or  hostos == 'darwin'):
-          localAutomation.IS_MAC = True
+            localAutomation.IS_MAC = True
         elif (hostos == 'linux' or hostos == 'linux2'):
-          localAutomation.IS_LINUX = True
-          localAutomation.UNIXISH = True
+            localAutomation.IS_LINUX = True
+            localAutomation.UNIXISH = True
         elif (hostos == 'win32' or hostos == 'win64'):
-          localAutomation.BIN_SUFFIX = ".exe"
-          localAutomation.IS_WIN32 = True
+            localAutomation.BIN_SUFFIX = ".exe"
+            localAutomation.IS_WIN32 = True
 
         paths = [options.xrePath, localAutomation.DIST_BIN, self.automation._product, os.path.join('..', self.automation._product)]
         options.xrePath = self.findPath(paths)
@@ -328,8 +332,8 @@ class RemoteReftest(RefTest):
     def stopWebServer(self, options):
         self.server.stop()
 
-    def createReftestProfile(self, options, profileDir):
-        RefTest.createReftestProfile(self, options, profileDir, server=options.remoteWebServer)
+    def createReftestProfile(self, options, profileDir, reftestlist):
+        RefTest.createReftestProfile(self, options, profileDir, reftestlist, server=options.remoteWebServer)
 
         # Turn off the locale picker screen
         fhandle = open(os.path.join(profileDir, "user.js"), 'a')
@@ -337,18 +341,20 @@ class RemoteReftest(RefTest):
 user_pref("browser.firstrun.show.localepicker", false);
 user_pref("font.size.inflation.emPerLine", 0);
 user_pref("font.size.inflation.minTwips", 0);
-""")
+user_pref("reftest.remote", true);
+user_pref("toolkit.telemetry.prompted", true);
+user_pref("reftest.uri", "%s");
+""" % reftestlist)
 
         #workaround for jsreftests.
         if options.enablePrivilege:
-          fhandle.write("""
+            fhandle.write("""
 user_pref("capability.principal.codebase.p2.granted", "UniversalPreferencesWrite UniversalXPConnect UniversalBrowserWrite UniversalPreferencesRead UniversalBrowserRead");
 user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
 """ % (options.remoteWebServer, options.httpPort))
 
         # Close the file
         fhandle.close()
-
 
         if (self._devicemanager.pushDir(profileDir, options.remoteProfile) == None):
             raise devicemanager.FileError("Failed to copy profiledir to device")
@@ -359,6 +365,9 @@ user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
             raise devicemanager.FileError("Failed to copy extra files to device") 
 
     def registerExtension(self, browserEnv, options, profileDir, extraArgs = ['-silent'] ):
+        if options.bootstrap:
+            return
+
         self.automation.log.info("REFTEST INFO | runreftest.py | Performing extension manager registration: start.\n")
         # Because our startProcess code doesn't return until fennec starts we just give it
         # a maxTime of 20 secs before timing it out and ensuring it is dead.
@@ -449,18 +458,22 @@ def main():
 
     procName = options.app.split('/')[-1]
     if (dm.processExist(procName)):
-      dm.killProcess(procName)
+        dm.killProcess(procName)
 
 #an example manifest name to use on the cli
 #    manifest = "http://" + options.remoteWebServer + "/reftests/layout/reftests/reftest-sanity/reftest.list"
     try:
-      reftest.runTests(manifest, options)
+        cmdlineArgs = ["-reftest", manifest]
+        if options.bootstrap:
+            cmdlineArgs = []
+        reftest.runTests(manifest, options, cmdlineArgs)
     except:
-      print "TEST-UNEXPECTED-FAIL | | exception while running reftests"
-      reftest.stopWebServer(options)
-      sys.exit(1)
+        print "TEST-UNEXPECTED-FAIL | | exception while running reftests"
+        reftest.stopWebServer(options)
+        sys.exit(1)
 
     reftest.stopWebServer(options)
 
 if __name__ == "__main__":
     main()
+    

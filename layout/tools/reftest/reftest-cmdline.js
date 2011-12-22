@@ -100,6 +100,12 @@ RefTestCmdLineHandler.prototype =
      * We want to do this here rather than in reftest.js because it's
      * important to force sRGB as an output profile for color management
      * before we load a window.
+     *
+     * If you change these, please adjust them in the bootstrap.js function 
+     * setDefaultPrefs().  These are duplicated there so we can have a 
+     * restartless addon for reftest on native Android.
+     *
+     * FIXME: These should be in only one place. 
      */
     var prefs = Components.classes["@mozilla.org/preferences-service;1"].
                 getService(Components.interfaces.nsIPrefService);

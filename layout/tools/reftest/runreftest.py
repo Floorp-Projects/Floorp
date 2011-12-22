@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -74,8 +73,13 @@ class RefTest(object):
           path = defaultManifestPath
     return path
 
-  def createReftestProfile(self, options, profileDir, server='localhost'):
-    "Sets up a profile for reftest."
+  def createReftestProfile(self, options, profileDir, manifest, server='localhost'):
+    """
+      Sets up a profile for reftest.
+      'manifest' is the path to the reftest.list file we want to test with.  This is used in
+      the remote subclass in remotereftest.py so we can write it to a preference for the 
+      bootstrap extension.
+    """
 
     self.automation.setupPermissionsDatabase(profileDir,
       {'allowXULXBL': [(server, True), ('<file>', True)]})
@@ -141,15 +145,18 @@ class RefTest(object):
     if profileDir:
       shutil.rmtree(profileDir, True)
 
-  def runTests(self, testPath, options):
+  def runTests(self, testPath, options, cmdlineArgs = None):
     debuggerInfo = getDebuggerInfo(self.oldcwd, options.debugger, options.debuggerArgs,
         options.debuggerInteractive);
 
     profileDir = None
     try:
+      reftestlist = self.getManifestPath(testPath)
+      if cmdlineArgs == None:
+        cmdlineArgs = ['-reftest', reftestlist]
       profileDir = mkdtemp()
       self.copyExtraFilesToProfile(options, profileDir)
-      self.createReftestProfile(options, profileDir)
+      self.createReftestProfile(options, profileDir, reftestlist)
       self.installExtensionsToProfile(options, profileDir)
 
       # browser environment
@@ -159,9 +166,8 @@ class RefTest(object):
 
       # then again to actually run reftest
       self.automation.log.info("REFTEST INFO | runreftest.py | Running tests: start.\n")
-      reftestlist = self.getManifestPath(testPath)
       status = self.automation.runApp(None, browserEnv, options.app, profileDir,
-                                 ["-reftest", reftestlist],
+                                 cmdlineArgs,
                                  utilityPath = options.utilityPath,
                                  xrePath=options.xrePath,
                                  debuggerInfo=debuggerInfo,

@@ -66,18 +66,6 @@ typedef size_t(*nsMallocSizeOfFun)(const void *p, size_t computedSize);
 
 /* Core XPCOM declarations. */
 
-/**
- * Macros defining the target platform...
- */
-#ifdef _WIN32
-#define NS_WIN32 1
-
-#elif defined(__unix)
-#define NS_UNIX 1
-
-#elif defined(XP_OS2)
-#define NS_OS2 1
-#endif
 /*----------------------------------------------------------------------*/
 /* Import/export defines */
 
@@ -171,7 +159,7 @@ typedef size_t(*nsMallocSizeOfFun)(const void *p, size_t computedSize);
 #define NS_CONSTRUCTOR_FASTCALL
 #endif
 
-#ifdef NS_WIN32
+#ifdef XP_WIN
 
 #define NS_IMPORT __declspec(dllimport)
 #define NS_IMPORT_(type) __declspec(dllimport) type __stdcall
@@ -395,7 +383,7 @@ typedef PRUint32 nsrefcnt;
    * commercial build.  When this is fixed there will be no need for the
    * |reinterpret_cast| in nsLiteralString.h either.
    */
-  #if defined(HAVE_CPP_2BYTE_WCHAR_T) && defined(NS_WIN32)
+  #if defined(HAVE_CPP_2BYTE_WCHAR_T) && defined(XP_WIN)
     typedef wchar_t PRUnichar;
   #else
     typedef PRUint16 PRUnichar;
