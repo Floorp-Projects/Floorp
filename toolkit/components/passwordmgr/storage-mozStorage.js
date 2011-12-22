@@ -223,7 +223,7 @@ LoginManagerStorage_mozStorage.prototype = {
      * necessary. Most of the work is done in _deferredInit.
      */
     init : function () {
-        this._dbStmts = [];
+        this._dbStmts = {};
 
         // Connect to the correct preferences branch.
         this._prefBranch = Services.prefs.getBranch("signon.");
@@ -1299,9 +1299,19 @@ LoginManagerStorage_mozStorage.prototype = {
             this._dbCleanup(true);
             throw e;
         }
+
+        Services.obs.addObserver(this, "profile-before-change", false);
         return isFirstRun;
     },
 
+    observe: function (subject, topic, data) {
+        switch (topic) {
+            case "profile-before-change":
+                Services.obs.removeObserver(this, "profile-before-change");
+                this._dbClose();
+            break;
+        }
+    },
 
     _dbCreate: function () {
         this.log("Creating Database");
@@ -1617,6 +1627,23 @@ LoginManagerStorage_mozStorage.prototype = {
         }
     },
 
+    _dbClose : function () {
+        this.log("Closing the DB connection.");
+        // Finalize all statements to free memory, avoid errors later
+        for each (let stmt in this._dbStmts) {
+            stmt.finalize();
+        }
+        this._dbStmts = {};
+
+        if (this._dbConnection !== null) {
+            try {
+                this._dbConnection.close();
+            } catch (e) {
+                Components.utils.reportError(e);
+            }
+        }
+        this._dbConnection = null;
+    },
 
     /*
      * _dbCleanup
@@ -1633,14 +1660,7 @@ LoginManagerStorage_mozStorage.prototype = {
             this._storageService.backupDatabaseFile(this._signonsFile, backupFile);
         }
 
-        // Finalize all statements to free memory, avoid errors later
-        for each (let stmt in this._dbStmts)
-            stmt.finalize();
-        this._dbStmts = [];
-
-        // Close the connection, ignore 'already closed' error
-        try { this._dbConnection.close() } catch(e) {}
-        this._dbConnection = null;
+        this._dbClose();
         this._signonsFile.remove(false);
     }
 

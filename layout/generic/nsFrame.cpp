@@ -42,6 +42,7 @@
 
 /* base class of all rendering objects */
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Util.h"
 
 #include "nsCOMPtr.h"
@@ -5054,7 +5055,7 @@ nsFrame::List(FILE* out, PRInt32 aIndent) const
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
-    fprintf(out, " [state=%016llx]", mState);
+    fprintf(out, " [state=%016llx]", (unsigned long long)mState);
   }
   nsIFrame* prevInFlow = GetPrevInFlow();
   nsIFrame* nextInFlow = GetNextInFlow();
@@ -5276,7 +5277,7 @@ nsFrame::DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aInd
   XMLQuote(name);
   fputs(NS_LossyConvertUTF16toASCII(name).get(), out);
   fprintf(out, "\" state=\"%016llx\" parent=\"%ld\">\n",
-          GetDebugStateBits(), PRUptrdiff(mParent));
+          (unsigned long long)GetDebugStateBits(), PRUptrdiff(mParent));
 
   aIndent++;
   DumpBaseRegressionData(aPresContext, out, aIndent);
@@ -8074,7 +8075,7 @@ struct DR_FrameTypeInfo
   char        mName[32];
   nsTArray<DR_Rule*> mRules;
 private:
-  DR_FrameTypeInfo& operator=(const DR_FrameTypeInfo&); // NOT USED
+  DR_FrameTypeInfo& operator=(const DR_FrameTypeInfo&) MOZ_DELETE;
 };
 
 DR_FrameTypeInfo::DR_FrameTypeInfo(nsIAtom* aFrameType, 

@@ -1781,8 +1781,8 @@ LookupCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom *atom, Val
                      * from our variable object here.
                      */
                     if (!shape->writable() && !shape->configurable() &&
-                        shape->hasDefaultGetter() && obj->containsSlot(shape->slot())) {
-                        *constp = obj->getSlot(shape->slot());
+                        shape->hasDefaultGetter() && shape->hasSlot()) {
+                        *constp = obj->nativeGetSlot(shape->slot());
                     }
                 }
 

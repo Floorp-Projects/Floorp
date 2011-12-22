@@ -226,12 +226,18 @@ var BrowserApp = {
 
     // XXX maybe we don't do this if the launch was kicked off from external
     Services.io.offline = false;
-    let newTab = this.addTab(uri);
 
     // Broadcast a UIReady message so add-ons know we are finished with startup
     let event = document.createEvent("Events");
     event.initEvent("UIReady", true, false);
     window.dispatchEvent(event);
+
+    // restore the previous session
+    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+    if (ss.shouldRestore())
+      ss.restoreLastSession(true);
+    else
+      this.addTab(uri);
 
     // notify java that gecko has loaded
     sendMessageToJava({
@@ -377,12 +383,20 @@ var BrowserApp = {
     if ("selected" in aParams && aParams.selected)
       newTab.active = true;
 
+    let evt = document.createEvent("UIEvents");
+    evt.initUIEvent("TabOpen", true, false, window, null);
+    newTab.browser.dispatchEvent(evt);
+
     return newTab;
   },
 
   closeTab: function closeTab(aTab) {
     if (aTab == this.selectedTab)
       this.selectedTab = null;
+
+    let evt = document.createEvent("UIEvents");
+    evt.initUIEvent("TabClose", true, false, window, null);
+    aTab.browser.dispatchEvent(evt);
 
     aTab.destroy();
     this._tabs.splice(this._tabs.indexOf(aTab), 1);
@@ -398,6 +412,10 @@ var BrowserApp = {
           tabID: aTab.id
         }
       };
+
+      let evt = document.createEvent("UIEvents");
+      evt.initUIEvent("TabSelect", true, false, window, null);
+      aTab.browser.dispatchEvent(evt);
 
       sendMessageToJava(message);
     }
@@ -472,6 +490,12 @@ var BrowserApp = {
           pref.value = PluginHelper.getPluginPreference();
           prefs.push(pref);
           continue;
+        } else if (prefName == MasterPassword.pref) {
+          // Master password is not a "real" pref
+          pref.type = "bool";
+          pref.value = MasterPassword.enabled;
+          prefs.push(pref);
+          continue;
         }
 
         try {
@@ -534,6 +558,11 @@ var BrowserApp = {
     if (json.name == "plugin.enable") {
       PluginHelper.setPluginPreference(json.value);
       return;
+    } else if(json.name == MasterPassword.pref) {
+      if (MasterPassword.enabled)
+        MasterPassword.removePassword(json.value);
+      else
+        MasterPassword.setPassword(json.value);
     }
 
     // when sending to java, we normalized special preferences that use
@@ -1127,7 +1156,8 @@ Tab.prototype = {
         uri: aURL,
         parentId: ("parentId" in aParams) ? aParams.parentId : -1,
         external: ("external" in aParams) ? aParams.external : false,
-        selected: ("selected" in aParams) ? aParams.selected : true
+        selected: ("selected" in aParams) ? aParams.selected : true,
+        title: aParams.title || ""
       }
     };
     sendMessageToJava(message);
@@ -1147,24 +1177,26 @@ Tab.prototype = {
 
     Services.obs.addObserver(this, "http-on-modify-request", false);
 
-    let flags = "flags" in aParams ? aParams.flags : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-    let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
-    let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
-    let charset = "charset" in aParams ? aParams.charset : null;
+    if (!aParams.delayLoad) {
+      let flags = "flags" in aParams ? aParams.flags : Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+      let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
+      let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
+      let charset = "charset" in aParams ? aParams.charset : null;
 
-    try {
-      this.browser.loadURIWithFlags(aURL, flags, referrerURI, charset, postData);
-    } catch(e) {
-      let message = {
-        gecko: {
-          type: "Content:LoadError",
-          tabID: this.id,
-          uri: this.browser.currentURI.spec,
-          title: this.browser.contentTitle
-        }
-      };
-      sendMessageToJava(message);
-      dump("Handled load error: " + e)
+      try {
+        this.browser.loadURIWithFlags(aURL, flags, referrerURI, charset, postData);
+      } catch(e) {
+        let message = {
+          gecko: {
+            type: "Content:LoadError",
+            tabID: this.id,
+            uri: this.browser.currentURI.spec,
+            title: this.browser.contentTitle
+          }
+        };
+        sendMessageToJava(message);
+        dump("Handled load error: " + e)
+      }
     }
   },
 
@@ -1202,7 +1234,13 @@ Tab.prototype = {
     this.browser.removeEventListener("scroll", this, true);
     this.browser.removeEventListener("PluginClickToPlay", this, true);
     this.browser.removeEventListener("pagehide", this, true);
+
+    // Make sure the previously selected panel remains selected. The selected panel of a deck is
+    // not stable when panels are removed.
+    let selectedPanel = BrowserApp.deck.selectedPanel;
     BrowserApp.deck.removeChild(this.vbox);
+    BrowserApp.deck.selectedPanel = selectedPanel;
+
     Services.obs.removeObserver(this, "http-on-modify-request", false);
     this.browser = null;
     this.vbox = null;
@@ -1457,7 +1495,7 @@ Tab.prototype = {
         let plugin = aEvent.target;
         // Keep track of all the plugins on the current page
         this._pluginsToPlay.push(plugin);
-        
+
         let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");        
         if (!overlay)
           return;
@@ -1476,17 +1514,20 @@ Tab.prototype = {
       }
 
       case "pagehide": {
-        // Reset plugin state when we leave the page
-        this._pluginsToPlay = [];
-        this._pluginOverlayShowing = false;
+        // Check to make sure it's top-level pagehide
+        if (aEvent.target.defaultView == this.browser.contentWindow) {
+          // Reset plugin state when we leave the page
+          this._pluginsToPlay = [];
+          this._pluginOverlayShowing = false;
+        }
         break;
       }
     }
   },
 
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
-      // Filter optimization: Only really send DOCUMENT state changes to Java listener
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
+      // Filter optimization: Only really send NETWORK state changes to Java listener
       let browser = BrowserApp.getBrowserForWindow(aWebProgress.DOMWindow);
       let uri = "";
       if (browser)
@@ -1747,7 +1788,6 @@ Tab.prototype = {
     Ci.nsISupportsWeakReference
   ])
 };
-
 
 var BrowserEventHandler = {
   init: function init() {
@@ -3264,7 +3304,7 @@ var PluginHelper = {
     // XXX just doing (callback)(arg) was giving a same-origin error. bug?
     let self = this;
     let callbackArgs = Array.prototype.slice.call(arguments).slice(2);
-      plugin.addEventListener("click", function(evt) {
+    plugin.addEventListener("click", function(evt) {
       if (!evt.isTrusted)
         return;
       evt.preventDefault();
@@ -3452,5 +3492,83 @@ var PermissionsHelper = {
     } else {
       Services.perms.remove(aURI.host, aType);
     }
+  }
+}
+
+var MasterPassword = {
+  pref: "privacy.masterpassword.enabled",
+  get _secModuleDB() {
+    delete this._secModuleDB;
+    return this._secModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(Ci.nsIPKCS11ModuleDB);
+  },
+
+  get _pk11DB() {
+    delete this._pk11DB;
+    return this._pk11DB = Cc["@mozilla.org/security/pk11tokendb;1"].getService(Ci.nsIPK11TokenDB);
+  },
+
+  get enabled() {
+    let slot = this._secModuleDB.findSlotByName(this._tokenName);
+    if (slot) {
+      let status = slot.status;
+      return status != Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED && status != Ci.nsIPKCS11Slot.SLOT_READY;
+    }
+    return false;
+  },
+
+  setPassword: function setPassword(aPassword) {
+    try {
+      let status;
+      let slot = this._secModuleDB.findSlotByName(this._tokenName);
+      if (slot)
+        status = slot.status;
+      else
+        return false;
+
+      let token = this._pk11DB.findTokenByName(this._tokenName);
+
+      if (status == Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED)
+        token.initPassword(aPassword);
+      else if (status == Ci.nsIPKCS11Slot.SLOT_READY)
+        token.changePassword("", aPassword);
+
+      this.updatePref();
+      return true;
+    } catch(e) {
+      dump("MasterPassword.setPassword: " + e);
+    }
+    return false;
+  },
+
+  removePassword: function removePassword(aOldPassword) {
+    try {
+      let token = this._pk11DB.getInternalKeyToken();
+      if (token.checkPassword(aOldPassword)) {
+        token.changePassword(aOldPassword, "");
+        this.updatePref();
+        return true;
+      }
+    } catch(e) {
+      dump("MasterPassword.removePassword: " + e + "\n");
+    }
+    NativeWindow.toast.show(Strings.browser.GetStringFromName("masterPassword.incorrect"), "short");
+    return false;
+  },
+
+  updatePref: function() {
+    var prefs = [];
+    let pref = {
+      name: this.pref,
+      type: "bool",
+      value: this.enabled
+    };
+    prefs.push(pref);
+
+    sendMessageToJava({
+      gecko: {
+        type: "Preferences:Data",
+        preferences: prefs
+      }
+    });
   }
 }

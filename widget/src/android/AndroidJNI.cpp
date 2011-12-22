@@ -40,6 +40,7 @@
 #include "nsString.h"
 
 #include "AndroidBridge.h"
+#include "AndroidGraphicBuffer.h"
 
 #include <jni.h>
 #include <pthread.h>
@@ -88,6 +89,11 @@ extern "C" {
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyUriVisited(JNIEnv *, jclass, jstring uri);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv* jenv, jclass, jdouble, jboolean, jdouble);
     NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_notifySmsReceived(JNIEnv* jenv, jclass, jstring, jstring, jlong);
+
+#ifdef MOZ_JAVA_COMPOSITOR
+    NS_EXPORT void JNICALL Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass);
+    NS_EXPORT bool JNICALL Java_org_mozilla_gecko_GeckoAppShell_testDirectTexture(JNIEnv* jenv, jclass);
+#endif
 }
 
 
@@ -278,3 +284,19 @@ Java_org_mozilla_gecko_GeckoAppShell_notifySmsReceived(JNIEnv* jenv, jclass,
     nsCOMPtr<nsIRunnable> runnable = new NotifySmsReceivedRunnable(message);
     NS_DispatchToMainThread(runnable);
 }
+
+#ifdef MOZ_JAVA_COMPOSITOR
+
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_bindWidgetTexture(JNIEnv* jenv, jclass)
+{
+    nsWindow::BindToTexture();
+}
+
+NS_EXPORT bool JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_testDirectTexture(JNIEnv* jenv, jclass)
+{
+    return nsWindow::HasDirectTexture();
+}
+
+#endif

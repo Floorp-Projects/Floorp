@@ -111,6 +111,7 @@ abstract public class GeckoApp
     public Handler mMainHandler;
     private File mProfileDir;
     private static boolean sIsGeckoReady = false;
+    private static int mOrientation;
 
     private IntentFilter mConnectivityFilter;
     private IntentFilter mBatteryFilter;
@@ -464,6 +465,7 @@ abstract public class GeckoApp
             forward.setEnabled(false);
             share.setEnabled(false);
             saveAsPDF.setEnabled(false);
+            agentMode.setEnabled(false);
             return true;
         }
         
@@ -482,9 +484,12 @@ abstract public class GeckoApp
 
         forward.setEnabled(tab.canDoForward());
 
-        // Don't share about:, chrome: and file: URIs
+        // Disable share and agentMode menuitems for about:, chrome: and file: URIs
         String scheme = Uri.parse(tab.getURL()).getScheme();
-        share.setEnabled(!(scheme.equals("about") || scheme.equals("chrome") || scheme.equals("file")));
+        boolean enabled = !(scheme.equals("about") || scheme.equals("chrome") ||
+                            scheme.equals("file"));
+        share.setEnabled(enabled);
+        agentMode.setEnabled(enabled);
 
         // Disable save as PDF for about:home and xul pages
         saveAsPDF.setEnabled(!(tab.getURL().equals("about:home") ||
@@ -898,7 +903,7 @@ abstract public class GeckoApp
                 final int tabId = message.getInt("tabID");
                 int state = message.getInt("state");
                 Log.i(LOGTAG, "State - " + state);
-                if ((state & GeckoAppShell.WPL_STATE_IS_DOCUMENT) != 0) {
+                if ((state & GeckoAppShell.WPL_STATE_IS_NETWORK) != 0) {
                     if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
                         Log.i(LOGTAG, "Got a document start");
                         handleDocumentStart(tabId);
@@ -1020,7 +1025,10 @@ abstract public class GeckoApp
                         loadUrl(url, AwesomeBar.Type.EDIT);
                     }
                 });
-                mGeckoLayout.addView(mAboutHomeContent);
+                RelativeLayout.LayoutParams lp = 
+                    new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, 
+                                                    LayoutParams.FILL_PARENT);
+                mGeckoLayout.addView(mAboutHomeContent, lp);
             }
             if (mAboutHomeContent != null)
                 mAboutHomeContent.setVisibility(mShow ? View.VISIBLE : View.GONE);
@@ -1587,6 +1595,8 @@ abstract public class GeckoApp
                 checkMigrateProfile();
             }
         }, 50);
+
+        mOrientation = getResources().getConfiguration().orientation;
     }
 
     /**
@@ -1795,14 +1805,21 @@ abstract public class GeckoApp
 
 
     @Override
-    public void onConfigurationChanged(android.content.res.Configuration newConfig)
+    public void onConfigurationChanged(Configuration newConfig)
     {
         Log.i(LOGTAG, "configuration changed");
 
-        // hide the autocomplete list on rotation
-        mAutoCompletePopup.hide();
-
         super.onConfigurationChanged(newConfig);
+
+        if (mOrientation != newConfig.orientation) {
+            mOrientation = newConfig.orientation;
+            mAutoCompletePopup.hide();
+
+            if (Build.VERSION.SDK_INT >= 11) {
+                mBrowserToolbar = (BrowserToolbar) getLayoutInflater().inflate(R.layout.gecko_app_actionbar, null);
+                GeckoActionBar.setCustomView(mAppContext, mBrowserToolbar);
+            }
+        }
     }
 
     @Override
