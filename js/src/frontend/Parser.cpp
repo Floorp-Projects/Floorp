@@ -5803,8 +5803,9 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NAME_AFTER_DOT);
                 return NULL;
             }
+        }
 #if JS_HAS_XML_SUPPORT
-        } else if (tt == TOK_DBLDOT) {
+        else if (tt == TOK_DBLDOT) {
             if (tc->inStrictMode()) {
                 reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NAME_AFTER_DOT);
                 return NULL;
@@ -5830,46 +5831,48 @@ Parser::memberExpr(JSBool allowCallSyntax)
             nextMember->pn_right = pn3;
             nextMember->pn_pos.begin = lhs->pn_pos.begin;
             nextMember->pn_pos.end = tokenStream.currentToken().pos.end;
+        }
 #endif
-        } else if (tt == TOK_LB) {
-            nextMember = BinaryNode::create(PNK_LB, tc);
-            if (!nextMember)
-                return NULL;
-            ParseNode *pn3 = expr();
-            if (!pn3)
+        else if (tt == TOK_LB) {
+            ParseNode *propExpr = expr();
+            if (!propExpr)
                 return NULL;
 
             MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_IN_INDEX);
-            nextMember->pn_pos.begin = lhs->pn_pos.begin;
-            nextMember->pn_pos.end = tokenStream.currentToken().pos.end;
+            TokenPtr begin = lhs->pn_pos.begin, end = tokenStream.currentToken().pos.end;
 
             /*
-             * Optimize o['p'] to o.p by rewriting nextMember, but don't
-             * rewrite o['0'] to use JSOP_GETPROP, to keep fast indexing
-             * disjoint in the interpreter from fast property access. However,
-             * if the bracketed string is a uint32_t, we rewrite pn3 to be a
-             * number instead of a string.
+             * Optimize property name lookups.  If the name is a PropertyName,
+             * then make a name-based node so the emitter will use a name-based
+             * bytecode.  Otherwise make a node using the property expression
+             * by value.  If the node is a string containing an index, convert
+             * it to a number to save work later.
              */
-            do {
-                if (pn3->isKind(PNK_STRING)) {
-                    jsuint index;
-
-                    if (!js_IdIsIndex(ATOM_TO_JSID(pn3->pn_atom), &index)) {
-                        nextMember->setKind(PNK_DOT);
-                        nextMember->setOp(JSOP_GETPROP);
-                        nextMember->setArity(PN_NAME);
-                        nextMember->pn_expr = lhs;
-                        nextMember->pn_atom = pn3->pn_atom;
-                        break;
-                    }
-                    pn3->setKind(PNK_NUMBER);
-                    pn3->setOp(JSOP_DOUBLE);
-                    pn3->pn_dval = index;
+            uint32_t index;
+            PropertyName *name = NULL;
+            if (propExpr->isKind(PNK_STRING)) {
+                JSAtom *atom = propExpr->pn_atom;
+                if (atom->isIndex(&index)) {
+                    propExpr->setKind(PNK_NUMBER);
+                    propExpr->setOp(JSOP_DOUBLE);
+                    propExpr->pn_dval = index;
+                } else {
+                    name = atom->asPropertyName();
                 }
-                nextMember->setOp(JSOP_GETELEM);
-                nextMember->pn_left = lhs;
-                nextMember->pn_right = pn3;
-            } while (0);
+            } else if (propExpr->isKind(PNK_NUMBER)) {
+                JSAtom *atom;
+                if (!js_ValueToAtom(context, NumberValue(propExpr->pn_dval), &atom))
+                    return NULL;
+                if (!atom->isIndex(&index))
+                    name = atom->asPropertyName();
+            }
+
+            if (name)
+                nextMember = new_<PropertyAccess>(lhs, name, begin, end);
+            else
+                nextMember = new_<PropertyByValue>(lhs, propExpr, begin, end);
+            if (!nextMember)
+                return NULL;
         } else if (allowCallSyntax && tt == TOK_LP) {
             nextMember = ListNode::create(PNK_LP, tc);
             if (!nextMember)
