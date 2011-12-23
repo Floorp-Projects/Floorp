@@ -93,6 +93,9 @@ nsScreenQt::GetRect(PRInt32 *outLeft,PRInt32 *outTop,
     QRect r = QApplication::desktop()->screenGeometry(mScreen);
 #ifdef MOZ_ENABLE_QTMOBILITY
     r = MozQOrientationSensorFilter::GetRotationTransform().mapRect(r);
+    // just rotating gives us weird negative coordinates, but we want to return
+    // sensible logical coordinates
+    r.moveTo(0, 0);
 #endif
 
     *outTop = r.x();
