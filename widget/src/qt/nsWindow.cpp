@@ -2382,9 +2382,13 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, bool    aRepaint)
     mNeedsResize = false;
 
     if (mIsTopLevel) {
-        QWidget *widget = GetViewWidget();
+        QGraphicsView *widget = qobject_cast<QGraphicsView*>(GetViewWidget());
         NS_ENSURE_TRUE(widget,);
-        widget->resize(aWidth, aHeight);
+        // map from in-scene widget to scene, from scene to view.
+        QRect r = widget->mapFromScene(mWidget->mapToScene(QRect(0, 0, aWidth, aHeight))).boundingRect();
+        // going from QPolygon to QRect includes the points, adding one to width and height
+        r.adjust(0, 0, -1, -1);
+        widget->resize(r.width(), r.height());
     }
     else {
         mWidget->resize(aWidth, aHeight);
@@ -2406,9 +2410,13 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
     mNeedsMove = false;
 
     if (mIsTopLevel) {
-        QWidget *widget = GetViewWidget();
+        QGraphicsView *widget = qobject_cast<QGraphicsView*>(GetViewWidget());
         NS_ENSURE_TRUE(widget,);
-        widget->setGeometry(aX, aY, aWidth, aHeight);
+        // map from in-scene widget to scene, from scene to view.
+        QRect r = widget->mapFromScene(mWidget->mapToScene(QRect(aX, aY, aWidth, aHeight))).boundingRect();
+        // going from QPolygon to QRect includes the points, adding one to width and height
+        r.adjust(0, 0, -1, -1);
+        widget->setGeometry(r.x(), r.y(), r.width(), r.height());
     }
     else {
         mWidget->setGeometry(aX, aY, aWidth, aHeight);
