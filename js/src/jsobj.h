@@ -908,7 +908,7 @@ struct JSObject : js::gc::Cell
      * on scope chains but mirror their structure, and can have a NULL
      * scope chain.
      */
-    inline JSObject *getStaticBlockScopeChain() const;
+    inline JSObject *staticBlockScopeChain() const;
     inline void setStaticBlockScopeChain(JSObject *obj);
 
     /* Common fixed slot for the scope chain of internal scope objects. */
@@ -1341,7 +1341,7 @@ struct JSObject : js::gc::Cell
 
     bool swap(JSContext *cx, JSObject *other);
 
-    const js::Shape *defineBlockVariable(JSContext *cx, jsid id, intN index);
+    const js::Shape *defineBlockVariable(JSContext *cx, jsid id, intN index, bool *redeclared);
 
     inline bool isArguments() const;
     inline bool isArrayBuffer() const;

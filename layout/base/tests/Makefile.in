@@ -89,7 +89,6 @@ _TEST_FILES =	\
 		test_bug404209.xhtml \
 		test_bug416896.html \
 		test_bug423523.html \
-		test_bug445810.html \
 		test_bug449781.html \
 		test_bug450930.xhtml \
 		test_bug458898.html \

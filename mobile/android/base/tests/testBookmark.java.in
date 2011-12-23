@@ -67,30 +67,37 @@ public class testBookmark extends ActivityInstrumentationTestCase2 {
   public void testBookmark(){
     // TODO: find a better way to not hardcode this url
     String url = "http://mochi.test:8888/tests/robocop/robocop.html";
+
+    actions.waitForGeckoEvent("Gecko:Ready");
     Element awesomebar = driver.findElement("awesome_bar");
     awesomebar.click();
 
     Element urlbar = driver.findElement("awesomebar_text");
+    getInstrumentation().waitForIdleSync();
     actions.sendKeys(url);
-    driver.is(url, urlbar.getText(), "Awesomebar url typed properly");
+    driver.is(urlbar.getText(), url, "Awesomebar url typed properly");
 
     //Click the top item in the list.
     actions.sendSpecialKey(Actions.SpecialKey.DOWN);
     actions.sendSpecialKey(Actions.SpecialKey.ENTER);    
     actions.waitForGeckoEvent("DOMContentLoaded");
 
+    getInstrumentation().waitForIdleSync();
     awesomebar.click();
-    driver.is(url, urlbar.getText(),"Awesomebar URL still on");
+    driver.is(urlbar.getText(), url, "Awesomebar URL still on");
     
 
     //Click the Top item in the history list.
+    getInstrumentation().waitForIdleSync();
     actions.sendSpecialKey(Actions.SpecialKey.RIGHT);
     actions.sendSpecialKey(Actions.SpecialKey.RIGHT);
+    getInstrumentation().waitForIdleSync();
     actions.sendSpecialKey(Actions.SpecialKey.DOWN);
     actions.sendSpecialKey(Actions.SpecialKey.DOWN);
     actions.sendSpecialKey(Actions.SpecialKey.ENTER);
     actions.waitForGeckoEvent("DOMContentLoaded");
 
+    getInstrumentation().waitForIdleSync();
     awesomebar.click();
     //Unfortunately, the item isn't constant so can't be tested.
     //driver.is(url, urlbar.getText(),"Shouldn't this be the last url in the history?");

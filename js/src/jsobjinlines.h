@@ -324,7 +324,7 @@ JSObject::scopeChain() const
 }
 
 inline JSObject *
-JSObject::getStaticBlockScopeChain() const
+JSObject::staticBlockScopeChain() const
 {
     JS_ASSERT(isStaticBlock());
     return getFixedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();

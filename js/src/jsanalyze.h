@@ -203,9 +203,6 @@ GetDefCount(JSScript *script, unsigned offset)
     JS_ASSERT(offset < script->length);
     jsbytecode *pc = script->code + offset;
 
-    if (js_CodeSpec[*pc].ndefs == -1)
-        return js_GetEnterBlockStackDefs(NULL, script, pc);
-
     /*
      * Add an extra pushed value for OR/AND opcodes, so that they are included
      * in the pushed array of stack values for type inference.
@@ -227,7 +224,7 @@ GetDefCount(JSScript *script, unsigned offset)
          */
         return (pc[1] + 1);
       default:
-        return js_CodeSpec[*pc].ndefs;
+        return StackDefs(script, pc);
     }
 }
 
@@ -240,7 +237,7 @@ GetUseCount(JSScript *script, unsigned offset)
     if (JSOp(*pc) == JSOP_PICK)
         return (pc[1] + 1);
     if (js_CodeSpec[*pc].nuses == -1)
-        return js_GetVariableStackUses(JSOp(*pc), pc);
+        return StackUses(script, pc);
     return js_CodeSpec[*pc].nuses;
 }
 
