@@ -31,7 +31,7 @@
 <!ENTITY bottomLinks.license        "Licensing Information">
 
 <!-- LOCALIZATION NOTE (bottomLinks.rights): This is a link title that links to about:rights. -->
-<!ENTITY bottomLinks.rights         "End User Rights">
+<!ENTITY bottomLinks.rights         "End-User Rights">
 
 <!-- LOCALIZATION NOTE (bottomLinks.privacy): This is a link title that links to http://www.mozilla.com/legal/privacy/. -->
 <!ENTITY bottomLinks.privacy        "Privacy Policy">

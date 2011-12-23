@@ -117,8 +117,15 @@ toolbarpaletteitem[type="spacer"] {
 
 .toolbarpaletteitem-box[type="spacer"][place="palette"],
 .toolbarpaletteitem-box[type="spring"][place="palette"] {
+  margin-top: 0;
   margin-bottom: 2px;
   height: 32px;
+}
+
+.toolbarpaletteitem-box[type="spring"][place="palette"] {
+  background-position: center;
+  margin-left: 8px;
+  margin-right: 8px;
 }
 
 /* ..... drag and drop feedback ..... */

@@ -160,6 +160,7 @@ Highlighter.prototype = {
 
     this.transitionDisabler = null;
 
+    this.computeZoomFactor();
     this.handleResize();
   },
 
@@ -441,16 +442,10 @@ Highlighter.prototype = {
       return this._highlighting; // same rectangle
     }
 
-    // get page zoom factor, if any
-    let zoom =
-      this.win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-      .getInterface(Components.interfaces.nsIDOMWindowUtils)
-      .screenPixelsPerCSSPixel;
-
     // adjust rect for zoom scaling
     let aRectScaled = {};
     for (let prop in aRect) {
-      aRectScaled[prop] = aRect[prop] * zoom;
+      aRectScaled[prop] = aRect[prop] * this.zoom;
     }
 
     if (aRectScaled.left >= 0 && aRectScaled.top >= 0 &&
@@ -523,14 +518,29 @@ Highlighter.prototype = {
    */
   moveInfobar: function Highlighter_moveInfobar()
   {
-    let rect = this._highlightRect;
-    if (rect && this._highlighting) {
+    if (this._highlightRect) {
+      let winHeight = this.win.innerHeight * this.zoom;
+      let winWidth = this.win.innerWidth * this.zoom;
+
+      let rect = {top: this._highlightRect.top,
+                  left: this._highlightRect.left,
+                  width: this._highlightRect.width,
+                  height: this._highlightRect.height};
+
+      rect.top = Math.max(rect.top, 0);
+      rect.left = Math.max(rect.left, 0);
+      rect.width = Math.max(rect.width, 0);
+      rect.height = Math.max(rect.height, 0);
+
+      rect.top = Math.min(rect.top, winHeight);
+      rect.left = Math.min(rect.left, winWidth);
+
       this.nodeInfo.container.removeAttribute("disabled");
       // Can the bar be above the node?
       if (rect.top < this.nodeInfo.barHeight) {
         // No. Can we move the toolbar under the node?
         if (rect.top + rect.height +
-            this.nodeInfo.barHeight > this.win.innerHeight) {
+            this.nodeInfo.barHeight > winHeight) {
           // No. Let's move it inside.
           this.nodeInfo.container.style.top = rect.top + "px";
           this.nodeInfo.container.setAttribute("position", "overlap");
@@ -554,8 +564,8 @@ Highlighter.prototype = {
         left = 0;
         this.nodeInfo.container.setAttribute("hide-arrow", "true");
       } else {
-        if (left + barWidth > this.win.innerWidth) {
-          left = this.win.innerWidth - barWidth;
+        if (left + barWidth > winWidth) {
+          left = winWidth - barWidth;
           this.nodeInfo.container.setAttribute("hide-arrow", "true");
         } else {
           this.nodeInfo.container.removeAttribute("hide-arrow");
@@ -638,6 +648,16 @@ Highlighter.prototype = {
     return !INSPECTOR_INVISIBLE_ELEMENTS[nodeName];
   },
 
+  /**
+   * Store page zoom factor.
+   */
+  computeZoomFactor: function Highlighter_computeZoomFactor() {
+    this.zoom =
+      this.win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+      .getInterface(Components.interfaces.nsIDOMWindowUtils)
+      .screenPixelsPerCSSPixel;
+  },
+
   /////////////////////////////////////////////////////////////////////////
   //// Event Handling
 
@@ -676,6 +696,7 @@ Highlighter.prototype = {
         this.handleMouseMove(aEvent);
         break;
       case "resize":
+        this.computeZoomFactor();
         this.brieflyDisableTransitions();
         this.handleResize(aEvent);
         break;
