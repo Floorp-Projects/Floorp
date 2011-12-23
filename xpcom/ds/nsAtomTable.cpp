@@ -369,21 +369,58 @@ AtomImpl::IsStaticAtom()
   return IsPermanent();
 }
 
+size_t
+AtomImpl::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  return aMallocSizeOf(this, sizeof(AtomImpl)) +
+         nsStringBuffer::FromData(mString)->
+           SizeOfIncludingThisIfUnshared(aMallocSizeOf);
+}
+
 //----------------------------------------------------------------------
 
+static size_t
+SizeOfAtomTableEntryExcludingThis(PLDHashEntryHdr *aHdr,
+                                  nsMallocSizeOfFun aMallocSizeOf,
+                                  void *aArg)
+{
+  AtomTableEntry* entry = static_cast<AtomTableEntry*>(aHdr);
+  return entry->mAtom->SizeOfIncludingThis(aMallocSizeOf);
+}
+
+size_t NS_SizeOfAtomTableIncludingThis(nsMallocSizeOfFun aMallocSizeOf) {
+  if (gAtomTable.ops) {
+      return PL_DHashTableSizeOfExcludingThis(&gAtomTable,
+                                              SizeOfAtomTableEntryExcludingThis,
+                                              aMallocSizeOf);
+  }
+  return 0;
+}
+
 #define ATOM_HASHTABLE_INITIAL_SIZE  4096
+
+static inline bool
+EnsureTableExists()
+{
+  if (gAtomTable.ops) {
+    return true;
+  }
+  if (PL_DHashTableInit(&gAtomTable, &AtomTableOps, 0,
+                        sizeof(AtomTableEntry), ATOM_HASHTABLE_INITIAL_SIZE)) {
+    return true;
+  }
+  // Initialization failed.
+  gAtomTable.ops = nsnull;
+  return false;
+}
 
 static inline AtomTableEntry*
 GetAtomHashEntry(const char* aString, PRUint32 aLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
-  if (!gAtomTable.ops &&
-      !PL_DHashTableInit(&gAtomTable, &AtomTableOps, 0,
-                         sizeof(AtomTableEntry), ATOM_HASHTABLE_INITIAL_SIZE)) {
-    gAtomTable.ops = nsnull;
+  if (!EnsureTableExists()) {
     return nsnull;
   }
-
   AtomTableKey key(aString, aLength);
   return static_cast<AtomTableEntry*>
                     (PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
@@ -393,13 +430,9 @@ static inline AtomTableEntry*
 GetAtomHashEntry(const PRUnichar* aString, PRUint32 aLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
-  if (!gAtomTable.ops &&
-      !PL_DHashTableInit(&gAtomTable, &AtomTableOps, 0,
-                         sizeof(AtomTableEntry), ATOM_HASHTABLE_INITIAL_SIZE)) {
-    gAtomTable.ops = nsnull;
+  if (!EnsureTableExists()) {
     return nsnull;
   }
-
   AtomTableKey key(aString, aLength);
   return static_cast<AtomTableEntry*>
                     (PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
