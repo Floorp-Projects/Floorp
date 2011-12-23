@@ -169,6 +169,11 @@ class nsStringBuffer
                            bool aMoveOwnership = false);
       void ToString(PRUint32 len, nsACString &str,
                            bool aMoveOwnership = false);
+
+      /**
+       * This measures the size only if the StringBuffer is unshared.
+       */
+      size_t SizeOfIncludingThisIfUnshared(nsMallocSizeOfFun aMallocSizeOf) const;
   };
 
 #endif /* !defined(nsStringBuffer_h__ */
