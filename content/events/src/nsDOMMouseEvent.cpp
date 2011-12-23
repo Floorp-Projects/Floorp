@@ -41,6 +41,7 @@
 #include "nsGUIEvent.h"
 #include "nsIContent.h"
 #include "nsContentUtils.h"
+#include "DictionaryHelpers.h"
 
 nsDOMMouseEvent::nsDOMMouseEvent(nsPresContext* aPresContext,
                                  nsInputEvent* aEvent)
@@ -145,58 +146,17 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, bool aCanBubble, bool a
 }   
 
 nsresult
-nsDOMMouseEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict,
-                              JSContext* aCx, JSObject* aObj)
+nsDOMMouseEvent::InitFromCtor(const nsAString& aType,
+                              JSContext* aCx, jsval* aVal)
 {
-  nsCOMPtr<nsIMouseEventInit> eventInit = do_QueryInterface(aDict);
-  bool bubbles = false;
-  bool cancelable = false;
-  nsCOMPtr<nsIDOMWindow> view;
-  PRInt32 detail = 0;
-  PRInt32 screenX = 0;
-  PRInt32 screenY = 0;
-  PRInt32 clientX = 0;
-  PRInt32 clientY = 0;
-  bool ctrl = false;
-  bool alt = false;
-  bool shift = false;
-  bool meta = false;
-  PRUint16 button = 0;
-  nsCOMPtr<nsIDOMEventTarget> relatedTarget;
-  if (eventInit) {
-    nsresult rv = eventInit->GetBubbles(&bubbles);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetCancelable(&cancelable);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetView(getter_AddRefs(view));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetDetail(&detail);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetScreenX(&screenX);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetScreenY(&screenY);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetClientX(&clientX);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetClientY(&clientY);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetCtrlKey(&ctrl);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetShiftKey(&shift);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetAltKey(&alt);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetMetaKey(&meta);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetButton(&button);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetRelatedTarget(getter_AddRefs(relatedTarget));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return InitMouseEvent(aType, bubbles, cancelable,
-                        view, detail, screenX, screenY, clientX, clientY, 
-                        ctrl, alt, shift, meta,
-                        button, relatedTarget);
+  mozilla::dom::MouseEventInit d;
+  nsresult rv = d.Init(aCx, aVal);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return InitMouseEvent(aType, d.bubbles, d.cancelable,
+                        d.view, d.detail, d.screenX, d.screenY,
+                        d.clientX, d.clientY, 
+                        d.ctrlKey, d.altKey, d.shiftKey, d.metaKey,
+                        d.button, d.relatedTarget);
 }
 
 NS_IMETHODIMP
