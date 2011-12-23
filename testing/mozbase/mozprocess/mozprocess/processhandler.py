@@ -46,6 +46,7 @@ import subprocess
 import sys
 import threading
 import time
+import traceback
 from Queue import Queue
 from datetime import datetime, timedelta
 
@@ -111,7 +112,10 @@ class ProcessHandlerMixin(object):
         def __del__(self, _maxint=sys.maxint):
             if mozinfo.isWin:
                 if self._handle:
-                    self._internal_poll(_deadstate=_maxint)
+                    if hasattr(self, '_internal_poll'):
+                        self._internal_poll(_deadstate=_maxint)
+                    else:
+                        self.poll(_deadstate=sys.maxint)
                 if self._handle or self._job or self._io_port:
                     self._cleanup()
             else:
@@ -257,13 +261,15 @@ class ProcessHandlerMixin(object):
                     except:
                         print >> sys.stderr, """Exception trying to use job objects;
 falling back to not using job objects for managing child processes"""
+                        tb = traceback.format_exc()
+                        print >> sys.stderr, tb
                         # Ensure no dangling handles left behind
                         self._cleanup_job_io_port()
                 else:
                     self._job = None
 
                 winprocess.ResumeThread(int(ht))
-                if self._procmgrthread:
+                if getattr(self, '_procmgrthread', None):
                     self._procmgrthread.start()
                 ht.Close()
 
@@ -373,7 +379,13 @@ falling back to not using job objects for managing child processes"""
                     # Dude, the process is like totally dead!
                     return self.returncode
 
-                if self._job and self._procmgrthread.is_alive():
+                # Python 2.5 uses isAlive versus is_alive use the proper one
+                threadalive = False
+                if hasattr(self._procmgrthread, 'is_alive'):
+                    threadalive = self._procmgrthread.is_alive()
+                else:
+                    threadalive = self._procmgrthread.isAlive()
+                if self._job and threadalive: 
                     # Then we are managing with IO Completion Ports
                     # wait on a signal so we know when we have seen the last
                     # process come through.
@@ -429,7 +441,7 @@ falling back to not using job objects for managing child processes"""
                     cases where we want to clean these without killing _handle
                     (i.e. if we fail to create the job object in the first place)
                 """
-                if self._job and self._job != winprocess.INVALID_HANDLE_VALUE:
+                if getattr(self, '_job') and self._job != winprocess.INVALID_HANDLE_VALUE:
                     self._job.Close()
                     self._job = None
                 else:
@@ -437,13 +449,13 @@ falling back to not using job objects for managing child processes"""
                     # (saw this intermittently while testing)
                     self._job = None
 
-                if self._io_port and self._io_port != winprocess.INVALID_HANDLE_VALUE:
+                if getattr(self, '_io_port', None) and self._io_port != winprocess.INVALID_HANDLE_VALUE:
                     self._io_port.Close()
                     self._io_port = None
                 else:
                     self._io_port = None
 
-                if self._procmgrthread:
+                if getattr(self, '_procmgrthread', None):
                     self._procmgrthread = None
 
             def _cleanup(self):
