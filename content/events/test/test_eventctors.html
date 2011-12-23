@@ -33,6 +33,32 @@ try {
 ok(ex, "First parameter is required!");
 ex = false;
 
+try {
+  e = new Event("foo", 123);
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "2nd parameter should be an object!");
+ex = false;
+
+try {
+  e = new Event("foo", "asdf");
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "2nd parameter should be an object!");
+ex = false;
+
+
+try {
+  e = new Event("foo", false);
+} catch(exp) {
+  ex = true;
+}
+ok(ex, "2nd parameter should be an object!");
+ex = false;
+
+
 e = new Event("hello");
 ok(e.type, "hello", "Wrong event type!");
 ok(!e.isTrusted, "Event shouldn't be trusted!");
@@ -91,11 +117,6 @@ ok(!e.cancelable, "Event shouldn't be cancelable!");
 var dict = { get detail() { return document.body } };
 e = new CustomEvent("hello", dict);
 is(e.detail, dict.detail, "Wrong event.detail!");
-ok(!e.bubbles, "Event shouldn't bubble!");
-ok(!e.cancelable, "Event shouldn't be cancelable!");
-
-e = new CustomEvent("hello", 1234);
-is(e.detail, null, "Wrong event.detail!");
 ok(!e.bubbles, "Event shouldn't bubble!");
 ok(!e.cancelable, "Event shouldn't be cancelable!");
 
