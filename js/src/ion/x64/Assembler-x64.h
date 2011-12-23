@@ -202,23 +202,6 @@ class Operand
 namespace js {
 namespace ion {
 
-class ValueOperand
-{
-    Register value_;
-
-  public:
-    explicit ValueOperand(Register value)
-      : value_(value)
-    { }
-
-    Operand value() const {
-        return Operand(value_);
-    }
-    Register valueReg() const {
-        return value_;
-    }
-};
-
 // Return operand from a JS -> JS call.
 static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg);
 
@@ -258,10 +241,16 @@ class Assembler : public AssemblerX86Shared
     void writeRelocation(JmpSrc src);
     void addPendingJump(JmpSrc src, void *target, Relocation::Kind reloc);
 
+  protected:
+    size_t addPatchableJump(JmpSrc src);
+
   public:
     using AssemblerX86Shared::j;
     using AssemblerX86Shared::jmp;
     using AssemblerX86Shared::push;
+
+    static uint8 *PatchableJumpAddress(IonCode *code, size_t index);
+    static void PatchJumpEntry(uint8 *entry, uint8 *target);
 
     Assembler()
       : extendedJumpTable_(0)
@@ -497,6 +486,17 @@ class Assembler : public AssemblerX86Shared
     }
 
 };
+
+static inline void
+PatchJump(CodeLocationJump jump, CodeLocationLabel label)
+{
+    if (JSC::X86Assembler::canRelinkJump(jump.raw(), label.raw())) {
+        JSC::X86Assembler::setRel32(jump.raw(), label.raw());
+    } else {
+        JSC::X86Assembler::setRel32(jump.raw(), jump.jumpTableEntry());
+        Assembler::PatchJumpEntry(jump.jumpTableEntry(), label.raw());
+    }
+}
 
 static inline bool
 GetArgReg(uint32 arg, Register *out)

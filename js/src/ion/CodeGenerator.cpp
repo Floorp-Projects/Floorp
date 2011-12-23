@@ -504,7 +504,7 @@ CodeGenerator::generate()
     JS_ASSERT(!script->ion);
 
     script->ion = IonScript::New(cx, snapshots_.length(), bailouts_.length(),
-                                 graph.numConstants(), frameInfoTable_.length());
+                                 graph.numConstants(), frameInfoTable_.length(), cacheList_.length());
     if (!script->ion)
         return false;
 
@@ -524,6 +524,8 @@ CodeGenerator::generate()
         script->ion->copyConstants(graph.constantPool());
     if (frameInfoTable_.length())
         script->ion->copyFrameInfoTable(&frameInfoTable_[0]);
+    if (cacheList_.length())
+        script->ion->copyCacheEntries(&cacheList_[0]);
 
     linkAbsoluteLabels();
 
@@ -580,6 +582,105 @@ CodeGenerator::visitOutOfLineUnboxDouble(OutOfLineUnboxDouble *ool)
     }
     masm.int32ValueToDouble(value, ToFloatRegister(ins->output()));
     masm.jump(ool->rejoin());
+    return true;
+}
+
+// An out-of-line path to call an inline cache and load a result property.
+class OutOfLineGetPropertyCache : public OutOfLineCodeBase<CodeGenerator>
+{
+    // GetPropertyCacheT or GetPropertyCacheV
+    LInstruction *ins;
+
+    CodeOffsetJump inlineJump;
+    CodeOffsetLabel inlineLabel;
+
+  public:
+    OutOfLineGetPropertyCache(LInstruction *ins)
+      : ins(ins)
+    {
+        JS_ASSERT(ins->op() == LInstruction::LOp_GetPropertyCacheT ||
+                  ins->op() == LInstruction::LOp_GetPropertyCacheV);
+    }
+
+    void setInlineJump(CodeOffsetJump jump, CodeOffsetLabel label) {
+        inlineJump = jump;
+        inlineLabel = label;
+    }
+
+    CodeOffsetJump getInlineJump() const {
+        return inlineJump;
+    }
+
+    CodeOffsetLabel getInlineLabel() const {
+        return inlineLabel;
+    }
+
+    bool accept(CodeGenerator *codegen) {
+        return codegen->visitOutOfLineGetPropertyCache(this);
+    }
+
+    LInstruction *cache() {
+        return ins;
+    }
+};
+
+bool
+CodeGenerator::visitGetPropertyCache(LInstruction *ins)
+{
+    OutOfLineGetPropertyCache *ool = new OutOfLineGetPropertyCache(ins);
+    if (!addOutOfLineCode(ool))
+        return false;
+
+    CodeOffsetJump jump = masm.jumpWithPatch(ool->entry());
+    CodeOffsetLabel label = masm.labelForPatch();
+    masm.bind(ool->rejoin());
+
+    ool->setInlineJump(jump, label);
+    return true;
+}
+
+bool
+CodeGenerator::visitOutOfLineGetPropertyCache(OutOfLineGetPropertyCache *ool)
+{
+    Register objReg = ToRegister(ool->cache()->getOperand(0));
+    RegisterSet liveRegs = ool->cache()->liveRegisters();
+
+    LInstruction *ins_ = ool->cache();
+    const MGetPropertyCache *mir;
+
+    TypedOrValueRegister output;
+
+    if (ins_->op() == LInstruction::LOp_GetPropertyCacheT) {
+        LGetPropertyCacheT *ins = (LGetPropertyCacheT *) ins_;
+        output = TypedOrValueRegister(ins->mir()->type(), ToAnyRegister(ins->getDef(0)));
+        mir = ins->mir();
+    } else {
+        LGetPropertyCacheV *ins = (LGetPropertyCacheV *) ins_;
+        output = TypedOrValueRegister(GetValueOutput(ins));
+        mir = ins->mir();
+    }
+
+    liveRegs.maybeTake(output);
+
+    IonCacheGetProperty cache(ool->getInlineJump(), ool->getInlineLabel(),
+                              masm.labelForPatch(), liveRegs,
+                              objReg, mir->atom(), output);
+
+    cache.setScriptedLocation(mir->script(), mir->pc());
+    size_t cacheIndex = allocateCache(cache);
+
+    masm.PushVolatileRegsInMask(liveRegs);
+
+    pushArg(objReg);
+    pushArg(Imm32(cacheIndex));
+    if (!callVM(GetPropertyCacheFun, ool->cache()))
+        return false;
+
+    masm.storeCallResult(output);
+    masm.PopVolatileRegsInMask(liveRegs);
+
+    masm.jump(ool->rejoin());
+
     return true;
 }
 

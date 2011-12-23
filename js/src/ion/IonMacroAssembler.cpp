@@ -101,3 +101,53 @@ template void MacroAssembler::guardTypeSet(const Address &address, types::TypeSe
 template void MacroAssembler::guardTypeSet(const ValueOperand &value, types::TypeSet *types,
                                            Register scratch, Label *mismatched);
 
+void
+MacroAssembler::PushVolatileRegsInMask(RegisterSet set)
+{
+    size_t diff = 0;
+    for (AnyRegisterIterator iter(set); iter.more(); iter++) {
+        AnyRegister reg = *iter;
+        if (!reg.volatile_())
+            continue;
+        if (reg.isFloat())
+            diff += sizeof(double);
+        else
+            diff += STACK_SLOT_SIZE;
+    }
+
+    reserveStack(diff);
+
+    diff = 0;
+    for (AnyRegisterIterator iter(set); iter.more(); iter++) {
+        AnyRegister reg = *iter;
+        if (!reg.volatile_())
+            continue;
+        if (reg.isFloat()) {
+            storeDouble(reg.fpu(), Address(StackPointer, diff));
+            diff += sizeof(double);
+        } else {
+            storePtr(reg.gpr(), Address(StackPointer, diff));
+            diff += STACK_SLOT_SIZE;
+        }
+    }
+}
+
+void
+MacroAssembler::PopVolatileRegsInMask(RegisterSet set)
+{
+    size_t diff = 0;
+    for (AnyRegisterIterator iter(set); iter.more(); iter++) {
+        AnyRegister reg = *iter;
+        if (!reg.volatile_())
+            continue;
+        if (reg.isFloat()) {
+            loadDouble(Address(StackPointer, diff), reg.fpu());
+            diff += sizeof(double);
+        } else {
+            loadPtr(Address(StackPointer, diff), reg.gpr());
+            diff += STACK_SLOT_SIZE;
+        }
+    }
+
+    freeStack(diff);
+}

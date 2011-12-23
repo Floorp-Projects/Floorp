@@ -379,12 +379,15 @@ IonScript::IonScript()
     constantTable_(0),
     constantEntries_(0),
     frameInfoTable_(0),
-    frameInfoEntries_(0)
+    frameInfoEntries_(0),
+    cacheList_(0),
+    cacheEntries_(0)
 {
 }
 
 IonScript *
-IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries, size_t constants, size_t frameInfoEntries)
+IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries, size_t constants, size_t frameInfoEntries,
+               size_t cacheEntries)
 {
     if (snapshotsSize >= MAX_BUFFER_SIZE ||
         (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32)))
@@ -399,7 +402,8 @@ IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries, size_
     size_t bytes = snapshotsSize +
                    bailoutEntries * sizeof(uint32) +
                    constants * sizeof(Value) +
-                   frameInfoEntries * sizeof(IonFrameInfo);
+                   frameInfoEntries * sizeof(IonFrameInfo) +
+                   cacheEntries * sizeof(IonCache);
     uint8 *buffer = (uint8 *)cx->malloc_(sizeof(IonScript) + bytes);
     if (!buffer)
         return NULL;
@@ -423,6 +427,10 @@ IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries, size_
 
     script->frameInfoTable_ = tableShift;
     script->frameInfoEntries_ = frameInfoEntries;
+    tableShift += frameInfoEntries * sizeof(IonFrameInfo);
+
+    script->cacheList_ = tableShift;
+    script->cacheEntries_ = cacheEntries;
 
     return script;
 }
@@ -460,6 +468,20 @@ void
 IonScript::copyFrameInfoTable(const IonFrameInfo *fi)
 {
     memcpy(frameInfoTable(), fi, frameInfoEntries_ * sizeof(IonFrameInfo));
+}
+
+void
+IonScript::copyCacheEntries(const IonCache *caches)
+{
+    memcpy(cacheList(), caches, numCaches() * sizeof(IonCache));
+
+    /*
+     * Jumps in the caches reflect the offset of those jumps in the compiled
+     * code, not the absolute positions of the jumps. Update according to the
+     * final code address now.
+     */
+    for (size_t i = 0; i < numCaches(); i++)
+        getCache(i).updateBaseAddress(method_);
 }
 
 const IonFrameInfo *

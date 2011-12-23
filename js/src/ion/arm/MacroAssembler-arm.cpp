@@ -1037,6 +1037,13 @@ MacroAssemblerARM::loadPtr(const ImmWord &imm, Register dest)
     movePtr(imm, ScratchRegister);
     loadPtr(Address(ScratchRegister, 0x0), dest);
 }
+
+void
+MacroAssemblerARM::storePtr(Register src, const Address &address)
+{
+    JS_NOT_REACHED("NYI");
+}
+
 void
 MacroAssemblerARM::setStackArg(const Register &reg, uint32 arg)
 {
@@ -1048,6 +1055,12 @@ void
 MacroAssemblerARM::subPtr(Imm32 imm, const Register dest)
 {
     ma_sub(imm, dest);
+}
+
+void
+MacroAssemblerARM::addPtr(Imm32 imm, const Register dest)
+{
+    JS_NOT_REACHED("NYI");
 }
 
 // higher level tag testing code
@@ -1204,6 +1217,12 @@ MacroAssemblerARMCompat::unboxDouble(const ValueOperand &operand, const FloatReg
     JS_ASSERT(dest != ScratchFloatReg);
     as_vxfer(operand.payloadReg(), operand.typeReg(),
              VFPRegister(dest), CoreToFloat);
+}
+
+void
+MacroAssemblerARMCompat::unboxValue(const ValueOperand &src, AnyRegister dest)
+{
+    JS_NOT_REACHED("NYI");
 }
 
 void
