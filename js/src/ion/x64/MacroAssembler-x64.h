@@ -118,8 +118,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void storeValue(ValueOperand val, Operand dest) {
         movq(val.valueReg(), dest);
     }
-    void loadValue(Operand src, ValueOperand val) {
-        movq(src, val.valueReg());
+    void loadValue(Address src, ValueOperand val) {
+        movq(Operand(src), val.valueReg());
     }
     void pushValue(ValueOperand val) {
         push(val.valueReg());
@@ -200,7 +200,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     Condition testDouble(Condition cond, const ValueOperand &src) {
         JS_ASSERT(cond == Equal || cond == NotEqual);
         movq(ImmShiftedTag(JSVAL_SHIFTED_TAG_MAX_DOUBLE), ScratchReg);
-        cmpq(src.value(), ScratchReg);
+        cmpq(Operand(src.valueReg()), ScratchReg);
         return (cond == NotEqual) ? Above : BelowOrEqual;
     }
     Condition testNull(Condition cond, const ValueOperand &src) {
@@ -267,13 +267,20 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         subq(imm, dest);
     }
 
-    void branchPtr(Condition cond, Register lhs, ImmWord ptr, Label *label) {
-        cmpPtr(lhs, ptr);
+    template <typename T, typename S>
+    void branchPtr(Condition cond, T lhs, S ptr, Label *label) {
+        cmpPtr(Operand(lhs), ptr);
         j(cond, label);
     }
-    void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label *label) {
-        cmpPtr(lhs, ptr);
-        j(cond, label);
+
+    CodeOffsetJump jumpWithPatch(Label *label) {
+        JmpSrc src = jmpSrc(label);
+        return CodeOffsetJump(size(), addPatchableJump(src));
+    }
+    CodeOffsetJump branchPtrWithPatch(Condition cond, Address addr, ImmGCPtr ptr, Label *label) {
+        cmpPtr(Operand(addr), ptr);
+        JmpSrc src = jSrc(cond, label);
+        return CodeOffsetJump(size(), addPatchableJump(src));
     }
     void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
         cmpPtr(lhs, rhs);
@@ -286,12 +293,18 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void movePtr(ImmGCPtr imm, Register dest) {
         movq(imm, dest);
     }
-    void loadPtr(const Address &address, Register dest) {
-        movq(Operand(address), dest);
-    }
     void loadPtr(ImmWord imm, Register dest) {
         movq(imm, ScratchReg);
         movq(Operand(ScratchReg, 0x0), dest);
+    }
+    void loadPtr(const Address &address, Register dest) {
+        movq(Operand(address), dest);
+    }
+    void storePtr(Register src, const Address &address) {
+        movq(src, Operand(address));
+    }
+    void rshiftPtr(Imm32 imm, const Register &dest) {
+        shrq(imm, dest);
     }
 
     void setStackArg(const Register &reg, uint32 arg) {
@@ -395,13 +408,13 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // Note that the |dest| register here may be ScratchReg, so we shouldn't
     // use it.
     void unboxInt32(const ValueOperand &src, const Register &dest) {
-        movl(src.value(), dest);
+        movl(Operand(src.valueReg()), dest);
     }
     void unboxInt32(const Operand &src, const Register &dest) {
         movl(src, dest);
     }
     void unboxBoolean(const ValueOperand &src, const Register &dest) {
-        movl(src.value(), dest);
+        movl(Operand(src.valueReg()), dest);
     }
     void unboxBoolean(const Operand &src, const Register &dest) {
         movl(src, dest);
@@ -413,30 +426,31 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         lea(src, ScratchReg);
         movqsd(ScratchReg, dest);
     }
-    void unboxString(const ValueOperand &src, const Register &dest) {
-        JS_ASSERT(src.valueReg() != dest);
-        movq(ImmWord(JSVAL_PAYLOAD_MASK), dest);
-        andq(src.valueReg(), dest);
+
+    // Unbox any non-double value into dest. Prefer unboxInt32 or unboxBoolean
+    // instead if the source type is known.
+    void unboxNonDouble(const ValueOperand &src, const Register &dest) {
+        if (src.valueReg() == dest) {
+            movq(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
+            andq(ScratchReg, dest);
+        } else {
+            movq(ImmWord(JSVAL_PAYLOAD_MASK), dest);
+            andq(src.valueReg(), dest);
+        }
     }
-    void unboxString(const Operand &src, const Register &dest) {
+    void unboxNonDouble(const Operand &src, const Register &dest) {
         // Explicitly permits |dest| to be used in |src|.
         JS_ASSERT(dest != ScratchReg);
         movq(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
         movq(src, dest);
         andq(ScratchReg, dest);
     }
-    void unboxObject(const ValueOperand &src, const Register &dest) {
-        JS_ASSERT(src.valueReg() != dest);
-        movq(ImmWord(JSVAL_PAYLOAD_MASK), dest);
-        andq(src.valueReg(), dest);
-    }
-    void unboxObject(const Operand &src, const Register &dest) {
-        // Explicitly permits |dest| to be used in |src|.
-        JS_ASSERT(dest != ScratchReg);
-        movq(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
-        movq(src, dest);
-        andq(ScratchReg, dest);
-    }
+
+    void unboxString(const ValueOperand &src, const Register &dest) { unboxNonDouble(src, dest); }
+    void unboxString(const Operand &src, const Register &dest) { unboxNonDouble(src, dest); }
+
+    void unboxObject(const ValueOperand &src, const Register &dest) { unboxNonDouble(src, dest); }
+    void unboxObject(const Operand &src, const Register &dest) { unboxNonDouble(src, dest); }
 
     // Extended unboxing API. If the payload is already in a register, returns
     // that register. Otherwise, provides a move to the given scratch register,
@@ -464,12 +478,27 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         return scratch;
     }
 
+    void unboxValue(const ValueOperand &src, AnyRegister dest) {
+        if (dest.isFloat()) {
+            Label notInt32, end;
+            branchTestInt32(Assembler::NotEqual, src, &notInt32);
+            cvtsi2sd(src.valueReg(), dest.fpu());
+            jump(&end);
+            bind(&notInt32);
+            unboxDouble(src, dest.fpu());
+            bind(&end);
+        } else {
+            if (src.valueReg() != dest.gpr())
+                unboxNonDouble(src, dest.gpr());
+        }
+    }
+
     // These two functions use the low 32-bits of the full value register.
     void boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
-        cvtsi2sd(operand.value(), dest);
+        cvtsi2sd(Operand(operand.valueReg()), dest);
     }
     void int32ValueToDouble(const ValueOperand &operand, const FloatRegister &dest) {
-        cvtsi2sd(operand.value(), dest);
+        cvtsi2sd(Operand(operand.valueReg()), dest);
     }
 
     void loadDouble(double d, const FloatRegister &dest) {
@@ -484,6 +513,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void loadStaticDouble(const double *dp, const FloatRegister &dest) {
         loadDouble(*dp, dest);
+    }
+    void loadDouble(Address src, FloatRegister dest) {
+        movsd(Operand(src), dest);
+    }
+    void storeDouble(FloatRegister src, Address dest) {
+        movsd(src, Operand(dest));
     }
 
     Condition testInt32Truthy(bool truthy, const ValueOperand &operand) {
@@ -505,8 +540,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         bind(&end);
     }
 
-    void rshiftPtr(Imm32 imm, const Register &dest) {
-        shrq(imm, dest);
+    void loadUnboxedValue(Address address, AnyRegister dest) {
+        if (dest.isFloat())
+            loadInt32OrDouble(Operand(address), dest.fpu());
+        else
+            unboxNonDouble(Operand(address), dest.gpr());
     }
 
     // Setup a call to C/C++ code, given the number of general arguments it

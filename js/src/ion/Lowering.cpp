@@ -795,6 +795,24 @@ LIRGenerator::visitStoreElement(MStoreElement *ins)
 }
 
 bool
+LIRGenerator::visitGetPropertyCache(MGetPropertyCache *ins)
+{
+    JS_ASSERT(ins->object()->type() == MIRType_Object);
+
+    if (ins->type() == MIRType_Value) {
+        LGetPropertyCacheV *lir = new LGetPropertyCacheV(useRegister(ins->object()));
+        if (!assignSafepoint(lir, ins))
+            return false;
+        return defineBox(lir, ins);
+    }
+
+    LGetPropertyCacheT *lir = new LGetPropertyCacheT(useRegister(ins->object()));
+    if (!assignSafepoint(lir, ins))
+        return false;
+    return define(lir, ins);
+}
+
+bool
 LIRGenerator::visitGuardClass(MGuardClass *ins)
 {
     LDefinition tempInt = temp(LDefinition::INTEGER);

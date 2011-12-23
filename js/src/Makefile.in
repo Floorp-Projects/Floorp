@@ -319,6 +319,7 @@ CPPSRCS +=	MIR.cpp \
 		Ion.cpp \
 		IonAnalysis.cpp \
 		IonBuilder.cpp \
+		IonCaches.cpp \
 		IonFrames.cpp \
 		IonMacroAssembler.cpp \
 		IonSpewer.cpp \

@@ -142,6 +142,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitBoundsCheck(MBoundsCheck *ins);
     bool visitLoadElement(MLoadElement *ins);
     bool visitStoreElement(MStoreElement *ins);
+    bool visitGetPropertyCache(MGetPropertyCache *ins);
     bool visitGuardClass(MGuardClass *ins);
     bool visitLoadProperty(MLoadProperty *ins);
     bool visitStringLength(MStringLength *ins);

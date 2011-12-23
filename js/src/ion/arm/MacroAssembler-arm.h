@@ -43,6 +43,7 @@
 #define jsion_macro_assembler_arm_h__
 
 #include "ion/arm/Assembler-arm.h"
+#include "ion/IonCaches.h"
 #include "ion/IonFrames.h"
 #include "ion/MoveResolver.h"
 #include "jsopcode.h"
@@ -341,6 +342,13 @@ class MacroAssemblerARM : public Assembler
     void ma_vstr(FloatRegister src, VFPAddr addr);
     void ma_vstr(FloatRegister src, const Operand &addr);
 
+    void loadDouble(Address addr, FloatRegister dest) {
+        JS_NOT_REACHED("NYI");
+    }
+    void storeDouble(FloatRegister src, Address addr) {
+        JS_NOT_REACHED("NYI");
+    }
+
   public:
     void reserveStack(uint32 amount);
     void freeStack(uint32 amount);
@@ -350,9 +358,11 @@ class MacroAssemblerARM : public Assembler
     void load32(const Address &address, Register dest);
     void loadPtr(const Address &address, Register dest);
     void loadPtr(const ImmWord &imm, Register dest);
+    void storePtr(Register src, const Address &address);
     void setStackArg(const Register &reg, uint32 arg);
 
     void subPtr(Imm32 imm, const Register dest);
+    void addPtr(Imm32 imm, const Register dest);
 
     // calls an Ion function, assumes that the stack is untouched (8 byte alinged)
     void ma_callIon(const Register reg);
@@ -412,9 +422,19 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         as_b(dest, Always);
     }
 
+    void mov(Register src, Register dest) {
+        ma_mov(src, dest);
+    }
     void mov(Imm32 imm, Register dest) {
         ma_mov(imm, dest);
     }
+    void mov(Register src, Address dest) {
+        JS_NOT_REACHED("NYI");
+    }
+    void mov(Address src, Register dest) {
+        JS_NOT_REACHED("NYI");
+    }
+
     void call(const Register reg) {
         as_blx(reg);
     }
@@ -480,6 +500,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void unboxInt32(const ValueOperand &operand, const Register &dest);
     void unboxBoolean(const ValueOperand &operand, const Register &dest);
     void unboxDouble(const ValueOperand &operand, const FloatRegister &dest);
+    void unboxValue(const ValueOperand &src, AnyRegister dest);
 
     // Extended unboxing API. If the payload is already in a register, returns
     // that register. Otherwise, provides a move to the given scratch register,
@@ -544,7 +565,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         JS_NOT_REACHED("feature NYI");
     }
 
+    void Push(Imm32 imm) {
+        JS_NOT_REACHED("feature NYI");
+    }
     void Push(Register reg) {
+        JS_NOT_REACHED("feature NYI");
+    }
+    void Pop(Register reg) {
         JS_NOT_REACHED("feature NYI");
     }
 
@@ -573,6 +600,19 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void moveValue(const Value &val, Register type, Register data);
 
+    CodeOffsetJump jumpWithPatch(Label *label) {
+        jump(label);
+        return CodeOffsetJump(size());
+    }
+    CodeOffsetJump branchPtrWithPatch(Condition cond, Address addr, ImmGCPtr ptr, Label *label) {
+        JS_NOT_REACHED("NYI");
+        return CodeOffsetJump(size());
+    }
+
+    void loadUnboxedValue(Address address, AnyRegister dest) {
+        JS_NOT_REACHED("NYI");
+    }
+
     void moveValue(const Value &val, const ValueOperand &dest);
     void storeValue(ValueOperand val, Operand dst);
     void loadValue(Operand src, ValueOperand val);
@@ -584,6 +624,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
         ma_lsl(Imm32(FRAMETYPE_BITS), frameSizeReg, frameSizeReg);
         ma_orr(Imm32(type), frameSizeReg);
+    }
+
+    void loadValue(Address address, ValueOperand dest) {
+        JS_NOT_REACHED("NYI");
     }
 
     void linkExitFrame();

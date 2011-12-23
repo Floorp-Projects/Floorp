@@ -69,8 +69,6 @@ class IonFrameIterator
     uint8 *current_;
     FrameType type_;
 
-    IonCommonFrameLayout *current() const;
-
   public:
     IonFrameIterator(uint8 *top)
       : current_(top),
@@ -84,25 +82,26 @@ class IonFrameIterator
     uint8 *fp() const {
         return current_;
     }
+
+    inline IonCommonFrameLayout *current() const;
+    inline uint8 *returnAddress() const;
+
     IonJSFrameLayout *jsFrame() {
         JS_ASSERT(type() == IonFrame_JS);
         return (IonJSFrameLayout *) fp();
     }
-    uint8 *returnAddress() const;
     void *calleeToken() const;
     bool hasScript() const;
     JSScript *script() const;
 
     // Previous frame information extracted from the current frame.
-    size_t prevFrameLocalSize() const;
-    FrameType prevType() const;
+    inline size_t prevFrameLocalSize() const;
+    inline FrameType prevType() const;
     uint8 *prevFp() const;
 
     // Funtctions used to iterate on frames.
     // When prevType is IonFrame_Entry, the current frame is the last frame.
-    bool more() const {
-        return prevType() != IonFrame_Entry;
-    }
+    inline bool more() const;
     IonFrameIterator &operator++();
 
     // Mutation

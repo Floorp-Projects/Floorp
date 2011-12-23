@@ -270,28 +270,35 @@ class AssemblerX86Shared
         }
     }
 
-    void j(Condition cond, Label *label) {
+  protected:
+    JmpSrc jSrc(Condition cond, Label *label) {
+        JmpSrc j = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
         if (label->bound()) {
             // The jump can be immediately patched to the correct destination.
-            masm.linkJump(masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond)), JmpDst(label->offset()));
+            masm.linkJump(j, JmpDst(label->offset()));
         } else {
             // Thread the jump list through the unpatched jump targets.
-            JmpSrc j = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
             JmpSrc prev = JmpSrc(label->use(j.offset()));
             masm.setNextJump(j, prev);
         }
+        return j;
     }
-    void jmp(Label *label) {
+    JmpSrc jmpSrc(Label *label) {
+        JmpSrc j = masm.jmp();
         if (label->bound()) {
             // The jump can be immediately patched to the correct destination.
-            masm.linkJump(masm.jmp(), JmpDst(label->offset()));
+            masm.linkJump(j, JmpDst(label->offset()));
         } else {
             // Thread the jump list through the unpatched jump targets.
-            JmpSrc j = masm.jmp();
             JmpSrc prev = JmpSrc(label->use(j.offset()));
             masm.setNextJump(j, prev);
         }
+        return j;
     }
+  public:
+
+    void j(Condition cond, Label *label) { jSrc(cond, label); }
+    void jmp(Label *label) { jmpSrc(label); }
     void jmp(const Operand &op){
         switch (op.kind()) {
           case Operand::SCALE:
@@ -677,6 +684,7 @@ class AssemblerX86Shared
     void push(const Imm32 imm) {
         masm.push_i32(imm.value);
     }
+
     void push(const Operand &src) {
         switch (src.kind()) {
           case Operand::REG:
@@ -707,6 +715,15 @@ class AssemblerX86Shared
     void pop(const Register &src) {
         masm.pop_r(src.code());
     }
+
+#ifdef JS_CPU_X86
+    void pushAllRegs() {
+        masm.pusha();
+    }
+    void popAllRegs() {
+        masm.popa();
+    }
+#endif
 
     // Zero-extend byte to 32-bit integer.
     void movzxbl(const Register &src, const Register &dest) {

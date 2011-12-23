@@ -148,19 +148,6 @@ FrameRecovery::ionScript() const
     return script_->ion;
 }
 
-IonCommonFrameLayout *
-IonFrameIterator::current() const
-{
-    return (IonCommonFrameLayout *)current_;
-}
-
-uint8 *
-IonFrameIterator::returnAddress() const
-{
-    IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
-    return current->returnAddress();
-}
-
 CalleeToken
 IonFrameIterator::calleeToken() const
 {
@@ -193,20 +180,6 @@ IonFrameIterator::script() const
         JS_NOT_REACHED("invalid tag");
         return NULL;
     }
-}
-
-size_t
-IonFrameIterator::prevFrameLocalSize() const
-{
-    IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
-    return current->prevFrameLocalSize();
-}
-
-FrameType
-IonFrameIterator::prevType() const
-{
-    IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
-    return current->prevType();
 }
 
 uint8 *

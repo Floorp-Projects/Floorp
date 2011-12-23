@@ -2065,6 +2065,50 @@ class MStoreElement
     }
 };
 
+class MGetPropertyCache
+  : public MUnaryInstruction,
+    public ObjectPolicy
+{
+    JSAtom *atom_;
+    JSScript *script_;
+    jsbytecode *pc_;
+
+    MGetPropertyCache(MDefinition *obj, JSAtom *atom, JSScript *script, jsbytecode *pc)
+      : MUnaryInstruction(obj),
+        atom_(atom),
+        script_(script),
+        pc_(pc)
+    {
+        // For now, all caches are impure and require a script/pc.
+        JS_ASSERT(script);
+
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(GetPropertyCache);
+
+    static MGetPropertyCache *New(MDefinition *obj, JSAtom *atom,
+                                  JSScript *script, jsbytecode *pc) {
+        return new MGetPropertyCache(obj, atom, script, pc);
+    }
+
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    JSAtom *atom() const {
+        return atom_;
+    }
+    JSScript *script() const {
+        return script_;
+    }
+    jsbytecode *pc() const {
+        return pc_;
+    }
+
+    TypePolicy *typePolicy() { return this; }
+};
+
 // Guard on an object's shape.
 class MGuardShape
   : public MUnaryInstruction,

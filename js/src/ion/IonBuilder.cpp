@@ -2945,8 +2945,20 @@ bool
 IonBuilder::jsop_getprop(JSAtom *atom)
 {
     MDefinition *obj = current->pop();
+    MInstruction *ins;
 
-    MLoadProperty *ins = new MLoadProperty(obj, atom);
+    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::TypeSet *types = oracle->propertyRead(script, pc);
+
+    TypeOracle::Unary unary = oracle->unaryOp(script, pc);
+    if (unary.ival == MIRType_Object) {
+        MGetPropertyCache *load = MGetPropertyCache::New(obj, atom, script, pc);
+        if (!barrier)
+            load->setResultType(unary.rval);
+        ins = load;
+    } else {
+        ins = new MLoadProperty(obj, atom);
+    }
 
     current->add(ins);
     current->push(ins);
@@ -2954,7 +2966,5 @@ IonBuilder::jsop_getprop(JSAtom *atom)
     if (!resumeAfter(ins))
         return false;
 
-    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
-    types::TypeSet *types = oracle->propertyRead(script, pc);
     return pushTypeBarrier(ins, types, barrier);
 }

@@ -123,6 +123,10 @@ class IonCode : public gc::Cell
         return offsetof(IonCode, code_);
     }
 
+    uint8 *jumpRelocTable() {
+        return code_ + jumpRelocTableOffset();
+    }
+
     // Allocates a new IonCode object which will be managed by the GC. If no
     // object can be allocated, NULL is returned. On failure, |pool| is
     // automatically released, so the code may be freed.
@@ -135,7 +139,8 @@ class IonCode : public gc::Cell
 };
 
 class SnapshotWriter;
-struct IonFrameInfo;
+class IonFrameInfo;
+class IonCache;
 
 // An IonScript attaches Ion-generated information to a JSScript.
 struct IonScript
@@ -172,6 +177,10 @@ struct IonScript
     uint32 frameInfoTable_;
     uint32 frameInfoEntries_;
 
+    // State for polymorphic caches in the compiled code.
+    uint32 cacheList_;
+    uint32 cacheEntries_;
+
     SnapshotOffset *bailoutTable() {
         return (SnapshotOffset *)(reinterpret_cast<uint8 *>(this) + bailoutTable_);
     }
@@ -184,6 +193,9 @@ struct IonScript
     IonFrameInfo *frameInfoTable() {
         return (IonFrameInfo *)(reinterpret_cast<uint8 *>(this) + frameInfoTable_);
     }
+    IonCache *cacheList() {
+        return (IonCache *)(reinterpret_cast<uint8 *>(this) + cacheList_);
+    }
 
   private:
     void trace(JSTracer *trc, JSScript *script);
@@ -193,7 +205,7 @@ struct IonScript
     IonScript();
 
     static IonScript *New(JSContext *cx, size_t snapshotsSize, size_t snapshotEntries,
-                          size_t constants, size_t frameInfoEntries);
+                          size_t constants, size_t frameInfoEntries, size_t cacheEntries);
     static void Trace(JSTracer *trc, JSScript *script);
     static void Destroy(JSContext *cx, JSScript *script);
 
@@ -247,10 +259,15 @@ struct IonScript
     const IonFrameInfo *getFrameInfo(uint8 *retAddr) const {
         return getFrameInfo(retAddr - method()->raw());
     }
+    inline IonCache &getCache(size_t index);
+    size_t numCaches() const {
+        return cacheEntries_;
+    }
     void copySnapshots(const SnapshotWriter *writer);
     void copyBailoutTable(const SnapshotOffset *table);
     void copyConstants(const Value *vp);
     void copyFrameInfoTable(const IonFrameInfo *hf);
+    void copyCacheEntries(const IonCache *caches);
 };
 
 struct VMFunction;

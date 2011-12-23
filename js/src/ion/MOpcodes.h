@@ -86,6 +86,7 @@ namespace ion {
     _(LoadSlot)                                                             \
     _(StoreSlot)                                                            \
     _(TypeBarrier)                                                          \
+    _(GetPropertyCache)                                                     \
     _(GuardShape)                                                           \
     _(GuardClass)                                                           \
     _(ArrayLength)                                                          \

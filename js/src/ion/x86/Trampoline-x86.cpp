@@ -589,7 +589,7 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Load the outparam and free any allocated stack.
     if (f.outParam == Type_Value) {
-        masm.loadValue(Operand(esp, 0), JSReturnOperand);
+        masm.loadValue(Address(esp, 0), JSReturnOperand);
         masm.freeStack(sizeof(Value));
     }
 

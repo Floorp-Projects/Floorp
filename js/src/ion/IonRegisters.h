@@ -43,6 +43,7 @@
 #define jsion_cpu_registers_h__
 
 #include "IonTypes.h"
+#include "TypeOracle.h"
 #if defined(JS_CPU_X86)
 # include "x86/Architecture-x86.h"
 #elif defined(JS_CPU_X64)
@@ -86,6 +87,9 @@ struct Register {
     bool allocatable() const {
         return !!((1 << code()) & Registers::AllocatableMask);
     }
+    bool volatile_() const {
+        return !!((1 << code()) & Registers::VolatileMask);
+    }
 };
 
 struct FloatRegister {
@@ -114,6 +118,9 @@ struct FloatRegister {
     }
     bool allocatable() const {
         return !!((1 << code()) & FloatRegisters::AllocatableMask);
+    }
+    bool volatile_() const {
+        return !!((1 << code()) & FloatRegisters::VolatileMask);
     }
 };
 
@@ -186,6 +193,110 @@ struct AnyRegister {
         return isFloat()
                ? fpu_ + Registers::Total
                : gpr_;
+    }
+    bool volatile_() const {
+        return isFloat() ? fpu().volatile_() : gpr().volatile_();
+    }
+};
+
+// Registers to hold a boxed value. Uses one register on 64 bit
+// platforms, two registers on 32 bit platforms.
+class ValueOperand
+{
+#if defined(JS_NUNBOX32)
+    Register type_;
+    Register payload_;
+
+  public:
+    ValueOperand(Register type, Register payload)
+      : type_(type), payload_(payload)
+    { }
+
+    Register typeReg() const {
+        return type_;
+    }
+    Register payloadReg() const {
+        return payload_;
+    }
+
+    Register scratchReg() const {
+        return payloadReg();
+    }
+
+#elif defined(JS_PUNBOX64)
+    Register value_;
+
+  public:
+    explicit ValueOperand(Register value)
+      : value_(value)
+    { }
+
+    Register valueReg() const {
+        return value_;
+    }
+
+    Register scratchReg() const {
+        return valueReg();
+    }
+#endif
+
+    ValueOperand() {}
+};
+
+// Registers to hold either either a typed or untyped value.
+class TypedOrValueRegister
+{
+    // Type of value being stored.
+    MIRType type_;
+
+    // Space to hold either an AnyRegister or a ValueOperand.
+    char data[tl::Max<sizeof(AnyRegister), sizeof(ValueOperand)>::result];
+
+    AnyRegister &dataTyped() {
+        JS_ASSERT(hasTyped());
+        return *(AnyRegister *)&data;
+    }
+    ValueOperand &dataValue() {
+        JS_ASSERT(hasValue());
+        return *(ValueOperand *)&data;
+    }
+
+  public:
+
+    TypedOrValueRegister()
+      : type_(MIRType_None)
+    {}
+
+    TypedOrValueRegister(MIRType type, AnyRegister reg)
+      : type_(type)
+    {
+        dataTyped() = reg;
+    }
+
+    TypedOrValueRegister(ValueOperand value)
+      : type_(MIRType_Value)
+    {
+        dataValue() = value;
+    }
+
+    MIRType type() {
+        return type_;
+    }
+
+    bool hasTyped() {
+        return type() != MIRType_None && type() != MIRType_Value;
+    }
+
+    bool hasValue() {
+        return type() == MIRType_Value;
+    }
+
+    AnyRegister typedReg() {
+        return dataTyped();
+    }
+
+    ValueOperand valueReg() {
+        return dataValue();
     }
 };
 
@@ -351,6 +462,35 @@ class RegisterSet {
     void clear() {
         gpr_.clear();
         fpu_.clear();
+    }
+
+    void maybeTake(Register reg) {
+        if (gpr_.has(reg)) gpr_.take(reg);
+    }
+    void maybeTake(FloatRegister reg) {
+        if (fpu_.has(reg)) fpu_.take(reg);
+    }
+    void maybeTake(AnyRegister reg) {
+        if (has(reg)) take(reg);
+    }
+    void maybeTake(ValueOperand value) {
+#if defined(JS_NUNBOX32)
+        if (gpr_.has(value.typeReg()))
+            gpr_.take(value.typeReg());
+        if (gpr_.has(value.payloadReg()))
+            gpr_.take(value.payloadReg());
+#elif defined(JS_PUNBOX64)
+        if (gpr_.has(value.valueReg()))
+            gpr_.take(value.valueReg());
+#else
+#error "Bad architecture"
+#endif
+    }
+    void maybeTake(TypedOrValueRegister reg) {
+        if (reg.hasValue())
+            maybeTake(reg.valueReg());
+        else if (reg.hasTyped())
+            maybeTake(reg.typedReg());
     }
 };
 

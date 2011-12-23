@@ -42,6 +42,8 @@
 #ifndef jsion_frames_h__
 #define jsion_frames_h__
 
+#include "jsfun.h"
+#include "jstypes.h"
 #include "jsutil.h"
 #include "IonRegisters.h"
 #include "IonCode.h"
@@ -321,6 +323,57 @@ MakeFrameDescriptor(uint32 frameSize, FrameType type)
 #else
 # error "unsupported architecture"
 #endif
+
+namespace js {
+namespace ion {
+
+inline IonCommonFrameLayout *
+IonFrameIterator::current() const
+{
+    return (IonCommonFrameLayout *)current_;
+}
+
+inline uint8 *
+IonFrameIterator::returnAddress() const
+{
+    IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
+    return current->returnAddress();
+}
+
+inline size_t
+IonFrameIterator::prevFrameLocalSize() const
+{
+    IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
+    return current->prevFrameLocalSize();
+}
+
+inline FrameType
+IonFrameIterator::prevType() const
+{
+    IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
+    return current->prevType();
+}
+
+inline bool 
+IonFrameIterator::more() const
+{
+    return prevType() != IonFrame_Entry;
+}
+
+static inline IonScript *
+GetTopIonFrame(JSContext *cx)
+{
+    IonFrameIterator iter(JS_THREAD_DATA(cx)->ionTop);
+    JS_ASSERT(iter.type() == IonFrame_Exit);
+    ++iter;
+    JS_ASSERT(iter.type() == IonFrame_JS);
+    IonJSFrameLayout *frame = static_cast<IonJSFrameLayout*>(iter.current());
+    JSFunction *fun = CalleeTokenToFunction(frame->calleeToken());
+    return fun->script()->ion;
+}
+
+} /* namespace ion */
+} /* namespace js */
 
 #endif // jsion_frames_h__
 
