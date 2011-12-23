@@ -1,4 +1,5 @@
 == solid-image-1.html solid-image-1-ref.html
+== solid-image-1a.html solid-image-1-ref.html
 == solid-image-2.html solid-image-2-ref.html
 == solid-image-2a.html solid-image-2-ref.html
 == multicolor-image-1.html multicolor-image-1-ref.html
@@ -24,3 +25,15 @@
 == center-scaling-4lr.html center-scaling-4lr-ref.html
 == side-scaling-1h.html side-scaling-1h-ref.html
 == side-scaling-1v.html side-scaling-1v-ref.html
+== border-image-width-1a.html border-image-width-1-ref.html
+== border-image-width-1b.html border-image-width-1-ref.html
+== border-image-width-1c.html border-image-width-1-ref.html
+== border-image-outset-1a.html border-image-outset-1-ref.html
+== border-image-outset-1b.html border-image-outset-1-ref.html
+== border-image-outset-1c.html border-image-outset-1-ref.html
+== border-image-nofill-1.html border-image-nofill-1-ref.html
+== border-image-outset-resize-1.html border-image-outset-resize-1-ref.html
+== border-image-outset-move-1.html border-image-outset-move-1-ref.html
+== border-image-style-none.html border-image-style-none-ref.html
+== border-image-style-none-length.html border-image-style-none-length-ref.html
+== border-image-style-none-auto.html border-image-style-none-auto-ref.html

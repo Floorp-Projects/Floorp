@@ -154,12 +154,14 @@ StackFrame::initCallFrame(JSContext *cx, JSFunction &callee,
     JS_ASSERT(script == callee.toFunction()->script());
 
     /* Initialize stack frame members. */
-    flags_ = FUNCTION | HAS_PREVPC | HAS_SCOPECHAIN | flagsArg;
+    flags_ = FUNCTION | HAS_PREVPC | HAS_SCOPECHAIN | HAS_BLOCKCHAIN | flagsArg;
     exec.fun = &callee;
     args.nactual = nactual;
     scopeChain_ = callee.toFunction()->environment();
     ncode_ = NULL;
     initPrev(cx);
+    blockChain_= NULL;
+    JS_ASSERT(!hasBlockChain());
     JS_ASSERT(!hasHookData());
     JS_ASSERT(annotation() == NULL);
     JS_ASSERT(!hasCallObj());

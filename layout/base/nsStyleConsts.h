@@ -328,9 +328,12 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_BORDER_STYLE_AUTO              10 // for outline-style only
 
 // See nsStyleBorder mBorderImage
-#define NS_STYLE_BORDER_IMAGE_STRETCH           0
-#define NS_STYLE_BORDER_IMAGE_REPEAT            1
-#define NS_STYLE_BORDER_IMAGE_ROUND             2
+#define NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH    0
+#define NS_STYLE_BORDER_IMAGE_REPEAT_REPEAT     1
+#define NS_STYLE_BORDER_IMAGE_REPEAT_ROUND      2
+
+#define NS_STYLE_BORDER_IMAGE_SLICE_NOFILL      0
+#define NS_STYLE_BORDER_IMAGE_SLICE_FILL        1
 
 // See nsStyleDisplay
 #define NS_STYLE_CLEAR_NONE                     0

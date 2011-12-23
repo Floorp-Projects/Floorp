@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=78: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -583,10 +584,13 @@ GetFloatFromBoxPosition(PRInt32 aEnumValue)
 #define SETCOORD_INITIAL_NONE           0x800
 #define SETCOORD_INITIAL_NORMAL         0x1000
 #define SETCOORD_INITIAL_HALF           0x2000
-#define SETCOORD_CALC_LENGTH_ONLY       0x4000
-#define SETCOORD_CALC_CLAMP_NONNEGATIVE 0x8000 // modifier for CALC_LENGTH_ONLY
-#define SETCOORD_STORE_CALC             0x00010000
-#define SETCOORD_BOX_POSITION           0x00020000 // exclusive with _ENUMERATED
+#define SETCOORD_INITIAL_HUNDRED_PCT    0x00004000
+#define SETCOORD_INITIAL_FACTOR_ONE     0x00008000
+#define SETCOORD_INITIAL_FACTOR_ZERO    0x00010000
+#define SETCOORD_CALC_LENGTH_ONLY       0x00020000
+#define SETCOORD_CALC_CLAMP_NONNEGATIVE 0x00040000 // modifier for CALC_LENGTH_ONLY
+#define SETCOORD_STORE_CALC             0x00080000
+#define SETCOORD_BOX_POSITION           0x00100000 // exclusive with _ENUMERATED
 
 #define SETCOORD_LP     (SETCOORD_LENGTH | SETCOORD_PERCENT)
 #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
@@ -611,7 +615,7 @@ static bool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
                        nsPresContext* aPresContext,
                        bool& aCanStoreInRuleTree)
 {
-  bool    result = true;
+  bool result = true;
   if (aValue.GetUnit() == eCSSUnit_Null) {
     result = false;
   }
@@ -665,30 +669,39 @@ static bool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
            (aValue.GetUnit() == eCSSUnit_Number)) {
     aCoord.SetFactorValue(aValue.GetFloatValue());
   }
-  else if (((aMask & SETCOORD_INITIAL_AUTO) != 0) &&
-           (aValue.GetUnit() == eCSSUnit_Initial)) {
-    aCoord.SetAutoValue();
-  }
-  else if (((aMask & SETCOORD_INITIAL_ZERO) != 0) &&
-           (aValue.GetUnit() == eCSSUnit_Initial)) {
-    aCoord.SetCoordValue(0);
-  }
-  else if (((aMask & SETCOORD_INITIAL_NONE) != 0) &&
-           (aValue.GetUnit() == eCSSUnit_Initial)) {
-    aCoord.SetNoneValue();
-  }
-  else if (((aMask & SETCOORD_INITIAL_NORMAL) != 0) &&
-           (aValue.GetUnit() == eCSSUnit_Initial)) {
-    aCoord.SetNormalValue();
-  }
-  else if (((aMask & SETCOORD_INITIAL_HALF) != 0) &&
-           (aValue.GetUnit() == eCSSUnit_Initial)) {
-    aCoord.SetPercentValue(0.5f);
-  }
   else if (((aMask & SETCOORD_STORE_CALC) != 0) &&
            (aValue.IsCalcUnit())) {
     SpecifiedCalcToComputedCalc(aValue, aCoord, aStyleContext,
                                 aCanStoreInRuleTree);
+  }
+  else if (aValue.GetUnit() == eCSSUnit_Initial) {
+    if ((aMask & SETCOORD_INITIAL_AUTO) != 0) {
+      aCoord.SetAutoValue();
+    }
+    else if ((aMask & SETCOORD_INITIAL_ZERO) != 0) {
+      aCoord.SetCoordValue(0);
+    }
+    else if ((aMask & SETCOORD_INITIAL_FACTOR_ZERO) != 0) {
+      aCoord.SetFactorValue(0.0f);
+    }
+    else if ((aMask & SETCOORD_INITIAL_NONE) != 0) {
+      aCoord.SetNoneValue();
+    }
+    else if ((aMask & SETCOORD_INITIAL_NORMAL) != 0) {
+      aCoord.SetNormalValue();
+    }
+    else if ((aMask & SETCOORD_INITIAL_HALF) != 0) {
+      aCoord.SetPercentValue(0.5f);
+    }
+    else if ((aMask & SETCOORD_INITIAL_HUNDRED_PCT) != 0) {
+      aCoord.SetPercentValue(1.0f);
+    }
+    else if ((aMask & SETCOORD_INITIAL_FACTOR_ONE) != 0) {
+      aCoord.SetFactorValue(1.0f);
+    }
+    else {
+      result = false;  // didn't set anything
+    }
   }
   else {
     result = false;  // didn't set anything
@@ -5269,6 +5282,80 @@ nsRuleNode::ComputeMarginData(void* aStartStruct,
   COMPUTE_END_RESET(Margin, margin)
 }
 
+static void
+SetBorderImageRect(const nsCSSValue& aValue,
+                   /** outparam */ nsCSSRect& aRect)
+{
+  switch (aValue.GetUnit()) {
+  case eCSSUnit_Null:
+    aRect.Reset();
+    break;
+  case eCSSUnit_Rect:
+    aRect = aValue.GetRectValue();
+    break;
+  case eCSSUnit_Inherit:
+  case eCSSUnit_Initial:
+    aRect.SetAllSidesTo(aValue);
+    break;
+  default:
+    NS_ASSERTION(false, "Unexpected border image value for rect.");
+  }
+}
+
+static void
+SetBorderImagePair(const nsCSSValue& aValue,
+                   /** outparam */ nsCSSValuePair& aPair)
+{
+  switch (aValue.GetUnit()) {
+  case eCSSUnit_Null:
+    aPair.Reset();
+    break;
+  case eCSSUnit_Pair:
+    aPair = aValue.GetPairValue();
+    break;
+  case eCSSUnit_Inherit:
+  case eCSSUnit_Initial:
+    aPair.SetBothValuesTo(aValue);
+    break;
+  default:
+    NS_ASSERTION(false, "Unexpected border image value for pair.");
+  }
+}
+
+static void
+SetBorderImageSlice(const nsCSSValue& aValue,
+                    /** outparam */ nsCSSValue& aSlice,
+                    /** outparam */ nsCSSValue& aFill)
+{
+  const nsCSSValueList* valueList;
+  switch (aValue.GetUnit()) {
+  case eCSSUnit_Null:
+    aSlice.Reset();
+    aFill.Reset();
+    break;
+  case eCSSUnit_List:
+    // Get slice dimensions.
+    valueList = aValue.GetListValue();
+    aSlice = valueList->mValue;
+
+    // Get "fill" keyword.
+    valueList = valueList->mNext;
+    if (valueList) {
+      aFill = valueList->mValue;
+    } else {
+      aFill.SetInitialValue();
+    }
+    break;
+  case eCSSUnit_Inherit:
+  case eCSSUnit_Initial:
+    aSlice = aValue;
+    aFill = aValue;
+    break;
+  default:
+    NS_ASSERTION(false, "Unexpected border image value for pair.");
+  }
+}
+
 const void*
 nsRuleNode::ComputeBorderData(void* aStartStruct,
                               const nsRuleData* aRuleData,
@@ -5554,81 +5641,88 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
               SETDSC_ENUMERATED, parentBorder->mFloatEdge,
               NS_STYLE_FLOAT_EDGE_CONTENT, 0, 0, 0, 0);
 
-  // border-image
-  const nsCSSValue* borderImageValue = aRuleData->ValueForBorderImage();
-  if (eCSSUnit_Array == borderImageValue->GetUnit()) {
-    nsCSSValue::Array *arr = borderImageValue->GetArrayValue();
-
-    // the image
-    if (eCSSUnit_Image == arr->Item(0).GetUnit()) {
-      NS_SET_IMAGE_REQUEST(border->SetBorderImage,
-                           aContext,
-                           arr->Item(0).GetImageValue())
-    }
-
-    // the numbers saying where to split the image
-    NS_FOR_CSS_SIDES(side) {
-      if (SetAbsCoord(arr->Item(1 + side), coord,
-                      SETCOORD_FACTOR | SETCOORD_PERCENT)) {
-        border->mBorderImageSplit.Set(side, coord);
-      }
-    }
-
-    // possible replacement for border-width
-    // if have one - have all four (see CSSParserImpl::ParseBorderImage())
-    if (eCSSUnit_Null != arr->Item(5).GetUnit()) {
-      NS_FOR_CSS_SIDES(side) {
-        // an uninitialized parentCoord is ok because I'm not passing SETCOORD_INHERIT
-        if (!SetCoord(arr->Item(5 + side), coord, nsStyleCoord(),
-                      SETCOORD_LENGTH, aContext, mPresContext,
-                      canStoreInRuleTree)) {
-          NS_NOTREACHED("SetCoord for border-width replacement from border-image failed");
-        }
-        if (coord.GetUnit() == eStyleUnit_Coord) {
-          border->SetBorderImageWidthOverride(side, coord.GetCoordValue());
-        } else {
-          NS_WARNING("a border-width replacement from border-image "
-                     "has a unit that's not eStyleUnit_Coord");
-          border->SetBorderImageWidthOverride(side, 0);
-        }
-      }
-      border->mHaveBorderImageWidth = true;
-    } else {
-      border->mHaveBorderImageWidth = false;
-    }
-
-    // stretch/round/repeat keywords
-    if (eCSSUnit_Null == arr->Item(9).GetUnit()) {
-      // default, both horizontal and vertical are stretch
-      border->mBorderImageHFill = NS_STYLE_BORDER_IMAGE_STRETCH;
-      border->mBorderImageVFill = NS_STYLE_BORDER_IMAGE_STRETCH;
-    } else {
-      // have horizontal value
-      border->mBorderImageHFill = arr->Item(9).GetIntValue();
-      if (eCSSUnit_Null == arr->Item(10).GetUnit()) {
-        // vertical same as horizontal
-        border->mBorderImageVFill = border->mBorderImageHFill;
-      } else {
-        // have vertical value
-        border->mBorderImageVFill = arr->Item(10).GetIntValue();
-      }
-    }
-  } else if (eCSSUnit_None == borderImageValue->GetUnit() ||
-             eCSSUnit_Initial == borderImageValue->GetUnit()) {
-    border->mHaveBorderImageWidth = false;
-    border->SetBorderImage(nsnull);
-  } else if (eCSSUnit_Inherit == borderImageValue->GetUnit()) {
-    canStoreInRuleTree = false;
-    NS_FOR_CSS_SIDES(side) {
-      border->SetBorderImageWidthOverride(side, parentBorder->mBorderImageWidth.Side(side));
-    }
-    border->mBorderImageSplit = parentBorder->mBorderImageSplit;
-    border->mBorderImageHFill = parentBorder->mBorderImageHFill;
-    border->mBorderImageVFill = parentBorder->mBorderImageVFill;
-    border->mHaveBorderImageWidth = parentBorder->mHaveBorderImageWidth;
+  // border-image-source
+  const nsCSSValue* borderImageSource = aRuleData->ValueForBorderImageSource();
+  if (borderImageSource->GetUnit() == eCSSUnit_Image) {
     NS_SET_IMAGE_REQUEST(border->SetBorderImage, aContext,
-                         parentBorder->GetBorderImage())
+                         borderImageSource->GetImageValue());
+  } else if (borderImageSource->GetUnit() == eCSSUnit_Inherit) {
+    canStoreInRuleTree = false;
+    NS_SET_IMAGE_REQUEST(border->SetBorderImage, aContext,
+                         parentBorder->GetBorderImage());
+  } else if (borderImageSource->GetUnit() == eCSSUnit_Initial ||
+             borderImageSource->GetUnit() == eCSSUnit_None) {
+    border->SetBorderImage(nsnull);
   }
+
+  nsCSSValue borderImageSliceValue;
+  nsCSSValue borderImageSliceFill;
+  SetBorderImageSlice(*aRuleData->ValueForBorderImageSlice(),
+                      borderImageSliceValue, borderImageSliceFill);
+
+  // border-image-slice: fill
+  SetDiscrete(borderImageSliceFill,
+              border->mBorderImageFill,
+              canStoreInRuleTree, SETDSC_ENUMERATED,
+              parentBorder->mBorderImageFill,
+              NS_STYLE_BORDER_IMAGE_SLICE_NOFILL, 0, 0, 0, 0);
+
+  nsCSSRect borderImageSlice;
+  SetBorderImageRect(borderImageSliceValue, borderImageSlice);
+
+  nsCSSRect borderImageWidth;
+  SetBorderImageRect(*aRuleData->ValueForBorderImageWidth(),
+                     borderImageWidth);
+
+  nsCSSRect borderImageOutset;
+  SetBorderImageRect(*aRuleData->ValueForBorderImageOutset(),
+                     borderImageOutset);
+
+  NS_FOR_CSS_SIDES (side) {
+    // border-image-slice
+    if (SetCoord(borderImageSlice.*(nsCSSRect::sides[side]), coord,
+                 parentBorder->mBorderImageSlice.Get(side),
+                 SETCOORD_FACTOR | SETCOORD_PERCENT |
+                 SETCOORD_INHERIT | SETCOORD_INITIAL_HUNDRED_PCT,
+                 aContext, mPresContext, canStoreInRuleTree)) {
+      border->mBorderImageSlice.Set(side, coord);
+    }
+
+    // border-image-width
+    // 'auto' here means "same as slice"
+    if (SetCoord(borderImageWidth.*(nsCSSRect::sides[side]), coord,
+                 parentBorder->mBorderImageWidth.Get(side),
+                 SETCOORD_LPAH | SETCOORD_FACTOR | SETCOORD_INITIAL_FACTOR_ONE,
+                 aContext, mPresContext, canStoreInRuleTree)) {
+      border->mBorderImageWidth.Set(side, coord);
+    }
+
+    // border-image-outset
+    if (SetCoord(borderImageOutset.*(nsCSSRect::sides[side]), coord,
+                 parentBorder->mBorderImageOutset.Get(side),
+                 SETCOORD_LENGTH | SETCOORD_FACTOR |
+                 SETCOORD_INHERIT | SETCOORD_INITIAL_FACTOR_ZERO,
+                 aContext, mPresContext, canStoreInRuleTree)) {
+      border->mBorderImageOutset.Set(side, coord);
+    }
+  }
+
+  // border-image-repeat
+  nsCSSValuePair borderImageRepeat;
+  SetBorderImagePair(*aRuleData->ValueForBorderImageRepeat(),
+                     borderImageRepeat);
+
+  SetDiscrete(borderImageRepeat.mXValue,
+              border->mBorderImageRepeatH,
+              canStoreInRuleTree, SETDSC_ENUMERATED,
+              parentBorder->mBorderImageRepeatH,
+              NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH, 0, 0, 0, 0);
+
+  SetDiscrete(borderImageRepeat.mYValue,
+              border->mBorderImageRepeatV,
+              canStoreInRuleTree, SETDSC_ENUMERATED,
+              parentBorder->mBorderImageRepeatV,
+              NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH, 0, 0, 0, 0);
 
   if (border->HasBorderImage())
     border->TrackImage(aContext->PresContext());

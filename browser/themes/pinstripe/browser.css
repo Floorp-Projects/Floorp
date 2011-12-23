@@ -1856,30 +1856,30 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 @TABSONTOP_TAB_STACK@ > .tab-content,
 @TABSONTOP_NEWTAB_BUTTON@ > .toolbarbutton-icon {
-  -moz-border-image: url(chrome://browser/skin/tabbrowser/tab-top-normal-active.png) 0 11 repeat stretch;
+  -moz-border-image: url(chrome://browser/skin/tabbrowser/tab-top-normal-active.png) 0 11 fill repeat stretch;
 }
 
 @TABSONTOP_TAB@:hover > .tab-stack > .tab-content:not([selected="true"]),
 @TABSONTOP_NEWTAB_BUTTON@:hover > .toolbarbutton-icon {
-  -moz-border-image: url(chrome://browser/skin/tabbrowser/tab-top-hover-active.png) 0 11 repeat stretch;
+  -moz-border-image: url(chrome://browser/skin/tabbrowser/tab-top-hover-active.png) 0 11 fill repeat stretch;
 }
 
 @TABSONTOP_TAB_STACK@ > .tab-content[selected="true"] {
-  -moz-border-image: url(chrome://browser/skin/tabbrowser/tab-top-selected-active.png) 0 11 repeat stretch;
+  -moz-border-image: url(chrome://browser/skin/tabbrowser/tab-top-selected-active.png) 0 11 fill repeat stretch;
 }
 
 @TABSONBOTTOM_TAB_STACK@ > .tab-content,
 @TABSONBOTTOM_NEWTAB_BUTTON@ > .toolbarbutton-icon {
-  -moz-border-image: url(chrome://browser/skin/tabbrowser/tab-bottom-normal-active.png) 0 11 repeat stretch;
+  -moz-border-image: url(chrome://browser/skin/tabbrowser/tab-bottom-normal-active.png) 0 11 fill repeat stretch;
 }
 
 @TABSONBOTTOM_TAB@:hover > .tab-stack > .tab-content:not([selected="true"]),
 @TABSONBOTTOM_NEWTAB_BUTTON@:hover > .toolbarbutton-icon {
-  -moz-border-image: url(chrome://browser/skin/tabbrowser/tab-bottom-hover-active.png) 0 11 repeat stretch;
+  -moz-border-image: url(chrome://browser/skin/tabbrowser/tab-bottom-hover-active.png) 0 11 fill repeat stretch;
 }
 
 @TABSONBOTTOM_TAB_STACK@ > .tab-content[selected="true"] {
-  -moz-border-image: url(chrome://browser/skin/tabbrowser/tab-bottom-selected-active.png) 0 11 repeat stretch;
+  -moz-border-image: url(chrome://browser/skin/tabbrowser/tab-bottom-selected-active.png) 0 11 fill repeat stretch;
 }
 
 /* preloading hack */
@@ -2090,12 +2090,16 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):-moz-locale-dir(ltr),
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):-moz-locale-dir(rtl) {
-  -moz-border-image: url("chrome://browser/skin/tabbrowser/tab-overflow-border.png") 0 2 0 2 / 0 2px 0 0;
+  border-width: 0 2px 0 0;
+  border-style: solid;
+  -moz-border-image: url("chrome://browser/skin/tabbrowser/tab-overflow-border.png") 0 2 0 2 fill;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):-moz-locale-dir(ltr),
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):-moz-locale-dir(rtl) {
-  -moz-border-image: url("chrome://browser/skin/tabbrowser/tab-overflow-border.png") 0 2 0 2 / 0 0 0 2px;
+  border-width: 0 0 0 2px;
+  border-style: solid;
+  -moz-border-image: url("chrome://browser/skin/tabbrowser/tab-overflow-border.png") 0 2 0 2 fill;
 }
 
 /**
@@ -2310,7 +2314,9 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   background-clip: padding-box;
   padding-left: 3px;
   border-radius: 2px 0 0 2px;
-  -moz-border-image: url("chrome://browser/skin/urlbar-arrow.png") 0 8 0 0 / 0 8px 0 0;
+  border-width: 0 8px 0 0;
+  border-style: solid;
+  -moz-border-image: url("chrome://browser/skin/urlbar-arrow.png") 0 8 0 0 fill;
   -moz-margin-end: -8px;
 }
 
