@@ -373,6 +373,13 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        if (mText != null && mText.getText() != null)
+            updateGoButton(mText.getText().toString());
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         mAwesomeTabs.destroy();
