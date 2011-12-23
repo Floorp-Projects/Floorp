@@ -2030,4 +2030,31 @@ NS_IsAboutBlank(nsIURI *uri)
     return str.EqualsLiteral("about:blank");
 }
 
+
+inline nsresult
+NS_GenerateHostPort(const nsCString& host, PRInt32 port,
+                    nsCString& hostLine)
+{
+    if (strchr(host.get(), ':')) {
+        // host is an IPv6 address literal and must be encapsulated in []'s
+        hostLine.Assign('[');
+        // scope id is not needed for Host header.
+        int scopeIdPos = host.FindChar('%');
+        if (scopeIdPos == -1)
+            hostLine.Append(host);
+        else if (scopeIdPos > 0)
+            hostLine.Append(Substring(host, 0, scopeIdPos));
+        else
+          return NS_ERROR_MALFORMED_URI;
+        hostLine.Append(']');
+    }
+    else
+        hostLine.Assign(host);
+    if (port != -1) {
+        hostLine.Append(':');
+        hostLine.AppendInt(port);
+    }
+    return NS_OK;
+}
+
 #endif // !nsNetUtil_h__
