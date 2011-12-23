@@ -2,15 +2,6 @@ tree[type="places"] {
   -moz-binding: url("chrome://browser/content/places/tree.xml#places-tree");
 }
 
-.bookmarks-toolbar-customize,
-toolbarpaletteitem #PlacesToolbarItems {
-  display: none;
-}
-
-toolbarpaletteitem .bookmarks-toolbar-customize {
-  display: -moz-box;
-}
-
 .toolbar-drop-indicator {
   position: relative;
   z-index: 1;
