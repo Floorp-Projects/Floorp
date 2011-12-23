@@ -1215,27 +1215,6 @@ class BooleanLiteral : public ParseNode {
     { }
 };
 
-class PropertyAccess : public ParseNode {
-  public:
-    PropertyAccess(ParseNode *lhs, PropertyName *name,
-                   const TokenPtr &begin, const TokenPtr &end)
-      : ParseNode(PNK_DOT, JSOP_GETPROP, PN_NAME, TokenPos::make(begin, end))
-    {
-        JS_ASSERT(lhs != NULL);
-        JS_ASSERT(name != NULL);
-        pn_u.name.expr = lhs;
-        pn_u.name.atom = name;
-    }
-
-    ParseNode &expression() const {
-        return *pn_u.name.expr;
-    }
-
-    PropertyName &name() const {
-        return *pn_u.name.atom->asPropertyName();
-    }
-};
-
 class XMLDoubleColonProperty : public ParseNode {
   public:
     XMLDoubleColonProperty(ParseNode *lhs, ParseNode *rhs,
@@ -1291,6 +1270,38 @@ class XMLProperty : public ParseNode {
 
     ParseNode &right() const {
         return *pn_u.binary.right;
+    }
+};
+
+class PropertyAccess : public ParseNode {
+  public:
+    PropertyAccess(ParseNode *lhs, PropertyName *name,
+                   const TokenPtr &begin, const TokenPtr &end)
+      : ParseNode(PNK_DOT, JSOP_GETPROP, PN_NAME, TokenPos::make(begin, end))
+    {
+        JS_ASSERT(lhs != NULL);
+        JS_ASSERT(name != NULL);
+        pn_u.name.expr = lhs;
+        pn_u.name.atom = name;
+    }
+
+    ParseNode &expression() const {
+        return *pn_u.name.expr;
+    }
+
+    PropertyName &name() const {
+        return *pn_u.name.atom->asPropertyName();
+    }
+};
+
+class PropertyByValue : public ParseNode {
+  public:
+    PropertyByValue(ParseNode *lhs, ParseNode *propExpr,
+                    const TokenPtr &begin, const TokenPtr &end)
+      : ParseNode(PNK_LB, JSOP_GETELEM, PN_BINARY, TokenPos::make(begin, end))
+    {
+        pn_u.binary.left = lhs;
+        pn_u.binary.right = propExpr;
     }
 };
 
