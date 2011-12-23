@@ -360,24 +360,6 @@ bool condsAreSafe(ALUOp op);
 // If there is a variant of op that has a dest (think cmp/sub)
 // return that variant of it.
 ALUOp getDestVariant(ALUOp op);
-// Operands that are JSVal's.  Why on earth are these part of the assembler?
-class ValueOperand
-{
-    Register type_;
-    Register payload_;
-
-  public:
-    ValueOperand(Register type, Register payload)
-        : type_(type), payload_(payload)
-    { }
-
-    Register typeReg() const {
-        return type_;
-    }
-    Register payloadReg() const {
-        return payload_;
-    }
-};
 
 static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg_Type, JSReturnReg_Data);
 
@@ -858,6 +840,12 @@ class Operand
         return VFPAddr(baseReg(), VFPOffImm(offset));
     }
 };
+
+static inline void
+PatchJump(CodeLocationJump jump, CodeLocationLabel label)
+{
+    JS_NOT_REACHED("NYI");
+}
 
 class Assembler
 {

@@ -57,6 +57,7 @@ namespace ion {
 
 class CheckOverRecursedFailure;
 class OutOfLineUnboxDouble;
+class OutOfLineGetPropertyCache;
 
 class CodeGenerator : public CodeGeneratorSpecific
 {
@@ -69,28 +70,34 @@ class CodeGenerator : public CodeGeneratorSpecific
   public:
     bool generate();
 
-    virtual bool visitCaptureAllocations(LCaptureAllocations *lir);
-    virtual bool visitParameter(LParameter *lir);
-    virtual bool visitStart(LStart *lir);
-    virtual bool visitOsrEntry(LOsrEntry *lir);
-    virtual bool visitValueToInt32(LValueToInt32 *lir);
-    virtual bool visitValueToDouble(LValueToDouble *lir);
-    virtual bool visitInt32ToDouble(LInt32ToDouble *lir);
-    virtual bool visitTestVAndBranch(LTestVAndBranch *lir);
-    virtual bool visitTruncateDToInt32(LTruncateDToInt32 *lir);
-    virtual bool visitPointer(LPointer *lir);
-    virtual bool visitSlots(LSlots *lir);
-    virtual bool visitElements(LElements *lir);
-    virtual bool visitTypeBarrier(LTypeBarrier *lir);
-    virtual bool visitDoubleToInt32(LDoubleToInt32 *lir);
-    virtual bool visitArrayLength(LArrayLength *lir);
-    virtual bool visitStringLength(LStringLength *lir);
-    virtual bool visitInitializedLength(LInitializedLength *lir);
-    virtual bool visitUnboxDouble(LUnboxDouble *lir);
+    bool visitCaptureAllocations(LCaptureAllocations *lir);
+    bool visitParameter(LParameter *lir);
+    bool visitStart(LStart *lir);
+    bool visitOsrEntry(LOsrEntry *lir);
+    bool visitValueToInt32(LValueToInt32 *lir);
+    bool visitValueToDouble(LValueToDouble *lir);
+    bool visitInt32ToDouble(LInt32ToDouble *lir);
+    bool visitTestVAndBranch(LTestVAndBranch *lir);
+    bool visitTruncateDToInt32(LTruncateDToInt32 *lir);
+    bool visitPointer(LPointer *lir);
+    bool visitSlots(LSlots *lir);
+    bool visitElements(LElements *lir);
+    bool visitTypeBarrier(LTypeBarrier *lir);
+    bool visitDoubleToInt32(LDoubleToInt32 *lir);
+    bool visitArrayLength(LArrayLength *lir);
+    bool visitStringLength(LStringLength *lir);
+    bool visitInitializedLength(LInitializedLength *lir);
+    bool visitUnboxDouble(LUnboxDouble *lir);
+    bool visitGetPropertyCacheV(LGetPropertyCacheV *load) { return visitGetPropertyCache(load); }
+    bool visitGetPropertyCacheT(LGetPropertyCacheT *load) { return visitGetPropertyCache(load); }
 
     bool visitCheckOverRecursed(LCheckOverRecursed *lir);
     bool visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool);
     bool visitOutOfLineUnboxDouble(OutOfLineUnboxDouble *ool);
+    bool visitOutOfLineGetPropertyCache(OutOfLineGetPropertyCache *ool);
+
+  private:
+    bool visitGetPropertyCache(LInstruction *load);
 };
 
 } // namespace ion

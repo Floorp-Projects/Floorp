@@ -40,6 +40,7 @@
 
 #include "jsgcmark.h"
 #include "methodjit/MethodJIT.h"
+#include "ion/IonFrames.h"
 #include "Stack.h"
 
 #include "jsgcinlines.h"

@@ -98,6 +98,8 @@
     _(LoadElementT)                 \
     _(StoreElementV)                \
     _(StoreElementT)                \
+    _(GetPropertyCacheV)            \
+    _(GetPropertyCacheT)            \
     _(LoadPropertyGeneric)          \
     _(ArrayLength)                  \
     _(StringLength)

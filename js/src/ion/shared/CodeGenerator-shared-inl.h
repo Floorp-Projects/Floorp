@@ -83,6 +83,40 @@ ToFloatRegister(const LDefinition *def)
     return ToFloatRegister(*def->output());
 }
 
+static inline AnyRegister
+ToAnyRegister(const LAllocation &a)
+{
+    JS_ASSERT(a.isGeneralReg() || a.isFloatReg());
+    if (a.isGeneralReg())
+        return AnyRegister(ToRegister(a));
+    return AnyRegister(ToFloatRegister(a));
+}
+
+static inline AnyRegister
+ToAnyRegister(const LAllocation *a)
+{
+    return ToAnyRegister(*a);
+}
+
+static inline AnyRegister
+ToAnyRegister(const LDefinition *def)
+{
+    return ToAnyRegister(def->output());
+}
+
+static inline ValueOperand
+GetValueOutput(LInstruction *ins)
+{
+#if defined(JS_NUNBOX32)
+    return ValueOperand(ToRegister(ins->getDef(TYPE_INDEX)),
+                        ToRegister(ins->getDef(PAYLOAD_INDEX)));
+#elif defined(JS_PUNBOX64)
+    return ValueOperand(ToRegister(ins->getDef(0)));
+#else
+#error "Unknown"
+#endif
+}
+
 } // ion
 } // js
 

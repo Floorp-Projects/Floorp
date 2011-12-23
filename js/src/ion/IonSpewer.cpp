@@ -203,9 +203,9 @@ ion::CheckLogging()
             "  snapshots Snapshot information\n"
             "  codegen   Native code generation\n"
             "  bailouts  Bailouts\n"
+            "  caches    Inline caches\n"
             "  osi       Invalidation\n"
-
-            "  all      Everything\n"
+            "  all       Everything\n"
             "\n"
         );
         exit(0);
@@ -231,6 +231,8 @@ ion::CheckLogging()
         LoggingBits |= (1 << uint32(IonSpew_Codegen));
     if (ContainsFlag(env, "bailouts"))
         LoggingBits |= (1 << uint32(IonSpew_Bailouts));
+    if (ContainsFlag(env, "caches"))
+        LoggingBits |= (1 << uint32(IonSpew_InlineCaches));
     if (ContainsFlag(env, "osi"))
         LoggingBits |= (1 << uint32(IonSpew_Invalidate));
     if (ContainsFlag(env, "all"))

@@ -94,6 +94,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     /////////////////////////////////////////////////////////////////
     // X86-specific interface.
     /////////////////////////////////////////////////////////////////
+
     Operand ToPayload(Operand base) {
         return base;
     }
@@ -130,9 +131,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movl(val.payloadReg(), ToPayload(dest));
         movl(val.typeReg(), ToType(dest));
     }
-    void loadValue(Operand src, ValueOperand val) {
-        Operand payload = ToPayload(src);
-        Operand type = ToType(src);
+    void loadValue(Address src, ValueOperand val) {
+        Operand payload = ToPayload(Operand(src));
+        Operand type = ToType(Operand(src));
 
         // Ensure that loading the payload does not erase the pointer to the
         // Value in memory.
@@ -297,13 +298,19 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         subl(imm, dest);
     }
 
-    void branchPtr(Condition cond, Register lhs, ImmWord ptr, Label *label) {
-        cmpl(lhs, ptr);
+    template <typename T, typename S>
+    void branchPtr(Condition cond, T lhs, S ptr, Label *label) {
+        cmpl(Operand(lhs), ptr);
         j(cond, label);
     }
-    void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label *label) {
-        cmpl(lhs, ptr);
-        j(cond, label);
+
+    CodeOffsetJump jumpWithPatch(Label *label) {
+        jump(label);
+        return CodeOffsetJump(size());
+    }
+    CodeOffsetJump branchPtrWithPatch(Condition cond, Address addr, ImmGCPtr ptr, Label *label) {
+        branchPtr(cond, addr, ptr, label);
+        return CodeOffsetJump(size());
     }
     void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
         cmpl(lhs, rhs);
@@ -321,6 +328,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void loadPtr(ImmWord imm, Register dest) {
         movl(Operand(imm.asPointer()), dest);
+    }
+    void storePtr(Register src, const Address &address) {
+        movl(src, Operand(address));
     }
 
     void setStackArg(const Register &reg, uint32 arg) {
@@ -408,6 +418,20 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
             unpcklps(ScratchFloatReg, dest);
         }
     }
+    void unboxValue(const ValueOperand &src, AnyRegister dest) {
+        if (dest.isFloat()) {
+            Label notInt32, end;
+            branchTestInt32(Assembler::NotEqual, src, &notInt32);
+            cvtsi2sd(Operand(src.payloadReg()), dest.fpu());
+            jump(&end);
+            bind(&notInt32);
+            unboxDouble(src, dest.fpu());
+            bind(&end);
+        } else {
+            if (src.payloadReg() != dest.gpr())
+                movl(src.payloadReg(), dest.gpr());
+        }
+    }
 
     // Extended unboxing API. If the payload is already in a register, returns
     // that register. Otherwise, provides a move to the given scratch register,
@@ -454,6 +478,19 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         bind(&notInt32);
         movsd(operand, dest);
         bind(&end);
+    }
+    void loadDouble(Address address, FloatRegister dest) {
+        movsd(Operand(address), dest);
+    }
+    void storeDouble(FloatRegister src, Address dest) {
+        movsd(src, Operand(dest));
+    }
+
+    void loadUnboxedValue(Address address, AnyRegister dest) {
+        if (dest.isFloat())
+            loadInt32OrDouble(Operand(address), dest.fpu());
+        else
+            movl(Operand(address), dest.gpr());
     }
 
     void rshiftPtr(Imm32 imm, const Register &dest) {

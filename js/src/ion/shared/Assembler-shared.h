@@ -90,6 +90,8 @@ struct Address
 
     Address(Register base, int32 offset) : base(base), offset(offset)
     { }
+
+    Address() { PodZero(this); }
 };
 
 class Relocation {
@@ -262,6 +264,149 @@ class DeferredData : public TempObject
 
     // Must copy pending data into the buffer.
     virtual void copy(IonCode *code, uint8 *buffer) const = 0;
+};
+
+// Location of a jump or label in a generated IonCode block, relative to the
+// start of the block.
+
+class CodeOffsetJump
+{
+    size_t offset_;
+
+#ifdef JS_CPU_X64
+    size_t jumpTableIndex_;
+#endif
+
+  public:
+
+#ifdef JS_CPU_X64
+    CodeOffsetJump(size_t offset, size_t jumpTableIndex)
+        : offset_(offset), jumpTableIndex_(jumpTableIndex)
+    {}
+    size_t jumpTableIndex() const {
+        return jumpTableIndex_;
+    }
+#else
+    CodeOffsetJump(size_t offset) : offset_(offset) {}
+#endif
+
+    CodeOffsetJump() {
+        PodZero(this);
+    }
+
+    size_t offset() const {
+        return offset_;
+    }
+};
+
+class CodeOffsetLabel
+{
+    size_t offset_;
+
+  public:
+    CodeOffsetLabel(size_t offset) : offset_(offset) {}
+    CodeOffsetLabel() : offset_(0) {}
+
+    size_t offset() const {
+        return offset_;
+    }
+};
+
+// Absolute location of a jump or a label in some generated IonCode block.
+// Can also encode a CodeOffset{Jump,Label}, such that the offset is initially
+// set and the absolute location later filled in after the final IonCode is
+// allocated.
+
+class CodeLocationJump
+{
+    uint8 *raw_;
+
+#ifdef JS_CPU_X64
+    uint8 *jumpTableEntry_;
+#endif
+
+#ifdef DEBUG
+    bool absolute;
+    void markAbsolute(bool value) {
+        absolute = value;
+    }
+#else
+    void markAbsolute(bool value) {}
+#endif
+
+  public:
+    CodeLocationJump() {}
+    CodeLocationJump(IonCode *code, CodeOffsetJump base) {
+        *this = base;
+        repoint(code);
+    }
+
+    void operator = (CodeOffsetJump base) {
+        raw_ = (uint8 *) base.offset();
+#ifdef JS_CPU_X64
+        jumpTableEntry_ = (uint8 *) base.jumpTableIndex();
+#endif
+        markAbsolute(false);
+    }
+
+    void repoint(IonCode *code);
+
+    uint8 *raw() {
+        JS_ASSERT(absolute);
+        return raw_;
+    }
+
+#ifdef JS_CPU_X64
+    uint8 *jumpTableEntry() {
+        JS_ASSERT(absolute);
+        return jumpTableEntry_;
+    }
+#endif
+};
+
+class CodeLocationLabel
+{
+    uint8 *raw_;
+#ifdef DEBUG
+    bool absolute;
+    void markAbsolute(bool value) {
+        absolute = value;
+    }
+#else
+    void markAbsolute(bool value) {}
+#endif
+
+  public:
+    CodeLocationLabel() {}
+    CodeLocationLabel(IonCode *code, CodeOffsetLabel base) {
+        *this = base;
+        repoint(code);
+    }
+    CodeLocationLabel(IonCode *code) {
+        raw_ = code->raw();
+        markAbsolute(true);
+    }
+    CodeLocationLabel(uint8 *raw) {
+        raw_ = raw;
+        markAbsolute(true);
+    }
+
+    void operator = (CodeOffsetLabel base) {
+        raw_ = (uint8 *) base.offset();
+        markAbsolute(false);
+    }
+
+    void repoint(IonCode *code) {
+        JS_ASSERT(!absolute);
+        JS_ASSERT(size_t(raw_) < code->instructionsSize());
+        raw_ = code->raw() + size_t(raw_);
+        markAbsolute(true);
+    }
+
+    uint8 *raw() {
+        JS_ASSERT(absolute);
+        return raw_;
+    }
 };
 
 } // namespace ion

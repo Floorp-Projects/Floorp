@@ -49,6 +49,8 @@
 #endif
 #include "jsopcode.h"
 
+#include "ion/IonCaches.h"
+
 namespace js {
 namespace ion {
 
@@ -117,6 +119,10 @@ class MacroAssemblerX86Shared : public Assembler
         push(t);
         framePushed_ += STACK_SLOT_SIZE;
     }
+    void Pop(const Register &reg) {
+        pop(reg);
+        framePushed_ -= STACK_SLOT_SIZE;
+    }
     void implicitPop(uint32 args) {
         framePushed_ -= args * STACK_SLOT_SIZE;
     }
@@ -130,6 +136,7 @@ class MacroAssemblerX86Shared : public Assembler
     void jump(Label *label) {
         jmp(label);
     }
+
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest) {
         cvtsi2sd(Operand(src), dest);
     }

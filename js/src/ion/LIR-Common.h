@@ -972,6 +972,37 @@ class LStoreElementT : public LInstructionHelper<0, 3, 0>
     }
 };
 
+// Patchable jump to stubs generated for a GetProperty cache, which loads a
+// boxed value.
+class LGetPropertyCacheV : public LInstructionHelper<BOX_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(GetPropertyCacheV);
+    BOX_OUTPUT_ACCESSORS();
+
+    LGetPropertyCacheV(const LAllocation &object) {
+        setOperand(0, object);
+    }
+    const MGetPropertyCache *mir() const {
+        return mir_->toGetPropertyCache();
+    }
+};
+
+// Patchable jump to stubs generated for a GetProperty cache, which loads a
+// value of a known type, possibly into an FP register.
+class LGetPropertyCacheT : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(GetPropertyCacheT);
+
+    LGetPropertyCacheT(const LAllocation &object) {
+        setOperand(0, object);
+    }
+    const MGetPropertyCache *mir() const {
+        return mir_->toGetPropertyCache();
+    }
+};
+
 // Load a value from an object's dslots or a slots vector.
 class LLoadSlotV : public LInstructionHelper<BOX_PIECES, 1, 0>
 {

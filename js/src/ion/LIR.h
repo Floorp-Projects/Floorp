@@ -650,6 +650,9 @@ class LInstruction : public TempObject,
     void assignSnapshot(LSnapshot *snapshot);
     void assignPostSnapshot(LSnapshot *snapshot);
 
+    // Get the set of registers which are live after this operation.
+    RegisterSet liveRegisters();
+
     virtual void print(FILE *fp);
     virtual void printName(FILE *fp);
     virtual void printOperands(FILE *fp);

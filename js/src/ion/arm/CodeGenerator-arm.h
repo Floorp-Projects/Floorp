@@ -176,6 +176,11 @@ private:
     bool visitGuardShape(LGuardShape *guard);
     bool visitGuardClass(LGuardClass *guard);
     bool visitImplicitThis(LImplicitThis *lir);
+
+    bool callVM(const VMFunction &f, LInstruction *ins) {
+        JS_NOT_REACHED("NYI");
+        return false;
+    }
 };
 
 typedef CodeGeneratorARM CodeGeneratorSpecific;
