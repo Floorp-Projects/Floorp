@@ -345,10 +345,11 @@ class StackFrame
         HAS_RVAL           =    0x20000,  /* frame has rval_ set */
         HAS_SCOPECHAIN     =    0x40000,  /* frame has scopeChain_ set */
         HAS_PREVPC         =    0x80000,  /* frame has prevpc_ and prevInline_ set */
+        HAS_BLOCKCHAIN     =   0x100000,  /* frame has blockChain_ set */
 
         /* Method JIT state */
-        DOWN_FRAMES_EXPANDED = 0x100000,  /* inlining in down frames has been expanded */
-        LOWERED_CALL_APPLY   = 0x200000   /* Pushed by a lowered call/apply */
+        DOWN_FRAMES_EXPANDED = 0x400000,  /* inlining in down frames has been expanded */
+        LOWERED_CALL_APPLY   = 0x800000   /* Pushed by a lowered call/apply */
     };
 
   private:
@@ -368,6 +369,7 @@ class StackFrame
 
     /* Lazily initialized */
     Value               rval_;          /* return value of the frame */
+    JSObject            *blockChain_;   /* innermost let block */
     jsbytecode          *prevpc_;       /* pc of previous frame*/
     JSInlinedSite       *prevInline_;   /* inlined site in previous frame */
     void                *hookData_;     /* closure returned by call hook */
@@ -839,6 +841,26 @@ class StackFrame
     inline CallObject &callObj() const;
     inline void setScopeChainNoCallObj(JSObject &obj);
     inline void setScopeChainWithOwnCallObj(CallObject &obj);
+
+    /* Block chain */
+
+    bool hasBlockChain() const {
+        return (flags_ & HAS_BLOCKCHAIN) && blockChain_;
+    }
+
+    JSObject *maybeBlockChain() {
+        return (flags_ & HAS_BLOCKCHAIN) ? blockChain_ : NULL;
+    }
+
+    JSObject &blockChain() const {
+        JS_ASSERT(hasBlockChain());
+        return *blockChain_;
+    }
+
+    void setBlockChain(JSObject *obj) {
+        flags_ |= HAS_BLOCKCHAIN;
+        blockChain_ = obj;
+    }
 
     /*
      * Prologue for function frames: make a call object for heavyweight

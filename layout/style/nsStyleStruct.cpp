@@ -380,29 +380,35 @@ nsChangeHint nsStylePadding::MaxDifference()
 #endif
 
 nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
-  : mHaveBorderImageWidth(false)
+  : mBorderColors(nsnull),
+    mBoxShadow(nsnull),
 #ifdef DEBUG
-  , mImageTracked(false)
+    mImageTracked(false),
 #endif
-  , mComputedBorder(0, 0, 0, 0)
-  , mBorderImage(nsnull)
+    mBorderImageSource(nsnull),
+    mBorderImageFill(NS_STYLE_BORDER_IMAGE_SLICE_NOFILL),
+    mBorderImageRepeatH(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH),
+    mBorderImageRepeatV(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH),
+    mFloatEdge(NS_STYLE_FLOAT_EDGE_CONTENT),
+    mComputedBorder(0, 0, 0, 0)
 {
   MOZ_COUNT_CTOR(nsStyleBorder);
+
+  NS_FOR_CSS_HALF_CORNERS (corner) {
+    mBorderRadius.Set(corner, nsStyleCoord(0, nsStyleCoord::CoordConstructor));
+  }
+
   nscoord medium =
     (aPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM];
   NS_FOR_CSS_SIDES(side) {
+    mBorderImageSlice.Set(side, nsStyleCoord(1.0f, eStyleUnit_Percent));
+    mBorderImageWidth.Set(side, nsStyleCoord(1.0f, eStyleUnit_Factor));
+    mBorderImageOutset.Set(side, nsStyleCoord(0.0f, eStyleUnit_Factor));
+
     mBorder.Side(side) = medium;
     mBorderStyle[side] = NS_STYLE_BORDER_STYLE_NONE | BORDER_COLOR_FOREGROUND;
     mBorderColor[side] = NS_RGB(0, 0, 0);
   }
-  NS_FOR_CSS_HALF_CORNERS(corner) {
-    mBorderRadius.Set(corner, nsStyleCoord(0, nsStyleCoord::CoordConstructor));
-  }
-
-  mBorderColors = nsnull;
-  mBoxShadow = nsnull;
-
-  mFloatEdge = NS_STYLE_FLOAT_EDGE_CONTENT;
 
   mTwipsPerPixel = aPresContext->DevPixelsToAppUnits(1);
 }
@@ -424,18 +430,22 @@ nsBorderColors::Clone(bool aDeep) const
 }
 
 nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
-  : mBorderRadius(aSrc.mBorderRadius),
-    mBorderImageSplit(aSrc.mBorderImageSplit),
-    mFloatEdge(aSrc.mFloatEdge),
-    mBorderImageHFill(aSrc.mBorderImageHFill),
-    mBorderImageVFill(aSrc.mBorderImageVFill),
-    mBorderColors(nsnull),
+  : mBorderColors(nsnull),
     mBoxShadow(aSrc.mBoxShadow),
-    mHaveBorderImageWidth(aSrc.mHaveBorderImageWidth),
+#ifdef DEBUG
+    mImageTracked(false),
+#endif
+    mBorderImageSource(aSrc.mBorderImageSource),
+    mBorderRadius(aSrc.mBorderRadius),
+    mBorderImageSlice(aSrc.mBorderImageSlice),
+    mBorderImageFill(aSrc.mBorderImageFill),
     mBorderImageWidth(aSrc.mBorderImageWidth),
+    mBorderImageOutset(aSrc.mBorderImageOutset),
+    mBorderImageRepeatH(aSrc.mBorderImageRepeatH),
+    mBorderImageRepeatV(aSrc.mBorderImageRepeatV),
+    mFloatEdge(aSrc.mFloatEdge),
     mComputedBorder(aSrc.mComputedBorder),
     mBorder(aSrc.mBorder),
-    mBorderImage(aSrc.mBorderImage),
     mTwipsPerPixel(aSrc.mTwipsPerPixel)
 {
   MOZ_COUNT_CTOR(nsStyleBorder);
@@ -452,9 +462,6 @@ nsStyleBorder::nsStyleBorder(const nsStyleBorder& aSrc)
     mBorderStyle[side] = aSrc.mBorderStyle[side];
     mBorderColor[side] = aSrc.mBorderColor[side];
   }
-  NS_FOR_CSS_HALF_CORNERS(corner) {
-    mBorderRadius.Set(corner, aSrc.mBorderRadius.Get(corner));
-  }
 }
 
 nsStyleBorder::~nsStyleBorder()
@@ -469,22 +476,48 @@ nsStyleBorder::~nsStyleBorder()
   }
 }
 
-void* 
+void*
 nsStyleBorder::operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
   void* result = aContext->AllocateFromShell(sz);
   if (result)
     memset(result, 0, sz);
   return result;
 }
-  
-void 
+
+nsMargin
+nsStyleBorder::GetImageOutset() const
+{
+  // We don't check whether there is a border-image (which is OK since
+  // the initial values yields 0 outset) so that we don't have to
+  // reflow to update overflow areas when an image loads.
+  nsMargin outset;
+  NS_FOR_CSS_SIDES(s) {
+    nsStyleCoord coord = mBorderImageOutset.Get(s);
+    nscoord value;
+    switch (coord.GetUnit()) {
+      case eStyleUnit_Coord:
+        value = coord.GetCoordValue();
+        break;
+      case eStyleUnit_Factor:
+        value = coord.GetFactorValue() * mComputedBorder.Side(s);
+        break;
+      default:
+        NS_NOTREACHED("unexpected CSS unit for image outset");
+        value = 0;
+        break;
+    }
+    outset.Side(s) = value;
+  }
+  return outset;
+}
+
+void
 nsStyleBorder::Destroy(nsPresContext* aContext) {
-  if (mBorderImage)
+  if (mBorderImageSource)
     UntrackImage(aContext);
   this->~nsStyleBorder();
   aContext->FreeToShell(sizeof(nsStyleBorder), this);
 }
-
 
 nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
 {
@@ -496,8 +529,9 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
   // XXXbz we should be able to return a more specific change hint for
   // at least GetActualBorder() differences...
   if (mTwipsPerPixel != aOther.mTwipsPerPixel ||
-      GetActualBorder() != aOther.GetActualBorder() || 
+      GetActualBorder() != aOther.GetActualBorder() ||
       mFloatEdge != aOther.mFloatEdge ||
+      mBorderImageOutset != aOther.mBorderImageOutset ||
       (shadowDifference & nsChangeHint_ReflowFrame))
     return NS_STYLE_HINT_REFLOW;
 
@@ -517,13 +551,14 @@ nsChangeHint nsStyleBorder::CalcDifference(const nsStyleBorder& aOther) const
     return NS_STYLE_HINT_VISUAL;
 
   if (IsBorderImageLoaded() || aOther.IsBorderImageLoaded()) {
-    if (mBorderImage != aOther.mBorderImage ||
-        mBorderImageHFill != aOther.mBorderImageHFill ||
-        mBorderImageVFill != aOther.mBorderImageVFill ||
-        mBorderImageSplit != aOther.mBorderImageSplit)
+    if (mBorderImageSource  != aOther.mBorderImageSource  ||
+        mBorderImageRepeatH != aOther.mBorderImageRepeatH ||
+        mBorderImageRepeatV != aOther.mBorderImageRepeatV ||
+        mBorderImageSlice   != aOther.mBorderImageSlice   ||
+        mBorderImageFill    != aOther.mBorderImageFill    ||
+        mBorderImageWidth   != aOther.mBorderImageWidth   ||
+        mBorderImageOutset  != aOther.mBorderImageOutset)
       return NS_STYLE_HINT_VISUAL;
-    // The call to GetActualBorder above already considered
-    // mBorderImageWidth and mHaveBorderImageWidth.
   }
 
   // Note that at this point if mBorderColors is non-null so is
@@ -547,36 +582,17 @@ nsChangeHint nsStyleBorder::MaxDifference()
 }
 #endif
 
-bool
-nsStyleBorder::ImageBorderDiffers() const
-{
-  return mComputedBorder !=
-           (mHaveBorderImageWidth ? mBorderImageWidth : mBorder);
-}
-
-const nsMargin&
-nsStyleBorder::GetActualBorder() const
-{
-  if (IsBorderImageLoaded())
-    if (mHaveBorderImageWidth)
-      return mBorderImageWidth;
-    else
-      return mBorder;
-  else
-    return mComputedBorder;
-}
-
 void
 nsStyleBorder::TrackImage(nsPresContext* aContext)
 {
   // Sanity
   NS_ABORT_IF_FALSE(!mImageTracked, "Already tracking image!");
-  NS_ABORT_IF_FALSE(mBorderImage, "Can't track null image!");
+  NS_ABORT_IF_FALSE(mBorderImageSource, "Can't track null image!");
 
   // Register the image with the document
   nsIDocument* doc = aContext->Document();
   if (doc)
-    doc->AddImage(mBorderImage);
+    doc->AddImage(mBorderImageSource);
 
   // Mark state
 #ifdef DEBUG
@@ -589,12 +605,12 @@ nsStyleBorder::UntrackImage(nsPresContext* aContext)
 {
   // Sanity
   NS_ABORT_IF_FALSE(mImageTracked, "Image not tracked!");
-  NS_ABORT_IF_FALSE(mBorderImage, "Can't track null image!");
+  NS_ABORT_IF_FALSE(mBorderImageSource, "Can't track null image!");
 
   // Unregister the image with the document
   nsIDocument* doc = aContext->Document();
   if (doc)
-    doc->RemoveImage(mBorderImage);
+    doc->RemoveImage(mBorderImageSource);
 
   // Mark state
 #ifdef DEBUG

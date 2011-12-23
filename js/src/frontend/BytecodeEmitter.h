@@ -138,7 +138,7 @@ struct StmtInfo {
     ptrdiff_t       continues;      /* offset of last continue in loop */
     union {
         JSAtom      *label;         /* name of LABEL */
-        ObjectBox   *blockBox;      /* block scope object */
+        JSObject    *blockObj;      /* block scope object */
     };
     StmtInfo        *down;          /* info for enclosing statement */
     StmtInfo        *downScope;     /* next enclosing lexical scope */
@@ -299,7 +299,7 @@ struct TreeContext {                /* tree context for semantic checks */
                                        at non-zero depth in current paren tree */
     StmtInfo        *topStmt;       /* top of statement info stack */
     StmtInfo        *topScopeStmt;  /* top lexical scope statement */
-    ObjectBox       *blockChainBox; /* compile time block scope chain (NB: one
+    JSObject        *blockChain;    /* compile time block scope chain (NB: one
                                        deeper than the topScopeStmt/downScope
                                        chain when in head of let block/expr) */
     ParseNode       *blockNode;     /* parse node for a block with let declarations
@@ -375,10 +375,6 @@ struct TreeContext {                /* tree context for semantic checks */
     }
 
     uintN blockid() { return topStmt ? topStmt->blockid : bodyid; }
-
-    JSObject *blockChain() {
-        return blockChainBox ? blockChainBox->object : NULL;
-    }
 
     /*
      * True if we are at the topmost level of a entire script or function body.
@@ -797,12 +793,6 @@ ptrdiff_t
 Emit3(JSContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1, jsbytecode op2);
 
 /*
- * Emit five bytecodes, an opcode with two 16-bit immediates.
- */
-ptrdiff_t
-Emit5(JSContext *cx, BytecodeEmitter *bce, JSOp op, uint16_t op1, uint16_t op2);
-
-/*
  * Emit (1 + extra) bytecodes, for N bytes of op and its immediate operand.
  */
 ptrdiff_t
@@ -843,7 +833,7 @@ PushStatement(TreeContext *tc, StmtInfo *stmt, StmtType type, ptrdiff_t top);
  * (if generating code), PopStatementBCE.
  */
 void
-PushBlockScope(TreeContext *tc, StmtInfo *stmt, ObjectBox *blockBox, ptrdiff_t top);
+PushBlockScope(TreeContext *tc, StmtInfo *stmt, JSObject *blockObj, ptrdiff_t top);
 
 /*
  * Pop tc->topStmt. If the top StmtInfo struct is not stack-allocated, it
@@ -952,9 +942,10 @@ enum SrcNoteType {
                                    from before loop, else JSOP_NOP at top of
                                    do-while loop */
     SRC_CONTINUE    = 5,        /* JSOP_GOTO is a continue, not a break;
-                                   also used on JSOP_ENDINIT if extra comma
-                                   at end of array literal: [1,2,,];
-                                   JSOP_DUP continuing destructuring pattern */
+                                   JSOP_ENDINIT needs extra comma at end of
+                                   array literal: [1,2,,];
+                                   JSOP_DUP continuing destructuring pattern;
+                                   JSOP_POP at end of for-in */
     SRC_DECL        = 6,        /* type of a declaration (var, const, let*) */
     SRC_DESTRUCT    = 6,        /* JSOP_DUP starting a destructuring assignment
                                    operation, with SRC_DECL_* offset operand */
@@ -962,6 +953,8 @@ enum SrcNoteType {
                                    next POP, or from CONDSWITCH to first CASE
                                    opcode, etc. -- always a forward delta */
     SRC_GROUPASSIGN = 7,        /* SRC_DESTRUCT variant for [a, b] = [c, d] */
+    SRC_DESTRUCTLET = 7,        /* JSOP_DUP starting a destructuring let
+                                   operation, with offset to JSOP_ENTERLET0 */
     SRC_ASSIGNOP    = 8,        /* += or another assign-op follows */
     SRC_COND        = 9,        /* JSOP_IFEQ is from conditional ?: operator */
     SRC_BRACE       = 10,       /* mandatory brace, for scope or to avoid
@@ -1040,6 +1033,8 @@ enum SrcNoteType {
 #define SN_3BYTE_OFFSET_FLAG    0x80
 #define SN_3BYTE_OFFSET_MASK    0x7f
 
+#define SN_MAX_OFFSET ((size_t)((ptrdiff_t)SN_3BYTE_OFFSET_FLAG << 16) - 1)
+
 #define SN_LENGTH(sn)           ((js_SrcNoteSpec[SN_TYPE(sn)].arity == 0) ? 1 \
                                  : js_SrcNoteLength(sn))
 #define SN_NEXT(sn)             ((sn) + SN_LENGTH(sn))
@@ -1110,6 +1105,28 @@ BytecodeEmitter::countFinalSourceNotes()
             cnt += JS_HOWMANY(diff, SN_XDELTA_MASK);
     }
     return cnt;
+}
+
+/*
+ * To avoid offending js_SrcNoteSpec[SRC_DECL].arity, pack the two data needed
+ * to decompile let into one ptrdiff_t:
+ *   offset: offset to the LEAVEBLOCK(EXPR) op (not including ENTER/LEAVE)
+ *   groupAssign: whether this was an optimized group assign ([x,y] = [a,b])
+ */
+inline ptrdiff_t PackLetData(size_t offset, bool groupAssign)
+{
+    JS_ASSERT(offset <= (size_t(-1) >> 1));
+    return ptrdiff_t(offset << 1) | ptrdiff_t(groupAssign);
+}
+
+inline size_t LetDataToOffset(ptrdiff_t w)
+{
+    return size_t(w) >> 1;
+}
+
+inline bool LetDataToGroupAssign(ptrdiff_t w)
+{
+    return size_t(w) & 1;
 }
 
 } /* namespace js */

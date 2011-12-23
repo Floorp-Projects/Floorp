@@ -1,4 +1,0 @@
-#filter substitution
-
-android-res.jar:
-  res/values-@AB_CD@/android_strings.dtd    (%android_strings.dtd)

@@ -845,6 +845,11 @@ struct ParseNode {
     /* Return true if this node appears in a Directive Prologue. */
     bool isDirectivePrologueMember() const { return pn_prologue; }
 
+#ifdef JS_HAS_DESTRUCTURING
+    /* Return true if this represents a hole in an array literal. */
+    bool isArrayHole() const { return isKind(PNK_COMMA) && isArity(PN_NULLARY); }
+#endif
+
 #ifdef JS_HAS_GENERATOR_EXPRS
     /*
      * True if this node is a desugared generator expression.
@@ -1293,8 +1298,6 @@ struct ObjectBox {
     ObjectBox           *traceLink;
     ObjectBox           *emitLink;
     JSObject            *object;
-    ObjectBox           *parent;
-    uintN               index;
     bool                isFunctionBox;
 };
 

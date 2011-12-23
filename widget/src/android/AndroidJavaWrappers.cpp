@@ -480,6 +480,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
+        case VIEWPORT:
         case BROADCAST: {
             ReadCharactersField(jenv);
             ReadCharactersExtraField(jenv);

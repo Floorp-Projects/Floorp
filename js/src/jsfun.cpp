@@ -2281,7 +2281,7 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
 }
 
 JSFunction *
-js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
+js_NewFlatClosure(JSContext *cx, JSFunction *fun)
 {
     /*
      * Flat closures cannot yet be partial, that is, all upvars must be copied,

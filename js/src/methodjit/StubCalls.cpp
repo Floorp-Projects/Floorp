@@ -673,7 +673,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
     } else {
         JS_ASSERT(!fun->isFlatClosure());
 
-        obj2 = GetScopeChainFast(cx, fp, JSOP_DEFFUN, JSOP_DEFFUN_LENGTH);
+        obj2 = GetScopeChain(cx, fp);
         if (!obj2)
             THROW();
     }
@@ -1333,8 +1333,7 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
     if (fun->isNullClosure()) {
         parent = &f.fp()->scopeChain();
     } else {
-        parent = GetScopeChainFast(f.cx, f.fp(), JSOP_DEFLOCALFUN,
-                                   JSOP_DEFLOCALFUN_LENGTH);
+        parent = GetScopeChain(f.cx, f.fp());
         if (!parent)
             THROWV(NULL);
     }
@@ -1350,7 +1349,7 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
 JSObject * JS_FASTCALL
 stubs::DefLocalFun_FC(VMFrame &f, JSFunction *fun)
 {
-    JSObject *obj = js_NewFlatClosure(f.cx, fun, JSOP_DEFLOCALFUN_FC, JSOP_DEFLOCALFUN_FC_LENGTH);
+    JSObject *obj = js_NewFlatClosure(f.cx, fun);
     if (!obj)
         THROWV(NULL);
     return obj;
@@ -1376,8 +1375,8 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
 JSObject * JS_FASTCALL
 stubs::LambdaJoinableForInit(VMFrame &f, JSFunction *fun)
 {
-    DebugOnly<jsbytecode*> nextpc = (jsbytecode *) f.scratch;
     JS_ASSERT(fun->joinable());
+    DebugOnly<jsbytecode*> nextpc = f.regs.pc + JSOP_LAMBDA_LENGTH;
     JS_ASSERT(fun->methodAtom() == f.script()->getAtom(GET_SLOTNO(nextpc)));
     return fun;
 }
@@ -1386,9 +1385,9 @@ JSObject * JS_FASTCALL
 stubs::LambdaJoinableForSet(VMFrame &f, JSFunction *fun)
 {
     JS_ASSERT(fun->joinable());
-    DebugOnly<jsbytecode*> nextpc = (jsbytecode *) f.scratch;
     const Value &lref = f.regs.sp[-1];
     if (lref.isObject() && lref.toObject().canHaveMethodBarrier()) {
+        DebugOnly<jsbytecode*> nextpc = f.regs.pc + JSOP_LAMBDA_LENGTH;
         JS_ASSERT(fun->methodAtom() == f.script()->getAtom(GET_SLOTNO(nextpc)));
         return fun;
     }
@@ -1399,7 +1398,6 @@ JSObject * JS_FASTCALL
 stubs::LambdaJoinableForCall(VMFrame &f, JSFunction *fun)
 {
     JS_ASSERT(fun->joinable());
-    jsbytecode *nextpc = (jsbytecode *) f.scratch;
 
     /*
      * Array.prototype.sort and String.prototype.replace are optimized as if
@@ -1407,7 +1405,7 @@ stubs::LambdaJoinableForCall(VMFrame &f, JSFunction *fun)
      * object fun, therefore we don't need to clone that compiler-created
      * function object for identity/mutation reasons.
      */
-    int iargc = GET_ARGC(nextpc);
+    int iargc = GET_ARGC(f.regs.pc + JSOP_LAMBDA_LENGTH);
 
     /*
      * Note that we have not yet pushed fun as the final argument, so
@@ -1444,7 +1442,7 @@ stubs::Lambda(VMFrame &f, JSFunction *fun)
     if (fun->isNullClosure()) {
         parent = &f.fp()->scopeChain();
     } else {
-        parent = GetScopeChainFast(f.cx, f.fp(), JSOP_LAMBDA, JSOP_LAMBDA_LENGTH);
+        parent = GetScopeChain(f.cx, f.fp());
         if (!parent)
             THROWV(NULL);
     }
@@ -1763,7 +1761,7 @@ stubs::Throw(VMFrame &f)
 JSObject * JS_FASTCALL
 stubs::FlatLambda(VMFrame &f, JSFunction *fun)
 {
-    JSObject *obj = js_NewFlatClosure(f.cx, fun, JSOP_LAMBDA_FC, JSOP_LAMBDA_FC_LENGTH);
+    JSObject *obj = js_NewFlatClosure(f.cx, fun);
     if (!obj)
         THROWV(NULL);
     return obj;
@@ -1819,21 +1817,23 @@ void JS_FASTCALL
 stubs::EnterBlock(VMFrame &f, JSObject *obj)
 {
     FrameRegs &regs = f.regs;
-#ifdef DEBUG
     StackFrame *fp = f.fp();
-#endif
 
     JS_ASSERT(!f.regs.inlined());
     JS_ASSERT(obj->isStaticBlock());
-    JS_ASSERT(fp->base() + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
-    Value *vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
-    JS_ASSERT(regs.sp < vp);
-    JS_ASSERT(vp <= fp->slots() + fp->script()->nslots);
-    SetValueRangeToUndefined(regs.sp, vp);
-    regs.sp = vp;
+
+    if (*regs.pc == JSOP_ENTERBLOCK) {
+        JS_ASSERT(fp->base() + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
+        Value *vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
+        JS_ASSERT(regs.sp < vp);
+        JS_ASSERT(vp <= fp->slots() + fp->script()->nslots);
+        SetValueRangeToUndefined(regs.sp, vp);
+        regs.sp = vp;
+    }
 
 #ifdef DEBUG
     JSContext *cx = f.cx;
+    JS_ASSERT(fp->maybeBlockChain() == obj->staticBlockScopeChain());
 
     /*
      * The young end of fp->scopeChain() may omit blocks if we haven't closed
@@ -1854,17 +1854,19 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
             JS_ASSERT(parent);
     }
 #endif
+
+    fp->setBlockChain(obj);
 }
 
 void JS_FASTCALL
-stubs::LeaveBlock(VMFrame &f, JSObject *blockChain)
+stubs::LeaveBlock(VMFrame &f)
 {
     JSContext *cx = f.cx;
     StackFrame *fp = f.fp();
 
 #ifdef DEBUG
-    JS_ASSERT(blockChain->isStaticBlock());
-    uintN blockDepth = OBJ_BLOCK_DEPTH(cx, blockChain);
+    JS_ASSERT(fp->blockChain().isBlock());
+    uintN blockDepth = OBJ_BLOCK_DEPTH(cx, &fp->blockChain());
 
     JS_ASSERT(blockDepth <= StackDepth(fp->script()));
 #endif
@@ -1873,12 +1875,15 @@ stubs::LeaveBlock(VMFrame &f, JSObject *blockChain)
      * cloned onto fp->scopeChain(), clear its private data, move its locals from
      * the stack into the clone, and pop it off the chain.
      */
-    JSObject *obj = &fp->scopeChain();
-    if (obj->getProto() == blockChain) {
-        JS_ASSERT(obj->isBlock());
+    JSObject &obj = fp->scopeChain();
+    JSObject &blockChain = fp->blockChain();
+    if (obj.getProto() == &blockChain) {
+        JS_ASSERT(obj.isBlock());
         if (!js_PutBlockObject(cx, JS_TRUE))
             THROW();
     }
+
+    fp->setBlockChain(blockChain.staticBlockScopeChain());
 }
 
 void * JS_FASTCALL

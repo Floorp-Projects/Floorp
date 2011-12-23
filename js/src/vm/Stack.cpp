@@ -78,7 +78,7 @@ StackFrame::initExecuteFrame(JSScript *script, StackFrame *prev, FrameRegs *regs
      * script in the context of another frame and the frame type is determined
      * by the context.
      */
-    flags_ = type | HAS_SCOPECHAIN | HAS_PREVPC;
+    flags_ = type | HAS_SCOPECHAIN | HAS_BLOCKCHAIN | HAS_PREVPC;
     if (!(flags_ & GLOBAL))
         flags_ |= (prev->flags_ & (FUNCTION | GLOBAL));
 
@@ -102,6 +102,7 @@ StackFrame::initExecuteFrame(JSScript *script, StackFrame *prev, FrameRegs *regs
     prev_ = prev;
     prevpc_ = regs ? regs->pc : (jsbytecode *)0xbad;
     prevInline_ = regs ? regs->inlined() : NULL;
+    blockChain_ = NULL;
 
 #ifdef DEBUG
     ncode_ = (void *)0xbad;
