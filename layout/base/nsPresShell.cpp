@@ -3616,6 +3616,9 @@ PresShell::ScheduleViewManagerFlush()
   if (presContext) {
     presContext->RefreshDriver()->ScheduleViewManagerFlush();
   }
+  if (mDocument) {
+    mDocument->SetNeedLayoutFlush();
+  }
 }
 
 void
@@ -4093,6 +4096,10 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
       nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
       if (rootPresContext) {
         rootPresContext->UpdatePluginGeometry();
+      }
+
+      if (!mIsDestroying) {
+        mViewManager->UpdateWidgetGeometry();
       }
     }
   }
