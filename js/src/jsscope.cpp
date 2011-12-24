@@ -654,18 +654,18 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
         }
     }
 
-    if (!maybeSetIndexed(cx, id))
-        return NULL;
-
     /* Find or create a property tree node labeled by our arguments. */
     Shape *shape;
     {
+        jsuint index;
+        bool indexed = js_IdIsIndex(id, &index);
         UnownedBaseShape *nbase;
-        if (lastProperty()->base()->matchesGetterSetter(getter, setter)) {
+        if (lastProperty()->base()->matchesGetterSetter(getter, setter) && !indexed) {
             nbase = lastProperty()->base()->unowned();
         } else {
-            BaseShape base(getClass(), getParent(), lastProperty()->getObjectFlags(),
-                           attrs, getter, setter);
+            uint32_t flags = lastProperty()->getObjectFlags()
+                             | (indexed ? BaseShape::INDEXED : 0);
+            BaseShape base(getClass(), getParent(), flags, attrs, getter, setter);
             nbase = BaseShape::getUnowned(cx, base);
             if (!nbase)
                 return NULL;
@@ -764,8 +764,11 @@ JSObject::putProperty(JSContext *cx, jsid id,
 
     UnownedBaseShape *nbase;
     {
-        BaseShape base(getClass(), getParent(), lastProperty()->getObjectFlags(),
-                       attrs, getter, setter);
+        jsuint index;
+        bool indexed = js_IdIsIndex(id, &index);
+        uint32_t flags = lastProperty()->getObjectFlags()
+                         | (indexed ? BaseShape::INDEXED : 0);
+        BaseShape base(getClass(), getParent(), flags, attrs, getter, setter);
         nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return NULL;
@@ -824,16 +827,6 @@ JSObject::putProperty(JSContext *cx, jsid id,
         shape->attrs = uint8_t(attrs);
         shape->flags = flags | Shape::IN_DICTIONARY;
         shape->shortid_ = int16_t(shortid);
-
-        /*
-         * We are done updating shape and the last property. Now we may need to
-         * update flags. In the last non-dictionary property case in the else
-         * clause just below, getChildProperty handles this for us. First update
-         * flags.
-         */
-        jsuint index;
-        if (js_IdIsIndex(shape->propid(), &index))
-            shape->base()->setObjectFlag(BaseShape::INDEXED);
     } else {
         /*
          * Updating the last property in a non-dictionary-mode object. Such
@@ -956,6 +949,21 @@ JSObject::removeProperty(JSContext *cx, jsid id)
         if (!spare)
             return false;
         new (spare) Shape(shape->base()->unowned(), 0);
+        if (shape == lastProperty()) {
+            /*
+             * Get an up to date unowned base shape for the new last property
+             * when removing the dictionary's last property. Information in
+             * base shapes for non-last properties may be out of sync with the
+             * object's state.
+             */
+            Shape *previous = lastProperty()->parent;
+            BaseShape base(getClass(), getParent(), lastProperty()->getObjectFlags(),
+                           previous->attrs, previous->getter(), previous->setter());
+            BaseShape *nbase = BaseShape::getUnowned(cx, base);
+            if (!nbase)
+                return false;
+            previous->base_ = nbase;
+        }
     }
 
     /* If shape has a slot, free its slot number. */
@@ -1143,7 +1151,13 @@ JSObject::setParent(JSContext *cx, JSObject *parent)
         return false;
 
     if (inDictionaryMode()) {
-        lastProperty()->base()->setParent(parent);
+        BaseShape base(*lastProperty()->base()->unowned());
+        base.setObjectParent(parent);
+        UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
+        if (!nbase)
+            return false;
+
+        lastProperty()->base()->adoptUnowned(nbase);
         return true;
     }
 
@@ -1157,7 +1171,7 @@ Shape::setObjectParent(JSContext *cx, JSObject *parent, JSObject *proto, HeapPtr
         return true;
 
     BaseShape base(*(*listp)->base()->unowned());
-    base.setParent(parent);
+    base.setObjectParent(parent);
 
     return replaceLastProperty(cx, base, proto, listp);
 }
@@ -1196,7 +1210,14 @@ JSObject::setFlag(JSContext *cx, /*BaseShape::Flag*/ uint32_t flag_, GenerateSha
     if (inDictionaryMode()) {
         if (generateShape == GENERATE_SHAPE && !generateOwnShape(cx))
             return false;
-        lastProperty()->base()->setObjectFlag(flag);
+
+        BaseShape base(*lastProperty()->base()->unowned());
+        base.setObjectFlag(flag);
+        UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
+        if (!nbase)
+            return false;
+
+        lastProperty()->base()->adoptUnowned(nbase);
         return true;
     }
 
