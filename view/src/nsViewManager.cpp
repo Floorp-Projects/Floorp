@@ -480,7 +480,6 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
     dirtyRegion->SimplifyOutward(8);
     nsViewManager* rootVM = RootViewManager();
     rootVM->mHasPendingUpdates = true;
-    rootVM->IncrementUpdateCount();
     return;
     // this should only happen at the top level, and this result
     // should not be consumed by top-level callers, so it doesn't
@@ -619,8 +618,6 @@ NS_IMETHODIMP nsViewManager::UpdateViewNoSuppression(nsIView *aView,
   damagedRect = damagedRect.ConvertAppUnitsRoundOut(APD, rootAPD);
   displayRootVM->UpdateWidgetArea(displayRoot, displayRoot->GetWidget(),
                                   nsRegion(damagedRect), nsnull);
-
-  RootViewManager()->IncrementUpdateCount();
 
   return NS_OK;
 }
