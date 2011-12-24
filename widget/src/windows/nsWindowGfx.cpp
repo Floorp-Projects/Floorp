@@ -574,7 +574,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
             // When our device was removed, we should have gfxWindowsPlatform
             // check if its render mode is up to date!
             gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
-            Invalidate(false);
+            Invalidate();
           }
         }
         break;
@@ -585,7 +585,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
           gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
           LayerManagerD3D10 *layerManagerD3D10 = static_cast<mozilla::layers::LayerManagerD3D10*>(GetLayerManager());
           if (layerManagerD3D10->device() != gfxWindowsPlatform::GetPlatform()->GetD3D10Device()) {
-            Invalidate(false);
+            Invalidate();
           } else {
             result = DispatchWindowEvent(&event, eventStatus);
           }
