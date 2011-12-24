@@ -238,6 +238,11 @@ public:
 			   mozFlushType aFlushType);
 #endif
 
+  /**
+   * Default interval the refresh driver uses, in ms.
+   */
+  static PRInt32 DefaultInterval();
+
 private:
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
   typedef nsTHashtable<nsISupportsHashKey> RequestTable;
