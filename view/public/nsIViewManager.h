@@ -120,9 +120,8 @@ public:
    * Called to inform the view manager that the entire area of a view
    * is dirty and needs to be redrawn.
    * @param aView view to paint. should be root view
-   * @param aUpdateFlags see bottom of nsIViewManager.h for description
    */
-  NS_IMETHOD  UpdateView(nsIView *aView, PRUint32 aUpdateFlags) = 0;
+  NS_IMETHOD  UpdateView(nsIView *aView) = 0;
 
   /**
    * Called to inform the view manager that some portion of a view is dirty and
@@ -130,17 +129,14 @@ public:
    * space. Does not check for paint suppression.
    * @param aView view to paint. should be root view
    * @param rect rect to mark as damaged
-   * @param aUpdateFlags see bottom of nsIViewManager.h for description
    */
-  NS_IMETHOD  UpdateViewNoSuppression(nsIView *aView, const nsRect &aRect,
-                                      PRUint32 aUpdateFlags) = 0;
+  NS_IMETHOD  UpdateViewNoSuppression(nsIView *aView, const nsRect &aRect) = 0;
 
   /**
    * Called to inform the view manager that it should redraw all views.
    * @param aView view to paint. should be root view
-   * @param aUpdateFlags see bottom of nsIViewManager.h for description
    */
-  NS_IMETHOD  UpdateAllViews(PRUint32 aUpdateFlags) = 0;
+  NS_IMETHOD  UpdateAllViews() = 0;
 
   /**
    * Called to dispatch an event to the appropriate view. Often called
@@ -294,30 +290,19 @@ public:
 
   /**
    * allow the view manager to refresh any damaged areas accumulated
-   * after the BeginUpdateViewBatch() call.  this may cause a
-   * synchronous paint to occur inside the call if aUpdateFlags
-   * NS_VMREFRESH_IMMEDIATE is set.
+   * after the BeginUpdateViewBatch() call.
    *
    * If this is not the outermost view batch command, then this does
-   * nothing except that the specified flags are remembered. When the
-   * outermost batch finally ends, we merge together all the flags for the
-   * inner batches in the following way:
-   * -- If any batch specified NS_VMREFRESH_IMMEDIATE, then we use that flag
-   * (i.e. there is a synchronous paint under the last EndUpdateViewBatch)
-   * -- Otherwise if any batch specified NS_VMREFERSH_DEFERRED, then we use
-   * that flag (i.e. invalidation is deferred until the processing of an
-   * Invalidate PLEvent)
-   * -- Otherwise all batches specified NS_VMREFRESH_NO_SYNC and we honor
-   * that; all widgets are invalidated normally and will be painted the next
-   * time the toolkit chooses to update them.
+   * nothing. When the
+   * outermost batch finally ends, all widgets are invalidated normally
+   * and will be painted the next time the toolkit chooses to update them.
    *
-   * @param aUpdateFlags see bottom of nsIViewManager.h for
    * description @return error status
    */
-    void EndUpdateViewBatch(PRUint32 aUpdateFlags) {
+    void EndUpdateViewBatch() {
       if (!mRootVM)
         return;
-      mRootVM->EndUpdateViewBatch(aUpdateFlags);
+      mRootVM->EndUpdateViewBatch();
       mRootVM = nsnull;
     }
 
@@ -332,7 +317,7 @@ private:
   friend class UpdateViewBatch;
 
   virtual nsIViewManager* BeginUpdateViewBatch(void) = 0;
-  NS_IMETHOD EndUpdateViewBatch(PRUint32 aUpdateFlags) = 0;
+  NS_IMETHOD EndUpdateViewBatch() = 0;
 
 public:
   /**
@@ -366,22 +351,5 @@ public:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewManager, NS_IVIEWMANAGER_IID)
-
-// Paint timing mode flags
-
-// intermediate: do no special timing processing; repaint when the
-// toolkit issues an expose event (which will happen *before* PLEvent
-// processing). This is essentially the default.
-#define NS_VMREFRESH_NO_SYNC            0
-
-// least immediate: we suppress invalidation, storing dirty areas in
-// views, and post an Invalidate PLEvent. The Invalidate event gets
-// processed after toolkit events such as window resize events!
-// This is only usable with EndUpdateViewBatch and EnableRefresh.
-#define NS_VMREFRESH_DEFERRED           0x0001
-
-// most immediate: force a call to nsViewManager::Composite, which
-// synchronously updates the window(s) right away before returning
-#define NS_VMREFRESH_IMMEDIATE          0x0002
 
 #endif  // nsIViewManager_h___
