@@ -4644,22 +4644,15 @@ nsIFrame::InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags)
     }
   }
 
-  PRUint32 flags =
-    (aFlags & INVALIDATE_IMMEDIATE) ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC;
-
   nsRect rect = aDamageRect;
   nsRegion* excludeRegion = static_cast<nsRegion*>
     (Properties().Get(DeferInvalidatesProperty()));
-  if (excludeRegion) {
-    flags = NS_VMREFRESH_DEFERRED;
-
-    if (aFlags & INVALIDATE_EXCLUDE_CURRENT_PAINT) {
-      nsRegion r;
-      r.Sub(rect, *excludeRegion);
-      if (r.IsEmpty())
-        return;
-      rect = r.GetBounds();
-    }
+  if (excludeRegion && (aFlags & INVALIDATE_EXCLUDE_CURRENT_PAINT)) {
+    nsRegion r;
+    r.Sub(rect, *excludeRegion);
+    if (r.IsEmpty())
+      return;
+    rect = r.GetBounds();
   }
 
   if (!(aFlags & INVALIDATE_NO_UPDATE_LAYER_TREE)) {
@@ -4668,7 +4661,7 @@ nsIFrame::InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags)
 
   nsIView* view = GetView();
   NS_ASSERTION(view, "This can only be called on frames with views");
-  view->GetViewManager()->UpdateViewNoSuppression(view, rect, flags);
+  view->GetViewManager()->UpdateViewNoSuppression(view, rect);
 }
 
 void
