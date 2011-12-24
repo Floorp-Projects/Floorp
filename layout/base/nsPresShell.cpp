@@ -2478,17 +2478,6 @@ PresShell::ScrollLine(bool aForward)
     scrollFrame->ScrollBy(nsIntPoint(0, aForward ? lineCount : -lineCount),
                           nsIScrollableFrame::LINES,
                           nsIScrollableFrame::SMOOTH);
-      
-//NEW FOR LINES    
-    // force the update to happen now, otherwise multiple scrolls can
-    // occur before the update is processed. (bug #7354)
-
-  // I'd use Composite here, but it doesn't always work.
-    // vm->Composite();
-    nsIViewManager* viewManager = GetViewManager();
-    if (viewManager) {
-      viewManager->ForceUpdate();
-    }
   }
   return NS_OK;
 }
@@ -2502,16 +2491,6 @@ PresShell::ScrollHorizontal(bool aLeft)
     scrollFrame->ScrollBy(nsIntPoint(aLeft ? -1 : 1, 0),
                           nsIScrollableFrame::LINES,
                           nsIScrollableFrame::SMOOTH);
-//NEW FOR LINES    
-    // force the update to happen now, otherwise multiple scrolls can
-    // occur before the update is processed. (bug #7354)
-
-  // I'd use Composite here, but it doesn't always work.
-    // vm->Composite();
-    nsIViewManager* viewManager = GetViewManager();
-    if (viewManager) {
-      viewManager->ForceUpdate();
-    }
   }
   return NS_OK;
 }
