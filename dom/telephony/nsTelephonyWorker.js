@@ -39,6 +39,7 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const DEBUG = true; // set to false to suppress debug messages
 
@@ -56,6 +57,12 @@ const DOM_CALL_READYSTATE_INCOMING       = "incoming";
 const DOM_CALL_READYSTATE_HOLDING        = "holding";
 const DOM_CALL_READYSTATE_HELD           = "held";
 
+const kSmsReceivedObserverTopic          = "sms-received";
+const DOM_SMS_DELIVERY_RECEIVED          = "received";
+
+XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
+                                   "@mozilla.org/sms/smsservice;1",
+                                   "nsISmsService");
 
 /**
  * Fake nsIAudioManager implementation so that we can run the telephony
@@ -156,6 +163,9 @@ nsTelephonyWorker.prototype = {
       case "callstatechange":
         this.handleCallState(message);
         break;
+      case "sms-received":
+        this.handleSmsReceived(message);
+        break;
       default:
         // Got some message from the RIL worker that we don't know about.
         return;
@@ -214,6 +224,17 @@ nsTelephonyWorker.prototype = {
         gAudioManager.phoneState = Ci.nsIAudioManager.PHONE_STATE_NORMAL;
         break;
     }
+  },
+
+  handleSmsReceived: function handleSmsReceived(message) {
+    //TODO: put the sms into a database, assign it a proper id, yada yada
+    let sms = gSmsService.createSmsMessage(-1,
+                                           DOM_SMS_DELIVERY_RECEIVED,
+                                           message.sender || null,
+                                           message.receiver || null,
+                                           message.body || null,
+                                           message.timestamp);
+    Services.obs.notifyObservers(sms, kSmsReceivedObserverTopic, null);
   },
 
   // nsIRadioWorker
