@@ -184,21 +184,6 @@ AutoSwitchCompartment::~AutoSwitchCompartment()
     cx->compartment = oldCompartment;
 }
 
-JS_FRIEND_API(size_t)
-js::GetObjectDynamicSlotSize(JSObject *obj, JSMallocSizeOfFun mallocSizeOf)
-{
-    return obj->dynamicSlotSize(mallocSizeOf);
-}
-
-JS_FRIEND_API(size_t)
-js::GetCompartmentShapeTableSize(JSCompartment *c, JSMallocSizeOfFun mallocSizeOf)
-{
-    return c->baseShapes.sizeOfExcludingThis(mallocSizeOf)
-         + c->initialShapes.sizeOfExcludingThis(mallocSizeOf)
-         + c->newTypeObjects.sizeOfExcludingThis(mallocSizeOf)
-         + c->lazyTypeObjects.sizeOfExcludingThis(mallocSizeOf);
-}
-
 JS_FRIEND_API(bool)
 js::IsScopeObject(const JSObject *obj)
 {
