@@ -4242,7 +4242,7 @@ nsresult nsEditor::EndUpdateViewBatch()
 
     StCaretHider caretHider(caret);
 
-    mBatch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+    mBatch.EndUpdateViewBatch();
 
     // Turn selection updating and notifications back on.
 
