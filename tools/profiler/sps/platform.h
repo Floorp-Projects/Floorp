@@ -10,6 +10,7 @@
 
 #include "mozilla/Util.h"
 #include "mozilla/unused.h"
+#include "mozilla/TimeStamp.h"
 #include "v8-support.h"
 #include <vector>
 #define ASSERT(a) MOZ_ASSERT(a)
@@ -231,6 +232,7 @@ class TickSample {
   static const int kMaxFramesCount = 64;
   Address stack[kMaxFramesCount];  // Call stack.
   int frames_count;  // Number of captured frames.
+  mozilla::TimeStamp timestamp;
 };
 
 class Sampler {
