@@ -394,7 +394,7 @@ nsComboboxControlFrame::SetFocus(bool aOn, bool aRepaint)
   // XXX this is rather inefficient
   nsIViewManager* vm = PresContext()->GetPresShell()->GetViewManager();
   if (vm) {
-    vm->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
+    vm->UpdateAllViews();
   }
 }
 

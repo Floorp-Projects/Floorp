@@ -102,10 +102,9 @@ public:
   NS_IMETHOD  SetWindowDimensions(nscoord width, nscoord height);
   NS_IMETHOD  FlushDelayedResize(bool aDoReflow);
 
-  NS_IMETHOD  UpdateView(nsIView *aView, PRUint32 aUpdateFlags);
-  NS_IMETHOD  UpdateViewNoSuppression(nsIView *aView, const nsRect &aRect,
-                                      PRUint32 aUpdateFlags);
-  NS_IMETHOD  UpdateAllViews(PRUint32 aUpdateFlags);
+  NS_IMETHOD  UpdateView(nsIView *aView);
+  NS_IMETHOD  UpdateViewNoSuppression(nsIView *aView, const nsRect &aRect);
+  NS_IMETHOD  UpdateAllViews();
 
   NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent,
       nsIView* aTargetView, nsEventStatus* aStatus);
@@ -134,7 +133,7 @@ public:
   NS_IMETHOD  GetDeviceContext(nsDeviceContext *&aContext);
 
   virtual nsIViewManager* BeginUpdateViewBatch(void);
-  NS_IMETHOD  EndUpdateViewBatch(PRUint32 aUpdateFlags);
+  NS_IMETHOD  EndUpdateViewBatch();
 
   NS_IMETHOD GetRootWidget(nsIWidget **aWidget);
  
@@ -163,9 +162,9 @@ private:
                         const nsRegion &aDamagedRegion,
                         nsView* aIgnoreWidgetView);
 
-  void UpdateViews(nsView *aView, PRUint32 aUpdateFlags);
+  void UpdateViews(nsView *aView);
 
-  void TriggerRefresh(PRUint32 aUpdateFlags);
+  void TriggerRefresh();
 
   // aView is the view for aWidget and aRegion is relative to aWidget.
   void Refresh(nsView *aView, nsIWidget *aWidget, const nsIntRegion& aRegion);
@@ -175,9 +174,9 @@ private:
                    const nsRegion& aRegion, const nsIntRegion& aIntRegion,
                    bool aPaintDefaultBackground, bool aWillSendDidPaint);
 
-  void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut, PRUint32 aUpdateFlags);
+  void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut);
   void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
-                                          PRUint32 aUpdateFlags, nscoord aY1, nscoord aY2, bool aInCutOut);
+                                          nscoord aY1, nscoord aY2, bool aInCutOut);
 
   // Utilities
 
@@ -225,7 +224,7 @@ private:
     RootViewManager()->mPainting = aPainting;
   }
 
-  nsresult UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags);
+  nsresult UpdateView(nsIView *aView, const nsRect &aRect);
 
 public: // NOT in nsIViewManager, so private to the view module
   nsView* GetRootViewImpl() const { return mRootView; }
@@ -264,7 +263,6 @@ private:
   // ClearUpdateCount() on the root viewmanager to access mUpdateCnt.
   PRInt32           mUpdateCnt;
   PRInt32           mUpdateBatchCnt;
-  PRUint32          mUpdateBatchFlags;
   // Use IsPainting() and SetPainting() to access mPainting.
   bool              mPainting;
   bool              mRecursiveRefreshPending;
