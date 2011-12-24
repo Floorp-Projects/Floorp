@@ -1458,7 +1458,7 @@ let Phone = {
  *
  * A PDU is a string containing a series of hexadecimally encoded octets
  * or nibble-swapped binary-coded decimals (BCDs). It contains not only the
- * message text but information abou the sender, the SMS service center,
+ * message text but information about the sender, the SMS service center,
  * timestamp, etc.
  */
 let GsmPDUHelper = {
@@ -1471,16 +1471,32 @@ let GsmPDUHelper = {
   readHexNibble: function readHexNibble() {
     let nibble = Buf.readUint16();
     if (nibble >= 48 && nibble <= 57) {
-      nibble -= 48;
+      nibble -= 48; // ASCII '0'..'9'
     } else if (nibble >= 65 && nibble <= 70) {
-      nibble -= 55;
+      nibble -= 55; // ASCII 'A'..'F'
     } else if (nibble >= 97 && nibble <= 102) {
-      nibble -= 87;
+      nibble -= 87; // ASCII 'a'..'f'
     } else {
       throw "Found invalid nibble during PDU parsing: " +
             String.fromCharCode(nibble);
     }
     return nibble;
+  },
+
+  /**
+   * Encode a nibble as one hex character in a RIL string (2 bytes).
+   *
+   * @param nibble
+   *        The nibble to encode (represented as a number)
+   */
+  writeHexNibble: function writeHexNibble(nibble) {
+    nibble &= 0x0f;
+    if (nibble < 10) {
+      nibble += 48; // ASCII '0'
+    } else {
+      nibble += 55; // ASCII 'A'
+    }
+    Buf.writeUint16(nibble);
   },
 
   /**
@@ -1490,6 +1506,17 @@ let GsmPDUHelper = {
    */
   readHexOctet: function readHexOctet() {
     return (this.readHexNibble() << 4) | this.readHexNibble();
+  },
+
+  /**
+   * Write an octet as two hex-encoded nibbles.
+   *
+   * @param octet
+   *        The octet (represented as a number) to encode.
+   */
+  writeHexOctet: function writeHexOctet(octet) {
+    this.writeHexNibble(octet >> 4);
+    this.writeHexNibble(octet);
   },
 
   /**
@@ -1533,6 +1560,23 @@ let GsmPDUHelper = {
   },
 
   /**
+   * Write numerical data as swapped nibble BCD.
+   * 
+   * @param data
+   *        Data to write (as a string or a number)
+   */
+  writeSwappedNibbleBCD: function writeSwappedNibbleBCD(data) {
+    data = data.toString();
+    if (data.length % 2) {
+      data += "F";
+    }
+    for (let i = 0; i < data.length; i += 2) {
+      Buf.writeUint16(data.charCodeAt(i + 1));
+      Buf.writeUint16(data.charCodeAt(i));
+    }
+  },
+
+  /**
    * Read user data, convert to septets, look up relevant characters in a
    * 7-bit alphabet, and construct string.
    *
@@ -1556,12 +1600,12 @@ let GsmPDUHelper = {
       let septet_mask = (0xff >> (shift + 1));
 
       let septet = ((octet & septet_mask) << shift) | leftOver;
-      ret += alphabet_7bit[septet];
+      ret += PDU_ALPHABET_7BIT_DEFAULT[septet];
       leftOver = (octet & leftOver_mask) >> (7 - shift);
 
       // Every 7th byte we have a whole septet left over that we can apply.
       if (shift == 6) {
-        ret += alphabet_7bit[leftOver];
+        ret += PDU_ALPHABET_7BIT_DEFAULT[leftOver];
         leftOver = 0;
       }
     }
@@ -1569,6 +1613,36 @@ let GsmPDUHelper = {
       ret = ret.slice(0, length);
     }
     return ret;
+  },
+
+  writeStringAsSeptets: function writeStringAsSeptets(message) {
+    let right = 0;
+    for (let i = 0; i < message.length + 1; i++) {
+      let shift = (i % 8);
+      let septet;
+      if (i < message.length) {
+        septet = PDU_ALPHABET_7BIT_DEFAULT.indexOf(message[i]);
+      } else {
+        septet = 0;
+      }
+      if (septet == -1) {
+        if (DEBUG) debug("Fffff, "  + message[i] + " not in 7 bit alphabet!");
+        septet = 0;
+      }
+      if (shift == 0) {
+        // We're at the beginning of a cycle, but we need two septet values
+        // to make an octet. So we're going to have to sit this one out.
+        right = septet;
+        continue;
+      }
+
+      let left_mask = 0xff >> (8 - shift);
+      let right_mask = (0xff << shift) & 0xff;
+      let left = (septet & left_mask) << (8 - shift);
+      let octet = left | right;
+      this.writeHexOctet(left | right);
+      right = (septet & right_mask) >> shift;
+    }
   },
 
   /**
@@ -1580,7 +1654,17 @@ let GsmPDUHelper = {
    * @return a string.
    */
   readUCS2String: function readUCS2String(length) {
-    //TODO
+    //TODO bug 712804
+  },
+
+  /**
+   * Write user data as a UCS2 string.
+   *
+   * @param message
+   *        Message string to encode as UCS2 in hex-encoded octets.
+   */
+  writeUCS2String: function writeUCS2String(message) {
+    //TODO bug 712804
   },
 
   /**
@@ -1595,16 +1679,16 @@ let GsmPDUHelper = {
       debug("Coding scheme: " + codingScheme);
     }
     // 7 bit is the default fallback encoding.
-    let encoding = 7;
+    let encoding = PDU_DCS_MSG_CODING_7BITS_ALPHABET;
     switch (codingScheme & 0xC0) {
       case 0x0:
         // bits 7..4 = 00xx
         switch (codingScheme & 0x0C) {
           case 0x4:
-            encoding = 8;
+            encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
             break;
           case 0x8:
-            encoding = 16;
+            encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
             break;
         }
         break;
@@ -1612,11 +1696,11 @@ let GsmPDUHelper = {
         // bits 7..4 = 11xx
         switch (codingScheme & 0x30) {
           case 0x20:
-            encoding = 16;
+            encoding = PDU_DCS_MSG_CODING_16BITS_ALPHABET;
             break;
           case 0x30:
             if (!codingScheme & 0x04) {
-              encoding = 8;
+              encoding = PDU_DCS_MSG_CODING_8BITS_ALPHABET;
             }
             break;
         }
@@ -1628,7 +1712,7 @@ let GsmPDUHelper = {
 
     if (DEBUG) debug("PDU: message encoding is " + encoding + " bit.");
     switch (encoding) {
-      case 7:
+      case PDU_DCS_MSG_CODING_7BITS_ALPHABET:
         // 7 bit encoding allows 140 octets, which means 160 characters
         // ((140x8) / 7 = 160 chars)
         if (length > PDU_MAX_USER_DATA_7BIT) {
@@ -1636,10 +1720,10 @@ let GsmPDUHelper = {
           return null;
         }
         return this.readSeptetsToString(length);
-      case 8:
+      case PDU_DCS_MSG_CODING_8BITS_ALPHABET:
         // Unsupported.
         return null;
-      case 16:
+      case PDU_DCS_MSG_CODING_16BITS_ALPHABET:
         return this.readUCS2String(length);
     }
     return null;
@@ -1756,6 +1840,140 @@ let GsmPDUHelper = {
     }
 
     return msg;
+  },
+
+  /**
+   * Serialize a SMS-SUBMIT PDU message and write it to the output stream.
+   *
+   * This method expects that a data coding scheme has been chosen already
+   * and that the length of the user data payload in that encoding is known,
+   * too. Both go hand in hand together anyway.
+   *
+   * @param address
+   *        String containing the address (number) of the SMS receiver
+   * @param userData
+   *        String containing the message to be sent as user data
+   * @param dcs
+   *        Data coding scheme. One of the PDU_DCS_MSG_CODING_*BITS_ALPHABET
+   *        constants.
+   * @param userDataLengthInOctets
+   *        Byte length of the user data when encoded with the given DCS.
+   */
+  writeMessage: function writeMessage(address,
+                                      userData,
+                                      dcs,
+                                      userDataLengthInOctets) {
+    // SMS-SUBMIT Format:
+    //
+    // PDU Type - 1 octet
+    // Message Reference - 1 octet
+    // DA - Destination Address - 2 to 12 octets
+    // PID - Protocol Identifier - 1 octet
+    // DCS - Data Coding Scheme - 1 octet
+    // VP - Validity Period - 0, 1 or 7 octets
+    // UDL - User Data Length - 1 octet
+    // UD - User Data - 140 octets
+
+    let addressFormat = PDU_TOA_ISDN; // 81
+    if (address[0] == '+') {
+      addressFormat = PDU_TOA_INTERNATIONAL | PDU_TOA_ISDN; // 91
+      address = address.substring(1);
+    }
+    //TODO validity is unsupported for now
+    let validity = 0;
+
+    let pduOctetLength = 4 + // PDU Type, Message Ref, address length + format
+                         Math.ceil(address.length / 2) +
+                         3 + // PID, DCS, UDL
+                         userDataLengthInOctets;
+    if (validity) {
+      //TODO: add more to pduOctetLength
+    }
+
+    // Start the string. Since octets are represented in hex, we will need
+    // twice as many characters as octets.
+    Buf.writeUint32(pduOctetLength * 2);
+
+    // - PDU-TYPE-
+
+    // +--------+----------+---------+---------+--------+---------+
+    // | RP (1) | UDHI (1) | SRR (1) | VPF (2) | RD (1) | MTI (2) |
+    // +--------+----------+---------+---------+--------+---------+
+    // RP:    0   Reply path parameter is not set
+    //        1   Reply path parameter is set
+    // UDHI:  0   The UD Field contains only the short message
+    //        1   The beginning of the UD field contains a header in addition
+    //            of the short message
+    // SRR:   0   A status report is not requested
+    //        1   A status report is requested
+    // VPF:   bit4  bit3
+    //        0     0     VP field is not present
+    //        0     1     Reserved
+    //        1     0     VP field present an integer represented (relative)
+    //        1     1     VP field present a semi-octet represented (absolute)
+    // RD:        Instruct the SMSC to accept(0) or reject(1) an SMS-SUBMIT
+    //            for a short message still held in the SMSC which has the same
+    //            MR and DA as a previously submitted short message from the
+    //            same OA
+    // MTI:   bit1  bit0    Message Type
+    //        0     0       SMS-DELIVER (SMSC ==> MS)
+    //        0     1       SMS-SUBMIT (MS ==> SMSC)
+
+    // PDU type. MTI is set to SMS-SUBMIT
+    let firstOctet = PDU_MTI_SMS_SUBMIT;
+
+    // Validity period
+    if (validity) {
+      //TODO: not supported yet, OR with one of PDU_VPF_*
+    }
+    let udhi = ""; //TODO: for now this is unsupported
+    if (udhi) {
+      firstOctet |= PDU_UDHI;
+    }
+    this.writeHexOctet(firstOctet);
+
+    // Message reference 00
+    this.writeHexOctet(0x00);
+
+    // - Destination Address -
+    this.writeHexOctet(address.length);
+    this.writeHexOctet(addressFormat);
+    this.writeSwappedNibbleBCD(address);
+
+    // - Protocol Identifier -
+    this.writeHexOctet(0x00);
+
+    // - Data coding scheme -
+    // For now it assumes bits 7..4 = 1111 except for the 16 bits use case
+    this.writeHexOctet(dcs);
+
+    // - Validity Period -
+    if (validity) {
+      this.writeHexOctet(validity);
+    }
+
+    // - User Data -
+    let userDataLength = userData.length;
+    if (dcs == PDU_DCS_MSG_CODING_16BITS_ALPHABET) {
+      userDataLength = userData.length * 2;
+    }
+    this.writeHexOctet(userDataLength);
+    switch (dcs) {
+      case PDU_DCS_MSG_CODING_7BITS_ALPHABET:
+        this.writeStringAsSeptets(userData);
+        break;
+      case PDU_DCS_MSG_CODING_8BITS_ALPHABET:
+        // Unsupported.
+        break;
+      case PDU_DCS_MSG_CODING_16BITS_ALPHABET:
+        this.writeUCS2String(userData);
+        break;
+    }
+
+    // End of the string. The string length is always even by definition, so
+    // we write two \0 delimiters.
+    Buf.writeUint16(0);
+    Buf.writeUint16(0);
   }
 };
 

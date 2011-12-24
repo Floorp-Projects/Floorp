@@ -328,8 +328,8 @@ const PDU_MTI_SMS_DELIVER         = 0x00;
 const PDU_MAX_USER_DATA_7BIT = 160;
 
 // DCS - Data Coding Scheme
-const PDU_DCS_MSG_CODING_7BITS_ALPHABET = 0xF0;
-const PDU_DCS_MSG_CODING_8BITS_ALPHABET = 0xF4;
+const PDU_DCS_MSG_CODING_7BITS_ALPHABET = 0x00;
+const PDU_DCS_MSG_CODING_8BITS_ALPHABET = 0x04;
 const PDU_DCS_MSG_CODING_16BITS_ALPHABET= 0x08;
 const PDU_DCS_MSG_CLASS_ME_SPECIFIC     = 0xF1;
 const PDU_DCS_MSG_CLASS_SIM_SPECIFIC    = 0xF2;
@@ -340,7 +340,7 @@ const PDU_TIMESTAMP_YEAR_OFFSET = 2000;
 
 // 7bit Default Alphabet
 //TODO: maybe convert this to a string? might be faster/cheaper
-const alphabet_7bit = [
+const PDU_ALPHABET_7BIT_DEFAULT = [
   "@",      // COMMERCIAL AT
   "\xa3",   // POUND SIGN
   "$",      // DOLLAR SIGN
