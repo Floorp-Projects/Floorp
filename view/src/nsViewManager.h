@@ -161,8 +161,7 @@ private:
   void CallDidPaintOnObservers();
   void ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget);
   void ReparentWidgets(nsIView* aView, nsIView *aParent);
-  void UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
-                        const nsRegion &aDamagedRegion);
+  void UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedRegion);
 
   void UpdateViews(nsView *aView);
 
