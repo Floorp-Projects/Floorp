@@ -753,34 +753,20 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
       break;
 
     case NS_WILL_PAINT:
-    case NS_PAINT:
       {
-        nsPaintEvent *event = static_cast<nsPaintEvent*>(aEvent);
-
         if (!aView || !mContext)
           break;
 
         *aStatus = nsEventStatus_eConsumeNoDefault;
 
-        if (aEvent->message == NS_PAINT && event->region.IsEmpty())
-          break;
+        nsPaintEvent *event = static_cast<nsPaintEvent*>(aEvent);
 
         NS_ASSERTION(static_cast<nsView*>(aView) ==
                        nsView::GetViewFor(event->widget),
                      "view/widget mismatch");
 
-        // The region is in device units, and it's in the coordinate space of
-        // its associated widget.
-
-        // Refresh the view
-        NS_ASSERTION(IsPaintingAllowed(),
-                     "shouldn't be receiving paint events while painting is "
-                     "disallowed!");
-        nsRefPtr<nsViewManager> rootVM = RootViewManager();
-
         // If an ancestor widget was hidden and then shown, we could
         // have a delayed resize to handle.
-        bool didResize = false;
         for (nsViewManager *vm = this; vm;
              vm = vm->mRootView->GetParent()
                     ? vm->mRootView->GetParent()->GetViewManager()
@@ -789,47 +775,51 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
               vm->mRootView->IsEffectivelyVisible() &&
               mPresShell && mPresShell->IsVisible()) {
             vm->FlushDelayedResize(true);
-
-            // Paint later.
             vm->UpdateView(vm->mRootView);
-            didResize = true;
-
-            // not sure if it's valid for us to claim that we
-            // ignored this, but we're going to do so anyway, since
-            // we didn't actually paint anything
-            *aStatus = nsEventStatus_eIgnore;
           }
         }
 
-        if (!didResize) {
-          // Notify view observers that we're about to paint.
-          // Make sure to not send WillPaint notifications while scrolling.
-
-          nsCOMPtr<nsIWidget> widget;
-          rootVM->GetRootWidget(getter_AddRefs(widget));
-          bool transparentWindow = false;
-          if (widget)
-              transparentWindow = widget->GetTransparencyMode() == eTransparencyTransparent;
-
-          nsView* view = static_cast<nsView*>(aView);
-          if (!transparentWindow) {
-            if (mPresShell) {
-              rootVM->CallWillPaintOnObservers(event->willSendDidPaint);
-              // Get the view pointer again since the code above might have
-              // destroyed it (bug 378273).
-              view = nsView::GetViewFor(aEvent->widget);
-            }
-          }
-          // Make sure to sync up any widget geometry changes we
-          // have pending before we paint.
-          if (rootVM->mHasPendingUpdates) {
-            rootVM->ProcessPendingUpdatesForView(mRootView);
-          }
-          
-          if (view && aEvent->message == NS_PAINT) {
-            Refresh(view, event->widget, event->region);
-          }
+        // Flush things like reflows and plugin widget geometry updates by
+        // calling WillPaint on observer presShells.
+        nsRefPtr<nsViewManager> rootVM = RootViewManager();
+        if (mPresShell) {
+          rootVM->CallWillPaintOnObservers(event->willSendDidPaint);
         }
+        // Flush view widget geometry updates and invalidations.
+        rootVM->ProcessPendingUpdates();
+      }
+      break;
+
+    case NS_PAINT:
+      {
+        if (!aView || !mContext)
+          break;
+
+        *aStatus = nsEventStatus_eConsumeNoDefault;
+        nsPaintEvent *event = static_cast<nsPaintEvent*>(aEvent);
+        nsView* view = static_cast<nsView*>(aView);
+        NS_ASSERTION(view == nsView::GetViewFor(event->widget),
+                     "view/widget mismatch");
+        NS_ASSERTION(IsPaintingAllowed(),
+                     "shouldn't be receiving paint events while painting is "
+                     "disallowed!");
+
+        if (!event->didSendWillPaint) {
+          // Send NS_WILL_PAINT event ourselves.
+          nsPaintEvent willPaintEvent(true, NS_WILL_PAINT, event->widget);
+          willPaintEvent.willSendDidPaint = event->willSendDidPaint;
+          DispatchEvent(&willPaintEvent, view, aStatus);
+
+          // Get the view pointer again since NS_WILL_PAINT might have
+          // destroyed it during CallWillPaintOnObservers (bug 378273).
+          view = nsView::GetViewFor(event->widget);
+        }
+
+        if (!view || event->region.IsEmpty())
+          break;
+
+        // Paint.
+        Refresh(view, event->widget, event->region);
 
         break;
       }
