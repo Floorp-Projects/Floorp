@@ -37,7 +37,7 @@
  
 #include "nsISupports.idl"
 
-[scriptable, uuid(05d312ef-8914-494e-91c9-2be8ed7f8e29)]
+[scriptable, uuid(07b6d070-ccea-4a00-84b4-f4b94dd9eb52)]
 interface nsIPlaintextEditor : nsISupports
 {
 
@@ -56,29 +56,27 @@ interface nsIPlaintextEditor : nsISupports
   const long eEditorFilterInputMask     = 0x0020;
   // use mail-compose editing rules
   const long eEditorMailMask            = 0x0040;
-  // prevent immediate reflows and view refreshes
-  const long eEditorUseAsyncUpdatesMask = 0x0080;
   // allow the editor to set font: monospace on the root node
-  const long eEditorEnableWrapHackMask  = 0x0100;
+  const long eEditorEnableWrapHackMask  = 0x0080;
   // bit for widgets (form elements)
-  const long eEditorWidgetMask          = 0x0200;
+  const long eEditorWidgetMask          = 0x0100;
   // this HTML editor should not create css styles
-  const long eEditorNoCSSMask           = 0x0400;
+  const long eEditorNoCSSMask           = 0x0200;
   // whether HTML document specific actions are executed or not.
   // e.g., if this flag is set, the editor doesn't handle Tab key.
   // besides, anchors of HTML are not clickable.
-  const long eEditorAllowInteraction    = 0x0800;
+  const long eEditorAllowInteraction    = 0x0400;
   // when this is set, the characters in password editor are always masked.
   // see bug 530367 for the detail.
-  const long eEditorDontEchoPassword    = 0x1000;
+  const long eEditorDontEchoPassword    = 0x0800;
   // when this flag is set, the internal direction of the editor is RTL.
   // if neither of the direction flags are set, the direction is determined
   // from the text control's content node.
-  const long eEditorRightToLeft         = 0x2000;
+  const long eEditorRightToLeft         = 0x1000;
   // when this flag is set, the internal direction of the editor is LTR.
-  const long eEditorLeftToRight         = 0x4000;
+  const long eEditorLeftToRight         = 0x2000;
   // when this flag is set, the editor's text content is not spell checked.
-  const long eEditorSkipSpellCheck      = 0x8000;
+  const long eEditorSkipSpellCheck      = 0x4000;
 
   /*
    * The valid values for newlines handling.

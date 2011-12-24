@@ -4250,19 +4250,7 @@ nsresult nsEditor::EndUpdateViewBatch()
 
     StCaretHider caretHider(caret);
 
-    PRUint32 flags = 0;
-
-    GetFlags(&flags);
-
-    // Turn view updating back on.
-    PRUint32 updateFlag = NS_VMREFRESH_IMMEDIATE;
-
-    // If we're doing async updates, use NS_VMREFRESH_DEFERRED here, so that
-    // the reflows we caused will get processed before the invalidates.
-    if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask) {
-      updateFlag = NS_VMREFRESH_DEFERRED;
-    }
-    mBatch.EndUpdateViewBatch(updateFlag);
+    mBatch.EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
     // Turn selection updating and notifications back on.
 
