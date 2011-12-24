@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Telephony.
+ * The Original Code is SMS DOM API.
  *
  * The Initial Developer of the Original Code is
  * the Mozilla Foundation.
@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Philipp von Weitershausen <philipp@weitershausen.de>
+ *   Philipp von Weitershausen <philipp@weitershausen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,42 +35,68 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "mozilla/dom/sms/SmsMessage.h"
+#include "SmsService.h"
+#include "RadioManager.h"
+#include "jsapi.h"
 
-[scriptable, uuid(9b7e3a01-9c45-4af3-81bb-1bf08a842226)]
-interface nsITelephoneCallback : nsISupports
+using mozilla::dom::telephony::RadioManager;
+
+namespace mozilla {
+namespace dom {
+namespace sms {
+
+NS_IMPL_ISUPPORTS1(SmsService, nsISmsService)
+
+SmsService::SmsService()
+  : mRIL(RadioManager::GetTelephone())
 {
-  void oncallstatechange(in jsval event);
+}
 
-  //XXX philikon's additions
-  void onoperatorchange(in jsval event);
-  void onradiostatechange(in jsval event);
-  void oncardstatechange(in jsval event);
-  void onsignalstrengthchange(in jsval event);
-};
-
-[scriptable, uuid(5be6e41d-3aee-4f5c-8284-95cf529dd6fe)]
-interface nsITelephone : nsISupports
+NS_IMETHODIMP
+SmsService::HasSupport(bool* aHasSupport)
 {
-  readonly attribute jsval currentState;
-  void registerCallback(in nsITelephoneCallback callback);
-  void unregisterCallback(in nsITelephoneCallback callback);
+  *aHasSupport = true;
+  return NS_OK;
+}
 
-  /**
-   * Functionality for making and managing phone calls.
-   */
-  void dial(in DOMString number);
-  void hangUp(in long callIndex);
-  void startTone(in DOMString dtmfChar);
-  void stopTone();
-  void answerCall();
-  void rejectCall();
-  attribute bool microphoneMuted;
-  attribute bool speakerEnabled;
+NS_IMETHODIMP
+SmsService::GetNumberOfMessagesForText(const nsAString& aText, PRUint16* aResult)
+{
+  if (!mRIL) {
+    *aResult = 0;
+    return NS_OK;
+  }
 
-  /**
-   * SMS-related functionality.
-   */
-  unsigned short getNumberOfMessagesForText(in DOMString text);
-  void sendSMS(in DOMString number, in DOMString message);
-};
+  mRIL->GetNumberOfMessagesForText(aText, aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SmsService::Send(const nsAString& aNumber, const nsAString& aMessage)
+{
+  if (!mRIL) {
+    return NS_OK;
+  }
+
+  mRIL->SendSMS(aNumber, aMessage);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SmsService::CreateSmsMessage(PRInt32 aId,
+                             const nsAString& aDelivery,
+                             const nsAString& aSender,
+                             const nsAString& aReceiver,
+                             const nsAString& aBody,
+                             const jsval& aTimestamp,
+                             JSContext* aCx,
+                             nsIDOMMozSmsMessage** aMessage)
+{
+  return SmsMessage::Create(
+    aId, aDelivery, aSender, aReceiver, aBody, aTimestamp, aCx, aMessage);
+}
+
+} // namespace sms
+} // namespace dom
+} // namespace mozilla
