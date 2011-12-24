@@ -205,7 +205,7 @@ public: // NOT in nsIViewManager, so private to the view module
   nsViewManager* RootViewManager() const { return mRootViewManager; }
   bool IsRootVM() const { return this == RootViewManager(); }
 
-  bool IsRefreshEnabled() { return RootViewManager()->mUpdateBatchCnt == 0; }
+  bool IsPaintingAllowed() { return RootViewManager()->mUpdateBatchCnt == 0; }
 
   // Call this when you need to let the viewmanager know that it now has
   // pending updates.
