@@ -132,8 +132,8 @@ public:
 
   NS_IMETHOD  GetDeviceContext(nsDeviceContext *&aContext);
 
-  virtual nsIViewManager* BeginUpdateViewBatch(void);
-  NS_IMETHOD  EndUpdateViewBatch();
+  virtual nsIViewManager* IncrementDisableRefreshCount();
+  virtual void DecrementDisableRefreshCount();
 
   NS_IMETHOD GetRootWidget(nsIWidget **aWidget);
  
@@ -205,7 +205,10 @@ public: // NOT in nsIViewManager, so private to the view module
   nsViewManager* RootViewManager() const { return mRootViewManager; }
   bool IsRootVM() const { return this == RootViewManager(); }
 
-  bool IsPaintingAllowed() { return RootViewManager()->mUpdateBatchCnt == 0; }
+  // Whether synchronous painting is allowed at the moment. For example,
+  // widget geometry changes can cause synchronous painting, so they need to
+  // be deferred while refresh is disabled.
+  bool IsPaintingAllowed() { return RootViewManager()->mRefreshDisableCount == 0; }
 
   // Call this when you need to let the viewmanager know that it now has
   // pending updates.
@@ -233,7 +236,7 @@ private:
   // the root view manager.  Some have accessor functions to enforce
   // this, as noted.
   
-  PRInt32           mUpdateBatchCnt;
+  PRInt32           mRefreshDisableCount;
   // Use IsPainting() and SetPainting() to access mPainting.
   bool              mPainting;
   bool              mRecursiveRefreshPending;
