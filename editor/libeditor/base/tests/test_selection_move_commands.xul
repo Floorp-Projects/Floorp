@@ -38,6 +38,7 @@ function execTests() {
   doc.designMode='on';
   body.innerHTML = "1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>";
   win.focus();
+  yield;
 
   function doCommand(cmd) {
     var controller = document.commandDispatcher.getControllerForCommand(cmd);
@@ -121,16 +122,6 @@ function execTests() {
   doCommand("cmd_scrollPageUp");
   yield;
   testScrollCommand("cmd_scrollPageUp", root.scrollHeight - 100 - pageHeight);
-
-  doCommand("cmd_scrollTop");
-  doCommand("cmd_scrollLineDown");
-  yield;
-  var lineHeight = -root.getBoundingClientRect().top;
-  ok(lineHeight > 0, "Can scroll by lines");
-  doCommand("cmd_scrollBottom");
-  doCommand("cmd_scrollLineUp");
-  yield;
-  testScrollCommand("cmd_scrollLineUp", root.scrollHeight - 100 - lineHeight);
 
   var runSelectionTests = function(selectWordNextNode, selectWordNextOffset) {
     testMoveCommand("cmd_moveBottom", body, 23);
