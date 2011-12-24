@@ -1398,7 +1398,7 @@ static void blinkRgn(RgnHandle rgn)
 #endif
 
 // Invalidate this component's visible area
-NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect, bool aIsSynchronous)
+NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1408,10 +1408,7 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsIntRect &aRect, bool aIsSynchronou
   NSRect r;
   nsCocoaUtils::GeckoRectToNSRect(aRect, r);
   
-  if (aIsSynchronous) {
-    [mView displayRect:r];
-  }
-  else if ([NSView focusView]) {
+  if ([NSView focusView]) {
     // if a view is focussed (i.e. being drawn), then postpone the invalidate so that we
     // don't lose it.
     [mView setNeedsPendingDisplayInRect:r];
@@ -1440,15 +1437,6 @@ inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
 {
   // return (color8 == 0xFF ? 0xFFFF : (color8 << 8));
   return (color8 << 8) | color8;  /* (color8 * 257) == (color8 * 0x0101) */
-}
-
-// The OS manages repaints well enough on its own, so we don't have to
-// flush them out here.  In other words, the OS will automatically call
-// displayIfNeeded at the appropriate times, so we don't need to do it
-// ourselves.  See bmo bug 459319.
-NS_IMETHODIMP nsChildView::Update()
-{
-  return NS_OK;
 }
 
 #pragma mark -
