@@ -4206,15 +4206,6 @@ nsresult nsEditor::BeginUpdateViewBatch()
       nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(selection));
       selPrivate->StartBatchChanges();
     }
-
-    // Turn off view updating.
-    nsCOMPtr<nsIPresShell> ps = GetPresShell();
-    if (ps) {
-      nsCOMPtr<nsIViewManager> viewManager = ps->GetViewManager();
-      if (viewManager) {
-        mBatch.BeginUpdateViewBatch(viewManager);
-      }
-    }
   }
 
   mUpdateCount++;
@@ -4249,8 +4240,6 @@ nsresult nsEditor::EndUpdateViewBatch()
       caret = presShell->GetCaret();
 
     StCaretHider caretHider(caret);
-
-    mBatch.EndUpdateViewBatch();
 
     // Turn selection updating and notifications back on.
 
