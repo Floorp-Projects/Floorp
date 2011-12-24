@@ -331,6 +331,11 @@ public:
    * geometry.
    */
   virtual void ProcessPendingUpdates()=0;
+
+  /**
+   * Just update widget geometry without flushing the dirty region
+   */
+  virtual void UpdateWidgetGeometry() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewManager, NS_IVIEWMANAGER_IID)
