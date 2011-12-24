@@ -768,8 +768,9 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
         // its associated widget.
 
         // Refresh the view
-        NS_ASSERTION(IsRefreshEnabled(),
-            "shouldn't be receiving paint events while refresh is disabled!");
+        NS_ASSERTION(IsPaintingAllowed(),
+                     "shouldn't be receiving paint events while painting is "
+                     "disallowed!");
         nsRefPtr<nsViewManager> rootVM = RootViewManager();
 
         // If an ancestor widget was hidden and then shown, we could
