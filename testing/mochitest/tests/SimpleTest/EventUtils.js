@@ -146,17 +146,30 @@ function _parseModifiers(aEvent)
  */
 function synthesizeMouse(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
 {
+  var rect = aTarget.getBoundingClientRect();
+  synthesizeMouseAtPoint(rect.left + aOffsetX, rect.top + aOffsetY,
+			 aEvent, aWindow);
+}
+
+/*
+ * Synthesize a mouse event at a particular point in aWindow.
+ *
+ * aEvent is an object which may contain the properties:
+ *   shiftKey, ctrlKey, altKey, metaKey, accessKey, clickCount, button, type
+ *
+ * If the type is specified, an mouse event of that type is fired. Otherwise,
+ * a mousedown followed by a mouse up is performed.
+ *
+ * aWindow is optional, and defaults to the current window object.
+ */
+function synthesizeMouseAtPoint(left, top, aEvent, aWindow)
+{
   var utils = _getDOMWindowUtils(aWindow);
 
   if (utils) {
     var button = aEvent.button || 0;
     var clickCount = aEvent.clickCount || 1;
     var modifiers = _parseModifiers(aEvent);
-
-    var rect = aTarget.getBoundingClientRect();
-
-    var left = rect.left + aOffsetX;
-    var top = rect.top + aOffsetY;
 
     if (aEvent.type) {
       utils.sendMouseEvent(aEvent.type, left, top, button, clickCount, modifiers);
