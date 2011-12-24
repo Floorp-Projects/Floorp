@@ -762,27 +762,6 @@ nsDOMWindowUtils::CycleCollect(nsICycleCollectorListener *aListener)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::ProcessUpdates()
-{
-  nsPresContext* presContext = GetPresContext();
-  if (!presContext)
-    return NS_ERROR_UNEXPECTED;
-
-  nsIPresShell* shell = presContext->GetPresShell();
-  if (!shell)
-    return NS_ERROR_UNEXPECTED;
-
-  nsIViewManager *viewManager = shell->GetViewManager();
-  if (!viewManager)
-    return NS_ERROR_UNEXPECTED;
-  
-  nsIViewManager::UpdateViewBatch batch;
-  batch.BeginUpdateViewBatch(viewManager);
-  batch.EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
                                          float aX,
                                          float aY,
