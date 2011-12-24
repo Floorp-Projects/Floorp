@@ -893,11 +893,6 @@ inline bool JSObject::setDelegate(JSContext *cx)
     return setFlag(cx, js::BaseShape::DELEGATE, GENERATE_SHAPE);
 }
 
-inline bool JSObject::setIndexed(JSContext *cx)
-{
-    return setFlag(cx, js::BaseShape::INDEXED);
-}
-
 inline bool JSObject::isVarObj() const
 {
     return lastProperty()->hasObjectFlag(js::BaseShape::VAROBJ);

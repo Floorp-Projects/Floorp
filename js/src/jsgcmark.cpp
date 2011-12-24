@@ -688,29 +688,26 @@ ScanShape(GCMarker *gcmarker, const Shape *shape)
 static inline void
 ScanBaseShape(GCMarker *gcmarker, BaseShape *base)
 {
-    for (;;) {
-        if (base->hasGetterObject())
-            PushMarkStack(gcmarker, base->getterObject());
+    base->assertConsistency();
 
-        if (base->hasSetterObject())
-            PushMarkStack(gcmarker, base->setterObject());
+    if (base->hasGetterObject())
+        PushMarkStack(gcmarker, base->getterObject());
 
-        if (JSObject *parent = base->getObjectParent())
-            PushMarkStack(gcmarker, parent);
+    if (base->hasSetterObject())
+        PushMarkStack(gcmarker, base->setterObject());
 
-        if (base->isOwned()) {
-            /*
-             * Make sure that ScanBaseShape is not recursive so its inlining
-             * is possible.
-             */
-            UnownedBaseShape *unowned = base->baseUnowned();
-            JS_SAME_COMPARTMENT_ASSERT(base, unowned);
-            if (unowned->markIfUnmarked(gcmarker->getMarkColor())) {
-                base = unowned;
-                continue;
-            }
-        }
-        break;
+    if (JSObject *parent = base->getObjectParent())
+        PushMarkStack(gcmarker, parent);
+
+    /*
+     * All children of the owned base shape are consistent with its
+     * unowned one, thus we do not need to trace through children of the
+     * unowned base shape.
+     */
+    if (base->isOwned()) {
+        UnownedBaseShape *unowned = base->baseUnowned();
+        JS_SAME_COMPARTMENT_ASSERT(base, unowned);
+        unowned->markIfUnmarked(gcmarker->getMarkColor());
     }
 }
 
@@ -952,6 +949,13 @@ MarkCycleCollectorChildren(JSTracer *trc, BaseShape *base, JSObject **prevParent
 {
     JS_ASSERT(base);
 
+    /*
+     * The cycle collector does not need to trace unowned base shapes,
+     * as they have the same getter, setter and parent as the original
+     * base shape.
+     */
+    base->assertConsistency();
+
     MarkBaseShapeGetterSetter(trc, base);
 
     JSObject *parent = base->getObjectParent();
@@ -959,17 +963,6 @@ MarkCycleCollectorChildren(JSTracer *trc, BaseShape *base, JSObject **prevParent
         MarkObjectUnbarriered(trc, parent, "parent");
         *prevParent = parent;
     }
-
-    // An owned base shape has the same parent, getter and setter as
-    // its baseUnowned().
-#ifdef DEBUG
-    if (base->isOwned()) {
-        UnownedBaseShape *unowned = base->baseUnowned();
-        JS_ASSERT_IF(base->hasGetterObject(), base->getterObject() == unowned->getterObject());
-        JS_ASSERT_IF(base->hasSetterObject(), base->setterObject() == unowned->setterObject());
-        JS_ASSERT(base->getObjectParent() == unowned->getObjectParent());
-    }
-#endif
 }
 
 /*
