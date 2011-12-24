@@ -160,7 +160,7 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
     // Allow wrong compartment or unset ScopeForNewObject when the caller knows
     // the value is primitive (viz., XPCNativeMember::GetConstantValue).
     NS_ABORT_IF_FALSE(type.IsArithmetic() ||
-                      cx->compartment == js::GetObjectCompartment(lccx.GetScopeForNewJSObjects()),
+                      js::IsObjectInContextCompartment(lccx.GetScopeForNewJSObjects(), cx),
                       "bad scope for new JSObjects");
 
     if (pErr)
@@ -933,7 +933,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     // optimal -- we could detect this and roll the functionality into a
     // single wrapper, but the current solution is good enough for now.
     JSContext* cx = lccx.GetJSContext();
-    NS_ABORT_IF_FALSE(js::GetObjectCompartment(lccx.GetScopeForNewJSObjects()) == cx->compartment,
+    NS_ABORT_IF_FALSE(js::IsObjectInContextCompartment(lccx.GetScopeForNewJSObjects(), cx),
                       "bad scope for new JSObjects");
 
     JSObject *jsscope = lccx.GetScopeForNewJSObjects();
@@ -979,7 +979,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
             if (!flat) {
                 tryConstructSlimWrapper = true;
             } else if (IS_SLIM_WRAPPER_OBJECT(flat)) {
-                if (js::GetObjectCompartment(flat) == cx->compartment) {
+                if (js::IsObjectInContextCompartment(flat, cx)) {
                     *d = OBJECT_TO_JSVAL(flat);
                     return true;
                 }
@@ -1150,7 +1150,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
         } else {
             flat = JS_ObjectToOuterObject(cx, flat);
             NS_ASSERTION(flat, "bad outer object hook!");
-            NS_ASSERTION(js::GetObjectCompartment(flat) == cx->compartment,
+            NS_ASSERTION(js::IsObjectInContextCompartment(flat, cx),
                          "bad compartment");
         }
     }
@@ -1584,7 +1584,7 @@ XPCConvert::NativeArray2JS(XPCLazyCallContext& lccx,
         return false;
 
     JSContext* cx = ccx.GetJSContext();
-    NS_ABORT_IF_FALSE(js::GetObjectCompartment(lccx.GetScopeForNewJSObjects()) == cx->compartment,
+    NS_ABORT_IF_FALSE(js::IsObjectInContextCompartment(lccx.GetScopeForNewJSObjects(), cx),
                       "bad scope for new JSObjects");
 
     // XXX add support for putting chars in a string rather than an array
