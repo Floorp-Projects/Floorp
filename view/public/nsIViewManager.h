@@ -121,7 +121,7 @@ public:
    * is dirty and needs to be redrawn.
    * @param aView view to paint. should be root view
    */
-  NS_IMETHOD  UpdateView(nsIView *aView) = 0;
+  NS_IMETHOD  InvalidateView(nsIView *aView) = 0;
 
   /**
    * Called to inform the view manager that some portion of a view is dirty and
@@ -130,13 +130,12 @@ public:
    * @param aView view to paint. should be root view
    * @param rect rect to mark as damaged
    */
-  NS_IMETHOD  UpdateViewNoSuppression(nsIView *aView, const nsRect &aRect) = 0;
+  NS_IMETHOD  InvalidateViewNoSuppression(nsIView *aView, const nsRect &aRect) = 0;
 
   /**
-   * Called to inform the view manager that it should redraw all views.
-   * @param aView view to paint. should be root view
+   * Called to inform the view manager that it should invalidate all views.
    */
-  NS_IMETHOD  UpdateAllViews() = 0;
+  NS_IMETHOD  InvalidateAllViews() = 0;
 
   /**
    * Called to dispatch an event to the appropriate view. Often called

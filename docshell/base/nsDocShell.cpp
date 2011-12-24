@@ -4732,7 +4732,7 @@ nsDocShell::Repaint(bool aForce)
     nsIViewManager* viewManager = presShell->GetViewManager();
     NS_ENSURE_TRUE(viewManager, NS_ERROR_FAILURE);
 
-    NS_ENSURE_SUCCESS(viewManager->UpdateAllViews(), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(viewManager->InvalidateAllViews(), NS_ERROR_FAILURE);
     return NS_OK;
 }
 
@@ -7323,7 +7323,7 @@ nsDocShell::RestoreFromHistory()
             // call Thaw. So we issue the invalidate here.
             newRootView = newVM->GetRootView();
             if (newRootView) {
-                newVM->UpdateView(newRootView);
+                newVM->InvalidateView(newRootView);
             }
         }
     }
