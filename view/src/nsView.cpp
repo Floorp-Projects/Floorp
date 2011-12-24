@@ -362,9 +362,9 @@ void nsIView::SetInvalidationDimensions(const nsRect* aRect)
 void nsView::ResetWidgetBounds(bool aRecurse, bool aMoveOnly,
                                bool aInvalidateChangedSize) {
   if (mWindow) {
-    // If our view manager has refresh disabled, then do nothing; the view
-    // manager will set our position when refresh is reenabled.  Just let it
-    // know that it has pending updates.
+    // Don't change widget geometry while refresh is disabled, for example
+    // during reflow. Changing widget sizes can cause synchronous painting
+    // which is forbidden during reflow.
     if (!mViewManager->IsRefreshEnabled()) {
       mViewManager->PostPendingUpdate();
       return;
