@@ -46,6 +46,8 @@ include $(DEPTH)/config/autoconf.mk
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 VPATH += $(srcdir)/android
+else ifdef MOZ_B2G_RIL
+VPATH += $(srcdir)/ril
 else
 VPATH += $(srcdir)/fallback
 endif
@@ -86,6 +88,13 @@ LOCAL_INCLUDES = \
 # Add VPATH to LOCAL_INCLUDES so we are going to include the correct backend
 # subdirectory (and the ipc one).
 LOCAL_INCLUDES += $(VPATH:%=-I%)
+
+ifdef MOZ_B2G_RIL
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/dom/telephony \
+  -I$(topsrcdir)/dom/system/b2g \
+  $(NULL)
+endif
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
