@@ -699,15 +699,6 @@ xpc_qsValueToInt64(JSContext *cx,
 }
 
 /**
- * Convert a jsdouble to PRUint64. Needed for traceable quickstubs too.
- */
-inline PRUint64
-xpc_qsDoubleToUint64(jsdouble doubleval)
-{
-    return static_cast<PRUint64>(doubleval);
-}
-
-/**
  * Convert a jsval to PRUint64. Return true on success.
  */
 inline JSBool
@@ -724,7 +715,7 @@ xpc_qsValueToUint64(JSContext *cx,
         jsdouble doubleval;
         if (!JS_ValueToNumber(cx, v, &doubleval))
             return false;
-        *result = xpc_qsDoubleToUint64(doubleval);
+        *result = static_cast<PRUint64>(doubleval);
     }
     return true;
 }
