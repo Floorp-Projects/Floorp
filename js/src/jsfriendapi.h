@@ -190,6 +190,9 @@ JS_FRIEND_API(JSBool) obj_defineGetter(JSContext *cx, uintN argc, js::Value *vp)
 JS_FRIEND_API(JSBool) obj_defineSetter(JSContext *cx, uintN argc, js::Value *vp);
 #endif
 
+extern JS_FRIEND_API(bool)
+IsSystemCompartment(const JSCompartment *compartment);
+
 /*
  * Check whether it is OK to assign an undeclared property with name
  * propname of the global object in the current script on cx.  Reports
@@ -438,6 +441,15 @@ JS_FRIEND_API(JSString *)
 GetPCCountScriptContents(JSContext *cx, size_t script);
 
 } /* namespace js */
+
+/*
+ * If protoKey is not JSProto_Null, then clasp is ignored. If protoKey is
+ * JSProto_Null, clasp must non-null.
+ */
+extern JS_FRIEND_API(JSBool)
+js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
+                     JSObject **protop, js::Class *clasp = NULL);
+
 #endif
 
 #endif /* jsfriendapi_h___ */
