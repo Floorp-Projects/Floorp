@@ -1241,7 +1241,8 @@ toolbar[iconsize="small"] #feed-button {
   border-radius: 2.5px 0 0 2.5px;
   border-width: 0 8px 0 0;
   border-style: solid;
-  -moz-border-image: url("chrome://browser/skin/urlbar-arrow.png") 0 8 0 0 fill;  -moz-margin-end: -8px;
+  -moz-border-image: url("chrome://browser/skin/urlbar-arrow.png") 0 8 0 0 fill;
+  -moz-margin-end: -8px;
   margin-top: -1px;
   margin-bottom: -1px;
 }
