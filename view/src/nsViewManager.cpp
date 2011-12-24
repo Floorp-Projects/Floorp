@@ -440,9 +440,7 @@ void nsViewManager::FlushDirtyRegionToWidget(nsView* aView)
   nsRegion r =
     ConvertRegionBetweenViews(*dirtyRegion, aView, nearestViewWithWidget);
   nsViewManager* widgetVM = nearestViewWithWidget->GetViewManager();
-  widgetVM->
-    UpdateWidgetArea(nearestViewWithWidget,
-                     nearestViewWithWidget->GetWidget(), r);
+  widgetVM->UpdateWidgetArea(nearestViewWithWidget, r);
   dirtyRegion->SetEmpty();
 }
 
@@ -464,24 +462,22 @@ AddDirtyRegion(nsView *aView, const nsRegion &aDamagedRegion)
 }
 
 /**
- * @param aWidget the widget for aWidgetView; in some cases the widget
- * is being managed directly by the frame system, so aWidgetView->GetWidget()
- * will return null but nsView::GetViewFor(aWidget) returns aWidgetview
  * @param aDamagedRegion this region, relative to aWidgetView, is invalidated in
  * every widget child of aWidgetView, plus aWidgetView's own widget
  */
 void
-nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
+nsViewManager::UpdateWidgetArea(nsView *aWidgetView,
                                 const nsRegion &aDamagedRegion)
 {
   NS_ASSERTION(aWidgetView->GetViewManager() == this,
                "UpdateWidgetArea called on view we don't own");
+  nsIWidget* widget = aWidgetView->GetWidget();
 
 #if 0
   nsRect dbgBounds = aDamagedRegion.GetBounds();
   printf("UpdateWidgetArea view:%X (%d) widget:%X region: %d, %d, %d, %d\n",
     aWidgetView, aWidgetView->IsAttachedToTopLevel(),
-    aWidget, dbgBounds.x, dbgBounds.y, dbgBounds.width, dbgBounds.height);
+    widget, dbgBounds.x, dbgBounds.y, dbgBounds.width, dbgBounds.height);
 #endif
 
   if (!IsRefreshEnabled()) {
@@ -501,14 +497,14 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
   }
 
   // If the widget is hidden, it don't cover nothing
-  if (aWidget) {
+  if (widget) {
     bool visible;
-    aWidget->IsVisible(visible);
+    widget->IsVisible(visible);
     if (!visible)
       return;
   }
 
-  if (!aWidget) {
+  if (!widget) {
     // The root view or a scrolling view might not have a widget
     // (for example, during printing). We get here when we scroll
     // during printing to show selected options in a listbox, for example.
@@ -519,8 +515,8 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
   // accumulate the union of all the child widget areas, or at least
   // some subset of that.
   nsRegion children;
-  if (aWidget->GetTransparencyMode() != eTransparencyTransparent) {
-    for (nsIWidget* childWidget = aWidget->GetFirstChild();
+  if (widget->GetTransparencyMode() != eTransparencyTransparent) {
+    for (nsIWidget* childWidget = widget->GetFirstChild();
          childWidget;
          childWidget = childWidget->GetNextSibling()) {
       nsView* view = nsView::GetViewFor(childWidget);
@@ -564,7 +560,7 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
     const nsRect* r;
     for (nsRegionRectIterator iter(leftOver); (r = iter.Next());) {
       nsIntRect bounds = ViewToWidget(aWidgetView, *r);
-      aWidget->Invalidate(bounds);
+      widget->Invalidate(bounds);
     }
   }
 }
@@ -618,8 +614,7 @@ NS_IMETHODIMP nsViewManager::UpdateViewNoSuppression(nsIView *aView,
   PRInt32 rootAPD = displayRootVM->AppUnitsPerDevPixel();
   PRInt32 APD = AppUnitsPerDevPixel();
   damagedRect = damagedRect.ConvertAppUnitsRoundOut(APD, rootAPD);
-  displayRootVM->UpdateWidgetArea(displayRoot, displayRoot->GetWidget(),
-                                  nsRegion(damagedRect));
+  displayRootVM->UpdateWidgetArea(displayRoot, nsRegion(damagedRect));
 
   return NS_OK;
 }
