@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Mounir Lamouri <mounir.lamouri@mozilla.com> (Original Author)
+ *  Philipp von Weitershausen <philipp@weitershausen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, function, uuid(0a0037ba-585e-41f4-b0a5-1d0224353105)]
+[scriptable, builtinclass, uuid(20da0c51-2224-49ae-afe9-4b309c6d8f84)]
 interface nsIDOMMozSmsMessage : nsISupports
 {
   // TODO: we should add SENT and RECEIVED DOMString constants, see bug 443316.
