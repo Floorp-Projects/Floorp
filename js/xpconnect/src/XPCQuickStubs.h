@@ -247,39 +247,16 @@ xpc_qsUint32ToJsval(JSContext *cx, PRUint32 u, jsval *rv)
     return true;
 }
 
-#ifdef HAVE_LONG_LONG
-
-#define INT64_TO_DOUBLE(i)      ((jsdouble) (i))
-// Win32 can't handle uint64 to double conversion
-#define UINT64_TO_DOUBLE(u)     ((jsdouble) (int64) (u))
-
-#else
-
-inline jsdouble
-INT64_TO_DOUBLE(const int64 &v)
-{
-    jsdouble d;
-    LL_L2D(d, v);
-    return d;
-}
-
-// if !HAVE_LONG_LONG, then uint64 is a typedef of int64
-#define UINT64_TO_DOUBLE INT64_TO_DOUBLE
-
-#endif
-
 inline JSBool
 xpc_qsInt64ToJsval(JSContext *cx, PRInt64 i, jsval *rv)
 {
-    double d = INT64_TO_DOUBLE(i);
-    return JS_NewNumberValue(cx, d, rv);
+    return JS_NewNumberValue(cx, static_cast<jsdouble>(i), rv);
 }
 
 inline JSBool
 xpc_qsUint64ToJsval(JSContext *cx, PRUint64 u, jsval *rv)
 {
-    double d = UINT64_TO_DOUBLE(u);
-    return JS_NewNumberValue(cx, d, rv);
+    return JS_NewNumberValue(cx, static_cast<jsdouble>(u), rv);
 }
 
 
@@ -727,12 +704,7 @@ xpc_qsValueToInt64(JSContext *cx,
 inline PRUint64
 xpc_qsDoubleToUint64(jsdouble doubleval)
 {
-#ifdef XP_WIN
-    // Note: Win32 can't handle double to uint64 directly
-    return static_cast<PRUint64>(static_cast<PRInt64>(doubleval));
-#else
     return static_cast<PRUint64>(doubleval);
-#endif
 }
 
 /**
