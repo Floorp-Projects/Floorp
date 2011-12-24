@@ -1280,12 +1280,8 @@ NS_METHOD nsWindow::Show(bool bState)
   }
   
 #ifdef MOZ_XUL
-  if (!wasVisible && bState) {
-    Invalidate();
-    if (syncInvalidate) {
-      ::UpdateWindow(mWnd);
-    }
-  }
+  if (!wasVisible && bState)
+    Invalidate(syncInvalidate);
 #endif
 
   return NS_OK;
@@ -1491,7 +1487,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
   }
 
   if (aRepaint)
-    Invalidate();
+    Invalidate(false);
 
   return NS_OK;
 }
@@ -1530,7 +1526,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeig
   }
 
   if (aRepaint)
-    Invalidate();
+    Invalidate(false);
 
   return NS_OK;
 }
@@ -2021,7 +2017,7 @@ nsWindow::ResetLayout()
   OnResize(evRect);
 
   // Invalidate and update
-  Invalidate();
+  Invalidate(false);
 }
 
 // Internally track the caption status via a window property. Required
@@ -2657,7 +2653,8 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(bool aShouldHide)
  **************************************************************/
 
 // Invalidate this component visible area
-NS_METHOD nsWindow::Invalidate(bool aEraseBackground, 
+NS_METHOD nsWindow::Invalidate(bool aIsSynchronous, 
+                               bool aEraseBackground, 
                                bool aUpdateNCArea,
                                bool aIncludeChildren)
 {
@@ -2669,6 +2666,7 @@ NS_METHOD nsWindow::Invalidate(bool aEraseBackground,
   debug_DumpInvalidate(stdout,
                        this,
                        nsnull,
+                       aIsSynchronous,
                        nsCAutoString("noname"),
                        (PRInt32) mWnd);
 #endif // WIDGET_DEBUG_OUTPUT
@@ -2676,6 +2674,9 @@ NS_METHOD nsWindow::Invalidate(bool aEraseBackground,
   DWORD flags = RDW_INVALIDATE;
   if (aEraseBackground) {
     flags |= RDW_ERASE;
+  }
+  if (aIsSynchronous) {
+    flags |= RDW_UPDATENOW;
   }
   if (aUpdateNCArea) {
     flags |= RDW_FRAME;
@@ -2689,7 +2690,7 @@ NS_METHOD nsWindow::Invalidate(bool aEraseBackground,
 }
 
 // Invalidate this component visible area
-NS_METHOD nsWindow::Invalidate(const nsIntRect & aRect)
+NS_METHOD nsWindow::Invalidate(const nsIntRect & aRect, bool aIsSynchronous)
 {
   if (mWnd)
   {
@@ -2697,6 +2698,7 @@ NS_METHOD nsWindow::Invalidate(const nsIntRect & aRect)
     debug_DumpInvalidate(stdout,
                          this,
                          &aRect,
+                         aIsSynchronous,
                          nsCAutoString("noname"),
                          (PRInt32) mWnd);
 #endif // WIDGET_DEBUG_OUTPUT
@@ -2709,6 +2711,10 @@ NS_METHOD nsWindow::Invalidate(const nsIntRect & aRect)
     rect.bottom = aRect.y + aRect.height;
 
     VERIFY(::InvalidateRect(mWnd, &rect, FALSE));
+
+    if (aIsSynchronous) {
+      VERIFY(::UpdateWindow(mWnd));
+    }
   }
   return NS_OK;
 }
@@ -2748,7 +2754,7 @@ nsWindow::MakeFullScreen(bool aFullScreen)
 
   if (visible) {
     Show(true);
-    Invalidate();
+    Invalidate(false);
   }
 
   // Notify the taskbar that we have exited full screen mode.
@@ -2761,6 +2767,26 @@ nsWindow::MakeFullScreen(bool aFullScreen)
   event.mSizeMode = mSizeMode;
   InitEvent(event);
   DispatchWindowEvent(&event);
+
+  return rv;
+}
+
+/**************************************************************
+ *
+ * SECTION: nsIWidget::Update
+ *
+ * Force a synchronous repaint of the window.
+ *
+ **************************************************************/
+
+NS_IMETHODIMP nsWindow::Update()
+{
+  nsresult rv = NS_OK;
+
+  // updates can come through for windows no longer holding an mWnd during
+  // deletes triggered by JavaScript in buttons with mouse feedback
+  if (mWnd)
+    VERIFY(::UpdateWindow(mWnd));
 
   return rv;
 }
@@ -4655,7 +4681,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
       // Invalidate the window so that the repaint will
       // pick up the new theme.
-      Invalidate(true, true, true);
+      Invalidate(true, true, true, true);
     }
     break;
 
@@ -5334,7 +5360,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     BroadcastMsg(mWnd, WM_DWMCOMPOSITIONCHANGED);
     DispatchStandardEvent(NS_THEMECHANGED);
     UpdateGlass();
-    Invalidate(true, true, true);
+    Invalidate(true, true, true, true);
     break;
 #endif
 
@@ -7210,7 +7236,7 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
         r.Sub(bounds, configuration.mBounds);
         r.MoveBy(-bounds.x,
                  -bounds.y);
-        w->Invalidate(r.GetBounds());
+        w->Invalidate(r.GetBounds(), false);
       }
     }
     rv = w->SetWindowClipRegion(configuration.mClipRegion, false);
@@ -7430,7 +7456,7 @@ bool nsWindow::OnResize(nsIntRect &aWindowRect)
 #ifdef CAIRO_HAS_D2D_SURFACE
   if (mD2DWindowSurface) {
     mD2DWindowSurface = NULL;
-    Invalidate();
+    Invalidate(false);
   }
 #endif
 
