@@ -562,7 +562,7 @@ void nsLayoutDebuggingTools::ForceRefresh()
         return;
     nsIView* root = vm->GetRootView();
     if (root) {
-        vm->UpdateView(root);
+        vm->InvalidateView(root);
     }
 }
 
