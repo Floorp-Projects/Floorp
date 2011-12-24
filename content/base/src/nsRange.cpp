@@ -84,6 +84,32 @@ nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult);
     }                                                                              \
   PR_END_MACRO
 
+static void InvalidateAllFrames(nsINode* aNode)
+{
+  NS_PRECONDITION(aNode, "bad arg");
+
+  nsIFrame* frame = nsnull;
+  switch (aNode->NodeType()) {
+    case nsIDOMNode::TEXT_NODE:
+    case nsIDOMNode::ELEMENT_NODE:
+    {
+      nsIContent* content = static_cast<nsIContent*>(aNode);
+      frame = content->GetPrimaryFrame();
+      break;
+    }
+    case nsIDOMNode::DOCUMENT_NODE:
+    {
+      nsIDocument* doc = static_cast<nsIDocument*>(aNode);
+      nsIPresShell* shell = doc ? doc->GetShell() : nsnull;
+      frame = shell ? shell->GetRootFrame() : nsnull;
+      break;
+    }
+  }
+  for (nsIFrame* f = frame; f; f = f->GetNextContinuation()) {
+    f->InvalidateFrameSubtree();
+  }
+}
+
 // Utility routine to detect if a content node is completely contained in a range
 // If outNodeBefore is returned true, then the node starts before the range does.
 // If outNodeAfter is returned true, then the node ends after the range does.
@@ -939,6 +965,7 @@ nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
   VALIDATE_ACCESS(aParent);
 
   nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
+  AutoInvalidateSelection atEndOfBlock(this);
   return SetStart(parent, aOffset);
 }
 
@@ -1000,6 +1027,7 @@ nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
 {
   VALIDATE_ACCESS(aParent);
 
+  AutoInvalidateSelection atEndOfBlock(this);
   nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
   return SetEnd(parent, aOffset);
 }
@@ -1067,6 +1095,7 @@ nsRange::Collapse(bool aToStart)
   if (!mIsPositioned)
     return NS_ERROR_NOT_INITIALIZED;
 
+  AutoInvalidateSelection atEndOfBlock(this);
   if (aToStart)
     DoSetRange(mStartParent, mStartOffset, mStartParent, mStartOffset, mRoot);
   else
@@ -1092,6 +1121,7 @@ nsRange::SelectNode(nsIDOMNode* aN)
     return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
   }
 
+  AutoInvalidateSelection atEndOfBlock(this);
   DoSetRange(parent, index, parent, index + 1, newRoot);
   
   return NS_OK;
@@ -1106,6 +1136,7 @@ nsRange::SelectNodeContents(nsIDOMNode* aN)
   nsINode* newRoot = IsValidBoundary(node);
   NS_ENSURE_TRUE(newRoot, NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR);
   
+  AutoInvalidateSelection atEndOfBlock(this);
   DoSetRange(node, 0, node, GetNodeLength(node), newRoot);
   
   return NS_OK;
@@ -2335,6 +2366,10 @@ nsRange::Detach()
   if(mIsDetached)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
 
+  if (IsInSelection()) {
+    ::InvalidateAllFrames(GetRegisteredCommonAncestor());
+  }
+
   mIsDetached = true;
 
   DoSetRange(nsnull, 0, nsnull, 0, nsnull);
@@ -2590,4 +2625,39 @@ nsRange::GetUsedFontFaces(nsIDOMFontFaceList** aResult)
 
   fontFaceList.forget(aResult);
   return NS_OK;
+}
+
+nsINode*
+nsRange::GetRegisteredCommonAncestor()
+{
+  NS_ASSERTION(IsInSelection(),
+               "GetRegisteredCommonAncestor only valid for range in selection");
+  nsINode* ancestor = GetNextRangeCommonAncestor(mStartParent);
+  while (ancestor) {
+    RangeHashTable* ranges =
+      static_cast<RangeHashTable*>(ancestor->GetProperty(nsGkAtoms::range));
+    if (ranges->GetEntry(this)) {
+      break;
+    }
+    ancestor = GetNextRangeCommonAncestor(ancestor->GetNodeParent());
+  }
+  NS_ASSERTION(ancestor, "can't find common ancestor for selected range");
+  return ancestor;
+}
+
+/* static */ bool nsRange::AutoInvalidateSelection::mIsNested;
+
+nsRange::AutoInvalidateSelection::~AutoInvalidateSelection()
+{
+  NS_ASSERTION(mWasInSelection == mRange->IsInSelection(),
+               "Range got unselected in AutoInvalidateSelection block");
+  if (!mCommonAncestor) {
+    return;
+  }
+  mIsNested = false;
+  ::InvalidateAllFrames(mCommonAncestor);
+  nsINode* commonAncestor = mRange->GetRegisteredCommonAncestor();
+  if (commonAncestor != mCommonAncestor) {
+    ::InvalidateAllFrames(commonAncestor);
+  }
 }
