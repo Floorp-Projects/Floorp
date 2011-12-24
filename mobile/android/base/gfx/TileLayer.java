@@ -98,7 +98,7 @@ public abstract class TileLayer extends Layer {
         invalidate(new Rect(0, 0, bufferSize.width, bufferSize.height));
     }
 
-    private void validateTexture() {
+    private void validateTexture(GL10 gl) {
         /* Calculate the ideal texture size. This must be a power of two if
          * the texture is repeated or OpenGL ES 2.0 isn't supported, as
          * OpenGL ES 2.0 is required for NPOT texture support (without
@@ -119,9 +119,9 @@ public abstract class TileLayer extends Layer {
                 TextureReaper.get().add(mTextureIDs);
                 mTextureIDs = null;
 
-                // XXX This won't be freed until the next frame is drawn, so we
-                //     temporarily have a larger-than-necessary memory requirement.
-                //     Is this what we want?
+                // Free the texture immediately, so we don't incur a
+                // temporarily increased memory usage.
+                TextureReaper.get().reap(gl);
             }
         }
     }
@@ -131,7 +131,7 @@ public abstract class TileLayer extends Layer {
         super.performUpdates(gl);
 
         // Reallocate the texture if the size has changed
-        validateTexture();
+        validateTexture(gl);
 
         // Don't do any work if the image has an invalid size.
         if (!mImage.getSize().isPositive())
@@ -152,7 +152,13 @@ public abstract class TileLayer extends Layer {
     }
 
     private void uploadDirtyRect(GL10 gl, Rect dirtyRect) {
+        // If we have nothing to upload, just return for now
         if (dirtyRect.isEmpty())
+            return;
+
+        // It's possible that the buffer will be null, check for that and return
+        ByteBuffer imageBuffer = mImage.getBuffer();
+        if (imageBuffer == null)
             return;
 
         boolean newlyCreated = false;
@@ -174,16 +180,21 @@ public abstract class TileLayer extends Layer {
         if (newlyCreated || dirtyRect.contains(bufferRect)) {
             if (mSize.equals(bufferSize)) {
                 gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width, mSize.height,
-                                0, glInfo.format, glInfo.type, mImage.getBuffer());
+                                0, glInfo.format, glInfo.type, imageBuffer);
                 return;
             } else {
                 gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, glInfo.internalFormat, mSize.width, mSize.height,
                                 0, glInfo.format, glInfo.type, null);
                 gl.glTexSubImage2D(gl.GL_TEXTURE_2D, 0, 0, 0, bufferSize.width, bufferSize.height,
-                                   glInfo.format, glInfo.type, mImage.getBuffer());
+                                   glInfo.format, glInfo.type, imageBuffer);
                 return;
             }
         }
+
+        // Make sure that the dirty region intersects with the buffer rect,
+        // otherwise we'll end up with an invalid buffer pointer.
+        if (!Rect.intersects(dirtyRect, bufferRect))
+            return;
 
         /*
          * Upload the changed rect. We have to widen to the full width of the texture
@@ -192,7 +203,7 @@ public abstract class TileLayer extends Layer {
          *
          * XXX We should still use GL_EXT_unpack_subimage when available.
          */
-        Buffer viewBuffer = mImage.getBuffer().slice();
+        Buffer viewBuffer = imageBuffer.slice();
         int bpp = CairoUtils.bitsPerPixelForCairoFormat(cairoFormat) / 8;
         int position = dirtyRect.top * bufferSize.width * bpp;
         if (position > viewBuffer.limit()) {
