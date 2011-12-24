@@ -1270,14 +1270,6 @@ public:
   virtual bool IsRoot() { return true; }
 
   /**
-   * This method is called off an event to force the plugin geometry to
-   * be updated. First we try to paint, since updating plugin geometry
-   * during paint is best for keeping plugins in sync with content.
-   * But we also force geometry updates in case painting doesn't work.
-   */
-  void SynchronousPluginGeometryUpdate();
-
-  /**
    * Call this after reflow and scrolling to ensure that the geometry
    * of any windowed plugins is updated. aFrame is the root of the
    * frame subtree whose geometry has changed.
