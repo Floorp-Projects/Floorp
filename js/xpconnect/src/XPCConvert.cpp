@@ -152,32 +152,6 @@ XPCConvert::RemoveXPCOMUCStringFinalizer()
                         ? INT_TO_JSVAL(i)                                     \
                         : DOUBLE_TO_JSVAL(i))
 
-/*
- * Support for 64 bit conversions where 'long long' not supported.
- * (from John Fairhurst <mjf35@cam.ac.uk>)
- */
-
-#ifdef HAVE_LONG_LONG
-
-#define INT64_TO_DOUBLE(i)      ((jsdouble) (i))
-// Win32 can't handle uint64 to double conversion
-#define UINT64_TO_DOUBLE(u)     ((jsdouble) (int64) (u))
-
-#else
-
-inline jsdouble
-INT64_TO_DOUBLE(const int64 &v)
-{
-    jsdouble d;
-    LL_L2D(d, v);
-    return d;
-}
-
-// if !HAVE_LONG_LONG, then uint64 is a typedef of int64
-#define UINT64_TO_DOUBLE INT64_TO_DOUBLE
-
-#endif
-
 // static
 JSBool
 XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
@@ -201,11 +175,11 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
     case nsXPTType::T_I8    : *d = INT_TO_JSVAL(int32_t(*((int8_t*)s)));             break;
     case nsXPTType::T_I16   : *d = INT_TO_JSVAL(int32_t(*((int16_t*)s)));            break;
     case nsXPTType::T_I32   : *d = INT_TO_JSVAL(*((int32_t*)s));                     break;
-    case nsXPTType::T_I64   : *d = DOUBLE_TO_JSVAL(INT64_TO_DOUBLE(*((int64*)s)));   break;
+    case nsXPTType::T_I64   : *d = DOUBLE_TO_JSVAL(jsdouble(*((int64_t*)s)));        break;
     case nsXPTType::T_U8    : *d = INT_TO_JSVAL(int32_t(*((uint8*)s)));              break;
     case nsXPTType::T_U16   : *d = INT_TO_JSVAL(int32_t(*((uint16_t*)s)));           break;
     case nsXPTType::T_U32   : *d = FIT_U32(*((uint32_t*)s));                         break;
-    case nsXPTType::T_U64   : *d = DOUBLE_TO_JSVAL(UINT64_TO_DOUBLE(*((uint64*)s))); break;
+    case nsXPTType::T_U64   : *d = DOUBLE_TO_JSVAL(jsdouble(*((uint64_t*)s)));       break;
     case nsXPTType::T_FLOAT : *d = DOUBLE_TO_JSVAL(*((float*)s));                    break;
     case nsXPTType::T_DOUBLE: *d = DOUBLE_TO_JSVAL(*((double*)s));                   break;
     case nsXPTType::T_BOOL  :
@@ -527,16 +501,11 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
         if (JSVAL_IS_INT(s)) {
             if (!JS_ValueToECMAUint32(cx, s, &tu))
                 return false;
-            *((int64_t*)d) = tu;
+            *((uint64_t*)d) = tu;
         } else {
             if (!JS_ValueToNumber(cx, s, &td))
                 return false;
-#ifdef XP_WIN
-            // Note: Win32 can't handle double to uint64 directly
-            *((uint64_t*)d) = uint64_t(int64_t(td));
-#else
             *((uint64_t*)d) = uint64_t(td);
-#endif
         }
         break;
     case nsXPTType::T_FLOAT  :
