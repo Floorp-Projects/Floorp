@@ -461,17 +461,6 @@ void nsViewManager::ProcessPendingUpdates(nsView* aView, bool aDoInvalidate)
   }
 }
 
-NS_IMETHODIMP nsViewManager::Composite()
-{
-  if (!IsRootVM()) {
-    return RootViewManager()->Composite();
-  }
-  ForceUpdate();
-  ClearUpdateCount();
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, PRUint32 aUpdateFlags)
 {
   // Mark the entire view as damaged
@@ -656,15 +645,6 @@ NS_IMETHODIMP nsViewManager::UpdateViewNoSuppression(nsIView *aView,
                                   nsRegion(damagedRect), nsnull);
 
   RootViewManager()->IncrementUpdateCount();
-
-  if (!IsRefreshEnabled()) {
-    return NS_OK;
-  }
-
-  // See if we should do an immediate refresh or wait
-  if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
-    Composite();
-  } 
 
   return NS_OK;
 }
@@ -1341,37 +1321,6 @@ NS_IMETHODIMP nsViewManager::SetViewVisibility(nsIView *aView, nsViewVisibility 
   return NS_OK;
 }
 
-void nsViewManager::UpdateWidgetsForView(nsView* aView)
-{
-  NS_PRECONDITION(aView, "Must have view!");
-
-  // No point forcing an update if invalidations have been suppressed.
-  if (!IsRefreshEnabled())
-    return;  
-
-  nsWeakView parentWeakView = aView;
-  if (aView->HasWidget()) {
-    aView->GetWidget()->Update();  // Flushes Layout!
-    if (!parentWeakView.IsAlive()) {
-      return;
-    }
-  }
-
-  nsView* childView = aView->GetFirstChild();
-  while (childView) {
-    nsWeakView childWeakView = childView;
-    UpdateWidgetsForView(childView);
-    if (NS_LIKELY(childWeakView.IsAlive())) {
-      childView = childView->GetNextSibling();
-    }
-    else {
-      // The current view was destroyed - restart at the first child if the
-      // parent is still alive.
-      childView = parentWeakView.IsAlive() ? aView->GetFirstChild() : nsnull;
-    }
-  }
-}
-
 bool nsViewManager::IsViewInserted(nsView *aView)
 {
   if (mRootView == aView) {
@@ -1438,15 +1387,7 @@ void nsViewManager::TriggerRefresh(PRUint32 aUpdateFlags)
   if (mUpdateBatchCnt > 0)
     return;
 
-  // nested batching can combine IMMEDIATE with DEFERRED. Favour
-  // IMMEDIATE over DEFERRED and DEFERRED over NO_SYNC.  We need to
-  // check for IMMEDIATE before checking mHasPendingUpdates, because
-  // the latter might be false as far as gecko is concerned but the OS
-  // might still have queued up expose events that it hasn't sent yet.
-  if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
-    FlushPendingInvalidates();
-    Composite();
-  } else if (!mHasPendingUpdates) {
+  if (!mHasPendingUpdates) {
     // Nothing to do
   } else if (aUpdateFlags & NS_VMREFRESH_DEFERRED) {
     PostInvalidateEvent();
@@ -1506,20 +1447,6 @@ NS_IMETHODIMP nsViewManager::GetRootWidget(nsIWidget **aWidget)
   if (mRootView->GetParent())
     return mRootView->GetParent()->GetViewManager()->GetRootWidget(aWidget);
   *aWidget = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsViewManager::ForceUpdate()
-{
-  if (!IsRootVM()) {
-    return RootViewManager()->ForceUpdate();
-  }
-
-  // Walk the view tree looking for widgets, and call Update() on each one
-  if (mRootView) {
-    UpdateWidgetsForView(mRootView);
-  }
-  
   return NS_OK;
 }
 
