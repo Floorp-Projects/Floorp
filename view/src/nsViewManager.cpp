@@ -417,32 +417,49 @@ void nsViewManager::ProcessPendingUpdates(nsView* aView, bool aDoInvalidate)
     ProcessPendingUpdates(childView, aDoInvalidate);
   }
 
-  if (aDoInvalidate && aView->HasNonEmptyDirtyRegion()) {
+  if (aDoInvalidate) {
     // Push out updates after we've processed the children; ensures that
     // damage is applied based on the final widget geometry
     NS_ASSERTION(IsRefreshEnabled(), "Cannot process pending updates with refresh disabled");
-    nsRegion* dirtyRegion = aView->GetDirtyRegion();
-    if (dirtyRegion) {
-      nsView* nearestViewWithWidget = aView;
-      while (!nearestViewWithWidget->HasWidget() &&
-             nearestViewWithWidget->GetParent()) {
-        nearestViewWithWidget = nearestViewWithWidget->GetParent();
-      }
-      nsRegion r =
-        ConvertRegionBetweenViews(*dirtyRegion, aView, nearestViewWithWidget);
-      nsViewManager* widgetVM = nearestViewWithWidget->GetViewManager();
-      widgetVM->
-        UpdateWidgetArea(nearestViewWithWidget,
-                         nearestViewWithWidget->GetWidget(), r);
-      dirtyRegion->SetEmpty();
-    }
+    FlushDirtyRegionToWidget(aView);
   }
+}
+
+void nsViewManager::FlushDirtyRegionToWidget(nsView* aView)
+{
+  if (!aView->HasNonEmptyDirtyRegion())
+    return;
+
+  nsRegion* dirtyRegion = aView->GetDirtyRegion();
+  nsView* nearestViewWithWidget = aView;
+  while (!nearestViewWithWidget->HasWidget() &&
+         nearestViewWithWidget->GetParent()) {
+    nearestViewWithWidget = nearestViewWithWidget->GetParent();
+  }
+  nsRegion r =
+    ConvertRegionBetweenViews(*dirtyRegion, aView, nearestViewWithWidget);
+  nsViewManager* widgetVM = nearestViewWithWidget->GetViewManager();
+  widgetVM->
+    UpdateWidgetArea(nearestViewWithWidget,
+                     nearestViewWithWidget->GetWidget(), r);
+  dirtyRegion->SetEmpty();
 }
 
 NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView)
 {
   // Mark the entire view as damaged
   return UpdateView(aView, aView->GetDimensions());
+}
+
+static void
+AddDirtyRegion(nsView *aView, const nsRegion &aDamagedRegion)
+{
+  nsRegion* dirtyRegion = aView->GetDirtyRegion();
+  if (!dirtyRegion)
+    return;
+
+  dirtyRegion->Or(*dirtyRegion, aDamagedRegion);
+  dirtyRegion->SimplifyOutward(8);
 }
 
 /**
@@ -469,18 +486,10 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
   if (!IsRefreshEnabled()) {
     // accumulate this rectangle in the view's dirty region, so we can
     // process it later.
-    nsRegion* dirtyRegion = aWidgetView->GetDirtyRegion();
-    if (!dirtyRegion) return;
-
-    dirtyRegion->Or(*dirtyRegion, aDamagedRegion);
-    // Don't let dirtyRegion grow beyond 8 rects
-    dirtyRegion->SimplifyOutward(8);
+    AddDirtyRegion(aWidgetView, aDamagedRegion);
     nsViewManager* rootVM = RootViewManager();
     rootVM->mHasPendingUpdates = true;
     return;
-    // this should only happen at the top level, and this result
-    // should not be consumed by top-level callers, so it doesn't
-    // really matter what we return
   }
 
   // If the bounds don't overlap at all, there's nothing to do
