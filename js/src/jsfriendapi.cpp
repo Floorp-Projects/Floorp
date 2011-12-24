@@ -215,6 +215,12 @@ js::GetObjectSlotSpan(const JSObject *obj)
 }
 
 JS_FRIEND_API(bool)
+js::IsObjectInContextCompartment(const JSObject *obj, const JSContext *cx)
+{
+    return obj->compartment() == cx->compartment;
+}
+
+JS_FRIEND_API(bool)
 js::IsOriginalScriptFunction(JSFunction *fun)
 {
     return fun->script()->function() == fun;
