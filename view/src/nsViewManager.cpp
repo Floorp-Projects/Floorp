@@ -398,7 +398,8 @@ void nsViewManager::RenderViews(nsView *aView, nsIWidget *aWidget,
   }
 }
 
-void nsViewManager::ProcessPendingUpdates(nsView* aView, bool aDoInvalidate)
+void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
+                                                 bool aDoInvalidate)
 {
   NS_ASSERTION(IsRootVM(), "Updates will be missed");
 
@@ -414,7 +415,7 @@ void nsViewManager::ProcessPendingUpdates(nsView* aView, bool aDoInvalidate)
   // process pending updates in child view.
   for (nsView* childView = aView->GetFirstChild(); childView;
        childView = childView->GetNextSibling()) {
-    ProcessPendingUpdates(childView, aDoInvalidate);
+    ProcessPendingUpdatesForView(childView, aDoInvalidate);
   }
 
   if (aDoInvalidate) {
@@ -828,7 +829,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
             // Make sure to sync up any widget geometry changes we
             // have pending before we paint.
             if (rootVM->mHasPendingUpdates) {
-              rootVM->ProcessPendingUpdates(mRootView, false);
+              rootVM->ProcessPendingUpdatesForView(mRootView, false);
             }
             
             if (view && aEvent->message == NS_PAINT) {
@@ -1425,13 +1426,19 @@ nsViewManager::IsPainting(bool& aIsPainting)
 }
 
 void
+nsViewManager::ProcessPendingUpdates()
+{
+  // To be implemented.
+}
+
+void
 nsViewManager::FlushPendingInvalidates()
 {
   NS_ASSERTION(IsRootVM(), "Must be root VM for this to be called!");
   NS_ASSERTION(mUpdateBatchCnt == 0, "Must not be in an update batch!");
 
   if (mHasPendingUpdates) {
-    ProcessPendingUpdates(mRootView, true);
+    ProcessPendingUpdatesForView(mRootView, true);
     mHasPendingUpdates = false;
   }
 }

@@ -141,8 +141,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID    \
-{ 0x4e23d557, 0x741a, 0x4fd0,\
-  { 0x91, 0x52, 0x34, 0xe2, 0xb4, 0xef, 0xe8, 0x2e } }
+{ 0x3ab5b116, 0x2d73, 0x431c, \
+ { 0x9a, 0x4b, 0x6c, 0x91, 0x9e, 0x42, 0x45, 0xc3 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -1148,6 +1148,7 @@ public:
   virtual bool ShouldIgnoreInvalidation() = 0;
   virtual void WillPaint(bool aWillSendDidPaint) = 0;
   virtual void DidPaint() = 0;
+  virtual void ScheduleViewManagerFlush() = 0;
   virtual void ClearMouseCaptureOnView(nsIView* aView) = 0;
   virtual bool IsVisible() = 0;
   virtual void DispatchSynthMouseMove(nsGUIEvent *aEvent, bool aFlushOnHoverChange) = 0;
