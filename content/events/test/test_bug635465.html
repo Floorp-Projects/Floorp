@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=635465
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 635465</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+      #item {
+        position: relative;
+      }
+      .s-menu-section-submenu {
+        position: absolute;
+        display: none;
+      }
+      .open .s-menu-section-submenu {
+        display: block;
+      }
+</style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=635465">Mozilla Bug 635465</a>
+<div id="display">
+  <div class="item" id="item"
+       onmouseover="showSubmenu(event)" onmouseout="hideSubmenu(event)">
+    <a href="#" id="firsthover">Hover me</a>
+    <div class="s-menu-section-submenu" id="menu">
+      <a href="#" id="secondhover">Now hover me</a>
+    </div>
+  </div>
+</div>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+/** Test for Bug 635465 **/
+function showSubmenu(event) {
+  var item = document.getElementById('item');
+
+  var width = item.offsetWidth;   // IT WORKS IF YOU REMOVE THIS LINE
+  
+  item.className='open';
+}
+
+function hideSubmenu(event) {
+  document.getElementById('item').className='';
+}
+
+SimpleTest.waitForExplicitFinish();
+
+function executeTests() {
+  // First flush out layout of firsthover
+  ok($("firsthover").getBoundingClientRect().height > 0, true,
+     "Should have a nonzero height before hover");
+
+  // Now trigger a mouseover on firsthover
+  synthesizeMouseAtCenter($("firsthover"), { type: "mousemove" });
+
+  ok($("secondhover").getBoundingClientRect().height > 0, true,
+     "Should have a nonzero height for submenu after hover");
+
+  // Now determine where secondhover is hanging out
+  var rect = $("secondhover").getBoundingClientRect();
+  synthesizeMouseAtCenter($("secondhover"), { type: "mousemove" });
+
+  // And another mouseover one pixel to the right of where the center used to be
+  synthesizeMouseAtPoint(rect.left + rect.width/2 + 1,
+                         rect.top + rect.height/2,
+                         { type: "mousemove" });
+
+  ok($("secondhover").getBoundingClientRect().height > 0, true,
+     "Should have a nonzero height for submenu after second hover");
+
+  // And check computed display of the menu
+  is(getComputedStyle($("menu"), "").display, "block", "Should have block display");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(executeTests);
+</script>
+</pre>
+</body>
+</html>
