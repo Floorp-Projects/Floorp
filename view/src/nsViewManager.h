@@ -145,6 +145,7 @@ public:
   void InvalidateHierarchy();
 
   virtual void ProcessPendingUpdates();
+  virtual void UpdateWidgetGeometry();
 
 protected:
   virtual ~nsViewManager();
@@ -152,7 +153,8 @@ protected:
 private:
 
   void FlushPendingInvalidates();
-  void ProcessPendingUpdatesForView(nsView *aView);
+  void ProcessPendingUpdatesForView(nsView *aView,
+                                    bool aFlushDirtyRegion = true);
   void FlushDirtyRegionToWidget(nsView* aView);
   /**
    * Call WillPaint() on all view observers under this vm root.
@@ -241,6 +243,7 @@ private:
   bool              mPainting;
   bool              mRecursiveRefreshPending;
   bool              mHasPendingUpdates;
+  bool              mHasPendingWidgetGeometryChanges;
   bool              mInScroll;
 
   //from here to public should be static and locked... MMP

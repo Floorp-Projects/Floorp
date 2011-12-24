@@ -351,7 +351,7 @@ void nsView::SetPosition(nscoord aX, nscoord aY)
   NS_ASSERTION(GetParent() || (aX == 0 && aY == 0),
                "Don't try to move the root widget to something non-zero");
 
-  ResetWidgetBounds(true, true, false);
+  ResetWidgetBounds(true, false);
 }
 
 void nsIView::SetInvalidationDimensions(const nsRect* aRect)
@@ -359,22 +359,23 @@ void nsIView::SetInvalidationDimensions(const nsRect* aRect)
   return Impl()->SetInvalidationDimensions(aRect);
 }
 
-void nsView::ResetWidgetBounds(bool aRecurse, bool aMoveOnly,
-                               bool aInvalidateChangedSize) {
+void nsView::ResetWidgetBounds(bool aRecurse, bool aForceSync)
+{
   if (mWindow) {
-    // Don't change widget geometry while refresh is disabled, for example
-    // during reflow. Changing widget sizes can cause synchronous painting
-    // which is forbidden during reflow.
-    if (!mViewManager->IsPaintingAllowed()) {
+    if (!aForceSync) {
+      // Don't change widget geometry synchronously, since that can
+      // cause synchronous painting.
       mViewManager->PostPendingUpdate();
-      return;
+    } else {
+      DoResetWidgetBounds(false, true);
     }
+    return;
+  }
 
-    DoResetWidgetBounds(aMoveOnly, aInvalidateChangedSize);
-  } else if (aRecurse) {
+  if (aRecurse) {
     // reposition any widgets under this view
     for (nsView* v = GetFirstChild(); v; v = v->GetNextSibling()) {
-      v->ResetWidgetBounds(true, aMoveOnly, aInvalidateChangedSize);
+      v->ResetWidgetBounds(true, aForceSync);
     }
   }
 }
@@ -492,7 +493,7 @@ void nsView::SetDimensions(const nsRect& aRect, bool aPaint, bool aResizeWidget)
   mDimBounds = dims;
 
   if (aResizeWidget) {
-    ResetWidgetBounds(false, false, aPaint);
+    ResetWidgetBounds(false, false);
   }
 }
 
