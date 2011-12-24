@@ -418,7 +418,7 @@ public:
   NS_IMETHOD              SetFocus(bool aRaise);
   NS_IMETHOD              GetBounds(nsIntRect &aRect);
 
-  NS_IMETHOD              Invalidate(const nsIntRect &aRect);
+  NS_IMETHOD              Invalidate(const nsIntRect &aRect, bool aIsSynchronous);
 
   virtual void*           GetNativeData(PRUint32 aDataType);
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
@@ -429,6 +429,7 @@ public:
                           { return aStatus == nsEventStatus_eConsumeNoDefault; }
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 
+  NS_IMETHOD              Update();
   virtual bool            GetShouldAccelerate();
 
   NS_IMETHOD        SetCursor(nsCursor aCursor);

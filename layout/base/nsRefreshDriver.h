@@ -177,17 +177,6 @@ public:
   }
 
   /**
-   * Remember whether our presshell's view manager needs a flush
-   */
-  void ScheduleViewManagerFlush() {
-    mViewManagerFlushIsPending = true;
-    EnsureTimerStarted(false);
-  }
-  void RevokeViewManagerFlush() {
-    mViewManagerFlushIsPending = false;
-  }
-
-  /**
    * Add a document for which we have nsIFrameRequestCallbacks
    */
   void ScheduleFrameRequestCallbacks(nsIDocument* aDocument);
@@ -238,11 +227,6 @@ public:
 			   mozFlushType aFlushType);
 #endif
 
-  /**
-   * Default interval the refresh driver uses, in ms.
-   */
-  static PRInt32 DefaultInterval();
-
 private:
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
   typedef nsTHashtable<nsISupportsHashKey> RequestTable;
@@ -281,7 +265,6 @@ private:
      a precise timer.  If mTimer is null, this boolean's value can be
      anything.  */
   bool mTimerIsPrecise;
-  bool mViewManagerFlushIsPending;
 
   // separate arrays for each flush type we support
   ObserverArray mObservers[3];
