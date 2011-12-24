@@ -7635,7 +7635,6 @@ static bool gInApplyRenderingChangeToTree = false;
 
 static void
 DoApplyRenderingChangeToTree(nsIFrame* aFrame,
-                             nsIViewManager* aViewManager,
                              nsFrameManager* aFrameManager,
                              nsChangeHint aChange);
 
@@ -7644,7 +7643,7 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
  * This rect is relative to aFrame's parent
  */
 static void
-UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
+UpdateViewsForTree(nsIFrame* aFrame,
                    nsFrameManager* aFrameManager,
                    nsChangeHint aChange)
 {
@@ -7671,19 +7670,19 @@ UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
           nsIFrame* outOfFlowFrame =
             nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
           do {
-            DoApplyRenderingChangeToTree(outOfFlowFrame, aViewManager,
-                                         aFrameManager, aChange);
+            DoApplyRenderingChangeToTree(outOfFlowFrame, aFrameManager,
+                                         aChange);
           } while ((outOfFlowFrame = outOfFlowFrame->GetNextContinuation()));
         } else if (lists.CurrentID() == nsIFrame::kPopupList) {
-          DoApplyRenderingChangeToTree(child, aViewManager,
-                                       aFrameManager, aChange);
+          DoApplyRenderingChangeToTree(child, aFrameManager,
+                                       aChange);
         } else {  // regular frame
           if ((child->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER) &&
               (aChange & nsChangeHint_RepaintFrame)) {
             FrameLayerBuilder::InvalidateThebesLayerContents(child,
               child->GetVisualOverflowRectRelativeToSelf());
           }
-          UpdateViewsForTree(child, aViewManager, aFrameManager, aChange);
+          UpdateViewsForTree(child, aFrameManager, aChange);
         }
       }
     }
@@ -7692,7 +7691,6 @@ UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
 
 static void
 DoApplyRenderingChangeToTree(nsIFrame* aFrame,
-                             nsIViewManager* aViewManager,
                              nsFrameManager* aFrameManager,
                              nsChangeHint aChange)
 {
@@ -7704,7 +7702,7 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     // frame doesn't have a view, find the nearest containing view
     // (adjusting r's coordinate system to reflect the nesting) and
     // update there.
-    UpdateViewsForTree(aFrame, aViewManager, aFrameManager, aChange);
+    UpdateViewsForTree(aFrame, aFrameManager, aChange);
 
     // if frame has view, will already be invalidated
     if (aChange & nsChangeHint_RepaintFrame) {
@@ -7767,8 +7765,6 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
     NS_ASSERTION(aFrame, "root frame must paint");
   }
 
-  nsIViewManager* viewManager = shell->GetViewManager();
-
   // Trigger rendering updates by damaging this frame and any
   // continuations of this frame.
 
@@ -7777,8 +7773,7 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
 #ifdef DEBUG
   gInApplyRenderingChangeToTree = true;
 #endif
-  DoApplyRenderingChangeToTree(aFrame, viewManager, shell->FrameManager(),
-                               aChange);
+  DoApplyRenderingChangeToTree(aFrame, shell->FrameManager(), aChange);
 #ifdef DEBUG
   gInApplyRenderingChangeToTree = false;
 #endif
