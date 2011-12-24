@@ -409,7 +409,7 @@ let Buf = {
       try {
         this.processParcel();
       } catch (ex) {
-        if (DEBUG) debug("Parcel handling threw " + ex);
+        if (DEBUG) debug("Parcel handling threw " + ex + "\n" + ex.stack);
       }
 
       // Ensure that the whole parcel was consumed.
@@ -686,6 +686,22 @@ let RIL = {
   },
 
   /**
+   * Acknowledge the receipt and handling of an SMS.
+   *
+   * @param success
+   *        Boolean indicating whether the message was successfuly handled.
+   * @param cause
+   *        SMS_* constant indicating the reason for unsuccessful handling.
+   */
+  acknowledgeSMS: function acknowledgeSMS(success, cause) {
+    let token = Buf.newParcel(REQUEST_SMS_ACKNOWLEDGE);
+    Buf.writeUint32(2);
+    Buf.writeUint32(success ? 1 : 0);
+    Buf.writeUint32(cause);
+    Buf.sendParcel();
+  },
+
+  /**
    * Start a DTMF Tone.
    *
    * @param dtmfChar
@@ -876,7 +892,9 @@ RIL[REQUEST_QUERY_CALL_FORWARD_STATUS] = null;
 RIL[REQUEST_SET_CALL_FORWARD] = null;
 RIL[REQUEST_QUERY_CALL_WAITING] = null;
 RIL[REQUEST_SET_CALL_WAITING] = null;
-RIL[REQUEST_SMS_ACKNOWLEDGE] = null;
+RIL[REQUEST_SMS_ACKNOWLEDGE] = function REQUEST_SMS_ACKNOWLEDGE() {
+  Phone.onAcknowledgeSMS();
+};
 RIL[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI() {
   let imei = Buf.readString();
   Phone.onIMEI(imei);
@@ -973,9 +991,17 @@ RIL[UNSOLICITED_RESPONSE_CALL_STATE_CHANGED] = function UNSOLICITED_RESPONSE_CAL
 RIL[UNSOLICITED_RESPONSE_NETWORK_STATE_CHANGED] = function UNSOLICITED_RESPONSE_NETWORK_STATE_CHANGED() {
   Phone.onNetworkStateChanged();
 };
-RIL[UNSOLICITED_RESPONSE_NEW_SMS] = null;
-RIL[UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT] = null;
-RIL[UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM] = null;
+RIL[UNSOLICITED_RESPONSE_NEW_SMS] = function UNSOLICITED_RESPONSE_NEW_SMS(length) {
+  Phone.onNewSMS(length);
+};
+RIL[UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT] = function UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT(length) {
+  let info = Buf.readStringList();
+  Phone.onNewSMSStatusReport(info);
+};
+RIL[UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM] = function UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM(length) {
+  let info = Buf.readUint32List();
+  Phone.onNewSMSOnSIM(message);
+};
 RIL[UNSOLICITED_ON_USSD] = null;
 RIL[UNSOLICITED_ON_USSD_REQUEST] = null;
 RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = null;
@@ -1311,6 +1337,50 @@ let Phone = {
 
   onSendSMS: function onSendSMS(messageRef, ackPDU, errorCode) {
     //TODO
+  },
+
+  onNewSMS: function onNewSMS(payloadLength) {
+    if (!payloadLength) {
+      if (DEBUG) debug("Received empty SMS!");
+      //TODO: should we acknowledge the SMS here? maybe only after multiple
+      //failures.
+      return;
+    }
+    // An SMS is a string, but we won't read it as such, so let's read the
+    // string length and then defer to PDU parsing helper.
+    let messageStringLength = Buf.readUint32();
+    debug("Got new SMS, length " + messageStringLength);
+    let message = GsmPDUHelper.readMessage();
+    debug(message);
+
+    // Read string delimiters. See Buf.readString().
+    let delimiter = Buf.readUint16();
+    if (!(messageStringLength & 1)) {
+      delimiter |= Buf.readUint16();
+    }
+    if (DEBUG) {
+      if (delimiter != 0) {
+        debug("Something's wrong, found string delimiter: " + delimiter);
+      }
+    }
+
+    message.type = "sms-received";
+    this.sendDOMMessage(message);
+
+    //TODO: this might be a lie? do we want to wait for the mainthread to
+    // report back?
+    RIL.acknowledgeSMS(true, SMS_HANDLED);
+  },
+
+  onNewSMSStatusReport: function onNewSMSStatusReport(info) {
+    //TODO
+  },
+
+  onNewSMSOnSIM: function onNewSMSOnSIM(info) {
+    //TODO
+  },
+
+  onAcknowledgeSMS: function onAcknowledgeSMS() {
   },
 
   /**
