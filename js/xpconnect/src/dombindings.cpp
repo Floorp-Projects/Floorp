@@ -40,6 +40,7 @@
 #include "mozilla/Util.h"
 
 #include "dombindings.h"
+#include "xpcpublic.h"
 #include "xpcprivate.h"
 #include "XPCQuickStubs.h"
 #include "XPCWrapper.h"
@@ -199,7 +200,7 @@ Wrap(JSContext *cx, JSObject *scope, nsISupportsResult &result, jsval *vp)
 static inline bool
 Wrap(JSContext *cx, JSObject *scope, nsString &result, jsval *vp)
 {
-    return xpc_qsStringToJsval(cx, result, vp);
+    return xpc::StringToJsval(cx, result, vp);
 }
 
 template<class T>
