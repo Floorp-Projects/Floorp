@@ -41,6 +41,7 @@
 #define xpcpublic_h
 
 #include "jsapi.h"
+#include "js/MemoryMetrics.h"
 #include "jsclass.h"
 #include "jsfriendapi.h"
 #include "jsgc.h"
@@ -239,7 +240,7 @@ struct CompartmentStats
     PRInt64 mjitCode;
     PRInt64 mjitData;
 #endif
-    TypeInferenceMemoryStats typeInferenceMemory;
+    JS::TypeInferenceMemoryStats typeInferenceMemory;
 };
 
 struct IterateData

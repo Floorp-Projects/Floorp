@@ -18,6 +18,7 @@
 #include "jsxdrapi.h"
 
 #include "js/HashTable.h"
+#include "js/MemoryMetrics.h"
 #include "js/TemplateLib.h"
 #include "js/Utility.h"
 #include "js/Vector.h"

@@ -56,6 +56,7 @@
 #include "jsiter.h"
 
 #include "frontend/TokenStream.h"
+#include "js/MemoryMetrics.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Retcon.h"
 
@@ -6294,7 +6295,7 @@ GetScriptMemoryStats(JSScript *script, TypeInferenceMemoryStats *stats, JSMalloc
 
     /*
      * This counts memory that is in the temp pool but gets attributed
-     * elsewhere.  See JS_GetTypeInferenceMemoryStats for more details.
+     * elsewhere.  See JS::SizeOfCompartmentTypeInferenceData for more details.
      */
     TypeSet *typeArray = typeScript->typeArray();
     for (unsigned i = 0; i < count; i++) {
@@ -6304,10 +6305,10 @@ GetScriptMemoryStats(JSScript *script, TypeInferenceMemoryStats *stats, JSMalloc
     }
 }
 
-JS_FRIEND_API(void)
-JS_GetTypeInferenceMemoryStats(JSContext *cx, JSCompartment *compartment,
-                               TypeInferenceMemoryStats *stats,
-                               JSMallocSizeOfFun mallocSizeOf)
+JS_PUBLIC_API(void)
+JS::SizeOfCompartmentTypeInferenceData(JSContext *cx, JSCompartment *compartment,
+                                       TypeInferenceMemoryStats *stats,
+                                       JSMallocSizeOfFun mallocSizeOf)
 {
     /*
      * Note: not all data in the pool is temporary, and some will survive GCs
@@ -6350,8 +6351,8 @@ JS_GetTypeInferenceMemoryStats(JSContext *cx, JSCompartment *compartment,
     }
 }
 
-JS_FRIEND_API(void)
-JS_GetTypeInferenceObjectStats(void *object_, TypeInferenceMemoryStats *stats, JSMallocSizeOfFun mallocSizeOf)
+JS_PUBLIC_API(void)
+JS::SizeOfObjectTypeInferenceData(void *object_, TypeInferenceMemoryStats *stats, JSMallocSizeOfFun mallocSizeOf)
 {
     TypeObject *object = (TypeObject *) object_;
 
