@@ -3825,11 +3825,9 @@ MJitCodeStats(JSContext *cx, uintN argc, jsval *vp)
 #ifdef JS_METHODJIT
     JSRuntime *rt = cx->runtime;
     AutoLockGC lock(rt);
-    size_t n = 0, method, regexp, unused;
-    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
-    {
-        (*c)->sizeOfCode(&method, &regexp, &unused);
-        n += method + regexp + unused;
+    size_t n = 0;
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
+        n += (*c)->sizeOfMjitCode();
     }
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(n));
 #else
