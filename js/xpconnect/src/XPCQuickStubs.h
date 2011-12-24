@@ -234,23 +234,6 @@ xpc_qsGetterOnlyPropertyStub(JSContext *cx, JSObject *obj, jsid id, JSBool stric
 /* Functions for converting values between COM and JS. */
 
 inline JSBool
-xpc_qsInt32ToJsval(JSContext *cx, PRInt32 i, jsval *rv)
-{
-    *rv = INT_TO_JSVAL(i);
-    return true;
-}
-
-inline JSBool
-xpc_qsUint32ToJsval(JSContext *cx, PRUint32 u, jsval *rv)
-{
-    if (u <= JSVAL_INT_MAX)
-        *rv = INT_TO_JSVAL(u);
-    else
-        *rv = DOUBLE_TO_JSVAL(u);
-    return true;
-}
-
-inline JSBool
 xpc_qsInt64ToJsval(JSContext *cx, PRInt64 i, jsval *rv)
 {
     return JS_NewNumberValue(cx, static_cast<jsdouble>(i), rv);
