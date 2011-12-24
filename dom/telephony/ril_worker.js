@@ -670,10 +670,17 @@ let RIL = {
    *
    * @param smscPDU
    *        String containing the SMSC PDU in hex format.
-   * @param pdu
-   *        String containing the PDU in hex format.
+   * @param address
+   *        String containing the recipients address.
+   * @param body
+   *        String containing the message body.
+   * @param dcs
+   *        Data coding scheme. One of the PDU_DCS_MSG_CODING_*BITS_ALPHABET
+   *        constants.
+   * @param bodyLengthInOctets
+   *        Byte length of the message body when encoded with the given DCS.
    */
-  sendSMS: function sendSMS(smscPDU, pdu) {
+  sendSMS: function sendSMS(smscPDU, address, body, dcs, bodyLengthInOctets) {
     let token = Buf.newParcel(REQUEST_SEND_SMS);
     //TODO we want to map token to the input values so that on the
     // response from the RIL device we know which SMS request was successful
@@ -681,7 +688,7 @@ let RIL = {
     // handle it within tokenRequestMap[].
     Buf.writeUint32(2);
     Buf.writeString(smscPDU);
-    Buf.writeString(pdu);
+    GsmPDUHelper.writeMessage(address, body, dcs, bodyLengthInOctets);
     Buf.sendParcel();
   },
 
@@ -723,6 +730,25 @@ let RIL = {
     Buf.writeString(dtmfChar);
     Buf.sendParcel();
   },
+
+  /**
+   * Get the Short Message Service Center address.
+   */
+  getSMSCAddress: function getSMSCAddress() {
+    Buf.simpleRequest(REQUEST_GET_SMSC_ADDRESS);
+  },
+
+  /**
+   * Set the Short Message Service Center address.
+   *
+   * @param smsc
+   *        Short Message Service Center address in PDU format.
+   */
+   setSMSCAddress: function setSMSCAddress(smsc) {
+     Buf.newParcel(REQUEST_SET_SMSC_ADDRESS);
+     Buf.writeString(smsc);
+     Buf.sendParcel();
+   },
 
   /**
    * Handle incoming requests from the RIL. We find the method that
@@ -877,8 +903,8 @@ RIL[REQUEST_DTMF] = function REQUEST_DTMF() {
 };
 RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS() {
   let messageRef = Buf.readUint32();
-  let ackPDU = p.readString();
-  let errorCode = p.readUint32();
+  let ackPDU = Buf.readString();
+  let errorCode = Buf.readUint32();
   Phone.onSendSMS(messageRef, ackPDU, errorCode);
 };
 RIL[REQUEST_SEND_SMS_EXPECT_MORE] = null;
@@ -977,8 +1003,13 @@ RIL[REQUEST_CDMA_WRITE_SMS_TO_RUIM] = null;
 RIL[REQUEST_CDMA_DELETE_SMS_ON_RUIM] = null;
 RIL[REQUEST_DEVICE_IDENTITY] = null;
 RIL[REQUEST_EXIT_EMERGENCY_CALLBACK_MODE] = null;
-RIL[REQUEST_GET_SMSC_ADDRESS] = null;
-RIL[REQUEST_SET_SMSC_ADDRESS] = null;
+RIL[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS() {
+  let smsc = Buf.readString();
+  Phone.onGetSMSCAddress(smsc);
+};
+RIL[REQUEST_SET_SMSC_ADDRESS] = function REQUEST_SET_SMSC_ADDRESS() {
+  Phone.onSetSMSCAddress();
+};
 RIL[REQUEST_REPORT_SMS_MEMORY_STATUS] = null;
 RIL[REQUEST_REPORT_STK_SERVICE_IS_RUNNING] = null;
 RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED() {
@@ -1064,6 +1095,7 @@ let Phone = {
   IMEI: null,
   IMEISV: null,
   IMSI: null,
+  SMSC: null,
 
   /**
    * List of strings identifying the network operator.
@@ -1156,6 +1188,7 @@ let Phone = {
       RIL.getICCStatus();
       this.requestNetworkInfo();
       RIL.getSignalStrength();
+      RIL.getSMSCAddress();
       this.sendDOMMessage({type: "cardstatechange",
                            cardState: DOM_CARDSTATE_READY});
     }
@@ -1335,6 +1368,13 @@ let Phone = {
   onStopTone: function onStopTone() {
   },
 
+  onGetSMSCAddress: function onGetSMSCAddress(smsc) {
+    this.SMSC = smsc;
+  },
+
+  onSetSMSCAddress: function onSetSMSCAddress() {
+  },
+
   onSendSMS: function onSendSMS(messageRef, ackPDU, errorCode) {
     //TODO
   },
@@ -1487,14 +1527,24 @@ let Phone = {
    *
    * @param number
    *        String containing the recipient number.
-   * @param message
+   * @param body
    *        String containing the message text.
    */
   sendSMS: function sendSMS(options) {
-    //TODO munge options.number and options.message into PDU format
-    let smscPDU = "";
-    let pdu = "";
-    RIL.sendSMS(smscPDU, pdu);
+    // Get the SMS Center address
+    if (!this.SMSC) {
+      //TODO: we shouldn't get here, but if we do, we might want to hold on
+      // to the message and retry once we know the SMSC... or just notify an
+      // error to the mainthread and let them deal with retrying?
+      debug("Cannot send the SMS. Need to get the SMSC address first.");
+      return;
+    }
+    //TODO: verify values on 'options'
+    //TODO: the data encoding and length in octets should eventually be
+    // computed on the mainthread and passed down to us.
+    RIL.sendSMS(this.SMSC, options.number, options.body,
+                PDU_DCS_MSG_CODING_7BITS_ALPHABET, //TODO: hard-coded for now,
+                Math.ceil(options.body.length * 7 / 8)); //TODO: ditto
   },
 
   /**
