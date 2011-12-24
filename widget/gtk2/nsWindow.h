@@ -173,9 +173,7 @@ public:
     NS_IMETHOD         SetCursor(nsCursor aCursor);
     NS_IMETHOD         SetCursor(imgIContainer* aCursor,
                                  PRUint32 aHotspotX, PRUint32 aHotspotY);
-    NS_IMETHOD         Invalidate(const nsIntRect &aRect,
-                                  bool             aIsSynchronous);
-    NS_IMETHOD         Update();
+    NS_IMETHOD         Invalidate(const nsIntRect &aRect);
     virtual void*      GetNativeData(PRUint32 aDataType);
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);

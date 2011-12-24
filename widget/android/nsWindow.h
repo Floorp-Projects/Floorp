@@ -120,9 +120,7 @@ public:
     NS_IMETHOD SetSizeMode(PRInt32 aMode);
     NS_IMETHOD Enable(bool aState);
     NS_IMETHOD IsEnabled(bool *aState);
-    NS_IMETHOD Invalidate(const nsIntRect &aRect,
-                          bool aIsSynchronous);
-    NS_IMETHOD Update();
+    NS_IMETHOD Invalidate(const nsIntRect &aRect);
     NS_IMETHOD SetFocus(bool aRaise = false);
     NS_IMETHOD GetScreenBounds(nsIntRect &aRect);
     virtual nsIntPoint WidgetToScreenOffset();
