@@ -1469,7 +1469,6 @@ nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
 nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
                                    nsIWidget *           aWidget,
                                    const nsIntRect *     aRect,
-                                   bool                  aIsSynchronous,
                                    const nsCAutoString & aWidgetName,
                                    PRInt32               aWindowID)
 {
@@ -1501,10 +1500,6 @@ nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
             " rect=%-15s",
             "none");
   }
-
-  fprintf(aFileOut,
-          " sync=%s",
-          (const char *) (aIsSynchronous ? "yes" : "no "));
   
   fprintf(aFileOut,"\n");
 }

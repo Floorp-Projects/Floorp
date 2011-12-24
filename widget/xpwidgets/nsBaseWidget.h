@@ -297,7 +297,6 @@ protected:
   static void debug_DumpInvalidate(FILE *                aFileOut,
                                    nsIWidget *           aWidget,
                                    const nsIntRect *     aRect,
-                                   bool                  aIsSynchronous,
                                    const nsCAutoString & aWidgetName,
                                    PRInt32               aWindowID);
 

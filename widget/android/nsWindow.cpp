@@ -590,17 +590,10 @@ nsWindow::IsEnabled(bool *aState)
 }
 
 NS_IMETHODIMP
-nsWindow::Invalidate(const nsIntRect &aRect,
-                     bool aIsSynchronous)
+nsWindow::Invalidate(const nsIntRect &aRect)
 {
     AndroidGeckoEvent *event = new AndroidGeckoEvent(AndroidGeckoEvent::DRAW, aRect);
     nsAppShell::gAppShell->PostEvent(event);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::Update()
-{
     return NS_OK;
 }
 
