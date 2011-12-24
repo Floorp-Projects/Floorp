@@ -69,7 +69,7 @@ interface nsIDOMBlob;
 interface nsIDOMFile;
 interface nsIFile;
 
-[scriptable, uuid(3af3c5ce-6f2a-47e7-acd0-555ed576fa82)]
+[scriptable, uuid(9df58cf3-7094-4c8d-96f2-bebd765099fe)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -945,28 +945,33 @@ interface nsIDOMWindowUtils : nsISupports {
    * Begin opcode-level profiling of all JavaScript execution in the window's
    * runtime.
    */
+  [implicit_jscontext]
   void startPCCountProfiling();
 
   /**
    * Stop opcode-level profiling of JavaScript execution in the runtime, and
    * collect all counts for use by getPCCount methods.
    */
+  [implicit_jscontext]
   void stopPCCountProfiling();
 
   /**
    * Purge collected PC counters.
    */
+  [implicit_jscontext]
   void purgePCCounts();
 
   /**
    * Get the number of scripts with opcode-level profiling information.
    */
+  [implicit_jscontext]
   long getPCCountScriptCount();
 
   /**
    * Get a JSON string for a short summary of a script and the PC counts
    * accumulated for it.
    */
+  [implicit_jscontext]
   AString getPCCountScriptSummary(in long script);
 
   /**
@@ -974,5 +979,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * including the decompilation of the script and placement of decompiled
    * operations within it, and PC counts for each operation.
    */
+  [implicit_jscontext]
   AString getPCCountScriptContents(in long script);
 };
