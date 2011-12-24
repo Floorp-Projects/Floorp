@@ -809,11 +809,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
           nsView* view = static_cast<nsView*>(aView);
           if (!transparentWindow) {
             if (mPresShell) {
-              // Do an update view batch.
-              UpdateViewBatch batch(this);
               rootVM->CallWillPaintOnObservers(event->willSendDidPaint);
-              batch.EndUpdateViewBatch();
-
               // Get the view pointer again since the code above might have
               // destroyed it (bug 378273).
               view = nsView::GetViewFor(aEvent->widget);
@@ -1297,32 +1293,24 @@ NS_IMETHODIMP nsViewManager::GetDeviceContext(nsDeviceContext *&aContext)
   return NS_OK;
 }
 
-nsIViewManager* nsViewManager::BeginUpdateViewBatch(void)
+nsIViewManager*
+nsViewManager::IncrementDisableRefreshCount()
 {
   if (!IsRootVM()) {
-    return RootViewManager()->BeginUpdateViewBatch();
+    return RootViewManager()->IncrementDisableRefreshCount();
   }
-  
-  ++mUpdateBatchCnt;
+
+  ++mRefreshDisableCount;
 
   return this;
 }
 
-NS_IMETHODIMP nsViewManager::EndUpdateViewBatch()
+void
+nsViewManager::DecrementDisableRefreshCount()
 {
   NS_ASSERTION(IsRootVM(), "Should only be called on root");
-  
-  --mUpdateBatchCnt;
-
-  NS_ASSERTION(mUpdateBatchCnt >= 0, "Invalid batch count!");
-
-  if (mUpdateBatchCnt < 0)
-    {
-      mUpdateBatchCnt = 0;
-      return NS_ERROR_FAILURE;
-    }
-
-  return NS_OK;
+  --mRefreshDisableCount;
+  NS_ASSERTION(mRefreshDisableCount >= 0, "Invalid refresh disable count!");
 }
 
 NS_IMETHODIMP nsViewManager::GetRootWidget(nsIWidget **aWidget)
@@ -1383,11 +1371,7 @@ void
 nsViewManager::CallWillPaintOnObservers(bool aWillSendDidPaint)
 {
   NS_PRECONDITION(IsRootVM(), "Must be root VM for this to be called!");
-  NS_PRECONDITION(mUpdateBatchCnt > 0, "Must be in an update batch!");
 
-#ifdef DEBUG
-  PRInt32 savedUpdateBatchCnt = mUpdateBatchCnt;
-#endif
   PRInt32 index;
   for (index = 0; index < mVMCount; index++) {
     nsViewManager* vm = (nsViewManager*)gViewManagers->ElementAt(index);
@@ -1397,8 +1381,6 @@ nsViewManager::CallWillPaintOnObservers(bool aWillSendDidPaint)
         nsCOMPtr<nsIPresShell> shell = vm->GetPresShell();
         if (shell) {
           shell->WillPaint(aWillSendDidPaint);
-          NS_ASSERTION(mUpdateBatchCnt == savedUpdateBatchCnt,
-                       "Observer did not end view batch?");
         }
       }
     }

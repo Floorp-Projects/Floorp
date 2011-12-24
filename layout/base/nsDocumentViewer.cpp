@@ -2808,8 +2808,6 @@ DocumentViewerImpl::SetTextZoom(float aTextZoom)
 
   mTextZoom = aTextZoom;
 
-  nsIViewManager::UpdateViewBatch batch(GetViewManager());
-      
   // Set the text zoom on all children of mContainer (even if our zoom didn't
   // change, our children's zoom may be different, though it would be unusual).
   // Do this first, in case kids are auto-sizing and post reflow commands on
@@ -2826,8 +2824,6 @@ DocumentViewerImpl::SetTextZoom(float aTextZoom)
   // And do the external resources
   mDocument->EnumerateExternalResources(SetExtResourceTextZoom, &ZoomInfo);
 
-  batch.EndUpdateViewBatch();
-  
   return NS_OK;
 }
 
@@ -2849,8 +2845,6 @@ DocumentViewerImpl::SetMinFontSize(PRInt32 aMinFontSize)
 
   mMinFontSize = aMinFontSize;
 
-  nsIViewManager::UpdateViewBatch batch(GetViewManager());
-      
   // Set the min font on all children of mContainer (even if our min font didn't
   // change, our children's min font may be different, though it would be unusual).
   // Do this first, in case kids are auto-sizing and post reflow commands on
@@ -2867,8 +2861,6 @@ DocumentViewerImpl::SetMinFontSize(PRInt32 aMinFontSize)
   mDocument->EnumerateExternalResources(SetExtResourceMinFontSize,
                                         NS_INT32_TO_PTR(aMinFontSize));
 
-  batch.EndUpdateViewBatch();
-  
   return NS_OK;
 }
 
@@ -2891,7 +2883,6 @@ DocumentViewerImpl::SetFullZoom(float aFullZoom)
     nsCOMPtr<nsIPresShell> shell = pc->GetPresShell();
     NS_ENSURE_TRUE(shell, NS_OK);
 
-    nsIViewManager::UpdateViewBatch batch(shell->GetViewManager());
     if (!mPrintPreviewZoomed) {
       mOriginalPrintPreviewScale = pc->GetPrintPreviewScale();
       mPrintPreviewZoomed = true;
@@ -2910,14 +2901,11 @@ DocumentViewerImpl::SetFullZoom(float aFullZoom)
       nsRect rect(nsPoint(0, 0), rootFrame->GetSize());
       rootFrame->Invalidate(rect);
     }
-    batch.EndUpdateViewBatch();
     return NS_OK;
   }
 #endif
 
   mPageZoom = aFullZoom;
-
-  nsIViewManager::UpdateViewBatch batch(GetViewManager());
 
   struct ZoomInfo ZoomInfo = { aFullZoom };
   CallChildren(SetChildFullZoom, &ZoomInfo);
@@ -2929,8 +2917,6 @@ DocumentViewerImpl::SetFullZoom(float aFullZoom)
 
   // And do the external resources
   mDocument->EnumerateExternalResources(SetExtResourceFullZoom, &ZoomInfo);
-
-  batch.EndUpdateViewBatch();
 
   return NS_OK;
 }
