@@ -32,14 +32,14 @@ function runTest()
   sel2.collapse(frames[1].document.body, 0);
 
   window.frames[0].focus();
-  document.commandDispatcher.getControllerForCommand("cmd_scrollBottom").doCommand("cmd_scrollBottom");
+  document.commandDispatcher.getControllerForCommand("cmd_moveBottom").doCommand("cmd_moveBottom");
 
   ok(frames[0].scrollY > 0, "scrollY for non-showcaret");
   is(sel1.focusNode, frames[0].document.body, "focusNode for non-showcaret");
   is(sel1.focusOffset, 0, "focusOffset for non-showcaret");
 
   window.frames[1].focus();
-  document.commandDispatcher.getControllerForCommand("cmd_scrollBottom").doCommand("cmd_scrollBottom");
+  document.commandDispatcher.getControllerForCommand("cmd_moveBottom").doCommand("cmd_moveBottom");
 
   ok(frames[1].scrollY <
        frames[1].document.getElementById('s').getBoundingClientRect().top,
@@ -64,7 +64,7 @@ function otherWindowFocused()
   hbox.focus();
   is(otherWindow.document.activeElement, hbox, "hbox in other window is focused");
 
-  document.commandDispatcher.getControllerForCommand("cmd_scrollLineDown").doCommand("cmd_scrollLineDown");
+  document.commandDispatcher.getControllerForCommand("cmd_lineNext").doCommand("cmd_lineNext");
   is(otherWindow.document.activeElement, hbox, "hbox still focused in other window after down movement");
 
   prefs.setBoolPref("accessibility.browsewithcaret", false);
