@@ -81,8 +81,6 @@
    Composite() calls should also be forwarded to the root view manager.
 */
 
-class nsInvalidateEvent;
-
 class nsViewManager : public nsIViewManager {
 public:
   nsViewManager();
@@ -142,7 +140,6 @@ public:
  
   NS_IMETHOD IsPainting(bool& aIsPainting);
   NS_IMETHOD GetLastUserEventTime(PRUint32& aTime);
-  void ProcessInvalidateEvent();
   static PRUint32 gLastUserEventTime;
 
   /* Update the cached RootViewManager pointer on this view manager. */
@@ -259,8 +256,6 @@ private:
   // never null (if we have no ancestors, it will be |this|).
   nsViewManager     *mRootViewManager;
 
-  nsRevocableEventPtr<nsInvalidateEvent> mInvalidateEvent;
-
   // The following members should not be accessed directly except by
   // the root view manager.  Some have accessor functions to enforce
   // this, as noted.
@@ -281,24 +276,6 @@ private:
 
   //list of view managers
   static nsVoidArray       *gViewManagers;
-
-  void PostInvalidateEvent();
-};
-
-class nsInvalidateEvent : public nsRunnable {
-public:
-  nsInvalidateEvent(class nsViewManager *vm) : mViewManager(vm) {
-    NS_ASSERTION(mViewManager, "null parameter");
-  }
-  void Revoke() { mViewManager = nsnull; }
-
-  NS_IMETHOD Run() {
-    if (mViewManager)
-      mViewManager->ProcessInvalidateEvent();
-    return NS_OK;
-  }
-protected:
-  class nsViewManager *mViewManager;
 };
 
 #endif /* nsViewManager_h___ */
