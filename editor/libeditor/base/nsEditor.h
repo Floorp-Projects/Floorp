@@ -763,7 +763,6 @@ protected:
 
   nsWeakPtr       mSelConWeak;   // weak reference to the nsISelectionController
   PRInt32         mUpdateCount;
-  nsIViewManager::UpdateViewBatch mBatch;
 
   // Spellchecking
   enum Tristate {

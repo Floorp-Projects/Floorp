@@ -259,65 +259,42 @@ public:
    */
   NS_IMETHOD  GetDeviceContext(nsDeviceContext *&aContext) = 0;
 
-  class UpdateViewBatch {
+  /**
+   * A stack class for disallowing changes that would enter painting. For
+   * example, popup widgets shouldn't be resized during reflow, since doing so
+   * might cause synchronous painting inside reflow which is forbidden.
+   * While refresh is disabled, widget geometry changes are deferred and will
+   * be handled later, either from the refresh driver or from an NS_WILL_PAINT
+   * event.
+   * We don't want to defer widget geometry changes all the time. Resizing a
+   * popup from script doesn't need to be deferred, for example, especially
+   * since popup widget geometry is observable from script and expected to
+   * update synchronously.
+   */
+  class NS_STACK_CLASS AutoDisableRefresh {
   public:
-    UpdateViewBatch() {}
-  /**
-   * prevents the view manager from refreshing. allows UpdateView()
-   * to notify widgets of damaged regions that should be repainted
-   * when the batch is ended. Call EndUpdateViewBatch on this object
-   * before it is destroyed
-   * @return error status
-   */
-    UpdateViewBatch(nsIViewManager* aVM) {
+    AutoDisableRefresh(nsIViewManager* aVM) {
       if (aVM) {
-        mRootVM = aVM->BeginUpdateViewBatch();
+        mRootVM = aVM->IncrementDisableRefreshCount();
       }
     }
-    ~UpdateViewBatch() {
-      NS_ASSERTION(!mRootVM, "Someone forgot to call EndUpdateViewBatch!");
-    }
-    
-    /**
-     * See the constructor, this lets you "fill in" a blank UpdateViewBatch.
-     */
-    void BeginUpdateViewBatch(nsIViewManager* aVM) {
-      NS_ASSERTION(!mRootVM, "already started a batch!");
-      if (aVM) {
-        mRootVM = aVM->BeginUpdateViewBatch();
+    ~AutoDisableRefresh() {
+      if (mRootVM) {
+        mRootVM->DecrementDisableRefreshCount();
       }
     }
-
-  /**
-   * allow the view manager to refresh any damaged areas accumulated
-   * after the BeginUpdateViewBatch() call.
-   *
-   * If this is not the outermost view batch command, then this does
-   * nothing. When the
-   * outermost batch finally ends, all widgets are invalidated normally
-   * and will be painted the next time the toolkit chooses to update them.
-   *
-   * description @return error status
-   */
-    void EndUpdateViewBatch() {
-      if (!mRootVM)
-        return;
-      mRootVM->EndUpdateViewBatch();
-      mRootVM = nsnull;
-    }
-
   private:
-    UpdateViewBatch(const UpdateViewBatch& aOther);
-    const UpdateViewBatch& operator=(const UpdateViewBatch& aOther);
+    AutoDisableRefresh(const AutoDisableRefresh& aOther);
+    const AutoDisableRefresh& operator=(const AutoDisableRefresh& aOther);
 
     nsCOMPtr<nsIViewManager> mRootVM;
   };
-  
-private:
-  friend class UpdateViewBatch;
 
-  virtual nsIViewManager* BeginUpdateViewBatch(void) = 0;
-  NS_IMETHOD EndUpdateViewBatch() = 0;
+private:
+  friend class AutoDisableRefresh;
+
+  virtual nsIViewManager* IncrementDisableRefreshCount() = 0;
+  virtual void DecrementDisableRefreshCount() = 0;
 
 public:
   /**
