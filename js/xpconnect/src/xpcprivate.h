@@ -3834,31 +3834,6 @@ public:
 private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
-
-class nsJSRuntimeServiceImpl : public nsIJSRuntimeService,
-                               public nsSupportsWeakReference
-{
- public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIJSRUNTIMESERVICE
-
-    // This returns an AddRef'd pointer. It does not do this with an out param
-    // only because this form  is required by generic module macro:
-    // NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR
-    static nsJSRuntimeServiceImpl* GetSingleton();
-
-    static void FreeSingleton();
-
-    nsJSRuntimeServiceImpl();
-    virtual ~nsJSRuntimeServiceImpl();
-
-    static void InitStatics() { gJSRuntimeService = nsnull; }
- protected:
-    static nsJSRuntimeServiceImpl* gJSRuntimeService;
-    nsCOMPtr<nsIXPCScriptable> mBackstagePass;
-};
-
-/***************************************************************************/
 // 'Components' object
 
 class nsXPCComponents : public nsIXPCComponents,
