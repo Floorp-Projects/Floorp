@@ -117,16 +117,6 @@ public:
   NS_IMETHOD  FlushDelayedResize(bool aDoReflow) = 0;
 
   /**
-   * Called to force a redrawing of any dirty areas.
-   */
-  // XXXbz why is this exposed?  Shouldn't update view batches handle this?
-  // It's not like Composite() does what's expected inside a view update batch
-  // anyway, since dirty areas may not have been invalidated on the widget yet
-  // and widget changes may not have been propagated yet.  Maybe this should
-  // call FlushPendingInvalidates()?
-  NS_IMETHOD  Composite(void) = 0;
-
-  /**
    * Called to inform the view manager that the entire area of a view
    * is dirty and needs to be redrawn.
    * @param aView view to paint. should be root view
@@ -350,16 +340,6 @@ public:
    * view manager whose root view has a widget.
    */
   NS_IMETHOD GetRootWidget(nsIWidget **aWidget) = 0;
-
-  /**
-   * Force update of view manager widget
-   * Callers should use UpdateView(view, NS_VMREFRESH_IMMEDIATE) in most cases instead
-   * @result error status
-   */
-  // XXXbz Callers seem to be confused about this one... and it doesn't play
-  // right with view update batching at all (will miss updates).  Maybe this
-  // should call FlushPendingInvalidates()?
-  NS_IMETHOD ForceUpdate() = 0;
 
   /**
    * Indicate whether the viewmanager is currently painting
