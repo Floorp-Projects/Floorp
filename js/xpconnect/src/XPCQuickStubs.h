@@ -40,6 +40,9 @@
 #ifndef xpcquickstubs_h___
 #define xpcquickstubs_h___
 
+#include "xpcpublic.h"
+#include "xpcprivate.h"
+
 #include "nsINode.h"
 
 /* XPCQuickStubs.h - Support functions used only by quick stubs. */
@@ -445,13 +448,6 @@ xpc_qsJsvalToCharStr(JSContext *cx, jsval v, JSAutoByteString *bytes);
 JSBool
 xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, jsval *pval, const PRUnichar **pstr);
 
-
-/** Convert an nsString to jsval, returning true on success.
- *  Note, the ownership of the string buffer may be moved from str to rval.
- *  If that happens, str will point to an empty string after this call.
- */
-JSBool
-xpc_qsStringToJsval(JSContext *cx, nsString &str, jsval *rval);
 
 /** Convert an nsString to JSString, returning true on success. This will sometimes modify |str| to be empty. */
 JSBool

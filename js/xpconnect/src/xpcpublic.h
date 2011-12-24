@@ -191,6 +191,17 @@ xpc_UnmarkGrayObject(JSObject *obj)
 NS_EXPORT_(void)
 xpc_ActivateDebugMode();
 
+namespace xpc {
+
+/**
+ * Convert an nsString to jsval, returning true on success.
+ * Note, the ownership of the string buffer may be moved from str to rval.
+ * If that happens, str will point to an empty string after this call.
+ */
+bool StringToJsval(JSContext *cx, nsString &str, JS::Value *rval);
+
+} // namespace xpc
+
 class nsIMemoryMultiReporterCallback;
 
 namespace mozilla {
