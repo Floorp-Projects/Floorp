@@ -361,7 +361,7 @@ GetNamedPropertyAsVariantRaw(XPCCallContext& ccx,
                              nsIVariant** aResult,
                              nsresult* pErr)
 {
-    nsXPTType type = nsXPTType((uint8)(TD_INTERFACE_TYPE | XPT_TDP_POINTER));
+    nsXPTType type = nsXPTType((uint8)TD_INTERFACE_TYPE);
     jsval val;
 
     return JS_GetPropertyById(ccx, aJSObj, aName, &val) &&
