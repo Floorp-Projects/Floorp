@@ -348,6 +348,12 @@ public:
    * the nearest enclosing popup or the root view for the root document.
    */
   static nsIView* GetDisplayRootFor(nsIView* aView);
+
+  /**
+   * Flush the accumulated dirty region to the widget and update widget
+   * geometry.
+   */
+  virtual void ProcessPendingUpdates()=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewManager, NS_IVIEWMANAGER_IID)
