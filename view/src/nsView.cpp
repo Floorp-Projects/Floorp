@@ -365,7 +365,7 @@ void nsView::ResetWidgetBounds(bool aRecurse, bool aMoveOnly,
     // Don't change widget geometry while refresh is disabled, for example
     // during reflow. Changing widget sizes can cause synchronous painting
     // which is forbidden during reflow.
-    if (!mViewManager->IsRefreshEnabled()) {
+    if (!mViewManager->IsPaintingAllowed()) {
       mViewManager->PostPendingUpdate();
       return;
     }
