@@ -188,6 +188,7 @@ static void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
     // Implement this on MIPS.
     UNIMPLEMENTED();
 #endif
+    sample->timestamp = mozilla::TimeStamp::Now();
   }
 #endif
   sActiveSampler->Tick(sample);
