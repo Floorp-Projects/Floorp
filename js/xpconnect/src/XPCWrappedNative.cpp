@@ -2515,7 +2515,7 @@ CallMethodHelper::QueryInterfaceFastPath() const
     uintN err;
     JSBool success =
         XPCConvert::NativeData2JS(mCallContext, &v, &qiresult,
-                                  nsXPTType::T_INTERFACE_IS | XPT_TDP_POINTER,
+                                  nsXPTType::T_INTERFACE_IS,
                                   iid, &err);
     NS_IF_RELEASE(qiresult);
 
