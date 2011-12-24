@@ -4336,8 +4336,12 @@ nsTypedSelection::SelectAllFramesForContent(nsIContentIterator *aInnerIter,
 nsresult
 nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIRange *aRange, bool aFlags)
 {
-  if (!mFrameSelection || !aPresContext || !aPresContext->GetPresShell())
+  if (!mFrameSelection || !aPresContext || !aPresContext->GetPresShell()) {
     return NS_OK; // nothing to do
+  }
+  if (!aRange) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   if (mFrameSelection->GetTableCellSelection()) {
     nsINode* node = aRange->GetCommonAncestor();
