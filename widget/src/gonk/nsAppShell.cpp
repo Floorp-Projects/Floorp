@@ -62,6 +62,9 @@
 #ifndef ABS_MT_TOUCH_MAJOR
 // Taken from include/linux/input.h
 // XXX update the bionic input.h so we don't have to do this!
+#define ABS_X			0x00
+#define ABS_Y			0x01
+// ...
 #define ABS_MT_TOUCH_MAJOR      0x30    /* Major axis of touching ellipse */
 #define ABS_MT_TOUCH_MINOR      0x31    /* Minor axis (omit if circular) */
 #define ABS_MT_WIDTH_MAJOR      0x32    /* Major axis of approaching ellipse */
@@ -134,6 +137,87 @@ sendMouseEvent(PRUint32 msg, struct timeval *time, int x, int y)
 
     nsWindow::DispatchInputEvent(event);
     //LOG("Dispatched type %d at %dx%d", msg, x, y);
+}
+
+static nsEventStatus
+sendKeyEventWithMsg(PRUint32 keyCode,
+                    PRUint32 msg,
+                    const timeval &time,
+                    PRUint32 flags)
+{
+    nsKeyEvent event(true, msg, NULL);
+    event.keyCode = keyCode;
+    event.time = timevalToMS(time);
+    event.flags |= flags;
+    return nsWindow::DispatchInputEvent(event);
+}
+
+static void
+sendKeyEvent(PRUint32 keyCode, bool down, const timeval &time)
+{
+    nsEventStatus status =
+        sendKeyEventWithMsg(keyCode, down ? NS_KEY_DOWN : NS_KEY_UP, time, 0);
+    if (down) {
+        sendKeyEventWithMsg(keyCode, NS_KEY_PRESS, time,
+                            status == nsEventStatus_eConsumeNoDefault ?
+                            NS_EVENT_FLAG_NO_DEFAULT : 0);
+    }
+}
+
+static void
+sendSpecialKeyEvent(nsIAtom *command, const timeval &time)
+{
+    nsCommandEvent event(true, nsGkAtoms::onAppCommand, command, NULL);
+    event.time = timevalToMS(time);
+    nsWindow::DispatchInputEvent(event);
+}
+
+static void
+maybeSendKeyEvent(const input_event& e)
+{
+    if (e.type != EV_KEY) {
+        LOG("Got unknown key event type. type 0x%04x code 0x%04x value %d",
+            e.type, e.code, e.value);
+        return;
+    }
+
+    if (e.value != 0 && e.value != 1) {
+        LOG("Got unknown key event value. type 0x%04x code 0x%04x value %d",
+            e.type, e.code, e.value);
+        return;
+    }
+
+    bool pressed = e.value == 1;
+    switch (e.code) {
+    case KEY_BACK:
+        sendKeyEvent(NS_VK_ESCAPE, pressed, e.time);
+        break;
+    case KEY_MENU:
+        if (!pressed)
+            sendSpecialKeyEvent(nsGkAtoms::Menu, e.time);
+        break;
+    case KEY_SEARCH:
+        if (pressed)
+            sendSpecialKeyEvent(nsGkAtoms::Search, e.time);
+        break;
+    case KEY_HOME:
+        sendKeyEvent(NS_VK_HOME, pressed, e.time);
+        break;
+    case KEY_POWER:
+        sendKeyEvent(NS_VK_SLEEP, pressed, e.time);
+        break;
+    case KEY_VOLUMEUP:
+        if (pressed)
+            sendSpecialKeyEvent(nsGkAtoms::VolumeUp, e.time);
+        break;
+    case KEY_VOLUMEDOWN:
+        if (pressed)
+            sendSpecialKeyEvent(nsGkAtoms::VolumeDown, e.time);
+        break;
+    default:
+        LOG("Got unknown key event code. type 0x%04x code 0x%04x value %d",
+            e.type, e.code, e.value);
+    }
 }
 
 static void
@@ -217,37 +301,64 @@ multitouchHandler(int fd, FdHandler *data)
     }
 }
 
-static nsEventStatus
-sendKeyEventWithMsg(PRUint32 keyCode,
-                    PRUint32 msg,
-                    const timeval &time,
-                    PRUint32 flags)
-{
-    nsKeyEvent event(true, msg, NULL);
-    event.keyCode = keyCode;
-    event.time = timevalToMS(time);
-    event.flags |= flags;
-    return nsWindow::DispatchInputEvent(event);
-}
-
 static void
-sendKeyEvent(PRUint32 keyCode, bool down, const timeval &time)
+singleTouchHandler(int fd, FdHandler *data)
 {
-    nsEventStatus status =
-        sendKeyEventWithMsg(keyCode, down ? NS_KEY_DOWN : NS_KEY_UP, time, 0);
-    if (down) {
-        sendKeyEventWithMsg(keyCode, NS_KEY_PRESS, time,
-                            status == nsEventStatus_eConsumeNoDefault ?
-                            NS_EVENT_FLAG_NO_DEFAULT : 0);
+    // The Linux's input documentation (Documentation/input/input.txt)
+    // says that we'll always read a multiple of sizeof(input_event) bytes here.
+    input_event events[16];
+    int event_count = read(fd, events, sizeof(events));
+    if (event_count < 0) {
+        LOG("Error reading in singleTouchHandler");
+        return;
     }
-}
+    MOZ_ASSERT(event_count % sizeof(input_event) == 0);
 
-static void
-sendSpecialKeyEvent(nsIAtom *command, const timeval &time)
-{
-    nsCommandEvent event(true, nsGkAtoms::onAppCommand, command, NULL);
-    event.time = timevalToMS(time);
-    nsWindow::DispatchInputEvent(event);
+    event_count /= sizeof(struct input_event);
+
+    for (int i = 0; i < event_count; i++) {
+        input_event *event = &events[i];
+
+        if (event->type == EV_KEY) {
+            switch (event->code) {
+            case BTN_TOUCH:
+                data->mtDown = event->value;
+                break;
+            default:
+                maybeSendKeyEvent(*event);
+            }
+        }
+        else if (event->type == EV_ABS) {
+            switch (event->code) {
+            case ABS_X:
+                data->mtX = event->value;
+                break;
+            case ABS_Y:
+                data->mtY = event->value;
+                break;
+            default:
+                LOG("Got unknown st abs event type 0x%04x with code 0x%04x and value %d",
+                    event->type, event->code, event->value);
+            }
+        } else if (event->type == EV_SYN) {
+            if (data->mtState == FdHandler::MT_START) {
+                MOZ_ASSERT(data->mtDown);
+                sendMouseEvent(NS_MOUSE_BUTTON_DOWN, &event->time,
+                               data->mtX, data->mtY);
+                data->mtState = FdHandler::MT_COLLECT;
+            } else if (data->mtDown) {
+                MOZ_ASSERT(data->mtDown);
+                sendMouseEvent(NS_MOUSE_MOVE, &event->time,
+                               data->mtX, data->mtY);
+            } else {
+                MOZ_ASSERT(!data->mtDown);
+                sendMouseEvent(NS_MOUSE_BUTTON_UP, &event->time,
+                                   data->mtX, data->mtY);
+                data->mtDown = false;
+                data->mtState = FdHandler::MT_START;
+            }
+        }
+    }
 }
 
 static void
@@ -269,50 +380,7 @@ keyHandler(int fd, FdHandler *data)
             continue;
         }
 
-        if (e.type != EV_KEY) {
-            LOG("Got unknown key event type. type 0x%04x code 0x%04x value %d",
-                e.type, e.code, e.value);
-            continue;
-        }
-
-        if (e.value != 0 && e.value != 1) {
-            LOG("Got unknown key event value. type 0x%04x code 0x%04x value %d",
-                e.type, e.code, e.value);
-            continue;
-        }
-
-        bool pressed = e.value == 1;
-        const char* upOrDown = pressed ? "pressed" : "released";
-        switch (e.code) {
-        case KEY_BACK:
-            sendKeyEvent(NS_VK_ESCAPE, pressed, e.time);
-            break;
-        case KEY_MENU:
-            if (!pressed)
-                sendSpecialKeyEvent(nsGkAtoms::Menu, e.time);
-            break;
-        case KEY_SEARCH:
-            if (pressed)
-                sendSpecialKeyEvent(nsGkAtoms::Search, e.time);
-            break;
-        case KEY_HOME:
-            sendKeyEvent(NS_VK_HOME, pressed, e.time);
-            break;
-        case KEY_POWER:
-            sendKeyEvent(NS_VK_SLEEP, pressed, e.time);
-            break;
-        case KEY_VOLUMEUP:
-            if (pressed)
-                sendSpecialKeyEvent(nsGkAtoms::VolumeUp, e.time);
-            break;
-        case KEY_VOLUMEDOWN:
-            if (pressed)
-                sendSpecialKeyEvent(nsGkAtoms::VolumeDown, e.time);
-            break;
-        default:
-            LOG("Got unknown key event code. type 0x%04x code 0x%04x value %d",
-                e.type, e.code, e.value);
-        }
+        maybeSendKeyEvent(e);
     }
 }
 
@@ -378,8 +446,12 @@ nsAppShell::Init()
         if (ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(flags)), flags) >= 0 &&
             BITSET(ABS_MT_POSITION_X, flags)) {
 
-            LOG("Found absolute input device");
+            LOG("Found multitouch input device");
             handlerFunc = multitouchHandler;
+        } else if (ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(flags)), flags) >= 0 &&
+                   BITSET(ABS_X, flags)) {
+            LOG("Found single touch input device");
+            handlerFunc = singleTouchHandler;
         } else if (ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(flags)), flags) >= 0) {
             LOG("Found key input device");
             handlerFunc = keyHandler;
