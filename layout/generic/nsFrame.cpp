@@ -4661,7 +4661,7 @@ nsIFrame::InvalidateRoot(const nsRect& aDamageRect, PRUint32 aFlags)
 
   nsIView* view = GetView();
   NS_ASSERTION(view, "This can only be called on frames with views");
-  view->GetViewManager()->UpdateViewNoSuppression(view, rect);
+  view->GetViewManager()->InvalidateViewNoSuppression(view, rect);
 }
 
 void

@@ -102,9 +102,9 @@ public:
   NS_IMETHOD  SetWindowDimensions(nscoord width, nscoord height);
   NS_IMETHOD  FlushDelayedResize(bool aDoReflow);
 
-  NS_IMETHOD  UpdateView(nsIView *aView);
-  NS_IMETHOD  UpdateViewNoSuppression(nsIView *aView, const nsRect &aRect);
-  NS_IMETHOD  UpdateAllViews();
+  NS_IMETHOD  InvalidateView(nsIView *aView);
+  NS_IMETHOD  InvalidateViewNoSuppression(nsIView *aView, const nsRect &aRect);
+  NS_IMETHOD  InvalidateAllViews();
 
   NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent,
       nsIView* aTargetView, nsEventStatus* aStatus);
@@ -163,9 +163,9 @@ private:
   void CallDidPaintOnObservers();
   void ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget);
   void ReparentWidgets(nsIView* aView, nsIView *aParent);
-  void UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedRegion);
+  void InvalidateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedRegion);
 
-  void UpdateViews(nsView *aView);
+  void InvalidateViews(nsView *aView);
 
   // aView is the view for aWidget and aRegion is relative to aWidget.
   void Refresh(nsView *aView, nsIWidget *aWidget, const nsIntRegion& aRegion);
@@ -200,7 +200,7 @@ private:
     RootViewManager()->mPainting = aPainting;
   }
 
-  nsresult UpdateView(nsIView *aView, const nsRect &aRect);
+  nsresult InvalidateView(nsIView *aView, const nsRect &aRect);
 
 public: // NOT in nsIViewManager, so private to the view module
   nsView* GetRootViewImpl() const { return mRootView; }
