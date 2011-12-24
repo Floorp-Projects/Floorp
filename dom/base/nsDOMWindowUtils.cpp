@@ -1982,77 +1982,37 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName,
   return NS_OK;
 }
 
-static inline JSContext *
-GetJSContext()
-{
-  nsCOMPtr<nsIXPConnect> xpc = nsContentUtils::XPConnect();
-
-  // get the xpconnect native call context
-  nsAXPCNativeCallContext *cc = nsnull;
-  xpc->GetCurrentNativeCallContext(&cc);
-  if(!cc)
-    return NULL;
-
-  // Get JSContext of current call
-  JSContext* cx;
-  nsresult rv = cc->GetJSContext(&cx);
-  if(NS_FAILED(rv) || !cx)
-    return NULL;
-
-  return cx;
-}
-
 NS_IMETHODIMP
-nsDOMWindowUtils::StartPCCountProfiling()
+nsDOMWindowUtils::StartPCCountProfiling(JSContext* cx)
 {
-  JSContext *cx = GetJSContext();
-  if (!cx)
-    return NS_ERROR_FAILURE;
-
   js::StartPCCountProfiling(cx);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::StopPCCountProfiling()
+nsDOMWindowUtils::StopPCCountProfiling(JSContext* cx)
 {
-  JSContext *cx = GetJSContext();
-  if (!cx)
-    return NS_ERROR_FAILURE;
-
   js::StopPCCountProfiling(cx);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::PurgePCCounts()
+nsDOMWindowUtils::PurgePCCounts(JSContext* cx)
 {
-  JSContext *cx = GetJSContext();
-  if (!cx)
-    return NS_ERROR_FAILURE;
-
   js::PurgePCCounts(cx);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetPCCountScriptCount(PRInt32 *result)
+nsDOMWindowUtils::GetPCCountScriptCount(JSContext* cx, PRInt32 *result)
 {
-  JSContext *cx = GetJSContext();
-  if (!cx)
-    return NS_ERROR_FAILURE;
-
   *result = js::GetPCCountScriptCount(cx);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetPCCountScriptSummary(PRInt32 script, nsAString& result)
+nsDOMWindowUtils::GetPCCountScriptSummary(PRInt32 script, JSContext* cx, nsAString& result)
 {
-  JSContext *cx = GetJSContext();
-  if (!cx)
-    return NS_ERROR_FAILURE;
-
   JSString *text = js::GetPCCountScriptSummary(cx, script);
   if (!text)
     return NS_ERROR_FAILURE;
@@ -2066,12 +2026,8 @@ nsDOMWindowUtils::GetPCCountScriptSummary(PRInt32 script, nsAString& result)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetPCCountScriptContents(PRInt32 script, nsAString& result)
+nsDOMWindowUtils::GetPCCountScriptContents(PRInt32 script, JSContext* cx, nsAString& result)
 {
-  JSContext *cx = GetJSContext();
-  if (!cx)
-    return NS_ERROR_FAILURE;
-
   JSString *text = js::GetPCCountScriptContents(cx, script);
   if (!text)
     return NS_ERROR_FAILURE;
