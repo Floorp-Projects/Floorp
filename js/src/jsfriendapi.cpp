@@ -185,6 +185,12 @@ AutoSwitchCompartment::~AutoSwitchCompartment()
 }
 
 JS_FRIEND_API(bool)
+js::IsSystemCompartment(const JSCompartment *c)
+{
+    return c->isSystemCompartment;
+}
+
+JS_FRIEND_API(bool)
 js::IsScopeObject(const JSObject *obj)
 {
     return obj->isInternalScope();

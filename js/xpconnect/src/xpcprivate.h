@@ -1485,11 +1485,13 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
 // Maybe this macro should check for class->enumerate ==
 // XPC_WN_Shared_Proto_Enumerate or something rather than checking for
 // 4 classes?
-#define IS_PROTO_CLASS(clazz)                                                 \
-    ((clazz) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||                      \
-     (clazz) == &XPC_WN_NoMods_NoCall_Proto_JSClass ||                        \
-     (clazz) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||                 \
-     (clazz) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass)
+static inline bool IS_PROTO_CLASS(js::Class *clazz)
+{
+    return clazz == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
+           clazz == &XPC_WN_NoMods_NoCall_Proto_JSClass ||
+           clazz == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||
+           clazz == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass;
+}
 
 /***************************************************************************/
 
