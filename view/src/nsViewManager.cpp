@@ -433,7 +433,7 @@ void nsViewManager::ProcessPendingUpdates(nsView* aView, bool aDoInvalidate)
       nsViewManager* widgetVM = nearestViewWithWidget->GetViewManager();
       widgetVM->
         UpdateWidgetArea(nearestViewWithWidget,
-                         nearestViewWithWidget->GetWidget(), r, nsnull);
+                         nearestViewWithWidget->GetWidget(), r);
       dirtyRegion->SetEmpty();
     }
   }
@@ -451,13 +451,10 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView)
  * will return null but nsView::GetViewFor(aWidget) returns aWidgetview
  * @param aDamagedRegion this region, relative to aWidgetView, is invalidated in
  * every widget child of aWidgetView, plus aWidgetView's own widget
- * @param aIgnoreWidgetView if non-null, the aIgnoreWidgetView's widget and its
- * children are not updated.
  */
 void
 nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
-                                const nsRegion &aDamagedRegion,
-                                nsView* aIgnoreWidgetView)
+                                const nsRegion &aDamagedRegion)
 {
   NS_ASSERTION(aWidgetView->GetViewManager() == this,
                "UpdateWidgetArea called on view we don't own");
@@ -499,11 +496,6 @@ nsViewManager::UpdateWidgetArea(nsView *aWidgetView, nsIWidget* aWidget,
     aWidget->IsVisible(visible);
     if (!visible)
       return;
-  }
-
-  if (aWidgetView == aIgnoreWidgetView) {
-    // the widget for aIgnoreWidgetView (and its children) should be treated as already updated.
-    return;
   }
 
   if (!aWidget) {
@@ -617,7 +609,7 @@ NS_IMETHODIMP nsViewManager::UpdateViewNoSuppression(nsIView *aView,
   PRInt32 APD = AppUnitsPerDevPixel();
   damagedRect = damagedRect.ConvertAppUnitsRoundOut(APD, rootAPD);
   displayRootVM->UpdateWidgetArea(displayRoot, displayRoot->GetWidget(),
-                                  nsRegion(damagedRect), nsnull);
+                                  nsRegion(damagedRect));
 
   return NS_OK;
 }
