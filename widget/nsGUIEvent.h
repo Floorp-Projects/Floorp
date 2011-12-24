@@ -737,13 +737,15 @@ class nsPaintEvent : public nsGUIEvent
 public:
   nsPaintEvent(bool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsGUIEvent(isTrusted, msg, w, NS_PAINT_EVENT),
-      willSendDidPaint(false)
+      willSendDidPaint(false),
+      didSendWillPaint(false)
   {
   }
 
   // area that needs repainting
   nsIntRegion region;
   bool willSendDidPaint;
+  bool didSendWillPaint;
 };
 
 /**
