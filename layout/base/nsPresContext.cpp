@@ -2616,50 +2616,17 @@ nsRootPresContext::UpdatePluginGeometry()
 }
 
 void
-nsRootPresContext::SynchronousPluginGeometryUpdate()
-{
-  if (!mNeedsToUpdatePluginGeometry) {
-    // Nothing to do
-    return;
-  }
-
-  // Force synchronous paint
-  nsIPresShell* shell = GetPresShell();
-  if (!shell)
-    return;
-  nsIFrame* rootFrame = shell->GetRootFrame();
-  if (!rootFrame)
-    return;
-  nsCOMPtr<nsIWidget> widget = rootFrame->GetNearestWidget();
-  if (!widget)
-    return;
-  // Force synchronous paint of a single pixel, just to force plugin
-  // updates to be flushed. Doing plugin updates during paint is the best
-  // way to ensure that plugin updates are in sync with our content.
-  widget->Invalidate(nsIntRect(0,0,1,1), true);
-
-  // Update plugin geometry just in case that invalidate didn't work
-  // (e.g. if none of the widget is visible, it might not have processed
-  // a paint event). Normally this won't need to do anything.
-  UpdatePluginGeometry();
-}
-
-void
 nsRootPresContext::RequestUpdatePluginGeometry(nsIFrame* aFrame)
 {
   if (mRegisteredPlugins.Count() == 0)
     return;
 
   if (!mNeedsToUpdatePluginGeometry) {
+    // We'll update the plugin geometry during the next paint in this
+    // presContext (either from nsPresShell::WillPaint or from
+    // nsPresShell::DidPaint, depending on the platform) or on the next
+    // layout flush, whichever comes first.
     mNeedsToUpdatePluginGeometry = true;
-
-    // Dispatch a Gecko event to ensure plugin geometry gets updated
-    // XXX this really should be done through the refresh driver, once
-    // all painting happens in the refresh driver
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(this, &nsRootPresContext::SynchronousPluginGeometryUpdate);
-    NS_DispatchToMainThread(event);
-
     mUpdatePluginGeometryForFrame = aFrame;
     mUpdatePluginGeometryForFrame->PresContext()->
       SetContainsUpdatePluginGeometryFrame(true);
