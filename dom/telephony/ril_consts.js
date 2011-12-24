@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Kyle Machulis <kyle@nonpolynomial.com>
  *   Philipp von Weitershausen <philipp@weitershausen.de>
+ *   Fernando Jimenez <ferjmoreno@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -205,6 +206,8 @@ const CALL_PRESENTATION_RESTRICTED = 1;
 const CALL_PRESENTATION_UNKNOWN = 2;
 const CALL_PRESENTATION_PAYPHONE = 3;
 
+const SMS_HANDLED = 0;
+
 
 /**
  * DOM constants
@@ -240,4 +243,173 @@ const RIL_TO_DOM_CALL_STATE = [
   DOM_CALL_READYSTATE_RINGING,   // CALL_READYSTATE_ALERTING
   DOM_CALL_READYSTATE_INCOMING,  // CALL_READYSTATE_INCOMING
   DOM_CALL_READYSTATE_HELD       // CALL_READYSTATE_WAITING (XXX is this right?)
+];
+
+
+/**
+ * GSM PDU constants
+ */
+
+// PDU TYPE-OF-ADDRESS
+const PDU_TOA_UNKNOWN       = 0x80; // Unknown. This is used when the user or
+                                    // network has no a priori information
+                                    // about the numbering plan.
+const PDU_TOA_ISDN          = 0x81; // ISDN/Telephone numbering
+const PDU_TOA_DATA_NUM      = 0x83; // Data numbering plan
+const PDU_TOA_TELEX_NUM     = 0x84; // Telex numbering plan
+const PDU_TOA_NATIONAL_NUM  = 0x88; // National numbering plan
+const PDU_TOA_PRIVATE_NUM   = 0x89; // Private numbering plan
+const PDU_TOA_ERMES_NUM     = 0x8A; // Ermes numbering plan
+const PDU_TOA_INTERNATIONAL = 0x90; // International number
+const PDU_TOA_NATIONAL      = 0xA0; // National number. Prefix or escape digits
+                                    // shall not be included
+const PDU_TOA_NETWORK_SPEC  = 0xB0; // Network specific number This is used to
+                                    // indicate administration/service number
+                                    // specific to the serving network
+const PDU_TOA_SUSCRIBER     = 0xC0; // Suscriber number. This is used when a
+                                    // specific short number representation is
+                                    // stored in one or more SCs as part of a
+                                    // higher layer application
+const PDU_TOA_ALPHANUMERIC  = 0xD0; // Alphanumeric, (coded according to GSM TS
+                                    // 03.38 7-bit default alphabet)
+const PDU_TOA_ABBREVIATED   = 0xE0; // Abbreviated number
+
+/**
+ * First octet of the SMS-DELIVER PDU
+ *
+ * RP:     0   Reply Path parameter is not set in this PDU
+ *         1   Reply Path parameter is set in this PDU
+ *
+ * UDHI:   0   The UD field contains only the short message
+ *         1   The beginning of the UD field contains a header in addition of
+ *             the short message
+ *
+ * SRI: (is only set by the SMSC)
+ *         0    A status report will not be returned to the SME
+ *         1    A status report will be returned to the SME
+ *
+ * MMS: (is only set by the SMSC)
+ *         0    More messages are waiting for the MS in the SMSC
+ *         1    No more messages are waiting for the MS in the SMSC
+ *
+ * MTI:   bit1    bit0    Message type
+ *         0       0       SMS-DELIVER (SMSC ==> MS)
+ *         0       0       SMS-DELIVER REPORT (MS ==> SMSC, is generated
+ *                         automatically by the M20, after receiving a
+ *                         SMS-DELIVER)
+ *         0       1       SMS-SUBMIT (MS ==> SMSC)
+ *         0       1       SMS-SUBMIT REPORT (SMSC ==> MS)
+ *         1       0       SMS-STATUS REPORT (SMSC ==> MS)
+ *         1       0       SMS-COMMAND (MS ==> SMSC)
+ *         1       1       Reserved
+ */
+const PDU_RP    = 0x80;       // Reply path. Parameter indicating that
+                              // reply path exists.
+const PDU_UDHI  = 0x40;       // User data header indicator. This bit is
+                              // set to 1 if the User Data field starts
+                              // with a header
+const PDU_SRI_SRR = 0x20;     // Status report indication (SMS-DELIVER)
+                              // or request (SMS-SUBMIT)
+const PDU_VPF_ABSOLUTE = 0x18;// Validity period aboslute format
+                              // (SMS-SUBMIT only)
+const PDU_VPF_RELATIVE = 0x10;// Validity period relative format
+                              // (SMS-SUBMIT only)
+const PDU_VPF_ENHANCED = 0x8; // Validity period enhance format
+                              // (SMS-SUBMIT only)
+const PDU_MMS_RD       = 0x04;// More messages to send. (SMS-DELIVER only) or
+                              // Reject duplicates (SMS-SUBMIT only)
+
+// MTI - Message Type Indicator
+const PDU_MTI_SMS_STATUS_COMMAND  = 0x02;
+const PDU_MTI_SMS_SUBMIT          = 0x01;
+const PDU_MTI_SMS_DELIVER         = 0x00;
+
+// User Data max length in octets
+const PDU_MAX_USER_DATA_7BIT = 160;
+
+// DCS - Data Coding Scheme
+const PDU_DCS_MSG_CODING_7BITS_ALPHABET = 0xF0;
+const PDU_DCS_MSG_CODING_8BITS_ALPHABET = 0xF4;
+const PDU_DCS_MSG_CODING_16BITS_ALPHABET= 0x08;
+const PDU_DCS_MSG_CLASS_ME_SPECIFIC     = 0xF1;
+const PDU_DCS_MSG_CLASS_SIM_SPECIFIC    = 0xF2;
+const PDU_DCS_MSG_CLASS_TE_SPECIFIC     = 0xF3;
+
+// Because service center timestamp omit the century. Yay.
+const PDU_TIMESTAMP_YEAR_OFFSET = 2000;
+
+// 7bit Default Alphabet
+//TODO: maybe convert this to a string? might be faster/cheaper
+const alphabet_7bit = [
+  "@",      // COMMERCIAL AT
+  "\xa3",   // POUND SIGN
+  "$",      // DOLLAR SIGN
+  "\xa5",   // YEN SIGN
+  "\xe8",   // LATIN SMALL LETTER E WITH GRAVE
+  "\xe9",   // LATIN SMALL LETTER E WITH ACUTE
+  "\xf9",   // LATIN SMALL LETTER U WITH GRAVE
+  "\xec",   // LATIN SMALL LETTER I WITH GRAVE
+  "\xf2",   // LATIN SMALL LETTER O WITH GRAVE
+  "\xc7",   // LATIN CAPITAL LETTER C WITH CEDILLA
+  "\n",     // LINE FEED
+  "\xd8",   // LATIN CAPITAL LETTER O WITH STROKE
+  "\xf8",   // LATIN SMALL LETTER O WITH STROKE
+  "\r",     // CARRIAGE RETURN
+  "\xc5",   // LATIN CAPITAL LETTER A WITH RING ABOVE
+  "\xe5",   // LATIN SMALL LETTER A WITH RING ABOVE
+  "\u0394", // GREEK CAPITAL LETTER DELTA
+  "_",      // LOW LINE
+  "\u03a6", // GREEK CAPITAL LETTER PHI
+  "\u0393", // GREEK CAPITAL LETTER GAMMA
+  "\u039b", // GREEK CAPITAL LETTER LAMBDA
+  "\u03a9", // GREEK CAPITAL LETTER OMEGA
+  "\u03a0", // GREEK CAPITAL LETTER PI
+  "\u03a8", // GREEK CAPITAL LETTER PSI
+  "\u03a3", // GREEK CAPITAL LETTER SIGMA
+  "\u0398", // GREEK CAPITAL LETTER THETA
+  "\u039e", // GREEK CAPITAL LETTER XI
+  "\u20ac", // (escape to extension table)
+  "\xc6",   // LATIN CAPITAL LETTER AE
+  "\xe6",   // LATIN SMALL LETTER AE
+  "\xdf",   // LATIN SMALL LETTER SHARP S (German)
+  "\xc9",   // LATIN CAPITAL LETTER E WITH ACUTE
+  " ",      // SPACE
+  "!",      // EXCLAMATION MARK
+  "\"",     // QUOTATION MARK
+  "#",      // NUMBER SIGN
+  "\xa4",   // CURRENCY SIGN
+  "%",      // PERCENT SIGN
+  "&",      // AMPERSAND
+  "'",      // APOSTROPHE
+  "(",      // LEFT PARENTHESIS
+  ")",      // RIGHT PARENTHESIS
+  "*",      // ASTERISK
+  "+",      // PLUS SIGN
+  ",",      // COMMA
+  "-",      // HYPHEN-MINUS
+  ".",      // FULL STOP
+  "/",      // SOLIDUS (SLASH)
+  "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+  ":",      // COLON
+  ";",      // SEMICOLON
+  "<",      // LESS-THAN SIGN
+  "=",      // EQUALS SIGN
+  ">",      // GREATER-THAN SIGN
+  "?",      // QUESTION MARK
+  "\xa1",   // INVERTED EXCLAMATION MARK
+  "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+  "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+  "\xc4",   // LATIN CAPITAL LETTER A WITH DIAERESIS
+  "\xd6",   // LATIN CAPITAL LETTER O WITH DIAERESIS
+  "\xd1",   // LATIN CAPITAL LETTER N WITH TILDE
+  "\xdc",   // LATIN CAPITAL LETTER U WITH DIAERESIS
+  "\xa7",   // SECTION SIGN
+  "\xbf",   // INVERTED QUESTION MARK
+  "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+  "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+  "\xe4",   // LATIN SMALL LETTER A WITH DIAERESIS
+  "\xf6",   // LATIN SMALL LETTER O WITH DIAERESIS
+  "\xf1",   // LATIN SMALL LETTER N WITH TILDE
+  "\xfc",   // LATIN SMALL LETTER U WITH DIAERESIS
+  "\xe0"    // LATIN SMALL LETTER A WITH GRAVE
 ];

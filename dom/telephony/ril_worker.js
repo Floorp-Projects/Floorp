@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Kyle Machulis <kyle@nonpolynomial.com>
  *   Philipp von Weitershausen <philipp@weitershausen.de>
+ *   Fernando Jimenez <ferjmoreno@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1451,6 +1452,312 @@ let Phone = {
 
 };
 
+
+/**
+ * This object exposes the functionality to parse and serialize PDU strings
+ *
+ * A PDU is a string containing a series of hexadecimally encoded octets
+ * or nibble-swapped binary-coded decimals (BCDs). It contains not only the
+ * message text but information abou the sender, the SMS service center,
+ * timestamp, etc.
+ */
+let GsmPDUHelper = {
+
+  /**
+   * Read one character (2 bytes) from a RIL string and decode as hex.
+   *
+   * @return the nibble as a number.
+   */
+  readHexNibble: function readHexNibble() {
+    let nibble = Buf.readUint16();
+    if (nibble >= 48 && nibble <= 57) {
+      nibble -= 48;
+    } else if (nibble >= 65 && nibble <= 70) {
+      nibble -= 55;
+    } else if (nibble >= 97 && nibble <= 102) {
+      nibble -= 87;
+    } else {
+      throw "Found invalid nibble during PDU parsing: " +
+            String.fromCharCode(nibble);
+    }
+    return nibble;
+  },
+
+  /**
+   * Read a hex-encoded octet (two nibbles).
+   *
+   * @return the octet as a number.
+   */
+  readHexOctet: function readHexOctet() {
+    return (this.readHexNibble() << 4) | this.readHexNibble();
+  },
+
+  /**
+   * Convert an octet (number) to a BCD number.
+   *
+   * Any nibbles that are not in the BCD range count as 0.
+   *
+   * @param octet
+   *        The octet (a number, as returned by getOctet())
+   *
+   * @return the corresponding BCD number.
+   */
+  octetToBCD: function octetToBCD(octet) {
+    return ((octet & 0xf0) <= 0x90) * ((octet >> 4) & 0x0f) +
+           ((octet & 0x0f) <= 0x09) * (octet & 0x0f) * 10;
+  },
+
+  /**
+   * Read a *swapped nibble* binary coded decimal (BCD)
+   *
+   * @param length
+   *        Number of nibble *pairs* to read.
+   *
+   * @return the decimal as a number.
+   */
+  readSwappedNibbleBCD: function readSwappedNibbleBCD(length) {
+    let number = 0;
+    for (let i = 0; i < length; i++) {
+      let octet = this.readHexOctet();
+      // If the first nibble is an "F" , only the second nibble is to be taken
+      // into account.
+      if ((octet & 0xf0) == 0xf0) {
+        number *= 10;
+        number += octet & 0x0f;
+        continue;
+      }
+      number *= 100;
+      number += this.octetToBCD(octet);
+    }
+    return number;
+  },
+
+  /**
+   * Read user data, convert to septets, look up relevant characters in a
+   * 7-bit alphabet, and construct string.
+   *
+   * @param length
+   *        Number of septets to read (*not* octets)
+   *
+   * @return a string.
+   *
+   * TODO: support other alphabets
+   * TODO: support escape chars
+   */
+  readSeptetsToString: function readSeptetsToString(length) {
+    let ret = "";
+    let byteLength = Math.ceil(length * 7 / 8);
+
+    let leftOver = 0;
+    for (let i = 0; i < byteLength; i++) {
+      let octet = this.readHexOctet();
+      let shift = (i % 7);
+      let leftOver_mask = (0xff << (7 - shift)) & 0xff;
+      let septet_mask = (0xff >> (shift + 1));
+
+      let septet = ((octet & septet_mask) << shift) | leftOver;
+      ret += alphabet_7bit[septet];
+      leftOver = (octet & leftOver_mask) >> (7 - shift);
+
+      // Every 7th byte we have a whole septet left over that we can apply.
+      if (shift == 6) {
+        ret += alphabet_7bit[leftOver];
+        leftOver = 0;
+      }
+    }
+    if (ret.length != length) {
+      ret = ret.slice(0, length);
+    }
+    return ret;
+  },
+
+  /**
+   * Read user data and decode as a UCS2 string.
+   *
+   * @param length
+   *        XXX TODO
+   *
+   * @return a string.
+   */
+  readUCS2String: function readUCS2String(length) {
+    //TODO
+  },
+
+  /**
+   * User data can be 7 bit (default alphabet) data, 8 bit data, or 16 bit
+   * (UCS2) data.
+   *
+   * TODO: This function currently supports only the default alphabet.
+   */
+  readUserData: function readUserData(length, codingScheme) {
+    if (DEBUG) {
+      debug("Reading " + length + " bytes of user data.");
+      debug("Coding scheme: " + codingScheme);
+    }
+    // 7 bit is the default fallback encoding.
+    let encoding = 7;
+    switch (codingScheme & 0xC0) {
+      case 0x0:
+        // bits 7..4 = 00xx
+        switch (codingScheme & 0x0C) {
+          case 0x4:
+            encoding = 8;
+            break;
+          case 0x8:
+            encoding = 16;
+            break;
+        }
+        break;
+      case 0xC0:
+        // bits 7..4 = 11xx
+        switch (codingScheme & 0x30) {
+          case 0x20:
+            encoding = 16;
+            break;
+          case 0x30:
+            if (!codingScheme & 0x04) {
+              encoding = 8;
+            }
+            break;
+        }
+        break;
+      default:
+        // Falling back to default encoding.
+        break;
+    }
+
+    if (DEBUG) debug("PDU: message encoding is " + encoding + " bit.");
+    switch (encoding) {
+      case 7:
+        // 7 bit encoding allows 140 octets, which means 160 characters
+        // ((140x8) / 7 = 160 chars)
+        if (length > PDU_MAX_USER_DATA_7BIT) {
+          if (DEBUG) debug("PDU error: user data is too long: " + length);
+          return null;
+        }
+        return this.readSeptetsToString(length);
+      case 8:
+        // Unsupported.
+        return null;
+      case 16:
+        return this.readUCS2String(length);
+    }
+    return null;
+  },
+
+  /**
+   * Read and decode a PDU-encoded message from the stream.
+   *
+   * TODO: add some basic sanity checks like:
+   * - do we have the minimum number of chars available
+   */
+  readMessage: function readMessage() {
+    // An empty message object. This gets filled below and then returned.
+    let msg = {
+      SMSC:      null,
+      reference: null,
+      sender:    null,
+      body:      null,
+      validity:  null,
+      timestamp: null
+    };
+
+    // SMSC info
+    let smscLength = this.readHexOctet();
+    if (smscLength > 0) {
+      let smscTypeOfAddress = this.readHexOctet();
+      // Subtract the type-of-address octet we just read from the length.
+      msg.SMSC = this.readSwappedNibbleBCD(smscLength - 1).toString();
+      if ((smscTypeOfAddress >> 4) == (PDU_TOA_INTERNATIONAL >> 4)) {
+        msg.SMSC = '+' + msg.SMSC;
+      }
+    }
+
+    // First octet of this SMS-DELIVER or SMS-SUBMIT message
+    let firstOctet = this.readHexOctet();
+    // if the sms is of SMS-SUBMIT type it would contain a TP-MR
+    let isSmsSubmit = firstOctet & PDU_MTI_SMS_SUBMIT;
+    if (isSmsSubmit) {
+      msg.reference = this.readHexOctet(); // TP-Message-Reference
+    }
+
+    // - Sender Address info -
+    // Address length
+    let senderAddressLength = this.readHexOctet();
+    if (senderAddressLength <= 0) {
+      if (DEBUG) debug("PDU error: invalid sender address length: " + senderAddressLength);
+      return null;
+    }
+    // Type-of-Address
+    let senderTypeOfAddress = this.readHexOctet();
+    if (senderAddressLength % 2 == 1) {
+      senderAddressLength += 1;
+    }
+    if (DEBUG) debug("PDU: Going to read sender address: " + senderAddressLength);
+    msg.sender = this.readSwappedNibbleBCD(senderAddressLength / 2).toString();
+    if (msg.sender.length <= 0) {
+      if (DEBUG) debug("PDU error: no sender number provided");
+      return null;
+    }
+    if ((senderTypeOfAddress >> 4) == (PDU_TOA_INTERNATIONAL >> 4)) {
+      msg.sender = '+' + msg.sender;
+    }
+
+    // - TP-Protocolo-Identifier -
+    let protocolIdentifier = this.readHexOctet();
+
+    // - TP-Data-Coding-Scheme -
+    let dataCodingScheme = this.readHexOctet();
+
+    // SMS of SMS-SUBMIT type contains a TP-Service-Center-Time-Stamp field
+    // SMS of SMS-DELIVER type contains a TP-Validity-Period octet
+    if (isSmsSubmit) {
+      //  - TP-Validity-Period -
+      //  The Validity Period octet is optional. Depends on the SMS-SUBMIT
+      //  first octet
+      //  Validity Period Format. Bit4 and Bit3 specify the TP-VP field
+      //  according to this table:
+      //  bit4 bit3
+      //    0   0 : TP-VP field not present
+      //    1   0 : TP-VP field present. Relative format (one octet)
+      //    0   1 : TP-VP field present. Enhanced format (7 octets)
+      //    1   1 : TP-VP field present. Absolute format (7 octets)
+      if (firstOctet & (PDU_VPF_ABSOLUTE | PDU_VPF_RELATIVE | PDU_VPF_ENHANCED)) {
+        msg.validity = this.readHexOctet();
+      }
+      //TODO: check validity period
+    } else {
+      // - TP-Service-Center-Time-Stamp -
+      let year   = this.readSwappedNibbleBCD(1) + PDU_TIMESTAMP_YEAR_OFFSET;
+      let month  = this.readSwappedNibbleBCD(1) - 1;
+      let day    = this.readSwappedNibbleBCD(1) - 1;
+      let hour   = this.readSwappedNibbleBCD(1) - 1;
+      let minute = this.readSwappedNibbleBCD(1) - 1;
+      let second = this.readSwappedNibbleBCD(1) - 1;
+      msg.timestamp = Date.UTC(year, month, day, hour, minute, second);
+
+      // If the most significant bit of the least significant nibble is 1,
+      // the timezone offset is negative (fourth bit from the right => 0x08).
+      let tzOctet = this.readHexOctet();
+      let tzOffset = this.octetToBCD(tzOctet & ~0x08) * 15 * 60 * 1000;
+      if (tzOctet & 0x08) {
+        msg.timestamp -= tzOffset;
+      } else {
+        msg.timestamp += tzOffset;
+      }
+    }
+
+    // - TP-User-Data-Length -
+    let userDataLength = this.readHexOctet();
+
+    // - TP-User-Data -
+    if (userDataLength > 0) {
+      msg.body = this.readUserData(userDataLength, dataCodingScheme);
+    }
+
+    return msg;
+  }
+};
 
 /**
  * Global stuff.
