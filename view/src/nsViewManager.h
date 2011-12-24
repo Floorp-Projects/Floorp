@@ -191,31 +191,6 @@ private:
 
   void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight);
 
-  // Safety helpers
-  void IncrementUpdateCount() {
-    NS_ASSERTION(IsRootVM(),
-                 "IncrementUpdateCount called on non-root viewmanager");
-    ++mUpdateCnt;
-  }
-
-  void DecrementUpdateCount() {
-    NS_ASSERTION(IsRootVM(),
-                 "DecrementUpdateCount called on non-root viewmanager");
-    --mUpdateCnt;
-  }
-
-  PRInt32 UpdateCount() const {
-    NS_ASSERTION(IsRootVM(),
-                 "DecrementUpdateCount called on non-root viewmanager");
-    return mUpdateCnt;
-  }
-
-  void ClearUpdateCount() {
-    NS_ASSERTION(IsRootVM(),
-                 "DecrementUpdateCount called on non-root viewmanager");
-    mUpdateCnt = 0;
-  }
-
   bool IsPainting() const {
     return RootViewManager()->mPainting;
   }
@@ -259,9 +234,6 @@ private:
   // the root view manager.  Some have accessor functions to enforce
   // this, as noted.
   
-  // Use IncrementUpdateCount(), DecrementUpdateCount(), UpdateCount(),
-  // ClearUpdateCount() on the root viewmanager to access mUpdateCnt.
-  PRInt32           mUpdateCnt;
   PRInt32           mUpdateBatchCnt;
   // Use IsPainting() and SetPainting() to access mPainting.
   bool              mPainting;
