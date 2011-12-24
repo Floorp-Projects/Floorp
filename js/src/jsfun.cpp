@@ -1726,7 +1726,8 @@ JSFunction::initBoundFunction(JSContext *cx, const Value &thisArg,
     if (!toDictionaryMode(cx))
         return false;
 
-    lastProperty()->base()->setObjectFlag(BaseShape::BOUND_FUNCTION);
+    if (!setFlag(cx, BaseShape::BOUND_FUNCTION))
+        return false;
 
     if (!setSlotSpan(cx, BOUND_FUNCTION_RESERVED_SLOTS + argslen))
         return false;

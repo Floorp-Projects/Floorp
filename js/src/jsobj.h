@@ -615,11 +615,8 @@ struct JSObject : js::gc::Cell
     /* Whether method shapes can be added to this object. */
     inline bool canHaveMethodBarrier() const;
 
+    /* Whether there may be indexed properties on this object. */
     inline bool isIndexed() const;
-    inline bool setIndexed(JSContext *cx);
-
-    /* Set the indexed flag on this object if id is an indexed property. */
-    inline bool maybeSetIndexed(JSContext *cx, jsid id);
 
     /*
      * Return true if this object is a native one that has been converted from
@@ -788,9 +785,6 @@ struct JSObject : js::gc::Cell
 
     inline void setFixedSlot(uintN slot, const js::Value &value);
     inline void initFixedSlot(uintN slot, const js::Value &value);
-
-    /* Extend this object to have shape as its last-added property. */
-    inline bool extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom = false);
 
     /*
      * Whether this is the only object which has its specified type. This
