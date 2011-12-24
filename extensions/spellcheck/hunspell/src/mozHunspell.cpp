@@ -364,14 +364,6 @@ NS_IMETHODIMP mozHunspell::GetDictionaryList(PRUnichar ***aDictionaries,
   return NS_OK;
 }
 
-static PLDHashOperator
-FindFirstString(const nsAString& aString, nsIFile* aFile, void* aClosure)
-{
-  nsAString *dic = (nsAString*) aClosure;
-  dic->Assign(aString);
-  return PL_DHASH_STOP;
-}
-
 void
 mozHunspell::LoadDictionaryList()
 {
