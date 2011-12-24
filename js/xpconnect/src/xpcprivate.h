@@ -3657,8 +3657,6 @@ private:
 /**************************************************************/
 // All of our thread local storage.
 
-#define BAD_TLS_INDEX ((PRUint32) -1)
-
 class XPCPerThreadData
 {
     typedef mozilla::Mutex Mutex;
