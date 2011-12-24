@@ -689,11 +689,6 @@ public:
     return (mFlags & nsIPlaintextEditor::eEditorMailMask) != 0;
   }
 
-  bool UseAsyncUpdate() const
-  {
-    return (mFlags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask) != 0;
-  }
-
   bool IsWrapHackEnabled() const
   {
     return (mFlags & nsIPlaintextEditor::eEditorEnableWrapHackMask) != 0;
