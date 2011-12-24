@@ -152,7 +152,7 @@ protected:
 private:
 
   void FlushPendingInvalidates();
-  void ProcessPendingUpdatesForView(nsView *aView, bool aDoInvalidate);
+  void ProcessPendingUpdatesForView(nsView *aView);
   void FlushDirtyRegionToWidget(nsView* aView);
   /**
    * Call WillPaint() on all view observers under this vm root.
@@ -164,8 +164,6 @@ private:
   void UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedRegion);
 
   void UpdateViews(nsView *aView);
-
-  void TriggerRefresh();
 
   // aView is the view for aWidget and aRegion is relative to aWidget.
   void Refresh(nsView *aView, nsIWidget *aWidget, const nsIntRegion& aRegion);
@@ -211,7 +209,7 @@ public: // NOT in nsIViewManager, so private to the view module
 
   // Call this when you need to let the viewmanager know that it now has
   // pending updates.
-  void PostPendingUpdate() { RootViewManager()->mHasPendingUpdates = true; }
+  void PostPendingUpdate();
 
   PRUint32 AppUnitsPerDevPixel() const
   {
