@@ -461,7 +461,11 @@ Shape::newDictionaryList(JSContext *cx, HeapPtrShape *listp)
     root->listp = listp;
 
     JS_ASSERT(root->inDictionary());
-    root->hashify(cx);
+    if (!root->hashify(cx)) {
+        *listp = list;
+        return NULL;
+    }
+
     return root;
 }
 
