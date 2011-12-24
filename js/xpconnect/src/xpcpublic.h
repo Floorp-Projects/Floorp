@@ -56,6 +56,10 @@
 class nsIPrincipal;
 struct nsDOMClassInfoData;
 
+#ifndef BAD_TLS_INDEX
+#define BAD_TLS_INDEX ((PRUint32) -1)
+#endif
+
 nsresult
 xpc_CreateGlobalObject(JSContext *cx, JSClass *clasp,
                        nsIPrincipal *principal, nsISupports *ptr,
