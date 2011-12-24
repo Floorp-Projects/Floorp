@@ -55,6 +55,7 @@
 #include "jsapi.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
+#include "nsIViewManager.h"
 
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
@@ -112,6 +113,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext *aPresContext)
     mThrottled(false),
     mTestControllingRefreshes(false),
     mTimerIsPrecise(false),
+    mViewManagerFlushIsPending(false),
     mLastTimerInterval(0)
 {
   mRequests.Init();
@@ -270,6 +272,7 @@ nsRefreshDriver::ObserverCount() const
   sum += mStyleFlushObservers.Length();
   sum += mLayoutFlushObservers.Length();
   sum += mFrameRequestCallbackDocs.Length();
+  sum += mViewManagerFlushIsPending;
   return sum;
 }
 
@@ -429,6 +432,11 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
   if (mRequests.Count()) {
     mRequests.EnumerateEntries(nsRefreshDriver::ImageRequestEnumerator, &parms);
     EnsureTimerStarted(false);
+  }
+
+  if (mViewManagerFlushIsPending) {
+    mViewManagerFlushIsPending = false;
+    mPresContext->GetPresShell()->GetViewManager()->ProcessPendingUpdates();
   }
 
   if (mThrottled ||
