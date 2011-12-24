@@ -80,21 +80,6 @@
 
 #define NSCOORD_NONE      PR_INT32_MIN
 
-void
-nsViewManager::PostInvalidateEvent()
-{
-  NS_ASSERTION(IsRootVM(), "Caller screwed up");
-
-  if (!mInvalidateEvent.IsPending()) {
-    nsRefPtr<nsInvalidateEvent> ev = new nsInvalidateEvent(this);
-    if (NS_FAILED(NS_DispatchToCurrentThread(ev))) {
-      NS_WARNING("failed to dispatch nsInvalidateEvent");
-    } else {
-      mInvalidateEvent = ev;
-    }
-  }
-}
-
 #undef DEBUG_MOUSE_LOCATION
 
 PRInt32 nsViewManager::mVMCount = 0;
@@ -132,10 +117,6 @@ nsViewManager::~nsViewManager()
     mRootView = nsnull;
   }
 
-  // Make sure to revoke pending events for all viewmanagers, since some events
-  // are posted by a non-root viewmanager.
-  mInvalidateEvent.Revoke();
-  
   if (!IsRootVM()) {
     // We have a strong ref to mRootViewManager
     NS_RELEASE(mRootViewManager);
@@ -1387,11 +1368,7 @@ void nsViewManager::TriggerRefresh(PRUint32 aUpdateFlags)
   if (mUpdateBatchCnt > 0)
     return;
 
-  if (!mHasPendingUpdates) {
-    // Nothing to do
-  } else if (aUpdateFlags & NS_VMREFRESH_DEFERRED) {
-    PostInvalidateEvent();
-  } else { // NO_SYNC
+  if (mHasPendingUpdates) {
     FlushPendingInvalidates();
   }
 }
@@ -1528,24 +1505,6 @@ nsViewManager::CallDidPaintOnObservers()
         }
       }
     }
-  }
-}
-
-void
-nsViewManager::ProcessInvalidateEvent()
-{
-  NS_ASSERTION(IsRootVM(),
-               "Incorrectly targeted invalidate event");
-  // If we're in the middle of an update batch, just repost the event,
-  // to be processed when the batch ends.
-  bool processEvent = (mUpdateBatchCnt == 0);
-  if (processEvent) {
-    FlushPendingInvalidates();
-  }
-  mInvalidateEvent.Forget();
-  if (!processEvent) {
-    // We didn't actually process this event... post a new one
-    PostInvalidateEvent();
   }
 }
 
