@@ -1056,6 +1056,12 @@ nsPresContext::SetShell(nsIPresShell* aShell)
       mAnimationManager->Disconnect();
       mAnimationManager = nsnull;
     }
+
+    if (IsRoot()) {
+      // Have to cancel our plugin geometry timer, because the
+      // callback for that depends on a non-null presshell.
+      static_cast<nsRootPresContext*>(this)->CancelUpdatePluginGeometryTimer();
+    }
   }
 }
 
@@ -2322,6 +2328,7 @@ nsRootPresContext::~nsRootPresContext()
   NS_ASSERTION(mRegisteredPlugins.Count() == 0,
                "All plugins should have been unregistered");
   CancelDidPaintTimer();
+  CancelUpdatePluginGeometryTimer();
 }
 
 void
@@ -2562,6 +2569,9 @@ nsRootPresContext::UpdatePluginGeometry()
   if (!mNeedsToUpdatePluginGeometry)
     return;
   mNeedsToUpdatePluginGeometry = false;
+  // Cancel out mUpdatePluginGeometryTimer so it doesn't do a random
+  // update when we don't actually want one.
+  CancelUpdatePluginGeometryTimer();
 
   nsIFrame* f = mUpdatePluginGeometryForFrame;
   if (f) {
@@ -2583,6 +2593,12 @@ nsRootPresContext::UpdatePluginGeometry()
   DidApplyPluginGeometryUpdates();
 }
 
+static void
+UpdatePluginGeometryCallback(nsITimer *aTimer, void *aClosure)
+{
+  static_cast<nsRootPresContext*>(aClosure)->UpdatePluginGeometry();
+}
+
 void
 nsRootPresContext::RequestUpdatePluginGeometry(nsIFrame* aFrame)
 {
@@ -2593,7 +2609,19 @@ nsRootPresContext::RequestUpdatePluginGeometry(nsIFrame* aFrame)
     // We'll update the plugin geometry during the next paint in this
     // presContext (either from nsPresShell::WillPaint or from
     // nsPresShell::DidPaint, depending on the platform) or on the next
-    // layout flush, whichever comes first.
+    // layout flush, whichever comes first.  But we may not have anyone
+    // flush layout, and paints might get optimized away if the old
+    // plugin geometry covers the whole canvas, so set a backup timer to
+    // do this too.  We want to make sure this won't fire before our
+    // normal paint notifications, if those would update the geometry,
+    // so set it for double the refresh driver interval.
+    mUpdatePluginGeometryTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (mUpdatePluginGeometryTimer) {
+      mUpdatePluginGeometryTimer->
+        InitWithFuncCallback(UpdatePluginGeometryCallback, this,
+                             nsRefreshDriver::DefaultInterval() * 2,
+                             nsITimer::TYPE_ONE_SHOT);
+    }
     mNeedsToUpdatePluginGeometry = true;
     mUpdatePluginGeometryForFrame = aFrame;
     mUpdatePluginGeometryForFrame->PresContext()->
