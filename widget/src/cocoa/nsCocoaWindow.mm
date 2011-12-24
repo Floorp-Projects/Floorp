@@ -1279,10 +1279,18 @@ NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsCocoaWindow::Invalidate(const nsIntRect & aRect)
+NS_IMETHODIMP nsCocoaWindow::Invalidate(const nsIntRect & aRect, bool aIsSynchronous)
 {
   if (mPopupContentView)
-    return mPopupContentView->Invalidate(aRect);
+    return mPopupContentView->Invalidate(aRect, aIsSynchronous);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCocoaWindow::Update()
+{
+  if (mPopupContentView)
+    return mPopupContentView->Update();
 
   return NS_OK;
 }

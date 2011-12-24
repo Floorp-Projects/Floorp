@@ -751,10 +751,11 @@ nsWindow::SetCursor(imgIContainer* aCursor,
 }
 
 NS_IMETHODIMP
-nsWindow::Invalidate(const nsIntRect &aRect)
+nsWindow::Invalidate(const nsIntRect &aRect,
+                     bool          aIsSynchronous)
 {
-    LOGDRAW(("Invalidate (rect) [%p,%p]: %d %d %d %d\n", (void *)this,
-             (void*)mWidget,aRect.x, aRect.y, aRect.width, aRect.height));
+    LOGDRAW(("Invalidate (rect) [%p,%p]: %d %d %d %d (sync: %d)\n", (void *)this,
+             (void*)mWidget,aRect.x, aRect.y, aRect.width, aRect.height, aIsSynchronous));
 
     if (!mWidget)
         return NS_OK;
@@ -763,6 +764,19 @@ nsWindow::Invalidate(const nsIntRect &aRect)
 
     mWidget->update(aRect.x, aRect.y, aRect.width, aRect.height);
 
+    // QGraphicsItems cannot trigger a repaint themselves, so we start it on the view
+    if (aIsSynchronous) {
+        QWidget *widget = GetViewWidget();
+        if (widget)
+            widget->repaint();
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::Update()
+{
     return NS_OK;
 }
 
