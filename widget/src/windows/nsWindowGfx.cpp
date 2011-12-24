@@ -310,6 +310,7 @@ bool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
 #endif
   event.region = GetRegionToPaint(forceRepaint, ps, hDC);
   event.willSendDidPaint = true;
+  event.didSendWillPaint = true;
 
   if (!event.region.IsEmpty() && mEventCallback)
   {

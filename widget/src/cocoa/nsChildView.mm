@@ -2508,6 +2508,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif
   // Create the event so we can fill in its region
   nsPaintEvent paintEvent(true, NS_PAINT, mGeckoChild);
+  paintEvent.didSendWillPaint = true;
 
   nsIntRect boundingRect =
     nsIntRect(aRect.origin.x, aRect.origin.y, aRect.size.width, aRect.size.height);
