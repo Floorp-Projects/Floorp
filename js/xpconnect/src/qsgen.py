@@ -641,7 +641,8 @@ resultConvTemplates = {
         "    return JS_TRUE;\n",
 
     'long':
-        "    return xpc_qsInt32ToJsval(cx, result, ${jsvalPtr});\n",
+        "    ${jsvalRef} = INT_TO_JSVAL(result);\n"
+        "    return JS_TRUE;\n",
 
     'long long':
         "    return xpc_qsInt64ToJsval(cx, result, ${jsvalPtr});\n",
@@ -651,7 +652,8 @@ resultConvTemplates = {
         "    return JS_TRUE;\n",
 
     'unsigned long':
-        "    return xpc_qsUint32ToJsval(cx, result, ${jsvalPtr});\n",
+        "    ${jsvalRef} = UINT_TO_JSVAL(result);\n"
+        "    return JS_TRUE;\n",
 
     'unsigned long long':
         "    return xpc_qsUint64ToJsval(cx, result, ${jsvalPtr});\n",
