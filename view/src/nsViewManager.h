@@ -53,32 +53,25 @@
 /**
    Invalidation model:
 
-   1) Callers call into the view manager and ask it to update a view.
+   1) Callers call into the view manager and ask it to invalidate a view.
    
    2) The view manager finds the "right" widget for the view, henceforth called
       the root widget.
 
    3) The view manager traverses descendants of the root widget and for each
-      one that needs invalidation either
+      one that needs invalidation stores the rect to invalidate on the widget's
+      view (batching).
 
-      a)  Calls Invalidate() on the widget (no batching)
-    or
-      b)  Stores the rect to invalidate on the widget's view (batching)
-
-   // XXXbz we want to change this a bit.  See bug 243726
-
-   4) When batching, the call to end the batch either processes the pending
-      Invalidate() calls on the widgets or posts an event to do so.
+   4) The dirty region is flushed to the right widget when
+      ProcessPendingUpdates is called from the RefreshDriver.
 
    It's important to note that widgets associated to views outside this view
    manager can end up being invalidated during step 3.  Therefore, the end of a
    view update batch really needs to traverse the entire view tree, to ensure
    that those invalidates happen.
 
-   To cope with this, invalidate event processing and view update batch
-   handling should only happen on the root viewmanager.  This means the root
-   view manager is the only thing keeping track of mUpdateCnt.  As a result,
-   Composite() calls should also be forwarded to the root view manager.
+   To cope with this, invalidation processing and should only happen on the
+   root viewmanager.
 */
 
 class nsViewManager : public nsIViewManager {
