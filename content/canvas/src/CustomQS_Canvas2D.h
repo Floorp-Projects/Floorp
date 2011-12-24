@@ -107,7 +107,7 @@ Canvas2D_GetStyleHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
 
     switch (resultType) {
     case nsIDOMCanvasRenderingContext2D::CMG_STYLE_STRING:
-        return xpc_qsStringToJsval(cx, resultString, vp);
+        return xpc::StringToJsval(cx, resultString, vp);
 
     case nsIDOMCanvasRenderingContext2D::CMG_STYLE_PATTERN:
     {
