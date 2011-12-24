@@ -86,8 +86,10 @@ xpc_LocalizeContext(JSContext *cx);
 nsresult
 xpc_MorphSlimWrapper(JSContext *cx, nsISupports *tomorph);
 
-#define IS_WRAPPER_CLASS(clazz)                                               \
-    ((clazz)->ext.isWrappedNative)
+static inline bool IS_WRAPPER_CLASS(js::Class* clazz)
+{
+    return clazz->ext.isWrappedNative;
+}
 
 inline JSBool
 DebugCheckWrapperClass(JSObject* obj)
