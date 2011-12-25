@@ -147,37 +147,6 @@ XPCConvert::RemoveXPCOMUCStringFinalizer()
     sXPCOMUCStringFinalizerIndex = -1;
 }
 
-
-#define FIT_U32(i)     ((i) <= JSVAL_INT_MAX                                  \
-                        ? INT_TO_JSVAL(i)                                     \
-                        : DOUBLE_TO_JSVAL(i))
-
-/*
- * Support for 64 bit conversions where 'long long' not supported.
- * (from John Fairhurst <mjf35@cam.ac.uk>)
- */
-
-#ifdef HAVE_LONG_LONG
-
-#define INT64_TO_DOUBLE(i)      ((jsdouble) (i))
-// Win32 can't handle uint64 to double conversion
-#define UINT64_TO_DOUBLE(u)     ((jsdouble) (int64) (u))
-
-#else
-
-inline jsdouble
-INT64_TO_DOUBLE(const int64 &v)
-{
-    jsdouble d;
-    LL_L2D(d, v);
-    return d;
-}
-
-// if !HAVE_LONG_LONG, then uint64 is a typedef of int64
-#define UINT64_TO_DOUBLE INT64_TO_DOUBLE
-
-#endif
-
 // static
 JSBool
 XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
@@ -191,7 +160,7 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
     // Allow wrong compartment or unset ScopeForNewObject when the caller knows
     // the value is primitive (viz., XPCNativeMember::GetConstantValue).
     NS_ABORT_IF_FALSE(type.IsArithmetic() ||
-                      cx->compartment == js::GetObjectCompartment(lccx.GetScopeForNewJSObjects()),
+                      js::IsObjectInContextCompartment(lccx.GetScopeForNewJSObjects(), cx),
                       "bad scope for new JSObjects");
 
     if (pErr)
@@ -201,11 +170,11 @@ XPCConvert::NativeData2JS(XPCLazyCallContext& lccx, jsval* d, const void* s,
     case nsXPTType::T_I8    : *d = INT_TO_JSVAL(int32_t(*((int8_t*)s)));             break;
     case nsXPTType::T_I16   : *d = INT_TO_JSVAL(int32_t(*((int16_t*)s)));            break;
     case nsXPTType::T_I32   : *d = INT_TO_JSVAL(*((int32_t*)s));                     break;
-    case nsXPTType::T_I64   : *d = DOUBLE_TO_JSVAL(INT64_TO_DOUBLE(*((int64*)s)));   break;
-    case nsXPTType::T_U8    : *d = INT_TO_JSVAL(int32_t(*((uint8*)s)));              break;
+    case nsXPTType::T_I64   : *d = DOUBLE_TO_JSVAL(jsdouble(*((int64_t*)s)));        break;
+    case nsXPTType::T_U8    : *d = INT_TO_JSVAL(int32_t(*((uint8_t*)s)));            break;
     case nsXPTType::T_U16   : *d = INT_TO_JSVAL(int32_t(*((uint16_t*)s)));           break;
-    case nsXPTType::T_U32   : *d = FIT_U32(*((uint32_t*)s));                         break;
-    case nsXPTType::T_U64   : *d = DOUBLE_TO_JSVAL(UINT64_TO_DOUBLE(*((uint64*)s))); break;
+    case nsXPTType::T_U32   : *d = UINT_TO_JSVAL(*((uint32_t*)s));                   break;
+    case nsXPTType::T_U64   : *d = DOUBLE_TO_JSVAL(jsdouble(*((uint64_t*)s)));       break;
     case nsXPTType::T_FLOAT : *d = DOUBLE_TO_JSVAL(*((float*)s));                    break;
     case nsXPTType::T_DOUBLE: *d = DOUBLE_TO_JSVAL(*((double*)s));                   break;
     case nsXPTType::T_BOOL  :
@@ -527,16 +496,11 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
         if (JSVAL_IS_INT(s)) {
             if (!JS_ValueToECMAUint32(cx, s, &tu))
                 return false;
-            *((int64_t*)d) = tu;
+            *((uint64_t*)d) = tu;
         } else {
             if (!JS_ValueToNumber(cx, s, &td))
                 return false;
-#ifdef XP_WIN
-            // Note: Win32 can't handle double to uint64 directly
-            *((uint64_t*)d) = uint64_t(int64_t(td));
-#else
             *((uint64_t*)d) = uint64_t(td);
-#endif
         }
         break;
     case nsXPTType::T_FLOAT  :
@@ -969,7 +933,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     // optimal -- we could detect this and roll the functionality into a
     // single wrapper, but the current solution is good enough for now.
     JSContext* cx = lccx.GetJSContext();
-    NS_ABORT_IF_FALSE(js::GetObjectCompartment(lccx.GetScopeForNewJSObjects()) == cx->compartment,
+    NS_ABORT_IF_FALSE(js::IsObjectInContextCompartment(lccx.GetScopeForNewJSObjects(), cx),
                       "bad scope for new JSObjects");
 
     JSObject *jsscope = lccx.GetScopeForNewJSObjects();
@@ -1015,7 +979,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
             if (!flat) {
                 tryConstructSlimWrapper = true;
             } else if (IS_SLIM_WRAPPER_OBJECT(flat)) {
-                if (js::GetObjectCompartment(flat) == cx->compartment) {
+                if (js::IsObjectInContextCompartment(flat, cx)) {
                     *d = OBJECT_TO_JSVAL(flat);
                     return true;
                 }
@@ -1186,7 +1150,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
         } else {
             flat = JS_ObjectToOuterObject(cx, flat);
             NS_ASSERTION(flat, "bad outer object hook!");
-            NS_ASSERTION(js::GetObjectCompartment(flat) == cx->compartment,
+            NS_ASSERTION(js::IsObjectInContextCompartment(flat, cx),
                          "bad compartment");
         }
     }
@@ -1620,7 +1584,7 @@ XPCConvert::NativeArray2JS(XPCLazyCallContext& lccx,
         return false;
 
     JSContext* cx = ccx.GetJSContext();
-    NS_ABORT_IF_FALSE(js::GetObjectCompartment(lccx.GetScopeForNewJSObjects()) == cx->compartment,
+    NS_ABORT_IF_FALSE(js::IsObjectInContextCompartment(lccx.GetScopeForNewJSObjects(), cx),
                       "bad scope for new JSObjects");
 
     // XXX add support for putting chars in a string rather than an array

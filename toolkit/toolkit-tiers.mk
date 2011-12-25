@@ -90,7 +90,7 @@ tier_platform_dirs	+= gfx/qcms
 # "gecko" - core components
 #
 
-tier_platform_dirs += ipc js/ipc js/jetpack
+tier_platform_dirs += ipc js/ipc
 
 tier_platform_dirs += \
 		hal \
