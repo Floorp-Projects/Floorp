@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test for view source</title>
+    <script type="text/javascript" src="/MochiKit/packed.js"></script>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+
+  <body>
+
+<!--
+  this is a multi-line comment
+-->
+
+    <script class="testbody" type="text/javascript">
+
+      SimpleTest.waitForExplicitFinish();
+
+      // Return the source text of the document at the given URL.
+      function fetch(url) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url, false);    // None of this async silliness,
+        xhr.send();                     // we'll just wait.
+        return xhr.responseText;
+      }
+
+      // Start a "view source" test using the document at "testUrl".  Note that
+      // the test will actually complete asynchronously.
+      function startViewSourceTest(testUrl) {
+        
+        // We will "view" the source of the document in an IFRAME.
+        // If everything is working correctly, the "source" will simply be the
+        // text content of the IFRAME document's top element.
+
+        // Create the IFRAME.
+        var iframe = document.createElement('iframe');
+        iframe.src = "view-source:" + testUrl;
+
+        // The actual test will be carried out inside the IFRAME's onload handler.
+        iframe.onload = function () {
+
+          var apparentSource = this.contentDocument.body.textContent;
+          var actualSource = fetch(testUrl);
+
+          // OK, verify that the apparent source and the actual source agree.
+          ok(apparentSource == actualSource, "Sources should match");
+
+          SimpleTest.finish();
+        }
+        
+        // Our test IFRAME is ready to go.  However, it will not load until we
+        // actually append it to the document.  Do that now.  Note that the test
+        // itself will run asynchronously some time after this function returns.
+        document.body.appendChild(iframe);
+      }
+
+      // Start a test using this document as the test document.
+      startViewSourceTest(document.location.href);
+    </script>
+
+  </body>
+</html>
