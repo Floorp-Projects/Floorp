@@ -589,7 +589,7 @@ js_math_round(JSContext *cx, uintN argc, Value *vp)
 
     double x;
     if (!ToNumber(cx, args[0], &x))
-        return JS_FALSE;
+        return false;
 
     jsdpun u;
     u.d = x;
