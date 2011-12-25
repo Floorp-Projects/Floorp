@@ -48,9 +48,6 @@
 #include "WrapperFactory.h"
 #include "dom_quickstubs.h"
 
-#include "jscompartment.h"
-#include "jsgcchunk.h"
-#include "jsscope.h"
 #include "nsIMemoryReporter.h"
 #include "nsPrintfCString.h"
 #include "mozilla/FunctionTimer.h"
@@ -59,6 +56,8 @@
 #include "mozilla/Telemetry.h"
 
 #include "nsContentUtils.h"
+
+#include "js/MemoryMetrics.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -511,7 +510,7 @@ XPCJSRuntime::SuspectWrappedNative(JSContext *cx, XPCWrappedNative *wrapper,
     // Only suspect wrappedJSObjects that are in a compartment that
     // participates in cycle collection.
     JSObject* obj = wrapper->GetFlatJSObjectPreserveColor();
-    if (!xpc::ParticipatesInCycleCollection(cx, obj))
+    if (!xpc::ParticipatesInCycleCollection(cx, js::gc::AsCell(obj)))
         return;
 
     // Only record objects that might be part of a cycle as roots, unless
@@ -588,7 +587,7 @@ XPCJSRuntime::AddXPConnectRoots(JSContext* cx,
 
         // Only suspect wrappedJSObjects that are in a compartment that
         // participates in cycle collection.
-        if (!xpc::ParticipatesInCycleCollection(cx, obj))
+        if (!xpc::ParticipatesInCycleCollection(cx, js::gc::AsCell(obj)))
             continue;
 
         cb.NoteXPCOMRoot(static_cast<nsIXPConnectWrappedJS *>(wrappedJS));
@@ -1240,7 +1239,7 @@ namespace {
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsMallocSizeOf, "js")
 
 void
-CompartmentCallback(JSContext *cx, void *vdata, JSCompartment *compartment)
+CompartmentMemoryCallback(JSContext *cx, void *vdata, JSCompartment *compartment)
 {
     // Append a new CompartmentStats to the vector.
     IterateData *data = static_cast<IterateData *>(vdata);
@@ -1251,15 +1250,13 @@ CompartmentCallback(JSContext *cx, void *vdata, JSCompartment *compartment)
 
     // Get the compartment-level numbers.
 #ifdef JS_METHODJIT
-    size_t method, regexp, unused;
-    compartment->sizeOfCode(&method, &regexp, &unused);
-    JS_ASSERT(regexp == 0);     /* this execAlloc is only used for method code */
-    curr->mjitCode = method + unused;
+    curr->mjitCode = JS::SizeOfCompartmentMjitCode(compartment);
 #endif
-    JS_GetTypeInferenceMemoryStats(cx, compartment, &curr->typeInferenceMemory,
-                                   JsMallocSizeOf);
+    JS::SizeOfCompartmentTypeInferenceData(cx, compartment,
+                                           &curr->typeInferenceMemory,
+                                           JsMallocSizeOf);
     curr->shapesCompartmentTables =
-        js::GetCompartmentShapeTableSize(compartment, JsMallocSizeOf);
+        JS::SizeOfCompartmentShapeTable(compartment, JsMallocSizeOf);
 }
 
 void
@@ -1306,7 +1303,7 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
             } else {
                 curr->gcHeapObjectsNonFunction += thingSize;
             }
-            curr->objectSlots += js::GetObjectDynamicSlotSize(obj, JsMallocSizeOf);
+            curr->objectSlots += JS::SizeOfObjectDynamicSlots(obj, JsMallocSizeOf);
             break;
         }
         case JSTRACE_STRING:
@@ -1318,17 +1315,16 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
         }
         case JSTRACE_SHAPE:
         {
-            js::Shape *shape = static_cast<js::Shape *>(thing);
-            if (shape->inDictionary()) {
+            if (JS::IsShapeInDictionary(thing)) {
                 curr->gcHeapShapesDict += thingSize;
                 curr->shapesExtraDictTables +=
-                    shape->sizeOfPropertyTable(JsMallocSizeOf);
+                    JS::SizeOfShapePropertyTable(thing, JsMallocSizeOf);
             } else {
                 curr->gcHeapShapesTree += thingSize;
                 curr->shapesExtraTreeTables +=
-                    shape->sizeOfPropertyTable(JsMallocSizeOf);
+                    JS::SizeOfShapePropertyTable(thing, JsMallocSizeOf);
                 curr->shapesExtraTreeShapeKids +=
-                    shape->sizeOfKids(JsMallocSizeOf);
+                    JS::SizeOfShapeKids(thing, JsMallocSizeOf);
             }
             break;
         }
@@ -1341,9 +1337,9 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
         {
             JSScript *script = static_cast<JSScript *>(thing);
             curr->gcHeapScripts += thingSize;
-            curr->scriptData += script->dataSize(JsMallocSizeOf);
+            curr->scriptData += JS::SizeOfScriptData(script, JsMallocSizeOf);
 #ifdef JS_METHODJIT
-            curr->mjitData += script->jitDataSize(JsMallocSizeOf);
+            curr->mjitData += JS::SizeOfScriptJitData(script, JsMallocSizeOf);
 #endif
             break;
         }
@@ -1351,8 +1347,8 @@ CellCallback(JSContext *cx, void *vdata, void *thing, JSGCTraceKind traceKind,
         {
             js::types::TypeObject *obj = static_cast<js::types::TypeObject *>(thing);
             curr->gcHeapTypeObjects += thingSize;
-            JS_GetTypeInferenceObjectStats(obj, &curr->typeInferenceMemory,
-                                           JsMallocSizeOf);
+            JS::SizeOfObjectTypeInferenceData(obj, &curr->typeInferenceMemory,
+                                              JsMallocSizeOf);
             break;
         }
         case JSTRACE_XML:
@@ -1464,27 +1460,13 @@ NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSGCHeap,
 static PRInt64
 GetJSSystemCompartmentCount()
 {
-    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
-    size_t n = 0;
-    for (size_t i = 0; i < rt->compartments.length(); i++) {
-        if (rt->compartments[i]->isSystemCompartment) {
-            n++;
-        }
-    }
-    return n;
+    return JS::SystemCompartmentCount(nsXPConnect::GetRuntimeInstance()->GetJSRuntime());
 }
 
 static PRInt64
 GetJSUserCompartmentCount()
 {
-    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
-    size_t n = 0;
-    for (size_t i = 0; i < rt->compartments.length(); i++) {
-        if (!rt->compartments[i]->isSystemCompartment) {
-            n++;
-        }
-    }
-    return n;
+    return JS::UserCompartmentCount(nsXPConnect::GetRuntimeInstance()->GetJSRuntime());
 }
 
 // Nb: js-system-compartment-count + js-user-compartment-count could be
@@ -1524,18 +1506,20 @@ CompartmentStats::CompartmentStats(JSContext *cx, JSCompartment *c)
 
     if (c == cx->runtime->atomsCompartment) {
         name.AssignLiteral("atoms");
-    } else if (c->principals) {
-        if (c->principals->codebase) {
-            name.Assign(c->principals->codebase);
+    } else if (JSPrincipals *principals = JS_GetCompartmentPrincipals(c)) {
+        if (principals->codebase) {
+            name.Assign(principals->codebase);
 
             // If it's the system compartment, append the address.
             // This means that multiple system compartments (and there
             // can be many) can be distinguished.
-            if (c->isSystemCompartment) {
-                if (c->data &&
-                    !((xpc::CompartmentPrivate*)c->data)->location.IsEmpty()) {
+            if (js::IsSystemCompartment(c)) {
+                xpc::CompartmentPrivate *compartmentPrivate =
+                        static_cast<xpc::CompartmentPrivate*>(JS_GetCompartmentPrivate(cx, c));
+                if (compartmentPrivate &&
+                    !compartmentPrivate->location.IsEmpty()) {
                     name.AppendLiteral(", ");
-                    name.Append(((xpc::CompartmentPrivate*)c->data)->location);
+                    name.Append(compartmentPrivate->location);
                 }
 
                 // ample; 64-bit address max is 18 chars
@@ -1581,7 +1565,7 @@ CollectCompartmentStatsForRuntime(JSRuntime *rt, IterateData *data)
             PRInt64(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) *
             js::gc::ChunkSize;
 
-        js::IterateCompartmentsArenasCells(cx, data, CompartmentCallback,
+        js::IterateCompartmentsArenasCells(cx, data, CompartmentMemoryCallback,
                                            ArenaCallback, CellCallback);
         js::IterateChunks(cx, data, ChunkCallback);
 
@@ -2164,12 +2148,12 @@ bool XPCJSRuntime::gNewDOMBindingsEnabled;
 
 bool PreserveWrapper(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(obj->getClass()->ext.isWrappedNative);
+    JS_ASSERT(IS_WRAPPER_CLASS(js::GetObjectClass(obj)));
     nsISupports *native = nsXPConnect::GetXPConnect()->GetNativeOfWrapper(cx, obj);
     if (!native)
         return false;
     nsresult rv;
-    nsCOMPtr<nsINode> node = nsQueryInterfaceWithError(native, &rv);
+    nsCOMPtr<nsINode> node = do_QueryInterface(native, &rv);
     if (NS_FAILED(rv))
         return false;
     nsContentUtils::PreserveWrapper(native, node);
@@ -2310,6 +2294,9 @@ XPCJSRuntime::newXPCJSRuntime(nsXPConnect* aXPConnect)
     return nsnull;
 }
 
+// DefineStaticDictionaryJSVals is automatically generated.
+bool DefineStaticDictionaryJSVals(JSContext* aCx);
+
 JSBool
 XPCJSRuntime::OnJSContextNew(JSContext *cx)
 {
@@ -2335,6 +2322,10 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
         }
 
         ok = mozilla::dom::binding::DefineStaticJSVals(cx);
+        if (!ok)
+            return false;
+        
+        ok = DefineStaticDictionaryJSVals(cx);
     }
     if (!ok)
         return false;

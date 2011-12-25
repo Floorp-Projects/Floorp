@@ -1896,14 +1896,6 @@ extern bool
 js_IsDelegate(JSContext *cx, JSObject *obj, const js::Value &v);
 
 /*
- * If protoKey is not JSProto_Null, then clasp is ignored. If protoKey is
- * JSProto_Null, clasp must non-null.
- */
-extern JS_FRIEND_API(JSBool)
-js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
-                     JSObject **protop, js::Class *clasp = NULL);
-
-/*
  * Wrap boolean, number or string as Boolean, Number or String object.
  * *vp must not be an object, null or undefined.
  */

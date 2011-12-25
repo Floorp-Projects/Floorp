@@ -62,6 +62,7 @@
 #include "nsDOMPopStateEvent.h"
 #include "mozilla/Preferences.h"
 #include "nsJSUtils.h"
+#include "DictionaryHelpers.h"
 
 using namespace mozilla;
 
@@ -409,16 +410,8 @@ nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
 
   nsDependentJSString type;
   NS_ENSURE_STATE(type.init(aCx, jsstr));
-  
-  nsCOMPtr<nsISupports> dict;
-  JSObject* obj = nsnull;
-  if (aArgc >= 2 && !JSVAL_IS_PRIMITIVE(aArgv[1])) {
-    obj = JSVAL_TO_OBJECT(aArgv[1]);
-    nsContentUtils::XPConnect()->WrapJS(aCx, obj,
-                                        EventInitIID(),
-                                        getter_AddRefs(dict));
-  }
-  nsresult rv = InitFromCtor(type, dict, aCx, obj);
+
+  nsresult rv = InitFromCtor(type, aCx, aArgc >= 2 ? &(aArgv[1]) : nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetTrusted(trusted);
@@ -426,19 +419,13 @@ nsDOMEvent::Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
 }
 
 nsresult
-nsDOMEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict,
-                         JSContext* aCx, JSObject* aObj)
+nsDOMEvent::InitFromCtor(const nsAString& aType,
+                         JSContext* aCx, jsval* aVal)
 {
-  nsCOMPtr<nsIEventInit> eventInit = do_QueryInterface(aDict);
-  bool bubbles = false;
-  bool cancelable = false;
-  if (eventInit) {
-    nsresult rv = eventInit->GetBubbles(&bubbles);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetCancelable(&cancelable);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return InitEvent(aType, bubbles, cancelable);
+  mozilla::dom::EventInit d;
+  nsresult rv = d.Init(aCx, aVal);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return InitEvent(aType, d.bubbles, d.cancelable);
 }
 
 NS_IMETHODIMP

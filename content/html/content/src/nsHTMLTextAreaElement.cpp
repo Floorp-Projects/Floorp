@@ -816,6 +816,12 @@ nsHTMLTextAreaElement::GetControllers(nsIControllers** aResult)
       return rv;
 
     mControllers->AppendController(controller);
+
+    controller = do_CreateInstance("@mozilla.org/editor/editingcontroller;1", &rv);
+    if (NS_FAILED(rv))
+      return rv;
+
+    mControllers->AppendController(controller);
   }
 
   *aResult = mControllers;
