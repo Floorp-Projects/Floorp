@@ -577,26 +577,30 @@ js_copysign(double x, double y)
 }
 #endif
 
-jsdouble
-js_math_round_impl(jsdouble x)
-{
-    return js_copysign(floor(x + 0.5), x);
-}
-
 JSBool
 js_math_round(JSContext *cx, uintN argc, Value *vp)
 {
-    jsdouble x, z;
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc == 0) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
+    if (args.length() == 0) {
+        args.rval().setDouble(js_NaN);
+        return true;
     }
-    if (!ToNumber(cx, vp[2], &x))
+
+    double x;
+    if (!ToNumber(cx, args[0], &x))
         return JS_FALSE;
-    z = js_copysign(floor(x + 0.5), x);
-    vp->setNumber(z);
-    return JS_TRUE;
+
+    jsdpun u;
+    u.d = x;
+    /* Some numbers are so big that adding 0.5 would give the wrong number */
+    if ((u.s.hi & JSDOUBLE_HI32_EXPMASK) > 52) {
+        args.rval().setNumber(x);
+        return true;
+    }
+
+    args.rval().setNumber(js_copysign(floor(x + 0.5), x));
+    return true;
 }
 
 static JSBool
