@@ -68,6 +68,7 @@
 
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
+#include "js/MemoryMetrics.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Retcon.h"
 #include "vm/Debugger.h"
@@ -1309,6 +1310,12 @@ JSScript::dataSize(JSMallocSizeOfFun mallocSizeOf)
 #endif
 
     return mallocSizeOf(data, dataSize());
+}
+
+JS_PUBLIC_API(size_t)
+JS::SizeOfScriptData(JSScript *script, JSMallocSizeOfFun mallocSizeOf)
+{
+    return script->dataSize(mallocSizeOf);
 }
 
 /*

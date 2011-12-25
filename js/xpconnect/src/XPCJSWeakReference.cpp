@@ -49,7 +49,7 @@ nsresult xpcJSWeakReference::Init(JSContext* cx, const JS::Value& object)
     JSAutoRequest ar(cx);
 
     if (!object.isObject())
-        return NS_ERROR_FAILURE;
+        return NS_OK;
 
     JSObject& obj = object.toObject();
 

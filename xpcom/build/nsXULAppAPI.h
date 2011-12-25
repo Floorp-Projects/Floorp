@@ -471,7 +471,6 @@ enum GeckoProcessType {
 
   GeckoProcessType_Plugin,
   GeckoProcessType_Content,
-  GeckoProcessType_Jetpack,
 
   GeckoProcessType_IPDLUnitTest,
 
@@ -483,7 +482,6 @@ static const char* const kGeckoProcessTypeString[] = {
   "default",
   "plugin",
   "tab",
-  "jetpack",
   "ipdlunittest"
 };
 

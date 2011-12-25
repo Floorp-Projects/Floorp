@@ -3683,7 +3683,7 @@ ConstructSlimWrapper(XPCCallContext &ccx,
         return false;
     }
 
-    if (ccx.GetJSContext()->compartment != js::GetObjectCompartment(parent)) {
+    if (!js::IsObjectInContextCompartment(parent, ccx.GetJSContext())) {
         SLIM_LOG_NOT_CREATED(ccx, identityObj, "wrong compartment");
 
         return false;
