@@ -598,23 +598,23 @@ struct ChunkInfo {
  *
  * For the mark bitmap, we know that each arena will use a fixed number of full
  * bytes: ArenaBitmapBytes. The full size of the header data is this number
- * multiplied by the eventual number of arenas we have in the header. We, 
+ * multiplied by the eventual number of arenas we have in the header. We,
  * conceptually, distribute this header data among the individual arenas and do
- * not include it in the header. This way we do not have to worry about its 
+ * not include it in the header. This way we do not have to worry about its
  * variable size: it gets attached to the variable number we are computing.
  *
  * For the decommitted arena bitmap, we only have 1 bit per arena, so this
  * technique will not work. Instead, we observe that we do not have enough
- * header info to fill 8 full arenas: it is currently 4 on 64bit, less on 
+ * header info to fill 8 full arenas: it is currently 4 on 64bit, less on
  * 32bit. Thus, with current numbers, we need 64 bytes for decommittedArenas.
- * This will not become 63 bytes unless we double the data required in the 
- * header. Therefore, we just compute the number of bytes required to track 
+ * This will not become 63 bytes unless we double the data required in the
+ * header. Therefore, we just compute the number of bytes required to track
  * every possible arena and do not worry about slop bits, since there are too
  * few to usefully allocate.
  *
  * To actually compute the number of arenas we can allocate in a chunk, we
  * divide the amount of available space less the header info (not including
- * the mark bitmap which is distributed into the arena size) by the size of 
+ * the mark bitmap which is distributed into the arena size) by the size of
  * the arena (with the mark bitmap bytes it uses).
  */
 const size_t BytesPerArenaWithHeader = ArenaSize + ArenaBitmapBytes;
@@ -750,6 +750,9 @@ struct Chunk {
     /* Must be called with the GC lock taken. */
     static inline void release(JSRuntime *rt, Chunk *chunk);
 
+    /* Must be called with the GC lock taken. */
+    inline void prepareToBeFreed(JSRuntime *rt);
+
   private:
     inline void init();
 
@@ -782,10 +785,13 @@ class ChunkPool {
     inline Chunk *get(JSRuntime *rt);
 
     /* Must be called either during the GC or with the GC lock taken. */
-    inline void put(JSRuntime *rt, Chunk *chunk);
+    inline void put(Chunk *chunk);
 
-    /* Must be called either during the GC or with the GC lock taken. */
-    void expire(JSRuntime *rt, bool releaseAll);
+    /*
+     * Return the list of chunks that can be released outside the GC lock.
+     * Must be called either during the GC or with the GC lock taken.
+     */
+    Chunk *expire(JSRuntime *rt, bool releaseAll);
 
     /* Must be called either during the GC or with the GC lock taken. */
     JS_FRIEND_API(int64_t) countCleanDecommittedArenas(JSRuntime *rt);
@@ -1720,7 +1726,7 @@ struct GCMarker : public JSTracer {
     void drainMarkStack();
 
     inline void processMarkStackTop();
-    
+
     void pushObject(JSObject *obj) {
         pushTaggedPtr(ObjectTag, obj);
     }
