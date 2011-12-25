@@ -65,6 +65,16 @@
 #endif
 #endif
 
+/* Low-level floating-point predicates. See bug 640494. */
+#define JSDOUBLE_HI32_SIGNBIT   0x80000000
+#define JSDOUBLE_HI32_EXPMASK   0x7ff00000
+#define JSDOUBLE_HI32_MANTMASK  0x000fffff
+#define JSDOUBLE_HI32_NAN       0x7ff80000
+#define JSDOUBLE_LO32_NAN       0x00000000
+
+#define JSDOUBLE_HI32_EXPSHIFT  20
+#define JSDOUBLE_EXPBIAS        1023
+
 typedef union jsdpun {
     struct {
 #if defined(IS_LITTLE_ENDIAN) && !defined(FPU_IS_ARM_FPA)
@@ -76,13 +86,6 @@ typedef union jsdpun {
     uint64_t u64;
     jsdouble d;
 } jsdpun;
-
-/* Low-level floating-point predicates. See bug 640494. */
-#define JSDOUBLE_HI32_SIGNBIT   0x80000000
-#define JSDOUBLE_HI32_EXPMASK   0x7ff00000
-#define JSDOUBLE_HI32_MANTMASK  0x000fffff
-#define JSDOUBLE_HI32_NAN       0x7ff80000
-#define JSDOUBLE_LO32_NAN       0x00000000
 
 static inline int
 JSDOUBLE_IS_NaN(jsdouble d)
