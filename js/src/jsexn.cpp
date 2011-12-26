@@ -256,7 +256,7 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
     return copy;
 }
 
-static HeapValue *
+static jsval *
 GetStackTraceValueBuffer(JSExnPrivate *priv)
 {
     /*
@@ -267,7 +267,7 @@ GetStackTraceValueBuffer(JSExnPrivate *priv)
      */
     JS_STATIC_ASSERT(sizeof(JSStackTraceElem) % sizeof(jsval) == 0);
 
-    return reinterpret_cast<HeapValue *>(priv->stackElems + priv->stackDepth);
+    return (jsval *)(priv->stackElems + priv->stackDepth);
 }
 
 struct SuppressErrorsGuard
@@ -359,7 +359,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
 
     size_t nbytes = offsetof(JSExnPrivate, stackElems) +
                     frames.length() * sizeof(JSStackTraceElem) +
-                    values.length() * sizeof(HeapValue);
+                    values.length() * sizeof(Value);
 
     JSExnPrivate *priv = (JSExnPrivate *)cx->malloc_(nbytes);
     if (!priv)
@@ -391,12 +391,11 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     priv->exnType = exnType;
 
     JSStackTraceElem *framesDest = priv->stackElems;
-    HeapValue *valuesDest = reinterpret_cast<HeapValue *>(framesDest + frames.length());
+    Value *valuesDest = reinterpret_cast<Value *>(framesDest + frames.length());
     JS_ASSERT(valuesDest == GetStackTraceValueBuffer(priv));
 
     PodCopy(framesDest, frames.begin(), frames.length());
-    for (size_t i = 0; i < values.length(); ++i)
-        valuesDest[i].init(cx->compartment, values[i]);
+    PodCopy(valuesDest, values.begin(), values.length());
 
     SetExnPrivate(cx, exnObject, priv);
     return true;
@@ -415,7 +414,7 @@ exn_trace(JSTracer *trc, JSObject *obj)
     JSExnPrivate *priv;
     JSStackTraceElem *elem;
     size_t vcount, i;
-    HeapValue *vp;
+    jsval *vp, v;
 
     priv = GetExnPrivate(obj);
     if (priv) {
@@ -434,7 +433,9 @@ exn_trace(JSTracer *trc, JSObject *obj)
         }
         vp = GetStackTraceValueBuffer(priv);
         for (i = 0; i != vcount; ++i, ++vp) {
-            MarkValue(trc, *vp, "stack trace argument");
+            /* This value is read-only, so it's okay for it to be Unbarriered. */
+            v = *vp;
+            MarkValueUnbarriered(trc, v, "stack trace argument");
         }
     }
 }
@@ -604,7 +605,7 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
     jschar *stackbuf;
     size_t stacklen, stackmax;
     JSStackTraceElem *elem, *endElem;
-    HeapValue *values;
+    jsval *values;
     size_t i;
     JSString *str;
     const char *cp;
