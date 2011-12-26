@@ -792,6 +792,9 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_COLUMN_COUNT_AUTO              0
 #define NS_STYLE_COLUMN_COUNT_UNLIMITED         (-1)
 
+#define NS_STYLE_COLUMN_FILL_AUTO               0
+#define NS_STYLE_COLUMN_FILL_BALANCE            1
+
 // See nsStyleUIReset
 #define NS_STYLE_IME_MODE_AUTO                  0
 #define NS_STYLE_IME_MODE_NORMAL                1
