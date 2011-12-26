@@ -312,11 +312,13 @@ function MozKeyboard() {
 }
 
 MozKeyboard.prototype = {
-  sendKey: function mozKeyboardSendKey(keyCode) {
+  sendKey: function mozKeyboardSendKey(keyCode, charCode) {
+    charCode = (charCode == undefined) ? keyCode : charCode;
+
     var utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIDOMWindowUtils);
     ['keydown', 'keypress', 'keyup'].forEach(function sendKeyEvents(type) {
-      utils.sendKeyEvent(type, keyCode, keyCode, null);
+      utils.sendKeyEvent(type, keyCode, charCode, null);
     });
   }
 };
