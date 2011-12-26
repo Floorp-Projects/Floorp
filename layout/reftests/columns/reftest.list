@@ -16,6 +16,9 @@
 == column-balancing-002.html column-balancing-002.ref.html
 == column-balancing-003.html column-balancing-000.ref.html
 == column-balancing-004.html column-balancing-004.ref.html
+HTTP(..) == columnfill-balance.html columnfill-balance-ref.html
+HTTP(..) == columnfill-auto.html columnfill-auto-ref.html
+HTTP(..) == columnfill-change.html columnfill-change-ref.html
 == columnrule-basic.html columnrule-basic-ref.html
 == columnrule-complex.html columnrule-complex-ref.html
 != columnrule-linestyles.html columnrule-linestyles-notref.html

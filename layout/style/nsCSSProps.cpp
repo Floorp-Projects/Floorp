@@ -1473,6 +1473,12 @@ const PRInt32 nsCSSProps::kColorInterpolationKTable[] = {
   eCSSKeyword_UNKNOWN, -1
 };
 
+const PRInt32 nsCSSProps::kColumnFillKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_COLUMN_FILL_AUTO,
+  eCSSKeyword_balance, NS_STYLE_COLUMN_FILL_BALANCE,
+  eCSSKeyword_UNKNOWN, -1
+};
+
 bool
 nsCSSProps::FindKeyword(nsCSSKeyword aKeyword, const PRInt32 aTable[], PRInt32& aResult)
 {
