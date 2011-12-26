@@ -416,7 +416,7 @@ nsIRange::RegisterCommonAncestor(nsINode* aNode)
   if (!ranges) {
     ranges = new RangeHashTable;
     ranges->Init();
-    aNode->SetProperty(nsGkAtoms::range, ranges, RangeHashTableDtor);
+    aNode->SetProperty(nsGkAtoms::range, ranges, RangeHashTableDtor, true);
   }
   ranges->PutEntry(this);
   aNode->SetCommonAncestorForRangeInSelection();
