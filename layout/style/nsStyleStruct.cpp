@@ -792,6 +792,7 @@ nsStyleColumn::nsStyleColumn(nsPresContext* aPresContext)
   mColumnCount = NS_STYLE_COLUMN_COUNT_AUTO;
   mColumnWidth.SetAutoValue();
   mColumnGap.SetNormalValue();
+  mColumnFill = NS_STYLE_COLUMN_FILL_BALANCE;
 
   mColumnRuleWidth = (aPresContext->GetBorderWidthTable())[NS_STYLE_BORDER_WIDTH_MEDIUM];
   mColumnRuleStyle = NS_STYLE_BORDER_STYLE_NONE;
@@ -823,7 +824,8 @@ nsChangeHint nsStyleColumn::CalcDifference(const nsStyleColumn& aOther) const
     return NS_STYLE_HINT_FRAMECHANGE;
 
   if (mColumnWidth != aOther.mColumnWidth ||
-      mColumnGap != aOther.mColumnGap)
+      mColumnGap != aOther.mColumnGap ||
+      mColumnFill != aOther.mColumnFill)
     return NS_STYLE_HINT_REFLOW;
 
   if (GetComputedColumnRuleWidth() != aOther.GetComputedColumnRuleWidth() ||
