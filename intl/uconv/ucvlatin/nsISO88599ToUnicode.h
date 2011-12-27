@@ -38,14 +38,9 @@
 #ifndef nsISO88599ToUnicode_h___
 #define nsISO88599ToUnicode_h___
 
-#include "nsISupports.h"
+#include "nsCP1254ToUnicode.h"
 
-/**
- * A character set converter from ISO88599 to Unicode.
- *
- * @created         05/Apr/1999
- * @author  Catalin Rotaru [CATA]
- */
+// Just make it an alias to windows-1254 decoder. (bug 712876)
 nsresult
 nsISO88599ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                void **aResult);
