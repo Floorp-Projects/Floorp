@@ -25,7 +25,6 @@
 #include <errno.h>
 
 
-#include "v8-support.h"
 #include "platform.h"
 
 // this port is based off of v8 svn revision 9837
