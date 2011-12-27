@@ -1175,7 +1175,7 @@ nsBrowserAccess.prototype = {
 
   openURI: function browser_openURI(aURI, aOpener, aWhere, aContext) {
     let browser = this._getBrowser(aURI, aOpener, aWhere, aContext);
-    return browser ? browser.QueryInterface(Ci.nsIFrameLoaderOwner) : null;
+    return browser ? browser.contentWindow : null;
   },
 
   openURIInFrame: function browser_openURIInFrame(aURI, aOpener, aWhere, aContext) {
