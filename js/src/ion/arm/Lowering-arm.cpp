@@ -129,25 +129,28 @@ LIRGeneratorARM::visitUnbox(MUnbox *unbox)
         return false;
 
     if (unbox->type() == MIRType_Double) {
-
         LUnboxDouble *lir = new LUnboxDouble();
-        if (unbox->fallible() && !assignSnapshot(lir))
+        if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
             return false;
         if (!useBox(lir, LUnboxDouble::Input, inner))
             return false;
         return define(lir, unbox);
     }
 
-    LUnbox *lir = new LUnbox(unbox->type());
+    LUnbox *lir = new LUnbox;
     lir->setOperand(0, useType(inner, LUse::REGISTER));
     lir->setOperand(1, usePayloadInRegister(inner));
+    lir->setMir(unbox);
 
     // Re-use the inner payload's def, for better register allocation.
     LDefinition::Type type = LDefinition::TypeFrom(unbox->type());
     lir->setDef(0, LDefinition(VirtualRegisterOfPayload(inner), type, LDefinition::REDEFINED));
     unbox->setVirtualRegister(VirtualRegisterOfPayload(inner));
 
-    return assignSnapshot(lir) && add(lir);
+    if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
+        return false;
+
+    return add(lir);
 }
 
 bool

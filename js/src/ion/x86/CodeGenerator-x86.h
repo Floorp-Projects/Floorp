@@ -92,12 +92,9 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitUnbox(LUnbox *unbox);
     bool visitValue(LValue *value);
     bool visitOsrValue(LOsrValue *value);
-    bool visitStackArg(LStackArg *arg);
-    bool visitReturn(LReturn *ret);
     bool visitDouble(LDouble *ins);
     bool visitLoadSlotV(LLoadSlotV *load);
     bool visitLoadSlotT(LLoadSlotT *load);
-    bool visitStoreSlotV(LStoreSlotV *store);
     bool visitStoreSlotT(LStoreSlotT *store);
     bool visitWriteBarrierV(LWriteBarrierV *barrier);
     bool visitWriteBarrierT(LWriteBarrierT *barrier);
