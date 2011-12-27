@@ -1278,7 +1278,7 @@ CodeGeneratorARM::visitStoreSlotT(LStoreSlotT *store)
 
     // Store the type tag if needed.
     if (valueType != store->mir()->slotType())
-        masm.storeTypeTag(ImmTag(MIRTypeToTag(valueType)), Operand(base, offset));
+        masm.storeTypeTag(ImmType(ValueTypeFromMIRType(valueType)), Operand(base, offset));
 
     // Store the payload.
     if (value->isConstant())
