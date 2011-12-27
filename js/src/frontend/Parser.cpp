@@ -6820,13 +6820,22 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                     pn2 = ParseNode::newBinaryOrAppend(PNK_COLON, op, pn3, pn2, tc);
                     goto skip;
                 }
-              case TOK_STRING:
+              case TOK_STRING: {
                 atom = tokenStream.currentToken().atom();
-                pn3 = NullaryNode::create(PNK_STRING, tc);
-                if (!pn3)
-                    return NULL;
-                pn3->pn_atom = atom;
+                uint32_t index;
+                if (atom->isIndex(&index)) {
+                    pn3 = NullaryNode::create(PNK_NUMBER, tc);
+                    if (!pn3)
+                        return NULL;
+                    pn3->pn_dval = index;
+                } else {
+                    pn3 = NullaryNode::create(PNK_STRING, tc);
+                    if (!pn3)
+                        return NULL;
+                    pn3->pn_atom = atom;
+                }
                 break;
+              }
               case TOK_RC:
                 goto end_obj_init;
               default:
