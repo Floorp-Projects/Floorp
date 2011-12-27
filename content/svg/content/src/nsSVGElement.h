@@ -195,6 +195,7 @@ public:
   virtual void DidAnimateTransformList();
   virtual void DidAnimateString(PRUint8 aAttrEnum);
 
+  nsSVGLength2* GetAnimatedLength(const nsIAtom *aAttrName);
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);
   void GetAnimatedIntegerValues(PRInt32 *aFirst, ...);

@@ -883,6 +883,20 @@ nsSVGSVGElement::GetTimedDocumentRoot()
 NS_IMETHODIMP_(bool)
 nsSVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
 {
+  // We want to map the 'width' and 'height' attributes into style for
+  // outer-<svg>, except when the attributes aren't set (since their default
+  // values of '100%' can cause unexpected and undesirable behaviour for SVG
+  // inline in HTML). We rely on nsSVGElement::UpdateContentStyleRule() to
+  // prevent mapping of the default values into style (it only maps attributes
+  // that are set). We also rely on a check in nsSVGElement::
+  // UpdateContentStyleRule() to prevent us mapping the attributes when they're
+  // given a <length> value that is not currently recognized by the SVG
+  // specification.
+
+  if (!IsInner() && (name == nsGkAtoms::width || name == nsGkAtoms::height)) {
+    return true;
+  }
+
   static const MappedAttributeEntry* const map[] = {
     sColorMap,
     sFEFloodMap,
