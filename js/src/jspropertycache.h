@@ -45,6 +45,8 @@
 #include "jsprvtd.h"
 #include "jstypes.h"
 
+#include "vm/String.h"
+
 namespace js {
 
 /*
@@ -180,8 +182,9 @@ class PropertyCache
 
     static inline bool matchShape(JSContext *cx, JSObject *obj, uint32_t shape);
 
-    JSAtom *fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp,
-                     JSObject **pobjp, PropertyCacheEntry *entry);
+    PropertyName *
+    fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp,
+             JSObject **pobjp, PropertyCacheEntry *entry);
 
 #ifdef DEBUG
     void assertEmpty();
@@ -192,18 +195,18 @@ class PropertyCache
   public:
     JS_ALWAYS_INLINE void test(JSContext *cx, jsbytecode *pc,
                                JSObject *&obj, JSObject *&pobj,
-                               PropertyCacheEntry *&entry, JSAtom *&atom);
+                               PropertyCacheEntry *&entry, PropertyName *&name);
 
     /*
      * Test for cached information about a property set on *objp at pc.
      *
      * On a hit, set *entryp to the entry and return true.
      *
-     * On a miss, set *atomp to the name of the property being set and return false.
+     * On a miss, set *namep to the name of the property being set and return false.
      */
     JS_ALWAYS_INLINE bool testForSet(JSContext *cx, jsbytecode *pc, JSObject *obj,
                                      PropertyCacheEntry **entryp, JSObject **obj2p,
-                                     JSAtom **atomp);
+                                     PropertyName **namep);
 
     /*
      * Fill property cache entry for key cx->fp->pc, optimized value word
