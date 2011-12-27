@@ -141,7 +141,7 @@ public class Tabs implements GeckoEventListener {
 
     /** Close tab and then select nextTab */
     public void closeTab(Tab tab, Tab nextTab) {
-        if (tab == null)
+        if (tab == null || nextTab == null)
             return;
 
         GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", String.valueOf(nextTab.getId())));
