@@ -1112,6 +1112,24 @@ nsSVGElement::UpdateContentStyleRule()
     if (!attrName->IsAtom() || !IsAttributeMapped(attrName->Atom()))
       continue;
 
+    if (Tag() == nsGkAtoms::svg) {
+      // Special case: we don't want <svg> 'width'/'height' mapped into style
+      // if the attribute value isn't a valid <length> according to SVG (which
+      // only supports a subset of the CSS <length> values). We don't enforce
+      // this by checking the attribute value in nsSVGSVGElement::
+      // IsAttributeMapped since we don't want that method to depend on the
+      // value of the attribute that is being checked. Rather we just prevent
+      // the actual mapping here, as necessary.
+      if (attrName->Atom() == nsGkAtoms::width &&
+          !GetAnimatedLength(nsGkAtoms::width)->HasBaseVal()) {
+        continue;
+      }
+      if (attrName->Atom() == nsGkAtoms::height &&
+          !GetAnimatedLength(nsGkAtoms::height)->HasBaseVal()) {
+        continue;
+      }
+    }
+
     nsAutoString value;
     mAttrsAndChildren.AttrAt(i)->ToString(value);
     mappedAttrParser.ParseMappedAttrValue(attrName->Atom(), value);
@@ -1312,6 +1330,20 @@ nsSVGElement::DidAnimateLength(PRUint8 aAttrEnum)
                             *info.mLengthInfo[aAttrEnum].mName,
                             nsIDOMMutationEvent::MODIFICATION);
   }
+}
+
+nsSVGLength2*
+nsSVGElement::GetAnimatedLength(const nsIAtom *aAttrName)
+{
+  LengthAttributesInfo lengthInfo = GetLengthInfo();
+
+  for (PRUint32 i = 0; i < lengthInfo.mLengthCount; i++) {
+    if (aAttrName == *lengthInfo.mLengthInfo[i].mName) {
+      return &lengthInfo.mLengths[i];
+    }
+  }
+  NS_ABORT_IF_FALSE(false, "no matching length found");
+  return nsnull;
 }
 
 void
