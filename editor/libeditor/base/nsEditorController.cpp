@@ -48,36 +48,34 @@
 #define NS_REGISTER_ONE_COMMAND(_cmdClass, _cmdName)                                      \
   {                                                                                       \
     _cmdClass* theCmd = new _cmdClass();                                                  \
-    NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);                                           \
-    rv = inCommandTable->RegisterCommand(_cmdName,                                        \
+    NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);                                       \
+    inCommandTable->RegisterCommand(_cmdName,                                             \
                                    static_cast<nsIControllerCommand *>(theCmd));          \
   }
 
 #define NS_REGISTER_FIRST_COMMAND(_cmdClass, _cmdName)                                    \
   {                                                                                       \
     _cmdClass* theCmd = new _cmdClass();                                                  \
-    NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);                                           \
-    rv = inCommandTable->RegisterCommand(_cmdName,                                        \
+    NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);                                       \
+    inCommandTable->RegisterCommand(_cmdName,                                             \
                                    static_cast<nsIControllerCommand *>(theCmd));
 
 #define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName)                                     \
-    rv = inCommandTable->RegisterCommand(_cmdName,                                        \
+    inCommandTable->RegisterCommand(_cmdName,                                             \
                                    static_cast<nsIControllerCommand *>(theCmd));
 
 #define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)                                     \
-    rv = inCommandTable->RegisterCommand(_cmdName,                                        \
+    inCommandTable->RegisterCommand(_cmdName,                                             \
                                    static_cast<nsIControllerCommand *>(theCmd));          \
   }
 
 
 // static
-nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandTable *inCommandTable)
+nsresult nsEditorController::RegisterEditingCommands(nsIControllerCommandTable *inCommandTable)
 {
-  nsresult rv;
- 
   // now register all our commands
   // These are commands that will be used in text widgets, and in composer
-  
+
   NS_REGISTER_ONE_COMMAND(nsUndoCommand, "cmd_undo");
   NS_REGISTER_ONE_COMMAND(nsRedoCommand, "cmd_redo");
   NS_REGISTER_ONE_COMMAND(nsClearUndoCommand, "cmd_clearUndo");
@@ -87,12 +85,12 @@ nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandTable *i
   NS_REGISTER_ONE_COMMAND(nsCopyCommand, "cmd_copy");
   NS_REGISTER_ONE_COMMAND(nsCopyOrDeleteCommand, "cmd_copyOrDelete");
   NS_REGISTER_ONE_COMMAND(nsSelectAllCommand, "cmd_selectAll");
-  
+
   NS_REGISTER_ONE_COMMAND(nsPasteCommand, "cmd_paste");
   NS_REGISTER_ONE_COMMAND(nsPasteTransferableCommand, "cmd_pasteTransferable");
 
   NS_REGISTER_ONE_COMMAND(nsSwitchTextDirectionCommand, "cmd_switchTextDirection");
-  
+
   NS_REGISTER_FIRST_COMMAND(nsDeleteCommand, "cmd_delete");
   NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteCharBackward");
   NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteCharForward");
@@ -100,6 +98,21 @@ nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandTable *i
   NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteWordForward");
   NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteToBeginningOfLine");
   NS_REGISTER_LAST_COMMAND(nsDeleteCommand, "cmd_deleteToEndOfLine");
+
+  // Insert content
+  NS_REGISTER_ONE_COMMAND(nsInsertPlaintextCommand, "cmd_insertText");
+  NS_REGISTER_ONE_COMMAND(nsPasteQuotationCommand,  "cmd_pasteQuote");
+
+  return NS_OK;
+}
+
+
+// static
+nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandTable *inCommandTable)
+{
+  nsresult rv;
+
+  // These are commands that will be used in text widgets only.
 
   NS_REGISTER_FIRST_COMMAND(nsSelectionMoveCommands, "cmd_scrollTop");
   NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_scrollBottom");
@@ -131,11 +144,6 @@ nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandTable *i
   NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_movePageDown");
   NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectPageUp");
   NS_REGISTER_LAST_COMMAND(nsSelectionMoveCommands, "cmd_selectPageDown");
-    
-  // Insert content
-  NS_REGISTER_ONE_COMMAND(nsInsertPlaintextCommand, "cmd_insertText");
-  NS_REGISTER_ONE_COMMAND(nsPasteQuotationCommand,  "cmd_pasteQuote");
-
 
   return NS_OK;
 }

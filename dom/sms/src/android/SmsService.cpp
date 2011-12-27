@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Mounir Lamouri <mounir.lamouri@mozilla.com> (Original Author)
+ *   Philipp von Weitershausen <philipp@weitershausen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,8 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/dom/sms/SmsMessage.h"
 #include "SmsService.h"
 #include "AndroidBridge.h"
+#include "jsapi.h"
 
 namespace mozilla {
 namespace dom {
@@ -72,6 +75,20 @@ SmsService::Send(const nsAString& aNumber, const nsAString& aMessage)
 
   AndroidBridge::Bridge()->SendMessage(aNumber, aMessage);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+SmsService::CreateSmsMessage(PRInt32 aId,
+                             const nsAString& aDelivery,
+                             const nsAString& aSender,
+                             const nsAString& aReceiver,
+                             const nsAString& aBody,
+                             const jsval& aTimestamp,
+                             JSContext* aCx,
+                             nsIDOMMozSmsMessage** aMessage)
+{
+  return SmsMessage::Create(
+    aId, aDelivery, aSender, aReceiver, aBody, aTimestamp, aCx, aMessage);
 }
 
 } // namespace sms

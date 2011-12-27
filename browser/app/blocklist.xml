@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1321712096000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1324588296000">
   <emItems>
       <emItem  blockID="i41" id="{99079a25-328f-4bd4-be04-00955acaa0a7}">
                         <versionRange  minVersion="0.1" maxVersion="4.3.1.00" severity="1">
@@ -70,10 +70,24 @@
                         <versionRange  minVersion="0.1" maxVersion="4.3.1.00" severity="1">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i46" id="{841468a1-d7f4-4bd3-84e6-bb0f13a06c64}">
+                        <versionRange  minVersion="0.1" maxVersion="*">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="9.0a1" maxVersion="9.0" />
+                          </targetApplication>
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i23" id="firefox@bandoo.com">
                         <versionRange  minVersion="5.0" maxVersion="5.0" severity="1">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="3.7a1pre" maxVersion="*" />
+                          </targetApplication>
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i11" id="yslow@yahoo-inc.com">
+                        <versionRange  minVersion="2.0.5" maxVersion="2.0.5">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="3.5.7" maxVersion="*" />
                           </targetApplication>
                     </versionRange>
                   </emItem>
@@ -106,13 +120,8 @@
                         <versionRange  minVersion="0.1" maxVersion="5.2.0.7164" severity="1">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i11" id="yslow@yahoo-inc.com">
-                        <versionRange  minVersion="2.0.5" maxVersion="2.0.5">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="3.5.7" maxVersion="*" />
-                          </targetApplication>
-                    </versionRange>
-                  </emItem>
+      <emItem  blockID="i47" id="youtube@youtube2.com">
+                        </emItem>
       <emItem  blockID="i17" id="{3252b9ae-c69a-4eaf-9502-dc9c1f6c009e}">
                         <versionRange  minVersion="2.2" maxVersion="2.2">
                     </versionRange>

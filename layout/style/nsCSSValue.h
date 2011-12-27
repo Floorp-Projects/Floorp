@@ -763,14 +763,14 @@ struct nsCSSRect_heap : public nsCSSRect {
 inline nsCSSRect&
 nsCSSValue::GetRectValue()
 {
-  NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Rect, "not a pair value");
+  NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Rect, "not a rect value");
   return *mValue.mRect;
 }
 
 inline const nsCSSRect&
 nsCSSValue::GetRectValue() const
 {
-  NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Rect, "not a pair value");
+  NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Rect, "not a rect value");
   return *mValue.mRect;
 }
 

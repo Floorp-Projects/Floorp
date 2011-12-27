@@ -46,14 +46,6 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
 ifdef LOCALE_MERGEDIR
-vpath book%.inc $(LOCALE_MERGEDIR)/mobile/profile
-endif
-vpath book%.inc $(LOCALE_SRCDIR)/profile
-ifdef LOCALE_MERGEDIR
-vpath book%.inc @srcdir@/en-US/profile
-endif
-
-ifdef LOCALE_MERGEDIR
 vpath crashreporter%.ini $(LOCALE_MERGEDIR)/mobile/crashreporter
 endif
 vpath crashreporter%.ini $(LOCALE_SRCDIR)/crashreporter
@@ -74,26 +66,6 @@ PREF_JS_EXPORTS = $(firstword $(wildcard $(LOCALE_SRCDIR)/mobile-l10n.js) \
 DEB_BUILD_ARCH = $(shell dpkg-architecture -qDEB_BUILD_ARCH)
 DATASTAGE = $(CURDIR)/data-stage
 
-SEARCH_PLUGINS = $(shell cat \
-  $(firstword $(wildcard $(LOCALE_SRCDIR)/searchplugins/list.txt) \
-       @srcdir@/en-US/searchplugins/list.txt ) )
-
-tmp-search.jar.mn::
-	printf "$(AB_CD).jar:" > $@
-	printf "$(foreach plugin,$(SEARCH_PLUGINS),$(subst __PLUGIN_SUBST__,$(plugin), \n locale/$(AB_CD)/browser/searchplugins/__PLUGIN_SUBST__.xml (__PLUGIN_SUBST__.xml)))" >>  $@
-	@echo   >> $@
-
-searchplugins: tmp-search.jar.mn
-	$(PYTHON) $(MOZILLA_DIR)/config/JarMaker.py \
-          $(QUIET) -j $(FINAL_TARGET)/chrome \
-          -s $(topsrcdir)/$(relativesrcdir)/en-US/searchplugins \
-          -s $(LOCALE_SRCDIR)/searchplugins \
-          $(MAKE_JARS_FLAGS) tmp-search.jar.mn
-
-export:: searchplugins
-
-GARBAGE += tmp-search.jar.mn
-
 include $(topsrcdir)/config/rules.mk
 
 include $(topsrcdir)/toolkit/locales/l10n.mk
@@ -108,23 +80,13 @@ clobber-zip:
 	  $(STAGEDIST)/chrome/$(AB_CD)
 
 libs-%:
-	$(NSINSTALL) -D $(DIST)/install
-	@$(MAKE) -C ../../toolkit/locales libs-$* BOTH_MANIFESTS=1
-	@$(MAKE) -C ../../services/sync/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
-	@$(MAKE) -C ../../intl/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
-	@$(MAKE) -B bookmarks.json AB_CD=$*
-	@$(MAKE) -B searchplugins AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) -C $(DEPTH)/mobile/locales libs-$* BOTH_MANIFESTS=1
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/preferences BOTH_MANIFESTS=1
-	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
 
 # Tailored target to just add the chrome processing for multi-locale builds
 chrome-%:
-	@$(MAKE) -C $(DEPTH)/toolkit/locales chrome-$*
-	@$(MAKE) -C $(DEPTH)/services/sync/locales chrome AB_CD=$*
-	@$(MAKE) -B bookmarks.json AB_CD=$*
-	@$(MAKE) -B searchplugins AB_CD=$*
+	@$(MAKE) -C $(DEPTH)/mobile/locales chrome-$*
 	@$(MAKE) chrome AB_CD=$*
-	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales chrome AB_CD=$*
 ifeq ($(OS_TARGET),Android)
 	@$(MAKE) -C $(DEPTH)/embedding/android chrome AB_CD=$*
 endif
@@ -134,17 +96,6 @@ endif
 
 installers-%: clobber-% langpack-% repackage-zip-%
 	@echo "repackaging done"
-
-NO_JA_JP_MAC_AB_CD := $(if $(filter ja-JP-mac, $(AB_CD)),ja,$(AB_CD))
-
-bookmarks.json: bookmarks.inc generic/profile/bookmarks.json.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-	  -I $< \
-	  -DAB_CD=$(NO_JA_JP_MAC_AB_CD) \
-	  $(srcdir)/generic/profile/bookmarks.json.in \
-	  > $@
-
-export:: bookmarks.json
 
 ifdef MOZ_UPDATER
 ifdef LOCALE_MERGEDIR

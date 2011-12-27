@@ -380,6 +380,23 @@ class Vector : private AllocPolicy
         return *(end() - 1);
     }
 
+    class Range {
+        friend class Vector;
+        T *cur, *end;
+        Range(T *cur, T *end) : cur(cur), end(end) {}
+      public:
+        Range() {}
+        bool empty() const { return cur == end; }
+        size_t remain() const { return end - cur; }
+        T &front() const { return *cur; }
+        void popFront() { JS_ASSERT(!empty()); ++cur; }
+        T popCopyFront() { JS_ASSERT(!empty()); return *cur++; }
+    };
+
+    Range all() {
+        return Range(begin(), end());
+    }
+
     /* mutators */
 
     /* If reserve(length() + N) succeeds, the N next appends are guaranteed to succeed. */

@@ -50,6 +50,7 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.provider.Browser;
 import android.util.Log;
+import android.webkit.WebIconDatabase;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -114,6 +115,11 @@ public class ProfileMigrator {
     }
 
     public void launchBackground() {
+        // Work around http://code.google.com/p/android/issues/detail?id=11291
+        // The WebIconDatabase needs to be initialized within the UI thread so
+        // just request the instance here.
+        WebIconDatabase.getInstance();
+
         PlacesTask placesTask = new PlacesTask();
         new Thread(placesTask).start();
     }

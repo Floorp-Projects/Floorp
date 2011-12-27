@@ -1,0 +1,149 @@
+#filter substitution
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Firefox Mobile Test Framework.
+ *
+ * The Initial Developer of the Original Code is Mozilla.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ * Trevor Fairey <tnfairey@gmail.com>
+ * David Burns <dburns@mozilla.com>
+ * Joel Maher <joel.maher@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+package @ANDROID_PACKAGE_NAME@;
+
+import java.util.List;
+
+import android.app.Activity;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.TextSwitcher;
+import android.app.Instrumentation;
+import android.util.Log;
+import com.jayway.android.robotium.solo.Solo;
+import java.util.concurrent.SynchronousQueue;
+
+public class FennecNativeElement implements Element {
+  private Integer id;
+  private Activity currentActivity;
+  private Solo robocop;
+
+  public FennecNativeElement(Integer id, Activity activity, Solo solo){
+    this.id = id;
+    robocop = solo;
+    currentActivity = activity;
+  }
+
+  public Integer getId() {
+    return id;
+  }
+
+  @Override
+  public void click() {
+    final SynchronousQueue syncQueue = new SynchronousQueue();
+    currentActivity = robocop.getCurrentActivity();
+    currentActivity.runOnUiThread(
+        new Runnable() {
+          public void run() {
+            View view = (View)currentActivity.findViewById(id);
+            if(view != null) {
+              view.performClick();
+            } else {
+              throw new RoboCopException("click: unable to find view "+id); 
+            }
+            syncQueue.offer(new Object());
+          }
+        });
+    try {
+      syncQueue.take();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private Object text;
+  private Activity elementActivity;
+
+  @Override
+  public String getText() {
+    elementActivity = robocop.getCurrentActivity();
+    final SynchronousQueue syncQueue = new SynchronousQueue();
+    elementActivity.runOnUiThread(
+        new Runnable() {
+          public void run() {
+            View v = elementActivity.findViewById(id);
+            if(v instanceof EditText) {
+              EditText et = (EditText)v;
+              text = et.getEditableText();
+            }else if(v instanceof TextSwitcher) {
+              TextSwitcher ts = (TextSwitcher)v;
+              ts.getNextView();
+              text = ((TextView)ts.getCurrentView()).getText();
+            }else if(v instanceof ViewGroup) {
+              ViewGroup vg = (ViewGroup)v;
+              for(int i = 0; i < vg.getChildCount(); i++) {
+                if(vg.getChildAt(i) instanceof TextView) {
+                  text = ((TextView)vg.getChildAt(i)).getText();
+                }
+              } //end of for
+            } else if(v instanceof TextView) {
+              text = ((TextView)v).getText(); 
+            } else if(v == null) {
+              throw new RoboCopException("getText: unable to find view "+id); 
+            } else {
+              throw new RoboCopException("getText: unhandled type for view "+id); 
+            }
+            syncQueue.offer(new Object());
+          } // end of run() method definition
+        } // end of anonymous Runnable object instantiation
+    );
+    try {   
+      //Wait for the UiThread code to finish running
+      syncQueue.take();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+    if(text == null) {
+      throw new RoboCopException("getText: Text is null for view "+id);
+    }
+    return text.toString();
+  }
+
+  @Override
+  public boolean isDisplayed() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+}

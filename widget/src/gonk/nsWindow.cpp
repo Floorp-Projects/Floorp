@@ -35,24 +35,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+
+#include "android/log.h"
+#include "ui/FramebufferNativeWindow.h"
+
+#include "Framebuffer.h"
+#include "gfxContext.h"
+#include "gfxUtils.h"
+#include "GLContextProvider.h"
+#include "LayerManagerOGL.h"
 #include "nsAutoPtr.h"
 #include "nsAppShell.h"
 #include "nsTArray.h"
 #include "nsWindow.h"
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include "ui/FramebufferNativeWindow.h"
-
-#include "LayerManagerOGL.h"
-#include "GLContextProvider.h"
-
-#include "android/log.h"
-
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
 
 #define IS_TOPLEVEL() (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog)
 
+using namespace mozilla;
 using namespace mozilla::gl;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
@@ -64,13 +67,29 @@ static nsTArray<nsWindow *> sTopWindows;
 static nsWindow *gWindowToRedraw = nsnull;
 static nsWindow *gFocusedWindow = nsnull;
 static android::FramebufferNativeWindow *gNativeWindow = nsnull;
+static bool sFramebufferOpen;
 
 nsWindow::nsWindow()
 {
-    if (!sGLContext) {
+    if (!sGLContext && !sFramebufferOpen) {
+        // We (apparently) don't have a way to tell if allocating the
+        // fbs succeeded or failed.
         gNativeWindow = new android::FramebufferNativeWindow();
         sGLContext = GLContextProvider::CreateForWindow(this);
         // CreateForWindow sets up gScreenBounds
+        if (!sGLContext) {
+            LOG("Failed to create GL context for fb, trying /dev/fb0");
+
+            // We can't delete gNativeWindow.
+
+            nsIntSize screenSize;
+            sFramebufferOpen = Framebuffer::Open(&screenSize);
+            gScreenBounds = nsIntRect(nsIntPoint(0, 0), screenSize);
+            if (!sFramebufferOpen) {
+                LOG("Failed to mmap fb(?!?), aborting ...");
+                NS_RUNTIMEABORT("Can't open GL context and can't fall back on /dev/fb0 ...");
+            }
+        }
     }
 }
 
@@ -81,14 +100,40 @@ nsWindow::~nsWindow()
 void
 nsWindow::DoDraw(void)
 {
-    if (!gWindowToRedraw)
+    if (!gWindowToRedraw) {
+        LOG("  no window to draw, bailing");
         return;
+    }
 
     nsPaintEvent event(true, NS_PAINT, gWindowToRedraw);
     event.region = gScreenBounds;
-    static_cast<LayerManagerOGL*>(gWindowToRedraw->GetLayerManager(nsnull))->
-                    SetClippingRegion(nsIntRegion(gScreenBounds));
-    gWindowToRedraw->mEventCallback(&event);
+
+    LayerManager* lm = gWindowToRedraw->GetLayerManager();
+    if (LayerManager::LAYERS_OPENGL == lm->GetBackendType()) {
+        static_cast<LayerManagerOGL*>(lm)->
+            SetClippingRegion(nsIntRegion(gScreenBounds));
+        gWindowToRedraw->mEventCallback(&event);
+    } else if (LayerManager::LAYERS_BASIC == lm->GetBackendType()) {
+        MOZ_ASSERT(sFramebufferOpen);
+
+        nsRefPtr<gfxASurface> backBuffer = Framebuffer::BackBuffer();
+        {
+            nsRefPtr<gfxContext> ctx = new gfxContext(backBuffer);
+            ctx->NewPath();
+            gfxUtils::PathFromRegion(ctx, event.region);
+            ctx->Clip();
+
+            // No double-buffering needed.
+            AutoLayerManagerSetup setupLayerManager(
+                gWindowToRedraw, ctx, BasicLayerManager::BUFFER_NONE);
+            gWindowToRedraw->mEventCallback(&event);
+        }
+        backBuffer->Flush();
+
+        Framebuffer::Present();
+    } else {
+        NS_RUNTIMEABORT("Unexpected layer manager type");
+    }
 }
 
 nsEventStatus
@@ -243,8 +288,10 @@ nsWindow::Invalidate(const nsIntRect &aRect,
     nsWindow *parent = mParent;
     while (parent && parent != sTopWindows[0])
         parent = parent->mParent;
-    if (parent != sTopWindows[0])
+    if (parent != sTopWindows[0]) {
+        LOG("  parent isn't top window, bailing");
         return NS_OK;
+    }
 
     gWindowToRedraw = this;
     gDrawRequest = true;
@@ -337,18 +384,17 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
         return nsnull;
     }
 
-    if (!sGLContext) {
-        LOG(" -- no GLContext\n");
-        return nsnull;
+    if (sGLContext) {
+        nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(this);
+
+        if (layerManager->Initialize(sGLContext))
+            mLayerManager = layerManager;
+        else
+            LOG("Could not create OGL LayerManager");
+    } else {
+        MOZ_ASSERT(sFramebufferOpen);
+        mLayerManager = new BasicShadowLayerManager(this);
     }
-
-    nsRefPtr<LayerManagerOGL> layerManager =
-        new LayerManagerOGL(this);
-
-    if (layerManager->Initialize(sGLContext))
-        mLayerManager = layerManager;
-    else
-        LOG("Could not create LayerManager");
 
     return mLayerManager;
 }

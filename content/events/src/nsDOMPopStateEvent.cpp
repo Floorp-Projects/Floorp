@@ -37,6 +37,7 @@
 #include "nsDOMClassInfoID.h"
 #include "nsIClassInfo.h"
 #include "nsIXPCScriptable.h"
+#include "DictionaryHelpers.h"
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMPopStateEvent)
 
@@ -84,22 +85,13 @@ nsDOMPopStateEvent::InitPopStateEvent(const nsAString &aTypeArg,
 }
 
 nsresult
-nsDOMPopStateEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict,
-                                 JSContext* aCx, JSObject* aObj)
+nsDOMPopStateEvent::InitFromCtor(const nsAString& aType,
+                                 JSContext* aCx, jsval* aVal)
 {
-  nsCOMPtr<nsIPopStateEventInit> eventInit = do_QueryInterface(aDict);
-  bool bubbles = false;
-  bool cancelable = false;
-  nsCOMPtr<nsIVariant> state;
-  if (eventInit) {
-    nsresult rv = eventInit->GetBubbles(&bubbles);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetCancelable(&cancelable);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetState(getter_AddRefs(state));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return InitPopStateEvent(aType, bubbles, cancelable, state);
+  mozilla::dom::PopStateEventInit d;
+  nsresult rv = d.Init(aCx, aVal);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return InitPopStateEvent(aType, d.bubbles, d.cancelable, d.state);
 }
 
 nsresult NS_NewDOMPopStateEvent(nsIDOMEvent** aInstancePtrResult,

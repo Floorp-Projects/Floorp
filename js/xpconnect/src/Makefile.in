@@ -86,6 +86,7 @@ CPPSRCS		= \
 		XPCQuickStubs.cpp \
 		dom_quickstubs.cpp \
 		dombindings.cpp \
+		DictionaryHelpers.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
@@ -93,7 +94,6 @@ include $(topsrcdir)/config/config.mk
 LOCAL_INCLUDES = \
 		-I$(srcdir)/../wrappers \
 		-I$(srcdir)/../loader \
-		-I$(topsrcdir)/js/src \
 		-I$(topsrcdir)/caps/include \
 		-I$(topsrcdir)/content/base/src \
 		-I$(topsrcdir)/content/html/content/src \
@@ -191,14 +191,59 @@ dombindings_gen.cpp: $(srcdir)/dombindings.conf \
 	  --makedepend-output $(MDDEPDIR)/dombindingsgen.pp \
 	  $(srcdir)/dombindings.conf
 
+DictionaryHelpers.$(OBJ_SUFFIX): DictionaryHelpers.h \
+                                 DictionaryHelpers.cpp
+
+DictionaryHelpers.h: $(srcdir)/dictionary_helper_gen.conf \
+                     $(srcdir)/dictionary_helper_gen.py \
+                     $(srcdir)/codegen.py \
+                     $(topsrcdir)/xpcom/idl-parser/header.py \
+                     $(topsrcdir)/xpcom/idl-parser/xpidl.py \
+                     $(DEPTH)/js/src/js-confdefs.h
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	  -I$(topsrcdir)/other-licenses/ply \
+	  -I$(topsrcdir)/xpcom/idl-parser \
+	  $(srcdir)/dictionary_helper_gen.py \
+	  -I $(DEPTH)/dist/idl \
+	  --cachedir=$(DEPTH)/xpcom/idl-parser/cache \
+	  --header-output DictionaryHelpers.h \
+	  $(srcdir)/dictionary_helper_gen.conf
+
+DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
+                       $(srcdir)/dictionary_helper_gen.py \
+                       $(srcdir)/codegen.py \
+                       $(topsrcdir)/xpcom/idl-parser/header.py \
+                       $(topsrcdir)/xpcom/idl-parser/xpidl.py \
+                       $(DEPTH)/js/src/js-confdefs.h
+	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	  -I$(topsrcdir)/other-licenses/ply \
+	  -I$(topsrcdir)/xpcom/idl-parser \
+	  $(srcdir)/dictionary_helper_gen.py \
+	  -I $(DEPTH)/dist/idl \
+	  --cachedir=$(DEPTH)/xpcom/idl-parser/cache \
+	  --header-output DictionaryHelpers.h \
+	  --stub-output DictionaryHelpers.cpp \
+	  --makedepend-output $(MDDEPDIR)/dictionary_helper_gen.pp \
+	  $(srcdir)/dictionary_helper_gen.conf
+
+_EXTRA_EXPORT_FILES = \
+  DictionaryHelpers.h \
+  $(NULL)
+
+libs:: $(_EXTRA_EXPORT_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/dist/include
+
 GARBAGE += \
 		dom_quickstubs.h \
 		dom_quickstubs.cpp \
 		dombindings_gen.h \
 		dombindings_gen.cpp \
+		DictionaryHelpers.h \
+		DictionaryHelpers.cpp \
 		xpidl_debug \
 		$(MDDEPDIR)/dom_qsgen.pp \
 		$(MDDEPDIR)/dombindingsgen.pp \
+		$(MDDEPDIR)/dictionary_helper_gen.pp \
 		$(wildcard $(topsrcdir)/other-licenses/ply/ply/*.pyc) \
 		$(wildcard $(topsrcdir)/xpcom/idl-parser/*.pyc) \
 		$(NULL)
