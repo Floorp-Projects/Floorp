@@ -28,7 +28,7 @@ The table related tags have their own display types like "table-cell",
 <h2>
 Block and inline code</h2>
 The main classes involved in the layout of HTML documents are nsBlockFrame
-and nsInlineFrame, both of which inherit from nsHTMLContainerFrame (why?).&nbsp;
+and nsInlineFrame, both of which inherit from nsContainerFrame (why?).&nbsp;
 These classes are persistent across reflows and are organized in a hierarchy
 to constitute the frame model of the Gecko system.&nbsp; The frame model
 is derived by applying style and presentation semantics to the content
@@ -77,7 +77,7 @@ to text runs and, so, determine where word breaks should occur.
 Questions</h2>
 What are anonymous blocks (nsBlockFrame.h)?
 <br>What is the difference between a span and a band (nsLineLayout)?
-<br>Why do nsBlockFrame and nsInlineFrame both inherit from nsHTMLContainerFrame?
+<br>Why do nsBlockFrame and nsInlineFrame both inherit from nsContainerFrame?
 <h2>
 To Do</h2>
 

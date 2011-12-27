@@ -71,7 +71,7 @@ using namespace mozilla;
 
 
 nsTableCellFrame::nsTableCellFrame(nsStyleContext* aContext) :
-  nsHTMLContainerFrame(aContext)
+  nsContainerFrame(aContext)
 {
   mColIndex = 0;
   mPriorAvailWidth = 0;
@@ -106,7 +106,7 @@ nsTableCellFrame::Init(nsIContent*      aContent,
                        nsIFrame*        aPrevInFlow)
 {
   // Let the base class do its initialization
-  nsresult rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  nsresult rv = nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   if (aPrevInFlow) {
     // Set the column index
@@ -746,7 +746,7 @@ nsTableCellFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 nsTableCellFrame::IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext)
 {
   IntrinsicWidthOffsetData result =
-    nsHTMLContainerFrame::IntrinsicWidthOffsets(aRenderingContext);
+    nsContainerFrame::IntrinsicWidthOffsets(aRenderingContext);
 
   result.hMargin = 0;
   result.hPctMargin = 0;
@@ -987,7 +987,7 @@ NS_QUERYFRAME_HEAD(nsTableCellFrame)
   NS_QUERYFRAME_ENTRY(nsTableCellFrame)
   NS_QUERYFRAME_ENTRY(nsITableCellLayout)
   NS_QUERYFRAME_ENTRY(nsIPercentHeightObserver)
-NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef ACCESSIBILITY
 already_AddRefed<nsAccessible>

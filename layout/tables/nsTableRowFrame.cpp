@@ -148,10 +148,10 @@ nsTableRowFrame::SetPctHeight(float  aPctValue,
 
 NS_QUERYFRAME_HEAD(nsTableRowFrame)
   NS_QUERYFRAME_ENTRY(nsTableRowFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsTableRowFrame::nsTableRowFrame(nsStyleContext* aContext)
-  : nsHTMLContainerFrame(aContext)
+  : nsContainerFrame(aContext)
 {
   mBits.mRowIndex = mBits.mFirstInserted = 0;
   ResetHeight(0);
@@ -169,7 +169,7 @@ nsTableRowFrame::Init(nsIContent*      aContent,
   nsresult  rv;
 
   // Let the base class do its initialization
-  rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  rv = nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 
   NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW == GetStyleDisplay()->mDisplay,
                "wrong display on table row frame");

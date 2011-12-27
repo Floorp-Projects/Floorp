@@ -145,7 +145,7 @@ public:
   virtual already_AddRefed<nsAccessible> CreateAccessible();
 #endif
 
-    // nsHTMLContainerFrame
+    // nsContainerFrame
   virtual PRIntn GetSkipSides() const;
 
     // nsIListControlFrame
