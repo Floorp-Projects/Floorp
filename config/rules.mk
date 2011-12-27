@@ -373,6 +373,13 @@ ifdef MAPFILE
 OS_LDFLAGS += -MAP:$(MAPFILE)
 endif
 
+else #!GNU_CC
+
+ifdef DEFFILE
+OS_LDFLAGS += $(call normalizepath,$(DEFFILE))
+EXTRA_DEPS += $(DEFFILE)
+endif
+
 endif # !GNU_CC
 
 endif # WINNT
