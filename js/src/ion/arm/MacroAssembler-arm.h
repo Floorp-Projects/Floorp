@@ -353,6 +353,7 @@ class MacroAssemblerARM : public Assembler
     void reserveStack(uint32 amount);
     void freeStack(uint32 amount);
 
+    void move32(const Imm32 &imm, const Register &dest);
     void movePtr(ImmWord imm, const Register dest);
     void movePtr(ImmGCPtr imm, const Register dest);
     void load32(const Address &address, Register dest);
@@ -614,7 +615,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
 
     void moveValue(const Value &val, const ValueOperand &dest);
+
     void storeValue(ValueOperand val, Operand dst);
+    void storeValue(ValueOperand val, const Address &dest) {
+        storeValue(val, Operand(dest));
+    }
+
     void loadValue(Operand src, ValueOperand val);
     void pushValue(ValueOperand val);
     void popValue(ValueOperand val);

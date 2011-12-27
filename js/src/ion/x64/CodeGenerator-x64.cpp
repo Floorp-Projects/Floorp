@@ -179,19 +179,6 @@ CodeGeneratorX64::visitUnbox(LUnbox *unbox)
     return true;
 }
 
-bool
-CodeGeneratorX64::visitReturn(LReturn *ret)
-{
-#ifdef DEBUG
-    LAllocation *result = ret->getOperand(0);
-    JS_ASSERT(ToRegister(result) == JSReturnReg);
-#endif
-    // Don't emit a jump to the return label if this is the last block.
-    if (current->mir() != *gen->graph().poBegin())
-        masm.jmp(returnLabel_);
-    return true;
-}
-
 Assembler::Condition
 CodeGeneratorX64::testStringTruthy(bool truthy, const ValueOperand &value)
 {
@@ -250,18 +237,6 @@ CodeGeneratorX64::visitLoadSlotT(LLoadSlotT *load)
 
     loadUnboxedValue(Operand(base, offset), load->mir()->type(), load->output());
 
-    return true;
-}
-
-bool
-CodeGeneratorX64::visitStoreSlotV(LStoreSlotV *store)
-{
-    Register base = ToRegister(store->slots());
-    int32 offset = store->mir()->slot() * sizeof(js::Value);
-
-    const ValueOperand value = ToValue(store, LStoreSlotV::Value);
-
-    masm.storeValue(value, Operand(base, offset));
     return true;
 }
 
@@ -361,17 +336,6 @@ CodeGeneratorX64::visitStoreElementT(LStoreElementT *store)
     MIRType elementType = store->mir()->elementType();
 
     storeUnboxedValue(value, valueType, dest, elementType);
-    return true;
-}
-
-bool
-CodeGeneratorX64::visitStackArg(LStackArg *arg)
-{
-    ValueOperand val = ToValue(arg, 0);
-    uint32 argslot = arg->argslot();
-    int32 stack_offset = StackOffsetOfPassedArg(argslot);
-
-    masm.storeValue(val, Operand(StackPointer, stack_offset));
     return true;
 }
 
