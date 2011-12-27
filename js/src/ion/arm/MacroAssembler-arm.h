@@ -583,20 +583,20 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
         ma_ldr(Operand(address.base, address.offset), ScratchRegister);
         ma_cmp(ScratchRegister, imm);
-        ma_b(label, cond);
+        ma_b(label, InvertCondition(cond));
     }
     void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
-        ma_cmp(lhs, rhs);
+        ma_cmp(rhs, lhs);
         ma_b(label, cond);
     }
     void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label *label) {
         movePtr(ptr, ScratchRegister);
-        ma_cmp(lhs, ScratchRegister);
+        ma_cmp(ScratchRegister, lhs);
         ma_b(label, cond);
     }
     void branchPtr(Condition cond, Register lhs, ImmWord imm, Label *label) {
         ma_cmp(lhs, Imm32(imm.value));
-        ma_b(label, cond);
+        ma_b(label, InvertCondition(cond));
     }
     void moveValue(const Value &val, Register type, Register data);
 
