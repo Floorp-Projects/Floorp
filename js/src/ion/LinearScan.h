@@ -291,7 +291,7 @@ class LiveInterval : public InlineListNode<LiveInterval>
     void setAllocation(LAllocation alloc) {
         alloc_ = alloc;
     }
-    VirtualRegister *reg() {
+    VirtualRegister *reg() const {
         return reg_;
     }
     uint32 index() const {
@@ -357,8 +357,11 @@ class VirtualRegister : public TempObject
     LInstruction *ins() {
         return ins_;
     }
-    LDefinition *def() {
+    LDefinition *def() const {
         return def_;
+    }
+    LDefinition::Type type() const {
+        return def()->type();
     }
     size_t numIntervals() {
         return intervals_.length();
@@ -520,6 +523,10 @@ class LinearScanAllocator
     // Allocation state
     StackSlotAllocator stackSlotAllocator;
 
+    typedef Vector<LiveInterval *, 0, SystemAllocPolicy> SlotList;
+    SlotList finishedSlots_;
+    SlotList finishedDoubleSlots_;
+
     // Run-time state
     UnhandledQueue unhandled;
     InlineList<LiveInterval> active;
@@ -535,6 +542,7 @@ class LinearScanAllocator
     bool resolveControlFlow();
     bool reifyAllocations();
 
+    uint32 allocateSlotFor(const LiveInterval *interval);
     bool splitInterval(LiveInterval *interval, CodePosition pos);
     bool assign(LAllocation allocation);
     bool spill();
