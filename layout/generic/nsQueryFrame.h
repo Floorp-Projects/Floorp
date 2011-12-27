@@ -103,7 +103,6 @@ public:
     nsGroupBoxFrame_id,
     nsHTMLButtonControlFrame_id,
     nsHTMLCanvasFrame_id,
-    nsHTMLContainerFrame_id,
     nsHTMLFramesetBlankFrame_id,
     nsHTMLFramesetBorderFrame_id,
     nsHTMLFramesetFrame_id,

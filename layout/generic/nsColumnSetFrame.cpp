@@ -38,7 +38,7 @@
 
 /* rendering object for css3 multi-column layout */
 
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsISupports.h"
@@ -54,7 +54,7 @@
 
 using namespace mozilla;
 
-class nsColumnSetFrame : public nsHTMLContainerFrame {
+class nsColumnSetFrame : public nsContainerFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
@@ -200,7 +200,7 @@ NS_NewColumnSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint3
 NS_IMPL_FRAMEARENA_HELPERS(nsColumnSetFrame)
 
 nsColumnSetFrame::nsColumnSetFrame(nsStyleContext* aContext)
-  : nsHTMLContainerFrame(aContext), mLastBalanceHeight(NS_INTRINSICSIZE),
+  : nsContainerFrame(aContext), mLastBalanceHeight(NS_INTRINSICSIZE),
     mLastFrameStatus(NS_FRAME_COMPLETE)
 {
 }
@@ -209,7 +209,7 @@ void
 nsColumnSetFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   DestroyAbsoluteFrames(aDestructRoot);
-  nsHTMLContainerFrame::DestroyFrom(aDestructRoot);
+  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 nsIAtom*
@@ -305,7 +305,7 @@ nsColumnSetFrame::SetInitialChildList(ChildListID     aListID,
   NS_ASSERTION(aChildList.OnlyChild(),
                "initial child list must have exactly one child");
   // Queue up the frames for the content frame
-  return nsHTMLContainerFrame::SetInitialChildList(kPrincipalList, aChildList);
+  return nsContainerFrame::SetInitialChildList(kPrincipalList, aChildList);
 }
 
 static nscoord

@@ -39,7 +39,7 @@
 
 #include "nsITableCellLayout.h"
 #include "nscore.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsTableRowFrame.h"  // need to actually include this here to inline GetRowIndex
 #include "nsStyleContext.h"
 #include "nsIPercentHeightObserver.h"
@@ -67,7 +67,7 @@ class nsTableFrame;
  *
  * @author  sclark
  */
-class nsTableCellFrame : public nsHTMLContainerFrame,
+class nsTableCellFrame : public nsContainerFrame,
                          public nsITableCellLayout,
                          public nsIPercentHeightObserver
 {
@@ -241,7 +241,7 @@ public:
                             nsPoint              aPt);
 
 protected:
-  /** implement abstract method on nsHTMLContainerFrame */
+  /** implement abstract method on nsContainerFrame */
   virtual PRIntn GetSkipSides() const;
 
   /**

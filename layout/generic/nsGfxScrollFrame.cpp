@@ -46,7 +46,7 @@
 #include "nsIView.h"
 #include "nsIScrollable.h"
 #include "nsIViewManager.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsGfxScrollFrame.h"
 #include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
@@ -100,7 +100,7 @@ NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, bool a
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLScrollFrame)
 
 nsHTMLScrollFrame::nsHTMLScrollFrame(nsIPresShell* aShell, nsStyleContext* aContext, bool aIsRoot)
-  : nsHTMLContainerFrame(aContext),
+  : nsContainerFrame(aContext),
     mInner(this, aIsRoot)
 {
 }
@@ -123,14 +123,14 @@ nsHTMLScrollFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   mInner.Destroy();
   DestroyAbsoluteFrames(aDestructRoot);
-  nsHTMLContainerFrame::DestroyFrom(aDestructRoot);
+  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 NS_IMETHODIMP
 nsHTMLScrollFrame::SetInitialChildList(ChildListID  aListID,
                                        nsFrameList& aChildList)
 {
-  nsresult rv = nsHTMLContainerFrame::SetInitialChildList(aListID, aChildList);
+  nsresult rv = nsContainerFrame::SetInitialChildList(aListID, aChildList);
   mInner.ReloadChildFrames();
   return rv;
 }
@@ -226,21 +226,21 @@ nsHTMLScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
         nsRect thebesLayerDamage = damage + GetScrollPosition() - mInner.mScrollPosAtLastPaint;
         if (parentDamage.IsEqualInterior(thebesLayerDamage)) {
           // This single call will take care of both rects
-          nsHTMLContainerFrame::InvalidateInternal(parentDamage, 0, 0, aForChild, aFlags);
+          nsContainerFrame::InvalidateInternal(parentDamage, 0, 0, aForChild, aFlags);
         } else {
           // Invalidate rects separately
           if (!(aFlags & INVALIDATE_NO_THEBES_LAYERS)) {
-            nsHTMLContainerFrame::InvalidateInternal(thebesLayerDamage, 0, 0, aForChild,
-                                                     aFlags | INVALIDATE_ONLY_THEBES_LAYERS);
+            nsContainerFrame::InvalidateInternal(thebesLayerDamage, 0, 0, aForChild,
+                                                 aFlags | INVALIDATE_ONLY_THEBES_LAYERS);
           }
           if (!(aFlags & INVALIDATE_ONLY_THEBES_LAYERS) && !parentDamage.IsEmpty()) {
-            nsHTMLContainerFrame::InvalidateInternal(parentDamage, 0, 0, aForChild,
-                                                     aFlags | INVALIDATE_NO_THEBES_LAYERS);
+            nsContainerFrame::InvalidateInternal(parentDamage, 0, 0, aForChild,
+                                                 aFlags | INVALIDATE_NO_THEBES_LAYERS);
           }
         }
       } else {
         if (!parentDamage.IsEmpty()) {
-          nsHTMLContainerFrame::InvalidateInternal(parentDamage, 0, 0, aForChild, aFlags);
+          nsContainerFrame::InvalidateInternal(parentDamage, 0, 0, aForChild, aFlags);
         }
       }
 
@@ -272,7 +272,7 @@ nsHTMLScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
     }
   }
  
-  nsHTMLContainerFrame::InvalidateInternal(aDamageRect, aX, aY, aForChild, aFlags);
+  nsContainerFrame::InvalidateInternal(aDamageRect, aX, aY, aForChild, aFlags);
 }
 
 /**
@@ -987,7 +987,7 @@ NS_QUERYFRAME_HEAD(nsHTMLScrollFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
   NS_QUERYFRAME_ENTRY(nsIScrollableFrame)
   NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 //----------nsXULScrollFrame-------------------------------------------
 

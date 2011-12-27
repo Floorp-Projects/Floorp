@@ -38,7 +38,7 @@
 #define nsTableOuterFrame_h__
 
 #include "nscore.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsITableLayout.h"
 #include "nsTableFrame.h"
@@ -82,7 +82,7 @@ protected:
  * the nsTableOuterFrame contains 0 or one caption frame, and a nsTableFrame
  * pseudo-frame (referred to as the "inner frame').
  */
-class nsTableOuterFrame : public nsHTMLContainerFrame, public nsITableLayout
+class nsTableOuterFrame : public nsContainerFrame, public nsITableLayout
 {
 public:
   NS_DECL_QUERYFRAME
@@ -188,7 +188,7 @@ protected:
 
   /** Always returns 0, since the outer table frame has no border of its own
     * The inner table frame can answer this question in a meaningful way.
-    * @see nsHTMLContainerFrame::GetSkipSides */
+    * @see nsContainerFrame::GetSkipSides */
   virtual PRIntn GetSkipSides() const;
 
   PRUint8 GetCaptionSide(); // NS_STYLE_CAPTION_SIDE_* or NO_SIDE

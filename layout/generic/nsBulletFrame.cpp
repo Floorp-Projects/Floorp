@@ -41,7 +41,7 @@
 #include "nsBulletFrame.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsGenericHTMLElement.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"

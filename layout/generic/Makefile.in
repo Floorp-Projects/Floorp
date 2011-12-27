@@ -95,7 +95,6 @@ CPPSRCS		= \
 		nsFrameUtil.cpp \
 		nsGfxScrollFrame.cpp \
 		nsHTMLCanvasFrame.cpp \
-		nsHTMLContainerFrame.cpp \
 		nsCanvasFrame.cpp \
 		nsHTMLReflowMetrics.cpp \
 		nsHTMLReflowState.cpp \
