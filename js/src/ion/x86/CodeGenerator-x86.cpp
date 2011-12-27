@@ -180,33 +180,6 @@ CodeGeneratorX86::visitUnbox(LUnbox *unbox)
     return true;
 }
 
-bool
-CodeGeneratorX86::visitStackArg(LStackArg *arg)
-{
-    ValueOperand val = ToValue(arg, 0);
-    uint32 argslot = arg->argslot();
-    int32 stack_offset = StackOffsetOfPassedArg(argslot);
-
-    masm.storeValue(val, Operand(StackPointer, stack_offset));
-    return true;
-}
-
-bool
-CodeGeneratorX86::visitReturn(LReturn *ret)
-{
-#ifdef DEBUG
-    LAllocation *type = ret->getOperand(TYPE_INDEX);
-    LAllocation *payload = ret->getOperand(PAYLOAD_INDEX);
-
-    JS_ASSERT(ToRegister(type) == JSReturnReg_Type);
-    JS_ASSERT(ToRegister(payload) == JSReturnReg_Data);
-#endif
-    // Don't emit a jump to the return label if this is the last block.
-    if (current->mir() != *gen->graph().poBegin())
-        masm.jmp(returnLabel_);
-    return true;
-}
-
 void
 CodeGeneratorX86::linkAbsoluteLabels()
 {
@@ -277,18 +250,6 @@ CodeGeneratorX86::visitLoadSlotT(LLoadSlotT *load)
         masm.loadInt32OrDouble(Operand(base, offset), ToFloatRegister(load->output()));
     else
         masm.movl(Operand(base, offset + NUNBOX32_PAYLOAD_OFFSET), ToRegister(load->output()));
-    return true;
-}
-
-bool
-CodeGeneratorX86::visitStoreSlotV(LStoreSlotV *store)
-{
-    Register base = ToRegister(store->slots());
-    int32 offset = store->mir()->slot() * sizeof(js::Value);
-
-    const ValueOperand value = ToValue(store, LStoreSlotV::Value);
-
-    masm.storeValue(value, Operand(base, offset));
     return true;
 }
 
