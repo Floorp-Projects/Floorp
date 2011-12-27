@@ -44,7 +44,7 @@
 #define nsMathMLContainerFrame_h___
 
 #include "nsCOMPtr.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsInlineFrame.h"
 #include "nsMathMLAtoms.h"
@@ -66,11 +66,11 @@
 #define STRETCH_CONSIDER_ACTUAL_SIZE    0x00000001 // just use our current size
 #define STRETCH_CONSIDER_EMBELLISHMENTS 0x00000002 // size calculations include embellishments
 
-class nsMathMLContainerFrame : public nsHTMLContainerFrame,
+class nsMathMLContainerFrame : public nsContainerFrame,
                                public nsMathMLFrame {
   friend class nsMathMLmfencedFrame;
 public:
-  nsMathMLContainerFrame(nsStyleContext* aContext) : nsHTMLContainerFrame(aContext) {}
+  nsMathMLContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
@@ -108,12 +108,12 @@ public:
   SetIncrementScriptLevel(PRInt32 aChildIndex, bool aIncrement);
 
   // --------------------------------------------------------------------------
-  // Overloaded nsHTMLContainerFrame methods -- see documentation in nsIFrame.h
+  // Overloaded nsContainerFrame methods -- see documentation in nsIFrame.h
 
   virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return !(aFlags & nsIFrame::eLineParticipant) &&
-      nsHTMLContainerFrame::IsFrameOfType(aFlags &
+      nsContainerFrame::IsFrameOfType(aFlags &
               ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
   }
 
@@ -154,7 +154,7 @@ public:
   WillReflow(nsPresContext* aPresContext)
   {
     mPresentationData.flags &= ~NS_MATHML_ERROR;
-    return nsHTMLContainerFrame::WillReflow(aPresContext);
+    return nsContainerFrame::WillReflow(aPresContext);
   }
 
   NS_IMETHOD
@@ -164,7 +164,7 @@ public:
 
   {
     mPresentationData.flags &= ~NS_MATHML_STRETCH_DONE;
-    return nsHTMLContainerFrame::DidReflow(aPresContext, aReflowState, aStatus);
+    return nsContainerFrame::DidReflow(aPresContext, aReflowState, aStatus);
   }
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,

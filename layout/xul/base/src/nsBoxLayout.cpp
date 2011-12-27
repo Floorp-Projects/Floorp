@@ -45,7 +45,7 @@
 
 #include "nsBox.h"
 #include "nsCOMPtr.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsBoxLayout.h"
 
 void

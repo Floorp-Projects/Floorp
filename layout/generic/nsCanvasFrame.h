@@ -40,7 +40,7 @@
 #ifndef nsCanvasFrame_h___
 #define nsCanvasFrame_h___
 
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsIScrollPositionListener.h"
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
@@ -56,12 +56,12 @@ class nsEvent;
  * It only supports having a single child frame which must be an area
  * frame
  */
-class nsCanvasFrame : public nsHTMLContainerFrame,
+class nsCanvasFrame : public nsContainerFrame,
                       public nsIScrollPositionListener
 {
 public:
   nsCanvasFrame(nsStyleContext* aContext)
-  : nsHTMLContainerFrame(aContext),
+  : nsContainerFrame(aContext),
     mDoPaintFocus(false),
     mAddedScrollPositionListener(false) {}
 
@@ -90,7 +90,7 @@ public:
                     nsReflowStatus&          aStatus);
   virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
-    return nsHTMLContainerFrame::IsFrameOfType(aFlags &
+    return nsContainerFrame::IsFrameOfType(aFlags &
              ~(nsIFrame::eCanContainOverflowContainers));
   }
 
