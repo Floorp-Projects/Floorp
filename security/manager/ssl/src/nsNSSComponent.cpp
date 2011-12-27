@@ -828,7 +828,10 @@ nsNSSComponent::InstallLoadableRoots()
   if (!directoryService)
     return;
 
+  static const char nss_lib[] = "nss3";
   const char *possible_ckbi_locations[] = {
+    nss_lib, // This special value means: search for ckbi in the directory
+             // where nss3 is.
     NS_XPCOM_CURRENT_PROCESS_DIR,
     NS_GRE_DIR,
     0 // This special value means: 
@@ -846,9 +849,30 @@ nsNSSComponent::InstallLoadableRoots()
     }
     else
     {
-      directoryService->Get( possible_ckbi_locations[il],
-                             NS_GET_IID(nsILocalFile), 
-                             getter_AddRefs(mozFile));
+      if (possible_ckbi_locations[il] == nss_lib) {
+        // Get the location of the nss3 library.
+        char *nss_path = PR_GetLibraryFilePathname(DLL_PREFIX "nss3" DLL_SUFFIX,
+                                                   (PRFuncPtr) NSS_Initialize);
+        if (!nss_path) {
+          continue;
+        }
+        // Get the directory containing the nss3 library.
+        nsCOMPtr<nsILocalFile> nssLib(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+        if (NS_SUCCEEDED(rv)) {
+          rv = nssLib->InitWithNativePath(nsDependentCString(nss_path));
+        }
+        PR_Free(nss_path);
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr<nsIFile> file;
+          if (NS_SUCCEEDED(nssLib->GetParent(getter_AddRefs(file)))) {
+            mozFile = do_QueryInterface(file);
+          }
+        }
+      } else {
+        directoryService->Get( possible_ckbi_locations[il],
+                               NS_GET_IID(nsILocalFile), 
+                               getter_AddRefs(mozFile));
+      }
   
       if (!mozFile) {
         continue;
