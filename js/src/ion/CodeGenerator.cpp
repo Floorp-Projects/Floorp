@@ -248,6 +248,19 @@ CodeGenerator::visitCaptureAllocations(LCaptureAllocations *)
 }
 
 bool
+CodeGenerator::visitGoto(LGoto *lir)
+{
+    LBlock *target = lir->target()->lir();
+
+    // No jump necessary if we can fall through to the next block.
+    if (isNextBlock(target))
+        return true;
+
+    masm.jump(target->label());
+    return true;
+}
+
+bool
 CodeGenerator::visitParameter(LParameter *lir)
 {
     return true;
@@ -260,13 +273,49 @@ CodeGenerator::visitStart(LStart *lir)
 }
 
 bool
-CodeGenerator::visitOsrEntry(LOsrEntry *entry)
+CodeGenerator::visitReturn(LReturn *lir)
+{
+#if defined(JS_NUNBOX32)
+    DebugOnly<LAllocation *> type    = lir->getOperand(TYPE_INDEX);
+    DebugOnly<LAllocation *> payload = lir->getOperand(PAYLOAD_INDEX);
+    JS_ASSERT(ToRegister(type)    == JSReturnReg_Type);
+    JS_ASSERT(ToRegister(payload) == JSReturnReg_Data);
+#elif defined(JS_PUNBOX64)
+    DebugOnly<LAllocation *> result = lir->getOperand(0);
+    JS_ASSERT(ToRegister(result) == JSReturnReg);
+#endif
+    // Don't emit a jump to the return label if this is the last block.
+    if (current->mir() != *gen->graph().poBegin())
+        masm.jump(returnLabel_);
+    return true;
+}
+
+bool
+CodeGenerator::visitOsrEntry(LOsrEntry *lir)
 {
     // Remember the OSR entry offset into the code buffer.
     setOsrEntryOffset(masm.size());
 
     // Allocate the full frame for this function.
     masm.subPtr(Imm32(frameSize()), StackPointer);
+    return true;
+}
+
+bool
+CodeGenerator::visitStackArg(LStackArg *lir)
+{
+    ValueOperand val = ToValue(lir, 0);
+    uint32 argslot = lir->argslot();
+    int32 stack_offset = StackOffsetOfPassedArg(argslot);
+
+    masm.storeValue(val, Address(StackPointer, stack_offset));
+    return true;
+}
+
+bool
+CodeGenerator::visitInteger(LInteger *lir)
+{
+    masm.move32(Imm32(lir->getValue()), ToRegister(lir->output()));
     return true;
 }
 
@@ -282,6 +331,18 @@ CodeGenerator::visitSlots(LSlots *lir)
 {
     Address slots(ToRegister(lir->object()), JSObject::offsetOfSlots());
     masm.loadPtr(slots, ToRegister(lir->output()));
+    return true;
+}
+
+bool
+CodeGenerator::visitStoreSlotV(LStoreSlotV *store)
+{
+    Register base = ToRegister(store->slots());
+    int32 offset  = store->mir()->slot() * sizeof(Value);
+
+    const ValueOperand value = ToValue(store, LStoreSlotV::Value);
+
+    masm.storeValue(value, Address(base, offset));
     return true;
 }
 
