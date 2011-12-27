@@ -302,22 +302,15 @@ EXPORTS_skia += \
 	$(NULL)
 CPPSRCS += \
 	SkFontHost_mac_coretext.cpp \
-	SkBitmapProcState_opts_SSE2.cpp \
-	SkBlitRow_opts_SSE2.cpp \
-	SkUtils_opts_SSE2.cpp \
-	opts_check_SSE2.cpp \
 	SkTime_Unix.cpp \
 	$(NULL)
 endif
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += \
-	SkBitmapProcState_opts_arm.cpp \
-	SkBlitRow_opts_arm.cpp \
 	SkFontHost_FreeType.cpp \
 	SkFontHost_android.cpp \
 	SkFontHost_gamma.cpp \
-	SkUtils_opts_none.cpp \
 	SkMMapStream.cpp \
 	SkTime_Unix.cpp \
 	$(NULL)
@@ -334,11 +327,31 @@ EXPORTS_skia += \
 CPPSRCS += \
 	SkFontHost_win.cpp \
 	SkTime_win.cpp \
+	$(NULL)
+endif
+
+ifneq (,$(INTEL_ARCHITECTURE))
+CPPSRCS += \
 	SkBitmapProcState_opts_SSE2.cpp \
 	SkBlitRow_opts_SSE2.cpp \
 	SkUtils_opts_SSE2.cpp \
 	opts_check_SSE2.cpp \
 	$(NULL)
+else
+ifeq ($(CPU_ARCH)_$(GNU_CC),arm_1)
+CPPSRCS += \
+	SkBitmapProcState_opts_arm.cpp \
+	SkBlitRow_opts_arm.cpp \
+	opts_check_arm.cpp \
+	$(NULL)
+SSRCS += memset.arm.S
+else
+CPPSRCS += \
+	SkBitmapProcState_opts_none.cpp \
+	SkBlitRow_opts_none.cpp \
+	SkUtils_opts_none.cpp \
+	$(NULL)
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
