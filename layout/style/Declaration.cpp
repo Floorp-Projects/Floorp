@@ -299,6 +299,17 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       }
       break;
     }
+    case eCSSProperty_border_image:
+      AppendValueToString(eCSSProperty_border_image_source, aValue);
+      aValue.Append(PRUnichar(' '));
+      AppendValueToString(eCSSProperty_border_image_slice, aValue);
+      aValue.Append(NS_LITERAL_STRING(" / "));
+      AppendValueToString(eCSSProperty_border_image_width, aValue);
+      aValue.Append(NS_LITERAL_STRING(" / "));
+      AppendValueToString(eCSSProperty_border_image_outset, aValue);
+      aValue.Append(PRUnichar(' '));
+      AppendValueToString(eCSSProperty_border_image_repeat, aValue);
+      break;
     case eCSSProperty_border: {
       const nsCSSProperty* subproptables[3] = {
         nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color),

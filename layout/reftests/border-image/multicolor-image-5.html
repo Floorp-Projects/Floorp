@@ -31,62 +31,61 @@
   }
 
   div.one {
-    -moz-border-image: url(10x5multicolor.png) 2 2 1 3 stretch;
-    -khtml-border-image: url(10x5multicolor.png) 2 2 1 3 stretch;
-    border-image: url(10x5multicolor.png) 2 2 1 3 stretch;
+    -moz-border-image: url(10x5multicolor.png) 2 2 1 3 fill stretch;
+    -khtml-border-image: url(10x5multicolor.png) 2 2 1 3 fill stretch;
+    border-image: url(10x5multicolor.png) 2 2 1 3 fill stretch;
     border-width: 4px 6px 8px 11px;
+    border-style: solid;
     width: 9px;
     height: 1px;
   }
 
   div.two {
-    -moz-border-image: url(10x5multicolor.png) 40% 20% 20% 30% repeat;
-    -khtml-border-image: url(10x5multicolor.png) 40% 20% 20% 30% repeat;
-    border-image: url(10x5multicolor.png) 40% 20% 20% 30% repeat;
+    -moz-border-image: url(10x5multicolor.png) 40% 20% 20% 30% fill repeat;
+    -khtml-border-image: url(10x5multicolor.png) 40% 20% 20% 30% fill repeat;
+    border-image: url(10x5multicolor.png) 40% 20% 20% 30% fill repeat;
     border-width: 3px 1px 0px 4px;
+    border-style: solid;
     width: 2px;
     height: 17px;
   }
 
   div.three {
-    -moz-border-image: url(10x5multicolor.png) 40% 2 1 30% round;
-    -khtml-border-image: url(10x5multicolor.png) 40% 2 1 30% round;
-    border-image: url(10x5multicolor.png) 40% 2 1 30% round;
+    -moz-border-image: url(10x5multicolor.png) 40% 2 1 30% fill round;
+    -khtml-border-image: url(10x5multicolor.png) 40% 2 1 30% fill round;
+    border-image: url(10x5multicolor.png) 40% 2 1 30% fill round;
     border-width: 10px 2px 5px 3px;
+    border-style: solid;
     width: 17px;
     height: 8px;
   }
 
   div.four {
-    -moz-border-image: url(10x5multicolor.png) 2 2 20% 30% stretch round;
-    -khtml-border-image: url(10x5multicolor.png) 2 2 20% 30% stretch round;
-    border-image: url(10x5multicolor.png) 2 2 20% 30% stretch round;
+    -moz-border-image: url(10x5multicolor.png) 2 2 20% 30% fill stretch round;
+    -khtml-border-image: url(10x5multicolor.png) 2 2 20% 30% fill stretch round;
+    border-image: url(10x5multicolor.png) 2 2 20% 30% fill stretch round;
     border-width: 5px 7px 1px 0;
+    border-style: solid;
     width: 8px;
     height: 5px;
   }
 
   div.five {
-    border-width: 5px 6px 7px 8px; /* ignored */
-    border-width: 5px 6px 7px 8px ! important; /* ignored */
-    -moz-border-image: url(10x5multicolor.png) 40% 2 1 30% / 4px 8px 10px 2px repeat stretch;
-    -khtml-border-image: url(10x5multicolor.png) 40% 2 1 30% / 4px 8px 10px 2px repeat stretch;
-    border-image: url(10x5multicolor.png) 40% 2 1 30% / 4px 8px 10px 2px repeat stretch;
-    border-width: 5px 6px 7px 8px; /* ignored */
-    border-width: 5px 6px 7px 8px ! important; /* ignored */
+    border-width: 4px 8px 10px 2px;
+    border-style: solid;
+    -moz-border-image: url(10x5multicolor.png) 40% 2 1 30% fill repeat stretch;
+    -khtml-border-image: url(10x5multicolor.png) 40% 2 1 30% fill repeat stretch;
+    border-image: url(10x5multicolor.png) 40% 2 1 30% fill repeat stretch;
     width: 0;
     height: 8px;
   }
-  div.five {
-    border-width: 5px 6px 7px 8px; /* ignored */
-    border-width: 5px 6px 7px 8px ! important; /* ignored */
-  }
 
   div.six {
-    border-width: 5px 6px 7px 8px; /* ignored */
-    -moz-border-image: url(10x5multicolor.png) 40% 2 1 30% / 4px 0 10px 2px round repeat;
-    -khtml-border-image: url(10x5multicolor.png) 40% 2 1 30% / 4px 0 10px 2px round repeat;
-    border-image: url(10x5multicolor.png) 40% 2 1 30% / 4px 0 10px 2px round repeat;
+    border-width: 4px 0 10px 2px;
+    border-style: solid;
+    -moz-border-image: url(10x5multicolor.png) 40% 2 1 30% round repeat;
+    -khtml-border-image: url(10x5multicolor.png) 40% 2 1 30% round repeat;
+    border-image: url(10x5multicolor.png) 40% 2 1 30% round repeat;
     width: 17px;
     height: 0;
   }
@@ -96,6 +95,7 @@
     -khtml-border-image: url(10x5multicolor.png) 40% 2 1 30% stretch repeat;
     border-image: url(10x5multicolor.png) 40% 2 1 30% stretch repeat;
     border-width: 1px 3px 0 0;
+    border-style: solid;
     width: 17px;
     height: 0;
   }

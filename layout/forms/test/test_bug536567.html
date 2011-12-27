@@ -24,7 +24,7 @@ const Cu = Components.utils;
 const Cm = Components.manager;
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.reset();
+MockFilePicker.init();
 
 var ioSvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
@@ -134,7 +134,7 @@ function endTest() {
       dirs[i].remove(true);
     }
 
-    MockFilePicker.reset();
+    MockFilePicker.cleanup();
     SimpleTest.finish();
 }
 

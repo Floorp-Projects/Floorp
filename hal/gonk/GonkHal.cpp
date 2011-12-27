@@ -41,6 +41,7 @@
 
 #include "hardware_legacy/uevent.h"
 #include "Hal.h"
+#include "HalImpl.h"
 #include "mozilla/dom/battery/Constants.h"
 #include "mozilla/FileUtils.h"
 #include "nsAlgorithm.h"

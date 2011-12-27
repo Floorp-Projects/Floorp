@@ -696,10 +696,17 @@ class YarrGenerator : private MacroAssembler {
 #endif
 
                 if (m_pattern.m_ignoreCase) {
+#if WTF_CPU_BIG_ENDIAN
+                    if (isASCIIAlpha(ch))
+                        mask |= 32 << 16;
+                    if (isASCIIAlpha(ch2))
+                        mask |= 32;
+#else
                     if (isASCIIAlpha(ch))
                         mask |= 32;
                     if (isASCIIAlpha(ch2))
                         mask |= 32 << 16;
+#endif
                 }
 
                 BaseIndex address(input, index, TimesTwo, (term->inputPosition - m_checked) * sizeof(UChar));

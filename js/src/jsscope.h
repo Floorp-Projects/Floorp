@@ -416,10 +416,11 @@ class BaseShape : public js::gc::Cell
     inline void adoptUnowned(UnownedBaseShape *other);
     inline void setOwned(UnownedBaseShape *unowned);
 
-    inline void setParent(JSObject *obj);
+    inline void setObjectParent(JSObject *obj);
     JSObject *getObjectParent() { return parent; }
 
     void setObjectFlag(Flag flag) { JS_ASSERT(!(flag & ~OBJECT_FLAG_MASK)); flags |= flag; }
+    uint32_t getObjectFlags() const { return flags & OBJECT_FLAG_MASK; }
 
     bool hasGetterObject() const { return !!(flags & HAS_GETTER_OBJECT); }
     JSObject *getterObject() const { JS_ASSERT(hasGetterObject()); return getterObj; }
@@ -445,6 +446,9 @@ class BaseShape : public js::gc::Cell
 
     /* Get the canonical base shape for an unowned one (i.e. identity). */
     inline UnownedBaseShape *toUnowned();
+
+    /* Check that an owned base shape is consistent with its unowned base. */
+    inline void assertConsistency();
 
     /* For JIT usage */
     static inline size_t offsetOfClass() { return offsetof(BaseShape, clasp); }
@@ -631,7 +635,7 @@ struct Shape : public js::gc::Cell
     static bool setObjectParent(JSContext *cx, JSObject *obj, JSObject *proto, HeapPtrShape *listp);
     static bool setObjectFlag(JSContext *cx, BaseShape::Flag flag, JSObject *proto, HeapPtrShape *listp);
 
-    uint32_t getObjectFlags() const { return base()->flags & BaseShape::OBJECT_FLAG_MASK; }
+    uint32_t getObjectFlags() const { return base()->getObjectFlags(); }
     bool hasObjectFlag(BaseShape::Flag flag) const {
         JS_ASSERT(!(flag & ~BaseShape::OBJECT_FLAG_MASK));
         return !!(base()->flags & flag);

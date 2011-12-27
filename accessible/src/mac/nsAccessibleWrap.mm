@@ -208,6 +208,28 @@ nsAccessibleWrap::InvalidateChildren()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+bool
+nsAccessibleWrap::AppendChild(nsAccessible *aAccessible)
+{
+  bool appended = nsAccessible::AppendChild(aAccessible);
+  
+  if (appended && mNativeObject)
+    [mNativeObject appendChild:aAccessible];
+
+  return appended;
+}
+
+bool
+nsAccessibleWrap::RemoveChild(nsAccessible *aAccessible)
+{
+  bool removed = nsAccessible::RemoveChild(aAccessible);
+
+  if (removed && mNativeObject)
+    [mNativeObject invalidateChildren];
+
+  return removed;
+}
+
 // if we for some reason have no native accessible, we should be skipped over (and traversed)
 // when fetching all unignored children, etc.  when counting unignored children, we will not be counted.
 bool 

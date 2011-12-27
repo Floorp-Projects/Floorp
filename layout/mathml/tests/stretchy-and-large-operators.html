@@ -1,0 +1,117 @@
+<!-- -*- mode: HTML; tab-width: 2; indent-tabs-mode: nil; -*- -->
+<!-- vim: set tabstop=2 expandtab shiftwidth=2 textwidth=80:  -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test Stretchy and Large Operators</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla MathML Project.
+   -
+   - The Initial Developer of the Original Code is
+   - Frédéric Wang.
+   - Portions created by the Initial Developer are Copyright (C) 2011
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+    <script type="text/javascript"
+            src="stretchy-and-large-operators.js"></script>
+    <script type="text/javascript">
+      function createMo(aOperator, aForm)
+      {
+        var mo = document.createElement("mo");
+        mo.appendChild(document.createTextNode(aOperator));
+        mo.setAttribute("form", aForm);
+        return mo;
+      }
+
+      function createTest(aEntry)
+      {
+        var opname = aEntry[0];
+        var operator = aEntry[1];
+        var type = aEntry[2];
+        var form = aEntry[3];
+
+        var div = document.createElement("div");
+        div.appendChild(document.createTextNode(opname));
+
+        var math = document.createElement("math");
+
+        switch (type)
+        {
+          case "l": // largeop
+            math.appendChild(createMo(operator, form));
+            var mstyle = document.createElement("mstyle");
+            mstyle.setAttribute("displaystyle", "true");
+            mstyle.appendChild(createMo(operator, form));
+            math.appendChild(mstyle);
+          break;
+
+          case "v": // vertical
+            for (var i = 1; i < 10; i+=2) {
+              var mo = createMo(operator, form);
+              mo.setAttribute("minsize", (.5 * i) + "em");
+              math.appendChild(mo);
+            }
+          break;
+
+          case "h": // horizontal
+            for (var i = 1; i < 10; i+=2) {
+              var mo = createMo(operator, form);
+              var mspace = document.createElement("mspace");
+              mspace.setAttribute("width", (.5 * i) + "em");
+              var mover = document.createElement("mover");
+              mover.setAttribute("accent", "false");
+              mover.appendChild(mspace);
+              mover.appendChild(mo);
+              math.appendChild(mover);
+            }
+          break;
+
+          default:
+          break;
+        }
+
+        div.appendChild(math);
+        document.body.appendChild(div);
+      }
+
+      function init()
+      {
+        for (var i in stretchy_and_large_operators) {
+          createTest(stretchy_and_large_operators[i]);
+        }
+      }
+    </script>
+  </head>
+
+  <body onload="init()">
+
+ </body>
+</html>

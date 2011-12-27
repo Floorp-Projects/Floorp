@@ -82,6 +82,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
+#include "js/MemoryMetrics.h"
 
 #include "jsarrayinlines.h"
 #include "jsinterpinlines.h"
@@ -1318,12 +1319,14 @@ DirectEval(JSContext *cx, const CallArgs &args)
 
     AutoFunctionCallProbe callProbe(cx, args.callee().toFunction(), caller->script());
 
-    JSObject *scopeChain =
-        GetScopeChainFast(cx, caller, JSOP_EVAL, JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH);
+    JSObject *scopeChain = GetScopeChain(cx, caller);
+    if (!scopeChain)
+        return false;
 
-    return scopeChain &&
-           WarnOnTooManyArgs(cx, args) &&
-           EvalKernel(cx, args, DIRECT_EVAL, caller, *scopeChain);
+    if (!WarnOnTooManyArgs(cx, args))
+        return false;
+
+    return EvalKernel(cx, args, DIRECT_EVAL, caller, *scopeChain);
 }
 
 bool
@@ -3676,20 +3679,28 @@ block_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *v
 }
 
 const Shape *
-JSObject::defineBlockVariable(JSContext *cx, jsid id, intN index)
+JSObject::defineBlockVariable(JSContext *cx, jsid id, intN index, bool *redeclared)
 {
     JS_ASSERT(isStaticBlock());
 
+    *redeclared = false;
+
+    /* Inline JSObject::addProperty in order to trap the redefinition case. */
+    Shape **spp = nativeSearch(cx, id, true);
+    if (SHAPE_FETCH(spp)) {
+        *redeclared = true;
+        return NULL;
+    }
+
     /*
-     * Use JSPROP_ENUMERATE to aid the disassembler, and don't convert this
-     * object to dictionary mode so that we can clone the block's shape later.
+     * Don't convert this object to dictionary mode so that we can clone the
+     * block's shape later.
      */
     uint32_t slot = JSSLOT_FREE(&BlockClass) + index;
-    const Shape *shape = addProperty(cx, id,
-                                     block_getProperty, block_setProperty,
-                                     slot, JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                                     Shape::HAS_SHORTID, index,
-                                     /* allowDictionary = */ false);
+    const Shape *shape = addPropertyInternal(cx, id, block_getProperty, block_setProperty,
+                                             slot, JSPROP_ENUMERATE | JSPROP_PERMANENT,
+                                             Shape::HAS_SHORTID, index, spp,
+                                             /* allowDictionary = */ false);
     if (!shape)
         return NULL;
     return shape;
@@ -4134,7 +4145,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
 
     if (xdr->mode == JSXDR_ENCODE) {
         obj = *objp;
-        parent = obj->getStaticBlockScopeChain();
+        parent = obj->staticBlockScopeChain();
         parentId = JSScript::isValidOffset(xdr->script->objectsOffset)
                    ? FindObjectIndex(xdr->script->objects(), parent)
                    : NO_PARENT_INDEX;
@@ -4189,8 +4200,11 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
             if (!js_XDRAtom(xdr, &atom))
                 return false;
 
-            if (!obj->defineBlockVariable(cx, ATOM_TO_JSID(atom), i))
+            bool redeclared;
+            if (!obj->defineBlockVariable(cx, ATOM_TO_JSID(atom), i, &redeclared)) {
+                JS_ASSERT(!redeclared);
                 return false;
+            }
         }
     } else {
         AutoShapeVector shapes(cx);
@@ -7117,6 +7131,12 @@ js::HandleNonGenericMethodClassMismatch(JSContext *cx, CallArgs args, Native nat
     return false;
 }
 
+JS_PUBLIC_API(size_t)
+JS::SizeOfObjectDynamicSlots(JSObject *obj, JSMallocSizeOfFun mallocSizeOf)
+{
+    return obj->dynamicSlotSize(mallocSizeOf);
+}
+
 #ifdef DEBUG
 
 /*
@@ -7458,6 +7478,7 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
             fprintf(stderr, "\n");
         }
         MaybeDumpObject("argsobj", fp->maybeArgsObj());
+        MaybeDumpObject("blockChain", fp->maybeBlockChain());
         if (!fp->isDummyFrame()) {
             MaybeDumpValue("this", fp->thisValue());
             fprintf(stderr, "  rval: ");

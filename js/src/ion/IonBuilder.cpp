@@ -660,9 +660,6 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_CALL:
         return jsop_call(GET_ARGC(pc));
 
-      case JSOP_NULLBLOCKCHAIN:
-        return true;
-
       case JSOP_INT8:
         return pushConstant(Int32Value(GET_INT8(pc)));
 

@@ -48,8 +48,7 @@
 #include "nsEventDispatcher.h"
 #include "nsThreadUtils.h"
 #include "mozilla/storage.h"
-#include "xpcprivate.h"
-#include "XPCQuickStubs.h"
+#include "xpcpublic.h"
 
 #include "AsyncConnectionHelper.h"
 #include "IDBCursor.h"
@@ -398,7 +397,7 @@ IDBIndex::GetKeyPath(JSContext* aCx,
     for (PRUint32 i = 0; i < mKeyPathArray.Length(); ++i) {
       jsval val;
       nsString tmp(mKeyPathArray[i]);
-      if (!xpc_qsStringToJsval(aCx, tmp, &val)) {
+      if (!xpc::StringToJsval(aCx, tmp, &val)) {
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
 
@@ -411,7 +410,7 @@ IDBIndex::GetKeyPath(JSContext* aCx,
   }
   else {
     nsString tmp(mKeyPath);
-    if (!xpc_qsStringToJsval(aCx, tmp, aVal)) {
+    if (!xpc::StringToJsval(aCx, tmp, aVal)) {
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
   }

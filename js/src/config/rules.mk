@@ -373,6 +373,13 @@ ifdef MAPFILE
 OS_LDFLAGS += -MAP:$(MAPFILE)
 endif
 
+else #!GNU_CC
+
+ifdef DEFFILE
+OS_LDFLAGS += $(call normalizepath,$(DEFFILE))
+EXTRA_DEPS += $(DEFFILE)
+endif
+
 endif # !GNU_CC
 
 endif # WINNT
@@ -447,6 +454,7 @@ ALL_TRASH_DIRS = \
 
 ifdef QTDIR
 GARBAGE                 += $(MOCSRCS)
+GARBAGE                 += $(RCCSRCS)
 endif
 
 ifdef SIMPLE_PROGRAMS
@@ -1183,11 +1191,13 @@ host_%.$(OBJ_SUFFIX): %.mm $(GLOBAL_DEPS)
 # 'moc' only knows about #defines it gets on the command line (-D...), not in
 # included headers like mozilla-config.h
 moc_%.cpp: %.h $(GLOBAL_DEPS)
-	$(MOC) $(DEFINES) $(ACDEFINES) $< $(OUTOPTION)$@
+	$(ELOG) $(MOC) $(DEFINES) $(ACDEFINES) $< $(OUTOPTION)$@
 
 moc_%.cc: %.cc $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
 	$(ELOG) $(MOC) $(DEFINES) $(ACDEFINES) $(_VPATH_SRCS:.cc=.h) $(OUTOPTION)$@
+
+qrc_%.cpp: %.qrc $(GLOBAL_DEPS)
+	$(ELOG) $(RCC) -name $* $< $(OUTOPTION)$@
 
 ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept

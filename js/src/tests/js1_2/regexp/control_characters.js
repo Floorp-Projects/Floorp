@@ -55,12 +55,12 @@ writeHeaderToLog('Executing script: control_characters.js');
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 
-// 'àOĞ ê:i¢Ø'.match(new RegExp('.+'))
-new TestCase ( SECTION, "'àOĞ ê:i¢Ø'.match(new RegExp('.+'))",
-	       String(['àOĞ ê:i¢Ø']), String('àOĞ ê:i¢Ø'.match(new RegExp('.+'))));
+// 'Ã OÃ Ãª:iÂ¢Ã˜'.match(new RegExp('.+'))
+new TestCase ( SECTION, "'Ã OÃ Ãª:iÂ¢Ã˜'.match(new RegExp('.+'))",
+	       String(['Ã OÃ Ãª:iÂ¢Ã˜']), String('Ã OÃ Ãª:iÂ¢Ã˜'.match(new RegExp('.+'))));
 
 // string1.match(new RegExp(string1))
-var string1 = 'àOĞ ê:i¢Ø';
+var string1 = 'Ã OÃ Ãª:iÂ¢Ã˜';
 new TestCase ( SECTION, "string1 = " + string1 + " string1.match(string1)",
 	       String([string1]), String(string1.match(string1)));
 
