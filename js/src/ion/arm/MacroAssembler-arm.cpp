@@ -1010,6 +1010,11 @@ MacroAssemblerARM::freeStack(uint32 amount)
     framePushed_ -= amount;
 }
 void
+MacroAssemblerARM::move32(const Imm32 &imm, const Register &dest)
+{
+    ma_mov(imm, dest);
+}
+void
 MacroAssemblerARM::movePtr(ImmWord imm, const Register dest)
 {
     ma_mov(Imm32(imm.value), dest);

@@ -47,7 +47,6 @@
 using namespace js;
 using namespace js::ion;
 
-static const uintptr_t BAILOUT_TABLE_ENTRY_SIZE = 4;
 #if 0
 // no clue what these asserts should be.
 JS_STATIC_ASSERT(sizeof(BailoutStack) ==
@@ -95,9 +94,9 @@ BailoutEnvironment::top() const
 }
 
 #endif
+
 namespace js {
 namespace ion {
-
 
 class BailoutStack
 {
@@ -110,6 +109,7 @@ class BailoutStack
         uintptr_t frameSize_;
         uintptr_t tableOffset_;
     };
+
   private:
     double    fpregs_[FloatRegisters::Total];
     uintptr_t regs_[Registers::Total];
@@ -198,3 +198,4 @@ ion::FrameRecoveryFromInvalidation(IonCompartment *ion, InvalidationBailoutStack
     return FrameRecovery::FromSnapshot(bailout->fp(), bailout->sp(), bailout->machine(),
                                        snapshotOffset);
 }
+

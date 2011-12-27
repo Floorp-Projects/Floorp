@@ -153,19 +153,6 @@ OutOfLineBailout::accept(CodeGeneratorX86Shared *codegen)
     return codegen->visitOutOfLineBailout(this);
 }
 
-bool
-CodeGeneratorX86Shared::visitGoto(LGoto *jump)
-{
-    LBlock *target = jump->target()->lir();
-
-    // Don't bother emitting a jump if we'll flow through to the next block.
-    if (isNextBlock(target))
-        return true;
-
-    masm.jmp(target->label());
-    return true;
-}
-
 void
 CodeGeneratorX86Shared::emitBranch(Assembler::Condition cond, MBasicBlock *mirTrue,
                                    MBasicBlock *mirFalse, NaNCond ifNaN)
@@ -660,14 +647,6 @@ CodeGeneratorX86Shared::visitShiftOp(LShiftOp *ins)
             JS_NOT_REACHED("unexpected shift opcode");
     }
 
-    return true;
-}
-
-bool
-CodeGeneratorX86Shared::visitInteger(LInteger *ins)
-{
-    const LDefinition *def = ins->getDef(0);
-    masm.movl(Imm32(ins->getValue()), ToRegister(def));
     return true;
 }
 

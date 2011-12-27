@@ -95,7 +95,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
   public:
     // Instruction visitors.
-    virtual bool visitGoto(LGoto *jump);
     virtual bool visitAddI(LAddI *ins);
     virtual bool visitSubI(LSubI *ins);
     virtual bool visitBitNot(LBitNot *ins);
@@ -105,7 +104,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
 
     virtual bool visitDivI(LDivI *ins);
     virtual bool visitMoveGroup(LMoveGroup *group);
-    virtual bool visitInteger(LInteger *ins);
     virtual bool visitShiftOp(LShiftOp *ins);
 
     virtual bool visitTestIAndBranch(LTestIAndBranch *test);
@@ -163,15 +161,12 @@ private:
     bool visitUnbox(LUnbox *unbox);
     bool visitValue(LValue *value);
     bool visitOsrValue(LOsrValue *value);
-    bool visitReturn(LReturn *ret);
     bool visitDouble(LDouble *ins);
 
-    bool visitStackArg(LStackArg *arg);
     bool visitCallGeneric(LCallGeneric *call);
 
     bool visitLoadSlotV(LLoadSlotV *load);
     bool visitLoadSlotT(LLoadSlotT *load);
-    bool visitStoreSlotV(LStoreSlotV *load);
     bool visitStoreSlotT(LStoreSlotT *load);
     bool visitGuardShape(LGuardShape *guard);
     bool visitGuardClass(LGuardClass *guard);
