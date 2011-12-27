@@ -125,6 +125,7 @@ MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kin
     successorWithPhis_(NULL),
     positionInPhiSuccessor_(0),
     kind_(kind),
+    loopDepth_(0),
     mark_(false),
     immediateDominator_(NULL),
     numDominated_(0),
