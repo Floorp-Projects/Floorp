@@ -38,10 +38,13 @@
 
 #palette-box {
   margin-top: 2px;
+  -moz-appearance: listbox;
+  margin: 0 0 10px;
 }
-#palette-box > hbox > toolbarpaletteitem {
-  padding: 2px;
-  margin: 0px;
+
+#palette-box > toolbarpaletteitem {
+  padding: 8px 2px;
+  margin: 0 8px;
 }
 
 #main-box {
