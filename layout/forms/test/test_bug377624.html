@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=377624
 SimpleTest.waitForExplicitFinish();
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.reset();
+MockFilePicker.init();
 
 var testData = [["a", MockFilePicker.filterImages, 1],
                 ["b", MockFilePicker.filterAudio, 1],
@@ -88,7 +88,7 @@ function runTests() {
          "File picker should show the correct filter index");
 
       if (++currentTest == testData.length) {
-        MockFilePicker.reset();
+        MockFilePicker.cleanup();
         SimpleTest.finish();
       } else {
         launchNextTest();

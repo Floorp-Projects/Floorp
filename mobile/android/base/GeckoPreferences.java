@@ -142,7 +142,7 @@ public class GeckoPreferences
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         String prefName = preference.getKey();
-        if (prefName.equals("privacy.masterpassword.enabled")) {
+        if (prefName != null && prefName.equals("privacy.masterpassword.enabled")) {
             showDialog((Boolean)newValue ? DIALOG_CREATE_MASTER_PASSWORD : DIALOG_REMOVE_MASTER_PASSWORD);
             return false;
         }
