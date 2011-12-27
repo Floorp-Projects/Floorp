@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=36619
 SimpleTest.waitForExplicitFinish();
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
-MockFilePicker.reset();
+MockFilePicker.init();
 
 // enable popups the first time
 SpecialPowers.pushPrefEnv({'set': [
@@ -45,7 +45,7 @@ SpecialPowers.pushPrefEnv({'set': [
       document.getElementById("a").click();
       SimpleTest.executeSoon(function() {
         ok(!MockFilePicker.shown, "File picker show method should not have been called");
-        MockFilePicker.reset();
+        MockFilePicker.cleanup();
 
         SimpleTest.finish();
       });

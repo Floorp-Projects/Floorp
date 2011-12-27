@@ -14,7 +14,6 @@
 ; Mac bundle stuff
 @APPNAME@/Contents/Info.plist
 @APPNAME@/Contents/PkgInfo
-@APPNAME@/Contents/Plug-Ins/
 @APPNAME@/Contents/Resources/
 #endif
 
