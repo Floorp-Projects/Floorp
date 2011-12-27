@@ -467,7 +467,9 @@ SfxEntry::SfxEntry(AffixMgr * pmgr, affentry* dp)
     memcpy(c.l.conds1, dp->c.l.conds1, MAXCONDLEN_1);
     c.l.conds2 = dp->c.l.conds2;
   } else memcpy(c.conds, dp->c.conds, MAXCONDLEN);
-
+  next = NULL;
+  nextne = NULL;
+  nexteq = NULL;
   rappnd = myrevstrdup(appnd);
   morphcode = dp->morphcode;
   contclass = dp->contclass;
