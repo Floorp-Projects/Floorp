@@ -2305,11 +2305,20 @@ IonBuilder::jsop_newarray(uint32 count)
 }
 
 MBasicBlock *
+IonBuilder::addBlock(MBasicBlock *block)
+{
+    if (!block)
+        return NULL;
+    graph().addBlock(block);
+    block->setLoopDepth(loops_.length());
+    return block;
+}
+
+MBasicBlock *
 IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc)
 {
     MBasicBlock *block = MBasicBlock::New(graph(), info(), predecessor, pc, MBasicBlock::NORMAL);
-    graph().addBlock(block);
-    return block;
+    return addBlock(block);
 }
 
 MBasicBlock *
@@ -2394,8 +2403,7 @@ MBasicBlock *
 IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
 {
     MBasicBlock *block = MBasicBlock::NewPendingLoopHeader(graph(), info(), predecessor, pc);
-    graph().addBlock(block);
-    return block;
+    return addBlock(block);
 }
 
 // A resume point is a mapping of stack slots to MDefinitions. It is used to

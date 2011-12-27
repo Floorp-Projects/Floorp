@@ -275,57 +275,44 @@ class LiveInterval : public InlineListNode<LiveInterval>
     { }
 
     bool addRange(CodePosition from, CodePosition to);
-
     void setFrom(CodePosition from);
-
     CodePosition start();
-
     CodePosition end();
-
     CodePosition intersect(LiveInterval *other);
-
     bool covers(CodePosition pos);
-
     CodePosition nextCoveredAfter(CodePosition pos);
-
     size_t numRanges();
-
     Range *getRange(size_t i);
 
     LAllocation *getAllocation() {
         return &alloc_;
     }
-
     void setAllocation(LAllocation alloc) {
         alloc_ = alloc;
     }
-
     VirtualRegister *reg() {
         return reg_;
     }
-
     uint32 index() const {
         return index_;
     }
-
     void setIndex(uint32 index) {
         index_ = index;
     }
-
     Requirement *requirement() {
         return &requirement_;
     }
-
     void setRequirement(const Requirement &requirement) {
         requirement_ = requirement;
     }
-
     Requirement *hint() {
         return &hint_;
     }
-
     void setHint(const Requirement &hint) {
         hint_ = hint;
+    }
+    bool isSpilled() const {
+        return alloc_.isMemory();
     }
 
     bool splitFrom(CodePosition pos, LiveInterval *after);
@@ -338,7 +325,6 @@ class LiveInterval : public InlineListNode<LiveInterval>
  */
 class VirtualRegister : public TempObject
 {
-  private:
     uint32 reg_;
     LBlock *block_;
     LInstruction *ins_;
@@ -348,18 +334,9 @@ class VirtualRegister : public TempObject
     LMoveGroup *inputMoves_;
     LMoveGroup *outputMoves_;
     LAllocation *canonicalSpill_;
+    bool spillAtDefinition_;
 
   public:
-    VirtualRegister()
-      : reg_(0),
-        block_(NULL),
-        ins_(NULL),
-        intervals_(),
-        inputMoves_(NULL),
-        outputMoves_(NULL),
-        canonicalSpill_(NULL)
-    { }
-
     bool init(uint32 reg, LBlock *block, LInstruction *ins, LDefinition *def) {
         reg_ = reg;
         block_ = block;
@@ -433,6 +410,12 @@ class VirtualRegister : public TempObject
     }
     bool isDouble() {
         return def_->type() == LDefinition::DOUBLE;
+    }
+    void setSpillAtDefinition() {
+        spillAtDefinition_ = true;
+    }
+    bool mustSpillAtDefinition() const {
+        return spillAtDefinition_;
     }
 
     LiveInterval *intervalFor(CodePosition pos);
@@ -559,6 +542,7 @@ class LinearScanAllocator
     AnyRegister::Code findBestBlockedRegister(CodePosition *nextUsed);
     bool canCoexist(LiveInterval *a, LiveInterval *b);
     LMoveGroup *getMoveGroupBefore(CodePosition pos);
+    LMoveGroup *getOutputSpillMoveGroup(VirtualRegister *vreg);
     bool moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to);
     void setIntervalRequirement(LiveInterval *interval);
     void addSpillInterval(LInstruction *ins, const Requirement &req);
