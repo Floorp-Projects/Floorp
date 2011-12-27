@@ -95,6 +95,16 @@ LBlock::lastId()
     return last->id();
 }
 
+LMoveGroup *
+LBlock::getEntryMoveGroup()
+{
+    if (entryMoveGroup_)
+        return entryMoveGroup_;
+    entryMoveGroup_ = new LMoveGroup;
+    insertBefore(*begin(), entryMoveGroup_);
+    return entryMoveGroup_;
+}
+
 static size_t
 TotalOperandCount(MResumePoint *mir)
 {

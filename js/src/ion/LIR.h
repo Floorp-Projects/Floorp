@@ -684,15 +684,18 @@ typedef InlineList<LInstruction>::iterator LInstructionIterator;
 typedef InlineList<LInstruction>::reverse_iterator LInstructionReverseIterator;
 
 class LPhi;
+class LMoveGroup;
 class LBlock : public TempObject
 {
     MBasicBlock *block_;
     Vector<LPhi *, 4, IonAllocPolicy> phis_;
     InlineList<LInstruction> instructions_;
     Label label_;
+    LMoveGroup *entryMoveGroup_;
 
     LBlock(MBasicBlock *block)
-      : block_(block)
+      : block_(block),
+        entryMoveGroup_(NULL)
     { }
 
   public:
@@ -743,6 +746,7 @@ class LBlock : public TempObject
     Label *label() {
         return &label_;
     }
+    LMoveGroup *getEntryMoveGroup();
 };
 
 template <size_t Defs, size_t Operands, size_t Temps>

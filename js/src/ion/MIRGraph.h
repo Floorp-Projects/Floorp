@@ -391,6 +391,12 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MBasicBlock *loopHeader() const {
         return loopHeader_;
     }
+    void setLoopDepth(uint32 loopDepth) {
+        loopDepth_ = loopDepth;
+    }
+    uint32 loopDepth() const {
+        return loopDepth_;
+    }
 
     // Lists all blocks contained within this loop header, but not contained in
     // a nested loop header.
@@ -426,6 +432,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MBasicBlock *successorWithPhis_;
     uint32 positionInPhiSuccessor_;
     Kind kind_;
+    uint32 loopDepth_;
 
     // Utility mark for traversal algorithms.
     bool mark_;

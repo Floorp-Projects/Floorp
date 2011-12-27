@@ -802,6 +802,13 @@ LinearScanAllocator::resolveControlFlow()
                 if (!moveBefore(outputOf(predecessor->lastId()), from, to))
                     return false;
             }
+
+            if (vregs[phi].mustSpillAtDefinition() && !to->isSpilled()) {
+                // Make sure this phi is spilled at the loop header.
+                LMoveGroup *moves = successor->getEntryMoveGroup();
+                if (!moves->add(to->getAllocation(), to->reg()->canonicalSpill()))
+                    return false;
+            }
         }
 
         // Resolve split intervals with moves
@@ -869,10 +876,22 @@ LinearScanAllocator::reifyAllocations()
             // Erase the def of this interval if it's the first one
             JS_ASSERT(DefinitionCompatibleWith(reg->ins(), reg->def(), *interval->getAllocation()));
             reg->def()->setOutput(*interval->getAllocation());
+
+            if (reg->mustSpillAtDefinition() && !reg->ins()->isPhi() &&
+                (*reg->canonicalSpill() != *interval->getAllocation()))
+            {
+                // Insert a spill at the input of the next instruction. Control
+                // instructions never have outputs, so the next instruction is
+                // always valid. Note that we explicitly ignore phis, which
+                // should have been handled in resolveControlFlow().
+                LMoveGroup *output = getOutputSpillMoveGroup(reg);
+                output->add(interval->getAllocation(), reg->canonicalSpill());
+            }
         }
         else if (interval->start() != inputOf(vregs[interval->start()].block()->firstId()) &&
                  (!reg->canonicalSpill() ||
-                  reg->canonicalSpill() == interval->getAllocation() ||
+                  (reg->canonicalSpill() == interval->getAllocation() &&
+                   !reg->mustSpillAtDefinition()) ||
                   *reg->canonicalSpill() != *interval->getAllocation()))
         {
             // If this virtual register has no canonical spill location, this
@@ -996,10 +1015,23 @@ LinearScanAllocator::assign(LAllocation allocation)
             }
         }
     } else if (reg && allocation.isMemory()) {
-        if (reg->canonicalSpill())
+        if (reg->canonicalSpill()) {
             JS_ASSERT(allocation == *current->reg()->canonicalSpill());
-        else
+
+            // This interval is spilled more than once, so just always spill
+            // it at its definition.
+            reg->setSpillAtDefinition();
+        } else {
             reg->setCanonicalSpill(current->getAllocation());
+
+            // If this spill is inside a loop, and the definition is outside
+            // the loop, instead move the spill to outside the loop.
+            VirtualRegister *other = &vregs[current->start()];
+            uint32 loopDepthAtDef = reg->block()->mir()->loopDepth();
+            uint32 loopDepthAtSpill = other->block()->mir()->loopDepth();
+            if (loopDepthAtSpill > loopDepthAtDef)
+                reg->setSpillAtDefinition();
+        }
     }
 
     active.pushBack(current);
@@ -1204,6 +1236,17 @@ LinearScanAllocator::canCoexist(LiveInterval *a, LiveInterval *b)
     if (aa->isRegister() && ba->isRegister() && aa->toRegister() == ba->toRegister())
         return a->intersect(b) == CodePosition::MIN;
     return true;
+}
+
+LMoveGroup *
+LinearScanAllocator::getOutputSpillMoveGroup(VirtualRegister *vreg)
+{
+    JS_ASSERT(!vreg->ins()->isPhi());
+
+    // Only one spill occurs per instruction, so it's safe to just insert it.
+    LMoveGroup *moves = new LMoveGroup;
+    vreg->block()->insertAfter(vreg->ins(), moves);
+    return moves;
 }
 
 LMoveGroup *
