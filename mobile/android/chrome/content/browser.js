@@ -3503,6 +3503,8 @@ var PermissionsHelper = {
 
 var MasterPassword = {
   pref: "privacy.masterpassword.enabled",
+  _tokenName: "",
+
   get _secModuleDB() {
     delete this._secModuleDB;
     return this._secModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(Ci.nsIPKCS11ModuleDB);
