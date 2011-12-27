@@ -903,7 +903,7 @@ LinearScanAllocator::reifyAllocations()
     }
 
     // Set the graph overall stack height
-    graph.setLocalSlotCount(stackAssignment.stackHeight());
+    graph.setLocalSlotCount(stackSlotAllocator.stackHeight());
 
     return true;
 }
@@ -1054,14 +1054,11 @@ LinearScanAllocator::spill()
     }
 
     uint32 stackSlot;
-    if (current->reg()->isDouble()) {
-        if (!stackAssignment.allocateDoubleSlot(&stackSlot))
-            return false;
-    } else {
-        if (!stackAssignment.allocateSlot(&stackSlot))
-            return false;
-    }
-    JS_ASSERT(stackSlot <= stackAssignment.stackHeight());
+    if (current->reg()->isDouble())
+        stackSlot = stackSlotAllocator.allocateDoubleSlot();
+    else
+        stackSlot = stackSlotAllocator.allocateSlot();
+    JS_ASSERT(stackSlot <= stackSlotAllocator.stackHeight());
 
     return assign(LStackSlot(stackSlot, current->reg()->isDouble()));
 }
@@ -1079,9 +1076,9 @@ LinearScanAllocator::finishInterval(LiveInterval *interval)
     bool lastInterval = interval->index() == (interval->reg()->numIntervals() - 1);
     if (alloc->isStackSlot() && (*alloc != *interval->reg()->canonicalSpill() || lastInterval)) {
         if (alloc->toStackSlot()->isDouble())
-            stackAssignment.freeDoubleSlot(alloc->toStackSlot()->slot());
+            stackSlotAllocator.freeDoubleSlot(alloc->toStackSlot()->slot());
         else
-            stackAssignment.freeSlot(alloc->toStackSlot()->slot());
+            stackSlotAllocator.freeSlot(alloc->toStackSlot()->slot());
     }
 
     handled.pushBack(interval);

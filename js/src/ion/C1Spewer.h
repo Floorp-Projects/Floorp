@@ -71,6 +71,7 @@ class C1Spewer
 
   private:
     void spewPass(FILE *fp, MBasicBlock *block);
+    void spewIntervals(FILE *fp, LinearScanAllocator *regalloc, LInstruction *ins, size_t &nextId);
     void spewIntervals(FILE *fp, MBasicBlock *block, LinearScanAllocator *regalloc, size_t &nextId);
 };
 

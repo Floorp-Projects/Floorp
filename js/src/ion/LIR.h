@@ -59,16 +59,6 @@
 #include "Bailouts.h"
 #include "VMFunctions.h"
 
-#if defined(JS_CPU_X86)
-# include "x86/StackAssignment-x86.h"
-#elif defined(JS_CPU_X64)
-# include "x64/StackAssignment-x64.h"
-#elif defined(JS_CPU_ARM)
-# include "arm/StackAssignment-arm.h"
-#else
-#error "CPU Not Supported"
-#endif
-
 namespace js {
 namespace ion {
 
