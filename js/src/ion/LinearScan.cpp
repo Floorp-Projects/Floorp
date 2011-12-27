@@ -1039,6 +1039,33 @@ LinearScanAllocator::assign(LAllocation allocation)
     return true;
 }
 
+uint32
+LinearScanAllocator::allocateSlotFor(const LiveInterval *interval)
+{
+    SlotList *freed;
+    if (interval->reg()->type() == LDefinition::DOUBLE)
+        freed = &finishedDoubleSlots_;
+    else
+        freed = &finishedSlots_;
+
+    if (!freed->empty()) {
+        LiveInterval *maybeDead = freed->back();
+        if (maybeDead->end() <= interval->reg()->getInterval(0)->start()) {
+            // This spill slot is dead before the start of the interval trying
+            // to reuse the slot, so reuse is safe. Otherwise, we could
+            // encounter a situation where a stack slot is allocated and freed
+            // inside a loop, but the same allocation is then used to hold a
+            // loop-carried value.
+            freed->popBack();
+            return maybeDead->reg()->canonicalSpill()->toStackSlot()->slot();
+        }
+    }
+
+    if (current->reg()->isDouble())
+        return stackSlotAllocator.allocateDoubleSlot();
+    return stackSlotAllocator.allocateSlot();
+}
+
 bool
 LinearScanAllocator::spill()
 {
@@ -1053,11 +1080,7 @@ LinearScanAllocator::spill()
         return assign(*current->reg()->canonicalSpill());
     }
 
-    uint32 stackSlot;
-    if (current->reg()->isDouble())
-        stackSlot = stackSlotAllocator.allocateDoubleSlot();
-    else
-        stackSlot = stackSlotAllocator.allocateSlot();
+    uint32 stackSlot = allocateSlotFor(current);
     JS_ASSERT(stackSlot <= stackSlotAllocator.stackHeight());
 
     return assign(LStackSlot(stackSlot, current->reg()->isDouble()));
@@ -1076,9 +1099,9 @@ LinearScanAllocator::finishInterval(LiveInterval *interval)
     bool lastInterval = interval->index() == (interval->reg()->numIntervals() - 1);
     if (alloc->isStackSlot() && (*alloc != *interval->reg()->canonicalSpill() || lastInterval)) {
         if (alloc->toStackSlot()->isDouble())
-            stackSlotAllocator.freeDoubleSlot(alloc->toStackSlot()->slot());
+            finishedDoubleSlots_.append(interval);
         else
-            stackSlotAllocator.freeSlot(alloc->toStackSlot()->slot());
+            finishedSlots_.append(interval);
     }
 
     handled.pushBack(interval);
