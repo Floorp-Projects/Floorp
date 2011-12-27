@@ -55,7 +55,6 @@
 
 #include "imgILoader.h"
 #include "imgIContainer.h"
-#include "nsStubImageDecoderObserver.h"
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
@@ -68,31 +67,6 @@
 using namespace mozilla;
 
 NS_DECLARE_FRAME_PROPERTY(FontSizeInflationProperty, nsnull)
-
-class nsBulletListener : public nsStubImageDecoderObserver
-{
-public:
-  nsBulletListener();
-  virtual ~nsBulletListener();
-
-  NS_DECL_ISUPPORTS
-  // imgIDecoderObserver (override nsStubImageDecoderObserver)
-  NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
-  NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, bool aCurrentFrame,
-                             const nsIntRect *aRect);
-  NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsresult status,
-                          const PRUnichar *statusArg);
-  NS_IMETHOD OnImageIsAnimated(imgIRequest *aRequest);
-
-  // imgIContainerObserver (override nsStubImageDecoderObserver)
-  NS_IMETHOD FrameChanged(imgIContainer *aContainer,
-                          const nsIntRect *dirtyRect);
-
-  void SetFrame(nsBulletFrame *frame) { mFrame = frame; }
-
-private:
-  nsBulletFrame *mFrame;
-};
 
 NS_IMPL_FRAMEARENA_HELPERS(nsBulletFrame)
 
@@ -113,8 +87,9 @@ nsBulletFrame::DestroyFrom(nsIFrame* aDestructRoot)
     mImageRequest = nsnull;
   }
 
-  if (mListener)
-    reinterpret_cast<nsBulletListener*>(mListener.get())->SetFrame(nsnull);
+  if (mListener) {
+    mListener->SetFrame(nsnull);
+  }
 
   // Let base class do the rest
   nsFrame::DestroyFrom(aDestructRoot);
@@ -156,12 +131,8 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   if (newRequest) {
 
     if (!mListener) {
-      nsBulletListener *listener = new nsBulletListener();
-      NS_ADDREF(listener);
-      listener->SetFrame(this);
-      listener->QueryInterface(NS_GET_IID(imgIDecoderObserver), getter_AddRefs(mListener));
-      NS_ASSERTION(mListener, "queryinterface for the listener failed");
-      NS_RELEASE(listener);
+      mListener = new nsBulletListener();
+      mListener->SetFrame(this);
     }
 
     bool needNewRequest = true;

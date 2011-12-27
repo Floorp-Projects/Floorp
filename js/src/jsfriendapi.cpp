@@ -184,19 +184,10 @@ AutoSwitchCompartment::~AutoSwitchCompartment()
     cx->compartment = oldCompartment;
 }
 
-JS_FRIEND_API(size_t)
-js::GetObjectDynamicSlotSize(JSObject *obj, JSMallocSizeOfFun mallocSizeOf)
+JS_FRIEND_API(bool)
+js::IsSystemCompartment(const JSCompartment *c)
 {
-    return obj->dynamicSlotSize(mallocSizeOf);
-}
-
-JS_FRIEND_API(size_t)
-js::GetCompartmentShapeTableSize(JSCompartment *c, JSMallocSizeOfFun mallocSizeOf)
-{
-    return c->baseShapes.sizeOfExcludingThis(mallocSizeOf)
-         + c->initialShapes.sizeOfExcludingThis(mallocSizeOf)
-         + c->newTypeObjects.sizeOfExcludingThis(mallocSizeOf)
-         + c->lazyTypeObjects.sizeOfExcludingThis(mallocSizeOf);
+    return c->isSystemCompartment;
 }
 
 JS_FRIEND_API(bool)
@@ -221,6 +212,12 @@ JS_FRIEND_API(uint32_t)
 js::GetObjectSlotSpan(const JSObject *obj)
 {
     return obj->slotSpan();
+}
+
+JS_FRIEND_API(bool)
+js::IsObjectInContextCompartment(const JSObject *obj, const JSContext *cx)
+{
+    return obj->compartment() == cx->compartment;
 }
 
 JS_FRIEND_API(bool)

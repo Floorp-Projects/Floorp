@@ -255,7 +255,7 @@ CreateIoCompletionPortProto = WINFUNCTYPE(HANDLE,      # Return Type
                                           DWORD        # Number of Threads
                                          )
 CreateIoCompletionPortFlags = ((1, "FileHandle", INVALID_HANDLE_VALUE),
-                               (1, "ExistingCompletionPort", None),
+                               (1, "ExistingCompletionPort", 0),
                                (1, "CompletionKey", c_ulong(0)),
                                (1, "NumberOfConcurrentThreads", 0))
 CreateIoCompletionPort = CreateIoCompletionPortProto(("CreateIoCompletionPort",

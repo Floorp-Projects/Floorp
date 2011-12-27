@@ -1485,11 +1485,13 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
 // Maybe this macro should check for class->enumerate ==
 // XPC_WN_Shared_Proto_Enumerate or something rather than checking for
 // 4 classes?
-#define IS_PROTO_CLASS(clazz)                                                 \
-    ((clazz) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||                      \
-     (clazz) == &XPC_WN_NoMods_NoCall_Proto_JSClass ||                        \
-     (clazz) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||                 \
-     (clazz) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass)
+static inline bool IS_PROTO_CLASS(js::Class *clazz)
+{
+    return clazz == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
+           clazz == &XPC_WN_NoMods_NoCall_Proto_JSClass ||
+           clazz == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||
+           clazz == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass;
+}
 
 /***************************************************************************/
 
@@ -3657,8 +3659,6 @@ private:
 /**************************************************************/
 // All of our thread local storage.
 
-#define BAD_TLS_INDEX ((PRUint32) -1)
-
 class XPCPerThreadData
 {
     typedef mozilla::Mutex Mutex;
@@ -3834,31 +3834,6 @@ public:
 private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
-
-class nsJSRuntimeServiceImpl : public nsIJSRuntimeService,
-                               public nsSupportsWeakReference
-{
- public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIJSRUNTIMESERVICE
-
-    // This returns an AddRef'd pointer. It does not do this with an out param
-    // only because this form  is required by generic module macro:
-    // NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR
-    static nsJSRuntimeServiceImpl* GetSingleton();
-
-    static void FreeSingleton();
-
-    nsJSRuntimeServiceImpl();
-    virtual ~nsJSRuntimeServiceImpl();
-
-    static void InitStatics() { gJSRuntimeService = nsnull; }
- protected:
-    static nsJSRuntimeServiceImpl* gJSRuntimeService;
-    nsCOMPtr<nsIXPCScriptable> mBackstagePass;
-};
-
-/***************************************************************************/
 // 'Components' object
 
 class nsXPCComponents : public nsIXPCComponents,

@@ -3341,7 +3341,7 @@ var PluginHelper = {
 
 var PermissionsHelper = {
 
-  _permissonTypes: ["password", "geo", "popup", "indexedDB",
+  _permissonTypes: ["password", "geolocation", "popup", "indexedDB",
                     "offline-app", "desktop-notification"],
   _permissionStrings: {
     "password": {
@@ -3349,10 +3349,10 @@ var PermissionsHelper = {
       allowed: "password.remember",
       denied: "password.never"
     },
-    "geo": {
+    "geolocation": {
       label: "geolocation.shareLocation",
-      allowed: "geolocation.alwaysShare",
-      denied: "geolocation.neverShare"
+      allowed: "geolocation.alwaysAllow",
+      denied: "geolocation.neverAllow"
     },
     "popup": {
       label: "blockPopups.label",
@@ -3444,7 +3444,7 @@ var PermissionsHelper = {
    *
    * @param aType
    *        The permission type string stored in permission manager.
-   *        e.g. "cookie", "geo", "indexedDB", "popup", "image"
+   *        e.g. "geolocation", "indexedDB", "popup"
    *
    * @return A permission value defined in nsIPermissionManager.
    */
@@ -3465,7 +3465,7 @@ var PermissionsHelper = {
     }
 
     // Geolocation consumers use testExactPermission
-    if (aType == "geo")
+    if (aType == "geolocation")
       return Services.perms.testExactPermission(aURI, aType);
 
     return Services.perms.testPermission(aURI, aType);
@@ -3476,7 +3476,7 @@ var PermissionsHelper = {
    *
    * @param aType
    *        The permission type string stored in permission manager.
-   *        e.g. "cookie", "geo", "indexedDB", "popup", "image"
+   *        e.g. "geolocation", "indexedDB", "popup"
    */
   clearPermission: function clearPermission(aURI, aType) {
     // Password saving isn't a nsIPermissionManager permission type, so handle
@@ -3497,6 +3497,8 @@ var PermissionsHelper = {
 
 var MasterPassword = {
   pref: "privacy.masterpassword.enabled",
+  _tokenName: "",
+
   get _secModuleDB() {
     delete this._secModuleDB;
     return this._secModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(Ci.nsIPKCS11ModuleDB);

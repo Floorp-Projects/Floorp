@@ -60,7 +60,7 @@ f9 = (function() {
     for each(let w in []) {}
   }
 })
-trap(f9, 22, undefined);
+trap(f9, 23, undefined);
 for (b in f9())
   (function() {})()
 

@@ -1726,7 +1726,8 @@ JSFunction::initBoundFunction(JSContext *cx, const Value &thisArg,
     if (!toDictionaryMode(cx))
         return false;
 
-    lastProperty()->base()->setObjectFlag(BaseShape::BOUND_FUNCTION);
+    if (!setFlag(cx, BaseShape::BOUND_FUNCTION))
+        return false;
 
     if (!setSlotSpan(cx, BOUND_FUNCTION_RESERVED_SLOTS + argslen))
         return false;
@@ -2281,7 +2282,7 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
 }
 
 JSFunction *
-js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
+js_NewFlatClosure(JSContext *cx, JSFunction *fun)
 {
     /*
      * Flat closures cannot yet be partial, that is, all upvars must be copied,

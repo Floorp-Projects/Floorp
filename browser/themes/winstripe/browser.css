@@ -1819,7 +1819,9 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   background-repeat: no-repeat;
   margin: 0;
   padding: 2px 0 4px;
-  -moz-border-image: url(tabbrowser/tab.png) 4 3 0 / 4px 3px 0 repeat stretch;
+  border-width: 4px 3px 0;
+  border-style: solid;
+  -moz-border-image: url(tabbrowser/tab.png) 4 3 0 fill repeat stretch;
   border-radius: 0;
 }
 
@@ -2014,7 +2016,9 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]),
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]) {
-  -moz-border-image: url("chrome://browser/skin/tabbrowser/tab-overflow-border.png") 0 2 0 2 / 0 2px 0 0;
+  border-width: 0 2px 0 0;
+  border-style: solid;
+  -moz-border-image: url("chrome://browser/skin/tabbrowser/tab-overflow-border.png") 0 2 0 2 fill;
 }
 
 .tabs-newtab-button > .toolbarbutton-icon {
@@ -2312,7 +2316,9 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   background-clip: padding-box;
   padding-left: 3px;
   border-radius: 2.5px 0 0 2.5px;
-  -moz-border-image: url("chrome://browser/skin/urlbar-arrow.png") 0 8 0 0 / 0 8px 0 0;
+  border-width: 0 8px 0 0;
+  border-style: solid;
+  -moz-border-image: url("chrome://browser/skin/urlbar-arrow.png") 0 8 0 0 fill;
   -moz-margin-end: -8px;
 }
 
@@ -2612,14 +2618,18 @@ panel[dimmed="true"] {
 .statuspanel-label:-moz-locale-dir(ltr):not([mirror]),
 .statuspanel-label:-moz-locale-dir(rtl)[mirror] {
   border-right-style: solid;
+  /* disabled for triggering grayscale AA (bug 659213)
   border-top-right-radius: .3em;
+  */
   margin-right: 1em;
 }
 
 .statuspanel-label:-moz-locale-dir(rtl):not([mirror]),
 .statuspanel-label:-moz-locale-dir(ltr)[mirror] {
   border-left-style: solid;
+  /* disabled for triggering grayscale AA (bug 659213)
   border-top-left-radius: .3em;
+  */
   margin-left: 1em;
 }
 

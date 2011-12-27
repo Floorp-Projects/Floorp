@@ -79,6 +79,9 @@
 #include "Worker.h"
 #include "WorkerFeature.h"
 #include "WorkerScope.h"
+#ifdef ANDROID
+#include <android/log.h>
+#endif
 
 #include "WorkerInlines.h"
 
@@ -1149,7 +1152,11 @@ public:
     }
 
     if (!logged) {
-      fputs(NS_ConvertUTF16toUTF8(aMessage).get(), stderr);
+      NS_ConvertUTF16toUTF8 msg(aMessage);
+#ifdef ANDROID
+      __android_log_print(ANDROID_LOG_INFO, "Gecko", msg.get());
+#endif
+      fputs(msg.get(), stderr);
       fflush(stderr);
     }
 

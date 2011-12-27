@@ -119,11 +119,11 @@ ScriptAnalysis::checkAliasedName(JSContext *cx, jsbytecode *pc)
 
     JSAtom *atom;
     if (JSOp(*pc) == JSOP_DEFFUN) {
-        JSFunction *fun = script->getFunction(js_GetIndexFromBytecode(cx, script, pc, 0));
+        JSFunction *fun = script->getFunction(js_GetIndexFromBytecode(script, pc, 0));
         atom = fun->atom;
     } else {
         JS_ASSERT(JOF_TYPE(js_CodeSpec[*pc].format) == JOF_ATOM);
-        atom = script->getAtom(js_GetIndexFromBytecode(cx, script, pc, 0));
+        atom = script->getAtom(js_GetIndexFromBytecode(script, pc, 0));
     }
 
     uintN index;
@@ -389,6 +389,8 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             isInlineable = canTrackVars = false;
             break;
 
+          case JSOP_ENTERLET0:
+          case JSOP_ENTERLET1:
           case JSOP_ENTERBLOCK:
           case JSOP_LEAVEBLOCK:
             addsScopeObjects_ = true;
@@ -407,7 +409,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
           case JSOP_TABLESWITCH:
           case JSOP_TABLESWITCHX: {
-            isInlineable = canTrackVars = false;
+            isInlineable = false;
             jsbytecode *pc2 = pc;
             unsigned jmplen = (op == JSOP_TABLESWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
             unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
@@ -437,7 +439,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
           case JSOP_LOOKUPSWITCH:
           case JSOP_LOOKUPSWITCHX: {
-            isInlineable = canTrackVars = false;
+            isInlineable = false;
             jsbytecode *pc2 = pc;
             unsigned jmplen = (op == JSOP_LOOKUPSWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
             unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
@@ -470,7 +472,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
              * exception but is not caught by a later handler in the same function:
              * no more code will execute, and it does not matter what is defined.
              */
-            isInlineable = canTrackVars = false;
+            isInlineable = false;
             JSTryNote *tn = script->trynotes()->vector;
             JSTryNote *tnlimit = tn + script->trynotes()->length;
             for (; tn < tnlimit; tn++) {
@@ -1146,6 +1148,13 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
      */
     Vector<uint32_t> branchTargets(cx);
 
+    /*
+     * Subset of branchTargets which are also exception handlers. Any value of
+     * a variable modified before the target is reached is a potential value
+     * at that target, along with the lazily added original value.
+     */
+    Vector<uint32_t> exceptionTargets(cx);
+
     uint32_t offset = 0;
     while (offset < script->length) {
         jsbytecode *pc = script->code + offset;
@@ -1181,7 +1190,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
              */
             Vector<SlotValue> *&pending = code->pendingValues;
             if (pending) {
-                removeBranchTarget(branchTargets, offset);
+                removeBranchTarget(branchTargets, exceptionTargets, offset);
             } else {
                 pending = cx->new_< Vector<SlotValue> >(cx);
                 if (!pending) {
@@ -1246,13 +1255,19 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
              * If there is fallthrough from the previous instruction, merge
              * with the current state and create phi nodes where necessary,
              * otherwise replace current values with the new values.
+             *
+             * Catch blocks are artifically treated as having fallthrough, so
+             * that values written inside the block but not subsequently
+             * overwritten are picked up.
              */
-            removeBranchTarget(branchTargets, offset);
+            bool exception = removeBranchTarget(branchTargets, exceptionTargets, offset);
             Vector<SlotValue> *pending = code->pendingValues;
             for (unsigned i = 0; i < pending->length(); i++) {
                 SlotValue &v = (*pending)[i];
-                if (code->fallthrough || code->jumpFallthrough)
+                if (code->fallthrough || code->jumpFallthrough ||
+                    (exception && values[v.slot].kind() != SSAValue::EMPTY)) {
                     mergeValue(cx, offset, values[v.slot], &v);
+                }
                 mergeBranchTarget(cx, values[v.slot], v.slot, branchTargets);
                 values[v.slot] = v.value;
             }
@@ -1348,6 +1363,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             uint32_t slot = GetBytecodeSlot(script, pc);
             if (trackSlot(slot)) {
                 mergeBranchTarget(cx, values[slot], slot, branchTargets);
+                mergeExceptionTarget(cx, values[slot], slot, exceptionTargets);
                 values[slot].initWritten(slot, offset);
             }
             break;
@@ -1410,11 +1426,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
 
           /*
            * Switch and try blocks preserve the stack between the original op
-           * and all case statements or exception/finally handlers. Even though
-           * we don't track the values of variables in scripts containing such
-           * switch and try blocks, propagate the stack now to all targets as
-           * the values on the stack may be popped by intervening cleanup ops
-           * (e.g. LEAVEBLOCK, ENDITER).
+           * and all case statements or exception/finally handlers.
            */
 
           case JSOP_TABLESWITCH:
@@ -1468,8 +1480,10 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
                 if (startOffset == offset + 1) {
                     unsigned catchOffset = startOffset + tn->length;
 
-                    if (tn->kind != JSTRY_ITER)
+                    if (tn->kind != JSTRY_ITER) {
                         checkBranchTarget(cx, catchOffset, branchTargets, values, stackDepth);
+                        checkExceptionTarget(cx, catchOffset, exceptionTargets);
+                    }
                 }
             }
             break;
@@ -1652,6 +1666,22 @@ ScriptAnalysis::checkBranchTarget(JSContext *cx, uint32_t targetOffset,
 }
 
 void
+ScriptAnalysis::checkExceptionTarget(JSContext *cx, uint32_t catchOffset,
+                                     Vector<uint32_t> &exceptionTargets)
+{
+    /*
+     * The catch offset will already be in the branch targets, just check
+     * whether this is already a known exception target.
+     */
+    for (unsigned i = 0; i < exceptionTargets.length(); i++) {
+        if (exceptionTargets[i] == catchOffset)
+            return;
+    }
+    if (!exceptionTargets.append(catchOffset))
+        setOOM(cx);
+}
+
+void
 ScriptAnalysis::mergeBranchTarget(JSContext *cx, const SSAValue &value, uint32_t slot,
                                   const Vector<uint32_t> &branchTargets)
 {
@@ -1677,16 +1707,56 @@ ScriptAnalysis::mergeBranchTarget(JSContext *cx, const SSAValue &value, uint32_t
 }
 
 void
-ScriptAnalysis::removeBranchTarget(Vector<uint32_t> &branchTargets, uint32_t offset)
+ScriptAnalysis::mergeExceptionTarget(JSContext *cx, const SSAValue &value, uint32_t slot,
+                                     const Vector<uint32_t> &exceptionTargets)
 {
+    JS_ASSERT(trackSlot(slot));
+
+    /*
+     * Update the value at exception targets with the value of a variable
+     * before it is overwritten. Unlike mergeBranchTarget, this is done whether
+     * or not the overwritten value is the value of the variable at the
+     * original branch. Values for a variable which are written after the
+     * try block starts and overwritten before it is finished can still be
+     * seen at exception handlers via exception paths.
+     */
+    for (unsigned i = 0; i < exceptionTargets.length(); i++) {
+        Vector<SlotValue> *pending = getCode(exceptionTargets[i]).pendingValues;
+
+        bool duplicate = false;
+        for (unsigned i = 0; i < pending->length(); i++) {
+            if ((*pending)[i].slot == slot && (*pending)[i].value.equals(value))
+                duplicate = true;
+        }
+
+        if (!duplicate && !pending->append(SlotValue(slot, value)))
+            setOOM(cx);
+    }
+}
+
+bool
+ScriptAnalysis::removeBranchTarget(Vector<uint32_t> &branchTargets,
+                                   Vector<uint32_t> &exceptionTargets,
+                                   uint32_t offset)
+{
+    bool exception = false;
+    for (unsigned i = 0; i < exceptionTargets.length(); i++) {
+        if (exceptionTargets[i] == offset) {
+            exceptionTargets[i] = branchTargets.back();
+            exceptionTargets.popBack();
+            exception = true;
+            break;
+        }
+    }
     for (unsigned i = 0; i < branchTargets.length(); i++) {
         if (branchTargets[i] == offset) {
             branchTargets[i] = branchTargets.back();
             branchTargets.popBack();
-            return;
+            return exception;
         }
     }
     JS_ASSERT(OOM());
+    return exception;
 }
 
 void

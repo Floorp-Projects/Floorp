@@ -34,6 +34,7 @@
 
 #include "nsDOMHashChangeEvent.h"
 #include "nsContentUtils.h"
+#include "DictionaryHelpers.h"
 
 NS_IMPL_ADDREF_INHERITED(nsDOMHashChangeEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMHashChangeEvent, nsDOMEvent)
@@ -79,31 +80,13 @@ nsDOMHashChangeEvent::InitHashChangeEvent(const nsAString &aTypeArg,
 }
 
 nsresult
-nsDOMHashChangeEvent::InitFromCtor(const nsAString& aType, nsISupports* aDict,
-                                   JSContext* aCx, JSObject* aObj)
+nsDOMHashChangeEvent::InitFromCtor(const nsAString& aType,
+                                   JSContext* aCx, jsval* aVal)
 {
-  nsCOMPtr<nsIHashChangeEventInit> eventInit = do_QueryInterface(aDict);
-  bool bubbles = false;
-  bool cancelable = false;
-  nsAutoString oldURL;
-  nsAutoString newURL;
-  if (eventInit) {
-    nsresult rv = eventInit->GetBubbles(&bubbles);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = eventInit->GetCancelable(&cancelable);
-    NS_ENSURE_SUCCESS(rv, rv);
-    JSBool found = JS_FALSE;
-    if (JS_HasProperty(aCx, aObj, "oldURL", &found) && found) {
-      rv = eventInit->GetOldURL(oldURL);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    found = JS_FALSE;
-    if (JS_HasProperty(aCx, aObj, "newURL", &found) && found) {
-      rv = eventInit->GetNewURL(newURL);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
-  return InitHashChangeEvent(aType, bubbles, cancelable, oldURL, newURL);
+  mozilla::dom::HashChangeEventInit d;
+  nsresult rv = d.Init(aCx, aVal);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return InitHashChangeEvent(aType, d.bubbles, d.cancelable, d.oldURL, d.newURL);
 }
 
 nsresult NS_NewDOMHashChangeEvent(nsIDOMEvent** aInstancePtrResult,

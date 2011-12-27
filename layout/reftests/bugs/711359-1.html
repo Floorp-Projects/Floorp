@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+ <script>
+  var lastLang = "";
+  function LangSelect(aLang) {
+    var tbody = document.getElementById("l10ntbody");
+    var child = tbody.firstChild;
+    while (child) {
+      if (child.nodeType == Node.ELEMENT_NODE) {
+        if (aLang == "*" || aLang == child.getAttribute("language"))
+          child.removeAttribute("style");
+        else
+           child.setAttribute("style", "display: none");
+      }
+      child = child.nextSibling;
+    }
+  }
+</script>
+</head>
+
+<body onload="LangSelect('cs');">
+ <table style="border-collapse: collapse;" border="1">
+  <tbody id="l10ntbody">
+   <tr style="display: none;" language="cs"><td>&nbsp;</td></tr>
+   <tr style="display: none;" language="cs"><td>&nbsp;</td></tr>
+   <tr style="display: none;" language="cs"><td>&nbsp;</td></tr>
+  </tbody>
+ </table>
+</body>
+</html>

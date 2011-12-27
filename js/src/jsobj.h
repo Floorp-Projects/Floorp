@@ -615,11 +615,8 @@ struct JSObject : js::gc::Cell
     /* Whether method shapes can be added to this object. */
     inline bool canHaveMethodBarrier() const;
 
+    /* Whether there may be indexed properties on this object. */
     inline bool isIndexed() const;
-    inline bool setIndexed(JSContext *cx);
-
-    /* Set the indexed flag on this object if id is an indexed property. */
-    inline bool maybeSetIndexed(JSContext *cx, jsid id);
 
     /*
      * Return true if this object is a native one that has been converted from
@@ -789,9 +786,6 @@ struct JSObject : js::gc::Cell
     inline void setFixedSlot(uintN slot, const js::Value &value);
     inline void initFixedSlot(uintN slot, const js::Value &value);
 
-    /* Extend this object to have shape as its last-added property. */
-    inline bool extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom = false);
-
     /*
      * Whether this is the only object which has its specified type. This
      * object will have its type constructed lazily as needed by analysis.
@@ -908,7 +902,7 @@ struct JSObject : js::gc::Cell
      * on scope chains but mirror their structure, and can have a NULL
      * scope chain.
      */
-    inline JSObject *getStaticBlockScopeChain() const;
+    inline JSObject *staticBlockScopeChain() const;
     inline void setStaticBlockScopeChain(JSObject *obj);
 
     /* Common fixed slot for the scope chain of internal scope objects. */
@@ -1341,7 +1335,7 @@ struct JSObject : js::gc::Cell
 
     bool swap(JSContext *cx, JSObject *other);
 
-    const js::Shape *defineBlockVariable(JSContext *cx, jsid id, intN index);
+    const js::Shape *defineBlockVariable(JSContext *cx, jsid id, intN index, bool *redeclared);
 
     inline bool isArguments() const;
     inline bool isArrayBuffer() const;
@@ -1900,14 +1894,6 @@ CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
 
 extern bool
 js_IsDelegate(JSContext *cx, JSObject *obj, const js::Value &v);
-
-/*
- * If protoKey is not JSProto_Null, then clasp is ignored. If protoKey is
- * JSProto_Null, clasp must non-null.
- */
-extern JS_FRIEND_API(JSBool)
-js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
-                     JSObject **protop, js::Class *clasp = NULL);
 
 /*
  * Wrap boolean, number or string as Boolean, Number or String object.

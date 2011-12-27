@@ -2625,6 +2625,12 @@ nsHTMLInputElement::GetControllers(nsIControllers** aResult)
       NS_ENSURE_SUCCESS(rv, rv);
 
       mControllers->AppendController(controller);
+
+      controller = do_CreateInstance("@mozilla.org/editor/editingcontroller;1",
+                                     &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      mControllers->AppendController(controller);
     }
   }
 

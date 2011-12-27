@@ -10,11 +10,11 @@ What ManifestDestiny gives you:
   are just dicts with some keys.  For example, a test with no
   user-specified metadata looks like this:
 
-   [{'path':
-     '/home/jhammel/mozmill/src/ManifestDestiny/manifestdestiny/tests/testToolbar/testBackForwardButtons.js',
-     'name': 'testToolbar/testBackForwardButtons.js', 'here':
-     '/home/jhammel/mozmill/src/ManifestDestiny/manifestdestiny/tests',
-     'manifest': '/home/jhammel/mozmill/src/ManifestDestiny/manifestdestiny/tests',}]
+    [{'path':
+      '/home/jhammel/mozmill/src/ManifestDestiny/manifestdestiny/tests/testToolbar/testBackForwardButtons.js',
+      'name': 'testToolbar/testBackForwardButtons.js', 'here':
+      '/home/jhammel/mozmill/src/ManifestDestiny/manifestdestiny/tests',
+      'manifest': '/home/jhammel/mozmill/src/ManifestDestiny/manifestdestiny/tests',}]
 
 The keys displayed here (path, name, here, and manifest) are reserved
 keys for ManifestDestiny and any consuming APIs.  You can add

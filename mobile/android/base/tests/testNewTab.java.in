@@ -67,20 +67,22 @@ public class testNewTab extends ActivityInstrumentationTestCase2 {
   public void testNewTab(){
     // TODO: find a better way to not hardcode this url
     String url = "http://mochi.test:8888/tests/robocop/robocop.html";
+    actions.waitForGeckoEvent("Gecko:Ready");
     Element tabs = driver.findElement("tabs");
     //Add one tab
     tabs.click();
 
     Element urlbar = driver.findElement("awesomebar_text");
+    getInstrumentation().waitForIdleSync();
     actions.sendKeys(url);
-    driver.is(url, urlbar.getText(),"Awesomebar url is fine");
+    driver.is(urlbar.getText(), url, "Awesomebar url is fine");
     actions.sendSpecialKey(Actions.SpecialKey.ENTER);
     actions.waitForGeckoEvent("DOMContentLoaded");
 
     try{Thread.sleep(5000);}catch(Throwable e){};
     //See tab count
     Element tabCount = driver.findElement("tabs_count");
-    driver.is("2", tabCount.getText(),"Number of tabs has increased");
+    driver.is(tabCount.getText(), "2", "Number of tabs has increased");
 
     //Click tab list
     tabs.click();
@@ -88,13 +90,15 @@ public class testNewTab extends ActivityInstrumentationTestCase2 {
 
     //Add another tab
     addTab.click();
+    getInstrumentation().waitForIdleSync();
     actions.sendKeys(url);
-    driver.is(url, urlbar.getText(),"URL is still fine");
+    getInstrumentation().waitForIdleSync();
+    driver.is(urlbar.getText(), url, "URL is still fine");
 
     actions.sendSpecialKey(Actions.SpecialKey.ENTER);
     actions.waitForGeckoEvent("DOMContentLoaded");
     //Check tab count another time.
-    driver.is("3", tabCount.getText(),"Number of tabs has increased");
+    driver.is(tabCount.getText(), "3", "Number of tabs has increased");
 
   }
 
