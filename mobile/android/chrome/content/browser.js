@@ -1085,7 +1085,7 @@ nsBrowserAccess.prototype = {
 
   openURI: function browser_openURI(aURI, aOpener, aWhere, aContext) {
     let browser = this._getBrowser(aURI, aOpener, aWhere, aContext);
-    return browser ? browser.contentWindow : null;
+    return browser ? browser.QueryInterface(Ci.nsIFrameLoaderOwner) : null;
   },
 
   openURIInFrame: function browser_openURIInFrame(aURI, aOpener, aWhere, aContext) {
@@ -1338,8 +1338,12 @@ Tab.prototype = {
     this._viewport.x = Math.round(this._viewport.x * this._viewport.zoom);
     this._viewport.y = Math.round(this._viewport.y * this._viewport.zoom);
 
+    /*
+     * Don't alter the page size until we hit DOMContentLoaded, because this causes the page size
+     * to jump around wildly during page load.
+     */
     let doc = this.browser.contentDocument;
-    if (doc != null) {
+    if (doc != null && doc.readyState === 'complete') {
       let pageWidth = this._viewport.width, pageHeight = this._viewport.height;
       let body = doc.body || { scrollWidth: pageWidth, scrollHeight: pageHeight };
       let html = doc.documentElement || { scrollWidth: pageWidth, scrollHeight: pageHeight };
@@ -1347,18 +1351,8 @@ Tab.prototype = {
       pageHeight = Math.max(body.scrollHeight, html.scrollHeight);
 
       /* Transform the page width and height based on the zoom factor. */
-      pageWidth = Math.round(pageWidth * this._viewport.zoom);
-      pageHeight = Math.round(pageHeight * this._viewport.zoom);
-
-      /*
-       * Avoid sending page sizes of less than screen size before we hit DOMContentLoaded, because
-       * this causes the page size to jump around wildly during page load. After the page is loaded,
-       * send updates regardless of page size; we'll zoom to fit the content as needed.
-       */
-      if (doc.readyState === 'complete' || (pageWidth >= gScreenWidth && pageHeight >= gScreenHeight)) {
-        this._viewport.pageWidth = pageWidth;
-        this._viewport.pageHeight = pageHeight;
-      }
+      this._viewport.pageWidth = Math.round(pageWidth * this._viewport.zoom);
+      this._viewport.pageHeight = Math.round(pageHeight * this._viewport.zoom);
     }
 
     return this._viewport;
