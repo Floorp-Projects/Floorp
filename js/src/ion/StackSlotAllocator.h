@@ -23,7 +23,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Anderson <danderson@mozilla.com>
+ *   David Anderson <dvander@alliedmods.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,42 +39,49 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsion_cpu_x64_stack_assignment_h__
-#define jsion_cpu_x64_stack_assignment_h__
+#ifndef jsion_stack_slot_allocator_h_
+#define jsion_stack_slot_allocator_h_
+
+#include "IonRegisters.h"
 
 namespace js {
 namespace ion {
 
-class StackAssignment
+class StackSlotAllocator
 {
-    js::Vector<uint32, 4, IonAllocPolicy> slots;
+    js::Vector<uint32, 4, SystemAllocPolicy> normalSlots;
+    js::Vector<uint32, 4, SystemAllocPolicy> doubleSlots;
     uint32 height_;
 
   public:
-    StackAssignment() : height_(0)
+    StackSlotAllocator() : height_(0)
     { }
 
     void freeSlot(uint32 index) {
-        slots.append(index);
+        normalSlots.append(index);
     }
-
     void freeDoubleSlot(uint32 index) {
-        freeSlot(index);
+        doubleSlots.append(index);
     }
 
-    bool allocateDoubleSlot(uint32 *index) {
-        return allocateSlot(index);
+    uint32 allocateDoubleSlot() {
+        if (!doubleSlots.empty())
+            return doubleSlots.popCopy();
+        if (ComputeByteAlignment(height_, DOUBLE_STACK_ALIGNMENT))
+            normalSlots.append(++height_);
+        height_ += (sizeof(double) / STACK_SLOT_SIZE);
+        return height_;
     }
-
-    bool allocateSlot(uint32 *index) {
-        if (!slots.empty()) {
-            *index = slots.popCopy();
-            return true;
+    uint32 allocateSlot() {
+        if (!normalSlots.empty())
+            return normalSlots.popCopy();
+        if (!doubleSlots.empty()) {
+            uint32 index = doubleSlots.popCopy();
+            normalSlots.append(index - 1);
+            return index;
         }
-        *index = ++height_;
-        return true;
+        return ++height_;
     }
-
     uint32 stackHeight() const {
         return height_;
     }
@@ -83,5 +90,5 @@ class StackAssignment
 } // namespace ion
 } // namespace js
 
-#endif // jsion_cpu_x64_stack_assignment_h__
+#endif // jsion_stack_slot_allocator_h_
 

@@ -143,31 +143,39 @@ DumpLIR(FILE *fp, LInstruction *ins)
 }
 
 void
+C1Spewer::spewIntervals(FILE *fp, LinearScanAllocator *regalloc, LInstruction *ins, size_t &nextId)
+{
+    for (size_t k = 0; k < ins->numDefs(); k++) {
+        VirtualRegister *vreg = &regalloc->vregs[ins->getDef(k)->virtualRegister()];
+
+        for (size_t i = 0; i < vreg->numIntervals(); i++) {
+            LiveInterval *live = vreg->getInterval(i);
+            if (live->numRanges()) {
+                fprintf(fp, "%d object \"", (i == 0) ? vreg->reg() : int32(nextId++));
+                LAllocation::PrintAllocation(fp, live->getAllocation());
+                fprintf(fp, "\" %d -1", vreg->reg());
+                for (size_t j = 0; j < live->numRanges(); j++) {
+                    fprintf(fp, " [%d, %d[", live->getRange(j)->from.pos(),
+                            live->getRange(j)->to.pos());
+                }
+                for (size_t j = 0; j < vreg->numUses(); j++)
+                    fprintf(fp, " %d M", vreg->getUse(j)->ins->id() * 2);
+                fprintf(fp, " \"\"\n");
+            }
+        }
+    }
+}
+
+void
 C1Spewer::spewIntervals(FILE *fp, MBasicBlock *block, LinearScanAllocator *regalloc, size_t &nextId)
 {
     LBlock *lir = block->lir();
 
-    for (LInstructionIterator ins = lir->begin(); ins != lir->end(); ins++) {
-        for (size_t k = 0; k < ins->numDefs(); k++) {
-            VirtualRegister *vreg = &regalloc->vregs[ins->getDef(k)->virtualRegister()];
+    for (size_t i = 0; i < lir->numPhis(); i++)
+        spewIntervals(fp, regalloc, lir->getPhi(i), nextId);
 
-            for (size_t i = 0; i < vreg->numIntervals(); i++) {
-                LiveInterval *live = vreg->getInterval(i);
-                if (live->numRanges()) {
-                    fprintf(fp, "%d object \"", (i == 0) ? vreg->reg() : int32(nextId++));
-                    LAllocation::PrintAllocation(fp, live->getAllocation());
-                    fprintf(fp, "\" %d -1", vreg->reg());
-                    for (size_t j = 0; j < live->numRanges(); j++) {
-                        fprintf(fp, " [%d, %d[", live->getRange(j)->from.pos(),
-                                live->getRange(j)->to.pos());
-                    }
-                    for (size_t j = 0; j < vreg->numUses(); j++)
-                        fprintf(fp, " %d M", vreg->getUse(j)->ins->id() * 2);
-                    fprintf(fp, " \"\"\n");
-                }
-            }
-        }
-    }
+    for (LInstructionIterator ins = lir->begin(); ins != lir->end(); ins++)
+        spewIntervals(fp, regalloc, *ins, nextId);
 }
 void
 C1Spewer::spewPass(FILE *fp, MBasicBlock *block)

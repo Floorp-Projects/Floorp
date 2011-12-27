@@ -48,6 +48,7 @@
 #include "LIR.h"
 #include "Lowering.h"
 #include "BitSet.h"
+#include "StackSlotAllocator.h"
 
 #include "js/Vector.h"
 
@@ -517,7 +518,7 @@ class LinearScanAllocator
     VirtualRegisterMap vregs;
 
     // Allocation state
-    StackAssignment stackAssignment;
+    StackSlotAllocator stackSlotAllocator;
 
     // Run-time state
     UnhandledQueue unhandled;
