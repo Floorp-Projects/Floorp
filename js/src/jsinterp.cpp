@@ -1284,8 +1284,8 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, FrameRegs& regs,
     uint32_t sample = cx->runtime->gcNumber;
     PropertyCacheEntry savedEntry = *entry;
 
-    JSAtom *atom;
-    GET_ATOM_FROM_BYTECODE(script, regs.pc, 0, atom);
+    PropertyName *name;
+    GET_NAME_FROM_BYTECODE(script, regs.pc, 0, name);
 
     JSObject *obj, *pobj;
     JSProperty *prop;
@@ -1293,10 +1293,10 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, FrameRegs& regs,
 
     if (JOF_OPMODE(*regs.pc) == JOF_NAME) {
         bool global = js_CodeSpec[*regs.pc].format & JOF_GNAME;
-        ok = js_FindProperty(cx, ATOM_TO_JSID(atom), global, &obj, &pobj, &prop);
+        ok = FindProperty(cx, name, global, &obj, &pobj, &prop);
     } else {
         obj = start;
-        ok = js_LookupProperty(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop);
+        ok = LookupProperty(cx, obj, name, &pobj, &prop);
     }
     if (!ok)
         return false;
@@ -1497,6 +1497,13 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
         atom = atoms[GET_INDEX(regs.pc + PCOFF)];                             \
     JS_END_MACRO
 
+#define LOAD_NAME(PCOFF, name)                                                \
+    JS_BEGIN_MACRO                                                            \
+        JSAtom *atom;                                                         \
+        LOAD_ATOM((PCOFF), atom);                                             \
+        name = atom->asPropertyName();                                        \
+    JS_END_MACRO
+
 #define GET_FULL_INDEX(PCOFF)                                                 \
     (atoms - script->atoms + GET_INDEX(regs.pc + (PCOFF)))
 
@@ -1644,7 +1651,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
     /* State communicated between non-local jumps: */
     JSBool interpReturnOK;
-    JSAtom *atomNotDefined;
 
     /* Don't call the script prologue if executing between Method and Trace JIT. */
     if (interpMode == JSINTERP_NORMAL) {
@@ -2260,11 +2266,11 @@ END_CASE(JSOP_PICK)
 
 BEGIN_CASE(JSOP_SETCONST)
 {
-    JSAtom *atom;
-    LOAD_ATOM(0, atom);
+    PropertyName *name;
+    LOAD_NAME(0, name);
     JSObject &obj = regs.fp()->varObj();
     const Value &ref = regs.sp[-1];
-    if (!obj.defineProperty(cx, atom->asPropertyName(), ref,
+    if (!obj.defineProperty(cx, name, ref,
                             JS_PropertyStub, JS_StrictPropertyStub,
                             JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
         goto error;
@@ -2320,15 +2326,14 @@ BEGIN_CASE(JSOP_BINDNAME)
 
         PropertyCacheEntry *entry;
         JSObject *obj2;
-        JSAtom *atom;
-        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, atom);
-        if (!atom) {
+        PropertyName *name;
+        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, name);
+        if (!name) {
             ASSERT_VALID_PROPERTY_CACHE_HIT(obj, obj2, entry);
             break;
         }
 
-        jsid id = ATOM_TO_JSID(atom);
-        obj = js_FindIdentifierBase(cx, &regs.fp()->scopeChain(), id);
+        obj = FindIdentifierBase(cx, &regs.fp()->scopeChain(), name);
         if (!obj)
             goto error;
     } while (0);
@@ -2721,12 +2726,11 @@ END_CASE(JSOP_POS)
 
 BEGIN_CASE(JSOP_DELNAME)
 {
-    JSAtom *atom;
-    LOAD_ATOM(0, atom);
-    jsid id = ATOM_TO_JSID(atom);
+    PropertyName *name;
+    LOAD_NAME(0, name);
     JSObject *obj, *obj2;
     JSProperty *prop;
-    if (!js_FindProperty(cx, id, false, &obj, &obj2, &prop))
+    if (!FindProperty(cx, name, false, &obj, &obj2, &prop))
         goto error;
 
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
@@ -2735,7 +2739,7 @@ BEGIN_CASE(JSOP_DELNAME)
     /* ECMA says to return true if name is undefined or inherited. */
     PUSH_BOOLEAN(true);
     if (prop) {
-        if (!obj->deleteProperty(cx, atom->asPropertyName(), &regs.sp[-1], false))
+        if (!obj->deleteProperty(cx, name, &regs.sp[-1], false))
             goto error;
     }
 }
@@ -2743,15 +2747,14 @@ END_CASE(JSOP_DELNAME)
 
 BEGIN_CASE(JSOP_DELPROP)
 {
-    JSAtom *atom;
-    LOAD_ATOM(0, atom);
-    jsid id = ATOM_TO_JSID(atom);
+    PropertyName *name;
+    LOAD_NAME(0, name);
 
     JSObject *obj;
     FETCH_OBJECT(cx, -1, obj);
 
     Value rval;
-    if (!obj->deleteGeneric(cx, id, &rval, script->strictModeCode))
+    if (!obj->deleteProperty(cx, name, &rval, script->strictModeCode))
         goto error;
 
     regs.sp[-1] = rval;
@@ -2804,8 +2807,7 @@ BEGIN_CASE(JSOP_TYPEOF)
 {
     const Value &ref = regs.sp[-1];
     JSType type = JS_TypeOfValue(cx, ref);
-    JSAtom *atom = rt->atomState.typeAtoms[type];
-    regs.sp[-1].setString(atom);
+    regs.sp[-1].setString(rt->atomState.typeAtoms[type]);
 }
 END_CASE(JSOP_TYPEOF)
 
@@ -2948,22 +2950,21 @@ BEGIN_CASE(JSOP_LENGTH)
 
         PropertyCacheEntry *entry;
         JSObject *obj2;
-        JSAtom *atom;
-        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
-        if (!atom) {
+        PropertyName *name;
+        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, name);
+        if (!name) {
             ASSERT_VALID_PROPERTY_CACHE_HIT(aobj, obj2, entry);
             NATIVE_GET(cx, obj, obj2, entry->prop, JSGET_METHOD_BARRIER, &rval);
             break;
         }
 
-        jsid id = ATOM_TO_JSID(atom);
         if (JS_LIKELY(!aobj->getOps()->getProperty)
-            ? !js_GetPropertyHelper(cx, obj, id,
-                                    (regs.pc[JSOP_GETPROP_LENGTH] == JSOP_IFEQ)
-                                    ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
-                                    : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
-                                    &rval)
-            : !obj->getGeneric(cx, id, &rval))
+            ? !GetPropertyHelper(cx, obj, name,
+                                 (regs.pc[JSOP_GETPROP_LENGTH] == JSOP_IFEQ)
+                                 ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
+                                 : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
+                                 &rval)
+            : !obj->getProperty(cx, name, &rval))
         {
             goto error;
         }
@@ -3007,50 +3008,44 @@ BEGIN_CASE(JSOP_CALLPROP)
 
     PropertyCacheEntry *entry;
     JSObject *obj2;
-    JSAtom *atom;
-    JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
-    if (!atom) {
+    PropertyName *name;
+    JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, name);
+    if (!name) {
         ASSERT_VALID_PROPERTY_CACHE_HIT(aobj, obj2, entry);
         NATIVE_GET(cx, &objv.toObject(), obj2, entry->prop, JSGET_NO_METHOD_BARRIER, &rval);
         regs.sp[-1] = rval;
         assertSameCompartment(cx, regs.sp[-1]);
         PUSH_COPY(lval);
     } else {
-        /*
-         * Cache miss: use the immediate atom that was loaded for us under
-         * PropertyCache::test.
-         */
-        jsid id;
-        id = ATOM_TO_JSID(atom);
-
+        /* Cache miss: use the name loaded for us under PropertyCache::test. */
         PUSH_NULL();
         if (lval.isObject()) {
-            if (!js_GetMethod(cx, &objv.toObject(), id,
-                              JS_LIKELY(!aobj->getOps()->getProperty)
-                              ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
-                              : JSGET_NO_METHOD_BARRIER,
-                              &rval)) {
+            if (!GetMethod(cx, &objv.toObject(), name,
+                           JS_LIKELY(!aobj->getOps()->getProperty)
+                           ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
+                           : JSGET_NO_METHOD_BARRIER,
+                           &rval))
+            {
                 goto error;
             }
             regs.sp[-1] = objv;
             regs.sp[-2] = rval;
-            assertSameCompartment(cx, regs.sp[-1], regs.sp[-2]);
         } else {
             JS_ASSERT(!objv.toObject().getOps()->getProperty);
-            if (!js_GetPropertyHelper(cx, &objv.toObject(), id,
-                                      JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER,
-                                      &rval)) {
+            if (!GetPropertyHelper(cx, &objv.toObject(), name,
+                                   JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER, &rval))
+            {
                 goto error;
             }
             regs.sp[-1] = lval;
             regs.sp[-2] = rval;
-            assertSameCompartment(cx, regs.sp[-1], regs.sp[-2]);
         }
+        assertSameCompartment(cx, regs.sp[-1], regs.sp[-2]);
     }
 #if JS_HAS_NO_SUCH_METHOD
     if (JS_UNLIKELY(rval.isPrimitive()) && regs.sp[-1].isObject()) {
-        LOAD_ATOM(0, atom);
-        regs.sp[-2].setString(atom);
+        LOAD_NAME(0, name);
+        regs.sp[-2].setString(name);
         if (!OnUnknownMethod(cx, regs.sp - 2))
             goto error;
     }
@@ -3097,8 +3092,8 @@ BEGIN_CASE(JSOP_SETMETHOD)
          */
         PropertyCacheEntry *entry;
         JSObject *obj2;
-        JSAtom *atom;
-        if (cache->testForSet(cx, regs.pc, obj, &entry, &obj2, &atom)) {
+        PropertyName *name;
+        if (cache->testForSet(cx, regs.pc, obj, &entry, &obj2, &name)) {
             /*
              * Property cache hit, only partially confirmed by testForSet. We
              * know that the entry applies to regs.pc and that obj's shape
@@ -3133,12 +3128,11 @@ BEGIN_CASE(JSOP_SETMETHOD)
             }
             PCMETER(cache->setpcmisses++);
 
-            LOAD_ATOM(0, atom);
+            LOAD_NAME(0, name);
         } else {
-            JS_ASSERT(atom);
+            JS_ASSERT(name);
         }
 
-        jsid id = ATOM_TO_JSID(atom);
         if (entry && JS_LIKELY(!obj->getOps()->setProperty)) {
             uintN defineHow;
             if (op == JSOP_SETMETHOD)
@@ -3147,10 +3141,10 @@ BEGIN_CASE(JSOP_SETMETHOD)
                 defineHow = DNP_CACHE_RESULT | DNP_UNQUALIFIED;
             else
                 defineHow = DNP_CACHE_RESULT;
-            if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rval, script->strictModeCode))
+            if (!SetPropertyHelper(cx, obj, name, defineHow, &rval, script->strictModeCode))
                 goto error;
         } else {
-            if (!obj->setGeneric(cx, id, &rval, script->strictModeCode))
+            if (!obj->setProperty(cx, name, &rval, script->strictModeCode))
                 goto error;
         }
     } while (0);
@@ -3458,9 +3452,9 @@ BEGIN_CASE(JSOP_CALLNAME)
 
     PropertyCacheEntry *entry;
     JSObject *obj2;
-    JSAtom *atom;
-    JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, atom);
-    if (!atom) {
+    PropertyName *name;
+    JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, name);
+    if (!name) {
         ASSERT_VALID_PROPERTY_CACHE_HIT(obj, obj2, entry);
         NATIVE_GET(cx, obj, obj2, entry->prop, JSGET_METHOD_BARRIER, &rval);
         PUSH_COPY(rval);
@@ -3474,9 +3468,8 @@ BEGIN_CASE(JSOP_CALLNAME)
         DO_NEXT_OP(len);
     }
 
-    jsid id = ATOM_TO_JSID(atom);
     JSProperty *prop;
-    if (!js_FindPropertyHelper(cx, id, true, global, &obj, &obj2, &prop))
+    if (!FindPropertyHelper(cx, name, true, global, &obj, &obj2, &prop))
         goto error;
     if (!prop) {
         /* Kludge to allow (typeof foo == "undefined") tests. */
@@ -3487,13 +3480,16 @@ BEGIN_CASE(JSOP_CALLNAME)
             len = JSOP_NAME_LENGTH;
             DO_NEXT_OP(len);
         }
-        atomNotDefined = atom;
-        goto atom_not_defined;
+
+        JSAutoByteString bytes;
+        if (js_AtomToPrintableString(cx, name, &bytes))
+            js_ReportIsNotDefined(cx, bytes.ptr());
+        goto error;
     }
 
     /* Take the slow path if prop was not found in a native object. */
     if (!obj->isNative() || !obj2->isNative()) {
-        if (!obj->getGeneric(cx, id, &rval))
+        if (!obj->getProperty(cx, name, &rval))
             goto error;
     } else {
         Shape *shape = (Shape *)prop;
@@ -3861,7 +3857,6 @@ BEGIN_CASE(JSOP_DEFVAR)
         attrs |= JSPROP_PERMANENT;
 
     /* Lookup id in order to check for redeclaration problems. */
-    jsid id = ATOM_TO_JSID(name);
     bool shouldDefine;
     if (op == JSOP_DEFVAR) {
         /*
@@ -3876,7 +3871,7 @@ BEGIN_CASE(JSOP_DEFVAR)
     } else {
         JS_ASSERT(op == JSOP_DEFCONST);
         attrs |= JSPROP_READONLY;
-        if (!CheckRedeclaration(cx, obj, id, attrs))
+        if (!CheckRedeclaration(cx, obj, name, attrs))
             goto error;
 
         /*
@@ -3888,8 +3883,9 @@ BEGIN_CASE(JSOP_DEFVAR)
 
     /* Bind a variable only if it's not yet defined. */
     if (shouldDefine &&
-        !DefineNativeProperty(cx, obj, id, UndefinedValue(), JS_PropertyStub, JS_StrictPropertyStub,
-                              attrs, 0, 0)) {
+        !DefineNativeProperty(cx, obj, name, UndefinedValue(),
+                              JS_PropertyStub, JS_StrictPropertyStub, attrs, 0, 0))
+    {
         goto error;
     }
 }
@@ -3956,7 +3952,6 @@ BEGIN_CASE(JSOP_DEFFUN)
 
     /* ES5 10.5 (NB: with subsequent errata). */
     PropertyName *name = fun->atom->asPropertyName();
-    jsid id = ATOM_TO_JSID(name);
     JSProperty *prop = NULL;
     JSObject *pobj;
     if (!parent->lookupProperty(cx, name, &pobj, &prop))
@@ -3990,9 +3985,9 @@ BEGIN_CASE(JSOP_DEFFUN)
 
             if (shape->isAccessorDescriptor() || !shape->writable() || !shape->enumerable()) {
                 JSAutoByteString bytes;
-                if (const char *name = js_ValueToPrintable(cx, IdToValue(id), &bytes)) {
+                if (js_AtomToPrintableString(cx, name, &bytes)) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                         JSMSG_CANT_REDEFINE_PROP, name);
+                                         JSMSG_CANT_REDEFINE_PROP, bytes.ptr());
                 }
                 goto error;
             }
@@ -4029,11 +4024,10 @@ BEGIN_CASE(JSOP_DEFFUN_FC)
 
     JSObject &parent = regs.fp()->varObj();
 
-    jsid id = ATOM_TO_JSID(fun->atom);
-    if (!CheckRedeclaration(cx, &parent, id, attrs))
+    PropertyName *name = fun->atom->asPropertyName();
+    if (!CheckRedeclaration(cx, &parent, name, attrs))
         goto error;
 
-    PropertyName *name = fun->atom->asPropertyName();
     if ((attrs == JSPROP_ENUMERATE)
         ? !parent.setProperty(cx, name, &rval, script->strictModeCode)
         : !parent.defineProperty(cx, name, rval, JS_PropertyStub, JS_StrictPropertyStub, attrs))
@@ -4227,9 +4221,9 @@ BEGIN_CASE(JSOP_SETTER)
       case JSOP_SETNAME:
       case JSOP_SETPROP:
       {
-        JSAtom *atom;
-        LOAD_ATOM(0, atom);
-        id = ATOM_TO_JSID(atom);
+        PropertyName *name;
+        LOAD_NAME(0, name);
+        id = ATOM_TO_JSID(name);
         rval = regs.sp[-1];
         i = -1;
         goto gs_pop_lval;
@@ -4247,9 +4241,9 @@ BEGIN_CASE(JSOP_SETTER)
         JS_ASSERT(regs.sp - regs.fp()->base() >= 2);
         rval = regs.sp[-1];
         i = -1;
-        JSAtom *atom;
-        LOAD_ATOM(0, atom);
-        id = ATOM_TO_JSID(atom);
+        PropertyName *name;
+        LOAD_NAME(0, name);
+        id = ATOM_TO_JSID(name);
         goto gs_get_lval;
       }
       default:
@@ -4273,11 +4267,8 @@ BEGIN_CASE(JSOP_SETTER)
         FETCH_ELEMENT_ID(obj, i, id);
 
     if (!js_IsCallable(rval)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_GETTER_OR_SETTER,
-                             (op == JSOP_GETTER)
-                             ? js_getter_str
-                             : js_setter_str);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GETTER_OR_SETTER,
+                             (op == JSOP_GETTER) ? js_getter_str : js_setter_str);
         goto error;
     }
 
@@ -4412,8 +4403,8 @@ BEGIN_CASE(JSOP_INITMETHOD)
      */
     PropertyCacheEntry *entry;
     JSObject *obj2;
-    JSAtom *atom;
-    if (JS_PROPERTY_CACHE(cx).testForSet(cx, regs.pc, obj, &entry, &obj2, &atom) &&
+    PropertyName *name;
+    if (JS_PROPERTY_CACHE(cx).testForSet(cx, regs.pc, obj, &entry, &obj2, &name) &&
         entry->prop->hasDefaultSetter() &&
         entry->isOwnPropertyHit())
     {
@@ -4422,17 +4413,14 @@ BEGIN_CASE(JSOP_INITMETHOD)
         obj->nativeSetSlotWithType(cx, entry->prop, rval);
     } else {
         PCMETER(JS_PROPERTY_CACHE(cx).inipcmisses++);
-        LOAD_ATOM(0, atom);
-
-        /* Get the immediate property name into id. */
-        jsid id = ATOM_TO_JSID(atom);
+        LOAD_NAME(0, name);
 
         uintN defineHow = (op == JSOP_INITMETHOD)
                           ? DNP_CACHE_RESULT | DNP_SET_METHOD
                           : DNP_CACHE_RESULT;
-        if (JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
-            ? !js_SetPropertyHelper(cx, obj, id, defineHow, &rval, script->strictModeCode)
-            : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
+        if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
+            ? !SetPropertyHelper(cx, obj, name, defineHow, &rval, script->strictModeCode)
+            : !DefineNativeProperty(cx, obj, name, rval, NULL, NULL,
                                     JSPROP_ENUMERATE, 0, 0, defineHow)) {
             goto error;
         }
@@ -5438,12 +5426,4 @@ END_CASE(JSOP_ARRAYPUSH)
 
     gc::VerifyBarriers(cx, true);
     return interpReturnOK;
-
-  atom_not_defined:
-    {
-        JSAutoByteString printable;
-        if (js_AtomToPrintableString(cx, atomNotDefined, &printable))
-            js_ReportIsNotDefined(cx, printable.ptr());
-    }
-    goto error;
 }

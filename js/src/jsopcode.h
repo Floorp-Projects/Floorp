@@ -341,8 +341,17 @@ js_GetIndexFromBytecode(JSScript *script, jsbytecode *pc, ptrdiff_t pcoff);
 #define GET_ATOM_FROM_BYTECODE(script, pc, pcoff, atom)                       \
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(*(pc) != JSOP_DOUBLE);                                      \
+        JS_ASSERT(js_CodeSpec[*(pc)].format & JOF_ATOM);                      \
         uintN index_ = js_GetIndexFromBytecode((script), (pc), (pcoff));      \
         (atom) = (script)->getAtom(index_);                                   \
+    JS_END_MACRO
+
+#define GET_NAME_FROM_BYTECODE(script, pc, pcoff, name)                       \
+    JS_BEGIN_MACRO                                                            \
+        JSAtom *atom_;                                                        \
+        GET_ATOM_FROM_BYTECODE(script, pc, pcoff, atom_);                     \
+        JS_ASSERT(js_CodeSpec[*(pc)].format & (JOF_NAME | JOF_PROP));         \
+        (name) = atom_->asPropertyName();                                     \
     JS_END_MACRO
 
 #define GET_DOUBLE_FROM_BYTECODE(script, pc, pcoff, dbl)                      \
