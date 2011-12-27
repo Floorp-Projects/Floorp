@@ -164,19 +164,6 @@ OutOfLineBailout::accept(CodeGeneratorARM *codegen)
 }
 
 bool
-CodeGeneratorARM::visitGoto(LGoto *jump)
-{
-    LBlock *target = jump->target()->lir();
-
-    // Don't bother emitting a jump if we'll flow through to the next block.
-    if (isNextBlock(target))
-        return true;
-
-    masm.ma_b(target->label());
-    return true;
-}
-
-bool
 CodeGeneratorARM::visitTestIAndBranch(LTestIAndBranch *test)
 {
     const LAllocation *opd = test->getOperand(0);
@@ -653,14 +640,6 @@ CodeGeneratorARM::visitShiftOp(LShiftOp *ins)
     return true;
 }
 
-bool
-CodeGeneratorARM::visitInteger(LInteger *ins)
-{
-    const LDefinition *def = ins->getDef(0);
-    masm.ma_mov(Imm32(ins->getValue()), ToRegister(def));
-    return true;
-}
-
 typedef MoveResolver::MoveOperand MoveOperand;
 
 MoveOperand
@@ -1004,27 +983,13 @@ CodeGeneratorARM::visitBoxDouble(LBoxDouble *box)
 bool
 CodeGeneratorARM::visitUnbox(LUnbox *unbox)
 {
-    LAllocation *type = unbox->getOperand(TYPE_INDEX);
-    masm.ma_cmp(ToRegister(type), Imm32(MIRTypeToTag(unbox->type())));
-    if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
-        return false;
-    return true;
-}
-
-bool
-CodeGeneratorARM::visitReturn(LReturn *ret)
-{
-
-#ifdef DEBUG
-    LAllocation *type = ret->getOperand(TYPE_INDEX);
-    LAllocation *payload = ret->getOperand(PAYLOAD_INDEX);
-
-    JS_ASSERT(ToRegister(type) == JSReturnReg_Type);
-    JS_ASSERT(ToRegister(payload) == JSReturnReg_Data);
-#endif
-    // Don't emit a jump to the return label if this is the last block.
-    if (current->mir() != *gen->graph().poBegin())
-        masm.ma_b(returnLabel_);
+    MUnbox *mir = unbox->mir();
+    if (mir->fallible()) {
+        LAllocation *type = unbox->getOperand(TYPE_INDEX);
+        masm.ma_cmp(ToRegister(type), Imm32(MIRTypeToTag(mir->type())));
+        if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
+            return false;
+    }
     return true;
 }
 
@@ -1088,19 +1053,6 @@ CodeGeneratorARM::testStringTruthy(bool truthy, const ValueOperand &value)
     masm.ma_dtr(IsLoad, string, Imm32(JSString::offsetOfLengthAndFlags()), tmp);
     masm.ma_tst(Imm32(mask), tmp);
     return truthy ? Assembler::NonZero : Assembler::Zero;
-}
-
-
-bool
-CodeGeneratorARM::visitStackArg(LStackArg *arg)
-{
-    ValueOperand val = ToValue(arg, 0);
-    uint32 argslot = arg->argslot();
-    int32 stack_offset = StackOffsetOfPassedArg(argslot);
-
-    masm.ma_str(val.typeReg(), DTRAddr(StackPointer, DtrOffImm(stack_offset+4)));
-    masm.ma_str(val.payloadReg(), DTRAddr(StackPointer, DtrOffImm(stack_offset)));
-    return true;
 }
 
 bool
@@ -1306,17 +1258,6 @@ CodeGeneratorARM::visitLoadSlotT(LLoadSlotT *load)
         masm.loadInt32OrDouble(Operand(base, offset), ToFloatRegister(load->output()));
     else
         masm.ma_ldr(Operand(base, offset + NUNBOX32_PAYLOAD_OFFSET), ToRegister(load->output()));
-    return true;
-}
-bool
-CodeGeneratorARM::visitStoreSlotV(LStoreSlotV *store)
-{
-    Register base = ToRegister(store->slots());
-    int32 offset = store->mir()->slot() * sizeof(js::Value);
-
-    const ValueOperand value = ToValue(store, LStoreSlotV::Value);
-
-    masm.storeValue(value, Operand(base, offset));
     return true;
 }
 
