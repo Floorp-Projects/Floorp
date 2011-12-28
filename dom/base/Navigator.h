@@ -103,6 +103,11 @@ public:
 
   PRInt64 SizeOf() const;
 
+  /**
+   * For use during document.write where our inner window changes.
+   */
+  void SetWindow(nsPIDOMWindow *aInnerWindow);
+
 private:
   bool IsSmsAllowed() const;
   bool IsSmsSupported() const;
