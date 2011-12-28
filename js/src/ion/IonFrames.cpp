@@ -254,9 +254,14 @@ ion::HandleException(ResumeFromException *rfe)
 }
 
 IonActivationIterator::IonActivationIterator(JSContext *cx)
-  : cx_(cx),
-    top_(JS_THREAD_DATA(cx)->ionTop),
+  : top_(JS_THREAD_DATA(cx)->ionTop),
     activation_(JS_THREAD_DATA(cx)->ionActivation)
+{
+}
+
+IonActivationIterator::IonActivationIterator(ThreadData *td)
+  : top_(td->ionTop),
+    activation_(td->ionActivation)
 {
 }
 
@@ -267,5 +272,11 @@ IonActivationIterator::operator++()
     top_ = activation_->prevIonTop();
     activation_ = activation_->prev();
     return *this;
+}
+
+bool
+IonActivationIterator::more() const
+{
+    return !!activation_;
 }
 
