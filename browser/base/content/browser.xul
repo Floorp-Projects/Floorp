@@ -398,20 +398,20 @@
     <tooltip id="tabbrowser-tab-tooltip" onpopupshowing="gBrowser.createTooltip(event);"/>
 
     <tooltip id="back-button-tooltip">
-      <label value="&backButton.tooltip;"/>
+      <label class="tooltip-label" value="&backButton.tooltip;"/>
 #ifdef XP_MACOSX
-      <label value="&backForwardButtonMenuMac.tooltip;"/>
+      <label class="tooltip-label" value="&backForwardButtonMenuMac.tooltip;"/>
 #else
-      <label value="&backForwardButtonMenu.tooltip;"/>
+      <label class="tooltip-label" value="&backForwardButtonMenu.tooltip;"/>
 #endif
     </tooltip>
   
     <tooltip id="forward-button-tooltip">
-      <label value="&forwardButton.tooltip;"/>
+      <label class="tooltip-label" value="&forwardButton.tooltip;"/>
 #ifdef XP_MACOSX
-      <label value="&backForwardButtonMenuMac.tooltip;"/>
+      <label class="tooltip-label" value="&backForwardButtonMenuMac.tooltip;"/>
 #else
-      <label value="&backForwardButtonMenu.tooltip;"/>
+      <label class="tooltip-label" value="&backForwardButtonMenu.tooltip;"/>
 #endif
     </tooltip>
   </popupset>
