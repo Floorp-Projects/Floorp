@@ -47,6 +47,7 @@
 #elif JS_CPU_X64
 # include "ion/x64/Assembler-x64.h"
 #endif
+#include "ion/IonFrames.h"
 #include "jsopcode.h"
 
 #include "ion/IonCaches.h"
@@ -151,6 +152,11 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void load32(const Address &address, Register dest) {
         movl(Operand(address), dest);
+    }
+    void callWithExitFrame(IonCode *target) {
+        uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
+        push(Imm32(descriptor));
+        call(target);
     }
 };
 

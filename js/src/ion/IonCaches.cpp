@@ -132,7 +132,7 @@ IonCacheGetProperty::attachNative(JSContext *cx, JSObject *obj, const Shape *sha
 }
 
 bool
-GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value *vp)
+js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value *vp)
 {
     IonScript *ion = GetTopIonFrame(cx);
     IonCacheGetProperty &cache = ion->getCache(cacheIndex).toGetProperty();
@@ -165,9 +165,3 @@ GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value *vp)
 
     return true;
 }
-
-const VMFunction ion::GetPropertyCacheFun(
-    JS_FUNC_TO_DATA_PTR(void *, GetPropertyCache),
-    2, /* cacheIndex, obj */
-    Type_Value,
-    Type_Bool);

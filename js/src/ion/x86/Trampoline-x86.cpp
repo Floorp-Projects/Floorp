@@ -569,7 +569,8 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Initialize and set the context parameter.
     Register cxreg = regs.takeAny();
-    masm.movl(Operand(&JS_THREAD_DATA(cx)->ionJSContext), cxreg);
+    masm.movePtr(ImmWord(JS_THREAD_DATA(cx)), cxreg);
+    masm.loadPtr(Address(cxreg, offsetof(ThreadData, ionJSContext)), cxreg);
     masm.setABIArg(0, cxreg);
 
     // Copy arguments.

@@ -995,14 +995,24 @@ MacroAssemblerARM::ma_vstr(FloatRegister src, const Operand &addr)
 }
 
 void
-MacroAssemblerARM::reserveStack(uint32 amount)
+MacroAssemblerARMCompat::callWithExitFrame(IonCode *target)
+{
+    uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
+    ma_push(ScratchRegister); // padding
+    push(Imm32(descriptor)); // descriptor
+    // TODO: Use relocation here.
+    ma_mov(Imm32((int) target->raw()), ScratchRegister);
+    ma_callIon(ScratchRegister);
+}
+void
+MacroAssemblerARMCompat::reserveStack(uint32 amount)
 {
     if (amount)
         ma_sub(Imm32(amount), sp);
     framePushed_ += amount;
 }
 void
-MacroAssemblerARM::freeStack(uint32 amount)
+MacroAssemblerARMCompat::freeStack(uint32 amount)
 {
     JS_ASSERT(amount <= framePushed_);
     if (amount)
@@ -1010,67 +1020,67 @@ MacroAssemblerARM::freeStack(uint32 amount)
     framePushed_ -= amount;
 }
 void
-MacroAssemblerARM::move32(const Imm32 &imm, const Register &dest)
+MacroAssemblerARMCompat::move32(const Imm32 &imm, const Register &dest)
 {
     ma_mov(imm, dest);
 }
 void
-MacroAssemblerARM::movePtr(ImmWord imm, const Register dest)
+MacroAssemblerARMCompat::movePtr(ImmWord imm, const Register dest)
 {
     ma_mov(Imm32(imm.value), dest);
 }
 void
-MacroAssemblerARM::movePtr(ImmGCPtr imm, const Register dest)
+MacroAssemblerARMCompat::movePtr(ImmGCPtr imm, const Register dest)
 {
     writeDataRelocation(nextOffset());
     ma_mov(imm, dest);
 }
 
 void
-MacroAssemblerARM::load32(const Address &address, Register dest)
+MacroAssemblerARMCompat::load32(const Address &address, Register dest)
 {
     loadPtr(address, dest);
 }
 void
-MacroAssemblerARM::loadPtr(const Address &address, Register dest)
+MacroAssemblerARMCompat::loadPtr(const Address &address, Register dest)
 {
-    ma_ldr(DTRAddr(address.base, DtrOffImm(address.offset)), dest);
+    ma_ldr(Operand(address), dest);
 }
 void
-MacroAssemblerARM::loadPtr(const ImmWord &imm, Register dest)
+MacroAssemblerARMCompat::loadPtr(const ImmWord &imm, Register dest)
 {
     movePtr(imm, ScratchRegister);
     loadPtr(Address(ScratchRegister, 0x0), dest);
 }
 
 void
-MacroAssemblerARM::storePtr(Register src, const Address &address)
+MacroAssemblerARMCompat::storePtr(Register src, const Address &address)
 {
-    JS_NOT_REACHED("NYI");
+    ma_str(src, Operand(address));
 }
 
 void
-MacroAssemblerARM::setStackArg(const Register &reg, uint32 arg)
+MacroAssemblerARMCompat::setStackArg(const Register &reg, uint32 arg)
 {
     ma_dataTransferN(IsStore, 32, true, sp, Imm32(arg * STACK_SLOT_SIZE), reg);
 
 }
 
 void
-MacroAssemblerARM::subPtr(Imm32 imm, const Register dest)
+MacroAssemblerARMCompat::subPtr(Imm32 imm, const Register dest)
 {
     ma_sub(imm, dest);
 }
 
 void
-MacroAssemblerARM::addPtr(Imm32 imm, const Register dest)
+MacroAssemblerARMCompat::addPtr(Imm32 imm, const Register dest)
 {
-    JS_NOT_REACHED("NYI");
+    ma_add(imm, dest);
 }
 
 // higher level tag testing code
 Assembler::Condition
-MacroAssemblerARM::compareDoubles(JSOp compare, FloatRegister lhs, FloatRegister rhs)
+MacroAssemblerARMCompat::compareDoubles(JSOp compare, FloatRegister lhs, FloatRegister rhs)
 {
     ma_vcmp(lhs, rhs);
     as_vmrs(pc);
@@ -1096,7 +1106,8 @@ MacroAssemblerARM::compareDoubles(JSOp compare, FloatRegister lhs, FloatRegister
 }
 
 Operand ToPayload(Operand base) {
-    return base;
+    return Operand(Register::FromCode(base.base()),
+                   base.disp());
 }
 Operand ToType(Operand base) {
     return Operand(Register::FromCode(base.base()),
@@ -1335,30 +1346,31 @@ MacroAssemblerARMCompat::storeValue(ValueOperand val, Operand dst) {
     ma_str(val.typeReg(), ToType(dst));
 }
 void
-MacroAssemblerARMCompat::loadValue(Operand src, ValueOperand val)
+MacroAssemblerARMCompat::loadValue(Address src, ValueOperand val)
 {
-    Operand payload = ToPayload(src);
-    Operand type = ToType(src);
+    Operand srcOp = Operand(src);
+    Operand payload = ToPayload(srcOp);
+    Operand type = ToType(srcOp);
     // TODO: copy this code into a generic function that acts on all sequences of memory accesses
     if (((val.payloadReg().code() & 1) == 0) &&
         val.typeReg().code() == val.payloadReg().code()+1)
     {
         // If the value we want is in two consecutive registers starting with an even register,
         // they can be combined as a single ldrd.
-        int offset = src.disp();
+        int offset = srcOp.disp();
         if (offset < 256 && offset > -256) {
-            ma_ldrd(EDtrAddr(Register::FromCode(src.base()), EDtrOffImm(src.disp())), val.payloadReg(), val.typeReg());
+            ma_ldrd(EDtrAddr(Register::FromCode(srcOp.base()), EDtrOffImm(srcOp.disp())), val.payloadReg(), val.typeReg());
             return;
         }
     }
     // if the value is lower than the type, then we may be able to use an ldm instruction
 
     if (val.payloadReg().code() < val.typeReg().code()) {
-        if (src.disp() <= 4 && src.disp() >= -8 && (src.disp() & 3) == 0) {
+        if (srcOp.disp() <= 4 && srcOp.disp() >= -8 && (srcOp.disp() & 3) == 0) {
             // turns out each of the 4 value -8, -4, 0, 4 corresponds exactly with one of
             // LDM{DB, DA, IA, IB}
             DTMMode mode;
-            switch(src.disp()) {
+            switch(srcOp.disp()) {
               case -8:
                 mode = DB;
                 break;
@@ -1374,7 +1386,7 @@ MacroAssemblerARMCompat::loadValue(Operand src, ValueOperand val)
               default:
                 JS_NOT_REACHED("Bogus Offset for LoadValue as DTM");
             }
-            startDataTransferM(IsLoad, Register::FromCode(src.base()), mode);
+            startDataTransferM(IsLoad, Register::FromCode(srcOp.base()), mode);
             transferReg(val.payloadReg());
             transferReg(val.typeReg());
             finishDataTransfer();
@@ -1477,12 +1489,13 @@ MacroAssemblerARM::ma_call(void *dest)
 }
 
 void
-MacroAssemblerARM::breakpoint() {
+MacroAssemblerARMCompat::breakpoint()
+{
     as_bkpt();
 }
 
 uint32
-MacroAssemblerARM::setupABICall(uint32 args)
+MacroAssemblerARMCompat::setupABICall(uint32 args)
 {
     JS_ASSERT(!inCall_);
     inCall_ = true;
@@ -1494,7 +1507,7 @@ MacroAssemblerARM::setupABICall(uint32 args)
 }
 
 void
-MacroAssemblerARM::setupAlignedABICall(uint32 args)
+MacroAssemblerARMCompat::setupAlignedABICall(uint32 args)
 {
     // Find the total number of bytes the stack will have been adjusted by,
     // in order to compute alignment. Include a stack slot for saving the stack
@@ -1509,7 +1522,7 @@ MacroAssemblerARM::setupAlignedABICall(uint32 args)
 }
 
 void
-MacroAssemblerARM::setupUnalignedABICall(uint32 args, const Register &scratch)
+MacroAssemblerARMCompat::setupUnalignedABICall(uint32 args, const Register &scratch)
 {
     uint32 stackForCall = setupABICall(args);
     uint32 displacement = stackForCall + STACK_SLOT_SIZE;
@@ -1527,7 +1540,7 @@ MacroAssemblerARM::setupUnalignedABICall(uint32 args, const Register &scratch)
 }
 
 void
-MacroAssemblerARM::setABIArg(uint32 arg, const MoveOperand &from)
+MacroAssemblerARMCompat::setABIArg(uint32 arg, const MoveOperand &from)
 {
     MoveOperand to;
     Register dest;
@@ -1543,12 +1556,12 @@ MacroAssemblerARM::setABIArg(uint32 arg, const MoveOperand &from)
 }
 
 void
-MacroAssemblerARM::setABIArg(uint32 arg, const Register &reg)
+MacroAssemblerARMCompat::setABIArg(uint32 arg, const Register &reg)
 {
     setABIArg(arg, MoveOperand(reg));
 }
 #ifdef DEBUG
-void MacroAssemblerARM::checkStackAlignment()
+void MacroAssemblerARMCompat::checkStackAlignment()
 {
         Label good;
         ma_tst(Imm32(StackAlignment - 1), sp);
@@ -1558,7 +1571,7 @@ void MacroAssemblerARM::checkStackAlignment()
 }
 #endif
 void
-MacroAssemblerARM::callWithABI(void *fun)
+MacroAssemblerARMCompat::callWithABI(void *fun)
 {
     JS_ASSERT(inCall_);
 

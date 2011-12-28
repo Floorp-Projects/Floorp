@@ -521,9 +521,10 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     masm.setupUnalignedABICall(f.argc(), temp);
 
     // Initialize and set the context parameter.
-    masm.movq(ImmWord(JS_THREAD_DATA(cx)), ArgReg0);
-    masm.movq(Operand(ArgReg0, offsetof(ThreadData, ionJSContext)), ArgReg0);
-    masm.setABIArg(0, ArgReg0);
+    Register cxreg = ArgReg0;
+    masm.movePtr(ImmWord(JS_THREAD_DATA(cx)), cxreg);
+    masm.loadPtr(Address(cxreg, offsetof(ThreadData, ionJSContext)), cxreg);
+    masm.setABIArg(0, cxreg);
 
     // Copy arguments.
     if (f.explicitArgs) {

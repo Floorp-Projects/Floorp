@@ -1461,6 +1461,9 @@ public:
     bool nextLink(BufferOffset b, BufferOffset *next);
     void bind(Label *label, BufferOffset boff = BufferOffset());
     static void Bind(IonCode *code, AbsoluteLabel *label, const void *address);
+    uint32 currentOffset() {
+        return nextOffset().getOffset();
+    }
     void retarget(Label *label, Label *target);
     // I'm going to pretend this doesn't exist for now.
     void retarget(Label *label, void *target, Relocation::Kind reloc);

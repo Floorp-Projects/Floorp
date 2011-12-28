@@ -215,7 +215,8 @@ class IonCacheGetProperty : public IonCache
     bool attachNative(JSContext *cx, JSObject *obj, const Shape *shape);
 };
 
-extern const VMFunction GetPropertyCacheFun;
+bool
+GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value *vp);
 
 } // namespace ion
 } // namespace js
