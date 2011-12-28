@@ -41,6 +41,8 @@
 #ifndef NumberObject_h___
 #define NumberObject_h___
 
+#include "mozilla/Attributes.h"
+
 #include "jsnum.h"
 
 namespace js {
@@ -80,8 +82,8 @@ class NumberObject : public ::JSObject
     ::js_InitNumberClass(JSContext *cx, JSObject *global);
 
   private:
-    NumberObject();
-    NumberObject &operator=(const NumberObject &so);
+    NumberObject() MOZ_DELETE;
+    NumberObject &operator=(const NumberObject &so) MOZ_DELETE;
 };
 
 } // namespace js
