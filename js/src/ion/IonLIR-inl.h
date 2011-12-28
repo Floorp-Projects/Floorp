@@ -75,6 +75,43 @@ LALLOC_CONST_CAST(ConstantIndex)
 
 #undef LALLOC_CAST
 
+#ifdef JS_NUNBOX32
+static inline signed
+OffsetToOtherHalfOfNunbox(LDefinition::Type type)
+{
+    JS_ASSERT(type == LDefinition::TYPE || type == LDefinition::PAYLOAD);
+    signed offset = (type == LDefinition::TYPE)
+                    ? PAYLOAD_INDEX - TYPE_INDEX
+                    : TYPE_INDEX - PAYLOAD_INDEX;
+    return offset;
+}
+
+static inline void
+AssertTypesFormANunbox(LDefinition::Type type1, LDefinition::Type type2)
+{
+    JS_ASSERT((type1 == LDefinition::TYPE && type2 == LDefinition::PAYLOAD) ||
+              (type2 == LDefinition::TYPE && type1 == LDefinition::PAYLOAD));
+}
+
+static inline unsigned
+OffsetOfNunboxSlot(LDefinition::Type type)
+{
+    if (type == LDefinition::PAYLOAD)
+        return NUNBOX32_PAYLOAD_OFFSET / STACK_SLOT_SIZE;
+    return NUNBOX32_TYPE_OFFSET / STACK_SLOT_SIZE;
+}
+
+// Note that stack indexes for LStackSlot are modelled backwards, so a
+// double-sized slot starting at 2 has its next word at 1, *not* 3.
+static inline unsigned
+BaseOfNunboxSlot(LDefinition::Type type, unsigned slot)
+{
+    if (type == LDefinition::PAYLOAD)
+        return slot + (NUNBOX32_PAYLOAD_OFFSET / STACK_SLOT_SIZE);
+    return slot + (NUNBOX32_TYPE_OFFSET / STACK_SLOT_SIZE);
+}
+#endif
+
 } // namespace ion
 } // namespace js
 

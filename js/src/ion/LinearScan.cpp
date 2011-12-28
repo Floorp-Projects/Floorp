@@ -1043,58 +1043,21 @@ static inline bool
 IsNunbox(VirtualRegister *vreg)
 {
 #ifdef JS_NUNBOX32
-    return (vreg->def()->type() == LDefinition::TYPE ||
-            vreg->def()->type() == LDefinition::PAYLOAD);
+    return (vreg->type() == LDefinition::TYPE ||
+            vreg->type() == LDefinition::PAYLOAD);
 #else
     return false;
 #endif
 }
 
 #ifdef JS_NUNBOX32
-static inline signed
-OffsetToOtherHalfOfNunbox(VirtualRegister *vreg)
-{
-    JS_ASSERT(IsNunbox(vreg));
-
-    signed offset = (vreg->def()->type() == LDefinition::TYPE)
-                    ? PAYLOAD_INDEX - TYPE_INDEX
-                    : TYPE_INDEX - PAYLOAD_INDEX;
-    return offset;
-}
-
 VirtualRegister *
 LinearScanAllocator::otherHalfOfNunbox(VirtualRegister *vreg)
 {
-    JS_ASSERT(IsNunbox(vreg));
-
-    signed offset = OffsetToOtherHalfOfNunbox(vreg);
+    signed offset = OffsetToOtherHalfOfNunbox(vreg->type());
     VirtualRegister *other = &vregs[vreg->def()->virtualRegister() + offset];
-    JS_ASSERT_IF(vreg->def()->type() == LDefinition::TYPE,
-                 other->def()->type() == LDefinition::PAYLOAD);
-    JS_ASSERT_IF(vreg->def()->type() == LDefinition::PAYLOAD,
-                 other->def()->type() == LDefinition::TYPE);
-
+    AssertTypesFormANunbox(vreg->type(), other->type());
     return other;
-}
-
-// Note that stack indexes for LStackSlot are modelled backwards, so a
-// double-sized slot starting at 2 has its next word at 1, *not* 3.
-static inline unsigned
-BaseOfNunboxSlot(VirtualRegister *vreg)
-{
-    JS_ASSERT(IsNunbox(vreg));
-    unsigned slot = vreg->canonicalSpill()->toStackSlot()->slot();
-    if (vreg->def()->type() == LDefinition::PAYLOAD)
-        return slot + (NUNBOX32_PAYLOAD_OFFSET / STACK_SLOT_SIZE);
-    return slot + (NUNBOX32_TYPE_OFFSET / STACK_SLOT_SIZE);
-}
-
-static inline unsigned
-OffsetOfNunboxSlot(LDefinition *def)
-{
-    if (def->type() == LDefinition::PAYLOAD)
-        return NUNBOX32_PAYLOAD_OFFSET / STACK_SLOT_SIZE;
-    return NUNBOX32_TYPE_OFFSET / STACK_SLOT_SIZE;
 }
 #endif
 
@@ -1150,13 +1113,13 @@ LinearScanAllocator::spill()
             // ensure the Value is spilled contiguously, use the other half (it
             // was allocated double-wide).
             JS_ASSERT(other->canonicalSpill()->isStackSlot());
-            stackSlot = BaseOfNunboxSlot(other);
+            stackSlot = BaseOfNunboxSlot(other->type(), other->canonicalSpillSlot());
         } else {
             // No canonical spill location exists for this nunbox yet. Allocate
             // one.
             stackSlot = allocateSlotFor(current);
         }
-        stackSlot -= OffsetOfNunboxSlot(current->reg()->def());
+        stackSlot -= OffsetOfNunboxSlot(current->reg()->type());
     } else
 #endif
     {

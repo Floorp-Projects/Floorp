@@ -418,6 +418,9 @@ class VirtualRegister
     LAllocation *canonicalSpill() const {
         return canonicalSpill_;
     }
+    unsigned canonicalSpillSlot() const {
+        return canonicalSpill_->toStackSlot()->slot();
+    }
     void setFinished() {
         finished_ = true;
     }

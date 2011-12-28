@@ -186,6 +186,16 @@ GreedyAllocator::prescanUses(LInstruction *ins)
     return true;
 }
 
+static inline bool
+IsNunbox(LDefinition::Type type)
+{
+#ifdef JS_NUNBOX32
+    return type == LDefinition::TYPE || type == LDefinition::PAYLOAD;
+#else
+    return false;
+#endif
+}
+
 void
 GreedyAllocator::allocateStack(VirtualRegister *vr)
 {
@@ -193,14 +203,47 @@ GreedyAllocator::allocateStack(VirtualRegister *vr)
         return;
 
     uint32 index;
-    if (vr->isDouble())
-        index = stackSlotAllocator.allocateDoubleSlot();
-    else
-        index = stackSlotAllocator.allocateSlot();
+#ifdef JS_NUNBOX32
+    if (IsNunbox(vr->type())) {
+        VirtualRegister *other = otherHalfOfNunbox(vr);
+        unsigned stackSlot;
+        if (!other->hasStackSlot())
+            stackSlot = stackSlotAllocator.allocateDoubleSlot();
+        else
+            stackSlot = BaseOfNunboxSlot(other->type(), other->stackSlot());
+        index = stackSlot - OffsetOfNunboxSlot(vr->type());
+    } else
+#endif
+    {
+        if (vr->isDouble())
+            index = stackSlotAllocator.allocateDoubleSlot();
+        else
+            index = stackSlotAllocator.allocateSlot();
+    }
 
     IonSpew(IonSpew_RegAlloc, "    assign vr%d := stack%d", vr->def->virtualRegister(), index);
 
     vr->setStackSlot(index);
+}
+
+#ifdef JS_NUNBOX32
+GreedyAllocator::VirtualRegister *
+GreedyAllocator::otherHalfOfNunbox(VirtualRegister *vreg)
+{
+    signed offset = OffsetToOtherHalfOfNunbox(vreg->type());
+    VirtualRegister *other = &vars[vreg->def->virtualRegister() + offset];
+    AssertTypesFormANunbox(vreg->type(), other->type());
+    return other;
+}
+#endif
+
+void
+GreedyAllocator::freeStack(VirtualRegister *vr)
+{
+    if (vr->isDouble())
+        stackSlotAllocator.freeDoubleSlot(vr->stackSlot());
+    else
+        stackSlotAllocator.freeSlot(vr->stackSlot());
 }
 
 bool
@@ -229,15 +272,6 @@ GreedyAllocator::allocate(LDefinition::Type type, Policy policy, AnyRegister *ou
 }
 
 void
-GreedyAllocator::freeStack(VirtualRegister *vr)
-{
-    if (vr->isDouble())
-        stackSlotAllocator.freeDoubleSlot(vr->stackSlot());
-    else
-        stackSlotAllocator.freeSlot(vr->stackSlot());
-}
-
-void
 GreedyAllocator::freeReg(AnyRegister reg)
 {
     state[reg] = NULL;
@@ -260,11 +294,31 @@ GreedyAllocator::killReg(VirtualRegister *vr)
 void
 GreedyAllocator::killStack(VirtualRegister *vr)
 {
+#if JS_NUNBOX32
+    if (IsNunbox(vr->type())) {
+        VirtualRegister *other = otherHalfOfNunbox(vr);
+        if (other->killed()) {
+            // The other half of this nunbox has been killed, so it's safe to
+            // free the combined stack, if any.
+            if (!vr->hasStackSlot() && !other->hasStackSlot())
+                return;
+
+            // Neither can have a preset spill location, if one has an
+            // allocated spill location.
+            JS_ASSERT_IF(vr->hasStackSlot(), other->hasStackSlot() || !other->hasBackingStack());
+            JS_ASSERT_IF(other->hasStackSlot(), vr->hasStackSlot() || !vr->hasBackingStack());
+            VirtualRegister *candidate = vr->hasStackSlot() ? vr : other;
+            unsigned slot = BaseOfNunboxSlot(candidate->type(), candidate->stackSlot());
+            stackSlotAllocator.freeDoubleSlot(slot);
+        }
+    } else
+#endif
     if (vr->hasStackSlot()) {
         IonSpew(IonSpew_RegAlloc, "    kill vr%d (stack:%d)",
                 vr->def->virtualRegister(), vr->stackSlot_);
         freeStack(vr);
     }
+    vr->setKilled();
 }
 
 bool
@@ -521,7 +575,7 @@ GreedyAllocator::allocateDefinitions(LInstruction *ins)
         }
 
         // Finally, set the output.
-        *def = LDefinition(def->type(), output);
+        def->setOutput(output);
     }
 
     return true;
@@ -539,7 +593,7 @@ GreedyAllocator::allocateTemporaries(LInstruction *ins)
         AnyRegister reg;
         if (!allocate(def->type(), DISALLOW, &reg))
             return false;
-        *def = LDefinition(def->type(), LAllocation(reg));
+        def->setOutput(LAllocation(reg));
     }
     return true;
 }
