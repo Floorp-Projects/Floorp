@@ -1735,7 +1735,7 @@ JSFunction::initBoundFunction(JSContext *cx, const Value &thisArg,
     setSlot(JSSLOT_BOUND_FUNCTION_THIS, thisArg);
     setSlot(JSSLOT_BOUND_FUNCTION_ARGS_COUNT, PrivateUint32Value(argslen));
 
-    copySlotRange(BOUND_FUNCTION_RESERVED_SLOTS, args, argslen, false);
+    initSlotRange(BOUND_FUNCTION_RESERVED_SLOTS, args, argslen);
 
     return true;
 }
