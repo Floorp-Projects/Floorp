@@ -33,7 +33,7 @@
 ;
 ; ***** END LICENSE BLOCK *****
 
-LIBRARY mozglue.dll
+LIBRARY mozutils.dll
 
 EXPORTS
 #ifdef MOZ_MEMORY

@@ -7144,17 +7144,17 @@ if test "$MOZ_DMD"; then
 fi
 
 if test "${OS_TARGET}" = "Android"; then
-  dnl On Android, we use WRAP_LDFLAGS to link everything to mozglue
+  dnl On Android, we use WRAP_LDFLAGS to link everything to mozutils
   :
 elif test "${OS_TARGET}" = "WINNT" -o "${OS_TARGET}" = "Darwin" -o "${OS_TARGET}" = "OS2"; then
-  dnl On Windows, OSX and OS2, we want to link all our binaries against mozglue
-  MOZ_GLUE_LDFLAGS='$(call EXPAND_LIBNAME_PATH,mozglue,$(LIBXUL_DIST)/lib)'
+  dnl On Windows, OSX and OS2, we want to link all our binaries against mozutils
+  MOZ_UTILS_LDFLAGS='$(call EXPAND_LIBNAME_PATH,mozutils,$(LIBXUL_DIST)/lib)'
 else
-  dnl On other Unix systems, we only want to link executables against mozglue
-  MOZ_GLUE_PROGRAM_LDFLAGS='$(MKSHLIB_FORCE_ALL) $(call EXPAND_LIBNAME_PATH,mozglue,$(LIBXUL_DIST)/lib) $(MKSHLIB_UNFORCE_ALL)'
+  dnl On other Unix systems, we only want to link executables against mozutils
+  MOZ_UTILS_PROGRAM_LDFLAGS='$(MKSHLIB_FORCE_ALL) $(call EXPAND_LIBNAME_PATH,mozutils,$(LIBXUL_DIST)/lib) $(MKSHLIB_UNFORCE_ALL)'
   if test -n "$GNU_CC"; then
-    dnl And we need mozglue symbols to be exported.
-    MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS -rdynamic"
+    dnl And we need mozutils symbols to be exported.
+    MOZ_UTILS_PROGRAM_LDFLAGS="$MOZ_UTILS_PROGRAM_LDFLAGS -rdynamic"
   fi
 fi
 
@@ -7207,7 +7207,7 @@ else
     AC_DEFINE(MOZ_MEMORY_LINUX)
     AC_DEFINE(MOZ_MEMORY_ANDROID)
     _WRAP_MALLOC=1
-    MOZ_GLUE_LDFLAGS=
+    MOZ_UTILS_LDFLAGS=
     ;;
   *-*linux*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
@@ -7229,11 +7229,11 @@ else
     WIN32_CRTDLL_FULLPATH=`lib -nologo -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
     lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
     if grep -q '__imp__\{0,1\}free' crtdll.obj; then
-      MOZ_GLUE_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
+      MOZ_UTILS_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
       dnl Also pass this to NSPR/NSS
-      DLLFLAGS="$DLLFLAGS $MOZ_GLUE_LDFLAGS"
+      DLLFLAGS="$DLLFLAGS $MOZ_UTILS_LDFLAGS"
     else
-      DLLFLAGS="$DLLFLAGS -LIBPATH:\$(DIST)/lib -DEFAULTLIB:mozglue"
+      DLLFLAGS="$DLLFLAGS -LIBPATH:\$(DIST)/lib -DEFAULTLIB:mozutils"
     fi
     rm crtdll.obj
 
@@ -7252,8 +7252,8 @@ else
   AC_DEFINE(HAVE_JEMALLOC_MEMALIGN)
 fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
-AC_SUBST(MOZ_GLUE_LDFLAGS)
-AC_SUBST(MOZ_GLUE_PROGRAM_LDFLAGS)
+AC_SUBST(MOZ_UTILS_LDFLAGS)
+AC_SUBST(MOZ_UTILS_PROGRAM_LDFLAGS)
 AC_SUBST(WIN32_CRT_LIBS)
 dnl Need to set this for make because NSS doesn't have configure
 AC_SUBST(DLLFLAGS)
@@ -7261,7 +7261,7 @@ AC_SUBST(DLLFLAGS)
 dnl We need to wrap dlopen and related functions on Android because we use
 dnl our own linker.
 if test "$OS_TARGET" = Android; then
-    WRAP_LDFLAGS="${WRAP_LDFLAGS} -L$_objdir/dist/lib -lmozglue"
+    WRAP_LDFLAGS="${WRAP_LDFLAGS} -L$_objdir/dist/lib -lmozutils"
     if test "$MOZ_WIDGET_TOOLKIT" = android; then
         WRAP_LDFLAGS="${WRAP_LDFLAGS} -Wl,--wrap=dlopen,--wrap=dlclose,--wrap=dlerror,--wrap=dlsym,--wrap=dladdr,--wrap=getaddrinfo,--wrap=freeaddrinfo,--wrap=gai_strerror"
     fi
@@ -9093,11 +9093,11 @@ ac_configure_args="$ac_configure_args --prefix=$dist"
 ac_configure_args="$ac_configure_args --with-sync-build-files=$_topsrcdir"
 if test "$MOZ_MEMORY"; then
    ac_configure_args="$ac_configure_args --enable-jemalloc"
-   if test -n "$MOZ_GLUE_LDFLAGS"; then
-     export MOZ_GLUE_LDFLAGS
+   if test -n "$MOZ_UTILS_LDFLAGS"; then
+     export MOZ_UTILS_LDFLAGS
    fi
-   if test -n "$MOZ_GLUE_PROGRAM_LDFLAGS"; then
-     export MOZ_GLUE_PROGRAM_LDFLAGS
+   if test -n "$MOZ_UTILS_PROGRAM_LDFLAGS"; then
+     export MOZ_UTILS_PROGRAM_LDFLAGS
    fi
 fi
 export MOZ_APP_NAME
