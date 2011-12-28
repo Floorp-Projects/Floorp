@@ -2086,6 +2086,29 @@ types::UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc)
 }
 
 bool
+types::ArrayPrototypeHasIndexedProperty(JSContext *cx, JSScript *script)
+{
+    if (!cx->typeInferenceEnabled() || !script->hasGlobal())
+        return true;
+
+    JSObject *proto;
+    if (!js_GetClassPrototype(cx, NULL, JSProto_Array, &proto, NULL))
+        return true;
+
+    while (proto) {
+        TypeObject *type = proto->getType(cx);
+        if (type->unknownProperties())
+            return true;
+        TypeSet *indexTypes = type->getProperty(cx, JSID_VOID, false);
+        if (!indexTypes || indexTypes->isOwnProperty(cx, type, true) || indexTypes->knownNonEmpty(cx))
+            return true;
+        proto = proto->getProto();
+    }
+
+    return false;
+}
+
+bool
 TypeCompartment::growPendingArray(JSContext *cx)
 {
     unsigned newCapacity = js::Max(unsigned(100), pendingCapacity * 2);
