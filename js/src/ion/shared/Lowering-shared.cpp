@@ -92,3 +92,119 @@ LIRGeneratorShared::lowerTypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *
     lir->setOperand(inputPosition, LUse(operand->virtualRegister(), LUse::ANY));
 }
 
+#ifdef JS_NUNBOX32
+LSnapshot *
+LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKind kind)
+{
+    LSnapshot *snapshot = LSnapshot::New(gen, rp, kind);
+    if (!snapshot)
+        return NULL;
+
+    FlattenedMResumePointIter iter(rp);
+    if (!iter.init())
+        return NULL;
+
+    size_t i = 0;
+    for (MResumePoint **it = iter.begin(), **end = iter.end(); it != end; ++it) {
+        MResumePoint *mir = *it;
+        for (size_t j = 0; j < mir->numOperands(); ++i, ++j) {
+            MDefinition *ins = mir->getOperand(j);
+            LAllocation *type = snapshot->typeOfSlot(i);
+            LAllocation *payload = snapshot->payloadOfSlot(i);
+
+            // The register allocation will fill these fields in with actual
+            // register/stack assignments. During code generation, we can restore
+            // interpreter state with the given information. Note that for
+            // constants, including known types, we record a dummy placeholder,
+            // since we can recover the same information, much cleaner, from MIR.
+            if (ins->isConstant() || ins->isUnused()) {
+                *type = LConstantIndex::Bogus();
+                *payload = LConstantIndex::Bogus();
+            } else if (ins->type() != MIRType_Value) {
+                *type = LConstantIndex::Bogus();
+                *payload = use(ins, LUse::KEEPALIVE);
+            } else {
+                *type = useType(ins, LUse::KEEPALIVE);
+                *payload = usePayload(ins, LUse::KEEPALIVE);
+            }
+        }
+    }
+
+    return snapshot;
+}
+
+#elif JS_PUNBOX64
+
+LSnapshot *
+LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKind kind)
+{
+    LSnapshot *snapshot = LSnapshot::New(gen, rp, kind);
+    if (!snapshot)
+        return NULL;
+
+    FlattenedMResumePointIter iter(rp);
+    if (!iter.init())
+        return NULL;
+
+    size_t i = 0;
+    for (MResumePoint **it = iter.begin(), **end = iter.end(); it != end; ++it) {
+        MResumePoint *mir = *it;
+        for (size_t j = 0; j < mir->numOperands(); ++i, ++j) {
+            MDefinition *def = mir->getOperand(j);
+            LAllocation *a = snapshot->getEntry(i);
+
+            if (def->isUnused()) {
+                *a = LConstantIndex::Bogus();
+                continue;
+            }
+
+            *a = useKeepaliveOrConstant(def);
+        }
+    }
+
+    return snapshot;
+}
+#endif
+
+bool
+LIRGeneratorShared::assignSnapshot(LInstruction *ins, BailoutKind kind)
+{
+    LSnapshot *snapshot = buildSnapshot(ins, lastResumePoint_, kind);
+    if (!snapshot)
+        return false;
+
+    ins->assignSnapshot(snapshot);
+    return true;
+}
+
+bool
+LIRGeneratorShared::assignPostSnapshot(MInstruction *mir, LInstruction *ins)
+{
+    JS_ASSERT(mir->resumePoint());
+    // Should only produce one postSnapshot per MIR. (not handled yet)
+    JS_ASSERT(!postSnapshot_);
+
+    LSnapshot *snapshot = buildSnapshot(ins, mir->resumePoint(), Bailout_Normal);
+    if (!snapshot)
+        return false;
+
+    ins->assignPostSnapshot(snapshot);
+    postSnapshot_ = snapshot;
+    return true;
+}
+
+bool
+LIRGeneratorShared::assignSafepoint(LInstruction *ins, MInstruction *mir)
+{
+    ins->setMir(mir);
+    if (!mir->isEffectful()) {
+        if (!ins->snapshot())
+            return assignSnapshot(ins);
+        return true;
+    } else {
+        if (!ins->postSnapshot())
+            return assignPostSnapshot(mir, ins);
+        return true;
+    }
+}
+

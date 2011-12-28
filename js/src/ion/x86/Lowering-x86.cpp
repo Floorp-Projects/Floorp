@@ -43,7 +43,6 @@
 #include "ion/Lowering.h"
 #include "Assembler-x86.h"
 #include "ion/shared/Lowering-shared-inl.h"
-#include "Lowering-x86-inl.h"
 
 using namespace js;
 using namespace js::ion;
@@ -172,88 +171,6 @@ LIRGeneratorX86::visitReturn(MReturn *ret)
     ins->setOperand(0, LUse(JSReturnReg_Type));
     ins->setOperand(1, LUse(JSReturnReg_Data));
     return fillBoxUses(ins, 0, opd) && add(ins);
-}
-
-LSnapshot *
-LIRGeneratorX86::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKind kind)
-{
-    LSnapshot *snapshot = LSnapshot::New(gen, rp, kind);
-    if (!snapshot)
-        return NULL;
-
-    FlattenedMResumePointIter iter(rp);
-    if (!iter.init())
-        return NULL;
-
-    size_t i = 0;
-    for (MResumePoint **it = iter.begin(), **end = iter.end(); it != end; ++it) {
-        MResumePoint *mir = *it;
-        for (size_t j = 0; j < mir->numOperands(); ++i, ++j) {
-            MDefinition *ins = mir->getOperand(j);
-            LAllocation *type = snapshot->typeOfSlot(i);
-            LAllocation *payload = snapshot->payloadOfSlot(i);
-
-            // The register allocation will fill these fields in with actual
-            // register/stack assignments. During code generation, we can restore
-            // interpreter state with the given information. Note that for
-            // constants, including known types, we record a dummy placeholder,
-            // since we can recover the same information, much cleaner, from MIR.
-            if (ins->isConstant() || ins->isUnused()) {
-                *type = LConstantIndex::Bogus();
-                *payload = LConstantIndex::Bogus();
-            } else if (ins->type() != MIRType_Value) {
-                *type = LConstantIndex::Bogus();
-                *payload = use(ins, LUse::KEEPALIVE);
-            } else {
-                *type = useType(ins, LUse::KEEPALIVE);
-                *payload = usePayload(ins, LUse::KEEPALIVE);
-            }
-        }
-    }
-
-    return snapshot;
-}
-
-bool
-LIRGeneratorX86::assignSnapshot(LInstruction *ins, BailoutKind kind)
-{
-    LSnapshot *snapshot = buildSnapshot(ins, lastResumePoint_, kind);
-    if (!snapshot)
-        return false;
-
-    ins->assignSnapshot(snapshot);
-    return true;
-}
-
-bool
-LIRGeneratorX86::assignPostSnapshot(MInstruction *mir, LInstruction *ins)
-{
-    JS_ASSERT(mir->resumePoint());
-    // Should only produce one postSnapshot per MIR. (not handled yet)
-    JS_ASSERT(!postSnapshot_);
-
-    LSnapshot *snapshot = buildSnapshot(ins, mir->resumePoint(), Bailout_Normal);
-    if (!snapshot)
-        return false;
-
-    ins->assignPostSnapshot(snapshot);
-    postSnapshot_ = snapshot;
-    return true;
-}
-
-bool
-LIRGeneratorX86::assignSafepoint(LInstruction *ins, MInstruction *mir)
-{
-    ins->setMir(mir);
-    if (mir->isEffectful()) {
-        if (!ins->postSnapshot())
-            return assignPostSnapshot(mir, ins);
-        return true;
-    } else {
-        if (!ins->snapshot())
-            return assignSnapshot(ins);
-        return true;
-    }
 }
 
 bool
