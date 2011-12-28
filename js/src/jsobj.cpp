@@ -3347,6 +3347,28 @@ JSObject::nonNativeSetElement(JSContext *cx, uint32_t index, js::Value *vp, JSBo
     return getOps()->setElement(cx, this, index, vp, strict);
 }
 
+bool
+JSObject::deleteByValue(JSContext *cx, const Value &property, Value *rval, bool strict)
+{
+    uint32_t index;
+    if (IsDefinitelyIndex(property, &index))
+        return deleteElement(cx, index, rval, strict);
+
+    Value propval = property;
+    SpecialId sid;
+    if (ValueIsSpecial(this, &propval, &sid, cx))
+        return deleteSpecial(cx, sid, rval, strict);
+
+    JSAtom *name;
+    if (!js_ValueToAtom(cx, propval, &name))
+        return false;
+
+    if (name->isIndex(&index))
+        return deleteElement(cx, index, rval, false);
+
+    return deleteProperty(cx, name->asPropertyName(), rval, false);
+}
+
 JS_FRIEND_API(bool)
 JS_CopyPropertiesFrom(JSContext *cx, JSObject *target, JSObject *obj)
 {
@@ -3915,7 +3937,7 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
 bad:
     if (named) {
         Value rval;
-        obj->deleteGeneric(cx, ATOM_TO_JSID(atom), &rval, false);
+        obj->deleteByValue(cx, StringValue(atom), &rval, false);
     }
     if (cached)
         ClearClassObject(cx, obj, key);
@@ -5903,7 +5925,7 @@ js_SetElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, uintN *att
 }
 
 JSBool
-js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
+js_DeleteGeneric(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
     JSObject *proto;
     JSProperty *prop;
@@ -5975,12 +5997,24 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
 }
 
 JSBool
+js_DeleteProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *rval, JSBool strict)
+{
+    return js_DeleteGeneric(cx, obj, ATOM_TO_JSID(name), rval, strict);
+}
+
+JSBool
 js_DeleteElement(JSContext *cx, JSObject *obj, uint32_t index, Value *rval, JSBool strict)
 {
     jsid id;
     if (!IndexToId(cx, index, &id))
         return false;
-    return js_DeleteProperty(cx, obj, id, rval, strict);
+    return js_DeleteGeneric(cx, obj, id, rval, strict);
+}
+
+JSBool
+js_DeleteSpecial(JSContext *cx, JSObject *obj, SpecialId sid, Value *rval, JSBool strict)
+{
+    return js_DeleteGeneric(cx, obj, SPECIALID_TO_JSID(sid), rval, strict);
 }
 
 namespace js {

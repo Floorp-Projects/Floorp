@@ -134,13 +134,13 @@ js_ValueToIterator(JSContext *cx, uintN flags, js::Value *vp);
 extern JS_FRIEND_API(JSBool)
 js_CloseIterator(JSContext *cx, JSObject *iterObj);
 
-bool
+extern bool
 js_SuppressDeletedProperty(JSContext *cx, JSObject *obj, jsid id);
 
-bool
+extern bool
 js_SuppressDeletedElement(JSContext *cx, JSObject *obj, uint32_t index);
 
-bool
+extern bool
 js_SuppressDeletedElements(JSContext *cx, JSObject *obj, uint32_t begin, uint32_t end);
 
 /*
