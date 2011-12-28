@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=707749
+-->
+<head>
+  <title>Test for Bug 707749</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=707749 ">Mozilla Bug 707749 </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 707749 **/
+SimpleTest.waitForExplicitFinish();
+function loaded() {
+    $('ifr').contentDocument.open();
+    $('ifr').contentDocument.close();
+    ok(true, "Don't throw an exception from contentDocument.open()");
+    SimpleTest.finish();
+}
+
+</script>
+<iframe id="ifr" onload="loaded()" src="data:text/html,<script>navigator</script>"></iframe>
+</pre>
+</body>
+</html>
+
