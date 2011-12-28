@@ -148,6 +148,9 @@ void
 MarkGCThing(JSTracer *trc, void *thing, const char *name);
 
 void
+MarkRootThingOrValue(JSTracer *trc, uintptr_t word, const char *name);
+
+void
 MarkRoot(JSTracer *trc, JSObject *thing, const char *name);
 
 void
