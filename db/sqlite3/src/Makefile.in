@@ -78,9 +78,9 @@ endif
 endif
 
 ifeq (Darwin,$(OS_TARGET))
-# On OSX, with jemalloc enabled, having sqlite linked against mozglue
+# On OSX, with jemalloc enabled, having sqlite linked against mozutils
 # causes crashes in NSS standalone tools.
-MOZ_GLUE_LDFLAGS =
+MOZ_UTILS_LDFLAGS =
 endif
 
 # XXX Force -O2 optimisation on Mac because using the default -O3 causes
