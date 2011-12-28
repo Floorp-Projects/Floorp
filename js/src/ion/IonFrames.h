@@ -91,10 +91,15 @@ InvalidationRecordToToken(InvalidationRecord *record)
 {
     return CalleeToken(uintptr_t(record) | uintptr_t(CalleeToken_InvalidationRecord));
 }
+static inline bool
+CalleeTokenIsFunction(CalleeToken token)
+{
+    return GetCalleeTokenTag(token) == CalleeToken_Function;
+}
 static inline JSFunction *
 CalleeTokenToFunction(CalleeToken token)
 {
-    JS_ASSERT(GetCalleeTokenTag(token) == CalleeToken_Function);
+    JS_ASSERT(CalleeTokenIsFunction(token));
     return (JSFunction *)token;
 }
 static inline JSScript *
