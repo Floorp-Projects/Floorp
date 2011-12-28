@@ -294,7 +294,7 @@ SafeInstallOperation.prototype = {
 
   _installDirEntry: function(aDirEntry, aTargetDirectory, aCopy) {
     try {
-      if (aDirEntry.isDirectory() && !aDirEntry.isSymlink())
+      if (aDirEntry.isDirectory())
         this._installDirectory(aDirEntry, aTargetDirectory, aCopy);
       else
         this._installFile(aDirEntry, aTargetDirectory, aCopy);
@@ -354,7 +354,7 @@ SafeInstallOperation.prototype = {
   rollback: function() {
     while (this._installedFiles.length > 0) {
       let move = this._installedFiles.pop();
-      if (move.newFile.isDirectory() && !move.newFile.isSymlink()) {
+      if (move.newFile.isDirectory()) {
         let oldDir = move.oldFile.parent.clone();
         oldDir.append(move.oldFile.leafName);
         oldDir.create(Ci.nsILocalFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
@@ -1276,7 +1276,7 @@ function recursiveRemove(aFile) {
     return;
   }
   catch (e) {
-    if (!aFile.isDirectory() || aFile.isSymlink()) {
+    if (!aFile.isDirectory()) {
       ERROR("Failed to remove file " + aFile.path, e);
       throw e;
     }
@@ -7855,33 +7855,24 @@ DirectoryInstallLocation.prototype = {
    * @return  a nsILocalFile object representing the linked directory.
    */
   _readDirectoryFromFile: function DirInstallLocation__readDirectoryFromFile(aFile) {
-    if (aFile.isSymlink()) {
-      var linkedDirectory = aFile.clone();
-      linkedDirectory.normalize();
-    }
-    else {
-      let fis = Cc["@mozilla.org/network/file-input-stream;1"].
-                createInstance(Ci.nsIFileInputStream);
-      fis.init(aFile, -1, -1, false);
-      let line = { value: "" };
-      if (fis instanceof Ci.nsILineInputStream)
-        fis.readLine(line);
-      fis.close();
+    let fis = Cc["@mozilla.org/network/file-input-stream;1"].
+              createInstance(Ci.nsIFileInputStream);
+    fis.init(aFile, -1, -1, false);
+    let line = { value: "" };
+    if (fis instanceof Ci.nsILineInputStream)
+      fis.readLine(line);
+    fis.close();
+    if (line.value) {
+      let linkedDirectory = Cc["@mozilla.org/file/local;1"].
+                            createInstance(Ci.nsILocalFile);
 
-      if (line.value) {
-        linkedDirectory = Cc["@mozilla.org/file/local;1"].
-                          createInstance(Ci.nsILocalFile);
-
-        try {
-          linkedDirectory.initWithPath(line.value);
-        }
-        catch (e) {
-          linkedDirectory.setRelativeDescriptor(aFile.parent, line.value);
-        }
+      try {
+        linkedDirectory.initWithPath(line.value);
       }
-    }
+      catch (e) {
+        linkedDirectory.setRelativeDescriptor(aFile.parent, line.value);
+      }
 
-    if (linkedDirectory) {
       if (!linkedDirectory.exists()) {
         WARN("File pointer " + aFile.path + " points to " + linkedDirectory.path +
              " which does not exist");
@@ -7931,7 +7922,7 @@ DirectoryInstallLocation.prototype = {
         continue;
       }
 
-      if (!directLoad && (entry.isFile() || entry.isSymlink())) {
+      if (entry.isFile() && !directLoad) {
         let newEntry = this._readDirectoryFromFile(entry);
         if (!newEntry) {
           LOG("Deleting stale pointer file " + entry.path);
