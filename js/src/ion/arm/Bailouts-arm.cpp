@@ -193,7 +193,7 @@ ion::FrameRecoveryFromInvalidation(IonCompartment *ion, InvalidationBailoutStack
     IonJSFrameLayout *fp = (IonJSFrameLayout *) bailout->fp();
     InvalidationRecord *record = CalleeTokenToInvalidationRecord(fp->calleeToken());
     const IonFrameInfo *exitInfo = record->ionScript->getFrameInfo(record->returnAddress);
-    SnapshotOffset snapshotOffset = exitInfo->snapshotOffset;
+    SnapshotOffset snapshotOffset = exitInfo->snapshotOffset();
 
     return FrameRecovery::FromSnapshot(bailout->fp(), bailout->sp(), bailout->machine(),
                                        snapshotOffset);

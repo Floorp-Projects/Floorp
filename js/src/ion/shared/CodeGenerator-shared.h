@@ -69,7 +69,9 @@ class CodeGeneratorShared : public LInstructionVisitor
     LBlock *current;
     SnapshotWriter snapshots_;
     IonCode *deoptTable_;
+#ifdef DEBUG
     uint32 pushedArgs_;
+#endif
     SafepointWriter safepoints_;
 
     // Mapping from bailout table ID to an offset in the snapshot buffer.
@@ -194,11 +196,16 @@ class CodeGeneratorShared : public LInstructionVisitor
         return (current->mir()->id() + 1 == block->mir()->id());
     }
 
+  public:
     template <typename T>
     void pushArg(const T &t) {
         masm.Push(t);
+#ifdef DEBUG
         pushedArgs_++;
+#endif
     }
+
+    bool callVM(const VMFunction &f, LInstruction *ins);
 
   protected:
     bool addOutOfLineCode(OutOfLineCode *code);

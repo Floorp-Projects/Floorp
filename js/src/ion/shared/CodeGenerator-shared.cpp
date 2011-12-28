@@ -52,7 +52,9 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph &graph)
   : gen(gen),
     graph(graph),
     deoptTable_(NULL),
+#ifdef DEBUG
     pushedArgs_(0),
+#endif
     osrEntryOffset_(0),
     frameDepth_(graph.localSlotCount() * sizeof(STACK_SLOT_SIZE) +
                 graph.argumentSlotCount() * sizeof(Value))
@@ -266,3 +268,47 @@ CodeGeneratorShared::assignFrameInfo(LSafepoint *safepoint, LSnapshot *snapshot)
     return frameInfoTable_.append(fi);
 }
 
+// Before doing any call to Cpp, you should ensure that volatile
+// registers are evicted by the register allocator.
+bool
+CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins)
+{
+    // Stack is:
+    //    ... frame ...
+    //    [args]
+#ifdef DEBUG
+    JS_ASSERT(pushedArgs_ == fun.explicitArgs);
+    pushedArgs_ = 0;
+#endif
+
+    // Generate the wrapper of the VM function.
+    IonCompartment *ion = gen->cx->compartment->ionCompartment();
+    IonCode *wrapper = ion->generateVMWrapper(gen->cx, fun);
+    if (!wrapper)
+        return false;
+
+#if defined(JS_CPU_ARM)
+    // As opposed of x86 and x64 implementation, ARM keep it's stack aligned all
+    // the time. Thus we add an extra padding if we pushed an odd number of
+    // arguments. This padding is removed by the wrapper wen it returns.
+    uint32 argumentPadding = (fun.explicitArgs % (StackAlignment / sizeof(void *))) * sizeof(void *);
+    masm.reserveStack(argumentPadding);
+#else
+    uint32 argumentPadding = 0;
+#endif
+
+    // Call the wrapper function.  The wrapper is in charge to unwind the stack
+    // when returning from the call.  Failures are handled with exceptions based
+    // on the return value of the C functions.  To guard the outcome of the
+    // returned value, use another LIR instruction.
+    masm.callWithExitFrame(wrapper);
+    if (!createSafepoint(ins))
+        return false;
+
+    // Pop arguments from framePushed.
+    masm.implicitPop(fun.explicitArgs + argumentPadding / sizeof(void *));
+
+    // Stack is:
+    //    ... frame ...
+    return true;
+}

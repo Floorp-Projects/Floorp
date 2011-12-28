@@ -507,21 +507,26 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     VMWrapperMap::AddPtr p = functionWrappers_->lookupForAdd(&f);
     if (p)
         return p->value;
+
+    // Generate a separated code for the wrapper.
     MacroAssembler masm;
-    // Avoid conflicts with argument registers while discarding the result after
-    // the function call.
-    const GeneralRegisterSet allocatableRegs(Registers::AllocatableMask & ~Registers::ArgRegMask);
-    GeneralRegisterSet regs(allocatableRegs);
-    // the stack is:
-    // ... frame ...
-    //  +8   [args]
-    //  +4   descriptor
-    //  +0   padding (not the return value)
-    // Save the current stack pointer as the base for copying arguments.
+    GeneralRegisterSet regs =
+        GeneralRegisterSet::Not(GeneralRegisterSet(Register::Codes::VolatileMask));
+
+    // Stack is:
+    //    ... frame ...
+    //  +8  [args] + argPadding
+    //  +0  ExitFrame
+    //
+    // We're aligned to an exit frame, so link it up.
+    masm.linkExitFrame();
+
+    // Save the base of the argument set stored on the stack.
     Register argsBase = InvalidReg;
+    uint32 argumentPadding = (f.explicitArgs % (StackAlignment / sizeof(void *))) * sizeof(void *);
     if (f.explicitArgs) {
         argsBase = regs.takeAny();
-        masm.ma_add(sp, Imm32(sizeof(IonExitFrameLayout)), argsBase);
+        masm.ma_add(sp, Imm32(sizeof(IonExitFrameLayout) + argumentPadding), argsBase);
     }
 
     // Reserve space for the outparameter.
@@ -532,14 +537,13 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
         masm.ma_mov(sp, outReg);
     }
 
-    Register temp = regs.takeAny();
-    // TODO: investigate if this can be changed into setupAlignedABICall.
-    masm.setupUnalignedABICall(f.argc(), temp);
+    // ARM stack is made to be constantly aligned by 8.
+    masm.setupAlignedABICall(f.argc());
 
     // Initialize and set the context parameter.
     Register cxreg = r0;
-    // the imm32 here used to be Operand, I have no clue what the type ws supposed to be.
-    masm.movePtr(ImmWord(&JS_THREAD_DATA(cx)->ionJSContext), cxreg);
+    masm.movePtr(ImmWord(JS_THREAD_DATA(cx)), cxreg);
+    masm.loadPtr(Address(cxreg, offsetof(ThreadData, ionJSContext)), cxreg);
     masm.setABIArg(0, cxreg);
 
     // Copy arguments.
@@ -561,26 +565,11 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Load the outparam and free any allocated stack.
     if (f.outParam == Type_Value) {
-        masm.ma_ldrd(EDtrAddr(sp, EDtrOffImm(0)), JSReturnReg_Data, JSReturnReg_Type);
+        masm.loadValue(Address(sp, 0), JSReturnOperand);
         masm.freeStack(sizeof(Value));
     }
 
-    // Pick a register which is not among the return registers.
-    regs = GeneralRegisterSet::Not(GeneralRegisterSet(Registers::JSCallMask | Registers::CallMask));
-    temp = regs.takeAny();
-
-    // Save the return address, remove the caller's arguments, then push the
-    // return address back again.
-    //masm.ma_ldr(Operand(sp, IonExitFrameLayout::offsetOfReturnAddress()), temp);
-    // ARM's ABI does not ask you to put the return address on the stack, so we don't
-    // We still need to have the return address, so we use the pc to compute it.
-    // Presently, I'm hard coding the value because I know exactly what code is being generated
-    // but I'll set up a as_mov(Register, Label *) that will automatically do this.
-    masm.breakpoint();
-    masm.ma_sub(pc, Imm32(128), temp);
-    masm.ma_add(Imm32(sizeof(IonExitFrameLayout) + f.explicitArgs * sizeof(void *)), sp);
-    masm.ma_push(temp);
-    masm.ret();
+    masm.retn(Imm32(sizeof(IonExitFrameLayout) + argumentPadding + f.explicitArgs * sizeof(void *)));
 
     masm.bind(&exception);
     masm.handleException();
