@@ -59,6 +59,21 @@ static inline D2D1_RECT_F D2DRect(const Rect &aRect)
   return D2D1::RectF(aRect.x, aRect.y, aRect.XMost(), aRect.YMost());
 }
 
+static inline D2D1_EXTEND_MODE D2DExtend(ExtendMode aExtendMode)
+{
+  D2D1_EXTEND_MODE extend = D2D1_EXTEND_MODE_CLAMP;
+  switch (aExtendMode) {
+  case EXTEND_REPEAT:
+    extend = D2D1_EXTEND_MODE_WRAP;
+    break;
+  case EXTEND_REFLECT:
+    extend = D2D1_EXTEND_MODE_MIRROR;
+    break;
+  }
+
+  return extend;
+}
+
 static inline D2D1_BITMAP_INTERPOLATION_MODE D2DFilter(const Filter &aFilter)
 {
   switch (aFilter) {
@@ -69,11 +84,11 @@ static inline D2D1_BITMAP_INTERPOLATION_MODE D2DFilter(const Filter &aFilter)
   return D2D1_BITMAP_INTERPOLATION_MODE_LINEAR;
 }
 
-static inline D2D1_ANTIALIAS_MODE D2DAAMode(const AntialiasMode &aMode)
+static inline D2D1_ANTIALIAS_MODE D2DAAMode(AntialiasMode aMode)
 {
   switch (aMode) {
   case AA_NONE:
-    D2D1_ANTIALIAS_MODE_ALIASED;
+    return D2D1_ANTIALIAS_MODE_ALIASED;
   }
 
   return D2D1_ANTIALIAS_MODE_PER_PRIMITIVE;
@@ -139,6 +154,11 @@ static inline D2D1_ALPHA_MODE AlphaMode(SurfaceFormat aFormat)
   }
 
   return D2D1_ALPHA_MODE_PREMULTIPLIED;
+}
+
+static inline D2D1_PIXEL_FORMAT D2DPixelFormat(SurfaceFormat aFormat)
+{
+  return D2D1::PixelFormat(DXGIFormat(aFormat), AlphaMode(aFormat));
 }
 
 static inline int BytesPerPixel(SurfaceFormat aFormat)

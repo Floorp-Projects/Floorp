@@ -38,7 +38,7 @@
 #include "nsPageFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsHTMLParts.h"
 #include "nsIContent.h"
 #include "nsPresContext.h"

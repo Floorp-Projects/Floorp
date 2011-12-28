@@ -40,17 +40,19 @@
 
 /* rendering object for CSS :first-letter pseudo-element */
 
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 
-#define nsFirstLetterFrameSuper nsHTMLContainerFrame
-
-class nsFirstLetterFrame : public nsFirstLetterFrameSuper {
+class nsFirstLetterFrame : public nsContainerFrame {
 public:
   NS_DECL_QUERYFRAME_TARGET(nsFirstLetterFrame)
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  nsFirstLetterFrame(nsStyleContext* aContext) : nsHTMLContainerFrame(aContext) {}
+  nsFirstLetterFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
+
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,
@@ -66,7 +68,7 @@ public:
   {
     if (!GetStyleDisplay()->IsFloating())
       aFlags = aFlags & ~(nsIFrame::eLineParticipant);
-    return nsFirstLetterFrameSuper::IsFrameOfType(aFlags &
+    return nsContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eBidiInlineContainer));
   }
 

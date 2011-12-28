@@ -78,6 +78,87 @@ static bool gStaticAtomTableSealed = false;
 
 //----------------------------------------------------------------------
 
+/**
+ * Note that AtomImpl objects are sometimes converted into PermanentAtomImpl
+ * objects using placement new and just overwriting the vtable pointer.
+ */
+
+class AtomImpl : public nsIAtom {
+public:
+  AtomImpl(const nsAString& aString);
+
+  // This is currently only used during startup when creating a permanent atom
+  // from NS_RegisterStaticAtoms
+  AtomImpl(nsStringBuffer* aData, PRUint32 aLength);
+
+protected:
+  // This is only intended to be used when a normal atom is turned into a
+  // permanent one.
+  AtomImpl() {
+    // We can't really assert that mString is a valid nsStringBuffer string,
+    // so do the best we can do and check for some consistencies.
+    NS_ASSERTION((mLength + 1) * sizeof(PRUnichar) <=
+                 nsStringBuffer::FromData(mString)->StorageSize() &&
+                 mString[mLength] == 0,
+                 "Not initialized atom");
+  }
+
+  // We don't need a virtual destructor here because PermanentAtomImpl
+  // deletions aren't handled through Release().
+  ~AtomImpl();
+
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIATOM
+
+  enum { REFCNT_PERMANENT_SENTINEL = PR_UINT32_MAX };
+
+  virtual bool IsPermanent();
+
+  // We can't use the virtual function in the base class destructor.
+  bool IsPermanentInDestructor() {
+    return mRefCnt == REFCNT_PERMANENT_SENTINEL;
+  }
+
+  // for |#ifdef NS_BUILD_REFCNT_LOGGING| access to reference count
+  nsrefcnt GetRefCount() { return mRefCnt; }
+
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+};
+
+/**
+ * A non-refcounted implementation of nsIAtom.
+ */
+
+class PermanentAtomImpl : public AtomImpl {
+public:
+  PermanentAtomImpl(const nsAString& aString)
+    : AtomImpl(aString)
+  {}
+  PermanentAtomImpl(nsStringBuffer* aData, PRUint32 aLength)
+    : AtomImpl(aData, aLength)
+  {}
+  PermanentAtomImpl()
+  {}
+
+  ~PermanentAtomImpl();
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+
+  virtual bool IsPermanent();
+
+  // SizeOfIncludingThis() isn't needed -- the one inherited from AtomImpl is
+  // good enough, because PermanentAtomImpl doesn't add any new data members.
+
+  void* operator new(size_t size, AtomImpl* aAtom) CPP_THROW_NEW;
+  void* operator new(size_t size) CPP_THROW_NEW
+  {
+    return ::operator new(size);
+  }
+};
+
+//----------------------------------------------------------------------
+
 struct AtomTableEntry : public PLDHashEntryHdr {
   AtomImpl* mAtom;
 };
@@ -369,21 +450,58 @@ AtomImpl::IsStaticAtom()
   return IsPermanent();
 }
 
+size_t
+AtomImpl::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  return aMallocSizeOf(this, sizeof(AtomImpl)) +
+         nsStringBuffer::FromData(mString)->
+           SizeOfIncludingThisIfUnshared(aMallocSizeOf);
+}
+
 //----------------------------------------------------------------------
 
+static size_t
+SizeOfAtomTableEntryExcludingThis(PLDHashEntryHdr *aHdr,
+                                  nsMallocSizeOfFun aMallocSizeOf,
+                                  void *aArg)
+{
+  AtomTableEntry* entry = static_cast<AtomTableEntry*>(aHdr);
+  return entry->mAtom->SizeOfIncludingThis(aMallocSizeOf);
+}
+
+size_t NS_SizeOfAtomTableIncludingThis(nsMallocSizeOfFun aMallocSizeOf) {
+  if (gAtomTable.ops) {
+      return PL_DHashTableSizeOfExcludingThis(&gAtomTable,
+                                              SizeOfAtomTableEntryExcludingThis,
+                                              aMallocSizeOf);
+  }
+  return 0;
+}
+
 #define ATOM_HASHTABLE_INITIAL_SIZE  4096
+
+static inline bool
+EnsureTableExists()
+{
+  if (gAtomTable.ops) {
+    return true;
+  }
+  if (PL_DHashTableInit(&gAtomTable, &AtomTableOps, 0,
+                        sizeof(AtomTableEntry), ATOM_HASHTABLE_INITIAL_SIZE)) {
+    return true;
+  }
+  // Initialization failed.
+  gAtomTable.ops = nsnull;
+  return false;
+}
 
 static inline AtomTableEntry*
 GetAtomHashEntry(const char* aString, PRUint32 aLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
-  if (!gAtomTable.ops &&
-      !PL_DHashTableInit(&gAtomTable, &AtomTableOps, 0,
-                         sizeof(AtomTableEntry), ATOM_HASHTABLE_INITIAL_SIZE)) {
-    gAtomTable.ops = nsnull;
+  if (!EnsureTableExists()) {
     return nsnull;
   }
-
   AtomTableKey key(aString, aLength);
   return static_cast<AtomTableEntry*>
                     (PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
@@ -393,13 +511,9 @@ static inline AtomTableEntry*
 GetAtomHashEntry(const PRUnichar* aString, PRUint32 aLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
-  if (!gAtomTable.ops &&
-      !PL_DHashTableInit(&gAtomTable, &AtomTableOps, 0,
-                         sizeof(AtomTableEntry), ATOM_HASHTABLE_INITIAL_SIZE)) {
-    gAtomTable.ops = nsnull;
+  if (!EnsureTableExists()) {
     return nsnull;
   }
-
   AtomTableKey key(aString, aLength);
   return static_cast<AtomTableEntry*>
                     (PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
