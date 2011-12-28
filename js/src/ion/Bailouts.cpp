@@ -291,6 +291,8 @@ ion::Bailout(BailoutStack *sp)
     IonActivation *activation = cx->threadData()->ionActivation;
     FrameRecovery in = FrameRecoveryFromBailout(ioncompartment, sp);
 
+    IonSpew(IonSpew_Snapshots, "Took bailout! Snapshot offset: %d", in.snapshotOffset());
+
     uint32 retval = ConvertFrames(cx, activation, in);
     if (retval != BAILOUT_RETURN_FATAL_ERROR)
         return retval;

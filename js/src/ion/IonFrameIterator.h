@@ -99,8 +99,8 @@ class IonFrameIterator
     inline FrameType prevType() const;
     uint8 *prevFp() const;
 
-    // Funtctions used to iterate on frames.
-    // When prevType is IonFrame_Entry, the current frame is the last frame.
+    // Functions used to iterate on frames. When prevType is IonFrame_Entry,
+    // the current frame is the last frame.
     inline bool more() const;
     IonFrameIterator &operator++();
 
@@ -110,18 +110,19 @@ class IonFrameIterator
 
 class IonActivationIterator
 {
-    JSContext *cx_;
     uint8 *top_;
     IonActivation *activation_;
 
   public:
     IonActivationIterator(JSContext *cx);
+    IonActivationIterator(ThreadData *td);
 
     IonActivationIterator &operator++();
 
     uint8 *top() const {
         return top_;
     }
+    bool more() const;
 };
 
 } // namespace ion

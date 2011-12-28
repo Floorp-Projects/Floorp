@@ -88,7 +88,9 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     masm.push(ebp);
     masm.movl(esp, ebp);
 
-    // Save non-volatile registers
+    // Save non-volatile registers. These must be saved by the trampoline,
+    // rather than the JIT'd code, because they are scanned by the conservative
+    // scanner.
     masm.push(ebx);
     masm.push(esi);
     masm.push(edi);
