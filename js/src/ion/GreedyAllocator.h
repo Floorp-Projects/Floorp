@@ -66,7 +66,8 @@ class GreedyAllocator
         }
     };
 
-    struct VirtualRegister {
+    struct VirtualRegister
+    {
         LDefinition *def;
         uint32 stackSlot_;
         union {
@@ -84,7 +85,7 @@ class GreedyAllocator
         LInstruction *ins;
 #endif
 
-        void init(LDefinition *def, LInstruction *ins) {
+        void define(LDefinition *def, LInstruction *ins) {
             this->def = def;
             this->hasBackingStack_ = (def->isPreset() && def->output()->isMemory());
 #ifdef DEBUG
@@ -186,12 +187,6 @@ class GreedyAllocator
         { }
     };
 
-    struct BlockInfo {
-        AllocationState in;
-        AllocationState out;
-        Mover restores;
-    };
-
   private:
     MIRGenerator *gen;
     LIRGraph &graph;
@@ -200,7 +195,6 @@ class GreedyAllocator
     RegisterSet discouraged;
     AllocationState state;
     StackSlotAllocator stackSlotAllocator;
-    BlockInfo *blocks;
 
     // Aligns: If a register shuffle must occur to align input parameters (for
     //         example, ecx loading into fixed edx), it goes here.
@@ -215,6 +209,7 @@ class GreedyAllocator
     //   Spills
     //   Restores
     // 
+    Mover phiMoves;
     LMoveGroup *aligns;
     LMoveGroup *spills;
     LMoveGroup *restores;
@@ -253,7 +248,6 @@ class GreedyAllocator
     void findDefinitionsInLIR(LInstruction *ins);
     void findDefinitionsInBlock(LBlock *block);
     void findDefinitions();
-    bool findLoopCarriedUses(LBlock *block);
 
     // Kills a definition, freeing its stack allocation and register.
     void killReg(VirtualRegister *vr);
@@ -265,6 +259,7 @@ class GreedyAllocator
     bool maybeEvict(AnyRegister reg);
 
     // Allocates or frees a stack slot.
+    uint32 allocateSlotFor(const VirtualRegister *vr);
     void allocateStack(VirtualRegister *vr);
     void freeStack(VirtualRegister *vr);
 
@@ -287,6 +282,7 @@ class GreedyAllocator
     // Allocate a free register of a particular type, possibly evicting in the
     // process.
     bool allocate(LDefinition::Type type, Policy policy, AnyRegister *out);
+    bool allocateReg(VirtualRegister *vreg);
 
     // Allocate a physical register for a virtual register, possibly evicting
     // in the process.
@@ -299,8 +295,7 @@ class GreedyAllocator
     bool prescanDefinitions(LInstruction *ins);
     bool prescanUses(LInstruction *ins);
     bool spillForCall(LInstruction *ins);
-    void informSnapshot(LSnapshot *snapshot);
-    bool allocateSameAsInput(LDefinition *def, LAllocation *a, AnyRegister *out);
+    void informSnapshot(LInstruction *ins);
     bool allocateDefinitions(LInstruction *ins);
     bool allocateTemporaries(LInstruction *ins);
     bool allocateInputs(LInstruction *ins);
@@ -308,11 +303,8 @@ class GreedyAllocator
     bool allocateRegisters();
     bool allocateRegistersInBlock(LBlock *block);
     bool allocateInstruction(LBlock *block, LInstruction *ins);
-    bool mergePhiState(LBlock *block);
-    bool prepareBackedge(LBlock *block);
-    bool mergeAllocationState(LBlock *block);
-    bool mergeBackedgeState(LBlock *header, LBlock *backedge);
-    bool mergeRegisterState(const AnyRegister &reg, LBlock *left, LBlock *right);
+    bool buildPhiMoves(LBlock *block);
+    bool findLoopCarriedUses(LBlock *block);
 
     VirtualRegister *otherHalfOfNunbox(VirtualRegister *vreg);
     VirtualRegister *getVirtualRegister(LDefinition *def) {
@@ -326,10 +318,6 @@ class GreedyAllocator
     }
     RegisterSet allocatableRegs() const {
         return RegisterSet::Intersect(state.free, RegisterSet::Not(disallowed));
-    }
-    BlockInfo *blockInfo(LBlock *block) {
-        JS_ASSERT(block->mir()->id() < graph.numBlockIds());
-        return &blocks[block->mir()->id()];
     }
 
   public:

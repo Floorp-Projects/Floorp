@@ -374,6 +374,9 @@ class TypedRegisterSet
     uint32 bits() const {
         return bits_;
     }
+    bool operator ==(const TypedRegisterSet<T> &other) const {
+        return other.bits_ == bits_;
+    }
 };
 
 typedef TypedRegisterSet<Register> GeneralRegisterSet;
@@ -471,6 +474,9 @@ class RegisterSet {
     }
     FloatRegisterSet fpus() const {
         return fpu_;
+    }
+    bool operator ==(const RegisterSet &other) const {
+        return other.gpr_ == gpr_ && other.fpu_ == fpu_;
     }
 
     void maybeTake(Register reg) {

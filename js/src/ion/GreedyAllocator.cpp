@@ -62,8 +62,7 @@ GreedyAllocator::findDefinitionsInLIR(LInstruction *ins)
         if (def->policy() == LDefinition::PASSTHROUGH)
             continue;
 
-        VirtualRegister *vr = &vars[def->virtualRegister()];
-        vr->init(def, ins);
+        vars[def->virtualRegister()].define(def, ins);
     }
 }
 
@@ -175,11 +174,9 @@ GreedyAllocator::prescanUses(LInstruction *ins)
             continue;
         }
 
-        LUse *use = a->toUse();
-        VirtualRegister *vr = getVirtualRegister(use);
-
-        if (use->policy() == LUse::FIXED)
-            disallowed.add(GetFixedRegister(vr->def, use));
+        VirtualRegister *vr = getVirtualRegister(a->toUse());
+        if (a->toUse()->policy() == LUse::FIXED)
+            disallowed.add(GetFixedRegister(vr->def, a->toUse()));
         else if (vr->hasRegister())
             discouraged.addUnchecked(vr->reg());
     }
@@ -196,6 +193,14 @@ IsNunbox(LDefinition::Type type)
 #endif
 }
 
+uint32
+GreedyAllocator::allocateSlotFor(const VirtualRegister *vr)
+{
+    if (IsNunbox(vr->type()) || vr->isDouble())
+        return stackSlotAllocator.allocateDoubleSlot();
+    return stackSlotAllocator.allocateSlot();
+}
+
 void
 GreedyAllocator::allocateStack(VirtualRegister *vr)
 {
@@ -208,17 +213,14 @@ GreedyAllocator::allocateStack(VirtualRegister *vr)
         VirtualRegister *other = otherHalfOfNunbox(vr);
         unsigned stackSlot;
         if (!other->hasStackSlot())
-            stackSlot = stackSlotAllocator.allocateDoubleSlot();
+            stackSlot = allocateSlotFor(vr);
         else
             stackSlot = BaseOfNunboxSlot(other->type(), other->stackSlot());
         index = stackSlot - OffsetOfNunboxSlot(vr->type());
     } else
 #endif
     {
-        if (vr->isDouble())
-            index = stackSlotAllocator.allocateDoubleSlot();
-        else
-            index = stackSlotAllocator.allocateSlot();
+        index = allocateSlotFor(vr);
     }
 
     IonSpew(IonSpew_RegAlloc, "    assign vr%d := stack%d", vr->def->virtualRegister(), index);
@@ -308,8 +310,8 @@ GreedyAllocator::killStack(VirtualRegister *vr)
             JS_ASSERT_IF(vr->hasStackSlot(), other->hasStackSlot() || !other->hasBackingStack());
             JS_ASSERT_IF(other->hasStackSlot(), vr->hasStackSlot() || !vr->hasBackingStack());
             VirtualRegister *candidate = vr->hasStackSlot() ? vr : other;
-            unsigned slot = BaseOfNunboxSlot(candidate->type(), candidate->stackSlot());
-            stackSlotAllocator.freeDoubleSlot(slot);
+            uint32 stackSlot = BaseOfNunboxSlot(candidate->type(), candidate->stackSlot());
+            stackSlotAllocator.freeDoubleSlot(stackSlot);
         }
     } else
 #endif
@@ -351,6 +353,17 @@ GreedyAllocator::assign(VirtualRegister *vr, AnyRegister reg)
 }
 
 bool
+GreedyAllocator::allocateReg(VirtualRegister *vreg)
+{
+    JS_ASSERT(!vreg->hasRegister());
+    AnyRegister reg;
+    if (!allocate(vreg->type(), DISALLOW, &reg))
+        return false;
+    assign(vreg, reg);
+    return true;
+}
+
+bool
 GreedyAllocator::allocateRegisterOperand(LAllocation *a, VirtualRegister *vr)
 {
     AnyRegister reg;
@@ -359,17 +372,11 @@ GreedyAllocator::allocateRegisterOperand(LAllocation *a, VirtualRegister *vr)
     // in later uses clobbering the register. If a register is already
     // assigned, it may already be in the disallow set (if an output was
     // same-as-input).
-    if (vr->hasRegister()) {
-        reg = vr->reg();
-        disallowed.addUnchecked(reg);
-    } else {
-        // If it does not have a register, allocate one now.
-        if (!allocate(vr->type(), DISALLOW, &reg))
-            return false;
-        assign(vr, reg);
-    }
+    if (!vr->hasRegister() && !allocateReg(vr))
+        return false;
+    disallowed.addUnchecked(vr->reg());
 
-    *a = LAllocation(reg);
+    *a = LAllocation(vr->reg());
     return true;
 }
 
@@ -380,9 +387,9 @@ GreedyAllocator::allocateWritableOperand(LAllocation *a, VirtualRegister *vr)
     if (!vr->hasRegister()) {
         // If the vr has no register assigned, then we can assign a register and
         // steal it knowing that it will be that register's last use.
-        if (!allocate(vr->type(), DISALLOW, &reg))
+        if (!allocateReg(vr))
             return false;
-        assign(vr, reg);
+        reg = vr->reg();
     } else {
         if (allocatableRegs().empty(vr->isDouble())) {
             // If there are registers free, get one.
@@ -455,48 +462,6 @@ GreedyAllocator::allocateFixedOperand(LAllocation *a, VirtualRegister *vr)
 }
 
 bool
-GreedyAllocator::allocateSameAsInput(LDefinition *def, LAllocation *a, AnyRegister *out)
-{
-    LUse *use = a->toUse();
-    VirtualRegister *vdef = getVirtualRegister(def);
-    VirtualRegister *vuse = getVirtualRegister(use);
-
-    JS_ASSERT(vdef->isDouble() == vuse->isDouble());
-
-    AnyRegister reg;
-
-    // Find a suitable output register. For simplicity, we do not consider the
-    // current allocation of the input virtual register, which means it could
-    // be evicted.
-    if (use->isFixedRegister()) {
-        reg = GetFixedRegister(def, use);
-    } else if (vdef->hasRegister()) {
-        reg = vdef->reg();
-    } else {
-        if (!allocate(vdef->type(), DISALLOW, &reg))
-            return false;
-    }
-    JS_ASSERT(disallowed.has(reg));
-
-    if (vuse->hasRegister()) {
-        JS_ASSERT(vuse->reg() != reg);
-        if (!align(vuse->reg(), reg))
-            return false;
-    } else {
-        // If the input has no register, we can just re-use the output register
-        // directly, because nothing downstream could be clobbered by consuming
-        // the register.
-        assign(vuse, reg);
-    }
-
-    // Overwrite the input allocation now.
-    *a = LAllocation(reg);
-
-    *out = reg;
-    return true;
-}
-
-bool
 GreedyAllocator::allocateDefinitions(LInstruction *ins)
 {
     for (size_t i = 0; i < ins->numDefs(); i++) {
@@ -510,16 +475,38 @@ GreedyAllocator::allocateDefinitions(LInstruction *ins)
             continue;
 
           case LDefinition::DEFAULT:
+          case LDefinition::MUST_REUSE_INPUT:
           {
+            AnyRegister reg;
             // Either take the register requested, or allocate a new one.
-            if (vr->hasRegister()) {
-                output = LAllocation(vr->reg());
+            if (def->policy() == LDefinition::MUST_REUSE_INPUT &&
+                ins->getOperand(0)->toUse()->isFixedRegister())
+            {
+                LAllocation *a = ins->getOperand(0);
+                VirtualRegister *vuse = getVirtualRegister(a->toUse());
+                reg = GetFixedRegister(vuse->def, a->toUse());
+            } else if (vr->hasRegister()) {
+                reg = vr->reg();
             } else {
-                AnyRegister reg;
                 if (!allocate(vr->type(), DISALLOW, &reg))
                     return false;
-                output = LAllocation(reg);
             }
+            if (def->policy() == LDefinition::MUST_REUSE_INPUT) {
+                VirtualRegister *vuse = getVirtualRegister(ins->getOperand(0)->toUse());
+                // If the use already has the given register, we need to evict.
+                if (vuse->hasRegister() && vuse->reg() == reg) {
+                    if (!evict(reg))
+                        return false;
+                }
+
+                // Make sure our input is using a fixed register.
+                LUse *use = ins->getOperand(0)->toUse();
+                if (reg.isFloat())
+                    *use = LUse(reg.fpu(), use->virtualRegister());
+                else
+                    *use = LUse(reg.gpr(), use->virtualRegister());
+            }
+            output = LAllocation(reg);
             break;
           }
 
@@ -528,15 +515,6 @@ GreedyAllocator::allocateDefinitions(LInstruction *ins)
             // Eviction and disallowing occurred during the definition
             // pre-scan pass.
             output = *def->output();
-            break;
-          }
-
-          case LDefinition::MUST_REUSE_INPUT:
-          {
-            AnyRegister out_reg;
-            if (!allocateSameAsInput(def, ins->getOperand(0), &out_reg))
-                return false;
-            output = LAllocation(out_reg);
             break;
           }
         }
@@ -632,10 +610,7 @@ GreedyAllocator::allocateInputs(LInstruction *ins)
         if (!a->isUse())
             continue;
 
-        LUse *use = a->toUse();
-        JS_ASSERT(use->policy() == LUse::ANY);
-
-        VirtualRegister *vr = getVirtualRegister(use);
+        VirtualRegister *vr = getVirtualRegister(a->toUse());
         if (!allocateAnyOperand(a, vr))
             return false;
     }
@@ -646,7 +621,7 @@ GreedyAllocator::allocateInputs(LInstruction *ins)
 bool
 GreedyAllocator::spillForCall(LInstruction *ins)
 {
-    for (AnyRegisterIterator iter(ins->spillRegs()); iter.more(); iter++) {
+    for (AnyRegisterIterator iter(RegisterSet::All()); iter.more(); iter++) {
         if (!maybeEvict(*iter))
             return false;
     }
@@ -654,21 +629,21 @@ GreedyAllocator::spillForCall(LInstruction *ins)
 }
 
 void
-GreedyAllocator::informSnapshot(LSnapshot *snapshot)
+GreedyAllocator::informSnapshot(LInstruction *ins)
 {
+    LSnapshot *snapshot = ins->snapshot();
     for (size_t i = 0; i < snapshot->numEntries(); i++) {
         LAllocation *a = snapshot->getEntry(i);
         if (!a->isUse())
             continue;
 
-        LUse *use = a->toUse();
-        VirtualRegister *vr = getVirtualRegister(use);
-        if (vr->hasRegister()) {
-            *a = LAllocation(vr->reg());
-        } else {
-            allocateStack(vr);
-            *a = vr->backingStack();
-        }
+        // Every definition in a snapshot gets a stack slot. This
+        // simplification means we can treat snapshots and post-snapshots the
+        // same (since we don't see registers as spilled at an
+        // LCaptureAllocations).
+        VirtualRegister *vr = getVirtualRegister(a->toUse());
+        allocateStack(vr);
+        *a = vr->backingStack();
     }
 }
 
@@ -715,17 +690,17 @@ GreedyAllocator::allocateInstruction(LBlock *block, LInstruction *ins)
     if (!prescanUses(ins))
         return false;
 
-    // Step 4. Assign fields of a snapshot.
-    if (ins->snapshot() && ins->op() != LInstruction::LOp_CaptureAllocations)
-        informSnapshot(ins->snapshot());
-
-    // Step 5. Allocate registers for each definition.
+    // Step 4. Allocate registers for each definition.
     if (!allocateDefinitions(ins))
         return false;
 
-    // Step 6. Allocate inputs and temporaries.
+    // Step 5. Allocate inputs and temporaries.
     if (!allocateInputs(ins))
         return false;
+
+    // Step 6. Assign fields of a snapshot.
+    if (ins->snapshot())
+        informSnapshot(ins);
 
     // Step 7. Free any allocated stack slots.
     for (size_t i = 0; i < ins->numDefs(); i++) {
@@ -733,140 +708,6 @@ GreedyAllocator::allocateInstruction(LBlock *block, LInstruction *ins)
         if (def->policy() == LDefinition::PASSTHROUGH)
             continue;
         killStack(getVirtualRegister(def));
-    }
-
-    // Step 8. Assign fields of a post snapshot.
-    if (ins->postSnapshot())
-        informSnapshot(ins->postSnapshot());
-
-    if (aligns)
-        block->insertBefore(ins, aligns);
-
-    return true;
-}
-
-bool
-GreedyAllocator::allocateRegistersInBlock(LBlock *block)
-{
-    IonSpew(IonSpew_RegAlloc, " Allocating instructions.");
-
-    LInstructionReverseIterator ri = block->instructions().rbegin();
-
-    // Control instructions need to be handled specially. Since they have no
-    // outputs, we are guaranteed they do not spill. But restores may occur,
-    // and may need to be duplicated on each outgoing edge.
-    if (!allocateInstruction(block, *ri))
-        return false;
-    ri++;
-
-    JS_ASSERT(!spills);
-
-    if (restores) {
-        // For each successor that has already been allocated, duplicate the
-        // move group into the start of its block. We don't yet have the
-        // ability to detect whether the receiving blocks actually need this
-        // move.
-        for (size_t i = 0; i < block->mir()->numSuccessors(); i++) {
-            MBasicBlock *msuccessor = block->mir()->getSuccessor(i);
-            if (msuccessor->id() <= block->mir()->id())
-                continue;
-
-            Mover moves;
-            LBlock *successor = msuccessor->lir();
-            for (size_t i = 0; i < restores->numMoves(); i++) {
-                const LMove &move = restores->getMove(i);
-                if (!moves.move(*move.from(), *move.to()))
-                    return false;
-            }
-
-            successor->insertBefore(*successor->begin(), moves.moves);
-        }
-    }
-
-    if (block->mir()->isLoopBackedge()) {
-        // If this is a loop backedge, save its exit allocation state at the
-        // loop header. Note this occurs after allocating the initial jump
-        // instruction, to avoid placing useless moves at the loop edge.
-        if (!prepareBackedge(block))
-            return false;
-    }
-    blockInfo(block)->out = state;
-
-    for (; ri != block->instructions().rend(); ri++) {
-        LInstruction *ins = *ri;
-
-        if (!allocateInstruction(block, ins))
-            return false;
-
-        // Step 6. Insert move instructions.
-        if (restores)
-            block->insertAfter(ins, restores);
-        if (spills) {
-            JS_ASSERT(ri != block->rbegin());
-            block->insertAfter(ins, spills);
-        }
-
-        assertValidRegisterState();
-    }
-
-    IonSpew(IonSpew_RegAlloc, " Done allocating instructions.");
-    return true;
-}
-
-bool
-GreedyAllocator::mergeRegisterState(const AnyRegister &reg, LBlock *left, LBlock *right)
-{
-    VirtualRegister *vleft = state[reg];
-    VirtualRegister *vright = blockInfo(right)->in[reg];
-
-    // If the input register is unused or occupied by the same vr, we're done.
-    if (vleft == vright)
-        return true;
-
-    // If the right-hand side has no allocation, then do nothing because the
-    // left-hand side has already propagated its value up.
-    if (!vright)
-        return true;
-
-    BlockInfo *rinfo = blockInfo(right);
-
-    if (!vleft && !vright->hasRegister()) {
-        // The left-hand side never assigned a register to |vright|, and has
-        // not assigned this register, so just inherit the right-hand side's
-        // allocation.
-        assign(vright, reg);
-        return true;
-    }
-
-    // Otherwise, we have reached one of two situations:
-    //  (1) The left-hand and right-hand sides have two different definitions
-    //      in the same register.
-    //  (2) The right-hand side expects a definition in a different register
-    //      than the left-hand side has assigned.
-    //
-    // In both cases, we emit a load or move on the right-hand side to ensure
-    // that the definition is in the expected register.
-    if (!vright->hasRegister() && !allocatableRegs().empty(vright->isDouble())) {
-        AnyRegister reg;
-        if (!allocate(vright->type(), DISALLOW, &reg))
-            return false;
-        assign(vright, reg);
-    }
-
-    if (vright->hasRegister()) {
-        JS_ASSERT(vright->reg() != reg);
-
-        IonSpew(IonSpew_RegAlloc, "    merging vr%d %s to %s",
-                vright->def->virtualRegister(), vright->reg().name(), reg.name());
-        if (!rinfo->restores.move(vright->reg(), reg))
-            return false;
-    } else {
-        allocateStack(vright);
-
-        IonSpew(IonSpew_RegAlloc, "    merging vr%d stack to %s",
-                vright->def->virtualRegister(), reg.name());
-        if (!rinfo->restores.move(vright->backingStack(), reg))
-            return false;
     }
 
     return true;
@@ -911,259 +752,103 @@ GreedyAllocator::findLoopCarriedUses(LBlock *backedge)
 }
 
 bool
-GreedyAllocator::prepareBackedge(LBlock *block)
+GreedyAllocator::allocateRegistersInBlock(LBlock *block)
 {
-    MBasicBlock *msuccessor = block->mir()->successorWithPhis();
-    if (!msuccessor)
-        return true;
+    IonSpew(IonSpew_RegAlloc, " Allocating instructions.");
 
-    IonSpew(IonSpew_RegAlloc, "  Preparing backedge.");
+    LInstructionReverseIterator ri = block->instructions().rbegin();
 
-    LBlock *successor = msuccessor->lir();
-
-    uint32 pos = block->mir()->positionInPhiSuccessor();
-    for (size_t i = 0; i < successor->numPhis(); i++) {
-        LPhi *phi = successor->getPhi(i);
-        LAllocation *a = phi->getOperand(pos);
-        if (!a->isUse())
-            continue;
-        VirtualRegister *vr = getVirtualRegister(a->toUse());
-
-        // We ensure a phi always has an allocation, because it's too early to
-        // tell whether something in the loop uses it.
-        LAllocation result;
-        if (!allocateAnyOperand(&result, vr, true))
-            return false;
-
-        // Store the def's exit allocation in the phi's output, as a cheap
-        // trick. At the loop header we'll see this and emit moves from the def
-        // to the phi's final storage.
-        phi->getDef(0)->setOutput(result);
-    }
-
-    IonSpew(IonSpew_RegAlloc, "  Done preparing backedge.");
-
-    if (!findLoopCarriedUses(block))
+    // Control instructions need to be handled specially. Since they have no
+    // outputs, and no registers are allocated yet, we are guaranteed there are
+    // no spill or restore moves.
+    if (!allocateInstruction(block, *ri))
         return false;
-
-    return true;
-}
-
-bool
-GreedyAllocator::mergeBackedgeState(LBlock *header, LBlock *backedge)
-{
-    BlockInfo *info = blockInfo(backedge);
-
-    IonSpew(IonSpew_RegAlloc, "  Merging backedge state.");
-
-    // Handle loop-carried carried registers, making sure anything live at the
-    // backedge is also properly held live at the top of the loop.
-    Mover carried;
-    for (AnyRegisterIterator iter; iter.more(); iter++) {
-        AnyRegister reg = *iter;
-        VirtualRegister *inVr = state[reg];
-        if (!inVr)
-            continue;
-
-        VirtualRegister *outVr = info->out[reg];
-        if (inVr == outVr)
-            continue;
-
-        // A register is live coming into the loop, but has a different exit
-        // assignment. For this to work, we either need to insert a spill or a
-        // move. This may insert unnecessary moves, since it cannot tell if a
-        // register was clobbered in the loop. It only knows if the allocation
-        // states at the loop edges are different. Note that for the same
-        // reasons, we cannot assume a register allocated here will be
-        // preserved across the loop.
-        allocateStack(inVr);
-
-        IonSpew(IonSpew_RegAlloc, "    loop carried vr%d (stack:%d) -> %s",
-                inVr->def->virtualRegister(), inVr->stackSlot_, reg.name());
-
-        if (!carried.move(inVr->backingStack(), reg))
-            return false;
-    }
-    if (carried.moves) {
-        LInstruction *ins = *header->instructions().begin();
-        header->insertBefore(ins, carried.moves);
+    if (aligns) {
+        block->insertBefore(*ri, aligns);
+        ri++;
     }
 
-    IonSpew(IonSpew_RegAlloc, "  Done merging backedge state.");
-    IonSpew(IonSpew_RegAlloc, "  Handling loop phis.");
+    JS_ASSERT(!spills);
+    JS_ASSERT(!restores);
 
-    Mover phis;
+    // Build the list of moves from this block into its successor, if there are
+    // phis. All phi moves are from newly allocated registers, or from stack
+    // slots, so none of these moves will conflict with the input of the control
+    // instruction.
+    if (!buildPhiMoves(block))
+        return false;
+    if (phiMoves.moves)
+        block->insertBefore(*ri, phiMoves.moves);
+    ri++;
 
-    // Handle loop phis.
-    for (size_t i = 0; i < header->numPhis(); i++) {
-        LPhi *phi = header->getPhi(i);
-        LDefinition *def = phi->getDef(0);
-        VirtualRegister *vr = getVirtualRegister(def);
+    if (block->mir()->isLoopBackedge()) {
+        if (!findLoopCarriedUses(block))
+            return false;
+    }
 
-        JS_ASSERT(def->policy() == LDefinition::PRESET);
-        const LAllocation *a = def->output();
+    for (; ri != block->instructions().rend(); ri++) {
+        LInstruction *ins = *ri;
 
-        if (vr->hasStackSlot() && !phis.move(*a, vr->backingStack()))
+        if (!allocateInstruction(block, ins))
             return false;
 
-        if (vr->hasRegister() && (!a->isRegister() || vr->reg() != a->toRegister())) {
-            if (!phis.move(*a, vr->reg()))
-                return false;
+        // Insert any input and output moves.
+        if (aligns)
+            block->insertBefore(ins, aligns);
+        if (restores)
+            block->insertAfter(ins, restores);
+        if (spills) {
+            JS_ASSERT(ri != block->rbegin());
+            block->insertAfter(ins, spills);
         }
+
+        assertValidRegisterState();
     }
 
-    if (phis.moves) {
-        LInstruction *ins = *backedge->instructions().rbegin();
-        backedge->insertBefore(ins, phis.moves);
-    }
-
-    IonSpew(IonSpew_RegAlloc, "  Done handling loop phis.");
-
+    IonSpew(IonSpew_RegAlloc, " Done allocating instructions.");
     return true;
 }
 
 bool
-GreedyAllocator::mergePhiState(LBlock *block)
+GreedyAllocator::buildPhiMoves(LBlock *block)
 {
+    IonSpew(IonSpew_RegAlloc, " Merging phi state."); 
+
+    phiMoves = Mover();
+
     MBasicBlock *mblock = block->mir();
     if (!mblock->successorWithPhis())
         return true;
 
-    IonSpew(IonSpew_RegAlloc, "  Merging phi state.");
-
-    // Reset state so evictions will work.
-    reset();
-
-    Mover phis;
-
+    // Insert moves from our state into our successor's phi.
     uint32 pos = mblock->positionInPhiSuccessor();
     LBlock *successor = mblock->successorWithPhis()->lir();
     for (size_t i = 0; i < successor->numPhis(); i++) {
         LPhi *phi = successor->getPhi(i);
-        VirtualRegister *def = getVirtualRegister(phi->getDef(0));
+        JS_ASSERT(phi->numDefs() == 1);
 
-        // Ignore non-loop phis with no uses.
-        if (!def->hasRegister() && !def->hasStackSlot()) {
-            IonSpew(IonSpew_RegAlloc, "    ignoring unused phi vr%d", def->def->virtualRegister());
-            continue;
-        }
+        VirtualRegister *phiReg = getVirtualRegister(phi->getDef(0));
+        allocateStack(phiReg);
 
-        LAllocation *a = phi->getOperand(pos);
-        VirtualRegister *use = getVirtualRegister(a->toUse());
+        LAllocation *in = phi->getOperand(pos);
+        VirtualRegister *inReg = getVirtualRegister(in->toUse());
+        allocateStack(inReg);
 
-        // Try to give the use a register.
-        if (!use->hasRegister()) {
-            if (def->hasRegister() && !state[def->reg()]) {
-                assign(use, def->reg());
-            } else {
-                LAllocation unused;
-                if (!allocateAnyOperand(&unused, use, true))
-                    return false;
-            }
-        }
-
-        // Emit a move from the use to a def register.
-        if (def->hasRegister()) {
-            if (use->hasRegister()) {
-                if (use->reg() != def->reg()) {
-                    IonSpew(IonSpew_RegAlloc, "    vr%d (%s) -> phi vr%d (%s)",
-                            use->def->virtualRegister(), use->reg().name(),
-                            def->def->virtualRegister(), def->reg().name());
-
-                    if (!phis.move(use->reg(), def->reg()))
-                        return false;
-                }
-            } else {
-                IonSpew(IonSpew_RegAlloc, "    vr%d (stack:%d) -> phi vr%d (%s)",
-                        use->def->virtualRegister(), use->stackSlot_,
-                        def->def->virtualRegister(), def->reg().name());
-
-                if (!phis.move(use->backingStack(), def->reg()))
-                    return false;
-            }
-        }
-
-        // Emit a move from the use to a def stack slot.
-        if (def->hasStackSlot()) {
-            if (use->hasRegister()) {
-                IonSpew(IonSpew_RegAlloc, "    vr%d (%s) -> phi vr%d (stack:%d)",
-                        use->def->virtualRegister(), use->reg().name(),
-                        def->def->virtualRegister(), use->stackSlot_);
-
-                if (!phis.move(use->reg(), def->backingStack()))
-                    return false;
-            } else if (use->backingStack() != def->backingStack()) {
-                IonSpew(IonSpew_RegAlloc, "    vr%d (stack:%d) -> phi vr%d (stack:%d)",
-                        use->def->virtualRegister(), use->stackSlot_,
-                        def->def->virtualRegister(), def->stackSlot_);
-
-                if (!phis.move(use->backingStack(), def->backingStack()))
-                    return false;
-            }
-        }
-    }
-
-    // Now insert restores (if any) and phi moves.
-    JS_ASSERT(!aligns);
-    JS_ASSERT(!spills);
-    LInstruction *before = *block->instructions().rbegin();
-    if (restores)
-        block->insertBefore(before, restores);
-    if (phis.moves)
-        block->insertBefore(before, phis.moves);
-
-    IonSpew(IonSpew_RegAlloc, "  Done merging phi state.");
-
-    return true;
-}
-
-bool
-GreedyAllocator::mergeAllocationState(LBlock *block)
-{
-    MBasicBlock *mblock = block->mir();
-
-    if (!mblock->numSuccessors()) {
-        state = AllocationState();
-        return true;
-    }
-
-    IonSpew(IonSpew_RegAlloc, " Merging allocation state.");
-
-    // Prefer the successor with phis as the baseline state
-    LBlock *leftblock = mblock->getSuccessor(0)->lir();
-    state = blockInfo(leftblock)->in;
-
-    // To complete inheriting our successor's state, make sure each taken
-    // register is applied to the def for which it was intended.
-    for (AnyRegisterIterator iter; iter.more(); iter++) {
-        AnyRegister reg = *iter;
-        if (VirtualRegister *vr = state[reg]) {
-            vr->setRegister(reg);
-            IonSpew(IonSpew_RegAlloc, "    vr%d inherits %s",
-                    vr->def->virtualRegister(), reg.name());
-        }
-    }
-
-    // Merge state from each additional successor.
-    for (size_t i = 1; i < mblock->numSuccessors(); i++) {
-        LBlock *rightblock = mblock->getSuccessor(i)->lir();
-
-        for (AnyRegisterIterator iter; iter.more(); iter++) {
-            AnyRegister reg = *iter;
-            if (!mergeRegisterState(reg, leftblock, rightblock))
+        // Try to get a register for the input.
+        if (!inReg->hasRegister() && !allocatableRegs().empty(inReg->isDouble())) {
+            if (!allocateReg(inReg))
                 return false;
         }
 
-        // If there were parallel moves, append them now.
-        BlockInfo *info = blockInfo(rightblock);
-        if (info->restores.moves)
-            rightblock->insertBefore(*rightblock->begin(), info->restores.moves);
+        // Add a move from the input to the phi.
+        if (inReg->hasRegister()) {
+            if (!phiMoves.move(inReg->reg(), phiReg->backingStack()))
+                return false;
+        } else {
+            if (!phiMoves.move(inReg->backingStack(), phiReg->backingStack()))
+                return false;
+        }
     }
-
-    if (!mergePhiState(block))
-        return false;
-
-    IonSpew(IonSpew_RegAlloc, " Done merging allocation state.");
 
     return true;
 }
@@ -1178,44 +863,50 @@ GreedyAllocator::allocateRegisters()
 
         IonSpew(IonSpew_RegAlloc, "Allocating block %d", (uint32)i);
 
-        // Merge allocation state from our successors.
-        if (!mergeAllocationState(block))
-            return false;
+        // All registers should be free.
+        JS_ASSERT(state.free == RegisterSet::All());
+
+        // Allocate stack for any phis.
+        for (size_t j = 0; j < block->numPhis(); j++) {
+            LPhi *phi = block->getPhi(j);
+            VirtualRegister *vreg = getVirtualRegister(phi->getDef(0));
+            allocateStack(vreg);
+        }
 
         // Allocate registers.
         if (!allocateRegistersInBlock(block))
             return false;
 
-        // If this is a loop header, insert moves at the backedge from phi
-        // inputs to phi outputs.
-        if (block->mir()->isLoopHeader()) {
-            if (!mergeBackedgeState(block, block->mir()->backedge()->lir()))
+        LMoveGroup *entrySpills = block->getEntryMoveGroup();
+
+        // We've reached the top of the block. Spill all registers by inserting
+        // moves from their stack locations.
+        for (AnyRegisterIterator iter(RegisterSet::All()); iter.more(); iter++) {
+            VirtualRegister *vreg = state[*iter];
+            if (!vreg) {
+                JS_ASSERT(state.free.has(*iter));
+                continue;
+            }
+
+            JS_ASSERT(vreg->reg() == *iter);
+            JS_ASSERT(!state.free.has(vreg->reg()));
+            allocateStack(vreg);
+
+            LAllocation *from = LAllocation::New(vreg->backingStack());
+            LAllocation *to = LAllocation::New(vreg->reg());
+            if (!entrySpills->add(from, to))
                 return false;
+
+            killReg(vreg);
+            vreg->unsetRegister();
         }
 
         // Kill phis.
         for (size_t i = 0; i < block->numPhis(); i++) {
             LPhi *phi = block->getPhi(i);
-            JS_ASSERT(phi->numDefs() == 1);
-
             VirtualRegister *vr = getVirtualRegister(phi->getDef(0));
-            killReg(vr);
+            JS_ASSERT(!vr->hasRegister());
             killStack(vr);
-        }
-
-        // We've reached the top of the block. Save the mapping of registers to
-        // definitions, as our predecessors will need this to merge state.
-        // Then, clear the register assignments to all defs. This is necessary
-        // otherwise block A's state could be left around for completely
-        // independent block B, which never actually allocated for that def.
-        blockInfo(block)->in = state;
-        for (AnyRegisterIterator iter; iter.more(); iter++) {
-            AnyRegister reg = *iter;
-            VirtualRegister *vr = state[reg];
-            if (vr) {
-                JS_ASSERT(vr->reg() == reg);
-                vr->unsetRegister();
-            }
         }
     }
     return true;
@@ -1231,10 +922,6 @@ GreedyAllocator::allocate()
     if (!vars)
         return false;
     memset(vars, 0, sizeof(VirtualRegister) * graph.numVirtualRegisters());
-
-    blocks = gen->allocate<BlockInfo>(graph.numBlockIds());
-    for (size_t i = 0; i < graph.numBlockIds(); i++)
-        new (&blocks[i]) BlockInfo();
 
     findDefinitions();
     if (!allocateRegisters())
