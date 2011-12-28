@@ -1521,7 +1521,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
         types::TypeSet *types = analysis->poppedTypes(PC, 2);
 
         if (!types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY) &&
-            !arrayPrototypeHasIndexedProperty()) {
+            !types::ArrayPrototypeHasIndexedProperty(cx, outerScript)) {
             // Inline dense array path.
             jsop_setelem_dense();
             return true;
@@ -2113,7 +2113,7 @@ mjit::Compiler::jsop_getelem(bool isCall)
 
         if (obj->mightBeType(JSVAL_TYPE_OBJECT) &&
             !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY) &&
-            !arrayPrototypeHasIndexedProperty()) {
+            !types::ArrayPrototypeHasIndexedProperty(cx, outerScript)) {
             // Inline dense array path.
             bool packed = !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
             jsop_getelem_dense(packed);
