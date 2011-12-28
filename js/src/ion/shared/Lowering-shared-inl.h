@@ -209,7 +209,7 @@ bool
 LIRGeneratorShared::defineAs(LInstruction *outLir, MDefinition *outMir, MDefinition *inMir)
 {
     uint32 vreg = inMir->virtualRegister();
-    LDefinition::Policy policy = LDefinition::REDEFINED;
+    LDefinition::Policy policy = LDefinition::PASSTHROUGH;
 
     if (outMir->type() == MIRType_Value) {
 #ifdef JS_NUNBOX32
@@ -308,7 +308,7 @@ LIRGeneratorShared::temp(LDefinition::Type type)
 LDefinition
 LIRGeneratorShared::tempFixed(Register reg)
 {
-    LDefinition t = temp(LDefinition::INTEGER);
+    LDefinition t = temp(LDefinition::GENERAL);
     t.setOutput(LGeneralReg(reg));
     return t;
 }
@@ -323,7 +323,7 @@ template <typename T> bool
 LIRGeneratorShared::annotate(T *ins)
 {
     for (size_t i = 0; i < ins->numDefs(); i++) {
-        if (ins->getDef(i)->policy() != LDefinition::REDEFINED) {
+        if (ins->getDef(i)->policy() != LDefinition::PASSTHROUGH) {
             ins->setId(ins->getDef(i)->virtualRegister());
             return true;
         }

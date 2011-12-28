@@ -71,7 +71,7 @@ LIRGeneratorX86Shared::visitTableSwitch(MTableSwitch *tableswitch)
         tempInt = LDefinition::BogusTemp();
     } else {
         index = useRegister(opd);
-        tempInt = temp(LDefinition::INTEGER);
+        tempInt = temp(LDefinition::GENERAL);
     }
-    return add(new LTableSwitch(index, tempInt, temp(LDefinition::POINTER), tableswitch));
+    return add(new LTableSwitch(index, tempInt, temp(LDefinition::GENERAL), tableswitch));
 }

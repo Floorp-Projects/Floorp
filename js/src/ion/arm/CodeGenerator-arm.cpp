@@ -53,6 +53,8 @@
 #include "ion/MoveEmitter.h"
 #include "ion/IonCompartment.h"
 
+#include "jsscopeinlines.h"
+
 using namespace js;
 using namespace js::ion;
 
@@ -963,7 +965,6 @@ CodeGeneratorARM::visitBox(LBox *box)
     // On x86, the input operand and the output payload have the same
     // virtual register. All that needs to be written is the type tag for
     // the type definition.
-    // this is different on ARM.  fix this accordingly.
     masm.ma_mov(Imm32(MIRTypeToTag(box->type())), ToRegister(type));
     return true;
 }
@@ -983,6 +984,8 @@ CodeGeneratorARM::visitBoxDouble(LBoxDouble *box)
 bool
 CodeGeneratorARM::visitUnbox(LUnbox *unbox)
 {
+    // Note that for unbox, the type and payload indexes are switched on the
+    // inputs.
     MUnbox *mir = unbox->mir();
     if (mir->fallible()) {
         LAllocation *type = unbox->getOperand(TYPE_INDEX);

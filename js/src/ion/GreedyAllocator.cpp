@@ -59,7 +59,7 @@ GreedyAllocator::findDefinitionsInLIR(LInstruction *ins)
         LDefinition *def = ins->getDef(i);
         JS_ASSERT(def->virtualRegister() < graph.numVirtualRegisters());
 
-        if (def->policy() == LDefinition::REDEFINED)
+        if (def->policy() == LDefinition::PASSTHROUGH)
             continue;
 
         VirtualRegister *vr = &vars[def->virtualRegister()];
@@ -121,7 +121,7 @@ GreedyAllocator::prescanDefinition(LDefinition *def)
     // If the definition is fakeo, a redefinition, ignore it entirely. It's not
     // valid to kill it, and it doesn't matter if an input uses the same
     // register (thus it does not go into the disallow set).
-    if (def->policy() == LDefinition::REDEFINED)
+    if (def->policy() == LDefinition::PASSTHROUGH)
         return true;
 
     VirtualRegister *vr = getVirtualRegister(def);
@@ -349,6 +349,16 @@ GreedyAllocator::allocateWritableOperand(LAllocation *a, VirtualRegister *vr)
     return true;
 }
 
+static inline bool
+DeservesRegister(LDefinition::Type type)
+{
+#ifdef JS_NUNBOX32
+    return type != LDefinition::TYPE;
+#else
+    return true;
+#endif
+}
+
 bool
 GreedyAllocator::allocateAnyOperand(LAllocation *a, VirtualRegister *vr, bool preferReg)
 {
@@ -358,7 +368,7 @@ GreedyAllocator::allocateAnyOperand(LAllocation *a, VirtualRegister *vr, bool pr
     }
 
     // Are any registers free? Don't bother if the requestee is a type tag.
-    if ((preferReg || vr->type() != LDefinition::TYPE) && !allocatableRegs().empty(vr->isDouble()))
+    if ((preferReg || DeservesRegister(vr->type())) && !allocatableRegs().empty(vr->isDouble()))
         return allocateRegisterOperand(a, vr);
 
     // Otherwise, use a memory operand.
@@ -441,7 +451,7 @@ GreedyAllocator::allocateDefinitions(LInstruction *ins)
 
         LAllocation output;
         switch (def->policy()) {
-          case LDefinition::REDEFINED:
+          case LDefinition::PASSTHROUGH:
             // This is purely passthru, so ignore it.
             continue;
 
@@ -666,7 +676,7 @@ GreedyAllocator::allocateInstruction(LBlock *block, LInstruction *ins)
     // Step 7. Free any allocated stack slots.
     for (size_t i = 0; i < ins->numDefs(); i++) {
         LDefinition *def = ins->getDef(i);
-        if (def->policy() == LDefinition::REDEFINED)
+        if (def->policy() == LDefinition::PASSTHROUGH)
             continue;
         killStack(getVirtualRegister(def));
     }

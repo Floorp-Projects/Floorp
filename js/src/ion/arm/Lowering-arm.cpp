@@ -111,8 +111,15 @@ LIRGeneratorARM::visitBox(MBox *box)
     if (vreg >= MAX_VIRTUAL_REGISTERS)
         return false;
 
-    lir->setDef(0, LDefinition(vreg, LDefinition::TYPE));
-    lir->setDef(1, LDefinition(inner->id(), LDefinition::PAYLOAD, LDefinition::REDEFINED));
+    // Note that because we're using PASSTHROUGH, we do not change the type of
+    // the definition. We also do not define the first output as "TYPE",
+    // because it has no corresponding payload at (vreg + 1). Also note that
+    // although we copy the input's original type for the payload half of the
+    // definition, this is only for clarity. PASSTHROUGH definitions are
+    // ignored.
+    lir->setDef(0, LDefinition(vreg, LDefinition::GENERAL));
+    lir->setDef(1, LDefinition(inner->virtualRegister(), LDefinition::TypeFrom(inner->type()),
+                               LDefinition::PASSTHROUGH));
     box->setVirtualRegister(vreg);
     return add(lir);
 }
@@ -137,20 +144,21 @@ LIRGeneratorARM::visitUnbox(MUnbox *unbox)
         return define(lir, unbox);
     }
 
+    // Swap the order we use the box pieces so we can re-use the payload register.
     LUnbox *lir = new LUnbox;
-    lir->setOperand(0, useType(inner, LUse::REGISTER));
-    lir->setOperand(1, usePayloadInRegister(inner));
-    lir->setMir(unbox);
-
-    // Re-use the inner payload's def, for better register allocation.
-    LDefinition::Type type = LDefinition::TypeFrom(unbox->type());
-    lir->setDef(0, LDefinition(VirtualRegisterOfPayload(inner), type, LDefinition::REDEFINED));
-    unbox->setVirtualRegister(VirtualRegisterOfPayload(inner));
+    lir->setOperand(0, usePayloadInRegister(inner));
+    lir->setOperand(1, useType(inner, LUse::ANY));
 
     if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
         return false;
 
-    return add(lir);
+    // Note that PASSTHROUGH here is illegal, since types and payloads form two
+    // separate intervals. If the type becomes dead before the payload, it
+    // could be used as a Value without the type being recoverable. Unbox's
+    // purpose is to eagerly kill the definition of a type tag, so keeping both
+    // alive (for the purpose of gcmaps) is unappealing. Instead, we create a
+    // new virtual register.
+    return defineReuseInput(lir, unbox);
 }
 
 bool
@@ -383,7 +391,7 @@ LIRGeneratorARM::visitTableSwitch(MTableSwitch *tableswitch)
         tempInt = LDefinition::BogusTemp();
     } else {
         index = useRegister(opd);
-        tempInt = temp(LDefinition::INTEGER);
+        tempInt = temp(LDefinition::GENERAL);
     }
     return add(new LTableSwitch(index, tempInt, tableswitch));
 }
@@ -391,7 +399,7 @@ LIRGeneratorARM::visitTableSwitch(MTableSwitch *tableswitch)
 bool
 LIRGeneratorARM::visitGuardShape(MGuardShape *ins)
 {
-    LDefinition tempInt = temp(LDefinition::INTEGER);
-    LGuardShape *guard = new LGuardShape(useRegister(ins->obj()), tempInt);
+    LDefinition tempObj = temp(LDefinition::OBJECT);
+    LGuardShape *guard = new LGuardShape(useRegister(ins->obj()), tempObj);
     return assignSnapshot(guard) && add(guard, ins);
 }
