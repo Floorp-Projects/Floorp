@@ -228,11 +228,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::PostCreatePrototype(JSContext *cx, JSObject *pr
     {return NS_OK;}
 #endif
 
-#ifndef XPC_MAP_WANT_PRE_CREATE_PROTOTYPE
-NS_IMETHODIMP XPC_MAP_CLASSNAME::PreCreatePrototype(JSContext *cx, JSObject *global, JSObject **protoProto)
-    {*protoProto = nsnull; return NS_OK;}
-#endif
-
 /**************************************************************/
 
 #undef XPC_MAP_CLASSNAME
@@ -316,10 +311,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::PreCreatePrototype(JSContext *cx, JSObject *glo
 
 #ifdef XPC_MAP_WANT_POST_CREATE_PROTOTYPE
 #undef XPC_MAP_WANT_POST_CREATE_PROTOTYPE
-#endif
-
-#ifdef XPC_MAP_WANT_PRE_CREATE_PROTOTYPE
-#undef XPC_MAP_WANT_PRE_CREATE_PROTOTYPE
 #endif
 
 #ifdef XPC_MAP_FLAGS
