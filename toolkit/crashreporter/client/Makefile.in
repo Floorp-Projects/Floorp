@@ -55,9 +55,9 @@ ifneq ($(OS_TARGET),Android)
 PROGRAM = crashreporter$(BIN_SUFFIX)
 DIST_PROGRAM = crashreporter$(BIN_SUFFIX)
 
-# Don't link the updater against libmozutils.
-MOZ_UTILS_LDFLAGS =
-MOZ_UTILS_PROGRAM_LDFLAGS =
+# Don't link the updater against libmozglue.
+MOZ_GLUE_LDFLAGS =
+MOZ_GLUE_PROGRAM_LDFLAGS =
 endif
 
 LOCAL_INCLUDES = -I$(srcdir)/../google-breakpad/src
