@@ -196,6 +196,10 @@ xpc_ActivateDebugMode();
 
 namespace xpc {
 
+// If these functions return false, then an exception will be set on cx.
+bool Base64Encode(JSContext *cx, JS::Value val, JS::Value *out);
+bool Base64Decode(JSContext *cx, JS::Value val, JS::Value *out);
+
 /**
  * Convert an nsString to jsval, returning true on success.
  * Note, the ownership of the string buffer may be moved from str to rval.
