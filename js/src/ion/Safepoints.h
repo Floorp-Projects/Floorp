@@ -49,7 +49,7 @@
 namespace js {
 namespace ion {
 
-class SafepointNunboxEntry;
+struct SafepointNunboxEntry;
 
 static const uint32 INVALID_SAFEPOINT_OFFSET = uint32(-1);
 
