@@ -134,8 +134,6 @@ IonCacheGetProperty::attachNative(JSContext *cx, JSObject *obj, const Shape *sha
 bool
 GetPropertyCache(JSContext *cx, size_t cacheIndex, JSObject *obj, Value *vp)
 {
-    printf("STUB\n");
-
     IonScript *ion = GetTopIonFrame(cx);
     IonCacheGetProperty &cache = ion->getCache(cacheIndex).toGetProperty();
     JSAtom *atom = cache.atom();
