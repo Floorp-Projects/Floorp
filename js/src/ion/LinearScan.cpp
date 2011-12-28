@@ -1039,11 +1039,71 @@ LinearScanAllocator::assign(LAllocation allocation)
     return true;
 }
 
+static inline bool
+IsNunbox(VirtualRegister *vreg)
+{
+#ifdef JS_NUNBOX32
+    return (vreg->def()->type() == LDefinition::TYPE ||
+            vreg->def()->type() == LDefinition::PAYLOAD);
+#else
+    return false;
+#endif
+}
+
+#ifdef JS_NUNBOX32
+static inline signed
+OffsetToOtherHalfOfNunbox(VirtualRegister *vreg)
+{
+    JS_ASSERT(IsNunbox(vreg));
+
+    signed offset = (vreg->def()->type() == LDefinition::TYPE)
+                    ? PAYLOAD_INDEX - TYPE_INDEX
+                    : TYPE_INDEX - PAYLOAD_INDEX;
+    return offset;
+}
+
+VirtualRegister *
+LinearScanAllocator::otherHalfOfNunbox(VirtualRegister *vreg)
+{
+    JS_ASSERT(IsNunbox(vreg));
+
+    signed offset = OffsetToOtherHalfOfNunbox(vreg);
+    VirtualRegister *other = &vregs[vreg->def()->virtualRegister() + offset];
+    JS_ASSERT_IF(vreg->def()->type() == LDefinition::TYPE,
+                 other->def()->type() == LDefinition::PAYLOAD);
+    JS_ASSERT_IF(vreg->def()->type() == LDefinition::PAYLOAD,
+                 other->def()->type() == LDefinition::TYPE);
+
+    return other;
+}
+
+// Note that stack indexes for LStackSlot are modelled backwards, so a
+// double-sized slot starting at 2 has its next word at 1, *not* 3.
+static inline unsigned
+BaseOfNunboxSlot(VirtualRegister *vreg)
+{
+    JS_ASSERT(IsNunbox(vreg));
+    unsigned slot = vreg->canonicalSpill()->toStackSlot()->slot();
+    if (vreg->def()->type() == LDefinition::PAYLOAD)
+        return slot + (NUNBOX32_PAYLOAD_OFFSET / STACK_SLOT_SIZE);
+    return slot + (NUNBOX32_TYPE_OFFSET / STACK_SLOT_SIZE);
+}
+
+static inline unsigned
+OffsetOfNunboxSlot(LDefinition *def)
+{
+    if (def->type() == LDefinition::PAYLOAD)
+        return NUNBOX32_PAYLOAD_OFFSET / STACK_SLOT_SIZE;
+    return NUNBOX32_TYPE_OFFSET / STACK_SLOT_SIZE;
+}
+#endif
+
+
 uint32
 LinearScanAllocator::allocateSlotFor(const LiveInterval *interval)
 {
     SlotList *freed;
-    if (interval->reg()->type() == LDefinition::DOUBLE)
+    if (interval->reg()->type() == LDefinition::DOUBLE || IsNunbox(interval->reg()))
         freed = &finishedDoubleSlots_;
     else
         freed = &finishedSlots_;
@@ -1061,7 +1121,7 @@ LinearScanAllocator::allocateSlotFor(const LiveInterval *interval)
         }
     }
 
-    if (current->reg()->isDouble())
+    if (interval->reg()->isDouble() || IsNunbox(interval->reg()))
         return stackSlotAllocator.allocateDoubleSlot();
     return stackSlotAllocator.allocateSlot();
 }
@@ -1080,10 +1140,65 @@ LinearScanAllocator::spill()
         return assign(*current->reg()->canonicalSpill());
     }
 
-    uint32 stackSlot = allocateSlotFor(current);
+    uint32 stackSlot;
+#if defined JS_NUNBOX32
+    if (IsNunbox(current->reg())) {
+        VirtualRegister *other = otherHalfOfNunbox(current->reg());
+
+        if (other->canonicalSpill()) {
+            // The other half of this nunbox already has a spill slot. To
+            // ensure the Value is spilled contiguously, use the other half (it
+            // was allocated double-wide).
+            JS_ASSERT(other->canonicalSpill()->isStackSlot());
+            stackSlot = BaseOfNunboxSlot(other);
+        } else {
+            // No canonical spill location exists for this nunbox yet. Allocate
+            // one.
+            stackSlot = allocateSlotFor(current);
+        }
+        stackSlot -= OffsetOfNunboxSlot(current->reg()->def());
+    } else
+#endif
+    {
+        stackSlot = allocateSlotFor(current);
+    }
     JS_ASSERT(stackSlot <= stackSlotAllocator.stackHeight());
 
     return assign(LStackSlot(stackSlot, current->reg()->isDouble()));
+}
+
+void
+LinearScanAllocator::freeAllocation(LiveInterval *interval, LAllocation *alloc)
+{
+    VirtualRegister *mine = interval->reg();
+    if (!IsNunbox(mine)) {
+        if (alloc->isStackSlot()) {
+            if (alloc->toStackSlot()->isDouble())
+                finishedDoubleSlots_.append(interval);
+            else
+                finishedSlots_.append(interval);
+        }
+        return;
+    }
+
+#ifdef JS_NUNBOX32
+    // Special handling for nunboxes. We can only free the stack slot once we
+    // know both intervals have been finished.
+    VirtualRegister *other = otherHalfOfNunbox(mine);
+    if (other->finished()) {
+        if (!mine->canonicalSpill() && !other->canonicalSpill())
+            return;
+
+        JS_ASSERT_IF(mine->canonicalSpill() && other->canonicalSpill(),
+                     mine->canonicalSpill()->isStackSlot() == other->canonicalSpill()->isStackSlot());
+
+        VirtualRegister *candidate = alloc ? mine : other;
+        if (!candidate->canonicalSpill()->isStackSlot())
+            return;
+
+        finishedDoubleSlots_.append(interval);
+    }
+#endif
 }
 
 void
@@ -1096,12 +1211,13 @@ LinearScanAllocator::finishInterval(LiveInterval *interval)
     if (!interval->reg())
         return;
 
+    // All spills should be equal to the canonical spill location.
+    JS_ASSERT_IF(alloc->isStackSlot(), *alloc == *interval->reg()->canonicalSpill());
+
     bool lastInterval = interval->index() == (interval->reg()->numIntervals() - 1);
-    if (alloc->isStackSlot() && (*alloc != *interval->reg()->canonicalSpill() || lastInterval)) {
-        if (alloc->toStackSlot()->isDouble())
-            finishedDoubleSlots_.append(interval);
-        else
-            finishedSlots_.append(interval);
+    if (lastInterval) {
+        freeAllocation(interval, alloc);
+        interval->reg()->setFinished();
     }
 
     handled.pushBack(interval);

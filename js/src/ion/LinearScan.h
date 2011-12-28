@@ -169,7 +169,7 @@ class CodePosition
 
 class Requirement
 {
-public:
+  public:
     enum Kind {
         NONE,
         REGISTER,
@@ -232,7 +232,7 @@ public:
 
     int priority();
 
-private:
+  private:
     Kind kind_;
     LAllocation allocation_;
     CodePosition position_;
@@ -244,7 +244,9 @@ private:
  * these intervals, splitting them as necessary and assigning allocations
  * to them as it runs.
  */
-class LiveInterval : public InlineListNode<LiveInterval>
+class LiveInterval
+  : public InlineListNode<LiveInterval>,
+    public TempObject
 {
   public:
     /*
@@ -324,7 +326,7 @@ class LiveInterval : public InlineListNode<LiveInterval>
  * register, including all associated intervals and pointers to relevant LIR
  * structures.
  */
-class VirtualRegister : public TempObject
+class VirtualRegister
 {
     uint32 reg_;
     LBlock *block_;
@@ -336,6 +338,10 @@ class VirtualRegister : public TempObject
     LMoveGroup *outputMoves_;
     LAllocation *canonicalSpill_;
     bool spillAtDefinition_;
+
+    // This bit is used to determine whether both halves of a nunbox have been
+    // processed by freeAllocation().
+    bool finished_;
 
   public:
     bool init(uint32 reg, LBlock *block, LInstruction *ins, LDefinition *def) {
@@ -397,22 +403,28 @@ class VirtualRegister : public TempObject
     void setInputMoves(LMoveGroup *moves) {
         inputMoves_ = moves;
     }
-    LMoveGroup *inputMoves() {
+    LMoveGroup *inputMoves() const {
         return inputMoves_;
     }
     void setOutputMoves(LMoveGroup *moves) {
         outputMoves_ = moves;
     }
-    LMoveGroup *outputMoves() {
+    LMoveGroup *outputMoves() const {
         return outputMoves_;
     }
     void setCanonicalSpill(LAllocation *alloc) {
         canonicalSpill_ = alloc;
     }
-    LAllocation *canonicalSpill() {
+    LAllocation *canonicalSpill() const {
         return canonicalSpill_;
     }
-    bool isDouble() {
+    void setFinished() {
+        finished_ = true;
+    }
+    bool finished() const {
+        return finished_;
+    }
+    bool isDouble() const {
         return def_->type() == LDefinition::DOUBLE;
     }
     void setSpillAtDefinition() {
@@ -546,6 +558,7 @@ class LinearScanAllocator
     bool splitInterval(LiveInterval *interval, CodePosition pos);
     bool assign(LAllocation allocation);
     bool spill();
+    void freeAllocation(LiveInterval *interval, LAllocation *alloc);
     void finishInterval(LiveInterval *interval);
     AnyRegister::Code findBestFreeRegister(CodePosition *freeUntil);
     AnyRegister::Code findBestBlockedRegister(CodePosition *nextUsed);
@@ -576,6 +589,9 @@ class LinearScanAllocator
     CodePosition inputOf(LInstruction *ins) {
         return CodePosition(ins->id(), CodePosition::INPUT);
     }
+#ifdef JS_NUNBOX32
+    VirtualRegister *otherHalfOfNunbox(VirtualRegister *vreg);
+#endif
 
   public:
     LinearScanAllocator(LIRGenerator *lir, LIRGraph &graph)
