@@ -1715,7 +1715,7 @@ LoopState::definiteArrayAccess(const SSAValue &obj, const SSAValue &index)
     if (objTypes->hasObjectFlags(cx, OBJECT_FLAG_NON_DENSE_ARRAY))
         return false;
 
-    if (cc.arrayPrototypeHasIndexedProperty())
+    if (ArrayPrototypeHasIndexedProperty(cx, outerScript))
         return false;
 
     uint32_t objSlot;
