@@ -2423,26 +2423,51 @@ GCHelperThread::threadLoop()
 }
 
 bool
-GCHelperThread::prepareForBackgroundSweep(JSContext *cx)
+GCHelperThread::prepareForBackgroundSweep()
 {
-    JS_ASSERT(cx->runtime == rt);
     JS_ASSERT(state == IDLE);
     size_t maxArenaLists = MAX_BACKGROUND_FINALIZE_KINDS * rt->compartments.length();
-    if (!finalizeVector.reserve(maxArenaLists))
-        return false;
-    context = cx;
-    return true;
+    return finalizeVector.reserve(maxArenaLists);
 }
 
 /* Must be called with the GC lock taken. */
-inline void
-GCHelperThread::startBackgroundSweep(bool shouldShrink)
+void
+GCHelperThread::startBackgroundSweep(JSContext *cx, bool shouldShrink)
 {
     /* The caller takes the GC lock. */
     JS_ASSERT(state == IDLE);
+    JS_ASSERT(cx);
+    JS_ASSERT(!finalizationContext);
+    finalizationContext = cx;
     shrinkFlag = shouldShrink;
     state = SWEEPING;
     PR_NotifyCondVar(wakeup);
+}
+
+/* Must be called with the GC lock taken. */
+void
+GCHelperThread::startBackgroundShrink()
+{
+    switch (state) {
+      case IDLE:
+        JS_ASSERT(!finalizationContext);
+        shrinkFlag = true;
+        state = SWEEPING;
+        PR_NotifyCondVar(wakeup);
+        break;
+      case SWEEPING:
+        shrinkFlag = true;
+        break;
+      case ALLOCATING:
+      case CANCEL_ALLOCATION:
+        /*
+         * If we have started background allocation there is nothing to
+         * shrink.
+         */
+        break;
+      case SHUTDOWN:
+        JS_NOT_REACHED("No shrink on shutdown");
+    }
 }
 
 /* Must be called with the GC lock taken. */
@@ -2496,9 +2521,8 @@ GCHelperThread::replenishAndFreeLater(void *ptr)
 void
 GCHelperThread::doSweep()
 {
-    JS_ASSERT(context);
-
-    {
+    if (JSContext *cx = finalizationContext) {
+        finalizationContext = NULL;
         AutoUnlockGC unlock(rt);
 
         /*
@@ -2506,10 +2530,8 @@ GCHelperThread::doSweep()
          * finalizeObjects.
          */
         for (ArenaHeader **i = finalizeVector.begin(); i != finalizeVector.end(); ++i)
-            ArenaLists::backgroundFinalize(context, *i);
+            ArenaLists::backgroundFinalize(cx, *i);
         finalizeVector.resize(0);
-
-        context = NULL;
 
         if (freeCursor) {
             void **array = freeCursorEnd - FREE_ARRAY_LENGTH;
@@ -2525,7 +2547,18 @@ GCHelperThread::doSweep()
         freeVector.resize(0);
     }
 
-    ExpireChunksAndArenas(rt, shouldShrink());
+    bool shrinking = shrinkFlag;
+    ExpireChunksAndArenas(rt, shrinking);
+
+    /*
+     * The main thread may have called ShrinkGCBuffers while
+     * ExpireChunksAndArenas(rt, false) was running, so we recheck the flag
+     * afterwards.
+     */
+    if (!shrinking && shrinkFlag) {
+        shrinkFlag = false;
+        ExpireChunksAndArenas(rt, true);
+    }
 }
 
 #endif /* JS_THREADSAFE */
@@ -3008,7 +3041,7 @@ GCCycle(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
     JS_ASSERT(!cx->gcBackgroundFree);
     rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
     if (gckind != GC_LAST_CONTEXT && rt->state != JSRTS_LANDING) {
-        if (rt->gcHelperThread.prepareForBackgroundSweep(cx))
+        if (rt->gcHelperThread.prepareForBackgroundSweep())
             cx->gcBackgroundFree = &rt->gcHelperThread;
     }
 #endif
@@ -3022,7 +3055,7 @@ GCCycle(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
     if (cx->gcBackgroundFree) {
         JS_ASSERT(cx->gcBackgroundFree == &rt->gcHelperThread);
         cx->gcBackgroundFree = NULL;
-        rt->gcHelperThread.startBackgroundSweep(gckind == GC_SHRINK);
+        rt->gcHelperThread.startBackgroundSweep(cx, gckind == GC_SHRINK);
     }
 #endif
 
@@ -3099,6 +3132,18 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind, gcstats::Re
 }
 
 namespace js {
+
+void
+ShrinkGCBuffers(JSRuntime *rt)
+{
+    AutoLockGC lock(rt);
+    JS_ASSERT(!rt->gcRunning);
+#ifndef JS_THREADSAFE
+    ExpireChunksAndArenas(rt, true);
+#else
+    rt->gcHelperThread.startBackgroundShrink();
+#endif
+}
 
 class AutoCopyFreeListToArenas {
     JSRuntime *rt;
@@ -3312,7 +3357,7 @@ RunDebugGC(JSContext *cx)
     rt->gcTriggerCompartment = rt->gcDebugCompartmentGC ? cx->compartment : NULL;
     if (rt->gcTriggerCompartment == rt->atomsCompartment)
         rt->gcTriggerCompartment = NULL;
-    
+
     RunLastDitchGC(cx);
 #endif
 }

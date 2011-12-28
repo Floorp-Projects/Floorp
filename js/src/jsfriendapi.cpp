@@ -125,10 +125,16 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
     return obj;
 }
 
-JS_PUBLIC_API(void)
+JS_FRIEND_API(void)
 JS_ShrinkingGC(JSContext *cx)
 {
     js_GC(cx, NULL, GC_SHRINK, gcstats::PUBLIC_API);
+}
+
+JS_FRIEND_API(void)
+JS_ShrinkGCBuffers(JSRuntime *rt)
+{
+    ShrinkGCBuffers(rt);
 }
 
 JS_FRIEND_API(JSPrincipals *)
