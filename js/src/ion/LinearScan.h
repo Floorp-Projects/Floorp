@@ -82,7 +82,7 @@ class VirtualRegister;
  * of instruction IDs is insufficiently expressive to denote all possibilities.
  * This class solves this issue by associating an extra bit with the instruction
  * ID which indicates whether the position is the input half or output half of
- * an instruction. This way, an interval that ends in the input halg of an
+ * an instruction. This way, an interval that ends in the input half of an
  * instruction will not intersect with the interval that starts in its output
  * half, so they could be assigned the same register without requiring a special
  * case in the register allocator.
@@ -314,8 +314,8 @@ class LiveInterval
     void setHint(const Requirement &hint) {
         hint_ = hint;
     }
-    bool isSpilled() const {
-        return alloc_.isMemory();
+    bool isSpill() const {
+        return alloc_.isStackSlot();
     }
 
     bool splitFrom(CodePosition pos, LiveInterval *after);
@@ -337,6 +337,7 @@ class VirtualRegister
     LMoveGroup *inputMoves_;
     LMoveGroup *outputMoves_;
     LAllocation *canonicalSpill_;
+    CodePosition spillPosition_;
     bool spillAtDefinition_;
 
     // This bit is used to determine whether both halves of a nunbox have been
@@ -430,11 +431,18 @@ class VirtualRegister
     bool isDouble() const {
         return def_->type() == LDefinition::DOUBLE;
     }
-    void setSpillAtDefinition() {
+    void setSpillAtDefinition(CodePosition pos) {
         spillAtDefinition_ = true;
+        setSpillPosition(pos);
     }
     bool mustSpillAtDefinition() const {
         return spillAtDefinition_;
+    }
+    CodePosition spillPosition() const {
+        return spillPosition_;
+    }
+    void setSpillPosition(CodePosition pos) {
+        spillPosition_ = pos;
     }
 
     LiveInterval *intervalFor(CodePosition pos);
@@ -448,23 +456,17 @@ class VirtualRegisterMap
 {
   private:
     VirtualRegister *vregs_;
-#ifdef DEBUG
     uint32 numVregs_;
-#endif
 
   public:
     VirtualRegisterMap()
-      : vregs_(NULL)
-#ifdef DEBUG
-      , numVregs_(0)
-#endif
+      : vregs_(NULL),
+        numVregs_(0)
     { }
 
     bool init(MIRGenerator *gen, uint32 numVregs) {
         vregs_ = gen->allocate<VirtualRegister>(numVregs);
-#ifdef DEBUG
         numVregs_ = numVregs;
-#endif
         if (!vregs_)
             return false;
         memset(vregs_, 0, sizeof(VirtualRegister) * numVregs);
@@ -490,6 +492,9 @@ class VirtualRegisterMap
     VirtualRegister &operator[](const LInstruction *ins) {
         JS_ASSERT(ins->id() < numVregs_);
         return vregs_[ins->id()];
+    }
+    uint32 numVirtualRegisters() const {
+        return numVregs_;
     }
 };
 
@@ -556,6 +561,7 @@ class LinearScanAllocator
     bool allocateRegisters();
     bool resolveControlFlow();
     bool reifyAllocations();
+    bool populateSafepoints();
 
     uint32 allocateSlotFor(const LiveInterval *interval);
     bool splitInterval(LiveInterval *interval, CodePosition pos);
@@ -571,6 +577,7 @@ class LinearScanAllocator
     bool moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to);
     void setIntervalRequirement(LiveInterval *interval);
     void addSpillInterval(LInstruction *ins, const Requirement &req);
+    size_t findFirstSafepoint(LiveInterval *interval, size_t firstSafepoint);
 
 #ifdef DEBUG
     void validateIntervals();
