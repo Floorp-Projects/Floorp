@@ -200,7 +200,9 @@ GreedyAllocator::allocateSlotFor(VirtualRegister *vr)
     liveSlots_.pushBack(vr);
     vr->setOwnsStackSlot();
 
-    if (IsNunbox(vr->type()) || vr->isDouble())
+    if (IsNunbox(vr->type()))
+        return stackSlotAllocator.allocateValueSlot();
+    if (vr->isDouble())
         return stackSlotAllocator.allocateDoubleSlot();
     return stackSlotAllocator.allocateSlot();
 }
@@ -303,7 +305,7 @@ GreedyAllocator::killStack(VirtualRegister *vr)
 #if JS_NUNBOX32
     if (IsNunbox(vr->type()) && vr->ownsStackSlot()) {
         uint32 stackSlot = BaseOfNunboxSlot(vr->type(), vr->stackSlot());
-        stackSlotAllocator.freeDoubleSlot(stackSlot);
+        stackSlotAllocator.freeValueSlot(stackSlot);
     } else
 #endif
     if (vr->hasStackSlot()) {

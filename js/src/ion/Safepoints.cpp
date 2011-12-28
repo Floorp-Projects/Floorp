@@ -152,8 +152,10 @@ SafepointWriter::writeNunboxParts(uint32 nentries, SafepointNunboxEntry *entries
     }
 #endif
 
-    if (nentries)
-        JS_NOT_REACHED("NYI - encode these once we support out-of-line calls");
+    if (nentries) {
+        // JS_NOT_REACHED("NYI - encode these once we support out-of-line calls");
+        return;
+    }
 }
 
 void

@@ -1243,7 +1243,9 @@ LinearScanAllocator::allocateSlotFor(const LiveInterval *interval)
         }
     }
 
-    if (interval->reg()->isDouble() || IsNunbox(interval->reg()))
+    if (IsNunbox(interval->reg()))
+        return stackSlotAllocator.allocateValueSlot();
+    if (interval->reg()->isDouble())
         return stackSlotAllocator.allocateDoubleSlot();
     return stackSlotAllocator.allocateSlot();
 }
