@@ -193,19 +193,20 @@ ion::CheckLogging()
             "\n"
             "usage: IONFLAGS=option,option,option,... where options can be:\n"
             "\n"
-            "  aborts    Compilation abort messages\n"
-            "  mir       MIR information\n"
-            "  alias     Alias analysis\n"
-            "  gvn       Global Value Numbering\n"
-            "  licm      Loop invariant code motion\n"
-            "  regalloc  Register allocation\n"
-            "  inline    Inlining\n"
-            "  snapshots Snapshot information\n"
-            "  codegen   Native code generation\n"
-            "  bailouts  Bailouts\n"
-            "  caches    Inline caches\n"
-            "  osi       Invalidation\n"
-            "  all       Everything\n"
+            "  aborts     Compilation abort messages\n"
+            "  mir        MIR information\n"
+            "  alias      Alias analysis\n"
+            "  gvn        Global Value Numbering\n"
+            "  licm       Loop invariant code motion\n"
+            "  regalloc   Register allocation\n"
+            "  inline     Inlining\n"
+            "  snapshots  Snapshot information\n"
+            "  codegen    Native code generation\n"
+            "  bailouts   Bailouts\n"
+            "  caches     Inline caches\n"
+            "  osi        Invalidation\n"
+            "  safepoints Safepoints\n"
+            "  all        Everything\n"
             "\n"
         );
         exit(0);
@@ -231,10 +232,12 @@ ion::CheckLogging()
         LoggingBits |= (1 << uint32(IonSpew_Codegen));
     if (ContainsFlag(env, "bailouts"))
         LoggingBits |= (1 << uint32(IonSpew_Bailouts));
-    if (ContainsFlag(env, "caches"))
-        LoggingBits |= (1 << uint32(IonSpew_InlineCaches));
     if (ContainsFlag(env, "osi"))
         LoggingBits |= (1 << uint32(IonSpew_Invalidate));
+    if (ContainsFlag(env, "caches"))
+        LoggingBits |= (1 << uint32(IonSpew_InlineCaches));
+    if (ContainsFlag(env, "safepoints"))
+        LoggingBits |= (1 << uint32(IonSpew_Safepoints));
     if (ContainsFlag(env, "all"))
         LoggingBits = uint32(-1);
 

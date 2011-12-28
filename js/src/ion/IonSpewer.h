@@ -76,7 +76,9 @@ namespace ion {
     /* Debug info about snapshots */        \
     _(Snapshots)                            \
     /* Generated inline cache stubs */      \
-    _(InlineCaches)
+    _(InlineCaches)                         \
+    /* Debug info about safepoints */       \
+    _(Safepoints)
 
 enum IonSpewChannel {
 #define IONSPEW_CHANNEL(name) IonSpew_##name,

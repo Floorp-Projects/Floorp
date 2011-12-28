@@ -56,6 +56,7 @@
 #include "MIRGraph.h"
 #include "shared/Assembler-shared.h"
 #include "Snapshots.h"
+#include "Safepoints.h"
 #include "Bailouts.h"
 #include "VMFunctions.h"
 
@@ -554,11 +555,13 @@ class LDefinition
 #undef LIROP
 
 class LSnapshot;
+class LSafepoint;
 class LCaptureAllocations;
 class LInstructionVisitor;
 
-class LInstruction : public TempObject,
-                     public InlineListNode<LInstruction>
+class LInstruction
+  : public TempObject,
+    public InlineListNode<LInstruction>
 {
     uint32 id_;
 
@@ -566,10 +569,15 @@ class LInstruction : public TempObject,
     // from the resume point pc.
     LSnapshot *snapshot_;
 
-    // This snapshot can only be set with non-resumable instruction (which are
-    // declared as ResumePoint, by definition).  Use this snapshot only to
-    // resume after any side-effect.
+    // Snapshot capturing the state of the interpreter as if this instruction
+    // has finished executing. This is used for deep invalidation (also known
+    // as deep bailouts), which occur from C++, where the current instruction
+    // cannot be re-executed.
     LSnapshot *postSnapshot_;
+
+    // Structure capturing the set of stack slots and registers which are known
+    // to hold either gcthings or Values.
+    LSafepoint *safepoint_;
 
   protected:
     MDefinition *mir_;
@@ -578,6 +586,7 @@ class LInstruction : public TempObject,
       : id_(0),
         snapshot_(NULL),
         postSnapshot_(NULL),
+        safepoint_(NULL),
         mir_(NULL)
     { }
 
@@ -633,16 +642,15 @@ class LInstruction : public TempObject,
     LSnapshot *postSnapshot() const {
         return postSnapshot_;
     }
-    LSnapshot *safepoint() const {
-        if (mir_->isEffectful())
-            return postSnapshot_;
-        return snapshot_;
+    LSafepoint *safepoint() const {
+        return safepoint_;
     }
     void setMir(MDefinition *mir) {
         mir_ = mir;
     }
     void assignSnapshot(LSnapshot *snapshot);
     void assignPostSnapshot(LSnapshot *snapshot);
+    void initSafepoint();
 
     // Get the set of registers which are live after this operation.
     RegisterSet liveRegisters();
@@ -650,8 +658,7 @@ class LInstruction : public TempObject,
     virtual void print(FILE *fp);
     virtual void printName(FILE *fp);
     virtual void printOperands(FILE *fp);
-    virtual void printInfo(FILE *fp) {
-    }
+    virtual void printInfo(FILE *fp) { }
 
   public:
     // Opcode testing and casts.
@@ -905,9 +912,95 @@ class LSnapshot : public TempObject
     }
 };
 
+struct SafepointNunboxEntry {
+    LAllocation type;
+    LAllocation payload;
+
+    SafepointNunboxEntry() { }
+    SafepointNunboxEntry(LAllocation type, LAllocation payload)
+      : type(type), payload(payload)
+    { }
+};
+
+class LSafepoint : public TempObject
+{
+    typedef SafepointNunboxEntry NunboxEntry;
+
+  public:
+    typedef Vector<uint32, 0, IonAllocPolicy> SlotList;
+    typedef Vector<NunboxEntry, 0, IonAllocPolicy> NunboxList;
+
+  private:
+    // The set of registers which are live after the safepoint. This is empty
+    // for instructions marked as calls.
+    RegisterSet liveRegs_;
+
+    // The set of registers which contain gcthings.
+    GeneralRegisterSet gcRegs_;
+
+    // Offset to a position in the safepoint stream, or
+    // INVALID_SAFEPOINT_OFFSET.
+    uint32 safepointOffset_;
+
+    // List of stack slots which have gc pointers.
+    SlotList gcSlots_;
+
+#ifdef JS_NUNBOX32
+    SlotList valueSlots_;
+    NunboxList nunboxParts_;
+#endif
+
+  public:
+    LSafepoint()
+      : safepointOffset_(INVALID_SAFEPOINT_OFFSET)
+    { }
+    void addLiveRegister(AnyRegister reg) {
+        liveRegs_.add(reg);
+    }
+    const RegisterSet &liveRegs() const {
+        return liveRegs_;
+    }
+    void addGcRegister(Register reg) {
+        gcRegs_.add(reg);
+    }
+    GeneralRegisterSet gcRegs() const {
+        return gcRegs_;
+    }
+    bool addGcSlot(uint32 slot) {
+        return gcSlots_.append(slot);
+    }
+    SlotList &gcSlots() {
+        return gcSlots_;
+    }
+#ifdef JS_NUNBOX32
+    bool addValueSlot(uint32 slot) {
+        return valueSlots_.append(slot);
+    }
+    SlotList &valueSlots() {
+        return valueSlots_;
+    }
+    bool addNunboxParts(LAllocation type, LAllocation payload) {
+        return nunboxParts_.append(NunboxEntry(type, payload));
+    }
+    NunboxList &nunboxParts() {
+        return nunboxParts_;
+    }
+#endif
+    bool encoded() const {
+        return safepointOffset_ != INVALID_SAFEPOINT_OFFSET;
+    }
+    uint32 offset() const {
+        JS_ASSERT(encoded());
+        return safepointOffset_;
+    }
+    void setOffset(uint32 offset) {
+        safepointOffset_ = offset;
+    }
+};
+
 class LInstruction::InputIterator
 {
-private:
+  private:
     LInstruction &ins_;
     size_t idx_;
     bool snapshot_;
@@ -970,7 +1063,9 @@ public:
 class LIRGraph
 {
     Vector<LBlock *, 16, SystemAllocPolicy> blocks_;
-    js::Vector<Value, 0, SystemAllocPolicy> constantPool_;
+    Vector<Value, 0, SystemAllocPolicy> constantPool_;
+    Vector<LInstruction *, 0, SystemAllocPolicy> safepoints_;
+    Vector<LInstruction *, 0, SystemAllocPolicy> nonCallSafepoints_;
     uint32 numVirtualRegisters_;
 
     // Number of stack slots needed for local spills.
@@ -1049,6 +1144,19 @@ class LIRGraph
     }
     LBlock *osrBlock() const {
         return osrBlock_;
+    }
+    bool noteNeedsSafepoint(LInstruction *ins);
+    size_t numNonCallSafepoints() const {
+        return nonCallSafepoints_.length();
+    }
+    LInstruction *getNonCallSafepoint(size_t i) const {
+        return nonCallSafepoints_[i];
+    }
+    size_t numSafepoints() const {
+        return safepoints_.length();
+    }
+    LInstruction *getSafepoint(size_t i) const {
+        return safepoints_[i];
     }
 };
 

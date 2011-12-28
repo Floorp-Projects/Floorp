@@ -333,7 +333,7 @@ class SnapshotWriter
         return writer_.oom() || writer_.length() >= MAX_BUFFER_SIZE;
     }
 
-    size_t length() const {
+    size_t size() const {
         return writer_.length();
     }
     const uint8 *buffer() const {

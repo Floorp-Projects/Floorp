@@ -371,6 +371,9 @@ class TypedRegisterSet
     void clear() {
         bits_ = 0;
     }
+    uint32 bits() const {
+        return bits_;
+    }
 };
 
 typedef TypedRegisterSet<Register> GeneralRegisterSet;
@@ -463,15 +466,24 @@ class RegisterSet {
         gpr_.clear();
         fpu_.clear();
     }
+    GeneralRegisterSet gprs() const {
+        return gpr_;
+    }
+    FloatRegisterSet fpus() const {
+        return fpu_;
+    }
 
     void maybeTake(Register reg) {
-        if (gpr_.has(reg)) gpr_.take(reg);
+        if (gpr_.has(reg))
+            gpr_.take(reg);
     }
     void maybeTake(FloatRegister reg) {
-        if (fpu_.has(reg)) fpu_.take(reg);
+        if (fpu_.has(reg))
+            fpu_.take(reg);
     }
     void maybeTake(AnyRegister reg) {
-        if (has(reg)) take(reg);
+        if (has(reg))
+            take(reg);
     }
     void maybeTake(ValueOperand value) {
 #if defined(JS_NUNBOX32)

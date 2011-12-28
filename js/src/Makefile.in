@@ -333,6 +333,7 @@ CPPSRCS +=	MIR.cpp \
 		MIRGraph.cpp \
 		MoveResolver.cpp \
 		Snapshots.cpp \
+		Safepoints.cpp \
 		TypeOracle.cpp \
 		TypePolicy.cpp \
 		ValueNumbering.cpp \

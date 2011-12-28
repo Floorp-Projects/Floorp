@@ -52,25 +52,29 @@ namespace ion {
 // N.B. All set operations must be performed on sets with the same maximum.
 class BitSet : private TempObject
 {
+  public:
+    static size_t RawLengthForBits(size_t bits) {
+        return 1 + bits / (8 * sizeof(uint32));
+    }
+
   private:
     BitSet(unsigned int max) :
         max_(max),
         bits_(NULL) {};
 
     unsigned int max_;
+    uint32 *bits_;
 
-    unsigned long *bits_;
-
-    static inline unsigned long bitForValue(unsigned int value) {
-        return 1l << (unsigned long)(value % (8 * sizeof(unsigned long)));
+    static inline uint32 bitForValue(unsigned int value) {
+        return 1l << (uint32)(value % (8 * sizeof(uint32)));
     }
 
     static inline unsigned int wordForValue(unsigned int value) {
-        return value / (8 * sizeof(unsigned long));
+        return value / (8 * sizeof(uint32));
     }
 
     inline unsigned int numWords() const {
-        return 1 + max_ / (8 * sizeof(*bits_));
+        return RawLengthForBits(max_);
     }
 
     bool init();
@@ -121,6 +125,12 @@ class BitSet : private TempObject
     // Iterator to the end of this set.
     Iterator end();
 
+    uint32 *raw() const {
+        return bits_;
+    }
+    size_t rawLength() const {
+        return numWords();
+    }
 };
 
 class BitSet::Iterator

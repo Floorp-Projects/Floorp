@@ -72,6 +72,16 @@ LIRGraph::addConstantToPool(MConstant *ins, uint32 *index)
     return constantPool_.append(ins->value());
 }
 
+bool
+LIRGraph::noteNeedsSafepoint(LInstruction *ins)
+{
+    // Instructions with safepoints must be in linear order.
+    JS_ASSERT_IF(safepoints_.length(), safepoints_[safepoints_.length() - 1]->id() < ins->id());
+    if (ins->isCall() && !nonCallSafepoints_.append(ins))
+        return false;
+    return safepoints_.append(ins);
+}
+
 uint32
 LBlock::firstId()
 {
@@ -337,6 +347,14 @@ LInstruction::print(FILE *fp)
         }
         fprintf(fp, ")");
     }
+}
+
+void
+LInstruction::initSafepoint()
+{
+    JS_ASSERT(!safepoint_);
+    safepoint_ = new LSafepoint();
+    JS_ASSERT(safepoint_);
 }
 
 void

@@ -50,6 +50,7 @@
 #include "ion/IonFrames.h"
 #include "ion/IonMacroAssembler.h"
 #include "ion/Snapshots.h"
+#include "ion/Safepoints.h"
 
 namespace js {
 namespace ion {
@@ -69,6 +70,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     SnapshotWriter snapshots_;
     IonCode *deoptTable_;
     uint32 pushedArgs_;
+    SafepointWriter safepoints_;
 
     // Mapping from bailout table ID to an offset in the snapshot buffer.
     js::Vector<SnapshotOffset, 0, SystemAllocPolicy> bailouts_;
@@ -173,16 +175,19 @@ class CodeGeneratorShared : public LInstructionVisitor
     // error (the code generator may use a slower bailout mechanism).
     bool assignBailoutId(LSnapshot *snapshot);
 
+    // Encode a safepoint in the safepoint stream.
+    void encodeSafepoint(LSafepoint *safepoint);
+
     // Assign a FrameInfo to the current offset and encodes the snapshot. This
     // is desirable just after call instructions to recover the FrameInfo from
     // the returnAddress and the calleeToken of the parent frame.
-    bool assignFrameInfo(LSnapshot *snapshot);
+    bool assignFrameInfo(LSafepoint *safepoint, LSnapshot *snapshot);
 
     // Create a safepoint at the current location. Usually the location is just
     // after a call.
     bool createSafepoint(LInstruction *ins) {
         JS_ASSERT(ins->safepoint());
-        return assignFrameInfo(ins->safepoint());
+        return assignFrameInfo(ins->safepoint(), ins->postSnapshot());
     }
 
     inline bool isNextBlock(LBlock *block) {

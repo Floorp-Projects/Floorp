@@ -240,7 +240,6 @@ CodeGeneratorX86Shared::emitSet(Assembler::Condition cond, const Register &dest,
         masm.movzxbl(dest, dest);
 
         if (ifNaN != NaN_Unexpected) {
-            // :TODO: Use masm.cmov (Bug ???)
             Label noNaN;
             masm.j(Assembler::NoParity, &noNaN);
             if (ifNaN == NaN_IsTrue)
