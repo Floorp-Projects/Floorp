@@ -39,68 +39,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "jscntxt.h"
-#include "jscompartment.h"
-#include "ion/shared/Bailouts-x86-shared.h"
-#include "ion/Bailouts.h"
-#include "ion/IonCompartment.h"
+#ifndef jsion_frames_inl_h__
+#define jsion_frames_inl_h__
 
-using namespace js;
-using namespace js::ion;
-
-#if defined(_WIN32)
-# pragma pack(push, 1)
-#endif
+#include "ion/IonFrames.h"
+#include "ion/Snapshots.h"
 
 namespace js {
 namespace ion {
 
-class BailoutStack
+bool
+IonFrameInfo::hasSnapshotOffset() const
 {
-    double    fpregs_[FloatRegisters::Total];
-    uintptr_t regs_[Registers::Total];
-    uintptr_t frameSize_;
-    uintptr_t snapshotOffset_;
+    return snapshotOffset_ != INVALID_SNAPSHOT_OFFSET;
+}
 
-  public:
-    MachineState machineState() {
-        return MachineState(regs_, fpregs_);
-    }
-    uint32 snapshotOffset() const {
-        return snapshotOffset_;
-    }
-    uint32 frameSize() const {
-        return frameSize_;
-    }
-    uint8 *parentStackPointer() {
-        return (uint8 *)this + sizeof(BailoutStack);
-    }
-};
+SnapshotOffset
+IonFrameInfo::snapshotOffset() const
+{
+    JS_ASSERT(hasSnapshotOffset());
+    return snapshotOffset_;
+}
 
 } // namespace ion
 } // namespace js
 
-#if defined(_WIN32)
-# pragma pack(pop)
-#endif
+#endif // jsion_frames_inl_h__
 
-FrameRecovery
-ion::FrameRecoveryFromBailout(IonCompartment *ion, BailoutStack *bailout)
-{
-    uint8 *sp = bailout->parentStackPointer();
-    uint8 *fp = sp + bailout->frameSize();
-
-    return FrameRecovery::FromSnapshot(fp, sp, bailout->machineState(), bailout->snapshotOffset());
-}
-
-FrameRecovery
-ion::FrameRecoveryFromInvalidation(IonCompartment *ion, InvalidationBailoutStack *bailout)
-{
-    IonJSFrameLayout *fp = (IonJSFrameLayout *) bailout->fp();
-    InvalidationRecord *record = CalleeTokenToInvalidationRecord(fp->calleeToken());
-    const IonFrameInfo *exitInfo = record->ionScript->getFrameInfo(record->returnAddress);
-    SnapshotOffset snapshotOffset = exitInfo->snapshotOffset();
-
-    return FrameRecovery::FromSnapshot(bailout->fp(), bailout->sp(), bailout->machine(),
-                                       snapshotOffset);
-}

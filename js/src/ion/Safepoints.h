@@ -38,87 +38,73 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef js_ion_frame_layouts_x86_h__
-#define js_ion_frame_layouts_x86_h__
+
+#ifndef jsion_include_safepoints_h_
+#define jsion_include_safepoints_h_
+
+#include "IonRegisters.h"
+#include "CompactBuffer.h"
+#include "BitSet.h"
 
 namespace js {
 namespace ion {
 
-class IonCommonFrameLayout
+class SafepointNunboxEntry;
+
+static const uint32 INVALID_SAFEPOINT_OFFSET = uint32(-1);
+
+class SafepointWriter
 {
-  private:
-    uint8 *returnAddress_;
-    uintptr_t descriptor_;
+    CompactBufferWriter stream_;
+    BitSet *frameSlots_;
 
   public:
-    static size_t offsetOfDescriptor() {
-        return offsetof(IonCommonFrameLayout, descriptor_);
+    bool init(uint32 localSlotCount);
+
+    // A safepoint entry is written in the order these functions appear.
+    uint32 startEntry();
+    void writeGcRegs(GeneralRegisterSet actual, GeneralRegisterSet spilled);
+    void writeGcSlots(uint32 nslots, uint32 *slots);
+    void writeValueSlots(uint32 nslots, uint32 *slots);
+    void writeNunboxParts(uint32 nentries, SafepointNunboxEntry *entries);
+    void endEntry();
+
+    size_t size() const {
+        return stream_.length();
     }
-    static size_t offsetOfReturnAddress() {
-        return offsetof(IonCommonFrameLayout, returnAddress_);
-    }
-    FrameType prevType() const {
-        return FrameType(descriptor_ & ((1 << FRAMETYPE_BITS) - 1));
-    }
-    size_t prevFrameLocalSize() const {
-        return descriptor_ >> FRAMETYPE_BITS;
-    }
-    void setFrameDescriptor(size_t size, FrameType type) {
-        descriptor_ = (size << FRAMETYPE_BITS) | type;
-    }
-    uint8 *returnAddress() const {
-        return returnAddress_;
-    }
-    uint8 **returnAddressPtr() {
-        return &returnAddress_;
+    const uint8 *buffer() const {
+        return stream_.buffer();
     }
 };
 
-class IonJSFrameLayout : public IonCommonFrameLayout
+class SafepointReader
 {
+    CompactBufferReader stream_;
+    uint32 localSlotCount_;
+    uint32 currentSlotChunk_;
+    uint32 currentSlotChunkNumber_;
+
   private:
-    void *calleeToken_;
+    void advanceFromGcRegs();
+    void advanceFromGcSlots();
+    void advanceFromValueSlots();
+    bool getSlotFromBitmap(uint32 *slot);
 
   public:
-    CalleeToken calleeToken() const {
-        return calleeToken_;
-    }
-    void replaceCalleeToken(void *value) {
-        calleeToken_ = value;
-    }
-    void setInvalidationRecord(InvalidationRecord *record) {
-        replaceCalleeToken(InvalidationRecordToToken(record));
-    }
+    SafepointReader(IonScript *script, const IonFrameInfo *fi);
 
-    static size_t offsetOfCalleeToken() {
-        return offsetof(IonJSFrameLayout, calleeToken_);
-    }
+    // A safepoint entry must be read in the order these functions appear.
+    void getGcRegs(GeneralRegisterSet *actual, GeneralRegisterSet *spilled);
 
-    Value *argv() {
-        return (Value *)(this + 1);
-    }
+    // Returns true if a slot was read, false if there are no more slots.
+    bool getGcSlot(uint32 *slot);
 
-    // Computes a reference to a slot, where a slot is a distance from the base
-    // frame pointer (as would be used for LStackSlot).
-    uintptr_t *slotRef(uint32 slot) {
-        return (uintptr_t *)((uint8 *)this - (slot * STACK_SLOT_SIZE));
-    }
+    // Returns true if a slot was read, false if there are no more slots.
+    bool getValueSlot(uint32 *slot);
 };
 
-class IonEntryFrameLayout : public IonJSFrameLayout
-{
-};
+} // namespace ion
+} // namespace js
 
-class IonRectifierFrameLayout : public IonJSFrameLayout
-{
-};
-
-class IonExitFrameLayout : public IonCommonFrameLayout
-{
-};
-
-}
-}
-
-#endif // js_ion_frame_layouts_x86_h__
+#endif // jsion_include_safepoints_h_
 

@@ -228,17 +228,41 @@ CodeGeneratorShared::assignBailoutId(LSnapshot *snapshot)
     return bailouts_.append(snapshot->snapshotOffset());
 }
 
-bool
-CodeGeneratorShared::assignFrameInfo(LSnapshot *snapshot)
+void
+CodeGeneratorShared::encodeSafepoint(LSafepoint *safepoint)
 {
-    if (!encode(snapshot))
-        return false;
+    if (safepoint->encoded())
+        return;
 
-    IonFrameInfo fi;
-    Label disp;
-    masm.bind(&disp);
-    fi.displacement = disp.offset();
-    fi.snapshotOffset = snapshot->snapshotOffset();
+    uint32 safepointOffset = safepoints_.startEntry();
 
+    safepoints_.writeGcRegs(safepoint->gcRegs(), safepoint->liveRegs().gprs());
+    safepoints_.writeGcSlots(safepoint->gcSlots().length(), safepoint->gcSlots().begin());
+#ifdef JS_NUNBOX32
+    safepoints_.writeValueSlots(safepoint->valueSlots().length(), safepoint->valueSlots().begin());
+    safepoints_.writeNunboxParts(safepoint->nunboxParts().length(), safepoint->nunboxParts().begin());
+#endif
+
+    safepoints_.endEntry();
+    safepoint->setOffset(safepointOffset);
+}
+
+bool
+CodeGeneratorShared::assignFrameInfo(LSafepoint *safepoint, LSnapshot *snapshot)
+{
+    SnapshotOffset snapshotOffset = INVALID_SNAPSHOT_OFFSET;
+
+    if (snapshot) {
+        if (!encode(snapshot))
+            return false;
+        snapshotOffset = snapshot->snapshotOffset();
+    }
+    encodeSafepoint(safepoint);
+
+    IonSpew(IonSpew_Safepoints, "Attaching safepoint %d to return displacement %d (snapshot: %d)",
+            safepoint->offset(), masm.currentOffset(), snapshotOffset);
+
+    IonFrameInfo fi(masm.currentOffset(), safepoint->offset(), snapshotOffset);
     return frameInfoTable_.append(fi);
 }
+

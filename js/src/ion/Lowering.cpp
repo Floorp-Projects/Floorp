@@ -159,7 +159,7 @@ LIRGenerator::visitCall(MCall *call)
         return false;
     if (!assignSnapshot(ins))
         return false;
-    if (!assignPostSnapshot(call, ins))
+    if (!assignSafepoint(ins, call))
         return false;
 
     freeArguments(argc);
