@@ -964,10 +964,20 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     // See bug 384168.
     *aGlobal = global;
 
-    if (!JS_ExecuteScriptVersion(cx, global, script, NULL, JSVERSION_LATEST)) {
+    uint32 oldopts = JS_GetOptions(cx);
+    JS_SetOptions(cx, oldopts |
+                  (exception ? JSOPTION_DONT_REPORT_UNCAUGHT : 0));
+    bool ok = JS_ExecuteScriptVersion(cx, global, script, NULL, JSVERSION_LATEST);
+    JS_SetOptions(cx, oldopts);
+
+    if (!ok) {
 #ifdef DEBUG_shaver_off
         fprintf(stderr, "mJCL: failed to execute %s\n", nativePath.get());
 #endif
+        if (exception) {
+            JS_GetPendingException(cx, exception);
+            JS_ClearPendingException(cx);
+        }
         *aGlobal = nsnull;
         return NS_ERROR_FAILURE;
     }
