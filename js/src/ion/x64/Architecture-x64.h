@@ -49,6 +49,7 @@ namespace ion {
 
 static const ptrdiff_t STACK_SLOT_SIZE       = 8;
 static const uint32 MAX_STACK_SLOTS          = 256;
+static const uint32 DOUBLE_STACK_ALIGNMENT   = 1;
 
 // In bytes: slots needed for potential memory->memory move spills.
 //   +8 for cycles
