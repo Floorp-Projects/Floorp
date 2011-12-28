@@ -123,22 +123,10 @@ XPCWrappedNativeProto::Init(XPCCallContext& ccx,
 
     JSObject *parent = mScope->GetGlobalJSObject();
 
-    JSObject *protoProto = nsnull;
-    if (callback) {
-        nsresult rv = callback->PreCreatePrototype(ccx, parent, &protoProto);
-        if (NS_FAILED(rv)) {
-            mJSProtoObject = nsnull;
-            XPCThrower::Throw(rv, ccx);
-            return false;
-        }
-    }
-    if (!protoProto) {
-        protoProto = mScope->GetPrototypeJSObject();
-    }
-
     mJSProtoObject =
         xpc_NewSystemInheritingJSObject(ccx, js::Jsvalify(jsclazz),
-                                        protoProto, true, parent);
+                                        mScope->GetPrototypeJSObject(),
+                                        true, parent);
 
     JSBool ok = mJSProtoObject && JS_SetPrivate(ccx, mJSProtoObject, this);
 
