@@ -1847,27 +1847,35 @@ nsLayoutUtils::GetAllInFlowBoxes(nsIFrame* aFrame, BoxCallback* aCallback)
 }
 
 struct BoxToBorderRect : public nsLayoutUtils::BoxCallback {
-  nsIFrame*                    mRelativeTo;
+  nsIFrame* mRelativeTo;
   nsLayoutUtils::RectCallback* mCallback;
+  PRUint32 mFlags;
 
-  BoxToBorderRect(nsIFrame* aRelativeTo, nsLayoutUtils::RectCallback* aCallback)
-    : mRelativeTo(aRelativeTo), mCallback(aCallback) {}
+  BoxToBorderRect(nsIFrame* aRelativeTo, nsLayoutUtils::RectCallback* aCallback,
+                  PRUint32 aFlags)
+    : mRelativeTo(aRelativeTo), mCallback(aCallback), mFlags(aFlags) {}
 
   virtual void AddBox(nsIFrame* aFrame) {
     nsRect r;
     nsIFrame* outer = nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(aFrame, &r);
-    if (outer) {
-      mCallback->AddRect(r + outer->GetOffsetTo(mRelativeTo));
-    } else
-      mCallback->AddRect(nsRect(aFrame->GetOffsetTo(mRelativeTo), aFrame->GetSize()));
+    if (!outer) {
+      outer = aFrame;
+      r = nsRect(nsPoint(0, 0), aFrame->GetSize());
+    }
+    if (mFlags & nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS) {
+      r = nsLayoutUtils::TransformFrameRectToAncestor(outer, r, mRelativeTo);
+    } else {
+      r += outer->GetOffsetTo(mRelativeTo);
+    }
+    mCallback->AddRect(r);
   }
 };
 
 void
 nsLayoutUtils::GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
-                                 RectCallback* aCallback)
+                                 RectCallback* aCallback, PRUint32 aFlags)
 {
-  BoxToBorderRect converter(aRelativeTo, aCallback);
+  BoxToBorderRect converter(aRelativeTo, aCallback, aFlags);
   GetAllInFlowBoxes(aFrame, &converter);
 }
 
@@ -1893,19 +1901,14 @@ void nsLayoutUtils::RectListBuilder::AddRect(const nsRect& aRect) {
 
 nsIFrame* nsLayoutUtils::GetContainingBlockForClientRect(nsIFrame* aFrame)
 {
-  // get the nearest enclosing SVG foreign object frame or the root frame
-  while (aFrame->GetParent() &&
-         !aFrame->IsFrameOfType(nsIFrame::eSVGForeignObject)) {
-    aFrame = aFrame->GetParent();
-  }
-
-  return aFrame;
+  return aFrame->PresContext()->PresShell()->GetRootFrame();
 }
 
 nsRect
-nsLayoutUtils::GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo) {
+nsLayoutUtils::GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo,
+                                      PRUint32 aFlags) {
   RectAccumulator accumulator;
-  GetAllInFlowRects(aFrame, aRelativeTo, &accumulator);
+  GetAllInFlowRects(aFrame, aRelativeTo, &accumulator, aFlags);
   return accumulator.mResultRect.IsEmpty() ? accumulator.mFirstRect
           : accumulator.mResultRect;
 }

@@ -704,8 +704,8 @@ public:
   };
 
   struct RectAccumulator : public RectCallback {
-    nsRect       mResultRect;
-    nsRect       mFirstRect;
+    nsRect mResultRect;
+    nsRect mFirstRect;
     bool mSeenFirstRect;
 
     RectAccumulator();
@@ -723,6 +723,9 @@ public:
 
   static nsIFrame* GetContainingBlockForClientRect(nsIFrame* aFrame);
 
+  enum {
+    RECTS_ACCOUNT_FOR_TRANSFORMS = 0x01
+  };
   /**
    * Collect all CSS border-boxes associated with aFrame and its
    * continuations, "drilling down" through outer table frames and
@@ -731,15 +734,22 @@ public:
    * into account) and passed to the callback in frame-tree order.
    * If aFrame is null, no boxes are returned.
    * For SVG frames, returns one rectangle, the bounding box.
+   * If aFlags includes RECTS_ACCOUNT_FOR_TRANSFORMS, then when converting
+   * the boxes into aRelativeTo coordinates, transforms (including CSS
+   * and SVG transforms) are taken into account.
    */
   static void GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
-                                RectCallback* aCallback);
+                                RectCallback* aCallback, PRUint32 aFlags = 0);
 
   /**
    * Computes the union of all rects returned by GetAllInFlowRects. If
    * the union is empty, returns the first rect.
+   * If aFlags includes RECTS_ACCOUNT_FOR_TRANSFORMS, then when converting
+   * the boxes into aRelativeTo coordinates, transforms (including CSS
+   * and SVG transforms) are taken into account.
    */
-  static nsRect GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo);
+  static nsRect GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo,
+                                       PRUint32 aFlags = 0);
 
   enum {
     EXCLUDE_BLUR_SHADOWS = 0x01
