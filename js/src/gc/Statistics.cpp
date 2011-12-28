@@ -120,6 +120,11 @@ Statistics::Statistics(JSRuntime *rt)
   : runtime(rt)
   , triggerReason(PUBLIC_API) //dummy reason to satisfy makeTable
 {
+    PodArrayZero(counts);
+    PodArrayZero(totals);
+
+    startupTime = PRMJ_Now();
+
     char *env = getenv("MOZ_GCTIMER");
     if (!env || strcmp(env, "none") == 0) {
         fp = NULL;
@@ -146,11 +151,6 @@ Statistics::Statistics(JSRuntime *rt)
             fprintf(fp, ", %*s", cols[i].width, cols[i].title);
         fprintf(fp, "\n");
     }
-
-    PodArrayZero(counts);
-    PodArrayZero(totals);
-
-    startupTime = PRMJ_Now();
 }
 
 Statistics::~Statistics()

@@ -46,6 +46,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm")
 Cu.import("resource://gre/modules/AddonManager.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "PluralForm", function() {
+  Cu.import("resource://gre/modules/PluralForm.jsm");
+  return PluralForm;
+});
+
 XPCOMUtils.defineLazyServiceGetter(this, "URIFixup",
   "@mozilla.org/docshell/urifixup;1", "nsIURIFixup");
 
@@ -839,6 +844,10 @@ var NativeWindow = {
                function(aTarget) {
                  let url = NativeWindow.contextmenus._getLinkURL(aTarget);
                  BrowserApp.addTab(url, { selected: false, parentId: BrowserApp.selectedTab.id });
+
+                 let newtabStrings = Strings.browser.GetStringFromName("newtabpopup.opened");
+                 let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
+                 NativeWindow.toast.show(label, "short");
                });
 
       this.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
@@ -1338,12 +1347,8 @@ Tab.prototype = {
     this._viewport.x = Math.round(this._viewport.x * this._viewport.zoom);
     this._viewport.y = Math.round(this._viewport.y * this._viewport.zoom);
 
-    /*
-     * Don't alter the page size until we hit DOMContentLoaded, because this causes the page size
-     * to jump around wildly during page load.
-     */
     let doc = this.browser.contentDocument;
-    if (doc != null && doc.readyState === 'complete') {
+    if (doc != null) {
       let pageWidth = this._viewport.width, pageHeight = this._viewport.height;
       let body = doc.body || { scrollWidth: pageWidth, scrollHeight: pageHeight };
       let html = doc.documentElement || { scrollWidth: pageWidth, scrollHeight: pageHeight };
@@ -1351,8 +1356,18 @@ Tab.prototype = {
       pageHeight = Math.max(body.scrollHeight, html.scrollHeight);
 
       /* Transform the page width and height based on the zoom factor. */
-      this._viewport.pageWidth = Math.round(pageWidth * this._viewport.zoom);
-      this._viewport.pageHeight = Math.round(pageHeight * this._viewport.zoom);
+      pageWidth = Math.round(pageWidth * this._viewport.zoom);
+      pageHeight = Math.round(pageHeight * this._viewport.zoom);
+
+      /*
+       * Avoid sending page sizes of less than screen size before we hit DOMContentLoaded, because
+       * this causes the page size to jump around wildly during page load. After the page is loaded,
+       * send updates regardless of page size; we'll zoom to fit the content as needed.
+       */
+      if (doc.readyState === 'complete' || (pageWidth >= gScreenWidth && pageHeight >= gScreenHeight)) {
+        this._viewport.pageWidth = pageWidth;
+        this._viewport.pageHeight = pageHeight;
+      }
     }
 
     return this._viewport;

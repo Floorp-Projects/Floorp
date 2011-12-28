@@ -1551,9 +1551,11 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 }
 
 %ifndef WINSTRIPE_AERO
-.ac-url-text:-moz-system-metric(windows-default-theme),
-.ac-action-text:-moz-system-metric(windows-default-theme) {
-  color: #006600;
+@media (-moz-windows-default-theme) {
+  .ac-url-text,
+  .ac-action-text {
+    color: #006600;
+  }
 }
 %endif
 
