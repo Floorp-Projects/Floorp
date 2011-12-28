@@ -47,7 +47,6 @@
 #include "nsHashtable.h"
 #include "nsAccessibilityService.h"
 #include "nsApplicationAccessibleWrap.h"
-#include "nsIAccessibleDocument.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocument.h"
