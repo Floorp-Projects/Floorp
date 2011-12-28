@@ -1125,8 +1125,9 @@ FrameState::frameSlot(ActiveFrame *a, const FrameEntry *fe) const
 }
 
 inline JSC::MacroAssembler::Address
-FrameState::addressForInlineReturn() const
+FrameState::addressForInlineReturn()
 {
+    discardFe(a->callee_);
     return addressOf(a->callee_);
 }
 
