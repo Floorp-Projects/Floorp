@@ -72,9 +72,22 @@ InvalidationRecord::InvalidationRecord(void *calleeToken, uint8 *returnAddress)
 {
     JS_ASSERT(!CalleeTokenIsInvalidationRecord(calleeToken));
     ionScript = MaybeScriptFromCalleeToken(calleeToken)->ion;
-    JS_ASSERT(ionScript);
 }
 
+InvalidationRecord *
+InvalidationRecord::New(void *calleeToken, uint8 *returnAddress)
+{
+    InvalidationRecord *record = OffTheBooks::new_<InvalidationRecord>(calleeToken, returnAddress);
+    record->ionScript->incref();
+    return record;
+}
+
+void
+InvalidationRecord::Destroy(JSContext *cx, InvalidationRecord *record)
+{
+    record->ionScript->decref(cx);
+    Foreground::delete_<InvalidationRecord>(record);
+}
 
 FrameRecovery::FrameRecovery(uint8 *fp, uint8 *sp, const MachineState &machine)
   : fp_((IonJSFrameLayout *)fp),
@@ -160,7 +173,7 @@ IonFrameIterator::calleeToken() const
 bool
 IonFrameIterator::hasScript() const
 {
-    return type_ == IonFrame_JS;
+    return type_ == IonFrame_JS && !CalleeTokenIsInvalidationRecord(calleeToken());
 }
 
 JSScript *
@@ -247,7 +260,7 @@ ion::HandleException(ResumeFromException *rfe)
             IonJSFrameLayout *fp = iter.jsFrame();
             CalleeToken token = fp->calleeToken();
             if (CalleeTokenIsInvalidationRecord(token))
-                Foreground::delete_<InvalidationRecord>(CalleeTokenToInvalidationRecord(token));
+                InvalidationRecord::Destroy(cx, CalleeTokenToInvalidationRecord(token));
         }
 
         ++iter;
