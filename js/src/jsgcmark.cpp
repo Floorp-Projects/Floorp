@@ -589,6 +589,26 @@ MarkGCThing(JSTracer *trc, void *thing, const char *name)
 }
 
 void
+MarkRootThingOrValue(JSTracer *trc, uintptr_t word, const char *name)
+{
+#ifdef JS_PUNBOX64
+    // All pointers on x64 will have the top bits cleared. If those bits
+    // are not cleared, this must be a Value.
+    {
+        if (word >> JSVAL_TAG_SHIFT) {
+            jsval_layout layout;
+            layout.asBits = word;
+            Value v = IMPL_TO_JSVAL(layout);
+            gc::MarkRoot(trc, v, name);
+	    return;
+        }
+    }
+#endif
+
+    gc::MarkGCThing(trc, reinterpret_cast<void *>(word), name);
+}
+
+void
 MarkGCThing(JSTracer *trc, void *thing, const char *name, size_t index)
 {
     JS_SET_TRACING_INDEX(trc, name, index);

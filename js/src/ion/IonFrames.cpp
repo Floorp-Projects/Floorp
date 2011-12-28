@@ -310,6 +310,45 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
     IonJSFrameLayout *layout = (IonJSFrameLayout *)frame.fp();
     
     MarkCalleeToken(trc, layout->calleeToken());
+
+    if (!CalleeTokenIsFunction(layout->calleeToken())) {
+        // On-stack invalidation may replace the calleetoken with something
+        // else. In this case we still have to mark a portion of the frame, but
+        // not all of it.
+        JS_NOT_REACHED("NYI");
+        return;
+    }
+
+    JSFunction *fun = CalleeTokenToFunction(layout->calleeToken());
+
+    // Trace function arguments.
+    Value *argv = layout->argv();
+    for (size_t i = 0; i < fun->nargs; i++)
+        gc::MarkRoot(trc, argv[i], "ion-argv");
+
+    IonScript *ionScript = fun->script()->ion;
+    const IonFrameInfo *fi = ionScript->getFrameInfo(frame.returnAddressToFp());
+
+    SafepointReader safepoint(ionScript, fi);
+
+    GeneralRegisterSet actual, spilled;
+    safepoint.getGcRegs(&actual, &spilled);
+    
+    // No support for manual spill calls yet.
+    JS_ASSERT(actual.empty() && spilled.empty());
+
+    // Scan through slots which contain pointers (or on punboxing systems,
+    // actual values).
+    uint32 slot;
+    while (safepoint.getGcSlot(&slot)) {
+        uintptr_t *ref = layout->slotRef(slot);
+        gc::MarkRootThingOrValue(trc, *ref, "ion-gc-slot");
+    }
+
+    while (safepoint.getValueSlot(&slot)) {
+        Value *v = (Value *)layout->slotRef(slot);
+        gc::MarkRoot(trc, *v, "ion-gc-slot");
+    }
 }
 
 static void
