@@ -43,6 +43,7 @@
 #include "jscompartment.h"
 #include "ion/Bailouts.h"
 #include "ion/IonCompartment.h"
+#include "ion/IonFrames-inl.h"
 
 using namespace js;
 using namespace js::ion;
