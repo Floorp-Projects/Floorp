@@ -106,13 +106,8 @@ public:
                           const Pattern &aPattern,
                           const DrawOptions &aOptions)
   { return; }
-  virtual void Mask(const Pattern &aSource,
-                    const Pattern &aMask,
-                    const DrawOptions &aOptions = DrawOptions())
-  { return; }
 
   virtual void PushClip(const Path *aPath) { }
-  virtual void PushClipRect(const Rect &aRect) { }
   virtual void PopClip() { }
 
   virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FILL_WINDING) const { return NULL; }
@@ -128,7 +123,7 @@ public:
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
   { return NULL; }
 
-  virtual TemporaryRef<GradientStops> CreateGradientStops(GradientStop *aStops, uint32_t aNumStops, ExtendMode aExtendMode = EXTEND_CLAMP) const
+  virtual TemporaryRef<GradientStops> CreateGradientStops(GradientStop *aStops, uint32_t aNumStops) const
   { return NULL; }
 
   virtual void *GetNativeSurface(NativeSurfaceType aType)
