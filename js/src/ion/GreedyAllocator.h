@@ -77,6 +77,7 @@ class GreedyAllocator
         bool hasRegister_;
         bool hasStackSlot_;
         bool hasBackingStack_;
+        bool killed_;
         mutable bool backingStackUsed_;
 
 #ifdef DEBUG
@@ -158,6 +159,12 @@ class GreedyAllocator
         }
         bool hasStackSlot() const {
             return hasStackSlot_;
+        }
+        void setKilled() {
+            killed_ = true;
+        }
+        bool killed() const {
+            return killed_;
         }
     };
 
@@ -307,6 +314,7 @@ class GreedyAllocator
     bool mergeBackedgeState(LBlock *header, LBlock *backedge);
     bool mergeRegisterState(const AnyRegister &reg, LBlock *left, LBlock *right);
 
+    VirtualRegister *otherHalfOfNunbox(VirtualRegister *vreg);
     VirtualRegister *getVirtualRegister(LDefinition *def) {
         JS_ASSERT(def->virtualRegister() < graph.numVirtualRegisters());
         return &vars[def->virtualRegister()];
