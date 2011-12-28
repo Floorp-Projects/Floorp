@@ -65,7 +65,7 @@ enum CalleeTokenTag
 };
 
 static inline CalleeTokenTag
-CalleeTokenGetTag(CalleeToken token)
+GetCalleeTokenTag(CalleeToken token)
 {
     CalleeTokenTag tag = CalleeTokenTag(uintptr_t(token) & 0x3);
     JS_ASSERT(tag != 0x3);
@@ -74,7 +74,7 @@ CalleeTokenGetTag(CalleeToken token)
 static inline bool
 CalleeTokenIsInvalidationRecord(CalleeToken token)
 {
-    return CalleeTokenGetTag(token) == CalleeToken_InvalidationRecord;
+    return GetCalleeTokenTag(token) == CalleeToken_InvalidationRecord;
 }
 static inline CalleeToken
 CalleeToToken(JSFunction *fun)
@@ -94,19 +94,19 @@ InvalidationRecordToToken(InvalidationRecord *record)
 static inline JSFunction *
 CalleeTokenToFunction(CalleeToken token)
 {
-    JS_ASSERT(CalleeTokenGetTag(token) == CalleeToken_Function);
+    JS_ASSERT(GetCalleeTokenTag(token) == CalleeToken_Function);
     return (JSFunction *)token;
 }
 static inline JSScript *
 CalleeTokenToScript(CalleeToken token)
 {
-    JS_ASSERT(CalleeTokenGetTag(token) == CalleeToken_Script);
+    JS_ASSERT(GetCalleeTokenTag(token) == CalleeToken_Script);
     return (JSScript *)(uintptr_t(token) & ~uintptr_t(0x3));
 }
 static inline InvalidationRecord *
 CalleeTokenToInvalidationRecord(CalleeToken token)
 {
-    JS_ASSERT(CalleeTokenGetTag(token) == CalleeToken_InvalidationRecord);
+    JS_ASSERT(GetCalleeTokenTag(token) == CalleeToken_InvalidationRecord);
     return (InvalidationRecord *)(uintptr_t(token) & ~uintptr_t(0x3));
 }
 JSScript *
@@ -307,6 +307,8 @@ struct ResumeFromException
 
 void HandleException(ResumeFromException *rfe);
 
+void MarkIonActivations(ThreadData *td, JSTracer *trc);
+
 static inline uint32
 MakeFrameDescriptor(uint32 frameSize, FrameType type)
 {
@@ -357,7 +359,7 @@ IonFrameIterator::prevType() const
 inline bool 
 IonFrameIterator::more() const
 {
-    return prevType() != IonFrame_Entry;
+    return type_ != IonFrame_Entry;
 }
 
 static inline IonScript *

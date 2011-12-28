@@ -943,7 +943,8 @@ MarkChildren(JSTracer *trc, JSScript *script)
         js_MarkScriptFilename(script->filename);
 
 #ifdef JS_ION
-    ion::IonScript::Trace(trc, script);
+    if (script->ion)
+	    ion::IonScript::Trace(trc, script->ion);
 #endif
 
     script->bindings.trace(trc);

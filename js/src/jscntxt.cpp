@@ -80,6 +80,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
+#include "ion/IonFrames.h"
 
 #ifdef JS_METHODJIT
 # include "assembler/assembler/MacroAssembler.h"
@@ -235,6 +236,15 @@ ThreadData::purgeRegExpPrivateCache()
 {
     rt->delete_<RegExpPrivateCache>(repCache);
     repCache = NULL;
+}
+
+void
+ThreadData::mark(JSTracer *trc)
+{
+    stackSpace.mark(trc);
+#ifdef JS_ION
+    ion::MarkIonActivations(this, trc);
+#endif
 }
 
 } /* namespace js */
