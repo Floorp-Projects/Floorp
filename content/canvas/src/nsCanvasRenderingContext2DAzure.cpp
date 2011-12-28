@@ -809,7 +809,7 @@ protected:
         if (state.patternStyles[aStyle]->mRepeat == nsCanvasPatternAzure::NOREPEAT) {
           mode = EXTEND_CLAMP;
         } else {
-          mode = EXTEND_REPEAT;
+          mode = EXTEND_WRAP;
         }
         mPattern = new (mSurfacePattern.addr())
           SurfacePattern(state.patternStyles[aStyle]->mSurface, mode);

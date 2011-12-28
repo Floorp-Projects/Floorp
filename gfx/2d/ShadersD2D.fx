@@ -60,20 +60,6 @@ sampler sSampler = sampler_state {
     AddressV = Clamp;
 };
 
-sampler sWrapSampler = sampler_state {
-    Filter = MIN_MAG_MIP_LINEAR;
-    Texture = tex;
-    AddressU = Wrap;
-    AddressV = Wrap;
-};
-
-sampler sMirrorSampler = sampler_state {
-    Filter = MIN_MAG_MIP_LINEAR;
-    Texture = tex;
-    AddressU = Mirror;
-    AddressV = Mirror;
-};
-
 sampler sMaskSampler = sampler_state {
     Filter = MIN_MAG_MIP_LINEAR;
     Texture = mask;
@@ -156,7 +142,7 @@ float4 SampleMaskTexturePS( VS_OUTPUT In) : SV_Target
     return tex.Sample(sSampler, In.TexCoord) * mask.Sample(sMaskSampler, In.MaskTexCoord).a;
 };
 
-float4 SampleRadialGradientPS(VS_RADIAL_OUTPUT In, uniform sampler aSampler) : SV_Target
+float4 SampleRadialGradientPS( VS_RADIAL_OUTPUT In) : SV_Target
 {
     // Radial gradient painting is defined as the set of circles whose centers
     // are described by C(t) = (C2 - C1) * t + C1; with radii
@@ -192,7 +178,7 @@ float4 SampleRadialGradientPS(VS_RADIAL_OUTPUT In, uniform sampler aSampler) : S
 
     float upper_t = lerp(t.y, t.x, isValid.x);
 
-    float4 output = tex.Sample(aSampler, float2(upper_t, 0.5));
+    float4 output = tex.Sample(sSampler, float2(upper_t, 0.5));
     // Premultiply
     output.rgb *= output.a;
     // Multiply the output color by the input mask for the operation.
@@ -200,7 +186,7 @@ float4 SampleRadialGradientPS(VS_RADIAL_OUTPUT In, uniform sampler aSampler) : S
     return output;
 };
 
-float4 SampleRadialGradientA0PS( VS_RADIAL_OUTPUT In, uniform sampler aSampler ) : SV_Target
+float4 SampleRadialGradientA0PS( VS_RADIAL_OUTPUT In) : SV_Target
 {
     // This simpler shader is used for the degenerate case where A is 0,
     // i.e. we're actually solving a linear equation.
@@ -219,7 +205,7 @@ float4 SampleRadialGradientA0PS( VS_RADIAL_OUTPUT In, uniform sampler aSampler )
       return float4(0, 0, 0, 0);
     }
 
-    float4 output = tex.Sample(aSampler, float2(t, 0.5));
+    float4 output = tex.Sample(sSampler, float2(t, 0.5));
     // Premultiply
     output.rgb *= output.a;
     // Multiply the output color by the input mask for the operation.
@@ -291,47 +277,19 @@ technique10 SampleTexture
 
 technique10 SampleRadialGradient
 {
-    pass APos
+    pass P0
     {
         SetRasterizerState(TextureRast);
         SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleRadialVS()));
         SetGeometryShader(NULL);
-        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleRadialGradientPS( sSampler )));
+        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleRadialGradientPS()));
     }
-    pass A0
+    pass P1
     {
         SetRasterizerState(TextureRast);
         SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleRadialVS()));
         SetGeometryShader(NULL);
-        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleRadialGradientA0PS( sSampler )));
-    }
-    pass APosWrap
-    {
-        SetRasterizerState(TextureRast);
-        SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleRadialVS()));
-        SetGeometryShader(NULL);
-        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleRadialGradientPS( sWrapSampler )));
-    }
-    pass A0Wrap
-    {
-        SetRasterizerState(TextureRast);
-        SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleRadialVS()));
-        SetGeometryShader(NULL);
-        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleRadialGradientA0PS( sWrapSampler )));
-    }
-    pass APosMirror
-    {
-        SetRasterizerState(TextureRast);
-        SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleRadialVS()));
-        SetGeometryShader(NULL);
-        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleRadialGradientPS( sMirrorSampler )));
-    }
-    pass A0Mirror
-    {
-        SetRasterizerState(TextureRast);
-        SetVertexShader(CompileShader(vs_4_0_level_9_3, SampleRadialVS()));
-        SetGeometryShader(NULL);
-        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleRadialGradientA0PS( sMirrorSampler )));
+        SetPixelShader(CompileShader(ps_4_0_level_9_3, SampleRadialGradientA0PS()));
     }
 }
 
