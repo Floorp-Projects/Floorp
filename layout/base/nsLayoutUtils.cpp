@@ -975,7 +975,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
    * out how to convert back to aFrame's coordinates and must use the CTM.
    */
   if (transformFound)
-    return InvertTransformsToRoot(aFrame, widgetToView);
+    return TransformRootPointToFrame(aFrame, widgetToView);
 
   /* Otherwise, all coordinate systems are translations of one another,
    * so we can just subtract out the different.
@@ -1117,68 +1117,62 @@ nsLayoutUtils::MatrixTransformPoint(const nsPoint &aPoint,
                  NSFloatPixelsToAppUnits(float(image.y), aFactor));
 }
 
-static gfxPoint 
-InvertTransformsToAncestor(nsIFrame *aFrame,
-                           const gfxPoint &aPoint,
-                           nsIFrame *aStopAtAncestor = nsnull)
+static gfx3DMatrix
+GetTransformToAncestor(nsIFrame *aFrame, nsIFrame *aAncestor)
 {
-  NS_PRECONDITION(aFrame, "Why are you inverting transforms when there is no frame?");
-
-  /* To invert everything to the root, we'll get the CTM, invert it, and use it to transform
-   * the point.
-   */
-  nsIFrame *parent = nsnull;
-  gfx3DMatrix ctm = aFrame->GetTransformMatrix(&parent);
-  gfxPoint result = aPoint;
-  
-  if (parent && parent != aStopAtAncestor) {
-      result = InvertTransformsToAncestor(parent, aPoint, aStopAtAncestor);
+  nsIFrame* parent;
+  gfx3DMatrix ctm = aFrame->GetTransformMatrix(aAncestor, &parent);
+  while (parent && parent != aAncestor) {
+    ctm = ctm * parent->GetTransformMatrix(aAncestor, &parent);
   }
+  return ctm;
+}
 
-  result = ctm.Inverse().ProjectPoint(result);
-  return result;
+static gfxPoint
+TransformGfxPointFromAncestor(nsIFrame *aFrame,
+                              const gfxPoint &aPoint,
+                              nsIFrame *aAncestor)
+{
+  gfx3DMatrix ctm = GetTransformToAncestor(aFrame, aAncestor);
+  return ctm.Inverse().ProjectPoint(aPoint);
 }
 
 static gfxRect
-InvertGfxRectToAncestor(nsIFrame *aFrame,
-                     const gfxRect &aRect,
-                     nsIFrame *aStopAtAncestor = nsnull)
+TransformGfxRectFromAncestor(nsIFrame *aFrame,
+                             const gfxRect &aRect,
+                             nsIFrame *aAncestor)
 {
-  NS_PRECONDITION(aFrame, "Why are you inverting transforms when there is no frame?");
+  gfx3DMatrix ctm = GetTransformToAncestor(aFrame, aAncestor);
+  return ctm.Inverse().ProjectRectBounds(aRect);
+}
 
-  /* To invert everything to the root, we'll get the CTM, invert it, and use it to transform
-   * the point.
-   */
-  nsIFrame *parent = nsnull;
-  gfx3DMatrix ctm = aFrame->GetTransformMatrix(&parent);
-  gfxRect result = aRect;
-  
-  if (parent && parent != aStopAtAncestor) {
-      result = InvertGfxRectToAncestor(parent, aRect, aStopAtAncestor);
-  }
-
-  result = ctm.Inverse().ProjectRectBounds(result);
-  return result;
+static gfxRect
+TransformGfxRectToAncestor(nsIFrame *aFrame,
+                           const gfxRect &aRect,
+                           nsIFrame *aAncestor)
+{
+  gfx3DMatrix ctm = GetTransformToAncestor(aFrame, aAncestor);
+  return ctm.ProjectRectBounds(aRect);
 }
 
 nsPoint
-nsLayoutUtils::InvertTransformsToRoot(nsIFrame *aFrame,
-                                      const nsPoint &aPoint)
+nsLayoutUtils::TransformRootPointToFrame(nsIFrame *aFrame,
+                                         const nsPoint &aPoint)
 {
     float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
     gfxPoint result(NSAppUnitsToFloatPixels(aPoint.x, factor),
                     NSAppUnitsToFloatPixels(aPoint.y, factor));
     
-    result = InvertTransformsToAncestor(aFrame, result);
+    result = TransformGfxPointFromAncestor(aFrame, result, nsnull);
    
     return nsPoint(NSFloatPixelsToAppUnits(float(result.x), factor),
                    NSFloatPixelsToAppUnits(float(result.y), factor));
 }
 
 nsRect 
-nsLayoutUtils::TransformRectToBoundsInAncestor(nsIFrame* aFrame,
-                                               const nsRect &aRect,
-                                               nsIFrame* aStopAtAncestor)
+nsLayoutUtils::TransformAncestorRectToFrame(nsIFrame* aFrame,
+                                            const nsRect &aRect,
+                                            nsIFrame* aAncestor)
 {
     float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
     gfxRect result(NSAppUnitsToFloatPixels(aRect.x, factor),
@@ -1186,12 +1180,31 @@ nsLayoutUtils::TransformRectToBoundsInAncestor(nsIFrame* aFrame,
                    NSAppUnitsToFloatPixels(aRect.width, factor),
                    NSAppUnitsToFloatPixels(aRect.height, factor));
 
-    result = InvertGfxRectToAncestor(aFrame, result, aStopAtAncestor);
+    result = TransformGfxRectFromAncestor(aFrame, result, aAncestor);
 
     return nsRect(NSFloatPixelsToAppUnits(float(result.x), factor),
                   NSFloatPixelsToAppUnits(float(result.y), factor),
                   NSFloatPixelsToAppUnits(float(result.width), factor),
                   NSFloatPixelsToAppUnits(float(result.height), factor));
+}
+
+nsRect
+nsLayoutUtils::TransformFrameRectToAncestor(nsIFrame* aFrame,
+                                            const nsRect& aRect,
+                                            nsIFrame* aAncestor)
+{
+  float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
+  gfxRect result(NSAppUnitsToFloatPixels(aRect.x, factor),
+                 NSAppUnitsToFloatPixels(aRect.y, factor),
+                 NSAppUnitsToFloatPixels(aRect.width, factor),
+                 NSAppUnitsToFloatPixels(aRect.height, factor));
+
+  result = TransformGfxRectToAncestor(aFrame, result, aAncestor);
+
+  return nsRect(NSFloatPixelsToAppUnits(float(result.x), factor),
+                NSFloatPixelsToAppUnits(float(result.y), factor),
+                NSFloatPixelsToAppUnits(float(result.width), factor),
+                NSFloatPixelsToAppUnits(float(result.height), factor));
 }
 
 static nsIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
