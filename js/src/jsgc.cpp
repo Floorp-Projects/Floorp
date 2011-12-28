@@ -38,9 +38,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* JS Mark-and-Sweep Garbage Collector. */
+
+#include "mozilla/Attributes.h"
+#include "mozilla/Util.h"
+
 /*
- * JS Mark-and-Sweep Garbage Collector.
- *
  * This GC allocates fixed-sized things with sizes up to GC_NBYTES_MAX (see
  * jsgc.h). It allocates from a special GC arena pool with each arena allocated
  * using malloc. It uses an ideally parallel array of flag bytes to hold the
@@ -50,8 +53,6 @@
  */
 #include <math.h>
 #include <string.h>     /* for memset used when DEBUG */
-
-#include "mozilla/Util.h"
 
 #include "jstypes.h"
 #include "jsstdint.h"
@@ -2782,9 +2783,8 @@ class AutoGCSession {
   private:
     JSContext   *context;
 
-    /* Disable copy constructor or assignments */
-    AutoGCSession(const AutoGCSession&);
-    void operator=(const AutoGCSession&);
+    AutoGCSession(const AutoGCSession&) MOZ_DELETE;
+    void operator=(const AutoGCSession&) MOZ_DELETE;
 };
 
 /*
