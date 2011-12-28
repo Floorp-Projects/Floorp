@@ -38,7 +38,7 @@
 #include "nsHTMLButtonControlFrame.h"
 
 #include "nsCOMPtr.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsHTMLParts.h"
 #include "nsIFormControl.h"
@@ -76,7 +76,7 @@ NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLButtonControlFrame)
 
 nsHTMLButtonControlFrame::nsHTMLButtonControlFrame(nsStyleContext* aContext)
-  : nsHTMLContainerFrame(aContext)
+  : nsContainerFrame(aContext)
 {
 }
 
@@ -89,7 +89,7 @@ nsHTMLButtonControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   DestroyAbsoluteFrames(aDestructRoot);
-  nsHTMLContainerFrame::DestroyFrom(aDestructRoot);
+  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 NS_IMETHODIMP
@@ -98,7 +98,7 @@ nsHTMLButtonControlFrame::Init(
               nsIFrame*        aParent,
               nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsHTMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
+  nsresult  rv = nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
   if (NS_SUCCEEDED(rv)) {
     mRenderer.SetFrame(this, PresContext());
   }
@@ -107,7 +107,7 @@ nsHTMLButtonControlFrame::Init(
 
 NS_QUERYFRAME_HEAD(nsHTMLButtonControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef ACCESSIBILITY
 already_AddRefed<nsAccessible>

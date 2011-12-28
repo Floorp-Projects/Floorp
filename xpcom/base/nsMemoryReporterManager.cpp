@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsAtomTable.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
@@ -496,6 +497,24 @@ NS_MEMORY_REPORTER_IMPLEMENT(HeapAllocated,
     "application because the allocator regularly rounds up request sizes. (The "
     "exact amount requested is not recorded.)")
 
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(AtomTableMallocSizeOf, "atom-table")
+
+static PRInt64 GetAtomTableSize() {
+  return NS_SizeOfAtomTableIncludingThis(AtomTableMallocSizeOf);
+}
+
+// Why is this here?  At first glance, you'd think it could be defined and
+// registered with nsMemoryReporterManager entirely within nsAtomTable.cpp.
+// However, the obvious time to register it is when the table is initialized,
+// and that happens before XPCOM components are initialized, which means the
+// NS_RegisterMemoryReporter call fails.  So instead we do it here.
+NS_MEMORY_REPORTER_IMPLEMENT(AtomTable,
+    "explicit/atom-table",
+    KIND_HEAP,
+    UNITS_BYTES,
+    GetAtomTableSize,
+    "Memory used by the atoms table.")
+
 /**
  ** nsMemoryReporterManager implementation
  **/
@@ -537,6 +556,8 @@ nsMemoryReporterManager::Init()
     REGISTER(HeapZone0Committed);
     REGISTER(HeapZone0Used);
 #endif
+
+    REGISTER(AtomTable);
 
     return NS_OK;
 }
