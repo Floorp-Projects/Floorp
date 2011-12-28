@@ -104,7 +104,10 @@ IonCompartment::generateEnterJIT(JSContext *cx)
 {
     MacroAssembler masm(cx);
     Assembler *aasm = &masm;
-    // store all of the callee saved registers.  they may be gone for a while
+
+    // Save non-volatile registers. These must be saved by the trampoline,
+    // rather than the JIT'd code, because they are scanned by the conservative
+    // scanner.
     masm.startDataTransferM(IsStore, sp, DB, WriteBack);
     masm.transferReg(r3); // [sp]  save the pointer we'll write our return value into
     masm.transferReg(r4); // [sp,4]

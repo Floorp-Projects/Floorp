@@ -94,6 +94,7 @@
 #ifdef JS_ION
 # include "ion/IonMacroAssembler.h"
 #endif
+#include "ion/IonFrameIterator.h"
 
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
@@ -1038,8 +1039,35 @@ static void
 MarkRangeConservatively(JSTracer *trc, const jsuword *begin, const jsuword *end)
 {
     JS_ASSERT(begin <= end);
+
     for (const jsuword *i = begin; i != end; ++i)
         MarkWordConservatively(trc, *i);
+}
+
+static void
+MarkRangeConservativelyAndSkipIon(JSTracer *trc, ThreadData *td, const jsuword *begin, const jsuword *end)
+{
+    const jsuword *i = begin;
+
+#if JS_STACK_GROWTH_DIRECTION < 0
+    // Walk only regions in between Ion activations. Note that non-volatile
+    // registers are spilled to the stack before the entry Ion frame, ensuring
+    // that the conservative scanner will still see them.
+    for (ion::IonActivationIterator ion(td); ion.more(); ++ion) {
+        ion::IonFrameIterator frames(ion.top());
+        while (frames.more())
+            ++frames;
+
+        jsuword *ionMin = (jsuword *)ion.top();
+        jsuword *ionEnd = (jsuword *)frames.fp();
+
+        MarkRangeConservatively(trc, i, ionMin);
+        i = ionEnd;
+    }
+#endif
+    
+    // Mark everything after the most recent Ion activation.
+    MarkRangeConservatively(trc, i, end);
 }
 
 static void
@@ -1056,7 +1084,7 @@ MarkThreadDataConservatively(JSTracer *trc, ThreadData *td)
     stackEnd = td->nativeStackBase;
 #endif
     JS_ASSERT(stackMin <= stackEnd);
-    MarkRangeConservatively(trc, stackMin, stackEnd);
+    MarkRangeConservativelyAndSkipIon(trc, td, stackMin, stackEnd);
     MarkRangeConservatively(trc, ctd->registerSnapshot.words,
                             ArrayEnd(ctd->registerSnapshot.words));
 }
