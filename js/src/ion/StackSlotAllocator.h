@@ -63,6 +63,9 @@ class StackSlotAllocator
     void freeDoubleSlot(uint32 index) {
         doubleSlots.append(index);
     }
+    void freeValueSlot(uint32 index) {
+        freeDoubleSlot(index);
+    }
 
     uint32 allocateDoubleSlot() {
         if (!doubleSlots.empty())
@@ -81,6 +84,9 @@ class StackSlotAllocator
             return index;
         }
         return ++height_;
+    }
+    uint32 allocateValueSlot() {
+        return allocateDoubleSlot();
     }
     uint32 stackHeight() const {
         return height_;
