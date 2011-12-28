@@ -66,7 +66,7 @@ class GreedyAllocator
         }
     };
 
-    struct VirtualRegister
+    struct VirtualRegister : public InlineListNode<VirtualRegister>
     {
         LDefinition *def;
         uint32 stackSlot_;
@@ -78,8 +78,12 @@ class GreedyAllocator
         bool hasRegister_;
         bool hasStackSlot_;
         bool hasBackingStack_;
-        bool killed_;
         mutable bool backingStackUsed_;
+
+        // For NunBox halves, only one half owns the stack slot, and is added
+        // to the live slot set. This makes it easier to skip the other half
+        // when building safepoints.
+        bool ownsStackSlot_;
 
 #ifdef DEBUG
         LInstruction *ins;
@@ -161,11 +165,11 @@ class GreedyAllocator
         bool hasStackSlot() const {
             return hasStackSlot_;
         }
-        void setKilled() {
-            killed_ = true;
+        void setOwnsStackSlot() {
+            ownsStackSlot_ = true;
         }
-        bool killed() const {
-            return killed_;
+        bool ownsStackSlot() const {
+            return ownsStackSlot_;
         }
     };
 
@@ -195,6 +199,7 @@ class GreedyAllocator
     RegisterSet discouraged;
     AllocationState state;
     StackSlotAllocator stackSlotAllocator;
+    InlineList<VirtualRegister> liveSlots_;
 
     // Aligns: If a register shuffle must occur to align input parameters (for
     //         example, ecx loading into fixed edx), it goes here.
@@ -259,7 +264,7 @@ class GreedyAllocator
     bool maybeEvict(AnyRegister reg);
 
     // Allocates or frees a stack slot.
-    uint32 allocateSlotFor(const VirtualRegister *vr);
+    uint32 allocateSlotFor(VirtualRegister *vr);
     void allocateStack(VirtualRegister *vr);
     void freeStack(VirtualRegister *vr);
 
@@ -296,6 +301,7 @@ class GreedyAllocator
     bool prescanUses(LInstruction *ins);
     bool spillForCall(LInstruction *ins);
     void informSnapshot(LInstruction *ins);
+    bool informSafepoint(LSafepoint *safepoint);
     bool allocateDefinitions(LInstruction *ins);
     bool allocateTemporaries(LInstruction *ins);
     bool allocateInputs(LInstruction *ins);
