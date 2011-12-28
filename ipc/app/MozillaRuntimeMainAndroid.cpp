@@ -49,7 +49,7 @@ main(int argc, char* argv[])
     if (argc < 2)
         return 1;
 
-    void *mozloader_handle = dlopen("libmozutils.so", RTLD_LAZY);
+    void *mozloader_handle = dlopen("libmozglue.so", RTLD_LAZY);
     if (!mozloader_handle) {
       __android_log_print(ANDROID_LOG_ERROR, "GeckoChildLoad",
                           "Couldn't load mozloader because %s", dlerror());
