@@ -1388,6 +1388,9 @@ TriggerCompartmentGC(JSCompartment *comp, js::gcstats::Reason reason);
 extern void
 MaybeGC(JSContext *cx);
 
+extern void
+ShrinkGCBuffers(JSRuntime *rt);
+
 } /* namespace js */
 
 /*
@@ -1459,7 +1462,7 @@ class GCHelperThread {
     PRCondVar         *done;
     volatile State    state;
 
-    JSContext         *context;
+    JSContext         *finalizationContext;
     bool              shrinkFlag;
 
     Vector<void **, 16, js::SystemAllocPolicy> freeVector;
@@ -1495,6 +1498,8 @@ class GCHelperThread {
         wakeup(NULL),
         done(NULL),
         state(IDLE),
+        finalizationContext(NULL),
+        shrinkFlag(false),
         freeCursor(NULL),
         freeCursorEnd(NULL),
         backgroundAllocation(true)
@@ -1504,7 +1509,10 @@ class GCHelperThread {
     void finish();
 
     /* Must be called with the GC lock taken. */
-    inline void startBackgroundSweep(bool shouldShrink);
+    void startBackgroundSweep(JSContext *cx, bool shouldShrink);
+
+    /* Must be called with the GC lock taken. */
+    void startBackgroundShrink();
 
     /* Must be called with the GC lock taken. */
     void waitBackgroundSweepEnd();
@@ -1549,7 +1557,7 @@ class GCHelperThread {
     }
 
     /* Must be called with the GC lock taken. */
-    bool prepareForBackgroundSweep(JSContext *cx);
+    bool prepareForBackgroundSweep();
 };
 
 #endif /* JS_THREADSAFE */

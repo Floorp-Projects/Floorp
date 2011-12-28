@@ -73,6 +73,9 @@ JS_ObjectCountDynamicSlots(JSObject *obj);
 extern JS_FRIEND_API(void)
 JS_ShrinkingGC(JSContext *cx);
 
+extern JS_FRIEND_API(void)
+JS_ShrinkGCBuffers(JSRuntime *rt);
+
 extern JS_FRIEND_API(size_t)
 JS_GetE4XObjectsCreated(JSContext *cx);
 
