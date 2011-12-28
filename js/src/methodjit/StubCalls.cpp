@@ -2052,11 +2052,10 @@ stubs::DelElem(VMFrame &f)
     if (!obj)
         THROW();
 
-    jsid id;
-    if (!FetchElementId(f, obj, f.regs.sp[-1], id, &f.regs.sp[-1]))
-        THROW();
+    const Value &propval = f.regs.sp[-1];
+    Value &rval = f.regs.sp[-2];
 
-    if (!obj->deleteGeneric(cx, id, &f.regs.sp[-2], strict))
+    if (!obj->deleteByValue(cx, propval, &rval, strict))
         THROW();
 }
 

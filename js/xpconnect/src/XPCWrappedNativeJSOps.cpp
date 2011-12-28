@@ -876,7 +876,6 @@ js::Class XPC_WN_NoHelper_JSClass = {
         nsnull, // setAttributes
         nsnull, // setElementAttributes
         nsnull, // setSpecialAttributes
-        nsnull, // deleteGeneric
         nsnull, // deleteProperty
         nsnull, // deleteElement
         nsnull, // deleteSpecial
