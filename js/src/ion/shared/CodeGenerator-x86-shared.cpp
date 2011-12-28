@@ -105,48 +105,6 @@ CodeGeneratorX86Shared::generateEpilogue()
     return true;
 }
 
-// Before doing any call to Cpp, you should ensure that volatile
-// registers are evicted by the register allocator.
-bool
-CodeGeneratorX86Shared::callVM(const VMFunction &fun, LInstruction *ins)
-{
-    // Stack is:
-    //    ... frame ...
-    //    [args]
-    JS_ASSERT(pushedArgs_ == fun.explicitArgs);
-    pushedArgs_ = 0;
-
-    // Generate the wrapper of the VM function.
-    IonCompartment *ion = gen->cx->compartment->ionCompartment();
-    IonCode *wrapper = ion->generateVMWrapper(gen->cx, fun);
-    if (!wrapper)
-        return false;
-
-    // Push a descriptor for the exit frame.
-    uint32 descriptor = MakeFrameDescriptor(masm.framePushed(), IonFrame_JS);
-    masm.push(Imm32(descriptor));
-
-    // Stack is:
-    //    ... frame ...
-    //    [args]
-    //    descriptor
-
-    // Call the wrapper function.  The wrapper is in charge to unwind the stack
-    // when returning from the call.  Failures are handled with exceptions based
-    // on the return value of the C functions.  To guard the outcome of the
-    // returned value, use another LIR instruction.
-    masm.call(wrapper);
-    if (!createSafepoint(ins))
-        return false;
-
-    // Pop arguments from framePushed.
-    masm.implicitPop(fun.explicitArgs);
-
-    // Stack is:
-    //    ... frame ...
-    return true;
-}
-
 bool
 OutOfLineBailout::accept(CodeGeneratorX86Shared *codegen)
 {
@@ -741,24 +699,6 @@ CodeGeneratorX86Shared::visitTableSwitch(LTableSwitch *ins)
 }
 
 bool
-CodeGeneratorX86Shared::visitNewArray(LNewArray *ins)
-{
-    typedef JSObject *(*pf)(JSContext *, uint32, types::TypeObject *);
-    static const VMFunction NewInitArrayInfo = FunctionInfo<pf>(NewInitArray);
-
-    // ReturnReg is used for the returned value, so we don't care using it
-    // because it would be erased by the function call.
-    const Register type = ReturnReg;
-    masm.movePtr(ImmWord(ins->mir()->type()), type);
-
-    pushArg(type);
-    pushArg(Imm32(ins->mir()->count()));
-    if (!callVM(NewInitArrayInfo, ins))
-        return false;
-    return true;
-}
-
-bool
 CodeGeneratorX86Shared::visitCallGeneric(LCallGeneric *call)
 {
     // Holds the function object.
@@ -947,20 +887,6 @@ CodeGeneratorX86Shared::visitGuardClass(LGuardClass *guard)
     masm.loadBaseShape(obj, tmp);
     masm.cmpPtr(Operand(tmp, BaseShape::offsetOfClass()), ImmWord(guard->mir()->getClass()));
     if (!bailoutIf(Assembler::NotEqual, guard->snapshot()))
-        return false;
-    return true;
-}
-
-bool
-CodeGeneratorX86Shared::visitLoadPropertyGeneric(LLoadPropertyGeneric *ins)
-{
-    typedef bool (*pf)(JSContext *, JSObject *, JSAtom *, Value *);
-    static const VMFunction GetPropertyInfo = FunctionInfo<pf>(GetProperty);
-    const Register obj = ToRegister(ins->getOperand(0));
-
-    pushArg(ImmGCPtr(ins->mir()->atom()));
-    pushArg(obj);
-    if (!callVM(GetPropertyInfo, ins))
         return false;
     return true;
 }

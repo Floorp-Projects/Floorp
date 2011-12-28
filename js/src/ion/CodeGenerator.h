@@ -89,9 +89,11 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitElements(LElements *lir);
     bool visitTypeBarrier(LTypeBarrier *lir);
     bool visitDoubleToInt32(LDoubleToInt32 *lir);
+    bool visitNewArray(LNewArray *builder);
     bool visitArrayLength(LArrayLength *lir);
     bool visitStringLength(LStringLength *lir);
     bool visitInitializedLength(LInitializedLength *lir);
+    bool visitLoadPropertyGeneric(LLoadPropertyGeneric *ins);
     bool visitGetPropertyCacheV(LGetPropertyCacheV *load) { return visitGetPropertyCache(load); }
     bool visitGetPropertyCacheT(LGetPropertyCacheT *load) { return visitGetPropertyCache(load); }
 
