@@ -59,27 +59,18 @@ TIERS += base
 # tier "base" - basic setup
 #
 tier_base_dirs = \
-  config \
-  build \
-  probes \
-  mfbt \
-  $(NULL)
+	config \
+	build \
+	probes \
+	mfbt \
+	$(NULL)
 
 ifndef LIBXUL_SDK
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-tier_base_dirs += \
-  other-licenses/android \
-  other-licenses/skia-npapi \
-  $(NULL)
+tier_base_dirs += other-licenses/android other-licenses/skia-npapi
 endif
 
-ifdef MOZ_MEMORY
-tier_base_dirs += memory/jemalloc
-endif
-tier_base_dirs += \
-  mozglue \
-  memory/mozalloc \
-  $(NULL)
+tier_base_dirs += memory
 endif
 
 ifdef COMPILE_ENVIRONMENT
