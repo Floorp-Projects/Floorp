@@ -170,10 +170,11 @@ CodeGeneratorX86::visitBoxDouble(LBoxDouble *box)
 bool
 CodeGeneratorX86::visitUnbox(LUnbox *unbox)
 {
+    // Note that for unbox, the type and payload indexes are switched on the
+    // inputs.
     MUnbox *mir = unbox->mir();
     if (mir->fallible()) {
-        LAllocation *type = unbox->getOperand(TYPE_INDEX);
-        masm.cmpl(ToOperand(type), Imm32(MIRTypeToTag(mir->type())));
+        masm.cmpl(ToOperand(unbox->type()), Imm32(MIRTypeToTag(mir->type())));
         if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
             return false;
     }

@@ -91,7 +91,7 @@ LIRGenerator::visitGoto(MGoto *ins)
 bool
 LIRGenerator::visitCheckOverRecursed(MCheckOverRecursed *ins)
 {
-    LCheckOverRecursed *lir = new LCheckOverRecursed(temp(LDefinition::POINTER));
+    LCheckOverRecursed *lir = new LCheckOverRecursed(temp(LDefinition::GENERAL));
 
     if (!assignSafepoint(lir, ins))
         return false;
@@ -152,9 +152,9 @@ LIRGenerator::visitCall(MCall *call)
     // A call is entirely stateful, depending upon arguments already being
     // stored in an argument vector. Therefore visitCall() may be generic.
     LCallGeneric *ins = new LCallGeneric(useRegister(call->getFunction()),
-                                         argslot, temp(LDefinition::POINTER),
-                                         temp(LDefinition::POINTER),
-                                         temp(LDefinition::POINTER));
+                                         argslot, temp(LDefinition::GENERAL),
+                                         temp(LDefinition::GENERAL),
+                                         temp(LDefinition::GENERAL));
     if (!defineReturn(ins, call))
         return false;
     if (!assignSnapshot(ins))
@@ -705,7 +705,9 @@ LIRGenerator::visitStoreSlot(MStoreSlot *ins)
 bool
 LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
 {
-    LTypeBarrier *barrier = new LTypeBarrier(temp(LDefinition::POINTER));
+    // Requesting a non-GC pointer is safe here since we never re-enter C++
+    // from inside a type barrier test.
+    LTypeBarrier *barrier = new LTypeBarrier(temp(LDefinition::GENERAL));
     if (!useBox(barrier, LTypeBarrier::Input, ins->input()))
         return false;
     if (!assignSnapshot(barrier, ins->bailoutKind()))
@@ -815,8 +817,8 @@ LIRGenerator::visitGetPropertyCache(MGetPropertyCache *ins)
 bool
 LIRGenerator::visitGuardClass(MGuardClass *ins)
 {
-    LDefinition tempInt = temp(LDefinition::INTEGER);
-    LGuardClass *guard = new LGuardClass(useRegister(ins->obj()), tempInt);
+    LDefinition t = temp(LDefinition::GENERAL);
+    LGuardClass *guard = new LGuardClass(useRegister(ins->obj()), t);
     return assignSnapshot(guard) && add(guard, ins);
 }
 

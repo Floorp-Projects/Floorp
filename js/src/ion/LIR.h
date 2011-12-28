@@ -435,18 +435,22 @@ class LDefinition
 
         // This definition's virtual register is the same as another; this is
         // for instructions which consume a register and silently define it as
-        // the same register.
-        REDEFINED
+        // the same register. It is not legal to use this if doing so would
+        // change the type of the virtual register.
+        PASSTHROUGH
     };
 
     enum Type {
-        INTEGER,    // Generic, integer data (GPR).
-        POINTER,    // Generic, pointer-width data (GPR).
+        GENERAL,    // Generic, integer or pointer-width data (GPR).
         OBJECT,     // Pointer that may be collected as garbage (GPR).
         DOUBLE,     // 64-bit point value (FPU).
-        TYPE,       // Type tag, for nunbox systems.
-        PAYLOAD,    // Payload, for nunbox systems.
-        BOX         // Joined box, for punbox systems.
+#ifdef JS_NUNBOX32
+        // A type virtual register must be followed by a payload virtual
+        // register, as both will be tracked as a single gcthing.
+        TYPE,
+        PAYLOAD,
+#endif
+        BOX         // Joined box, for punbox systems. (GPR, gcthing)
     };
 
     void set(uint32 index, Type type, Policy policy) {
@@ -479,7 +483,7 @@ class LDefinition
     { }
 
     static LDefinition BogusTemp() {
-        return LDefinition(INTEGER, LConstantIndex::Bogus());
+        return LDefinition(GENERAL, LConstantIndex::Bogus());
     }
 
     Policy policy() const {
@@ -520,7 +524,7 @@ class LDefinition
         switch (type) {
           case MIRType_Boolean:
           case MIRType_Int32:
-            return LDefinition::INTEGER;
+            return LDefinition::GENERAL;
           case MIRType_String:
           case MIRType_Object:
             return LDefinition::OBJECT;
@@ -534,12 +538,12 @@ class LDefinition
           case MIRType_Elements:
             // When we begin allocating slots vectors from the GC, this will
             // need to change to ::OBJECT.
-            return LDefinition::POINTER;
+            return LDefinition::GENERAL;
           case MIRType_StackFrame:
-            return LDefinition::POINTER;
+            return LDefinition::GENERAL;
           default:
             JS_NOT_REACHED("unexpected type");
-            return LDefinition::BOX;
+            return LDefinition::GENERAL;
         }
     }
 };
@@ -816,7 +820,7 @@ class LVMCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, T
           case LDefinition::BOX:
             JS_ASSERT(Defs == BOX_PIECES);
             return Registers::JSCallMask;
-          case LDefinition::INTEGER:
+          case LDefinition::GENERAL:
           case LDefinition::OBJECT:
             JS_ASSERT(Defs == 1);
             return Registers::CallMask;

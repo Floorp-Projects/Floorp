@@ -112,6 +112,8 @@ class LIRGeneratorShared : public MInstructionVisitor
     // These create temporary register requests.
     inline LDefinition temp(LDefinition::Type type);
     inline LDefinition tempFloat();
+
+    // Note that the fixed register has a GENERAL type.
     inline LDefinition tempFixed(Register reg);
 
     template <size_t Ops, size_t Temps>
