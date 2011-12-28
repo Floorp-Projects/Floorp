@@ -343,6 +343,55 @@ LIRGeneratorShared::add(T *ins, MInstruction *mir)
     return annotate(ins);
 }
 
+#ifdef JS_NUNBOX32
+// Returns the virtual register of a js::Value-defining instruction. This is
+// abstracted because MBox is a special value-returning instruction that
+// redefines its input payload if its input is not constant. Therefore, it is
+// illegal to request a box's payload by adding VREG_DATA_OFFSET to its raw id.
+static inline uint32
+VirtualRegisterOfPayload(MDefinition *mir)
+{
+    if (mir->isBox()) {
+        MDefinition *inner = mir->toBox()->getOperand(0);
+        if (!inner->isConstant() && inner->type() != MIRType_Double)
+            return inner->id();
+    }
+    return mir->id() + VREG_DATA_OFFSET;
+}
+
+LUse
+LIRGeneratorShared::useType(MDefinition *mir, LUse::Policy policy)
+{
+    JS_ASSERT(mir->type() == MIRType_Value);
+
+    return LUse(mir->virtualRegister() + VREG_TYPE_OFFSET, policy);
+}
+
+LUse
+LIRGeneratorShared::usePayload(MDefinition *mir, LUse::Policy policy)
+{
+    JS_ASSERT(mir->type() == MIRType_Value);
+
+    return LUse(VirtualRegisterOfPayload(mir), policy);
+}
+
+LUse
+LIRGeneratorShared::usePayloadInRegister(MDefinition *mir)
+{
+    return usePayload(mir, LUse::REGISTER);
+}
+
+bool
+LIRGeneratorShared::fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir)
+{
+    if (!ensureDefined(mir))
+        return false;
+    lir->getOperand(n)->toUse()->setVirtualRegister(mir->id() + VREG_TYPE_OFFSET);
+    lir->getOperand(n + 1)->toUse()->setVirtualRegister(VirtualRegisterOfPayload(mir));
+    return true;
+}
+#endif
+
 } // namespace ion
 } // namespace js
 
