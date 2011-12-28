@@ -673,12 +673,6 @@ GetRTIdByIndex(JSContext *cx, uintN index)
   return rt->GetStringID(index);
 }
 
-inline jsval
-GetRTStringByIndex(JSContext *cx, uintN index)
-{
-  return STRING_TO_JSVAL(JSID_TO_STRING(GetRTIdByIndex(cx, index)));
-}
-
 inline
 JSBool ThrowBadParam(nsresult rv, uintN paramNum, XPCCallContext& ccx)
 {

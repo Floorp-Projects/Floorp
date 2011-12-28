@@ -4388,9 +4388,6 @@ xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsid id);
 inline jsid
 GetRTIdByIndex(JSContext *cx, uintN index);
 
-inline jsval
-GetRTStringByIndex(JSContext *cx, uintN index);
-
 // Wrapper for JS_NewObject to mark the new object as system when parent is
 // also a system object. If uniqueType is specified then a new type object will
 // be created which is used only by the result, so that its property types
