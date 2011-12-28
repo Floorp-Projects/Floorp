@@ -803,15 +803,15 @@ LIRGenerator::visitGetPropertyCache(MGetPropertyCache *ins)
 
     if (ins->type() == MIRType_Value) {
         LGetPropertyCacheV *lir = new LGetPropertyCacheV(useRegister(ins->object()));
-        if (!assignSafepoint(lir, ins))
+        if (!defineBox(lir, ins))
             return false;
-        return defineBox(lir, ins);
+        return assignSafepoint(lir, ins);
     }
 
     LGetPropertyCacheT *lir = new LGetPropertyCacheT(useRegister(ins->object()));
-    if (!assignSafepoint(lir, ins))
+    if (!define(lir, ins))
         return false;
-    return define(lir, ins);
+    return assignSafepoint(lir, ins);
 }
 
 bool
