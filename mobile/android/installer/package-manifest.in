@@ -47,7 +47,7 @@
 @BINPATH@/@DLL_PREFIX@xpcom@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@nspr4@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@mozalloc@DLL_SUFFIX@
-@BINPATH@/@DLL_PREFIX@mozutils@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
 #ifdef XP_MACOSX
 @BINPATH@/XUL
 #else
@@ -84,7 +84,6 @@
 @BINPATH@/resources.arsc
 @BINPATH@/package-name.txt
 @BINPATH@/classes.dex
-@BINPATH@/@DLL_PREFIX@mozutils@DLL_SUFFIX@
 @BINPATH@/res/drawable
 @BINPATH@/res/drawable-hdpi
 @BINPATH@/res/layout

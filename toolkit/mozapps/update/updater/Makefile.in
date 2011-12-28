@@ -51,9 +51,9 @@ CPPSRCS = \
 
 PROGRAM = updater$(BIN_SUFFIX)
 
-# Don't link the updater against libmozutils. See bug 687139
-MOZ_UTILS_LDFLAGS =
-MOZ_UTILS_PROGRAM_LDFLAGS =
+# Don't link the updater against libmozglue. See bug 687139
+MOZ_GLUE_LDFLAGS =
+MOZ_GLUE_PROGRAM_LDFLAGS =
 
 LOCAL_INCLUDES += -I$(srcdir)/../../readstrings \
   -I$(srcdir)/../common

@@ -82,7 +82,7 @@
 @BINPATH@/AndroidManifest.xml
 @BINPATH@/resources.arsc
 @BINPATH@/classes.dex
-@BINPATH@/@DLL_PREFIX@mozutils@DLL_SUFFIX@
+@BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
 @BINPATH@/res/drawable
 @BINPATH@/res/drawable-hdpi
 @BINPATH@/res/layout
