@@ -459,8 +459,7 @@ static nsRect GetDisplayPortBounds(nsDisplayListBuilder* aBuilder,
     return *displayport;
   }
 
-  // XXX this isn't correct, see bug 701190
-  return nsLayoutUtils::TransformAncestorRectToFrame(
+  return nsLayoutUtils::TransformRectToBoundsInAncestor(
            frame,
            nsRect(0, 0, displayport->width, displayport->height),
            aBuilder->ReferenceFrame());
