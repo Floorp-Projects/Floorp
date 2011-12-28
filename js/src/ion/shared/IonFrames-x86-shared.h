@@ -80,7 +80,7 @@ class IonJSFrameLayout : public IonCommonFrameLayout
     void *calleeToken_;
 
   public:
-    void *calleeToken() const {
+    CalleeToken calleeToken() const {
         return calleeToken_;
     }
     void replaceCalleeToken(void *value) {

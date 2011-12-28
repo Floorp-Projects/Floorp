@@ -198,7 +198,7 @@ struct IonScript
     }
 
   private:
-    void trace(JSTracer *trc, JSScript *script);
+    void trace(JSTracer *trc);
 
   public:
     // Do not call directly, use IonScript::New. This is public for cx->new_.
@@ -206,7 +206,7 @@ struct IonScript
 
     static IonScript *New(JSContext *cx, size_t snapshotsSize, size_t snapshotEntries,
                           size_t constants, size_t frameInfoEntries, size_t cacheEntries);
-    static void Trace(JSTracer *trc, JSScript *script);
+    static void Trace(JSTracer *trc, IonScript *script);
     static void Destroy(JSContext *cx, JSScript *script);
 
   public:

@@ -437,7 +437,7 @@ IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries, size_
 
 
 void
-IonScript::trace(JSTracer *trc, JSScript *script)
+IonScript::trace(JSTracer *trc)
 {
     if (method_)
         MarkIonCode(trc, method_, "method");
@@ -536,10 +536,10 @@ IonScript::getFrameInfo(ptrdiff_t disp) const
 
 
 void
-IonScript::Trace(JSTracer *trc, JSScript *script)
+IonScript::Trace(JSTracer *trc, IonScript *script)
 {
-    if (script->ion && script->ion != ION_DISABLED_SCRIPT)
-        script->ion->trace(trc, script);
+    if (script != ION_DISABLED_SCRIPT)
+        script->trace(trc);
 }
 
 void
