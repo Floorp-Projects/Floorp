@@ -190,6 +190,9 @@ struct IonScript
     uint32 cacheList_;
     uint32 cacheEntries_;
 
+    // Number of references from invalidation records.
+    size_t refcount_;
+
     SnapshotOffset *bailoutTable() {
         return (SnapshotOffset *)(reinterpret_cast<uint8 *>(this) + bailoutTable_);
     }
@@ -218,7 +221,7 @@ struct IonScript
                           size_t constants, size_t frameInfoEntries, size_t cacheEntries,
                           size_t safepointsSize);
     static void Trace(JSTracer *trc, IonScript *script);
-    static void Destroy(JSContext *cx, JSScript *script);
+    static void Destroy(JSContext *cx, IonScript *script);
 
   public:
     IonCode *method() const {
@@ -289,6 +292,16 @@ struct IonScript
     void copyFrameInfoTable(const IonFrameInfo *hf);
     void copyCacheEntries(const IonCache *caches);
     void copySafepoints(const SafepointWriter *writer);
+
+    void incref() {
+        refcount_++;
+    }
+    void decref(JSContext *cx) {
+        JS_ASSERT(refcount_);
+        refcount_--;
+        if (!refcount_)
+            Destroy(cx, this);
+    }
 };
 
 struct VMFunction;

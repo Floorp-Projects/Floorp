@@ -1375,6 +1375,10 @@ JSScript::finalize(JSContext *cx, bool background)
 
 #ifdef JS_METHODJIT
     mjit::ReleaseScriptCode(cx, this);
+# ifdef JS_ION
+    if (hasIonScript())
+        ion::IonScript::Destroy(cx, ion);
+# endif
 #endif
 
     destroyCounts(cx);
