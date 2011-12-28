@@ -102,20 +102,22 @@ class TempAllocator
 
 class AutoIonContextAlloc
 {
-    TempAllocator tempAlloc;
-    IonContext *icx;
+    TempAllocator tempAlloc_;
+    IonContext *icx_;
+    TempAllocator *prevAlloc_;
 
   public:
     explicit AutoIonContextAlloc(JSContext *cx)
-      : tempAlloc(&cx->tempLifoAlloc()) {
-        icx = GetIonContext();
-        JS_ASSERT(!icx->temp);
-        icx->temp = &tempAlloc;
+      : tempAlloc_(&cx->tempLifoAlloc()),
+        icx_(GetIonContext()),
+        prevAlloc_(icx_->temp)
+    {
+        icx_->temp = &tempAlloc_;
     }
 
     ~AutoIonContextAlloc() {
-        JS_ASSERT(icx->temp == &tempAlloc);
-        icx->temp = NULL;
+        JS_ASSERT(icx_->temp == &tempAlloc_);
+        icx_->temp = prevAlloc_;
     }
 };
 
