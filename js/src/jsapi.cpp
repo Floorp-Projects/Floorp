@@ -4161,7 +4161,11 @@ JS_DeletePropertyById2(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
-    return obj->deleteGeneric(cx, id, rval, false);
+
+    if (JSID_IS_SPECIAL(id))
+        return obj->deleteSpecial(cx, JSID_TO_SPECIALID(id), rval, false);
+
+    return obj->deleteByValue(cx, IdToValue(id), rval, false);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4169,24 +4173,37 @@ JS_DeleteElement2(JSContext *cx, JSObject *obj, uint32_t index, jsval *rval)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    jsid id;
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return JS_DeletePropertyById2(cx, obj, id, rval);
+    assertSameCompartment(cx, obj);
+    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+    return obj->deleteElement(cx, index, rval, false);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_DeleteProperty2(JSContext *cx, JSObject *obj, const char *name, jsval *rval)
 {
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
-    return atom && JS_DeletePropertyById2(cx, obj, ATOM_TO_JSID(atom), rval);
+    if (!atom)
+        return false;
+
+    return obj->deleteByValue(cx, StringValue(atom), rval, false);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_DeleteUCProperty2(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen, jsval *rval)
 {
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+    JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED);
+
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
-    return atom && JS_DeletePropertyById2(cx, obj, ATOM_TO_JSID(atom), rval);
+    if (!atom)
+        return false;
+
+    return obj->deleteByValue(cx, StringValue(atom), rval, false);
 }
 
 JS_PUBLIC_API(JSBool)
