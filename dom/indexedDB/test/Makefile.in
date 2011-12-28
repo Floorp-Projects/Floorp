@@ -124,10 +124,11 @@ TEST_FILES = \
   test_setVersion_events.html \
   test_setVersion_exclusion.html \
   test_unique_index_update.html \
-  test_writer_starvation.html \
   third_party_iframe1.html \
   third_party_iframe2.html \
   $(NULL)
+
+#   test_writer_starvation.html  disabled for infinite loops, bug 595368
 
 ifeq (browser,$(MOZ_BUILD_APP))
 BROWSER_TEST_FILES = \
