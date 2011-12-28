@@ -202,8 +202,8 @@ PrintDefinition(FILE *fp, const LDefinition &def)
         fprintf(fp, ")");
     } else if (def.policy() == LDefinition::MUST_REUSE_INPUT) {
         fprintf(fp, " (!)");
-    } else if (def.policy() == LDefinition::REDEFINED) {
-        fprintf(fp, " (r)");
+    } else if (def.policy() == LDefinition::PASSTHROUGH) {
+        fprintf(fp, " (-)");
     }
     fprintf(fp, "]");
 }

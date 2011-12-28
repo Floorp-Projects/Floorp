@@ -91,7 +91,7 @@ DefinitionCompatibleWith(LInstruction *ins, const LDefinition *def, LAllocation 
         if (!alloc.isRegister() || !ins->numOperands())
             return false;
         return alloc == *ins->getOperand(0);
-      case LDefinition::REDEFINED:
+      case LDefinition::PASSTHROUGH:
         return true;
       default:
         JS_NOT_REACHED("Unknown definition policy");
@@ -371,7 +371,7 @@ LinearScanAllocator::createDataStructures()
         for (LInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
             bool foundRealDef = false;
             for (size_t j = 0; j < ins->numDefs(); j++) {
-                if (ins->getDef(j)->policy() != LDefinition::REDEFINED) {
+                if (ins->getDef(j)->policy() != LDefinition::PASSTHROUGH) {
                     foundRealDef = true;
                     uint32 reg = ins->getDef(j)->virtualRegister();
                     if (!vregs[reg].init(reg, block, *ins, ins->getDef(j)))
@@ -487,7 +487,7 @@ LinearScanAllocator::buildLivenessInfo()
             }
 
             for (size_t i = 0; i < ins->numDefs(); i++) {
-                if (ins->getDef(i)->policy() != LDefinition::REDEFINED) {
+                if (ins->getDef(i)->policy() != LDefinition::PASSTHROUGH) {
                     LDefinition *def = ins->getDef(i);
 
                     // The output register may be clobbered before inputs are
