@@ -284,6 +284,14 @@ class LUse : public LAllocation
     LUse(FloatRegister reg) {
         set(FIXED, reg.code());
     }
+    LUse(Register reg, uint32 virtualRegister) {
+        set(FIXED, reg.code());
+        setVirtualRegister(virtualRegister);
+    }
+    LUse(FloatRegister reg, uint32 virtualRegister) {
+        set(FIXED, reg.code());
+        setVirtualRegister(virtualRegister);
+    }
 
     void setVirtualRegister(uint32 index) {
         JS_STATIC_ASSERT(VREG_MASK <= MAX_VIRTUAL_REGISTERS);

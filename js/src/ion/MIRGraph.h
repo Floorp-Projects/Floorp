@@ -391,12 +391,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MBasicBlock *loopHeader() const {
         return loopHeader_;
     }
-    void setLoopDepth(uint32 loopDepth) {
-        loopDepth_ = loopDepth;
-    }
-    uint32 loopDepth() const {
-        return loopDepth_;
-    }
 
     // Lists all blocks contained within this loop header, but not contained in
     // a nested loop header.
@@ -411,6 +405,13 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     bool addContainedInLoop(MBasicBlock *block) {
         JS_ASSERT(isLoopHeader());
         return containedInLoop_.append(block);
+    }
+
+    void setLoopDepth(uint32 loopDepth) {
+        loopDepth_ = loopDepth;
+    }
+    uint32 loopDepth() const {
+        return loopDepth_;
     }
 
     void dumpStack(FILE *fp);
