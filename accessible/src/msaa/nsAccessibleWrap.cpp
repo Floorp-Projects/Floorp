@@ -48,7 +48,6 @@
 
 #include "ia2AccessibleRelation.h"
 
-#include "nsIAccessibleDocument.h"
 #include "nsIAccessibleEvent.h"
 #include "nsIAccessibleRelation.h"
 #include "nsIAccessibleWin32Object.h"
