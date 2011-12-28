@@ -196,15 +196,11 @@ LIRGeneratorShared::assignPostSnapshot(MInstruction *mir, LInstruction *ins)
 bool
 LIRGeneratorShared::assignSafepoint(LInstruction *ins, MInstruction *mir)
 {
-    ins->setMir(mir);
-    if (!mir->isEffectful()) {
-        if (!ins->snapshot())
-            return assignSnapshot(ins);
-        return true;
-    } else {
-        if (!ins->postSnapshot())
-            return assignPostSnapshot(mir, ins);
-        return true;
+    if (mir->isEffectful() && !ins->postSnapshot()) {
+        if (!assignPostSnapshot(mir, ins))
+            return false;
     }
+    ins->initSafepoint();
+    return lirGraph_.noteNeedsSafepoint(ins);
 }
 

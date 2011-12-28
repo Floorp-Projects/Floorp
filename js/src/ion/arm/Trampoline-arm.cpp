@@ -247,7 +247,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     JS_ASSERT(ArgumentsRectifierReg == r8);
 
     // Load the number of |undefined|s to push into %rcx.
-    masm.ma_ldr(DTRAddr(sp, DtrOffImm(IonFrameData::offsetOfCalleeToken())), r1);
+    masm.ma_ldr(DTRAddr(sp, DtrOffImm(IonJSFrameLayout::offsetOfCalleeToken())), r1);
     masm.ma_ldrh(EDtrAddr(r1, EDtrOffImm(offsetof(JSFunction, nargs))), r6);
 
     masm.ma_sub(r6, r8, r2);
@@ -269,7 +269,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     // Get the topmost argument.
 
     masm.ma_alu(r3, lsl(r8, 3), r3, op_add); // r3 <- r3 + nargs * 8
-    masm.ma_add(r3, Imm32(sizeof(IonFrameData)), r3);
+    masm.ma_add(r3, Imm32(sizeof(IonJSFrameLayout)), r3);
 
     // Push arguments, |nargs| + 1 times (to include |this|).
     {
@@ -285,7 +285,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     // Construct sizeDescriptor.
     masm.makeFrameDescriptor(r6, IonFrame_Rectifier);
 
-    // Construct IonFrameData.
+    // Construct IonJSFrameLayout.
     masm.ma_push(r0); // calleeToken.
     masm.ma_push(r1); // calleeToken.
     masm.ma_push(r6); // sizeDescriptor.

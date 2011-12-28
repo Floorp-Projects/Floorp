@@ -45,6 +45,8 @@
 #include "jsscript.h"
 #include "jsfun.h"
 #include "IonCompartment.h"
+#include "IonFrames-inl.h"
+#include "Safepoints.h"
 #include "IonSpewer.h"
 
 using namespace js;
@@ -134,7 +136,7 @@ FrameRecovery::FromFrameIterator(const IonFrameIterator& it)
     MachineState noRegs;
     FrameRecovery frame(it.prevFp(), it.prevFp() - it.prevFrameLocalSize(), noRegs);
     const IonFrameInfo *info = frame.ionScript()->getFrameInfo(it.returnAddress());
-    frame.setSnapshotOffset(info->snapshotOffset);
+    frame.setSnapshotOffset(info->snapshotOffset());
     return frame;
 }
 
@@ -223,6 +225,7 @@ IonFrameIterator::operator++()
     // next frame.
     uint8 *prev = prevFp();
     type_ = current()->prevType();
+    returnAddressToFp_ = current()->returnAddress();
     current_ = prev;
     return *this;
 }

@@ -386,8 +386,9 @@ IonScript::IonScript()
 }
 
 IonScript *
-IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries, size_t constants, size_t frameInfoEntries,
-               size_t cacheEntries)
+IonScript::New(JSContext *cx, uint32 frameLocals, uint32 frameSize, size_t snapshotsSize,
+               size_t bailoutEntries, size_t constants, size_t frameInfoEntries,
+               size_t cacheEntries, size_t safepointsSize)
 {
     if (snapshotsSize >= MAX_BUFFER_SIZE ||
         (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32)))
@@ -403,7 +404,8 @@ IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries, size_
                    bailoutEntries * sizeof(uint32) +
                    constants * sizeof(Value) +
                    frameInfoEntries * sizeof(IonFrameInfo) +
-                   cacheEntries * sizeof(IonCache);
+                   cacheEntries * sizeof(IonCache) +
+                   safepointsSize;
     uint8 *buffer = (uint8 *)cx->malloc_(sizeof(IonScript) + bytes);
     if (!buffer)
         return NULL;
@@ -411,26 +413,34 @@ IonScript::New(JSContext *cx, size_t snapshotsSize, size_t bailoutEntries, size_
     IonScript *script = reinterpret_cast<IonScript *>(buffer);
     new (script) IonScript();
 
-    uint32 tableShift = sizeof(IonScript);
+    uint32 offsetCursor = sizeof(IonScript);
 
-    script->snapshots_ = tableShift;
+    script->snapshots_ = offsetCursor;
     script->snapshotsSize_ = snapshotsSize;
-    tableShift += snapshotsSize;
+    offsetCursor += snapshotsSize;
 
-    script->bailoutTable_ = tableShift;
+    script->bailoutTable_ = offsetCursor;
     script->bailoutEntries_ = bailoutEntries;
-    tableShift += bailoutEntries * sizeof(uint32);
+    offsetCursor += bailoutEntries * sizeof(uint32);
 
-    script->constantTable_ = tableShift;
+    script->constantTable_ = offsetCursor;
     script->constantEntries_ = constants;
-    tableShift += constants * sizeof(Value);
+    offsetCursor += constants * sizeof(Value);
 
-    script->frameInfoTable_ = tableShift;
+    script->frameInfoTable_ = offsetCursor;
     script->frameInfoEntries_ = frameInfoEntries;
-    tableShift += frameInfoEntries * sizeof(IonFrameInfo);
+    offsetCursor += frameInfoEntries * sizeof(IonFrameInfo);
 
-    script->cacheList_ = tableShift;
+    script->cacheList_ = offsetCursor;
     script->cacheEntries_ = cacheEntries;
+    offsetCursor += cacheEntries * sizeof(IonCache);
+
+    script->safepointsStart_ = offsetCursor;
+    script->safepointsSize_ = safepointsSize;
+    offsetCursor += safepointsSize;
+
+    script->frameLocals_ = frameLocals;
+    script->frameSize_ = frameSize;
 
     return script;
 }
@@ -448,8 +458,15 @@ IonScript::trace(JSTracer *trc)
 void
 IonScript::copySnapshots(const SnapshotWriter *writer)
 {
-    JS_ASSERT(writer->length() == snapshotsSize_);
+    JS_ASSERT(writer->size() == snapshotsSize_);
     memcpy((uint8 *)this + snapshots_, writer->buffer(), snapshotsSize_);
+}
+
+void
+IonScript::copySafepoints(const SafepointWriter *writer)
+{
+    JS_ASSERT(writer->size() == safepointsSize_);
+    memcpy((uint8 *)this + safepointsStart_, writer->buffer(), safepointsSize_);
 }
 
 void
@@ -485,29 +502,29 @@ IonScript::copyCacheEntries(const IonCache *caches)
 }
 
 const IonFrameInfo *
-IonScript::getFrameInfo(ptrdiff_t disp) const
+IonScript::getFrameInfo(uint32 disp) const
 {
     JS_ASSERT(frameInfoEntries_ > 0);
 
     const IonFrameInfo *table = frameInfoTable();
     if (frameInfoEntries_ == 1) {
-        JS_ASSERT(disp == table[0].displacement);
+        JS_ASSERT(disp == table[0].displacement());
         return &table[0];
     }
 
     size_t minEntry = 0;
     size_t maxEntry = frameInfoEntries_ - 1;
-    ptrdiff_t min = table[minEntry].displacement;
-    ptrdiff_t max = table[maxEntry].displacement;
+    uint32 min = table[minEntry].displacement();
+    uint32 max = table[maxEntry].displacement();
 
     // Raise if the element is not in the list.
     JS_ASSERT(min <= disp && disp <= max);
 
     // Approximate the location of the FrameInfo.
     size_t guess = (disp - min) * (maxEntry - minEntry) / (max - min) + minEntry;
-    ptrdiff_t guessDisp = table[guess].displacement;
+    uint32 guessDisp = table[guess].displacement();
 
-    if (table[guess].displacement == disp)
+    if (table[guess].displacement() == disp)
         return &table[guess];
 
     // Doing a linear scan from the guess should be more efficient in case of
@@ -516,14 +533,14 @@ IonScript::getFrameInfo(ptrdiff_t disp) const
     // such as:  <...      ...    ...  ...  .   ...    ...>
     if (guessDisp > disp) {
         while (--guess >= minEntry) {
-            guessDisp = table[guess].displacement;
+            guessDisp = table[guess].displacement();
             JS_ASSERT(guessDisp >= disp);
             if (guessDisp == disp)
                 return &table[guess];
         }
     } else {
         while (++guess <= maxEntry) {
-            guessDisp = table[guess].displacement;
+            guessDisp = table[guess].displacement();
             JS_ASSERT(guessDisp <= disp);
             if (guessDisp == disp)
                 return &table[guess];

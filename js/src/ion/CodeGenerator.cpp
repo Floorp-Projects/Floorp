@@ -532,6 +532,9 @@ CodeGenerator::generate()
 {
     JSContext *cx = gen->cx;
 
+    if (!safepoints_.init(graph.localSlotCount()))
+        return false;
+
     // Before generating any code, we generate type checks for all parameters.
     // This comes before deoptTable_, because we can't use deopt tables without
     // creating the actual frame.
@@ -564,8 +567,10 @@ CodeGenerator::generate()
     JSScript *script = gen->info().script();
     JS_ASSERT(!script->ion);
 
-    script->ion = IonScript::New(cx, snapshots_.length(), bailouts_.length(),
-                                 graph.numConstants(), frameInfoTable_.length(), cacheList_.length());
+    script->ion = IonScript::New(cx, graph.localSlotCount(), frameDepth_, snapshots_.size(),
+                                 bailouts_.length(), graph.numConstants(),
+                                 frameInfoTable_.length(), cacheList_.length(),
+                                 safepoints_.size());
     if (!script->ion)
         return false;
 
@@ -577,7 +582,7 @@ CodeGenerator::generate()
 
     script->ion->setMethod(code);
     script->ion->setDeoptTable(deoptTable_);
-    if (snapshots_.length())
+    if (snapshots_.size())
         script->ion->copySnapshots(&snapshots_);
     if (bailouts_.length())
         script->ion->copyBailoutTable(&bailouts_[0]);
@@ -587,6 +592,8 @@ CodeGenerator::generate()
         script->ion->copyFrameInfoTable(&frameInfoTable_[0]);
     if (cacheList_.length())
         script->ion->copyCacheEntries(&cacheList_[0]);
+    if (safepoints_.size())
+        script->ion->copySafepoints(&safepoints_);
 
     linkAbsoluteLabels();
 

@@ -395,7 +395,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     masm.subl(esp, ebp);
     masm.makeFrameDescriptor(ebp, IonFrame_Rectifier);
 
-    // Construct IonFrameData.
+    // Construct IonJSFrameLayout.
     masm.push(eax); // calleeToken
     masm.push(ebp); // descriptor
 

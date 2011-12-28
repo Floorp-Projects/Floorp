@@ -44,6 +44,7 @@
 #include "ion/shared/Bailouts-x86-shared.h"
 #include "ion/Bailouts.h"
 #include "ion/IonCompartment.h"
+#include "ion/IonFrames-inl.h"
 
 using namespace js;
 using namespace js::ion;
@@ -130,7 +131,7 @@ ion::FrameRecoveryFromInvalidation(IonCompartment *ion, InvalidationBailoutStack
     IonJSFrameLayout *fp = (IonJSFrameLayout *) bailout->fp();
     InvalidationRecord *record = CalleeTokenToInvalidationRecord(fp->calleeToken());
     const IonFrameInfo *exitInfo = record->ionScript->getFrameInfo(record->returnAddress);
-    SnapshotOffset snapshotOffset = exitInfo->snapshotOffset;
+    SnapshotOffset snapshotOffset = exitInfo->snapshotOffset();
 
     return FrameRecovery::FromSnapshot(bailout->fp(), bailout->sp(), bailout->machine(),
                                        snapshotOffset);

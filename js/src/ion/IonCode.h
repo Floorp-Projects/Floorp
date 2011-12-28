@@ -139,6 +139,7 @@ class IonCode : public gc::Cell
 };
 
 class SnapshotWriter;
+class SafepointWriter;
 class IonFrameInfo;
 class IonCache;
 
@@ -177,6 +178,14 @@ struct IonScript
     uint32 frameInfoTable_;
     uint32 frameInfoEntries_;
 
+    // Local slot count and frame size.
+    uint32 frameLocals_;
+    uint32 frameSize_;
+
+    // Offset to and length of the safepoint table in bytes.
+    uint32 safepointsStart_;
+    uint32 safepointsSize_;
+
     // State for polymorphic caches in the compiled code.
     uint32 cacheList_;
     uint32 cacheEntries_;
@@ -204,8 +213,10 @@ struct IonScript
     // Do not call directly, use IonScript::New. This is public for cx->new_.
     IonScript();
 
-    static IonScript *New(JSContext *cx, size_t snapshotsSize, size_t snapshotEntries,
-                          size_t constants, size_t frameInfoEntries, size_t cacheEntries);
+    static IonScript *New(JSContext *cx, uint32 frameLocals, uint32 frameSize,
+                          size_t snapshotsSize, size_t snapshotEntries,
+                          size_t constants, size_t frameInfoEntries, size_t cacheEntries,
+                          size_t safepointsSize);
     static void Trace(JSTracer *trc, IonScript *script);
     static void Destroy(JSContext *cx, JSScript *script);
 
@@ -244,6 +255,12 @@ struct IonScript
     size_t snapshotsSize() const {
         return snapshotsSize_;
     }
+    const uint8 *safepoints() const {
+        return reinterpret_cast<const uint8 *>(this) + safepointsStart_;
+    }
+    size_t safepointsSize() const {
+        return safepointsSize_;
+    }
     Value &getConstant(size_t index) {
         JS_ASSERT(index < numConstants());
         return constants()[index];
@@ -251,11 +268,14 @@ struct IonScript
     size_t numConstants() const {
         return constantEntries_;
     }
+    uint32 frameLocals() const {
+        return frameLocals_;
+    }
     SnapshotOffset bailoutToSnapshot(uint32 bailoutId) {
         JS_ASSERT(bailoutId < bailoutEntries_);
         return bailoutTable()[bailoutId];
     }
-    const IonFrameInfo *getFrameInfo(ptrdiff_t disp) const;
+    const IonFrameInfo *getFrameInfo(uint32 disp) const;
     const IonFrameInfo *getFrameInfo(uint8 *retAddr) const {
         return getFrameInfo(retAddr - method()->raw());
     }
@@ -268,6 +288,7 @@ struct IonScript
     void copyConstants(const Value *vp);
     void copyFrameInfoTable(const IonFrameInfo *hf);
     void copyCacheEntries(const IonCache *caches);
+    void copySafepoints(const SafepointWriter *writer);
 };
 
 struct VMFunction;

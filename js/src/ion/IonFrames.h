@@ -127,12 +127,35 @@ MaybeScriptFromCalleeToken(CalleeToken token);
 // IonFrameInfo are stored separately from the stack frame.  It can be composed
 // of any field which are computed at compile time only.  It is recovered by
 // using the calleeToken and the returnAddress of the stack frame.
-struct IonFrameInfo
+class IonFrameInfo
 {
-    // The displacement field is used to lookup the frame info among the list of
-    // frameinfo of the script.
-    ptrdiff_t displacement;
-    SnapshotOffset snapshotOffset;
+  private:
+    // The displacement is the distance from the first byte of the JIT'd code
+    // to the return address.
+    uint32 displacement_;
+
+    // Offset to entry in the safepoint stream.
+    uint32 safepointOffset_;
+
+    // If this instruction is effectful, a snapshot will be present to restore
+    // the interpreter state in the case of a deep bailout.
+    SnapshotOffset snapshotOffset_;
+
+  public:
+    IonFrameInfo(uint32 displacement, uint32 safepointOffset, SnapshotOffset snapshotOffset)
+      : displacement_(displacement),
+        safepointOffset_(safepointOffset),
+        snapshotOffset_(snapshotOffset)
+    { }
+
+    uint32 displacement() const {
+        return displacement_;
+    }
+    uint32 safepointOffset() const {
+        return safepointOffset_;
+    }
+    inline SnapshotOffset snapshotOffset() const;
+    inline bool hasSnapshotOffset() const;
 };
 
 struct InvalidationRecord
