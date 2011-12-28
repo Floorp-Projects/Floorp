@@ -109,6 +109,17 @@ class LIRGeneratorShared : public MInstructionVisitor
     inline LAllocation useKeepaliveOrConstant(MDefinition *mir);
     inline LAllocation useRegisterOrConstant(MDefinition *mir);
 
+#ifdef JS_NUNBOX32
+    inline LUse useType(MDefinition *mir, LUse::Policy policy);
+    inline LUse usePayload(MDefinition *mir, LUse::Policy policy);
+    inline LUse usePayloadInRegister(MDefinition *mir);
+
+    // Adds a box input to an instruction, setting operand |n| to the type and
+    // |n+1| to the payload. Does not modify the operands, instead expecting a
+    // policy to already be set.
+    inline bool fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir);
+#endif
+
     // These create temporary register requests.
     inline LDefinition temp(LDefinition::Type type);
     inline LDefinition tempFloat();
@@ -158,6 +169,11 @@ class LIRGeneratorShared : public MInstructionVisitor
 
     void lowerTypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex);
     bool defineTypedPhi(MPhi *phi, size_t lirIndex);
+
+    LSnapshot *buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKind kind);
+    bool assignSnapshot(LInstruction *ins, BailoutKind kind = Bailout_Normal);
+    bool assignPostSnapshot(MInstruction *mir, LInstruction *ins);
+    bool assignSafepoint(LInstruction *ins, MInstruction *mir);
 
   public:
     bool visitConstant(MConstant *ins);

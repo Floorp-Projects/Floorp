@@ -42,8 +42,8 @@
 #include <limits.h>
 #include "BitSet.h"
 #include "LinearScan.h"
-#include "IonLIR-inl.h"
 #include "IonSpewer.h"
+#include "LIR-inl.h"
 
 using namespace js;
 using namespace js::ion;

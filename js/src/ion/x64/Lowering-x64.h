@@ -55,11 +55,6 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     { }
 
   protected:
-    LSnapshot *buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKind kind);
-    bool assignSnapshot(LInstruction *ins, BailoutKind kind = Bailout_Normal);
-    bool assignPostSnapshot(MInstruction *mir, LInstruction *ins);
-    bool assignSafepoint(LInstruction *ins, MInstruction *mir);
-
     void lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex);
     bool defineUntypedPhi(MPhi *phi, size_t lirIndex);
 

@@ -55,27 +55,10 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     { }
 
   protected:
-    // Uses components of a nunbox. Must be in a use request (startUsing,
-    // stopUsing).
-    LUse useType(MDefinition *mir, LUse::Policy policy);
-    LUse useTypeOrConstant(MDefinition *mir);
-    LUse usePayload(MDefinition *mir, LUse::Policy policy);
-    LUse usePayloadInRegister(MDefinition *mir);
-
     // Adds a box input to an instruction, setting operand |n| to the type and
     // |n+1| to the payload.
     bool useBox(LInstruction *lir, size_t n, MDefinition *mir,
                 LUse::Policy policy = LUse::REGISTER);
-
-    // Adds a box input to an instruction, setting operand |n| to the type and
-    // |n+1| to the payload. Does not modify the operands, instead expecting a
-    // policy to already be set.
-    bool fillBoxUses(LInstruction *lir, size_t n, MDefinition *mir);
-
-    LSnapshot *buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKind kind);
-    bool assignSnapshot(LInstruction *ins, BailoutKind kind = Bailout_Normal);
-    bool assignPostSnapshot(MInstruction *mir, LInstruction *ins);
-    bool assignSafepoint(LInstruction *ins, MInstruction *mir);
 
     void lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *block, size_t lirIndex);
     bool defineUntypedPhi(MPhi *phi, size_t lirIndex);

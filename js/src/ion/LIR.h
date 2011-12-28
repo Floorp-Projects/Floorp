@@ -1109,7 +1109,7 @@ LAllocation::toRegister() const
 
 #undef LIR_HEADER
 
-#include "IonLIR-inl.h"
+#include "LIR-inl.h"
 
 #endif // jsion_lir_h__
 
