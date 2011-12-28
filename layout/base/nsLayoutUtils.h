@@ -515,21 +515,11 @@ public:
                                    bool aShouldIgnoreSuppression = false,
                                    bool aIgnoreRootScrollFrame = false);
 
-  /**
-   * Transform aRect relative to aAncestor down to the coordinate system of
-   * aFrame. Computes the bounding-box of the true quadrilateral.
-   */
-  static nsRect TransformAncestorRectToFrame(nsIFrame* aFrame,
-                                             const nsRect& aRect,
-                                             nsIFrame* aAncestor);
+  
 
-  /**
-   * Transform aRect relative to aFrame up to the coordinate system of
-   * aAncestor. Computes the bounding-box of the true quadrilateral.
-   */
-  static nsRect TransformFrameRectToAncestor(nsIFrame* aFrame,
-                                             const nsRect& aRect,
-                                             nsIFrame* aAncestor);
+  static nsRect TransformRectToBoundsInAncestor(nsIFrame* aFrame,
+                                                const nsRect& aRect,
+                                                nsIFrame* aStopAtAncestor);
 
   /**
    * Given a point in the global coordinate space, returns that point expressed
@@ -540,8 +530,8 @@ public:
    * @param aPoint The point, in the global space, to get in the frame-local space.
    * @return aPoint, expressed in aFrame's canonical coordinate space.
    */
-  static nsPoint TransformRootPointToFrame(nsIFrame* aFrame,
-                                           const nsPoint &aPt);
+  static nsPoint InvertTransformsToRoot(nsIFrame* aFrame,
+                                        const nsPoint &aPt);
 
   /**
    * Helper function that, given a rectangle and a matrix, returns the smallest
@@ -704,8 +694,8 @@ public:
   };
 
   struct RectAccumulator : public RectCallback {
-    nsRect mResultRect;
-    nsRect mFirstRect;
+    nsRect       mResultRect;
+    nsRect       mFirstRect;
     bool mSeenFirstRect;
 
     RectAccumulator();
@@ -723,9 +713,6 @@ public:
 
   static nsIFrame* GetContainingBlockForClientRect(nsIFrame* aFrame);
 
-  enum {
-    RECTS_ACCOUNT_FOR_TRANSFORMS = 0x01
-  };
   /**
    * Collect all CSS border-boxes associated with aFrame and its
    * continuations, "drilling down" through outer table frames and
@@ -734,22 +721,15 @@ public:
    * into account) and passed to the callback in frame-tree order.
    * If aFrame is null, no boxes are returned.
    * For SVG frames, returns one rectangle, the bounding box.
-   * If aFlags includes RECTS_ACCOUNT_FOR_TRANSFORMS, then when converting
-   * the boxes into aRelativeTo coordinates, transforms (including CSS
-   * and SVG transforms) are taken into account.
    */
   static void GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
-                                RectCallback* aCallback, PRUint32 aFlags = 0);
+                                RectCallback* aCallback);
 
   /**
    * Computes the union of all rects returned by GetAllInFlowRects. If
    * the union is empty, returns the first rect.
-   * If aFlags includes RECTS_ACCOUNT_FOR_TRANSFORMS, then when converting
-   * the boxes into aRelativeTo coordinates, transforms (including CSS
-   * and SVG transforms) are taken into account.
    */
-  static nsRect GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo,
-                                       PRUint32 aFlags = 0);
+  static nsRect GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo);
 
   enum {
     EXCLUDE_BLUR_SHADOWS = 0x01

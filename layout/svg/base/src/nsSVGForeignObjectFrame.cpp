@@ -278,8 +278,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
 }
 
 gfx3DMatrix
-nsSVGForeignObjectFrame::GetTransformMatrix(nsIFrame* aAncestor,
-                                            nsIFrame **aOutAncestor)
+nsSVGForeignObjectFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
 {
   NS_PRECONDITION(aOutAncestor, "We need an ancestor to write to!");
 
