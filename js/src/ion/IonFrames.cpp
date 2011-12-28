@@ -53,7 +53,7 @@ using namespace js::ion;
 JSScript *
 ion::MaybeScriptFromCalleeToken(CalleeToken token)
 {
-    switch (CalleeTokenGetTag(token)) {
+    switch (GetCalleeTokenTag(token)) {
       case CalleeToken_InvalidationRecord:
         return NULL;
       case CalleeToken_Script:
@@ -85,7 +85,7 @@ FrameRecovery::FrameRecovery(uint8 *fp, uint8 *sp, const MachineState &machine)
 void
 FrameRecovery::unpackCalleeToken(CalleeToken token)
 {
-    switch (CalleeTokenGetTag(token)) {
+    switch (GetCalleeTokenTag(token)) {
       case CalleeToken_Function:
          callee_ = CalleeTokenToFunction(token);
          script_ = callee_->script();
@@ -142,7 +142,7 @@ IonScript *
 FrameRecovery::ionScript() const
 {
     CalleeToken token = fp_->calleeToken();
-    if (CalleeToken_InvalidationRecord == CalleeTokenGetTag(token))
+    if (CalleeToken_InvalidationRecord == GetCalleeTokenTag(token))
         return CalleeTokenToInvalidationRecord(token)->ionScript;
 
     return script_->ion;
@@ -166,7 +166,7 @@ IonFrameIterator::script() const
 {
     JS_ASSERT(hasScript());
     CalleeToken token = calleeToken();
-    switch (CalleeTokenGetTag(token)) {
+    switch (GetCalleeTokenTag(token)) {
       case CalleeToken_Script:
         return CalleeTokenToScript(token);
       case CalleeToken_Function:
@@ -243,7 +243,7 @@ ion::HandleException(ResumeFromException *rfe)
         if (iter.type() == IonFrame_JS) {
             IonJSFrameLayout *fp = iter.jsFrame();
             CalleeToken token = fp->calleeToken();
-            if (CalleeTokenGetTag(token) == CalleeToken_InvalidationRecord)
+            if (CalleeTokenIsInvalidationRecord(token))
                 Foreground::delete_<InvalidationRecord>(CalleeTokenToInvalidationRecord(token));
         }
 
@@ -278,5 +278,59 @@ bool
 IonActivationIterator::more() const
 {
     return !!activation_;
+}
+
+static void
+MarkCalleeToken(JSTracer *trc, CalleeToken token)
+{
+    switch (GetCalleeTokenTag(token)) {
+      case CalleeToken_Function:
+        MarkRoot(trc, CalleeTokenToFunction(token), "ion-callee");
+        break;
+      case CalleeToken_Script:
+        MarkRoot(trc, CalleeTokenToScript(token), "ion-entry");
+        break;
+      case CalleeToken_InvalidationRecord:
+      {
+        ion::InvalidationRecord *record = CalleeTokenToInvalidationRecord(token);
+        ion::IonScript::Trace(trc, record->ionScript);
+        break;
+      }
+      default:
+        JS_NOT_REACHED("unknown callee token type");
+    }
+}
+
+static void
+MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
+{
+    IonJSFrameLayout *layout = (IonJSFrameLayout *)frame.fp();
+    
+    MarkCalleeToken(trc, layout->calleeToken());
+}
+
+static void
+MarkIonActivation(JSTracer *trc, uint8 *top)
+{
+    for (IonFrameIterator frames(top); frames.more(); ++frames) {
+        switch (frames.type()) {
+          case IonFrame_Exit:
+            // The exit frame gets ignored.
+            break;
+          case IonFrame_JS:
+            MarkIonJSFrame(trc, frames);
+            break;
+          default:
+            JS_NOT_REACHED("unexpected frame type");
+            break;
+        }
+    }
+}
+
+void
+ion::MarkIonActivations(ThreadData *td, JSTracer *trc)
+{
+    for (IonActivationIterator activations(td); activations.more(); ++activations)
+        MarkIonActivation(trc, activations.top());
 }
 

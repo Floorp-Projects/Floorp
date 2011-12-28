@@ -231,9 +231,7 @@ struct ThreadData {
 
     bool init();
 
-    void mark(JSTracer *trc) {
-        stackSpace.mark(trc);
-    }
+    void mark(JSTracer *trc);
 
     void purge(JSContext *cx) {
         tempLifoAlloc.freeUnused();
