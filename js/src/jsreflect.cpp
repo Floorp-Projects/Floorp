@@ -2432,15 +2432,22 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
         return leftAssociate(pn, dst);
       }
 
-      case PNK_INC:
-      case PNK_DEC:
+      case PNK_PREINCREMENT:
+      case PNK_PREDECREMENT:
       {
-        bool incr = pn->isKind(PNK_INC);
-        bool prefix = pn->getOp() >= JSOP_INCNAME && pn->getOp() <= JSOP_DECELEM;
-
+        bool inc = pn->isKind(PNK_PREINCREMENT);
         Value expr;
         return expression(pn->pn_kid, &expr) &&
-               builder.updateExpression(expr, incr, prefix, &pn->pn_pos, dst);
+               builder.updateExpression(expr, inc, true, &pn->pn_pos, dst);
+      }
+
+      case PNK_POSTINCREMENT:
+      case PNK_POSTDECREMENT:
+      {
+        bool inc = pn->isKind(PNK_POSTINCREMENT);
+        Value expr;
+        return expression(pn->pn_kid, &expr) &&
+               builder.updateExpression(expr, inc, false, &pn->pn_pos, dst);
       }
 
       case PNK_ASSIGN:

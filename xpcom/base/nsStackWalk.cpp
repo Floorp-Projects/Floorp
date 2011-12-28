@@ -133,7 +133,7 @@ my_malloc_logger(uint32_t type, uintptr_t arg1, uintptr_t arg2, uintptr_t arg3,
   // stack shows up as having two pthread_cond_wait$UNIX2003 frames.
   const char *name = OnSnowLeopardOrLater() ? "new_sem_from_pool" :
     "pthread_cond_wait$UNIX2003";
-  NS_StackWalk(stack_callback, 0, const_cast<char*>(name));
+  NS_StackWalk(stack_callback, 0, const_cast<char*>(name), 0);
 }
 
 void
@@ -802,7 +802,7 @@ WalkStackThread(void* aData)
 
 EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
-             void *aClosure)
+             void *aClosure, uintptr_t aThread)
 {
     MOZ_ASSERT(gCriticalAddress.mInit);
     HANDLE myProcess, myThread;
@@ -811,6 +811,13 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
 
     if (!EnsureImageHlpInitialized())
         return false;
+
+    HANDLE targetThread;
+    if (aThread) {
+        targetThread = reinterpret_cast<HANDLE> (aThread);
+    } else {
+        targetThread = ::GetCurrentThread();
+    }
 
     // Have to duplicate handle to get a real handle.
     if (!::DuplicateHandle(::GetCurrentProcess(),
@@ -822,7 +829,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
         return NS_ERROR_FAILURE;
     }
     if (!::DuplicateHandle(::GetCurrentProcess(),
-                           ::GetCurrentThread(),
+                           targetThread,
                            ::GetCurrentProcess(),
                            &myThread,
                            THREAD_ALL_ACCESS, FALSE, 0)) {
@@ -1481,9 +1488,10 @@ cs_operate(int (*operate_func)(void *, void *), void * usrarg)
 
 EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
-             void *aClosure)
+             void *aClosure, uintptr_t aThread)
 {
     MOZ_ASSERT(gCriticalAddress.mInit);
+    MOZ_ASSERT(!aThread);
     struct my_user_args args;
 
     if (!initialized)
@@ -1561,9 +1569,10 @@ extern void *__libc_stack_end; // from ld-linux.so
 
 EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
-             void *aClosure)
+             void *aClosure, uintptr_t aThread)
 {
   MOZ_ASSERT(gCriticalAddress.mInit);
+  MOZ_ASSERT(!aThread);
   // Stack walking code courtesy Kipp's "leaky".
 
   // Get the frame pointer
@@ -1639,9 +1648,10 @@ unwind_callback (struct _Unwind_Context *context, void *closure)
 
 EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
-             void *aClosure)
+             void *aClosure, uintptr_t aThread)
 {
     MOZ_ASSERT(gCriticalAddress.mInit);
+    MOZ_ASSERT(!aThread);
     unwind_info info;
     info.callback = aCallback;
     info.skip = aSkipFrames + 1;
@@ -1717,9 +1727,10 @@ NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
 
 EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
-             void *aClosure)
+             void *aClosure, uintptr_t aThread)
 {
     MOZ_ASSERT(gCriticalAddress.mInit);
+    MOZ_ASSERT(!aThread);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

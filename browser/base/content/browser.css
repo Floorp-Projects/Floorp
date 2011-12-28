@@ -47,14 +47,7 @@ tabbrowser {
 .tab-label:not([fadein]):not([pinned]),
 .tab-icon-image:not([fadein]):not([pinned]),
 .tab-close-button:not([fadein]):not([pinned]) {
-  opacity: 0 !important;
-}
-
-.tab-throbber,
-.tab-label,
-.tab-icon-image,
-.tab-close-button {
-  -moz-transition: opacity 250ms;
+  display: none;
 }
 
 .tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned] {
