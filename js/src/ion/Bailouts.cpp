@@ -325,7 +325,7 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
         IonSpew(IonSpew_Invalidate, "   orig ra %p", (void *) frame->returnAddress());
 
         InvalidationRecord *record = CalleeTokenToInvalidationRecord(frame->calleeToken());
-        Foreground::delete_<InvalidationRecord>(record);
+        InvalidationRecord::Destroy(cx, record);
         // Not strictly necessary, but nice for sanity.
         frame->replaceCalleeToken(InvalidationRecordToToken(NULL));
 

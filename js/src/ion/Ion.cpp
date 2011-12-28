@@ -380,8 +380,13 @@ IonScript::IonScript()
     constantEntries_(0),
     frameInfoTable_(0),
     frameInfoEntries_(0),
+    frameLocals_(0),
+    frameSize_(0),
+    safepointsStart_(0),
+    safepointsSize_(0),
     cacheList_(0),
-    cacheEntries_(0)
+    cacheEntries_(0),
+    refcount_(0)
 {
 }
 
@@ -560,12 +565,9 @@ IonScript::Trace(JSTracer *trc, IonScript *script)
 }
 
 void
-IonScript::Destroy(JSContext *cx, JSScript *script)
+IonScript::Destroy(JSContext *cx, IonScript *script)
 {
-    if (!script->ion || script->ion == ION_DISABLED_SCRIPT)
-        return;
-
-    cx->free_(script->ion);
+    cx->free_(script);
 }
 
 static bool
@@ -937,6 +939,8 @@ InvalidateActivation(JSContext *cx, HashSet<JSScript *> &invalidHash, uint8 *ion
             IonSpew(IonSpew_Invalidate, "#%d exit frame @ %p", frameno, it.fp());
             break;
           case IonFrame_JS:
+            if (!it.hasScript())
+                break;
             IonSpew(IonSpew_Invalidate, "#%d JS frame @ %p: %s:%d", frameno, it.fp(),
                     it.script()->filename, it.script()->lineno);
             break;
@@ -963,8 +967,7 @@ InvalidateActivation(JSContext *cx, HashSet<JSScript *> &invalidHash, uint8 *ion
         IonSpew(IonSpew_Invalidate, "   ! requires invalidation");
         JS_ASSERT(!CalleeTokenIsInvalidationRecord(it.calleeToken()));
         JS_ASSERT(MaybeScriptFromCalleeToken(it.calleeToken()) == script);
-        InvalidationRecord *record =
-            OffTheBooks::new_<InvalidationRecord>(it.calleeToken(), *calleeReturnAddressPtr);
+        InvalidationRecord *record = InvalidationRecord::New(it.calleeToken(), *calleeReturnAddressPtr);
         if (!record)
             return false;
 

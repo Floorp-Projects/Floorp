@@ -170,6 +170,9 @@ struct InvalidationRecord
     IonScript *ionScript;
 
     InvalidationRecord(void *calleeToken, uint8 *returnAddress);
+
+    static InvalidationRecord *New(void *calleeToken, uint8 *returnAddress);
+    static void Destroy(JSContext *cx, InvalidationRecord *record);
 };
 
 // The layout of an Ion frame on the C stack is roughly:
