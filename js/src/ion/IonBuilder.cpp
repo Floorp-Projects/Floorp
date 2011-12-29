@@ -138,6 +138,11 @@ IonBuilder::getInliningTarget(uint32 argc, jsbytecode *pc, JSFunction **out)
         return true;
     }
 
+    if (calleeTypes->unknownObject()) {
+        IonSpew(IonSpew_Inlining, "Cannot inline due to unknown object");
+        return true;
+    }
+
     if (calleeTypes->getObjectCount() > 1) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to multiple objects");
         return true;
