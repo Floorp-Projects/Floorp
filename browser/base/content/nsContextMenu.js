@@ -337,6 +337,7 @@ nsContextMenu.prototype = {
             .setAttribute("checked", canSpell && InlineSpellCheckerUI.enabled);
 
     this.showItem("spell-add-to-dictionary", onMisspelling);
+    this.showItem("spell-undo-add-to-dictionary", InlineSpellCheckerUI.canUndo());
 
     // suggestion list
     this.showItem("spell-suggestions-separator", onMisspelling);
