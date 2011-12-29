@@ -106,7 +106,8 @@ nsWindow::DoDraw(void)
     }
 
     nsPaintEvent event(true, NS_PAINT, gWindowToRedraw);
-    event.region = gScreenBounds;
+    event.region = gWindowToRedraw->mDirtyRegion;
+    gWindowToRedraw->mDirtyRegion.SetEmpty();
 
     LayerManager* lm = gWindowToRedraw->GetLayerManager();
     if (LayerManager::LAYERS_OPENGL == lm->GetBackendType()) {
@@ -293,9 +294,15 @@ nsWindow::Invalidate(const nsIntRect &aRect,
         return NS_OK;
     }
 
+    mDirtyRegion.Or(mDirtyRegion, aRect);
     gWindowToRedraw = this;
-    gDrawRequest = true;
-    mozilla::NotifyEvent();
+    if (aIsSynchronous) {
+        gDrawRequest = false;
+        DoDraw();
+    } else {
+        gDrawRequest = true;
+        mozilla::NotifyEvent();
+    }
     return NS_OK;
 }
 
