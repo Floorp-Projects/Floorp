@@ -52,19 +52,13 @@ class XPCCallContext;
 #define XPC_QS_NULL_INDEX  ((uint16_t) -1)
 
 struct xpc_qsPropertySpec {
-    const char *name;
+    uint16_t name_index;
     JSPropertyOp getter;
     JSStrictPropertyOp setter;
 };
 
 struct xpc_qsFunctionSpec {
-    const char *name;
-    JSNative native;
-    uintN arity;
-};
-
-struct xpc_qsTraceableSpec {
-    const char *name;
+    uint16_t name_index;
     JSNative native;
     uintN arity;
 };
@@ -168,7 +162,8 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN extraFlags,
                        PRUint32 ifacec, const nsIID **interfaces,
                        PRUint32 tableSize, const xpc_qsHashEntry *table,
                        const xpc_qsPropertySpec *propspecs,
-                       const xpc_qsFunctionSpec *funcspecs);
+                       const xpc_qsFunctionSpec *funcspecs,
+                       const char *stringTable);
 
 /** Raise an exception on @a cx and return false. */
 JSBool
