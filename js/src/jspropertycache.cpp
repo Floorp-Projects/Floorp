@@ -80,7 +80,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
     JS_ASSERT_IF(obj == pobj, scopeIndex == 0);
 
     JSObject *tmp = obj;
-    for (uintN i = 0; i != scopeIndex; i++)
+    for (uintN i = 0; i < scopeIndex; i++)
         tmp = tmp->internalScopeChain();
 
     uintN protoIndex = 0;
@@ -109,7 +109,8 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
         ++protoIndex;
     }
 
-    if (scopeIndex > PCINDEX_SCOPEMASK || protoIndex > PCINDEX_PROTOMASK) {
+    typedef PropertyCacheEntry Entry;
+    if (scopeIndex > Entry::MaxScopeIndex || protoIndex > Entry::MaxProtoIndex) {
         PCMETER(longchains++);
         return JS_NO_PROP_CACHE_FILL;
     }
@@ -196,7 +197,6 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     const JSCodeSpec &cs = js_CodeSpec[op];
 
     obj = *objp;
-    uint32_t vindex = entry->vindex;
 
     if (entry->kpc != pc) {
         PCMETER(kpcmisses++);
@@ -234,23 +234,25 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     pobj = obj;
 
     if (JOF_MODE(cs.format) == JOF_NAME) {
-        while (vindex & (PCINDEX_SCOPEMASK << PCINDEX_PROTOBITS)) {
+        uint8_t scopeIndex = entry->scopeIndex;
+        while (scopeIndex > 0) {
             tmp = pobj->scopeChain();
             if (!tmp || !tmp->isNative())
                 break;
             pobj = tmp;
-            vindex -= PCINDEX_PROTOSIZE;
+            scopeIndex--;
         }
 
         *objp = pobj;
     }
 
-    while (vindex & PCINDEX_PROTOMASK) {
+    uint8_t protoIndex = entry->protoIndex;
+    while (protoIndex > 0) {
         tmp = pobj->getProto();
         if (!tmp || !tmp->isNative())
             break;
         pobj = tmp;
-        --vindex;
+        protoIndex--;
     }
 
     if (pobj->lastProperty() == entry->pshape) {
@@ -279,7 +281,8 @@ PropertyCache::assertEmpty()
         JS_ASSERT(!table[i].kshape);
         JS_ASSERT(!table[i].pshape);
         JS_ASSERT(!table[i].prop);
-        JS_ASSERT(!table[i].vindex);
+        JS_ASSERT(!table[i].scopeIndex);
+        JS_ASSERT(!table[i].protoIndex);
     }
 }
 #endif

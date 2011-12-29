@@ -169,16 +169,16 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
              */
             const Shape *shape = entry->prop;
             JS_ASSERT_IF(shape->isDataDescriptor(), shape->writable());
-            JS_ASSERT_IF(shape->hasSlot(), !entry->vindex);
+            JS_ASSERT_IF(shape->hasSlot(), entry->isOwnPropertyHit());
 
-            if (entry->vindex == 0 ||
+            if (entry->isOwnPropertyHit() ||
                 ((obj2 = obj->getProto()) && obj2->lastProperty() == entry->pshape)) {
 #ifdef DEBUG
-                if (entry->directHit()) {
+                if (entry->isOwnPropertyHit()) {
                     JS_ASSERT(obj->nativeContains(cx, *shape));
                 } else {
                     JS_ASSERT(obj2->nativeContains(cx, *shape));
-                    JS_ASSERT(entry->vindex == 1);
+                    JS_ASSERT(entry->isPrototypePropertyHit());
                     JS_ASSERT(entry->kshape != entry->pshape);
                     JS_ASSERT(!shape->hasSlot());
                 }
@@ -1646,7 +1646,8 @@ InitPropOrMethod(VMFrame &f, JSAtom *atom, JSOp op)
     JSAtom *atom2;
     if (JS_PROPERTY_CACHE(cx).testForSet(cx, f.pc(), obj, &entry, &obj2, &atom2) &&
         entry->prop->hasDefaultSetter() &&
-        entry->vindex == 0) {
+        entry->isOwnPropertyHit())
+    {
         JS_ASSERT(obj == obj2);
         /* Fast path. Property cache hit. */
         obj->nativeSetSlotWithType(cx, entry->prop, rval);
