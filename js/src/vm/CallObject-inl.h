@@ -165,8 +165,8 @@ inline void
 CallObject::copyValues(uintN nargs, Value *argv, uintN nvars, Value *slots)
 {
     JS_ASSERT(slotInRange(RESERVED_SLOTS + nargs + nvars, SENTINEL_ALLOWED));
-    copySlotRange(RESERVED_SLOTS, argv, nargs, true);
-    copySlotRange(RESERVED_SLOTS + nargs, slots, nvars, true);
+    copySlotRange(RESERVED_SLOTS, argv, nargs);
+    copySlotRange(RESERVED_SLOTS + nargs, slots, nvars);
 }
 
 inline js::HeapValueArray
