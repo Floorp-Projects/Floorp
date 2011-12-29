@@ -104,7 +104,6 @@ ThreadData::ThreadData(JSRuntime *rt)
 #ifdef JS_THREADSAFE
     requestDepth(0),
 #endif
-    waiveGCQuota(false),
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     execAlloc(NULL),
     bumpAlloc(NULL),
@@ -1598,7 +1597,7 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
         AutoLockGC lock(this);
         gcHelperThread.waitBackgroundSweepOrAllocEnd();
 #endif
-        gcChunkPool.expire(this, true);
+        gcChunkPool.expireAndFree(this, true);
     }
     if (!p)
         p = OffTheBooks::malloc_(nbytes);
