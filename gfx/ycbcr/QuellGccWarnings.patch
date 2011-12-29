@@ -1,0 +1,40 @@
+diff --git a/gfx/ycbcr/yuv_convert.cpp b/gfx/ycbcr/yuv_convert.cpp
+--- a/gfx/ycbcr/yuv_convert.cpp
++++ b/gfx/ycbcr/yuv_convert.cpp
+@@ -337,16 +337,17 @@ NS_GFX_(void) ScaleYCbCrToRGB32(const ui
+                                          source_dx_uv >> kFractionBits);
+         }
+       }
+       else {
+         ScaleYUVToRGB32Row_C(y_ptr, u_ptr, v_ptr,
+                              dest_pixel, width, source_dx);
+       }
+ #else
++      (void)source_dx_uv;
+       ScaleYUVToRGB32Row(y_ptr, u_ptr, v_ptr,
+                          dest_pixel, width, source_dx);
+ #endif
+     }
+   }
+   // MMX used for FastConvertYUVToRGB32Row and FilterRows requires emms.
+   if (has_mmx)
+     EMMS();
+diff --git a/gfx/ycbcr/yuv_row.h b/gfx/ycbcr/yuv_row.h
+--- a/gfx/ycbcr/yuv_row.h
++++ b/gfx/ycbcr/yuv_row.h
+@@ -129,14 +129,14 @@ extern SIMD_ALIGNED(int16 kCoefficientsR
+ #if defined(ARCH_CPU_X86) && !defined(ARCH_CPU_X86_64)
+ #if defined(_MSC_VER)
+ #define EMMS() __asm emms
+ #pragma warning(disable: 4799)
+ #else
+ #define EMMS() asm("emms")
+ #endif
+ #else
+-#define EMMS()
++#define EMMS() ((void)0)
+ #endif
+ 
+ }  // extern "C"
+ 
+ #endif  // MEDIA_BASE_YUV_ROW_H_
