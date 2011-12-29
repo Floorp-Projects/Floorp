@@ -201,7 +201,8 @@ class HashTable : private AllocPolicy
 
         void popFront() {
             JS_ASSERT(!empty());
-            while (++cur != end && !cur->isLive());
+            while (++cur != end && !cur->isLive())
+                continue;
         }
     };
 
