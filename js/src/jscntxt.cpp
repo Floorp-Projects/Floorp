@@ -104,7 +104,6 @@ ThreadData::ThreadData(JSRuntime *rt)
 #ifdef JS_THREADSAFE
     requestDepth(0),
 #endif
-    waiveGCQuota(false),
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     execAlloc(NULL),
     bumpAlloc(NULL),
@@ -1270,33 +1269,8 @@ js_InvokeOperationCallback(JSContext *cx)
 #endif
     JS_UNLOCK_GC(rt);
 
-    if (rt->gcIsNeeded) {
+    if (rt->gcIsNeeded)
         js_GC(cx, rt->gcTriggerCompartment, GC_NORMAL, rt->gcTriggerReason);
-
-        /*
-         * On trace we can exceed the GC quota, see comments in NewGCArena. So
-         * we check the quota and report OOM here when we are off trace.
-         */
-        if (checkOutOfMemory(rt)) {
-#ifdef JS_THREADSAFE
-            /*
-            * We have to wait until the background thread is done in order
-            * to get a correct answer.
-            */
-            {
-                AutoLockGC lock(rt);
-                rt->gcHelperThread.waitBackgroundSweepEnd();
-            }
-            if (checkOutOfMemory(rt)) {
-                js_ReportOutOfMemory(cx);
-                return false;
-            }
-#else
-            js_ReportOutOfMemory(cx);
-            return false;
-#endif
-        }
-    }
 
 #ifdef JS_THREADSAFE
     /*
@@ -1598,7 +1572,7 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
         AutoLockGC lock(this);
         gcHelperThread.waitBackgroundSweepOrAllocEnd();
 #endif
-        gcChunkPool.expire(this, true);
+        gcChunkPool.expireAndFree(this, true);
     }
     if (!p)
         p = OffTheBooks::malloc_(nbytes);
