@@ -2617,7 +2617,7 @@ struct types::ObjectTableKey
 
 struct types::ObjectTableEntry
 {
-    TypeObject *object;
+    ReadBarriered<TypeObject> object;
     Type *types;
 };
 
@@ -5837,9 +5837,6 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun)
         if (type->newScript && type->newScript->fun != fun)
             type->clearNewScript(cx);
 
-        if (cx->compartment->needsBarrier())
-            TypeObject::readBarrier(type);
-
         return type;
     }
 
@@ -5904,9 +5901,6 @@ JSCompartment::getLazyType(JSContext *cx, JSObject *proto)
     if (p) {
         TypeObject *type = *p;
         JS_ASSERT(type->lazy());
-
-        if (cx->compartment->needsBarrier())
-            TypeObject::readBarrier(type);
 
         return type;
     }
