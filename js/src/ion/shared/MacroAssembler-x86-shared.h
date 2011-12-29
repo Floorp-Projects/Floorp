@@ -105,8 +105,17 @@ class MacroAssemblerX86Shared : public Assembler
         }
     }
 
+    void move32(const Address &address, const Register &dest) {
+        movl(Operand(address), dest);
+    }
     void move32(const Imm32 &imm, const Register &dest) {
         movl(imm, dest);
+    }
+    void and32(const Imm32 &imm, const Register &dest) {
+        andl(imm, dest);
+    }
+    void cmp32(const Register &src, const Imm32 &imm) {
+        cmpl(src, imm);
     }
 
     void branch32(Condition cond, const Register &lhs, Imm32 imm, Label *label) {
@@ -114,7 +123,7 @@ class MacroAssemblerX86Shared : public Assembler
         j(cond, label);
     }
     void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
-        testl(Operand(address.base, address.offset), imm);
+        testl(Operand(address), imm);
         j(cond, label);
     }
 
@@ -157,6 +166,9 @@ class MacroAssemblerX86Shared : public Assembler
         uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
         push(Imm32(descriptor));
         call(target);
+    }
+    void callIon(const Register &callee) {
+        call(callee);
     }
 };
 
