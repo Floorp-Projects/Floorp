@@ -1107,8 +1107,8 @@ def writeMethodStub(f, customMethodCalls, stringtable, method):
     stubName = method.iface.name + '_' + header.methodNativeName(method)
     if not custom:
         writeQuickStub(f, customMethodCalls, method, stubName)
-    fs = '{%d, %s, %d}' % (stringtable.stringIndex(method.name),
-                           stubName, len(method.params))
+    fs = '{%d, %d, %s}' % (stringtable.stringIndex(method.name),
+                           len(method.params), stubName)
     return fs
 
 def writeStubsForInterface(f, customMethodCalls, stringtable, iface):

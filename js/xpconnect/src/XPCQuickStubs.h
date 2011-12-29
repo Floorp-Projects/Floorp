@@ -59,8 +59,8 @@ struct xpc_qsPropertySpec {
 
 struct xpc_qsFunctionSpec {
     uint16_t name_index;
+    uint16_t arity;
     JSNative native;
-    uintN arity;
 };
 
 /** A table mapping interfaces to quick stubs. */
