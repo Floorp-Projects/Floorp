@@ -38,11 +38,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* JS execution context. */
+
 #ifndef jscntxt_h___
 #define jscntxt_h___
-/*
- * JS execution context.
- */
+
+#include "mozilla/Attributes.h"
+
 #include <string.h>
 
 #include "jsfriendapi.h"
@@ -1406,10 +1408,9 @@ class AutoGCRooter {
         OBJVECTOR =   -16  /* js::AutoObjectVector */
     };
 
-    private:
-    /* No copy or assignment semantics. */
-    AutoGCRooter(AutoGCRooter &ida);
-    void operator=(AutoGCRooter &ida);
+  private:
+    AutoGCRooter(AutoGCRooter &ida) MOZ_DELETE;
+    void operator=(AutoGCRooter &ida) MOZ_DELETE;
 };
 
 /* FIXME(bug 332648): Move this into a public header. */
@@ -1618,9 +1619,8 @@ class AutoIdArray : private AutoGCRooter {
     JSIdArray * idArray;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
-    /* No copy or assignment semantics. */
-    AutoIdArray(AutoIdArray &ida);
-    void operator=(AutoIdArray &ida);
+    AutoIdArray(AutoIdArray &ida) MOZ_DELETE;
+    void operator=(AutoIdArray &ida) MOZ_DELETE;
 };
 
 /* The auto-root for enumeration object and its state. */
@@ -1797,7 +1797,8 @@ class AutoReleasePtr {
     void        *ptr;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
-    AutoReleasePtr operator=(const AutoReleasePtr &other);
+    AutoReleasePtr(const AutoReleasePtr &other) MOZ_DELETE;
+    AutoReleasePtr operator=(const AutoReleasePtr &other) MOZ_DELETE;
 
   public:
     explicit AutoReleasePtr(JSContext *cx, void *ptr
@@ -1817,7 +1818,8 @@ class AutoReleaseNullablePtr {
     void        *ptr;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
-    AutoReleaseNullablePtr operator=(const AutoReleaseNullablePtr &other);
+    AutoReleaseNullablePtr(const AutoReleaseNullablePtr &other) MOZ_DELETE;
+    AutoReleaseNullablePtr operator=(const AutoReleaseNullablePtr &other) MOZ_DELETE;
 
   public:
     explicit AutoReleaseNullablePtr(JSContext *cx, void *ptr

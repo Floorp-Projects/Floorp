@@ -912,6 +912,13 @@ bool
 UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc);
 
 /*
+ * Whether Array.prototype, or an object on its proto chain, has an
+ * indexed property.
+ */
+bool
+ArrayPrototypeHasIndexedProperty(JSContext *cx, JSScript *script);
+
+/*
  * Type information about a callsite. this is separated from the bytecode
  * information itself so we can handle higher order functions not called
  * directly via a bytecode.

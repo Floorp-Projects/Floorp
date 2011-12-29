@@ -66,6 +66,7 @@ XPIDLSRCS = \
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/base \
   -I$(topsrcdir)/dom/telephony \
+  -I$(topsrcdir)/dom/wifi \
   -I$(topsrcdir)/content/events/src \
   $(NULL)
 

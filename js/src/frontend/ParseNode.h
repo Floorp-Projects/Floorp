@@ -75,8 +75,10 @@ enum ParseNodeKind {
     PNK_STAR,
     PNK_DIV,
     PNK_MOD,
-    PNK_INC,
-    PNK_DEC,
+    PNK_PREINCREMENT,
+    PNK_POSTINCREMENT,
+    PNK_PREDECREMENT,
+    PNK_POSTDECREMENT,
     PNK_DOT,
     PNK_LB,
     PNK_RB,
@@ -347,8 +349,10 @@ enum ParseNodeKind {
  * PNK_VOID,
  * PNK_NOT,
  * PNK_BITNOT
- * PNK_INC,     unary       pn_kid: MEMBER expr
- * PNK_DEC
+ * PNK_PREINCREMENT, unary  pn_kid: MEMBER expr
+ * PNK_POSTINCREMENT,
+ * PNK_PREDECREMENT,
+ * PNK_POSTDECREMENT
  * PNK_NEW      list        pn_head: list of ctor, arg1, arg2, ... argN
  *                          pn_count: 1 + N (where N is number of args)
  *                          ctor is a MEMBER expr

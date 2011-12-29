@@ -105,6 +105,13 @@ HeapValue::init(const Value &v)
 }
 
 inline void
+HeapValue::init(JSCompartment *comp, const Value &v)
+{
+    value = v;
+    post(comp);
+}
+
+inline void
 HeapValue::writeBarrierPre(const Value &value)
 {
 #ifdef JSGC_INCREMENTAL

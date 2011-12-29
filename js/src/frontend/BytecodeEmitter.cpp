@@ -7334,8 +7334,10 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ok = EmitUnary(cx, bce, pn);
         break;
 
-      case PNK_INC:
-      case PNK_DEC:
+      case PNK_PREINCREMENT:
+      case PNK_PREDECREMENT:
+      case PNK_POSTINCREMENT:
+      case PNK_POSTDECREMENT:
         ok = EmitIncOrDec(cx, bce, pn);
         break;
 

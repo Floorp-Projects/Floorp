@@ -639,6 +639,14 @@ struct JSObject : js::gc::Cell
 
   private:
     inline js::HeapValue* fixedSlots() const;
+
+    /*
+     * Get internal pointers to the range of values starting at start and
+     * running for length.
+     */
+    void getSlotRange(size_t start, size_t length,
+                      js::HeapValue **fixedStart, js::HeapValue **fixedEnd,
+                      js::HeapValue **slotsStart, js::HeapValue **slotsEnd);
   public:
 
     /* Accessors for properties. */
@@ -690,7 +698,6 @@ struct JSObject : js::gc::Cell
     inline bool updateSlotsForSpan(JSContext *cx, size_t oldSpan, size_t newSpan);
 
   public:
-
     /*
      * Trigger the write barrier on a range of slots that will no longer be
      * reachable.
@@ -699,12 +706,16 @@ struct JSObject : js::gc::Cell
     inline void prepareElementRangeForOverwrite(size_t start, size_t end);
 
     /*
-     * Copy a flat array of slots to this object at a start slot. Caller must
-     * ensure there are enough slots in this object. If |valid|, then the slots
-     * being overwritten hold valid data and must be invalidated for the write
-     * barrier.
+     * Initialize a flat array of slots to this object at a start slot.  The
+     * caller must ensure that are enough slots.
      */
-    void copySlotRange(size_t start, const js::Value *vector, size_t length, bool valid);
+    void initSlotRange(size_t start, const js::Value *vector, size_t length);
+
+    /*
+     * Copy a flat array of slots to this object at a start slot. Caller must
+     * ensure there are enough slots in this object.
+     */
+    void copySlotRange(size_t start, const js::Value *vector, size_t length);
 
     inline uint32_t slotSpan() const;
 
