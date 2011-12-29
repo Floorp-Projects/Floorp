@@ -391,7 +391,8 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
                        PRUint32 ifacec, const nsIID **interfaces,
                        PRUint32 tableSize, const xpc_qsHashEntry *table,
                        const xpc_qsPropertySpec *propspecs,
-                       const xpc_qsFunctionSpec *funcspecs)
+                       const xpc_qsFunctionSpec *funcspecs,
+                       const char *stringTable)
 {
     /*
      * Walk interfaces in reverse order to behave like XPConnect when a
@@ -414,8 +415,9 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
                 const xpc_qsPropertySpec *ps_end = ps + entry->n_props;
                 for ( ; ps < ps_end; ++ps) {
                     definedProperty = true;
-                    if (!JS_DefineProperty(cx, proto, ps->name, JSVAL_VOID,
-                                           ps->getter, ps->setter,
+                    if (!JS_DefineProperty(cx, proto,
+                                           stringTable + ps->name_index,
+                                           JSVAL_VOID, ps->getter, ps->setter,
                                            flags | JSPROP_SHARED)) 
                         return false;
                 }
@@ -424,7 +426,8 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
                 const xpc_qsFunctionSpec *fs = funcspecs + entry->func_index;
                 const xpc_qsFunctionSpec *fs_end = fs + entry->n_funcs;
                 for ( ; fs < fs_end; ++fs) {
-                    if (!JS_DefineFunction(cx, proto, fs->name,
+                    if (!JS_DefineFunction(cx, proto,
+                                           stringTable + fs->name_index,
                                            reinterpret_cast<JSNative>(fs->native),
                                            fs->arity, flags))
                         return false;

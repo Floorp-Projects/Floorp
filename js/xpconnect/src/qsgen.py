@@ -125,8 +125,6 @@ import sys
 
 # === Preliminaries
 
-MAX_TRACEABLE_NATIVE_ARGS = 8
-
 # --makedepend-output support.
 make_dependencies = []
 make_targets = []
@@ -388,6 +386,38 @@ def writeHeaderFile(filename, name):
         f.close()
 
 # === Generating the source file
+
+class StringTable:
+    def __init__(self):
+        self.current_index = 0;
+        self.table = {}
+        self.reverse_table = {}
+
+    def c_strlen(self, string):
+        return len(string) + 1
+
+    def stringIndex(self, string):
+        if string in self.table:
+            return self.table[string]
+        else:
+            result = self.current_index
+            self.table[string] = result
+            self.current_index += self.c_strlen(string)
+            return result
+
+    def writeDefinition(self, f, name):
+        entries = self.table.items()
+        entries.sort(key=lambda x:x[1])
+        # Avoid null-in-string warnings with GCC and potentially
+        # overlong string constants; write everything out the long way.
+        def explodeToCharArray(string):
+            return ", ".join(map(lambda x:"'%s'" % x, string))
+        f.write("static const char %s[] = {\n" % name)
+        for (string, offset) in entries[:-1]:
+            f.write("  /* %5d */ %s, '\\0',\n"
+                    % (offset, explodeToCharArray(string)))
+        f.write("  /* %5d */ %s, '\\0' };\n\n"
+                % (entries[-1][1], explodeToCharArray(entries[-1][0])))
 
 def substitute(template, vals):
     """ Simple replacement for string.Template, which isn't in Python 2.3. """
@@ -1048,7 +1078,7 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
     if customMethodCall is not None:
         f.write(callTemplate)
 
-def writeAttrStubs(f, customMethodCalls, attr):
+def writeAttrStubs(f, customMethodCalls, stringtable, attr):
     cmc = customMethodCalls.get(attr.iface.name + "_" + header.methodNativeName(attr), None)
     custom = cmc and cmc.get('skipgen', False)
 
@@ -1064,11 +1094,11 @@ def writeAttrStubs(f, customMethodCalls, attr):
         if not custom:
             writeQuickStub(f, customMethodCalls, attr, setterName, isSetter=True)
 
-    ps = ('{"%s", %s, %s}'
-          % (attr.name, getterName, setterName))
+    ps = ('{%d, %s, %s}'
+          % (stringtable.stringIndex(attr.name), getterName, setterName))
     return ps
 
-def writeMethodStub(f, customMethodCalls, method):
+def writeMethodStub(f, customMethodCalls, stringtable, method):
     """ Write a method stub to `f`. Return an xpc_qsFunctionSpec initializer. """
 
     cmc = customMethodCalls.get(method.iface.name + "_" + header.methodNativeName(method), None)
@@ -1077,33 +1107,20 @@ def writeMethodStub(f, customMethodCalls, method):
     stubName = method.iface.name + '_' + header.methodNativeName(method)
     if not custom:
         writeQuickStub(f, customMethodCalls, method, stubName)
-    fs = '{"%s", %s, %d}' % (method.name, stubName, len(method.params))
+    fs = '{%d, %s, %d}' % (stringtable.stringIndex(method.name),
+                           stubName, len(method.params))
     return fs
 
-def writeTraceableStub(f, customMethodCalls, method):
-    """ Write a method stub to `f`. Return an xpc_qsTraceableSpec initializer. """
-
-    cmc = customMethodCalls.get(method.iface.name + "_" + header.methodNativeName(method), None)
-    custom = cmc and cmc.get('skipgen', False)
-
-    stubName = method.iface.name + '_' + header.methodNativeName(method)
-    if not custom:
-        writeTraceableQuickStub(f, customMethodCalls, method, stubName)
-    fs = '{"%s", %s, %d}' % (method.name,
-                             "JS_DATA_TO_FUNC_PTR(JSNative, &%s_trcinfo)" % stubName,
-                             len(method.params))
-    return fs
-
-def writeStubsForInterface(f, customMethodCalls, iface):
+def writeStubsForInterface(f, customMethodCalls, stringtable, iface):
     f.write("// === interface %s\n\n" % iface.name)
     propspecs = []
     funcspecs = []
     for member in iface.stubMembers:
         if member.kind == 'attribute':
-            ps = writeAttrStubs(f, customMethodCalls, member)
+            ps = writeAttrStubs(f, customMethodCalls, stringtable, member)
             propspecs.append(ps)
         elif member.kind == 'method':
-            fs = writeMethodStub(f, customMethodCalls, member)
+            fs = writeMethodStub(f, customMethodCalls, stringtable, member)
             funcspecs.append(fs)
         else:
             raise TypeError('expected attribute or method, not %r'
@@ -1156,7 +1173,7 @@ def writeSpecs(f, elementType, varname, spec_type, spec_indices, interfaces):
             index += len(specs)
     f.write("};\n\n")
 
-def writeDefiner(f, conf, interfaces):
+def writeDefiner(f, conf, stringtable, interfaces):
     f.write("// === Definer\n\n")
 
     # Write out the properties and functions
@@ -1253,14 +1270,23 @@ def writeDefiner(f, conf, interfaces):
             "PR_STATIC_ASSERT((sizeof(tableData) / sizeof(tableData[0])) < (1 << (8 * sizeof(tableData[0].parentInterface))));\n"
             "PR_STATIC_ASSERT((sizeof(tableData) / sizeof(tableData[0])) < (1 << (8 * sizeof(tableData[0].chain))));\n\n")
 
+    # The string table for property and method names.
+    table_name = "stringtab"
+    stringtable.writeDefinition(f, table_name)
+    structNames = [prop_array_name, func_array_name]
+    for name in structNames:
+        f.write("PR_STATIC_ASSERT(sizeof(%s) < (1 << (8 * sizeof(%s[0].name_index))));\n"
+                % (table_name, name))
+    f.write("\n")
+
     # the definer function (entry point to this quick stubs file)
     f.write("JSBool %s_DefineQuickStubs(" % conf.name)
     f.write("JSContext *cx, JSObject *proto, uintN flags, PRUint32 count, "
             "const nsID **iids)\n"
             "{\n")
     f.write("    return xpc_qsDefineQuickStubs("
-            "cx, proto, flags, count, iids, %d, tableData, %s, %s);\n" % (
-            size, prop_array_name, func_array_name))
+            "cx, proto, flags, count, iids, %d, tableData, %s, %s, %s);\n" % (
+            size, prop_array_name, func_array_name, table_name))
     f.write("}\n\n\n")
 
 
@@ -1329,9 +1355,10 @@ def writeStubFile(filename, headerFilename, conf, interfaces):
         writeResultXPCInterfacesArray(f, conf, frozenset(resulttypes))
         for customQS in conf.customQuickStubs:
             f.write('#include "%s"\n' % customQS)
+        stringtable = StringTable()
         for iface in interfaces:
-            writeStubsForInterface(f, conf.customMethodCalls, iface)
-        writeDefiner(f, conf, interfaces)
+            writeStubsForInterface(f, conf.customMethodCalls, stringtable, iface)
+        writeDefiner(f, conf, stringtable, interfaces)
     finally:
         f.close()
 
