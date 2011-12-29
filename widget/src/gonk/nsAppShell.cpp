@@ -45,17 +45,18 @@
 #include <signal.h>
 #include <sys/epoll.h>
 #include <sys/ioctl.h>
-#include <sys/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
+#include "mozilla/Hal.h"
+#include "mozilla/Services.h"
 #include "nsAppShell.h"
 #include "nsGkAtoms.h"
 #include "nsGUIEvent.h"
-#include "nsWindow.h"
 #include "nsIObserverService.h"
-#include "mozilla/Services.h"
+#include "nsWindow.h"
 
 #include "android/log.h"
 
@@ -399,11 +400,6 @@ nsAppShell::~nsAppShell()
 nsresult
 nsAppShell::Init()
 {
-    epoll_event event = {
-        EPOLLIN,
-        { 0 }
-    };
-
     nsresult rv = nsBaseAppShell::Init();
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -413,12 +409,8 @@ nsAppShell::Init()
     int ret = pipe2(signalfds, O_NONBLOCK);
     NS_ENSURE_FALSE(ret, NS_ERROR_UNEXPECTED);
 
-    FdHandler *handler = mHandlers.AppendElement();
-    handler->fd = signalfds[0];
-    handler->func = pipeHandler;
-    event.data.u32 = mHandlers.Length() - 1;
-    ret = epoll_ctl(epollfd, EPOLL_CTL_ADD, signalfds[0], &event);
-    NS_ENSURE_FALSE(ret, NS_ERROR_UNEXPECTED);
+    rv = AddFdHandler(signalfds[0], pipeHandler);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     DIR *dir = opendir("/dev/input");
     NS_ENSURE_TRUE(dir, NS_ERROR_UNEXPECTED);
@@ -461,15 +453,28 @@ nsAppShell::Init()
         if (!handlerFunc)
             continue;
 
-        handler = mHandlers.AppendElement();
-        handler->fd = fd;
-        handler->func = handlerFunc;
-        event.data.u32 = mHandlers.Length() - 1;
-        if (epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event))
+        rv = AddFdHandler(fd, handlerFunc);
+        if (NS_FAILED(rv))
             LOG("Failed to add fd to epoll fd");
     }
 
     return rv;
+}
+
+nsresult
+nsAppShell::AddFdHandler(int fd, FdHandlerCallback handlerFunc)
+{
+    epoll_event event = {
+        EPOLLIN,
+        { 0 }
+    };
+
+    FdHandler *handler = mHandlers.AppendElement();
+    handler->fd = fd;
+    handler->func = handlerFunc;
+    event.data.u32 = mHandlers.Length() - 1;
+    return epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event) ?
+           NS_ERROR_UNEXPECTED : NS_OK;
 }
 
 void
