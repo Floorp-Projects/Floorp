@@ -42,10 +42,11 @@
 
 // Needed for PathAppendW
 #include <shlwapi.h>
+// Needed for CreateToolhelp32Snapshot
+#include <tlhelp32.h>
 #pragma comment(lib, "shlwapi.lib") 
 
-WCHAR*
-MakeCommandLine(int argc, WCHAR **argv);
+WCHAR* MakeCommandLine(int argc, WCHAR **argv);
 BOOL PathAppendSafe(LPWSTR base, LPCWSTR extra);
 
 /**
@@ -258,66 +259,71 @@ StartServiceUpdate(int argc, LPWSTR *argv)
   BOOL svcUpdateProcessStarted = CreateProcessW(maintserviceInstallerPath, 
                                                 cmdLine, 
                                                 NULL, NULL, FALSE, 
-                                                CREATE_DEFAULT_ERROR_MODE | 
-                                                CREATE_UNICODE_ENVIRONMENT, 
+                                                0, 
                                                 NULL, argv[2], &si, &pi);
   if (svcUpdateProcessStarted) {
-    // Wait on the process to finish updating to avoid problems with 
-    // tests that are running.  maintenanceservice_installer.exe 
-    // will execute very fast anyway.
-    WaitForSingleObject(pi.hProcess, INFINITE);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
   }
   return svcUpdateProcessStarted;
 }
 
-
 /**
  * Executes a maintenance service command
  * 
  * @param  argc    The total number of arguments in argv
  * @param  argv    An array of null terminated strings to pass to the service, 
- * @return TRUE if the service command was started.
+ * @return ERROR_SUCCESS if the service command was started.
+ *         Less than 16000, a windows system error code from StartServiceW
+ *         More than 20000, 20000 + the last state of the service constant if
+ *         the last state is something other than stopped.
+ *         17001 if the SCM could not be opened
+ *         17002 if the service could not be opened
 */
-BOOL 
-StartServiceCommand(int argc, LPCWSTR* argv) 
+DWORD
+StartServiceCommand(int argc, LPCWSTR* argv)
 {
+  DWORD lastState = WaitForServiceStop(SVC_NAME, 5);
+  if (lastState != SERVICE_STOPPED) {
+    return 20000 + lastState;
+  }
+
   // Get a handle to the SCM database.
   SC_HANDLE serviceManager = OpenSCManager(NULL, NULL, 
                                            SC_MANAGER_CONNECT | 
                                            SC_MANAGER_ENUMERATE_SERVICE);
   if (!serviceManager)  {
-    return FALSE;
+    return 17001;
   }
 
   // Get a handle to the service.
   SC_HANDLE service = OpenServiceW(serviceManager, 
                                    SVC_NAME, 
-                                   SERVICE_QUERY_STATUS | SERVICE_START);
+                                   SERVICE_START);
   if (!service) {
     CloseServiceHandle(serviceManager);
-    return FALSE;
+    return 17002;
   }
 
-  // Make sure the service is not stopped.
-  SERVICE_STATUS_PROCESS ssp;
-  DWORD bytesNeeded;
-  if (!QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO, (LPBYTE)&ssp,
-                            sizeof(SERVICE_STATUS_PROCESS), &bytesNeeded)) {
-    CloseServiceHandle(service);
-    CloseServiceHandle(serviceManager);
-    return FALSE;
+  // Wait at most 5 seconds trying to start the service in case of errors
+  // like ERROR_SERVICE_DATABASE_LOCKED or ERROR_SERVICE_REQUEST_TIMEOUT.
+  const DWORD maxWaitMS = 5000;
+  DWORD currentWaitMS = 0;
+  DWORD lastError = ERROR_SUCCESS;
+  while (currentWaitMS < maxWaitMS) {
+    BOOL result = StartServiceW(service, argc, argv);
+    if (result) {
+      lastError = ERROR_SUCCESS;
+      break;
+    } else {
+      lastError = GetLastError();
+    }
+    Sleep(100);
+    currentWaitMS += 100;
   }
-
-  // The service is already in use.
-  if (ssp.dwCurrentState != SERVICE_STOPPED) {
-    CloseServiceHandle(service);
-    CloseServiceHandle(serviceManager);
-    return FALSE;
-  }
-
-  return StartServiceW(service, argc, argv);
+  CloseServiceHandle(service);
+  CloseServiceHandle(serviceManager);
+  return lastError;
 }
 
 /**
@@ -328,16 +334,16 @@ StartServiceCommand(int argc, LPCWSTR* argv)
  * @param  argc    The total number of arguments in argv
  * @param  argv    An array of null terminated strings to pass to the exePath, 
  *                 argv[0] must be the path to the updater.exe
- * @return TRUE if successful
+ * @return ERROR_SUCCESS if successful
  */
-BOOL
+DWORD
 LaunchServiceSoftwareUpdateCommand(DWORD argc, LPCWSTR* argv)
 {
   // The service command is the same as the updater.exe command line except 
   // it has 2 extra args: 1) The Path to udpater.exe, and 2) the command 
   // being executed which is "software-update"
   LPCWSTR *updaterServiceArgv = new LPCWSTR[argc + 2];
-  updaterServiceArgv[0] = L"maintenanceservice.exe";
+  updaterServiceArgv[0] = L"MozillaMaintenance";
   updaterServiceArgv[1] = L"software-update";
 
   for (int i = 0; i < argc; ++i) {
@@ -346,9 +352,9 @@ LaunchServiceSoftwareUpdateCommand(DWORD argc, LPCWSTR* argv)
 
   // Execute the service command by starting the service with
   // the passed in arguments.
-  BOOL result = StartServiceCommand(argc + 2, updaterServiceArgv);
+  DWORD ret = StartServiceCommand(argc + 2, updaterServiceArgv);
   delete[] updaterServiceArgv;
-  return result;
+  return ret;
 }
 
 /**
@@ -405,7 +411,7 @@ WriteStatusPending(LPCWSTR updateDirPath)
  * @return TRUE if successful
  */
 BOOL
-WriteStatusFailure(LPCWSTR updateDirPath, int errorCode) 
+WriteStatusFailure(LPCWSTR updateDirPath, int errorCode)
 {
   WCHAR updateStatusFilePath[MAX_PATH + 1];
   wcscpy(updateStatusFilePath, updateDirPath);
@@ -434,20 +440,53 @@ WriteStatusFailure(LPCWSTR updateDirPath, int errorCode)
  * This function does not stop the service, it just blocks until the service
  * is stopped.
  *
- * @param  serviceName    The service to wait for.
- * @param  maxWaitSeconds The maximum number of seconds to wait
- * @return TRUE if the service was stopped after waiting at most maxWaitSeconds
- *         FALSE on an error or when the service was not stopped
+ * @param  serviceName     The service to wait for.
+ * @param  maxWaitSeconds  The maximum number of seconds to wait
+ * @return state of the service after a timeout or when stopped.
+ *         A value of 255 is returned for an error. Typical values are:
+ *         SERVICE_STOPPED 0x00000001
+ *         SERVICE_START_PENDING 0x00000002
+ *         SERVICE_STOP_PENDING 0x00000003
+ *         SERVICE_RUNNING 0x00000004
+ *         SERVICE_CONTINUE_PENDING 0x00000005
+ *         SERVICE_PAUSE_PENDING 0x00000006
+ *         SERVICE_PAUSED 0x00000007
+ *         last status not set 0x000000CF
+ *         Could no query status 0x000000DF
+ *         Could not open service, access denied 0x000000EB
+ *         Could not open service, invalid handle 0x000000EC
+ *         Could not open service, invalid name 0x000000ED
+ *         Could not open service, does not exist 0x000000EE
+ *         Could not open service, other error 0x000000EF
+ *         Could not open SCM, access denied 0x000000FD
+ *         Could not open SCM, database does not exist 0x000000FE;
+ *         Could not open SCM, other error 0x000000FF;
+ * Note: The strange choice of error codes above SERVICE_PAUSED are chosen
+ * in case Windows comes out with other service stats higher than 7, they
+ * would likely call it 8 and above.  JS code that uses this in TestAUSHelper
+ * only handles values up to 255 so that's why we don't use GetLastError 
+ * directly.
  */
-BOOL
-WaitForServiceStop(LPCWSTR serviceName, DWORD maxWaitSeconds) 
+DWORD
+WaitForServiceStop(LPCWSTR serviceName, DWORD maxWaitSeconds)
 {
+  // 0x000000CF is defined above to be not set
+  DWORD lastServiceState = 0x000000CF;
+
   // Get a handle to the SCM database.
   SC_HANDLE serviceManager = OpenSCManager(NULL, NULL, 
                                            SC_MANAGER_CONNECT | 
                                            SC_MANAGER_ENUMERATE_SERVICE);
   if (!serviceManager)  {
-    return FALSE;
+    DWORD lastError = GetLastError();
+    switch(lastError) {
+    case ERROR_ACCESS_DENIED:
+      return 0x000000FD;
+    case ERROR_DATABASE_DOES_NOT_EXIST:
+      return 0x000000FE;
+    default:
+      return 0x000000FF;
+    }
   }
 
   // Get a handle to the service.
@@ -455,31 +494,140 @@ WaitForServiceStop(LPCWSTR serviceName, DWORD maxWaitSeconds)
                                    serviceName, 
                                    SERVICE_QUERY_STATUS);
   if (!service) {
+    DWORD lastError = GetLastError();
     CloseServiceHandle(serviceManager);
-    return FALSE;
+    switch(lastError) {
+    case ERROR_ACCESS_DENIED:
+      return 0x000000EB;
+    case ERROR_INVALID_HANDLE:
+      return 0x000000EC;
+    case ERROR_INVALID_NAME:
+      return 0x000000ED;
+    case ERROR_SERVICE_DOES_NOT_EXIST:
+      return 0x000000EE;
+    default:
+      return 0x000000EF;
+    } 
   }
 
-  BOOL gotStop = FALSE;
   DWORD currentWaitMS = 0;
+  SERVICE_STATUS_PROCESS ssp;
+  ssp.dwCurrentState = lastServiceState;
   while (currentWaitMS < maxWaitSeconds * 1000) {
-    // Make sure the service is not stopped.
-    SERVICE_STATUS_PROCESS ssp;
     DWORD bytesNeeded;
     if (!QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO, (LPBYTE)&ssp,
                               sizeof(SERVICE_STATUS_PROCESS), &bytesNeeded)) {
+      DWORD lastError = GetLastError();
+      switch (lastError) {
+      case ERROR_INVALID_HANDLE:
+        ssp.dwCurrentState = 0x000000D9;
+        break;
+      case ERROR_ACCESS_DENIED:
+        ssp.dwCurrentState = 0x000000DA;
+        break;
+      case ERROR_INSUFFICIENT_BUFFER:
+        ssp.dwCurrentState = 0x000000DB;
+        break;
+      case ERROR_INVALID_PARAMETER:
+        ssp.dwCurrentState = 0x000000DC;
+        break;
+      case ERROR_INVALID_LEVEL:
+        ssp.dwCurrentState = 0x000000DD;
+        break;
+      case ERROR_SHUTDOWN_IN_PROGRESS:
+        ssp.dwCurrentState = 0x000000DE;
+        break;
+      // These 3 errors can occur when the service is not yet stopped but
+      // it is stopping.
+      case ERROR_INVALID_SERVICE_CONTROL:
+      case ERROR_SERVICE_CANNOT_ACCEPT_CTRL:
+      case ERROR_SERVICE_NOT_ACTIVE:
+        currentWaitMS += 50;
+        Sleep(50);
+        continue;
+      default:
+        ssp.dwCurrentState = 0x000000DF;
+      }
+
+      // We couldn't query the status so just break out
       break;
     }
 
     // The service is already in use.
     if (ssp.dwCurrentState == SERVICE_STOPPED) {
-      gotStop = TRUE;
       break;
     }
     currentWaitMS += 50;
     Sleep(50);
   }
 
+  lastServiceState = ssp.dwCurrentState;
   CloseServiceHandle(service);
   CloseServiceHandle(serviceManager);
-  return gotStop;
+  return lastServiceState;
+}
+
+/**
+ * Determines if there is at least one process running for the specified
+ * application. A match will be found across any session for any user.
+ *
+ * @param process The process to check for existance
+ * @return ERROR_NOT_FOUND if the process was not found
+ * @       ERROR_SUCCESS if the process was found and there were no errors
+ * @       Other Win32 system error code for other errors
+**/
+DWORD
+IsProcessRunning(LPCWSTR filename)
+{
+  // Take a snapshot of all processes in the system.
+  HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if (INVALID_HANDLE_VALUE == snapshot) {
+    return GetLastError();
+  }
+  
+  PROCESSENTRY32W processEntry;
+  processEntry.dwSize = sizeof(PROCESSENTRY32W);
+  if (!Process32FirstW(snapshot, &processEntry)) {
+    DWORD lastError = GetLastError();
+    CloseHandle(snapshot);
+    return lastError;
+  }
+
+  do {
+    if (wcsicmp(filename, processEntry.szExeFile) == 0) {
+      CloseHandle(snapshot);
+      return ERROR_SUCCESS;
+    }
+  } while (Process32NextW(snapshot, &processEntry));
+  CloseHandle(snapshot);
+  return ERROR_NOT_FOUND;
+}
+
+/**
+ * Waits for the specified applicaiton to exit.
+ *
+ * @param filename   The application to wait for.
+ * @param maxSeconds The maximum amount of seconds to wait for all
+ *                   instances of the application to exit.
+ * @return  ERROR_SUCCESS if no instances of the application exist
+ *          WAIT_TIMEOUT if the process is still running after maxSeconds.
+ *          Any other Win32 system error code.
+*/
+DWORD
+WaitForProcessExit(LPCWSTR filename, DWORD maxSeconds)
+{
+  DWORD applicationRunningError = WAIT_TIMEOUT;
+  for(DWORD i = 0; i < maxSeconds; i++) {
+    DWORD applicationRunningError = IsProcessRunning(filename);
+    if (ERROR_NOT_FOUND == applicationRunningError) {
+      return ERROR_SUCCESS;
+    }
+    Sleep(1000);
+  }
+
+  if (ERROR_SUCCESS == applicationRunningError) {
+    return WAIT_TIMEOUT;
+  }
+
+  return applicationRunningError;
 }

@@ -21,7 +21,7 @@ const TEST_FILES = [
 ];
 
 function run_test() {
-  if (!shouldRunServiceTest()) {
+  if (!shouldRunServiceTest(true)) {
     return;
   }
 

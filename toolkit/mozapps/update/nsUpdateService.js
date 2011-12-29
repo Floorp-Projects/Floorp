@@ -148,6 +148,8 @@ const SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS = 16001;
 const SERVICE_UPDATER_SIGN_ERROR           = 16002;
 const SERVICE_UPDATER_COMPARE_ERROR        = 16003;
 const SERVICE_UPDATER_IDENTITY_ERROR       = 16004;
+const SERVICE_STILL_APPLYING_ON_SUCCESS    = 16005;
+const SERVICE_STILL_APPLYING_ON_FAILURE    = 16006;
 
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
@@ -1439,7 +1441,9 @@ UpdateService.prototype = {
             update.errorCode == SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS ||
             update.errorCode == SERVICE_UPDATER_SIGN_ERROR ||
             update.errorCode == SERVICE_UPDATER_COMPARE_ERROR ||
-            update.errorCode == SERVICE_UPDATER_IDENTITY_ERROR) {
+            update.errorCode == SERVICE_UPDATER_IDENTITY_ERROR ||
+            update.errorCode == SERVICE_STILL_APPLYING_ON_SUCCESS ||
+            update.errorCode == SERVICE_STILL_APPLYING_ON_FAILURE) {
           var failCount = getPref("getIntPref", 
                                   PREF_APP_UPDATE_SERVICE_ERRORS, 0);
           var maxFail = getPref("getIntPref", 
