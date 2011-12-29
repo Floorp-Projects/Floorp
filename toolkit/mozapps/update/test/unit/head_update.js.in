@@ -462,7 +462,12 @@ let gServiceLaunchedCallbackArgs = null;
  *
  * @return true if the test should run and false if it shouldn't.
  */
-function shouldRunServiceTest() {
+function shouldRunServiceTest(aFirstTest) {
+  // In case the machine is running an old maintenance service or if it
+  // is not installed, and permissions exist to install it.  Then install
+  // the newer bin that we have.
+  attemptServiceInstall();
+
   const REG_PATH = "SOFTWARE\\Mozilla\\MaintenanceService\\" +
                    "3932ecacee736d366d6436db0f55bce4";
 
@@ -490,17 +495,38 @@ function shouldRunServiceTest() {
     updaterBinPath = '"' + updaterBinPath + '"';
   }
 
+  // Check to make sure the service is installed
   let helperBin = do_get_file(HELPER_BIN_FILE);
-  let args = ["check-signature", updaterBinPath];
+  let args = ["wait-for-service-stop", "MozillaMaintenance", "10"];
   let process = AUS_Cc["@mozilla.org/process/util;1"].
                 createInstance(AUS_Ci.nsIProcess);
   process.init(helperBin);
+  logTestInfo("Checking if the service exists on this machine.");
   process.run(true, args, args.length);
+  if (process.exitValue == 0xEE) {
+    logTestInfo("this test can only run when the service is installed.");
+    return false;
+  } else {
+    logTestInfo("Service exists, return value: " + process.exitValue);
+  }
 
+  // If this is the first test in the series, then there is no reason the
+  // service should be anything but stopped, so be strict here and throw
+  // an error.
+  if (aFirstTest && process.exitValue != 0) {
+    do_throw("First test, check for service stopped state returned error " + 
+             process.exitValue);
+  }
+
+  // Make sure the binaries are signed
+  args = ["check-signature", updaterBinPath];
+  process = AUS_Cc["@mozilla.org/process/util;1"].
+            createInstance(AUS_Ci.nsIProcess);
+  process.init(helperBin);
+  process.run(true, args, args.length);
   if (process.exitValue == 0) {
     return true;
   }
-
   logTestInfo("this test can only run on builds with signed binaries. " +
               HELPER_BIN_FILE + " returned " + process.exitValue)
   return false;
@@ -524,6 +550,34 @@ function copyBinToApplyToDir(filename) {
     do_print("copying " + fileToCopy.path + " to: " + applyToUpdater.path);
     fileToCopy.copyTo(applyToUpdater, filename);
   }
+}
+
+/**
+ * Attempts to upgrade the maintenance service if permissions are allowed.
+ * This is useful for XP where we have permission to upgrade in case an
+ * older service installer exists.  Also if the user manually installed into
+ * a unprivileged location.
+*/
+function attemptServiceInstall() {
+  var version = AUS_Cc["@mozilla.org/system-info;1"]
+                .getService(AUS_Ci.nsIPropertyBag2)
+                .getProperty("version");
+  var isVistaOrHigher = (parseFloat(version) >= 6.0);
+  if (isVistaOrHigher) {
+    return;
+  }
+  
+  let binDir = getGREDir();
+  let installerFile = binDir.clone();
+  installerFile.append(MAINTENANCE_SERVICE_INSTALLER_BIN_FILE);
+  if (!installerFile.exists()) {
+    do_throw(MAINTENANCE_SERVICE_INSTALLER_BIN_FILE + " not found.");
+  }
+  let installerProcess = AUS_Cc["@mozilla.org/process/util;1"].
+                         createInstance(AUS_Ci.nsIProcess);
+  installerProcess.init(installerFile);
+  logTestInfo("Starting installer process...");
+  installerProcess.run(true, [], 0);
 }
 
 /**
@@ -554,26 +608,60 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
     file.append("maintenanceservice.log");
     return readFile(file);
   }
+  function waitServiceApps() {
+    // maintenanceservice_installer.exe is started async during updates.
+    waitForApplicationStop("maintenanceservice_installer.exe");
+    // maintenanceservice_tmp.exe is started async from the service installer.
+    waitForApplicationStop("maintenanceservice_tmp.exe");
+    // In case the SCM thinks the service is stopped, but process still exists.
+    waitForApplicationStop("maintenanceservice.exe");
+  }
   function waitForServiceStop(aFailTest) {
+    waitServiceApps(); 
     logTestInfo("Waiting for service to stop if necessary...");
     // Use the helper bin to ensure the service is stopped. If not
-    // stopped then wait for the service to be stopped (at most 20 seconds)
+    // stopped then wait for the service to be stopped (at most 120 seconds)
     let helperBin = do_get_file(HELPER_BIN_FILE);
     let helperBinArgs = ["wait-for-service-stop", 
                          "MozillaMaintenance", 
-                         "20"];
+                         "120"];
+    let helperBinProcess = AUS_Cc["@mozilla.org/process/util;1"].
+                           createInstance(AUS_Ci.nsIProcess);
+    helperBinProcess.init(helperBin);
+    logTestInfo("Stopping service...");
+    helperBinProcess.run(true, helperBinArgs, helperBinArgs.length);
+    if (helperBinProcess.exitValue == 0xEE) {
+      do_throw("The service does not exist on this machine.  Return value: " +
+               helperBinProcess.exitValue);
+    } else if (helperBinProcess.exitValue != 0) {
+      if (aFailTest) {
+        do_throw("maintenance service did not stop, last state: " +
+                 helperBinProcess.exitValue + ". Forcing test failure.");
+      } else {
+        logTestInfo("maintenance service did not stop, last state: " + 
+                    helperBinProcess.exitValue + ".  May cause failures.");
+      }
+    } else {
+      logTestInfo("Service stopped.");
+    }
+    waitServiceApps(); 
+  }
+  function waitForApplicationStop(application) {
+    logTestInfo("Waiting for " + application + " to stop if " + 
+                "necessary...");
+    // Use the helper bin to ensure the application is stopped. 
+    // If not, then wait for it to be stopped (at most 120 seconds)
+    let helperBin = do_get_file(HELPER_BIN_FILE);
+    let helperBinArgs = ["wait-for-application-exit", 
+                         application, 
+                         "120"];
     let helperBinProcess = AUS_Cc["@mozilla.org/process/util;1"].
                            createInstance(AUS_Ci.nsIProcess);
     helperBinProcess.init(helperBin);
     helperBinProcess.run(true, helperBinArgs, helperBinArgs.length);
     if (helperBinProcess.exitValue != 0) {
-      if (aFailTest) {
-        do_throw("maintenance service did not stop, forcing test failure.");
-      } else {
-        logTestInfo("maintenance service did not stop, may cause failures.");
-      }
-    } else {
-      logTestInfo("Service stopped.");
+      do_throw(application + " did not stop, last state: " +
+               helperBinProcess.exitValue + ". Forcing test failure.");
     }
   }
 
@@ -586,19 +674,6 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
 
     do_register_cleanup(function serviceCleanup() {
       resetEnvironment();
-
-      // Remove the copy of the application executable used for the test on
-      // Windows if it exists.
-      let appBinCopy = getCurrentProcessDir();
-      appBinCopy.append(TEST_ID + FILE_WIN_TEST_EXE);
-      if (appBinCopy.exists()) {
-        try {
-          appBinCopy.remove(false);
-        }
-        catch (e) {
-          logTestInfo("unable to remove file during cleanup. Exception: " + e);
-        }
-      }
 
       // This will delete the app console log file if it exists.
       try {
@@ -672,7 +747,7 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
   copyBinToApplyToDir(MAINTENANCE_SERVICE_INSTALLER_BIN_FILE);
 
   // Firefox does not wait for the service command to finish, but
-  // we still launch the process sync to avoid intemittent failures with
+  // we still launch the process sync to avoid intermittent failures with
   // the log file not being written out yet.
   // We will rely on watching the update.status file and waiting for the service
   // to stop to know the service command is done.
@@ -696,13 +771,14 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
                   " status, got " + status + " for now...");
       return;
     }
+    
+    // Make sure all of the logs are written out.
+    waitForServiceStop(false);
+
     do_check_eq(status, aExpectedStatus);
 
     timer.cancel();
     timer = null;
-
-    // Make sure all of the logs are written out.
-    waitForServiceStop(false);
 
     if (aCheckSvcLog) {
       checkServiceLogs(svcOriginalLog);
@@ -1206,8 +1282,30 @@ function checkCallbackServiceLog() {
               "and the expected command line arguments passed to it");
   do_check_eq(logContents, expectedLogContents);
 
-  // Use a timeout to give any files that were in use additional time to close.
-  do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
+
+  (function removeCallbackCopy() {
+    // Remove the copy of the application executable used for the test on
+    // Windows if it exists.
+    let appBinCopy = getCurrentProcessDir();
+    appBinCopy.append(TEST_ID + FILE_WIN_TEST_EXE);
+    if (appBinCopy.exists()) {
+      try {
+        appBinCopy.remove(false);
+        // Use a timeout to give any files that were in use additional 
+        // time to close.  Same as updater.exe without service tests.
+        do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
+      }
+      catch (e) {
+        logTestInfo("unable to remove file during cleanup. Exception: " + e);
+        do_timeout(TEST_HELPER_TIMEOUT, removeCallbackCopy);
+      }
+    } else {
+      do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
+    }
+  })();
+
+
+
 }
 
 /**

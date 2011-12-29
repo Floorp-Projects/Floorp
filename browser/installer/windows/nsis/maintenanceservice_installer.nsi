@@ -35,9 +35,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# Required Plugins:
-# ServicesHelper Mozilla specific plugin that is located in /other-licenses/nsis
-
 ; Set verbosity to 3 (e.g. no script) to lessen the noise in the build logs
 !verbose 3
 
@@ -170,18 +167,12 @@ Section "MaintenanceService"
   CreateDirectory $INSTDIR
   SetOutPath $INSTDIR
 
-  ; If the service already exists, then stop it if it is running.
-  ServicesHelper::IsInstalled "MozillaMaintenance"
-  Pop $R9
-  ${If} $R9 == 1
-    ; Stop the maintenance service so we can overwrite any
-    ; binaries that it uses.
-    ServicesHelper::Stop "MozillaMaintenance"
-  ${EndIf}
-
-  ; If we don't have maintenanceservice.exe already installed
-  ; then keep that name.  If we do use maintenanceservice_tmp.exe
-  ; which will auto install itself when you call it with the install parameter.
+  ; If the service already exists, then it will be stopped when upgrading it
+  ; via the maintenanceservice_tmp.exe command executed below.
+  ; The maintenanceservice_tmp.exe command will rename the file to
+  ; maintenanceservice.exe if maintenanceservice_tmp.exe is newer.
+  ; If the service does not exist yet, we install it and drop the file on
+  ; disk as maintenanceservice.exe directly.
   StrCpy $TempMaintServiceName "maintenanceservice.exe"
   IfFileExists "$INSTDIR\maintenanceservice.exe" 0 skipAlreadyExists
     StrCpy $TempMaintServiceName "maintenanceservice_tmp.exe"

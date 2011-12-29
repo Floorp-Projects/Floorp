@@ -90,7 +90,7 @@ LPCTSTR UACHelper::PrivsToDisable[] = {
  * @return TRUE if the OS is vista or later.
  */
 BOOL
-UACHelper::IsVistaOrLater() 
+UACHelper::IsVistaOrLater()
 {
   // Check if we are running Vista or later.
   OSVERSIONINFO osInfo;
@@ -127,7 +127,7 @@ UACHelper::OpenUserToken(DWORD sessionID)
  *         Caller should close the handle.
  */
 HANDLE
-UACHelper::OpenLinkedToken(HANDLE token) 
+UACHelper::OpenLinkedToken(HANDLE token)
 {
   // Magic below...
   // UAC creates 2 tokens.  One is the restricted token which we have.
