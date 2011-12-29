@@ -140,7 +140,12 @@ nsSVGForeignObjectFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   nsSVGForeignObjectFrameBase::DidSetStyleContext(aOldStyleContext);
 
-  UpdateGraphic();
+  // No need to invalidate before first reflow - that will happen elsewhere.
+  // Moreover we haven't been initialised properly yet so we may not have the
+  // right state bits.
+  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    UpdateGraphic();
+  }
 }
 
 NS_IMETHODIMP
