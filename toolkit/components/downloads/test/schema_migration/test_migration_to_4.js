@@ -55,6 +55,7 @@ function run_test()
 
   // Check that the column exists (statement should not throw)
   stmt = dbConn.createStatement("SELECT entityID FROM moz_downloads");
+  stmt.finalize();
 
   // now we check the entries
   stmt = dbConn.createStatement(
@@ -72,7 +73,7 @@ function run_test()
   do_check_eq(1, stmt.getInt32(5));
   do_check_eq("http://www.mozilla.com/en-US/products/download.html?product=firefox-2.0.0.6&os=osx&lang=en-US",stmt.getUTF8String(6));
   do_check_true(stmt.getIsNull(7));
-  stmt.reset();
+  stmt.finalize();
 
   cleanup();
 }

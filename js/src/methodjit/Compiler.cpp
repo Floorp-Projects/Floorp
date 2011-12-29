@@ -7610,29 +7610,6 @@ mjit::Compiler::pushedSingleton(unsigned pushed)
     return types->getSingleton(cx);
 }
 
-bool
-mjit::Compiler::arrayPrototypeHasIndexedProperty()
-{
-    if (!cx->typeInferenceEnabled() || !globalObj)
-        return true;
-
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, NULL, JSProto_Array, &proto, NULL))
-        return true;
-
-    while (proto) {
-        types::TypeObject *type = proto->getType(cx);
-        if (type->unknownProperties())
-            return true;
-        types::TypeSet *indexTypes = type->getProperty(cx, JSID_VOID, false);
-        if (!indexTypes || indexTypes->isOwnProperty(cx, type, true) || indexTypes->knownNonEmpty(cx))
-            return true;
-        proto = proto->getProto();
-    }
-
-    return false;
-}
-
 /*
  * Barriers overview.
  *

@@ -4780,7 +4780,7 @@ Parser::assignExpr()
     return ParseNode::newBinaryOrAppend(kind, op, lhs, rhs, tc);
 }
 
-static ParseNode *
+static bool
 SetLvalKid(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn, ParseNode *kid,
            const char *name)
 {
@@ -4795,25 +4795,24 @@ SetLvalKid(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn, Parse
         !kid->isKind(PNK_LB))
     {
         ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR, JSMSG_BAD_OPERAND, name);
-        return NULL;
+        return false;
     }
     if (!CheckStrictAssignment(cx, tc, kid))
-        return NULL;
+        return false;
     pn->pn_kid = kid;
-    return kid;
+    return true;
 }
 
 static const char incop_name_str[][10] = {"increment", "decrement"};
 
 static JSBool
 SetIncOpKid(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn, ParseNode *kid,
-            TokenKind tt, JSBool preorder)
+            TokenKind tt, bool preorder)
 {
     JSOp op;
 
-    kid = SetLvalKid(cx, ts, tc, pn, kid, incop_name_str[tt == TOK_DEC]);
-    if (!kid)
-        return JS_FALSE;
+    if (!SetLvalKid(cx, ts, tc, pn, kid, incop_name_str[tt == TOK_DEC]))
+        return false;
     switch (kid->getKind()) {
       case PNK_NAME:
         op = (tt == TOK_INC)
@@ -4885,13 +4884,13 @@ Parser::unaryExpr()
 
       case TOK_INC:
       case TOK_DEC:
-        pn = UnaryNode::create((tt == TOK_INC) ? PNK_INC : PNK_DEC, tc);
+        pn = UnaryNode::create((tt == TOK_INC) ? PNK_PREINCREMENT : PNK_PREDECREMENT, tc);
         if (!pn)
             return NULL;
         pn2 = memberExpr(JS_TRUE);
         if (!pn2)
             return NULL;
-        if (!SetIncOpKid(context, &tokenStream, tc, pn, pn2, tt, JS_TRUE))
+        if (!SetIncOpKid(context, &tokenStream, tc, pn, pn2, tt, true))
             return NULL;
         pn->pn_pos.end = pn2->pn_pos.end;
         break;
@@ -4954,11 +4953,11 @@ Parser::unaryExpr()
         if (tokenStream.onCurrentLine(pn->pn_pos)) {
             tt = tokenStream.peekTokenSameLine(TSF_OPERAND);
             if (tt == TOK_INC || tt == TOK_DEC) {
-                (void) tokenStream.getToken();
-                pn2 = UnaryNode::create((tt == TOK_INC) ? PNK_INC : PNK_DEC, tc);
+                tokenStream.consumeKnownToken(tt);
+                pn2 = UnaryNode::create((tt == TOK_INC) ? PNK_POSTINCREMENT : PNK_POSTDECREMENT, tc);
                 if (!pn2)
                     return NULL;
-                if (!SetIncOpKid(context, &tokenStream, tc, pn2, pn, tt, JS_FALSE))
+                if (!SetIncOpKid(context, &tokenStream, tc, pn2, pn, tt, false))
                     return NULL;
                 pn2->pn_pos.begin = pn->pn_pos.begin;
                 pn = pn2;
@@ -6821,13 +6820,22 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                     pn2 = ParseNode::newBinaryOrAppend(PNK_COLON, op, pn3, pn2, tc);
                     goto skip;
                 }
-              case TOK_STRING:
+              case TOK_STRING: {
                 atom = tokenStream.currentToken().atom();
-                pn3 = NullaryNode::create(PNK_STRING, tc);
-                if (!pn3)
-                    return NULL;
-                pn3->pn_atom = atom;
+                uint32_t index;
+                if (atom->isIndex(&index)) {
+                    pn3 = NullaryNode::create(PNK_NUMBER, tc);
+                    if (!pn3)
+                        return NULL;
+                    pn3->pn_dval = index;
+                } else {
+                    pn3 = NullaryNode::create(PNK_STRING, tc);
+                    if (!pn3)
+                        return NULL;
+                    pn3->pn_atom = atom;
+                }
                 break;
+              }
               case TOK_RC:
                 goto end_obj_init;
               default:

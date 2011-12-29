@@ -150,6 +150,13 @@ const EXPECTED_FAIL = 1;
 const EXPECTED_RANDOM = 2;
 const EXPECTED_DEATH = 3;  // test must be skipped to avoid e.g. crash/hang
 
+// types of preference value we might want to set for a specific test
+const PREF_BOOLEAN = 0;
+const PREF_STRING  = 1;
+const PREF_INTEGER = 2;
+
+var gPrefsToRestore = [];
+
 const gProtocolRE = /^\w+:/;
 
 var HTTP_SERVER_PORT = 4444;
@@ -681,8 +688,9 @@ function ReadManifest(aURL, inherited_status)
         var maxAsserts = 0;
         var needs_focus = false;
         var slow = false;
+        var prefSettings = [];
         
-        while (items[0].match(/^(fails|needs-focus|random|skip|asserts|slow|require-or|silentfail)/)) {
+        while (items[0].match(/^(fails|needs-focus|random|skip|asserts|slow|require-or|silentfail|pref)/)) {
             var item = items.shift();
             var stat;
             var cond;
@@ -744,6 +752,24 @@ function ReadManifest(aURL, inherited_status)
             } else if (item == "silentfail") {
                 cond = false;
                 allow_silent_fail = true;
+            } else if ((m = item.match(/^pref\((.+?),(.*)\)$/))) {
+                cond = false;
+                var prefName = m[1];
+                var prefVal = Components.utils.evalInSandbox("(" + m[2] + ")", sandbox);
+                var prefType;
+                var valType = typeof(prefVal);
+                if (valType == "boolean") {
+                    prefType = PREF_BOOLEAN;
+                } else if (valType == "string") {
+                    prefType = PREF_STRING;
+                } else if (valType == "number" && (parseInt(prefVal) == prefVal)) {
+                    prefType = PREF_INTEGER;
+                } else {
+                    throw "Error in pref value in manifest file " + aURL.spec + " line " + lineNo;
+                }
+                prefSettings.push( { name: prefName,
+                                     type: prefType,
+                                     value: prefVal } );
             } else {
                 throw "Error 1 in manifest file " + aURL.spec + " line " + lineNo;
             }
@@ -822,6 +848,7 @@ function ReadManifest(aURL, inherited_status)
                           maxAsserts: maxAsserts,
                           needsFocus: needs_focus,
                           slow: slow,
+                          prefSettings: prefSettings,
                           url1: testURI,
                           url2: null } );
         } else if (items[0] == TYPE_SCRIPT) {
@@ -844,6 +871,7 @@ function ReadManifest(aURL, inherited_status)
                           maxAsserts: maxAsserts,
                           needsFocus: needs_focus,
                           slow: slow,
+                          prefSettings: prefSettings,
                           url1: testURI,
                           url2: null } );
         } else if (items[0] == TYPE_REFTEST_EQUAL || items[0] == TYPE_REFTEST_NOTEQUAL) {
@@ -869,6 +897,7 @@ function ReadManifest(aURL, inherited_status)
                           maxAsserts: maxAsserts,
                           needsFocus: needs_focus,
                           slow: slow,
+                          prefSettings: prefSettings,
                           url1: testURI,
                           url2: refURI } );
         } else {
@@ -897,7 +926,8 @@ function BuildUseCounts()
         var url = gURLs[i];
         if (url.expected != EXPECTED_DEATH &&
             (url.type == TYPE_REFTEST_EQUAL ||
-             url.type == TYPE_REFTEST_NOTEQUAL)) {
+             url.type == TYPE_REFTEST_NOTEQUAL) &&
+            url.prefSettings.length == 0) {
             AddURIUseCount(gURLs[i].url1);
             AddURIUseCount(gURLs[i].url2);
         }
@@ -968,6 +998,8 @@ function StartCurrentTest()
 {
     gTestLog = [];
 
+    RestoreChangedPreferences();
+
     // make sure we don't run tests that are expected to kill the browser
     while (gURLs.length > 0) {
         var test = gURLs[0];
@@ -983,6 +1015,77 @@ function StartCurrentTest()
             ++gTestResults.Slow;
             gDumpLog("REFTEST TEST-KNOWN-SLOW | " + test.url1.spec + " | (SLOW)\n");
             gURLs.shift();
+        } else if (gURLs[0].prefSettings.length > 0) {
+            var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                        getService(Components.interfaces.nsIPrefBranch2);
+            var badPref = undefined;
+            try {
+                gURLs[0].prefSettings.forEach(function(ps) {
+                    var oldVal;
+                    if (ps.type == PREF_BOOLEAN) {
+                        try {
+                            oldVal = prefs.getBoolPref(ps.name);
+                        } catch (e) {
+                            badPref = "boolean preference '" + ps.name + "'";
+                            throw "bad pref";
+                        }
+                    } else if (ps.type == PREF_STRING) {
+                        try {
+                            oldVal = prefs.getCharPref(ps.name);
+                        } catch (e) {
+                            badPref = "string preference '" + ps.name + "'";
+                            throw "bad pref";
+                        }
+                    } else if (ps.type == PREF_INTEGER) {
+                        try {
+                            oldVal = prefs.getIntPref(ps.name);
+                        } catch (e) {
+                            badPref = "integer preference '" + ps.name + "'";
+                            throw "bad pref";
+                        }
+                    } else {
+                        throw "internal error - unknown preference type";
+                    }
+                    if (oldVal != ps.value) {
+                        gPrefsToRestore.push( { name: ps.name,
+                                                type: ps.type,
+                                                value: oldVal } );
+                        var value = ps.value;
+                        if (ps.type == PREF_BOOLEAN) {
+                            prefs.setBoolPref(ps.name, value);
+                        } else if (ps.type == PREF_STRING) {
+                            prefs.setCharPref(ps.name, value);
+                            value = '"' + value + '"';
+                        } else if (ps.type == PREF_INTEGER) {
+                            prefs.setIntPref(ps.name, value);
+                        }
+                        gDumpLog("SET PREFERENCE pref(" + ps.name + "," + value + ")\n");
+                    }
+                });
+            } catch (e) {
+                if (e == "bad pref") {
+                    if (test.expected == EXPECTED_FAIL) {
+                        gDumpLog("REFTEST TEST-KNOWN-FAIL | " + test.url1.spec +
+                                 " | (SKIPPED; " + badPref + " not known or wrong type)\n");
+                        ++gTestResults.Skip;
+                    } else {
+                        gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | " + test.url1.spec +
+                                 " | " + badPref + " not known or wrong type\n");
+                        ++gTestResults.UnexpectedFail;
+                    }
+                } else {
+                    throw e;
+                }
+            }
+            if (badPref != undefined) {
+                // undo anything we changed
+                RestoreChangedPreferences();
+
+                // skip the test that had a bad preference
+                gURLs.shift();
+            } else {
+                break;
+            }
         } else {
             break;
         }
@@ -1004,7 +1107,8 @@ function StartCurrentURI(aState)
     gState = aState;
     gCurrentURL = gURLs[0]["url" + aState].spec;
 
-    if (gURICanvases[gCurrentURL] &&
+    if (gURLs[0].prefSettings.length == 0 &&
+        gURICanvases[gCurrentURL] &&
         (gURLs[0].type == TYPE_REFTEST_EQUAL ||
          gURLs[0].type == TYPE_REFTEST_NOTEQUAL) &&
         gURLs[0].maxAsserts == 0) {
@@ -1264,7 +1368,8 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
         return;
     }
 
-    if (gURICanvases[gCurrentURL]) {
+    if (gURLs[0].prefSettings.length == 0 &&
+        gURICanvases[gCurrentURL]) {
         gCurrentCanvas = gURICanvases[gCurrentURL];
     }
     if (gCurrentCanvas == null) {
@@ -1343,8 +1448,10 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
                 FlushTestLog();
             }
 
-            UpdateCanvasCache(gURLs[0].url1, gCanvas1);
-            UpdateCanvasCache(gURLs[0].url2, gCanvas2);
+            if (gURLs[0].prefSettings.length == 0) {
+                UpdateCanvasCache(gURLs[0].url1, gCanvas1);
+                UpdateCanvasCache(gURLs[0].url2, gCanvas2);
+            }
 
             CleanUpCrashDumpFiles();
             FinishTestItem();
@@ -1472,6 +1579,27 @@ function ResetRenderingState()
 {
     SendResetRenderingState();
     // We would want to clear any viewconfig here, if we add support for it
+}
+
+function RestoreChangedPreferences()
+{
+    if (gPrefsToRestore.length > 0) {
+        var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                    getService(Components.interfaces.nsIPrefBranch2);
+        gPrefsToRestore.forEach(function(ps) {
+            var value = ps.value;
+            if (ps.type == PREF_BOOLEAN) {
+                prefs.setBoolPref(ps.name, value);
+            } else if (ps.type == PREF_STRING) {
+                prefs.setCharPref(ps.name, value);
+                value = '"' + value + '"';
+            } else if (ps.type == PREF_INTEGER) {
+                prefs.setIntPref(ps.name, value);
+            }
+            gDumpLog("RESTORE PREFERENCE pref(" + ps.name + "," + value + ")\n");
+        });
+        gPrefsToRestore = [];
+    }
 }
 
 function RegisterMessageListenersAndLoadContentScript()

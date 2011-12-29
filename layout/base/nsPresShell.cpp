@@ -5818,7 +5818,28 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
         return NS_OK;
 
       if (presShell != this) {
-        return presShell->HandleEvent(presShell->GetRootFrame(), aEvent, true, aEventStatus);
+        nsIFrame* frame = presShell->GetRootFrame();
+        if (!frame) {
+          if (aEvent->message == NS_QUERY_TEXT_CONTENT ||
+              NS_IS_CONTENT_COMMAND_EVENT(aEvent)) {
+            return NS_OK;
+          }
+
+          nsIView* view = presShell->GetViewManager()->GetRootView();
+          while (view && !view->GetFrame()) {
+            view = view->GetParent();
+          }
+
+          if (view) {
+            frame = view->GetFrame();
+          }
+        }
+
+        if (!frame)
+          return NS_OK;
+
+        nsCOMPtr<nsIPresShell> shell = frame->PresContext()->GetPresShell();
+        return shell->HandleEvent(frame, aEvent, true, aEventStatus);
       }
     }
   }
