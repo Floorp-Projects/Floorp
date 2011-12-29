@@ -2182,7 +2182,7 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
   // get the rowspan and colspan from the cell map since the content may have changed
   bool zeroColSpan;
   PRUint32 numCols = aMap.GetColCount();
-  PRInt32 rowSpan = GetRowSpan(aRowIndex, aColIndex, false);
+  PRInt32 rowSpan = GetRowSpan(aRowIndex, aColIndex, true);
   PRUint32 colSpan = GetEffectiveColSpan(aMap, aRowIndex, aColIndex, zeroColSpan);
   PRUint32 endRowIndex = aRowIndex + rowSpan - 1;
   PRUint32 endColIndex = aColIndex + colSpan - 1;
