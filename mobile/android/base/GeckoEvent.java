@@ -78,6 +78,7 @@ public class GeckoEvent {
     public static final int ACTIVITY_START = 17;
     public static final int BROADCAST = 19;
     public static final int VIEWPORT = 20;
+    public static final int EXPOSE = 21;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
