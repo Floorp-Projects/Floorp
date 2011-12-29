@@ -901,12 +901,14 @@ public:
 
 class NotifyRunnable : public WorkerControlRunnable
 {
+  bool mFromJSObjectFinalizer;
   Status mStatus;
 
 public:
-  NotifyRunnable(WorkerPrivate* aWorkerPrivate, Status aStatus)
+  NotifyRunnable(WorkerPrivate* aWorkerPrivate, bool aFromJSObjectFinalizer,
+                 Status aStatus)
   : WorkerControlRunnable(aWorkerPrivate, WorkerThread, UnchangedBusyCount),
-    mStatus(aStatus)
+    mFromJSObjectFinalizer(aFromJSObjectFinalizer), mStatus(aStatus)
   {
     NS_ASSERTION(aStatus == Terminating || aStatus == Canceling ||
                  aStatus == Killing, "Bad status!");
@@ -916,8 +918,12 @@ public:
   PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
     // Modify here, but not in PostRun! This busy count addition will be matched
-    // by the CloseEventRunnable.
-    return aWorkerPrivate->ModifyBusyCount(aCx, true);
+    // by the CloseEventRunnable. If we're running from a finalizer there is no
+    // need to modify the count because future changes to the busy count will
+    // have no effect.
+    return mFromJSObjectFinalizer ?
+           true :
+           aWorkerPrivate->ModifyBusyCount(aCx, true);
   }
 
   bool
@@ -1789,7 +1795,8 @@ WorkerPrivateParent<Derived>::Start()
 
 template <class Derived>
 bool
-WorkerPrivateParent<Derived>::Notify(JSContext* aCx, Status aStatus)
+WorkerPrivateParent<Derived>::NotifyPrivate(JSContext* aCx, Status aStatus,
+                                            bool aFromJSObjectFinalizer)
 {
   AssertIsOnParentThread();
 
@@ -1830,8 +1837,9 @@ WorkerPrivateParent<Derived>::Notify(JSContext* aCx, Status aStatus)
   mQueuedRunnables.Clear();
 
   nsRefPtr<NotifyRunnable> runnable =
-    new NotifyRunnable(ParentAsWorkerPrivate(), aStatus);
-  return runnable->Dispatch(aCx);
+    new NotifyRunnable(ParentAsWorkerPrivate(), aFromJSObjectFinalizer,
+                       aStatus);
+  return runnable->Dispatch(aFromJSObjectFinalizer ? nsnull : aCx);
 }
 
 template <class Derived>
@@ -1906,9 +1914,10 @@ WorkerPrivateParent<Derived>::FinalizeInstance(JSContext* aCx,
   AssertIsOnParentThread();
 
   if (mJSObject) {
-    // Make sure we're in the right compartment.
+    // Make sure we're in the right compartment, but only enter one if this is
+    // not running from a finalizer.
     JSAutoEnterCompartment ac;
-    if (!ac.enter(aCx, mJSObject)) {
+    if (!aFromJSFinalizer && !ac.enter(aCx, mJSObject)) {
       NS_ERROR("How can this fail?!");
       return;
     }
@@ -1922,7 +1931,7 @@ WorkerPrivateParent<Derived>::FinalizeInstance(JSContext* aCx,
     // Unroot.
     RootJSObject(aCx, false);
 
-    if (!Terminate(aCx)) {
+    if (!TerminatePrivate(aCx, aFromJSFinalizer)) {
       NS_WARNING("Failed to terminate!");
     }
 
