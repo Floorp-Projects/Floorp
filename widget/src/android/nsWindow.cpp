@@ -1168,6 +1168,21 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     if (gAndroidBounds.width <= 0 || gAndroidBounds.height <= 0)
         return;
 
+    /*
+     * Check to see whether browser.js wants us to draw. This will be false during page
+     * transitions, in which case we immediately bail out.
+     */
+    nsCOMPtr<nsIAndroidDrawMetadataProvider> metadataProvider =
+        AndroidBridge::Bridge()->GetDrawMetadataProvider();
+
+    bool shouldDraw = true;
+    if (metadataProvider) {
+        metadataProvider->DrawingAllowed(&shouldDraw);
+    }
+    if (!shouldDraw) {
+        return;
+    }
+
     AndroidGeckoSoftwareLayerClient &client =
         AndroidBridge::Bridge()->GetSoftwareLayerClient();
     client.BeginDrawing(gAndroidBounds.width, gAndroidBounds.height);
@@ -1207,11 +1222,8 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
               DrawTo(targetSurface, ae->Rect());
             }
 
-            {
-                nsCOMPtr<nsIAndroidDrawMetadataProvider> metadataProvider =
-                    AndroidBridge::Bridge()->GetDrawMetadataProvider();
-                if (metadataProvider)
-                    metadataProvider->GetDrawMetadata(metadata);
+            if (metadataProvider) {
+                metadataProvider->GetDrawMetadata(metadata);
             }
         }
         if (sHasDirectTexture) {
