@@ -50,10 +50,6 @@ JS_REQUIRES_STACK PropertyCacheEntry *
 PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *pobj,
                     const Shape *shape)
 {
-    JSOp op;
-    const JSCodeSpec *cs;
-    PropertyCacheEntry *entry;
-
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
     JS_ASSERT(!cx->runtime->gcRunning);
 
@@ -85,7 +81,6 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
 
     uintN protoIndex = 0;
     while (tmp != pobj) {
-
         /*
          * Don't cache entries across prototype lookups which can mutate in
          * arbitrary ways without a shape change.
@@ -121,8 +116,8 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
      */
     jsbytecode *pc;
     (void) cx->stack.currentScript(&pc);
-    op = JSOp(*pc);
-    cs = &js_CodeSpec[op];
+    JSOp op = JSOp(*pc);
+    const JSCodeSpec *cs = &js_CodeSpec[op];
 
     if ((cs->format & JOF_SET) && obj->watched())
         return JS_NO_PROP_CACHE_FILL;
@@ -147,7 +142,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
         }
     }
 
-    entry = &table[hash(pc, obj->lastProperty())];
+    PropertyCacheEntry *entry = &table[hash(pc, obj->lastProperty())];
     PCMETER(entry->vword.isNull() || recycles++);
     entry->assign(pc, obj->lastProperty(), pobj->lastProperty(), shape, scopeIndex, protoIndex);
 
