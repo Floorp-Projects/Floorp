@@ -238,7 +238,7 @@ GetChannelChangeFile(nsIFile *dir, nsCOMPtr<nsILocalFile> &result)
 // Compares the current application version with the update's application
 // version.
 static bool
-IsOlderVersion(nsILocalFile *versionFile, const char *&appVersion)
+IsOlderVersion(nsILocalFile *versionFile, const char *appVersion)
 {
   PRFileDesc *fd = nsnull;
   nsresult rv = versionFile->OpenNSPRFileDesc(PR_RDONLY, 0660, &fd);
@@ -498,7 +498,7 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
 
 nsresult
 ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
-               int argc, char **argv, const char *&appVersion)
+               int argc, char **argv, const char *appVersion)
 {
   nsresult rv;
 
