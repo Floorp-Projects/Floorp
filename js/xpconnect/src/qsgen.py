@@ -1109,18 +1109,8 @@ def writeStubsForInterface(f, customMethodCalls, iface):
             raise TypeError('expected attribute or method, not %r'
                             % member.__class__.__name__)
 
-    if propspecs:
-        f.write("static const xpc_qsPropertySpec %s_properties[] = {\n"
-                % iface.name)
-        for ps in propspecs:
-            f.write("    %s,\n" % ps)
-        f.write("    {nsnull}};\n")
-    if funcspecs:
-        f.write("static const xpc_qsFunctionSpec %s_functions[] = {\n" % iface.name)
-        for fs in funcspecs:
-            f.write("    %s,\n" % fs)
-        f.write("    {nsnull}};\n")
-    f.write('\n\n')
+    iface.propspecs = propspecs
+    iface.funcspecs = funcspecs
 
 def hashIID(iid):
     # See nsIDKey::HashCode in nsHashtable.h.
@@ -1153,8 +1143,31 @@ def writeResultXPCInterfacesArray(f, conf, resulttypes):
     if count > 0:
         f.write("\n\n")
 
+def writeSpecs(f, elementType, varname, spec_type, spec_indices, interfaces):
+    index = 0
+    f.write("static const %s %s[] = {\n" % (elementType, varname))
+    for iface in interfaces:
+        specs = getattr(iface, spec_type)
+        if specs:
+            spec_indices[iface.name] = index
+            f.write("    // %s (index %d)\n" % (iface.name,index))
+            for s in specs:
+                f.write("    %s,\n" % s)
+            index += len(specs)
+    f.write("};\n\n")
+
 def writeDefiner(f, conf, interfaces):
     f.write("// === Definer\n\n")
+
+    # Write out the properties and functions
+    propspecs_indices = {}
+    funcspecs_indices = {}
+    prop_array_name = "all_properties"
+    func_array_name = "all_functions"
+    writeSpecs(f, "xpc_qsPropertySpec", prop_array_name,
+               "propspecs", propspecs_indices, interfaces)
+    writeSpecs(f, "xpc_qsFunctionSpec", func_array_name,
+               "funcspecs", funcspecs_indices, interfaces)
 
     # generate the static hash table
     loadFactor = 0.6
@@ -1180,7 +1193,7 @@ def writeDefiner(f, conf, interfaces):
                 arraySize += 1
 
     entries = ["    {{0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}}, "
-               "nsnull, nsnull, XPC_QS_NULL_INDEX, XPC_QS_NULL_INDEX}"
+               "0, 0, 0, 0, XPC_QS_NULL_INDEX, XPC_QS_NULL_INDEX}"
                for i in range(arraySize)]
     for i, bucket in enumerate(buckets):
         for j, iface in enumerate(bucket):
@@ -1194,19 +1207,19 @@ def writeDefiner(f, conf, interfaces):
                         m4[4:6], m4[6:8], m4[8:10], m4[10:12]))
             iid = ('{0x%s, 0x%s, 0x%s, %s}' % (m0, m1, m2, m3arr))
 
-            # properties field
-            properties = "nsnull"
-            for member in iface.stubMembers:
-                if member.kind == 'attribute':
-                    properties = iface.name + "_properties"
-                    break
+            # properties fields
+            prop_index = 0
+            prop_n_entries = 0
+            if iface.propspecs:
+                prop_index = propspecs_indices[iface.name]
+                prop_n_entries = len(iface.propspecs)
 
-            # member field
-            functions = "nsnull"
-            for member in iface.stubMembers:
-                if member.kind == 'method':
-                    functions = iface.name + "_functions"
-                    break
+            # member fields
+            func_index = 0
+            func_n_entries = 0
+            if iface.funcspecs:
+                func_index = funcspecs_indices[iface.name]
+                func_n_entries = len(iface.funcspecs)
 
             # parentInterface field
             baseName = iface.base
@@ -1228,8 +1241,9 @@ def writeDefiner(f, conf, interfaces):
                 chain = str(k)
 
             # add entry
-            entry = "    {%s, %s, %s, %s, %s}" % (
-                iid, properties, functions, parentInterface, chain)
+            entry = "    /* %s */ {%s, %d, %d, %d, %d, %s, %s}" % (
+                iface.name, iid, prop_index, prop_n_entries,
+                func_index, func_n_entries, parentInterface, chain)
             entries[entryIndexes[iface.attributes.uuid]] = entry
 
     f.write("static const xpc_qsHashEntry tableData[] = {\n")
@@ -1245,7 +1259,8 @@ def writeDefiner(f, conf, interfaces):
             "const nsID **iids)\n"
             "{\n")
     f.write("    return xpc_qsDefineQuickStubs("
-            "cx, proto, flags, count, iids, %d, tableData);\n" % size)
+            "cx, proto, flags, count, iids, %d, tableData, %s, %s);\n" % (
+            size, prop_array_name, func_array_name))
     f.write("}\n\n\n")
 
 
