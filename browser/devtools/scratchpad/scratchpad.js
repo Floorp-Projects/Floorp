@@ -581,8 +581,12 @@ var Scratchpad = {
       let content = null;
 
       if (Components.isSuccessCode(aStatus)) {
+        let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+                        createInstance(Ci.nsIScriptableUnicodeConverter);
+        converter.charset = "UTF-8";
         content = NetUtil.readInputStreamToString(aInputStream,
                                                   aInputStream.available());
+        content = converter.ConvertToUnicode(content);
         self.setText(content);
         self.editor.resetUndo();
       }
