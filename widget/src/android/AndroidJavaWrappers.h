@@ -532,6 +532,7 @@ public:
         ACTIVITY_START = 17,
         BROADCAST = 19,
         VIEWPORT = 20,
+        EXPOSE = 21,
         dummy_java_enum_list_end
     };
 
