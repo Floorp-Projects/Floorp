@@ -243,15 +243,15 @@ public:
 
     typedef Vector<NativeRegion, 0, RuntimeAllocPolicy> RegionVector;
 
+    virtual JITReportGranularity granularityRequested() = 0;
+
+#ifdef JS_METHODJIT
     static bool CollectNativeRegions(RegionVector &regions,
                                      JSRuntime *rt,
                                      mjit::JITScript *jit,
                                      mjit::JSActiveFrame *outerFrame,
                                      mjit::JSActiveFrame **inlineFrames);
 
-    virtual JITReportGranularity granularityRequested() = 0;
-
-#ifdef JS_METHODJIT
     virtual void registerMJITCode(JSContext *cx, js::mjit::JITScript *jscr,
                                   mjit::JSActiveFrame *outerFrame,
                                   mjit::JSActiveFrame **inlineFrames,
