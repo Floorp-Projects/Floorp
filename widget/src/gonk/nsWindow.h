@@ -129,10 +129,10 @@ public:
 protected:
     nsWindow* mParent;
     bool mVisible;
+    nsIntRegion mDirtyRegion;
+    InputContext mInputContext;
 
     void BringToTop();
-
-    InputContext mInputContext;
 };
 
 #endif /* nsWindow_h */
