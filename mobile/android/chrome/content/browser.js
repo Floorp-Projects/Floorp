@@ -722,7 +722,7 @@ var BrowserApp = {
         return;
       }
 
-      ViewportHandler.updateMetadata(tab);
+      ViewportHandler.resetMetadata(tab);
 
       // Unsuppress drawing unless the page was being thawed from the bfcache (which is an atomic
       // operation, so there is no drawing to suppress).
