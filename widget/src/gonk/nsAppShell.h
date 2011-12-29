@@ -39,6 +39,7 @@
 #define nsAppShell_h
 
 #include "nsBaseAppShell.h"
+#include "nsRect.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -53,9 +54,17 @@ typedef void(*FdHandlerCallback)(int, FdHandler *);
 
 class FdHandler {
 public:
-    FdHandler() : mtState(MT_START), mtDown(false) { }
+    FdHandler()
+        : mtState(MT_START)
+        , keyCode(0)
+        , mtDown(false)
+        , calibrated(false)
+    {
+        memset(name, 0, sizeof(name));
+    }
 
     int fd;
+    char name[64];
     FdHandlerCallback func;
     enum mtStates {
         MT_START,
@@ -64,11 +73,47 @@ public:
     } mtState;
     int mtX, mtY;
     int mtMajor;
+    int keyCode;
     bool mtDown;
+    // FIXME/bug 712973: we should be using libui here instead of
+    // recreating all that logic ourselves.  Please don't extend the
+    // hacks here further than what's below.
+    bool calibrated;
+    // Multitouch events are delivered to us in "input space", which
+    // is a coordinate space defined by the multitouch device driver.
+    // The coordinate space has top-left at P_min = <inputMinX,
+    // inputMinY> when in normal-portrait orientation.  The input
+    // device and the screen might have different resolutions.  The
+    // resolution difference is Scale = <inputToScreenScaleX,
+    // inputToScreenScaleY>.  So going from input to screen space
+    // (when in normal portrait orientation) is an affine transform
+    // defined by
+    //
+    //   P_screen = Scale * (P_input - P_min)
+    //
+    int inputMinX, inputMinY;
+    float inputToScreenScaleX, inputToScreenScaleY;
+    // Some touch devices use virtual buttons instead of hardware
+    // buttons.  When the device uses vbuttons, we convert touch
+    // events into key events of type |keyCode| when the start of the
+    // touch is within |buttonRect|.  |buttonRect| must be disjoint
+    // from the screen rect.
+    static const size_t kMaxVButtons = 4;
+    struct VButton {
+        nsIntRect buttonRect;   // in screen space
+        int keyCode;
+    } vbuttons[kMaxVButtons];
 
     void run()
     {
         func(fd, this);
+    }
+
+    int inputXToScreenX(int inputX) {
+        return inputToScreenScaleX * (inputX - inputMinX);
+    }
+    int inputYToScreenY(int inputY) {
+        return inputToScreenScaleY * (inputY - inputMinY);
     }
 };
 
@@ -87,7 +132,8 @@ protected:
     virtual void ScheduleNativeEventCallback();
 
 private:
-    nsresult AddFdHandler(int fd, FdHandlerCallback handlerFunc);
+    nsresult AddFdHandler(int fd, FdHandlerCallback handlerFunc,
+                          const char* deviceName);
 
     // This is somewhat racy but is perfectly safe given how the callback works
     bool mNativeCallbackRequest;
