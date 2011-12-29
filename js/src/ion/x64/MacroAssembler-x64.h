@@ -299,6 +299,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void movePtr(ImmGCPtr imm, Register dest) {
         movq(imm, dest);
     }
+    void movePtr(const Address &address, const Register &dest) {
+        movq(Operand(address), dest);
+    }
     void loadPtr(ImmWord imm, Register dest) {
         movq(imm, ScratchReg);
         movq(Operand(ScratchReg, 0x0), dest);
