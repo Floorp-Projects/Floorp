@@ -86,6 +86,9 @@ protected:
 
     virtual void ScheduleNativeEventCallback();
 
+private:
+    nsresult AddFdHandler(int fd, FdHandlerCallback handlerFunc);
+
     // This is somewhat racy but is perfectly safe given how the callback works
     bool mNativeCallbackRequest;
     nsTArray<FdHandler> mHandlers;
