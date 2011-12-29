@@ -12,8 +12,8 @@ function test() {
 
   // Go offline and disable the cache, then try to load the test URL.
   Services.io.offline = true;
-  gPrefService.setBoolPref("browser.cache.disk.enable", false);
-  gPrefService.setBoolPref("browser.cache.memory.enable", false);
+  Services.prefs.setBoolPref("browser.cache.disk.enable", false);
+  Services.prefs.setBoolPref("browser.cache.memory.enable", false);
   content.location = "http://example.com/";
 }
 
@@ -42,8 +42,8 @@ function checkPage() {
 }
 
 registerCleanupFunction(function() {
-  gPrefService.setBoolPref("browser.cache.disk.enable", true);
-  gPrefService.setBoolPref("browser.cache.memory.enable", true);
+  Services.prefs.setBoolPref("browser.cache.disk.enable", true);
+  Services.prefs.setBoolPref("browser.cache.memory.enable", true);
   Services.io.offline = false;
   gBrowser.removeCurrentTab();
 });
