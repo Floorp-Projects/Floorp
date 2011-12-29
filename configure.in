@@ -336,6 +336,7 @@ if test -n "$gonkdir" ; then
     fi
 
     AC_DEFINE(ANDROID)
+    AC_DEFINE(HAVE_SYS_UIO_H)
     CROSS_COMPILE=1
     MOZ_CHROME_FILE_FORMAT=omni
     ZLIB_DIR=yes
