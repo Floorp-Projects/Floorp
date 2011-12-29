@@ -1806,20 +1806,14 @@ if test "$GNU_CC"; then
     _MOZ_RTTI_FLAGS_ON=-frtti
     _MOZ_RTTI_FLAGS_OFF=-fno-rtti
 
-    # Turn on GNU-specific warnings:
-    # -Wall - turn on a lot of warnings
-    # -pedantic - this is turned on below
-    # -Wpointer-arith - enabled with -pedantic, but good to have even if not
-    # -Wdeclaration-after-statement - MSVC doesn't like these
-    # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
-    #
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -Wpointer-arith -Wdeclaration-after-statement -Wempty-body"
-    
-    # Turn off the following warnings that -Wall/-pedantic turn on:
-    # -Woverlength-strings - we exceed the minimum maximum length all the time
-    #
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-overlength-strings"
-
+    # Turn on GNU specific features
+    # -Wall - turn on all warnings
+    # -pedantic - make compiler warn about non-ANSI stuff, and
+    #             be a little bit stricter
+    # Warnings slamm took out for now (these were giving more noise than help):
+    # -Wbad-function-cast - warns when casting a function to a new return type
+    # -Wshadow - removed because it generates more noise than help --pete
+    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wpointer-arith"
     if test -z "$INTEL_CC" -a -z "$CLANG_CC"; then
        # Don't use -Wcast-align with ICC or clang
        case "$CPU_ARCH" in
@@ -1835,26 +1829,12 @@ if test "$GNU_CC"; then
     dnl Turn pedantic on but disable the warnings for long long
     _PEDANTIC=1
 
+    if test -z "$INTEL_CC"; then
+      _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -W"
+    fi
+
     _DEFINES_CFLAGS='-include $(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
-
-    AC_CACHE_CHECK(whether the compiler supports -Wtype-limits,
-                   ac_cc_has_wtype_limits,
-        [
-            AC_LANG_SAVE
-            AC_LANG_C
-            _SAVE_CFLAGS="$CFLAGS"
-            CFLAGS="$CFLAGS -Wtype-limits"
-            AC_TRY_COMPILE([],
-                           [return(0);],
-                           ac_cc_has_wtype_limits="yes",
-                           ac_cc_has_wtype_limits="no")
-            CFLAGS="$_SAVE_CFLAGS"
-            AC_LANG_RESTORE
-        ])
-    if test "$ac_cc_has_wtype_limits" = "yes"; then
-        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wtype-limits"
-    fi
 elif test "$SOLARIS_SUNPRO_CC"; then
     DSO_CFLAGS=''
     if test "$CPU_ARCH" = "sparc"; then
@@ -1880,21 +1860,8 @@ else
 fi
 
 if test "$GNU_CXX"; then
-    # Turn on GNU-specific warnings:
-    # -Wall - turn on a lot of warnings
-    # -pedantic - this is turned on below
-    # -Wpointer-arith - enabled with -pedantic, but good to have even if not
-    # -Woverloaded-virtual - ???
-    # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
-    #
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wpointer-arith -Woverloaded-virtual -Wempty-body"
-
-    # Turn off the following warnings that -Wall/-pedantic turn on:
-    # -Woverlength-strings - we exceed the minimum maximum length all the time
-    # -Wctor-dtor-privacy - ???
-    #
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-overlength-strings -Wno-ctor-dtor-privacy"
-
+    # Turn on GNU specific features
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wpointer-arith -Woverloaded-virtual -Wsynth -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor"
     if test -z "$INTEL_CXX" -a -z "$CLANG_CXX"; then
        # Don't use -Wcast-align with ICC or clang
        case "$CPU_ARCH" in
@@ -1993,24 +1960,6 @@ if test "$GNU_CXX"; then
         ])
     if test "$ac_has_werror_return_type" = "yes"; then
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=return-type"
-    fi
-
-    AC_CACHE_CHECK(whether the compiler supports -Wtype-limits,
-                   ac_has_wtype_limits,
-        [
-            AC_LANG_SAVE
-            AC_LANG_CPLUSPLUS
-            _SAVE_CXXFLAGS="$CXXFLAGS"
-            CXXFLAGS="$CXXFLAGS -Wtype-limits"
-            AC_TRY_COMPILE([],
-                           [return(0);],
-                           ac_has_wtype_limits="yes",
-                           ac_has_wtype_limits="no")
-            CXXFLAGS="$_SAVE_CXXFLAGS"
-            AC_LANG_RESTORE
-        ])
-    if test "$ac_has_wtype_limits" = "yes"; then
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wtype-limits"
     fi
 
 else
