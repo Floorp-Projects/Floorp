@@ -328,8 +328,7 @@ singleTouchHandler(int fd, FdHandler *data)
             default:
                 maybeSendKeyEvent(*event);
             }
-        }
-        else if (event->type == EV_ABS) {
+        } else if (event->type == EV_ABS) {
             switch (event->code) {
             case ABS_X:
                 data->mtX = event->value;
