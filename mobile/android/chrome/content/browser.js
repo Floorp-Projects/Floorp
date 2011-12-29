@@ -155,6 +155,16 @@ var Strings = {};
   });
 });
 
+var MetadataProvider = {
+  getDrawMetadata: function getDrawMetadata() {
+    return BrowserApp.getDrawMetadata();
+  },
+
+  drawingAllowed: function drawingAllowed() {
+    return !BrowserApp.selectedTab.suppressDrawing;
+  }
+};
+
 var BrowserApp = {
   _tabs: [],
   _selectedTab: null,
@@ -169,7 +179,7 @@ var BrowserApp = {
     BrowserEventHandler.init();
     ViewportHandler.init();
 
-    getBridge().setDrawMetadataProvider(this.getDrawMetadata.bind(this));
+    getBridge().setDrawMetadataProvider(MetadataProvider);
 
     Services.obs.addObserver(this, "Tab:Add", false);
     Services.obs.addObserver(this, "Tab:Load", false);
