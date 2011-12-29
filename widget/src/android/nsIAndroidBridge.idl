@@ -1,8 +1,14 @@
 #include "nsISupports.idl"
 
-[scriptable, function, uuid(9feed1e5-bb90-4663-b70a-e03cb27a9e8b)]
+[scriptable, uuid(c60bf6cf-5e31-4bf8-a1f0-a82c061d65a8)]
 interface nsIAndroidDrawMetadataProvider : nsISupports {
   AString getDrawMetadata();
+
+  /*
+   * Returns true if drawing should be allowed or false if it should be suppressed (during page
+   * transitions).
+   */
+  boolean drawingAllowed();
 };
 
 [scriptable, uuid(7dd8441a-4f38-49b2-bd90-da69d02a96cf)]
