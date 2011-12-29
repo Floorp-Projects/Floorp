@@ -50,8 +50,9 @@
 
 SERVICE_STATUS gSvcStatus = { 0 }; 
 SERVICE_STATUS_HANDLE gSvcStatusHandle = NULL; 
-HANDLE ghSvcStopEvent = NULL;
-BOOL gServiceStopping = FALSE;
+HANDLE gWorkDoneEvent = NULL;
+HANDLE gThread = NULL;
+bool gServiceControlStopping = false;
 
 // logs are pretty small ~10 lines, so 5 seems reasonable.
 #define LOGS_TO_KEEP 5
@@ -129,30 +130,16 @@ wmain(int argc, WCHAR **argv)
   }
 
   SERVICE_TABLE_ENTRYW DispatchTable[] = { 
-    { SVC_NAME, (LPSERVICE_MAIN_FUNCTION) SvcMain }, 
+    { SVC_NAME, (LPSERVICE_MAIN_FUNCTIONW) SvcMain }, 
     { NULL, NULL } 
   }; 
 
   // This call returns when the service has stopped. 
   // The process should simply terminate when the call returns.
-  if (!StartServiceCtrlDispatcher(DispatchTable)) {
+  if (!StartServiceCtrlDispatcherW(DispatchTable)) {
     LOG(("StartServiceCtrlDispatcher failed (%d)\n", GetLastError()));
   }
 
-  return 0;
-}
-
-/**
- * Wrapper callback for the monitoring thread.
- *
- * @param param Unused thread callback parameter
- */
-DWORD
-WINAPI StartMaintenanceServiceThread(LPVOID param) 
-{
-  ThreadData *threadData = reinterpret_cast<ThreadData*>(param);
-  ExecuteServiceCommand(threadData->argc, threadData->argv);
-  delete threadData;
   return 0;
 }
 
@@ -163,7 +150,7 @@ WINAPI StartMaintenanceServiceThread(LPVOID param)
  * @return TRUE if successful.
  */
 BOOL
-GetLogDirectoryPath(WCHAR *path) 
+GetLogDirectoryPath(WCHAR *path)
 {
   HRESULT hr = SHGetFolderPathW(NULL, CSIDL_COMMON_APPDATA, NULL, 
     SHGFP_TYPE_CURRENT, path);
@@ -218,7 +205,7 @@ GetBackupLogPath(LPWSTR path, LPCWSTR basePath, int logNumber)
  * @param numLogsToKeep The number of logs to keep
  */
 void
-BackupOldLogs(LPCWSTR basePath, int numLogsToKeep) 
+BackupOldLogs(LPCWSTR basePath, int numLogsToKeep)
 {
   WCHAR oldPath[MAX_PATH + 1];
   WCHAR newPath[MAX_PATH + 1];
@@ -231,17 +218,51 @@ BackupOldLogs(LPCWSTR basePath, int numLogsToKeep)
       continue;
     }
 
-    if (!MoveFileEx(oldPath, newPath, MOVEFILE_REPLACE_EXISTING)) {
+    if (!MoveFileExW(oldPath, newPath, MOVEFILE_REPLACE_EXISTING)) {
       continue;
     }
   }
 }
 
 /**
+ * Ensures the service is shutdown once all work is complete.
+ * There is an issue on XP SP2 and below where the service can hang
+ * in a stop pending state even though the SCM is notified of a stopped
+ * state.  Control *should* be returned to StartServiceCtrlDispatcher from the 
+ * call to SetServiceStatus on a stopped state in the wmain thread.  
+ * Sometimes this is not the case though. This thread will terminate the process
+ * if it has been 5 seconds after all work is done and the process is still not
+ * terminated.  This thread is only started once a stopped state was sent to the
+ * SCM. The stop pending hang can be reproduced intermittently even if you set 
+ * a stopped state dirctly and never set a stop pending state.  It is safe to 
+ * forcefully terminate the process ourselves since all work is done once we 
+ * start this thread.
+*/
+DWORD WINAPI
+EnsureProcessTerminatedThread(LPVOID)
+{
+  Sleep(5000);
+  exit(0);
+  return 0;
+}
+
+void
+StartTerminationThread()
+{
+  // If the process does not self terminate like it should, this thread 
+  // will terminate the process after 5 seconds.
+  HANDLE thread = CreateThread(NULL, 0, EnsureProcessTerminatedThread, 
+                               NULL, 0, NULL);
+  if (thread) {
+    CloseHandle(thread);
+  }
+}
+
+/**
  * Main entry point when running as a service.
  */
-void WINAPI 
-SvcMain(DWORD dwArgc, LPWSTR *lpszArgv)
+void WINAPI
+SvcMain(DWORD argc, LPWSTR *argv)
 {
   // Setup logging, and backup the old logs
   WCHAR updatePath[MAX_PATH + 1];
@@ -258,51 +279,45 @@ SvcMain(DWORD dwArgc, LPWSTR *lpszArgv)
   gSvcStatusHandle = RegisterServiceCtrlHandlerW(SVC_NAME, SvcCtrlHandler);
   if (!gSvcStatusHandle) {
     LOG(("RegisterServiceCtrlHandler failed (%d)\n", GetLastError()));
-    return; 
+    ExecuteServiceCommand(argc, argv);  
+    LogFinish();
+    exit(1);
   } 
 
-  // These SERVICE_STATUS members remain as set here
+  // These values will be re-used later in calls involving gSvcStatus
   gSvcStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
   gSvcStatus.dwServiceSpecificExitCode = 0;
 
   // Report initial status to the SCM
   ReportSvcStatus(SERVICE_START_PENDING, NO_ERROR, 3000);
 
-  // Perform service-specific initialization and work.
-  SvcInit(dwArgc, lpszArgv);
-}
-
-/**
- * Service initialization.
- */
-void
-SvcInit(DWORD argc, LPWSTR *argv)
-{
-  // Create an event. The control handler function, SvcCtrlHandler,
-  // signals this event when it receives the stop control code.
-  ghSvcStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-  if (NULL == ghSvcStopEvent) {
+  // This event will be used to tell the SvcCtrlHandler when the work is
+  // done for when a stop comamnd is manually issued.
+  gWorkDoneEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+  if (!gWorkDoneEvent) {
     ReportSvcStatus(SERVICE_STOPPED, 1, 0);
+    StartTerminationThread();
     return;
   }
 
-  ThreadData *threadData = new ThreadData();
-  threadData->argc = argc;
-  threadData->argv = argv;
-
-  DWORD threadID;
-  HANDLE thread = CreateThread(NULL, 0, StartMaintenanceServiceThread, 
-                               threadData, 0, &threadID);
-
-  // Report running status when initialization is complete.
+  // Initialization complete and we're about to start working on
+  // the actual command.  Report the service state as running to the SCM.
   ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
 
-  // Perform work until service stops.
-  for(;;) {
-    // Check whether to stop the service.
-    WaitForSingleObject(ghSvcStopEvent, INFINITE);
+  // The service command was executed, stop logging and set an event
+  // to indicate the work is done in case someone is waiting on a
+  // service stop operation.
+  ExecuteServiceCommand(argc, argv);  
+  LogFinish();
+
+  SetEvent(gWorkDoneEvent);
+
+  // If we aren't already in a stopping state then tell the SCM we're stopped
+  // now.  If we are already in a stopping state then the SERVICE_STOPPED state
+  // will be set by the SvcCtrlHandler.
+  if (!gServiceControlStopping) {
     ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
-    return;
+    StartTerminationThread();
   }
 }
 
@@ -320,15 +335,16 @@ ReportSvcStatus(DWORD currentState,
 {
   static DWORD dwCheckPoint = 1;
 
-  // Fill in the SERVICE_STATUS structure.
   gSvcStatus.dwCurrentState = currentState;
   gSvcStatus.dwWin32ExitCode = exitCode;
   gSvcStatus.dwWaitHint = waitHint;
 
-  if (SERVICE_START_PENDING == currentState) {
+  if (SERVICE_START_PENDING == currentState || 
+      SERVICE_STOP_PENDING == currentState) {
     gSvcStatus.dwControlsAccepted = 0;
   } else {
-    gSvcStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+    gSvcStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | 
+                                    SERVICE_ACCEPT_SHUTDOWN;
   }
 
   if ((SERVICE_RUNNING == currentState) ||
@@ -343,24 +359,57 @@ ReportSvcStatus(DWORD currentState,
 }
 
 /**
+ * Since the SvcCtrlHandler should only spend at most 30 seconds before 
+ * returning, this function does the service stop work for the SvcCtrlHandler. 
+*/
+DWORD WINAPI
+StopServiceAndWaitForCommandThread(LPVOID)
+{
+  do {
+    ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 1000);
+  } while(WaitForSingleObject(gWorkDoneEvent, 100) == WAIT_TIMEOUT);
+  CloseHandle(gWorkDoneEvent);
+  gWorkDoneEvent = NULL;
+  ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
+  StartTerminationThread();
+  return 0;
+}
+
+/**
  * Called by SCM whenever a control code is sent to the service
  * using the ControlService function.
  */
 void WINAPI
 SvcCtrlHandler(DWORD dwCtrl)
 {
+  // After a SERVICE_CONTROL_STOP there should be no more commands sent to
+  // the SvcCtrlHandler.
+  if (gServiceControlStopping) {
+    return;
+  }
+
   // Handle the requested control code. 
   switch(dwCtrl) {
-  case SERVICE_CONTROL_STOP: 
-    ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
-    // Signal the service to stop.
-    SetEvent(ghSvcStopEvent);
-    ReportSvcStatus(gSvcStatus.dwCurrentState, NO_ERROR, 0);
-    LogFinish();
+  case SERVICE_CONTROL_SHUTDOWN:
+  case SERVICE_CONTROL_STOP: {
+      gServiceControlStopping = true;
+      ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 1000);
+
+      // The SvcCtrlHandler thread should not spend more than 30 seconds in 
+      // shutdown so we spawn a new thread for stopping the service 
+      HANDLE thread = CreateThread(NULL, 0, StopServiceAndWaitForCommandThread, 
+                                   NULL, 0, NULL);
+      if (thread) {
+        CloseHandle(thread);
+      } else {
+        // Couldn't start the thread so just call the stop ourselves.
+        // If it happens to take longer than 30 seconds the caller will
+        // get an error.
+        StopServiceAndWaitForCommandThread(NULL);
+      }
+    }
     break;
-  case SERVICE_CONTROL_INTERROGATE: 
-    break; 
-  default: 
+  default:
     break;
   }
 }
