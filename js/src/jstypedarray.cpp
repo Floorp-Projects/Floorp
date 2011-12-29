@@ -1687,7 +1687,9 @@ class TypedArrayTemplate
     {
         JS_ASSERT(tarray);
 
+        JS_ASSERT(0 <= begin);
         JS_ASSERT(begin <= getLength(tarray));
+        JS_ASSERT(0 <= end);
         JS_ASSERT(end <= getLength(tarray));
 
         JSObject *bufobj = getBuffer(tarray);
