@@ -69,6 +69,17 @@ function isApproxVec(vec1, vec2) {
   return true;
 }
 
+function isEqualVec(vec1, vec2) {
+  if (vec1.length !== vec2.length) {
+    return false;
+  }
+  for (let i = 0, len = vec1.length; i < len; i++) {
+    if (vec1[i] !== vec2[i]) {
+      return false;
+    }
+  }
+  return true;
+}
 
 function createCanvas() {
   return document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
