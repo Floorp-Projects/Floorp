@@ -152,7 +152,7 @@ LIRGenerator::visitCall(MCall *call)
     // A call is entirely stateful, depending upon arguments already being
     // stored in an argument vector. Therefore visitCall() may be generic.
     LCallGeneric *ins = new LCallGeneric(useRegister(call->getFunction()),
-                                         argslot, temp(LDefinition::GENERAL),
+                                         argslot,
                                          temp(LDefinition::GENERAL),
                                          temp(LDefinition::GENERAL));
     if (!defineReturn(ins, call))

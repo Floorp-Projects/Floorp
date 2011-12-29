@@ -604,23 +604,33 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
 
     void callWithExitFrame(IonCode *target);
+    void callIon(const Register &callee);
 
     void reserveStack(uint32 amount);
     void freeStack(uint32 amount);
 
     void move32(const Imm32 &imm, const Register &dest);
-    void movePtr(ImmWord imm, const Register dest);
-    void movePtr(ImmGCPtr imm, const Register dest);
-    void load32(const Address &address, Register dest);
-    void loadPtr(const Address &address, Register dest);
-    void loadPtr(const ImmWord &imm, Register dest);
+    void move32(const Address &src, const Register &dest);
+    void movePtr(const ImmWord &imm, const Register &dest);
+    void movePtr(const ImmGCPtr &imm, const Register &dest);
+    void movePtr(const Address &src, const Register &dest);
+
+    void load32(const Address &address, const Register &dest);
+    void loadPtr(const Address &address, const Register &dest);
+    void loadPtr(const ImmWord &imm, const Register &dest);
+
     void storePtr(Register src, const Address &address);
-    void setStackArg(const Register &reg, uint32 arg);
+
+    void cmp32(const Register &lhs, const Imm32 &rhs);
+    void cmpPtr(const Register &lhs, const ImmWord &rhs);
 
     void subPtr(Imm32 imm, const Register dest);
     void addPtr(Imm32 imm, const Register dest);
 
+    void setStackArg(const Register &reg, uint32 arg);
+
     void breakpoint();
+
     Condition compareDoubles(JSOp compare, FloatRegister lhs, FloatRegister rhs);
     void checkStackAlignment();
 

@@ -129,7 +129,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitCompareDAndBranch(LCompareDAndBranch *comp);
     virtual bool visitMathD(LMathD *math);
     virtual bool visitTableSwitch(LTableSwitch *ins);
-    virtual bool visitCallGeneric(LCallGeneric *call);
     virtual bool visitBoundsCheck(LBoundsCheck *lir);
     virtual bool visitGuardShape(LGuardShape *guard);
     virtual bool visitGuardClass(LGuardClass *guard);
@@ -155,8 +154,8 @@ class OutOfLineBailout : public OutOfLineCodeBase<CodeGeneratorX86Shared>
     }
 };
 
-} // ion
-} // js
+} // namespace ion
+} // namespace js
 
 #endif // jsion_codegen_x86_shared_h__
 
