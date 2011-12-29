@@ -140,12 +140,6 @@ struct ThreadData {
     /* Keeper of the contiguous stack used by all contexts in this thread. */
     StackSpace          stackSpace;
 
-    /*
-     * Flag indicating that we are waiving any soft limits on the GC heap
-     * because we want allocations to be infallible (except when we hit OOM).
-     */
-    bool                waiveGCQuota;
-
     /* Temporary arena pool used while compiling and decompiling. */
     static const size_t TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
     LifoAlloc           tempLifoAlloc;
