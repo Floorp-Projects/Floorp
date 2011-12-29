@@ -362,9 +362,8 @@ Shape::readBarrier(const Shape *shape)
 {
 #ifdef JSGC_INCREMENTAL
     JSCompartment *comp = shape->compartment();
-    JS_ASSERT(comp->needsBarrier());
-
-    MarkShapeUnbarriered(comp->barrierTracer(), shape, "read barrier");
+    if (comp->needsBarrier())
+        MarkShapeUnbarriered(comp->barrierTracer(), shape, "read barrier");
 #endif
 }
 
@@ -391,9 +390,8 @@ BaseShape::readBarrier(BaseShape *base)
 {
 #ifdef JSGC_INCREMENTAL
     JSCompartment *comp = base->compartment();
-    JS_ASSERT(comp->needsBarrier());
-
-    MarkBaseShapeUnbarriered(comp->barrierTracer(), base, "read barrier");
+    if (comp->needsBarrier())
+        MarkBaseShapeUnbarriered(comp->barrierTracer(), base, "read barrier");
 #endif
 }
 

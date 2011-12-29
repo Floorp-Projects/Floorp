@@ -1279,9 +1279,8 @@ TypeObject::readBarrier(TypeObject *type)
 {
 #ifdef JSGC_INCREMENTAL
     JSCompartment *comp = type->compartment();
-    JS_ASSERT(comp->needsBarrier());
-
-    MarkTypeObjectUnbarriered(comp->barrierTracer(), type, "read barrier");
+    if (comp->needsBarrier())
+        MarkTypeObjectUnbarriered(comp->barrierTracer(), type, "read barrier");
 #endif
 }
 

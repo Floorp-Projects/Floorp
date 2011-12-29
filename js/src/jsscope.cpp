@@ -1275,14 +1275,8 @@ BaseShape::getUnowned(JSContext *cx, const BaseShape &base)
 
     BaseShapeSet::AddPtr p = table.lookupForAdd(&base);
 
-    if (p) {
-        UnownedBaseShape *base = *p;
-
-        if (cx->compartment->needsBarrier())
-            BaseShape::readBarrier(base);
-
-        return base;
-    }
+    if (p)
+        return *p;
 
     BaseShape *nbase_ = js_NewGCBaseShape(cx);
     if (!nbase_)
@@ -1382,14 +1376,8 @@ EmptyShape::getInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSObje
 
     InitialShapeSet::AddPtr p = table.lookupForAdd(lookup);
 
-    if (p) {
-        Shape *shape = p->shape;
-
-        if (cx->compartment->needsBarrier())
-            Shape::readBarrier(shape);
-
-        return shape;
-    }
+    if (p)
+        return p->shape;
 
     BaseShape base(clasp, parent, objectFlags);
     UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
