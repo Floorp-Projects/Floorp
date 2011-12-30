@@ -269,6 +269,9 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
+    void load16(const Address &src, const Register &dest) {
+        load16(Operand(src), dest);
+    }
 
   protected:
     JmpSrc jSrc(Condition cond, Label *label) {
@@ -651,6 +654,9 @@ class AssemblerX86Shared
           default:
             JS_NOT_REACHED("unexpected operand kind");
         }
+    }
+    void negl(const Register &reg) {
+        masm.negl_r(reg.code());
     }
     void notl(const Operand &src) {
         switch (src.kind()) {

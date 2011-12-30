@@ -60,6 +60,22 @@ class LDivI : public LBinaryMath<1>
         return getTemp(0);
     }
 };
+
+class LModI : public LBinaryMath<1>
+{
+  public:
+    LIR_HEADER(ModI);
+
+    LModI(const LAllocation &lhs, const LAllocation &rhs) {
+        setOperand(0, lhs);
+        setOperand(1, rhs);
+    }
+
+    const LDefinition *remainder() {
+        return getDef(0);
+    }
+};
+
 // Takes a tableswitch with an integer to decide
 class LTableSwitch : public LInstructionHelper<0, 1, 2>
 {
