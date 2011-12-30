@@ -155,16 +155,6 @@ var Strings = {};
   });
 });
 
-var MetadataProvider = {
-  getDrawMetadata: function getDrawMetadata() {
-    return BrowserApp.getDrawMetadata();
-  },
-
-  drawingAllowed: function drawingAllowed() {
-    return !BrowserApp.selectedTab.suppressDrawing;
-  }
-};
-
 var BrowserApp = {
   _tabs: [],
   _selectedTab: null,
@@ -179,7 +169,7 @@ var BrowserApp = {
     BrowserEventHandler.init();
     ViewportHandler.init();
 
-    getBridge().setDrawMetadataProvider(MetadataProvider);
+    getBridge().setDrawMetadataProvider(this.getDrawMetadata.bind(this));
 
     Services.obs.addObserver(this, "Tab:Add", false);
     Services.obs.addObserver(this, "Tab:Load", false);
@@ -200,7 +190,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Viewport:Change", false);
     Services.obs.addObserver(this, "AgentMode:Change", false);
     Services.obs.addObserver(this, "SearchEngines:Get", false);
-    Services.obs.addObserver(this, "document-shown", false);
 
     function showFullScreenWarning() {
       NativeWindow.toast.show(Strings.browser.GetStringFromName("alertFullScreenToast"), "short");
@@ -772,19 +761,6 @@ var BrowserApp = {
       ViewportHandler.onResize();
     } else if (aTopic == "SearchEngines:Get") {
       this.getSearchEngines();
-    } else if (aTopic == "document-shown") {
-      let tab = BrowserApp.getTabForBrowser(BrowserApp.getBrowserForDocument(aSubject));
-      if (!tab)
-        return;
-
-      ViewportHandler.resetMetadata(tab);
-
-      // Unsuppress drawing unless the page was being thawed from the bfcache (which is an atomic
-      // operation, so there is no drawing to suppress).
-      if (tab.suppressDrawing) {
-        tab.sendExposeEvent();
-        tab.suppressDrawing = false;
-      }
     }
   },
 
@@ -792,7 +768,7 @@ var BrowserApp = {
     delete this.defaultBrowserWidth;
     let width = Services.prefs.getIntPref("browser.viewport.desktopWidth");
     return this.defaultBrowserWidth = width;
-  }
+   }
 };
 
 var NativeWindow = {
@@ -1265,12 +1241,6 @@ Tab.prototype = {
     this.browser.addEventListener("PluginClickToPlay", this, true);
     this.browser.addEventListener("pagehide", this, true);
 
-    let chromeEventHandler = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                                       .getInterface(Ci.nsIWebNavigation)
-                                                       .QueryInterface(Ci.nsIDocShell)
-                                                       .chromeEventHandler;
-    chromeEventHandler.addEventListener("DOMWindowCreated", this, false);
-
     Services.obs.addObserver(this, "http-on-modify-request", false);
 
     if (!aParams.delayLoad) {
@@ -1483,7 +1453,8 @@ Tab.prototype = {
       return;
     sendMessageToJava({
       gecko: {
-        type: "Viewport:UpdateAndDraw"
+        type: "Viewport:Update",
+        viewport: JSON.stringify(this.viewport)
       }
     });
   },
@@ -1642,18 +1613,6 @@ Tab.prototype = {
           this._pluginsToPlay = [];
           this._pluginOverlayShowing = false;
         }
-        break;
-      }
-
-      case "DOMWindowCreated": {
-        // Conveniently, this call to getBrowserForDocument() will return null if the document is
-        // not the top-level content document of the browser.
-        let browser = BrowserApp.getBrowserForDocument(aEvent.originalTarget);
-        if (!browser)
-          break;
-
-        let tab = BrowserApp.getTabForBrowser(browser);
-        tab.suppressDrawing = true;
         break;
       }
     }
@@ -1913,16 +1872,6 @@ Tab.prototype = {
       if (this.agentMode == UA_MODE_DESKTOP)
         channel.setRequestHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:7.0.1) Gecko/20100101 Firefox/7.0.1", false);
     }
-  },
-
-  sendExposeEvent: function() {
-    // Now that the document is actually on the screen, send an expose event.
-    this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    sendMessageToJava({
-      gecko: {
-        type: "Viewport:Expose"
-      }
-    });
   },
 
   QueryInterface: XPCOMUtils.generateQI([
