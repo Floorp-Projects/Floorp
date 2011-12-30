@@ -286,7 +286,7 @@ protected:
 
   // Return success if the subject principal subsumes the principal of our
   // inner, error otherwise.  This will also succeed if the subject has
-  // UniversalBrowserWrite.
+  // UniversalXPConnect.
   nsresult SubjectSubsumesInnerPrincipal() const;
 
   // Add the namespace mapping from this @namespace rule to our namespace map
