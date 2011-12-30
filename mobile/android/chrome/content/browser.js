@@ -773,10 +773,9 @@ var BrowserApp = {
     } else if (aTopic == "SearchEngines:Get") {
       this.getSearchEngines();
     } else if (aTopic == "document-shown") {
-      let tab = this.selectedTab;
-      if (tab.browser.contentDocument != aSubject) {
+      let tab = BrowserApp.getTabForBrowser(BrowserApp.getBrowserForDocument(aSubject));
+      if (!tab)
         return;
-      }
 
       ViewportHandler.resetMetadata(tab);
 
