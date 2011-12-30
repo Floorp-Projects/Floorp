@@ -986,7 +986,7 @@ CodeGeneratorARM::visitUnbox(LUnbox *unbox)
     // inputs.
     MUnbox *mir = unbox->mir();
     if (mir->fallible()) {
-        LAllocation *type = unbox->getOperand(TYPE_INDEX);
+        const LAllocation *type = unbox->type();
         masm.ma_cmp(ToRegister(type), Imm32(MIRTypeToTag(mir->type())));
         if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
             return false;
