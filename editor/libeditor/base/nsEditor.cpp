@@ -121,6 +121,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Element.h"
 #include "nsContentUtils.h"
+#include "nsCCUncollectableMarker.h"
 
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
@@ -199,6 +200,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsEditor)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEditor)
+ nsIDocument* currentDoc =
+   tmp->mRootElement ? tmp->mRootElement->GetCurrentDoc() : nsnull;
+ if (currentDoc &&
+     nsCCUncollectableMarker::InGeneration(cb, currentDoc->GetMarkedCCGeneration())) {
+   return NS_SUCCESS_INTERRUPTED_TRAVERSE;
+ }
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRootElement)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mInlineSpellChecker)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTxnMgr)
