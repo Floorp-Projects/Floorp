@@ -547,13 +547,9 @@ AddonsReconciler.prototype = {
   pruneChangesBeforeDate: function pruneChangesBeforeDate(date) {
     this._ensureStateLoaded();
 
-    while (this._changes.length > 0) {
-      if (this._changes[0][0] >= date) {
-        return;
-      }
-
-      delete this._changes[0];
-    }
+    this._changes = this._changes.filter(function test_age(change) {
+      return change[0] >= date;
+    });
   },
 
   /**
