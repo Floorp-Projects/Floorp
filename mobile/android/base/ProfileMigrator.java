@@ -263,11 +263,13 @@ public class ProfileMigrator {
         protected void addFavicon(String url, String mime, byte[] data) {
             ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
             BitmapDrawable image = (BitmapDrawable) Drawable.createFromStream(byteStream, "src");
-            try {
-                BrowserDB.updateFaviconForUrl(mCr, url, image);
-            } catch (SQLiteException e) {
-                Log.i(LOGTAG, "Migrating favicon failed: " + mime + " URL: " + url
-                      + " error:" + e.getMessage());
+            if (image != null) {
+                try {
+                    BrowserDB.updateFaviconForUrl(mCr, url, image);
+                } catch (SQLiteException e) {
+                    Log.i(LOGTAG, "Migrating favicon failed: " + mime + " URL: " + url
+                          + " error:" + e.getMessage());
+                }
             }
         }
 
