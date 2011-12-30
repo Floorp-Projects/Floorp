@@ -2749,10 +2749,10 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
   }
 
   // Prevent modification to certain HTTP headers (see bug 302263), unless
-  // the executing script has UniversalBrowserWrite permission.
+  // the executing script has UniversalXPConnect.
 
   bool privileged;
-  rv = IsCapabilityEnabled("UniversalBrowserWrite", &privileged);
+  rv = IsCapabilityEnabled("UniversalXPConnect", &privileged);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
