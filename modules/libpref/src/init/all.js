@@ -405,7 +405,7 @@ pref("editor.positioning.offset",            0);
 
 // Default Capability Preferences: Security-Critical! 
 // Editing these may create a security risk - be sure you know what you're doing
-//pref("capability.policy.default.barprop.visible.set", "UniversalBrowserWrite");
+//pref("capability.policy.default.barprop.visible.set", "UniversalXPConnect");
 
 pref("capability.policy.default_policynames", "mailnews");
 
@@ -416,13 +416,13 @@ pref("capability.policy.default.DOMException.result", "allAccess");
 pref("capability.policy.default.DOMException.toString.get", "allAccess");
 
 pref("capability.policy.default.History.back.get", "allAccess");
-pref("capability.policy.default.History.current", "UniversalBrowserRead");
+pref("capability.policy.default.History.current", "UniversalXPConnect");
 pref("capability.policy.default.History.forward.get", "allAccess");
 pref("capability.policy.default.History.go.get", "allAccess");
-pref("capability.policy.default.History.item", "UniversalBrowserRead");
-pref("capability.policy.default.History.next", "UniversalBrowserRead");
-pref("capability.policy.default.History.previous", "UniversalBrowserRead");
-pref("capability.policy.default.History.toString", "UniversalBrowserRead");
+pref("capability.policy.default.History.item", "UniversalXPConnect");
+pref("capability.policy.default.History.next", "UniversalXPConnect");
+pref("capability.policy.default.History.previous", "UniversalXPConnect");
+pref("capability.policy.default.History.toString", "UniversalXPConnect");
 
 pref("capability.policy.default.Location.hash.set", "allAccess");
 pref("capability.policy.default.Location.href.set", "allAccess");
