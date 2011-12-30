@@ -148,13 +148,19 @@ struct StrokeOptions {
  *
  * mFilter - Filter used when resampling source surface region to the
  *           destination region.
+ * aSamplingBounds - This indicates whether the implementation is allowed
+ *                   to sample pixels outside the source rectangle as
+ *                   specified in DrawSurface on the surface.
  */
 struct DrawSurfaceOptions {
-  DrawSurfaceOptions(Filter aFilter = FILTER_LINEAR)
+  DrawSurfaceOptions(Filter aFilter = FILTER_LINEAR,
+                     SamplingBounds aSamplingBounds = SAMPLING_UNBOUNDED)
     : mFilter(aFilter)
+    , mSamplingBounds(aSamplingBounds)
   { }
 
   Filter mFilter : 3;
+  SamplingBounds mSamplingBounds : 1;
 };
 
 /*
@@ -212,16 +218,20 @@ class LinearGradientPattern : public Pattern
 public:
   /*
    * aBegin Start of the linear gradient
-   * aEnd End of the linear gradient
+   * aEnd End of the linear gradient - NOTE: In the case of a zero length
+   *      gradient it will act as the color of the last stop.
    * aStops GradientStops object for this gradient, this should match the
    *        backend type of the draw target this pattern will be used with.
+   * aMatrix A matrix that transforms the pattern into user space
    */
   LinearGradientPattern(const Point &aBegin,
                         const Point &aEnd,
-                        GradientStops *aStops)
+                        GradientStops *aStops,
+                        const Matrix &aMatrix = Matrix())
     : mBegin(aBegin)
     , mEnd(aEnd)
     , mStops(aStops)
+    , mMatrix(aMatrix)
   {
   }
 
@@ -230,6 +240,7 @@ public:
   Point mBegin;
   Point mEnd;
   RefPtr<GradientStops> mStops;
+  Matrix mMatrix;
 };
 
 /*
@@ -245,17 +256,20 @@ public:
    * aEnd End of the linear gradient
    * aStops GradientStops object for this gradient, this should match the
    *        backend type of the draw target this pattern will be used with.
+   * aMatrix A matrix that transforms the pattern into user space
    */
   RadialGradientPattern(const Point &aCenter1,
                         const Point &aCenter2,
                         Float aRadius1,
                         Float aRadius2,
-                        GradientStops *aStops)
+                        GradientStops *aStops,
+                        const Matrix &aMatrix = Matrix())
     : mCenter1(aCenter1)
     , mCenter2(aCenter2)
     , mRadius1(aRadius1)
     , mRadius2(aRadius2)
     , mStops(aStops)
+    , mMatrix(aMatrix)
   {
   }
 
@@ -266,6 +280,7 @@ public:
   Float mRadius1;
   Float mRadius2;
   RefPtr<GradientStops> mStops;
+  Matrix mMatrix;
 };
 
 /*
@@ -275,9 +290,19 @@ public:
 class SurfacePattern : public Pattern
 {
 public:
-  SurfacePattern(SourceSurface *aSourceSurface, ExtendMode aExtendMode)
+  /*
+   * aSourceSurface Surface to use for drawing
+   * aExtendMode This determines how the image is extended outside the bounds
+   *             of the image.
+   * aMatrix A matrix that transforms the pattern into user space
+   * aFilter Resampling filter used for resampling the image.
+   */
+  SurfacePattern(SourceSurface *aSourceSurface, ExtendMode aExtendMode,
+                 const Matrix &aMatrix = Matrix(), Filter aFilter = FILTER_LINEAR)
     : mSurface(aSourceSurface)
     , mExtendMode(aExtendMode)
+    , mFilter(aFilter)
+    , mMatrix(aMatrix)
   {}
 
   virtual PatternType GetType() const { return PATTERN_SURFACE; }
@@ -285,6 +310,7 @@ public:
   RefPtr<SourceSurface> mSurface;
   ExtendMode mExtendMode;
   Filter mFilter;
+  Matrix mMatrix;
 };
 
 /*
@@ -311,6 +337,7 @@ public:
 class DataSourceSurface : public SourceSurface
 {
 public:
+  virtual SurfaceType GetType() const { return SURFACE_DATA; }
   /* Get the raw bitmap data of the surface */
   virtual unsigned char *GetData() = 0;
   /*
@@ -318,6 +345,12 @@ public:
    * data belonging to row y and row y+1. This may be negative.
    */
   virtual int32_t Stride() = 0;
+
+  /*
+   * This function is called after modifying the data on the source surface
+   * directly through the data pointer.
+   */
+  virtual void MarkDirty() {}
 
   virtual TemporaryRef<DataSourceSurface> GetDataSurface() { RefPtr<DataSourceSurface> temp = this; return temp.forget(); }
 };
@@ -607,11 +640,32 @@ public:
                           const DrawOptions &aOptions = DrawOptions()) = 0;
 
   /*
+   * This takes a source pattern and a mask, and composites the source pattern
+   * onto the destination surface using the alpha channel of the mask pattern
+   * as a mask for the operation.
+   *
+   * aSource Source pattern
+   * aMask Mask pattern
+   * aOptions Drawing options
+   */
+  virtual void Mask(const Pattern &aSource,
+                    const Pattern &aMask,
+                    const DrawOptions &aOptions = DrawOptions()) = 0;
+
+  /*
    * Push a clip to the DrawTarget.
    *
    * aPath The path to clip to
    */
   virtual void PushClip(const Path *aPath) = 0;
+
+  /*
+   * Push an axis-aligned rectangular clip to the DrawTarget. This rectangle
+   * is specified in user space.
+   *
+   * aRect The rect to clip to
+   */
+  virtual void PushClipRect(const Rect &aRect) = 0;
 
   /* Pop a clip from the DrawTarget. A pop without a corresponding push will
    * be ignored.
@@ -625,9 +679,9 @@ public:
    * The SourceSurface does not take ownership of aData, and may be freed at any time.
    */
   virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
-                                                            const IntSize &aSize,
-                                                            int32_t aStride,
-                                                            SurfaceFormat aFormat) const = 0;
+                                                                  const IntSize &aSize,
+                                                                  int32_t aStride,
+                                                                  SurfaceFormat aFormat) const = 0;
 
   /*
    * Create a SourceSurface optimized for use with this DrawTarget from
@@ -666,8 +720,13 @@ public:
    *
    * aStops An array of gradient stops
    * aNumStops Number of stops in the array aStops
+   * aExtendNone This describes how to extend the stop color outside of the
+   *             gradient area.
    */
-  virtual TemporaryRef<GradientStops> CreateGradientStops(GradientStop *aStops, uint32_t aNumStops) const = 0;
+  virtual TemporaryRef<GradientStops>
+    CreateGradientStops(GradientStop *aStops,
+                        uint32_t aNumStops,
+                        ExtendMode aExtendMode = EXTEND_CLAMP) const = 0;
 
   const Matrix &GetTransform() const { return mTransform; }
 
@@ -695,12 +754,34 @@ protected:
 class Factory
 {
 public:
-#ifdef USE_CAIRO
   static TemporaryRef<DrawTarget> CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface);
-#endif
 
-  static TemporaryRef<DrawTarget> CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFormat aFormat);
-  static TemporaryRef<ScaledFont> CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSize);
+  static TemporaryRef<DrawTarget>
+    CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFormat aFormat);
+  
+  static TemporaryRef<DrawTarget>
+    CreateDrawTargetForData(BackendType aBackend, unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat);
+
+  static TemporaryRef<ScaledFont>
+    CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSize);
+
+  /*
+   * This creates a simple data source surface for a certain size. It allocates
+   * new memory for the surface. This memory is freed when the surface is
+   * destroyed.
+   */
+  static TemporaryRef<DataSourceSurface>
+    CreateDataSourceSurface(const IntSize &aSize, SurfaceFormat aFormat);
+  
+  /*
+   * This creates a simple data source surface for some existing data. It will
+   * wrap this data and the data for this source surface. The caller is
+   * responsible for deallocating the memory only after destruction of the
+   * surface.
+   */
+  static TemporaryRef<DataSourceSurface>
+    CreateDataSourceSurfaceFromData(unsigned char *aData, int32_t aStride,
+                                    const IntSize &aSize, SurfaceFormat aFormat);
 
 #ifdef WIN32
   static TemporaryRef<DrawTarget> CreateDrawTargetForD3D10Texture(ID3D10Texture2D *aTexture, SurfaceFormat aFormat);

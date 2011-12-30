@@ -218,7 +218,6 @@ typedef enum JSShellErrNum {
 #include "jsshell.msg"
 #undef MSG_DEF
     JSShellErr_Limit
-#undef MSGDEF
 } JSShellErrNum;
 
 static JSContext *
@@ -2335,16 +2334,9 @@ DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
 static JSBool
 DumpStats(JSContext *cx, uintN argc, jsval *vp)
 {
-    uintN i;
-    JSString *str;
-    jsid id;
-    JSObject *obj2;
-    JSProperty *prop;
-    Value value;
-
     jsval *argv = JS_ARGV(cx, vp);
-    for (i = 0; i < argc; i++) {
-        str = JS_ValueToString(cx, argv[i]);
+    for (uintN i = 0; i < argc; i++) {
+        JSString *str = JS_ValueToString(cx, argv[i]);
         if (!str)
             return JS_FALSE;
         argv[i] = STRING_TO_JSVAL(str);
@@ -2356,24 +2348,10 @@ DumpStats(JSContext *cx, uintN argc, jsval *vp)
         } else if (JS_FlatStringEqualsAscii(flatStr, "global")) {
             DumpScope(cx, cx->globalObject, stdout);
         } else {
-            if (!JS_ValueToId(cx, STRING_TO_JSVAL(str), &id))
-                return JS_FALSE;
-            JSObject *obj;
-            if (!js_FindProperty(cx, id, false, &obj, &obj2, &prop))
-                return JS_FALSE;
-            if (prop) {
-                if (!obj->getGeneric(cx, id, &value))
-                    return JS_FALSE;
-            }
-            if (!prop || !value.isObjectOrNull()) {
-                fputs("js: invalid stats argument ", gErrFile);
-                JS_FileEscapedString(gErrFile, str, 0);
-                putc('\n', gErrFile);
-                continue;
-            }
-            obj = value.toObjectOrNull();
-            if (obj)
-                DumpScope(cx, obj, stdout);
+            fputs("js: invalid stats argument ", gErrFile);
+            JS_FileEscapedString(gErrFile, str, 0);
+            putc('\n', gErrFile);
+            continue;
         }
     }
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -4119,7 +4097,7 @@ static const char *const shell_help_messages[] = {
 "  Interface to JS_DumpHeap with output sent to file",
 "dumpObject()             Dump an internal representation of an object",
 "notes([fun])             Show source notes for functions",
-"stats([string ...])      Dump 'arena', 'atom', 'global' stats",
+"stats([string ...])      Dump 'atom' or 'global' stats",
 "findReferences(target)\n"
 "  Walk the entire heap, looking for references to |target|, and return a\n"
 "  \"references object\" describing what we found.\n"
@@ -4569,7 +4547,7 @@ its_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
     return JS_TRUE;
 }
 
-JSErrorFormatString jsShell_ErrorFormatString[JSErr_Limit] = {
+JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
 #define MSG_DEF(name, number, count, exception, format) \
     { format, count, JSEXN_ERR } ,
 #include "jsshell.msg"
@@ -4579,9 +4557,10 @@ JSErrorFormatString jsShell_ErrorFormatString[JSErr_Limit] = {
 static const JSErrorFormatString *
 my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
 {
-    if ((errorNumber > 0) && (errorNumber < JSShellErr_Limit))
-        return &jsShell_ErrorFormatString[errorNumber];
-    return NULL;
+    if (errorNumber == 0 || errorNumber >= JSShellErr_Limit)
+        return NULL;
+
+    return &jsShell_ErrorFormatString[errorNumber];
 }
 
 static void

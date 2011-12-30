@@ -159,6 +159,7 @@ public:
         NS_IF_RELEASE(sInstance);
     }
 
+    void MarkInCCGeneration(PRUint32 aGeneration);
 protected:
     friend nsresult
     NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult);

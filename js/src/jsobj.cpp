@@ -3620,7 +3620,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     if (normalUnwind) {
         uintN slot = JSSLOT_BLOCK_FIRST_FREE_SLOT;
         depth += fp->numFixed();
-        obj->copySlotRange(slot, fp->slots() + depth, count, true);
+        obj->copySlotRange(slot, fp->slots() + depth, count);
     }
 
     /* We must clear the private slot even with errors. */
@@ -4037,7 +4037,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
             a->shape_ = reserved.newashape;
 
         a->slots = reserved.newaslots;
-        a->copySlotRange(0, reserved.bvals.begin(), bcap, false);
+        a->initSlotRange(0, reserved.bvals.begin(), bcap);
         if (a->hasPrivate())
             a->setPrivate(bpriv);
 
@@ -4047,7 +4047,7 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
             b->shape_ = reserved.newbshape;
 
         b->slots = reserved.newbslots;
-        b->copySlotRange(0, reserved.avals.begin(), acap, false);
+        b->initSlotRange(0, reserved.avals.begin(), acap);
         if (b->hasPrivate())
             b->setPrivate(apriv);
 
@@ -4524,25 +4524,55 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *protoProto,
 }
 
 void
-JSObject::copySlotRange(size_t start, const Value *vector, size_t length, bool valid)
+JSObject::getSlotRange(size_t start, size_t length,
+                       HeapValue **fixedStart, HeapValue **fixedEnd,
+                       HeapValue **slotsStart, HeapValue **slotsEnd)
 {
-    if (valid)
-        prepareSlotRangeForOverwrite(start, start + length);
-
     JS_ASSERT(!isDenseArray());
     JS_ASSERT(slotInRange(start + length, SENTINEL_ALLOWED));
+
     size_t fixed = numFixedSlots();
     if (start < fixed) {
         if (start + length < fixed) {
-            memcpy(fixedSlots() + start, vector, length * sizeof(Value));
+            *fixedStart = &fixedSlots()[start];
+            *fixedEnd = &fixedSlots()[start + length];
+            *slotsStart = *slotsEnd = NULL;
         } else {
             size_t localCopy = fixed - start;
-            memcpy(fixedSlots() + start, vector, localCopy * sizeof(Value));
-            memcpy(slots, vector + localCopy, (length - localCopy) * sizeof(Value));
+            *fixedStart = &fixedSlots()[start];
+            *fixedEnd = &fixedSlots()[start + localCopy];
+            *slotsStart = &slots[0];
+            *slotsEnd = &slots[length - localCopy];
         }
     } else {
-        memcpy(slots + start - fixed, vector, length * sizeof(Value));
+        *fixedStart = *fixedEnd = NULL;
+        *slotsStart = &slots[start - fixed];
+        *slotsEnd = &slots[start - fixed + length];
     }
+}
+
+void
+JSObject::initSlotRange(size_t start, const Value *vector, size_t length)
+{
+    JSCompartment *comp = compartment();
+    HeapValue *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
+    getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
+    for (HeapValue *vp = fixedStart; vp != fixedEnd; vp++)
+        vp->init(comp, *vector++);
+    for (HeapValue *vp = slotsStart; vp != slotsEnd; vp++)
+        vp->init(comp, *vector++);
+}
+
+void
+JSObject::copySlotRange(size_t start, const Value *vector, size_t length)
+{
+    JSCompartment *comp = compartment();
+    HeapValue *fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
+    getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
+    for (HeapValue *vp = fixedStart; vp != fixedEnd; vp++)
+        vp->set(comp, *vector++);
+    for (HeapValue *vp = slotsStart; vp != slotsEnd; vp++)
+        vp->set(comp, *vector++);
 }
 
 inline void

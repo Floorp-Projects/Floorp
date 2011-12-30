@@ -45,7 +45,11 @@
 #include "nsIObserverService.h"
 #include "mozilla/dom/workers/Workers.h"
 #include "jstypedarray.h"
+
 #include "nsTelephonyWorker.h"
+#include "nsITelephone.h"
+#include "nsWifiWorker.h"
+#include "nsIWifi.h"
 
 #include "nsThreadUtils.h"
 
@@ -60,6 +64,7 @@ USING_WORKERS_NAMESPACE
 using namespace mozilla::ipc;
 
 static NS_DEFINE_CID(kTelephonyWorkerCID, NS_TELEPHONYWORKER_CID);
+static NS_DEFINE_CID(kWifiWorkerCID, NS_WIFIWORKER_CID);
 
 // Topic we listen to for shutdown.
 #define PROFILE_BEFORE_CHANGE_TOPIC "profile-before-change"
@@ -225,16 +230,6 @@ RadioManager::Init()
   nsresult rv = obs->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // The telephony worker component is a hack that gives us a global object for
-  // our own functions and makes creating the worker possible.
-  nsCOMPtr<nsIRadioWorker> worker(do_CreateInstance(kTelephonyWorkerCID));
-  NS_ENSURE_TRUE(worker, NS_ERROR_FAILURE);
-
-  jsval workerval;
-  rv = worker->GetWorker(&workerval);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(!JSVAL_IS_PRIMITIVE(workerval), "bad worker value");
-
   JSContext *cx;
   rv = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext(&cx);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -243,30 +238,11 @@ RadioManager::Init()
     return NS_ERROR_FAILURE;
   }
 
-  JSObject *workerobj = JSVAL_TO_OBJECT(workerval);
+  rv = InitTelephone(cx);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  JSAutoRequest ar(cx);
-  JSAutoEnterCompartment ac;
-  if (!ac.enter(cx, workerobj)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  WorkerCrossThreadDispatcher *wctd = GetWorkerCrossThreadDispatcher(cx, workerval);
-  if (!wctd) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsRefPtr<ConnectWorkerToRIL> connection = new ConnectWorkerToRIL();
-  if (!wctd->PostTask(connection)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // Now that we're set up, connect ourselves to the RIL thread.
-  mozilla::RefPtr<RILReceiver> receiver = new RILReceiver(wctd);
-  StartRil(receiver);
-
-  mTelephone = do_QueryInterface(worker);
-  NS_ENSURE_TRUE(mTelephone, NS_ERROR_FAILURE);
+  rv = InitWifi(cx);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -278,6 +254,7 @@ RadioManager::Shutdown()
 
   StopRil();
   mTelephone = nsnull;
+  mWifi = nsnull;
 
   mShutdown = true;
 }
@@ -314,6 +291,59 @@ RadioManager::GetTelephone()
   }
 
   return nsnull;
+}
+
+nsresult
+RadioManager::InitTelephone(JSContext *cx)
+{
+  // The telephony worker component is a hack that gives us a global object for
+  // our own functions and makes creating the worker possible.
+  nsCOMPtr<nsIRadioWorker> worker(do_CreateInstance(kTelephonyWorkerCID));
+  NS_ENSURE_TRUE(worker, NS_ERROR_FAILURE);
+
+  jsval workerval;
+  nsresult rv = worker->GetWorker(&workerval);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ASSERTION(!JSVAL_IS_PRIMITIVE(workerval), "bad worker value");
+
+  JSObject *workerobj = JSVAL_TO_OBJECT(workerval);
+
+  JSAutoRequest ar(cx);
+  JSAutoEnterCompartment ac;
+  if (!ac.enter(cx, workerobj)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  WorkerCrossThreadDispatcher *wctd = GetWorkerCrossThreadDispatcher(cx, workerval);
+  if (!wctd) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsRefPtr<ConnectWorkerToRIL> connection = new ConnectWorkerToRIL();
+  if (!wctd->PostTask(connection)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // Now that we're set up, connect ourselves to the RIL thread.
+  mozilla::RefPtr<RILReceiver> receiver = new RILReceiver(wctd);
+  StartRil(receiver);
+
+  mTelephone = do_QueryInterface(worker);
+  NS_ENSURE_TRUE(mTelephone, NS_ERROR_FAILURE);
+
+  return NS_OK;
+}
+
+nsresult
+RadioManager::InitWifi(JSContext *cx)
+{
+  nsCOMPtr<nsIRadioWorker> worker(do_CreateInstance(kWifiWorkerCID));
+  NS_ENSURE_TRUE(worker, NS_ERROR_FAILURE);
+
+  mWifi = do_QueryInterface(worker);
+  NS_ENSURE_TRUE(mWifi, NS_ERROR_FAILURE);
+
+  return NS_OK;
 }
 
 

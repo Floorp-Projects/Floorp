@@ -72,7 +72,7 @@
 #include "nsStyleConsts.h"
 #include "nsTableOuterFrame.h"
 #include "nsIDOMXULElement.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLLegendElement.h"

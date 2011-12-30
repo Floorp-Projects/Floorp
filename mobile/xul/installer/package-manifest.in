@@ -154,6 +154,7 @@
 @BINPATH@/components/dom_base.xpt
 #ifdef MOZ_B2G_RIL
 @BINPATH@/components/dom_telephony.xpt
+@BINPATH@/components/dom_wifi.xpt
 @BINPATH@/components/dom_system_b2g.xpt
 #endif
 @BINPATH@/components/dom_battery.xpt
@@ -398,6 +399,8 @@
 @BINPATH@/components/nsTelephonyWorker.js
 @BINPATH@/components/Telephony.manifest
 @BINPATH@/components/Telephony.js
+@BINPATH@/components/nsWifiWorker.js
+@BINPATH@/components/nsWifiWorker.manifest
 #endif
 #ifdef XP_MACOSX
 @BINPATH@/components/libalerts_s.dylib
