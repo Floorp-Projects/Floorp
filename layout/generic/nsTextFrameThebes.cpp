@@ -7449,7 +7449,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // Disallow negative widths
   aMetrics.width = NSToCoordCeil(NS_MAX(gfxFloat(0.0), textMetrics.mAdvanceWidth));
 
-  if (completedFirstLetter && transformedCharsFit == 0 && !usedHyphenation) {
+  if (transformedCharsFit == 0 && !usedHyphenation) {
     aMetrics.ascent = 0;
     aMetrics.height = 0;
   } else if (boundingBoxType != gfxFont::LOOSE_INK_EXTENTS) {
