@@ -130,12 +130,15 @@ classes.dex: $(_JAVA_TESTS)
 robocop.ap_: AndroidManifest.xml
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -I . -S res -F $@ -J ./
 
-robocop.apk: robocop.ap_ classes.dex
-	$(APKBUILDER) robocop-raw.apk -v $(APKBUILDER_FLAGS) -z robocop.ap_ -f classes.dex
-ifdef JARSIGNER
-	$(JARSIGNER) robocop-raw.apk
-endif
-	$(ZIPALIGN) -f -v 4 robocop-raw.apk $@
+robocop-unsigned-unaligned.apk: robocop.ap_ classes.dex
+	$(APKBUILDER) $@ -v $(APKBUILDER_FLAGS) -z robocop.ap_ -f classes.dex
+
+robocop-unaligned.apk: robocop-unsigned-unaligned.apk
+	cp robocop-unsigned-unaligned.apk $@
+	jarsigner -keystore ~/.android/debug.keystore -storepass android -keypass android $@ androiddebugkey
+
+robocop.apk: robocop-unaligned.apk
+	$(ZIPALIGN) -f -v 4 robocop-unaligned.apk $@
 	cp $(TESTPATH)/robocop.ini robocop.ini
 	cp $(srcdir)/parse_ids.py parse_ids.py
 
