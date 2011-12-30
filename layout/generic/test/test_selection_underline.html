@@ -313,8 +313,7 @@ function run()
     gTestingIndex = 0;
   }
 
-  netscape.security.PrivilegeManager.enablePrivilege(
-   'UniversalPreferencesRead UniversalPreferencesWrite UniversalXPConnect');
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
@@ -392,8 +391,7 @@ function onLoad()
     return;
   }
 
-  netscape.security.PrivilegeManager.enablePrivilege(
-   'UniversalPreferencesRead UniversalPreferencesWrite UniversalXPConnect');
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
@@ -416,8 +414,7 @@ function onLoad()
 
 function cleanup()
 {
-  netscape.security.PrivilegeManager.enablePrivilege(
-   'UniversalPreferencesRead UniversalPreferencesWrite UniversalXPConnect');
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);

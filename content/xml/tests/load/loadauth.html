@@ -36,7 +36,7 @@ xmlDoc.addEventListener("load", documentLoaded, false);
 
 function execute()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   xmlDoc.load("http://green/heikki/login/data.xml");
 }
 

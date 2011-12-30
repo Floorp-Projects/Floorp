@@ -32,7 +32,7 @@ RemoteCanvas.prototype.remotePageLoaded = function(callback) {
 };
 
 function bidiNumeral(val) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalPreferencesRead UniversalPreferencesWrite UniversalXPConnect');
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
 
