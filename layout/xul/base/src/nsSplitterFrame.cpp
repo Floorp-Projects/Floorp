@@ -63,7 +63,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsIXBLService.h"
 #include "nsIServiceManager.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
 #include "nsContentCID.h"

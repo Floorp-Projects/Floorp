@@ -1,12 +1,14 @@
 %include places.css
 
 /* Style Places sidebars as Vista media collection */
-#bookmarksPanel:-moz-system-metric(windows-default-theme),
-#history-panel:-moz-system-metric(windows-default-theme) {
-  background-color: #EEF3FA;
-}
+@media (-moz-windows-default-theme) {
+  #bookmarksPanel,
+  #history-panel {
+    background-color: #EEF3FA;
+  }
 
-.sidebar-placesTree:-moz-system-metric(windows-default-theme) {
-  background-color: transparent;
-  border-top: none;
+  .sidebar-placesTree {
+    background-color: transparent;
+    border-top: none;
+  }
 }

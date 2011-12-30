@@ -152,6 +152,7 @@ _TEST_FILES	= \
 		devicemotion_outer.html \
 		devicemotion_inner.html \
 		test_bug698061.html \
+		test_bug707749.html \
 		$(NULL)
 
 libs:: 	$(_TEST_FILES)

@@ -307,6 +307,16 @@ nsStringBuffer::ToString(PRUint32 len, nsACString &str,
     accessor->set(data, len, flags);
   }
 
+size_t
+nsStringBuffer::SizeOfIncludingThisIfUnshared(nsMallocSizeOfFun aMallocSizeOf) const
+  {
+    if (!IsReadonly())
+      {
+        return aMallocSizeOf(this, sizeof(nsStringBuffer) + mStorageSize);
+      }
+    return 0;
+  }
+
 // ---------------------------------------------------------------------------
 
 

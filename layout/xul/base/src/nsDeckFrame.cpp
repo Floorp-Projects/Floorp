@@ -56,7 +56,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsStackLayout.h"
 #include "nsDisplayList.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 
 nsIFrame*
 NS_NewDeckFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)

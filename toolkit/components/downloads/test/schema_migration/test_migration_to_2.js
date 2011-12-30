@@ -74,7 +74,7 @@ function run_test()
   do_check_eq(1180493839859230, stmt.getInt64(3));
   do_check_eq(1180493839859230, stmt.getInt64(4));
   do_check_eq(1, stmt.getInt32(5));
-  stmt.reset();
+  stmt.finalize();
 
   cleanup();
 }

@@ -102,8 +102,7 @@ protected:
 
         const txExpandedName key()
         {
-            NS_ASSERTION(mCurrentPos >= 0 &&
-                         mCurrentPos < mMap.mItems.Length(),
+            NS_ASSERTION(mCurrentPos < mMap.mItems.Length(),
                          "invalid position in txExpandedNameMap::iterator");
             return txExpandedName(mMap.mItems[mCurrentPos].mNamespaceID,
                                   mMap.mItems[mCurrentPos].mLocalName);
@@ -112,8 +111,7 @@ protected:
     protected:
         void* itemValue()
         {
-            NS_ASSERTION(mCurrentPos >= 0 &&
-                         mCurrentPos < mMap.mItems.Length(),
+            NS_ASSERTION(mCurrentPos < mMap.mItems.Length(),
                          "invalid position in txExpandedNameMap::iterator");
             return mMap.mItems[mCurrentPos].mValue;
         }

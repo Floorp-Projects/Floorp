@@ -1679,6 +1679,25 @@ jsid nsDOMClassInfo::sMultiEntry_id      = JSID_VOID;
 jsid nsDOMClassInfo::sOnload_id          = JSID_VOID;
 jsid nsDOMClassInfo::sOnerror_id         = JSID_VOID;
 
+static const JSClass *sObjectClass = nsnull;
+
+/**
+ * Set our JSClass pointer for the Object class
+ */
+static void
+FindObjectClass(JSObject* aGlobalObject)
+{
+  NS_ASSERTION(!sObjectClass,
+               "Double set of sObjectClass");
+  JSObject *obj, *proto = aGlobalObject;
+  do {
+    obj = proto;
+    proto = js::GetObjectProto(obj);
+  } while (proto);
+
+  sObjectClass = js::GetObjectJSClass(obj);
+}
+
 static void
 PrintWarningOnConsole(JSContext *cx, const char *stringBundleProperty)
 {
@@ -4702,52 +4721,6 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
                  nsScriptNameSpaceManager *nameSpaceManager,
                  JSObject *dot_prototype, bool install, bool *did_resolve);
 
-static nsresult
-LookupPrototypeProto(JSContext *cx, JSObject *winobj,
-                     const nsDOMClassInfoData *ci_data,
-                     const nsGlobalNameStruct *name_struct,
-                     JSObject **aProtoProto);
-
-
-static nsGlobalWindow*
-FindUsableInnerWindow(nsIXPConnect *xpc, JSContext *cx, JSObject *global)
-{
-  // Only do this if the global object is a window.
-  // XXX Is there a better way to check this?
-  nsISupports *globalNative = xpc->GetNativeOfWrapper(cx, global);
-  nsCOMPtr<nsPIDOMWindow> piwin = do_QueryInterface(globalNative);
-  if (!piwin) {
-    return nsnull;
-  }
-
-  nsGlobalWindow *win = nsGlobalWindow::FromSupports(globalNative);
-  if (win->IsClosedOrClosing()) {
-    return nsnull;
-  }
-  
-  // If the window is in a different compartment than the global object, then
-  // it's likely that global is a sandbox object whose prototype is a window.
-  // Don't do anything in this case.
-  if (win->FastGetGlobalJSObject() &&
-      js::GetObjectCompartment(global) != js::GetObjectCompartment(win->FastGetGlobalJSObject())) {
-    return nsnull;
-  }
-
-  if (win->IsOuterWindow()) {
-    // XXXjst: Do security checks here when we remove the security
-    // checks on the inner window.
-
-    win = win->GetCurrentInnerWindowInternal();
-
-    JSObject* global;
-    if (!win || !(global = win->GetGlobalJSObject()) ||
-        win->IsClosedOrClosing()) {
-      return nsnull;
-    }
-  }
-
-  return win;
-}
 
 NS_IMETHODIMP
 nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
@@ -4765,6 +4738,19 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
                                        count, mData->mInterfaces)) {
     JS_ClearPendingException(cx);
   }
+
+  // This is called before any other location that requires
+  // sObjectClass, so compute it here. We assume that nobody has had a
+  // chance to monkey around with proto's prototype chain before this.
+  if (!sObjectClass) {
+    FindObjectClass(proto);
+    NS_ASSERTION(sObjectClass && !strcmp(sObjectClass->name, "Object"),
+                 "Incorrect object class!");
+  }
+
+  NS_ASSERTION(::JS_GetPrototype(cx, proto) &&
+               JS_GET_CLASS(cx, ::JS_GetPrototype(cx, proto)) == sObjectClass,
+               "Hmm, somebody did something evil?");
 
 #ifdef DEBUG
   if (mData->mHasClassInterface && mData->mProtoChainInterface &&
@@ -4793,12 +4779,38 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
   // document.body's prototype will find the right function.
   JSObject *global = ::JS_GetGlobalForObject(cx, proto);
 
-  nsGlobalWindow *win = FindUsableInnerWindow(XPConnect(), cx, global);
-  if (!win) {
+  // Only do this if the global object is a window.
+  // XXX Is there a better way to check this?
+  nsISupports *globalNative = XPConnect()->GetNativeOfWrapper(cx, global);
+  nsCOMPtr<nsPIDOMWindow> piwin = do_QueryInterface(globalNative);
+  if (!piwin) {
     return NS_OK;
   }
 
-  global = win->FastGetGlobalJSObject();
+  nsGlobalWindow *win = nsGlobalWindow::FromSupports(globalNative);
+  if (win->IsClosedOrClosing()) {
+    return NS_OK;
+  }
+
+  // If the window is in a different compartment than the global object, then
+  // it's likely that global is a sandbox object whose prototype is a window.
+  // Don't do anything in this case.
+  if (win->FastGetGlobalJSObject() &&
+      js::GetObjectCompartment(global) != js::GetObjectCompartment(win->FastGetGlobalJSObject())) {
+    return NS_OK;
+  }
+
+  if (win->IsOuterWindow()) {
+    // XXXjst: Do security checks here when we remove the security
+    // checks on the inner window.
+
+    win = win->GetCurrentInnerWindowInternal();
+
+    if (!win || !(global = win->GetGlobalJSObject()) ||
+        win->IsClosedOrClosing()) {
+      return NS_OK;
+    }
+  }
 
   // Don't overwrite a property set by content.
   JSBool found;
@@ -4816,23 +4828,6 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
                           mData, nsnull, nameSpaceManager, proto, !found,
                           &unused);
 }
-
-NS_IMETHODIMP
-nsDOMClassInfo::PreCreatePrototype(JSContext * cx, JSObject * global,
-                                   JSObject **protoProto)
-{
-  *protoProto = nsnull;
-  
-  nsGlobalWindow *win = FindUsableInnerWindow(XPConnect(), cx, global);
-  if (!win) {
-    return NS_OK;
-  }
-
-  JSObject *winObj = win->FastGetGlobalJSObject();
-  
-  return LookupPrototypeProto(cx, winObj, mData, nsnull, protoProto);
-}
-
 
 // static
 nsIClassInfo *
@@ -5186,7 +5181,7 @@ nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
   // scope polluter (right before Object.prototype).
 
   while ((proto = ::JS_GetPrototype(cx, o))) {
-    if (js::GetObjectClass(proto) == &js::ObjectClass) {
+    if (JS_GET_CLASS(cx, proto) == sObjectClass) {
       // Set the global scope polluters prototype to Object.prototype
       ::JS_SplicePrototype(cx, gsp, proto);
 
@@ -6008,105 +6003,6 @@ GetXPCProto(nsIXPConnect *aXPConnect, JSContext *cx, nsGlobalWindow *aWin,
   return aXPConnect->HoldObject(cx, proto_obj, aProto);
 }
 
-static nsresult
-LookupPrototypeProto(JSContext *cx, JSObject *winobj,
-                     const nsDOMClassInfoData *ci_data,
-                     const nsGlobalNameStruct *name_struct,
-                     JSObject **aProtoProto)
-{
-  NS_ASSERTION(ci_data ||
-               (name_struct &&
-                name_struct->mType == nsGlobalNameStruct::eTypeClassProto),
-               "Wrong type or missing ci_data!");
-
-  const nsIID *primary_iid = &NS_GET_IID(nsISupports);
-
-  if (!ci_data) {
-    primary_iid = &name_struct->mIID;
-  } else if (ci_data->mProtoChainInterface) {
-    primary_iid = ci_data->mProtoChainInterface;
-  }
-
-  if (primary_iid->Equals(NS_GET_IID(nsISupports))) {
-    *aProtoProto = nsnull;
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIInterfaceInfoManager>
-    iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
-  NS_ENSURE_TRUE(iim, NS_ERROR_NOT_AVAILABLE);
-
-  nsCOMPtr<nsIInterfaceInfo> if_info;
-  iim->GetInfoForIID(primary_iid, getter_AddRefs(if_info));
-  NS_ENSURE_TRUE(if_info, NS_ERROR_UNEXPECTED);
-
-  const nsIID *iid = nsnull;
-
-  nsCOMPtr<nsIInterfaceInfo> parent;
-  if (ci_data && !ci_data->mHasClassInterface) {
-    if_info->GetIIDShared(&iid);
-  } else {
-    if_info->GetParent(getter_AddRefs(parent));
-    NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
-
-    parent->GetIIDShared(&iid);
-  }
-
-  if (!iid || iid->Equals(NS_GET_IID(nsISupports))) {
-    *aProtoProto = nsnull;
-    return NS_OK;
-  }
-
-  const char *class_parent_name = nsnull;
-  if (ci_data && !ci_data->mHasClassInterface) {
-    // If the class doesn't have a class interface the primary
-    // interface is the interface that should be
-    // constructor.prototype.__proto__.
-
-    if_info->GetNameShared(&class_parent_name);
-  } else {
-    // If the class does have a class interface (or there's no
-    // real class for this name) then the parent of the
-    // primary interface is what we want on
-    // constructor.prototype.__proto__.
-
-    NS_ASSERTION(parent, "Whoa, this is bad, null parent here!");
-
-    parent->GetNameShared(&class_parent_name);
-  }
-
-  JSObject *protoProto = nsnull;
-
-  // Get class_parent_name here
-  if (class_parent_name) {
-    jsval val;
-
-    JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, winobj)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    if (!::JS_LookupProperty(cx, winobj, CutPrefix(class_parent_name), &val)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    JSObject *tmp = JSVAL_IS_OBJECT(val) ? JSVAL_TO_OBJECT(val) : nsnull;
-
-    if (tmp) {
-      if (!::JS_LookupProperty(cx, tmp, "prototype", &val)) {
-        return NS_ERROR_UNEXPECTED;
-      }
-
-      if (JSVAL_IS_OBJECT(val)) {
-        protoProto = JSVAL_TO_OBJECT(val);
-      }
-    }
-  }
-
-  *aProtoProto = protoProto;
-  return NS_OK;
-}
-
 // Either ci_data must be non-null or name_struct must be non-null and of type
 // eTypeClassProto.
 static nsresult
@@ -6152,6 +6048,10 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
     primary_iid = ci_data->mProtoChainInterface;
   }
 
+  nsCOMPtr<nsIInterfaceInfo> if_info;
+  nsCOMPtr<nsIInterfaceInfo> parent;
+  const char *class_parent_name = nsnull;
+
   if (!primary_iid->Equals(NS_GET_IID(nsISupports))) {
     JSAutoEnterCompartment ac;
 
@@ -6175,14 +6075,76 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
         !indexedDB::IDBKeyRange::DefineConstructors(cx, class_obj)) {
       return NS_ERROR_FAILURE;
     }
+
+    nsCOMPtr<nsIInterfaceInfoManager>
+      iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
+    NS_ENSURE_TRUE(iim, NS_ERROR_NOT_AVAILABLE);
+
+    iim->GetInfoForIID(primary_iid, getter_AddRefs(if_info));
+    NS_ENSURE_TRUE(if_info, NS_ERROR_UNEXPECTED);
+
+    const nsIID *iid = nsnull;
+
+    if (ci_data && !ci_data->mHasClassInterface) {
+      if_info->GetIIDShared(&iid);
+    } else {
+      if_info->GetParent(getter_AddRefs(parent));
+      NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
+
+      parent->GetIIDShared(&iid);
+    }
+
+    if (iid) {
+      if (!iid->Equals(NS_GET_IID(nsISupports))) {
+        if (ci_data && !ci_data->mHasClassInterface) {
+          // If the class doesn't have a class interface the primary
+          // interface is the interface that should be
+          // constructor.prototype.__proto__.
+
+          if_info->GetNameShared(&class_parent_name);
+        } else {
+          // If the class does have a class interface (or there's no
+          // real class for this name) then the parent of the
+          // primary interface is what we want on
+          // constructor.prototype.__proto__.
+
+          NS_ASSERTION(parent, "Whoa, this is bad, null parent here!");
+
+          parent->GetNameShared(&class_parent_name);
+        }
+      }
+    }
   }
 
   {
     JSObject *winobj = aWin->FastGetGlobalJSObject();
 
-    JSObject *proto;
-    rv = LookupPrototypeProto(cx, winobj, ci_data, name_struct, &proto);
-    NS_ENSURE_SUCCESS(rv, rv);
+    JSObject *proto = nsnull;
+
+    if (class_parent_name) {
+      jsval val;
+
+      JSAutoEnterCompartment ac;
+      if (!ac.enter(cx, winobj)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      if (!::JS_LookupProperty(cx, winobj, CutPrefix(class_parent_name), &val)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      JSObject *tmp = JSVAL_IS_OBJECT(val) ? JSVAL_TO_OBJECT(val) : nsnull;
+
+      if (tmp) {
+        if (!::JS_LookupProperty(cx, tmp, "prototype", &val)) {
+          return NS_ERROR_UNEXPECTED;
+        }
+
+        if (JSVAL_IS_OBJECT(val)) {
+          proto = JSVAL_TO_OBJECT(val);
+        }
+      }
+    }
 
     if (dot_prototype) {
       JSAutoEnterCompartment ac;
@@ -6194,7 +6156,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
 
       if (proto &&
           (!xpc_proto_proto ||
-           js::GetObjectClass(xpc_proto_proto) == &js::ObjectClass)) {
+           JS_GET_CLASS(cx, xpc_proto_proto) == sObjectClass)) {
         if (!JS_WrapObject(cx, &proto) ||
             !JS_SetPrototype(cx, dot_prototype, proto)) {
           return NS_ERROR_UNEXPECTED;
@@ -9581,7 +9543,7 @@ nsHTMLPluginObjElementSH::SetupProtoChain(nsIXPConnectWrappedNative *wrapper,
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (pi_proto && js::GetObjectClass(pi_proto) != &js::ObjectClass) {
+  if (pi_proto && JS_GET_CLASS(cx, pi_proto) != sObjectClass) {
     // The plugin wrapper has a proto that's not Object.prototype, set
     // 'pi.__proto__.__proto__' to the original 'this.__proto__'
     if (pi_proto != my_proto && !::JS_SetPrototype(cx, pi_proto, my_proto)) {

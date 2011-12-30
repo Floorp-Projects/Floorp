@@ -153,6 +153,10 @@ function run_test()
   do_check_eq(gDownloadLastDir.file.path, dir3.path);
 
   // cleanup
+  Cc["@mozilla.org/observer-service;1"]
+    .getService(Ci.nsIObserverService)
+    .notifyObservers(null, "quit-application", null);
+
   prefsService.clearUserPref("browser.privatebrowsing.keep_current_session");
   [dir1, dir2, dir3].forEach(function(dir) dir.remove(true));
 }
