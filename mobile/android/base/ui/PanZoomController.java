@@ -264,10 +264,7 @@ public class PanZoomController
             // the screen orientation changed) so abort it and start a new one to
             // ensure the viewport doesn't contain out-of-bounds areas
         case NOTHING:
-            // Don't do animations here; they're distracting and can cause flashes on page
-            // transitions.
-            mController.setViewportMetrics(getValidViewportMetrics());
-            mController.notifyLayerClientOfGeometryChange();
+            bounce();
             break;
         }
     }
