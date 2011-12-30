@@ -74,6 +74,13 @@ RUN_MOCHITEST_REMOTE = \
 	  --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
 	  $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
 
+RUN_MOCHITEST_ROBOTIUM = \
+  rm -f ./$@.log && \
+  $(PYTHON) _tests/testing/mochitest/runtestsremote.py --robocop ../../../build/mobile/robocop \
+    --console-level=INFO --log-file=./$@.log --file-level=INFO $(DM_FLAGS) --dm_trans=adb \
+    --app=$(TEST_PACKAGE_NAME) --deviceIP=${TEST_DEVICE} --xre-path=${MOZ_HOST_BIN} \
+    $(SYMBOLS_PATH) $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS)
+
 ifndef NO_FAIL_ON_TEST_ERRORS
 define CHECK_TEST_ERROR
   @errors=`grep "TEST-UNEXPECTED-" $@.log` ;\
@@ -91,6 +98,14 @@ mochitest-remote: DM_TRANS?=adb
 mochitest-remote:
 	@if test -f ${MOZ_HOST_BIN}/xpcshell && [ "${TEST_DEVICE}" != "usb" -o "$(DM_TRANS)" = "adb" ]; \
           then $(RUN_MOCHITEST_REMOTE); \
+        else \
+          echo "please prepare your host with environment variables for TEST_DEVICE and MOZ_HOST_BIN"; \
+        fi
+
+mochitest-robotium: DM_TRANS?=adb
+mochitest-robotium:
+	@if test -f ${MOZ_HOST_BIN}/xpcshell && [ "${TEST_DEVICE}" != "usb" -o "$(DM_TRANS)" = "adb" ]; \
+          then $(RUN_MOCHITEST_ROBOTIUM); \
         else \
           echo "please prepare your host with environment variables for TEST_DEVICE and MOZ_HOST_BIN"; \
         fi
@@ -286,6 +301,11 @@ stage-android: make-stage-dir
 	$(NSINSTALL) $(DEPTH)/build/mobile/sutagent/android/watcher/Watcher.apk $(PKG_STAGE)/bin
 	$(NSINSTALL) $(DEPTH)/build/mobile/sutagent/android/fencp/FenCP.apk $(PKG_STAGE)/bin
 	$(NSINSTALL) $(DEPTH)/build/mobile/sutagent/android/ffxcp/FfxCP.apk $(PKG_STAGE)/bin
+ifeq ($(MOZ_BUILD_APP),mobile/android)
+	$(NSINSTALL) $(DEPTH)/build/mobile/robocop/robocop.apk $(PKG_STAGE)/bin
+	$(PYTHON) $(DIST)/../build/mobile/robocop/parse_ids.py -i $(DEPTH)/mobile/android/base/R.java -o $(DEPTH)/build/mobile/robocop/fennec_ids.txt
+	$(NSINSTALL) $(DEPTH)/build/mobile/robocop/fennec_ids.txt $(PKG_STAGE)/bin
+endif
 
 stage-jetpack: make-stage-dir
 	$(NSINSTALL) $(topsrcdir)/testing/jetpack/jetpack-location.txt $(PKG_STAGE)/jetpack
