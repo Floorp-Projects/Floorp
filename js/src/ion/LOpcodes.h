@@ -71,7 +71,6 @@
     _(AddI)                         \
     _(SubI)                         \
     _(MulI)                         \
-    _(ModI)                         \
     _(MathD)                        \
     _(Int32ToDouble)                \
     _(ValueToDouble)                \
