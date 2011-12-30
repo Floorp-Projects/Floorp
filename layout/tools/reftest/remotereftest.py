@@ -349,7 +349,7 @@ user_pref("reftest.uri", "%s");
         #workaround for jsreftests.
         if options.enablePrivilege:
             fhandle.write("""
-user_pref("capability.principal.codebase.p2.granted", "UniversalPreferencesWrite UniversalXPConnect UniversalBrowserWrite UniversalPreferencesRead UniversalBrowserRead");
+user_pref("capability.principal.codebase.p2.granted", "UniversalXPConnect");
 user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
 """ % (options.remoteWebServer, options.httpPort))
 
