@@ -28,6 +28,7 @@ public class testPan extends ActivityInstrumentationTestCase2 {
   private Activity activity;
   private Driver driver;
   private Actions actions;
+  private Assert asserter;
   private static Class<?> launcherActivityClass;
 
   static{
@@ -64,11 +65,14 @@ public class testPan extends ActivityInstrumentationTestCase2 {
     driver = new FennecNativeDriver(activity, solo);
     actions = new FennecNativeActions(activity, solo, getInstrumentation());
     driver.setLogFile((String)config.get("logfile"));
+
+    asserter = new FennecNativeAssert();
+    asserter.setLogFile((String)config.get("logfile"));
   }
 
   public void testPan() {
     // TODO: find a better way to not hardcode this url
-    String url = "http://mochi.test:8888/tests/robocop/pantest.html";
+    String url = "http://mochi.test:8888/startup_test/fenncmark/wikipedia.html";
     actions.waitForGeckoEvent("Gecko:Ready");
     Element awesomebar = driver.findElement("awesome_bar");
     awesomebar.click();
@@ -76,7 +80,7 @@ public class testPan extends ActivityInstrumentationTestCase2 {
     Element urlbar = driver.findElement("awesomebar_text");
     getInstrumentation().waitForIdleSync();
     actions.sendKeys(url);
-    driver.is(url, urlbar.getText(),"Asserting Awesomebar typing works");
+    asserter.is(url, urlbar.getText(),"Asserting Awesomebar typing works");
 
     actions.sendSpecialKey(Actions.SpecialKey.ENTER);
     actions.waitForGeckoEvent("DOMContentLoaded");
@@ -101,7 +105,7 @@ public class testPan extends ActivityInstrumentationTestCase2 {
       }
       i++;
     } while( i < 1000 && driver.getScrollHeight() + 2*driver.getHeight() < driver.getPageHeight() );
-    driver.ok(i < 1000, "Less than 1000", "Should take less than 1000 drags to get to bottom of the page.");
+//    asserter.ok(i < 1000, "Less than 1000", "Should take less than 1000 drags to get to bottom of the page.");
 
     int frames = driver.stopFrameRecording();
     driver.dumpLog("__start_report" + Integer.toString(frames) + "__end_report");
