@@ -2129,7 +2129,8 @@ nsGenericElement::GetBoundingClientRect(nsIDOMClientRect** aResult)
   }
 
   nsRect r = nsLayoutUtils::GetAllInFlowRectsUnion(frame,
-          nsLayoutUtils::GetContainingBlockForClientRect(frame));
+          nsLayoutUtils::GetContainingBlockForClientRect(frame),
+          nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
   rect->SetLayoutRect(r);
   return NS_OK;
 }
@@ -2157,7 +2158,8 @@ nsGenericElement::GetClientRects(nsIDOMClientRectList** aResult)
 
   nsLayoutUtils::RectListBuilder builder(rectList);
   nsLayoutUtils::GetAllInFlowRects(frame,
-          nsLayoutUtils::GetContainingBlockForClientRect(frame), &builder);
+          nsLayoutUtils::GetContainingBlockForClientRect(frame), &builder,
+          nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
   if (NS_FAILED(builder.mRV))
     return builder.mRV;
   *aResult = rectList.forget().get();

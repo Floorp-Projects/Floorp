@@ -426,6 +426,7 @@ class ReadBarriered
     T *value;
 
   public:
+    ReadBarriered() : value(NULL) {}
     ReadBarriered(T *value) : value(value) {}
 
     T *get() const {
@@ -436,6 +437,9 @@ class ReadBarriered
     }
 
     operator T*() const { return get(); }
+
+    T &operator*() const { return *get(); }
+    T *operator->() const { return get(); }
 
     T *unsafeGet() { return value; }
 

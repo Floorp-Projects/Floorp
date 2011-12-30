@@ -43,8 +43,17 @@
 #include "nsXULAppAPI.h"
 #include "nsThreadUtils.h"
 #include "prenv.h"
+#include "shared-libraries.h"
+#include "mozilla/StringBuilder.h"
+
+// we eventually want to make this runtime switchable
+//#define USE_BACKTRACE
+#ifdef USE_BACKTRACE
+#include <execinfo.h>
+#endif
 
 using std::string;
+using namespace mozilla;
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -70,6 +79,7 @@ using std::string;
 #if _MSC_VER
 #define snprintf _snprintf
 #endif
+
 
 mozilla::tls::key pkey_stack;
 mozilla::tls::key pkey_ticker;
@@ -113,12 +123,12 @@ public:
   { }
 
   string TagToString(Profile *profile);
-  void WriteTag(Profile *profile, FILE* stream);
 
 private:
   union {
     const char* mTagData;
     float mTagFloat;
+    Address mTagAddress;
   };
   Address mLeafAddress;
   char mTagName;
@@ -134,6 +144,10 @@ public:
     , mEntrySize(aEntrySize)
   {
     mEntries = new ProfileEntry[mEntrySize];
+    mNeedsSharedLibraryInfo = false;
+#if defined(ENABLE_SPS_LEAF_DATA) || defined(USE_BACKTRACE)
+    mNeedsSharedLibraryInfo = true;
+#endif
   }
 
   ~Profile()
@@ -153,18 +167,17 @@ public:
     }
   }
 
-  void ToString(string* profile)
+  void ToString(StringBuilder &profile)
   {
-    // Can't be called from signal because
-    // get_maps calls non reentrant functions.
-#ifdef ENABLE_SPS_LEAF_DATA
-    mMaps = getmaps(getpid());
-#endif
+    if (mNeedsSharedLibraryInfo) {
+      // Can't be called from signal because
+      // getting the shared library information can call non-reentrant functions.
+      mSharedLibraryInfo = SharedLibraryInfo::GetInfoForSelf();
+    }
 
-    *profile = "";
     int oldReadPos = mReadPos;
     while (mReadPos != mWritePos) {
-      *profile += mEntries[mReadPos].TagToString(this);
+      profile.Append(mEntries[mReadPos].TagToString(this).c_str());
       mReadPos = (mReadPos + 1) % mEntrySize;
     }
     mReadPos = oldReadPos;
@@ -172,26 +185,25 @@ public:
 
   void WriteProfile(FILE* stream)
   {
-    // Can't be called from signal because
-    // get_maps calls non reentrant functions.
-#ifdef ENABLE_SPS_LEAF_DATA
-    mMaps = getmaps(getpid());
-#endif
+    if (mNeedsSharedLibraryInfo) {
+      // Can't be called from signal because
+      // getting the shared library information can call non-reentrant functions.
+      mSharedLibraryInfo = SharedLibraryInfo::GetInfoForSelf();
+    }
 
     int oldReadPos = mReadPos;
     while (mReadPos != mWritePos) {
-      mEntries[mReadPos].WriteTag(this, stream);
+      string tag = mEntries[mReadPos].TagToString(this);
+      fwrite(tag.data(), 1, tag.length(), stream);
       mReadPos = (mReadPos + 1) % mEntrySize;
     }
     mReadPos = oldReadPos;
   }
 
-#ifdef ENABLE_SPS_LEAF_DATA
-  MapInfo& getMap()
+  SharedLibraryInfo& getSharedLibraryInfo()
   {
-    return mMaps;
+    return mSharedLibraryInfo;
   }
-#endif
 private:
   // Circular buffer 'Keep One Slot Open' implementation
   // for simplicity
@@ -199,9 +211,8 @@ private:
   int mWritePos; // points to the next entry we will write to
   int mReadPos;  // points to the next entry we will read to
   int mEntrySize;
-#ifdef ENABLE_SPS_LEAF_DATA
-  MapInfo mMaps;
-#endif
+  bool mNeedsSharedLibraryInfo;
+  SharedLibraryInfo mSharedLibraryInfo;
 };
 
 class SaveProfileTask;
@@ -303,6 +314,49 @@ void TableTicker::HandleSaveRequest()
   NS_DispatchToMainThread(runnable);
 }
 
+#ifdef USE_BACKTRACE
+static
+void doBacktrace(Profile &aProfile)
+{
+  void *array[100];
+  int count = backtrace (array, 100);
+
+  bool isSignal = true;
+#ifndef __i386__
+  // the test doesn't work for 64bit
+  isSignal = false;
+#endif
+  for (int i = count-1; i >= 0; i--) {
+    if( isSignal ) {
+      if( (intptr_t)array[i] == -1 ) { // signal frames have addresses of -1?
+        isSignal = false;
+      }
+      continue;
+    }
+    aProfile.addTag(ProfileEntry('l', (const char*)array[i]));
+  }
+  aProfile.addTag(ProfileEntry('s', "XRE_Main", 0));
+}
+#endif
+
+static
+void doSampleStackTrace(Stack *aStack, Profile &aProfile, TickSample *sample)
+{
+  // Sample
+  // 's' tag denotes the start of a sample block
+  // followed by 0 or more 'c' tags.
+  for (int i = 0; i < aStack->mStackPointer; i++) {
+    if (i == 0) {
+      Address pc = 0;
+      if (sample) {
+        pc = sample->pc;
+      }
+      aProfile.addTag(ProfileEntry('s', aStack->mStack[i], pc));
+    } else {
+      aProfile.addTag(ProfileEntry('c', aStack->mStack[i]));
+    }
+  }
+}
 
 void TableTicker::Tick(TickSample* sample)
 {
@@ -315,20 +369,11 @@ void TableTicker::Tick(TickSample* sample)
   }
   mStack->mQueueClearMarker = true;
 
-  // Sample
-  // 's' tag denotes the start of a sample block
-  // followed by 0 or more 'c' tags.
-  for (int i = 0; i < mStack->mStackPointer; i++) {
-    if (i == 0) {
-      Address pc = 0;
-      if (sample) {
-        pc = sample->pc;
-      }
-      mProfile.addTag(ProfileEntry('s', mStack->mStack[i], pc));
-    } else {
-      mProfile.addTag(ProfileEntry('c', mStack->mStack[i]));
-    }
-  }
+#ifdef USE_BACKTRACE
+  doBacktrace(mProfile);
+#else
+  doSampleStackTrace(mStack, mProfile, sample);
+#endif
 
   if (!sLastTracerEvent.IsNull()) {
     TimeDuration delta = sample->timestamp - sLastTracerEvent;
@@ -343,6 +388,27 @@ string ProfileEntry::TagToString(Profile *profile)
     char buff[50];
     snprintf(buff, 50, "%-40f", mTagFloat);
     tag += string(1, mTagName) + string("-") + string(buff) + string("\n");
+  } else if (mTagName == 'l') {
+    bool found = false;
+    char tagBuff[1024];
+    SharedLibraryInfo& shlibInfo = profile->getSharedLibraryInfo();
+    Address pc = mTagAddress;
+    // TODO Use binary sort (STL)
+    for (size_t i = 0; i < shlibInfo.GetSize(); i++) {
+      SharedLibrary &e = shlibInfo.GetEntry(i);
+      if (pc > (Address)e.GetStart() && pc < (Address)e.GetEnd()) {
+        if (e.GetName()) {
+          found = true;
+          snprintf(tagBuff, 1024, "l-%s@%p\n", e.GetName(), pc - e.GetStart());
+          tag += string(tagBuff);
+          break;
+        }
+      }
+    }
+    if (!found) {
+      snprintf(tagBuff, 1024, "l-???@%p\n", pc);
+      tag += string(tagBuff);
+    }
   } else {
     tag += string(1, mTagName) + string("-") + string(mTagData) + string("\n");
   }
@@ -351,11 +417,11 @@ string ProfileEntry::TagToString(Profile *profile)
   if (mLeafAddress) {
     bool found = false;
     char tagBuff[1024];
-    MapInfo& maps = profile->getMap();
+    SharedLibraryInfo& shlibInfo = profile->getSharedLibraryInfo();
     unsigned long pc = (unsigned long)mLeafAddress;
     // TODO Use binary sort (STL)
-    for (size_t i = 0; i < maps.GetSize(); i++) {
-      MapEntry &e = maps.GetEntry(i);
+    for (size_t i = 0; i < shlibInfo.GetSize(); i++) {
+      SharedLibrary &e = shlibInfo.GetEntry(i);
       if (pc > e.GetStart() && pc < e.GetEnd()) {
         if (e.GetName()) {
           found = true;
@@ -372,33 +438,6 @@ string ProfileEntry::TagToString(Profile *profile)
   }
 #endif
   return tag;
-}
-
-void ProfileEntry::WriteTag(Profile *profile, FILE *stream)
-{
-  fprintf(stream, "%c-%s\n", mTagName, mTagData);
-
-#ifdef ENABLE_SPS_LEAF_DATA
-  if (mLeafAddress) {
-    bool found = false;
-    MapInfo& maps = profile->getMap();
-    unsigned long pc = (unsigned long)mLeafAddress;
-    // TODO Use binary sort (STL)
-    for (size_t i = 0; i < maps.GetSize(); i++) {
-      MapEntry &e = maps.GetEntry(i);
-      if (pc > e.GetStart() && pc < e.GetEnd()) {
-        if (e.GetName()) {
-          found = true;
-          fprintf(stream, "l-%s@%li\n", e.GetName(), pc - e.GetStart());
-          break;
-        }
-      }
-    }
-    if (!found) {
-      fprintf(stream, "l-???@%li\n", pc);
-    }
-  }
-#endif
 }
 
 #define PROFILE_DEFAULT_ENTRY 100000
@@ -454,11 +493,11 @@ char* mozilla_sampler_get_profile() {
     return NULL;
   }
 
-  string profile;
-  t->GetProfile()->ToString(&profile);
+  StringBuilder profile;
+  t->GetProfile()->ToString(profile);
 
-  char *rtn = (char*)malloc( (strlen(profile.c_str())+1) * sizeof(char) );
-  strcpy(rtn, profile.c_str());
+  char *rtn = (char*)malloc( (profile.Length()+1) * sizeof(char) );
+  strcpy(rtn, profile.Buffer());
   return rtn;
 }
 
