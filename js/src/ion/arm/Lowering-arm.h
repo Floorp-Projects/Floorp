@@ -77,6 +77,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
 
     bool lowerConstantDouble(double d, MInstruction *ins);
     bool lowerDivI(MDiv *div);
+    bool lowerModI(MMod *mod);
     bool visitTableSwitch(MTableSwitch *tableswitch);
 
   public:

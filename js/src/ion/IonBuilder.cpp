@@ -563,6 +563,7 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_SUB:
       case JSOP_MUL:
       case JSOP_DIV:
+      case JSOP_MOD:
       	return jsop_binary(op);
 
       case JSOP_POS:
@@ -1943,6 +1944,10 @@ IonBuilder::jsop_binary(JSOp op, MDefinition *left, MDefinition *right)
 
       case JSOP_DIV:
         ins = MDiv::New(left, right);
+        break;
+
+      case JSOP_MOD:
+        ins = MMod::New(left, right);
         break;
 
       default:

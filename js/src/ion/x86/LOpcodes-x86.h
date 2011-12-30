@@ -47,7 +47,8 @@
     _(UnboxDouble)              \
     _(Box)                      \
     _(BoxDouble)                \
-    _(DivI)
+    _(DivI)                     \
+    _(ModI)
 
 #endif // jsion_lir_opcodes_x86_h__
 

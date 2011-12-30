@@ -152,7 +152,7 @@ LIRGenerator::visitCall(MCall *call)
     // A call is entirely stateful, depending upon arguments already being
     // stored in an argument vector. Therefore visitCall() may be generic.
     LCallGeneric *ins = new LCallGeneric(useRegister(call->getFunction()),
-                                         argslot, temp(LDefinition::GENERAL),
+                                         argslot,
                                          temp(LDefinition::GENERAL),
                                          temp(LDefinition::GENERAL));
     if (!defineReturn(ins, call))
@@ -445,6 +445,23 @@ LIRGenerator::visitDiv(MDiv *ins)
         JS_ASSERT(lhs->type() == MIRType_Double);
         return lowerForFPU(new LMathD(JSOP_DIV), ins, lhs, rhs);
     }
+
+    JS_NOT_REACHED("NYI");
+    return false;
+}
+
+bool
+LIRGenerator::visitMod(MMod *ins)
+{
+    MDefinition *lhs = ins->lhs();
+    MDefinition *rhs = ins->rhs();
+
+    if (ins->type() == MIRType_Int32 &&
+        ins->specialization() == MIRType_Int32) {
+        JS_ASSERT(lhs->type() == MIRType_Int32);
+        return lowerModI(ins);
+    }
+    // TODO: Implement for ins->specialization() == MIRType_Double
 
     JS_NOT_REACHED("NYI");
     return false;
