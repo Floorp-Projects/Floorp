@@ -1025,12 +1025,7 @@ toolbar[iconsize="small"] #feed-button {
 #page-proxy-favicon {
   width: 16px;
   height: 16px;
-}
-
-#page-proxy-stack {
-  width: 24px;
-  height: 20px;
-  padding: 2px 4px;
+  margin: 2px 4px;
 }
 
 #page-proxy-favicon:not([src]) {
