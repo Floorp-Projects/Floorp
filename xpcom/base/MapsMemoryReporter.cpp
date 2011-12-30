@@ -152,6 +152,13 @@ public:
   CollectReports(nsIMemoryMultiReporterCallback *aCallback,
                  nsISupports *aClosure);
 
+  NS_IMETHOD
+  GetExplicitNonHeap(PRInt64 *aAmount) {
+    // This reporter doesn't do any "explicit" measurements.
+    *aAmount = 0;
+    return NS_OK;
+  }
+
 private:
   // Search through /proc/self/maps for libxul.so, and set mLibxulDir to the
   // the directory containing libxul.
@@ -223,7 +230,7 @@ MapsReporter::CollectReports(nsIMemoryMultiReporterCallback *aCallback,
   NS_ASSERTION(categoriesSeen.mSeenVsize, "Didn't create a resident node?");
   if (!categoriesSeen.mSeenSwap) {
     aCallback->Callback(NS_LITERAL_CSTRING(""),
-                        NS_LITERAL_CSTRING("map/swap"),
+                        NS_LITERAL_CSTRING("map/swap/total"),
                         nsIMemoryReporter::KIND_NONHEAP,
                         nsIMemoryReporter::UNITS_BYTES,
                         0,

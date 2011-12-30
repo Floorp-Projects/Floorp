@@ -155,6 +155,16 @@ var Strings = {};
   });
 });
 
+var MetadataProvider = {
+  getDrawMetadata: function getDrawMetadata() {
+    return BrowserApp.getDrawMetadata();
+  },
+
+  drawingAllowed: function drawingAllowed() {
+    return !BrowserApp.selectedTab.suppressDrawing;
+  }
+};
+
 var BrowserApp = {
   _tabs: [],
   _selectedTab: null,
@@ -169,7 +179,7 @@ var BrowserApp = {
     BrowserEventHandler.init();
     ViewportHandler.init();
 
-    getBridge().setDrawMetadataProvider(this.getDrawMetadata.bind(this));
+    getBridge().setDrawMetadataProvider(MetadataProvider);
 
     Services.obs.addObserver(this, "Tab:Add", false);
     Services.obs.addObserver(this, "Tab:Load", false);
@@ -190,6 +200,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Viewport:Change", false);
     Services.obs.addObserver(this, "AgentMode:Change", false);
     Services.obs.addObserver(this, "SearchEngines:Get", false);
+    Services.obs.addObserver(this, "document-shown", false);
 
     function showFullScreenWarning() {
       NativeWindow.toast.show(Strings.browser.GetStringFromName("alertFullScreenToast"), "short");
@@ -427,7 +438,6 @@ var BrowserApp = {
   },
 
   quit: function quit() {
-      Cu.reportError("got quit quit message");
       window.QueryInterface(Ci.nsIDOMChromeWindow).minimize();
       window.close();
   },
@@ -639,8 +649,65 @@ var BrowserApp = {
       return;
     let focused = doc.activeElement;
     if ((focused instanceof HTMLInputElement && focused.mozIsTextField(false)) || (focused instanceof HTMLTextAreaElement)) {
-      focused.scrollIntoView(false);
-      BrowserApp.getTabForBrowser(aBrowser).sendViewportUpdate();
+      let tab = BrowserApp.getTabForBrowser(aBrowser);
+      let win = aBrowser.contentWindow;
+
+      // tell gecko to scroll the field into view. this will scroll any nested scrollable elements
+      // as well as the browser's content window, and modify the scrollX and scrollY on the content window.
+      focused.scrollIntoView(true);
+
+      // update userScrollPos so that we don't send a duplicate viewport update by triggering
+      // our scroll listener
+      tab.userScrollPos.x = win.scrollX;
+      tab.userScrollPos.y = win.scrollY;
+
+      // note that:
+      // 1. because of the way we do zooming using a CSS transform, gecko does not take into
+      // account the effect of the zoom on the viewport size.
+      // 2. if the input element is near the bottom/right of the page (less than one viewport
+      // height/width away from the bottom/right), the scrollIntoView call will make gecko scroll to the
+      // bottom/right of the page in an attempt to align the input field with the top of the viewport.
+      // however, since gecko doesn't know about the zoom, what it thinks is the "bottom/right of
+      // the page" isn't actually the bottom/right of the page at the current zoom level, and we 
+      // need to adjust this further.
+      // 3. we can't actually adjust this by changing the window scroll position, as gecko already thinks
+      // we're at the bottom/right, so instead we do it by changing the viewportExcess on the tab and
+      // moving the browser element.
+
+      let visibleContentWidth = tab._viewport.width / tab._viewport.zoom;
+      let visibleContentHeight = tab._viewport.height / tab._viewport.zoom;
+      // get the rect that the focused element occupies relative to what gecko thinks the viewport is,
+      // and adjust it by viewportExcess to so that it is relative to what the user sees as the viewport.
+      let focusedRect = focused.getBoundingClientRect();
+      focusedRect = {
+        left: focusedRect.left - tab.viewportExcess.x,
+        right: focusedRect.right - tab.viewportExcess.x,
+        top: focusedRect.top - tab.viewportExcess.y,
+        bottom: focusedRect.bottom - tab.viewportExcess.y
+      };
+      let transformChanged = false;
+      if (focusedRect.right >= visibleContentWidth && focusedRect.left > 0) {
+        // the element is too far off the right side, so we need to scroll to the right more
+        tab.viewportExcess.x += Math.min(focusedRect.left, focusedRect.right - visibleContentWidth);
+        transformChanged = true;
+      } else if (focusedRect.left < 0) {
+        // the element is too far off the left side, so we need to scroll to the left more
+        tab.viewportExcess.x += focusedRect.left;
+        transformChanged = true;
+      }
+      if (focusedRect.bottom >= visibleContentHeight && focusedRect.top > 0) {
+        // the element is too far down, so we need to scroll down more
+        tab.viewportExcess.y += Math.min(focusedRect.top, focusedRect.bottom - visibleContentHeight);
+        transformChanged = true;
+      } else if (focusedRect.top < 0) {
+        // the element is too far up, so we need to scroll up more
+        tab.viewportExcess.y += focusedRect.top;
+        transformChanged = true;
+      }
+      if (transformChanged)
+        tab.updateTransform();
+      // finally, let java know where we ended up
+      tab.sendViewportUpdate();
     }
   },
 
@@ -705,6 +772,20 @@ var BrowserApp = {
       ViewportHandler.onResize();
     } else if (aTopic == "SearchEngines:Get") {
       this.getSearchEngines();
+    } else if (aTopic == "document-shown") {
+      let tab = this.selectedTab;
+      if (tab.browser.contentDocument != aSubject) {
+        return;
+      }
+
+      ViewportHandler.resetMetadata(tab);
+
+      // Unsuppress drawing unless the page was being thawed from the bfcache (which is an atomic
+      // operation, so there is no drawing to suppress).
+      if (tab.suppressDrawing) {
+        tab.sendExposeEvent();
+        tab.suppressDrawing = false;
+      }
     }
   },
 
@@ -712,7 +793,7 @@ var BrowserApp = {
     delete this.defaultBrowserWidth;
     let width = Services.prefs.getIntPref("browser.viewport.desktopWidth");
     return this.defaultBrowserWidth = width;
-   }
+  }
 };
 
 var NativeWindow = {
@@ -1184,6 +1265,12 @@ Tab.prototype = {
     this.browser.addEventListener("PluginClickToPlay", this, true);
     this.browser.addEventListener("pagehide", this, true);
 
+    let chromeEventHandler = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                                       .getInterface(Ci.nsIWebNavigation)
+                                                       .QueryInterface(Ci.nsIDocShell)
+                                                       .chromeEventHandler;
+    chromeEventHandler.addEventListener("DOMWindowCreated", this, false);
+
     Services.obs.addObserver(this, "http-on-modify-request", false);
 
     if (!aParams.delayLoad) {
@@ -1320,20 +1407,22 @@ Tab.prototype = {
       transformChanged = true;
     }
 
+    if (transformChanged)
+      this.updateTransform();
+  },
+
+  updateTransform: function() {
     let hasZoom = (Math.abs(this._viewport.zoom - 1.0) >= 1e-6);
+    let x = this._viewport.offsetX + Math.round(-this.viewportExcess.x * this._viewport.zoom);
+    let y = this._viewport.offsetY + Math.round(-this.viewportExcess.y * this._viewport.zoom);
 
-    if (transformChanged) {
-      let x = this._viewport.offsetX + Math.round(-excessX * this._viewport.zoom);
-      let y = this._viewport.offsetY + Math.round(-excessY * this._viewport.zoom);
+    let transform =
+      "translate(" + x + "px, " +
+                     y + "px)";
+    if (hasZoom)
+      transform += " scale(" + this._viewport.zoom + ")";
 
-      let transform =
-        "translate(" + x + "px, " +
-                       y + "px)";
-      if (hasZoom)
-        transform += " scale(" + this._viewport.zoom + ")";
-
-      this.browser.style.MozTransform = transform;
-    }
+    this.browser.style.MozTransform = transform;
   },
 
   get viewport() {
@@ -1393,8 +1482,7 @@ Tab.prototype = {
       return;
     sendMessageToJava({
       gecko: {
-        type: "Viewport:Update",
-        viewport: JSON.stringify(this.viewport)
+        type: "Viewport:UpdateAndDraw"
       }
     });
   },
@@ -1535,6 +1623,18 @@ Tab.prototype = {
           this._pluginsToPlay = [];
           this._pluginOverlayShowing = false;
         }
+        break;
+      }
+
+      case "DOMWindowCreated": {
+        // Conveniently, this call to getBrowserForDocument() will return null if the document is
+        // not the top-level content document of the browser.
+        let browser = BrowserApp.getBrowserForDocument(aEvent.originalTarget);
+        if (!browser)
+          break;
+
+        let tab = BrowserApp.getTabForBrowser(browser);
+        tab.suppressDrawing = true;
         break;
       }
     }
@@ -1794,6 +1894,16 @@ Tab.prototype = {
       if (this.agentMode == UA_MODE_DESKTOP)
         channel.setRequestHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:7.0.1) Gecko/20100101 Firefox/7.0.1", false);
     }
+  },
+
+  sendExposeEvent: function() {
+    // Now that the document is actually on the screen, send an expose event.
+    this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    sendMessageToJava({
+      gecko: {
+        type: "Viewport:Expose"
+      }
+    });
   },
 
   QueryInterface: XPCOMUtils.generateQI([

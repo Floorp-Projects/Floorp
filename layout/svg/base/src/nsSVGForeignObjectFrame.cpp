@@ -140,7 +140,12 @@ nsSVGForeignObjectFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   nsSVGForeignObjectFrameBase::DidSetStyleContext(aOldStyleContext);
 
-  UpdateGraphic();
+  // No need to invalidate before first reflow - that will happen elsewhere.
+  // Moreover we haven't been initialised properly yet so we may not have the
+  // right state bits.
+  if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    UpdateGraphic();
+  }
 }
 
 NS_IMETHODIMP
@@ -278,7 +283,8 @@ nsSVGForeignObjectFrame::PaintSVG(nsSVGRenderState *aContext,
 }
 
 gfx3DMatrix
-nsSVGForeignObjectFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
+nsSVGForeignObjectFrame::GetTransformMatrix(nsIFrame* aAncestor,
+                                            nsIFrame **aOutAncestor)
 {
   NS_PRECONDITION(aOutAncestor, "We need an ancestor to write to!");
 

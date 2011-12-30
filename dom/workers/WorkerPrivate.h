@@ -661,8 +661,7 @@ public:
   ScheduleDeletion(bool aWasPending);
 
   bool
-  BlockAndCollectRuntimeStats(mozilla::xpconnect::memory::IterateData* aData,
-                              bool* aDisabled);
+  BlockAndCollectRuntimeStats(bool isQuick, void* aData, bool* aDisabled);
 
   bool
   DisableMemoryReporter();

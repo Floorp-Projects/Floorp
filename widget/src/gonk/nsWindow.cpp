@@ -78,7 +78,7 @@ nsWindow::nsWindow()
         sGLContext = GLContextProvider::CreateForWindow(this);
         // CreateForWindow sets up gScreenBounds
         if (!sGLContext) {
-            LOG("Failed to create GL context for fb, trying /dev/fb0");
+            LOG("Failed to create GL context for fb, trying /dev/graphics/fb0");
 
             // We can't delete gNativeWindow.
 
@@ -87,7 +87,7 @@ nsWindow::nsWindow()
             gScreenBounds = nsIntRect(nsIntPoint(0, 0), screenSize);
             if (!sFramebufferOpen) {
                 LOG("Failed to mmap fb(?!?), aborting ...");
-                NS_RUNTIMEABORT("Can't open GL context and can't fall back on /dev/fb0 ...");
+                NS_RUNTIMEABORT("Can't open GL context and can't fall back on /dev/graphics/fb0 ...");
             }
         }
     }
@@ -106,7 +106,8 @@ nsWindow::DoDraw(void)
     }
 
     nsPaintEvent event(true, NS_PAINT, gWindowToRedraw);
-    event.region = gScreenBounds;
+    event.region = gWindowToRedraw->mDirtyRegion;
+    gWindowToRedraw->mDirtyRegion.SetEmpty();
 
     LayerManager* lm = gWindowToRedraw->GetLayerManager();
     if (LayerManager::LAYERS_OPENGL == lm->GetBackendType()) {
@@ -293,9 +294,15 @@ nsWindow::Invalidate(const nsIntRect &aRect,
         return NS_OK;
     }
 
+    mDirtyRegion.Or(mDirtyRegion, aRect);
     gWindowToRedraw = this;
-    gDrawRequest = true;
-    mozilla::NotifyEvent();
+    if (aIsSynchronous) {
+        gDrawRequest = false;
+        DoDraw();
+    } else {
+        gDrawRequest = true;
+        mozilla::NotifyEvent();
+    }
     return NS_OK;
 }
 

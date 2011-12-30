@@ -273,11 +273,13 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
                 return JS_FALSE;
             break;
 
-          case PNK_XMLPI:
-            str = js_MakeXMLPIString(cx, pn2->pn_pitarget, pn2->pn_pidata);
+          case PNK_XMLPI: {
+            XMLProcessingInstruction &pi = pn2->asXMLProcessingInstruction();
+            str = js_MakeXMLPIString(cx, pi.target(), pi.data());
             if (!str)
                 return JS_FALSE;
             break;
+          }
 
           cantfold:
           default:
@@ -556,7 +558,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
             break;
         /* FALL THROUGH */
 
-      case PNK_HOOK:
+      case PNK_CONDITIONAL:
         /* Reduce 'if (C) T; else E' into T for true C, E for false. */
         switch (pn1->getKind()) {
           case PNK_NUMBER:
@@ -591,8 +593,8 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, TreeContext *tc, bool inCond)
              * False condition and no else, or an empty then-statement was
              * moved up over pn.  Either way, make pn an empty block (not an
              * empty statement, which does not decompile, even when labeled).
-             * NB: pn must be a PNK_IF as PNK_HOOK can never have a null kid
-             * or an empty statement for a child.
+             * NB: pn must be a PNK_IF as PNK_CONDITIONAL can never have a null
+             * kid or an empty statement for a child.
              */
             pn->setKind(PNK_STATEMENTLIST);
             pn->setArity(PN_LIST);

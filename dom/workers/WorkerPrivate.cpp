@@ -186,17 +186,14 @@ public:
                   NS_LITERAL_CSTRING(")/");
   }
 
-  NS_IMETHOD
-  CollectReports(nsIMemoryMultiReporterCallback* aCallback,
-                 nsISupports* aClosure)
+  nsresult
+  CollectForRuntime(bool aIsQuick, void* aData)
   {
     AssertIsOnMainThread();
 
-    IterateData data;
-
     if (mWorkerPrivate) {
       bool disabled;
-      if (!mWorkerPrivate->BlockAndCollectRuntimeStats(&data, &disabled)) {
+      if (!mWorkerPrivate->BlockAndCollectRuntimeStats(aIsQuick, aData, &disabled)) {
         return NS_ERROR_FAILURE;
       }
 
@@ -217,11 +214,34 @@ public:
         mWorkerPrivate = nsnull;
       }
     }
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  CollectReports(nsIMemoryMultiReporterCallback* aCallback,
+                 nsISupports* aClosure)
+  {
+    AssertIsOnMainThread();
+
+    IterateData data;
+    nsresult rv = CollectForRuntime(/* isQuick = */false, &data);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     // Always report, even if we're disabled, so that we at least get an entry
     // in about::memory.
     ReportJSRuntimeStats(data, mPathPrefix, aCallback, aClosure);
+
     return NS_OK;
+  }
+
+  NS_IMETHOD
+  GetExplicitNonHeap(PRInt64 *aAmount)
+  {
+    AssertIsOnMainThread();
+
+    return CollectForRuntime(/* isQuick = */true, aAmount);
   }
 };
 
@@ -1378,16 +1398,17 @@ class CollectRuntimeStatsRunnable : public WorkerControlRunnable
   Mutex mMutex;
   CondVar mCondVar;
   volatile bool mDone;
-  IterateData* mData;
+  bool mIsQuick;
+  void* mData;
   bool* mSucceeded;
 
 public:
-  CollectRuntimeStatsRunnable(WorkerPrivate* aWorkerPrivate, IterateData* aData,
-                              bool* aSucceeded)
+  CollectRuntimeStatsRunnable(WorkerPrivate* aWorkerPrivate, bool aIsQuick,
+                              void* aData, bool* aSucceeded)
   : WorkerControlRunnable(aWorkerPrivate, WorkerThread, UnchangedBusyCount),
     mMutex("CollectRuntimeStatsRunnable::mMutex"),
     mCondVar(mMutex, "CollectRuntimeStatsRunnable::mCondVar"), mDone(false),
-    mData(aData), mSucceeded(aSucceeded)
+    mIsQuick(aIsQuick), mData(aData), mSucceeded(aSucceeded)
   { }
 
   bool
@@ -1429,7 +1450,9 @@ public:
   {
     JSAutoSuspendRequest asr(aCx);
 
-    *mSucceeded = CollectCompartmentStatsForRuntime(JS_GetRuntime(aCx), mData);
+    *mSucceeded = mIsQuick ?
+      mozilla::xpconnect::memory::GetExplicitNonHeapForRuntime(JS_GetRuntime(aCx), mData) :
+      mozilla::xpconnect::memory::CollectCompartmentStatsForRuntime(JS_GetRuntime(aCx), mData);
 
     {
       MutexAutoLock lock(mMutex);
@@ -2569,7 +2592,7 @@ WorkerPrivate::ScheduleDeletion(bool aWasPending)
 }
 
 bool
-WorkerPrivate::BlockAndCollectRuntimeStats(IterateData* aData, bool* aDisabled)
+WorkerPrivate::BlockAndCollectRuntimeStats(bool aIsQuick, void* aData, bool* aDisabled)
 {
   AssertIsOnMainThread();
   NS_ASSERTION(aData, "Null data!");
@@ -2589,7 +2612,7 @@ WorkerPrivate::BlockAndCollectRuntimeStats(IterateData* aData, bool* aDisabled)
   bool succeeded;
 
   nsRefPtr<CollectRuntimeStatsRunnable> runnable =
-    new CollectRuntimeStatsRunnable(this, aData, &succeeded);
+    new CollectRuntimeStatsRunnable(this, aIsQuick, aData, &succeeded);
   if (!runnable->Dispatch(nsnull)) {
     NS_WARNING("Failed to dispatch runnable!");
     succeeded = false;

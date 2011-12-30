@@ -909,6 +909,7 @@ mjit::Compiler::inlineNativeFunction(uint32_t argc, bool callingNew)
             return compileRound(arg, Round);
         }
         if (native == js_math_sqrt && type == JSVAL_TYPE_DOUBLE &&
+             masm.supportsFloatingPointSqrt() &&
             (argType == JSVAL_TYPE_INT32 || argType == JSVAL_TYPE_DOUBLE)) {
             return compileMathSqrt(arg);
         }
@@ -949,6 +950,7 @@ mjit::Compiler::inlineNativeFunction(uint32_t argc, bool callingNew)
         JSValueType arg2Type = arg2->isTypeKnown() ? arg2->getKnownType() : JSVAL_TYPE_UNKNOWN;
 
         if (native == js_math_pow && type == JSVAL_TYPE_DOUBLE &&
+             masm.supportsFloatingPointSqrt() &&
             (arg1Type == JSVAL_TYPE_DOUBLE || arg1Type == JSVAL_TYPE_INT32) &&
             arg2Type == JSVAL_TYPE_DOUBLE && arg2->isConstant())
         {

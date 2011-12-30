@@ -24,63 +24,6 @@
 
 typedef uint8_t* Address;
 
-class MapEntry {
-public:
-  MapEntry(unsigned long aStart, unsigned long aEnd, unsigned long aOffset, char *aName)
-    : mStart(aStart)
-    , mEnd(aEnd)
-    , mOffset(aOffset)
-    , mName(strdup(aName))
-  {}
-
-  MapEntry(const MapEntry& aEntry)
-    : mStart(aEntry.mStart)
-    , mEnd(aEntry.mEnd)
-    , mOffset(aEntry.mOffset)
-    , mName(strdup(aEntry.mName))
-  {}
-
-  ~MapEntry()
-  {
-    free(mName);
-  }
-
-  unsigned long GetStart() { return mStart; }
-  unsigned long GetEnd() { return mEnd; }
-  char* GetName() { return mName; }
-
-private:
-  unsigned long mStart;
-  unsigned long mEnd;
-  unsigned long mOffset;
-  char *mName;
-};
-
-class MapInfo {
-public:
-  MapInfo() {}
-
-  void AddMapEntry(MapEntry entry)
-  {
-    mEntries.push_back(entry);
-  }
-
-  MapEntry& GetEntry(size_t i)
-  {
-    return mEntries[i];
-  }
-
-  size_t GetSize()
-  {
-    return mEntries.size();
-  }
-private:
-  std::vector<MapEntry> mEntries;
-};
-
-#ifdef ENABLE_SPS_LEAF_DATA
-struct MapInfo getmaps(pid_t pid);
-#endif
 // ----------------------------------------------------------------------------
 // Mutex
 //
