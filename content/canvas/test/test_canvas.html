@@ -21024,7 +21024,7 @@ img.onload = wrapFunction(function ()
     ctx667.drawImage(img, 0, 25);
     // (The alpha values do not really survive float->int conversion, so just
     // do approximate comparisons)
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalBrowserRead');
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     isPixel(ctx667, 12,40, 1,3,254,255, 0);
     isPixel(ctx667, 37,40, 8,252,248,191, 2);
     isPixel(ctx667, 62,40, 6,10,250,127, 4);
@@ -21151,7 +21151,7 @@ deferTest();
 img.onload = wrapFunction(function ()
 {
     ctx672.drawImage(img, 0, 0);
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalBrowserRead');
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     isPixel(ctx672, 12,20, 255,255,0,255, 0);
     isPixel(ctx672, 50,20, 0,255,255,255, 0);
     isPixel(ctx672, 87,20, 0,0,255,255, 0);
