@@ -998,18 +998,23 @@ void
 MacroAssemblerARMCompat::callWithExitFrame(IonCode *target)
 {
     uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
-    ma_push(ScratchRegister); // padding
-    push(Imm32(descriptor)); // descriptor
+    Push(ScratchRegister); // padding
+    Push(Imm32(descriptor)); // descriptor
     // TODO: Use relocation here.
     ma_mov(Imm32((int) target->raw()), ScratchRegister);
-    ma_callIon(ScratchRegister);
+    callIon(ScratchRegister);
 }
 
 void
 MacroAssemblerARMCompat::callIon(const Register &callee)
 {
-    ma_callIon(callee);
-    framePushed_ += 4; // return address.
+    JS_ASSERT((framePushed() & 3) == 0);
+    if (framePushed() & 7 == 4) {
+        ma_callIonHalfPush(callee);
+    } else {
+        adjustFrame(sizeof(void*));
+        ma_callIon(callee);
+    }
 }
 
 void
@@ -1017,7 +1022,7 @@ MacroAssemblerARMCompat::reserveStack(uint32 amount)
 {
     if (amount)
         ma_sub(Imm32(amount), sp);
-    framePushed_ += amount;
+    adjustFrame(amount);
 }
 void
 MacroAssemblerARMCompat::freeStack(uint32 amount)
@@ -1025,7 +1030,7 @@ MacroAssemblerARMCompat::freeStack(uint32 amount)
     JS_ASSERT(amount <= framePushed_);
     if (amount)
         ma_add(Imm32(amount), sp);
-    framePushed_ -= amount;
+    adjustFrame(-amount);
 }
 void
 MacroAssemblerARMCompat::move32(const Imm32 &imm, const Register &dest)
@@ -1241,6 +1246,13 @@ MacroAssemblerARMCompat::testObject(Assembler::Condition cond, const Register &t
     JS_ASSERT(cond == Equal || cond == NotEqual);
     ma_cmp(tag, ImmTag(JSVAL_TAG_OBJECT));
     return cond;
+}
+Assembler::Condition
+MacroAssemblerARMCompat::testNumber(Condition cond, const Register &tag)
+{
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    ma_cmp(tag, ImmTag(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET));
+    return cond == Equal ? BelowOrEqual : Above;
 }
 
 // unboxing code
@@ -1491,21 +1503,26 @@ MacroAssemblerARMCompat::linkExitFrame() {
 void
 MacroAssemblerARM::ma_callIon(const Register r)
 {
-    // The stack is presently 8 byte aligned
-    // We want to decrement sp by 8, and write pc+8 into the new sp
-
+    // When the stack is 8 byte aligned,
+    // we want to decrement sp by 8, and write pc+8 into the new sp.
+    // when we return from this call, sp will be its present value minus 4.
     as_dtr(IsStore, 32, PreIndex, pc, DTRAddr(sp, DtrOffImm(-8)));
     as_blx(r);
 }
 void
 MacroAssemblerARM::ma_callIonNoPush(const Register r)
 {
+    // Since we just write the return address into the stack, which is
+    // popped on return, the net effect is removing 4 bytes from the stack
     as_dtr(IsStore, 32, Offset, pc, DTRAddr(sp, DtrOffImm(0)));
     as_blx(r);
 }
 void
 MacroAssemblerARM::ma_callIonHalfPush(const Register r)
 {
+    // The stack is unaligned by 4 bytes.
+    // We push the pc to the stack to align the stack before the call, when we
+    // return the pc is poped and the stack is restored to its unaligned state.
     ma_push(pc);
     as_blx(r);
 }
@@ -1652,4 +1669,3 @@ MacroAssemblerARMCompat::handleException()
     as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
     //ret();
 }
-
