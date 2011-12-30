@@ -581,11 +581,6 @@ protected:
                                      nsIDOMNode **aTargetNode,       
                                      PRInt32 *aTargetOffset,   
                                      bool *aDoContinue);
-  nsresult   RelativizeURIInFragmentList(const nsCOMArray<nsIDOMNode> &aNodeList,
-                                        const nsAString &aFlavor,
-                                        nsIDOMDocument *aSourceDoc,
-                                        nsIDOMNode *aTargetNode);
-  nsresult   RelativizeURIForNode(nsIDOMNode *aNode, nsIURL *aDestURL);
   nsresult   GetAttributeToModifyOnNode(nsIDOMNode *aNode, nsAString &aAttrib);
 
   bool       IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink = nsnull);
