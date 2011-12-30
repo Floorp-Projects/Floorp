@@ -506,7 +506,7 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
         return false;
     masm.bind(&nonzero);
 
-    // Sign extend lhs (eax) to (eax:edx) since idiv is 64-bit.
+    // Sign extend eax into edx to make (edx:eax), since idiv is 64-bit.
     masm.cdq();
     masm.idiv(rhs);
 
@@ -515,6 +515,58 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
     if (!bailoutIf(Assembler::NonZero, ins->snapshot()))
         return false;
 
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitModI(LModI *ins)
+{
+    Register remainder = ToRegister(ins->remainder());
+    Register lhs = ToRegister(ins->lhs());
+    Register rhs = ToRegister(ins->rhs());
+
+    // Required to use idiv.
+    JS_ASSERT(remainder == edx);
+    JS_ASSERT(lhs == eax);
+
+    // If rhs == 0, bailout, since result must be a double (NaN).
+    masm.testl(rhs, rhs);
+    if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+        return false;
+
+    Label negative, join;
+
+    // Since the lhs will be made positive before reaching an idiv, instead of
+    // sign extending eax into edx to 64-bit (edx:eax), we can simply zero it.
+    masm.xorl(edx, edx);
+
+    // Switch based on sign of the lhs.
+    masm.branchTest32(Assembler::Signed, lhs, lhs, &negative);
+    // If lhs >= 0 then remainder = lhs % rhs. The remainder must be positive.
+    {
+        masm.idiv(rhs);
+        masm.jump(&join);
+    }
+
+    // If lhs < 0 then remainder = -(-lhs % rhs).
+    {
+        masm.bind(&negative);
+        masm.negl(lhs);
+        if (!bailoutIf(Assembler::Overflow, ins->snapshot()))
+            return false;
+
+        masm.idiv(rhs);
+
+        // A remainder of 0 means that the rval must be -0, which is a double.
+        masm.testl(remainder, remainder);
+        if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+            return false; 
+
+        // Cannot overflow.
+        masm.negl(remainder);
+    }
+
+    masm.bind(&join);
     return true;
 }
 
