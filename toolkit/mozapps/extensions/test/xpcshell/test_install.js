@@ -1678,7 +1678,52 @@ function check_test_28(install) {
 function finish_test_28(install) {
   prepare_test({}, [
     "onDownloadCancelled"
-  ], do_test_finished);
+  ], run_test_29);
 
   install.cancel();
+}
+
+// Tests that an install with a matching compatibility override has appDisabled
+// set correctly.
+function run_test_29() {
+  Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", true);
+
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = "http://localhost:4444/addons/test_install6.xpi";
+  AddonManager.getInstallForURL(url, function(install) {
+    ensure_test_completed();
+
+    do_check_neq(install, null);
+    do_check_eq(install.version, "1.0");
+    do_check_eq(install.name, "Addon Test 6");
+    do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
+
+    AddonManager.getInstallsByTypes(null, function(activeInstalls) {
+      do_check_eq(activeInstalls.length, 1);
+      do_check_eq(activeInstalls[0], install);
+
+      prepare_test({}, [
+        "onDownloadStarted",
+        "onDownloadEnded"
+      ], check_test_29);
+      install.install();
+    });
+  }, "application/x-xpinstall", null, "Addon Test 6", null, "1.0");
+}
+
+function check_test_29(install) {
+  //ensure_test_completed();
+  do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
+  do_check_neq(install.addon, null);
+  do_check_false(install.addon.isCompatible);
+  do_check_true(install.addon.appDisabled);
+
+  prepare_test({}, [
+    "onDownloadCancelled"
+  ], do_test_finished);
+  install.cancel();
+  return false;
 }
