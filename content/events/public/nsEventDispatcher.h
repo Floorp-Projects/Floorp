@@ -255,7 +255,7 @@ public:
    * Dispatches an event.
    * If aDOMEvent is not nsnull, it is used for dispatching
    * (aEvent can then be nsnull) and (if aDOMEvent is not |trusted| already),
-   * the |trusted| flag is set based on the UniversalBrowserWrite capability.
+   * the |trusted| flag is set based on the UniversalXPConnect capability.
    * Otherwise this works like nsEventDispatcher::Dispatch.
    * @note Use this method when dispatching nsIDOMEvent.
    */
