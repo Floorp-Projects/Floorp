@@ -59,10 +59,6 @@
   <string name="pref_about_firefox">&pref_about_firefox;</string>
   <string name="pref_do_not_track">&pref_do_not_track;</string>
   <string name="pref_telemetry">&pref_telemetry;</string>
-  <string name="pref_homepage">&pref_homepage;</string>
-  <string name="pref_homepage_start">&pref_homepage_start;</string>
-  <string name="pref_homepage_blank">&pref_homepage_blank;</string>
-  <string name="pref_homepage_current">&pref_homepage_current;</string>
   <string name="pref_remember_signons">&pref_remember_signons;</string>
   <string name="pref_cookies">&pref_cookies;</string>
   <string name="pref_char_encoding">&pref_char_encoding;</string>
