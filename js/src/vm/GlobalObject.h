@@ -41,6 +41,8 @@
 #ifndef GlobalObject_h___
 #define GlobalObject_h___
 
+#include "mozilla/Attributes.h"
+
 #include "jsarray.h"
 #include "jsbool.h"
 #include "jsfun.h"
@@ -90,6 +92,9 @@ class Debugger;
  * again if its property is deleted and readded).
  */
 class GlobalObject : public ::JSObject {
+    GlobalObject(const GlobalObject &other) MOZ_DELETE;
+    void operator=(const GlobalObject &other) MOZ_DELETE;
+
     /*
      * Count of slots to store built-in constructors, prototypes, and initial
      * visible properties for the constructors.

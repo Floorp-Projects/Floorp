@@ -56,7 +56,7 @@
 using namespace mozilla;
 
 nsTableRowGroupFrame::nsTableRowGroupFrame(nsStyleContext* aContext):
-  nsHTMLContainerFrame(aContext)
+  nsContainerFrame(aContext)
 {
   SetRepeatable(false);
 }
@@ -67,7 +67,7 @@ nsTableRowGroupFrame::~nsTableRowGroupFrame()
 
 NS_QUERYFRAME_HEAD(nsTableRowGroupFrame)
   NS_QUERYFRAME_ENTRY(nsTableRowGroupFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 PRInt32
 nsTableRowGroupFrame::GetRowCount()

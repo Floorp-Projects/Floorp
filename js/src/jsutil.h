@@ -45,6 +45,8 @@
 #ifndef jsutil_h___
 #define jsutil_h___
 
+#include "mozilla/Attributes.h"
+
 #include "js/Utility.h"
 
 /* Forward declarations. */
@@ -224,8 +226,8 @@ class AutoRefCount
     JSContext *const cx;
     RefCountable *obj;
 
-    AutoRefCount(const AutoRefCount &);
-    void operator=(const AutoRefCount &);
+    AutoRefCount(const AutoRefCount &other) MOZ_DELETE;
+    void operator=(const AutoRefCount &other) MOZ_DELETE;
 
   public:
     explicit AutoRefCount(JSContext *cx)

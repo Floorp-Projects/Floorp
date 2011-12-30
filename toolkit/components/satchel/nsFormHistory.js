@@ -137,7 +137,6 @@ FormHistory.prototype = {
         this.messageManager.addMessageListener("FormHistory:FormSubmitEntries", this);
 
         // Add observers
-        Services.obs.addObserver(this, "profile-change-teardown", true);
         Services.obs.addObserver(this, "profile-before-change", true);
         Services.obs.addObserver(this, "idle-daily", true);
         Services.obs.addObserver(this, "formhistory-expire-now", true);
@@ -403,10 +402,7 @@ FormHistory.prototype = {
             this.expireOldEntries();
             break;
         case "profile-before-change":
-            // FIXME (bug 696486): close the connection in here.
-            break;
-        case "profile-change-teardown":
-            this._dbFinalize();
+            this._dbClose();
             break;
         default:
             this.log("Oops! Unexpected notification: " + topic);
@@ -869,15 +865,22 @@ FormHistory.prototype = {
     },
 
     /**
-     * _dbFinalize
+     * _dbClose
      *
-     * Finalize all statements to allow closing the connection correctly.
+     * Finalize all statements and close the connection.
      */
-    _dbFinalize : function FH__dbFinalize() {
+    _dbClose : function FH__dbClose() {
         for each (let stmt in this.dbStmts) {
             stmt.finalize();
         }
         this.dbStmts = {};
+        if (this.dbConnection !== undefined) {
+            try {
+                this.dbConnection.close();
+            } catch (e) {
+                Components.utils.reportError(e);
+            }
+        }
     },
 
     /*
@@ -895,16 +898,7 @@ FormHistory.prototype = {
         let backupFile = this.dbFile.leafName + ".corrupt";
         storage.backupDatabaseFile(this.dbFile, backupFile);
 
-        this._dbFinalize();
-
-        if (this.dbConnection !== undefined) {
-            try {
-                this.dbConnection.close();
-            } catch (e) {
-                Components.utils.reportError(e);
-            }
-        }
-
+        this._dbClose();
         this.dbFile.remove(false);
     }
 };

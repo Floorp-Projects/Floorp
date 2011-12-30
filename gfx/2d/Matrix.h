@@ -143,6 +143,24 @@ public:
 
     return resultMatrix;
   }
+
+  /* Returns true if the matrix is a rectilinear transformation (i.e.
+   * grid-aligned rectangles are transformed to grid-aligned rectangles)
+   */
+  bool IsRectilinear() {
+    if (FuzzyEqual(_12, 0) && FuzzyEqual(_21, 0)) {
+      return true;
+    } else if (FuzzyEqual(_22, 0) && FuzzyEqual(_11, 0)) {
+      return true;
+    }
+
+    return false;
+  }
+private:
+  static bool FuzzyEqual(Float aV1, Float aV2) {
+    // XXX - Check if fabs does the smart thing and just negates the sign bit.
+    return fabs(aV2 - aV1) < 1e-6;
+  }
 };
 
 }

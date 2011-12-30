@@ -73,7 +73,7 @@
  * to *_retval unless they want to return PR_FALSE.
  */
 
-[uuid(9cadb17b-9990-461a-8e01-cf50aeffc2c5)]
+[uuid(a40ce52e-2d8c-400f-9af2-f8784a656070)]
 interface nsIXPCScriptable : nsISupports
 {
     /* bitflags used for 'flags' (only 32 bits available!) */
@@ -191,14 +191,6 @@ interface nsIXPCScriptable : nsISupports
                             in JSContextPtr cx, in JSObjectPtr obj);
 
     void postCreatePrototype(in JSContextPtr cx, in JSObjectPtr proto);
-
-    /**
-     * Notify that we're about to create the prototype object for this class,
-     * and ask what prototype we should use for that.
-     */
-    void preCreatePrototype(in JSContextPtr cx,
-                            in JSObjectPtr globalObj,
-                            out JSObjectPtr protoProtoObj);
 };
 
 %{ C++

@@ -90,6 +90,7 @@
 #include "nsILocalFileWin.h"
 #endif
 #include "xpcprivate.h"
+#include "xpcpublic.h"
 #include "nsIResProtocolHandler.h"
 
 #include "mozilla/scache/StartupCache.h"
@@ -235,7 +236,7 @@ Atob(JSContext *cx, uintN argc, jsval *vp)
     if (!argc)
         return true;
 
-    return nsXPConnect::Base64Decode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
+    return xpc::Base64Decode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
 }
 
 static JSBool
@@ -244,7 +245,7 @@ Btoa(JSContext *cx, uintN argc, jsval *vp)
     if (!argc)
         return true;
 
-    return nsXPConnect::Base64Encode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
+    return xpc::Base64Encode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
 }
 
 static JSBool
@@ -964,10 +965,20 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     // See bug 384168.
     *aGlobal = global;
 
-    if (!JS_ExecuteScriptVersion(cx, global, script, NULL, JSVERSION_LATEST)) {
+    uint32 oldopts = JS_GetOptions(cx);
+    JS_SetOptions(cx, oldopts |
+                  (exception ? JSOPTION_DONT_REPORT_UNCAUGHT : 0));
+    bool ok = JS_ExecuteScriptVersion(cx, global, script, NULL, JSVERSION_LATEST);
+    JS_SetOptions(cx, oldopts);
+
+    if (!ok) {
 #ifdef DEBUG_shaver_off
         fprintf(stderr, "mJCL: failed to execute %s\n", nativePath.get());
 #endif
+        if (exception) {
+            JS_GetPendingException(cx, exception);
+            JS_ClearPendingException(cx);
+        }
         *aGlobal = nsnull;
         return NS_ERROR_FAILURE;
     }
