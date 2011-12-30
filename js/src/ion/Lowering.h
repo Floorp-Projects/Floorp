@@ -124,6 +124,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitSub(MSub *ins);
     bool visitMul(MMul *ins);
     bool visitDiv(MDiv *ins);
+    bool visitMod(MMod *ins);
     bool visitStart(MStart *start);
     bool visitOsrEntry(MOsrEntry *entry);
     bool visitOsrValue(MOsrValue *value);

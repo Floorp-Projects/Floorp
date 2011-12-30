@@ -119,9 +119,7 @@ CodeGeneratorARM::generatePrologue()
 {
     // Note that this automatically sets MacroAssembler::framePushed().
     masm.reserveStack(frameSize());
-#ifdef DEBUG
     masm.checkStackAlignment();
-#endif
     // Allocate returnLabel_ on the heap, so we don't run its destructor and
     // assert-not-bound in debug mode on compilation failure.
     returnLabel_ = new HeapLabel();
@@ -988,7 +986,7 @@ CodeGeneratorARM::visitUnbox(LUnbox *unbox)
     // inputs.
     MUnbox *mir = unbox->mir();
     if (mir->fallible()) {
-        LAllocation *type = unbox->getOperand(TYPE_INDEX);
+        const LAllocation *type = unbox->type();
         masm.ma_cmp(ToRegister(type), Imm32(MIRTypeToTag(mir->type())));
         if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
             return false;
@@ -1059,139 +1057,6 @@ CodeGeneratorARM::testStringTruthy(bool truthy, const ValueOperand &value)
 }
 
 bool
-CodeGeneratorARM::visitCallGeneric(LCallGeneric *call)
-{
-
-#ifdef DEBUG
-    masm.checkStackAlignment();
-#endif
-    // Holds the function object.
-    const LAllocation *callee = call->getFunction();
-    Register calleereg  = ToRegister(callee);
-
-    // Holds the function object so we can modify it willy nilly.
-    const LAllocation *obj = call->getTempObject();
-    Register objreg  = ToRegister(obj);
-
-    // Make the modifiable object reg a copy of the immutable function reg
-    masm.ma_mov(calleereg, objreg);
-    // Holds the callee token. Initially undefined.
-    const LAllocation *tok = call->getToken();
-    Register tokreg  = ToRegister(tok);
-
-    // Holds the function nargs. Initially undefined.
-    const LAllocation *nargs = call->getNargsReg();
-    Register nargsreg = ToRegister(nargs);
-
-    uint32 callargslot  = call->argslot();
-    uint32 unused_stack = StackOffsetOfPassedArg(callargslot);
-    JS_ASSERT((unused_stack & 0x7) == 0);
-
-    // Guard that objreg is actually a function object.
-    masm.loadObjClass(objreg, tokreg);
-    masm.ma_cmp(tokreg, Imm32((uint32)&js::FunctionClass));
-    if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
-        return false;
-
-    // Guard that objreg is a non-native function:
-    // Non-native iff (obj->flags & JSFUN_KINDMASK >= JSFUN_INTERPRETED).
-    masm.ma_ldr(DTRAddr(objreg, DtrOffImm(offsetof(JSFunction, flags))),
-                tokreg);
-
-    // theoreticaly the test is tokreg & JSFUN_KINDMASK >= JSFUN_INTERPRETED
-    // however, JSFUN_KINDMASK is two bits, and JSFUN_INTERPRETED is the smallest
-    // non-zero value that those two bits can take on (0b01).  In this case, the
-    // comparison is equivalent to seeing if either of the bits is non-zero.
-    masm.ma_tst(Imm32(JSFUN_KINDMASK), tokreg);
-
-    if (!bailoutIf(Assembler::Zero, call->snapshot())) {
-        return false;
-    }
-
-    // Save the calleeToken, which equals the function object.
-    masm.ma_mov(objreg, tokreg);
-
-    // Knowing that objreg is a non-native function, load the JSScript.
-    masm.ma_ldr(DTRAddr(objreg, DtrOffImm(offsetof(JSFunction, u.i.script_))),
-                objreg);
-    masm.ma_ldr(DTRAddr(objreg, DtrOffImm(offsetof(JSScript, ion))),
-                objreg);
-
-    masm.ma_cmp(objreg, Imm32((uint32)ION_DISABLED_SCRIPT));
-    // Bail if the callee has not yet been JITted.
-    if (!bailoutIf(Assembler::BelowOrEqual, call->snapshot()))
-        return false;
-
-
-    // Remember the size of the frame above this point, in case of bailout.
-    uint32 stack_size = masm.framePushed() - unused_stack;
-    uint32 size_descriptor = (stack_size << FRAMETYPE_BITS) | IonFrame_JS;
-
-
-
-    // Nestle sp up to the argument vector.
-    if (unused_stack) {
-        masm.ma_add(StackPointer, Imm32(unused_stack), StackPointer);
-    }
-    // Construct the IonFramePrefix.
-    masm.ma_push(tokreg);
-    masm.push(Imm32(size_descriptor));
-#ifdef DEBUG
-    masm.checkStackAlignment();
-#endif
-    // Call the function, padding with |undefined| in case of insufficient args.
-    {
-        Label thunk, rejoin;
-
-        // Get the address of the argumentsRectifier code.
-        IonCompartment *ion = gen->ionCompartment();
-
-        IonCode *argumentsRectifier = ion->getArgumentsRectifier(gen->cx);
-        if (!argumentsRectifier)
-            return false;
-
-        // Check whether the provided arguments satisfy target argc.
-        masm.ma_ldrh(EDtrAddr(tokreg, EDtrOffImm(offsetof(JSFunction, nargs))),
-                     nargsreg);
-
-        masm.ma_cmp(nargsreg, Imm32(call->nargs()));
-        masm.ma_b(&thunk, Assembler::Above);
-
-        // No argument fixup needed. Call the function normally.
-        masm.ma_ldr(DTRAddr(objreg, DtrOffImm(offsetof(IonScript, method_))), objreg);
-        masm.ma_ldr(DTRAddr(objreg, DtrOffImm(IonCode::OffsetOfCode())), objreg);
-        masm.ma_callIon(objreg);
-        if (!createSafepoint(call))
-            return false;
-        masm.ma_b(&rejoin);
-
-        // Argument fixup needed. Create a frame with correct |nargs| and then call.
-        masm.bind(&thunk);
-        // r0 should be safe, since everything has been saved by the register
-        // allocator
-        masm.ma_mov(Imm32(call->nargs()), r0);
-        masm.ma_mov(Imm32((int)argumentsRectifier->raw()), ScratchRegister);
-        masm.ma_callIon(ScratchRegister);
-        if (!createSafepoint(call))
-            return false;
-
-        masm.bind(&rejoin);
-
-    }
-
-    // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
-    int prefix_garbage = sizeof(IonJSFrameLayout) - sizeof(void*);
-    int restore_diff = prefix_garbage - unused_stack;
-    
-    if (restore_diff > 0)
-        masm.ma_add(Imm32(restore_diff), StackPointer);
-    else if (restore_diff < 0)
-        masm.ma_sub(Imm32(-restore_diff), StackPointer);
-
-    return true;
-}
-
-bool
 CodeGeneratorARM::visitTestDAndBranch(LTestDAndBranch *test)
 {
     const LAllocation *opd = test->input();
@@ -1210,7 +1075,6 @@ CodeGeneratorARM::visitTestDAndBranch(LTestDAndBranch *test)
         masm.ma_b(ifTrue->label());
     return true;
 }
-
 
 bool
 CodeGeneratorARM::visitCompareD(LCompareD *comp)

@@ -230,7 +230,7 @@ class LStackArg : public LInstructionHelper<0, BOX_PIECES, 0>
 
 // Generates a polymorphic callsite, wherein the function being called is
 // unknown and anticipated to vary.
-class LCallGeneric : public LCallInstructionHelper<BOX_PIECES , 1, 3>
+class LCallGeneric : public LCallInstructionHelper<BOX_PIECES , 1, 2>
 {
     // Slot below which %esp should be adjusted to make the call.
     // Zero for a function without arguments.
@@ -240,15 +240,14 @@ class LCallGeneric : public LCallInstructionHelper<BOX_PIECES , 1, 3>
     LIR_HEADER(CallGeneric);
 
     LCallGeneric(const LAllocation &func,
-                 uint32 argslot, const LDefinition &token,
+                 uint32 argslot,
                  const LDefinition &nargsreg,
                  const LDefinition &tmpobjreg)
       : argslot_(argslot)
     {
         setOperand(0, func);
-        setTemp(0, token);
-        setTemp(1, nargsreg);
-        setTemp(2, tmpobjreg);
+        setTemp(0, nargsreg);
+        setTemp(1, tmpobjreg);
     }
 
     uint32 argslot() const {
@@ -266,14 +265,11 @@ class LCallGeneric : public LCallInstructionHelper<BOX_PIECES , 1, 3>
     const LAllocation *getFunction() {
         return getOperand(0);
     }
-    const LAllocation *getToken() {
+    const LAllocation *getNargsReg() {
         return getTemp(0)->output();
     }
-    const LAllocation *getNargsReg() {
-        return getTemp(1)->output();
-    }
     const LAllocation *getTempObject() {
-        return getTemp(2)->output();
+        return getTemp(1)->output();
     }
 };
 
