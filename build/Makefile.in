@@ -62,7 +62,6 @@ ifeq (android,$(MOZ_WIDGET_TOOLKIT))
           mobile/sutagent/android/watcher \
           mobile/sutagent/android/ffxcp \
           mobile/sutagent/android/fencp \
-          mobile/robocop \
           $(NULL)
 endif
 endif
