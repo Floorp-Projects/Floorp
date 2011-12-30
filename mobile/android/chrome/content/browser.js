@@ -1261,6 +1261,7 @@ Tab.prototype = {
     this.browser.addEventListener("DOMContentLoaded", this, true);
     this.browser.addEventListener("DOMLinkAdded", this, true);
     this.browser.addEventListener("DOMTitleChanged", this, true);
+    this.browser.addEventListener("DOMWindowClose", this, true);
     this.browser.addEventListener("scroll", this, true);
     this.browser.addEventListener("PluginClickToPlay", this, true);
     this.browser.addEventListener("pagehide", this, true);
@@ -1327,6 +1328,7 @@ Tab.prototype = {
     this.browser.removeEventListener("DOMContentLoaded", this, true);
     this.browser.removeEventListener("DOMLinkAdded", this, true);
     this.browser.removeEventListener("DOMTitleChanged", this, true);
+    this.browser.removeEventListener("DOMWindowClose", this, true);
     this.browser.removeEventListener("scroll", this, true);
     this.browser.removeEventListener("PluginClickToPlay", this, true);
     this.browser.removeEventListener("pagehide", this, true);
@@ -1579,6 +1581,24 @@ Tab.prototype = {
             title: aEvent.target.title
           }
         });
+        break;
+      }
+
+      case "DOMWindowClose": {
+        if (!aEvent.isTrusted)
+          return;
+
+        // Find the relevant tab, and close it from Java
+        if (this.browser.contentWindow == aEvent.target) {
+          aEvent.preventDefault();
+
+          sendMessageToJava({
+            gecko: {
+              type: "DOMWindowClose",
+              tabID: this.id
+            }
+          });
+        }
         break;
       }
 
