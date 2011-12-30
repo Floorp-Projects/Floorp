@@ -177,6 +177,13 @@ LIRGeneratorX64::lowerDivI(MDiv *div)
 }
 
 bool
+LIRGeneratorX64::lowerModI(MMod *mod)
+{
+    LModI *lir = new LModI(useFixed(mod->lhs(), rax), useRegister(mod->rhs()));
+    return defineFixed(lir, mod, LAllocation(AnyRegister(rdx))) && assignSnapshot(lir);
+}
+
+bool
 LIRGeneratorX64::visitGuardShape(MGuardShape *ins)
 {
     LGuardShape *guard = new LGuardShape(useRegister(ins->obj()));

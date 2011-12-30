@@ -2738,12 +2738,7 @@ BEGIN_CASE(JSOP_MOD)
         if (!ToNumber(cx, regs.sp[-2], &d1) || !ToNumber(cx, regs.sp[-1], &d2))
             goto error;
         regs.sp--;
-        if (d2 == 0) {
-            regs.sp[-1].setDouble(js_NaN);
-        } else {
-            d1 = js_fmod(d1, d2);
-            regs.sp[-1].setDouble(d1);
-        }
+        regs.sp[-1].setNumber(NumberMod(d1, d2));
         TypeScript::MonitorOverflow(cx, script, regs.pc);
     }
 }

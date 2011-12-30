@@ -451,6 +451,23 @@ LIRGenerator::visitDiv(MDiv *ins)
 }
 
 bool
+LIRGenerator::visitMod(MMod *ins)
+{
+    MDefinition *lhs = ins->lhs();
+    MDefinition *rhs = ins->rhs();
+
+    if (ins->type() == MIRType_Int32 &&
+        ins->specialization() == MIRType_Int32) {
+        JS_ASSERT(lhs->type() == MIRType_Int32);
+        return lowerModI(ins);
+    }
+    // TODO: Implement for ins->specialization() == MIRType_Double
+
+    JS_NOT_REACHED("NYI");
+    return false;
+}
+
+bool
 LIRGenerator::visitStart(MStart *start)
 {
     // Create a snapshot that captures the initial state of the function.
