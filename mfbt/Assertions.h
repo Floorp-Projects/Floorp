@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* Implementations of runtime and static assertion macros for C and C++. */
+
 #ifndef mozilla_Assertions_h_
 #define mozilla_Assertions_h_
 

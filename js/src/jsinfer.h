@@ -898,7 +898,7 @@ struct TypeObjectEntry
     static inline HashNumber hash(JSObject *base);
     static inline bool match(TypeObject *key, JSObject *lookup);
 };
-typedef HashSet<TypeObject *, TypeObjectEntry, SystemAllocPolicy> TypeObjectSet;
+typedef HashSet<ReadBarriered<TypeObject>, TypeObjectEntry, SystemAllocPolicy> TypeObjectSet;
 
 /*
  * Call to mark a script's arguments as having been created, recompile any
@@ -1120,14 +1120,14 @@ class TypeScript
 };
 
 struct ArrayTableKey;
-typedef HashMap<ArrayTableKey,TypeObject*,ArrayTableKey,SystemAllocPolicy> ArrayTypeTable;
+typedef HashMap<ArrayTableKey,ReadBarriered<TypeObject>,ArrayTableKey,SystemAllocPolicy> ArrayTypeTable;
 
 struct ObjectTableKey;
 struct ObjectTableEntry;
 typedef HashMap<ObjectTableKey,ObjectTableEntry,ObjectTableKey,SystemAllocPolicy> ObjectTypeTable;
 
 struct AllocationSiteKey;
-typedef HashMap<AllocationSiteKey,TypeObject*,AllocationSiteKey,SystemAllocPolicy> AllocationSiteTable;
+typedef HashMap<AllocationSiteKey,ReadBarriered<TypeObject>,AllocationSiteKey,SystemAllocPolicy> AllocationSiteTable;
 
 /* Type information for a compartment. */
 struct TypeCompartment

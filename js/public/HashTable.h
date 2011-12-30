@@ -181,7 +181,7 @@ class HashTable : private AllocPolicy
         friend class HashTable;
 
         Range(Entry *c, Entry *e) : cur(c), end(e) {
-            while (cur != end && !cur->isLive())
+            while (cur < end && !cur->isLive())
                 ++cur;
         }
 
@@ -201,7 +201,8 @@ class HashTable : private AllocPolicy
 
         void popFront() {
             JS_ASSERT(!empty());
-            while (++cur != end && !cur->isLive());
+            while (++cur < end && !cur->isLive())
+                continue;
         }
     };
 
@@ -342,14 +343,14 @@ class HashTable : private AllocPolicy
         Entry *newTable = (Entry *)alloc.malloc_(capacity * sizeof(Entry));
         if (!newTable)
             return NULL;
-        for (Entry *e = newTable, *end = e + capacity; e != end; ++e)
+        for (Entry *e = newTable, *end = e + capacity; e < end; ++e)
             new(e) Entry();
         return newTable;
     }
 
     static void destroyTable(AllocPolicy &alloc, Entry *oldTable, uint32_t capacity)
     {
-        for (Entry *e = oldTable, *end = e + capacity; e != end; ++e)
+        for (Entry *e = oldTable, *end = e + capacity; e < end; ++e)
             e->~Entry();
         alloc.free_(oldTable);
     }
@@ -565,7 +566,7 @@ class HashTable : private AllocPolicy
         table = newTable;
 
         /* Copy only live entries, leaving removed ones behind. */
-        for (Entry *src = oldTable, *end = src + oldCap; src != end; ++src) {
+        for (Entry *src = oldTable, *end = src + oldCap; src < end; ++src) {
             if (src->isLive()) {
                 src->unsetCollision();
                 findFreeEntry(src->getKeyHash()) = Move(*src);
@@ -607,7 +608,7 @@ class HashTable : private AllocPolicy
             memset(table, 0, sizeof(*table) * capacity());
         } else {
             uint32_t tableCapacity = capacity();
-            for (Entry *e = table, *end = table + tableCapacity; e != end; ++e)
+            for (Entry *e = table, *end = table + tableCapacity; e < end; ++e)
                 *e = Move(Entry());
         }
         removedCount = 0;

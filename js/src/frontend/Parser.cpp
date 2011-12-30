@@ -2931,7 +2931,6 @@ Parser::letBlock(LetContext letContext)
         if (!semi)
             return NULL;
 
-        semi->pn_num = -1;
         semi->pn_kid = pnlet;
 
         letContext = LetExpresion;
@@ -4226,7 +4225,7 @@ Parser::statement()
         return pn;
 
       case TOK_DEBUGGER:
-        pn = NullaryNode::create(PNK_DEBUGGER, tc);
+        pn = tc->parser->new_<DebuggerStatement>(tokenStream.currentToken().pos);
         if (!pn)
             return NULL;
         tc->flags |= TCF_FUN_HEAVYWEIGHT;
@@ -4643,37 +4642,30 @@ Parser::orExpr1()
 JS_ALWAYS_INLINE ParseNode *
 Parser::condExpr1()
 {
-    ParseNode *pn = orExpr1();
-    if (pn && tokenStream.isCurrentTokenType(TOK_HOOK)) {
-        ParseNode *pn1 = pn;
-        pn = TernaryNode::create(PNK_HOOK, tc);
-        if (!pn)
-            return NULL;
+    ParseNode *condition = orExpr1();
+    if (!condition || !tokenStream.isCurrentTokenType(TOK_HOOK))
+        return condition;
 
-        /*
-         * Always accept the 'in' operator in the middle clause of a ternary,
-         * where it's unambiguous, even if we might be parsing the init of a
-         * for statement.
-         */
-        uintN oldflags = tc->flags;
-        tc->flags &= ~TCF_IN_FOR_INIT;
-        ParseNode *pn2 = assignExpr();
-        tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
+    /*
+     * Always accept the 'in' operator in the middle clause of a ternary,
+     * where it's unambiguous, even if we might be parsing the init of a
+     * for statement.
+     */
+    uintN oldflags = tc->flags;
+    tc->flags &= ~TCF_IN_FOR_INIT;
+    ParseNode *thenExpr = assignExpr();
+    tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
+    if (!thenExpr)
+        return NULL;
 
-        if (!pn2)
-            return NULL;
-        MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_IN_COND);
-        ParseNode *pn3 = assignExpr();
-        if (!pn3)
-            return NULL;
-        pn->pn_pos.begin = pn1->pn_pos.begin;
-        pn->pn_pos.end = pn3->pn_pos.end;
-        pn->pn_kid1 = pn1;
-        pn->pn_kid2 = pn2;
-        pn->pn_kid3 = pn3;
-        tokenStream.getToken();     /* need to read one token past the end */
-    }
-    return pn;
+    MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_IN_COND);
+
+    ParseNode *elseExpr = assignExpr();
+    if (!elseExpr)
+        return NULL;
+
+    tokenStream.getToken(); /* read one token past the end */
+    return new_<ConditionalExpression>(condition, thenExpr, elseExpr);
 }
 
 bool
@@ -6363,13 +6355,10 @@ Parser::xmlElementContent(ParseNode *pn)
             pn2->pn_xflags &= ~PNX_XMLROOT;
             pn->pn_xflags |= pn2->pn_xflags;
         } else if (tt == TOK_XMLPI) {
-            pn2 = NullaryNode::create(PNK_XMLPI, tc);
+            const Token &tok = tokenStream.currentToken();
+            pn2 = new_<XMLProcessingInstruction>(tok.xmlPITarget(), tok.xmlPIData(), tok.pos);
             if (!pn2)
                 return false;
-            const Token &tok = tokenStream.currentToken();
-            pn2->setOp(tok.t_op);
-            pn2->pn_pitarget = tok.xmlPITarget();
-            pn2->pn_pidata = tok.xmlPIData();
         } else {
             JS_ASSERT(tt == TOK_XMLCDATA || tt == TOK_XMLCOMMENT);
             pn2 = atomNode(tt == TOK_XMLCDATA ? PNK_XMLCDATA : PNK_XMLCOMMENT,
@@ -6575,16 +6564,6 @@ Parser::parseXMLText(JSObject *chain, bool allowList)
 }
 
 #endif /* JS_HAS_XMLSUPPORT */
-
-static ParseNode *
-PrimaryExprNode(ParseNodeKind kind, JSOp op, TreeContext *tc)
-{
-    ParseNode *pn = NullaryNode::create(kind, tc);
-    if (!pn)
-        return NULL;
-    pn->setOp(op);
-    return pn;
-}
 
 ParseNode *
 Parser::primaryExpr(TokenKind tt, JSBool afterDot)
@@ -6954,40 +6933,45 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 #endif
 
 #if JS_HAS_SHARP_VARS
-      case TOK_DEFSHARP:
-        pn = UnaryNode::create(PNK_DEFSHARP, tc);
-        if (!pn)
+      case TOK_DEFSHARP: {
+        if (!tc->ensureSharpSlots())
             return NULL;
-        pn->pn_num = tokenStream.currentToken().sharpNumber();
+        const Token &tok = tokenStream.currentToken();
+        TokenPtr begin = tok.pos.begin;
+        uint16_t number = tok.sharpNumber();
+
         tt = tokenStream.getToken(TSF_OPERAND);
-        pn->pn_kid = primaryExpr(tt, JS_FALSE);
-        if (!pn->pn_kid)
+        ParseNode *expr = primaryExpr(tt, false);
+        if (!expr)
             return NULL;
-        if (pn->pn_kid->isKind(PNK_USESHARP) ||
-            pn->pn_kid->isKind(PNK_DEFSHARP) ||
-            pn->pn_kid->isKind(PNK_STRING) ||
-            pn->pn_kid->isKind(PNK_NUMBER) ||
-            pn->pn_kid->isKind(PNK_TRUE) ||
-            pn->pn_kid->isKind(PNK_FALSE) ||
-            pn->pn_kid->isKind(PNK_NULL) ||
-            pn->pn_kid->isKind(PNK_THIS))
+        if (expr->isKind(PNK_USESHARP) ||
+            expr->isKind(PNK_DEFSHARP) ||
+            expr->isKind(PNK_STRING) ||
+            expr->isKind(PNK_NUMBER) ||
+            expr->isKind(PNK_TRUE) ||
+            expr->isKind(PNK_FALSE) ||
+            expr->isKind(PNK_NULL) ||
+            expr->isKind(PNK_THIS))
         {
-            reportErrorNumber(pn->pn_kid, JSREPORT_ERROR, JSMSG_BAD_SHARP_VAR_DEF);
+            reportErrorNumber(expr, JSREPORT_ERROR, JSMSG_BAD_SHARP_VAR_DEF);
             return NULL;
         }
-        if (!tc->ensureSharpSlots())
-            return NULL;
-        break;
-
-      case TOK_USESHARP:
-        /* Check for forward/dangling references at runtime, to allow eval. */
-        pn = NullaryNode::create(PNK_USESHARP, tc);
+        pn = new_<DefSharpExpression>(number, expr, begin, tokenStream.currentToken().pos.end);
         if (!pn)
             return NULL;
+        break;
+      }
+
+      case TOK_USESHARP: {
         if (!tc->ensureSharpSlots())
             return NULL;
-        pn->pn_num = tokenStream.currentToken().sharpNumber();
+        /* Check for forward/dangling references at runtime, to allow eval. */
+        const Token &tok = tokenStream.currentToken();
+        pn = new_<UseSharpExpression>(tok.sharpNumber(), tok.pos);
+        if (!pn)
+            return NULL;
         break;
+      }
 #endif /* JS_HAS_SHARP_VARS */
 
       case TOK_LP:
@@ -7053,14 +7037,14 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         break;
 
 #if JS_HAS_XML_SUPPORT
-      case TOK_XMLPI:
+      case TOK_XMLPI: {
         JS_ASSERT(!tc->inStrictMode());
-        pn = NullaryNode::create(PNK_XMLPI, tc);
+        const Token &tok = tokenStream.currentToken();
+        pn = new_<XMLProcessingInstruction>(tok.xmlPITarget(), tok.xmlPIData(), tok.pos);
         if (!pn)
             return NULL;
-        pn->pn_pitarget = tokenStream.currentToken().xmlPITarget();
-        pn->pn_pidata = tokenStream.currentToken().xmlPIData();
         break;
+      }
 #endif
 
       case TOK_NAME:
@@ -7223,13 +7207,13 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         break;
 
       case TOK_TRUE:
-        return PrimaryExprNode(PNK_TRUE, JSOP_TRUE, tc);
+        return new_<BooleanLiteral>(true, tokenStream.currentToken().pos);
       case TOK_FALSE:
-        return PrimaryExprNode(PNK_FALSE, JSOP_FALSE, tc);
+        return new_<BooleanLiteral>(false, tokenStream.currentToken().pos);
       case TOK_THIS:
-        return PrimaryExprNode(PNK_THIS, JSOP_THIS, tc);
+        return new_<ThisLiteral>(tokenStream.currentToken().pos);
       case TOK_NULL:
-        return PrimaryExprNode(PNK_NULL, JSOP_NULL, tc);
+        return new_<NullLiteral>(tokenStream.currentToken().pos);
 
       case TOK_ERROR:
         /* The scanner or one of its subroutines reported the error. */
