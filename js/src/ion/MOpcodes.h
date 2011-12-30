@@ -70,6 +70,7 @@ namespace ion {
     _(Sub)                                                                  \
     _(Mul)                                                                  \
     _(Div)                                                                  \
+    _(Mod)                                                                  \
     _(Return)                                                               \
     _(Copy)                                                                 \
     _(Box)                                                                  \

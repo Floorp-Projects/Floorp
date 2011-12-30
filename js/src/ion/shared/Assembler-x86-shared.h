@@ -655,6 +655,9 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
+    void negl(const Register &reg) {
+        masm.negl_r(reg.code());
+    }
     void notl(const Operand &src) {
         switch (src.kind()) {
           case Operand::REG:

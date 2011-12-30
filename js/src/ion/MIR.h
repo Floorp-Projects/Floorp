@@ -1692,6 +1692,27 @@ class MDiv : public MBinaryArithInstruction
     }
 };
 
+class MMod : public MBinaryArithInstruction
+{
+    MMod(MDefinition *left, MDefinition *right)
+      : MBinaryArithInstruction(left, right)
+    {
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Mod);
+    static MMod *New(MDefinition *left, MDefinition *right) {
+        return new MMod(left, right);
+    }
+
+    MDefinition *foldsTo(bool useValueNumbers);
+    double getIdentity() {
+        JS_NOT_REACHED("not used");
+        return 1;
+    }
+};
+
 class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
 {
     js::Vector<MDefinition *, 2, IonAllocPolicy> inputs_;
