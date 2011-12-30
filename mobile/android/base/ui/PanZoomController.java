@@ -669,18 +669,18 @@ public class PanZoomController
             if (flingingX || flingingY) {
                 mX.displace(); mY.displace();
                 updatePosition();
-            }
 
-            /*
-             * If we're still flinging with an appreciable velocity, stop here. The threshold is
-             * higher in the case of overscroll, so we bounce back eagerly when overscrolling but
-             * coast smoothly to a stop when not.
-             */
-            float excess = PointUtils.distance(new PointF(mX.getExcess(), mY.getExcess()));
-            PointF velocityVector = new PointF(mX.getRealVelocity(), mY.getRealVelocity());
-            float threshold = (excess >= 1.0f) ? STOPPED_THRESHOLD : FLING_STOPPED_THRESHOLD;
-            if (PointUtils.distance(velocityVector) >= threshold)
-                return;
+                /*
+                 * If we're still flinging with an appreciable velocity, stop here. The threshold is
+                 * higher in the case of overscroll, so we bounce back eagerly when overscrolling but
+                 * coast smoothly to a stop when not.
+                 */
+                float excess = PointUtils.distance(new PointF(mX.getExcess(), mY.getExcess()));
+                PointF velocityVector = new PointF(mX.getRealVelocity(), mY.getRealVelocity());
+                float threshold = (excess >= 1.0f) ? STOPPED_THRESHOLD : FLING_STOPPED_THRESHOLD;
+                if (PointUtils.distance(velocityVector) >= threshold)
+                    return;
+            }
 
             /*
              * Perform a bounce-back animation if overscrolled, unless panning is being overridden
