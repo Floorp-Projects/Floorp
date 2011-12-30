@@ -2797,7 +2797,7 @@ IonBuilder::jsop_getelem()
 bool
 IonBuilder::jsop_getelem_dense()
 {
-    if (oracle->arrayProtoHasIndexedProperty())
+    if (oracle->arrayPrototypeHasIndexedProperty())
         return abort("GETELEM Array proto has indexed properties");
 
     types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
@@ -2859,7 +2859,7 @@ IonBuilder::jsop_setelem()
 bool
 IonBuilder::jsop_setelem_dense()
 {
-    if (oracle->arrayProtoHasIndexedProperty())
+    if (oracle->arrayPrototypeHasIndexedProperty())
         return abort("SETELEM Array proto has indexed properties");
 
     MIRType elementType = oracle->elementWrite(script, pc);

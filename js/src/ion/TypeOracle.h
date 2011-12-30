@@ -131,7 +131,7 @@ class TypeOracle
     virtual MIRType elementWrite(JSScript *script, jsbytecode *pc) {
         return MIRType_None;
     }
-    virtual bool arrayProtoHasIndexedProperty() {
+    virtual bool arrayPrototypeHasIndexedProperty() {
         return true;
     }
 
@@ -200,7 +200,7 @@ class TypeInferenceOracle : public TypeOracle
     bool propertyWriteCanSpecialize(JSScript *script, jsbytecode *pc);
     bool propertyWriteNeedsBarrier(JSScript *script, jsbytecode *pc, jsid id);
     MIRType elementWrite(JSScript *script, jsbytecode *pc);
-    bool arrayProtoHasIndexedProperty();
+    bool arrayPrototypeHasIndexedProperty();
     bool canEnterInlinedScript(JSScript *inlineScript);
 };
 
