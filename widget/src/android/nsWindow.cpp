@@ -978,7 +978,6 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             break;
 
         case AndroidGeckoEvent::DRAW:
-        case AndroidGeckoEvent::EXPOSE:
             win->OnDraw(ae);
             break;
 
@@ -1169,31 +1168,9 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     if (gAndroidBounds.width <= 0 || gAndroidBounds.height <= 0)
         return;
 
-    nsCOMPtr<nsIAndroidDrawMetadataProvider> metadataProvider =
-        AndroidBridge::Bridge()->GetDrawMetadataProvider();
-
-    /*
-     * If this is a DRAW event (not an EXPOSE event), check to see whether browser.js wants us to
-     * draw. This will be false during page transitions, in which case we immediately bail out.
-     */
-
-    bool shouldDraw = true;
-    if (metadataProvider && ae->Type() == AndroidGeckoEvent::DRAW) {
-        metadataProvider->DrawingAllowed(&shouldDraw);
-    }
-    if (!shouldDraw) {
-        return;
-    }
-
     AndroidGeckoSoftwareLayerClient &client =
         AndroidBridge::Bridge()->GetSoftwareLayerClient();
     client.BeginDrawing(gAndroidBounds.width, gAndroidBounds.height);
-
-    // Redraw the entire tile on an EXPOSE event. Otherwise (on a DRAW event), redraw only the
-    // portion specified by the event.
-    nsIntRect rect(0, 0, gAndroidBounds.width, gAndroidBounds.height);
-    if (ae->Type() == AndroidGeckoEvent::DRAW)
-        rect = ae->Rect();
 
     nsAutoString metadata;
     unsigned char *bits = NULL;
@@ -1227,11 +1204,14 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
               // XXX: lock only the dirty rect above and pass it in here
               DrawTo(targetSurface);
             } else {
-              DrawTo(targetSurface, rect);
+              DrawTo(targetSurface, ae->Rect());
             }
 
-            if (metadataProvider) {
-                metadataProvider->GetDrawMetadata(metadata);
+            {
+                nsCOMPtr<nsIAndroidDrawMetadataProvider> metadataProvider =
+                    AndroidBridge::Bridge()->GetDrawMetadataProvider();
+                if (metadataProvider)
+                    metadataProvider->GetDrawMetadata(metadata);
             }
         }
         if (sHasDirectTexture) {
@@ -1240,7 +1220,7 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
           client.UnlockBuffer();
         }
     }
-    client.EndDrawing(rect, metadata);
+    client.EndDrawing(ae->Rect(), metadata);
     return;
 #endif
 
