@@ -422,6 +422,9 @@ MAKEFILES_xpcom="
 "
 
 MAKEFILES_xpfe="
+  xpfe/components/autocomplete/Makefile
+  xpfe/components/autocomplete/public/Makefile
+  xpfe/components/autocomplete/src/Makefile
   xpfe/components/Makefile
   xpfe/components/directory/Makefile
   xpfe/components/windowds/Makefile
