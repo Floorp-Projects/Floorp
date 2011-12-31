@@ -316,7 +316,6 @@ FoldXMLConstants(JSContext *cx, ParseNode *pn, TreeContext *tc)
 
         if (accum) {
             {
-                AutoStringRooter tvr(cx, accum);
                 str = ((kind == PNK_XMLSTAGO || kind == PNK_XMLPTAGC) && i != 0)
                       ? js_AddAttributePart(cx, i & 1, accum, str)
                       : js_ConcatStrings(cx, accum, str);
