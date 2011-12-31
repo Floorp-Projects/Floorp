@@ -74,8 +74,7 @@ class IonCommonFrameLayout
         return returnAddress_;
     }
     uint8 **returnAddressPtr() {
-        JS_NOT_REACHED("NYI");
-        return NULL;
+        return &returnAddress_;
     }
 };
 
