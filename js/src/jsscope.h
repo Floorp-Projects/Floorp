@@ -57,6 +57,7 @@
 #include "jspropertytree.h"
 
 #include "js/HashTable.h"
+#include "mozilla/Attributes.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -708,10 +709,7 @@ struct Shape : public js::gc::Cell
     Shape(UnownedBaseShape *base, uint32_t nfixed);
 
     /* Copy constructor disabled, to avoid misuse of the above form. */
-    Shape(const Shape &other);
-
-    /* Not defined: Shapes must not be stack allocated. */
-    ~Shape();
+    Shape(const Shape &other) MOZ_DELETE;
 
     /*
      * Whether this shape has a valid slot value. This may be true even if
