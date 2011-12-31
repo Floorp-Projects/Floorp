@@ -68,7 +68,7 @@ class IonFrameIterator
 {
     uint8 *current_;
     FrameType type_;
-    uint8 *returnAddressToFp_;
+    uint8 **returnAddressToFp_;
 
   public:
     IonFrameIterator(uint8 *top)
@@ -99,6 +99,9 @@ class IonFrameIterator
     // Returns the return address of the frame above this one (that is, the
     // return address that returns back to the current frame).
     uint8 *returnAddressToFp() const {
+        return *returnAddressToFp_;
+    }
+    uint8 **addressOfReturnToFp() const {
         return returnAddressToFp_;
     }
 
