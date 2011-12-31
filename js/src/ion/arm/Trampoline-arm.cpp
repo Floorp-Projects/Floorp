@@ -398,19 +398,6 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
                     , sp);
     }
 
-    Label frameFixupDone;
-    masm.ma_ldr(Operand(sp, IonJSFrameLayout::offsetOfDescriptor()), r1);
-    // see if we have a JS frame, and fix it up.  We don't fix up rectifier or exit frames?
-    masm.ma_and(Imm32(FRAMETYPE_BITS), r1, r2);
-    masm.ma_cmp(r2, Imm32(IonFrame_JS));
-    masm.ma_b(&frameFixupDone, Assembler::NotEqual);
-    {
-        JS_STATIC_ASSERT(sizeof(IonJSFrameLayout) >= sizeof(IonExitFrameLayout));
-        ptrdiff_t difference = sizeof(IonJSFrameLayout) - sizeof(IonExitFrameLayout);
-        masm.ma_add(r1, Imm32(difference << FRAMETYPE_BITS), r1);
-        masm.ma_str(r1, Operand(sp, IonJSFrameLayout::offsetOfDescriptor()));
-    }
-    masm.bind(&frameFixupDone);
     masm.linkExitFrame();
 
     Label interpret;

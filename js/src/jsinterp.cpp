@@ -1895,8 +1895,10 @@ check_backedge:
             ion::CanEnterAtBranch(cx, script, regs.fp(), regs.pc);
         if (status == ion::Method_Compiled) {
             interpReturnOK = ion::SideCannon(cx, regs.fp(), regs.pc);
-            if (interpReturnOK)
+            if (entryFrame != regs.fp())
                 goto jit_return;
+            regs.fp()->setFinishedInInterpreter();
+            goto leave_on_safe_point;
         }
     }
 #endif /* JS_ION */

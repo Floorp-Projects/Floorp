@@ -429,30 +429,6 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32 frameClass)
     masm.pop(rcx);
     masm.lea(Operand(rsp, rcx, TimesOne, sizeof(void *)), rsp);
 
-    // Convert the remaining header to an exit frame. Stack is:
-    //   ...
-    //   +8 descriptor
-    //   +0 returnAddress
-    //
-    // Test the descriptor to see if the previous frame is a JS frame. If it
-    // is, we need to rewrite it to account for the difference between
-    // the sizes of an Exit and JS frame. Otherwise, IonFrameIterator will
-    // assume sizeof(ExitFrame) accounts for the entire header, and end up off
-    // by one word.
-    Label frameFixupDone;
-    masm.movq(Operand(rsp, IonCommonFrameLayout::offsetOfDescriptor()), rcx);
-    masm.movq(rcx, rdx);
-    masm.andl(Imm32(FRAMETYPE_BITS), rdx);
-    masm.cmpl(rdx, Imm32(IonFrame_JS));
-    masm.j(Assembler::NotEqual, &frameFixupDone);
-    {
-        JS_STATIC_ASSERT(sizeof(IonJSFrameLayout) >= sizeof(IonExitFrameLayout));
-        ptrdiff_t difference = sizeof(IonJSFrameLayout) - sizeof(IonExitFrameLayout);
-        masm.addq(Imm32(difference << FRAMETYPE_BITS), rcx);
-        masm.movq(rcx, Operand(esp, IonCommonFrameLayout::offsetOfDescriptor()));
-    }
-    masm.bind(&frameFixupDone);
-
     GenerateBailoutTail(masm);
 }
 

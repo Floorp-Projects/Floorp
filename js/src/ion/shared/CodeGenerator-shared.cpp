@@ -83,6 +83,16 @@ CodeGeneratorShared::addOutOfLineCode(OutOfLineCode *code)
     return outOfLineCode_.append(code);
 }
 
+static inline int32
+ToStackIndex(LAllocation *a)
+{
+    if (a->isStackSlot()) {
+        JS_ASSERT(a->toStackSlot()->slot() >= 1);
+        return a->toStackSlot()->slot();
+    }
+    return -a->toArgument()->index();
+}
+
 bool
 CodeGeneratorShared::encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint,
                                  uint32 *startIndex)
@@ -113,7 +123,7 @@ CodeGeneratorShared::encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint,
             LAllocation *payload = snapshot->payloadOfSlot(i);
             JSValueType type = ValueTypeFromMIRType(mir->type());
             if (payload->isMemory()) {
-                snapshots_.addSlot(type, ToStackOffset(payload));
+                snapshots_.addSlot(type, ToStackIndex(payload));
             } else if (payload->isGeneralReg()) {
                 snapshots_.addSlot(type, ToRegister(payload));
             } else if (payload->isFloatReg()) {
@@ -144,18 +154,18 @@ CodeGeneratorShared::encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint,
                 if (payload->isRegister())
                     snapshots_.addSlot(ToRegister(type), ToRegister(payload));
                 else
-                    snapshots_.addSlot(ToRegister(type), ToStackOffset(payload));
+                    snapshots_.addSlot(ToRegister(type), ToStackIndex(payload));
             } else {
                 if (payload->isRegister())
-                    snapshots_.addSlot(ToStackOffset(type), ToRegister(payload));
+                    snapshots_.addSlot(ToStackIndex(type), ToRegister(payload));
                 else
-                    snapshots_.addSlot(ToStackOffset(type), ToStackOffset(payload));
+                    snapshots_.addSlot(ToStackIndex(type), ToStackIndex(payload));
             }
 #elif JS_PUNBOX64
             if (payload->isRegister())
                 snapshots_.addSlot(ToRegister(payload));
             else
-                snapshots_.addSlot(ToStackOffset(payload));
+                snapshots_.addSlot(ToStackIndex(payload));
 #endif
             break;
           }

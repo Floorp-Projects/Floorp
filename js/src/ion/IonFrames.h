@@ -291,6 +291,8 @@ class FrameRecovery
 
     void unpackCalleeToken(CalleeToken token);
 
+    static int32 OffsetOfSlot(int32 slot);
+
   public:
     static FrameRecovery FromBailoutId(uint8 *fp, uint8 *sp, const MachineState &machine,
                                        BailoutId bailoutId);
@@ -304,13 +306,11 @@ class FrameRecovery
     const MachineState &machine() const {
         return machine_;
     }
-    uintptr_t readSlot(uint32 offset) const {
-        JS_ASSERT((offset % STACK_SLOT_SIZE) == 0);
-        return *(uintptr_t *)(sp_ + offset);
+    uintptr_t readSlot(int32 slot) const {
+        return *(uintptr_t *)((char *)fp_ + OffsetOfSlot(slot));
     }
-    double readDoubleSlot(uint32 offset) const {
-        JS_ASSERT((offset % STACK_SLOT_SIZE) == 0);
-        return *(double *)(sp_ + offset);
+    double readDoubleSlot(int32 slot) const {
+        return *(double *)((char *)fp_ + OffsetOfSlot(slot));
     }
     JSFunction *callee() const {
         return callee_;

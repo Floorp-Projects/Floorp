@@ -542,16 +542,16 @@ SnapshotWriter::addSlot(JSValueType type, const Register &reg)
 }
 
 void
-SnapshotWriter::addSlot(JSValueType type, int32 stackOffset)
+SnapshotWriter::addSlot(JSValueType type, int32 stackIndex)
 {
     IonSpew(IonSpew_Snapshots, "    slot %u: %s (stack %d)",
-            slotsWritten_, ValTypeToString(type), stackOffset);
+            slotsWritten_, ValTypeToString(type), stackIndex);
 
     if (type == JSVAL_TYPE_DOUBLE)
         writeSlotHeader(type, FloatRegisters::Invalid);
     else
         writeSlotHeader(type, Registers::Invalid);
-    writer_.writeSigned(stackOffset);
+    writer_.writeSigned(stackIndex);
 }
 
 #if defined(JS_NUNBOX32)
@@ -567,36 +567,36 @@ SnapshotWriter::addSlot(const Register &type, const Register &payload)
 }
 
 void
-SnapshotWriter::addSlot(const Register &type, int32 payloadStackOffset)
+SnapshotWriter::addSlot(const Register &type, int32 payloadStackIndex)
 {
     IonSpew(IonSpew_Snapshots, "    slot %u: value (t=%s, d=%d)",
-            slotsWritten_, type.name(), payloadStackOffset);
+            slotsWritten_, type.name(), payloadStackIndex);
 
     writeSlotHeader(JSVAL_TYPE_MAGIC, NUNBOX32_REG_STACK);
     writer_.writeByte(type.code());
-    writer_.writeSigned(payloadStackOffset);
+    writer_.writeSigned(payloadStackIndex);
 }
 
 void
-SnapshotWriter::addSlot(int32 typeStackOffset, const Register &payload)
+SnapshotWriter::addSlot(int32 typeStackIndex, const Register &payload)
 {
     IonSpew(IonSpew_Snapshots, "    slot %u: value (t=%d, d=%s)",
-            slotsWritten_, typeStackOffset, payload.name());
+            slotsWritten_, typeStackIndex, payload.name());
 
     writeSlotHeader(JSVAL_TYPE_MAGIC, NUNBOX32_STACK_REG);
-    writer_.writeSigned(typeStackOffset);
+    writer_.writeSigned(typeStackIndex);
     writer_.writeByte(payload.code());
 }
 
 void
-SnapshotWriter::addSlot(int32 typeStackOffset, int32 payloadStackOffset)
+SnapshotWriter::addSlot(int32 typeStackIndex, int32 payloadStackIndex)
 {
     IonSpew(IonSpew_Snapshots, "    slot %u: value (t=%d, d=%d)",
-            slotsWritten_, typeStackOffset, payloadStackOffset);
+            slotsWritten_, typeStackIndex, payloadStackIndex);
 
     writeSlotHeader(JSVAL_TYPE_MAGIC, NUNBOX32_STACK_STACK);
-    writer_.writeSigned(typeStackOffset);
-    writer_.writeSigned(payloadStackOffset);
+    writer_.writeSigned(typeStackIndex);
+    writer_.writeSigned(payloadStackIndex);
 }
 
 #elif defined(JS_PUNBOX64)

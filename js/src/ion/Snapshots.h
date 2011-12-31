@@ -313,16 +313,16 @@ class SnapshotWriter
 
     void addSlot(const FloatRegister &reg);
     void addSlot(JSValueType type, const Register &reg);
-    void addSlot(JSValueType type, int32 stackOffset);
+    void addSlot(JSValueType type, int32 stackIndex);
     void addUndefinedSlot();
     void addNullSlot();
     void addInt32Slot(int32 value);
     void addConstantPoolSlot(uint32 index);
 #if defined(JS_NUNBOX32)
     void addSlot(const Register &type, const Register &payload);
-    void addSlot(const Register &type, int32 payloadStackOffset);
-    void addSlot(int32 typeStackOffset, const Register &payload);
-    void addSlot(int32 typeStackOffset, int32 payloadStackOffset);
+    void addSlot(const Register &type, int32 payloadStackIndex);
+    void addSlot(int32 typeStackIndex, const Register &payload);
+    void addSlot(int32 typeStackIndex, int32 payloadStackIndex);
 #elif defined(JS_PUNBOX64)
     void addSlot(const Register &value);
     void addSlot(int32 valueStackSlot);
