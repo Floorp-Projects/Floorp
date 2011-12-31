@@ -5575,7 +5575,6 @@ xml_attributes(JSContext *cx, uintN argc, jsval *vp)
     if (!qn)
         return JS_FALSE;
 
-    AutoObjectRooter tvr(cx, qn);
     jsid id = OBJECT_TO_JSID(qn);
     JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
