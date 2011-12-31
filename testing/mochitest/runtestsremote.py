@@ -49,6 +49,7 @@ from runtests import MochitestOptions
 from runtests import MochitestServer
 
 import devicemanager, devicemanagerADB, devicemanagerSUT
+import manifestparser
 
 class RemoteOptions(MochitestOptions):
 
@@ -105,6 +106,11 @@ class RemoteOptions(MochitestOptions):
                     type = "string", dest = "pidFile",
                     help = "name of the pidfile to generate")
         defaults["pidFile"] = ""
+
+        self.add_option("--robocop", action = "store",
+                    type = "string", dest = "robocop",
+                    help = "use when running robotium tests on native UI")
+        defaults["robocop"] = ""
 
         defaults["remoteTestRoot"] = None
         defaults["logFile"] = "mochitest.log"
@@ -312,7 +318,7 @@ def main():
     auto = RemoteAutomation(dm_none, "fennec")
     parser = RemoteOptions(auto, scriptdir)
     options, args = parser.parse_args()
-    if (options.dm_trans == "adb"):
+    if (options.dm_trans == "adb" or options.robocop):
         if (options.deviceIP):
             dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort)
         else:
@@ -345,14 +351,46 @@ def main():
     procName = options.app.split('/')[-1]
     if (dm.processExist(procName)):
       dm.killProcess(procName)
+    
+    if (options.robocop):
+      mp = manifestparser.TestManifest(strict=False)
+      # TODO: pull this in dynamically
+      mp.read('robocop.ini')
+      robocop_tests = mp.active_tests(exists=False)
 
-    try:
-      retVal = mochitest.runTests(options)
-    except:
-      print "TEST-UNEXPECTED-ERROR | | Exception caught while running tests."
+      fHandle = open("robotium.config", "w")
+      fHandle.write("profile=%s\n" % (mochitest.remoteProfile))
+      fHandle.write("logfile=%s\n" % (options.remoteLogFile))
+      fHandle.close()
+      deviceRoot = dm.getDeviceRoot()
+      
+      # Note, we are pushing to /sdcard since we have this location hard coded in robocop
+      dm.pushFile("robotium.config", "/sdcard/robotium.config")
+      dm.pushFile(os.path.abspath(options.robocop + "/fennec_ids.txt"), "/sdcard/fennec_ids.txt")
+      options.extraPrefs.append('robocop.logfile="%s/robocop.log"' % deviceRoot)
+
+      manifest = mochitest.buildProfile(options)
+      mochitest.startWebServer(options)
+
+      if (options.dm_trans == 'adb'):
+        dm.checkCmd(["install", "-r", os.path.join(options.robocop, "robocop.apk")])
+        for test in robocop_tests:
+          cmd = ["shell", "am", "instrument", "-w", "-e", "class"]
+          cmd.append("%s.tests.%s" % (options.app, test['name']))
+          cmd.append("org.mozilla.roboexample.test/android.test.InstrumentationTestRunner")
+          retVal = dm.checkCmd(cmd)
+      else:
+        # SUTAgent needs to install robocop and not crash when we launch robocop.
+        retVal = dm.launchProcess(["am", "instrument", "-w", "org.mozilla.roboexample.test/android.test.InstrumentationTestRunner"])
       mochitest.stopWebServer(options)
-      mochitest.stopWebSocketServer(options)
-      sys.exit(1)
+    else:
+      try:
+        retVal = mochitest.runTests(options)
+      except:
+        print "TEST-UNEXPECTED-ERROR | | Exception caught while running tests."
+        mochitest.stopWebServer(options)
+        mochitest.stopWebSocketServer(options)
+        sys.exit(1)
       
     sys.exit(retVal)
         
