@@ -2654,10 +2654,6 @@ pref("browser.display.substitute_vector_fonts", true);
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
 
-pref("applications.telnet", "telnetpm.exe");
-pref("applications.telnet.host", "%host%");
-pref("applications.telnet.port", "-p %port%");
-
 pref("mail.compose.max_recycled_windows", 0);
 
 // Disable IPv6 name lookups by default.
@@ -2707,10 +2703,6 @@ pref("helpers.global_mime_types_file", "/etc/mime.types");
 pref("helpers.global_mailcap_file", "/etc/mailcap");
 pref("helpers.private_mime_types_file", "~/.mime.types");
 pref("helpers.private_mailcap_file", "~/.mailcap");
-pref("applications.telnet", "xterm -e telnet %h %p");
-pref("applications.tn3270", "xterm -e tn3270 %h");
-pref("applications.rlogin", "xterm -e rlogin %h");
-pref("applications.rlogin_with_user", "xterm -e rlogin %h -l %u");
 pref("print.print_command", "lpr ${MOZ_PRINTER_NAME:+-P\"$MOZ_PRINTER_NAME\"}");
 pref("print.printer_list", ""); // list of printers, separated by spaces
 pref("print.print_reversed", false);
@@ -2972,10 +2964,6 @@ pref("helpers.global_mime_types_file", "/etc/mime.types");
 pref("helpers.global_mailcap_file", "/etc/mailcap");
 pref("helpers.private_mime_types_file", "~/.mime.types");
 pref("helpers.private_mailcap_file", "~/.mailcap");
-pref("applications.telnet", "xterm -e telnet %h %p");
-pref("applications.tn3270", "xterm -e tn3270 %h");
-pref("applications.rlogin", "xterm -e rlogin %h");
-pref("applications.rlogin_with_user", "xterm -e rlogin %h -l %u");
 pref("print.print_command", "lpr ${MOZ_PRINTER_NAME:+-P\"$MOZ_PRINTER_NAME\"}");
 pref("print.printer_list", ""); // list of printers, separated by spaces
 pref("print.print_reversed", false);
