@@ -1273,8 +1273,8 @@ StackBaseShape::match(UnownedBaseShape *key, const StackBaseShape *lookup)
     return key->flags == lookup->flags
         && key->clasp == lookup->clasp
         && key->parent == lookup->parent
-        && (void *) key->rawGetter == lookup->rawGetter
-        && (void *) key->rawSetter == lookup->rawSetter;
+        && key->rawGetter == lookup->rawGetter
+        && key->rawSetter == lookup->rawSetter;
 }
 
 /* Root for stack allocated base shapes. */
