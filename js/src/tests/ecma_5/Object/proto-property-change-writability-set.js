@@ -7,26 +7,38 @@
  *   Jason Orendorff
  */
 
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 713944;
+var summary =
+  "Don't assert anything about a shape from the property cache until it's " +
+  "known the cache entry matches";
+
+print(BUGNUMBER + ": " + summary);
+
+/**************
+ * BEGIN TEST *
+ **************/
+
 var accDesc = { set: function() {} };
 var dataDesc = { value: 3 };
 
 function f()
 {
-  constructor = {};
+  propertyIsEnumerable = {};
 }
 function g()
 {
-  constructor = {};
+  propertyIsEnumerable = {};
 }
 
-Object.defineProperty(Object.prototype, "constructor", accDesc);
+Object.defineProperty(Object.prototype, "propertyIsEnumerable", accDesc);
 f();
-Object.defineProperty(Object.prototype, "constructor", dataDesc);
-assertEq(constructor, 3);
+Object.defineProperty(Object.prototype, "propertyIsEnumerable", dataDesc);
+assertEq(propertyIsEnumerable, 3);
 f();
-assertEq(constructor, 3);
+assertEq(propertyIsEnumerable, 3);
 g();
-assertEq(constructor, 3);
+assertEq(propertyIsEnumerable, 3);
 
 
 
