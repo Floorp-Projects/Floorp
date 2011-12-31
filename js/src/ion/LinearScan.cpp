@@ -1239,7 +1239,10 @@ LinearScanAllocator::allocateSlotFor(const LiveInterval *interval)
             // inside a loop, but the same allocation is then used to hold a
             // loop-carried value.
             freed->popBack();
-            return maybeDead->reg()->canonicalSpill()->toStackSlot()->slot();
+            VirtualRegister *dead = maybeDead->reg();
+            if (IsNunbox(dead))
+                return BaseOfNunboxSlot(dead->type(), dead->canonicalSpillSlot());
+            return dead->canonicalSpillSlot();
         }
     }
 
