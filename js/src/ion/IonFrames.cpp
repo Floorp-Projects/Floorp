@@ -119,6 +119,14 @@ FrameRecovery::unpackCalleeToken(CalleeToken token)
     }
 }
 
+int32
+FrameRecovery::OffsetOfSlot(int32 slot)
+{
+    if (slot <= 0)
+        return sizeof(IonJSFrameLayout) + -slot;
+    return -(slot * STACK_SLOT_SIZE);
+}
+
 void
 FrameRecovery::setBailoutId(BailoutId bailoutId)
 {
@@ -202,21 +210,7 @@ IonFrameIterator::prevFp() const
 {
     JS_ASSERT(type_ != IonFrame_Entry);
 
-    size_t currentSize;
-    switch (type_) {
-      case IonFrame_JS:
-        currentSize = sizeof(IonJSFrameLayout);
-        break;
-      case IonFrame_Rectifier:
-        currentSize = sizeof(IonRectifierFrameLayout);
-        break;
-      case IonFrame_Exit:
-        currentSize = sizeof(IonExitFrameLayout);
-        break;
-      default:
-        JS_NOT_REACHED("unexpected frame type");
-        return NULL;
-    }
+    size_t currentSize = SizeOfFramePrefix(type_);
     currentSize += current()->prevFrameLocalSize();
 
     return current_ + currentSize;

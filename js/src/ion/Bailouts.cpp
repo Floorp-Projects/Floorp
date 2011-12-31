@@ -50,6 +50,7 @@
 #include "jsinfer.h"
 #include "jsanalyze.h"
 #include "jsinferinlines.h"
+#include "IonFrames-inl.h"
 
 using namespace js;
 using namespace js::ion;
@@ -283,6 +284,20 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
     return true;
 }
 
+static inline void
+EnsureExitFrame(IonCommonFrameLayout *frame)
+{
+    if (frame->prevType() == IonFrame_Entry) {
+        // The previous frame type is the entry frame, so there's no actual
+        // need for an exit frame.
+        return;
+    }
+
+    uint32 callerFrameSize = frame->prevFrameLocalSize() +
+                             SizeOfFramePrefix(frame->prevType()) - sizeof(IonExitFrameLayout);
+    frame->setFrameDescriptor(callerFrameSize, IonFrame_Exit);
+}
+
 uint32
 ion::Bailout(BailoutStack *sp)
 {
@@ -294,6 +309,9 @@ ion::Bailout(BailoutStack *sp)
     IonSpew(IonSpew_Snapshots, "Took bailout! Snapshot offset: %d", in.snapshotOffset());
 
     uint32 retval = ConvertFrames(cx, activation, in);
+
+    EnsureExitFrame(in.fp());
+
     if (retval != BAILOUT_RETURN_FATAL_ERROR)
         return retval;
 
@@ -329,10 +347,7 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
         // Not strictly necessary, but nice for sanity.
         frame->replaceCalleeToken(InvalidationRecordToToken(NULL));
 
-        uint32 callerFrameSize = frame->prevFrameLocalSize() +
-                                 sizeof(IonJSFrameLayout) - sizeof(IonExitFrameLayout);
-        frame->setFrameDescriptor(callerFrameSize, IonFrame_Exit);
-
+        EnsureExitFrame(frame);
         IonSpew(IonSpew_Invalidate, "   new  calleeToken %p", (void *) frame->calleeToken());
         IonSpew(IonSpew_Invalidate, "   new  frameSize %u", unsigned(frame->prevFrameLocalSize()));
         IonSpew(IonSpew_Invalidate, "   new  ra %p", (void *) frame->returnAddress());
