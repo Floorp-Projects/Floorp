@@ -111,8 +111,7 @@ nsWindow::DoDraw(void)
 
     LayerManager* lm = gWindowToRedraw->GetLayerManager();
     if (LayerManager::LAYERS_OPENGL == lm->GetBackendType()) {
-        static_cast<LayerManagerOGL*>(lm)->
-            SetClippingRegion(nsIntRegion(gScreenBounds));
+        static_cast<LayerManagerOGL*>(lm)->SetClippingRegion(event.region);
         gWindowToRedraw->mEventCallback(&event);
     } else if (LayerManager::LAYERS_BASIC == lm->GetBackendType()) {
         MOZ_ASSERT(sFramebufferOpen);
@@ -120,7 +119,6 @@ nsWindow::DoDraw(void)
         nsRefPtr<gfxASurface> backBuffer = Framebuffer::BackBuffer();
         {
             nsRefPtr<gfxContext> ctx = new gfxContext(backBuffer);
-            ctx->NewPath();
             gfxUtils::PathFromRegion(ctx, event.region);
             ctx->Clip();
 
@@ -131,7 +129,7 @@ nsWindow::DoDraw(void)
         }
         backBuffer->Flush();
 
-        Framebuffer::Present();
+        Framebuffer::Present(event.region);
     } else {
         NS_RUNTIMEABORT("Unexpected layer manager type");
     }
