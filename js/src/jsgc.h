@@ -734,8 +734,8 @@ struct Chunk {
         return info.numArenasFree == ArenasPerChunk;
     }
 
-    bool noAvailableArenas() const {
-        return info.numArenasFree == 0;
+    bool hasAvailableArenas() const {
+        return info.numArenasFree != 0;
     }
 
     inline void addToAvailableList(JSCompartment *compartment);
