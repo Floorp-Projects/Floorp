@@ -52,7 +52,9 @@
 #include "android/log.h"
 
 #include "Framebuffer.h"
+#include "gfxContext.h"
 #include "gfxImageSurface.h"
+#include "gfxUtils.h"
 #include "mozilla/FileUtils.h"
 #include "nsTArray.h"
 
@@ -141,7 +143,7 @@ Open(nsIntSize* aScreenSize)
     }
 
     // Clear the framebuffer to a known state.
-    Present();
+    Present(nsIntRect());
 
     *aScreenSize = size;
     return true;
@@ -167,8 +169,14 @@ BackBuffer()
     return Buffers()[!sActiveBuffer];
 }
 
+static gfxASurface*
+FrontBuffer()
+{
+    return Buffers()[sActiveBuffer];
+}
+
 void
-Present()
+Present(const nsIntRegion& aUpdated)
 {
     sActiveBuffer = !sActiveBuffer;
 
@@ -178,6 +186,13 @@ Present()
     if (ioctl(sFd, FBIOPUT_VSCREENINFO, &sVi) < 0) {
         LOG("Error presenting front buffer");
     }
+
+    nsRefPtr<gfxContext> ctx = new gfxContext(BackBuffer());
+    gfxUtils::PathFromRegion(ctx, aUpdated);
+    ctx->Clip();
+    ctx->SetSource(FrontBuffer());
+    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    ctx->Paint(1.0);
 }
 
 } // namespace Framebuffer
