@@ -108,7 +108,7 @@ using namespace mozilla;
 
 #define PRINTING_FC_PROPERTY "gfx.printing"
 
-class gfxPangoFcFont;
+struct gfxPangoFcFont;
 
 // Same as pango_units_from_double from Pango 1.16 (but not in older versions)
 int moz_pango_units_from_double(double d) {
