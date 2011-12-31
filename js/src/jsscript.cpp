@@ -90,9 +90,8 @@ Bindings::lookup(JSContext *cx, JSAtom *name, uintN *indexp) const
     if (!lastBinding)
         return NONE;
 
-    Shape *shape =
-        SHAPE_FETCH(Shape::search(cx, const_cast<HeapPtrShape *>(&lastBinding),
-                                  ATOM_TO_JSID(name)));
+    Shape **spp;
+    Shape *shape = Shape::search(cx, lastBinding, ATOM_TO_JSID(name), &spp);
     if (!shape)
         return NONE;
 
@@ -166,19 +165,21 @@ Bindings::add(JSContext *cx, JSAtom *name, BindingKind kind)
         id = ATOM_TO_JSID(name);
     }
 
-    BaseShape base(&CallClass, NULL, BaseShape::VAROBJ, attrs, getter, setter);
+    StackBaseShape base(&CallClass, NULL, BaseShape::VAROBJ);
+    base.updateGetterSetter(attrs, getter, setter);
+
     UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
     if (!nbase)
         return NULL;
 
-    Shape child(nbase, id, slot, 0, attrs, Shape::HAS_SHORTID, *indexp);
+    StackShape child(nbase, id, slot, 0, attrs, Shape::HAS_SHORTID, *indexp);
 
     /* Shapes in bindings cannot be dictionaries. */
-    Shape *shape = lastBinding->getChildBinding(cx, child, &lastBinding);
+    Shape *shape = lastBinding->getChildBinding(cx, child);
     if (!shape)
         return false;
 
-    JS_ASSERT(lastBinding == shape);
+    lastBinding = shape;
     ++*indexp;
     return true;
 }

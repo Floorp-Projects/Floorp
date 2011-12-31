@@ -91,16 +91,45 @@ BaseShape::BaseShape(Class *clasp, JSObject *parent, uint32_t objectFlags,
     }
 }
 
+inline
+BaseShape::BaseShape(const StackBaseShape &base)
+{
+    PodZero(this);
+    this->clasp = base.clasp;
+    this->parent = base.parent;
+    this->flags = base.flags;
+    this->rawGetter = base.rawGetter;
+    this->rawSetter = base.rawSetter;
+}
+
 inline bool
 BaseShape::matchesGetterSetter(PropertyOp rawGetter, StrictPropertyOp rawSetter) const
 {
     return rawGetter == this->rawGetter && rawSetter == this->rawSetter;
 }
 
-inline void
-BaseShape::setObjectParent(JSObject *obj)
+inline
+StackBaseShape::StackBaseShape(Shape *shape)
+  : flags(shape->getObjectFlags()),
+    clasp(shape->getObjectClass()),
+    parent(shape->getObjectParent())
 {
-    parent = obj;
+    updateGetterSetter(shape->attrs, shape->getter(), shape->setter());
+}
+
+inline void
+StackBaseShape::updateGetterSetter(uint8_t attrs,
+                                   PropertyOp rawGetter,
+                                   StrictPropertyOp rawSetter)
+{
+    flags &= ~(BaseShape::HAS_GETTER_OBJECT | BaseShape::HAS_SETTER_OBJECT);
+    if ((attrs & JSPROP_GETTER) && rawGetter)
+        flags |= BaseShape::HAS_GETTER_OBJECT;
+    if ((attrs & JSPROP_SETTER) && rawSetter)
+        flags |= BaseShape::HAS_SETTER_OBJECT;
+
+    this->rawGetter = rawGetter;
+    this->rawSetter = rawSetter;
 }
 
 inline void
@@ -149,31 +178,13 @@ BaseShape::assertConsistency()
 }
 
 inline
-Shape::Shape(UnownedBaseShape *base, jsid propid, uint32_t slot, uint32_t nfixed,
-             uintN attrs, uintN flags, intN shortid)
-  : base_(base),
-    propid_(propid),
-    slotInfo(slot | (nfixed << FIXED_SLOTS_SHIFT)),
-    attrs(uint8_t(attrs)),
-    flags(uint8_t(flags)),
-    shortid_(int16_t(shortid)),
-    parent(NULL)
-{
-    JS_ASSERT(base);
-    JS_ASSERT(!JSID_IS_VOID(propid));
-    JS_ASSERT_IF(isMethod(), !base->rawGetter);
-    JS_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
-    kids.setNull();
-}
-
-inline
-Shape::Shape(const Shape *other)
-  : base_(other->base()->unowned()),
-    propid_(other->maybePropid()),
-    slotInfo(other->slotInfo & ~LINEAR_SEARCHES_MASK),
-    attrs(other->attrs),
-    flags(other->flags),
-    shortid_(other->maybeShortid()),
+Shape::Shape(const StackShape &other, uint32_t nfixed)
+  : base_(other.base),
+    propid_(other.propid),
+    slotInfo(other.maybeSlot() | (nfixed << FIXED_SLOTS_SHIFT)),
+    attrs(other.attrs),
+    flags(other.flags),
+    shortid_(other.shortid),
     parent(NULL)
 {
     kids.setNull();
@@ -194,16 +205,16 @@ Shape::Shape(UnownedBaseShape *base, uint32_t nfixed)
 }
 
 inline JSDHashNumber
-Shape::hash() const
+StackShape::hash() const
 {
-    JSDHashNumber hash = jsuword(base()->unowned());
+    JSDHashNumber hash = jsuword(base);
 
     /* Accumulate from least to most random so the low bits are most random. */
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (flags & PUBLIC_FLAGS);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ (flags & Shape::PUBLIC_FLAGS);
     hash = JS_ROTATE_LEFT32(hash, 4) ^ attrs;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ shortid_;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ maybeSlot();
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ JSID_BITS(propid_.get());
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ shortid;
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ slot_;
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ JSID_BITS(propid);
     return hash;
 }
 
@@ -213,6 +224,13 @@ Shape::matches(const js::Shape *other) const
     return propid_.get() == other->propid_.get() &&
            matchesParamsAfterId(other->base(), other->maybeSlot(), other->attrs,
                                 other->flags, other->shortid_);
+}
+
+inline bool
+Shape::matches(const StackShape &other) const
+{
+    return propid_.get() == other.propid &&
+           matchesParamsAfterId(other.base, other.slot_, other.attrs, other.flags, other.shortid);
 }
 
 inline bool
@@ -297,7 +315,7 @@ Shape::removeFromDictionary(JSObject *obj)
 }
 
 inline void
-Shape::insertIntoDictionary(HeapPtr<js::Shape> *dictp)
+Shape::insertIntoDictionary(HeapPtrShape *dictp)
 {
     /*
      * Don't assert inDictionaryMode() here because we may be called from
@@ -313,18 +331,15 @@ Shape::insertIntoDictionary(HeapPtr<js::Shape> *dictp)
     setParent(*dictp);
     if (parent)
         parent->listp = &parent;
-    listp = dictp;
+    listp = (HeapPtrShape *) dictp;
     *dictp = this;
 }
 
 void
-Shape::initDictionaryShape(const Shape &child, HeapPtrShape *dictp)
+Shape::initDictionaryShape(const StackShape &child, uint32_t nfixed, HeapPtrShape *dictp)
 {
-    UnownedBaseShape *base = child.base()->unowned();
-
-    new (this) Shape(base, child.maybePropid(),
-                     child.maybeSlot(), child.numFixedSlots(), child.attrs,
-                     child.flags | IN_DICTIONARY, child.maybeShortid());
+    new (this) Shape(child, nfixed);
+    this->flags |= IN_DICTIONARY;
 
     this->listp = NULL;
     insertIntoDictionary(dictp);

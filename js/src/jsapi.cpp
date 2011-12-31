@@ -1853,6 +1853,8 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
     JSStdName *stdnm;
     uintN i;
 
+    RootObject objRoot(cx, &obj);
+
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
     *resolved = JS_FALSE;
@@ -3040,7 +3042,8 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, parent_proto);
-    return js_InitClass(cx, obj, parent_proto, Valueify(clasp), constructor,
+    RootObject objRoot(cx, &obj);
+    return js_InitClass(cx, objRoot, parent_proto, Valueify(clasp), constructor,
                         nargs, ps, fs, static_ps, static_fs);
 }
 
@@ -3588,6 +3591,9 @@ DefineProperty(JSContext *cx, JSObject *obj, const char *name, const Value &valu
     jsid id;
     JSAtom *atom;
 
+    RootObject objRoot(cx, &obj);
+    RootValue valueRoot(cx, &value);
+
     if (attrs & JSPROP_INDEX) {
         id = INT_TO_JSID(intptr_t(name));
         atom = NULL;
@@ -3600,6 +3606,8 @@ DefineProperty(JSContext *cx, JSObject *obj, const char *name, const Value &valu
     }
 
     if (attrs & JSPROP_NATIVE_ACCESSORS) {
+        RootId idRoot(cx, &id);
+
         JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
         attrs &= ~JSPROP_NATIVE_ACCESSORS;
         if (getter) {
@@ -3617,6 +3625,7 @@ DefineProperty(JSContext *cx, JSObject *obj, const char *name, const Value &valu
             attrs |= JSPROP_SETTER;
         }
     }
+
     return DefinePropertyById(cx, obj, id, value, getter, setter, attrs, flags, tinyid);
 }
 
@@ -3679,7 +3688,10 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *jsclasp
     if (!clasp)
         clasp = &ObjectClass;    /* default class is Object */
 
-    JSObject *nobj = NewObjectWithClassProto(cx, clasp, proto, obj);
+    RootObject root(cx, &obj);
+    RootedVarObject nobj(cx);
+
+    nobj = NewObjectWithClassProto(cx, clasp, proto, obj);
     if (!nobj)
         return NULL;
 
@@ -3712,6 +3724,7 @@ JS_PUBLIC_API(JSBool)
 JS_DefineProperties(JSContext *cx, JSObject *obj, JSPropertySpec *ps)
 {
     JSBool ok;
+    RootObject root(cx, &obj);
 
     for (ok = true; ps->name; ps++) {
         ok = DefineProperty(cx, obj, ps->name, UndefinedValue(), ps->getter, ps->setter,
@@ -4181,7 +4194,6 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
          * Note: we have to make sure that we root obj around the call to
          * JS_Enumerate to protect against multiple allocations under it.
          */
-        AutoObjectRooter tvr(cx, iterobj);
         ida = JS_Enumerate(cx, obj);
         if (!ida)
             return NULL;
@@ -4367,7 +4379,9 @@ JS_NewFunction(JSContext *cx, JSNative native, uintN nargs, uintN flags,
         if (!atom)
             return NULL;
     }
-    return js_NewFunction(cx, NULL, native, nargs, flags, parent, atom);
+
+    RootObject parentRoot(cx, &parent);
+    return js_NewFunction(cx, NULL, native, nargs, flags, parentRoot, atom);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4379,7 +4393,8 @@ JS_NewFunctionById(JSContext *cx, JSNative native, uintN nargs, uintN flags, JSO
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);
 
-    return js_NewFunction(cx, NULL, native, nargs, flags, parent, JSID_TO_ATOM(id));
+    RootObject parentRoot(cx, &parent);
+    return js_NewFunction(cx, NULL, native, nargs, flags, parentRoot, JSID_TO_ATOM(id));
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4533,14 +4548,15 @@ js_generic_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
 JS_PUBLIC_API(JSBool)
 JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
 {
+    RootObject objRoot(cx, &obj);
+
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     uintN flags;
-    JSObject *ctor;
+    RootedVarObject ctor(cx);
     JSFunction *fun;
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    ctor = NULL;
     for (; fs->name; fs++) {
         flags = fs->flags;
 
@@ -4553,6 +4569,8 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
          * method if flags contains JSFUN_GENERIC_NATIVE.
          */
         if (flags & JSFUN_GENERIC_NATIVE) {
+            RootAtom root(cx, &atom);
+
             if (!ctor) {
                 ctor = JS_GetConstructor(cx, obj);
                 if (!ctor)
@@ -4575,7 +4593,8 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
             fun->setExtendedSlot(0, PrivateValue(fs));
         }
 
-        fun = js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), fs->call, fs->nargs, flags);
+        fun = js_DefineFunction(cx, objRoot,
+                                ATOM_TO_JSID(atom), fs->call, fs->nargs, flags);
         if (!fun)
             return JS_FALSE;
     }
@@ -4586,13 +4605,15 @@ JS_PUBLIC_API(JSFunction *)
 JS_DefineFunction(JSContext *cx, JSObject *obj, const char *name, JSNative call,
                   uintN nargs, uintN attrs)
 {
+    RootObject objRoot(cx, &obj);
+
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     if (!atom)
         return NULL;
-    return js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), call, nargs, attrs);
+    return js_DefineFunction(cx, objRoot, ATOM_TO_JSID(atom), call, nargs, attrs);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4600,23 +4621,27 @@ JS_DefineUCFunction(JSContext *cx, JSObject *obj,
                     const jschar *name, size_t namelen, JSNative call,
                     uintN nargs, uintN attrs)
 {
+    RootObject objRoot(cx, &obj);
+
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen));
     if (!atom)
         return NULL;
-    return js_DefineFunction(cx, obj, ATOM_TO_JSID(atom), call, nargs, attrs);
+    return js_DefineFunction(cx, objRoot, ATOM_TO_JSID(atom), call, nargs, attrs);
 }
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_DefineFunctionById(JSContext *cx, JSObject *obj, jsid id, JSNative call,
                     uintN nargs, uintN attrs)
 {
+    RootObject objRoot(cx, &obj);
+
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    return js_DefineFunction(cx, obj, id, call, nargs, attrs);
+    return js_DefineFunction(cx, objRoot, id, call, nargs, attrs);
 }
 
 struct AutoLastFrameCheck {
@@ -4917,6 +4942,8 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
                                      const jschar *chars, size_t length,
                                      const char *filename, uintN lineno, JSVersion version)
 {
+    RootObject objRoot(cx, &obj);
+
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, principals);
@@ -4939,7 +4966,7 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj,
             return NULL;
     }
 
-    JSFunction *fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, obj, funAtom);
+    JSFunction *fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, objRoot, funAtom);
     if (!fun)
         return NULL;
 

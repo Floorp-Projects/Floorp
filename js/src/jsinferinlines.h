@@ -1327,13 +1327,19 @@ JSScript::ensureHasTypes(JSContext *cx)
 inline bool
 JSScript::ensureRanAnalysis(JSContext *cx, JSObject *scope)
 {
-    if (!ensureHasTypes(cx))
+    JSScript *self = this;
+
+    if (!self->ensureHasTypes(cx))
         return false;
-    if (!types->hasScope() && !js::types::TypeScript::SetScope(cx, this, scope))
+    if (!self->types->hasScope()) {
+        js::CheckRoot root(cx, &self);
+        js::RootObject objRoot(cx, &scope);
+        if (!js::types::TypeScript::SetScope(cx, self, scope))
+            return false;
+    }
+    if (!self->hasAnalysis() && !self->makeAnalysis(cx))
         return false;
-    if (!hasAnalysis() && !makeAnalysis(cx))
-        return false;
-    JS_ASSERT(analysis()->ranBytecode());
+    JS_ASSERT(self->analysis()->ranBytecode());
     return true;
 }
 

@@ -48,6 +48,7 @@
 #include "jsdbgapi.h"
 #include "jsclist.h"
 #include "jsinfer.h"
+#include "jsscope.h"
 
 #include "gc/Barrier.h"
 
@@ -207,7 +208,7 @@ class Bindings {
     inline bool ensureShape(JSContext *cx);
 
     /* Returns the shape lineage generated for these bindings. */
-    inline js::Shape *lastShape() const;
+    inline Shape *lastShape() const;
 
     /* See Scope::extensibleParents */
     inline bool extensibleParents();
@@ -312,6 +313,14 @@ class Bindings {
     const js::Shape *lastUpvar() const;
 
     void trace(JSTracer *trc);
+
+    /* Rooter for stack allocated Bindings. */
+    struct StackRoot {
+        RootShape root;
+        StackRoot(JSContext *cx, Bindings *bindings)
+            : root(cx, (Shape **) &bindings->lastBinding)
+        {}
+    };
 };
 
 } /* namespace js */
@@ -820,6 +829,8 @@ struct JSScript : public js::gc::Cell {
 
     static inline void writeBarrierPre(JSScript *script);
     static inline void writeBarrierPost(JSScript *script, void *addr);
+
+    static inline js::ThingRootKind rootKind() { return js::THING_ROOT_SCRIPT; }
 };
 
 /* If this fails, padding_ can be removed. */

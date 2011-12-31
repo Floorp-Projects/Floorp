@@ -53,13 +53,13 @@
 using namespace js;
 
 inline HashNumber
-ShapeHasher::hash(const Lookup l)
+ShapeHasher::hash(const Lookup &l)
 {
-    return l->hash();
+    return l.hash();
 }
 
 inline bool
-ShapeHasher::match(const Key k, const Lookup l)
+ShapeHasher::match(const Key k, const Lookup &l)
 {
     return k->matches(l);
 }
@@ -84,8 +84,8 @@ HashChildren(Shape *kid1, Shape *kid2)
         return NULL;
     }
 
-    JS_ALWAYS_TRUE(hash->putNew(kid1));
-    JS_ALWAYS_TRUE(hash->putNew(kid2));
+    JS_ALWAYS_TRUE(hash->putNew(kid1, kid1));
+    JS_ALWAYS_TRUE(hash->putNew(kid2, kid2));
     return hash;
 }
 
@@ -121,7 +121,7 @@ PropertyTree::insertChild(JSContext *cx, Shape *parent, Shape *child)
         return true;
     }
 
-    if (!kidp->toHash()->putNew(child)) {
+    if (!kidp->toHash()->putNew(child, child)) {
         JS_ReportOutOfMemory(cx);
         return false;
     }
@@ -145,7 +145,9 @@ Shape::removeChild(Shape *child)
 
     KidsHash *hash = kidp->toHash();
     JS_ASSERT(hash->count() >= 2);      /* otherwise kidp->isShape() should be true */
+
     hash->remove(child);
+
     if (hash->count() == 1) {
         /* Convert from HASH form back to SHAPE form. */
         KidsHash::Range r = hash->all(); 
@@ -171,7 +173,7 @@ ReadBarrier(Shape *shape)
 }
 
 Shape *
-PropertyTree::getChild(JSContext *cx, Shape *parent, const Shape &child)
+PropertyTree::getChild(JSContext *cx, Shape *parent, uint32_t nfixed, const StackShape &child)
 {
     Shape *shape;
 
@@ -188,24 +190,24 @@ PropertyTree::getChild(JSContext *cx, Shape *parent, const Shape &child)
     KidsPointer *kidp = &parent->kids;
     if (kidp->isShape()) {
         shape = kidp->toShape();
-        if (shape->matches(&child))
+        if (shape->matches(child))
             return ReadBarrier(shape);
     } else if (kidp->isHash()) {
-        shape = *kidp->toHash()->lookup(&child);
+        shape = *kidp->toHash()->lookup(child);
         if (shape)
             return ReadBarrier(shape);
     } else {
         /* If kidp->isNull(), we always insert. */
     }
 
+    RootStackShape childRoot(cx, &child);
+    RootShape parentRoot(cx, &parent);
+
     shape = newShape(cx);
     if (!shape)
         return NULL;
 
-    UnownedBaseShape *base = child.base()->unowned();
-
-    new (shape) Shape(&child);
-    shape->base_.init(base);
+    new (shape) Shape(child, nfixed);
 
     if (!insertChild(cx, parent, shape))
         return NULL;

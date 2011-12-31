@@ -1728,7 +1728,6 @@ js::FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
     JSObject *newborn = NewObjectWithGivenProto(cx, clasp, proto, parent, kind);
     if (!newborn)
         return false;
-    AutoObjectRooter tvr2(cx, newborn);
 
     if (clasp == &CallableObjectClass) {
         newborn->setSlot(JSSLOT_CALLABLE_CALL, GetCall(proxy));
