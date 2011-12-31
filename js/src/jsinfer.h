@@ -878,6 +878,8 @@ struct TypeObject : gc::Cell
     static inline void writeBarrierPost(TypeObject *type, void *addr);
     static inline void readBarrier(TypeObject *type);
 
+    static inline ThingRootKind rootKind() { return THING_ROOT_TYPE_OBJECT; }
+
   private:
     inline uint32_t basePropertyCount() const;
     inline void setBasePropertyCount(uint32_t count);

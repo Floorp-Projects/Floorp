@@ -1373,6 +1373,12 @@ class HashSet
         return add(p, t);
     }
 
+    bool putNew(const Lookup &l, const T &t) {
+        AddPtr p = lookupForAdd(l);
+        JS_ASSERT(!p);
+        return add(p, t);
+    }
+
     void remove(const Lookup &l) {
         if (Ptr p = lookup(l))
             remove(p);
