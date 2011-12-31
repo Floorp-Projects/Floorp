@@ -1473,12 +1473,6 @@ JSContext::JSContext(JSRuntime *rt)
 #ifdef JS_THREADSAFE
     PodZero(&threadLinks);
 #endif
-#ifdef JSGC_ROOT_ANALYSIS
-    PodArrayZero(thingGCRooters);
-#ifdef DEBUG
-    checkGCRooters = NULL;
-#endif
-#endif
 }
 
 JSContext::~JSContext()

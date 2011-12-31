@@ -110,16 +110,14 @@ Shape::makeOwnBaseShape(JSContext *cx)
 {
     JS_ASSERT(!base()->isOwned());
 
-    RootedVarShape self(cx, this);
-
     BaseShape *nbase = js_NewGCBaseShape(cx);
     if (!nbase)
         return false;
 
-    new (nbase) BaseShape(*self->base());
-    nbase->setOwned(self->base()->toUnowned());
+    new (nbase) BaseShape(*base());
+    nbase->setOwned(base()->toUnowned());
 
-    self->base_ = nbase;
+    this->base_ = nbase;
 
     return true;
 }
@@ -149,22 +147,20 @@ Shape::hashify(JSContext *cx)
 {
     JS_ASSERT(!hasTable());
 
-    RootedVarShape self(cx, this);
-
     if (!ensureOwnBaseShape(cx))
         return false;
 
     JSRuntime *rt = cx->runtime;
-    PropertyTable *table = rt->new_<PropertyTable>(self->entryCount());
+    PropertyTable *table = rt->new_<PropertyTable>(entryCount());
     if (!table)
         return false;
 
-    if (!table->init(rt, self)) {
+    if (!table->init(rt, this)) {
         rt->free_(table);
         return false;
     }
 
-    self->base()->setTable(table);
+    base()->setTable(table);
     return true;
 }
 
@@ -307,13 +303,16 @@ PropertyTable::grow(JSContext *cx)
 }
 
 Shape *
-Shape::getChildBinding(JSContext *cx, const StackShape &child)
+Shape::getChildBinding(JSContext *cx, const js::Shape &child, HeapPtrShape *lastBinding)
 {
     JS_ASSERT(!inDictionary());
+    JS_ASSERT(!child.inDictionary());
 
-    Shape *shape = JS_PROPERTY_TREE(cx).getChild(cx, this, numFixedSlots(), child);
+    Shape *shape = JS_PROPERTY_TREE(cx).getChild(cx, this, child);
     if (shape) {
         JS_ASSERT(shape->parent == this);
+        JS_ASSERT(this == *lastBinding);
+        *lastBinding = shape;
 
         /*
          * Update the number of fixed slots which bindings of this shape will
@@ -342,29 +341,39 @@ Shape::getChildBinding(JSContext *cx, const StackShape &child)
     return shape;
 }
 
-/* static */ Shape *
-Shape::replaceLastProperty(JSContext *cx, const StackBaseShape &base, JSObject *proto, Shape *shape)
+/* static */ bool
+Shape::replaceLastProperty(JSContext *cx, const BaseShape &base, JSObject *proto, HeapPtrShape *lastp)
 {
+    Shape *shape = *lastp;
     JS_ASSERT(!shape->inDictionary());
 
     if (!shape->parent) {
         /* Treat as resetting the initial property of the shape hierarchy. */
         AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-        return EmptyShape::getInitialShape(cx, base.clasp, proto,
-                                           base.parent, kind,
-                                           base.flags & BaseShape::OBJECT_FLAG_MASK);
+        Shape *newShape =
+            EmptyShape::getInitialShape(cx, base.clasp, proto,
+                                        base.parent, kind,
+                                        base.flags & BaseShape::OBJECT_FLAG_MASK);
+        if (!newShape)
+            return false;
+        JS_ASSERT(newShape->numFixedSlots() == shape->numFixedSlots());
+        *lastp = newShape;
+        return true;
     }
 
-    RootShape root(cx, &shape);
-
-    UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
+    BaseShape *nbase = BaseShape::getUnowned(cx, base);
     if (!nbase)
         return false;
 
-    StackShape child(shape);
-    child.base = nbase;
+    Shape child(shape);
+    child.base_ = nbase;
 
-    return JS_PROPERTY_TREE(cx).getChild(cx, shape->parent, shape->numFixedSlots(), child);
+    Shape *newShape = JS_PROPERTY_TREE(cx).getChild(cx, shape->parent, child);
+    if (!newShape)
+        return false;
+
+    *lastp = newShape;
+    return true;
 }
 
 /*
@@ -373,7 +382,7 @@ Shape::replaceLastProperty(JSContext *cx, const StackBaseShape &base, JSObject *
  * or lastProp->parent.
  */
 Shape *
-JSObject::getChildProperty(JSContext *cx, Shape *parent, StackShape &child)
+JSObject::getChildProperty(JSContext *cx, Shape *parent, Shape &child)
 {
     /*
      * Shared properties have no slot, but slot_ will reflect that of parent.
@@ -398,30 +407,68 @@ JSObject::getChildProperty(JSContext *cx, Shape *parent, StackShape &child)
 
     Shape *shape;
 
-    RootedVarObject self(cx, this);
-
     if (inDictionaryMode()) {
         JS_ASSERT(parent == lastProperty());
-        RootStackShape childRoot(cx, &child);
         shape = js_NewGCShape(cx);
         if (!shape)
             return NULL;
-        if (child.hasSlot() && child.slot() >= self->lastProperty()->base()->slotSpan()) {
-            if (!self->setSlotSpan(cx, child.slot() + 1))
+        if (child.hasSlot() && child.slot() >= lastProperty()->base()->slotSpan()) {
+            if (!setSlotSpan(cx, child.slot() + 1))
                 return NULL;
         }
-        shape->initDictionaryShape(child, self->numFixedSlots(), &self->shape_);
+        shape->initDictionaryShape(child, &shape_);
     } else {
-        shape = JS_PROPERTY_TREE(cx).getChild(cx, parent, self->numFixedSlots(), child);
+        shape = JS_PROPERTY_TREE(cx).getChild(cx, parent, child);
         if (!shape)
             return NULL;
-        //JS_ASSERT(shape->parent == parent);
-        //JS_ASSERT_IF(parent != lastProperty(), parent == lastProperty()->parent);
-        if (!self->setLastProperty(cx, shape))
+        JS_ASSERT(shape->parent == parent);
+        JS_ASSERT_IF(parent != lastProperty(), parent == lastProperty()->parent);
+        if (!setLastProperty(cx, shape))
             return NULL;
     }
 
     return shape;
+}
+
+Shape *
+Shape::newDictionaryList(JSContext *cx, HeapPtrShape *listp)
+{
+    Shape *shape = *listp;
+    Shape *list = shape;
+
+    /*
+     * We temporarily create the dictionary shapes using a root located on the
+     * stack. This way, the GC doesn't see any intermediate state until we
+     * switch listp at the end.
+     */
+    HeapPtrShape root(NULL);
+    HeapPtrShape *childp = &root;
+
+    while (shape) {
+        JS_ASSERT(!shape->inDictionary());
+
+        Shape *dprop = js_NewGCShape(cx);
+        if (!dprop) {
+            *listp = list;
+            return NULL;
+        }
+        dprop->initDictionaryShape(*shape, childp);
+
+        JS_ASSERT(!dprop->hasTable());
+        childp = &dprop->parent;
+        shape = shape->parent;
+    }
+
+    *listp = root;
+    root->listp = listp;
+
+    JS_ASSERT(root->inDictionary());
+    if (!root->hashify(cx)) {
+        *listp = list;
+        return NULL;
+    }
+
+    return root;
 }
 
 bool
@@ -434,48 +481,23 @@ JSObject::toDictionaryMode(JSContext *cx)
 
     uint32_t span = slotSpan();
 
-    RootedVarObject self(cx, this);
-
     /*
      * Clone the shapes into a new dictionary list. Don't update the
      * last property of this object until done, otherwise a GC
      * triggered while creating the dictionary will get the wrong
      * slot span for this object.
      */
-    RootedVarShape root(cx);
-    RootedVarShape dictionaryShape(cx);
-
-    RootedVarShape shape(cx);
-    shape = lastProperty();
-
-    while (shape) {
-        JS_ASSERT(!shape->inDictionary());
-
-        Shape *dprop = js_NewGCShape(cx);
-        if (!dprop)
-            return false;
-
-        HeapPtrShape *listp = dictionaryShape
-                              ? &dictionaryShape->parent
-                              : (HeapPtrShape *) root.address();
-
-        StackShape child(shape);
-        dprop->initDictionaryShape(child, self->numFixedSlots(), listp);
-
-        JS_ASSERT(!dprop->hasTable());
-        dictionaryShape = dprop;
-        shape = shape->previous();
-    }
-
-    if (!root->hashify(cx))
+    HeapPtrShape last;
+    last.init(lastProperty());
+    if (!Shape::newDictionaryList(cx, &last))
         return false;
 
-    JS_ASSERT((Shape **) root->listp == root.address());
-    root->listp = &self->shape_;
-    self->shape_ = root;
+    JS_ASSERT(last->listp == &last);
+    last->listp = &shape_;
+    shape_ = last;
 
-    JS_ASSERT(self->inDictionaryMode());
-    root->base()->setSlotSpan(span);
+    JS_ASSERT(lastProperty()->hasTable());
+    lastProperty()->base()->setSlotSpan(span);
 
     return true;
 }
@@ -594,25 +616,20 @@ JSObject::addProperty(JSContext *cx, jsid id,
 
     NormalizeGetterAndSetter(cx, this, id, attrs, flags, getter, setter);
 
-    Shape **spp = NULL;
-    if (inDictionaryMode())
-        spp = lastProperty()->table().search(id, true);
-
-    return addPropertyInternal(cx, id, getter, setter, slot, attrs, flags, shortid,
-                               spp, allowDictionary);
+    /* Search for id with adding = true in order to claim its entry. */
+    Shape **spp = nativeSearch(cx, id, true);
+    JS_ASSERT(!SHAPE_FETCH(spp));
+    return addPropertyInternal(cx, id, getter, setter, slot, attrs, flags, shortid, spp, allowDictionary);
 }
 
 Shape *
 JSObject::addPropertyInternal(JSContext *cx, jsid id,
                               PropertyOp getter, StrictPropertyOp setter,
                               uint32_t slot, uintN attrs,
-                              uintN flags, intN shortid, Shape **spp,
-                              bool allowDictionary)
+                              uintN flags, intN shortid,
+                              Shape **spp, bool allowDictionary)
 {
     JS_ASSERT_IF(!allowDictionary, !inDictionaryMode());
-
-    RootId idRoot(cx, &id);
-    RootedVarObject self(cx, this);
 
     PropertyTable *table = NULL;
     if (!inDictionaryMode()) {
@@ -625,47 +642,43 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
             (!stableSlot || lastProperty()->entryCount() >= PropertyTree::MAX_HEIGHT)) {
             if (!toDictionaryMode(cx))
                 return NULL;
+            spp = nativeSearch(cx, id, true);
             table = &lastProperty()->table();
-            spp = table->search(id, true);
         }
-    } else {
+    } else if (lastProperty()->hasTable()) {
         table = &lastProperty()->table();
         if (table->needsToGrow()) {
             if (!table->grow(cx))
                 return NULL;
+
             spp = table->search(id, true);
             JS_ASSERT(!SHAPE_FETCH(spp));
         }
     }
 
-    JS_ASSERT(!!table == !!spp);
-
     /* Find or create a property tree node labeled by our arguments. */
     Shape *shape;
     {
-        shape = self->lastProperty();
-
         jsuint index;
         bool indexed = js_IdIsIndex(id, &index);
         UnownedBaseShape *nbase;
-        if (shape->base()->matchesGetterSetter(getter, setter) && !indexed) {
-            nbase = shape->base()->unowned();
+        if (lastProperty()->base()->matchesGetterSetter(getter, setter) && !indexed) {
+            nbase = lastProperty()->base()->unowned();
         } else {
-            StackBaseShape base(shape->base());
-            base.updateGetterSetter(attrs, getter, setter);
-            if (indexed)
-                base.flags |= BaseShape::INDEXED;
+            uint32_t flags = lastProperty()->getObjectFlags()
+                             | (indexed ? BaseShape::INDEXED : 0);
+            BaseShape base(getClass(), getParent(), flags, attrs, getter, setter);
             nbase = BaseShape::getUnowned(cx, base);
             if (!nbase)
                 return NULL;
         }
 
-        StackShape child(nbase, id, slot, self->numFixedSlots(), attrs, flags, shortid);
-        shape = self->getChildProperty(cx, self->lastProperty(), child);
+        Shape child(nbase, id, slot, numFixedSlots(), attrs, flags, shortid);
+        shape = getChildProperty(cx, lastProperty(), child);
     }
 
     if (shape) {
-        JS_ASSERT(shape == self->lastProperty());
+        JS_ASSERT(shape == lastProperty());
 
         if (table) {
             /* Store the tree node pointer in the table entry for id. */
@@ -677,11 +690,11 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
             shape->parent->handoffTableTo(shape);
         }
 
-        CHECK_SHAPE_CONSISTENCY(self);
+        CHECK_SHAPE_CONSISTENCY(this);
         return shape;
     }
 
-    CHECK_SHAPE_CONSISTENCY(self);
+    CHECK_SHAPE_CONSISTENCY(this);
     return NULL;
 }
 
@@ -717,34 +730,28 @@ JSObject::putProperty(JSContext *cx, jsid id,
 {
     JS_ASSERT(!JSID_IS_VOID(id));
 
-    RootId idRoot(cx, &id);
-
     NormalizeGetterAndSetter(cx, this, id, attrs, flags, getter, setter);
 
-    RootedVarObject self(cx, this);
-
     /* Search for id in order to claim its entry if table has been allocated. */
-    Shape **spp;
-    Shape *shape = Shape::search(cx, lastProperty(), id, &spp, true);
+    Shape **spp = nativeSearch(cx, id, true);
+    Shape *shape = SHAPE_FETCH(spp);
     if (!shape) {
         /*
          * You can't add properties to a non-extensible object, but you can change
          * attributes of properties in such objects.
          */
-        if (!self->isExtensible()) {
-            self->reportNotExtensible(cx);
+        if (!isExtensible()) {
+            reportNotExtensible(cx);
             return NULL;
         }
 
-        return self->addPropertyInternal(cx, id, getter, setter, slot, attrs, flags, shortid, spp, true);
+        return addPropertyInternal(cx, id, getter, setter, slot, attrs, flags, shortid, spp, true);
     }
 
     /* Property exists: search must have returned a valid *spp. */
-    JS_ASSERT_IF(spp, !SHAPE_IS_REMOVED(*spp));
+    JS_ASSERT(!SHAPE_IS_REMOVED(*spp));
 
-    RootShape shapeRoot(cx, &shape);
-
-    if (!CheckCanChangeAttrs(cx, self, shape, &attrs))
+    if (!CheckCanChangeAttrs(cx, this, shape, &attrs))
         return NULL;
     
     /*
@@ -757,14 +764,13 @@ JSObject::putProperty(JSContext *cx, jsid id,
     if (!(attrs & JSPROP_SHARED) && slot == SHAPE_INVALID_SLOT && hadSlot)
         slot = oldSlot;
 
-    RootedVar<UnownedBaseShape*> nbase(cx);
+    UnownedBaseShape *nbase;
     {
         jsuint index;
         bool indexed = js_IdIsIndex(id, &index);
-        StackBaseShape base(self->lastProperty()->base());
-        base.updateGetterSetter(attrs, getter, setter);
-        if (indexed)
-            base.flags |= BaseShape::INDEXED;
+        uint32_t flags = lastProperty()->getObjectFlags()
+                         | (indexed ? BaseShape::INDEXED : 0);
+        BaseShape base(getClass(), getParent(), flags, attrs, getter, setter);
         nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return NULL;
@@ -782,10 +788,10 @@ JSObject::putProperty(JSContext *cx, jsid id,
      * The shape tree is shared immutable, and we can't removeProperty and then
      * addPropertyInternal because a failure under add would lose data.
      */
-    if (shape != self->lastProperty() && !self->inDictionaryMode()) {
-        if (!self->toDictionaryMode(cx))
+    if (shape != lastProperty() && !inDictionaryMode()) {
+        if (!toDictionaryMode(cx))
             return NULL;
-        spp = self->lastProperty()->table().search(shape->propid(), false);
+        spp = nativeSearch(cx, shape->propid());
         shape = SHAPE_FETCH(spp);
     }
 
@@ -801,20 +807,20 @@ JSObject::putProperty(JSContext *cx, jsid id,
      * This is more than an optimization: it is required to preserve for-in
      * enumeration order (see bug 601399).
      */
-    if (self->inDictionaryMode()) {
-        bool updateLast = (shape == self->lastProperty());
-        if (!self->generateOwnShape(cx))
+    if (inDictionaryMode()) {
+        bool updateLast = (shape == lastProperty());
+        if (!generateOwnShape(cx))
             return NULL;
         if (updateLast)
-            shape = self->lastProperty();
+            shape = lastProperty();
 
         /* FIXME bug 593129 -- slot allocation and JSObject *this must move out of here! */
         if (slot == SHAPE_INVALID_SLOT && !(attrs & JSPROP_SHARED)) {
-            if (!self->allocSlot(cx, &slot))
+            if (!allocSlot(cx, &slot))
                 return NULL;
         }
 
-        if (shape == self->lastProperty())
+        if (shape == lastProperty())
             shape->base()->adoptUnowned(nbase);
         else
             shape->base_ = nbase;
@@ -833,20 +839,20 @@ JSObject::putProperty(JSContext *cx, jsid id,
          * If any shape in the tree has a property hashtable, it is shared and
          * immutable too, therefore we must not update *spp.
          */
-        StackBaseShape base(self->lastProperty()->base());
-        base.updateGetterSetter(attrs, getter, setter);
+        BaseShape base(getClass(), getParent(), lastProperty()->getObjectFlags(),
+                       attrs, getter, setter);
         UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return NULL;
 
-        JS_ASSERT(shape == self->lastProperty());
+        JS_ASSERT(shape == lastProperty());
 
         /* Find or create a property tree node labeled by our arguments. */
-        StackShape child(nbase, id, slot, self->numFixedSlots(), attrs, flags, shortid);
-        Shape *newShape = self->getChildProperty(cx, shape->parent, child);
+        Shape child(nbase, id, slot, numFixedSlots(), attrs, flags, shortid);
+        Shape *newShape = getChildProperty(cx, shape->parent, child);
 
         if (!newShape) {
-            CHECK_SHAPE_CONSISTENCY(self);
+            CHECK_SHAPE_CONSISTENCY(this);
             return NULL;
         }
 
@@ -860,12 +866,12 @@ JSObject::putProperty(JSContext *cx, jsid id,
      * property (shape here) has a slotSpan that does not cover it.
      */
     if (hadSlot && !shape->hasSlot()) {
-        if (oldSlot < self->slotSpan())
-            self->freeSlot(cx, oldSlot);
+        if (oldSlot < slotSpan())
+            freeSlot(cx, oldSlot);
         JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
     }
 
-    CHECK_SHAPE_CONSISTENCY(self);
+    CHECK_SHAPE_CONSISTENCY(this);
 
     return shape;
 }
@@ -916,13 +922,8 @@ JSObject::changeProperty(JSContext *cx, Shape *shape, uintN attrs, uintN mask,
 bool
 JSObject::removeProperty(JSContext *cx, jsid id)
 {
-    RootedVarObject self(cx, this);
-
-    RootId idRoot(cx, &id);
-    RootedVarShape shape(cx);
-
-    Shape **spp;
-    shape = Shape::search(cx, lastProperty(), id, &spp);
+    Shape **spp = nativeSearch(cx, id);
+    Shape *shape = SHAPE_FETCH(spp);
     if (!shape)
         return true;
 
@@ -930,10 +931,10 @@ JSObject::removeProperty(JSContext *cx, jsid id)
      * If shape is not the last property added, or the last property cannot
      * be removed, switch to dictionary mode.
      */
-    if (!self->inDictionaryMode() && (shape != self->lastProperty() || !self->canRemoveLastProperty())) {
-        if (!self->toDictionaryMode(cx))
+    if (!inDictionaryMode() && (shape != lastProperty() || !canRemoveLastProperty())) {
+        if (!toDictionaryMode(cx))
             return false;
-        spp = self->lastProperty()->table().search(shape->propid(), false);
+        spp = nativeSearch(cx, shape->propid());
         shape = SHAPE_FETCH(spp);
     }
 
@@ -945,7 +946,7 @@ JSObject::removeProperty(JSContext *cx, jsid id)
      * the object or table, so the remaining removal is infallible.
      */
     Shape *spare = NULL;
-    if (self->inDictionaryMode()) {
+    if (inDictionaryMode()) {
         spare = js_NewGCShape(cx);
         if (!spare)
             return false;
@@ -958,8 +959,8 @@ JSObject::removeProperty(JSContext *cx, jsid id)
              * object's state.
              */
             Shape *previous = lastProperty()->parent;
-            StackBaseShape base(lastProperty()->base());
-            base.updateGetterSetter(previous->attrs, previous->getter(), previous->setter());
+            BaseShape base(getClass(), getParent(), lastProperty()->getObjectFlags(),
+                           previous->attrs, previous->getter(), previous->setter());
             BaseShape *nbase = BaseShape::getUnowned(cx, base);
             if (!nbase)
                 return false;
@@ -969,7 +970,7 @@ JSObject::removeProperty(JSContext *cx, jsid id)
 
     /* If shape has a slot, free its slot number. */
     if (shape->hasSlot()) {
-        self->freeSlot(cx, shape->slot());
+        freeSlot(cx, shape->slot());
         JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
     }
 
@@ -978,8 +979,8 @@ JSObject::removeProperty(JSContext *cx, jsid id)
      * doubly linked list, hashed by lastProp->table. So we can edit the list
      * and hash in place.
      */
-    if (self->inDictionaryMode()) {
-        PropertyTable &table = self->lastProperty()->table();
+    if (inDictionaryMode()) {
+        PropertyTable &table = lastProperty()->table();
 
         if (SHAPE_HAD_COLLISION(*spp)) {
             *spp = SHAPE_REMOVED;
@@ -995,21 +996,21 @@ JSObject::removeProperty(JSContext *cx, jsid id)
              * checks not to alter significantly the complexity of the
              * delete in debug builds, see bug 534493.
              */
-            const Shape *aprop = self->lastProperty();
+            const Shape *aprop = lastProperty();
             for (int n = 50; --n >= 0 && aprop->parent; aprop = aprop->parent)
-                JS_ASSERT_IF(aprop != shape, self->nativeContains(cx, *aprop));
+                JS_ASSERT_IF(aprop != shape, nativeContains(cx, *aprop));
 #endif
         }
 
         /* Remove shape from its non-circular doubly linked list. */
-        Shape *oldLastProp = self->lastProperty();
-        shape->removeFromDictionary(self);
+        Shape *oldLastProp = lastProperty();
+        shape->removeFromDictionary(this);
 
         /* Hand off table from the old to new last property. */
-        oldLastProp->handoffTableTo(self->lastProperty());
+        oldLastProp->handoffTableTo(lastProperty());
 
         /* Generate a new shape for the object, infallibly. */
-        JS_ALWAYS_TRUE(self->generateOwnShape(cx, spare));
+        JS_ALWAYS_TRUE(generateOwnShape(cx, spare));
 
         /* Consider shrinking table if its load factor is <= .25. */
         uint32_t size = table.capacity();
@@ -1022,11 +1023,11 @@ JSObject::removeProperty(JSContext *cx, jsid id)
          * lazily make via a later hashify the exact table for the new property
          * lineage.
          */
-        JS_ASSERT(shape == self->lastProperty());
-        self->removeLastProperty(cx);
+        JS_ASSERT(shape == lastProperty());
+        removeLastProperty(cx);
     }
 
-    CHECK_SHAPE_CONSISTENCY(self);
+    CHECK_SHAPE_CONSISTENCY(this);
     return true;
 }
 
@@ -1069,8 +1070,6 @@ JSObject::rollbackProperties(JSContext *cx, uint32_t slotSpan)
 bool
 JSObject::generateOwnShape(JSContext *cx, Shape *newShape)
 {
-    RootedVarObject self(cx, this);
-
     if (!inDictionaryMode() && !toDictionaryMode(cx))
         return false;
 
@@ -1078,21 +1077,17 @@ JSObject::generateOwnShape(JSContext *cx, Shape *newShape)
         newShape = js_NewGCShape(cx);
         if (!newShape)
             return false;
-        new (newShape) Shape(self->lastProperty()->base()->unowned(), 0);
+        new (newShape) Shape(lastProperty()->base()->unowned(), 0);
     }
 
-    PropertyTable &table = self->lastProperty()->table();
-    Shape **spp = self->lastProperty()->isEmptyShape()
-                  ? NULL
-                  : table.search(self->lastProperty()->maybePropid(), false);
+    PropertyTable &table = lastProperty()->table();
+    Shape **spp = lastProperty()->isEmptyShape() ? NULL : table.search(lastProperty()->maybePropid(), false);
 
-    Shape *oldShape = self->lastProperty();
-
-    StackShape nshape(self->lastProperty());
-    newShape->initDictionaryShape(nshape, self->numFixedSlots(), &self->shape_);
+    Shape *oldShape = lastProperty();
+    newShape->initDictionaryShape(*oldShape, &shape_);
 
     JS_ASSERT(newShape->parent == oldShape);
-    oldShape->removeFromDictionary(self);
+    oldShape->removeFromDictionary(this);
 
     oldShape->handoffTableTo(newShape);
 
@@ -1158,8 +1153,8 @@ JSObject::setParent(JSContext *cx, JSObject *parent)
         return false;
 
     if (inDictionaryMode()) {
-        StackBaseShape base(lastProperty());
-        base.parent = parent;
+        BaseShape base(*lastProperty()->base()->unowned());
+        base.setObjectParent(parent);
         UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return false;
@@ -1168,32 +1163,25 @@ JSObject::setParent(JSContext *cx, JSObject *parent)
         return true;
     }
 
-    Shape *newShape = Shape::setObjectParent(cx, parent, getProto(), shape_);
-    if (!newShape)
-        return false;
-
-    shape_ = newShape;
-    return true;
+    return Shape::setObjectParent(cx, parent, getProto(), &shape_);
 }
 
-/* static */ Shape *
-Shape::setObjectParent(JSContext *cx, JSObject *parent, JSObject *proto, Shape *last)
+/* static */ bool
+Shape::setObjectParent(JSContext *cx, JSObject *parent, JSObject *proto, HeapPtrShape *listp)
 {
-    if (last->getObjectParent() == parent)
-        return last;
+    if ((*listp)->getObjectParent() == parent)
+        return true;
 
-    StackBaseShape base(last);
-    base.parent = parent;
+    BaseShape base(*(*listp)->base()->unowned());
+    base.setObjectParent(parent);
 
-    return replaceLastProperty(cx, base, proto, last);
+    return replaceLastProperty(cx, base, proto, listp);
 }
 
 bool
 JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
 {
     JS_ASSERT(isExtensible());
-
-    RootedVarObject self(cx, this);
 
     if (props) {
         if (js::FixOp fix = getOps()->fix) {
@@ -1210,7 +1198,7 @@ JSObject::preventExtensions(JSContext *cx, js::AutoIdVector *props)
         }
     }
 
-    return self->setFlag(cx, BaseShape::NOT_EXTENSIBLE, GENERATE_SHAPE);
+    return setFlag(cx, BaseShape::NOT_EXTENSIBLE, GENERATE_SHAPE);
 }
 
 bool
@@ -1221,82 +1209,64 @@ JSObject::setFlag(JSContext *cx, /*BaseShape::Flag*/ uint32_t flag_, GenerateSha
     if (lastProperty()->getObjectFlags() & flag)
         return true;
 
-    RootedVarObject self(cx, this);
-
     if (inDictionaryMode()) {
         if (generateShape == GENERATE_SHAPE && !generateOwnShape(cx))
             return false;
-        StackBaseShape base(self->lastProperty());
-        base.flags |= flag;
+
+        BaseShape base(*lastProperty()->base()->unowned());
+        base.setObjectFlag(flag);
         UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return false;
 
-        self->lastProperty()->base()->adoptUnowned(nbase);
+        lastProperty()->base()->adoptUnowned(nbase);
         return true;
     }
 
-    Shape *newShape = Shape::setObjectFlag(cx, flag, getProto(), lastProperty());
-    if (!newShape)
-        return false;
-
-    self->shape_ = newShape;
-    return true;
+    return Shape::setObjectFlag(cx, flag, getProto(), &shape_);
 }
 
-/* static */ Shape *
-Shape::setObjectFlag(JSContext *cx, BaseShape::Flag flag, JSObject *proto, Shape *last)
+/* static */ bool
+Shape::setObjectFlag(JSContext *cx, BaseShape::Flag flag, JSObject *proto, HeapPtrShape *listp)
 {
-    if (last->getObjectFlags() & flag)
-        return last;
+    if ((*listp)->getObjectFlags() & flag)
+        return true;
 
-    StackBaseShape base(last);
+    BaseShape base(*(*listp)->base()->unowned());
     base.flags |= flag;
 
-    return replaceLastProperty(cx, base, proto, last);
+    return replaceLastProperty(cx, base, proto, listp);
 }
 
 /* static */ inline HashNumber
-StackBaseShape::hash(const StackBaseShape *base)
+BaseShapeEntry::hash(const js::BaseShape *base)
 {
+    JS_ASSERT(!base->isOwned());
+
     JSDHashNumber hash = base->flags;
     hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsuword(base->clasp) >> 3);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsuword(base->parent) >> 3);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(base->rawGetter);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(base->rawSetter);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^ (jsuword(base->parent.get()) >> 3);
+    if (base->rawGetter)
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(base->rawGetter);
+    if (base->rawSetter)
+        hash = JS_ROTATE_LEFT32(hash, 4) ^ jsuword(base->rawSetter);
     return hash;
 }
 
 /* static */ inline bool
-StackBaseShape::match(UnownedBaseShape *key, const StackBaseShape *lookup)
+BaseShapeEntry::match(UnownedBaseShape *key, const BaseShape *lookup)
 {
+    JS_ASSERT(!lookup->isOwned());
+
     return key->flags == lookup->flags
         && key->clasp == lookup->clasp
         && key->parent == lookup->parent
-        && (void *) key->rawGetter == lookup->rawGetter
-        && (void *) key->rawSetter == lookup->rawSetter;
+        && key->getterObj == lookup->getterObj
+        && key->setterObj == lookup->setterObj;
 }
 
-/* Root for stack allocated base shapes. */
-class RootStackBaseShape
-{
-    Root<const JSObject*> parentRoot;
-    Maybe<RootObject> getterRoot;
-    Maybe<RootObject> setterRoot;
-
-  public:
-    RootStackBaseShape(JSContext *cx, const StackBaseShape *base)
-        : parentRoot(cx, &base->parent)
-    {
-        if (base->flags & BaseShape::HAS_GETTER_OBJECT)
-            getterRoot.construct(cx, (JSObject **) &base->rawGetter);
-        if (base->flags & BaseShape::HAS_SETTER_OBJECT)
-            setterRoot.construct(cx, (JSObject **) &base->rawSetter);
-    }
-};
-
 /* static */ UnownedBaseShape *
-BaseShape::getUnowned(JSContext *cx, const StackBaseShape &base)
+BaseShape::getUnowned(JSContext *cx, const BaseShape &base)
 {
     BaseShapeSet &table = cx->compartment->baseShapes;
 
@@ -1307,8 +1277,6 @@ BaseShape::getUnowned(JSContext *cx, const StackBaseShape &base)
 
     if (p)
         return *p;
-
-    RootStackBaseShape root(cx, &base);
 
     BaseShape *nbase_ = js_NewGCBaseShape(cx);
     if (!nbase_)
@@ -1344,16 +1312,17 @@ BaseShape::finalize(JSContext *cx, bool background)
     }
 }
 
-/* static */ Shape *
-Shape::setExtensibleParents(JSContext *cx, Shape *shape)
+/* static */ bool
+Shape::setExtensibleParents(JSContext *cx, HeapPtrShape *listp)
 {
+    Shape *shape = *listp;
     JS_ASSERT(!shape->inDictionary());
 
-    StackBaseShape base(shape);
+    BaseShape base(*shape->base()->unowned());
     base.flags |= BaseShape::EXTENSIBLE_PARENTS;
 
     /* This is only used for Block and Call objects, which have a NULL proto. */
-    return replaceLastProperty(cx, base, NULL, shape);
+    return replaceLastProperty(cx, base, NULL, listp);
 }
 
 bool
@@ -1361,36 +1330,17 @@ Bindings::setExtensibleParents(JSContext *cx)
 {
     if (!ensureShape(cx))
         return false;
-    Shape *newShape = Shape::setExtensibleParents(cx, lastBinding);
-    if (!newShape)
-        return false;
-    lastBinding = newShape;
-    return true;
+    return Shape::setExtensibleParents(cx, &lastBinding);
 }
 
 bool
 Bindings::setParent(JSContext *cx, JSObject *obj)
 {
-    /*
-     * This may be invoked on GC heap allocated bindings, in which case this
-     * is pointing to an internal value of a JSScript that can't itself be
-     * relocated. The script itself will be rooted, and will not be moved, so
-     * mark the stack value as non-relocatable for the stack root analysis.
-     */
-    Bindings *self = this;
-    CheckRoot root(cx, &self);
-
-    RootObject rootObj(cx, &obj);
-
     if (!ensureShape(cx))
         return false;
 
     /* This is only used for Block objects, which have a NULL proto. */
-    Shape *newShape = Shape::setObjectParent(cx, obj, NULL, self->lastBinding);
-    if (!newShape)
-        return false;
-    self->lastBinding = newShape;
-    return true;
+    return Shape::setObjectParent(cx, obj, NULL, &lastBinding);
 }
 
 /* static */ inline HashNumber
@@ -1429,10 +1379,8 @@ EmptyShape::getInitialShape(JSContext *cx, Class *clasp, JSObject *proto, JSObje
     if (p)
         return p->shape;
 
-    RootedVar<UnownedBaseShape*> nbase(cx);
-
-    StackBaseShape base(clasp, parent, objectFlags);
-    nbase = BaseShape::getUnowned(cx, base);
+    BaseShape base(clasp, parent, objectFlags);
+    UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
     if (!nbase)
         return NULL;
 

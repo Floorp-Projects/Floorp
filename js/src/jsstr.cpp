@@ -1623,15 +1623,15 @@ js::str_match(JSContext *cx, uintN argc, Value *vp)
     if (!rep)
         return false;
 
-    JSObject *array = NULL;
-    MatchArgType arg = &array;
+    AutoObjectRooter array(cx);
+    MatchArgType arg = array.addr();
     RegExpStatics *res = cx->regExpStatics();
     Value rval;
     if (!DoMatch(cx, res, str, *rep, MatchCallback, arg, MATCH_ARGS, &rval))
         return false;
 
     if (rep->matcher().global())
-        vp->setObjectOrNull(array);
+        vp->setObjectOrNull(array.object());
     else
         *vp = rval;
     return true;
