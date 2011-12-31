@@ -238,7 +238,7 @@ IonFrameIterator::operator++()
     // next frame.
     uint8 *prev = prevFp();
     type_ = current()->prevType();
-    returnAddressToFp_ = current()->returnAddress();
+    returnAddressToFp_ = current()->returnAddressPtr();
     current_ = prev;
     return *this;
 }

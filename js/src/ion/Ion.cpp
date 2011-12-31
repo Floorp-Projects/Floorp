@@ -926,10 +926,7 @@ InvalidateActivation(JSContext *cx, HashSet<JSScript *> &invalidHash, uint8 *ion
 {
     size_t frameno = 1;
 
-    uint8 **calleeReturnAddressPtr = NULL;
-    for (IonFrameIterator it(ionTop);
-         it.more();
-         calleeReturnAddressPtr = it.returnAddressPtr(), ++it, ++frameno)
+    for (IonFrameIterator it(ionTop); it.more(); ++it, ++frameno)
     {
         JS_ASSERT_IF(frameno == 1, it.type() == IonFrame_Exit);
 
@@ -962,12 +959,14 @@ InvalidateActivation(JSContext *cx, HashSet<JSScript *> &invalidHash, uint8 *ion
         if (!invalidHash.has(script))
             continue;
 
+        uint8 **returnPtr = it.addressOfReturnToFp();
+
         // This frame needs to be invalidated.
         // Create an invalidation record and stick it where the calleeToken was.
         IonSpew(IonSpew_Invalidate, "   ! requires invalidation");
         JS_ASSERT(!CalleeTokenIsInvalidationRecord(it.calleeToken()));
         JS_ASSERT(MaybeScriptFromCalleeToken(it.calleeToken()) == script);
-        InvalidationRecord *record = InvalidationRecord::New(it.calleeToken(), *calleeReturnAddressPtr);
+        InvalidationRecord *record = InvalidationRecord::New(it.calleeToken(), *returnPtr);
         if (!record)
             return false;
 
@@ -979,9 +978,9 @@ InvalidateActivation(JSContext *cx, HashSet<JSScript *> &invalidHash, uint8 *ion
             return false;
 
         IonSpew(IonSpew_Invalidate, "   callee return address @ %p: %p => %p",
-                (void *) calleeReturnAddressPtr, (void *) *calleeReturnAddressPtr,
+                (void *) returnPtr, (void *) *returnPtr,
                 (void *) invalidator->raw());
-        *calleeReturnAddressPtr = invalidator->raw();
+        *returnPtr = invalidator->raw();
     }
 
     IonSpew(IonSpew_Invalidate, "Done invalidating activation");
