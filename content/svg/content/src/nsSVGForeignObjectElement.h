@@ -41,12 +41,14 @@
 
 #include "nsSVGGraphicElement.h"
 #include "nsIDOMSVGForeignObjectElem.h"
+#include "DOMSVGTests.h"
 #include "nsSVGLength2.h"
 
 typedef nsSVGGraphicElement nsSVGForeignObjectElementBase;
 
 class nsSVGForeignObjectElement : public nsSVGForeignObjectElementBase,
-                                  public nsIDOMSVGForeignObjectElement
+                                  public nsIDOMSVGForeignObjectElement,
+                                  public DOMSVGTests
 {
   friend class nsSVGForeignObjectFrame;
 

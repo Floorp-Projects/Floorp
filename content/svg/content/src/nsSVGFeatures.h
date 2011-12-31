@@ -41,9 +41,6 @@
 
 #include "nsString.h"
 
-class nsIContent;
-class nsIAtom;
-
 class nsSVGFeatures
 {
 public:
@@ -56,56 +53,7 @@ public:
    *    http://www.w3.org/TR/SVG11/feature.html
    */
   static bool
-  HaveFeature(nsISupports* aObject, const nsAString& aFeature);
-
-  /**
-   * Compare the language name(s) in a systemLanguage attribute to the
-   * user's language preferences, as defined in
-   * http://www.w3.org/TR/SVG11/struct.html#SystemLanguageAttribute
-   * We have a match if a language name in the users language preferences
-   * exactly equals one of the language names or exactly equals a prefix of
-   * one of the language names in the systemLanguage attribute.
-   * @returns 2 * the lowest index in the aAcceptLangs that matches + 1
-   * if only the prefix matches, or -1 if no indices match.
-   * XXX This algorithm is O(M*N).
-   */
-  static int
-  GetBestLanguagePreferenceRank(const nsSubstring& aAttribute,
-                                const nsSubstring& aAcceptLangs);
-
-  /**
-   * Special value to pass to PassesConditionalProcessingTests to ignore systemLanguage
-   * attributes
-   */
-  static const nsString * const kIgnoreSystemLanguage;
-
-  /**
-   * Check whether the conditional processing attributes requiredFeatures,
-   * requiredExtensions and systemLanguage all "return true" if they apply to
-   * and are specified on the given element. Returns true if this element
-   * should be rendered, false if it should not.
-   *
-   * @param aContent the element to test
-   * @param aAcceptLangs Optional parameter to pass in the value of the
-   *   intl.accept_languages preference if the caller has it cached.
-   *   Alternatively, pass in kIgnoreSystemLanguage to skip the systemLanguage
-   *   check if the caller is giving that special treatment.
-   */
-  static bool
-  PassesConditionalProcessingTests(nsIContent *aContent,
-                                   const nsString *aAcceptLangs = nsnull);
-
-private:
-  /**
-   * Check whether we support the given list of feature strings.
-   *
-   * @param aObject the object, which should support the feature,
-   *        for example nsIDOMNode or nsIDOMDOMImplementation
-   * @param aFeatures a whitespace separated list containing one or more of the
-   *   feature strings specified at http://www.w3.org/TR/SVG11/feature.html
-   */
-  static bool
-  HaveFeatures(nsISupports* aObject, const nsSubstring& aFeatures);
+  HasFeature(nsISupports* aObject, const nsAString& aFeature);
 
   /**
    * Check whether we support the given extension string.
@@ -114,41 +62,7 @@ private:
    *   "http://www.w3.org/1999/xhtml" and "http://www.w3.org/1998/Math/MathML"
    */
   static bool
-  HaveExtension(const nsAString& aExtension);
-
-  /**
-   * Check whether we support the given list of extension strings.
-   *
-   * @param aExtension a whitespace separated list containing one or more
-   *   extension strings
-   */
-  static bool
-  HaveExtensions(const nsSubstring& aExtensions);
-
-  /**
-   * Compare the language name(s) in a systemLanguage attribute to the
-   * user's language preferences, as defined in
-   * http://www.w3.org/TR/SVG11/struct.html#SystemLanguageAttribute
-   * We have a match if a language name in the users language preferences
-   * exactly equals one of the language names or exactly equals a prefix of
-   * one of the language names in the systemLanguage attribute.
-   * XXX This algorithm is O(M*N).
-   */
-  static bool
-  MatchesLanguagePreferences(const nsSubstring& aAttribute,
-                             const nsSubstring& aAcceptLangs); 
-
-  /**
-   * Check whether this element supports the specified attributes
-   * (i.e. whether the SVG specification defines the attributes
-   * for the specified element).
-   *
-   * @param aTagName the tag for the element
-   * @param aAttr the conditional to test for, either
-   *    ATTRS_TEST or ATTRS_EXTERNAL
-   */
-  static bool
-  ElementSupportsAttributes(const nsIAtom *aTagName, PRUint16 aAttr);
+  HasExtension(const nsAString& aExtension);
 };
 
 #endif // __NS_SVGFEATURES_H__

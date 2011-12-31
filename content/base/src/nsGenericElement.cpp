@@ -2442,7 +2442,7 @@ nsGenericElement::InternalIsSupported(nsISupports* aObject,
     }
   } else if (PL_strcasecmp(f, "SVGEvents") == 0 ||
              PL_strcasecmp(f, "SVGZoomEvents") == 0 ||
-             nsSVGFeatures::HaveFeature(aObject, aFeature)) {
+             nsSVGFeatures::HasFeature(aObject, aFeature)) {
     if (aVersion.IsEmpty() ||
         PL_strcmp(v, "1.0") == 0 ||
         PL_strcmp(v, "1.1") == 0) {

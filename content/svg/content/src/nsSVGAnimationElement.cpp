@@ -55,6 +55,7 @@ NS_IMPL_RELEASE_INHERITED(nsSVGAnimationElement, nsSVGAnimationElementBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGAnimationElement)
   NS_INTERFACE_MAP_ENTRY(nsISMILAnimationElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMElementTimeControl)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTests)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGAnimationElementBase)
 
 // Cycle collection magic -- based on nsSVGUseElement
