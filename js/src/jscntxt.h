@@ -1479,9 +1479,6 @@ class AutoGCRooter {
  *   fix than when relying on a separate rooting analysis.
  */
 
-template <typename T>
-struct RootMethods { };
-
 template <> struct RootMethods<const jsid>
 {
     static jsid initial() { return JSID_VOID; }
