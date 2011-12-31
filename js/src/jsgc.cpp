@@ -1197,6 +1197,14 @@ CheckLeakedRoots(JSRuntime *rt);
 void
 js_FinishGC(JSRuntime *rt)
 {
+    /*
+     * Wait until the background finalization stops and the helper thread
+     * shuts down before we forcefully release any remaining GC memory.
+     */
+#ifdef JS_THREADSAFE
+    rt->gcHelperThread.finish();
+#endif
+
     /* Delete all remaining Compartments. */
     for (CompartmentsIter c(rt); !c.done(); c.next())
         Foreground::delete_(c.get());
@@ -1209,14 +1217,6 @@ js_FinishGC(JSRuntime *rt)
         Chunk::release(rt, r.front());
     rt->gcChunkSet.clear();
 
-#ifdef JS_THREADSAFE
-    rt->gcHelperThread.finish();
-#endif
-
-    /*
-     * Finish the pool after the background thread stops in case it was doing
-     * the background sweeping.
-     */
     rt->gcChunkPool.expireAndFree(rt, true);
 
 #ifdef DEBUG
@@ -2354,7 +2354,10 @@ GCHelperThread::finish()
     {
         AutoLockGC lock(rt);
         if (thread && state != SHUTDOWN) {
-            /* The allocation should have been stopped during the last GC. */
+            /*
+             * We cannot be in the ALLOCATING or CANCEL_ALLOCATION states as
+             * the allocations should have been stopped during the last GC.
+             */
             JS_ASSERT(state == IDLE || state == SWEEPING);
             if (state == IDLE)
                 PR_NotifyCondVar(wakeup);
