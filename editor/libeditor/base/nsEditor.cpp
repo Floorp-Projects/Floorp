@@ -1000,7 +1000,8 @@ nsEditor::EndPlaceHolderTransaction()
         // since that is the only known case where the placeholdertxn would disappear on us.
         // For now just removing the assert.
       }
-      // notify editor observers of action unless it is uncommitted IME
+      // notify editor observers of action but if composing, it's done by
+      // text event handler.
       if (!mInIMEMode) NotifyEditorObservers();
     }
   }
