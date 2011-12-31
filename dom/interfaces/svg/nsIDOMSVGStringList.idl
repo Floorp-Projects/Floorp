@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,8 +14,9 @@
  *
  * The Original Code is the Mozilla SVG project.
  *
- * The Initial Developer of the Original Code is IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * The Initial Developer of the Original Code is
+ * Robert Longson
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,39 +35,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGPATHGEOMETRYELEMENT_H__
-#define __NS_SVGPATHGEOMETRYELEMENT_H__
+#include "domstubs.idl"
 
-#include "nsSVGGraphicElement.h"
-#include "DOMSVGTests.h"
-#include "nsTArray.h"
-#include "gfxPath.h"
-#include "gfxMatrix.h"
+[scriptable, uuid(481f01a5-0bbb-4abf-8623-f3c2fb5642a9)]
+interface nsIDOMSVGStringList : nsISupports
+{ 
+  readonly attribute unsigned long numberOfItems;
 
-struct nsSVGMark {
-  float x, y, angle;
-  nsSVGMark(float aX, float aY, float aAngle) :
-    x(aX), y(aY), angle(aAngle) {}
+  void clear();
+          // raises(nsIDOMDOMException);
+  DOMString initialize(in DOMString newItem);
+                    // raises(nsIDOMDOMException);
+  DOMString getItem(in unsigned long index);
+                    // raises(nsIDOMDOMException);
+  DOMString insertItemBefore(in DOMString newItem, in unsigned long index);
+                    // raises(nsIDOMDOMException);
+  DOMString replaceItem(in DOMString newItem, in unsigned long index);
+                    // raises(nsIDOMDOMException);
+  DOMString removeItem(in unsigned long index);
+                    // raises(nsIDOMDOMException);
+  DOMString appendItem(in DOMString newItem);
+                    // raises(nsIDOMDOMException);
 };
-
-class gfxContext;
-
-typedef nsSVGGraphicElement nsSVGPathGeometryElementBase;
-
-class nsSVGPathGeometryElement : public nsSVGPathGeometryElementBase,
-                                 public DOMSVGTests
-{
-public:
-  nsSVGPathGeometryElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  virtual bool AttributeDefinesGeometry(const nsIAtom *aName);
-  virtual bool IsMarkable();
-  virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
-  virtual void ConstructPath(gfxContext *aCtx) = 0;
-  virtual already_AddRefed<gfxFlattenedPath> GetFlattenedPath(const gfxMatrix &aMatrix);
-};
-
-#endif

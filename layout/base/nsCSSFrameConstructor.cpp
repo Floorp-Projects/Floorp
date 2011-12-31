@@ -143,7 +143,7 @@
 
 #include "nsMathMLParts.h"
 #include "nsIDOMSVGFilters.h"
-#include "nsSVGFeatures.h"
+#include "DOMSVGTests.h"
 #include "nsSVGEffects.h"
 #include "nsSVGUtils.h"
 #include "nsSVGOuterSVGFrame.h"
@@ -4795,7 +4795,8 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
     return &sOuterSVGData;
   }
   
-  if (!nsSVGFeatures::PassesConditionalProcessingTests(aElement)) {
+  nsCOMPtr<DOMSVGTests> tests(do_QueryInterface(aElement));
+  if (tests && !tests->PassesConditionalProcessingTests()) {
     // Elements with failing conditional processing attributes never get
     // rendered.  Note that this is not where we select which frame in a
     // <switch> to render!  That happens in nsSVGSwitchFrame::PaintSVG.
