@@ -712,7 +712,7 @@ Chunk::fetchNextFreeArena(JSRuntime *rt)
 ArenaHeader *
 Chunk::allocateArena(JSCompartment *comp, AllocKind thingKind)
 {
-    JS_ASSERT(!noAvailableArenas());
+    JS_ASSERT(hasAvailableArenas());
 
     JSRuntime *rt = comp->rt;
 
@@ -720,7 +720,7 @@ Chunk::allocateArena(JSCompartment *comp, AllocKind thingKind)
                            ? fetchNextFreeArena(rt)
                            : fetchNextDecommittedArena();
     aheader->init(comp, thingKind);
-    if (JS_UNLIKELY(noAvailableArenas()))
+    if (JS_UNLIKELY(!hasAvailableArenas()))
         removeFromAvailableList();
 
     Probes::resizeHeap(comp, rt->gcBytes, rt->gcBytes + ArenaSize);
@@ -2257,7 +2257,11 @@ DecommitArenasFromAvailableList(JSRuntime *rt, Chunk **availableListHeadp)
              * be available for allocations either via the free list or via
              * the decommittedArenas bitmap. For that we just fetch the arena
              * from the free list before the decommit and then mark it as free
-             * and decommitted when we retake the GC lock.
+             * and decommitted when we retake the GC lock. However, if this
+             * arena also is the single free arena in the chunk, then during
+             * the decommit the allocation thread may find the chunk as
+             * present on the available list yet having no arenas to allocate.
+             * To avoid complications in this case we decommit inside the lock.
              *
              * We also must make sure that the aheader is not accessed again
              * after we decommit the arena.
@@ -2266,7 +2270,9 @@ DecommitArenasFromAvailableList(JSRuntime *rt, Chunk **availableListHeadp)
             size_t arenaIndex = Chunk::arenaIndex(aheader->arenaAddress());
             bool ok;
             {
-                AutoUnlockGC unlock(rt);
+                Maybe<AutoUnlockGC> maybayUnlock;
+                if (chunk->hasAvailableArenas())
+                    maybayUnlock.construct(rt);
                 ok = DecommitMemory(aheader->getArena(), ArenaSize);
             }
 
