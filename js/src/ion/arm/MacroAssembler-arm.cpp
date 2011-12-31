@@ -1279,7 +1279,18 @@ MacroAssemblerARMCompat::unboxDouble(const ValueOperand &operand, const FloatReg
 void
 MacroAssemblerARMCompat::unboxValue(const ValueOperand &src, AnyRegister dest)
 {
-    JS_NOT_REACHED("NYI");
+    if (dest.isFloat()) {
+        Label notInt32, end;
+        branchTestInt32(Assembler::NotEqual, src, &notInt32);
+        convertInt32ToDouble(src.payloadReg(), dest.fpu());
+        ma_b(&end);
+        bind(&notInt32);
+        unboxDouble(src, dest.fpu());
+        bind(&end);
+    } else {
+        if (src.payloadReg() != dest.gpr())
+            as_mov(dest.gpr(), O2Reg(src.payloadReg()));
+    }
 }
 
 void
