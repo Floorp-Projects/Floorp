@@ -398,9 +398,6 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     Label end, invoke;
 
-    // Nestle %esp up to the argument vector.
-    masm.freeStack(unusedStack);
-
     // Guard that calleereg is a non-native function:
     // Non-native iff (callee->flags & JSFUN_KINDMASK >= JSFUN_INTERPRETED).
     // This is equivalent to testing if any of the bits in JSFUN_KINDMASK are set.
@@ -413,6 +410,9 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     // Guard that the IonScript has been compiled.
     masm.branchPtr(Assembler::BelowOrEqual, objreg, ImmWord(ION_DISABLED_SCRIPT), &invoke);
+
+    // Nestle %esp up to the argument vector.
+    masm.freeStack(unusedStack);
 
     // Remember the size of the frame above this point, in case of bailout.
     uint32 stackSize = masm.framePushed() - unusedStack;
@@ -487,6 +487,10 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
         typedef bool (*pf)(JSContext *, JSFunction *, uint32, Value *, Value *);
         static const VMFunction InvokeFunctionInfo = FunctionInfo<pf>(InvokeFunction);
 
+        // Nestle %esp up to the argument vector.
+        // Each path must account for framePushed_ separately, for callVM to be valid.
+        masm.freeStack(unusedStack);
+
         pushArg(StackPointer);          // argv.
         pushArg(Imm32(call->nargs()));  // argc.
         pushArg(calleereg);             // JSFunction *.
@@ -495,8 +499,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
             return false;
 
         // Un-nestle %esp from the argument vector. No prefix was pushed.
-        if (unusedStack)
-            masm.subPtr(Imm32(unusedStack), StackPointer);
+        masm.reserveStack(unusedStack);
     }
 
     masm.bind(&end);
