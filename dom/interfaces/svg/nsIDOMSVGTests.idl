@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,8 +14,9 @@
  *
  * The Original Code is the Mozilla SVG project.
  *
- * The Initial Developer of the Original Code is IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * The Initial Developer of the Original Code is
+ * Robert Longson
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,39 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGPATHGEOMETRYELEMENT_H__
-#define __NS_SVGPATHGEOMETRYELEMENT_H__
+#include "nsIDOMSVGStringList.idl"
 
-#include "nsSVGGraphicElement.h"
-#include "DOMSVGTests.h"
-#include "nsTArray.h"
-#include "gfxPath.h"
-#include "gfxMatrix.h"
-
-struct nsSVGMark {
-  float x, y, angle;
-  nsSVGMark(float aX, float aY, float aAngle) :
-    x(aX), y(aY), angle(aAngle) {}
-};
-
-class gfxContext;
-
-typedef nsSVGGraphicElement nsSVGPathGeometryElementBase;
-
-class nsSVGPathGeometryElement : public nsSVGPathGeometryElementBase,
-                                 public DOMSVGTests
+[scriptable, uuid(b6186ed0-0861-11e1-be50-0800200c9a66)]
+interface nsIDOMSVGTests : nsISupports
 {
-public:
-  nsSVGPathGeometryElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  readonly attribute nsIDOMSVGStringList requiredFeatures;
+  readonly attribute nsIDOMSVGStringList requiredExtensions;
+  readonly attribute nsIDOMSVGStringList systemLanguage;
 
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  virtual bool AttributeDefinesGeometry(const nsIAtom *aName);
-  virtual bool IsMarkable();
-  virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
-  virtual void ConstructPath(gfxContext *aCtx) = 0;
-  virtual already_AddRefed<gfxFlattenedPath> GetFlattenedPath(const gfxMatrix &aMatrix);
+  boolean hasExtension(in DOMString extension);
 };
 
-#endif
