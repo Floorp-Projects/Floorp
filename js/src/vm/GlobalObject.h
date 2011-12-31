@@ -215,74 +215,94 @@ class GlobalObject : public ::JSObject {
     JSObject *createBlankPrototypeInheriting(JSContext *cx, js::Class *clasp, JSObject &proto);
 
     JSObject *getOrCreateObjectPrototype(JSContext *cx) {
+        GlobalObject *self = this;
         if (!functionObjectClassesInitialized()) {
+            Root<GlobalObject*> root(cx, &self);
             if (!initFunctionAndObjectClasses(cx))
                 return NULL;
         }
-        return &getPrototype(JSProto_Object).toObject();
+        return &self->getPrototype(JSProto_Object).toObject();
     }
 
     JSObject *getOrCreateFunctionPrototype(JSContext *cx) {
+        GlobalObject *self = this;
         if (!functionObjectClassesInitialized()) {
+            Root<GlobalObject*> root(cx, &self);
             if (!initFunctionAndObjectClasses(cx))
                 return NULL;
         }
-        return &getPrototype(JSProto_Function).toObject();
+        return &self->getPrototype(JSProto_Function).toObject();
     }
 
     JSObject *getOrCreateArrayPrototype(JSContext *cx) {
+        GlobalObject *self = this;
         if (!arrayClassInitialized()) {
+            Root<GlobalObject*> root(cx, &self);
             if (!js_InitArrayClass(cx, this))
                 return NULL;
         }
-        return &getPrototype(JSProto_Array).toObject();
+        return &self->getPrototype(JSProto_Array).toObject();
     }
 
     JSObject *getOrCreateBooleanPrototype(JSContext *cx) {
+        GlobalObject *self = this;
         if (!booleanClassInitialized()) {
+            Root<GlobalObject*> root(cx, &self);
             if (!js_InitBooleanClass(cx, this))
                 return NULL;
         }
-        return &getPrototype(JSProto_Boolean).toObject();
+        return &self->getPrototype(JSProto_Boolean).toObject();
     }
 
     JSObject *getOrCreateNumberPrototype(JSContext *cx) {
+        GlobalObject *self = this;
         if (!numberClassInitialized()) {
+            Root<GlobalObject*> root(cx, &self);
             if (!js_InitNumberClass(cx, this))
                 return NULL;
         }
-        return &getPrototype(JSProto_Number).toObject();
+        return &self->getPrototype(JSProto_Number).toObject();
     }
 
     JSObject *getOrCreateStringPrototype(JSContext *cx) {
+        GlobalObject *self = this;
         if (!stringClassInitialized()) {
+            Root<GlobalObject*> root(cx, &self);
             if (!js_InitStringClass(cx, this))
                 return NULL;
         }
-        return &getPrototype(JSProto_String).toObject();
+        return &self->getPrototype(JSProto_String).toObject();
     }
 
     JSObject *getOrCreateRegExpPrototype(JSContext *cx) {
+        GlobalObject *self = this;
         if (!regexpClassInitialized()) {
+            Root<GlobalObject*> root(cx, &self);
             if (!js_InitRegExpClass(cx, this))
                 return NULL;
         }
-        return &getPrototype(JSProto_RegExp).toObject();
+        return &self->getPrototype(JSProto_RegExp).toObject();
     }
 
     JSObject *getOrCreateArrayBufferPrototype(JSContext *cx) {
+        GlobalObject *self = this;
         if (!arrayBufferClassInitialized()) {
+            Root<GlobalObject*> root(cx, &self);
             if (!js_InitTypedArrayClasses(cx, this))
                 return NULL;
         }
-        return &getPrototype(JSProto_ArrayBuffer).toObject();
+        return &self->getPrototype(JSProto_ArrayBuffer).toObject();
     }
 
     JSObject *getOrCreateGeneratorPrototype(JSContext *cx) {
-        HeapValue &v = getSlotRef(GENERATOR_PROTO);
-        if (!v.isObject() && !js_InitIteratorClasses(cx, this))
-            return NULL;
-        return &v.toObject();
+        GlobalObject *self = this;
+        Value v = getSlotRef(GENERATOR_PROTO);
+        if (!v.isObject()) {
+            Root<GlobalObject*> root(cx, &self);
+            if (!js_InitIteratorClasses(cx, this))
+                return NULL;
+        }
+        return &self->getSlot(GENERATOR_PROTO).toObject();
     }
 
     inline RegExpStatics *getRegExpStatics() const;

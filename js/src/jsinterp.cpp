@@ -213,7 +213,6 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
     JSObject *innermostNewChild = js_CloneBlockObject(cx, sharedBlock, fp);
     if (!innermostNewChild)
         return NULL;
-    AutoObjectRooter tvr(cx, innermostNewChild);
 
     /*
      * Clone our way towards outer scopes until we reach the innermost
@@ -644,6 +643,8 @@ js::ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const V
 {
     JS_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
 
+    Root<JSScript*> scriptRoot(cx, &script);
+
     if (script->isEmpty()) {
         if (result)
             result->setUndefined();
@@ -652,6 +653,9 @@ js::ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const V
 
     ExecuteFrameGuard efg;
     if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
+        return false;
+
+    if (!script->ensureRanAnalysis(cx, &scopeChain))
         return false;
 
     /* Give strict mode eval its own fresh lexical environment. */
@@ -665,9 +669,6 @@ js::ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const V
 #endif
 
     Probes::startExecution(cx, script);
-
-    if (!script->ensureRanAnalysis(cx, &scopeChain))
-        return false;
 
     TypeScript::SetThis(cx, script, fp->thisValue());
 
