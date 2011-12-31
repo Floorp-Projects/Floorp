@@ -2636,8 +2636,7 @@ DebuggerFrame_getArguments(JSContext *cx, uintN argc, Value *vp)
     JSObject *argsobj;
     if (fp->hasArgs()) {
         /* Create an arguments object. */
-        RootedVar<GlobalObject*> global(cx);
-        global = args.callee().getGlobal();
+        GlobalObject *global = args.callee().getGlobal();
         JSObject *proto;
         if (!js_GetClassPrototype(cx, global, JSProto_Array, &proto))
             return false;
@@ -3791,45 +3790,35 @@ static JSFunctionSpec DebuggerEnv_methods[] = {
 extern JS_PUBLIC_API(JSBool)
 JS_DefineDebuggerObject(JSContext *cx, JSObject *obj)
 {
-    RootObject objRoot(cx, &obj);
-
-    RootedVarObject
-        objProto(cx),
-        debugCtor(cx),
-        debugProto(cx),
-        frameProto(cx),
-        scriptProto(cx),
-        objectProto(cx);
-
-    if (!js_GetClassPrototype(cx, obj, JSProto_Object, objProto.address()))
+    JSObject *objProto;
+    if (!js_GetClassPrototype(cx, obj, JSProto_Object, &objProto))
         return false;
 
-
-    debugProto = js_InitClass(cx, objRoot,
-                              objProto, &Debugger::jsclass, Debugger::construct,
-                              1, Debugger::properties, Debugger::methods, NULL, NULL,
-                              debugCtor.address());
+    JSObject *debugCtor;
+    JSObject *debugProto = js_InitClass(cx, obj, objProto, &Debugger::jsclass, Debugger::construct,
+                                        1, Debugger::properties, Debugger::methods, NULL, NULL,
+                                        &debugCtor);
     if (!debugProto)
         return false;
 
-    frameProto = js_InitClass(cx, debugCtor, objProto, &DebuggerFrame_class,
-                              DebuggerFrame_construct, 0,
-                              DebuggerFrame_properties, DebuggerFrame_methods,
-                              NULL, NULL);
+    JSObject *frameProto = js_InitClass(cx, debugCtor, objProto, &DebuggerFrame_class,
+                                        DebuggerFrame_construct, 0,
+                                        DebuggerFrame_properties, DebuggerFrame_methods,
+                                        NULL, NULL);
     if (!frameProto)
         return false;
 
-    scriptProto = js_InitClass(cx, debugCtor, objProto, &DebuggerScript_class,
-                               DebuggerScript_construct, 0,
-                               DebuggerScript_properties, DebuggerScript_methods,
-                               NULL, NULL);
+    JSObject *scriptProto = js_InitClass(cx, debugCtor, objProto, &DebuggerScript_class,
+                                         DebuggerScript_construct, 0,
+                                         DebuggerScript_properties, DebuggerScript_methods,
+                                         NULL, NULL);
     if (!scriptProto)
         return false;
 
-    objectProto = js_InitClass(cx, debugCtor, objProto, &DebuggerObject_class,
-                               DebuggerObject_construct, 0,
-                               DebuggerObject_properties, DebuggerObject_methods,
-                               NULL, NULL);
+    JSObject *objectProto = js_InitClass(cx, debugCtor, objProto, &DebuggerObject_class,
+                                         DebuggerObject_construct, 0,
+                                         DebuggerObject_properties, DebuggerObject_methods,
+                                         NULL, NULL);
     if (!objectProto)
         return false;
 

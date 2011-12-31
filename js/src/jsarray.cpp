@@ -660,6 +660,9 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value 
         if (!iter)
             return false;
 
+        /* Protect iter against GC under JSObject::deleteProperty. */
+        AutoObjectRooter tvr(cx, iter);
+
         jsuint gap = oldlen - newlen;
         for (;;) {
             if (!JS_CHECK_OPERATION_LIMIT(cx) || !JS_NextProperty(cx, iter, &id))
@@ -3585,18 +3588,15 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    RootedVar<GlobalObject*> global(cx);
-    global = obj->asGlobal();
+    GlobalObject *global = obj->asGlobal();
 
-    RootedVarObject arrayProto(cx);
-    arrayProto = global->createBlankPrototype(cx, &SlowArrayClass);
+    JSObject *arrayProto = global->createBlankPrototype(cx, &SlowArrayClass);
     if (!arrayProto || !AddLengthProperty(cx, arrayProto))
         return NULL;
     arrayProto->setArrayLength(cx, 0);
 
-    RootedVarFunction ctor(cx);
-    ctor = global->createConstructor(cx, js_Array, &ArrayClass,
-                                     CLASS_ATOM(cx, Array), 1);
+    JSFunction *ctor = global->createConstructor(cx, js_Array, &ArrayClass,
+                                                 CLASS_ATOM(cx, Array), 1);
     if (!ctor)
         return NULL;
 
@@ -3674,15 +3674,10 @@ NewArray(JSContext *cx, uint32_t length, JSObject *proto)
         return obj;
     }
 
-    Root<GlobalObject*> parentRoot(cx, &parent);
-
-    if (!proto && !FindProto(cx, &ArrayClass, parentRoot, &proto))
+    if (!proto && !FindProto(cx, &ArrayClass, parent, &proto))
         return NULL;
 
-    RootObject protoRoot(cx, &proto);
-    RootedVarTypeObject type(cx);
-
-    type = proto->getNewType(cx);
+    types::TypeObject *type = proto->getNewType(cx);
     if (!type)
         return NULL;
 
@@ -3690,9 +3685,8 @@ NewArray(JSContext *cx, uint32_t length, JSObject *proto)
      * Get a shape with zero fixed slots, regardless of the size class.
      * See JSObject::createDenseArray.
      */
-    RootedVarShape shape(cx);
-    shape = EmptyShape::getInitialShape(cx, &ArrayClass, proto,
-                                        parent, gc::FINALIZE_OBJECT0);
+    Shape *shape = EmptyShape::getInitialShape(cx, &ArrayClass, proto,
+                                               proto->getParent(), gc::FINALIZE_OBJECT0);
     if (!shape)
         return NULL;
 

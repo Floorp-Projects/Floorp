@@ -151,6 +151,7 @@ enum RegExpExecType
     RegExpTest
 };
 
+class AutoStringRooter;
 class ExecuteArgsGuard;
 class InvokeFrameGuard;
 class InvokeArgsGuard;
@@ -224,9 +225,6 @@ struct EmptyShape;
 class ShapeKindArray;
 class Bindings;
 
-struct StackBaseShape;
-struct StackShape;
-
 class MultiDeclRange;
 class ParseMapPool;
 class DefnOrHeader;
@@ -278,69 +276,6 @@ struct TypeObject;
 struct TypeCompartment;
 
 } /* namespace types */
-
-enum ThingRootKind
-{
-    THING_ROOT_OBJECT,
-    THING_ROOT_SHAPE,
-    THING_ROOT_BASE_SHAPE,
-    THING_ROOT_TYPE_OBJECT,
-    THING_ROOT_STRING,
-    THING_ROOT_SCRIPT,
-    THING_ROOT_ID,
-    THING_ROOT_VALUE,
-    THING_ROOT_LIMIT
-};
-
-template <typename T> class Root;
-template <typename T> class RootedVar;
-
-/*
- * Reference to a stack location rooted for GC. See "Moving GC Stack Rooting"
- * comment in jscntxt.h.
- */
-template <typename T>
-class Handle
-{
-  public:
-    // Copy handles of different types, with implicit coercion.
-    template <typename S> Handle(Handle<S> handle) {
-        testAssign<S>();
-        ptr = reinterpret_cast<const T *>(handle.address());
-    }
-
-    // Get a handle from a rooted stack location, with implicit coercion.
-    template <typename S> inline Handle(const Root<S> &root);
-    template <typename S> inline Handle(const RootedVar<S> &root);
-
-    const T *address() { return ptr; }
-
-    operator T () { return value(); }
-    T operator ->() { return value(); }
-
-  private:
-    const T *ptr;
-    T value() { return *ptr; }
-
-    template <typename S>
-    void testAssign() {
-#ifdef DEBUG
-        T a;
-        S b;
-        a = b;
-#endif
-    }
-};
-
-typedef Handle<JSObject*>          HandleObject;
-typedef Handle<JSFunction*>        HandleFunction;
-typedef Handle<Shape*>             HandleShape;
-typedef Handle<BaseShape*>         HandleBaseShape;
-typedef Handle<types::TypeObject*> HandleTypeObject;
-typedef Handle<JSString*>          HandleString;
-typedef Handle<JSAtom*>            HandleAtom;
-typedef Handle<jsid>               HandleId;
-typedef Handle<Value>              HandleValue;
 
 } /* namespace js */
 
