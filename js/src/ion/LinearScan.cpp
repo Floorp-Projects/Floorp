@@ -1240,8 +1240,10 @@ LinearScanAllocator::allocateSlotFor(const LiveInterval *interval)
             // loop-carried value.
             freed->popBack();
             VirtualRegister *dead = maybeDead->reg();
+#ifdef JS_NUNBOX32
             if (IsNunbox(dead))
                 return BaseOfNunboxSlot(dead->type(), dead->canonicalSpillSlot());
+#endif
             return dead->canonicalSpillSlot();
         }
     }
