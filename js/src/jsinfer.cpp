@@ -1969,8 +1969,6 @@ TypeObject *
 TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
                                JSProtoKey key, JSObject *proto, bool unknown)
 {
-    RootObject root(cx, &proto);
-
     TypeObject *object = gc::NewGCThing<TypeObject>(cx, gc::FINALIZE_TYPE_OBJECT, sizeof(TypeObject));
     if (!object)
         return NULL;
@@ -5178,11 +5176,7 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
 {
     JS_ASSERT(script->types && !script->types->hasScope());
 
-    Root<JSScript*> scriptRoot(cx, &script);
-    RootObject scopeRoot(cx, &scope);
-
     JSFunction *fun = script->function();
-    bool nullClosure = fun && fun->isNullClosure();
 
     JS_ASSERT_IF(!fun, !script->isOuterFunction && !script->isInnerFunction);
     JS_ASSERT_IF(!scope, fun && !script->isInnerFunction);
@@ -5213,7 +5207,7 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
     if (!cx->typeInferenceEnabled())
         return true;
 
-    if (!script->isInnerFunction || nullClosure) {
+    if (!script->isInnerFunction || fun->isNullClosure()) {
         /*
          * Outermost functions need nesting information if there are inner
          * functions directly nested in them.
@@ -5817,6 +5811,9 @@ JSObject::setNewTypeUnknown(JSContext *cx)
 TypeObject *
 JSObject::getNewType(JSContext *cx, JSFunction *fun)
 {
+    if (!setDelegate(cx))
+        return NULL;
+
     TypeObjectSet &table = cx->compartment->newTypeObjects;
 
     if (!table.initialized() && !table.init())
@@ -5843,19 +5840,14 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun)
         return type;
     }
 
-    RootedVarObject self(cx, this);
-
-    if (!setDelegate(cx))
-        return NULL;
-
-    bool markUnknown = self->lastProperty()->hasObjectFlag(BaseShape::NEW_TYPE_UNKNOWN);
+    bool markUnknown = lastProperty()->hasObjectFlag(BaseShape::NEW_TYPE_UNKNOWN);
 
     TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL,
-                                                            JSProto_Object, self, markUnknown);
+                                                            JSProto_Object, this, markUnknown);
     if (!type)
         return NULL;
 
-    if (!table.relookupOrAdd(p, self, type))
+    if (!table.relookupOrAdd(p, this, type))
         return NULL;
 
     if (!cx->typeInferenceEnabled())
@@ -5868,7 +5860,7 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun)
      * flag set. This is a hack, :XXX: need a real correspondence between
      * types and the possible js::Class of objects with that type.
      */
-    if (self->hasSpecialEquality())
+    if (hasSpecialEquality())
         type->flags |= OBJECT_FLAG_SPECIAL_EQUALITY;
 
     if (fun)
@@ -5876,11 +5868,11 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun)
 
 #if JS_HAS_XML_SUPPORT
     /* Special case for XML object equality, see makeLazyType(). */
-    if (self->isXML() && !type->unknownProperties())
+    if (isXML() && !type->unknownProperties())
         type->flags |= OBJECT_FLAG_UNKNOWN_MASK;
 #endif
 
-    if (self->getClass()->ext.equality)
+    if (getClass()->ext.equality)
         type->flags |= OBJECT_FLAG_SPECIAL_EQUALITY;
 
     /*
@@ -5900,8 +5892,6 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun)
 TypeObject *
 JSCompartment::getLazyType(JSContext *cx, JSObject *proto)
 {
-    gc::MaybeCheckStackRoots(cx);
-
     TypeObjectSet &table = cx->compartment->lazyTypeObjects;
 
     if (!table.initialized() && !table.init())

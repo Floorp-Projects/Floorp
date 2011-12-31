@@ -48,10 +48,10 @@ namespace js {
 
 struct ShapeHasher {
     typedef js::Shape *Key;
-    typedef js::StackShape Lookup;
+    typedef const js::Shape *Lookup;
 
-    static inline HashNumber hash(const Lookup &l);
-    static inline bool match(Key k, const Lookup &l);
+    static inline HashNumber hash(const Lookup l);
+    static inline bool match(Key k, Lookup l);
 };
 
 typedef HashSet<js::Shape *, ShapeHasher, SystemAllocPolicy> KidsHash;
@@ -116,7 +116,7 @@ class PropertyTree
     }
     
     js::Shape *newShape(JSContext *cx);
-    js::Shape *getChild(JSContext *cx, Shape *parent, uint32_t nfixed, const StackShape &child);
+    js::Shape *getChild(JSContext *cx, js::Shape *parent, const js::Shape &child);
 
 #ifdef DEBUG
     static void dumpShapes(JSContext *cx);

@@ -1032,7 +1032,7 @@ JSObject::initializeSlotRange(size_t start, size_t length)
 
 /* static */ inline JSObject *
 JSObject::create(JSContext *cx, js::gc::AllocKind kind,
-                 js::HandleShape shape, js::HandleTypeObject type, js::HeapValue *slots)
+                 js::Shape *shape, js::types::TypeObject *type, js::HeapValue *slots)
 {
     /*
      * Callers must use dynamicSlotsCount to size the initial slot array of the
@@ -1063,8 +1063,7 @@ JSObject::create(JSContext *cx, js::gc::AllocKind kind,
 
 /* static */ inline JSObject *
 JSObject::createDenseArray(JSContext *cx, js::gc::AllocKind kind,
-                           js::HandleShape shape, js::HandleTypeObject type,
-                           uint32_t length)
+                           js::Shape *shape, js::types::TypeObject *type, uint32_t length)
 {
     JS_ASSERT(shape && type);
     JS_ASSERT(shape->getObjectClass() == &js::ArrayClass);
@@ -1193,12 +1192,17 @@ JSObject::isNative() const
     return lastProperty()->isNative();
 }
 
+inline js::Shape **
+JSObject::nativeSearch(JSContext *cx, jsid id, bool adding)
+{
+    return js::Shape::search(cx, &shape_, id, adding);
+}
+
 inline const js::Shape *
 JSObject::nativeLookup(JSContext *cx, jsid id)
 {
     JS_ASSERT(isNative());
-    js::Shape **spp;
-    return js::Shape::search(cx, lastProperty(), id, &spp);
+    return SHAPE_FETCH(nativeSearch(cx, id));
 }
 
 inline bool
@@ -1651,17 +1655,12 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_)
 
     /* Copy the entry to the stack first in case it is purged by a GC. */
     size_t nbytes = entry->nbytes;
-    char stackObject[sizeof(JSObject_Slots16)];
-    JS_ASSERT(nbytes <= sizeof(stackObject));
+    JSObject_Slots16 stackObject;
     memcpy(&stackObject, &entry->templateObject, nbytes);
-
-    JSObject *baseobj = (JSObject *) stackObject;
-    RootShape shapeRoot(cx, (Shape **) baseobj->addressOfShape());
-    RootTypeObject typeRoot(cx, (types::TypeObject **) baseobj->addressOfType());
 
     obj = js_NewGCObject(cx, entry->kind);
     if (obj) {
-        memcpy(obj, baseobj, nbytes);
+        memcpy(obj, &stackObject, nbytes);
         Probes::createObject(cx, obj);
         return obj;
     }
@@ -1714,7 +1713,7 @@ GetClassProtoKey(js::Class *clasp)
 }
 
 inline bool
-FindProto(JSContext *cx, js::Class *clasp, HandleObject parent, JSObject **proto)
+FindProto(JSContext *cx, js::Class *clasp, JSObject *parent, JSObject ** proto)
 {
     JSProtoKey protoKey = GetClassProtoKey(clasp);
     if (!js_GetClassPrototype(cx, parent, protoKey, proto, clasp))
@@ -1883,16 +1882,15 @@ DefineConstructorAndPrototype(JSContext *cx, GlobalObject *global,
     /* Set these first in case AddTypePropertyId looks for this class. */
     global->setSlot(key, ObjectValue(*ctor));
     global->setSlot(key + JSProto_LIMIT, ObjectValue(*proto));
-    global->setSlot(key + JSProto_LIMIT * 2, ObjectValue(*ctor));
 
     types::AddTypePropertyId(cx, global, id, ObjectValue(*ctor));
     if (!global->addDataProperty(cx, id, key + JSProto_LIMIT * 2, 0)) {
         global->setSlot(key, UndefinedValue());
         global->setSlot(key + JSProto_LIMIT, UndefinedValue());
-        global->setSlot(key + JSProto_LIMIT * 2, UndefinedValue());
         return false;
     }
 
+    global->setSlot(key + JSProto_LIMIT * 2, ObjectValue(*ctor));
     return true;
 }
 
@@ -2023,7 +2021,7 @@ ValueIsSpecial(JSObject *obj, Value *propval, SpecialId *sidp, JSContext *cx)
 }
 
 JSObject *
-DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, HandleAtom atom,
+DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
                               JSObject *protoProto, Class *clasp,
                               Native constructor, uintN nargs,
                               JSPropertySpec *ps, JSFunctionSpec *fs,
@@ -2034,7 +2032,7 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
 } /* namespace js */
 
 extern JSObject *
-js_InitClass(JSContext *cx, js::HandleObject obj, JSObject *parent_proto,
+js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              js::Class *clasp, JSNative constructor, uintN nargs,
              JSPropertySpec *ps, JSFunctionSpec *fs,
              JSPropertySpec *static_ps, JSFunctionSpec *static_fs,

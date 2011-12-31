@@ -2013,10 +2013,11 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
      */
     if ((bce->flags & TCF_FUN_EXTENSIBLE_SCOPE) ||
         bce->bindings.extensibleParents()) {
-        Shape *newShape = Shape::setExtensibleParents(cx, blockObj->lastProperty());
-        if (!newShape)
+        HeapPtrShape shape;
+        shape.init(blockObj->lastProperty());
+        if (!Shape::setExtensibleParents(cx, &shape))
             return false;
-        blockObj->setLastPropertyInfallible(newShape);
+        blockObj->setLastPropertyInfallible(shape);
     }
 
     return true;
@@ -5571,9 +5572,6 @@ EmitWith(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 static bool
 SetMethodFunction(JSContext *cx, FunctionBox *funbox, JSAtom *atom)
 {
-    RootedVarObject parent(cx);
-    parent = funbox->function()->getParent();
-
     /*
      * Replace a boxed function with a new one with a method atom. Methods
      * require a function with the extended size finalize kind, which normal
@@ -5583,7 +5581,7 @@ SetMethodFunction(JSContext *cx, FunctionBox *funbox, JSAtom *atom)
     JSFunction *fun = js_NewFunction(cx, NULL, NULL,
                                      funbox->function()->nargs,
                                      funbox->function()->flags,
-                                     parent,
+                                     funbox->function()->getParent(),
                                      funbox->function()->atom,
                                      JSFunction::ExtendedFinalizeKind);
     if (!fun)

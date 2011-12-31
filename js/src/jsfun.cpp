@@ -131,17 +131,13 @@ ArgumentsObject::create(JSContext *cx, uint32_t argc, JSObject &callee, StackFra
     if (!proto)
         return NULL;
 
-    RootedVarTypeObject type(cx);
-
-    type = proto->getNewType(cx);
+    TypeObject *type = proto->getNewType(cx);
     if (!type)
         return NULL;
 
     bool strict = callee.toFunction()->inStrictMode();
     Class *clasp = strict ? &StrictArgumentsObjectClass : &NormalArgumentsObjectClass;
-
-    RootedVarShape emptyArgumentsShape(cx);
-    emptyArgumentsShape =
+    Shape *emptyArgumentsShape =
         EmptyShape::getInitialShape(cx, clasp, proto,
                                     proto->getParent(), FINALIZE_KIND,
                                     BaseShape::INDEXED);
@@ -627,15 +623,12 @@ Class js::DeclEnvClass = {
 static inline JSObject *
 NewDeclEnvObject(JSContext *cx, StackFrame *fp)
 {
-    RootedVarTypeObject type(cx);
-    type = cx->compartment->getEmptyType(cx);
+    types::TypeObject *type = cx->compartment->getEmptyType(cx);
     if (!type)
         return NULL;
 
     JSObject *parent = fp->scopeChain().getGlobal();
-
-    RootedVarShape emptyDeclEnvShape(cx);
-    emptyDeclEnvShape =
+    Shape *emptyDeclEnvShape =
         EmptyShape::getInitialShape(cx, &DeclEnvClass, NULL,
                                     parent, CallObject::DECL_ENV_FINALIZE_KIND);
     if (!emptyDeclEnvShape)
@@ -1211,8 +1204,6 @@ fun_enumerate(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isFunction());
 
-    RootObject root(cx, &obj);
-
     jsid id;
     bool found;
 
@@ -1293,8 +1284,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     if (!JSID_IS_ATOM(id))
         return true;
 
-    RootedVarFunction fun(cx);
-    fun = obj->toFunction();
+    JSFunction *fun = obj->toFunction();
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.classPrototypeAtom)) {
         /*
@@ -1312,9 +1302,9 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         if (fun->isNative() || fun->isFunctionPrototype())
             return true;
 
-        if (!ResolveInterpretedFunctionPrototype(cx, fun))
+        if (!ResolveInterpretedFunctionPrototype(cx, obj))
             return false;
-        *objp = fun;
+        *objp = obj;
         return true;
     }
 
@@ -1328,11 +1318,11 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         else
             v.setString(fun->atom ? fun->atom : cx->runtime->emptyString);
         
-        if (!DefineNativeProperty(cx, fun, id, v, JS_PropertyStub, JS_StrictPropertyStub,
+        if (!DefineNativeProperty(cx, obj, id, v, JS_PropertyStub, JS_StrictPropertyStub,
                                   JSPROP_PERMANENT | JSPROP_READONLY, 0, 0)) {
             return false;
         }
-        *objp = fun;
+        *objp = obj;
         return true;
     }
 
@@ -1340,13 +1330,13 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         const uint16_t offset = poisonPillProps[i];
 
         if (JSID_IS_ATOM(id, OFFSET_TO_ATOM(cx->runtime, offset))) {
-            JS_ASSERT(!IsInternalFunctionObject(fun));
+            JS_ASSERT(!IsInternalFunctionObject(obj));
 
             PropertyOp getter;
             StrictPropertyOp setter;
             uintN attrs = JSPROP_PERMANENT;
-            if (fun->isInterpreted() ? fun->inStrictMode() : fun->isBoundFunction()) {
-                JSObject *throwTypeError = fun->getThrowTypeError();
+            if (fun->isInterpreted() ? fun->inStrictMode() : obj->isBoundFunction()) {
+                JSObject *throwTypeError = obj->getThrowTypeError();
 
                 getter = CastAsPropertyOp(throwTypeError);
                 setter = CastAsStrictPropertyOp(throwTypeError);
@@ -1356,11 +1346,11 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                 setter = JS_StrictPropertyStub;
             }
 
-            if (!DefineNativeProperty(cx, fun, id, UndefinedValue(), getter, setter,
+            if (!DefineNativeProperty(cx, obj, id, UndefinedValue(), getter, setter,
                                       attrs, 0, 0)) {
                 return false;
             }
-            *objp = fun;
+            *objp = obj;
             return true;
         }
     }
@@ -1397,8 +1387,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         flagsword = (fun->nargs << 16) | fun->flags;
         script = fun->script();
     } else {
-        RootedVarObject parent(cx, NULL);
-        fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, parent, NULL);
+        fun = js_NewFunction(cx, NULL, NULL, 0, JSFUN_INTERPRETED, NULL, NULL);
         if (!fun)
             return false;
         if (!fun->clearParent(cx))
@@ -1407,6 +1396,8 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
             return false;
         script = NULL;
     }
+
+    AutoObjectRooter tvr(cx, fun);
 
     if (!JS_XDRUint32(xdr, &firstword))
         return false;
@@ -1873,8 +1864,7 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
         return false;
     }
 
-    RootedVarObject target(cx);
-    target = &thisv.toObject();
+    JSObject *target = &thisv.toObject();
 
     /* Step 3. */
     Value *boundArgs = NULL;
@@ -1954,8 +1944,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Block this call if security callbacks forbid it. */
-    RootedVar<GlobalObject*> global(cx);
-    global = args.callee().getGlobal();
+    GlobalObject *global = args.callee().getGlobal();
     if (!global->isRuntimeCodeGenEnabled(cx)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CSP_BLOCKED_FUNCTION);
         return false;
@@ -2155,7 +2144,7 @@ LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj)
 
 JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
-               uintN flags, HandleObject parent, JSAtom *atom, js::gc::AllocKind kind)
+               uintN flags, JSObject *parent, JSAtom *atom, js::gc::AllocKind kind)
 {
     JS_ASSERT(kind == JSFunction::FinalizeKind || kind == JSFunction::ExtendedFinalizeKind);
     JS_ASSERT(sizeof(JSFunction) <= gc::Arena::thingSize(JSFunction::FinalizeKind));
@@ -2316,15 +2305,12 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun)
 }
 
 JSFunction *
-js_DefineFunction(JSContext *cx, HandleObject obj, jsid id, Native native,
+js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
                   uintN nargs, uintN attrs, AllocKind kind)
 {
-    RootId idRoot(cx, &id);
-
     PropertyOp gop;
     StrictPropertyOp sop;
-
-    RootedVarFunction fun(cx);
+    JSFunction *fun;
 
     if (attrs & JSFUN_STUB_GSOPS) {
         /*

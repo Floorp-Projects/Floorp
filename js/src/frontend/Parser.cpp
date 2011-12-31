@@ -953,9 +953,7 @@ Parser::newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
      */
     while (tc->parent)
         tc = tc->parent;
-
-    RootedVarObject parent(context);
-    parent = tc->inFunction() ? NULL : tc->scopeChain();
+    JSObject *parent = tc->inFunction() ? NULL : tc->scopeChain();
 
     JSFunction *fun =
         js_NewFunction(context, NULL, NULL, 0,
