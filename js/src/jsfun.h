@@ -310,7 +310,7 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent);
 
 extern JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
-               uintN flags, JSObject *parent, JSAtom *atom,
+               uintN flags, js::HandleObject parent, JSAtom *atom,
                js::gc::AllocKind kind = JSFunction::FinalizeKind);
 
 extern JSFunction * JS_FASTCALL
@@ -324,7 +324,7 @@ extern JSFunction *
 js_NewFlatClosure(JSContext *cx, JSFunction *fun);
 
 extern JSFunction *
-js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, JSNative native,
+js_DefineFunction(JSContext *cx, js::HandleObject obj, jsid id, JSNative native,
                   uintN nargs, uintN flags,
                   js::gc::AllocKind kind = JSFunction::FinalizeKind);
 

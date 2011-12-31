@@ -57,7 +57,9 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
     Bindings &bindings = script->bindings;
     gc::AllocKind kind = gc::GetGCObjectKind(bindings.lastShape()->numFixedSlots() + 1);
 
-    js::types::TypeObject *type = cx->compartment->getEmptyType(cx);
+    RootedVarTypeObject type(cx);
+
+    type = cx->compartment->getEmptyType(cx);
     if (!type)
         return NULL;
 
@@ -65,7 +67,10 @@ CallObject::create(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObje
     if (!PreallocateObjectDynamicSlots(cx, bindings.lastShape(), &slots))
         return NULL;
 
-    JSObject *obj = JSObject::create(cx, kind, bindings.lastShape(), type, slots);
+    RootedVarShape shape(cx);
+    shape = bindings.lastShape();
+
+    JSObject *obj = JSObject::create(cx, kind, shape, type, slots);
     if (!obj)
         return NULL;
 
