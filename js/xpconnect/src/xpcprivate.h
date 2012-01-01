@@ -1536,9 +1536,6 @@ public:
     {return mScriptObjectPrincipal ?
          mScriptObjectPrincipal->GetPrincipal() : nsnull;}
 
-    JSObject*
-    GetPrototypeJSFunction() const {return mPrototypeJSFunction;}
-
     void RemoveWrappedNativeProtos();
 
     static XPCWrappedNativeScope*
@@ -1657,8 +1654,6 @@ private:
 
     // Cached value of Object.prototype
     JS::HeapPtrObject                mPrototypeJSObject;
-    // Cached value of Function.prototype
-    JS::HeapPtrObject                mPrototypeJSFunction;
     // Prototype to use for wrappers with no helper.
     JSObject*                        mPrototypeNoHelper;
 
