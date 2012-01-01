@@ -46,23 +46,13 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 
-#define LOCK_TX_MANAGER(mgr)    (mgr)->Lock()
-#define UNLOCK_TX_MANAGER(mgr)  (mgr)->Unlock()
-
-
 nsTransactionManager::nsTransactionManager(PRInt32 aMaxTransactionCount)
   : mMaxTransactionCount(aMaxTransactionCount)
 {
-  mMonitor = ::PR_NewMonitor();
 }
 
 nsTransactionManager::~nsTransactionManager()
 {
-  if (mMonitor)
-  {
-    ::PR_DestroyMonitor(mMonitor);
-    mMonitor = 0;
-  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsTransactionManager)
@@ -97,19 +87,15 @@ nsTransactionManager::DoTransaction(nsITransaction *aTransaction)
 
   NS_ENSURE_TRUE(aTransaction, NS_ERROR_NULL_POINTER);
 
-  LOCK_TX_MANAGER(this);
-
   bool doInterrupt = false;
 
   result = WillDoNotify(aTransaction, &doInterrupt);
 
   if (NS_FAILED(result)) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
   if (doInterrupt) {
-    UNLOCK_TX_MANAGER(this);
     return NS_OK;
   }
 
@@ -117,7 +103,6 @@ nsTransactionManager::DoTransaction(nsITransaction *aTransaction)
 
   if (NS_FAILED(result)) {
     DidDoNotify(aTransaction, result);
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
@@ -128,8 +113,6 @@ nsTransactionManager::DoTransaction(nsITransaction *aTransaction)
   if (NS_SUCCEEDED(result))
     result = result2;
 
-  UNLOCK_TX_MANAGER(this);
-
   return result;
 }
 
@@ -139,8 +122,6 @@ nsTransactionManager::UndoTransaction()
   nsresult result       = NS_OK;
   nsRefPtr<nsTransactionItem> tx;
 
-  LOCK_TX_MANAGER(this);
-
   // It is illegal to call UndoTransaction() while the transaction manager is
   // executing a  transaction's DoTransaction() method! If this happens,
   // the UndoTransaction() request is ignored, and we return NS_ERROR_FAILURE.
@@ -148,12 +129,10 @@ nsTransactionManager::UndoTransaction()
   result = mDoStack.Peek(getter_AddRefs(tx));
 
   if (NS_FAILED(result)) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
   if (tx) {
-    UNLOCK_TX_MANAGER(this);
     return NS_ERROR_FAILURE;
   }
 
@@ -162,13 +141,11 @@ nsTransactionManager::UndoTransaction()
   result = mUndoStack.Peek(getter_AddRefs(tx));
 
   if (NS_FAILED(result)) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
   // Bail if there's nothing on the stack.
   if (!tx) {
-    UNLOCK_TX_MANAGER(this);
     return NS_OK;
   }
 
@@ -177,7 +154,6 @@ nsTransactionManager::UndoTransaction()
   result = tx->GetTransaction(getter_AddRefs(t));
 
   if (NS_FAILED(result)) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
@@ -186,12 +162,10 @@ nsTransactionManager::UndoTransaction()
   result = WillUndoNotify(t, &doInterrupt);
 
   if (NS_FAILED(result)) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
   if (doInterrupt) {
-    UNLOCK_TX_MANAGER(this);
     return NS_OK;
   }
 
@@ -209,8 +183,6 @@ nsTransactionManager::UndoTransaction()
   if (NS_SUCCEEDED(result))
     result = result2;
 
-  UNLOCK_TX_MANAGER(this);
-
   return result;
 }
 
@@ -220,8 +192,6 @@ nsTransactionManager::RedoTransaction()
   nsresult result       = NS_OK;
   nsRefPtr<nsTransactionItem> tx;
 
-  LOCK_TX_MANAGER(this);
-
   // It is illegal to call RedoTransaction() while the transaction manager is
   // executing a  transaction's DoTransaction() method! If this happens,
   // the RedoTransaction() request is ignored, and we return NS_ERROR_FAILURE.
@@ -229,12 +199,10 @@ nsTransactionManager::RedoTransaction()
   result = mDoStack.Peek(getter_AddRefs(tx));
 
   if (NS_FAILED(result)) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
   if (tx) {
-    UNLOCK_TX_MANAGER(this);
     return NS_ERROR_FAILURE;
   }
 
@@ -243,13 +211,11 @@ nsTransactionManager::RedoTransaction()
   result = mRedoStack.Peek(getter_AddRefs(tx));
 
   if (NS_FAILED(result)) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
   // Bail if there's nothing on the stack.
   if (!tx) {
-    UNLOCK_TX_MANAGER(this);
     return NS_OK;
   }
 
@@ -258,7 +224,6 @@ nsTransactionManager::RedoTransaction()
   result = tx->GetTransaction(getter_AddRefs(t));
 
   if (NS_FAILED(result)) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
@@ -267,12 +232,10 @@ nsTransactionManager::RedoTransaction()
   result = WillRedoNotify(t, &doInterrupt);
 
   if (NS_FAILED(result)) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
   if (doInterrupt) {
-    UNLOCK_TX_MANAGER(this);
     return NS_OK;
   }
 
@@ -290,8 +253,6 @@ nsTransactionManager::RedoTransaction()
   if (NS_SUCCEEDED(result))
     result = result2;
 
-  UNLOCK_TX_MANAGER(this);
-
   return result;
 }
 
@@ -300,18 +261,13 @@ nsTransactionManager::Clear()
 {
   nsresult result;
 
-  LOCK_TX_MANAGER(this);
-
   result = ClearRedoStack();
 
   if (NS_FAILED(result)) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
   result = ClearUndoStack();
-
-  UNLOCK_TX_MANAGER(this);
 
   return result;
 }
@@ -326,19 +282,15 @@ nsTransactionManager::BeginBatch()
   // will be popped off the do stack, and then pushed on the undo stack
   // in EndBatch().
 
-  LOCK_TX_MANAGER(this);
-
   bool doInterrupt = false;
 
   result = WillBeginBatchNotify(&doInterrupt);
 
   if (NS_FAILED(result)) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
   if (doInterrupt) {
-    UNLOCK_TX_MANAGER(this);
     return NS_OK;
   }
 
@@ -349,8 +301,6 @@ nsTransactionManager::BeginBatch()
   if (NS_SUCCEEDED(result))
     result = result2;
 
-  UNLOCK_TX_MANAGER(this);
-
   return result;
 }
 
@@ -360,8 +310,6 @@ nsTransactionManager::EndBatch()
   nsRefPtr<nsTransactionItem> tx;
   nsCOMPtr<nsITransaction> ti;
   nsresult result;
-
-  LOCK_TX_MANAGER(this);
 
   // XXX: Need to add some mechanism to detect the case where the transaction
   //      at the top of the do stack isn't the dummy transaction, so we can
@@ -377,7 +325,6 @@ nsTransactionManager::EndBatch()
   result = mDoStack.Peek(getter_AddRefs(tx));
 
   if (NS_FAILED(result)) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
@@ -385,7 +332,6 @@ nsTransactionManager::EndBatch()
     tx->GetTransaction(getter_AddRefs(ti));
 
   if (!tx || ti) {
-    UNLOCK_TX_MANAGER(this);
     return NS_ERROR_FAILURE;
   }
 
@@ -394,12 +340,10 @@ nsTransactionManager::EndBatch()
   result = WillEndBatchNotify(&doInterrupt);
 
   if (NS_FAILED(result)) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
   if (doInterrupt) {
-    UNLOCK_TX_MANAGER(this);
     return NS_OK;
   }
 
@@ -410,33 +354,19 @@ nsTransactionManager::EndBatch()
   if (NS_SUCCEEDED(result))
     result = result2;
 
-  UNLOCK_TX_MANAGER(this);
-
   return result;
 }
 
 NS_IMETHODIMP
 nsTransactionManager::GetNumberOfUndoItems(PRInt32 *aNumItems)
 {
-  nsresult result;
-
-  LOCK_TX_MANAGER(this);
-  result = mUndoStack.GetSize(aNumItems);
-  UNLOCK_TX_MANAGER(this);
-
-  return result;
+  return mUndoStack.GetSize(aNumItems);
 }
 
 NS_IMETHODIMP
 nsTransactionManager::GetNumberOfRedoItems(PRInt32 *aNumItems)
 {
-  nsresult result;
-
-  LOCK_TX_MANAGER(this);
-  result = mRedoStack.GetSize(aNumItems);
-  UNLOCK_TX_MANAGER(this);
-
-  return result;
+  return mRedoStack.GetSize(aNumItems);
 }
 
 NS_IMETHODIMP
@@ -444,9 +374,7 @@ nsTransactionManager::GetMaxTransactionCount(PRInt32 *aMaxCount)
 {
   NS_ENSURE_TRUE(aMaxCount, NS_ERROR_NULL_POINTER);
 
-  LOCK_TX_MANAGER(this);
   *aMaxCount = mMaxTransactionCount;
-  UNLOCK_TX_MANAGER(this);
 
   return NS_OK;
 }
@@ -458,8 +386,6 @@ nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
   nsRefPtr<nsTransactionItem> tx;
   nsresult result;
 
-  LOCK_TX_MANAGER(this);
-
   // It is illegal to call SetMaxTransactionCount() while the transaction
   // manager is executing a  transaction's DoTransaction() method because
   // the undo and redo stacks might get pruned! If this happens, the
@@ -469,12 +395,10 @@ nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
   result = mDoStack.Peek(getter_AddRefs(tx));
 
   if (NS_FAILED(result)) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
   if (tx) {
-    UNLOCK_TX_MANAGER(this);
     return NS_ERROR_FAILURE;
   }
 
@@ -483,21 +407,18 @@ nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
 
   if (aMaxCount < 0) {
     mMaxTransactionCount = -1;
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
   result = mUndoStack.GetSize(&numUndoItems);
 
   if (NS_FAILED(result)) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
   result = mRedoStack.GetSize(&numRedoItems);
 
   if (NS_FAILED(result)) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
@@ -509,7 +430,6 @@ nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
 
   if (aMaxCount > total ) {
     mMaxTransactionCount = aMaxCount;
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
@@ -520,7 +440,6 @@ nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
     result = mUndoStack.PopBottom(getter_AddRefs(tx));
 
     if (NS_FAILED(result) || !tx) {
-      UNLOCK_TX_MANAGER(this);
       return result;
     }
 
@@ -534,7 +453,6 @@ nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
     result = mRedoStack.PopBottom(getter_AddRefs(tx));
 
     if (NS_FAILED(result) || !tx) {
-      UNLOCK_TX_MANAGER(this);
       return result;
     }
 
@@ -542,8 +460,6 @@ nsTransactionManager::SetMaxTransactionCount(PRInt32 aMaxCount)
   }
 
   mMaxTransactionCount = aMaxCount;
-
-  UNLOCK_TX_MANAGER(this);
 
   return result;
 }
@@ -558,18 +474,13 @@ nsTransactionManager::PeekUndoStack(nsITransaction **aTransaction)
 
   *aTransaction = 0;
 
-  LOCK_TX_MANAGER(this);
-
   result = mUndoStack.Peek(getter_AddRefs(tx));
 
   if (NS_FAILED(result) || !tx) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
   result = tx->GetTransaction(aTransaction);
-
-  UNLOCK_TX_MANAGER(this);
 
   return result;
 }
@@ -584,18 +495,13 @@ nsTransactionManager::PeekRedoStack(nsITransaction **aTransaction)
 
   *aTransaction = 0;
 
-  LOCK_TX_MANAGER(this);
-
   result = mRedoStack.Peek(getter_AddRefs(tx));
 
   if (NS_FAILED(result) || !tx) {
-    UNLOCK_TX_MANAGER(this);
     return result;
   }
 
   result = tx->GetTransaction(aTransaction);
-
-  UNLOCK_TX_MANAGER(this);
 
   return result;
 }
@@ -629,13 +535,7 @@ nsTransactionManager::AddListener(nsITransactionListener *aListener)
 {
   NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
 
-  LOCK_TX_MANAGER(this);
-
-  nsresult rv = mListeners.AppendObject(aListener) ? NS_OK : NS_ERROR_FAILURE;
-
-  UNLOCK_TX_MANAGER(this);
-
-  return rv;
+  return mListeners.AppendObject(aListener) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -643,37 +543,19 @@ nsTransactionManager::RemoveListener(nsITransactionListener *aListener)
 {
   NS_ENSURE_TRUE(aListener, NS_ERROR_NULL_POINTER);
 
-  LOCK_TX_MANAGER(this);
-
-  nsresult rv = mListeners.RemoveObject(aListener) ? NS_OK : NS_ERROR_FAILURE;
-
-  UNLOCK_TX_MANAGER(this);
-
-  return rv;
+  return mListeners.RemoveObject(aListener) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
 nsTransactionManager::ClearUndoStack()
 {
-  nsresult result;
-
-  LOCK_TX_MANAGER(this);
-  result = mUndoStack.Clear();
-  UNLOCK_TX_MANAGER(this);
-
-  return result;
+  return mUndoStack.Clear();
 }
 
 nsresult
 nsTransactionManager::ClearRedoStack()
 {
-  nsresult result;
-
-  LOCK_TX_MANAGER(this);
-  result = mRedoStack.Clear();
-  UNLOCK_TX_MANAGER(this);
-
-  return result;
+  return mRedoStack.Clear();
 }
 
 nsresult
@@ -912,9 +794,6 @@ nsTransactionManager::BeginTransaction(nsITransaction *aTransaction)
 {
   nsresult result = NS_OK;
 
-  // No need for LOCK/UNLOCK_TX_MANAGER() calls since the calling routine
-  // should have done this already!
-
   // XXX: POSSIBLE OPTIMIZATION
   //      We could use a factory that pre-allocates/recycles transaction items.
   nsRefPtr<nsTransactionItem> tx = new nsTransactionItem(aTransaction);
@@ -945,9 +824,6 @@ nsTransactionManager::EndTransaction()
   nsCOMPtr<nsITransaction> tint;
   nsRefPtr<nsTransactionItem> tx;
   nsresult result              = NS_OK;
-
-  // No need for LOCK/UNLOCK_TX_MANAGER() calls since the calling routine
-  // should have done this already!
 
   result = mDoStack.Pop(getter_AddRefs(tx));
 
@@ -1075,23 +951,5 @@ nsTransactionManager::EndTransaction()
   }
 
   return result;
-}
-
-nsresult
-nsTransactionManager::Lock()
-{
-  if (mMonitor)
-    PR_EnterMonitor(mMonitor);
-
-  return NS_OK;
-}
-
-nsresult
-nsTransactionManager::Unlock()
-{
-  if (mMonitor)
-    PR_ExitMonitor(mMonitor);
-
-  return NS_OK;
 }
 
