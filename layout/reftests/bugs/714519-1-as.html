@@ -1,0 +1,13 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<title>bug 714519: list numbering of nested vertical-align:top in almost standards mode</title>
+
+<style>
+ol {width: 30em; margin-top: 0 }
+span > span { vertical-align: top }
+</style>
+
+<ol>
+<li><span><span>Short line</span></span></li>
+<li><span><span>This is text that needs to wrap to more than one line to cause the list bullet to disappear</span></span></li>
+<li><span><span>Short line</span></span></li>
+</ol>
