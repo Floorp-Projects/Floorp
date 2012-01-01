@@ -156,6 +156,7 @@
 #include "nsIJSRuntimeService.h"
 #include "nsIMemoryReporter.h"
 #include "xpcpublic.h"
+#include "nsXPCOMPrivate.h"
 #include <stdio.h>
 #include <string.h>
 #ifdef WIN32
@@ -1386,9 +1387,22 @@ public:
 
     NS_IMETHOD Begin()
     {
-        char name[255];
-        sprintf(name, "cc-edges-%d.%d.log", ++gLogCounter, base::GetCurrentProcId());
+        char name[MAXPATHLEN] = {'\0'};
+        tmpnam(name);
+        char *lastSlash = strrchr(name, XPCOM_FILE_PATH_SEPARATOR[0]);
+        if (lastSlash) {
+            *lastSlash = '\0';
+        }
+        sprintf(name, "%s%scc-edges-%d.%d.log", name,
+                XPCOM_FILE_PATH_SEPARATOR,
+                ++gLogCounter, base::GetCurrentProcId());
         mStream = fopen(name, "w");
+
+        nsCOMPtr<nsIConsoleService> cs =
+            do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+        if (cs) {
+            cs->LogStringMessage(NS_ConvertUTF8toUTF16(name).get());
+        }
 
         return mStream ? NS_OK : NS_ERROR_FAILURE;
     }
