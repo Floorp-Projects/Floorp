@@ -6564,9 +6564,14 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   // This is now called FinishAndStoreOverflow() instead of 
   // StoreOverflow() because frame-generic ways of adding overflow
   // can happen here, e.g. CSS2 outline and native theme.
+  // If the overflow area width or height is nscoord_MAX, then a
+  // saturating union may have encounted an overflow, so the overflow may not
+  // contain the frame border-box. Don't warn in that case.
   NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
+    DebugOnly<nsRect*> r = &aOverflowAreas.Overflow(otype);
     NS_ASSERTION(aNewSize.width == 0 || aNewSize.height == 0 ||
-                 aOverflowAreas.Overflow(otype).Contains(nsRect(nsPoint(0,0), aNewSize)),
+                 r->width == nscoord_MAX || r->height == nscoord_MAX ||
+                 r->Contains(nsRect(nsPoint(0,0), aNewSize)),
                  "Computed overflow area must contain frame bounds");
   }
 
