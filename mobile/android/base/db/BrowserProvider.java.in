@@ -388,9 +388,8 @@ public class BrowserProvider extends ContentProvider {
         // profile is provided using a URI query argument in each request
         // to our content provider.
 
-        // Always fallback to default profile if non has been provided.
+        // Always fallback to default profile if none has been provided.
         if (TextUtils.isEmpty(profile)) {
-            Log.d(LOGTAG, "No profile provided, using default.");
             profile = BrowserContract.DEFAULT_PROFILE;
         }
 
@@ -829,8 +828,6 @@ public class BrowserProvider extends ContentProvider {
     @Override
     public Cursor query(Uri uri, String[] projection, String selection,
             String[] selectionArgs, String sortOrder) {
-        Log.d(LOGTAG, "Querying with URI: " + uri);
-
         SQLiteDatabase db = getReadableDatabase(uri);
         final int match = URI_MATCHER.match(uri);
 
@@ -844,12 +841,10 @@ public class BrowserProvider extends ContentProvider {
                 Log.d(LOGTAG, "Query is on bookmarks: " + uri);
 
                 if (match == BOOKMARKS_ID) {
-                    Log.d(LOGTAG, "Query is BOOKMARKS_ID: " + uri);
                     selection = concatenateWhere(selection, Bookmarks._ID + " = ?");
                     selectionArgs = appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
                 } else if (match == BOOKMARKS_FOLDER_ID) {
-                    Log.d(LOGTAG, "Query is BOOKMARKS_FOLDER_ID: " + uri);
                     selection = concatenateWhere(selection, Bookmarks.PARENT + " = ?");
                     selectionArgs = appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
@@ -859,8 +854,9 @@ public class BrowserProvider extends ContentProvider {
                     selection = concatenateWhere(Bookmarks.IS_DELETED + " = 0", selection);
 
                 if (TextUtils.isEmpty(sortOrder)) {
-                    Log.d(LOGTAG, "Using default sort order on query: " + uri);
                     sortOrder = DEFAULT_BOOKMARKS_SORT_ORDER;
+                } else {
+                    Log.d(LOGTAG, "Using sort order " + sortOrder + ".");
                 }
 
                 qb.setProjectionMap(BOOKMARKS_PROJECTION_MAP);
@@ -878,7 +874,6 @@ public class BrowserProvider extends ContentProvider {
                 Log.d(LOGTAG, "Query is on history: " + uri);
 
                 if (match == HISTORY_ID) {
-                    Log.d(LOGTAG, "Query is HISTORY_ID: " + uri);
                     selection = concatenateWhere(selection, History._ID + " = ?");
                     selectionArgs = appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
@@ -905,7 +900,6 @@ public class BrowserProvider extends ContentProvider {
                 Log.d(LOGTAG, "Query is on images: " + uri);
 
                 if (match == IMAGES_ID) {
-                    Log.d(LOGTAG, "Query is IMAGES_ID: " + uri);
                     selection = concatenateWhere(selection, Images._ID + " = ?");
                     selectionArgs = appendSelectionArgs(selectionArgs,
                             new String[] { Long.toString(ContentUris.parseId(uri)) });
@@ -921,8 +915,7 @@ public class BrowserProvider extends ContentProvider {
             }
 
             case SCHEMA: {
-                Log.d(LOGTAG, "Query is on schema: " + uri);
-
+                Log.d(LOGTAG, "Query is on schema.");
                 MatrixCursor schemaCursor = new MatrixCursor(new String[] { Schema.VERSION });
                 schemaCursor.newRow().add(DATABASE_VERSION);
 
@@ -933,7 +926,7 @@ public class BrowserProvider extends ContentProvider {
                 throw new UnsupportedOperationException("Unknown query URI " + uri);
         }
 
-        Log.d(LOGTAG, "Finally running the built query: " + uri);
+        Log.d(LOGTAG, "Running built query.");
         Cursor cursor = qb.query(db, projection, selection, selectionArgs, null,
                 null, sortOrder, limit);
         cursor.setNotificationUri(getContext().getContentResolver(),
