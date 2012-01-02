@@ -3812,16 +3812,16 @@ nsXPCComponents_Utils::CanSetProperty(const nsIID * iid, const PRUnichar *proper
 }
 
 nsresult
-GetBoolOption(JSContext* cx, uint32 aOption, bool* aValue)
+GetBoolOption(JSContext* cx, uint32_t aOption, bool* aValue)
 {
     *aValue = !!(JS_GetOptions(cx) & aOption);
     return NS_OK;
 }
 
 nsresult
-SetBoolOption(JSContext* cx, uint32 aOption, bool aValue)
+SetBoolOption(JSContext* cx, uint32_t aOption, bool aValue)
 {
-    uint32 options = JS_GetOptions(cx);
+    uint32_t options = JS_GetOptions(cx);
     if (aValue) {
         options |= aOption;
     } else {
