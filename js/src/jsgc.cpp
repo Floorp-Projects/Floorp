@@ -3420,7 +3420,7 @@ CheckStackRoot(JSTracer *trc, jsuword *w)
             }
             CheckRoot *check = acx->checkGCRooters;
             while (check) {
-                if (check->contains((uint8 *) w, sizeof(w)))
+                if (check->contains(static_cast<uint8_t*>(w), sizeof(w)))
                     matched = true;
                 check = check->previous();
             }
