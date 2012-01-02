@@ -2286,17 +2286,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 attributes = null; // CPP
                                 break starttagloop;
                             case RT_OR_RP:
-                                /*
-                                 * If the stack of open elements has a ruby
-                                 * element in scope, then generate implied end
-                                 * tags. If the current node is not then a ruby
-                                 * element, this is a parse error; pop all the
-                                 * nodes from the current node up to the node
-                                 * immediately before the bottommost ruby
-                                 * element on the stack of open elements.
-                                 * 
-                                 * Insert an HTML element for the token.
-                                 */
                                 eltPos = findLastInScope("ruby");
                                 if (eltPos != NOT_FOUND_ON_STACK) {
                                     generateImpliedEndTags();
@@ -2306,9 +2295,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                         errStartTagSeenWithoutRuby(name);
                                     } else {
                                         errUnclosedChildrenInRuby();
-                                    }
-                                    while (currentPtr > eltPos) {
-                                        pop();
                                     }
                                 }
                                 appendToCurrentNodeAndPushElementMayFoster(
