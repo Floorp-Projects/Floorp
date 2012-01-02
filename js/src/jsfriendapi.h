@@ -285,7 +285,6 @@ extern JS_FRIEND_DATA(js::Class) NamespaceClass;
 extern JS_FRIEND_DATA(js::Class) OuterWindowProxyClass;
 extern JS_FRIEND_DATA(js::Class) ObjectProxyClass;
 extern JS_FRIEND_DATA(js::Class) QNameClass;
-extern JS_FRIEND_DATA(js::Class) ScriptClass;
 extern JS_FRIEND_DATA(js::Class) XMLClass;
 extern JS_FRIEND_DATA(js::Class) ObjectClass;
 
@@ -302,17 +301,17 @@ GetObjectJSClass(const JSObject *obj)
 }
 
 JS_FRIEND_API(bool)
-IsScopeObject(const JSObject *obj);
+IsScopeObject(JSObject *obj);
 
 inline JSObject *
-GetObjectParent(const JSObject *obj)
+GetObjectParent(JSObject *obj)
 {
     JS_ASSERT(!IsScopeObject(obj));
-    return reinterpret_cast<const shadow::Object*>(obj)->shape->base->parent;
+    return reinterpret_cast<shadow::Object*>(obj)->shape->base->parent;
 }
 
 JS_FRIEND_API(JSObject *)
-GetObjectParentMaybeScope(const JSObject *obj);
+GetObjectParentMaybeScope(JSObject *obj);
 
 JS_FRIEND_API(JSObject *)
 GetGlobalForObjectCrossCompartment(JSObject *obj);
@@ -345,13 +344,13 @@ JS_FRIEND_API(void)
 SetFunctionNativeReserved(JSObject *fun, size_t which, const Value &val);
 
 inline JSObject *
-GetObjectProto(const JSObject *obj)
+GetObjectProto(JSObject *obj)
 {
     return reinterpret_cast<const shadow::Object*>(obj)->type->proto;
 }
 
 inline void *
-GetObjectPrivate(const JSObject *obj)
+GetObjectPrivate(JSObject *obj)
 {
     const shadow::Object *nobj = reinterpret_cast<const shadow::Object*>(obj);
     void **addr = reinterpret_cast<void**>(&nobj->fixedSlots()[nobj->numFixedSlots()]);
@@ -377,17 +376,17 @@ SetReservedSlot(JSObject *obj, size_t slot, const Value &value)
 }
 
 JS_FRIEND_API(uint32_t)
-GetObjectSlotSpan(const JSObject *obj);
+GetObjectSlotSpan(JSObject *obj);
 
 inline const Value &
-GetObjectSlot(const JSObject *obj, size_t slot)
+GetObjectSlot(JSObject *obj, size_t slot)
 {
     JS_ASSERT(slot < GetObjectSlotSpan(obj));
     return reinterpret_cast<const shadow::Object *>(obj)->slotRef(slot);
 }
 
 inline Shape *
-GetObjectShape(const JSObject *obj)
+GetObjectShape(JSObject *obj)
 {
     shadow::Shape *shape = reinterpret_cast<const shadow::Object*>(obj)->shape;
     return reinterpret_cast<Shape *>(shape);

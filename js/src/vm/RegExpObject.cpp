@@ -98,7 +98,7 @@ RegExpObjectBuilder::getOrCreate()
         return false;
     obj->setPrivate(NULL);
 
-    reobj_ = obj->asRegExp();
+    reobj_ = &obj->asRegExp();
     return true;
 }
 
@@ -112,7 +112,7 @@ RegExpObjectBuilder::getOrCreateClone(RegExpObject *proto)
         return false;
     clone->setPrivate(NULL);
 
-    reobj_ = clone->asRegExp();
+    reobj_ = &clone->asRegExp();
     return true;
 }
 
@@ -327,9 +327,9 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
 
     if (xdr->mode == JSXDR_ENCODE) {
         JS_ASSERT(objp);
-        RegExpObject *reobj = (*objp)->asRegExp();
-        source = reobj->getSource();
-        flagsword = reobj->getFlags();
+        RegExpObject &reobj = (*objp)->asRegExp();
+        source = reobj.getSource();
+        flagsword = reobj.getFlags();
     }
     if (!JS_XDRString(xdr, &source) || !JS_XDRUint32(xdr, &flagsword))
         return false;
@@ -360,14 +360,14 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
 static void
 regexp_finalize(JSContext *cx, JSObject *obj)
 {
-    obj->asRegExp()->finalize(cx);
+    obj->asRegExp().finalize(cx);
 }
 
 static void
 regexp_trace(JSTracer *trc, JSObject *obj)
 {
     if (trc->runtime->gcRunning)
-        obj->asRegExp()->purge(trc->context);
+        obj->asRegExp().purge(trc->context);
 }
 
 Class js::RegExpClass = {
@@ -565,7 +565,7 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
     JS_ASSERT(proto->isRegExp());
 
     RegExpObjectBuilder builder(cx);
-    return builder.clone(obj->asRegExp(), proto->asRegExp());
+    return builder.clone(&obj->asRegExp(), &proto->asRegExp());
 }
 
 JSFlatString *
