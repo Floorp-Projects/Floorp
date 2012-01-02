@@ -242,6 +242,13 @@ CodeGenerator::visitTruncateDToInt32(LTruncateDToInt32 *lir)
 }
 
 bool
+CodeGenerator::visitLabel(LLabel *lir)
+{
+    masm.bind(lir->label());
+    return true;
+}
+
+bool
 CodeGenerator::visitCaptureAllocations(LCaptureAllocations *)
 {
     return true;
@@ -623,7 +630,6 @@ CodeGenerator::generateBody()
 {
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         current = graph.getBlock(i);
-        masm.bind(current->label());
         for (LInstructionIterator iter = current->begin(); iter != current->end(); iter++) {
             if (!iter->accept(this))
                 return false;

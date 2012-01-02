@@ -82,6 +82,12 @@ LIRGraph::noteNeedsSafepoint(LInstruction *ins)
     return safepoints_.append(ins);
 }
 
+Label *
+LBlock::label()
+{
+    return begin()->toLabel()->label();
+}
+
 uint32
 LBlock::firstId()
 {
@@ -111,7 +117,8 @@ LBlock::getEntryMoveGroup()
     if (entryMoveGroup_)
         return entryMoveGroup_;
     entryMoveGroup_ = new LMoveGroup;
-    insertBefore(*begin(), entryMoveGroup_);
+    JS_ASSERT(begin()->isLabel());
+    insertAfter(*begin(), entryMoveGroup_);
     return entryMoveGroup_;
 }
 

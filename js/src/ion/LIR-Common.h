@@ -49,6 +49,20 @@
 namespace js {
 namespace ion {
 
+// Used for jumps from other blocks. Also simplifies register allocation since
+// the first instruction of a block is guaranteed to have no uses.
+class LLabel : public LInstructionHelper<0, 0, 0>
+{
+    Label label_;
+
+  public:
+    LIR_HEADER(Label);
+
+    Label *label() {
+        return &label_;
+    }
+};
+
 // Used to fill post snapshots when the register allocator process the
 // stream of instructions.
 class LCaptureAllocations : public LInstructionHelper<0, 0, 0>

@@ -813,8 +813,19 @@ LinearScanAllocator::resolveControlFlow()
 
         // Resolve split intervals with moves
         BitSet *live = liveIn[mSuccessor->id()];
+        CodePosition blockStart = inputOf(successor->firstId());
+
+        // Add a new movegroup after the first instruction to avoid conflicts with the
+        // movegroup inserted before the second instruction.
+        LMoveGroup *moves = NULL;
+        if (mSuccessor->numPredecessors() == 1) {
+            moves = new LMoveGroup;
+            VirtualRegister *vreg = &vregs[blockStart];
+            vreg->block()->insertAfter(vreg->ins(), moves);
+        }
+
         for (BitSet::Iterator liveRegId(live->begin()); liveRegId != live->end(); liveRegId++) {
-            LiveInterval *to = vregs[*liveRegId].intervalFor(inputOf(successor->firstId()));
+            LiveInterval *to = vregs[*liveRegId].intervalFor(blockStart);
             JS_ASSERT(to);
 
             for (size_t j = 0; j < mSuccessor->numPredecessors(); j++) {
@@ -827,7 +838,7 @@ LinearScanAllocator::resolveControlFlow()
                     if (!moveBefore(outputOf(predecessor->lastId()), from, to))
                         return false;
                 } else {
-                    if (!moveBefore(inputOf(successor->firstId()), from, to))
+                    if (!addMove(moves, from, to))
                         return false;
                 }
             }
@@ -1103,10 +1114,6 @@ LinearScanAllocator::splitInterval(LiveInterval *interval, CodePosition pos)
     JS_ASSERT(newInterval->numRanges() > 0);
 
     if (!reg->addInterval(newInterval))
-        return false;
-
-    // We'll need a move group later, insert it now.
-    if (!getMoveGroupBefore(pos))
         return false;
 
     IonSpew(IonSpew_RegAlloc, "  Split interval to %u = [%u, %u]/[%u, %u]",
@@ -1520,6 +1527,7 @@ LinearScanAllocator::getMoveGroupBefore(CodePosition pos)
     VirtualRegister *vreg = &vregs[pos];
     JS_ASSERT(vreg->ins());
     JS_ASSERT(!vreg->ins()->isPhi());
+    JS_ASSERT(!vreg->ins()->isLabel());;
 
     LMoveGroup *moves;
     switch (pos.subpos()) {
@@ -1551,12 +1559,18 @@ LinearScanAllocator::getMoveGroupBefore(CodePosition pos)
 }
 
 bool
-LinearScanAllocator::moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to)
+LinearScanAllocator::addMove(LMoveGroup *moves, LiveInterval *from, LiveInterval *to)
 {
-    LMoveGroup *moves = getMoveGroupBefore(pos);
     if (*from->getAllocation() == *to->getAllocation())
         return true;
     return moves->add(from->getAllocation(), to->getAllocation());
+}
+
+bool
+LinearScanAllocator::moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to)
+{
+    LMoveGroup *moves = getMoveGroupBefore(pos);
+    return addMove(moves, from, to);
 }
 
 #ifdef DEBUG
