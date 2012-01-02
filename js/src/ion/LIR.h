@@ -699,7 +699,6 @@ class LBlock : public TempObject
     MBasicBlock *block_;
     Vector<LPhi *, 4, IonAllocPolicy> phis_;
     InlineList<LInstruction> instructions_;
-    Label label_;
     LMoveGroup *entryMoveGroup_;
 
     LBlock(MBasicBlock *block)
@@ -748,13 +747,12 @@ class LBlock : public TempObject
         instructions_.insertAfter(at, ins);
     }
     void insertBefore(LInstruction *at, LInstruction *ins) {
+        JS_ASSERT(!at->isLabel());
         instructions_.insertBefore(at, ins);
     }
     uint32 firstId();
     uint32 lastId();
-    Label *label() {
-        return &label_;
-    }
+    Label *label();
     LMoveGroup *getEntryMoveGroup();
 };
 
