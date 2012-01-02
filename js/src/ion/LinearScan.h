@@ -55,42 +55,19 @@
 namespace js {
 namespace ion {
 
-struct LOperand
-{
-  public:
-    LUse *use;
-    LInstruction *ins;
-    bool snapshot;
-
-    LOperand(LUse *use, LInstruction *ins, bool snapshot) :
-        use(use),
-        ins(ins),
-        snapshot(snapshot)
-    { }
-
-};
-
 class VirtualRegister;
 
 /*
  * Represents with better-than-instruction precision a position in the
  * instruction stream.
  *
- * An issue comes up when dealing live intervals as to how to represent
+ * An issue comes up when dealing with live intervals as to how to represent
  * information such as "this register is only needed for the input of
  * this instruction, it can be clobbered in the output". Just having ranges
  * of instruction IDs is insufficiently expressive to denote all possibilities.
  * This class solves this issue by associating an extra bit with the instruction
  * ID which indicates whether the position is the input half or output half of
- * an instruction. This way, an interval that ends in the input half of an
- * instruction will not intersect with the interval that starts in its output
- * half, so they could be assigned the same register without requiring a special
- * case in the register allocator.
- *
- * Doing this also allows live intervals to be inclusive, which makes much of
- * the legwork cleaner. Temporaries and clobbers are represented as intervals
- * consisting only of the output half of an instruction, and thus require no
- * special consideration.
+ * an instruction.
  */
 class CodePosition
 {
@@ -165,6 +142,22 @@ class CodePosition
         JS_ASSERT(*this != MIN);
         return CodePosition(bits_ - 1);
     }
+    CodePosition next() const {
+        JS_ASSERT(*this != MAX);
+        return CodePosition(bits_ + 1);
+    }
+};
+
+struct UsePosition : public TempObject,
+                     public InlineForwardListNode<UsePosition>
+{
+    LUse *use;
+    CodePosition pos;
+
+    UsePosition(LUse *use, CodePosition pos) :
+        use(use),
+        pos(pos)
+    { }
 };
 
 class Requirement
@@ -212,31 +205,33 @@ class Requirement
         position_(at)
     { }
 
-    Kind kind() {
+    Kind kind() const {
         return kind_;
     }
 
-    LAllocation allocation() {
+    LAllocation allocation() const {
         JS_ASSERT(!allocation_.isUse());
         return allocation_;
     }
 
-    uint32 virtualRegister() {
+    uint32 virtualRegister() const {
         JS_ASSERT(allocation_.isUse());
         return allocation_.toUse()->virtualRegister();
     }
 
-    CodePosition pos() {
+    CodePosition pos() const {
         return position_;
     }
 
-    int priority();
+    int priority() const;
 
   private:
     Kind kind_;
     LAllocation allocation_;
     CodePosition position_;
 };
+
+typedef InlineForwardListIterator<UsePosition> UsePositionIterator;
 
 /*
  * A live interval is a set of disjoint ranges of code positions where a
@@ -257,8 +252,12 @@ class LiveInterval
         Range(CodePosition f, CodePosition t)
           : from(f),
             to(t)
-        { }
+        {
+            JS_ASSERT(from < to);
+        }
         CodePosition from;
+
+        // The end of this range, exclusive.
         CodePosition to;
     };
 
@@ -269,6 +268,7 @@ class LiveInterval
     uint32 index_;
     Requirement requirement_;
     Requirement hint_;
+    InlineForwardList<UsePosition> uses_;
 
   public:
 
@@ -306,6 +306,9 @@ class LiveInterval
         return &requirement_;
     }
     void setRequirement(const Requirement &requirement) {
+        // A SAME_AS_OTHER requirement complicates regalloc too much; it
+        // should only be used as hint.
+        JS_ASSERT(requirement.kind() != Requirement::SAME_AS_OTHER);
         requirement_ = requirement;
     }
     Requirement *hint() {
@@ -319,6 +322,19 @@ class LiveInterval
     }
 
     bool splitFrom(CodePosition pos, LiveInterval *after);
+
+    void addUse(UsePosition *use);
+    UsePosition *nextUseAfter(CodePosition pos);
+    CodePosition nextUsePosAfter(CodePosition pos);
+    CodePosition firstIncompatibleUse(LAllocation alloc);
+
+    UsePositionIterator usesBegin() const {
+        return uses_.begin();
+    }
+
+    UsePositionIterator usesEnd() const {
+        return uses_.end();
+    }
 };
 
 /*
@@ -333,23 +349,28 @@ class VirtualRegister
     LInstruction *ins_;
     LDefinition *def_;
     Vector<LiveInterval *, 1, IonAllocPolicy> intervals_;
-    Vector<LOperand, 0, IonAllocPolicy> uses_;
     LMoveGroup *inputMoves_;
     LMoveGroup *outputMoves_;
+    LMoveGroup *afterMoves_;
     LAllocation *canonicalSpill_;
-    CodePosition spillPosition_;
-    bool spillAtDefinition_;
+    CodePosition spillPosition_ ;
+
+    bool spillAtDefinition_ : 1;
 
     // This bit is used to determine whether both halves of a nunbox have been
     // processed by freeAllocation().
-    bool finished_;
+    bool finished_ : 1;
+
+    // Whether def_ is a temp or an output.
+    bool isTemp_ : 1;
 
   public:
-    bool init(uint32 reg, LBlock *block, LInstruction *ins, LDefinition *def) {
+    bool init(uint32 reg, LBlock *block, LInstruction *ins, LDefinition *def, bool isTemp) {
         reg_ = reg;
         block_ = block;
         ins_ = ins;
         def_ = def;
+        isTemp_ = isTemp;
         LiveInterval *initial = new LiveInterval(this, 0);
         if (!initial)
             return false;
@@ -369,6 +390,9 @@ class VirtualRegister
     }
     LDefinition::Type type() const {
         return def()->type();
+    }
+    bool isTemp() const {
+        return isTemp_;
     }
     size_t numIntervals() {
         return intervals_.length();
@@ -392,15 +416,6 @@ class VirtualRegister
             found = intervals_.end();
         return intervals_.insert(found, interval);
     }
-    size_t numUses() {
-        return uses_.length();
-    }
-    LOperand *getUse(size_t i) {
-        return &uses_[i];
-    }
-    bool addUse(LOperand operand) {
-        return uses_.append(operand);
-    }
     void setInputMoves(LMoveGroup *moves) {
         inputMoves_ = moves;
     }
@@ -412,6 +427,12 @@ class VirtualRegister
     }
     LMoveGroup *outputMoves() const {
         return outputMoves_;
+    }
+    void setAfterMoves(LMoveGroup *moves) {
+        afterMoves_ = moves;
+    }
+    LMoveGroup *afterMoves() {
+        return afterMoves_;
     }
     void setCanonicalSpill(LAllocation *alloc) {
         canonicalSpill_ = alloc;
@@ -446,9 +467,6 @@ class VirtualRegister
     }
 
     LiveInterval *intervalFor(CodePosition pos);
-    LOperand *nextUseAfter(CodePosition pos);
-    CodePosition nextUsePosAfter(CodePosition pos);
-    CodePosition nextIncompatibleUseAfter(CodePosition after, LAllocation alloc);
     LiveInterval *getFirstInterval();
 };
 
@@ -553,8 +571,6 @@ class LinearScanAllocator
     InlineList<LiveInterval> inactive;
     InlineList<LiveInterval> handled;
     LiveInterval *current;
-    LOperand *firstUse;
-    CodePosition firstUsePos;
 
     bool createDataStructures();
     bool buildLivenessInfo();
@@ -573,9 +589,11 @@ class LinearScanAllocator
     AnyRegister::Code findBestBlockedRegister(CodePosition *nextUsed);
     bool canCoexist(LiveInterval *a, LiveInterval *b);
     LMoveGroup *getMoveGroupBefore(CodePosition pos);
-    LMoveGroup *getOutputSpillMoveGroup(VirtualRegister *vreg);
+    LMoveGroup *getMoveGroupAfter(CodePosition pos);
     bool addMove(LMoveGroup *moves, LiveInterval *from, LiveInterval *to);
     bool moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to);
+    bool moveBeforeAlloc(CodePosition pos, LAllocation *from, LAllocation *to);
+    bool moveAfter(CodePosition pos, LiveInterval *from, LiveInterval *to);
     void setIntervalRequirement(LiveInterval *interval);
     void addSpillInterval(LInstruction *ins, const Requirement &req);
     size_t findFirstSafepoint(LiveInterval *interval, size_t firstSafepoint);
@@ -607,8 +625,7 @@ class LinearScanAllocator
   public:
     LinearScanAllocator(LIRGenerator *lir, LIRGraph &graph)
       : lir(lir),
-        graph(graph),
-        firstUsePos(CodePosition::MAX)
+        graph(graph)
     { }
 
     bool go();

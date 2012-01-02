@@ -149,6 +149,20 @@ class InlineForwardList : protected InlineForwardListNode<T>
         JS_ASSERT(at->next == item);
         at->next = item->next;
     }
+    void splitAfter(Node *at, InlineForwardList<T> *to) {
+        JS_ASSERT(to->empty());
+        if (!at)
+            at = this;
+        if (at == tail_)
+            return;
+#ifdef DEBUG
+        modifyCount_++;
+#endif
+        to->next = at->next;
+        to->tail_ = tail_;
+        tail_ = at;
+        at->next = NULL;
+    }
     bool empty() const {
         return tail_ == this;
     }

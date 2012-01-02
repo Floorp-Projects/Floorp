@@ -67,8 +67,8 @@ LIRGeneratorX86Shared::visitTableSwitch(MTableSwitch *tableswitch)
     LAllocation index;
     LDefinition tempInt;
     if (opd->type() == MIRType_Int32) {
-        index = useCopy(opd);
-        tempInt = LDefinition::BogusTemp();
+        index = useRegisterAtStart(opd);
+        tempInt = tempCopy(opd, 0);
     } else {
         index = useRegister(opd);
         tempInt = temp(LDefinition::GENERAL);

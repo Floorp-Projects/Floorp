@@ -122,7 +122,7 @@ LIRGeneratorX64::visitReturn(MReturn *ret)
 bool
 LIRGeneratorX64::lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
-    ins->setOperand(0, useRegister(lhs));
+    ins->setOperand(0, useRegisterAtStart(lhs));
 
     // shift operator should be constant or in register rcx
     // x86 can't shift a non-ecx register
@@ -131,30 +131,30 @@ LIRGeneratorX64::lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mi
     else
         ins->setOperand(1, useFixed(rhs, rcx));
 
-    return defineReuseInput(ins, mir);
+    return defineReuseInput(ins, mir, 0);
 }
 
 bool
 LIRGeneratorX64::lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input)
 {
-    ins->setOperand(0, useRegister(input));
-    return defineReuseInput(ins, mir);
+    ins->setOperand(0, useRegisterAtStart(input));
+    return defineReuseInput(ins, mir, 0);
 }
 
 bool
 LIRGeneratorX64::lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
-    ins->setOperand(0, useRegister(lhs));
+    ins->setOperand(0, useRegisterAtStart(lhs));
     ins->setOperand(1, useOrConstant(rhs));
-    return defineReuseInput(ins, mir);
+    return defineReuseInput(ins, mir, 0);
 }
 
 bool
 LIRGeneratorX64::lowerForFPU(LMathD *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
-    ins->setOperand(0, useRegister(lhs));
+    ins->setOperand(0, useRegisterAtStart(lhs));
     ins->setOperand(1, useRegister(rhs));
-    return defineReuseInput(ins, mir);
+    return defineReuseInput(ins, mir, 0);
 }
 
 bool
@@ -172,8 +172,8 @@ LIRGeneratorX64::lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *b
 bool
 LIRGeneratorX64::lowerDivI(MDiv *div)
 {
-    LDivI *lir = new LDivI(useFixed(div->lhs(), rax), useRegister(div->rhs()), tempFixed(rdx));
-    return defineReuseInput(lir, div) && assignSnapshot(lir);
+    LDivI *lir = new LDivI(useFixedAtStart(div->lhs(), rax), useRegister(div->rhs()), tempFixed(rdx));
+    return defineReuseInput(lir, div, 0) && assignSnapshot(lir);
 }
 
 bool
