@@ -574,6 +574,7 @@ class LinearScanAllocator
     bool canCoexist(LiveInterval *a, LiveInterval *b);
     LMoveGroup *getMoveGroupBefore(CodePosition pos);
     LMoveGroup *getOutputSpillMoveGroup(VirtualRegister *vreg);
+    bool addMove(LMoveGroup *moves, LiveInterval *from, LiveInterval *to);
     bool moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to);
     void setIntervalRequirement(LiveInterval *interval);
     void addSpillInterval(LInstruction *ins, const Requirement &req);
