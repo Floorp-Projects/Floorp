@@ -1594,7 +1594,7 @@ class CheckRoot
 #if defined(DEBUG) && defined(JSGC_ROOT_ANALYSIS)
 
     CheckRoot **stack, *prev;
-    const uint8 *ptr;
+    const uint8_t *ptr;
 
   public:
     template <typename T>
@@ -1604,7 +1604,7 @@ class CheckRoot
         this->stack = &cx->checkGCRooters;
         this->prev = *stack;
         *stack = this;
-        this->ptr = (const uint8 *) ptr;
+        this->ptr = static_cast<const uint8_t*>(ptr);
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
@@ -1616,7 +1616,7 @@ class CheckRoot
 
     CheckRoot *previous() { return prev; }
 
-    bool contains(const uint8 *v, size_t len) {
+    bool contains(const uint8_t *v, size_t len) {
         return ptr >= v && ptr < v + len;
     }
 
