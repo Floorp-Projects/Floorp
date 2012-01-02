@@ -401,19 +401,19 @@ argumentUnboxingTemplates = {
         "    uint32_t ${name}_u32;\n"
         "    if (!JS_ValueToECMAUint32(cx, ${argVal}, &${name}_u32))\n"
         "        return JS_FALSE;\n"
-        "    uint8 ${name} = (uint8) ${name}_u32;\n",
+        "    uint8_t ${name} = (uint8_t) ${name}_u32;\n",
 
     'short':
         "    int32_t ${name}_i32;\n"
         "    if (!JS_ValueToECMAInt32(cx, ${argVal}, &${name}_i32))\n"
         "        return JS_FALSE;\n"
-        "    int16 ${name} = (int16) ${name}_i32;\n",
+        "    int16_t ${name} = (int16_t) ${name}_i32;\n",
 
     'unsigned short':
         "    uint32_t ${name}_u32;\n"
         "    if (!JS_ValueToECMAUint32(cx, ${argVal}, &${name}_u32))\n"
         "        return JS_FALSE;\n"
-        "    uint16 ${name} = (uint16) ${name}_u32;\n",
+        "    uint16_t ${name} = (uint16_t) ${name}_u32;\n",
 
     'long':
         "    int32_t ${name};\n"
@@ -633,11 +633,11 @@ resultConvTemplates = {
             "    return JS_TRUE;\n",
 
     'octet':
-        "    ${jsvalRef} = INT_TO_JSVAL((int32) result);\n"
+        "    ${jsvalRef} = INT_TO_JSVAL((int32_t) result);\n"
         "    return JS_TRUE;\n",
 
     'short':
-        "    ${jsvalRef} = INT_TO_JSVAL((int32) result);\n"
+        "    ${jsvalRef} = INT_TO_JSVAL((int32_t) result);\n"
         "    return JS_TRUE;\n",
 
     'long':
@@ -648,7 +648,7 @@ resultConvTemplates = {
         "    return xpc_qsInt64ToJsval(cx, result, ${jsvalPtr});\n",
 
     'unsigned short':
-        "    ${jsvalRef} = INT_TO_JSVAL((int32) result);\n"
+        "    ${jsvalRef} = INT_TO_JSVAL((int32_t) result);\n"
         "    return JS_TRUE;\n",
 
     'unsigned long':
