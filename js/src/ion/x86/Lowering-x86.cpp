@@ -95,7 +95,7 @@ LIRGeneratorX86::visitBox(MBox *box)
 
     // If the box wrapped a double, it needs a new register.
     if (inner->type() == MIRType_Double)
-        return defineBox(new LBoxDouble(use(inner, LUse::COPY)), box);
+        return defineBox(new LBoxDouble(useRegisterAtStart(inner), tempCopy(inner, 0)), box);
 
     if (box->canEmitAtUses())
         return emitAtUses(box);
@@ -146,7 +146,7 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
 
     // Swap the order we use the box pieces so we can re-use the payload register.
     LUnbox *lir = new LUnbox;
-    lir->setOperand(0, usePayloadInRegister(inner));
+    lir->setOperand(0, usePayloadInRegisterAtStart(inner));
     lir->setOperand(1, useType(inner, LUse::ANY));
 
     if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
@@ -158,7 +158,7 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
     // purpose is to eagerly kill the definition of a type tag, so keeping both
     // alive (for the purpose of gcmaps) is unappealing. Instead, we create a
     // new virtual register.
-    return defineReuseInput(lir, unbox);
+    return defineReuseInput(lir, unbox, 0);
 }
 
 bool
@@ -176,7 +176,7 @@ LIRGeneratorX86::visitReturn(MReturn *ret)
 bool
 LIRGeneratorX86::lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
-    ins->setOperand(0, useRegister(lhs));
+    ins->setOperand(0, useRegisterAtStart(lhs));
 
     // shift operator should be constant or in register ecx
     // x86 can't shift a non-ecx register
@@ -185,30 +185,30 @@ LIRGeneratorX86::lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mi
     else
         ins->setOperand(1, useFixed(rhs, ecx));
 
-    return defineReuseInput(ins, mir);
+    return defineReuseInput(ins, mir, 0);
 }
 
 bool
 LIRGeneratorX86::lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input)
 {
-    ins->setOperand(0, useRegister(input));
-    return defineReuseInput(ins, mir);
+    ins->setOperand(0, useRegisterAtStart(input));
+    return defineReuseInput(ins, mir, 0);
 }
 
 bool
 LIRGeneratorX86::lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
-    ins->setOperand(0, useRegister(lhs));
+    ins->setOperand(0, useRegisterAtStart(lhs));
     ins->setOperand(1, useOrConstant(rhs));
-    return defineReuseInput(ins, mir);
+    return defineReuseInput(ins, mir, 0);
 }
 
 bool
 LIRGeneratorX86::lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
-    ins->setOperand(0, useRegister(lhs));
+    ins->setOperand(0, useRegisterAtStart(lhs));
     ins->setOperand(1, useRegister(rhs));
-    return defineReuseInput(ins, mir);
+    return defineReuseInput(ins, mir, 0);
 }
 
 bool
@@ -246,8 +246,8 @@ LIRGeneratorX86::lowerUntypedPhiInput(MPhi *phi, uint32 inputPosition, LBlock *b
 bool
 LIRGeneratorX86::lowerDivI(MDiv *div)
 {
-    LDivI *lir = new LDivI(useFixed(div->lhs(), eax), useRegister(div->rhs()), tempFixed(edx));
-    return defineReuseInput(lir, div) && assignSnapshot(lir);
+    LDivI *lir = new LDivI(useFixedAtStart(div->lhs(), eax), useRegister(div->rhs()), tempFixed(edx));
+    return defineReuseInput(lir, div, 0) && assignSnapshot(lir);
 }
 
 bool

@@ -56,7 +56,6 @@ UseCompatibleWith(const LUse *use, LAllocation alloc)
       case LUse::KEEPALIVE:
         return alloc.isRegister() || alloc.isMemory();
       case LUse::REGISTER:
-      case LUse::COPY:
         return alloc.isRegister();
       case LUse::FIXED:
         if (alloc.isGeneralReg())
@@ -90,7 +89,7 @@ DefinitionCompatibleWith(LInstruction *ins, const LDefinition *def, LAllocation 
       case LDefinition::MUST_REUSE_INPUT:
         if (!alloc.isRegister() || !ins->numOperands())
             return false;
-        return alloc == *ins->getOperand(0);
+        return alloc == *ins->getOperand(def->getReusedInput());
       case LDefinition::PASSTHROUGH:
         return true;
       default:
@@ -101,11 +100,10 @@ DefinitionCompatibleWith(LInstruction *ins, const LDefinition *def, LAllocation 
 #endif
 
 int
-Requirement::priority()
+Requirement::priority() const
 {
     switch (kind_) {
       case Requirement::FIXED:
-      case Requirement::SAME_AS_OTHER:
         return 0;
 
       case Requirement::REGISTER:
@@ -179,7 +177,7 @@ bool
 LiveInterval::covers(CodePosition pos)
 {
     for (size_t i = 0; i < ranges_.length(); i++) {
-        if (ranges_[i].to < pos)
+        if (ranges_[i].to <= pos)
             return false;
         if (ranges_[i].from <= pos)
             return true;
@@ -191,7 +189,7 @@ CodePosition
 LiveInterval::nextCoveredAfter(CodePosition pos)
 {
     for (size_t i = 0; i < ranges_.length(); i++) {
-        if (ranges_[i].to < pos) {
+        if (ranges_[i].to <= pos) {
             if (i)
                 return ranges_[i-1].from;
             break;
@@ -249,7 +247,7 @@ LiveInterval::getRange(size_t i)
 bool
 LiveInterval::splitFrom(CodePosition pos, LiveInterval *after)
 {
-    JS_ASSERT(pos >= start() && pos <= end());
+    JS_ASSERT(pos >= start() && pos < end());
     JS_ASSERT(after->ranges_.empty());
 
     // Move all intervals over to the target
@@ -261,12 +259,12 @@ LiveInterval::splitFrom(CodePosition pos, LiveInterval *after)
 
     // Move intervals back as required
     for (Range *i = &after->ranges_.back(); i >= after->ranges_.begin(); i--) {
-        if (pos > i->to)
+        if (pos >= i->to)
             continue;
 
         if (pos > i->from) {
             // Split the range
-            Range split(i->from, pos.previous());
+            Range split(i->from, pos);
             i->from = pos;
             if (!ranges_.append(split))
                 return false;
@@ -274,11 +272,19 @@ LiveInterval::splitFrom(CodePosition pos, LiveInterval *after)
         if (!ranges_.append(i + 1, after->ranges_.end()))
             return false;
         after->ranges_.shrinkBy(after->ranges_.end() - i - 1);
-        return true;
+        break;
     }
 
-    JS_NOT_REACHED("Emptied an interval");
-    return false;
+    // Split the linked list of use positions
+    UsePosition *prev = NULL;
+    for (UsePositionIterator usePos(usesBegin()); usePos != usesEnd(); usePos++) {
+        if (usePos->pos > pos)
+            break;
+        prev = *usePos;
+    }
+
+    uses_.splitAfter(prev, &after->uses_);
+    return true;
 }
 
 LiveInterval *
@@ -287,7 +293,7 @@ VirtualRegister::intervalFor(CodePosition pos)
     for (LiveInterval **i = intervals_.begin(); i != intervals_.end(); i++) {
         if ((*i)->covers(pos))
             return *i;
-        if (pos <= (*i)->end())
+        if (pos < (*i)->end())
             break;
     }
     return NULL;
@@ -300,52 +306,63 @@ VirtualRegister::getFirstInterval()
     return intervals_[0];
 }
 
-LOperand *
-VirtualRegister::nextUseAfter(CodePosition after)
+void
+LiveInterval::addUse(UsePosition *use)
 {
-    LOperand *min = NULL;
-    CodePosition minPos = CodePosition::MAX;
-    for (LOperand *i = uses_.begin(); i != uses_.end(); i++) {
-        CodePosition ip(i->ins->id(), CodePosition::INPUT);
-        if (i->use->policy() != LUse::KEEPALIVE && ip >= after && ip < minPos) {
-            min = i;
-            minPos = ip;
-        }
+    // Insert use positions in ascending order. Note that instructions
+    // are visited in reverse order, so in most cases the loop terminates
+    // at the first iteration and the use position will be added to the
+    // front of the list.
+    UsePosition *prev = NULL;
+    for (UsePositionIterator current(usesBegin()); current != usesEnd(); current++) {
+        if (current->pos >= use->pos)
+            break;
+        prev = *current;
     }
-    return min;
+
+    if (prev)
+        uses_.insertAfter(prev, use);
+    else
+        uses_.pushFront(use);
+}
+
+UsePosition *
+LiveInterval::nextUseAfter(CodePosition after)
+{
+    for (UsePositionIterator usePos(usesBegin()); usePos != usesEnd(); usePos++) {
+        if (usePos->pos >= after && usePos->use->policy() != LUse::KEEPALIVE)
+            return *usePos;
+    }
+    return NULL;
 }
 
 /*
- * This function locates the first "real" use of the callee virtual register
- * that follows the given code position. Non-"real" uses are currently just
- * snapshots, which keep virtual registers alive but do not result in the
+ * This function locates the first "real" use of this interval that follows
+ * the given code position. Non-"real" uses are currently just snapshots,
+ * which keep virtual registers alive but do not result in the
  * generation of code that use them.
  */
 CodePosition
-VirtualRegister::nextUsePosAfter(CodePosition after)
+LiveInterval::nextUsePosAfter(CodePosition after)
 {
-    LOperand *min = nextUseAfter(after);
-    if (min)
-        return CodePosition(min->ins->id(), CodePosition::INPUT);
-    return CodePosition::MAX;
+    UsePosition *min = nextUseAfter(after);
+    return min ? min->pos : CodePosition::MAX;
 }
 
 /*
- * This function finds the position of the next use of the callee virtual
- * register that is incompatible with the provideded allocation. For example,
+ * This function finds the position of the first use of this interval
+ * that is incompatible with the provideded allocation. For example,
  * a use with a REGISTER policy would be incompatible with a stack slot
  * allocation.
  */
 CodePosition
-VirtualRegister::nextIncompatibleUseAfter(CodePosition after, LAllocation alloc)
+LiveInterval::firstIncompatibleUse(LAllocation alloc)
 {
-    CodePosition min = CodePosition::MAX;
-    for (LOperand *i = uses_.begin(); i != uses_.end(); i++) {
-        CodePosition ip(i->ins->id(), CodePosition::INPUT);
-        if (ip >= after && ip < min && !UseCompatibleWith(i->use, alloc))
-            min = ip;
+    for (UsePositionIterator usePos(usesBegin()); usePos != usesEnd(); usePos++) {
+        if (!UseCompatibleWith(usePos->use, alloc))
+            return usePos->pos;
     }
-    return min;
+    return CodePosition::MAX;
 }
 
 const CodePosition CodePosition::MAX(UINT_MAX);
@@ -371,29 +388,30 @@ LinearScanAllocator::createDataStructures()
         for (LInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
             bool foundRealDef = false;
             for (size_t j = 0; j < ins->numDefs(); j++) {
-                if (ins->getDef(j)->policy() != LDefinition::PASSTHROUGH) {
+                LDefinition *def = ins->getDef(j);
+                if (def->policy() != LDefinition::PASSTHROUGH) {
                     foundRealDef = true;
-                    uint32 reg = ins->getDef(j)->virtualRegister();
-                    if (!vregs[reg].init(reg, block, *ins, ins->getDef(j)))
+                    uint32 reg = def->virtualRegister();
+                    if (!vregs[reg].init(reg, block, *ins, def, /* isTemp */ false))
                         return false;
                 }
             }
             if (!foundRealDef) {
-                if (!vregs[*ins].init(ins->id(), block, *ins, NULL))
+                if (!vregs[*ins].init(ins->id(), block, *ins, NULL, /* isTemp */ false))
                     return false;
             }
             for (size_t j = 0; j < ins->numTemps(); j++) {
                 LDefinition *def = ins->getTemp(j);
                 if (def->isBogusTemp())
                     continue;
-                if (!vregs[def].init(def->virtualRegister(), block, *ins, def))
+                if (!vregs[def].init(def->virtualRegister(), block, *ins, def, /* isTemp */ true))
                     return false;
             }
         }
         for (size_t j = 0; j < block->numPhis(); j++) {
             LPhi *phi = block->getPhi(j);
             LDefinition *def = phi->getDef(0);
-            if (!vregs[def].init(phi->id(), block, phi, def))
+            if (!vregs[def].init(phi->id(), block, phi, def, /* isTemp */ false))
                 return false;
         }
     }
@@ -402,14 +420,14 @@ LinearScanAllocator::createDataStructures()
 }
 
 /*
- * Allocates a bogus interval at the output of the given instruction, such that
- * the given requirement is met for that interval, but unused.
+ * Allocates a bogus interval covering the input half of the given instruction,
+ * such that the given requirement is met for that interval, but unused.
  */
 void
 LinearScanAllocator::addSpillInterval(LInstruction *ins, const Requirement &req)
 {
     LiveInterval *bogus = new LiveInterval(NULL, 0);
-    bogus->addRange(outputOf(ins), outputOf(ins));
+    bogus->addRange(inputOf(ins), outputOf(ins));
     bogus->setRequirement(req);
     unhandled.enqueue(bogus); 
 }
@@ -474,7 +492,7 @@ LinearScanAllocator::buildLivenessInfo()
         // the interval to the point of definition.
         for (BitSet::Iterator i(live->begin()); i != live->end(); i++) {
             vregs[*i].getInterval(0)->addRange(inputOf(block->firstId()),
-                                               outputOf(block->lastId()));
+                                               outputOf(block->lastId()).next());
         }
 
         // Shorten the front end of live intervals for live variables to their
@@ -482,20 +500,35 @@ LinearScanAllocator::buildLivenessInfo()
         for (LInstructionReverseIterator ins = block->rbegin(); ins != block->rend(); ins++) {
             // Calls may clobber registers, so force a spill and reload around the callsite.
             if (ins->isCall()) {
-                for (AnyRegisterIterator iter(ins->spillRegs()); iter.more(); iter++)
+                // Leave enough registers available for temporaries.
+                RegisterSet toSpill = ins->spillRegs();
+
+                // Take fixed regs first.
+                for (size_t i = 0; i < ins->numTemps(); i++) {
+                    LDefinition *temp = ins->getTemp(i);
+                    if (temp->isPreset()) {
+                        AnyRegister reg = temp->output()->toRegister();
+                        toSpill.take(reg);
+                    }
+                }
+
+                for (size_t i = 0; i < ins->numTemps(); i++) {
+                    LDefinition *temp = ins->getTemp(i);
+                    if (!temp->isPreset()) {
+                        JS_ASSERT(temp->policy() == LDefinition::DEFAULT ||
+                                  temp->policy() == LDefinition::MUST_REUSE_INPUT);
+                        toSpill.takeGeneral();
+                    }
+                }
+
+                for (AnyRegisterIterator iter(toSpill); iter.more(); iter++)
                     addSpillInterval(*ins, Requirement(LAllocation(*iter)));
             }
 
             for (size_t i = 0; i < ins->numDefs(); i++) {
                 if (ins->getDef(i)->policy() != LDefinition::PASSTHROUGH) {
                     LDefinition *def = ins->getDef(i);
-
-                    // The output register may be clobbered before inputs are
-                    // read unless the policy says otherwise, so we have to
-                    // make the intervals overlap.
                     CodePosition from(inputOf(*ins));
-                    if (def->policy() == LDefinition::MUST_REUSE_INPUT)
-                        from = outputOf(*ins);
 
                     // Ensure that if there aren't any uses, there's at least
                     // some interval for the output to go into.
@@ -517,18 +550,16 @@ LinearScanAllocator::buildLivenessInfo()
             {
                 if (alloc->isUse()) {
                     LUse *use = alloc->toUse();
-                    vregs[use].addUse(LOperand(use, *ins, alloc.isSnapshotInput()));
 
-                    if (ins->id() == block->firstId()) {
-                        vregs[use].getInterval(0)->addRange(inputOf(*ins), outputOf(*ins));
-                    } else {
-                        vregs[use].getInterval(0)->addRange(inputOf(block->firstId()),
-                                                            outputOf(*ins));
-                    }
+                    // The first instruction, LLabel, has no uses.
+                    JS_ASSERT(inputOf(*ins) > outputOf(block->firstId()));
+
+                    CodePosition endPos = use->usedAtStart() ? inputOf(*ins) : outputOf(*ins);
+                    LiveInterval *interval = vregs[use].getInterval(0);
+                    interval->addRange(inputOf(block->firstId()), endPos);
+                    interval->addUse(new UsePosition(use, endPos));
+
                     live->insert(use->virtualRegister());
-
-                    if (use->policy() == LUse::COPY)
-                        addSpillInterval(*ins, Requirement(use->virtualRegister(), inputOf(*ins)));
                 }
             }
         }
@@ -544,7 +575,7 @@ LinearScanAllocator::buildLivenessInfo()
                 // This is a dead phi, so add a dummy range over all phis. This
                 // can go away if we have an earlier dead code elimination pass.
                 vregs[def].getInterval(0)->addRange(inputOf(block->firstId()),
-                                                    inputOf(*block->begin()).previous());
+                                                    outputOf(block->firstId()));
             }
         }
 
@@ -562,7 +593,7 @@ LinearScanAllocator::buildLivenessInfo()
                 // Add an interval for this entire loop block
                 for (BitSet::Iterator i(live->begin()); i != live->end(); i++) {
                     vregs[*i].getInterval(0)->addRange(inputOf(loopBlock->lir()->firstId()),
-                                                       outputOf(loopBlock->lir()->lastId()));
+                                                       outputOf(loopBlock->lir()->lastId()).next());
                 }
 
                 // Fix up the liveIn set to account for the new interval
@@ -654,7 +685,7 @@ LinearScanAllocator::allocateRegisters()
             LiveInterval *it = *i;
             JS_ASSERT(it->numRanges() > 0);
 
-            if (it->end() < position) {
+            if (it->end() <= position) {
                 i = active.removeAt(i);
                 finishInterval(it);
             } else if (!it->covers(position)) {
@@ -670,7 +701,7 @@ LinearScanAllocator::allocateRegisters()
             LiveInterval *it = *i;
             JS_ASSERT(it->numRanges() > 0);
 
-            if (it->end() < position) {
+            if (it->end() <= position) {
                 i = inactive.removeAt(i);
                 finishInterval(it);
             } else if (it->covers(position)) {
@@ -716,7 +747,7 @@ LinearScanAllocator::allocateRegisters()
             IonSpew(IonSpew_RegAlloc, "  Decided best register was %s", best.name());
 
             // Split when the register is next needed if necessary
-            if (bestFreeUntil <= current->end()) {
+            if (bestFreeUntil < current->end()) {
                 if (!splitInterval(current, bestFreeUntil))
                     return false;
             }
@@ -813,19 +844,9 @@ LinearScanAllocator::resolveControlFlow()
 
         // Resolve split intervals with moves
         BitSet *live = liveIn[mSuccessor->id()];
-        CodePosition blockStart = inputOf(successor->firstId());
-
-        // Add a new movegroup after the first instruction to avoid conflicts with the
-        // movegroup inserted before the second instruction.
-        LMoveGroup *moves = NULL;
-        if (mSuccessor->numPredecessors() == 1) {
-            moves = new LMoveGroup;
-            VirtualRegister *vreg = &vregs[blockStart];
-            vreg->block()->insertAfter(vreg->ins(), moves);
-        }
 
         for (BitSet::Iterator liveRegId(live->begin()); liveRegId != live->end(); liveRegId++) {
-            LiveInterval *to = vregs[*liveRegId].intervalFor(blockStart);
+            LiveInterval *to = vregs[*liveRegId].intervalFor(inputOf(successor->firstId()));
             JS_ASSERT(to);
 
             for (size_t j = 0; j < mSuccessor->numPredecessors(); j++) {
@@ -838,7 +859,7 @@ LinearScanAllocator::resolveControlFlow()
                     if (!moveBefore(outputOf(predecessor->lastId()), from, to))
                         return false;
                 } else {
-                    if (!addMove(moves, from, to))
+                    if (!moveAfter(outputOf(successor->firstId()), from, to))
                         return false;
                 }
             }
@@ -846,6 +867,15 @@ LinearScanAllocator::resolveControlFlow()
     }
 
     return true;
+}
+
+bool
+LinearScanAllocator::moveBeforeAlloc(CodePosition pos, LAllocation *from, LAllocation *to)
+{
+    LMoveGroup *moves = getMoveGroupBefore(pos);
+    if (*from == *to)
+        return true;
+    return moves->add(from, to);
 }
 
 /*
@@ -870,23 +900,26 @@ LinearScanAllocator::reifyAllocations()
         if (!reg)
             continue;
 
-        // Erase all uses of this interval
-        for (size_t i = 0; i < reg->numUses(); i++) {
-            LOperand *use = reg->getUse(i);
-            CodePosition pos = inputOf(use->ins);
-            if (use->snapshot)
-                pos = outputOf(use->ins);
-            if (interval->covers(pos)) {
-                JS_ASSERT(UseCompatibleWith(use->use, *interval->getAllocation()));
-                *static_cast<LAllocation *>(use->use) = *interval->getAllocation();
-            }
+        for (UsePositionIterator usePos(interval->usesBegin()); usePos != interval->usesEnd(); usePos++) {
+            JS_ASSERT(UseCompatibleWith(usePos->use, *interval->getAllocation()));
+            *static_cast<LAllocation *>(usePos->use) = *interval->getAllocation();
         }
 
+        // Erase the def of this interval if it's the first one
         if (interval->index() == 0)
         {
-            // Erase the def of this interval if it's the first one
-            JS_ASSERT(DefinitionCompatibleWith(reg->ins(), reg->def(), *interval->getAllocation()));
-            reg->def()->setOutput(*interval->getAllocation());
+            LDefinition *def = reg->def();
+            if (def->policy() == LDefinition::MUST_REUSE_INPUT) {
+                LAllocation *alloc = reg->ins()->getOperand(def->getReusedInput());
+                LAllocation *origAlloc = LAllocation::New(*alloc);
+
+                *alloc = *interval->getAllocation();
+                if (!moveBeforeAlloc(inputOf(reg->ins()), origAlloc, alloc))
+                    return false;
+            }
+
+            JS_ASSERT(DefinitionCompatibleWith(reg->ins(), def, *interval->getAllocation()));
+            def->setOutput(*interval->getAllocation());
 
             if (reg->mustSpillAtDefinition() && !reg->ins()->isPhi() &&
                 (*reg->canonicalSpill() != *interval->getAllocation()))
@@ -895,11 +928,12 @@ LinearScanAllocator::reifyAllocations()
                 // instructions never have outputs, so the next instruction is
                 // always valid. Note that we explicitly ignore phis, which
                 // should have been handled in resolveControlFlow().
-                LMoveGroup *output = getOutputSpillMoveGroup(reg);
-                output->add(interval->getAllocation(), reg->canonicalSpill());
+                LMoveGroup *moves = getMoveGroupAfter(outputOf(reg->ins()));
+                if (!moves->add(interval->getAllocation(), reg->canonicalSpill()))
+                    return false;
             }
         }
-        else if (interval->start() != inputOf(vregs[interval->start()].block()->firstId()) &&
+        else if (interval->start() > inputOf(vregs[interval->start()].block()->firstId()) &&
                  (!reg->canonicalSpill() ||
                   (reg->canonicalSpill() == interval->getAllocation() &&
                    !reg->mustSpillAtDefinition()) ||
@@ -908,8 +942,22 @@ LinearScanAllocator::reifyAllocations()
             // If this virtual register has no canonical spill location, this
             // is the first spill to that location, or this is a move to somewhere
             // completely different, we have to emit a move for this interval.
-            if (!moveBefore(interval->start(), reg->getInterval(interval->index() - 1), interval))
-                return false;
+            // Don't do this if the interval starts at the first instruction of the
+            // block; this case should have been handled by resolveControlFlow().
+            //
+            // If the interval starts at the output half of an instruction, we have to
+            // emit the move *after* this instruction, to prevent clobbering an input
+            // register.
+            CodePosition start = interval->start();
+            VirtualRegister *vreg = &vregs[start];
+
+            if (start.subpos() == CodePosition::INPUT || start <= inputOf(vreg->ins())) {
+                if (!moveBefore(start, reg->getInterval(interval->index() - 1), interval))
+                    return false;
+            } else {
+                if (!moveAfter(start, reg->getInterval(interval->index() - 1), interval))
+                    return false;
+            }
 
             // Mark this interval's spill position, if needed.
             if (reg->canonicalSpill() == interval->getAllocation() &&
@@ -1021,6 +1069,16 @@ LinearScanAllocator::populateSafepoints()
             if (end < inputOf(ins))
                 break;
 
+            // Include temps but not instruction outputs. Also make sure MUST_REUSE_INPUT
+            // is not used with gcthings or nunboxes, or we would have to add the input reg
+            // to this safepoint.
+            if (ins == reg->ins() && !reg->isTemp()) {
+                LDefinition *def = reg->def();
+                JS_ASSERT_IF(def->policy() == LDefinition::MUST_REUSE_INPUT,
+                             def->type() == LDefinition::GENERAL || def->type() == LDefinition::DOUBLE);
+                continue;
+            }
+
             LSafepoint *safepoint = ins->safepoint();
 
             if (!IsNunbox(reg)) {
@@ -1098,7 +1156,7 @@ LinearScanAllocator::splitInterval(LiveInterval *interval, CodePosition pos)
 {
     // Make sure we're actually splitting this interval, not some other
     // interval in the same virtual register.
-    JS_ASSERT(interval->start() < pos && pos <= interval->end());
+    JS_ASSERT(interval->start() < pos && pos < interval->end());
 
     VirtualRegister *reg = interval->reg();
 
@@ -1144,9 +1202,15 @@ LinearScanAllocator::assign(LAllocation allocation)
     // Split this interval at the next incompatible one
     VirtualRegister *reg = current->reg();
     if (reg) {
-        CodePosition toSplit = reg->nextIncompatibleUseAfter(current->start(), allocation);
-        if (toSplit <= current->end()) {
-            if (!splitInterval(current, toSplit))
+        CodePosition splitPos = current->firstIncompatibleUse(allocation);
+        if (splitPos != CodePosition::MAX) {
+            // Split before the incompatible use. This ensures the use position is
+            // part of the second half of the interval and guarantees we never split
+            // at the end (zero-length intervals are invalid).
+            splitPos = splitPos.previous();
+
+            JS_ASSERT (splitPos < current->end());
+            if (!splitInterval(current, splitPos))
                 return false;
         }
     }
@@ -1457,7 +1521,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
                 nextUsePos[reg.code()] = CodePosition::MIN;
                 IonSpew(IonSpew_RegAlloc, "   Disqualifying %s due to recency", reg.name());
             } else if (nextUsePos[reg.code()] != CodePosition::MIN) {
-                nextUsePos[reg.code()] = i->reg()->nextUsePosAfter(current->start());
+                nextUsePos[reg.code()] = i->nextUsePosAfter(current->start());
                 IonSpew(IonSpew_RegAlloc, "   Register %s next used %u", reg.name(),
                         nextUsePos[reg.code()].pos());
             }
@@ -1466,7 +1530,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
     for (IntervalIterator i(inactive.begin()); i != inactive.end(); i++) {
         if (i->getAllocation()->isRegister()) {
             AnyRegister reg = i->getAllocation()->toRegister();
-            CodePosition pos = i->reg()->nextUsePosAfter(current->start());
+            CodePosition pos = i->nextUsePosAfter(current->start());
             JS_ASSERT(i->covers(pos) || pos == CodePosition::MAX);
             if (pos < nextUsePos[reg.code()]) {
                 nextUsePos[reg.code()] = pos;
@@ -1511,17 +1575,6 @@ LinearScanAllocator::canCoexist(LiveInterval *a, LiveInterval *b)
 }
 
 LMoveGroup *
-LinearScanAllocator::getOutputSpillMoveGroup(VirtualRegister *vreg)
-{
-    JS_ASSERT(!vreg->ins()->isPhi());
-
-    // Only one spill occurs per instruction, so it's safe to just insert it.
-    LMoveGroup *moves = new LMoveGroup;
-    vreg->block()->insertAfter(vreg->ins(), moves);
-    return moves;
-}
-
-LMoveGroup *
 LinearScanAllocator::getMoveGroupBefore(CodePosition pos)
 {
     VirtualRegister *vreg = &vregs[pos];
@@ -1558,6 +1611,23 @@ LinearScanAllocator::getMoveGroupBefore(CodePosition pos)
     }
 }
 
+LMoveGroup *
+LinearScanAllocator::getMoveGroupAfter(CodePosition pos)
+{
+    VirtualRegister *vreg = &vregs[pos];
+    JS_ASSERT(vreg->ins());
+    JS_ASSERT(!vreg->ins()->isPhi());
+
+    if (vreg->afterMoves())
+        return vreg->afterMoves();
+
+    LMoveGroup *moves = new LMoveGroup;
+    vreg->setAfterMoves(moves);
+    vreg->block()->insertAfter(vreg->ins(), moves);
+
+    return moves;
+}
+
 bool
 LinearScanAllocator::addMove(LMoveGroup *moves, LiveInterval *from, LiveInterval *to)
 {
@@ -1570,6 +1640,14 @@ bool
 LinearScanAllocator::moveBefore(CodePosition pos, LiveInterval *from, LiveInterval *to)
 {
     LMoveGroup *moves = getMoveGroupBefore(pos);
+    return addMove(moves, from, to);
+}
+
+bool
+LinearScanAllocator::moveAfter(CodePosition pos, LiveInterval *from, LiveInterval *to)
+{
+    JS_ASSERT(pos.subpos() == CodePosition::OUTPUT);
+    LMoveGroup *moves = getMoveGroupAfter(pos);
     return addMove(moves, from, to);
 }
 
@@ -1608,7 +1686,7 @@ LinearScanAllocator::validateIntervals()
         JS_ASSERT(!i->getAllocation()->isUse());
         JS_ASSERT(i->numRanges() > 0);
         if (i->getAllocation()->isRegister()) {
-            JS_ASSERT(i->end() < current->start());
+            JS_ASSERT(i->end() <= current->start());
             JS_ASSERT(!i->covers(current->start()));
         }
 
@@ -1703,9 +1781,17 @@ LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
             // Preset policies get a FIXED requirement
             interval->setRequirement(Requirement(*reg->def()->output()));
         } else if (reg->def()->policy() == LDefinition::MUST_REUSE_INPUT) {
-            // Reuse policies get a SAME_AS requirement of the first input
-            LUse *use = reg->ins()->getOperand(0)->toUse();
-            interval->setRequirement(Requirement(use->virtualRegister(), interval->start()));
+            // Reuse policies get either a FIXED requirement or a SAME_AS hint.
+            LUse *use = reg->ins()->getOperand(reg->def()->getReusedInput())->toUse();
+            if (use->isFixedRegister()) {
+                if (reg->isDouble())
+                    interval->setRequirement(LFloatReg(FloatRegister::FromCode(use->registerCode())));
+                else
+                    interval->setRequirement(LGeneralReg(Register::FromCode(use->registerCode())));
+            } else {
+                interval->setRequirement(Requirement(Requirement::REGISTER));
+                interval->setHint(Requirement(use->virtualRegister(), interval->start().previous()));
+            }
         } else if (reg->ins()->isPhi()) {
             // Phis don't have any requirements, but they should prefer
             // their input allocations, so they get a SAME_AS hint of the
@@ -1722,28 +1808,28 @@ LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
 
     // Search for any uses for requirements or hints
     bool fixedOpIsHint = false;
-    LOperand *fixedOp = NULL;
-    LOperand *registerOp = NULL;
-    for (size_t i = 0; i < interval->reg()->numUses(); i++) {
-        LOperand *op = interval->reg()->getUse(i);
-        if (interval->start() == inputOf(op->ins)) {
-            if (op->use->policy() == LUse::FIXED) {
+    UsePosition *fixedOp = NULL;
+    UsePosition *registerOp = NULL;
+
+    for (UsePositionIterator usePos(interval->usesBegin()); usePos != interval->usesEnd(); usePos++) {
+        if (interval->start() == usePos->pos || interval->start() == usePos->pos.previous()) {
+            if (usePos->use->policy() == LUse::FIXED) {
                 fixedOpIsHint = false;
-                fixedOp = op;
+                fixedOp = *usePos;
                 break;
-            } else if (op->use->policy() == LUse::REGISTER || op->use->policy() == LUse::COPY) {
+            } else if (usePos->use->policy() == LUse::REGISTER) {
                 // Register uses get a REGISTER requirement
                 interval->setRequirement(Requirement(Requirement::REGISTER));
             }
-        } else if (interval->start() < inputOf(op->ins) && inputOf(op->ins) <= interval->end()) {
-            if (op->use->policy() == LUse::FIXED) {
-                if (!fixedOp || op->ins->id() < fixedOp->ins->id()) {
+        } else {
+            if (usePos->use->policy() == LUse::FIXED) {
+                if (!fixedOp || usePos->pos.ins() < fixedOp->pos.ins()) {
                     fixedOpIsHint = true;
-                    fixedOp = op;
+                    fixedOp = *usePos;
                 }
-            } else if (op->use->policy() == LUse::REGISTER || op->use->policy() == LUse::COPY) {
-                if (!registerOp || op->ins->id() < registerOp->ins->id())
-                    registerOp = op;
+            } else if (usePos->use->policy() == LUse::REGISTER) {
+                if (!registerOp || usePos->pos.ins() < registerOp->pos.ins())
+                    registerOp = *usePos;
             }
         }
     }
@@ -1757,12 +1843,12 @@ LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
             required = AnyRegister(Register::FromCode(fixedOp->use->registerCode()));
 
         if (fixedOpIsHint)
-            interval->setHint(Requirement(LAllocation(required), inputOf(fixedOp->ins)));
+            interval->setHint(Requirement(LAllocation(required), fixedOp->pos));
         else
             interval->setRequirement(Requirement(LAllocation(required)));
     } else if (registerOp) {
         // Intervals with register uses get a REGISTER hint
-        interval->setHint(Requirement(Requirement::REGISTER, inputOf(registerOp->ins)));
+        interval->setHint(Requirement(Requirement::REGISTER, registerOp->pos));
     }
 }
 

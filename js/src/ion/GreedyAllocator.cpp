@@ -64,6 +64,14 @@ GreedyAllocator::findDefinitionsInLIR(LInstruction *ins)
 
         vars[def->virtualRegister()].define(def, ins);
     }
+
+    for (size_t i = 0; i < ins->numTemps(); i++) {
+        LDefinition *temp = ins->getTemp(i);
+        JS_ASSERT(temp->virtualRegister() < graph.numVirtualRegisters());
+        JS_ASSERT(temp->policy() != LDefinition::PASSTHROUGH);
+
+        vars[temp->virtualRegister()].define(temp, ins);
+    }
 }
 
 void
@@ -458,98 +466,122 @@ GreedyAllocator::allocateFixedOperand(LAllocation *a, VirtualRegister *vr)
 }
 
 bool
+GreedyAllocator::allocateDefinition(LInstruction *ins, LDefinition *def)
+{
+    VirtualRegister *vr = getVirtualRegister(def);
+
+    LAllocation output;
+    switch (def->policy()) {
+      case LDefinition::PASSTHROUGH:
+        // This is purely passthru, so ignore it.
+        return true;
+
+      case LDefinition::DEFAULT:
+      case LDefinition::MUST_REUSE_INPUT:
+      {
+        AnyRegister reg;
+        // Either take the register requested, or allocate a new one.
+        if (def->policy() == LDefinition::MUST_REUSE_INPUT &&
+            ins->getOperand(def->getReusedInput())->toUse()->isFixedRegister())
+        {
+            LAllocation *a = ins->getOperand(def->getReusedInput());
+            VirtualRegister *vuse = getVirtualRegister(a->toUse());
+            reg = GetFixedRegister(vuse->def, a->toUse());
+        } else if (vr->hasRegister()) {
+            reg = vr->reg();
+        } else {
+            if (!allocate(vr->type(), DISALLOW, &reg))
+                return false;
+        }
+
+        if (def->policy() == LDefinition::MUST_REUSE_INPUT) {
+            LUse *use = ins->getOperand(def->getReusedInput())->toUse();
+            VirtualRegister *vuse = getVirtualRegister(use);
+            // If the use already has the given register, we need to evict.
+            if (vuse->hasRegister() && vuse->reg() == reg) {
+                if (!evict(reg))
+                    return false;
+            }
+
+            // Make sure our input is using a fixed register.
+            if (reg.isFloat())
+                *use = LUse(reg.fpu(), use->virtualRegister());
+            else
+                *use = LUse(reg.gpr(), use->virtualRegister());
+        }
+        output = LAllocation(reg);
+        break;
+      }
+
+      case LDefinition::PRESET:
+      {
+        // Eviction and disallowing occurred during the definition
+        // pre-scan pass.
+        output = *def->output();
+        break;
+      }
+    }
+
+    if (output.isRegister()) {
+        JS_ASSERT_IF(output.isFloatReg(), disallowed.has(output.toFloatReg()->reg()));
+        JS_ASSERT_IF(output.isGeneralReg(), disallowed.has(output.toGeneralReg()->reg()));
+    }
+
+    // Finally, set the output.
+    def->setOutput(output);
+    return true;
+}
+
+bool
+GreedyAllocator::spillDefinition(LDefinition *def)
+{
+    if (def->policy() == LDefinition::PASSTHROUGH)
+        return true;
+
+    VirtualRegister *vr = getVirtualRegister(def);
+    const LAllocation *output = def->output();
+
+    if (output->isRegister()) {
+        if (vr->hasRegister()) {
+            // If the returned register is different from the output
+            // register, a move is required.
+            AnyRegister out = GetAllocatedRegister(output);
+            if (out != vr->reg()) {
+                if (!spill(*output, vr->reg()))
+                    return false;
+            }
+        }
+
+        // Spill to the stack if needed.
+        if (vr->hasStackSlot() && vr->backingStackUsed()) {
+            if (!spill(*output, vr->backingStack()))
+                return false;
+        }
+    } else if (vr->hasRegister()) {
+        // This definition has a canonical spill location, so make sure to
+        // load it to the resulting register, if any.
+        JS_ASSERT(!vr->hasStackSlot());
+        JS_ASSERT(vr->hasBackingStack());
+        if (!spill(*output, vr->reg()))
+            return false;
+    }
+
+    return true;
+}
+
+bool
 GreedyAllocator::allocateDefinitions(LInstruction *ins)
 {
     for (size_t i = 0; i < ins->numDefs(); i++) {
         LDefinition *def = ins->getDef(i);
-        VirtualRegister *vr = getVirtualRegister(def);
+        if (!allocateDefinition(ins, def))
+            return false;
 
-        LAllocation output;
-        switch (def->policy()) {
-          case LDefinition::PASSTHROUGH:
-            // This is purely passthru, so ignore it.
-            continue;
-
-          case LDefinition::DEFAULT:
-          case LDefinition::MUST_REUSE_INPUT:
-          {
-            AnyRegister reg;
-            // Either take the register requested, or allocate a new one.
-            if (def->policy() == LDefinition::MUST_REUSE_INPUT &&
-                ins->getOperand(0)->toUse()->isFixedRegister())
-            {
-                LAllocation *a = ins->getOperand(0);
-                VirtualRegister *vuse = getVirtualRegister(a->toUse());
-                reg = GetFixedRegister(vuse->def, a->toUse());
-            } else if (vr->hasRegister()) {
-                reg = vr->reg();
-            } else {
-                if (!allocate(vr->type(), DISALLOW, &reg))
-                    return false;
-            }
-            if (def->policy() == LDefinition::MUST_REUSE_INPUT) {
-                VirtualRegister *vuse = getVirtualRegister(ins->getOperand(0)->toUse());
-                // If the use already has the given register, we need to evict.
-                if (vuse->hasRegister() && vuse->reg() == reg) {
-                    if (!evict(reg))
-                        return false;
-                }
-
-                // Make sure our input is using a fixed register.
-                LUse *use = ins->getOperand(0)->toUse();
-                if (reg.isFloat())
-                    *use = LUse(reg.fpu(), use->virtualRegister());
-                else
-                    *use = LUse(reg.gpr(), use->virtualRegister());
-            }
-            output = LAllocation(reg);
-            break;
-          }
-
-          case LDefinition::PRESET:
-          {
-            // Eviction and disallowing occurred during the definition
-            // pre-scan pass.
-            output = *def->output();
-            break;
-          }
-        }
-
-        if (output.isRegister()) {
-            JS_ASSERT_IF(output.isFloatReg(), disallowed.has(output.toFloatReg()->reg()));
-            JS_ASSERT_IF(output.isGeneralReg(), disallowed.has(output.toGeneralReg()->reg()));
-        }
-
-        // |output| is now the allocation state leaving the instruction.
-        // However, this is not necessarily the allocation state expected
-        // downstream, so emit moves where necessary.
-        if (output.isRegister()) {
-            if (vr->hasRegister()) {
-                // If the returned register is different from the output
-                // register, a move is required.
-                AnyRegister out = GetAllocatedRegister(&output);
-                if (out != vr->reg()) {
-                    if (!spill(output, vr->reg()))
-                        return false;
-                }
-            }
-
-            // Spill to the stack if needed.
-            if (vr->hasStackSlot() && vr->backingStackUsed()) {
-                if (!spill(output, vr->backingStack()))
-                    return false;
-            }
-        } else if (vr->hasRegister()) {
-            // This definition has a canonical spill location, so make sure to
-            // load it to the resulting register, if any.
-            JS_ASSERT(!vr->hasStackSlot());
-            JS_ASSERT(vr->hasBackingStack());
-            if (!spill(output, vr->reg()))
-                return false;
-        }
-
-        // Finally, set the output.
-        def->setOutput(output);
+        // The definition's output is the allocation state leaving the
+        // instruction. However, this is not necessarily the allocation
+        // state expected downstream, so emit moves where necessary.
+        if (!spillDefinition(def))
+            return false;
     }
 
     return true;
@@ -560,15 +592,10 @@ GreedyAllocator::allocateTemporaries(LInstruction *ins)
 {
     for (size_t i = 0; i < ins->numTemps(); i++) {
         LDefinition *def = ins->getTemp(i);
-        if (def->policy() == LDefinition::PRESET)
-            continue;
-
-        JS_ASSERT(def->policy() == LDefinition::DEFAULT);
-        AnyRegister reg;
-        if (!allocate(def->type(), DISALLOW, &reg))
+        if (!allocateDefinition(ins, def))
             return false;
-        def->setOutput(LAllocation(reg));
     }
+
     return true;
 }
 
@@ -589,16 +616,8 @@ GreedyAllocator::allocateInputs(LInstruction *ins)
         } else if (use->policy() == LUse::REGISTER) {
             if (!allocateRegisterOperand(a, vr))
                 return false;
-        } else if (use->policy() == LUse::COPY) {
-            if (!allocateWritableOperand(a, vr))
-                return false;
         }
     }
-
-    // Allocate temporaries before uses that accept memory operands, because
-    // temporaries require registers.
-    if (!allocateTemporaries(ins))
-        return false;
 
     // Finally, deal with things that take either registers or memory.
     for (size_t i = 0; i < ins->numOperands(); i++) {
@@ -721,15 +740,20 @@ GreedyAllocator::allocateInstruction(LBlock *block, LInstruction *ins)
     if (!allocateDefinitions(ins))
         return false;
 
-    // Step 5. Allocate inputs and temporaries.
+    // Step 5. Allocate temporaries before inputs, since temporaries
+    // require a register and may have a MUST_REUSE_INPUT policy.
+    if (!allocateTemporaries(ins))
+        return false;
+
+    // Step 6. Allocate inputs.
     if (!allocateInputs(ins))
         return false;
 
-    // Step 6. Assign fields of a snapshot.
+    // Step 7. Assign fields of a snapshot.
     if (ins->snapshot())
         informSnapshot(ins);
 
-    // Step 7. Free any allocated stack slots.
+    // Step 8. Free any allocated stack slots.
     for (size_t i = 0; i < ins->numDefs(); i++) {
         LDefinition *def = ins->getDef(i);
         if (def->policy() == LDefinition::PASSTHROUGH)
@@ -737,7 +761,7 @@ GreedyAllocator::allocateInstruction(LBlock *block, LInstruction *ins)
         killStack(getVirtualRegister(def));
     }
 
-    // Step 8. If this instruction has a safepoint, fill it with any stack
+    // Step 9. If this instruction has a safepoint, fill it with any stack
     // slots and registers that are live.
     if (ins->safepoint()) {
         if (!informSafepoint(ins->safepoint()))
