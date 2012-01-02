@@ -2931,7 +2931,7 @@ JS_EXPORT_API(void) DumpJSObject(JSObject* obj)
 
 JS_EXPORT_API(void) DumpJSValue(jsval val)
 {
-    printf("Dumping 0x%llu.\n", (long long) val.asRawBits());
+    printf("Dumping 0x%llu.\n", (long long) JSVAL_TO_IMPL(val).asBits);
     if (JSVAL_IS_NULL(val)) {
         printf("Value is null\n");
     } else if (JSVAL_IS_OBJECT(val) || JSVAL_IS_NULL(val)) {
