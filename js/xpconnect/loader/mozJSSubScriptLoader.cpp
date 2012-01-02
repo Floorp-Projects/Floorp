@@ -240,11 +240,7 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
         rv = wn->GetJSObject(&targetObj);
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-        JSObject *maybeGlob = JS_GetParent(cx, targetObj);
-        while (maybeGlob) {
-            targetObj = maybeGlob;
-            maybeGlob = JS_GetParent(cx, maybeGlob);
-        }
+        targetObj = JS_GetGlobalForObject(cx, targetObj);
     }
 
     // Remember an object out of the calling compartment so that we
