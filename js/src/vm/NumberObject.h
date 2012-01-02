@@ -47,7 +47,7 @@
 
 namespace js {
 
-class NumberObject : public ::JSObject
+class NumberObject : public JSObject
 {
     /* Stores this Number object's [[PrimitiveValue]]. */
     static const uintN PRIMITIVE_VALUE_SLOT = 0;

@@ -324,13 +324,13 @@ class InterpreterFrames {
  * fp->sp on return to stackDepth.
  */
 extern bool
-UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind);
+UnwindScope(JSContext *cx, uint32_t stackDepth, JSBool normalUnwind);
 
 extern bool
 OnUnknownMethod(JSContext *cx, js::Value *vp);
 
 extern bool
-IsActiveWithOrBlock(JSContext *cx, JSObject &obj, int stackDepth);
+IsActiveWithOrBlock(JSContext *cx, JSObject &obj, uint32_t stackDepth);
 
 /************************************************************************/
 

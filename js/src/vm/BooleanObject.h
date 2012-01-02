@@ -47,7 +47,7 @@
 
 namespace js {
 
-class BooleanObject : public ::JSObject
+class BooleanObject : public JSObject
 {
     /* Stores this Boolean object's [[PrimitiveValue]]. */
     static const uintN PRIMITIVE_VALUE_SLOT = 0;

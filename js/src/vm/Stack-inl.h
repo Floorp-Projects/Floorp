@@ -44,13 +44,14 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 
-#include "Stack.h"
+#include "methodjit/MethodJIT.h"
+#include "vm/Stack.h"
 
 #include "jsscriptinlines.h"
-#include "ArgumentsObject-inl.h"
-#include "CallObject-inl.h"
 
-#include "methodjit/MethodJIT.h"
+#include "ArgumentsObject-inl.h"
+#include "ScopeObject-inl.h"
+
 
 namespace js {
 
@@ -84,7 +85,7 @@ StackFrame::varObj()
 {
     JSObject *obj = &scopeChain();
     while (!obj->isVarObj())
-        obj = obj->scopeChain();
+        obj = obj->enclosingScope();
     return *obj;
 }
 
@@ -377,10 +378,10 @@ StackFrame::setScopeChainNoCallObj(JSObject &obj)
         if (hasCallObj()) {
             JSObject *pobj = &obj;
             while (pobj && pobj->getPrivate() != this)
-                pobj = pobj->scopeChain();
+                pobj = pobj->enclosingScope();
             JS_ASSERT(pobj);
         } else {
-            for (JSObject *pobj = &obj; pobj->isInternalScope(); pobj = pobj->scopeChain())
+            for (JSObject *pobj = &obj; pobj->isScope(); pobj = pobj->enclosingScope())
                 JS_ASSERT_IF(pobj->isCall(), pobj->getPrivate() != this);
         }
     }
@@ -405,7 +406,7 @@ StackFrame::callObj() const
 
     JSObject *pobj = &scopeChain();
     while (JS_UNLIKELY(!pobj->isCall()))
-        pobj = pobj->scopeChain();
+        pobj = pobj->enclosingScope();
     return pobj->asCall();
 }
 
@@ -477,7 +478,7 @@ StackFrame::markFunctionEpilogueDone()
              */
             scopeChain_ = isFunctionFrame()
                           ? callee().toFunction()->environment()
-                          : scopeChain_->internalScopeChain();
+                          : &scopeChain_->asScope().enclosingScope();
             flags_ &= ~HAS_CALL_OBJ;
         }
     }

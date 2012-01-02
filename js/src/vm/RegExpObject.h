@@ -65,7 +65,7 @@ enum RegExpRunStatus
     RegExpRunStatus_Success_NotFound
 };
 
-class RegExpObject : public ::JSObject
+class RegExpObject : public JSObject
 {
     typedef detail::RegExpPrivate RegExpPrivate;
     typedef detail::RegExpPrivateCode RegExpPrivateCode;

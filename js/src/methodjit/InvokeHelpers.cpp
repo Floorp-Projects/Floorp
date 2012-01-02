@@ -630,8 +630,8 @@ js_InternalThrow(VMFrame &f)
      */
     if (cx->isExceptionPending()) {
         JS_ASSERT(JSOp(*pc) == JSOP_ENTERBLOCK);
-        JSObject *obj = script->getObject(GET_SLOTNO(pc));
-        Value *vp = cx->regs().sp + OBJ_BLOCK_COUNT(cx, obj);
+        StaticBlockObject &blockObj = script->getObject(GET_SLOTNO(pc))->asStaticBlock();
+        Value *vp = cx->regs().sp + blockObj.slotCount();
         SetValueRangeToUndefined(cx->regs().sp, vp);
         cx->regs().sp = vp;
         JS_ASSERT(JSOp(pc[JSOP_ENTERBLOCK_LENGTH]) == JSOP_EXCEPTION);
@@ -639,7 +639,7 @@ js_InternalThrow(VMFrame &f)
         cx->clearPendingException();
         cx->regs().sp++;
         cx->regs().pc = pc + JSOP_ENTERBLOCK_LENGTH + JSOP_EXCEPTION_LENGTH;
-        cx->regs().fp()->setBlockChain(obj);
+        cx->regs().fp()->setBlockChain(&blockObj);
     }
 
     *f.oldregs = f.regs;

@@ -6377,7 +6377,7 @@ mjit::Compiler::jsop_callgname_epilogue()
     /* Paths for known object callee. */
     if (fval->isConstant()) {
         JSObject *obj = &fval->getValue().toObject();
-        if (obj->getGlobal() == globalObj) {
+        if (&obj->global() == globalObj) {
             frame.push(UndefinedValue());
         } else {
             prepareStubCall(Uses(1));
@@ -6834,7 +6834,7 @@ mjit::Compiler::jsop_regexp()
     RegExpStatics *res = globalObj ? globalObj->getRegExpStatics() : NULL;
 
     if (!globalObj ||
-        obj->getGlobal() != globalObj ||
+        &obj->global() != globalObj ||
         !cx->typeInferenceEnabled() ||
         analysis->localsAliasStack() ||
         types::TypeSet::HasObjectFlags(cx, globalObj->getType(cx),
@@ -6846,7 +6846,7 @@ mjit::Compiler::jsop_regexp()
         return true;
     }
 
-    RegExpObject *reobj = obj->asRegExp();
+    RegExpObject *reobj = &obj->asRegExp();
 
     DebugOnly<uint32_t> origFlags = reobj->getFlags();
     DebugOnly<uint32_t> staticsFlags = res->getFlags();

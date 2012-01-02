@@ -96,7 +96,7 @@
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 
-#include "vm/CallObject-inl.h"
+#include "vm/ScopeObject-inl.h"
 #include "vm/String-inl.h"
 
 #ifdef MOZ_VALGRIND
