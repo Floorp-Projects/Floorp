@@ -235,8 +235,6 @@ PrintUse(FILE *fp, const LUse *use)
         fprintf(fp, "*");
     } else if (use->policy() == LUse::REGISTER) {
         fprintf(fp, "r");
-    } else if (use->policy() == LUse::COPY) {
-        fprintf(fp, "c");
     } else {
         // Unfortunately, we don't know here whether the virtual register is a
         // float or a double. Should we steal a bit in LUse for help? For now,

@@ -151,10 +151,11 @@ LIRGenerator::visitCall(MCall *call)
 
     // A call is entirely stateful, depending upon arguments already being
     // stored in an argument vector. Therefore visitCall() may be generic.
-    LCallGeneric *ins = new LCallGeneric(useRegister(call->getFunction()),
+    LCallGeneric *ins = new LCallGeneric(useRegisterAtStart(call->getFunction()),
                                          argslot,
                                          tempFixed(ArgumentsRectifierReg),
-                                         temp(LDefinition::GENERAL));
+                                         temp(LDefinition::GENERAL),
+                                         tempCopy(call->getFunction(), 0));
     if (!defineReturn(ins, call))
         return false;
     if (!assignSnapshot(ins))
@@ -843,7 +844,7 @@ bool
 LIRGenerator::visitLoadProperty(MLoadProperty *ins)
 {
     LLoadPropertyGeneric *lir = new LLoadPropertyGeneric();
-    lir->setOperand(0, useRegister(ins->getOperand(0)));
+    lir->setOperand(0, useRegisterAtStart(ins->getOperand(0)));
 
     if (!defineVMReturn(lir, ins))
         return false;

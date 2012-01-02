@@ -303,6 +303,8 @@ class GreedyAllocator
     void informSnapshot(LInstruction *ins);
     bool informSafepoint(LSafepoint *safepoint);
     bool allocateDefinitions(LInstruction *ins);
+    bool allocateDefinition(LInstruction *ins, LDefinition *def);
+    bool spillDefinition(LDefinition *def);
     bool allocateTemporaries(LInstruction *ins);
     bool allocateInputs(LInstruction *ins);
 

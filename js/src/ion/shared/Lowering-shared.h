@@ -101,10 +101,14 @@ class LIRGeneratorShared : public MInstructionVisitor
     // allocation policy.
     inline LUse use(MDefinition *mir, LUse policy);
     inline LUse use(MDefinition *mir);
+    inline LUse useAtStart(MDefinition *mir);
     inline LUse useCopy(MDefinition *mir);
     inline LUse useRegister(MDefinition *mir);
+    inline LUse useRegisterAtStart(MDefinition *mir);
     inline LUse useFixed(MDefinition *mir, Register reg);
     inline LUse useFixed(MDefinition *mir, FloatRegister reg);
+    inline LUse useFixedAtStart(MDefinition *mir, Register reg);
+    inline LUse useFixedAtStart(MDefinition *mir, FloatRegister reg);
     inline LAllocation useOrConstant(MDefinition *mir);
     inline LAllocation useKeepaliveOrConstant(MDefinition *mir);
     inline LAllocation useRegisterOrConstant(MDefinition *mir);
@@ -112,7 +116,8 @@ class LIRGeneratorShared : public MInstructionVisitor
 #ifdef JS_NUNBOX32
     inline LUse useType(MDefinition *mir, LUse::Policy policy);
     inline LUse usePayload(MDefinition *mir, LUse::Policy policy);
-    inline LUse usePayloadInRegister(MDefinition *mir);
+    inline LUse usePayloadAtStart(MDefinition *mir, LUse::Policy policy);
+    inline LUse usePayloadInRegisterAtStart(MDefinition *mir);
 
     // Adds a box input to an instruction, setting operand |n| to the type and
     // |n+1| to the payload. Does not modify the operands, instead expecting a
@@ -121,8 +126,9 @@ class LIRGeneratorShared : public MInstructionVisitor
 #endif
 
     // These create temporary register requests.
-    inline LDefinition temp(LDefinition::Type type);
+    inline LDefinition temp(LDefinition::Type type, LDefinition::Policy policy = LDefinition::DEFAULT);
     inline LDefinition tempFloat();
+    inline LDefinition tempCopy(MDefinition *input, uint32 reusedInput);
 
     // Note that the fixed register has a GENERAL type.
     inline LDefinition tempFixed(Register reg);
@@ -150,7 +156,7 @@ class LIRGeneratorShared : public MInstructionVisitor
                        LDefinition::Policy policy = LDefinition::DEFAULT);
 
     template <size_t Ops, size_t Temps>
-    inline bool defineReuseInput(LInstructionHelper<1, Ops, Temps> *lir, MDefinition *mir);
+    inline bool defineReuseInput(LInstructionHelper<1, Ops, Temps> *lir, MDefinition *mir, uint32 operand);
 
     // Rather than defining a new virtual register, sets |ins| to have the same
     // virtual register as |as|.

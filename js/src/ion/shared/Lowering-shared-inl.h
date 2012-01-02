@@ -105,9 +105,17 @@ LIRGeneratorShared::defineFixed(LInstructionHelper<1, X, Y> *lir, MDefinition *m
 }
 
 template <size_t Ops, size_t Temps> bool
-LIRGeneratorShared::defineReuseInput(LInstructionHelper<1, Ops, Temps> *lir, MDefinition *mir)
+LIRGeneratorShared::defineReuseInput(LInstructionHelper<1, Ops, Temps> *lir, MDefinition *mir, uint32 operand)
 {
-    return define(lir, mir, LDefinition::MUST_REUSE_INPUT);
+    // The input should be used at the start of the instruction, to avoid moves.
+    JS_ASSERT(lir->getOperand(operand)->toUse()->usedAtStart());
+
+    LDefinition::Type type = LDefinition::TypeFrom(mir->type());
+
+    LDefinition def(type, LDefinition::MUST_REUSE_INPUT);
+    def.setReusedInput(operand);
+
+    return define(lir, mir, def);
 }
 
 template <size_t Ops, size_t Temps> bool
@@ -241,21 +249,27 @@ LIRGeneratorShared::ensureDefined(MDefinition *mir)
 }
 
 LUse
-LIRGeneratorShared::useCopy(MDefinition *mir)
-{
-    return use(mir, LUse(LUse::COPY));
-}
-
-LUse
 LIRGeneratorShared::useRegister(MDefinition *mir)
 {
     return use(mir, LUse(LUse::REGISTER));
 }
 
 LUse
+LIRGeneratorShared::useRegisterAtStart(MDefinition *mir)
+{
+    return use(mir, LUse(LUse::REGISTER, true));
+}
+
+LUse
 LIRGeneratorShared::use(MDefinition *mir)
 {
     return use(mir, LUse(LUse::ANY));
+}
+
+LUse
+LIRGeneratorShared::useAtStart(MDefinition *mir)
+{
+    return use(mir, LUse(LUse::ANY, true));
 }
 
 LAllocation
@@ -294,15 +308,27 @@ LIRGeneratorShared::useFixed(MDefinition *mir, FloatRegister reg)
     return use(mir, LUse(reg));
 }
 
+LUse
+LIRGeneratorShared::useFixedAtStart(MDefinition *mir, Register reg)
+{
+    return use(mir, LUse(reg, true));
+}
+
+LUse
+LIRGeneratorShared::useFixedAtStart(MDefinition *mir, FloatRegister reg)
+{
+    return use(mir, LUse(reg, true));
+}
+
 LDefinition
-LIRGeneratorShared::temp(LDefinition::Type type)
+LIRGeneratorShared::temp(LDefinition::Type type, LDefinition::Policy policy)
 {
     uint32 vreg = getVirtualRegister();
     if (vreg >= MAX_VIRTUAL_REGISTERS) {
         gen->abort("max virtual registers");
         return LDefinition();
     }
-    return LDefinition(vreg, type);
+    return LDefinition(vreg, type, policy);
 }
 
 LDefinition
@@ -317,6 +343,14 @@ LDefinition
 LIRGeneratorShared::tempFloat()
 {
     return temp(LDefinition::DOUBLE);
+}
+
+LDefinition
+LIRGeneratorShared::tempCopy(MDefinition *input, uint32 reusedInput)
+{
+    LDefinition t = temp(LDefinition::TypeFrom(input->type()), LDefinition::MUST_REUSE_INPUT);
+    t.setReusedInput(reusedInput);
+    return t;
 }
 
 template <typename T> bool
@@ -376,9 +410,17 @@ LIRGeneratorShared::usePayload(MDefinition *mir, LUse::Policy policy)
 }
 
 LUse
-LIRGeneratorShared::usePayloadInRegister(MDefinition *mir)
+LIRGeneratorShared::usePayloadAtStart(MDefinition *mir, LUse::Policy policy)
 {
-    return usePayload(mir, LUse::REGISTER);
+    JS_ASSERT(mir->type() == MIRType_Value);
+
+    return LUse(VirtualRegisterOfPayload(mir), policy, true);
+}
+
+LUse
+LIRGeneratorShared::usePayloadInRegisterAtStart(MDefinition *mir)
+{
+    return usePayloadAtStart(mir, LUse::REGISTER);
 }
 
 bool

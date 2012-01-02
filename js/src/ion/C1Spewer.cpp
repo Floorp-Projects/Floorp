@@ -158,8 +158,8 @@ C1Spewer::spewIntervals(FILE *fp, LinearScanAllocator *regalloc, LInstruction *i
                     fprintf(fp, " [%d, %d[", live->getRange(j)->from.pos(),
                             live->getRange(j)->to.pos());
                 }
-                for (size_t j = 0; j < vreg->numUses(); j++)
-                    fprintf(fp, " %d M", vreg->getUse(j)->ins->id() * 2);
+                for (UsePositionIterator usePos(live->usesBegin()); usePos != live->usesEnd(); usePos++)
+                    fprintf(fp, " %d M", usePos->pos.pos());
                 fprintf(fp, " \"\"\n");
             }
         }
