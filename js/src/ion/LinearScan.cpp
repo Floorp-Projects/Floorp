@@ -720,12 +720,6 @@ LinearScanAllocator::allocateRegisters()
             if (!assign(req->allocation()))
                 return false;
             continue;
-        } else if (req->kind() == Requirement::SAME_AS_OTHER) {
-            LiveInterval *other = vregs[req->virtualRegister()].intervalFor(req->pos());
-            JS_ASSERT(other);
-            if (!assign(*other->getAllocation()))
-                return false;
-            continue;
         }
 
         // If we don't really need this in a register, don't allocate one
@@ -1470,14 +1464,21 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
                 bestCode = prevReg.code();
         }
     }
-    if (current->hint()->kind() == Requirement::FIXED &&
-        current->hint()->allocation().isRegister())
-    {
-        // As another, use the register suggested by the hint if free until
-        // needed.
-        AnyRegister hintReg = current->hint()->allocation().toRegister();
-        if (freeUntilPos[hintReg.code()] > current->hint()->pos())
+
+    // Assign the register suggested by the hint if it's free.
+    Requirement *hint = current->hint();
+    if (hint->kind() == Requirement::FIXED && hint->allocation().isRegister()) {
+        AnyRegister hintReg = hint->allocation().toRegister();
+        if (freeUntilPos[hintReg.code()] > hint->pos())
             bestCode = hintReg.code();
+    } else if (hint->kind() == Requirement::SAME_AS_OTHER) {
+        LiveInterval *other = vregs[hint->virtualRegister()].intervalFor(hint->pos());
+        JS_ASSERT(other);
+        if (other->getAllocation()->isRegister()) {
+            AnyRegister hintReg = other->getAllocation()->toRegister();
+            if (freeUntilPos[hintReg.code()] > hint->pos())
+                bestCode = hintReg.code();
+        }
     }
 
     if (bestCode == AnyRegister::Invalid) {
@@ -1847,8 +1848,11 @@ LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
         else
             interval->setRequirement(Requirement(LAllocation(required)));
     } else if (registerOp) {
-        // Intervals with register uses get a REGISTER hint
-        interval->setHint(Requirement(Requirement::REGISTER, registerOp->pos));
+        // Intervals with register uses get a REGISTER hint. We may have already
+        // assigned a SAME_AS hint, make sure we don't overwrite it with a weaker
+        // hint.
+        if (interval->hint()->kind() == Requirement::NONE)
+            interval->setHint(Requirement(Requirement::REGISTER, registerOp->pos));
     }
 }
 
