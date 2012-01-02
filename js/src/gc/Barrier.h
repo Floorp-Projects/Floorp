@@ -342,10 +342,6 @@ class HeapValue
 
     JSGCTraceKind gcKind() const { return value.gcKind(); }
 
-    inline void boxNonDoubleFrom(JSValueType type, uint64_t *out);
-
-    uint64_t asRawBits() const { return value.asRawBits(); }
-
 #ifdef DEBUG
     JSWhyMagic whyMagic() const { return value.whyMagic(); }
 #endif

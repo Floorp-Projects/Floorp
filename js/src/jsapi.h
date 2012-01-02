@@ -251,8 +251,8 @@ inline bool IsPoisonedPtr(T *v)
  *   example, if cx->exception has a magic value, the reason must be
  *   JS_GENERATOR_CLOSING.
  *
- * - A key difference between jsval and JS::Value is that JS::Value gives null
- *   a separate type. Thus
+ * - A key difference between JSVAL_* and JS::Value operations is that
+ *   JS::Value gives null a separate type. Thus
  *
  *           JSVAL_IS_OBJECT(v) === v.isObjectOrNull()
  *       !JSVAL_IS_PRIMITIVE(v) === v.isObject()
@@ -324,11 +324,6 @@ class Value
     void setObject(JSObject &obj) {
         JS_ASSERT(!IsPoisonedPtr(&obj));
         data = OBJECT_TO_JSVAL_IMPL(&obj);
-    }
-
-    JS_ALWAYS_INLINE
-    void setObject(const JS::Anchor<JSObject *> &obj) {
-        setObject(*obj.get());
     }
 
     JS_ALWAYS_INLINE
@@ -482,13 +477,6 @@ class Value
         return isMagic() && data.s.payload.why == why;
     }
 
-#if JS_BITS_PER_WORD == 64
-    JS_ALWAYS_INLINE
-    bool hasPtrPayload() const {
-        return data.asBits >= JSVAL_LOWER_INCL_SHIFTED_TAG_OF_PTR_PAYLOAD_SET;
-    }
-#endif
-
     JS_ALWAYS_INLINE
     bool isMarkable() const {
         return JSVAL_IS_TRACEABLE_IMPL(data);
@@ -577,56 +565,8 @@ class Value
     }
 
     JS_ALWAYS_INLINE
-    uint64_t asRawBits() const {
-        return data.asBits;
-    }
-
-    JS_ALWAYS_INLINE
-    void setRawBits(uint64_t bits) {
-        data.asBits = bits;
-    }
-
-    /*
-     * In the extract/box/unbox functions below, "NonDouble" means this
-     * functions must not be called on a value that is a double. This allows
-     * these operations to be implemented more efficiently, since doubles
-     * generally already require special handling by the caller.
-     */
-    JS_ALWAYS_INLINE
     JSValueType extractNonDoubleType() const {
         return JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(data);
-    }
-
-    JS_ALWAYS_INLINE
-    JSValueTag extractNonDoubleTag() const {
-        return JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(data);
-    }
-
-    JS_ALWAYS_INLINE
-    void unboxNonDoubleTo(uint64_t *out) const {
-        UNBOX_NON_DOUBLE_JSVAL(data, out);
-    }
-
-    JS_ALWAYS_INLINE
-    void boxNonDoubleFrom(JSValueType type, uint64_t *out) {
-        data = BOX_NON_DOUBLE_JSVAL(type, out);
-    }
-
-    /*
-     * The trace-jit specializes JSVAL_TYPE_OBJECT into JSVAL_TYPE_FUNOBJ and
-     * JSVAL_TYPE_NONFUNOBJ. Since these two operations just return the type of
-     * a value, the caller must handle JSVAL_TYPE_OBJECT separately.
-     */
-    JS_ALWAYS_INLINE
-    JSValueType extractNonDoubleObjectTraceType() const {
-        JS_ASSERT(!isObject());
-        return JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(data);
-    }
-
-    JS_ALWAYS_INLINE
-    JSValueTag extractNonDoubleObjectTraceTag() const {
-        JS_ASSERT(!isObject());
-        return JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(data);
     }
 
     /*
@@ -846,7 +786,7 @@ template<>
 inline Anchor<Value>::~Anchor()
 {
     volatile uint64_t bits;
-    bits = hold.asRawBits();
+    bits = JSVAL_TO_IMPL(hold).asBits;
 }
 
 #endif

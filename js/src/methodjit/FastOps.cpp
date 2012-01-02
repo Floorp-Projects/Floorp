@@ -734,7 +734,7 @@ mjit::Compiler::jsop_typeof()
         if (op == JSOP_STRICTEQ || op == JSOP_EQ || op == JSOP_STRICTNE || op == JSOP_NE) {
             JSAtom *atom = script->getAtom(fullAtomIndex(PC + JSOP_TYPEOF_LENGTH));
             JSRuntime *rt = cx->runtime;
-            JSValueType type = JSVAL_TYPE_BOXED;
+            JSValueType type = JSVAL_TYPE_UNKNOWN;
             Assembler::Condition cond = (op == JSOP_STRICTEQ || op == JSOP_EQ)
                                         ? Assembler::Equal
                                         : Assembler::NotEqual;
@@ -752,7 +752,7 @@ mjit::Compiler::jsop_typeof()
                 cond = (cond == Assembler::Equal) ? Assembler::BelowOrEqual : Assembler::Above;
             }
 
-            if (type != JSVAL_TYPE_BOXED) {
+            if (type != JSVAL_TYPE_UNKNOWN) {
                 PC += JSOP_STRING_LENGTH;;
                 PC += JSOP_EQ_LENGTH;
 
