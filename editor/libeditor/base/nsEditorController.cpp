@@ -110,8 +110,6 @@ nsresult nsEditorController::RegisterEditingCommands(nsIControllerCommandTable *
 // static
 nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandTable *inCommandTable)
 {
-  nsresult rv;
-
   // These are commands that will be used in text widgets only.
 
   NS_REGISTER_FIRST_COMMAND(nsSelectionMoveCommands, "cmd_scrollTop");
