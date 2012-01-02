@@ -359,7 +359,7 @@ Shape::replaceLastProperty(JSContext *cx, const StackBaseShape &base, JSObject *
 
     UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
     if (!nbase)
-        return false;
+        return NULL;
 
     StackShape child(shape);
     child.base = nbase;
