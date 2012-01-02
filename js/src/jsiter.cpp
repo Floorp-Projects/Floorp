@@ -1278,7 +1278,7 @@ js_NewGenerator(JSContext *cx)
     JS_ASSERT(stackfp->base() == cx->regs().sp);
     JS_ASSERT(stackfp->actualArgs() <= stackfp->formalArgs());
 
-    GlobalObject *global = stackfp->scopeChain().getGlobal();
+    GlobalObject *global = &stackfp->scopeChain().global();
     JSObject *proto = global->getOrCreateGeneratorPrototype(cx);
     if (!proto)
         return NULL;
@@ -1622,7 +1622,7 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = obj->asGlobal();
+    GlobalObject *global = &obj->asGlobal();
 
     /*
      * Bail if Iterator has already been initialized.  We test for Iterator

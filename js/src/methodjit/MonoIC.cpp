@@ -86,13 +86,13 @@ PatchGetFallback(VMFrame &f, ic::GetGlobalNameIC *ic)
 void JS_FASTCALL
 ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
 {
-    JSObject *obj = f.fp()->scopeChain().getGlobal();
+    JSObject &obj = f.fp()->scopeChain().global();
     JSAtom *atom = f.script()->getAtom(GET_INDEX(f.pc()));
     jsid id = ATOM_TO_JSID(atom);
 
     RecompilationMonitor monitor(f.cx);
 
-    const Shape *shape = obj->nativeLookup(f.cx, id);
+    const Shape *shape = obj.nativeLookup(f.cx, id);
 
     if (monitor.recompiled()) {
         stubs::GetGlobalName(f);
@@ -112,10 +112,10 @@ ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
 
     /* Patch shape guard. */
     Repatcher repatcher(f.jit());
-    repatcher.repatch(ic->fastPathStart.dataLabelPtrAtOffset(ic->shapeOffset), obj->lastProperty());
+    repatcher.repatch(ic->fastPathStart.dataLabelPtrAtOffset(ic->shapeOffset), obj.lastProperty());
 
     /* Patch loads. */
-    uint32_t index = obj->dynamicSlotIndex(slot);
+    uint32_t index = obj.dynamicSlotIndex(slot);
     JSC::CodeLocationLabel label = ic->fastPathStart.labelAtOffset(ic->loadStoreOffset);
     repatcher.patchAddressOffsetForValueLoad(label, index * sizeof(Value));
 
@@ -208,16 +208,16 @@ UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, const Sh
 void JS_FASTCALL
 ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
-    JSObject *obj = f.fp()->scopeChain().getGlobal();
+    JSObject &obj = f.fp()->scopeChain().global();
     JSScript *script = f.script();
     JSAtom *atom = script->getAtom(GET_INDEX(f.pc()));
 
     RecompilationMonitor monitor(f.cx);
 
-    const Shape *shape = obj->nativeLookup(f.cx, ATOM_TO_JSID(atom));
+    const Shape *shape = obj.nativeLookup(f.cx, ATOM_TO_JSID(atom));
 
     if (!monitor.recompiled()) {
-        LookupStatus status = UpdateSetGlobalName(f, ic, obj, shape);
+        LookupStatus status = UpdateSetGlobalName(f, ic, &obj, shape);
         if (status == Lookup_Error)
             THROW();
     }

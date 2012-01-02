@@ -2374,7 +2374,7 @@ js_InitTypedArrayClasses(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = obj->asGlobal();
+    GlobalObject *global = &obj->asGlobal();
 
     /* Idempotency required: we initialize several things, possibly lazily. */
     JSObject *stop;

@@ -316,6 +316,7 @@ class Handle
         T a = RootMethods<T>::initial();
         S b = RootMethods<S>::initial();
         a = b;
+        (void)a;
 #endif
     }
 };
