@@ -1247,9 +1247,6 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 } else {
                   errUnclosedChildrenInRuby();
                 }
-                while (currentPtr > eltPos) {
-                  pop();
-                }
               }
               appendToCurrentNodeAndPushElementMayFoster(elementName, attributes);
               attributes = nsnull;
