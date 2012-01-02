@@ -4847,7 +4847,6 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value_,
     if (shape->hasSlot())
         obj->nativeSetSlot(shape->slot(), value);
 
-    /* XXXbe called with lock held */
     if (!CallAddPropertyHook(cx, clasp, obj, shape, value.address())) {
         obj->removeProperty(cx, id);
         return NULL;

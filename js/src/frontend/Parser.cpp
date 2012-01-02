@@ -2654,13 +2654,10 @@ CheckDestructuring(JSContext *cx, BindData *data, ParseNode *left, TreeContext *
      * that doesn't introduce at least one binding.
      */
     if (toplevel && blockObj && blockCountBefore == blockObj->slotCount()) {
-        if (!DefineNativeProperty(cx, blockObj,
-                                  INT_TO_JSID(blockCountBefore),
-                                  UndefinedValue(), NULL, NULL,
-                                  JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                                  Shape::HAS_SHORTID, blockCountBefore)) {
+        bool redeclared;
+        if (!blockObj->addVar(cx, INT_TO_JSID(blockCountBefore), blockCountBefore, &redeclared))
             return false;
-        }
+        JS_ASSERT(!redeclared);
         JS_ASSERT(blockObj->slotCount() == blockCountBefore + 1);
     }
 
