@@ -66,7 +66,7 @@ class InfoObject
     if (!mOk)
       return;
 
-    const nsPromiseFlatString &flat = PromiseFlatString(value);
+    const nsString &flat = PromiseFlatString(value);
     JSString *string = JS_NewUCStringCopyN(mCx, static_cast<const jschar*>(flat.get()), flat.Length());
     if (!string)
       mOk = JS_FALSE;
