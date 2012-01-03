@@ -75,24 +75,12 @@ function test_merge(f,t) {
   f.contentDocument.body.normalize();
 }
 
-function repaint_selection(win) {
-  let a = new Array;
-  let sel = win.getSelection();
-  for (let i = 0; i < sel.rangeCount; ++i) {
-    a[i] = sel.getRangeAt(i);
-  }
-  sel.removeAllRanges();
-  for (let i = 0; i < a.length; ++i) {
-    sel.addRange(a[i]);
-  }
-}
-
 function createFrame(run,t) {
   let f = document.createElement('iframe');
   f.setAttribute('height','22');
   f.setAttribute('frameborder','0');
   f.setAttribute('width','200');
   f.src = 'data:text/html,<body style="margin:0;padding:0">';
-  f.onload = function () { try { run(f, t); repaint_selection(f.contentWindow);} finally { ++tests_done; } }
+  f.onload = function () { try { run(f, t); } finally { ++tests_done; } }
   return f;
 }

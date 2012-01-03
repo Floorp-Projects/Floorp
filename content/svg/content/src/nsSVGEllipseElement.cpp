@@ -102,8 +102,9 @@ NS_IMPL_RELEASE_INHERITED(nsSVGEllipseElement,nsSVGEllipseElementBase)
 DOMCI_NODE_DATA(SVGEllipseElement, nsSVGEllipseElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGEllipseElement)
-  NS_NODE_INTERFACE_TABLE4(nsSVGEllipseElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGEllipseElement)
+  NS_NODE_INTERFACE_TABLE5(nsSVGEllipseElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement, nsIDOMSVGTests,
+                           nsIDOMSVGEllipseElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGEllipseElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGEllipseElementBase)
 

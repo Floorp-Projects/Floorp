@@ -60,7 +60,7 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    return obj->asGlobal()->getOrCreateObjectPrototype(cx);
+    return obj->asGlobal().getOrCreateObjectPrototype(cx);
 }
 
 JSObject *
@@ -68,7 +68,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    return obj->asGlobal()->getOrCreateFunctionPrototype(cx);
+    return obj->asGlobal().getOrCreateFunctionPrototype(cx);
 }
 
 static JSBool
@@ -84,6 +84,8 @@ namespace js {
 JSObject *
 GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
 {
+    RootedVar<GlobalObject*> self(cx, this);
+
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     JS_ASSERT(isNative());
 
@@ -96,13 +98,15 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
 
     /* If cx has no global object, make this the global object. */
     if (!cx->globalObject)
-        JS_SetGlobalObject(cx, this);
+        JS_SetGlobalObject(cx, self);
+
+    RootedVarObject objectProto(cx);
 
     /*
      * Create |Object.prototype| first, mirroring CreateBlankProto but for the
      * prototype of the created object.
      */
-    JSObject *objectProto = NewObjectWithGivenProto(cx, &ObjectClass, NULL, this);
+    objectProto = NewObjectWithGivenProto(cx, &ObjectClass, NULL, self);
     if (!objectProto || !objectProto->setSingletonType(cx))
         return NULL;
 
@@ -115,18 +119,20 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         return NULL;
 
     /* Create |Function.prototype| next so we can create other functions. */
-    JSFunction *functionProto;
+    RootedVarFunction functionProto(cx);
     {
-        JSObject *proto = NewObjectWithGivenProto(cx, &FunctionClass, objectProto, this);
-        if (!proto)
+        JSObject *functionProto_ = NewObjectWithGivenProto(cx, &FunctionClass, objectProto, self);
+        if (!functionProto_)
             return NULL;
+        functionProto = functionProto_->toFunction();
 
         /*
          * Bizarrely, |Function.prototype| must be an interpreted function, so
          * give it the guts to be one.
          */
-        functionProto = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, this, NULL);
-        if (!functionProto)
+        JSObject *proto = js_NewFunction(cx, functionProto,
+                                         NULL, 0, JSFUN_INTERPRETED, self, NULL);
+        if (!proto)
             return NULL;
         JS_ASSERT(proto == functionProto);
         functionProto->flags |= JSFUN_PROTOTYPE;
@@ -142,7 +148,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         functionProto->getType(cx)->interpretedFunction = functionProto;
         script->setFunction(functionProto);
 
-        if (!proto->setSingletonType(cx))
+        if (!functionProto->setSingletonType(cx))
             return NULL;
 
         /*
@@ -150,22 +156,20 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
          * inference to have unknown properties, to simplify handling of e.g.
          * CloneFunctionObject.
          */
-        if (!proto->setNewTypeUnknown(cx))
+        if (!functionProto->setNewTypeUnknown(cx))
             return NULL;
     }
 
     /* Create the Object function now that we have a [[Prototype]] for it. */
-    jsid objectId = ATOM_TO_JSID(CLASS_ATOM(cx, Object));
-    JSFunction *objectCtor;
+    RootedVarFunction objectCtor(cx);
     {
-        JSObject *ctor = NewObjectWithGivenProto(cx, &FunctionClass, functionProto, this);
+        JSObject *ctor = NewObjectWithGivenProto(cx, &FunctionClass, functionProto, self);
         if (!ctor)
             return NULL;
-        objectCtor = js_NewFunction(cx, ctor, js_Object, 1, JSFUN_CONSTRUCTOR, this,
-                                    JSID_TO_ATOM(objectId));
+        objectCtor = js_NewFunction(cx, ctor, js_Object, 1, JSFUN_CONSTRUCTOR, self,
+                                    CLASS_ATOM(cx, Object));
         if (!objectCtor)
             return NULL;
-        JS_ASSERT(ctor == objectCtor);
 
         objectCtor->setConstructorClass(&ObjectClass);
     }
@@ -174,18 +178,17 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
      * Install |Object| and |Object.prototype| for the benefit of subsequent
      * code that looks for them.
      */
-    setObjectClassDetails(objectCtor, objectProto);
+    self->setObjectClassDetails(objectCtor, objectProto);
 
     /* Create |Function| so it and |Function.prototype| can be installed. */
-    jsid functionId = ATOM_TO_JSID(CLASS_ATOM(cx, Function));
-    JSFunction *functionCtor;
+    RootedVarFunction functionCtor(cx);
     {
         JSObject *ctor =
-            NewObjectWithGivenProto(cx, &FunctionClass, functionProto, this);
+            NewObjectWithGivenProto(cx, &FunctionClass, functionProto, self);
         if (!ctor)
             return NULL;
-        functionCtor = js_NewFunction(cx, ctor, Function, 1, JSFUN_CONSTRUCTOR, this,
-                                      JSID_TO_ATOM(functionId));
+        functionCtor = js_NewFunction(cx, ctor, Function, 1, JSFUN_CONSTRUCTOR, self,
+                                      CLASS_ATOM(cx, Function));
         if (!functionCtor)
             return NULL;
         JS_ASSERT(ctor == functionCtor);
@@ -197,7 +200,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
      * Install |Function| and |Function.prototype| so that we can freely create
      * functions and objects without special effort.
      */
-    setFunctionClassDetails(functionCtor, functionProto);
+    self->setFunctionClassDetails(functionCtor, functionProto);
 
     /*
      * The hard part's done: now go back and add all the properties these
@@ -214,28 +217,31 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     }
 
     /* Add the global Function and Object properties now. */
-    if (!addDataProperty(cx, objectId, JSProto_Object + JSProto_LIMIT * 2, 0))
+    jsid objectId = ATOM_TO_JSID(CLASS_ATOM(cx, Object));
+    if (!self->addDataProperty(cx, objectId, JSProto_Object + JSProto_LIMIT * 2, 0))
         return NULL;
-    if (!addDataProperty(cx, functionId, JSProto_Function + JSProto_LIMIT * 2, 0))
+    jsid functionId = ATOM_TO_JSID(CLASS_ATOM(cx, Function));
+    if (!self->addDataProperty(cx, functionId, JSProto_Function + JSProto_LIMIT * 2, 0))
         return NULL;
 
     /* Heavy lifting done, but lingering tasks remain. */
 
     /* ES5 15.1.2.1. */
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.evalAtom);
-    JSObject *evalobj = js_DefineFunction(cx, this, id, eval, 1, JSFUN_STUB_GSOPS);
+    JSObject *evalobj = js_DefineFunction(cx, self, id, eval, 1, JSFUN_STUB_GSOPS);
     if (!evalobj)
         return NULL;
-    setOriginalEval(evalobj);
+    self->setOriginalEval(evalobj);
 
     /* ES5 13.2.3: Construct the unique [[ThrowTypeError]] function object. */
-    JSFunction *throwTypeError = js_NewFunction(cx, NULL, ThrowTypeError, 0, 0, this, NULL);
+    RootedVarFunction throwTypeError(cx);
+    throwTypeError = js_NewFunction(cx, NULL, ThrowTypeError, 0, 0, self, NULL);
     if (!throwTypeError)
         return NULL;
     AutoIdVector ids(cx);
     if (!throwTypeError->preventExtensions(cx, &ids))
         return NULL;
-    setThrowTypeError(throwTypeError);
+    self->setThrowTypeError(throwTypeError);
 
     /*
      * The global object should have |Object.prototype| as its [[Prototype]].
@@ -245,7 +251,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
      * [[Prototype]] before standard classes have been initialized.  For now,
      * only set the [[Prototype]] if it hasn't already been set.
      */
-    if (shouldSplicePrototype(cx) && !splicePrototype(cx, objectProto))
+    if (self->shouldSplicePrototype(cx) && !self->splicePrototype(cx, objectProto))
         return NULL;
 
     /*
@@ -261,22 +267,24 @@ GlobalObject::create(JSContext *cx, Class *clasp)
 {
     JS_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
 
-    JSObject *obj = NewObjectWithGivenProto(cx, clasp, NULL, NULL);
-    if (!obj || !obj->setSingletonType(cx))
-        return NULL;
+    RootedVar<GlobalObject*> obj(cx);
 
-    GlobalObject *globalObj = obj->asGlobal();
-    if (!globalObj->setVarObj(cx))
+    JSObject *obj_ = NewObjectWithGivenProto(cx, clasp, NULL, NULL);
+    if (!obj_)
+        return NULL;
+    obj = &obj_->asGlobal();
+
+    if (!obj->setSingletonType(cx) || !obj->setVarObj(cx))
         return NULL;
 
     /* Construct a regexp statics object for this global object. */
-    JSObject *res = RegExpStatics::create(cx, globalObj);
+    JSObject *res = RegExpStatics::create(cx, obj);
     if (!res)
         return NULL;
-    globalObj->initSlot(REGEXP_STATICS, ObjectValue(*res));
-    globalObj->initFlags(0);
+    obj->initSlot(REGEXP_STATICS, ObjectValue(*res));
+    obj->initFlags(0);
 
-    return globalObj;
+    return obj;
 }
 
 bool
@@ -371,7 +379,10 @@ JSFunction *
 GlobalObject::createConstructor(JSContext *cx, Native ctor, Class *clasp, JSAtom *name,
                                 uintN length, gc::AllocKind kind)
 {
-    JSFunction *fun = js_NewFunction(cx, NULL, ctor, length, JSFUN_CONSTRUCTOR, this, name, kind);
+    RootedVarObject self(cx, this);
+
+    JSFunction *fun = js_NewFunction(cx, NULL, ctor, length,
+                                     JSFUN_CONSTRUCTOR, self, name, kind);
     if (!fun)
         return NULL;
 
@@ -415,6 +426,9 @@ GlobalObject::createBlankPrototypeInheriting(JSContext *cx, Class *clasp, JSObje
 bool
 LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto)
 {
+    RootObject ctorRoot(cx, &ctor);
+    RootObject protoRoot(cx, &proto);
+
     return ctor->defineProperty(cx, cx->runtime->atomState.classPrototypeAtom,
                                 ObjectValue(*proto), JS_PropertyStub, JS_StrictPropertyStub,
                                 JSPROP_PERMANENT | JSPROP_READONLY) &&
@@ -425,6 +439,8 @@ LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto)
 bool
 DefinePropertiesAndBrand(JSContext *cx, JSObject *obj, JSPropertySpec *ps, JSFunctionSpec *fs)
 {
+    RootObject root(cx, &obj);
+
     if ((ps && !JS_DefineProperties(cx, obj, ps)) || (fs && !JS_DefineFunctions(cx, obj, fs)))
         return false;
     return true;

@@ -1539,7 +1539,7 @@ proxy_createFunction(JSContext *cx, uintN argc, Value *vp)
         return false;
     JSObject *proto, *parent;
     parent = vp[0].toObject().getParent();
-    proto = parent->getGlobal()->getOrCreateFunctionPrototype(cx);
+    proto = parent->global().getOrCreateFunctionPrototype(cx);
     if (!proto)
         return false;
     parent = proto->getParent();
@@ -1653,7 +1653,7 @@ callable_Construct(JSContext *cx, uintN argc, Value *vp)
         if (protov.isObject()) {
             proto = &protov.toObject();
         } else {
-            proto = callable->getGlobal()->getOrCreateObjectPrototype(cx);
+            proto = callable->global().getOrCreateObjectPrototype(cx);
             if (!proto)
                 return false;
         }
@@ -1728,7 +1728,6 @@ js::FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
     JSObject *newborn = NewObjectWithGivenProto(cx, clasp, proto, parent, kind);
     if (!newborn)
         return false;
-    AutoObjectRooter tvr2(cx, newborn);
 
     if (clasp == &CallableObjectClass) {
         newborn->setSlot(JSSLOT_CALLABLE_CALL, GetCall(proxy));

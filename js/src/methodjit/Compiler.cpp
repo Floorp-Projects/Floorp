@@ -486,8 +486,10 @@ void
 mjit::Compiler::popActiveFrame()
 {
     JS_ASSERT(a->parent);
+    a->mainCodeEnd = masm.size();
+    a->stubCodeEnd = stubcc.size();
     this->PC = a->parentPC;
-    this->a = a->parent;
+    this->a = (ActiveFrame *) a->parent;
     this->script = a->script;
     this->analysis = this->script->analysis();
 
@@ -546,18 +548,19 @@ mjit::Compiler::performCompilation(JITScript **jitp)
 
     JaegerSpew(JSpew_Scripts, "successfully compiled (code \"%p\") (size \"%u\")\n",
                (*jitp)->code.m_code.executableAddress(), unsigned((*jitp)->code.m_size));
-
-    if (!*jitp)
-        return Compile_Abort;
-
     return Compile_Okay;
 }
 
 #undef CHECK_STATUS
 
+mjit::JSActiveFrame::JSActiveFrame()
+    : parent(NULL), parentPC(NULL), script(NULL), inlineIndex(UINT32_MAX)
+{
+}
+
 mjit::Compiler::ActiveFrame::ActiveFrame(JSContext *cx)
-    : parent(NULL), parentPC(NULL), script(NULL), jumpMap(NULL),
-      inlineIndex(UINT32_MAX), varTypes(NULL), needReturnValue(false),
+    : jumpMap(NULL),
+      varTypes(NULL), needReturnValue(false),
       syncReturnValue(false), returnValueDouble(false), returnSet(false),
       returnEntry(NULL), returnJumps(NULL), exitState(NULL)
 {}
@@ -925,6 +928,9 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         JaegerSpew(JSpew_Scripts, "dumped a constant pool while generating an IC\n");
         return Compile_Abort;
     }
+
+    a->mainCodeEnd = masm.size();
+    a->stubCodeEnd = stubcc.size();
 
     for (size_t i = 0; i < branchPatches.length(); i++) {
         Label label = labelOf(branchPatches[i].pc, branchPatches[i].inlineIndex);
@@ -1389,8 +1395,9 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     JSC::ExecutableAllocator::makeExecutable(result, masm.size() + stubcc.size());
     JSC::ExecutableAllocator::cacheFlush(result, masm.size() + stubcc.size());
 
-    Probes::registerMJITCode(cx, jit, script, script->function() ? script->function() : NULL,
-                             (mjit::Compiler_ActiveFrame**) inlineFrames.begin(),
+    Probes::registerMJITCode(cx, jit,
+                             a,
+                             (JSActiveFrame**) inlineFrames.begin(),
                              result, masm.size(),
                              result + masm.size(), stubcc.size());
 
@@ -2474,12 +2481,6 @@ mjit::Compiler::generateMethod()
             frame.popn(2);
           END_CASE(JSOP_ENUMELEM)
 
-          BEGIN_CASE(JSOP_BLOCKCHAIN)
-          END_CASE(JSOP_BLOCKCHAIN)
-
-          BEGIN_CASE(JSOP_NULLBLOCKCHAIN)
-          END_CASE(JSOP_NULLBLOCKCHAIN)
-
           BEGIN_CASE(JSOP_CONDSWITCH)
             /* No-op for the decompiler. */
           END_CASE(JSOP_CONDSWITCH)
@@ -2548,7 +2549,7 @@ mjit::Compiler::generateMethod()
 
             jsbytecode *pc2 = NULL;
             if (fun->joinable()) {
-                pc2 = AdvanceOverBlockchainOp(PC + JSOP_LAMBDA_LENGTH);
+                pc2 = PC + JSOP_LAMBDA_LENGTH;
                 JSOp next = JSOp(*pc2);
 
                 if (next == JSOP_INITMETHOD) {
@@ -2571,9 +2572,6 @@ mjit::Compiler::generateMethod()
 
             prepareStubCall(Uses(uses));
             masm.move(ImmPtr(fun), Registers::ArgReg1);
-
-            if (stub != stubs::Lambda)
-                masm.storePtr(ImmPtr(pc2), FrameAddress(offsetof(VMFrame, scratch)));
 
             INLINE_STUBCALL(stub, REJOIN_PUSH_OBJECT);
 
@@ -2691,6 +2689,8 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_GETXPROP)
 
           BEGIN_CASE(JSOP_ENTERBLOCK)
+          BEGIN_CASE(JSOP_ENTERLET0)
+          BEGIN_CASE(JSOP_ENTERLET1)
             enterBlock(script->getObject(fullAtomIndex(PC)));
           END_CASE(JSOP_ENTERBLOCK);
 
@@ -6377,7 +6377,7 @@ mjit::Compiler::jsop_callgname_epilogue()
     /* Paths for known object callee. */
     if (fval->isConstant()) {
         JSObject *obj = &fval->getValue().toObject();
-        if (obj->getGlobal() == globalObj) {
+        if (&obj->global() == globalObj) {
             frame.push(UndefinedValue());
         } else {
             prepareStubCall(Uses(1));
@@ -6834,7 +6834,7 @@ mjit::Compiler::jsop_regexp()
     RegExpStatics *res = globalObj ? globalObj->getRegExpStatics() : NULL;
 
     if (!globalObj ||
-        obj->getGlobal() != globalObj ||
+        &obj->global() != globalObj ||
         !cx->typeInferenceEnabled() ||
         analysis->localsAliasStack() ||
         types::TypeSet::HasObjectFlags(cx, globalObj->getType(cx),
@@ -6846,7 +6846,7 @@ mjit::Compiler::jsop_regexp()
         return true;
     }
 
-    RegExpObject *reobj = obj->asRegExp();
+    RegExpObject *reobj = &obj->asRegExp();
 
     DebugOnly<uint32_t> origFlags = reobj->getFlags();
     DebugOnly<uint32_t> staticsFlags = res->getFlags();
@@ -7147,9 +7147,9 @@ mjit::Compiler::enterBlock(JSObject *obj)
     /* For now, don't bother doing anything for this opcode. */
     frame.syncAndForgetEverything();
     masm.move(ImmPtr(obj), Registers::ArgReg1);
-    uint32_t n = js_GetEnterBlockStackDefs(cx, script, PC);
     INLINE_STUBCALL(stubs::EnterBlock, REJOIN_NONE);
-    frame.enterBlock(n);
+    if (*PC == JSOP_ENTERBLOCK)
+        frame.enterBlock(StackDefs(script, PC));
 }
 
 void
@@ -7159,10 +7159,8 @@ mjit::Compiler::leaveBlock()
      * Note: After bug 535912, we can pass the block obj directly, inline
      * PutBlockObject, and do away with the muckiness in PutBlockObject.
      */
-    uint32_t n = js_GetVariableStackUses(JSOP_LEAVEBLOCK, PC);
-    JSObject *obj = script->getObject(fullAtomIndex(PC + UINT16_LEN));
+    uint32_t n = StackUses(script, PC);
     prepareStubCall(Uses(n));
-    masm.move(ImmPtr(obj), Registers::ArgReg1);
     INLINE_STUBCALL(stubs::LeaveBlock, REJOIN_NONE);
     frame.leaveBlock(n);
 }
@@ -7621,29 +7619,6 @@ mjit::Compiler::pushedSingleton(unsigned pushed)
 
     types::TypeSet *types = analysis->pushedTypes(PC, pushed);
     return types->getSingleton(cx);
-}
-
-bool
-mjit::Compiler::arrayPrototypeHasIndexedProperty()
-{
-    if (!cx->typeInferenceEnabled() || !globalObj)
-        return true;
-
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, NULL, JSProto_Array, &proto, NULL))
-        return true;
-
-    while (proto) {
-        types::TypeObject *type = proto->getType(cx);
-        if (type->unknownProperties())
-            return true;
-        types::TypeSet *indexTypes = type->getProperty(cx, JSID_VOID, false);
-        if (!indexTypes || indexTypes->isOwnProperty(cx, type, true) || indexTypes->knownNonEmpty(cx))
-            return true;
-        proto = proto->getProto();
-    }
-
-    return false;
 }
 
 /*

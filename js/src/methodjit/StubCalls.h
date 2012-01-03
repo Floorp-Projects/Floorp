@@ -154,7 +154,7 @@ JSObject * JS_FASTCALL LambdaJoinableForNull(VMFrame &f, JSFunction *fun);
 JSObject * JS_FASTCALL FlatLambda(VMFrame &f, JSFunction *fun);
 void JS_FASTCALL Arguments(VMFrame &f);
 void JS_FASTCALL EnterBlock(VMFrame &f, JSObject *obj);
-void JS_FASTCALL LeaveBlock(VMFrame &f, JSObject *blockChain);
+void JS_FASTCALL LeaveBlock(VMFrame &f);
 
 JSBool JS_FASTCALL LessThan(VMFrame &f);
 JSBool JS_FASTCALL LessEqual(VMFrame &f);

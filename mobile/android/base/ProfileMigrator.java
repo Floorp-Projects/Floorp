@@ -50,6 +50,7 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.provider.Browser;
 import android.util.Log;
+import android.webkit.WebIconDatabase;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -114,6 +115,11 @@ public class ProfileMigrator {
     }
 
     public void launchBackground() {
+        // Work around http://code.google.com/p/android/issues/detail?id=11291
+        // The WebIconDatabase needs to be initialized within the UI thread so
+        // just request the instance here.
+        WebIconDatabase.getInstance();
+
         PlacesTask placesTask = new PlacesTask();
         new Thread(placesTask).start();
     }
@@ -159,10 +165,6 @@ public class ProfileMigrator {
                     // Places URL hit is newer than Android,
                     // allow it to be updated with places date
                     allowUpdate = true;
-                } else {
-                    Log.i(LOGTAG, "Android history is newer, not adding: " + url
-                          + " date: " + (new Date(date)).toString()
-                          + " android: " + (new Date(androidDate)).toString());
                 }
             }
 
@@ -172,7 +174,6 @@ public class ProfileMigrator {
                 if (title != null) {
                     BrowserDB.updateHistoryTitle(mCr, url, title);
                 }
-                Log.i(LOGTAG, "Adding history: " + url);
             }
         }
 
@@ -197,8 +198,6 @@ public class ProfileMigrator {
                     String title = cursor.getString(titleCol);
                     // Convert from us (Places) to ms (Java, Android)
                     long date = cursor.getLong(dateCol) / (long)1000;
-                    Log.i(LOGTAG, "History: " + title + " URL: " + url
-                          + " time: " + (new Date(date)).toString());
                     addHistory(androidHistory, url, title, date);
                     placesHistory.add(url);
                     cursor.moveToNext();
@@ -225,7 +224,6 @@ public class ProfileMigrator {
 
         protected void addBookmark(String url, String title) {
             if (!BrowserDB.isBookmark(mCr, url)) {
-                Log.i(LOGTAG, "Adding bookmark: " + url);
                 if (title == null) {
                     title = url;
                 }
@@ -248,7 +246,6 @@ public class ProfileMigrator {
                     while (!cursor.isAfterLast()) {
                         String url = cursor.getString(urlCol);
                         String title = cursor.getString(titleCol);
-                        Log.i(LOGTAG, "Bookmark: " + title + " URL: " + url);
                         addBookmark(url, title);
                         cursor.moveToNext();
                     }
@@ -266,12 +263,13 @@ public class ProfileMigrator {
         protected void addFavicon(String url, String mime, byte[] data) {
             ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
             BitmapDrawable image = (BitmapDrawable) Drawable.createFromStream(byteStream, "src");
-            try {
-                BrowserDB.updateFaviconForUrl(mCr, url, image);
-                Log.i(LOGTAG, "Favicon added: " + mime + " URL: " + url);
-            } catch (SQLiteException e) {
-                Log.i(LOGTAG, "Favicon failed: " + mime + " URL: " + url
-                      + " error:" + e.getMessage());
+            if (image != null) {
+                try {
+                    BrowserDB.updateFaviconForUrl(mCr, url, image);
+                } catch (SQLiteException e) {
+                    Log.i(LOGTAG, "Migrating favicon failed: " + mime + " URL: " + url
+                          + " error:" + e.getMessage());
+                }
             }
         }
 
@@ -343,6 +341,8 @@ public class ProfileMigrator {
                 dbFile.delete();
                 dbFileWal.delete();
                 dbFileShm.delete();
+
+                Log.i(LOGTAG, "Profile migration finished");
             } catch (SQLiteException e) {
                 if (db != null) {
                     db.close();

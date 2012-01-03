@@ -23,6 +23,7 @@
  *   Mihai Șucan <mihai.sucan@gmail.com>
  *   Michael Ratcliffe <mratcliffe@mozilla.com>
  *   Dão Gottwald <dao@mozilla.com>
+ *   Rob Campbell <rcampbell@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,17 +50,9 @@
 }
 
 .property-header {
-  padding: 4px;
-  -moz-padding-start: 0;
-  -moz-padding-end: 5px;
-}
-
-.rule-unmatched {
-  cursor: pointer;
-  padding: 2px;
-  -moz-padding-start: 4px;
-  -moz-padding-end: 0;
+  padding: 5px 0;
   white-space: nowrap;
+  vertical-align: text-top;
 }
 
 /* Take away these two :visited rules to get a core dumper     */
@@ -75,11 +68,6 @@
   text-decoration: none;
 }
 
-.helplink-container {
-  position: relative;
-  top: 2px;
-}
-
 .helplink {
   display: block;
   height: 14px;
@@ -88,19 +76,16 @@
   -moz-padding-start: 14px;
   background-image: url("chrome://browser/skin/devtools/goto-mdn.png");
   -moz-margin-end: 2px;
+  cursor: pointer;
 }
 
-.property-header:not(:hover) > .helplink-container {
+.property-view:not(:hover) > .helplink-container {
   visibility: hidden;
-}
-
-.unmatchedSelectorTable {
-  -moz-margin-start: 15px;
 }
 
 .rulelink {
   color: -moz-dialogtext;
-  -moz-margin-start: 12px;
+  padding: 0;
 }
 
 .expander {
@@ -109,6 +94,8 @@
   -moz-margin-start: 5px;
   -moz-margin-end: 5px;
   background: url("chrome://global/skin/tree/twisty-clsd.png") center center no-repeat;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .expander[open] {
@@ -123,25 +110,25 @@
   visibility: hidden;
 }
 
-.expandable > .match {
+.expandable > .property-header > .match {
   visibility: visible;
-}
-
-.only-unmatched {
-  -moz-margin-start: 0;
 }
 
 .property-name {
   font-size: 12px;
   color: -moz-FieldText;
-  width: 220px;
+  display: inline-block;
 }
 .property-value {
+  padding: 0;
   font-size: 10px;
   color: grey;
+  vertical-align: text-top;
+  width: 100%;
 }
 
-.property-view-hidden {
+.property-view-hidden,
+.property-content-hidden {
   display: none;
 }
 
@@ -153,7 +140,8 @@
 /* This rule is necessary because Templater.jsm breaks LTR TDs in RTL docs */
 .rule-text {
   direction: ltr;
-  -moz-padding-start: 15px;
+  padding: 0;
+  -moz-padding-start: 20px;
 }
 
 .bestmatch {
@@ -165,15 +153,13 @@
 .parentmatch {
   color: #666;
 }
-.unmatched {
-  color: brown;
-}
 
 #propertyContainer {
   display: -moz-box;
   -moz-box-orient: vertical;
   -moz-box-flex: 1;
   overflow-y: auto;
+  border-collapse: collapse;
 }
 
 .darkrow {
@@ -189,20 +175,11 @@
 .headerControls {
   color: -moz-dialogtext;
   background-color: -moz-dialog;
-  padding-top: 5px;
 }
 
 .onlyuserstyles {
   cursor: pointer;
   font-size: 11px;
-}
-
-.searchfield {
-  -moz-margin-start: 10px;
-}
-
-.styleinspector-legend {
-  -moz-margin-start: 12px;
 }
 
 #footer {
@@ -228,6 +205,10 @@
 
 .ruleview-code {
   padding: 2px 5px;
+}
+
+.ruleview-ruleopen {
+  -moz-padding-end: 5px;
 }
 
 .ruleview-propertylist {

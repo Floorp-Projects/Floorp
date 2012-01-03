@@ -3,8 +3,10 @@
 <!DOCTYPE resources [
 #includesubst @BRANDPATH@
 #includesubst @STRINGSPATH@
+#includesubst @SYNCSTRINGSPATH@
 ]>
 <resources>
+#include ../sync/strings.xml.in
   <string name="splash_firstrun">&splash_firstrun;</string>
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
@@ -57,10 +59,6 @@
   <string name="pref_about_firefox">&pref_about_firefox;</string>
   <string name="pref_do_not_track">&pref_do_not_track;</string>
   <string name="pref_telemetry">&pref_telemetry;</string>
-  <string name="pref_homepage">&pref_homepage;</string>
-  <string name="pref_homepage_start">&pref_homepage_start;</string>
-  <string name="pref_homepage_blank">&pref_homepage_blank;</string>
-  <string name="pref_homepage_current">&pref_homepage_current;</string>
   <string name="pref_remember_signons">&pref_remember_signons;</string>
   <string name="pref_cookies">&pref_cookies;</string>
   <string name="pref_char_encoding">&pref_char_encoding;</string>
@@ -91,4 +89,13 @@
   <string name="contextmenu_open_new_tab">&contextmenu_open_new_tab;</string>
   <string name="contextmenu_add_to_launcher">&contextmenu_add_to_launcher;</string>
   <string name="contextmenu_share">&contextmenu_share;</string>
+
+  <string name="pref_use_master_password">&pref_use_master_password;</string>
+  <string name="masterpassword_create_title">&masterpassword_create_title;</string>
+  <string name="masterpassword_remove_title">&masterpassword_remove_title;</string>
+  <string name="masterpassword_password">&masterpassword_password;</string>
+  <string name="masterpassword_confirm">&masterpassword_confirm;</string>
+
+  <string name="button_ok">&button_ok;</string>
+  <string name="button_cancel">&button_cancel;</string>
 </resources>

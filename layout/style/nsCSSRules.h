@@ -72,8 +72,8 @@ class nsMediaList;
 namespace mozilla {
 namespace css {
 
-class MediaRule : public GroupRule,
-                  public nsIDOMCSSMediaRule
+class MediaRule MOZ_FINAL : public GroupRule,
+                            public nsIDOMCSSMediaRule
 {
 public:
   MediaRule();
@@ -115,8 +115,8 @@ protected:
   nsRefPtr<nsMediaList> mMedia;
 };
 
-class DocumentRule : public GroupRule,
-                     public nsIDOMCSSMozDocumentRule
+class DocumentRule MOZ_FINAL : public GroupRule,
+                               public nsIDOMCSSMozDocumentRule
 {
 public:
   DocumentRule();
@@ -315,7 +315,7 @@ private:
 
 class nsCSSKeyframeRule;
 
-class nsCSSKeyframeStyleDeclaration : public nsDOMCSSDeclaration
+class nsCSSKeyframeStyleDeclaration MOZ_FINAL : public nsDOMCSSDeclaration
 {
 public:
   nsCSSKeyframeStyleDeclaration(nsCSSKeyframeRule *aRule);
@@ -390,8 +390,8 @@ private:
   nsRefPtr<nsCSSKeyframeStyleDeclaration>    mDOMDeclaration;
 };
 
-class nsCSSKeyframesRule : public mozilla::css::GroupRule,
-                           public nsIDOMMozCSSKeyframesRule
+class nsCSSKeyframesRule MOZ_FINAL : public mozilla::css::GroupRule,
+                                     public nsIDOMMozCSSKeyframesRule
 {
 public:
   nsCSSKeyframesRule(const nsSubstring& aName)

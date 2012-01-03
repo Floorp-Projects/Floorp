@@ -78,7 +78,7 @@ DEFINES += -DDISABLE_FILE_FACE -DDISABLE_TRACING -DDISABLE_SEGCACHE
 
 # provide a custom header that overrides malloc() and friends,
 # to ensure safe OOM handling
-DEFINES += -DGR_CUSTOM_HEADER="\"MozGrMalloc.h\""
+DEFINES += -DGR2_CUSTOM_HEADER="\"MozGrMalloc.h\""
 
 # Filter out -pedantic so that direct_machine.cpp can use computed goto
 CXXFLAGS := $(filter-out -pedantic,$(CXXFLAGS))

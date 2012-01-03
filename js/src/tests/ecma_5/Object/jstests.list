@@ -38,6 +38,7 @@ skip-if(!xulRuntime.shell) script 15.2.3.6-dictionary-redefinition-8-of-8.js # u
 script 15.2.3.6-define-over-method.js
 script mutation-prevention-methods.js
 script object-toString-01.js
+script proto-property-change-writability-set.js
 script vacuous-accessor-unqualified-name.js
 script add-property-non-extensible.js
 skip-if(!xulRuntime.shell) script freeze-global-eval-const.js # uses evalcx

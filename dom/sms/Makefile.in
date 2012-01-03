@@ -39,12 +39,15 @@ topsrcdir        = @top_srcdir@
 srcdir           = @srcdir@
 VPATH            = @srcdir@
 
+relativesrcdir   = dom/sms
+
 include $(DEPTH)/config/autoconf.mk
 
 PARALLEL_DIRS = interfaces src
 
 ifdef ENABLE_TESTS
 DIRS += tests
+XPCSHELL_TESTS = tests
 endif
 
 include $(topsrcdir)/config/rules.mk

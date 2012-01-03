@@ -41,6 +41,8 @@
 #ifndef LifoAlloc_h__
 #define LifoAlloc_h__
 
+#include "mozilla/Attributes.h"
+
 /*
  * This data structure supports stacky LIFO allocation (mark/release and
  * LifoAllocScope). It does not maintain one contiguous segment; instead, it
@@ -181,8 +183,8 @@ class LifoAlloc
     size_t      markCount;
     size_t      defaultChunkSize_;
 
-    void operator=(const LifoAlloc &);
-    LifoAlloc(const LifoAlloc &);
+    void operator=(const LifoAlloc &) MOZ_DELETE;
+    LifoAlloc(const LifoAlloc &) MOZ_DELETE;
 
     /* 
      * Return a BumpChunk that can perform an allocation of at least size |n|

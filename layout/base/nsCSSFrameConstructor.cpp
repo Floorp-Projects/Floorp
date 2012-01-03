@@ -72,7 +72,7 @@
 #include "nsStyleConsts.h"
 #include "nsTableOuterFrame.h"
 #include "nsIDOMXULElement.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLLegendElement.h"
@@ -143,7 +143,7 @@
 
 #include "nsMathMLParts.h"
 #include "nsIDOMSVGFilters.h"
-#include "nsSVGFeatures.h"
+#include "DOMSVGTests.h"
 #include "nsSVGEffects.h"
 #include "nsSVGUtils.h"
 #include "nsSVGOuterSVGFrame.h"
@@ -3527,7 +3527,7 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
     SIMPLE_TAG_CREATE(frameset, NS_NewHTMLFramesetFrame),
     SIMPLE_TAG_CREATE(iframe, NS_NewSubDocumentFrame),
     COMPLEX_TAG_CREATE(button, &nsCSSFrameConstructor::ConstructButtonFrame),
-    SIMPLE_TAG_CREATE(canvas, NS_NewHTMLCanvasFrame),
+    SIMPLE_TAG_CHAIN(canvas, nsCSSFrameConstructor::FindCanvasData),
 #if defined(MOZ_MEDIA)
     SIMPLE_TAG_CREATE(video, NS_NewHTMLVideoFrame),
     SIMPLE_TAG_CREATE(audio, NS_NewHTMLVideoFrame),
@@ -3636,6 +3636,20 @@ nsCSSFrameConstructor::FindObjectData(Element* aElement,
 
   return FindDataByInt((PRInt32)type, aElement, aStyleContext,
                        sObjectData, ArrayLength(sObjectData));
+}
+
+/* static */
+const nsCSSFrameConstructor::FrameConstructionData*
+nsCSSFrameConstructor::FindCanvasData(Element* aElement,
+                                      nsStyleContext* aStyleContext)
+{
+  if (!aElement->OwnerDoc()->IsScriptEnabled()) {
+    return nsnull;
+  }
+
+  static const FrameConstructionData sCanvasData =
+    SIMPLE_FCDATA(NS_NewHTMLCanvasFrame);
+  return &sCanvasData;
 }
 
 nsresult
@@ -4781,7 +4795,8 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
     return &sOuterSVGData;
   }
   
-  if (!nsSVGFeatures::PassesConditionalProcessingTests(aElement)) {
+  nsCOMPtr<DOMSVGTests> tests(do_QueryInterface(aElement));
+  if (tests && !tests->PassesConditionalProcessingTests()) {
     // Elements with failing conditional processing attributes never get
     // rendered.  Note that this is not where we select which frame in a
     // <switch> to render!  That happens in nsSVGSwitchFrame::PaintSVG.

@@ -48,12 +48,14 @@
 #include "jsscope.h"
 #include "jswatchpoint.h"
 #include "jswrapper.h"
+
 #include "assembler/wtf/Platform.h"
-#include "yarr/BumpPointerAllocator.h"
+#include "js/MemoryMetrics.h"
 #include "methodjit/MethodJIT.h"
 #include "methodjit/PolyIC.h"
 #include "methodjit/MonoIC.h"
 #include "vm/Debugger.h"
+#include "yarr/BumpPointerAllocator.h"
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
@@ -142,17 +144,24 @@ JSCompartment::ensureJaegerCompartmentExists(JSContext *cx)
     return true;
 }
 
-void
-JSCompartment::sizeOfCode(size_t *method, size_t *regexp, size_t *unused) const
+size_t
+JSCompartment::sizeOfMjitCode() const
 {
-    if (jaegerCompartment_) {
-        jaegerCompartment_->execAlloc()->sizeOfCode(method, regexp, unused);
-    } else {
-        *method = 0;
-        *regexp = 0;
-        *unused = 0;
-    }
+    if (!jaegerCompartment_)
+        return 0;
+
+    size_t method, regexp, unused;
+    jaegerCompartment_->execAlloc()->sizeOfCode(&method, &regexp, &unused);
+    JS_ASSERT(regexp == 0);
+    return method + unused;
 }
+
+JS_PUBLIC_API(size_t)
+JS::SizeOfCompartmentMjitCode(const JSCompartment *c)
+{
+    return c->sizeOfMjitCode();
+}
+
 #endif
 
 bool
@@ -191,7 +200,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
      */
     JSObject *global;
     if (cx->hasfp()) {
-        global = cx->fp()->scopeChain().getGlobal();
+        global = &cx->fp()->scopeChain().global();
     } else {
         global = JS_ObjectToInnerObject(cx, cx->globalObject);
         if (!global)
@@ -739,4 +748,13 @@ JSCompartment::createBarrierTracer()
 {
     JS_ASSERT(!gcIncrementalTracer);
     return NULL;
+}
+
+JS_PUBLIC_API(size_t)
+JS::SizeOfCompartmentShapeTable(JSCompartment *c, JSMallocSizeOfFun mallocSizeOf)
+{
+    return c->baseShapes.sizeOfExcludingThis(mallocSizeOf)
+         + c->initialShapes.sizeOfExcludingThis(mallocSizeOf)
+         + c->newTypeObjects.sizeOfExcludingThis(mallocSizeOf)
+         + c->lazyTypeObjects.sizeOfExcludingThis(mallocSizeOf);
 }

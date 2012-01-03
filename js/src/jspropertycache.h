@@ -52,17 +52,7 @@ namespace js {
  * polymorphic callsite method/get/set speedups.  For details, see
  * <https://developer.mozilla.org/en/SpiderMonkey/Internals/Property_cache>.
  */
-
-/* Indexing for property cache entry scope and prototype chain walking. */
-enum {
-    PCINDEX_PROTOBITS = 4,
-    PCINDEX_PROTOSIZE = JS_BIT(PCINDEX_PROTOBITS),
-    PCINDEX_PROTOMASK = JS_BITMASK(PCINDEX_PROTOBITS),
-
-    PCINDEX_SCOPEBITS = 4,
-    PCINDEX_SCOPESIZE = JS_BIT(PCINDEX_SCOPEBITS),
-    PCINDEX_SCOPEMASK = JS_BITMASK(PCINDEX_SCOPEBITS)
-};
+class PropertyCache;
 
 struct PropertyCacheEntry
 {
@@ -70,21 +60,50 @@ struct PropertyCacheEntry
     const Shape         *kshape;        /* shape of direct (key) object */
     const Shape         *pshape;        /* shape of owning object */
     const Shape         *prop;          /* shape of accessed property */
-    uint16_t            vindex;         /* scope/proto chain indexing,
-                                         * see PCINDEX above */
 
-    bool directHit() const { return vindex == 0; }
+    friend class PropertyCache;
+
+  private:
+    /* Index into scope chain; inapplicable to property lookup entries. */
+    uint8_t             scopeIndex;
+    /* Index into the prototype chain from the object for this entry. */
+    uint8_t             protoIndex;
+
+  public:
+    static const size_t MaxScopeIndex = 15;
+    static const size_t MaxProtoIndex = 15;
+
+    /*
+     * True iff the property lookup will find an own property on the object if
+     * the entry matches.
+     *
+     * This test is applicable only to property lookups, not to identifier
+     * lookups.  It is meaningless to ask this question of an entry for an
+     * identifier lookup.
+     */
+    bool isOwnPropertyHit() const { return scopeIndex == 0 && protoIndex == 0; }
+
+    /*
+     * True iff the property lookup will find the property on the prototype of
+     * the object if the entry matches.
+     *
+     * This test is applicable only to property lookups, not to identifier
+     * lookups.  It is meaningless to ask this question of an entry for an
+     * identifier lookup.
+     */
+    bool isPrototypePropertyHit() const { return scopeIndex == 0 && protoIndex == 1; }
 
     void assign(jsbytecode *kpc, const Shape *kshape, const Shape *pshape,
                 const Shape *prop, uintN scopeIndex, uintN protoIndex) {
-        JS_ASSERT(scopeIndex <= PCINDEX_SCOPEMASK);
-        JS_ASSERT(protoIndex <= PCINDEX_PROTOMASK);
+        JS_ASSERT(scopeIndex <= MaxScopeIndex);
+        JS_ASSERT(protoIndex <= MaxProtoIndex);
 
         this->kpc = kpc;
         this->kshape = kshape;
         this->pshape = pshape;
         this->prop = prop;
-        this->vindex = (scopeIndex << PCINDEX_PROTOBITS) | protoIndex;
+        this->scopeIndex = uint8_t(scopeIndex);
+        this->protoIndex = uint8_t(protoIndex);
     }
 };
 
@@ -161,8 +180,8 @@ class PropertyCache
 
     static inline bool matchShape(JSContext *cx, JSObject *obj, uint32_t shape);
 
-    JS_REQUIRES_STACK JSAtom *fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp,
-                                       JSObject **pobjp, PropertyCacheEntry *entry);
+    JSAtom *fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp,
+                     JSObject **pobjp, PropertyCacheEntry *entry);
 
 #ifdef DEBUG
     void assertEmpty();
@@ -171,9 +190,9 @@ class PropertyCache
 #endif
 
   public:
-    JS_ALWAYS_INLINE JS_REQUIRES_STACK void test(JSContext *cx, jsbytecode *pc,
-                                                 JSObject *&obj, JSObject *&pobj,
-                                                 PropertyCacheEntry *&entry, JSAtom *&atom);
+    JS_ALWAYS_INLINE void test(JSContext *cx, jsbytecode *pc,
+                               JSObject *&obj, JSObject *&pobj,
+                               PropertyCacheEntry *&entry, JSAtom *&atom);
 
     /*
      * Test for cached information about a property set on *objp at pc.
@@ -194,8 +213,8 @@ class PropertyCache
      * Return the filled cache entry or JS_NO_PROP_CACHE_FILL if caching was
      * not possible.
      */
-    JS_REQUIRES_STACK PropertyCacheEntry *fill(JSContext *cx, JSObject *obj, uintN scopeIndex,
-                                               JSObject *pobj, const js::Shape *shape);
+    PropertyCacheEntry *fill(JSContext *cx, JSObject *obj, uintN scopeIndex,
+                             JSObject *pobj, const js::Shape *shape);
 
     void purge(JSContext *cx);
 

@@ -39,6 +39,7 @@
 
 #include <android/log.h>
 #include <math.h>
+#include <unistd.h>
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
@@ -91,6 +92,20 @@ static gfxIntSize gAndroidScreenBounds;
 #ifdef ACCESSIBILITY
 bool nsWindow::sAccessibilityEnabled = false;
 #endif
+
+#ifdef MOZ_JAVA_COMPOSITOR
+#include "mozilla/Mutex.h"
+#include "nsThreadUtils.h"
+#include "AndroidDirectTexture.h"
+
+static AndroidDirectTexture* sDirectTexture = new AndroidDirectTexture(2048, 2048,
+        AndroidGraphicBuffer::UsageSoftwareWrite | AndroidGraphicBuffer::UsageTexture,
+        gfxASurface::ImageFormatRGB16_565);
+
+static bool sHasDirectTexture = true;
+
+#endif
+
 
 class ContentCreationNotifier;
 static nsCOMPtr<ContentCreationNotifier> gContentCreationNotifier;
@@ -808,6 +823,53 @@ nsWindow::GetThebesSurface()
     return new gfxImageSurface(gfxIntSize(5,5), gfxImageSurface::ImageFormatRGB24);
 }
 
+#ifdef MOZ_JAVA_COMPOSITOR
+
+void
+nsWindow::BindToTexture()
+{
+    sDirectTexture->Bind();
+}
+
+bool
+nsWindow::HasDirectTexture()
+{
+  // If we already tested, return early
+  if (!sHasDirectTexture)
+    return false;
+
+  AndroidGraphicBuffer* buffer = new AndroidGraphicBuffer(512, 512,
+      AndroidGraphicBuffer::UsageSoftwareWrite | AndroidGraphicBuffer::UsageTexture,
+      gfxASurface::ImageFormatRGB16_565);
+
+  unsigned char* bits = NULL;
+  if (!buffer->Lock(AndroidGraphicBuffer::UsageSoftwareWrite, &bits) || !bits) {
+    ALOG("failed to lock graphic buffer");
+    buffer->Unlock();
+    sHasDirectTexture = false;
+    goto cleanup;
+  }
+
+  if (!buffer->Unlock()) {
+    ALOG("failed to unlock graphic buffer");
+    sHasDirectTexture = false;
+    goto cleanup;
+  }
+
+  if (!buffer->Reallocate(1024, 1024, gfxASurface::ImageFormatRGB16_565)) {
+    ALOG("failed to reallocate graphic buffer");
+    sHasDirectTexture = false;
+    goto cleanup;
+  }
+
+cleanup:
+  delete buffer;
+
+  return sHasDirectTexture;
+}
+
+#endif
+
 void
 nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 {
@@ -1108,12 +1170,29 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
 
     AndroidGeckoSoftwareLayerClient &client =
         AndroidBridge::Bridge()->GetSoftwareLayerClient();
-    client.BeginDrawing();
+    client.BeginDrawing(gAndroidBounds.width, gAndroidBounds.height);
 
     nsAutoString metadata;
-    unsigned char *bits = client.LockBufferBits();
+    unsigned char *bits = NULL;
+    if (sHasDirectTexture) {
+      if ((sDirectTexture->Width() != gAndroidBounds.width ||
+           sDirectTexture->Height() != gAndroidBounds.height) &&
+          gAndroidBounds.width != 0 && gAndroidBounds.height != 0) {
+        sDirectTexture->Reallocate(gAndroidBounds.width, gAndroidBounds.height);
+      }
+
+      sDirectTexture->Lock(AndroidGraphicBuffer::UsageSoftwareWrite, &bits);
+    } else {
+      bits = client.LockBufferBits();
+    }
     if (!bits) {
         ALOG("### Failed to lock buffer");
+
+        if (sHasDirectTexture) {
+          sDirectTexture->Unlock();
+        } else {
+          client.UnlockBuffer();
+        }
     } else {
         nsRefPtr<gfxImageSurface> targetSurface =
             new gfxImageSurface(bits, gfxIntSize(gAndroidBounds.width, gAndroidBounds.height), gAndroidBounds.width * 2,
@@ -1121,7 +1200,12 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
         if (targetSurface->CairoStatus()) {
             ALOG("### Failed to create a valid surface from the bitmap");
         } else {
-            DrawTo(targetSurface, ae->Rect());
+            if (sHasDirectTexture) {
+              // XXX: lock only the dirty rect above and pass it in here
+              DrawTo(targetSurface);
+            } else {
+              DrawTo(targetSurface, ae->Rect());
+            }
 
             {
                 nsCOMPtr<nsIAndroidDrawMetadataProvider> metadataProvider =
@@ -1130,7 +1214,11 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
                     metadataProvider->GetDrawMetadata(metadata);
             }
         }
-        client.UnlockBuffer();
+        if (sHasDirectTexture) {
+          sDirectTexture->Unlock();
+        } else {
+          client.UnlockBuffer();
+        }
     }
     client.EndDrawing(ae->Rect(), metadata);
     return;

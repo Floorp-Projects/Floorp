@@ -401,19 +401,19 @@ argumentUnboxingTemplates = {
         "    uint32_t ${name}_u32;\n"
         "    if (!JS_ValueToECMAUint32(cx, ${argVal}, &${name}_u32))\n"
         "        return JS_FALSE;\n"
-        "    uint8 ${name} = (uint8) ${name}_u32;\n",
+        "    uint8_t ${name} = (uint8_t) ${name}_u32;\n",
 
     'short':
         "    int32_t ${name}_i32;\n"
         "    if (!JS_ValueToECMAInt32(cx, ${argVal}, &${name}_i32))\n"
         "        return JS_FALSE;\n"
-        "    int16 ${name} = (int16) ${name}_i32;\n",
+        "    int16_t ${name} = (int16_t) ${name}_i32;\n",
 
     'unsigned short':
         "    uint32_t ${name}_u32;\n"
         "    if (!JS_ValueToECMAUint32(cx, ${argVal}, &${name}_u32))\n"
         "        return JS_FALSE;\n"
-        "    uint16 ${name} = (uint16) ${name}_u32;\n",
+        "    uint16_t ${name} = (uint16_t) ${name}_u32;\n",
 
     'long':
         "    int32_t ${name};\n"
@@ -633,25 +633,27 @@ resultConvTemplates = {
             "    return JS_TRUE;\n",
 
     'octet':
-        "    ${jsvalRef} = INT_TO_JSVAL((int32) result);\n"
+        "    ${jsvalRef} = INT_TO_JSVAL((int32_t) result);\n"
         "    return JS_TRUE;\n",
 
     'short':
-        "    ${jsvalRef} = INT_TO_JSVAL((int32) result);\n"
+        "    ${jsvalRef} = INT_TO_JSVAL((int32_t) result);\n"
         "    return JS_TRUE;\n",
 
     'long':
-        "    return xpc_qsInt32ToJsval(cx, result, ${jsvalPtr});\n",
+        "    ${jsvalRef} = INT_TO_JSVAL(result);\n"
+        "    return JS_TRUE;\n",
 
     'long long':
         "    return xpc_qsInt64ToJsval(cx, result, ${jsvalPtr});\n",
 
     'unsigned short':
-        "    ${jsvalRef} = INT_TO_JSVAL((int32) result);\n"
+        "    ${jsvalRef} = INT_TO_JSVAL((int32_t) result);\n"
         "    return JS_TRUE;\n",
 
     'unsigned long':
-        "    return xpc_qsUint32ToJsval(cx, result, ${jsvalPtr});\n",
+        "    ${jsvalRef} = UINT_TO_JSVAL(result);\n"
+        "    return JS_TRUE;\n",
 
     'unsigned long long':
         "    return xpc_qsUint64ToJsval(cx, result, ${jsvalPtr});\n",
@@ -667,10 +669,10 @@ resultConvTemplates = {
         "    return JS_TRUE;\n",
 
     '[astring]':
-        "    return xpc_qsStringToJsval(cx, result, ${jsvalPtr});\n",
+        "    return xpc::StringToJsval(cx, result, ${jsvalPtr});\n",
 
     '[domstring]':
-        "    return xpc_qsStringToJsval(cx, result, ${jsvalPtr});\n",
+        "    return xpc::StringToJsval(cx, result, ${jsvalPtr});\n",
 
     '[jsval]':
         # Here there's nothing to convert, because the result has already been

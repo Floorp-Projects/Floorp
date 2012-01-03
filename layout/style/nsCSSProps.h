@@ -343,7 +343,8 @@ public:
   static const PRInt32 kBackgroundSizeKTable[];
   static const PRInt32 kBorderCollapseKTable[];
   static const PRInt32 kBorderColorKTable[];
-  static const PRInt32 kBorderImageKTable[];
+  static const PRInt32 kBorderImageRepeatKTable[];
+  static const PRInt32 kBorderImageSliceKTable[];
   static const PRInt32 kBorderStyleKTable[];
   static const PRInt32 kBorderWidthKTable[];
   static const PRInt32 kBoxAlignKTable[];
@@ -359,6 +360,7 @@ public:
   static const PRInt32 kTextAnchorKTable[];
   static const PRInt32 kTextRenderingKTable[];
   static const PRInt32 kColorInterpolationKTable[];
+  static const PRInt32 kColumnFillKTable[];
   static const PRInt32 kBoxPropSourceKTable[];
   static const PRInt32 kBoxShadowTypeKTable[];
   static const PRInt32 kBoxSizingKTable[];

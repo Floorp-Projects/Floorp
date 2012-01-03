@@ -193,7 +193,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 
 #include "mozAutoDocUpdate.h"
 #include "imgICache.h"
-#include "xpcprivate.h"
+#include "xpcprivate.h" // nsXPConnect
 #include "nsScriptSecurityManager.h"
 #include "nsIChannelPolicy.h"
 #include "nsChannelPolicy.h"
@@ -207,6 +207,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIContentViewer.h"
 #include "nsIObjectLoadingContent.h"
 
+#include "mozilla/Base64.h"
 #include "mozilla/Preferences.h"
 
 #include "nsWrapperCacheInlines.h"
@@ -633,7 +634,7 @@ nsContentUtils::Btoa(const nsAString& aBinaryData,
     return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
   }
 
-  return nsXPConnect::Base64Encode(aBinaryData, aAsciiBase64String);
+  return Base64Encode(aBinaryData, aAsciiBase64String);
 }
 
 nsresult
@@ -645,7 +646,7 @@ nsContentUtils::Atob(const nsAString& aAsciiBase64String,
     return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
   }
 
-  nsresult rv = nsXPConnect::Base64Decode(aAsciiBase64String, aBinaryData);
+  nsresult rv = Base64Decode(aAsciiBase64String, aBinaryData);
   if (NS_FAILED(rv) && rv == NS_ERROR_INVALID_ARG) {
     return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
   }
@@ -1147,16 +1148,9 @@ nsContentUtils::Shutdown()
 
 // static
 bool
-nsContentUtils::IsCallerTrustedForCapability(const char* aCapability)
+nsContentUtils::CallerHasUniversalXPConnect()
 {
-  // The secman really should handle UniversalXPConnect case, since that
-  // should include UniversalBrowserRead... doesn't right now, though.
   bool hasCap;
-  if (NS_FAILED(sSecurityManager->IsCapabilityEnabled(aCapability, &hasCap)))
-    return false;
-  if (hasCap)
-    return true;
-    
   if (NS_FAILED(sSecurityManager->IsCapabilityEnabled("UniversalXPConnect",
                                                       &hasCap)))
     return false;
@@ -1226,16 +1220,9 @@ nsContentUtils::CanCallerAccess(nsIPrincipal* aSubjectPrincipal,
     return true;
   }
 
-  // The subject doesn't subsume aPrincipal.  Allow access only if the subject
-  // has either "UniversalXPConnect" (if aPrincipal is system principal) or
-  // "UniversalBrowserRead" (in all other cases).
-  bool isSystem;
-  rv = sSecurityManager->IsSystemPrincipal(aPrincipal, &isSystem);
-  isSystem = NS_FAILED(rv) || isSystem;
-  const char* capability =
-    NS_FAILED(rv) || isSystem ? "UniversalXPConnect" : "UniversalBrowserRead";
-
-  return IsCallerTrustedForCapability(capability);
+  // The subject doesn't subsume aPrincipal. Allow access only if the subject
+  // has UniversalXPConnect.
+  return CallerHasUniversalXPConnect();
 }
 
 // static
@@ -1468,13 +1455,13 @@ nsContentUtils::IsCallerChrome()
 bool
 nsContentUtils::IsCallerTrustedForRead()
 {
-  return IsCallerTrustedForCapability("UniversalBrowserRead");
+  return CallerHasUniversalXPConnect();
 }
 
 bool
 nsContentUtils::IsCallerTrustedForWrite()
 {
-  return IsCallerTrustedForCapability("UniversalBrowserWrite");
+  return CallerHasUniversalXPConnect();
 }
 
 bool
@@ -2831,7 +2818,7 @@ nsContentUtils::ReportToConsole(PRUint32 aErrorFlags,
   if (aURI)
     aURI->GetSpec(spec);
 
-  nsCOMPtr<nsIScriptError2> errorObject =
+  nsCOMPtr<nsIScriptError> errorObject =
       do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2843,8 +2830,7 @@ nsContentUtils::ReportToConsole(PRUint32 aErrorFlags,
                                      innerWindowID);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIScriptError> logError = do_QueryInterface(errorObject);
-  return sConsoleService->LogMessage(logError);
+  return sConsoleService->LogMessage(errorObject);
 }
 
 bool
@@ -4969,18 +4955,16 @@ nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsCString& aOrigin)
     rv = uri->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    aOrigin = scheme + NS_LITERAL_CSTRING("://") + host;
-
-    // If needed, append the port
-    PRInt32 port;
+    PRInt32 port = -1;
     uri->GetPort(&port);
-    if (port != -1) {
-      PRInt32 defaultPort = NS_GetDefaultPort(scheme.get());
-      if (port != defaultPort) {
-        aOrigin.Append(':');
-        aOrigin.AppendInt(port);
-      }
-    }
+    if (port != -1 && port == NS_GetDefaultPort(scheme.get()))
+      port = -1;
+
+    nsCString hostPort;
+    rv = NS_GenerateHostPort(host, port, hostPort);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aOrigin = scheme + NS_LITERAL_CSTRING("://") + hostPort;
   }
   else {
     aOrigin.AssignLiteral("null");
@@ -5029,18 +5013,17 @@ nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsString& aOrigin)
     rv = uri->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    aOrigin = NS_ConvertUTF8toUTF16(scheme + NS_LITERAL_CSTRING("://") + host);
-
-    // If needed, append the port
-    PRInt32 port;
+    PRInt32 port = -1;
     uri->GetPort(&port);
-    if (port != -1) {
-      PRInt32 defaultPort = NS_GetDefaultPort(scheme.get());
-      if (port != defaultPort) {
-        aOrigin.Append(':');
-        aOrigin.AppendInt(port);
-      }
-    }
+    if (port != -1 && port == NS_GetDefaultPort(scheme.get()))
+      port = -1;
+
+    nsCString hostPort;
+    rv = NS_GenerateHostPort(host, port, hostPort);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aOrigin = NS_ConvertUTF8toUTF16(
+      scheme + NS_LITERAL_CSTRING("://") + hostPort);
   }
   else {
     aOrigin.AssignLiteral("null");

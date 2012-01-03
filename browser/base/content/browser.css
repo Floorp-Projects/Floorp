@@ -47,14 +47,7 @@ tabbrowser {
 .tab-label:not([fadein]):not([pinned]),
 .tab-icon-image:not([fadein]):not([pinned]),
 .tab-close-button:not([fadein]):not([pinned]) {
-  opacity: 0 !important;
-}
-
-.tab-throbber,
-.tab-label,
-.tab-icon-image,
-.tab-close-button {
-  -moz-transition: opacity 250ms;
+  display: none;
 }
 
 .tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned] {
@@ -107,8 +100,13 @@ toolbar[printpreview="true"] {
 }
 %endif
 
-toolbarpaletteitem[place="palette"] > toolbaritem > hbox[type="places"] {
+.bookmarks-toolbar-customize,
+#wrapper-personal-bookmarks > #personal-bookmarks > #PlacesToolbar > hbox > #PlacesToolbarItems {
   display: none;
+}
+
+#wrapper-personal-bookmarks[place="toolbar"] > #personal-bookmarks > #PlacesToolbar > .bookmarks-toolbar-customize {
+  display: -moz-box;
 }
 
 #main-window[disablechrome] #navigator-toolbox[tabsontop="true"] > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {

@@ -760,6 +760,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameSelection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mMaintainRange)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameSelection)
+  if (tmp->mShell) {
+    return NS_SUCCESS_INTERRUPTED_TRAVERSE;
+  }
   PRInt32 i;
   for (i = 0; i < nsISelectionController::NUM_SELECTIONTYPES; ++i) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mDomSelections[i],
@@ -4336,8 +4339,12 @@ nsTypedSelection::SelectAllFramesForContent(nsIContentIterator *aInnerIter,
 nsresult
 nsTypedSelection::selectFrames(nsPresContext* aPresContext, nsIRange *aRange, bool aFlags)
 {
-  if (!mFrameSelection || !aPresContext || !aPresContext->GetPresShell())
+  if (!mFrameSelection || !aPresContext || !aPresContext->GetPresShell()) {
     return NS_OK; // nothing to do
+  }
+  if (!aRange) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   if (mFrameSelection->GetTableCellSelection()) {
     nsINode* node = aRange->GetCommonAncestor();

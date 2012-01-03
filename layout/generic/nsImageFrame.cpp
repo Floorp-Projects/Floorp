@@ -67,7 +67,7 @@
 #include "nsISupportsPriority.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "prprf.h"
 #include "nsCSSRendering.h"
 #include "nsILink.h"

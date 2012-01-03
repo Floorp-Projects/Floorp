@@ -1,3 +1,15 @@
+== dir-1.html dir-1-ref.html
+== dir-2.html dir-2-ref.html
+== dir-3.html dir-3-ref.html
+== dir-4.html dir-4-ref.html
+== dir-5.html dir-5-ref.html
+fails == dir-6.html dir-6-ref.html
+== dir-7.html dir-7-ref.html
+fails == dir-8.html dir-8-ref.html
+== mirror-op-1.html mirror-op-1-ref.html
+!= mirror-op-2.html mirror-op-2-ref.html
+!= mirror-op-3.html mirror-op-3-ref.html
+!= mirror-op-4.html mirror-op-4-ref.html
 == dynamic-mi.xhtml dynamic-mi-ref.xhtml
 == mfenced-1.xhtml mfenced-1-ref.xhtml
 == mfenced-2a.xhtml mfenced-2-ref.xhtml

@@ -135,7 +135,7 @@ class AddonManager(object):
         {'id':      u'rainbow@colors.org', # id of the addon
          'version': u'1.4',                # version of the addon
          'name':    u'Rainbow',            # name of the addon
-         'unpack': # whether to unpack the addon
+         'unpack':  False } # whether to unpack the addon
         """
 
         # TODO: We don't use the unpack variable yet, but we should: bug 662683

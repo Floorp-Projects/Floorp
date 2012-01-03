@@ -41,12 +41,14 @@
 #ifndef StringObject_h___
 #define StringObject_h___
 
+#include "mozilla/Attributes.h"
+
 #include "jsobj.h"
 #include "jsstr.h"
 
 namespace js {
 
-class StringObject : public ::JSObject
+class StringObject : public JSObject
 {
     static const uintN PRIMITIVE_THIS_SLOT = 0;
     static const uintN LENGTH_SLOT = 1;
@@ -95,8 +97,8 @@ class StringObject : public ::JSObject
     Shape *assignInitialShape(JSContext *cx);
 
   private:
-    StringObject();
-    StringObject &operator=(const StringObject &so);
+    StringObject() MOZ_DELETE;
+    StringObject &operator=(const StringObject &so) MOZ_DELETE;
 };
 
 } // namespace js

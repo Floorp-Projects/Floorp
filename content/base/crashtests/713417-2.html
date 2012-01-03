@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var f = document.getElementById("f");
+  var w = f.contentWindow;
+  var d = w.document;
+  var range = d.createRange();
+  w.getSelection().removeAllRanges();
+  w.getSelection().addRange(range);
+  var r = d.documentElement;
+  d.removeChild(r);
+  w.getSelection().collapse(r,0);
+  document.adoptNode(r);
+  f.parentNode.removeChild(f);
+}
+
+</script>
+</head>
+<body onload="boom();">
+<iframe src="data:text/html,1" id="f"></iframe>
+</body>
+</html>

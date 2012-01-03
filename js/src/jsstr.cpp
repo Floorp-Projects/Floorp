@@ -48,6 +48,9 @@
  * of rooting things that might lose their newborn root due to subsequent GC
  * allocations in the same native method.
  */
+
+#include "mozilla/Attributes.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
@@ -1358,8 +1361,8 @@ class RegExpPair
  */
 class RegExpGuard
 {
-    RegExpGuard(const RegExpGuard &);
-    void operator=(const RegExpGuard &);
+    RegExpGuard(const RegExpGuard &) MOZ_DELETE;
+    void operator=(const RegExpGuard &) MOZ_DELETE;
 
     JSContext   *cx;
     RegExpPair  rep;
@@ -1400,7 +1403,7 @@ class RegExpGuard
     init(uintN argc, Value *vp, bool convertVoid = false)
     {
         if (argc != 0 && ValueIsRegExp(vp[2])) {
-            if (!rep.reset(vp[2].toObject().asRegExp()))
+            if (!rep.reset(&vp[2].toObject().asRegExp()))
                 return false;
         } else {
             if (convertVoid && (argc == 0 || vp[2].isUndefined())) {
@@ -1620,15 +1623,15 @@ js::str_match(JSContext *cx, uintN argc, Value *vp)
     if (!rep)
         return false;
 
-    AutoObjectRooter array(cx);
-    MatchArgType arg = array.addr();
+    JSObject *array = NULL;
+    MatchArgType arg = &array;
     RegExpStatics *res = cx->regExpStatics();
     Value rval;
     if (!DoMatch(cx, res, str, *rep, MatchCallback, arg, MATCH_ARGS, &rval))
         return false;
 
     if (rep->matcher().global())
-        vp->setObjectOrNull(array.object());
+        vp->setObjectOrNull(array);
     else
         *vp = rval;
     return true;
@@ -2535,8 +2538,7 @@ js::str_split(JSContext *cx, uintN argc, Value *vp)
     bool sepUndefined = (argc == 0 || vp[2].isUndefined());
     if (!sepUndefined) {
         if (ValueIsRegExp(vp[2])) {
-            RegExpObject *reobj = vp[2].toObject().asRegExp();
-            if (!matcher.reset(reobj))
+            if (!matcher.reset(&vp[2].toObject().asRegExp()))
                 return false;
         } else {
             JSString *sep = ToString(cx, vp[2]);
@@ -3030,10 +3032,10 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = obj->asGlobal();
+    GlobalObject *global = &obj->asGlobal();
 
     JSObject *proto = global->createBlankPrototype(cx, &StringClass);
-    if (!proto || !proto->asString()->init(cx, cx->runtime->emptyString))
+    if (!proto || !proto->asString().init(cx, cx->runtime->emptyString))
         return NULL;
 
     /* Now create the String function. */

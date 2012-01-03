@@ -375,10 +375,12 @@ load text-overflow-bug666751-2.html
 asserts(2) load text-overflow-bug670564.xhtml # asserts(2) for bug 436470
 load text-overflow-bug671796.xhtml
 load 667025.html
-asserts(14) asserts-if(Android,8) load 673770.html # bug 569193 and bug 459597
+asserts-if(Android,8) load 673770.html
 load 679933-1.html
 load 682649-1.html
 load 683702-1.xhtml
 load 688996-1.html
 load 688996-2.html
 load 683712.html
+load text-overflow-bug713610.html
+load 700031.xhtml
