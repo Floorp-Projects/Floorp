@@ -121,6 +121,16 @@ public:
                            : true;
     }
 
+    // Measures the size of the array's element storage, and if
+    // |aSizeOfElement| is non-NULL, measures the size of things pointed to by
+    // elements.
+    size_t SizeOfExcludingThis(
+             nsVoidArraySizeOfElementIncludingThisFunc aSizeOfElementIncludingThis,
+             nsMallocSizeOfFun aMallocSizeOf, void* aData = NULL) const {
+        return mArray.SizeOfExcludingThis(aSizeOfElementIncludingThis,
+                                          aMallocSizeOf, aData);
+    }
+    
 private:
     
     // the actual storage
@@ -274,6 +284,20 @@ class nsCOMArray : public nsCOMArray_base
     // as necessary
     bool RemoveObjectsAt(PRInt32 aIndex, PRInt32 aCount) {
         return nsCOMArray_base::RemoveObjectsAt(aIndex, aCount);
+    }
+
+    // Each element in an nsCOMArray<T> is actually a T*, so this function is
+    // "IncludingThis" rather than "ExcludingThis" because it needs to measure
+    // the memory taken by the T itself as well as anything it points to.
+    typedef size_t (* nsCOMArraySizeOfElementIncludingThisFunc)
+        (T* aElement, nsMallocSizeOfFun aMallocSizeOf, void *aData);
+    
+    size_t SizeOfExcludingThis(
+             nsCOMArraySizeOfElementIncludingThisFunc aSizeOfElementIncludingThis, 
+             nsMallocSizeOfFun aMallocSizeOf, void *aData = NULL) const {
+        return nsCOMArray_base::SizeOfExcludingThis(
+                 nsVoidArraySizeOfElementIncludingThisFunc(aSizeOfElementIncludingThis),
+                 aMallocSizeOf, aData);
     }
 
 private:
