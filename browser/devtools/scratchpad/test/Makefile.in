@@ -61,6 +61,7 @@ _BROWSER_TEST_FILES = \
 		head.js \
 		browser_scratchpad_bug_653427_confirm_close.js \
 		browser_scratchpad_bug684546_reset_undo.js \
+		browser_scratchpad_bug690552_display_outputs_errors.js \
 
 libs:: $(_BROWSER_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
