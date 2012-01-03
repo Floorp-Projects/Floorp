@@ -121,6 +121,8 @@ public:
      */
     static nsCSSCompressedDataBlock* CreateEmptyBlock();
 
+    size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
 private:
     void* operator new(size_t aBaseSize, size_t aDataSize) {
         NS_ABORT_IF_FALSE(aBaseSize == sizeof(nsCSSCompressedDataBlock),

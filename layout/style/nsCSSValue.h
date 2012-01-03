@@ -454,6 +454,8 @@ public:
   static already_AddRefed<nsStringBuffer>
     BufferFromString(const nsString& aValue);
 
+  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
   struct URL {
     // Methods are not inline because using an nsIPrincipal means requiring
     // caps, which leads to REQUIRES hell, since this header is included all
@@ -480,6 +482,8 @@ public:
     bool URIEquals(const URL& aOther) const;
 
     nsIURI* GetURI() const;
+
+    size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
   private:
     // If mURIResolved is false, mURI stores the base URI.
@@ -544,7 +548,7 @@ protected:
     nsCSSValueList* mListDependent;
     nsCSSValuePairList_heap* mPairList;
     nsCSSValuePairList* mPairListDependent;
-  }         mValue;
+  } mValue;
 };
 
 struct nsCSSValue::Array {
@@ -642,6 +646,8 @@ private:
     }
   }
 
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
 #undef CSSVALUE_LIST_FOR_EXTRA_VALUES
 
 private:
@@ -662,6 +668,8 @@ struct nsCSSValueList {
   bool operator!=(const nsCSSValueList& aOther) const
   { return !(*this == aOther); }
 
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
   nsCSSValue      mValue;
   nsCSSValueList* mNext;
 
@@ -678,6 +686,8 @@ private:
 // it's an implementation detail of nsCSSValue.
 struct nsCSSValueList_heap : public nsCSSValueList {
   NS_INLINE_DECL_REFCOUNTING(nsCSSValueList_heap)
+
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 };
 
 // This has to be here so that the relationship between nsCSSValueList
@@ -756,6 +766,8 @@ struct nsCSSRect {
 // it's an implementation detail of nsCSSValue.
 struct nsCSSRect_heap : public nsCSSRect {
   NS_INLINE_DECL_REFCOUNTING(nsCSSRect_heap)
+
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 };
 
 // This has to be here so that the relationship between nsCSSRect
@@ -826,6 +838,8 @@ struct nsCSSValuePair {
 
   void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
 
+  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
   nsCSSValue mXValue;
   nsCSSValue mYValue;
 };
@@ -834,12 +848,14 @@ struct nsCSSValuePair {
 // refcounted.  It should not be necessary to use this class directly;
 // it's an implementation detail of nsCSSValue.
 struct nsCSSValuePair_heap : public nsCSSValuePair {
-    // forward constructor
-    nsCSSValuePair_heap(const nsCSSValue& aXValue, const nsCSSValue& aYValue)
-        : nsCSSValuePair(aXValue, aYValue)
-    {}
+  // forward constructor
+  nsCSSValuePair_heap(const nsCSSValue& aXValue, const nsCSSValue& aYValue)
+      : nsCSSValuePair(aXValue, aYValue)
+  {}
 
-    NS_INLINE_DECL_REFCOUNTING(nsCSSValuePair_heap)
+  NS_INLINE_DECL_REFCOUNTING(nsCSSValuePair_heap)
+
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 };
 
 struct nsCSSValueTriplet {
@@ -916,6 +932,8 @@ struct nsCSSValueTriplet_heap : public nsCSSValueTriplet {
   {}
 
   NS_INLINE_DECL_REFCOUNTING(nsCSSValueTriplet_heap)
+
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 };
 
 // This has to be here so that the relationship between nsCSSValuePair
@@ -960,6 +978,8 @@ struct nsCSSValuePairList {
   bool operator!=(const nsCSSValuePairList& aOther) const
   { return !(*this == aOther); }
 
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
   nsCSSValue          mXValue;
   nsCSSValue          mYValue;
   nsCSSValuePairList* mNext;
@@ -977,6 +997,8 @@ private:
 // it's an implementation detail of nsCSSValue.
 struct nsCSSValuePairList_heap : public nsCSSValuePairList {
   NS_INLINE_DECL_REFCOUNTING(nsCSSValuePairList_heap)
+
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 };
 
 // This has to be here so that the relationship between nsCSSValuePairList
@@ -1024,6 +1046,8 @@ public:
   {
     return !(*this == aOther);
   }
+
+  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 };
 
 struct nsCSSValueGradient {
@@ -1071,6 +1095,8 @@ struct nsCSSValueGradient {
   }
 
   NS_INLINE_DECL_REFCOUNTING(nsCSSValueGradient)
+
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
 private:
   nsCSSValueGradient(const nsCSSValueGradient& aOther) MOZ_DELETE;

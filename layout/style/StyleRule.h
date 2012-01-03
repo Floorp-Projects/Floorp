@@ -70,6 +70,8 @@ public:
   /** Do a deep clone.  Should be used only on the first in the linked list. */
   nsAtomList* Clone() const { return Clone(true); }
 
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
   nsCOMPtr<nsIAtom> mAtom;
   nsAtomList*       mNext;
 private: 
@@ -90,6 +92,8 @@ public:
 
   /** Do a deep clone.  Should be used only on the first in the linked list. */
   nsPseudoClassList* Clone() const { return Clone(true); }
+
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
   union {
     // For a given value of mType, we have either:
@@ -217,6 +221,8 @@ public:
     mPseudoType = static_cast<PRInt16>(aType);
   }
 
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
   // For case-sensitive documents, mLowercaseTag is the same as mCasedTag,
   // but in case-insensitive documents (HTML) mLowercaseTag is lowercase.
   // Also, for pseudo-elements mCasedTag will be null but mLowercaseTag
@@ -270,6 +276,8 @@ struct nsCSSSelectorList {
    * Do a deep clone.  Should be used only on the first in the list.
    */
   nsCSSSelectorList* Clone() const { return Clone(true); }
+
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
   nsCSSSelector*     mSelectors;
   PRInt32            mWeight;
@@ -379,6 +387,8 @@ public:
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
+
+  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
 private:
   ~StyleRule();

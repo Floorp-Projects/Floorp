@@ -1114,6 +1114,141 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
   }
 }
 
+size_t
+nsCSSValue::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = 0;
+
+  switch (GetUnit()) {
+    // No value: nothing extra to measure.
+    case eCSSUnit_Null:
+    case eCSSUnit_Auto:
+    case eCSSUnit_Inherit:
+    case eCSSUnit_Initial:
+    case eCSSUnit_None:
+    case eCSSUnit_Normal:
+    case eCSSUnit_System_Font:
+    case eCSSUnit_All:
+    case eCSSUnit_Dummy:
+    case eCSSUnit_DummyInherit:
+      break;
+
+    // String
+    case eCSSUnit_String:
+    case eCSSUnit_Ident:
+    case eCSSUnit_Families:
+    case eCSSUnit_Attr:
+    case eCSSUnit_Local_Font:
+    case eCSSUnit_Font_Format:
+    case eCSSUnit_Element:
+      n += mValue.mString->SizeOfIncludingThisIfUnshared(aMallocSizeOf);
+      break;
+
+    // Array
+    case eCSSUnit_Array:
+    case eCSSUnit_Counter:
+    case eCSSUnit_Counters:
+    case eCSSUnit_Cubic_Bezier:
+    case eCSSUnit_Steps:
+    case eCSSUnit_Function:
+    case eCSSUnit_Calc:
+    case eCSSUnit_Calc_Plus:
+    case eCSSUnit_Calc_Minus:
+    case eCSSUnit_Calc_Times_L:
+    case eCSSUnit_Calc_Times_R:
+    case eCSSUnit_Calc_Divided:
+      break;
+
+    // URL
+    case eCSSUnit_URL:
+      n += mValue.mURL->SizeOfIncludingThis(aMallocSizeOf);
+      break;
+
+    // Image
+    case eCSSUnit_Image:
+      // Not yet measured.  Measurement may be added later if DMD finds it
+      // worthwhile.
+      break;
+
+    // Gradient
+    case eCSSUnit_Gradient:
+      n += mValue.mGradient->SizeOfIncludingThis(aMallocSizeOf);
+      break;
+
+    // Pair
+    case eCSSUnit_Pair:
+      n += mValue.mPair->SizeOfIncludingThis(aMallocSizeOf);
+      break;
+
+    // Triplet
+    case eCSSUnit_Triplet:
+      n += mValue.mTriplet->SizeOfIncludingThis(aMallocSizeOf);
+      break;
+
+    // Rect
+    case eCSSUnit_Rect:
+      n += mValue.mRect->SizeOfIncludingThis(aMallocSizeOf);
+      break;
+
+    // List
+    case eCSSUnit_List:
+      n += mValue.mList->SizeOfIncludingThis(aMallocSizeOf);
+      break;
+
+    // ListDep: not measured because it's non-owning.
+    case eCSSUnit_ListDep:
+      break;
+
+    // PairList
+    case eCSSUnit_PairList:
+      n += mValue.mPairList->SizeOfIncludingThis(aMallocSizeOf);
+      break;
+
+    // PairListDep: not measured because it's non-owning.
+    case eCSSUnit_PairListDep:
+      break;
+
+    // Int: nothing extra to measure.
+    case eCSSUnit_Integer:
+    case eCSSUnit_Enumerated:
+    case eCSSUnit_EnumColor:
+      break;
+
+    // Color: nothing extra to measure.
+    case eCSSUnit_Color:
+      break;
+
+    // Float: nothing extra to measure.
+    case eCSSUnit_Percent:
+    case eCSSUnit_Number:
+    case eCSSUnit_PhysicalMillimeter:
+    case eCSSUnit_EM:
+    case eCSSUnit_XHeight:
+    case eCSSUnit_Char:
+    case eCSSUnit_RootEM:
+    case eCSSUnit_Point:
+    case eCSSUnit_Inch:
+    case eCSSUnit_Millimeter:
+    case eCSSUnit_Centimeter:
+    case eCSSUnit_Pica:
+    case eCSSUnit_Pixel:
+    case eCSSUnit_Degree:
+    case eCSSUnit_Grad:
+    case eCSSUnit_Radian:
+    case eCSSUnit_Hertz:
+    case eCSSUnit_Kilohertz:
+    case eCSSUnit_Seconds:
+    case eCSSUnit_Milliseconds:
+      break;
+
+    default:
+      NS_ABORT_IF_FALSE(false, "bad nsCSSUnit");
+      break;
+  }
+
+  return n;
+}
+
 // --- nsCSSValueList -----------------
 
 nsCSSValueList::~nsCSSValueList()
@@ -1173,6 +1308,28 @@ nsCSSValueList::operator==(const nsCSSValueList& aOther) const
       return false;
   }
   return !p1 && !p2; // true if same length, false otherwise
+}
+
+size_t
+nsCSSValueList::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = 0;
+  const nsCSSValueList* v = this;
+  while (v) {
+    n += aMallocSizeOf(v);
+    n += v->mValue.SizeOfExcludingThis(aMallocSizeOf);
+    v = v->mNext;
+  }
+  return n;
+}
+
+size_t
+nsCSSValueList_heap::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mValue.SizeOfExcludingThis(aMallocSizeOf);
+  n += mNext ? mNext->SizeOfIncludingThis(aMallocSizeOf) : 0;
+  return n;
 }
 
 // --- nsCSSRect -----------------
@@ -1239,6 +1396,17 @@ void nsCSSRect::SetAllSidesTo(const nsCSSValue& aValue)
   mLeft = aValue;
 }
 
+size_t
+nsCSSRect_heap::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mTop   .SizeOfExcludingThis(aMallocSizeOf);
+  n += mRight .SizeOfExcludingThis(aMallocSizeOf);
+  n += mBottom.SizeOfExcludingThis(aMallocSizeOf);
+  n += mLeft  .SizeOfExcludingThis(aMallocSizeOf);
+  return n;
+}
+
 PR_STATIC_ASSERT(NS_SIDE_TOP == 0 && NS_SIDE_RIGHT == 1 &&
                  NS_SIDE_BOTTOM == 2 && NS_SIDE_LEFT == 3);
 
@@ -1262,7 +1430,25 @@ nsCSSValuePair::AppendToString(nsCSSProperty aProperty,
   }
 }
 
-// --- nsCSSValueTriple -----------------
+size_t
+nsCSSValuePair::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = 0;
+  n += mXValue.SizeOfExcludingThis(aMallocSizeOf);
+  n += mYValue.SizeOfExcludingThis(aMallocSizeOf);
+  return n;
+}
+
+size_t
+nsCSSValuePair_heap::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mXValue.SizeOfExcludingThis(aMallocSizeOf);
+  n += mYValue.SizeOfExcludingThis(aMallocSizeOf);
+  return n;
+}
+
+// --- nsCSSValueTriplet -----------------
 
 void
 nsCSSValueTriplet::AppendToString(nsCSSProperty aProperty,
@@ -1277,6 +1463,16 @@ nsCSSValueTriplet::AppendToString(nsCSSProperty aProperty,
             mZValue.AppendToString(aProperty, aResult);
         }
     }
+}
+
+size_t
+nsCSSValueTriplet_heap::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mXValue.SizeOfExcludingThis(aMallocSizeOf);
+  n += mYValue.SizeOfExcludingThis(aMallocSizeOf);
+  n += mZValue.SizeOfExcludingThis(aMallocSizeOf);
+  return n;
 }
 
 // --- nsCSSValuePairList -----------------
@@ -1340,6 +1536,40 @@ nsCSSValuePairList::operator==(const nsCSSValuePairList& aOther) const
       return false;
   }
   return !p1 && !p2; // true if same length, false otherwise
+}
+
+size_t
+nsCSSValuePairList::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = 0;
+  const nsCSSValuePairList* v = this;
+  while (v) {
+    n += aMallocSizeOf(v);
+    n += v->mXValue.SizeOfExcludingThis(aMallocSizeOf);
+    n += v->mYValue.SizeOfExcludingThis(aMallocSizeOf);
+    v = v->mNext;
+  }
+  return n;
+}
+
+size_t
+nsCSSValuePairList_heap::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mXValue.SizeOfExcludingThis(aMallocSizeOf);
+  n += mYValue.SizeOfExcludingThis(aMallocSizeOf);
+  n += mNext ? mNext->SizeOfIncludingThis(aMallocSizeOf) : 0;
+  return n;
+}
+
+size_t
+nsCSSValue::Array::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  for (size_t i = 0; i < mCount; i++) {
+    n += mArray[i].SizeOfExcludingThis(aMallocSizeOf);
+  }
+  return n;
 }
 
 nsCSSValue::URL::URL(nsIURI* aURI, nsStringBuffer* aString,
@@ -1418,6 +1648,24 @@ nsCSSValue::URL::GetURI() const
   return mURI;
 }
 
+size_t
+nsCSSValue::URL::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+
+  // This string is unshared.
+  n += mString->SizeOfIncludingThisMustBeUnshared(aMallocSizeOf);
+
+  // Measurement of the following members may be added later if DMD finds it is
+  // worthwhile:
+  // - mURI
+  // - mReferrer
+  // - mOriginPrincipal
+
+  return n;
+}
+
+
 nsCSSValue::Image::Image(nsIURI* aURI, nsStringBuffer* aString,
                          nsIURI* aReferrer, nsIPrincipal* aOriginPrincipal,
                          nsIDocument* aDocument)
@@ -1458,6 +1706,15 @@ nsCSSValueGradientStop::~nsCSSValueGradientStop()
   MOZ_COUNT_DTOR(nsCSSValueGradientStop);
 }
 
+size_t
+nsCSSValueGradientStop::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = 0;
+  n += mLocation.SizeOfExcludingThis(aMallocSizeOf);
+  n += mColor   .SizeOfExcludingThis(aMallocSizeOf);
+  return n;
+}
+
 nsCSSValueGradient::nsCSSValueGradient(bool aIsRadial,
                                        bool aIsRepeating)
   : mIsRadial(aIsRadial),
@@ -1468,6 +1725,21 @@ nsCSSValueGradient::nsCSSValueGradient(bool aIsRadial,
     mRadialShape(eCSSUnit_None),
     mRadialSize(eCSSUnit_None)
 {
+}
+
+size_t
+nsCSSValueGradient::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mBgPos      .SizeOfExcludingThis(aMallocSizeOf);
+  n += mAngle      .SizeOfExcludingThis(aMallocSizeOf);
+  n += mRadialShape.SizeOfExcludingThis(aMallocSizeOf);
+  n += mRadialSize .SizeOfExcludingThis(aMallocSizeOf);
+  n += mStops      .SizeOfExcludingThis(aMallocSizeOf);
+  for (PRUint32 i = 0; i < mStops.Length(); i++) {
+    n += mStops[i].SizeOfExcludingThis(aMallocSizeOf);
+  }
+  return n;
 }
 
 // --- nsCSSCornerSizes -----------------
