@@ -94,7 +94,7 @@ LIRGeneratorARM::visitBox(MBox *box)
 
     // If the box wrapped a double, it needs a new register.
     if (inner->type() == MIRType_Double)
-        return defineBox(new LBoxDouble(use(inner, LUse::COPY)), box);
+        return defineBox(new LBoxDouble(useRegisterAtStart(inner), tempCopy(inner, 0)), box);
 
     if (box->canEmitAtUses())
         return emitAtUses(box);
@@ -145,7 +145,7 @@ LIRGeneratorARM::visitUnbox(MUnbox *unbox)
 
     // Swap the order we use the box pieces so we can re-use the payload register.
     LUnbox *lir = new LUnbox;
-    lir->setOperand(0, usePayloadInRegister(inner));
+    lir->setOperand(0, usePayloadInRegisterAtStart(inner));
     lir->setOperand(1, useType(inner, LUse::REGISTER));
 
     if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
@@ -157,7 +157,7 @@ LIRGeneratorARM::visitUnbox(MUnbox *unbox)
     // purpose is to eagerly kill the definition of a type tag, so keeping both
     // alive (for the purpose of gcmaps) is unappealing. Instead, we create a
     // new virtual register.
-    return defineReuseInput(lir, unbox);
+    return defineReuseInput(lir, unbox, 0);
 }
 
 bool
@@ -311,8 +311,8 @@ LIRGeneratorARM::visitTableSwitch(MTableSwitch *tableswitch)
     LAllocation index;
     LDefinition tempInt;
     if (opd->type() == MIRType_Int32) {
-        index = useCopy(opd);
-        tempInt = LDefinition::BogusTemp();
+        index = useRegisterAtStart(opd);
+        tempInt = tempCopy(opd, 0);
     } else {
         index = useRegister(opd);
         tempInt = temp(LDefinition::GENERAL);
