@@ -295,7 +295,7 @@ EnsureExitFrame(IonCommonFrameLayout *frame)
 
     uint32 callerFrameSize = frame->prevFrameLocalSize() +
                              SizeOfFramePrefix(frame->prevType()) - sizeof(IonExitFrameLayout);
-    frame->setFrameDescriptor(callerFrameSize, IonFrame_Exit);
+    frame->setFrameDescriptor(callerFrameSize, frame->prevType());
 }
 
 uint32
