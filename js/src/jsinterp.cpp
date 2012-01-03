@@ -518,7 +518,7 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
 
     /* Invoke native functions. */
     JSFunction *fun = callee.toFunction();
-    JS_ASSERT_IF(construct, !fun->isConstructor());
+    JS_ASSERT_IF(construct, !fun->isNativeConstructor());
     if (fun->isNative())
         return CallJSNative(cx, fun->u.n.native, args);
 
@@ -575,6 +575,45 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, uintN argc, Val
 
     *rval = args.rval();
     return true;
+}
+
+bool
+js::InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
+{
+    JS_ASSERT(!FunctionClass.construct);
+    CallArgs args = argsRef;
+
+    args.thisv().setMagic(JS_IS_CONSTRUCTING);
+
+    if (args.calleev().isObject()) {
+        JSObject *callee = &args.callee();
+        Class *clasp = callee->getClass();
+        if (clasp == &FunctionClass) {
+            JSFunction *fun = callee->toFunction();
+
+            if (fun->isNativeConstructor()) {
+                Probes::calloutBegin(cx, fun);
+                bool ok = CallJSNativeConstructor(cx, fun->u.n.native, args);
+                Probes::calloutEnd(cx, fun);
+                return ok;
+            }
+
+            if (!fun->isInterpretedConstructor())
+                goto error;
+
+            if (!InvokeKernel(cx, args, CONSTRUCT))
+                return false;
+
+            JS_ASSERT(args.rval().isObject());
+            return true;
+        }
+        if (clasp->construct)
+            return CallJSNativeConstructor(cx, clasp->construct, args);
+    }
+
+error:
+    js_ReportIsNotFunction(cx, &args.calleev(), JSV2F_CONSTRUCT);
+    return false;
 }
 
 bool
@@ -954,85 +993,6 @@ js::TypeOfValue(JSContext *cx, const Value &vref)
         return v.toObject().typeOf(cx);
     JS_ASSERT(v.isBoolean());
     return JSTYPE_BOOLEAN;
-}
-
-bool
-js::InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
-{
-    JS_ASSERT(!FunctionClass.construct);
-    CallArgs args = argsRef;
-
-    /*
-     * Callers are not required to initialize 'this' when constructing, but
-     * make sure the value is initialized in case we are about to call a native
-     * or if something (e.g. type inference) tries to inspect the frame before
-     * its 'this' value is constructed.
-     */
-    args.thisv().setMagicWithObjectOrNullPayload(NULL);
-
-    if (args.calleev().isObject()) {
-        JSObject *callee = &args.callee();
-        Class *clasp = callee->getClass();
-        if (clasp == &FunctionClass) {
-            JSFunction *fun = callee->toFunction();
-
-            if (fun->isConstructor()) {
-                Probes::calloutBegin(cx, fun);
-                bool ok = CallJSNativeConstructor(cx, fun->u.n.native, args);
-                Probes::calloutEnd(cx, fun);
-                return ok;
-            }
-
-            if (!fun->isInterpretedConstructor())
-                goto error;
-
-            if (!InvokeKernel(cx, args, CONSTRUCT))
-                return false;
-
-            JS_ASSERT(args.rval().isObject());
-            return true;
-        }
-        if (clasp->construct)
-            return CallJSNativeConstructor(cx, clasp->construct, args);
-    }
-
-error:
-    js_ReportIsNotFunction(cx, &args.calleev(), JSV2F_CONSTRUCT);
-    return false;
-}
-
-bool
-js::InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fval,
-                                   uintN argc, Value *argv, Value *rval)
-{
-    InvokeArgsGuard args;
-    if (!cx->stack.pushInvokeArgs(cx, argc, &args))
-        return JS_FALSE;
-
-    args.calleev() = fval;
-    /* Initialize args.thisv on all paths below. */
-    memcpy(args.array(), argv, argc * sizeof(Value));
-
-    /* Handle the fast-constructor cases before calling the general case. */
-    JSObject &callee = fval.toObject();
-    Class *clasp = callee.getClass();
-    JSFunction *fun;
-    bool ok;
-    if (clasp == &FunctionClass && (fun = callee.toFunction())->isConstructor()) {
-        args.thisv().setMagicWithObjectOrNullPayload(thisobj);
-        Probes::calloutBegin(cx, fun);
-        ok = CallJSNativeConstructor(cx, fun->u.n.native, args);
-        Probes::calloutEnd(cx, fun);
-    } else if (clasp->construct) {
-        args.thisv().setMagicWithObjectOrNullPayload(thisobj);
-        ok = CallJSNativeConstructor(cx, clasp->construct, args);
-    } else {
-        args.thisv().setObjectOrNull(thisobj);
-        ok = Invoke(cx, args, CONSTRUCT);
-    }
-
-    *rval = args.rval();
-    return ok;
 }
 
 bool

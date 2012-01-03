@@ -337,16 +337,6 @@ class Value
     }
 
     JS_ALWAYS_INLINE
-    void setMagicWithObjectOrNullPayload(JSObject *obj) {
-        data = MAGIC_OBJ_TO_JSVAL_IMPL(obj);
-    }
-
-    JS_ALWAYS_INLINE
-    JSObject *getMagicObjectOrNullPayload() const {
-        return MAGIC_JSVAL_TO_OBJECT_OR_NULL_IMPL(data);
-    }
-
-    JS_ALWAYS_INLINE
     bool setNumber(uint32_t ui) {
         if (ui > JSVAL_INT_MAX) {
             setDouble((double)ui);
@@ -472,8 +462,13 @@ class Value
         return JSVAL_IS_MAGIC_IMPL(data);
     }
 
+    /*
+     * Although the Value class comment says 'magic' is a singleton type, it is
+     * technically possible to use the payload. This should be avoided to
+     * preserve the ability for the strong assertions in isMagic().
+     */
     JS_ALWAYS_INLINE
-    bool isMagicCheck(JSWhyMagic why) const {
+    bool isParticularMagic(JSWhyMagic why) const {
         return isMagic() && data.s.payload.why == why;
     }
 
@@ -3404,12 +3399,11 @@ extern JS_PUBLIC_API(JSBool)
 JS_FreezeObject(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
-                   JSObject *parent);
+JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *parent);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_ConstructObjectWithArguments(JSContext *cx, JSClass *clasp, JSObject *proto,
-                                JSObject *parent, uintN argc, jsval *argv);
+JS_ConstructObjectWithArguments(JSContext *cx, JSClass *clasp, JSObject *parent,
+                                uintN argc, jsval *argv);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv);
