@@ -875,7 +875,7 @@ public class GeckoAppShell
             }});
         try {
             String ret = sClipboardQueue.take();
-            return (ret == EMPTY_STRING ? null : ret);
+            return (EMPTY_STRING.equals(ret) ? null : ret);
         } catch (InterruptedException ie) {}
         return null;
     }
