@@ -580,8 +580,8 @@ public class GeckoInputConnection
 
         switch (type) {
         case NOTIFY_IME_RESETINPUTSTATE:
+            if (DEBUG) Log.d(LOGTAG, "notifyIME = reset");
 
-        if (DEBUG) Log.d(LOGTAG, "notifyIME = reset");
             // Composition event is already fired from widget.
             // So reset IME flags.
             reset();
@@ -591,7 +591,7 @@ public class GeckoInputConnection
             // after calling restartInput() immediately.
             // So we have to call showSoftInput() delay.
             InputMethodManager imm = (InputMethodManager) v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            if (imm != null) {
+            if (imm == null) {
                 // no way to reset IME status directly
                 IMEStateUpdater.resetIME();
             } else {
@@ -603,12 +603,12 @@ public class GeckoInputConnection
             break;
 
         case NOTIFY_IME_CANCELCOMPOSITION:
-        if (DEBUG) Log.d(LOGTAG, "notifyIME = cancel");
+            if (DEBUG) Log.d(LOGTAG, "notifyIME = cancel");
             IMEStateUpdater.resetIME();
             break;
 
         case NOTIFY_IME_FOCUSCHANGE:
-        if (DEBUG) Log.d(LOGTAG, "notifyIME = focus");
+            if (DEBUG) Log.d(LOGTAG, "notifyIME = focus");
             IMEStateUpdater.resetIME();
             break;
         }
