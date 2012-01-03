@@ -4517,66 +4517,6 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
     return true;
 }
 
-JSObject *
-js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *parent,
-                   uintN argc, Value *argv)
-{
-    AutoArrayRooter argtvr(cx, argc, argv);
-
-    JSProtoKey protoKey = GetClassProtoKey(clasp);
-
-    /* Protect constructor in case a crazy getter for .prototype uproots it. */
-    AutoValueRooter tvr(cx);
-    if (!js_FindClassObject(cx, parent, protoKey, tvr.addr(), clasp))
-        return NULL;
-
-    const Value &cval = tvr.value();
-    if (tvr.value().isPrimitive()) {
-        js_ReportIsNotFunction(cx, tvr.addr(), JSV2F_CONSTRUCT | JSV2F_SEARCH_STACK);
-        return NULL;
-    }
-
-    /*
-     * If proto is NULL, set it to Constructor.prototype, just like JSOP_NEW
-     * does, likewise for the new object's parent.
-     */
-    JSObject *ctor = &cval.toObject();
-    if (!parent)
-        parent = ctor->getParent();
-    if (!proto) {
-        Value rval;
-        if (!ctor->getProperty(cx, cx->runtime->atomState.classPrototypeAtom, &rval))
-            return NULL;
-        if (rval.isObjectOrNull())
-            proto = rval.toObjectOrNull();
-    }
-
-    JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, parent);
-    if (!obj)
-        return NULL;
-
-    MarkTypeObjectUnknownProperties(cx, obj->type());
-
-    Value rval;
-    if (!InvokeConstructorWithGivenThis(cx, obj, cval, argc, argv, &rval))
-        return NULL;
-
-    if (rval.isPrimitive())
-        return obj;
-
-    /*
-     * If the instance's class differs from what was requested, throw a type
-     * error.
-     */
-    obj = &rval.toObject();
-    if (obj->getClass() != clasp) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_WRONG_CONSTRUCTOR, clasp->name);
-        return NULL;
-    }
-    return obj;
-}
-
 bool
 JSObject::allocSlot(JSContext *cx, uint32_t *slotp)
 {

@@ -126,7 +126,7 @@ struct JSFunction : public JSObject
     bool optimizedClosure()  const { return kind() > JSFUN_INTERPRETED; }
     bool isInterpreted()     const { return kind() >= JSFUN_INTERPRETED; }
     bool isNative()          const { return !isInterpreted(); }
-    bool isConstructor()     const { return flags & JSFUN_CONSTRUCTOR; }
+    bool isNativeConstructor() const { return flags & JSFUN_CONSTRUCTOR; }
     bool isHeavyweight()     const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
     bool isNullClosure()     const { return kind() == JSFUN_NULL_CLOSURE; }
     bool isFlatClosure()     const { return kind() == JSFUN_FLAT_CLOSURE; }

@@ -818,11 +818,11 @@ class CallCompiler : public BaseCompiler
         if (!IsFunctionObject(args.calleev(), &fun))
             return false;
 
-        if ((!callingNew && !fun->isNative()) || (callingNew && !fun->isConstructor()))
+        if ((!callingNew && !fun->isNative()) || (callingNew && !fun->isNativeConstructor()))
             return false;
 
         if (callingNew)
-            args.thisv().setMagicWithObjectOrNullPayload(NULL);
+            args.thisv().setMagic(JS_IS_CONSTRUCTING);
 
         RecompilationMonitor monitor(cx);
 
@@ -917,11 +917,8 @@ class CallCompiler : public BaseCompiler
         }
 
         /* Mark vp[1] as magic for |new|. */
-        if (callingNew) {
-            Value v;
-            v.setMagicWithObjectOrNullPayload(NULL);
-            masm.storeValue(v, Address(vpReg, sizeof(Value)));
-        }
+        if (callingNew)
+            masm.storeValue(MagicValue(JS_IS_CONSTRUCTING), Address(vpReg, sizeof(Value)));
 
         masm.restoreStackBase();
         masm.setupABICall(Registers::NormalCall, 3);
