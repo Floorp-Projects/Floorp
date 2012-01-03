@@ -41,7 +41,6 @@
 
 #include "nsIXPConnect.h"
 
-#include "jscntxt.h"
 #include "nsDOMClassInfo.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"

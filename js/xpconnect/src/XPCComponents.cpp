@@ -57,6 +57,7 @@
 #include "mozJSComponentLoader.h"
 #include "nsContentUtils.h"
 #include "jsgc.h"
+#include "jsfriendapi.h"
 
 using namespace js;
 /***************************************************************************/
@@ -3223,12 +3224,17 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 
         if (found) {
             if (!JS_GetProperty(cx, optionsObject, "sameGroupAs", &option) ||
-                JSVAL_IS_PRIMITIVE(option)) {
-                    return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
-            }
+                JSVAL_IS_PRIMITIVE(option))
+                return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
+
+            JSObject* unwrapped = UnwrapObject(JSVAL_TO_OBJECT(option));
+            JSObject* global = GetGlobalForObjectCrossCompartment(unwrapped);
+            if (GetObjectJSClass(unwrapped) != &SandboxClass &&
+                GetObjectJSClass(global) != &SandboxClass)
+                return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
 
             void* privateValue =
-                JS_GetCompartmentPrivate(cx,GetObjectCompartment(JSVAL_TO_OBJECT(option)));
+                JS_GetCompartmentPrivate(cx, GetObjectCompartment(unwrapped));
             xpc::CompartmentPrivate *compartmentPrivate =
                 static_cast<xpc::CompartmentPrivate*>(privateValue);
 
@@ -3812,16 +3818,16 @@ nsXPCComponents_Utils::CanSetProperty(const nsIID * iid, const PRUnichar *proper
 }
 
 nsresult
-GetBoolOption(JSContext* cx, uint32 aOption, bool* aValue)
+GetBoolOption(JSContext* cx, uint32_t aOption, bool* aValue)
 {
     *aValue = !!(JS_GetOptions(cx) & aOption);
     return NS_OK;
 }
 
 nsresult
-SetBoolOption(JSContext* cx, uint32 aOption, bool aValue)
+SetBoolOption(JSContext* cx, uint32_t aOption, bool aValue)
 {
-    uint32 options = JS_GetOptions(cx);
+    uint32_t options = JS_GetOptions(cx);
     if (aValue) {
         options |= aOption;
     } else {

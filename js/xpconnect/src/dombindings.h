@@ -192,8 +192,8 @@ private:
 
     static JSBool length_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
-    static inline bool getItemAt(ListType *list, uint32 i, IndexGetterType &item);
-    static inline bool setItemAt(JSContext *cx, ListType *list, uint32 i, IndexSetterType item);
+    static inline bool getItemAt(ListType *list, uint32_t i, IndexGetterType &item);
+    static inline bool setItemAt(JSContext *cx, ListType *list, uint32_t i, IndexSetterType item);
 
     static inline bool namedItem(JSContext *cx, JSObject *obj, jsval *name, NameGetterType &result,
                                  bool *hasResult);
@@ -227,7 +227,7 @@ public:
     bool hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp);
     bool get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, JS::Value *vp);
     bool getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                             uint32 index, JS::Value *vp, bool *present);
+                             uint32_t index, JS::Value *vp, bool *present);
     bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
              JS::Value *vp);
     bool keys(JSContext *cx, JSObject *proxy, js::AutoIdVector &props);

@@ -1110,7 +1110,7 @@ XPCJSRuntime::~XPCJSRuntime()
     // clean up and destroy maps...
     if (mWrappedJSMap) {
 #ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32 count = mWrappedJSMap->Count();
+        uint32_t count = mWrappedJSMap->Count();
         if (count)
             printf("deleting XPCJSRuntime with %d live wrapped JSObject\n", (int)count);
 #endif
@@ -1120,7 +1120,7 @@ XPCJSRuntime::~XPCJSRuntime()
 
     if (mWrappedJSClassMap) {
 #ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32 count = mWrappedJSClassMap->Count();
+        uint32_t count = mWrappedJSClassMap->Count();
         if (count)
             printf("deleting XPCJSRuntime with %d live nsXPCWrappedJSClass\n", (int)count);
 #endif
@@ -1129,7 +1129,7 @@ XPCJSRuntime::~XPCJSRuntime()
 
     if (mIID2NativeInterfaceMap) {
 #ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32 count = mIID2NativeInterfaceMap->Count();
+        uint32_t count = mIID2NativeInterfaceMap->Count();
         if (count)
             printf("deleting XPCJSRuntime with %d live XPCNativeInterfaces\n", (int)count);
 #endif
@@ -1138,7 +1138,7 @@ XPCJSRuntime::~XPCJSRuntime()
 
     if (mClassInfo2NativeSetMap) {
 #ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32 count = mClassInfo2NativeSetMap->Count();
+        uint32_t count = mClassInfo2NativeSetMap->Count();
         if (count)
             printf("deleting XPCJSRuntime with %d live XPCNativeSets\n", (int)count);
 #endif
@@ -1147,7 +1147,7 @@ XPCJSRuntime::~XPCJSRuntime()
 
     if (mNativeSetMap) {
 #ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32 count = mNativeSetMap->Count();
+        uint32_t count = mNativeSetMap->Count();
         if (count)
             printf("deleting XPCJSRuntime with %d live XPCNativeSets\n", (int)count);
 #endif
@@ -1159,7 +1159,7 @@ XPCJSRuntime::~XPCJSRuntime()
 
     if (mThisTranslatorMap) {
 #ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32 count = mThisTranslatorMap->Count();
+        uint32_t count = mThisTranslatorMap->Count();
         if (count)
             printf("deleting XPCJSRuntime with %d live ThisTranslator\n", (int)count);
 #endif
@@ -1179,7 +1179,7 @@ XPCJSRuntime::~XPCJSRuntime()
 
     if (mNativeScriptableSharedMap) {
 #ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32 count = mNativeScriptableSharedMap->Count();
+        uint32_t count = mNativeScriptableSharedMap->Count();
         if (count)
             printf("deleting XPCJSRuntime with %d live XPCNativeScriptableShared\n", (int)count);
 #endif
@@ -1188,7 +1188,7 @@ XPCJSRuntime::~XPCJSRuntime()
 
     if (mDyingWrappedNativeProtoMap) {
 #ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32 count = mDyingWrappedNativeProtoMap->Count();
+        uint32_t count = mDyingWrappedNativeProtoMap->Count();
         if (count)
             printf("deleting XPCJSRuntime with %d live but dying XPCWrappedNativeProto\n", (int)count);
 #endif
@@ -1197,7 +1197,7 @@ XPCJSRuntime::~XPCJSRuntime()
 
     if (mDetachedWrappedNativeProtoMap) {
 #ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32 count = mDetachedWrappedNativeProtoMap->Count();
+        uint32_t count = mDetachedWrappedNativeProtoMap->Count();
         if (count)
             printf("deleting XPCJSRuntime with %d live detached XPCWrappedNativeProto\n", (int)count);
 #endif
@@ -1206,7 +1206,7 @@ XPCJSRuntime::~XPCJSRuntime()
 
     if (mExplicitNativeWrapperMap) {
 #ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32 count = mExplicitNativeWrapperMap->Count();
+        uint32_t count = mExplicitNativeWrapperMap->Count();
         if (count)
             printf("deleting XPCJSRuntime with %d live explicit XPCNativeWrapper\n", (int)count);
 #endif
@@ -1274,7 +1274,7 @@ ChunkCallback(JSContext *cx, void *vdata, js::gc::Chunk *chunk)
     // Nb: This function is only called for dirty chunks, which is why we
     // increment gcHeapChunkDirtyDecommitted.
     IterateData *data = static_cast<IterateData *>(vdata);
-    for (uint32 i = 0; i < js::gc::ArenasPerChunk; i++)
+    for (uint32_t i = 0; i < js::gc::ArenasPerChunk; i++)
         if (chunk->decommittedArenas.get(i))
             data->gcHeapChunkDirtyDecommitted += js::gc::ArenaSize;
 }

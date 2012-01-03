@@ -39,7 +39,6 @@
 #include "ChromeWorkerScope.h"
 
 #include "jsapi.h"
-#include "jscntxt.h"
 
 #include "nsXPCOM.h"
 #include "nsNativeCharsetUtils.h"

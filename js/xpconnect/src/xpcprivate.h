@@ -2885,7 +2885,7 @@ public:
 
     JSObject* GetRootJSObject(XPCCallContext& ccx, JSObject* aJSObj);
 
-    NS_IMETHOD CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
+    NS_IMETHOD CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                           const XPTMethodDescriptor* info,
                           nsXPTCMiniVariant* params);
 
@@ -2914,24 +2914,24 @@ private:
 
     JSObject*  NewOutObject(JSContext* cx, JSObject* scope);
 
-    JSBool IsReflectable(uint16 i) const
+    JSBool IsReflectable(uint16_t i) const
         {return (JSBool)(mDescriptors[i/32] & (1 << (i%32)));}
-    void SetReflectable(uint16 i, JSBool b)
+    void SetReflectable(uint16_t i, JSBool b)
         {if (b) mDescriptors[i/32] |= (1 << (i%32));
          else mDescriptors[i/32] &= ~(1 << (i%32));}
 
     JSBool GetArraySizeFromParam(JSContext* cx,
                                  const XPTMethodDescriptor* method,
                                  const nsXPTParamInfo& param,
-                                 uint16 methodIndex,
-                                 uint8 paramIndex,
+                                 uint16_t methodIndex,
+                                 uint8_t paramIndex,
                                  nsXPTCMiniVariant* params,
                                  uint32_t* result);
 
     JSBool GetInterfaceTypeFromParam(JSContext* cx,
                                      const XPTMethodDescriptor* method,
                                      const nsXPTParamInfo& param,
-                                     uint16 methodIndex,
+                                     uint16_t methodIndex,
                                      const nsXPTType& type,
                                      nsXPTCMiniVariant* params,
                                      nsID* result);
@@ -2948,7 +2948,7 @@ private:
     nsIInterfaceInfo* mInfo;
     char* mName;
     nsIID mIID;
-    uint32* mDescriptors;
+    uint32_t* mDescriptors;
 };
 
 /*************************/

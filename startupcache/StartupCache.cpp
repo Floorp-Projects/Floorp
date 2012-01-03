@@ -681,7 +681,7 @@ StartupCacheWrapper::GetBuffer(const char* id, char** outbuf, PRUint32* length)
 }
 
 nsresult
-StartupCacheWrapper::PutBuffer(const char* id, char* inbuf, PRUint32 length) 
+StartupCacheWrapper::PutBuffer(const char* id, const char* inbuf, PRUint32 length) 
 {
   StartupCache* sc = StartupCache::GetSingleton();
   if (!sc) {
