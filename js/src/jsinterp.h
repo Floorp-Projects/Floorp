@@ -180,7 +180,7 @@ InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, uintN argc
  * InvokeConstructor* implement a function call from a constructor context
  * (e.g. 'new') handling the the creation of the new 'this' object.
  */
-extern JS_REQUIRES_STACK bool
+extern bool
 InvokeConstructorKernel(JSContext *cx, const CallArgs &args);
 
 /* See the InvokeArgsGuard overload of Invoke. */
@@ -201,7 +201,7 @@ InvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv, Val
  * InvokeConstructorWithGivenThis directly calls the constructor with the given
  * 'this'; the caller must choose the semantically correct 'this'.
  */
-extern JS_REQUIRES_STACK bool
+extern bool
 InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fval,
                                uintN argc, Value *argv, Value *rval);
 
@@ -233,10 +233,10 @@ enum InterpMode
  * Execute the caller-initialized frame for a user-defined script or function
  * pointed to by cx->fp until completion or error.
  */
-extern JS_REQUIRES_STACK JS_NEVER_INLINE bool
+extern JS_NEVER_INLINE bool
 Interpret(JSContext *cx, StackFrame *stopFp, InterpMode mode = JSINTERP_NORMAL);
 
-extern JS_REQUIRES_STACK bool
+extern bool
 RunScript(JSContext *cx, JSScript *script, StackFrame *fp);
 
 extern bool
@@ -323,14 +323,14 @@ class InterpreterFrames {
  * Unwind block and scope chains to match the given depth. The function sets
  * fp->sp on return to stackDepth.
  */
-extern bool
-UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind);
+extern void
+UnwindScope(JSContext *cx, uint32_t stackDepth);
 
 extern bool
 OnUnknownMethod(JSContext *cx, js::Value *vp);
 
 extern bool
-IsActiveWithOrBlock(JSContext *cx, JSObject &obj, int stackDepth);
+IsActiveWithOrBlock(JSContext *cx, JSObject &obj, uint32_t stackDepth);
 
 /************************************************************************/
 

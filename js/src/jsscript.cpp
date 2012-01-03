@@ -653,23 +653,24 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
         HeapPtr<JSObject> *objp = &script->objects()->vector[i];
         uint32_t isBlock;
         if (xdr->mode == JSXDR_ENCODE) {
-            Class *clasp = (*objp)->getClass();
-            JS_ASSERT(clasp == &FunctionClass ||
-                      clasp == &BlockClass);
-            isBlock = (clasp == &BlockClass) ? 1 : 0;
+            JSObject *obj = *objp;
+            JS_ASSERT(obj->isFunction() || obj->isStaticBlock());
+            isBlock = obj->isBlock() ? 1 : 0;
         }
         if (!JS_XDRUint32(xdr, &isBlock))
             goto error;
-        JSObject *tmp = *objp;
         if (isBlock == 0) {
+            JSObject *tmp = *objp;
             if (!js_XDRFunctionObject(xdr, &tmp))
                 goto error;
+            *objp = tmp;
         } else {
             JS_ASSERT(isBlock == 1);
-            if (!js_XDRBlockObject(xdr, &tmp))
+            StaticBlockObject *tmp = static_cast<StaticBlockObject *>(objp->get());
+            if (!js_XDRStaticBlockObject(xdr, &tmp))
                 goto error;
+            *objp = tmp;
         }
-        *objp = tmp;
     }
     for (i = 0; i != nupvars; ++i) {
         if (!JS_XDRUint32(xdr, reinterpret_cast<uint32_t *>(&script->upvars()->vector[i])))
@@ -1261,7 +1262,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
             return NULL;
 
         fun->setScript(script);
-        script->globalObject = fun->getParent() ? fun->getParent()->getGlobal() : NULL;
+        script->globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;
     } else {
         /*
          * Initialize script->object, if necessary, so that the debugger has a
@@ -1278,7 +1279,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         if (script->compileAndGo) {
             compileAndGoGlobal = script->globalObject;
             if (!compileAndGoGlobal)
-                compileAndGoGlobal = bce->scopeChain()->getGlobal();
+                compileAndGoGlobal = &bce->scopeChain()->global();
         }
         Debugger::onNewScript(cx, script, compileAndGoGlobal);
     }

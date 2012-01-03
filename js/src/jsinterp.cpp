@@ -139,7 +139,7 @@ using namespace js::types;
 JSObject *
 js::GetScopeChain(JSContext *cx, StackFrame *fp)
 {
-    JSObject *sharedBlock = fp->maybeBlockChain();
+    StaticBlockObject *sharedBlock = fp->maybeBlockChain();
 
     if (!sharedBlock) {
         /*
@@ -175,7 +175,7 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
          */
         limitClone = &fp->scopeChain();
         while (limitClone->isWith())
-            limitClone = limitClone->internalScopeChain();
+            limitClone = &limitClone->asWith().enclosingScope();
         JS_ASSERT(limitClone);
 
         /*
@@ -207,10 +207,9 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
      * Special-case cloning the innermost block; this doesn't have enough in
      * common with subsequent steps to include in the loop.
      *
-     * js_CloneBlockObject leaves the clone's parent slot uninitialized. We
-     * populate it below.
+     * create() leaves the clone's enclosingScope unset. We set it below.
      */
-    JSObject *innermostNewChild = js_CloneBlockObject(cx, sharedBlock, fp);
+    ClonedBlockObject *innermostNewChild = ClonedBlockObject::create(cx, *sharedBlock, fp);
     if (!innermostNewChild)
         return NULL;
 
@@ -218,25 +217,25 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
      * Clone our way towards outer scopes until we reach the innermost
      * enclosing function, or the innermost block we've already cloned.
      */
-    JSObject *newChild = innermostNewChild;
+    ClonedBlockObject *newChild = innermostNewChild;
     for (;;) {
         JS_ASSERT(newChild->getProto() == sharedBlock);
-        sharedBlock = sharedBlock->staticBlockScopeChain();
+        sharedBlock = sharedBlock->enclosingBlock();
 
         /* Sometimes limitBlock will be NULL, so check that first.  */
         if (sharedBlock == limitBlock || !sharedBlock)
             break;
 
         /* As in the call above, we don't know the real parent yet.  */
-        JSObject *clone = js_CloneBlockObject(cx, sharedBlock, fp);
+        ClonedBlockObject *clone = ClonedBlockObject::create(cx, *sharedBlock, fp);
         if (!clone)
             return NULL;
 
-        if (!newChild->setInternalScopeChain(cx, clone))
+        if (!newChild->setEnclosingScope(cx, *clone))
             return NULL;
         newChild = clone;
     }
-    if (!newChild->setInternalScopeChain(cx, &fp->scopeChain()))
+    if (!newChild->setEnclosingScope(cx, fp->scopeChain()))
         return NULL;
 
 
@@ -245,7 +244,7 @@ js::GetScopeChain(JSContext *cx, StackFrame *fp)
      * found it in blockChain.
      */
     JS_ASSERT_IF(limitBlock &&
-                 limitBlock->isBlock() &&
+                 limitBlock->isClonedBlock() &&
                  limitClone->getPrivate() == js_FloatingFrameIfGenerator(cx, fp),
                  sharedBlock);
 
@@ -327,7 +326,7 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
 #endif
 
     if (thisv.isNullOrUndefined()) {
-        JSObject *thisp = call.callee().getGlobal()->thisObject(cx);
+        JSObject *thisp = call.callee().global().thisObject(cx);
         if (!thisp)
             return false;
         call.thisv().setObject(*thisp);
@@ -421,7 +420,7 @@ js::OnUnknownMethod(JSContext *cx, Value *vp)
     return true;
 }
 
-static JS_REQUIRES_STACK JSBool
+static JSBool
 NoSuchMethod(JSContext *cx, uintN argc, Value *vp)
 {
     InvokeArgsGuard args;
@@ -447,7 +446,7 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp)
 
 #endif /* JS_HAS_NO_SUCH_METHOD */
 
-JS_REQUIRES_STACK bool
+bool
 js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 {
     JS_ASSERT(script);
@@ -459,7 +458,7 @@ js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 
     /* FIXME: Once bug 470510 is fixed, make this an assert. */
     if (script->compileAndGo) {
-        if (fp->scopeChain().getGlobal()->isCleared()) {
+        if (fp->scopeChain().global().isCleared()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CLEARED_SCOPE);
             return false;
         }
@@ -1088,8 +1087,8 @@ EnterWith(JSContext *cx, jsint stackIndex)
     if (!obj)
         return JS_FALSE;
 
-    JSObject *withobj = js_NewWithObject(cx, obj, parent,
-                                         sp + stackIndex - fp->base());
+    JSObject *withobj = WithObject::create(cx, fp, *obj, *parent,
+                                           sp + stackIndex - fp->base());
     if (!withobj)
         return JS_FALSE;
 
@@ -1100,58 +1099,45 @@ EnterWith(JSContext *cx, jsint stackIndex)
 static void
 LeaveWith(JSContext *cx)
 {
-    JSObject *withobj;
-
-    withobj = &cx->fp()->scopeChain();
-    JS_ASSERT(withobj->getClass() == &WithClass);
-    JS_ASSERT(withobj->getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp()));
-    JS_ASSERT(OBJ_BLOCK_DEPTH(cx, withobj) >= 0);
-    withobj->setPrivate(NULL);
-    cx->fp()->setScopeChainNoCallObj(*withobj->internalScopeChain());
+    WithObject &withobj = cx->fp()->scopeChain().asWith();
+    JS_ASSERT(withobj.maybeStackFrame() == js_FloatingFrameIfGenerator(cx, cx->fp()));
+    JS_ASSERT(withobj.stackDepth() >= 0);
+    withobj.setStackFrame(NULL);
+    cx->fp()->setScopeChainNoCallObj(withobj.enclosingScope());
 }
 
 bool
-js::IsActiveWithOrBlock(JSContext *cx, JSObject &obj, int stackDepth)
+js::IsActiveWithOrBlock(JSContext *cx, JSObject &obj, uint32_t stackDepth)
 {
     return (obj.isWith() || obj.isBlock()) &&
            obj.getPrivate() == js_FloatingFrameIfGenerator(cx, cx->fp()) &&
-           OBJ_BLOCK_DEPTH(cx, &obj) >= stackDepth;
+           obj.asNestedScope().stackDepth() >= stackDepth;
 }
 
-/*
- * Unwind block and scope chains to match the given depth. The function sets
- * fp->sp on return to stackDepth.
- */
-bool
-js::UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind)
+/* Unwind block and scope chains to match the given depth. */
+void
+js::UnwindScope(JSContext *cx, uint32_t stackDepth)
 {
-    JS_ASSERT(stackDepth >= 0);
     JS_ASSERT(cx->fp()->base() + stackDepth <= cx->regs().sp);
 
     StackFrame *fp = cx->fp();
-    JSObject *obj = fp->maybeBlockChain();
-    while (obj) {
-        JS_ASSERT(obj->isStaticBlock());
-        if (OBJ_BLOCK_DEPTH(cx, obj) < stackDepth)
+    StaticBlockObject *block = fp->maybeBlockChain();
+    while (block) {
+        if (block->stackDepth() < stackDepth)
             break;
-        obj = obj->staticBlockScopeChain();
+        block = block->enclosingBlock();
     }
-    fp->setBlockChain(obj);
+    fp->setBlockChain(block);
 
     for (;;) {
         JSObject &scopeChain = fp->scopeChain();
         if (!IsActiveWithOrBlock(cx, scopeChain, stackDepth))
             break;
-        if (scopeChain.isBlock()) {
-            /* Don't fail until after we've updated all stacks. */
-            normalUnwind &= js_PutBlockObject(cx, normalUnwind);
-        } else {
+        if (scopeChain.isClonedBlock())
+            scopeChain.asClonedBlock().put(cx);
+        else
             LeaveWith(cx);
-        }
     }
-
-    cx->regs().sp = fp->base() + stackDepth;
-    return normalUnwind;
 }
 
 /*
@@ -1922,17 +1908,17 @@ BEGIN_CASE(JSOP_POPN)
     regs.sp -= GET_UINT16(regs.pc);
 #ifdef DEBUG
     JS_ASSERT(regs.fp()->base() <= regs.sp);
-    JSObject *obj = regs.fp()->maybeBlockChain();
-    JS_ASSERT_IF(obj,
-                 OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj)
+    StaticBlockObject *block = regs.fp()->maybeBlockChain();
+    JS_ASSERT_IF(block,
+                 block->stackDepth() + block->slotCount()
                  <= (size_t) (regs.sp - regs.fp()->base()));
-    for (obj = &regs.fp()->scopeChain(); obj; obj = obj->scopeChain()) {
+    for (JSObject *obj = &regs.fp()->scopeChain(); obj; obj = obj->enclosingScope()) {
         if (!obj->isBlock() || !obj->isWith())
             continue;
         if (obj->getPrivate() != js_FloatingFrameIfGenerator(cx, regs.fp()))
             break;
-        JS_ASSERT(regs.fp()->base() + OBJ_BLOCK_DEPTH(cx, obj)
-                  + (obj->isBlock() ? OBJ_BLOCK_COUNT(cx, obj) : 1)
+        JS_ASSERT(regs.fp()->base() + obj->asBlock().stackDepth()
+                  + (obj->isBlock() ? obj->asBlock().slotCount() : 1)
                   <= regs.sp);
     }
 #endif
@@ -2345,7 +2331,7 @@ END_CASE(JSOP_ENUMCONSTELEM)
 #endif
 
 BEGIN_CASE(JSOP_BINDGNAME)
-    PUSH_OBJECT(*regs.fp()->scopeChain().getGlobal());
+    PUSH_OBJECT(regs.fp()->scopeChain().global());
 END_CASE(JSOP_BINDGNAME)
 
 BEGIN_CASE(JSOP_BINDNAME)
@@ -2979,9 +2965,9 @@ BEGIN_CASE(JSOP_LENGTH)
                 }
 
                 if (obj->isArguments()) {
-                    ArgumentsObject *argsobj = obj->asArguments();
-                    if (!argsobj->hasOverriddenLength()) {
-                        uint32_t length = argsobj->initialLength();
+                    ArgumentsObject &argsobj = obj->asArguments();
+                    if (!argsobj.hasOverriddenLength()) {
+                        uint32_t length = argsobj.initialLength();
                         JS_ASSERT(length < INT32_MAX);
                         rval = Int32Value(int32_t(length));
                         break;
@@ -3038,14 +3024,14 @@ BEGIN_CASE(JSOP_CALLPROP)
     if (lval.isObject()) {
         objv = lval;
     } else {
-        GlobalObject *global = regs.fp()->scopeChain().getGlobal();
+        GlobalObject &global = regs.fp()->scopeChain().global();
         JSObject *pobj;
         if (lval.isString()) {
-            pobj = global->getOrCreateStringPrototype(cx);
+            pobj = global.getOrCreateStringPrototype(cx);
         } else if (lval.isNumber()) {
-            pobj = global->getOrCreateNumberPrototype(cx);
+            pobj = global.getOrCreateNumberPrototype(cx);
         } else if (lval.isBoolean()) {
-            pobj = global->getOrCreateBooleanPrototype(cx);
+            pobj = global.getOrCreateBooleanPrototype(cx);
         } else {
             JS_ASSERT(lval.isNull() || lval.isUndefined());
             js_ReportIsNullOrUndefined(cx, -1, lval, NULL);
@@ -3125,7 +3111,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
     JSObject *obj;
     VALUE_TO_OBJECT(cx, &lref, obj);
 
-    JS_ASSERT_IF(op == JSOP_SETGNAME, obj == regs.fp()->scopeChain().getGlobal());
+    JS_ASSERT_IF(op == JSOP_SETGNAME, obj == &regs.fp()->scopeChain().global());
 
     do {
         PropertyCache *cache = &JS_PROPERTY_CACHE(cx);
@@ -3258,7 +3244,7 @@ BEGIN_CASE(JSOP_GETELEM)
                     goto end_getelem;
             }
         } else if (obj->isArguments()) {
-            if (obj->asArguments()->getElement(index, &rval))
+            if (obj->asArguments().getElement(index, &rval))
                 goto end_getelem;
         }
 
@@ -3506,7 +3492,7 @@ BEGIN_CASE(JSOP_CALLNAME)
 
     bool global = js_CodeSpec[op].format & JOF_GNAME;
     if (global)
-        obj = obj->getGlobal();
+        obj = &obj->global();
 
     Value rval;
 
@@ -3552,8 +3538,8 @@ BEGIN_CASE(JSOP_CALLNAME)
     } else {
         Shape *shape = (Shape *)prop;
         JSObject *normalized = obj;
-        if (normalized->getClass() == &WithClass && !shape->hasDefaultGetter())
-            normalized = js_UnwrapWithObject(cx, normalized);
+        if (normalized->isWith() && !shape->hasDefaultGetter())
+            normalized = &normalized->asWith().object();
         NATIVE_GET(cx, normalized, obj2, shape, JSGET_METHOD_BARRIER, &rval);
     }
 
@@ -3632,7 +3618,7 @@ BEGIN_CASE(JSOP_REGEXP)
      * bytecode at pc.
      */
     jsatomid index = GET_FULL_INDEX(0);
-    JSObject *proto = regs.fp()->scopeChain().getGlobal()->getOrCreateRegExpPrototype(cx);
+    JSObject *proto = regs.fp()->scopeChain().global().getOrCreateRegExpPrototype(cx);
     if (!proto)
         goto error;
     JSObject *obj = js_CloneRegExpObject(cx, script->getRegExp(index), proto);
@@ -5102,7 +5088,7 @@ BEGIN_CASE(JSOP_GETFUNNS)
     JS_ASSERT(!script->strictModeCode);
 
     Value rval;
-    if (!cx->fp()->scopeChain().getGlobal()->getFunctionNamespace(cx, &rval))
+    if (!cx->fp()->scopeChain().global().getFunctionNamespace(cx, &rval))
         goto error;
     PUSH_COPY(rval);
 }
@@ -5115,26 +5101,26 @@ BEGIN_CASE(JSOP_ENTERLET1)
 {
     JSObject *obj;
     LOAD_OBJECT(0, obj);
-    JS_ASSERT(obj->isStaticBlock());
-    JS_ASSERT(regs.fp()->maybeBlockChain() == obj->staticBlockScopeChain());
+    StaticBlockObject &blockObj = obj->asStaticBlock();
+    JS_ASSERT(regs.fp()->maybeBlockChain() == blockObj.enclosingBlock());
 
     if (op == JSOP_ENTERBLOCK) {
-        JS_ASSERT(regs.fp()->base() + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
-        Value *vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
+        JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() == regs.sp);
+        Value *vp = regs.sp + blockObj.slotCount();
         JS_ASSERT(regs.sp < vp);
         JS_ASSERT(vp <= regs.fp()->slots() + script->nslots);
         SetValueRangeToUndefined(regs.sp, vp);
         regs.sp = vp;
     } else if (op == JSOP_ENTERLET0) {
-        JS_ASSERT(regs.fp()->base() + OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj)
+        JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() + blockObj.slotCount()
                   == regs.sp);
     } else if (op == JSOP_ENTERLET1) {
-        JS_ASSERT(regs.fp()->base() + OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj)
+        JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() + blockObj.slotCount()
                   == regs.sp - 1);
     }
 
 #ifdef DEBUG
-    JS_ASSERT(regs.fp()->maybeBlockChain() == obj->staticBlockScopeChain());
+    JS_ASSERT(regs.fp()->maybeBlockChain() == blockObj.enclosingBlock());
 
     /*
      * The young end of fp->scopeChain may omit blocks if we haven't closed
@@ -5145,19 +5131,18 @@ BEGIN_CASE(JSOP_ENTERLET1)
      */
     JSObject *obj2 = &regs.fp()->scopeChain();
     while (obj2->isWith())
-        obj2 = obj2->internalScopeChain();
+        obj2 = &obj2->asWith().enclosingScope();
     if (obj2->isBlock() &&
         obj2->getPrivate() == js_FloatingFrameIfGenerator(cx, regs.fp()))
     {
-        JSObject *youngestProto = obj2->getProto();
-        JS_ASSERT(youngestProto->isStaticBlock());
-        JSObject *parent = obj;
-        while ((parent = parent->scopeChain()) != youngestProto)
+        StaticBlockObject &youngestProto = obj2->asClonedBlock().staticBlock();
+        StaticBlockObject *parent = &blockObj;
+        while ((parent = parent->enclosingBlock()) != &youngestProto)
             JS_ASSERT(parent);
     }
 #endif
 
-    regs.fp()->setBlockChain(obj);
+    regs.fp()->setBlockChain(&blockObj);
 }
 END_CASE(JSOP_ENTERBLOCK)
 
@@ -5165,33 +5150,29 @@ BEGIN_CASE(JSOP_LEAVEBLOCK)
 BEGIN_CASE(JSOP_LEAVEFORLETIN)
 BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
 {
-    JS_ASSERT(regs.fp()->blockChain().isStaticBlock());
-    DebugOnly<uintN> blockDepth = OBJ_BLOCK_DEPTH(cx, &regs.fp()->blockChain());
-    JS_ASSERT(blockDepth <= StackDepth(script));
+    StaticBlockObject &blockObj = regs.fp()->blockChain();
+    JS_ASSERT(blockObj.stackDepth() <= StackDepth(script));
 
     /*
      * If we're about to leave the dynamic scope of a block that has been
      * cloned onto fp->scopeChain, clear its private data, move its locals from
      * the stack into the clone, and pop it off the chain.
      */
-    JSObject &obj = regs.fp()->scopeChain();
-    if (obj.getProto() == &regs.fp()->blockChain()) {
-        JS_ASSERT(obj.isClonedBlock());
-        if (!js_PutBlockObject(cx, JS_TRUE))
-            goto error;
-    }
+    JSObject &scope = regs.fp()->scopeChain();
+    if (scope.getProto() == &blockObj)
+        scope.asClonedBlock().put(cx);
 
-    regs.fp()->setBlockChain(regs.fp()->blockChain().staticBlockScopeChain());
+    regs.fp()->setBlockChain(blockObj.enclosingBlock());
 
     if (op == JSOP_LEAVEBLOCK) {
         /* Pop the block's slots. */
         regs.sp -= GET_UINT16(regs.pc);
-        JS_ASSERT(regs.fp()->base() + blockDepth == regs.sp);
+        JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() == regs.sp);
     } else if (op == JSOP_LEAVEBLOCKEXPR) {
         /* Pop the block's slots maintaining the topmost expr. */
         Value *vp = &regs.sp[-1];
         regs.sp -= GET_UINT16(regs.pc);
-        JS_ASSERT(regs.fp()->base() + blockDepth == regs.sp - 1);
+        JS_ASSERT(regs.fp()->base() + blockObj.stackDepth() == regs.sp - 1);
         regs.sp[-1] = *vp;
     } else {
         /* Another op will pop; nothing to do here. */
@@ -5395,15 +5376,8 @@ END_CASE(JSOP_ARRAYPUSH)
              */
             regs.pc = (script)->main() + tn->start + tn->length;
 
-            JSBool ok = UnwindScope(cx, tn->stackDepth, JS_TRUE);
-            JS_ASSERT(regs.sp == regs.fp()->base() + tn->stackDepth);
-            if (!ok) {
-                /*
-                 * Restart the handler search with updated pc and stack depth
-                 * to properly notify the debugger.
-                 */
-                goto error;
-            }
+            UnwindScope(cx, tn->stackDepth);
+            regs.sp = regs.fp()->base() + tn->stackDepth;
 
             switch (tn->kind) {
               case JSTRY_CATCH:
@@ -5439,7 +5413,7 @@ END_CASE(JSOP_ARRAYPUSH)
                 JS_ASSERT(JSOp(*regs.pc) == JSOP_ENDITER);
                 Value v = cx->getPendingException();
                 cx->clearPendingException();
-                ok = js_CloseIterator(cx, &regs.sp[-1].toObject());
+                bool ok = js_CloseIterator(cx, &regs.sp[-1].toObject());
                 regs.sp -= 1;
                 if (!ok)
                     goto error;
@@ -5465,15 +5439,8 @@ END_CASE(JSOP_ARRAYPUSH)
     }
 
   forced_return:
-    /*
-     * Unwind the scope making sure that interpReturnOK stays false even when
-     * UnwindScope returns true.
-     *
-     * When a trap handler returns JSTRAP_RETURN, we jump here with
-     * interpReturnOK set to true bypassing any finally blocks.
-     */
-    interpReturnOK &= (JSBool)UnwindScope(cx, 0, interpReturnOK || cx->isExceptionPending());
-    JS_ASSERT(regs.sp == regs.fp()->base());
+    UnwindScope(cx, 0);
+    regs.sp = regs.fp()->base();
 
     if (entryFrame != regs.fp())
         goto inline_return;

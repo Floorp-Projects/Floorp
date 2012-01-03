@@ -228,7 +228,7 @@ NumBlockSlots(JSScript *script, jsbytecode *pc)
 
     JSObject *obj = NULL;
     GET_OBJECT_FROM_BYTECODE(script, pc, 0, obj);
-    return OBJ_BLOCK_COUNT(NULL, obj);
+    return obj->asStaticBlock().slotCount();
 }
 
 uintN
@@ -494,10 +494,8 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
 
     if (!JSVAL_IS_PRIMITIVE(v)) {
         JSObject *obj = JSVAL_TO_OBJECT(v);
-        Class *clasp = obj->getClass();
-
-        if (clasp == &BlockClass) {
-            char *source = JS_sprintf_append(NULL, "depth %d {", OBJ_BLOCK_DEPTH(cx, obj));
+        if (obj->isBlock()) {
+            char *source = JS_sprintf_append(NULL, "depth %d {", obj->asBlock().stackDepth());
             if (!source)
                 return false;
 
@@ -527,15 +525,15 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
             return true;
         }
 
-        if (clasp == &FunctionClass) {
+        if (obj->isFunction()) {
             JSString *str = JS_DecompileFunction(cx, obj->toFunction(), JS_DONT_PRETTY_PRINT);
             if (!str)
                 return false;
             return bytes->encode(cx, str);
         }
 
-        if (clasp == &RegExpClass) {
-            JSString *source = obj->asRegExp()->toString(cx);
+        if (obj->isRegExp()) {
+            JSString *source = obj->asRegExp().toString(cx);
             if (!source)
                 return false;
             JS::Anchor<JSString *> anchor(source);
@@ -1758,9 +1756,8 @@ GetLocal(SprintStack *ss, jsint i)
             JSObject *obj = script->getObject(j);
 
             if (obj->isBlock()) {
-                jsint depth = OBJ_BLOCK_DEPTH(cx, obj);
-                jsint count = OBJ_BLOCK_COUNT(cx, obj);
-
+                uint32_t depth = obj->asBlock().stackDepth();
+                uint32_t count = obj->asBlock().slotCount();
                 if (jsuint(i - depth) < jsuint(count))
                     return GetLocalInSlot(ss, i, jsint(i - depth), obj);
             }
@@ -1772,9 +1769,8 @@ GetLocal(SprintStack *ss, jsint i)
         JSObject *obj = script->getObject(j);
 
         if (obj->isBlock()) {
-            jsint depth = OBJ_BLOCK_DEPTH(cx, obj);
-            jsint count = OBJ_BLOCK_COUNT(cx, obj);
-
+            uint32_t depth = obj->asBlock().stackDepth();
+            uint32_t count = obj->asBlock().slotCount();
             if (jsuint(i - depth) < jsuint(count))
                 return GetLocalInSlot(ss, i, jsint(i - depth), obj);
         }
@@ -2252,15 +2248,15 @@ DecompileGroupAssignment(SprintStack *ss, jsbytecode *pc, jsbytecode *endpc,
  * back in declaration order.
  */
 static bool
-GetBlockNames(JSContext *cx, JSObject *blockObj, AtomVector *atoms)
+GetBlockNames(JSContext *cx, StaticBlockObject &blockObj, AtomVector *atoms)
 {
-    size_t numAtoms = OBJ_BLOCK_COUNT(cx, blockObj);
+    size_t numAtoms = blockObj.slotCount();
     LOCAL_ASSERT(numAtoms > 0);
     if (!atoms->resize(numAtoms))
         return false;
 
     uintN i = numAtoms;
-    for (Shape::Range r = blockObj->lastProperty()->all(); !r.empty(); r.popFront()) {
+    for (Shape::Range r = blockObj.lastProperty()->all(); !r.empty(); r.popFront()) {
         const Shape &shape = r.front();
         LOCAL_ASSERT(shape.hasShortID());
         --i;
@@ -3188,7 +3184,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               {
                 LOAD_OBJECT(0);
                 AtomVector atoms(cx);
-                if (!GetBlockNames(cx, obj, &atoms) || !PushBlockNames(cx, ss, atoms))
+                StaticBlockObject &blockObj = obj->asStaticBlock();
+
+                if (!GetBlockNames(cx, blockObj, &atoms) || !PushBlockNames(cx, ss, atoms))
                     return NULL;
 
                 sn = js_GetSrcNote(jp->script, pc);
@@ -3246,7 +3244,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #endif
                         LOCAL_ASSERT(*pc == JSOP_SETLOCALPOP);
                         pc += JSOP_SETLOCALPOP_LENGTH;
-                        LOCAL_ASSERT(OBJ_BLOCK_COUNT(cx, obj) >= 1);
+                        LOCAL_ASSERT(blockObj.slotCount() >= 1);
                         if (!QuoteString(&jp->sprinter, atoms[0], 0))
                             return NULL;
 #if JS_HAS_DESTRUCTURING
@@ -3328,18 +3326,19 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_ENTERLET0:
               {
                 LOAD_OBJECT(0);
+                StaticBlockObject &blockObj = obj->asStaticBlock();
 
                 AtomVector atoms(cx);
-                if (!GetBlockNames(cx, obj, &atoms))
+                if (!GetBlockNames(cx, blockObj, &atoms))
                     return NULL;
 
                 sn = js_GetSrcNote(jp->script, pc);
                 LOCAL_ASSERT(SN_TYPE(sn) == SRC_DECL);
                 ptrdiff_t letData = js_GetSrcNoteOffset(sn, 0);
                 bool groupAssign = LetDataToGroupAssign(letData);
-                uintN letDepth = OBJ_BLOCK_DEPTH(cx, obj);
-                LOCAL_ASSERT(letDepth == (uintN)ss->top - OBJ_BLOCK_COUNT(cx, obj));
-                LOCAL_ASSERT(atoms.length() == OBJ_BLOCK_COUNT(cx, obj));
+                uintN letDepth = blockObj.stackDepth();
+                LOCAL_ASSERT(letDepth == (uintN)ss->top - blockObj.slotCount());
+                LOCAL_ASSERT(atoms.length() == blockObj.slotCount());
 
                 /*
                  * Build the list of decompiled rhs expressions. Do this before
@@ -3449,13 +3448,14 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_ENTERLET1:
               {
                 LOAD_OBJECT(0);
+                StaticBlockObject &blockObj = obj->asStaticBlock();
 
                 AtomVector atoms(cx);
-                if (!GetBlockNames(cx, obj, &atoms))
+                if (!GetBlockNames(cx, blockObj, &atoms))
                     return NULL;
 
                 LOCAL_ASSERT(js_GetSrcNote(jp->script, pc) == NULL);
-                LOCAL_ASSERT(ss->top - 1 == OBJ_BLOCK_DEPTH(cx, obj) + OBJ_BLOCK_COUNT(cx, obj));
+                LOCAL_ASSERT(ss->top - 1 == blockObj.stackDepth() + blockObj.slotCount());
                 jsbytecode *nextpc = pc + JSOP_ENTERLET1_LENGTH;
                 if (*nextpc == JSOP_GOTO || *nextpc == JSOP_GOTOX) {
                     LOCAL_ASSERT(SN_TYPE(js_GetSrcNote(jp->script, nextpc)) == SRC_FOR_IN);
@@ -4126,13 +4126,14 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                         LOCAL_ASSERT(*(pc + offsetToLet) == JSOP_ENTERLET0);
 
                         GET_OBJECT_FROM_BYTECODE(jp->script, pc + offsetToLet, 0, obj);
+                        StaticBlockObject &blockObj = obj->asStaticBlock();
 
-                        uint32_t blockDepth = OBJ_BLOCK_DEPTH(cx, obj);
+                        uint32_t blockDepth = blockObj.stackDepth();
                         LOCAL_ASSERT(blockDepth < ss->top);
-                        LOCAL_ASSERT(ss->top <= blockDepth + OBJ_BLOCK_COUNT(cx, obj));
+                        LOCAL_ASSERT(ss->top <= blockDepth + blockObj.slotCount());
 
                         AtomVector atoms(cx);
-                        if (!GetBlockNames(cx, obj, &atoms))
+                        if (!GetBlockNames(cx, blockObj, &atoms))
                             return NULL;
 
                         /*
@@ -4823,7 +4824,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_REGEXP:
                 GET_REGEXP_FROM_BYTECODE(jp->script, pc, 0, obj);
-                str = obj->asRegExp()->toString(cx);
+                str = obj->asRegExp().toString(cx);
                 if (!str)
                     return NULL;
                 goto sprint_string;
