@@ -129,6 +129,8 @@ static PRLogModuleInfo* gJSDiagnostics;
 // a page) and doing the actual GC.
 #define NS_GC_DELAY                 4000 // ms
 
+#define NS_SHRINK_GC_BUFFERS_DELAY  4000 // ms
+
 // The amount of time we wait from the first request to GC to actually
 // doing the first GC.
 #define NS_FIRST_GC_DELAY           10000 // ms
@@ -142,6 +144,7 @@ static PRLogModuleInfo* gJSDiagnostics;
 // if you add statics here, add them to the list in nsJSRuntime::Startup
 
 static nsITimer *sGCTimer;
+static nsITimer *sShrinkGCBuffersTimer;
 static nsITimer *sCCTimer;
 
 static bool sGCHasRun;
@@ -1098,8 +1101,9 @@ nsJSContext::~nsJSContext()
 void
 nsJSContext::DestroyJSContext()
 {
-  if (!mContext)
+  if (!mContext) {
     return;
+  }
 
   // Clear our entry in the JSContext, bugzilla bug 66413
   ::JS_SetContextPrivate(mContext, nsnull);
@@ -1108,14 +1112,14 @@ nsJSContext::DestroyJSContext()
   Preferences::UnregisterCallback(JSOptionChangedCallback,
                                   js_options_dot_str, this);
 
-  bool do_gc = mGCOnDestruction && !sGCTimer;
-
+  if (mGCOnDestruction) {
+    PokeGC();
+  }
+        
   // Let xpconnect destroy the JSContext when it thinks the time is right.
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
   if (xpc) {
-    xpc->ReleaseJSContext(mContext, !do_gc);
-  } else if (do_gc) {
-    ::JS_DestroyContext(mContext);
+    xpc->ReleaseJSContext(mContext, true);
   } else {
     ::JS_DestroyContextNoGC(mContext);
   }
@@ -3224,6 +3228,7 @@ nsJSContext::GarbageCollectNow(bool shrinkingGC)
   SAMPLE_LABEL("GC", "GarbageCollectNow");
 
   KillGCTimer();
+  KillShrinkGCBuffersTimer();
 
   // Reset sPendingLoadCount in case the timer that fired was a
   // timer we scheduled due to a normal GC timer firing while
@@ -3237,6 +3242,18 @@ nsJSContext::GarbageCollectNow(bool shrinkingGC)
   if (nsContentUtils::XPConnect()) {
     nsContentUtils::XPConnect()->GarbageCollect(shrinkingGC);
   }
+}
+
+//static
+void
+nsJSContext::ShrinkGCBuffersNow()
+{
+  NS_TIME_FUNCTION_MIN(1.0);
+  SAMPLE_LABEL("GC", "ShrinkGCBuffersNow");
+
+  KillShrinkGCBuffersTimer();
+
+  JS_ShrinkGCBuffers(nsJSRuntime::sRuntime);
 }
 
 //Static
@@ -3294,6 +3311,14 @@ GCTimerFired(nsITimer *aTimer, void *aClosure)
   NS_RELEASE(sGCTimer);
 
   nsJSContext::GarbageCollectNow();
+}
+
+void
+ShrinkGCBuffersTimerFired(nsITimer *aTimer, void *aClosure)
+{
+  NS_RELEASE(sShrinkGCBuffersTimer);
+
+  nsJSContext::ShrinkGCBuffersNow();
 }
 
 // static
@@ -3361,6 +3386,26 @@ nsJSContext::PokeGC()
 
 // static
 void
+nsJSContext::PokeShrinkGCBuffers()
+{
+  if (sShrinkGCBuffersTimer) {
+    return;
+  }
+
+  CallCreateInstance("@mozilla.org/timer;1", &sShrinkGCBuffersTimer);
+
+  if (!sShrinkGCBuffersTimer) {
+    // Failed to create timer (probably because we're in XPCOM shutdown)
+    return;
+  }
+
+  sShrinkGCBuffersTimer->InitWithFuncCallback(ShrinkGCBuffersTimerFired, nsnull,
+                                              NS_SHRINK_GC_BUFFERS_DELAY,
+                                              nsITimer::TYPE_ONE_SHOT);
+}
+
+// static
+void
 nsJSContext::MaybePokeCC()
 {
   if (nsCycleCollector_suspectedCount() > 1000) {
@@ -3397,6 +3442,17 @@ nsJSContext::KillGCTimer()
     sGCTimer->Cancel();
 
     NS_RELEASE(sGCTimer);
+  }
+}
+
+//static
+void
+nsJSContext::KillShrinkGCBuffersTimer()
+{
+  if (sShrinkGCBuffersTimer) {
+    sShrinkGCBuffersTimer->Cancel();
+
+    NS_RELEASE(sShrinkGCBuffersTimer);
   }
 }
 
@@ -3465,10 +3521,11 @@ DOMGCFinishedCallback(JSRuntime *rt, JSCompartment *comp, const char *status)
     }
   }
 
-  // If we didn't end up scheduling a GC, and there are unused
-  // chunks waiting to expire, make sure we will GC again soon.
-  if (!sGCTimer && JS_GetGCParameter(rt, JSGC_UNUSED_CHUNKS) > 0) {
-    nsJSContext::PokeGC();
+  // If we didn't end up scheduling a GC, make sure that we release GC buffers
+  // soon after canceling previous shrinking attempt 
+  nsJSContext::KillShrinkGCBuffersTimer();
+  if (!sGCTimer) {
+    nsJSContext::PokeShrinkGCBuffers();
   }
 }
 
@@ -3808,6 +3865,7 @@ void
 nsJSRuntime::Shutdown()
 {
   nsJSContext::KillGCTimer();
+  nsJSContext::KillShrinkGCBuffersTimer();
   nsJSContext::KillCCTimer();
 
   NS_IF_RELEASE(gNameSpaceManager);

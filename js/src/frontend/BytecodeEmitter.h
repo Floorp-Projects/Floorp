@@ -351,6 +351,7 @@ struct TreeContext {                /* tree context for semantic checks */
 
     Bindings        bindings;       /* bindings in this code, including
                                        arguments if we're compiling a function */
+    Bindings::StackRoot bindingsRoot; /* root for stack allocated bindings. */
 
     void trace(JSTracer *trc);
 

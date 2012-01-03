@@ -113,10 +113,12 @@ XPIDLSRCS	= \
 		nsIDOMSVGSetElement.idl \
 		nsIDOMSVGSVGElement.idl \
 		nsIDOMSVGStopElement.idl \
+		nsIDOMSVGStringList.idl \
 		nsIDOMSVGStylable.idl \
 		nsIDOMSVGStyleElement.idl \
 		nsIDOMSVGSwitchElement.idl \
 		nsIDOMSVGSymbolElement.idl \
+		nsIDOMSVGTests.idl \
 		nsIDOMSVGTextContentElement.idl \
 		nsIDOMSVGTextElement.idl \
 		nsIDOMSVGTextPathElement.idl \

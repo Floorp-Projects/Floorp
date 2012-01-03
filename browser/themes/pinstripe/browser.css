@@ -1111,11 +1111,6 @@ toolbar[mode="icons"] #zoom-in-button {
   padding: 0px;
 }
 
-#page-proxy-stack {
-  width: 16px;
-  height: 16px;
-}
-
 #page-proxy-favicon:not([src]) {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }

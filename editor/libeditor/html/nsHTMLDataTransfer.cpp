@@ -370,10 +370,6 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
   if (nodeList.Count() == 0)
     return NS_OK;
 
-  // walk list of nodes; perform surgery on nodes (relativize) with _mozattr
-  res = RelativizeURIInFragmentList(nodeList, aFlavor, aSourceDoc, targetNode);
-  // ignore results from this call, try to paste/insert anyways
- 
   // are there any table elements in the list?  
   // node and offset for insertion
   nsCOMPtr<nsIDOMNode> parentNode;
@@ -889,92 +885,6 @@ nsHTMLEditor::GetAttributeToModifyOnNode(nsIDOMNode *aNode, nsAString &aAttr)
   {
     aAttr = srcStr;
     return NS_OK;
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsHTMLEditor::RelativizeURIForNode(nsIDOMNode *aNode, nsIURL *aDestURL)
-{
-  nsAutoString attributeToModify;
-  GetAttributeToModifyOnNode(aNode, attributeToModify);
-  if (attributeToModify.IsEmpty())
-    return NS_OK;
-
-  nsCOMPtr<nsIDOMNamedNodeMap> attrMap;
-  nsresult rv = aNode->GetAttributes(getter_AddRefs(attrMap));
-  NS_ENSURE_SUCCESS(rv, NS_OK);
-  NS_ENSURE_TRUE(attrMap, NS_OK); // assume errors here shouldn't cancel insertion
-
-  nsCOMPtr<nsIDOMNode> attrNode;
-  rv = attrMap->GetNamedItem(attributeToModify, getter_AddRefs(attrNode));
-  NS_ENSURE_SUCCESS(rv, NS_OK); // assume errors here shouldn't cancel insertion
-
-  if (attrNode)
-  {
-    nsAutoString oldValue;
-    attrNode->GetNodeValue(oldValue);
-    if (!oldValue.IsEmpty())
-    {
-      NS_ConvertUTF16toUTF8 oldCValue(oldValue);
-      nsCOMPtr<nsIURI> currentNodeURI;
-      rv = NS_NewURI(getter_AddRefs(currentNodeURI), oldCValue);
-      if (NS_SUCCEEDED(rv))
-      {
-        nsCAutoString newRelativePath;
-        aDestURL->GetRelativeSpec(currentNodeURI, newRelativePath);
-        if (!newRelativePath.IsEmpty())
-        {
-          NS_ConvertUTF8toUTF16 newCValue(newRelativePath);
-          attrNode->SetNodeValue(newCValue);
-        }
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsHTMLEditor::RelativizeURIInFragmentList(const nsCOMArray<nsIDOMNode> &aNodeList,
-                                          const nsAString &aFlavor,
-                                          nsIDOMDocument *aSourceDoc,
-                                          nsIDOMNode *aTargetNode)
-{
-  // determine destination URL
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  GetDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocument> destDoc = do_QueryInterface(domDoc);
-  NS_ENSURE_TRUE(destDoc, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIURL> destURL = do_QueryInterface(destDoc->GetDocBaseURI());
-  NS_ENSURE_TRUE(destURL, NS_ERROR_FAILURE);
-
-  PRInt32 listCount = aNodeList.Count();
-  PRInt32 j;
-  for (j = 0; j < listCount; j++)
-  {
-    nsIDOMNode* somenode = aNodeList[j];
-
-    nsCOMPtr<nsIDOMTreeWalker> walker;
-    nsresult rv = domDoc->CreateTreeWalker(somenode,
-                                           nsIDOMNodeFilter::SHOW_ELEMENT,
-                                           nsnull, true,
-                                           getter_AddRefs(walker));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDOMNode> currentNode;
-    walker->GetCurrentNode(getter_AddRefs(currentNode));
-    while (currentNode)
-    {
-      rv = RelativizeURIForNode(currentNode, destURL);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      walker->NextNode(getter_AddRefs(currentNode));
-    }
   }
 
   return NS_OK;

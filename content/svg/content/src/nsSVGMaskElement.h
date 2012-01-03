@@ -39,6 +39,7 @@
 
 #include "nsSVGStylableElement.h"
 #include "nsIDOMSVGMaskElement.h"
+#include "DOMSVGTests.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
@@ -49,6 +50,7 @@ typedef nsSVGStylableElement nsSVGMaskElementBase;
 
 class nsSVGMaskElement : public nsSVGMaskElementBase,
                          public nsIDOMSVGMaskElement,
+                         public DOMSVGTests,
                          public nsIDOMSVGUnitTypes
 {
   friend class nsSVGMaskFrame;

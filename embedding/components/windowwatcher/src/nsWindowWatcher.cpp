@@ -1556,7 +1556,7 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
   // Check security state for use in determing window dimensions
   bool enabled;
   nsresult res =
-    securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
+    securityManager->IsCapabilityEnabled("UniversalXPConnect", &enabled);
 
   if (NS_FAILED(res) || !enabled || (isChrome && !aHasChromeParent)) {
     // If priv check fails (or if we're called from chrome, but the
@@ -1978,7 +1978,7 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
   nsCOMPtr<nsIScriptSecurityManager>
     securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
   if (securityManager) {
-    res = securityManager->IsCapabilityEnabled("UniversalBrowserWrite",
+    res = securityManager->IsCapabilityEnabled("UniversalXPConnect",
                                                &enabled);
     if (NS_FAILED(res))
       enabled = false;

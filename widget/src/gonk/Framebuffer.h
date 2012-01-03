@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 class gfxASurface;
+class nsIntRegion;
 class nsIntSize;
 
 namespace mozilla {
@@ -71,8 +72,9 @@ void Close();
 // Return the buffer to be drawn into, that will be the next frame.
 gfxASurface* BackBuffer();
 
-// Swap the front buffer for the back buffer.
-void Present();
+// Swap the front buffer for the back buffer.  |aUpdated| is the
+// region of the back buffer that was repainted.
+void Present(const nsIntRegion& aUpdated);
 
 } // namespace Framebuffer
 

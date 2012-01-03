@@ -285,9 +285,6 @@ CXX_WRAPPER = @CXX_WRAPPER@
 
 MOZ_DEMANGLE_SYMBOLS = @MOZ_DEMANGLE_SYMBOLS@
 
-# XXX - these need to be cleaned up and have real checks added -cls
-CM_BLDTYPE=dbg
-AWT_11=1
 OS_TARGET=@OS_TARGET@
 OS_ARCH=@OS_ARCH@
 OS_RELEASE=@OS_RELEASE@

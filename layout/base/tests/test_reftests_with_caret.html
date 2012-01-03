@@ -83,8 +83,7 @@ function refTest(test,ref) {
 var caretBlinkTime = null;
 function endTest() {
   SimpleTest.finish();
-  netscape.security.PrivilegeManager.enablePrivilege(
-   'UniversalPreferencesRead UniversalPreferencesWrite UniversalXPConnect');
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
   if (caretBlinkTime !== null) {
@@ -161,8 +160,7 @@ function runTests() {
   try {
     SimpleTest.waitForExplicitFinish();
 
-    netscape.security.PrivilegeManager.enablePrivilege(
-      'UniversalPreferencesRead UniversalPreferencesWrite UniversalXPConnect');
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(Components.interfaces.nsIPrefBranch);
     try {

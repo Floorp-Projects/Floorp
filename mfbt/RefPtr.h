@@ -38,15 +38,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* Helpers for defining and using refcounted objects. */
+
 #ifndef mozilla_RefPtr_h_
 #define mozilla_RefPtr_h_
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-
-/**
- * Helpers for defining and using refcounted objects.
- */
 
 namespace mozilla {
 

@@ -39,12 +39,7 @@
 #include <string.h>
 #include <stdio.h>
 
-// Real time signals are not supported on android.
-// This behaves as a standard signal.
-#define SIGNAL_SAVE_PROFILE 42
-
-#define PATH_MAX_TOSTRING(x) #x
-#define PATH_MAX_STRING(x) PATH_MAX_TOSTRING(x)
+#define SIGNAL_SAVE_PROFILE SIGUSR2
 
 #if defined(__GLIBC__)
 // glibc doesn't implement gettid(2).
@@ -52,61 +47,6 @@
 pid_t gettid()
 {
   return (pid_t) syscall(SYS_gettid);
-}
-#endif
-
-#ifdef ENABLE_SPS_LEAF_DATA
-/* a crapy version of getline, because it's not included in bionic */
-static ssize_t getline(char **lineptr, size_t *n, FILE *stream)
-{
- char *ret;
- if (!*lineptr) {
-   *lineptr = (char*)malloc(4096);
- }
- ret = fgets(*lineptr, 4096, stream);
- if (!ret)
-   return 0;
- return strlen(*lineptr);
-}
-
-MapInfo getmaps(pid_t pid)
-{
- MapInfo info;
- char path[PATH_MAX];
- snprintf(path, PATH_MAX, "/proc/%d/maps", pid);
- FILE *maps = fopen(path, "r");
- char *line = NULL;
- int count = 0;
- size_t line_size = 0;
- while (maps && getline (&line, &line_size, maps) > 0) {
-   int ret;
-   //XXX: needs input sanitizing
-   unsigned long start;
-   unsigned long end;
-   char perm[6] = "";
-   unsigned long offset;
-   char name[PATH_MAX] = "";
-   ret = sscanf(line,
-                "%lx-%lx %6s %lx %*s %*x %" PATH_MAX_STRING(PATH_MAX) "s\n",
-                &start, &end, perm, &offset, name);
-   if (!strchr(perm, 'x')) {
-     // Ignore non executable entries
-     continue;
-   }
-   if (ret != 5 && ret != 4) {
-     LOG("Get maps line failed");
-     continue;
-   }
-   MapEntry entry(start, end, offset, name);
-   info.AddMapEntry(entry);
-   if (count > 10000) {
-     LOG("Get maps failed");
-     break;
-   }
-   count++;
- }
- free(line);
- return info;
 }
 #endif
 
@@ -193,9 +133,11 @@ static void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
   sActiveSampler->Tick(sample);
 }
 
+#ifndef XP_MACOSX
 void tgkill(pid_t tgid, pid_t tid, int signalno) {
   syscall(SYS_tgkill, tgid, tid, signalno);
 }
+#endif
 
 class Sampler::PlatformData : public Malloced {
  public:
@@ -203,16 +145,26 @@ class Sampler::PlatformData : public Malloced {
       : sampler_(sampler),
         signal_handler_installed_(false),
         vm_tgid_(getpid()),
+#ifndef XP_MACOSX
         vm_tid_(gettid()),
-        signal_sender_launched_(false) {
+#endif
+        signal_sender_launched_(false)
+#ifdef XP_MACOSX
+        , signal_receiver_(pthread_self())
+#endif
+  {
   }
 
   void SignalSender() {
     while (sampler_->IsActive()) {
       sampler_->HandleSaveRequest();
 
+#ifdef XP_MACOSX
+      pthread_kill(signal_receiver_, SIGPROF);
+#else
       // Glibc doesn't provide a wrapper for tgkill(2).
       tgkill(vm_tgid_, vm_tid_, SIGPROF);
+#endif
       // Convert ms to us and subtract 100 us to compensate delays
       // occuring during signal delivery.
 
@@ -240,6 +192,9 @@ class Sampler::PlatformData : public Malloced {
   pid_t vm_tid_;
   bool signal_sender_launched_;
   pthread_t signal_sender_thread_;
+#ifdef XP_MACOSX
+  pthread_t signal_receiver_;
+#endif
 };
 
 

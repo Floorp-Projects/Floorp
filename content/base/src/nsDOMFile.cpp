@@ -165,12 +165,12 @@ nsDOMFileBase::GetMozFullPath(nsAString &aFileName)
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
 
-  // It is unsafe to call IsCallerTrustedForCapability on a non-main thread. If
+  // It is unsafe to call CallerHasUniversalXPConnect on a non-main thread. If
   // you hit the following assertion you need to figure out some other way to
   // determine privileges and call GetMozFullPathInternal.
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (nsContentUtils::IsCallerTrustedForCapability("UniversalFileRead")) {
+  if (nsContentUtils::CallerHasUniversalXPConnect()) {
     return GetMozFullPathInternal(aFileName);
   }
   aFileName.Truncate();

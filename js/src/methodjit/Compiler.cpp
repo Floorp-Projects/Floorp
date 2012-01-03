@@ -486,8 +486,10 @@ void
 mjit::Compiler::popActiveFrame()
 {
     JS_ASSERT(a->parent);
+    a->mainCodeEnd = masm.size();
+    a->stubCodeEnd = stubcc.size();
     this->PC = a->parentPC;
-    this->a = a->parent;
+    this->a = (ActiveFrame *) a->parent;
     this->script = a->script;
     this->analysis = this->script->analysis();
 
@@ -551,9 +553,14 @@ mjit::Compiler::performCompilation(JITScript **jitp)
 
 #undef CHECK_STATUS
 
+mjit::JSActiveFrame::JSActiveFrame()
+    : parent(NULL), parentPC(NULL), script(NULL), inlineIndex(UINT32_MAX)
+{
+}
+
 mjit::Compiler::ActiveFrame::ActiveFrame(JSContext *cx)
-    : parent(NULL), parentPC(NULL), script(NULL), jumpMap(NULL),
-      inlineIndex(UINT32_MAX), varTypes(NULL), needReturnValue(false),
+    : jumpMap(NULL),
+      varTypes(NULL), needReturnValue(false),
       syncReturnValue(false), returnValueDouble(false), returnSet(false),
       returnEntry(NULL), returnJumps(NULL), exitState(NULL)
 {}
@@ -921,6 +928,9 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         JaegerSpew(JSpew_Scripts, "dumped a constant pool while generating an IC\n");
         return Compile_Abort;
     }
+
+    a->mainCodeEnd = masm.size();
+    a->stubCodeEnd = stubcc.size();
 
     for (size_t i = 0; i < branchPatches.length(); i++) {
         Label label = labelOf(branchPatches[i].pc, branchPatches[i].inlineIndex);
@@ -1385,8 +1395,9 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     JSC::ExecutableAllocator::makeExecutable(result, masm.size() + stubcc.size());
     JSC::ExecutableAllocator::cacheFlush(result, masm.size() + stubcc.size());
 
-    Probes::registerMJITCode(cx, jit, script, script->function() ? script->function() : NULL,
-                             (mjit::Compiler_ActiveFrame**) inlineFrames.begin(),
+    Probes::registerMJITCode(cx, jit,
+                             a,
+                             (JSActiveFrame**) inlineFrames.begin(),
                              result, masm.size(),
                              result + masm.size(), stubcc.size());
 

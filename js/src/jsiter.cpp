@@ -216,10 +216,15 @@ static bool
 EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN flags, IdSet &ht,
                           AutoIdVector *props)
 {
+    RootObject objRoot(cx, &obj);
+    RootObject pobjRoot(cx, &pobj);
+
     size_t initialLength = props->length();
 
     /* Collect all unique properties from this object's scope. */
-    for (Shape::Range r = pobj->lastProperty()->all(); !r.empty(); r.popFront()) {
+    Shape::Range r = pobj->lastProperty()->all();
+    Shape::Range::Root root(cx, &r);
+    for (; !r.empty(); r.popFront()) {
         const Shape &shape = r.front();
 
         if (!JSID_IS_DEFAULT_XML_NAMESPACE(shape.propid()) &&
@@ -294,7 +299,10 @@ Snapshot(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector *props)
     if (!ht.init(32))
         return NULL;
 
-    JSObject *pobj = obj;
+    RootObject objRoot(cx, &obj);
+    RootedVarObject pobj(cx);
+    pobj = obj;
+
     do {
         Class *clasp = pobj->getClass();
         if (pobj->isNative() &&
@@ -473,12 +481,14 @@ static inline JSObject *
 NewIteratorObject(JSContext *cx, uintN flags)
 {
     if (flags & JSITER_ENUMERATE) {
-        types::TypeObject *type = cx->compartment->getEmptyType(cx);
+        RootedVarTypeObject type(cx);
+        type = cx->compartment->getEmptyType(cx);
         if (!type)
             return NULL;
 
-        Shape *emptyEnumeratorShape = EmptyShape::getInitialShape(cx, &IteratorClass, NULL, NULL,
-                                                                  ITERATOR_FINALIZE_KIND);
+        RootedVarShape emptyEnumeratorShape(cx);
+        emptyEnumeratorShape = EmptyShape::getInitialShape(cx, &IteratorClass, NULL, NULL,
+                                                           ITERATOR_FINALIZE_KIND);
         if (!emptyEnumeratorShape)
             return NULL;
 
@@ -928,16 +938,16 @@ SuppressDeletedPropertyHelper(JSContext *cx, JSObject *obj, IdPredicate predicat
                      * became visible as a result of this deletion.
                      */
                     if (obj->getProto()) {
-                        AutoObjectRooter proto(cx, obj->getProto());
-                        AutoObjectRooter obj2(cx);
+                        JSObject *proto = obj->getProto();
+                        JSObject *obj2;
                         JSProperty *prop;
-                        if (!proto.object()->lookupGeneric(cx, *idp, obj2.addr(), &prop))
+                        if (!proto->lookupGeneric(cx, *idp, &obj2, &prop))
                             return false;
                         if (prop) {
                             uintN attrs;
-                            if (obj2.object()->isNative())
+                            if (obj2->isNative())
                                 attrs = ((Shape *) prop)->attributes();
-                            else if (!obj2.object()->getGenericAttributes(cx, *idp, &attrs))
+                            else if (!obj2->getGenericAttributes(cx, *idp, &attrs))
                                 return false;
 
                             if (attrs & JSPROP_ENUMERATE)

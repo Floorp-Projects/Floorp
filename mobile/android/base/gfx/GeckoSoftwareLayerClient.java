@@ -179,22 +179,20 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             mGeckoViewport.setSize(viewportSize);
 
             LayerController controller = getLayerController();
-            synchronized (controller) {
-                PointF displayportOrigin = mGeckoViewport.getDisplayportOrigin();
-                mTileLayer.setOrigin(PointUtils.round(displayportOrigin));
-                mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
+            PointF displayportOrigin = mGeckoViewport.getDisplayportOrigin();
+            mTileLayer.setOrigin(PointUtils.round(displayportOrigin));
+            mTileLayer.setResolution(mGeckoViewport.getZoomFactor());
 
-                if (onlyUpdatePageSize) {
-                    // Don't adjust page size when zooming unless zoom levels are
-                    // approximately equal.
-                    if (FloatUtils.fuzzyEquals(controller.getZoomFactor(),
-                            mGeckoViewport.getZoomFactor()))
-                        controller.setPageSize(mGeckoViewport.getPageSize());
-                } else {
-                    Log.d(LOGTAG, "Received viewport update from gecko");
-                    controller.setViewportMetrics(mGeckoViewport);
-                    controller.abortPanZoomAnimation();
-                }
+            if (onlyUpdatePageSize) {
+                // Don't adjust page size when zooming unless zoom levels are
+                // approximately equal.
+                if (FloatUtils.fuzzyEquals(controller.getZoomFactor(),
+                        mGeckoViewport.getZoomFactor()))
+                    controller.setPageSize(mGeckoViewport.getPageSize());
+            } else {
+                Log.d(LOGTAG, "Received viewport update from gecko");
+                controller.setViewportMetrics(mGeckoViewport);
+                controller.abortPanZoomAnimation();
             }
         } catch (JSONException e) {
             Log.e(LOGTAG, "Bad viewport description: " + viewportDescription);
@@ -207,15 +205,17 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
      * a little more JNI magic.
      */
     public void endDrawing(int x, int y, int width, int height, String metadata) {
-        try {
-            updateViewport(metadata, !mUpdateViewportOnEndDraw);
-            mUpdateViewportOnEndDraw = false;
-            Rect rect = new Rect(x, y, x + width, y + height);
+        synchronized (getLayerController()) {
+            try {
+                updateViewport(metadata, !mUpdateViewportOnEndDraw);
+                mUpdateViewportOnEndDraw = false;
+                Rect rect = new Rect(x, y, x + width, y + height);
 
-            if (mTileLayer instanceof SingleTileLayer)
-                ((SingleTileLayer)mTileLayer).invalidate(rect);
-        } finally {
-            endTransaction(mTileLayer);
+                if (mTileLayer instanceof SingleTileLayer)
+                    ((SingleTileLayer)mTileLayer).invalidate(rect);
+            } finally {
+                endTransaction(mTileLayer);
+            }
         }
     }
 

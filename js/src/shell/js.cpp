@@ -438,6 +438,8 @@ Process(JSContext *cx, JSObject *obj, const char *filename, bool forceTTY)
     FILE *file;
     uint32_t oldopts;
 
+    RootObject root(cx, &obj);
+
     if (forceTTY || !filename || strcmp(filename, "-") == 0) {
         file = stdin;
     } else {
@@ -2949,10 +2951,9 @@ NewSandbox(JSContext *cx, bool lazy)
             return NULL;
     }
 
-    AutoObjectRooter objroot(cx, obj);
-    if (!cx->compartment->wrap(cx, objroot.addr()))
+    if (!cx->compartment->wrap(cx, &obj))
         return NULL;
-    return objroot.object();
+    return obj;
 }
 
 static JSBool
@@ -4970,9 +4971,11 @@ DestroyContext(JSContext *cx, bool withGC)
 static JSObject *
 NewGlobalObject(JSContext *cx, CompartmentKind compartment)
 {
-    JSObject *glob = (compartment == NEW_COMPARTMENT)
-                     ? JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL)
-                     : JS_NewGlobalObject(cx, &global_class);
+    RootedVarObject glob(cx);
+
+    glob = (compartment == NEW_COMPARTMENT)
+           ? JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL)
+           : JS_NewGlobalObject(cx, &global_class);
     if (!glob)
         return NULL;
 
@@ -5015,7 +5018,7 @@ NewGlobalObject(JSContext *cx, CompartmentKind compartment)
             return NULL;
     }
 
-    if (compartment == NEW_COMPARTMENT && !JS_WrapObject(cx, &glob))
+    if (compartment == NEW_COMPARTMENT && !JS_WrapObject(cx, glob.address()))
         return NULL;
 
     return glob;
@@ -5024,8 +5027,11 @@ NewGlobalObject(JSContext *cx, CompartmentKind compartment)
 static bool
 BindScriptArgs(JSContext *cx, JSObject *obj, OptionParser *op)
 {
+    RootObject root(cx, &obj);
+
     MultiStringRange msr = op->getMultiStringArg("scriptArgs");
-    JSObject *scriptArgs = JS_NewArrayObject(cx, 0, NULL);
+    RootedVarObject scriptArgs(cx);
+    scriptArgs = JS_NewArrayObject(cx, 0, NULL);
     if (!scriptArgs)
         return false;
 
@@ -5061,6 +5067,8 @@ OptionFailure(const char *option, const char *str)
 static int
 ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
 {
+    RootObject root(cx, &obj);
+
     if (op->getBoolOption('a'))
         JS_ToggleOptions(cx, JSOPTION_METHODJIT_ALWAYS);
 
@@ -5199,7 +5207,8 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
         JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
     }
 
-    JSObject *glob = NewGlobalObject(cx, NEW_COMPARTMENT);
+    RootedVarObject glob(cx);
+    glob = NewGlobalObject(cx, NEW_COMPARTMENT);
     if (!glob)
         return 1;
 

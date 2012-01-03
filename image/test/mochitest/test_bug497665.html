@@ -21,7 +21,7 @@ SimpleTest.waitForExplicitFinish();
 
 function checkFirst()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   var iframeelem = document.getElementById('test-iframe');
   var canvas = document.getElementById('canvas');
