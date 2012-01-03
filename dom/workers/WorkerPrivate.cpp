@@ -155,6 +155,8 @@ SwapToISupportsArray(SmartPtr<T>& aSrc,
   dest->swap(rawSupports);
 }
 
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsWorkerMallocSizeOf, "js-worker")
+
 class WorkerMemoryReporter : public nsIMemoryMultiReporter
 {
   WorkerPrivate* mWorkerPrivate;
@@ -232,7 +234,7 @@ public:
   {
     AssertIsOnMainThread();
 
-    JS::RuntimeStats rtStats(xpc::JsMallocSizeOf, xpc::GetCompartmentName,
+    JS::RuntimeStats rtStats(JsWorkerMallocSizeOf, xpc::GetCompartmentName,
                              xpc::DestroyCompartmentName);
     nsresult rv = CollectForRuntime(/* isQuick = */false, &rtStats);
     if (NS_FAILED(rv)) {
@@ -1523,7 +1525,7 @@ public:
     JSAutoSuspendRequest asr(aCx);
 
     *mSucceeded = mIsQuick
-      ? JS::GetExplicitNonHeapForRuntime(JS_GetRuntime(aCx), static_cast<int64_t*>(mData), xpc::JsMallocSizeOf)
+      ? JS::GetExplicitNonHeapForRuntime(JS_GetRuntime(aCx), static_cast<int64_t*>(mData), JsWorkerMallocSizeOf)
       : JS::CollectRuntimeStats(JS_GetRuntime(aCx), static_cast<JS::RuntimeStats*>(mData));
 
     {

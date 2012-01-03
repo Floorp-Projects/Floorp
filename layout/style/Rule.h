@@ -129,6 +129,16 @@ public:
   nsresult GetParentRule(nsIDOMCSSRule** aParentRule);
   nsresult GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet);
 
+  // This is pure virtual because all of Rule's data members are non-owning and
+  // thus measured elsewhere.
+  virtual NS_MUST_OVERRIDE size_t
+    SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const = 0;
+
+  // This is used to measure nsCOMArray<Rule>s.
+  static size_t SizeOfCOMArrayElementIncludingThis(css::Rule* aElement,
+                                                   nsMallocSizeOfFun aMallocSizeOf,
+                                                   void* aData);
+
 protected:
   nsCSSStyleSheet*  mSheet;
   GroupRule*        mParentRule;

@@ -111,6 +111,9 @@ public:
   // @media rule methods
   nsresult SetMedia(nsMediaList* aMedia);
   
+  virtual NS_MUST_OVERRIDE size_t
+    SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
 protected:
   nsRefPtr<nsMediaList> mMedia;
 };
@@ -173,6 +176,9 @@ public:
   };
 
   void SetURLs(URL *aURLs) { mURLs = aURLs; }
+
+  virtual NS_MUST_OVERRIDE size_t
+    SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
 protected:
   nsAutoPtr<URL> mURLs; // linked list of |struct URL| above.
@@ -241,6 +247,8 @@ public:
   void SetDesc(nsCSSFontDesc aDescID, nsCSSValue const & aValue);
   void GetDesc(nsCSSFontDesc aDescID, nsCSSValue & aValue);
 
+  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
 protected:
   friend class nsCSSFontFaceStyleDecl;
   nsCSSFontFaceStyleDecl mDecl;
@@ -300,6 +308,8 @@ public:
   // nsIDOMCSSCharsetRule methods
   NS_IMETHOD GetEncoding(nsAString& aEncoding);
   NS_IMETHOD SetEncoding(const nsAString& aEncoding);
+
+  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
 private:
   nsString  mEncoding;
@@ -378,6 +388,8 @@ public:
 
   void ChangeDeclaration(mozilla::css::Declaration* aDeclaration);
 
+  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
 private:
   nsAutoTArray<float, 1>                     mKeys;
   nsAutoPtr<mozilla::css::Declaration>       mDeclaration;
@@ -423,6 +435,8 @@ public:
                                     nsMediaQueryResultCacheKey& aKey);
 
   const nsString& GetName() { return mName; }
+
+  virtual size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
 private:
   PRUint32 FindRuleIndexForKey(const nsAString& aKey);

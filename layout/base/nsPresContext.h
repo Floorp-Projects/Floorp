@@ -965,9 +965,10 @@ public:
 
   virtual NS_MUST_OVERRIDE size_t
         SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
-    // XXX: lots of things hang off nsPresContext and should be included in
-    // this measurement.  Bug 671299 may add them.
     return 0;
+
+    // Measurement of other members may be added later if DMD finds it is
+    // worthwhile.
   }
   virtual NS_MUST_OVERRIDE size_t
         SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
@@ -1318,9 +1319,17 @@ public:
 
   virtual NS_MUST_OVERRIDE size_t
         SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const MOZ_OVERRIDE {
-    // XXX: several things hang off an nsRootPresContext and should be included
-    // in this measurement.  Bug 671299 may do this.
     return nsPresContext::SizeOfExcludingThis(aMallocSizeOf);
+
+    // Measurement of the following members may be added later if DMD finds it is
+    // worthwhile:
+    // - mNotifyDidPaintTimer
+    // - mRegisteredPlugins
+    // - mWillPaintObservers
+    // - mWillPaintFallbackEvent
+    //
+    // The following member are not measured:
+    // - mUpdatePluginGeometryForFrame, because it is non-owning
   }
   virtual NS_MUST_OVERRIDE size_t
         SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const MOZ_OVERRIDE {
