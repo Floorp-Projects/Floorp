@@ -99,6 +99,8 @@ function testPresenter(presenter) {
     "The presenter highlight fourth vertex should be initially zeroed.");
   ok(presenter.transforms,
     "The presenter transforms wasn't initialized properly.");
+  ok(isApproxVec(presenter.transforms.zoom, 1),
+    "The presenter transforms zoom should be initially 1.");
   ok(isApproxVec(presenter.transforms.offset, [0, 0, 0]),
     "The presenter transforms offset should be initially zeroed.");
   ok(isApproxVec(presenter.transforms.translation, [0, 0, 0]),

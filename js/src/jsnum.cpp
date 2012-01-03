@@ -1012,12 +1012,12 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     /* XXX must do at least once per new thread, so do it per JSContext... */
     FIX_FPU();
 
-    GlobalObject *global = obj->asGlobal();
+    GlobalObject *global = &obj->asGlobal();
 
     JSObject *numberProto = global->createBlankPrototype(cx, &NumberClass);
     if (!numberProto)
         return NULL;
-    numberProto->asNumber()->setPrimitiveValue(0);
+    numberProto->asNumber().setPrimitiveValue(0);
 
     JSFunction *ctor = global->createConstructor(cx, Number, &NumberClass,
                                                  CLASS_ATOM(cx, Number), 1);
