@@ -399,7 +399,7 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
      * front of 'interfaces' overwrite those toward the back.
      */
     bool definedProperty = false;
-    for (uint32 i = ifacec; i-- != 0;) {
+    for (uint32_t i = ifacec; i-- != 0;) {
         const nsID &iid = *interfaces[i];
         const xpc_qsHashEntry *entry =
             LookupInterfaceOrAncestor(tableSize, table, iid);

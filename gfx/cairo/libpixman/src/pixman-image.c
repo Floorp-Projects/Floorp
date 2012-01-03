@@ -517,7 +517,7 @@ pixman_image_set_transform (pixman_image_t *          image,
     }
 
     if (common->transform &&
-	memcmp (common->transform, transform, sizeof (pixman_transform_t) == 0))
+	memcmp (common->transform, transform, sizeof (pixman_transform_t)) == 0)
     {
 	return TRUE;
     }

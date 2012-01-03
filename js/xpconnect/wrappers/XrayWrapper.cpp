@@ -55,9 +55,9 @@ namespace xpc {
 
 using namespace js;
 
-static const uint32 JSSLOT_WN = 0;
-static const uint32 JSSLOT_RESOLVING = 1;
-static const uint32 JSSLOT_EXPANDO = 2;
+static const uint32_t JSSLOT_WN = 0;
+static const uint32_t JSSLOT_RESOLVING = 1;
+static const uint32_t JSSLOT_EXPANDO = 2;
 
 class ResolvingId
 {

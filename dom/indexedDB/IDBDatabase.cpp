@@ -39,7 +39,6 @@
 
 #include "IDBDatabase.h"
 
-#include "jscntxt.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/storage.h"
 #include "nsDOMClassInfo.h"

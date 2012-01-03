@@ -42,7 +42,7 @@
 #include "nsIObserver.idl"
 #include "nsIObjectOutputStream.idl"
 
-[uuid(de798fab-af49-4a61-8144-81550986e1da)]
+[uuid(8c2a360b-e337-455b-8c1b-04265ef9c5a3)]
 interface nsIStartupCache : nsISupports
 {
 
@@ -52,7 +52,7 @@ interface nsIStartupCache : nsISupports
    *  in that file. */
 
   PRUint32 getBuffer(in string aID, out charPtr aBuffer);
-  void putBuffer(in string aID, in charPtr aBuffer, 
+  void putBuffer(in string aID, in string aBuffer, 
                             in PRUint32 aLength);
  
   void invalidateCache();
