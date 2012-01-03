@@ -548,7 +548,7 @@ endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version winspool comdlg32 imm32 winmm wsock32 msimg32 shlwapi psapi ws2_32 dbghelp)
+OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version winspool comdlg32 imm32 winmm wsock32 msimg32 shlwapi psapi ws2_32 dbghelp rasapi32 rasdlg)
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 OS_LIBS += $(call EXPAND_LIBNAME,imagehlp)
 endif
