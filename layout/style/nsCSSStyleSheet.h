@@ -99,6 +99,8 @@ private:
   // Create a new namespace map
   nsresult CreateNamespaceMap();
 
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
   nsAutoTArray<nsCSSStyleSheet*, 8> mSheets;
   nsCOMPtr<nsIURI>       mSheetURI; // for error reports, etc.
   nsCOMPtr<nsIURI>       mOriginalSheetURI;  // for GetHref.  Can be null.
@@ -265,6 +267,8 @@ public:
   // Function used as a callback to rebuild our inner's child sheet
   // list after we clone a unique inner for ourselves.
   static bool RebuildChildList(mozilla::css::Rule* aRule, void* aBuilder);
+
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
 
 private:
   nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,

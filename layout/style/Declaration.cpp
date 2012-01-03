@@ -994,5 +994,15 @@ Declaration::EnsureMutable()
   }
 }
 
+size_t
+Declaration::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mOrder.SizeOfExcludingThis(aMallocSizeOf);
+  n += mData          ? mData         ->SizeOfIncludingThis(aMallocSizeOf) : 0;
+  n += mImportantData ? mImportantData->SizeOfIncludingThis(aMallocSizeOf) : 0;
+  return n;
+}
+
 } // namespace mozilla::css
 } // namespace mozilla
