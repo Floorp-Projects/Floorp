@@ -76,7 +76,6 @@ public:
     mPromptResult(0)
   {
     NS_ASSERTION(aHelper, "Null pointer!");
-    NS_ASSERTION(aWindow, "Null pointer!");
     NS_ASSERTION(!aASCIIOrigin.IsEmpty(), "Empty origin!");
   }
 
