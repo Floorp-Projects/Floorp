@@ -188,7 +188,7 @@ void OutputHLSL::header()
 
         if (mUsesFragCoord)
         {
-            out << "uniform float4 dx_Viewport;\n"
+            out << "uniform float4 dx_Coord;\n"
                    "uniform float2 dx_Depth;\n";
         }
 
