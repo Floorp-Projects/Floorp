@@ -723,7 +723,7 @@ GetChildGlobalObject(JSContext* cx,
  */
 static const struct JSOption {
     const char  *name;
-    uint32      flag;
+    uint32_t    flag;
 } js_options[] = {
     {"atline",          JSOPTION_ATLINE},
     {"relimit",         JSOPTION_RELIMIT},
@@ -732,7 +732,7 @@ static const struct JSOption {
     {"xml",             JSOPTION_XML},
 };
 
-static uint32
+static uint32_t
 MapContextOptionNameToFlag(JSContext* cx, const char* name)
 {
     for (size_t i = 0; i < ArrayLength(js_options); ++i) {

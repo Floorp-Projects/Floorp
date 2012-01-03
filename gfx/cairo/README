@@ -186,6 +186,8 @@ NOTE: we previously supported ARM assembler on MSVC, this has been removed becau
 
 pixman-export.patch: use cairo_public for PIXMAN_EXPORT to make sure pixman symbols are not exported in libxul
 
+bad-memset.patch: Fix third argument in memcmp call in pixman-image.c
+
 ==== disable printing patch ====
 
 disable-printing.patch:  allows us to use NS_PRINTING to disable printing.

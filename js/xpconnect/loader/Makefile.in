@@ -53,4 +53,8 @@ EXTRA_JS_MODULES = XPCOMUtils.jsm ISO8601DateUtils.jsm
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DJSFILE -DJS_THREADSAFE
+DEFINES += \
+  -DJSFILE \
+  -DJS_THREADSAFE \
+  -DNO_NSPR_10_SUPPORT \
+  $(NULL)
