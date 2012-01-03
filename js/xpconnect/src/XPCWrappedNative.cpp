@@ -2076,26 +2076,26 @@ class CallMethodHelper
     nsIInterfaceInfo* const mIFaceInfo;
     const nsXPTMethodInfo* mMethodInfo;
     nsISupports* const mCallee;
-    const uint16 mVTableIndex;
+    const uint16_t mVTableIndex;
     const jsid mIdxValueId;
 
     nsAutoTArray<nsXPTCVariant, 8> mDispatchParams;
-    uint8 mJSContextIndex; // TODO make const
-    uint8 mOptArgcIndex; // TODO make const
+    uint8_t mJSContextIndex; // TODO make const
+    uint8_t mOptArgcIndex; // TODO make const
 
     jsval* const mArgv;
     const PRUint32 mArgc;
 
     JS_ALWAYS_INLINE JSBool
-    GetArraySizeFromParam(uint8 paramIndex, uint32_t* result) const;
+    GetArraySizeFromParam(uint8_t paramIndex, uint32_t* result) const;
 
     JS_ALWAYS_INLINE JSBool
-    GetInterfaceTypeFromParam(uint8 paramIndex,
+    GetInterfaceTypeFromParam(uint8_t paramIndex,
                               const nsXPTType& datum_type,
                               nsID* result) const;
 
     JS_ALWAYS_INLINE JSBool
-    GetOutParamSource(uint8 paramIndex, jsval* srcp) const;
+    GetOutParamSource(uint8_t paramIndex, jsval* srcp) const;
 
     JS_ALWAYS_INLINE JSBool
     GatherAndConvertResults();
@@ -2104,7 +2104,7 @@ class CallMethodHelper
     QueryInterfaceFastPath() const;
 
     nsXPTCVariant*
-    GetDispatchParam(uint8 paramIndex)
+    GetDispatchParam(uint8_t paramIndex)
     {
         if (paramIndex >= mJSContextIndex)
             paramIndex += 1;
@@ -2113,7 +2113,7 @@ class CallMethodHelper
         return &mDispatchParams[paramIndex];
     }
     const nsXPTCVariant*
-    GetDispatchParam(uint8 paramIndex) const
+    GetDispatchParam(uint8_t paramIndex) const
     {
         return const_cast<CallMethodHelper*>(this)->GetDispatchParam(paramIndex);
     }
@@ -2121,9 +2121,9 @@ class CallMethodHelper
     JS_ALWAYS_INLINE JSBool InitializeDispatchParams();
 
     JS_ALWAYS_INLINE JSBool ConvertIndependentParams(JSBool* foundDependentParam);
-    JS_ALWAYS_INLINE JSBool ConvertIndependentParam(uint8 i);
+    JS_ALWAYS_INLINE JSBool ConvertIndependentParam(uint8_t i);
     JS_ALWAYS_INLINE JSBool ConvertDependentParams();
-    JS_ALWAYS_INLINE JSBool ConvertDependentParam(uint8 i);
+    JS_ALWAYS_INLINE JSBool ConvertDependentParam(uint8_t i);
 
     JS_ALWAYS_INLINE void CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type);
 
@@ -2265,9 +2265,9 @@ CallMethodHelper::Call()
 
 CallMethodHelper::~CallMethodHelper()
 {
-    uint8 paramCount = mMethodInfo->GetParamCount();
+    uint8_t paramCount = mMethodInfo->GetParamCount();
     if (mDispatchParams.Length()) {
-        for (uint8 i = 0; i < paramCount; i++) {
+        for (uint8_t i = 0; i < paramCount; i++) {
             nsXPTCVariant* dp = GetDispatchParam(i);
             const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
 
@@ -2313,7 +2313,7 @@ CallMethodHelper::~CallMethodHelper()
 }
 
 JSBool
-CallMethodHelper::GetArraySizeFromParam(uint8 paramIndex,
+CallMethodHelper::GetArraySizeFromParam(uint8_t paramIndex,
                                         uint32_t* result) const
 {
     nsresult rv;
@@ -2331,13 +2331,13 @@ CallMethodHelper::GetArraySizeFromParam(uint8 paramIndex,
 }
 
 JSBool
-CallMethodHelper::GetInterfaceTypeFromParam(uint8 paramIndex,
+CallMethodHelper::GetInterfaceTypeFromParam(uint8_t paramIndex,
                                             const nsXPTType& datum_type,
                                             nsID* result) const
 {
     nsresult rv;
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(paramIndex);
-    uint8 tag = datum_type.TagPart();
+    uint8_t tag = datum_type.TagPart();
 
     // TODO fixup the various exceptions that are thrown
 
@@ -2362,7 +2362,7 @@ CallMethodHelper::GetInterfaceTypeFromParam(uint8 paramIndex,
 }
 
 JSBool
-CallMethodHelper::GetOutParamSource(uint8 paramIndex, jsval* srcp) const
+CallMethodHelper::GetOutParamSource(uint8_t paramIndex, jsval* srcp) const
 {
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(paramIndex);
 
@@ -2393,8 +2393,8 @@ JSBool
 CallMethodHelper::GatherAndConvertResults()
 {
     // now we iterate through the native params to gather and convert results
-    uint8 paramCount = mMethodInfo->GetParamCount();
-    for (uint8 i = 0; i < paramCount; i++) {
+    uint8_t paramCount = mMethodInfo->GetParamCount();
+    for (uint8_t i = 0; i < paramCount; i++) {
         const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
         if (!paramInfo.IsOut() && !paramInfo.IsDipper())
             continue;
@@ -2531,11 +2531,11 @@ CallMethodHelper::QueryInterfaceFastPath() const
 JSBool
 CallMethodHelper::InitializeDispatchParams()
 {
-    const uint8 wantsOptArgc = mMethodInfo->WantsOptArgc() ? 1 : 0;
-    const uint8 wantsJSContext = mMethodInfo->WantsContext() ? 1 : 0;
-    const uint8 paramCount = mMethodInfo->GetParamCount();
-    uint8 requiredArgs = paramCount;
-    uint8 hasRetval = 0;
+    const uint8_t wantsOptArgc = mMethodInfo->WantsOptArgc() ? 1 : 0;
+    const uint8_t wantsJSContext = mMethodInfo->WantsContext() ? 1 : 0;
+    const uint8_t paramCount = mMethodInfo->GetParamCount();
+    uint8_t requiredArgs = paramCount;
+    uint8_t hasRetval = 0;
 
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
     if (paramCount && mMethodInfo->GetParam(paramCount-1).IsRetval()) {
@@ -2569,7 +2569,7 @@ CallMethodHelper::InitializeDispatchParams()
     }
 
     // iterate through the params to clear flags (for safe cleanup later)
-    for (uint8 i = 0; i < paramCount + wantsJSContext + wantsOptArgc; i++) {
+    for (uint8_t i = 0; i < paramCount + wantsJSContext + wantsOptArgc; i++) {
         nsXPTCVariant* dp = mDispatchParams.AppendElement();
         dp->ClearFlags();
         dp->val.p = nsnull;
@@ -2595,8 +2595,8 @@ CallMethodHelper::InitializeDispatchParams()
 JSBool
 CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
 {
-    const uint8 paramCount = mMethodInfo->GetParamCount();
-    for (uint8 i = 0; i < paramCount; i++) {
+    const uint8_t paramCount = mMethodInfo->GetParamCount();
+    for (uint8_t i = 0; i < paramCount; i++) {
         const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
 
         if (paramInfo.GetType().IsDependent())
@@ -2610,11 +2610,11 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
 }
 
 JSBool
-CallMethodHelper::ConvertIndependentParam(uint8 i)
+CallMethodHelper::ConvertIndependentParam(uint8_t i)
 {
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
     const nsXPTType& type = paramInfo.GetType();
-    uint8 type_tag = type.TagPart();
+    uint8_t type_tag = type.TagPart();
     nsXPTCVariant* dp = GetDispatchParam(i);
     dp->type = type;
     NS_ABORT_IF_FALSE(!paramInfo.IsShared(), "[shared] implies [noscript]!");
@@ -2691,8 +2691,8 @@ CallMethodHelper::ConvertIndependentParam(uint8 i)
 JSBool
 CallMethodHelper::ConvertDependentParams()
 {
-    const uint8 paramCount = mMethodInfo->GetParamCount();
-    for (uint8 i = 0; i < paramCount; i++) {
+    const uint8_t paramCount = mMethodInfo->GetParamCount();
+    for (uint8_t i = 0; i < paramCount; i++) {
         const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
 
         if (!paramInfo.GetType().IsDependent())
@@ -2705,7 +2705,7 @@ CallMethodHelper::ConvertDependentParams()
 }
 
 JSBool
-CallMethodHelper::ConvertDependentParam(uint8 i)
+CallMethodHelper::ConvertDependentParam(uint8_t i)
 {
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
     const nsXPTType& type = paramInfo.GetType();
@@ -2877,7 +2877,7 @@ CallMethodHelper::HandleDipperParam(nsXPTCVariant* dp,
                                     const nsXPTParamInfo& paramInfo)
 {
     // Get something we can make comparisons with.
-    uint8 type_tag = paramInfo.GetType().TagPart();
+    uint8_t type_tag = paramInfo.GetType().TagPart();
 
     // Dippers always have the 'in' and 'dipper' flags set. Never 'out'.
     NS_ABORT_IF_FALSE(!paramInfo.IsOut(), "Dipper has unexpected flags.");

@@ -639,7 +639,7 @@ mjit::Compiler::compileArrayConcat(types::TypeSet *thisTypes, types::TypeSet *ar
     if (thisTypes->getObjectCount() != 1)
         return Compile_InlineAbort;
     types::TypeObject *thisType = thisTypes->getTypeObject(0);
-    if (!thisType || thisType->proto->getGlobal() != globalObj)
+    if (!thisType || &thisType->proto->global() != globalObj)
         return Compile_InlineAbort;
 
     /*
@@ -839,7 +839,7 @@ mjit::Compiler::inlineNativeFunction(uint32_t argc, bool callingNew)
      * The callee must have the same parent as the script's global, otherwise
      * inference may not have accounted for any side effects correctly.
      */
-    if (!globalObj || globalObj != callee->getGlobal())
+    if (!globalObj || globalObj != &callee->global())
         return Compile_InlineAbort;
 
     Native native = callee->toFunction()->maybeNative();

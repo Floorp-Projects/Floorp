@@ -303,14 +303,14 @@ ListBase<LC>::length_getter(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         return false;
     PRUint32 length;
     getListObject(obj)->GetLength(&length);
-    JS_ASSERT(int32(length) >= 0);
+    JS_ASSERT(int32_t(length) >= 0);
     *vp = UINT_TO_JSVAL(length);
     return true;
 }
 
 template<class LC>
 bool
-ListBase<LC>::getItemAt(ListType *list, uint32 i, IndexGetterType &item)
+ListBase<LC>::getItemAt(ListType *list, uint32_t i, IndexGetterType &item)
 {
     JS_STATIC_ASSERT(!hasIndexGetter);
     return false;
@@ -318,7 +318,7 @@ ListBase<LC>::getItemAt(ListType *list, uint32 i, IndexGetterType &item)
 
 template<class LC>
 bool
-ListBase<LC>::setItemAt(JSContext *cx, ListType *list, uint32 i, IndexSetterType item)
+ListBase<LC>::setItemAt(JSContext *cx, ListType *list, uint32_t i, IndexSetterType item)
 {
     JS_STATIC_ASSERT(!hasIndexSetter);
     return false;
@@ -734,8 +734,8 @@ ListBase<LC>::getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &
 {
     PRUint32 length;
     getListObject(proxy)->GetLength(&length);
-    JS_ASSERT(int32(length) >= 0);
-    for (int32 i = 0; i < int32(length); ++i) {
+    JS_ASSERT(int32_t(length) >= 0);
+    for (int32_t i = 0; i < int32_t(length); ++i) {
         if (!props.append(INT_TO_JSID(i)))
             return false;
     }
@@ -976,7 +976,7 @@ ListBase<LC>::getPropertyOnPrototype(JSContext *cx, JSObject *proxy, jsid id, bo
             if (vp) {
                 PRUint32 length;
                 getListObject(proxy)->GetLength(&length);
-                JS_ASSERT(int32(length) >= 0);
+                JS_ASSERT(int32_t(length) >= 0);
                 vp->setInt32(length);
             }
             *found = true;
@@ -1074,7 +1074,7 @@ ListBase<LC>::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, V
 template<class LC>
 bool
 ListBase<LC>::getElementIfPresent(JSContext *cx, JSObject *proxy, JSObject *receiver,
-                                  uint32 index, Value *vp, bool *present)
+                                  uint32_t index, Value *vp, bool *present)
 {
     NS_ASSERTION(!xpc::WrapperFactory::IsXrayWrapper(proxy),
                  "Should not have a XrayWrapper here");

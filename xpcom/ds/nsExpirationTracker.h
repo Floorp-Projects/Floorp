@@ -48,6 +48,7 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
+#include "mozilla/Attributes.h"
 
 /**
  * Data used to track the expiration state of an object. We promise that this
@@ -315,7 +316,7 @@ template <class T, PRUint32 K> class nsExpirationTracker {
      * Whenever "memory-pressure" is observed, it calls AgeAllGenerations()
      * to minimize memory usage.
      */
-    class ExpirationTrackerObserver : public nsIObserver {
+    class ExpirationTrackerObserver MOZ_FINAL : public nsIObserver {
     public:
       void Init(nsExpirationTracker<T,K> *obj) {
         mOwner = obj;

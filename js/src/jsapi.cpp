@@ -1412,7 +1412,7 @@ JS_EnterCrossCompartmentCallStackFrame(JSContext *cx, JSStackFrame *target)
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
 
-    return JS_EnterCrossCompartmentCall(cx, Valueify(target)->scopeChain().getGlobal());
+    return JS_EnterCrossCompartmentCall(cx, &Valueify(target)->scopeChain().global());
 }
 
 JS_PUBLIC_API(void)
@@ -1752,7 +1752,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 
     assertSameCompartment(cx, obj);
 
-    return obj->asGlobal()->initStandardClasses(cx);
+    return obj->global().initStandardClasses(cx);
 }
 
 #define CLASP(name)                 (&name##Class)
@@ -2177,7 +2177,7 @@ JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
 {
     AssertNoGC(cx);
     assertSameCompartment(cx, obj);
-    return obj->getGlobal();
+    return &obj->global();
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -3237,7 +3237,7 @@ JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
 JS_PUBLIC_API(JSObject *)
 JS_GetParent(JSContext *cx, JSObject *obj)
 {
-    JS_ASSERT(!obj->isInternalScope());
+    JS_ASSERT(!obj->isScope());
     assertSameCompartment(cx, obj);
     return obj->getParent();
 }
@@ -3247,7 +3247,7 @@ JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    JS_ASSERT(!obj->isInternalScope());
+    JS_ASSERT(!obj->isScope());
     JS_ASSERT(parent || !obj->getParent());
     assertSameCompartment(cx, obj, parent);
     return obj->setParent(cx, parent);
@@ -3741,14 +3741,14 @@ DefineProperty(JSContext *cx, JSObject *obj, const char *name, const Value &valu
         JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
         attrs &= ~JSPROP_NATIVE_ACCESSORS;
         if (getter) {
-            JSObject *getobj = JS_NewFunction(cx, (Native) getter, 0, 0, obj->getGlobal(), NULL);
+            JSObject *getobj = JS_NewFunction(cx, (Native) getter, 0, 0, &obj->global(), NULL);
             if (!getobj)
                 return false;
             getter = JS_DATA_TO_FUNC_PTR(PropertyOp, getobj);
             attrs |= JSPROP_GETTER;
         }
         if (setter) {
-            JSObject *setobj = JS_NewFunction(cx, (Native) setter, 1, 0, obj->getGlobal(), NULL);
+            JSObject *setobj = JS_NewFunction(cx, (Native) setter, 1, 0, &obj->global(), NULL);
             if (!setobj)
                 return false;
             setter = JS_DATA_TO_FUNC_PTR(StrictPropertyOp, setobj);
@@ -4228,7 +4228,7 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
 
     /* Clear cached class objects on the global object. */
     if (obj->isGlobal())
-        obj->asGlobal()->clear(cx);
+        obj->asGlobal().clear(cx);
 
     js_InitRandom(cx);
 }
@@ -4617,7 +4617,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
                                      JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
                 return NULL;
             }
-            obj = obj->scopeChain();
+            obj = obj->enclosingScope();
         }
 
         Value v;
@@ -6303,7 +6303,7 @@ JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, uin
     if (!chars)
         return NULL;
 
-    RegExpStatics *res = obj->asGlobal()->getRegExpStatics();
+    RegExpStatics *res = obj->asGlobal().getRegExpStatics();
     RegExpObject *reobj = RegExpObject::create(cx, res, chars, length, RegExpFlag(flags), NULL);
     cx->free_(chars);
     return reobj;
@@ -6314,7 +6314,7 @@ JS_NewUCRegExpObject(JSContext *cx, JSObject *obj, jschar *chars, size_t length,
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    RegExpStatics *res = obj->asGlobal()->getRegExpStatics();
+    RegExpStatics *res = obj->asGlobal().getRegExpStatics();
     return RegExpObject::create(cx, res, chars, length, RegExpFlag(flags), NULL);
 }
 
@@ -6325,7 +6325,7 @@ JS_SetRegExpInput(JSContext *cx, JSObject *obj, JSString *input, JSBool multilin
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, input);
 
-    obj->asGlobal()->getRegExpStatics()->reset(cx, input, !!multiline);
+    obj->asGlobal().getRegExpStatics()->reset(cx, input, !!multiline);
 }
 
 JS_PUBLIC_API(void)
@@ -6335,7 +6335,7 @@ JS_ClearRegExpStatics(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
     JS_ASSERT(obj);
 
-    obj->asGlobal()->getRegExpStatics()->clear();
+    obj->asGlobal().getRegExpStatics()->clear();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -6345,8 +6345,8 @@ JS_ExecuteRegExp(JSContext *cx, JSObject *obj, JSObject *reobj, jschar *chars, s
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
 
-    RegExpStatics *res = obj->asGlobal()->getRegExpStatics();
-    return ExecuteRegExp(cx, res, reobj->asRegExp(), NULL, chars, length,
+    RegExpStatics *res = obj->asGlobal().getRegExpStatics();
+    return ExecuteRegExp(cx, res, &reobj->asRegExp(), NULL, chars, length,
                          indexp, test ? RegExpTest : RegExpExec, rval);
 }
 
@@ -6378,7 +6378,7 @@ JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *obj, jschar *chars, size_t le
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
 
-    return ExecuteRegExp(cx, NULL, obj->asRegExp(), NULL, chars, length, indexp,
+    return ExecuteRegExp(cx, NULL, &obj->asRegExp(), NULL, chars, length, indexp,
                          test ? RegExpTest : RegExpExec, rval);
 }
 
@@ -6396,7 +6396,7 @@ JS_GetRegExpFlags(JSContext *cx, JSObject *obj)
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
 
-    return obj->asRegExp()->getFlags();
+    return obj->asRegExp().getFlags();
 }
 
 JS_PUBLIC_API(JSString *)
@@ -6405,7 +6405,7 @@ JS_GetRegExpSource(JSContext *cx, JSObject *obj)
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
 
-    return obj->asRegExp()->getSource();
+    return obj->asRegExp().getSource();
 }
 
 /************************************************************************/
