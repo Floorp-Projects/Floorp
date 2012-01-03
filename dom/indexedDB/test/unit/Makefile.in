@@ -1,0 +1,104 @@
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Indexed Database Test Code.
+#
+# The Initial Developer of the Original Code is
+# The Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2010
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Shawn Wilsher <me@shawnwilsher.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH = ../../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+relativesrcdir = dom/indexedDB/test/unit
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+TEST_FILES = \
+  test_add_put.js \
+  test_add_twice_failure.js \
+  test_advance.js \
+  test_autoIncrement.js \
+  test_autoIncrement_indexes.js \
+  test_clear.js \
+  test_count.js \
+  test_create_index.js \
+  test_create_index_with_integer_keys.js \
+  test_create_objectStore.js \
+  test_cursor_mutation.js \
+  test_cursor_update_updates_indexes.js \
+  test_cursors.js \
+  test_event_source.js \
+  test_getAll.js \
+  test_global_data.js \
+  test_index_empty_keyPath.js \
+  test_index_getAll.js \
+  test_index_getAllObjects.js \
+  test_index_object_cursors.js \
+  test_index_update_delete.js \
+  test_indexes.js \
+  test_indexes_bad_values.js \
+  test_key_requirements.js \
+  test_keys.js \
+  test_multientry.js \
+  test_object_identity.js \
+  test_objectCursors.js \
+  test_objectStore_inline_autoincrement_key_added_on_put.js \
+  test_objectStore_remove_values.js \
+  test_odd_result_order.js \
+  test_open_empty_db.js \
+  test_open_objectStore.js \
+  test_optionalArguments.js \
+  test_overlapping_transactions.js \
+  test_put_get_values.js \
+  test_put_get_values_autoIncrement.js \
+  test_remove_index.js \
+  test_remove_objectStore.js \
+  test_request_readyState.js \
+  test_setVersion.js \
+  test_setVersion_abort.js \
+  test_setVersion_events.js \
+  test_setVersion_exclusion.js \
+  test_success_events_after_abort.js \
+  test_traffic_jam.js \
+  test_transaction_abort.js \
+  test_transaction_lifetimes.js \
+  test_transaction_lifetimes_nested.js \
+  test_transaction_ordering.js \
+  test_writer_starvation.js \
+  $(NULL)
+
+
+libs:: $(TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
