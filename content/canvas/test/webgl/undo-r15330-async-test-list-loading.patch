@@ -1,6 +1,5 @@
 # HG changeset patch
-# Parent 41137626edf2a358f2be1b7ed3f83211230ab4f5
-
+# Parent fb36d18f04ef9b01ca87d3fde539d50c204f9bba
 diff --git a/content/canvas/test/webgl/resources/webgl-test-harness.js b/content/canvas/test/webgl/resources/webgl-test-harness.js
 --- a/content/canvas/test/webgl/resources/webgl-test-harness.js
 +++ b/content/canvas/test/webgl/resources/webgl-test-harness.js

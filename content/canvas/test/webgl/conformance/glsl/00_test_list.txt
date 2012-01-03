@@ -1,5 +1,7 @@
 functions/00_test_list.txt
 implicit/00_test_list.txt
+# commented out for version 1.0.1 of the conforamnce tests.
+#matrices/00_test_list.txt
 misc/00_test_list.txt
 reserved/00_test_list.txt
 # commented out for version 1.0.1 of the conforamnce tests.
