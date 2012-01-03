@@ -286,6 +286,7 @@ typedef enum JSWhyMagic
     JS_ARG_POISON,               /* used in debug builds to catch tracing errors */
     JS_SERIALIZE_NO_NODE,        /* an empty subnode in the AST serializer */
     JS_LAZY_ARGUMENTS,           /* lazy arguments value on the stack */
+    JS_IS_CONSTRUCTING,          /* magic value passed to natives to indicate construction */
     JS_GENERIC_MAGIC             /* for local use */
 } JSWhyMagic;
 
@@ -495,13 +496,6 @@ JSVAL_IS_MAGIC_IMPL(jsval_layout l)
     return l.s.tag == JSVAL_TAG_MAGIC;
 }
 
-static JS_ALWAYS_INLINE JSObject *
-MAGIC_JSVAL_TO_OBJECT_OR_NULL_IMPL(jsval_layout l)
-{
-    JS_ASSERT(JSVAL_IS_MAGIC_IMPL(l));
-    return l.s.payload.obj;
-}
-
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_OBJECT_IMPL(jsval_layout l)
 {
@@ -603,15 +597,6 @@ MAGIC_TO_JSVAL_IMPL(JSWhyMagic why)
     jsval_layout l;
     l.s.tag = JSVAL_TAG_MAGIC;
     l.s.payload.why = why;
-    return l;
-}
-
-static JS_ALWAYS_INLINE jsval_layout
-MAGIC_OBJ_TO_JSVAL_IMPL(JSObject *obj)
-{
-    jsval_layout l;
-    l.s.tag = JSVAL_TAG_MAGIC;
-    l.s.payload.obj = obj;
     return l;
 }
 
@@ -753,15 +738,6 @@ JSVAL_IS_MAGIC_IMPL(jsval_layout l)
     return (l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_MAGIC;
 }
 
-static JS_ALWAYS_INLINE JSObject *
-MAGIC_JSVAL_TO_OBJECT_OR_NULL_IMPL(jsval_layout l)
-{
-    uint64_t ptrBits = l.asBits & JSVAL_PAYLOAD_MASK;
-    JS_ASSERT(JSVAL_IS_MAGIC_IMPL(l));
-    JS_ASSERT((ptrBits >> JSVAL_TAG_SHIFT) == 0);
-    return (JSObject *)ptrBits;
-}
-
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_PRIMITIVE_IMPL(jsval_layout l)
 {
@@ -868,14 +844,6 @@ MAGIC_TO_JSVAL_IMPL(JSWhyMagic why)
 {
     jsval_layout l;
     l.asBits = ((uint64_t)(uint32_t)why) | JSVAL_SHIFTED_TAG_MAGIC;
-    return l;
-}
-
-static JS_ALWAYS_INLINE jsval_layout
-MAGIC_OBJ_TO_JSVAL_IMPL(JSObject *obj)
-{
-    jsval_layout l;
-    l.asBits = ((uint64_t)obj) | JSVAL_SHIFTED_TAG_MAGIC;
     return l;
 }
 

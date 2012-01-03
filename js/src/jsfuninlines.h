@@ -299,24 +299,6 @@ IsConstructing(CallReceiver call)
     return IsConstructing(call.base());
 }
 
-static JS_ALWAYS_INLINE bool
-IsConstructing_PossiblyWithGivenThisObject(const Value *vp, JSObject **ctorThis)
-{
-#ifdef DEBUG
-    JSObject *callee = &JS_CALLEE(cx, vp).toObject();
-    if (callee->isFunction()) {
-        JSFunction *fun = callee->toFunction();
-        JS_ASSERT((fun->flags & JSFUN_CONSTRUCTOR) != 0);
-    } else {
-        JS_ASSERT(callee->getClass()->construct != NULL);
-    }
-#endif
-    bool isCtor = vp[1].isMagic();
-    if (isCtor)
-        *ctorThis = vp[1].getMagicObjectOrNullPayload();
-    return isCtor;
-}
-
 inline const char *
 GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
 {
