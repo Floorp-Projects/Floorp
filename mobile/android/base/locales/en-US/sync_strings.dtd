@@ -1,0 +1,55 @@
+<!-- Don't localize these. They're here until they have
+     a better place to live. -->
+<!ENTITY syncBrand.fullName.label "Firefox Sync">
+<!ENTITY syncBrand.shortName.label "Sync">
+
+<!-- Main titles. -->
+<!ENTITY sync.app.name.label '&syncBrand.fullName.label;'>
+<!ENTITY sync.title.connect.label 'Connect to &syncBrand.shortName.label;'>
+<!ENTITY sync.title.pair.label 'Pair a Device'>
+
+<!-- J-PAKE Key Screen -->
+<!ENTITY sync.subtitle.connect.label 'To activate your new device, select “Set up &syncBrand.shortName.label;” on the device.'>
+<!ENTITY sync.subtitle.pair.label 'To activate, select “Pair a device” on your other device.'>
+<!ENTITY sync.pin.default.label '...\n...\n...\n'>
+<!ENTITY sync.link.show.label '<a href="https://support.mozilla.com/kb/add-a-device-to-firefox-sync">Show me how</a>'>
+<!ENTITY sync.link.nodevice.label '<a href="#">I don\&apos;t have the device with me…</a>'>
+
+<!-- J-PAKE Waiting Screen -->
+<!ENTITY sync.jpake.subtitle.waiting.label 'Waiting for other device…'>
+
+<!-- Account Login Screen -->
+<!ENTITY sync.subtitle.account.label 'Enter your &syncBrand.fullName.label; account information'>
+<!ENTITY sync.input.username.label 'Account Name'>
+<!ENTITY sync.input.password.label 'Password'>
+<!ENTITY sync.input.key.label 'Recovery Key'>
+<!ENTITY sync.checkbox.server.label 'Use custom server'>
+<!ENTITY sync.input.server.label 'Server URL'>
+  
+<!-- Setup Fail -->
+<!ENTITY sync.title.fail.label 'Cannot Set Up &syncBrand.shortName.label;'>
+<!ENTITY sync.subtitle.fail.label '&syncBrand.fullName.label; could not connect to the server. Would you like to try again?'>
+<!ENTITY sync.button.tryagain.label 'Try again'>
+<!ENTITY sync.button.manual.label 'Manual Setup'>
+  
+<!-- Setup Success -->
+<!ENTITY sync.title.success.label 'Setup Complete'>
+<!ENTITY sync.subtitle.success.label 'Your data is now being downloaded in the background. You can go to Settings to manage your account.'>
+<!ENTITY sync.settings.label 'Settings'>
+<!ENTITY sync.subtitle.manage.label 'Your &syncBrand.fullName.label; account is already set up. Go to Settings to manage your account.'>
+  
+<!-- Common text -->
+<!ENTITY sync.button.cancel.label 'Cancel'>
+<!ENTITY sync.button.connect.label 'Connect'>
+  
+<!-- Account strings -->
+<!ENTITY sync.account.label.label '&syncBrand.fullName.label;'>
+  
+<!-- Bookmark folder strings -->
+<!ENTITY bookmarks.folder.menu.label 'Bookmarks Menu'>
+<!ENTITY bookmarks.folder.places.label ''>
+<!ENTITY bookmarks.folder.tags.label 'Tags'>
+<!ENTITY bookmarks.folder.toolbar.label 'Bookmarks Toolbar'>
+<!ENTITY bookmarks.folder.unfiled.label 'Unsorted Bookmarks'>
+<!ENTITY bookmarks.folder.desktop.label 'Desktop Bookmarks'>
+<!ENTITY bookmarks.folder.mobile.label 'Mobile Bookmarks'>

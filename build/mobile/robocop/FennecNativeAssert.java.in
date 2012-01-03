@@ -1,0 +1,212 @@
+#filter substitution
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Firefox Mobile Test Framework.
+ *
+ * The Initial Developer of the Original Code is Mozilla.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ * Trevor Fairey <tnfairey@gmail.com>
+ * David Burns <dburns@mozilla.com>
+ * Joel Maher <joel.maher@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+package @ANDROID_PACKAGE_NAME@;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.HashMap;
+import java.util.List;
+
+import java.lang.Class;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.lang.reflect.InvocationHandler;
+import java.lang.Long;
+
+import android.app.Activity;
+import android.util.Log;
+import android.view.View;
+
+import org.json.*;
+
+import com.jayway.android.robotium.solo.Solo;
+
+public class FennecNativeAssert implements Assert {
+  // Map of IDs to element names.
+  private HashMap locators = null;
+  private String logFile = null;
+  
+  // Objects for reflexive access of fennec classes.
+
+  private LinkedList<testInfo> testList = new LinkedList<testInfo>();
+
+  // If waiting for an event.
+  private boolean asleep = false;
+
+  public FennecNativeAssert(){
+  }
+
+  // Write information to a logfile and logcat
+  public void dumpLog(String message)
+  {
+    File file = new File(logFile);
+    BufferedWriter bw = null;
+
+    try {
+      bw = new BufferedWriter(new FileWriter(logFile, true));
+      bw.write(message);
+      bw.newLine();
+    } catch(IOException e) {
+      Log.e("Robocop", "exception with file writer on: " + logFile);
+    } finally {
+      try {
+        if (bw != null) {
+          bw.flush();
+          bw.close();
+        }
+      } catch (IOException ex) {
+        ex.printStackTrace();
+      }
+    }
+
+    Log.i("Robocop", message);
+  }
+
+  // Set the filename used for dumpLog.
+  public void setLogFile(String filename)
+  {
+    logFile = filename;
+  }
+
+
+  class testInfo {
+    public boolean result;
+    public String name;
+    public String diag;
+    public boolean todo;
+    public testInfo(boolean r, String n, String d, boolean t) {
+      result = r;
+      name = n;
+      diag = d;
+      todo = t;
+    }
+
+  }
+
+
+  private void _logResult(testInfo test, String passString, String failString)
+  {
+    boolean isError = true;
+    String resultString = failString;
+    if(test.result || test.todo){
+      isError = false;
+    }
+    if(test.result)
+    {
+      resultString = passString;
+    }
+    String diag= test.name;
+    if(test.diag!=null) diag+= " - " + test.diag;
+
+    String message = resultString + " | " + "ROBOCOP" + " | " + diag;
+    if(isError) {
+      if(logFile == null)
+      {
+        assert(false);
+      }
+      else {
+        dumpLog(message);
+      }
+    }
+    else {
+      dumpLog(message);
+    }
+  }
+
+  public void ok(boolean condition, String name, String diag) {
+    testInfo test = new testInfo(condition, name, diag, false);
+    _logResult(test, "TEST-PASS", "TEST-UNEXPECTED-FAIL");
+    testList.add(test);
+  }
+
+  public void is(Object a, Object b, String name) {
+    boolean pass = a.equals(b);
+    String diag = "got " + a.toString() + ", expected " + b.toString();
+    if(pass) {
+      diag = a.toString() + " should equal " + b.toString();
+    }
+    ok(pass, name, diag);
+  }
+  
+  public void isnot(Object a, Object b, String name) {
+    boolean pass = !a.equals(b);
+    String diag = "didn't expect " + a.toString() + ", but got it";
+    if(pass) {
+      diag = a.toString() + " should not equal " + b.toString();
+    }
+    ok(pass, name, diag);
+  }
+
+  public void todo(boolean condition, String name, String diag) {
+    testInfo test = new testInfo(condition, name, diag, true);
+    _logResult(test, "TEST-UNEXPECTED-PASS", "TEST-KNOWN-FAIL");
+    testList.add(test);
+  }
+
+  public void todo_is(Object a, Object b, String name) {
+    boolean pass = a.equals(b);
+    String diag = "got " + a.toString() + ", expected " + b.toString();
+    if(pass) {
+      diag = a.toString() + " should equal " + b.toString();
+    }
+    todo(pass, name, diag);
+  }
+  
+  public void todo_isnot(Object a, Object b, String name) {
+    boolean pass = !a.equals(b);
+    String diag = "didn't expect " + a.toString() + ", but got it";
+    if(pass) {
+      diag = a.toString() + " should not equal " + b.toString();
+    }
+    todo(pass, name, diag);
+  }
+
+  public void info(String name, String message) {
+    testInfo test = new testInfo(true, name, message, false);
+    _logResult(test, "TEST-INFO", "INFO FAILED?");
+  }
+}

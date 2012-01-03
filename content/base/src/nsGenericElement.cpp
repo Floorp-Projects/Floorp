@@ -1207,6 +1207,13 @@ nsINode::Trace(nsINode *tmp, TraceCallback cb, void *closure)
   nsContentUtils::TraceWrapper(tmp, cb, closure);
 }
 
+static bool
+IsXBL(nsINode* aNode)
+{
+  return aNode->IsElement() &&
+         aNode->AsElement()->IsInNamespace(kNameSpaceID_XBL);
+}
+
 /* static */
 bool
 nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
@@ -1215,6 +1222,34 @@ nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
   if (currentDoc &&
       nsCCUncollectableMarker::InGeneration(cb, currentDoc->GetMarkedCCGeneration())) {
     return false;
+  }
+
+  if (nsCCUncollectableMarker::sGeneration) {
+    // If we're black no need to traverse.
+    if (tmp->IsBlack()) {
+      return false;
+    }
+
+    const PtrBits problematicFlags =
+      (NODE_IS_ANONYMOUS |
+       NODE_IS_IN_ANONYMOUS_SUBTREE |
+       NODE_IS_NATIVE_ANONYMOUS_ROOT |
+       NODE_MAY_BE_IN_BINDING_MNGR |
+       NODE_IS_INSERTION_PARENT);
+
+    if (!tmp->HasFlag(problematicFlags) && !IsXBL(tmp)) {
+      // If we're in a black document, return early.
+      if ((currentDoc && currentDoc->IsBlack())) {
+        return false;
+      }
+      // If we're not in anonymous content and we have a black parent,
+      // return early.
+      nsIContent* parent = tmp->GetParent();
+      if (parent && !IsXBL(parent) && parent->IsBlack()) {
+        NS_ABORT_IF_FALSE(parent->IndexOf(tmp) >= 0, "Parent doesn't own us?");
+        return false;
+      }
+    }
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNodeInfo)
@@ -2094,7 +2129,8 @@ nsGenericElement::GetBoundingClientRect(nsIDOMClientRect** aResult)
   }
 
   nsRect r = nsLayoutUtils::GetAllInFlowRectsUnion(frame,
-          nsLayoutUtils::GetContainingBlockForClientRect(frame));
+          nsLayoutUtils::GetContainingBlockForClientRect(frame),
+          nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
   rect->SetLayoutRect(r);
   return NS_OK;
 }
@@ -2122,7 +2158,8 @@ nsGenericElement::GetClientRects(nsIDOMClientRectList** aResult)
 
   nsLayoutUtils::RectListBuilder builder(rectList);
   nsLayoutUtils::GetAllInFlowRects(frame,
-          nsLayoutUtils::GetContainingBlockForClientRect(frame), &builder);
+          nsLayoutUtils::GetContainingBlockForClientRect(frame), &builder,
+          nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
   if (NS_FAILED(builder.mRV))
     return builder.mRV;
   *aResult = rectList.forget().get();
@@ -2405,7 +2442,7 @@ nsGenericElement::InternalIsSupported(nsISupports* aObject,
     }
   } else if (PL_strcasecmp(f, "SVGEvents") == 0 ||
              PL_strcasecmp(f, "SVGZoomEvents") == 0 ||
-             nsSVGFeatures::HaveFeature(aObject, aFeature)) {
+             nsSVGFeatures::HasFeature(aObject, aFeature)) {
     if (aVersion.IsEmpty() ||
         PL_strcmp(v, "1.0") == 0 ||
         PL_strcmp(v, "1.1") == 0) {

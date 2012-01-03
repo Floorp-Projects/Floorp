@@ -52,7 +52,7 @@
 #include "nsBlockFrame.h"
 #include "nsInlineFrame.h"
 #include "nsStyleConsts.h"
-#include "nsHTMLContainerFrame.h"
+#include "nsContainerFrame.h"
 #include "nsFloatManager.h"
 #include "nsStyleContext.h"
 #include "nsPresContext.h"
@@ -999,7 +999,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         // Remove all of the childs next-in-flows. Make sure that we ask
         // the right parent to do the removal (it's possible that the
         // parent is not this because we are executing pullup code)
-        nsHTMLContainerFrame* parent = static_cast<nsHTMLContainerFrame*>
+        nsContainerFrame* parent = static_cast<nsContainerFrame*>
                                                   (kidNextInFlow->GetParent());
         parent->DeleteNextInFlowChild(mPresContext, kidNextInFlow, true);
       }
@@ -2130,6 +2130,55 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 #endif
     nscoord goodMinY = spanFramePFD->mBorderPadding.top - psd->mTopLeading;
     nscoord goodMaxY = goodMinY + psd->mLogicalHeight;
+
+    // For cases like the one in bug 714519 (text-decoration placement
+    // or making nsLineLayout::IsZeroHeight() handle
+    // vertical-align:top/bottom on a descendant of the line that's not
+    // a child of it), we want to treat elements that are
+    // vertical-align: top or bottom somewhat like children for the
+    // purposes of this quirk.  To some extent, this is guessing, since
+    // they might end up being aligned anywhere.  However, we'll guess
+    // that they'll be placed aligned with the top or bottom of this
+    // frame (as though this frame is the only thing in the line).
+    // (Guessing isn't crazy, since all we're doing is reducing the
+    // scope of a quirk and making the behavior more standards-like.)
+    if (maxTopBoxHeight > maxY - minY) {
+      // Distribute maxTopBoxHeight to ascent (baselineY - minY), and
+      // then to descent (maxY - baselineY) by adjusting minY or maxY,
+      // but not to exceed goodMinY and goodMaxY.
+      nscoord distribute = maxTopBoxHeight - (maxY - minY);
+      nscoord ascentSpace = NS_MAX(minY - goodMinY, 0);
+      if (distribute > ascentSpace) {
+        distribute -= ascentSpace;
+        minY -= ascentSpace;
+        nscoord descentSpace = NS_MAX(goodMaxY - maxY, 0);
+        if (distribute > descentSpace) {
+          maxY += descentSpace;
+        } else {
+          maxY += distribute;
+        }
+      } else {
+        minY -= distribute;
+      }
+    }
+    if (maxBottomBoxHeight > maxY - minY) {
+      // Likewise, but preferring descent to ascent.
+      nscoord distribute = maxBottomBoxHeight - (maxY - minY);
+      nscoord descentSpace = NS_MAX(goodMaxY - maxY, 0);
+      if (distribute > descentSpace) {
+        distribute -= descentSpace;
+        maxY += descentSpace;
+        nscoord ascentSpace = NS_MAX(minY - goodMinY, 0);
+        if (distribute > ascentSpace) {
+          minY -= ascentSpace;
+        } else {
+          minY -= distribute;
+        }
+      } else {
+        maxY += distribute;
+      }
+    }
+
     if (minY > goodMinY) {
       nscoord adjust = minY - goodMinY; // positive
 

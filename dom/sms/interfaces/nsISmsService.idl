@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Mounir Lamouri <mounir.lamouri@mozilla.com> (Original Author)
+ *  Philipp von Weitershausen <philipp@weitershausen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,15 +37,25 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMMozSmsMessage;
+
 %{C++
 #define NS_SMSSERVICE_CID { 0xbada3cb8, 0xa568, 0x4dff, { 0xb5, 0x43, 0x52, 0xbb, 0xb3, 0x14, 0x31, 0x21 } }
 #define SMSSERVICE_CONTRACTID "@mozilla.org/sms/smsservice;1"
 %}
 
-[scriptable, function, uuid(24edea1d-130a-4ae3-9522-0e2a7ee2885d)]
+[scriptable, builtinclass, uuid(a0fbbe74-5d61-4b7e-b7ab-9b5224f9e5e9)]
 interface nsISmsService : nsISupports
 {
   boolean        hasSupport();
   unsigned short getNumberOfMessagesForText(in DOMString text);
             void send(in DOMString number, in DOMString message);
+
+  [implicit_jscontext]
+  nsIDOMMozSmsMessage createSmsMessage(in long      id,
+                                       in DOMString delivery,
+                                       in DOMString sender,
+                                       in DOMString receiver,
+                                       in DOMString body,
+                                       in jsval     timestamp);
 };

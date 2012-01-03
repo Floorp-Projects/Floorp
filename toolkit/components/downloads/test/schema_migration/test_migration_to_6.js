@@ -73,7 +73,7 @@ function run_test()
   do_check_true(stmt.getIsNull(8));
   do_check_eq(0, stmt.getInt64(9));
   do_check_eq(-1, stmt.getInt64(10));
-  stmt.reset();
+  stmt.finalize();
 
   cleanup();
 }

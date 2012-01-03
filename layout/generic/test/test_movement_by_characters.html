@@ -16,8 +16,13 @@
 
 SimpleTest.waitForExplicitFinish();
 
-// This seems to be necessary because the selection is not set up properly otherwise
-setTimeout(test, 0);
+setTimeout(focusing, 0);
+
+function focusing() {
+  document.getElementById("editor").focus();
+  // This seems to be necessary because the selection is not set up properly otherwise
+  setTimeout(test, 0);
+}
 
 function test() {
   var sel = window.getSelection();

@@ -36,7 +36,9 @@ runtests();
 function runtests() {
   function doClick() {
     document.getElementById("test2").addEventListener("mousedown", testFinish, true);
-    synthesizeMouseAtCenter(document.getElementById("test2"), { type: "mousedown" })
+    // Don't target the center because the center could actually be outside the
+    // viewport.
+    synthesizeMouse(document.getElementById("test2"), 10, 10, { type: "mousedown" })
   }
   setTimeout(doClick, 300);
 }

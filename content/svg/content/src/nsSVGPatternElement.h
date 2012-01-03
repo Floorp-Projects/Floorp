@@ -43,6 +43,7 @@
 #include "nsIDOMSVGURIReference.h"
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsIDOMSVGPatternElement.h"
+#include "DOMSVGTests.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
@@ -56,9 +57,10 @@
 typedef nsSVGStylableElement nsSVGPatternElementBase;
 
 class nsSVGPatternElement : public nsSVGPatternElementBase,
+                            public nsIDOMSVGPatternElement,
+                            public DOMSVGTests,
                             public nsIDOMSVGURIReference,
                             public nsIDOMSVGFitToViewBox,
-                            public nsIDOMSVGPatternElement,
                             public nsIDOMSVGUnitTypes
 {
   friend class nsSVGPatternFrame;

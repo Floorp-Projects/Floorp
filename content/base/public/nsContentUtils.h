@@ -232,10 +232,9 @@ public:
   static bool     IsCallerTrustedForWrite();
 
   /**
-   * Check whether a caller is trusted to have aCapability.  This also
-   * checks for UniversalXPConnect in addition to aCapability.
+   * Check whether a caller has UniversalXPConnect.
    */
-  static bool     IsCallerTrustedForCapability(const char* aCapability);
+  static bool     CallerHasUniversalXPConnect();
 
   static bool     IsImageSrcSetDisabled();
 

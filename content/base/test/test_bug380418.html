@@ -22,7 +22,7 @@
 	request.send(null);
 	
 	// Try reading headers in privileged context
-	netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect UniversalBrowserRead");
+	netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 	is(request.getResponseHeader("Set-Cookie"), "test", "Reading Set-Cookie response header in privileged context");
 	is(request.getResponseHeader("Set-Cookie2"), "test2", "Reading Set-Cookie2 response header in privileged context");
 	is(request.getResponseHeader("X-Dummy"), "test", "Reading X-Dummy response header in privileged context");

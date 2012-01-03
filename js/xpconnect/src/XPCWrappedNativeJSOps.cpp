@@ -656,12 +656,6 @@ TraceScopeJSObjects(JSTracer *trc, XPCWrappedNativeScope* scope)
         JS_CALL_OBJECT_TRACER(trc, obj,
                               "XPCWrappedNativeScope::mPrototypeJSObject");
     }
-
-    obj = scope->GetPrototypeJSFunction();
-    if (obj) {
-        JS_CALL_OBJECT_TRACER(trc, obj,
-                              "XPCWrappedNativeScope::mPrototypeJSFunction");
-    }
 }
 
 static void

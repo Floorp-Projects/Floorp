@@ -1932,17 +1932,20 @@ public:
   virtual nsIAtom* GetType() const = 0;
 
   /**
-   * Returns a transformation matrix that converts points in this frame's coordinate space
-   * to points in some ancestor frame's coordinate space.  The frame decides which ancestor
-   * it will use as a reference point.  If this frame has no ancestor, aOutAncestor will be
-   * set to null.
+   * Returns a transformation matrix that converts points in this frame's
+   * coordinate space to points in some ancestor frame's coordinate space.
+   * The frame decides which ancestor it will use as a reference point.
+   * If this frame has no ancestor, aOutAncestor will be set to null.
    *
-   * @param aOutAncestor [out] The ancestor frame the frame has chosen.  If this frame has no
-   *        ancestor, aOutAncestor will be nsnull.
-   * @return A gfxMatrix that converts points in this frame's coordinate space into
-   *         points in aOutAncestor's coordinate space.
+   * @param aStopAtAncestor don't look further than aStopAtAncestor. If null,
+   *   all ancestors (including across documents) will be traversed.
+   * @param aOutAncestor [out] The ancestor frame the frame has chosen.  If
+   *   this frame has no ancestor, *aOutAncestor will be set to null.
+   * @return A gfxMatrix that converts points in this frame's coordinate space
+   *   into points in aOutAncestor's coordinate space.
    */
-  virtual gfx3DMatrix GetTransformMatrix(nsIFrame **aOutAncestor);
+  virtual gfx3DMatrix GetTransformMatrix(nsIFrame* aStopAtAncestor,
+                                         nsIFrame **aOutAncestor);
 
   /**
    * Bit-flags to pass to IsFrameOfType()

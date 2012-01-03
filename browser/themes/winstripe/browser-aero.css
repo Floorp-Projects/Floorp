@@ -294,21 +294,23 @@
 }
 
 @media not all and (-moz-windows-compositor) {
-  #main-window:-moz-system-metric(windows-default-theme) {
-    background-color: rgb(185,209,234);
-  }
-  #main-window:-moz-system-metric(windows-default-theme):-moz-window-inactive {
-    background-color: rgb(215,228,242);
-  }
+  @media (-moz-windows-default-theme) {
+    #main-window {
+      background-color: rgb(185,209,234);
+    }
+    #main-window:-moz-window-inactive {
+      background-color: rgb(215,228,242);
+    }
 
-  #toolbar-menubar:not([autohide=true]):not(:-moz-lwtheme):-moz-system-metric(windows-default-theme),
-  #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme):-moz-system-metric(windows-default-theme),
-  #navigator-toolbox[tabsontop=false] > toolbar:not(#toolbar-menubar):not(:-moz-lwtheme):-moz-system-metric(windows-default-theme) {
-    -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
-    background-color: transparent;
-  }
-  #toolbar-menubar[autohide=true]:-moz-system-metric(windows-default-theme) {
-    background-color: transparent;
+    #toolbar-menubar:not([autohide=true]):not(:-moz-lwtheme),
+    #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme),
+    #navigator-toolbox[tabsontop=false] > toolbar:not(#toolbar-menubar):not(:-moz-lwtheme) {
+      -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
+      background-color: transparent;
+    }
+    #toolbar-menubar[autohide=true] {
+      background-color: transparent !important;
+    }
   }
 
   #print-preview-toolbar:not(:-moz-lwtheme) {

@@ -2457,14 +2457,6 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
         if (startContent == rootContent) {
           startContent = nsnull;
         }
-        else if (startContent && startContent->HasFlag(NODE_IS_EDITABLE)) {
-          // Don't start from the selection if the selection is in a
-          // contentEditable region.
-          nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
-          if (htmlDoc &&
-              htmlDoc->GetEditingState() == nsIHTMLDocument::eContentEditable)
-            startContent = nsnull;
-        }
 
         if (aType == MOVEFOCUS_CARET) {
           // GetFocusInSelection finds a focusable link near the caret.

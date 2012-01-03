@@ -38,7 +38,8 @@
 #include "nsISupports.idl"
 
 [scriptable, uuid(9b7e3a01-9c45-4af3-81bb-1bf08a842226)]
-interface nsITelephoneCallback : nsISupports {
+interface nsITelephoneCallback : nsISupports
+{
   void oncallstatechange(in jsval event);
 
   //XXX philikon's additions
@@ -48,11 +49,16 @@ interface nsITelephoneCallback : nsISupports {
   void onsignalstrengthchange(in jsval event);
 };
 
-[scriptable, uuid(f6baa721-665e-403e-8a98-acaa0d8bf267)]
-interface nsITelephone : nsISupports {
-
+[scriptable, uuid(5be6e41d-3aee-4f5c-8284-95cf529dd6fe)]
+interface nsITelephone : nsISupports
+{
   readonly attribute jsval currentState;
+  void registerCallback(in nsITelephoneCallback callback);
+  void unregisterCallback(in nsITelephoneCallback callback);
 
+  /**
+   * Functionality for making and managing phone calls.
+   */
   void dial(in DOMString number);
   void hangUp(in long callIndex);
   void startTone(in DOMString dtmfChar);
@@ -62,6 +68,9 @@ interface nsITelephone : nsISupports {
   attribute bool microphoneMuted;
   attribute bool speakerEnabled;
 
-  void registerCallback(in nsITelephoneCallback callback);
-  void unregisterCallback(in nsITelephoneCallback callback);
+  /**
+   * SMS-related functionality.
+   */
+  unsigned short getNumberOfMessagesForText(in DOMString text);
+  void sendSMS(in DOMString number, in DOMString message);
 };

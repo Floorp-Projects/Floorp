@@ -100,6 +100,9 @@ public:
   float GetAnimValue(nsSVGSVGElement* aCtx) const
     { return mAnimVal / GetUnitScaleFactor(aCtx, mSpecifiedUnitType); }
 
+  bool HasBaseVal() const {
+    return mIsBaseSet;
+  }
   // Returns true if the animated value of this length has been explicitly
   // set (either by animation, or by taking on the base value which has been
   // explicitly set by markup or a DOM call), false otherwise.

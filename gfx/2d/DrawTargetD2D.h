@@ -56,6 +56,7 @@ namespace mozilla {
 namespace gfx {
 
 class SourceSurfaceD2DTarget;
+class SourceSurfaceD2D;
 class GradientStopsD2D;
 
 struct PrivateD3D10DataD2D
@@ -117,7 +118,11 @@ public:
                           const GlyphBuffer &aBuffer,
                           const Pattern &aPattern,
                           const DrawOptions &aOptions = DrawOptions());
+  virtual void Mask(const Pattern &aSource,
+                    const Pattern &aMask,
+                    const DrawOptions &aOptions = DrawOptions());
   virtual void PushClip(const Path *aPath);
+  virtual void PushClipRect(const Rect &aRect);
   virtual void PopClip();
 
   virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
@@ -134,7 +139,10 @@ public:
 
   virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FILL_WINDING) const;
 
-  virtual TemporaryRef<GradientStops> CreateGradientStops(GradientStop *aStops, uint32_t aNumStops) const;
+  virtual TemporaryRef<GradientStops>
+    CreateGradientStops(GradientStop *aStops,
+                        uint32_t aNumStops,
+                        ExtendMode aExtendMode = EXTEND_CLAMP) const;
 
   virtual void *GetNativeSurface(NativeSurfaceType aType);
 
@@ -185,6 +193,11 @@ private:
   TemporaryRef<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
 
   TemporaryRef<ID3D10Texture1D> CreateGradientTexture(const GradientStopsD2D *aStops);
+
+  // This creates a partially uploaded bitmap for a SourceSurfaceD2D that is
+  // too big to fit in a bitmap. It adjusts the passed Matrix to accomodate the
+  // partial upload.
+  TemporaryRef<ID2D1Bitmap> CreatePartialBitmapForSurface(SourceSurfaceD2D *aSurface, Matrix &aMatrix);
 
   void SetupEffectForRadialGradient(const RadialGradientPattern *aPattern);
 

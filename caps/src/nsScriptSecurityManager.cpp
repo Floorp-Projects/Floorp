@@ -1089,19 +1089,6 @@ nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
         return NS_ERROR_DOM_PROP_ACCESS_DENIED;
 
     /*
-    * If we failed the origin tests it still might be the case that we
-    * are a signed script and have permissions to do this operation.
-    * Check for that here.
-    */
-    bool capabilityEnabled = false;
-    const char* cap = aAction == nsIXPCSecurityManager::ACCESS_SET_PROPERTY ?
-                      "UniversalBrowserWrite" : "UniversalBrowserRead";
-    rv = IsCapabilityEnabled(cap, &capabilityEnabled);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (capabilityEnabled)
-        return NS_OK;
-
-    /*
     ** Access tests failed, so now report error.
     */
     return NS_ERROR_DOM_PROP_ACCESS_DENIED;
@@ -1321,7 +1308,7 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
     }
 
     // See if we're attempting to load a file: URI. If so, let a
-    // UniversalFileRead capability trump the above check.
+    // UniversalXPConnect capability trump the above check.
     bool isFile = false;
     bool isRes = false;
     if (NS_FAILED(aURI->SchemeIs("file", &isFile)) ||
@@ -1330,7 +1317,7 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
     if (isFile || isRes)
     {
         bool enabled;
-        if (NS_FAILED(IsCapabilityEnabled("UniversalFileRead", &enabled)))
+        if (NS_FAILED(IsCapabilityEnabled("UniversalXPConnect", &enabled)))
             return NS_ERROR_FAILURE;
         if (enabled)
             return NS_OK;

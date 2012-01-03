@@ -337,7 +337,7 @@ var Scratchpad = {
       let contentWindow = this.gBrowser.selectedBrowser.contentWindow;
 
       let scriptError = Cc["@mozilla.org/scripterror;1"].
-                        createInstance(Ci.nsIScriptError2);
+                        createInstance(Ci.nsIScriptError);
 
       scriptError.initWithWindowID(ex.message + "\n" + ex.stack, ex.fileName,
                                    "", ex.lineNumber, 0, scriptError.errorFlag,
@@ -581,8 +581,12 @@ var Scratchpad = {
       let content = null;
 
       if (Components.isSuccessCode(aStatus)) {
+        let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+                        createInstance(Ci.nsIScriptableUnicodeConverter);
+        converter.charset = "UTF-8";
         content = NetUtil.readInputStreamToString(aInputStream,
                                                   aInputStream.available());
+        content = converter.ConvertToUnicode(content);
         self.setText(content);
         self.editor.resetUndo();
       }

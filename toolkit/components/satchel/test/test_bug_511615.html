@@ -210,7 +210,7 @@ function runTest(testNum) {
         break;
     case 15:
         checkPopupOpen(false);
-        checkForm("v");
+        checkForm("");
         break;
     // try a space
     case 16:
@@ -219,7 +219,7 @@ function runTest(testNum) {
         break;
     case 17:
         checkPopupOpen(false);
-        checkForm("v ");
+        checkForm("");
         break;
     // backspace
     case 18:
@@ -228,19 +228,19 @@ function runTest(testNum) {
         break;
     case 19:
         checkPopupOpen(false);
-        checkForm("v");
+        checkForm("");
         nextTestPrivledged = true;
         break;
     case 20:
         // We're priviledged for this test, so open the popup.
         checkPopupOpen(false);
-        checkForm("v");
+        checkForm("");
         doKey("down");
         nextTestPrivledged = true;
         break;
     case 21:
         checkPopupOpen(true, -1);
-        checkForm("v");
+        checkForm("");
         testNum = 99;
         break;
 
@@ -255,7 +255,7 @@ function runTest(testNum) {
         break;
     case 101:
         checkPopupOpen(true, -1);
-        checkForm("v");
+        checkForm("");
         break;
     // try a page-down
     case 102:
@@ -264,7 +264,7 @@ function runTest(testNum) {
         break;
     case 103:
         checkPopupOpen(true, -1);
-        checkForm("v");
+        checkForm("");
         nextTestPrivledged = true;
         break;
     // really adjust the index
@@ -275,7 +275,7 @@ function runTest(testNum) {
         break;
     case 105:
         checkPopupOpen(true, 0);
-        checkForm("v");
+        checkForm("");
         break;
     // try a down-arrow
     case 106:
@@ -284,7 +284,7 @@ function runTest(testNum) {
         break;
     case 107:
         checkPopupOpen(true, 0);
-        checkForm("v");
+        checkForm("");
         break;
     // try a page-down
     case 108:
@@ -293,7 +293,7 @@ function runTest(testNum) {
         break;
     case 109:
         checkPopupOpen(true, 0);
-        checkForm("v");
+        checkForm("");
     // try a keypress
     case 110:
         // XXX this causes the popup to close, and makes the value "vaa" (sic)
@@ -302,7 +302,7 @@ function runTest(testNum) {
         break;
     case 111:
         checkPopupOpen(true, 0);
-        checkForm("v");
+        checkForm("");
         testNum = 199;
         break;
 
@@ -316,7 +316,7 @@ function runTest(testNum) {
         break;
     case 201:
         checkPopupOpen(true, 0);
-        checkForm("v");
+        checkForm("");
         break;
     // try a space
     case 202:
@@ -326,7 +326,7 @@ function runTest(testNum) {
     case 203:
         // XXX we should ignore this input while popup is open?
         checkPopupOpen(true, 0);
-        checkForm("v ");
+        checkForm("");
         break;
     // backspace
     case 204:
@@ -336,7 +336,7 @@ function runTest(testNum) {
     case 205:
         // XXX we should ignore this input while popup is open?
         checkPopupOpen(true, 0);
-        checkForm("v");
+        checkForm("");
         nextTestPrivledged = true;
         break;
     case 206:
@@ -345,7 +345,7 @@ function runTest(testNum) {
         break;
     case 207:
         checkPopupOpen(true, 0);
-        checkForm("v");
+        checkForm("");
         break;
     // try a return
     case 208:
@@ -355,7 +355,7 @@ function runTest(testNum) {
         break;
     case 209:
         checkPopupOpen(true, 0);
-        checkForm("v");
+        checkForm("");
         break;
     // Send a real Escape to ensure popup closed at end of test.
     case 210:

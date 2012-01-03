@@ -8,8 +8,10 @@
 #define __android_log_print(a, ...)
 #endif
 
+#include "mozilla/StdInt.h"
 #include "mozilla/Util.h"
 #include "mozilla/unused.h"
+#include "mozilla/TimeStamp.h"
 #include "v8-support.h"
 #include <vector>
 #define ASSERT(a) MOZ_ASSERT(a)
@@ -20,75 +22,8 @@
 #define LOG(text) printf("Profiler: %s\n", text)
 #endif
 
-#ifdef _MSC_VER
- typedef __int8 byte;
- typedef __int32 int32_t;
- typedef unsigned __int32 uint32_t;
- typedef __int64 int64_t;
- typedef unsigned __int64 uint64_t;
-#else
- #include <stdint.h>
- typedef uint8 byte;
-#endif
-typedef byte* Address;
+typedef uint8_t* Address;
 
-class MapEntry {
-public:
-  MapEntry(unsigned long aStart, unsigned long aEnd, unsigned long aOffset, char *aName)
-    : mStart(aStart)
-    , mEnd(aEnd)
-    , mOffset(aOffset)
-    , mName(strdup(aName))
-  {}
-
-  MapEntry(const MapEntry& aEntry)
-    : mStart(aEntry.mStart)
-    , mEnd(aEntry.mEnd)
-    , mOffset(aEntry.mOffset)
-    , mName(strdup(aEntry.mName))
-  {}
-
-  ~MapEntry()
-  {
-    free(mName);
-  }
-
-  unsigned long GetStart() { return mStart; }
-  unsigned long GetEnd() { return mEnd; }
-  char* GetName() { return mName; }
-
-private:
-  unsigned long mStart;
-  unsigned long mEnd;
-  unsigned long mOffset;
-  char *mName;
-};
-
-class MapInfo {
-public:
-  MapInfo() {}
-
-  void AddMapEntry(MapEntry entry)
-  {
-    mEntries.push_back(entry);
-  }
-
-  MapEntry& GetEntry(size_t i)
-  {
-    return mEntries[i];
-  }
-
-  size_t GetSize()
-  {
-    return mEntries.size();
-  }
-private:
-  std::vector<MapEntry> mEntries;
-};
-
-#ifdef ENABLE_SPS_LEAF_DATA
-struct MapInfo getmaps(pid_t pid);
-#endif
 // ----------------------------------------------------------------------------
 // Mutex
 //
@@ -231,6 +166,7 @@ class TickSample {
   static const int kMaxFramesCount = 64;
   Address stack[kMaxFramesCount];  // Call stack.
   int frames_count;  // Number of captured frames.
+  mozilla::TimeStamp timestamp;
 };
 
 class Sampler {

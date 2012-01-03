@@ -241,7 +241,8 @@ nsMathMLmencloseFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     nsRect rect;
     mMathMLChar[mRadicalCharIndex].GetRect(rect);
-    rect.MoveBy(rect.width, 0);
+    rect.MoveBy(NS_MATHML_IS_RTL(mPresentationData.flags) ?
+                -mContentWidth : rect.width, 0);
     rect.SizeTo(mContentWidth, mRuleThickness);
     rv = DisplayBar(aBuilder, this, rect, aLists);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -496,7 +497,7 @@ nsMathMLmencloseFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       mMathMLChar[mLongDivCharIndex].Stretch(PresContext(), aRenderingContext,
                                              NS_STRETCH_DIRECTION_VERTICAL,
                                              contSize, bmLongdivChar,
-                                             NS_STRETCH_LARGER);
+                                             NS_STRETCH_LARGER, false);
       mMathMLChar[mLongDivCharIndex].GetBoundingMetrics(bmLongdivChar);
 
       // Update horizontal parameters
@@ -518,12 +519,15 @@ nsMathMLmencloseFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
   ///////////////
   // radical notation:
   if (IsToDraw(NOTATION_RADICAL)) {
+    nscoord *dx_leading =
+      NS_MATHML_IS_RTL(mPresentationData.flags) ? &dx_right : &dx_left;
+    
     if (aWidthOnly) {
       nscoord radical_width = mMathMLChar[mRadicalCharIndex].
         GetMaxWidth(PresContext(), aRenderingContext);
       
       // Update horizontal parameters
-      dx_left = NS_MAX(dx_left, radical_width);
+      *dx_leading = NS_MAX(*dx_leading, radical_width);
     } else {
       // Stretch the radical symbol to the appropriate height if it is not
       // big enough.
@@ -535,11 +539,12 @@ nsMathMLmencloseFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       mMathMLChar[mRadicalCharIndex].Stretch(PresContext(), aRenderingContext,
                                              NS_STRETCH_DIRECTION_VERTICAL,
                                              contSize, bmRadicalChar,
-                                             NS_STRETCH_LARGER);
+                                             NS_STRETCH_LARGER,
+                                             NS_MATHML_IS_RTL(mPresentationData.flags));
       mMathMLChar[mRadicalCharIndex].GetBoundingMetrics(bmRadicalChar);
 
       // Update horizontal parameters
-      dx_left = NS_MAX(dx_left, bmRadicalChar.width);
+      *dx_leading = NS_MAX(*dx_leading, bmRadicalChar.width);
 
       // Update vertical parameters
       radicalAscent = bmBase.ascent + psi + mRuleThickness;
@@ -653,14 +658,17 @@ nsMathMLmencloseFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
                                                     bmLongdivChar.ascent +
                                                     bmLongdivChar.descent));
 
-    if (IsToDraw(NOTATION_RADICAL))
-      mMathMLChar[mRadicalCharIndex].SetRect(nsRect(dx_left -
-                                                    bmRadicalChar.width,
+    if (IsToDraw(NOTATION_RADICAL)) {
+      nscoord dx = NS_MATHML_IS_RTL(mPresentationData.flags) ?
+        dx_left + bmBase.width : dx_left - bmRadicalChar.width;
+
+      mMathMLChar[mRadicalCharIndex].SetRect(nsRect(dx,
                                                     aDesiredSize.ascent -
                                                     radicalAscent,
                                                     bmRadicalChar.width,
                                                     bmRadicalChar.ascent +
                                                     bmRadicalChar.descent));
+    }
 
     mContentWidth = bmBase.width;
 

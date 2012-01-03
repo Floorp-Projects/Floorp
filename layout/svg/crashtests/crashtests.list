@@ -59,7 +59,7 @@ load 385552-2.svg
 load 385840-1.svg
 load 385852-1.svg
 load 386475-1.xhtml
-load 386566-1.svg
+asserts(1) load 386566-1.svg # Bug 713626
 load 386690-1.svg
 load 387290-1.svg
 load 402408-1.svg
@@ -121,3 +121,4 @@ load 692203-2.svg
 load 693424-1.svg
 load 709920-1.svg
 load 709920-2.svg
+load 713413-1.svg

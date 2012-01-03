@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<marker id="m"></marker>
+
+<script>
+window.addEventListener("load", function() {
+  document.getElementById("m").appendChild(document.createElementNS("http://www.w3.org/2000/svg", "foreignObject"));
+}, false);
+</script>
+
+</svg>

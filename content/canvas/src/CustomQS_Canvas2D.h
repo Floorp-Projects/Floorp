@@ -107,7 +107,7 @@ Canvas2D_GetStyleHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,
 
     switch (resultType) {
     case nsIDOMCanvasRenderingContext2D::CMG_STYLE_STRING:
-        return xpc_qsStringToJsval(cx, resultString, vp);
+        return xpc::StringToJsval(cx, resultString, vp);
 
     case nsIDOMCanvasRenderingContext2D::CMG_STYLE_PATTERN:
     {
@@ -156,11 +156,11 @@ nsIDOMCanvasRenderingContext2D_GetFillStyle(JSContext *cx, JSObject *obj, jsid i
 
 static bool
 CreateImageData(JSContext* cx,
-                uint32 w,
-                uint32 h,
+                uint32_t w,
+                uint32_t h,
                 nsIDOMCanvasRenderingContext2D* self,
-                int32 x,
-                int32 y,
+                int32_t x,
+                int32_t y,
                 jsval* vp)
 {
     using mozilla::CheckedInt;
@@ -281,11 +281,11 @@ nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, uintN argc, jsval 
     if (!width || !height)
         return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
 
-    int32 wi = JS_DoubleToInt32(width);
-    int32 hi = JS_DoubleToInt32(height);
+    int32_t wi = JS_DoubleToInt32(width);
+    int32_t hi = JS_DoubleToInt32(height);
 
-    uint32 w = NS_ABS(wi);
-    uint32 h = NS_ABS(hi);
+    uint32_t w = NS_ABS(wi);
+    uint32_t h = NS_ABS(hi);
     return CreateImageData(cx, w, h, NULL, 0, 0, vp);
 }
 
@@ -323,14 +323,14 @@ nsIDOMCanvasRenderingContext2D_GetImageData(JSContext *cx, uintN argc, jsval *vp
     if (!width || !height)
         return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
 
-    int32 x = JS_DoubleToInt32(xd);
-    int32 y = JS_DoubleToInt32(yd);
-    int32 wi = JS_DoubleToInt32(width);
-    int32 hi = JS_DoubleToInt32(height);
+    int32_t x = JS_DoubleToInt32(xd);
+    int32_t y = JS_DoubleToInt32(yd);
+    int32_t wi = JS_DoubleToInt32(width);
+    int32_t hi = JS_DoubleToInt32(height);
 
     // Handle negative width and height by flipping the rectangle over in the
     // relevant direction.
-    uint32 w, h;
+    uint32_t w, h;
     if (width < 0) {
         w = -wi;
         x -= w;
@@ -383,8 +383,8 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
         return xpc_qsThrow(cx, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     }
 
-    int32 x = JS_DoubleToInt32(xd);
-    int32 y = JS_DoubleToInt32(yd);
+    int32_t x = JS_DoubleToInt32(xd);
+    int32_t y = JS_DoubleToInt32(yd);
 
     // Grab width, height, and the dense array from the dataObject.
     js::AutoValueRooter tv(cx);
@@ -395,10 +395,10 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
 
     // the optional dirty rect
     bool hasDirtyRect = false;
-    int32 dirtyX = 0,
-          dirtyY = 0,
-          dirtyWidth = w,
-          dirtyHeight = h;
+    int32_t dirtyX = 0,
+            dirtyY = 0,
+            dirtyWidth = w,
+            dirtyHeight = h;
 
     if (argc >= 7) {
         double dx, dy, dw, dh;

@@ -137,9 +137,12 @@ nsWebMReader::nsWebMReader(nsBuiltinDecoder* aDecoder)
   mAudioStartUsec(-1),
   mAudioFrames(0),
   mHasVideo(false),
-  mHasAudio(false)
+  mHasAudio(false),
+  mForceStereoMode(0)
 {
   MOZ_COUNT_CTOR(nsWebMReader);
+
+  Preferences::GetInt("media.webm.force_stereo_mode", &mForceStereoMode);
 }
 
 nsWebMReader::~nsWebMReader()
@@ -306,25 +309,21 @@ nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo)
         break;
       }
 
-      PRInt32 forceStereoMode;
-      if (NS_SUCCEEDED(Preferences::GetInt("media.webm.force_stereo_mode",
-                                           &forceStereoMode))) {
-        switch (forceStereoMode) {
-        case 1:
-          mInfo.mStereoMode = STEREO_MODE_LEFT_RIGHT;
-          break;
-        case 2:
-          mInfo.mStereoMode = STEREO_MODE_RIGHT_LEFT;
-          break;
-        case 3:
-          mInfo.mStereoMode = STEREO_MODE_TOP_BOTTOM;
-          break;
-        case 4:
-          mInfo.mStereoMode = STEREO_MODE_BOTTOM_TOP;
-          break;
-        default:
-          mInfo.mStereoMode = STEREO_MODE_MONO;
-        }
+      switch (mForceStereoMode) {
+      case 1:
+        mInfo.mStereoMode = STEREO_MODE_LEFT_RIGHT;
+        break;
+      case 2:
+        mInfo.mStereoMode = STEREO_MODE_RIGHT_LEFT;
+        break;
+      case 3:
+        mInfo.mStereoMode = STEREO_MODE_TOP_BOTTOM;
+        break;
+      case 4:
+        mInfo.mStereoMode = STEREO_MODE_BOTTOM_TOP;
+        break;
+      default:
+        mInfo.mStereoMode = STEREO_MODE_MONO;
       }
     }
     else if (!mHasAudio && type == NESTEGG_TRACK_AUDIO) {

@@ -76,7 +76,9 @@ function startupHttpd(baseDir, port) {
 // until we have a proper security model, add some rights to
 // the pre-installed web applications 
 function addPermissions(urls) {
-  let permissions = ['indexedDB', 'webapps-manage', 'offline-app'];
+  let permissions = [
+    'indexedDB', 'indexedDB-unlimited', 'webapps-manage', 'offline-app'
+  ];
   urls.forEach(function(url) {
     let uri = Services.io.newURI(url, null, null);
     let allow = Ci.nsIPermissionManager.ALLOW_ACTION;
@@ -310,11 +312,13 @@ function MozKeyboard() {
 }
 
 MozKeyboard.prototype = {
-  sendKey: function mozKeyboardSendKey(keyCode) {
+  sendKey: function mozKeyboardSendKey(keyCode, charCode) {
+    charCode = (charCode == undefined) ? keyCode : charCode;
+
     var utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIDOMWindowUtils);
     ['keydown', 'keypress', 'keyup'].forEach(function sendKeyEvents(type) {
-      utils.sendKeyEvent(type, keyCode, keyCode, null);
+      utils.sendKeyEvent(type, keyCode, charCode, null);
     });
   }
 };

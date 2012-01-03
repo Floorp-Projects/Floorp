@@ -1250,9 +1250,9 @@ inline JSObject *
 TypeObject::getGlobal()
 {
     if (singleton)
-        return singleton->getGlobal();
+        return &singleton->global();
     if (interpretedFunction && interpretedFunction->script()->compileAndGo)
-        return interpretedFunction->getGlobal();
+        return &interpretedFunction->global();
     return NULL;
 }
 
@@ -1279,9 +1279,8 @@ TypeObject::readBarrier(TypeObject *type)
 {
 #ifdef JSGC_INCREMENTAL
     JSCompartment *comp = type->compartment();
-    JS_ASSERT(comp->needsBarrier());
-
-    MarkTypeObjectUnbarriered(comp->barrierTracer(), type, "read barrier");
+    if (comp->needsBarrier())
+        MarkTypeObjectUnbarriered(comp->barrierTracer(), type, "read barrier");
 #endif
 }
 
@@ -1328,13 +1327,19 @@ JSScript::ensureHasTypes(JSContext *cx)
 inline bool
 JSScript::ensureRanAnalysis(JSContext *cx, JSObject *scope)
 {
-    if (!ensureHasTypes(cx))
+    JSScript *self = this;
+
+    if (!self->ensureHasTypes(cx))
         return false;
-    if (!types->hasScope() && !js::types::TypeScript::SetScope(cx, this, scope))
+    if (!self->types->hasScope()) {
+        js::CheckRoot root(cx, &self);
+        js::RootObject objRoot(cx, &scope);
+        if (!js::types::TypeScript::SetScope(cx, self, scope))
+            return false;
+    }
+    if (!self->hasAnalysis() && !self->makeAnalysis(cx))
         return false;
-    if (!hasAnalysis() && !makeAnalysis(cx))
-        return false;
-    JS_ASSERT(analysis()->ranBytecode());
+    JS_ASSERT(self->analysis()->ranBytecode());
     return true;
 }
 

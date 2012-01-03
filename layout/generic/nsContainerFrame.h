@@ -58,6 +58,19 @@
 
 class nsOverflowContinuationTracker;
 
+// Some macros for container classes to do sanity checking on
+// width/height/x/y values computed during reflow.
+// NOTE: AppUnitsPerCSSPixel value hardwired here to remove the
+// dependency on nsDeviceContext.h.  It doesn't matter if it's a
+// little off.
+#ifdef DEBUG
+#define CRAZY_W (1000000*60)
+#define CRAZY_H CRAZY_W
+
+#define CRAZY_WIDTH(_x) (((_x) < -CRAZY_W) || ((_x) > CRAZY_W))
+#define CRAZY_HEIGHT(_y) (((_y) < -CRAZY_H) || ((_y) > CRAZY_H))
+#endif
+
 /**
  * Implementation of a container frame.
  */
@@ -97,6 +110,23 @@ public:
 #endif  
 
   // nsContainerFrame methods
+
+  /**
+   * Helper method to create next-in-flows if necessary. If aFrame
+   * already has a next-in-flow then this method does
+   * nothing. Otherwise, a new continuation frame is created and
+   * linked into the flow. In addition, the new frame is inserted
+   * into the principal child list after aFrame.
+   * @note calling this method on a block frame is illegal. Use
+   * nsBlockFrame::CreateContinuationFor() instead.
+   * @param aNextInFlowResult will contain the next-in-flow
+   *        <b>if and only if</b> one is created. If a next-in-flow already
+   *        exists aNextInFlowResult is set to nsnull.
+   * @return NS_OK if a next-in-flow already exists or is successfully created.
+   */
+  nsresult CreateNextInFlow(nsPresContext* aPresContext,
+                            nsIFrame*       aFrame,
+                            nsIFrame*&      aNextInFlowResult);
 
   /**
    * Delete aNextInFlow and its next-in-flows.
@@ -365,6 +395,21 @@ protected:
                                                const nsRect&           aDirtyRect,
                                                const nsDisplayListSet& aLists,
                                                PRUint32                aFlags = 0);
+
+  /**
+   * A version of BuildDisplayList that use DISPLAY_CHILD_INLINE.
+   * Intended as a convenience for derived classes.
+   */
+  nsresult BuildDisplayListForInline(nsDisplayListBuilder*   aBuilder,
+                                     const nsRect&           aDirtyRect,
+                                     const nsDisplayListSet& aLists) {
+    nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = BuildDisplayListForNonBlockChildren(aBuilder, aDirtyRect, aLists,
+                                             DISPLAY_CHILD_INLINE);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return rv;
+  }
 
 
   // ==========================================================================

@@ -256,7 +256,7 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
     return copy;
 }
 
-static jsval *
+static HeapValue *
 GetStackTraceValueBuffer(JSExnPrivate *priv)
 {
     /*
@@ -267,7 +267,7 @@ GetStackTraceValueBuffer(JSExnPrivate *priv)
      */
     JS_STATIC_ASSERT(sizeof(JSStackTraceElem) % sizeof(jsval) == 0);
 
-    return (jsval *)(priv->stackElems + priv->stackDepth);
+    return reinterpret_cast<HeapValue *>(priv->stackElems + priv->stackDepth);
 }
 
 struct SuppressErrorsGuard
@@ -359,7 +359,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
 
     size_t nbytes = offsetof(JSExnPrivate, stackElems) +
                     frames.length() * sizeof(JSStackTraceElem) +
-                    values.length() * sizeof(Value);
+                    values.length() * sizeof(HeapValue);
 
     JSExnPrivate *priv = (JSExnPrivate *)cx->malloc_(nbytes);
     if (!priv)
@@ -391,11 +391,12 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     priv->exnType = exnType;
 
     JSStackTraceElem *framesDest = priv->stackElems;
-    Value *valuesDest = reinterpret_cast<Value *>(framesDest + frames.length());
+    HeapValue *valuesDest = reinterpret_cast<HeapValue *>(framesDest + frames.length());
     JS_ASSERT(valuesDest == GetStackTraceValueBuffer(priv));
 
     PodCopy(framesDest, frames.begin(), frames.length());
-    PodCopy(valuesDest, values.begin(), values.length());
+    for (size_t i = 0; i < values.length(); ++i)
+        valuesDest[i].init(cx->compartment, values[i]);
 
     SetExnPrivate(cx, exnObject, priv);
     return true;
@@ -414,7 +415,7 @@ exn_trace(JSTracer *trc, JSObject *obj)
     JSExnPrivate *priv;
     JSStackTraceElem *elem;
     size_t vcount, i;
-    jsval *vp, v;
+    HeapValue *vp;
 
     priv = GetExnPrivate(obj);
     if (priv) {
@@ -433,9 +434,7 @@ exn_trace(JSTracer *trc, JSObject *obj)
         }
         vp = GetStackTraceValueBuffer(priv);
         for (i = 0; i != vcount; ++i, ++vp) {
-            /* This value is read-only, so it's okay for it to be Unbarriered. */
-            v = *vp;
-            MarkValueUnbarriered(trc, v, "stack trace argument");
+            MarkValue(trc, *vp, "stack trace argument");
         }
     }
 }
@@ -605,7 +604,7 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
     jschar *stackbuf;
     size_t stacklen, stackmax;
     JSStackTraceElem *elem, *endElem;
-    jsval *values;
+    HeapValue *values;
     size_t i;
     JSString *str;
     const char *cp;
@@ -1031,7 +1030,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     JS_ASSERT(obj->isGlobal());
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = obj->asGlobal();
+    GlobalObject *global = &obj->asGlobal();
 
     JSObject *objectProto;
     if (!js_GetClassPrototype(cx, global, JSProto_Object, &objectProto))
@@ -1334,7 +1333,7 @@ js_CopyErrorObject(JSContext *cx, JSObject *errobj, JSObject *scope)
 
     // Create the Error object.
     JSObject *proto;
-    if (!js_GetClassPrototype(cx, scope->getGlobal(), GetExceptionProtoKey(copy->exnType), &proto))
+    if (!js_GetClassPrototype(cx, &scope->global(), GetExceptionProtoKey(copy->exnType), &proto))
         return NULL;
     JSObject *copyobj = NewObjectWithGivenProto(cx, &ErrorClass, proto, NULL);
     SetExnPrivate(cx, copyobj, copy);

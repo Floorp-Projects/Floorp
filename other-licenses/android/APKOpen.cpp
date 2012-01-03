@@ -299,6 +299,8 @@ SHELL_WRAPPER1(cameraCallbackBridge, jbyteArray)
 SHELL_WRAPPER1(notifyUriVisited, jstring)
 SHELL_WRAPPER3(notifyBatteryChange, jdouble, jboolean, jdouble);
 SHELL_WRAPPER3(notifySmsReceived, jstring, jstring, jlong);
+SHELL_WRAPPER0(bindWidgetTexture);
+SHELL_WRAPPER0_WITH_RETURN(testDirectTexture, bool);
 
 static void * xul_handle = NULL;
 static time_t apk_mtime = 0;
@@ -638,7 +640,7 @@ loadLibs(const char *apkName)
   gettimeofday(&t0, 0);
   struct rusage usage1;
   getrusage(RUSAGE_THREAD, &usage1);
-
+  
   void *zip = map_file(apkName);
   struct cdir_end *dirend = (struct cdir_end *)((char *)zip + zip_size - sizeof(*dirend));
   while ((void *)dirend > zip &&
@@ -704,6 +706,8 @@ loadLibs(const char *apkName)
   GETFUNC(notifyUriVisited);
   GETFUNC(notifyBatteryChange);
   GETFUNC(notifySmsReceived);
+  GETFUNC(bindWidgetTexture);
+  GETFUNC(testDirectTexture);
 #undef GETFUNC
   sStartupTimeline = (uint64_t *)__wrap_dlsym(xul_handle, "_ZN7mozilla15StartupTimeline16sStartupTimelineE");
   gettimeofday(&t1, 0);

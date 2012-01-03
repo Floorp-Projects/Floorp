@@ -46,6 +46,10 @@
                 label="&spellAddToDictionary.label;"
                 accesskey="&spellAddToDictionary.accesskey;"
                 oncommand="InlineSpellCheckerUI.addToDictionary();"/>
+      <menuitem id="spell-undo-add-to-dictionary"
+                label="&spellUndoAddToDictionary.label;"
+                accesskey="&spellUndoAddToDictionary.accesskey;"
+                oncommand="InlineSpellCheckerUI.undoAddToDictionary();" />
       <menuseparator id="spell-suggestions-separator"/>
       <menuitem id="context-openlinkincurrent"
                 label="&openLinkCmdInCurrent.label;"

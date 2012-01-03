@@ -988,6 +988,13 @@ nsPlaintextEditor::UpdateIMEComposition(const nsAString& aCompositionString,
     if (aCompositionString.IsEmpty()) {
       mIMETextNode = nsnull;
     }
+
+    // If still composing, we should fire input event via observer.
+    // Note that if committed, we don't need to notify it since it will be
+    // notified at followed compositionend event.
+    if (mIsIMEComposing) {
+      NotifyEditorObservers();
+    }
   }
 
   return rv;

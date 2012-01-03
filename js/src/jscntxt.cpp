@@ -104,7 +104,6 @@ ThreadData::ThreadData(JSRuntime *rt)
 #ifdef JS_THREADSAFE
     requestDepth(0),
 #endif
-    waiveGCQuota(false),
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     execAlloc(NULL),
     bumpAlloc(NULL),
@@ -152,17 +151,22 @@ ThreadData::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, 
      * The computedSize is 0 because sizeof(DtoaState) isn't available here and
      * it's not worth making it available.
      */
-    *normal = mallocSizeOf(dtoaState, /* sizeof(DtoaState) */0);
+    if (normal)
+        *normal = mallocSizeOf(dtoaState, /* sizeof(DtoaState) */0);
 
-    *temporary = tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
+    if (temporary)
+        *temporary = tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 
-    size_t method = 0, regexp = 0, unused = 0;
-    if (execAlloc)
-        execAlloc->sizeOfCode(&method, &regexp, &unused);
-    JS_ASSERT(method == 0);     /* this execAlloc is only used for regexp code */
-    *regexpCode = regexp + unused;
+    if (regexpCode) {
+        size_t method = 0, regexp = 0, unused = 0;
+        if (execAlloc)
+            execAlloc->sizeOfCode(&method, &regexp, &unused);
+        JS_ASSERT(method == 0);     /* this execAlloc is only used for regexp code */
+        *regexpCode = regexp + unused;
+    }
 
-    *stackCommitted = stackSpace.sizeOfCommitted();
+    if (stackCommitted)
+        *stackCommitted = stackSpace.sizeOfCommitted();
 }
 #endif
 
@@ -253,7 +257,8 @@ JSThread::sizeOfIncludingThis(JSMallocSizeOfFun mallocSizeOf, size_t *normal, si
                               size_t *regexpCode, size_t *stackCommitted)
 {
     data.sizeOfExcludingThis(mallocSizeOf, normal, temporary, regexpCode, stackCommitted);
-    *normal += mallocSizeOf(this, sizeof(JSThread));
+    if (normal)
+        *normal += mallocSizeOf(this, sizeof(JSThread));
 }
 
 JSThread *
@@ -1468,6 +1473,12 @@ JSContext::JSContext(JSRuntime *rt)
 #ifdef JS_THREADSAFE
     PodZero(&threadLinks);
 #endif
+#ifdef JSGC_ROOT_ANALYSIS
+    PodArrayZero(thingGCRooters);
+#ifdef DEBUG
+    checkGCRooters = NULL;
+#endif
+#endif
 }
 
 JSContext::~JSContext()
@@ -1593,13 +1604,13 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
      * Retry when we are done with the background sweeping and have stopped
      * all the allocations and released the empty GC chunks.
      */
-    {
+    ShrinkGCBuffers(this);
 #ifdef JS_THREADSAFE
+    {
         AutoLockGC lock(this);
         gcHelperThread.waitBackgroundSweepOrAllocEnd();
-#endif
-        gcChunkPool.expire(this, true);
     }
+#endif
     if (!p)
         p = OffTheBooks::malloc_(nbytes);
     else if (p == reinterpret_cast<void *>(1))

@@ -336,6 +336,7 @@ if test -n "$gonkdir" ; then
     fi
 
     AC_DEFINE(ANDROID)
+    AC_DEFINE(HAVE_SYS_UIO_H)
     CROSS_COMPILE=1
     MOZ_CHROME_FILE_FORMAT=omni
     ZLIB_DIR=yes
@@ -5037,6 +5038,7 @@ then
     if test -z "$QTDIR"; then
         PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore QtOpenGL)
         AC_CHECK_PROGS(HOST_MOC, $MOC moc, "")
+        AC_CHECK_PROGS(HOST_RCC, $RCC rcc, "")
     else
         MOZ_QT_LIBS="-L$QTDIR/lib/ -lQtGui -lQtNetwork -lQtCore -lQtXml -lQtOpenGL"
 
@@ -5048,12 +5050,19 @@ then
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtNetwork"
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtXml"
         HOST_MOC="$QTDIR/bin/moc"
+        HOST_RCC="$QTDIR/bin/rcc"
     fi
     if test -z "$HOST_MOC"; then
         AC_MSG_ERROR([No acceptable moc preprocessor found. Qt SDK is not installed or --with-qt is
 incorrect])
     fi
+    if test -z "$HOST_RCC"; then
+        AC_MSG_ERROR([No acceptable rcc preprocessor found. Qt SDK is not installed or --with-qt is
+incorrect])
+    fi
+
     MOC=$HOST_MOC
+    RCC=$HOST_RCC
 
     MOZ_ENABLE_QMSYSTEM2=
     PKG_CHECK_MODULES(_QMSYSTEM2, qmsystem2,
@@ -5116,6 +5125,7 @@ AC_SUBST(MOZ_QT_CFLAGS)
 AC_SUBST(MOZ_QT_LIBS)
 
 AC_SUBST(MOC)
+AC_SUBST(RCC)
 
 AC_SUBST(MOZ_DFB)
 AC_SUBST(MOZ_X11)
@@ -8021,7 +8031,7 @@ dnl ========================================================
 dnl Graphics checks.
 dnl ========================================================
 
-if test "${OS_ARCH}" = "Darwin" -o "${OS_TARGET}" = "Android"; then
+if test "${OS_ARCH}" = "Darwin" -o "${MOZ_WIDGET_TOOLKIT}" = "android"; then
 MOZ_ENABLE_SKIA=1
 else
 MOZ_ENABLE_SKIA=

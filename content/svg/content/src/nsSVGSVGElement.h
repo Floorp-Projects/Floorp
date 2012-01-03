@@ -42,6 +42,7 @@
 
 #include "nsSVGStylableElement.h"
 #include "nsIDOMSVGSVGElement.h"
+#include "DOMSVGTests.h"
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsIDOMSVGLocatable.h"
 #include "nsIDOMSVGZoomAndPan.h"
@@ -118,6 +119,7 @@ public:
 
 class nsSVGSVGElement : public nsSVGSVGElementBase,
                         public nsIDOMSVGSVGElement,
+                        public DOMSVGTests,
                         public nsIDOMSVGFitToViewBox,
                         public nsIDOMSVGLocatable,
                         public nsIDOMSVGZoomAndPan

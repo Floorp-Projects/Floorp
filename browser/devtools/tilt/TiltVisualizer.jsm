@@ -221,6 +221,7 @@ TiltVisualizer.Presenter = function TV_Presenter(
    * Modified by events in the controller through delegate functions.
    */
   this.transforms = {
+    zoom: TiltUtils.getDocumentZoom(),
     offset: vec3.create(),      // mesh offset, aligned to the viewport center
     translation: vec3.create(), // scene translation, on the [x, y, z] axis
     rotation: quat4.create()    // scene rotation, expressed as a quaternion
@@ -337,6 +338,8 @@ TiltVisualizer.Presenter.prototype = {
     // offset the visualization mesh to center
     renderer.translate(transforms.offset[0],
                        transforms.offset[1] + transforms.translation[1], 0);
+
+    renderer.scale(transforms.zoom, transforms.zoom);
 
     // draw the visualization mesh
     renderer.strokeWeight(2);
@@ -492,12 +495,13 @@ TiltVisualizer.Presenter.prototype = {
       this.highlightNode(this.inspectorUI.selection);
     }
 
-    let width = renderer.width;
-    let height = renderer.height;
+    let zoom = TiltUtils.getDocumentZoom();
+    let width = Math.min(aData.meshWidth * zoom, renderer.width);
+    let height = Math.min(aData.meshHeight * zoom, renderer.height);
 
     // set the necessary mesh offsets
-    this.transforms.offset[0] = -Math.min(aData.meshWidth, width) * 0.5;
-    this.transforms.offset[1] = -Math.min(aData.meshHeight, height) * 0.5;
+    this.transforms.offset[0] = -width * 0.5;
+    this.transforms.offset[1] = -height * 0.5;
 
     // make sure the canvas is opaque now that the initialization is finished
     this.canvas.style.background = TiltVisualizerStyle.canvas.background;
@@ -559,8 +563,9 @@ TiltVisualizer.Presenter.prototype = {
    */
   onResize: function TVP_onResize(e)
   {
-    let width = e.target.innerWidth;
-    let height = e.target.innerHeight;
+    let zoom = TiltUtils.getDocumentZoom();
+    let width = e.target.innerWidth * zoom;
+    let height = e.target.innerHeight * zoom;
 
     // handle aspect ratio changes to update the projection matrix
     this.renderer.width = width;
@@ -703,9 +708,12 @@ TiltVisualizer.Presenter.prototype = {
       }
     }, false);
 
-    let width = this.renderer.width;
-    let height = this.renderer.height;
+    let zoom = TiltUtils.getDocumentZoom();
+    let width = this.renderer.width * zoom;
+    let height = this.renderer.height * zoom;
     let mesh = this.meshStacks;
+    x *= zoom;
+    y *= zoom;
 
     // create a ray following the mouse direction from the near clipping plane
     // to the far clipping plane, to check for intersections with the mesh,
@@ -853,6 +861,7 @@ TiltVisualizer.Controller = function TV_Controller(aCanvas, aPresenter)
   aCanvas.addEventListener("MozMousePixelScroll", this.onMozScroll, false);
   aCanvas.addEventListener("keydown", this.onKeyDown, false);
   aCanvas.addEventListener("keyup", this.onKeyUp, false);
+  aCanvas.addEventListener("blur", this.onBlur, false);
 
   // handle resize events to change the arcball dimensions
   aPresenter.contentWindow.addEventListener("resize", this.onResize, false);
@@ -987,7 +996,11 @@ TiltVisualizer.Controller.prototype = {
       e.preventDefault();
       e.stopPropagation();
     }
-    this.arcball.keyDown(code);
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+      this.arcball.cancelKeyEvents();
+    } else {
+      this.arcball.keyDown(code);
+    }
   },
 
   /**
@@ -1009,12 +1022,20 @@ TiltVisualizer.Controller.prototype = {
   },
 
   /**
+   * Called when the canvas looses focus.
+   */
+  onBlur: function TVC_onBlur(e) {
+    this.arcball.cancelKeyEvents();
+  },
+
+  /**
    * Called when the content window of the current browser is resized.
    */
   onResize: function TVC_onResize(e)
   {
-    let width = e.target.innerWidth;
-    let height = e.target.innerHeight;
+    let zoom = TiltUtils.getDocumentZoom();
+    let width = e.target.innerWidth * zoom;
+    let height = e.target.innerHeight * zoom;
 
     this.arcball.resize(width, height);
   },
@@ -1049,6 +1070,7 @@ TiltVisualizer.Controller.prototype = {
     canvas.removeEventListener("MozMousePixelScroll", this.onMozScroll, false);
     canvas.removeEventListener("keydown", this.onKeyDown, false);
     canvas.removeEventListener("keyup", this.onKeyUp, false);
+    canvas.removeEventListener("blur", this.onBlur, false);
     presenter.contentWindow.removeEventListener("resize", this.onResize,false);
     presenter.ondraw = null;
   }
@@ -1457,6 +1479,13 @@ TiltVisualizer.Arcball.prototype = {
       aSphereVec[1] = y;
       aSphereVec[2] = Math.sqrt(1 - sqlength);
     }
+  },
+
+  /**
+   * Cancels all pending transformations caused by key events.
+   */
+  cancelKeyEvents: function TVA_cancelKeyEvents() {
+    this._keyCode = {};
   },
 
   /**
