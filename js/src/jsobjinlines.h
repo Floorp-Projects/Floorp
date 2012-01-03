@@ -44,28 +44,23 @@
 #include <new>
 
 #include "jsarray.h"
+#include "jsbool.h"
+#include "jscntxt.h"
 #include "jsdate.h"
 #include "jsfun.h"
 #include "jsgcmark.h"
 #include "jsiter.h"
 #include "jslock.h"
+#include "jsnum.h"
 #include "jsobj.h"
 #include "jsprobes.h"
 #include "jspropertytree.h"
 #include "jsproxy.h"
 #include "jsscope.h"
+#include "jsstr.h"
 #include "jstypedarray.h"
 #include "jsxml.h"
 #include "jswrapper.h"
-
-/* Headers included for inline implementations used by this header. */
-#include "jsbool.h"
-#include "jscntxt.h"
-#include "jsnum.h"
-#include "jsinferinlines.h"
-#include "jsscopeinlines.h"
-#include "jsscriptinlines.h"
-#include "jsstr.h"
 
 #include "gc/Barrier.h"
 #include "js/TemplateLib.h"
@@ -74,7 +69,9 @@
 #include "jsatominlines.h"
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
+#include "jsinferinlines.h"
 #include "jsscopeinlines.h"
+#include "jsscriptinlines.h"
 
 #include "gc/Barrier-inl.h"
 #include "vm/String-inl.h"
@@ -288,53 +285,10 @@ JSObject::getParent() const
     return lastProperty()->getObjectParent();
 }
 
-inline bool
-JSObject::isInternalScope() const
-{
-    return isCall() || isDeclEnv() || isBlock() || isWith();
-}
-
 inline JSObject *
-JSObject::internalScopeChain() const
+JSObject::enclosingScope()
 {
-    JS_ASSERT(isInternalScope());
-    return &getFixedSlot(SCOPE_CHAIN_SLOT).toObject();
-}
-
-inline bool
-JSObject::setInternalScopeChain(JSContext *cx, JSObject *obj)
-{
-    JS_ASSERT(isInternalScope());
-    if (!obj->setDelegate(cx))
-        return false;
-    setFixedSlot(SCOPE_CHAIN_SLOT, JS::ObjectValue(*obj));
-    return true;
-}
-
-/*static*/ inline size_t
-JSObject::offsetOfInternalScopeChain()
-{
-    return getFixedSlotOffset(SCOPE_CHAIN_SLOT);
-}
-
-inline JSObject *
-JSObject::scopeChain() const
-{
-    return isInternalScope() ? internalScopeChain() : getParent();
-}
-
-inline JSObject *
-JSObject::staticBlockScopeChain() const
-{
-    JS_ASSERT(isStaticBlock());
-    return getFixedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
-}
-
-inline void
-JSObject::setStaticBlockScopeChain(JSObject *obj)
-{
-    JS_ASSERT(isStaticBlock());
-    setFixedSlot(SCOPE_CHAIN_SLOT, JS::ObjectOrNullValue(obj));
+    return isScope() ? &asScope().enclosingScope() : getParent();
 }
 
 /*
@@ -458,7 +412,7 @@ JSObject::getRawSlots()
     return slots;
 }
 
-inline js::Value
+inline const js::Value &
 JSObject::getReservedSlot(uintN index) const
 {
     JS_ASSERT(index < JSSLOT_FREE(getClass()));
@@ -805,18 +759,6 @@ JSObject::setQNameLocalName(JSAtom *name)
     setSlot(JSSLOT_QNAME_LOCAL_NAME, name ? js::StringValue(name) : js::UndefinedValue());
 }
 
-inline JSObject *
-JSObject::getWithThis() const
-{
-    return &getFixedSlot(JSSLOT_WITH_THIS).toObject();
-}
-
-inline void
-JSObject::setWithThis(JSObject *thisp)
-{
-    setFixedSlot(JSSLOT_WITH_THIS, js::ObjectValue(*thisp));
-}
-
 inline bool
 JSObject::setSingletonType(JSContext *cx)
 {
@@ -947,31 +889,32 @@ inline bool JSObject::hasSpecialEquality() const
 
 inline bool JSObject::isArguments() const { return isNormalArguments() || isStrictArguments(); }
 inline bool JSObject::isArrayBuffer() const { return hasClass(&js::ArrayBufferClass); }
-inline bool JSObject::isNormalArguments() const { return hasClass(&js::NormalArgumentsObjectClass); }
-inline bool JSObject::isStrictArguments() const { return hasClass(&js::StrictArgumentsObjectClass); }
-inline bool JSObject::isNumber() const { return hasClass(&js::NumberClass); }
-inline bool JSObject::isBoolean() const { return hasClass(&js::BooleanClass); }
-inline bool JSObject::isString() const { return hasClass(&js::StringClass); }
-inline bool JSObject::isPrimitive() const { return isNumber() || isString() || isBoolean(); }
-inline bool JSObject::isDate() const { return hasClass(&js::DateClass); }
-inline bool JSObject::isFunction() const { return hasClass(&js::FunctionClass); }
-inline bool JSObject::isObject() const { return hasClass(&js::ObjectClass); }
-inline bool JSObject::isWith() const { return hasClass(&js::WithClass); }
 inline bool JSObject::isBlock() const { return hasClass(&js::BlockClass); }
-inline bool JSObject::isStaticBlock() const { return isBlock() && !getProto(); }
-inline bool JSObject::isClonedBlock() const { return isBlock() && !!getProto(); }
+inline bool JSObject::isBoolean() const { return hasClass(&js::BooleanClass); }
 inline bool JSObject::isCall() const { return hasClass(&js::CallClass); }
+inline bool JSObject::isClonedBlock() const { return isBlock() && !!getProto(); }
+inline bool JSObject::isDate() const { return hasClass(&js::DateClass); }
 inline bool JSObject::isDeclEnv() const { return hasClass(&js::DeclEnvClass); }
-inline bool JSObject::isRegExp() const { return hasClass(&js::RegExpClass); }
-inline bool JSObject::isScript() const { return hasClass(&js::ScriptClass); }
+inline bool JSObject::isError() const { return hasClass(&js::ErrorClass); }
+inline bool JSObject::isFunction() const { return hasClass(&js::FunctionClass); }
+inline bool JSObject::isFunctionProxy() const { return hasClass(&js::FunctionProxyClass); }
 inline bool JSObject::isGenerator() const { return hasClass(&js::GeneratorClass); }
 inline bool JSObject::isIterator() const { return hasClass(&js::IteratorClass); }
-inline bool JSObject::isStopIteration() const { return hasClass(&js::StopIterationClass); }
-inline bool JSObject::isError() const { return hasClass(&js::ErrorClass); }
-inline bool JSObject::isXML() const { return hasClass(&js::XMLClass); }
 inline bool JSObject::isNamespace() const { return hasClass(&js::NamespaceClass); }
+inline bool JSObject::isNestedScope() const { return isBlock() || isWith(); }
+inline bool JSObject::isNormalArguments() const { return hasClass(&js::NormalArgumentsObjectClass); }
+inline bool JSObject::isNumber() const { return hasClass(&js::NumberClass); }
+inline bool JSObject::isObject() const { return hasClass(&js::ObjectClass); }
+inline bool JSObject::isPrimitive() const { return isNumber() || isString() || isBoolean(); }
+inline bool JSObject::isRegExp() const { return hasClass(&js::RegExpClass); }
+inline bool JSObject::isScope() const { return isCall() || isDeclEnv() || isNestedScope(); }
+inline bool JSObject::isStaticBlock() const { return isBlock() && !getProto(); }
+inline bool JSObject::isStopIteration() const { return hasClass(&js::StopIterationClass); }
+inline bool JSObject::isStrictArguments() const { return hasClass(&js::StrictArgumentsObjectClass); }
+inline bool JSObject::isString() const { return hasClass(&js::StringClass); }
 inline bool JSObject::isWeakMap() const { return hasClass(&js::WeakMapClass); }
-inline bool JSObject::isFunctionProxy() const { return hasClass(&js::FunctionProxyClass); }
+inline bool JSObject::isWith() const { return hasClass(&js::WithClass); }
+inline bool JSObject::isXML() const { return hasClass(&js::XMLClass); }
 
 inline bool JSObject::isArray() const
 {
@@ -1432,8 +1375,8 @@ JSObject::isWrapper() const
     return js::IsWrapper(this);
 }
 
-inline js::GlobalObject *
-JSObject::getGlobal() const
+inline js::GlobalObject &
+JSObject::global() const
 {
     JSObject *obj = const_cast<JSObject *>(this);
     while (JSObject *parent = obj->getParent())
@@ -1445,13 +1388,6 @@ static inline bool
 js_IsCallable(const js::Value &v)
 {
     return v.isObject() && v.toObject().isCallable();
-}
-
-inline JSObject *
-js_UnwrapWithObject(JSContext *cx, JSObject *withobj)
-{
-    JS_ASSERT(withobj->isWith());
-    return withobj->getProto();
 }
 
 namespace js {
@@ -1773,7 +1709,7 @@ inline GlobalObject *
 GetCurrentGlobal(JSContext *cx)
 {
     JSObject *scopeChain = (cx->hasfp()) ? &cx->fp()->scopeChain() : cx->globalObject;
-    return scopeChain ? scopeChain->getGlobal() : NULL;
+    return scopeChain ? &scopeChain->global() : NULL;
 }
 
 bool

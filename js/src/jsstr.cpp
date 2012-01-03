@@ -1403,7 +1403,7 @@ class RegExpGuard
     init(uintN argc, Value *vp, bool convertVoid = false)
     {
         if (argc != 0 && ValueIsRegExp(vp[2])) {
-            if (!rep.reset(vp[2].toObject().asRegExp()))
+            if (!rep.reset(&vp[2].toObject().asRegExp()))
                 return false;
         } else {
             if (convertVoid && (argc == 0 || vp[2].isUndefined())) {
@@ -2538,8 +2538,7 @@ js::str_split(JSContext *cx, uintN argc, Value *vp)
     bool sepUndefined = (argc == 0 || vp[2].isUndefined());
     if (!sepUndefined) {
         if (ValueIsRegExp(vp[2])) {
-            RegExpObject *reobj = vp[2].toObject().asRegExp();
-            if (!matcher.reset(reobj))
+            if (!matcher.reset(&vp[2].toObject().asRegExp()))
                 return false;
         } else {
             JSString *sep = ToString(cx, vp[2]);
@@ -3033,10 +3032,10 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = obj->asGlobal();
+    GlobalObject *global = &obj->asGlobal();
 
     JSObject *proto = global->createBlankPrototype(cx, &StringClass);
-    if (!proto || !proto->asString()->init(cx, cx->runtime->emptyString))
+    if (!proto || !proto->asString().init(cx, cx->runtime->emptyString))
         return NULL;
 
     /* Now create the String function. */

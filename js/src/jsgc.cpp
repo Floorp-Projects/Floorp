@@ -100,7 +100,7 @@
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 
-#include "vm/CallObject-inl.h"
+#include "vm/ScopeObject-inl.h"
 #include "vm/String-inl.h"
 
 #ifdef MOZ_VALGRIND
@@ -2132,7 +2132,7 @@ MarkWeakReferences(GCMarker *gcmarker)
     JS_ASSERT(gcmarker->isMarkStackEmpty());
 }
 
-JS_REQUIRES_STACK void
+void
 MarkRuntime(JSTracer *trc)
 {
     JSRuntime *rt = trc->runtime;
@@ -3480,7 +3480,7 @@ CheckStackRoot(JSTracer *trc, jsuword *w)
             }
             CheckRoot *check = acx->checkGCRooters;
             while (check) {
-                if (check->contains((uint8 *) w, sizeof(w)))
+                if (check->contains(static_cast<uint8_t*>(w), sizeof(w)))
                     matched = true;
                 check = check->previous();
             }

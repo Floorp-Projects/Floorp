@@ -201,11 +201,6 @@
 #define NS_MACICELANDICTOUNICODE_CID \
   { 0x6394eeab, 0xfc3d, 0x11d2, {0xb3, 0xb8, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
 
-// Class ID for our GEOSTD8ToUnicode charset converter
-// {6394EEAF-FC3D-11d2-B3B8-00805F8A6670}
-#define NS_GEOSTD8TOUNICODE_CID \
-  { 0x6394eeaf, 0xfc3d, 0x11d2, {0xb3, 0xb8, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
 // Class ID for our ARMSCII8ToUnicode charset converter
 // {6394EEAC-FC3D-11d2-B3B8-00805F8A6670}
 #define NS_ARMSCII8TOUNICODE_CID \
@@ -396,11 +391,6 @@
 // {6394EEBB-FC3D-11d2-B3B8-00805F8A6670}
 #define NS_UNICODETOMACICELANDIC_CID \
   { 0x6394eebb, 0xfc3d, 0x11d2, {0xb3, 0xb8, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
-// Class ID for our UnicodeToGEOSTD8 charset converter
-// {6394EEBE-FC3D-11d2-B3B8-00805F8A6670}
-#define NS_UNICODETOGEOSTD8_CID \
-  { 0x6394eebe, 0xfc3d, 0x11d2, {0xb3, 0xb8, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
 
 // Class ID for our UnicodeToARMSCII8 charset converter
 // {6394EEBC-FC3D-11d2-B3B8-00805F8A6670}

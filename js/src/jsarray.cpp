@@ -156,9 +156,9 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     }
 
     if (obj->isArguments()) {
-        ArgumentsObject *argsobj = obj->asArguments();
-        if (!argsobj->hasOverriddenLength()) {
-            *lengthp = argsobj->initialLength();
+        ArgumentsObject &argsobj = obj->asArguments();
+        if (!argsobj.hasOverriddenLength()) {
+            *lengthp = argsobj.initialLength();
             return true;
         }
     }
@@ -415,7 +415,7 @@ GetElement(JSContext *cx, JSObject *obj, IndexType index, JSBool *hole, Value *v
         return JS_TRUE;
     }
     if (obj->isArguments()) {
-        if (obj->asArguments()->getElement(uint32_t(index), vp)) {
+        if (obj->asArguments().getElement(uint32_t(index), vp)) {
             *hole = JS_FALSE;
             return true;
         }
@@ -452,9 +452,9 @@ GetElements(JSContext *cx, JSObject *aobj, jsuint length, Value *vp)
     }
 
     if (aobj->isArguments()) {
-        ArgumentsObject *argsobj = aobj->asArguments();
-        if (!argsobj->hasOverriddenLength()) {
-            if (argsobj->getElements(0, length, vp))
+        ArgumentsObject &argsobj = aobj->asArguments();
+        if (!argsobj.hasOverriddenLength()) {
+            if (argsobj.getElements(0, length, vp))
                 return true;
         }
     }
@@ -2015,7 +2015,7 @@ struct SortComparatorFunction {
     SortComparatorFunction(JSContext *cx, const Value &fval, InvokeArgsGuard &ag)
       : cx(cx), fval(fval), ag(ag) { }
 
-    bool JS_REQUIRES_STACK operator()(const Value &a, const Value &b, bool *lessOrEqualp);
+    bool operator()(const Value &a, const Value &b, bool *lessOrEqualp);
 };
 
 bool
@@ -3586,7 +3586,7 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
     JS_ASSERT(obj->isNative());
 
     RootedVar<GlobalObject*> global(cx);
-    global = obj->asGlobal();
+    global = &obj->asGlobal();
 
     RootedVarObject arrayProto(cx);
     arrayProto = global->createBlankPrototype(cx, &SlowArrayClass);

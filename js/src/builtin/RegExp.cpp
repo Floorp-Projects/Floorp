@@ -244,7 +244,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder,
             return false;
         }
 
-        RegExpObject *reobj = builder.build(sourceObj.asRegExp());
+        RegExpObject *reobj = builder.build(&sourceObj.asRegExp());
         if (!reobj)
             return false;
         *rval = ObjectValue(*reobj);
@@ -300,7 +300,7 @@ regexp_compile(JSContext *cx, uintN argc, Value *vp)
     if (!obj)
         return ok;
 
-    RegExpObjectBuilder builder(cx, obj->asRegExp());
+    RegExpObjectBuilder builder(cx, &obj->asRegExp());
     return CompileRegExpObject(cx, builder, args.length(), args.array(), &args.rval());
 }
 
@@ -339,7 +339,7 @@ regexp_toString(JSContext *cx, uintN argc, Value *vp)
     if (!obj)
         return ok;
 
-    JSString *str = obj->asRegExp()->toString(cx);
+    JSString *str = obj->asRegExp().toString(cx);
     if (!str)
         return false;
 
@@ -453,14 +453,14 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = obj->asGlobal();
+    GlobalObject *global = &obj->asGlobal();
 
     JSObject *proto = global->createBlankPrototype(cx, &RegExpClass);
     if (!proto)
         return NULL;
     proto->setPrivate(NULL);
 
-    RegExpObject *reproto = proto->asRegExp();
+    RegExpObject *reproto = &proto->asRegExp();
     RegExpObjectBuilder builder(cx, reproto);
     if (!builder.build(cx->runtime->emptyString, RegExpFlag(0)))
         return NULL;
@@ -514,7 +514,7 @@ ExecuteRegExp(JSContext *cx, Native native, uintN argc, Value *vp)
     if (!obj)
         return ok;
 
-    RegExpObject *reobj = obj->asRegExp();
+    RegExpObject *reobj = &obj->asRegExp();
 
     RegExpMatcher matcher(cx);
     if (reobj->startsWithAtomizedGreedyStar()) {

@@ -4656,7 +4656,7 @@ HasFunctionProperty(JSContext *cx, JSObject *obj, jsid funid, JSBool *found)
              * Search in String.prototype to set found whenever
              * GetXMLFunction returns existing function.
              */
-            JSObject *proto = obj->getGlobal()->getOrCreateStringPrototype(cx);
+            JSObject *proto = obj->global().getOrCreateStringPrototype(cx);
             if (!proto)
                 return false;
 
@@ -7404,7 +7404,7 @@ js_InitNamespaceClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = obj->asGlobal();
+    GlobalObject *global = &obj->asGlobal();
 
     JSObject *namespaceProto = global->createBlankPrototype(cx, &NamespaceClass);
     if (!namespaceProto)
@@ -7437,7 +7437,7 @@ js_InitQNameClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = obj->asGlobal();
+    GlobalObject *global = &obj->asGlobal();
 
     JSObject *qnameProto = global->createBlankPrototype(cx, &QNameClass);
     if (!qnameProto)
@@ -7469,7 +7469,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = obj->asGlobal();
+    GlobalObject *global = &obj->asGlobal();
 
     JSObject *xmlProto = global->createBlankPrototype(cx, &XMLClass);
     if (!xmlProto)
@@ -7595,9 +7595,8 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         return false;
 
     obj = NULL;
-    for (tmp = scopeChain; tmp; tmp = tmp->scopeChain()) {
-        Class *clasp = tmp->getClass();
-        if (clasp == &BlockClass || clasp == &WithClass)
+    for (tmp = scopeChain; tmp; tmp = tmp->enclosingScope()) {
+        if (tmp->isBlock() || tmp->isWith())
             continue;
         if (!tmp->getSpecial(cx, SpecialId::defaultXMLNamespace(), &v))
             return JS_FALSE;
@@ -7708,7 +7707,7 @@ js_ValueToXMLString(JSContext *cx, const Value &v)
 JSBool
 js_GetAnyName(JSContext *cx, jsid *idp)
 {
-    JSObject *global = cx->hasfp() ? cx->fp()->scopeChain().getGlobal() : cx->globalObject;
+    JSObject *global = cx->hasfp() ? &cx->fp()->scopeChain().global() : cx->globalObject;
     Value v = global->getReservedSlot(JSProto_AnyName);
     if (v.isUndefined()) {
         JSObject *obj = NewObjectWithGivenProto(cx, &AnyNameClass, NULL, global);
@@ -7793,7 +7792,7 @@ js_FindXMLProperty(JSContext *cx, const Value &nameval, JSObject **objp, jsid *i
                 return JS_TRUE;
             }
         }
-    } while ((obj = obj->scopeChain()) != NULL);
+    } while ((obj = obj->enclosingScope()) != NULL);
 
     JSAutoByteString printable;
     JSString *str = ConvertQNameToString(cx, nameobj);
@@ -7829,7 +7828,7 @@ GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         return true;
 
     /* Search in String.prototype to implement 11.2.2.1 Step 3(f). */
-    JSObject *proto = obj->getGlobal()->getOrCreateStringPrototype(cx);
+    JSObject *proto = obj->global().getOrCreateStringPrototype(cx);
     if (!proto)
         return false;
 
