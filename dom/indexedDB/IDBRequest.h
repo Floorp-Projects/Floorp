@@ -57,14 +57,14 @@ BEGIN_INDEXEDDB_NAMESPACE
 class HelperBase;
 class IDBTransaction;
 
-class IDBRequest : public nsDOMEventTargetHelper,
+class IDBRequest : public nsDOMEventTargetWrapperCache,
                    public nsIIDBRequest
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIIDBREQUEST
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(IDBRequest,
-                                                         nsDOMEventTargetHelper)
+                                                         nsDOMEventTargetWrapperCache)
 
   static
   already_AddRefed<IDBRequest> Create(nsISupports* aSource,
@@ -94,13 +94,11 @@ public:
 
   nsIScriptContext* ScriptContext()
   {
-    NS_ASSERTION(mScriptContext, "This should never be null!");
     return mScriptContext;
   }
 
   nsPIDOMWindow* Owner()
   {
-    NS_ASSERTION(mOwner, "This should never be null!");
     return mOwner;
   }
 
