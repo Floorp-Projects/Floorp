@@ -102,7 +102,6 @@ class LIRGeneratorShared : public MInstructionVisitor
     inline LUse use(MDefinition *mir, LUse policy);
     inline LUse use(MDefinition *mir);
     inline LUse useAtStart(MDefinition *mir);
-    inline LUse useCopy(MDefinition *mir);
     inline LUse useRegister(MDefinition *mir);
     inline LUse useRegisterAtStart(MDefinition *mir);
     inline LUse useFixed(MDefinition *mir, Register reg);
