@@ -250,15 +250,18 @@ class TypedOrValueRegister
     MIRType type_;
 
     // Space to hold either an AnyRegister or a ValueOperand.
-    char data[tl::Max<sizeof(AnyRegister), sizeof(ValueOperand)>::result];
+    union U {
+        AlignedStorage2<AnyRegister> typed;
+        AlignedStorage2<ValueOperand> value;
+    } data;
 
     AnyRegister &dataTyped() {
         JS_ASSERT(hasTyped());
-        return *(AnyRegister *)&data;
+        return *data.typed.addr();
     }
     ValueOperand &dataValue() {
         JS_ASSERT(hasValue());
-        return *(ValueOperand *)&data;
+        return *data.value.addr();
     }
 
   public:
