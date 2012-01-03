@@ -612,8 +612,8 @@ abstract public class GeckoApp
                 if (getLayerController().getLayerClient() != mSoftwareLayerClient)
                     return;
 
-                if (mLastUri == lastHistoryEntry.mUri &&
-                    mLastTitle == lastHistoryEntry.mTitle)
+                if (mLastUri.equals(lastHistoryEntry.mUri) &&
+                    mLastTitle.equals(lastHistoryEntry.mTitle))
                     return;
    
                 mLastViewport = mSoftwareLayerClient.getGeckoViewportMetrics().toJSON();
