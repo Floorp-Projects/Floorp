@@ -1891,7 +1891,7 @@ TypeHasGlobal(Type type, JSObject *global)
         return false;
 
     if (type.isSingleObject())
-        return type.singleObject()->getGlobal() == global;
+        return &type.singleObject()->global() == global;
 
     if (type.isTypeObject())
         return type.typeObject()->getGlobal() == global;
@@ -5199,8 +5199,8 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
         return true;
     }
 
-    JS_ASSERT_IF(fun && scope, fun->getGlobal() == scope->getGlobal());
-    script->types->global = fun ? fun->getGlobal() : scope->getGlobal();
+    JS_ASSERT_IF(fun && scope, fun->global() == scope->global());
+    script->types->global = fun ? &fun->global() : &scope->global();
 
     /*
      * Update the parent in the script's bindings. The bindings are created
@@ -5231,7 +5231,7 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
      * the script is nested inside.
      */
     while (!scope->isCall())
-        scope = scope->internalScopeChain();
+        scope = &scope->asScope().enclosingScope();
 
     CallObject &call = scope->asCall();
 
@@ -5264,9 +5264,9 @@ TypeScript::SetScope(JSContext *cx, JSScript *script, JSObject *scope)
     if (!parent->ensureHasTypes(cx))
         return false;
     if (!parent->types->hasScope()) {
-        if (!SetScope(cx, parent, scope->internalScopeChain()))
+        if (!SetScope(cx, parent, &call.enclosingScope()))
             return false;
-        parent->nesting()->activeCall = scope;
+        parent->nesting()->activeCall = &call;
         parent->nesting()->argArray = Valueify(call.argArray());
         parent->nesting()->varArray = Valueify(call.varArray());
     }
@@ -5359,7 +5359,7 @@ CheckNestingParent(JSContext *cx, JSObject *scope, JSScript *script)
     JS_ASSERT(parent);
 
     while (!scope->isCall() || scope->asCall().getCalleeFunction()->script() != parent)
-        scope = scope->internalScopeChain();
+        scope = &scope->asScope().enclosingScope();
 
     if (scope != parent->nesting()->activeCall) {
         parent->reentrantOuterFunction = true;
@@ -5374,7 +5374,7 @@ CheckNestingParent(JSContext *cx, JSObject *scope, JSScript *script)
          * parent.
          */
         if (parent->nesting()->parent) {
-            scope = scope->internalScopeChain();
+            scope = &scope->asScope().enclosingScope();
             script = parent;
             goto restart;
         }

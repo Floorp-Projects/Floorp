@@ -92,7 +92,7 @@ JS_GetObjectFunction(JSObject *obj)
 JS_FRIEND_API(JSObject *)
 JS_GetGlobalForFrame(JSStackFrame *fp)
 {
-    return Valueify(fp)->scopeChain().getGlobal();
+    return &Valueify(fp)->scopeChain().global();
 }
 
 JS_FRIEND_API(JSBool)
@@ -197,25 +197,25 @@ js::IsSystemCompartment(const JSCompartment *c)
 }
 
 JS_FRIEND_API(bool)
-js::IsScopeObject(const JSObject *obj)
+js::IsScopeObject(JSObject *obj)
 {
-    return obj->isInternalScope();
+    return obj->isScope();
 }
 
 JS_FRIEND_API(JSObject *)
-js::GetObjectParentMaybeScope(const JSObject *obj)
+js::GetObjectParentMaybeScope(JSObject *obj)
 {
-    return obj->scopeChain();
+    return obj->enclosingScope();
 }
 
 JS_FRIEND_API(JSObject *)
 js::GetGlobalForObjectCrossCompartment(JSObject *obj)
 {
-    return obj->getGlobal();
+    return &obj->global();
 }
 
 JS_FRIEND_API(uint32_t)
-js::GetObjectSlotSpan(const JSObject *obj)
+js::GetObjectSlotSpan(JSObject *obj)
 {
     return obj->slotSpan();
 }

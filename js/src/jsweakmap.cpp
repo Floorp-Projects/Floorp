@@ -330,7 +330,7 @@ js_InitWeakMapClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = obj->asGlobal();
+    GlobalObject *global = &obj->asGlobal();
 
     JSObject *weakMapProto = global->createBlankPrototype(cx, &WeakMapClass);
     if (!weakMapProto)

@@ -48,7 +48,7 @@
 
 namespace js {
 
-class StringObject : public ::JSObject
+class StringObject : public JSObject
 {
     static const uintN PRIMITIVE_THIS_SLOT = 0;
     static const uintN LENGTH_SLOT = 1;
