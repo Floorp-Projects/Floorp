@@ -76,6 +76,7 @@ _BROWSER_TEST_FILES = \
 	browser_tilt_utils05.js \
 	browser_tilt_utils06.js \
 	browser_tilt_visualizer.js \
+	browser_tilt_zoom.js \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
