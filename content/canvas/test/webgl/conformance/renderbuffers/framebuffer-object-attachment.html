@@ -1,5 +1,8 @@
 <!--
-Copyright (c) 2011 The Chromium Authors. All rights reserved.
+Copyright (c) 2011 The Chromium Authors.
+Copyright (c) 2011 Mozilla Foundation.
+
+All rights reserved.
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
  -->
@@ -31,7 +34,7 @@ const ALLOW_COMPLETE              = 0x01;
 const ALLOW_UNSUPPORTED           = 0x02;
 const ALLOW_INCOMPLETE_ATTACHMENT = 0x04;
 
-function CheckFramebufferForAllowedStatuses(allowedStatuses)
+function checkFramebufferForAllowedStatuses(allowedStatuses)
 {
     // If the framebuffer is in an error state for multiple reasons,
     // we can't guarantee which one will be reported.
@@ -53,7 +56,7 @@ function testAttachment(attachment, buffer, allowedStatuses)
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, colorBuffer);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachment, gl.RENDERBUFFER, buffer);
     glErrorShouldBe(gl, gl.NO_ERROR);
-    CheckFramebufferForAllowedStatuses(allowedStatuses);
+    checkFramebufferForAllowedStatuses(allowedStatuses);
     if ((allowedStatuses & ALLOW_COMPLETE) == 0) {
         gl.clear(gl.COLOR_BUFFER_BIT);
         glErrorShouldBe(gl, gl.INVALID_FRAMEBUFFER_OPERATION);
@@ -72,7 +75,7 @@ function testAttachments(attachment0, buffer0, attachment1, buffer1, allowedStat
     glErrorShouldBe(gl, gl.NO_ERROR);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachment1, gl.RENDERBUFFER, buffer1);
     glErrorShouldBe(gl, gl.NO_ERROR);
-    CheckFramebufferForAllowedStatuses(allowedStatuses);
+    checkFramebufferForAllowedStatuses(allowedStatuses);
     gl.deleteFramebuffer(fbo);
 }
 
@@ -238,7 +241,7 @@ if (checkValidColorDepthCombination()) {
     testUsingIncompleteFramebuffer();
 }
 
-function CheckFramebuffer(expected) {
+function checkFramebuffer(expected) {
     var actual = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     var msg = "gl.checkFramebufferStatus(gl.FRAMEBUFFER) should be " + wtu.glEnumToString(gl, expected) + " was " + wtu.glEnumToString(gl, actual);
     if (expected != gl.FRAMEBUFFER_COMPLETE) {
@@ -274,18 +277,18 @@ function testUsingIncompleteFramebuffer() {
         gl.FRAMEBUFFER, depthAttachment, gl.RENDERBUFFER, depthBuffer);
     gl.renderbufferStorage(gl.RENDERBUFFER, depthFormat, 16, 16);
     glErrorShouldBe(gl, gl.NO_ERROR);
-    CheckFramebuffer(gl.FRAMEBUFFER_COMPLETE);
+    checkFramebuffer(gl.FRAMEBUFFER_COMPLETE);
 
     // We pick this combination because it works on desktop OpenGL but should not work on OpenGL ES 2.0
     gl.renderbufferStorage(gl.RENDERBUFFER, depthFormat, 32, 16);
-    CheckFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS);
+    checkFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS);
     debug("");
     debug("Drawing or reading from an incomplete framebuffer should generate INVALID_FRAMEBUFFER_OPERATION");
     testRenderingAndReading();
 
     shouldBeNonNull("fbo2 = gl.createFramebuffer()");
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo2);
-    CheckFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT);
+    checkFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT);
     debug("");
     debug("Drawing or reading from an incomplete framebuffer should generate INVALID_FRAMEBUFFER_OPERATION");
     testRenderingAndReading();
@@ -325,20 +328,20 @@ function testFramebufferIncompleteAttachment() {
     gl.framebufferRenderbuffer(
         gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, colorBuffer);
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, 16, 16);
-    CheckFramebuffer(gl.FRAMEBUFFER_COMPLETE);
+    checkFramebuffer(gl.FRAMEBUFFER_COMPLETE);
 
     debug("");
     debug("Wrong storage type for type of attachment be FRAMEBUFFER_INCOMPLETE_ATTACHMENT (OpenGL ES 2.0 4.4.5)");
     gl.renderbufferStorage(gl.RENDERBUFFER, depthFormat, 16, 16);
-    CheckFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT);
+    checkFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT);
 
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, 16, 16);
-    CheckFramebuffer(gl.FRAMEBUFFER_COMPLETE);
+    checkFramebuffer(gl.FRAMEBUFFER_COMPLETE);
 
     debug("");
     debug("0 size attachment should be FRAMEBUFFER_INCOMPLETE_ATTACHMENT (OpenGL ES 2.0 4.4.5)");
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, 0, 0);
-    CheckFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT);
+    checkFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT);
 
     glErrorShouldBe(gl, gl.NO_ERROR);
 }
@@ -348,18 +351,18 @@ function testFramebufferIncompleteMissingAttachment() {
     debug("No attachments should be INCOMPLETE_FRAMEBUFFER_MISSING_ATTACHMENT (OpenGL ES 2.0 4.4.5)");
     shouldBeNonNull("fbo = gl.createFramebuffer()");
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-    CheckFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT);
+    checkFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT);
 
     shouldBeNonNull("colorBuffer = gl.createRenderbuffer()");
     gl.bindRenderbuffer(gl.RENDERBUFFER, colorBuffer);
     gl.framebufferRenderbuffer(
         gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, colorBuffer);
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, 16, 16);
-    CheckFramebuffer(gl.FRAMEBUFFER_COMPLETE);
+    checkFramebuffer(gl.FRAMEBUFFER_COMPLETE);
 
     gl.framebufferRenderbuffer(
         gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, null);
-    CheckFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT);
+    checkFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT);
 
     glErrorShouldBe(gl, gl.NO_ERROR);
 }
@@ -382,17 +385,17 @@ function testFramebufferIncompleteDimensions() {
         gl.FRAMEBUFFER, depthAttachment, gl.RENDERBUFFER, depthBuffer);
     gl.renderbufferStorage(gl.RENDERBUFFER, depthFormat, 16, 16);
     glErrorShouldBe(gl, gl.NO_ERROR);
-    CheckFramebuffer(gl.FRAMEBUFFER_COMPLETE);
+    checkFramebuffer(gl.FRAMEBUFFER_COMPLETE);
 
     gl.renderbufferStorage(gl.RENDERBUFFER, depthFormat, 32, 16);
-    CheckFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS);
+    checkFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS);
     gl.renderbufferStorage(gl.RENDERBUFFER, depthFormat, 16, 16);
-    CheckFramebuffer(gl.FRAMEBUFFER_COMPLETE);
+    checkFramebuffer(gl.FRAMEBUFFER_COMPLETE);
     gl.bindRenderbuffer(gl.RENDERBUFFER, colorBuffer);
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, 16, 32);
-    CheckFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS);
+    checkFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS);
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, 16, 16);
-    CheckFramebuffer(gl.FRAMEBUFFER_COMPLETE);
+    checkFramebuffer(gl.FRAMEBUFFER_COMPLETE);
     glErrorShouldBe(gl, gl.NO_ERROR);
 
     var tex = gl.createTexture();
@@ -405,9 +408,9 @@ function testFramebufferIncompleteDimensions() {
     }
 
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 32, 16, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    CheckFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS);
+    checkFramebuffer(gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 16, 16, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    CheckFramebuffer(gl.FRAMEBUFFER_COMPLETE);
+    checkFramebuffer(gl.FRAMEBUFFER_COMPLETE);
 
     glErrorShouldBe(gl, gl.NO_ERROR);
 }
