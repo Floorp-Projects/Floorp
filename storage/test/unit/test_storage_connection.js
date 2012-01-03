@@ -573,7 +573,11 @@ function test_getInterface()
   // the correct value.
   do_check_true(target != null);
 
-  run_next_test();
+ db.asyncClose(function() {
+   // Reset gDBConn so that later tests will get a new connection object.
+   gDBConn = null;
+   run_next_test();
+ });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
