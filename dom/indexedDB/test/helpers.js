@@ -5,11 +5,6 @@
 
 var testGenerator = testSteps();
 
-function executeSoon(aFun)
-{
-  SimpleTest.executeSoon(aFun);
-}
-
 function runTest()
 {
   allowIndexedDB();

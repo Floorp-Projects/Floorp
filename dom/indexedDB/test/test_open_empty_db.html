@@ -9,7 +9,46 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
-  <script type="text/javascript;version=1.7" src="unit/test_open_empty_db.js"></script>
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const names = [
+        "",
+        null,
+        undefined,
+        window.location.pathname
+      ];
+
+      const version = 1;
+
+      for each (let name in names) {
+        let request = mozIndexedDB.open(name, version);
+        request.onerror = errorHandler;
+        request.onsuccess = grabEventAndContinueHandler;
+        let event = yield;
+
+        if (name === null) {
+          name = "null";
+        }
+        else if (name === undefined) {
+          name = "undefined";
+        }
+
+        let db = event.target.result;
+        is(db.name, name, "Bad name");
+        is(db.version, version, "Bad version");
+        is(db.objectStoreNames.length, 0, "Bad objectStores list");
+
+        is(db.name, request.result.name, "Bad name");
+        is(db.version, request.result.version, "Bad version");
+        is(db.objectStoreNames.length, request.result.objectStoreNames.length,
+           "Bad objectStores list");
+      }
+
+      finishTest();
+      yield;
+    }
+  </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>
 
 </head>

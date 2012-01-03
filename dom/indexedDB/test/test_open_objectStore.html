@@ -9,7 +9,41 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
-  <script type="text/javascript;version=1.7" src="unit/test_open_objectStore.js"></script>
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const nsIIDBObjectStore = Components.interfaces.nsIIDBObjectStore;
+      const name = window.location.pathname;
+      const description = "My Test Database";
+      const objectStoreName = "Objects";
+
+      let request = mozIndexedDB.open(name, 1, description);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.target.result;
+      is(db.objectStoreNames.length, 0, "Bad objectStores list");
+
+      let objectStore = db.createObjectStore(objectStoreName,
+                                             { keyPath: "foo" });
+
+      is(db.objectStoreNames.length, 1, "Bad objectStores list");
+      is(db.objectStoreNames.item(0), objectStoreName, "Bad name");
+
+      yield;
+
+      objectStore = db.transaction(objectStoreName).objectStore(objectStoreName);
+
+      is(objectStore.name, objectStoreName, "Bad name");
+      is(objectStore.keyPath, "foo", "Bad keyPath");
+      if(objectStore.indexNames.length, 0, "Bad indexNames");
+
+      finishTest();
+      yield;
+    }
+  </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>
 
 </head>

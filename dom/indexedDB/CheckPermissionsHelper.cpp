@@ -77,11 +77,6 @@ GetIndexedDBPermissions(const nsACString& aASCIIOrigin,
     return nsIPermissionManager::DENY_ACTION;
   }
 
-  // No window here means chrome access
-  if (!aWindow) {
-    return nsIPermissionManager::ALLOW_ACTION;
-  }
-
   nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(aWindow));
   NS_ENSURE_TRUE(sop, nsIPermissionManager::DENY_ACTION);
 

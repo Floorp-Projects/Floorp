@@ -395,6 +395,7 @@ class AutoEnterWindow
 public:
   AutoEnterWindow(nsPIDOMWindow* aWindow)
   {
+    NS_ASSERTION(aWindow, "This should never be null!");
     IndexedDatabaseManager::SetCurrentWindow(aWindow);
   }
 

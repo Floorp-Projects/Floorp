@@ -9,7 +9,63 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
-  <script type="text/javascript;version=1.7" src="unit/test_transaction_lifetimes_nested.js"></script>
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      let request = mozIndexedDB.open(window.location.pathname, 1);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.target.result;
+      db.onerror = errorHandler;
+
+      event.target.onsuccess = continueToNextStep;
+      db.createObjectStore("foo");
+      yield;
+
+      let transaction1 = db.transaction("foo");
+      is(transaction1.readyState, IDBTransaction.INITIAL, "Correct readyState");
+
+      let transaction2;
+
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      let thread = Components.classes["@mozilla.org/thread-manager;1"]
+                             .getService()
+                             .currentThread;
+
+      let eventHasRun;
+
+      thread.dispatch(function() {
+        eventHasRun = true;
+
+        is(transaction1.readyState, IDBTransaction.INITIAL,
+           "Correct readyState");
+
+        transaction2 = db.transaction("foo");
+        is(transaction2.readyState, IDBTransaction.INITIAL,
+           "Correct readyState");
+
+      }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+
+      while (!eventHasRun) {
+        thread.processNextEvent(false);
+      }
+
+      is(transaction1.readyState, IDBTransaction.INITIAL, "Correct readyState");
+
+      ok(transaction2, "Non-null transaction2");
+      is(transaction2.readyState, IDBTransaction.DONE, "Correct readyState");
+
+      continueToNextStep();
+      yield;
+
+      is(transaction1.readyState, IDBTransaction.DONE, "Correct readyState");
+
+      finishTest();
+      yield;
+    }
+  </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>
 
 </head>
