@@ -45,30 +45,6 @@
 #include "nscore.h"
 #include "nspr.h"
 
-#if (WINVER < 0x401)
-/* AutoDial address properties.
-*/
-typedef struct tagRASAUTODIALENTRYA {
-    DWORD dwSize;
-    DWORD dwFlags;
-    DWORD dwDialingLocation;
-    PRUnichar szEntry[RAS_MaxEntryName + 1];
-} RASAUTODIALENTRYW, *LPRASAUTODIALENTRYW;
-typedef RASAUTODIALENTRYW RASAUTODIALENTRY, *LPRASAUTODIALENTRY;
-
-#define RASADP_LoginSessionDisable              1
-
-#endif  // WINVER
-
-// Loading the RAS DLL dynamically. 
-typedef DWORD (WINAPI* tRASPHONEBOOKDLG)(LPWSTR,LPWSTR,LPRASPBDLG);
-typedef DWORD (WINAPI* tRASDIALDLG)(LPWSTR,LPWSTR,LPWSTR,LPRASDIALDLG);
-typedef DWORD (WINAPI* tRASENUMCONNECTIONS)(LPRASCONN,LPDWORD,LPDWORD);
-typedef DWORD (WINAPI* tRASENUMENTRIES)(LPWSTR,LPWSTR,LPRASENTRYNAMEW,LPDWORD,LPDWORD);
-typedef DWORD (WINAPI* tRASSETAUTODIALADDRESS)(LPCWSTR,DWORD,LPRASAUTODIALENTRYW,DWORD,DWORD);
-typedef DWORD (WINAPI* tRASGETAUTODIALADDRESS)(LPCWSTR,LPDWORD,LPRASAUTODIALENTRYW,LPDWORD,LPDWORD);
-typedef DWORD (WINAPI* tRASGETAUTODIALENABLE)(DWORD,LPBOOL);
-typedef DWORD (WINAPI* tRASGETAUTODIALPARAM)(DWORD,LPVOID,LPDWORD);
 // For Windows NT 4, 2000, and XP, we sometimes want to open the RAS dialup 
 // window ourselves, since those versions aren't very nice about it. 
 // See bug 93002. If the RAS autodial service is running, (Remote Access 
@@ -152,24 +128,6 @@ private:
 
     // OS version info.
     OSVERSIONINFO mOSVerInfo;
-
-    // DLL instance handles.
-    static HINSTANCE mhRASdlg;
-    static HINSTANCE mhRASapi32;
-
-    // DLL function pointers.
-    static tRASPHONEBOOKDLG mpRasPhonebookDlg;
-    static tRASENUMCONNECTIONS	mpRasEnumConnections;
-    static tRASENUMENTRIES mpRasEnumEntries;
-    static tRASDIALDLG mpRasDialDlg;
-    static tRASSETAUTODIALADDRESS mpRasSetAutodialAddress;
-    static tRASGETAUTODIALADDRESS mpRasGetAutodialAddress;
-    static tRASGETAUTODIALENABLE mpRasGetAutodialEnable;
-    static tRASGETAUTODIALPARAM mpRasGetAutodialParam;
-
-    bool LoadRASapi32DLL();
-    bool LoadRASdlgDLL();
-
 
 public:
   
