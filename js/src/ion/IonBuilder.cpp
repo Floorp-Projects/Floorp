@@ -2104,6 +2104,10 @@ IonBuilder::jsop_call_inline(uint32 argc, IonBuilder &inlineBuilder, InliningDat
 
     bottom->push(retvalDefn);
 
+    // Replace the callee with the return value in the resumepoint.
+    uint32 retvalSlot = bottom->stackDepth() - 1;
+    bottom->entryResumePoint()->replaceOperand(retvalSlot, retvalDefn);
+
     // Check the depth change:
     //  -argc for popped args
     //  -2 for callee/this
