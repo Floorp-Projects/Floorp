@@ -1611,7 +1611,10 @@ OpenDatabaseHelper::DoDatabaseWork()
 
   NS_ASSERTION(mOpenDBRequest, "This should never be null!");
 
+  // Once we support IDB outside of Windows this assertion will no longer hold.
   nsPIDOMWindow* window = mOpenDBRequest->Owner();
+  NS_ASSERTION(window, "This should never be null");
+
   AutoEnterWindow autoWindow(window);
 
   nsCOMPtr<nsIFile> dbDirectory;

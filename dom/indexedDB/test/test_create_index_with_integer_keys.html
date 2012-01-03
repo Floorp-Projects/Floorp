@@ -9,7 +9,67 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
-  <script type="text/javascript;version=1.7" src="unit/test_create_index_with_integer_keys.js"></script>
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      const data = { id: new Date().getTime(),
+                     num: parseInt(Math.random() * 1000) };
+
+      let request = mozIndexedDB.open(window.location.pathname, 1);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = event.target.result;
+      db.onerror = errorHandler;
+
+      event.target.onsuccess = continueToNextStep;
+
+      // Make object store, add data.
+      let objectStore = db.createObjectStore("foo", { keyPath: "id" });
+      objectStore.add(data);
+      yield;
+      db.close();
+
+      let request = mozIndexedDB.open(window.location.pathname, 2);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db2 = event.target.result;
+      db2.onerror = errorHandler;
+
+      event.target.onsuccess = continueToNextStep;
+
+      // Create index.
+      event.target.transaction.objectStore("foo").createIndex("foo", "num");
+      yield;
+
+      // Make sure our object made it into the index.
+      let seenCount = 0;
+
+
+      db2.transaction("foo").objectStore("foo").index("foo")
+         .openKeyCursor().onsuccess = function(event) {
+        let cursor = event.target.result;
+        if (cursor) {
+          is(cursor.key, data.num, "Good key");
+          is(cursor.primaryKey, data.id, "Good value");
+          seenCount++;
+          cursor.continue();
+        }
+        else {
+          continueToNextStep();
+        }
+      };
+      yield;
+
+      is(seenCount, 1, "Saw our entry");
+
+      finishTest();
+      yield;
+    }
+  </script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>
 </head>
 

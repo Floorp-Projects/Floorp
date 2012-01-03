@@ -715,10 +715,6 @@ IDBDatabase::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   NS_ENSURE_TRUE(aVisitor.mDOMEvent, NS_ERROR_UNEXPECTED);
 
-  if (!mOwner) {
-    return NS_OK;
-  }
-
   if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
     nsString type;
     nsresult rv = aVisitor.mDOMEvent->GetType(type);
