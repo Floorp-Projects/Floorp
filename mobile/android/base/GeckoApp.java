@@ -883,6 +883,9 @@ abstract public class GeckoApp
                 final String href = message.getString("href");
                 Log.i(LOGTAG, "link rel - " + rel + ", href - " + href);
                 handleLinkAdded(tabId, rel, href);
+            } else if (event.equals("DOMWindowClose")) {
+                final int tabId = message.getInt("tabID");
+                handleWindowClose(tabId);
             } else if (event.equals("log")) {
                 // generic log listener
                 final String msg = message.getString("msg");
@@ -1313,6 +1316,12 @@ abstract public class GeckoApp
         }
     }
 
+    void handleWindowClose(final int tabId) {
+        Tabs tabs = Tabs.getInstance();
+        Tab tab = tabs.getTab(tabId);
+        tabs.closeTab(tab);
+    }
+
     void addPluginView(final View view,
                        final double x, final double y,
                        final double w, final double h) {
@@ -1533,6 +1542,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("DOMContentLoaded", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("DOMTitleChanged", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("DOMLinkAdded", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("DOMWindowClose", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("log", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Content:LocationChange", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Content:SecurityChange", GeckoApp.mAppContext);
@@ -1768,6 +1778,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("DOMContentLoaded", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("DOMTitleChanged", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("DOMLinkAdded", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("DOMWindowClose", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("log", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Content:LocationChange", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Content:SecurityChange", GeckoApp.mAppContext);

@@ -409,10 +409,7 @@ user_pref("extensions.getAddons.search.url", "http://%(server)s/extensions-dummy
 
     if useServerLocations == False:
       part = """
-user_pref("capability.principal.codebase.p1.granted",
-          "UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite \
-           UniversalPreferencesRead UniversalPreferencesWrite \
-           UniversalFileRead");
+user_pref("capability.principal.codebase.p1.granted", "UniversalXPConnect");
 user_pref("capability.principal.codebase.p1.id", "%(origin)s");
 user_pref("capability.principal.codebase.p1.subjectName", "");
 """  % { "origin": "http://" + self.webServer + ":" + str(self.httpPort) }
@@ -422,10 +419,7 @@ user_pref("capability.principal.codebase.p1.subjectName", "");
       privileged = filter(lambda loc: "privileged" in loc.options, locations)
       for (i, l) in itertools.izip(itertools.count(1), privileged):
         part = """
-user_pref("capability.principal.codebase.p%(i)d.granted",
-          "UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite \
-           UniversalPreferencesRead UniversalPreferencesWrite \
-           UniversalFileRead");
+user_pref("capability.principal.codebase.p%(i)d.granted", "UniversalXPConnect");
 user_pref("capability.principal.codebase.p%(i)d.id", "%(origin)s");
 user_pref("capability.principal.codebase.p%(i)d.subjectName", "");
 """  % { "i": i,

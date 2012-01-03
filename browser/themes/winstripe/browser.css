@@ -1490,12 +1490,7 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 #page-proxy-favicon {
   width: 16px;
   height: 16px;
-}
-
-#page-proxy-stack {
-  width: 24px;
-  height: 18px;
-  padding: 1px 4px;
+  margin: 1px 4px;
 }
 
 #page-proxy-favicon:not([src]) {

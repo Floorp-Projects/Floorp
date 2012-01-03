@@ -198,7 +198,13 @@ EncodeInputStream(nsIInputStream *aInputStream,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  PRUint32 count = (aCount + 2) / 3 * 4; // +2 due to integer math.
+  PRUint64 countlong =
+    (PRUint64(aCount) + 2) / 3 * 4; // +2 due to integer math.
+  if (countlong + aOffset > PR_UINT32_MAX)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  PRUint32 count = PRUint32(countlong);
+
   aDest.SetLength(count + aOffset);
   if (aDest.Length() != count + aOffset)
     return NS_ERROR_OUT_OF_MEMORY;

@@ -19,7 +19,7 @@
 #endif
 
 namespace base {
-class FileDescriptor;
+struct FileDescriptor;
 }
 
 class FileDescriptorSet;

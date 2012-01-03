@@ -2602,7 +2602,7 @@ nsGlobalWindow::DialogOpenAttempted()
   topWindow = topWindow->GetCurrentInnerWindowInternal();
   if (!topWindow ||
       topWindow->mLastDialogQuitTime.IsNull() ||
-      nsContentUtils::IsCallerTrustedForCapability("UniversalXPConnect")) {
+      nsContentUtils::CallerHasUniversalXPConnect()) {
     return false;
   }
 
