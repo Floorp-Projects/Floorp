@@ -45,36 +45,55 @@ function test() {
           "At init, the rotation should be zero.");
 
 
-        EventUtils.synthesizeKey("VK_A", { type: "keydown" });
-        EventUtils.synthesizeKey("VK_LEFT", { type: "keydown" });
-        instance.controller.update();
-
-        ok(!isEqualVec(tran(), prev_tran),
-          "After a translation key is pressed, the vector should change.");
-        ok(!isEqualVec(rot(), prev_rot),
-          "After a rotation key is pressed, the quaternion should change.");
-
-        save();
-
-
-        gBrowser.selectedBrowser.contentWindow.focus();
-        instance.controller.update();
-
-        ok(!isEqualVec(tran(), prev_tran),
-          "Even if the canvas lost focus, the vector has some inertia.");
-        ok(!isEqualVec(rot(), prev_rot),
-          "Even if the canvas lost focus, the quaternion has some inertia.");
-
-        save();
-
-
-        while (!isEqualVec(tran(), prev_tran) || !isEqualVec(rot(), prev_rot)) {
+        function testEventCancel(cancellingEvent) {
+          EventUtils.synthesizeKey("VK_A", { type: "keydown" });
+          EventUtils.synthesizeKey("VK_LEFT", { type: "keydown" });
           instance.controller.update();
+
+          ok(!isEqualVec(tran(), prev_tran),
+            "After a translation key is pressed, the vector should change.");
+          ok(!isEqualVec(rot(), prev_rot),
+            "After a rotation key is pressed, the quaternion should change.");
+
           save();
+
+
+          cancellingEvent();
+          instance.controller.update();
+
+          ok(!isEqualVec(tran(), prev_tran),
+            "Even if the canvas lost focus, the vector has some inertia.");
+          ok(!isEqualVec(rot(), prev_rot),
+            "Even if the canvas lost focus, the quaternion has some inertia.");
+
+          save();
+
+
+          while (!isEqualVec(tran(), prev_tran) ||
+                 !isEqualVec(rot(), prev_rot)) {
+            instance.controller.update();
+            save();
+          }
+
+          ok(isEqualVec(tran(), prev_tran) && isEqualVec(rot(), prev_rot),
+            "After focus lost, the transforms inertia eventually stops.");
         }
 
-        ok(isEqualVec(tran(), prev_tran) && isEqualVec(rot(), prev_rot),
-          "After the focus is lost, the transforms inertia eventually stops.");
+        testEventCancel(function() {
+          EventUtils.synthesizeKey("T", { type: "keydown", altKey: 1 });
+        });
+        testEventCancel(function() {
+          EventUtils.synthesizeKey("I", { type: "keydown", ctrlKey: 1 });
+        });
+        testEventCancel(function() {
+          EventUtils.synthesizeKey("L", { type: "keydown", metaKey: 1 });
+        });
+        testEventCancel(function() {
+          EventUtils.synthesizeKey("T", { type: "keydown", shiftKey: 1 });
+        });
+        testEventCancel(function() {
+          gBrowser.selectedBrowser.contentWindow.focus();
+        });
       },
       onEnd: function()
       {
