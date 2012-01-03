@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="about:memory"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"></body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  // Test for bug 708248, where the SQLite memory multi-reporter was
+  // crashing when a DB was closed.
+
+  // Nb: this test is all JS and so should be done with an xpcshell test,
+  // but bug 671753 is preventing the memory-reporter-manager from being
+  // accessed from xpcshell.
+
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+  const Cu = Components.utils;
+
+  // Make a fake DB file.
+  var file = Cc["@mozilla.org/file/directory_service;1"].
+             getService(Ci.nsIProperties).
+             get("ProfD", Ci.nsIFile);
+  file.append("test_sqliteMultiReporter-fake-DB-tmp.sqlite");
+
+  // Open and close the DB.
+  var storage = Cc["@mozilla.org/storage/service;1"].
+                getService(Ci.mozIStorageService);
+  var db = storage.openDatabase(file);
+  db.close();
+
+  // Invoke all the multi-reporters.  The SQLite multi-reporter is among
+  // them.  It shouldn't crash.
+  var mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+            getService(Ci.nsIMemoryReporterManager);
+  e = mgr.enumerateMultiReporters();
+  while (e.hasMoreElements()) {
+    var r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
+    r.collectReports(function(){}, null);
+  }
+
+  // If we haven't crashed, we've passed, but the test harness requires that
+  // we explicitly check something.
+  ok(true);
+
+  SimpleTest.finish();
+  ]]>
+  </script>
+</window>
