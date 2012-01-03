@@ -1988,7 +1988,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     if (aState) {
       newInnerWindow = wsh->GetInnerWindow();
       mInnerWindowHolder = wsh->GetInnerWindowHolder();
-      
+
       NS_ASSERTION(newInnerWindow, "Got a state without inner window");
     } else if (thisChrome) {
       newInnerWindow = new nsGlobalChromeWindow(this);
@@ -2038,6 +2038,15 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       bool termFuncSet = false;
 
       if (oldDoc == aDocument) {
+        // Move the navigator from the old inner window to the new one since
+        // this is a document.write. This is safe from a same-origin point of
+        // view because document.write can only be used by the same origin.
+        newInnerWindow->mNavigator = currentInner->mNavigator;
+        currentInner->mNavigator = nsnull;
+        if (newInnerWindow->mNavigator) {
+          newInnerWindow->mNavigator->SetWindow(newInnerWindow);
+        }
+
         // Suspend the current context's request before Pop() resumes the old
         // context's request.
         JSAutoSuspendRequest asr(cx);
@@ -2593,7 +2602,7 @@ nsGlobalWindow::DialogOpenAttempted()
   topWindow = topWindow->GetCurrentInnerWindowInternal();
   if (!topWindow ||
       topWindow->mLastDialogQuitTime.IsNull() ||
-      nsContentUtils::IsCallerTrustedForCapability("UniversalXPConnect")) {
+      nsContentUtils::CallerHasUniversalXPConnect()) {
     return false;
   }
 

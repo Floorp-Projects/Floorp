@@ -213,11 +213,23 @@ interface nsIMemoryMultiReporterCallback : nsISupports
  * (Compare and contrast this with nsIMemoryReporter, which allows all
  * fields except |amount| to be accessed without triggering computation.)
  */
-[scriptable, uuid(eae277ad-b67d-4389-95f4-03fa11c09d06)]
+[scriptable, uuid(61d498d5-b460-4398-a8ea-7f75208534b4)]
 interface nsIMemoryMultiReporter : nsISupports
 {
   void collectReports(in nsIMemoryMultiReporterCallback callback,
                       in nsISupports closure);
+
+  /*
+   * Return the sum of all this multi-reporter's measurements that have a
+   * path that starts with "explicit" and are KIND_NONHEAP.
+   *
+   * This is a hack that's required to implement
+   * nsIMemoryReporterManager::explicit efficiently, which is important --
+   * multi-reporters can special-case this operation so it's much faster
+   * than getting all the reports, filtering out the unneeded ones, and
+   * summing the remainder.
+   */
+  readonly attribute PRInt64 explicitNonHeap;
 };
 
 [scriptable, uuid(84ba9c85-3372-4423-b7ab-74708b9269a6)]

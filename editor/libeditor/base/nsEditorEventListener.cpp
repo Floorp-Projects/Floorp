@@ -157,7 +157,6 @@ nsEditorEventListener::InstallToEditor()
   elmP->AddEventListenerByType(this,
                                NS_LITERAL_STRING("keypress"),
                                NS_EVENT_FLAG_BUBBLE |
-                               NS_PRIV_EVENT_UNTRUSTED_PERMITTED |
                                NS_EVENT_FLAG_SYSTEM_EVENT);
   // See bug 455215, we cannot use the standard dragstart event yet
   elmP->AddEventListenerByType(this,

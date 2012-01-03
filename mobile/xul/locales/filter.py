@@ -35,30 +35,43 @@
 #
 # ***** END LICENSE BLOCK *****
 
+"""This routine controls which localizable files and entries are
+reported and l10n-merged.
+It's common to all of mobile, mobile/android and mobile/xul, so
+those three versions need to stay in sync.
+"""
 
 def test(mod, path, entity = None):
   import re
   # ignore anything but mobile, which is our local repo checkout name
   if mod not in ("netwerk", "dom", "toolkit", "security/manager",
-                 "services/sync", "embedding/android",
+                 "services/sync", "mobile",
+                 "mobile/android/base",  "mobile/android",
                  "mobile/xul"):
-    return False
+    return "ignore"
 
-  if mod != "mobile/xul":
-    # we only have exceptions for mobile
-    return True
-  if not entity:
-    return not (re.match(r"searchplugins\/.+\.xml", path) or
-                re.match(r"mobile-l10n.js", path) or
-                re.match(r"defines.inc", path))
-  if path == "defines.inc":
-    return entity != "MOZ_LANGPACK_CONTRIBUTORS"
+  if mod not in ("mobile", "mobile/android", "mobile/xul"):
+    # we only have exceptions for mobile*
+    return "error"
+  if mod in ("mobile/android", "mobile/xul"):
+    if not entity:
+      if (re.match(r"mobile-l10n.js", path) or
+          re.match(r"defines.inc", path)):
+        return "ignore"
+    if path == "defines.inc":
+      if entity == "MOZ_LANGPACK_CONTRIBUTORS":
+        return "ignore"
+    return "error"
 
-  if path != "chrome/region.properties":
-    # only region.properties exceptions remain, compare all others
-    return True
-  
-  return not (re.match(r"browser\.search\.order\.[1-9]", entity) or
-              re.match(r"browser\.contentHandlers\.types\.[0-5]", entity) or
-              re.match(r"gecko\.handlerService\.schemes\.", entity) or
-              re.match(r"gecko\.handlerService\.defaultHandlersVersion", entity))
+  # we're in mod == "mobile"
+  if re.match(r"searchplugins\/.+\.xml", path):
+    return "ignore"
+  if path == "chrome/region.properties":
+    # only region.properties exceptions remain
+    if (re.match(r"browser\.search\.order\.[1-9]", entity) or
+        re.match(r"browser\.contentHandlers\.types\.[0-5]", entity) or
+        re.match(r"gecko\.handlerService\.schemes\.", entity) or
+      re.match(r"gecko\.handlerService\.defaultHandlersVersion", entity)):
+      return "ignore"
+
+  return "error"

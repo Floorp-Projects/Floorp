@@ -50,11 +50,11 @@
 #include "jsstrinlines.h"
 #include "RegExpStatics-inl.h"
 
-inline js::RegExpObject *
+inline js::RegExpObject &
 JSObject::asRegExp()
 {
     JS_ASSERT(isRegExp());
-    return static_cast<js::RegExpObject *>(this);
+    return *static_cast<js::RegExpObject *>(this);
 }
 
 namespace js {

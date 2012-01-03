@@ -6148,6 +6148,7 @@ AddonInstall.prototype = {
         if (aRepoAddon) {
           aAddon._repositoryAddon = aRepoAddon;
           aAddon.compatibilityOverrides = aRepoAddon.compatibilityOverrides;
+          aAddon.appDisabled = !isUsableAddon(aAddon);
           aCallback();
           return;
         }
@@ -6159,6 +6160,7 @@ AddonInstall.prototype = {
             aAddon.compatibilityOverrides = aRepoAddon ?
                                               aRepoAddon.compatibilityOverrides :
                                               null;
+            aAddon.appDisabled = !isUsableAddon(aAddon);
             aCallback();
           });
         });
@@ -7283,9 +7285,10 @@ AddonInternal.prototype = {
    *         A JS object containing the cached metadata
    */
   importMetadata: function(aObj) {
-    ["targetApplications", "userDisabled", "softDisabled", "existingAddonID",
-     "sourceURI", "releaseNotesURI", "installDate", "updateDate",
-     "applyBackgroundUpdates", "compatibilityOverrides"].forEach(function(aProp) {
+    ["syncGUID", "targetApplications", "userDisabled", "softDisabled",
+     "existingAddonID", "sourceURI", "releaseNotesURI", "installDate",
+     "updateDate", "applyBackgroundUpdates", "compatibilityOverrides"]
+    .forEach(function(aProp) {
       if (!(aProp in aObj))
         return;
 

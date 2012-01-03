@@ -77,14 +77,14 @@ PropertyCache::test(JSContext *cx, jsbytecode *pc, JSObject *&obj,
     if (entry->kpc == pc && entry->kshape == kshape) {
         JSObject *tmp;
         pobj = obj;
-        if (entry->vindex == 1 &&
+        if (entry->isPrototypePropertyHit() &&
             (tmp = pobj->getProto()) != NULL) {
             pobj = tmp;
         }
 
         if (pobj->lastProperty() == entry->pshape) {
             PCMETER(pchits++);
-            PCMETER(!entry->vindex || protopchits++);
+            PCMETER(entry->isOwnPropertyHit() || protopchits++);
             atom = NULL;
             return;
         }

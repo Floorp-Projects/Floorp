@@ -722,6 +722,13 @@ PresShell::MemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PresShell::MemoryReporter::GetExplicitNonHeap(PRInt64 *aAmount) {
+  // This reporter doesn't do any KIND_NONHEAP measurements.
+  *aAmount = 0;
+  return NS_OK;
+}
+
 class nsAutoCauseReflowNotifier
 {
 public:
@@ -2408,7 +2415,12 @@ PresShell::CharacterExtendForBackspace()
 NS_IMETHODIMP 
 PresShell::WordMove(bool aForward, bool aExtend)
 {
-  return mSelection->WordMove(aForward, aExtend);  
+  nsresult result = mSelection->WordMove(aForward, aExtend);
+// if we can't go down/up any more we must then move caret completely to
+// end/beginning respectively.
+  if (NS_FAILED(result))
+    result = CompleteMove(aForward, aExtend);
+  return result;
 }
 
 NS_IMETHODIMP 
@@ -5813,7 +5825,28 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
         return NS_OK;
 
       if (presShell != this) {
-        return presShell->HandleEvent(presShell->GetRootFrame(), aEvent, true, aEventStatus);
+        nsIFrame* frame = presShell->GetRootFrame();
+        if (!frame) {
+          if (aEvent->message == NS_QUERY_TEXT_CONTENT ||
+              NS_IS_CONTENT_COMMAND_EVENT(aEvent)) {
+            return NS_OK;
+          }
+
+          nsIView* view = presShell->GetViewManager()->GetRootView();
+          while (view && !view->GetFrame()) {
+            view = view->GetParent();
+          }
+
+          if (view) {
+            frame = view->GetFrame();
+          }
+        }
+
+        if (!frame)
+          return NS_OK;
+
+        nsCOMPtr<nsIPresShell> shell = frame->PresContext()->GetPresShell();
+        return shell->HandleEvent(frame, aEvent, true, aEventStatus);
       }
     }
   }

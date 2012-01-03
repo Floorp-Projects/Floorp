@@ -399,7 +399,7 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *proto, uintN flags,
      * front of 'interfaces' overwrite those toward the back.
      */
     bool definedProperty = false;
-    for (uint32 i = ifacec; i-- != 0;) {
+    for (uint32_t i = ifacec; i-- != 0;) {
         const nsID &iid = *interfaces[i];
         const xpc_qsHashEntry *entry =
             LookupInterfaceOrAncestor(tableSize, table, iid);
@@ -1012,8 +1012,10 @@ xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, jsval *pval, const PRUnichar **pst
     return true;
 }
 
-JSBool
-xpc_qsStringToJsval(JSContext *cx, nsString &str, jsval *rval)
+namespace xpc {
+
+bool
+StringToJsval(JSContext *cx, nsString &str, JS::Value *rval)
 {
     // From the T_DOMSTRING case in XPCConvert::NativeData2JS.
     if (str.IsVoid()) {
@@ -1033,6 +1035,8 @@ xpc_qsStringToJsval(JSContext *cx, nsString &str, jsval *rval)
     }
     return true;
 }
+
+} // namespace xpc
 
 JSBool
 xpc_qsStringToJsstring(JSContext *cx, nsString &str, JSString **rval)

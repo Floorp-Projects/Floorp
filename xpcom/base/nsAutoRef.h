@@ -40,6 +40,8 @@
 #ifndef nsAutoRef_h_
 #define nsAutoRef_h_
 
+#include "mozilla/Attributes.h"
+
 #include "nscore.h" // for nsnull, bool
 
 template <class T> class nsSimpleRef;
@@ -642,7 +644,7 @@ protected:
     };
 
 private:
-    ThisClass& operator=(const ThisClass& aSmartRef);
+    ThisClass& operator=(const ThisClass& aSmartRef) MOZ_DELETE;
     
 public:
     RawRef operator->() const

@@ -63,7 +63,7 @@ NS_NewProgressFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsProgressFrame)
 
 nsProgressFrame::nsProgressFrame(nsStyleContext* aContext)
-  : nsHTMLContainerFrame(aContext)
+  : nsContainerFrame(aContext)
   , mBarDiv(nsnull)
 {
 }
@@ -80,7 +80,7 @@ nsProgressFrame::DestroyFrom(nsIFrame* aDestructRoot)
                "need to call RegUnregAccessKey only for the first.");
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   nsContentUtils::DestroyAnonymousContent(&mBarDiv);
-  nsHTMLContainerFrame::DestroyFrom(aDestructRoot);
+  nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 nsresult
@@ -123,8 +123,16 @@ nsProgressFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
 NS_QUERYFRAME_HEAD(nsProgressFrame)
   NS_QUERYFRAME_ENTRY(nsProgressFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
+
+NS_IMETHODIMP
+nsProgressFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                  const nsRect&           aDirtyRect,
+                                  const nsDisplayListSet& aLists)
+{
+  return BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
+}
 
 NS_IMETHODIMP nsProgressFrame::Reflow(nsPresContext*           aPresContext,
                                       nsHTMLReflowMetrics&     aDesiredSize,
@@ -252,8 +260,7 @@ nsProgressFrame::AttributeChanged(PRInt32  aNameSpaceID,
     Invalidate(GetVisualOverflowRectRelativeToSelf());
   }
 
-  return nsHTMLContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,
-                                                aModType);
+  return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
 nsSize

@@ -57,6 +57,9 @@
 
 static bool sInited = 0;
 PRUint32 nsCCUncollectableMarker::sGeneration = 0;
+#ifdef MOZ_XUL
+#include "nsXULPrototypeCache.h"
+#endif
 
 NS_IMPL_ISUPPORTS1(nsCCUncollectableMarker, nsIObserver)
 
@@ -246,6 +249,13 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
       MarkDocShell(shellTreeNode);
     }
   }
+
+#ifdef MOZ_XUL
+  nsXULPrototypeCache* xulCache = nsXULPrototypeCache::GetInstance();
+  if (xulCache) {
+    xulCache->MarkInCCGeneration(sGeneration);
+  }
+#endif
 
   return NS_OK;
 }

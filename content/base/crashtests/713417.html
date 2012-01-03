@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var f = document.getElementById("f");
+  var w = f.contentWindow;
+  var d = w.document;
+  d.designMode = 'on';
+  var r = d.documentElement;
+  d.removeChild(r);
+  document.adoptNode(r);
+  f.parentNode.removeChild(f);
+}
+
+</script>
+</head>
+<body onload="boom();">
+<iframe src="data:text/html,1" id="f"></iframe>
+</body>
+</html>

@@ -140,7 +140,7 @@ function restoreSession() {
     ss.setWindowState(top, stateString, true);
     return;
   }
-  
+
   // restore the session into a new window and close the current tab
   var newWindow = top.openDialog(top.location, "_blank", "chrome,dialog=no,all");
   newWindow.addEventListener("load", function() {

@@ -156,6 +156,7 @@
 #include "nsIJSRuntimeService.h"
 #include "nsIMemoryReporter.h"
 #include "xpcpublic.h"
+#include "nsXPCOMPrivate.h"
 #include <stdio.h>
 #include <string.h>
 #ifdef WIN32
@@ -1373,7 +1374,7 @@ GraphWalker<Visitor>::DoWalk(nsDeque &aQueue)
 class nsCycleCollectorLogger : public nsICycleCollectorListener
 {
 public:
-    nsCycleCollectorLogger() : mStream(nsnull)
+    nsCycleCollectorLogger() : mStream(nsnull), mWantAllTraces(false)
     {
     }
     ~nsCycleCollectorLogger()
@@ -1384,11 +1385,37 @@ public:
     }
     NS_DECL_ISUPPORTS
 
+    NS_IMETHOD AllTraces(nsICycleCollectorListener** aListener)
+    {
+      mWantAllTraces = true;
+      NS_ADDREF(*aListener = this);
+      return NS_OK;
+    }
+
+    NS_IMETHOD GetWantAllTraces(bool* aAllTraces)
+    {
+      *aAllTraces = mWantAllTraces;
+      return NS_OK;
+    }
+
     NS_IMETHOD Begin()
     {
-        char name[255];
-        sprintf(name, "cc-edges-%d.%d.log", ++gLogCounter, base::GetCurrentProcId());
+        char name[MAXPATHLEN] = {'\0'};
+        tmpnam(name);
+        char *lastSlash = strrchr(name, XPCOM_FILE_PATH_SEPARATOR[0]);
+        if (lastSlash) {
+            *lastSlash = '\0';
+        }
+        sprintf(name, "%s%scc-edges-%d.%d.log", name,
+                XPCOM_FILE_PATH_SEPARATOR,
+                ++gLogCounter, base::GetCurrentProcId());
         mStream = fopen(name, "w");
+
+        nsCOMPtr<nsIConsoleService> cs =
+            do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+        if (cs) {
+            cs->LogStringMessage(NS_ConvertUTF8toUTF16(name).get());
+        }
 
         return mStream ? NS_OK : NS_ERROR_FAILURE;
     }
@@ -1442,6 +1469,7 @@ public:
 
 private:
     FILE *mStream;
+    bool mWantAllTraces;
 
     static PRUint32 gLogCounter;
 };
@@ -1570,15 +1598,22 @@ GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
     if (!PL_DHashTableInit(&mPtrToNodeMap, &PtrNodeOps, nsnull,
                            sizeof(PtrToNodeEntry), 32768))
         mPtrToNodeMap.ops = nsnull;
-    // We want all edges and all info if DEBUG_CC is set or if we have a
-    // listener. Do we want them all the time?
-#ifndef DEBUG_CC
-    if (mListener)
+
+    PRUint32 flags = 0;
+#ifdef DEBUG_CC
+    flags = nsCycleCollectionTraversalCallback::WANT_DEBUG_INFO |
+            nsCycleCollectionTraversalCallback::WANT_ALL_TRACES;
 #endif
-    {
-        mFlags |= nsCycleCollectionTraversalCallback::WANT_DEBUG_INFO |
-                  nsCycleCollectionTraversalCallback::WANT_ALL_TRACES;
+    if (!flags && mListener) {
+        flags = nsCycleCollectionTraversalCallback::WANT_DEBUG_INFO;
+        bool all = false;
+        mListener->GetWantAllTraces(&all);
+        if (all) {
+            flags |= nsCycleCollectionTraversalCallback::WANT_ALL_TRACES;
+        }
     }
+
+    mFlags |= flags;
 }
 
 GCGraphBuilder::~GCGraphBuilder()

@@ -203,9 +203,6 @@ GetDefCount(JSScript *script, unsigned offset)
     JS_ASSERT(offset < script->length);
     jsbytecode *pc = script->code + offset;
 
-    if (js_CodeSpec[*pc].ndefs == -1)
-        return js_GetEnterBlockStackDefs(NULL, script, pc);
-
     /*
      * Add an extra pushed value for OR/AND opcodes, so that they are included
      * in the pushed array of stack values for type inference.
@@ -227,7 +224,7 @@ GetDefCount(JSScript *script, unsigned offset)
          */
         return (pc[1] + 1);
       default:
-        return js_CodeSpec[*pc].ndefs;
+        return StackDefs(script, pc);
     }
 }
 
@@ -240,7 +237,7 @@ GetUseCount(JSScript *script, unsigned offset)
     if (JSOp(*pc) == JSOP_PICK)
         return (pc[1] + 1);
     if (js_CodeSpec[*pc].nuses == -1)
-        return js_GetVariableStackUses(JSOp(*pc), pc);
+        return StackUses(script, pc);
     return js_CodeSpec[*pc].nuses;
 }
 
@@ -1095,8 +1092,8 @@ class ScriptAnalysis
     /*
      * Whether we distinguish different writes of this variable while doing
      * SSA analysis. Escaping locals can be written in other scripts, and the
-     * presence of NAME opcodes, switch or try blocks keeps us from tracking
-     * variable values at each point.
+     * presence of NAME opcodes which could alias local variables or arguments
+     * keeps us from tracking variable values at each point.
      */
     bool trackSlot(uint32_t slot) { return !slotEscapes(slot) && canTrackVars; }
 
@@ -1156,9 +1153,15 @@ class ScriptAnalysis
                            Vector<SlotValue> *pending);
     void checkBranchTarget(JSContext *cx, uint32_t targetOffset, Vector<uint32_t> &branchTargets,
                            SSAValue *values, uint32_t stackDepth);
+    void checkExceptionTarget(JSContext *cx, uint32_t catchOffset,
+                              Vector<uint32_t> &exceptionTargets);
     void mergeBranchTarget(JSContext *cx, const SSAValue &value, uint32_t slot,
                            const Vector<uint32_t> &branchTargets);
-    void removeBranchTarget(Vector<uint32_t> &branchTargets, uint32_t offset);
+    void mergeExceptionTarget(JSContext *cx, const SSAValue &value, uint32_t slot,
+                              const Vector<uint32_t> &exceptionTargets);
+    bool removeBranchTarget(Vector<uint32_t> &branchTargets,
+                            Vector<uint32_t> &exceptionTargets,
+                            uint32_t offset);
     void freezeNewValues(JSContext *cx, uint32_t offset);
 
     struct TypeInferenceState {

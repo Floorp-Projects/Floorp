@@ -100,8 +100,9 @@ NS_IMPL_RELEASE_INHERITED(nsSVGCircleElement,nsSVGCircleElementBase)
 DOMCI_NODE_DATA(SVGCircleElement, nsSVGCircleElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGCircleElement)
-  NS_NODE_INTERFACE_TABLE4(nsSVGCircleElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGCircleElement)
+  NS_NODE_INTERFACE_TABLE5(nsSVGCircleElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement, nsIDOMSVGTests,
+                           nsIDOMSVGCircleElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGCircleElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGCircleElementBase)
 

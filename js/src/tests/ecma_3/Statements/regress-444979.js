@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 2008
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): László Jánszky
+ * Contributor(s): LÃ¡szlÃ³ JÃ¡nszky
  *                 Andrei Saprykin
  *
  * Alternatively, the contents of this file may be used under the terms of

@@ -41,6 +41,8 @@
 #ifndef ParseMaps_h__
 #define ParseMaps_h__
 
+#include "mozilla/Attributes.h"
+
 #include "ds/InlineMap.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
@@ -267,8 +269,8 @@ class AtomDecls
     JSContext   *cx;
     AtomDOHMap  *map;
 
-    AtomDecls(const AtomDecls &other);
-    void operator=(const AtomDecls &other);
+    AtomDecls(const AtomDecls &other) MOZ_DELETE;
+    void operator=(const AtomDecls &other) MOZ_DELETE;
 
     AtomDeclNode *allocNode(Definition *defn);
 

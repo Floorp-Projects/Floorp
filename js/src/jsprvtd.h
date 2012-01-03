@@ -55,8 +55,12 @@
  */
 
 #include "jsapi.h"
-
 #include "jsutil.h"
+
+#ifdef __cplusplus
+#include "js/HashTable.h"
+#include "js/Vector.h"
+#endif
 
 JS_BEGIN_EXTERN_C
 
@@ -151,7 +155,6 @@ enum RegExpExecType
     RegExpTest
 };
 
-class AutoStringRooter;
 class ExecuteArgsGuard;
 class InvokeFrameGuard;
 class InvokeArgsGuard;
@@ -189,25 +192,6 @@ class RuntimeAllocPolicy;
 
 class GlobalObject;
 
-template <class T,
-          size_t MinInlineCapacity = 0,
-          class AllocPolicy = TempAllocPolicy>
-class Vector;
-
-template <class>
-struct DefaultHasher;
-
-template <class Key,
-          class Value,
-          class HashPolicy = DefaultHasher<Key>,
-          class AllocPolicy = TempAllocPolicy>
-class HashMap;
-
-template <class T,
-          class HashPolicy = DefaultHasher<T>,
-          class AllocPolicy = TempAllocPolicy>
-class HashSet;
-
 template <typename K,
           typename V,
           size_t InlineElems>
@@ -224,6 +208,9 @@ struct Shape;
 struct EmptyShape;
 class ShapeKindArray;
 class Bindings;
+
+struct StackBaseShape;
+struct StackShape;
 
 class MultiDeclRange;
 class ParseMapPool;
@@ -276,6 +263,73 @@ struct TypeObject;
 struct TypeCompartment;
 
 } /* namespace types */
+
+enum ThingRootKind
+{
+    THING_ROOT_OBJECT,
+    THING_ROOT_SHAPE,
+    THING_ROOT_BASE_SHAPE,
+    THING_ROOT_TYPE_OBJECT,
+    THING_ROOT_STRING,
+    THING_ROOT_SCRIPT,
+    THING_ROOT_ID,
+    THING_ROOT_VALUE,
+    THING_ROOT_LIMIT
+};
+
+template <typename T> class Root;
+template <typename T> class RootedVar;
+
+template <typename T>
+struct RootMethods { };
+
+/*
+ * Reference to a stack location rooted for GC. See "Moving GC Stack Rooting"
+ * comment in jscntxt.h.
+ */
+template <typename T>
+class Handle
+{
+  public:
+    // Copy handles of different types, with implicit coercion.
+    template <typename S> Handle(Handle<S> handle) {
+        testAssign<S>();
+        ptr = reinterpret_cast<const T *>(handle.address());
+    }
+
+    // Get a handle from a rooted stack location, with implicit coercion.
+    template <typename S> inline Handle(const Root<S> &root);
+    template <typename S> inline Handle(const RootedVar<S> &root);
+
+    const T *address() { return ptr; }
+
+    operator T () { return value(); }
+    T operator ->() { return value(); }
+
+  private:
+    const T *ptr;
+    T value() { return *ptr; }
+
+    template <typename S>
+    void testAssign() {
+#ifdef DEBUG
+        T a = RootMethods<T>::initial();
+        S b = RootMethods<S>::initial();
+        a = b;
+        (void)a;
+#endif
+    }
+};
+
+typedef Handle<JSObject*>          HandleObject;
+typedef Handle<JSFunction*>        HandleFunction;
+typedef Handle<Shape*>             HandleShape;
+typedef Handle<BaseShape*>         HandleBaseShape;
+typedef Handle<types::TypeObject*> HandleTypeObject;
+typedef Handle<JSString*>          HandleString;
+typedef Handle<JSAtom*>            HandleAtom;
+typedef Handle<jsid>               HandleId;
+typedef Handle<Value>              HandleValue;
 
 } /* namespace js */
 

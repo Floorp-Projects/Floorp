@@ -4,15 +4,15 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=507902
 -->
 <head>
-  <title>Test for watchPosition </title>
+  <title>Test for devicemotion</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=507902">Mozilla Bug 507902</a>
 <p id="display"></p>
-<div id="content" style="display: none">
-  
+<div id="content">
+<iframe id="frame" src="bug507902-frame.html"></iframe>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -28,8 +28,6 @@ function boom()
 }
 
 SimpleTest.waitForExplicitFinish();
-
-window.addEventListener("load", function() { setTimeout(boom, 0); }, false);
 
 </script>
 </pre>

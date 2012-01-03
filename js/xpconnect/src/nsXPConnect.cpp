@@ -47,17 +47,13 @@
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
 #include "jsatom.h"
-#include "jsobj.h"
 #include "jsfriendapi.h"
-#include "jsfun.h"
 #include "jsgc.h"
-#include "jsscript.h"
 #include "nsThreadUtilsInternal.h"
 #include "dom_quickstubs.h"
 #include "nsNullPrincipal.h"
 #include "nsIURI.h"
 #include "nsJSEnvironment.h"
-#include "plbase64.h"
 
 #include "XrayWrapper.h"
 #include "WrapperFactory.h"
@@ -67,6 +63,10 @@
 
 #include "XPCQuickStubs.h"
 #include "dombindings.h"
+
+#include "mozilla/Assertions.h"
+#include "mozilla/Base64.h"
+
 #include "nsWrapperCacheInlines.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
@@ -738,7 +738,7 @@ xpc_UnmarkGrayObjectRecursive(JSObject *obj)
     NS_ASSERTION(obj, "Don't pass me null!");
 
     // Unmark.
-    obj->unmark(js::gc::GRAY);
+    js::gc::AsCell(obj)->unmark(js::gc::GRAY);
 
     // Tracing requires a JSContext...
     JSContext *cx;
@@ -919,9 +919,9 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         }
 
         // Disable printing global for objects while we figure out ObjShrink fallout.
-        cb.DescribeGCedNode(isMarked, sizeof(JSObject), name);
+        cb.DescribeGCedNode(isMarked, sizeof(js::shadow::Object), name);
     } else {
-        cb.DescribeGCedNode(isMarked, sizeof(JSObject), "JS Object");
+        cb.DescribeGCedNode(isMarked, sizeof(js::shadow::Object), "JS Object");
     }
 
     // There's no need to trace objects that have already been marked by the JS
@@ -1115,7 +1115,7 @@ CreateNewCompartment(JSContext *cx, JSClass *clasp, nsIPrincipal *principal,
         return false;
 
     *global = tempGlobal;
-    *compartment = tempGlobal->compartment();
+    *compartment = js::GetObjectCompartment(tempGlobal);
 
     js::AutoSwitchCompartment sc(cx, *compartment);
     JS_SetCompartmentPrivate(cx, *compartment, priv_holder.forget());
@@ -2800,65 +2800,22 @@ nsXPConnect::GetCaller(JSContext **aJSContext, JSObject **aObj)
     *aObj = ccx->GetFlattenedJSObject();
 }
 
-// static
-nsresult
-nsXPConnect::Base64Encode(const nsACString &aBinaryData, nsACString &aString)
+namespace xpc {
+
+bool
+Base64Encode(JSContext *cx, JS::Value val, JS::Value *out)
 {
-  // Check for overflow.
-  if (aBinaryData.Length() > (PR_UINT32_MAX / 4) * 3)
-      return NS_ERROR_FAILURE;
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(out);
 
-  PRUint32 stringLen = ((aBinaryData.Length() + 2) / 3) * 4;
-
-  char *buffer;
-
-  // Add one byte for null termination.
-  if (aString.SetCapacity(stringLen + 1) &&
-      (buffer = aString.BeginWriting()) &&
-      PL_Base64Encode(aBinaryData.BeginReading(), aBinaryData.Length(), buffer)) {
-      // PL_Base64Encode doesn't null terminate the buffer for us when we pass
-      // the buffer in. Do that manually.
-      buffer[stringLen] = '\0';
-
-      aString.SetLength(stringLen);
-      return NS_OK;
-  }
-
-  aString.Truncate();
-  return NS_ERROR_INVALID_ARG;
-}
-
-// static
-nsresult
-nsXPConnect::Base64Encode(const nsAString &aString, nsAString &aBinaryData)
-{
-    NS_LossyConvertUTF16toASCII string(aString);
-    nsCAutoString binaryData;
-
-    nsresult rv = Base64Encode(string, binaryData);
-    if (NS_SUCCEEDED(rv))
-        CopyASCIItoUTF16(binaryData, aBinaryData);
-    else
-        aBinaryData.Truncate();
-
-    return rv;
-}
-
-// static
-JSBool
-nsXPConnect::Base64Encode(JSContext *cx, jsval val, jsval *out)
-{
-    NS_ASSERTION(cx, "Null context!");
-    NS_ASSERTION(out, "Null jsval pointer!");
-
-    jsval root = val;
+    JS::Value root = val;
     xpc_qsACString encodedString(cx, root, &root, xpc_qsACString::eNull,
                                  xpc_qsACString::eStringify);
     if (!encodedString.IsValid())
         return false;
 
     nsCAutoString result;
-    if (NS_FAILED(nsXPConnect::Base64Encode(encodedString, result))) {
+    if (NS_FAILED(mozilla::Base64Encode(encodedString, result))) {
         JS_ReportError(cx, "Failed to encode base64 data!");
         return false;
     }
@@ -2871,72 +2828,20 @@ nsXPConnect::Base64Encode(JSContext *cx, jsval val, jsval *out)
     return true;
 }
 
-// static
-nsresult
-nsXPConnect::Base64Decode(const nsACString &aString, nsACString &aBinaryData)
+bool
+Base64Decode(JSContext *cx, JS::Value val, JS::Value *out)
 {
-  // Check for overflow.
-  if (aString.Length() > PR_UINT32_MAX / 3)
-      return NS_ERROR_FAILURE;
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(out);
 
-  PRUint32 binaryDataLen = ((aString.Length() * 3) / 4);
-
-  char *buffer;
-
-  // Add one byte for null termination.
-  if (aBinaryData.SetCapacity(binaryDataLen + 1) &&
-      (buffer = aBinaryData.BeginWriting()) &&
-      PL_Base64Decode(aString.BeginReading(), aString.Length(), buffer)) {
-      // PL_Base64Decode doesn't null terminate the buffer for us when we pass
-      // the buffer in. Do that manually, taking into account the number of '='
-      // characters we were passed.
-      if (!aString.IsEmpty() && aString[aString.Length() - 1] == '=') {
-          if (aString.Length() > 1 && aString[aString.Length() - 2] == '=')
-              binaryDataLen -= 2;
-          else
-              binaryDataLen -= 1;
-      }
-      buffer[binaryDataLen] = '\0';
-
-      aBinaryData.SetLength(binaryDataLen);
-      return NS_OK;
-  }
-
-  aBinaryData.Truncate();
-  return NS_ERROR_INVALID_ARG;
-}
-
-// static
-nsresult
-nsXPConnect::Base64Decode(const nsAString &aBinaryData, nsAString &aString)
-{
-    NS_LossyConvertUTF16toASCII binaryData(aBinaryData);
-    nsCAutoString string;
-
-    nsresult rv = Base64Decode(binaryData, string);
-    if (NS_SUCCEEDED(rv))
-        CopyASCIItoUTF16(string, aString);
-    else
-        aString.Truncate();
-
-    return rv;
-}
-
-// static
-JSBool
-nsXPConnect::Base64Decode(JSContext *cx, jsval val, jsval *out)
-{
-    NS_ASSERTION(cx, "Null context!");
-    NS_ASSERTION(out, "Null jsval pointer!");
-
-    jsval root = val;
+    JS::Value root = val;
     xpc_qsACString encodedString(cx, root, &root, xpc_qsACString::eNull,
                                  xpc_qsACString::eNull);
     if (!encodedString.IsValid())
         return false;
 
     nsCAutoString result;
-    if (NS_FAILED(nsXPConnect::Base64Decode(encodedString, result))) {
+    if (NS_FAILED(mozilla::Base64Decode(encodedString, result))) {
         JS_ReportError(cx, "Failed to decode base64 string!");
         return false;
     }
@@ -2948,6 +2853,8 @@ nsXPConnect::Base64Decode(JSContext *cx, jsval val, jsval *out)
     *out = STRING_TO_JSVAL(str);
     return true;
 }
+
+} // namespace xpc
 
 NS_IMETHODIMP
 nsXPConnect::SetDebugModeWhenPossible(bool mode, bool allowSyncDisable)

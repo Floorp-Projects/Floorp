@@ -120,11 +120,10 @@ XPCWrappedNativeScope::GetNewOrUsed(XPCCallContext& ccx, JSObject* aGlobal)
         scope = new XPCWrappedNativeScope(ccx, aGlobal);
     else {
         // We need to call SetGlobal in order to refresh our cached
-        // mPrototypeJSObject and mPrototypeJSFunction and to clear
-        // mPrototypeNoHelper (so we get a new one if requested in the
-        // new scope) in the case where the global object is being
-        // reused (JS_ClearScope has been called).  NOTE: We are only
-        // called by nsXPConnect::InitClasses.
+        // mPrototypeJSObject and to clear mPrototypeNoHelper (so we get a new
+        // new one if requested in the new scope) in the case where the global
+        // object is being reused (JS_ClearScope has been called).  NOTE: We are
+        // only called by nsXPConnect::InitClasses.
         scope->SetGlobal(ccx, aGlobal);
     }
     if (js::GetObjectClass(aGlobal)->flags & JSCLASS_XPCONNECT_GLOBAL)
@@ -144,7 +143,6 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
         mNext(nsnull),
         mGlobalJSObject(nsnull),
         mPrototypeJSObject(nsnull),
-        mPrototypeJSFunction(nsnull),
         mPrototypeNoHelper(nsnull),
         mScriptObjectPrincipal(nsnull),
         mNewDOMBindingsEnabled(ccx.GetRuntime()->NewDOMBindingsEnabled())
@@ -263,7 +261,6 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal)
 
         jsval val;
         jsid idObj = mRuntime->GetStringID(XPCJSRuntime::IDX_OBJECT);
-        jsid idFun = mRuntime->GetStringID(XPCJSRuntime::IDX_FUNCTION);
         jsid idProto = mRuntime->GetStringID(XPCJSRuntime::IDX_PROTOTYPE);
 
         if (JS_GetPropertyById(ccx, aGlobal, idObj, &val) &&
@@ -273,15 +270,6 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal)
             mPrototypeJSObject = JSVAL_TO_OBJECT(val);
         } else {
             NS_ERROR("Can't get globalObject.Object.prototype");
-        }
-
-        if (JS_GetPropertyById(ccx, aGlobal, idFun, &val) &&
-            !JSVAL_IS_PRIMITIVE(val) &&
-            JS_GetPropertyById(ccx, JSVAL_TO_OBJECT(val), idProto, &val) &&
-            !JSVAL_IS_PRIMITIVE(val)) {
-            mPrototypeJSFunction = JSVAL_TO_OBJECT(val);
-        } else {
-            NS_ERROR("Can't get globalObject.Function.prototype");
         }
     }
 
@@ -322,7 +310,6 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
     JSRuntime *rt = mRuntime->GetJSRuntime();
     mGlobalJSObject.finalize(rt);
     mPrototypeJSObject.finalize(rt);
-    mPrototypeJSFunction.finalize(rt);
 }
 
 JSObject *
@@ -451,10 +438,6 @@ XPCWrappedNativeScope::FinishedMarkPhaseOfGC(JSContext* cx, XPCJSRuntime* rt)
             if (cur->mPrototypeJSObject &&
                 JS_IsAboutToBeFinalized(cx, cur->mPrototypeJSObject)) {
                 cur->mPrototypeJSObject.finalize(cx);
-            }
-            if (cur->mPrototypeJSFunction &&
-                JS_IsAboutToBeFinalized(cx, cur->mPrototypeJSFunction)) {
-                cur->mPrototypeJSFunction.finalize(cx);
             }
             if (cur->mPrototypeNoHelper &&
                 JS_IsAboutToBeFinalized(cx, cur->mPrototypeNoHelper)) {
@@ -954,7 +937,6 @@ XPCWrappedNativeScope::DebugDump(PRInt16 depth)
         XPC_LOG_ALWAYS(("mComponents @ %x", mComponents));
         XPC_LOG_ALWAYS(("mGlobalJSObject @ %x", mGlobalJSObject.get()));
         XPC_LOG_ALWAYS(("mPrototypeJSObject @ %x", mPrototypeJSObject.get()));
-        XPC_LOG_ALWAYS(("mPrototypeJSFunction @ %x", mPrototypeJSFunction.get()));
         XPC_LOG_ALWAYS(("mPrototypeNoHelper @ %x", mPrototypeNoHelper));
 
         XPC_LOG_ALWAYS(("mWrappedNativeMap @ %x with %d wrappers(s)",         \

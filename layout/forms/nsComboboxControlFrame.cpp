@@ -550,8 +550,8 @@ nsComboboxControlFrame::GetCSSTransformTranslation()
   bool is3DTransform = false;
   gfxMatrix transform;
   while (frame) {
-    nsIFrame* parent = nsnull;
-    gfx3DMatrix ctm = frame->GetTransformMatrix(&parent);
+    nsIFrame* parent;
+    gfx3DMatrix ctm = frame->GetTransformMatrix(nsnull, &parent);
     gfxMatrix matrix;
     if (ctm.Is2D(&matrix)) {
       transform = transform * matrix;

@@ -81,6 +81,7 @@ inline
 HeapValue::HeapValue(const Value &v)
     : value(v)
 {
+    JS_ASSERT(!IsPoisonedValue(v));
     post();
 }
 
@@ -88,6 +89,7 @@ inline
 HeapValue::HeapValue(const HeapValue &v)
     : value(v.value)
 {
+    JS_ASSERT(!IsPoisonedValue(v.value));
     post();
 }
 
@@ -100,8 +102,16 @@ HeapValue::~HeapValue()
 inline void
 HeapValue::init(const Value &v)
 {
+    JS_ASSERT(!IsPoisonedValue(v));
     value = v;
     post();
+}
+
+inline void
+HeapValue::init(JSCompartment *comp, const Value &v)
+{
+    value = v;
+    post(comp);
 }
 
 inline void
@@ -160,6 +170,7 @@ inline HeapValue &
 HeapValue::operator=(const Value &v)
 {
     pre();
+    JS_ASSERT(!IsPoisonedValue(v));
     value = v;
     post();
     return *this;
@@ -169,6 +180,7 @@ inline HeapValue &
 HeapValue::operator=(const HeapValue &v)
 {
     pre();
+    JS_ASSERT(!IsPoisonedValue(v.value));
     value = v.value;
     post();
     return *this;
@@ -186,6 +198,7 @@ HeapValue::set(JSCompartment *comp, const Value &v)
 #endif
 
     pre(comp);
+    JS_ASSERT(!IsPoisonedValue(v));
     value = v;
     post(comp);
 }
@@ -195,6 +208,7 @@ HeapValue::boxNonDoubleFrom(JSValueType type, uint64_t *out)
 {
     pre();
     value.boxNonDoubleFrom(type, out);
+    JS_ASSERT(!IsPoisonedValue(value));
     post();
 }
 
@@ -202,6 +216,7 @@ inline
 HeapId::HeapId(jsid id)
     : value(id)
 {
+    JS_ASSERT(!IsPoisonedId(id));
     post();
 }
 
@@ -214,6 +229,7 @@ HeapId::~HeapId()
 inline void
 HeapId::init(jsid id)
 {
+    JS_ASSERT(!IsPoisonedId(id));
     value = id;
     post();
 }
@@ -240,6 +256,7 @@ inline HeapId &
 HeapId::operator=(jsid id)
 {
     pre();
+    JS_ASSERT(!IsPoisonedId(id));
     value = id;
     post();
     return *this;
@@ -249,6 +266,7 @@ inline HeapId &
 HeapId::operator=(const HeapId &v)
 {
     pre();
+    JS_ASSERT(!IsPoisonedId(v.value));
     value = v.value;
     post();
     return *this;

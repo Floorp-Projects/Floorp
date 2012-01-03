@@ -43,7 +43,7 @@
   -moz-appearance: none;
   padding: 4px 3px;
   box-shadow: 0 1px 0 0 hsla(210, 16%, 76%, .2) inset;
-  background-image: -moz-linear-gradient(top, hsl(210,11%,36%), hsl(210,11%,18%));
+  background-image: url(background-noise-toolbar.png), -moz-linear-gradient(top, hsl(210,11%,36%), hsl(210,11%,18%));
 }
 
 .devtools-toolbarbutton {

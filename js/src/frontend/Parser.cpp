@@ -179,8 +179,6 @@ Parser::setPrincipals(JSPrincipals *prin, JSPrincipals *originPrin)
 ObjectBox *
 Parser::newObjectBox(JSObject *obj)
 {
-    JS_ASSERT(obj);
-
     /*
      * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
      * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
@@ -837,6 +835,12 @@ js::DefineArg(ParseNode *pn, JSAtom *atom, uintN i, TreeContext *tc)
 typedef JSBool
 (*Binder)(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc);
 
+static JSBool
+BindLet(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc);
+
+static JSBool
+BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc);
+
 struct BindData {
     BindData() : fresh(true) {}
 
@@ -846,10 +850,26 @@ struct BindData {
     Binder          binder;     /* binder, discriminates u */
     union {
         struct {
+            VarContext varContext;
+            StaticBlockObject *blockObj;
             uintN   overflow;
         } let;
     };
     bool fresh;
+
+    void initLet(VarContext varContext, StaticBlockObject &blockObj, uintN overflow) {
+        this->pn = NULL;
+        this->op = JSOP_NOP;
+        this->binder = BindLet;
+        this->let.varContext = varContext;
+        this->let.blockObj = &blockObj;
+        this->let.overflow = overflow;
+    }
+
+    void initVarOrConst(JSOp op) {
+        this->op = op;
+        this->binder = BindVarOrConst;
+    }
 };
 
 static bool
@@ -931,7 +951,9 @@ Parser::newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
      */
     while (tc->parent)
         tc = tc->parent;
-    JSObject *parent = tc->inFunction() ? NULL : tc->scopeChain();
+
+    RootedVarObject parent(context);
+    parent = tc->inFunction() ? NULL : tc->scopeChain();
 
     JSFunction *fun =
         js_NewFunction(context, NULL, NULL, 0,
@@ -1877,58 +1899,55 @@ MatchLabel(JSContext *cx, TokenStream *ts, PropertyName **label)
     return true;
 }
 
+static bool
+ReportRedeclaration(JSContext *cx, TreeContext *tc, ParseNode *pn, bool isConst, JSAtom *atom)
+{
+    JSAutoByteString name;
+    if (js_AtomToPrintableString(cx, atom, &name)) {
+        ReportCompileErrorNumber(cx, TS(tc->parser), pn,
+                                 JSREPORT_ERROR, JSMSG_REDECLARED_VAR,
+                                 isConst ? "const" : "variable",
+                                 name.ptr());
+    }
+    return false;
+}
+
 /*
  * Define a let-variable in a block, let-expression, or comprehension scope. tc
  * must already be in such a scope.
  *
  * Throw a SyntaxError if 'atom' is an invalid name. Otherwise create a
- * property for the new variable on the block object, tc->blockChain();
+ * property for the new variable on the block object, tc->blockChain;
  * populate data->pn->pn_{op,cookie,defn,dflags}; and stash a pointer to
  * data->pn in a slot of the block object.
  */
 static JSBool
 BindLet(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
 {
-    ParseNode *pn;
-    JSObject *blockObj;
-    jsint n;
-
-    /*
-     * Body-level 'let' is the same as 'var' currently -- this may change in a
-     * successor standard to ES5 that specifies 'let'.
-     */
-    JS_ASSERT(!tc->atBodyLevel());
-
-    pn = data->pn;
+    ParseNode *pn = data->pn;
     if (!CheckStrictBinding(cx, tc, atom->asPropertyName(), pn))
         return false;
 
-    blockObj = tc->blockChain();
-    Definition *dn = tc->decls.lookupFirst(atom);
-    if (dn && dn->pn_blockid == tc->blockid()) {
-        JSAutoByteString name;
-        if (js_AtomToPrintableString(cx, atom, &name)) {
-            ReportCompileErrorNumber(cx, TS(tc->parser), pn,
-                                     JSREPORT_ERROR, JSMSG_REDECLARED_VAR,
-                                     dn->isConst() ? "const" : "variable",
-                                     name.ptr());
-        }
-        return false;
-    }
-
-    n = OBJ_BLOCK_COUNT(cx, blockObj);
-    if (n == JS_BIT(16)) {
+    StaticBlockObject &blockObj = *data->let.blockObj;
+    uintN blockCount = blockObj.slotCount();
+    if (blockCount == JS_BIT(16)) {
         ReportCompileErrorNumber(cx, TS(tc->parser), pn,
                                  JSREPORT_ERROR, data->let.overflow);
         return false;
     }
 
     /*
-     * Pass push = true to Define so it pushes an ale ahead of any outer scope.
-     * This is balanced by PopStatement, defined immediately below.
+     * For bindings that are hoisted to the beginning of the block/function,
+     * Define() right now. For the rest, delay Define() until PushLetScope.
      */
-    if (!Define(pn, atom, tc, true))
-        return false;
+    if (data->let.varContext == HoistVars) {
+        JS_ASSERT(!tc->atBodyLevel());
+        Definition *dn = tc->decls.lookupFirst(atom);
+        if (dn && dn->pn_blockid == tc->blockid())
+            return ReportRedeclaration(cx, tc, pn, dn->isConst(), atom);
+        if (!Define(pn, atom, tc, true))
+            return false;
+    }
 
     /*
      * Assign block-local index to pn->pn_cookie right away, encoding it as an
@@ -1938,47 +1957,58 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, TreeContext *tc)
      * again to include script->nfixed.
      */
     pn->setOp(JSOP_GETLOCAL);
-    pn->pn_cookie.set(tc->staticLevel, uint16_t(n));
+    pn->pn_cookie.set(tc->staticLevel, uint16_t(blockCount));
     pn->pn_dflags |= PND_LET | PND_BOUND;
 
     /*
      * Define the let binding's property before storing pn in the the binding's
-     * slot indexed by n off the class-reserved slot base.
+     * slot indexed by blockCount off the class-reserved slot base.
      */
-    const Shape *shape = blockObj->defineBlockVariable(cx, ATOM_TO_JSID(atom), n);
-    if (!shape)
+    bool redeclared;
+    jsid id = ATOM_TO_JSID(atom);
+    const Shape *shape = blockObj.addVar(cx, id, blockCount, &redeclared);
+    if (!shape) {
+        if (redeclared)
+            ReportRedeclaration(cx, tc, pn, false, atom);
         return false;
+    }
 
-    /*
-     * Store pn temporarily in what would be shape-mapped slots in a cloned
-     * block object (once the prototype's final population is known, after all
-     * 'let' bindings for this block have been parsed). We free these slots in
-     * BytecodeEmitter.cpp:EmitEnterBlock so they don't tie up unused space
-     * in the so-called "static" prototype Block.
-     */
-    blockObj->setSlot(shape->slot(), PrivateValue(pn));
+    /* Store pn in the static block object. */
+    blockObj.setDefinitionParseNode(blockCount, reinterpret_cast<Definition *>(pn));
     return true;
 }
+
+template <class Op>
+static inline bool
+ForEachLetDef(TreeContext *tc, StaticBlockObject &blockObj, Op op)
+{
+    for (Shape::Range r = blockObj.lastProperty()->all(); !r.empty(); r.popFront()) {
+        const Shape &shape = r.front();
+
+        /* Beware the destructuring dummy slots. */
+        if (JSID_IS_INT(shape.propid()))
+            continue;
+
+        if (!op(tc, blockObj, shape, JSID_TO_ATOM(shape.propid())))
+            return false;
+    }
+    return true;
+}
+
+struct RemoveDecl {
+    bool operator()(TreeContext *tc, StaticBlockObject &, const Shape &, JSAtom *atom) {
+        tc->decls.remove(atom);
+        return true;
+    }
+};
 
 static void
 PopStatement(TreeContext *tc)
 {
-    StmtInfo *stmt = tc->topStmt;
-
-    if (stmt->flags & SIF_SCOPE) {
-        JSObject *obj = stmt->blockBox->object;
-        JS_ASSERT(!obj->isClonedBlock());
-
-        for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {
-            JSAtom *atom = JSID_TO_ATOM(r.front().propid());
-
-            /* Beware the empty destructuring dummy. */
-            if (atom == tc->parser->context->runtime->atomState.emptyAtom)
-                continue;
-            tc->decls.remove(atom);
-        }
-
-        JS_ASSERT(!obj->inDictionaryMode());
+    if (tc->topStmt->flags & SIF_SCOPE) {
+        StaticBlockObject &blockObj = *tc->topStmt->blockObj;
+        JS_ASSERT(!blockObj.inDictionaryMode());
+        ForEachLetDef(tc, blockObj, RemoveDecl());
     }
     PopStatementTC(tc);
 }
@@ -2536,9 +2566,13 @@ BindDestructuringLHS(JSContext *cx, ParseNode *pn, TreeContext *tc)
  * See also UndominateInitializers, immediately below. If you change
  * either of these functions, you might have to change the other to
  * match.
+ *
+ * The 'toplevel' is a private detail of the recursive strategy used by
+ * CheckDestructuring and callers should use the default value.
  */
 static bool
-CheckDestructuring(JSContext *cx, BindData *data, ParseNode *left, TreeContext *tc)
+CheckDestructuring(JSContext *cx, BindData *data, ParseNode *left, TreeContext *tc,
+                   bool toplevel = true)
 {
     bool ok;
 
@@ -2548,12 +2582,15 @@ CheckDestructuring(JSContext *cx, BindData *data, ParseNode *left, TreeContext *
         return false;
     }
 
+    StaticBlockObject *blockObj = data && data->binder == BindLet ? data->let.blockObj : NULL;
+    uint32_t blockCountBefore = blockObj ? blockObj->slotCount() : 0;
+
     if (left->isKind(PNK_RB)) {
         for (ParseNode *pn = left->pn_head; pn; pn = pn->pn_next) {
             /* Nullary comma is an elision; binary comma is an expression.*/
-            if (!pn->isKind(PNK_COMMA) || !pn->isArity(PN_NULLARY)) {
+            if (!pn->isArrayHole()) {
                 if (pn->isKind(PNK_RB) || pn->isKind(PNK_RC)) {
-                    ok = CheckDestructuring(cx, data, pn, tc);
+                    ok = CheckDestructuring(cx, data, pn, tc, false);
                 } else {
                     if (data) {
                         if (!pn->isKind(PNK_NAME)) {
@@ -2577,7 +2614,7 @@ CheckDestructuring(JSContext *cx, BindData *data, ParseNode *left, TreeContext *
             ParseNode *pn = pair->pn_right;
 
             if (pn->isKind(PNK_RB) || pn->isKind(PNK_RC)) {
-                ok = CheckDestructuring(cx, data, pn, tc);
+                ok = CheckDestructuring(cx, data, pn, tc, false);
             } else if (data) {
                 if (!pn->isKind(PNK_NAME)) {
                     ReportCompileErrorNumber(cx, TS(tc->parser), pn, JSREPORT_ERROR,
@@ -2603,23 +2640,28 @@ CheckDestructuring(JSContext *cx, BindData *data, ParseNode *left, TreeContext *
      *   let [] = 1;
      *
      * would violate this assumption as the there would be no let locals to
-     * store on the stack. To satisfy it we add an empty property to such
-     * blocks so that OBJ_BLOCK_COUNT(cx, blockObj), which gives the number of
-     * slots, would be always positive.
+     * store on the stack.
      *
-     * Note that we add such a property even if the block has locals due to
-     * later let declarations in it. We optimize for code simplicity here,
-     * not the fastest runtime performance with empty [] or {}.
+     * Furthermore, the decompiler needs an abstract stack location to store
+     * the decompilation of each let block/expr initializer. E.g., given:
+     *
+     *   let (x = 1, [[]] = b, y = 3, {a:[]} = c) { ... }
+     *
+     * four slots are needed.
+     *
+     * To satisfy both constraints, we push a dummy slot (and add a
+     * corresponding dummy property to the block object) for each initializer
+     * that doesn't introduce at least one binding.
      */
-    if (data &&
-        data->binder == BindLet &&
-        OBJ_BLOCK_COUNT(cx, tc->blockChain()) == 0 &&
-        !DefineNativeProperty(cx, tc->blockChain(),
-                              ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
-                              UndefinedValue(), NULL, NULL,
-                              JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                              Shape::HAS_SHORTID, 0)) {
-        return false;
+    if (toplevel && blockObj && blockCountBefore == blockObj->slotCount()) {
+        if (!DefineNativeProperty(cx, blockObj,
+                                  INT_TO_JSID(blockCountBefore),
+                                  UndefinedValue(), NULL, NULL,
+                                  JSPROP_ENUMERATE | JSPROP_PERMANENT,
+                                  Shape::HAS_SHORTID, blockCountBefore)) {
+            return false;
+        }
+        JS_ASSERT(blockObj->slotCount() == blockCountBefore + 1);
     }
 
     return true;
@@ -2764,21 +2806,17 @@ Parser::returnOrYield(bool useAssignExpr)
 }
 
 static ParseNode *
-PushLexicalScope(JSContext *cx, TokenStream *ts, TreeContext *tc, StmtInfo *stmt)
+PushLexicalScope(JSContext *cx, TreeContext *tc, StaticBlockObject &obj, StmtInfo *stmt)
 {
     ParseNode *pn = LexicalScopeNode::create(PNK_LEXICALSCOPE, tc);
     if (!pn)
         return NULL;
 
-    JSObject *obj = js_NewBlockObject(cx);
-    if (!obj)
-        return NULL;
-
-    ObjectBox *blockbox = tc->parser->newObjectBox(obj);
+    ObjectBox *blockbox = tc->parser->newObjectBox(&obj);
     if (!blockbox)
         return NULL;
 
-    PushBlockScope(tc, stmt, blockbox, -1);
+    PushBlockScope(tc, stmt, obj, -1);
     pn->setOp(JSOP_LEAVEBLOCK);
     pn->pn_objbox = blockbox;
     pn->pn_cookie.makeFree();
@@ -2789,36 +2827,85 @@ PushLexicalScope(JSContext *cx, TokenStream *ts, TreeContext *tc, StmtInfo *stmt
     return pn;
 }
 
+static ParseNode *
+PushLexicalScope(JSContext *cx, TreeContext *tc, StmtInfo *stmt)
+{
+    StaticBlockObject *blockObj = StaticBlockObject::create(cx);
+    if (!blockObj)
+        return NULL;
+
+    return PushLexicalScope(cx, tc, *blockObj, stmt);
+}
+
 #if JS_HAS_BLOCK_SCOPE
 
+struct AddDecl
+{
+    uint32_t blockid;
+
+    AddDecl(uint32_t blockid) : blockid(blockid) {}
+
+    bool operator()(TreeContext *tc, StaticBlockObject &blockObj, const Shape &shape, JSAtom *atom)
+    {
+        ParseNode *def = (ParseNode *) blockObj.getSlot(shape.slot()).toPrivate();
+        def->pn_blockid = blockid;
+        return Define(def, atom, tc, true);
+    }
+};
+
+static ParseNode *
+PushLetScope(JSContext *cx, TreeContext *tc, StaticBlockObject &blockObj, StmtInfo *stmt)
+{
+    ParseNode *pn = PushLexicalScope(cx, tc, blockObj, stmt);
+    if (!pn)
+        return NULL;
+
+    /* Tell codegen to emit JSOP_ENTERLETx (not JSOP_ENTERBLOCK). */
+    pn->pn_dflags |= PND_LET;
+
+    /* Populate the new scope with decls found in the head with updated blockid. */
+    if (!ForEachLetDef(tc, blockObj, AddDecl(stmt->blockid)))
+        return NULL;
+
+    return pn;
+}
+
+/*
+ * Parse a let block statement or let expression (determined by 'letContext').
+ * In both cases, bindings are not hoisted to the top of the enclosing block
+ * and thus must be carefully injected between variables() and the let body.
+ */
 ParseNode *
-Parser::letBlock(JSBool statement)
+Parser::letBlock(LetContext letContext)
 {
     JS_ASSERT(tokenStream.currentToken().type == TOK_LET);
 
-    /* Create the let binary node. */
     ParseNode *pnlet = BinaryNode::create(PNK_LET, tc);
     if (!pnlet)
         return NULL;
 
+    StaticBlockObject *blockObj = StaticBlockObject::create(context);
+    if (!blockObj)
+        return NULL;
+
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_LET);
 
-    /* This is a let block or expression of the form: let (a, b, c) .... */
-    StmtInfo stmtInfo;
-    ParseNode *pnblock = PushLexicalScope(context, &tokenStream, tc, &stmtInfo);
-    if (!pnblock)
+    ParseNode *vars = variables(PNK_LET, blockObj, DontHoistVars);
+    if (!vars)
         return NULL;
-    ParseNode *pn = pnblock;
-    pn->pn_expr = pnlet;
-
-    pnlet->pn_left = variables(PNK_LP, true);
-    if (!pnlet->pn_left)
-        return NULL;
-    pnlet->pn_left->pn_xflags = PNX_POPVAR;
 
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_LET);
 
-    if (statement && !tokenStream.matchToken(TOK_LC, TSF_OPERAND)) {
+    StmtInfo stmtInfo;
+    ParseNode *block = PushLetScope(context, tc, *blockObj, &stmtInfo);
+    if (!block)
+        return NULL;
+
+    pnlet->pn_left = vars;
+    pnlet->pn_right = block;
+
+    ParseNode *ret;
+    if (letContext == LetStatement && !tokenStream.matchToken(TOK_LC, TSF_OPERAND)) {
         /*
          * Strict mode eliminates a grammar ambiguity with unparenthesized
          * LetExpressions in an ExpressionStatement. If followed immediately
@@ -2837,33 +2924,34 @@ Parser::letBlock(JSBool statement)
          * need to wrap the TOK_LET node in a TOK_SEMI node so that we pop
          * the return value of the expression.
          */
-        pn = UnaryNode::create(PNK_SEMI, tc);
-        if (!pn)
+        ParseNode *semi = UnaryNode::create(PNK_SEMI, tc);
+        if (!semi)
             return NULL;
-        pn->pn_num = -1;
-        pn->pn_kid = pnblock;
 
-        statement = JS_FALSE;
+        semi->pn_kid = pnlet;
+
+        letContext = LetExpresion;
+        ret = semi;
+    } else {
+        ret = pnlet;
     }
 
-    if (statement) {
-        pnlet->pn_right = statements();
-        if (!pnlet->pn_right)
+    if (letContext == LetStatement) {
+        JS_ASSERT(block->getOp() == JSOP_LEAVEBLOCK);
+        block->pn_expr = statements();
+        if (!block->pn_expr)
             return NULL;
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_LET);
     } else {
-        /*
-         * Change pnblock's opcode to the variant that propagates the last
-         * result down after popping the block, and clear statement.
-         */
-        pnblock->setOp(JSOP_LEAVEBLOCKEXPR);
-        pnlet->pn_right = assignExpr();
-        if (!pnlet->pn_right)
+        JS_ASSERT(letContext == LetExpresion);
+        block->setOp(JSOP_LEAVEBLOCKEXPR);
+        block->pn_expr = assignExpr();
+        if (!block->pn_expr)
             return NULL;
     }
 
     PopStatement(tc);
-    return pn;
+    return ret;
 }
 
 #endif /* JS_HAS_BLOCK_SCOPE */
@@ -2876,43 +2964,50 @@ PushBlocklikeStatement(StmtInfo *stmt, StmtType type, TreeContext *tc)
 }
 
 static ParseNode *
-NewBindingNode(JSAtom *atom, TreeContext *tc, bool let = false)
+NewBindingNode(JSAtom *atom, TreeContext *tc, StaticBlockObject *blockObj = NULL,
+               VarContext varContext = HoistVars)
 {
-    ParseNode *pn;
-    AtomDefnPtr removal;
+    /*
+     * If this name is being injected into an existing block/function, see if
+     * it has already been declared or if it resolves an outstanding lexdep.
+     * Otherwise, this is a let block/expr that introduces a new scope and thus
+     * shadows existing decls and doesn't resolve existing lexdeps. Duplicate
+     * names are caught by BindLet.
+     */
+    if (!blockObj || varContext == HoistVars) {
+        ParseNode *pn = tc->decls.lookupFirst(atom);
+        AtomDefnPtr removal;
+        if (pn) {
+            JS_ASSERT(!pn->isPlaceholder());
+        } else {
+            removal = tc->lexdeps->lookup(atom);
+            pn = removal ? removal.value() : NULL;
+            JS_ASSERT_IF(pn, pn->isPlaceholder());
+        }
 
-    if ((pn = tc->decls.lookupFirst(atom))) {
-        JS_ASSERT(!pn->isPlaceholder());
-    } else {
-        removal = tc->lexdeps->lookup(atom);
-        pn = removal ? removal.value() : NULL;
-        JS_ASSERT_IF(pn, pn->isPlaceholder());
-    }
+        if (pn) {
+            JS_ASSERT(pn->isDefn());
 
-    if (pn) {
-        JS_ASSERT(pn->isDefn());
+            /*
+             * A let binding at top level becomes a var before we get here, so if
+             * pn and tc have the same blockid then that id must not be the bodyid.
+             * If pn is a forward placeholder definition from the same or a higher
+             * block then we claim it.
+             */
+            JS_ASSERT_IF(blockObj && pn->pn_blockid == tc->blockid(),
+                         pn->pn_blockid != tc->bodyid);
 
-        /*
-         * A let binding at top level becomes a var before we get here, so if
-         * pn and tc have the same blockid then that id must not be the bodyid.
-         * If pn is a forward placeholder definition from the same or a higher
-         * block then we claim it.
-         */
-        JS_ASSERT_IF(let && pn->pn_blockid == tc->blockid(),
-                     pn->pn_blockid != tc->bodyid);
-
-        if (pn->isPlaceholder() && pn->pn_blockid >= (let ? tc->blockid() : tc->bodyid)) {
-            if (let)
+            if (pn->isPlaceholder() && pn->pn_blockid >= tc->blockid()) {
                 pn->pn_blockid = tc->blockid();
-
-            tc->lexdeps->remove(removal);
-            return pn;
+                tc->lexdeps->remove(removal);
+                return pn;
+            }
         }
     }
 
     /* Make a new node for this declarator name (or destructuring pattern). */
     JS_ASSERT(tc->parser->tokenStream.currentToken().type == TOK_NAME);
-    pn = NameNode::create(PNK_NAME, atom, tc);
+    ParseNode *pn = NameNode::create(PNK_NAME, atom, tc);
     if (!pn)
         return NULL;
 
@@ -3043,18 +3138,13 @@ Parser::forStatement()
 {
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_FOR));
 
-    ParseNode *pnseq = NULL;
-#if JS_HAS_BLOCK_SCOPE
-    ParseNode *pnlet = NULL;
-    StmtInfo blockInfo;
-#endif
-
     /* A FOR node is binary, left is loop control and right is the body. */
     ParseNode *pn = BinaryNode::create(PNK_FOR, tc);
     if (!pn)
         return NULL;
-    StmtInfo stmtInfo;
-    PushStatement(tc, &stmtInfo, STMT_FOR_LOOP, -1);
+
+    StmtInfo forStmt;
+    PushStatement(tc, &forStmt, STMT_FOR_LOOP, -1);
 
     pn->setOp(JSOP_ITER);
     pn->pn_iflags = 0;
@@ -3067,15 +3157,14 @@ Parser::forStatement()
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
 
-#ifdef JS_HAS_BLOCK_SCOPE
-    bool let = false;
-#endif
-
     /*
      * True if we have 'for (var/let/const ...)', except in the oddball case
      * where 'let' begins a let-expression in 'for (let (...) ...)'.
      */
     bool forDecl = false;
+
+    /* Non-null when forDecl is true for a 'for (let ...)' statement. */
+    StaticBlockObject *blockObj = NULL;
 
     /* Set to 'x' in 'for (x ;... ;...)' or 'for (x in ...)'. */
     ParseNode *pn1;
@@ -3107,21 +3196,19 @@ Parser::forStatement()
             if (tt == TOK_VAR || tt == TOK_CONST) {
                 forDecl = true;
                 tokenStream.consumeKnownToken(tt);
-                pn1 = variables(tt == TOK_VAR ? PNK_VAR : PNK_CONST, false);
+                pn1 = variables(tt == TOK_VAR ? PNK_VAR : PNK_CONST);
             }
 #if JS_HAS_BLOCK_SCOPE
             else if (tt == TOK_LET) {
-                let = true;
                 (void) tokenStream.getToken();
                 if (tokenStream.peekToken() == TOK_LP) {
-                    pn1 = letBlock(JS_FALSE);
+                    pn1 = letBlock(LetExpresion);
                 } else {
                     forDecl = true;
-                    pnlet = PushLexicalScope(context, &tokenStream, tc, &blockInfo);
-                    if (!pnlet)
+                    blockObj = StaticBlockObject::create(context);
+                    if (!blockObj)
                         return NULL;
-                    blockInfo.flags |= SIF_FOR_BLOCK;
-                    pn1 = variables(PNK_LET, false);
+                    pn1 = variables(PNK_LET, blockObj, DontHoistVars);
                 }
             }
 #endif
@@ -3134,14 +3221,23 @@ Parser::forStatement()
         }
     }
 
+    JS_ASSERT_IF(forDecl, pn1->isArity(PN_LIST));
+    JS_ASSERT(!!blockObj == (forDecl && pn1->isOp(JSOP_NOP)));
+
+    const TokenPos pos = tokenStream.currentToken().pos;
+
+    /* If non-null, the parent that should be returned instead of forHead. */
+    ParseNode *forParent = NULL;
+
     /*
      * We can be sure that it's a for/in loop if there's still an 'in'
      * keyword here, even if JavaScript recognizes 'in' as an operator,
      * as we've excluded 'in' from being parsed in RelExpr by setting
      * the TCF_IN_FOR_INIT flag in our TreeContext.
      */
-    TokenPos pos = tokenStream.currentToken().pos;
-    ParseNode *pn2, *pn3, *pn4;
+    ParseNode *forHead;     /* initialized by both branches. */
+    StmtInfo letStmt;       /* used if blockObj != NULL. */
+    ParseNode *pn2, *pn3;   /* forHead->pn_kid1 and pn_kid2. */
     if (pn1 && tokenStream.matchToken(TOK_IN)) {
         /*
          * Parse the rest of the for/in head.
@@ -3151,7 +3247,7 @@ Parser::forStatement()
          * enumeration value each iteration, and pn3 is the rhs of 'in'.
          */
         pn->pn_iflags |= JSITER_ENUMERATE;
-        stmtInfo.type = STMT_FOR_IN_LOOP;
+        forStmt.type = STMT_FOR_IN_LOOP;
 
         /* Check that the left side of the 'in' is valid. */
         if (forDecl
@@ -3214,16 +3310,15 @@ Parser::forStatement()
                  * the loop head.
                  */
 #if JS_HAS_BLOCK_SCOPE
-                if (let) {
+                if (blockObj) {
                     reportErrorNumber(pn2, JSREPORT_ERROR, JSMSG_INVALID_FOR_IN_INIT);
                     return NULL;
                 }
 #endif /* JS_HAS_BLOCK_SCOPE */
 
-                pnseq = ListNode::create(PNK_SEQ, tc);
+                ParseNode *pnseq = ListNode::create(PNK_SEQ, tc);
                 if (!pnseq)
                     return NULL;
-                pnseq->pn_pos.begin = pn->pn_pos.begin;
 
                 dflag = PND_INITIALIZED;
 
@@ -3238,6 +3333,7 @@ Parser::forStatement()
                 pn1->pn_xflags &= ~PNX_FORINVAR;
                 pn1->pn_xflags |= PNX_POPVAR;
                 pnseq->initList(pn1);
+                pn1 = NULL;
 
 #if JS_HAS_DESTRUCTURING
                 if (pn2->isKind(PNK_ASSIGN)) {
@@ -3246,22 +3342,47 @@ Parser::forStatement()
                               pn2->isKind(PNK_NAME));
                 }
 #endif
-                pn1 = NULL;
+                pnseq->append(pn);
+                forParent = pnseq;
             }
-
-            /*
-             * pn2 is part of a declaration. Make a copy that can be passed to
-             * EmitAssignment.
-             */
-            pn2 = CloneLeftHandSide(pn2, tc);
-            if (!pn2)
-                return NULL;
         } else {
             /* Not a declaration. */
+            JS_ASSERT(!blockObj);
             pn2 = pn1;
             pn1 = NULL;
 
             if (!setAssignmentLhsOps(pn2, JSOP_NOP))
+                return NULL;
+        }
+
+        pn3 = expr();
+        if (!pn3)
+            return NULL;
+
+        if (blockObj) {
+            /*
+             * Now that the pn3 has been parsed, push the let scope. To hold
+             * the blockObj for the emitter, wrap the TOK_LEXICALSCOPE node
+             * created by PushLetScope around the for's initializer. This also
+             * serves to indicate the let-decl to the emitter.
+             */
+            ParseNode *block = PushLetScope(context, tc, *blockObj, &letStmt);
+            if (!block)
+                return NULL;
+            letStmt.flags |= SIF_FOR_BLOCK;
+            block->pn_expr = pn1;
+            pn1 = block;
+        }
+
+        if (forDecl) {
+            /*
+             * pn2 is part of a declaration. Make a copy that can be passed to
+             * EmitAssignment. Take care to do this after PushLetScope has
+             * Define's the new binding since this pn2->isDefn() which tells
+             * CloneLeftHandSide to make the new pn2 a use.
+             */
+            pn2 = CloneLeftHandSide(pn2, tc);
+            if (!pn2)
                 return NULL;
         }
 
@@ -3293,28 +3414,29 @@ Parser::forStatement()
           default:;
         }
 
-        /*
-         * Parse the object expression as the right operand of 'in', first
-         * removing the top statement from the statement-stack if this is a
-         * 'for (let x in y)' loop.
-         */
-#if JS_HAS_BLOCK_SCOPE
-        StmtInfo *save = tc->topStmt;
-        if (let)
-            tc->topStmt = save->down;
-#endif
-        pn3 = expr();
-        if (!pn3)
-            return NULL;
-#if JS_HAS_BLOCK_SCOPE
-        if (let)
-            tc->topStmt = save;
-#endif
-
-        pn4 = TernaryNode::create(PNK_FORIN, tc);
-        if (!pn4)
+        forHead = TernaryNode::create(PNK_FORIN, tc);
+        if (!forHead)
             return NULL;
     } else {
+        if (blockObj) {
+            /*
+             * Desugar 'for (let A; B; C) D' into 'let (A) { for (; B; C) D }'
+             * to induce the correct scoping for A.
+             */
+            ParseNode *block = PushLetScope(context, tc, *blockObj, &letStmt);
+            if (!block)
+                return NULL;
+            letStmt.flags |= SIF_FOR_BLOCK;
+
+            ParseNode *let = new_<BinaryNode>(PNK_LET, JSOP_NOP, pos, pn1, block);
+            if (!let)
+                return NULL;
+
+            pn1 = NULL;
+            block->pn_expr = pn;
+            forParent = let;
+        }
+
         if (pn->pn_iflags & JSITER_FOREACH) {
             reportErrorNumber(pn, JSREPORT_ERROR, JSMSG_BAD_FOR_EACH_LOOP);
             return NULL;
@@ -3323,8 +3445,7 @@ Parser::forStatement()
 
         /* Parse the loop condition or null into pn2. */
         MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_INIT);
-        TokenKind tt = tokenStream.peekToken(TSF_OPERAND);
-        if (tt == TOK_SEMI) {
+        if (tokenStream.peekToken(TSF_OPERAND) == TOK_SEMI) {
             pn2 = NULL;
         } else {
             pn2 = expr();
@@ -3334,8 +3455,7 @@ Parser::forStatement()
 
         /* Parse the update expression or null into pn3. */
         MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_COND);
-        tt = tokenStream.peekToken(TSF_OPERAND);
-        if (tt == TOK_RP) {
+        if (tokenStream.peekToken(TSF_OPERAND) == TOK_RP) {
             pn3 = NULL;
         } else {
             pn3 = expr();
@@ -3343,42 +3463,40 @@ Parser::forStatement()
                 return NULL;
         }
 
-        pn4 = TernaryNode::create(PNK_FORHEAD, tc);
-        if (!pn4)
+        forHead = TernaryNode::create(PNK_FORHEAD, tc);
+        if (!forHead)
             return NULL;
     }
-    pn4->pn_pos = pos;
-    pn4->setOp(JSOP_NOP);
-    pn4->pn_kid1 = pn1;
-    pn4->pn_kid2 = pn2;
-    pn4->pn_kid3 = pn3;
-    pn->pn_left = pn4;
+
+    forHead->pn_pos = pos;
+    forHead->setOp(JSOP_NOP);
+    forHead->pn_kid1 = pn1;
+    forHead->pn_kid2 = pn2;
+    forHead->pn_kid3 = pn3;
+    pn->pn_left = forHead;
 
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FOR_CTRL);
 
-    /* Parse the loop body into pn->pn_right. */
-    pn2 = statement();
-    if (!pn2)
+    /* Parse the loop body. */
+    ParseNode *body = statement();
+    if (!body)
         return NULL;
-    pn->pn_right = pn2;
 
     /* Record the absolute line number for source note emission. */
-    pn->pn_pos.end = pn2->pn_pos.end;
+    pn->pn_pos.end = body->pn_pos.end;
+    pn->pn_right = body;
+
+    if (forParent) {
+        forParent->pn_pos.begin = pn->pn_pos.begin;
+        forParent->pn_pos.end = pn->pn_pos.end;
+    }
 
 #if JS_HAS_BLOCK_SCOPE
-    if (pnlet) {
+    if (blockObj)
         PopStatement(tc);
-        pnlet->pn_expr = pn;
-        pn = pnlet;
-    }
 #endif
-    if (pnseq) {
-        pnseq->pn_pos.end = pn->pn_pos.end;
-        pnseq->append(pn);
-        pn = pnseq;
-    }
     PopStatement(tc);
-    return pn;
+    return forParent ? forParent : pn;
 }
 
 ParseNode *
@@ -3442,7 +3560,7 @@ Parser::tryStatement()
              * Create a lexical scope node around the whole catch clause,
              * including the head.
              */
-            pnblock = PushLexicalScope(context, &tokenStream, tc, &stmtInfo);
+            pnblock = PushLexicalScope(context, tc, &stmtInfo);
             if (!pnblock)
                 return NULL;
             stmtInfo.type = STMT_CATCH;
@@ -3465,10 +3583,8 @@ Parser::tryStatement()
              * scoped, not a property of a new Object instance.  This is
              * an intentional change that anticipates ECMA Ed. 4.
              */
-            data.pn = NULL;
-            data.op = JSOP_NOP;
-            data.binder = BindLet;
-            data.let.overflow = JSMSG_TOO_MANY_CATCH_VARS;
+            data.initLet(HoistVars, *tc->blockChain, JSMSG_TOO_MANY_CATCH_VARS);
+            JS_ASSERT(data.let.blockObj && data.let.blockObj == pnblock->pn_objbox->object);
 
             tt = tokenStream.getToken();
             ParseNode *pn3;
@@ -3485,7 +3601,7 @@ Parser::tryStatement()
               case TOK_NAME:
               {
                 JSAtom *label = tokenStream.currentToken().name();
-                pn3 = NewBindingNode(label, tc, true);
+                pn3 = NewBindingNode(label, tc);
                 if (!pn3)
                     return NULL;
                 data.pn = pn3;
@@ -3611,12 +3727,16 @@ Parser::letStatement()
     do {
         /* Check for a let statement or let expression. */
         if (tokenStream.peekToken() == TOK_LP) {
-            pn = letBlock(JS_TRUE);
-            if (!pn || pn->isOp(JSOP_LEAVEBLOCK))
+            pn = letBlock(LetStatement);
+            if (!pn)
+                return NULL;
+
+            JS_ASSERT(pn->isKind(PNK_LET) || pn->isKind(PNK_SEMI));
+            if (pn->isKind(PNK_LET) && pn->pn_expr->getOp() == JSOP_LEAVEBLOCK)
                 return pn;
 
             /* Let expressions require automatic semicolon insertion. */
-            JS_ASSERT(pn->isKind(PNK_SEMI) || pn->isOp(JSOP_LEAVEBLOCKEXPR));
+            JS_ASSERT(pn->isKind(PNK_SEMI) || pn->isOp(JSOP_NOP));
             break;
         }
 
@@ -3639,14 +3759,14 @@ Parser::letStatement()
         }
 
         if (stmt && (stmt->flags & SIF_SCOPE)) {
-            JS_ASSERT(tc->blockChainBox == stmt->blockBox);
+            JS_ASSERT(tc->blockChain == stmt->blockObj);
         } else {
             if (!stmt || (stmt->flags & SIF_BODY_BLOCK)) {
                 /*
                  * ES4 specifies that let at top level and at body-block scope
                  * does not shadow var, so convert back to var.
                  */
-                pn = variables(PNK_VAR, false);
+                pn = variables(PNK_VAR);
                 if (!pn)
                     return NULL;
                 pn->pn_xflags |= PNX_POPVAR;
@@ -3667,11 +3787,11 @@ Parser::letStatement()
             JS_ASSERT(!stmt->downScope);
 
             /* Convert the block statement into a scope statement. */
-            JSObject *obj = js_NewBlockObject(tc->parser->context);
-            if (!obj)
+            StaticBlockObject *blockObj = StaticBlockObject::create(tc->parser->context);
+            if (!blockObj)
                 return NULL;
 
-            ObjectBox *blockbox = tc->parser->newObjectBox(obj);
+            ObjectBox *blockbox = tc->parser->newObjectBox(blockObj);
             if (!blockbox)
                 return NULL;
 
@@ -3685,10 +3805,9 @@ Parser::letStatement()
             stmt->downScope = tc->topScopeStmt;
             tc->topScopeStmt = stmt;
 
-            obj->setStaticBlockScopeChain(tc->blockChain());
-            blockbox->parent = tc->blockChainBox;
-            tc->blockChainBox = blockbox;
-            stmt->blockBox = blockbox;
+            blockObj->setEnclosingBlock(tc->blockChain);
+            tc->blockChain = blockObj;
+            stmt->blockObj = blockObj;
 
 #ifdef DEBUG
             ParseNode *tmp = tc->blockNode;
@@ -3708,7 +3827,7 @@ Parser::letStatement()
             tc->blockNode = pn1;
         }
 
-        pn = variables(PNK_LET, false);
+        pn = variables(PNK_LET, tc->blockChain, HoistVars);
         if (!pn)
             return NULL;
         pn->pn_xflags = PNX_POPVAR;
@@ -4040,7 +4159,7 @@ Parser::statement()
         return withStatement();
 
       case TOK_VAR:
-        pn = variables(PNK_VAR, false);
+        pn = variables(PNK_VAR);
         if (!pn)
             return NULL;
 
@@ -4049,7 +4168,7 @@ Parser::statement()
         break;
 
       case TOK_CONST:
-        pn = variables(PNK_CONST, false);
+        pn = variables(PNK_CONST);
         if (!pn)
             return NULL;
 
@@ -4103,7 +4222,7 @@ Parser::statement()
         return pn;
 
       case TOK_DEBUGGER:
-        pn = NullaryNode::create(PNK_DEBUGGER, tc);
+        pn = tc->parser->new_<DebuggerStatement>(tokenStream.currentToken().pos);
         if (!pn)
             return NULL;
         tc->flags |= TCF_FUN_HEAVYWEIGHT;
@@ -4153,8 +4272,13 @@ Parser::statement()
     return MatchOrInsertSemicolon(context, &tokenStream) ? pn : NULL;
 }
 
+/*
+ * The 'blockObj' parameter is non-null when parsing the 'vars' in a let
+ * expression, block statement, non-top-level let declaration in statement
+ * context, and the let-initializer of a for-statement.
+ */
 ParseNode *
-Parser::variables(ParseNodeKind kind, bool inLetHead)
+Parser::variables(ParseNodeKind kind, StaticBlockObject *blockObj, VarContext varContext)
 {
     /*
      * The four options here are:
@@ -4165,29 +4289,11 @@ Parser::variables(ParseNodeKind kind, bool inLetHead)
      */
     JS_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET || kind == PNK_LP);
 
-    bool let = (kind == PNK_LET || kind == PNK_LP);
-
-#if JS_HAS_BLOCK_SCOPE
-    bool popScope = (inLetHead || (let && (tc->flags & TCF_IN_FOR_INIT)));
-    StmtInfo *save = tc->topStmt, *saveScope = tc->topScopeStmt;
-#endif
-
-    /* Make sure that statement set up the tree context correctly. */
-    StmtInfo *scopeStmt = tc->topScopeStmt;
-    if (let) {
-        while (scopeStmt && !(scopeStmt->flags & SIF_SCOPE)) {
-            JS_ASSERT(!STMT_MAYBE_SCOPE(scopeStmt));
-            scopeStmt = scopeStmt->downScope;
-        }
-        JS_ASSERT(scopeStmt);
-    }
-
-    BindData data;
-    data.op = let ? JSOP_NOP : kind == PNK_VAR ? JSOP_DEFVAR : JSOP_DEFCONST;
     ParseNode *pn = ListNode::create(kind, tc);
     if (!pn)
         return NULL;
-    pn->setOp(data.op);
+
+    pn->setOp(blockObj ? JSOP_NOP : kind == PNK_VAR ? JSOP_DEFVAR : JSOP_DEFCONST);
     pn->makeEmpty();
 
     /*
@@ -4195,13 +4301,11 @@ Parser::variables(ParseNodeKind kind, bool inLetHead)
      * var, whereas let is block scoped. ES-Harmony wants block-scoped const so
      * this code will change soon.
      */
-    if (let) {
-        JS_ASSERT(tc->blockChainBox == scopeStmt->blockBox);
-        data.binder = BindLet;
-        data.let.overflow = JSMSG_TOO_MANY_LOCALS;
-    } else {
-        data.binder = BindVarOrConst;
-    }
+    BindData data;
+    if (blockObj)
+        data.initLet(varContext, *blockObj, JSMSG_TOO_MANY_LOCALS);
+    else
+        data.initVarOrConst(pn->getOp());
 
     ParseNode *pn2;
     do {
@@ -4224,20 +4328,7 @@ Parser::variables(ParseNodeKind kind, bool inLetHead)
             MUST_MATCH_TOKEN(TOK_ASSIGN, JSMSG_BAD_DESTRUCT_DECL);
             JS_ASSERT(tokenStream.currentToken().t_op == JSOP_NOP);
 
-#if JS_HAS_BLOCK_SCOPE
-            if (popScope) {
-                tc->topStmt = save->down;
-                tc->topScopeStmt = saveScope->downScope;
-            }
-#endif
             ParseNode *init = assignExpr();
-#if JS_HAS_BLOCK_SCOPE
-            if (popScope) {
-                tc->topStmt = save;
-                tc->topScopeStmt = saveScope;
-            }
-#endif
-
             if (!init)
                 return NULL;
             UndominateInitializers(pn2, init->pn_pos.end, tc);
@@ -4257,7 +4348,7 @@ Parser::variables(ParseNodeKind kind, bool inLetHead)
         }
 
         PropertyName *name = tokenStream.currentToken().name();
-        pn2 = NewBindingNode(name, tc, let);
+        pn2 = NewBindingNode(name, tc, blockObj, varContext);
         if (!pn2)
             return NULL;
         if (data.op == JSOP_DEFCONST)
@@ -4270,19 +4361,7 @@ Parser::variables(ParseNodeKind kind, bool inLetHead)
         if (tokenStream.matchToken(TOK_ASSIGN)) {
             JS_ASSERT(tokenStream.currentToken().t_op == JSOP_NOP);
 
-#if JS_HAS_BLOCK_SCOPE
-            if (popScope) {
-                tc->topStmt = save->down;
-                tc->topScopeStmt = saveScope->downScope;
-            }
-#endif
             ParseNode *init = assignExpr();
-#if JS_HAS_BLOCK_SCOPE
-            if (popScope) {
-                tc->topStmt = save;
-                tc->topScopeStmt = saveScope;
-            }
-#endif
             if (!init)
                 return NULL;
 
@@ -4311,7 +4390,7 @@ Parser::variables(ParseNodeKind kind, bool inLetHead)
 
             if (tc->inFunction() && name == context->runtime->atomState.argumentsAtom) {
                 tc->noteArgumentsUse(pn2);
-                if (!let)
+                if (!blockObj)
                     tc->flags |= TCF_FUN_HEAVYWEIGHT;
             }
         }
@@ -4560,37 +4639,30 @@ Parser::orExpr1()
 JS_ALWAYS_INLINE ParseNode *
 Parser::condExpr1()
 {
-    ParseNode *pn = orExpr1();
-    if (pn && tokenStream.isCurrentTokenType(TOK_HOOK)) {
-        ParseNode *pn1 = pn;
-        pn = TernaryNode::create(PNK_HOOK, tc);
-        if (!pn)
-            return NULL;
+    ParseNode *condition = orExpr1();
+    if (!condition || !tokenStream.isCurrentTokenType(TOK_HOOK))
+        return condition;
 
-        /*
-         * Always accept the 'in' operator in the middle clause of a ternary,
-         * where it's unambiguous, even if we might be parsing the init of a
-         * for statement.
-         */
-        uintN oldflags = tc->flags;
-        tc->flags &= ~TCF_IN_FOR_INIT;
-        ParseNode *pn2 = assignExpr();
-        tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
+    /*
+     * Always accept the 'in' operator in the middle clause of a ternary,
+     * where it's unambiguous, even if we might be parsing the init of a
+     * for statement.
+     */
+    uintN oldflags = tc->flags;
+    tc->flags &= ~TCF_IN_FOR_INIT;
+    ParseNode *thenExpr = assignExpr();
+    tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
+    if (!thenExpr)
+        return NULL;
 
-        if (!pn2)
-            return NULL;
-        MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_IN_COND);
-        ParseNode *pn3 = assignExpr();
-        if (!pn3)
-            return NULL;
-        pn->pn_pos.begin = pn1->pn_pos.begin;
-        pn->pn_pos.end = pn3->pn_pos.end;
-        pn->pn_kid1 = pn1;
-        pn->pn_kid2 = pn2;
-        pn->pn_kid3 = pn3;
-        tokenStream.getToken();     /* need to read one token past the end */
-    }
-    return pn;
+    MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_IN_COND);
+
+    ParseNode *elseExpr = assignExpr();
+    if (!elseExpr)
+        return NULL;
+
+    tokenStream.getToken(); /* read one token past the end */
+    return new_<ConditionalExpression>(condition, thenExpr, elseExpr);
 }
 
 bool
@@ -4697,7 +4769,7 @@ Parser::assignExpr()
     return ParseNode::newBinaryOrAppend(kind, op, lhs, rhs, tc);
 }
 
-static ParseNode *
+static bool
 SetLvalKid(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn, ParseNode *kid,
            const char *name)
 {
@@ -4712,25 +4784,24 @@ SetLvalKid(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn, Parse
         !kid->isKind(PNK_LB))
     {
         ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR, JSMSG_BAD_OPERAND, name);
-        return NULL;
+        return false;
     }
     if (!CheckStrictAssignment(cx, tc, kid))
-        return NULL;
+        return false;
     pn->pn_kid = kid;
-    return kid;
+    return true;
 }
 
 static const char incop_name_str[][10] = {"increment", "decrement"};
 
 static JSBool
 SetIncOpKid(JSContext *cx, TokenStream *ts, TreeContext *tc, ParseNode *pn, ParseNode *kid,
-            TokenKind tt, JSBool preorder)
+            TokenKind tt, bool preorder)
 {
     JSOp op;
 
-    kid = SetLvalKid(cx, ts, tc, pn, kid, incop_name_str[tt == TOK_DEC]);
-    if (!kid)
-        return JS_FALSE;
+    if (!SetLvalKid(cx, ts, tc, pn, kid, incop_name_str[tt == TOK_DEC]))
+        return false;
     switch (kid->getKind()) {
       case PNK_NAME:
         op = (tt == TOK_INC)
@@ -4802,13 +4873,13 @@ Parser::unaryExpr()
 
       case TOK_INC:
       case TOK_DEC:
-        pn = UnaryNode::create((tt == TOK_INC) ? PNK_INC : PNK_DEC, tc);
+        pn = UnaryNode::create((tt == TOK_INC) ? PNK_PREINCREMENT : PNK_PREDECREMENT, tc);
         if (!pn)
             return NULL;
         pn2 = memberExpr(JS_TRUE);
         if (!pn2)
             return NULL;
-        if (!SetIncOpKid(context, &tokenStream, tc, pn, pn2, tt, JS_TRUE))
+        if (!SetIncOpKid(context, &tokenStream, tc, pn, pn2, tt, true))
             return NULL;
         pn->pn_pos.end = pn2->pn_pos.end;
         break;
@@ -4871,11 +4942,11 @@ Parser::unaryExpr()
         if (tokenStream.onCurrentLine(pn->pn_pos)) {
             tt = tokenStream.peekTokenSameLine(TSF_OPERAND);
             if (tt == TOK_INC || tt == TOK_DEC) {
-                (void) tokenStream.getToken();
-                pn2 = UnaryNode::create((tt == TOK_INC) ? PNK_INC : PNK_DEC, tc);
+                tokenStream.consumeKnownToken(tt);
+                pn2 = UnaryNode::create((tt == TOK_INC) ? PNK_POSTINCREMENT : PNK_POSTDECREMENT, tc);
                 if (!pn2)
                     return NULL;
-                if (!SetIncOpKid(context, &tokenStream, tc, pn2, pn, tt, JS_FALSE))
+                if (!SetIncOpKid(context, &tokenStream, tc, pn2, pn, tt, false))
                     return NULL;
                 pn2->pn_pos.begin = pn->pn_pos.begin;
                 pn = pn2;
@@ -5255,7 +5326,7 @@ Parser::comprehensionTail(ParseNode *kid, uintN blockid, bool isGenexp,
          * yields the next value from a for-in loop (possibly nested, and with
          * optional if guard). Make pn be the TOK_LC body node.
          */
-        pn = PushLexicalScope(context, &tokenStream, tc, &stmtInfo);
+        pn = PushLexicalScope(context, tc, &stmtInfo);
         if (!pn)
             return NULL;
         adjust = pn->pn_blockid - blockid;
@@ -5275,7 +5346,7 @@ Parser::comprehensionTail(ParseNode *kid, uintN blockid, bool isGenexp,
          * block scope.
          */
         adjust = tc->blockid();
-        pn = PushLexicalScope(context, &tokenStream, tc, &stmtInfo);
+        pn = PushLexicalScope(context, tc, &stmtInfo);
         if (!pn)
             return NULL;
 
@@ -5292,10 +5363,8 @@ Parser::comprehensionTail(ParseNode *kid, uintN blockid, bool isGenexp,
     CompExprTransplanter transplanter(kid, tc, kind == PNK_SEMI, adjust);
     transplanter.transplant(kid);
 
-    data.pn = NULL;
-    data.op = JSOP_NOP;
-    data.binder = BindLet;
-    data.let.overflow = JSMSG_ARRAY_INIT_TOO_BIG;
+    JS_ASSERT(tc->blockChain && tc->blockChain == pn->pn_objbox->object);
+    data.initLet(HoistVars, *tc->blockChain, JSMSG_ARRAY_INIT_TOO_BIG);
 
     do {
         /*
@@ -5343,7 +5412,7 @@ Parser::comprehensionTail(ParseNode *kid, uintN blockid, bool isGenexp,
              * and it tries to bind all names to slots, so we must let it do
              * the deed.
              */
-            pn3 = NewBindingNode(name, tc, true);
+            pn3 = NewBindingNode(name, tc);
             if (!pn3)
                 return NULL;
             break;
@@ -6283,13 +6352,10 @@ Parser::xmlElementContent(ParseNode *pn)
             pn2->pn_xflags &= ~PNX_XMLROOT;
             pn->pn_xflags |= pn2->pn_xflags;
         } else if (tt == TOK_XMLPI) {
-            pn2 = NullaryNode::create(PNK_XMLPI, tc);
+            const Token &tok = tokenStream.currentToken();
+            pn2 = new_<XMLProcessingInstruction>(tok.xmlPITarget(), tok.xmlPIData(), tok.pos);
             if (!pn2)
                 return false;
-            const Token &tok = tokenStream.currentToken();
-            pn2->setOp(tok.t_op);
-            pn2->pn_pitarget = tok.xmlPITarget();
-            pn2->pn_pidata = tok.xmlPIData();
         } else {
             JS_ASSERT(tt == TOK_XMLCDATA || tt == TOK_XMLCOMMENT);
             pn2 = atomNode(tt == TOK_XMLCDATA ? PNK_XMLCDATA : PNK_XMLCOMMENT,
@@ -6495,50 +6561,6 @@ Parser::parseXMLText(JSObject *chain, bool allowList)
 }
 
 #endif /* JS_HAS_XMLSUPPORT */
-
-#if JS_HAS_BLOCK_SCOPE
-/*
- * Check whether blockid is an active scoping statement in tc. This code is
- * necessary to qualify tc->decls.lookup() hits in primaryExpr's TOK_NAME case
- * (below) where the hits come from Scheme-ish let bindings in for loop heads
- * and let blocks and expressions (not let declarations).
- *
- * Unlike let declarations ("let as the new var"), which is a kind of letrec
- * due to hoisting, let in a for loop head, let block, or let expression acts
- * like Scheme's let: initializers are evaluated without the new let bindings
- * being in scope.
- *
- * Name binding analysis is eager with fixups, rather than multi-pass, and let
- * bindings push on the front of the tc->decls AtomDecls (either the singular
- * list or on a hash chain -- see JSAtomMultiList::add*) in order to shadow
- * outer scope bindings of the same name.
- *
- * This simplifies binding lookup code at the price of a linear search here,
- * but only if code uses let (var predominates), and even then this function's
- * loop iterates more than once only in crazy cases.
- */
-static inline bool
-BlockIdInScope(uintN blockid, TreeContext *tc)
-{
-    if (blockid > tc->blockid())
-        return false;
-    for (StmtInfo *stmt = tc->topScopeStmt; stmt; stmt = stmt->downScope) {
-        if (stmt->blockid == blockid)
-            return true;
-    }
-    return false;
-}
-#endif
-
-static ParseNode *
-PrimaryExprNode(ParseNodeKind kind, JSOp op, TreeContext *tc)
-{
-    ParseNode *pn = NullaryNode::create(kind, tc);
-    if (!pn)
-        return NULL;
-    pn->setOp(op);
-    return pn;
-}
 
 ParseNode *
 Parser::primaryExpr(TokenKind tt, JSBool afterDot)
@@ -6774,13 +6796,22 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                     pn2 = ParseNode::newBinaryOrAppend(PNK_COLON, op, pn3, pn2, tc);
                     goto skip;
                 }
-              case TOK_STRING:
+              case TOK_STRING: {
                 atom = tokenStream.currentToken().atom();
-                pn3 = NullaryNode::create(PNK_STRING, tc);
-                if (!pn3)
-                    return NULL;
-                pn3->pn_atom = atom;
+                uint32_t index;
+                if (atom->isIndex(&index)) {
+                    pn3 = NullaryNode::create(PNK_NUMBER, tc);
+                    if (!pn3)
+                        return NULL;
+                    pn3->pn_dval = index;
+                } else {
+                    pn3 = NullaryNode::create(PNK_STRING, tc);
+                    if (!pn3)
+                        return NULL;
+                    pn3->pn_atom = atom;
+                }
                 break;
+              }
               case TOK_RC:
                 goto end_obj_init;
               default:
@@ -6892,47 +6923,52 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 
 #if JS_HAS_BLOCK_SCOPE
       case TOK_LET:
-        pn = letBlock(JS_FALSE);
+        pn = letBlock(LetExpresion);
         if (!pn)
             return NULL;
         break;
 #endif
 
 #if JS_HAS_SHARP_VARS
-      case TOK_DEFSHARP:
-        pn = UnaryNode::create(PNK_DEFSHARP, tc);
-        if (!pn)
+      case TOK_DEFSHARP: {
+        if (!tc->ensureSharpSlots())
             return NULL;
-        pn->pn_num = tokenStream.currentToken().sharpNumber();
+        const Token &tok = tokenStream.currentToken();
+        TokenPtr begin = tok.pos.begin;
+        uint16_t number = tok.sharpNumber();
+
         tt = tokenStream.getToken(TSF_OPERAND);
-        pn->pn_kid = primaryExpr(tt, JS_FALSE);
-        if (!pn->pn_kid)
+        ParseNode *expr = primaryExpr(tt, false);
+        if (!expr)
             return NULL;
-        if (pn->pn_kid->isKind(PNK_USESHARP) ||
-            pn->pn_kid->isKind(PNK_DEFSHARP) ||
-            pn->pn_kid->isKind(PNK_STRING) ||
-            pn->pn_kid->isKind(PNK_NUMBER) ||
-            pn->pn_kid->isKind(PNK_TRUE) ||
-            pn->pn_kid->isKind(PNK_FALSE) ||
-            pn->pn_kid->isKind(PNK_NULL) ||
-            pn->pn_kid->isKind(PNK_THIS))
+        if (expr->isKind(PNK_USESHARP) ||
+            expr->isKind(PNK_DEFSHARP) ||
+            expr->isKind(PNK_STRING) ||
+            expr->isKind(PNK_NUMBER) ||
+            expr->isKind(PNK_TRUE) ||
+            expr->isKind(PNK_FALSE) ||
+            expr->isKind(PNK_NULL) ||
+            expr->isKind(PNK_THIS))
         {
-            reportErrorNumber(pn->pn_kid, JSREPORT_ERROR, JSMSG_BAD_SHARP_VAR_DEF);
+            reportErrorNumber(expr, JSREPORT_ERROR, JSMSG_BAD_SHARP_VAR_DEF);
             return NULL;
         }
-        if (!tc->ensureSharpSlots())
-            return NULL;
-        break;
-
-      case TOK_USESHARP:
-        /* Check for forward/dangling references at runtime, to allow eval. */
-        pn = NullaryNode::create(PNK_USESHARP, tc);
+        pn = new_<DefSharpExpression>(number, expr, begin, tokenStream.currentToken().pos.end);
         if (!pn)
             return NULL;
+        break;
+      }
+
+      case TOK_USESHARP: {
         if (!tc->ensureSharpSlots())
             return NULL;
-        pn->pn_num = tokenStream.currentToken().sharpNumber();
+        /* Check for forward/dangling references at runtime, to allow eval. */
+        const Token &tok = tokenStream.currentToken();
+        pn = new_<UseSharpExpression>(tok.sharpNumber(), tok.pos);
+        if (!pn)
+            return NULL;
         break;
+      }
 #endif /* JS_HAS_SHARP_VARS */
 
       case TOK_LP:
@@ -6998,14 +7034,14 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         break;
 
 #if JS_HAS_XML_SUPPORT
-      case TOK_XMLPI:
+      case TOK_XMLPI: {
         JS_ASSERT(!tc->inStrictMode());
-        pn = NullaryNode::create(PNK_XMLPI, tc);
+        const Token &tok = tokenStream.currentToken();
+        pn = new_<XMLProcessingInstruction>(tok.xmlPITarget(), tok.xmlPIData(), tok.pos);
         if (!pn)
             return NULL;
-        pn->pn_pitarget = tokenStream.currentToken().xmlPITarget();
-        pn->pn_pidata = tokenStream.currentToken().xmlPIData();
         break;
+      }
 #endif
 
       case TOK_NAME:
@@ -7049,26 +7085,8 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             StmtInfo *stmt = LexicalLookup(tc, pn->pn_atom, NULL);
 
             MultiDeclRange mdl = tc->decls.lookupMulti(pn->pn_atom);
+
             Definition *dn;
-
-            if (!mdl.empty()) {
-                dn = mdl.front();
-#if JS_HAS_BLOCK_SCOPE
-                /*
-                 * Skip out-of-scope let bindings along an ALE list or hash
-                 * chain. These can happen due to |let (x = x) x| block and
-                 * expression bindings, where the x on the right of = comes
-                 * from an outer scope. See bug 496532.
-                 */
-                while (dn->isLet() && !BlockIdInScope(dn->pn_blockid, tc)) {
-                    mdl.popFront();
-                    if (mdl.empty())
-                        break;
-                    dn = mdl.front();
-                }
-#endif
-            }
-
             if (!mdl.empty()) {
                 dn = mdl.front();
             } else {
@@ -7186,13 +7204,13 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         break;
 
       case TOK_TRUE:
-        return PrimaryExprNode(PNK_TRUE, JSOP_TRUE, tc);
+        return new_<BooleanLiteral>(true, tokenStream.currentToken().pos);
       case TOK_FALSE:
-        return PrimaryExprNode(PNK_FALSE, JSOP_FALSE, tc);
+        return new_<BooleanLiteral>(false, tokenStream.currentToken().pos);
       case TOK_THIS:
-        return PrimaryExprNode(PNK_THIS, JSOP_THIS, tc);
+        return new_<ThisLiteral>(tokenStream.currentToken().pos);
       case TOK_NULL:
-        return PrimaryExprNode(PNK_NULL, JSOP_NULL, tc);
+        return new_<NullLiteral>(tokenStream.currentToken().pos);
 
       case TOK_ERROR:
         /* The scanner or one of its subroutines reported the error. */

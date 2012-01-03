@@ -47,6 +47,8 @@
 #ifndef nsStyleSet_h_
 #define nsStyleSet_h_
 
+#include "mozilla/Attributes.h"
+
 #include "nsIStyleRuleProcessor.h"
 #include "nsCSSStyleSheet.h"
 #include "nsBindingManager.h"
@@ -321,9 +323,8 @@ class nsStyleSet
   nsIStyleRule* InitialStyleRule();
 
  private:
-  // Not to be implemented
-  nsStyleSet(const nsStyleSet& aCopy);
-  nsStyleSet& operator=(const nsStyleSet& aCopy);
+  nsStyleSet(const nsStyleSet& aCopy) MOZ_DELETE;
+  nsStyleSet& operator=(const nsStyleSet& aCopy) MOZ_DELETE;
 
   // Returns false on out-of-memory.
   bool BuildDefaultStyleData(nsPresContext* aPresContext);

@@ -45,40 +45,36 @@
 #define NS_REGISTER_ONE_COMMAND(_cmdClass, _cmdName)                    \
   {                                                                     \
     _cmdClass* theCmd = new _cmdClass();                                \
-    NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);                         \
-    rv = inCommandTable->RegisterCommand(_cmdName,                      \
+    inCommandTable->RegisterCommand(_cmdName,                           \
                        static_cast<nsIControllerCommand *>(theCmd));    \
   }
 
 #define NS_REGISTER_FIRST_COMMAND(_cmdClass, _cmdName)                  \
   {                                                                     \
     _cmdClass* theCmd = new _cmdClass();                                \
-    NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);                         \
-    rv = inCommandTable->RegisterCommand(_cmdName,                      \
+    inCommandTable->RegisterCommand(_cmdName,                           \
                        static_cast<nsIControllerCommand *>(theCmd));
 
 #define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName)                   \
-    rv = inCommandTable->RegisterCommand(_cmdName,                      \
+    inCommandTable->RegisterCommand(_cmdName,                           \
                         static_cast<nsIControllerCommand *>(theCmd));
 
 #define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)                   \
-    rv = inCommandTable->RegisterCommand(_cmdName,                      \
+    inCommandTable->RegisterCommand(_cmdName,                           \
                        static_cast<nsIControllerCommand *>(theCmd));    \
   }
 
 #define NS_REGISTER_STYLE_COMMAND(_cmdClass, _cmdName, _styleTag)       \
   {                                                                     \
     _cmdClass* theCmd = new _cmdClass(_styleTag);                       \
-    NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);                         \
-    rv = inCommandTable->RegisterCommand(_cmdName,                      \
+    inCommandTable->RegisterCommand(_cmdName,                           \
                        static_cast<nsIControllerCommand *>(theCmd));    \
   }
   
 #define NS_REGISTER_TAG_COMMAND(_cmdClass, _cmdName, _tagName)          \
   {                                                                     \
     _cmdClass* theCmd = new _cmdClass(_tagName);                        \
-    NS_ENSURE_TRUE(theCmd, NS_ERROR_OUT_OF_MEMORY);                         \
-    rv = inCommandTable->RegisterCommand(_cmdName,                      \
+    inCommandTable->RegisterCommand(_cmdName,                           \
                        static_cast<nsIControllerCommand *>(theCmd));    \
   }
   
@@ -88,8 +84,6 @@ nsresult
 nsComposerController::RegisterEditorDocStateCommands(
                         nsIControllerCommandTable *inCommandTable)
 {
-  nsresult rv;
-
   // observer commands for document state
   NS_REGISTER_FIRST_COMMAND(nsDocumentStateCommand, "obs_documentCreated")
   NS_REGISTER_NEXT_COMMAND(nsDocumentStateCommand, "obs_documentWillBeDestroyed")
@@ -113,8 +107,6 @@ nsresult
 nsComposerController::RegisterHTMLEditorCommands(
                         nsIControllerCommandTable *inCommandTable)
 {
-  nsresult rv;
-  
   // Edit menu
   NS_REGISTER_ONE_COMMAND(nsPasteNoFormattingCommand, "cmd_pasteNoFormatting");
 
