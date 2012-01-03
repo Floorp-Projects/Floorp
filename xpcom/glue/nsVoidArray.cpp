@@ -717,10 +717,22 @@ bool nsVoidArray::EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData)
   PRInt32 index = -1;
   bool    running = true;
 
-  if (mImpl)
-  {
-    while (running && (++index < mImpl->mCount))
-    {
+  if (mImpl) {
+    while (running && (++index < mImpl->mCount)) {
+      running = (*aFunc)(mImpl->mArray[index], aData);
+    }
+  }
+  return running;
+}
+
+bool nsVoidArray::EnumerateForwards(nsVoidArrayEnumFuncConst aFunc,
+                                    void* aData) const
+{
+  PRInt32 index = -1;
+  bool    running = true;
+
+  if (mImpl) {
+    while (running && (++index < mImpl->mCount)) {
       running = (*aFunc)(mImpl->mArray[index], aData);
     }
   }
@@ -740,6 +752,42 @@ bool nsVoidArray::EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData)
     }
   }
   return running;
+}
+
+struct SizeOfElementIncludingThisData
+{
+  size_t mSize;
+  nsVoidArraySizeOfElementIncludingThisFunc mSizeOfElementIncludingThis;
+  nsMallocSizeOfFun mMallocSizeOf;
+  void *mData;      // the arg passed by the user
+};
+
+static bool
+SizeOfElementIncludingThisEnumerator(const void *aElement, void *aData)
+{
+  SizeOfElementIncludingThisData *d = (SizeOfElementIncludingThisData *)aData;
+  d->mSize += d->mSizeOfElementIncludingThis(aElement, d->mMallocSizeOf, d->mData);
+  return true;
+}
+
+size_t
+nsVoidArray::SizeOfExcludingThis(
+  nsVoidArraySizeOfElementIncludingThisFunc aSizeOfElementIncludingThis,
+  nsMallocSizeOfFun aMallocSizeOf, void* aData) const
+{
+  size_t n = 0;
+  // Measure the element storage.
+  if (mImpl) {
+    n += aMallocSizeOf(mImpl);
+  }
+  // Measure things pointed to by the elements.
+  if (aSizeOfElementIncludingThis) { 
+    SizeOfElementIncludingThisData data2 =
+      { 0, aSizeOfElementIncludingThis, aMallocSizeOf, aData };
+    EnumerateForwards(SizeOfElementIncludingThisEnumerator, &data2);
+    n += data2.mSize;
+  }
+  return n;
 }
 
 //----------------------------------------------------------------
