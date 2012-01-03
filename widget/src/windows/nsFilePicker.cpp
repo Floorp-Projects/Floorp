@@ -973,6 +973,12 @@ nsFilePicker::ShowFilePicker(const nsString& aInitialDir)
 
   // results
 
+  // Remember what filter type the user selected
+  UINT filterIdxResult;
+  if (SUCCEEDED(dialog->GetFileTypeIndex(&filterIdxResult))) {
+    mSelectedType = (PRInt16)filterIdxResult;
+  }
+
   // single selection
   if (mMode != modeOpenMultiple) {
     nsRefPtr<IShellItem> item;
