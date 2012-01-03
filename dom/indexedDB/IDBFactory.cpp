@@ -101,18 +101,17 @@ already_AddRefed<nsIIDBFactory>
 IDBFactory::Create(nsPIDOMWindow* aWindow)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aWindow, "Must have a window!");
 
-  if (aWindow && aWindow->IsOuterWindow()) {
+  if (aWindow->IsOuterWindow()) {
     aWindow = aWindow->GetCurrentInnerWindow();
-    NS_ENSURE_TRUE(aWindow, nsnull);
   }
+  NS_ENSURE_TRUE(aWindow, nsnull);
 
   nsRefPtr<IDBFactory> factory = new IDBFactory();
 
-  if (aWindow) {
-    factory->mWindow = do_GetWeakReference(aWindow);
-    NS_ENSURE_TRUE(factory->mWindow, nsnull);
-  }
+  factory->mWindow = do_GetWeakReference(aWindow);
+  NS_ENSURE_TRUE(factory->mWindow, nsnull);
 
   return factory.forget();
 }
@@ -428,20 +427,14 @@ IDBFactory::OpenCommon(const nsAString& aName,
     ContentChild::GetSingleton()->GetIndexedDBPath();
   }
 
-  nsCOMPtr<nsPIDOMWindow> window;
-  nsCOMPtr<nsIScriptGlobalObject> sgo;
-  nsIScriptContext* context = nsnull;
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_TRUE(window, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  if (mWindow) {
-    window = do_QueryReferent(mWindow);
-    NS_ENSURE_TRUE(window, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-    
-    sgo = do_QueryInterface(window);
-    NS_ENSURE_TRUE(sgo, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-    
-    context = sgo->GetContext();
-    NS_ENSURE_TRUE(context, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
+  NS_ENSURE_TRUE(sgo, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsIScriptContext* context = sgo->GetContext();
+  NS_ENSURE_TRUE(context, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsCString origin;
   nsresult rv =

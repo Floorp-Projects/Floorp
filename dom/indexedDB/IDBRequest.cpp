@@ -40,7 +40,6 @@
 
 #include "IDBRequest.h"
 
-#include "nsIJSContextStack.h"
 #include "nsIScriptContext.h"
 
 #include "nsComponentManagerUtils.h"
@@ -51,11 +50,11 @@
 #include "nsPIDOMWindow.h"
 #include "nsStringGlue.h"
 #include "nsThreadUtils.h"
-#include "nsWrapperCacheInlines.h"
 
 #include "AsyncConnectionHelper.h"
 #include "IDBEvents.h"
 #include "IDBTransaction.h"
+#include "nsContentUtils.h"
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -88,6 +87,12 @@ IDBRequest::Create(nsISupports* aSource,
                    IDBTransaction* aTransaction)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (!aScriptContext || !aOwner) {
+    NS_ERROR("Null context and owner!");
+    return nsnull;
+  }
+
   nsRefPtr<IDBRequest> request(new IDBRequest());
 
   request->mSource = aSource;
@@ -135,29 +140,15 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
   }
 
   // Otherwise we need to get the result from the helper.
-  JSContext* cx = nsnull;
-  JSObject* obj = nsnull;
-  if (mScriptContext) {   
-    cx = mScriptContext->GetNativeContext();
-    NS_ASSERTION(cx, "Failed to get a context!");
+  JSContext* cx = mScriptContext->GetNativeContext();
+  NS_ASSERTION(cx, "Failed to get a context!");
 
-    obj = mScriptContext->GetNativeGlobal();
-    NS_ASSERTION(obj, "Failed to get global object!");
-  } 
-  else {
-    nsIThreadJSContextStack* cxStack = nsContentUtils::ThreadJSContextStack();
-    NS_ASSERTION(cxStack, "Failed to get thread context stack!");
-
-    NS_ENSURE_SUCCESS(cxStack->GetSafeJSContext(&cx),
-                      NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-    obj = GetWrapper();
-    NS_ENSURE_TRUE(obj, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
+  JSObject* global = mScriptContext->GetNativeGlobal();
+  NS_ASSERTION(global, "Failed to get global object!");
 
   JSAutoRequest ar(cx);
   JSAutoEnterCompartment ac;
-  if (!ac.enter(cx, obj)) {
+  if (!ac.enter(cx, global)) {
     rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
   else {
@@ -299,7 +290,7 @@ IDBRequest::GetOnerror(nsIDOMEventListener** aErrorListener)
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBRequest)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBRequest,
-                                                  nsDOMEventTargetWrapperCache)
+                                                  nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnSuccessListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
@@ -309,7 +300,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBRequest,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBRequest,
-                                                nsDOMEventTargetWrapperCache)
+                                                nsDOMEventTargetHelper)
   if (tmp->mResultValRooted) {
     tmp->mResultVal = JSVAL_VOID;
     tmp->UnrootResultVal();
@@ -320,8 +311,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBRequest,
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTransaction)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(IDBRequest,
-                                               nsDOMEventTargetWrapperCache)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBRequest)
   if (JSVAL_IS_GCTHING(tmp->mResultVal)) {
     void *gcThing = JSVAL_TO_GCTHING(tmp->mResultVal);
     NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mResultVal")
@@ -331,10 +321,10 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBRequest)
   NS_INTERFACE_MAP_ENTRY(nsIIDBRequest)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBRequest)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetWrapperCache)
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(IDBRequest, nsDOMEventTargetWrapperCache)
-NS_IMPL_RELEASE_INHERITED(IDBRequest, nsDOMEventTargetWrapperCache)
+NS_IMPL_ADDREF_INHERITED(IDBRequest, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(IDBRequest, nsDOMEventTargetHelper)
 
 DOMCI_DATA(IDBRequest, IDBRequest)
 
@@ -363,6 +353,12 @@ IDBOpenDBRequest::Create(nsIScriptContext* aScriptContext,
                          nsPIDOMWindow* aOwner)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (!aScriptContext || !aOwner) {
+    NS_ERROR("Null context and owner!");
+    return nsnull;
+  }
+
   nsRefPtr<IDBOpenDBRequest> request(new IDBOpenDBRequest());
 
   request->mScriptContext = aScriptContext;
