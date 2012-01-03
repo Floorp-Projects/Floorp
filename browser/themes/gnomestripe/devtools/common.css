@@ -83,9 +83,9 @@
 .devtools-searchinput {
   -moz-appearance: none;
   margin: 0 3px;
-  background-color: transparent;
   border: 1px solid hsla(210,8%,5%,.6);
-  border-radius: 20px;
+  border-radius: 2px;
+  background-color: transparent;
   background-image: url(magnifying-glass.png), -moz-linear-gradient(hsla(210,16%,76%,.15), hsla(210,16%,76%,.35));
   background-repeat: no-repeat;
   background-position: 4px 3px, top left, top left;
