@@ -64,7 +64,7 @@
 
 importScripts("ril_consts.js");
 
-const DEBUG = true;
+let DEBUG = false;
 
 const INT32_MAX   = 2147483647;
 const UINT8_SIZE  = 1;
