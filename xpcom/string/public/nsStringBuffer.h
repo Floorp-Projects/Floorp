@@ -171,6 +171,12 @@ class nsStringBuffer
                            bool aMoveOwnership = false);
 
       /**
+       * This measures the size.  It should only be used if the StringBuffer is
+       * unshared.  This is checked.
+       */
+      size_t SizeOfIncludingThisMustBeUnshared(nsMallocSizeOfFun aMallocSizeOf) const;
+
+      /**
        * This measures the size only if the StringBuffer is unshared.
        */
       size_t SizeOfIncludingThisIfUnshared(nsMallocSizeOfFun aMallocSizeOf) const;
