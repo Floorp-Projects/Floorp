@@ -51,10 +51,6 @@
 <!ENTITY pref_about_firefox "About &brandShortName;">
 <!ENTITY pref_do_not_track "Tell sites not to track me">
 <!ENTITY pref_telemetry "Send performance data">
-<!ENTITY pref_homepage "Home page">
-<!ENTITY pref_homepage_start "Firefox Start">
-<!ENTITY pref_homepage_blank "Blank page">
-<!ENTITY pref_homepage_current "Current page">
 <!ENTITY pref_remember_signons "Remember passwords">
 <!ENTITY pref_cookies "Enable cookies">
 <!ENTITY pref_char_encoding "Show character encoding">

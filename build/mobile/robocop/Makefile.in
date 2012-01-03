@@ -51,15 +51,24 @@ JAVAFILES = \
   R.java \
 
 _JAVA_HARNESS = \
+  Actions.java \
+  Assert.java \
   Driver.java \
   Element.java \
-  Actions.java \
+  FennecNativeActions.java \
+  FennecNativeAssert.java \
+  FennecNativeDriver.java \
   FennecNativeElement.java \
   RoboCopException.java \
-  FennecNativeDriver.java \
-  FennecNativeActions.java \
+  $(NULL)
 
 _JAVA_TESTS = $(patsubst $(TESTPATH)/%.in,%,$(wildcard $(TESTPATH)/*.java.in))
+
+_TEST_FILES = \
+  $(TESTPATH)/robocop_blank_01.html \
+  $(TESTPATH)/robocop_blank_02.html \
+  $(TESTPATH)/robocop_blank_03.html \
+  $(NULL)
 
 _ROBOCOP_TOOLS = \
   $(TESTPATH)/robocop.ini \
@@ -104,13 +113,16 @@ $(_ROBOCOP_TOOLS):
 	cp $(TESTPATH)/robocop.ini robocop.ini
 	cp $(srcdir)/parse_ids.txt parse_ids.txt
 
+libs:: $(_TEST_FILES)
+	$(NSINSTALL) -D $(DEPTH)/_tests/testing/mochitest/tests/robocop
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/robocop/
+
 tools:: robocop.apk
 
 classes.dex: robocop.ap_
 classes.dex: $(_ROBOCOP_TOOLS)
 classes.dex: $(_JAVA_HARNESS)
 classes.dex: $(_JAVA_TESTS)
-classes.dex: $(TEST_FILES)
 	$(NSINSTALL) -D classes
 	$(JAVAC) $(JAVAC_FLAGS) -d classes $(JAVAFILES) $(_JAVA_HARNESS) $(addprefix $(DEPTH)/mobile/android/base/tests/,$(_JAVA_TESTS))
 	$(DX) --dex --output=$@ classes $(ROBOTIUM_PATH)
@@ -118,15 +130,12 @@ classes.dex: $(TEST_FILES)
 robocop.ap_: AndroidManifest.xml
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -I . -S res -F $@ -J ./
 
-robocop-unsigned-unaligned.apk: robocop.ap_ classes.dex
-	$(APKBUILDER) $@ -v $(APKBUILDER_FLAGS) -z robocop.ap_ -f classes.dex
-
-robocop-unaligned.apk: robocop-unsigned-unaligned.apk
-	cp robocop-unsigned-unaligned.apk $@
-	jarsigner -keystore ~/.android/debug.keystore -storepass android -keypass android $@ androiddebugkey
-
-robocop.apk: robocop-unaligned.apk
-	$(ZIPALIGN) -f -v 4 robocop-unaligned.apk $@
+robocop.apk: robocop.ap_ classes.dex
+	$(APKBUILDER) robocop-raw.apk -v $(APKBUILDER_FLAGS) -z robocop.ap_ -f classes.dex
+ifdef JARSIGNER
+	$(JARSIGNER) robocop-raw.apk
+endif
+	$(ZIPALIGN) -f -v 4 robocop-raw.apk $@
 	cp $(TESTPATH)/robocop.ini robocop.ini
 	cp $(srcdir)/parse_ids.py parse_ids.py
 

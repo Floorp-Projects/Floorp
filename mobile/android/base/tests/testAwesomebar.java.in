@@ -25,6 +25,7 @@ public class testAwesomebar extends ActivityInstrumentationTestCase2 {
   private Solo solo;    
   private Activity activity;
   private Driver driver;
+  private Assert asserter;
   private Actions actions;
   private static Class<?> launcherActivityClass;
 
@@ -62,11 +63,13 @@ public class testAwesomebar extends ActivityInstrumentationTestCase2 {
     driver = new FennecNativeDriver(activity, solo);
     actions = new FennecNativeActions(activity, solo, getInstrumentation());
     driver.setLogFile((String)config.get("logfile"));
+    
+    asserter = new FennecNativeAssert();
+    asserter.setLogFile((String)config.get("logfile"));
   }
 
   public void testAwesomebar() {
-    // TODO: find a better way to not hardcode this url
-    String url = "http://mochi.test:8888/tests/robocop/robocop.html";
+    String url = "http://mochi.test:8888/tests/robocop/robocop_blank_01.html";
     actions.waitForGeckoEvent("Gecko:Ready");
     Element awesomebar = driver.findElement("awesome_bar");
     awesomebar.click();
@@ -74,11 +77,13 @@ public class testAwesomebar extends ActivityInstrumentationTestCase2 {
     Element urlbar = driver.findElement("awesomebar_text");
     getInstrumentation().waitForIdleSync();
     actions.sendKeys(url);
-    driver.is(urlbar.getText(), url, "Awesomebar URL Typed Properly");
+    asserter.is(urlbar.getText(), url, "Awesomebar URL Typed Properly");
+
     actions.sendSpecialKey(Actions.SpecialKey.ENTER);
     //wait for screen to load
     actions.waitForGeckoEvent("DOMContentLoaded");
     driver.setupScrollHandling();
+
     //Calculate where we should be dragging.
     int midX = driver.getGeckoLeft() + driver.getGeckoWidth()/2;
     int midY = driver.getGeckoTop() + driver.getGeckoHeight()/2;
@@ -94,7 +99,7 @@ public class testAwesomebar extends ActivityInstrumentationTestCase2 {
     //Click the awesomebar again 
     awesomebar.click();
     getInstrumentation().waitForIdleSync();
-    driver.is(urlbar.getText(), url, "Aweosmebar URL stayed the same");
+    asserter.is(urlbar.getText(), url, "Awesomebar URL stayed the same");
   }	
   
   @Override	

@@ -25,6 +25,7 @@ public class testLoad extends ActivityInstrumentationTestCase2 {
   private Solo solo;    
   private Activity activity;
   private Driver driver;
+  private Assert asserter;
   private Actions actions;
   private static Class<?> launcherActivityClass;
 
@@ -62,11 +63,14 @@ public class testLoad extends ActivityInstrumentationTestCase2 {
     driver = new FennecNativeDriver(activity, solo);
     actions = new FennecNativeActions(activity, solo, getInstrumentation());
     driver.setLogFile((String)config.get("logfile"));
+    
+    asserter = new FennecNativeAssert();
+    asserter.setLogFile((String)config.get("logfile"));
   } 	
 
   public void testLoad(){
     // TODO: find a better way to not hardcode this url
-    String url = "http://mochi.test:8888/tests/robocop/robocop.html";
+    String url = "http://mochi.test:8888/tests/robocop/robocop_blank_03.html";
 
     actions.waitForGeckoEvent("Gecko:Ready");
     Element awesomebar = driver.findElement("awesome_bar");
@@ -76,7 +80,7 @@ public class testLoad extends ActivityInstrumentationTestCase2 {
     getInstrumentation().waitForIdleSync();
     actions.sendKeys(url);
     getInstrumentation().waitForIdleSync();
-    driver.is(urlbar.getText(), url, "Awesomebar URL Correct");
+    asserter.is(urlbar.getText(), url, "Awesomebar URL Correct");
 
     //Select top item in the list.
     actions.sendSpecialKey(Actions.SpecialKey.DOWN);
@@ -85,7 +89,7 @@ public class testLoad extends ActivityInstrumentationTestCase2 {
 
     awesomebar.click();
     getInstrumentation().waitForIdleSync();
-    driver.is(urlbar.getText(), url, "Awesomebar URL is still correct");
+    asserter.is(urlbar.getText(), url, "Awesomebar URL is still correct");
   }
 
   @Override	

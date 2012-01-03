@@ -1,0 +1,8 @@
+<title>bug 714519: underline of nested vertical-align:top in quirks mode</title>
+
+<style>
+div > span { text-decoration: underline }
+span { vertical-align: top }
+</style>
+
+<div><span><span>Short line</span></span></div>

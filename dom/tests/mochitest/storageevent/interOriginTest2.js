@@ -16,7 +16,6 @@ window.addEventListener("message", onMessageReceived, false);
 function onMessageReceived(event)
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
 
   switch (event.data)
   {

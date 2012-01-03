@@ -43,6 +43,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
 #include "nsIServiceManager.h"
+#include "nsProxyRelease.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsAutoPtr.h"
@@ -485,6 +486,12 @@ public:
     , mTargetThread(aTargetThread)
   { }
 
+  ~DNSListenerProxy()
+  {
+    nsCOMPtr<nsIThread> mainThread(do_GetMainThread());
+    NS_ProxyRelease(mainThread, mListener);
+  }
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDNSLISTENER
 
@@ -500,6 +507,12 @@ public:
       , mRecord(aRecord)
       , mStatus(aStatus)
     { }
+
+    ~OnLookupCompleteRunnable()
+    {
+      nsCOMPtr<nsIThread> mainThread(do_GetMainThread());
+      NS_ProxyRelease(mainThread, mListener);
+    }
 
     NS_DECL_NSIRUNNABLE
 

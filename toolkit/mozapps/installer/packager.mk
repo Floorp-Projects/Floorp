@@ -350,6 +350,7 @@ INNER_MAKE_PACKAGE	= \
   cp $(_ABS_DIST)/gecko.apk $(_ABS_DIST)/gecko-unsigned-unaligned.apk && \
   $(JARSIGNER) $(_ABS_DIST)/gecko.apk && \
   $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/gecko.apk $(PACKAGE)
+
 INNER_UNMAKE_PACKAGE	= \
   mkdir $(MOZ_PKG_DIR) && \
   pushd $(MOZ_PKG_DIR) && \

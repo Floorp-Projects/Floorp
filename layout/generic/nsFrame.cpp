@@ -4541,7 +4541,8 @@ nsIFrame::InvalidateInternal(const nsRect& aDamageRect, nscoord aX, nscoord aY,
 }
 
 gfx3DMatrix
-nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
+nsIFrame::GetTransformMatrix(nsIFrame* aStopAtAncestor,
+                             nsIFrame** aOutAncestor)
 {
   NS_PRECONDITION(aOutAncestor, "Need a place to put the ancestor!");
 
@@ -4553,7 +4554,8 @@ nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
     /* Compute the delta to the parent, which we need because we are converting
      * coordinates to our parent.
      */
-    NS_ASSERTION(nsLayoutUtils::GetCrossDocParentFrame(this), "Cannot transform the viewport frame!");
+    NS_ASSERTION(nsLayoutUtils::GetCrossDocParentFrame(this),
+	             "Cannot transform the viewport frame!");
     PRInt32 scaleFactor = PresContext()->AppUnitsPerDevPixel();
 
     gfx3DMatrix result =
@@ -4582,7 +4584,7 @@ nsIFrame::GetTransformMatrix(nsIFrame **aOutAncestor)
     return gfx3DMatrix();
   
   /* Keep iterating while the frame can't possibly be transformed. */
-  while (!(*aOutAncestor)->IsTransformed()) {
+  while (!(*aOutAncestor)->IsTransformed() && *aOutAncestor != aStopAtAncestor) {
     /* If no parent, stop iterating.  Otherwise, update the ancestor. */
     nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(*aOutAncestor);
     if (!parent)

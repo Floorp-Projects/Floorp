@@ -95,7 +95,7 @@ class WebGLFramebuffer;
 class WebGLRenderbuffer;
 class WebGLUniformLocation;
 class WebGLExtension;
-class WebGLVertexAttribData;
+struct WebGLVertexAttribData;
 
 class WebGLContextBoundObject;
 

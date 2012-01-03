@@ -1202,7 +1202,8 @@ function runCompositionTest()
 function runCompositionEventTest()
 {
   const kDescription = "runCompositionEventTest: ";
-  const kEvents = ["compositionstart", "compositionupdate", "compositionend"];
+  const kEvents = ["compositionstart", "compositionupdate", "compositionend",
+                   "input"];
 
   input.value = "";
   input.focus();
@@ -1237,6 +1238,12 @@ function runCompositionEventTest()
     }
   }
 
+  function formEventHandlerForWindow(aEvent)
+  {
+    windowEventCounts[aEvent.type]++;
+    windowEventData[aEvent.type] = input.value;
+  }
+
   function compositionEventHandlerForInput(aEvent)
   {
     inputEventCounts[aEvent.type]++;
@@ -1250,11 +1257,19 @@ function runCompositionEventTest()
     }
   }
 
+  function formEventHandlerForInput(aEvent)
+  {
+    inputEventCounts[aEvent.type]++;
+    inputEventData[aEvent.type] = input.value;
+  }
+
   window.addEventListener("compositionstart", compositionEventHandlerForWindow,
                           true, true);
   window.addEventListener("compositionend", compositionEventHandlerForWindow,
                           true, true);
   window.addEventListener("compositionupdate", compositionEventHandlerForWindow,
+                          true, true);
+  window.addEventListener("input", formEventHandlerForWindow,
                           true, true);
 
   input.addEventListener("compositionstart", compositionEventHandlerForInput,
@@ -1262,6 +1277,8 @@ function runCompositionEventTest()
   input.addEventListener("compositionend", compositionEventHandlerForInput,
                          true, true);
   input.addEventListener("compositionupdate", compositionEventHandlerForInput,
+                         true, true);
+  input.addEventListener("input", formEventHandlerForInput,
                          true, true);
 
   // test for normal case
@@ -1311,6 +1328,15 @@ function runCompositionEventTest()
   is(inputEventCounts["compositionend"], 0,
      kDescription + "compositionend has been handled by input #1");
 
+  is(windowEventCounts["input"], 1,
+     kDescription + "input hasn't been handled by window #1");
+  is(windowEventData["input"], "\u3089",
+     kDescription + "value of input element wasn't modified (window) #1");
+  is(inputEventCounts["input"], 1,
+     kDescription + "input hasn't been handled by input #1");
+  is(inputEventData["input"], "\u3089",
+     kDescription + "value of input element wasn't modified (input) #1");
+
   synthesizeComposition({ type: "compositionupdate", data: "\u3089\u30FC" });
   synthesizeText(
     { "composition":
@@ -1345,6 +1371,15 @@ function runCompositionEventTest()
      kDescription + "compositionend has been handled during composition by window #2");
   is(inputEventCounts["compositionend"], 0,
      kDescription + "compositionend has been handled during composition by input #2");
+
+  is(windowEventCounts["input"], 2,
+     kDescription + "input hasn't been handled by window #2");
+  is(windowEventData["input"], "\u3089\u30FC",
+     kDescription + "value of input element wasn't modified (window) #2");
+  is(inputEventCounts["input"], 2,
+     kDescription + "input hasn't been handled by input #2");
+  is(inputEventData["input"], "\u3089\u30FC",
+     kDescription + "value of input element wasn't modified (input) #2");
 
   // text event shouldn't cause composition update, e.g., at committing.
   synthesizeText(
@@ -1382,6 +1417,15 @@ function runCompositionEventTest()
      kDescription + "data of compositionend doesn't match (input) #3");
   is(inputEventLocale["compositionend"], "",
      kDescription + "locale of compositionend isn't empty (input) #3");
+
+  is(windowEventCounts["input"], 3,
+     kDescription + "input hasn't been handled by window #3");
+  is(windowEventData["input"], "\u3089\u30FC",
+     kDescription + "value of input element wasn't modified (window) #3");
+  is(inputEventCounts["input"], 3,
+     kDescription + "input hasn't been handled by input #3");
+  is(inputEventData["input"], "\u3089\u30FC",
+     kDescription + "value of input element wasn't modified (input) #3");
 
   // select the second character, then, data of composition start should be
   // the selected character.
@@ -1453,6 +1497,15 @@ function runCompositionEventTest()
      kDescription + "data of compositionend doesn't match (input) #4");
   is(inputEventLocale["compositionend"], "",
      kDescription + "locale of compositionend isn't empty (input) #4");
+
+  is(windowEventCounts["input"], 2,
+     kDescription + "input hasn't been handled by window #4");
+  is(windowEventData["input"], "\u3089\u3089",
+     kDescription + "value of input element wasn't modified (window) #4");
+  is(inputEventCounts["input"], 2,
+     kDescription + "input hasn't been handled by input #4");
+  is(inputEventData["input"], "\u3089\u3089",
+     kDescription + "value of input element wasn't modified (input) #4");
 
   // preventDefault() should effect nothing.
   preventDefault = true;
@@ -1526,6 +1579,15 @@ function runCompositionEventTest()
   is(inputEventLocale["compositionend"], "",
      kDescription + "locale of compositionend isn't empty (input) #5");
 
+  is(windowEventCounts["input"], 2,
+     kDescription + "input hasn't been handled by window #5");
+  is(windowEventData["input"], "\u306D",
+     kDescription + "value of input element wasn't modified (window) #5");
+  is(inputEventCounts["input"], 2,
+     kDescription + "input hasn't been handled by input #5");
+  is(inputEventData["input"], "\u306D",
+     kDescription + "value of input element wasn't modified (input) #5");
+
   prevnetDefault = false;
 
   // stopPropagation() should effect nothing (except event count)
@@ -1587,6 +1649,15 @@ function runCompositionEventTest()
      kDescription + "locale of compositionend isn't empty #6");
   is(inputEventCounts["compositionend"], 0,
      kDescription + "compositionend has been handled by input #6");
+
+  is(windowEventCounts["input"], 2,
+     kDescription + "input hasn't been handled by window #6");
+  is(windowEventData["input"], "\u306E",
+     kDescription + "value of input element wasn't modified (window) #6");
+  is(inputEventCounts["input"], 2,
+     kDescription + "input hasn't been handled by input #6");
+  is(inputEventData["input"], "\u306E",
+     kDescription + "value of input element wasn't modified (input) #6");
 
   stopPropagation = false;
 
@@ -1726,6 +1797,8 @@ function runCompositionEventTest()
                              compositionEventHandlerForWindow, true);
   window.removeEventListener("compositionupdate",
                              compositionEventHandlerForWindow, true);
+  window.removeEventListener("input",
+                             formEventHandlerForWindow, true);
 
   input.removeEventListener("compositionstart",
                             compositionEventHandlerForInput, true);
@@ -1733,6 +1806,8 @@ function runCompositionEventTest()
                             compositionEventHandlerForInput, true);
   input.removeEventListener("compositionupdate",
                             compositionEventHandlerForInput, true);
+  input.removeEventListener("input",
+                            formEventHandlerForInput, true);
 }
 
 function runCharAtPointTest(aFocusedEditor, aTargetName)

@@ -498,15 +498,15 @@ struct JSObject : js::gc::Cell
     /* Make a non-array object with the specified initial state. */
     static inline JSObject *create(JSContext *cx,
                                    js::gc::AllocKind kind,
-                                   js::Shape *shape,
-                                   js::types::TypeObject *type,
+                                   js::HandleShape shape,
+                                   js::HandleTypeObject type,
                                    js::HeapValue *slots);
 
     /* Make a dense array object with the specified initial state. */
     static inline JSObject *createDenseArray(JSContext *cx,
                                              js::gc::AllocKind kind,
-                                             js::Shape *shape,
-                                             js::types::TypeObject *type,
+                                             js::HandleShape shape,
+                                             js::HandleTypeObject type,
                                              uint32_t length);
 
     /*
@@ -526,7 +526,6 @@ struct JSObject : js::gc::Cell
     static inline size_t offsetOfShape() { return offsetof(JSObject, shape_); }
     inline js::HeapPtrShape *addressOfShape() { return &shape_; }
 
-    inline js::Shape **nativeSearch(JSContext *cx, jsid id, bool adding = false);
     const js::Shape *nativeLookup(JSContext *cx, jsid id);
 
     inline bool nativeContains(JSContext *cx, jsid id);
@@ -1219,7 +1218,7 @@ struct JSObject : js::gc::Cell
     bool callMethod(JSContext *cx, jsid id, uintN argc, js::Value *argv, js::Value *vp);
 
   private:
-    js::Shape *getChildProperty(JSContext *cx, js::Shape *parent, js::Shape &child);
+    js::Shape *getChildProperty(JSContext *cx, js::Shape *parent, js::StackShape &child);
 
     /*
      * Internal helper that adds a shape not yet mapped by this object.
@@ -1231,8 +1230,8 @@ struct JSObject : js::gc::Cell
     js::Shape *addPropertyInternal(JSContext *cx, jsid id,
                                    JSPropertyOp getter, JSStrictPropertyOp setter,
                                    uint32_t slot, uintN attrs,
-                                   uintN flags, intN shortid,
-                                   js::Shape **spp, bool allowDictionary);
+                                   uintN flags, intN shortid, js::Shape **spp,
+                                   bool allowDictionary);
 
     bool toDictionaryMode(JSContext *cx);
 
@@ -1392,6 +1391,8 @@ struct JSObject : js::gc::Cell
     static inline void writeBarrierPost(JSObject *obj, void *addr);
     inline void privateWriteBarrierPre(void **oldval);
     inline void privateWriteBarrierPost(void **oldval);
+
+    static inline js::ThingRootKind rootKind() { return js::THING_ROOT_OBJECT; }
 
   private:
     static void staticAsserts() {

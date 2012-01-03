@@ -103,8 +103,9 @@ NS_IMPL_RELEASE_INHERITED(nsSVGRectElement,nsSVGRectElementBase)
 DOMCI_NODE_DATA(SVGRectElement, nsSVGRectElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGRectElement)
-  NS_NODE_INTERFACE_TABLE4(nsSVGRectElement, nsIDOMNode, nsIDOMElement,
-                           nsIDOMSVGElement, nsIDOMSVGRectElement)
+  NS_NODE_INTERFACE_TABLE5(nsSVGRectElement, nsIDOMNode, nsIDOMElement,
+                           nsIDOMSVGElement, nsIDOMSVGTests,
+                           nsIDOMSVGRectElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGRectElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGRectElementBase)
 

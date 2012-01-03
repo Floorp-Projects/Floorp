@@ -460,7 +460,7 @@ GetDisplayPortBounds(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem)
   }
 
   const nsRect* displayport = aBuilder->GetDisplayPort();
-  nsRect result = nsLayoutUtils::TransformRectToBoundsInAncestor(
+  nsRect result = nsLayoutUtils::TransformAncestorRectToFrame(
                     frame,
                     nsRect(0, 0, displayport->width, displayport->height),
                     aBuilder->ReferenceFrame());
