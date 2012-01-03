@@ -1371,16 +1371,11 @@ MarkGenerator(JSTracer *trc, JSGenerator *gen)
      */
     JS_ASSERT(size_t(gen->regs.sp - fp->slots()) <= fp->numSlots());
 
-    /*
-     * Currently, generators are not mjitted. Still, (overflow) args can be
-     * pushed by the mjit and need to be conservatively marked. Technically, the
-     * formal args and generator slots are safe for exact marking, but since the
-     * plan is to eventually mjit generators, it makes sense to future-proof
-     * this code and save someone an hour later.
-     */
-    MarkStackRangeConservatively(trc, gen->floatingStack, fp->formalArgsEnd());
+    MarkValueRange(trc, (HeapValue *)fp->formalArgsEnd() - gen->floatingStack,
+                   gen->floatingStack, "Generator Floating Args");
     js_TraceStackFrame(trc, fp);
-    MarkStackRangeConservatively(trc, fp->slots(), gen->regs.sp);
+    MarkValueRange(trc, gen->regs.sp - fp->slots(),
+                   (HeapValue *)fp->slots(), "Generator Floating Stack");
 }
 
 static void
@@ -1469,14 +1464,18 @@ js_NewGenerator(JSContext *cx)
                    (-1 + /* one Value included in JSGenerator */
                     vplen +
                     VALUES_PER_STACK_FRAME +
-                    stackfp->numSlots()) * sizeof(Value);
+                    stackfp->numSlots()) * sizeof(HeapValue);
+
+    JS_ASSERT(nbytes % sizeof(Value) == 0);
+    JS_STATIC_ASSERT(sizeof(StackFrame) % sizeof(HeapValue) == 0);
 
     JSGenerator *gen = (JSGenerator *) cx->malloc_(nbytes);
     if (!gen)
         return NULL;
+    SetValueRangeToUndefined((Value *)gen, nbytes / sizeof(Value));
 
     /* Cut up floatingStack space. */
-    Value *genvp = gen->floatingStack;
+    HeapValue *genvp = gen->floatingStack;
     StackFrame *genfp = reinterpret_cast<StackFrame *>(genvp + vplen);
 
     /* Initialize JSGenerator. */
@@ -1487,7 +1486,8 @@ js_NewGenerator(JSContext *cx)
 
     /* Copy from the stack to the generator's floating frame. */
     gen->regs.rebaseFromTo(stackRegs, *genfp);
-    genfp->stealFrameAndSlots(genvp, stackfp, stackvp, stackRegs.sp);
+    genfp->stealFrameAndSlots<HeapValue, Value, StackFrame::DoPostBarrier>(
+                              genfp, genvp, stackfp, stackvp, stackRegs.sp);
     genfp->initFloatingGenerator();
 
     obj->setPrivate(gen);
