@@ -48,6 +48,8 @@
 
 namespace js {
 
+class TempAllocPolicy;
+
 /* Integral types for all hash functions. */
 typedef uint32_t HashNumber;
 
@@ -958,7 +960,10 @@ struct IsPodType<HashMapEntry<K, V> >
  *      called by HashMap must not call back into the same HashMap object.
  * N.B: Due to the lack of exception handling, the user must call |init()|.
  */
-template <class Key, class Value, class HashPolicy, class AllocPolicy>
+template <class Key,
+          class Value,
+          class HashPolicy = DefaultHasher<Key>,
+          class AllocPolicy = TempAllocPolicy>
 class HashMap
 {
   public:
@@ -1200,7 +1205,7 @@ class HashMap
  *      HashSet must not call back into the same HashSet object.
  * N.B: Due to the lack of exception handling, the user must call |init()|.
  */
-template <class T, class HashPolicy, class AllocPolicy>
+template <class T, class HashPolicy = DefaultHasher<T>, class AllocPolicy = TempAllocPolicy>
 class HashSet
 {
     typedef typename HashPolicy::Lookup Lookup;
