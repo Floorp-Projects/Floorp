@@ -287,7 +287,8 @@ IonBuilder::buildInline(MResumePoint *callerResumePoint, MDefinition *thisDefn,
     JS_ASSERT(current->numPredecessors() == 1);
     current->setCallerResumePoint(callerResumePoint);
 
-    JS_ASSERT(args.length() == info().nargs());
+    if (args.length() != info().nargs())
+        return abort("mismatched argc inlining not yet supported");
 
     current->initSlot(info().thisSlot(), thisDefn);
 
@@ -1958,6 +1959,9 @@ IonBuilder::jsop_binary(JSOp op, MDefinition *left, MDefinition *right)
     current->add(ins);
     ins->infer(oracle->binaryOp(script, pc));
 
+    if (ins->type() == MIRType_Value || (op == JSOP_MOD && ins->type() != MIRType_Int32))
+        return abort("unspecialized add not yet supported");
+
     current->push(ins);
     return true;
 }
@@ -2285,6 +2289,9 @@ IonBuilder::jsop_compare(JSOp op)
     current->add(ins);
 
     ins->infer(oracle->binaryOp(script, pc));
+
+    if (ins->specialization() == MIRType_None)
+        return abort("unspecialized compare not yet supported");
 
     // Push result
     current->push(ins);
