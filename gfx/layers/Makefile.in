@@ -128,8 +128,8 @@ CPPSRCS += \
 endif
 endif
 
-EXPORTS_NAMESPACES = IPC mozilla/layers
-EXPORTS_IPC = ShadowLayerUtils.h
+EXPORTS_NAMESPACES = gfxipc mozilla/layers
+EXPORTS_gfxipc = ShadowLayerUtils.h
 EXPORTS_mozilla/layers =\
         ShadowLayers.h \
         ShadowLayersChild.h \
