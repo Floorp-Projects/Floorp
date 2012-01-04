@@ -392,7 +392,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(07661008-5505-4784-a612-89f7dc2144da)]
+[uuid(241e6db3-e018-4d99-b976-c782a05f9c77)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -657,17 +657,6 @@ interface nsIXPConnect : nsISupports
 
     jsval variantToJS(in JSContextPtr ctx, in JSObjectPtr scope, in nsIVariant value);
     nsIVariant JSToVariant(in JSContextPtr ctx, in jsval value);
-
-    /**
-     * Restore an old prototype for wrapped natives of type
-     * aClassInfo. This should be used only when restoring an old
-     * scope into a state close to where it was prior to
-     * being reinitialized.
-     */
-    void restoreWrappedNativePrototype(in JSContextPtr aJSContext,
-                                       in JSObjectPtr  aScope,
-                                       in nsIClassInfo aClassInfo,
-                                       in nsIXPConnectJSObjectHolder aPrototype);
 
     /**
      * Create a sandbox for evaluating code in isolation using
