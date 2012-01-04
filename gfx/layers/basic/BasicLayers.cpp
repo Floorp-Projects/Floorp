@@ -754,6 +754,9 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
     }
   }
 
+  if (BasicManager()->IsTransactionIncomplete())
+    return;
+
   if (!IsHidden()) {
     AutoSetOperator setOperator(aContext, GetOperator());
     mBuffer.DrawTo(this, aContext, opacity);
