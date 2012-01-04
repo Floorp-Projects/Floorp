@@ -806,7 +806,7 @@ var BrowserApp = {
     delete this.defaultBrowserWidth;
     let width = Services.prefs.getIntPref("browser.viewport.desktopWidth");
     return this.defaultBrowserWidth = width;
-   }
+  }
 };
 
 var NativeWindow = {
@@ -1491,8 +1491,7 @@ Tab.prototype = {
       return;
     sendMessageToJava({
       gecko: {
-        type: "Viewport:Update",
-        viewport: JSON.stringify(this.viewport)
+        type: "Viewport:UpdateAndDraw"
       }
     });
   },
