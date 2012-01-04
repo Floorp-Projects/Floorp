@@ -1401,11 +1401,17 @@ public:
     NS_IMETHOD Begin()
     {
         char name[MAXPATHLEN] = {'\0'};
+#ifdef XP_WIN
+        // On Windows, tmpnam returns useless stuff, such as "\\s164.".
+        // Therefore we need to call the APIs directly.
+        GetTempPathA(mozilla::ArrayLength(name), name);
+#else
         tmpnam(name);
         char *lastSlash = strrchr(name, XPCOM_FILE_PATH_SEPARATOR[0]);
         if (lastSlash) {
             *lastSlash = '\0';
         }
+#endif
         sprintf(name, "%s%scc-edges-%d.%d.log", name,
                 XPCOM_FILE_PATH_SEPARATOR,
                 ++gLogCounter, base::GetCurrentProcId());

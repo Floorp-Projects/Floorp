@@ -50,6 +50,7 @@
  * is reference counted and the slot vector is malloc'ed.
  */
 #include "jsapi.h"
+#include "jsatom.h"
 #include "jsclass.h"
 #include "jsfriendapi.h"
 #include "jsinfer.h"
@@ -246,6 +247,17 @@ extern JS_FRIEND_API(JSBool)
 js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                   JSProperty **propp);
 
+namespace js {
+
+inline bool
+LookupProperty(JSContext *cx, JSObject *obj, PropertyName *name,
+               JSObject **objp, JSProperty **propp)
+{
+    return js_LookupProperty(cx, obj, ATOM_TO_JSID(name), objp, propp);
+}
+
+}
+
 extern JS_FRIEND_API(JSBool)
 js_LookupElement(JSContext *cx, JSObject *obj, uint32_t index,
                  JSObject **objp, JSProperty **propp);
@@ -286,6 +298,17 @@ GetPropertyDefault(JSContext *cx, JSObject *obj, jsid id, const Value &def, Valu
 extern JSBool
 js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                      js::Value *vp, JSBool strict);
+
+namespace js {
+
+inline bool
+SetPropertyHelper(JSContext *cx, JSObject *obj, PropertyName *name, uintN defineHow,
+                  Value *vp, JSBool strict)
+{
+    return !!js_SetPropertyHelper(cx, obj, ATOM_TO_JSID(name), defineHow, vp, strict);
+}
+
+} /* namespace js */
 
 extern JSBool
 js_SetElementHelper(JSContext *cx, JSObject *obj, uint32_t index, uintN defineHow,
@@ -422,7 +445,7 @@ extern HeapValue *emptyObjectElements;
  * JSObject struct. The JSFunction struct is an extension of this struct
  * allocated from a larger GC size-class.
  *
- * The lastProp member stores the shape of the object, which includes the
+ * The |shape_| member stores the shape of the object, which includes the
  * object's class and the layout of all its properties.
  *
  * The type member stores the type of the object, which contains its prototype
@@ -1231,6 +1254,12 @@ struct JSObject : js::gc::Cell
                            JSPropertyOp getter, JSStrictPropertyOp setter,
                            uint32_t slot, uintN attrs,
                            uintN flags, intN shortid);
+    inline js::Shape *
+    putProperty(JSContext *cx, js::PropertyName *name,
+                JSPropertyOp getter, JSStrictPropertyOp setter,
+                uint32_t slot, uintN attrs, uintN flags, intN shortid) {
+        return putProperty(cx, js_CheckForStringIndex(ATOM_TO_JSID(name)), getter, setter, slot, attrs, flags, shortid);
+    }
 
     /* Change the given property into a sibling with the same id in this scope. */
     js::Shape *changeProperty(JSContext *cx, js::Shape *shape, uintN attrs, uintN mask,
@@ -1672,10 +1701,6 @@ extern JSBool
 js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey key,
                    js::Value *vp, js::Class *clasp = NULL);
 
-extern JSObject *
-js_ConstructObject(JSContext *cx, js::Class *clasp, JSObject *proto,
-                   JSObject *parent, uintN argc, js::Value *argv);
-
 // Specialized call for constructing |this| with a known function callee,
 // and a known prototype.
 extern JSObject *
@@ -1734,9 +1759,18 @@ const uintN DNP_SKIP_TYPE = 0x10;   /* Don't update type information */
  * Return successfully added or changed shape or NULL on error.
  */
 extern const Shape *
-DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const js::Value &value,
+DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
                      PropertyOp getter, StrictPropertyOp setter, uintN attrs,
                      uintN flags, intN shortid, uintN defineHow = 0);
+
+inline const Shape *
+DefineNativeProperty(JSContext *cx, JSObject *obj, PropertyName *name, const Value &value,
+                     PropertyOp getter, StrictPropertyOp setter, uintN attrs,
+                     uintN flags, intN shortid, uintN defineHow = 0)
+{
+    return DefineNativeProperty(cx, obj, ATOM_TO_JSID(name), value, getter, setter, attrs, flags,
+                                shortid, defineHow);
+}
 
 /*
  * Specialized subroutine that allows caller to preset JSRESOLVE_* flags.
@@ -1745,6 +1779,12 @@ extern bool
 LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                         JSObject **objp, JSProperty **propp);
 
+inline bool
+LookupPropertyWithFlags(JSContext *cx, JSObject *obj, PropertyName *name, uintN flags,
+                        JSObject **objp, JSProperty **propp)
+{
+    return LookupPropertyWithFlags(cx, obj, ATOM_TO_JSID(name), flags, objp, propp);
+}
 
 /*
  * Call the [[DefineOwnProperty]] internal method of obj.
@@ -1772,25 +1812,25 @@ ReadPropertyDescriptors(JSContext *cx, JSObject *props, bool checkAccessors,
  */
 static const uintN RESOLVE_INFER = 0xffff;
 
-}
-
 /*
  * If cacheResult is false, return JS_NO_PROP_CACHE_FILL on success.
  */
-extern js::PropertyCacheEntry *
-js_FindPropertyHelper(JSContext *cx, jsid id, bool cacheResult, bool global,
-                      JSObject **objp, JSObject **pobjp, JSProperty **propp);
+extern PropertyCacheEntry *
+FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool global,
+                   JSObject **objp, JSObject **pobjp, JSProperty **propp);
 
 /*
- * Search for id either on the current scope chain or on the scope chain's
+ * Search for name either on the current scope chain or on the scope chain's
  * global object, per the global parameter.
  */
-extern JS_FRIEND_API(JSBool)
-js_FindProperty(JSContext *cx, jsid id, bool global,
-                JSObject **objp, JSObject **pobjp, JSProperty **propp);
+extern bool
+FindProperty(JSContext *cx, PropertyName *name, bool global,
+             JSObject **objp, JSObject **pobjp, JSProperty **propp);
 
 extern JSObject *
-js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id);
+FindIdentifierBase(JSContext *cx, JSObject *scopeChain, PropertyName *name);
+
+}
 
 extern JSObject *
 js_FindVariableScope(JSContext *cx, JSFunction **funp);
@@ -1826,10 +1866,16 @@ extern JSBool
 js_NativeSet(JSContext *cx, JSObject *obj, const js::Shape *shape, bool added,
              bool strict, js::Value *vp);
 
-extern JSBool
-js_GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32_t getHow, js::Value *vp);
-
 namespace js {
+
+bool
+GetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uint32_t getHow, Value *vp);
+
+inline bool
+GetPropertyHelper(JSContext *cx, JSObject *obj, PropertyName *name, uint32_t getHow, Value *vp)
+{
+    return GetPropertyHelper(cx, obj, ATOM_TO_JSID(name), getHow, vp);
+}
 
 bool
 GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, PropertyDescriptor *desc);
@@ -1844,6 +1890,16 @@ NewPropertyDescriptorObject(JSContext *cx, const PropertyDescriptor *desc, Value
 
 extern JSBool
 js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, js::Value *vp);
+
+namespace js {
+
+inline bool
+GetMethod(JSContext *cx, JSObject *obj, PropertyName *name, uintN getHow, Value *vp)
+{
+    return js_GetMethod(cx, obj, ATOM_TO_JSID(name), getHow, vp);
+}
+
+} /* namespace js */
 
 /*
  * Change attributes for the given native property. The caller must ensure

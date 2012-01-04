@@ -87,12 +87,11 @@ void JS_FASTCALL
 ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
 {
     JSObject &obj = f.fp()->scopeChain().global();
-    JSAtom *atom = f.script()->getAtom(GET_INDEX(f.pc()));
-    jsid id = ATOM_TO_JSID(atom);
+    PropertyName *name = f.script()->getName(GET_INDEX(f.pc()));
 
     RecompilationMonitor monitor(f.cx);
 
-    const Shape *shape = obj.nativeLookup(f.cx, id);
+    const Shape *shape = obj.nativeLookup(f.cx, js_CheckForStringIndex(ATOM_TO_JSID(name)));
 
     if (monitor.recompiled()) {
         stubs::GetGlobalName(f);
@@ -127,9 +126,7 @@ template <JSBool strict>
 static void JS_FASTCALL
 DisabledSetGlobal(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
-    JSScript *script = f.script();
-    JSAtom *atom = script->getAtom(GET_INDEX(f.pc()));
-    stubs::SetGlobalName<strict>(f, atom);
+    stubs::SetGlobalName<strict>(f, f.script()->getName(GET_INDEX(f.pc())));
 }
 
 template void JS_FASTCALL DisabledSetGlobal<true>(VMFrame &f, ic::SetGlobalNameIC *ic);
@@ -139,9 +136,7 @@ template <JSBool strict>
 static void JS_FASTCALL
 DisabledSetGlobalNoCache(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
-    JSScript *script = f.script();
-    JSAtom *atom = script->getAtom(GET_INDEX(f.pc()));
-    stubs::SetGlobalNameNoCache<strict>(f, atom);
+    stubs::SetGlobalNameNoCache<strict>(f, f.script()->getName(GET_INDEX(f.pc())));
 }
 
 template void JS_FASTCALL DisabledSetGlobalNoCache<true>(VMFrame &f, ic::SetGlobalNameIC *ic);
@@ -210,11 +205,11 @@ ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
     JSObject &obj = f.fp()->scopeChain().global();
     JSScript *script = f.script();
-    JSAtom *atom = script->getAtom(GET_INDEX(f.pc()));
+    PropertyName *name = script->getName(GET_INDEX(f.pc()));
 
     RecompilationMonitor monitor(f.cx);
 
-    const Shape *shape = obj.nativeLookup(f.cx, ATOM_TO_JSID(atom));
+    const Shape *shape = obj.nativeLookup(f.cx, ATOM_TO_JSID(name));
 
     if (!monitor.recompiled()) {
         LookupStatus status = UpdateSetGlobalName(f, ic, &obj, shape);
@@ -223,9 +218,9 @@ ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
     }
 
     if (ic->usePropertyCache)
-        STRICT_VARIANT(stubs::SetGlobalName)(f, atom);
+        STRICT_VARIANT(stubs::SetGlobalName)(f, name);
     else
-        STRICT_VARIANT(stubs::SetGlobalNameNoCache)(f, atom);
+        STRICT_VARIANT(stubs::SetGlobalNameNoCache)(f, name);
 }
 
 class EqualityICLinker : public LinkerHelper
@@ -818,11 +813,11 @@ class CallCompiler : public BaseCompiler
         if (!IsFunctionObject(args.calleev(), &fun))
             return false;
 
-        if ((!callingNew && !fun->isNative()) || (callingNew && !fun->isConstructor()))
+        if ((!callingNew && !fun->isNative()) || (callingNew && !fun->isNativeConstructor()))
             return false;
 
         if (callingNew)
-            args.thisv().setMagicWithObjectOrNullPayload(NULL);
+            args.thisv().setMagic(JS_IS_CONSTRUCTING);
 
         RecompilationMonitor monitor(cx);
 
@@ -917,11 +912,8 @@ class CallCompiler : public BaseCompiler
         }
 
         /* Mark vp[1] as magic for |new|. */
-        if (callingNew) {
-            Value v;
-            v.setMagicWithObjectOrNullPayload(NULL);
-            masm.storeValue(v, Address(vpReg, sizeof(Value)));
-        }
+        if (callingNew)
+            masm.storeValue(MagicValue(JS_IS_CONSTRUCTING), Address(vpReg, sizeof(Value)));
 
         masm.restoreStackBase();
         masm.setupABICall(Registers::NormalCall, 3);

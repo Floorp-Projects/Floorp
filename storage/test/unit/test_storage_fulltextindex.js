@@ -42,7 +42,7 @@
 
 function test_table_creation()
 {
-  var msc = getOpenedDatabase(true);
+  var msc = getOpenedUnsharedDatabase();
 
   msc.executeSimpleSQL(
     "CREATE VIRTUAL TABLE recipe USING fts3(name, ingredients)");
@@ -52,7 +52,7 @@ function test_table_creation()
 
 function test_insertion()
 {
-  var msc = getOpenedDatabase(true);
+  var msc = getOpenedUnsharedDatabase();
 
   msc.executeSimpleSQL("INSERT INTO recipe (name, ingredients) VALUES " +
                        "('broccoli stew', 'broccoli peppers cheese tomatoes')");
@@ -74,7 +74,7 @@ function test_insertion()
 
 function test_selection()
 {
-  var msc = getOpenedDatabase(true);
+  var msc = getOpenedUnsharedDatabase();
 
   var stmt = msc.createStatement(
     "SELECT rowid, name, ingredients FROM recipe WHERE name MATCH 'pie'");

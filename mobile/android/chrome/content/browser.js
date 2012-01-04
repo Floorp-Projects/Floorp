@@ -1009,7 +1009,7 @@ var NativeWindow = {
     },
 
     _show: function(aEvent) {
-      if (aEvent.getPreventDefault())
+      if (aEvent.defaultPrevented)
         return;
 
       let popupNode = aEvent.originalTarget;

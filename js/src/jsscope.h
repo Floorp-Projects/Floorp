@@ -67,141 +67,67 @@
 #endif
 
 /*
- * Given P independent, non-unique properties each of size S words mapped by
- * all scopes in a runtime, construct a property tree of N nodes each of size
- * S+L words (L for tree linkage).  A nominal L value is 2 for leftmost-child
- * and right-sibling links.  We hope that the N < P by enough that the space
- * overhead of L, and the overhead of scope entries pointing at property tree
- * nodes, is worth it.
+ * In isolation, a Shape represents a property that exists in one or more
+ * objects; it has an id, flags, etc. (But it doesn't represent the property's
+ * value.)  However, Shapes are always stored in linked linear sequence of
+ * Shapes, called "shape lineages". Each shape lineage represents the layout of
+ * an entire object. 
+ *   
+ * Every JSObject has a pointer, |shape_|, accessible via lastProperty(), to
+ * the last Shape in a shape lineage, which identifies the property most
+ * recently added to the object.  This pointer permits fast object layout
+ * tests. The shape lineage order also dictates the enumeration order for the
+ * object; ECMA requires no particular order but this implementation has
+ * promised and delivered property definition order.
+ *   
+ * Shape lineages occur in two kinds of data structure.
+ * 
+ * 1. N-ary property trees. Each path from a non-root node to the root node in
+ *    a property tree is a shape lineage. Property trees permit full (or
+ *    partial) sharing of Shapes between objects that have fully (or partly)
+ *    identical layouts. The root is an EmptyShape whose identity is determined
+ *    by the object's class, compartment and prototype. These Shapes are shared
+ *    and immutable.
+ * 
+ * 2. Dictionary mode lists. Shapes in such lists are said to be "in
+ *    dictionary mode", as are objects that point to such Shapes. These Shapes
+ *    are unshared, private to a single object, and mutable.
+ * 
+ * All shape lineages are bi-directionally linked, via the |parent| and
+ * |kids|/|listp| members.
+ * 
+ * Shape lineages start out life in the property tree. They can be converted
+ * (by copying) to dictionary mode lists in the following circumstances.
+ * 
+ * 1. The shape lineage's size reaches MAX_HEIGHT. This reasonable limit avoids
+ *    potential worst cases involving shape lineage mutations.
+ * 
+ * 2. A property represented by a non-last Shape in a shape lineage is removed
+ *    from an object. (In the last Shape case, obj->shape_ can be easily
+ *    adjusted to point to obj->shape_->parent.)  We originally tried lazy
+ *    forking of the property tree, but this blows up for delete/add
+ *    repetitions.
+ * 
+ * 3. A property represented by a non-last Shape in a shape lineage has its
+ *    attributes modified.
+ * 
+ * To find the Shape for a particular property of an object initially requires
+ * a linear search. But if the number of searches starting at any particular
+ * Shape in the property tree exceeds MAX_LINEAR_SEARCHES and the Shape's
+ * lineage has (excluding the EmptyShape) at least MIN_ENTRIES, we create an
+ * auxiliary hash table -- the PropertyTable -- that allows faster lookup.
+ * Furthermore, a PropertyTable is always created for dictionary mode lists,
+ * and it is attached to the last Shape in the lineage. Property tables for
+ * property tree Shapes never change, but property tables for dictionary mode
+ * Shapes can grow and shrink.
  *
- * The tree construction goes as follows.  If any empty scope in the runtime
- * has a property X added to it, find or create a node under the tree root
- * labeled X, and set obj->lastProp to point at that node.  If any non-empty
- * scope whose most recently added property is labeled Y has another property
- * labeled Z added, find or create a node for Z under the node that was added
- * for Y, and set obj->lastProp to point at that node.
+ * There used to be a long, math-heavy comment here explaining why property
+ * trees are more space-efficient than alternatives.  This was removed in bug
+ * 631138; see that bug for the full details.
  *
- * A property is labeled by its members' values: id, getter, setter, slot,
- * attributes, tiny or short id, and a field telling for..in order.  Note that
- * labels are not unique in the tree, but they are unique among a node's kids
- * (barring rare and benign multi-threaded race condition outcomes, see below)
- * and along any ancestor line from the tree root to a given leaf node (except
- * for the hard case of duplicate formal parameters to a function).
- *
- * Thus the root of the tree represents all empty scopes, and the first ply
- * of the tree represents all scopes containing one property, etc.  Each node
- * in the tree can stand for any number of scopes having the same ordered set
- * of properties, where that node was the last added to the scope.  (We need
- * not store the root of the tree as a node, and do not -- all we need are
- * links to its kids.)
- *
- * Sidebar on for..in loop order: ECMA requires no particular order, but this
- * implementation has promised and delivered property definition order, and
- * compatibility is king.  We could use an order number per property, which
- * would require a sort in js_Enumerate, and an entry order generation number
- * per scope.  An order number beats a list, which should be doubly-linked for
- * O(1) delete.  An even better scheme is to use a parent link in the property
- * tree, so that the ancestor line can be iterated from obj->lastProp when
- * filling in a JSIdArray from back to front.  This parent link also helps the
- * GC to sweep properties iteratively.
- *
- * What if a property Y is deleted from a scope?  If Y is the last property in
- * the scope, we simply adjust the scope's lastProp member after we remove the
- * scope's hash-table entry pointing at that property node.  The parent link
- * mentioned in the for..in sidebar above makes this adjustment O(1).  But if
- * Y comes between X and Z in the scope, then we might have to "fork" the tree
- * at X, leaving X->Y->Z in case other scopes have those properties added in
- * that order; and to finish the fork, we'd add a node labeled Z with the path
- * X->Z, if it doesn't exist.  This could lead to lots of extra nodes, and to
- * O(n^2) growth when deleting lots of properties.
- *
- * Rather, for O(1) growth all around, we should share the path X->Y->Z among
- * scopes having those three properties added in that order, and among scopes
- * having only X->Z where Y was deleted.  All such scopes have a lastProp that
- * points to the Z child of Y.  But a scope in which Y was deleted does not
- * have a table entry for Y, and when iterating that scope by traversing the
- * ancestor line from Z, we will have to test for a table entry for each node,
- * skipping nodes that lack entries.
- *
- * What if we add Y again?  X->Y->Z->Y is wrong and we'll enumerate Y twice.
- * Therefore we must fork in such a case if not earlier, or do something else.
- * We used to fork on the theory that set after delete is rare, but the Web is
- * a harsh mistress, and we now convert the scope to a "dictionary" on first
- * delete, to avoid O(n^2) growth in the property tree.
- *
- * Is the property tree worth it compared to property storage in each table's
- * entries?  To decide, we must find the relation <> between the words used
- * with a property tree and the words required without a tree.
- *
- * Model all scopes as one super-scope of capacity T entries (T a power of 2).
- * Let alpha be the load factor of this double hash-table.  With the property
- * tree, each entry in the table is a word-sized pointer to a node that can be
- * shared by many scopes.  But all such pointers are overhead compared to the
- * situation without the property tree, where the table stores property nodes
- * directly, as entries each of size S words.  With the property tree, we need
- * L=2 extra words per node for siblings and kids pointers.  Without the tree,
- * (1-alpha)*S*T words are wasted on free or removed sentinel-entries required
- * by double hashing.
- *
- * Therefore,
- *
- *      (property tree)                 <> (no property tree)
- *      N*(S+L) + T                     <> S*T
- *      N*(S+L) + T                     <> P*S + (1-alpha)*S*T
- *      N*(S+L) + alpha*T + (1-alpha)*T <> P*S + (1-alpha)*S*T
- *
- * Note that P is alpha*T by definition, so
- *
- *      N*(S+L) + P + (1-alpha)*T <> P*S + (1-alpha)*S*T
- *      N*(S+L)                   <> P*S - P + (1-alpha)*S*T - (1-alpha)*T
- *      N*(S+L)                   <> (P + (1-alpha)*T) * (S-1)
- *      N*(S+L)                   <> (P + (1-alpha)*P/alpha) * (S-1)
- *      N*(S+L)                   <> P * (1/alpha) * (S-1)
- *
- * Let N = P*beta for a compression ratio beta, beta <= 1:
- *
- *      P*beta*(S+L) <> P * (1/alpha) * (S-1)
- *      beta*(S+L)   <> (S-1)/alpha
- *      beta         <> (S-1)/((S+L)*alpha)
- *
- * For S = 6 (32-bit architectures) and L = 2, the property tree wins iff
- *
- *      beta < 5/(8*alpha)
- *
- * We ensure that alpha <= .75, so the property tree wins if beta < .83_.  An
- * average beta from recent Mozilla browser startups was around .6.
- *
- * Can we reduce L?  Observe that the property tree degenerates into a list of
- * lists if at most one property Y follows X in all scopes.  In or near such a
- * case, we waste a word on the right-sibling link outside of the root ply of
- * the tree.  Note also that the root ply tends to be large, so O(n^2) growth
- * searching it is likely, indicating the need for hashing.
- *
- * If only K out of N nodes in the property tree have more than one child, we
- * could eliminate the sibling link and overlay a children list or hash-table
- * pointer on the leftmost-child link (which would then be either null or an
- * only-child link; the overlay could be tagged in the low bit of the pointer,
- * or flagged elsewhere in the property tree node, although such a flag must
- * not be considered when comparing node labels during tree search).
- *
- * For such a system, L = 1 + (K * averageChildrenTableSize) / N instead of 2.
- * If K << N, L approaches 1 and the property tree wins if beta < .95.
- *
- * We observe that fan-out below the root ply of the property tree appears to
- * have extremely low degree (see the MeterPropertyTree code that histograms
- * child-counts in jsscope.c), so instead of a hash-table we use a linked list
- * of child node pointer arrays ("kid chunks").  The details are isolated in
- * jspropertytree.h/.cpp; others must treat js::Shape.kids as opaque.
- *
- * One final twist (can you stand it?): the vast majority (~95% or more) of
- * scopes are looked up fewer than three times;  in these cases, initializing
- * scope->table isn't worth it.  So instead of always allocating scope->table,
- * we leave it null while initializing all the other scope members as if it
- * were non-null and minimal-length.  Until a scope is searched
- * LINEAR_SEARCHES_MAX times, we use linear search from obj->lastProp to find a
- * given id, and save on the time and space overhead of creating a hash table.
- * Also, we don't create tables for property tree Shapes that have shape
- * lineages smaller than MIN_ENTRIES.
+ * Because many Shapes have similar data, there is actually a secondary type
+ * called a BaseShape that holds some of a Shape's data.  Many shapes can share
+ * a single BaseShape.
  */
 
 namespace js {
@@ -582,10 +508,10 @@ struct Shape : public js::gc::Cell
     union {
         KidsPointer kids;       /* null, single child, or a tagged ptr
                                    to many-kids data structure */
-        HeapPtrShape *listp;    /* dictionary list starting at lastProp
+        HeapPtrShape *listp;    /* dictionary list starting at shape_
                                    has a double-indirect back pointer,
-                                   either to shape->parent if not last,
-                                   else to obj->lastProp */
+                                   either to the next shape's parent if not
+                                   last, else to obj->shape_ */
     };
 
     static inline Shape *search(JSContext *cx, Shape *start, jsid id,

@@ -361,12 +361,15 @@ var Browser = {
     os.addObserver(SessionHistoryObserver, "browser:purge-session-history", false);
     os.addObserver(ContentCrashObserver, "ipc:content-shutdown", false);
     os.addObserver(MemoryObserver, "memory-pressure", false);
+#ifndef ANDROID
+    // Disabled on Android because of bug 712517
     os.addObserver(ActivityObserver, "application-background", false);
     os.addObserver(ActivityObserver, "application-foreground", false);
     os.addObserver(ActivityObserver, "system-active", false);
     os.addObserver(ActivityObserver, "system-idle", false);
     os.addObserver(ActivityObserver, "system-display-on", false);
     os.addObserver(ActivityObserver, "system-display-off", false);
+#endif
 
     // Listens for change in the viewable area
 #if MOZ_PLATFORM_MAEMO == 6
@@ -534,12 +537,15 @@ var Browser = {
     os.removeObserver(SessionHistoryObserver, "browser:purge-session-history");
     os.removeObserver(ContentCrashObserver, "ipc:content-shutdown");
     os.removeObserver(MemoryObserver, "memory-pressure");
+#ifndef ANDROID
+    // Disabled on Android because of bug 712517
     os.removeObserver(ActivityObserver, "application-background", false);
     os.removeObserver(ActivityObserver, "application-foreground", false);
     os.removeObserver(ActivityObserver, "system-active", false);
     os.removeObserver(ActivityObserver, "system-idle", false);
     os.removeObserver(ActivityObserver, "system-display-on", false);
     os.removeObserver(ActivityObserver, "system-display-off", false);
+#endif
 
     window.controllers.removeController(this);
     window.controllers.removeController(BrowserUI);

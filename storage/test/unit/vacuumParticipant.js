@@ -91,7 +91,7 @@ vacuumParticipant.prototype =
     }
     else if (aData == "memory") {
       try {
-        this._dbConn.close();
+        this._dbConn.asyncClose();
       }
       catch(e) {}
       this._dbConn = Cc["@mozilla.org/storage/service;1"].
@@ -100,6 +100,10 @@ vacuumParticipant.prototype =
     }
     else if (aData == "dispose") {
       Services.obs.removeObserver(this, "test-options");
+      try {
+        this._dbConn.asyncClose();
+      }
+      catch(e) {}
     }
   },
 

@@ -980,18 +980,12 @@ public class PanZoomController
     public void onScaleEnd(ScaleGestureDetector detector) {
         Log.d(LOGTAG, "onScaleEnd in " + mState);
 
-        PointF o = mController.getOrigin();
         if (mState == PanZoomState.ANIMATED_ZOOM)
             return;
 
         mState = PanZoomState.PANNING_HOLD_LOCKED;
         mX.firstTouchPos = mX.lastTouchPos = mX.touchPos = detector.getFocusX();
         mY.firstTouchPos = mY.lastTouchPos = mY.touchPos = detector.getFocusY();
-
-        RectF viewport = mController.getViewport();
-
-        FloatSize pageSize = mController.getPageSize();
-        RectF pageRect = new RectF(0,0, pageSize.width, pageSize.height);
 
         // Force a viewport synchronisation
         mController.setForceRedraw();

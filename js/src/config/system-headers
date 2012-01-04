@@ -113,11 +113,6 @@ fusion/protocol.h
 fusion/fusion.h
 fusion/arena.h
 fusion/object.h
-directfbgl.h
-directfb_version.h
-directfb.h
-directfb_util.h
-directfb_keynames.h
 dgiff.h
 direct/util.h
 direct/memcpy.h

@@ -249,6 +249,10 @@ struct Parser : private AutoGCRooter
     ParseNode *returnOrYield(bool useAssignExpr);
     ParseNode *destructuringExpr(BindData *data, TokenKind tt);
 
+    bool checkForFunctionNode(PropertyName *name, ParseNode *node);
+
+    ParseNode *identifierName(bool afterDot);
+
 #if JS_HAS_XML_SUPPORT
     ParseNode *endBracketedExpr();
 
@@ -262,6 +266,9 @@ struct Parser : private AutoGCRooter
     JSBool xmlElementContent(ParseNode *pn);
     ParseNode *xmlElementOrList(JSBool allowList);
     ParseNode *xmlElementOrListRoot(JSBool allowList);
+
+    ParseNode *starOrAtPropertyIdentifier(TokenKind tt);
+    ParseNode *propertyQualifiedIdentifier();
 #endif /* JS_HAS_XML_SUPPORT */
 
     bool setAssignmentLhsOps(ParseNode *pn, JSOp op);

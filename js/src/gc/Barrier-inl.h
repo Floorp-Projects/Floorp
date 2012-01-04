@@ -203,15 +203,6 @@ HeapValue::set(JSCompartment *comp, const Value &v)
     post(comp);
 }
 
-inline void
-HeapValue::boxNonDoubleFrom(JSValueType type, uint64_t *out)
-{
-    pre();
-    value.boxNonDoubleFrom(type, out);
-    JS_ASSERT(!IsPoisonedValue(value));
-    post();
-}
-
 inline
 HeapId::HeapId(jsid id)
     : value(id)
