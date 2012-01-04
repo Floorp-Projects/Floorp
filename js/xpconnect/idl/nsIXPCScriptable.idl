@@ -101,7 +101,6 @@ interface nsIXPCScriptable : nsISupports
     const PRUint32 CLASSINFO_INTERFACES_ONLY        = 1 << 23;
     const PRUint32 ALLOW_PROP_MODS_DURING_RESOLVE   = 1 << 24;
     const PRUint32 ALLOW_PROP_MODS_TO_PROTOTYPE     = 1 << 25;
-    const PRUint32 DONT_SHARE_PROTOTYPE             = 1 << 26;
     const PRUint32 DONT_REFLECT_INTERFACE_NAMES     = 1 << 27;
     const PRUint32 WANT_EQUALITY                    = 1 << 28;
     const PRUint32 WANT_OUTER_OBJECT                = 1 << 29;

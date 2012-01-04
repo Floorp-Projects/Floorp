@@ -2131,8 +2131,7 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
 
     AutoMarkingWrappedNativeProtoPtr proto(ccx);
     proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, scope, aClassInfo,
-                                                &sciProto, false,
-                                                OBJ_IS_NOT_GLOBAL);
+                                                &sciProto, OBJ_IS_NOT_GLOBAL);
     if (!proto)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
