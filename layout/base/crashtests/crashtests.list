@@ -343,5 +343,6 @@ load 665837.html
 load 668941.xhtml
 load 670226.html
 asserts(2) load 675246-1.xhtml # Bug 675713
+load 691118-1.html
 load 695861.html
 load 707098.html
