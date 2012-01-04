@@ -41,6 +41,8 @@
 
 using namespace mozilla;
 
+NS_IMPL_ISUPPORTS2(nsScreenGonk, nsIScreen, nsIScreen)
+
 nsScreenGonk::nsScreenGonk(void *nativeScreen)
 {
 }
@@ -62,12 +64,14 @@ nsScreenGonk::GetRect(PRInt32 *outLeft,  PRInt32 *outTop,
     return NS_OK;
 }
 
+
 NS_IMETHODIMP
 nsScreenGonk::GetAvailRect(PRInt32 *outLeft,  PRInt32 *outTop,
-                           PRInt32 *outWidth, PRInt32 *outHeight)
+                          PRInt32 *outWidth, PRInt32 *outHeight)
 {
     return GetRect(outLeft, outTop, outWidth, outHeight);
 }
+
 
 
 NS_IMETHODIMP
@@ -78,6 +82,7 @@ nsScreenGonk::GetPixelDepth(PRInt32 *aPixelDepth)
     *aPixelDepth = 24;
     return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsScreenGonk::GetColorDepth(PRInt32 *aColorDepth)
