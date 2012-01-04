@@ -118,7 +118,7 @@ stubs::BindNameNoCache(VMFrame &f, JSAtom *atom)
 JSObject * JS_FASTCALL
 stubs::BindGlobalName(VMFrame &f)
 {
-    return f.fp()->scopeChain().getGlobal();
+    return &f.fp()->scopeChain().global();
 }
 
 template<JSBool strict>
@@ -317,7 +317,7 @@ NameOp(VMFrame &f, JSObject *obj, bool callname)
             Shape *shape = (Shape *)prop;
             JSObject *normalized = obj;
             if (normalized->isWith() && !shape->hasDefaultGetter())
-                normalized = js_UnwrapWithObject(cx, normalized);
+                normalized = &normalized->asWith().object();
             NATIVE_GET(cx, normalized, obj2, shape, JSGET_METHOD_BARRIER, &rval, return NULL);
         }
 
@@ -347,7 +347,7 @@ stubs::Name(VMFrame &f)
 void JS_FASTCALL
 stubs::GetGlobalName(VMFrame &f)
 {
-    JSObject *globalObj = f.fp()->scopeChain().getGlobal();
+    JSObject *globalObj = &f.fp()->scopeChain().global();
     if (!NameOp(f, globalObj, false))
          THROW();
 }
@@ -395,7 +395,7 @@ stubs::GetElem(VMFrame &f)
                     return;
             }
         } else if (obj->isArguments()) {
-            if (obj->asArguments()->getElement(index, &rval))
+            if (obj->asArguments().getElement(index, &rval))
                 return;
         }
 
@@ -556,7 +556,7 @@ stubs::CallName(VMFrame &f)
 void JS_FASTCALL
 stubs::PushImplicitThisForGlobal(VMFrame &f)
 {
-    return PushImplicitThis(f, f.fp()->scopeChain().getGlobal(), f.regs.sp[-1]);
+    return PushImplicitThis(f, &f.fp()->scopeChain().global(), f.regs.sp[-1]);
 }
 
 void JS_FASTCALL
@@ -691,7 +691,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
         obj = CloneFunctionObjectIfNotSingleton(cx, fun, obj2);
         if (!obj)
             THROW();
-        JS_ASSERT_IF(f.script()->compileAndGo, obj->getGlobal() == fun->getGlobal());
+        JS_ASSERT_IF(f.script()->compileAndGo, obj->global() == fun->global());
     }
 
     /*
@@ -1341,7 +1341,7 @@ stubs::DefLocalFun(VMFrame &f, JSFunction *fun)
     if (!obj)
         THROWV(NULL);
 
-    JS_ASSERT_IF(f.script()->compileAndGo, obj->getGlobal() == fun->getGlobal());
+    JS_ASSERT_IF(f.script()->compileAndGo, obj->global() == fun->global());
 
     return obj;
 }
@@ -1362,7 +1362,7 @@ stubs::RegExp(VMFrame &f, JSObject *regex)
      * Push a regexp object cloned from the regexp literal object mapped by the
      * bytecode at pc.
      */
-    JSObject *proto = f.fp()->scopeChain().getGlobal()->getOrCreateRegExpPrototype(f.cx);
+    JSObject *proto = f.fp()->scopeChain().global().getOrCreateRegExpPrototype(f.cx);
     if (!proto)
         THROW();
     JS_ASSERT(proto);
@@ -1451,7 +1451,7 @@ stubs::Lambda(VMFrame &f, JSFunction *fun)
     if (!obj)
         THROWV(NULL);
 
-    JS_ASSERT_IF(f.script()->compileAndGo, obj->getGlobal() == fun->getGlobal());
+    JS_ASSERT_IF(f.script()->compileAndGo, obj->global() == fun->global());
     return obj;
 }
 
@@ -1536,14 +1536,14 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
     if (lval.isObject()) {
         objv = lval;
     } else {
-        GlobalObject *global = f.fp()->scopeChain().getGlobal();
+        GlobalObject &global = f.fp()->scopeChain().global();
         JSObject *pobj;
         if (lval.isString()) {
-            pobj = global->getOrCreateStringPrototype(cx);
+            pobj = global.getOrCreateStringPrototype(cx);
         } else if (lval.isNumber()) {
-            pobj = global->getOrCreateNumberPrototype(cx);
+            pobj = global.getOrCreateNumberPrototype(cx);
         } else if (lval.isBoolean()) {
-            pobj = global->getOrCreateBooleanPrototype(cx);
+            pobj = global.getOrCreateBooleanPrototype(cx);
         } else {
             JS_ASSERT(lval.isNull() || lval.isUndefined());
             js_ReportIsNullOrUndefined(cx, -1, lval, NULL);
@@ -1819,13 +1819,13 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
 {
     FrameRegs &regs = f.regs;
     StackFrame *fp = f.fp();
+    StaticBlockObject &blockObj = obj->asStaticBlock();
 
     JS_ASSERT(!f.regs.inlined());
-    JS_ASSERT(obj->isStaticBlock());
 
     if (*regs.pc == JSOP_ENTERBLOCK) {
-        JS_ASSERT(fp->base() + OBJ_BLOCK_DEPTH(cx, obj) == regs.sp);
-        Value *vp = regs.sp + OBJ_BLOCK_COUNT(cx, obj);
+        JS_ASSERT(fp->base() + blockObj.stackDepth() == regs.sp);
+        Value *vp = regs.sp + blockObj.slotCount();
         JS_ASSERT(regs.sp < vp);
         JS_ASSERT(vp <= fp->slots() + fp->script()->nslots);
         SetValueRangeToUndefined(regs.sp, vp);
@@ -1834,7 +1834,7 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
 
 #ifdef DEBUG
     JSContext *cx = f.cx;
-    JS_ASSERT(fp->maybeBlockChain() == obj->staticBlockScopeChain());
+    JS_ASSERT(fp->maybeBlockChain() == blockObj.enclosingBlock());
 
     /*
      * The young end of fp->scopeChain() may omit blocks if we haven't closed
@@ -1845,18 +1845,17 @@ stubs::EnterBlock(VMFrame &f, JSObject *obj)
      */
     JSObject *obj2 = &fp->scopeChain();
     while (obj2->isWith())
-        obj2 = obj2->internalScopeChain();
+        obj2 = &obj2->asWith().enclosingScope();
     if (obj2->isBlock() &&
         obj2->getPrivate() == js_FloatingFrameIfGenerator(cx, fp)) {
-        JSObject *youngestProto = obj2->getProto();
-        JS_ASSERT(youngestProto->isStaticBlock());
-        JSObject *parent = obj;
-        while ((parent = parent->scopeChain()) != youngestProto)
+        JSObject &youngestProto = obj2->asClonedBlock().staticBlock();
+        StaticBlockObject *parent = &blockObj;
+        while ((parent = parent->enclosingBlock()) != &youngestProto)
             JS_ASSERT(parent);
     }
 #endif
 
-    fp->setBlockChain(obj);
+    fp->setBlockChain(&blockObj);
 }
 
 void JS_FASTCALL
@@ -1865,26 +1864,19 @@ stubs::LeaveBlock(VMFrame &f)
     JSContext *cx = f.cx;
     StackFrame *fp = f.fp();
 
-#ifdef DEBUG
-    JS_ASSERT(fp->blockChain().isBlock());
-    uintN blockDepth = OBJ_BLOCK_DEPTH(cx, &fp->blockChain());
+    StaticBlockObject &blockObj = fp->blockChain();
+    JS_ASSERT(blockObj.stackDepth() <= StackDepth(fp->script()));
 
-    JS_ASSERT(blockDepth <= StackDepth(fp->script()));
-#endif
     /*
      * If we're about to leave the dynamic scope of a block that has been
      * cloned onto fp->scopeChain(), clear its private data, move its locals from
      * the stack into the clone, and pop it off the chain.
      */
     JSObject &obj = fp->scopeChain();
-    JSObject &blockChain = fp->blockChain();
-    if (obj.getProto() == &blockChain) {
-        JS_ASSERT(obj.isBlock());
-        if (!js_PutBlockObject(cx, JS_TRUE))
-            THROW();
-    }
+    if (obj.getProto() == &blockObj)
+        obj.asClonedBlock().put(cx);
 
-    fp->setBlockChain(blockChain.staticBlockScopeChain());
+    fp->setBlockChain(blockObj.enclosingBlock());
 }
 
 void * JS_FASTCALL

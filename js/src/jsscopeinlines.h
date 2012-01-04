@@ -41,6 +41,7 @@
 #define jsscopeinlines_h___
 
 #include <new>
+
 #include "jsarray.h"
 #include "jsbool.h"
 #include "jscntxt.h"
@@ -52,11 +53,14 @@
 #include "jsgcmark.h"
 
 #include "vm/ArgumentsObject.h"
+#include "vm/ScopeObject.h"
 #include "vm/StringObject.h"
 
 #include "jscntxtinlines.h"
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
+
+#include "vm/ScopeObject-inl.h"
 
 namespace js {
 
@@ -265,7 +269,7 @@ Shape::get(JSContext* cx, JSObject *receiver, JSObject* obj, JSObject *pobj, js:
      * Avoid exposing the With object to native getters.
      */
     if (obj->isWith())
-        obj = js_UnwrapWithObject(cx, obj);
+        obj = &obj->asWith().object();
     return js::CallJSPropertyOp(cx, getterOp(), receiver, getUserId(), vp);
 }
 
@@ -284,7 +288,7 @@ Shape::set(JSContext* cx, JSObject* obj, bool strict, js::Value* vp) const
 
     /* See the comment in js::Shape::get as to why we check for With. */
     if (obj->isWith())
-        obj = js_UnwrapWithObject(cx, obj);
+        obj = &obj->asWith().object();
     return js::CallJSPropertyOpSetter(cx, setterOp(), obj, getUserId(), strict, vp);
 }
 

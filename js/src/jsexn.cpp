@@ -1030,7 +1030,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     JS_ASSERT(obj->isGlobal());
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = obj->asGlobal();
+    GlobalObject *global = &obj->asGlobal();
 
     JSObject *objectProto;
     if (!js_GetClassPrototype(cx, global, JSProto_Object, &objectProto))
@@ -1333,7 +1333,7 @@ js_CopyErrorObject(JSContext *cx, JSObject *errobj, JSObject *scope)
 
     // Create the Error object.
     JSObject *proto;
-    if (!js_GetClassPrototype(cx, scope->getGlobal(), GetExceptionProtoKey(copy->exnType), &proto))
+    if (!js_GetClassPrototype(cx, &scope->global(), GetExceptionProtoKey(copy->exnType), &proto))
         return NULL;
     JSObject *copyobj = NewObjectWithGivenProto(cx, &ErrorClass, proto, NULL);
     SetExnPrivate(cx, copyobj, copy);

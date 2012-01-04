@@ -55,8 +55,12 @@
  */
 
 #include "jsapi.h"
-
 #include "jsutil.h"
+
+#ifdef __cplusplus
+#include "js/HashTable.h"
+#include "js/Vector.h"
+#endif
 
 JS_BEGIN_EXTERN_C
 
@@ -188,25 +192,6 @@ class RuntimeAllocPolicy;
 
 class GlobalObject;
 
-template <class T,
-          size_t MinInlineCapacity = 0,
-          class AllocPolicy = TempAllocPolicy>
-class Vector;
-
-template <class>
-struct DefaultHasher;
-
-template <class Key,
-          class Value,
-          class HashPolicy = DefaultHasher<Key>,
-          class AllocPolicy = TempAllocPolicy>
-class HashMap;
-
-template <class T,
-          class HashPolicy = DefaultHasher<T>,
-          class AllocPolicy = TempAllocPolicy>
-class HashSet;
-
 template <typename K,
           typename V,
           size_t InlineElems>
@@ -331,6 +316,7 @@ class Handle
         T a = RootMethods<T>::initial();
         S b = RootMethods<S>::initial();
         a = b;
+        (void)a;
 #endif
     }
 };

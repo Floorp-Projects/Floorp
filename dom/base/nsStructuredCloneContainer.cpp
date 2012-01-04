@@ -96,7 +96,7 @@ nsStructuredCloneContainer::InitFromVariant(nsIVariant *aData, JSContext *aCx)
   NS_ENSURE_STATE(jsBytes);
 
   // Copy jsBytes into our own buffer.
-  mData = (PRUint64*) malloc(mSize);
+  mData = (uint64_t*) malloc(mSize);
   if (!mData) {
     mSize = 0;
     mVersion = 0;
@@ -131,7 +131,7 @@ nsStructuredCloneContainer::InitFromBase64(const nsAString &aData,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Copy the string's data into our own buffer.
-  mData = (PRUint64*) malloc(binaryData.Length());
+  mData = (uint64_t*) malloc(binaryData.Length());
   NS_ENSURE_STATE(mData);
   memcpy(mData, binaryData.get(), binaryData.Length());
 

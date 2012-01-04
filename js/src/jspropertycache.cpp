@@ -46,7 +46,7 @@
 
 using namespace js;
 
-JS_REQUIRES_STACK PropertyCacheEntry *
+PropertyCacheEntry *
 PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *pobj,
                     const Shape *shape)
 {
@@ -77,7 +77,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
 
     JSObject *tmp = obj;
     for (uintN i = 0; i < scopeIndex; i++)
-        tmp = tmp->internalScopeChain();
+        tmp = &tmp->asScope().enclosingScope();
 
     uintN protoIndex = 0;
     while (tmp != pobj) {
@@ -176,7 +176,7 @@ GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs
     return atom;
 }
 
-JS_REQUIRES_STACK JSAtom *
+JSAtom *
 PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject **pobjp,
                         PropertyCacheEntry *entry)
 {
@@ -231,7 +231,7 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     if (JOF_MODE(cs.format) == JOF_NAME) {
         uint8_t scopeIndex = entry->scopeIndex;
         while (scopeIndex > 0) {
-            tmp = pobj->scopeChain();
+            tmp = pobj->enclosingScope();
             if (!tmp || !tmp->isNative())
                 break;
             pobj = tmp;

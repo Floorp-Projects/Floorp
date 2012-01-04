@@ -523,9 +523,9 @@ JSStructuredCloneWriter::startWrite(const js::Value &v)
     } else if (v.isObject()) {
         JSObject *obj = &v.toObject();
         if (obj->isRegExp()) {
-            RegExpObject *reobj = obj->asRegExp();
-            return out.writePair(SCTAG_REGEXP_OBJECT, reobj->getFlags()) &&
-                   writeString(SCTAG_STRING, reobj->getSource());
+            RegExpObject &reobj = obj->asRegExp();
+            return out.writePair(SCTAG_REGEXP_OBJECT, reobj.getFlags()) &&
+                   writeString(SCTAG_STRING, reobj.getSource());
         } else if (obj->isDate()) {
             jsdouble d = js_DateGetMsecSinceEpoch(context(), obj);
             return out.writePair(SCTAG_DATE_OBJECT, 0) && out.writeDouble(d);

@@ -180,8 +180,8 @@ class PropertyCache
 
     static inline bool matchShape(JSContext *cx, JSObject *obj, uint32_t shape);
 
-    JS_REQUIRES_STACK JSAtom *fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp,
-                                       JSObject **pobjp, PropertyCacheEntry *entry);
+    JSAtom *fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp,
+                     JSObject **pobjp, PropertyCacheEntry *entry);
 
 #ifdef DEBUG
     void assertEmpty();
@@ -190,9 +190,9 @@ class PropertyCache
 #endif
 
   public:
-    JS_ALWAYS_INLINE JS_REQUIRES_STACK void test(JSContext *cx, jsbytecode *pc,
-                                                 JSObject *&obj, JSObject *&pobj,
-                                                 PropertyCacheEntry *&entry, JSAtom *&atom);
+    JS_ALWAYS_INLINE void test(JSContext *cx, jsbytecode *pc,
+                               JSObject *&obj, JSObject *&pobj,
+                               PropertyCacheEntry *&entry, JSAtom *&atom);
 
     /*
      * Test for cached information about a property set on *objp at pc.
@@ -213,8 +213,8 @@ class PropertyCache
      * Return the filled cache entry or JS_NO_PROP_CACHE_FILL if caching was
      * not possible.
      */
-    JS_REQUIRES_STACK PropertyCacheEntry *fill(JSContext *cx, JSObject *obj, uintN scopeIndex,
-                                               JSObject *pobj, const js::Shape *shape);
+    PropertyCacheEntry *fill(JSContext *cx, JSObject *obj, uintN scopeIndex,
+                             JSObject *pobj, const js::Shape *shape);
 
     void purge(JSContext *cx);
 

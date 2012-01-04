@@ -54,7 +54,7 @@
 #include "jsinterpinlines.h"
 #include "jsautooplen.h"
 
-#include "vm/CallObject-inl.h"
+#include "vm/ScopeObject-inl.h"
 
 #if defined JS_POLYIC
 
@@ -1443,10 +1443,10 @@ class ScopeNameCompiler : public PICStubCompiler
                 return error();
 
             /* Load the next link in the scope chain. */
-            Address parent(pic.objReg, JSObject::offsetOfInternalScopeChain());
+            Address parent(pic.objReg, ScopeObject::offsetOfEnclosingScope());
             masm.loadPayload(parent, pic.objReg);
 
-            tobj = tobj->internalScopeChain();
+            tobj = &tobj->asScope().enclosingScope();
         }
 
         if (tobj != getprop.holder)
@@ -1501,7 +1501,7 @@ class ScopeNameCompiler : public PICStubCompiler
             masm.loadPtr(Address(JSFrameReg, StackFrame::offsetOfScopeChain()), pic.objReg);
 
         JS_ASSERT(obj == getprop.holder);
-        JS_ASSERT(getprop.holder == scopeChain->getGlobal());
+        JS_ASSERT(getprop.holder == &scopeChain->global());
 
         LookupStatus status = walkScopeChain(masm, fails);
         if (status != Lookup_Cacheable)
@@ -1585,7 +1585,7 @@ class ScopeNameCompiler : public PICStubCompiler
             masm.loadPtr(Address(JSFrameReg, StackFrame::offsetOfScopeChain()), pic.objReg);
 
         JS_ASSERT(obj == getprop.holder);
-        JS_ASSERT(getprop.holder != scopeChain->getGlobal());
+        JS_ASSERT(getprop.holder != &scopeChain->global());
 
         CallObjPropKind kind;
         const Shape *shape = getprop.shape;
@@ -1763,7 +1763,7 @@ class ScopeNameCompiler : public PICStubCompiler
         const Shape *shape = getprop.shape;
         JSObject *normalized = obj;
         if (obj->isWith() && !shape->hasDefaultGetter())
-            normalized = js_UnwrapWithObject(cx, obj);
+            normalized = &obj->asWith().object();
         NATIVE_GET(cx, normalized, holder, shape, JSGET_METHOD_BARRIER, vp, return false);
         if (thisvp)
             return ComputeImplicitThis(cx, normalized, *vp, thisvp);
@@ -1825,7 +1825,7 @@ class BindNameCompiler : public PICStubCompiler
 
         /* Walk up the scope chain. */
         JSObject *tobj = scopeChain;
-        Address parent(pic.objReg, JSObject::offsetOfInternalScopeChain());
+        Address parent(pic.objReg, ScopeObject::offsetOfEnclosingScope());
         while (tobj && tobj != obj) {
             if (!IsCacheableNonGlobalScope(tobj))
                 return disable("non-cacheable obj in scope chain");
@@ -1835,7 +1835,7 @@ class BindNameCompiler : public PICStubCompiler
                                             ImmPtr(tobj->lastProperty()));
             if (!fails.append(shapeTest))
                 return error();
-            tobj = tobj->internalScopeChain();
+            tobj = &tobj->asScope().enclosingScope();
         }
         if (tobj != obj)
             return disable("indirect hit");
@@ -1932,7 +1932,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
         } else if (!f.regs.sp[-1].isPrimitive()) {
             JSObject *obj = &f.regs.sp[-1].toObject();
             if (obj->isArray() ||
-                (obj->isArguments() && !obj->asArguments()->hasOverriddenLength()) ||
+                (obj->isArguments() && !obj->asArguments().hasOverriddenLength()) ||
                 obj->isString()) {
                 GetPropCompiler cc(f, script, obj, *pic, NULL, DisabledGetPropIC);
                 if (obj->isArray()) {
@@ -1944,7 +1944,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
                     LookupStatus status = cc.generateArgsLengthStub();
                     if (status == Lookup_Error)
                         THROW();
-                    f.regs.sp[-1].setInt32(int32_t(obj->asArguments()->initialLength()));
+                    f.regs.sp[-1].setInt32(int32_t(obj->asArguments().initialLength()));
                 } else if (obj->isString()) {
                     LookupStatus status = cc.generateStringObjLengthStub();
                     if (status == Lookup_Error)
@@ -2069,14 +2069,14 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     if (lval.isObject()) {
         objv = lval;
     } else {
-        GlobalObject *global = f.fp()->scopeChain().getGlobal();
+        GlobalObject &global = f.fp()->scopeChain().global();
         JSObject *pobj;
         if (lval.isString()) {
-            pobj = global->getOrCreateStringPrototype(cx);
+            pobj = global.getOrCreateStringPrototype(cx);
         } else if (lval.isNumber()) {
-            pobj = global->getOrCreateNumberPrototype(cx);
+            pobj = global.getOrCreateNumberPrototype(cx);
         } else if (lval.isBoolean()) {
-            pobj = global->getOrCreateBooleanPrototype(cx);
+            pobj = global.getOrCreateBooleanPrototype(cx);
         } else {
             JS_ASSERT(lval.isNull() || lval.isUndefined());
             js_ReportIsNullOrUndefined(cx, -1, lval, NULL);
