@@ -1810,6 +1810,8 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 /* No-ops for ease of decompilation. */
 ADD_EMPTY_CASE(JSOP_NOP)
 ADD_EMPTY_CASE(JSOP_UNUSED0)
+ADD_EMPTY_CASE(JSOP_UNUSED1)
+ADD_EMPTY_CASE(JSOP_UNUSED2)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
 #if JS_HAS_XML_SUPPORT
@@ -4635,35 +4637,6 @@ BEGIN_CASE(JSOP_SETLOCALPOP)
     POP_COPY_TO(regs.fp()->slots()[slot]);
 }
 END_CASE(JSOP_SETLOCALPOP)
-
-BEGIN_CASE(JSOP_IFCANTCALLTOP)
-    /*
-     * If the top of stack is of primitive type, jump to our target. Otherwise
-     * advance to the next opcode.
-     */
-    JS_ASSERT(regs.sp > regs.fp()->base());
-    if (!js_IsCallable(regs.sp[-1])) {
-        len = GET_JUMP_OFFSET(regs.pc);
-        BRANCH(len);
-    }
-END_CASE(JSOP_IFCANTCALLTOP)
-
-BEGIN_CASE(JSOP_PRIMTOP)
-    JS_ASSERT(regs.sp > regs.fp()->base());
-    if (regs.sp[-1].isObject()) {
-        jsint i = GET_INT8(regs.pc);
-        js_ReportValueError2(cx, JSMSG_CANT_CONVERT_TO, -2, regs.sp[-2], NULL,
-                             (i == JSTYPE_VOID) ? "primitive type" : JS_TYPE_STR(i));
-        goto error;
-    }
-END_CASE(JSOP_PRIMTOP)
-
-BEGIN_CASE(JSOP_OBJTOP)
-    if (regs.sp[-1].isPrimitive()) {
-        js_ReportValueError(cx, GET_UINT16(regs.pc), -1, regs.sp[-1], NULL);
-        goto error;
-    }
-END_CASE(JSOP_OBJTOP)
 
 BEGIN_CASE(JSOP_INSTANCEOF)
 {
