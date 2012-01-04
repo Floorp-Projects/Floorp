@@ -711,7 +711,7 @@ ForgetUse(ParseNode *pn)
 static ParseNode *
 MakeAssignment(ParseNode *pn, ParseNode *rhs, TreeContext *tc)
 {
-    ParseNode *lhs = tc->parser->new_<ParseNode>(*pn);
+    ParseNode *lhs = tc->parser->cloneNode(*pn);
     if (!lhs)
         return NULL;
 
