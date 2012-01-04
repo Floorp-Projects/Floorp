@@ -243,6 +243,10 @@ IonBuilder::build()
 
     current->makeStart(MStart::New(MStart::StartType_Default));
 
+    // Parameters have been checked to correspond to the typeset, now we unbox
+    // what we can in an infallible manner.
+    rewriteParameters();
+
     // The type analysis phase attempts to insert unbox operations near
     // definitions of values. It also attempts to replace uses in resume points
     // with the narrower, unboxed variants. However, we must prevent this
@@ -359,6 +363,7 @@ IonBuilder::rewriteParameters()
         // 
         // As usual, it would be invalid for v1 to be captured in the initial
         // resume point, rather than v0.
+        current->add(actual);
         current->rewriteSlot(i, actual);
     }
 }
@@ -710,6 +715,9 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_LENGTH:
         return jsop_length();
+
+      case JSOP_THIS:
+        return jsop_this();
 
       case JSOP_GETPROP:
         return jsop_getprop(info().getAtom(pc));
@@ -2993,4 +3001,20 @@ IonBuilder::jsop_getprop(JSAtom *atom)
         return false;
 
     return pushTypeBarrier(ins, types, barrier);
+}
+
+bool
+IonBuilder::jsop_this()
+{
+    if (!info().fun())
+        return abort("JSOP_THIS outside of a JSFunction.");
+
+    // Do not re-pushed, use pushSlot instead.
+    MDefinition *thisParam = current->getSlot(info().thisSlot());
+
+    if (thisParam->type() != MIRType_Object)
+        return abort("Cannot compile JSOP_THIS, not an object.");
+
+    current->pushSlot(info().thisSlot());
+    return true;
 }
