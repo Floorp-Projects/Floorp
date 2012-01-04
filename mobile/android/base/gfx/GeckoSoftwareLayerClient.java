@@ -140,7 +140,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             layerController.setViewportMetrics(mGeckoViewport);
         }
 
-        GeckoAppShell.registerGeckoEventListener("Viewport:Update", this);
+        GeckoAppShell.registerGeckoEventListener("Viewport:UpdateAndDraw", this);
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateLater", this);
     }
 
@@ -340,19 +340,13 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     }
 
     public void handleMessage(String event, JSONObject message) {
-        if ("Viewport:Update".equals(event)) {
-            beginTransaction(mTileLayer);
-            try {
-                updateViewport(message.getString("viewport"), false);
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "Unable to update viewport", e);
-            } finally {
-                endTransaction(mTileLayer);
-            }
+        if ("Viewport:UpdateAndDraw".equals(event)) {
+            mUpdateViewportOnEndDraw = true;
+
+            // Redraw everything.
+            Rect rect = new Rect(0, 0, mBufferSize.width, mBufferSize.height);
+            GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.DRAW, rect));
         } else if ("Viewport:UpdateLater".equals(event)) {
-            if (!mTileLayer.inTransaction()) {
-                Log.e(LOGTAG, "Viewport:UpdateLater called while not in transaction. You should be using Viewport:Update instead!");
-            }
             mUpdateViewportOnEndDraw = true;
         }
     }
