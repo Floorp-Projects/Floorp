@@ -4799,7 +4799,6 @@ MOZ_ARG_HEADER(Toolkit Options)
                             Mac OS X - cairo-cocoa
                             OS/2 - cairo-os2
                             Win32 - cairo-windows
-                            Gtk2 with DirectFB - cairo-gtk2-dfb
                             * - cairo-gtk2
                             * - cairo-qt],
     [ _DEFAULT_TOOLKIT=$enableval ],
@@ -4807,7 +4806,6 @@ MOZ_ARG_HEADER(Toolkit Options)
 
     if test "$_DEFAULT_TOOLKIT" = "cairo-windows" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2-dfb" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2-x11" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-qt" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
@@ -4852,24 +4850,6 @@ cairo-gtk2|cairo-gtk2-x11)
     AC_DEFINE(MOZ_WIDGET_GTK2)
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
-    ;;
-
-cairo-gtk2-dfb)
-    MOZ_WIDGET_TOOLKIT=gtk2
-    MOZ_ENABLE_GTK2=1
-    MOZ_WEBGL=
-
-    AC_DEFINE(MOZ_DFB)
-    MOZ_DFB=1
-
-    TK_CFLAGS='$(MOZ_GTK2_CFLAGS)'
-    TK_LIBS='$(MOZ_GTK2_LIBS)'
-    AC_DEFINE(MOZ_WIDGET_GTK2)
-    if test "$no_x" != "yes"; then
-        AC_MSG_WARN([Disabling X when DirectFB is specified.])
-        no_x=yes
-    fi
-    MOZ_PDF_PRINTING=1
     ;;
 
 cairo-qt)
@@ -4967,9 +4947,6 @@ if test "$COMPILE_ENVIRONMENT"; then
   if test "$MOZ_ENABLE_GTK2"; then
     if test "$MOZ_X11"; then
       GDK_PACKAGES=gdk-x11-2.0
-    elif test "$MOZ_DFB"; then
-      PKG_CHECK_MODULES(MOZ_DFB, directfb >= 1.1.0)
-      GDK_PACKAGES=directfb
     fi
 
     PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= $GTK2_VERSION gtk+-unix-print-2.0 glib-2.0 gobject-2.0 $GDK_PACKAGES)
@@ -5127,7 +5104,6 @@ AC_SUBST(MOZ_QT_LIBS)
 AC_SUBST(MOC)
 AC_SUBST(RCC)
 
-AC_SUBST(MOZ_DFB)
 AC_SUBST(MOZ_X11)
 
 dnl ========================================================

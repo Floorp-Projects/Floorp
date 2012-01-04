@@ -816,14 +816,16 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
 
     switch (rejoin) {
       case REJOIN_SCRIPTED: {
+        jsval_layout rval;
 #ifdef JS_NUNBOX32
-        uint64_t rvalBits = ((uint64_t)returnType << 32) | (uint32_t)returnData;
+        rval.asBits = ((uint64_t)returnType << 32) | (uint32_t)returnData;
 #elif JS_PUNBOX64
-        uint64_t rvalBits = (uint64_t)returnType | (uint64_t)returnData;
+        rval.asBits = (uint64_t)returnType | (uint64_t)returnData;
 #else
 #error "Unknown boxing format"
 #endif
-        nextsp[-1].setRawBits(rvalBits);
+
+        nextsp[-1] = IMPL_TO_JSVAL(rval);
 
         /*
          * When making a scripted call at monitored sites, it is the caller's

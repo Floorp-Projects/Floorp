@@ -392,14 +392,14 @@ abstract public class GeckoApp
         if (!checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched))
             return false;
 
-                String args = intent.getStringExtra("args");
-                if (args != null && args.contains("-profile")) {
-                    // XXX: TO-DO set mProfileDir to the path passed in
-                    mUserDefinedProfile = true;
-                }
-
         if (intent == null)
             intent = getIntent();
+
+        String args = intent.getStringExtra("args");
+        if (args != null && args.contains("-profile")) {
+            // XXX: TO-DO set mProfileDir to the path passed in
+            mUserDefinedProfile = true;
+        }
 
         prefetchDNS(intent.getData());
         new GeckoThread(intent, mLastUri, mLastTitle).start();
@@ -553,7 +553,7 @@ abstract public class GeckoApp
                 GeckoAppShell.sendEventToGecko(new GeckoEvent("Permissions:Get", null));
                 return true;
             case R.id.addons:
-                loadUrlInNewTab("about:addons");
+                loadUrlInTab("about:addons");
                 return true;
             case R.id.agent_mode:
                 Tab selectedTab = Tabs.getInstance().getSelectedTab();
@@ -612,8 +612,7 @@ abstract public class GeckoApp
                 if (getLayerController().getLayerClient() != mSoftwareLayerClient)
                     return;
 
-                if (mLastUri == lastHistoryEntry.mUri &&
-                    mLastTitle == lastHistoryEntry.mTitle)
+                if (lastHistoryEntry.mUri.equals(mLastUri))
                     return;
    
                 mLastViewport = mSoftwareLayerClient.getGeckoViewportMetrics().toJSON();
@@ -1580,7 +1579,7 @@ abstract public class GeckoApp
 
         final GeckoApp self = this;
  
-        mMainHandler.postDelayed(new Runnable() {
+        GeckoAppShell.getHandler().postDelayed(new Runnable() {
             public void run() {
                 
                 Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - pre checkLaunchState");
@@ -1849,7 +1848,6 @@ abstract public class GeckoApp
         Map<String,String> envMap = System.getenv();
         Set<Map.Entry<String,String>> envSet = envMap.entrySet();
         Iterator<Map.Entry<String,String>> envIter = envSet.iterator();
-        StringBuffer envstr = new StringBuffer();
         int c = 0;
         while (envIter.hasNext()) {
             Map.Entry<String,String> entry = envIter.next();
@@ -2197,11 +2195,24 @@ abstract public class GeckoApp
     }
 
     /**
-     * Open the link as a new tab, and mark the selected tab as its "parent".
+     * Open the url as a new tab, and mark the selected tab as its "parent".
+     * If the url is already open in a tab, the existing tab is selected.
      * Use this for tabs opened by the browser chrome, so users can press the
      * "Back" button to return to the previous tab.
      */
-    public void loadUrlInNewTab(String url) {
+    public void loadUrlInTab(String url) {
+        ArrayList<Tab> tabs = Tabs.getInstance().getTabsInOrder();
+        if (tabs != null) {
+            Iterator<Tab> tabsIter = tabs.iterator();
+            while (tabsIter.hasNext()) {
+                Tab tab = tabsIter.next();
+                if (url.equals(tab.getURL())) {
+                    GeckoAppShell.sendEventToGecko(new GeckoEvent("Tab:Select", String.valueOf(tab.getId())));
+                    return;
+                }
+            }
+        }
+
         JSONObject args = new JSONObject();
         try {
             args.put("url", url);
