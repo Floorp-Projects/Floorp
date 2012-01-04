@@ -688,7 +688,7 @@ TraceForValidWrapper(JSTracer *trc, XPCWrappedNative* wrapper)
 }
 
 static void
-MarkWrappedNative(JSTracer *trc, JSObject *obj, bool helper)
+MarkWrappedNative(JSTracer *trc, JSObject *obj)
 {
     JSObject *obj2;
 
@@ -698,20 +698,17 @@ MarkWrappedNative(JSTracer *trc, JSObject *obj, bool helper)
         XPCWrappedNative::GetWrappedNativeOfJSObject(nsnull, obj, nsnull, &obj2);
 
     if (wrapper) {
-        if (wrapper->IsValid()) {
-            if (helper)
-                wrapper->GetScriptableCallback()->Trace(wrapper, trc, obj);
+        if (wrapper->IsValid())
              TraceForValidWrapper(trc, wrapper);
-        }
     } else if (obj2) {
         GetSlimWrapperProto(obj2)->TraceJS(trc);
     }
 }
 
 static void
-XPC_WN_Shared_Trace(JSTracer *trc, JSObject *obj)
+XPC_WN_NoHelper_Trace(JSTracer *trc, JSObject *obj)
 {
-    MarkWrappedNative(trc, obj, false);
+    MarkWrappedNative(trc, obj);
 }
 
 static JSBool
@@ -840,7 +837,7 @@ js::Class XPC_WN_NoHelper_JSClass = {
     nsnull,                         // construct
     nsnull,                         // xdrObject;
     nsnull,                         // hasInstance
-    XPC_WN_Shared_Trace,            // trace
+    XPC_WN_NoHelper_Trace,          // trace
 
     // ClassExtension
     {
@@ -1063,12 +1060,6 @@ XPC_WN_Helper_Finalize(JSContext *cx, JSObject *obj)
         return;
     wrapper->GetScriptableCallback()->Finalize(wrapper, cx, obj);
     wrapper->FlatJSObjectFinalized(cx);
-}
-
-static void
-XPC_WN_Helper_Trace(JSTracer *trc, JSObject *obj)
-{
-    MarkWrappedNative(trc, obj, true);
 }
 
 static JSBool
@@ -1501,10 +1492,7 @@ XPCNativeScriptableShared::PopulateJSClass(JSBool isGlobal)
     if (mFlags.WantHasInstance())
         mJSClass.base.hasInstance = XPC_WN_Helper_HasInstance;
 
-    if (mFlags.WantTrace())
-        mJSClass.base.trace = XPC_WN_Helper_Trace;
-    else
-        mJSClass.base.trace = XPC_WN_Shared_Trace;
+    mJSClass.base.trace = XPC_WN_NoHelper_Trace;
 
     if (mFlags.WantOuterObject())
         mJSClass.base.ext.outerObject = XPC_WN_OuterObject;
