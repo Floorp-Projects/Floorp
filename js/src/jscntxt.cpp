@@ -112,6 +112,10 @@ ThreadData::ThreadData(JSRuntime *rt)
     dtoaState(NULL),
     nativeStackBase(GetNativeStackBase()),
     pendingProxyOperation(NULL),
+    ionTop(NULL),
+    ionJSContext(NULL),
+    ionStackLimit(0),
+    ionActivation(NULL),
     interpreterFrames(NULL)
 {
 #ifdef DEBUG
