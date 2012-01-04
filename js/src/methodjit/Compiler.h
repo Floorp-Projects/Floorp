@@ -770,6 +770,7 @@ private:
     CompileStatus compileGetChar(FrameEntry *thisValue, FrameEntry *arg, GetCharMode mode);
     
     CompileStatus compileStringFromCode(FrameEntry *arg);
+    CompileStatus compileParseInt(JSValueType argType, uint32_t argc);
 
     void prepareStubCall(Uses uses);
     Call emitStubCall(void *ptr, DataLabelPtr *pinline);
