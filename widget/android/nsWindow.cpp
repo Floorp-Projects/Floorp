@@ -1168,6 +1168,22 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     if (gAndroidBounds.width <= 0 || gAndroidBounds.height <= 0)
         return;
 
+    /*
+     * Check to see whether the presentation shell corresponding to the document on the screen
+     * is suppressing painting. If it is, we bail out, as continuing would result in a mismatch
+     * between the content on the screen and the current viewport metrics.
+     */
+    nsCOMPtr<nsIAndroidDrawMetadataProvider> metadataProvider =
+        AndroidBridge::Bridge()->GetDrawMetadataProvider();
+
+    bool paintingSuppressed = false;
+    if (metadataProvider) {
+        metadataProvider->PaintingSuppressed(&paintingSuppressed);
+    }
+    if (paintingSuppressed) {
+        return;
+    }
+
     AndroidGeckoSoftwareLayerClient &client =
         AndroidBridge::Bridge()->GetSoftwareLayerClient();
     client.BeginDrawing(gAndroidBounds.width, gAndroidBounds.height);
@@ -1207,11 +1223,8 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
               DrawTo(targetSurface, ae->Rect());
             }
 
-            {
-                nsCOMPtr<nsIAndroidDrawMetadataProvider> metadataProvider =
-                    AndroidBridge::Bridge()->GetDrawMetadataProvider();
-                if (metadataProvider)
-                    metadataProvider->GetDrawMetadata(metadata);
+            if (metadataProvider) {
+                metadataProvider->GetDrawMetadata(metadata);
             }
         }
         if (sHasDirectTexture) {

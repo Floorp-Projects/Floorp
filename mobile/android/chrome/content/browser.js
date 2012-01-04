@@ -155,6 +155,21 @@ var Strings = {};
   });
 });
 
+var MetadataProvider = {
+  getDrawMetadata: function getDrawMetadata() {
+    return BrowserApp.getDrawMetadata();
+  },
+
+  paintingSuppressed: function paintingSuppressed() {
+    let browser = BrowserApp.selectedBrowser;
+    if (!browser)
+      return false;
+    let cwu = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsIDOMWindowUtils);
+    return cwu.paintingSuppressed;
+  }
+};
+
 var BrowserApp = {
   _tabs: [],
   _selectedTab: null,
@@ -169,7 +184,7 @@ var BrowserApp = {
     BrowserEventHandler.init();
     ViewportHandler.init();
 
-    getBridge().setDrawMetadataProvider(this.getDrawMetadata.bind(this));
+    getBridge().setDrawMetadataProvider(MetadataProvider);
 
     Services.obs.addObserver(this, "Tab:Add", false);
     Services.obs.addObserver(this, "Tab:Load", false);
