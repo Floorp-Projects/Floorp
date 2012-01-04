@@ -40,8 +40,6 @@
 #include "nsObjCExceptions.h"
 #include "nsCocoaUtils.h"
 
-NS_IMPL_ISUPPORTS1(nsScreenCocoa, nsIScreen)
-
 nsScreenCocoa::nsScreenCocoa (NSScreen *screen)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
