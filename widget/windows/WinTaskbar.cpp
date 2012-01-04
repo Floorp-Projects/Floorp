@@ -56,6 +56,7 @@
 #include "nsIJumpListBuilder.h"
 #include "nsUXThemeData.h"
 #include "nsWindow.h"
+#include "WinUtils.h"
 #include "TaskbarTabPreview.h"
 #include "TaskbarWindowPreview.h"
 #include "JumpListBuilder.h"
@@ -328,13 +329,13 @@ WinTaskbar::GetAppUserModelID(nsAString & aDefaultGroupId) {
     // The hash is short, but users may customize this, so use a respectable
     // string buffer.
     PRUnichar buf[256];
-    if (nsWindow::GetRegistryKey(HKEY_LOCAL_MACHINE,
+    if (WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE,
                                  regKey.get(),
                                  path,
                                  buf,
                                  sizeof buf)) {
       aDefaultGroupId.Assign(buf);
-    } else if (nsWindow::GetRegistryKey(HKEY_CURRENT_USER,
+    } else if (WinUtils::GetRegistryKey(HKEY_CURRENT_USER,
                                         regKey.get(),
                                         path,
                                         buf,
@@ -360,7 +361,7 @@ WinTaskbar::GetDefaultGroupId(nsAString & aDefaultGroupId) {
 // (static) Called from AppShell
 bool
 WinTaskbar::RegisterAppUserModelID() {
-  if (nsWindow::GetWindowsVersion() < WIN7_VERSION)
+  if (WinUtils::GetWindowsVersion() < WinUtils::WIN7_VERSION)
     return false;
 
   SetCurrentProcessExplicitAppUserModelIDPtr funcAppUserModelID = nsnull;
@@ -392,7 +393,7 @@ WinTaskbar::RegisterAppUserModelID() {
 NS_IMETHODIMP
 WinTaskbar::GetAvailable(bool *aAvailable) {
   *aAvailable = 
-    nsWindow::GetWindowsVersion() < WIN7_VERSION ?
+    WinUtils::GetWindowsVersion() < WinUtils::WIN7_VERSION ?
     false : true;
 
   return NS_OK;
@@ -432,7 +433,7 @@ WinTaskbar::GetTaskbarWindowPreview(nsIDocShell *shell, nsITaskbarWindowPreview 
   if (!toplevelHWND)
     return NS_ERROR_INVALID_ARG;
 
-  nsWindow *window = nsWindow::GetNSWindowPtr(toplevelHWND);
+  nsWindow *window = WinUtils::GetNSWindowPtr(toplevelHWND);
 
   if (!window)
     return NS_ERROR_FAILURE;

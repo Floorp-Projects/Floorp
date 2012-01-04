@@ -60,6 +60,9 @@
 
 #include "nsIMM32Handler.h"
 #include "nsWindow.h"
+#include "WinUtils.h"
+
+using namespace mozilla::widget;
 
 static nsIMM32Handler* gIMM32Handler = nsnull;
 
@@ -148,7 +151,7 @@ nsIMM32Handler::IsTopLevelWindowOfComposition(nsWindow* aWindow)
     return false;
   }
   HWND wnd = gIMM32Handler->mComposingWindow->GetWindowHandle();
-  return nsWindow::GetTopLevelHWND(wnd, true) == aWindow->GetWindowHandle();
+  return WinUtils::GetTopLevelHWND(wnd, true) == aWindow->GetWindowHandle();
 }
 
 /* static */ bool

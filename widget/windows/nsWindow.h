@@ -200,16 +200,6 @@ public:
   void                    SetDrawsInTitlebar(bool aState);
 
   /**
-   * Statics used in other classes
-   */
-  static PRInt32          GetWindowsVersion();
-  static bool             GetRegistryKey(HKEY aRoot,
-                                         const PRUnichar* aKeyName,
-                                         const PRUnichar* aValueName,
-                                         PRUnichar* aBuffer,
-                                         DWORD aBufferLength);
-
-  /**
    * Event helpers
    */
   void                    InitEvent(nsGUIEvent& event, nsIntPoint* aPoint = nsnull);
@@ -242,12 +232,8 @@ public:
    * Window utilities
    */
   nsWindow*               GetTopLevelWindow(bool aStopOnDialogOrPopup);
-  static HWND             GetTopLevelHWND(HWND aWnd, 
-                                          bool aStopIfNotChild = false, 
-                                          bool aStopIfNotPopup = true);
   HWND                    GetWindowHandle() { return mWnd; }
   WNDPROC                 GetPrevWindowProc() { return mPrevWndProc; }
-  static nsWindow*        GetNSWindowPtr(HWND aWnd);
   WindowHook&             GetWindowHook() { return mWindowHook; }
   nsWindow*               GetParentWindow(bool aIncludeOwner);
   // Get an array of all nsWindow*s on the main thread.
@@ -337,13 +323,10 @@ protected:
   static BOOL    CALLBACK EnumAllThreadWindowProc(HWND aWnd, LPARAM aParam);
   static void             AllowD3D9Callback(nsWindow *aWindow);
   static void             AllowD3D9WithReinitializeCallback(nsWindow *aWindow);
-  static BOOL CALLBACK    FindOurWindowAtPointCallback(HWND aHWND, LPARAM aLPARAM);
 
   /**
    * Window utilities
    */
-  static BOOL             SetNSWindowPtr(HWND aWnd, nsWindow * ptr);
-  static PRInt32          GetMonitorCount();
   LPARAM                  lParamToScreen(LPARAM lParam);
   LPARAM                  lParamToClient(LPARAM lParam);
   virtual void            SubclassWindow(BOOL bState);
@@ -362,9 +345,6 @@ protected:
     return mTransparencyMode == eTransparencyGlass ||
            mTransparencyMode == eTransparencyBorderlessGlass;
   }
-  static bool             IsOurProcessWindow(HWND aHWND);
-  static HWND             FindOurProcessWindow(HWND aHWND);
-  static HWND             FindOurWindowAtPoint(const POINT& aPoint);
 
   /**
    * Event processing helpers
@@ -379,7 +359,6 @@ protected:
   void                    RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg,
                             UINT aLastMsg,
                             nsFakeCharMessage* aFakeCharMessage = nsnull);
-  static MSG              InitMSG(UINT aMessage, WPARAM wParam, LPARAM lParam);
   virtual bool            ProcessMessage(UINT msg, WPARAM &wParam,
                                          LPARAM &lParam, LRESULT *aRetValue);
   bool                    ProcessMessageForPlugin(const MSG &aMsg,
@@ -395,14 +374,6 @@ protected:
   static bool             ConvertStatus(nsEventStatus aStatus);
   static void             PostSleepWakeNotification(const bool aIsSleepMode);
   PRInt32                 ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my);
-  static WORD             GetScanCode(LPARAM aLParam)
-  {
-    return (aLParam >> 16) & 0xFF;
-  }
-  static bool             IsExtendedScanCode(LPARAM aLParam)
-  {
-    return (aLParam & 0x1000000) != 0;
-  }
   static bool             IsRedirectedKeyDownMessage(const MSG &aMsg);
   static void             ForgetRedirectedKeyDownMessage()
   {
@@ -442,8 +413,6 @@ protected:
   BOOL                    OnInputLangChange(HKL aHKL);
   bool                    OnPaint(HDC aDC, PRUint32 aNestingLevel);
   void                    OnWindowPosChanged(WINDOWPOS *wp, bool& aResult);
-  static UINT             GetInternalMessage(UINT aNativeMessage);
-  static UINT             GetNativeMessage(UINT aInternalMessage);
   void                    OnMouseWheel(UINT aMsg, WPARAM aWParam,
                                        LPARAM aLParam, LRESULT *aRetValue);
   void                    OnMouseWheelInternal(UINT aMessage, WPARAM aWParam,
@@ -511,7 +480,6 @@ protected:
   nsIntRegion             GetRegionToPaint(bool aForceFullRepaint, 
                                            PAINTSTRUCT ps, HDC aDC);
   static void             ActivateOtherWindowHelper(HWND aWnd);
-  static PRUint16         GetMouseInputSource();
 #ifdef ACCESSIBILITY
   static STDMETHODIMP_(LRESULT) LresultFromObject(REFIID riid, WPARAM wParam, LPUNKNOWN pAcc);
 #endif // ACCESSIBILITY

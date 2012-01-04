@@ -68,13 +68,6 @@
 // systems, and when the screen resolution changes.
 #define MOZ_WM_ENSUREVISIBLE              (WM_APP + 14159)
 
-// GetWindowsVersion constants
-#define WIN2K_VERSION                     0x500
-#define WINXP_VERSION                     0x501
-#define WIN2K3_VERSION                    0x502
-#define VISTA_VERSION                     0x600
-#define WIN7_VERSION                      0x601
-
 #ifndef WM_THEMECHANGED
 #define WM_THEMECHANGED                   0x031A
 #endif
@@ -186,7 +179,7 @@
 #define TABLET_INK_SIGNATURE 0xFFFFFF00
 #define TABLET_INK_CHECK     0xFF515700
 #define TABLET_INK_TOUCH     0x00000080
-#define MOUSE_INPUT_SOURCE() GetMouseInputSource()
+#define MOUSE_INPUT_SOURCE() WinUtils::GetMouseInputSource()
 
 /**************************************************************
  *

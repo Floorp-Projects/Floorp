@@ -43,6 +43,7 @@
 #include "TaskbarTabPreview.h"
 #include "nsWindowGfx.h"
 #include "nsUXThemeData.h"
+#include "WinUtils.h"
 #include <nsITaskbarPreviewController.h>
 
 #define TASKBARPREVIEW_HWNDID L"TaskbarTabPreviewHwnd"
@@ -184,7 +185,7 @@ TaskbarTabPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
         bool activateWindow;
         nsresult rv = mController->OnActivate(&activateWindow);
         if (NS_SUCCEEDED(rv) && activateWindow) {
-          nsWindow* win = nsWindow::GetNSWindowPtr(mWnd);
+          nsWindow* win = WinUtils::GetNSWindowPtr(mWnd);
           if (win) {
             nsWindow * parent = win->GetTopLevelWindow(true);
             if (parent) {
