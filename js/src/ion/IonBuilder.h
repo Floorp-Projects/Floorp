@@ -296,6 +296,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_length_fastPath();
     bool jsop_getprop(JSAtom *atom);
     bool jsop_newarray(uint32 count);
+    bool jsop_this();
 
     /* Inlining. */
 
