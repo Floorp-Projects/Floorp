@@ -658,9 +658,15 @@ endif
 PKG_ARG = , "$(pkg)"
 
 # Define packager macro to work around make 3.81 backslash issue (bug #339933)
+
+# Controls whether missing file warnings should be fatal
+ifndef MOZ_PKG_FATAL_WARNINGS
+MOZ_PKG_FATAL_WARNINGS = 0
+endif
+
 define PACKAGER_COPY
 $(PERL) -I$(MOZILLA_DIR)/toolkit/mozapps/installer -e 'use Packager; \
-       Packager::Copy($1,$2,$3,$4,$5,$6,$7);'
+       Packager::Copy($1,$2,$3,$4,$5,$(MOZ_PKG_FATAL_WARNINGS),$6,$7);'
 endef
 
 installer-stage: stage-package
