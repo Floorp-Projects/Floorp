@@ -144,6 +144,21 @@ public:
     return resultMatrix;
   }
 
+  /* Returns true if the other matrix is fuzzy-equal to this matrix.
+   * Note that this isn't a cheap comparison!
+   */
+  bool operator==(const Matrix& other) const
+  {
+    return FuzzyEqual(_11, other._11) && FuzzyEqual(_12, other._12) &&
+           FuzzyEqual(_21, other._21) && FuzzyEqual(_22, other._22) &&
+           FuzzyEqual(_31, other._31) && FuzzyEqual(_32, other._32);
+  }
+
+  bool operator!=(const Matrix& other) const
+  {
+    return !(*this == other);
+  }
+
   /* Returns true if the matrix is a rectilinear transformation (i.e.
    * grid-aligned rectangles are transformed to grid-aligned rectangles)
    */
