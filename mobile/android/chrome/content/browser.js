@@ -2106,6 +2106,16 @@ var BrowserEventHandler = {
     cwu.sendMouseEventToWindow(aName, Math.round(aX), Math.round(aY), aButton, 1, 0, true);
   },
 
+  _hasScrollableOverflow: function(elem) {
+    var win = elem.ownerDocument.defaultView;
+    if (!win)
+      return false;
+    var computedStyle = win.getComputedStyle(elem);
+    if (!computedStyle)
+      return false;
+    return computedStyle.overflow == 'auto' || computedStyle.overflow == 'scroll';
+  },
+
   _findScrollableElement: function(elem, checkElem) {
     // Walk the DOM tree until we find a scrollable element
     let scrollable = false;
@@ -2119,8 +2129,7 @@ var BrowserEventHandler = {
       if (checkElem) {
         if (((elem.scrollHeight > elem.clientHeight) ||
              (elem.scrollWidth > elem.clientWidth)) &&
-            (elem.style.overflow == 'auto' ||
-             elem.style.overflow == 'scroll' ||
+            (this._hasScrollableOverflow(elem) ||
              elem.mozMatchesSelector("html, body, textarea")) ||
             (elem instanceof HTMLSelectElement && (elem.size > 1 || elem.multiple))) {
           scrollable = true;
