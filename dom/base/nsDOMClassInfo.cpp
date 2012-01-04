@@ -4684,15 +4684,6 @@ nsDOMClassInfo::HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 }
 
 NS_IMETHODIMP
-nsDOMClassInfo::Trace(nsIXPConnectWrappedNative *wrapper, JSTracer *trc,
-                      JSObject *obj)
-{
-  NS_WARNING("nsDOMClassInfo::Trace Don't call me!");
-
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
 nsDOMClassInfo::Equality(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                          JSObject * obj, const jsval &val, bool *bp)
 {
