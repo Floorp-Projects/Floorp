@@ -156,6 +156,16 @@ public:
 
     return false;
   }
+
+  /* Returns true if the matrix is an identity matrix.
+   */
+  bool IsIdentity() const
+  {
+    return _11 == 1.0f && _12 == 0.0f &&
+           _21 == 0.0f && _22 == 1.0f &&
+           _31 == 0.0f && _32 == 0.0f;
+  }
+
 private:
   static bool FuzzyEqual(Float aV1, Float aV2) {
     // XXX - Check if fabs does the smart thing and just negates the sign bit.
