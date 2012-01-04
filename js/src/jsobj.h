@@ -343,13 +343,20 @@ extern Class WithClass;
 extern Class XMLFilterClass;
 
 class ArgumentsObject;
+class BlockObject;
 class BooleanObject;
+class ClonedBlockObject;
+class DeclEnvObject;
 class GlobalObject;
+class NestedScopeObject;
 class NormalArgumentsObject;
 class NumberObject;
+class ScopeObject;
+class StaticBlockObject;
 class StrictArgumentsObject;
 class StringObject;
 class RegExpObject;
+class WithObject;
 
 /*
  * Header structure for object element arrays. This structure is immediately
@@ -775,10 +782,8 @@ struct JSObject : js::gc::Cell
     inline void nativeSetSlot(uintN slot, const js::Value &value);
     inline void nativeSetSlotWithType(JSContext *cx, const js::Shape *shape, const js::Value &value);
 
-    inline js::Value getReservedSlot(uintN index) const;
+    inline const js::Value &getReservedSlot(uintN index) const;
     inline js::HeapValue &getReservedSlotRef(uintN index);
-
-    /* Call this only after the appropriate ensure{Class,Instance}ReservedSlots call. */
     inline void setReservedSlot(uintN index, const js::Value &v);
 
     /* For slots which are known to always be fixed, due to the way they are allocated. */
@@ -873,11 +878,11 @@ struct JSObject : js::gc::Cell
      *
      * Except for the non-script-accessible builtins, the global with which an
      * object is associated can be reached by following parent links to that
-     * global (see getGlobal()).
+     * global (see global()).
      *
      * The scope chain of an object is the link in the search path when a
      * script does a name lookup on a scope object. For JS internal scope
-     * objects --- Call, Block, DeclEnv and With --- the chain is stored in
+     * objects --- Call, DeclEnv and block --- the chain is stored in
      * the first fixed slot of the object, and the object's parent is the
      * associated global. For other scope objects, the chain is stored in the
      * object's parent.
@@ -893,30 +898,14 @@ struct JSObject : js::gc::Cell
     inline JSObject *getParent() const;
     bool setParent(JSContext *cx, JSObject *newParent);
 
-    /* Get the scope chain of an arbitrary scope object. */
-    inline JSObject *scopeChain() const;
-
-    inline bool isGlobal() const;
-    inline js::GlobalObject *asGlobal();
-    inline js::GlobalObject *getGlobal() const;
-
-    inline bool isInternalScope() const;
-
-    /* Access the scope chain of an internal scope object. */
-    inline JSObject *internalScopeChain() const;
-    inline bool setInternalScopeChain(JSContext *cx, JSObject *obj);
-    static inline size_t offsetOfInternalScopeChain();
-
     /*
-     * Access the scope chain of a static block object. These do not appear
-     * on scope chains but mirror their structure, and can have a NULL
-     * scope chain.
+     * Get the enclosing scope of an object. When called on non-scope object,
+     * this will just be the global (the name "enclosing scope" still applies
+     * in this situation because non-scope objects can be on the scope chain).
      */
-    inline JSObject *staticBlockScopeChain() const;
-    inline void setStaticBlockScopeChain(JSObject *obj);
+    inline JSObject *enclosingScope();
 
-    /* Common fixed slot for the scope chain of internal scope objects. */
-    static const uint32_t SCOPE_CHAIN_SLOT = 0;
+    inline js::GlobalObject &global() const;
 
     /* Private data accessors. */
 
@@ -980,12 +969,6 @@ struct JSObject : js::gc::Cell
         /* All primitive objects have their value in a fixed slot. */
         return getFixedSlotOffset(JSSLOT_PRIMITIVE_THIS);
     }
-
-  public:
-    inline js::BooleanObject *asBoolean();
-    inline js::NumberObject *asNumber();
-    inline js::StringObject *asString();
-    inline js::RegExpObject *asRegExp();
 
     /* Accessors for elements. */
 
@@ -1080,14 +1063,6 @@ struct JSObject : js::gc::Cell
     inline uint8_t * arrayBufferDataOffset();
 
   public:
-    inline js::ArgumentsObject *asArguments();
-    inline js::NormalArgumentsObject *asNormalArguments();
-    inline js::StrictArgumentsObject *asStrictArguments();
-
-  public:
-    inline js::CallObject &asCall();
-
-  public:
     /*
      * Date-specific getters and setters.
      */
@@ -1179,12 +1154,6 @@ struct JSObject : js::gc::Cell
     inline js::Wrapper *getWrapperHandler() const;
 
     /*
-     * With object-specific getters and setters.
-     */
-    inline JSObject *getWithThis() const;
-    inline void setWithThis(JSObject *thisp);
-
-    /*
      * Back to generic stuff.
      */
     inline bool isCallable();
@@ -1220,6 +1189,7 @@ struct JSObject : js::gc::Cell
   private:
     js::Shape *getChildProperty(JSContext *cx, js::Shape *parent, js::StackShape &child);
 
+  protected:
     /*
      * Internal helper that adds a shape not yet mapped by this object.
      *
@@ -1233,6 +1203,7 @@ struct JSObject : js::gc::Cell
                                    uintN flags, intN shortid, js::Shape **spp,
                                    bool allowDictionary);
 
+  private:
     bool toDictionaryMode(JSContext *cx);
 
     struct TradeGutsReserved;
@@ -1345,52 +1316,105 @@ struct JSObject : js::gc::Cell
 
     bool swap(JSContext *cx, JSObject *other);
 
-    const js::Shape *defineBlockVariable(JSContext *cx, jsid id, intN index, bool *redeclared);
-
-    inline bool isArguments() const;
-    inline bool isArrayBuffer() const;
-    inline bool isNormalArguments() const;
-    inline bool isStrictArguments() const;
-    inline bool isArray() const;
-    inline bool isDenseArray() const;
-    inline bool isSlowArray() const;
-    inline bool isNumber() const;
-    inline bool isBoolean() const;
-    inline bool isString() const;
-    inline bool isPrimitive() const;
-    inline bool isDate() const;
-    inline bool isFunction() const;
-    inline bool isObject() const;
-    inline bool isWith() const;
-    inline bool isBlock() const;
-    inline bool isStaticBlock() const;
-    inline bool isClonedBlock() const;
-    inline bool isCall() const;
-    inline bool isDeclEnv() const;
-    inline bool isRegExp() const;
-    inline bool isScript() const;
-    inline bool isGenerator() const;
-    inline bool isIterator() const;
-    inline bool isStopIteration() const;
-    inline bool isError() const;
-    inline bool isXML() const;
-    inline bool isNamespace() const;
-    inline bool isWeakMap() const;
-    inline bool isFunctionProxy() const;
-    inline bool isProxy() const;
-
-    inline bool isXMLId() const;
-    inline bool isQName() const;
-
-    inline bool isWrapper() const;
-    inline bool isCrossCompartmentWrapper() const;
-
     inline void initArrayClass();
 
     static inline void writeBarrierPre(JSObject *obj);
     static inline void writeBarrierPost(JSObject *obj, void *addr);
     inline void privateWriteBarrierPre(void **oldval);
     inline void privateWriteBarrierPost(void **oldval);
+
+    /*
+     * In addition to the generic object interface provided by JSObject,
+     * specific types of objects may provide additional operations. To access,
+     * these addition operations, callers should use the pattern:
+     *
+     *   if (obj.isX()) {
+     *     XObject &x = obj.asX();
+     *     x.foo();
+     *   }
+     *
+     * These XObject classes form a hierarchy. For example, for a cloned block
+     * object, the following predicates are true: isClonedBlock, isBlock,
+     * isNestedScope and isScope. Each of these has a respective class that
+     * derives and adds operations.
+     *
+     * A class XObject is defined in a vm/XObject{.h, .cpp, -inl.h} file
+     * triplet (along with any class YObject that derives XObject).
+     *
+     * Note that X represents a low-level representation and does not query the
+     * [[Class]] property of object defined by the spec (for this, see
+     * js::ObjectClassIs).
+     *
+     * SpiderMonkey has not been completely switched to the isX/asX/XObject
+     * pattern so in some cases there is no XObject class and the engine
+     * instead pokes directly at reserved slots and getPrivate. In such cases,
+     * consider adding the missing XObject class.
+     */
+
+    /* Direct subtypes of JSObject: */
+    inline bool isArguments() const;
+    inline bool isArrayBuffer() const;
+    inline bool isArray() const;
+    inline bool isDate() const;
+    inline bool isDenseArray() const;
+    inline bool isError() const;
+    inline bool isFunction() const;
+    inline bool isGenerator() const;
+    inline bool isGlobal() const;
+    inline bool isIterator() const;
+    inline bool isNamespace() const;
+    inline bool isObject() const;
+    inline bool isQName() const;
+    inline bool isPrimitive() const;
+    inline bool isProxy() const;
+    inline bool isRegExp() const;
+    inline bool isScope() const;
+    inline bool isScript() const;
+    inline bool isSlowArray() const;
+    inline bool isStopIteration() const;
+    inline bool isWeakMap() const;
+    inline bool isXML() const;
+    inline bool isXMLId() const;
+
+    /* Subtypes of ScopeObject. */
+    inline bool isBlock() const;
+    inline bool isCall() const;
+    inline bool isDeclEnv() const;
+    inline bool isNestedScope() const;
+    inline bool isWith() const;
+    inline bool isClonedBlock() const;
+    inline bool isStaticBlock() const;
+
+    /* Subtypes of PrimitiveObject. */
+    inline bool isBoolean() const;
+    inline bool isNumber() const;
+    inline bool isString() const;
+
+    /* Subtypes of ArgumentsObject. */
+    inline bool isNormalArguments() const;
+    inline bool isStrictArguments() const;
+
+    /* Subtypes of Proxy. */
+    inline bool isWrapper() const;
+    inline bool isFunctionProxy() const;
+    inline bool isCrossCompartmentWrapper() const;
+
+    inline js::ArgumentsObject &asArguments();
+    inline js::BlockObject &asBlock();
+    inline js::BooleanObject &asBoolean();
+    inline js::CallObject &asCall();
+    inline js::ClonedBlockObject &asClonedBlock();
+    inline js::DeclEnvObject &asDeclEnv();
+    inline js::GlobalObject &asGlobal();
+    inline js::NestedScopeObject &asNestedScope();
+    inline js::NormalArgumentsObject &asNormalArguments();
+    inline js::NumberObject &asNumber();
+    inline js::RegExpObject &asRegExp();
+    inline js::ScopeObject &asScope();
+    inline js::StrictArgumentsObject &asStrictArguments();
+    inline js::StaticBlockObject &asStaticBlock();
+    inline js::StringObject &asString();
+    inline js::WithObject &asWith();
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_OBJECT; }
 
@@ -1483,66 +1507,6 @@ class ValueArray {
 
     ValueArray(js::Value *v, size_t c) : array(v), length(c) {}
 };
-
-/*
- * Block scope object macros.  The slots reserved by BlockClass are:
- *
- *   private              StackFrame *      active frame pointer or null
- *   JSSLOT_SCOPE_CHAIN   JSObject *        scope chain, as for other scopes
- *   JSSLOT_BLOCK_DEPTH   int               depth of block slots in frame
- *
- * After JSSLOT_BLOCK_DEPTH come one or more slots for the block locals.
- *
- * A With object is like a Block object, in that both have a reserved slot
- * telling the stack depth of the relevant slots (the slot whose value is the
- * object named in the with statement, the slots containing the block's local
- * variables); and both have a private slot referring to the StackFrame in
- * whose activation they were created (or null if the with or block object
- * outlives the frame).
- */
-static const uint32_t JSSLOT_BLOCK_DEPTH = 1;
-static const uint32_t JSSLOT_BLOCK_FIRST_FREE_SLOT = JSSLOT_BLOCK_DEPTH + 1;
-
-static const uint32_t JSSLOT_WITH_THIS = 2;
-
-#define OBJ_BLOCK_COUNT(cx,obj)                                               \
-    (obj)->propertyCount()
-#define OBJ_BLOCK_DEPTH(cx,obj)                                               \
-    (obj)->getFixedSlot(JSSLOT_BLOCK_DEPTH).toInt32()
-#define OBJ_SET_BLOCK_DEPTH(cx,obj,depth)                                     \
-    (obj)->setFixedSlot(JSSLOT_BLOCK_DEPTH, Value(Int32Value(depth)))
-
-/*
- * To make sure this slot is well-defined, always call js_NewWithObject to
- * create a With object, don't call js_NewObject directly.  When creating a
- * With object that does not correspond to a stack slot, pass -1 for depth.
- *
- * When popping the stack across this object's "with" statement, client code
- * must call withobj->setPrivate(NULL).
- */
-extern JS_REQUIRES_STACK JSObject *
-js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth);
-
-inline JSObject *
-js_UnwrapWithObject(JSContext *cx, JSObject *withobj);
-
-/*
- * Create a new block scope object not linked to any proto or parent object.
- * Blocks are created by the compiler to reify let blocks and comprehensions.
- * Only when dynamic scope is captured do they need to be cloned and spliced
- * into an active scope chain.
- */
-extern JSObject *
-js_NewBlockObject(JSContext *cx);
-
-extern JSObject *
-js_CloneBlockObject(JSContext *cx, JSObject *proto, js::StackFrame *fp);
-
-extern JS_REQUIRES_STACK JSBool
-js_PutBlockObject(JSContext *cx, JSBool normalUnwind);
-
-JSBool
-js_XDRBlockObject(JSXDRState *xdr, JSObject **objp);
 
 /* For manipulating JSContext::sharpObjectMap. */
 #define SHARP_BIT       ((jsatomid) 1)
@@ -1825,7 +1789,7 @@ extern JS_FRIEND_API(JSBool)
 js_FindProperty(JSContext *cx, jsid id, bool global,
                 JSObject **objp, JSObject **pobjp, JSProperty **propp);
 
-extern JS_REQUIRES_STACK JSObject *
+extern JSObject *
 js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id);
 
 extern JSObject *
@@ -1988,7 +1952,7 @@ eval(JSContext *cx, uintN argc, Value *vp);
  * currently-executing stack frame, which must be a script frame. On completion
  * the result is returned in args.rval.
  */
-extern JS_REQUIRES_STACK bool
+extern bool
 DirectEval(JSContext *cx, const CallArgs &args);
 
 /*

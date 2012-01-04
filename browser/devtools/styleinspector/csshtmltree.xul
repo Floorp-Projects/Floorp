@@ -69,8 +69,8 @@
 </div>
 
 <!-- The output from #templateProperty (below) is appended here. -->
-<div id="propertyContainer">
-</div>
+<table id="propertyContainer">
+</table>
 
 <xul:hbox id="footer">
   <xul:label class="legendKey bestmatch">&bestMatch;</xul:label>

@@ -141,7 +141,7 @@ struct ArgumentsData
  *     remove this oddity, but preserving it allows us to work with arguments
  *     objects of either kind more abstractly, so we keep it for now.
  */
-class ArgumentsObject : public ::JSObject
+class ArgumentsObject : public JSObject
 {
     static const uint32_t INITIAL_LENGTH_SLOT = 0;
     static const uint32_t DATA_SLOT = 1;
@@ -243,25 +243,25 @@ class StrictArgumentsObject : public ArgumentsObject
 
 } // namespace js
 
-js::NormalArgumentsObject *
+js::NormalArgumentsObject &
 JSObject::asNormalArguments()
 {
     JS_ASSERT(isNormalArguments());
-    return reinterpret_cast<js::NormalArgumentsObject *>(this);
+    return *reinterpret_cast<js::NormalArgumentsObject *>(this);
 }
 
-js::StrictArgumentsObject *
+js::StrictArgumentsObject &
 JSObject::asStrictArguments()
 {
     JS_ASSERT(isStrictArguments());
-    return reinterpret_cast<js::StrictArgumentsObject *>(this);
+    return *reinterpret_cast<js::StrictArgumentsObject *>(this);
 }
 
-js::ArgumentsObject *
+js::ArgumentsObject &
 JSObject::asArguments()
 {
     JS_ASSERT(isArguments());
-    return reinterpret_cast<js::ArgumentsObject *>(this);
+    return *reinterpret_cast<js::ArgumentsObject *>(this);
 }
 
 #endif /* ArgumentsObject_h___ */

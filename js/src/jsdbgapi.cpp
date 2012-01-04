@@ -647,7 +647,7 @@ JS_GetScriptFunction(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(JSObject *)
 JS_GetParentOrScopeChain(JSContext *cx, JSObject *obj)
 {
-    return obj->scopeChain();
+    return obj->enclosingScope();
 }
 
 JS_PUBLIC_API(JSBool)
