@@ -965,7 +965,7 @@ SessionStore.prototype = {
 
         for (let i=0; i<tabs.length; i++) {
           let tabData = tabs[i];
-          let isSelected = i + 1 == selected;
+          let isSelected = (i + 1 <= selected) && aBringToFront;
           let entry = tabData.entries[tabData.index - 1];
 
           // Add a tab, but don't load the URL until we need to

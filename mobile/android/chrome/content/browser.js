@@ -225,9 +225,9 @@ var BrowserApp = {
     // Init FormHistory
     Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
-    let uri = "about:home";
+    let url = "about:home";
     if ("arguments" in window && window.arguments[0])
-      uri = window.arguments[0];
+      url = window.arguments[0];
 
     // XXX maybe we don't do this if the launch was kicked off from external
     Services.io.offline = false;
@@ -239,10 +239,33 @@ var BrowserApp = {
 
     // restore the previous session
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-    if (ss.shouldRestore())
-      ss.restoreLastSession(true);
-    else
-      this.addTab(uri);
+    if (ss.shouldRestore()) {
+      // A restored tab should not be active if we are loading a URL
+      let restoreToFront = false;
+
+      // Open any commandline URLs, except the homepage
+      if (url && url != "about:home") {
+        this.addTab(url);
+      } else {
+        // Let the session make a restored tab active
+        restoreToFront = true;
+
+        // Be ready to handle any restore failures by making sure we have a valid tab opened
+        let restoreCleanup = {
+          observe: function(aSubject, aTopic, aData) {
+            Services.obs.removeObserver(restoreCleanup, "sessionstore-windows-restored");
+            if (aData == "fail")
+              BrowserApp.addTab("about:home");
+          }
+        };
+        Services.obs.addObserver(restoreCleanup, "sessionstore-windows-restored", false);
+      }
+
+      // Start the restore
+      ss.restoreLastSession(restoreToFront);
+    } else {
+      this.addTab(url);
+    }
 
     // notify java that gecko has loaded
     sendMessageToJava({
