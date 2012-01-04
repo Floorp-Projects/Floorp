@@ -43,11 +43,12 @@
 
 #include "nsUXThemeData.h"
 #include "nsDebug.h"
-// For GetWindowsVersion
-#include "nsWindow.h"
+#include "nsToolkit.h"
+#include "WinUtils.h"
 #include "nsUXThemeConstants.h"
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
 const PRUnichar
 nsUXThemeData::kThemeLibraryName[] = L"uxtheme.dll";
@@ -120,9 +121,9 @@ nsUXThemeData::Initialize()
   ::ZeroMemory(sThemes, sizeof(sThemes));
   NS_ASSERTION(!sThemeDLL, "nsUXThemeData being initialized twice!");
 
-  PRInt32 version = nsWindow::GetWindowsVersion();
-  sIsXPOrLater = version >= WINXP_VERSION;
-  sIsVistaOrLater = version >= VISTA_VERSION;
+  WinUtils::WinVersion version = WinUtils::GetWindowsVersion();
+  sIsXPOrLater = version >= WinUtils::WINXP_VERSION;
+  sIsVistaOrLater = version >= WinUtils::VISTA_VERSION;
 
   if (GetThemeDLL()) {
     openTheme = (OpenThemeDataPtr)GetProcAddress(sThemeDLL, "OpenThemeData");
@@ -272,7 +273,7 @@ nsUXThemeData::InitTitlebarInfo()
   // Use system metrics for pre-vista, otherwise trigger a
   // refresh on the next layout.
   sTitlebarInfoPopulatedAero = sTitlebarInfoPopulatedThemed =
-    (nsWindow::GetWindowsVersion() < VISTA_VERSION);
+    (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION);
 }
 
 // static
@@ -400,7 +401,8 @@ void
 nsUXThemeData::UpdateNativeThemeInfo()
 {
   // Trigger a refresh of themed button metrics if needed
-  sTitlebarInfoPopulatedThemed = (nsWindow::GetWindowsVersion() < VISTA_VERSION);
+  sTitlebarInfoPopulatedThemed =
+    (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION);
 
   sIsDefaultWindowsTheme = false;
   sThemeId = LookAndFeel::eWindowsTheme_Generic;

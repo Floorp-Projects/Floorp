@@ -65,6 +65,7 @@ using mozilla::plugins::PluginInstanceParent;
 #include "gfxContext.h"
 #include "nsRenderingContext.h"
 #include "prmem.h"
+#include "WinUtils.h"
 
 #include "LayerManagerOGL.h"
 #include "BasicLayers.h"
@@ -84,6 +85,7 @@ extern "C" {
 }
 
 using namespace mozilla::layers;
+using namespace mozilla::widget;
 
 /**************************************************************
  **************************************************************
@@ -761,7 +763,7 @@ bool nsWindowGfx::IsCursorTranslucencySupported()
   if (!didCheck) {
     didCheck = true;
     // Cursor translucency is supported on Windows XP and newer
-    isSupported = nsWindow::GetWindowsVersion() >= 0x501;
+    isSupported = WinUtils::GetWindowsVersion() >= WinUtils::WINXP_VERSION;
   }
 
   return isSupported;

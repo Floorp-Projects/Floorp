@@ -59,6 +59,9 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsToolkit.h"
+#include "WinUtils.h"
+
+using namespace mozilla::widget;
 
 PRUnichar *nsFilePicker::mLastUsedUnicodeDirectory;
 char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
@@ -706,7 +709,7 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
   // a hook procedure.  The hook procedure fixes a problem on XP dialogs for
   // file picker visibility.  Vista and up automatically ensures the file 
   // picker is always visible.
-  if (nsWindow::GetWindowsVersion() < VISTA_VERSION) {
+  if (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION) {
     ofn.lpfnHook = FilePickerHook;
     ofn.Flags |= OFN_ENABLEHOOK;
   }
@@ -765,7 +768,7 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
       // the file picker to use the old style dialogs because hooks are not
       // allowed in the new file picker UI.  We need to eventually move to
       // the new Common File Dialogs for Vista and up.
-      if (nsWindow::GetWindowsVersion() < VISTA_VERSION) {
+      if (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION) {
         ofn.lpfnHook = MultiFilePickerHook;
         fileBuffer.forget();
         result = FilePickerWrapper(&ofn, PICKER_TYPE_OPEN);
@@ -1053,7 +1056,7 @@ nsFilePicker::ShowW(PRInt16 *aReturnVal)
   bool result = false;
    if (mMode == modeGetFolder) {
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-    if (nsWindow::GetWindowsVersion() >= VISTA_VERSION)
+    if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION)
       result = ShowFolderPicker(initialDir);
     else
       result = ShowXPFolderPicker(initialDir);
@@ -1062,7 +1065,7 @@ nsFilePicker::ShowW(PRInt16 *aReturnVal)
 #endif  
    } else {
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-    if (nsWindow::GetWindowsVersion() >= VISTA_VERSION)
+    if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION)
       result = ShowFilePicker(initialDir);
     else
       result = ShowXPFilePicker(initialDir);
@@ -1259,7 +1262,7 @@ NS_IMETHODIMP
 nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 {
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
-  if (nsWindow::GetWindowsVersion() >= VISTA_VERSION) {
+  if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
     mComFilterList.Append(aTitle, aFilter);
   } else {
     AppendXPFilter(aTitle, aFilter);
