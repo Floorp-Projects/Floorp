@@ -1340,12 +1340,15 @@ nsFilePicker::IsDefaultPathHtml()
 void
 nsFilePicker::ComDlgFilterSpec::Append(const nsAString& aTitle, const nsAString& aFilter)
 {
-  COMDLG_FILTERSPEC* pSpecForward = mSpecList.AppendElement();
-  if (!pSpecForward) {
+  PRUint32 size = sizeof(COMDLG_FILTERSPEC);
+  PRUint32 hdrLen = size * (mLength + 1);
+  mSpecList = (COMDLG_FILTERSPEC*)realloc(mSpecList, hdrLen);
+  if (!mSpecList) {
     NS_WARNING("mSpecList realloc failed.");
     return;
   }
-  memset(pSpecForward, 0, sizeof(*pSpecForward));
+  COMDLG_FILTERSPEC* pSpecForward = (COMDLG_FILTERSPEC*)(mSpecList + mLength);
+  memset(pSpecForward, 0, size);
   nsString* pStr = mStrings.AppendElement(aTitle);
   if (!pStr) {
     NS_WARNING("mStrings.AppendElement failed.");
@@ -1357,12 +1360,6 @@ nsFilePicker::ComDlgFilterSpec::Append(const nsAString& aTitle, const nsAString&
     NS_WARNING("mStrings.AppendElement failed.");
     return;
   }
-  if (aFilter.EqualsLiteral("..apps"))
-    pStr->AssignLiteral("*.exe;*.com");
-  else {
-    pStr->StripWhitespace();
-    if (pStr->EqualsLiteral("*"))
-      pStr->AppendLiteral(".*");
-  }
   pSpecForward->pszSpec = pStr->get();
+  mLength++;
 }
