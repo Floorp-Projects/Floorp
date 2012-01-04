@@ -291,17 +291,25 @@ IonBuilder::buildInline(MResumePoint *callerResumePoint, MDefinition *thisDefn,
     JS_ASSERT(current->numPredecessors() == 1);
     current->setCallerResumePoint(callerResumePoint);
 
-    if (args.length() != info().nargs())
-        return abort("mismatched argc inlining not yet supported");
+    // Fill in any missing arguments with undefined.
+    const size_t nargs = info().nargs();
+    if (args.length() < nargs) {
+        for (size_t i = 0, missing = nargs - args.length(); i < missing; ++i) {
+            MConstant *undef = MConstant::New(UndefinedValue());
+            current->add(undef);
+            if (!args.append(undef))
+                return false;
+        }
+    }
 
     current->initSlot(info().thisSlot(), thisDefn);
 
-    IonSpew(IonSpew_Inlining, "Initializing %u arg slots", args.length());
+    IonSpew(IonSpew_Inlining, "Initializing %u arg slots", nargs);
 
     // Initialize argument references.
-    for (MDefinition **it = args.begin(), **end = args.end(); it != end; ++it) {
-        MDefinition *arg = *it;
-        size_t i = it - args.begin();
+    JS_ASSERT(args.length() >= nargs);
+    for (size_t i = 0; i < nargs; ++i) {
+        MDefinition *arg = args[i];
         current->initSlot(info().argSlot(i), arg);
     }
 
@@ -318,7 +326,7 @@ IonBuilder::buildInline(MResumePoint *callerResumePoint, MDefinition *thisDefn,
             (void *) current->entryResumePoint(), current->entryResumePoint()->numOperands());
 
     // Note: +1 for |this|.
-    JS_ASSERT(current->entryResumePoint()->numOperands() == args.length() + info().nlocals() + 1);
+    JS_ASSERT(current->entryResumePoint()->numOperands() == nargs + info().nlocals() + 1);
 
     return traverseBytecode();
 }
