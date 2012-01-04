@@ -160,25 +160,30 @@ protected:
   class ComDlgFilterSpec
   {
   public:
-    ComDlgFilterSpec() {}
-    ~ComDlgFilterSpec() {}
+    ComDlgFilterSpec() :
+      mSpecList(nsnull),
+      mLength(0) {}
+    ~ComDlgFilterSpec() {
+      free(mSpecList);
+    }
     
     const PRUint32 Length() {
-      return mSpecList.Length();
+      return mLength;
     }
 
     const bool IsEmpty() {
-      return (mSpecList.Length() == 0);
+      return (mLength == 0);
     }
 
     const COMDLG_FILTERSPEC* get() {
-      return mSpecList.Elements();
+      return mSpecList;
     }
     
     void Append(const nsAString& aTitle, const nsAString& aFilter);
   private:
-    nsAutoTArray<COMDLG_FILTERSPEC, 1> mSpecList;
+    COMDLG_FILTERSPEC* mSpecList;
     nsAutoTArray<nsString, 2> mStrings;
+    PRUint32 mLength;
   };
 
   ComDlgFilterSpec       mComFilterList;
