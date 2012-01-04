@@ -150,6 +150,8 @@ BROWSER_TEST_FILES = \
   browser_quotaPromptDeny.js \
   browser_quotaPromptDatabases.html \
   browser_quotaPromptDatabases.js \
+  browser_quotaPromptDelete.html \
+  browser_quotaPromptDelete.js \
   head.js \
   $(NULL)
 

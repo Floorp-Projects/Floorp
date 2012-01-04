@@ -2396,6 +2396,9 @@ DeleteDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       NS_WARNING("Failed to delete file directory!");
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
+
+    rv = fileManagerDirectory->Remove(true);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
