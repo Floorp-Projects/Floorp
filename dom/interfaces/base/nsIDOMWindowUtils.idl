@@ -69,7 +69,7 @@ interface nsIDOMBlob;
 interface nsIDOMFile;
 interface nsIFile;
 
-[scriptable, uuid(9df58cf3-7094-4c8d-96f2-bebd765099fe)]
+[scriptable, uuid(c1fa9c82-acf2-4b27-8ca7-7d1864e606af)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -981,4 +981,10 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   [implicit_jscontext]
   AString getPCCountScriptContents(in long script);
+
+  /**
+   * Returns true if painting is suppressed for this window and false
+   * otherwise.
+   */
+  readonly attribute boolean paintingSuppressed;
 };
