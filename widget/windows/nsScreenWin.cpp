@@ -70,6 +70,10 @@ nsScreenWin :: ~nsScreenWin()
 }
 
 
+// addref, release, QI
+NS_IMPL_ISUPPORTS1(nsScreenWin, nsIScreen)
+
+
 NS_IMETHODIMP
 nsScreenWin :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
