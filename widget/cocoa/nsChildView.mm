@@ -2773,7 +2773,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
       PRUint32 popupsToRollup = PR_UINT32_MAX;
       if (gRollupListener) {
         nsAutoTArray<nsIWidget*, 5> widgetChain;
-        gRollupListener->GetSubmenuWidgetChain(&widgetChain);
         PRUint32 sameTypeCount = gRollupListener->GetSubmenuWidgetChain(&widgetChain);
         for (PRUint32 i = 0; i < widgetChain.Length(); i++) {
           nsIWidget* widget = widgetChain[i];
