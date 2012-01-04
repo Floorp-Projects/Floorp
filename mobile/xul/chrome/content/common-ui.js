@@ -1176,7 +1176,8 @@ var FullScreenVideo = {
     try {
       this.screen = null;
       let screenManager = Cc["@mozilla.org/gfx/screenmanager;1"].getService(Ci.nsIScreenManager);
-      this.screen = screenManager.primaryScreen;
+      let screen = screenManager.primaryScreen.QueryInterface(Ci.nsIScreen_MOZILLA_2_0_BRANCH);
+      this.screen = screen;
     }
     catch (e) {} // The screen does not support brightness locks
   },
