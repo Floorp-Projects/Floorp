@@ -2533,9 +2533,12 @@ WebGLContext::CreateTexture(nsIWebGLTexture **retval)
 NS_IMETHODIMP
 WebGLContext::GetError(WebGLenum *_retval)
 {
-    if (!mContextLost) {
+    if (mContextStatus == ContextStable) {
         MakeContextCurrent();
         UpdateWebGLErrorAndClearGLError();
+    } else if (!mContextLostErrorSet) {
+        mWebGLError = LOCAL_GL_CONTEXT_LOST;
+        mContextLostErrorSet = true;
     }
 
     *_retval = mWebGLError;
@@ -5145,11 +5148,10 @@ WebGLContext::TexSubImage2D_dom(WebGLenum target, WebGLint level,
 bool
 WebGLContext::LoseContext()
 {
-    if (mContextLost) {
+    if (mContextLost)
         return false;
-    }
 
-    mAllowRestore = true;
+    mContextLostDueToTest = true;
     ForceLoseContext();
 
     return true;
@@ -5158,7 +5160,7 @@ WebGLContext::LoseContext()
 bool
 WebGLContext::RestoreContext()
 {
-    if (!mContextLost || !mAllowRestore) {
+    if (IsContextStable() || !mAllowRestore) {
         return false;
     }
 
