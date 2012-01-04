@@ -38,7 +38,7 @@
 #ifndef nsScreenOS2_h___
 #define nsScreenOS2_h___
 
-#include "nsBaseScreen.h"
+#include "nsIScreen.h"
 
 #define INCL_WIN
 #define INCL_DOS
@@ -46,16 +46,14 @@
 
 //------------------------------------------------------------------------
 
-class nsScreenOS2 : public nsBaseScreen
+class nsScreenOS2 : public nsIScreen
 {
 public:
   nsScreenOS2 ( );
   virtual ~nsScreenOS2();
 
-  NS_IMETHOD GetRect(PRInt32* aLeft, PRInt32* aTop, PRInt32* aWidth, PRInt32* aHeight);
-  NS_IMETHOD GetAvailRect(PRInt32* aLeft, PRInt32* aTop, PRInt32* aWidth, PRInt32* aHeight);
-  NS_IMETHOD GetPixelDepth(PRInt32* aPixelDepth);
-  NS_IMETHOD GetColorDepth(PRInt32* aColorDepth);
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISCREEN
 
 private:
 
