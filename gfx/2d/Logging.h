@@ -43,6 +43,7 @@
 #include <stdio.h>
 
 #include "Point.h"
+#include "Matrix.h"
 
 #ifdef WIN32
 #include <windows.h>
@@ -115,6 +116,9 @@ public:
     { mMessage << "(" << aSize.width << "x" << aSize.height << ")"; return *this; }
   Log &operator <<(const IntSize &aSize)
     { mMessage << "(" << aSize.width << "x" << aSize.height << ")"; return *this; }
+  Log &operator<<(const Matrix& aMatrix)
+    { mMessage << "[ " << aMatrix._11 << " " << aMatrix._12 << " ; " << aMatrix._21 << " " << aMatrix._22 << " ; " << aMatrix._31 << " " << aMatrix._32 << " ]"; return *this; }
+
 
 private:
 
