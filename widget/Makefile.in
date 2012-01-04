@@ -53,7 +53,7 @@ DIRS += $(MOZ_WIDGET_TOOLKIT)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-DIRS += windows build
+DIRS += windows
 endif
 
 ifdef ENABLE_TESTS

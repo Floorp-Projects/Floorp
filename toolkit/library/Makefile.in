@@ -318,7 +318,7 @@ STATIC_LIBS += thebes gl ycbcr
 COMPONENT_LIBS += profiler
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
-COMPONENT_LIBS += gkwidget
+COMPONENT_LIBS += widget_windows
 endif
 ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += wdgtos2
@@ -581,7 +581,6 @@ export:: $(RDF_UTIL_SRC_CPPSRCS) $(INTL_UNICHARUTIL_UTIL_CPPSRCS)
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/config \
   -I$(topsrcdir)/widget/windows \
-  -I$(topsrcdir)/widget/build \
   $(NULL)
 
 OS_LIBS += $(LIBICONV)
