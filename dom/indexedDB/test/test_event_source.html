@@ -9,34 +9,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
-  <script type="text/javascript;version=1.7">
-    function testSteps()
-    {
-      const name = window.location.pathname;
-      const description = "My Test Database";
-      const objectStoreName = "Objects";
-
-      var request = mozIndexedDB.open(name, 1, description);
-      request.onerror = errorHandler;
-      request.onupgradeneeded = grabEventAndContinueHandler;
-      var event = yield;
-
-      is(event.target.source, null, "correct event.target.source");
-
-      var db = event.target.result;
-      var objectStore = db.createObjectStore(objectStoreName,
-                                             { autoIncrement: true });
-      request = objectStore.add({});
-      request.onerror = errorHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield;
-
-      ok(event.target.source === objectStore, "correct event.source");
-
-      finishTest();
-      yield;
-    }
-  </script>
+  <script type="text/javascript;version=1.7" src="unit/test_event_source.js"></script>
   <script type="text/javascript;version=1.7" src="helpers.js"></script>
 </head>
 
