@@ -527,8 +527,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // wrapper is actually created, but before JS code can see it.
 
     if (info && !isClassInfo) {
-        proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, Scope, info, &sciProto,
-                                                    false, isGlobal);
+        proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, Scope, info, &sciProto, isGlobal);
         if (!proto)
             return NS_ERROR_FAILURE;
 
@@ -1028,15 +1027,13 @@ XPCWrappedNative::GatherScriptableCreateInfo(nsISupports* obj,
 
         NS_ASSERTION(!(sciWrapper.GetFlags().DontEnumStaticProps() &&
                        !sciProto.GetFlags().DontEnumStaticProps() &&
-                       sciProto.GetCallback() &&
-                       !sciProto.GetFlags().DontSharePrototype()),
+                       sciProto.GetCallback()),
                      "Can't set DONT_ENUM_STATIC_PROPS on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
 
         NS_ASSERTION(!(sciWrapper.GetFlags().DontEnumQueryInterface() &&
                        !sciProto.GetFlags().DontEnumQueryInterface() &&
-                       sciProto.GetCallback() &&
-                       !sciProto.GetFlags().DontSharePrototype()),
+                       sciProto.GetCallback()),
                      "Can't set DONT_ENUM_QUERY_INTERFACE on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
 
@@ -1047,29 +1044,20 @@ XPCWrappedNative::GatherScriptableCreateInfo(nsISupports* obj,
 
         NS_ASSERTION(!(sciWrapper.GetFlags().ClassInfoInterfacesOnly() &&
                        !sciProto.GetFlags().ClassInfoInterfacesOnly() &&
-                       sciProto.GetCallback() &&
-                       !sciProto.GetFlags().DontSharePrototype()),
+                       sciProto.GetCallback()),
                      "Can't set CLASSINFO_INTERFACES_ONLY on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
 
         NS_ASSERTION(!(sciWrapper.GetFlags().AllowPropModsDuringResolve() &&
                        !sciProto.GetFlags().AllowPropModsDuringResolve() &&
-                       sciProto.GetCallback() &&
-                       !sciProto.GetFlags().DontSharePrototype()),
+                       sciProto.GetCallback()),
                      "Can't set ALLOW_PROP_MODS_DURING_RESOLVE on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
 
         NS_ASSERTION(!(sciWrapper.GetFlags().AllowPropModsToPrototype() &&
                        !sciProto.GetFlags().AllowPropModsToPrototype() &&
-                       sciProto.GetCallback() &&
-                       !sciProto.GetFlags().DontSharePrototype()),
-                     "Can't set ALLOW_PROP_MODS_TO_PROTOTYPE on an instance scriptable "
-                     "without also setting it on the class scriptable (if present and shared)");
-
-        NS_ASSERTION(!(sciWrapper.GetFlags().DontSharePrototype() &&
-                       !sciProto.GetFlags().DontSharePrototype() &&
                        sciProto.GetCallback()),
-                     "Can't set DONT_SHARE_PROTOTYPE on an instance scriptable "
+                     "Can't set ALLOW_PROP_MODS_TO_PROTOTYPE on an instance scriptable "
                      "without also setting it on the class scriptable (if present and shared)");
 
         return sciWrapper;
@@ -1101,13 +1089,6 @@ XPCWrappedNative::Init(XPCCallContext& ccx,
 
             if (!mScriptableInfo)
                 return false;
-
-            // If we have a one-off proto, then it should share our scriptable.
-            // This allows the proto's JSClass callbacks to do the right things
-            // (like respecting the DONT_ENUM_STATIC_PROPS flag) w/o requiring
-            // scriptable objects to have an nsIClassInfo.
-            if (HasProto() && !HasSharedProto())
-                GetProto()->SetScriptableInfo(mScriptableInfo);
         }
     }
     XPCNativeScriptableInfo* si = mScriptableInfo;
@@ -1502,7 +1483,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                 XPCWrappedNativeProto::GetNewOrUsed(ccx, aNewScope,
                                                     oldProto->GetClassInfo(),
                                                     &ci,
-                                                    !oldProto->IsShared(),
                                                     (info->GetJSClass()->flags & JSCLASS_IS_GLOBAL),
                                                     oldProto->GetOffsetsMasked());
             if (!newProto) {
@@ -3035,7 +3015,6 @@ NS_IMETHODIMP XPCWrappedNative::RefreshPrototype()
     newProto = XPCWrappedNativeProto::GetNewOrUsed(ccx, oldProto->GetScope(),
                                                    oldProto->GetClassInfo(),
                                                    &ci,
-                                                   !oldProto->IsShared(),
                                                    (info->GetJSClass()->flags & JSCLASS_IS_GLOBAL),
                                                    oldProto->GetOffsetsMasked());
     if (!newProto)
@@ -3724,7 +3703,7 @@ ConstructSlimWrapper(XPCCallContext &ccx,
     JSBool isGlobal = false;
     xpcproto = XPCWrappedNativeProto::GetNewOrUsed(ccx, xpcScope,
                                                    classInfoHelper, &sciProto,
-                                                   false, isGlobal);
+                                                   isGlobal);
     if (!xpcproto)
         return false;
 
