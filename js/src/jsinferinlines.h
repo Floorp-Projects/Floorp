@@ -1250,9 +1250,9 @@ inline JSObject *
 TypeObject::getGlobal()
 {
     if (singleton)
-        return singleton->getGlobal();
+        return &singleton->global();
     if (interpretedFunction && interpretedFunction->script()->compileAndGo)
-        return interpretedFunction->getGlobal();
+        return &interpretedFunction->global();
     return NULL;
 }
 

@@ -190,12 +190,12 @@ EmitCheck(JSContext *cx, BytecodeEmitter *bce, ptrdiff_t delta)
     return offset;
 }
 
-static JSObject *
+static StaticBlockObject &
 CurrentBlock(BytecodeEmitter *bce)
 {
     JS_ASSERT(bce->topStmt->type == STMT_BLOCK || bce->topStmt->type == STMT_SWITCH);
     JS_ASSERT(bce->topStmt->blockObj->isStaticBlock());
-    return bce->topStmt->blockObj;
+    return *bce->topStmt->blockObj;
 }
 
 static void
@@ -225,11 +225,11 @@ UpdateDepth(JSContext *cx, BytecodeEmitter *bce, ptrdiff_t target)
     intN nuses, ndefs;
     if (op == JSOP_ENTERBLOCK) {
         nuses = 0;
-        ndefs = OBJ_BLOCK_COUNT(cx, CurrentBlock(bce));
+        ndefs = CurrentBlock(bce).slotCount();
     } else if (op == JSOP_ENTERLET0) {
-        nuses = ndefs = OBJ_BLOCK_COUNT(cx, CurrentBlock(bce));
+        nuses = ndefs = CurrentBlock(bce).slotCount();
     } else if (op == JSOP_ENTERLET1) {
-        nuses = ndefs = OBJ_BLOCK_COUNT(cx, CurrentBlock(bce)) + 1;
+        nuses = ndefs = CurrentBlock(bce).slotCount() + 1;
     } else {
         nuses = StackUses(NULL, pc);
         ndefs = StackDefs(NULL, pc);
@@ -1356,15 +1356,15 @@ frontend::PushStatement(TreeContext *tc, StmtInfo *stmt, StmtType type, ptrdiff_
 }
 
 void
-frontend::PushBlockScope(TreeContext *tc, StmtInfo *stmt, JSObject *blockObj, ptrdiff_t top)
+frontend::PushBlockScope(TreeContext *tc, StmtInfo *stmt, StaticBlockObject &blockObj, ptrdiff_t top)
 {
     PushStatement(tc, stmt, STMT_BLOCK, top);
     stmt->flags |= SIF_SCOPE;
-    blockObj->setStaticBlockScopeChain(tc->blockChain);
+    blockObj.setEnclosingBlock(tc->blockChain);
     stmt->downScope = tc->topScopeStmt;
     tc->topScopeStmt = stmt;
-    tc->blockChain = blockObj;
-    stmt->blockObj = blockObj;
+    tc->blockChain = &blockObj;
+    stmt->blockObj = &blockObj;
 }
 
 /*
@@ -1560,7 +1560,7 @@ EmitNonLocalJumpFixup(JSContext *cx, BytecodeEmitter *bce, StmtInfo *toStmt)
 
         if (stmt->flags & SIF_SCOPE) {
             FLUSH_POPS();
-            uintN blockObjCount = OBJ_BLOCK_COUNT(cx, stmt->blockObj);
+            uintN blockObjCount = stmt->blockObj->slotCount();
             if (stmt->flags & SIF_FOR_BLOCK) {
                 /*
                  * For a for-let-in statement, pushing/popping the block is
@@ -1649,7 +1649,7 @@ frontend::PopStatementTC(TreeContext *tc)
     if (STMT_LINKS_SCOPE(stmt)) {
         tc->topScopeStmt = stmt->downScope;
         if (stmt->flags & SIF_SCOPE)
-            tc->blockChain = stmt->blockObj->staticBlockScopeChain();
+            tc->blockChain = stmt->blockObj->enclosingBlock();
     }
 }
 
@@ -1691,17 +1691,13 @@ frontend::LexicalLookup(TreeContext *tc, JSAtom *atom, jsint *slotp, StmtInfo *s
         if (!(stmt->flags & SIF_SCOPE))
             continue;
 
-        JSObject *obj = stmt->blockObj;
-        JS_ASSERT(obj->isStaticBlock());
-
-        const Shape *shape = obj->nativeLookup(tc->parser->context, ATOM_TO_JSID(atom));
+        StaticBlockObject &blockObj = *stmt->blockObj;
+        const Shape *shape = blockObj.nativeLookup(tc->parser->context, ATOM_TO_JSID(atom));
         if (shape) {
             JS_ASSERT(shape->hasShortID());
 
-            if (slotp) {
-                JS_ASSERT(obj->getSlot(JSSLOT_BLOCK_DEPTH).isInt32());
-                *slotp = obj->getSlot(JSSLOT_BLOCK_DEPTH).toInt32() + shape->shortid();
-            }
+            if (slotp)
+                *slotp = blockObj.stackDepth() + shape->shortid();
             return stmt;
         }
     }
@@ -1963,29 +1959,28 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
     if (!EmitObjectOp(cx, pn->pn_objbox, op, bce))
         return false;
 
-    JSObject *blockObj = pn->pn_objbox->object;
-    JS_ASSERT(blockObj->isStaticBlock());
-    JS_ASSERT(blockObj->getSlot(JSSLOT_BLOCK_DEPTH).isUndefined());
+    StaticBlockObject &blockObj = pn->pn_objbox->object->asStaticBlock();
 
     int depth = bce->stackDepth -
-                (OBJ_BLOCK_COUNT(cx, blockObj) + ((op == JSOP_ENTERLET1) ? 1 : 0));
+                (blockObj.slotCount() + ((op == JSOP_ENTERLET1) ? 1 : 0));
     JS_ASSERT(depth >= 0);
-    OBJ_SET_BLOCK_DEPTH(cx, blockObj, depth);
+
+    blockObj.setStackDepth(depth);
+
     int depthPlusFixed = AdjustBlockSlot(cx, bce, depth);
     if (depthPlusFixed < 0)
         return false;
 
-    uintN base = JSSLOT_FREE(&BlockClass);
-    for (uintN slot = base, limit = base + OBJ_BLOCK_COUNT(cx, blockObj); slot < limit; slot++) {
-        const Value &v = blockObj->getSlot(slot);
+    for (unsigned i = 0; i < blockObj.slotCount(); i++) {
+        Definition *dn = blockObj.maybeDefinitionParseNode(i);
+        blockObj.poisonDefinitionParseNode(i);
 
         /* Beware the empty destructuring dummy. */
-        if (v.isUndefined()) {
-            JS_ASSERT(slot + 1 <= limit);
+        if (!dn) {
+            JS_ASSERT(i + 1 <= blockObj.slotCount());
             continue;
         }
 
-        Definition *dn = (Definition *) v.toPrivate();
         JS_ASSERT(dn->isDefn());
         JS_ASSERT(uintN(dn->frameSlot() + depthPlusFixed) < JS_BIT(16));
         dn->pn_cookie.set(dn->pn_cookie.level(), uint16_t(dn->frameSlot() + depthPlusFixed));
@@ -1996,14 +1991,6 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
             JS_ASSERT(pnu->pn_cookie.isFree());
         }
 #endif
-
-        /*
-         * If this variable is closed over, and |eval| is not present, then
-         * then set a bit in dslots so the Method JIT can deoptimize this
-         * slot.
-         */
-        bool isClosed = bce->shouldNoteClosedName(dn);
-        blockObj->setSlot(slot, BooleanValue(isClosed));
     }
 
     /*
@@ -2013,10 +2000,10 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
      */
     if ((bce->flags & TCF_FUN_EXTENSIBLE_SCOPE) ||
         bce->bindings.extensibleParents()) {
-        Shape *newShape = Shape::setExtensibleParents(cx, blockObj->lastProperty());
+        Shape *newShape = Shape::setExtensibleParents(cx, blockObj.lastProperty());
         if (!newShape)
             return false;
-        blockObj->setLastPropertyInfallible(newShape);
+        blockObj.setLastPropertyInfallible(newShape);
     }
 
     return true;
@@ -3227,10 +3214,10 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * If there are hoisted let declarations, their stack slots go under the
      * discriminant's value so push their slots now and enter the block later.
      */
-    uint32_t blockCount = 0;
+    uint32_t blockObjCount = 0;
     if (pn2->isKind(PNK_LEXICALSCOPE)) {
-        blockCount = OBJ_BLOCK_COUNT(cx, pn2->pn_objbox->object);
-        for (uint32_t i = 0; i < blockCount; ++i) {
+        blockObjCount = pn2->pn_objbox->object->asStaticBlock().slotCount();
+        for (uint32_t i = 0; i < blockObjCount; ++i) {
             if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
                 return JS_FALSE;
         }
@@ -3243,7 +3230,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
 #if JS_HAS_BLOCK_SCOPE
     if (pn2->isKind(PNK_LEXICALSCOPE)) {
-        PushBlockScope(bce, &stmtInfo, pn2->pn_objbox->object, -1);
+        PushBlockScope(bce, &stmtInfo, pn2->pn_objbox->object->asStaticBlock(), -1);
         stmtInfo.type = STMT_SWITCH;
         if (!EmitEnterBlock(cx, bce, pn2, JSOP_ENTERLET1))
             return JS_FALSE;
@@ -3710,7 +3697,7 @@ out:
 
 #if JS_HAS_BLOCK_SCOPE
         if (ok && pn->pn_right->isKind(PNK_LEXICALSCOPE))
-            EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, blockCount);
+            EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, blockObjCount);
 #endif
     }
     return ok;
@@ -5124,7 +5111,7 @@ EmitTry(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              * guardJump at the next catch (the guard mismatch case).
              */
             JS_ASSERT(pn3->isKind(PNK_LEXICALSCOPE));
-            count = OBJ_BLOCK_COUNT(cx, pn3->pn_objbox->object);
+            count = pn3->pn_objbox->object->asStaticBlock().slotCount();
             if (!EmitTree(cx, bce, pn3))
                 return false;
 
@@ -5363,8 +5350,7 @@ EmitLet(JSContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
     JS_ASSERT(varList->isArity(PN_LIST));
     ParseNode *letBody = pnLet->pn_right;
     JS_ASSERT(letBody->isLet() && letBody->isKind(PNK_LEXICALSCOPE));
-    JSObject *blockObj = letBody->pn_objbox->object;
-    JS_ASSERT(blockObj->isStaticBlock());
+    StaticBlockObject &blockObj = letBody->pn_objbox->object->asStaticBlock();
 
     ptrdiff_t letHeadOffset = bce->offset();
     intN letHeadDepth = bce->stackDepth;
@@ -5375,7 +5361,7 @@ EmitLet(JSContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
 
     /* Push storage for hoisted let decls (e.g. 'let (x) { let y }'). */
     uint32_t alreadyPushed = uintN(bce->stackDepth - letHeadDepth);
-    uint32_t blockObjCount = OBJ_BLOCK_COUNT(cx, blockObj);
+    uint32_t blockObjCount = blockObj.slotCount();
     for (uint32_t i = alreadyPushed; i < blockObjCount; ++i) {
         /* Tell the decompiler not to print the decl in the let head. */
         if (NewSrcNote(cx, bce, SRC_CONTINUE) < 0)
@@ -5408,7 +5394,7 @@ EmitLet(JSContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
     }
 
     JS_ASSERT(leaveOp == JSOP_LEAVEBLOCK || leaveOp == JSOP_LEAVEBLOCKEXPR);
-    EMIT_UINT16_IMM_OP(leaveOp, OBJ_BLOCK_COUNT(cx, blockObj));
+    EMIT_UINT16_IMM_OP(leaveOp, blockObj.slotCount());
 
     ptrdiff_t bodyEnd = bce->offset();
     JS_ASSERT(bodyEnd > bodyBegin);
@@ -5506,8 +5492,7 @@ EmitLexicalScope(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     StmtInfo stmtInfo;
     ObjectBox *objbox = pn->pn_objbox;
-    JSObject *blockObj = objbox->object;
-    JS_ASSERT(blockObj->isStaticBlock());
+    StaticBlockObject &blockObj = objbox->object->asStaticBlock();
     PushBlockScope(bce, &stmtInfo, blockObj, bce->offset());
 
     /*
@@ -5546,7 +5531,7 @@ EmitLexicalScope(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
     }
 
-    EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, OBJ_BLOCK_COUNT(cx, blockObj));
+    EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, blockObj.slotCount());
 
     return PopStatementBCE(cx, bce);
 }
@@ -5618,8 +5603,8 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     bool letDecl = pn1 && pn1->isKind(PNK_LEXICALSCOPE);
     JS_ASSERT_IF(letDecl, pn1->isLet());
 
-    JSObject *blockObj = letDecl ? pn1->pn_objbox->object : NULL;
-    uint32_t blockObjCount = blockObj ? OBJ_BLOCK_COUNT(cx, blockObj) : 0;
+    StaticBlockObject *blockObj = letDecl ? &pn1->pn_objbox->object->asStaticBlock() : NULL;
+    uint32_t blockObjCount = blockObj ? blockObj->slotCount() : 0;
 
     if (letDecl) {
         /*
@@ -5676,7 +5661,7 @@ EmitForIn(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
     /* Enter the block before the loop body, after evaluating the obj. */
     StmtInfo letStmt;
     if (letDecl) {
-        PushBlockScope(bce, &letStmt, blockObj, bce->offset());
+        PushBlockScope(bce, &letStmt, *blockObj, bce->offset());
         letStmt.flags |= SIF_FOR_BLOCK;
         if (!EmitEnterBlock(cx, bce, pn1, JSOP_ENTERLET1))
             return false;

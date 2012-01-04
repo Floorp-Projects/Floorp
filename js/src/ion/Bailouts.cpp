@@ -295,7 +295,7 @@ EnsureExitFrame(IonCommonFrameLayout *frame)
 
     uint32 callerFrameSize = frame->prevFrameLocalSize() +
                              SizeOfFramePrefix(frame->prevType()) - sizeof(IonExitFrameLayout);
-    frame->setFrameDescriptor(callerFrameSize, IonFrame_Exit);
+    frame->setFrameDescriptor(callerFrameSize, frame->prevType());
 }
 
 uint32
@@ -389,12 +389,23 @@ ion::ReflowTypeInfo(uint32 bailoutResult)
 
     JSScript *script = cx->fp()->script();
     jsbytecode *pc = cx->regs().pc;
+
+    JS_ASSERT(script->hasAnalysis());
+    JS_ASSERT(script->analysis()->ranInference());
+
+    // pc is the op after the type barrier (where we resume in the interpreter),
+    // so we have to find the pc of the previous op.
+    do {
+        pc--;
+    } while (!script->analysis()->maybeCode(pc));
+
+    JS_ASSERT(js_CodeSpec[*pc].format & JOF_TYPESET);
+
     IonSpew(IonSpew_Bailouts, "reflowing type info at %s:%d pcoff %d", script->filename,
             script->lineno, pc - script->code);
-    if (script->hasAnalysis() && script->analysis()->ranInference()) {
-        types::AutoEnterTypeInference enter(cx);
-        script->analysis()->breakTypeBarriers(cx, pc - script->code, false);
-    }
+
+    types::AutoEnterTypeInference enter(cx);
+    script->analysis()->breakTypeBarriers(cx, pc - script->code, false);
 
     // When a type barrier fails, the bad value is at the top of the stack.
     Value &result = cx->regs().sp[-1];

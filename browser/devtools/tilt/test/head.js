@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/*global Services, Components, gBrowser, executeSoon */
+/*global Services, Components, gBrowser, executeSoon, info */
 /*global InspectorUI, Tilt, TiltGL, EPSILON */
 "use strict";
 
@@ -53,16 +53,24 @@ function isWebGLSupported() {
   return TiltGL.isWebGLSupported() && TiltGL.create3DContext(createCanvas());
 }
 
-function isApprox(num1, num2) {
-  return Math.abs(num1 - num2) < EPSILON;
+function isApprox(num1, num2, delta) {
+  if (Math.abs(num1 - num2) > (delta || EPSILON)) {
+    info("isApprox expected " + num1 + ", got " + num2 + " instead.");
+    return false;
+  }
+  return true;
 }
 
-function isApproxVec(vec1, vec2) {
+function isApproxVec(vec1, vec2, delta) {
+  vec1 = Array.prototype.slice.call(vec1);
+  vec2 = Array.prototype.slice.call(vec2);
+
   if (vec1.length !== vec2.length) {
     return false;
   }
   for (let i = 0, len = vec1.length; i < len; i++) {
-    if (!isApprox(vec1[i], vec2[i])) {
+    if (!isApprox(vec1[i], vec2[i], delta)) {
+      info("isApproxVec expected [" + vec1 + "], got [" + vec2 + "] instead.");
       return false;
     }
   }
@@ -70,11 +78,15 @@ function isApproxVec(vec1, vec2) {
 }
 
 function isEqualVec(vec1, vec2) {
+  vec1 = Array.prototype.slice.call(vec1);
+  vec2 = Array.prototype.slice.call(vec2);
+
   if (vec1.length !== vec2.length) {
     return false;
   }
   for (let i = 0, len = vec1.length; i < len; i++) {
     if (vec1[i] !== vec2[i]) {
+      info("isEqualVec expected [" + vec1 + "], got [" + vec2 + "] instead.");
       return false;
     }
   }
