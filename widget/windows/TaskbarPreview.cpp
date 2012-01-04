@@ -56,6 +56,7 @@
 #include "nsWindow.h"
 #include "nsAppShell.h"
 #include "TaskbarPreviewButton.h"
+#include "WinUtils.h"
 
 #include <nsIBaseWindow.h>
 #include <nsICanvasRenderingContextInternal.h>
@@ -285,7 +286,7 @@ TaskbarPreview::Disable() {
 bool
 TaskbarPreview::IsWindowAvailable() const {
   if (mWnd) {
-    nsWindow* win = nsWindow::GetNSWindowPtr(mWnd);
+    nsWindow* win = WinUtils::GetNSWindowPtr(mWnd);
     if(win && !win->HasDestroyStarted()) {
       return true;
     }
@@ -356,7 +357,7 @@ TaskbarPreview::CanMakeTaskbarCalls() {
   if (!::IsWindowVisible(mWnd))
     return false;
   if (mVisible) {
-    nsWindow *window = nsWindow::GetNSWindowPtr(mWnd);
+    nsWindow *window = WinUtils::GetNSWindowPtr(mWnd);
     NS_ASSERTION(window, "Could not get nsWindow from HWND");
     return window->HasTaskbarIconBeenCreated();
   }
@@ -365,7 +366,7 @@ TaskbarPreview::CanMakeTaskbarCalls() {
 
 WindowHook&
 TaskbarPreview::GetWindowHook() {
-  nsWindow *window = nsWindow::GetNSWindowPtr(mWnd);
+  nsWindow *window = WinUtils::GetNSWindowPtr(mWnd);
   NS_ASSERTION(window, "Cannot use taskbar previews in an embedded context!");
 
   return window->GetWindowHook();
@@ -449,7 +450,7 @@ TaskbarPreview::MainWindowHook(void *aContext,
     // We can't really do anything at this point including removing hooks
     preview->mWnd = NULL;
   } else {
-    nsWindow *window = nsWindow::GetNSWindowPtr(preview->mWnd);
+    nsWindow *window = WinUtils::GetNSWindowPtr(preview->mWnd);
     NS_ASSERTION(window, "Cannot use taskbar previews in an embedded context!");
 
     window->SetHasTaskbarIconBeenCreated();

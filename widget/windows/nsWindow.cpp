@@ -161,6 +161,7 @@
 #include "mozilla/Preferences.h"
 #include "nsISound.h"
 #include "WinTaskbar.h"
+#include "WinUtils.h"
 
 #ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
@@ -543,7 +544,8 @@ nsWindow::Create(nsIWidget *aParent,
     mParent = aParent;
   } else { // has a nsNative parent
     parent = (HWND)aNativeParent;
-    mParent = aNativeParent ? GetNSWindowPtr((HWND)aNativeParent) : nsnull;
+    mParent = aNativeParent ?
+      WinUtils::GetNSWindowPtr((HWND)aNativeParent) : nsnull;
   }
 
   mPopupType = aInitData->mPopupHint;
@@ -677,7 +679,7 @@ nsWindow::Create(nsIWidget *aParent,
     // bugs over the years, disable it (sTrimOnMinimize=1) on Vista and up.
     sTrimOnMinimize =
       Preferences::GetBool("config.trim_on_minimize",
-                           (GetWindowsVersion() >= VISTA_VERSION)) ? 1 : 0;
+        (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION)) ? 1 : 0;
     sSwitchKeyboardLayout =
       Preferences::GetBool("intl.keyboard.per_window_layout", false);
     gDisableNativeTheme =
@@ -949,64 +951,17 @@ void nsWindow::SubclassWindow(BOOL bState)
                                                 (LONG_PTR)nsWindow::WindowProc);
       NS_ASSERTION(mPrevWndProc, "Null standard window procedure");
       // connect the this pointer to the nsWindow handle
-      SetNSWindowPtr(mWnd, this);
+      WinUtils::SetNSWindowPtr(mWnd, this);
     }
     else {
       if (mUnicodeWidget)
         ::SetWindowLongPtrW(mWnd, GWLP_WNDPROC, (LONG_PTR)mPrevWndProc);
       else
         ::SetWindowLongPtrA(mWnd, GWLP_WNDPROC, (LONG_PTR)mPrevWndProc);
-      SetNSWindowPtr(mWnd, NULL);
+      WinUtils::SetNSWindowPtr(mWnd, NULL);
       mPrevWndProc = NULL;
     }
   }
-}
-
-/**************************************************************
- *
- * SECTION: Window properties
- *
- * Set and clear native window properties.
- *
- **************************************************************/
-
-static PRUnichar sPropName[40] = L"";
-static PRUnichar* GetNSWindowPropName()
-{
-  if (!*sPropName)
-  {
-    _snwprintf(sPropName, 39, L"MozillansIWidgetPtr%p", GetCurrentProcessId());
-    sPropName[39] = '\0';
-  }
-  return sPropName;
-}
-
-nsWindow * nsWindow::GetNSWindowPtr(HWND aWnd)
-{
-  return (nsWindow *) ::GetPropW(aWnd, GetNSWindowPropName());
-}
-
-BOOL nsWindow::SetNSWindowPtr(HWND aWnd, nsWindow * ptr)
-{
-  if (ptr == NULL) {
-    ::RemovePropW(aWnd, GetNSWindowPropName());
-    return TRUE;
-  } else {
-    return ::SetPropW(aWnd, GetNSWindowPropName(), (HANDLE)ptr);
-  }
-}
-
-static BOOL CALLBACK AddMonitor(HMONITOR, HDC, LPRECT, LPARAM aParam)
-{
-  (*(PRInt32*)aParam)++;
-  return TRUE;
-}
-
-PRInt32 nsWindow::GetMonitorCount()
-{
-  PRInt32 monitorCount = 0;
-  EnumDisplayMonitors(NULL, NULL, AddMonitor, (LPARAM)&monitorCount);
-  return monitorCount;
 }
 
 /**************************************************************
@@ -1106,7 +1061,7 @@ nsWindow* nsWindow::GetParentWindow(bool aIncludeOwner)
       parent = ::GetAncestor(mWnd, GA_PARENT);
 
     if (parent) {
-      widget = GetNSWindowPtr(parent);
+      widget = WinUtils::GetNSWindowPtr(parent);
       if (widget) {
         // If the widget is in the process of being destroyed then
         // do NOT return it
@@ -1123,7 +1078,7 @@ nsWindow* nsWindow::GetParentWindow(bool aIncludeOwner)
 BOOL CALLBACK
 nsWindow::EnumAllChildWindProc(HWND aWnd, LPARAM aParam)
 {
-  nsWindow *wnd = nsWindow::GetNSWindowPtr(aWnd);
+  nsWindow *wnd = WinUtils::GetNSWindowPtr(aWnd);
   if (wnd) {
     ((nsWindow::WindowEnumCallback*)aParam)(wnd);
   }
@@ -1133,7 +1088,7 @@ nsWindow::EnumAllChildWindProc(HWND aWnd, LPARAM aParam)
 BOOL CALLBACK
 nsWindow::EnumAllThreadWindowProc(HWND aWnd, LPARAM aParam)
 {
-  nsWindow *wnd = nsWindow::GetNSWindowPtr(aWnd);
+  nsWindow *wnd = WinUtils::GetNSWindowPtr(aWnd);
   if (wnd) {
     ((nsWindow::WindowEnumCallback*)aParam)(wnd);
   }
@@ -1166,7 +1121,7 @@ NS_METHOD nsWindow::Show(bool bState)
     // pop-up windows when the DWM is disabled and two monitors are
     // connected.
     if (HasBogusPopupsDropShadowOnMultiMonitor() &&
-        GetMonitorCount() > 1 &&
+        WinUtils::GetMonitorCount() > 1 &&
         !nsUXThemeData::CheckForCompositor())
     {
       if (sDropShadowEnabled) {
@@ -1369,14 +1324,14 @@ NS_METHOD nsWindow::UnregisterTouchWindow() {
 }
 
 BOOL CALLBACK nsWindow::RegisterTouchForDescendants(HWND aWnd, LPARAM aMsg) {
-  nsWindow* win = GetNSWindowPtr(aWnd);
+  nsWindow* win = WinUtils::GetNSWindowPtr(aWnd);
   if (win)
     win->mGesture.RegisterTouchWindow(aWnd);
   return TRUE;
 }
 
 BOOL CALLBACK nsWindow::UnregisterTouchForDescendants(HWND aWnd, LPARAM aMsg) {
-  nsWindow* win = GetNSWindowPtr(aWnd);
+  nsWindow* win = WinUtils::GetNSWindowPtr(aWnd);
   if (win)
     win->mGesture.UnregisterTouchWindow(aWnd);
   return TRUE;
@@ -1579,7 +1534,7 @@ nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, PRInt32 aHorizontal, PRInt32 aVert
   CaptureMouse(false);
 
   // find the top-level window
-  HWND toplevelWnd = GetTopLevelHWND(mWnd, true);
+  HWND toplevelWnd = WinUtils::GetTopLevelHWND(mWnd, true);
 
   // tell Windows to start the resize
   ::PostMessage(toplevelWnd, WM_SYSCOMMAND, syscommand,
@@ -1806,7 +1761,7 @@ NS_METHOD nsWindow::SetFocus(bool aRaise)
 {
   if (mWnd) {
 #ifdef WINSTATE_DEBUG_OUTPUT
-    if (mWnd == GetTopLevelHWND(mWnd)) {
+    if (mWnd == WinUtils::GetTopLevelHWND(mWnd)) {
       PR_LOG(gWindowsLog, PR_LOG_ALWAYS,
              ("*** SetFocus: [  top] raise=%d\n", aRaise));
     } else {
@@ -1815,7 +1770,7 @@ NS_METHOD nsWindow::SetFocus(bool aRaise)
     }
 #endif
     // Uniconify, if necessary
-    HWND toplevelWnd = GetTopLevelHWND(mWnd);
+    HWND toplevelWnd = WinUtils::GetTopLevelHWND(mWnd);
     if (aRaise && ::IsIconic(toplevelWnd)) {
       ::ShowWindow(toplevelWnd, SW_RESTORE);
     }
@@ -2604,8 +2559,8 @@ void nsWindow::UpdateGlass()
 
 NS_IMETHODIMP nsWindow::HideWindowChrome(bool aShouldHide)
 {
-  HWND hwnd = GetTopLevelHWND(mWnd, true);
-  if (!GetNSWindowPtr(hwnd))
+  HWND hwnd = WinUtils::GetTopLevelHWND(mWnd, true);
+  if (!WinUtils::GetNSWindowPtr(hwnd))
   {
     NS_WARNING("Trying to hide window decorations in an embedded context");
     return NS_ERROR_FAILURE;
@@ -3106,13 +3061,13 @@ nsWindow::GetAttention(PRInt32 aCycleCount)
   if (!mWnd)
     return NS_ERROR_NOT_INITIALIZED;
 
-  HWND flashWnd = GetTopLevelHWND(mWnd, false, false);
+  HWND flashWnd = WinUtils::GetTopLevelHWND(mWnd, false, false);
   HWND fgWnd = ::GetForegroundWindow();
   // Don't flash if the flash count is 0 or if the foreground window is our
   // window handle or that of our owned-most window.
   if (aCycleCount == 0 || 
       flashWnd == fgWnd ||
-      flashWnd == GetTopLevelHWND(fgWnd, false, false)) {
+      flashWnd == WinUtils::GetTopLevelHWND(fgWnd, false, false)) {
     return NS_OK;
   }
 
@@ -3374,7 +3329,8 @@ nsWindow::OnDefaultButtonLoaded(const nsIntRect &aButtonRect)
   // Don't snap when we are not active.
   HWND activeWnd = ::GetActiveWindow();
   if (activeWnd != ::GetForegroundWindow() ||
-      GetTopLevelHWND(mWnd, true) != GetTopLevelHWND(activeWnd, true)) {
+      WinUtils::GetTopLevelHWND(mWnd, true) !=
+        WinUtils::GetTopLevelHWND(activeWnd, true)) {
     return NS_OK;
   }
 
@@ -3447,7 +3403,7 @@ nsWindow::OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
 
   // Only Vista and later, Windows has the system setting of horizontal
   // scrolling by the mouse wheel.
-  if (GetWindowsVersion() >= VISTA_VERSION) {
+  if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
     if (!::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0, &systemSpeed, 0)) {
       return NS_ERROR_FAILURE;
     }
@@ -3501,15 +3457,6 @@ nsWindow::OverrideSystemMouseScrollSpeed(PRInt32 aOriginalDelta,
  **************************************************************/
 
 // Event intialization
-MSG nsWindow::InitMSG(UINT aMessage, WPARAM wParam, LPARAM lParam)
-{
-  MSG msg;
-  msg.message = aMessage;
-  msg.wParam  = wParam;
-  msg.lParam  = lParam;
-  return msg;
-}
-
 void nsWindow::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
 {
   if (nsnull == aPoint) {     // use the point from the event
@@ -3766,7 +3713,7 @@ void nsWindow::DispatchPendingEvents()
   // paint events pending.
   if (::GetQueueStatus(QS_PAINT)) {
     // Find the top level window.
-    HWND topWnd = GetTopLevelHWND(mWnd);
+    HWND topWnd = WinUtils::GetTopLevelHWND(mWnd);
 
     // Dispatch pending paints for topWnd and all its descendant windows.
     // Note: EnumChildWindows enumerates all descendant windows not just
@@ -3799,7 +3746,7 @@ bool nsWindow::DispatchPluginEvent(UINT aMessage,
                                      LPARAM aLParam,
                                      bool aDispatchPendingEvents)
 {
-  bool ret = DispatchPluginEvent(InitMSG(aMessage, aWParam, aLParam));
+  bool ret = DispatchPluginEvent(WinUtils::InitMSG(aMessage, aWParam, aLParam));
   if (aDispatchPendingEvents) {
     DispatchPendingEvents();
   }
@@ -4097,7 +4044,7 @@ bool nsWindow::DispatchFocusToTopLevelWindow(PRUint32 aEventType)
   while (curWnd) {
     toplevelWnd = curWnd;
 
-    nsWindow *win = GetNSWindowPtr(curWnd);
+    nsWindow *win = WinUtils::GetNSWindowPtr(curWnd);
     if (win) {
       nsWindowType wintype;
       win->GetWindowType(wintype);
@@ -4109,7 +4056,7 @@ bool nsWindow::DispatchFocusToTopLevelWindow(PRUint32 aEventType)
   }
 
   if (toplevelWnd) {
-    nsWindow *win = GetNSWindowPtr(toplevelWnd);
+    nsWindow *win = WinUtils::GetNSWindowPtr(toplevelWnd);
     if (win)
       return win->DispatchFocus(aEventType);
   }
@@ -4161,14 +4108,14 @@ bool nsWindow::IsTopLevelMouseExit(HWND aWnd)
   mp.y = GET_Y_LPARAM(pos);
   HWND mouseWnd = ::WindowFromPoint(mp);
 
-  // GetTopLevelHWND will return a HWND for the window frame (which includes
-  // the non-client area).  If the mouse has moved into the non-client area,
-  // we should treat it as a top-level exit.
-  HWND mouseTopLevel = nsWindow::GetTopLevelHWND(mouseWnd);
+  // WinUtils::GetTopLevelHWND() will return a HWND for the window frame
+  // (which includes the non-client area).  If the mouse has moved into
+  // the non-client area, we should treat it as a top-level exit.
+  HWND mouseTopLevel = WinUtils::GetTopLevelHWND(mouseWnd);
   if (mouseWnd == mouseTopLevel)
     return true;
 
-  return nsWindow::GetTopLevelHWND(aWnd) != mouseTopLevel;
+  return WinUtils::GetTopLevelHWND(aWnd) != mouseTopLevel;
 }
 
 bool nsWindow::BlurEventsSuppressed()
@@ -4180,7 +4127,7 @@ bool nsWindow::BlurEventsSuppressed()
   // are they suppressed by any container widget?
   HWND parentWnd = ::GetParent(mWnd);
   if (parentWnd) {
-    nsWindow *parent = GetNSWindowPtr(parentWnd);
+    nsWindow *parent = WinUtils::GetNSWindowPtr(parentWnd);
     if (parent)
       return parent->BlurEventsSuppressed();
   }
@@ -4290,7 +4237,7 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
               GetClassNameW(focusWnd, szClass,
                             sizeof(szClass)/sizeof(PRUnichar)) &&
               !wcscmp(szClass, L"Edit") &&
-              !IsOurProcessWindow(focusWnd)) {
+              !WinUtils::IsOurProcessWindow(focusWnd)) {
             break;
           }
         }
@@ -4421,7 +4368,7 @@ LRESULT CALLBACK nsWindow::WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam
   }
 
   // Get the window which caused the event and ask it to process the message
-  nsWindow *someWindow = GetNSWindowPtr(hWnd);
+  nsWindow *someWindow = WinUtils::GetNSWindowPtr(hWnd);
 
   if (someWindow)
     someWindow->IPCWindowProcHandler(msg, wParam, lParam);
@@ -4579,7 +4526,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
   if (PluginHasFocus()) {
     bool callDefaultWndProc;
-    MSG nativeMsg = InitMSG(msg, wParam, lParam);
+    MSG nativeMsg = WinUtils::InitMSG(msg, wParam, lParam);
     if (ProcessMessageForPlugin(nativeMsg, aRetValue, callDefaultWndProc)) {
       return mWnd ? !callDefaultWndProc : true;
     }
@@ -4897,7 +4844,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_SYSCHAR:
     case WM_CHAR:
     {
-      MSG nativeMsg = InitMSG(msg, wParam, lParam);
+      MSG nativeMsg = WinUtils::InitMSG(msg, wParam, lParam);
       result = ProcessCharMessage(nativeMsg, nsnull);
       DispatchPendingEvents();
     }
@@ -4906,7 +4853,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_SYSKEYUP:
     case WM_KEYUP:
     {
-      MSG nativeMsg = InitMSG(msg, wParam, lParam);
+      MSG nativeMsg = WinUtils::InitMSG(msg, wParam, lParam);
       nativeMsg.time = ::GetMessageTime();
       result = ProcessKeyUpMessage(nativeMsg, nsnull);
       DispatchPendingEvents();
@@ -4916,7 +4863,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_SYSKEYDOWN:
     case WM_KEYDOWN:
     {
-      MSG nativeMsg = InitMSG(msg, wParam, lParam);
+      MSG nativeMsg = WinUtils::InitMSG(msg, wParam, lParam);
       result = ProcessKeyDownMessage(nativeMsg, nsnull);
       DispatchPendingEvents();
     }
@@ -5158,7 +5105,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case MOZ_WM_HSCROLL:
     case MOZ_WM_VSCROLL:
       *aRetValue = 0;
-      OnScrollInternal(GetNativeMessage(msg), wParam, lParam);
+      OnScrollInternal(WinUtils::GetNativeMessage(msg), wParam, lParam);
       // Doesn't need to call next wndproc for internal message.
       return true;
 
@@ -5222,7 +5169,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     case WM_SETFOCUS:
       // If previous focused window isn't ours, it must have received the
       // redirected message.  So, we should forget it.
-      if (!IsOurProcessWindow(HWND(wParam))) {
+      if (!WinUtils::IsOurProcessWindow(HWND(wParam))) {
         ForgetRedirectedKeyDownMessage();
       }
       if (sJustGotActivate) {
@@ -5337,7 +5284,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
   case MOZ_WM_MOUSEVWHEEL:
   case MOZ_WM_MOUSEHWHEEL:
     {
-      UINT nativeMessage = GetNativeMessage(msg);
+      UINT nativeMessage = WinUtils::GetNativeMessage(msg);
       // If OnMouseWheel returns true, the event was forwarded directly to another
       // mozilla window message handler (ProcessMessage). In this case the return
       // value of the forwarded event is in 'result' which we should return immediately.
@@ -5880,7 +5827,7 @@ nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
     }
     ::SetKeyboardState(kbdState);
     nsModifierKeyState modKeyState;
-    MSG msg = InitMSG(WM_KEYDOWN, key, 0);
+    MSG msg = WinUtils::InitMSG(WM_KEYDOWN, key, 0);
     if (i == keySequence.Length() - 1 && aCharacters.Length() > 0) {
       UINT scanCode = ::MapVirtualKeyEx(aNativeKeyCode, MAPVK_VK_TO_VSC,
                                         gKbdLayout.GetLayout());
@@ -5899,7 +5846,7 @@ nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
     }
     ::SetKeyboardState(kbdState);
     nsModifierKeyState modKeyState;
-    MSG msg = InitMSG(WM_KEYUP, key, 0);
+    MSG msg = WinUtils::InitMSG(WM_KEYUP, key, 0);
     OnKeyUp(msg, modKeyState, nsnull);
   }
 
@@ -5954,7 +5901,7 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, bool& result)
     return;
 
 #ifdef WINSTATE_DEBUG_OUTPUT
-  if (mWnd == GetTopLevelHWND(mWnd)) {
+  if (mWnd == WinUtils::GetTopLevelHWND(mWnd)) {
     PR_LOG(gWindowsLog, PR_LOG_ALWAYS, ("*** OnWindowPosChanged: [  top] "));
   } else {
     PR_LOG(gWindowsLog, PR_LOG_ALWAYS, ("*** OnWindowPosChanged: [child] "));
@@ -6206,7 +6153,7 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info)
       event.mPlacement = nsWindowZTop;
     else {
       event.mPlacement = nsWindowZRelative;
-      aboveWindow = GetNSWindowPtr(hwndAfter);
+      aboveWindow = WinUtils::GetNSWindowPtr(hwndAfter);
     }
     event.mReqBelow = aboveWindow;
     event.mActualBelow = nsnull;
@@ -6354,17 +6301,6 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
   mGesture.CloseGestureInfoHandle((HGESTUREINFO)lParam);
 
   return true; // Handled
-}
-
-PRUint16 nsWindow::GetMouseInputSource()
-{
-  PRUint16 inputSource = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
-  LPARAM lParamExtraInfo = ::GetMessageExtraInfo();
-  if ((lParamExtraInfo & TABLET_INK_SIGNATURE) == TABLET_INK_CHECK) {
-    inputSource = (lParamExtraInfo & TABLET_INK_TOUCH) ?
-                  PRUint16(nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) : nsIDOMMouseEvent::MOZ_SOURCE_PEN;
-  }
-  return inputSource;
 }
 
 /* static */ void
@@ -6664,7 +6600,8 @@ bool nsWindow::IsRedirectedKeyDownMessage(const MSG &aMsg)
 {
   return (aMsg.message == WM_KEYDOWN || aMsg.message == WM_SYSKEYDOWN) &&
          (sRedirectedKeyDown.message == aMsg.message &&
-          GetScanCode(sRedirectedKeyDown.lParam) == GetScanCode(aMsg.lParam));
+          WinUtils::GetScanCode(sRedirectedKeyDown.lParam) ==
+            WinUtils::GetScanCode(aMsg.lParam));
 }
 
 void
@@ -6755,9 +6692,9 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       INPUT keyinput;
       keyinput.type = INPUT_KEYBOARD;
       keyinput.ki.wVk = aMsg.wParam;
-      keyinput.ki.wScan = GetScanCode(aMsg.lParam);
+      keyinput.ki.wScan = WinUtils::GetScanCode(aMsg.lParam);
       keyinput.ki.dwFlags = KEYEVENTF_SCANCODE;
-      if (IsExtendedScanCode(aMsg.lParam)) {
+      if (WinUtils::IsExtendedScanCode(aMsg.lParam)) {
         keyinput.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
       }
       keyinput.ki.time = 0;
@@ -7492,105 +7429,6 @@ bool nsWindow::OnHotKey(WPARAM wParam, LPARAM lParam)
   return true;
 }
 
-/* static */
-bool nsWindow::IsOurProcessWindow(HWND aHWND)
-{
-  if (!aHWND) {
-    return false;
-  }
-  DWORD processId = 0;
-  ::GetWindowThreadProcessId(aHWND, &processId);
-  return processId == ::GetCurrentProcessId();
-}
-
-/* static */
-HWND nsWindow::FindOurProcessWindow(HWND aHWND)
-{
-  for (HWND wnd = ::GetParent(aHWND); wnd; wnd = ::GetParent(wnd)) {
-    if (IsOurProcessWindow(wnd)) {
-      return wnd;
-    }
-  }
-  return nsnull;
-}
-
-static bool PointInWindow(HWND aHWND, const POINT& aPoint)
-{
-  RECT bounds;
-  if (!::GetWindowRect(aHWND, &bounds)) {
-    return false;
-  }
-
-  if (aPoint.x < bounds.left
-      || aPoint.x >= bounds.right
-      || aPoint.y < bounds.top
-      || aPoint.y >= bounds.bottom) {
-    return false;
-  }
-
-  return true;
-}
-
-static HWND FindTopmostWindowAtPoint(HWND aHWND, const POINT& aPoint)
-{
-  if (!::IsWindowVisible(aHWND) || !PointInWindow(aHWND, aPoint)) {
-    return 0;
-  }
-
-  HWND childWnd = ::GetTopWindow(aHWND);
-  while (childWnd) {
-    HWND topmostWnd = FindTopmostWindowAtPoint(childWnd, aPoint);
-    if (topmostWnd) {
-      return topmostWnd;
-    }
-    childWnd = ::GetNextWindow(childWnd, GW_HWNDNEXT);
-  }
-
-  return aHWND;
-}
-
-struct FindOurWindowAtPointInfo
-{
-  POINT mInPoint;
-  HWND mOutHWND;
-};
-
-/* static */
-BOOL CALLBACK nsWindow::FindOurWindowAtPointCallback(HWND aHWND, LPARAM aLPARAM)
-{
-  if (!nsWindow::IsOurProcessWindow(aHWND)) {
-    // This isn't one of our top-level windows; continue enumerating.
-    return TRUE;
-  }
-
-  // Get the top-most child window under the point.  If there's no child
-  // window, and the point is within the top-level window, then the top-level
-  // window will be returned.  (This is the usual case.  A child window
-  // would be returned for plugins.)
-  FindOurWindowAtPointInfo* info = reinterpret_cast<FindOurWindowAtPointInfo*>(aLPARAM);
-  HWND childWnd = FindTopmostWindowAtPoint(aHWND, info->mInPoint);
-  if (!childWnd) {
-    // This window doesn't contain the point; continue enumerating.
-    return TRUE;
-  }
-
-  // Return the HWND and stop enumerating.
-  info->mOutHWND = childWnd;
-  return FALSE;
-}
-
-/* static */
-HWND nsWindow::FindOurWindowAtPoint(const POINT& aPoint)
-{
-  FindOurWindowAtPointInfo info;
-  info.mInPoint = aPoint;
-  info.mOutHWND = 0;
-
-  // This will enumerate all top-level windows in order from top to bottom.
-  EnumWindows(FindOurWindowAtPointCallback, reinterpret_cast<LPARAM>(&info));
-  return info.mOutHWND;
-}
-
 typedef DWORD (WINAPI *GetProcessImageFileNameProc)(HANDLE, LPWSTR, DWORD);
 
 // Determine whether the given HWND is the handle for the Elantech helper
@@ -7630,42 +7468,6 @@ static bool IsElantechHelperWindow(HWND aHWND)
   }
 
   return result;
-}
-
-// static
-UINT
-nsWindow::GetInternalMessage(UINT aNativeMessage)
-{
-  switch (aNativeMessage) {
-    case WM_MOUSEWHEEL:
-      return MOZ_WM_MOUSEVWHEEL;
-    case WM_MOUSEHWHEEL:
-      return MOZ_WM_MOUSEHWHEEL;
-    case WM_VSCROLL:
-      return MOZ_WM_VSCROLL;
-    case WM_HSCROLL:
-      return MOZ_WM_HSCROLL;
-    default:
-      return aNativeMessage;
-  }
-}
-
-// static
-UINT
-nsWindow::GetNativeMessage(UINT aInternalMessage)
-{
-  switch (aInternalMessage) {
-    case MOZ_WM_MOUSEVWHEEL:
-      return WM_MOUSEWHEEL;
-    case MOZ_WM_MOUSEHWHEEL:
-      return WM_MOUSEHWHEEL;
-    case MOZ_WM_VSCROLL:
-      return WM_VSCROLL;
-    case MOZ_WM_HSCROLL:
-      return WM_HSCROLL;
-    default:
-      return aInternalMessage;
-  }
 }
 
 /**
@@ -7721,7 +7523,7 @@ nsWindow::OnMouseWheel(UINT aMsg, WPARAM aWParam, LPARAM aLParam,
     // when sending a WM_MOUSEWHEEL event to us as part of a pinch-to-zoom
     // gesture.  We detect that here, and search for our window that would
     // be beneath the cursor if that window wasn't there.
-    underCursorWnd = FindOurWindowAtPoint(point);
+    underCursorWnd = WinUtils::FindOurWindowAtPoint(point);
     if (!underCursorWnd) {
       return;
     }
@@ -7730,13 +7532,13 @@ nsWindow::OnMouseWheel(UINT aMsg, WPARAM aWParam, LPARAM aLParam,
   // Handle most cases first.  If the window under mouse cursor is our window
   // except plugin window (MozillaWindowClass), we should handle the message
   // on the window.
-  if (IsOurProcessWindow(underCursorWnd)) {
-    nsWindow* destWindow = GetNSWindowPtr(underCursorWnd);
+  if (WinUtils::IsOurProcessWindow(underCursorWnd)) {
+    nsWindow* destWindow = WinUtils::GetNSWindowPtr(underCursorWnd);
     if (!destWindow) {
       NS_WARNING("We're not sure what cause this is.");
       HWND wnd = ::GetParent(underCursorWnd);
       for (; wnd; wnd = ::GetParent(wnd)) {
-        destWindow = GetNSWindowPtr(wnd);
+        destWindow = WinUtils::GetNSWindowPtr(wnd);
         if (destWindow) {
           break;
         }
@@ -7756,7 +7558,7 @@ nsWindow::OnMouseWheel(UINT aMsg, WPARAM aWParam, LPARAM aLParam,
       destWindow = destWindow->GetParentWindow(false);
       NS_ENSURE_TRUE(destWindow, );
     }
-    UINT internalMessage = GetInternalMessage(aMsg);
+    UINT internalMessage = WinUtils::GetInternalMessage(aMsg);
     ::PostMessage(destWindow->mWnd, internalMessage, aWParam, aLParam);
     return;
   }
@@ -7764,7 +7566,7 @@ nsWindow::OnMouseWheel(UINT aMsg, WPARAM aWParam, LPARAM aLParam,
   // If the window under cursor is not in our process, it means:
   // 1. The window may be a plugin window (GeckoPluginWindow or its descendant).
   // 2. The window may be another application's window.
-  HWND pluginWnd = FindOurProcessWindow(underCursorWnd);
+  HWND pluginWnd = WinUtils::FindOurProcessWindow(underCursorWnd);
   if (!pluginWnd) {
     // If there is no plugin window in ancestors of the window under cursor,
     // the window is for another applications (case 2).
@@ -7780,7 +7582,7 @@ nsWindow::OnMouseWheel(UINT aMsg, WPARAM aWParam, LPARAM aLParam,
   if (mWindowType == eWindowType_plugin && pluginWnd == mWnd) {
     nsWindow* destWindow = GetParentWindow(false);
     NS_ENSURE_TRUE(destWindow, );
-    UINT internalMessage = GetInternalMessage(aMsg);
+    UINT internalMessage = WinUtils::GetInternalMessage(aMsg);
     ::PostMessage(destWindow->mWnd, internalMessage, aWParam, aLParam);
     return;
   }
@@ -8185,7 +7987,7 @@ bool nsWindow::AssociateDefaultIMC(bool aAssociate)
 
 #define NS_LOG_WMGETOBJECT_WND(aMsg, aHwnd)                                    \
 {                                                                              \
-  nsWindow* wnd = GetNSWindowPtr(aHwnd);                                       \
+  nsWindow* wnd = WinUtils::GetNSWindowPtr(aHwnd);                             \
   PR_LOG(gWindowsLog, PR_LOG_ALWAYS,                                           \
          ("Get " aMsg ":\n  {\n     HWND: %d, parent HWND: %d, wndobj: %p,\n", \
           aHwnd, ::GetParent(aHwnd), wnd));                                    \
@@ -8293,8 +8095,8 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
     return;
 
   // stop on dialogs and popups!
-  HWND hWnd = GetTopLevelHWND(mWnd, true);
-  nsWindow* parent = GetNSWindowPtr(hWnd);
+  HWND hWnd = WinUtils::GetTopLevelHWND(mWnd, true);
+  nsWindow* parent = WinUtils::GetNSWindowPtr(hWnd);
 
   if (!parent)
   {
@@ -8364,7 +8166,7 @@ nsresult nsWindow::UpdateTranslucentWindow()
   BLENDFUNCTION bf = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
   SIZE winSize = { mBounds.width, mBounds.height };
   POINT srcPos = { 0, 0 };
-  HWND hWnd = GetTopLevelHWND(mWnd, true);
+  HWND hWnd = WinUtils::GetTopLevelHWND(mWnd, true);
   RECT winRect;
   ::GetWindowRect(hWnd, &winRect);
 
@@ -8471,7 +8273,7 @@ LRESULT CALLBACK nsWindow::MozSpecialMsgFilter(int code, WPARAM wParam, LPARAM l
 LRESULT CALLBACK nsWindow::MozSpecialMouseProc(int code, WPARAM wParam, LPARAM lParam)
 {
   if (sProcessHook) {
-    switch (GetNativeMessage(wParam)) {
+    switch (WinUtils::GetNativeMessage(wParam)) {
       case WM_LBUTTONDOWN:
       case WM_RBUTTONDOWN:
       case WM_MBUTTONDOWN:
@@ -8479,7 +8281,7 @@ LRESULT CALLBACK nsWindow::MozSpecialMouseProc(int code, WPARAM wParam, LPARAM l
       case WM_MOUSEHWHEEL:
       {
         MOUSEHOOKSTRUCT* ms = (MOUSEHOOKSTRUCT*)lParam;
-        nsIWidget* mozWin = (nsIWidget*)GetNSWindowPtr(ms->hwnd);
+        nsIWidget* mozWin = WinUtils::GetNSWindowPtr(ms->hwnd);
         if (mozWin) {
           // If this window is windowed plugin window, the mouse events are not
           // sent to us.
@@ -8622,7 +8424,7 @@ VOID CALLBACK nsWindow::HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent, D
 
 BOOL CALLBACK nsWindow::ClearResourcesCallback(HWND aWnd, LPARAM aMsg)
 {
-    nsWindow *window = nsWindow::GetNSWindowPtr(aWnd);
+    nsWindow *window = WinUtils::GetNSWindowPtr(aWnd);
     if (window) {
         window->ClearCachedResources();
     }  
@@ -8673,7 +8475,7 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
 {
   if (sRollupListener && sRollupWidget && ::IsWindowVisible(inWnd)) {
 
-    inMsg = GetNativeMessage(inMsg);
+    inMsg = WinUtils::GetNativeMessage(inMsg);
     if (inMsg == WM_LBUTTONDOWN || inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN ||
         inMsg == WM_MOUSEWHEEL || inMsg == WM_MOUSEHWHEEL || inMsg == WM_ACTIVATE ||
         (inMsg == WM_KILLFOCUS && IsDifferentThreadWindow((HWND)inWParam)) ||
@@ -8770,7 +8572,7 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
 
           // However, don't activate panels
           if (inMsg == WM_MOUSEACTIVATE) {
-            nsWindow* activateWindow = GetNSWindowPtr(inWnd);
+            nsWindow* activateWindow = WinUtils::GetNSWindowPtr(inWnd);
             if (activateWindow) {
               nsWindowType wintype;
               activateWindow->GetWindowType(wintype);
@@ -8814,27 +8616,10 @@ nsModifierKeyState::nsModifierKeyState()
 }
 
 
-PRInt32 nsWindow::GetWindowsVersion()
-{
-  static PRInt32 version = 0;
-  static bool didCheck = false;
-
-  if (!didCheck)
-  {
-    didCheck = true;
-    OSVERSIONINFOEX osInfo;
-    osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-    // This cast is safe and supposed to be here, don't worry
-    ::GetVersionEx((OSVERSIONINFO*)&osInfo);
-    version = (osInfo.dwMajorVersion & 0xff) << 8 | (osInfo.dwMinorVersion & 0xff);
-  }
-  return version;
-}
-
 // Note that the result of GetTopLevelWindow method can be different from the
-// result of GetTopLevelHWND method.  The result can be non-floating window.
-// Because our top level window may be contained in another window which is
-// not managed by us.
+// result of WinUtils::GetTopLevelHWND().  The result can be non-floating
+// window.  Because our top level window may be contained in another window
+// which is not managed by us.
 nsWindow* nsWindow::GetTopLevelWindow(bool aStopOnDialogOrPopup)
 {
   nsWindow* curWindow = this;
@@ -8858,43 +8643,6 @@ nsWindow* nsWindow::GetTopLevelWindow(bool aStopOnDialogOrPopup)
 
     curWindow = parentWindow;
   }
-}
-
-// Note that the result of GetTopLevelHWND can be different from the result
-// of GetTopLevelWindow method.  Because this is checking whether the window
-// is top level only in Win32 window system.  Therefore, the result window
-// may not be managed by us.
-HWND nsWindow::GetTopLevelHWND(HWND aWnd, 
-                               bool aStopIfNotChild, 
-                               bool aStopIfNotPopup)
-{
-  HWND curWnd = aWnd;
-  HWND topWnd = NULL;
-  HWND upWnd = NULL;
-
-  while (curWnd) {
-    topWnd = curWnd;
-
-    if (aStopIfNotChild) {
-      DWORD_PTR style = ::GetWindowLongPtrW(curWnd, GWL_STYLE);
-
-      VERIFY_WINDOW_STYLE(style);
-
-      if (!(style & WS_CHILD)) // first top-level window
-        break;
-    }
-
-    upWnd = ::GetParent(curWnd); // Parent or owner (if has no parent)
-
-    // GetParent will only return the owner if the passed in window 
-    // has the WS_POPUP style.
-    if (!upWnd && !aStopIfNotPopup) {
-      upWnd = ::GetWindow(curWnd, GW_OWNER);
-    }
-    curWnd = upWnd;
-  }
-
-  return topWnd;
 }
 
 static BOOL CALLBACK gEnumWindowsProc(HWND hwnd, LPARAM lParam)
@@ -8989,51 +8737,11 @@ HasRegistryKey(HKEY aRoot, PRUnichar* aName)
   return true;
 }
 
-/**
- * Gets the value of a string-typed registry value.
- *
- * @param aRoot The registry root to search in.
- * @param aKeyName The name of the registry key to open.
- * @param aValueName The name of the registry value in the specified key whose
- *   value is to be retrieved.  Can be null, to retrieve the key's unnamed/
- *   default value.
- * @param aBuffer The buffer into which to store the string value.  Can be null,
- *   in which case the return value indicates just whether the value exists.
- * @param aBufferLength The size of aBuffer, in bytes.
- * @return Whether the value exists and is a string.
- */
-bool
-nsWindow::GetRegistryKey(HKEY aRoot,
-                         const PRUnichar* aKeyName,
-                         const PRUnichar* aValueName,
-                         PRUnichar* aBuffer,
-                         DWORD aBufferLength)
-{
-  if (!aKeyName)
-    return false;
-
-  HKEY key;
-  LONG result = ::RegOpenKeyExW(aRoot, aKeyName, NULL, KEY_READ | KEY_WOW64_32KEY, &key);
-  if (result != ERROR_SUCCESS) {
-    result = ::RegOpenKeyExW(aRoot, aKeyName, NULL, KEY_READ | KEY_WOW64_64KEY, &key);
-    if (result != ERROR_SUCCESS)
-      return false;
-  }
-  DWORD type;
-  result = ::RegQueryValueExW(key, aValueName, NULL, &type, (BYTE*) aBuffer, &aBufferLength);
-  ::RegCloseKey(key);
-  if (result != ERROR_SUCCESS || type != REG_SZ)
-    return false;
-  if (aBuffer)
-    aBuffer[aBufferLength / sizeof(*aBuffer) - 1] = 0;
-  return true;
-}
-
 static bool
 IsObsoleteSynapticsDriver()
 {
   PRUnichar buf[40];
-  bool foundKey = nsWindow::GetRegistryKey(HKEY_LOCAL_MACHINE,
+  bool foundKey = WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE,
                                            L"Software\\Synaptics\\SynTP\\Install",
                                            L"DriverVersion",
                                            buf,
@@ -9055,13 +8763,13 @@ GetElantechDriverMajorVersion()
 {
   PRUnichar buf[40];
   // The driver version is found in one of these two registry keys.
-  bool foundKey = nsWindow::GetRegistryKey(HKEY_CURRENT_USER,
+  bool foundKey = WinUtils::GetRegistryKey(HKEY_CURRENT_USER,
                                            L"Software\\Elantech\\MainOption",
                                            L"DriverVersion",
                                            buf,
                                            sizeof buf);
   if (!foundKey)
-    foundKey = nsWindow::GetRegistryKey(HKEY_CURRENT_USER,
+    foundKey = WinUtils::GetRegistryKey(HKEY_CURRENT_USER,
                                         L"Software\\Elantech",
                                         L"DriverVersion",
                                         buf,

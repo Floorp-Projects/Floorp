@@ -60,6 +60,7 @@
 #include "nsWindow.h"
 #include "nsIComboboxControlFrame.h"
 #include "prinrval.h"
+#include "WinUtils.h"
 
 #include "gfxPlatform.h"
 #include "gfxContext.h"
@@ -70,6 +71,8 @@
 
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
+
+using namespace mozilla::widget;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gWindowsLog;
@@ -382,7 +385,7 @@ static void AddPaddingRect(nsIntSize* aSize, CaptionButton button) {
   RECT offset;
   if (!nsUXThemeData::IsAppThemed())
     offset = buttonData[CAPTION_CLASSIC].hotPadding[button];
-  else if (nsWindow::GetWindowsVersion() == WINXP_VERSION)
+  else if (WinUtils::GetWindowsVersion() == WinUtils::WINXP_VERSION)
     offset = buttonData[CAPTION_XPTHEME].hotPadding[button];
   else
     offset = buttonData[CAPTION_BASIC].hotPadding[button];
@@ -396,7 +399,7 @@ static void OffsetBackgroundRect(RECT& rect, CaptionButton button) {
   RECT offset;
   if (!nsUXThemeData::IsAppThemed())
     offset = buttonData[CAPTION_CLASSIC].hotPadding[button];
-  else if (nsWindow::GetWindowsVersion() == WINXP_VERSION)
+  else if (WinUtils::GetWindowsVersion() == WinUtils::WINXP_VERSION)
     offset = buttonData[CAPTION_XPTHEME].hotPadding[button];
   else
     offset = buttonData[CAPTION_BASIC].hotPadding[button];
@@ -2077,7 +2080,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* a
       aResult->width = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_RESTORE].cx;
       aResult->height = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_RESTORE].cy;
       // For XP, subtract 4 from system metrics dimensions.
-      if (nsWindow::GetWindowsVersion() == WINXP_VERSION) {
+      if (WinUtils::GetWindowsVersion() == WinUtils::WINXP_VERSION) {
         aResult->width -= 4;
         aResult->height -= 4;
       }
@@ -2089,7 +2092,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* a
       QueryForButtonData(aFrame);
       aResult->width = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_MINIMIZE].cx;
       aResult->height = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_MINIMIZE].cy;
-      if (nsWindow::GetWindowsVersion() == WINXP_VERSION) {
+      if (WinUtils::GetWindowsVersion() == WinUtils::WINXP_VERSION) {
         aResult->width -= 4;
         aResult->height -= 4;
       }
@@ -2101,7 +2104,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* a
       QueryForButtonData(aFrame);
       aResult->width = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_CLOSE].cx;
       aResult->height = nsUXThemeData::sCommandButtons[CMDBUTTONIDX_CLOSE].cy;
-      if (nsWindow::GetWindowsVersion() == WINXP_VERSION) {
+      if (WinUtils::GetWindowsVersion() == WinUtils::WINXP_VERSION) {
         aResult->width -= 4;
         aResult->height -= 4;
       }

@@ -78,6 +78,7 @@ CPPSRCS = \
   WidgetTraceEvent.cpp \
   AudioSession.cpp \
   nsWidgetFactory.cpp \
+  WinUtils.cpp \
   $(NULL)
 
 ifdef MOZ_CRASHREPORTER
