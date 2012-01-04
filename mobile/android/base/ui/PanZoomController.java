@@ -487,7 +487,7 @@ public class PanZoomController
         }
 
         mX.setFlingState(Axis.FlingStates.PANNING); mY.setFlingState(Axis.FlingStates.PANNING);
-        mX.displace(); mY.displace();
+        mX.displace(mOverridePanning); mY.displace(mOverridePanning);
         updatePosition();
     }
 
@@ -497,7 +497,7 @@ public class PanZoomController
 
         mX.disableSnap = mY.disableSnap = mOverridePanning;
 
-        mX.displace(); mY.displace();
+        mX.displace(mOverridePanning); mY.displace(mOverridePanning);
         updatePosition();
 
         stopAnimationTimer();
@@ -670,7 +670,7 @@ public class PanZoomController
 
             /* If we're still flinging in any direction, update the origin. */
             if (flingingX || flingingY) {
-                mX.displace(); mY.displace();
+                mX.displace(mOverridePanning); mY.displace(mOverridePanning);
                 updatePosition();
 
                 /*
@@ -849,8 +849,8 @@ public class PanZoomController
         }
 
         // Performs displacement of the viewport position according to the current velocity.
-        public void displace() {
-            if (locked || !scrollable())
+        public void displace(boolean panningOverridden) {
+            if (!panningOverridden && (locked || !scrollable()))
                 return;
 
             if (mFlingState == FlingStates.PANNING)
