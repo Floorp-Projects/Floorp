@@ -291,13 +291,13 @@ template <typename T>
 class Handle
 {
   public:
-    // Copy handles of different types, with implicit coercion.
+    /* Copy handles of different types, with implicit coercion. */
     template <typename S> Handle(Handle<S> handle) {
         testAssign<S>();
         ptr = reinterpret_cast<const T *>(handle.address());
     }
 
-    // Get a handle from a rooted stack location, with implicit coercion.
+    /* Get a handle from a rooted stack location, with implicit coercion. */
     template <typename S> inline Handle(const Root<S> &root);
     template <typename S> inline Handle(const RootedVar<S> &root);
 
