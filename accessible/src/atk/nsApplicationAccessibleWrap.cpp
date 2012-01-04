@@ -614,7 +614,7 @@ toplevel_event_watcher(GSignalInvocationHint* ihint,
 bool
 nsApplicationAccessibleWrap::Init()
 {
-    // XXX following code is copied from widget/src/gtk2/nsWindow.cpp
+    // XXX following code is copied from widget/gtk2/nsWindow.cpp
     // we should put it to somewhere that can be used from both modules
     // see bug 390761
 
