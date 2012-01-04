@@ -8526,8 +8526,6 @@ void nsWindow::RegisterSpecialDropdownHooks()
 
   DISPLAY_NMM_PRT("***************** Installing Msg Hooks ***************\n");
 
-  //HMODULE hMod = GetModuleHandle("gkwidget.dll");
-
   // Install msg hook for moving the window and resizing
   if (!sMsgFilterHook) {
     DISPLAY_NMM_PRT("***** Hooking sMsgFilterHook!\n");

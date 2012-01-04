@@ -44,8 +44,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= widget
 LIBRARY_NAME	= widget_windows
+EXPORT_LIBRARY	= 1
+IS_COMPONENT	= 1
+RESFILE		= widget.res
+MODULE_NAME	= nsWidgetWinModule
 LIBXUL_LIBRARY = 1
-
 
 CPPSRCS = \
   nsWindow.cpp \
@@ -74,6 +77,7 @@ CPPSRCS = \
   GfxInfo.cpp \
   WidgetTraceEvent.cpp \
   AudioSession.cpp \
+  nsWidgetFactory.cpp \
   $(NULL)
 
 ifdef MOZ_CRASHREPORTER
@@ -104,7 +108,6 @@ ifdef NS_ENABLE_TSF
 CPPSRCS		+= nsTextStore.cpp
 endif
 
-
 DEFINES		+= -D_IMPL_NS_WIDGET -DMOZ_UNICODE 
 
 ifdef MOZ_ENABLE_D3D9_LAYER
@@ -115,6 +118,9 @@ ifdef MOZ_ENABLE_D3D10_LAYER
 DEFINES		+= -DMOZ_ENABLE_D3D10_LAYER
 endif
 
+SHARED_LIBRARY_LIBS = \
+  ../xpwidgets/$(LIB_PREFIX)xpwidgets_s.$(LIB_SUFFIX) \
+  $(NULL)
 
 EXPORTS		= nsdefs.h WindowHook.h
 EXPORTS_NAMESPACES = mozilla/widget

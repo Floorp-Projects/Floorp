@@ -595,7 +595,6 @@ if [ "$MOZ_WIDGET_TOOLKIT" = "windows" ]; then
     intl/locale/src/windows/Makefile
     netwerk/system/win32/Makefile
     toolkit/system/windowsproxy/Makefile
-    widget/build/Makefile
     widget/windows/Makefile
     xpcom/reflect/xptcall/src/md/win32/Makefile
   "
