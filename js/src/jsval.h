@@ -137,17 +137,9 @@ JS_ENUM_HEADER(JSValueType, uint8_t)
     JSVAL_TYPE_NULL                = 0x06,
     JSVAL_TYPE_OBJECT              = 0x07,
 
-    /* The below types never appear in a jsval; they are only used in tracing and type inference. */
+    /* This never appears in a jsval; it is only provided as an out-of-band value. */
+    JSVAL_TYPE_UNKNOWN             = 0x20
 
-    JSVAL_TYPE_UNKNOWN             = 0x20,
-
-    JSVAL_TYPE_NONFUNOBJ           = 0x57,
-    JSVAL_TYPE_FUNOBJ              = 0x67,
-
-    JSVAL_TYPE_STRORNULL           = 0x77,
-    JSVAL_TYPE_OBJORNULL           = 0x78,
-
-    JSVAL_TYPE_BOXED               = 0x79
 } JS_ENUM_FOOTER(JSValueType);
 
 JS_STATIC_ASSERT(sizeof(JSValueType) == 1);
@@ -214,12 +206,6 @@ typedef uint8_t JSValueType;
 #define JSVAL_TYPE_NULL              ((uint8_t)0x06)
 #define JSVAL_TYPE_OBJECT            ((uint8_t)0x07)
 #define JSVAL_TYPE_UNKNOWN           ((uint8_t)0x20)
-#define JSVAL_TYPE_NONFUNOBJ         ((uint8_t)0x57)
-#define JSVAL_TYPE_FUNOBJ            ((uint8_t)0x67)
-#define JSVAL_TYPE_STRORNULL         ((uint8_t)0x77)
-#define JSVAL_TYPE_OBJORNULL         ((uint8_t)0x78)
-#define JSVAL_TYPE_BOXED             ((uint8_t)0x79)
-#define JSVAL_TYPE_UNINITIALIZED     ((uint8_t)0x7d)
 
 #if JS_BITS_PER_WORD == 32
 
@@ -262,8 +248,6 @@ typedef uint64_t JSValueShiftedTag;
 #define JSVAL_UPPER_EXCL_TYPE_OF_PRIMITIVE_SET          JSVAL_TYPE_OBJECT
 #define JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET             JSVAL_TYPE_INT32
 #define JSVAL_LOWER_INCL_TYPE_OF_PTR_PAYLOAD_SET        JSVAL_TYPE_MAGIC
-#define JSVAL_UPPER_INCL_TYPE_OF_VALUE_SET              JSVAL_TYPE_OBJECT
-#define JSVAL_UPPER_INCL_TYPE_OF_BOXABLE_SET            JSVAL_TYPE_FUNOBJ
 
 #if JS_BITS_PER_WORD == 32
 
@@ -284,7 +268,6 @@ typedef uint64_t JSValueShiftedTag;
 #define JSVAL_LOWER_INCL_SHIFTED_TAG_OF_OBJ_OR_NULL_SET  JSVAL_SHIFTED_TAG_NULL
 #define JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_PRIMITIVE_SET    JSVAL_SHIFTED_TAG_OBJECT
 #define JSVAL_UPPER_EXCL_SHIFTED_TAG_OF_NUMBER_SET       JSVAL_SHIFTED_TAG_UNDEFINED
-#define JSVAL_LOWER_INCL_SHIFTED_TAG_OF_PTR_PAYLOAD_SET  JSVAL_SHIFTED_TAG_MAGIC
 #define JSVAL_LOWER_INCL_SHIFTED_TAG_OF_GCTHING_SET      JSVAL_SHIFTED_TAG_STRING
 
 #endif /* JS_BITS_PER_WORD */
@@ -303,6 +286,7 @@ typedef enum JSWhyMagic
     JS_ARG_POISON,               /* used in debug builds to catch tracing errors */
     JS_SERIALIZE_NO_NODE,        /* an empty subnode in the AST serializer */
     JS_LAZY_ARGUMENTS,           /* lazy arguments value on the stack */
+    JS_IS_CONSTRUCTING,          /* magic value passed to natives to indicate construction */
     JS_GENERIC_MAGIC             /* for local use */
 } JSWhyMagic;
 
@@ -512,13 +496,6 @@ JSVAL_IS_MAGIC_IMPL(jsval_layout l)
     return l.s.tag == JSVAL_TAG_MAGIC;
 }
 
-static JS_ALWAYS_INLINE JSObject *
-MAGIC_JSVAL_TO_OBJECT_OR_NULL_IMPL(jsval_layout l)
-{
-    JS_ASSERT(JSVAL_IS_MAGIC_IMPL(l));
-    return l.s.payload.obj;
-}
-
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_OBJECT_IMPL(jsval_layout l)
 {
@@ -623,15 +600,6 @@ MAGIC_TO_JSVAL_IMPL(JSWhyMagic why)
     return l;
 }
 
-static JS_ALWAYS_INLINE jsval_layout
-MAGIC_OBJ_TO_JSVAL_IMPL(JSObject *obj)
-{
-    jsval_layout l;
-    l.s.tag = JSVAL_TAG_MAGIC;
-    l.s.payload.obj = obj;
-    return l;
-}
-
 static JS_ALWAYS_INLINE JSBool
 JSVAL_SAME_TYPE_IMPL(jsval_layout lhs, jsval_layout rhs)
 {
@@ -661,42 +629,6 @@ JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(jsval_layout l)
     uint32_t type = l.s.tag & 0xF;
     JS_ASSERT(type > JSVAL_TYPE_DOUBLE);
     return (JSValueType)type;
-}
-
-static JS_ALWAYS_INLINE JSValueTag
-JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(jsval_layout l)
-{
-    JSValueTag tag = l.s.tag;
-    JS_ASSERT(tag >= JSVAL_TAG_INT32);
-    return tag;
-}
-
-#ifdef __cplusplus
-JS_STATIC_ASSERT((JSVAL_TYPE_NONFUNOBJ & 0xF) == JSVAL_TYPE_OBJECT);
-JS_STATIC_ASSERT((JSVAL_TYPE_FUNOBJ & 0xF) == JSVAL_TYPE_OBJECT);
-#endif
-
-static JS_ALWAYS_INLINE jsval_layout
-BOX_NON_DOUBLE_JSVAL(JSValueType type, uint64_t *slot)
-{
-    jsval_layout l;
-    JS_ASSERT(type > JSVAL_TYPE_DOUBLE && type <= JSVAL_UPPER_INCL_TYPE_OF_BOXABLE_SET);
-    JS_ASSERT_IF(type == JSVAL_TYPE_STRING ||
-                 type == JSVAL_TYPE_OBJECT ||
-                 type == JSVAL_TYPE_NONFUNOBJ ||
-                 type == JSVAL_TYPE_FUNOBJ,
-                 *(uint32_t *)slot != 0);
-    l.s.tag = JSVAL_TYPE_TO_TAG(type & 0xF);
-    /* A 32-bit value in a 64-bit slot always occupies the low-addressed end. */
-    l.s.payload.u32 = *(uint32_t *)slot;
-    return l;
-}
-
-static JS_ALWAYS_INLINE void
-UNBOX_NON_DOUBLE_JSVAL(jsval_layout l, uint64_t *out)
-{
-    JS_ASSERT(!JSVAL_IS_DOUBLE_IMPL(l));
-    *(uint32_t *)out = l.s.payload.u32;
 }
 
 #elif JS_BITS_PER_WORD == 64
@@ -804,15 +736,6 @@ static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_MAGIC_IMPL(jsval_layout l)
 {
     return (l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_MAGIC;
-}
-
-static JS_ALWAYS_INLINE JSObject *
-MAGIC_JSVAL_TO_OBJECT_OR_NULL_IMPL(jsval_layout l)
-{
-    uint64_t ptrBits = l.asBits & JSVAL_PAYLOAD_MASK;
-    JS_ASSERT(JSVAL_IS_MAGIC_IMPL(l));
-    JS_ASSERT((ptrBits >> JSVAL_TAG_SHIFT) == 0);
-    return (JSObject *)ptrBits;
 }
 
 static JS_ALWAYS_INLINE JSBool
@@ -924,14 +847,6 @@ MAGIC_TO_JSVAL_IMPL(JSWhyMagic why)
     return l;
 }
 
-static JS_ALWAYS_INLINE jsval_layout
-MAGIC_OBJ_TO_JSVAL_IMPL(JSObject *obj)
-{
-    jsval_layout l;
-    l.asBits = ((uint64_t)obj) | JSVAL_SHIFTED_TAG_MAGIC;
-    return l;
-}
-
 static JS_ALWAYS_INLINE JSBool
 JSVAL_SAME_TYPE_IMPL(jsval_layout lhs, jsval_layout rhs)
 {
@@ -962,47 +877,6 @@ JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(jsval_layout l)
    uint64_t type = (l.asBits >> JSVAL_TAG_SHIFT) & 0xF;
    JS_ASSERT(type > JSVAL_TYPE_DOUBLE);
    return (JSValueType)type;
-}
-
-static JS_ALWAYS_INLINE JSValueTag
-JSVAL_EXTRACT_NON_DOUBLE_TAG_IMPL(jsval_layout l)
-{
-    uint64_t tag = l.asBits >> JSVAL_TAG_SHIFT;
-    JS_ASSERT(tag > JSVAL_TAG_MAX_DOUBLE);
-    return (JSValueTag)tag;
-}
-
-#ifdef __cplusplus
-JS_STATIC_ASSERT((JSVAL_TYPE_NONFUNOBJ & 0xF) == JSVAL_TYPE_OBJECT);
-JS_STATIC_ASSERT((JSVAL_TYPE_FUNOBJ & 0xF) == JSVAL_TYPE_OBJECT);
-#endif
-
-static JS_ALWAYS_INLINE jsval_layout
-BOX_NON_DOUBLE_JSVAL(JSValueType type, uint64_t *slot)
-{
-    uint32_t isI32 = (uint32_t)(type < JSVAL_LOWER_INCL_TYPE_OF_PTR_PAYLOAD_SET);
-    uint32_t shift = isI32 * 32;
-    uint64_t mask = ((uint64_t)-1) >> shift;
-    uint64_t payload = *slot & mask;
-    jsval_layout l;
-
-    /* N.B. for 32-bit payloads, the high 32 bits of the slot are trash. */
-    JS_ASSERT(type > JSVAL_TYPE_DOUBLE && type <= JSVAL_UPPER_INCL_TYPE_OF_BOXABLE_SET);
-    JS_ASSERT_IF(type == JSVAL_TYPE_STRING ||
-                 type == JSVAL_TYPE_OBJECT ||
-                 type == JSVAL_TYPE_NONFUNOBJ ||
-                 type == JSVAL_TYPE_FUNOBJ,
-                 payload != 0);
-
-    l.asBits = payload | JSVAL_TYPE_TO_SHIFTED_TAG(type & 0xF);
-    return l;
-}
-
-static JS_ALWAYS_INLINE void
-UNBOX_NON_DOUBLE_JSVAL(jsval_layout l, uint64_t *out)
-{
-    JS_ASSERT(!JSVAL_IS_DOUBLE_IMPL(l));
-    *out = (l.asBits & JSVAL_PAYLOAD_MASK);
 }
 
 #endif  /* JS_BITS_PER_WORD */

@@ -100,7 +100,7 @@ tier_platform_dirs += \
 
 ifdef MOZ_ENABLE_GTK2
 ifdef MOZ_X11
-tier_platform_dirs     += widget/src/gtkxtbin
+tier_platform_dirs     += widget/gtkxtbin
 endif
 endif
 
@@ -199,7 +199,7 @@ tier_platform_dirs  += tools/profiler
 tier_platform_dirs	+= xpfe/components
 
 ifdef MOZ_ENABLE_XREMOTE
-tier_platform_dirs += widget/src/xremoteclient
+tier_platform_dirs += widget/xremoteclient
 endif
 
 ifdef MOZ_SPELLCHECK

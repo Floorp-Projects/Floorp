@@ -140,7 +140,7 @@
       <menuitem id="context-copyimage-contents"
                 label="&copyImageContentsCmd.label;"
                 accesskey="&copyImageContentsCmd.accesskey;"
-                oncommand="goDoCommand('cmd_copyImageContents');"/>
+                oncommand="goDoCommand('cmd_copyImage');"/>
 #endif
       <menuitem id="context-copyimage"
                 label="&copyImageCmd.label;"

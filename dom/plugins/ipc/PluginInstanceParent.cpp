@@ -1622,7 +1622,7 @@ PluginInstanceParent::RecvNegotiatedCarbon()
 
   focus from child -> focus manager:
     Child picks up the local wm_setfocus and sends it via ipc over
-    here. We then post a custom event to widget/src/windows/nswindow
+    here. We then post a custom event to widget/windows/nswindow
     which fires off a gui event letting the browser know.
 */
 

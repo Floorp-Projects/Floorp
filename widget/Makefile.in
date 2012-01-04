@@ -40,13 +40,150 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+MODULE = widget
+XPIDL_MODULE	= widget
+GRE_MODULE	= 1
+
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= public src
+DIRS = shared xpwidgets
+
+ifneq (,$(filter os2 cocoa qt android gonk,$(MOZ_WIDGET_TOOLKIT)))
+DIRS += $(MOZ_WIDGET_TOOLKIT)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+DIRS += windows
+endif
 
 ifdef ENABLE_TESTS
-TOOL_DIRS  += tests
+TOOL_DIRS += tests
 endif
+
+#
+# Don't build the DSO under the 'build' directory as windows does.
+#
+# The DSOs get built in the toolkit dir itself.  Do this so that 
+# multiple implementations of widget can be built on the same
+# source tree.
+#
+ifdef MOZ_ENABLE_GTK2
+DIRS += gtk2
+ifdef MOZ_X11
+DIRS += gtkxtbin
+endif
+endif
+
+
+EXPORTS_NAMESPACES = IPC
+
+EXPORTS_IPC = \
+		nsGUIEventIPC.h \
+		$(NULL)
+
+EXPORTS_NAMESPACES += mozilla
+
+EXPORTS_mozilla = \
+		LookAndFeel.h \
+		$(NULL)
+
+ifdef MOZ_INSTRUMENT_EVENT_LOOP
+EXPORTS_mozilla += \
+		WidgetTraceEvent.h \
+		$(NULL)
+endif
+
+EXPORTS		= \
+		nsIWidget.h \
+		nsGUIEvent.h \
+		nsEvent.h \
+		nsNativeWidget.h \
+		nsWidgetInitData.h \
+		nsWidgetsCID.h \
+		nsIPluginWidget.h \
+		nsINativeKeyBindings.h \
+		nsIDeviceContextSpec.h \
+		nsIRollupListener.h \
+		$(NULL)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+EXPORTS		+= \
+		nsINativeMenuService.h \
+		nsIPrintDialogService.h \
+		$(NULL)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+EXPORTS		+= nsIDragSessionOS2.h
+endif
+
+ifneq (,$(filter android gonk,$(MOZ_WIDGET_TOOLKIT)))
+EXPORTS		+= \
+		nsIPrintDialogService.h \
+		$(NULL)
+endif
+
+ifneq (,$(filter qt gtk2,$(MOZ_WIDGET_TOOLKIT)))
+EXPORTS		+= \
+		nsIDragSessionGTK.h \
+		nsIPrintDialogService.h \
+		$(NULL)
+endif
+
+XPIDLSRCS	= \
+		nsIAppShell.idl \
+		nsIFilePicker.idl \
+		nsISound.idl \
+		nsITransferable.idl \
+		nsIClipboardDragDropHooks.idl \
+		nsIClipboardDragDropHookList.idl \
+		nsIDragSession.idl \
+		nsIDragService.idl \
+		nsIFormatConverter.idl \
+		nsIClipboard.idl \
+		nsIClipboardHelper.idl \
+		nsIClipboardOwner.idl \
+		nsIBaseWindow.idl \
+		nsIBidiKeyboard.idl \
+		nsIScreen.idl \
+		nsIScreenManager.idl \
+		nsIPrintSession.idl \
+		nsIPrintSettings.idl \
+		nsIPrintSettingsService.idl \
+		nsIPrintOptions.idl \
+		nsIIdleService.idl \
+		nsIGfxInfo.idl \
+                nsIGfxInfoDebug.idl \
+		nsIIMEPicker.idl \
+		$(NULL)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+XPIDLSRCS	+= nsIPrintSettingsWin.idl \
+		nsIWinTaskbar.idl	\
+		nsITaskbarPreview.idl	\
+		nsITaskbarTabPreview.idl \
+		nsITaskbarWindowPreview.idl \
+		nsITaskbarPreviewController.idl \
+		nsITaskbarPreviewButton.idl \
+		nsITaskbarProgress.idl \
+		nsITaskbarPreviewButton.idl \
+		nsITaskbarOverlayIconController.idl \
+		nsIJumpListBuilder.idl \
+		nsIJumpListItem.idl \
+		$(NULL)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+XPIDLSRCS +=	nsIMacDockSupport.idl \
+		nsIStandaloneNativeMenu.idl \
+		$(NULL)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+XPIDLSRCS	+= nsIRwsService.idl
+endif
+
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
 
