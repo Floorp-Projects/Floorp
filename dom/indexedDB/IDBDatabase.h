@@ -106,19 +106,20 @@ public:
 
   nsIScriptContext* ScriptContext()
   {
-    NS_ASSERTION(mScriptContext, "This should never be null!");
     return mScriptContext;
   }
 
   nsPIDOMWindow* Owner()
   {
-    NS_ASSERTION(mOwner, "This should never be null!");
     return mOwner;
   }
 
   already_AddRefed<nsIDocument> GetOwnerDocument()
   {
-    NS_ASSERTION(mOwner, "This should never be null!");
+    if (!mOwner) {
+      return nsnull;
+    }
+
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(mOwner->GetExtantDocument());
     return doc.forget();
   }
