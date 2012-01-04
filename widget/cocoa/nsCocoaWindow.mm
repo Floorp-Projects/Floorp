@@ -2315,7 +2315,7 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     mColor = [[TitlebarAndBackgroundColor alloc] initWithWindow:self];
     // Bypass our guard method below.
     [super setBackgroundColor:mColor];
-    mBackgroundColor = [NSColor whiteColor];
+    mBackgroundColor = [[NSColor whiteColor] retain];
 
     mUnifiedToolbarHeight = 0.0f;
 
