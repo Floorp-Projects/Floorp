@@ -798,7 +798,7 @@ mjit::Compiler::compileArrayWithArgs(uint32_t argc)
                  Address(result, offset + ObjectElements::offsetOfInitializedLength()));
 
     for (unsigned i = 0; i < argc; i++) {
-        FrameEntry *arg = frame.peek(-(int)argc + i);
+        FrameEntry *arg = frame.peek(-(int32_t)argc + i);
         frame.storeTo(arg, Address(result, offset), /* popped = */ true);
         offset += sizeof(Value);
     }
@@ -813,6 +813,90 @@ mjit::Compiler::compileArrayWithArgs(uint32_t argc)
 
     stubcc.rejoin(Changes(1));
     return Compile_Okay;
+}
+
+CompileStatus
+mjit::Compiler::compileParseInt(JSValueType argType, uint32_t argc)
+{
+    bool needStubCall = false;
+
+    if (argc > 1) {
+        FrameEntry *arg = frame.peek(-(int32_t)argc + 1);
+
+        if (!arg->isTypeKnown() || arg->getKnownType() != JSVAL_TYPE_INT32)
+            return Compile_InlineAbort;
+
+        if (arg->isConstant()) {
+            int32_t base = arg->getValue().toInt32();
+            if (base != 0 && base != 10)
+                return Compile_InlineAbort;
+        } else {
+            RegisterID baseReg = frame.tempRegForData(arg);
+            needStubCall = true;
+
+            Jump isTen = masm.branch32(Assembler::Equal, baseReg, Imm32(10));
+            Jump isNotZero = masm.branch32(Assembler::NotEqual, baseReg, Imm32(0));
+            stubcc.linkExit(isNotZero, Uses(2 + argc));
+
+            isTen.linkTo(masm.label(), &masm);
+        }
+    }
+
+    if (argType == JSVAL_TYPE_INT32) {
+        if (needStubCall) {
+            stubcc.leave();
+            stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
+            OOL_STUBCALL(stubs::SlowCall, REJOIN_FALLTHROUGH);
+        }
+
+        /* 
+         * Stack looks like callee, this, arg1, arg2, argN.
+         * First pop all args other than arg1.
+         */
+        frame.popn(argc - 1);
+        /* "Shimmy" arg1 to the callee slot and pop this + arg1. */
+        frame.shimmy(2);
+
+        if (needStubCall) {
+            stubcc.rejoin(Changes(1));
+        }        
+    } else {
+        FrameEntry *arg = frame.peek(-(int32_t)argc);
+        FPRegisterID fpScratchReg = frame.allocFPReg();
+        FPRegisterID fpReg;
+        bool allocate;
+
+        DebugOnly<MaybeJump> notNumber = loadDouble(arg, &fpReg, &allocate);
+        JS_ASSERT(!((MaybeJump)notNumber).isSet());
+
+        masm.slowLoadConstantDouble(1, fpScratchReg);
+
+        /* Slow path for NaN and numbers < 1. */
+        Jump lessThanOneOrNan = masm.branchDouble(Assembler::DoubleLessThanOrUnordered, 
+                                                  fpReg, fpScratchReg);
+        stubcc.linkExit(lessThanOneOrNan, Uses(2 + argc));
+
+        frame.freeReg(fpScratchReg);
+
+        /* Truncate to integer, slow path if this overflows. */
+        RegisterID reg = frame.allocReg();
+        Jump overflow = masm.branchTruncateDoubleToInt32(fpReg, reg);
+        stubcc.linkExit(overflow, Uses(2 + argc));
+
+        if (allocate)
+            frame.freeReg(fpReg);
+
+        stubcc.leave();
+        stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
+        OOL_STUBCALL(stubs::SlowCall, REJOIN_FALLTHROUGH);
+
+        frame.popn(2 + argc);
+        frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
+
+        stubcc.rejoin(Changes(1));
+    }
+
+    return Compile_Okay;   
 }
 
 CompileStatus
@@ -868,6 +952,16 @@ mjit::Compiler::inlineNativeFunction(uint32_t argc, bool callingNew)
     /* Remaining natives must not be called with 'new'. */
     if (callingNew)
         return Compile_InlineAbort;
+
+    if (native == js::num_parseInt && argc >= 1) {
+        FrameEntry *arg = frame.peek(-(int32_t)argc);
+        JSValueType argType = arg->isTypeKnown() ? arg->getKnownType() : JSVAL_TYPE_UNKNOWN;
+
+        if ((argType == JSVAL_TYPE_DOUBLE || argType == JSVAL_TYPE_INT32) &&
+            type == JSVAL_TYPE_INT32) {
+            return compileParseInt(argType, argc);
+        }
+    }
 
     if (argc == 0) {
         if ((native == js::array_pop || native == js::array_shift) && thisType == JSVAL_TYPE_OBJECT) {
