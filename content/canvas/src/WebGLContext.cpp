@@ -803,7 +803,7 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                              CanvasLayer *aOldLayer,
                              LayerManager *aManager)
 {
-    if (mContextLost)
+    if (!IsContextStable())
         return nsnull;
 
     if (!mResetLayer && aOldLayer &&
@@ -867,7 +867,7 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 NS_IMETHODIMP
 WebGLContext::GetContextAttributes(jsval *aResult)
 {
-    if (mContextLost)
+    if (!IsContextStable())
     {
         *aResult = OBJECT_TO_JSVAL(NULL);
         return NS_OK;
@@ -911,7 +911,7 @@ WebGLContext::GetContextAttributes(jsval *aResult)
 NS_IMETHODIMP
 WebGLContext::MozGetUnderlyingParamString(PRUint32 pname, nsAString& retval)
 {
-    if (mContextLost)
+    if (!IsContextStable())
         return NS_OK;
 
     retval.SetIsVoid(true);
@@ -965,7 +965,7 @@ NS_IMETHODIMP
 WebGLContext::GetExtension(const nsAString& aName, nsIWebGLExtension **retval)
 {
     *retval = nsnull;
-    if (mContextLost)
+    if (!IsContextStable())
         return NS_OK;
     
     if (mDisableExtensions) {
@@ -1421,7 +1421,7 @@ NS_INTERFACE_MAP_END_INHERITING(WebGLExtension)
 NS_IMETHODIMP
 WebGLContext::GetDrawingBufferWidth(WebGLsizei *aWidth)
 {
-    if (mContextLost)
+    if (!IsContextStable())
         return NS_OK;
 
     *aWidth = mWidth;
@@ -1432,7 +1432,7 @@ WebGLContext::GetDrawingBufferWidth(WebGLsizei *aWidth)
 NS_IMETHODIMP
 WebGLContext::GetDrawingBufferHeight(WebGLsizei *aHeight)
 {
-    if (mContextLost)
+    if (!IsContextStable())
         return NS_OK;
 
     *aHeight = mHeight;
@@ -1504,7 +1504,7 @@ NS_IMETHODIMP
 WebGLContext::GetSupportedExtensions(nsIVariant **retval)
 {
     *retval = nsnull;
-    if (mContextLost)
+    if (!IsContextStable())
         return NS_OK;
     
     if (mDisableExtensions) {
