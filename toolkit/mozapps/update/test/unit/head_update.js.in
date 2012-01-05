@@ -554,7 +554,7 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
     file.append("maintenanceservice.log");
     return readFile(file);
   }
-  function waitForServiceStop() {
+  function waitForServiceStop(aFailTest) {
     logTestInfo("Waiting for service to stop if necessary...");
     // Use the helper bin to ensure the service is stopped. If not
     // stopped then wait for the service to be stopped (at most 20 seconds)
@@ -567,14 +567,18 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
     helperBinProcess.init(helperBin);
     helperBinProcess.run(true, helperBinArgs, helperBinArgs.length);
     if (helperBinProcess.exitValue != 0) {
-      logTestInfo("maintenance service could not stop, may cause failures.");
+      if (aFailTest) {
+        do_throw("maintenance service did not stop, forcing test failure.");
+      } else {
+        logTestInfo("maintenance service did not stop, may cause failures.");
+      }
     } else {
       logTestInfo("Service stopped.");
     }
   }
 
   // Make sure the service from the previous test is already stopped.
-  waitForServiceStop();
+  waitForServiceStop(true);
 
   // Prevent the cleanup function from begin run more than once
   if (typeof(gRegisteredServiceCleanup) === "undefined") {
@@ -698,7 +702,7 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
     timer = null;
 
     // Make sure all of the logs are written out.
-    waitForServiceStop();
+    waitForServiceStop(false);
 
     if (aCheckSvcLog) {
       checkServiceLogs(svcOriginalLog);
