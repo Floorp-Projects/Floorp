@@ -1591,6 +1591,10 @@ int NS_main(int argc, NS_tchar **argv)
   gSourcePath = argv[1];
 
 #ifdef XP_WIN
+  // Disable every privilege we don't need. Processes started using
+  // CreateProcess will use the same token as this process.
+  UACHelper::DisablePrivileges(NULL);
+
   bool useService = false;
   // We never want the service to be used unless we build with
   // the maintenance service.
