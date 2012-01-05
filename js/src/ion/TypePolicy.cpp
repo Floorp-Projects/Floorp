@@ -46,25 +46,6 @@
 using namespace js;
 using namespace js::ion;
 
-void
-TypeAnalysis::preferType(MDefinition *def, MIRType type)
-{
-    if (def->type() != MIRType_Value)
-        return;
-    addPreferredType(def, type);
-}
-
-bool
-BoxInputsPolicy::respecialize(MInstruction *ins)
-{
-    return false;
-}
-
-void
-BoxInputsPolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analysis)
-{
-}
-
 MDefinition *
 BoxInputsPolicy::boxAt(MInstruction *at, MDefinition *operand)
 {
@@ -85,39 +66,6 @@ BoxInputsPolicy::adjustInputs(MInstruction *ins)
         ins->replaceOperand(i, boxAt(ins, in));
     }
     return true;
-}
-
-bool
-BinaryArithPolicy::respecialize(MInstruction *ins)
-{
-    // If this operation is not specialized, we don't care.
-    if (specialization_ == MIRType_None)
-        return false;
-
-    MDefinition *lhs = ins->getOperand(0);
-    MDefinition *rhs = ins->getOperand(1);
-
-    MIRType oldType = ins->type();
-
-    // Check if any input would coerce to a double.
-    if (CoercesToDouble(lhs->type()) || CoercesToDouble(rhs->type())) {
-        if (ins->type() != MIRType_Double) {
-            specialization_ = MIRType_Double;
-            ins->setResultType(specialization_);
-        }
-    }
-
-    return oldType != ins->type();
-}
-
-void
-BinaryArithPolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analysis)
-{
-    if (specialization_ == MIRType_None)
-        return;
-
-    analysis->preferType(ins->getOperand(0), specialization_);
-    analysis->preferType(ins->getOperand(1), specialization_);
 }
 
 bool
@@ -155,33 +103,6 @@ BinaryArithPolicy::adjustInputs(MInstruction *ins)
 }
 
 bool
-ComparePolicy::respecialize(MInstruction *def)
-{
-    // If this operation is not specialized, we don't care.
-    if (specialization_ == MIRType_None)
-        return false;
-
-    MDefinition *lhs = def->getOperand(0);
-    MDefinition *rhs = def->getOperand(1);
-
-    // Check if any input would coerce to a double.
-    if (CoercesToDouble(lhs->type()) || CoercesToDouble(rhs->type()))
-        specialization_ = MIRType_Double;
-
-    return false;
-}
-
-void
-ComparePolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analyzer)
-{
-    if (specialization_ == MIRType_None)
-        return;
-
-    analyzer->preferType(ins->getOperand(0), specialization_);
-    analyzer->preferType(ins->getOperand(1), specialization_);
-}
-
-bool
 ComparePolicy::adjustInputs(MInstruction *def)
 {
     if (specialization_ == MIRType_None)
@@ -210,16 +131,6 @@ ComparePolicy::adjustInputs(MInstruction *def)
     return true;
 }
 
-void
-BitwisePolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analysis)
-{
-    if (specialization_ == MIRType_None)
-        return;
-
-    for (size_t i = 0; i < ins->numOperands(); i++)
-        analysis->preferType(ins->getOperand(i), MIRType_Int32);
-}
-
 bool
 BitwisePolicy::adjustInputs(MInstruction *ins)
 {
@@ -244,12 +155,6 @@ BitwisePolicy::adjustInputs(MInstruction *ins)
     return true;
 }
 
-void
-TableSwitchPolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analysis)
-{
-    analysis->preferType(ins->getOperand(0), MIRType_Int32);
-}
-
 bool
 TableSwitchPolicy::adjustInputs(MInstruction *ins)
 {
@@ -270,12 +175,6 @@ TableSwitchPolicy::adjustInputs(MInstruction *ins)
     ins->replaceOperand(0, replace);
 
     return true;
-}
-
-void
-ObjectPolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analyzer)
-{
-    analyzer->preferType(ins->getOperand(0), MIRType_Object);
 }
 
 bool
@@ -300,12 +199,6 @@ ObjectPolicy::adjustInputs(MInstruction *def)
     return true;
 }
 
-void
-StringPolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analyzer)
-{
-    analyzer->preferType(ins->getOperand(0), MIRType_String);
-}
-
 bool
 StringPolicy::adjustInputs(MInstruction *def)
 {
@@ -317,12 +210,6 @@ StringPolicy::adjustInputs(MInstruction *def)
     def->block()->insertBefore(def, replace);
     def->replaceOperand(0, replace);
     return true;
-}
-
-void
-CallPolicy::specializeInputs(MInstruction *ins, TypeAnalysis *analysis)
-{
-    analysis->preferType(ins->getOperand(0), MIRType_Object);
 }
 
 bool
