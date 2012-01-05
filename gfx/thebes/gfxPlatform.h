@@ -356,6 +356,9 @@ public:
     
     // helper method to add a pref lang to an array, if not already in array
     static void AppendPrefLang(eFontPrefLang aPrefLangs[], PRUint32& aLen, eFontPrefLang aAddLang);
+
+    // helper method to indicate if we want to use Azure content drawing
+    static bool UseAzureContentDrawing();
     
     /**
      * Are we going to try color management?
