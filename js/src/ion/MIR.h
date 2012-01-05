@@ -257,7 +257,6 @@ class MDefinition : public MNode
                                    // is sorted within a basic block.
     uint32 valueNumber_;           // The instruction's value number (see GVN for details in use)
     MIRType resultType_;           // Representation of result type.
-    uint32 usedTypes_;             // Set of used types.
     uint32 flags_;                 // Bit flags.
     MDefinition *dependency_;      // Implicit dependency (store, call, etc.) of this instruction.
 
@@ -289,7 +288,6 @@ class MDefinition : public MNode
       : id_(0),
         valueNumber_(0),
         resultType_(MIRType_None),
-        usedTypes_(0),
         flags_(0),
         dependency_(NULL)
     { }
@@ -345,11 +343,6 @@ class MDefinition : public MNode
         return resultType_;
     }
 
-    // Returns a normalized type this instruction should be used as. If exactly
-    // one type was requested, then that type is returned. If more than one
-    // type was requested, then Value is returned.
-    MIRType usedAsType() const;
-
     // Returns the beginning of this definition's use chain.
     MUseIterator usesBegin() const {
         return uses_.begin();
@@ -388,20 +381,6 @@ class MDefinition : public MNode
     void linkUse(MUse *use) {
         JS_ASSERT(use->node()->getOperand(use->index()) == this);
         uses_.pushFront(use);
-    }
-
-  public:   // Functions for analysis phases.
-    // Analyzes inputs and uses and updates type information. If type
-    // information changed, returns true, otherwise, returns false.
-    void addUsedTypes(uint32 types) {
-        usedTypes_ = types | usedTypes();
-    }
-    void useAsType(MIRType type) {
-        JS_ASSERT(type < MIRType_Value);
-        addUsedTypes(1 << uint32(type));
-    }
-    uint32 usedTypes() const {
-        return usedTypes_;
     }
 
     void setVirtualRegister(uint32 vreg) {
