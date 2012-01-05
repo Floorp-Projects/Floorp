@@ -72,6 +72,7 @@ const int SERVICE_UPDATER_COULD_NOT_BE_STARTED = 16000;
 const int SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS = 16001;
 const int SERVICE_UPDATER_SIGN_ERROR = 16002;
 const int SERVICE_UPDATER_COMPARE_ERROR = 16003;
+const int SERVICE_UPDATER_IDENTITY_ERROR = 16004;
 
 /**
  * Runs an update process as the service using the SYSTEM account.
@@ -374,6 +375,42 @@ ProcessWorkItem(LPCWSTR monitoringBasePath,
         !WriteStatusFailure(argvTmp[1], 
                             SERVICE_UPDATER_COMPARE_ERROR)) {
       LOG(("Could not write update.status updater compare failure.\n"));
+    }
+    return TRUE;
+  }
+
+  // Check to make sure the udpater.exe module has the unique updater identity.
+  // This is a security measure to make sure that the signed executable that
+  // we will run is actually an updater.
+  HMODULE updaterModule = LoadLibrary(updaterPath);
+  if (!updaterModule) {
+    LOG(("updater.exe module could not be loaded. (%d)\n", GetLastError()));
+    result = FALSE;
+  } else {
+    char updaterIdentity[64];
+    if (!LoadStringA(updaterModule, IDS_UPDATER_IDENTITY, 
+                     updaterIdentity, sizeof(updaterIdentity))) {
+      LOG(("The updater.exe application does not contain the Mozilla"
+           " updater identity.\n"));
+      result = FALSE;
+    }
+
+    if (strcmp(updaterIdentity, UPDATER_IDENTITY_STRING)) {
+      LOG(("The updater.exe identity string is not valid.\n"));
+      result = FALSE;
+    }
+    FreeLibrary(updaterModule);
+  }
+
+  if (result) {
+    LOG(("The updater.exe application contains the Mozilla"
+          " updater identity.\n"));
+  } else {
+    SetEvent(serviceRunningEvent);
+    if (argcTmp < 2 || 
+        !WriteStatusFailure(argvTmp[1], 
+                            SERVICE_UPDATER_IDENTITY_ERROR)) {
+      LOG(("Could not write update.status no updater identity.\n"));
     }
     return TRUE;
   }
