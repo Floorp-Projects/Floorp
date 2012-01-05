@@ -61,10 +61,12 @@ EXPORTS = updatelogging.h \
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS += updatehelper.cpp \
   uachelper.cpp \
+  pathhash.cpp \
   $(NULL)
 
 EXPORTS = updatehelper.h \
   uachelper.h \
+  pathhash.h \
   $(NULL)
 endif
 
