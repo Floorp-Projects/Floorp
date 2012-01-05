@@ -200,6 +200,21 @@ AssertValidPropertyCacheHit(JSContext *cx, JSObject *start, JSObject *found,
 #endif
 
 inline bool
+GetPropertyGenericMaybeCallXML(JSContext *cx, JSOp op, JSObject *obj, jsid id, Value *vp)
+{
+    /*
+     * Various XML properties behave differently when accessed in a
+     * call vs. normal context, and getGeneric will not work right.
+     */
+#if JS_HAS_XML_SUPPORT
+    if (op == JSOP_CALLPROP && obj->isXML())
+        return js_GetXMLMethod(cx, obj, id, vp);
+#endif
+
+    return obj->getGeneric(cx, id, vp);
+}
+
+inline bool
 GetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, Value *vp)
 {
     JS_ASSERT(vp != &lval);
@@ -264,20 +279,8 @@ GetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, Value *vp
     jsid id = ATOM_TO_JSID(name);
 
     if (obj->getOps()->getProperty) {
-#if JS_HAS_XML_SUPPORT
-        if (op == JSOP_CALLPROP && obj->isXML()) {
-            /*
-             * Various XML properties behave differently when accessed in a
-             * call vs. normal context, and getGeneric will not work right.
-             */
-            if (!js_GetXMLMethod(cx, obj, id, vp))
-                return false;
-        } else
-#endif
-        {
-            if (!obj->getGeneric(cx, id, vp))
-                return false;
-        }
+        if (!GetPropertyGenericMaybeCallXML(cx, op, obj, id, vp))
+            return false;
     } else {
         if (!GetPropertyHelper(cx, obj, id, flags, vp))
             return false;
