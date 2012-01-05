@@ -47,8 +47,6 @@
 
 #include "updatelogging.h"
 
-UpdateLog*  UpdateLog::primaryLog = NULL;
-
 UpdateLog::UpdateLog() : logFP(NULL)
 {
 }
@@ -74,6 +72,15 @@ void UpdateLog::Finish()
   fclose(logFP);
   logFP = NULL;
 }
+
+void UpdateLog::Flush()
+{
+  if (!logFP)
+    return;
+
+  fflush(logFP);
+}
+
 
 void UpdateLog::Printf(const char *fmt, ... )
 {
