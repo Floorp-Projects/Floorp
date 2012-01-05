@@ -617,9 +617,14 @@ struct JSObject : js::gc::Cell
     inline bool hasUncacheableProto() const;
     inline bool setUncacheableProto(JSContext *cx);
 
-    bool generateOwnShape(JSContext *cx, js::Shape *newShape = NULL);
+    bool generateOwnShape(JSContext *cx, js::Shape *newShape = NULL) {
+        return replaceWithNewEquivalentShape(cx, lastProperty(), newShape);
+    }
 
   private:
+    js::Shape *replaceWithNewEquivalentShape(JSContext *cx, js::Shape *existingShape,
+                                             js::Shape *newShape = NULL);
+
     enum GenerateShape {
         GENERATE_NONE,
         GENERATE_SHAPE
