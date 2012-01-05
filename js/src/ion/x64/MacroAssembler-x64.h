@@ -138,7 +138,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         movq(op, dest);
     }
     void moveValue(const Value &val, const Register &dest) {
-        movq(ImmWord((void *)val.asRawBits()), dest);
+        jsval_layout jv = JSVAL_TO_IMPL(val);
+        movq(ImmWord(jv.asPtr), dest);
         if (val.isMarkable())
             writeDataRelocation(masm.currentOffset());
     }
