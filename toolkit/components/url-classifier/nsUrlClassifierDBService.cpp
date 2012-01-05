@@ -3126,7 +3126,8 @@ nsUrlClassifierDBServiceWorker::SetCacheSize(
   NS_ASSERTION(hasResult, "Should always be able to get page size from sqlite");
   PRUint32 pageSize = mGetPageSizeStatement->AsInt32(0);
   PRUint32 cachePages = aCacheSize / pageSize;
-  nsCAutoString cacheSizePragma("PRAGMA cache_size=");
+  nsCAutoString cacheSizePragma(MOZ_STORAGE_UNIQUIFY_QUERY_STR
+                                "PRAGMA cache_size=");
   cacheSizePragma.AppendInt(cachePages);
   rv = aConnection->ExecuteSimpleSQL(cacheSizePragma);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3413,7 +3414,7 @@ nsUrlClassifierDBServiceWorker::OpenDb()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = connection->CreateStatement
-    (NS_LITERAL_CSTRING("PRAGMA page_size"),
+    (NS_LITERAL_CSTRING(MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA page_size"),
      getter_AddRefs(mGetPageSizeStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
