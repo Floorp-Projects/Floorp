@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * This file tests migration invariants from a database with schema version 11
+ * This file tests migration invariants from a database with schema version 14
  * that was then downgraded to a database with a schema version 10.  Places
  * should then migrate this database to one with the current schema version.
  */
@@ -127,6 +127,6 @@ function test_final_state()
 
 function run_test()
 {
-  setPlacesDatabase("places_v10_from_v11.sqlite");
+  setPlacesDatabase("places_v10_from_v14.sqlite");
   run_next_test();
 }
