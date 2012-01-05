@@ -290,7 +290,7 @@ MConstant::valueHash() const
 {
     // This disregards some state, since values are 64 bits. But for a hash,
     // it's completely acceptable.
-    return (HashNumber)value_.asRawBits();
+    return (HashNumber)JSVAL_TO_IMPL(value_).asBits;
 }
 bool
 MConstant::congruentTo(MDefinition * const &ins) const
