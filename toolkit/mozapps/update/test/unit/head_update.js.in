@@ -117,7 +117,7 @@ const TEST_HELPER_TIMEOUT = 100;
 
 // Use a copy of the main application executable for the test to avoid main
 // executable in use errors.
-const FILE_WIN_TEST_EXE = "aus_test_app.exe";
+const FILE_WIN_TEST_EXE = "_aus_test_app.exe";
 
 var gTestserver;
 
@@ -590,7 +590,7 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
       // Remove the copy of the application executable used for the test on
       // Windows if it exists.
       let appBinCopy = getCurrentProcessDir();
-      appBinCopy.append(FILE_WIN_TEST_EXE);
+      appBinCopy.append(TEST_ID + FILE_WIN_TEST_EXE);
       if (appBinCopy.exists()) {
         try {
           appBinCopy.remove(false);
@@ -1636,13 +1636,13 @@ XPCOMUtils.defineLazyGetter(this, "gAppBinPath", function test_gAppBinPath() {
   if (appBin.exists()) {
     if (IS_WIN) {
       let appBinCopy = processDir.clone();
-      appBinCopy.append(FILE_WIN_TEST_EXE);
+      appBinCopy.append(TEST_ID + FILE_WIN_TEST_EXE);
       if (appBinCopy.exists()) {
         appBinCopy.remove(false);
       }
-      appBin.copyTo(processDir, FILE_WIN_TEST_EXE);
+      appBin.copyTo(processDir, TEST_ID + FILE_WIN_TEST_EXE);
       appBin = processDir.clone();
-      appBin.append(FILE_WIN_TEST_EXE);
+      appBin.append(TEST_ID + FILE_WIN_TEST_EXE);
     }
     let appBinPath = appBin.path;
     if (/ /.test(appBinPath)) {
