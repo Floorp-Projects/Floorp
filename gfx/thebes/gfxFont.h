@@ -1920,9 +1920,8 @@ public:
 
     void SetSimpleGlyph(PRUint32 aCharIndex, CompressedGlyph aGlyph) {
         NS_ASSERTION(aGlyph.IsSimpleGlyph(), "Should be a simple glyph here");
-        if (mCharacterGlyphs) {
-            mCharacterGlyphs[aCharIndex] = aGlyph;
-        }
+        NS_ASSERTION(mCharacterGlyphs, "mCharacterGlyphs pointer is null!");
+        mCharacterGlyphs[aCharIndex] = aGlyph;
     }
 
     void SetGlyphs(PRUint32 aCharIndex, CompressedGlyph aGlyph,
@@ -2176,6 +2175,12 @@ public:
     typedef gfxShapedWord::CompressedGlyph    CompressedGlyph;
     typedef gfxShapedWord::DetailedGlyph      DetailedGlyph;
     typedef gfxShapedWord::DetailedGlyphStore DetailedGlyphStore;
+
+    // Override operator delete to properly free the object that was
+    // allocated via moz_malloc.
+    void operator delete(void* p) {
+        moz_free(p);
+    }
 
     virtual ~gfxTextRun();
 
@@ -2569,17 +2574,15 @@ public:
 
     // Call the following glyph-setters during initialization or during reshaping
     // only. It is OK to overwrite existing data for a character.
+    void SetSimpleGlyph(PRUint32 aCharIndex, CompressedGlyph aGlyph) {
+        NS_ASSERTION(aGlyph.IsSimpleGlyph(), "Should be a simple glyph here");
+        mCharacterGlyphs[aCharIndex] = aGlyph;
+    }
     /**
      * Set the glyph data for a character. aGlyphs may be null if aGlyph is a
      * simple glyph or has no associated glyphs. If non-null the data is copied,
      * the caller retains ownership.
      */
-    void SetSimpleGlyph(PRUint32 aCharIndex, CompressedGlyph aGlyph) {
-        NS_ASSERTION(aGlyph.IsSimpleGlyph(), "Should be a simple glyph here");
-        if (mCharacterGlyphs) {
-            mCharacterGlyphs[aCharIndex] = aGlyph;
-        }
-    }
     void SetGlyphs(PRUint32 aCharIndex, CompressedGlyph aGlyph,
                    const DetailedGlyph *aGlyphs);
     void SetMissingGlyph(PRUint32 aCharIndex, PRUint32 aUnicodeChar);
@@ -2718,20 +2721,26 @@ public:
 
 protected:
     /**
-     * Initializes the textrun to blank.
-     * @param aGlyphStorage preallocated array of CompressedGlyph[aLength]
-     * for the textrun to use; if aText is not persistent, then it has also
-     * been appended to this array, so it must NOT be freed separately.
+     * Create a textrun, and set its mCharacterGlyphs to point immediately
+     * after the base object; this is ONLY used in conjunction with placement
+     * new, after allocating a block large enough for the glyph records to
+     * follow the base textrun object.
      */
     gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
-               PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags,
-               CompressedGlyph *aGlyphStorage);
+               PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
 
     /**
      * Helper for the Create() factory method to allocate the required
-     * glyph storage.
+     * glyph storage for a textrun object with the basic size aSize,
+     * plus room for aLength glyph records.
      */
-    static CompressedGlyph* AllocateStorage(PRUint32 aLength);
+    static void* AllocateStorageForTextRun(size_t aSize, PRUint32 aLength);
+
+    // All our glyph data is in logical order, not visual.
+    // Space for mCharacterGlyphs is allocated fused with the textrun object,
+    // and then the constructor sets the pointer to the beginning of this
+    // storage area. Thus, this pointer must NOT be freed!
+    CompressedGlyph  *mCharacterGlyphs;
 
 private:
     // **** general helpers **** 
@@ -2788,13 +2797,6 @@ private:
                     gfxPoint *aPt, PRUint32 aStart, PRUint32 aEnd,
                     PropertyProvider *aProvider,
                     PRUint32 aSpacingStart, PRUint32 aSpacingEnd);
-
-    // All our glyph data is in logical order, not visual.
-    // mCharacterGlyphs is allocated by the factory that creates the textrun,
-    // to avoid the possibility of failure during the constructor;
-    // however, ownership passes to the textrun during construction and so
-    // it must be deleted in the destructor.
-    CompressedGlyph*                mCharacterGlyphs;
 
     nsAutoPtr<DetailedGlyphStore>   mDetailedGlyphs;
 
