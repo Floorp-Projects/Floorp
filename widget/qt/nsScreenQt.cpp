@@ -79,13 +79,6 @@ nsScreenQt::~nsScreenQt()
 #endif
 }
 
-// addref, release, QI
-#ifdef MOZ_ENABLE_QMSYSTEM2
-NS_IMPL_ISUPPORTS2(nsScreenQt, nsIScreen, nsIScreen_MOZILLA_2_0_BRANCH)
-#else
-NS_IMPL_ISUPPORTS1(nsScreenQt, nsIScreen)
-#endif
-
 NS_IMETHODIMP
 nsScreenQt::GetRect(PRInt32 *outLeft,PRInt32 *outTop,
                     PRInt32 *outWidth,PRInt32 *outHeight)

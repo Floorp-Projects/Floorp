@@ -86,7 +86,7 @@ private:
   bool EnsureEGLImage();
 
   void DestroyBuffer();
-  bool EnsureBufferCreated(PRUint32 aWidth, PRUint32 aHeight, PRUint32 aUsage, gfxASurface::gfxImageFormat aFormat);
+  bool EnsureBufferCreated();
 
   PRUint32 GetAndroidUsage(PRUint32 aUsage);
   PRUint32 GetAndroidFormat(gfxASurface::gfxImageFormat aFormat);

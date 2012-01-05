@@ -244,7 +244,7 @@ typedef size_t(*nsMallocSizeOfFun)(const void *p, size_t computedSize);
  */
 #if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
 # define MOZ_DEPRECATED __attribute__((deprecated))
-#elif defined(_MSC_VER) && (_MSC_VER >= 1300)
+#elif defined(_MSC_VER)
 # define MOZ_DEPRECATED __declspec(deprecated)
 #else
 # define MOZ_DEPRECATED
@@ -330,7 +330,7 @@ typedef size_t(*nsMallocSizeOfFun)(const void *p, size_t computedSize);
 #ifdef NS_NO_VTABLE
 #undef NS_NO_VTABLE
 #endif
-#if defined(_MSC_VER) && _MSC_VER >= 1100
+#if defined(_MSC_VER)
 #define NS_NO_VTABLE __declspec(novtable)
 #else
 #define NS_NO_VTABLE
@@ -373,7 +373,7 @@ typedef PRUint32 nsrefcnt;
 /* Casting macros for hiding C++ features from older compilers */
 
   /* under VC++ (Windows), we don't have autoconf yet */
-#if defined(_MSC_VER) && (_MSC_VER>=1100)
+#if defined(_MSC_VER)
   #define HAVE_CPP_2BYTE_WCHAR_T
 #endif
 

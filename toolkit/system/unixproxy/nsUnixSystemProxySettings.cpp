@@ -456,7 +456,8 @@ nsUnixSystemProxySettings::GetProxyFromGSettings(const nsACString& aScheme,
 
   rv = mGSettings->GetCollectionForSchema(NS_LITERAL_CSTRING("org.gnome.system.proxy"),
                                           getter_AddRefs(proxy_settings));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv))
+    return rv;
 
   nsCString proxyMode; 
   rv = proxy_settings->GetString(NS_LITERAL_CSTRING("mode"), proxyMode);

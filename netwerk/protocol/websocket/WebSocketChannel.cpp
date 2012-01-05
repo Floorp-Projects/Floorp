@@ -2373,7 +2373,8 @@ WebSocketChannel::SendMsgCommon(const nsACString *aMsg, bool aIsBinary,
     return NS_ERROR_NOT_CONNECTED;
   }
 
-  if (aLength > mMaxMessageSize) {
+  NS_ABORT_IF_FALSE(mMaxMessageSize >= 0, "max message size negative");
+  if (aLength > static_cast<PRUint32>(mMaxMessageSize)) {
     LOG(("WebSocketChannel:: Error: message too big\n"));
     return NS_ERROR_FILE_TOO_BIG;
   }
