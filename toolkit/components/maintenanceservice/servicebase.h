@@ -39,3 +39,9 @@
 #include "updatelogging.h"
 
 BOOL PathAppendSafe(LPWSTR base, LPCWSTR extra);
+BOOL VerifySameFiles(LPCWSTR file1Path, LPCWSTR file2Path, BOOL &sameContent);
+
+// 32KiB for comparing files at a time seems reasonable.
+// The bigger the better for speed, but this will be used
+// on the stack so I don't want it to be too big.
+#define COMPARE_BLOCKSIZE 32768
