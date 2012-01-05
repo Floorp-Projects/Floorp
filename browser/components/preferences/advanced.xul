@@ -108,6 +108,12 @@
       <preference id="app.update.disable_button.showUpdateHistory"
                   name="app.update.disable_button.showUpdateHistory"
                   type="bool"/>
+
+#ifdef MOZ_MAINTENANCE_SERVICE
+      <preference id="app.update.service.enabled"
+                  name="app.update.service.enabled"
+                  type="bool"/>
+#endif
 #endif
 
       <preference id="browser.search.update"           name="browser.search.update"           type="bool"/>
@@ -336,6 +342,13 @@
                       preference="app.update.disable_button.showUpdateHistory"
                       oncommand="gAdvancedPane.showUpdates();"/>
             </hbox>
+
+#ifdef MOZ_MAINTENANCE_SERVICE
+            <checkbox id="useService"
+                      label="&useService.label;"
+                      accesskey="&useService.accesskey;"
+                      preference="app.update.service.enabled"/>
+#endif
           </groupbox>
 #endif
           <groupbox id="updateOthers">

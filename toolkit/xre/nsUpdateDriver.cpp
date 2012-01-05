@@ -24,6 +24,7 @@
  *  Ben Turner <mozilla@songbirdnest.com>
  *  Robert Strong <robert.bugzilla@gmail.com>
  *  Josh Aas <josh@mozilla.com>
+ *  Brian R. Bondy <netzen@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -190,7 +191,7 @@ GetStatusFile(nsIFile *dir, nsCOMPtr<nsILocalFile> &result)
 }
 
 static bool
-IsPending(nsILocalFile *statusFile)
+IsPending(nsILocalFile *statusFile, bool &isPendingService)
 {
   PRFileDesc *fd = nsnull;
   nsresult rv = statusFile->OpenNSPRFileDesc(PR_RDONLY, 0660, &fd);
@@ -205,14 +206,23 @@ IsPending(nsILocalFile *statusFile)
     return false;
   
   const char kPending[] = "pending";
-  return (strncmp(buf, kPending, sizeof(kPending) - 1) == 0);
+  bool isPending = (strncmp(buf, kPending, sizeof(kPending) - 1) == 0);
+
+  const char kPendingService[] = "pending-service";
+  isPendingService = (strncmp(buf, kPendingService, 
+                      sizeof(kPendingService) - 1) == 0);
+
+  return isPending || isPendingService;
 }
 
 static bool
 SetStatusApplying(nsILocalFile *statusFile)
 {
   PRFileDesc *fd = nsnull;
-  nsresult rv = statusFile->OpenNSPRFileDesc(PR_WRONLY, 0660, &fd);
+  nsresult rv = statusFile->OpenNSPRFileDesc(PR_WRONLY | 
+                                             PR_TRUNCATE | 
+                                             PR_CREATE_FILE, 
+                                             0660, &fd);
   if (NS_FAILED(rv))
     return false;
 
@@ -334,7 +344,7 @@ CopyUpdaterIntoUpdateDir(nsIFile *greDir, nsIFile *appDir, nsIFile *updateDir,
 
 static void
 ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
-            nsIFile *appDir, int appArgc, char **appArgv)
+            nsIFile *appDir, int appArgc, char **appArgv, bool isPendingService)
 {
   nsresult rv;
 
@@ -480,8 +490,42 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
 #if defined(USE_EXECV)
   execv(updaterPath.get(), argv);
 #elif defined(XP_WIN)
-  if (!WinLaunchChild(updaterPathW.get(), argc, argv))
-    return;
+
+#ifndef MOZ_MAINTENANCE_SERVICE
+  // We never want the service to be used unless we have Firefox
+  isPendingService = false;
+#endif
+
+  if (isPendingService) {
+    // Make sure the service isn't already busy processing another work item.
+    SetLastError(ERROR_SUCCESS);
+    HANDLE serviceRunningEvent = 
+      OpenEvent(EVENT_ALL_ACCESS, 
+                FALSE, 
+                L"Global\\moz-5b780de9-065b-4341-a04f-ddd94b3723e5");
+    // Only use the service if we know the event exists.
+    // If we have a non NULL handle, or if ERROR_ACCESS_DENIED is returned,
+    // then the event exists.
+    isPendingService = !serviceRunningEvent && 
+                       GetLastError() != ERROR_ACCESS_DENIED;
+    if (serviceRunningEvent) {
+      CloseHandle(serviceRunningEvent);
+    }
+  }
+
+  // Launch the update operation using the service if the status file said so.
+  // We also set the status to pending to ensure we never attempt to use the 
+  // service more than once in a row for a single update.
+  if (!isPendingService || 
+      !WriteStatusPending(NS_ConvertUTF8toUTF16(updateDirPath).get()) ||
+      !WinLaunchServiceCommand(updaterPathW.get(), argc, argv)) {
+    // Launch the update using updater.exe
+    if (!WinLaunchChild(updaterPathW.get(), argc, argv)) {
+      return;
+    }
+  }
+
+  // We are going to process an update so we should exit now
   _exit(0);
 #elif defined(XP_MACOSX)
   CommandLineServiceMac::SetupMacCommandLine(argc, argv, true);
@@ -516,7 +560,9 @@ ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
     return rv;
 
   nsCOMPtr<nsILocalFile> statusFile;
-  if (GetStatusFile(updatesDir, statusFile) && IsPending(statusFile)) {
+  bool isPendingService;
+  if (GetStatusFile(updatesDir, statusFile) && 
+      IsPending(statusFile, isPendingService)) {
     nsCOMPtr<nsILocalFile> versionFile;
     nsCOMPtr<nsILocalFile> channelChangeFile;
     // Remove the update if the update application version file doesn't exist
@@ -527,7 +573,8 @@ ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
          IsOlderVersion(versionFile, appVersion))) {
       updatesDir->Remove(true);
     } else {
-      ApplyUpdate(greDir, updatesDir, statusFile, appDir, argc, argv);
+      ApplyUpdate(greDir, updatesDir, statusFile, appDir, 
+                  argc, argv, isPendingService);
     }
   }
 

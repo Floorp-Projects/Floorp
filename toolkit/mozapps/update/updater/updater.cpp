@@ -69,92 +69,6 @@
  *
  * 'remove-cc' is a remove action to perform on channel change.
  */
-
-#if defined(XP_WIN)
-# include <windows.h>
-# include <direct.h>
-# include <io.h>
-
-# define F_OK 00
-# define W_OK 02
-# define R_OK 04
-# define S_ISDIR(s) (((s) & _S_IFMT) == _S_IFDIR)
-# define S_ISREG(s) (((s) & _S_IFMT) == _S_IFREG)
-
-# define access _access
-
-# define putenv _putenv
-# define stat _stat
-# define DELETE_DIR L"tobedeleted"
-# define CALLBACK_BACKUP_EXT L".moz-callback"
-
-# define LOG_S "%S"
-# define NS_T(str) L ## str
-// On Windows, _snprintf and _snwprintf don't guarantee null termination. These
-// macros always leave room in the buffer for null termination and set the end
-// of the buffer to null in case the string is larger than the buffer. Having
-// multiple nulls in a string is fine and this approach is simpler (possibly
-// faster) than calculating the string length to place the null terminator and
-// truncates the string as _snprintf and _snwprintf do on other platforms.
-# define snprintf(dest, count, fmt, ...) \
-  PR_BEGIN_MACRO \
-    int _count = count - 1; \
-    _snprintf(dest, _count, fmt, ##__VA_ARGS__); \
-    dest[_count] = '\0'; \
-  PR_END_MACRO
-# define NS_tsnprintf(dest, count, fmt, ...) \
-  PR_BEGIN_MACRO \
-    int _count = count - 1; \
-    _snwprintf(dest, _count, fmt, ##__VA_ARGS__); \
-    dest[_count] = L'\0'; \
-  PR_END_MACRO
-# define NS_taccess _waccess
-# define NS_tchdir _wchdir
-# define NS_tchmod _wchmod
-# define NS_tfopen _wfopen
-# define NS_tmkdir(path, perms) _wmkdir(path)
-# define NS_tremove _wremove
-// _wrename is used to avoid the link tracking service.
-# define NS_trename _wrename
-# define NS_trmdir _wrmdir
-# define NS_tstat _wstat
-# define NS_tstrcat wcscat
-# define NS_tstrcmp wcscmp
-# define NS_tstrcpy wcscpy
-# define NS_tstrlen wcslen
-# define NS_tstrrchr wcsrchr
-# define NS_tstrstr wcsstr
-#else
-# include <sys/wait.h>
-# include <unistd.h>
-# include <fts.h>
-
-#ifdef XP_MACOSX
-# include <sys/time.h>
-#endif
-
-# define LOG_S "%s"
-# define NS_T(str) str
-# define NS_tsnprintf snprintf
-# define NS_taccess access
-# define NS_tchdir chdir
-# define NS_tchmod chmod
-# define NS_tfopen fopen
-# define NS_tmkdir mkdir
-# define NS_tremove remove
-# define NS_trename rename
-# define NS_trmdir rmdir
-# define NS_tstat stat
-# define NS_tstrcat strcat
-# define NS_tstrcmp strcmp
-# define NS_tstrcpy strcpy
-# define NS_tstrlen strlen
-# define NS_tstrrchr strrchr
-# define NS_tstrstr strstr
-#endif
-
-#define BACKUP_EXT NS_T(".moz-backup")
-
 #include "bspatch.h"
 #include "progressui.h"
 #include "archivereader.h"
@@ -171,6 +85,8 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <errno.h>
+
+#include "updatelogging.h"
 
 // Amount of the progress bar to use in each of the 3 update stages,
 // should total 100.0.
@@ -196,20 +112,6 @@ void LaunchMacPostProcess(const char* aAppExe);
 # define SSIZE_MAX LONG_MAX
 #endif
 
-#ifndef MAXPATHLEN
-# ifdef PATH_MAX
-#  define MAXPATHLEN PATH_MAX
-# elif defined(MAX_PATH)
-#  define MAXPATHLEN MAX_PATH
-# elif defined(_MAX_PATH)
-#  define MAXPATHLEN _MAX_PATH
-# elif defined(CCHMAXPATH)
-#  define MAXPATHLEN CCHMAXPATH
-# else
-#  define MAXPATHLEN 1024
-# endif
-#endif
-
 // We want to use execv to invoke the callback executable on platforms where
 // we were launched using execv.  See nsUpdateDriver.cpp.
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
@@ -217,6 +119,8 @@ void LaunchMacPostProcess(const char* aAppExe);
 #endif
 
 #ifdef XP_WIN
+#include "launchwinprocess.h"
+
 // Closes the handle if valid and if the updater is elevated returns with the
 // return code specified. This prevents multiple launches of the callback
 // application by preventing the elevated process from launching the callback.
@@ -400,47 +304,6 @@ static NS_tchar gCallbackBackupPath[MAXPATHLEN];
 static const NS_tchar kWhitespace[] = NS_T(" \t");
 static const NS_tchar kNL[] = NS_T("\r\n");
 static const NS_tchar kQuote[] = NS_T("\"");
-
-//-----------------------------------------------------------------------------
-// LOGGING
-
-static FILE *gLogFP = NULL;
-
-static void LogInit()
-{
-  if (gLogFP)
-    return;
-
-  NS_tchar logFile[MAXPATHLEN];
-  NS_tsnprintf(logFile, sizeof(logFile)/sizeof(logFile[0]),
-               NS_T("%s/update.log"), gSourcePath);
-
-  gLogFP = NS_tfopen(logFile, NS_T("w"));
-}
-
-static void LogFinish()
-{
-  if (!gLogFP)
-    return;
-
-  fclose(gLogFP);
-  gLogFP = NULL;
-}
-
-static void LogPrintf(const char *fmt, ... )
-{
-  if (!gLogFP)
-    return;
-
-  va_list ap;
-  va_start(ap, fmt);
-  vfprintf(gLogFP, fmt, ap);
-  va_end(ap);
-}
-
-#define LOG(args) LogPrintf args
-
-//-----------------------------------------------------------------------------
 
 static inline size_t
 mmin(size_t a, size_t b)
@@ -1519,96 +1382,7 @@ PatchIfFile::Finish(int status)
 
 #ifdef XP_WIN
 #include "nsWindowsRestart.cpp"
-
-static void
-LaunchWinPostProcess(const WCHAR *appExe)
-{
-  // Launch helper.exe to perform post processing (e.g. registry and log file
-  // modifications) for the update.
-  WCHAR inifile[MAXPATHLEN];
-  wcscpy(inifile, appExe);
-
-  WCHAR *slash = wcsrchr(inifile, '\\');
-  if (!slash)
-    return;
-
-  wcscpy(slash + 1, L"updater.ini");
-
-  WCHAR exefile[MAXPATHLEN];
-  WCHAR exearg[MAXPATHLEN];
-  WCHAR exeasync[10];
-  bool async = true;
-  if (!GetPrivateProfileStringW(L"PostUpdateWin", L"ExeRelPath", NULL, exefile,
-                                MAXPATHLEN, inifile))
-    return;
-
-  if (!GetPrivateProfileStringW(L"PostUpdateWin", L"ExeArg", NULL, exearg,
-                                MAXPATHLEN, inifile))
-    return;
-
-  if (!GetPrivateProfileStringW(L"PostUpdateWin", L"ExeAsync", L"TRUE", exeasync,
-                                sizeof(exeasync)/sizeof(exeasync[0]), inifile))
-    return;
-
-  WCHAR exefullpath[MAXPATHLEN];
-  wcscpy(exefullpath, appExe);
-
-  slash = wcsrchr(exefullpath, '\\');
-  wcscpy(slash + 1, exefile);
-
-  WCHAR dlogFile[MAXPATHLEN];
-  wcscpy(dlogFile, exefullpath);
-
-  slash = wcsrchr(dlogFile, '\\');
-  wcscpy(slash + 1, L"uninstall.update");
-
-  WCHAR slogFile[MAXPATHLEN];
-  NS_tsnprintf(slogFile, sizeof(slogFile)/sizeof(slogFile[0]),
-               NS_T("%s/update.log"), gSourcePath);
-
-  WCHAR dummyArg[13];
-  wcscpy(dummyArg, L"argv0ignored ");
-
-  size_t len = wcslen(exearg) + wcslen(dummyArg);
-  WCHAR *cmdline = (WCHAR *) malloc((len + 1) * sizeof(WCHAR));
-  if (!cmdline)
-    return;
-
-  wcscpy(cmdline, dummyArg);
-  wcscat(cmdline, exearg);
-
-  if (!_wcsnicmp(exeasync, L"false", 6) || !_wcsnicmp(exeasync, L"0", 2))
-    async = false;
-
-  // We want to launch the post update helper app to update the Windows
-  // registry even if there is a failure with removing the uninstall.update
-  // file or copying the update.log file.
-  NS_tremove(dlogFile);
-  CopyFile(slogFile, dlogFile, false);
-
-  STARTUPINFOW si = {sizeof(si), 0};
-  PROCESS_INFORMATION pi = {0};
-
-  bool ok = CreateProcessW(exefullpath,
-                           cmdline,
-                           NULL,  // no special security attributes
-                           NULL,  // no special thread attributes
-                           false, // don't inherit filehandles
-                           0,     // No special process creation flags
-                           NULL,  // inherit my environment
-                           NULL,  // use my current directory
-                           &si,
-                           &pi);
-  free(cmdline);
-
-  if (ok) {
-    if (!async)
-      WaitForSingleObject(pi.hProcess, INFINITE);
-
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
-  }
-}
+#include "uachelper.h"
 #endif
 
 static void
@@ -1620,15 +1394,35 @@ LaunchCallbackApp(const NS_tchar *workingDir, int argc, NS_tchar **argv)
   // Run from the specified working directory (see bug 312360). This is not
   // necessary on Windows CE since the application that launches the updater
   // passes the working directory as an --environ: command line argument.
-  if(NS_tchdir(workingDir) != 0)
+  if (NS_tchdir(workingDir) != 0) {
     LOG(("Warning: chdir failed\n"));
+  }
 
 #if defined(USE_EXECV)
   execv(argv[0], argv);
 #elif defined(XP_MACOSX)
   LaunchChild(argc, argv);
+#elif defined(MOZ_MAINTENANCE_SERVICE)
+  // If updater.exe is run as session ID 0 and we have a MOZ_SESSION_ID 
+  // set, then get the unelevated token and use that to start the callback
+  // application.  Getting tokens will only work if the process is running
+  // as the system account.
+  DWORD myProcessID = GetCurrentProcessId();
+  DWORD mySessionID = 0;
+  ProcessIdToSessionId(myProcessID, &mySessionID);
+  nsAutoHandle unelevatedToken(NULL);
+  if (mySessionID == 0) {
+    WCHAR *sessionIDStr = _wgetenv(L"MOZ_SESSION_ID");
+    if (sessionIDStr) {
+      // Remove the env var now that we have its value.
+      int callbackSessionID = _wtoi(sessionIDStr);
+      _wputenv(L"MOZ_SESSION_ID=");
+      unelevatedToken.own(UACHelper::OpenUserToken(callbackSessionID));
+    }
+  }
+  WinLaunchChild(argv[0], argc, argv, unelevatedToken);
 #elif defined(XP_WIN)
-  WinLaunchChild(argv[0], argc, argv);
+  WinLaunchChild(argv[0], argc, argv, NULL);
 #else
 # warning "Need implementaton of LaunchCallbackApp"
 #endif
@@ -1872,7 +1666,7 @@ int NS_main(int argc, NS_tchar **argv)
   }
 #endif
 
-  LogInit();
+  LogInit(gSourcePath, NS_T("update.log"));
   LOG(("SOURCE DIRECTORY " LOG_S "\n", argv[1]));
   LOG(("DESTINATION DIRECTORY " LOG_S "\n", argv[2]));
 
@@ -2035,7 +1829,20 @@ int NS_main(int argc, NS_tchar **argv)
   if (argc > callbackIndex) {
 #if defined(XP_WIN)
     if (gSucceeded) {
-      LaunchWinPostProcess(argv[callbackIndex]);
+      // The service update will only be executed if it is already installed.
+      // For first time installs of the service, the install will happen from
+      // the PostUpdate process. We do the service update process here 
+      // because it's possible we are updating with updater.exe without the 
+      // service if the service failed to apply the update. We want to update
+      // the service to a newer version in that case. If we are not running
+      // through the service, then MOZ_SESSION_ID will not exist.
+      WCHAR *sessionIDStr = _wgetenv(L"MOZ_SESSION_ID");
+      if (!sessionIDStr) {
+        if (!LaunchWinPostProcess(argv[2], gSourcePath, false, NULL)) {
+          LOG(("NS_main: The post update process could not be launched.\n"));
+        }
+        StartServiceUpdate(argc, argv);
+      }
     }
     EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 0);
 #endif /* XP_WIN */

@@ -78,6 +78,7 @@ INI_TEST_FILES = \
 LOCAL_INCLUDES += \
   -I$(srcdir) \
   -I$(topsrcdir)/toolkit/mozapps/update \
+  -I$(topsrcdir)/toolkit/mozapps/update/common \
   $(NULL)
 
 MOZ_WINCONSOLE = 1
