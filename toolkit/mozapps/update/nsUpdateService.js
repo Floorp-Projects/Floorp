@@ -146,7 +146,6 @@ const ELEVATION_CANCELED = 9;
 const SERVICE_UPDATER_COULD_NOT_BE_STARTED = 16000;
 const SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS = 16001;
 const SERVICE_UPDATER_SIGN_ERROR           = 16002;
-const SERVICE_CALLBACK_SIGN_ERROR          = 16003;
 
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
@@ -1436,8 +1435,7 @@ UpdateService.prototype = {
 
         if (update.errorCode == SERVICE_UPDATER_COULD_NOT_BE_STARTED ||
             update.errorCode == SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS ||
-            update.errorCode == SERVICE_UPDATER_SIGN_ERROR || 
-            update.errorCode == SERVICE_CALLBACK_SIGN_ERROR) {
+            update.errorCode == SERVICE_UPDATER_SIGN_ERROR) {
           var failCount = getPref("getIntPref", 
                                   PREF_APP_UPDATE_SERVICE_ERRORS, 0);
           var maxFail = getPref("getIntPref", 

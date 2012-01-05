@@ -119,7 +119,7 @@ void LaunchMacPostProcess(const char* aAppExe);
 #endif
 
 #ifdef XP_WIN
-#include "launchwinprocess.h"
+#include "updatehelper.h"
 
 // Closes the handle if valid and if the updater is elevated returns with the
 // return code specified. This prevents multiple launches of the callback
@@ -1402,25 +1402,6 @@ LaunchCallbackApp(const NS_tchar *workingDir, int argc, NS_tchar **argv)
   execv(argv[0], argv);
 #elif defined(XP_MACOSX)
   LaunchChild(argc, argv);
-#elif defined(MOZ_MAINTENANCE_SERVICE)
-  // If updater.exe is run as session ID 0 and we have a MOZ_SESSION_ID 
-  // set, then get the unelevated token and use that to start the callback
-  // application.  Getting tokens will only work if the process is running
-  // as the system account.
-  DWORD myProcessID = GetCurrentProcessId();
-  DWORD mySessionID = 0;
-  ProcessIdToSessionId(myProcessID, &mySessionID);
-  nsAutoHandle unelevatedToken(NULL);
-  if (mySessionID == 0) {
-    WCHAR *sessionIDStr = _wgetenv(L"MOZ_SESSION_ID");
-    if (sessionIDStr) {
-      // Remove the env var now that we have its value.
-      int callbackSessionID = _wtoi(sessionIDStr);
-      _wputenv(L"MOZ_SESSION_ID=");
-      unelevatedToken.own(UACHelper::OpenUserToken(callbackSessionID));
-    }
-  }
-  WinLaunchChild(argv[0], argc, argv, unelevatedToken);
 #elif defined(XP_WIN)
   WinLaunchChild(argv[0], argc, argv, NULL);
 #else
@@ -1451,6 +1432,88 @@ WriteStatusFile(int status)
     text = buf;
   }
   fwrite(text, strlen(text), 1, file);
+}
+
+static bool
+WriteStatusApplying()
+{
+  NS_tchar filename[MAXPATHLEN];
+  NS_tsnprintf(filename, sizeof(filename)/sizeof(filename[0]),
+               NS_T("%s/update.status"), gSourcePath);
+
+  AutoFile file = NS_tfopen(filename, NS_T("wb+"));
+  if (file == NULL)
+    return false;
+
+  static const char kApplying[] = "Applying\n";
+  if (fwrite(kApplying, strlen(kApplying), 1, file) != 1)
+    return false;
+
+  return true;
+}
+
+/* 
+ * Read the update.status file and sets isPendingService to true if
+ * the status is set to pending-service.
+ *
+ * @param  isPendingService Out parameter for specifying if the status
+ *         is set to pending-service or not.
+ * @return true if the information was retrieved and it is pending
+ *         or pending-service.
+*/
+static bool
+IsUpdateStatusPending(bool &isPendingService)
+{
+  bool isPending = false;
+  isPendingService = false;
+  NS_tchar filename[MAXPATHLEN];
+  NS_tsnprintf(filename, sizeof(filename)/sizeof(filename[0]),
+               NS_T("%s/update.status"), gSourcePath);
+
+  AutoFile file = NS_tfopen(filename, NS_T("rb"));
+  if (file == NULL)
+    return false;
+
+  char buf[32] = { 0 };
+  fread(buf, sizeof(buf), 1, file);
+
+  const char kPending[] = "pending";
+  const char kPendingService[] = "pending-service";
+  isPending = strncmp(buf, kPending, 
+                      sizeof(kPending) - 1) == 0;
+
+  isPendingService = strncmp(buf, kPendingService, 
+                             sizeof(kPendingService) - 1) == 0;
+  return isPending;
+}
+
+/* 
+ * Read the update.status file and sets isSuccess to true if
+ * the status is set to succeeded.
+ *
+ * @param  isSucceeded Out parameter for specifying if the status
+ *         is set to succeeded or not.
+ * @return true if the information was retrieved and it is succeeded.
+*/
+static bool
+IsUpdateStatusSucceeded(bool &isSucceeded)
+{
+  isSucceeded = false;
+  NS_tchar filename[MAXPATHLEN];
+  NS_tsnprintf(filename, sizeof(filename)/sizeof(filename[0]),
+               NS_T("%s/update.status"), gSourcePath);
+
+  AutoFile file = NS_tfopen(filename, NS_T("rb"));
+  if (file == NULL)
+    return false;
+
+  char buf[32] = { 0 };
+  fread(buf, sizeof(buf), 1, file);
+
+  const char kSucceeded[] = "succeeded";
+  isSucceeded = strncmp(buf, kSucceeded, 
+                        sizeof(kSucceeded) - 1) == 0;
+  return true;
 }
 
 static void
@@ -1524,6 +1587,23 @@ int NS_main(int argc, NS_tchar **argv)
     return 1;
   }
 
+  // The directory containing the update information.
+  gSourcePath = argv[1];
+
+#ifdef XP_WIN
+  bool useService = false;
+  // We never want the service to be used unless we build with
+  // the maintenance service.
+#ifdef MOZ_MAINTENANCE_SERVICE
+  IsUpdateStatusPending(useService);
+#endif
+#endif
+
+  if (!WriteStatusApplying()) {
+    LOG(("failed setting status to 'applying'\n"));
+    return 1;
+  }
+
 #ifdef XP_WIN
   // Remove everything except close window from the context menu
   {
@@ -1566,9 +1646,6 @@ int NS_main(int argc, NS_tchar **argv)
       waitpid(pid, NULL, 0);
 #endif
   }
-
-  // The directory containing the update information.
-  gSourcePath = argv[1];
 
   // The callback is the remaining arguments starting at callbackIndex.
   // The argument specified by callbackIndex is the callback executable and the
@@ -1634,26 +1711,80 @@ int NS_main(int argc, NS_tchar **argv)
         return 1;
       }
 
-      SHELLEXECUTEINFO sinfo;
-      memset(&sinfo, 0, sizeof(SHELLEXECUTEINFO));
-      sinfo.cbSize       = sizeof(SHELLEXECUTEINFO);
-      sinfo.fMask        = SEE_MASK_FLAG_NO_UI |
-                           SEE_MASK_FLAG_DDEWAIT |
-                           SEE_MASK_NOCLOSEPROCESS;
-      sinfo.hwnd         = NULL;
-      sinfo.lpFile       = argv[0];
-      sinfo.lpParameters = cmdLine;
-      sinfo.lpVerb       = L"runas";
-      sinfo.nShow        = SW_SHOWNORMAL;
+      HANDLE serviceInUseEvent = NULL;
+      if (useService) {
+        // Make sure the service isn't already busy processing another work item.
+        // This event will also be used by the service who will signal it when
+        // it is done with the udpate.
+        serviceInUseEvent = CreateEventW(NULL, TRUE, 
+                                         FALSE, SERVICE_EVENT_NAME);
 
-      bool result = ShellExecuteEx(&sinfo);
-      free(cmdLine);
+        // Only use the service if we know the event can be created and
+        // doesn't already exist.
+        if (!serviceInUseEvent) {
+          useService = false;
+        }
+      }
 
-      if (result) {
-        WaitForSingleObject(sinfo.hProcess, INFINITE);
-        CloseHandle(sinfo.hProcess);
-      } else {
-        WriteStatusFile(ELEVATION_CANCELED);
+      // Originally we used to write "pending" to update.status before
+      // launching the service command.  This is no longer needed now
+      // since the service command is launched from updater.exe.  If anything
+      // fails in between, we can fall back to using the normal update process
+      // on our own.
+
+      // If we still want to use the service try to launch the service 
+      // comamnd for the update.
+      if (useService) {
+        // If the update couldn't be started, then set useService to false so
+        // we do the update the old way.
+        useService = WinLaunchServiceCommand(argv[0], argc, argv);
+
+        // The command was launched, so we should wait for the work to be done.
+        // The service will set the event we wait on when it is done.
+        if (useService) {
+          WaitForSingleObject(serviceInUseEvent, INFINITE);
+          CloseHandle(serviceInUseEvent);
+        }
+      }
+
+      // If we started the service command, and it finished, check the
+      // update.status file to make sure it succeeded, and if it did
+      // we need to manually start the PostUpdate process from the
+      // current user's session of this unelevated updater.exe the
+      // current process is running as.
+      if (useService) {
+        bool updateStatusSucceeded = false;
+        if (IsUpdateStatusSucceeded(updateStatusSucceeded) && 
+            updateStatusSucceeded) {
+          LaunchWinPostProcess(argv[callbackIndex], gSourcePath, false, NULL);
+        }
+      }
+
+      // If we didn't want to use the service at all, or if an update was 
+      // already happening, or launching the service command failed, then 
+      // launch the elevated updater.exe as we used to without the service.
+      if (!useService) {
+        SHELLEXECUTEINFO sinfo;
+        memset(&sinfo, 0, sizeof(SHELLEXECUTEINFO));
+        sinfo.cbSize       = sizeof(SHELLEXECUTEINFO);
+        sinfo.fMask        = SEE_MASK_FLAG_NO_UI |
+                             SEE_MASK_FLAG_DDEWAIT |
+                             SEE_MASK_NOCLOSEPROCESS;
+        sinfo.hwnd         = NULL;
+        sinfo.lpFile       = argv[0];
+        sinfo.lpParameters = cmdLine;
+        sinfo.lpVerb       = L"runas";
+        sinfo.nShow        = SW_SHOWNORMAL;
+
+        bool result = ShellExecuteEx(&sinfo);
+        free(cmdLine);
+
+        if (result) {
+          WaitForSingleObject(sinfo.hProcess, INFINITE);
+          CloseHandle(sinfo.hProcess);
+        } else {
+          WriteStatusFile(ELEVATION_CANCELED);
+        }
       }
 
       if (argc > callbackIndex) {
@@ -1835,9 +1966,9 @@ int NS_main(int argc, NS_tchar **argv)
       // because it's possible we are updating with updater.exe without the 
       // service if the service failed to apply the update. We want to update
       // the service to a newer version in that case. If we are not running
-      // through the service, then MOZ_SESSION_ID will not exist.
-      WCHAR *sessionIDStr = _wgetenv(L"MOZ_SESSION_ID");
-      if (!sessionIDStr) {
+      // through the service, then MOZ_USING_SERVICE will not exist.
+      WCHAR *usingService = _wgetenv(L"MOZ_USING_SERVICE");
+      if (!usingService) {
         if (!LaunchWinPostProcess(argv[2], gSourcePath, false, NULL)) {
           LOG(("NS_main: The post update process could not be launched.\n"));
         }
