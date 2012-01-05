@@ -2927,7 +2927,6 @@
       <field name="_tabDefaultMaxWidth">NaN</field>
       <field name="_lastTabClosedByMouse">false</field>
       <field name="_hasTabTempMaxWidth">false</field>
-      <field name="_usingClosingTabsSpacer">false</field>
 
       <!-- Try to keep the active tab's close button under the mouse cursor -->
       <method name="_lockTabSizing">
@@ -2995,7 +2994,7 @@
         <body><![CDATA[
           let spacer = this._closingTabsSpacer;
           spacer.style.width = parseFloat(spacer.style.width) + pixels + "px";
-          this._usingClosingTabsSpacer = true;
+          this.setAttribute("using-closing-tabs-spacer", "true");
           this.tabbrowser.addEventListener("mousemove", this, false);
           window.addEventListener("mouseout", this, false);
         ]]></body>
@@ -3005,14 +3004,16 @@
         <body><![CDATA[
           this.tabbrowser.removeEventListener("mousemove", this, false);
           window.removeEventListener("mouseout", this, false);
+
           if (this._hasTabTempMaxWidth) {
             this._hasTabTempMaxWidth = false;
             let tabs = this.tabbrowser.visibleTabs;
             for (let i = 0; i < tabs.length; i++)
               tabs[i].style.maxWidth = "";
           }
-          if (this._usingClosingTabsSpacer) {
-            this._usingClosingTabsSpacer = false;
+
+          if (this.hasAttribute("using-closing-tabs-spacer")) {
+            this.removeAttribute("using-closing-tabs-spacer");
             this._closingTabsSpacer.style.width = 0;
           }
         ]]></body>
