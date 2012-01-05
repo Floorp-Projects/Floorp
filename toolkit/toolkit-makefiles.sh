@@ -473,6 +473,7 @@ MAKEFILES_xulapp="
   toolkit/components/filepicker/Makefile
   toolkit/components/find/Makefile
   toolkit/components/intl/Makefile
+  toolkit/components/maintenanceservice/Makefile
   toolkit/components/microformats/Makefile
   toolkit/components/parentalcontrols/Makefile
   toolkit/components/passwordmgr/Makefile
