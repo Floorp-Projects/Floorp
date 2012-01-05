@@ -64,8 +64,8 @@
           this.initSearchSessions();
         
         // hack to work around lack of bottom-up constructor calling
-        if ("initialize" in this.resultsPopup)
-          this.resultsPopup.initialize();
+        if ("initialize" in this.popup)
+          this.popup.initialize();
       ]]></constructor>
 
       <destructor><![CDATA[
@@ -173,7 +173,7 @@
       <property name="showCommentColumn"
                 onget="return this.getAttribute('showcommentcolumn') == 'true';">
         <setter><![CDATA[
-          this.resultsPopup.showCommentColumn = val;
+          this.popup.showCommentColumn = val;
           this.setAttribute('showcommentcolumn', val); return val;
         ]]></setter>
       </property>
@@ -232,7 +232,7 @@
                 onget="return this.mAutoCompleteTimer != 0;"/>
 
       <!-- reference to the results popup element -->
-      <field name="resultsPopup"><![CDATA[
+      <field name="popup"><![CDATA[
         document.getAnonymousElementByAttribute(this, "anonid", "popup");
       ]]></field>
 
@@ -781,7 +781,7 @@
           this.mFireAfterSearch = false;
           if (this.mNeedToFinish && !this.disableAutoComplete) {
             // set textbox value to either override value, or default search result 
-            var val = this.resultsPopup.overrideValue;
+            var val = this.popup.overrideValue;
             if (val) {
               this.setTextValue(val);
               this.mNeedToFinish = false;
@@ -854,18 +854,18 @@
         <body><![CDATA[
          // set textbox value to either override value, or the clicked result
           var errItem=null;
-          var val = this.resultsPopup.overrideValue;
+          var val = this.popup.overrideValue;
             if (val)
               this.setTextValue(val);
-          else if (this.resultsPopup.selectedIndex != -1) {
-            if (this.getSessionStatusAt(this.resultsPopup.selectedIndex) ==
+          else if (this.popup.selectedIndex != -1) {
+            if (this.getSessionStatusAt(this.popup.selectedIndex) ==
                 Components.interfaces.nsIAutoCompleteStatus.failureItems) {
               this.setTextValue(this.currentSearchString);
               this.mTransientValue = true;
-              errItem = this.getResultAt(this.resultsPopup.selectedIndex);
+              errItem = this.getResultAt(this.popup.selectedIndex);
             } else { 
               this.setTextValue(this.getResultValueAt(
-                                             this.resultsPopup.selectedIndex));
+                                             this.popup.selectedIndex));
             }
           }
 
@@ -938,7 +938,7 @@
           this.mNeedToComplete = true;
           var str = this.value;
           this.currentSearchString = str;
-          this.resultsPopup.clearSelection();
+          this.popup.clearSelection();
           
           this.mAutoCompleteTimer = setTimeout(this.callListener, this.timeout, this, "startLookup");
         ]]></body>
@@ -968,10 +968,10 @@
 
               // if this is a failure item, save it for fireErrorCommand
               var errItem = null;
-              if (this.resultsPopup.selectedIndex != -1 && 
-                  this.getSessionStatusAt(this.resultsPopup.selectedIndex) ==
+              if (this.popup.selectedIndex != -1 && 
+                  this.getSessionStatusAt(this.popup.selectedIndex) ==
                   Components.interfaces.nsIAutoCompleteStatus.failureItems) {
-                errItem = this.getResultAt(this.resultsPopup.selectedIndex);
+                errItem = this.getResultAt(this.popup.selectedIndex);
               }
 
               killEvent = this.mMenuOpen;
@@ -1085,7 +1085,7 @@
                           k == KeyEvent.DOM_VK_PAGE_UP;
             var page = k == KeyEvent.DOM_VK_PAGE_UP ||
                        k == KeyEvent.DOM_VK_PAGE_DOWN;
-            var selected = this.resultsPopup.selectBy(reverse, page);
+            var selected = this.popup.selectBy(reverse, page);
           
             // determine which value to place in the textbox
             this.ignoreInputEvent = true;
@@ -1171,9 +1171,9 @@
                (this.getResultCount() >= this.minResultsForPopup
                 || this.mFailureItems)) {
             var w = this.boxObject.width;
-            if (w != this.resultsPopup.boxObject.width)
-              this.resultsPopup.setAttribute("width", w);
-            this.resultsPopup.showPopup(this, -1, -1, "popup", "bottomleft", "topleft");
+            if (w != this.popup.boxObject.width)
+              this.popup.setAttribute("width", w);
+            this.popup.showPopup(this, -1, -1, "popup", "bottomleft", "topleft");
             this.mMenuOpen = true;
           }
         ]]></body>
@@ -1182,8 +1182,8 @@
       <!--  -->
       <method name="closePopup">
         <body><![CDATA[
-          if (this.resultsPopup && this.mMenuOpen) {
-            this.resultsPopup.hidePopup();
+          if (this.popup && this.mMenuOpen) {
+            this.popup.hidePopup();
             this.mMenuOpen = false;
           }
         ]]></body>
@@ -1196,7 +1196,7 @@
         <body><![CDATA[
           if (this.focused && this.showPopup) {
             this.view.replaceResults(aResults, aOldResults);
-            this.resultsPopup.adjustHeight();
+            this.popup.adjustHeight();
           }
         ]]></body>
       </method>
@@ -1207,7 +1207,7 @@
         <body><![CDATA[
           this.view.clearResults();
           if (aInvalidate)
-            this.resultsPopup.adjustHeight();
+            this.popup.adjustHeight();
 
           this.noMatch = true;
         ]]></body>
@@ -1696,27 +1696,27 @@
 
   <binding id="autocomplete-treebody">
     <implementation>
-      <field name="resultsPopup">document.getBindingParent(this);</field>
+      <field name="popup">document.getBindingParent(this);</field>
 
       <field name="mLastMoveTime">Date.now()</field>
     </implementation>
     
     <handlers>
-      <handler event="mouseout" action="this.resultsPopup.selectedIndex = -1;"/>
+      <handler event="mouseout" action="this.popup.selectedIndex = -1;"/>
 
       <handler event="mouseup"><![CDATA[
         var rc = this.parentNode.treeBoxObject.getRowAt(event.clientX, event.clientY);
         if (rc != -1) {
-          this.resultsPopup.selectedIndex = rc;
-          this.resultsPopup.view.handleEnter(true);
+          this.popup.selectedIndex = rc;
+          this.popup.view.handleEnter(true);
         }
       ]]></handler>
 
       <handler event="mousemove"><![CDATA[
         if (Date.now() - this.mLastMoveTime > 30) {
           var rc = this.parentNode.treeBoxObject.getRowAt(event.clientX, event.clientY);
-          if (rc != -1 && rc != this.resultsPopup.selectedIndex) 
-            this.resultsPopup.selectedIndex = rc;
+          if (rc != -1 && rc != this.popup.selectedIndex) 
+            this.popup.selectedIndex = rc;
           this.mLastMoveTime = Date.now();
         }
       ]]></handler>
