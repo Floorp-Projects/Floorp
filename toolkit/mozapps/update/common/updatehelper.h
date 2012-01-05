@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-BOOL LaunchWinPostProcess(const WCHAR *appExe, 
+BOOL LaunchWinPostProcess(const WCHAR *installationDir,
                           const WCHAR *updateInfoDir, 
                           bool forceSync,
                           HANDLE userToken);

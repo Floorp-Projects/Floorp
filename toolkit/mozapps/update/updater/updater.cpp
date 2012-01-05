@@ -1756,7 +1756,10 @@ int NS_main(int argc, NS_tchar **argv)
         bool updateStatusSucceeded = false;
         if (IsUpdateStatusSucceeded(updateStatusSucceeded) && 
             updateStatusSucceeded) {
-          LaunchWinPostProcess(argv[callbackIndex], gSourcePath, false, NULL);
+          if (!LaunchWinPostProcess(argv[2], gSourcePath, false, NULL)) {
+            fprintf(stderr, "The post update process which runs as the user"
+                    " for service update could not be launched.");
+          }
         }
       }
 

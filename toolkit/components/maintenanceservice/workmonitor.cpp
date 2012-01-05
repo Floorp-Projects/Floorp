@@ -97,8 +97,6 @@ StartUpdateProcess(LPCWSTR updaterPath,
 
   // The updater command line is of the form:
   // updater.exe update-dir apply [wait-pid [callback-dir callback-path args]]
-  // So update callback-dir is the 4th, callback-path is the 5th and its args 
-  // are the 6th index.
   LPWSTR cmdLine = MakeCommandLine(argcTmp, argvTmp);
 
   // If we're about to start the update process from session 0,
@@ -187,10 +185,9 @@ StartUpdateProcess(LPCWSTR updaterPath,
   if (selfHandlePostUpdate) {
     MoveFileEx(updaterINITemp, updaterINI, MOVEFILE_REPLACE_EXISTING);
 
-    // Only run the PostUpdate if the update was successful and if we have
-    // a callback application.  This is the same thing updater.exe does.
-    if (updateWasSuccessful && argcTmp > 5) {
-      LPCWSTR callbackApplication = argvTmp[5];
+    // Only run the PostUpdate if the update was successful
+    if (updateWasSuccessful && argcTmp > 2) {
+      LPCWSTR installationDir = argvTmp[2];
       LPCWSTR updateInfoDir = argvTmp[1];
 
       // Launch the PostProcess with admin access in session 0.  This is
@@ -200,8 +197,10 @@ StartUpdateProcess(LPCWSTR updaterPath,
       // the unelevated updater.exe after the update process is complete
       // from the service.  We don't know here which session to start
       // the user PostUpdate process from.
-      LOG(("Launching post update process as the service in session 0."));
-      LaunchWinPostProcess(callbackApplication, updateInfoDir, true, NULL);
+      LOG(("Launching post update process as the service in session 0.\n"));
+      if (!LaunchWinPostProcess(installationDir, updateInfoDir, true, NULL)) {
+        LOG(("The post update process could not be launched.\n"));
+      }
     }
   }
 
