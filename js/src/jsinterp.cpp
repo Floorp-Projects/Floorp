@@ -2989,7 +2989,7 @@ BEGIN_CASE(JSOP_LENGTH)
                                  ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                                  : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
                                  &rval)
-            : !GetProperty(cx, obj, atom, &rval))
+            : !GetProperty(cx, obj, name, &rval))
         {
             goto error;
         }
