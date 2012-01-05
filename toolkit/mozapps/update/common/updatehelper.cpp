@@ -422,8 +422,10 @@ WinLaunchServiceCommand(LPCWSTR exePath, int argc, LPWSTR* argv)
   // Write out the command line arguments that are passed to updater.exe
   // updater.exe's command line arguments look like this normally:
   // updater.exe update-dir apply [wait-pid [callback-dir callback-path args]]
-  // We want everything except the callback application and its arguments.
-  LPWSTR commandLineBuffer = MakeCommandLine(min(argc, 4), argv);
+  // We pass everything including the callback application and its arguments.
+  // The only reason we pass the callback info though is to lock the exe so it
+  // is not launched during update.
+  LPWSTR commandLineBuffer = MakeCommandLine(argc, argv);
   if (!commandLineBuffer) {
     return FALSE;
   }
