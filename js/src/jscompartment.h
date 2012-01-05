@@ -184,8 +184,8 @@ struct JS_FRIEND_API(JSCompartment) {
         return createBarrierTracer();
     }
 
-    uint32_t                     gcBytes;
-    uint32_t                     gcTriggerBytes;
+    size_t                       gcBytes;
+    size_t                       gcTriggerBytes;
     size_t                       gcLastBytes;
 
     bool                         hold;
@@ -310,7 +310,7 @@ struct JS_FRIEND_API(JSCompartment) {
     void purge(JSContext *cx);
 
     void setGCLastBytes(size_t lastBytes, JSGCInvocationKind gckind);
-    void reduceGCTriggerBytes(uint32_t amount);
+    void reduceGCTriggerBytes(size_t amount);
 
     js::DtoaCache dtoaCache;
 
