@@ -80,54 +80,5 @@ WidgetUtils::DOMWindowToWidget(nsIDOMWindow *aDOMWindow)
   return widget.forget();
 }
 
-// class BrightnessLockingWidget
-
-BrightnessLockingWidget::BrightnessLockingWidget()
-{
-  for (PRUint32 i = 0; i < nsIScreen_MOZILLA_2_0_BRANCH::BRIGHTNESS_LEVELS; i++)
-    mBrightnessLocks[i] = 0;
-}
-
-NS_IMETHODIMP
-BrightnessLockingWidget::LockMinimumBrightness(PRUint32 aBrightness)
-{
-  NS_ABORT_IF_FALSE(
-    aBrightness < nsIScreen_MOZILLA_2_0_BRANCH::BRIGHTNESS_LEVELS,
-    "Invalid brightness level to lock");
-  mBrightnessLocks[aBrightness]++;
-  NS_ABORT_IF_FALSE(mBrightnessLocks[aBrightness] > 0,
-    "Overflow after locking brightness level");
-
-  CheckMinimumBrightness();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BrightnessLockingWidget::UnlockMinimumBrightness(PRUint32 aBrightness)
-{
-  NS_ABORT_IF_FALSE(
-    aBrightness < nsIScreen_MOZILLA_2_0_BRANCH::BRIGHTNESS_LEVELS,
-    "Invalid brightness level to lock");
-  NS_ABORT_IF_FALSE(mBrightnessLocks[aBrightness] > 0,
-    "Unlocking a brightness level with no corresponding lock");
-  mBrightnessLocks[aBrightness]--;
-
-  CheckMinimumBrightness();
-
-  return NS_OK;
-}
-
-void
-BrightnessLockingWidget::CheckMinimumBrightness()
-{
-  PRUint32 brightness = nsIScreen_MOZILLA_2_0_BRANCH::BRIGHTNESS_LEVELS;
-  for (PRUint32 i = 0; i < nsIScreen_MOZILLA_2_0_BRANCH::BRIGHTNESS_LEVELS; i++)
-    if (mBrightnessLocks[i] > 0)
-      brightness = i;
-
-  ApplyMinimumBrightness(brightness);
-}
-
 } // namespace widget
 } // namespace mozilla

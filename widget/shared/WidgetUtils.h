@@ -45,7 +45,6 @@
 #include "nsIWidget.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindow.h"
-#include "nsIScreen.h"
 
 namespace mozilla {
 namespace widget {
@@ -59,46 +58,6 @@ public:
    * the docshell tree until it finds a docshell item that has a widget.
    */
   static already_AddRefed<nsIWidget> DOMWindowToWidget(nsIDOMWindow *aDOMWindow);
-};
-
-/**
- * Simple management of screen brightness locks. This abstract base class
- * allows all widget implementations to share brightness locking code.
- */
-class BrightnessLockingWidget : public nsIScreen_MOZILLA_2_0_BRANCH
-{
-public:
-  BrightnessLockingWidget();
-
-  NS_IMETHOD LockMinimumBrightness(PRUint32 aBrightness);
-  NS_IMETHOD UnlockMinimumBrightness(PRUint32 aBrightness);
-
-protected:
-  /**
-   * Manually set the current level of brightness locking. This is called after
-   * we determine, based on the current active locks, what the strongest
-   * lock is. You should normally not call this function - it will be
-   * called automatically by this class.
-   *
-   * Each widget implementation should implement this in a way that
-   * makes sense there. This is normally the only function that
-   * contains widget-specific code.
-   *
-   * @param aBrightness The current brightness level to set. If this is
-   *                    nsIScreen_MOZILLA_2_0_BRANCH::BRIGHTNESS_LEVELS
-   *                    (an impossible value for a brightness level to be),
-   *                    then that signifies that there is no current
-   *                    minimum brightness level, and the screen can shut off.
-   */
-  virtual void ApplyMinimumBrightness(PRUint32 aBrightness) = 0;
-
-  /**
-   * Checks what the minimum brightness value is, and calls
-   * ApplyMinimumBrightness.
-   */
-  void CheckMinimumBrightness();
-
-  PRUint32 mBrightnessLocks[nsIScreen_MOZILLA_2_0_BRANCH::BRIGHTNESS_LEVELS];
 };
 
 } // namespace widget
