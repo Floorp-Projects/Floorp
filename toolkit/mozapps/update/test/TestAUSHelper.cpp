@@ -3,7 +3,11 @@
  */
 
 #ifdef XP_WIN
+#pragma comment(lib, "wintrust.lib")
+#pragma comment(lib, "crypt32.lib")
 # include <windows.h>
+# include <wintrust.h>
+# include <softpub.h>
 # include <direct.h>
 # include <io.h>
   typedef WCHAR NS_tchar;
@@ -111,6 +115,44 @@ CheckMsg(const NS_tchar *path, const char *expected)
   return strcmp(rb, expected) == 0;
 }
 
+#ifdef XP_WIN
+/**
+ * Verifies the trust of the specified file path.
+ *
+ * @param  filePath  The file path to check.
+ * @return ERROR_SUCCESS if successful, or the last error code otherwise.
+ */
+DWORD
+VerifyCertificateTrustForFile(LPCWSTR filePath)
+{
+  // Setup the file to check.
+  WINTRUST_FILE_INFO fileToCheck;
+  ZeroMemory(&fileToCheck, sizeof(fileToCheck));
+  fileToCheck.cbStruct = sizeof(WINTRUST_FILE_INFO);
+  fileToCheck.pcwszFilePath = filePath;
+
+  // Setup what to check, we want to check it is signed and trusted.
+  WINTRUST_DATA trustData;
+  ZeroMemory(&trustData, sizeof(trustData));
+  trustData.cbStruct = sizeof(trustData);
+  trustData.pPolicyCallbackData = NULL;
+  trustData.pSIPClientData = NULL;
+  trustData.dwUIChoice = WTD_UI_NONE;
+  trustData.fdwRevocationChecks = WTD_REVOKE_NONE; 
+  trustData.dwUnionChoice = WTD_CHOICE_FILE;
+  trustData.dwStateAction = 0;
+  trustData.hWVTStateData = NULL;
+  trustData.pwszURLReference = NULL;
+  // no UI
+  trustData.dwUIContext = 0;
+  trustData.pFile = &fileToCheck;
+
+  GUID policyGUID = WINTRUST_ACTION_GENERIC_VERIFY_V2;
+  // Check if the file is signed by something that is trusted.
+  return WinVerifyTrust(NULL, &policyGUID, &trustData);
+}
+#endif
+
 int NS_main(int argc, NS_tchar **argv)
 {
 
@@ -121,6 +163,7 @@ int NS_main(int argc, NS_tchar **argv)
             "\n" \
             "Usage: WORKINGDIR INFILE OUTFILE -s SECONDS [FILETOLOCK]\n"  \
             "   or: WORKINGDIR LOGFILE [ARG2 ARG3...]\n" \
+            "   or: signature-check filepath\n" \
             "\n" \
             "  WORKINGDIR  \tThe relative path to the working directory to use.\n" \
             "  INFILE      \tThe relative path from the working directory for the file to\n" \
@@ -140,6 +183,19 @@ int NS_main(int argc, NS_tchar **argv)
             "Note: All paths must be relative.\n" \
             "\n");
     return 1;
+  }
+
+  if (!NS_tstrcmp(argv[1], NS_T("check-signature"))) {
+#ifdef XP_WIN
+    if (ERROR_SUCCESS == VerifyCertificateTrustForFile(argv[2])) {
+      return 0;
+    } else {
+      return 1;
+    }
+#else 
+    // Not implemented on non-Windows platforms
+    return 1;
+#endif
   }
 
   int i = 0;
