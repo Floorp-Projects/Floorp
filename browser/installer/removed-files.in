@@ -1452,3 +1452,7 @@ extensions/inspector@mozilla.org/chrome/icons/default/winInspectorMain.ico
 components/nsPlacesTransactionsService.js
 components/browserplaces.xpt
 components/nsPlacesDBFlush.js
+#ifndef MOZ_MAINTENANCE_SERVICE
+maintenanceservice.exe
+maintenanceservice_installer.exe
+#endif

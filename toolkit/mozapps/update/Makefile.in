@@ -52,6 +52,7 @@ ifdef MOZ_UPDATER
 DIRS = ../readstrings
 
 ifneq ($(OS_TARGET),Android)
+DIRS += common
 DIRS += updater
 endif
 

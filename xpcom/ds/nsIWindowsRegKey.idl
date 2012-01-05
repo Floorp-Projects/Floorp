@@ -83,6 +83,9 @@ interface nsIWindowsRegKey : nsISupports
                                                   ACCESS_CREATE_SUB_KEY;
   const unsigned long ACCESS_ALL                = ACCESS_READ |
                                                   ACCESS_WRITE;
+  const unsigned long WOW64_32                  = 0x00000200;
+  const unsigned long WOW64_64                  = 0x00000100;
+
 
   /**
    * Values for the type of a registry value.  The numeric values of these
