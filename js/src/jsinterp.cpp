@@ -386,11 +386,8 @@ Class js_NoSuchMethodClass = {
  * parameters.
  */
 bool
-js::OnUnknownMethod(JSContext *cx, Value *vp)
+js::OnUnknownMethod(JSContext *cx, JSObject *obj, Value idval, Value *vp)
 {
-    JS_ASSERT(!vp[1].isPrimitive());
-
-    JSObject *obj = &vp[1].toObject();
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
     AutoValueRooter tvr(cx);
     if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, tvr.addr()))
@@ -398,14 +395,14 @@ js::OnUnknownMethod(JSContext *cx, Value *vp)
     TypeScript::MonitorUnknown(cx, cx->fp()->script(), cx->regs().pc);
 
     if (tvr.value().isPrimitive()) {
-        vp[0] = tvr.value();
+        *vp = tvr.value();
     } else {
 #if JS_HAS_XML_SUPPORT
         /* Extract the function name from function::name qname. */
-        if (vp[0].isObject()) {
-            obj = &vp[0].toObject();
+        if (idval.isObject()) {
+            obj = &idval.toObject();
             if (js_GetLocalNameFromFunctionQName(obj, &id, cx))
-                vp[0] = IdToValue(id);
+                idval = IdToValue(id);
         }
 #endif
 
@@ -414,8 +411,8 @@ js::OnUnknownMethod(JSContext *cx, Value *vp)
             return false;
 
         obj->setSlot(JSSLOT_FOUND_FUNCTION, tvr.value());
-        obj->setSlot(JSSLOT_SAVED_ID, vp[0]);
-        vp[0].setObject(*obj);
+        obj->setSlot(JSSLOT_SAVED_ID, idval);
+        vp->setObject(*obj);
     }
     return true;
 }
@@ -1262,25 +1259,15 @@ inline InterpreterFrames::~InterpreterFrames()
     JS_THREAD_DATA(context)->interpreterFrames = older;
 }
 
-/*
- * Deadlocks or else bad races are likely if JS_THREADSAFE, so we must rely on
- * single-thread DEBUG js shell testing to verify property cache hits.
- */
-#if defined DEBUG && !defined JS_THREADSAFE
-
-# define ASSERT_VALID_PROPERTY_CACHE_HIT(obj,pobj,entry)                      \
-    JS_BEGIN_MACRO                                                            \
-        if (!AssertValidPropertyCacheHit(cx, script, regs, obj, pobj,         \
-                                         entry)) {                            \
-            goto error;                                                       \
-        }                                                                     \
-    JS_END_MACRO
-
-static bool
-AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, FrameRegs& regs,
-                            JSObject *start, JSObject *found,
-                            PropertyCacheEntry *entry)
+#if defined(DEBUG) && !defined(JS_THREADSAFE)
+void
+js::AssertValidPropertyCacheHit(JSContext *cx,
+                                JSObject *start, JSObject *found,
+                                PropertyCacheEntry *entry)
 {
+    JSScript *script = cx->fp()->script();
+    FrameRegs& regs = cx->regs();
+
     uint32_t sample = cx->runtime->gcNumber;
     PropertyCacheEntry savedEntry = *entry;
 
@@ -1298,8 +1285,8 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, FrameRegs& regs,
         obj = start;
         ok = LookupProperty(cx, obj, name, &pobj, &prop);
     }
-    if (!ok)
-        return false;
+    JS_ASSERT(ok);
+
     if (cx->runtime->gcNumber != sample)
         JS_PROPERTY_CACHE(cx).restore(&savedEntry);
     JS_ASSERT(prop);
@@ -1307,13 +1294,8 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, FrameRegs& regs,
 
     const Shape *shape = (Shape *) prop;
     JS_ASSERT(entry->prop == shape);
-
-    return true;
 }
-
-#else
-# define ASSERT_VALID_PROPERTY_CACHE_HIT(obj,pobj,entry) ((void) 0)
-#endif
+#endif /* DEBUG && !JS_THREADSAFE */
 
 /*
  * Ensure that the intrepreter switch can close call-bytecode cases in the
@@ -2237,35 +2219,6 @@ BEGIN_CASE(JSOP_PICK)
 }
 END_CASE(JSOP_PICK)
 
-#define NATIVE_GET(cx,obj,pobj,shape,getHow,vp)                               \
-    JS_BEGIN_MACRO                                                            \
-        if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {         \
-            /* Fast path for Object instance properties. */                   \
-            JS_ASSERT((shape)->slot() != SHAPE_INVALID_SLOT ||                \
-                      !shape->hasDefaultSetter());                            \
-            if (((shape)->slot() != SHAPE_INVALID_SLOT))                      \
-                *(vp) = (pobj)->nativeGetSlot((shape)->slot());               \
-            else                                                              \
-                (vp)->setUndefined();                                         \
-        } else {                                                              \
-            if (!js_NativeGet(cx, obj, pobj, shape, getHow, vp))              \
-                goto error;                                                   \
-        }                                                                     \
-    JS_END_MACRO
-
-#define NATIVE_SET(cx,obj,shape,entry,strict,vp)                              \
-    JS_BEGIN_MACRO                                                            \
-        if (shape->hasDefaultSetter() &&                                      \
-            (shape)->hasSlot() &&                                             \
-            !(shape)->isMethod()) {                                           \
-            /* Fast path for, e.g., plain Object instance properties. */      \
-            (obj)->nativeSetSlotWithType(cx, shape, *vp);                     \
-        } else {                                                              \
-            if (!js_NativeSet(cx, obj, shape, false, strict, vp))             \
-                goto error;                                                   \
-        }                                                                     \
-    JS_END_MACRO
-
 BEGIN_CASE(JSOP_SETCONST)
 {
     PropertyName *name;
@@ -2326,14 +2279,8 @@ BEGIN_CASE(JSOP_BINDNAME)
         if (obj->isGlobal())
             break;
 
-        PropertyCacheEntry *entry;
-        JSObject *obj2;
         PropertyName *name;
-        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, name);
-        if (!name) {
-            ASSERT_VALID_PROPERTY_CACHE_HIT(obj, obj2, entry);
-            break;
-        }
+        LOAD_NAME(0, name);
 
         obj = FindIdentifierBase(cx, &regs.fp()->scopeChain(), name);
         if (!obj)
@@ -2905,72 +2852,11 @@ END_CASE(JSOP_THIS)
 BEGIN_CASE(JSOP_GETPROP)
 BEGIN_CASE(JSOP_GETXPROP)
 BEGIN_CASE(JSOP_LENGTH)
+BEGIN_CASE(JSOP_CALLPROP)
 {
     Value rval;
-    do {
-        Value *vp = &regs.sp[-1];
-
-        if (op == JSOP_LENGTH) {
-            /* Optimize length accesses on strings, arrays, and arguments. */
-            if (vp->isString()) {
-                rval = Int32Value(vp->toString()->length());
-                break;
-            }
-            if (vp->isMagic(JS_LAZY_ARGUMENTS)) {
-                rval = Int32Value(regs.fp()->numActualArgs());
-                break;
-            }
-            if (vp->isObject()) {
-                JSObject *obj = &vp->toObject();
-                if (obj->isArray()) {
-                    jsuint length = obj->getArrayLength();
-                    rval = NumberValue(length);
-                    break;
-                }
-
-                if (obj->isArguments()) {
-                    ArgumentsObject &argsobj = obj->asArguments();
-                    if (!argsobj.hasOverriddenLength()) {
-                        uint32_t length = argsobj.initialLength();
-                        JS_ASSERT(length < INT32_MAX);
-                        rval = Int32Value(int32_t(length));
-                        break;
-                    }
-                }
-
-                if (js_IsTypedArray(obj)) {
-                    JSObject *tarray = TypedArray::getTypedArray(obj);
-                    rval = Int32Value(TypedArray::getLength(tarray));
-                    break;
-                }
-            }
-        }
-
-        JSObject *obj;
-        VALUE_TO_OBJECT(cx, vp, obj);
-        JSObject *aobj = js_GetProtoIfDenseArray(obj);
-
-        PropertyCacheEntry *entry;
-        JSObject *obj2;
-        PropertyName *name;
-        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, name);
-        if (!name) {
-            ASSERT_VALID_PROPERTY_CACHE_HIT(aobj, obj2, entry);
-            NATIVE_GET(cx, obj, obj2, entry->prop, JSGET_METHOD_BARRIER, &rval);
-            break;
-        }
-
-        if (JS_LIKELY(!aobj->getOps()->getProperty)
-            ? !GetPropertyHelper(cx, obj, name,
-                                 (regs.pc[JSOP_GETPROP_LENGTH] == JSOP_IFEQ)
-                                 ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
-                                 : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
-                                 &rval)
-            : !obj->getProperty(cx, name, &rval))
-        {
-            goto error;
-        }
-    } while (0);
+    if (!GetPropertyOperation(cx, regs.pc, regs.sp[-1], &rval))
+        goto error;
 
     TypeScript::Monitor(cx, script, regs.pc, rval);
 
@@ -2979,177 +2865,16 @@ BEGIN_CASE(JSOP_LENGTH)
 }
 END_CASE(JSOP_GETPROP)
 
-BEGIN_CASE(JSOP_CALLPROP)
-{
-    Value lval = regs.sp[-1];
-
-    Value objv;
-    if (lval.isObject()) {
-        objv = lval;
-    } else {
-        GlobalObject &global = regs.fp()->scopeChain().global();
-        JSObject *pobj;
-        if (lval.isString()) {
-            pobj = global.getOrCreateStringPrototype(cx);
-        } else if (lval.isNumber()) {
-            pobj = global.getOrCreateNumberPrototype(cx);
-        } else if (lval.isBoolean()) {
-            pobj = global.getOrCreateBooleanPrototype(cx);
-        } else {
-            JS_ASSERT(lval.isNull() || lval.isUndefined());
-            js_ReportIsNullOrUndefined(cx, -1, lval, NULL);
-            goto error;
-        }
-        if (!pobj)
-            goto error;
-        objv.setObject(*pobj);
-    }
-
-    JSObject *aobj = js_GetProtoIfDenseArray(&objv.toObject());
-    Value rval;
-
-    PropertyCacheEntry *entry;
-    JSObject *obj2;
-    PropertyName *name;
-    JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, name);
-    if (!name) {
-        ASSERT_VALID_PROPERTY_CACHE_HIT(aobj, obj2, entry);
-        NATIVE_GET(cx, &objv.toObject(), obj2, entry->prop, JSGET_NO_METHOD_BARRIER, &rval);
-        regs.sp[-1] = rval;
-        assertSameCompartment(cx, regs.sp[-1]);
-        PUSH_COPY(lval);
-    } else {
-        /* Cache miss: use the name loaded for us under PropertyCache::test. */
-        PUSH_NULL();
-        if (lval.isObject()) {
-            if (!GetMethod(cx, &objv.toObject(), name,
-                           JS_LIKELY(!aobj->getOps()->getProperty)
-                           ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
-                           : JSGET_NO_METHOD_BARRIER,
-                           &rval))
-            {
-                goto error;
-            }
-            regs.sp[-1] = objv;
-            regs.sp[-2] = rval;
-        } else {
-            JS_ASSERT(!objv.toObject().getOps()->getProperty);
-            if (!GetPropertyHelper(cx, &objv.toObject(), name,
-                                   JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER, &rval))
-            {
-                goto error;
-            }
-            regs.sp[-1] = lval;
-            regs.sp[-2] = rval;
-        }
-        assertSameCompartment(cx, regs.sp[-1], regs.sp[-2]);
-    }
-#if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(rval.isPrimitive()) && regs.sp[-1].isObject()) {
-        LOAD_NAME(0, name);
-        regs.sp[-2].setString(name);
-        if (!OnUnknownMethod(cx, regs.sp - 2))
-            goto error;
-    }
-#endif
-    TypeScript::Monitor(cx, script, regs.pc, rval);
-}
-END_CASE(JSOP_CALLPROP)
-
 BEGIN_CASE(JSOP_SETGNAME)
 BEGIN_CASE(JSOP_SETNAME)
 BEGIN_CASE(JSOP_SETPROP)
 BEGIN_CASE(JSOP_SETMETHOD)
 {
-    Value rval = regs.sp[-1];
-    JS_ASSERT_IF(op == JSOP_SETMETHOD, IsFunctionObject(rval));
-    Value &lref = regs.sp[-2];
-    JS_ASSERT_IF(op == JSOP_SETNAME, lref.isObject());
-    JSObject *obj;
-    VALUE_TO_OBJECT(cx, &lref, obj);
+    const Value &rval = regs.sp[-1];
+    const Value &lval = regs.sp[-2];
 
-    JS_ASSERT_IF(op == JSOP_SETGNAME, obj == &regs.fp()->scopeChain().global());
-
-    do {
-        PropertyCache *cache = &JS_PROPERTY_CACHE(cx);
-
-        /*
-         * Probe the property cache, specializing for two important
-         * set-property cases. First:
-         *
-         *   function f(a, b, c) {
-         *     var o = {p:a, q:b, r:c};
-         *     return o;
-         *   }
-         *
-         * or similar real-world cases, which evolve a newborn native
-         * object predicatably through some bounded number of property
-         * additions. And second:
-         *
-         *   o.p = x;
-         *
-         * in a frequently executed method or loop body, where p will
-         * (possibly after the first iteration) always exist in native
-         * object o.
-         */
-        PropertyCacheEntry *entry;
-        JSObject *obj2;
-        PropertyName *name;
-        if (cache->testForSet(cx, regs.pc, obj, &entry, &obj2, &name)) {
-            /*
-             * Property cache hit, only partially confirmed by testForSet. We
-             * know that the entry applies to regs.pc and that obj's shape
-             * matches.
-             *
-             * The entry predicts a set either an existing "own" property, or
-             * on a prototype property that has a setter.
-             */
-            const Shape *shape = entry->prop;
-
-            if (entry->isOwnPropertyHit() ||
-                ((obj2 = obj->getProto()) && obj2->lastProperty() == entry->pshape))
-            {
-                JS_ASSERT_IF(shape->isDataDescriptor(), shape->writable());
-                JS_ASSERT_IF(shape->hasSlot(), entry->isOwnPropertyHit());
-
-#ifdef DEBUG
-                if (entry->isOwnPropertyHit()) {
-                    JS_ASSERT(obj->nativeContains(cx, *shape));
-                } else {
-                    JS_ASSERT(obj2->nativeContains(cx, *shape));
-                    JS_ASSERT(entry->isPrototypePropertyHit());
-                    JS_ASSERT(entry->kshape != entry->pshape);
-                    JS_ASSERT(!shape->hasSlot());
-                }
-#endif
-
-                PCMETER(cache->pchits++);
-                PCMETER(cache->setpchits++);
-                NATIVE_SET(cx, obj, shape, entry, script->strictModeCode, &rval);
-                break;
-            }
-            PCMETER(cache->setpcmisses++);
-
-            LOAD_NAME(0, name);
-        } else {
-            JS_ASSERT(name);
-        }
-
-        if (entry && JS_LIKELY(!obj->getOps()->setProperty)) {
-            uintN defineHow;
-            if (op == JSOP_SETMETHOD)
-                defineHow = DNP_CACHE_RESULT | DNP_SET_METHOD;
-            else if (op == JSOP_SETNAME)
-                defineHow = DNP_CACHE_RESULT | DNP_UNQUALIFIED;
-            else
-                defineHow = DNP_CACHE_RESULT;
-            if (!SetPropertyHelper(cx, obj, name, defineHow, &rval, script->strictModeCode))
-                goto error;
-        } else {
-            if (!obj->setProperty(cx, name, &rval, script->strictModeCode))
-                goto error;
-        }
-    } while (0);
+    if (!SetPropertyOperation(cx, regs.pc, lval, rval))
+        goto error;
 
     regs.sp[-2] = regs.sp[-1];
     regs.sp--;
@@ -3254,18 +2979,14 @@ BEGIN_CASE(JSOP_CALLELEM)
 
 #if JS_HAS_NO_SUCH_METHOD
     if (JS_UNLIKELY(regs.sp[-2].isPrimitive()) && thisv.isObject()) {
-        /* For OnUnknownMethod, sp[-2] is the index, and sp[-1] is the object missing it. */
-        regs.sp[-2] = regs.sp[-1];
-        regs.sp[-1].setObject(*thisObj);
-        if (!OnUnknownMethod(cx, regs.sp - 2))
+        if (!OnUnknownMethod(cx, &thisv.toObject(), regs.sp[-1], regs.sp - 2))
             goto error;
-    } else
-#endif
-    {
-        regs.sp[-1] = thisv;
     }
+#endif
 
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-2]);
+    regs.sp--;
+
+    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 }
 END_CASE(JSOP_CALLELEM)
 
@@ -3431,82 +3152,34 @@ BEGIN_CASE(JSOP_SETCALL)
 }
 END_CASE(JSOP_SETCALL)
 
-#define PUSH_IMPLICIT_THIS(cx, obj, funval)                                   \
-    JS_BEGIN_MACRO                                                            \
-        Value v;                                                              \
-        if (!ComputeImplicitThis(cx, obj, funval, &v))                        \
-            goto error;                                                       \
-        PUSH_COPY(v);                                                         \
-    JS_END_MACRO                                                              \
+BEGIN_CASE(JSOP_IMPLICITTHIS)
+{
+    PropertyName *name;
+    LOAD_NAME(0, name);
+
+    JSObject *obj, *obj2;
+    JSProperty *prop;
+    if (!FindPropertyHelper(cx, name, false, false, &obj, &obj2, &prop))
+        goto error;
+
+    Value v;
+    if (!ComputeImplicitThis(cx, obj, &v))
+        goto error;
+    PUSH_COPY(v);
+}
+END_CASE(JSOP_IMPLICITTHIS)
 
 BEGIN_CASE(JSOP_GETGNAME)
 BEGIN_CASE(JSOP_CALLGNAME)
 BEGIN_CASE(JSOP_NAME)
 BEGIN_CASE(JSOP_CALLNAME)
 {
-    JSObject *obj = &regs.fp()->scopeChain();
-
-    bool global = js_CodeSpec[op].format & JOF_GNAME;
-    if (global)
-        obj = &obj->global();
-
     Value rval;
-
-    PropertyCacheEntry *entry;
-    JSObject *obj2;
-    PropertyName *name;
-    JS_PROPERTY_CACHE(cx).test(cx, regs.pc, obj, obj2, entry, name);
-    if (!name) {
-        ASSERT_VALID_PROPERTY_CACHE_HIT(obj, obj2, entry);
-        NATIVE_GET(cx, obj, obj2, entry->prop, JSGET_METHOD_BARRIER, &rval);
-        PUSH_COPY(rval);
-
-        TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
-
-        JS_ASSERT(obj->isGlobal() || IsCacheableNonGlobalScope(obj));
-        if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
-            PUSH_IMPLICIT_THIS(cx, obj, regs.sp[-1]);
-        len = JSOP_NAME_LENGTH;
-        DO_NEXT_OP(len);
-    }
-
-    JSProperty *prop;
-    if (!FindPropertyHelper(cx, name, true, global, &obj, &obj2, &prop))
+    if (!NameOperation(cx, regs.pc, &rval))
         goto error;
-    if (!prop) {
-        /* Kludge to allow (typeof foo == "undefined") tests. */
-        JSOp op2 = JSOp(regs.pc[JSOP_NAME_LENGTH]);
-        if (op2 == JSOP_TYPEOF) {
-            PUSH_UNDEFINED();
-            TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
-            len = JSOP_NAME_LENGTH;
-            DO_NEXT_OP(len);
-        }
-
-        JSAutoByteString bytes;
-        if (js_AtomToPrintableString(cx, name, &bytes))
-            js_ReportIsNotDefined(cx, bytes.ptr());
-        goto error;
-    }
-
-    /* Take the slow path if prop was not found in a native object. */
-    if (!obj->isNative() || !obj2->isNative()) {
-        if (!obj->getProperty(cx, name, &rval))
-            goto error;
-    } else {
-        Shape *shape = (Shape *)prop;
-        JSObject *normalized = obj;
-        if (normalized->isWith() && !shape->hasDefaultGetter())
-            normalized = &normalized->asWith().object();
-        NATIVE_GET(cx, normalized, obj2, shape, JSGET_METHOD_BARRIER, &rval);
-    }
 
     PUSH_COPY(rval);
     TypeScript::Monitor(cx, script, regs.pc, rval);
-
-    /* obj must be on the scope chain, thus not a function. */
-    if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
-        PUSH_IMPLICIT_THIS(cx, obj, rval);
 }
 END_CASE(JSOP_NAME)
 
@@ -3783,8 +3456,6 @@ BEGIN_CASE(JSOP_CALLARG)
     uint32_t slot = GET_ARGNO(regs.pc);
     JS_ASSERT(slot < regs.fp()->numFormalArgs());
     PUSH_COPY(argv[slot]);
-    if (op == JSOP_CALLARG)
-        PUSH_UNDEFINED();
 }
 END_CASE(JSOP_GETARG)
 
@@ -3797,6 +3468,7 @@ BEGIN_CASE(JSOP_SETARG)
 END_CASE(JSOP_SETARG)
 
 BEGIN_CASE(JSOP_GETLOCAL)
+BEGIN_CASE(JSOP_CALLLOCAL)
 {
     /*
      * Skip the same-compartment assertion if the local will be immediately
@@ -3815,15 +3487,6 @@ BEGIN_CASE(JSOP_GETLOCAL)
 }
 END_CASE(JSOP_GETLOCAL)
 
-BEGIN_CASE(JSOP_CALLLOCAL)
-{
-    uint32_t slot = GET_SLOTNO(regs.pc);
-    JS_ASSERT(slot < script->nslots);
-    PUSH_COPY(regs.fp()->slots()[slot]);
-    PUSH_UNDEFINED();
-}
-END_CASE(JSOP_CALLLOCAL)
-
 BEGIN_CASE(JSOP_SETLOCAL)
 {
     uint32_t slot = GET_SLOTNO(regs.pc);
@@ -3841,8 +3504,6 @@ BEGIN_CASE(JSOP_CALLFCSLOT)
 
     PUSH_COPY(obj->toFunction()->getFlatClosureUpvar(index));
     TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
-    if (op == JSOP_CALLFCSLOT)
-        PUSH_UNDEFINED();
 }
 END_CASE(JSOP_GETFCSLOT)
 
@@ -4398,37 +4059,18 @@ BEGIN_CASE(JSOP_INITMETHOD)
     JSObject *obj = &regs.sp[-2].toObject();
     JS_ASSERT(obj->isObject());
 
-    /*
-     * Probe the property cache to see if this is a set on an existing property
-     * added by a NEWOBJECT or a previous INITPROP. If the cached shape has a
-     * non-default setter, it must be __proto__, so don't handle this.
-     */
-    PropertyCacheEntry *entry;
-    JSObject *obj2;
-    PropertyName *name;
-    if (JS_PROPERTY_CACHE(cx).testForSet(cx, regs.pc, obj, &entry, &obj2, &name) &&
-        entry->prop->hasDefaultSetter() &&
-        entry->isOwnPropertyHit())
-    {
-        JS_ASSERT(obj == obj2);
-        /* Fast path. Property cache hit. */
-        obj->nativeSetSlotWithType(cx, entry->prop, rval);
-    } else {
-        PCMETER(JS_PROPERTY_CACHE(cx).inipcmisses++);
-        LOAD_NAME(0, name);
+    JSAtom *atom;
+    LOAD_ATOM(0, atom);
+    jsid id = ATOM_TO_JSID(atom);
 
-        uintN defineHow = (op == JSOP_INITMETHOD)
-                          ? DNP_CACHE_RESULT | DNP_SET_METHOD
-                          : DNP_CACHE_RESULT;
-        if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
-            ? !SetPropertyHelper(cx, obj, name, defineHow, &rval, script->strictModeCode)
-            : !DefineNativeProperty(cx, obj, name, rval, NULL, NULL,
-                                    JSPROP_ENUMERATE, 0, 0, defineHow)) {
-            goto error;
-        }
+    uintN defineHow = (op == JSOP_INITMETHOD) ? DNP_SET_METHOD : 0;
+    if (JS_UNLIKELY(atom == cx->runtime->atomState.protoAtom)
+        ? !js_SetPropertyHelper(cx, obj, id, defineHow, &rval, script->strictModeCode)
+        : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
+                                JSPROP_ENUMERATE, 0, 0, defineHow)) {
+        goto error;
     }
 
-    /* Common tail for property cache hit and miss cases. */
     regs.sp--;
 }
 END_CASE(JSOP_INITPROP);
@@ -4834,8 +4476,12 @@ BEGIN_CASE(JSOP_XMLNAME)
     if (!obj->getGeneric(cx, id, &rval))
         goto error;
     regs.sp[-1] = rval;
-    if (op == JSOP_CALLXMLNAME)
-        PUSH_IMPLICIT_THIS(cx, obj, rval);
+    if (op == JSOP_CALLXMLNAME) {
+        Value v;
+        if (!ComputeImplicitThis(cx, obj, &v))
+            goto error;
+        PUSH_COPY(v);
+    }
 }
 END_CASE(JSOP_XMLNAME)
 

@@ -54,14 +54,6 @@ ThrowException(VMFrame &f)
 #define THROW()   do { mjit::ThrowException(f); return; } while (0)
 #define THROWV(v) do { mjit::ThrowException(f); return v; } while (0)
 
-static inline JSObject *
-ValueToObject(JSContext *cx, Value *vp)
-{
-    if (vp->isObject())
-        return &vp->toObject();
-    return js_ValueToNonNullObject(cx, *vp);
-}
-
 static inline void
 ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
 {

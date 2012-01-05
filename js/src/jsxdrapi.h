@@ -226,7 +226,7 @@ JS_XDRFindClassById(JSXDRState *xdr, uint32_t id);
  * and saved versions. If deserialization fails, the data should be
  * invalidated if possible.
  */
-#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 101)
+#define JSXDR_BYTECODE_VERSION      (0xb973c0de - 102)
 
 /*
  * Library-private functions.
