@@ -57,6 +57,7 @@ DEFINES += \
 
 CPPSRCS		= \
 		nsBaseAppShell.cpp \
+		nsBaseScreen.cpp \
 		nsBaseWidget.cpp \
 		nsTransferable.cpp \
 		nsHTMLFormatConverter.cpp \

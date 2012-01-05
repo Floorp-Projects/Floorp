@@ -35,20 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//
-// We have to do this in order to have access to the multiple-monitor
-// APIs that are only defined when WINVER is >= 0x0500. Don't worry,
-// these won't actually be called unless they are present.
-//
-#undef WINVER
-#define WINVER 0x0500
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0500
-
 #include "nsScreenWin.h"
 
 
-nsScreenWin :: nsScreenWin ( void* inScreen )
+nsScreenWin :: nsScreenWin ( HMONITOR inScreen )
   : mScreen(inScreen)
 {
 #ifdef DEBUG
@@ -70,19 +60,14 @@ nsScreenWin :: ~nsScreenWin()
 }
 
 
-// addref, release, QI
-NS_IMPL_ISUPPORTS1(nsScreenWin, nsIScreen)
-
-
 NS_IMETHODIMP
 nsScreenWin :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
   BOOL success = FALSE;
-#if _MSC_VER >= 1200
   if ( mScreen ) {
     MONITORINFO info;
     info.cbSize = sizeof(MONITORINFO);
-    success = ::GetMonitorInfoW( (HMONITOR)mScreen, &info );
+    success = ::GetMonitorInfoW( mScreen, &info );
     if ( success ) {
       *outLeft = info.rcMonitor.left;
       *outTop = info.rcMonitor.top;
@@ -90,7 +75,6 @@ nsScreenWin :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRI
       *outHeight = info.rcMonitor.bottom - info.rcMonitor.top;
     }
   }
-#endif
   if (!success) {
      HDC hDCScreen = ::GetDC(nsnull);
      NS_ASSERTION(hDCScreen,"GetDC Failure");
@@ -111,11 +95,10 @@ nsScreenWin :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth
 {
   BOOL success = FALSE;
 
-#if _MSC_VER >= 1200
   if ( mScreen ) {
     MONITORINFO info;
     info.cbSize = sizeof(MONITORINFO);
-    success = ::GetMonitorInfoW( (HMONITOR)mScreen, &info );
+    success = ::GetMonitorInfoW( mScreen, &info );
     if ( success ) {
       *outLeft = info.rcWork.left;
       *outTop = info.rcWork.top;
@@ -123,7 +106,6 @@ nsScreenWin :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth
       *outHeight = info.rcWork.bottom - info.rcWork.top;
     }
   }
-#endif
   if (!success) {
     RECT workArea;
     ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);

@@ -4707,10 +4707,12 @@ var XULBrowserWindow = {
         document.documentElement.removeAttribute("disablechrome");
 
       // Disable find commands in documents that ask for them to be disabled.
-      let docElt = content.document.documentElement;
-      let disableFind = aLocationURI &&
-        (docElt && docElt.getAttribute("disablefastfind") == "true") &&
-        (aLocationURI.schemeIs("about") || aLocationURI.schemeIs("chrome"));
+      let disableFind = false;
+      if (aLocationURI &&
+          (aLocationURI.schemeIs("about") || aLocationURI.schemeIs("chrome"))) {
+        let docElt = content.document.documentElement;
+        disableFind = docElt && docElt.getAttribute("disablefastfind") == "true";
+      }
       let findCommands = [document.getElementById("cmd_find"),
                           document.getElementById("cmd_findAgain"),
                           document.getElementById("cmd_findPrevious")];

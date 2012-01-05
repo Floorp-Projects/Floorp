@@ -42,24 +42,32 @@
 
 #include "cairo.h"
 
+#include <vector>
+
+using namespace mozilla::gfx;
+
 gfxPattern::gfxPattern(cairo_pattern_t *aPattern)
+  : mGfxPattern(NULL)
 {
     mPattern = cairo_pattern_reference(aPattern);
 }
 
 gfxPattern::gfxPattern(const gfxRGBA& aColor)
+  : mGfxPattern(NULL)
 {
     mPattern = cairo_pattern_create_rgba(aColor.r, aColor.g, aColor.b, aColor.a);
 }
 
 // from another surface
 gfxPattern::gfxPattern(gfxASurface *surface)
+  : mGfxPattern(NULL)
 {
     mPattern = cairo_pattern_create_for_surface(surface->CairoSurface());
 }
 
 // linear
 gfxPattern::gfxPattern(gfxFloat x0, gfxFloat y0, gfxFloat x1, gfxFloat y1)
+  : mGfxPattern(NULL)
 {
     mPattern = cairo_pattern_create_linear(x0, y0, x1, y1);
 }
@@ -67,14 +75,28 @@ gfxPattern::gfxPattern(gfxFloat x0, gfxFloat y0, gfxFloat x1, gfxFloat y1)
 // radial
 gfxPattern::gfxPattern(gfxFloat cx0, gfxFloat cy0, gfxFloat radius0,
                        gfxFloat cx1, gfxFloat cy1, gfxFloat radius1)
+  : mGfxPattern(NULL)
 {
     mPattern = cairo_pattern_create_radial(cx0, cy0, radius0,
                                            cx1, cy1, radius1);
 }
 
+// Azure
+gfxPattern::gfxPattern(SourceSurface *aSurface, const Matrix &aTransform)
+  : mPattern(NULL)
+  , mGfxPattern(NULL)
+  , mSourceSurface(aSurface)
+  , mTransform(aTransform)
+{
+}
+
 gfxPattern::~gfxPattern()
 {
     cairo_pattern_destroy(mPattern);
+
+    if (mGfxPattern) {
+      mGfxPattern->~Pattern();
+    }
 }
 
 cairo_pattern_t *
@@ -86,6 +108,8 @@ gfxPattern::CairoPattern()
 void
 gfxPattern::AddColorStop(gfxFloat offset, const gfxRGBA& c)
 {
+  if (mPattern) {
+    mStops = NULL;
     if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
         gfxRGBA cms;
         gfxPlatform::TransformPixel(c, cms, gfxPlatform::GetCMSRGBTransform());
@@ -97,26 +121,159 @@ gfxPattern::AddColorStop(gfxFloat offset, const gfxRGBA& c)
     }
     else
         cairo_pattern_add_color_stop_rgba(mPattern, offset, c.r, c.g, c.b, c.a);
+  }
 }
 
 void
 gfxPattern::SetMatrix(const gfxMatrix& matrix)
 {
+  if (mPattern) {
     cairo_matrix_t mat = *reinterpret_cast<const cairo_matrix_t*>(&matrix);
     cairo_pattern_set_matrix(mPattern, &mat);
+  } else {
+    mTransform = ToMatrix(matrix);
+  }
 }
 
 gfxMatrix
 gfxPattern::GetMatrix() const
 {
+  if (mPattern) {
     cairo_matrix_t mat;
     cairo_pattern_get_matrix(mPattern, &mat);
     return gfxMatrix(*reinterpret_cast<gfxMatrix*>(&mat));
+  } else {
+    return ThebesMatrix(mTransform);
+  }
+}
+
+Pattern*
+gfxPattern::GetPattern(mozilla::gfx::DrawTarget *aTarget)
+{
+  if (!mPattern) {
+    mGfxPattern = new (mSurfacePattern.addr())
+      SurfacePattern(mSourceSurface, EXTEND_CLAMP, mTransform);
+    return mGfxPattern;
+  }
+
+  GraphicsExtend extend = (GraphicsExtend)cairo_pattern_get_extend(mPattern);
+
+  switch (cairo_pattern_get_type(mPattern)) {
+  case CAIRO_PATTERN_TYPE_SURFACE:
+    {
+      GraphicsFilter filter = (GraphicsFilter)cairo_pattern_get_filter(mPattern);
+      cairo_matrix_t mat;
+      cairo_pattern_get_matrix(mPattern, &mat);
+      gfxMatrix matrix(*reinterpret_cast<gfxMatrix*>(&mat));
+
+      cairo_surface_t *surf = NULL;
+      cairo_pattern_get_surface(mPattern, &surf);
+
+      if (!mSourceSurface) {
+        nsRefPtr<gfxASurface> gfxSurf = gfxASurface::Wrap(surf);
+        mSourceSurface =
+          gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(aTarget, gfxSurf);
+      }
+
+      if (mSourceSurface) {
+        Matrix newMat = ToMatrix(matrix);
+        newMat.Invert();
+        double x, y;
+        cairo_surface_get_device_offset(surf, &x, &y);
+        newMat.Translate(-x, -y);
+        mGfxPattern = new (mSurfacePattern.addr())
+          SurfacePattern(mSourceSurface, ToExtendMode(extend), newMat, ToFilter(filter));
+        return mGfxPattern;
+      }
+      break;
+    }
+  case CAIRO_PATTERN_TYPE_LINEAR:
+    {
+      double x1, y1, x2, y2;
+      cairo_pattern_get_linear_points(mPattern, &x1, &y1, &x2, &y2);
+      if (!mStops) {
+        int count = 0;
+        cairo_pattern_get_color_stop_count(mPattern, &count);
+
+        std::vector<GradientStop> stops;
+
+        for (int i = 0; i < count; i++) {
+          GradientStop stop;
+          double r, g, b, a, offset;
+          cairo_pattern_get_color_stop_rgba(mPattern, i, &offset, &r, &g, &b, &a);
+
+          stop.offset = offset;
+          stop.color = Color(Float(r), Float(g), Float(b), Float(a));
+          stops.push_back(stop);
+        }
+
+        mStops = aTarget->CreateGradientStops(&stops.front(), count, ToExtendMode(extend));
+      }
+
+      if (mStops) {
+        cairo_matrix_t mat;
+        cairo_pattern_get_matrix(mPattern, &mat);
+        gfxMatrix matrix(*reinterpret_cast<gfxMatrix*>(&mat));
+
+        Matrix newMat = ToMatrix(matrix);
+        newMat.Invert();
+
+        mGfxPattern = new (mLinearGradientPattern.addr())
+          LinearGradientPattern(Point(x1, y1), Point(x2, y2), mStops, newMat);
+
+        return mGfxPattern;
+      }
+      break;
+    }
+  case CAIRO_PATTERN_TYPE_RADIAL:
+    {
+      if (!mStops) {
+        int count = 0;
+        cairo_pattern_get_color_stop_count(mPattern, &count);
+
+        std::vector<GradientStop> stops;
+
+        for (int i = 0; i < count; i++) {
+          GradientStop stop;
+          double r, g, b, a, offset;
+          cairo_pattern_get_color_stop_rgba(mPattern, i, &offset, &r, &g, &b, &a);
+
+          stop.offset = offset;
+          stop.color = Color(Float(r), Float(g), Float(b), Float(a));
+          stops.push_back(stop);
+        }
+
+        mStops = aTarget->CreateGradientStops(&stops.front(), count, ToExtendMode(extend));
+      }
+
+      if (mStops) {
+        cairo_matrix_t mat;
+        cairo_pattern_get_matrix(mPattern, &mat);
+        gfxMatrix matrix(*reinterpret_cast<gfxMatrix*>(&mat));
+
+        Matrix newMat = ToMatrix(matrix);
+        newMat.Invert();
+
+        double x1, y1, x2, y2, r1, r2;
+        cairo_pattern_get_radial_circles(mPattern, &x1, &y1, &r1, &x2, &y2, &r2);
+        mGfxPattern = new (mRadialGradientPattern.addr())
+          RadialGradientPattern(Point(x1, y1), Point(x2, y2), r1, r2, mStops, newMat);
+
+        return mGfxPattern;
+      }
+      break;
+    }
+  }
+
+  new (mColorPattern.addr()) ColorPattern(Color(0, 0, 0, 0));
+  return mColorPattern.addr();
 }
 
 void
 gfxPattern::SetExtend(GraphicsExtend extend)
 {
+  if (mPattern) {
+    mStops = NULL;
     if (extend == EXTEND_PAD_EDGE) {
         if (cairo_pattern_get_type(mPattern) == CAIRO_PATTERN_TYPE_SURFACE) {
             cairo_surface_t *surf = NULL;
@@ -144,24 +301,66 @@ gfxPattern::SetExtend(GraphicsExtend extend)
     }
 
     cairo_pattern_set_extend(mPattern, (cairo_extend_t)extend);
+  } else {
+    // This is always a surface pattern and will default to EXTEND_PAD
+    // for EXTEND_PAD_EDGE.
+    mExtend = ToExtendMode(extend);
+  }
+}
+
+bool
+gfxPattern::IsOpaque()
+{
+  if (mPattern) {
+    switch (cairo_pattern_get_type(mPattern)) {
+    case CAIRO_PATTERN_TYPE_SURFACE:
+      {
+        cairo_surface_t *surf = NULL;
+        cairo_pattern_get_surface(mPattern, &surf);
+
+        if (cairo_surface_get_content(surf) == CAIRO_CONTENT_COLOR) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  if (mSourceSurface->GetFormat() == FORMAT_B8G8R8X8) {
+    return true;
+  }
+  return false;
 }
 
 gfxPattern::GraphicsExtend
 gfxPattern::Extend() const
 {
+  if (mPattern) {
     return (GraphicsExtend)cairo_pattern_get_extend(mPattern);
+  } else {
+    return ThebesExtend(mExtend);
+  }
 }
 
 void
 gfxPattern::SetFilter(GraphicsFilter filter)
 {
+  if (mPattern) {
     cairo_pattern_set_filter(mPattern, (cairo_filter_t)filter);
+  } else {
+    mFilter = ToFilter(filter);
+  }
 }
 
 gfxPattern::GraphicsFilter
 gfxPattern::Filter() const
 {
+  if (mPattern) {
     return (GraphicsFilter)cairo_pattern_get_filter(mPattern);
+  } else {
+    return ThebesFilter(mFilter);
+  }
 }
 
 bool
@@ -177,22 +376,39 @@ gfxPattern::GetSolidColor(gfxRGBA& aColor)
 already_AddRefed<gfxASurface>
 gfxPattern::GetSurface()
 {
+  if (mPattern) {
     cairo_surface_t *surf = nsnull;
 
     if (cairo_pattern_get_surface (mPattern, &surf) != CAIRO_STATUS_SUCCESS)
         return nsnull;
 
     return gfxASurface::Wrap(surf);
+  } else {
+    // We should never be trying to get the surface off an Azure gfx Pattern.
+    NS_ERROR("Attempt to get surface off an Azure gfxPattern!");
+    return NULL;
+  }
 }
 
 gfxPattern::GraphicsPatternType
 gfxPattern::GetType() const
 {
+  if (mPattern) {
     return (GraphicsPatternType) cairo_pattern_get_type(mPattern);
+  } else {
+    // We should never be trying to get the type off an Azure gfx Pattern.
+    MOZ_ASSERT(0);
+    return PATTERN_SURFACE;
+  }
 }
 
 int
 gfxPattern::CairoStatus()
 {
+  if (mPattern) {
     return cairo_pattern_status(mPattern);
+  } else {
+    // An Azure pattern as this point is never in error status.
+    return CAIRO_STATUS_SUCCESS;
+  }
 }

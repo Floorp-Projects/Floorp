@@ -35,16 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//
-// We have to do this in order to have access to the multiple-monitor
-// APIs that are only defined when WINVER is >= 0x0500. Don't worry,
-// these won't actually be called unless they are present.
-//
-#undef WINVER
-#define WINVER 0x0500
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0500
-
 #include "nsScreenManagerWin.h"
 #include "nsScreenWin.h"
 
@@ -78,7 +68,7 @@ NS_IMPL_ISUPPORTS1(nsScreenManagerWin, nsIScreenManager)
 //        screen. This should change when a multi-monitor impl is done.
 //
 nsIScreen* 
-nsScreenManagerWin :: CreateNewScreenObject ( void* inScreen )
+nsScreenManagerWin :: CreateNewScreenObject ( HMONITOR inScreen )
 {
   nsIScreen* retScreen = nsnull;
   
@@ -93,7 +83,7 @@ nsScreenManagerWin :: CreateNewScreenObject ( void* inScreen )
   } // for each screen.
  
   retScreen = new nsScreenWin(inScreen);
-  mScreenList.AppendElement ( ScreenListItem ( (HMONITOR)inScreen, retScreen ) );
+  mScreenList.AppendElement ( ScreenListItem ( inScreen, retScreen ) );
 
   NS_IF_ADDREF(retScreen);
   return retScreen;
@@ -120,7 +110,7 @@ nsScreenManagerWin :: ScreenForRect ( PRInt32 inLeft, PRInt32 inTop, PRInt32 inW
 
   RECT globalWindowBounds = { inLeft, inTop, inLeft + inWidth, inTop + inHeight };
 
-  void* genScreen = ::MonitorFromRect( &globalWindowBounds, MONITOR_DEFAULTTOPRIMARY );
+  HMONITOR genScreen = ::MonitorFromRect( &globalWindowBounds, MONITOR_DEFAULTTOPRIMARY );
 
   *outScreen = CreateNewScreenObject ( genScreen );    // addrefs
   

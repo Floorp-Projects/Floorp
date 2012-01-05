@@ -2583,7 +2583,8 @@ RasterImage::Draw(gfxContext *aContext,
     mFrameDecodeFlags = DECODE_FLAGS_DEFAULT;
   }
 
-  if (!mDecoded) {
+  // We use !mDecoded && mHasSourceData to mean discarded.
+  if (!mDecoded && mHasSourceData) {
       mDrawStartTime = TimeStamp::Now();
   }
 
@@ -2838,10 +2839,10 @@ imgDecodeWorker::Run()
   mDecodeTime += decodeLatency;
 
   // Flush invalidations _after_ we've written everything we're going to.
-  // Furthermore, if this is a redecode, we don't want to do progressive
+  // Furthermore, if we have all of the data, we don't want to do progressive
   // display at all. In that case, let Decoder::PostFrameStop() do the
   // flush once the whole frame is ready.
-  if (!image->mHasBeenDecoded) {
+  if (!image->mHasSourceData) {
     image->mInDecoder = true;
     image->mDecoder->FlushInvalidations();
     image->mInDecoder = false;
