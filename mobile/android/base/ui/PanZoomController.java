@@ -242,6 +242,7 @@ public class PanZoomController
     }
 
     /** This function must be called from the UI thread. */
+    @SuppressWarnings("fallthrough")
     public void abortAnimation() {
         // this happens when gecko changes the viewport on us or if the device is rotated.
         // if that's the case, abort any animation in progress and re-zoom so that the page
@@ -301,6 +302,7 @@ public class PanZoomController
         return false;
     }
 
+    @SuppressWarnings("fallthrough")
     private boolean onTouchMove(MotionEvent event) {
         Log.d(LOGTAG, "onTouchMove in state " + mState);
 

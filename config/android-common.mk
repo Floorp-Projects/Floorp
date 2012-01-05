@@ -69,7 +69,6 @@ JAVAC_FLAGS = \
   -source $(JAVA_VERSION) \
   -classpath $(JAVA_CLASSPATH) \
   -bootclasspath $(JAVA_BOOTCLASSPATH) \
-  -encoding ascii \
+  -encoding UTF8 \
   -g \
   $(NULL)
-
