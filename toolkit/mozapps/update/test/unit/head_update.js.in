@@ -1484,7 +1484,7 @@ function getProcessArgs(aExtraArgs) {
  */
 function getAppConsoleLogPath() {
   let appConsoleLog = do_get_file("/", true);
-  appConsoleLog.append("app_console_log");
+  appConsoleLog.append(TEST_ID + "_app_console_log");
   if (appConsoleLog.exists()) {
     appConsoleLog.remove(false);
   }
