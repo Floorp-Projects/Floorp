@@ -278,8 +278,6 @@ function run_test() {
 
   setupUpdaterTest(MAR_COMPLETE_FILE);
 
-  let updatesDir = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX);
-
   // apply the complete mar
   runUpdateUsingService(STATE_PENDING_SVC, STATE_SUCCEEDED, checkUpdateApplied);
 }
