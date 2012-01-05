@@ -110,30 +110,28 @@ PathGetSiblingFilePath(LPWSTR destinationBuffer,
  * of helper.exe.  For service updates this is called from both the system
  * account and the current user account.
  *
- * @param  appExe        The path to the callback application binary.
- * @param  updateInfoDir The directory where update info is stored.
- * @param  forceSync     If true even if the ini file specifies async, the
- *                       process will wait for termination of PostUpdate.
- * @param  userToken     The user token to run as, if NULL the current user
- *                       will be used.
+ * @param  installationDir The path to the callback application binary.
+ * @param  updateInfoDir   The directory where update info is stored.
+ * @param  forceSync       If true even if the ini file specifies async, the
+ *                         process will wait for termination of PostUpdate.
+ * @param  userToken       The user token to run as, if NULL the current user
+ *                         will be used.
  * @return TRUE if there was no error starting the process.
  */
 BOOL
-LaunchWinPostProcess(const WCHAR *appExe,
+LaunchWinPostProcess(const WCHAR *installationDir,
                      const WCHAR *updateInfoDir,
                      bool forceSync,
                      HANDLE userToken)
 {
   WCHAR workingDirectory[MAX_PATH + 1];
-  wcscpy(workingDirectory, appExe);
-  if (!PathRemoveFileSpecW(workingDirectory)) {
-    return FALSE;
-  }
+  wcscpy(workingDirectory, installationDir);
 
   // Launch helper.exe to perform post processing (e.g. registry and log file
   // modifications) for the update.
   WCHAR inifile[MAX_PATH + 1];
-  if (!PathGetSiblingFilePath(inifile, appExe, L"updater.ini")) {
+  wcscpy(inifile, installationDir);
+  if (!PathAppendSafe(inifile, L"updater.ini")) {
     return FALSE;
   }
 
@@ -153,13 +151,15 @@ LaunchWinPostProcess(const WCHAR *appExe,
 
   if (!GetPrivateProfileStringW(L"PostUpdateWin", L"ExeAsync", L"TRUE", 
                                 exeasync,
-                                sizeof(exeasync)/sizeof(exeasync[0]), inifile)) {
+                                sizeof(exeasync)/sizeof(exeasync[0]), 
+                                inifile)) {
     return FALSE;
   }
 
   WCHAR exefullpath[MAX_PATH + 1];
-  if (!PathGetSiblingFilePath(exefullpath, appExe, exefile)) {
-    return FALSE;
+  wcscpy(exefullpath, installationDir);
+  if (!PathAppendSafe(exefullpath, exefile)) {
+    return false;
   }
 
   WCHAR dlogFile[MAX_PATH + 1];
@@ -420,7 +420,10 @@ WinLaunchServiceCommand(LPCWSTR exePath, int argc, LPWSTR* argv)
                           &commandIDWrote, NULL);
 
   // Write out the command line arguments that are passed to updater.exe
-  WCHAR *commandLineBuffer = MakeCommandLine(argc, argv);
+  // updater.exe's command line arguments look like this normally:
+  // updater.exe update-dir apply [wait-pid [callback-dir callback-path args]]
+  // We want everything except the callback application and its arguments.
+  LPWSTR commandLineBuffer = MakeCommandLine(min(argc, 4), argv);
   if (!commandLineBuffer) {
     return FALSE;
   }
