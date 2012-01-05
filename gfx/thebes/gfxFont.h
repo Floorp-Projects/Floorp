@@ -671,22 +671,27 @@ struct gfxTextRange {
  * We're using 3 generations with a ten-second generation interval, so
  * zero-refcount fonts will be deleted 20-30 seconds after their refcount
  * goes to zero, if timer events fire in a timely manner.
+ *
+ * The font cache also handles timed expiration of cached ShapedWords
+ * for "persistent" fonts: it has a repeating timer, and notifies
+ * each cached font to "age" its shaped words. The words will be released
+ * by the fonts if they get aged three times without being re-used in the
+ * meantime.
+ *
+ * Note that the ShapedWord timeout is much larger than the font timeout,
+ * so that in the case of a short-lived font, we'll discard the gfxFont
+ * completely, with all its words, and avoid the cost of aging the words
+ * individually. That only happens with longer-lived fonts.
  */
 class THEBES_API gfxFontCache : public nsExpirationTracker<gfxFont,3> {
 public:
-    enum { TIMEOUT_SECONDS = 10 };
-    gfxFontCache()
-        : nsExpirationTracker<gfxFont,3>(TIMEOUT_SECONDS*1000) { mFonts.Init(); }
-    ~gfxFontCache() {
-        // Expire everything that has a zero refcount, so we don't leak them.
-        AgeAllGenerations();
-        // All fonts should be gone.
-        NS_WARN_IF_FALSE(mFonts.Count() == 0,
-                         "Fonts still alive while shutting down gfxFontCache");
-        // Note that we have to delete everything through the expiration
-        // tracker, since there might be fonts not in the hashtable but in
-        // the tracker.
-    }
+    enum {
+        FONT_TIMEOUT_SECONDS = 10,
+        SHAPED_WORD_TIMEOUT_SECONDS = 60
+    };
+
+    gfxFontCache();
+    ~gfxFontCache();
 
     /*
      * Get the global gfxFontCache.  You must call Init() before
@@ -703,7 +708,7 @@ public:
     // Look up a font in the cache. Returns an addrefed pointer, or null
     // if there's nothing matching in the cache
     already_AddRefed<gfxFont> Lookup(const gfxFontEntry *aFontEntry,
-                                     const gfxFontStyle *aFontGroup);
+                                     const gfxFontStyle *aStyle);
     // We created a new font (presumably because Lookup returned null);
     // put it in the cache. The font's refcount should be nonzero. It is
     // allowable to add a new font even if there is one already in the
@@ -761,6 +766,10 @@ protected:
     };
 
     nsTHashtable<HashEntry> mFonts;
+
+    static PLDHashOperator AgeCachedWordsForFont(HashEntry* aHashEntry, void*);
+    static void WordCacheExpirationTimerCallback(nsITimer* aTimer, void* aCache);
+    nsCOMPtr<nsITimer>      mWordCacheExpirationTimer;
 };
 
 class THEBES_API gfxTextRunFactory {
@@ -1386,6 +1395,14 @@ public:
         }
     }
 
+    // Called by the gfxFontCache timer to increment the age of all the words,
+    // so that they'll expire after a sufficient period of non-use
+    void AgeCachedWords() {
+        if (mWordCache.IsInitialized()) {
+            (void)mWordCache.EnumerateEntries(AgeCacheEntry, this);
+        }
+    }
+
 protected:
     // Call the appropriate shaper to generate glyphs for aText and store
     // them into aShapedWord.
@@ -1471,6 +1488,9 @@ protected:
     };
 
     nsTHashtable<CacheHashEntry> mWordCache;
+
+    static PLDHashOperator AgeCacheEntry(CacheHashEntry *aEntry, void *aUserData);
+    static const PRUint32  kShapedWordCacheMaxAge = 3;
 
     bool                       mIsValid;
 
@@ -1891,6 +1911,13 @@ public:
         return mAppUnitsPerDevUnit;
     }
 
+    void ResetAge() {
+        mAgeCounter = 0;
+    }
+    PRUint32 IncrementAge() {
+        return ++mAgeCounter;
+    }
+
     void SetSimpleGlyph(PRUint32 aCharIndex, CompressedGlyph aGlyph) {
         NS_ASSERTION(aGlyph.IsSimpleGlyph(), "Should be a simple glyph here");
         if (mCharacterGlyphs) {
@@ -1954,6 +1981,7 @@ private:
         , mFlags(aFlags | gfxTextRunFactory::TEXT_IS_8BIT)
         , mAppUnitsPerDevUnit(aAppUnitsPerDevUnit)
         , mScript(aRunScript)
+        , mAgeCounter(0)
     {
         memset(mCharacterGlyphs, 0, aLength * sizeof(CompressedGlyph));
         PRUint8 *text = reinterpret_cast<PRUint8*>(&mCharacterGlyphs[aLength]);
@@ -1967,6 +1995,7 @@ private:
         , mFlags(aFlags)
         , mAppUnitsPerDevUnit(aAppUnitsPerDevUnit)
         , mScript(aRunScript)
+        , mAgeCounter(0)
     {
         memset(mCharacterGlyphs, 0, aLength * sizeof(CompressedGlyph));
         PRUnichar *text = reinterpret_cast<PRUnichar*>(&mCharacterGlyphs[aLength]);
@@ -2110,6 +2139,8 @@ private:
 
     PRInt32                         mAppUnitsPerDevUnit;
     PRInt32                         mScript;
+
+    PRUint32                        mAgeCounter;
 
     // The mCharacterGlyphs array is actually a variable-size member;
     // when the ShapedWord is created, its size will be increased as necessary
