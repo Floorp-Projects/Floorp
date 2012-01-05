@@ -45,6 +45,7 @@
 
 #include "serviceinstall.h"
 #include "servicebase.h"
+#include "updatehelper.h"
 #include "shellapi.h"
 
 #pragma comment(lib, "version.lib")
@@ -91,7 +92,7 @@ GetVersionNumberFromPath(LPWSTR path, DWORD &A, DWORD &B,
 }
 
 /**
- * Installs or upgrades the MozillaMaintenance service.
+ * Installs or upgrades the SVC_NAME service.
  * If an existing service is already installed, we replace it with the
  * currently running process.
  *
@@ -120,6 +121,7 @@ SvcInstall(SvcInstallAction action)
   }
 
   // Check if we already have an open service
+  BOOL serviceAlreadyExists = FALSE;
   nsAutoServiceHandle schService(OpenServiceW(schSCManager, 
                                               SVC_NAME, 
                                               SERVICE_ALL_ACCESS));
@@ -131,6 +133,8 @@ SvcInstall(SvcInstallAction action)
   }
   
   if (schService) {
+    serviceAlreadyExists = TRUE;
+
     // The service exists and we opened it
     DWORD bytesNeeded;
     if (!QueryServiceConfigW(schService, NULL, 0, &bytesNeeded) && 
@@ -181,7 +185,7 @@ SvcInstall(SvcInstallAction action)
          existingC < newC) ||
         (existingA == newA && existingB == newB && 
          existingC == newC && existingD < newD)) {
-      if (!SvcUninstall()) {
+      if (!StopService()) {
         return FALSE;
       }
 
@@ -221,24 +225,26 @@ SvcInstall(SvcInstallAction action)
     return TRUE;
   }
 
-  // Create the service as on demand
-  schService.own(CreateServiceW(schSCManager, SVC_NAME, SVC_DISPLAY_NAME,
-                                SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
-                                SERVICE_DEMAND_START, SERVICE_ERROR_NORMAL,
-                                newServiceBinaryPath, NULL, NULL, NULL, 
-                                NULL, NULL));
-  if (!schService) {
-    LOG(("Could not create Windows service. "
-         "This error should never happen since a service install "
-         "should only be called when elevated. (%d)\n", GetLastError()));
-    return FALSE;
-  } 
+  if (!serviceAlreadyExists) {
+    // Create the service as on demand
+    schService.own(CreateServiceW(schSCManager, SVC_NAME, SVC_DISPLAY_NAME,
+                                  SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
+                                  SERVICE_DEMAND_START, SERVICE_ERROR_NORMAL,
+                                  newServiceBinaryPath, NULL, NULL, NULL, 
+                                  NULL, NULL));
+    if (!schService) {
+      LOG(("Could not create Windows service. "
+           "This error should never happen since a service install "
+           "should only be called when elevated. (%d)\n", GetLastError()));
+      return FALSE;
+    } 
 
-  if (!SetUserAccessServiceDACL(schService)) {
-    LOG(("Could not set security ACE on service handle, the service will not be "
-         "able to be started from unelevated processes. "
-         "This error should never happen.  (%d)\n", 
-         GetLastError()));
+    if (!SetUserAccessServiceDACL(schService)) {
+      LOG(("Could not set security ACE on service handle, the service will not be "
+           "able to be started from unelevated processes. "
+           "This error should never happen.  (%d)\n", 
+           GetLastError()));
+    }
   }
 
   return TRUE;
@@ -271,8 +277,7 @@ StopService()
   // Stop logging before stopping the service.
   LogFinish();
 
-  SERVICE_STATUS status;
-  return ControlService(schService, SERVICE_CONTROL_STOP, &status);
+  return WaitForServiceStop(SVC_NAME, 60); 
 }
 
 /**

@@ -88,6 +88,8 @@ const HELPER_BIN_FILE = "TestAUSHelper" + BIN_SUFFIX;
 const MAR_COMPLETE_FILE = "data/complete.mar";
 const MAR_PARTIAL_FILE = "data/partial.mar";
 const UPDATER_BIN_FILE = "updater" + BIN_SUFFIX;
+const MAINTENANCE_SERVICE_BIN_FILE = "maintenanceservice.exe";
+const MAINTENANCE_SERVICE_INSTALLER_BIN_FILE = "maintenanceservice_installer.exe";
 const UPDATES_DIR_SUFFIX = "_mar";
 const CHANNEL_CHANGE_FILE = "channelchange";
 
@@ -505,6 +507,26 @@ function shouldRunServiceTest() {
 }
 
 /**
+ * Copies the specified filename from the dist/bin
+ * directory into the apply-to directory.
+ *
+ * @param filename The name of the file to copy
+*/
+function copyBinToApplyToDir(filename) {
+  let binDir = getGREDir();
+  let fileToCopy = binDir.clone();
+  fileToCopy.append(filename);
+  if (!fileToCopy.exists()) {
+    do_throw("Unable to copy binary: " + filename);
+  }
+  let applyToUpdater = getApplyDirFile(null, true);
+  if (applyToUpdater.path != binDir.path) {
+    do_print("copying " + fileToCopy.path + " to: " + applyToUpdater.path);
+    fileToCopy.copyTo(applyToUpdater, filename);
+  }
+}
+
+/**
  * Helper function for updater tests for launching the updater using the
  * maintenance service to apply a mar file.
  *
@@ -636,17 +658,14 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
   // There is a security check done by the service to make sure the updater 
   // we are executing is the same as the one in the apply-to dir. 
   // To make sure they match from tests we copy updater.exe to the apply-to dir.
-  let binDir = getGREDir();
-  let updater = binDir.clone();
-  updater.append(UPDATER_BIN_FILE);
-  if (!updater.exists()) {
-    do_throw("Unable to find updater binary!");
-  }
-  let applyToUpdater = getApplyDirFile(null, true);
-  if (applyToUpdater.path != binDir.path) {
-    do_print("copying " + updater.path + " to: " + applyToUpdater.path);
-    updater.copyTo(applyToUpdater, UPDATER_BIN_FILE);
-  }
+  copyBinToApplyToDir(UPDATER_BIN_FILE);
+
+  // The service will execute maintenanceservice_installer.exe and
+  // will copy maintenanceservice.exe out of the same directory from
+  // the installation directory.  So we need to make sure both of those
+  // bins always exist in the installation directory.
+  copyBinToApplyToDir(MAINTENANCE_SERVICE_BIN_FILE);
+  copyBinToApplyToDir(MAINTENANCE_SERVICE_INSTALLER_BIN_FILE);
 
   // Firefox does not wait for the service command to finish, but
   // we still launch the process sync to avoid intemittent failures with
