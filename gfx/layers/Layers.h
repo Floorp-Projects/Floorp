@@ -51,6 +51,7 @@
 #include "nsTArray.h"
 
 #include "mozilla/gfx/2D.h"
+#include "mozilla/TimeStamp.h"
 
 #if defined(DEBUG) || defined(PR_LOGGING)
 #  include <stdio.h>            // FILE
@@ -512,6 +513,11 @@ public:
    */
   void LogSelf(const char* aPrefix="");
 
+  void StartFrameTimeRecording();
+  nsTArray<float> StopFrameTimeRecording();
+
+  void PostPresent();
+
   static bool IsLogEnabled();
   static PRLogModuleInfo* GetLog() { return sLog; }
 
@@ -532,6 +538,9 @@ protected:
 
   static void InitLog();
   static PRLogModuleInfo* sLog;
+private:
+  TimeStamp mLastFrameTime;
+  nsTArray<float> mFrameTimes;
 };
 
 class ThebesLayer;
