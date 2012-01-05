@@ -208,7 +208,7 @@ nsDOMStoragePersistentDB::Init(const nsString& aDatabaseName)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "PRAGMA temp_store = MEMORY"));
+        MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA temp_store = MEMORY"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mozStorageTransaction transaction(mConnection, false);
