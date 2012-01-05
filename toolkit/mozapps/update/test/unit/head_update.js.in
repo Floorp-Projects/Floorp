@@ -547,6 +547,21 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
 
   setEnvironment();
 
+  // There is a security check done by the service to make sure the updater 
+  // we are executing is the same as the one in the apply-to dir. 
+  // To make sure they match from tests we copy updater.exe to the apply-to dir.
+  let binDir = getGREDir();
+  let updater = binDir.clone();
+  updater.append(UPDATER_BIN_FILE);
+  if (!updater.exists()) {
+    do_throw("Unable to find updater binary!");
+  }
+  let applyToUpdater = getApplyDirFile(null, true);
+  if (applyToUpdater.path != binDir.path) {
+    do_print("copying " + updater.path + " to: " + applyToUpdater.path);
+    updater.copyTo(applyToUpdater, UPDATER_BIN_FILE);
+  }
+
   // We can't get sync behavior here since Firefox does not wait for the
   // process launched through the service to finish.  Since the service
   // launches the updater in the background, providing an observer argument
@@ -563,7 +578,11 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
     if (aExpectedStatus == STATE_FAILED) {
       status = status.split(": ")[0];
     }
-    if (status == STATE_PENDING) {
+    // status will probably always be equal to STATE_APPLYING but there is a
+    // race condition where it would be possible on slower machines where status
+    // could be equal to STATE_PENDING_SVC.
+    if (status == STATE_APPLYING || 
+        status == STATE_PENDING_SVC) {
       logTestInfo("Still waiting to see the " + aExpectedStatus +
                   " status, got " + status + " for now...");
       return;

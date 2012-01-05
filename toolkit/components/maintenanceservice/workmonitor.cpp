@@ -357,7 +357,8 @@ ProcessWorkItem(LPCWSTR monitoringBasePath,
   BOOL updaterIsCorrect;
   if (result && !VerifySameFiles(updaterPath, installDirUpdater, 
                                  updaterIsCorrect)) {
-    LOG(("Error checking if the updaters are the same.\n")); 
+    LOG(("Error checking if the updaters are the same.\n"
+         "Path 1: %ls\nPath 2: %ls\n", updaterPath, installDirUpdater));
     result = FALSE;
   }
 
