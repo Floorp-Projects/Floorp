@@ -69,7 +69,7 @@ interface nsIDOMBlob;
 interface nsIDOMFile;
 interface nsIFile;
 
-[scriptable, uuid(c1fa9c82-acf2-4b27-8ca7-7d1864e606af)]
+[scriptable, uuid(15fcceb0-37ea-11e1-b86c-0800200c9a66)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -838,6 +838,9 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   readonly attribute AString layerManagerType;
 
+  void startFrameTimeRecording();
+  void stopFrameTimeRecording([optional] out unsigned long frameCount,
+                              [retval, array, size_is(frameCount)] out float frameTime);
   /**
    * The DPI of the display
    */

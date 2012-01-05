@@ -819,6 +819,7 @@ LayerManagerOGL::Render()
 
   if (mGLContext->IsDoubleBuffered()) {
     mGLContext->SwapBuffers();
+    LayerManager::PostPresent();
     mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
     return;
   }
