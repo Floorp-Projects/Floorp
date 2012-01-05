@@ -56,6 +56,21 @@ namespace a11y {
  */
 FocusManager* FocusMgr();
 
+#ifdef MOZ_ACCESSIBILITY_ATK
+/**
+ * Perform initialization that should be done as soon as possible, in order
+ * to minimize startup time.
+ * XXX: this function and the next defined in nsApplicationAccessibleWrap.cpp
+ */
+void PreInit();
+
+/**
+ * Is platform accessibility enabled.
+ * Only used on linux with atk for now.
+ */
+bool ShouldA11yBeEnabled();
+#endif
+
 } // namespace a11y
 } // namespace mozilla
 
