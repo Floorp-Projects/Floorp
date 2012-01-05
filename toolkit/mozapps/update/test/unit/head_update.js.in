@@ -532,6 +532,24 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
     file.append("maintenanceservice.log");
     return readFile(file);
   }
+  function waitForServiceStop() {
+    // Use the helper bin to ensure the service is stopped. If not
+    // stopped then wait for the service to be stopped (at most 20 seconds)
+    let helperBin = do_get_file(HELPER_BIN_FILE);
+    let helperBinArgs = ["wait-for-service-stop", 
+                         "MozillaMaintenance", 
+                         "20"];
+    let helperBinProcess = AUS_Cc["@mozilla.org/process/util;1"].
+                           createInstance(AUS_Ci.nsIProcess);
+    helperBinProcess.init(helperBin);
+    helperBinProcess.run(true, helperBinArgs, helperBinArgs.length);
+    if (helperBinProcess.exitValue != 0) {
+      logTestInfo("maintenance service could not stop, may cause failures.");
+    }
+  }
+
+  // Make sure the service from the previous test is already stopped.
+  waitForServiceStop();
 
   // Prevent the cleanup function from begin run more than once
   if (typeof(gRegisteredServiceCleanup) === "undefined") {
@@ -657,19 +675,8 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
     timer.cancel();
     timer = null;
 
-    // Use the helper bin to ensure the service is stopped. If not
-    // stopped then wait for the service to be stopped (at most 10 seconds)
-    let helperBin = do_get_file(HELPER_BIN_FILE);
-    let helperBinArgs = ["wait-for-service-stop", 
-                         "MozillaMaintenance", 
-                         "10"];
-    let helperBinProcess = AUS_Cc["@mozilla.org/process/util;1"].
-                           createInstance(AUS_Ci.nsIProcess);
-    helperBinProcess.init(helperBin);
-    helperBinProcess.run(true, helperBinArgs, helperBinArgs.length);
-    if (helperBinProcess.exitValue != 0) {
-      logTestInfo("maintenance service could not stop, may cause failures.");
-    }
+    // Make sure all of the logs are written out.
+    waitForServiceStop();
 
     if (aCheckSvcLog) {
       checkServiceLogs(svcOriginalLog);
