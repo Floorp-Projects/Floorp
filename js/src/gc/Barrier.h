@@ -341,7 +341,6 @@ class HeapValue
     double toNumber() const { return value.toNumber(); }
 
     JSGCTraceKind gcKind() const { return value.gcKind(); }
-    uint64_t asRawBits() const { return value.asRawBits(); }
 
 #ifdef DEBUG
     JSWhyMagic whyMagic() const { return value.whyMagic(); }
