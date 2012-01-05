@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim:set ts=4 sw=4 sts=4 et cindent: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -59,9 +59,14 @@ public:
 
   SharedLibrary& operator=(const SharedLibrary& aEntry)
   {
+    // Gracefully handle self assignment
+    if (this == &aEntry) return *this;
+
     mStart = aEntry.mStart;
     mEnd = aEntry.mEnd;
     mOffset = aEntry.mOffset;
+    if (mName)
+      free(mName);
     mName = strdup(aEntry.mName);
     return *this;
   }
