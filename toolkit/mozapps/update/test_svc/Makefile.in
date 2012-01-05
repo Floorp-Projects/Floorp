@@ -13,17 +13,17 @@
 #
 # The Original Code is the Application Update Service.
 #
-# The Initial Developer of the Original Code is Ben Goodger.
-# Portions created by the Initial Developer are Copyright (C) 2004
-# the Initial Developer. All Rights Reserved.
+# The Initial Developer of the Original Code is
+# Ehsan Akhgari <ehsan@mozilla.com>.
+#
+# Portions created by the Initial Developer are Copyright (C) 2011
+# the Mozilla Foundation. All Rights Reserved.
 #
 # Contributor(s):
-#   Ben Goodger <ben@mozilla.org>
-#   Robert Strong <robert.bugzilla@gmail.com>.
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,45 +35,37 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ../../..
+DEPTH     = ../../../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
+relativesrcdir = toolkit/mozapps/update/test_svc
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = update
-
-XPIDLSRCS = nsIUpdateTimerManager.idl
-
-EXTRA_PP_COMPONENTS = nsUpdateTimerManager.js nsUpdateTimerManager.manifest
-
-ifdef MOZ_UPDATER
-DIRS = ../readstrings
-
-ifneq ($(OS_TARGET),Android)
-DIRS += common
-DIRS += updater
-endif
-
-XPIDLSRCS += nsIUpdateService.idl
-
-EXTRA_PP_COMPONENTS += \
-  nsUpdateService.js \
-  nsUpdateServiceStub.js \
-  nsUpdateService.manifest \
+XPCSHELL_TESTS = \
+  unit \
   $(NULL)
-endif
 
-ifdef ENABLE_TESTS
-DIRS += test_timermanager
-# Update tests require the updater binary
-ifdef MOZ_UPDATER
-DIRS += test
-ifdef MOZ_MAINTENANCE_SERVICE
-DIRS += test_svc
-endif
-endif
-endif
+TESTROOT = $(call core_abspath,$(DEPTH))/_tests/xpcshell/$(relativesrcdir)
+
+DEFINES += \
+  -DAB_CD=$(AB_CD) \
+  -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
+  -DBIN_SUFFIX=$(BIN_SUFFIX) \
+  -DNS_NO_XPCOM \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+libs:: ../test/unit/head_update.js.in
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) $^ > $(TESTROOT)/unit/head_update.js
+
+ifneq ($(OS_TARGET),Android)
+ifndef MOZ_PROFILE_GENERATE
+libs::
+	$(INSTALL) ../test/TestAUSHelper$(BIN_SUFFIX) $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit
+	$(INSTALL) -D $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/data
+	$(INSTALL) $(topsrcdir)/$(relativesrcdir)/../test/unit/data/* $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/data
+endif
+endif # Not Android
