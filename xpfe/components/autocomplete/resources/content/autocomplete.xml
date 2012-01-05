@@ -304,7 +304,7 @@
             try {
               this.self.finishAutoComplete(false, false, aEvent);
               this.self.clearTimer();
-              this.self.closeResultPopup();
+              this.self.closePopup();
             } catch (e) {
               window.top.removeEventListener("DOMMenuBarActive", this, true);
             }
@@ -614,7 +614,7 @@
           var str = this.currentSearchString;
           if (!str) {
             this.clearResults(false);
-            this.closeResultPopup();
+            this.closePopup();
             return;
           }
 
@@ -693,7 +693,7 @@
             this.clearResultElements(false); // clear results, but don't repaint yet
           }
 
-          // always call openResultPopup...we may not have opened it
+          // always call openPopup...we may not have opened it
           // if a previous search session didn't return enough search results.
           // it's smart and doesn't try to open itself multiple times...
           // be sure to add our result elements before calling openResultPopuup as we need
@@ -704,7 +704,7 @@
           this.autoFillInput(aSessionName, aResults, false);
           if (this.mFirstReturn && this.view.mTree)
             this.view.mTree.endUpdateBatch();
-          this.openResultPopup();
+          this.openPopup();
           this.mFirstReturn = false;
          
           // if this is the last session to return... 
@@ -725,9 +725,9 @@
           if (this.mSessionReturns == 0 && this.getResultCount() == 0) {
             if (this.minResultsForPopup == 0) {
               this.clearResults(true); // clear data and repaint empty
-              this.openResultPopup();
+              this.openPopup();
             } else {
-              this.closeResultPopup(); 
+              this.closePopup(); 
             }
           }
 
@@ -838,7 +838,7 @@
             if (!this.noMatch)
               this.autoComplete();
 
-            this.closeResultPopup();
+            this.closePopup();
           }
           
           this.mNeedToComplete = false;
@@ -875,7 +875,7 @@
           this.mNeedToFinish = false;
           this.mNeedToComplete = false;
           
-          this.closeResultPopup();
+          this.closePopup();
 
           this.currentSearchString = "";
 
@@ -976,7 +976,7 @@
 
               killEvent = this.mMenuOpen;
               this.finishAutoComplete(true, true, aEvent);
-              this.closeResultPopup();
+              this.closePopup();
               if (errItem) {
                   this._fireEvent("errorcommand", errItem);
               }
@@ -986,7 +986,7 @@
               this.clearTimer();
               killEvent = this.mMenuOpen;
               this.undoAutoComplete();
-              this.closeResultPopup();
+              this.closePopup();
               break;
   
             case KeyEvent.DOM_VK_LEFT:
@@ -995,7 +995,7 @@
             case KeyEvent.DOM_VK_END:
               this.finishAutoComplete(true, false, aEvent);
               this.clearTimer();
-              this.closeResultPopup();
+              this.closePopup();
               break;
 
             case KeyEvent.DOM_VK_DOWN:
@@ -1039,7 +1039,7 @@
         <body><![CDATA[
           this.finishAutoComplete(false, false, null);
           this.clearTimer();
-          this.closeResultPopup();
+          this.closePopup();
         ]]></body>
       </method>
 
@@ -1073,7 +1073,7 @@
                 return true; // used to be false, see above
 
               this.mNeedToFinish = true;
-              this.openResultPopup();
+              this.openPopup();
               return true;
             }
             
@@ -1165,7 +1165,7 @@
       <!-- ::::::::::::: popup and tree ::::::::::::: -->
 
       <!--  -->
-      <method name="openResultPopup">
+      <method name="openPopup">
         <body><![CDATA[
           if (!this.mMenuOpen && this.focused &&
                (this.getResultCount() >= this.minResultsForPopup
@@ -1180,7 +1180,7 @@
       </method>
 
       <!--  -->
-      <method name="closeResultPopup">
+      <method name="closePopup">
         <body><![CDATA[
           if (this.resultsPopup && this.mMenuOpen) {
             this.resultsPopup.hidePopup();
