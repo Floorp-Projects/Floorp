@@ -1195,7 +1195,7 @@ nsCanvasRenderingContext2DAzure::Redraw(const mgfx::Rect &r)
 
   nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
 
-  gfxRect tmpR = GFXRect(r);
+  gfxRect tmpR = ThebesRect(r);
   HTMLCanvasElement()->InvalidateCanvasContent(&tmpR);
 
   return;
