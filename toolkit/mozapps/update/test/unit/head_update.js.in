@@ -533,6 +533,7 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
     return readFile(file);
   }
   function waitForServiceStop() {
+    logTestInfo("Waiting for service to stop if necessary...");
     // Use the helper bin to ensure the service is stopped. If not
     // stopped then wait for the service to be stopped (at most 20 seconds)
     let helperBin = do_get_file(HELPER_BIN_FILE);
@@ -545,6 +546,8 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
     helperBinProcess.run(true, helperBinArgs, helperBinArgs.length);
     if (helperBinProcess.exitValue != 0) {
       logTestInfo("maintenance service could not stop, may cause failures.");
+    } else {
+      logTestInfo("Service stopped.");
     }
   }
 
