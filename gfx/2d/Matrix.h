@@ -73,6 +73,16 @@ public:
     return retPoint;
   }
 
+  Size operator *(const Size &aSize) const
+  {
+    Size retSize;
+
+    retSize.width = aSize.width * _11 + aSize.height * _21;
+    retSize.height = aSize.width * _12 + aSize.height * _22;
+
+    return retSize;
+  }
+
   Rect TransformBounds(const Rect& rect) const;
 
   // Apply a scale to this matrix. This scale will be applied -before- the
