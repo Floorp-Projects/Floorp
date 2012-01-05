@@ -39,12 +39,12 @@
 #include <shlwapi.h>
 #include <stdio.h>
 #include <wchar.h>
+#include <shlobj.h>
 
 #include "serviceinstall.h"
 #include "maintenanceservice.h"
 #include "servicebase.h"
 #include "workmonitor.h"
-#include "shlobj.h"
 
 SERVICE_STATUS gSvcStatus = { 0 }; 
 SERVICE_STATUS_HANDLE gSvcStatusHandle = NULL; 
