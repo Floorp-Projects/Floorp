@@ -384,13 +384,11 @@ struct PICInfo : public BasePolyIC {
 #endif
     {
         GET,        // JSOP_GETPROP
-        CALL,       // JSOP_CALLPROP
         SET,        // JSOP_SETPROP, JSOP_SETNAME
         SETMETHOD,  // JSOP_SETMETHOD
         NAME,       // JSOP_NAME
         BIND,       // JSOP_BINDNAME
-        XNAME,      // JSOP_GETXPROP
-        CALLNAME    // JSOP_CALLNAME
+        XNAME       // JSOP_GETXPROP
     };
 
     union {
@@ -467,13 +465,13 @@ struct PICInfo : public BasePolyIC {
         return kind == SET || kind == SETMETHOD;
     }
     inline bool isGet() const {
-        return kind == GET || kind == CALL;
+        return kind == GET;
     }
     inline bool isBind() const {
         return kind == BIND;
     }
     inline bool isScopeName() const {
-        return kind == NAME || kind == CALLNAME || kind == XNAME;
+        return kind == NAME || kind == XNAME;
     }
     inline RegisterID typeReg() {
         JS_ASSERT(isGet());
@@ -485,10 +483,6 @@ struct PICInfo : public BasePolyIC {
     }
     inline bool shapeNeedsRemat() {
         return !shapeRegHasBaseShape;
-    }
-    inline bool isFastCall() {
-        JS_ASSERT(kind == CALL);
-        return !hasTypeCheck();
     }
 
     union {
@@ -510,7 +504,7 @@ struct PICInfo : public BasePolyIC {
         bindNameLabels_ = labels;
     }
     void setLabels(const ic::ScopeNameLabels &labels) {
-        JS_ASSERT(kind == NAME || kind == CALLNAME || kind == XNAME);
+        JS_ASSERT(kind == NAME || kind == XNAME);
         scopeNameLabels_ = labels;
     }
 
@@ -527,7 +521,7 @@ struct PICInfo : public BasePolyIC {
         return bindNameLabels_;
     }
     ScopeNameLabels &scopeNameLabels() {
-        JS_ASSERT(kind == NAME || kind == CALLNAME || kind == XNAME);
+        JS_ASSERT(kind == NAME || kind == XNAME);
         return scopeNameLabels_;
     }
 
@@ -550,13 +544,10 @@ struct PICInfo : public BasePolyIC {
 void JS_FASTCALL GetProp(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL GetPropNoCache(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL SetProp(VMFrame &f, ic::PICInfo *);
-void JS_FASTCALL CallProp(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL Name(VMFrame &f, ic::PICInfo *);
-void JS_FASTCALL CallName(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL XName(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL BindName(VMFrame &f, ic::PICInfo *);
 void JS_FASTCALL GetElement(VMFrame &f, ic::GetElementIC *);
-void JS_FASTCALL CallElement(VMFrame &f, ic::GetElementIC *);
 template <JSBool strict> void JS_FASTCALL SetElement(VMFrame &f, ic::SetElementIC *);
 #endif
 

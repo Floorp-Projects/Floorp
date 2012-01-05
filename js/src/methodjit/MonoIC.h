@@ -128,7 +128,6 @@ struct GlobalNameIC
      */
     int32_t loadStoreOffset   : 15;
     int32_t shapeOffset       : 15;
-    bool usePropertyCache   : 1;
 };
 
 struct GetGlobalNameIC : public GlobalNameIC

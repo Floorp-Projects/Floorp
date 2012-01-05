@@ -1820,7 +1820,7 @@ static const uintN RESOLVE_INFER = 0xffff;
 /*
  * If cacheResult is false, return JS_NO_PROP_CACHE_FILL on success.
  */
-extern PropertyCacheEntry *
+extern bool
 FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool global,
                    JSObject **objp, JSObject **pobjp, JSProperty **propp);
 
@@ -1853,9 +1853,9 @@ js_FindVariableScope(JSContext *cx, JSFunction **funp);
  * barrier, which is not needed when invoking a lambda that otherwise does not
  * leak its callee reference (via arguments.callee or its name).
  */
-const uintN JSGET_CACHE_RESULT      = 1; // from a caching interpreter opcode
 const uintN JSGET_METHOD_BARRIER    = 0; // get can leak joined function object
-const uintN JSGET_NO_METHOD_BARRIER = 2; // call to joined function can't leak
+const uintN JSGET_NO_METHOD_BARRIER = 1; // call to joined function can't leak
+const uintN JSGET_CACHE_RESULT      = 2; // from a caching interpreter opcode
 
 /*
  * NB: js_NativeGet and js_NativeSet are called with the scope containing shape
@@ -1939,12 +1939,12 @@ js_IsDelegate(JSContext *cx, JSObject *obj, const js::Value &v);
 extern JSBool
 js_PrimitiveToObject(JSContext *cx, js::Value *vp);
 
-/*
- * v and vp may alias. On successful return, vp->isObjectOrNull(). If vp is not
- * rooted, the caller must root vp before the next possible GC.
- */
 extern JSBool
 js_ValueToObjectOrNull(JSContext *cx, const js::Value &v, JSObject **objp);
+
+/* Throws if v could not be converted to an object. */
+extern JSObject *
+js_ValueToNonNullObject(JSContext *cx, const js::Value &v);
 
 namespace js {
 
@@ -1963,14 +1963,16 @@ ToObject(JSContext *cx, Value *vp)
     return ToObjectSlow(cx, vp);
 }
 
-} /* namespace js */
+/* As for ToObject, but preserves the original value. */
+inline JSObject *
+ValueToObject(JSContext *cx, const Value &v)
+{
+    if (v.isObject())
+        return &v.toObject();
+    return js_ValueToNonNullObject(cx, v);
+}
 
-/*
- * v and vp may alias. On successful return, vp->isObject(). If vp is not
- * rooted, the caller must root vp before the next possible GC.
- */
-extern JSObject *
-js_ValueToNonNullObject(JSContext *cx, const js::Value &v);
+} /* namespace js */
 
 extern JSBool
 js_XDRObject(JSXDRState *xdr, JSObject **objp);

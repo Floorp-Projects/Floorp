@@ -745,6 +745,8 @@ struct BytecodeEmitter : public TreeContext
         return true;
     }
 
+    bool needsImplicitThis();
+
     TokenStream *tokenStream() { return &parser->tokenStream; }
 
     jsbytecode *base() const { return current->base; }

@@ -6,5 +6,5 @@ function caller(code, obj) {
   eval(code); // Make the compiler give up on binding analysis.
   return x;
 }
-trap(caller, 12, "var x = 'success'; nop()");
+trap(caller, 13, "var x = 'success'; nop()");
 assertEq(caller("var y = 'ignominy'", this), "success");
