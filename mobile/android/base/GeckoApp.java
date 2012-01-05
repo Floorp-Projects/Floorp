@@ -52,6 +52,8 @@ import org.mozilla.gecko.Tab.HistoryEntry;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.util.zip.*;
 import java.net.URL;
 import java.nio.*;
@@ -133,7 +135,6 @@ abstract public class GeckoApp
     private static GeckoSoftwareLayerClient mSoftwareLayerClient;
     private AboutHomeContent mAboutHomeContent;
     private static AbsoluteLayout mPluginContainer;
-    boolean mUserDefinedProfile = false;
 
     public String mLastUri;
     public String mLastTitle;
@@ -417,8 +418,8 @@ abstract public class GeckoApp
                                     InputStream is = (InputStream) url.getContent();
                                     Drawable drawable = Drawable.createFromStream(is, "src");
                                     mi.setIcon(drawable);
-                                } catch(Exception e) {
-                                    Log.e(LOGTAG, "onPrepareOptionsMenu: Unable to set icon", e);
+                                } catch (Exception e) {
+                                    Log.w(LOGTAG, "onPrepareOptionsMenu: Unable to set icon", e);
                                 }
                             }
                         });
@@ -762,24 +763,16 @@ abstract public class GeckoApp
     }
 
     public File getProfileDir() {
-        // XXX: TO-DO read profiles.ini to get the default profile
         return getProfileDir("default");
     }
 
     public File getProfileDir(final String profileName) {
-        if (mProfileDir == null && !mUserDefinedProfile) {
-            File mozDir = new File(GeckoAppShell.sHomeDir, "mozilla");
-            if (!mozDir.exists()) {
-                // Profile directory may have been deleted or not created yet.
-                return null;
-            }
-            File[] profiles = mozDir.listFiles(new FileFilter() {
-                public boolean accept(File pathname) {
-                    return pathname.getName().endsWith("." + profileName);
-                }
-            });
-            if (profiles != null && profiles.length == 1)
-                mProfileDir = profiles[0];
+        if (mProfileDir != null)
+            return mProfileDir;
+        try {
+            mProfileDir = GeckoDirProvider.getProfileDir(mAppContext, profileName);
+        } catch (IOException ex) {
+            Log.e(LOGTAG, "Error getting profile dir.", ex);
         }
         return mProfileDir;
     }
@@ -1435,6 +1428,19 @@ abstract public class GeckoApp
         }
 
         Intent intent = getIntent();
+        String args = intent.getStringExtra("args");
+        if (args != null && args.contains("-profile")) {
+            Pattern p = Pattern.compile("(?:-profile\\s*)(\\w*)(\\s*)");
+            Matcher m = p.matcher(args);
+            if (m.find()) {
+                mProfileDir = new File(m.group(1));
+                mLastUri = null;
+                mLastTitle = null;
+                mLastViewport = null;
+                mLastScreen = null;
+            }
+        }
+
         String uri = intent.getDataString();
         String title = uri;
         if (uri != null && uri.length() > 0) {
@@ -1451,12 +1457,6 @@ abstract public class GeckoApp
 
         if (sGREDir == null)
             sGREDir = new File(this.getApplicationInfo().dataDir);
-
-        String args = intent.getStringExtra("args");
-        if (args != null && args.contains("-profile")) {
-            // XXX: TO-DO set mProfileDir to the path passed in
-            mUserDefinedProfile = true;
-        }
 
         prefetchDNS(intent.getData());
 
@@ -1524,11 +1524,8 @@ abstract public class GeckoApp
              * run experience, perhaps?
              */
             mLayerController = new LayerController(this);
-            mPlaceholderLayerClient = mUserDefinedProfile ?  null :
-                PlaceholderLayerClient.createInstance(this);
-            if (mPlaceholderLayerClient != null) {
-                mLayerController.setLayerClient(mPlaceholderLayerClient);
-            }
+            mPlaceholderLayerClient = PlaceholderLayerClient.createInstance(this);
+            mLayerController.setLayerClient(mPlaceholderLayerClient);
 
             mGeckoLayout.addView(mLayerController.getView(), 0);
         }
