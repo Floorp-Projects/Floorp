@@ -234,6 +234,11 @@ private:
 
 namespace mozilla {
 
+static void clearGLError()
+{
+  while (glGetError() != GL_NO_ERROR);
+}
+
 static bool ensureNoGLError(const char* name)
 {
   bool result = true;
@@ -443,6 +448,7 @@ AndroidGraphicBuffer::Bind()
     return false;
   }
 
+  clearGLError();
   sGLFunctions.fImageTargetTexture2DOES(GL_TEXTURE_2D, mEGLImage);
   return ensureNoGLError("glEGLImageTargetTexture2DOES");
 }
