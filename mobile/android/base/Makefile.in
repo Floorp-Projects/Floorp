@@ -78,7 +78,6 @@ JAVAFILES = \
   GeckoAsyncTask.java \
   GeckoBatteryManager.java \
   GeckoConnectivityReceiver.java \
-  GeckoDirProvider.java \
   GeckoEvent.java \
   GeckoEventListener.java \
   GeckoInputConnection.java \
