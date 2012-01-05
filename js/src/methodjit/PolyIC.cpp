@@ -1907,7 +1907,7 @@ GetPropWithStub(VMFrame &f, ic::PICInfo *pic, VoidStubPIC stub)
     }
 
     Value v;
-    if (!obj->getProperty(f.cx, name, &v))
+    if (!GetPropertyGenericMaybeCallXML(f.cx, JSOp(*f.pc()), obj, ATOM_TO_JSID(name), &v))
         THROW();
 
     f.regs.sp[-1] = v;
