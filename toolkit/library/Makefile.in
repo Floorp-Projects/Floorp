@@ -401,6 +401,13 @@ endif
 
 EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,gkmedias,$(DIST)/lib) 
 
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_DSO_LDOPTS += \
+  delayimp.lib \
+  -DELAYLOAD:gkmedias.dll \
+  $(NULL)
+endif
+
 ifdef MOZ_SYDNEYAUDIO
 ifeq ($(OS_ARCH),Linux)
 EXTRA_DSO_LDOPTS += $(MOZ_ALSA_LIBS)
