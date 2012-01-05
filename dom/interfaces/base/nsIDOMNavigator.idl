@@ -39,7 +39,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(e610c037-db58-4cd7-8ed3-0d7f1422b4d3)]
+[scriptable, uuid(e0737ed5-89c5-4fe3-891e-a75bf3a1bb55)]
 interface nsIDOMNavigator : nsISupports
 {
   readonly attribute DOMString             appCodeName;
@@ -62,6 +62,7 @@ interface nsIDOMNavigator : nsISupports
   readonly attribute nsIDOMMozPowerManager mozPower;
 
   boolean                   javaEnabled();
+  boolean                   taintEnabled();
 
   /**
    * Pulse the device's vibrator, if it has one.  If the device does not have a
