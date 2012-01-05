@@ -67,17 +67,16 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath)
   // force the non redirected registry under Wow6432Node.
   // This flag is ignored on 32bit systems.
   HKEY baseKeyRaw;
-  LSTATUS retCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
-                                  maintenanceServiceKey, 0, 
-                                  KEY_READ | KEY_WOW64_64KEY, &baseKeyRaw);
+  LONG retCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
+                               maintenanceServiceKey, 0, 
+                               KEY_READ | KEY_WOW64_64KEY, &baseKeyRaw);
   if (retCode != ERROR_SUCCESS) {
     LOG(("Could not open key. (%d)\n", retCode));
     // Our tests run with a different apply directory for each test.
     // We use this registry key on our test slaves to store the 
     // allowed name/issuers.
     retCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
-                            L"SOFTWARE\\Mozilla\\MaintenanceService"
-                            L"\\3932ecacee736d366d6436db0f55bce4", 0,
+                            TEST_ONLY_FALLBACK_KEY_PATH, 0,
                             KEY_READ | KEY_WOW64_64KEY, &baseKeyRaw);
     if (retCode != ERROR_SUCCESS) {
       LOG(("Could not open fallback key. (%d)\n", retCode));
