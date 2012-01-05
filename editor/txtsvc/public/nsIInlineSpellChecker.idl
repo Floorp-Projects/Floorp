@@ -49,8 +49,8 @@ interface nsIInlineSpellChecker : nsISupports
 {
   readonly attribute nsIEditorSpellCheck spellChecker;
 
-  [noscript] void init(in nsIEditor aEditor);
-  [noscript] void cleanup(in boolean aDestroyingFrames);
+  void init(in nsIEditor aEditor);
+  void cleanup(in boolean aDestroyingFrames);
 
   attribute boolean enableRealTimeSpell;
 
