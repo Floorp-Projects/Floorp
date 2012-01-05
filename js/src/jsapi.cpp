@@ -2895,9 +2895,12 @@ JS_PUBLIC_API(void)
 JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
 {
     switch (key) {
-      case JSGC_MAX_BYTES:
+      case JSGC_MAX_BYTES: {
+        AutoLockGC lock(rt);
+        JS_ASSERT(value >= rt->gcBytes);
         rt->gcMaxBytes = value;
         break;
+      }
       case JSGC_MAX_MALLOC_BYTES:
         rt->setGCMaxMallocBytes(value);
         break;
@@ -2915,11 +2918,11 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
 {
     switch (key) {
       case JSGC_MAX_BYTES:
-        return rt->gcMaxBytes;
+        return uint32_t(rt->gcMaxBytes);
       case JSGC_MAX_MALLOC_BYTES:
         return rt->gcMaxMallocBytes;
       case JSGC_BYTES:
-        return rt->gcBytes;
+        return uint32_t(rt->gcBytes);
       case JSGC_MODE:
         return uint32_t(rt->gcMode);
       case JSGC_UNUSED_CHUNKS:
@@ -5351,7 +5354,7 @@ JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, JSObject *obj,
     return EvaluateUCScriptForPrincipalsCommon(cx, obj, principals, NULL, chars, length,
                                                filename, lineno, rval, avi.version());
 }
- 
+
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateUCScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *obj,
                                               JSPrincipals *principals,
