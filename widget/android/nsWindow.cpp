@@ -1191,9 +1191,8 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     nsAutoString metadata;
     unsigned char *bits = NULL;
     if (sHasDirectTexture) {
-      if ((sDirectTexture->Width() != gAndroidBounds.width ||
-           sDirectTexture->Height() != gAndroidBounds.height) &&
-          gAndroidBounds.width != 0 && gAndroidBounds.height != 0) {
+      if (sDirectTexture->Width() != gAndroidBounds.width ||
+          sDirectTexture->Height() != gAndroidBounds.height) {
         sDirectTexture->Reallocate(gAndroidBounds.width, gAndroidBounds.height);
       }
 
