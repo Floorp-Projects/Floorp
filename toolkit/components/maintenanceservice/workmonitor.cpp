@@ -128,29 +128,22 @@ StartUpdateProcess(int argc,
                                       MOVEFILE_REPLACE_EXISTING);
   }
 
-  // Create an environment block for the updater.exe process we're about to 
-  // start.  Indicate that MOZ_USING_SERVICE is set so the updater.exe can
+  // Add an env var for MOZ_USING_SERVICE so the updater.exe can
   // do anything special that it needs to do for service updates.
-  // Search in updater.cpp for more info on MOZ_USING_SERVICE.
+  // Search in updater.cpp for more info on MOZ_USING_SERVICE
+  // for more info.
   WCHAR envVarString[32];
   wsprintf(envVarString, L"MOZ_USING_SERVICE=1"); 
   _wputenv(envVarString);
-  LPVOID environmentBlock = NULL;
-  if (!CreateEnvironmentBlock(&environmentBlock, NULL, TRUE)) {
-    LOG(("Could not create an environment block, setting it to NULL.\n"));
-    environmentBlock = NULL;
-  }
+
   // Empty value on _wputenv is how you remove an env variable in Windows
-  _wputenv(L"MOZ_USING_SERVICE=");
   processStarted = CreateProcessW(argv[0], cmdLine, 
                                   NULL, NULL, FALSE, 
-                                  CREATE_DEFAULT_ERROR_MODE | 
-                                  CREATE_UNICODE_ENVIRONMENT, 
-                                  environmentBlock, 
+                                  CREATE_DEFAULT_ERROR_MODE, 
+                                  NULL, 
                                   NULL, &si, &pi);
-  if (environmentBlock) {
-    DestroyEnvironmentBlock(environmentBlock);
-  }
+  _wputenv(L"MOZ_USING_SERVICE=");
+  
   BOOL updateWasSuccessful = FALSE;
   if (processStarted) {
     // Wait for the updater process to finish
