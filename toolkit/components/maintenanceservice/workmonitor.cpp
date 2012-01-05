@@ -71,6 +71,7 @@ BOOL PathGetSiblingFilePath(LPWSTR destinationBuffer,  LPCWSTR siblingFilePath,
 const int SERVICE_UPDATER_COULD_NOT_BE_STARTED = 16000;
 const int SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS = 16001;
 const int SERVICE_UPDATER_SIGN_ERROR = 16002;
+const int SERVICE_UPDATER_COMPARE_ERROR = 16003;
 
 /**
  * Runs an update process as the service using the SYSTEM account.
@@ -341,6 +342,41 @@ ProcessWorkItem(LPCWSTR monitoringBasePath,
 
   int argcTmp = 0;
   LPWSTR* argvTmp = CommandLineToArgvW(cmdlineBufferWide, &argcTmp);
+
+  // Verify that the updater.exe that we are executing is the same
+  // as the one in the installation directory which we are updating.
+  // The installation dir that we are installing to is argvTmp[2].
+  WCHAR installDirUpdater[MAX_PATH + 1];
+  wcsncpy(installDirUpdater, argvTmp[2], MAX_PATH);
+  if (!PathAppendSafe(installDirUpdater, L"updater.exe")) {
+    LOG(("Install directory updater could not be determined.\n"));
+    result = FALSE;
+  }
+
+  BOOL updaterIsCorrect;
+  if (result && !VerifySameFiles(updaterPath, installDirUpdater, 
+                                 updaterIsCorrect)) {
+    LOG(("Error checking if the updaters are the same.\n")); 
+    result = FALSE;
+  }
+
+  if (result && !updaterIsCorrect) {
+    LOG(("The updaters do not match, udpater will not run.\n")); 
+    result = FALSE;
+  }
+
+  if (result) {
+    LOG(("updater.exe was compared successfully to the installation directory"
+         " updater.exe.\n"));
+  } else {
+    SetEvent(serviceRunningEvent);
+    if (argcTmp < 2 || 
+        !WriteStatusFailure(argvTmp[1], 
+                            SERVICE_UPDATER_COMPARE_ERROR)) {
+      LOG(("Could not write update.status updater compare failure.\n"));
+    }
+    return TRUE;
+  }
 
   // Check for updater.exe sign problems
   BOOL updaterSignProblem = FALSE;
