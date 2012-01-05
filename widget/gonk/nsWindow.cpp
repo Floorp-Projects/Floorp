@@ -191,12 +191,25 @@ nsWindow::Show(bool aState)
     if (mWindowType == eWindowType_invisible)
         return NS_OK;
 
+    if (mVisible == aState)
+        return NS_OK;
+
     mVisible = aState;
     if (!IS_TOPLEVEL())
         return mParent ? mParent->Show(aState) : NS_OK;
 
-    if (aState)
+    if (aState) {
         BringToTop();
+    } else {
+        for (unsigned int i = 0; i < sTopWindows.Length(); i++) {
+            nsWindow *win = sTopWindows[i];
+            if (!win->mVisible)
+                continue;
+
+            win->BringToTop();
+            break;
+        }
+    }
 
     return NS_OK;
 }
@@ -287,10 +300,8 @@ nsWindow::Invalidate(const nsIntRect &aRect,
     nsWindow *parent = mParent;
     while (parent && parent != sTopWindows[0])
         parent = parent->mParent;
-    if (parent != sTopWindows[0]) {
-        LOG("  parent isn't top window, bailing");
+    if (parent != sTopWindows[0])
         return NS_OK;
-    }
 
     mDirtyRegion.Or(mDirtyRegion, aRect);
     gWindowToRedraw = this;
@@ -429,5 +440,6 @@ nsWindow::BringToTop()
 
     nsGUIEvent event(true, NS_ACTIVATE, this);
     (*mEventCallback)(&event);
+    Update();
 }
 
