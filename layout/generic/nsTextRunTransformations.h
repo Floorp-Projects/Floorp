@@ -149,12 +149,13 @@ private:
                        gfxFontGroup* aFontGroup,
                        const PRUnichar* aString, PRUint32 aLength,
                        const PRUint32 aFlags, nsStyleContext** aStyles,
-                       bool aOwnsFactory,
-                       CompressedGlyph *aGlyphStorage)
-    : gfxTextRun(aParams, aString, aLength, aFontGroup, aFlags, aGlyphStorage),
+                       bool aOwnsFactory)
+    : gfxTextRun(aParams, aString, aLength, aFontGroup, aFlags),
       mFactory(aFactory), mString(aString, aLength),
       mOwnsFactory(aOwnsFactory), mNeedsRebuild(true)
   {
+    mCharacterGlyphs = reinterpret_cast<CompressedGlyph*>(this + 1);
+
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
       mStyles.AppendElement(aStyles[i]);
