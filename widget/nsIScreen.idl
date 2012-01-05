@@ -38,24 +38,9 @@
 
 #include "nsISupports.idl"
 
-
-[scriptable, uuid(f728830e-1dd1-11b2-9598-fb9f414f2465)]
+[scriptable, uuid(498dcd6c-94a2-4c32-8c77-531b583dff37)]
 interface nsIScreen : nsISupports
 {
-  void GetRect ( out long left, out long top, out long width, out long height );
-  void GetAvailRect ( out long left, out long top, out long width, out long height );
-  
-  readonly attribute long pixelDepth;
-  readonly attribute long colorDepth;  
-};
-
-
-%{ C++
-
-%}
-
-[scriptable, uuid(f7c93d20-c4e4-4628-b343-cb5530b04f15)]
-interface nsIScreen_MOZILLA_2_0_BRANCH : nsISupports {
   /**
    * Levels of brightness for the screen, from off to full brightness.
    */
@@ -64,6 +49,9 @@ interface nsIScreen_MOZILLA_2_0_BRANCH : nsISupports {
 
   /* The number of different brightness levels */
   const unsigned long BRIGHTNESS_LEVELS = 2;
+
+  void GetRect(out long left, out long top, out long width, out long height);
+  void GetAvailRect(out long left, out long top, out long width, out long height);
 
   /**
    * Locks the minimum brightness of the screen, forcing it to be at
@@ -82,5 +70,7 @@ interface nsIScreen_MOZILLA_2_0_BRANCH : nsISupports {
    * @param brightness A brightness level, one of the above constants.
    */
   void unlockMinimumBrightness(in unsigned long brightness);
+  
+  readonly attribute long pixelDepth;
+  readonly attribute long colorDepth;  
 };
-

@@ -963,8 +963,7 @@ var gViewController = {
         return true;
       },
       doCommand: function(aAddon) {
-        if (gViewController.currentViewObj == gListView &&
-            aAddon.optionsType == AddonManager.OPTIONS_TYPE_INLINE) {
+        if (aAddon.optionsType == AddonManager.OPTIONS_TYPE_INLINE) {
           gViewController.commands.cmd_showItemDetails.doCommand(aAddon);
           return;
         }

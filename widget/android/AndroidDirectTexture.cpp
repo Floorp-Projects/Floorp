@@ -126,6 +126,9 @@ AndroidDirectTexture::Reallocate(PRUint32 aWidth, PRUint32 aHeight, gfxASurface:
   bool result = mBackBuffer->Reallocate(aWidth, aHeight, aFormat);
   if (result) {
     mPendingReallocBuffer = mFrontBuffer;
+
+    mWidth = aWidth;
+    mHeight = aHeight;
   }
 
   return result;
