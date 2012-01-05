@@ -45,6 +45,7 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Util.h"
 
 #include "nsIControllerCommandTable.h"
 #include "nsICommandParams.h"
