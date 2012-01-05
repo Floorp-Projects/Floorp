@@ -405,7 +405,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
             int groupPosition = exList.getPackedPositionGroup(info.packedPosition);
             selectedItem = exList.getExpandableListAdapter().getChild(groupPosition, childPosition);
 
-            Map<String, Object> map = (Map<String, Object>)selectedItem;
+            Map map = (Map)selectedItem;
             title = (String)map.get(URLColumns.TITLE);
         } else {
             AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
@@ -442,7 +442,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
             b = (byte[]) cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
             title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
         } else if (mContextMenuSubject instanceof Map) {
-            Map<String, Object> map = (Map<String, Object>)mContextMenuSubject;
+            Map map = (Map)mContextMenuSubject;
             url = (String)map.get(URLColumns.URL);
             b = (byte[]) map.get(URLColumns.FAVICON);
             title = (String)map.get(URLColumns.TITLE);
