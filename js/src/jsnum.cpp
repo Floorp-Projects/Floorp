@@ -365,8 +365,8 @@ ParseIntStringHelper(JSContext *cx, const jschar *ws, const jschar *end, int may
 }
 
 /* See ECMA 15.1.2.2. */
-static JSBool
-num_parseInt(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js::num_parseInt(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 

@@ -84,90 +84,21 @@
 #include "DiscardTracker.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 
-#define DISCARD_PREF "image.mem.discardable"
-#define DECODEONDRAW_PREF "image.mem.decodeondraw"
-#define BYTESATATIME_PREF "image.mem.decode_bytes_at_a_time"
-#define MAXMS_PREF "image.mem.max_ms_before_yield"
-#define MAXBYTESFORSYNC_PREF "image.mem.max_bytes_for_sync_decode"
 #define SVG_MIMETYPE "image/svg+xml"
 
 using namespace mozilla;
 using namespace mozilla::imagelib;
 
-/* Kept up to date by a pref observer. */
+static bool gInitializedPrefCaches = false;
 static bool gDecodeOnDraw = false;
 static bool gDiscardable = false;
 
-static const char* kObservedPrefs[] = {
-  DISCARD_PREF,
-  DECODEONDRAW_PREF,
-  DISCARD_TIMEOUT_PREF,
-  nsnull
-};
-
-/*
- * Pref observer goop. Yuck.
- */
-
-// Flag
-static bool gRegisteredPrefObserver = false;
-
-// Reloader
 static void
-ReloadPrefs()
+InitPrefCaches()
 {
-  // Discardable
-  gDiscardable = Preferences::GetBool(DISCARD_PREF, gDiscardable);
-
-  // Decode-on-draw
-  gDecodeOnDraw = Preferences::GetBool(DECODEONDRAW_PREF, gDecodeOnDraw);
-
-  // Progressive decoding knobs
-  PRInt32 bytesAtATime, maxMS, maxBytesForSync;
-  if (NS_SUCCEEDED(Preferences::GetInt(BYTESATATIME_PREF, &bytesAtATime))) {
-    RasterImage::SetDecodeBytesAtATime(bytesAtATime);
-  }
-
-  if (NS_SUCCEEDED(Preferences::GetInt(MAXMS_PREF, &maxMS))) {
-    RasterImage::SetMaxMSBeforeYield(maxMS);
-  }
-
-  if (NS_SUCCEEDED(Preferences::GetInt(MAXBYTESFORSYNC_PREF,
-                                       &maxBytesForSync))) {
-    RasterImage::SetMaxBytesForSyncDecode(maxBytesForSync);
-  }
-
-  // Discard timeout
-  mozilla::imagelib::DiscardTracker::ReloadTimeout();
-}
-
-// Observer
-class imgRequestPrefObserver : public nsIObserver {
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-};
-NS_IMPL_ISUPPORTS1(imgRequestPrefObserver, nsIObserver)
-
-// Callback
-NS_IMETHODIMP
-imgRequestPrefObserver::Observe(nsISupports     *aSubject,
-                                const char      *aTopic,
-                                const PRUnichar *aData)
-{
-  // Right topic
-  NS_ABORT_IF_FALSE(!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID), "invalid topic");
-
-  // Right pref
-  if (strcmp(NS_LossyConvertUTF16toASCII(aData).get(), DISCARD_PREF) &&
-      strcmp(NS_LossyConvertUTF16toASCII(aData).get(), DECODEONDRAW_PREF) &&
-      strcmp(NS_LossyConvertUTF16toASCII(aData).get(), DISCARD_TIMEOUT_PREF))
-    return NS_OK;
-
-  // Process the change
-  ReloadPrefs();
-
-  return NS_OK;
+  Preferences::AddBoolVarCache(&gDiscardable, "image.mem.discardable");
+  Preferences::AddBoolVarCache(&gDecodeOnDraw, "image.mem.decodeondraw");
+  gInitializedPrefCaches = true;
 }
 
 #if defined(PR_LOGGING)
@@ -187,7 +118,12 @@ imgRequest::imgRequest() :
   mInnerWindowId(0), mCORSMode(imgIRequest::CORS_NONE),
   mDecodeRequested(false), mIsMultiPartChannel(false), mGotData(false),
   mIsInCache(false)
-{}
+{
+  // Register our pref observers if we haven't yet.
+  if (NS_UNLIKELY(!gInitializedPrefCaches)) {
+    InitPrefCaches();
+  }
+}
 
 imgRequest::~imgRequest()
 {
@@ -239,14 +175,6 @@ nsresult imgRequest::Init(nsIURI *aURI,
   mCacheEntry = aCacheEntry;
 
   SetLoadId(aLoadId);
-
-  // Register our pref observer if it hasn't been done yet.
-  if (NS_UNLIKELY(!gRegisteredPrefObserver)) {
-    nsCOMPtr<nsIObserver> observer(new imgRequestPrefObserver());
-    Preferences::AddStrongObservers(observer, kObservedPrefs);
-    ReloadPrefs();
-    gRegisteredPrefObserver = true;
-  }
 
   return NS_OK;
 }

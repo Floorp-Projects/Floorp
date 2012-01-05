@@ -54,10 +54,10 @@ using namespace js;
  * same variable, since for JOF_PROP-mode opcodes, obj must not be changed
  * because of a cache miss.
  *
- * On return, if atom is null then obj points to the scope chain element in
- * which the property was found, pobj is locked, and entry is valid. If atom is
+ * On return, if name is null then obj points to the scope chain element in
+ * which the property was found, pobj is locked, and entry is valid. If name is
  * non-null then no object is locked but entry is still set correctly for use,
- * e.g., by PropertyCache::fill and atom should be used as the id to find.
+ * e.g., by PropertyCache::fill and name should be used as the id to find.
  *
  * We must lock pobj on a hit in order to close races with threads that might
  * be deleting a property from its scope, or otherwise invalidating property
@@ -65,7 +65,7 @@ using namespace js;
  */
 JS_ALWAYS_INLINE void
 PropertyCache::test(JSContext *cx, jsbytecode *pc, JSObject *&obj,
-                    JSObject *&pobj, PropertyCacheEntry *&entry, JSAtom *&atom)
+                    JSObject *&pobj, PropertyCacheEntry *&entry, PropertyName *&name)
 {
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
 
@@ -85,18 +85,18 @@ PropertyCache::test(JSContext *cx, jsbytecode *pc, JSObject *&obj,
         if (pobj->lastProperty() == entry->pshape) {
             PCMETER(pchits++);
             PCMETER(entry->isOwnPropertyHit() || protopchits++);
-            atom = NULL;
+            name = NULL;
             return;
         }
     }
-    atom = fullTest(cx, pc, &obj, &pobj, entry);
-    if (atom)
+    name = fullTest(cx, pc, &obj, &pobj, entry);
+    if (name)
         PCMETER(misses++);
 }
 
 JS_ALWAYS_INLINE bool
 PropertyCache::testForSet(JSContext *cx, jsbytecode *pc, JSObject *obj,
-                          PropertyCacheEntry **entryp, JSObject **obj2p, JSAtom **atomp)
+                          PropertyCacheEntry **entryp, JSObject **obj2p, PropertyName **namep)
 {
     JS_ASSERT(this == &JS_PROPERTY_CACHE(cx));
 
@@ -109,13 +109,13 @@ PropertyCache::testForSet(JSContext *cx, jsbytecode *pc, JSObject *obj,
     if (entry->kpc == pc && entry->kshape == kshape)
         return true;
 
-    JSAtom *atom = fullTest(cx, pc, &obj, obj2p, entry);
-    JS_ASSERT(atom);
+    PropertyName *name = fullTest(cx, pc, &obj, obj2p, entry);
+    JS_ASSERT(name);
 
     PCMETER(misses++);
     PCMETER(setmisses++);
 
-    *atomp = atom;
+    *namep = name;
     return false;
 }
 

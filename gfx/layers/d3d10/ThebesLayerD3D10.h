@@ -86,6 +86,8 @@ private:
   /* This contains the thebes surface */
   nsRefPtr<gfxASurface> mD2DSurface;
 
+  mozilla::RefPtr<mozilla::gfx::DrawTarget> mDrawTarget;
+
   /* This contains the thebes surface for our render-on-white texture */
   nsRefPtr<gfxASurface> mD2DSurfaceOnWhite;
 

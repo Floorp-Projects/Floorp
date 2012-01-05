@@ -64,7 +64,7 @@
 
 importScripts("ril_consts.js");
 
-const DEBUG = true;
+let DEBUG = false;
 
 const INT32_MAX   = 2147483647;
 const UINT8_SIZE  = 1;
@@ -619,9 +619,9 @@ let RIL = {
     Buf.writeString(address);
     Buf.writeUint32(clirMode || 0);
     Buf.writeUint32(uusInfo || 0);
-	// TODO Why do we need this extra 0? It was put it in to make this
-	// match the format of the binary message.
-	Buf.writeUint32(0);
+    // TODO Why do we need this extra 0? It was put it in to make this
+    // match the format of the binary message.
+    Buf.writeUint32(0);
     Buf.sendParcel();
   },
 

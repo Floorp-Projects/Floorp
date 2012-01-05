@@ -46,7 +46,7 @@ include $(topsrcdir)/config/rules.mk
 
 _CHROME_FILES	= \
 		test_aboutmemory.xul \
-		test_asyncClose_leak.xul \
+		test_sqliteMultiReporter.xul \
 		$(NULL)
 
 libs:: $(_CHROME_FILES)

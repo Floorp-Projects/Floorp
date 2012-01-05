@@ -228,7 +228,7 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
     JS_BeginRequest(cx);
 
     /* Objects call JS_ValueToString in their own compartment. */
-    scopeObj = JSVAL_IS_OBJECT(jsdval->val) ? JSVAL_TO_OBJECT(jsdval->val) : jsdc->glob;
+    scopeObj = !JSVAL_IS_PRIMITIVE(jsdval->val) ? JSVAL_TO_OBJECT(jsdval->val) : jsdc->glob;
     call = JS_EnterCrossCompartmentCall(cx, scopeObj);
     if(!call) {
         JS_EndRequest(cx);

@@ -133,9 +133,9 @@ var Downloads = {
           this._dlmgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
         this._progressAlert = new AlertDownloadProgressListener();
         this._dlmgr.addListener(this._progressAlert);
-
-        NativeWindow.toast.show(Strings.browser.GetStringFromName("alertDownloadsToast"), "long");
       }
+
+      NativeWindow.toast.show(Strings.browser.GetStringFromName("alertDownloadsToast"), "long");
     } else if (aTopic == "dl-done") {
       msgKey = "alertDownloadsDone";
     }
