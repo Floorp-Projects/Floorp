@@ -1849,7 +1849,8 @@ gfxFont::GetShapedWord(gfxContext *aContext,
         ok = ShapeWord(aContext, sw, (const PRUnichar*)aText);
     } else {
         nsAutoString utf16;
-        AppendASCIItoUTF16((const char*)aText, utf16);
+        AppendASCIItoUTF16(nsDependentCSubstring((const char*)aText, aLength),
+                           utf16);
         ok = ShapeWord(aContext, sw, utf16.BeginReading());
     }
     NS_WARN_IF_FALSE(ok, "failed to shape word - expect garbled text");
