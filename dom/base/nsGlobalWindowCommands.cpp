@@ -225,7 +225,7 @@ nsSelectionCommandsBase::GetSelectionControllerFromWindow(nsPIDOMWindow *aWindow
 #pragma mark -
 #endif
 
-static const struct {
+static const struct BrowseCommand {
   const char *reverse, *forward;
   nsresult (NS_STDCALL nsISelectionController::*scroll)(bool);
   nsresult (NS_STDCALL nsISelectionController::*move)(bool, bool);
