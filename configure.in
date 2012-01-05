@@ -6334,6 +6334,23 @@ AC_MSG_RESULT([$WGET])
 AC_SUBST(WGET)
 
 dnl ========================================================
+dnl Maintenance Service
+dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(maintenance-service,
+[  --enable-maintenance-service       Enable building of maintenanceservice],
+    MOZ_MAINTENANCE_SERVICE=1,
+    MOZ_MAINTENANCE_SERVICE= )
+
+if test -n "$MOZ_MAINTENANCE_SERVICE"; then
+  if test "$OS_ARCH" = "WINNT"; then
+    AC_DEFINE(MOZ_MAINTENANCE_SERVICE)
+  else
+    AC_MSG_ERROR([Can only build with --enable-maintenance-service with a Windows target])
+  fi
+fi
+
+dnl ========================================================
 dnl Updater
 dnl ========================================================
 
@@ -8424,6 +8441,7 @@ AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_JAVA_COMPOSITOR)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_CRASHREPORTER)
+AC_SUBST(MOZ_MAINTENANCE_SERVICE)
 AC_SUBST(MOZ_UPDATER)
 AC_SUBST(MOZ_ANGLE)
 AC_SUBST(MOZ_DIRECTX_SDK_PATH)

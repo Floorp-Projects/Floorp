@@ -3291,8 +3291,8 @@ var gDragDrop = {
       if (pos == urls.length) {
         if (installs.length > 0) {
           // Display the normal install confirmation for the installs
-          AddonManager.installAddonsFromWebpage("application/x-xpinstall", this,
-                                                null, installs);
+          AddonManager.installAddonsFromWebpage("application/x-xpinstall",
+                                                window, null, installs);
         }
         return;
       }
