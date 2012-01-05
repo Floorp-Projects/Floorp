@@ -61,7 +61,7 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
 
     private static final Uri BOOKMARKS_CONTENT_URI_POST_11 = Uri.parse("content://com.android.browser/bookmarks");
 
-    public Cursor filter(ContentResolver cr, CharSequence constraint, int limit) {
+    public Cursor filter(ContentResolver cr, CharSequence constraint, int limit, CharSequence urlFilter) {
         Cursor c = cr.query(Browser.BOOKMARKS_URI,
                             new String[] { URL_COLUMN_ID,
                                            BookmarkColumns.URL,
@@ -70,9 +70,11 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
                                            URL_COLUMN_THUMBNAIL },
                             // The length restriction on URL is for the same reason as in the general bookmark query
                             // (see comment earlier in this file).
+                            (urlFilter != null ? "(" + Browser.BookmarkColumns.URL + " NOT LIKE ? ) AND " : "" ) + 
                             "(" + Browser.BookmarkColumns.URL + " LIKE ? OR " + Browser.BookmarkColumns.TITLE + " LIKE ?)"
                             + " AND LENGTH(" + Browser.BookmarkColumns.URL + ") > 0",
-                            new String[] {"%" + constraint.toString() + "%", "%" + constraint.toString() + "%",},
+                            urlFilter == null ? new String[] {"%" + constraint.toString() + "%", "%" + constraint.toString() + "%"} :
+                            new String[] {urlFilter.toString(), "%" + constraint.toString() + "%", "%" + constraint.toString() + "%"},
                             // ORDER BY is number of visits times a multiplier from 1 - 120 of how recently the site
                             // was accessed with a site accessed today getting 120 and a site accessed 119 or more
                             // days ago getting 1
