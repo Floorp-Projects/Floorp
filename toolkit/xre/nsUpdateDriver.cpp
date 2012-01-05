@@ -191,7 +191,7 @@ GetStatusFile(nsIFile *dir, nsCOMPtr<nsILocalFile> &result)
 }
 
 static bool
-IsPending(nsILocalFile *statusFile, bool &isPendingService)
+IsPending(nsILocalFile *statusFile)
 {
   PRFileDesc *fd = nsnull;
   nsresult rv = statusFile->OpenNSPRFileDesc(PR_RDONLY, 0660, &fd);
@@ -207,30 +207,7 @@ IsPending(nsILocalFile *statusFile, bool &isPendingService)
   
   const char kPending[] = "pending";
   bool isPending = (strncmp(buf, kPending, sizeof(kPending) - 1) == 0);
-
-  const char kPendingService[] = "pending-service";
-  isPendingService = (strncmp(buf, kPendingService, 
-                      sizeof(kPendingService) - 1) == 0);
-
-  return isPending || isPendingService;
-}
-
-static bool
-SetStatusApplying(nsILocalFile *statusFile)
-{
-  PRFileDesc *fd = nsnull;
-  nsresult rv = statusFile->OpenNSPRFileDesc(PR_WRONLY | 
-                                             PR_TRUNCATE | 
-                                             PR_CREATE_FILE, 
-                                             0660, &fd);
-  if (NS_FAILED(rv))
-    return false;
-
-  static const char kApplying[] = "Applying\n";
-  PR_Write(fd, kApplying, sizeof(kApplying) - 1);
-  PR_Close(fd);
-
-  return true;
+  return isPending;
 }
 
 static bool
@@ -344,7 +321,7 @@ CopyUpdaterIntoUpdateDir(nsIFile *greDir, nsIFile *appDir, nsIFile *updateDir,
 
 static void
 ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
-            nsIFile *appDir, int appArgc, char **appArgv, bool isPendingService)
+            nsIFile *appDir, int appArgc, char **appArgv)
 {
   nsresult rv;
 
@@ -447,10 +424,11 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
   if (NS_FAILED(rv))
     return;
 
-  if (!SetStatusApplying(statusFile)) {
-    LOG(("failed setting status to 'applying'\n"));
-    return;
-  }
+  // We used to write out "Applying" to the update.status file here.
+  // Instead we do this from within the updater application now.
+  // This is so that we don't overwrite the status of pending-service
+  // in the Windows case.  This change was made for all platforms so
+  // that it stays consistent across all OS.
 
   // Construct the PID argument for this process.  If we are using execv, then
   // we pass "0" which is then ignored by the updater.
@@ -491,38 +469,9 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
   execv(updaterPath.get(), argv);
 #elif defined(XP_WIN)
 
-#ifndef MOZ_MAINTENANCE_SERVICE
-  // We never want the service to be used unless we have Firefox
-  isPendingService = false;
-#endif
-
-  if (isPendingService) {
-    // Make sure the service isn't already busy processing another work item.
-    SetLastError(ERROR_SUCCESS);
-    HANDLE serviceRunningEvent = 
-      OpenEvent(EVENT_ALL_ACCESS, 
-                FALSE, 
-                L"Global\\moz-5b780de9-065b-4341-a04f-ddd94b3723e5");
-    // Only use the service if we know the event exists.
-    // If we have a non NULL handle, or if ERROR_ACCESS_DENIED is returned,
-    // then the event exists.
-    isPendingService = !serviceRunningEvent && 
-                       GetLastError() != ERROR_ACCESS_DENIED;
-    if (serviceRunningEvent) {
-      CloseHandle(serviceRunningEvent);
-    }
-  }
-
-  // Launch the update operation using the service if the status file said so.
-  // We also set the status to pending to ensure we never attempt to use the 
-  // service more than once in a row for a single update.
-  if (!isPendingService || 
-      !WriteStatusPending(NS_ConvertUTF8toUTF16(updateDirPath).get()) ||
-      !WinLaunchServiceCommand(updaterPathW.get(), argc, argv)) {
-    // Launch the update using updater.exe
-    if (!WinLaunchChild(updaterPathW.get(), argc, argv)) {
-      return;
-    }
+  // Launch the update using updater.exe
+  if (!WinLaunchChild(updaterPathW.get(), argc, argv)) {
+    return;
   }
 
   // We are going to process an update so we should exit now
@@ -587,9 +536,8 @@ ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
   }
 
   nsCOMPtr<nsILocalFile> statusFile;
-  bool isPendingService;
   if (GetStatusFile(updatesDir, statusFile) && 
-      IsPending(statusFile, isPendingService)) {
+      IsPending(statusFile)) {
     nsCOMPtr<nsILocalFile> versionFile;
     nsCOMPtr<nsILocalFile> channelChangeFile;
     // Remove the update if the update application version file doesn't exist
@@ -601,7 +549,7 @@ ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
       updatesDir->Remove(true);
     } else {
       ApplyUpdate(greDir, updatesDir, statusFile, appDir, 
-                  argc, argv, isPendingService);
+                  argc, argv);
     }
   }
 
