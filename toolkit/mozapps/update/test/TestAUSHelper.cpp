@@ -151,6 +151,62 @@ VerifyCertificateTrustForFile(LPCWSTR filePath)
   // Check if the file is signed by something that is trusted.
   return WinVerifyTrust(NULL, &policyGUID, &trustData);
 }
+
+/**
+ * Waits for a service to enter a stopped state.
+ * This function does not stop the service, it just blocks until the service
+ * is stopped.
+ *
+ * @param  serviceName    The service to wait for.
+ * @param  maxWaitSeconds The maximum number of seconds to wait
+ * @return true if the service was stopped after waiting at most maxWaitSeconds
+ *         false on an error or when the service was not stopped
+ */
+bool WaitForServiceStop(LPCWSTR serviceName, DWORD maxWaitSeconds) 
+{
+  // Get a handle to the SCM database.
+  SC_HANDLE serviceManager = OpenSCManager(NULL, NULL, 
+                                           SC_MANAGER_CONNECT | 
+                                           SC_MANAGER_ENUMERATE_SERVICE);
+  if (!serviceManager)  {
+    return false;
+  }
+
+  // Get a handle to the service.
+  SC_HANDLE service = OpenServiceW(serviceManager, 
+                                   serviceName, 
+                                   SERVICE_QUERY_STATUS);
+  if (!service) {
+    CloseServiceHandle(serviceManager);
+    return false;
+  }
+
+  bool gotStop = false;
+  DWORD currentWaitMS = 0;
+  while (currentWaitMS < maxWaitSeconds * 1000) {
+    // Make sure the service is not stopped.
+    SERVICE_STATUS_PROCESS ssp;
+    DWORD bytesNeeded;
+    if (!QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO, (LPBYTE)&ssp,
+                              sizeof(SERVICE_STATUS_PROCESS), &bytesNeeded)) {
+      break;
+    }
+
+    // The service is already in use.
+    if (ssp.dwCurrentState == SERVICE_STOPPED) {
+      gotStop = true;
+      break;
+    }
+    currentWaitMS += 50;
+    Sleep(50);
+  }
+
+  CloseServiceHandle(service);
+  CloseServiceHandle(serviceManager);
+  return gotStop;
+}
+
+
 #endif
 
 int NS_main(int argc, NS_tchar **argv)
@@ -188,6 +244,21 @@ int NS_main(int argc, NS_tchar **argv)
   if (!NS_tstrcmp(argv[1], NS_T("check-signature"))) {
 #ifdef XP_WIN
     if (ERROR_SUCCESS == VerifyCertificateTrustForFile(argv[2])) {
+      return 0;
+    } else {
+      return 1;
+    }
+#else 
+    // Not implemented on non-Windows platforms
+    return 1;
+#endif
+  }
+
+  if (!NS_tstrcmp(argv[1], NS_T("wait-for-service-stop"))) {
+#ifdef XP_WIN
+    const int maxWaitSeconds = NS_ttoi(argv[3]);
+    LPCWSTR serviceName = argv[2];
+    if (WaitForServiceStop(serviceName, maxWaitSeconds)) {
       return 0;
     } else {
       return 1;

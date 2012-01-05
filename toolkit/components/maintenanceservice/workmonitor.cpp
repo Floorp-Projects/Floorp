@@ -315,11 +315,14 @@ ProessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv)
     if (StartUpdateProcess(argc, argv,
                            updateProcessWasStarted)) {
       LOG(("updater.exe was launched and run successfully!\n"));
+      LogFlush();
+
       StartServiceUpdate(argc, argv);
     } else {
       result = FALSE;
       LOG(("Error running update process. Updating update.status"
            " Last error: %d\n", GetLastError()));
+      LogFlush();
 
       // If the update process was started, then updater.exe is responsible for
       // setting the failure code.  If it could not be started then we do the 

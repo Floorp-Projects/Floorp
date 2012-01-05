@@ -46,32 +46,30 @@ class UpdateLog
 public:
   static UpdateLog & GetPrimaryLog() 
   {
-    if (!primaryLog) {
-      primaryLog = new UpdateLog();
-    }
-    return *primaryLog;
+    static UpdateLog primaryLog;
+    return primaryLog;
   }
 
   void Init(NS_tchar* sourcePath, NS_tchar* fileName);
   void Finish();
+  void Flush();
   void Printf(const char *fmt, ... );
 
   ~UpdateLog()
   {
-    delete primaryLog;
+    Finish();
   }
 
 protected:
   UpdateLog();
   FILE *logFP;
   NS_tchar* sourcePath;
-
-  static UpdateLog* primaryLog;
 };
 
 #define LOG(args) UpdateLog::GetPrimaryLog().Printf args
 #define LogInit(PATHNAME_, FILENAME_) \
   UpdateLog::GetPrimaryLog().Init(PATHNAME_, FILENAME_)
 #define LogFinish() UpdateLog::GetPrimaryLog().Finish()
+#define LogFlush() UpdateLog::GetPrimaryLog().Flush()
 
 #endif

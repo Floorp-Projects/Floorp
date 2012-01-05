@@ -657,14 +657,24 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus,
     timer.cancel();
     timer = null;
 
-    // Give the service enough time to write its log and finish up
-    do_timeout(1000, function() {
-      if (aCheckSvcLog) {
-        checkServiceLogs(svcOriginalLog);
-      }
+    // Use the helper bin to ensure the service is stopped. If not
+    // stopped then wait for the service to be stopped (at most 10 seconds)
+    let helperBin = do_get_file(HELPER_BIN_FILE);
+    let helperBinArgs = ["wait-for-service-stop", 
+                         "MozillaMaintenance", 
+                         "10"];
+    let helperBinProcess = AUS_Cc["@mozilla.org/process/util;1"].
+                           createInstance(AUS_Ci.nsIProcess);
+    helperBinProcess.init(helperBin);
+    helperBinProcess.run(true, helperBinArgs, helperBinArgs.length);
+    if (helperBinProcess.exitValue != 0) {
+      logTestInfo("maintenance service could not stop, may cause failures.");
+    }
 
-      aCallback();
-    });
+    if (aCheckSvcLog) {
+      checkServiceLogs(svcOriginalLog);
+    } 
+    aCallback();
   }
 
   let timer = AUS_Cc["@mozilla.org/timer;1"].createInstance(AUS_Ci.nsITimer);
