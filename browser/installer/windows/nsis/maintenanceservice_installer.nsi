@@ -237,11 +237,6 @@ Section "MaintenanceService"
   ; WriteRegStr HKLM "${FallbackKey}\0" "name" "Mozilla Corporation"
   ; WriteRegStr HKLM "${FallbackKey}\0" "issuer" "Thawte Code Signing CA - G2"
   SetRegView lastused
-
-  # The Mozilla/updates directory will have an inherited permission
-  # which allows any user to write to it.  Work items are written there.
-  SetShellVarContext all
-  CreateDirectory "$APPDATA\Mozilla\updates"
 SectionEnd
 
 ; By renaming before deleting we improve things slightly in case

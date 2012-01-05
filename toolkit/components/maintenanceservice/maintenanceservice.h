@@ -41,3 +41,7 @@ void WINAPI SvcCtrlHandler(DWORD dwCtrl);
 void ReportSvcStatus(DWORD dwCurrentState, 
                      DWORD dwWin32ExitCode, 
                      DWORD dwWaitHint);
+struct ThreadData {
+  LPWSTR *argv;
+  DWORD argc;
+};

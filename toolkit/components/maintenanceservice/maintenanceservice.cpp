@@ -147,9 +147,11 @@ wmain(int argc, WCHAR **argv)
  * @param param Unused thread callback parameter
  */
 DWORD
-WINAPI StartMonitoringThreadProc(LPVOID param) 
+WINAPI StartMaintenanceServiceThread(LPVOID param) 
 {
-  StartDirectoryChangeMonitor();
+  ThreadData *threadData = reinterpret_cast<ThreadData*>(param);
+  ExecuteServiceCommand(threadData->argc, threadData->argv);
+  delete threadData;
   return 0;
 }
 
@@ -273,7 +275,7 @@ SvcMain(DWORD dwArgc, LPWSTR *lpszArgv)
  * Service initialization.
  */
 void
-SvcInit(DWORD dwArgc, LPWSTR *lpszArgv)
+SvcInit(DWORD argc, LPWSTR *argv)
 {
   // Create an event. The control handler function, SvcCtrlHandler,
   // signals this event when it receives the stop control code.
@@ -283,9 +285,13 @@ SvcInit(DWORD dwArgc, LPWSTR *lpszArgv)
     return;
   }
 
+  ThreadData *threadData = new ThreadData();
+  threadData->argc = argc;
+  threadData->argv = argv;
+
   DWORD threadID;
-  HANDLE thread = CreateThread(NULL, 0, StartMonitoringThreadProc, 0, 
-                               0, &threadID);
+  HANDLE thread = CreateThread(NULL, 0, StartMaintenanceServiceThread, 
+                               threadData, 0, &threadID);
 
   // Report running status when initialization is complete.
   ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
@@ -294,31 +300,6 @@ SvcInit(DWORD dwArgc, LPWSTR *lpszArgv)
   for(;;) {
     // Check whether to stop the service.
     WaitForSingleObject(ghSvcStopEvent, INFINITE);
-
-    WCHAR stopFilePath[MAX_PATH +1];
-    if (!GetUpdateDirectoryPath(stopFilePath)) {
-      LOG(("Could not obtain update directory path, terminating thread "
-           "forcefully.\n"));
-      TerminateThread(thread, 1);
-    }
-
-    // The stop file is to wake up the synchronous call for watching directory
-    // changes. Directory watching will only actually be stopped if 
-    // gServiceStopping is also set to TRUE.
-    gServiceStopping = TRUE;
-    if (!PathAppendSafe(stopFilePath, L"stop")) {
-      TerminateThread(thread, 2);
-    }
-    HANDLE stopFile = CreateFile(stopFilePath, GENERIC_READ, 0, 
-                                 NULL, CREATE_ALWAYS, 0, NULL);
-    if (stopFile == INVALID_HANDLE_VALUE) {
-      LOG(("Could not create stop file, terminating thread forcefully.\n"));
-      TerminateThread(thread, 3);
-    } else {
-      CloseHandle(stopFile);
-      DeleteFile(stopFilePath);
-    }
-
     ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
     return;
   }
