@@ -1758,7 +1758,7 @@ int NS_main(int argc, NS_tchar **argv)
 
       HANDLE serviceInUseEvent = NULL;
       if (useService) {
-        // Make sure the service isn't already busy processing another work item.
+        // Make sure the service isn't already busy processing another command.
         // This event will also be used by the service who will signal it when
         // it is done with the udpate.
         serviceInUseEvent = CreateEventW(NULL, TRUE, 
@@ -1782,14 +1782,14 @@ int NS_main(int argc, NS_tchar **argv)
       if (useService) {
         // If the update couldn't be started, then set useService to false so
         // we do the update the old way.
-        useService = WinLaunchServiceCommand(argv[0], argc, argv);
+        useService = LaunchServiceSoftwareUpdateCommand(argc, (LPCWSTR *)argv);
 
         // The command was launched, so we should wait for the work to be done.
         // The service will set the event we wait on when it is done.
         if (useService) {
           WaitForSingleObject(serviceInUseEvent, INFINITE);
-          CloseHandle(serviceInUseEvent);
         }
+        CloseHandle(serviceInUseEvent);
       }
 
       // If we started the service command, and it finished, check the
