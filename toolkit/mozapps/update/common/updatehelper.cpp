@@ -38,6 +38,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include "shlobj.h"
+#include "updatehelper.h"
 
 // Needed for PathAppendW
 #include <shlwapi.h>
@@ -230,7 +231,7 @@ StartServiceUpdate(int argc, LPWSTR *argv)
   }
 
   // Open the service
-  SC_HANDLE svc = OpenServiceW(manager, L"MozillaMaintenance", 
+  SC_HANDLE svc = OpenServiceW(manager, SVC_NAME, 
                                SERVICE_ALL_ACCESS);
   if (!svc) {
     CloseServiceHandle(manager);
@@ -261,6 +262,10 @@ StartServiceUpdate(int argc, LPWSTR *argv)
                                                 CREATE_UNICODE_ENVIRONMENT, 
                                                 NULL, argv[2], &si, &pi);
   if (svcUpdateProcessStarted) {
+    // Wait on the process to finish updating to avoid problems with 
+    // tests that are running.  maintenanceservice_installer.exe 
+    // will execute very fast anyway.
+    WaitForSingleObject(pi.hProcess, INFINITE);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
   }
@@ -288,7 +293,7 @@ StartServiceCommand(int argc, LPCWSTR* argv)
 
   // Get a handle to the service.
   SC_HANDLE service = OpenServiceW(serviceManager, 
-                                   L"MozillaMaintenance", 
+                                   SVC_NAME, 
                                    SERVICE_QUERY_STATUS | SERVICE_START);
   if (!service) {
     CloseServiceHandle(serviceManager);
@@ -422,4 +427,59 @@ WriteStatusFailure(LPCWSTR updateDirPath, int errorCode)
                       toWrite, &wrote, NULL); 
   CloseHandle(statusFile);
   return ok && wrote == toWrite;
+}
+
+/**
+ * Waits for a service to enter a stopped state.
+ * This function does not stop the service, it just blocks until the service
+ * is stopped.
+ *
+ * @param  serviceName    The service to wait for.
+ * @param  maxWaitSeconds The maximum number of seconds to wait
+ * @return TRUE if the service was stopped after waiting at most maxWaitSeconds
+ *         FALSE on an error or when the service was not stopped
+ */
+BOOL
+WaitForServiceStop(LPCWSTR serviceName, DWORD maxWaitSeconds) 
+{
+  // Get a handle to the SCM database.
+  SC_HANDLE serviceManager = OpenSCManager(NULL, NULL, 
+                                           SC_MANAGER_CONNECT | 
+                                           SC_MANAGER_ENUMERATE_SERVICE);
+  if (!serviceManager)  {
+    return FALSE;
+  }
+
+  // Get a handle to the service.
+  SC_HANDLE service = OpenServiceW(serviceManager, 
+                                   serviceName, 
+                                   SERVICE_QUERY_STATUS);
+  if (!service) {
+    CloseServiceHandle(serviceManager);
+    return FALSE;
+  }
+
+  BOOL gotStop = FALSE;
+  DWORD currentWaitMS = 0;
+  while (currentWaitMS < maxWaitSeconds * 1000) {
+    // Make sure the service is not stopped.
+    SERVICE_STATUS_PROCESS ssp;
+    DWORD bytesNeeded;
+    if (!QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO, (LPBYTE)&ssp,
+                              sizeof(SERVICE_STATUS_PROCESS), &bytesNeeded)) {
+      break;
+    }
+
+    // The service is already in use.
+    if (ssp.dwCurrentState == SERVICE_STOPPED) {
+      gotStop = TRUE;
+      break;
+    }
+    currentWaitMS += 50;
+    Sleep(50);
+  }
+
+  CloseServiceHandle(service);
+  CloseServiceHandle(serviceManager);
+  return gotStop;
 }

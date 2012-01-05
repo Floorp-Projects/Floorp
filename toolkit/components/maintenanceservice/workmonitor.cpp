@@ -317,6 +317,8 @@ ProessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv)
       LOG(("updater.exe was launched and run successfully!\n"));
       LogFlush();
 
+      // We might not execute code after StartServiceUpdate because
+      // the service installer will stop the service if it is running.
       StartServiceUpdate(argc, argv);
     } else {
       result = FALSE;
@@ -367,15 +369,8 @@ ProessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv)
 BOOL
 ExecuteServiceCommand(int argc, LPWSTR *argv) 
 {
-  // Indicate that the service is busy and shouldn't be used by anyone else
-  // by opening or creating a named event.  Programs should check if this 
-  // event exists before trying to start the service.
-  nsAutoHandle serviceRunningEvent(CreateEventW(NULL, TRUE, 
-                                                FALSE, SERVICE_EVENT_NAME));
-
   if (argc < 3) {
     LOG(("Not enough command line arguments to execute a service command\n"));
-    SetEvent(serviceRunningEvent);
     StopService();
     return FALSE;
   }
@@ -395,6 +390,9 @@ ExecuteServiceCommand(int argc, LPWSTR *argv)
   BOOL result = FALSE;
   if (!lstrcmpi(argv[2], L"software-update")) {
     result = ProessSoftwareUpdateCommand(argc - 3, argv + 3);
+    // We might not reach here if the service install succeeded
+    // because the service self updates itself and the service
+    // installer will stop the service.
     LOG(("Service command %ls complete.\n", argv[2]));
   } else {
     LOG(("Service command not recognized: %ls.\n", argv[2]));
@@ -403,7 +401,6 @@ ExecuteServiceCommand(int argc, LPWSTR *argv)
 
   LOG(("service command %ls complete with result: %ls.\n", 
        argv[1], (result ? L"Success" : L"Failure")));
-  SetEvent(serviceRunningEvent);
   StopService();
   return TRUE;
 }

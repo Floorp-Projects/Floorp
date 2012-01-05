@@ -1772,22 +1772,6 @@ int NS_main(int argc, NS_tchar **argv)
         }
       }
 
-      HANDLE serviceInUseEvent = NULL;
-      if (useService) {
-        // Make sure the service isn't already busy processing another command.
-        // This event will also be used by the service who will signal it when
-        // it is done with the udpate.
-        serviceInUseEvent = CreateEventW(NULL, TRUE, 
-                                         FALSE, SERVICE_EVENT_NAME);
-
-        // Only use the service if we know the event can be created and
-        // doesn't already exist.
-        if (!serviceInUseEvent) {
-          useService = false;
-          lastFallbackError = FALLBACKKEY_EVENT_ERROR;
-        }
-      }
-
       // Originally we used to write "pending" to update.status before
       // launching the service command.  This is no longer needed now
       // since the service command is launched from updater.exe.  If anything
@@ -1801,14 +1785,15 @@ int NS_main(int argc, NS_tchar **argv)
         // we do the update the old way.
         useService = LaunchServiceSoftwareUpdateCommand(argc, (LPCWSTR *)argv);
 
-        // The command was launched, so we should wait for the work to be done.
-        // The service will set the event we wait on when it is done.
+        // If the command was launched then wait for the service to be done.
         if (useService) {
-          WaitForSingleObject(serviceInUseEvent, INFINITE);
-        } else {
-          lastFallbackError = FALLBACKKEY_LAUNCH_ERROR;
+          if (!WaitForServiceStop(SVC_NAME, 600)) {
+            // If the service doesn't stop after 10 minutes there is
+            // something seriously wrong.
+            lastFallbackError = FALLBACKKEY_SERVICE_NO_STOP_ERROR;
+            useService = false;
+          }
         }
-        CloseHandle(serviceInUseEvent);
       }
 
       // If we started the service command, and it finished, check the
