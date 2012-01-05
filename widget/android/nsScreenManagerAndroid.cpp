@@ -42,8 +42,6 @@
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS2(nsScreenAndroid, nsIScreen, nsIScreen_MOZILLA_2_0_BRANCH)
-
 nsScreenAndroid::nsScreenAndroid(void *nativeScreen)
 {
 }

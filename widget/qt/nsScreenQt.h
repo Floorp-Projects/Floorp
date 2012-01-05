@@ -41,10 +41,9 @@
 #ifndef nsScreenQt_h___
 #define nsScreenQt_h___
 
-#include "nsIScreen.h"
+#include "nsBaseScreen.h"
 
 #ifdef MOZ_ENABLE_QMSYSTEM2
-#include "WidgetUtils.h"
 namespace MeeGo
 {
     class QmDisplayState;
@@ -54,20 +53,20 @@ namespace MeeGo
 
 //------------------------------------------------------------------------
 
-class nsScreenQt : public nsIScreen
-#ifdef MOZ_ENABLE_QMSYSTEM2
-                , public mozilla::widget::BrightnessLockingWidget
-#endif
+class nsScreenQt : public nsBaseScreen
 {
 public:
   nsScreenQt (int aScreen);
   virtual ~nsScreenQt();
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISCREEN
+  NS_IMETHOD GetRect(PRInt32* aLeft, PRInt32* aTop, PRInt32* aWidth, PRInt32* aHeight);
+  NS_IMETHOD GetAvailRect(PRInt32* aLeft, PRInt32* aTop, PRInt32* aWidth, PRInt32* aHeight);
+  NS_IMETHOD GetPixelDepth(PRInt32* aPixelDepth);
+  NS_IMETHOD GetColorDepth(PRInt32* aColorDepth);
 
 #ifdef MOZ_ENABLE_QMSYSTEM2
-  void ApplyMinimumBrightness(PRUint32 aType);
+protected:
+  virtual void ApplyMinimumBrightness(PRUint32 aType) MOZ_OVERRIDE;
 private:
   MeeGo::QmDisplayState* mDisplayState;
 #endif
