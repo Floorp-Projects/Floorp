@@ -3152,6 +3152,20 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
                    appData.version);
     if (EnvHasValue("MOZ_PROCESS_UPDATES")) {
       SaveToEnv("MOZ_PROCESS_UPDATES=");
+
+      // If the caller has asked us to log our arguments, do so.  This is used
+      // to make sure that the maintenance service successfully launches the
+      // callback application.
+      const char *logFile = nsnull;
+      if (ARG_FOUND == CheckArg("dump-args", false, &logFile)) {
+        FILE* logFP = fopen(logFile, "wb");
+        if (logFP) {
+          for (i = 1; i < gRestartArgc; ++i) {
+            fprintf(logFP, "%s\n", gRestartArgv[i]);
+          }
+          fclose(logFP);
+        }
+      }
       return 0;
     }
 #endif
