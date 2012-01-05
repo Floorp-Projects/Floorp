@@ -584,6 +584,7 @@ public class BrowserProvider extends ContentProvider {
         return deleted;
     }
 
+    @SuppressWarnings("fallthrough")
     public int deleteInTransaction(Uri uri, String selection, String[] selectionArgs) {
         Log.d(LOGTAG, "Calling delete in transaction on URI: " + uri);
 
@@ -788,6 +789,7 @@ public class BrowserProvider extends ContentProvider {
         return updated;
     }
 
+    @SuppressWarnings("fallthrough")
     public int updateInTransaction(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
         Log.d(LOGTAG, "Calling update in transaction on URI: " + uri);
