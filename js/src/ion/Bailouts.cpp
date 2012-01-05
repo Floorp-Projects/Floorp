@@ -204,7 +204,7 @@ PushInlinedFrame(JSContext *cx, StackFrame *callerFrame)
     // JSOP_GETPROP). That will have to be handled differently.
     FrameRegs &regs = cx->regs();
     JS_ASSERT(JSOp(*regs.pc) == JSOP_CALL);
-    uintN callerArgc = GET_ARGC(regs.pc);
+    int callerArgc = GET_ARGC(regs.pc);
     const Value &calleeVal = regs.sp[-callerArgc - 2];
 
     JSFunction *fun = calleeVal.toObject().toFunction();
