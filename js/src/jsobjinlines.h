@@ -1324,9 +1324,9 @@ JSObject::getElementIfPresent(JSContext *cx, JSObject *receiver, uint32_t index,
 }
 
 inline JSBool
-JSObject::getSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp)
+JSObject::getSpecial(JSContext *cx, JSObject *receiver, js::SpecialId sid, js::Value *vp)
 {
-    return getGeneric(cx, SPECIALID_TO_JSID(sid), vp);
+    return getGeneric(cx, receiver, SPECIALID_TO_JSID(sid), vp);
 }
 
 inline JSBool

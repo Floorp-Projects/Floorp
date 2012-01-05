@@ -40,9 +40,14 @@ topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
 relativesrcdir = dom/indexedDB/test
+DIRS += unit
 
 include $(DEPTH)/config/autoconf.mk
+
+XPCSHELL_TESTS = unit
+
 include $(topsrcdir)/config/rules.mk
+
 
 TEST_FILES = \
   bfcache_iframe1.html \
@@ -145,6 +150,8 @@ BROWSER_TEST_FILES = \
   browser_quotaPromptDeny.js \
   browser_quotaPromptDatabases.html \
   browser_quotaPromptDatabases.js \
+  browser_quotaPromptDelete.html \
+  browser_quotaPromptDelete.js \
   head.js \
   $(NULL)
 

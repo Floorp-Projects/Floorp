@@ -158,8 +158,8 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, JSObject *po
     return entry;
 }
 
-static inline JSAtom *
-GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs)
+static inline PropertyName *
+GetNameFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs)
 {
     if (op == JSOP_LENGTH)
         return cx->runtime->atomState.lengthAtom;
@@ -171,12 +171,12 @@ GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs
 
     JSScript *script = cx->stack.currentScript();
     ptrdiff_t pcoff = (JOF_TYPE(cs.format) == JOF_SLOTATOM) ? SLOTNO_LEN : 0;
-    JSAtom *atom;
-    GET_ATOM_FROM_BYTECODE(script, pc, pcoff, atom);
-    return atom;
+    PropertyName *name;
+    GET_NAME_FROM_BYTECODE(script, pc, pcoff, name);
+    return name;
 }
 
-JSAtom *
+PropertyName *
 PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject **pobjp,
                         PropertyCacheEntry *entry)
 {
@@ -196,13 +196,13 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     if (entry->kpc != pc) {
         PCMETER(kpcmisses++);
 
-        JSAtom *atom = GetAtomFromBytecode(cx, pc, op, cs);
+        PropertyName *name = GetNameFromBytecode(cx, pc, op, cs);
 #ifdef DEBUG_notme
         JSAutoByteString printable;
         fprintf(stderr,
                 "id miss for %s from %s:%u"
                 " (pc %u, kpc %u, kshape %p, shape %p)\n",
-                js_AtomToPrintableString(cx, atom, &printable),
+                js_AtomToPrintableString(cx, name, &printable),
                 script->filename,
                 js_PCToLineNumber(cx, script, pc),
                 pc - script->code,
@@ -214,12 +214,12 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
                                 JS_FALSE, stderr);
 #endif
 
-        return atom;
+        return name;
     }
 
     if (entry->kshape != obj->lastProperty()) {
         PCMETER(kshapemisses++);
-        return GetAtomFromBytecode(cx, pc, op, cs);
+        return GetNameFromBytecode(cx, pc, op, cs);
     }
 
     /*
@@ -252,18 +252,15 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
 
     if (pobj->lastProperty() == entry->pshape) {
 #ifdef DEBUG
-        JSAtom *atom = GetAtomFromBytecode(cx, pc, op, cs);
-        jsid id = ATOM_TO_JSID(atom);
-
-        id = js_CheckForStringIndex(id);
-        JS_ASSERT(pobj->nativeContains(cx, id));
+        PropertyName *name = GetNameFromBytecode(cx, pc, op, cs);
+        JS_ASSERT(pobj->nativeContains(cx, js_CheckForStringIndex(ATOM_TO_JSID(name))));
 #endif
         *pobjp = pobj;
         return NULL;
     }
 
     PCMETER(vcapmisses++);
-    return GetAtomFromBytecode(cx, pc, op, cs);
+    return GetNameFromBytecode(cx, pc, op, cs);
 }
 
 #ifdef DEBUG

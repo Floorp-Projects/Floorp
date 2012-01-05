@@ -728,7 +728,12 @@ Database::InitSchema(bool* aDatabaseMigrated)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 11 uses schema version 14.
+      if (currentSchemaVersion < 16) {
+        rv = MigrateV16Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 11 uses schema version 16.
 
       // Schema Upgrades must add migration code here.
 
@@ -1545,6 +1550,8 @@ Database::MigrateV13Up()
 nsresult
 Database::MigrateV14Up()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   // For existing profiles, we may not have a moz_favicons.guid column.
   // Add it here. We want it to be unique, but ALTER TABLE doesn't allow
   // a uniqueness constraint, so the index must be created separately.
@@ -1560,17 +1567,18 @@ Database::MigrateV14Up()
     ));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Generate GUIDs for our existing favicons.
-    rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "UPDATE moz_favicons "
-      "SET guid = GENERATE_GUID()"
-    ));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // And now we can make the column unique.
     rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_FAVICONS_GUID);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  // Generate GUID for any favicon missing it.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_favicons "
+    "SET guid = GENERATE_GUID() "
+    "WHERE guid ISNULL "
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -1594,6 +1602,23 @@ Database::MigrateV15Up()
       "FROM moz_bookmarks "
       "WHERE keyword_id = moz_keywords.id "
     ")"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+Database::MigrateV16Up()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Due to Bug 715268 downgraded and then upgraded profiles may lack favicons
+  // guids, so fillup any missing ones.
+  nsresult rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_favicons "
+    "SET guid = GENERATE_GUID() "
+    "WHERE guid ISNULL "
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1632,7 +1657,7 @@ Database::Observe(nsISupports *aSubject,
                   const char *aTopic,
                   const PRUnichar *aData)
 {
-  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  MOZ_ASSERT(NS_IsMainThread());
  
   if (strcmp(aTopic, TOPIC_PROFILE_CHANGE_TEARDOWN) == 0) {
     // Tests simulating shutdown may cause multiple notifications.
@@ -1678,27 +1703,38 @@ Database::Observe(nsISupports *aSubject,
 
 #ifdef DEBUG
     { // Sanity check for missing guids.
+      bool haveNullGuids = false;
       nsCOMPtr<mozIStorageStatement> stmt;
+
       nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
         "SELECT 1 "
         "FROM moz_places "
         "WHERE guid IS NULL "
-        "UNION ALL "
+      ), getter_AddRefs(stmt));
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = stmt->ExecuteStep(&haveNullGuids);
+      NS_ENSURE_SUCCESS(rv, rv);
+      MOZ_ASSERT(!haveNullGuids && "Found a page without a GUID!");
+
+      rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
         "SELECT 1 "
         "FROM moz_bookmarks "
         "WHERE guid IS NULL "
-        "UNION ALL "
+      ), getter_AddRefs(stmt));
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = stmt->ExecuteStep(&haveNullGuids);
+      NS_ENSURE_SUCCESS(rv, rv);
+      MOZ_ASSERT(!haveNullGuids && "Found a bookmark without a GUID!");
+
+      rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
         "SELECT 1 "
         "FROM moz_favicons "
         "WHERE guid IS NULL "
       ), getter_AddRefs(stmt));
       NS_ENSURE_SUCCESS(rv, rv);
-
-      bool haveNullGuids;
       rv = stmt->ExecuteStep(&haveNullGuids);
       NS_ENSURE_SUCCESS(rv, rv);
-      NS_ASSERTION(!haveNullGuids,
-                   "Someone added an entry without adding a GUID!");
+      MOZ_ASSERT(!haveNullGuids && "Found a favicon without a GUID!");
     }
 #endif
 

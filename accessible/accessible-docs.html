@@ -819,7 +819,7 @@ called, Windows sends the window in question a <a
  href="http://lxr.mozilla.org/seamonkey/search?string=WM_GETOBJECT">WM_GETOBJECT</a>
 message requesting an IAccessible for your root object in the window. In
 our case, this event is received in <a
- href="http://lxr.mozilla.org/seamonkey/source/widget/src/windows/nsWindow.cpp#4370">mozilla/widget/src/windows/nsWindow.cpp</a>.
+ href="http://lxr.mozilla.org/mozilla-central/source/widget/windows/nsWindow.cpp#4370">mozilla/widget/windows/nsWindow.cpp</a>.
 We send back an IAccessible pointer which can be used by the client to
 get information about this root object. The assistive technology will
 use that root IAccessible to traverse the rest of the object tree, by

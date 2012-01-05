@@ -550,17 +550,6 @@ Connection::Connection(Service *aService,
 Connection::~Connection()
 {
   (void)Close();
-
-  // The memory reporters should have been already unregistered if the APIs
-  // have been used properly.  But if an async connection hasn't been closed
-  // with asyncClose(), the connection is about to leak and it's too late to do
-  // anything about it.  So we mark the memory reporters accordingly so that
-  // the leak will be obvious in about:memory.
-  for (PRUint32 i = 0; i < mMemoryReporters.Length(); i++) {
-    if (mMemoryReporters[i]) {
-      mMemoryReporters[i]->markAsLeaked();
-    }
-  }
 }
 
 NS_IMPL_THREADSAFE_ADDREF(Connection)
@@ -722,28 +711,6 @@ Connection::initialize(nsIFile *aDatabaseFile,
       break;
   }
 
-  nsRefPtr<StorageMemoryReporter> reporter;
-  nsCString filename = this->getFilename();
-
-  reporter =
-    new StorageMemoryReporter(this->mDBConn, filename,
-                              StorageMemoryReporter::Cache_Used);
-  mMemoryReporters.AppendElement(reporter);
-
-  reporter =
-    new StorageMemoryReporter(this->mDBConn, filename,
-                              StorageMemoryReporter::Schema_Used);
-  mMemoryReporters.AppendElement(reporter);
-
-  reporter =
-    new StorageMemoryReporter(this->mDBConn, filename,
-                              StorageMemoryReporter::Stmt_Used);
-  mMemoryReporters.AppendElement(reporter);
-
-  for (PRUint32 i = 0; i < mMemoryReporters.Length(); i++) {
-    (void)::NS_RegisterMemoryReporter(mMemoryReporters[i]);
-  }
-
   return NS_OK;
 }
 
@@ -880,11 +847,6 @@ Connection::internalClose()
   }
 #endif
 
-  for (PRUint32 i = 0; i < mMemoryReporters.Length(); i++) {
-    (void)::NS_UnregisterMemoryReporter(mMemoryReporters[i]);
-    mMemoryReporters[i] = nsnull;
-  }
-
   int srv = ::sqlite3_close(mDBConn);
   NS_ASSERTION(srv == SQLITE_OK,
                "sqlite3_close failed. There are probably outstanding statements that are listed above!");
@@ -1013,8 +975,9 @@ Connection::Close()
     return NS_ERROR_NOT_INITIALIZED;
 
   { // Make sure we have not executed any asynchronous statements.
-    // If this fails, the connection will be left open!  See ~Connection() for
-    // more details.
+    // If this fails, the mDBConn will be left open, resulting in a leak.
+    // Ideally we'd schedule some code to destroy the mDBConn once all its
+    // async statements have finished executing;  see bug 704030.
     MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
     bool asyncCloseWasCalled = !mAsyncExecutionThread;
     NS_ENSURE_TRUE(asyncCloseWasCalled, NS_ERROR_UNEXPECTED);

@@ -11,7 +11,10 @@ var wtu = WebGLTestUtils;
 var canvas;
 var gl;
 var shouldGenerateGLError;
-var extension_name = "WEBGL_EXT_lose_context";
+var extensionNames = [
+    "WEBKIT_WEBGL_lose_context",
+    "MOZ_WEBGL_lose_context",
+];
 var extension;
 var bufferObjects;
 var program;
@@ -33,22 +36,19 @@ function init()
     testLosingContext();
 }
 
-function runTest1()
-{
-    testLosingAndRestoringContext();
-
-    finishTest();
-}
-
 function setupTest()
 {
     canvas = document.createElement("canvas");
     canvas.width = 1;
     canvas.height = 1;
     gl = wtu.create3DContext(canvas);
-    extension = gl.getExtension(extension_name);
+    for (var ii = 0; ii < extensionNames.length; ++ii) {
+        extension = gl.getExtension(extensionNames[ii]);
+        if (extension)
+            break;
+    }
     if (!extension) {
-        debug(extension_name + " extension not found.");
+        debug("Could not find lose_context extension under the following names: " + extensionNames.join(" "));
         return false;
     }
     return true;
@@ -61,13 +61,13 @@ function testLosingContext()
 
     debug("Test losing a context and inability to restore it.");
 
-    canvas.addEventListener("webglcontextlost", function() {
-       testLostContext();
+    canvas.addEventListener("webglcontextlost", function(e) {
+       testLostContext(e);
        // restore the context after this event has exited.
        setTimeout(function() {
          // we didn't call prevent default so we should not be able to restore the context
          shouldGenerateGLError(gl, gl.INVALID_OPERATION, "extension.restoreContext()");
-         testLosingAndRetoreingContext();
+         testLosingAndRestoringContext();
        }, 1);
     });
     canvas.addEventListener("webglcontextrestored", testShouldNotRestoreContext);
@@ -82,7 +82,7 @@ function testLosingContext()
     shouldBe("gl.getError()", "gl.CONTEXT_LOST_WEBGL");
     shouldBe("gl.getError()", "gl.NO_ERROR");
     // gl methods should be no-ops
-    shouldGenerateGLError(gl, gl.NO_ERROR, gl.blendFunc(gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP));
+    shouldGenerateGLError(gl, gl.NO_ERROR, "gl.blendFunc(gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP)");
     // but the event should not have been fired.
     shouldBeFalse("contextLostEventFired");
 }
@@ -95,8 +95,8 @@ function testLosingAndRestoringContext()
     debug("");
     debug("Test losing and restoring a context.");
 
-    canvas.addEventListener("webglcontextlost", function() {
-      testLostContext();
+    canvas.addEventListener("webglcontextlost", function(e) {
+      testLostContext(e);
       // restore the context after this event has exited.
       setTimeout(function() {
         shouldGenerateGLError(gl, gl.NO_ERROR, "extension.restoreContext()");
@@ -105,7 +105,7 @@ function testLosingAndRestoringContext()
         shouldBeTrue("gl.isContextLost()");
         shouldBe("gl.getError()", "gl.NO_ERROR");
         // gl methods should still be no-ops
-        shouldGenerateGLError(gl, gl.NO_ERROR, gl.blendFunc(gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP));
+        shouldGenerateGLError(gl, gl.NO_ERROR, "gl.blendFunc(gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP)");
       }, 1);
     });
     canvas.addEventListener("webglcontextrestored", function() {
@@ -123,7 +123,7 @@ function testLosingAndRestoringContext()
     shouldBe("gl.getError()", "gl.CONTEXT_LOST_WEBGL");
     shouldBe("gl.getError()", "gl.NO_ERROR");
     // gl methods should be no-ops
-    shouldGenerateGLError(gl, gl.NO_ERROR, gl.blendFunc(gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP));
+    shouldGenerateGLError(gl, gl.NO_ERROR, "gl.blendFunc(gl.TEXTURE_2D, gl.TEXTURE_CUBE_MAP)");
     // but the event should not have been fired.
     shouldBeFalse("contextLostEventFired");
 }

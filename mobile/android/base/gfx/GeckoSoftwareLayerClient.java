@@ -140,8 +140,10 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             layerController.setViewportMetrics(mGeckoViewport);
         }
 
-        GeckoAppShell.registerGeckoEventListener("Viewport:Update", this);
+        GeckoAppShell.registerGeckoEventListener("Viewport:UpdateAndDraw", this);
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateLater", this);
+
+        sendResizeEventIfNecessary();
     }
 
     public void beginDrawing(int width, int height) {
@@ -263,30 +265,36 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     @Override
     public void geometryChanged() {
         /* Let Gecko know if the screensize has changed */
+        sendResizeEventIfNecessary();
+        render();
+    }
+
+    /* Informs Gecko that the screen size has changed. */
+    private void sendResizeEventIfNecessary() {
         DisplayMetrics metrics = new DisplayMetrics();
         GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
-        if (metrics.widthPixels != mScreenSize.width ||
-            metrics.heightPixels != mScreenSize.height) {
-            mScreenSize = new IntSize(metrics.widthPixels, metrics.heightPixels);
-            int maxSize = getLayerController().getView().getMaxTextureSize();
-
-            // XXX Introduce tiling to solve this?
-            if (mScreenSize.width > maxSize || mScreenSize.height > maxSize)
-                throw new RuntimeException("Screen size of " + mScreenSize + " larger than maximum texture size of " + maxSize);
-
-            // Round to next power of two until we use NPOT texture support
-            IntSize bufferSize = new IntSize(Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.width + LayerController.MIN_BUFFER.width)),
-                                             Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.height + LayerController.MIN_BUFFER.height)));
-
-            Log.i(LOGTAG, "Screen-size changed to " + mScreenSize);
-            GeckoEvent event = new GeckoEvent(GeckoEvent.SIZE_CHANGED,
-                                              bufferSize.width, bufferSize.height,
-                                              metrics.widthPixels, metrics.heightPixels);
-            GeckoAppShell.sendEventToGecko(event);
+        if (metrics.widthPixels == mScreenSize.width &&
+                metrics.heightPixels == mScreenSize.height) {
+            return;
         }
 
-        render();
+        mScreenSize = new IntSize(metrics.widthPixels, metrics.heightPixels);
+        int maxSize = getLayerController().getView().getMaxTextureSize();
+
+        // XXX Introduce tiling to solve this?
+        if (mScreenSize.width > maxSize || mScreenSize.height > maxSize)
+            throw new RuntimeException("Screen size of " + mScreenSize + " larger than maximum texture size of " + maxSize);
+
+        // Round to next power of two until we use NPOT texture support
+        IntSize bufferSize = new IntSize(Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.width + LayerController.MIN_BUFFER.width)),
+                                         Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.height + LayerController.MIN_BUFFER.height)));
+
+        Log.i(LOGTAG, "Screen-size changed to " + mScreenSize);
+        GeckoEvent event = new GeckoEvent(GeckoEvent.SIZE_CHANGED,
+                                          bufferSize.width, bufferSize.height,
+                                          metrics.widthPixels, metrics.heightPixels);
+        GeckoAppShell.sendEventToGecko(event);
     }
 
     @Override
@@ -340,19 +348,13 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
     }
 
     public void handleMessage(String event, JSONObject message) {
-        if ("Viewport:Update".equals(event)) {
-            beginTransaction(mTileLayer);
-            try {
-                updateViewport(message.getString("viewport"), false);
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "Unable to update viewport", e);
-            } finally {
-                endTransaction(mTileLayer);
-            }
+        if ("Viewport:UpdateAndDraw".equals(event)) {
+            mUpdateViewportOnEndDraw = true;
+
+            // Redraw everything.
+            Rect rect = new Rect(0, 0, mBufferSize.width, mBufferSize.height);
+            GeckoAppShell.sendEventToGecko(new GeckoEvent(GeckoEvent.DRAW, rect));
         } else if ("Viewport:UpdateLater".equals(event)) {
-            if (!mTileLayer.inTransaction()) {
-                Log.e(LOGTAG, "Viewport:UpdateLater called while not in transaction. You should be using Viewport:Update instead!");
-            }
             mUpdateViewportOnEndDraw = true;
         }
     }
