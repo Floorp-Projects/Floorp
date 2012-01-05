@@ -64,7 +64,7 @@ using namespace mozilla::services;
 #define MOZ_SERVICE(NAME, TYPE, CONTRACT_ID)                            \
   static TYPE* g##NAME = nsnull;                                        \
                                                                         \
-  already_AddRefed<TYPE>                                         \
+  already_AddRefed<TYPE>                                                \
   mozilla::services::Get##NAME()                                        \
   {                                                                     \
     if (!g##NAME) {                                                     \
@@ -73,6 +73,11 @@ using namespace mozilla::services;
     }                                                                   \
     NS_IF_ADDREF(g##NAME);                                              \
     return g##NAME;                                                     \
+  }                                                                     \
+  NS_EXPORT_(already_AddRefed<TYPE>)                                    \
+  mozilla::services::_external_Get##NAME()                              \
+  {                                                                     \
+    return Get##NAME();                                                 \
   }
 
 #include "ServiceList.h"
