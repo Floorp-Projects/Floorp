@@ -49,7 +49,6 @@ CPPSRCS = \
   certificatecheck.cpp \
   servicebase.cpp \
   registrycertificates.cpp \
-  pathhash.cpp \
   $(NULL)
 
 # For debugging purposes only
