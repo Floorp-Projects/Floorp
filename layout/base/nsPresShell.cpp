@@ -2506,12 +2506,12 @@ PresShell::ScrollLine(bool aForward)
 }
 
 NS_IMETHODIMP
-PresShell::ScrollHorizontal(bool aLeft)
+PresShell::ScrollCharacter(bool aRight)
 {
   nsIScrollableFrame* scrollFrame =
     GetFrameToScrollAsScrollable(nsIPresShell::eHorizontal);
   if (scrollFrame) {
-    scrollFrame->ScrollBy(nsIntPoint(aLeft ? -1 : 1, 0),
+    scrollFrame->ScrollBy(nsIntPoint(aRight ? 1 : -1, 0),
                           nsIScrollableFrame::LINES,
                           nsIScrollableFrame::SMOOTH);
 //NEW FOR LINES    
