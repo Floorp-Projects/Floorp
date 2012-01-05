@@ -1751,6 +1751,9 @@ function setEnvironment() {
                 gEnvAppDirOverride + "\n");
     env.set("MOZ_UPDATE_APPDIR_OVERRIDE", gEnvAppDirOverride);
   }
+
+  logTestInfo("setting MOZ_NO_SERVICE_FALLBACK environment variable to 1");
+  env.set("MOZ_NO_SERVICE_FALLBACK", "1");
 }
 
 /**
@@ -1825,4 +1828,7 @@ function resetEnvironment() {
     env.set("MOZ_UPDATE_APPDIR_OVERRIDE", "");
     gEnvAppDirOverride = null;
   }
+
+  logTestInfo("removing MOZ_NO_SERVICE_FALLBACK environment variable");
+  env.set("MOZ_NO_SERVICE_FALLBACK", "");
 }
