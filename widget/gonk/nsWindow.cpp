@@ -210,8 +210,8 @@ nsWindow::IsVisible(bool & aState)
 
 NS_IMETHODIMP
 nsWindow::ConstrainPosition(bool aAllowSlop,
-                  PRInt32 *aX,
-                  PRInt32 *aY)
+                            PRInt32 *aX,
+                            PRInt32 *aY)
 {
     return NS_OK;
 }
@@ -350,13 +350,13 @@ NS_IMETHODIMP_(void)
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
-  mInputContext = aContext;
+    mInputContext = aContext;
 }
 
 NS_IMETHODIMP_(InputContext)
 nsWindow::GetInputContext()
 {
-  return mInputContext;
+    return mInputContext;
 }
 
 NS_IMETHODIMP
