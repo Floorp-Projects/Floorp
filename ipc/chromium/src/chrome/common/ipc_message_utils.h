@@ -774,7 +774,7 @@ struct ParamTraits<LogData> {
     int type;
     bool result =
       ReadParam(m, iter, &r->channel) &&
-      ReadParam(m, iter, &r->routing_id);
+      ReadParam(m, iter, &r->routing_id) &&
       ReadParam(m, iter, &type) &&
       ReadParam(m, iter, &r->flags) &&
       ReadParam(m, iter, &r->sent) &&
