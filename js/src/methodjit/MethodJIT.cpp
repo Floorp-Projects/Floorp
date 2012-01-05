@@ -1363,9 +1363,6 @@ PICPCComparator(const void *key, const void *entry)
     const jsbytecode *pc = (const jsbytecode *)key;
     const ic::PICInfo *pic = (const ic::PICInfo *)entry;
 
-    if (ic::PICInfo::CALL != pic->kind)
-        return ic::PICInfo::CALL - pic->kind;
-
     /*
      * We can't just return |pc - pic->pc| because the pointers may be
      * far apart and an int (or even a ptrdiff_t) may not be large
