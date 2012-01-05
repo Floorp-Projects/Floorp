@@ -558,6 +558,33 @@ ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
   rv = updatesDir->AppendNative(NS_LITERAL_CSTRING("0"));
   if (NS_FAILED(rv))
     return rv;
+ 
+  const char *processingUpdates = PR_GetEnv("MOZ_PROCESS_UPDATES");
+  if (processingUpdates && *processingUpdates) {
+    // Enable the tests to request us to use a different update root directory
+    const char *updRootOverride = PR_GetEnv("MOZ_UPDATE_ROOT_OVERRIDE");
+    if (updRootOverride && *updRootOverride) {
+      nsCOMPtr<nsILocalFile> overrideDir;
+      nsCAutoString path(updRootOverride);
+      rv = NS_NewNativeLocalFile(path, false, getter_AddRefs(overrideDir));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      updatesDir = do_QueryInterface(overrideDir);
+    }
+    // Enable the tests to request us to use a different app directory
+    const char *appDirOverride = PR_GetEnv("MOZ_UPDATE_APPDIR_OVERRIDE");
+    if (appDirOverride && *appDirOverride) {
+      nsCOMPtr<nsILocalFile> overrideDir;
+      nsCAutoString path(appDirOverride);
+      rv = NS_NewNativeLocalFile(path, false, getter_AddRefs(overrideDir));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      NS_RELEASE(appDir);
+      NS_ADDREF(appDir = overrideDir);
+    }
+  }
 
   nsCOMPtr<nsILocalFile> statusFile;
   bool isPendingService;

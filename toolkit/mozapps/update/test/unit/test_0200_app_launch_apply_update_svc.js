@@ -20,9 +20,6 @@ const CHECK_TIMEOUT_MILLI = 1000;
 // the test will try to kill it.
 const APP_TIMER_TIMEOUT = 15000;
 
-let gAppTimer;
-let gProcess;
-
 function run_test() {
   do_test_pending();
   do_register_cleanup(end_test);
@@ -52,7 +49,6 @@ function run_test() {
             createINIParser(file);
   let version = ini.getString("App", "Version");
   writeVersionFile(version);
-  writeStatusFile(STATE_PENDING);
 
   // This is the directory where the update files will be located
   let updateTestDir = getUpdateTestDir();
@@ -102,37 +98,41 @@ function run_test() {
   updaterIni.append(FILE_UPDATER_INI);
   writeFile(updaterIni, updaterIniContents);
 
-  let launchBin = getLaunchBin();
-  let args = getProcessArgs();
-  logTestInfo("launching " + launchBin.path + " " + args.join(" "));
+  let updatesRootDir = processDir.clone();
+  updatesRootDir.append("updates");
+  updatesRootDir.append("0");
+  getApplyDirPath = function() {
+    return processDir.path;
+  }
+  getApplyDirFile = function (aRelPath, allowNonexistent) {
+    let base = AUS_Cc["@mozilla.org/file/local;1"].
+               createInstance(AUS_Ci.nsILocalFile);
+    base.initWithPath(getApplyDirPath());
+    let path = (aRelPath ? aRelPath : "");
+    let bits = path.split("/");
+    for (let i = 0; i < bits.length; i++) {
+      if (bits[i]) {
+        if (bits[i] == "..")
+          base = base.parent;
+        else
+          base.append(bits[i]);
+      }
+    }
 
-  gProcess = AUS_Cc["@mozilla.org/process/util;1"].
-                createInstance(AUS_Ci.nsIProcess);
-  gProcess.init(launchBin);
+    if (!allowNonexistent && !base.exists()) {
+      _passed = false;
+      var stack = Components.stack.caller;
+      _dump("TEST-UNEXPECTED-FAIL | " + stack.filename + " | [" +
+            stack.name + " : " + stack.lineNumber + "] " + base.path +
+            " does not exist\n");
+    }
 
-  gAppTimer = AUS_Cc["@mozilla.org/timer;1"].createInstance(AUS_Ci.nsITimer);
-  gAppTimer.initWithCallback(gTimerCallback, APP_TIMER_TIMEOUT,
-                             AUS_Ci.nsITimer.TYPE_ONE_SHOT);
-
-  setEnvironment();
-
-  gProcess.runAsync(args, args.length, gProcessObserver);
-
-  resetEnvironment();
+    return base;
+  }
+  runUpdateUsingService(STATE_PENDING_SVC, STATE_SUCCEEDED, checkUpdateFinished, updatesRootDir);
 }
 
 function end_test() {
-  if (gProcess.isRunning) {
-    logTestInfo("attempt to kill process");
-    gProcess.kill();
-  }
-
-  if (gAppTimer) {
-    logTestInfo("cancelling timer");
-    gAppTimer.cancel();
-    gAppTimer = null;
-  }
-
   resetEnvironment();
 
   let processDir = getCurrentProcessDir();
@@ -141,14 +141,12 @@ function end_test() {
   updaterIni.append(FILE_UPDATER_INI_BAK);
   updaterIni.moveTo(processDir, FILE_UPDATER_INI);
 
-  if (IS_WIN) {
-    // Remove the copy of the application executable used for the test on
-    // Windows if it exists.
-    let appBinCopy = processDir.clone();
-    appBinCopy.append(FILE_WIN_TEST_EXE);
-    if (appBinCopy.exists()) {
-      appBinCopy.remove(false);
-    }
+  // Remove the copy of the application executable used for the test on
+  // Windows if it exists.
+  let appBinCopy = processDir.clone();
+  appBinCopy.append(FILE_WIN_TEST_EXE);
+  if (appBinCopy.exists()) {
+    appBinCopy.remove(false);
   }
 
   // Remove the files added by the update.
@@ -165,49 +163,8 @@ function end_test() {
   // This will delete the app console log file if it exists.
   getAppConsoleLogPath();
 
-  if (IS_UNIX) {
-    // This will delete the launch script if it exists.
-    getLaunchScript();
-    if (IS_MACOSX) {
-      // This will delete the version script and version file if they exist.
-      getVersionScriptAndFile();
-    }
-  }
-
   cleanUp();
 }
-
-/**
- * The observer for the call to nsIProcess:runAsync.
- */
-let gProcessObserver = {
-  observe: function PO_observe(subject, topic, data) {
-    logTestInfo("topic " + topic + ", process exitValue " + gProcess.exitValue);
-    if (gAppTimer) {
-      gAppTimer.cancel();
-      gAppTimer = null;
-    }
-    if (topic != "process-finished" || gProcess.exitValue != 0) {
-      do_throw("Failed to launch application");
-    }
-    do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
-  },
-  QueryInterface: XPCOMUtils.generateQI([AUS_Ci.nsIObserver])
-};
-
-/**
- * The timer callback to kill the process if it takes too long.
- */
-let gTimerCallback = {
-  notify: function TC_notify(aTimer) {
-    gAppTimer = null;
-    if (gProcess.isRunning) {
-      gProcess.kill();
-    }
-    do_throw("launch application timer expired");
-  },
-  QueryInterface: XPCOMUtils.generateQI([AUS_Ci.nsITimerCallback])
-};
 
 /**
  * Gets the directory where the update adds / removes the files contained in the
@@ -218,9 +175,6 @@ let gTimerCallback = {
  */
 function getUpdateTestDir() {
   let updateTestDir = getCurrentProcessDir();
-  if (IS_MACOSX) {
-    updateTestDir = updateTestDir.parent.parent;
-  }
   updateTestDir.append("update_test");
   return updateTestDir;
 }
@@ -239,13 +193,6 @@ function checkUpdateFinished() {
     return;
   }
 
-  // Don't proceed until the update status is no longer pending or applying.
-  let status = readStatusFile();
-  if (status == STATE_PENDING || status == STATE_APPLYING) {
-    do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
-    return;
-  }
-
   // Log the contents of the update.log so it is simpler to diagnose a test
   // failure. For example, on Windows if the application binary is in use the
   // updater will not apply the update.
@@ -253,11 +200,9 @@ function checkUpdateFinished() {
   logTestInfo("contents of " + log.path + ":\n" +  
               contents.replace(/\r\n/g, "\n"));
 
-  if (IS_WIN && contents.indexOf("NS_main: file in use") != -1) {
+  if (contents.indexOf("NS_main: file in use") != -1) {
     do_throw("the application can't be in use when running this test");
   }
-
-  do_check_eq(status, STATE_SUCCEEDED);
 
   standardInit();
 

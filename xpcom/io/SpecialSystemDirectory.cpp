@@ -772,6 +772,10 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         {
             return GetWindowsFolder(CSIDL_COMMON_DESKTOPDIRECTORY, aFile);
         }
+        case Win_Common_AppData:
+        {
+            return GetWindowsFolder(CSIDL_COMMON_APPDATA, aFile);
+        }
         case Win_Printhood:
         {
             return GetWindowsFolder(CSIDL_PRINTHOOD, aFile);
