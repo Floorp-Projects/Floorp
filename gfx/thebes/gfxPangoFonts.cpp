@@ -2048,28 +2048,23 @@ gfxPangoFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
                                    gfxFont *aPrevMatchedFont,
                                    PRUint8 *aMatchType)
 {
-    if (aPrevMatchedFont) {
-        PRUint8 category = gfxUnicodeProperties::GetGeneralCategory(aCh);
-        // If this character is a format character (including join-causers)
-        // or a variation selector, use the same font as the previous
-        // character, regardless of whether it supports the character.
-        // Otherwise the text run will be divided.
-        if ((category == HB_CATEGORY_CONTROL ||
-             category == HB_CATEGORY_FORMAT  ||
-             gfxFontUtils::IsVarSelector(aCh))) {
+    // if this character is a join-control or the previous is a join-causer,
+    // use the same font as the previous range if we can
+    if (gfxFontUtils::IsJoinControl(aCh) || gfxFontUtils::IsJoinCauser(aPrevCh)) {
+        if (aPrevMatchedFont && aPrevMatchedFont->HasCharacter(aCh)) {
             return nsRefPtr<gfxFont>(aPrevMatchedFont).forget();
         }
+    }
 
-        // If the previous character is a space or a join-causer and the
-        // previous font supports this character, then use the same font.
-        //
-        // The fonts selected for spaces are usually ignored.  Sticking with
-        // the same font avoids breaking the shaping run.
-        if (aCh == ' ' ||
-            (gfxFontUtils::IsJoinCauser(aPrevCh) &&
-             static_cast<gfxFcFont*>(aPrevMatchedFont)->GetGlyph(aCh))) {
+    // if this character is a variation selector,
+    // use the previous font regardless of whether it supports VS or not.
+    // otherwise the text run will be divided.
+    if (gfxFontUtils::IsVarSelector(aCh)) {
+        if (aPrevMatchedFont) {
             return nsRefPtr<gfxFont>(aPrevMatchedFont).forget();
         }
+        // VS alone. it's meaningless to search different fonts
+        return nsnull;
     }
 
     // The real fonts that fontconfig provides for generic/fallback families
