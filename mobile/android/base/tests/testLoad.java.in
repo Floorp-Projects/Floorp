@@ -4,27 +4,10 @@ package @ANDROID_PACKAGE_NAME@.tests;
 import @ANDROID_PACKAGE_NAME@.*;
 
 public class testLoad extends BaseTest {
+    private static final String URL = "http://mochi.test:8888/tests/robocop/robocop_blank_03.html";
+
     public void testLoad() {
-        // TODO: find a better way to not hardcode this url
-        String url = "http://mochi.test:8888/tests/robocop/robocop_blank_03.html";
-
-        mActions.waitForGeckoEvent("Gecko:Ready");
-        Element awesomebar = mDriver.findElement("awesome_bar");
-        awesomebar.click();
-
-        Element urlbar = mDriver.findElement("awesomebar_text");
-        getInstrumentation().waitForIdleSync();
-        mActions.sendKeys(url);
-        getInstrumentation().waitForIdleSync();
-        mAsserter.is(urlbar.getText(), url, "Awesomebar URL Correct");
-
-        // Select top item in the list.
-        mActions.sendSpecialKey(Actions.SpecialKey.DOWN);
-        mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
-        mActions.waitForGeckoEvent("DOMContentLoaded");
-
-        awesomebar.click();
-        getInstrumentation().waitForIdleSync();
-        mAsserter.is(urlbar.getText(), url, "Awesomebar URL is still correct");
+        loadUrl(URL);
+        verifyUrl(URL);
     }
 }

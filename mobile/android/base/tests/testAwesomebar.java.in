@@ -4,22 +4,12 @@ package @ANDROID_PACKAGE_NAME@.tests;
 import @ANDROID_PACKAGE_NAME@.*;
 
 public class testAwesomebar extends BaseTest {
+    private static final String URL = "http://mochi.test:8888/tests/robocop/robocop_blank_01.html";
+
     public void testAwesomebar() {
-        String url = "http://mochi.test:8888/tests/robocop/robocop_blank_01.html";
-        mActions.waitForGeckoEvent("Gecko:Ready");
-        Element awesomebar = mDriver.findElement("awesome_bar");
-        awesomebar.click();
+        loadUrl(URL);
 
-        Element urlbar = mDriver.findElement("awesomebar_text");
-        getInstrumentation().waitForIdleSync();
-        mActions.sendKeys(url);
-        mAsserter.is(urlbar.getText(), url, "Awesomebar URL Typed Properly");
-
-        mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
-        // wait for screen to load
-        mActions.waitForGeckoEvent("DOMContentLoaded");
         mDriver.setupScrollHandling();
-
         // Calculate where we should be dragging.
         int midX = mDriver.getGeckoLeft() + mDriver.getGeckoWidth()/2;
         int midY = mDriver.getGeckoTop() + mDriver.getGeckoHeight()/2;
@@ -32,9 +22,7 @@ public class testAwesomebar extends BaseTest {
                 e.printStackTrace();
             }
         }
-        // Click the awesomebar again
-        awesomebar.click();
-        getInstrumentation().waitForIdleSync();
-        mAsserter.is(urlbar.getText(), url, "Awesomebar URL stayed the same");
+
+        verifyUrl(URL);
     }
 }

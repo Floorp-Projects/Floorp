@@ -4,20 +4,11 @@ package @ANDROID_PACKAGE_NAME@.tests;
 import @ANDROID_PACKAGE_NAME@.*;
 
 public class testPan extends BaseTest {
+    private static final String URL = "http://mochi.test:8888/startup_test/fenncmark/wikipedia.html";
+
     public void testPan() {
-        // TODO: find a better way to not hardcode this url
-        String url = "http://mochi.test:8888/startup_test/fenncmark/wikipedia.html";
-        mActions.waitForGeckoEvent("Gecko:Ready");
-        Element awesomebar = mDriver.findElement("awesome_bar");
-        awesomebar.click();
+        loadUrl(URL);
 
-        Element urlbar = mDriver.findElement("awesomebar_text");
-        getInstrumentation().waitForIdleSync();
-        mActions.sendKeys(url);
-        mAsserter.is(url, urlbar.getText(),"Asserting Awesomebar typing works");
-
-        mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
-        mActions.waitForGeckoEvent("DOMContentLoaded");
         mDriver.setupScrollHandling();
 
         // Setup scrolling coordinates.
@@ -42,7 +33,7 @@ public class testPan extends BaseTest {
 
         int frames = mDriver.stopFrameRecording();
         mDriver.dumpLog("__start_report" + Integer.toString(frames) + "__end_report");
-        Long msecs = System.currentTimeMillis();
-        mDriver.dumpLog("__startTimestamp" + msecs.toString() + "__endTimestamp");
+        long msecs = System.currentTimeMillis();
+        mDriver.dumpLog("__startTimestamp" + msecs + "__endTimestamp");
     }	
 }
