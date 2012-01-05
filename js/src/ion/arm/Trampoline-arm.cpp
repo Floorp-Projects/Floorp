@@ -39,6 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "ion/IonSpewer.h"
 #include "jscompartment.h"
 #include "assembler/assembler/MacroAssembler.h"
 #include "ion/IonCompartment.h"
@@ -229,13 +230,90 @@ IonCompartment::generateReturnError(JSContext *cx)
     Linker linker(masm);
     return linker.newCode(cx);
 }
+static void
+generateBailoutTail(MacroAssembler &masm)
+{
+    masm.linkExitFrame();
 
+    Label interpret;
+    Label exception;
+
+    // The return value from Bailout is tagged as:
+    // - 0x0: done (thunk to interpreter)
+    // - 0x1: error (handle exception)
+    // - 0x2: reflow args
+    // - 0x3: reflow barrier
+
+    masm.ma_cmp(r0, Imm32(BAILOUT_RETURN_FATAL_ERROR));
+    masm.ma_b(&interpret, Assembler::LessThan);
+    masm.ma_b(&exception, Assembler::Equal);
+
+    // Otherwise, we're in the "reflow" case.
+    masm.setupAlignedABICall(1);
+    masm.setABIArg(0, r0);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReflowTypeInfo));
+
+    masm.ma_cmp(r0, Imm32(0));
+    masm.ma_b(&exception, Assembler::Equal);
+
+    masm.bind(&interpret);
+    // Reserve space for Interpret() to store a Value.
+    masm.as_sub(sp, sp, Imm8(sizeof(Value)));
+
+    // Call out to the interpreter.
+    masm.setupAlignedABICall(1);
+    masm.setABIArg(0, sp);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
+
+    // Load the value that the interpreter returned *and* return the stack
+    // to its previous location
+    masm.as_extdtr(IsLoad, 64, true, PostIndex,
+                   JSReturnReg_Data, EDtrAddr(sp, EDtrOffImm(8)));
+
+    // Test for an exception
+    masm.as_cmp(r0, Imm8(0));
+    masm.ma_b(&exception, Assembler::Zero);
+    masm.as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
+    masm.bind(&exception);
+    masm.handleException();
+
+}
 IonCode *
 IonCompartment::generateInvalidator(JSContext *cx)
 {
+    // See large comment in x86's IonCompartment::generateInvalidator.
+
     MacroAssembler masm(cx);
-    JS_ASSERT(false); // NYI
-    return NULL;
+    masm.startDataTransferM(IsStore, sp, DB, WriteBack);
+    // We don't have to push everything, but this is likely easier.
+    // setting regs_
+    for (uint32 i = 0; i < Registers::Total; i++)
+        masm.transferReg(Register::FromCode(i));
+    masm.finishDataTransfer();
+
+    masm.startFloatTransferM(IsStore, sp, DB, WriteBack);
+    for (uint32 i = 0; i < FloatRegisters::Total; i++)
+        masm.transferFloatReg(FloatRegister::FromCode(i));
+    masm.finishFloatTransfer();
+
+    masm.ma_mov(sp, r0);
+    masm.reserveStack(sizeof(size_t));
+    masm.mov(sp, r1);
+    masm.setupAlignedABICall(3);
+    masm.setABIArg(0, r0);
+    masm.setABIArg(1, r1);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, InvalidationBailout));
+
+    const uint32 BailoutDataSize = sizeof(double) * FloatRegisters::Total +
+                                   sizeof(void *) * Registers::Total;
+
+    masm.ma_add(sp, r0, sp);
+    masm.ma_add(sp, Imm32(BailoutDataSize), sp);
+    generateBailoutTail(masm);
+    Linker linker(masm);
+    IonCode *code = linker.newCode(cx);
+    IonSpew(IonSpew_Invalidate, "   invalidation thunk created at %p", (void *) code->raw());
+    return code;
 }
 
 IonCode *
@@ -397,64 +475,7 @@ GenerateBailoutThunk(MacroAssembler &masm, uint32 frameClass)
                           + bailoutFrameSize) // everything else that was pushed on the stack
                     , sp);
     }
-
-    masm.linkExitFrame();
-
-    Label interpret;
-    Label exception;
-
-    // The return value from Bailout is tagged as:
-    // - 0x0: done (thunk to interpreter)
-    // - 0x1: error (handle exception)
-    // - 0x2: reflow args
-    // - 0x3: reflow barrier
-
-    masm.ma_cmp(r0, Imm32(BAILOUT_RETURN_FATAL_ERROR));
-    masm.ma_b(&interpret, Assembler::LessThan);
-    masm.ma_b(&exception, Assembler::Equal);
-
-    // Otherwise, we're in the "reflow" case.
-    masm.setupAlignedABICall(1);
-    masm.setABIArg(0, r0);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReflowTypeInfo));
-
-    masm.ma_cmp(r0, Imm32(0));
-    masm.ma_b(&exception, Assembler::Equal);
-
-    masm.bind(&interpret);
-    // Reserve space for Interpret() to store a Value.
-    masm.as_sub(sp, sp, Imm8(sizeof(Value)));
-
-    // Call out to the interpreter.
-    masm.setupAlignedABICall(1);
-    masm.setABIArg(0, sp);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ThunkToInterpreter));
-
-    // Load the value that the interpreter returned *and* return the stack
-    // to its previous location
-    masm.as_extdtr(IsLoad, 64, true, PostIndex,
-                   JSReturnReg_Data, EDtrAddr(sp, EDtrOffImm(8)));
-
-    // Test for an exception
-    masm.as_cmp(r0, Imm8(0));
-    masm.ma_b(&exception, Assembler::Zero);
-    masm.as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
-    masm.bind(&exception);
-    masm.handleException();
-#if 0
-    // Call into HandleException, passing in the top frame prefix
-    masm.as_mov(r0, O2Reg(sp));
-    masm.setupAlignedABICall(1);
-    masm.setABIArg(0,r0);
-    void *func = JS_FUNC_TO_DATA_PTR(void *, ion::HandleException);
-    masm.callWithABI(func);
-
-    // The return value is how much stack to adjust before returning.
-    masm.as_add(sp, sp, O2Reg(r0));
-    // We're going to be returning by the ion calling convention, which returns
-    // by ??? (for now, I think ldr pc, [sp]!)
-    masm.as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
-#endif
+    generateBailoutTail(masm);
 }
 
 IonCode *
