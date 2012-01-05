@@ -48,6 +48,7 @@
 #include "nsExpirationTracker.h"
 #include "nsILanguageAtomService.h"
 #include "nsIMemoryReporter.h"
+#include "nsITimer.h"
 
 #include "gfxFont.h"
 #include "gfxPlatform.h"
@@ -981,6 +982,36 @@ gfxFontCache::Shutdown()
 #endif
 }
 
+gfxFontCache::gfxFontCache()
+    : nsExpirationTracker<gfxFont,3>(FONT_TIMEOUT_SECONDS * 1000)
+{
+    mFonts.Init();
+    mWordCacheExpirationTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (mWordCacheExpirationTimer) {
+        mWordCacheExpirationTimer->
+            InitWithFuncCallback(WordCacheExpirationTimerCallback, this,
+                                 SHAPED_WORD_TIMEOUT_SECONDS * 1000,
+                                 nsITimer::TYPE_REPEATING_SLACK);
+    }
+}
+
+gfxFontCache::~gfxFontCache()
+{
+    if (mWordCacheExpirationTimer) {
+        mWordCacheExpirationTimer->Cancel();
+        mWordCacheExpirationTimer = nsnull;
+    }
+
+    // Expire everything that has a zero refcount, so we don't leak them.
+    AgeAllGenerations();
+    // All fonts should be gone.
+    NS_WARN_IF_FALSE(mFonts.Count() == 0,
+                     "Fonts still alive while shutting down gfxFontCache");
+    // Note that we have to delete everything through the expiration
+    // tracker, since there might be fonts not in the hashtable but in
+    // the tracker.
+}
+
 bool
 gfxFontCache::HashEntry::KeyEquals(const KeyTypePointer aKey) const
 {
@@ -1055,6 +1086,22 @@ gfxFontCache::DestroyFont(gfxFont *aFont)
     delete aFont;
 }
 
+/*static*/
+PLDHashOperator
+gfxFontCache::AgeCachedWordsForFont(HashEntry* aHashEntry, void* aUserData)
+{
+    aHashEntry->mFont->AgeCachedWords();
+    return PL_DHASH_NEXT;
+}
+
+/*static*/
+void
+gfxFontCache::WordCacheExpirationTimerCallback(nsITimer* aTimer, void* aCache)
+{
+    gfxFontCache* cache = static_cast<gfxFontCache*>(aCache);
+    cache->mFonts.EnumerateEntries(AgeCachedWordsForFont, nsnull);
+}
+
 void
 gfxFont::RunMetrics::CombineWith(const RunMetrics& aOther, bool aOtherIsOnLeft)
 {
@@ -1094,6 +1141,20 @@ gfxFont::~gfxFont()
     for (i = 0; i < mGlyphExtentsArray.Length(); ++i) {
         delete mGlyphExtentsArray[i];
     }
+}
+
+/*static*/
+PLDHashOperator
+gfxFont::AgeCacheEntry(CacheHashEntry *aEntry, void *aUserData)
+{
+    if (!aEntry->mShapedWord) {
+        NS_ASSERTION(aEntry->mShapedWord, "cache entry has no gfxShapedWord!");
+        return PL_DHASH_REMOVE;
+    }
+    if (aEntry->mShapedWord->IncrementAge() == kShapedWordCacheMaxAge) {
+        return PL_DHASH_REMOVE;
+    }
+    return PL_DHASH_NEXT;
 }
 
 hb_blob_t *
@@ -1767,40 +1828,43 @@ gfxFont::GetShapedWord(gfxContext *aContext,
                      aFlags);
 
     CacheHashEntry *entry = mWordCache.PutEntry(key);
-    if (entry->mShapedWord) {
-        return entry->mShapedWord;
+    gfxShapedWord *sw = entry->mShapedWord;
+    if (sw) {
+        sw->ResetAge();
+        return sw;
     }
 
-    entry->mShapedWord = gfxShapedWord::Create(aText, aLength,
-                                               aRunScript,
-                                               aAppUnitsPerDevUnit,
-                                               aFlags);
-    if (!entry->mShapedWord) {
-        NS_WARNING("failed to create gfxShapedWord - expect missing text");
+    sw = entry->mShapedWord = gfxShapedWord::Create(aText, aLength,
+                                                    aRunScript,
+                                                    aAppUnitsPerDevUnit,
+                                                    aFlags);
+    NS_ASSERTION(sw != nsnull,
+                 "failed to create gfxShapedWord - expect missing text");
+    if (!sw) {
         return nsnull;
     }
 
     bool ok;
     if (sizeof(T) == sizeof(PRUnichar)) {
-        ok = ShapeWord(aContext, entry->mShapedWord, (const PRUnichar*)aText);
+        ok = ShapeWord(aContext, sw, (const PRUnichar*)aText);
     } else {
         nsAutoString utf16;
         AppendASCIItoUTF16((const char*)aText, utf16);
-        ok = ShapeWord(aContext, entry->mShapedWord, utf16.BeginReading());
+        ok = ShapeWord(aContext, sw, utf16.BeginReading());
     }
     NS_WARN_IF_FALSE(ok, "failed to shape word - expect garbled text");
 
     for (PRUint32 i = 0; i < aLength; ++i) {
         if (aText[i] == ' ') {
-            entry->mShapedWord->SetIsSpace(i);
+            sw->SetIsSpace(i);
         } else if (i > 0 &&
                    NS_IS_HIGH_SURROGATE(aText[i - 1]) &&
                    NS_IS_LOW_SURROGATE(aText[i])) {
-            entry->mShapedWord->SetIsLowSurrogate(i);
+            sw->SetIsLowSurrogate(i);
         }
     }
 
-    return entry->mShapedWord;
+    return sw;
 }
 
 bool
