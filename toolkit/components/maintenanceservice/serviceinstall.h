@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define SVC_NAME L"MozillaMaintenance"
 #define SVC_DISPLAY_NAME L"Mozilla Maintenance Service"
 
 enum SvcInstallAction { UpgradeSvc, InstallSvc, ForceInstallSvc };

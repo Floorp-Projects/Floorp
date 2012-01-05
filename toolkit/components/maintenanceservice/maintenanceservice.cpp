@@ -46,6 +46,7 @@
 #include "servicebase.h"
 #include "workmonitor.h"
 #include "uachelper.h"
+#include "updatehelper.h"
 
 SERVICE_STATUS gSvcStatus = { 0 }; 
 SERVICE_STATUS_HANDLE gSvcStatusHandle = NULL; 
