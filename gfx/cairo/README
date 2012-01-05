@@ -176,6 +176,8 @@ lround-c99-only.patch: Only use lround in C99 programs.
 
 unicode-printing.patch: Print as unicode (bug 454532)
 
+quartz-mark-dirty.patch: Add a quartz implementation of mark_dirty_rectangle (bug 715704)
+
 ==== pixman patches ====
 
 pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.

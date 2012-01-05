@@ -3121,6 +3121,17 @@ _cairo_quartz_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clip
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_status_t
+_cairo_quartz_surface_mark_dirty_rectangle (void *abstract_surface,
+					    int x, int y,
+					    int width, int height)
+{
+    cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
+    _cairo_quartz_surface_will_change (surface);
+    return CAIRO_STATUS_SUCCESS;
+}
+
+
 // XXXtodo implement show_page; need to figure out how to handle begin/end
 
 static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
@@ -3143,7 +3154,7 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
     NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
     NULL, /* flush */
-    NULL, /* mark_dirty_rectangle */
+    _cairo_quartz_surface_mark_dirty_rectangle,
     NULL, /* scaled_font_fini */
     NULL, /* scaled_glyph_fini */
 
