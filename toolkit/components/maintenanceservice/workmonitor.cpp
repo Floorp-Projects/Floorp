@@ -57,6 +57,8 @@
 #include "uachelper.h"
 #include "updatehelper.h"
 
+extern HANDLE ghSvcStopEvent;
+
 // Wait 15 minutes for an update operation to run at most.
 // Updates usually take less than a minute so this seems like a 
 // significantly large and safe amount of time to wait.
@@ -371,7 +373,7 @@ ExecuteServiceCommand(int argc, LPWSTR *argv)
 {
   if (argc < 3) {
     LOG(("Not enough command line arguments to execute a service command\n"));
-    StopService();
+    SetEvent(ghSvcStopEvent);
     return FALSE;
   }
 
@@ -401,6 +403,6 @@ ExecuteServiceCommand(int argc, LPWSTR *argv)
 
   LOG(("service command %ls complete with result: %ls.\n", 
        argv[1], (result ? L"Success" : L"Failure")));
-  StopService();
+  SetEvent(ghSvcStopEvent);
   return TRUE;
 }
