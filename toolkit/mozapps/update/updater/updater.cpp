@@ -1404,7 +1404,12 @@ LaunchCallbackApp(const NS_tchar *workingDir, int argc, NS_tchar **argv)
 #elif defined(XP_MACOSX)
   LaunchChild(argc, argv);
 #elif defined(XP_WIN)
-  WinLaunchChild(argv[0], argc, argv, NULL);
+  // Do not allow the callback to run when running an update through the
+  // service as session 0.  The unelevated updater.exe will do the launching.
+  WCHAR *usingService = _wgetenv(L"MOZ_USING_SERVICE");
+  if (!usingService) {
+    WinLaunchChild(argv[0], argc, argv, NULL);
+  }
 #else
 # warning "Need implementaton of LaunchCallbackApp"
 #endif
@@ -1672,11 +1677,12 @@ int NS_main(int argc, NS_tchar **argv)
   const int callbackIndex = 5;
 
 #if defined(XP_WIN)
+  WCHAR *usingService = _wgetenv(L"MOZ_USING_SERVICE");
   // Launch a second instance of the updater with the runas verb on Windows
   // when write access is denied to the installation directory.
   HANDLE updateLockFileHandle;
   NS_tchar elevatedLockFilePath[MAXPATHLEN];
-  if (argc > callbackIndex) {
+  if (argc > callbackIndex && !usingService) {
     NS_tchar updateLockFilePath[MAXPATHLEN];
     NS_tsnprintf(updateLockFilePath,
                  sizeof(updateLockFilePath)/sizeof(updateLockFilePath[0]),
@@ -2009,7 +2015,6 @@ int NS_main(int argc, NS_tchar **argv)
       // service if the service failed to apply the update. We want to update
       // the service to a newer version in that case. If we are not running
       // through the service, then MOZ_USING_SERVICE will not exist.
-      WCHAR *usingService = _wgetenv(L"MOZ_USING_SERVICE");
       if (!usingService) {
         if (!LaunchWinPostProcess(argv[2], gSourcePath, false, NULL)) {
           LOG(("NS_main: The post update process could not be launched.\n"));
