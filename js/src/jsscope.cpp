@@ -1071,7 +1071,7 @@ JSObject::replaceWithNewEquivalentShape(JSContext *cx, Shape *oldShape, Shape *n
         RootObject selfRoot(cx, &self);
         RootShape newRoot(cx, &newShape);
         if (!toDictionaryMode(cx))
-            return false;
+            return NULL;
         oldShape = lastProperty();
     }
 
@@ -1080,7 +1080,7 @@ JSObject::replaceWithNewEquivalentShape(JSContext *cx, Shape *oldShape, Shape *n
         RootShape oldRoot(cx, &oldShape);
         newShape = js_NewGCShape(cx);
         if (!newShape)
-            return false;
+            return NULL;
         new (newShape) Shape(oldShape->base()->unowned(), 0);
     }
 
