@@ -1864,7 +1864,8 @@ int NS_main(int argc, NS_tchar **argv)
 
       CloseHandle(elevatedFileHandle);
 
-      if (!useService && INVALID_HANDLE_VALUE == updateLockFileHandle) {
+      if (!useService && !noServiceFallback &&
+          INVALID_HANDLE_VALUE == updateLockFileHandle) {
         // We didn't use the service and we did run the elevated updater.exe.
         // The elevated updater.exe is responsible for writing out the
         // update.status file.
