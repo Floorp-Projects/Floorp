@@ -46,7 +46,7 @@
 class nsScreenWin : public nsBaseScreen
 {
 public:
-  nsScreenWin ( void* inScreen );
+  nsScreenWin ( HMONITOR inScreen );
   ~nsScreenWin();
 
   NS_IMETHOD GetRect(PRInt32* aLeft, PRInt32* aTop, PRInt32* aWidth, PRInt32* aHeight);
@@ -56,7 +56,7 @@ public:
 
 private:
 
-  void* mScreen;                    // a |HMONITOR|, can't use this type in header file though.
+  HMONITOR mScreen;
 };
 
 #endif  // nsScreenWin_h___ 
