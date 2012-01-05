@@ -575,10 +575,17 @@ public:
         return mMinCapability;
     }
 
+    // See the comment over WebGLContext::Notify() for more information on this.
+    bool ShouldEnableRobustnessTimer() {
+        return mHasRobustness ||
+               IsExtensionEnabled(WebGL_MOZ_WEBGL_lose_context) ||
+               (gl != nsnull && gl->GetContextType() == gl::GLContext::ContextTypeEGL);
+    }
+
     // Sets up the GL_ARB_robustness timer if it isn't already, so that if the
     // driver gets restarted, the context may get reset with it.
     void SetupRobustnessTimer() {
-        if (mContextLost || (!mHasRobustness && gl->GetContextType() != gl::GLContext::ContextTypeEGL))
+        if (!ShouldEnableRobustnessTimer())
             return;
 
         // If the timer was already running, don't restart it here. Instead,
@@ -668,11 +675,30 @@ protected:
     PRInt32 mGLMaxFragmentUniformVectors;
     PRInt32 mGLMaxVertexUniformVectors;
 
+    // Represents current status, or state, of the context. That is, is it lost
+    // or stable and what part of the context lost process are we currently at.
+    // This is used to support the WebGL spec's asyncronous nature in handling
+    // context loss.
+    enum ContextStatus {
+        // The context is stable; there either are none or we don't know of any.
+        ContextStable,
+        // The context has been lost, but we have not yet sent an event to the
+        // script informing it of this.
+        ContextLostAwaitingEvent,
+        // The context has been lost, and we have sent the script an event
+        // informing it of this.
+        ContextLost,
+        // The context is lost, an event has been sent to the script, and the
+        // script correctly handled the event. We are waiting for the context to
+        // be restored.
+        ContextLostAwaitingRestore
+    };
+
     // extensions
     enum WebGLExtensionID {
         WebGL_OES_texture_float,
         WebGL_OES_standard_derivatives,
-        WebGL_WEBGL_EXT_lose_context,
+        WebGL_MOZ_WEBGL_lose_context,
         WebGLExtensionID_Max
     };
     nsCOMPtr<WebGLExtension> mEnabledExtensions[WebGLExtensionID_Max];
@@ -805,6 +831,7 @@ protected:
                              const GLvoid *data);
 
     void MaybeRestoreContext();
+    bool IsContextStable();
     void ForceLoseContext();
     void ForceRestoreContext();
 
@@ -861,10 +888,12 @@ protected:
     int mBackbufferClearingStatus;
 
     nsCOMPtr<nsITimer> mContextRestorer;
-    bool mContextLost;
     bool mAllowRestore;
     bool mRobustnessTimerRunning;
     bool mDrawSinceRobustnessTimerSet;
+    ContextStatus mContextStatus;
+    bool mContextLostErrorSet;
+    bool mContextLostDueToTest;
 
 public:
     // console logging helpers

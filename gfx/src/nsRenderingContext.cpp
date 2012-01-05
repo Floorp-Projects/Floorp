@@ -125,9 +125,9 @@ nsRenderingContext::IntersectClip(const nsRect& aRect)
     gfxRect clipRect(GFX_RECT_FROM_TWIPS_RECT(aRect));
     if (mThebes->UserToDevicePixelSnapped(clipRect, true)) {
         gfxMatrix mat(mThebes->CurrentMatrix());
-        mThebes->IdentityMatrix();
+        mat.Invert();
+        clipRect = mat.Transform(clipRect);
         mThebes->Rectangle(clipRect);
-        mThebes->SetMatrix(mat);
     } else {
         mThebes->Rectangle(clipRect);
     }

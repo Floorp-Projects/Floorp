@@ -609,6 +609,11 @@ IntersectWithClip(const nsIntRegion& aRegion, gfxContext* aContext)
 static void
 SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget)
 {
+  if (!aTarget->IsCairo()) {
+    // Azure targets don't contain antialiasing flags at this point.
+    return;
+  }
+
   nsRefPtr<gfxASurface> surface = aTarget->CurrentSurface();
   if (surface->GetContentType() != gfxASurface::CONTENT_COLOR_ALPHA) {
     // Destination doesn't have alpha channel; no need to set any special flags
@@ -753,6 +758,9 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
                    "If we need to draw, we should have a context");
     }
   }
+
+  if (BasicManager()->IsTransactionIncomplete())
+    return;
 
   if (!IsHidden()) {
     AutoSetOperator setOperator(aContext, GetOperator());
@@ -930,14 +938,16 @@ BasicImageLayer::PaintContext(gfxPattern* aPattern,
   // outside the bounds of the video image.
   gfxPattern::GraphicsExtend extend = gfxPattern::EXTEND_PAD;
 
-  // PAD is slow with X11 and Quartz surfaces, so prefer speed over correctness
-  // and use NONE.
-  nsRefPtr<gfxASurface> target = aContext->CurrentSurface();
-  gfxASurface::gfxSurfaceType type = target->GetType();
-  if (type == gfxASurface::SurfaceTypeXlib ||
-      type == gfxASurface::SurfaceTypeXcb ||
-      type == gfxASurface::SurfaceTypeQuartz) {
-    extend = gfxPattern::EXTEND_NONE;
+  if (aContext->IsCairo()) {
+    // PAD is slow with X11 and Quartz surfaces, so prefer speed over correctness
+    // and use NONE.
+    nsRefPtr<gfxASurface> target = aContext->CurrentSurface();
+    gfxASurface::gfxSurfaceType type = target->GetType();
+    if (type == gfxASurface::SurfaceTypeXlib ||
+        type == gfxASurface::SurfaceTypeXcb ||
+        type == gfxASurface::SurfaceTypeQuartz) {
+      extend = gfxPattern::EXTEND_NONE;
+    }
   }
 
   if (!aTileSourceRect) {
@@ -1334,7 +1344,8 @@ already_AddRefed<gfxContext>
 BasicLayerManager::PushGroupWithCachedSurface(gfxContext *aTarget,
                                               gfxASurface::gfxContentType aContent)
 {
-  if (mCachedSurfaceInUse) {
+  if (mCachedSurfaceInUse || !aTarget->IsCairo()) {
+    // We can't cache Azure DrawTargets at this point.
     aTarget->PushGroup(aContent);
     nsRefPtr<gfxContext> result = aTarget;
     return result.forget();
@@ -1360,7 +1371,7 @@ BasicLayerManager::PopGroupToSourceWithCachedSurface(gfxContext *aTarget, gfxCon
   if (!aTarget)
     return;
   nsRefPtr<gfxASurface> current = aPushed->CurrentSurface();
-  if (mCachedSurface.IsSurface(current)) {
+  if (aTarget->IsCairo() && mCachedSurface.IsSurface(current)) {
     gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
     aTarget->IdentityMatrix();
     aTarget->SetSource(current);
@@ -1849,17 +1860,20 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
 
   bool pushedTargetOpaqueRect = false;
   nsRefPtr<gfxASurface> currentSurface = aTarget->CurrentSurface();
-  const gfxRect& targetOpaqueRect = currentSurface->GetOpaqueRect();
-
-  // Try to annotate currentSurface with a region of pixels that have been
-  // (or will be) painted opaque, if no such region is currently set.
   const nsIntRect& bounds = visibleRegion.GetBounds();
-  if (targetOpaqueRect.IsEmpty() && visibleRegion.GetNumRects() == 1 &&
-      (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
-      !transform.HasNonAxisAlignedTransform()) {
-    currentSurface->SetOpaqueRect(
-        aTarget->UserToDevice(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height)));
-    pushedTargetOpaqueRect = true;
+  
+  if (aTarget->IsCairo()) {
+    const gfxRect& targetOpaqueRect = currentSurface->GetOpaqueRect();
+
+    // Try to annotate currentSurface with a region of pixels that have been
+    // (or will be) painted opaque, if no such region is currently set.
+    if (targetOpaqueRect.IsEmpty() && visibleRegion.GetNumRects() == 1 &&
+        (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
+        !transform.HasNonAxisAlignedTransform()) {
+      currentSurface->SetOpaqueRect(
+          aTarget->UserToDevice(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height)));
+      pushedTargetOpaqueRect = true;
+    }
   }
 
   nsRefPtr<gfxContext> groupTarget;

@@ -368,9 +368,9 @@ Shape::replaceLastProperty(JSContext *cx, const StackBaseShape &base, JSObject *
 }
 
 /*
- * Get or create a property-tree or dictionary child property of parent, which
- * must be lastProp if inDictionaryMode(), else parent must be one of lastProp
- * or lastProp->parent.
+ * Get or create a property-tree or dictionary child property of |parent|,
+ * which must be lastProperty() if inDictionaryMode(), else parent must be
+ * one of lastProperty() or lastProperty()->parent.
  */
 Shape *
 JSObject::getChildProperty(JSContext *cx, Shape *parent, StackShape &child)
@@ -825,13 +825,9 @@ JSObject::putProperty(JSContext *cx, jsid id,
         shape->shortid_ = int16_t(shortid);
     } else {
         /*
-         * Updating the last property in a non-dictionary-mode object. Such
-         * objects share their shapes via a tree rooted at a prototype
-         * emptyShape, or perhaps a well-known compartment-wide singleton
-         * emptyShape.
-         *
-         * If any shape in the tree has a property hashtable, it is shared and
-         * immutable too, therefore we must not update *spp.
+         * Updating the last property in a non-dictionary-mode object.  If any
+         * shape in the property tree has a property hashtable, it is shared
+         * and immutable too, therefore we must not update *spp.
          */
         StackBaseShape base(self->lastProperty()->base());
         base.updateGetterSetter(attrs, getter, setter);
@@ -975,8 +971,8 @@ JSObject::removeProperty(JSContext *cx, jsid id)
 
     /*
      * A dictionary-mode object owns mutable, unique shapes on a non-circular
-     * doubly linked list, hashed by lastProp->table. So we can edit the list
-     * and hash in place.
+     * doubly linked list, hashed by lastProperty()->table. So we can edit the
+     * list and hash in place.
      */
     if (self->inDictionaryMode()) {
         PropertyTable &table = self->lastProperty()->table();

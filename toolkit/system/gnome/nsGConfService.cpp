@@ -36,24 +36,93 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Util.h"
 #include "nsGConfService.h"
 #include "nsStringAPI.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIMutableArray.h"
+#include "prlink.h"
 
 #include <gconf/gconf-client.h>
+
+using namespace mozilla;
+
+#define GCONF_FUNCTIONS \
+  FUNC(gconf_client_get_default, GConfClient*, (void)) \
+  FUNC(gconf_client_get_bool, gboolean, (GConfClient*, const gchar*, GError**)) \
+  FUNC(gconf_client_get_string, gchar*, (GConfClient*, const gchar*, GError**)) \
+  FUNC(gconf_client_get_int, gint, (GConfClient*, const gchar*, GError**)) \
+  FUNC(gconf_client_get_float, gdouble, (GConfClient*, const gchar*, GError**)) \
+  FUNC(gconf_client_get_list, GSList*, (GConfClient*, const gchar*, GConfValueType, GError**)) \
+  FUNC(gconf_client_set_bool, gboolean, (GConfClient*, const gchar*, gboolean, GError**)) \
+  FUNC(gconf_client_set_string, gboolean, (GConfClient*, const gchar*, const gchar*, GError**)) \
+  FUNC(gconf_client_set_int, gboolean, (GConfClient*, const gchar*, gint, GError**)) \
+  FUNC(gconf_client_set_float, gboolean, (GConfClient*, const gchar*, gdouble, GError**)) \
+  FUNC(gconf_client_unset, gboolean, (GConfClient*, const gchar*, GError**))
+
+#define FUNC(name, type, params) \
+  typedef type (*_##name##_fn) params; \
+  static _##name##_fn _##name;
+
+GCONF_FUNCTIONS
+
+#undef FUNC
+
+#define gconf_client_get_default _gconf_client_get_default
+#define gconf_client_get_bool _gconf_client_get_bool
+#define gconf_client_get_string _gconf_client_get_string
+#define gconf_client_get_int _gconf_client_get_int
+#define gconf_client_get_float _gconf_client_get_float
+#define gconf_client_get_list _gconf_client_get_list
+#define gconf_client_set_bool _gconf_client_set_bool
+#define gconf_client_set_string _gconf_client_set_string
+#define gconf_client_set_int _gconf_client_set_int
+#define gconf_client_set_float _gconf_client_set_float
+#define gconf_client_unset _gconf_client_unset
+
+static PRLibrary *gconfLib = nsnull;
+
+typedef void (*nsGConfFunc)();
+struct nsGConfDynamicFunction {
+  const char *functionName;
+  nsGConfFunc *function;
+};
 
 nsGConfService::~nsGConfService()
 {
   if (mClient)
     g_object_unref(mClient);
+
+  // We don't unload gconf here because liborbit uses atexit(). In addition to
+  // this, it's not a good idea to unload any gobject based library, as it
+  // leaves types registered in glib's type system
 }
 
 nsresult
 nsGConfService::Init()
 {
+#define FUNC(name, type, params) { #name, (nsGConfFunc *)&_##name },
+  static const nsGConfDynamicFunction kGConfSymbols[] = {
+    GCONF_FUNCTIONS
+  };
+#undef FUNC
+
+  if (!gconfLib) {
+    gconfLib = PR_LoadLibrary("libgconf-2.so.4");
+    if (!gconfLib)
+      return NS_ERROR_FAILURE;
+  }
+
+  for (PRUint32 i = 0; i < ArrayLength(kGConfSymbols); i++) {
+    *kGConfSymbols[i].function =
+      PR_FindFunctionSymbol(gconfLib, kGConfSymbols[i].functionName);
+    if (!*kGConfSymbols[i].function) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
   mClient = gconf_client_get_default();
   return mClient ? NS_OK : NS_ERROR_FAILURE;
 }

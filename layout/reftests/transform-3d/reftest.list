@@ -41,3 +41,4 @@ fails == preserve3d-1a.html preserve3d-1-ref.html
 == sorting-3a.html green-rect.html
 # Different, but equivalent (for the given transform) transform origins
 == rotatex-transformorigin-1a.html rotatex-transformorigin-1-ref.html
+== overflow-hidden-1a.html overflow-hidden-1-ref.html

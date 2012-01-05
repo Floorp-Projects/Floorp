@@ -69,7 +69,6 @@
 
 #ifdef XP_MACOSX
 #include "nsVersionComparator.h"
-#include "MacQuirks.h"
 #include "MacLaunchHelper.h"
 #include "MacApplicationDelegate.h"
 #include "MacAutoreleasePool.h"
@@ -2594,10 +2593,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     NS_BREAK();
 #endif
 
-#ifdef XP_MACOSX
-  TriggerQuirks();
-#endif
-
   // see bug 639842
   // it's very important to fire this process BEFORE we set up error handling.
   // indeed, this process is expected to be crashy, and we don't want the user to see its crashes.
@@ -3135,6 +3130,25 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     // XRE_UPDATE_ROOT_DIR may fail. Fallback to appDir if failed
     if (NS_FAILED(rv))
       updRoot = dirProvider.GetAppDir();
+
+    // If the MOZ_PROCESS_UPDATES environment variable already exists, then
+    // we are being called from the callback application.
+    if (EnvHasValue("MOZ_PROCESS_UPDATES")) {
+      // If the caller has asked us to log our arguments, do so.  This is used
+      // to make sure that the maintenance service successfully launches the
+      // callback application.
+      const char *logFile = nsnull;
+      if (ARG_FOUND == CheckArg("dump-args", false, &logFile)) {
+        FILE* logFP = fopen(logFile, "wb");
+        if (logFP) {
+          for (i = 1; i < gRestartArgc; ++i) {
+            fprintf(logFP, "%s\n", gRestartArgv[i]);
+          }
+          fclose(logFP);
+        }
+      }
+      return 0;
+    }
 
     // Support for processing an update and exiting. The MOZ_PROCESS_UPDATES
     // environment variable will be part of the updater's environment and the

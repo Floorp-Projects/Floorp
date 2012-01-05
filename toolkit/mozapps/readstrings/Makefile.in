@@ -49,5 +49,6 @@ export NO_SHUNT = 1
 USE_STATIC_LIBS = 1
 
 CPPSRCS = readstrings.cpp
+EXPORTS = readstrings.h
 
 include $(topsrcdir)/config/rules.mk

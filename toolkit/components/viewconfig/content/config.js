@@ -462,7 +462,8 @@ function FilterPrefs()
     gFilter = null;
   }
 
-  var prefCol = view.selection.currentIndex < 0 ? null : gPrefView[view.selection.currentIndex].prefCol;
+  var prefCol = (view.selection && view.selection.currentIndex < 0) ?
+                null : gPrefView[view.selection.currentIndex].prefCol;
   var oldlen = gPrefView.length;
   gPrefView = gPrefArray;
   if (gFilter) {

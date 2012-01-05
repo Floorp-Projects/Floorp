@@ -96,10 +96,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsFileProtocolHandler,
 NS_IMETHODIMP
 nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
 {
-// IUniformResourceLocator isn't supported by VC5 (bless its little heart)
-#if _MSC_VER < 1200
-    return NS_ERROR_NOT_AVAILABLE;
-#else
     nsAutoString path;
     nsresult rv = aFile->GetPath(path);
     if (NS_FAILED(rv))
@@ -139,8 +135,6 @@ nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
         urlLink->Release();
     }
     return rv;
-
-#endif //_MSC_VER < 1200
 }
 
 #elif defined(XP_OS2)

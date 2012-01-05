@@ -149,6 +149,7 @@
     #define NS_WIN_COMMON_PROGRAMS_DIR          "CmPrgs"
     #define NS_WIN_COMMON_STARTUP_DIR           "CmStrt"
     #define NS_WIN_COMMON_DESKTOP_DIRECTORY     "CmDeskP"
+    #define NS_WIN_COMMON_APPDATA_DIR           "CmAppData"
     #define NS_WIN_APPDATA_DIR                  "AppData"
     #define NS_WIN_LOCAL_APPDATA_DIR            "LocalAppData"
     #define NS_WIN_PRINTHOOD                    "PrntHd"

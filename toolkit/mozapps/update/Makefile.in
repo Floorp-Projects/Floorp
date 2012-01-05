@@ -52,6 +52,7 @@ ifdef MOZ_UPDATER
 DIRS = ../readstrings
 
 ifneq ($(OS_TARGET),Android)
+DIRS += common
 DIRS += updater
 endif
 
@@ -69,6 +70,9 @@ DIRS += test_timermanager
 # Update tests require the updater binary
 ifdef MOZ_UPDATER
 DIRS += test
+ifdef MOZ_MAINTENANCE_SERVICE
+DIRS += test_svc
+endif
 endif
 endif
 

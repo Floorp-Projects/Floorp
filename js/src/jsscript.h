@@ -749,6 +749,10 @@ struct JSScript : public js::gc::Cell {
         return atoms[index];
     }
 
+    js::PropertyName *getName(size_t index) {
+        return getAtom(index)->asPropertyName();
+    }
+
     JSObject *getObject(size_t index) {
         JSObjectArray *arr = objects();
         JS_ASSERT(index < arr->length);

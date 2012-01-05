@@ -976,6 +976,21 @@ gfxPlatform::AppendPrefLang(eFontPrefLang aPrefLangs[], PRUint32& aLen, eFontPre
     }
 }
 
+bool
+gfxPlatform::UseAzureContentDrawing()
+{
+  static bool sAzureContentDrawingEnabled;
+  static bool sAzureContentDrawingPrefCached = false;
+
+  if (!sAzureContentDrawingPrefCached) {
+    sAzureContentDrawingPrefCached = true;
+    mozilla::Preferences::AddBoolVarCache(&sAzureContentDrawingEnabled, 
+                                          "gfx.content.azure.enabled");
+  }
+
+  return sAzureContentDrawingEnabled;
+}
+
 eCMSMode
 gfxPlatform::GetCMSMode()
 {

@@ -1375,6 +1375,25 @@ public:
   }
 };
 
+class UpdateJSRuntimeHeapSizeRunnable : public WorkerControlRunnable
+{
+  PRUint32 mJSRuntimeHeapSize;
+
+public:
+  UpdateJSRuntimeHeapSizeRunnable(WorkerPrivate* aWorkerPrivate,
+                                  PRUint32 aJSRuntimeHeapSize)
+  : WorkerControlRunnable(aWorkerPrivate, WorkerThread, UnchangedBusyCount),
+    mJSRuntimeHeapSize(aJSRuntimeHeapSize)
+  { }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  {
+    aWorkerPrivate->UpdateJSRuntimeHeapSizeInternal(aCx, mJSRuntimeHeapSize);
+    return true;
+  }
+};
+
 #ifdef JS_GC_ZEAL
 class UpdateGCZealRunnable : public WorkerControlRunnable
 {
@@ -1733,7 +1752,8 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mCondVar(mMutex, "WorkerPrivateParent CondVar"),
   mJSObject(aObject), mParent(aParent), mParentJSContext(aParentJSContext),
   mScriptURL(aScriptURL), mDomain(aDomain), mBusyCount(0),
-  mParentStatus(Pending), mJSObjectRooted(false), mParentSuspended(false),
+  mParentStatus(Pending), mJSContextOptions(0), mJSRuntimeHeapSize(0),
+  mGCZeal(0), mJSObjectRooted(false), mParentSuspended(false),
   mIsChromeWorker(aIsChromeWorker), mPrincipalIsSystem(false)
 {
   MOZ_COUNT_CTOR(mozilla::dom::workers::WorkerPrivateParent);
@@ -1754,6 +1774,12 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
     NS_ASSERTION(JS_GetOptions(aCx) == aParent->GetJSContextOptions(),
                  "Options mismatch!");
     mJSContextOptions = aParent->GetJSContextOptions();
+
+    NS_ASSERTION(JS_GetGCParameter(JS_GetRuntime(aCx), JSGC_MAX_BYTES) ==
+                 aParent->GetJSRuntimeHeapSize(),
+                 "Runtime heap size mismatch!");
+    mJSRuntimeHeapSize = aParent->GetJSRuntimeHeapSize();
+
 #ifdef JS_GC_ZEAL
     mGCZeal = aParent->GetGCZeal();
 #endif
@@ -1762,6 +1788,7 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
     AssertIsOnMainThread();
 
     mJSContextOptions = RuntimeService::GetDefaultJSContextOptions();
+    mJSRuntimeHeapSize = RuntimeService::GetDefaultJSRuntimeHeapSize();
 #ifdef JS_GC_ZEAL
     mGCZeal = RuntimeService::GetDefaultGCZeal();
 #endif
@@ -2101,6 +2128,23 @@ WorkerPrivateParent<Derived>::UpdateJSContextOptions(JSContext* aCx,
     new UpdateJSContextOptionsRunnable(ParentAsWorkerPrivate(), aOptions);
   if (!runnable->Dispatch(aCx)) {
     NS_WARNING("Failed to update worker context options!");
+    JS_ClearPendingException(aCx);
+  }
+}
+
+template <class Derived>
+void
+WorkerPrivateParent<Derived>::UpdateJSRuntimeHeapSize(JSContext* aCx,
+                                                      PRUint32 aMaxBytes)
+{
+  AssertIsOnParentThread();
+
+  mJSRuntimeHeapSize = aMaxBytes;
+
+  nsRefPtr<UpdateJSRuntimeHeapSizeRunnable> runnable =
+    new UpdateJSRuntimeHeapSizeRunnable(ParentAsWorkerPrivate(), aMaxBytes);
+  if (!runnable->Dispatch(aCx)) {
+    NS_WARNING("Failed to update worker heap size!");
     JS_ClearPendingException(aCx);
   }
 }
@@ -3228,12 +3272,6 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aMessage,
   PRUint32 lineNumber, columnNumber, flags, errorNumber;
 
   if (aReport) {
-    // Can't do anything here if we're out of memory.
-    if (aReport->errorNumber == JSMSG_OUT_OF_MEMORY) {
-      NS_WARNING("Out of memory!");
-      return;
-    }
-
     if (aReport->ucmessage) {
       message = aReport->ucmessage;
     }
@@ -3256,9 +3294,10 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aMessage,
   mErrorHandlerRecursionCount++;
 
   // Don't want to run the scope's error handler if this is a recursive error or
-  // if there was an error in the close handler.
+  // if there was an error in the close handler or if we ran out of memory.
   bool fireAtScope = mErrorHandlerRecursionCount == 1 &&
-                     !mCloseHandlerStarted;
+                     !mCloseHandlerStarted &&
+                     errorNumber != JSMSG_OUT_OF_MEMORY;
 
   if (!ReportErrorRunnable::ReportError(aCx, this, fireAtScope, nsnull, message,
                                         filename, line, lineNumber,
@@ -3567,6 +3606,19 @@ WorkerPrivate::UpdateJSContextOptionsInternal(JSContext* aCx, PRUint32 aOptions)
 
   for (PRUint32 index = 0; index < mChildWorkers.Length(); index++) {
     mChildWorkers[index]->UpdateJSContextOptions(aCx, aOptions);
+  }
+}
+
+void
+WorkerPrivate::UpdateJSRuntimeHeapSizeInternal(JSContext* aCx,
+                                               PRUint32 aMaxBytes)
+{
+  AssertIsOnWorkerThread();
+
+  JS_SetGCParameter(JS_GetRuntime(aCx), JSGC_MAX_BYTES, aMaxBytes);
+
+  for (PRUint32 index = 0; index < mChildWorkers.Length(); index++) {
+    mChildWorkers[index]->UpdateJSRuntimeHeapSize(aCx, aMaxBytes);
   }
 }
 

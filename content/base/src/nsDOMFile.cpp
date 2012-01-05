@@ -70,6 +70,7 @@
 #include "prmem.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // XXXkhuey the input stream that we pass out of a DOMFile
 // can outlive the actual DOMFile object.  Thus, we must

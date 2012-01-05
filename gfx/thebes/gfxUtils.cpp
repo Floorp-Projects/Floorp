@@ -297,11 +297,11 @@ struct NS_STACK_CLASS AutoCairoPixmanBugWorkaround
     AutoCairoPixmanBugWorkaround(gfxContext*      aContext,
                                  const gfxMatrix& aDeviceSpaceToImageSpace,
                                  const gfxRect&   aFill,
-                                 const gfxASurface::gfxSurfaceType& aSurfaceType)
+                                 const gfxASurface* aSurface)
      : mContext(aContext), mSucceeded(true), mPushedGroup(false)
     {
         // Quartz's limits for matrix are much larger than pixman
-        if (aSurfaceType == gfxASurface::SurfaceTypeQuartz)
+        if (!aSurface || aSurface->GetType() == gfxASurface::SurfaceTypeQuartz)
             return;
 
         if (!IsSafeImageTransformComponent(aDeviceSpaceToImageSpace.xx) ||
@@ -381,12 +381,11 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
     bool doTile = !aImageRect.Contains(aSourceRect);
 
     nsRefPtr<gfxASurface> currentTarget = aContext->CurrentSurface();
-    gfxASurface::gfxSurfaceType surfaceType = currentTarget->GetType();
     gfxMatrix deviceSpaceToImageSpace =
         DeviceToImageTransform(aContext, aUserSpaceToImageSpace);
 
     AutoCairoPixmanBugWorkaround workaround(aContext, deviceSpaceToImageSpace,
-                                            aFill, surfaceType);
+                                            aFill, currentTarget);
     if (!workaround.Succeeded())
         return;
 

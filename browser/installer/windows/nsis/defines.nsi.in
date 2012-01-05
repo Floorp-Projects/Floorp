@@ -17,6 +17,9 @@
 
 !define NO_UNINSTALL_SURVEY
 
+!define CERTIFICATE_NAME      "Mozilla Corporation"
+!define CERTIFICATE_ISSUER    "Thawte Code Signing CA - G2"
+
 # LSP_CATEGORIES is the permitted LSP categories for the application. Each LSP
 # category value is ANDed together to set multiple permitted categories.
 # See http://msdn.microsoft.com/en-us/library/ms742253%28VS.85%29.aspx
@@ -41,6 +44,10 @@
 #else
 !define ARCH "x86"
 !define MinSupportedVer "Microsoft Windows 2000"
+#endif
+
+#ifdef MOZ_MAINTENANCE_SERVICE
+!define MOZ_MAINTENANCE_SERVICE
 #endif
 
 # File details shared by both the installer and uninstaller
