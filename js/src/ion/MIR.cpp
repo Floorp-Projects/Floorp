@@ -254,23 +254,6 @@ IsPowerOfTwo(uint32 n)
     return (n > 0) && ((n & (n - 1)) == 0);
 }
 
-MIRType
-MDefinition::usedAsType() const
-{
-    // usedTypes() should never have MIRType_Value in its set.
-    JS_ASSERT(!(usedTypes() & (1 << MIRType_Value)));
-
-    if (IsPowerOfTwo(usedTypes())) {
-        // If all uses of this instruction want a specific type, then set the
-        // result as that type.
-        int t;
-        JS_FLOOR_LOG2(t, usedTypes());
-        return MIRType(t);
-    }
-
-    return MIRType_Value;
-}
-
 MConstant *
 MConstant::New(const Value &v)
 {
