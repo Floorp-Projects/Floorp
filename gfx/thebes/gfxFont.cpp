@@ -3915,11 +3915,6 @@ AccountStorageForTextRun(gfxTextRun *aTextRun, PRInt32 aSign)
     // directly in the textrun anyway so no additional overhead.
     PRUint32 length = aTextRun->GetLength();
     PRInt32 bytes = length * sizeof(gfxTextRun::CompressedGlyph);
-    if (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_PERSISTENT) {
-      bytes += length * ((aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT) ? 1 : 2);
-      bytes += sizeof(gfxTextRun::CompressedGlyph) - 1;
-      bytes &= ~(sizeof(gfxTextRun::CompressedGlyph) - 1);
-    }
     bytes += sizeof(gfxTextRun);
     gTextRunStorage += bytes*aSign;
     gTextRunStorageHighWaterMark = NS_MAX(gTextRunStorageHighWaterMark, gTextRunStorage);
@@ -3929,16 +3924,20 @@ AccountStorageForTextRun(gfxTextRun *aTextRun, PRInt32 aSign)
 // Helper for textRun creation to preallocate storage for glyph records;
 // this function returns a pointer to the newly-allocated glyph storage.
 // Returns nsnull if allocation fails.
-gfxTextRun::CompressedGlyph *
-gfxTextRun::AllocateStorage(PRUint32 aLength)
+void *
+gfxTextRun::AllocateStorageForTextRun(size_t aSize, PRUint32 aLength)
 {
-    // allocate the storage we need, returning nsnull on failure rather than
-    // throwing an exception (because web content can create huge runs)
-    CompressedGlyph *storage = new (std::nothrow) CompressedGlyph[aLength];
+    // Allocate the storage we need, returning nsnull on failure rather than
+    // throwing an exception (because web content can create huge runs).
+    void *storage = moz_malloc(aSize + aLength * sizeof(CompressedGlyph));
     if (!storage) {
-        NS_WARNING("failed to allocate glyph storage for text run!");
+        NS_WARNING("failed to allocate storage for text run!");
         return nsnull;
     }
+
+    // Initialize the glyph storage (beyond aSize) to zero
+    memset(reinterpret_cast<char*>(storage) + aSize, 0,
+           aLength * sizeof(CompressedGlyph));
 
     return storage;
 }
@@ -3947,19 +3946,17 @@ gfxTextRun *
 gfxTextRun::Create(const gfxTextRunFactory::Parameters *aParams, const void *aText,
                    PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags)
 {
-    CompressedGlyph *glyphStorage = AllocateStorage(aLength);
-    if (!glyphStorage) {
+    void *storage = AllocateStorageForTextRun(sizeof(gfxTextRun), aLength);
+    if (!storage) {
         return nsnull;
     }
 
-    return new gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags, glyphStorage);
+    return new (storage) gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags);
 }
 
 gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void *aText,
-                       PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags,
-                       CompressedGlyph *aGlyphStorage)
-  : mCharacterGlyphs(aGlyphStorage),
-    mUserData(aParams->mUserData),
+                       PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags)
+  : mUserData(aParams->mUserData),
     mFontGroup(aFontGroup),
     mAppUnitsPerDevUnit(aParams->mAppUnitsPerDevUnit),
     mFlags(aFlags), mCharacterCount(aLength)
@@ -3967,6 +3964,9 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void 
     NS_ASSERTION(mAppUnitsPerDevUnit != 0, "Invalid app unit scale");
     MOZ_COUNT_CTOR(gfxTextRun);
     NS_ADDREF(mFontGroup);
+
+    mCharacterGlyphs = reinterpret_cast<CompressedGlyph*>(this + 1);
+
     if (aParams->mSkipChars) {
         mSkipChars.TakeFrom(aParams->mSkipChars);
     }
@@ -3988,10 +3988,6 @@ gfxTextRun::~gfxTextRun()
     mFlags = 0xFFFFFFFF;
 #endif
 
-    // this will also delete the text, if it is owned by the run,
-    // because we merge the storage allocations
-    delete [] mCharacterGlyphs;
-
     NS_RELEASE(mFontGroup);
     MOZ_COUNT_DTOR(gfxTextRun);
 }
@@ -4003,19 +3999,18 @@ gfxTextRun::SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
 {
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Overflow");
 
-    if (!mCharacterGlyphs)
-        return true;
     PRUint32 changed = 0;
     PRUint32 i;
+    CompressedGlyph *charGlyphs = mCharacterGlyphs + aStart;
     for (i = 0; i < aLength; ++i) {
         PRUint8 canBreak = aBreakBefore[i];
-        if (canBreak && !mCharacterGlyphs[aStart + i].IsClusterStart()) {
+        if (canBreak && !charGlyphs[i].IsClusterStart()) {
             // This can happen ... there is no guarantee that our linebreaking rules
             // align with the platform's idea of what constitutes a cluster.
             NS_WARNING("Break suggested inside cluster!");
             canBreak = CompressedGlyph::FLAG_BREAK_TYPE_NONE;
         }
-        changed |= mCharacterGlyphs[aStart + i].SetCanBreakBefore(canBreak);
+        changed |= charGlyphs[i].SetCanBreakBefore(canBreak);
     }
     return changed != 0;
 }
@@ -4855,9 +4850,10 @@ gfxTextRun::SanitizeGlyphRuns()
     // (seen with U+FEFF in reftest 474417-1, as Core Text eliminates the glyph, which makes
     // it appear as if a ligature has been formed)
     PRInt32 i, lastRunIndex = mGlyphRuns.Length() - 1;
+    const CompressedGlyph *charGlyphs = mCharacterGlyphs;
     for (i = lastRunIndex; i >= 0; --i) {
         GlyphRun& run = mGlyphRuns[i];
-        while (mCharacterGlyphs[run.mCharacterOffset].IsLigatureContinuation() &&
+        while (charGlyphs[run.mCharacterOffset].IsLigatureContinuation() &&
                run.mCharacterOffset < mCharacterCount) {
             run.mCharacterOffset++;
         }
@@ -4888,10 +4884,6 @@ gfxTextRun::DetailedGlyph *
 gfxTextRun::AllocateDetailedGlyphs(PRUint32 aIndex, PRUint32 aCount)
 {
     NS_ASSERTION(aIndex < mCharacterCount, "Index out of range");
-
-    if (!mCharacterGlyphs) {
-        return nsnull;
-    }
 
     if (!mDetailedGlyphs) {
         mDetailedGlyphs = new DetailedGlyphStore();
@@ -4993,9 +4985,11 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
     }
 
     // Copy base glyph data, and DetailedGlyph data where present
+    const CompressedGlyph *srcGlyphs = aSource->mCharacterGlyphs + aStart;
+    CompressedGlyph *dstGlyphs = mCharacterGlyphs + aDest;
     for (PRUint32 i = 0; i < aLength; ++i) {
-        CompressedGlyph g = aSource->mCharacterGlyphs[i + aStart];
-        g.SetCanBreakBefore(mCharacterGlyphs[i + aDest].CanBreakBefore());
+        CompressedGlyph g = srcGlyphs[i];
+        g.SetCanBreakBefore(dstGlyphs[i].CanBreakBefore());
         if (!g.IsSimpleGlyph()) {
             PRUint32 count = g.GetGlyphCount();
             if (count > 0) {
@@ -5012,7 +5006,7 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
                 }
             }
         }
-        mCharacterGlyphs[i + aDest] = g;
+        dstGlyphs[i] = g;
     }
 
     // Copy glyph runs
@@ -5219,15 +5213,11 @@ gfxTextRun::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf)
 {
     // The second arg is how much gfxTextRun::AllocateStorage would have
     // allocated.
-    size_t total =
-        aMallocSizeOf(mCharacterGlyphs,
-                      sizeof(CompressedGlyph) * mCharacterCount);
+    size_t total = mGlyphRuns.SizeOfExcludingThis(aMallocSizeOf);
 
     if (mDetailedGlyphs) {
         total += mDetailedGlyphs->SizeOfIncludingThis(aMallocSizeOf);
     }
-
-    total += mGlyphRuns.SizeOfExcludingThis(aMallocSizeOf);
 
     return total;
 }
@@ -5235,7 +5225,9 @@ gfxTextRun::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf)
 size_t
 gfxTextRun::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
 {
-    return aMallocSizeOf(this, sizeof(gfxTextRun)) +
+    // The second arg is how much gfxTextRun::AllocateStorageForTextRun would
+    // have allocated, given the character count of this run.
+    return aMallocSizeOf(this, sizeof(gfxTextRun) + sizeof(CompressedGlyph) * GetLength()) +
            SizeOfExcludingThis(aMallocSizeOf);
 }
 

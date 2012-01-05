@@ -59,14 +59,14 @@ nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
   NS_ASSERTION(!(aFlags & gfxTextRunFactory::TEXT_IS_8BIT),
                "didn't expect text to be marked as 8-bit here");
 
-  CompressedGlyph *glyphStorage = AllocateStorage(aLength);
-  if (!glyphStorage) {
+  void *storage = AllocateStorageForTextRun(sizeof(nsTransformedTextRun), aLength);
+  if (!storage) {
     return nsnull;
   }
 
-  return new nsTransformedTextRun(aParams, aFactory, aFontGroup,
-                                  aString, aLength,
-                                  aFlags, aStyles, aOwnsFactory, glyphStorage);
+  return new (storage) nsTransformedTextRun(aParams, aFactory, aFontGroup,
+                                            aString, aLength,
+                                            aFlags, aStyles, aOwnsFactory);
 }
 
 void
@@ -114,7 +114,8 @@ nsTransformedTextRun::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf)
 size_t
 nsTransformedTextRun::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
 {
-  return aMallocSizeOf(this, sizeof(nsTransformedTextRun)) +
+  return aMallocSizeOf(this, sizeof(nsTransformedTextRun) +
+                             GetLength() * sizeof(CompressedGlyph)) +
          SizeOfExcludingThis(aMallocSizeOf);
 }
 
