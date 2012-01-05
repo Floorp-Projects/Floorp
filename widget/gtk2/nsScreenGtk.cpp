@@ -58,10 +58,6 @@ nsScreenGtk :: ~nsScreenGtk()
 }
 
 
-// addref, release, QI
-NS_IMPL_ISUPPORTS1(nsScreenGtk, nsIScreen)
-
-
 NS_IMETHODIMP
 nsScreenGtk :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
