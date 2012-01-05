@@ -475,7 +475,33 @@ function shouldRunServiceTest() {
                 "time.");
     return false;
   }
-  return true;
+
+  let binDir = getGREDir();
+  let updaterBin = binDir.clone();
+  updaterBin.append(UPDATER_BIN_FILE);
+  if (!updaterBin.exists()) {
+    do_throw("Unable to find updater binary!");
+  }
+
+  let updaterBinPath = updaterBin.path;
+  if (/ /.test(updaterBinPath)) {
+    updaterBinPath = '"' + updaterBinPath + '"';
+  }
+
+  let helperBin = do_get_file(HELPER_BIN_FILE);
+  let args = ["check-signature", updaterBinPath];
+  let process = AUS_Cc["@mozilla.org/process/util;1"].
+                createInstance(AUS_Ci.nsIProcess);
+  process.init(helperBin);
+  process.run(true, args, args.length);
+
+  if (process.exitValue == 0) {
+    return true;
+  }
+
+  logTestInfo("this test can only run on builds with signed binaries. " +
+              HELPER_BIN_FILE + " returned " + process.exitValue)
+  return false;
 }
 
 /**
