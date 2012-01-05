@@ -184,7 +184,7 @@ ion::EliminateCopies(MIRGraph &graph)
 // Phi adjustment: If a phi's inputs are all the same type, the phi is
 // specialized to return that type.
 //
-// Input adjustment: Each input is asked to apply conversion operations its
+// Input adjustment: Each input is asked to apply conversion operations to its
 // inputs. This may include Box, Unbox, or other instruction-specific type
 // conversion operations.
 //
@@ -233,7 +233,7 @@ GuessPhiType(MPhi *phi)
             continue;
         if (type == MIRType_None)
             type = in->type();
-        if (type != in->type())
+        else if (type != in->type())
             return MIRType_Value;
     }
     return type;
