@@ -500,7 +500,10 @@ class NetworkTools:
       return None
 
   def getLanIp(self):
-    ip = socket.gethostbyname(socket.gethostname())
+    try:
+      ip = socket.gethostbyname(socket.gethostname())
+    except socket.gaierror:
+      ip = socket.gethostbyname(socket.gethostname() + ".local") # for Mac OS X
     if ip.startswith("127.") and os.name != "nt":
       interfaces = ["eth0","eth1","eth2","wlan0","wlan1","wifi0","ath0","ath1","ppp0"]
       for ifname in interfaces:

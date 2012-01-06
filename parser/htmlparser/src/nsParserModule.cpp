@@ -73,7 +73,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSAXAttributes)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSAXXMLReader)
 
 #if defined(NS_DEBUG)
-NS_DEFINE_NAMED_CID(NS_LOGGING_SINK_CID);
 NS_DEFINE_NAMED_CID(NS_EXPAT_DRIVER_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_PARSER_CID);
@@ -84,7 +83,6 @@ NS_DEFINE_NAMED_CID(NS_SAXXMLREADER_CID);
 
 static const mozilla::Module::CIDEntry kParserCIDs[] = {
 #if defined(NS_DEBUG)
-  { &kNS_LOGGING_SINK_CID, false, NULL, nsLoggingSinkConstructor },
   { &kNS_EXPAT_DRIVER_CID, false, NULL, nsExpatDriverConstructor },
 #endif
   { &kNS_PARSER_CID, false, NULL, nsParserConstructor },

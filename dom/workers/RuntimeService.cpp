@@ -78,8 +78,8 @@ using mozilla::MutexAutoUnlock;
 using mozilla::Preferences;
 using namespace mozilla::xpconnect::memory;
 
-// The size of the worker runtime heaps in bytes.
-#define WORKER_RUNTIME_HEAPSIZE 32 * 1024 * 1024
+// The size of the worker runtime heaps in bytes. May be changed via pref.
+#define WORKER_DEFAULT_RUNTIME_HEAPSIZE 32 * 1024 * 1024
 
 // The C stack size. We use the same stack size on all platforms for
 // consistency.
@@ -152,6 +152,7 @@ enum {
   PREF_relimit,
   PREF_methodjit,
   PREF_methodjit_always,
+  PREF_mem_max,
 
 #ifdef JS_GC_ZEAL
   PREF_gczeal,
@@ -167,7 +168,8 @@ const char* gPrefsToWatch[] = {
   JS_OPTIONS_DOT_STR "werror",
   JS_OPTIONS_DOT_STR "relimit",
   JS_OPTIONS_DOT_STR "methodjit.content",
-  JS_OPTIONS_DOT_STR "methodjit_always"
+  JS_OPTIONS_DOT_STR "methodjit_always",
+  JS_OPTIONS_DOT_STR "mem.max"
 
 #ifdef JS_GC_ZEAL
   , PREF_WORKERS_GCZEAL
@@ -186,7 +188,15 @@ PrefCallback(const char* aPrefName, void* aClosure)
 
   NS_NAMED_LITERAL_CSTRING(jsOptionStr, JS_OPTIONS_DOT_STR);
 
-  if(StringBeginsWith(nsDependentCString(aPrefName), jsOptionStr)) {
+  if (!strcmp(aPrefName, gPrefsToWatch[PREF_mem_max])) {
+    PRInt32 pref = Preferences::GetInt(aPrefName, -1);
+    PRUint32 maxBytes = (pref <= 0 || pref >= 0x1000) ?
+                        PRUint32(-1) :
+                        PRUint32(pref) * 1024 * 1024;
+    RuntimeService::SetDefaultJSRuntimeHeapSize(maxBytes);
+    rts->UpdateAllWorkerJSRuntimeHeapSize();
+  }
+  else if (StringBeginsWith(nsDependentCString(aPrefName), jsOptionStr)) {
     PRUint32 newOptions = kRequiredJSContextOptions;
     if (Preferences::GetBool(gPrefsToWatch[PREF_strict])) {
       newOptions |= JSOPTION_STRICT;
@@ -236,11 +246,17 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate)
   aWorkerPrivate->AssertIsOnWorkerThread();
   NS_ASSERTION(!aWorkerPrivate->GetJSContext(), "Already has a context!");
 
-  JSRuntime* runtime = JS_NewRuntime(WORKER_RUNTIME_HEAPSIZE);
+  // The number passed here doesn't matter, we're about to change it in the call
+  // to JS_SetGCParameter.
+  JSRuntime* runtime = JS_NewRuntime(WORKER_DEFAULT_RUNTIME_HEAPSIZE);
   if (!runtime) {
     NS_WARNING("Could not create new runtime!");
     return nsnull;
   }
+
+  // This is the real place where we set the max memory for the runtime.
+  JS_SetGCParameter(runtime, JSGC_MAX_BYTES,
+                    aWorkerPrivate->GetJSRuntimeHeapSize());
 
   JSContext* workerCx = JS_NewContext(runtime, 0);
   if (!workerCx) {
@@ -503,6 +519,9 @@ WorkerCrossThreadDispatcher::PostTask(WorkerTask* aTask)
 END_WORKERS_NAMESPACE
 
 PRUint32 RuntimeService::sDefaultJSContextOptions = kRequiredJSContextOptions;
+
+PRUint32 RuntimeService::sDefaultJSRuntimeHeapSize =
+  WORKER_DEFAULT_RUNTIME_HEAPSIZE;
 
 PRInt32 RuntimeService::sCloseHandlerTimeoutSeconds = MAX_SCRIPT_RUN_TIME_SEC;
 
@@ -1176,6 +1195,27 @@ RuntimeService::UpdateAllWorkerJSContextOptions()
     AutoSafeJSContext cx;
     for (PRUint32 index = 0; index < workers.Length(); index++) {
       workers[index]->UpdateJSContextOptions(cx, GetDefaultJSContextOptions());
+    }
+  }
+}
+
+void
+RuntimeService::UpdateAllWorkerJSRuntimeHeapSize()
+{
+  AssertIsOnMainThread();
+
+  nsAutoTArray<WorkerPrivate*, 100> workers;
+  {
+    MutexAutoLock lock(mMutex);
+
+    mDomainMap.EnumerateRead(AddAllTopLevelWorkersToArray, &workers);
+  }
+
+  if (!workers.IsEmpty()) {
+    AutoSafeJSContext cx;
+    for (PRUint32 index = 0; index < workers.Length(); index++) {
+      workers[index]->UpdateJSRuntimeHeapSize(cx,
+                                              GetDefaultJSRuntimeHeapSize());
     }
   }
 }

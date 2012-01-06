@@ -27,6 +27,7 @@
 #  Alexander J. Vincent <ajvincent@gmail.com>
 #  Dão Gottwald <dao@mozilla.com>
 #  Robert Strong <robert.bugzilla@gmail.com>
+#  Brian R. Bondy <netzen@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -81,6 +82,9 @@ const PREF_APP_UPDATE_SILENT              = "app.update.silent";
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
+const PREF_APP_UPDATE_SERVICE_ENABLED     = "app.update.service.enabled";
+const PREF_APP_UPDATE_SERVICE_ERRORS      = "app.update.service.errors";
+const PREF_APP_UPDATE_SERVICE_MAX_ERRORS  = "app.update.service.maxErrors";
 
 const PREF_PARTNER_BRANCH                 = "app.partner.";
 const PREF_APP_DISTRIBUTION               = "distribution.id";
@@ -129,6 +133,7 @@ const FILE_UPDATE_LOCALE  = "update.locale";
 const STATE_NONE            = "null";
 const STATE_DOWNLOADING     = "downloading";
 const STATE_PENDING         = "pending";
+const STATE_PENDING_SVC     = "pending-service";
 const STATE_APPLYING        = "applying";
 const STATE_SUCCEEDED       = "succeeded";
 const STATE_DOWNLOAD_FAILED = "download-failed";
@@ -138,6 +143,13 @@ const STATE_FAILED          = "failed";
 const WRITE_ERROR        = 7;
 const UNEXPECTED_ERROR   = 8;
 const ELEVATION_CANCELED = 9;
+const SERVICE_UPDATER_COULD_NOT_BE_STARTED = 16000;
+const SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS = 16001;
+const SERVICE_UPDATER_SIGN_ERROR           = 16002;
+const SERVICE_UPDATER_COMPARE_ERROR        = 16003;
+const SERVICE_UPDATER_IDENTITY_ERROR       = 16004;
+const SERVICE_STILL_APPLYING_ON_SUCCESS    = 16005;
+const SERVICE_STILL_APPLYING_ON_FAILURE    = 16006;
 
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
@@ -148,6 +160,10 @@ const DOWNLOAD_BACKGROUND_INTERVAL  = 600;    // seconds
 const DOWNLOAD_FOREGROUND_INTERVAL  = 0;
 
 const UPDATE_WINDOW_NAME      = "Update:Wizard";
+
+// The number of consecutive failures when updating using the service before
+// setting the app.update.service.enabled preference to false.
+const DEFAULT_SERVICE_MAX_ERRORS = 10;
 
 var gLocale     = null;
 
@@ -461,7 +477,7 @@ function LOG(string) {
 #  @param   defaultValue
 #           The default value to return in the event the preference has
 #           no setting
-#  @returns The value of the preference, or undefined if there was no
+#  @return  The value of the preference, or undefined if there was no
 #           user or default value.
  */
 function getPref(func, preference, defaultValue) {
@@ -530,7 +546,7 @@ function getUpdateFile(pathArray) {
  * @param   defaultCode
  *          The default code to look up should human readable status text
  *          not exist for |code|
- * @returns A human readable status text string
+ * @return  A human readable status text string
  */
 function getStatusTextFromCode(code, defaultCode) {
   var reason;
@@ -550,7 +566,7 @@ function getStatusTextFromCode(code, defaultCode) {
 
 /**
  * Get the Active Updates directory
- * @returns The active updates directory, as a nsIFile object
+ * @return The active updates directory, as a nsIFile object
  */
 function getUpdatesDir() {
   // Right now, we only support downloading one patch at a time, so we always
@@ -563,7 +579,7 @@ function getUpdatesDir() {
  * directory.
  * @param   dir
  *          The dir to look for an update.status file in
- * @returns The status value of the update.
+ * @return  The status value of the update.
  */
 function readStatusFile(dir) {
   var statusFile = dir.clone();
@@ -587,6 +603,22 @@ function writeStatusFile(dir, state) {
   var statusFile = dir.clone();
   statusFile.append(FILE_UPDATE_STATUS);
   writeStringToFile(statusFile, state);
+}
+
+/**
+ * Determines if the service should be used to attempt an update
+ * or not.  For now this is only when PREF_APP_UPDATE_SERVICE_ENABLED
+ * is true and we have Firefox.
+ *
+ * @return  true if the service should be used for updates.
+ */
+function shouldUseService() {
+#ifdef MOZ_MAINTENANCE_SERVICE
+  return getPref("getBoolPref", 
+                 PREF_APP_UPDATE_SERVICE_ENABLED, false);
+#else
+  return false;
+#endif
 }
 
 /**
@@ -1399,7 +1431,37 @@ UpdateService.prototype = {
           writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
           return;
         }
-        else if (update.errorCode == ELEVATION_CANCELED) {
+
+        if (update.errorCode == ELEVATION_CANCELED) {
+          writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
+          return;
+        }
+
+        if (update.errorCode == SERVICE_UPDATER_COULD_NOT_BE_STARTED ||
+            update.errorCode == SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS ||
+            update.errorCode == SERVICE_UPDATER_SIGN_ERROR ||
+            update.errorCode == SERVICE_UPDATER_COMPARE_ERROR ||
+            update.errorCode == SERVICE_UPDATER_IDENTITY_ERROR ||
+            update.errorCode == SERVICE_STILL_APPLYING_ON_SUCCESS ||
+            update.errorCode == SERVICE_STILL_APPLYING_ON_FAILURE) {
+          var failCount = getPref("getIntPref", 
+                                  PREF_APP_UPDATE_SERVICE_ERRORS, 0);
+          var maxFail = getPref("getIntPref", 
+                                PREF_APP_UPDATE_SERVICE_MAX_ERRORS, 
+                                DEFAULT_SERVICE_MAX_ERRORS);
+
+          // As a safety, when the service reaches maximum failures, it will
+          // disable itself and fallback to using the normal update mechanism
+          // without the service.
+          if (failCount >= maxFail) {
+            Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED, false);
+            Services.prefs.clearUserPref(PREF_APP_UPDATE_SERVICE_ERRORS);
+          } else {
+            failCount++;
+            Services.prefs.setIntPref(PREF_APP_UPDATE_SERVICE_ERRORS, 
+                                      failCount);
+          }
+
           writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
           return;
         }
@@ -1522,7 +1584,7 @@ UpdateService.prototype = {
    * be offered.
    * @param   updates
    *          An array of available nsIUpdate items
-   * @returns The nsIUpdate to offer.
+   * @return  The nsIUpdate to offer.
    */
   selectUpdate: function AUS_selectUpdate(updates) {
     if (updates.length == 0)
@@ -2011,7 +2073,7 @@ UpdateManager.prototype = {
    * Loads an updates.xml formatted file into an array of nsIUpdate items.
    * @param   file
    *          A nsIFile for the updates.xml file
-   * @returns The array of nsIUpdate items held in the file.
+   * @return  The array of nsIUpdate items held in the file.
    */
   _loadXMLFileIntoArray: function UM__loadXMLFileIntoArray(file) {
     if (!file.exists()) {
@@ -2195,7 +2257,7 @@ UpdateManager.prototype = {
       for (let i = updates.length - 1; i >= 0; --i) {
         let state = updates[i].state;
         if (state == STATE_NONE || state == STATE_DOWNLOADING ||
-            state == STATE_PENDING) {
+            state == STATE_PENDING || state == STATE_PENDING_SVC) {
           updates.splice(i, 1);
         }
       }
@@ -2530,7 +2592,8 @@ Downloader.prototype = {
    * Whether or not a patch has been downloaded and staged for installation.
    */
   get patchIsStaged() {
-    return readStatusFile(getUpdatesDir()) == STATE_PENDING;
+    var readState = readStatusFile(getUpdatesDir()); 
+    return readState == STATE_PENDING || readState == STATE_PENDING_SVC;
   },
 
   /**
@@ -2582,7 +2645,7 @@ Downloader.prototype = {
    *          A nsIUpdate object to select a patch from
    * @param   updateDir
    *          A nsIFile representing the update directory
-   * @returns A nsIUpdatePatch object to download
+   * @return  A nsIUpdatePatch object to download
    */
   _selectPatch: function Downloader__selectPatch(update, updateDir) {
     // Given an update to download, we will always try to download the patch
@@ -2592,7 +2655,7 @@ Downloader.prototype = {
      * Return the first UpdatePatch with the given type.
      * @param   type
      *          The type of the patch ("complete" or "partial")
-     * @returns A nsIUpdatePatch object matching the type specified
+     * @return  A nsIUpdatePatch object matching the type specified
      */
     function getPatchOfType(type) {
       for (var i = 0; i < update.patchCount; ++i) {
@@ -2620,6 +2683,7 @@ Downloader.prototype = {
       case STATE_DOWNLOADING:
         LOG("Downloader:_selectPatch - resuming download");
         return selectedPatch;
+      case STATE_PENDING_SVC:
       case STATE_PENDING:
         LOG("Downloader:_selectPatch - already downloaded and staged");
         return null;
@@ -2847,7 +2911,7 @@ Downloader.prototype = {
     var deleteActiveUpdate = false;
     if (Components.isSuccessCode(status)) {
       if (this._verifyDownload()) {
-        state = STATE_PENDING;
+        state = shouldUseService() ? STATE_PENDING_SVC : STATE_PENDING
 
         // We only need to explicitly show the prompt if this is a background
         // download, since otherwise some kind of UI is already visible and

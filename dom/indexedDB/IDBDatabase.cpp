@@ -57,7 +57,6 @@
 #include "IDBTransaction.h"
 #include "IDBFactory.h"
 #include "IndexedDatabaseManager.h"
-#include "LazyIdleThread.h"
 #include "TransactionThreadPool.h"
 #include "DictionaryHelpers.h"
 
@@ -714,6 +713,10 @@ nsresult
 IDBDatabase::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   NS_ENSURE_TRUE(aVisitor.mDOMEvent, NS_ERROR_UNEXPECTED);
+
+  if (!mOwner) {
+    return NS_OK;
+  }
 
   if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
     nsString type;

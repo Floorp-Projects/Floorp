@@ -13,11 +13,16 @@ tabbrowser {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tabs");
 }
 
+#tabbrowser-tabs:not([overflow="true"]) ~ #alltabs-button,
 #tabbrowser-tabs:not([overflow="true"]) + #new-tab-button,
 #tabbrowser-tabs[overflow="true"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
 #TabsToolbar[currentset]:not([currentset*="tabbrowser-tabs,new-tab-button"]) > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
 #TabsToolbar[customizing="true"] > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button {
   visibility: collapse;
+}
+
+#tabbrowser-tabs:not([overflow="true"])[using-closing-tabs-spacer] ~ #alltabs-button {
+  visibility: hidden; /* temporary space to keep a tab's close button under the cursor */
 }
 
 .tabbrowser-tab {

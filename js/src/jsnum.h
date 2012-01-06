@@ -331,6 +331,9 @@ ValueToUint16(JSContext *cx, const js::Value &v, uint16_t *out)
     return ValueToUint16Slow(cx, v, out);
 }
 
+JSBool
+num_parseInt(JSContext *cx, uintN argc, Value *vp);
+
 }  /* namespace js */
 
 /*

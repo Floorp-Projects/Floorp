@@ -145,6 +145,13 @@ MOZ_ANDROID_DRAWABLES += embedding/android/resources/drawable/desktop_notificati
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
+RESOURCES=$(RES_LAYOUT) $(RES_VALUES)
+
+RES_DIRS= \
+	res/layout   \
+	res/values   \
+	$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 # Override the Java settings with some specific android settings
@@ -169,19 +176,20 @@ res/drawable-hdpi/icon.png: $(MOZ_APP_ICON)
 	$(NSINSTALL) -D res/drawable-hdpi
 	cp $(ICON_PATH_HDPI) $@
 
+$(RES_DIRS):
+	rm -rf $@
+	$(NSINSTALL) -D $@
+
 RES_DRAWABLE = $(addprefix res/drawable/,$(notdir $(MOZ_ANDROID_DRAWABLES)))
 
 $(RES_DRAWABLE): $(addprefix $(topsrcdir)/,$(MOZ_ANDROID_DRAWABLES))
 	$(NSINSTALL) -D res/drawable
 	$(NSINSTALL) $^ res/drawable/
 
-$(RES_LAYOUT): $(subst res/,$(srcdir)/resources/,$(RES_LAYOUT))
-	$(NSINSTALL) -D res/layout
-	$(NSINSTALL) $(srcdir)/resources/layout/* res/layout/
+$(RESOURCES): $(RES_DIRS) $(subst res/,$(srcdir)/resources/,$(RESOURCES))
+	@echo "creating $@"
+	$(NSINSTALL) $(subst res/,$(srcdir)/resources/,$@) $(dir $@)
 
-$(RES_VALUES): $(subst res/,$(srcdir)/resources/,$(RES_VALUES))
-	$(NSINSTALL) -D res/values
-	$(NSINSTALL) $(srcdir)/resources/values/* res/values/
 
 R.java: $(MOZ_APP_ICON) $(RES_LAYOUT) $(RES_DRAWABLE) $(RES_VALUES) res/drawable/icon.png res/drawable-hdpi/icon.png res/values/strings.xml AndroidManifest.xml
 	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko

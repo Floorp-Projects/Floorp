@@ -59,7 +59,7 @@ const MEM_HISTOGRAMS = {
   "js-compartments-user": "MEMORY_JS_COMPARTMENTS_USER",
   "explicit": "MEMORY_EXPLICIT",
   "resident": "MEMORY_RESIDENT",
-  "explicit/storage/sqlite": "MEMORY_STORAGE_SQLITE",
+  "storage-sqlite": "MEMORY_STORAGE_SQLITE",
   "explicit/images/content/used/uncompressed":
     "MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED",
   "heap-allocated": "MEMORY_HEAP_ALLOCATED",
