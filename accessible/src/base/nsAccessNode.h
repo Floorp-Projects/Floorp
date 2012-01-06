@@ -195,6 +195,12 @@ public:
    */
   virtual bool IsPrimaryForNode() const;
 
+  /**
+   * Return the string bundle
+   */
+  static nsIStringBundle* GetStringBundle()
+    { return gStringBundle; }
+
 protected:
     nsPresContext* GetPresContext();
 

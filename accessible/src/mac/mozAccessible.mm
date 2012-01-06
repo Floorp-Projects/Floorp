@@ -43,6 +43,7 @@
 #import "nsRoleMap.h"
 
 #include "nsRect.h"
+#include "nsCocoaUtils.h"
 #include "nsCoord.h"
 #include "nsObjCExceptions.h"
 
@@ -52,8 +53,12 @@
 #include "nsIAccessibleEditableText.h"
 #include "Relation.h"
 
+#include "nsAccessNode.h"
 #include "nsRootAccessible.h"
 
+#include "mozilla/Services.h"
+
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 // converts a screen-global point in the cocoa coordinate system (with origo in the bottom-left corner
@@ -121,8 +126,26 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
 }
 
+/**
+ * Get a localized string from the string bundle.
+ * Return nil is not found.
+ */
+static NSString* 
+GetLocalizedString(const nsString& aString)
+{
+  if (!nsAccessNode::GetStringBundle())
+    return nil;
+
+  nsXPIDLString text;
+  nsresult rv = nsAccessNode::GetStringBundle()->GetStringFromName(aString.get(),
+                                 getter_Copies(text));
+  NS_ENSURE_SUCCESS(rv, nil);
+
+  return !text.IsEmpty() ? nsCocoaUtils::ToNSString(text) : nil;
+}
+
 #pragma mark -
- 
+
 @implementation mozAccessible
  
 - (id)initWithAccessible:(nsAccessibleWrap*)geckoAccessible
@@ -229,8 +252,14 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
     return [NSNumber numberWithBool:[self isEnabled]];
   if ([attribute isEqualToString:NSAccessibilityValueAttribute])
     return [self value];
-  if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute])
+  if ([attribute isEqualToString:NSAccessibilityRoleDescriptionAttribute]) {
+    if ((mRole == nsIAccessibleRole::ROLE_INTERNAL_FRAME) 
+        || (mRole == nsIAccessibleRole::ROLE_DOCUMENT_FRAME))
+      return GetLocalizedString(NS_LITERAL_STRING("htmlContent")) ? : @"HTML Content";
+
     return NSAccessibilityRoleDescription([self role], nil);
+  }
+  
   if ([attribute isEqualToString:NSAccessibilityDescriptionAttribute])
     return [self customDescription];
   if ([attribute isEqualToString:NSAccessibilityFocusedAttribute])
