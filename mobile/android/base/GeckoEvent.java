@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; -*-
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -80,6 +80,7 @@ public class GeckoEvent {
     public static final int BROADCAST = 19;
     public static final int VIEWPORT = 20;
     public static final int TILE_SIZE = 21;
+    public static final int VISTITED = 22;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -257,4 +258,8 @@ public class GeckoEvent {
         mCharacters = uri;
     }
 
+    public GeckoEvent(int type, String data) {
+        mType = type;
+        mCharacters = data;
+    }
 }
