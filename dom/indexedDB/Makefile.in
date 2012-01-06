@@ -68,7 +68,6 @@ CPPSRCS = \
   IDBTransaction.cpp \
   IDBFactory.cpp \
   IndexedDatabaseManager.cpp \
-  LazyIdleThread.cpp \
   OpenDatabaseHelper.cpp \
   TransactionThreadPool.cpp \
   Key.cpp \
@@ -87,7 +86,6 @@ EXPORTS_mozilla/dom/indexedDB = \
   IndexedDatabaseManager.h \
   IDBFactory.h \
   Key.h \
-  LazyIdleThread.h \
   FileManager.h \
   FileInfo.h \
   $(NULL)
