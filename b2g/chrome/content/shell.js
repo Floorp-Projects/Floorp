@@ -60,8 +60,8 @@ XPCOMUtils.defineLazyGetter(Services, 'fm', function() {
 
 // In order to use http:// scheme instead of file:// scheme
 // (that is much more restricted) the following code kick-off
-// a local http server listening on http://127.0.0.1:8888 and
-// http://localhost:8888.
+// a local http server listening on http://127.0.0.1:7777 and
+// http://localhost:7777.
 function startupHttpd(baseDir, port) {
   const httpdURL = 'chrome://browser/content/httpd.js';
   let httpd = {};
@@ -139,7 +139,7 @@ var shell = {
         baseDir.pop();
         baseDir = baseDir.join('/');
 
-        const SERVER_PORT = 8888;
+        const SERVER_PORT = 7777;
         startupHttpd(baseDir, SERVER_PORT);
 
         let baseHost = 'http://localhost';
