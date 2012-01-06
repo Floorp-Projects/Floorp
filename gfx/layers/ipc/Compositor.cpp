@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Benoit Girard <bgirard@mozilla.com>
+ *   Ali Juma <ajuma@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,23 +38,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_layers_Compositor_h
-#define mozilla_layers_Compositor_h
-
+#include "CompositorParent.h"
 #include "Compositor.h"
-#include "CompositorChild.h"
 #include "nsDebug.h"
-
-class CompositorChild;
 
 namespace mozilla {
 namespace layers {
 namespace compositor {
 
-int sShadowNativeContext = 0;
+LayerManager*
+GetLayerManager(CompositorParent* aParent)
+{
+  return aParent->GetLayerManager();
+}
+
 
 }
 }
 }
-#endif
-

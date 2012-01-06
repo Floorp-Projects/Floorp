@@ -122,12 +122,11 @@ ShadowChild(const OpRemoveChild& op)
 
 //--------------------------------------------------
 // ShadowLayersParent
-ShadowLayersParent::ShadowLayersParent(ShadowLayerManager* aManager, ShadowLayersHost* aHost)
-  : mDestroyed(false)
+ShadowLayersParent::ShadowLayersParent(ShadowLayerManager* aManager,
+                                       ShadowLayersManager* aLayersManager)
+  : mLayerManager(aManager), mShadowLayersManager(aLayersManager), mDestroyed(false)
 {
   MOZ_COUNT_CTOR(ShadowLayersParent);
-  mLayerManager = aManager;
-  mHost = aHost;
 }
 
 ShadowLayersParent::~ShadowLayersParent()
@@ -221,11 +220,6 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       layer->SetClipRect(common.useClipRect() ? &common.clipRect() : NULL);
       layer->SetTransform(common.transform());
       layer->SetTileSourceRect(common.useTileSourceRect() ? &common.tileSourceRect() : NULL);
-      if (mHost->GetCompositorParent()) {
-        layer->AsShadowLayer()->SetShadowTransform(common.transform());
-        layer->AsShadowLayer()->SetShadowVisibleRegion(common.visibleRegion());
-        layer->AsShadowLayer()->SetShadowClipRect(layer->GetClipRect());
-      }
       static bool fixedPositionLayersEnabled = getenv("MOZ_ENABLE_FIXED_POSITION_LAYERS") != 0;
       if (fixedPositionLayersEnabled) {
         layer->SetIsFixedPosition(common.isFixedPosition());
@@ -288,9 +282,6 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       MOZ_LAYERS_LOG(("[ParentSide] SetRoot"));
 
       mRoot = AsShadowLayer(edit.get_OpSetRoot())->AsContainer();
-      if (mHost->GetCompositorParent()) {
-        mLayerManager->SetRoot(mRoot);
-      }
       break;
     }
     case Edit::TOpInsertAfter: {
@@ -392,13 +383,8 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   // other's buffer contents.
   ShadowLayerManager::PlatformSyncBeforeReplyUpdate();
 
-  if (Frame()) {
-    Frame()->ShadowLayersUpdated();
-  }
+  mShadowLayersManager->ShadowLayersUpdated();
 
-  if (mHost->GetCompositorParent()) {
-    mHost->GetCompositorParent()->RequestComposition();
-  }
   return true;
 }
 
@@ -413,16 +399,6 @@ ShadowLayersParent::DeallocPLayer(PLayerParent* actor)
 {
   delete actor;
   return true;
-}
-
-RenderFrameParent*
-ShadowLayersParent::Frame()
-{
-  if (mDestroyed) {
-    return NULL;
-  } else {
-    return mHost->GetRenderFrameParent();
-  }
 }
 
 void

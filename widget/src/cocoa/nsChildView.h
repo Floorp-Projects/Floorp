@@ -119,6 +119,10 @@ namespace mozilla {
 namespace gl {
 class TextureImage;
 }
+
+namespace layers {
+class LayerManagerOGL;
+}
 }
 
 #ifndef NP_NO_CARBON
@@ -295,6 +299,9 @@ typedef NSInteger NSEventGestureAxis;
 #ifdef __LP64__
   BOOL *mSwipeAnimationCancelled;
 #endif
+
+  // Whether this uses off-main-thread compositing.
+  BOOL mUsingOMTCompositor;
 }
 
 // class initialization
@@ -350,6 +357,8 @@ typedef NSInteger NSEventGestureAxis;
 - (void)maybeTrackScrollEventAsSwipe:(NSEvent *)anEvent
                       scrollOverflow:(PRInt32)overflow;
 #endif
+
+- (void)setUsingOMTCompositor:(BOOL)aUseOMTC;
 @end
 
 class ChildViewMouseTracker {
@@ -489,6 +498,7 @@ public:
   already_AddRefed<nsAccessible> GetDocumentAccessible();
 #endif
 
+  virtual void CreateCompositor();
   virtual gfxASurface* GetThebesSurface();
   virtual void DrawOver(LayerManager* aManager, nsIntRect aRect);
 
