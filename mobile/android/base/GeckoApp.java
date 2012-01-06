@@ -2374,10 +2374,10 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
     }
 
     public static PluginLayoutParams create(int aX, int aY, int aWidth, int aHeight, float aResolution) {
-        aX = (int)Math.round(aX * aResolution);
-        aY = (int)Math.round(aY * aResolution);
-        aWidth = (int)Math.round(aWidth * aResolution);
-        aHeight = (int)Math.round(aHeight * aResolution);
+        aX = Math.round(aX * aResolution);
+        aY = Math.round(aY * aResolution);
+        aWidth = Math.round(aWidth * aResolution);
+        aHeight = Math.round(aHeight * aResolution);
 
         return new PluginLayoutParams(aX, aY, aWidth, aHeight, aResolution);
     }
@@ -2395,10 +2395,10 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
     }
 
     public void reset(int aX, int aY, int aWidth, int aHeight, float aResolution) {
-        x = mOriginalX = (int)Math.round(aX * aResolution);
-        y = mOriginalY = (int)Math.round(aY * aResolution);
-        width = mOriginalWidth = (int)Math.round(aWidth * aResolution);
-        height = mOriginalHeight = (int)Math.round(aHeight * aResolution);
+        x = mOriginalX = Math.round(aX * aResolution);
+        y = mOriginalY = Math.round(aY * aResolution);
+        width = mOriginalWidth = Math.round(aWidth * aResolution);
+        height = mOriginalHeight = Math.round(aHeight * aResolution);
         mLastResolution = mOriginalResolution = aResolution;
 
         clampToMaxSize();
@@ -2413,8 +2413,8 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
 
         if (!FloatUtils.fuzzyEquals(mLastResolution, aResolution)) {
             float scaleFactor = aResolution / mOriginalResolution;
-            width = (int)Math.round(scaleFactor * mOriginalWidth);
-            height = (int)Math.round(scaleFactor * mOriginalHeight);
+            width = Math.round(scaleFactor * mOriginalWidth);
+            height = Math.round(scaleFactor * mOriginalHeight);
             mLastResolution = aResolution;
 
             clampToMaxSize();
@@ -2425,8 +2425,8 @@ class PluginLayoutParams extends AbsoluteLayout.LayoutParams
         PointF targetOrigin = targetViewport.getOrigin();
         PointF hostOrigin = hostViewport.getOrigin();
 
-        Point offset = new Point((int)Math.round(hostOrigin.x - targetOrigin.x),
-                                 (int)Math.round(hostOrigin.y - targetOrigin.y));
+        Point offset = new Point(Math.round(hostOrigin.x - targetOrigin.x),
+                                 Math.round(hostOrigin.y - targetOrigin.y));
 
         reposition(offset, hostViewport.getZoomFactor());
     }

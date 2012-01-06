@@ -297,7 +297,7 @@ public class LayerRenderer implements GLSurfaceView.Renderer {
         mDroppedFrames -= (mFrameTimings[mCurrentFrame] + 1) / MAX_FRAME_TIME;
         mDroppedFrames += (frameElapsedTime + 1) / MAX_FRAME_TIME;
 
-        mFrameTimings[mCurrentFrame] = (int)frameElapsedTime;
+        mFrameTimings[mCurrentFrame] = frameElapsedTime;
         mCurrentFrame = (mCurrentFrame + 1) % mFrameTimings.length;
 
         int averageTime = mFrameTimingsSum / mFrameTimings.length;
