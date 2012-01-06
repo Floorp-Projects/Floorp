@@ -444,7 +444,9 @@
 
   <toolbox id="navigator-toolbox"
            defaultmode="icons" mode="icons"
-           iconsize="large">
+           iconsize="large"
+           tabsontop="true"
+           persist="tabsontop">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
              defaultset="menubar-items"
