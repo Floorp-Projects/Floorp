@@ -590,75 +590,63 @@ nsresult nsAccessible::GetTranslatedString(const nsAString& aKey, nsAString& aSt
   return NS_OK;
 }
 
-bool
-nsAccessible::IsVisible(bool* aIsOffscreen)
+PRUint64
+nsAccessible::VisibilityState()
 {
+  PRUint64 vstates = states::INVISIBLE | states::OFFSCREEN;
+
+  // We need to check the parent chain for visibility.
+  nsAccessible* accessible = this;
+  do {
+    // We don't want background tab page content to be aggressively invisible.
+    // Otherwise this foils screen reader virtual buffer caches.
+	  PRUint32 role = accessible->Role();
+    if (role == nsIAccessibleRole::ROLE_PROPERTYPAGE ||
+        role == nsIAccessibleRole::ROLE_PANE) {
+      break;
+    }
+
+    nsIFrame* frame = accessible->GetFrame();
+    if (!frame)
+      return vstates;
+
+    const nsIView* view = frame->GetView();
+    if (view && view->GetVisibility() == nsViewVisibility_kHide)
+      return vstates;
+    
+  } while (accessible = accessible->Parent());
+
+  nsIFrame* frame = GetFrame();
+  const nsCOMPtr<nsIPresShell> shell(GetPresShell());
+
   // We need to know if at least a kMinPixels around the object is visible,
-  // otherwise it will be marked states::OFFSCREEN. The states::INVISIBLE flag
-  // is for elements which are programmatically hidden.
-
-  *aIsOffscreen = true;
-  if (IsDefunct())
-    return false;
-
+  // otherwise it will be marked states::OFFSCREEN.
   const PRUint16 kMinPixels  = 12;
-   // Set up the variables we need, return false if we can't get at them all
-  nsCOMPtr<nsIPresShell> shell(GetPresShell());
-  if (!shell) 
-    return false;
-
-  nsIFrame *frame = GetFrame();
-  if (!frame) {
-    return false;
-  }
-
-  // If visibility:hidden or visibility:collapsed then mark with STATE_INVISIBLE
-  if (!frame->GetStyleVisibility()->IsVisible())
-  {
-      return false;
-  }
-
-  // We don't use the more accurate GetBoundsRect, because that is more expensive
-  // and the STATE_OFFSCREEN flag that this is used for only needs to be a rough
-  // indicator
-  nsSize frameSize = frame->GetSize();
-  nsRectVisibility rectVisibility =
+  const nsSize frameSize = frame->GetSize();
+  const nsRectVisibility rectVisibility =
     shell->GetRectVisibility(frame, nsRect(nsPoint(0,0), frameSize),
                              nsPresContext::CSSPixelsToAppUnits(kMinPixels));
 
-  if (frame->GetRect().IsEmpty()) {
-    bool isEmpty = true;
+  if (rectVisibility == nsRectVisibility_kVisible)
+    vstates &= ~states::OFFSCREEN;
 
-    nsIAtom *frameType = frame->GetType();
-    if (frameType == nsGkAtoms::textFrame) {
-      // Zero area rects can occur in the first frame of a multi-frame text flow,
-      // in which case the rendered text is not empty and the frame should not be marked invisible
-      nsAutoString renderedText;
-      frame->GetRenderedText (&renderedText, nsnull, nsnull, 0, 1);
-      isEmpty = renderedText.IsEmpty();
-    }
-    else if (frameType == nsGkAtoms::inlineFrame) {
-      // Yuck. Unfortunately inline frames can contain larger frames inside of them,
-      // so we can't really believe this is a zero area rect without checking more deeply.
-      // GetBounds() will do that for us.
-      PRInt32 x, y, width, height;
-      GetBounds(&x, &y, &width, &height);
-      isEmpty = width == 0 || height == 0;
-    }
+  // Zero area rects can occur in the first frame of a multi-frame text flow,
+  // in which case the rendered text is not empty and the frame should not be
+  // marked invisible.
+  // XXX Can we just remove this check? Why do we need to mark empty
+  // text invisible?
+  if (frame->GetType() == nsGkAtoms::textFrame &&
+      !(frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
+      frame->GetRect().IsEmpty()) {
+    nsAutoString renderedText;
+    frame->GetRenderedText(&renderedText, nsnull, nsnull, 0, 1);
+    if (renderedText.IsEmpty())
+      return vstates;
 
-    if (isEmpty && !(frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
-      // Consider zero area objects hidden unless they are absolutely positioned
-      // or floating and may have descendants that have a non-zero size
-      return false;
-    }
   }
 
-  // The frame intersects the viewport, but we need to check the parent view chain :(
-  bool isVisible = frame->IsVisibleConsideringAncestors(nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY);
-  if (isVisible && rectVisibility == nsRectVisibility_kVisible) {
-    *aIsOffscreen = false;
-  }
-  return isVisible;
+  // Assume we are visible enough.
+  return vstates &= ~states::INVISIBLE;
 }
 
 PRUint64
@@ -701,15 +689,8 @@ nsAccessible::NativeState()
       state |= states::FOCUSED;
   }
 
-  // Check if states::INVISIBLE and
-  // states::OFFSCREEN flags should be turned on for this object.
-  bool isOffscreen;
-  if (!IsVisible(&isOffscreen)) {
-    state |= states::INVISIBLE;
-  }
-  if (isOffscreen) {
-    state |= states::OFFSCREEN;
-  }
+  // Gather states::INVISIBLE and states::OFFSCREEN flags for this object.
+  state |= VisibilityState();
 
   nsIFrame *frame = GetFrame();
   if (frame && (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW))
