@@ -73,7 +73,7 @@ TestHangsParent::ShouldContinueFromReplyTimeout()
 {
     mDetectedHang = true;
 
-    // so we've detected a timeout after 1 ms ... now we cheat and
+    // so we've detected a timeout after 2 ms ... now we cheat and
     // sleep for a long time, to allow the subprocess's reply to come
     // in
 
@@ -95,9 +95,9 @@ TestHangsParent::AnswerStackFrame()
             fail("should have timed out!");
     }
     else {
-        // minimum possible, 1 ms.  We want to detecting a hang to race
+        // minimum possible, 2 ms.  We want to detecting a hang to race
         // with the reply coming in, as reliably as possible
-        SetReplyTimeoutMs(1);
+        SetReplyTimeoutMs(2);
 
         if (CallHang())
             fail("should have timed out!");
