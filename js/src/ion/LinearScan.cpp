@@ -159,20 +159,6 @@ LiveInterval::setFrom(CodePosition from)
     }
 }
 
-CodePosition
-LiveInterval::start()
-{
-    JS_ASSERT(!ranges_.empty());
-    return ranges_.back().from;
-}
-
-CodePosition
-LiveInterval::end()
-{
-    JS_ASSERT(!ranges_.empty());
-    return ranges_.begin()->to;
-}
-
 bool
 LiveInterval::covers(CodePosition pos)
 {
@@ -219,18 +205,6 @@ LiveInterval::intersect(LiveInterval *other)
     }
 
     return CodePosition::MIN;
-}
-
-size_t
-LiveInterval::numRanges()
-{
-    return ranges_.length();
-}
-
-LiveInterval::Range *
-LiveInterval::getRange(size_t i)
-{
-    return &ranges_[i];
 }
 
 /*
@@ -500,28 +474,7 @@ LinearScanAllocator::buildLivenessInfo()
         for (LInstructionReverseIterator ins = block->rbegin(); ins != block->rend(); ins++) {
             // Calls may clobber registers, so force a spill and reload around the callsite.
             if (ins->isCall()) {
-                // Leave enough registers available for temporaries.
-                RegisterSet toSpill = ins->spillRegs();
-
-                // Take fixed regs first.
-                for (size_t i = 0; i < ins->numTemps(); i++) {
-                    LDefinition *temp = ins->getTemp(i);
-                    if (temp->isPreset()) {
-                        AnyRegister reg = temp->output()->toRegister();
-                        toSpill.take(reg);
-                    }
-                }
-
-                for (size_t i = 0; i < ins->numTemps(); i++) {
-                    LDefinition *temp = ins->getTemp(i);
-                    if (!temp->isPreset()) {
-                        JS_ASSERT(temp->policy() == LDefinition::DEFAULT ||
-                                  temp->policy() == LDefinition::MUST_REUSE_INPUT);
-                        toSpill.takeGeneral();
-                    }
-                }
-
-                for (AnyRegisterIterator iter(toSpill); iter.more(); iter++)
+                for (AnyRegisterIterator iter(RegisterSet::All()); iter.more(); iter++)
                     addSpillInterval(*ins, Requirement(LAllocation(*iter)));
             }
 
@@ -553,6 +506,10 @@ LinearScanAllocator::buildLivenessInfo()
 
                     // The first instruction, LLabel, has no uses.
                     JS_ASSERT(inputOf(*ins) > outputOf(block->firstId()));
+
+                    // Call uses should always be at-start, since all registers (except temps
+                    // and defs) are spilled.
+                    JS_ASSERT_IF(ins->isCall() && !alloc.isSnapshotInput(), use->usedAtStart());
 
                     CodePosition endPos = use->usedAtStart() ? inputOf(*ins) : outputOf(*ins);
                     LiveInterval *interval = vregs[use].getInterval(0);
@@ -1213,6 +1170,13 @@ LinearScanAllocator::assign(LAllocation allocation)
         // Split the blocking interval if it exists
         for (IntervalIterator i(active.begin()); i != active.end(); i++) {
             if (i->getAllocation()->isRegister() && *i->getAllocation() == allocation) {
+                // Allow temps and defs of a call instruction to have the same register
+                // as a spill interval.
+                if (i->isSpillInterval() && !i->requireSpill(current))
+                    continue;
+                if (current->isSpillInterval() && !current->requireSpill(*i))
+                    continue;
+
                 IonSpew(IonSpew_RegAlloc, " Splitting active interval %u = [%u, %u]",
                         i->reg()->ins()->id(), i->start().pos(), i->end().pos());
 
@@ -1436,6 +1400,14 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
             freeUntilPos[i] = CodePosition::MAX;
     }
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
+        // Allow temps and defs of a call instruction to have the same register
+        // as a spill interval.
+        if (i->isSpillInterval() && !i->requireSpill(current)) {
+            IonSpew(IonSpew_RegAlloc, "   Register %s free (used by spill interval)",
+                    i->getAllocation()->toRegister().name());
+            continue;
+        }
+
         if (i->getAllocation()->isRegister()) {
             AnyRegister reg = i->getAllocation()->toRegister();
             IonSpew(IonSpew_RegAlloc, "   Register %s not free", reg.name());
@@ -1570,8 +1542,13 @@ LinearScanAllocator::canCoexist(LiveInterval *a, LiveInterval *b)
 {
     LAllocation *aa = a->getAllocation();
     LAllocation *ba = b->getAllocation();
-    if (aa->isRegister() && ba->isRegister() && aa->toRegister() == ba->toRegister())
+    if (aa->isRegister() && ba->isRegister() && aa->toRegister() == ba->toRegister()) {
+        if (a->isSpillInterval() && !a->requireSpill(b))
+            return true;
+        if (b->isSpillInterval() && !b->requireSpill(a))
+            return true;
         return a->intersect(b) == CodePosition::MIN;
+    }
     return true;
 }
 
