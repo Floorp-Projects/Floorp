@@ -68,7 +68,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     protected final void enterUrl(String url) {
-        mActions.waitForGeckoEvent("Gecko:Ready");
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
         Element awesomebar = mDriver.findElement("awesome_bar");
         awesomebar.click();
         getInstrumentation().waitForIdleSync();
@@ -78,12 +78,16 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mAsserter.is(urlbar.getText(), url, "Awesomebar URL typed properly");
     }
 
-    protected final void loadUrl(String url) {
-        enterUrl(url);
-
+    protected final void hitEnterAndWait() {
+        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
         mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
         // wait for screen to load
-        mActions.waitForGeckoEvent("DOMContentLoaded");
+        contentEventExpecter.blockForEvent();
+    }
+
+    protected final void loadUrl(String url) {
+        enterUrl(url);
+        hitEnterAndWait();
     }
 
     protected final void verifyUrl(String url) {
