@@ -87,7 +87,7 @@
   border-bottom: 1px solid #CAD4E0;  
 }
 
-@media all and (max-width: 600px) {
+@media (max-width: 600px) {
   .global-warning-text {
     display: none;
   }
@@ -251,7 +251,7 @@
 }
 
 /* Maximize the size of the viewport when the window is small */
-@media all and (max-width: 800px) {
+@media (max-width: 800px) {
   .category-name {
     display: none;
   }
@@ -319,7 +319,7 @@
   margin: 0;
 }
 
-@media all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme) {
   #header-search {
     -moz-appearance: none;
     border: 1px solid rgba(0, 0, 0, 0.32);

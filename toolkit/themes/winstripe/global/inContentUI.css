@@ -61,7 +61,7 @@ html|html {
 }
 
 %ifdef WINSTRIPE_AERO
-@media all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme) {
   *|*:root {
     color: #000;
     background-color: #CCD9EA;
@@ -72,7 +72,7 @@ html|html {
   }
 }
 
-@media all and (-moz-windows-compositor) {
+@media (-moz-windows-compositor) {
   *|*:root {
     color: #000;
     /* Blame shorlander for this monstrosity. */
@@ -117,7 +117,7 @@ html|html {
 }
 
 %ifdef WINSTRIPE_AERO
-@media all and (-moz-windows-compositor) {
+@media (-moz-windows-compositor) {
   /* Buttons */
   *|button,
   menulist,
