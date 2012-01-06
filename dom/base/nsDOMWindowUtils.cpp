@@ -1619,6 +1619,55 @@ nsDOMWindowUtils::GetLayerManagerType(nsAString& aType)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::StartFrameTimeRecording()
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  LayerManager *mgr = widget->GetLayerManager();
+  if (!mgr)
+    return NS_ERROR_FAILURE;
+
+  mgr->StartFrameTimeRecording();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::StopFrameTimeRecording(PRUint32 *frameCount NS_OUTPARAM, float **frames NS_OUTPARAM)
+{
+  NS_ENSURE_ARG_POINTER(frameCount);
+  NS_ENSURE_ARG_POINTER(frames);
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  LayerManager *mgr = widget->GetLayerManager();
+  if (!mgr)
+    return NS_ERROR_FAILURE;
+
+  nsTArray<float> frameTimes = mgr->StopFrameTimeRecording();
+
+  *frames = nsnull;
+  *frameCount = frameTimes.Length();
+
+  if (*frameCount != 0) {
+    *frames = (float*)nsMemory::Alloc(*frameCount * sizeof(float*));
+    if (!*frames)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    /* copy over the frame times into the array we just allocated */
+    for (PRUint32 i = 0; i < *frameCount; i++) {
+      (*frames)[i] = frameTimes[i];
+    }
+  }
+
+  return NS_OK;
+}
+
 static bool
 ComputeAnimationValue(nsCSSProperty aProperty,
                       Element* aElement,

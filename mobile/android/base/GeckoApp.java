@@ -437,6 +437,7 @@ abstract public class GeckoApp
         MenuItem share = aMenu.findItem(R.id.share);
         MenuItem agentMode = aMenu.findItem(R.id.agent_mode);
         MenuItem saveAsPDF = aMenu.findItem(R.id.save_as_pdf);
+        MenuItem downloads = aMenu.findItem(R.id.downloads);
 
         if (tab == null) {
             bookmark.setEnabled(false);
@@ -453,11 +454,9 @@ abstract public class GeckoApp
         if (tab.isBookmark()) {
             bookmark.setChecked(true);
             bookmark.setIcon(R.drawable.ic_menu_bookmark_remove);
-            bookmark.setTitle(R.string.bookmark_remove);
         } else {
             bookmark.setChecked(false);
             bookmark.setIcon(R.drawable.ic_menu_bookmark_add);
-            bookmark.setTitle(R.string.bookmark_add);
         }
 
         forward.setEnabled(tab.canDoForward());
@@ -472,6 +471,10 @@ abstract public class GeckoApp
         // Disable save as PDF for about:home and xul pages
         saveAsPDF.setEnabled(!(tab.getURL().equals("about:home") ||
                                tab.getContentType().equals("application/vnd.mozilla.xul+xml")));
+
+        // DownloadManager support is tied to level 12 and higher
+        if (Build.VERSION.SDK_INT < 12)
+            downloads.setVisible(false);
 
         return true;
     }
@@ -498,12 +501,10 @@ abstract public class GeckoApp
                         tab.removeBookmark();
                         Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
                         item.setIcon(R.drawable.ic_menu_bookmark_add);
-                        item.setTitle(R.string.bookmark_add);
                     } else {
                         tab.addBookmark();
                         Toast.makeText(this, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
                         item.setIcon(R.drawable.ic_menu_bookmark_remove);
-                        item.setTitle(R.string.bookmark_remove);
                     }
                 }
                 return true;
@@ -532,6 +533,10 @@ abstract public class GeckoApp
                 return true;
             case R.id.addons:
                 loadUrlInTab("about:addons");
+                return true;
+            case R.id.downloads:
+                intent = new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS);
+                startActivity(intent);
                 return true;
             case R.id.agent_mode:
                 Tab selectedTab = Tabs.getInstance().getSelectedTab();
@@ -975,6 +980,13 @@ abstract public class GeckoApp
                 String host = message.getString("host");
                 JSONArray permissions = message.getJSONArray("permissions");
                 showSiteSettingsDialog(host, permissions);
+            } else if (event.equals("Downloads:Done")) {
+                String displayName = message.getString("displayName");
+                String path = message.getString("path");
+                String mimeType = message.getString("mimeType");
+                int size = message.getInt("size");
+
+                handleDownloadDone(displayName, path, mimeType, size);
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1302,6 +1314,17 @@ abstract public class GeckoApp
         tabs.closeTab(tab);
     }
 
+    void handleDownloadDone(String displayName, String path, String mimeType, int size) {
+        // DownloadManager.addCompletedDownload is supported in level 12 and higher
+        if (Build.VERSION.SDK_INT >= 12) {
+            DownloadManager dm = (DownloadManager) mAppContext.getSystemService(Context.DOWNLOAD_SERVICE);
+            dm.addCompletedDownload(displayName, displayName,
+                false /* do not use media scanner */,
+                mimeType, path, size,
+                false /* no notification */);
+        }
+    }
+
     void addPluginView(final View view,
                        final double x, final double y,
                        final double w, final double h) {
@@ -1559,6 +1582,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("AgentMode:Changed", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("FormAssist:AutoComplete", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Downloads:Done", GeckoApp.mAppContext);
 
         mConnectivityFilter = new IntentFilter();
         mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -1794,6 +1818,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("AgentMode:Changed", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("FormAssist:AutoComplete", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Permissions:Data", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Downloads:Done", GeckoApp.mAppContext);
 
         mFavicons.close();
 
