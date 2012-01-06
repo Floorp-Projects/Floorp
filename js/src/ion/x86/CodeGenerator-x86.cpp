@@ -338,7 +338,7 @@ CodeGeneratorX86::visitStoreElementT(LStoreElementT *store)
 
     // Store the type tag if needed.
     if (valueType != store->mir()->elementType())
-        masm.storeTypeTag(ImmTag(MIRTypeToTag(valueType)), dest);
+        masm.storeTypeTag(ImmType(ValueTypeFromMIRType(valueType)), dest);
 
     // Store the payload.
     if (value->isConstant())
