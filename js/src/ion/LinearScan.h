@@ -279,13 +279,26 @@ class LiveInterval
 
     bool addRange(CodePosition from, CodePosition to);
     void setFrom(CodePosition from);
-    CodePosition start();
-    CodePosition end();
     CodePosition intersect(LiveInterval *other);
     bool covers(CodePosition pos);
     CodePosition nextCoveredAfter(CodePosition pos);
-    size_t numRanges();
-    Range *getRange(size_t i);
+
+    CodePosition start() const {
+        JS_ASSERT(!ranges_.empty());
+        return ranges_.back().from;
+    }
+
+    CodePosition end() const {
+        JS_ASSERT(!ranges_.empty());
+        return ranges_.begin()->to;
+    }
+
+    size_t numRanges() const {
+        return ranges_.length();
+    }
+    const Range *getRange(size_t i) const {
+        return &ranges_[i];
+    }
 
     LAllocation *getAllocation() {
         return &alloc_;
@@ -319,6 +332,16 @@ class LiveInterval
     }
     bool isSpill() const {
         return alloc_.isStackSlot();
+    }
+    bool isSpillInterval() const {
+        return !reg_;
+    }
+    bool requireSpill(const LiveInterval *other) const {
+        // Spill intervals at call instructions force spills of everything
+        // except temps and defs of this call.
+        JS_ASSERT(isSpillInterval());
+        JS_ASSERT(!other->isSpillInterval());
+        return (other->index() > 0 || start() != other->start());
     }
 
     bool splitFrom(CodePosition pos, LiveInterval *after);

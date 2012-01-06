@@ -200,7 +200,7 @@ class LGoto : public LInstructionHelper<0, 0, 0>
     }
 };
 
-class LNewArray : public LVMCallInstructionHelper<LDefinition::OBJECT, 1, 0, 0>
+class LNewArray : public LCallInstructionHelper<1, 0, 0>
 {
   public:
     LIR_HEADER(NewArray);
@@ -1122,7 +1122,7 @@ class LStringLength : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LLoadPropertyGeneric : public LVMCallInstructionHelper<LDefinition::BOX, BOX_PIECES, 1, 0>
+class LLoadPropertyGeneric : public LCallInstructionHelper<BOX_PIECES, 1, 0>
 {
   public:
     LIR_HEADER(LoadPropertyGeneric);
