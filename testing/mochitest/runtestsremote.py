@@ -280,6 +280,7 @@ class MochiRemote(Mochitest):
     def buildProfile(self, options):
         manifest = Mochitest.buildProfile(self, options)
         self.localProfile = options.profilePath
+        self._dm.removeDir(self.remoteProfile)
         if self._dm.pushDir(options.profilePath, self.remoteProfile) == None:
             raise devicemanager.FileError("Unable to copy profile to device.")
 
