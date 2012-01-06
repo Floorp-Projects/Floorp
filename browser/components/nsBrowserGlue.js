@@ -1100,7 +1100,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 5;
+    const UI_VERSION = 6;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
     let currentUIVersion = 0;
     try {
@@ -1220,6 +1220,15 @@ BrowserGlue.prototype = {
           this._setPersist(toolbarResource, collapsedResource, "false");
         }
       }
+    }
+
+    if (currentUIVersion < 6) {
+      // convert tabsontop attribute to pref
+      let toolboxResource = this._rdf.GetResource(BROWSER_DOCURL + "navigator-toolbox");
+      let tabsOnTopResource = this._rdf.GetResource("tabsontop");
+      let tabsOnTopAttribute = this._getPersist(toolboxResource, tabsOnTopResource);
+      if (tabsOnTopAttribute)
+        Services.prefs.setBoolPref("browser.tabs.onTop", tabsOnTopAttribute == "true");
     }
 
     if (this._dirty)
