@@ -117,6 +117,7 @@ class IonFrameIterator
 
     // Mutation
     uint8 **returnAddressPtr();
+    void setReturnAddress(uint8 *addr);
 };
 
 class IonActivationIterator
@@ -130,6 +131,9 @@ class IonActivationIterator
 
     IonActivationIterator &operator++();
 
+    IonActivation *activation() {
+        return activation_;
+    }
     uint8 *top() const {
         return top_;
     }
