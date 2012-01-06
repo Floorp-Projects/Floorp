@@ -353,6 +353,8 @@ nsPluginHost::nsPluginHost()
 
   mPluginsDisabled = Preferences::GetBool("plugin.disable", false);
 
+  Preferences::AddStrongObserver(this, "plugin.disable");
+
   nsCOMPtr<nsIObserverService> obsService =
     mozilla::services::GetObserverService();
   if (obsService) {
@@ -387,7 +389,7 @@ nsPluginHost::~nsPluginHost()
 {
   PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("nsPluginHost::dtor\n"));
 
-  Destroy();
+  UnloadPlugins();
   sInst = nsnull;
 }
 
@@ -811,14 +813,12 @@ nsresult nsPluginHost::Init()
   return NS_OK;
 }
 
-nsresult nsPluginHost::Destroy()
+nsresult nsPluginHost::UnloadPlugins()
 {
-  PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsPluginHost::Destroy Called\n"));
+  PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsPluginHost::UnloadPlugins Called\n"));
 
-  if (mIsDestroyed)
+  if (!mPluginsLoaded)
     return NS_OK;
-
-  mIsDestroyed = true;
 
   // we should call nsIPluginInstance::Stop and nsIPluginInstance::SetWindow
   // for those plugins who want it
@@ -848,6 +848,8 @@ nsresult nsPluginHost::Destroy()
     mPrivateDirServiceProvider = nsnull;
   }
 #endif /* XP_WIN */
+
+  mPluginsLoaded = false;
 
   return NS_OK;
 }
@@ -3326,13 +3328,22 @@ NS_IMETHODIMP nsPluginHost::Observe(nsISupports *aSubject,
 {
   if (!nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic)) {
     OnShutdown();
-    Destroy();
+    UnloadPlugins();
     sInst->Release();
   }
   if (!nsCRT::strcmp(NS_PRIVATE_BROWSING_SWITCH_TOPIC, aTopic)) {
     // inform all active plugins of changed private mode state
     for (PRUint32 i = 0; i < mInstances.Length(); i++) {
       mInstances[i]->PrivateModeStateChanged();
+    }
+  }
+  if (!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
+    mPluginsDisabled = Preferences::GetBool("plugin.disable", false);
+    // Unload or load plugins as needed
+    if (mPluginsDisabled) {
+      UnloadPlugins();
+    } else {
+      LoadPlugins();
     }
   }
 #ifdef MOZ_WIDGET_ANDROID
