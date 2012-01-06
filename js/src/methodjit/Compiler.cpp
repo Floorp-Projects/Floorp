@@ -3342,14 +3342,18 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
     }
 
     /*
-     * Outside the mjit, activation objects are put by ContextStack::pop*
-     * members. For JSOP_RETURN, the interpreter only calls popInlineFrame if
-     * fp != entryFrame since the VM protocol is that Invoke/Execute are
-     * responsible for pushing/popping the initial frame. The mjit does not
-     * perform this branch (by instead using a trampoline at the return address
-     * to handle exiting mjit code) and thus always puts activation objects,
-     * even on the entry frame. To avoid double-putting, EnterMethodJIT clears
-     * out the entry frame's activation objects.
+     * Outside the mjit, activation objects (call objects and arguments objects) are put
+     * by ContextStack::pop* members. For JSOP_RETURN, the interpreter only calls
+     * popInlineFrame if fp != entryFrame since the VM protocol is that Invoke/Execute are
+     * responsible for pushing/popping the initial frame. However, an mjit function
+     * epilogue doesn't treat the initial StackFrame of its VMFrame specially: it always
+     * puts activation objects. And furthermore, if the last mjit frame throws, the mjit
+     * does *not* put the activation objects. So we can't assume any particular state of
+     * puttedness upon exit from the mjit.
+     *
+     * To avoid double-putting, EnterMethodJIT calls updateEpilogueFlags to clear the
+     * entry frame's hasArgsObj() and hasCallObj() flags if the given objects have already
+     * been put.
      */
     if (script->function()) {
         types::TypeScriptNesting *nesting = script->nesting();

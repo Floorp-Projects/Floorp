@@ -873,15 +873,15 @@ class StackFrame
      * Epilogue for function frames: put any args or call object for the frame
      * which may still be live, and maintain type nesting invariants. Note:
      * this does not mark the epilogue as having been completed, since the
-     * frame is about to be popped. Use markFunctionEpilogueDone for this.
+     * frame is about to be popped. Use updateEpilogueFlags for this.
      */
     inline void functionEpilogue();
 
     /*
-     * Mark any work needed in the function's epilogue as done. This call must
-     * be followed by a later functionEpilogue.
+     * If callObj() or argsObj() have already been put, update our flags
+     * accordingly. This call must be followed by a later functionEpilogue.
      */
-    inline void markFunctionEpilogueDone();
+    inline void updateEpilogueFlags();
 
     inline bool maintainNestingState() const;
 
