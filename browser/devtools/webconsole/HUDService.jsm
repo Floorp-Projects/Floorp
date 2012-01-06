@@ -125,6 +125,12 @@ XPCOMUtils.defineLazyGetter(this, "namesAndValuesOf", function () {
   return obj.namesAndValuesOf;
 });
 
+XPCOMUtils.defineLazyGetter(this, "gConsoleStorage", function () {
+  let obj = {};
+  Cu.import("resource://gre/modules/ConsoleAPIStorage.jsm", obj);
+  return obj.ConsoleAPIStorage;
+});
+
 function LogFactory(aMessagePrefix)
 {
   function log(aMessage) {
@@ -1412,6 +1418,18 @@ HUD_SERVICE.prototype =
   getWindowId: function HS_getWindowId(aWindow)
   {
     return aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+  },
+
+  /**
+   * Gets the ID of the inner window of this DOM window
+   *
+   * @param nsIDOMWindow aWindow
+   * @returns integer
+   */
+  getInnerWindowId: function HS_getInnerWindowId(aWindow)
+  {
+    return aWindow.QueryInterface(Ci.nsIInterfaceRequestor).
+           getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
   },
 
   /**
@@ -2891,7 +2909,7 @@ HUD_SERVICE.prototype =
     if (!hudNode) {
       // get nBox object and call new HUD
       let config = { parentNode: nBox,
-                     contentWindow: aContentWindow
+                     contentWindow: aContentWindow.top
                    };
 
       hud = new HeadsUpDisplay(config);
@@ -2904,6 +2922,8 @@ HUD_SERVICE.prototype =
 
       _browser.webProgress.addProgressListener(hud.progressListener,
         Ci.nsIWebProgress.NOTIFY_STATE_ALL);
+
+      hud.displayCachedConsoleMessages();
     }
     else {
       hud = this.hudReferences[hudId];
@@ -3569,6 +3589,35 @@ HeadsUpDisplay.prototype = {
     }
     else {
       throw new Error("Unsupported Gecko Application");
+    }
+  },
+
+  /**
+   * Display cached messages that may have been collected before the UI is
+   * displayed.
+   *
+   * @returns void
+   */
+  displayCachedConsoleMessages: function HUD_displayCachedConsoleMessages()
+  {
+    // Get the messages from the ConsoleStorageService.
+    let windowId = HUDService.getInnerWindowId(this.contentWindow);
+
+    let messages = gConsoleStorage.getEvents(windowId);
+
+    // Turn off scrolling for the moment.
+    ConsoleUtils.scroll = false;
+
+    messages.forEach(function(aMessage) {
+      HUDService.logConsoleAPIMessage(this.hudId, aMessage);
+    }, this);
+
+    ConsoleUtils.scroll = true;
+
+    // Scroll to bottom.
+    let numChildren = this.outputNode.childNodes.length;
+    if (numChildren) {
+      this.outputNode.ensureIndexIsVisible(numChildren - 1);
     }
   },
 
@@ -5662,6 +5711,11 @@ FirefoxApplicationHooks.prototype = {
  */
 
 ConsoleUtils = {
+  /**
+   * Flag to turn on and off scrolling.
+   */
+  scroll: true,
+
   supString: function ConsoleUtils_supString(aString)
   {
     let str = Cc["@mozilla.org/supports-string;1"].
@@ -5705,6 +5759,10 @@ ConsoleUtils = {
    * @returns void
    */
   scrollToVisible: function ConsoleUtils_scrollToVisible(aNode) {
+    if (!this.scroll) {
+      return;
+    }
+
     // Find the enclosing richlistbox node.
     let richListBoxNode = aNode.parentNode;
     while (richListBoxNode.tagName != "richlistbox") {
