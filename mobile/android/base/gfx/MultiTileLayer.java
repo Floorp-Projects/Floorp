@@ -42,6 +42,7 @@ import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.SingleTileLayer;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.util.Log;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -159,13 +160,59 @@ public class MultiTileLayer extends Layer {
     }
 
     @Override
-    protected void performUpdates(GL10 gl) {
-        super.performUpdates(gl);
+    protected boolean performUpdates(GL10 gl, RenderContext context) {
+        super.performUpdates(gl, context);
 
         validateTiles();
 
-        for (SingleTileLayer layer : mTiles)
-            layer.performUpdates(gl);
+        // Iterate over the tiles and decide which ones we'll be drawing
+        int dirtyTiles = 0;
+        boolean screenUpdateDone = false;
+        SingleTileLayer firstDirtyTile = null;
+        for (SingleTileLayer layer : mTiles) {
+            // First do a non-texture update to make sure coordinates are
+            // up-to-date.
+            boolean invalid = layer.getSkipTextureUpdate();
+            layer.setSkipTextureUpdate(true);
+            layer.performUpdates(gl, context);
+
+            RectF layerBounds = layer.getBounds(context, new FloatSize(layer.getSize()));
+            boolean isDirty = layer.isDirty();
+
+            if (isDirty) {
+                if (!RectF.intersects(layerBounds, context.viewport)) {
+                    if (firstDirtyTile == null)
+                        firstDirtyTile = layer;
+                    dirtyTiles ++;
+                    invalid = true;
+                } else {
+                    // This tile intersects with the screen and is dirty,
+                    // update it immediately.
+                    layer.setSkipTextureUpdate(false);
+                    screenUpdateDone = true;
+                    layer.performUpdates(gl, context);
+                    invalid = false;
+                }
+            }
+
+            // We use the SkipTextureUpdate flag as a marker of a tile's
+            // validity. This is required, as sometimes layers are drawn
+            // without updating first, and we mustn't draw tiles that have
+            // been marked as invalid that we haven't updated.
+            layer.setSkipTextureUpdate(invalid);
+        }
+
+        // Now if no tiles that intersect with the screen were updated, update
+        // a single tile that doesn't (if there are any). This has the effect
+        // of spreading out non-critical texture upload over time, and smoothing
+        // upload-related hitches.
+        if (!screenUpdateDone && firstDirtyTile != null) {
+            firstDirtyTile.setSkipTextureUpdate(false);
+            firstDirtyTile.performUpdates(gl, context);
+            dirtyTiles --;
+        }
+
+        return (dirtyTiles == 0);
     }
 
     private void refreshTileMetrics(Point origin, float resolution, boolean inTransaction) {
@@ -221,8 +268,17 @@ public class MultiTileLayer extends Layer {
 
     @Override
     public void draw(RenderContext context) {
-        for (SingleTileLayer layer : mTiles)
-            layer.draw(context);
+        for (SingleTileLayer layer : mTiles) {
+            // We use the SkipTextureUpdate flag as a validity flag. If it's false,
+            // the contents of this tile are invalid and we shouldn't draw it.
+            if (layer.getSkipTextureUpdate())
+                continue;
+
+            // Avoid work, only draw tiles that intersect with the viewport
+            RectF layerBounds = layer.getBounds(context, new FloatSize(layer.getSize()));
+            if (RectF.intersects(layerBounds, context.viewport))
+                layer.draw(context);
+        }
     }
 }
 
