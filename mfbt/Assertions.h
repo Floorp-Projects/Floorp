@@ -152,21 +152,58 @@ JS_Assert(const char* s, const char* file, int ln);
 #endif
 
 /*
- * MOZ_ASSERT() is a "strong" assertion of state, like libc's
- * assert().
+ * MOZ_ASSERT(expr [, explanation-string]) asserts that |expr| must be truthy in
+ * debug builds.  If it is, execution continues.  Otherwise, an error message
+ * including the expression and the explanation-string (if provided) is printed,
+ * an attempt is made to invoke any existing debugger, and execution halts.
+ * MOZ_ASSERT is fatal: no recovery is possible.  Do not assert a condition
+ * which can correctly be falsy.
  *
- *   MOZ_ASSERT(twoToThePowerOf(5) == 32);
+ * The optional explanation-string, if provided, must be a string literal
+ * explaining the assertion.  It is intended for use with assertions whose
+ * correctness or rationale is non-obvious, and for assertions where the "real"
+ * condition being tested is best described prosaically.  Don't provide an
+ * explanation if it's not actually helpful.
  *
- * If a MOZ_ASSERT() fails in a debug build, the process in which it fails will
- * stop running in a loud and dramatic way.  It has no effect in an optimized
- * build.  This macro is designed to catch bugs during debugging, not "in the
- * field".
+ *   // No explanation needed: pointer arguments often must not be NULL.
+ *   MOZ_ASSERT(arg);
+ *
+ *   // An explanation can be helpful to explain exactly how we know an
+ *   // assertion is valid.
+ *   MOZ_ASSERT(state == WAITING_FOR_RESPONSE,
+ *              "given that <thingA> and <thingB>, we must have...");
+ *
+ *   // Or it might disambiguate multiple identical (save for their location)
+ *   // assertions of the same expression.
+ *   MOZ_ASSERT(getSlot(PRIMITIVE_THIS_SLOT).isUndefined(),
+ *              "we already set [[PrimitiveThis]] for this Boolean object");
+ *   MOZ_ASSERT(getSlot(PRIMITIVE_THIS_SLOT).isUndefined(),
+ *              "we already set [[PrimitiveThis]] for this String object");
+ *
+ * MOZ_ASSERT has no effect in non-debug builds.  It is designed to catch bugs
+ * *only* during debugging, not "in the field".
  */
 #ifdef DEBUG
-#  define MOZ_ASSERT(expr_)                                      \
-     ((expr_) ? ((void)0) : JS_Assert(#expr_, __FILE__, __LINE__))
+   /* First the single-argument form. */
+#  define MOZ_ASSERT_HELPER1(expr) \
+     ((expr) ? ((void)0) : JS_Assert(#expr, __FILE__, __LINE__))
+   /* Now the two-argument form. */
+#  define MOZ_ASSERT_HELPER2(expr, explain) \
+     ((expr) ? ((void)0) : JS_Assert(#expr " (" explain ")", __FILE__, __LINE__))
+   /* And now, helper macrology up the wazoo. */
+   /* Count the number of arguments passed to MOZ_ASSERT. */
+#  define MOZ_COUNT_ASSERT_ARGS(...) \
+     MOZ_COUNT_ASSERT_ARGS_IMPL(__VA_ARGS__, 2, 1, 0)
+#  define MOZ_COUNT_ASSERT_ARGS_IMPL(_1, _2, count, ...) \
+     count
+   /* Invoke the right helper. */
+#  define MOZ_ASSERT_VAHELP2(count, ...) MOZ_ASSERT_HELPER##count(__VA_ARGS__)
+#  define MOZ_ASSERT_VAHELP(count, ...) MOZ_ASSERT_VAHELP2(count, __VA_ARGS__)
+   /* The actual macro. */
+#  define MOZ_ASSERT(...) \
+     MOZ_ASSERT_VAHELP(MOZ_COUNT_ASSERT_ARGS(__VA_ARGS__), __VA_ARGS__)
 #else
-#  define MOZ_ASSERT(expr_) ((void)0)
+#  define MOZ_ASSERT(...) ((void)0)
 #endif /* DEBUG */
 
 /*
