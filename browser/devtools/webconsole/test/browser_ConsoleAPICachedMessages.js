@@ -36,68 +36,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const TEST_URI = "data:text/html,<p>Web Console test for notifications";
+const TEST_URI = "data:text/html,<p>Web Console test for bug 609890";
 
-function test() {
-  observer.init();
-  addTab(TEST_URI);
-  browser.addEventListener("load", onLoad, true);
-}
-
-function webConsoleCreated(aID)
+function test()
 {
-  Services.obs.removeObserver(observer, "web-console-created");
-  ok(HUDService.hudReferences[aID], "We have a hud reference");
-  content.wrappedJSObject.console.log("adding a log message");
+  waitForExplicitFinish();
+
+  gBrowser.selectedTab = gBrowser.addTab(TEST_URI);
+
+  gBrowser.selectedBrowser.addEventListener("load", testOpenUI, true);
 }
 
-function webConsoleDestroyed(aID)
+function testOpenUI()
 {
-  Services.obs.removeObserver(observer, "web-console-destroyed");
-  ok(!HUDService.hudReferences[aID], "We do not have a hud reference");
-  executeSoon(finishTest);
-}
+  gBrowser.selectedBrowser.removeEventListener("load", testOpenUI, true);
 
-function webConsoleMessage(aID, aNodeID)
-{
-  Services.obs.removeObserver(observer, "web-console-message-created");
-  ok(aID, "we have a console ID");
-  is(typeof aNodeID, "string", "message node id is a string");
-  executeSoon(closeConsole);
-}
+  // test to see if the messages are
+  // displayed when the console UI is opened
 
-let observer = {
+  let console = content.wrappedJSObject.console;
+  console.log("log Bazzle");
+  console.info("info Bazzle");
+  console.warn("warn Bazzle");
+  console.error("error Bazzle");
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  HUDService.activateHUDForContext(gBrowser.selectedTab);
+  let hudId = HUDService.getHudIdByWindow(content);
+  let hud = HUDService.getHudReferenceById(hudId);
 
-  observe: function observe(aSubject, aTopic, aData)
-  {
-    aSubject = aSubject.QueryInterface(Ci.nsISupportsString);
+  testLogEntry(hud.outputNode, "log Bazzle",
+               "Find a console log entry from before console UI is opened",
+               false, null);
 
-    switch(aTopic) {
-      case "web-console-created":
-        webConsoleCreated(aSubject);
-        break;
-      case "web-console-destroyed":
-        webConsoleDestroyed(aSubject);
-        break;
-      case "web-console-message-created":
-        webConsoleMessage(aSubject, aData);
-        break;
-      default:
-        break;
-    }
-  },
+  HUDService.deactivateHUDForContext(gBrowser.selectedTab);
 
-  init: function init()
-  {
-    Services.obs.addObserver(this, "web-console-created", false);
-    Services.obs.addObserver(this, "web-console-destroyed", false);
-    Services.obs.addObserver(this, "web-console-message-created", false);
-  }
-};
-
-function onLoad() {
-  browser.removeEventListener("load", onLoad, true);
-  openConsole();
+  executeSoon(finish);
 }
