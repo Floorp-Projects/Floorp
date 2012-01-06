@@ -1653,7 +1653,7 @@ Tab.prototype = {
         // Keep track of all the plugins on the current page
         this._pluginsToPlay.push(plugin);
 
-        let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");        
+        let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
         if (!overlay)
           return;
 
@@ -1664,8 +1664,12 @@ Tab.prototype = {
           return;
         }
 
-        // Play all the plugin objects when the user clicks on one
-        PluginHelper.addPluginClickCallback(plugin, "playAllPlugins", this);
+        // Add click to play listener
+        plugin.addEventListener("click", (function(event) {
+          // Play all the plugin objects when the user clicks on one
+          PluginHelper.playAllPlugins(this, event);
+        }).bind(this), true);
+
         this._pluginOverlayShowing = true;
         break;
       }
@@ -3432,12 +3436,23 @@ var PluginHelper = {
     NativeWindow.doorhanger.show(message, "ask-to-play-plugins", buttons, aTab.id);
   },
 
-  playAllPlugins: function(aTab) {
+  playAllPlugins: function(aTab, aEvent) {
     let plugins = aTab._pluginsToPlay;
+    if (!plugins.length)
+      return;
+
+    if (aEvent) {
+      if (!aEvent.isTrusted)
+        return;
+      aEvent.preventDefault();
+    }
+
     for (let i = 0; i < plugins.length; i++) {
       let objLoadingContent = plugins[i].QueryInterface(Ci.nsIObjectLoadingContent);
       objLoadingContent.playPlugin();
     }
+    // Clear _pluginsToPlay so we don't accidentally re-load them
+    aTab._pluginsToPlay = [];
   },
 
   getPluginPreference: function getPluginPreference() {
@@ -3464,33 +3479,6 @@ var PluginHelper = {
         Services.prefs.clearUserPref("plugins.click_to_play");
         break;
     }
-  },
-
-  // Mostly copied from /browser/base/content/browser.js
-  addPluginClickCallback: function (plugin, callbackName /*callbackArgs...*/) {
-    // XXX just doing (callback)(arg) was giving a same-origin error. bug?
-    let self = this;
-    let callbackArgs = Array.prototype.slice.call(arguments).slice(2);
-    plugin.addEventListener("click", function(evt) {
-      if (!evt.isTrusted)
-        return;
-      evt.preventDefault();
-      if (callbackArgs.length == 0)
-        callbackArgs = [ evt ];
-      (self[callbackName]).apply(self, callbackArgs);
-    }, true);
-
-    plugin.addEventListener("keydown", function(evt) {
-      if (!evt.isTrusted)
-        return;
-      if (evt.keyCode == evt.DOM_VK_RETURN) {
-        evt.preventDefault();
-        if (callbackArgs.length == 0)
-          callbackArgs = [ evt ];
-        evt.preventDefault();
-        (self[callbackName]).apply(self, callbackArgs);
-      }
-    }, true);
   },
 
   // Copied from /browser/base/content/browser.js
