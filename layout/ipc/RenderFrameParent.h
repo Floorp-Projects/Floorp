@@ -42,7 +42,7 @@
 #define mozilla_layout_RenderFrameParent_h
 
 #include "mozilla/layout/PRenderFrameParent.h"
-#include "mozilla/layers/ShadowLayersHost.h"
+#include "mozilla/layers/ShadowLayersManager.h"
 
 #include <map>
 #include "nsDisplayList.h"
@@ -61,7 +61,7 @@ class ShadowLayersParent;
 namespace layout {
 
 class RenderFrameParent : public PRenderFrameParent,
-                          public mozilla::layers::ShadowLayersHost
+                          public mozilla::layers::ShadowLayersManager
 {
   typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef mozilla::layers::ContainerLayer ContainerLayer;
@@ -86,7 +86,7 @@ public:
 
   void ContentViewScaleChanged(nsContentView* aView);
 
-  void ShadowLayersUpdated();
+  virtual void ShadowLayersUpdated();
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder* aBuilder,
                               nsSubDocumentFrame* aFrame,
@@ -101,9 +101,6 @@ public:
   void OwnerContentChanged(nsIContent* aContent);
 
   void SetBackgroundColor(nscolor aColor) { mBackgroundColor = gfxRGBA(aColor); };
-
-  virtual RenderFrameParent* GetRenderFrameParent() { return this; }
-  virtual mozilla::layers::CompositorParent* GetCompositorParent() { return NULL; }
 
 protected:
   NS_OVERRIDE void ActorDestroy(ActorDestroyReason why);

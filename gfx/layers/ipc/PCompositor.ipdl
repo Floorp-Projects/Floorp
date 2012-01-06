@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Benoit Girard <bgirard@mozilla.com>
+ *   Ali Juma <ajuma@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,22 +47,6 @@ using mozilla::null_t;
 namespace mozilla {
 namespace layers {
 
-// The Compositor needs to know about the widget to initialize the LayerManager.
-struct ViewWidget {
-  uintptr_t widgetPtr;
-};
-
-// Gives platform specific information about the widget to initialize the LayerManager.
-union WidgetDescriptor {
-  ViewWidget;
-  null_t;
-};
-
-// Cocoa: The widget needs to have access to the native context for resizing
-struct NativeContext {
-  uintptr_t nativeContext;
-};
-
 /**
  * The PCompositor protocol is used to manage communication between
  * the main thread and the compositor thread context. It's primary
@@ -69,7 +54,7 @@ struct NativeContext {
  */
 rpc protocol PCompositor
 {
-  // Compositor can manage many Layer Manager (PLayers)
+  // A Compositor manages a single Layer Manager (PLayers)
   manages PLayers;
 
 parent:  
@@ -77,14 +62,7 @@ parent:
   sync Init();
   sync Stop();
 
-  async PLayers(LayersBackend backend, WidgetDescriptor widgetDescriptor);
-
-child:
-
-  // We create the LayerManager async thus we need to notify
-  // content that we have a native context to attach to the widget.
-  async NativeContextCreated(NativeContext aNativeContext);
-
+  async PLayers(LayersBackend backend);
 };
 
 } // layers

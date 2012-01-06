@@ -57,6 +57,7 @@
 #include "nsIXULRuntime.h"
 #include "nsIGfxInfo.h"
 #include "npapi.h"
+#include "base/thread.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -72,6 +73,8 @@ static PRInt32 gNumWidgets;
 
 using namespace mozilla::layers;
 using namespace mozilla;
+using base::Thread;
+using mozilla::ipc::AsyncChannel;
 
 nsIContent* nsBaseWidget::mLastRollup = nsnull;
 
@@ -106,6 +109,7 @@ nsBaseWidget::nsBaseWidget()
 , mEventCallback(nsnull)
 , mViewCallback(nsnull)
 , mContext(nsnull)
+, mCompositorThread(nsnull)
 , mCursor(eCursor_standard)
 , mWindowType(eWindowType_child)
 , mBorderStyle(eBorderStyle_none)
@@ -144,11 +148,12 @@ nsBaseWidget::~nsBaseWidget()
 
   if (mLayerManager) {
     mLayerManager->Destroy();
-    mLayerManager = NULL;
+    mLayerManager = nsnull;
   }
 
-  if (mCompositor) {
-    mCompositor->Destroy();
+  if (mCompositorChild) {
+    mCompositorChild->Destroy();
+    delete mCompositorThread;
   }
 
 #ifdef NOISY_WIDGET_LEAKS
@@ -821,6 +826,38 @@ nsBaseWidget::GetShouldAccelerate()
   return mUseAcceleratedRendering;
 }
 
+void nsBaseWidget::CreateCompositor()
+{
+  mCompositorParent = new CompositorParent(this);
+  mCompositorThread = new Thread("CompositorThread");
+  if (mCompositorThread->Start()) {
+    LayerManager* lm = CreateBasicLayerManager();
+    MessageLoop *childMessageLoop = mCompositorThread->message_loop();
+    mCompositorChild = new CompositorChild(lm);
+    AsyncChannel *parentChannel = mCompositorParent->GetIPCChannel();
+    AsyncChannel::Side childSide = mozilla::ipc::AsyncChannel::Child;
+    mCompositorChild->Open(parentChannel, childMessageLoop, childSide);
+    PLayersChild* shadowManager = mCompositorChild->SendPLayersConstructor(                                                LayerManager::LAYERS_OPENGL);
+
+    if (shadowManager) {
+      mCompositorChild->SendInit();
+      ShadowLayerForwarder* lf = lm->AsShadowForwarder();
+      if (!lf) {
+        delete lm;
+        mCompositorChild = nsnull;
+      }
+      lf->SetShadowManager(shadowManager);
+      lf->SetParentBackendType(LayerManager::LAYERS_OPENGL);
+
+      mLayerManager = lm;
+    } else {
+      NS_WARNING("fail to construct LayersChild");
+      delete lm;
+      mCompositorChild = nsnull;
+    }
+  }
+}
+
 LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
                                             LayersBackend aBackendHint,
                                             LayerManagerPersistence aPersistence,
@@ -836,34 +873,10 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
       bool useCompositor =
         Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
       if (useCompositor) {
-        LayerManager* lm = CreateBasicLayerManager();
-        mCompositorParent = new CompositorParent();
-        mCompositor = CompositorChild::CreateCompositor(lm, mCompositorParent);
-
-        if (mCompositor) {
-          // e10s uses the parameter to pass in the shadow manager from the TabChild
-          // so we don't expect to see it there since this doesn't support e10s.
-          NS_ASSERTION(aShadowManager == NULL, "Async Compositor not supported with e10s");
-          WidgetDescriptor desc = ViewWidget((uintptr_t)dynamic_cast<nsIWidget*>(this));
-          PLayersChild* shadowManager = mCompositor->SendPLayersConstructor(
-                                          LayerManager::LAYERS_OPENGL,
-                                          desc);
-
-          if (shadowManager) {
-            ShadowLayerForwarder* lf = lm->AsShadowForwarder();
-            if (!lf) {
-              delete lm;
-              mCompositor = NULL;
-            }
-            lf->SetShadowManager(shadowManager);
-            lf->SetParentBackendType(LayerManager::LAYERS_OPENGL);
-
-            mLayerManager = lm;
-          } else {
-            NS_WARNING("fail to construct LayersChild");
-            mCompositor = NULL;
-          }
-        }
+        // e10s uses the parameter to pass in the shadow manager from the TabChild
+        // so we don't expect to see it there since this doesn't support e10s.
+        NS_ASSERTION(aShadowManager == nsnull, "Async Compositor not supported with e10s");
+        CreateCompositor();
       }
 
       if (!mLayerManager) {

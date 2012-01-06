@@ -43,41 +43,42 @@
 
 #include "mozilla/layers/PCompositorParent.h"
 #include "mozilla/layers/PLayersParent.h"
-#include "ShadowLayersHost.h"
+#include "ShadowLayersManager.h"
 
-class LayerManager;
+class nsIWidget;
 
 namespace mozilla {
 namespace layers {
 
+class LayerManager;
+
 class CompositorParent : public PCompositorParent,
-                         public ShadowLayersHost
+                         public ShadowLayersManager
 {
-  NS_INLINE_DECL_REFCOUNTING(CompositorParent)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorParent)
 public:
-  CompositorParent();
+  CompositorParent(nsIWidget* aWidget);
   virtual ~CompositorParent();
 
   bool RecvInit();
   bool RecvStop();
 
-  void RequestComposition();
-
-  virtual mozilla::layout::RenderFrameParent* GetRenderFrameParent() { return NULL; }
-  virtual CompositorParent* GetCompositorParent() { return this; }
-
+  virtual void ShadowLayersUpdated();
   void Destroy();
 
-protected:
-  virtual PLayersParent* AllocPLayers(const LayersBackend &backend, const WidgetDescriptor &widget);
+  LayerManager* GetLayerManager() { return mLayerManager; }
 
+protected:
+  virtual PLayersParent* AllocPLayers(const LayersBackend &backendType);
   virtual bool DeallocPLayers(PLayersParent* aLayers);
 
 private:
+  void ScheduleComposition();
   void Composite();
 
   nsRefPtr<LayerManager> mLayerManager;
   bool mStopped;
+  nsIWidget* mWidget;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };

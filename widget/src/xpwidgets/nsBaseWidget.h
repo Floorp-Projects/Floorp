@@ -58,8 +58,9 @@ class CompositorParent;
 }
 }
 
-using mozilla::layers::CompositorChild;
-using mozilla::layers::CompositorParent;
+namespace base {
+class Thread;
+}
 
 /**
  * Common widget implementation used as base class for native
@@ -76,6 +77,9 @@ class nsBaseWidget : public nsIWidget
 
 protected:
   typedef mozilla::layers::BasicLayerManager BasicLayerManager;
+  typedef mozilla::layers::CompositorChild CompositorChild;
+  typedef mozilla::layers::CompositorParent CompositorParent;
+  typedef base::Thread Thread;
 
 public:
   nsBaseWidget();
@@ -127,6 +131,7 @@ public:
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                           bool* aAllowRetaining = nsnull);
 
+  virtual void            CreateCompositor();
   virtual void            DrawOver(LayerManager* aManager, nsIntRect aRect) {}
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) {}
   virtual gfxASurface*    GetThebesSurface();
@@ -278,8 +283,9 @@ protected:
   nsDeviceContext* mContext;
   nsRefPtr<LayerManager> mLayerManager;
   nsRefPtr<LayerManager> mBasicLayerManager;
-  nsRefPtr<CompositorChild> mCompositor;
+  nsRefPtr<CompositorChild> mCompositorChild;
   nsRefPtr<CompositorParent> mCompositorParent;
+  Thread*           mCompositorThread;
   nscolor           mBackground;
   nscolor           mForeground;
   nsCursor          mCursor;

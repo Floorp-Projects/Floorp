@@ -41,14 +41,14 @@
 #include "CompositorParent.h"
 #include "ShadowLayersParent.h"
 #include "LayerManagerOGL.h"
+#include "nsIWidget.h"
 
 namespace mozilla {
 namespace layers {
 
-CompositorParent::CompositorParent()
-  : mStopped(false)
+CompositorParent::CompositorParent(nsIWidget* aWidget)
+  : mStopped(false), mWidget(aWidget)
 {
-
   MOZ_COUNT_CTOR(CompositorParent);
 }
 
@@ -60,22 +60,13 @@ CompositorParent::~CompositorParent()
 void
 CompositorParent::Destroy()
 {
-  size_t numChildren = ManagedPLayersParent().Length();
-  NS_ABORT_IF_FALSE(0 == numChildren || 1 == numChildren,
-                    "compositor must only have 0 or 1 layer manager");
-
-  if (numChildren) {
-    ShadowLayersParent* layers =
-      static_cast<ShadowLayersParent*>(ManagedPLayersParent()[0]);
-    layers->Destroy();
-  }
+  NS_ABORT_IF_FALSE(ManagedPLayersParent().Length() == 0,
+                    "CompositorParent destroyed before managed PLayersParent");
 }
 
 bool
 CompositorParent::RecvInit()
 {
-  CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::Composite);
-  MessageLoop::current()->PostTask(FROM_HERE, composeTask);
   return true;
 }
 
@@ -88,7 +79,7 @@ CompositorParent::RecvStop()
 }
 
 void
-CompositorParent::RequestComposition()
+CompositorParent::ScheduleComposition()
 {
   CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::Composite);
   MessageLoop::current()->PostTask(FROM_HERE, composeTask);
@@ -97,30 +88,49 @@ CompositorParent::RequestComposition()
 void
 CompositorParent::Composite()
 {
-  if (mStopped) {
-    return;
-  }
-
-  if (!mLayerManager) {
-    CancelableTask *composeTask = NewRunnableMethod(this, &CompositorParent::Composite);
-    MessageLoop::current()->PostDelayedTask(FROM_HERE, composeTask, 10);
+  if (mStopped || !mLayerManager) {
     return;
   }
 
   mLayerManager->EndEmptyTransaction();
 }
 
-PLayersParent*
-CompositorParent::AllocPLayers(const LayersBackend &backend, const WidgetDescriptor &widget)
+// Go down shadow layer tree, setting properties to match their non-shadow
+// counterparts.
+static void
+SetShadowProperties(Layer* aLayer)
 {
-  if (widget.type() != WidgetDescriptor::TViewWidget) {
-    NS_ERROR("Invalid widget descriptor\n");
-    return NULL;
-  }
+  ShadowLayer* shadow = aLayer->AsShadowLayer();
+  shadow->SetShadowTransform(aLayer->GetTransform());
+  shadow->SetShadowVisibleRegion(aLayer->GetVisibleRegion());
+  shadow->SetShadowClipRect(aLayer->GetClipRect());
 
-  if (backend == LayerManager::LAYERS_OPENGL) {
-    nsIWidget *nsWidget = (nsIWidget*)widget.get_ViewWidget().widgetPtr();
-    nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(nsWidget);
+  for (Layer* child = aLayer->GetFirstChild();
+      child; child = child->GetNextSibling()) {
+    SetShadowProperties(child);
+  }
+}
+
+void
+CompositorParent::ShadowLayersUpdated()
+{
+  const nsTArray<PLayersParent*>& shadowParents = ManagedPLayersParent();
+  NS_ABORT_IF_FALSE(shadowParents.Length() <= 1,
+                    "can only support at most 1 ShadowLayersParent");
+  if (shadowParents.Length()) {
+    Layer* root = static_cast<ShadowLayersParent*>(shadowParents[0])->GetRoot();
+    mLayerManager->SetRoot(root);
+    SetShadowProperties(root);
+  }
+  ScheduleComposition();
+}
+
+PLayersParent*
+CompositorParent::AllocPLayers(const LayersBackend &backendType)
+{
+  if (backendType == LayerManager::LAYERS_OPENGL) {
+    nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(mWidget);
+    mLayerManager = layerManager;
 
     if (!layerManager->Initialize()) {
       NS_ERROR("Failed to init OGL Layers");
@@ -131,13 +141,6 @@ CompositorParent::AllocPLayers(const LayersBackend &backend, const WidgetDescrip
     if (!slm) {
       return NULL;
     }
-
-    void *glContext = layerManager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
-    NativeContext nativeContext = NativeContext((uintptr_t)glContext);
-    SendNativeContextCreated(nativeContext);
-
-    mLayerManager = layerManager;
-
     return new ShadowLayersParent(slm, this);
   } else {
     NS_ERROR("Unsupported backend selected for Async Compositor");
