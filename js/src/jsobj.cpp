@@ -3542,6 +3542,19 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         js_memcpy(tmp, a, size);
         js_memcpy(a, b, size);
         js_memcpy(b, tmp, size);
+
+#ifdef JSGC_GENERATIONAL
+        /*
+         * Trigger post barriers for fixed slots. JSObject bits are barriered
+         * below, in common with the other case.
+         */
+        for (size_t i = 0; i < a->numFixedSlots(); ++i) {
+            HeapValue *slotA = &a->getFixedSlotRef(i);
+            HeapValue *slotB = &b->getFixedSlotRef(i);
+            HeapValue::writeBarrierPost(*slotA, slotA);
+            HeapValue::writeBarrierPost(*slotB, slotB);
+        }
+#endif
     } else {
         /*
          * If the objects are of differing sizes, use the space we reserved
@@ -3596,6 +3609,13 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         reserved.newaslots = NULL;
         reserved.newbslots = NULL;
     }
+
+#ifdef JSGC_GENERATIONAL
+    Shape::writeBarrierPost(a->shape_, &a->shape_);
+    Shape::writeBarrierPost(b->shape_, &b->shape_);
+    types::TypeObject::writeBarrierPost(a->type_, &a->type_);
+    types::TypeObject::writeBarrierPost(b->type_, &b->type_);
+#endif
 }
 
 /*
