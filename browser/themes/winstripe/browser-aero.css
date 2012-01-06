@@ -37,7 +37,7 @@
   }
 }
 
-@media all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme) {
   #navigator-toolbox > toolbar:not(:-moz-lwtheme),
   #browser-bottombox:not(:-moz-lwtheme) {
     background-color: @customToolbarColor@;
@@ -82,7 +82,7 @@
   }
 }
 
-@media all and (-moz-windows-compositor) {
+@media (-moz-windows-compositor) {
   /* These should be hidden w/ glass enabled. Windows draws its own buttons. */
   .titlebar-button {
     display: none;
@@ -348,7 +348,7 @@
 }
 
 /* ::::: splitmenu highlight style that imitates Windows 7 start menu ::::: */
-@media all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme) {
   .splitmenu-menuitem,
   .splitmenu-menu {
     -moz-appearance: none;
