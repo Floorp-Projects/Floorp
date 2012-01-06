@@ -5064,6 +5064,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, OptionParser *op)
     if (op->getBoolOption('a'))
         JS_ToggleOptions(cx, JSOPTION_METHODJIT_ALWAYS);
 
+    if (op->getBoolOption('c'))
+        compileOnly = true;
+
     if (op->getBoolOption('m')) {
         enableMethodJit = true;
         JS_ToggleOptions(cx, JSOPTION_METHODJIT);
@@ -5331,6 +5334,7 @@ main(int argc, char **argv, char **envp)
         || !op.addBoolOption('i', "shell", "Enter prompt after running code")
         || !op.addBoolOption('m', "methodjit", "Enable the JaegerMonkey method JIT")
         || !op.addBoolOption('n', "typeinfer", "Enable type inference")
+        || !op.addBoolOption('c', "compileonly", "Only compile, don't run (syntax checking mode)")
         || !op.addBoolOption('d', "debugjit", "Enable runtime debug mode for method JIT code")
         || !op.addBoolOption('a', "always-mjit",
                              "Do not try to run in the interpreter before method jitting.")

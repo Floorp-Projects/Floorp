@@ -968,6 +968,8 @@ struct JSObject : js::gc::Cell
 
     bool isSealedOrFrozen(JSContext *cx, ImmutabilityType it, bool *resultp);
 
+    static inline uintN getSealedOrFrozenAttributes(uintN attrs, ImmutabilityType it);
+
     inline void *&privateRef(uint32_t nfixed) const;
 
   public:

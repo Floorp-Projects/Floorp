@@ -1017,7 +1017,7 @@ nsCookieService::TryInitDB(bool aRecreateDB)
   // Use write-ahead-logging for performance. We cap the autocheckpoint limit at
   // 16 pages (around 500KB).
   mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "PRAGMA journal_mode = WAL"));
+    MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA journal_mode = WAL"));
   mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "PRAGMA wal_autocheckpoint = 16"));
 

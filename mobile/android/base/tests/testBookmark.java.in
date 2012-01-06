@@ -11,8 +11,7 @@ public class testBookmark extends BaseTest {
 
         //Click the top item in the list.
         mActions.sendSpecialKey(Actions.SpecialKey.DOWN);
-        mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
-        mActions.waitForGeckoEvent("DOMContentLoaded");
+        hitEnterAndWait();
 
         verifyUrl(URL);
 
@@ -23,8 +22,8 @@ public class testBookmark extends BaseTest {
         getInstrumentation().waitForIdleSync();
         mActions.sendSpecialKey(Actions.SpecialKey.DOWN);
         mActions.sendSpecialKey(Actions.SpecialKey.DOWN);
-        mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
-        mActions.waitForGeckoEvent("DOMContentLoaded");
+
+        hitEnterAndWait();
 
         getInstrumentation().waitForIdleSync();
         //Unfortunately, the item isn't constant so can't be tested.
