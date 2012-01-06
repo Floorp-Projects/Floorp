@@ -132,7 +132,9 @@ public class GeckoAppShell
     public static native void loadLibs(String apkName, boolean shouldExtract);
     public static native void onChangeNetworkLinkStatus(String status);
     public static native void reportJavaCrash(String stack);
-    public static native void notifyUriVisited(String uri);
+    public static void notifyUriVisited(String uri) {
+        sendEventToGecko(new GeckoEvent(GeckoEvent.VISTITED, uri));
+    }
 
     public static native void processNextNativeEvent();
 
