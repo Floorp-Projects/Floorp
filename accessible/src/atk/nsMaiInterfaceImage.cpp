@@ -37,8 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccessibleWrap.h"
 #include "nsMaiInterfaceImage.h"
+
+#include "nsAccessibleWrap.h"
+#include "nsHTMLImageAccessible.h"
 
 extern "C" const gchar* getDescriptionCB(AtkObject* aAtkObj);
 
@@ -58,19 +60,13 @@ getImagePositionCB(AtkImage *aImage, gint *aAccX, gint *aAccY,
                    AtkCoordType aCoordType)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aImage));
-    if (!accWrap) 
+    if (!accWrap || !accWrap->IsImageAccessible())
       return;
 
-    nsCOMPtr<nsIAccessibleImage> image;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleImage),
-                            getter_AddRefs(image));
-    if (!image)
-      return;
-
+    nsHTMLImageAccessible* image = accWrap->AsImage();
     PRUint32 geckoCoordType = (aCoordType == ATK_XY_WINDOW) ?
       nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE :
       nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE;
-
     // Returned in screen coordinates
     image->GetImagePosition(geckoCoordType, aAccX, aAccY);
 }
@@ -85,14 +81,8 @@ void
 getImageSizeCB(AtkImage *aImage, gint *aAccWidth, gint *aAccHeight)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aImage));
-    if (!accWrap) 
+    if (!accWrap || !accWrap->IsImageAccessible())
       return;
 
-    nsCOMPtr<nsIAccessibleImage> image;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleImage),
-                            getter_AddRefs(image));
-    if (!image)
-      return;
-
-    image->GetImageSize(aAccWidth, aAccHeight);
+    accWrap->AsImage()->GetImageSize(aAccWidth, aAccHeight);
 }
