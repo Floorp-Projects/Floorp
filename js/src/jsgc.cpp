@@ -1919,7 +1919,14 @@ js_TraceStackFrame(JSTracer *trc, StackFrame *fp)
         return;
     if (fp->hasArgsObj())
         MarkRoot(trc, &fp->argsObj(), "arguments");
-    MarkRoot(trc, fp->script(), "script");
+    if (fp->isFunctionFrame()) {
+        MarkRoot(trc, fp->fun(), "fun");
+        if (fp->isEvalFrame()) {
+            MarkRoot(trc, fp->script(), "eval script");
+        }
+    } else {
+        MarkRoot(trc, fp->script(), "script");
+    }
     fp->script()->compartment()->active = true;
     MarkRoot(trc, fp->returnValue(), "rval");
 }
