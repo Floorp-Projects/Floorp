@@ -3425,28 +3425,46 @@ JS_DeepFreezeObject(JSContext *cx, JSObject *obj)
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_ConstructObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
+JS_ConstructObject(JSContext *cx, JSClass *jsclasp, JSObject *parent)
 {
-    AssertNoGC(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, proto, parent);
-    Class *clasp = Valueify(jsclasp);
-    if (!clasp)
-        clasp = &ObjectClass;    /* default class is Object */
-    return js_ConstructObject(cx, clasp, proto, parent, 0, NULL);
+    return JS_ConstructObjectWithArguments(cx, jsclasp, parent, 0, NULL);
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_ConstructObjectWithArguments(JSContext *cx, JSClass *jsclasp, JSObject *proto,
-                                JSObject *parent, uintN argc, jsval *argv)
+JS_ConstructObjectWithArguments(JSContext *cx, JSClass *jsclasp, JSObject *parent,
+                                uintN argc, jsval *argv)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, proto, parent, JSValueArray(argv, argc));
+    assertSameCompartment(cx, parent, JSValueArray(argv, argc));
+
+    AutoArrayRooter argtvr(cx, argc, argv);
+
     Class *clasp = Valueify(jsclasp);
     if (!clasp)
         clasp = &ObjectClass;    /* default class is Object */
-    return js_ConstructObject(cx, clasp, proto, parent, argc, argv);
+
+    JSProtoKey protoKey = GetClassProtoKey(clasp);
+
+    /* Protect constructor in case a crazy getter for .prototype uproots it. */
+    AutoValueRooter tvr(cx);
+    if (!js_FindClassObject(cx, parent, protoKey, tvr.addr(), clasp))
+        return NULL;
+
+    Value rval;
+    if (!InvokeConstructor(cx, tvr.value(), argc, argv, &rval))
+        return NULL;
+
+    /*
+     * If the instance's class differs from what was requested, throw a type
+     * error.
+     */
+    if (!rval.isObject() || rval.toObject().getClass() != clasp) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_WRONG_CONSTRUCTOR, clasp->name);
+        return NULL;
+    }
+    return &rval.toObject();
 }
 
 static JSBool

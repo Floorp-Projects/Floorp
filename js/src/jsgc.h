@@ -739,6 +739,7 @@ struct Chunk {
     }
 
     inline void addToAvailableList(JSCompartment *compartment);
+    inline void insertToAvailableList(Chunk **insertPoint);
     inline void removeFromAvailableList();
 
     ArenaHeader *allocateArena(JSCompartment *comp, AllocKind kind);
@@ -760,9 +761,14 @@ struct Chunk {
      */
     Chunk *getPrevious() {
         JS_ASSERT(info.prevp);
-        uintptr_t prevAddress = reinterpret_cast<uintptr_t>(info.prevp);
-        JS_ASSERT((prevAddress & ChunkMask) == offsetof(Chunk, info.next));
-        return reinterpret_cast<Chunk *>(prevAddress - offsetof(Chunk, info.next));
+        return fromPointerToNext(info.prevp);
+    }
+
+    /* Get the chunk from a pointer to its info.next field. */
+    static Chunk *fromPointerToNext(Chunk **nextFieldPtr) {
+        uintptr_t addr = reinterpret_cast<uintptr_t>(nextFieldPtr);
+        JS_ASSERT((addr & ChunkMask) == offsetof(Chunk, info.next));
+        return reinterpret_cast<Chunk *>(addr - offsetof(Chunk, info.next));
     }
 
   private:
@@ -1295,7 +1301,7 @@ struct WrapperHasher
     typedef Value Lookup;
 
     static HashNumber hash(Value key) {
-        uint64_t bits = key.asRawBits();
+        uint64_t bits = JSVAL_TO_IMPL(key).asBits;
         return uint32_t(bits) ^ uint32_t(bits >> 32);
     }
 

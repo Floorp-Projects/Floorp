@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* Possibly shared proto object for XPCWrappedNative. */
+/* Shared proto object for XPCWrappedNative. */
 
 #include "xpcprivate.h"
 
@@ -152,13 +152,11 @@ XPCWrappedNativeProto::JSProtoObjectFinalized(JSContext *cx, JSObject *obj)
 
     // Map locking is not necessary since we are running gc.
 
-    if (IsShared()) {
-        // Only remove this proto from the map if it is the one in the map.
-        ClassInfo2WrappedNativeProtoMap* map =
-            GetScope()->GetWrappedNativeProtoMap(ClassIsMainThreadOnly());
-        if (map->Find(mClassInfo) == this)
-            map->Remove(mClassInfo);
-    }
+    // Only remove this proto from the map if it is the one in the map.
+    ClassInfo2WrappedNativeProtoMap* map =
+        GetScope()->GetWrappedNativeProtoMap(ClassIsMainThreadOnly());
+    if (map->Find(mClassInfo) == this)
+        map->Remove(mClassInfo);
 
     GetRuntime()->GetDetachedWrappedNativeProtoMap()->Remove(this);
     GetRuntime()->GetDyingWrappedNativeProtoMap()->Add(this);
@@ -191,67 +189,48 @@ XPCWrappedNativeProto::SystemIsBeingShutDown(JSContext* cx)
 // static
 XPCWrappedNativeProto*
 XPCWrappedNativeProto::GetNewOrUsed(XPCCallContext& ccx,
-                                    XPCWrappedNativeScope* Scope,
-                                    nsIClassInfo* ClassInfo,
-                                    const XPCNativeScriptableCreateInfo* ScriptableCreateInfo,
-                                    JSBool ForceNoSharing,
+                                    XPCWrappedNativeScope* scope,
+                                    nsIClassInfo* classInfo,
+                                    const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
                                     JSBool isGlobal,
                                     QITableEntry* offsets)
 {
-    NS_ASSERTION(Scope, "bad param");
-    NS_ASSERTION(ClassInfo, "bad param");
+    NS_ASSERTION(scope, "bad param");
+    NS_ASSERTION(classInfo, "bad param");
 
     AutoMarkingWrappedNativeProtoPtr proto(ccx);
     ClassInfo2WrappedNativeProtoMap* map = nsnull;
     XPCLock* lock = nsnull;
-    JSBool shared;
 
     uint32_t ciFlags;
-    if (NS_FAILED(ClassInfo->GetFlags(&ciFlags)))
+    if (NS_FAILED(classInfo->GetFlags(&ciFlags)))
         ciFlags = 0;
 
-    if (ciFlags & XPC_PROTO_DONT_SHARE) {
-        NS_ERROR("reserved flag set!");
-        ciFlags &= ~XPC_PROTO_DONT_SHARE;
-    }
-
-    if (ForceNoSharing || (ciFlags & nsIClassInfo::PLUGIN_OBJECT) ||
-        (ScriptableCreateInfo &&
-         ScriptableCreateInfo->GetFlags().DontSharePrototype())) {
-        ciFlags |= XPC_PROTO_DONT_SHARE;
-        shared = false;
-    } else {
-        shared = true;
-    }
-
-    if (shared) {
-        JSBool mainThreadOnly = !!(ciFlags & nsIClassInfo::MAIN_THREAD_ONLY);
-        map = Scope->GetWrappedNativeProtoMap(mainThreadOnly);
-        lock = mainThreadOnly ? nsnull : Scope->GetRuntime()->GetMapLock();
-        {   // scoped lock
-            XPCAutoLock al(lock);
-            proto = map->Find(ClassInfo);
-            if (proto)
-                return proto;
-        }
+    JSBool mainThreadOnly = !!(ciFlags & nsIClassInfo::MAIN_THREAD_ONLY);
+    map = scope->GetWrappedNativeProtoMap(mainThreadOnly);
+    lock = mainThreadOnly ? nsnull : scope->GetRuntime()->GetMapLock();
+    {   // scoped lock
+        XPCAutoLock al(lock);
+        proto = map->Find(classInfo);
+        if (proto)
+            return proto;
     }
 
     AutoMarkingNativeSetPtr set(ccx);
-    set = XPCNativeSet::GetNewOrUsed(ccx, ClassInfo);
+    set = XPCNativeSet::GetNewOrUsed(ccx, classInfo);
     if (!set)
         return nsnull;
 
-    proto = new XPCWrappedNativeProto(Scope, ClassInfo, ciFlags, set, offsets);
+    proto = new XPCWrappedNativeProto(scope, classInfo, ciFlags, set, offsets);
 
-    if (!proto || !proto->Init(ccx, isGlobal, ScriptableCreateInfo)) {
+    if (!proto || !proto->Init(ccx, isGlobal, scriptableCreateInfo)) {
         delete proto.get();
         return nsnull;
     }
 
-    if (shared)
     {   // scoped lock
         XPCAutoLock al(lock);
-        map->Add(ClassInfo, proto);
+        map->Add(classInfo, proto);
     }
 
     return proto;

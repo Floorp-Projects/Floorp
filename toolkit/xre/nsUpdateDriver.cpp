@@ -24,6 +24,7 @@
  *  Ben Turner <mozilla@songbirdnest.com>
  *  Robert Strong <robert.bugzilla@gmail.com>
  *  Josh Aas <josh@mozilla.com>
+ *  Brian R. Bondy <netzen@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -205,22 +206,8 @@ IsPending(nsILocalFile *statusFile)
     return false;
   
   const char kPending[] = "pending";
-  return (strncmp(buf, kPending, sizeof(kPending) - 1) == 0);
-}
-
-static bool
-SetStatusApplying(nsILocalFile *statusFile)
-{
-  PRFileDesc *fd = nsnull;
-  nsresult rv = statusFile->OpenNSPRFileDesc(PR_WRONLY, 0660, &fd);
-  if (NS_FAILED(rv))
-    return false;
-
-  static const char kApplying[] = "Applying\n";
-  PR_Write(fd, kApplying, sizeof(kApplying) - 1);
-  PR_Close(fd);
-
-  return true;
+  bool isPending = (strncmp(buf, kPending, sizeof(kPending) - 1) == 0);
+  return isPending;
 }
 
 static bool
@@ -437,10 +424,11 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
   if (NS_FAILED(rv))
     return;
 
-  if (!SetStatusApplying(statusFile)) {
-    LOG(("failed setting status to 'applying'\n"));
-    return;
-  }
+  // We used to write out "Applying" to the update.status file here.
+  // Instead we do this from within the updater application now.
+  // This is so that we don't overwrite the status of pending-service
+  // in the Windows case.  This change was made for all platforms so
+  // that it stays consistent across all OS.
 
   // Construct the PID argument for this process.  If we are using execv, then
   // we pass "0" which is then ignored by the updater.
@@ -480,8 +468,13 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsILocalFile *statusFile,
 #if defined(USE_EXECV)
   execv(updaterPath.get(), argv);
 #elif defined(XP_WIN)
-  if (!WinLaunchChild(updaterPathW.get(), argc, argv))
+
+  // Launch the update using updater.exe
+  if (!WinLaunchChild(updaterPathW.get(), argc, argv)) {
     return;
+  }
+
+  // We are going to process an update so we should exit now
   _exit(0);
 #elif defined(XP_MACOSX)
   CommandLineServiceMac::SetupMacCommandLine(argc, argv, true);
@@ -514,9 +507,37 @@ ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
   rv = updatesDir->AppendNative(NS_LITERAL_CSTRING("0"));
   if (NS_FAILED(rv))
     return rv;
+ 
+  const char *processingUpdates = PR_GetEnv("MOZ_PROCESS_UPDATES");
+  if (processingUpdates && *processingUpdates) {
+    // Enable the tests to request us to use a different update root directory
+    const char *updRootOverride = PR_GetEnv("MOZ_UPDATE_ROOT_OVERRIDE");
+    if (updRootOverride && *updRootOverride) {
+      nsCOMPtr<nsILocalFile> overrideDir;
+      nsCAutoString path(updRootOverride);
+      rv = NS_NewNativeLocalFile(path, false, getter_AddRefs(overrideDir));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      updatesDir = do_QueryInterface(overrideDir);
+    }
+    // Enable the tests to request us to use a different app directory
+    const char *appDirOverride = PR_GetEnv("MOZ_UPDATE_APPDIR_OVERRIDE");
+    if (appDirOverride && *appDirOverride) {
+      nsCOMPtr<nsILocalFile> overrideDir;
+      nsCAutoString path(appDirOverride);
+      rv = NS_NewNativeLocalFile(path, false, getter_AddRefs(overrideDir));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      NS_RELEASE(appDir);
+      NS_ADDREF(appDir = overrideDir);
+    }
+  }
 
   nsCOMPtr<nsILocalFile> statusFile;
-  if (GetStatusFile(updatesDir, statusFile) && IsPending(statusFile)) {
+  if (GetStatusFile(updatesDir, statusFile) && 
+      IsPending(statusFile)) {
     nsCOMPtr<nsILocalFile> versionFile;
     nsCOMPtr<nsILocalFile> channelChangeFile;
     // Remove the update if the update application version file doesn't exist
@@ -527,7 +548,8 @@ ProcessUpdates(nsIFile *greDir, nsIFile *appDir, nsIFile *updRootDir,
          IsOlderVersion(versionFile, appVersion))) {
       updatesDir->Remove(true);
     } else {
-      ApplyUpdate(greDir, updatesDir, statusFile, appDir, argc, argv);
+      ApplyUpdate(greDir, updatesDir, statusFile, appDir, 
+                  argc, argv);
     }
   }
 

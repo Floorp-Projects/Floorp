@@ -1487,8 +1487,8 @@ pref("plugins.click_to_play", false);
 pref("dom.ipc.plugins.timeoutSecs", 25);
 // How long a plugin process will wait for a response from the parent
 // to a synchronous request before terminating itself. After this
-// point the child assumes the parent is hung.
-pref("dom.ipc.plugins.parentTimeoutSecs", 15);
+// point the child assumes the parent is hung. Currently disabled.
+pref("dom.ipc.plugins.parentTimeoutSecs", 0);
 // How long a plugin launch is allowed to take before
 // we consider it failed.
 pref("dom.ipc.plugins.processLaunchTimeoutSecs", 25);

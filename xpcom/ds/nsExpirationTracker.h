@@ -39,6 +39,8 @@
 #ifndef NSEXPIRATIONTRACKER_H_
 #define NSEXPIRATIONTRACKER_H_
 
+#include "mozilla/Attributes.h"
+
 #include "prlog.h"
 #include "nsTArray.h"
 #include "nsITimer.h"
