@@ -79,21 +79,21 @@ interface nsIMemoryReporter : nsISupports
    *   mmap/VirtualAlloc/vm_allocate) or a heap-level allocation (eg.
    *   malloc/calloc/operator new).
    *
-   *   Each reporter can be viewed as representing a node in a tree rooted at
-   *   "explicit".  Not all nodes of the tree need have an associated reporter.
-   *   So, for example, the reporters "explicit/a/b", "explicit/a/c",
-   *   "explicit/d", "explicit/d/e", and "explicit/d/f" define this tree:
+   *   Each reporter can be viewed as representing a leaf node in a tree
+   *   rooted at "explicit".  Internal nodes of the tree don't have
+   *   reporters.  So, for example, the reporters "explicit/a/b",
+   *   "explicit/a/c", "explicit/d/e", and "explicit/d/f" define this tree:
    *
    *     explicit
    *     |--a
    *     |  |--b [*]
    *     |  \--c [*]
-   *     \--d [*]
+   *     \--d
    *        |--e [*]
    *        \--f [*]
    *
-   *   Nodes marked with a [*] have a reporter.  Notice that "explicit/a" is
-   *   implicitly defined.
+   *   Nodes marked with a [*] have a reporter.  Notice that the internal
+   *   nodes are implicitly defined by the paths.
    *
    *   A node's children divide their parent's memory into disjoint pieces.
    *   So in the example above, |a| may not count any allocations counted by
@@ -119,7 +119,7 @@ interface nsIMemoryReporter : nsISupports
    *    calloc, realloc, memalign, operator new, or operator new[].  Reporters
    *    in this category must have units UNITS_BYTES and must have a path
    *    starting with "explicit".
-
+   *
    *  - NONHEAP: memory which the program explicitly allocated, but does not
    *    live on the heap.  Such memory is commonly allocated by calling one of
    *    the OS's memory-mapping functions (e.g. mmap, VirtualAlloc, or
