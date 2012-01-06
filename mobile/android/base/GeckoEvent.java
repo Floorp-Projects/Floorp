@@ -37,6 +37,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.ViewportMetrics;
 import android.os.*;
 import android.app.*;
@@ -78,6 +79,7 @@ public class GeckoEvent {
     public static final int ACTIVITY_START = 17;
     public static final int BROADCAST = 19;
     public static final int VIEWPORT = 20;
+    public static final int TILE_SIZE = 21;
 
     public static final int IME_COMPOSITION_END = 0;
     public static final int IME_COMPOSITION_BEGIN = 1;
@@ -226,6 +228,16 @@ public class GeckoEvent {
 
         mP0 = new Point(w, h);
         mP1 = new Point(screenw, screenh);
+    }
+
+    public GeckoEvent(int etype, IntSize size) {
+        if (etype != TILE_SIZE) {
+            mType = INVALID;
+            return;
+        }
+
+        mType = etype;
+        mP0 = new Point(size.width, size.height);
     }
 
     public GeckoEvent(String subject, String data) {
