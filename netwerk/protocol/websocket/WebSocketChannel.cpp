@@ -160,6 +160,7 @@ public:
 
   NS_IMETHOD Run()
   {
+    NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
     mChannel->mListener->OnStop(mChannel->mContext, mData);
     return NS_OK;
   }
@@ -1684,10 +1685,10 @@ WebSocketChannel::AbortSession(nsresult reason)
   if (mTransport && reason != NS_BASE_STREAM_CLOSED &&
       !mRequestedClose && !mClientClosed && !mServerClosed) {
     mRequestedClose = 1;
+    mStopOnClose = reason;
     mSocketThread->Dispatch(
       new OutboundEnqueuer(this, new OutboundMessage(kMsgTypeFin, nsnull)),
                            nsIEventTarget::DISPATCH_NORMAL);
-    mStopOnClose = reason;
   } else {
     StopSession(reason);
   }
