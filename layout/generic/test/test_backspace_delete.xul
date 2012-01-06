@@ -32,59 +32,6 @@ function execTests() {
     sel.collapse(n, firstChildOffsetForCaret);
   }
 
-  /* On Unix systems we have to check for a bug in Pango's handling of Thai
-   * script (bug 474068 and http://bugzilla.gnome.org/show_bug.cgi?id=576156 ).
-   * We assume that ctypes is available, and the library can be accessed as
-   * libpango-1.0.so.0, on all systems that potentially have this problem.
-   */
-  var pango_todos = false;
-  try {
-    Components.utils.import("resource://gre/modules/ctypes.jsm");
-    if (ctypes) {
-      let pango = ctypes.open("libpango-1.0.so.0");
-      if (pango) {
-	// int pango_version();
-	let pango_version = pango.declare("pango_version", ctypes.default_abi,
-					  ctypes.int);
-	if (pango_version) {
-	  let version = pango_version();
-	  // The bug was introduced in pango 1.22.0 and has not yet been fixed.
-	  // version == major*10000 + minor*100 + micro, therefore:
-	  if (version >= 12200) {
-	    pango_todos = true;
-	    todo(false, "warning: buggy version of Pango detected");
-	  }
-	}
-      }
-    }
-  } catch (ex) {
-  }
-
-  // Select |is| or |todo_is| according to whether the current subtest
-  // is affected by the above-mentioned Pango bug. The logic for the
-  // decision is: If |pango_todos| is not true, the bug is not expected
-  // to occur. If |alternate| is either undefined or equal to |expected|,
-  // then the subtest should not be affected by the bug. If |value| is
-  // equal to *neither* |expected| nor |alternate| then there is a
-  // different problem than the known Pango bug. In all those cases
-  // we want to use regular |is|.
-  //
-  // But if |pango_todos| is true, |alternate| is defined and not equal
-  // to |expected|, and |value| is equal to one of them, then we want to
-  // use |todo_is| *regardless* of which possibility |value| is equal to.
-  // If |value| is equal to |alternate|, this is the bug's syndrome and
-  // we obviously want a |todo_is|; if |value| is equal to |expected|,
-  // the check for the buggy library is wrong (hopefully, because the
-  // bug has been fixed in a new Pango version) and we want to get a
-  // failure so we notice.
-  function pango_todo_is(value, expected, alternate, msg) {
-    if (pango_todos && alternate !== undefined && alternate !== expected &&
-	(value === expected || value === alternate))
-      todo_is(value, expected, msg);
-    else
-      is(value, expected, msg);
-  }
-
   var eatSpace;
 
   function getPrefs() {
@@ -105,28 +52,23 @@ function execTests() {
     } catch(ex) {}
   }
 
-  /* The various _todo arguments below are honored only if pango_todos is true. */
-
-  function doCommand(cmd, exc_todo) {
-    if (!pango_todos) exc_todo = false;
+  function doCommand(cmd) {
     var controller = document.commandDispatcher.getControllerForCommand(cmd);
     if (controller) {
       try {
         controller.doCommand(cmd);
-        (exc_todo ? todo : ok)
-	  (true, 'doCommand(' + cmd + ') succeeded');
+        ok(true, 'doCommand(' + cmd + ') succeeded');
       } catch(ex) {
-        (exc_todo ? todo : ok)
-	  (false, 'exception in doCommand(' + cmd + '): ', ex.message);
+        ok(false, 'exception in doCommand(' + cmd + '): ', ex.message);
       }
     }
   }
 
-  function testRight(node, offset, offset_todo) {
+  function testRight(node, offset) {
     doCommand("cmd_charNext");
     var msg = "Right movement broken in \"" + editor.innerHTML + "\", offset " + offset;
     is(sel.anchorNode, node, msg);
-    pango_todo_is(sel.anchorOffset, offset, offset_todo, msg);
+    is(sel.anchorOffset, offset, msg);
   }
 
   function selErrString(dir) {
@@ -142,26 +84,26 @@ function execTests() {
     is(selRange.endOffset, endOffset, selErrString("Word right"));
   }
 
-  function testDelete(node, offset, text, richtext, offset_todo, text_todo, exc_todo) {
-    doCommand("cmd_deleteCharForward", exc_todo);
+  function testDelete(node, offset, text, richtext) {
+    doCommand("cmd_deleteCharForward");
     var msg = "Delete broken in \"" + editor.innerHTML + "\", offset " + offset;
     if(typeof node == 'function'){
       node = node();
     }
     is(sel.anchorNode, node, msg);
 
-    pango_todo_is(sel.anchorOffset, offset, offset_todo, msg);
+    is(sel.anchorOffset, offset, msg);
     let text_result = richtext ? editor.innerHTML : editor.textContent;
-    pango_todo_is(text_result, text, text_todo, msg);
+    is(text_result, text, msg);
   }
 
-  function testBackspace(node, offset, text, offset_todo, text_todo) {
+  function testBackspace(node, offset, text) {
     doCommand("cmd_deleteCharBackward");
     var msg = "Backspace broken in \"" + editor.innerHTML + "\", offset " + offset;
     is(sel.anchorNode, node, msg);
 
-    pango_todo_is(sel.anchorOffset, offset, offset_todo, msg);
-    pango_todo_is(editor.textContent, text, text_todo, msg);
+    is(sel.anchorOffset, offset, msg);
+    is(editor.textContent, text, msg);
   }
 
   function testDeletePrevWord(node, offset, text) {
@@ -188,12 +130,12 @@ function execTests() {
   testDelete(editor.firstChild, 2, "สสพ่อแม่พี่น้อง");
   testRight(editor.firstChild, 4);
   testDelete(editor.firstChild, 4, "สสพ่แม่พี่น้อง");
-  testRight(editor.firstChild, 5, 7);
-  testDelete(editor.firstChild, 5, "สสพ่แพี่น้อง", false, 7, "สสพ่แม่น้อง");
-  testRight(editor.firstChild, 8, 9);
-  testDelete(editor.firstChild, 8, "สสพ่แพี่อง", false, 9, "สสพ่แม่น้ง");
-  testRight(editor.firstChild, 9, 10);
-  testDelete(editor.firstChild, 9, "สสพ่แพี่อ", false, 10, "สสพ่แม่น้ง", true);
+  testRight(editor.firstChild, 5);
+  testDelete(editor.firstChild, 5, "สสพ่แพี่น้อง", false);
+  testRight(editor.firstChild, 8);
+  testDelete(editor.firstChild, 8, "สสพ่แพี่อง", false);
+  testRight(editor.firstChild, 9);
+  testDelete(editor.firstChild, 9, "สสพ่แพี่อ", false);
 
   // Test character-wise deletion of Backspace
   setupTest("สวัสดีพ่อแม่พี่น้อง", 0);
@@ -209,18 +151,18 @@ function execTests() {
   testBackspace(editor.firstChild, 3, "วดพอแม่พี่น้อง");
   testRight(editor.firstChild, 4);
   testBackspace(editor.firstChild, 3, "วดพแม่พี่น้อง");
-  testRight(editor.firstChild, 4, 6);
-  testBackspace(editor.firstChild, 3, "วดพม่พี่น้อง", 5, "วดพแมพี่น้อง");
-  testRight(editor.firstChild, 5, 8);
-  testBackspace(editor.firstChild, 4, "วดพมพี่น้อง", 7, "วดพแมพีน้อง");
-  testRight(editor.firstChild, 7, 9);
-  testBackspace(editor.firstChild, 6, "วดพมพีน้อง", 8, "วดพแมพีนอง");
-  testRight(editor.firstChild, 8, 9);
-  testBackspace(editor.firstChild, 7, "วดพมพีนอง", 8, "วดพแมพีนง");
-  testRight(editor.firstChild, 8, 9);
-  testBackspace(editor.firstChild, 7, "วดพมพีนง", 8, "วดพแมพีน");
-  testRight(editor.firstChild, 8, 8);
-  testBackspace(editor.firstChild, 7, "วดพมพีน", 7, "วดพแมพี");
+  testRight(editor.firstChild, 4);
+  testBackspace(editor.firstChild, 3, "วดพม่พี่น้อง");
+  testRight(editor.firstChild, 5);
+  testBackspace(editor.firstChild, 4, "วดพมพี่น้อง");
+  testRight(editor.firstChild, 7);
+  testBackspace(editor.firstChild, 6, "วดพมพีน้อง");
+  testRight(editor.firstChild, 8);
+  testBackspace(editor.firstChild, 7, "วดพมพีนอง");
+  testRight(editor.firstChild, 8);
+  testBackspace(editor.firstChild, 7, "วดพมพีนง");
+  testRight(editor.firstChild, 8);
+  testBackspace(editor.firstChild, 7, "วดพมพีน");
 
   // Tests for Bug 417745
 

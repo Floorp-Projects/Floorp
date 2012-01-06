@@ -1,119 +1,34 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
-import com.jayway.android.robotium.solo.Solo;	
 import @ANDROID_PACKAGE_NAME@.*;
 
-import android.app.Activity;
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.PerformanceTestCase;
-import android.util.Log;
-import android.widget.Button;
-import android.content.Intent;
-import java.util.HashMap;
+public class testBookmark extends BaseTest {
+    private static final String URL = "http://mochi.test:8888/tests/robocop/robocop_blank_02.html";
 
-@SuppressWarnings("unused")
-public class testBookmark extends ActivityInstrumentationTestCase2 {
+    public void testBookmark() {
+        enterUrl(URL);
 
-  @SuppressWarnings("unchecked")
-  public testBookmark(Class activityClass) {
-    super(activityClass);
-    // TODO Auto-generated constructor stub
-  }
-  private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";	
-  private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
-  private Solo solo;    
-  private Activity activity;
-  private Driver driver;
-  private Assert asserter;
-  private Actions actions;
-  private static Class<?> launcherActivityClass;
+        //Click the top item in the list.
+        mActions.sendSpecialKey(Actions.SpecialKey.DOWN);
+        mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
+        mActions.waitForGeckoEvent("DOMContentLoaded");
 
-  static{
-    try{
-      launcherActivityClass = Class.forName(LAUNCH_ACTIVITY_FULL_CLASSNAME);	
-    } catch (ClassNotFoundException e){
-      throw new RuntimeException(e);	
-    }	
-  }	
+        verifyUrl(URL);
 
-  @SuppressWarnings("unchecked")	
-  public testBookmark() throws ClassNotFoundException {
-    super(TARGET_PACKAGE_ID, launcherActivityClass);	
-  }	
-  
-  @Override 
-  protected void setUp() throws Exception
-  {
-    //Load config file
-    String configFile = FennecNativeDriver.getFile("/mnt/sdcard/robotium.config");
-    HashMap config = FennecNativeDriver.convertTextToTable(configFile);
+        //Click the Top item in the history list.
+        getInstrumentation().waitForIdleSync();
+        mActions.sendSpecialKey(Actions.SpecialKey.RIGHT);
+        mActions.sendSpecialKey(Actions.SpecialKey.RIGHT);
+        getInstrumentation().waitForIdleSync();
+        mActions.sendSpecialKey(Actions.SpecialKey.DOWN);
+        mActions.sendSpecialKey(Actions.SpecialKey.DOWN);
+        mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
+        mActions.waitForGeckoEvent("DOMContentLoaded");
 
-    //Create the intent to be used with all the important arguments
-    Intent i = new Intent(Intent.ACTION_MAIN);
-    String argsList = "-no-remote -profile " + (String)config.get("profile");
-    i.putExtra("args", argsList);
-
-    //Start the activity
-    setActivityIntent(i);
-    activity = getActivity();
-    
-    //Set up Robotium.solo and Driver objects
-    solo = new Solo(getInstrumentation(), getActivity());	
-    driver = new FennecNativeDriver(activity, solo);
-    actions = new FennecNativeActions(activity, solo, getInstrumentation());
-    driver.setLogFile((String)config.get("logfile"));
-    
-    asserter = new FennecNativeAssert();
-    asserter.setLogFile((String)config.get("logfile"));
-  } 	
-
-  public void testBookmark(){
-    // TODO: find a better way to not hardcode this url
-    String url = "http://mochi.test:8888/tests/robocop/robocop_blank_02.html";
-
-    actions.waitForGeckoEvent("Gecko:Ready");
-    Element awesomebar = driver.findElement("awesome_bar");
-    awesomebar.click();
-
-    Element urlbar = driver.findElement("awesomebar_text");
-    getInstrumentation().waitForIdleSync();
-    actions.sendKeys(url);
-    asserter.is(urlbar.getText(), url, "Awesomebar url typed properly");
-
-    //Click the top item in the list.
-    actions.sendSpecialKey(Actions.SpecialKey.DOWN);
-    actions.sendSpecialKey(Actions.SpecialKey.ENTER);    
-    actions.waitForGeckoEvent("DOMContentLoaded");
-
-    getInstrumentation().waitForIdleSync();
-    awesomebar.click();
-    asserter.is(urlbar.getText(), url, "Awesomebar URL still on");
-
-    //Click the Top item in the history list.
-    getInstrumentation().waitForIdleSync();
-    actions.sendSpecialKey(Actions.SpecialKey.RIGHT);
-    actions.sendSpecialKey(Actions.SpecialKey.RIGHT);
-    getInstrumentation().waitForIdleSync();
-    actions.sendSpecialKey(Actions.SpecialKey.DOWN);
-    actions.sendSpecialKey(Actions.SpecialKey.DOWN);
-    actions.sendSpecialKey(Actions.SpecialKey.ENTER);
-    actions.waitForGeckoEvent("DOMContentLoaded");
-
-    getInstrumentation().waitForIdleSync();
-    awesomebar.click();
-    //Unfortunately, the item isn't constant so can't be tested.
-    //asserter.is(url, urlbar.getText(),"Shouldn't this be the last url in the history?");
-  }
-  
-  @Override	
-  public void tearDown() throws Exception {	
-    try	{
-      solo.finalize();	
-    }catch (Throwable e){	
-      e.printStackTrace();	
-    }	
-    getActivity().finish();	
-    super.tearDown();	
-  }
+        getInstrumentation().waitForIdleSync();
+        //Unfortunately, the item isn't constant so can't be tested.
+        //awesomebar.click();
+        //asserter.is(url, urlbar.getText(),"Shouldn't this be the last url in the history?");
+    }
 }
