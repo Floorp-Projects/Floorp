@@ -210,7 +210,7 @@ LIRGenerator::visitTest(MTest *test)
 
         if (comp->specialization() == MIRType_Int32) {
             JSOp op = ReorderComparison(comp->jsop(), &left, &right);
-            return add(new LCompareIAndBranch(op, useRegister(left), useOrConstant(right),
+            return add(new LCompareIAndBranch(op, useRegister(left), useAnyOrConstant(right),
                                               ifTrue, ifFalse));
         }
         if (comp->specialization() == MIRType_Double) {
@@ -253,7 +253,7 @@ LIRGenerator::visitCompare(MCompare *comp)
 
         if (comp->specialization() == MIRType_Int32) {
             JSOp op = ReorderComparison(comp->jsop(), &left, &right);
-            return define(new LCompareI(op, useRegister(left), useOrConstant(right)), comp);
+            return define(new LCompareI(op, useRegister(left), useAnyOrConstant(right)), comp);
         }
 
         if (comp->specialization() == MIRType_Double)
@@ -455,10 +455,10 @@ bool
 LIRGenerator::visitMod(MMod *ins)
 {
     MDefinition *lhs = ins->lhs();
-    MDefinition *rhs = ins->rhs();
 
     if (ins->type() == MIRType_Int32 &&
-        ins->specialization() == MIRType_Int32) {
+        ins->specialization() == MIRType_Int32)
+    {
         JS_ASSERT(lhs->type() == MIRType_Int32);
         return lowerModI(ins);
     }

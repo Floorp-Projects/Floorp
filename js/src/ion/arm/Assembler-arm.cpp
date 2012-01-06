@@ -175,7 +175,7 @@ VFPRegister js::ion::NoVFPRegister(true);
 bool
 InstDTR::isTHIS(Instruction &i)
 {
-    return (i.encode() & IsDTRMask) == IsDTR;
+    return (i.encode() & IsDTRMask) == (uint32)IsDTR;
 }
 
 InstDTR *
