@@ -1589,72 +1589,62 @@ const char js_defineSetter_str[] = "__defineSetter__";
 const char js_lookupGetter_str[] = "__lookupGetter__";
 const char js_lookupSetter_str[] = "__lookupSetter__";
 
-JS_FRIEND_API(JSBool)
-js::obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
+enum DefineType { Getter, Setter };
+
+template<DefineType Type>
+static bool
+DefineAccessor(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (!BoxNonStrictThis(cx, args))
         return false;
-    JSObject *obj = &args.thisv().toObject();
 
-    if (args.length() <= 1 || !js_IsCallable(args[1])) {
+    if (args.length() < 2 || !js_IsCallable(args[1])) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_GETTER_OR_SETTER,
-                             js_getter_str);
-        return JS_FALSE;
+                             Type == Getter ? js_getter_str : js_setter_str);
+        return false;
     }
-    PropertyOp getter = CastAsPropertyOp(&args[1].toObject());
 
     jsid id;
     if (!ValueToId(cx, args[0], &id))
-        return JS_FALSE;
-    if (!CheckRedeclaration(cx, obj, id, JSPROP_GETTER))
-        return JS_FALSE;
-    /*
-     * Getters and setters are just like watchpoints from an access
-     * control point of view.
-     */
-    Value junk;
-    uintN attrs;
-    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
-        return JS_FALSE;
+        return false;
+
+    JSObject *descObj = NewBuiltinClassInstance(cx, &ObjectClass);
+    if (!descObj)
+        return false;
+
+    JSAtomState &state = cx->runtime->atomState;
+    /* enumerable: true */
+    if (!descObj->defineProperty(cx, state.enumerableAtom, BooleanValue(true)))
+        return false;
+
+    /* configurable: true */
+    if (!descObj->defineProperty(cx, state.configurableAtom, BooleanValue(true)))
+        return false;
+
+    /* enumerable: true */
+    PropertyName *acc = (Type == Getter) ? state.getAtom : state.setAtom;
+    if (!descObj->defineProperty(cx, acc, args[1]))
+        return false;
+
+    JSBool dummy;
+    if (!js_DefineOwnProperty(cx, &args.thisv().toObject(), id, ObjectValue(*descObj), &dummy))
+        return false;
     args.rval().setUndefined();
-    return obj->defineGeneric(cx, id, UndefinedValue(), getter, JS_StrictPropertyStub,
-                              JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED);
+    return true;
+}
+
+JS_FRIEND_API(JSBool)
+js::obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
+{
+    return DefineAccessor<Getter>(cx, argc, vp);
 }
 
 JS_FRIEND_API(JSBool)
 js::obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!BoxNonStrictThis(cx, args))
-        return false;
-    JSObject *obj = &args.thisv().toObject();
-
-    if (args.length() <= 1 || !js_IsCallable(args[1])) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_GETTER_OR_SETTER,
-                             js_setter_str);
-        return JS_FALSE;
-    }
-    StrictPropertyOp setter = CastAsStrictPropertyOp(&args[1].toObject());
-
-    jsid id;
-    if (!ValueToId(cx, args[0], &id))
-        return JS_FALSE;
-    if (!CheckRedeclaration(cx, obj, id, JSPROP_SETTER))
-        return JS_FALSE;
-    /*
-     * Getters and setters are just like watchpoints from an access
-     * control point of view.
-     */
-    Value junk;
-    uintN attrs;
-    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
-        return JS_FALSE;
-    args.rval().setUndefined();
-    return obj->defineGeneric(cx, id, UndefinedValue(), JS_PropertyStub, setter,
-                              JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED);
+    return DefineAccessor<Setter>(cx, argc, vp);
 }
 
 static JSBool
