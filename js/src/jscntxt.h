@@ -419,7 +419,6 @@ struct JSRuntime
     size_t              gcLastBytes;
     size_t              gcMaxBytes;
     size_t              gcMaxMallocBytes;
-    uint32_t            gcEmptyArenaPoolLifespan;
 
     /*
      * Number of the committed arenas in all GC chunks including empty chunks.

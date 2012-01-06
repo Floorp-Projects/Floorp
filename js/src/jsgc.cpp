@@ -891,7 +891,6 @@ js_InitGC(JSRuntime *rt, uint32_t maxbytes)
      */
     rt->gcMaxBytes = maxbytes;
     rt->setGCMaxMallocBytes(maxbytes);
-    rt->gcEmptyArenaPoolLifespan = 30000;
 
     /*
      * The assigned value prevents GC from running when GC memory is too low
