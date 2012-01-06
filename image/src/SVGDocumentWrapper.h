@@ -62,7 +62,7 @@ class nsSVGSVGElement;
 
 
 namespace mozilla {
-namespace imagelib {
+namespace image {
 
 class SVGDocumentWrapper MOZ_FINAL : public nsIStreamListener,
                                      public nsIObserver,
@@ -187,7 +187,7 @@ private:
   bool                        mRegisteredForXPCOMShutdown;
 };
 
-} // namespace imagelib
+} // namespace image
 } // namespace mozilla
 
 #endif // mozilla_imagelib_SVGDocumentWrapper_h_

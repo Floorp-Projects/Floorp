@@ -39,7 +39,7 @@
 #define MOZILLA_IMAGELIB_BMPHEADERS_H_
 
 namespace mozilla {
-  namespace imagelib {
+  namespace image {
 
     struct BMPFILEHEADER {
       char signature[2]; // String "BM"
@@ -97,7 +97,7 @@ namespace mozilla {
       PRUint8 blueRightShift;
     };
 
-  } // namespace imagelib
+  } // namespace image
 } // namespace mozilla
 
 #define BITFIELD_LENGTH 12 // Length of the bitfields structure in the bmp file

@@ -545,7 +545,7 @@ nsBMPEncoder::InitInfoHeader(PRUint32 aBPP, PRUint32 aWidth, PRUint32 aHeight)
 void 
 nsBMPEncoder::EncodeFileHeader() 
 {  
-  mozilla::imagelib::BMPFILEHEADER littleEndianBFH = mBMPFileHeader;
+  mozilla::image::BMPFILEHEADER littleEndianBFH = mBMPFileHeader;
   littleEndianBFH.filesize = NATIVE32_TO_LITTLE(littleEndianBFH.filesize);
   littleEndianBFH.reserved = NATIVE32_TO_LITTLE(littleEndianBFH.reserved);
   littleEndianBFH.dataoffset= NATIVE32_TO_LITTLE(littleEndianBFH.dataoffset);
@@ -572,7 +572,7 @@ nsBMPEncoder::EncodeFileHeader()
 void 
 nsBMPEncoder::EncodeInfoHeader()
 {
-  mozilla::imagelib::BMPINFOHEADER littleEndianmBIH = mBMPInfoHeader;
+  mozilla::image::BMPINFOHEADER littleEndianmBIH = mBMPInfoHeader;
   littleEndianmBIH.width =  NATIVE32_TO_LITTLE(littleEndianmBIH.width);
   littleEndianmBIH.height = NATIVE32_TO_LITTLE(littleEndianmBIH.height); 
   littleEndianmBIH.planes = NATIVE16_TO_LITTLE(littleEndianmBIH.planes);
