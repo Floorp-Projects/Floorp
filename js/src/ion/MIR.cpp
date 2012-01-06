@@ -121,6 +121,7 @@ EvaluateConstantOperands(MBinaryInstruction *ins)
         break;
       case MDefinition::Op_Mod:
         ret.setNumber(NumberMod(lhs.toNumber(), rhs.toNumber()));
+        break;
       default:
         JS_NOT_REACHED("NYI");
         return NULL;
