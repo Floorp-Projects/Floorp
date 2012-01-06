@@ -85,7 +85,7 @@ mailing address.
 #include "qcms.h"
 
 namespace mozilla {
-namespace imagelib {
+namespace image {
 
 /*
  * GETN(n, s) requests at least 'n' bytes available from 'q', at start of state 's'
@@ -1104,5 +1104,5 @@ nsGIFDecoder2::SpeedHistogram()
 }
 
 
-} // namespace imagelib
+} // namespace image
 } // namespace mozilla

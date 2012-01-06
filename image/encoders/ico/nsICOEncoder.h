@@ -108,8 +108,8 @@ protected:
   // These headers will always contain endian independent stuff.
   // Don't trust the width and height of mICODirEntry directly,
   // instead use the accessors GetRealWidth() and GetRealHeight().
-  mozilla::imagelib::IconFileHeader mICOFileHeader;
-  mozilla::imagelib::IconDirEntry mICODirEntry;
+  mozilla::image::IconFileHeader mICOFileHeader;
+  mozilla::image::IconDirEntry mICODirEntry;
 
   // Keeps track of the start of the image buffer
   PRUint8* mImageBufferStart;
