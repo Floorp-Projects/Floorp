@@ -454,11 +454,9 @@ abstract public class GeckoApp
         if (tab.isBookmark()) {
             bookmark.setChecked(true);
             bookmark.setIcon(R.drawable.ic_menu_bookmark_remove);
-            bookmark.setTitle(R.string.bookmark_remove);
         } else {
             bookmark.setChecked(false);
             bookmark.setIcon(R.drawable.ic_menu_bookmark_add);
-            bookmark.setTitle(R.string.bookmark_add);
         }
 
         forward.setEnabled(tab.canDoForward());
@@ -503,12 +501,10 @@ abstract public class GeckoApp
                         tab.removeBookmark();
                         Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
                         item.setIcon(R.drawable.ic_menu_bookmark_add);
-                        item.setTitle(R.string.bookmark_add);
                     } else {
                         tab.addBookmark();
                         Toast.makeText(this, R.string.bookmark_added, Toast.LENGTH_SHORT).show();
                         item.setIcon(R.drawable.ic_menu_bookmark_remove);
-                        item.setTitle(R.string.bookmark_remove);
                     }
                 }
                 return true;
