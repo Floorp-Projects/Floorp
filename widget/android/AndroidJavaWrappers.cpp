@@ -408,6 +408,10 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
     mType = jenv->GetIntField(jobj, jTypeField);
 
     switch (mType) {
+        case TILE_SIZE:
+            ReadP0Field(jenv);
+            break;
+
         case SIZE_CHANGED:
             ReadP0Field(jenv);
             ReadP1Field(jenv);
