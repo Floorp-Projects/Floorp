@@ -81,3 +81,16 @@ function testMultipleTypes() {
     assertEq(b[1], 20);
 }
 testMultipleTypes();
+
+function testNull() {
+    function f(arr) {
+        arr[0] = null;
+    }
+
+    var arr = [undefined];
+    for (var i=0; i<100; i++) {
+        f(arr);
+    }
+    assertEq(arr[0], null);
+}
+testNull();
