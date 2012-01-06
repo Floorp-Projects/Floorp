@@ -78,8 +78,8 @@ public class IntSize {
     public String toString() { return "(" + width + "," + height + ")"; }
 
     public IntSize scale(float factor) {
-        return new IntSize((int)Math.round(width * factor),
-                           (int)Math.round(height * factor));
+        return new IntSize(Math.round(width * factor),
+                           Math.round(height * factor));
     }
 
     /* Returns the power of two that is greater than or equal to value */

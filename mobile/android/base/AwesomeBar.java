@@ -439,7 +439,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         if (mContextMenuSubject instanceof Cursor) {
             Cursor cursor = (Cursor)mContextMenuSubject;
             url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
-            b = (byte[]) cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
+            b = cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
             title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
         } else if (mContextMenuSubject instanceof Map) {
             Map map = (Map)mContextMenuSubject;
