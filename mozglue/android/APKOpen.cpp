@@ -296,7 +296,6 @@ SHELL_WRAPPER1(onChangeNetworkLinkStatus, jstring)
 SHELL_WRAPPER1(reportJavaCrash, jstring)
 SHELL_WRAPPER0(executeNextRunnable)
 SHELL_WRAPPER1(cameraCallbackBridge, jbyteArray)
-SHELL_WRAPPER1(notifyUriVisited, jstring)
 SHELL_WRAPPER3(notifyBatteryChange, jdouble, jboolean, jdouble);
 SHELL_WRAPPER3(notifySmsReceived, jstring, jstring, jlong);
 SHELL_WRAPPER0(bindWidgetTexture);
@@ -703,7 +702,6 @@ loadLibs(const char *apkName)
   GETFUNC(reportJavaCrash);
   GETFUNC(executeNextRunnable);
   GETFUNC(cameraCallbackBridge);
-  GETFUNC(notifyUriVisited);
   GETFUNC(notifyBatteryChange);
   GETFUNC(notifySmsReceived);
   GETFUNC(bindWidgetTexture);
