@@ -692,7 +692,6 @@ JSRuntime::JSRuntime()
     gcLastBytes(0),
     gcMaxBytes(0),
     gcMaxMallocBytes(0),
-    gcEmptyArenaPoolLifespan(0),
     gcNumArenasFreeCommitted(0),
     gcNumber(0),
     gcIncrementalTracer(NULL),
@@ -2902,9 +2901,6 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
       case JSGC_MAX_MALLOC_BYTES:
         rt->setGCMaxMallocBytes(value);
         break;
-      case JSGC_STACKPOOL_LIFESPAN:
-        rt->gcEmptyArenaPoolLifespan = value;
-        break;
       default:
         JS_ASSERT(key == JSGC_MODE);
         rt->gcMode = JSGCMode(value);
@@ -2922,8 +2918,6 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
         return rt->gcMaxBytes;
       case JSGC_MAX_MALLOC_BYTES:
         return rt->gcMaxMallocBytes;
-      case JSGC_STACKPOOL_LIFESPAN:
-        return rt->gcEmptyArenaPoolLifespan;
       case JSGC_BYTES:
         return rt->gcBytes;
       case JSGC_MODE:

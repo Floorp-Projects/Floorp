@@ -1234,7 +1234,6 @@ static const struct ParamPair {
 } paramMap[] = {
     {"maxBytes",            JSGC_MAX_BYTES },
     {"maxMallocBytes",      JSGC_MAX_MALLOC_BYTES},
-    {"gcStackpoolLifespan", JSGC_STACKPOOL_LIFESPAN},
     {"gcBytes",             JSGC_BYTES},
     {"gcNumber",            JSGC_NUMBER},
 };
