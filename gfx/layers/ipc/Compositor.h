@@ -47,37 +47,16 @@
 
 namespace mozilla {
 namespace layers {
+
+class CompositorParent;
+class LayerManager;
+
 namespace compositor {
 
-// Layer user data to store the native content
-// on the shadow layer manager since cocoa widgets
-// expects to find the native context from the layer manager.
-extern int sShadowNativeContext;
-
-class ShadowNativeContextUserData : public LayerUserData
-{
-public:
-  ShadowNativeContextUserData(void *aNativeContext)
-    : mNativeContext(aNativeContext)
-  {
-    MOZ_COUNT_CTOR(ShadowNativeContextUserData);
-  }
-  ~ShadowNativeContextUserData()
-  {
-    MOZ_COUNT_DTOR(ShadowNativeContextUserData);
-  }
-
-  // This native context is shared with the compositor.
-  // The user is responsible for locking usage of this context
-  // with the compositor. Note that using this context blocks
-  // the compositor and must be avoided.
-  void* GetNativeContext() {
-    return mNativeContext;
-  }
-private:
-  void *mNativeContext;
-};
-
+// Needed when we cannot directly include CompositorParent.h since it includes
+// an IPDL-generated header (e.g. IPDL-generated headers cannot be included in
+// widget/src/cocoa).
+LayerManager* GetLayerManager(CompositorParent* aParent);
 
 }
 }

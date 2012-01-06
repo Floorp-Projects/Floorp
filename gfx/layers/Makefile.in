@@ -137,7 +137,7 @@ EXPORTS_mozilla/layers = \
         ShadowLayers.h \
         ShadowLayersChild.h \
         ShadowLayersParent.h \
-        ShadowLayersHost.h \
+        ShadowLayersManager.h \
         $(NULL)
 
 CPPSRCS += \

@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_layers_ShadowLayersHost_h
-#define mozilla_layers_ShadowLayersHost_h
+#ifndef mozilla_layers_ShadowLayersManager_h
+#define mozilla_layers_ShadowLayersManager_h
 
 namespace mozilla {
 
@@ -50,16 +50,14 @@ namespace layers {
 
 class CompositorParent;
 
-class ShadowLayersHost
+class ShadowLayersManager
 {
-NS_INLINE_DECL_REFCOUNTING(ShadowLayersHost)
 
 public:
-  virtual mozilla::layout::RenderFrameParent* GetRenderFrameParent() = 0;
-  virtual CompositorParent* GetCompositorParent() = 0;
+  virtual void ShadowLayersUpdated() = 0;
 };
 
 } // layers
 } // mozilla
 
-#endif // mozilla_layers_ShadowLayersHost_h
+#endif // mozilla_layers_ShadowLayersManager_h

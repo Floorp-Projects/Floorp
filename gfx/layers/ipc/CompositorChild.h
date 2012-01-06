@@ -42,12 +42,6 @@
 
 #include "mozilla/layers/PCompositorChild.h"
 
-namespace base {
-  class Thread;
-}
-
-using base::Thread;
-
 namespace mozilla {
 namespace layers {
 
@@ -58,23 +52,16 @@ class CompositorChild : public PCompositorChild
 {
   NS_INLINE_DECL_REFCOUNTING(CompositorChild)
 public:
+  CompositorChild(LayerManager *aLayerManager);
   virtual ~CompositorChild();
 
   void Destroy();
 
-  static CompositorChild* CreateCompositor(LayerManager *aLayerManager,
-                                           CompositorParent *aCompositorParent);
-
 protected:
-  CompositorChild(Thread* aCompositorThread, LayerManager *aLayerManager);
-
-  virtual PLayersChild* AllocPLayers(const LayersBackend &aBackend, const WidgetDescriptor &aWidget);
+  virtual PLayersChild* AllocPLayers(const LayersBackend &aBackend);
   virtual bool DeallocPLayers(PLayersChild *aChild);
 
-  virtual bool RecvNativeContextCreated(const NativeContext &aNativeContext);
-
 private:
-  Thread *mCompositorThread;
   nsRefPtr<LayerManager> mLayerManager;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorChild);

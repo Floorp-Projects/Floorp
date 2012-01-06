@@ -102,8 +102,6 @@ using namespace mozilla::gl;
 using namespace mozilla::widget;
 using namespace mozilla;
 
-using compositor::ShadowNativeContextUserData;
-
 #undef DEBUG_UPDATE
 #undef INVALIDATE_DEBUGGING  // flash areas as they are invalidated
 
@@ -1786,6 +1784,22 @@ NSView<mozView>* nsChildView::GetEditorView()
 
 #pragma mark -
 
+void
+nsChildView::CreateCompositor()
+{
+  nsBaseWidget::CreateCompositor();
+  if (mCompositorChild) {
+    LayerManagerOGL *manager =
+      static_cast<LayerManagerOGL*>(compositor::GetLayerManager(mCompositorParent));
+
+    NSOpenGLContext *glContext =
+      (NSOpenGLContext *) manager->gl()->GetNativeData(GLContext::NativeGLContext);
+
+    [(ChildView *)mView setGLContext:glContext];
+    [(ChildView *)mView setUsingOMTCompositor:true];
+  }
+}
+
 gfxASurface*
 nsChildView::GetThebesSurface()
 {
@@ -2590,17 +2604,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     }
 
     return;
-  } else if (layerManager->AsShadowManager() &&
-             layerManager->GetUserData(&compositor::sShadowNativeContext)) {
-    NSOpenGLContext *glContext;
-
-    ShadowNativeContextUserData *userData =
-        (ShadowNativeContextUserData*)layerManager->GetUserData(&compositor::sShadowNativeContext);
-      glContext = (NSOpenGLContext*)userData->GetNativeContext();
-
-    if (!mGLContext) {
-      [self setGLContext:glContext];
-    }
   }
 
   // Create Cairo objects.
@@ -2633,8 +2636,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Force OpenGL to refresh the very first time we draw. This works around a
   // Mac OS X bug that stops windows updating on OS X when we use OpenGL.
   if (painted && !mDidForceRefreshOpenGL &&
-      layerManager->AsShadowManager() &&
-      layerManager->GetUserData(&compositor::sShadowNativeContext)) {
+      layerManager->AsShadowManager() && mUsingOMTCompositor) {
     if (!mDidForceRefreshOpenGL) {
       [self performSelector:@selector(forceRefreshOpenGL) withObject:nil afterDelay:0];
       mDidForceRefreshOpenGL = YES;
@@ -3178,6 +3180,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
   mSwipeAnimationCancelled = &animationCancelled;
 }
 #endif // #ifdef __LP64__
+
+- (void)setUsingOMTCompositor:(BOOL)aUseOMTC
+{
+  mUsingOMTCompositor = aUseOMTC;
+}
+
 
 // Returning NO from this method only disallows ordering on mousedown - in order
 // to prevent it for mouseup too, we need to call [NSApp preventWindowOrdering]
