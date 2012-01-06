@@ -140,12 +140,11 @@ public class FennecNativeElement implements Element {
 
   public boolean isDisplayed() {
     final SynchronousQueue syncQueue = new SynchronousQueue();
-    currentActivity = robocop.getCurrentActivity();
     displayed = false;
-    currentActivity.runOnUiThread(
+    mActivity.runOnUiThread(
         new Runnable() {
           public void run() {
-            View view = (View)currentActivity.findViewById(id);
+            View view = (View)mActivity.findViewById(id);
             if(view != null) {
               displayed = true;
             }
