@@ -116,6 +116,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitMathD(LMathD *math);
     virtual bool visitTableSwitch(LTableSwitch *ins);
 
+
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);
 private:
@@ -166,6 +167,13 @@ private:
     bool visitLoadSlotV(LLoadSlotV *load);
     bool visitLoadSlotT(LLoadSlotT *load);
     bool visitStoreSlotT(LStoreSlotT *load);
+    bool visitWriteBarrierT(LWriteBarrierT *barrier);
+
+    bool visitLoadElementV(LLoadElementV *load);
+    bool visitLoadElementT(LLoadElementT *load);
+    bool visitStoreElementV(LStoreElementV *store);
+    bool visitStoreElementT(LStoreElementT *store);
+
     bool visitGuardShape(LGuardShape *guard);
     bool visitGuardClass(LGuardClass *guard);
     bool visitImplicitThis(LImplicitThis *lir);
