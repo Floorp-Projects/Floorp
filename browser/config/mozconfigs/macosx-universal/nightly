@@ -18,3 +18,6 @@ export MOZ_TELEMETRY_REPORTING=1
 mk_add_options MOZ_MAKE_FLAGS="-j4"
 
 ac_add_options --with-macbundlename-prefix=Firefox
+
+# Treat warnings as errors in directories with FAIL_ON_WARNINGS.
+ac_add_options --enable-warnings-as-errors
