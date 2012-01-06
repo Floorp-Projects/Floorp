@@ -514,8 +514,11 @@ imgRequest::RequestDecode()
 
 /** imgIContainerObserver methods **/
 
-/* [noscript] void frameChanged (in imgIContainer container, in nsIntRect dirtyRect); */
-NS_IMETHODIMP imgRequest::FrameChanged(imgIContainer *container,
+/* [noscript] void frameChanged (in imgIRequest request,
+                                 in imgIContainer container,
+                                 in nsIntRect dirtyRect); */
+NS_IMETHODIMP imgRequest::FrameChanged(imgIRequest *request,
+                                       imgIContainer *container,
                                        const nsIntRect *dirtyRect)
 {
   LOG_SCOPE(gImgLog, "imgRequest::FrameChanged");

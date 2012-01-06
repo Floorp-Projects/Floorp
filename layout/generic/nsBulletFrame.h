@@ -68,7 +68,8 @@ public:
   NS_IMETHOD OnImageIsAnimated(imgIRequest *aRequest);
 
   // imgIContainerObserver (override nsStubImageDecoderObserver)
-  NS_IMETHOD FrameChanged(imgIContainer *aContainer,
+  NS_IMETHOD FrameChanged(imgIRequest *aRequest,
+                          imgIContainer *aContainer,
                           const nsIntRect *dirtyRect);
 
   void SetFrame(nsBulletFrame *frame) { mFrame = frame; }
@@ -122,7 +123,8 @@ public:
                           nsresult aStatus,
                           const PRUnichar *aStatusArg);
   NS_IMETHOD OnImageIsAnimated(imgIRequest *aRequest);
-  NS_IMETHOD FrameChanged(imgIContainer *aContainer,
+  NS_IMETHOD FrameChanged(imgIRequest *aRequest,
+                          imgIContainer *aContainer,
                           const nsIntRect *aDirtyRect);
 
   /* get list item text, without '.' */
