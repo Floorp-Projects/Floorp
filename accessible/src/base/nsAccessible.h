@@ -671,7 +671,8 @@ protected:
 
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
-  bool IsVisible(bool *aIsOffscreen); 
+
+  PRUint64 VisibilityState(); 
 
   //////////////////////////////////////////////////////////////////////////////
   // Name helpers
