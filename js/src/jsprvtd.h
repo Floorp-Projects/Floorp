@@ -199,6 +199,9 @@ class InlineMap;
 
 class LifoAlloc;
 
+class PropertyCache;
+struct PropertyCacheEntry;
+
 class BaseShape;
 class UnownedBaseShape;
 struct Shape;

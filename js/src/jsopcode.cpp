@@ -2467,15 +2467,6 @@ InitSprintStack(JSContext *cx, SprintStack *ss, JSPrinter *jp, uintN depth)
     return JS_TRUE;
 }
 
-template <typename T>
-void
-Swap(T &a, T &b)
-{
-    T tmp = a;
-    a = b;
-    b = tmp;
-}
-
 /*
  * If nb is non-negative, decompile nb bytecodes starting at pc.  Otherwise
  * the decompiler starts at pc and continues until it reaches an opcode for
@@ -4217,13 +4208,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 todo = SprintCString(&ss->sprinter, rval);
                 break;
 
-              case JSOP_SWAP:
-                Swap(ss->offsets[ss->top-1], ss->offsets[ss->top-2]);
-                Swap(ss->opcodes[ss->top-1], ss->opcodes[ss->top-2]);
-                Swap(ss->bytecodes[ss->top-1], ss->bytecodes[ss->top-2]);
-                todo = -2;
-                break;
-
               case JSOP_SETARG:
                 atom = GetArgOrVarAtom(jp, GET_ARGNO(pc));
                 LOCAL_ASSERT(atom);
@@ -4305,8 +4289,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                                        op == JSOP_EVAL ||
                                        op == JSOP_FUNCALL ||
                                        op == JSOP_FUNAPPLY ||
-                                       op == JSOP_CALLPROP ||
-                                       op == JSOP_CALLELEM))
+                                       (js_CodeSpec[op].format & JOF_CALLOP)))
                                      ? JSOP_NAME
                                      : saveop,
                                      &lvalpc);
@@ -5394,6 +5377,12 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 CopyDecompiledTextForDecomposedOp(jp, pc);
         }
 
+        if (cs->format & JOF_CALLOP) {
+            todo = Sprint(&ss->sprinter, "");
+            if (todo < 0 || !PushOff(ss, todo, saveop))
+                return NULL;
+        }
+
         pc += len;
     }
 
@@ -5819,16 +5808,6 @@ DecompileExpression(JSContext *cx, JSScript *script, JSFunction *fun,
       }
       default:;
     }
-
-    /*
-     * Include the trailing SWAP when decompiling CALLPROP or CALLELEM ops,
-     * so that the result is the entire access rather than the lvalue.
-     */
-    if (op == JSOP_CALLPROP || op == JSOP_CALLELEM) {
-        JS_ASSERT(*end == JSOP_SWAP);
-        end += JSOP_SWAP_LENGTH;
-    }
-
     ptrdiff_t len = end - begin;
     if (len <= 0)
         return FAILED_EXPRESSION_DECOMPILER;
