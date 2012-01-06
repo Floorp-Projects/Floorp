@@ -244,9 +244,17 @@ IonFrameIterator::returnAddressPtr()
 }
 
 void
+IonFrameIterator::setReturnAddress(uint8 *addr)
+{
+    *current()->returnAddressPtr() = addr;
+}
+
+void
 ion::HandleException(ResumeFromException *rfe)
 {
     JSContext *cx = GetIonContext()->cx;
+
+    IonSpew(IonSpew_Invalidate, "handling exception");
 
     IonFrameIterator iter(JS_THREAD_DATA(cx)->ionTop);
     while (iter.type() != IonFrame_Entry) {

@@ -922,14 +922,22 @@ ion::SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc)
     return EnterIon(cx, fp, target, osrcode, true);
 }
 
+// Fails invalidation for all existing activations.
 static void
 FailInvalidation(JSContext *cx, uint8 *ionTop)
 {
-    JS_ASSERT(false); // NYI
+    IonSpew(IonSpew_Invalidate, "failed invalidation!");
 
-    // Need to flag the IonActivation that corresponds to
-    // as failing invalidation -- this must be checked for
-    // in the exit frame epilogue.
+    js_ReportOutOfMemory(cx);
+
+    for (IonActivationIterator ait(cx); ait.more(); ++ait) {
+        IonFrameIterator it(ait.top());
+        JS_ASSERT(it.type() == IonFrame_Exit);
+        it.setReturnAddress(NULL);
+
+        IonSpew(IonSpew_Invalidate, "failed invalidation for activation %p", (void *) ionTop);
+        ait.activation()->setFailedInvalidation(true);
+    }
 }
 
 static bool
@@ -1005,9 +1013,9 @@ ion::Invalidate(JSContext *cx, const Vector<JSScript *> &invalid)
     if (!ionTop)
         return;
 
+    IonSpew(IonSpew_Invalidate, "Invalidating with set of %u scripts", unsigned(invalid.length()));
+
     // Build the invalids as a hash set to avoid O(n^2) linear scans.
-    // FIXME: this should actually fail all active IonActivations
-    // instead of just the first.
     HashSet<JSScript *> invalidHash(cx);
     if (!invalidHash.init(invalid.length())) {
         FailInvalidation(cx, ionTop);
@@ -1029,7 +1037,7 @@ ion::Invalidate(JSContext *cx, const Vector<JSScript *> &invalid)
         activation = activation->prev();
     }
 
-    /* Clear out the compiled ion scripts now that they are invalidated. */
+    // Clear out the compiled ion scripts now that they are invalidated.
     for (JSScript * const *it = invalid.begin(), * const *end = invalid.end(); it != end; ++it)
         (*it)->ion = NULL;
 }
