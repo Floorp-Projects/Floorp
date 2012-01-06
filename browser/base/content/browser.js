@@ -1364,7 +1364,7 @@ function BrowserStartup() {
 
   allTabs.readPref();
 
-  TabsOnTop.init();
+  TabsOnTop.syncCommand();
 
   BookmarksMenuButton.init();
 
@@ -5278,44 +5278,27 @@ function setToolbarVisibility(toolbar, isVisible) {
 }
 
 var TabsOnTop = {
-  init: function TabsOnTop_init() {
-    this.syncUI();
-    Services.prefs.addObserver(this._prefName, this, false);
-  },
-
   toggle: function () {
-    this.enabled = !Services.prefs.getBoolPref(this._prefName);
+    this.enabled = !this.enabled;
   },
-
-  syncUI: function () {
-    let userEnabled = Services.prefs.getBoolPref(this._prefName);
-    let enabled = userEnabled && gBrowser.tabContainer.visible;
-
+  syncCommand: function () {
+    let enabled = this.enabled;
     document.getElementById("cmd_ToggleTabsOnTop")
-            .setAttribute("checked", userEnabled);
-
+            .setAttribute("checked", enabled);
     document.documentElement.setAttribute("tabsontop", enabled);
-    document.getElementById("navigator-toolbox").setAttribute("tabsontop", enabled);
     document.getElementById("TabsToolbar").setAttribute("tabsontop", enabled);
     gBrowser.tabContainer.setAttribute("tabsontop", enabled);
     TabsInTitlebar.allowedBy("tabs-on-top", enabled);
   },
-
   get enabled () {
     return gNavToolbox.getAttribute("tabsontop") == "true";
   },
-
   set enabled (val) {
-    Services.prefs.setBoolPref(this._prefName, !!val);
+    gNavToolbox.setAttribute("tabsontop", !!val);
+    this.syncCommand();
+
     return val;
-  },
-
-  observe: function (subject, topic, data) {
-    if (topic == "nsPref:changed")
-      this.syncUI();
-  },
-
-  _prefName: "browser.tabs.onTop"
+  }
 }
 
 var TabsInTitlebar = {
