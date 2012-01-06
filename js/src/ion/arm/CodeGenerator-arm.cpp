@@ -789,8 +789,8 @@ CodeGeneratorARM::visitTableSwitch(LTableSwitch *ins)
 bool
 CodeGeneratorARM::visitMathD(LMathD *math)
 {
-    const LAllocation *src1 = math->getOperand(1);
-    const LAllocation *src2 = math->getOperand(0);
+    const LAllocation *src1 = math->getOperand(0);
+    const LAllocation *src2 = math->getOperand(1);
     const LDefinition *output = math->getDef(0);
     
     switch (math->jsop()) {
@@ -1103,8 +1103,8 @@ CodeGeneratorARM::visitLoadSlotV(LLoadSlotV *load)
     Register base = ToRegister(load->input());
     int32 offset = load->mir()->slot() * sizeof(js::Value);
 
-    masm.ma_ldr(DTRAddr(base, DtrOffImm(offset + NUNBOX32_TYPE_OFFSET)), type);
-    masm.ma_ldr(DTRAddr(base, DtrOffImm(offset + NUNBOX32_PAYLOAD_OFFSET)), payload);
+    masm.ma_ldr(Operand(base, offset + NUNBOX32_TYPE_OFFSET), type);
+    masm.ma_ldr(Operand(base, offset + NUNBOX32_PAYLOAD_OFFSET), payload);
     return true;
 }
 
@@ -1148,6 +1148,104 @@ CodeGeneratorARM::visitStoreSlotT(LStoreSlotT *store)
 
     return true;
 }
+bool
+CodeGeneratorARM::visitLoadElementV(LLoadElementV *load)
+{
+    Register type = ToRegister(load->getDef(TYPE_INDEX));
+    Register payload = ToRegister(load->getDef(PAYLOAD_INDEX));
+    Register base = ToRegister(load->elements());
+    if (load->index()->isConstant()) {
+        masm.loadValue(Address(base, ToInt32(load->index())), ValueOperand(type, payload));
+    } else {
+        masm.loadValue(base, ToRegister(load->index()), ValueOperand(type, payload));
+    }
+
+    if (load->mir()->needsHoleCheck()) {
+        masm.ma_cmp(type, ImmTag(JSVAL_TAG_MAGIC));
+        return bailoutIf(Assembler::Equal, load->snapshot());
+    }
+
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitLoadElementT(LLoadElementT *load)
+{
+    Register base = ToRegister(load->elements());
+    if (load->mir()->type() == MIRType_Double) {
+        if (load->index()->isConstant()) {
+            masm.loadInt32OrDouble(Address(base,ToInt32(load->index())), ToFloatRegister(load->output()));
+        } else {
+            masm.loadInt32OrDouble(base, ToRegister(load->index()), ToFloatRegister(load->output()));
+        }
+    } else {
+        if (load->index()->isConstant()) {
+            masm.load32(Address(base, ToInt32(load->index())), ToRegister(load->output()));
+        } else {
+            masm.ma_ldr(DTRAddr(base, DtrRegImmShift(ToRegister(load->index()), LSL, 3)),
+                        ToRegister(load->output()));
+        }
+    }
+    JS_ASSERT(!load->mir()->needsHoleCheck());
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitStoreElementV(LStoreElementV *store)
+{
+    Register type = ToRegister(store->getDef(TYPE_INDEX));
+    Register payload = ToRegister(store->getDef(PAYLOAD_INDEX));
+    Register base = ToRegister(store->elements());
+    if (store->index()->isConstant()) {
+        masm.storeValue(ValueOperand(type, payload), Address(base, ToInt32(store->index())));
+    } else {
+        masm.storeValue(ValueOperand(type, payload), base, ToRegister(store->index()));
+    }
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitStoreElementT(LStoreElementT *store)
+{
+    const LAllocation *value = store->value();
+    MIRType valueType = store->mir()->value()->type();
+    Register base = ToRegister(store->elements());
+    if (store->index()->isConstant()) {
+        int32 index = ToInt32(store->index());
+        Address dest = Address(base, index);
+        if (valueType == MIRType_Double) {
+            masm.ma_vstr(ToFloatRegister(value), Operand(dest));
+            return true;
+        }
+
+        // Store the type tag if needed.
+        if (valueType != store->mir()->elementType())
+            masm.storeTypeTag(ImmType(ValueTypeFromMIRType(valueType)), dest);
+
+        // Store the payload.
+        if (value->isConstant())
+            masm.storePayload(*value->toConstant(), dest);
+        else
+            masm.storePayload(ToRegister(value), dest);
+    } else {
+        Register index;
+        if (valueType == MIRType_Double) {
+            masm.ma_vstr(ToFloatRegister(value), base, index);
+            return true;
+        }
+
+        // Store the type tag if needed.
+        if (valueType != store->mir()->elementType())
+            masm.storeTypeTag(ImmType(ValueTypeFromMIRType(valueType)), base, index);
+
+        // Store the payload.
+        if (value->isConstant())
+            masm.storePayload(*value->toConstant(), base, index);
+        else
+            masm.storePayload(ToRegister(value), base, index);
+    }
+    return false;
+}
 
 bool
 CodeGeneratorARM::visitGuardShape(LGuardShape *guard)
@@ -1172,6 +1270,17 @@ CodeGeneratorARM::visitGuardClass(LGuardClass *guard)
     masm.ma_cmp(tmp, Imm32((uint32)guard->mir()->getClass()));
     if (!bailoutIf(Assembler::NotEqual, guard->snapshot()))
         return false;
+    return true;
+}
+
+
+bool
+CodeGeneratorARM::visitWriteBarrierT(LWriteBarrierT *barrier)
+{
+    // TODO: Perform C++ call to some WriteBarrier stub.
+    // For now, we just breakpoint.
+    masm.breakpoint();
+    masm.breakpoint();
     return true;
 }
 

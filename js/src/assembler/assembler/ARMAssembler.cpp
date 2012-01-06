@@ -125,7 +125,7 @@ ARMWord ARMAssembler::getOp2RegScale(RegisterID reg, ARMWord scale)
     }
     shift = 31-lz;
     // Check that scale was a power of 2.
-    if ((1<<shift) != scale) {
+    if ((1u<<shift) != scale) {
         return INVALID_IMM;
     }
 

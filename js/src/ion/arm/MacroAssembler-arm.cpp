@@ -43,15 +43,27 @@
 
 using namespace js;
 using namespace ion;
+bool
+isValueDTRDCandidate(ValueOperand &val)
+{
+    // In order to be used for a DTRD memory function, the two target registers
+    // need to be a) Adjacent, with the tag larger than the payload, and
+    // b) Aligned to a multiple of two.
+    if ((val.typeReg().code() != (val.payloadReg().code() + 1)))
+        return false;
+    else if ((val.payloadReg().code() & 1) != 0)
+        return false;
+    return true;
+}
 
 void
-MacroAssemblerARM::convertInt32ToDouble(const Register &src, const FloatRegister &dest)
+MacroAssemblerARM::convertInt32ToDouble(const Register &src, const FloatRegister &dest_)
 {
     // direct conversions aren't possible.
-    as_vxfer(src, InvalidReg, VFPRegister(dest, VFPRegister::Single),
+    VFPRegister dest = VFPRegister(dest_);
+    as_vxfer(src, InvalidReg, dest.sintOverlay(),
              CoreToFloat);
-    as_vcvt(VFPRegister(dest, VFPRegister::Double),
-            VFPRegister(dest, VFPRegister::Int));
+    as_vcvt(dest, dest.sintOverlay());
 }
 
 bool
@@ -543,7 +555,18 @@ MacroAssemblerARM::ma_cmp(Register src1, ImmGCPtr ptr, Condition c)
 void
 MacroAssemblerARM::ma_cmp(Register src1, Operand op, Condition c)
 {
-    as_cmp(src1, op.toOp2(), c);
+    switch (op.getTag()) {
+      case Operand::OP2:
+        as_cmp(src1, op.toOp2(), c);
+        break;
+      case Operand::MEM:
+        ma_ldr(op, ScratchRegister);
+        as_cmp(src1, O2Reg(ScratchRegister), c);
+        break;
+      default:
+        JS_NOT_REACHED("trying to compare FP and integer registers");
+        break;
+    }
 }
 void
 MacroAssemblerARM::ma_cmp(Register src1, Register src2, Condition c)
@@ -719,6 +742,13 @@ MacroAssemblerARM::ma_str(Register rt, const Operand &addr, Index mode, Conditio
 {
     ma_dtr(IsStore, rt, addr, mode, cc);
 }
+void
+MacroAssemblerARM::ma_strd(Register rt, DebugOnly<Register> rt2, EDtrAddr addr, Index mode, Condition cc)
+{
+    JS_ASSERT((rt.code() & 1) == 0);
+    JS_ASSERT(rt2.value.code() == rt.code() + 1);
+    as_extdtr(IsStore, 64, true, mode, rt, addr, cc);
+}
 
 void
 MacroAssemblerARM::ma_ldr(DTRAddr addr, Register rt, Index mode, Condition cc)
@@ -816,6 +846,7 @@ enum RelocBranchStyle {
     LDR,
     MOVW_ADD
 };
+
 RelocBranchStyle
 b_type()
 {
@@ -993,6 +1024,12 @@ MacroAssemblerARM::ma_vstr(FloatRegister src, const Operand &addr)
 {
     ma_vdtr(IsStore, addr, src);
 }
+void
+MacroAssemblerARM::ma_vstr(FloatRegister src, Register base, Register index, int32 shift)
+{
+    as_add(ScratchRegister, base, lsl(index, shift));
+    ma_vstr(src, Operand(ScratchRegister, 0));
+}
 
 void
 MacroAssemblerARMCompat::callWithExitFrame(IonCode *target)
@@ -1009,7 +1046,7 @@ void
 MacroAssemblerARMCompat::callIon(const Register &callee)
 {
     JS_ASSERT((framePushed() & 3) == 0);
-    if (framePushed() & 7 == 4) {
+    if ((framePushed() & 7) == 4) {
         ma_callIonHalfPush(callee);
     } else {
         adjustFrame(sizeof(void*));
@@ -1317,7 +1354,6 @@ void
 MacroAssemblerARMCompat::loadInt32OrDouble(const Operand &src, const FloatRegister &dest)
 {
     Label notInt32, end;
-
     // If it's an int, convert it to double.
     ma_ldr(ToType(src), ScratchRegister);
     branchTestInt32(Assembler::NotEqual, ScratchRegister, &notInt32);
@@ -1328,6 +1364,34 @@ MacroAssemblerARMCompat::loadInt32OrDouble(const Operand &src, const FloatRegist
     // Not an int, just load as double.
     bind(&notInt32);
     ma_vldr(src, dest);
+    bind(&end);
+}
+
+void
+MacroAssemblerARMCompat::loadInt32OrDouble(Register base, Register index, const FloatRegister &dest, int32 shift)
+{
+    Label notInt32, end;
+
+    JS_STATIC_ASSERT(NUNBOX32_PAYLOAD_OFFSET == 0);
+
+    // If it's an int, convert it to double.
+    ma_alu(base, lsl(index, shift), ScratchRegister, op_add);
+
+    // Since we only have one scratch register, we need to stomp over it with the tag
+    ma_ldr(Address(ScratchRegister, NUNBOX32_TYPE_OFFSET), ScratchRegister);
+    branchTestInt32(Assembler::NotEqual, ScratchRegister, &notInt32);
+
+    // Implicitly requires NUNBOX32_PAYLOAD_OFFSET == 0: no offset provided
+    ma_ldr(DTRAddr(base, DtrRegImmShift(index, LSL, shift)), ScratchRegister);
+    convertInt32ToDouble(ScratchRegister, dest);
+    ma_b(&end);
+
+    // Not an int, just load as double.
+    bind(&notInt32);
+    // First, recompute the offset that had been stored in the scratch register
+    // since the scratch register was overwritten loading in the type.
+    ma_alu(base, lsl(index, shift), ScratchRegister, op_add);
+    ma_vldr(Address(ScratchRegister, 0), dest);
     bind(&end);
 }
 
@@ -1397,6 +1461,63 @@ MacroAssemblerARMCompat::storeValue(ValueOperand val, Operand dst) {
     ma_str(val.payloadReg(), ToPayload(dst));
     ma_str(val.typeReg(), ToType(dst));
 }
+
+void
+MacroAssemblerARMCompat::storeValue(ValueOperand val, Register base, Register index, int32 shift)
+{
+    if (isValueDTRDCandidate(val)) {
+        Register tmpIdx;
+        if (shift == 0) {
+            tmpIdx = index;
+        } else if (shift < 0) {
+            ma_asr(Imm32(-shift), index, ScratchRegister);
+            tmpIdx = ScratchRegister;
+        } else {
+            ma_lsl(Imm32(shift), index, ScratchRegister);
+            tmpIdx = ScratchRegister;
+        }
+        ma_strd(val.payloadReg(), val.typeReg(), EDtrAddr(base, EDtrOffReg(tmpIdx)));
+    } else {
+        // The ideal case is the base is dead so the sequence:
+        // str val.payloadReg(), [base, index LSL shift]!
+        // str val.typeReg(), [base, #4]
+        // only clobbers dead registers
+        // Sadly, this information is not available, so the scratch register is necessary.
+        ma_alu(base, lsl(index, shift), ScratchRegister, op_add);
+
+        // This case is handled by a simpler function.
+        storeValue(val, Address(ScratchRegister, 0));
+    }
+}
+
+void
+MacroAssemblerARMCompat::loadValue(Register base, Register index, ValueOperand val, int32 shift)
+{
+    if (isValueDTRDCandidate(val)) {
+        Register tmpIdx;
+        if (shift == 0) {
+            tmpIdx = index;
+        } else if (shift < 0) {
+            ma_asr(Imm32(-shift), index, ScratchRegister);
+            tmpIdx = ScratchRegister;
+        } else {
+            ma_lsl(Imm32(shift), index, ScratchRegister);
+            tmpIdx = ScratchRegister;
+        }
+        ma_ldrd(EDtrAddr(base, EDtrOffReg(tmpIdx)), val.payloadReg(), val.typeReg());
+    } else {
+        // The ideal case is the base is dead so the sequence:
+        // ldr val.payloadReg(), [base, index LSL shift]!
+        // ldr val.typeReg(), [base, #4]
+        // only clobbers dead registers
+        // Sadly, this information is not available, so the scratch register is necessary.
+        ma_alu(base, lsl(index, shift), ScratchRegister, op_add);
+
+        // This case is handled by a simpler function.
+        loadValue(Address(ScratchRegister, 0), val);
+    }
+}
+
 void
 MacroAssemblerARMCompat::loadValue(Address src, ValueOperand val)
 {
@@ -1404,9 +1525,7 @@ MacroAssemblerARMCompat::loadValue(Address src, ValueOperand val)
     Operand payload = ToPayload(srcOp);
     Operand type = ToType(srcOp);
     // TODO: copy this code into a generic function that acts on all sequences of memory accesses
-    if (((val.payloadReg().code() & 1) == 0) &&
-        val.typeReg().code() == val.payloadReg().code()+1)
-    {
+    if (isValueDTRDCandidate(val)) {
         // If the value we want is in two consecutive registers starting with an even register,
         // they can be combined as a single ldrd.
         int offset = srcOp.disp();
@@ -1466,7 +1585,8 @@ MacroAssemblerARMCompat::popValue(ValueOperand val) {
     ma_pop(val.typeReg());
 }
 void
-MacroAssemblerARMCompat::storePayload(const Value &val, Operand dest) {
+MacroAssemblerARMCompat::storePayload(const Value &val, Operand dest)
+{
     jsval_layout jv = JSVAL_TO_IMPL(val);
     if (val.isMarkable()) {
         ma_mov(ImmGCPtr((gc::Cell *)jv.s.payload.ptr), ScratchRegister);
@@ -1476,7 +1596,8 @@ MacroAssemblerARMCompat::storePayload(const Value &val, Operand dest) {
     ma_str(ScratchRegister, ToPayload(dest));
 }
 void
-MacroAssemblerARMCompat::storePayload(Register src, Operand dest) {
+MacroAssemblerARMCompat::storePayload(Register src, Operand dest)
+{
     if (dest.getTag() == Operand::MEM) {
         ma_str(src, ToPayload(dest));
         return;
@@ -1484,6 +1605,33 @@ MacroAssemblerARMCompat::storePayload(Register src, Operand dest) {
     JS_NOT_REACHED("why do we do all of these things?");
 
 }
+
+void
+MacroAssemblerARMCompat::storePayload(const Value &val, Register base, Register index, int32 shift)
+{
+    jsval_layout jv = JSVAL_TO_IMPL(val);
+    if (val.isMarkable()) {
+        ma_mov(ImmGCPtr((gc::Cell *)jv.s.payload.ptr), ScratchRegister);
+    } else {
+        ma_mov(Imm32(jv.s.payload.i32), ScratchRegister);
+    }
+    JS_STATIC_ASSERT(NUNBOX32_PAYLOAD_OFFSET == 0);
+    // If NUNBOX32_PAYLOAD_OFFSET is not zero, the memory operand [base + index << shift + imm]
+    // cannot be encoded into a single instruction, and cannot be integrated into the as_dtr call.
+    as_dtr(IsStore, 32, Offset, ScratchRegister, DTRAddr(base, DtrRegImmShift(index, LSL, shift)));
+}
+void
+MacroAssemblerARMCompat::storePayload(Register src, Register base, Register index, int32 shift)
+{
+    JS_ASSERT((shift < 32) && (shift >= 0));
+    // If NUNBOX32_PAYLOAD_OFFSET is not zero, the memory operand [base + index << shift + imm]
+    // cannot be encoded into a single instruction, and cannot be integrated into the as_dtr call.
+    JS_STATIC_ASSERT(NUNBOX32_PAYLOAD_OFFSET == 0);
+    // Technically, shift > -32 can be handle by changing LSL to ASR, but should never come up,
+    // and this is one less code path to get wrong.
+    as_dtr(IsStore, 32, Offset, src, DTRAddr(base, DtrRegImmShift(index, LSL, shift)));
+}
+
 void
 MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Operand dest) {
     if (dest.getTag() == Operand::MEM) {
@@ -1494,6 +1642,22 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Operand dest) {
 
     JS_NOT_REACHED("why do we do all of these things?");
 
+}
+
+void
+MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Register base, Register index, int32 shift) {
+    JS_ASSERT(base != ScratchRegister);
+    JS_ASSERT(index != ScratchRegister);
+    // A value needs to be store a value int base + index << shift + 4.
+    // Arm cannot handle this in a single operand, so a temp register is required.
+    // However, the scratch register is presently in use to hold the immediate that
+    // is being stored into said memory location. Work around this by modifying
+    // the base so the valid [base + index << shift] format can be used, then
+    // restore it.
+    ma_add(base, Imm32(NUNBOX32_TYPE_OFFSET), base);
+    ma_mov(tag, ScratchRegister);
+    ma_str(ScratchRegister, DTRAddr(base, DtrRegImmShift(index, LSL, shift)));
+    ma_sub(base, Imm32(NUNBOX32_TYPE_OFFSET), base);
 }
 
 void

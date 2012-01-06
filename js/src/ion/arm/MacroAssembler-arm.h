@@ -52,7 +52,8 @@ namespace js {
 namespace ion {
 
 static Register CallReg = ip;
-
+static const int defaultShift = 3;
+JS_STATIC_ASSERT(1 << defaultShift == sizeof(jsval));
 // MacroAssemblerARM is inheriting form Assembler defined in Assembler-arm.{h,cpp}
 class MacroAssemblerARM : public Assembler
 {
@@ -247,6 +248,7 @@ class MacroAssemblerARM : public Assembler
     void ma_ldrsh(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
     void ma_ldrsb(EDtrAddr addr, Register rt, Index mode = Offset, Condition cc = Always);
     void ma_ldrd(EDtrAddr addr, Register rt, DebugOnly<Register> rt2, Index mode = Offset, Condition cc = Always);
+    void ma_strd(Register rt, DebugOnly<Register> rt2, EDtrAddr addr, Index mode = Offset, Condition cc = Always);
     // specialty for moving N bits of data, where n == 8,16,32,64
     void ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                           Register rn, Register rm, Register rt,
@@ -299,7 +301,7 @@ class MacroAssemblerARM : public Assembler
 
     void ma_vstr(FloatRegister src, VFPAddr addr);
     void ma_vstr(FloatRegister src, const Operand &addr);
-
+    void ma_vstr(FloatRegister src, Register base, Register index, int32 shift = defaultShift);
     // calls an Ion function, assumes that the stack is untouched (8 byte alinged)
     void ma_callIon(const Register reg);
     // callso an Ion function, assuming that sp has already been decremented
@@ -465,7 +467,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void boolValueToDouble(const ValueOperand &operand, const FloatRegister &dest);
     void int32ValueToDouble(const ValueOperand &operand, const FloatRegister &dest);
     void loadInt32OrDouble(const Operand &src, const FloatRegister &dest);
-
+    void loadInt32OrDouble(Register base, Register index,
+                           const FloatRegister &dest, int32 shift = defaultShift);
     void loadStaticDouble(const double *dp, const FloatRegister &dest);
     // treat the value as a boolean, and set condition codes accordingly
     Condition testInt32Truthy(bool truthy, const ValueOperand &operand);
@@ -543,7 +546,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         return CodeOffsetJump(size());
     }
     CodeOffsetJump branchPtrWithPatch(Condition cond, Address addr, ImmGCPtr ptr, Label *label) {
-        JS_NOT_REACHED("NYI");
+        JS_NOT_REACHED("NYI-IC");
         return CodeOffsetJump(size());
     }
 
@@ -554,16 +557,24 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void moveValue(const Value &val, const ValueOperand &dest);
 
     void storeValue(ValueOperand val, Operand dst);
+    void storeValue(ValueOperand val, Register base, Register index, int32 shift = defaultShift);
     void storeValue(ValueOperand val, const Address &dest) {
         storeValue(val, Operand(dest));
     }
 
     void loadValue(Address src, ValueOperand val);
+    void loadValue(Operand dest, ValueOperand val) {
+        loadValue(dest.toAddress(), val);
+    }
+    void loadValue(Register base, Register index, ValueOperand val, int32 shift = defaultShift);
     void pushValue(ValueOperand val);
     void popValue(ValueOperand val);
     void storePayload(const Value &val, Operand dest);
     void storePayload(Register src, Operand dest);
+    void storePayload(const Value &val, Register base, Register index, int32 shift = defaultShift);
+    void storePayload(Register src, Register base, Register index, int32 shift = defaultShift);
     void storeTypeTag(ImmTag tag, Operand dest);
+    void storeTypeTag(ImmTag tag, Register base, Register index, int32 shift = defaultShift);
     void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
         ma_lsl(Imm32(FRAMETYPE_BITS), frameSizeReg, frameSizeReg);
         ma_orr(Imm32(type), frameSizeReg);
