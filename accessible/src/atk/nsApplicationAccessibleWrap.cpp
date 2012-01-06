@@ -884,6 +884,9 @@ PreInit()
   sChecked = TRUE;
 
   // dbus is only checked if GNOME_ACCESSIBILITY is unset
+  // also make sure that a session bus address is available to prevent dbus from
+  // starting a new one.  Dbus confuses the test harness when it creates a new
+  // process (see bug 693343)
   if (PR_GetEnv(sAccEnv) || !PR_GetEnv("DBUS_SESSION_BUS_ADDRESS"))
     return;
 
