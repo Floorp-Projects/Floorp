@@ -644,12 +644,6 @@ class LInstruction
     virtual bool isCall() const {
         return false;
     };
-    virtual RegisterSet &spillRegs() const {
-        JS_NOT_REACHED("spillRegs should be guarded by isCall().");
-        static RegisterSet regs;
-        return regs;
-    }
-
     uint32 id() const {
         return id_;
     }
@@ -819,46 +813,7 @@ class LCallInstructionHelper : public LInstructionHelper<Defs, Operands, Temps>
     virtual bool isCall() const {
         return true;
     }
-    virtual RegisterSet &spillRegs() const {
-        JS_ASSERT(Defs == BOX_PIECES);
-        static RegisterSet regs(
-                  GeneralRegisterSet::Not(GeneralRegisterSet(Registers::JSCallMask)),
-                  FloatRegisterSet::All()
-        );
-        return regs;
-    }
 };
-
-template <LDefinition::Type DefType, size_t Defs, size_t Operands, size_t Temps>
-class LVMCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, Temps>
-{
-  public:
-    virtual RegisterSet &spillRegs() const {
-        static RegisterSet regs(
-            GeneralRegisterSet::Not(GeneralRegisterSet(defMask())),
-            FloatRegisterSet::All()
-        );
-        return regs;
-    }
-
-  private:
-    static uint32 defMask() {
-        switch (DefType) {
-          case LDefinition::BOX:
-            JS_ASSERT(Defs == BOX_PIECES);
-            return Registers::JSCallMask;
-          case LDefinition::GENERAL:
-          case LDefinition::OBJECT:
-            JS_ASSERT(Defs == 1);
-            return Registers::CallMask;
-          default:
-            JS_NOT_REACHED("unexpected return type (void)");
-            return 0;
-        }
-        return 0;
-    }
-};
-
 
 // An LSnapshot is the reflection of an MResumePoint in LIR. Unlike MResumePoints,
 // they cannot be shared, as they are filled in by the register allocator in
