@@ -77,7 +77,7 @@ interface imgIContainer;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(2e5fa0c4-57f8-4d16-bda3-1daeba9caa34)]
+[scriptable, uuid(5ca71b89-1a2f-475f-881d-d76c1531c4c8)]
 interface imgIDecoderObserver : imgIContainerObserver
 {
   /**
