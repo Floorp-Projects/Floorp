@@ -1,126 +1,39 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
-
-import com.jayway.android.robotium.solo.Solo;	
 import @ANDROID_PACKAGE_NAME@.*;
 
-import android.app.Activity;
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.PerformanceTestCase;
-import android.util.Log;
-import android.widget.Button;
-import android.content.Intent;
-import java.util.HashMap;
-import java.util.List;
+public class testPan extends BaseTest {
+    private static final String URL = "http://mochi.test:8888/startup_test/fenncmark/wikipedia.html";
 
-@SuppressWarnings("unused")
-public class testPan extends ActivityInstrumentationTestCase2 {
+    public void testPan() {
+        loadUrl(URL);
 
-  @SuppressWarnings("unchecked")
-  public testPan(Class activityClass) {
-    super(activityClass);
-    // TODO Auto-generated constructor stub
-  }
-  private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";	
-  private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
-  private Solo solo;    
-  private Activity activity;
-  private Driver driver;
-  private Actions actions;
-  private Assert asserter;
-  private static Class<?> launcherActivityClass;
+        mDriver.setupScrollHandling();
 
-  static{
-    try{
-      launcherActivityClass = Class.forName(LAUNCH_ACTIVITY_FULL_CLASSNAME);	
-    } catch (ClassNotFoundException e){
-      throw new RuntimeException(e);	
+        // Setup scrolling coordinates.
+        int midX = mDriver.getGeckoLeft() + mDriver.getGeckoWidth()/2;
+        int midY = mDriver.getGeckoTop() + mDriver.getGeckoHeight()/2;
+        int endY = mDriver.getGeckoTop() + mDriver.getGeckoHeight()/10;
+
+        mDriver.startFrameRecording();
+
+        int i = 0;
+        // Scroll a thousand times or until the end of the page.
+        do {
+            mActions.drag(midX, midX, midY, endY);
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            i++;
+        } while (i < 1000 && mDriver.getScrollHeight() + 2 * mDriver.getHeight() < mDriver.getPageHeight());
+        // asserter.ok(i < 1000, "Less than 1000", "Should take less than 1000 drags to get to bottom of the page.");
+
+        int frames = mDriver.stopFrameRecording();
+        mDriver.dumpLog("__start_report" + Integer.toString(frames) + "__end_report");
+        long msecs = System.currentTimeMillis();
+        mDriver.dumpLog("__startTimestamp" + msecs + "__endTimestamp");
     }	
-  }	
-
-  @SuppressWarnings("unchecked")	
-  public testPan() throws ClassNotFoundException {
-    super(TARGET_PACKAGE_ID, launcherActivityClass);	
-  }	
-  
-  @Override 
-  protected void setUp() throws Exception
-  {
-    // Load config file from sdcard (setup by python script)
-    String configFile = FennecNativeDriver.getFile("/mnt/sdcard/robotium.config");
-    HashMap config = FennecNativeDriver.convertTextToTable(configFile);
-
-    // Create the intent to be used with all the important arguments.
-    Intent i = new Intent(Intent.ACTION_MAIN);
-    String argsList = "-no-remote -profile " + (String)config.get("profile");
-    i.putExtra("args", argsList);
-
-    //Start the activity
-    setActivityIntent(i);
-    activity = getActivity();
-
-    //Set up Robotium.solo and Driver objects
-    solo = new Solo(getInstrumentation(), getActivity());
-    driver = new FennecNativeDriver(activity, solo);
-    actions = new FennecNativeActions(activity, solo, getInstrumentation());
-    driver.setLogFile((String)config.get("logfile"));
-
-    asserter = new FennecNativeAssert();
-    asserter.setLogFile((String)config.get("logfile"));
-  }
-
-  public void testPan() {
-    // TODO: find a better way to not hardcode this url
-    String url = "http://mochi.test:8888/startup_test/fenncmark/wikipedia.html";
-    actions.waitForGeckoEvent("Gecko:Ready");
-    Element awesomebar = driver.findElement("awesome_bar");
-    awesomebar.click();
-
-    Element urlbar = driver.findElement("awesomebar_text");
-    getInstrumentation().waitForIdleSync();
-    actions.sendKeys(url);
-    asserter.is(url, urlbar.getText(),"Asserting Awesomebar typing works");
-
-    actions.sendSpecialKey(Actions.SpecialKey.ENTER);
-    actions.waitForGeckoEvent("DOMContentLoaded");
-    driver.setupScrollHandling();
-
-    // Setup scrolling coordinates.
-    int midX = driver.getGeckoLeft() + driver.getGeckoWidth()/2;
-    int midY = driver.getGeckoTop() + driver.getGeckoHeight()/2;
-    int endY = driver.getGeckoTop() + driver.getGeckoHeight()/10;
-
-    driver.startFrameRecording();
-
-    int i = 0;
-    // Scroll a thousand times or until the end of the page.
-    do {
-      actions.drag(midX, midX, midY, endY);
-      try {
-        Thread.sleep(200);
-      }
-      catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      i++;
-    } while( i < 1000 && driver.getScrollHeight() + 2*driver.getHeight() < driver.getPageHeight() );
-//    asserter.ok(i < 1000, "Less than 1000", "Should take less than 1000 drags to get to bottom of the page.");
-
-    int frames = driver.stopFrameRecording();
-    driver.dumpLog("__start_report" + Integer.toString(frames) + "__end_report");
-    Long msecs = System.currentTimeMillis();
-    driver.dumpLog("__startTimestamp" + msecs.toString() + "__endTimestamp");
-  }	
-
-  @Override	
-  public void tearDown() throws Exception {	
-    try	{
-      solo.finalize();	
-    }catch (Throwable e){	
-      e.printStackTrace();	
-    }	
-    getActivity().finish();	
-    super.tearDown();	
-  }
 }

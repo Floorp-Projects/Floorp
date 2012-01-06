@@ -41,7 +41,6 @@
 
 #include "gfxFont.h"
 #include "gfxSkipChars.h"
-#include "gfxTextRunCache.h"
 #include "nsTextFragment.h"
 
 #define BIG_TEXT_NODE_SIZE 4096

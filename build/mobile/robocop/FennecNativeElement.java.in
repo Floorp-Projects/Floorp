@@ -141,9 +141,29 @@ public class FennecNativeElement implements Element {
     return text.toString();
   }
 
+  private boolean displayed;
+
   @Override
   public boolean isDisplayed() {
-    // TODO Auto-generated method stub
-    return false;
+    final SynchronousQueue syncQueue = new SynchronousQueue();
+    currentActivity = robocop.getCurrentActivity();
+    displayed = false;
+    currentActivity.runOnUiThread(
+        new Runnable() {
+          public void run() {
+            View view = (View)currentActivity.findViewById(id);
+            if(view != null) {
+              displayed = true;
+            }
+            syncQueue.offer(new Object());
+          }
+        });
+    try {
+      syncQueue.take();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+    return displayed;
   }
+
 }

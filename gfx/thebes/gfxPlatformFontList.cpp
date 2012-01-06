@@ -70,7 +70,6 @@
 #include "prlog.h"
 
 #include "gfxPlatformFontList.h"
-#include "gfxTextRunWordCache.h"
 
 #include "nsUnicharUtils.h"
 #include "nsUnicodeRange.h"
