@@ -84,6 +84,8 @@ public:
 private:
   bool AddSQLInfo(JSContext *cx, JSObject *rootObj, bool mainThread);
 
+  // Like GetHistogramById, but returns the underlying C++ object, not the JS one.
+  nsresult GetHistogramByName(const nsACString &name, Histogram **ret);
   // This is used for speedy JS string->Telemetry::ID conversions
   typedef nsBaseHashtableET<nsCharPtrHashKey, Telemetry::ID> CharPtrEntryType;
   typedef nsTHashtable<CharPtrEntryType> HistogramMapType;
@@ -389,6 +391,33 @@ TelemetryImpl::AddSQLInfo(JSContext *cx, JSObject *rootObj, bool mainThread)
 }
 
 
+nsresult
+TelemetryImpl::GetHistogramByName(const nsACString &name, Histogram **ret)
+{
+  // Cache names
+  // Note the histogram names are statically allocated
+  if (!mHistogramMap.Count()) {
+    for (PRUint32 i = 0; i < Telemetry::HistogramCount; i++) {
+      CharPtrEntryType *entry = mHistogramMap.PutEntry(gHistograms[i].id);
+      if (NS_UNLIKELY(!entry)) {
+        mHistogramMap.Clear();
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      entry->mData = (Telemetry::ID) i;
+    }
+  }
+
+  CharPtrEntryType *entry = mHistogramMap.GetEntry(PromiseFlatCString(name).get());
+  if (!entry)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv = GetHistogramByEnumId(entry->mData, ret);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 TelemetryImpl::GetHistogramSnapshots(JSContext *cx, jsval *ret)
 {
@@ -434,26 +463,8 @@ TelemetryImpl::GetSlowSQL(JSContext *cx, jsval *ret)
 NS_IMETHODIMP
 TelemetryImpl::GetHistogramById(const nsACString &name, JSContext *cx, jsval *ret)
 {
-  // Cache names
-  // Note the histogram names are statically allocated
-  if (!mHistogramMap.Count()) {
-    for (PRUint32 i = 0; i < Telemetry::HistogramCount; i++) {
-      CharPtrEntryType *entry = mHistogramMap.PutEntry(gHistograms[i].id);
-      if (NS_UNLIKELY(!entry)) {
-        mHistogramMap.Clear();
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      entry->mData = (Telemetry::ID) i;
-    }
-  }
-
-  CharPtrEntryType *entry = mHistogramMap.GetEntry(PromiseFlatCString(name).get());
-  if (!entry)
-    return NS_ERROR_FAILURE;
-  
   Histogram *h;
-
-  nsresult rv = GetHistogramByEnumId(entry->mData, &h);
+  nsresult rv = GetHistogramByName(name, &h);
   if (NS_FAILED(rv))
     return rv;
 
