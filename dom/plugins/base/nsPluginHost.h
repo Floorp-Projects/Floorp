@@ -110,8 +110,8 @@ public:
   NS_DECL_NSITIMERCALLBACK
 
   nsresult Init();
-  nsresult Destroy();
   nsresult LoadPlugins();
+  nsresult UnloadPlugins();
   nsresult CreateListenerForChannel(nsIChannel* aChannel,
                                     nsObjectLoadingContent* aContent,
                                     nsIStreamListener** aListener);
@@ -308,7 +308,6 @@ private:
   nsRefPtr<nsInvalidPluginTag> mInvalidPlugins;
   bool mPluginsLoaded;
   bool mDontShowBadPluginMessage;
-  bool mIsDestroyed;
 
   // set by pref plugin.override_internal_types
   bool mOverrideInternalTypes;
