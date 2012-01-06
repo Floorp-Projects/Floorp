@@ -79,7 +79,7 @@ static void
 PatchGetFallback(VMFrame &f, ic::GetGlobalNameIC *ic)
 {
     Repatcher repatch(f.jit());
-    JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, stubs::Name));
+    JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, stubs::GetGlobalName));
     repatch.relink(ic->slowPathCall, fptr);
 }
 
@@ -94,7 +94,7 @@ ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
     const Shape *shape = obj.nativeLookup(f.cx, js_CheckForStringIndex(ATOM_TO_JSID(name)));
 
     if (monitor.recompiled()) {
-        stubs::Name(f);
+        stubs::GetGlobalName(f);
         return;
     }
 
@@ -104,7 +104,7 @@ ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
     {
         if (shape)
             PatchGetFallback(f, ic);
-        stubs::Name(f);
+        stubs::GetGlobalName(f);
         return;
     }
     uint32_t slot = shape->slot();
@@ -119,7 +119,7 @@ ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
     repatcher.patchAddressOffsetForValueLoad(label, index * sizeof(Value));
 
     /* Do load anyway... this time. */
-    stubs::Name(f);
+    stubs::GetGlobalName(f);
 }
 
 template <JSBool strict>
@@ -132,12 +132,24 @@ DisabledSetGlobal(VMFrame &f, ic::SetGlobalNameIC *ic)
 template void JS_FASTCALL DisabledSetGlobal<true>(VMFrame &f, ic::SetGlobalNameIC *ic);
 template void JS_FASTCALL DisabledSetGlobal<false>(VMFrame &f, ic::SetGlobalNameIC *ic);
 
+template <JSBool strict>
+static void JS_FASTCALL
+DisabledSetGlobalNoCache(VMFrame &f, ic::SetGlobalNameIC *ic)
+{
+    stubs::SetGlobalNameNoCache<strict>(f, f.script()->getName(GET_INDEX(f.pc())));
+}
+
+template void JS_FASTCALL DisabledSetGlobalNoCache<true>(VMFrame &f, ic::SetGlobalNameIC *ic);
+template void JS_FASTCALL DisabledSetGlobalNoCache<false>(VMFrame &f, ic::SetGlobalNameIC *ic);
+
 static void
 PatchSetFallback(VMFrame &f, ic::SetGlobalNameIC *ic)
 {
     JSScript *script = f.script();
     Repatcher repatch(f.jit());
-    VoidStubSetGlobal stub = STRICT_VARIANT(DisabledSetGlobal);
+    VoidStubSetGlobal stub = ic->usePropertyCache
+                             ? STRICT_VARIANT(DisabledSetGlobal)
+                             : STRICT_VARIANT(DisabledSetGlobalNoCache);
     JSC::FunctionPtr fptr(JS_FUNC_TO_DATA_PTR(void *, stub));
     repatch.relink(ic->slowPathCall, fptr);
 }
@@ -205,7 +217,10 @@ ic::SetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic)
             THROW();
     }
 
-    STRICT_VARIANT(stubs::SetGlobalName)(f, name);
+    if (ic->usePropertyCache)
+        STRICT_VARIANT(stubs::SetGlobalName)(f, name);
+    else
+        STRICT_VARIANT(stubs::SetGlobalNameNoCache)(f, name);
 }
 
 class EqualityICLinker : public LinkerHelper
