@@ -40,6 +40,7 @@
 #include "Key.h"
 #include "nsIStreamBufferAccess.h"
 #include "jsdate.h"
+#include "nsAlgorithm.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "xpcpublic.h"
@@ -411,7 +412,8 @@ Key::EncodeNumber(double aFloat, PRUint8 aType)
                     -pun.u :
                     (pun.u | PR_UINT64(0x8000000000000000));
 
-  *reinterpret_cast<PRUint64*>(buffer) = NS_SWAP64(number);
+  number = NS_SWAP64(number);
+  memcpy(buffer, &number, sizeof(number));
 }
 
 // static
@@ -422,17 +424,12 @@ Key::DecodeNumber(const unsigned char*& aPos, const unsigned char* aEnd)
                *aPos % eMaxType == eDate, "Don't call me!");
 
   ++aPos;
+
   PRUint64 number = 0;
-  for (PRInt32 n = 7; n >= 0; --n) {
-    number <<= 8;
-    if (aPos < aEnd) {
-      number |= *(aPos++);
-    }
-    else {
-      number <<= 8 * n;
-      break;
-    }
-  }
+  memcpy(&number, aPos, NS_MIN<size_t>(sizeof(number), aEnd - aPos));
+  number = NS_SWAP64(number);
+
+  aPos += sizeof(number);
 
   Float64Union pun;
   pun.u = number & PR_UINT64(0x8000000000000000) ?

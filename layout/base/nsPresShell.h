@@ -360,7 +360,7 @@ public:
   NS_IMETHOD PageMove(bool aForward, bool aExtend);
   NS_IMETHOD ScrollPage(bool aForward);
   NS_IMETHOD ScrollLine(bool aForward);
-  NS_IMETHOD ScrollHorizontal(bool aLeft);
+  NS_IMETHOD ScrollCharacter(bool aRight);
   NS_IMETHOD CompleteScroll(bool aForward);
   NS_IMETHOD CompleteMove(bool aForward, bool aExtend);
   NS_IMETHOD SelectAll();

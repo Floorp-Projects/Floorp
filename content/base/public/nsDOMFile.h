@@ -70,13 +70,13 @@ class nsIBlobBuilder;
 
 nsresult NS_NewBlobBuilder(nsISupports* *aSupports);
 
-using namespace mozilla::dom;
-
 class nsDOMFileBase : public nsIDOMFile,
                       public nsIXHRSendable,
                       public nsIMutable
 {
 public:
+  typedef mozilla::dom::indexedDB::FileInfo FileInfo;
+
   nsDOMFileBase(const nsAString& aName, const nsAString& aContentType,
                 PRUint64 aLength)
     : mIsFile(true), mImmutable(false), mContentType(aContentType),
@@ -143,7 +143,7 @@ protected:
   PRUint64 mLength;
 
   // Protected by IndexedDatabaseManager::FileMutex()
-  nsTArray<nsRefPtr<indexedDB::FileInfo> > mFileInfos;
+  nsTArray<nsRefPtr<FileInfo> > mFileInfos;
 };
 
 class nsDOMFileFile : public nsDOMFileBase,
@@ -174,7 +174,7 @@ public:
   // Create as a stored file
   nsDOMFileFile(const nsAString& aName, const nsAString& aContentType,
                 PRUint64 aLength, nsIFile* aFile,
-                indexedDB::FileInfo* aFileInfo)
+                FileInfo* aFileInfo)
     : nsDOMFileBase(aName, aContentType, aLength),
       mFile(aFile), mWholeFile(true), mStoredFile(true)
   {
@@ -184,7 +184,7 @@ public:
 
   // Create as a stored blob
   nsDOMFileFile(const nsAString& aContentType, PRUint64 aLength,
-                nsIFile* aFile, indexedDB::FileInfo* aFileInfo)
+                nsIFile* aFile, FileInfo* aFileInfo)
     : nsDOMFileBase(aContentType, aLength),
       mFile(aFile), mWholeFile(true), mStoredFile(true)
   {
@@ -233,10 +233,10 @@ protected:
     mImmutable = aOther->mImmutable;
 
     if (mStoredFile) {
-      indexedDB::FileInfo* fileInfo;
+      FileInfo* fileInfo;
 
-      if (!indexedDB::IndexedDatabaseManager::IsClosed()) {
-        indexedDB::IndexedDatabaseManager::FileMutex().Lock();
+      if (!mozilla::dom::indexedDB::IndexedDatabaseManager::IsClosed()) {
+        mozilla::dom::indexedDB::IndexedDatabaseManager::FileMutex().Lock();
       }
 
       NS_ASSERTION(!aOther->mFileInfos.IsEmpty(),
@@ -244,8 +244,8 @@ protected:
 
       fileInfo = aOther->mFileInfos.ElementAt(0);
 
-      if (!indexedDB::IndexedDatabaseManager::IsClosed()) {
-        indexedDB::IndexedDatabaseManager::FileMutex().Unlock();
+      if (!mozilla::dom::indexedDB::IndexedDatabaseManager::IsClosed()) {
+        mozilla::dom::indexedDB::IndexedDatabaseManager::FileMutex().Unlock();
       }
 
       mFileInfos.AppendElement(fileInfo);
