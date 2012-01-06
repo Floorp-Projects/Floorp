@@ -118,6 +118,22 @@ private:
     nsDiskCacheBinding *mBinding;
 };
 
+class nsEvictDiskCacheEntriesEvent : public nsRunnable {
+public:
+    nsEvictDiskCacheEntriesEvent(nsDiskCacheDevice *device)
+        : mDevice(device) {}
+
+    NS_IMETHOD Run()
+    {
+        nsCacheServiceAutoLock lock;
+        mDevice->EvictDiskCacheEntries(mDevice->mCacheCapacity);
+        return NS_OK;
+    }
+
+private:
+    nsDiskCacheDevice *mDevice;
+};
+
 /******************************************************************************
  *  nsDiskCacheEvictor
  *
@@ -1120,8 +1136,14 @@ nsDiskCacheDevice::SetCapacity(PRUint32  capacity)
     // Units are KiB's
     mCacheCapacity = capacity;
     if (Initialized()) {
-        // start evicting entries if the new size is smaller!
-        EvictDiskCacheEntries(mCacheCapacity);
+        if (NS_IsMainThread()) {
+            // Do not evict entries on the main thread
+            nsCacheService::DispatchToCacheIOThread(
+                new nsEvictDiskCacheEntriesEvent(this));
+        } else {
+            // start evicting entries if the new size is smaller!
+            EvictDiskCacheEntries(mCacheCapacity);
+        }
     }
     // Let cache map know of the new capacity
     mCacheMap.NotifyCapacityChange(capacity);
