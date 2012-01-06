@@ -51,7 +51,7 @@ namespace layers {
 class LayerManager;
 class ImageContainer;
 }
-namespace imagelib {
+namespace image {
 
 class SVGDocumentWrapper;
 class SVGRootRenderingObserver;
@@ -132,7 +132,7 @@ private:
                                           // created via ExtractFrame?
 };
 
-} // namespace imagelib
+} // namespace image
 } // namespace mozilla
 
 #endif // mozilla_imagelib_VectorImage_h_

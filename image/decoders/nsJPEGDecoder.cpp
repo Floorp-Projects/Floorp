@@ -74,7 +74,7 @@ ycc_rgb_convert_argb (j_decompress_ptr cinfo,
 static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width);
 
 namespace mozilla {
-namespace imagelib {
+namespace image {
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gJPEGlog = PR_NewLogModule("JPEGDecoder");
@@ -890,7 +890,7 @@ term_source (j_decompress_ptr jd)
   decoder->NotifyDone();
 }
 
-} // namespace imagelib
+} // namespace image
 } // namespace mozilla
 
 
