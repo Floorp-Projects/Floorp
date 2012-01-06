@@ -461,7 +461,7 @@ StackFrame::functionEpilogue()
 }
 
 inline void
-StackFrame::markFunctionEpilogueDone()
+StackFrame::updateEpilogueFlags()
 {
     if (flags_ & (HAS_ARGS_OBJ | HAS_CALL_OBJ)) {
         if (hasArgsObj() && !argsObj().maybeStackFrame()) {
