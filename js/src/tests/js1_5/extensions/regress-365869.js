@@ -98,7 +98,7 @@ function test()
 
   try
   {
-    expect = 'TypeError: redeclaration of const 5';
+    expect = "TypeError: can't redefine non-configurable property '5'";
     "012345".__defineSetter__(5, function(){});
   }
   catch(ex)
