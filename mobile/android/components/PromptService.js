@@ -154,7 +154,7 @@ Prompt.prototype = {
   /* ---------- internal methods ---------- */
   commonPrompt: function commonPrompt(aTitle, aText, aButtons, aCheckMsg, aCheckState, aInputs) {
     if (aCheckMsg)
-      aInputs.push({ type: "checkbox", label: aCheckMsg, checked: aCheckState.value });
+      aInputs.push({ type: "checkbox", label: PromptUtils.cleanUpLabel(aCheckMsg), checked: aCheckState.value });
 
     let msg = { type: "Prompt:Show" };
     if (aTitle) msg.title = aTitle;
@@ -165,49 +165,6 @@ Prompt.prototype = {
     ];
     msg.inputs = aInputs;
     return PromptUtils.sendMessageToJava(msg);
-  },
-
-  //
-  // Copied from chrome://global/content/commonDialog.js
-  //
-  setLabelForNode: function setLabelForNode(aNode, aLabel) {
-    // This is for labels which may contain embedded access keys.
-    // If we end in (&X) where X represents the access key, optionally preceded
-    // by spaces and/or followed by the ':' character, store the access key and
-    // remove the access key placeholder + leading spaces from the label.
-    // Otherwise a character preceded by one but not two &s is the access key.
-    // Store it and remove the &.
-
-    // Note that if you change the following code, see the comment of
-    // nsTextBoxFrame::UpdateAccessTitle.
-
-    if (!aLabel)
-      return;
-
-    var accessKey = null;
-    if (/ *\(\&([^&])\)(:)?$/.test(aLabel)) {
-      aLabel = RegExp.leftContext + RegExp.$2;
-      accessKey = RegExp.$1;
-    } else if (/^(.*[^&])?\&(([^&]).*$)/.test(aLabel)) {
-      aLabel = RegExp.$1 + RegExp.$2;
-      accessKey = RegExp.$3;
-    }
-
-    // && is the magic sequence to embed an & in your label.
-    aLabel = aLabel.replace(/\&\&/g, "&");
-    if (aNode instanceof Ci.nsIDOMXULLabelElement) {
-      aNode.setAttribute("value", aLabel);
-    } else if (aNode instanceof Ci.nsIDOMXULDescriptionElement) {
-      let text = aNode.ownerDocument.createTextNode(aLabel);
-      aNode.appendChild(text);
-    } else {    // Set text for other xul elements
-      aNode.setAttribute("label", aLabel);
-    }
-
-    // XXXjag bug 325251
-    // Need to set this after aNode.setAttribute("value", aLabel);
-    if (accessKey)
-      aNode.setAttribute("accesskey", accessKey);
   },
 
   /*
@@ -300,7 +257,7 @@ Prompt.prototype = {
           bTitle = PromptUtils.getLocaleString("Revert");
           break;
         case Ci.nsIPromptService.BUTTON_TITLE_IS_STRING :
-          bTitle = titles[i];
+          bTitle = PromptUtils.cleanUpLabel(titles[i]);
         break;
       }
 
@@ -551,9 +508,36 @@ Prompt.prototype = {
 let PromptUtils = {
   getLocaleString: function pu_getLocaleString(aKey, aService) {
     if (aService == "passwdmgr")
-      return this.passwdBundle.GetStringFromName(aKey).replace(/&/g, "");
+      return this.cleanUpLabel(this.passwdBundle.GetStringFromName(aKey));
 
-    return this.bundle.GetStringFromName(aKey).replace(/&/g, "");
+    return this.cleanUpLabel(this.bundle.GetStringFromName(aKey));
+  },
+
+  //
+  // Copied from chrome://global/content/commonDialog.js
+  //
+  cleanUpLabel: function cleanUpLabel(aLabel) {
+    // This is for labels which may contain embedded access keys.
+    // If we end in (&X) where X represents the access key, optionally preceded
+    // by spaces and/or followed by the ':' character,
+    // remove the access key placeholder + leading spaces from the label.
+    // Otherwise a character preceded by one but not two &s is the access key.
+
+    // Note that if you change the following code, see the comment of
+    // nsTextBoxFrame::UpdateAccessTitle.
+    if (!aLabel)
+      return "";
+
+    if (/ *\(\&([^&])\)(:)?$/.test(aLabel)) {
+      aLabel = RegExp.leftContext + RegExp.$2;
+    } else if (/^(.*[^&])?\&(([^&]).*$)/.test(aLabel)) {
+      aLabel = RegExp.$1 + RegExp.$2;
+    }
+
+    // Special code for using that & symbol
+    aLabel = aLabel.replace(/\&\&/g, "&");
+
+    return aLabel;
   },
 
   get pwmgr() {
