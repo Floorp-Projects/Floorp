@@ -144,7 +144,7 @@ var shell = {
         baseDir.pop();
         baseDir = baseDir.join('/');
 
-        const SERVER_PORT = 7777;
+        const SERVER_PORT = 6666;
         startupHttpd(baseDir, SERVER_PORT);
 
         let baseHost = 'http://localhost';
