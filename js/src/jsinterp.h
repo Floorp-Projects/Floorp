@@ -325,7 +325,7 @@ extern void
 UnwindScope(JSContext *cx, uint32_t stackDepth);
 
 extern bool
-OnUnknownMethod(JSContext *cx, JSObject *obj, Value idval, Value *vp);
+OnUnknownMethod(JSContext *cx, js::Value *vp);
 
 extern bool
 IsActiveWithOrBlock(JSContext *cx, JSObject &obj, uint32_t stackDepth);

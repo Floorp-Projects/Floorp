@@ -2717,30 +2717,6 @@ CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool *ans
     return ok;
 }
 
-bool
-BytecodeEmitter::needsImplicitThis()
-{
-    if (!compileAndGo())
-        return true;
-    if (!inFunction()) {
-        JSObject *scope = scopeChain();
-        while (scope) {
-            if (scope->isWith())
-                return true;
-            scope = scope->enclosingScope();
-        }
-    }
-    for (const FunctionBox *funbox = this->funbox; funbox; funbox = funbox->parent) {
-        if (funbox->tcflags & TCF_IN_WITH)
-            return true;
-    }
-    for (StmtInfo *stmt = topStmt; stmt; stmt = stmt->down) {
-        if (stmt->type == STMT_WITH)
-            return true;
-    }
-    return false;
-}
-
 static JSBool
 EmitNameOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool callContext)
 {
@@ -2776,23 +2752,15 @@ EmitNameOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool callContex
     if (op == JSOP_ARGUMENTS || op == JSOP_CALLEE) {
         if (Emit1(cx, bce, op) < 0)
             return JS_FALSE;
+        /* Need to provide |this| value for call */
+        if (callContext && Emit1(cx, bce, JSOP_UNDEFINED) < 0)
+            return JS_FALSE;
     } else {
         if (!pn->pn_cookie.isFree()) {
             EMIT_UINT16_IMM_OP(op, pn->pn_cookie.asInteger());
         } else {
             if (!EmitAtomOp(cx, pn, op, bce))
                 return JS_FALSE;
-        }
-    }
-
-    /* Need to provide |this| value for call */
-    if (callContext) {
-        if (op == JSOP_CALLNAME && bce->needsImplicitThis()) {
-            if (!EmitAtomOp(cx, pn, JSOP_IMPLICITTHIS, bce))
-                return false;
-        } else {
-            if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
-                return false;
         }
     }
 
@@ -2817,10 +2785,7 @@ EmitXMLName(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
     if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - pn2->pn_offset) < 0)
         return false;
 
-    if (Emit1(cx, bce, op) < 0)
-        return false;
-
-    return true;
+    return Emit1(cx, bce, op) >= 0;
 }
 #endif
 
@@ -2830,8 +2795,6 @@ EmitElemOpBase(JSContext *cx, BytecodeEmitter *bce, JSOp op)
     if (Emit1(cx, bce, op) < 0)
         return false;
     CheckTypeSet(cx, bce, op);
-    if (op == JSOP_CALLELEM)
-        return Emit1(cx, bce, JSOP_SWAP) >= 0;
     return true;
 }
 
@@ -2848,17 +2811,7 @@ EmitSpecialPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
         return false;
     if (!EmitIndexOp(cx, JSOP_QNAMEPART, index, bce))
         return false;
-
-    if (op == JSOP_CALLELEM && Emit1(cx, bce, JSOP_DUP) < 0)
-        return false;
-
-    if (!EmitElemOpBase(cx, bce, op))
-        return false;
-
-    if (op == JSOP_CALLELEM && Emit1(cx, bce, JSOP_SWAP) < 0)
-        return false;
-
-    return true;
+    return EmitElemOpBase(cx, bce, op);
 }
 
 static bool
@@ -2938,19 +2891,10 @@ EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce,
             return false;
     }
 
-    if (op == JSOP_CALLPROP && Emit1(cx, bce, JSOP_DUP) < 0)
-        return false;
-
     if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - pn2->pn_offset) < 0)
         return false;
 
-    if (!EmitAtomOp(cx, pn, op, bce, psuffix))
-        return false;
-
-    if (op == JSOP_CALLPROP && Emit1(cx, bce, JSOP_SWAP) < 0)
-        return false;
-
-    return true;
+    return EmitAtomOp(cx, pn, op, bce, psuffix);
 }
 
 static bool
@@ -3112,9 +3056,6 @@ EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
     }
 
     if (!EmitTree(cx, bce, left))
-        return false;
-
-    if (op == JSOP_CALLELEM && Emit1(cx, bce, JSOP_DUP) < 0)
         return false;
 
     /* The right side of the descendant operator is implicitly quoted. */

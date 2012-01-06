@@ -51,6 +51,7 @@
 #include "jsiter.h"
 #include "jstypes.h"
 #include "methodjit/StubCalls.h"
+#include "jspropertycache.h"
 #include "methodjit/MonoIC.h"
 #include "jsanalyze.h"
 #include "methodjit/BaseCompiler.h"
@@ -58,6 +59,7 @@
 #include "vm/Debugger.h"
 
 #include "jsinterpinlines.h"
+#include "jspropertycacheinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jsobjinlines.h"
@@ -860,10 +862,25 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         /*
          * We don't rejoin until after the native stub finishes execution, in
          * which case the return value will be in memory. For lowered natives,
-         * the return value will be in the 'this' value's slot.
+         * the return value will be in the 'this' value's slot. For getters,
+         * the result is at nextsp[0] (see ic::CallProp).
          */
-        if (rejoin != REJOIN_NATIVE)
+        if (rejoin == REJOIN_NATIVE_LOWERED) {
             nextsp[-1] = nextsp[0];
+        } else if (rejoin == REJOIN_NATIVE_GETTER) {
+            if (js_CodeSpec[op].format & JOF_CALLOP) {
+                /*
+                 * If we went through jsop_callprop_obj then the 'this' value
+                 * is still in its original slot and hasn't been shifted yet,
+                 * so fix that now. Yuck.
+                 */
+                if (nextsp[-2].isObject())
+                    nextsp[-1] = nextsp[-2];
+                nextsp[-2] = nextsp[0];
+            } else {
+                nextsp[-1] = nextsp[0];
+            }
+        }
 
         /* Release this reference on the orphaned native stub. */
         RemoveOrphanedNative(cx, fp);
@@ -1012,6 +1029,42 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
          * fused opcode which needs to be finished.
          */
         switch (op) {
+          case JSOP_NAME:
+          case JSOP_GETGNAME:
+          case JSOP_GETFCSLOT:
+          case JSOP_GETPROP:
+          case JSOP_GETXPROP:
+          case JSOP_LENGTH:
+            /* Non-fused opcode, state is already correct for the next op. */
+            f.regs.pc = nextpc;
+            break;
+
+          case JSOP_CALLGNAME:
+          case JSOP_CALLNAME:
+            if (!ComputeImplicitThis(cx, &fp->scopeChain(), nextsp[-2], &nextsp[-1]))
+                return js_InternalThrow(f);
+            f.regs.pc = nextpc;
+            break;
+
+          case JSOP_CALLFCSLOT:
+            /* |this| is always undefined for CALLGLOBAL/CALLFCSLOT. */
+            nextsp[-1].setUndefined();
+            f.regs.pc = nextpc;
+            break;
+
+          case JSOP_CALLPROP: {
+            /*
+             * CALLPROP is compiled in terms of GETPROP for known strings.
+             * In such cases the top two entries are in place, but are swapped.
+             */
+            JS_ASSERT(nextsp[-2].isString());
+            Value tmp = nextsp[-2];
+            nextsp[-2] = nextsp[-1];
+            nextsp[-1] = tmp;
+            f.regs.pc = nextpc;
+            break;
+          }
+
           case JSOP_INSTANCEOF: {
             /*
              * If we recompiled from a getprop used within JSOP_INSTANCEOF,
@@ -1028,8 +1081,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
           }
 
           default:
-            f.regs.pc = nextpc;
-            break;
+            JS_NOT_REACHED("Bad rejoin getter op");
         }
         break;
 
@@ -1084,8 +1136,10 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
      * The result may not have been marked if we bailed out while inside a stub
      * for the op.
      */
-    if (f.regs.pc == nextpc && (js_CodeSpec[op].format & JOF_TYPESET))
-        types::TypeScript::Monitor(cx, script, pc, f.regs.sp[-1]);
+    if (f.regs.pc == nextpc && (js_CodeSpec[op].format & JOF_TYPESET)) {
+        int which = (js_CodeSpec[op].format & JOF_CALLOP) ? -2 : -1;  /* Yuck. */
+        types::TypeScript::Monitor(cx, script, pc, f.regs.sp[which]);
+    }
 
     /* Mark the entry frame as unfinished, and update the regs to resume at. */
     JaegerStatus status = skipTrap ? Jaeger_UnfinishedAtTrap : Jaeger_Unfinished;
