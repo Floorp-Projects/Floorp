@@ -43,8 +43,8 @@ import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerClient;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.LayerRenderer;
+import org.mozilla.gecko.gfx.MultiTileLayer;
 import org.mozilla.gecko.gfx.PointUtils;
-import org.mozilla.gecko.gfx.SingleTileLayer;
 import org.mozilla.gecko.gfx.WidgetTileLayer;
 import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.GeckoApp;
@@ -53,6 +53,7 @@ import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoEventListener;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -84,6 +85,8 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
     private CairoImage mCairoImage;
 
+    private static final IntSize TILE_SIZE = new IntSize(256, 256);
+
     private static final long MIN_VIEWPORT_CHANGE_DELAY = 350L;
     private long mLastViewportChangeTime;
     private boolean mPendingViewportAdjust;
@@ -112,7 +115,7 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             public int getFormat() { return mFormat; }
         };
 
-        mTileLayer = new SingleTileLayer(mCairoImage);
+        mTileLayer = new MultiTileLayer(mCairoImage, TILE_SIZE);
     }
 
 
@@ -142,6 +145,14 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
 
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateAndDraw", this);
         GeckoAppShell.registerGeckoEventListener("Viewport:UpdateLater", this);
+
+        // This needs to happen before a call to sendResizeEventIfNecessary
+        // happens, but only needs to be called once. As that is only called by
+        // the layer controller or this, here is a safe place to do so.
+        if (mTileLayer instanceof MultiTileLayer) {
+            GeckoEvent event = new GeckoEvent(GeckoEvent.TILE_SIZE, TILE_SIZE);
+            GeckoAppShell.sendEventToGecko(event);
+        }
 
         sendResizeEventIfNecessary();
     }
@@ -213,8 +224,8 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
                 mUpdateViewportOnEndDraw = false;
                 Rect rect = new Rect(x, y, x + width, y + height);
 
-                if (mTileLayer instanceof SingleTileLayer)
-                    ((SingleTileLayer)mTileLayer).invalidate(rect);
+                if (mTileLayer instanceof MultiTileLayer)
+                    ((MultiTileLayer)mTileLayer).invalidate(rect);
             } finally {
                 endTransaction(mTileLayer);
             }
@@ -228,6 +239,33 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         return null;
     }
 
+    public void copyPixelsFromMultiTileLayer(Bitmap target) {
+        Canvas c = new Canvas(target);
+        ByteBuffer tileBuffer = mBuffer.slice();
+        int bpp = CairoUtils.bitsPerPixelForCairoFormat(mFormat) / 8;
+
+        for (int y = 0; y < mBufferSize.height; y += TILE_SIZE.height) {
+            for (int x = 0; x < mBufferSize.width; x += TILE_SIZE.width) {
+                // Calculate tile size
+                IntSize tileSize = new IntSize(Math.min(mBufferSize.width - x, TILE_SIZE.width),
+                                               Math.min(mBufferSize.height - y, TILE_SIZE.height));
+
+                // Create a Bitmap from this tile
+                Bitmap tile = Bitmap.createBitmap(tileSize.width, tileSize.height,
+                                                  CairoUtils.cairoFormatTobitmapConfig(mFormat));
+                tile.copyPixelsFromBuffer(tileBuffer.asIntBuffer());
+
+                // Copy the tile to the master Bitmap and recycle it
+                c.drawBitmap(tile, x, y, null);
+                tile.recycle();
+
+                // Progress the buffer to the next tile
+                tileBuffer.position(tileSize.getArea() * bpp);
+                tileBuffer = tileBuffer.slice();
+            }
+        }
+    }
+
     public Bitmap getBitmap() {
         // Begin a tile transaction, otherwise the buffer can be destroyed while
         // we're reading from it.
@@ -238,7 +276,12 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
             try {
                 Bitmap b = Bitmap.createBitmap(mBufferSize.width, mBufferSize.height,
                                                CairoUtils.cairoFormatTobitmapConfig(mFormat));
-                b.copyPixelsFromBuffer(mBuffer.asIntBuffer());
+
+                if (mTileLayer instanceof MultiTileLayer)
+                    copyPixelsFromMultiTileLayer(b);
+                else
+                    b.copyPixelsFromBuffer(mBuffer.asIntBuffer());
+
                 return b;
             } catch (OutOfMemoryError oom) {
                 Log.w(LOGTAG, "Unable to create bitmap", oom);
@@ -280,15 +323,25 @@ public class GeckoSoftwareLayerClient extends LayerClient implements GeckoEventL
         }
 
         mScreenSize = new IntSize(metrics.widthPixels, metrics.heightPixels);
-        int maxSize = getLayerController().getView().getMaxTextureSize();
+        IntSize bufferSize;
 
-        // XXX Introduce tiling to solve this?
-        if (mScreenSize.width > maxSize || mScreenSize.height > maxSize)
-            throw new RuntimeException("Screen size of " + mScreenSize + " larger than maximum texture size of " + maxSize);
+        // Round up depending on layer implementation to remove texture wastage
+        if (mTileLayer instanceof MultiTileLayer) {
+            // Round to the next multiple of the tile size, respecting maximum texture size
+            bufferSize = new IntSize(((mScreenSize.width + LayerController.MIN_BUFFER.width - 1) / TILE_SIZE.width + 1) * TILE_SIZE.width,
+                                     ((mScreenSize.height + LayerController.MIN_BUFFER.height - 1) / TILE_SIZE.height + 1) * TILE_SIZE.height);
 
-        // Round to next power of two until we use NPOT texture support
-        IntSize bufferSize = new IntSize(Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.width + LayerController.MIN_BUFFER.width)),
-                                         Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.height + LayerController.MIN_BUFFER.height)));
+        } else {
+            int maxSize = getLayerController().getView().getMaxTextureSize();
+
+            // XXX Integrate gralloc/tiling work to circumvent this
+            if (mScreenSize.width > maxSize || mScreenSize.height > maxSize)
+                throw new RuntimeException("Screen size of " + mScreenSize + " larger than maximum texture size of " + maxSize);
+
+            // Round to next power of two until we have NPOT texture support
+            bufferSize = new IntSize(Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.width + LayerController.MIN_BUFFER.width)),
+                                     Math.min(maxSize, IntSize.nextPowerOfTwo(mScreenSize.height + LayerController.MIN_BUFFER.height)));
+        }
 
         Log.i(LOGTAG, "Screen-size changed to " + mScreenSize);
         GeckoEvent event = new GeckoEvent(GeckoEvent.SIZE_CHANGED,

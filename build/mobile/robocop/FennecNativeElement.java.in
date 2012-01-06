@@ -56,28 +56,26 @@ import com.jayway.android.robotium.solo.Solo;
 import java.util.concurrent.SynchronousQueue;
 
 public class FennecNativeElement implements Element {
+  private final Activity mActivity;
   private Integer id;
-  private Activity currentActivity;
   private Solo robocop;
 
   public FennecNativeElement(Integer id, Activity activity, Solo solo){
     this.id = id;
+    mActivity = activity;
     robocop = solo;
-    currentActivity = activity;
   }
 
   public Integer getId() {
     return id;
   }
 
-  @Override
   public void click() {
     final SynchronousQueue syncQueue = new SynchronousQueue();
-    currentActivity = robocop.getCurrentActivity();
-    currentActivity.runOnUiThread(
+    mActivity.runOnUiThread(
         new Runnable() {
           public void run() {
-            View view = (View)currentActivity.findViewById(id);
+            View view = (View)mActivity.findViewById(id);
             if(view != null) {
               view.performClick();
             } else {
@@ -94,16 +92,13 @@ public class FennecNativeElement implements Element {
   }
 
   private Object text;
-  private Activity elementActivity;
 
-  @Override
   public String getText() {
-    elementActivity = robocop.getCurrentActivity();
     final SynchronousQueue syncQueue = new SynchronousQueue();
-    elementActivity.runOnUiThread(
+    mActivity.runOnUiThread(
         new Runnable() {
           public void run() {
-            View v = elementActivity.findViewById(id);
+            View v = mActivity.findViewById(id);
             if(v instanceof EditText) {
               EditText et = (EditText)v;
               text = et.getEditableText();
@@ -143,15 +138,13 @@ public class FennecNativeElement implements Element {
 
   private boolean displayed;
 
-  @Override
   public boolean isDisplayed() {
     final SynchronousQueue syncQueue = new SynchronousQueue();
-    currentActivity = robocop.getCurrentActivity();
     displayed = false;
-    currentActivity.runOnUiThread(
+    mActivity.runOnUiThread(
         new Runnable() {
           public void run() {
-            View view = (View)currentActivity.findViewById(id);
+            View view = (View)mActivity.findViewById(id);
             if(view != null) {
               displayed = true;
             }

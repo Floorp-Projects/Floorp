@@ -300,7 +300,6 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
 {
     JS_ASSERT(nativeContains(cx, shape));
     JS_ASSERT(shape.isMethod());
-    JS_ASSERT(shape.writable());
     JS_ASSERT(shape.hasSlot());
     JS_ASSERT(shape.hasDefaultSetter());
     JS_ASSERT(!isGlobal());  /* i.e. we are not changing the global shape */

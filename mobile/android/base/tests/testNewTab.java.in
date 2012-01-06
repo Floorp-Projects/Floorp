@@ -2,36 +2,31 @@
 package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
+import android.app.Activity;
 
 public class testNewTab extends BaseTest {
     public void testNewTab() {
         // TODO: find a better way to not hardcode this url
         String url = "http://mochi.test:8888/tests/robocop/robocop_blank_01.html";
         String url2 = "http://mochi.test:8888/tests/robocop/robocop_blank_02.html";
-        mActions.waitForGeckoEvent("Gecko:Ready");
-        Element tabs = mDriver.findElement("tabs");
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        Element tabs = mDriver.findElement(getActivity(), "tabs");
         // Add one tab
-        tabs.click();
+        Activity awesomeBarActivity = getActivityFromClick(tabs);
 
-        Element urlbar = mDriver.findElement("awesomebar_text");
         getInstrumentation().waitForIdleSync();
+        Element urlbar = mDriver.findElement(awesomeBarActivity, "awesomebar_text");
         mActions.sendKeys(url);
         mAsserter.is(urlbar.getText(), url, "Awesomebar url is fine");
-        mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
-        mActions.waitForGeckoEvent("DOMContentLoaded");
-
-        try {
-            Thread.sleep(5000);
-        } catch (Throwable e) {
-        }
+        hitEnterAndWait();
 
         // See tab count
-        Element tabCount = mDriver.findElement("tabs_count");
+        Element tabCount = mDriver.findElement(getActivity(), "tabs_count");
         mAsserter.is(tabCount.getText(), "2", "Number of tabs has increased");
 
         // Click tab list
-        tabs.click();
-        Element addTab = mDriver.findElement("add_tab");
+        Activity tabTray = getActivityFromClick(tabs);
+        Element addTab = mDriver.findElement(tabTray, "add_tab");
 
         //Add another tab
         addTab.click();
@@ -40,8 +35,7 @@ public class testNewTab extends BaseTest {
         getInstrumentation().waitForIdleSync();
         mAsserter.is(urlbar.getText(), url2, "URL is still fine");
 
-        mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
-        mActions.waitForGeckoEvent("DOMContentLoaded");
+        hitEnterAndWait();
         //Check tab count another time.
         mAsserter.is(tabCount.getText(), "3", "Number of tabs has increased");
     }
