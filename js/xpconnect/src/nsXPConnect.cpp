@@ -2061,97 +2061,6 @@ nsXPConnect::ClearAllWrappedNativeSecurityPolicies()
     return XPCWrappedNativeScope::ClearAllWrappedNativeSecurityPolicies(ccx);
 }
 
-/* void restoreWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsIClassInfo aClassInfo, in nsIXPConnectJSObjectHolder aPrototype); */
-NS_IMETHODIMP
-nsXPConnect::RestoreWrappedNativePrototype(JSContext * aJSContext,
-                                           JSObject * aScope,
-                                           nsIClassInfo * aClassInfo,
-                                           nsIXPConnectJSObjectHolder * aPrototype)
-{
-    XPCCallContext ccx(NATIVE_CALLER, aJSContext);
-    if (!ccx.IsValid())
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    if (!aClassInfo || !aPrototype)
-        return UnexpectedFailure(NS_ERROR_INVALID_ARG);
-
-    JSObject *protoJSObject;
-    nsresult rv = aPrototype->GetJSObject(&protoJSObject);
-    if (NS_FAILED(rv))
-        return UnexpectedFailure(rv);
-
-    if (!IS_PROTO_CLASS(js::GetObjectClass(protoJSObject)))
-        return UnexpectedFailure(NS_ERROR_INVALID_ARG);
-
-    XPCWrappedNativeScope* scope =
-        XPCWrappedNativeScope::FindInJSObjectScope(ccx, aScope);
-    if (!scope)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    XPCWrappedNativeProto *proto =
-        (XPCWrappedNativeProto*)xpc_GetJSPrivate(protoJSObject);
-    if (!proto)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    if (scope != proto->GetScope()) {
-        NS_ERROR("Attempt to reset prototype to a prototype from a"
-                 "different scope!");
-
-        return UnexpectedFailure(NS_ERROR_INVALID_ARG);
-    }
-
-    XPCNativeScriptableInfo *si = proto->GetScriptableInfo();
-
-    if (si && si->GetFlags().DontSharePrototype())
-        return UnexpectedFailure(NS_ERROR_INVALID_ARG);
-
-    ClassInfo2WrappedNativeProtoMap* map =
-        scope->GetWrappedNativeProtoMap(proto->ClassIsMainThreadOnly());
-    XPCLock* lock = GetRuntime()->GetMapLock();
-
-    {   // scoped lock
-        XPCAutoLock al(lock);
-
-        XPCWrappedNativeProtoMap* detachedMap =
-            GetRuntime()->GetDetachedWrappedNativeProtoMap();
-
-        // If we're replacing an old proto, make sure to put it on the
-        // map of detached wrapped native protos so that the old proto
-        // gets properly cleaned up, especially during shutdown.
-        XPCWrappedNativeProto *oldProto = map->Find(aClassInfo);
-        if (oldProto) {
-            detachedMap->Add(oldProto);
-
-            // ClassInfo2WrappedNativeProtoMap doesn't ever replace
-            // entries in the map, so now since we know there's an
-            // entry for aClassInfo in the map we have to remove it to
-            // be able to add the new one.
-            map->Remove(aClassInfo);
-
-            // This code should do the right thing even if we're
-            // restoring the current proto, but warn in that case
-            // since doing that is pointless.
-            NS_ASSERTION(proto != oldProto,
-                         "Restoring current prototype, fix caller!");
-        }
-
-        map->Add(aClassInfo, proto);
-
-        // Remove the prototype from the map of detached wrapped
-        // native prototypes now that the prototype is part of a scope
-        // again.
-        detachedMap->Remove(proto);
-    }
-
-    // The global in this scope didn't change, but a prototype did
-    // (most likely the global object's prototype), which means the
-    // scope needs to get a chance to update its cached
-    // Object.prototype pointers etc.
-    scope->SetGlobal(ccx, aScope);
-
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
                            nsIXPConnectJSObjectHolder **_retval)
@@ -2222,8 +2131,7 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
 
     AutoMarkingWrappedNativeProtoPtr proto(ccx);
     proto = XPCWrappedNativeProto::GetNewOrUsed(ccx, scope, aClassInfo,
-                                                &sciProto, false,
-                                                OBJ_IS_NOT_GLOBAL);
+                                                &sciProto, OBJ_IS_NOT_GLOBAL);
     if (!proto)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
@@ -2931,7 +2839,7 @@ JS_EXPORT_API(void) DumpJSObject(JSObject* obj)
 
 JS_EXPORT_API(void) DumpJSValue(jsval val)
 {
-    printf("Dumping 0x%llu.\n", (long long) val.asRawBits());
+    printf("Dumping 0x%llu.\n", (long long) JSVAL_TO_IMPL(val).asBits);
     if (JSVAL_IS_NULL(val)) {
         printf("Value is null\n");
     } else if (JSVAL_IS_OBJECT(val) || JSVAL_IS_NULL(val)) {

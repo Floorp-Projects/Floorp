@@ -109,9 +109,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::GetScriptableFlags(PRUint32 *aFlags)
 #ifdef XPC_MAP_WANT_HASINSTANCE
     nsIXPCScriptable::WANT_HASINSTANCE |
 #endif
-#ifdef XPC_MAP_WANT_TRACE
-    nsIXPCScriptable::WANT_TRACE |
-#endif
 #ifdef XPC_MAP_WANT_EQUALITY
     nsIXPCScriptable::WANT_EQUALITY |
 #endif
@@ -208,11 +205,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::HasInstance(nsIXPConnectWrappedNative *wrapper,
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
 #endif
 
-#ifndef XPC_MAP_WANT_TRACE
-NS_IMETHODIMP XPC_MAP_CLASSNAME::Trace(nsIXPConnectWrappedNative *wrapper, JSTracer *trc, JSObject * obj)
-    {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
-#endif
-
 #ifndef XPC_MAP_WANT_EQUALITY
 NS_IMETHODIMP XPC_MAP_CLASSNAME::Equality(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj, const jsval &val, bool *bp)
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
@@ -295,10 +287,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::PostCreatePrototype(JSContext *cx, JSObject *pr
 
 #ifdef XPC_MAP_WANT_HASINSTANCE
 #undef XPC_MAP_WANT_HASINSTANCE
-#endif
-
-#ifdef XPC_MAP_WANT_TRACE
-#undef XPC_MAP_WANT_TRACE
 #endif
 
 #ifdef XPC_MAP_WANT_EQUALITY

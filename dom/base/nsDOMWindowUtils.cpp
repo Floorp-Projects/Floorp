@@ -2039,3 +2039,19 @@ nsDOMWindowUtils::GetPCCountScriptContents(PRInt32 script, JSContext* cx, nsAStr
   result = str;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetPaintingSuppressed(bool *aPaintingSuppressed)
+{
+  NS_ENSURE_TRUE(mWindow, NS_ERROR_FAILURE);
+  nsIDocShell *docShell = mWindow->GetDocShell();
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPresShell> presShell;
+  docShell->GetPresShell(getter_AddRefs(presShell));
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+
+  *aPaintingSuppressed = presShell->IsPaintingSuppressed();
+  return NS_OK;
+}
+

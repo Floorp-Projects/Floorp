@@ -380,9 +380,9 @@ MAKEFILES_docshell="
 MAKEFILES_widget="
   widget/Makefile
   widget/public/Makefile
-  widget/src/Makefile
-  widget/src/shared/Makefile
-  widget/src/xpwidgets/Makefile
+  widget/Makefile
+  widget/shared/Makefile
+  widget/xpwidgets/Makefile
 "
 
 MAKEFILES_xpcom="
@@ -473,6 +473,7 @@ MAKEFILES_xulapp="
   toolkit/components/filepicker/Makefile
   toolkit/components/find/Makefile
   toolkit/components/intl/Makefile
+  toolkit/components/maintenanceservice/Makefile
   toolkit/components/microformats/Makefile
   toolkit/components/parentalcontrols/Makefile
   toolkit/components/passwordmgr/Makefile
@@ -595,8 +596,7 @@ if [ "$MOZ_WIDGET_TOOLKIT" = "windows" ]; then
     intl/locale/src/windows/Makefile
     netwerk/system/win32/Makefile
     toolkit/system/windowsproxy/Makefile
-    widget/src/build/Makefile
-    widget/src/windows/Makefile
+    widget/windows/Makefile
     xpcom/reflect/xptcall/src/md/win32/Makefile
   "
 elif [ "$MOZ_WIDGET_TOOLKIT" = "cocoa" ]; then
@@ -613,12 +613,12 @@ elif [ "$MOZ_WIDGET_TOOLKIT" = "cocoa" ]; then
     toolkit/themes/pinstripe/mozapps/Makefile
     toolkit/components/alerts/mac/Makefile
     toolkit/components/alerts/mac/growl/Makefile
-    widget/src/cocoa/Makefile
+    widget/cocoa/Makefile
   "
 elif [ "$MOZ_WIDGET_TOOLKIT" = "gtk2" ]; then
   add_makefiles "
     image/decoders/icon/gtk/Makefile
-    widget/src/gtk2/Makefile
+    widget/gtk2/Makefile
   "
 elif [ "$MOZ_WIDGET_TOOLKIT" = "android" ]; then
   add_makefiles "
@@ -626,7 +626,7 @@ elif [ "$MOZ_WIDGET_TOOLKIT" = "android" ]; then
     dom/system/android/Makefile
     image/decoders/icon/android/Makefile
     netwerk/system/android/Makefile
-    widget/src/android/Makefile
+    widget/android/Makefile
   "
   if [ "$MOZ_BUILD_APP" = "mobile/xul" ]; then
     add_makefiles "
@@ -636,21 +636,21 @@ elif [ "$MOZ_WIDGET_TOOLKIT" = "android" ]; then
   fi
 elif [ "$MOZ_WIDGET_TOOLKIT" = "gonk" ]; then
   add_makefiles "
-    widget/src/gonk/Makefile
+    widget/gonk/Makefile
   "
 elif [ "$MOZ_WIDGET_TOOLKIT" = "qt" ]; then
   add_makefiles "
     image/decoders/icon/qt/Makefile
     image/decoders/icon/qt/public/Makefile
-    widget/src/qt/Makefile
-    widget/src/qt/faststartupqt/Makefile
+    widget/qt/Makefile
+    widget/qt/faststartupqt/Makefile
   "
 elif [ "$MOZ_WIDGET_TOOLKIT" = "os2" ]; then
   add_makefiles "
     image/decoders/icon/os2/Makefile
     intl/locale/src/os2/Makefile
     toolkit/themes/pmstripe/global/Makefile
-    widget/src/os2/Makefile
+    widget/os2/Makefile
     xpcom/reflect/xptcall/src/md/os2/Makefile
   "
 fi
@@ -1077,7 +1077,7 @@ if [ "$ENABLE_TESTS" ]; then
   if [ "$OS_ARCH" = "WINNT" ]; then
     add_makefiles "
       toolkit/xre/test/win/Makefile
-      widget/src/windows/tests/Makefile
+      widget/windows/tests/Makefile
       xpcom/tests/windows/Makefile
     "
   fi
@@ -1244,7 +1244,7 @@ fi
 if [ "$MOZ_ENABLE_XREMOTE" ]; then
   add_makefiles "
     toolkit/components/remote/Makefile
-    widget/src/xremoteclient/Makefile
+    widget/xremoteclient/Makefile
   "
 fi
 
@@ -1363,11 +1363,11 @@ fi
 
 if [ "$MOZ_X11" ]; then
   add_makefiles "
-    widget/src/shared/x11/Makefile
+    widget/shared/x11/Makefile
   "
   if [ "$MOZ_WIDGET_TOOLKIT" = "gtk2" ]; then
     add_makefiles "
-      widget/src/gtkxtbin/Makefile
+      widget/gtkxtbin/Makefile
     "
   fi
 fi

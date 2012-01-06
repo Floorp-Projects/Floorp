@@ -1,4 +1,3 @@
-conformance/context/context-lost-restored.html
 conformance/context/premultiplyalpha-test.html
 conformance/glsl/misc/glsl-function-nodes.html
 conformance/glsl/misc/glsl-long-variable-names.html

@@ -4336,7 +4336,7 @@ public:
   nsChangeHint mChangeHint;
 };
 
-class LayerActivityTracker : public nsExpirationTracker<LayerActivity,4> {
+class LayerActivityTracker MOZ_FINAL : public nsExpirationTracker<LayerActivity,4> {
 public:
   // 75-100ms is a good timeout period. We use 4 generations of 25ms each.
   enum { GENERATION_MS = 100 };

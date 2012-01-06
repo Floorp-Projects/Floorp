@@ -399,6 +399,18 @@ function runTests(imgs) {
   // The image should be red.
   checkPixelRange(buf, middle, center, [ 255, 0, 0, 255 ], 10);
 
+  debug("")
+  debug("check calling texImage2D with NULL clears the texture");
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB,
+                imgs['../resources/red-indexed.png'].width,
+                imgs['../resources/red-indexed.png'].height,
+				0, gl.RGB, gl.UNSIGNED_BYTE, null);
+  glErrorShouldBe(gl, gl.NO_ERROR, "Should be no errors from setup");
+  wtu.drawQuad(gl);
+  gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+  // The image should be white.
+  checkPixelRange(buf, middle, center, [ 0, 0, 0, 255 ], 10);
+
   debug("");
   successfullyParsed = true;
   shouldBeTrue("successfullyParsed");

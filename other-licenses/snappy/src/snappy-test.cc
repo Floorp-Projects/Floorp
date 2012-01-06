@@ -353,7 +353,6 @@ int ZLib::CompressAtMostOrAll(Bytef *dest, uLongf *destLen,
   // compression.
   err = deflate(&comp_stream_, flush_mode);
 
-  const uLong source_bytes_consumed = *sourceLen - comp_stream_.avail_in;
   *sourceLen = comp_stream_.avail_in;
 
   if ((err == Z_STREAM_END || err == Z_OK)
@@ -397,7 +396,6 @@ int ZLib::CompressChunkOrAll(Bytef *dest, uLongf *destLen,
 int ZLib::Compress(Bytef *dest, uLongf *destLen,
                    const Bytef *source, uLong sourceLen) {
   int err;
-  const uLongf orig_destLen = *destLen;
   if ( (err=CompressChunkOrAll(dest, destLen, source, sourceLen,
                                Z_FINISH)) != Z_OK )
     return err;

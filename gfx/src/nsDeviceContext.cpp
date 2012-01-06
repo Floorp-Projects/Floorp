@@ -44,6 +44,7 @@
 #include "nsIView.h"
 #include "nsIWidget.h"
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "nsIServiceManager.h"
@@ -91,7 +92,7 @@ static nsSystemFontsAndroid *gSystemFonts = nsnull;
 using namespace mozilla;
 using mozilla::services::GetObserverService;
 
-class nsFontCache : public nsIObserver
+class nsFontCache MOZ_FINAL : public nsIObserver
 {
 public:
     nsFontCache()   { MOZ_COUNT_CTOR(nsFontCache); }

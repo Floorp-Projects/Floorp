@@ -397,7 +397,16 @@ JSBool
 ArrayBuffer::obj_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name,
                              Value *vp)
 {
-    return obj_getGeneric(cx, obj, receiver, ATOM_TO_JSID(name), vp);
+    obj = getArrayBuffer(obj);
+    if (name == cx->runtime->atomState.byteLengthAtom) {
+        vp->setInt32(obj->arrayBufferByteLength());
+        return true;
+    }
+
+    JSObject *delegate = DelegateObject(cx, obj);
+    if (!delegate)
+        return false;
+    return js_GetProperty(cx, delegate, receiver, ATOM_TO_JSID(name), vp);
 }
 
 JSBool
@@ -1012,19 +1021,13 @@ class TypedArrayTemplate
     }
 
     static JSBool
-    obj_getGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+    obj_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name,
+                    Value *vp)
     {
         JSObject *tarray = getTypedArray(obj);
 
-        if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
+        if (name == cx->runtime->atomState.lengthAtom) {
             vp->setNumber(getLength(tarray));
-            return true;
-        }
-
-        jsuint index;
-        if (isArrayIndex(cx, tarray, id, &index)) {
-            // this inline function is specialized for each type
-            copyIndexToValue(cx, tarray, index, vp);
             return true;
         }
 
@@ -1034,14 +1037,7 @@ class TypedArrayTemplate
             return true;
         }
 
-        return proto->getGeneric(cx, receiver, id, vp);
-    }
-
-    static JSBool
-    obj_getProperty(JSContext *cx, JSObject *obj, JSObject *receiver, PropertyName *name,
-                    Value *vp)
-    {
-        return obj_getGeneric(cx, obj, receiver, ATOM_TO_JSID(name), vp);
+        return proto->getProperty(cx, receiver, name, vp);
     }
 
     static JSBool
@@ -1050,7 +1046,6 @@ class TypedArrayTemplate
         JSObject *tarray = getTypedArray(obj);
 
         if (index < getLength(tarray)) {
-            // this inline function is specialized for each type
             copyIndexToValue(cx, tarray, index, vp);
             return true;
         }
@@ -1062,6 +1057,41 @@ class TypedArrayTemplate
         }
 
         return proto->getElement(cx, receiver, index, vp);
+    }
+
+    static JSBool
+    obj_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp)
+    {
+        JSObject *proto = obj->getProto();
+        if (!proto) {
+            vp->setUndefined();
+            return true;
+        }
+
+        return proto->getSpecial(cx, receiver, sid, vp);
+    }
+
+    static JSBool
+    obj_getGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
+    {
+        Value idval = IdToValue(id);
+
+        uint32_t index;
+        if (IsDefinitelyIndex(idval, &index))
+            return obj_getElement(cx, obj, receiver, index, vp);
+
+        SpecialId sid;
+        if (ValueIsSpecial(obj, &idval, &sid, cx))
+            return obj_getSpecial(cx, obj, receiver, sid, vp);
+
+        JSAtom *atom;
+        if (!js_ValueToAtom(cx, idval, &atom))
+            return false;
+
+        if (atom->isIndex(&index))
+            return obj_getElement(cx, obj, receiver, index, vp);
+
+        return obj_getProperty(cx, obj, receiver, atom->asPropertyName(), vp);
     }
 
     static JSBool
@@ -1084,12 +1114,6 @@ class TypedArrayTemplate
         }
 
         return proto->getElementIfPresent(cx, receiver, index, vp, present);
-    }
-
-    static JSBool
-    obj_getSpecial(JSContext *cx, JSObject *obj, JSObject *receiver, SpecialId sid, Value *vp)
-    {
-        return obj_getGeneric(cx, obj, receiver, SPECIALID_TO_JSID(sid), vp);
     }
 
     static bool

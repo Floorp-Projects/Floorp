@@ -101,6 +101,13 @@
     event = yield;
     ok(true, "deleteDatabase on a non-existent database succeeded");
 
+    let request = mozIndexedDB.open("thisDatabaseHadBetterNotExist");
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+
+    event = yield;
+    ok(true, "after deleting a non-existent database, open should work");
+
     finishTest();
     yield;
   }

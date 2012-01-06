@@ -87,7 +87,7 @@ template <class T> class nsReturningRef;
  * // Specializing nsAutoRefTraits<nsRawFD> describes how to manage file
  * // descriptors, so that nsAutoRef<nsRawFD> provides automatic closing of
  * // its file descriptor on destruction.
- * NS_SPECIALIZE_TEMPLATE
+ * template <>
  * class nsAutoRefTraits<nsRawFD> {
  * public:
  *     // The file descriptor is held in an int.
@@ -431,7 +431,7 @@ public:
  * // integral typedefs, a new unique possibly-incomplete class may need to be
  * // declared.
  *
- * NS_SPECIALIZE_TEMPLATE
+ * template <>
  * class nsAutoRefTraits<T>
  * {
  *     // Specializations must provide a typedef for RawRef, describing the
@@ -477,14 +477,14 @@ template <class T> class nsAutoRefTraits;
  *
  * Examples of use:
  *
- * NS_SPECIALIZE_TEMPLATE
+ * template <>
  * class nsAutoRefTraits<PRFileDesc> : public nsPointerRefTraits<PRFileDesc>
  * {
  * public:
  *     static void Release(PRFileDesc *ptr) { PR_Close(ptr); }
  * };
  *
- * NS_SPECIALIZE_TEMPLATE
+ * template <>
  * class nsAutoRefTraits<FcPattern> : public nsPointerRefTraits<FcPattern>
  * {
  * public:

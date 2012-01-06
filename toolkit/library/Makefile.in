@@ -107,7 +107,7 @@ ifndef MOZ_NATIVE_ZLIB
 CPPSRCS += dlldeps-zlib.cpp
 endif
 
-LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/windows
+LOCAL_INCLUDES += -I$(topsrcdir)/widget/windows
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 endif
 
@@ -127,9 +127,9 @@ CPPSRCS += dlldeps-zlib.cpp
 endif
 
 RESFILE = xulrunos2.res
-RCFLAGS += -i $(topsrcdir)/widget/src/os2
+RCFLAGS += -i $(topsrcdir)/widget/os2
 
-LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/os2
+LOCAL_INCLUDES += -I$(topsrcdir)/widget/os2
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 endif
 
@@ -318,7 +318,7 @@ STATIC_LIBS += thebes gl ycbcr
 COMPONENT_LIBS += profiler
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
-COMPONENT_LIBS += gkwidget
+COMPONENT_LIBS += widget_windows
 endif
 ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += wdgtos2
@@ -400,6 +400,13 @@ EXTRA_DSO_LDOPTS += $(MOZ_LIBVPX_LIBS)
 endif
 
 EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,gkmedias,$(DIST)/lib) 
+
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_DSO_LDOPTS += \
+  delayimp.lib \
+  -DELAYLOAD:gkmedias.dll \
+  $(NULL)
+endif
 
 ifdef MOZ_SYDNEYAUDIO
 ifeq ($(OS_ARCH),Linux)
@@ -522,7 +529,7 @@ endif
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS) $(XT_LIBS) $(MOZ_QT_LIBS) -lgthread-2.0
 EXTRA_DSO_LDOPTS += $(FT2_LIBS) $(MOZ_PANGO_LIBS)
-EXTRA_DSO_LDOPTS += $(LIBXUL_DIST)/../widget/src/qt/faststartupqt/$(LIB_PREFIX)faststartupqt.$(LIB_SUFFIX)
+EXTRA_DSO_LDOPTS += $(LIBXUL_DIST)/../widget/qt/faststartupqt/$(LIB_PREFIX)faststartupqt.$(LIB_SUFFIX)
 endif
 
 ifdef MOZ_TREE_FREETYPE
@@ -548,12 +555,19 @@ endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version winspool comdlg32 imm32 winmm wsock32 msimg32 shlwapi psapi ws2_32 dbghelp)
+OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version winspool comdlg32 imm32 winmm wsock32 msimg32 shlwapi psapi ws2_32 dbghelp rasapi32 rasdlg)
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 OS_LIBS += $(call EXPAND_LIBNAME,imagehlp)
 endif
 ifdef MOZ_CRASHREPORTER
 OS_LIBS += $(call EXPAND_LIBNAME,wininet)
+endif
+ifdef _MSC_VER
+OS_LIBS += $(call EXPAND_LIBNAME,delayimp)
+EXTRA_DSO_LDOPTS += \
+  -DELAYLOAD:rasapi32.dll \
+  -DELAYLOAD:rasdlg.dll \
+  $(NULL)
 endif
 endif # WINNT
 
@@ -570,11 +584,10 @@ include $(topsrcdir)/config/rules.mk
 export:: $(RDF_UTIL_SRC_CPPSRCS) $(INTL_UNICHARUTIL_UTIL_CPPSRCS)
 	$(INSTALL) $^ .
 
-# need widget/src/windows for resource.h (included from widget.rc)
+# need widget/windows for resource.h (included from widget.rc)
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/config \
-  -I$(topsrcdir)/widget/src/windows \
-  -I$(topsrcdir)/widget/src/build \
+  -I$(topsrcdir)/widget/windows \
   $(NULL)
 
 OS_LIBS += $(LIBICONV)

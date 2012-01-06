@@ -163,17 +163,13 @@ class NunboxAssembler : public JSC::MacroAssembler
     }
 
     void loadValueAsComponents(const Value &val, RegisterID type, RegisterID payload) {
-        jsval_layout jv;
-        jv.asBits = val.asRawBits();
-
+        jsval_layout jv = JSVAL_TO_IMPL(val);
         move(ImmTag(jv.s.tag), type);
         move(Imm32(jv.s.payload.u32), payload);
     }
 
     void loadValuePayload(const Value &val, RegisterID payload) {
-        jsval_layout jv;
-        jv.asBits = val.asRawBits();
-
+        jsval_layout jv = JSVAL_TO_IMPL(val);
         move(Imm32(jv.s.payload.u32), payload);
     }
 
@@ -257,8 +253,7 @@ class NunboxAssembler : public JSC::MacroAssembler
 
     /* Overloaded for storing constant type and data. */
     DataLabel32 storeValueWithAddressOffsetPatch(const Value &v, Address address) {
-        jsval_layout jv;
-        jv.asBits = v.asRawBits();
+        jsval_layout jv = JSVAL_TO_IMPL(v);
         ImmTag type(jv.s.tag);
         Imm32 payload(jv.s.payload.u32);
         DataLabel32 start = dataLabel32();
@@ -296,9 +291,7 @@ class NunboxAssembler : public JSC::MacroAssembler
      */
     template <typename T>
     Label storeValue(const Value &v, T address) {
-        jsval_layout jv;
-        jv.asBits = v.asRawBits();
-
+        jsval_layout jv = JSVAL_TO_IMPL(v);
         store32(ImmTag(jv.s.tag), tagOf(address));
         Label l = label();
         store32(Imm32(jv.s.payload.u32), payloadOf(address));
