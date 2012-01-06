@@ -428,7 +428,7 @@ class Preprocessor:
         args = open(args, 'rU')
       except:
         raise Preprocessor.Error(self, 'FILE_NOT_FOUND', str(args))
-    self.checkLineNumbers = bool(re.search('\.js(?:\.in)?$', args.name))
+    self.checkLineNumbers = bool(re.search('\.(js|java)(?:\.in)?$', args.name))
     oldFile = self.context['FILE']
     oldLine = self.context['LINE']
     oldDir = self.context['DIRECTORY']
