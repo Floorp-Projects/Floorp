@@ -37,20 +37,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_indexeddb_lazyidlethread_h__
-#define mozilla_dom_indexeddb_lazyidlethread_h__
+#ifndef mozilla_lazyidlethread_h__
+#define mozilla_lazyidlethread_h__
 
-#include "mozilla/dom/indexedDB/IndexedDatabase.h"
+#ifndef MOZILLA_INTERNAL_API
+#error "This header is only usable from within libxul (MOZILLA_INTERNAL_API)."
+#endif
 
 #include "nsIObserver.h"
 #include "nsIThreadInternal.h"
 #include "nsITimer.h"
 
 #include "mozilla/Mutex.h"
+#include "nsCOMPtr.h"
+#include "nsTArray.h"
 
 #define IDLE_THREAD_TOPIC "thread-shutting-down"
 
-BEGIN_INDEXEDDB_NAMESPACE
+namespace mozilla {
 
 /**
  * This class provides a basic event target that creates its thread lazily and
@@ -236,6 +240,6 @@ private:
   bool mIdleTimeoutEnabled;
 };
 
-END_INDEXEDDB_NAMESPACE
+} // namespace mozilla
 
-#endif // mozilla_dom_indexeddb_lazyidlethread_h__
+#endif // mozilla_lazyidlethread_h__

@@ -60,9 +60,7 @@
 #define ASSERT_OWNING_THREAD() /* nothing */
 #endif
 
-USING_INDEXEDDB_NAMESPACE
-
-using mozilla::MutexAutoLock;
+namespace mozilla {
 
 LazyIdleThread::LazyIdleThread(PRUint32 aIdleTimeoutMS,
                                ShutdownMethod aShutdownMethod,
@@ -558,3 +556,5 @@ LazyIdleThread::Observe(nsISupports* /* aSubject */,
   Shutdown();
   return NS_OK;
 }
+
+} // namespace mozilla

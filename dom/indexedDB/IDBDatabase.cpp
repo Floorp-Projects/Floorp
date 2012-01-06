@@ -57,7 +57,6 @@
 #include "IDBTransaction.h"
 #include "IDBFactory.h"
 #include "IndexedDatabaseManager.h"
-#include "LazyIdleThread.h"
 #include "TransactionThreadPool.h"
 #include "DictionaryHelpers.h"
 

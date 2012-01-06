@@ -152,6 +152,8 @@ enum {
   PREF_relimit,
   PREF_methodjit,
   PREF_methodjit_always,
+  PREF_typeinference,
+  PREF_jit_hardening,
   PREF_mem_max,
 
 #ifdef JS_GC_ZEAL
@@ -169,6 +171,8 @@ const char* gPrefsToWatch[] = {
   JS_OPTIONS_DOT_STR "relimit",
   JS_OPTIONS_DOT_STR "methodjit.content",
   JS_OPTIONS_DOT_STR "methodjit_always",
+  JS_OPTIONS_DOT_STR "typeinference",
+  JS_OPTIONS_DOT_STR "jit_hardening",
   JS_OPTIONS_DOT_STR "mem.max"
 
 #ifdef JS_GC_ZEAL
@@ -213,6 +217,15 @@ PrefCallback(const char* aPrefName, void* aClosure)
     if (Preferences::GetBool(gPrefsToWatch[PREF_methodjit_always])) {
       newOptions |= JSOPTION_METHODJIT_ALWAYS;
     }
+    if (Preferences::GetBool(gPrefsToWatch[PREF_typeinference])) {
+      newOptions |= JSOPTION_TYPE_INFERENCE;
+    }
+
+    // This one is special, it's enabled by default and only needs to be unset.
+    if (!Preferences::GetBool(gPrefsToWatch[PREF_jit_hardening])) {
+      newOptions |= JSOPTION_SOFTEN;
+    }
+
     RuntimeService::SetDefaultJSContextOptions(newOptions);
     rts->UpdateAllWorkerJSContextOptions();
   }
