@@ -644,34 +644,6 @@ js::InvokeGetterOrSetter(JSContext *cx, JSObject *obj, const Value &fval, uintN 
     return Invoke(cx, ObjectValue(*obj), fval, argc, argv, rval);
 }
 
-#if JS_HAS_SHARP_VARS
-JS_STATIC_ASSERT(SHARP_NSLOTS == 2);
-
-static JS_NEVER_INLINE bool
-InitSharpSlots(JSContext *cx, StackFrame *fp)
-{
-    StackFrame *prev = fp->prev();
-    JSScript *script = fp->script();
-    JS_ASSERT(script->nfixed >= SHARP_NSLOTS);
-
-    Value *sharps = &fp->slots()[script->nfixed - SHARP_NSLOTS];
-    if (!fp->isGlobalFrame() && prev->script()->hasSharps) {
-        JS_ASSERT(prev->numFixed() >= SHARP_NSLOTS);
-        int base = prev->isNonEvalFunctionFrame()
-                   ? prev->fun()->script()->bindings.sharpSlotBase(cx)
-                   : prev->numFixed() - SHARP_NSLOTS;
-        if (base < 0)
-            return false;
-        sharps[0] = prev->slots()[base];
-        sharps[1] = prev->slots()[base + 1];
-    } else {
-        sharps[0].setUndefined();
-        sharps[1].setUndefined();
-    }
-    return true;
-}
-#endif
-
 bool
 js::ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const Value &thisv,
                   ExecuteType type, StackFrame *evalInFrame, Value *result)
@@ -697,11 +669,6 @@ js::ExecuteKernel(JSContext *cx, JSScript *script, JSObject &scopeChain, const V
     StackFrame *fp = efg.fp();
     if (fp->isStrictEvalFrame() && !CreateEvalCallObject(cx, fp))
         return false;
-
-#if JS_HAS_SHARP_VARS
-    if (script->hasSharps && !InitSharpSlots(cx, fp))
-        return false;
-#endif
 
     Probes::startExecution(cx, script);
 
@@ -1804,6 +1771,9 @@ ADD_EMPTY_CASE(JSOP_UNUSED10)
 ADD_EMPTY_CASE(JSOP_UNUSED11)
 ADD_EMPTY_CASE(JSOP_UNUSED12)
 ADD_EMPTY_CASE(JSOP_UNUSED13)
+ADD_EMPTY_CASE(JSOP_UNUSED14)
+ADD_EMPTY_CASE(JSOP_UNUSED15)
+ADD_EMPTY_CASE(JSOP_UNUSED16)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
 #if JS_HAS_XML_SUPPORT
@@ -3817,92 +3787,6 @@ BEGIN_CASE(JSOP_INITELEM)
 }
 END_CASE(JSOP_INITELEM)
 
-#if JS_HAS_SHARP_VARS
-
-BEGIN_CASE(JSOP_DEFSHARP)
-{
-    uint32_t slot = GET_UINT16(regs.pc);
-    JS_ASSERT(slot + 1 < regs.fp()->numFixed());
-    const Value &lref = regs.fp()->slots()[slot];
-    JSObject *obj;
-    if (lref.isObject()) {
-        obj = &lref.toObject();
-    } else {
-        JS_ASSERT(lref.isUndefined());
-        obj = NewDenseEmptyArray(cx);
-        if (!obj)
-            goto error;
-        regs.fp()->slots()[slot].setObject(*obj);
-    }
-    jsint i = (jsint) GET_UINT16(regs.pc + UINT16_LEN);
-    jsid id = INT_TO_JSID(i);
-    const Value &rref = regs.sp[-1];
-    if (rref.isPrimitive()) {
-        char numBuf[12];
-        JS_snprintf(numBuf, sizeof numBuf, "%u", (unsigned) i);
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_SHARP_DEF, numBuf);
-        goto error;
-    }
-    if (!obj->defineGeneric(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
-        goto error;
-}
-END_CASE(JSOP_DEFSHARP)
-
-BEGIN_CASE(JSOP_USESHARP)
-{
-    uint32_t slot = GET_UINT16(regs.pc);
-    JS_ASSERT(slot + 1 < regs.fp()->numFixed());
-    const Value &lref = regs.fp()->slots()[slot];
-    jsint i = (jsint) GET_UINT16(regs.pc + UINT16_LEN);
-    Value rval;
-    if (lref.isUndefined()) {
-        rval.setUndefined();
-    } else {
-        JSObject *obj = &regs.fp()->slots()[slot].toObject();
-        jsid id = INT_TO_JSID(i);
-        if (!obj->getGeneric(cx, id, &rval))
-            goto error;
-    }
-    if (!rval.isObjectOrNull()) {
-        char numBuf[12];
-
-        JS_snprintf(numBuf, sizeof numBuf, "%u", (unsigned) i);
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_SHARP_USE, numBuf);
-        goto error;
-    }
-    PUSH_COPY(rval);
-}
-END_CASE(JSOP_USESHARP)
-
-BEGIN_CASE(JSOP_SHARPINIT)
-{
-    uint32_t slot = GET_UINT16(regs.pc);
-    JS_ASSERT(slot + 1 < regs.fp()->numFixed());
-    Value *vp = &regs.fp()->slots()[slot];
-    Value rval = vp[1];
-
-    /*
-     * We peek ahead safely here because empty initialisers get zero
-     * JSOP_SHARPINIT ops, and non-empty ones get two: the first comes
-     * immediately after JSOP_NEWINIT followed by one or more property
-     * initialisers; and the second comes directly before JSOP_ENDINIT.
-     */
-    if (regs.pc[JSOP_SHARPINIT_LENGTH] != JSOP_ENDINIT) {
-        rval.setInt32(rval.isUndefined() ? 1 : rval.toInt32() + 1);
-    } else {
-        JS_ASSERT(rval.isInt32());
-        rval.getInt32Ref() -= 1;
-        if (rval.toInt32() == 0)
-            vp[0].setUndefined();
-    }
-    vp[1] = rval;
-}
-END_CASE(JSOP_SHARPINIT)
-
-#endif /* JS_HAS_SHARP_VARS */
-
 {
 BEGIN_CASE(JSOP_GOSUB)
     PUSH_BOOLEAN(false);
@@ -4497,12 +4381,6 @@ END_CASE(JSOP_ARRAYPUSH)
   L_JSOP_GENERATOR:
   L_JSOP_YIELD:
   L_JSOP_ARRAYPUSH:
-# endif
-
-# if !JS_HAS_SHARP_VARS
-  L_JSOP_DEFSHARP:
-  L_JSOP_USESHARP:
-  L_JSOP_SHARPINIT:
 # endif
 
 # if !JS_HAS_DESTRUCTURING

@@ -1437,10 +1437,6 @@ class ArraySharpDetector
         return sharp;
     }
 
-    void makeSharp() {
-        MAKE_SHARP(he);
-    }
-
     bool hasSharpChars() const {
         return chars != NULL;
     }
@@ -1477,23 +1473,11 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
 
     StringBuffer sb(cx);
 
-#if JS_HAS_SHARP_VARS
-    if (detector.initiallySharp()) {
-        jschar *chars = detector.takeSharpChars();
-        sb.replaceRawBuffer(chars, js_strlen(chars));
-        goto make_string;
-    } else if (detector.hasSharpChars()) {
-        detector.makeSharp();
-        jschar *chars = detector.takeSharpChars();
-        sb.replaceRawBuffer(chars, js_strlen(chars));
-    }
-#else
     if (detector.initiallySharp()) {
         if (!sb.append("[]"))
             return false;
         goto make_string;
     }
-#endif
 
     if (!sb.append('['))
         return false;

@@ -458,12 +458,8 @@ Process(JSContext *cx, JSObject *obj, const char *filename, bool forceTTY)
         SkipUTF8BOM(file);
 
         /*
-         * It's not interactive - just execute it.
-         *
-         * Support the UNIX #! shell hack; gobble the first line if it starts
-         * with '#'.  TODO - this isn't quite compatible with sharp variables,
-         * as a legal js program (using sharp variables) might start with '#'.
-         * But that would require multi-character lookahead.
+         * It's not interactive - just execute it.  Support the UNIX #! shell
+         * hack, and gobble the first line if it starts with '#'.
          */
         int ch = fgetc(file);
         if (ch == '#') {
