@@ -208,14 +208,14 @@ class DeviceManager:
     pieces = appname.split(' ')
     parts = pieces[0].split('/')
     app = parts[-1]
-    procre = re.compile('.*' + app + '.*')
 
     procList = self.getProcessList()
     if (procList == []):
       return None
       
     for proc in procList:
-      if (procre.match(proc[1])):
+      procName = proc[1].split('/')[-1]
+      if (procName == app):
         pid = proc[0]
         break
     return pid
