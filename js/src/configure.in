@@ -4349,6 +4349,17 @@ if test -n "$JSGC_INCREMENTAL"; then
 fi
 
 dnl ========================================================
+dnl = Use generational GC
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(gcgenerational,
+[  --enable-gcgenerational Enable generational GC],
+    JSGC_GENERATIONAL=1,
+    JSGC_GENERATIONAL= )
+if test -n "$JSGC_GENERATIONAL"; then
+    AC_DEFINE(JSGC_GENERATIONAL)
+fi
+
+dnl ========================================================
 dnl = Perform moving GC stack rooting analysis
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(gcrootanalysis,
