@@ -863,6 +863,12 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
                 "JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));\n")
         if isInterfaceType(member.realtype):
             f.write("    XPCLazyCallContext lccx(ccx);\n")
+    elif isInterfaceType(member.realtype):
+        if isMethod:
+            f.write("    JSObject *callee = "
+                    "JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));\n")
+        elif isGetter:
+            f.write("    JSObject *callee = nsnull;\n")
 
     # Get the 'self' pointer.
     if customMethodCall is None or not 'thisType' in customMethodCall:
@@ -894,10 +900,10 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
 
         if not isSetter and isInterfaceType(member.realtype):
             f.write("    XPCLazyCallContext lccx(JS_CALLER, cx, obj);\n")
-            f.write("    if (!xpc_qsUnwrapThis(cx, obj, &self, "
+            f.write("    if (!xpc_qsUnwrapThis(cx, obj, callee, &self, "
                     "&selfref.ptr, %s, &lccx, %s))\n" % (pthisval, unwrapFatalArg))
         else:
-            f.write("    if (!xpc_qsUnwrapThis(cx, obj, &self, "
+            f.write("    if (!xpc_qsUnwrapThis(cx, obj, nsnull, &self, "
                     "&selfref.ptr, %s, nsnull, %s))\n" % (pthisval, unwrapFatalArg))
         f.write("        return JS_FALSE;\n")
 
