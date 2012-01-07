@@ -68,14 +68,4 @@ public interface Driver {
 
   void startFrameRecording();
   int stopFrameRecording();
-  void dumpLog(String message);
-  void setLogFile(String filename);
-
-  void ok(boolean condition, String name, String diag);
-  void is(Object a, Object b, String name);
-  void isnot(Object a, Object b, String name);
-  void todo(boolean condition, String name, String diag);
-  void todo_is(Object a, Object b, String name);
-  void todo_isnot(Object a, Object b, String name);
-  void info(String name, String message);
 }
