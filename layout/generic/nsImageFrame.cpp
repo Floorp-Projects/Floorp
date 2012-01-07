@@ -682,7 +682,8 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
 }
 
 nsresult
-nsImageFrame::FrameChanged(imgIContainer *aContainer,
+nsImageFrame::FrameChanged(imgIRequest *aRequest,
+                           imgIContainer *aContainer,
                            const nsIntRect *aDirtyRect)
 {
   if (!GetStyleVisibility()->IsVisible()) {
@@ -1988,7 +1989,8 @@ nsImageFrame::IconLoad::OnDiscard(imgIRequest *aRequest)
 }
 
 NS_IMETHODIMP
-nsImageFrame::IconLoad::FrameChanged(imgIContainer *aContainer,
+nsImageFrame::IconLoad::FrameChanged(imgIRequest *aRequest,
+                                     imgIContainer *aContainer,
                                      const nsIntRect *aDirtyRect)
 {
   nsTObserverArray<nsImageFrame*>::ForwardIterator iter(mIconObservers);
@@ -2043,13 +2045,14 @@ NS_IMETHODIMP nsImageListener::OnStopDecode(imgIRequest *aRequest,
   return mFrame->OnStopDecode(aRequest, status, statusArg);
 }
 
-NS_IMETHODIMP nsImageListener::FrameChanged(imgIContainer *aContainer,
+NS_IMETHODIMP nsImageListener::FrameChanged(imgIRequest *aRequest,
+                                            imgIContainer *aContainer,
                                             const nsIntRect *aDirtyRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  return mFrame->FrameChanged(aContainer, aDirtyRect);
+  return mFrame->FrameChanged(aRequest, aContainer, aDirtyRect);
 }
 
 static bool

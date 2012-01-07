@@ -1,0 +1,109 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import com.jayway.android.robotium.solo.Solo;
+import @ANDROID_PACKAGE_NAME@.*;
+
+import android.app.Activity;
+import android.app.Instrumentation;
+import android.test.ActivityInstrumentationTestCase2;
+import android.content.Intent;
+import java.util.HashMap;
+
+abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
+    private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";
+    private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
+
+    private static Class<Activity> mLauncherActivityClass;
+    private Activity mActivity;
+    private Solo mSolo;
+    protected Driver mDriver;
+    protected Assert mAsserter;
+    protected Actions mActions;
+
+    static {
+        try {
+            mLauncherActivityClass = (Class<Activity>)Class.forName(LAUNCH_ACTIVITY_FULL_CLASSNAME);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public BaseTest() {
+        super(TARGET_PACKAGE_ID, mLauncherActivityClass);
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+        // Load config file from sdcard (setup by python script)
+        String configFile = FennecNativeDriver.getFile("/mnt/sdcard/robotium.config");
+        HashMap config = FennecNativeDriver.convertTextToTable(configFile);
+
+        // Create the intent to be used with all the important arguments.
+        Intent i = new Intent(Intent.ACTION_MAIN);
+        i.putExtra("args", "-no-remote -profile " + (String)config.get("profile"));
+
+        // Start the activity
+        setActivityIntent(i);
+        mActivity = getActivity();
+
+        // Set up Robotium.solo and Driver objects
+        mSolo = new Solo(getInstrumentation());
+        mDriver = new FennecNativeDriver(mActivity, mSolo);
+        mActions = new FennecNativeActions(mActivity, mSolo, getInstrumentation());
+        mDriver.setLogFile((String)config.get("logfile"));
+
+        mAsserter = new FennecNativeAssert();
+        mAsserter.setLogFile((String)config.get("logfile"));
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        try {
+            mSolo.finalize();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        getActivity().finish();
+        super.tearDown();
+    }
+
+    protected final Activity getActivityFromClick(Element element) {
+        Instrumentation inst = getInstrumentation();
+        Instrumentation.ActivityMonitor monitor = inst.addMonitor((String)null, null, false);
+        element.click();
+        return inst.waitForMonitor(monitor);
+    }
+
+    protected final void enterUrl(String url) {
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        Element awesomebar = mDriver.findElement(mActivity, "awesome_bar");
+        Activity awesomeBarActivity = getActivityFromClick(awesomebar);
+        getInstrumentation().waitForIdleSync();
+
+        Element urlbar = mDriver.findElement(awesomeBarActivity, "awesomebar_text");
+        mActions.sendKeys(url);
+        mAsserter.is(urlbar.getText(), url, "Awesomebar URL typed properly");
+    }
+
+    protected final void hitEnterAndWait() {
+        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
+        mActions.sendSpecialKey(Actions.SpecialKey.ENTER);
+        // wait for screen to load
+        contentEventExpecter.blockForEvent();
+    }
+
+    protected final void loadUrl(String url) {
+        enterUrl(url);
+        hitEnterAndWait();
+    }
+
+    protected final void verifyUrl(String url) {
+        Element awesomebar = mDriver.findElement(mActivity, "awesome_bar");
+        Activity awesomeBarActivity = getActivityFromClick(awesomebar);
+        getInstrumentation().waitForIdleSync();
+
+        Element urlbar = mDriver.findElement(awesomeBarActivity, "awesomebar_text");
+        mAsserter.is(urlbar.getText(), url, "Awesomebar URL stayed the same");
+    }
+}

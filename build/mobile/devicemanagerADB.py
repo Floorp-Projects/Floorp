@@ -112,17 +112,21 @@ class DeviceManagerADB(DeviceManager):
     # files; we either zip/unzip or push file-by-file to get around this 
     # limitation
     try:
+      if (not self.dirExists(remoteDir)):
+        self.mkDirs(remoteDir+"/x")
       if (self.useZip):
         localZip = tempfile.mktemp()+".zip"
         remoteZip = remoteDir + "/adbdmtmp.zip"
         subprocess.check_output(["zip", "-r", localZip, '.'], cwd=localDir)
         self.pushFile(localZip, remoteZip)
         os.remove(localZip)
-        self.checkCmdAs(["shell", "unzip", "-o", remoteZip, "-d", remoteDir])
+        data = self.runCmdAs(["shell", "unzip", "-o", remoteZip, "-d", remoteDir]).stdout.read()
         self.checkCmdAs(["shell", "rm", remoteZip])
+        if (re.search("unzip: exiting", data) or re.search("Operation not permitted", data)):
+          print "zip/unzip failure: falling back to normal push"
+          self.useZip = False
+          self.pushDir(localDir, remoteDir)
       else:
-        if (not self.dirExists(remoteDir)):
-          self.mkDirs(remoteDir+"/x")
         for root, dirs, files in os.walk(localDir, followlinks='true'):
           relRoot = os.path.relpath(root, localDir)
           for file in files:
@@ -609,7 +613,7 @@ class DeviceManagerADB(DeviceManager):
       self.checkCmd(["shell", "run-as", packageName, "rm", "-r", devroot + "/sanity"])
       
   def isUnzipAvailable(self):
-    data = self.runCmd(["shell", "unzip"]).stdout.read()
+    data = self.runCmdAs(["shell", "unzip"]).stdout.read()
     if (re.search('Usage', data)):
       return True
     else:
