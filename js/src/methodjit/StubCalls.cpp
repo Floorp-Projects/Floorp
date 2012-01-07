@@ -167,11 +167,13 @@ stubs::SetName(VMFrame &f, PropertyName *origName)
              * on a prototype property that has a setter.
              */
             const Shape *shape = entry->prop;
-            JS_ASSERT_IF(shape->isDataDescriptor(), shape->writable());
-            JS_ASSERT_IF(shape->hasSlot(), entry->isOwnPropertyHit());
 
             if (entry->isOwnPropertyHit() ||
-                ((obj2 = obj->getProto()) && obj2->lastProperty() == entry->pshape)) {
+                ((obj2 = obj->getProto()) && obj2->lastProperty() == entry->pshape))
+            {
+                JS_ASSERT_IF(shape->isDataDescriptor(), shape->writable());
+                JS_ASSERT_IF(shape->hasSlot(), entry->isOwnPropertyHit());
+
 #ifdef DEBUG
                 if (entry->isOwnPropertyHit()) {
                     JS_ASSERT(obj->nativeContains(cx, *shape));
