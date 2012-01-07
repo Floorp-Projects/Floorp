@@ -281,7 +281,8 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
         return BAILOUT_RETURN_ARGUMENT_CHECK;
     }
 
-    return true;
+    JS_NOT_REACHED("bad bailout kind");
+    return BAILOUT_RETURN_FATAL_ERROR;
 }
 
 static inline void
@@ -306,12 +307,13 @@ ion::Bailout(BailoutStack *sp)
     IonActivation *activation = cx->threadData()->ionActivation;
     FrameRecovery in = FrameRecoveryFromBailout(ioncompartment, sp);
 
-    IonSpew(IonSpew_Snapshots, "Took bailout! Snapshot offset: %d", in.snapshotOffset());
+    IonSpew(IonSpew_Bailouts, "Took bailout! Snapshot offset: %d", in.snapshotOffset());
 
     uint32 retval = ConvertFrames(cx, activation, in);
 
     EnsureExitFrame(in.fp());
 
+    JS_ASSERT(!activation->failedInvalidation());
     if (retval != BAILOUT_RETURN_FATAL_ERROR)
         return retval;
 
@@ -326,6 +328,8 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
     IonCompartment *ioncompartment = cx->compartment->ionCompartment();
     IonActivation *activation = cx->threadData()->ionActivation;
     FrameRecovery in = FrameRecoveryFromInvalidation(ioncompartment, sp);
+
+    IonSpew(IonSpew_Bailouts, "Took invalidation bailout! Snapshot offset: %d", in.snapshotOffset());
 
     // Note: the frame size must be computed before we return from this function.
     *frameSizeOut = in.frameSize();
@@ -353,7 +357,7 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
         IonSpew(IonSpew_Invalidate, "   new  ra %p", (void *) frame->returnAddress());
     }
 
-    if (retval != BAILOUT_RETURN_FATAL_ERROR)
+    if (retval != BAILOUT_RETURN_FATAL_ERROR && !activation->failedInvalidation())
         return retval;
 
     cx->delete_(activation->maybeTakeBailout());
@@ -380,6 +384,8 @@ ion::ReflowTypeInfo(uint32 bailoutResult)
 {
     JSContext *cx = GetIonContext()->cx;
     IonActivation *activation = cx->threadData()->ionActivation;
+
+    IonSpew(IonSpew_Bailouts, "reflowing type info");
 
     if (bailoutResult == BAILOUT_RETURN_ARGUMENT_CHECK) {
         IonSpew(IonSpew_Bailouts, "reflowing type info at argument-checked entry");
