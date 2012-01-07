@@ -492,8 +492,6 @@ def main(argv):
     if OPTIONS.ion_tbpl:
         # Running all bits would take forever. Instead, we test a few interesting combinations.
         ion_flags = [ 
-                      ['--ion-eager' ],
-                      ['--ion-eager', '--ion-gvn=off', '--ion-licm=off'],
                       ['--ion-eager', '--ion-gvn=off', '--ion-licm=off', '--ion-regalloc=greedy'],
                       ['--ion', '-n'],
                       ['--ion', '-n', '--ion-regalloc=greedy'],
