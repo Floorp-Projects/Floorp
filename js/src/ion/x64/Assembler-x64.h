@@ -428,6 +428,15 @@ class Assembler : public AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
+    void cmpq(const Operand &lhs, Imm32 rhs) {
+        switch (lhs.kind()) {
+          case Operand::REG_DISP:
+            masm.cmpq_im(rhs.value, lhs.disp(), lhs.base());
+            break;
+          default:
+            JS_NOT_REACHED("unexpected operand kind");
+        }
+    }
     void cmpq(const Register &lhs, const Operand &rhs) {
         switch (rhs.kind()) {
           case Operand::REG:
