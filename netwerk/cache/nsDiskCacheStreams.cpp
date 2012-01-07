@@ -45,6 +45,9 @@
 #include "nsCacheService.h"
 #include "mozilla/FileUtils.h"
 #include "nsIDiskCacheStreamInternal.h"
+#include "nsThreadUtils.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TimeStamp.h"
 
 
 
@@ -231,22 +234,44 @@ nsDiskCacheOutputStream::~nsDiskCacheOutputStream()
 NS_IMETHODIMP
 nsDiskCacheOutputStream::Close()
 {
+    mozilla::TimeStamp start = mozilla::TimeStamp::Now();
+
     if (!mClosed) {
         mClosed = true;
         // tell parent streamIO we are closing
         mStreamIO->CloseOutputStream(this);
     }
+
+    mozilla::Telemetry::ID id;
+    if (NS_IsMainThread())
+        id = mozilla::Telemetry::NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_MAIN_THREAD;
+    else
+        id = mozilla::Telemetry::NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE;
+
+    mozilla::Telemetry::AccumulateTimeDelta(id, start);
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDiskCacheOutputStream::CloseInternal()
 {
+    mozilla::TimeStamp start = mozilla::TimeStamp::Now();
+
     if (!mClosed) {
         mClosed = true;
         // tell parent streamIO we are closing
         mStreamIO->CloseOutputStreamInternal(this);
     }
+
+    mozilla::Telemetry::ID id;
+    if (NS_IsMainThread())
+        id = mozilla::Telemetry::NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL_MAIN_THREAD;
+    else
+        id = mozilla::Telemetry::NETWORK_DISK_CACHE_OUTPUT_STREAM_CLOSE_INTERNAL;
+
+    mozilla::Telemetry::AccumulateTimeDelta(id, start);
+
     return NS_OK;
 }
 
