@@ -1231,8 +1231,6 @@ nsBrowserAccess.prototype = {
 
 let gTabIDFactory = 0;
 
-const kDefaultMetadata = { autoSize: false, allowZoom: true, autoScale: true };
-
 // track the last known screen size so that new tabs
 // get created with the right size rather than being 1x1
 let gScreenWidth = 1;
@@ -1245,7 +1243,6 @@ function Tab(aURL, aParams) {
   this.agentMode = UA_MODE_MOBILE;
   this.lastHost = null;
   this.create(aURL, aParams);
-  this._metadata = null;
   this._viewport = { x: 0, y: 0, width: gScreenWidth, height: gScreenHeight, offsetX: 0, offsetY: 0,
                      pageWidth: gScreenWidth, pageHeight: gScreenHeight, zoom: 1.0 };
   this.viewportExcess = { x: 0, y: 0 };
@@ -1815,7 +1812,7 @@ Tab.prototype = {
   },
 
   get metadata() {
-    return this._metadata || kDefaultMetadata;
+    return ViewportHandler.getMetadataForDocument(this.browser.contentDocument);
   },
 
   /** Update viewport when the metadata changes. */
@@ -1830,7 +1827,7 @@ Tab.prototype = {
       if ("maxZoom" in aMetadata && aMetadata.maxZoom > 0)
         aMetadata.maxZoom *= scaleRatio;
     }
-    this._metadata = aMetadata;
+    ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
     this.updateViewportSize();
     this.updateViewport(true);
   },
@@ -2826,6 +2823,11 @@ const kViewportMinHeight = 223;
 const kViewportMaxHeight = 10000;
 
 var ViewportHandler = {
+  // The cached viewport metadata for each document. We tie viewport metadata to each document
+  // instead of to each tab so that we don't have to update it when the document changes. Using an
+  // ES6 weak map lets us avoid leaks.
+  _metadata: new WeakMap(),
+
   init: function init() {
     addEventListener("DOMWindowCreated", this, false);
     addEventListener("DOMMetaAdded", this, false);
@@ -2972,6 +2974,33 @@ var ViewportHandler = {
     let utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     delete this.displayDPI;
     return this.displayDPI = utils.displayDPI;
+  },
+
+  /**
+   * Returns the viewport metadata for the given document, or the default metrics if no viewport
+   * metadata is available for that document.
+   */
+  getMetadataForDocument: function getMetadataForDocument(aDocument) {
+    let metadata = this._metadata.get(aDocument, this.getDefaultMetadata());
+    return metadata;
+  },
+
+  /** Updates the saved viewport metadata for the given content document. */
+  setMetadataForDocument: function setMetadataForDocument(aDocument, aMetadata) {
+    if (!aMetadata)
+      this._metadata.delete(aDocument);
+    else
+      this._metadata.set(aDocument, aMetadata);
+  },
+
+  /** Returns the default viewport metadata for a document. */
+  getDefaultMetadata: function getDefaultMetadata() {
+    return {
+      autoSize: false,
+      allowZoom: true,
+      autoScale: true,
+      scaleRatio: ViewportHandler.getScaleRatio()
+    };
   }
 };
 
