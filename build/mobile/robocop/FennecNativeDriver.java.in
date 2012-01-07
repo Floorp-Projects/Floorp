@@ -70,7 +70,6 @@ public class FennecNativeDriver implements Driver {
   private HashMap locators = null;
   private Activity activity;
   private Solo solo;
-  private String logFile;
 
   // Objects for reflexive access of fennec classes.
   private ClassLoader classLoader;
@@ -82,9 +81,6 @@ public class FennecNativeDriver implements Driver {
   private Method sendGE;
   private Method _startFrameRecording;
   private Method _stopFrameRecording;
-
-
-  private LinkedList<testInfo> testList = new LinkedList<testInfo>();
 
   public FennecNativeDriver(Activity activity, Solo robocop){
     this.activity = activity;
@@ -286,38 +282,6 @@ public class FennecNativeDriver implements Driver {
     return text.toString();  
   }
 
-  // Write information to a logfile and logcat
-  public void dumpLog(String message)
-  {
-    File file = new File(logFile);
-    BufferedWriter bw = null;
-
-    try {
-      bw = new BufferedWriter(new FileWriter(logFile, true));
-      bw.write(message);
-      bw.newLine();
-    } catch(IOException e) {
-      e.printStackTrace();
-    } finally {
-      try {
-        if (bw != null) {
-          bw.flush();
-          bw.close();
-        }
-      } catch (IOException ex) {
-        ex.printStackTrace();
-      }
-    }
-
-    Log.i("Robocop", message);
-  }
-
-  // Set the filename used for dumpLog.
-  public void setLogFile(String filename)
-  {
-    logFile = filename;
-  }
-
   // Takes a string of "key=value" pairs split by \n and creates a hash table.
   public static HashMap convertTextToTable(String data)
   {
@@ -329,96 +293,5 @@ public class FennecNativeDriver implements Driver {
       retVal.put(parts[0].trim(), parts[1].trim());
     }
     return retVal;
-  }
-
-  class testInfo {
-    public boolean result;
-    public String name;
-    public String diag;
-    public boolean todo;
-    public testInfo(boolean r, String n, String d, boolean t) {
-      result = r;
-      name = n;
-      diag = d;
-      todo = t;
-    }
-
-  }
-
-
-  private void _logResult(testInfo test, String passString, String failString)
-  {
-    boolean isError = true;
-    String resultString = failString;
-    if(test.result || test.todo){
-      isError = false;
-    }
-    if(test.result)
-    {
-      resultString = passString;
-    }
-    String diag= test.name;
-    if(test.diag!=null) diag+= " - " + test.diag;
-
-    String message = resultString + " | " + "ROBOCOP" + " | " + diag;
-    if(isError) {
-      dumpLog(message);
-    }
-    else {
-      dumpLog(message);
-    }
-  }
-
-  public void ok(boolean condition, String name, String diag) {
-    testInfo test = new testInfo(condition, name, diag, false);
-    _logResult(test, "TEST-PASS", "TEST-UNEXPECTED-FAIL");
-    testList.add(test);
-  }
-
-  public void is(Object a, Object b, String name) {
-    boolean pass = a.equals(b);
-    String diag = "got " + a.toString() + ", expected " + b.toString();
-    if(pass) {
-      diag = a.toString() + " should equal " + b.toString();
-    }
-    ok(pass, name, diag);
-  }
-  
-  public void isnot(Object a, Object b, String name) {
-    boolean pass = !a.equals(b);
-    String diag = "didn't expect " + a.toString() + ", but got it";
-    if(pass) {
-      diag = a.toString() + " should not equal " + b.toString();
-    }
-    ok(pass, name, diag);
-  }
-
-  public void todo(boolean condition, String name, String diag) {
-    testInfo test = new testInfo(condition, name, diag, true);
-    _logResult(test, "TEST-UNEXPECTED-PASS", "TEST-KNOWN-FAIL");
-    testList.add(test);
-  }
-
-  public void todo_is(Object a, Object b, String name) {
-    boolean pass = a.equals(b);
-    String diag = "got " + a.toString() + ", expected " + b.toString();
-    if(pass) {
-      diag = a.toString() + " should equal " + b.toString();
-    }
-    todo(pass, name, diag);
-  }
-  
-  public void todo_isnot(Object a, Object b, String name) {
-    boolean pass = !a.equals(b);
-    String diag = "didn't expect " + a.toString() + ", but got it";
-    if(pass) {
-      diag = a.toString() + " should not equal " + b.toString();
-    }
-    todo(pass, name, diag);
-  }
-
-  public void info(String name, String message) {
-    testInfo test = new testInfo(true, name, message, false);
-    _logResult(test, "TEST-INFO", "INFO FAILED?");
   }
 }
