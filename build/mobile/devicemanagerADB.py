@@ -258,10 +258,6 @@ class DeviceManagerADB(DeviceManager):
   #  success: output filename
   #  failure: None
   def launchProcess(self, cmd, outputFile = "process.txt", cwd = '', env = '', failIfRunning=False):
-    if cmd[0] == "am":
-      self.checkCmd(["shell"] + cmd)
-      return outputFile
-
     acmd = ["shell", "am","start"]
     cmd = ' '.join(cmd).strip()
     i = cmd.find(" ")
@@ -286,7 +282,7 @@ class DeviceManagerADB(DeviceManager):
       acmd.append(''.join(['\'',uri, '\'']));
     print acmd
     self.checkCmd(acmd)
-    return outputFile
+    return outputFile;
 
   # external function
   # returns:
@@ -426,14 +422,15 @@ class DeviceManagerADB(DeviceManager):
   # returns:
   #  success: path for app root
   #  failure: None
-  def getAppRoot(self, packageName):
+  def getAppRoot(self):
     devroot = self.getDeviceRoot()
     if (devroot == None):
       return None
 
-    if (packageName and self.dirExists('/data/data/' + packageName)):
-      self.packageName = packageName
-      return '/data/data/' + packageName
+    if (self.dirExists(devroot + '/fennec')):
+      return devroot + '/fennec'
+    elif (self.dirExists(devroot + '/firefox')):
+      return devroot + '/firefox'
     elif (self.packageName and self.dirExists('/data/data/' + self.packageName)):
       return '/data/data/' + self.packageName
 

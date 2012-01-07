@@ -32,8 +32,8 @@ public class testPan extends BaseTest {
         // asserter.ok(i < 1000, "Less than 1000", "Should take less than 1000 drags to get to bottom of the page.");
 
         int frames = mDriver.stopFrameRecording();
-        mAsserter.dumpLog("__start_report" + Integer.toString(frames) + "__end_report");
+        mDriver.dumpLog("__start_report" + Integer.toString(frames) + "__end_report");
         long msecs = System.currentTimeMillis();
-        mAsserter.dumpLog("__startTimestamp" + msecs + "__endTimestamp");
+        mDriver.dumpLog("__startTimestamp" + msecs + "__endTimestamp");
     }	
 }
