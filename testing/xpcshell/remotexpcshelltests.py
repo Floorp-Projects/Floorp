@@ -37,6 +37,7 @@
 # ***** END LICENSE BLOCK ***** */
 
 import re, sys, os
+import subprocess
 import runxpcshelltests as xpcshell
 from automationutils import *
 import devicemanager, devicemanagerADB, devicemanagerSUT
@@ -66,6 +67,22 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.remoteAPK = self.remoteJoin(self.remoteBinDir, os.path.basename(options.localAPK))
         self.remoteDebugger = options.debugger
         self.remoteDebuggerArgs = options.debuggerArgs  
+        self.setAppRoot()
+
+    def setAppRoot(self):
+        # Determine the application root directory associated with the package 
+        # name used by the Fennec APK.
+        self.appRoot = None
+        packageName = None
+        if self.options.localAPK:
+          try:
+            packageName = subprocess.check_output(["unzip", "-p", self.options.localAPK, "package-name.txt"])
+            if packageName:
+              self.appRoot = self.device.getAppRoot(packageName.strip())
+          except Exception as detail:
+            print "unable to determine app root: " + detail
+            pass
+        return None
 
     def remoteJoin(self, path1, path2):
         joined = os.path.join(path1, path2)
@@ -203,9 +220,9 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         shellArgs = "cd "+self.remoteHere
         shellArgs += "; LD_LIBRARY_PATH="+self.remoteBinDir
         shellArgs += "; export CACHE_PATH="+self.remoteBinDir
-        if (self.device.getAppRoot()):
+        if (self.appRoot):
           # xpcshell still runs without GRE_HOME; it may not be necessary
-          shellArgs += "; export GRE_HOME="+self.device.getAppRoot()
+          shellArgs += "; export GRE_HOME="+self.appRoot
         shellArgs += "; export XPCSHELL_TEST_PROFILE_DIR="+self.profileDir
         shellArgs += "; "+xpcshell+" "
         shellArgs += " ".join(cmd[1:])
