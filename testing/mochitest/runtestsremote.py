@@ -109,8 +109,13 @@ class RemoteOptions(MochitestOptions):
 
         self.add_option("--robocop", action = "store",
                     type = "string", dest = "robocop",
-                    help = "use when running robotium tests on native UI")
+                    help = "name of the .ini file containing the list of tests to run")
         defaults["robocop"] = ""
+
+        self.add_option("--robocop-path", action = "store",
+                    type = "string", dest = "robocopPath",
+                    help = "Path to the folder where robocop.apk is located at.  Primarily used for ADB test running")
+        defaults["robocopPath"] = ""
 
         defaults["remoteTestRoot"] = None
         defaults["logFile"] = "mochitest.log"
@@ -169,6 +174,17 @@ class RemoteOptions(MochitestOptions):
             f = open(options.pidFile, 'w')
             f.write("%s" % os.getpid())
             f.close()
+
+        # Robocop specific options
+        if options.robocop and not os.path.exists(options.robocop):
+            print "ERROR: Unable to find specified manifest '%s'" % options.robocop
+            return None
+        options.robocop = os.path.abspath(options.robocop)
+
+        if options.robocopPath and not os.path.exists(os.path.join(options.robocopPath, 'robocop.apk')):
+            print "ERROR: Unable to find robocop.apk in path '%s'" % options.robocopPath
+            return None
+        options.robocopPath = os.path.abspath(options.robocopPath)
 
         return options
 
@@ -359,7 +375,7 @@ def main():
     if (options.robocop):
         mp = manifestparser.TestManifest(strict=False)
         # TODO: pull this in dynamically
-        mp.read('robocop.ini')
+        mp.read(options.robocop)
         robocop_tests = mp.active_tests(exists=False)
 
         fHandle = open("robotium.config", "w")
@@ -373,11 +389,14 @@ def main():
         dm.pushFile(os.path.abspath(options.robocop + "/fennec_ids.txt"), "/sdcard/fennec_ids.txt")
         options.extraPrefs.append('robocop.logfile="%s/robocop.log"' % deviceRoot)
 
-        if (options.dm_trans == 'adb'):
-          dm.checkCmd(["install", "-r", os.path.join(options.robocop, "robocop.apk")])
+        if (options.dm_trans == 'adb' and options.robocopPath):
+          dm.checkCmd(["install", "-r", os.path.join(options.robocopPath, "robocop.apk")])
 
         appname = options.app
         for test in robocop_tests:
+            if options.testPath and options.testPath != test['name']:
+                continue
+
             options.app = "am"
             options.browserArgs = ["instrument", "-w", "-e", "class"]
             options.browserArgs.append("%s.tests.%s" % (appname, test['name']))
