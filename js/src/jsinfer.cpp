@@ -3447,7 +3447,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_STARTXML:
       case JSOP_STARTXMLEXPR:
       case JSOP_DEFXMLNS:
-      case JSOP_SHARPINIT:
       case JSOP_INDEXBASE:
       case JSOP_INDEXBASE1:
       case JSOP_INDEXBASE2:
@@ -4131,13 +4130,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
       case JSOP_ENDFILTER:
         poppedTypes(pc, 1)->addSubset(cx, &pushed[0]);
-        break;
-
-      case JSOP_DEFSHARP:
-        break;
-
-      case JSOP_USESHARP:
-        pushed[0].addType(cx, Type::UnknownType());
         break;
 
       case JSOP_CALLEE:
