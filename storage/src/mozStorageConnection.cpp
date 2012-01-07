@@ -70,6 +70,7 @@
 #include "StorageBaseStatementInternal.h"
 #include "SQLCollations.h"
 #include "FileSystemModule.h"
+#include "mozStorageHelper.h"
 
 #include "prlog.h"
 #include "prprf.h"
@@ -650,14 +651,17 @@ Connection::initialize(nsIFile *aDatabaseFile,
   // the database has just been created, otherwise, if the database does not
   // use WAL journal mode, a VACUUM operation will updated its page_size.
   PRInt64 pageSize = DEFAULT_PAGE_SIZE;
-  nsCAutoString pageSizeQuery("PRAGMA page_size = ");
+  nsCAutoString pageSizeQuery(MOZ_STORAGE_UNIQUIFY_QUERY_STR
+                              "PRAGMA page_size = ");
   pageSizeQuery.AppendInt(pageSize);
   rv = ExecuteSimpleSQL(pageSizeQuery);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the current page_size, since it may differ from the specified value.
   sqlite3_stmt *stmt;
-  srv = prepareStatement(NS_LITERAL_CSTRING("PRAGMA page_size"), &stmt);
+  NS_NAMED_LITERAL_CSTRING(pragma_page_size,
+                           MOZ_STORAGE_UNIQUIFY_QUERY_STR "PRAGMA page_size");
+  srv = prepareStatement(pragma_page_size, &stmt);
   if (srv == SQLITE_OK) {
     if (SQLITE_ROW == stepStatement(stmt)) {
       pageSize = ::sqlite3_column_int64(stmt, 0);
@@ -668,7 +672,8 @@ Connection::initialize(nsIFile *aDatabaseFile,
   // Setting the cache_size forces the database open, verifying if it is valid
   // or corrupt.  So this is executed regardless it being actually needed.
   // The cache_size is calculated from the actual page_size, to save memory.
-  nsCAutoString cacheSizeQuery("PRAGMA cache_size = ");
+  nsCAutoString cacheSizeQuery(MOZ_STORAGE_UNIQUIFY_QUERY_STR
+                               "PRAGMA cache_size = ");
   cacheSizeQuery.AppendInt(NS_MIN(DEFAULT_CACHE_SIZE_PAGES,
                                   PRInt32(MAX_CACHE_SIZE_BYTES / pageSize)));
   srv = ::sqlite3_exec(mDBConn, cacheSizeQuery.get(), NULL, NULL, NULL);

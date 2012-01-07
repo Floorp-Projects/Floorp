@@ -1916,7 +1916,7 @@ DoReplace(JSContext *cx, RegExpStatics *res, ReplaceData &rdata)
             dp++;
         }
     }
-    JS_ALWAYS_TRUE(rdata.sb.append(cp, repstr->length() - (cp - bp)));
+    rdata.sb.infallibleAppend(cp, repstr->length() - (cp - bp));
 }
 
 static bool

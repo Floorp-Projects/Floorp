@@ -358,7 +358,8 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
 //
 
 NS_IMETHODIMP
-nsMenuItemIconX::FrameChanged(imgIContainer*   aContainer,
+nsMenuItemIconX::FrameChanged(imgIRequest* aRequest,
+                              imgIContainer*   aContainer,
                               const nsIntRect* aDirtyRect)
 {
   return NS_OK;

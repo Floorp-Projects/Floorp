@@ -54,12 +54,9 @@ public:
         MOZ_COUNT_DTOR(gfxGDIShaper);
     }
 
-    virtual bool InitTextRun(gfxContext *aContext,
-                               gfxTextRun *aTextRun,
-                               const PRUnichar *aString,
-                               PRUint32 aRunStart,
-                               PRUint32 aRunLength,
-                               PRInt32 aRunScript);
+    virtual bool ShapeWord(gfxContext *aContext,
+                           gfxShapedWord *aShapedWord,
+                           const PRUnichar *aString);
 };
 
 #endif /* GFX_GDISHAPER_H */

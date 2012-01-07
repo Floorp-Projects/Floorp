@@ -161,12 +161,9 @@ MakeGraphiteLangTag(PRUint32 aTag)
 }
 
 bool
-gfxGraphiteShaper::InitTextRun(gfxContext *aContext,
-                               gfxTextRun *aTextRun,
-                               const PRUnichar *aString,
-                               PRUint32 aRunStart,
-                               PRUint32 aRunLength,
-                               PRInt32 aRunScript)
+gfxGraphiteShaper::ShapeWord(gfxContext      *aContext,
+                             gfxShapedWord   *aShapedWord,
+                             const PRUnichar *aText)
 {
     // some font back-ends require this in order to get proper hinted metrics
     mFont->SetupCairoFont(aContext);
@@ -190,12 +187,13 @@ gfxGraphiteShaper::InitTextRun(gfxContext *aContext,
         }
     }
 
-    const gfxFontStyle *style = aTextRun->GetFontGroup()->GetStyle();
+    gfxFontEntry *entry = mFont->GetFontEntry();
+    const gfxFontStyle *style = mFont->GetStyle();
     PRUint32 grLang = 0;
     if (style->languageOverride) {
         grLang = MakeGraphiteLangTag(style->languageOverride);
-    } else if (mFont->GetFontEntry()->mLanguageOverride) {
-        grLang = MakeGraphiteLangTag(mFont->GetFontEntry()->mLanguageOverride);
+    } else if (entry->mLanguageOverride) {
+        grLang = MakeGraphiteLangTag(entry->mLanguageOverride);
     } else {
         nsCAutoString langString;
         style->language->ToUTF8String(langString);
@@ -203,10 +201,7 @@ gfxGraphiteShaper::InitTextRun(gfxContext *aContext,
     }
     gr_feature_val *grFeatures = gr_face_featureval_for_lang(mGrFace, grLang);
 
-    bool disableLigatures =
-        (aTextRun->GetFlags() &
-         gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES) != 0;
-    if (disableLigatures) {
+    if (aShapedWord->DisableLigatures()) {
         const gr_feature_ref* fref =
             gr_face_find_fref(mGrFace, TRUETYPE_TAG('l','i','g','a'));
         if (fref) {
@@ -216,7 +211,7 @@ gfxGraphiteShaper::InitTextRun(gfxContext *aContext,
 
     const nsTArray<gfxFontFeature> *features = &style->featureSettings;
     if (features->IsEmpty()) {
-        features = &mFont->GetFontEntry()->mFeatureSettings;
+        features = &entry->mFeatureSettings;
     }
     for (PRUint32 i = 0; i < features->Length(); ++i) {
         const gr_feature_ref* fref =
@@ -226,19 +221,9 @@ gfxGraphiteShaper::InitTextRun(gfxContext *aContext,
         }
     }
 
-    const PRUnichar *textStart = aString + aRunStart;
-    const PRUnichar *textEnd = textStart + aRunLength;
-    const void *pError;
-    size_t nChars = gr_count_unicode_characters(gr_utf16,
-                                                textStart, textEnd,
-                                                &pError);
-    if (pError != nsnull) {
-        return false;
-    }
-
     gr_segment *seg = gr_make_seg(mGrFont, mGrFace, 0, grFeatures,
-                                  gr_utf16, textStart, nChars,
-                                  aTextRun->IsRightToLeft());
+                                  gr_utf16, aText, aShapedWord->Length(),
+                                  aShapedWord->IsRightToLeft());
     if (features) {
         gr_featureval_destroy(grFeatures);
     }
@@ -246,7 +231,7 @@ gfxGraphiteShaper::InitTextRun(gfxContext *aContext,
         return false;
     }
 
-    nsresult rv = SetGlyphsFromSegment(aTextRun, aRunStart, aRunLength, seg);
+    nsresult rv = SetGlyphsFromSegment(aShapedWord, seg);
 
     gr_seg_destroy(seg);
 
@@ -265,13 +250,11 @@ struct Cluster {
 };
 
 nsresult
-gfxGraphiteShaper::SetGlyphsFromSegment(gfxTextRun *aTextRun,
-                                        PRUint32 aRunStart,
-                                        PRUint32 aRunLength,
+gfxGraphiteShaper::SetGlyphsFromSegment(gfxShapedWord *aShapedWord,
                                         gr_segment *aSegment)
 {
-    PRInt32 dev2appUnits = aTextRun->GetAppUnitsPerDevUnit();
-    bool rtl = aTextRun->IsRightToLeft();
+    PRInt32 dev2appUnits = aShapedWord->AppUnitsPerDevUnit();
+    bool rtl = aShapedWord->IsRightToLeft();
 
     PRUint32 glyphCount = gr_seg_n_slots(aSegment);
 
@@ -281,7 +264,7 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxTextRun *aTextRun,
     nsAutoTArray<float,SMALL_GLYPH_RUN> xLocs;
     nsAutoTArray<float,SMALL_GLYPH_RUN> yLocs;
 
-    if (!clusters.SetLength(aRunLength) ||
+    if (!clusters.SetLength(aShapedWord->Length()) ||
         !gids.SetLength(glyphCount) ||
         !xLocs.SetLength(glyphCount) ||
         !yLocs.SetLength(glyphCount))
@@ -317,7 +300,7 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxTextRun *aTextRun,
         if (gr_slot_can_insert_before(slot) && clusters[cIndex].nChars &&
             before >= clusters[cIndex].baseChar + clusters[cIndex].nChars)
         {
-            NS_ASSERTION(cIndex < aRunLength - 1, "cIndex at end of run");
+            NS_ASSERTION(cIndex < aShapedWord->Length() - 1, "cIndex at end of word");
             Cluster& c = clusters[cIndex + 1];
             c.baseChar = clusters[cIndex].baseChar + clusters[cIndex].nChars;
             c.nChars = before - c.baseChar;
@@ -327,7 +310,7 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxTextRun *aTextRun,
         }
 
         // increment cluster's glyph count to include current slot
-        NS_ASSERTION(cIndex < aRunLength, "cIndex beyond valid run length");
+        NS_ASSERTION(cIndex < aShapedWord->Length(), "cIndex beyond word length");
         ++clusters[cIndex].nGlyphs;
 
         // extend cluster if necessary to reach the glyph's "after" index
@@ -358,30 +341,30 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxTextRun *aTextRun,
         // Check for default-ignorable char that didn't get filtered, combined,
         // etc by the shaping process, and skip it.
         PRUint32 offs = gr_cinfo_base(gr_seg_cinfo(aSegment, c.baseChar));
-        NS_ASSERTION(offs >= c.baseChar && offs < aRunLength,
+        NS_ASSERTION(offs >= c.baseChar && offs < aShapedWord->Length(),
                      "unexpected offset");
         if (c.nGlyphs == 1 && c.nChars == 1 &&
-            aTextRun->FilterIfIgnorable(aRunStart + offs))
+            aShapedWord->FilterIfIgnorable(offs))
         {
             continue;
         }
 
         PRUint32 appAdvance = adv * dev2appUnits;
         if (c.nGlyphs == 1 &&
-            gfxTextRun::CompressedGlyph::IsSimpleGlyphID(gids[c.baseGlyph]) &&
-            gfxTextRun::CompressedGlyph::IsSimpleAdvance(appAdvance) &&
+            gfxShapedWord::CompressedGlyph::IsSimpleGlyphID(gids[c.baseGlyph]) &&
+            gfxShapedWord::CompressedGlyph::IsSimpleAdvance(appAdvance) &&
             yLocs[c.baseGlyph] == 0)
         {
-            gfxTextRun::CompressedGlyph g;
-            aTextRun->SetSimpleGlyph(aRunStart + offs,
-                                     g.SetSimpleGlyph(appAdvance,
-                                                      gids[c.baseGlyph]));
+            gfxShapedWord::CompressedGlyph g;
+            aShapedWord->SetSimpleGlyph(offs,
+                                        g.SetSimpleGlyph(appAdvance,
+                                                         gids[c.baseGlyph]));
         } else {
             // not a one-to-one mapping with simple metrics: use DetailedGlyph
-            nsAutoTArray<gfxTextRun::DetailedGlyph,8> details;
+            nsAutoTArray<gfxShapedWord::DetailedGlyph,8> details;
             float clusterLoc;
             for (PRUint32 j = c.baseGlyph; j < c.baseGlyph + c.nGlyphs; ++j) {
-                gfxTextRun::DetailedGlyph* d = details.AppendElement();
+                gfxShapedWord::DetailedGlyph* d = details.AppendElement();
                 d->mGlyphID = gids[j];
                 d->mYOffset = -yLocs[j] * dev2appUnits;
                 if (j == c.baseGlyph) {
@@ -393,20 +376,19 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxTextRun *aTextRun,
                     d->mAdvance = 0;
                 }
             }
-            gfxTextRun::CompressedGlyph g;
-            g.SetComplex(aTextRun->IsClusterStart(aRunStart + offs),
+            gfxShapedWord::CompressedGlyph g;
+            g.SetComplex(aShapedWord->IsClusterStart(offs),
                          true, details.Length());
-            aTextRun->SetGlyphs(aRunStart + offs, g, details.Elements());
+            aShapedWord->SetGlyphs(offs, g, details.Elements());
         }
 
         for (PRUint32 j = c.baseChar + 1; j < c.baseChar + c.nChars; ++j) {
             offs = gr_cinfo_base(gr_seg_cinfo(aSegment, j));
-            NS_ASSERTION(offs >= j && offs < aRunLength,
+            NS_ASSERTION(offs >= j && offs < aShapedWord->Length(),
                          "unexpected offset");
-            gfxTextRun::CompressedGlyph g;
-            g.SetComplex(aTextRun->IsClusterStart(aRunStart + offs),
-                         false, 0);
-            aTextRun->SetGlyphs(aRunStart + offs, g, nsnull);
+            gfxShapedWord::CompressedGlyph g;
+            g.SetComplex(aShapedWord->IsClusterStart(offs), false, 0);
+            aShapedWord->SetGlyphs(offs, g, nsnull);
         }
     }
 

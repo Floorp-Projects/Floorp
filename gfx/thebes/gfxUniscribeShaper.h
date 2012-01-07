@@ -64,12 +64,9 @@ public:
         MOZ_COUNT_DTOR(gfxUniscribeShaper);
     }
 
-    virtual bool InitTextRun(gfxContext *aContext,
-                               gfxTextRun *aTextRun,
-                               const PRUnichar *aString,
-                               PRUint32 aRunStart,
-                               PRUint32 aRunLength,
-                               PRInt32 aRunScript);
+    virtual bool ShapeWord(gfxContext *aContext,
+                           gfxShapedWord *aShapedWord,
+                           const PRUnichar *aString);
 
     SCRIPT_CACHE *ScriptCache() { return &mScriptCache; }
 

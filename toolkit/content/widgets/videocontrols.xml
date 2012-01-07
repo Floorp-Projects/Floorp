@@ -1279,8 +1279,20 @@
                     var self = this;
                     this.muteButton.addEventListener("command", function() { self.toggleMute(); }, false);
                     this.playButton.addEventListener("command", function() { self.togglePause(); }, false);
-                    this.controlsSpacer.addEventListener("click", function(e) { if (e.button == 0 && !self.hasError()) { self.togglePause(); } }, false);
                     this.fullscreenButton.addEventListener("command", function() { self.toggleFullscreen(); }, false );
+
+                    this.controlsSpacer.addEventListener("click", function spacerClickHandler(e) {
+                      if (e.button != 0 || self.hasError())
+                        return;
+                      // Read defaultPrevented asynchronously, since Web content
+                      // may want to consume the "click" event but will only
+                      // receive it after us (bug 693014).
+                      setTimeout(function togglePauseCallback() {
+                        if (!e.defaultPrevented)
+                          self.togglePause();
+                      }, 0);
+                    }, false);
+
                     if (!this.isAudioOnly) {
                       this.muteButton.addEventListener("mouseover",  function(e) { self.onVolumeMouseInOut(e); }, false);
                       this.muteButton.addEventListener("mouseout",   function(e) { self.onVolumeMouseInOut(e); }, false);

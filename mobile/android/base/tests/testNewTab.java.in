@@ -1,120 +1,42 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
-import com.jayway.android.robotium.solo.Solo;
 import @ANDROID_PACKAGE_NAME@.*;
-
 import android.app.Activity;
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.PerformanceTestCase;
-import android.util.Log;
-import android.widget.Button;
-import android.content.Intent;
-import java.util.HashMap;
 
-@SuppressWarnings("unused")
-public class testNewTab extends ActivityInstrumentationTestCase2 {
+public class testNewTab extends BaseTest {
+    public void testNewTab() {
+        // TODO: find a better way to not hardcode this url
+        String url = "http://mochi.test:8888/tests/robocop/robocop_blank_01.html";
+        String url2 = "http://mochi.test:8888/tests/robocop/robocop_blank_02.html";
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+        Element tabs = mDriver.findElement(getActivity(), "tabs");
+        // Add one tab
+        Activity awesomeBarActivity = getActivityFromClick(tabs);
 
-  @SuppressWarnings("unchecked")
-  public testNewTab(Class activityClass) {
-    super(activityClass);
-    // TODO Auto-generated constructor stub
-  }
-  private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";	
-  private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
-  private Solo solo;    
-  private Activity activity;
-  private Actions actions;
-  private Driver driver;
-  private Assert asserter;
-  private static Class<?> launcherActivityClass;
+        getInstrumentation().waitForIdleSync();
+        Element urlbar = mDriver.findElement(awesomeBarActivity, "awesomebar_text");
+        mActions.sendKeys(url);
+        mAsserter.is(urlbar.getText(), url, "Awesomebar url is fine");
+        hitEnterAndWait();
 
-  static{
-    try{
-      launcherActivityClass = Class.forName(LAUNCH_ACTIVITY_FULL_CLASSNAME);	
-    } catch (ClassNotFoundException e){
-      throw new RuntimeException(e);	
-    }	
-  }	
+        // See tab count
+        Element tabCount = mDriver.findElement(getActivity(), "tabs_count");
+        mAsserter.is(tabCount.getText(), "2", "Number of tabs has increased");
 
-  @SuppressWarnings("unchecked")	
-  public testNewTab() throws ClassNotFoundException {
-    super(TARGET_PACKAGE_ID, launcherActivityClass);	
-  }	
-  
-  @Override 
-  protected void setUp() throws Exception
-  {
-    // Load config file from sdcard (setup by python script)
-    String configFile = FennecNativeDriver.getFile("/mnt/sdcard/robotium.config");
-    HashMap config = FennecNativeDriver.convertTextToTable(configFile);
+        // Click tab list
+        Activity tabTray = getActivityFromClick(tabs);
+        Element addTab = mDriver.findElement(tabTray, "add_tab");
 
-    // Create the intent to be used with all the important arguments.
-    Intent i = new Intent(Intent.ACTION_MAIN);
-    String argsList = "-no-remote -profile " + (String)config.get("profile");
-    i.putExtra("args", argsList);
+        //Add another tab
+        addTab.click();
+        getInstrumentation().waitForIdleSync();
+        mActions.sendKeys(url2);
+        getInstrumentation().waitForIdleSync();
+        mAsserter.is(urlbar.getText(), url2, "URL is still fine");
 
-    //Start the activity
-    setActivityIntent(i);
-    activity = getActivity();
-
-    //Set up Robotium.solo and Driver objects
-    solo = new Solo(getInstrumentation(), getActivity());
-    driver = new FennecNativeDriver(activity, solo);
-    actions = new FennecNativeActions(activity, solo, getInstrumentation());
-    driver.setLogFile((String)config.get("logfile"));
-    
-    asserter = new FennecNativeAssert();
-    asserter.setLogFile((String)config.get("logfile"));
-  }
-
-  public void testNewTab(){
-    // TODO: find a better way to not hardcode this url
-    String url = "http://mochi.test:8888/tests/robocop/robocop_blank_01.html";
-    String url2 = "http://mochi.test:8888/tests/robocop/robocop_blank_02.html";
-    actions.waitForGeckoEvent("Gecko:Ready");
-    Element tabs = driver.findElement("tabs");
-    //Add one tab
-    tabs.click();
-
-    Element urlbar = driver.findElement("awesomebar_text");
-    getInstrumentation().waitForIdleSync();
-    actions.sendKeys(url);
-    asserter.is(urlbar.getText(), url, "Awesomebar url is fine");
-    actions.sendSpecialKey(Actions.SpecialKey.ENTER);
-    actions.waitForGeckoEvent("DOMContentLoaded");
-
-    try{Thread.sleep(5000);}catch(Throwable e){};
-    //See tab count
-    Element tabCount = driver.findElement("tabs_count");
-    asserter.is(tabCount.getText(), "2", "Number of tabs has increased");
-
-    //Click tab list
-    tabs.click();
-    Element addTab = driver.findElement("add_tab");
-
-    //Add another tab
-    addTab.click();
-    getInstrumentation().waitForIdleSync();
-    actions.sendKeys(url2);
-    getInstrumentation().waitForIdleSync();
-    asserter.is(urlbar.getText(), url2, "URL is still fine");
-
-    actions.sendSpecialKey(Actions.SpecialKey.ENTER);
-    actions.waitForGeckoEvent("DOMContentLoaded");
-    //Check tab count another time.
-    asserter.is(tabCount.getText(), "3", "Number of tabs has increased");
-
-  }
-
-  @Override	
-  public void tearDown() throws Exception {	
-    try	{
-      solo.finalize();	
-    }catch (Throwable e){	
-      e.printStackTrace();	
-    }	
-    getActivity().finish();	
-    super.tearDown();	
-  }
+        hitEnterAndWait();
+        //Check tab count another time.
+        mAsserter.is(tabCount.getText(), "3", "Number of tabs has increased");
+    }
 }

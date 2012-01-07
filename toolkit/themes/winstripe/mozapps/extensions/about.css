@@ -10,7 +10,7 @@
   color: -moz-DialogText;
 }
 
-@media all and (-moz-windows-compositor) {
+@media (-moz-windows-compositor) {
   #genericAbout {
     -moz-appearance: -moz-win-glass;
     background: transparent;
