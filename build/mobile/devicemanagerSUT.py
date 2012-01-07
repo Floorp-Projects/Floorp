@@ -858,6 +858,15 @@ class DeviceManagerSUT(DeviceManager):
 
     return deviceRoot
 
+  def getAppRoot(self, packageName):
+    try:
+      data = self.verifySendCMD(['getapproot '+packageName])
+    except:
+      return None
+  
+    appRoot = self.stripPrompt(data).strip('\n')
+    return appRoot
+
   # external function
   # returns:
   #  success: output of unzip command

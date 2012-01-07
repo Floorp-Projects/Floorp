@@ -137,7 +137,7 @@ public class DoCommand {
     String ffxProvider = "org.mozilla.ffxcp";
     String fenProvider = "org.mozilla.fencp";
 
-    private final String prgVersion = "SUTAgentAndroid Version 1.03";
+    private final String prgVersion = "SUTAgentAndroid Version 1.04";
 
     public enum Command
         {
@@ -1285,7 +1285,7 @@ private void CancelNotification()
             try {
                 Context appCtx = ctx.createPackageContext(AppName, 0);
                 ContextWrapper appCtxW = new ContextWrapper(appCtx);
-                sRet = appCtxW.getPackageResourcePath();
+                sRet = appCtxW.getApplicationInfo().dataDir;
                 appCtxW = null;
                 appCtx = null;
                 ctx = null;
