@@ -58,7 +58,7 @@ const char gPrincipalCodebase[] = "Web Worker";
 
 JSPrincipals gPrincipal = {
   const_cast<char*>(gPrincipalCodebase),
-  NULL, NULL, 1, PrincipalDestroy, PrincipalSubsume
+  1, PrincipalDestroy, PrincipalSubsume
 };
 
 } // anonymous namespace
