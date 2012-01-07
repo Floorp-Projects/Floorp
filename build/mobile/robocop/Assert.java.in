@@ -42,9 +42,7 @@ package @ANDROID_PACKAGE_NAME@;
 public interface Assert {
   void dumpLog(String message);
   void setLogFile(String filename);
-  void setTestName(String testName);
 
-  void finalize();
   void ok(boolean condition, String name, String diag);
   void is(Object a, Object b, String name);
   void isnot(Object a, Object b, String name);
