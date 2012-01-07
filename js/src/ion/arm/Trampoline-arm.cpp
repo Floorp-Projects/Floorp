@@ -276,8 +276,8 @@ generateBailoutTail(MacroAssembler &masm)
     masm.as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
     masm.bind(&exception);
     masm.handleException();
-
 }
+
 IonCode *
 IonCompartment::generateInvalidator(JSContext *cx)
 {
@@ -594,7 +594,8 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     masm.handleException();
 
     masm.bind(&invalidated);
-    masm.ma_cmp(Imm32(0), Operand(sp, 0));
+    masm.ma_mov(Imm32(0), r5);
+    masm.ma_cmp(r5, Operand(sp, 0));
     masm.ma_b(&exception, Assembler::Zero);
     masm.ret();
 
