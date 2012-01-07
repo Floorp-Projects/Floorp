@@ -162,6 +162,8 @@ public:
   nsresult SendAsyncMessageInternal(const nsAString& aMessage,
                                     const nsAString& aJSON);
   JSContext* GetJSContext() { return mContext; }
+  void SetJSContext(JSContext* aCx) { mContext = aCx; }
+  void RemoveFromParent();
   nsFrameMessageManager* GetParentManager() { return mParentManager; }
   void SetParentManager(nsFrameMessageManager* aParent)
   {

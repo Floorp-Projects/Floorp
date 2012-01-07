@@ -553,6 +553,17 @@ nsFrameMessageManager::SetCallbackData(void* aData, bool aLoadScripts)
 }
 
 void
+nsFrameMessageManager::RemoveFromParent()
+{
+  if (mParentManager) {
+    mParentManager->RemoveChildManager(this);
+  }
+  mParentManager = nsnull;
+  mCallbackData = nsnull;
+  mContext = nsnull;
+}
+
+void
 nsFrameMessageManager::Disconnect(bool aRemoveFromParent)
 {
   if (mParentManager && aRemoveFromParent) {
