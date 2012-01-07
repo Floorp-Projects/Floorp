@@ -5328,12 +5328,6 @@ if test "$ENABLE_TESTS"; then
   "
 fi
 
-if test "$DEHYDRA_PATH"; then
-  MAKEFILES="$MAKEFILES
-    analysis-tests/Makefile
-  "
-fi
-
 dnl
 dnl Run a perl script to quickly create the makefiles.
 dnl If it succeeds, it outputs a shell command to set CONFIG_FILES
