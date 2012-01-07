@@ -70,7 +70,7 @@ notification[type="critical"] .messageImage {
 %ifdef XP_WIN
 /*
 XXX: apply styles to all themes until bug 509642 is fixed
-@media all and (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme) {
 */
   .popup-notification-menubutton[type="menu-button"] {
     -moz-appearance: none;

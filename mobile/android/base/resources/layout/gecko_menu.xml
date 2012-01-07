@@ -11,7 +11,7 @@
 
     <item android:id="@+id/bookmark"
           android:icon="@drawable/ic_menu_bookmark_add"
-          android:title="@string/bookmark_add"/>
+          android:title="@string/bookmark"/>
 
     <item android:id="@+id/share"
           android:icon="@drawable/ic_menu_share"
@@ -32,6 +32,9 @@
 
     <item android:id="@+id/addons"
           android:title="@string/addons"/>
+
+    <item android:id="@+id/downloads"
+          android:title="@string/downloads"/>
 
     <item android:id="@+id/quit"
           android:title="@string/quit" />

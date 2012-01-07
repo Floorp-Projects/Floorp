@@ -167,8 +167,7 @@ public class FennecNativeDriver implements Driver {
     return geckoWidth;
   }
 
-  @Override
-  public Element findElement(String name) {
+  public Element findElement(Activity activity, String name) {
     if (name == null)
       throw new IllegalArgumentException("Can not findElements when passed a null");
     if (locators.containsKey(name)){
