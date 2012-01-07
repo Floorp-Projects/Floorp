@@ -208,14 +208,14 @@ class DeviceManager:
     pieces = appname.split(' ')
     parts = pieces[0].split('/')
     app = parts[-1]
+    procre = re.compile('.*' + app + '.*')
 
     procList = self.getProcessList()
     if (procList == []):
       return None
       
     for proc in procList:
-      procName = proc[1].split('/')[-1]
-      if (procName == app):
+      if (procre.match(proc[1])):
         pid = proc[0]
         break
     return pid
@@ -346,7 +346,24 @@ class DeviceManager:
   #  success: path for app root
   #  failure: None
   def getAppRoot(self):
-    assert 0 == 1
+    devroot = self.getDeviceRoot()
+    if (devroot == None):
+      return None
+
+    if (self.dirExists(devroot + '/fennec')):
+      return devroot + '/fennec'
+    elif (self.dirExists(devroot + '/firefox')):
+      return devroot + '/firefox'
+    elif (self.dirExsts('/data/data/org.mozilla.fennec')):
+      return 'org.mozilla.fennec'
+    elif (self.dirExists('/data/data/org.mozilla.firefox')):
+      return 'org.mozilla.firefox'
+    elif (self.dirExists('/data/data/org.mozilla.fennec_aurora')):
+      return 'org.mozilla.fennec_aurora'
+    elif (self.dirExists('/data/data/org.mozilla.firefox_beta')):
+      return 'org.mozilla.firefox_beta'
+
+    # Failure (either not installed or not a recognized platform)
     return None
 
   # Gets the directory location on the device for a specific test type
