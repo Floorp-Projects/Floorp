@@ -3729,10 +3729,6 @@ JS_SetReservedSlot(JSContext *cx, JSObject *obj, uint32_t index, jsval v);
 struct JSPrincipals {
     char *codebase;
 
-    /* XXX unspecified and unused by Mozilla code -- can we remove these? */
-    void * (* getPrincipalArray)(JSContext *cx, JSPrincipals *);
-    JSBool (* globalPrivilegesEnabled)(JSContext *cx, JSPrincipals *);
-
     /* Don't call "destroy"; use reference counting macros below. */
     jsrefcount refcount;
 
