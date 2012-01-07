@@ -51,15 +51,16 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mSolo = new Solo(getInstrumentation());
         mDriver = new FennecNativeDriver(mActivity, mSolo);
         mActions = new FennecNativeActions(mActivity, mSolo, getInstrumentation());
-        mDriver.setLogFile((String)config.get("logfile"));
 
         mAsserter = new FennecNativeAssert();
         mAsserter.setLogFile((String)config.get("logfile"));
+        mAsserter.setTestName(this.getClass().getName());
     }
 
     @Override
     public void tearDown() throws Exception {
         try {
+            mAsserter.finalize();
             mSolo.finalize();
         } catch (Throwable e) {
             e.printStackTrace();
