@@ -778,7 +778,6 @@ getNativeFromWrapper(JSContext *cx,
 nsresult
 getWrapper(JSContext *cx,
            JSObject *obj,
-           JSObject *callee,
            XPCWrappedNative **wrapper,
            JSObject **cur,
            XPCWrappedNativeTearOff **tearoff)
@@ -947,7 +946,7 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
         wrapper = nsnull;
         obj2 = src;
     } else {
-        rv = getWrapper(cx, src, nsnull, &wrapper, &obj2, &tearoff);
+        rv = getWrapper(cx, src, &wrapper, &obj2, &tearoff);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
