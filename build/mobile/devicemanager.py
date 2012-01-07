@@ -346,24 +346,7 @@ class DeviceManager:
   #  success: path for app root
   #  failure: None
   def getAppRoot(self):
-    devroot = self.getDeviceRoot()
-    if (devroot == None):
-      return None
-
-    if (self.dirExists(devroot + '/fennec')):
-      return devroot + '/fennec'
-    elif (self.dirExists(devroot + '/firefox')):
-      return devroot + '/firefox'
-    elif (self.dirExsts('/data/data/org.mozilla.fennec')):
-      return 'org.mozilla.fennec'
-    elif (self.dirExists('/data/data/org.mozilla.firefox')):
-      return 'org.mozilla.firefox'
-    elif (self.dirExists('/data/data/org.mozilla.fennec_aurora')):
-      return 'org.mozilla.fennec_aurora'
-    elif (self.dirExists('/data/data/org.mozilla.firefox_beta')):
-      return 'org.mozilla.firefox_beta'
-
-    # Failure (either not installed or not a recognized platform)
+    assert 0 == 1
     return None
 
   # Gets the directory location on the device for a specific test type
