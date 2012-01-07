@@ -42,7 +42,9 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.util.DisplayMetrics;
 import org.mozilla.gecko.FloatUtils;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.IntSize;
 import org.mozilla.gecko.gfx.LayerController;
@@ -70,8 +72,11 @@ public class ViewportMetrics {
     private static final float MAX_BIAS = 0.8f;
 
     public ViewportMetrics() {
-        mPageSize = new FloatSize(1, 1);
-        mViewportRect = new RectF(0, 0, 1, 1);
+        DisplayMetrics metrics = new DisplayMetrics();
+        GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+        mPageSize = new FloatSize(metrics.widthPixels, metrics.heightPixels);
+        mViewportRect = new RectF(0, 0, metrics.widthPixels, metrics.heightPixels);
         mViewportOffset = new PointF(0, 0);
         mZoomFactor = 1.0f;
         mViewportBias = new PointF(0.0f, 0.0f);
