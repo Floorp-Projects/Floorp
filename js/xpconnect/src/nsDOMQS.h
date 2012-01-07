@@ -44,6 +44,7 @@ template <>                                                                   \
 inline JSBool                                                                 \
 xpc_qsUnwrapThis<_interface>(JSContext *cx,                                   \
                              JSObject *obj,                                   \
+                             JSObject *callee,                                \
                              _interface **ppThis,                             \
                              nsISupports **pThisRef,                          \
                              jsval *pThisVal,                                 \
@@ -51,7 +52,7 @@ xpc_qsUnwrapThis<_interface>(JSContext *cx,                                   \
                              bool failureFatal)                               \
 {                                                                             \
     nsresult rv;                                                              \
-    nsISupports *native = castNativeFromWrapper(cx, obj, _bit,                \
+    nsISupports *native = castNativeFromWrapper(cx, obj, callee, _bit,        \
                                                 pThisRef, pThisVal, lccx,     \
                                                 &rv);                         \
     *ppThis = NULL;  /* avoids uninitialized warnings in callers */           \
@@ -107,6 +108,7 @@ template <>
 inline JSBool
 xpc_qsUnwrapThis<nsGenericElement>(JSContext *cx,
                                    JSObject *obj,
+                                   JSObject *callee,
                                    nsGenericElement **ppThis,
                                    nsISupports **pThisRef,
                                    jsval *pThisVal,
@@ -115,7 +117,7 @@ xpc_qsUnwrapThis<nsGenericElement>(JSContext *cx,
 {
     nsIContent *content;
     jsval val;
-    JSBool ok = xpc_qsUnwrapThis<nsIContent>(cx, obj, &content,
+    JSBool ok = xpc_qsUnwrapThis<nsIContent>(cx, obj, callee, &content,
                                              pThisRef, &val, lccx,
                                              failureFatal);
     if (ok) {
