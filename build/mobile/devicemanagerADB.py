@@ -426,15 +426,14 @@ class DeviceManagerADB(DeviceManager):
   # returns:
   #  success: path for app root
   #  failure: None
-  def getAppRoot(self):
+  def getAppRoot(self, packageName):
     devroot = self.getDeviceRoot()
     if (devroot == None):
       return None
 
-    if (self.dirExists(devroot + '/fennec')):
-      return devroot + '/fennec'
-    elif (self.dirExists(devroot + '/firefox')):
-      return devroot + '/firefox'
+    if (packageName and self.dirExists('/data/data/' + packageName)):
+      self.packageName = packageName
+      return '/data/data/' + packageName
     elif (self.packageName and self.dirExists('/data/data/' + self.packageName)):
       return '/data/data/' + self.packageName
 
