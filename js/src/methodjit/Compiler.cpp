@@ -963,11 +963,6 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
         return Compile_Skipped;
     }
 
-#if JS_HAS_SHARP_VARS
-    if (script->hasSharps)
-        return Compile_Abort;
-#endif
-
     if (!cx->compartment->ensureJaegerCompartmentExists(cx))
         return Compile_Error;
 

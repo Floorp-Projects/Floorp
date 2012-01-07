@@ -538,14 +538,10 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
          * string of the form "#n#".
          */
         JS_ASSERT(IS_SHARP(he));
-#if JS_HAS_SHARP_VARS
-        nchars = js_strlen(chars);
-#else
         chars[0] = '{';
         chars[1] = '}';
-        chars[2] = 0;
+        chars[2] = '\0';
         nchars = 2;
-#endif
         goto make_string;
     }
     JS_ASSERT(!IS_SHARP(he));
@@ -688,25 +684,6 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
              */
             vsharp = NULL;
             vsharplength = 0;
-#if JS_HAS_SHARP_VARS
-            if (!gsop[j] && val[j].isObject() && vchars[0] != '#') {
-                he = js_EnterSharpObject(cx, &val[j].toObject(), NULL, &vsharp);
-                if (!he) {
-                    ok = JS_FALSE;
-                    goto error;
-                }
-                if (IS_SHARP(he)) {
-                    vchars = vsharp;
-                    vlength = js_strlen(vchars);
-                } else {
-                    if (vsharp) {
-                        vsharplength = js_strlen(vsharp);
-                        MAKE_SHARP(he);
-                    }
-                    js_LeaveSharpObject(cx, NULL);
-                }
-            }
-#endif
 
             /*
              * Remove '(function ' from the beginning of valstr and ')' from the

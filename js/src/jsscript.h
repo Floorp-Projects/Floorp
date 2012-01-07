@@ -287,12 +287,6 @@ class Bindings {
     bool getLocalNameArray(JSContext *cx, Vector<JSAtom *> *namesp);
 
     /*
-     * Returns the slot where the sharp array is stored, or a value < 0 if no
-     * sharps are present or in case of failure.
-     */
-    int sharpSlotBase(JSContext *cx);
-
-    /*
      * Protect stored bindings from mutation.  Subsequent attempts to add
      * bindings will copy the existing bindings before adding to them, allowing
      * the original bindings to be safely shared.
@@ -455,7 +449,6 @@ struct JSScript : public js::gc::Cell {
     bool            noScriptRval:1; /* no need for result value of last
                                        expression statement */
     bool            savedCallerFun:1; /* can call getCallerFunction() */
-    bool            hasSharps:1;      /* script uses sharp variables */
     bool            strictModeCode:1; /* code is in strict mode */
     bool            compileAndGo:1;   /* script was compiled with TCF_COMPILE_N_GO */
     bool            usesEval:1;       /* script uses eval() */
@@ -824,8 +817,6 @@ struct JSScript : public js::gc::Cell {
 /* If this fails, padding_ can be removed. */
 JS_STATIC_ASSERT(sizeof(JSScript) % js::gc::Cell::CellSize == 0);
 
-#define SHARP_NSLOTS            2       /* [#array, #depth] slots if the script
-                                           uses sharp variables */
 static JS_INLINE uintN
 StackDepth(JSScript *script)
 {

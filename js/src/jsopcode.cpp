@@ -5149,21 +5149,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 LOCAL_ASSERT(i == JSProto_Array || i == JSProto_Object);
 
                 todo = ss->sprinter.getOffset();
-#if JS_HAS_SHARP_VARS
-                op = (JSOp)pc[len];
-                if (op == JSOP_SHARPINIT)
-                    op = (JSOp)pc[len += JSOP_SHARPINIT_LENGTH];
-                if (op == JSOP_DEFSHARP) {
-                    pc += len;
-                    cs = &js_CodeSpec[op];
-                    len = cs->length;
-                    if (Sprint(&ss->sprinter, "#%u=",
-                               (unsigned) (jsint) GET_UINT16(pc + UINT16_LEN))
-                        < 0) {
-                        return NULL;
-                    }
-                }
-#endif /* JS_HAS_SHARP_VARS */
                 if (i == JSProto_Array) {
                     ++ss->inArrayInit;
                     if (SprintCString(&ss->sprinter, "[") < 0)
@@ -5275,19 +5260,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 }
                 break;
               }
-
-#if JS_HAS_SHARP_VARS
-              case JSOP_DEFSHARP:
-                i = (jsint) GET_UINT16(pc + UINT16_LEN);
-                rval = POP_STR();
-                todo = Sprint(&ss->sprinter, "#%u=%s", (unsigned) i, rval);
-                break;
-
-              case JSOP_USESHARP:
-                i = (jsint) GET_UINT16(pc + UINT16_LEN);
-                todo = Sprint(&ss->sprinter, "#%u#", (unsigned) i);
-                break;
-#endif /* JS_HAS_SHARP_VARS */
 
               case JSOP_DEBUGGER:
                 js_printf(jp, "\tdebugger;\n");
