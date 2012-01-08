@@ -450,14 +450,6 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
   NS_ABORT_IF_FALSE(!(mState & XML_HTTP_REQUEST_SYNCLOOPING), "we rather crash than hang");
   mState &= ~XML_HTTP_REQUEST_SYNCLOOPING;
 
-  // This can happen if the XHR was only used by C++ (and so never created a JS
-  // wrapper) that also made an ArrayBuffer.
-  if (PreservingWrapper()) {
-    nsContentUtils::ReleaseWrapper(
-      static_cast<nsIDOMEventTarget*>(
-        static_cast<nsDOMEventTargetHelper*>(this)), this);
-  }
-
   nsLayoutStatics::Release();
 }
 

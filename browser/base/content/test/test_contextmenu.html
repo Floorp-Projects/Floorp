@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Tests for browser context menu</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -28,29 +28,21 @@ function openContextMenuFor(element, shiftkey, shouldWaitForFocus) {
     // Context menu should be closed before we open it again.
     is(contextMenu.state, "closed", "checking if popup is closed");
 
-    //Some elements need time to focus and spellcheck before any tests are
-    //run on them.
-    if(shouldWaitForFocus)
-    {
-      if (lastElement)
-        lastElement.blur();
-      element.focus();
-      
-      SimpleTest.executeSoon(function() {
-        lastElement = element;
-        var eventDetails = { type : "contextmenu", button : 2, shiftKey : shiftkey };
-        synthesizeMouse(element, 2, 2, eventDetails, element.ownerDocument.defaultView);
-      });
-    }
-    else
-    {
-      if (lastElement)
-          lastElement.blur();
-      element.focus();
+    if (lastElement)
+      lastElement.blur();
+    element.focus();
+
+    // Some elements need time to focus and spellcheck before any tests are
+    // run on them.
+    function actuallyOpenContextMenuFor() {
       lastElement = element;
       var eventDetails = { type : "contextmenu", button : 2, shiftKey : shiftkey };
       synthesizeMouse(element, 2, 2, eventDetails, element.ownerDocument.defaultView);
     }
+    if (shouldWaitForFocus)
+      SimpleTest.executeSoon(actuallyOpenContextMenuFor);
+    else
+      actuallyOpenContextMenuFor();
 }
 
 function closeContextMenu() {
@@ -77,7 +69,7 @@ function invokeItemAction(generatedItemId)
                                                 generatedItemId)[0];
   ok(item, "Got generated XUL menu item");
   item.doCommand();
-  is(pagemenu.hasAttribute("hopeless"), false, "attribute got removed");
+  ok(!pagemenu.hasAttribute("hopeless"), "attribute got removed");
 }
 
 function getVisibleMenuItems(aMenu, aData) {
@@ -178,7 +170,7 @@ function checkContextMenu(expectedItems) {
  *                   ["sub1", true,         // submenu contents
  *                    "sub2", false], null, // submenu contents
  *               "lol", false]              // item disabled
- * 
+ *
  */
 function checkMenu(menu, expectedItems, data) {
     var actualItems = getVisibleMenuItems(menu, data);
@@ -192,8 +184,12 @@ function checkMenu(menu, expectedItems, data) {
             ok(true, "Checking submenu...");
             var menuID = expectedItems[i - 2]; // The last item was the menu ID.
             var submenu = menu.getElementsByAttribute("id", menuID)[0];
-            ok(submenu && submenu.nodeName == "menu", "got expected submenu element");
-            checkMenu(submenu.menupopup, expectedItem, data);
+            ok(submenu, "got a submenu element of id='" + menuID + "'");
+            if (submenu) {
+              is(submenu.nodeName, "menu", "submenu element of id='" + menuID +
+                                           "' has expected nodeName");
+              checkMenu(submenu.menupopup, expectedItem, data);
+            }
         } else {
             is(actualItem, expectedItem,
                "checking item #" + i/2 + " (" + expectedItem + ") name");
@@ -513,7 +509,7 @@ function runTest(testNum) {
                           "spell-dictionaries",  true,
                               ["spell-check-dictionary-en-US", true,
                                "---",                          null,
-                               "spell-add-dictionaries",       true], null,
+                               "spell-add-dictionaries",       true], null
                          ].concat(inspectItems));
         contextMenu.ownerDocument.getElementById("spell-add-to-dictionary").doCommand(); // Add to dictionary
         closeContextMenu();
@@ -537,7 +533,7 @@ function runTest(testNum) {
                           "spell-dictionaries",  true,
                               ["spell-check-dictionary-en-US", true,
                                "---",                          null,
-                               "spell-add-dictionaries",       true], null,
+                               "spell-add-dictionaries",       true], null
                          ].concat(inspectItems));
         contextMenu.ownerDocument.getElementById("spell-undo-add-to-dictionary").doCommand(); // Undo add to dictionary
         closeContextMenu();
@@ -661,6 +657,7 @@ function runTest(testNum) {
                           "context-viewsource",   true,
                           "context-viewinfo",     true
                          ].concat(inspectItems));
+        closeContextMenu();
 
         subwindow.close();
         SimpleTest.finish();
@@ -703,6 +700,7 @@ function startTest() {
     ok(contextMenu, "Got context menu XUL");
 
     if (chromeWin.document.getElementById("Browser:Stop").getAttribute("disabled") != "true") {
+      todo(false, "Wait for subwindow to load... (This should usually happen once.)");
       SimpleTest.executeSoon(startTest);
       return;
     }

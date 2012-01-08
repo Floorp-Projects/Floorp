@@ -90,7 +90,7 @@ public:
 
 protected:
   nsDOMEventTargetWrapperCache() : nsDOMEventTargetHelper(), nsWrapperCache() {}
-  virtual ~nsDOMEventTargetWrapperCache() {}
+  virtual ~nsDOMEventTargetWrapperCache();
 };
 
 #define NS_DECL_EVENT_HANDLER(_event)                                         \
