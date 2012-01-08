@@ -54,6 +54,7 @@
 #include "nsLayoutStatics.h"
 #include "nsBindingManager.h"
 #include "nsHashKeys.h"
+#include "nsCCUncollectableMarker.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -161,6 +162,11 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsNodeInfoManager, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsNodeInfoManager, Release)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_NATIVE_0(nsNodeInfoManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsNodeInfoManager)
+  if (tmp->mDocument &&
+      nsCCUncollectableMarker::InGeneration(cb,
+                                            tmp->mDocument->GetMarkedCCGeneration())) {
+    return NS_SUCCESS_INTERRUPTED_TRAVERSE;
+  }
   if (tmp->mNonDocumentNodeInfos) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mDocument)
   }
