@@ -91,8 +91,8 @@ public:
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                 const nsAString* aValue, bool aNotify);
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLTableElement,
-                                                     nsGenericHTMLElement)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHTMLTableElement,
+                                           nsGenericHTMLElement)
   nsMappedAttributes* GetAttributesMappedForCell();
   already_AddRefed<nsIDOMHTMLTableSectionElement> GetTHead() {
     return GetSection(nsGkAtoms::thead);
