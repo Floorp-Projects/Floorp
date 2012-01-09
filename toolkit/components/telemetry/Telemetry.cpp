@@ -84,6 +84,8 @@ public:
 private:
   bool AddSQLInfo(JSContext *cx, JSObject *rootObj, bool mainThread);
 
+  // Like GetHistogramById, but returns the underlying C++ object, not the JS one.
+  nsresult GetHistogramByName(const nsACString &name, Histogram **ret);
   // This is used for speedy JS string->Telemetry::ID conversions
   typedef nsBaseHashtableET<nsCharPtrHashKey, Telemetry::ID> CharPtrEntryType;
   typedef nsTHashtable<CharPtrEntryType> HistogramMapType;
@@ -109,6 +111,7 @@ struct TelemetryHistogram {
   PRUint32 max;
   PRUint32 bucketCount;
   PRUint32 histogramType;
+  const char *comment;
 };
 
 // Perform the checks at the beginning of HistogramGet at compile time, so
@@ -123,13 +126,33 @@ struct TelemetryHistogram {
 #undef HISTOGRAM
 
 const TelemetryHistogram gHistograms[] = {
-#define HISTOGRAM(id, min, max, bucket_count, histogram_type, b) \
-  { NULL, NS_STRINGIFY(id), min, max, bucket_count, nsITelemetry::HISTOGRAM_ ## histogram_type },
+#define HISTOGRAM(id, min, max, bucket_count, histogram_type, comment) \
+  { NULL, NS_STRINGIFY(id), min, max, bucket_count, \
+    nsITelemetry::HISTOGRAM_ ## histogram_type, comment },
 
 #include "TelemetryHistograms.h"
 
 #undef HISTOGRAM
 };
+
+bool
+TelemetryHistogramType(Histogram *h, PRUint32 *result)
+{
+  switch (h->histogram_type()) {
+  case Histogram::HISTOGRAM:
+    *result = nsITelemetry::HISTOGRAM_EXPONENTIAL;
+    break;
+  case Histogram::LINEAR_HISTOGRAM:
+    *result = nsITelemetry::HISTOGRAM_LINEAR;
+    break;
+  case Histogram::BOOLEAN_HISTOGRAM:
+    *result = nsITelemetry::HISTOGRAM_BOOLEAN;
+    break;
+  default:
+    return false;
+  }
+  return true;
+}
 
 nsresult
 HistogramGet(const char *name, PRUint32 min, PRUint32 max, PRUint32 bucketCount,
@@ -211,7 +234,6 @@ ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
         && FillRanges(cx, rarray, h)
         && (counts_array = JS_NewArrayObject(cx, count, NULL))
         && JS_DefineProperty(cx, obj, "counts", OBJECT_TO_JSVAL(counts_array), NULL, NULL, JSPROP_ENUMERATE)
-        && JS_DefineProperty(cx, obj, "static", static_histogram, NULL, NULL, JSPROP_ENUMERATE)
         )) {
     return JS_FALSE;
   }
@@ -389,6 +411,60 @@ TelemetryImpl::AddSQLInfo(JSContext *cx, JSObject *rootObj, bool mainThread)
 }
 
 
+nsresult
+TelemetryImpl::GetHistogramByName(const nsACString &name, Histogram **ret)
+{
+  // Cache names
+  // Note the histogram names are statically allocated
+  if (!mHistogramMap.Count()) {
+    for (PRUint32 i = 0; i < Telemetry::HistogramCount; i++) {
+      CharPtrEntryType *entry = mHistogramMap.PutEntry(gHistograms[i].id);
+      if (NS_UNLIKELY(!entry)) {
+        mHistogramMap.Clear();
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      entry->mData = (Telemetry::ID) i;
+    }
+  }
+
+  CharPtrEntryType *entry = mHistogramMap.GetEntry(PromiseFlatCString(name).get());
+  if (!entry)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv = GetHistogramByEnumId(entry->mData, ret);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::HistogramFrom(const nsACString &name, const nsACString &existing_name,
+                             JSContext *cx, jsval *ret)
+{
+  Histogram *existing;
+  nsresult rv = GetHistogramByName(existing_name, &existing);
+  if (NS_FAILED(rv))
+    return rv;
+
+  PRUint32 histogramType;
+  bool success = TelemetryHistogramType(existing, &histogramType);
+  if (!success)
+    return NS_ERROR_INVALID_ARG;
+
+  Histogram *clone;
+  rv = HistogramGet(PromiseFlatCString(name).get(), existing->declared_min(),
+                    existing->declared_max(), existing->bucket_count(),
+                    histogramType, &clone);
+  if (NS_FAILED(rv))
+    return rv;
+
+  Histogram::SampleSet ss;
+  existing->SnapshotSample(&ss);
+  clone->AddSampleSet(ss);
+  return WrapAndReturnHistogram(clone, cx, ret);
+}
+
 NS_IMETHODIMP
 TelemetryImpl::GetHistogramSnapshots(JSContext *cx, jsval *ret)
 {
@@ -432,28 +508,33 @@ TelemetryImpl::GetSlowSQL(JSContext *cx, jsval *ret)
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetHistogramById(const nsACString &name, JSContext *cx, jsval *ret)
+TelemetryImpl::GetRegisteredHistograms(JSContext *cx, jsval *ret)
 {
-  // Cache names
-  // Note the histogram names are statically allocated
-  if (!mHistogramMap.Count()) {
-    for (PRUint32 i = 0; i < Telemetry::HistogramCount; i++) {
-      CharPtrEntryType *entry = mHistogramMap.PutEntry(gHistograms[i].id);
-      if (NS_UNLIKELY(!entry)) {
-        mHistogramMap.Clear();
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      entry->mData = (Telemetry::ID) i;
+  size_t count = ArrayLength(gHistograms);
+  JSObject *info = JS_NewObject(cx, NULL, NULL, NULL);
+  if (!info)
+    return NS_ERROR_FAILURE;
+
+  for (size_t i = 0; i < count; ++i) {
+    JSString *comment = JS_InternString(cx, gHistograms[i].comment);
+    
+    if (!(comment
+          && JS_DefineProperty(cx, info, gHistograms[i].id,
+                               STRING_TO_JSVAL(comment), NULL, NULL,
+                               JSPROP_ENUMERATE))) {
+      return NS_ERROR_FAILURE;
     }
   }
 
-  CharPtrEntryType *entry = mHistogramMap.GetEntry(PromiseFlatCString(name).get());
-  if (!entry)
-    return NS_ERROR_FAILURE;
-  
-  Histogram *h;
+  *ret = OBJECT_TO_JSVAL(info);
+  return NS_OK;
+}
 
-  nsresult rv = GetHistogramByEnumId(entry->mData, &h);
+NS_IMETHODIMP
+TelemetryImpl::GetHistogramById(const nsACString &name, JSContext *cx, jsval *ret)
+{
+  Histogram *h;
+  nsresult rv = GetHistogramByName(name, &h);
   if (NS_FAILED(rv))
     return rv;
 

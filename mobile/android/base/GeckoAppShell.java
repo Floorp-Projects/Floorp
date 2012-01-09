@@ -302,17 +302,19 @@ public class GeckoAppShell
         // libxul will depend on.  Not ideal.
         GeckoApp geckoApp = GeckoApp.mAppContext;
         String homeDir;
+        sHomeDir = GeckoDirProvider.getFilesDir(geckoApp);
+        homeDir = sHomeDir.getPath();
+
+        // handle the application being moved to phone from sdcard
+        File profileDir = new File(homeDir, "mozilla");
+        File oldHome = new File("/data/data/" + 
+                    GeckoApp.mAppContext.getPackageName() + "/mozilla");
+        if (oldHome.exists())
+            moveDir(oldHome, profileDir);
+
         if (Build.VERSION.SDK_INT < 8 ||
             geckoApp.getApplication().getPackageResourcePath().startsWith("/data") ||
             geckoApp.getApplication().getPackageResourcePath().startsWith("/system")) {
-            sHomeDir = geckoApp.getFilesDir();
-            homeDir = sHomeDir.getPath();
-            // handle the application being moved to phone from sdcard
-            File profileDir = new File(homeDir, "mozilla");
-            File oldHome = new File("/data/data/" + 
-                        GeckoApp.mAppContext.getPackageName() + "/mozilla");
-            if (oldHome.exists())
-                moveDir(oldHome, profileDir);
             if (Build.VERSION.SDK_INT >= 8) {
                 File extHome =  geckoApp.getExternalFilesDir(null);
                 File extProf = new File (extHome, "mozilla");
@@ -320,15 +322,6 @@ public class GeckoAppShell
                     moveDir(extProf, profileDir);
             }
         } else {
-            sHomeDir = geckoApp.getExternalFilesDir(null);
-            homeDir = sHomeDir.getPath();
-            // handle the application being moved to phone from sdcard
-            File profileDir = new File(homeDir, "mozilla");
-            File oldHome = new File("/data/data/" + 
-                        GeckoApp.mAppContext.getPackageName() + "/mozilla");
-            if (oldHome.exists())
-                moveDir(oldHome, profileDir);
-
             File intHome =  geckoApp.getFilesDir();
             File intProf = new File(intHome, "mozilla");
             if (intHome != null && intProf != null && intProf.exists())

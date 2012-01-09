@@ -142,9 +142,9 @@ struct Parser : private AutoGCRooter
     inline bool reportErrorNumber(ParseNode *pn, uintN flags, uintN errorNumber, ...);
 
   private:
-    void *allocParseNode(size_t size) {
+    ParseNode *allocParseNode(size_t size) {
         JS_ASSERT(size == sizeof(ParseNode));
-        return allocator.allocNode();
+        return static_cast<ParseNode *>(allocator.allocNode());
     }
 
     /*
@@ -159,6 +159,14 @@ struct Parser : private AutoGCRooter
 
     /* new_ methods for creating parse nodes. These report OOM on context. */
     JS_DECLARE_NEW_METHODS(allocParseNode, inline)
+
+    ParseNode *cloneNode(const ParseNode &other) {
+        ParseNode *node = allocParseNode(sizeof(ParseNode));
+        if (!node)
+            return NULL;
+        memcpy(node, &other, sizeof(*node));
+        return node;
+    }
 
     /* Public entry points for parsing. */
     ParseNode *statement();

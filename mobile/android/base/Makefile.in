@@ -50,14 +50,14 @@ DIST_FILES = package-name.txt
 
 SYNC_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/java-sources.mn | tr '\n' ' ';)
 SYNC_PP_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/preprocess-sources.mn | tr '\n' ' ';)
+SYNC_THIRDPARTY_JAVA_FILES=$(shell cat $(topsrcdir)/mobile/android/sync/java-third-party-sources.mn | tr '\n' ' ';)
 SYNC_RES_DRAWABLE=$(shell cat $(topsrcdir)/mobile/android/sync/android-drawable-resources.mn | tr '\n' ' ';)
 SYNC_RES_LAYOUT=$(shell cat $(topsrcdir)/mobile/android/sync/android-layout-resources.mn | tr '\n' ' ';)
 SYNC_RES_VALUES=$(shell cat $(topsrcdir)/mobile/android/sync/android-values-resources.mn | tr '\n' ' ';)
 SYNC_RES_XML=res/xml/sync_authenticator.xml
 SYNC_PP_RES_XML=res/xml/sync_syncadapter.xml
 
-JAVAFILES = \
-  $(SYNC_JAVA_FILES) \
+FENNEC_JAVA_FILES = \
   AboutHomeContent.java \
   AlertNotification.java \
   AutoCompletePopup.java \
@@ -78,6 +78,7 @@ JAVAFILES = \
   GeckoAsyncTask.java \
   GeckoBatteryManager.java \
   GeckoConnectivityReceiver.java \
+  GeckoDirProvider.java \
   GeckoEvent.java \
   GeckoEventListener.java \
   GeckoInputConnection.java \
@@ -123,8 +124,7 @@ JAVAFILES = \
   ui/PanZoomController.java \
   $(NULL)
 
-PROCESSEDJAVAFILES = \
-  $(SYNC_PP_JAVA_FILES) \
+FENNEC_PP_JAVA_FILES = \
   App.java \
   LauncherShortcuts.java \
   NotificationHandler.java \
@@ -159,7 +159,8 @@ DEFINES += \
 GARBAGE += \
   AndroidManifest.xml  \
   classes.dex  \
-  $(PROCESSEDJAVAFILES) \
+  $(FENNEC_PP_JAVA_FILES) \
+  $(SYNC_PP_JAVA_FILES) \
   gecko.ap_  \
   res/values/strings.xml \
   R.java \
@@ -195,6 +196,7 @@ endif
 RES_LAYOUT = \
   $(SYNC_RES_LAYOUT) \
   res/layout/autocomplete_list_item.xml \
+  res/layout/awesomebar.xml \
   res/layout/awesomebar_header_row.xml \
   res/layout/awesomebar_row.xml \
   res/layout/awesomebar_search.xml \
@@ -221,10 +223,8 @@ RES_LAYOUT = \
   $(NULL)
 
 RES_LAYOUT_V11 = \
-  res/layout-v11/awesomebar_search.xml \
-  res/layout-v11/awesomebar_search_actionbar.xml \
+  res/layout-v11/awesomebar.xml \
   res/layout-v11/gecko_app.xml \
-  res/layout-v11/gecko_app_actionbar.xml \
   $(NULL)
 
 RES_VALUES = \
@@ -467,7 +467,7 @@ RES_MENU = \
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 
 ifdef MOZ_CRASHREPORTER
-PROCESSEDJAVAFILES += CrashReporter.java
+FENNEC_PP_JAVA_FILES += CrashReporter.java
 MOZ_ANDROID_DRAWABLES += mobile/android/base/resources/drawable/crash_reporter.png
 RES_LAYOUT += res/layout/crash_reporter.xml
 endif
@@ -558,9 +558,10 @@ include $(topsrcdir)/config/android-common.mk
 # Sync dependencies are provided in a single jar. Sync classes themselves are delivered as source,
 # because Android resource classes must be compiled together in order to avoid overlapping resource
 # indices.
-classes.dex: $(JAVAFILES) $(PROCESSEDJAVAFILES) R.java
+classes.dex: $(FENNEC_JAVA_FILES) $(FENNEC_PP_JAVA_FILES) $(SYNC_JAVA_FILES) $(SYNC_PP_JAVA_FILES) $(SYNC_THIRDPARTY_JAVA_FILES) R.java
 	$(NSINSTALL) -D classes
-	$(JAVAC) $(JAVAC_FLAGS) -Xlint:unchecked -Xlint:deprecation -d classes  $(addprefix $(srcdir)/,$(JAVAFILES)) $(PROCESSEDJAVAFILES) R.java
+	$(JAVAC) $(JAVAC_FLAGS) -d classes $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES))
+	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes -classpath classes $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
 	$(DX) --dex --output=$@ classes
 
 PP_RES_XML=$(SYNC_PP_RES_XML)
@@ -569,7 +570,7 @@ $(PP_RES_XML): $(subst res/,$(srcdir)/resources/, $(PP_RES_XML).in)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
 
-AndroidManifest.xml $(PROCESSEDJAVAFILES) package-name.txt: % : %.in
+AndroidManifest.xml $(FENNEC_PP_JAVA_FILES) $(SYNC_PP_JAVA_FILES) package-name.txt: % : %.in
 	mkdir -p db sync/repositories/android
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
