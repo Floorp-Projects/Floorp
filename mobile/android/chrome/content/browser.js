@@ -301,6 +301,9 @@ var BrowserApp = {
       ss.restoreLastSession(restoreToFront);
     } else {
       this.addTab(url);
+
+      // show telemetry door hanger if we aren't restoring a session
+      this._showTelemetryPrompt();
     }
 
     // notify java that gecko has loaded
@@ -309,35 +312,35 @@ var BrowserApp = {
         type: "Gecko:Ready"
       }
     });
+  },
 
+  _showTelemetryPrompt: function _showTelemetryPrompt() {
     let telemetryPrompted = false;
     try {
       telemetryPrompted = Services.prefs.getBoolPref("toolkit.telemetry.prompted");
-    } catch (e) {
-      // optional
-    }
+    } catch (e) { /* Optional */ }
+    if (telemetryPrompted)
+      return;
 
-    if (!telemetryPrompted) {
-      let buttons = [
-        {
-          label: Strings.browser.GetStringFromName("telemetry.optin.yes"),
-          callback: function () {
-            Services.prefs.setBoolPref("toolkit.telemetry.prompted", true);
-            Services.prefs.setBoolPref("toolkit.telemetry.enabled", true);
-          }
-        },
-        {
-          label: Strings.browser.GetStringFromName("telemetry.optin.no"),
-          callback: function () {
-            Services.prefs.setBoolPref("toolkit.telemetry.prompted", true);
-            Services.prefs.setBoolPref("toolkit.telemetry.enabled", false);
-          }
+    let buttons = [
+      {
+        label: Strings.browser.GetStringFromName("telemetry.optin.yes"),
+        callback: function () {
+          Services.prefs.setBoolPref("toolkit.telemetry.prompted", true);
+          Services.prefs.setBoolPref("toolkit.telemetry.enabled", true);
         }
-      ];
-      let brandShortName = Strings.brand.GetStringFromName("brandShortName");
-      let message = Strings.browser.formatStringFromName("telemetry.optin.message", [brandShortName], 1);
-      NativeWindow.doorhanger.show(message, "telemetry-optin", buttons);
-    }
+      },
+      {
+        label: Strings.browser.GetStringFromName("telemetry.optin.no"),
+        callback: function () {
+          Services.prefs.setBoolPref("toolkit.telemetry.prompted", true);
+          Services.prefs.setBoolPref("toolkit.telemetry.enabled", false);
+        }
+      }
+    ];
+    let brandShortName = Strings.brand.GetStringFromName("brandShortName");
+    let message = Strings.browser.formatStringFromName("telemetry.optin.message", [brandShortName], 1);
+    NativeWindow.doorhanger.show(message, "telemetry-optin", buttons);
   },
 
   shutdown: function shutdown() {
