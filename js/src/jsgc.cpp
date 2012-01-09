@@ -1035,9 +1035,9 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w)
         return CGCT_NOTLIVE;
 
 #ifdef DEBUG
-    const char pattern[] = "machine_stack %lx";
-    char nameBuf[sizeof(pattern) - 3 + sizeof(thing) * 2];
-    JS_snprintf(nameBuf, sizeof(nameBuf), "machine_stack %lx", (unsigned long) thing);
+    const char pattern[] = "machine_stack %p";
+    char nameBuf[sizeof(pattern) - 2 + sizeof(thing) * 2];
+    JS_snprintf(nameBuf, sizeof(nameBuf), pattern, thing);
     JS_SET_TRACING_NAME(trc, nameBuf);
 #endif
     MarkKind(trc, thing, MapAllocToTraceKind(thingKind));
