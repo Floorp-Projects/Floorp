@@ -947,7 +947,7 @@ FailInvalidation(JSContext *cx, uint8 *ionTop)
 }
 
 static bool
-InvalidateActivation(JSContext *cx, HashSet<JSScript *> &invalidHash, uint8 *ionTop)
+InvalidateActivation(JSContext *cx, uint8 *ionTop)
 {
     size_t frameno = 1;
 
@@ -999,8 +999,7 @@ InvalidateActivation(JSContext *cx, HashSet<JSScript *> &invalidHash, uint8 *ion
         it.jsFrame()->setInvalidationRecord(record);
 
         IonCode *invalidator = cx->compartment->ionCompartment()->getOrCreateInvalidationThunk(cx);
-        if (!invalidator)
-            return false;
+        JS_ASSERT(invalidator);
 
         IonSpew(IonSpew_Invalidate, "   callee return address @ %p: %p => %p",
                 (void *) returnPtr, (void *) *returnPtr,
@@ -1015,35 +1014,25 @@ InvalidateActivation(JSContext *cx, HashSet<JSScript *> &invalidHash, uint8 *ion
 void
 ion::Invalidate(JSContext *cx, const Vector<JSScript *> &invalid)
 {
-    uint8 *ionTop = cx->threadData()->ionTop;
-    if (!ionTop)
-        return;
-
-    IonSpew(IonSpew_Invalidate, "Invalidating with set of %u scripts", unsigned(invalid.length()));
-
-    // Build the invalids as a hash set to avoid O(n^2) linear scans.
-    HashSet<JSScript *> invalidHash(cx);
-    if (!invalidHash.init(invalid.length())) {
-        FailInvalidation(cx, ionTop);
-        return;
+    // Add an invalidation reference to all invalidated IonScripts.
+    for (size_t i = 0; i < invalid.length(); i++) {
+        if (invalid[i]->hasIonScript())
+            invalid[i]->ion->incref();
     }
 
-    for (JSScript **it = invalid.begin(); it != invalid.end(); ++it)
-        JS_ALWAYS_TRUE(invalidHash.putNew(*it));
-
-    IonActivation *activation = cx->threadData()->ionActivation;
-    while (ionTop) {
-        if (!InvalidateActivation(cx, invalidHash, ionTop))
-            FailInvalidation(cx, ionTop);
-
-        if (!activation)
-            break;
-
-        ionTop = activation->prevIonTop();
-        activation = activation->prev();
+    for (IonActivationIterator iter(cx); iter.more(); ++iter) {
+        if (!InvalidateActivation(cx, iter.top()))
+            FailInvalidation(cx, iter.top());
     }
 
-    // Clear out the compiled ion scripts now that they are invalidated.
-    for (JSScript * const *it = invalid.begin(), * const *end = invalid.end(); it != end; ++it)
-        (*it)->ion = NULL;
+    // Drop the references added above. If a script was never active, its
+    // IonScript will be immediately destroyed. Otherwise, it will be held live
+    // until its last InvalidationRecord is destroyed.
+    for (size_t i = 0; i < invalid.length(); i++) {
+        if (invalid[i]->hasIonScript()) {
+            invalid[i]->ion->decref(cx);
+            invalid[i]->ion = NULL;
+        }
+    }
 }
+
