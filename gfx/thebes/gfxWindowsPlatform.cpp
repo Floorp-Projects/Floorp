@@ -519,6 +519,7 @@ gfxWindowsPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
     nsRefPtr<gfxASurface> surf =
       new gfxD2DSurface(texture, ContentForFormat(aTarget->GetFormat()));
 
+    // shouldn't this hold a reference?
     surf->SetData(&kDrawTarget, aTarget, NULL);
 
     return surf.forget();
