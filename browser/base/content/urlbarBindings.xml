@@ -510,10 +510,17 @@
           var inputVal = this.inputField.value;
           var selectedVal = inputVal.substring(this.selectionStart, this.selectionEnd);
 
-          // If the selection doesn't start at the beginning or URL bar is
-          // modified, nothing else to do here.
+          // If the selection doesn't start at the beginning or doesn't span the full domain or
+          // the URL bar is modified, nothing else to do here.
           if (this.selectionStart > 0 || this.valueIsTyped)
             return selectedVal;
+          // The selection doesn't span the full domain if it doesn't contain a slash and is
+          // followed by some character other than a slash.
+          if (selectedVal.indexOf("/") == -1) {
+            let remainder = inputVal.replace(selectedVal, "");
+            if (remainder != "" && remainder[0] != "/")
+              return selectedVal;
+          }
 
           let uriFixup = Cc["@mozilla.org/docshell/urifixup;1"].getService(Ci.nsIURIFixup);
 
