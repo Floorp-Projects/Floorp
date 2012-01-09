@@ -39,6 +39,7 @@
 
 #include "2D.h"
 #include "cairo.h"
+#include "PathCairo.h"
 
 #include <vector>
 
@@ -127,12 +128,10 @@ public:
                           const DrawOptions &aOptions);
   virtual void Mask(const Pattern &aSource,
                     const Pattern &aMask,
-                    const DrawOptions &aOptions = DrawOptions())
-  { }
+                    const DrawOptions &aOptions = DrawOptions());
 
   virtual void PushClip(const Path *aPath);
-  virtual void PushClipRect(const Rect &aRect)
-  { }
+  virtual void PushClipRect(const Rect &aRect);
   virtual void PopClip();
 
   virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FILL_WINDING) const;
@@ -156,12 +155,18 @@ public:
 
   bool Init(cairo_surface_t* aSurface);
 
-private: // methods
-  void PrepareForDrawing(cairo_t* aContext);
+  void SetPathObserver(CairoPathContext* aPathObserver);
 
+  virtual void SetTransform(const Matrix& aTransform);
+
+  // Call to set up aContext for drawing (with the current transform, etc).
+  // Pass the path you're going to be using if you have one.
+  // Implicitly calls WillChange(aPath).
+  void PrepareForDrawing(cairo_t* aContext, const Path* aPath = NULL);
+
+private: // methods
   enum DrawPatternType { DRAW_FILL, DRAW_STROKE };
-  void DrawPattern(const Rect& aRect,
-                   const Pattern& aPattern,
+  void DrawPattern(const Pattern& aPattern,
                    const StrokeOptions& aStrokeOptions,
                    const DrawOptions& aOptions,
                    DrawPatternType aDrawType);
@@ -172,8 +177,9 @@ private: // methods
   void RemoveSnapshot(SourceSurfaceCairo* aSnapshot);
 
   // Call before you make any changes to the backing surface with which this
-  // context is associated.
-  void MarkChanged();
+  // context is associated. Pass the path you're going to be using if you have
+  // one.
+  void WillChange(const Path* aPath = NULL);
 
   // Call if there is any reason to disassociate all snapshots from this draw
   // target; for example, because we're going to be destroyed.
@@ -182,6 +188,7 @@ private: // methods
 private: // data
   cairo_t* mContext;
   std::vector<SourceSurfaceCairo*> mSnapshots;
+  mutable RefPtr<CairoPathContext> mPathObserver;
 };
 
 }
