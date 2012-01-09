@@ -1014,7 +1014,8 @@ InvalidateActivation(JSContext *cx, uint8 *ionTop)
 void
 ion::Invalidate(JSContext *cx, const Vector<JSScript *> &invalid)
 {
-    // Add an invalidation reference to all invalidated IonScripts.
+    // Add an invalidation reference to all invalidated IonScripts to indicate
+    // to the traversal which frames have been invalidated.
     for (size_t i = 0; i < invalid.length(); i++) {
         if (invalid[i]->hasIonScript())
             invalid[i]->ion->incref();
