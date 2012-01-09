@@ -134,8 +134,7 @@ SourceSurfaceCairo::GetDataSurface()
 
     // Fill the new image surface with the contents of our surface.
     cairo_t* ctx = cairo_create(imageSurf);
-    cairo_pattern_t* pat = cairo_pattern_create_for_surface(mSurface);
-    cairo_set_source(ctx, pat);
+    cairo_set_source_surface(ctx, mSurface, 0, 0);
     cairo_paint(ctx);
     cairo_destroy(ctx);
 
