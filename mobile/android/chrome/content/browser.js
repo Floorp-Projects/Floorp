@@ -262,8 +262,13 @@ var BrowserApp = {
     Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
 
     let url = "about:home";
-    if ("arguments" in window && window.arguments[0])
-      url = window.arguments[0];
+    let restoreSession = false;
+    if ("arguments" in window) {
+      if (window.arguments[0])
+        uri = window.arguments[0];
+      if (window.arguments[1])
+        restoreSession = window.arguments[1];
+    }
 
     // XXX maybe we don't do this if the launch was kicked off from external
     Services.io.offline = false;
@@ -275,7 +280,7 @@ var BrowserApp = {
 
     // restore the previous session
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-    if (ss.shouldRestore()) {
+    if (restoreSession || ss.shouldRestore()) {
       // A restored tab should not be active if we are loading a URL
       let restoreToFront = false;
 
