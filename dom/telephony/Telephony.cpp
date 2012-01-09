@@ -47,7 +47,9 @@
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "SystemWorkerManager.h"
 
 #include "CallEvent.h"
 #include "TelephonyCall.h"
@@ -454,9 +456,11 @@ NS_NewTelephony(nsPIDOMWindow* aWindow, nsIDOMTelephony** aTelephony)
 
   nsRefPtr<Telephony> telephony;
   if (phoneAppURL.Equals(documentURL, nsCaseInsensitiveCStringComparator())) {
-    nsCOMPtr<nsITelephone> telephone =
-      do_GetService("@mozilla.org/telephony/radio-interface;1");
-    NS_ENSURE_TRUE(telephone, NS_ERROR_FAILURE);
+    nsIInterfaceRequestor* ireq = SystemWorkerManager::GetInterfaceRequestor();
+    NS_ENSURE_TRUE(ireq, NS_ERROR_UNEXPECTED);
+
+    nsCOMPtr<nsITelephone> telephone = do_GetInterface(ireq);
+    NS_ENSURE_TRUE(telephone, NS_ERROR_UNEXPECTED);
 
     telephony = Telephony::Create(innerWindow, telephone);
   }

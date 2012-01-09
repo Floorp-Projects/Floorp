@@ -37,7 +37,8 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(8f031451-ac25-4816-a09e-a075bb704e63)]
-interface nsIRadioWorker : nsISupports {
-    readonly attribute jsval worker;
+[scriptable, uuid(c04f3102-1ce8-4d57-9c27-8aece9c2740a)]
+interface nsIWorkerHolder : nsISupports
+{
+  readonly attribute jsval worker;
 };

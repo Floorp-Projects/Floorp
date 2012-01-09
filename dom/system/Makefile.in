@@ -61,9 +61,9 @@ ifneq (,$(filter android,$(MOZ_WIDGET_TOOLKIT)))
 DIRS = android
 endif
 
-ifdef MOZ_B2G_RIL #{
+ifdef MOZ_B2G_RIL
 DIRS += b2g
-endif #}
+endif
 
 CPPSRCS     = \
   nsDeviceMotion.cpp \
