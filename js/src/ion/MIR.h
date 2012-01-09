@@ -1784,6 +1784,26 @@ class MCheckOverRecursed : public MAryInstruction<0>
     INSTRUCTION_HEADER(CheckOverRecursed);
 };
 
+// Check the script's use count and trigger recompilation to inline
+// calls when the script becomes hot.
+class MRecompileCheck : public MAryInstruction<0>
+{
+    MRecompileCheck() {
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(RecompileCheck);
+
+    static MRecompileCheck *New() {
+        return new MRecompileCheck();
+    }
+
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 // Determines the implicit |this| value for function calls.
 class MImplicitThis
   : public MUnaryInstruction,

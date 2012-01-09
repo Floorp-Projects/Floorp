@@ -55,6 +55,7 @@
     _(Goto)                         \
     _(NewArray)                     \
     _(CheckOverRecursed)            \
+    _(RecompileCheck)               \
     _(CallGeneric)                  \
     _(StackArg)                     \
     _(BitNot)                       \

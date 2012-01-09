@@ -75,3 +75,11 @@ LIRGeneratorX86Shared::visitTableSwitch(MTableSwitch *tableswitch)
     }
     return add(new LTableSwitch(index, tempInt, temp(LDefinition::GENERAL), tableswitch));
 }
+
+bool
+LIRGeneratorX86Shared::visitRecompileCheck(MRecompileCheck *ins)
+{
+    LRecompileCheck *lir = new LRecompileCheck();
+    return assignSnapshot(lir, Bailout_RecompileCheck) && add(lir);
+}
+

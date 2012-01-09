@@ -327,3 +327,10 @@ LIRGeneratorARM::visitGuardShape(MGuardShape *ins)
     LGuardShape *guard = new LGuardShape(useRegister(ins->obj()), tempObj);
     return assignSnapshot(guard) && add(guard, ins);
 }
+
+bool
+LIRGeneratorARM::visitRecompileCheck(MRecompileCheck *ins)
+{
+    LRecompileCheck *lir = new LRecompileCheck(temp(LDefinition::GENERAL));
+    return assignSnapshot(lir, Bailout_RecompileCheck) && add(lir);
+}

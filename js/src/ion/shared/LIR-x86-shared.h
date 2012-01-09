@@ -123,6 +123,12 @@ class LGuardShape : public LInstructionHelper<0, 1, 0>
     }
 };
 
+class LRecompileCheck : public LInstructionHelper<0, 0, 0>
+{
+  public:
+    LIR_HEADER(RecompileCheck);
+};
+
 } // namespace ion
 } // namespace js
 

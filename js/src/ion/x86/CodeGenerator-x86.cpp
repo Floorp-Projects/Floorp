@@ -397,3 +397,18 @@ CodeGeneratorX86::visitImplicitThis(LImplicitThis *lir)
     masm.moveValue(UndefinedValue(), type, payload);
     return true;
 }
+
+bool
+CodeGeneratorX86::visitRecompileCheck(LRecompileCheck *lir)
+{
+    // Bump the script's use count and bailout if the script is hot. Note that
+    // it's safe to bake in this pointer since scripts are never nursery
+    // allocated and jitcode will be purged before doing a compacting GC.
+    // Without this assumption we'd need a temp register here.
+    Operand addr(gen->info().script()->addressOfUseCount());
+    masm.addl(Imm32(1), addr);
+    masm.cmpl(addr, Imm32(js_IonOptions.usesBeforeInlining));
+    if (!bailoutIf(Assembler::AboveOrEqual, lir->snapshot()))
+        return false;
+    return true;
+}

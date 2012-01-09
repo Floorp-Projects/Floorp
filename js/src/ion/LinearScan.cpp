@@ -1504,7 +1504,6 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
         if (i->getAllocation()->isRegister()) {
             AnyRegister reg = i->getAllocation()->toRegister();
             CodePosition pos = i->nextUsePosAfter(current->start());
-            JS_ASSERT(i->covers(pos) || pos == CodePosition::MAX);
             if (pos < nextUsePos[reg.code()]) {
                 nextUsePos[reg.code()] = pos;
                 IonSpew(IonSpew_RegAlloc, "   Register %s next used %u", reg.name(), pos.pos());

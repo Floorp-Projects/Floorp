@@ -252,7 +252,8 @@ class IonBuilder : public MIRGenerator
     // handles any pending breaks.
     ControlStatus finishLoop(CFGState &state, MBasicBlock *successor);
 
-    void assertValidTraceOp(JSOp op);
+    void assertValidLoopHeadOp(jsbytecode *pc);
+
     bool forInLoop(JSOp op, jssrcnote *sn) {
         return false;
     }
@@ -265,6 +266,8 @@ class IonBuilder : public MIRGenerator
     // IonBuilder.cpp, near the definition for this function.
     bool resumeAt(MInstruction *ins, jsbytecode *pc);
     bool resumeAfter(MInstruction *ins);
+
+    void insertRecompileCheck();
 
     void initParameters();
     void rewriteParameters();
@@ -281,6 +284,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_ifeq(JSOp op);
     bool jsop_andor(JSOp op);
     bool jsop_dup2();
+    bool jsop_loophead(jsbytecode *pc);
     bool jsop_incslot(JSOp op, uint32 slot);
     bool jsop_localinc(JSOp op);
     bool jsop_arginc(JSOp op);
