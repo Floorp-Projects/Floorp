@@ -1921,15 +1921,10 @@ LoopState::analyzeLoopBody(unsigned frame)
           case JSOP_LOCALINC:
           case JSOP_LOCALDEC:
           case JSOP_IFEQ:
-          case JSOP_IFEQX:
           case JSOP_IFNE:
-          case JSOP_IFNEX:
           case JSOP_AND:
-          case JSOP_ANDX:
           case JSOP_OR:
-          case JSOP_ORX:
           case JSOP_GOTO:
-          case JSOP_GOTOX:
             break;
 
           case JSOP_ADD:

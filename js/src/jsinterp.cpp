@@ -1794,6 +1794,17 @@ ADD_EMPTY_CASE(JSOP_NOP)
 ADD_EMPTY_CASE(JSOP_UNUSED0)
 ADD_EMPTY_CASE(JSOP_UNUSED1)
 ADD_EMPTY_CASE(JSOP_UNUSED2)
+ADD_EMPTY_CASE(JSOP_UNUSED3)
+ADD_EMPTY_CASE(JSOP_UNUSED4)
+ADD_EMPTY_CASE(JSOP_UNUSED5)
+ADD_EMPTY_CASE(JSOP_UNUSED6)
+ADD_EMPTY_CASE(JSOP_UNUSED7)
+ADD_EMPTY_CASE(JSOP_UNUSED8)
+ADD_EMPTY_CASE(JSOP_UNUSED9)
+ADD_EMPTY_CASE(JSOP_UNUSED10)
+ADD_EMPTY_CASE(JSOP_UNUSED11)
+ADD_EMPTY_CASE(JSOP_UNUSED12)
+ADD_EMPTY_CASE(JSOP_UNUSED13)
 ADD_EMPTY_CASE(JSOP_CONDSWITCH)
 ADD_EMPTY_CASE(JSOP_TRY)
 #if JS_HAS_XML_SUPPORT
@@ -1805,9 +1816,6 @@ END_EMPTY_CASES
 
 BEGIN_CASE(JSOP_LABEL)
 END_CASE(JSOP_LABEL)
-
-BEGIN_CASE(JSOP_LABELX)
-END_CASE(JSOP_LABELX)
 
 check_backedge:
 {
@@ -2023,64 +2031,6 @@ BEGIN_CASE(JSOP_AND)
     }
 }
 END_CASE(JSOP_AND)
-
-BEGIN_CASE(JSOP_DEFAULTX)
-    regs.sp--;
-    /* FALL THROUGH */
-BEGIN_CASE(JSOP_GOTOX)
-{
-    len = GET_JUMPX_OFFSET(regs.pc);
-    BRANCH(len);
-}
-END_CASE(JSOP_GOTOX);
-
-BEGIN_CASE(JSOP_IFEQX)
-{
-    bool cond;
-    Value *_;
-    POP_BOOLEAN(cx, _, cond);
-    if (cond == false) {
-        len = GET_JUMPX_OFFSET(regs.pc);
-        BRANCH(len);
-    }
-}
-END_CASE(JSOP_IFEQX)
-
-BEGIN_CASE(JSOP_IFNEX)
-{
-    bool cond;
-    Value *_;
-    POP_BOOLEAN(cx, _, cond);
-    if (cond != false) {
-        len = GET_JUMPX_OFFSET(regs.pc);
-        BRANCH(len);
-    }
-}
-END_CASE(JSOP_IFNEX)
-
-BEGIN_CASE(JSOP_ORX)
-{
-    bool cond;
-    Value *_;
-    VALUE_TO_BOOLEAN(cx, _, cond);
-    if (cond == true) {
-        len = GET_JUMPX_OFFSET(regs.pc);
-        DO_NEXT_OP(len);
-    }
-}
-END_CASE(JSOP_ORX)
-
-BEGIN_CASE(JSOP_ANDX)
-{
-    bool cond;
-    Value *_;
-    VALUE_TO_BOOLEAN(cx, _, cond);
-    if (cond == JS_FALSE) {
-        len = GET_JUMPX_OFFSET(regs.pc);
-        DO_NEXT_OP(len);
-    }
-}
-END_CASE(JSOP_ANDX)
 
 /*
  * If the index value at sp[n] is not an int that fits in a jsval, it could
@@ -2377,18 +2327,6 @@ BEGIN_CASE(JSOP_CASE)
     }
 }
 END_CASE(JSOP_CASE)
-
-BEGIN_CASE(JSOP_CASEX)
-{
-    bool cond;
-    STRICT_EQUALITY_OP(==, cond);
-    if (cond) {
-        regs.sp--;
-        len = GET_JUMPX_OFFSET(regs.pc);
-        BRANCH(len);
-    }
-}
-END_CASE(JSOP_CASEX)
 
 #undef STRICT_EQUALITY_OP
 
@@ -3316,57 +3254,14 @@ END_VARLEN_CASE
 }
 
 {
-BEGIN_CASE(JSOP_TABLESWITCHX)
-{
-    jsbytecode *pc2 = regs.pc;
-    len = GET_JUMPX_OFFSET(pc2);
-
-    /*
-     * ECMAv2+ forbids conversion of discriminant, so we will skip to the
-     * default case if the discriminant isn't already an int jsval.  (This
-     * opcode is emitted only for dense jsint-domain switches.)
-     */
-    const Value &rref = *--regs.sp;
-    int32_t i;
-    if (rref.isInt32()) {
-        i = rref.toInt32();
-    } else if (rref.isDouble() && rref.toDouble() == 0) {
-        /* Treat -0 (double) as 0. */
-        i = 0;
-    } else {
-        DO_NEXT_OP(len);
-    }
-
-    pc2 += JUMPX_OFFSET_LEN;
-    jsint low = GET_JUMP_OFFSET(pc2);
-    pc2 += JUMP_OFFSET_LEN;
-    jsint high = GET_JUMP_OFFSET(pc2);
-
-    i -= low;
-    if ((jsuint)i < (jsuint)(high - low + 1)) {
-        pc2 += JUMP_OFFSET_LEN + JUMPX_OFFSET_LEN * i;
-        jsint off = (jsint) GET_JUMPX_OFFSET(pc2);
-        if (off)
-            len = off;
-    }
-}
-END_VARLEN_CASE
-}
-
-{
-BEGIN_CASE(JSOP_LOOKUPSWITCHX)
+BEGIN_CASE(JSOP_LOOKUPSWITCH)
 {
     jsint off;
-    off = JUMPX_OFFSET_LEN;
-    goto do_lookup_switch;
-
-BEGIN_CASE(JSOP_LOOKUPSWITCH)
     off = JUMP_OFFSET_LEN;
 
-  do_lookup_switch:
     /*
-     * JSOP_LOOKUPSWITCH and JSOP_LOOKUPSWITCHX are never used if any atom
-     * index in it would exceed 64K limit.
+     * JSOP_LOOKUPSWITCH are never used if any atom index in it would exceed
+     * 64K limit.
      */
     JS_ASSERT(atoms == script->atoms);
     jsbytecode *pc2 = regs.pc;
@@ -3421,9 +3316,7 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
 #undef SEARCH_PAIRS
 
   end_lookup_switch:
-    len = (op == JSOP_LOOKUPSWITCH)
-          ? GET_JUMP_OFFSET(pc2)
-          : GET_JUMPX_OFFSET(pc2);
+    len = GET_JUMP_OFFSET(pc2);
 }
 END_VARLEN_CASE
 }
@@ -4199,16 +4092,7 @@ END_CASE(JSOP_SHARPINIT)
 BEGIN_CASE(JSOP_GOSUB)
     PUSH_BOOLEAN(false);
     jsint i = (regs.pc - script->code) + JSOP_GOSUB_LENGTH;
-    PUSH_INT32(i);
     len = GET_JUMP_OFFSET(regs.pc);
-END_VARLEN_CASE
-}
-
-{
-BEGIN_CASE(JSOP_GOSUBX)
-    PUSH_BOOLEAN(false);
-    jsint i = (regs.pc - script->code) + JSOP_GOSUBX_LENGTH;
-    len = GET_JUMPX_OFFSET(regs.pc);
     PUSH_INT32(i);
 END_VARLEN_CASE
 }
