@@ -75,6 +75,7 @@ public:
   static void RecordSlowStatement(const nsACString &statement,
                                   const nsACString &dbName,
                                   PRUint32 delay);
+  static nsresult GetHistogramEnumId(const char *name, Telemetry::ID &id);
   struct StmtStats {
     PRUint32 hitCount;
     PRUint32 totalTime;
@@ -412,28 +413,48 @@ TelemetryImpl::AddSQLInfo(JSContext *cx, JSObject *rootObj, bool mainThread)
   return true;
 }
 
-
 nsresult
-TelemetryImpl::GetHistogramByName(const nsACString &name, Histogram **ret)
+TelemetryImpl::GetHistogramEnumId(const char *name, Telemetry::ID *id)
 {
+  if (!sTelemetry) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Cache names
   // Note the histogram names are statically allocated
-  if (!mHistogramMap.Count()) {
+  TelemetryImpl::HistogramMapType *map = &sTelemetry->mHistogramMap;
+  if (!map->Count()) {
     for (PRUint32 i = 0; i < Telemetry::HistogramCount; i++) {
-      CharPtrEntryType *entry = mHistogramMap.PutEntry(gHistograms[i].id);
+      CharPtrEntryType *entry = map->PutEntry(gHistograms[i].id);
       if (NS_UNLIKELY(!entry)) {
-        mHistogramMap.Clear();
+        map->Clear();
         return NS_ERROR_OUT_OF_MEMORY;
       }
       entry->mData = (Telemetry::ID) i;
     }
   }
 
-  CharPtrEntryType *entry = mHistogramMap.GetEntry(PromiseFlatCString(name).get());
-  if (!entry)
-    return NS_ERROR_FAILURE;
+  CharPtrEntryType *entry = map->GetEntry(name);
+  // A histogram might not be in our static list of names (e.g. secret
+  // histograms maintained by Histogram itself or addon histograms).
+  // Use a separate error code to help the caller.
+  if (!entry) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *id = entry->mData;
+  return NS_OK;
+}
 
-  nsresult rv = GetHistogramByEnumId(entry->mData, ret);
+nsresult
+TelemetryImpl::GetHistogramByName(const nsACString &name, Histogram **ret)
+{
+  Telemetry::ID id;
+  nsresult rv = GetHistogramEnumId(PromiseFlatCString(name).get(), &id);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = GetHistogramByEnumId(id, ret);
   if (NS_FAILED(rv))
     return rv;
 
