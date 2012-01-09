@@ -1303,3 +1303,23 @@ CodeGeneratorARM::visitImplicitThis(LImplicitThis *lir)
     masm.moveValue(UndefinedValue(), type, payload);
     return true;
 }
+
+bool
+CodeGeneratorARM::visitRecompileCheck(LRecompileCheck *lir)
+{
+    Register tmp = ToRegister(lir->tempInt());
+    const size_t *addr = gen->info().script()->addressOfUseCount();
+
+    // Bump the script's use count. Note that it's safe to bake in this pointer
+    // since scripts are never nursery allocated and jitcode will be purged before
+    // doing a compacting GC.
+    masm.load32(ImmWord(addr), tmp);
+    masm.ma_add(Imm32(1), tmp);
+    masm.store32(tmp, ImmWord(addr));
+
+    // Bailout if the script is hot.
+    masm.ma_cmp(tmp, Imm32(js_IonOptions.usesBeforeInlining));
+    if (!bailoutIf(Assembler::AboveOrEqual, lir->snapshot()))
+        return false;
+    return true;
+}

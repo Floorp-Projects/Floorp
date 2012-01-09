@@ -251,6 +251,12 @@ TypeInferenceOracle::arrayPrototypeHasIndexedProperty()
 }
 
 bool
+TypeInferenceOracle::canInlineCalls()
+{
+    return script->analysis()->hasFunctionCalls();
+}
+
+bool
 TypeInferenceOracle::propertyWriteCanSpecialize(JSScript *script, jsbytecode *pc)
 {
     return !script->analysis()->getCode(pc).monitoredTypes;

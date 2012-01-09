@@ -89,14 +89,23 @@ struct IonOptions
     // Default: true
     bool inlining;
 
-    // How many invocations of a function are needed before the Ion compiler
-    // kicks in.
+    // How many invocations or loop iterations are needed before functions
+    // are compiled.
     //
     // Default: 40.
-    uint32 invokesBeforeCompile;
+    uint32 usesBeforeCompile;
+
+    // How many invocations or loop iterations are needed before calls
+    // are inlined.
+    //
+    // Default: 10,000
+    uint32 usesBeforeInlining;
 
     void setEagerCompilation() {
-        invokesBeforeCompile = 0;
+        usesBeforeCompile = 0;
+
+        // Eagerly inline calls to improve test coverage.
+        usesBeforeInlining = usesBeforeCompile;
     }
 
     IonOptions()
@@ -107,7 +116,8 @@ struct IonOptions
         osr(true),
         lsra(true),
         inlining(true),
-        invokesBeforeCompile(40)
+        usesBeforeCompile(40),
+        usesBeforeInlining(10000)
     { }
 };
 

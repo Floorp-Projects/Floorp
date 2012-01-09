@@ -52,6 +52,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
       : LIRGeneratorShared(gen, graph, lirGraph)
     {}
     bool visitTableSwitch(MTableSwitch *tableswitch);
+    bool visitRecompileCheck(MRecompileCheck *ins);
 };
 
 }

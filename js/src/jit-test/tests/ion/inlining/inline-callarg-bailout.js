@@ -12,13 +12,13 @@ function runBinop(binop, lhs, rhs) {
 var accum = 0;
 for (var i = 0; i < 1000; ++i)
     accum += add(1, 1);
-print(accum);
+assertEq(accum, 2000);
 
 // Get the runBinop function to compile and inline the add function.
 var accum = 0;
-for (var i = 0; i < 50; ++i)
+for (var i = 0; i < 10100; ++i)
     accum = runBinop(add, i, i);
-print(accum);
+assertEq(accum, 20198);
 
 var t30 = 1 << 30;
 var t31 = t30 + t30;

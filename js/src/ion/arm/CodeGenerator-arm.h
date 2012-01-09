@@ -177,6 +177,8 @@ private:
     bool visitGuardShape(LGuardShape *guard);
     bool visitGuardClass(LGuardClass *guard);
     bool visitImplicitThis(LImplicitThis *lir);
+
+    bool visitRecompileCheck(LRecompileCheck *lir);
 };
 
 typedef CodeGeneratorARM CodeGeneratorSpecific;

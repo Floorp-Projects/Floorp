@@ -1101,6 +1101,13 @@ MacroAssemblerARMCompat::load32(const Address &address, const Register &dest)
 {
     loadPtr(address, dest);
 }
+
+void
+MacroAssemblerARMCompat::load32(const ImmWord &imm, const Register &dest)
+{
+    loadPtr(imm, dest);
+}
+
 void
 MacroAssemblerARMCompat::loadPtr(const Address &address, const Register &dest)
 {
@@ -1114,9 +1121,22 @@ MacroAssemblerARMCompat::loadPtr(const ImmWord &imm, const Register &dest)
 }
 
 void
+MacroAssemblerARMCompat::store32(Register src, const ImmWord &imm)
+{
+    storePtr(src, imm);
+}
+
+void
 MacroAssemblerARMCompat::storePtr(Register src, const Address &address)
 {
     ma_str(src, Operand(address));
+}
+
+void
+MacroAssemblerARMCompat::storePtr(Register src, const ImmWord &imm)
+{
+    movePtr(imm, ScratchRegister);
+    storePtr(src, Address(ScratchRegister, 0x0));
 }
 
 void
