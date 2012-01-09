@@ -881,7 +881,7 @@ nsGeolocation::HasActiveCallbacks()
     if (mWatchingCallbacks[i]->IsActive())
       return true;
 
-  return false;
+  return mPendingCallbacks.Length() != 0;
 }
 
 void
