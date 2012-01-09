@@ -2740,6 +2740,10 @@ panel[dimmed="true"] {
   position: relative;
 }
 
+#devtools-sidebar-box {
+  background-color: -moz-Field;
+}
+
 /* Highlighter - toolbar resizers */
 
 .inspector-resizer {
