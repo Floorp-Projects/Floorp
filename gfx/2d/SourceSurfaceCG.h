@@ -47,10 +47,11 @@ namespace gfx {
 class SourceSurfaceCG : public SourceSurface
 {
 public:
-  SourceSurfaceCG();
+  SourceSurfaceCG() {}
+  SourceSurfaceCG(CGImageRef aImage) : mImage(aImage) {}
   ~SourceSurfaceCG();
 
-  virtual SurfaceType GetType() const { return COREGRAPHICS_IMAGE; }
+  virtual SurfaceType GetType() const { return SURFACE_COREGRAPHICS_IMAGE; }
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const;
   virtual TemporaryRef<DataSourceSurface> GetDataSurface();
@@ -69,6 +70,39 @@ private:
    * deduce the format to save space in SourceSurfaceCG,
    * for now we just store it in mFormat */
   SurfaceFormat mFormat;
+};
+
+class DataSourceSurfaceCG : public DataSourceSurface
+{
+public:
+  DataSourceSurfaceCG() {}
+  DataSourceSurfaceCG(CGImageRef aImage);
+  ~DataSourceSurfaceCG();
+
+  virtual SurfaceType GetType() const { return SURFACE_DATA; }
+  virtual IntSize GetSize() const;
+  virtual SurfaceFormat GetFormat() const { return FORMAT_B8G8R8A8; }
+
+  CGImageRef GetImage() { return mImage; }
+
+  bool InitFromData(unsigned char *aData,
+                    const IntSize &aSize,
+                    int32_t aStride,
+                    SurfaceFormat aFormat);
+
+  virtual unsigned char *GetData();
+
+  virtual int32_t Stride() { return CGImageGetBytesPerRow(mImage); }
+
+
+private:
+  CGContextRef mCg;
+  CGImageRef mImage;
+  //XXX: we don't need to store mData we can just get it from the CGContext
+  void *mData;
+  /* It might be better to just use the bitmap info from the CGImageRef to
+   * deduce the format to save space in SourceSurfaceCG,
+   * for now we just store it in mFormat */
 };
 
 }
