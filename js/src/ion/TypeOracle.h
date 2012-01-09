@@ -134,6 +134,9 @@ class TypeOracle
     virtual bool arrayPrototypeHasIndexedProperty() {
         return true;
     }
+    virtual bool canInlineCalls() {
+        return false;
+    }
 
     /* |pc| must be a |JSOP_CALL|. */
     virtual types::TypeSet *getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc) {
@@ -201,6 +204,7 @@ class TypeInferenceOracle : public TypeOracle
     bool propertyWriteNeedsBarrier(JSScript *script, jsbytecode *pc, jsid id);
     MIRType elementWrite(JSScript *script, jsbytecode *pc);
     bool arrayPrototypeHasIndexedProperty();
+    bool canInlineCalls();
     bool canEnterInlinedScript(JSScript *inlineScript);
 };
 

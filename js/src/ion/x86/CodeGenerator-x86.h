@@ -103,6 +103,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitStoreElementV(LStoreElementV *store);
     bool visitStoreElementT(LStoreElementT *store);
     bool visitImplicitThis(LImplicitThis *lir);
+    bool visitRecompileCheck(LRecompileCheck *lir);
 };
 
 typedef CodeGeneratorX86 CodeGeneratorSpecific;

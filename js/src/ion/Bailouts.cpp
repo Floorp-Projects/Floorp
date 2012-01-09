@@ -279,6 +279,8 @@ ConvertFrames(JSContext *cx, IonActivation *activation, FrameRecovery &in)
         return BAILOUT_RETURN_TYPE_BARRIER;
       case Bailout_ArgumentCheck:
         return BAILOUT_RETURN_ARGUMENT_CHECK;
+      case Bailout_RecompileCheck:
+        return BAILOUT_RETURN_RECOMPILE_CHECK;
     }
 
     JS_NOT_REACHED("bad bailout kind");
@@ -416,6 +418,29 @@ ion::ReflowTypeInfo(uint32 bailoutResult)
     // When a type barrier fails, the bad value is at the top of the stack.
     Value &result = cx->regs().sp[-1];
     types::TypeScript::Monitor(cx, script, pc, result);
+
+    return !activation->failedInvalidation();
+}
+
+uint32
+ion::RecompileForInlining()
+{
+    JSContext *cx = GetIonContext()->cx;
+    JSScript *script = cx->fp()->script();
+    IonActivation *activation = cx->threadData()->ionActivation;
+
+    IonSpew(IonSpew_Inlining, "Recompiling script to inline calls %s:%d", script->filename,
+            script->lineno);
+
+    // Invalidate the script to force a recompile.
+    Vector<JSScript *> scripts(cx);
+    if (!scripts.append(script))
+        return BAILOUT_RETURN_FATAL_ERROR;
+
+    Invalidate(cx, scripts);
+
+    // Invalidation should not reset the use count.
+    JS_ASSERT(script->getUseCount() >= js_IonOptions.usesBeforeInlining);
 
     return !activation->failedInvalidation();
 }

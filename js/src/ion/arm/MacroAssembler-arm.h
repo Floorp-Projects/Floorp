@@ -637,10 +637,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void movePtr(const Address &src, const Register &dest);
 
     void load32(const Address &address, const Register &dest);
+    void load32(const ImmWord &imm, const Register &dest);
     void loadPtr(const Address &address, const Register &dest);
     void loadPtr(const ImmWord &imm, const Register &dest);
 
+    void store32(Register src, const ImmWord &imm);
     void storePtr(Register src, const Address &address);
+    void storePtr(Register src, const ImmWord &imm);
 
     void cmp32(const Register &lhs, const Imm32 &rhs);
     void cmpPtr(const Register &lhs, const ImmWord &rhs);

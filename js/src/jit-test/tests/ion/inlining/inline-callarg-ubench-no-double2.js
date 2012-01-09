@@ -19,7 +19,7 @@ for (var i = 0; i < 100; ++i)
 
 // Then, run the outer function with the inner function as a CALLARG to get it
 // to Ion compile with inlining.
-for (var i = 0; i < 100; ++i)
+for (var i = 0; i < 11000; ++i)
     runSomeTimes(lameFunc, 1);
 
 // Lastly, now that we're all inlined and compiled, perform the test!

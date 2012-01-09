@@ -56,6 +56,7 @@ namespace ion {
     _(Phi)                                                                  \
     _(OsrValue)                                                             \
     _(CheckOverRecursed)                                                    \
+    _(RecompileCheck)                                                       \
     _(PrepareCall)                                                          \
     _(PassArg)                                                              \
     _(Call)                                                                 \

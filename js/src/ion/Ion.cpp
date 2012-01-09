@@ -827,7 +827,7 @@ ion::Compile(JSContext *cx, JSScript *script, js::StackFrame *fp, jsbytecode *os
         return Method_Compiled;
     }
 
-    if (script->incUseCount() <= js_IonOptions.invokesBeforeCompile)
+    if (script->incUseCount() <= js_IonOptions.usesBeforeCompile)
         return Method_Skipped;
 
     if (!IonCompile(cx, script, fp, osrPc)) {
