@@ -58,7 +58,6 @@ EXPORTS = \
 		nsIParserNode.h             \
 		nsIParser.h                 \
 		nsIDTD.h                    \
-		nsIParserFilter.h           \
 		nsIElementObserver.h        \
 		nsIParserService.h          \
 		nsHTMLTagList.h             \
