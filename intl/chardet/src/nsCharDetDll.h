@@ -43,6 +43,5 @@
 #include "nsICharsetDetector.h"
 #include "nsICharsetDetectionObserver.h"
 #include "nsIStringCharsetDetector.h"
-#include "nsICharsetDetectionAdaptor.h"
 
 #endif /* nsCharDetDll_h__ */
