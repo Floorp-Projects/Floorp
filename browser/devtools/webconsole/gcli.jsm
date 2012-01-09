@@ -3029,6 +3029,12 @@ JavascriptType.prototype.parse = function(arg) {
     return new Conversion(typed, arg, Status.ERROR, beginning.err);
   }
 
+  // If the current state is ParseState.COMPLEX, then we can't do completion.
+  // so bail out now
+  if (beginning.state === ParseState.COMPLEX) {
+    return new Conversion(typed, arg);
+  }
+
   // If the current state is not ParseState.NORMAL, then we are inside of a
   // string which means that no completion is possible.
   if (beginning.state !== ParseState.NORMAL) {
@@ -3068,7 +3074,7 @@ JavascriptType.prototype.parse = function(arg) {
         // It would be nice to be able to report this error in some way but
         // as it can happen just when someone types '{sessionStorage.', it
         // almost doesn't really count as an error, so we ignore it
-        return new Conversion(typed, arg, Status.INCOMPLETE, '');
+        return new Conversion(typed, arg, Status.VALID, '');
       }
     }
   }
@@ -3246,8 +3252,26 @@ function isVendorPrefixed(name) {
  * Constants used in return value of _findCompletionBeginning()
  */
 var ParseState = {
+  /**
+   * We have simple input like window.foo, without any punctuation that makes
+   * completion prediction be confusing or wrong
+   */
   NORMAL: 0,
+
+  /**
+   * The cursor is in some Javascript that makes completion hard to predict,
+   * like console.log(
+   */
+  COMPLEX: 1,
+
+  /**
+   * The cursor is inside single quotes (')
+   */
   QUOTE: 2,
+
+  /**
+   * The cursor is inside single quotes (")
+   */
   DQUOTE: 3
 };
 
@@ -3258,6 +3282,12 @@ var OPEN_CLOSE_BODY = {
   '[': ']',
   '(': ')'
 };
+
+/**
+ * How we distinguish between simple and complex JS input. We attempt
+ * completion against simple JS.
+ */
+var simpleChars = /[a-zA-Z0-9.]/;
 
 /**
  * Analyzes a given string to find the last statement that is interesting for
@@ -3277,8 +3307,13 @@ JavascriptType.prototype._findCompletionBeginning = function(text) {
   var state = ParseState.NORMAL;
   var start = 0;
   var c;
+  var complex = false;
+
   for (var i = 0; i < text.length; i++) {
     c = text[i];
+    if (!simpleChars.test(c)) {
+      complex = true;
+    }
 
     switch (state) {
       // Normal JS state.
@@ -3342,6 +3377,10 @@ JavascriptType.prototype._findCompletionBeginning = function(text) {
         }
         break;
     }
+  }
+
+  if (state === ParseState.NORMAL && complex) {
+    state = ParseState.COMPLEX;
   }
 
   return {
@@ -4338,7 +4377,6 @@ Requisition.prototype.toCanonicalString = function() {
   }, this);
 
   // Canonically, if we've opened with a { then we should have a } to close
-  var command = this.commandAssignment.getValue();
   if (cmd === '{') {
     if (this.getAssignment(0).getArg().suffix.indexOf('}') === -1) {
       line.push(' }');
@@ -6136,7 +6174,7 @@ Completer.prototype.update = function(input) {
   if (unclosedJs) {
     var close = dom.createElement(document, 'span');
     close.classList.add('gcli-in-closebrace');
-    close.appendChild(document.createTextNode('}'));
+    close.appendChild(document.createTextNode(' }'));
     this.element.appendChild(close);
   }
 };
