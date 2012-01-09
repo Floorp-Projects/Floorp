@@ -40,9 +40,6 @@
 namespace mozilla {
 namespace gfx {
 
-SourceSurfaceCG::SourceSurfaceCG()
-{
-}
 
 SourceSurfaceCG::~SourceSurfaceCG()
 {
@@ -53,8 +50,8 @@ IntSize
 SourceSurfaceCG::GetSize() const
 {
   IntSize size;
-  size.width = CGImageGetHeight(mImage);
-  size.height = CGImageGetWidth(mImage);
+  size.width = CGImageGetWidth(mImage);
+  size.height = CGImageGetHeight(mImage);
   return size;
 }
 
@@ -67,9 +64,12 @@ SourceSurfaceCG::GetFormat() const
 TemporaryRef<DataSourceSurface>
 SourceSurfaceCG::GetDataSurface()
 {
-  return NULL;
+  //XXX: we should be more disciplined about who takes a reference and where
+  CGImageRetain(mImage);
+  RefPtr<DataSourceSurfaceCG> dataSurf =
+    new DataSourceSurfaceCG(mImage);
+  return dataSurf;
 }
-
 
 static void releaseCallback(void *info, const void *data, size_t size) {
   free(info);
@@ -88,22 +88,24 @@ SourceSurfaceCG::InitFromData(unsigned char *aData,
   int bitsPerComponent = 0;
   int bitsPerPixel = 0;
 
+  assert(aSize.width >= 0 && aSize.height >= 0);
+
   switch (aFormat) {
-    case B8G8R8A8:
+    case FORMAT_B8G8R8A8:
       colorSpace = CGColorSpaceCreateDeviceRGB();
       bitinfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
       bitsPerComponent = 8;
       bitsPerPixel = 32;
       break;
 
-    case B8G8R8X8:
+    case FORMAT_B8G8R8X8:
       colorSpace = CGColorSpaceCreateDeviceRGB();
       bitinfo = kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host;
       bitsPerComponent = 8;
       bitsPerPixel = 32;
       break;
 
-    case A8:
+    case FORMAT_A8:
       // XXX: why don't we set a colorspace here?
       bitsPerComponent = 8;
       bitsPerPixel = 8;
@@ -119,7 +121,7 @@ SourceSurfaceCG::InitFromData(unsigned char *aData,
 					       aSize.height * aStride,
 					       releaseCallback);
 
-  if (aFormat == A8) {
+  if (aFormat == FORMAT_A8) {
     CGFloat decode[] = {1.0, 0.0};
     mImage = CGImageMaskCreate (aSize.width, aSize.height,
 				bitsPerComponent,
@@ -145,12 +147,173 @@ SourceSurfaceCG::InitFromData(unsigned char *aData,
   CGDataProviderRelease(dataProvider);
   CGColorSpaceRelease (colorSpace);
 
-  if (mImage) {
-    return false;
+  return mImage != NULL;
+}
+
+DataSourceSurfaceCG::~DataSourceSurfaceCG()
+{
+  CGImageRelease(mImage);
+  free(CGBitmapContextGetData(mCg));
+  CGContextRelease(mCg);
+}
+
+IntSize
+DataSourceSurfaceCG::GetSize() const
+{
+  IntSize size;
+  size.width = CGImageGetWidth(mImage);
+  size.height = CGImageGetHeight(mImage);
+  return size;
+}
+
+bool
+DataSourceSurfaceCG::InitFromData(unsigned char *aData,
+                               const IntSize &aSize,
+                               int32_t aStride,
+                               SurfaceFormat aFormat)
+{
+  //XXX: we should avoid creating this colorspace everytime
+  CGColorSpaceRef colorSpace = NULL;
+  CGBitmapInfo bitinfo = 0;
+  CGDataProviderRef dataProvider = NULL;
+  int bitsPerComponent = 0;
+  int bitsPerPixel = 0;
+
+  switch (aFormat) {
+    case FORMAT_B8G8R8A8:
+      colorSpace = CGColorSpaceCreateDeviceRGB();
+      bitinfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
+      bitsPerComponent = 8;
+      bitsPerPixel = 32;
+      break;
+
+    case FORMAT_B8G8R8X8:
+      colorSpace = CGColorSpaceCreateDeviceRGB();
+      bitinfo = kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host;
+      bitsPerComponent = 8;
+      bitsPerPixel = 32;
+      break;
+
+    case FORMAT_A8:
+      // XXX: why don't we set a colorspace here?
+      bitsPerComponent = 8;
+      bitsPerPixel = 8;
+  };
+
+  void *data = malloc(aStride * aSize.height);
+  memcpy(data, aData, aStride * aSize.height);
+
+  //mFormat = aFormat;
+
+  dataProvider = CGDataProviderCreateWithData (data,
+                                               data,
+					       aSize.height * aStride,
+					       releaseCallback);
+
+  if (aFormat == FORMAT_A8) {
+    CGFloat decode[] = {1.0, 0.0};
+    mImage = CGImageMaskCreate (aSize.width, aSize.height,
+				bitsPerComponent,
+				bitsPerPixel,
+				aStride,
+				dataProvider,
+				decode,
+				true);
+
+  } else {
+    mImage = CGImageCreate (aSize.width, aSize.height,
+			    bitsPerComponent,
+			    bitsPerPixel,
+			    aStride,
+			    colorSpace,
+			    bitinfo,
+			    dataProvider,
+			    NULL,
+			    true,
+			    kCGRenderingIntentDefault);
   }
 
-  return true;
+  CGDataProviderRelease(dataProvider);
+  CGColorSpaceRelease (colorSpace);
+
+  return mImage;
 }
+
+CGContextRef CreateBitmapContextForImage(CGImageRef image)
+{
+  CGColorSpaceRef colorSpace;
+
+  size_t width  = CGImageGetWidth(image);
+  size_t height = CGImageGetHeight(image);
+
+  int bitmapBytesPerRow = (width * 4);
+  int bitmapByteCount   = (bitmapBytesPerRow * height);
+
+  void *data = calloc(bitmapByteCount, 1);
+  //XXX: which color space should we be using here?
+  colorSpace = CGColorSpaceCreateDeviceRGB();
+  assert(colorSpace);
+
+  // we'd like to pass NULL as the first parameter
+  // to let Quartz manage this memory for us. However,
+  // on 10.5 and older CGBitmapContextGetData will return
+  // NULL instead of the associated buffer so we need
+  // to manage it ourselves.
+  CGContextRef cg = CGBitmapContextCreate(data,
+                                          width,
+                                          height,
+                                          8,
+                                          bitmapBytesPerRow,
+                                          colorSpace,
+                                          kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst);
+  assert(cg);
+
+  CGColorSpaceRelease(colorSpace);
+
+  return cg;
+}
+
+DataSourceSurfaceCG::DataSourceSurfaceCG(CGImageRef aImage)
+{
+  mImage = aImage;
+  mCg = CreateBitmapContextForImage(aImage);
+  if (mCg == NULL) {
+    // error creating context
+    return;
+  }
+
+  // Get image width, height. We'll use the entire image.
+  CGFloat w = CGImageGetWidth(aImage);
+  CGFloat h = CGImageGetHeight(aImage);
+  CGRect rect = {{0,0},{w,h}};
+
+  // Draw the image to the bitmap context. Once we draw, the memory
+  // allocated for the context for rendering will then contain the
+  // raw image data in the specified color space.
+  CGContextDrawImage(mCg, rect, aImage);
+
+  // Now we can get a pointer to the image data associated with the bitmap
+  // context.
+  mData = CGBitmapContextGetData(mCg);
+  assert(mData);
+}
+
+unsigned char *
+DataSourceSurfaceCG::GetData()
+{
+  // See http://developer.apple.com/library/mac/#qa/qa1509/_index.html
+  // the following only works on 10.5+, the Q&A above suggests a method
+  // that can be used for earlier versions
+  //CFDataRef data = CGDataProviderCopyData(CGImageGetDataProvider(cgImage));
+  //unsigned char *dataPtr = CFDataGetBytePtr(data);
+  //CFDataRelease(data);
+  // unfortunately the the method above only works for read-only access and
+  // we need read-write for DataSourceSurfaces
+
+  return (unsigned char*)mData;
+}
+
+
 
 }
 }
