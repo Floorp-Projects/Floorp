@@ -408,6 +408,10 @@
         <row>
           <label value="&syncMy.label;" />
           <vbox>
+            <checkbox label="&engine.addons.label;"
+                      accesskey="&engine.addons.accesskey;"
+                      id="engine.addons"
+                      checked="true"/>
             <checkbox label="&engine.bookmarks.label;"
                       accesskey="&engine.bookmarks.accesskey;"
                       id="engine.bookmarks"
@@ -427,10 +431,6 @@
             <checkbox label="&engine.tabs.label;"
                       accesskey="&engine.tabs.accesskey;"
                       id="engine.tabs"
-                      checked="true"/>
-            <checkbox label="&engine.addons.label;"
-                      accesskey="&engine.addons.accesskey;"
-                      id="engine.addons"
                       checked="true"/>
           </vbox>
         </row>
