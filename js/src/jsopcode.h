@@ -632,7 +632,7 @@ class OpcodeCounts
         return counts[which];
     }
 
-    // Boolean conversion, for 'if (counters) ...'
+    /* Boolean conversion, for 'if (counters) ...' */
     operator void*() const {
         return counts;
     }
