@@ -558,6 +558,8 @@ StaticBlockObject::create(JSContext *cx)
 const Shape *
 StaticBlockObject::addVar(JSContext *cx, jsid id, intN index, bool *redeclared)
 {
+    JS_ASSERT(JSID_IS_ATOM(id) || (JSID_IS_INT(id) && JSID_TO_INT(id) == index));
+
     *redeclared = false;
 
     /* Inline JSObject::addProperty in order to trap the redefinition case. */
@@ -669,13 +671,17 @@ js_XDRStaticBlockObject(JSXDRState *xdr, StaticBlockObject **objp)
          * properties to XDR, stored as id/shortid pairs.
          */
         for (uintN i = 0; i < count; i++) {
-            /* XDR the real id. */
             JSAtom *atom;
             if (!js_XDRAtom(xdr, &atom))
                 return false;
 
+            /* The empty string indicates an int id. */
+            jsid id = atom != cx->runtime->emptyString
+                      ? ATOM_TO_JSID(atom)
+                      : INT_TO_JSID(i);
+
             bool redeclared;
-            if (!obj->addVar(cx, ATOM_TO_JSID(atom), i, &redeclared)) {
+            if (!obj->addVar(cx, id, i, &redeclared)) {
                 JS_ASSERT(!redeclared);
                 return false;
             }
@@ -699,10 +705,13 @@ js_XDRStaticBlockObject(JSXDRState *xdr, StaticBlockObject **objp)
             JS_ASSERT(uintN(shape->shortid()) == i);
 
             jsid propid = shape->propid();
-            JS_ASSERT(JSID_IS_ATOM(propid));
-            JSAtom *atom = JSID_TO_ATOM(propid);
+            JS_ASSERT(JSID_IS_ATOM(propid) || JSID_IS_INT(propid));
 
-            /* XDR the real id. */
+            /* The empty string indicates an int id. */
+            JSAtom *atom = JSID_IS_ATOM(propid)
+                           ? JSID_TO_ATOM(propid)
+                           : cx->runtime->emptyString;
+
             if (!js_XDRAtom(xdr, &atom))
                 return false;
         }
