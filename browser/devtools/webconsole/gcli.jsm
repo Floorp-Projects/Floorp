@@ -5329,9 +5329,6 @@ define("text!gcli/commands/help_intro.html", [], "\n" +
   "<h2>${l10n.introHeader}</h2>\n" +
   "\n" +
   "<p>\n" +
-  "  <a target=\"_blank\" href=\"https://developer.mozilla.org/AppLinks/WebConsoleHelp?locale=${lang}\">\n" +
-  "    ${l10n.introBody}\n" +
-  "  </a>\n" +
   "</p>\n" +
   "");
 
