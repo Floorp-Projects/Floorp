@@ -43,11 +43,6 @@
 #include "nsLayoutUtils.h"
 #include "gfxUtils.h"
 
-static double Square(double aX)
-{
-  return aX*aX;
-}
-
 float
 nsSVGFilterInstance::GetPrimitiveNumber(PRUint8 aCtxType, float aValue) const
 {
@@ -69,9 +64,9 @@ nsSVGFilterInstance::GetPrimitiveNumber(PRUint8 aCtxType, float aValue) const
     return value * mFilterSpaceSize.height / mFilterRect.Height();
   case nsSVGUtils::XY:
   default:
-    return value *
-      sqrt(Square(mFilterSpaceSize.width) + Square(mFilterSpaceSize.height)) /
-      sqrt(Square(mFilterRect.Width()) + Square(mFilterRect.Height()));
+    return value * nsSVGUtils::ComputeNormalizedHypotenuse(
+                     mFilterSpaceSize.width / mFilterRect.Width(),
+                     mFilterSpaceSize.height / mFilterRect.Height());
   }
 }
 
