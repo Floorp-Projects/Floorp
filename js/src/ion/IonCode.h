@@ -293,6 +293,9 @@ struct IonScript
     void copyCacheEntries(const IonCache *caches);
     void copySafepoints(const SafepointWriter *writer);
 
+    bool invalidated() const {
+        return refcount_ != 0;
+    }
     void incref() {
         refcount_++;
     }
