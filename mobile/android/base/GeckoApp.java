@@ -102,6 +102,7 @@ abstract public class GeckoApp
     public static final String SAVED_STATE_TITLE    = "title";
     public static final String SAVED_STATE_VIEWPORT = "viewport";
     public static final String SAVED_STATE_SCREEN   = "screen";
+    public static final String SAVED_STATE_SESSION  = "session";
 
     private LinearLayout mMainLayout;
     private RelativeLayout mGeckoLayout;
@@ -141,6 +142,7 @@ abstract public class GeckoApp
     public String mLastViewport;
     public byte[] mLastScreen;
     public int mOwnActivityDepth = 0;
+    private boolean mRestoreSession = false;
 
     private Vector<View> mPluginViews = new Vector<View>();
 
@@ -575,6 +577,7 @@ abstract public class GeckoApp
         outState.putString(SAVED_STATE_TITLE, mLastTitle);
         outState.putString(SAVED_STATE_VIEWPORT, mLastViewport);
         outState.putByteArray(SAVED_STATE_SCREEN, mLastScreen);
+        outState.putBoolean(SAVED_STATE_SESSION, true);
     }
 
     public class SessionSnapshotRunnable implements Runnable {
@@ -1425,6 +1428,7 @@ abstract public class GeckoApp
             mLastTitle = savedInstanceState.getString(SAVED_STATE_TITLE);
             mLastViewport = savedInstanceState.getString(SAVED_STATE_VIEWPORT);
             mLastScreen = savedInstanceState.getByteArray(SAVED_STATE_SCREEN);
+            mRestoreSession = savedInstanceState.getBoolean(SAVED_STATE_SESSION);
         }
 
         Intent intent = getIntent();
@@ -1460,7 +1464,7 @@ abstract public class GeckoApp
 
         prefetchDNS(intent.getData());
 
-        sGeckoThread = new GeckoThread(intent, mLastUri, mLastTitle);
+        sGeckoThread = new GeckoThread(intent, mLastUri, mLastTitle, mRestoreSession);
         if (!ACTION_DEBUG.equals(intent.getAction()) &&
             checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched))
             sGeckoThread.start();
