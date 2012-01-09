@@ -223,7 +223,6 @@ ReflectHistogramSnapshot(JSContext *cx, JSObject *obj, Histogram *h)
   h->SnapshotSample(&ss);
   JSObject *counts_array;
   JSObject *rarray;
-  jsval static_histogram = h->flags() && Histogram::kUmaTargetedHistogramFlag ? JSVAL_TRUE : JSVAL_FALSE;
   const size_t count = h->bucket_count();
   if (!(JS_DefineProperty(cx, obj, "min", INT_TO_JSVAL(h->declared_min()), NULL, NULL, JSPROP_ENUMERATE)
         && JS_DefineProperty(cx, obj, "max", INT_TO_JSVAL(h->declared_max()), NULL, NULL, JSPROP_ENUMERATE)
@@ -330,7 +329,7 @@ mHashMutex("Telemetry::mHashMutex")
   };
 
   mTrackedDBs.Init();
-  for (int i = 0; i < sizeof(trackedDBs)/sizeof(const char*); i++)
+  for (size_t i = 0; i < ArrayLength(trackedDBs); i++)
     mTrackedDBs.PutEntry(nsDependentCString(trackedDBs[i]));
 
 #ifdef DEBUG
