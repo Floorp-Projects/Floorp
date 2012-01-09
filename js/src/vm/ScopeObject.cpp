@@ -616,40 +616,32 @@ FindObjectIndex(JSObjectArray *array, JSObject *obj)
 bool
 js_XDRStaticBlockObject(JSXDRState *xdr, StaticBlockObject **objp)
 {
-    JSContext *cx;
-    uint32_t parentId;
-    StaticBlockObject *obj, *parent;
-    uintN depth, count;
-    uint32_t depthAndCount;
-    const Shape *shape;
+    JSContext *cx = xdr->cx;
 
-    cx = xdr->cx;
-#ifdef __GNUC__
-    obj = NULL;         /* quell GCC overwarning */
-#endif
-
+    StaticBlockObject *obj = NULL;
+    uint32_t parentId = 0;
+    uint32_t count = 0;
+    uint32_t depthAndCount = 0;
     if (xdr->mode == JSXDR_ENCODE) {
         obj = *objp;
-        parent = obj->enclosingBlock();
         parentId = JSScript::isValidOffset(xdr->script->objectsOffset)
-                   ? FindObjectIndex(xdr->script->objects(), parent)
+                   ? FindObjectIndex(xdr->script->objects(), obj->enclosingBlock())
                    : NO_PARENT_INDEX;
-        depth = uint16_t(obj->stackDepth());
-        count = uint16_t(obj->slotCount());
-        depthAndCount = uint32_t(depth << 16) | count;
+        uint32_t depth = obj->stackDepth();
+        JS_ASSERT(depth <= UINT16_MAX);
+        count = obj->slotCount();
+        JS_ASSERT(count <= UINT16_MAX);
+        depthAndCount = (depth << 16) | uint16_t(count);
     }
-#ifdef __GNUC__ /* suppress bogus gcc warnings */
-    else count = 0;
-#endif
 
     /* First, XDR the parent atomid. */
     if (!JS_XDRUint32(xdr, &parentId))
-        return JS_FALSE;
+        return false;
 
     if (xdr->mode == JSXDR_DECODE) {
         obj = StaticBlockObject::create(cx);
         if (!obj)
-            return JS_FALSE;
+            return false;
         *objp = obj;
 
         /*
@@ -657,11 +649,9 @@ js_XDRStaticBlockObject(JSXDRState *xdr, StaticBlockObject **objp)
          * object array. We know that we XDR block object in outer-to-inner
          * order, which means that getting the parent now will work.
          */
-        if (parentId == NO_PARENT_INDEX)
-            parent = NULL;
-        else
-            parent = &xdr->script->getObject(parentId)->asStaticBlock();
-        obj->setEnclosingBlock(parent);
+        obj->setEnclosingBlock(parentId == NO_PARENT_INDEX
+                               ? NULL
+                               : &xdr->script->getObject(parentId)->asStaticBlock());
     }
 
     AutoObjectRooter tvr(cx, obj);
@@ -670,7 +660,7 @@ js_XDRStaticBlockObject(JSXDRState *xdr, StaticBlockObject **objp)
         return false;
 
     if (xdr->mode == JSXDR_DECODE) {
-        depth = uint16_t(depthAndCount >> 16);
+        uint32_t depth = uint16_t(depthAndCount >> 16);
         count = uint16_t(depthAndCount);
         obj->setStackDepth(depth);
 
@@ -679,9 +669,8 @@ js_XDRStaticBlockObject(JSXDRState *xdr, StaticBlockObject **objp)
          * properties to XDR, stored as id/shortid pairs.
          */
         for (uintN i = 0; i < count; i++) {
-            JSAtom *atom;
-
             /* XDR the real id. */
+            JSAtom *atom;
             if (!js_XDRAtom(xdr, &atom))
                 return false;
 
@@ -696,7 +685,7 @@ js_XDRStaticBlockObject(JSXDRState *xdr, StaticBlockObject **objp)
         shapes.growBy(count);
 
         for (Shape::Range r(obj->lastProperty()); !r.empty(); r.popFront()) {
-            shape = &r.front();
+            const Shape *shape = &r.front();
             shapes[shape->shortid()] = shape;
         }
 
@@ -705,17 +694,13 @@ js_XDRStaticBlockObject(JSXDRState *xdr, StaticBlockObject **objp)
          * properties to XDR, stored as id/shortid pairs.
          */
         for (uintN i = 0; i < count; i++) {
-            shape = shapes[i];
+            const Shape *shape = shapes[i];
             JS_ASSERT(shape->getter() == block_getProperty);
+            JS_ASSERT(uintN(shape->shortid()) == i);
 
             jsid propid = shape->propid();
             JS_ASSERT(JSID_IS_ATOM(propid));
             JSAtom *atom = JSID_TO_ATOM(propid);
-
-#ifdef DEBUG
-            uint16_t shortid = uint16_t(shape->shortid());
-            JS_ASSERT(shortid == i);
-#endif
 
             /* XDR the real id. */
             if (!js_XDRAtom(xdr, &atom))
