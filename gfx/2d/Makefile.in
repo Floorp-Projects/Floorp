@@ -69,6 +69,7 @@ CPPSRCS	= \
         Matrix.cpp \
         DrawTargetCairo.cpp \
         SourceSurfaceCairo.cpp \
+        PathCairo.cpp \
         Blur.cpp \
         $(NULL)
 
