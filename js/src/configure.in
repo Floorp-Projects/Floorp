@@ -4214,14 +4214,14 @@ if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
 fi
 
 dnl ========================================================
-dnl = Disable any treating of compile warnings as errors
+dnl = Enable any treating of compile warnings as errors
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(warnings-as-errors,
-[  --disable-warnings-as-errors
-                          Disable treating of warnings as errors],
-    MOZ_DISABLE_WARNINGS_AS_ERRORS=1,
-    MOZ_DISABLE_WARNINGS_AS_ERRORS= )
-if test "$MOZ_DISABLE_WARNINGS_AS_ERRORS"; then
+[  --enable-warnings-as-errors
+                          Enable treating of warnings as errors],
+    MOZ_ENABLE_WARNINGS_AS_ERRORS=1,
+    MOZ_ENABLE_WARNINGS_AS_ERRORS=)
+if test -z "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
    WARNINGS_AS_ERRORS=''
 fi
 
@@ -5347,12 +5347,6 @@ if test "$ENABLE_TESTS"; then
   MAKEFILES="$MAKEFILES
     jsapi-tests/Makefile
     tests/Makefile
-  "
-fi
-
-if test "$DEHYDRA_PATH"; then
-  MAKEFILES="$MAKEFILES
-    analysis-tests/Makefile
   "
 fi
 

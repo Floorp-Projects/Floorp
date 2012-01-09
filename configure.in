@@ -7053,14 +7053,14 @@ if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -n "$MOZ_DEBUG_FLAGS"; then
 fi
 
 dnl ========================================================
-dnl = Disable any treating of compile warnings as errors
+dnl = Enable any treating of compile warnings as errors
 dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(warnings-as-errors,
-[  --disable-warnings-as-errors
-                          Disable treating of warnings as errors],
-    MOZ_DISABLE_WARNINGS_AS_ERRORS=1,
-    MOZ_DISABLE_WARNINGS_AS_ERRORS= )
-if test "$MOZ_DISABLE_WARNINGS_AS_ERRORS"; then
+MOZ_ARG_ENABLE_BOOL(warnings-as-errors,
+[  --enable-warnings-as-errors
+                          Enable treating of warnings as errors],
+    MOZ_ENABLE_WARNINGS_AS_ERRORS=1,
+    MOZ_ENABLE_WARNINGS_AS_ERRORS=)
+if test -z "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
    WARNINGS_AS_ERRORS=''
 fi
 

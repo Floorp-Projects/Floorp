@@ -57,12 +57,12 @@ public final class RectUtils {
     }
 
     public static Rect contract(Rect rect, int lessWidth, int lessHeight) {
-        float halfLessWidth = (float)lessWidth / 2.0f;
-        float halfLessHeight = (float)lessHeight / 2.0f;
-        return new Rect((int)Math.round((float)rect.left + halfLessWidth),
-                        (int)Math.round((float)rect.top + halfLessHeight),
-                        (int)Math.round((float)rect.right - halfLessWidth),
-                        (int)Math.round((float)rect.bottom - halfLessHeight));
+        float halfLessWidth = lessWidth / 2.0f;
+        float halfLessHeight = lessHeight / 2.0f;
+        return new Rect(Math.round(rect.left + halfLessWidth),
+                        Math.round(rect.top + halfLessHeight),
+                        Math.round(rect.right - halfLessWidth),
+                        Math.round(rect.bottom - halfLessHeight));
     }
 
     public static RectF contract(RectF rect, float lessWidth, float lessHeight) {

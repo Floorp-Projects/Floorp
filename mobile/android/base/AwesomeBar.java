@@ -101,10 +101,10 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
 
         Log.d(LOGTAG, "creating awesomebar");
 
-        setContentView(R.layout.awesomebar_search);
+        setContentView(R.layout.awesomebar);
 
         if (Build.VERSION.SDK_INT >= 11) {
-            RelativeLayout actionBarLayout = (RelativeLayout) getLayoutInflater().inflate(R.layout.awesomebar_search_actionbar, null);
+            RelativeLayout actionBarLayout = (RelativeLayout) getLayoutInflater().inflate(R.layout.awesomebar_search, null);
 
             GeckoActionBar.setBackgroundDrawable(this, getResources().getDrawable(R.drawable.gecko_actionbar_bg));
             GeckoActionBar.setDisplayOptions(this, ActionBar.DISPLAY_SHOW_CUSTOM, ActionBar.DISPLAY_SHOW_CUSTOM |
@@ -405,7 +405,7 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
             int groupPosition = exList.getPackedPositionGroup(info.packedPosition);
             selectedItem = exList.getExpandableListAdapter().getChild(groupPosition, childPosition);
 
-            Map<String, Object> map = (Map<String, Object>)selectedItem;
+            Map map = (Map)selectedItem;
             title = (String)map.get(URLColumns.TITLE);
         } else {
             AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
@@ -439,10 +439,10 @@ public class AwesomeBar extends Activity implements GeckoEventListener {
         if (mContextMenuSubject instanceof Cursor) {
             Cursor cursor = (Cursor)mContextMenuSubject;
             url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
-            b = (byte[]) cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
+            b = cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
             title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
         } else if (mContextMenuSubject instanceof Map) {
-            Map<String, Object> map = (Map<String, Object>)mContextMenuSubject;
+            Map map = (Map)mContextMenuSubject;
             url = (String)map.get(URLColumns.URL);
             b = (byte[]) map.get(URLColumns.FAVICON);
             title = (String)map.get(URLColumns.TITLE);

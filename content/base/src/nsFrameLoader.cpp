@@ -1203,13 +1203,19 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     mMessageManager->GetParentManager() : nsnull;
   nsFrameMessageManager* otherParentManager = aOther->mMessageManager ?
     aOther->mMessageManager->GetParentManager() : nsnull;
+  JSContext* thisCx =
+    mMessageManager ? mMessageManager->GetJSContext() : nsnull;
+  JSContext* otherCx = 
+    aOther->mMessageManager ? aOther->mMessageManager->GetJSContext() : nsnull;
   if (mMessageManager) {
-    mMessageManager->Disconnect();
+    mMessageManager->RemoveFromParent();
+    mMessageManager->SetJSContext(otherCx);
     mMessageManager->SetParentManager(otherParentManager);
     mMessageManager->SetCallbackData(aOther, false);
   }
   if (aOther->mMessageManager) {
-    aOther->mMessageManager->Disconnect();
+    aOther->mMessageManager->RemoveFromParent();
+    aOther->mMessageManager->SetJSContext(thisCx);
     aOther->mMessageManager->SetParentManager(ourParentManager);
     aOther->mMessageManager->SetCallbackData(this, false);
   }

@@ -332,12 +332,6 @@ with_SetSpecialAttributes(JSContext *cx, JSObject *obj, SpecialId sid, uintN *at
 }
 
 static JSBool
-with_DeleteGeneric(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
-{
-    return obj->asWith().object().deleteGeneric(cx, id, rval, strict);
-}
-
-static JSBool
 with_DeleteProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *rval, JSBool strict)
 {
     return obj->asWith().object().deleteProperty(cx, name, rval, strict);
@@ -421,7 +415,6 @@ Class js::WithClass = {
         with_SetPropertyAttributes,
         with_SetElementAttributes,
         with_SetSpecialAttributes,
-        with_DeleteGeneric,
         with_DeleteProperty,
         with_DeleteElement,
         with_DeleteSpecial,

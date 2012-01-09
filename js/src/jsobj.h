@@ -327,10 +327,16 @@ extern JSBool
 js_SetElementAttributes(JSContext *cx, JSObject *obj, uint32_t index, uintN *attrsp);
 
 extern JSBool
-js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, js::Value *rval, JSBool strict);
+js_DeleteProperty(JSContext *cx, JSObject *obj, js::PropertyName *name, js::Value *rval, JSBool strict);
 
 extern JSBool
 js_DeleteElement(JSContext *cx, JSObject *obj, uint32_t index, js::Value *rval, JSBool strict);
+
+extern JSBool
+js_DeleteSpecial(JSContext *cx, JSObject *obj, js::SpecialId sid, js::Value *rval, JSBool strict);
+
+extern JSBool
+js_DeleteGeneric(JSContext *cx, JSObject *obj, jsid id, js::Value *rval, JSBool strict);
 
 extern JSType
 js_TypeOf(JSContext *cx, JSObject *obj);
@@ -1336,10 +1342,10 @@ struct JSObject : js::gc::Cell
     inline JSBool setElementAttributes(JSContext *cx, uint32_t index, uintN *attrsp);
     inline JSBool setSpecialAttributes(JSContext *cx, js::SpecialId sid, uintN *attrsp);
 
-    inline JSBool deleteGeneric(JSContext *cx, jsid id, js::Value *rval, JSBool strict);
-    inline JSBool deleteProperty(JSContext *cx, js::PropertyName *name, js::Value *rval, JSBool strict);
-    inline JSBool deleteElement(JSContext *cx, uint32_t index, js::Value *rval, JSBool strict);
-    inline JSBool deleteSpecial(JSContext *cx, js::SpecialId sid, js::Value *rval, JSBool strict);
+    inline bool deleteProperty(JSContext *cx, js::PropertyName *name, js::Value *rval, bool strict);
+    inline bool deleteElement(JSContext *cx, uint32_t index, js::Value *rval, bool strict);
+    inline bool deleteSpecial(JSContext *cx, js::SpecialId sid, js::Value *rval, bool strict);
+    bool deleteByValue(JSContext *cx, const js::Value &property, js::Value *rval, bool strict);
 
     inline bool enumerate(JSContext *cx, JSIterateOp iterop, js::Value *statep, jsid *idp);
     inline bool defaultValue(JSContext *cx, JSType hint, js::Value *vp);
