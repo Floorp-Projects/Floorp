@@ -8117,7 +8117,7 @@ JS_FRIEND_DATA(JSSrcNoteSpec) js_SrcNoteSpec[] = {
     {"switch",          2,      0,      1},
     {"funcdef",         1,      0,      0},
     {"catch",           1,      0,      1},
-    {"extended",       -1,      0,      0},
+    {"unused",         -1,      0,      0},
     {"newline",         0,      0,      0},
     {"setline",         1,      0,      0},
     {"xdelta",          0,      0,      0},
