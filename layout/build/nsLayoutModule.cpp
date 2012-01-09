@@ -129,10 +129,14 @@
 using mozilla::dom::indexedDB::IndexedDatabaseManager;
 
 #ifdef MOZ_B2G_RIL
-#include "RadioManager.h"
-using mozilla::dom::telephony::RadioManager;
-#include "nsITelephone.h"
+#include "SystemWorkerManager.h"
+using mozilla::dom::telephony::SystemWorkerManager;
+#define SYSTEMWORKERMANAGER_CID \
+  {0xd53b6524, 0x6ac3, 0x42b0, {0xae, 0xca, 0x62, 0xb3, 0xc4, 0xe5, 0x2b, 0x04}}
+#define SYSTEMWORKERMANAGER_CONTRACTID \
+  "@mozilla.org/telephony/system-worker-manager;1"
 #endif
+
 #ifdef MOZ_WIDGET_GONK
 #include "AudioManager.h"
 using mozilla::dom::telephony::AudioManager;
@@ -279,29 +283,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsChannelPolicy)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(IndexedDatabaseManager,
                                          IndexedDatabaseManager::FactoryCreate)
 #ifdef MOZ_B2G_RIL
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(RadioManager, RadioManager::FactoryCreate)
-
-// The 'RadioManager' class controls the lifetime of the nsITelephonyWorker
-// object which is also an nsITelephone, so we don't want to register it
-// as a global service on app-startup. Instead, we'll (ab)use createInstance()
-// to always return the one singleton that 'RadioManager' holds on to.
-static nsresult
-RadioInterfaceConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-  if (NULL != aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
-  nsCOMPtr<nsITelephone> inst = RadioManager::GetTelephone();
-  if (NULL == inst) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  *aResult = inst.get();
-  inst.forget();
-
-  return NS_OK;
-}
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(SystemWorkerManager,
+                                         SystemWorkerManager::FactoryCreate)
 #endif
 
 #ifdef MOZ_WIDGET_GONK
@@ -771,8 +754,7 @@ NS_DEFINE_NAMED_CID(NS_DOMJSON_CID);
 NS_DEFINE_NAMED_CID(NS_TEXTEDITOR_CID);
 NS_DEFINE_NAMED_CID(INDEXEDDB_MANAGER_CID);
 #ifdef MOZ_B2G_RIL
-NS_DEFINE_NAMED_CID(TELEPHONYRADIO_CID);
-NS_DEFINE_NAMED_CID(TELEPHONYRADIOINTERFACE_CID);
+NS_DEFINE_NAMED_CID(SYSTEMWORKERMANAGER_CID);
 #endif
 #ifdef MOZ_WIDGET_GONK
 NS_DEFINE_NAMED_CID(NS_AUDIOMANAGER_CID);
@@ -1044,8 +1026,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_TEXTEDITOR_CID, false, NULL, nsPlaintextEditorConstructor },
   { &kINDEXEDDB_MANAGER_CID, false, NULL, IndexedDatabaseManagerConstructor },
 #ifdef MOZ_B2G_RIL
-  { &kTELEPHONYRADIO_CID, true, NULL, RadioManagerConstructor },
-  { &kTELEPHONYRADIOINTERFACE_CID, true, NULL, RadioInterfaceConstructor },
+  { &kSYSTEMWORKERMANAGER_CID, true, NULL, SystemWorkerManagerConstructor },
 #endif
 #ifdef MOZ_WIDGET_GONK
   { &kNS_AUDIOMANAGER_CID, true, NULL, AudioManagerConstructor },
@@ -1182,8 +1163,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/editor/texteditor;1", &kNS_TEXTEDITOR_CID },
   { INDEXEDDB_MANAGER_CONTRACTID, &kINDEXEDDB_MANAGER_CID },
 #ifdef MOZ_B2G_RIL  
-  { TELEPHONYRADIO_CONTRACTID, &kTELEPHONYRADIO_CID },
-  { TELEPHONYRADIOINTERFACE_CONTRACTID, &kTELEPHONYRADIOINTERFACE_CID },
+  { SYSTEMWORKERMANAGER_CONTRACTID, &kSYSTEMWORKERMANAGER_CID },
 #endif
 #ifdef MOZ_WIDGET_GONK
   { NS_AUDIOMANAGER_CONTRACTID, &kNS_AUDIOMANAGER_CID },
@@ -1245,11 +1225,8 @@ static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
   { JAVASCRIPT_GLOBAL_STATIC_NAMESET_CATEGORY, "PrivilegeManager", NS_SECURITYNAMESET_CONTRACTID },
   { "app-startup", "Script Security Manager", "service," NS_SCRIPTSECURITYMANAGER_CONTRACTID },
   CONTENTDLF_CATEGORIES
-
-  // This probably should be "app-startup" but we want our testing extension to
-  // be able to override the contractid so we wait until "profile-after-change"
 #ifdef MOZ_B2G_RIL
-  { "profile-after-change", "Telephony Radio", TELEPHONYRADIO_CONTRACTID },
+  { "profile-after-change", "Telephony System Worker Manager", SYSTEMWORKERMANAGER_CONTRACTID },
 #endif
   { NULL }
 };

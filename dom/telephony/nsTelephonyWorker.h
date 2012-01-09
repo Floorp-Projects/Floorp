@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// This must always match the CID given in nsTelephonyWorker.manifest!
 #define NS_TELEPHONYWORKER_CID \
     { 0x2d831c8d, 0x6017, 0x435b, \
       { 0xa8, 0x0c, 0xe5, 0xd4, 0x22, 0x81, 0x0c, 0xea } }
