@@ -391,5 +391,8 @@ pref("layers.acceleration.force-enabled", true);
 pref("dom.screenEnabledProperty.enabled", true);
 pref("dom.screenBrightnessProperty.enabled", true);
 
+// Temporary permission hack for WebSMS
+pref("dom.sms.enabled", true);
+pref("dom.sms.whitelist", "file://,http://localhost:6666");
 // Ignore X-Frame-Options headers.
 pref("b2g.ignoreXFrameOptions", true);
