@@ -836,7 +836,8 @@ ion::Compile(JSContext *cx, JSScript *script, js::StackFrame *fp, jsbytecode *os
         return Method_CantCompile;
     }
 
-    return Method_Compiled;
+    // Compilation succeeded, but we invalidated right away. 
+    return script->hasIonScript() ? Method_Compiled : Method_Skipped;
 }
 
 // Function pointer to call from EnterIon().
@@ -869,6 +870,10 @@ EnterIon(JSContext *cx, StackFrame *fp, CallTarget target, void *jitcode, bool o
         IonContext ictx(cx, NULL);
         IonActivation activation(cx, fp);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
+
+        // Ensure that the invalidator thunk exists.
+        if (!cx->compartment->ionCompartment()->getOrCreateInvalidationThunk(cx))
+            return false;
 
         // Switch entrypoint.
         if (osr)
@@ -976,7 +981,7 @@ InvalidateActivation(JSContext *cx, HashSet<JSScript *> &invalidHash, uint8 *ion
             continue;
 
         JSScript *script = it.script();
-        if (!invalidHash.has(script))
+        if (!script->hasIonScript() || !script->ion->invalidated())
             continue;
 
         uint8 **returnPtr = it.addressOfReturnToFp();
