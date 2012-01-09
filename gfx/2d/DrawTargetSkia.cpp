@@ -37,7 +37,7 @@
 
 #include "DrawTargetSkia.h"
 #include "SourceSurfaceSkia.h"
-#include "ScaledFontSkia.h"
+#include "ScaledFontBase.h"
 #include "skia/SkDevice.h"
 #include "skia/SkTypeface.h"
 #include "skia/SkGradientShader.h"
@@ -58,6 +58,7 @@ namespace gfx {
 
 SkColor ColorToSkColor(const Color &color, Float aAlpha)
 {
+  //XXX: do a better job converting to int
   return SkColorSetARGB(color.a*aAlpha*255.0, color.r*255.0, color.g*255.0, color.b*255.0);
 }
 
@@ -520,10 +521,10 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
 
   MarkChanged();
 
-  ScaledFontSkia* skiaFont = static_cast<ScaledFontSkia*>(aFont);
+  ScaledFontBase* skiaFont = static_cast<ScaledFontBase*>(aFont);
 
   AutoPaintSetup paint(mCanvas.get(), aOptions, aPattern);
-  paint.mPaint.setTypeface(skiaFont->mTypeface);
+  paint.mPaint.setTypeface(skiaFont->GetSkTypeface());
   paint.mPaint.setTextSize(SkFloatToScalar(skiaFont->mSize));
   paint.mPaint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
   
