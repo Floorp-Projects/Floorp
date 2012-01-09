@@ -37,10 +37,11 @@
 
 #include "mozilla/dom/sms/SmsMessage.h"
 #include "SmsService.h"
-#include "RadioManager.h"
+#include "SystemWorkerManager.h"
 #include "jsapi.h"
+#include "nsIInterfaceRequestorUtils.h"
 
-using mozilla::dom::telephony::RadioManager;
+using mozilla::dom::telephony::SystemWorkerManager;
 
 namespace mozilla {
 namespace dom {
@@ -49,8 +50,14 @@ namespace sms {
 NS_IMPL_ISUPPORTS1(SmsService, nsISmsService)
 
 SmsService::SmsService()
-  : mRIL(RadioManager::GetTelephone())
 {
+  nsIInterfaceRequestor* ireq = SystemWorkerManager::GetInterfaceRequestor();
+  NS_WARN_IF_FALSE(ireq, "The SystemWorkerManager has not been created!");
+
+  if (ireq) {
+    mRIL = do_GetInterface(ireq);
+    NS_WARN_IF_FALSE(mRIL, "This shouldn't fail!");
+  }
 }
 
 NS_IMETHODIMP

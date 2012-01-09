@@ -48,8 +48,8 @@ Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
 const DEBUG = true; // set to false to suppress debug messages
 
-const TELEPHONYWORKER_CONTRACTID = "@mozilla.org/telephony/worker;1";
-const TELEPHONYWORKER_CID        = Components.ID("{2d831c8d-6017-435b-a80c-e5d422810cea}");
+const TELEPHONYWORKER_CID =
+  Components.ID("{2d831c8d-6017-435b-a80c-e5d422810cea}");
 
 const nsIAudioManager = Ci.nsIAudioManager;
 const nsITelephone = Ci.nsITelephone;
@@ -126,12 +126,11 @@ nsTelephonyWorker.prototype = {
 
   classID:   TELEPHONYWORKER_CID,
   classInfo: XPCOMUtils.generateCI({classID: TELEPHONYWORKER_CID,
-                                    contractID: TELEPHONYWORKER_CONTRACTID,
                                     classDescription: "Telephone",
-                                    interfaces: [Ci.nsIRadioWorker,
+                                    interfaces: [Ci.nsIWorkerHolder,
                                                  Ci.nsITelephone]}),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRadioWorker,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWorkerHolder,
                                          Ci.nsITelephone]),
 
   onerror: function onerror(event) {

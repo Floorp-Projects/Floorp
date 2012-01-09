@@ -51,7 +51,7 @@ FORCE_STATIC_LIB = 1
 include $(topsrcdir)/dom/dom-config.mk
 
 CPPSRCS = \
-  RadioManager.cpp \
+  SystemWorkerManager.cpp \
   $(NULL)
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
@@ -60,7 +60,7 @@ endif
 
 XPIDLSRCS = \
   nsIAudioManager.idl \
-  nsIRadioWorker.idl \
+  nsIWorkerHolder.idl \
   $(NULL)
 
 LOCAL_INCLUDES = \
