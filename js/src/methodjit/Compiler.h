@@ -103,7 +103,6 @@ class Compiler : public BaseCompiler
         Call slowPathCall;
         DataLabelPtr shape;
         DataLabelPtr addrLabel;
-        bool usePropertyCache;
 
         void copyTo(ic::GlobalNameIC &to, JSC::LinkBuffer &full, JSC::LinkBuffer &stub) {
             to.fastPathStart = full.locationOf(fastPathStart);
@@ -113,7 +112,6 @@ class Compiler : public BaseCompiler
             JS_ASSERT(to.shapeOffset == offset);
 
             to.slowPathCall = stub.locationOf(slowPathCall);
-            to.usePropertyCache = usePropertyCache;
         }
     };
 
@@ -237,15 +235,14 @@ class Compiler : public BaseCompiler
     };
 
     struct PICGenInfo : public BaseICInfo {
-        PICGenInfo(ic::PICInfo::Kind kind, JSOp op, bool usePropCache)
-          : BaseICInfo(op), kind(kind), usePropCache(usePropCache), typeMonitored(false)
+        PICGenInfo(ic::PICInfo::Kind kind, JSOp op)
+          : BaseICInfo(op), kind(kind), typeMonitored(false)
         { }
         ic::PICInfo::Kind kind;
         Label typeCheck;
         RegisterID shapeReg;
         RegisterID objReg;
         RegisterID typeReg;
-        bool usePropCache;
         Label shapeGuard;
         jsbytecode *pc;
         PropertyName *name;
@@ -261,7 +258,7 @@ class Compiler : public BaseCompiler
         };
 
         ic::GetPropLabels &getPropLabels() {
-            JS_ASSERT(kind == ic::PICInfo::GET || kind == ic::PICInfo::CALL);
+            JS_ASSERT(kind == ic::PICInfo::GET);
             return getPropLabels_;
         }
         ic::SetPropLabels &setPropLabels() {
@@ -273,7 +270,7 @@ class Compiler : public BaseCompiler
             return bindNameLabels_;
         }
         ic::ScopeNameLabels &scopeNameLabels() {
-            JS_ASSERT(kind == ic::PICInfo::NAME || kind == ic::PICInfo::CALLNAME ||
+            JS_ASSERT(kind == ic::PICInfo::NAME ||
                       kind == ic::PICInfo::XNAME);
             return scopeNameLabels_;
         }
@@ -283,7 +280,6 @@ class Compiler : public BaseCompiler
             ic.shapeReg = shapeReg;
             ic.objReg = objReg;
             ic.name = name;
-            ic.usePropCache = usePropCache;
             if (ic.isSet()) {
                 ic.u.vr = vr;
             } else if (ic.isGet()) {
@@ -598,9 +594,9 @@ private:
     bool jumpAndRun(Jump j, jsbytecode *target, Jump *slow = NULL, bool *trampoline = NULL);
     bool startLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget);
     bool finishLoop(jsbytecode *head);
-    void jsop_bindname(PropertyName *name, bool usePropCache);
+    void jsop_bindname(PropertyName *name);
     void jsop_setglobal(uint32_t index);
-    void jsop_getprop_slow(PropertyName *name, bool usePropCache = true);
+    void jsop_getprop_slow(PropertyName *name, bool forPrototype = false);
     void jsop_getarg(uint32_t slot);
     void jsop_setarg(uint32_t slot, bool popped);
     void jsop_this();
@@ -622,25 +618,18 @@ private:
     void fixPrimitiveReturn(Assembler *masm, FrameEntry *fe);
     void jsop_getgname(uint32_t index);
     void jsop_getgname_slow(uint32_t index);
-    void jsop_callgname_epilogue();
-    void jsop_setgname(PropertyName *name, bool usePropertyCache, bool popGuaranteed);
-    void jsop_setgname_slow(PropertyName *name, bool usePropertyCache);
+    void jsop_setgname(PropertyName *name, bool popGuaranteed);
+    void jsop_setgname_slow(PropertyName *name);
     void jsop_bindgname();
     void jsop_setelem_slow();
     void jsop_getelem_slow();
-    void jsop_callelem_slow();
     bool jsop_getprop(PropertyName *name, JSValueType type,
-                      bool typeCheck = true, bool usePropCache = true);
-    bool jsop_setprop(PropertyName *name, bool usePropCache, bool popGuaranteed);
-    void jsop_setprop_slow(PropertyName *name, bool usePropCache = true);
-    bool jsop_callprop_slow(PropertyName *name);
-    bool jsop_callprop(PropertyName *name);
-    bool jsop_callprop_obj(PropertyName *name);
-    bool jsop_callprop_str(PropertyName *name);
-    bool jsop_callprop_generic(PropertyName *name);
-    bool jsop_callprop_dispatch(PropertyName *name);
+                      bool typeCheck = true, bool forPrototype = false);
+    bool jsop_getprop_dispatch(PropertyName *name);
+    bool jsop_setprop(PropertyName *name, bool popGuaranteed);
+    void jsop_setprop_slow(PropertyName *name);
     bool jsop_instanceof();
-    void jsop_name(PropertyName *name, JSValueType type, bool isCall);
+    void jsop_name(PropertyName *name, JSValueType type);
     bool jsop_xname(PropertyName *name);
     void enterBlock(JSObject *obj);
     void leaveBlock();
@@ -698,7 +687,7 @@ private:
     void convertForTypedArray(int atype, ValueRemat *vr, bool *allocated);
 #endif
     bool jsop_setelem(bool popGuaranteed);
-    bool jsop_getelem(bool isCall);
+    bool jsop_getelem();
     void jsop_getelem_dense(bool isPacked);
     void jsop_getelem_args();
 #ifdef JS_METHODJIT_TYPED_ARRAY
