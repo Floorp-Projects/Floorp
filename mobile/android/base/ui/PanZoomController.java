@@ -42,7 +42,6 @@ import org.json.JSONException;
 import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.LayerController;
 import org.mozilla.gecko.gfx.PointUtils;
-import org.mozilla.gecko.gfx.RectUtils;
 import org.mozilla.gecko.gfx.ViewportMetrics;
 import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.GeckoApp;
@@ -242,6 +241,7 @@ public class PanZoomController
     }
 
     /** This function must be called from the UI thread. */
+    @SuppressWarnings("fallthrough")
     public void abortAnimation() {
         // this happens when gecko changes the viewport on us or if the device is rotated.
         // if that's the case, abort any animation in progress and re-zoom so that the page
@@ -301,6 +301,7 @@ public class PanZoomController
         return false;
     }
 
+    @SuppressWarnings("fallthrough")
     private boolean onTouchMove(MotionEvent event) {
         Log.d(LOGTAG, "onTouchMove in state " + mState);
 
@@ -905,11 +906,11 @@ public class PanZoomController
         float minZoomFactor = 0.0f;
         if (viewport.width() > pageSize.width && pageSize.width > 0) {
             float scaleFactor = viewport.width() / pageSize.width;
-            minZoomFactor = (float)Math.max(minZoomFactor, zoomFactor * scaleFactor);
+            minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
         }
         if (viewport.height() > pageSize.height && pageSize.height > 0) {
             float scaleFactor = viewport.height() / pageSize.height;
-            minZoomFactor = (float)Math.max(minZoomFactor, zoomFactor * scaleFactor);
+            minZoomFactor = Math.max(minZoomFactor, zoomFactor * scaleFactor);
         }
 
         if (!FloatUtils.fuzzyEquals(minZoomFactor, 0.0f)) {
@@ -1035,20 +1036,20 @@ public class PanZoomController
 
     @Override
     public void onLongPress(MotionEvent motionEvent) {
-        JSONObject ret = new JSONObject();
+        String json;
         try {
             PointF point = new PointF(motionEvent.getX(), motionEvent.getY());
             point = mController.convertViewPointToLayerPoint(point);
             if (point == null) {
                 return;
             }
-            ret.put("x", (int)Math.round(point.x));
-            ret.put("y", (int)Math.round(point.y));
+            json = PointUtils.toJSON(point).toString();
         } catch(Exception ex) {
             Log.w(LOGTAG, "Error building return: " + ex);
+            return; // json would be null
         }
 
-        GeckoEvent e = new GeckoEvent("Gesture:LongPress", ret.toString());
+        GeckoEvent e = new GeckoEvent("Gesture:LongPress", json);
         GeckoAppShell.sendEventToGecko(e);
     }
 
@@ -1058,36 +1059,34 @@ public class PanZoomController
 
     @Override
     public boolean onDown(MotionEvent motionEvent) {
-        JSONObject ret = new JSONObject();
+        String json;
         try {
             PointF point = new PointF(motionEvent.getX(), motionEvent.getY());
             point = mController.convertViewPointToLayerPoint(point);
-            ret.put("x", (int)Math.round(point.x));
-            ret.put("y", (int)Math.round(point.y));
+            json = PointUtils.toJSON(point).toString();
         } catch(Exception ex) {
             throw new RuntimeException(ex);
         }
 
-        GeckoEvent e = new GeckoEvent("Gesture:ShowPress", ret.toString());
+        GeckoEvent e = new GeckoEvent("Gesture:ShowPress", json);
         GeckoAppShell.sendEventToGecko(e);
         return false;
     }
 
     @Override
     public boolean onSingleTapConfirmed(MotionEvent motionEvent) {
-        JSONObject ret = new JSONObject();
+        String json;
         try {
             PointF point = new PointF(motionEvent.getX(), motionEvent.getY());
             point = mController.convertViewPointToLayerPoint(point);
-            ret.put("x", (int)Math.round(point.x));
-            ret.put("y", (int)Math.round(point.y));
+            json = PointUtils.toJSON(point).toString();
         } catch(Exception ex) {
             throw new RuntimeException(ex);
         }
 
         GeckoApp.mAppContext.mAutoCompletePopup.hide();
 
-        GeckoEvent e = new GeckoEvent("Gesture:SingleTap", ret.toString());
+        GeckoEvent e = new GeckoEvent("Gesture:SingleTap", json);
         GeckoAppShell.sendEventToGecko(e);
         return true;
     }
@@ -1099,17 +1098,16 @@ public class PanZoomController
 
     @Override
     public boolean onDoubleTap(MotionEvent motionEvent) {
-        JSONObject ret = new JSONObject();
+        String json;
         try {
             PointF point = new PointF(motionEvent.getX(), motionEvent.getY());
             point = mController.convertViewPointToLayerPoint(point);
-            ret.put("x", (int)Math.round(point.x));
-            ret.put("y", (int)Math.round(point.y));
+            json = PointUtils.toJSON(point).toString();
         } catch(Exception ex) {
             throw new RuntimeException(ex);
         }
 
-        GeckoEvent e = new GeckoEvent("Gesture:DoubleTap", ret.toString());
+        GeckoEvent e = new GeckoEvent("Gesture:DoubleTap", json);
         GeckoAppShell.sendEventToGecko(e);
         return true;
     }

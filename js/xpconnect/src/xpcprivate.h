@@ -1415,7 +1415,6 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
         nsnull, /* setAttributes  */                                          \
         nsnull, /* setElementAttributes  */                                   \
         nsnull, /* setSpecialAttributes  */                                   \
-        nsnull, /* deleteGeneric */                                           \
         nsnull, /* deleteProperty */                                          \
         nsnull, /* deleteElement */                                           \
         nsnull, /* deleteSpecial */                                           \
@@ -1453,7 +1452,6 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj);
         nsnull, /* setAttributes  */                                          \
         nsnull, /* setElementAttributes  */                                   \
         nsnull, /* setSpecialAttributes  */                                   \
-        nsnull, /* deleteGeneric */                                           \
         nsnull, /* deleteProperty */                                          \
         nsnull, /* deleteElement */                                           \
         nsnull, /* deleteSpecial */                                           \
