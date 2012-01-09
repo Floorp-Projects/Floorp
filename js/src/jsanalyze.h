@@ -1067,9 +1067,12 @@ class ScriptAnalysis
     /* For a JSOP_CALL* op, get the pc of the corresponding JSOP_CALL/NEW/etc. */
     jsbytecode *getCallPC(jsbytecode *pc)
     {
-        JS_ASSERT(js_CodeSpec[*pc].format & JOF_CALLOP);
-        SSAUseChain *uses = useChain(SSAValue::PushedValue(pc - script->code, 1));
-        JS_ASSERT(uses && !uses->next && uses->popped);
+        SSAUseChain *uses = useChain(SSAValue::PushedValue(pc - script->code, 0));
+        JS_ASSERT(uses && uses->popped);
+        JS_ASSERT_IF(uses->next,
+                     !uses->next->next &&
+                     uses->next->popped &&
+                     script->code[uses->next->offset] == JSOP_SWAP);
         return script->code + uses->offset;
     }
 

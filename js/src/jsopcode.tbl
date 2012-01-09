@@ -176,7 +176,7 @@ OPDEF(JSOP_GETPROP,   53, "getprop",    NULL,         3,  1,  1, 18,  JOF_ATOM|J
 OPDEF(JSOP_SETPROP,   54, "setprop",    NULL,         3,  2,  1,  3,  JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING)
 OPDEF(JSOP_GETELEM,   55, "getelem",    NULL,         1,  2,  1, 18,  JOF_BYTE |JOF_ELEM|JOF_TYPESET|JOF_LEFTASSOC)
 OPDEF(JSOP_SETELEM,   56, "setelem",    NULL,         1,  3,  1,  3,  JOF_BYTE |JOF_ELEM|JOF_SET|JOF_DETECTING)
-OPDEF(JSOP_CALLNAME,  57, "callname",   NULL,         3,  0,  2, 19,  JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_CALLOP)
+OPDEF(JSOP_CALLNAME,  57, "callname",   NULL,         3,  0,  1, 19,  JOF_ATOM|JOF_NAME|JOF_TYPESET)
 OPDEF(JSOP_CALL,      58, "call",       NULL,         3, -1,  1, 18,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET)
 OPDEF(JSOP_NAME,      59, "name",       NULL,         3,  0,  1, 19,  JOF_ATOM|JOF_NAME|JOF_TYPESET)
 OPDEF(JSOP_DOUBLE,    60, "double",     NULL,         3,  0,  1, 16,  JOF_ATOM)
@@ -367,11 +367,10 @@ OPDEF(JSOP_FINALLY,     135,"finally",    NULL,       1,  0,  2,  0,  JOF_BYTE)
 /*
  * Get a slot from a flat closure function object that contains a snapshot of
  * the closure-invariant upvar values. The immediate operand indexes the upvar
- * in the function's u.i.script->upvars() array. The CALL variant computes the
- * callee and this-object in preparation for a JSOP_CALL.
+ * in the function's u.i.script->upvars() array.
  */
 OPDEF(JSOP_GETFCSLOT,   136,"getfcslot",  NULL,       3,  0,  1, 19,  JOF_UINT16|JOF_NAME|JOF_TYPESET)
-OPDEF(JSOP_CALLFCSLOT,  137,"callfcslot", NULL,       3,  0,  2, 19,  JOF_UINT16|JOF_NAME|JOF_TYPESET|JOF_CALLOP)
+OPDEF(JSOP_CALLFCSLOT,  137,"callfcslot", NULL,       3,  0,  1, 19,  JOF_UINT16|JOF_NAME|JOF_TYPESET)
 
 /*
  * Define a local function object as a local variable.
@@ -439,7 +438,7 @@ OPDEF(JSOP_XMLCOMMENT,    181,"xmlcomment", NULL,     3,  0,  1, 19,  JOF_ATOM)
 OPDEF(JSOP_XMLPI,         182,"xmlpi",      NULL,     3,  1,  1, 19,  JOF_ATOM)
 OPDEF(JSOP_DELDESC,       183,"deldesc",    NULL,     1,  2,  1, 15,  JOF_BYTE|JOF_ELEM|JOF_DEL)
 
-OPDEF(JSOP_CALLPROP,      184,"callprop",   NULL,     3,  1,  2, 18,  JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_CALLOP|JOF_TMPSLOT3)
+OPDEF(JSOP_CALLPROP,      184,"callprop",   NULL,     3,  1,  1, 18,  JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_TMPSLOT3)
 
 /* Enter a let block/expr whose slots are at the top of the stack. */
 OPDEF(JSOP_ENTERLET0,     185,"enterlet0",  NULL,     3, -1, -1,  0,  JOF_OBJECT)
@@ -468,7 +467,7 @@ OPDEF(JSOP_RESETBASE0,    190,"resetbase0", NULL,     1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_STARTXML,      191,"startxml",    NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_STARTXMLEXPR,  192,"startxmlexpr",NULL,    1,  0,  0,  0,  JOF_BYTE)
 
-OPDEF(JSOP_CALLELEM,      193, "callelem",   NULL,    1,  2,  2, 18,  JOF_BYTE |JOF_ELEM|JOF_TYPESET|JOF_LEFTASSOC|JOF_CALLOP)
+OPDEF(JSOP_CALLELEM,      193, "callelem",   NULL,    1,  2,  1, 18,  JOF_BYTE |JOF_ELEM|JOF_TYPESET|JOF_LEFTASSOC)
 
 /*
  * Stop interpretation, emitted at end of script to save the threaded bytecode
@@ -482,7 +481,7 @@ OPDEF(JSOP_STOP,          194,"stop",        NULL,    1,  0,  0,  0,  JOF_BYTE)
  */
 OPDEF(JSOP_GETXPROP,      195,"getxprop",    NULL,    3,  1,  1, 18,  JOF_ATOM|JOF_PROP|JOF_TYPESET)
 
-OPDEF(JSOP_CALLXMLNAME,   196, "callxmlname",  NULL,  1,  1,  2, 19,  JOF_BYTE|JOF_CALLOP)
+OPDEF(JSOP_CALLXMLNAME,   196, "callxmlname",  NULL,  1,  1,  2, 19,  JOF_BYTE)
 
 /*
  * Specialized JSOP_TYPEOF to avoid reporting undefined for typeof(0, undef).
@@ -530,9 +529,9 @@ OPDEF(JSOP_INDEXBASE1,    208,"indexbase1",    NULL,  1,  0,  0,  0,  JOF_BYTE |
 OPDEF(JSOP_INDEXBASE2,    209,"indexbase2",    NULL,  1,  0,  0,  0,  JOF_BYTE |JOF_INDEXBASE)
 OPDEF(JSOP_INDEXBASE3,    210,"indexbase3",    NULL,  1,  0,  0,  0,  JOF_BYTE |JOF_INDEXBASE)
 
-OPDEF(JSOP_CALLGNAME,     211, "callgname",    NULL,  3,  0,  2, 19,  JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_CALLOP|JOF_GNAME)
-OPDEF(JSOP_CALLLOCAL,     212, "calllocal",    NULL,  3,  0,  2, 19,  JOF_LOCAL|JOF_NAME|JOF_CALLOP)
-OPDEF(JSOP_CALLARG,       213, "callarg",      NULL,  3,  0,  2, 19,  JOF_QARG |JOF_NAME|JOF_CALLOP)
+OPDEF(JSOP_CALLGNAME,     211, "callgname",    NULL,  3,  0,  1, 19,  JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_GNAME)
+OPDEF(JSOP_CALLLOCAL,     212, "calllocal",    NULL,  3,  0,  1, 19,  JOF_LOCAL|JOF_NAME)
+OPDEF(JSOP_CALLARG,       213, "callarg",      NULL,  3,  0,  1, 19,  JOF_QARG |JOF_NAME)
 OPDEF(JSOP_BINDGNAME,     214, "bindgname",    NULL,  3,  0,  1,  0,  JOF_ATOM|JOF_NAME|JOF_SET|JOF_GNAME)
 
 /*
@@ -570,3 +569,6 @@ OPDEF(JSOP_SHARPINIT,     224,"sharpinit",     NULL,  3,  0,  0,  0,  JOF_UINT16
 
 /* Pop the stack, convert to a jsid (int or string), and push back. */
 OPDEF(JSOP_TOID,          225, "toid",         NULL,  1,  1,  1,  0,  JOF_BYTE)
+
+/* Push the implicit 'this' value for calls to the associated name. */
+OPDEF(JSOP_IMPLICITTHIS,  226, "implicitthis", "",    3,  0,  1,  0,  JOF_ATOM)
