@@ -922,9 +922,7 @@ EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *body);
  * B have disjoint sets of source notes that could apply to each bytecode may
  * reuse the same note type value for two notes (snA, snB) that have the same
  * arity, offsetBias, and isSpanDep initializers in JSSrcNoteSpec. This is
- * why SRC_IF and SRC_INITPROP have the same value below. For bad historical
- * reasons, some bytecodes below that could be overlayed have not been, but
- * before using SRC_EXTENDED, consider compressing the existing note types.
+ * why SRC_IF and SRC_INITPROP have the same value below.
  *
  * Don't forget to update JSXDR_BYTECODE_VERSION in jsxdrapi.h for all such
  * incompatible source note or other bytecode changes.
@@ -976,7 +974,7 @@ enum SrcNoteType {
     SRC_SWITCHBREAK = 18,       /* JSOP_GOTO is a break in a switch */
     SRC_FUNCDEF     = 19,       /* JSOP_NOP for function f() with atomid */
     SRC_CATCH       = 20,       /* catch block has guard */
-    SRC_EXTENDED    = 21,       /* extended source note, 32-159, in next byte */
+                                /* 21 is unused */
     SRC_NEWLINE     = 22,       /* bytecode follows a source newline */
     SRC_SETLINE     = 23,       /* a file-absolute source line number note */
     SRC_XDELTA      = 24        /* 24-31 are for extended delta notes */
