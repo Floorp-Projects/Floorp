@@ -105,7 +105,6 @@ StatisticsRecorder gStatisticsRecorder;
 
 // Hardcoded probes
 struct TelemetryHistogram {
-  Histogram *histogram;
   const char *id;
   PRUint32 min;
   PRUint32 max;
@@ -127,7 +126,7 @@ struct TelemetryHistogram {
 
 const TelemetryHistogram gHistograms[] = {
 #define HISTOGRAM(id, min, max, bucket_count, histogram_type, comment) \
-  { NULL, NS_STRINGIFY(id), min, max, bucket_count, \
+  { NS_STRINGIFY(id), min, max, bucket_count, \
     nsITelemetry::HISTOGRAM_ ## histogram_type, comment },
 
 #include "TelemetryHistograms.h"
