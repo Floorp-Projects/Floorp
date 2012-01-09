@@ -4665,7 +4665,6 @@ PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
         }
         shape = obj->nativeLookup(cx, id);
         if (shape) {
-            PCMETER(JS_PROPERTY_CACHE(cx).pcpurges++);
             if (!obj->shadowingShapeChange(cx, *shape))
                 return false;
 
@@ -5106,13 +5105,12 @@ js::LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     return LookupPropertyWithFlagsInline(cx, obj, id, flags, objp, propp);
 }
 
-PropertyCacheEntry *
+bool
 js::FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool global,
                        JSObject **objp, JSObject **pobjp, JSProperty **propp)
 {
     jsid id = ATOM_TO_JSID(name);
     JSObject *scopeChain, *obj, *parent, *pobj;
-    PropertyCacheEntry *entry;
     int scopeIndex;
     JSProperty *prop;
 
@@ -5132,7 +5130,6 @@ js::FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool
     }
 
     /* Scan entries on the scope chain that we can cache across. */
-    entry = JS_NO_PROP_CACHE_FILL;
     obj = scopeChain;
     parent = obj->enclosingScope();
     for (scopeIndex = 0;
@@ -5141,7 +5138,7 @@ js::FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool
          : !obj->getOps()->lookupProperty;
          ++scopeIndex) {
         if (!LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags, &pobj, &prop))
-            return NULL;
+            return false;
 
         if (prop) {
 #ifdef DEBUG
@@ -5164,14 +5161,16 @@ js::FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool
                 JS_ASSERT(obj->isNative());
             }
 #endif
+
             /*
              * We must check if pobj is native as a global object can have
              * non-native prototype.
              */
             if (cacheResult && pobj->isNative()) {
-                entry = JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, pobj,
-                                                   (Shape *) prop);
+                JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, pobj,
+                                           (Shape *) prop);
             }
+
             goto out;
         }
 
@@ -5185,11 +5184,9 @@ js::FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool
 
     for (;;) {
         if (!obj->lookupGeneric(cx, id, &pobj, &prop))
-            return NULL;
-        if (prop) {
-            PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
+            return false;
+        if (prop)
             goto out;
-        }
 
         /*
          * We conservatively assume that a resolve hook could mutate the scope
@@ -5208,7 +5205,7 @@ js::FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool
     *objp = obj;
     *pobjp = pobj;
     *propp = prop;
-    return entry;
+    return true;
 }
 
 /*
@@ -5255,9 +5252,7 @@ js::FindIdentifierBase(JSContext *cx, JSObject *scopeChain, PropertyName *name)
                 return obj;
             }
             JS_ASSERT_IF(obj->isScope(), pobj->getClass() == obj->getClass());
-            DebugOnly<PropertyCacheEntry*> entry =
-                JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, pobj, (Shape *) prop);
-            JS_ASSERT(entry);
+            JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, pobj, (Shape *) prop);
             return obj;
         }
 
@@ -5406,8 +5401,6 @@ js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsi
         if (!CallJSPropertyOp(cx, obj->getClass()->getProperty, obj, id, vp))
             return JS_FALSE;
 
-        PCMETER(getHow & JSGET_CACHE_RESULT && JS_PROPERTY_CACHE(cx).nofills++);
-
         /* Record non-undefined values produced by the class getter hook. */
         if (!vp->isUndefined())
             AddTypePropertyId(cx, obj, id, *vp);
@@ -5534,7 +5527,6 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, Value *vp)
 #endif
         return GetPropertyHelper(cx, obj, id, getHow, vp);
     }
-    JS_ASSERT_IF(getHow & JSGET_CACHE_RESULT, obj->isDenseArray());
 #if JS_HAS_XML_SUPPORT
     if (obj->isXML())
         return js_GetXMLMethod(cx, obj, id, vp);
@@ -5697,8 +5689,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
             JS_ASSERT(shape->isDataDescriptor());
 
             if (!shape->writable()) {
-                PCMETER((defineHow & JSDNP_CACHE_RESULT) && JS_PROPERTY_CACHE(cx).rofills++);
-
                 /* Error in strict mode code, warn with strict option, otherwise do nothing. */
                 if (strict)
                     return obj->reportReadOnly(cx, id);
