@@ -1799,7 +1799,7 @@ if test "$GNU_CC"; then
         # Don't allow undefined symbols in libraries
         DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs"
     fi
-    WARNINGS_AS_ERRORS='-Werror'
+    WARNINGS_AS_ERRORS='-Werror -Wno-error=uninitialized'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
     ASFLAGS="$ASFLAGS -fPIC"
