@@ -5374,7 +5374,7 @@ function Console(options) {
   this.focusManager.addMonitoredElement(this.gcliTerm.hintNode, 'gcliTerm');
 
   this.inputter = new Inputter({
-    document: options.contentDocument,
+    document: options.chromeDocument,
     requisition: options.requisition,
     inputElement: options.inputElement,
     completeElement: options.completeElement,
@@ -5384,14 +5384,14 @@ function Console(options) {
   });
 
   this.menu = new CommandMenu({
-    document: options.contentDocument,
+    document: options.chromeDocument,
     requisition: options.requisition,
     menuClass: 'gcliterm-menu'
   });
   this.hintElement.appendChild(this.menu.element);
 
   this.argFetcher = new ArgFetcher({
-    document: options.contentDocument,
+    document: options.chromeDocument,
     requisition: options.requisition,
     argFetcherClass: 'gcliterm-argfetcher'
   });
@@ -5467,6 +5467,57 @@ Console.prototype.resizer = function() {
 
       this.hintElement.style.overflowY = null;
       this.hintElement.style.borderBottomColor = 'white';
+    }
+  }
+
+  // We also try to make the max-width of any GCLI elements so they don't
+  // extend outside the scroll area.
+  var doc = this.hintElement.ownerDocument;
+
+  var outputNode = this.hintElement.parentNode.parentNode.children[1];
+  var outputs = outputNode.getElementsByClassName('gcliterm-msg-body');
+  var listItems = outputNode.getElementsByClassName('hud-msg-node');
+
+  // This is an top-side estimate. We could try to calculate it, maybe using
+  // something along these lines http://www.alexandre-gomes.com/?p=115 However
+  // experience has shown this to be hard to get to work reliably
+  // Also we don't need to be precise. If we use a number that is too big then
+  // the only down-side is too great a right margin
+  var scrollbarWidth = 20;
+
+  if (listItems.length > 0) {
+    var parentWidth = outputNode.getBoundingClientRect().width - scrollbarWidth;
+    var otherWidth;
+    var body;
+
+    for (var i = 0; i < listItems.length; ++i) {
+      var listItem = listItems[i];
+      // a.k.a 'var otherWidth = 132'
+      otherWidth = 0;
+      body = null;
+
+      for (var j = 0; j < listItem.children.length; j++) {
+        var child = listItem.children[j];
+
+        if (child.classList.contains('gcliterm-msg-body')) {
+          body = child.children[0];
+        }
+        else {
+          otherWidth += child.getBoundingClientRect().width;
+        }
+
+        var styles = doc.defaultView.getComputedStyle(child, null);
+        otherWidth += parseInt(styles.borderLeftWidth, 10) +
+                      parseInt(styles.borderRightWidth, 10) +
+                      parseInt(styles.paddingLeft, 10) +
+                      parseInt(styles.paddingRight, 10) +
+                      parseInt(styles.marginLeft, 10) +
+                      parseInt(styles.marginRight, 10);
+      }
+
+      if (body) {
+        body.style.width = (parentWidth - otherWidth) + 'px';
+      }
     }
   }
 };
@@ -6039,7 +6090,7 @@ Completer.prototype.update = function(input) {
   // <span class="gcli-in-closebrace" if="${unclosedJs}">}<span>
 
   var document = this.element.ownerDocument;
-  var prompt = document.createElement('span');
+  var prompt = dom.createElement(document, 'span');
   prompt.classList.add('gcli-prompt');
   prompt.appendChild(document.createTextNode(this.completionPrompt + ' '));
   this.element.appendChild(prompt);
@@ -6071,7 +6122,7 @@ Completer.prototype.update = function(input) {
       this.element.appendChild(document.createTextNode(prefix));
     }
 
-    var suffix = document.createElement('span');
+    var suffix = dom.createElement(document, 'span');
     suffix.classList.add('gcli-in-ontab');
     suffix.appendChild(document.createTextNode(contents));
     this.element.appendChild(suffix);
@@ -6083,7 +6134,7 @@ Completer.prototype.update = function(input) {
   var unclosedJs = command && command.name === '{' &&
           this.requisition.getAssignment(0).getArg().suffix.indexOf('}') === -1;
   if (unclosedJs) {
-    var close = document.createElement('span');
+    var close = dom.createElement(document, 'span');
     close.classList.add('gcli-in-closebrace');
     close.appendChild(document.createTextNode('}'));
     this.element.appendChild(close);
@@ -6111,7 +6162,7 @@ Completer.prototype.appendMarkupStatus = function(element, scores, input) {
         console.error('No state at i=' + i + '. scores.len=' + scores.length);
         state = Status.VALID;
       }
-      span = document.createElement('span');
+      span = dom.createElement(document, 'span');
       span.classList.add('gcli-in-' + state.toString().toLowerCase());
       lastStatus = scores[i];
     }
