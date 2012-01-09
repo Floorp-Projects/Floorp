@@ -54,10 +54,12 @@ public class GeckoThread extends Thread {
 
     Intent mIntent;
     String mUri;
+    boolean mRestoreSession;
 
-    GeckoThread (Intent intent, String uri) {
+    GeckoThread (Intent intent, String uri, boolean restoreSession) {
         mIntent = intent;
         mUri = uri;
+        mRestoreSession = restoreSession;
     }
 
     public void run() {
@@ -98,7 +100,8 @@ public class GeckoThread extends Thread {
 
             GeckoAppShell.runGecko(app.getApplication().getPackageResourcePath(),
                                    mIntent.getStringExtra("args"),
-                                   mUri);
+                                   mUri,
+                                   mRestoreSession);
         } catch (Exception e) {
             Log.e(LOGTAG, "top level exception", e);
             StringWriter sw = new StringWriter();
