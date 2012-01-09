@@ -84,7 +84,8 @@ enum FontType
 
 enum NativeSurfaceType
 {
-  NATIVE_SURFACE_D3D10_TEXTURE
+  NATIVE_SURFACE_D3D10_TEXTURE,
+  NATIVE_SURFACE_CAIRO_SURFACE
 };
 
 enum NativeFontType
