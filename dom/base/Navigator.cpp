@@ -75,6 +75,10 @@
 #include "nsIWebNavigation.h"
 #include "mozilla/ClearOnShutdown.h"
 
+#ifdef MOZ_B2G_RIL
+#include "TelephonyFactory.h"
+#endif
+
 // This should not be in the namespace.
 DOMCI_DATA(Navigator, mozilla::dom::Navigator)
 
@@ -123,6 +127,9 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorBattery)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDesktopNotification)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorSms)
+#ifdef MOZ_B2G_RIL
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorTelephony)
+#endif
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Navigator)
 NS_INTERFACE_MAP_END
 
@@ -159,6 +166,12 @@ Navigator::Invalidate()
     mSmsManager->Shutdown();
     mSmsManager = nsnull;
   }
+
+#ifdef MOZ_B2G_RIL
+  if (mTelephony) {
+    mTelephony = nsnull;
+  }
+#endif
 }
 
 nsPIDOMWindow *
@@ -1017,6 +1030,34 @@ Navigator::GetMozSms(nsIDOMMozSmsManager** aSmsManager)
 
   return NS_OK;
 }
+
+#ifdef MOZ_B2G_RIL
+
+//*****************************************************************************
+//    nsNavigator::nsIDOMNavigatorTelephony
+//*****************************************************************************
+
+NS_IMETHODIMP
+Navigator::GetMozTelephony(nsIDOMTelephony** aTelephony)
+{
+  nsCOMPtr<nsIDOMTelephony> telephony = mTelephony;
+
+  if (!telephony) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+    NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+
+    nsresult rv = NS_NewTelephony(window, getter_AddRefs(mTelephony));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // mTelephony may be null here!
+    telephony = mTelephony;
+  }
+
+  telephony.forget(aTelephony);
+  return NS_OK;
+}
+
+#endif // MOZ_B2G_RIL
 
 PRInt64
 Navigator::SizeOf() const
