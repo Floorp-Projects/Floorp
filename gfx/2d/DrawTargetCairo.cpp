@@ -126,10 +126,37 @@ GetCairoSurfaceSize(cairo_surface_t* surface, IntSize& size)
   }
 }
 
+static bool
+PatternIsCompatible(const Pattern& aPattern)
+{
+  switch (aPattern.GetType())
+  {
+    case PATTERN_LINEAR_GRADIENT:
+    {
+      const LinearGradientPattern& pattern = static_cast<const LinearGradientPattern&>(aPattern);
+      return pattern.mStops->GetBackendType() == BACKEND_CAIRO;
+    }
+    case PATTERN_RADIAL_GRADIENT:
+    {
+      const RadialGradientPattern& pattern = static_cast<const RadialGradientPattern&>(aPattern);
+      return pattern.mStops->GetBackendType() == BACKEND_CAIRO;
+    }
+  }
+
+  return true;
+}
+
+// Never returns NULL. As such, you must always pass in Cairo-compatible
+// patterns, most notably gradients with a GradientStopCairo.
+// The pattern returned must have cairo_pattern_destroy() called on it by the
+// caller.
+// As the cairo_pattern_t returned may depend on the Pattern passed in, the
+// lifetime of the cairo_pattern_t returned must not exceed the lifetime of the
+// Pattern passed in.
 static cairo_pattern_t*
 GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
 {
-  cairo_pattern_t* pat = NULL;
+  cairo_pattern_t* pat;
 
   switch (aPattern.GetType())
   {
@@ -143,24 +170,27 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
     case PATTERN_SURFACE:
     {
       const SurfacePattern& pattern = static_cast<const SurfacePattern&>(aPattern);
-      cairo_surface_t* surf = NULL;
+      cairo_surface_t* surf;
 
+      // After this block, |surf| always has an extra cairo reference to be
+      // destroyed. This makes creating new surfaces or reusing old ones more
+      // uniform.
       if (pattern.mSurface->GetType() == SURFACE_CAIRO) {
-        const SourceSurfaceCairo* sourcesurf = static_cast<const SourceSurfaceCairo*>(pattern.mSurface.get());
-        surf = sourcesurf->GetSurface();
+        const SourceSurfaceCairo* source = static_cast<const SourceSurfaceCairo*>(pattern.mSurface.get());
+        surf = source->GetSurface();
         cairo_surface_reference(surf);
       } else if (pattern.mSurface->GetType() == SURFACE_CAIRO_IMAGE) {
-        const DataSourceSurfaceCairo* sourcesurf =
+        const DataSourceSurfaceCairo* source =
           static_cast<const DataSourceSurfaceCairo*>(pattern.mSurface.get());
-        surf = sourcesurf->GetSurface();
+        surf = source->GetSurface();
         cairo_surface_reference(surf);
       } else {
-        RefPtr<DataSourceSurface> sourcesurf = pattern.mSurface->GetDataSurface();
-        surf = cairo_image_surface_create_for_data(sourcesurf->GetData(),
-                                                   GfxFormatToCairoFormat(sourcesurf->GetFormat()),
-                                                   sourcesurf->GetSize().width,
-                                                   sourcesurf->GetSize().height,
-                                                   sourcesurf->Stride());
+        RefPtr<DataSourceSurface> source = pattern.mSurface->GetDataSurface();
+        surf = cairo_image_surface_create_for_data(source->GetData(),
+                                                   GfxFormatToCairoFormat(source->GetFormat()),
+                                                   source->GetSize().width,
+                                                   source->GetSize().height,
+                                                   source->Stride());
       }
 
       pat = cairo_pattern_create_for_surface(surf);
@@ -174,20 +204,18 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
     case PATTERN_LINEAR_GRADIENT:
     {
       const LinearGradientPattern& pattern = static_cast<const LinearGradientPattern&>(aPattern);
-      RefPtr<GradientStops> stops = pattern.mStops;
-      if (stops->GetBackendType() == BACKEND_CAIRO) {
-        pat = cairo_pattern_create_linear(pattern.mBegin.x, pattern.mBegin.y,
-                                          pattern.mEnd.x, pattern.mEnd.y);
 
-        const std::vector<GradientStop>& stops =
-          static_cast<GradientStopsCairo*>(pattern.mStops.get())->GetStops();
-        for (std::vector<GradientStop>::const_iterator i = stops.begin();
-             i != stops.end();
-             ++i) {
-          cairo_pattern_add_color_stop_rgba(pat, i->offset, i->color.r,
-                                            i->color.g, i->color.b,
-                                            i->color.a);
-        }
+      pat = cairo_pattern_create_linear(pattern.mBegin.x, pattern.mBegin.y,
+                                        pattern.mEnd.x, pattern.mEnd.y);
+
+      MOZ_ASSERT(pattern.mStops->GetBackendType() == BACKEND_CAIRO);
+      const std::vector<GradientStop>& stops =
+        static_cast<GradientStopsCairo*>(pattern.mStops.get())->GetStops();
+      for (size_t i = 0; i < stops.size(); ++i) {
+        const GradientStop& stop = stops[i];
+        cairo_pattern_add_color_stop_rgba(pat, stop.offset, stop.color.r,
+                                          stop.color.g, stop.color.b,
+                                          stop.color.a);
       }
 
       break;
@@ -195,23 +223,25 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
     case PATTERN_RADIAL_GRADIENT:
     {
       const RadialGradientPattern& pattern = static_cast<const RadialGradientPattern&>(aPattern);
-      RefPtr<GradientStops> stops = pattern.mStops;
-      if (stops->GetBackendType() == BACKEND_CAIRO) {
-        pat = cairo_pattern_create_radial(pattern.mCenter1.x, pattern.mCenter1.y, pattern.mRadius1,
-                                          pattern.mCenter2.x, pattern.mCenter2.y, pattern.mRadius2);
 
-        const std::vector<GradientStop>& stops =
-          static_cast<GradientStopsCairo*>(pattern.mStops.get())->GetStops();
-        for (std::vector<GradientStop>::const_iterator i = stops.begin();
-             i != stops.end();
-             ++i) {
-          cairo_pattern_add_color_stop_rgba(pat, i->offset, i->color.r,
-                                            i->color.g, i->color.b,
-                                            i->color.a);
-        }
+      pat = cairo_pattern_create_radial(pattern.mCenter1.x, pattern.mCenter1.y, pattern.mRadius1,
+                                        pattern.mCenter2.x, pattern.mCenter2.y, pattern.mRadius2);
+
+      const std::vector<GradientStop>& stops =
+        static_cast<GradientStopsCairo*>(pattern.mStops.get())->GetStops();
+      for (size_t i = 0; i < stops.size(); ++i) {
+        const GradientStop& stop = stops[i];
+        cairo_pattern_add_color_stop_rgba(pat, stop.offset, stop.color.r,
+                                          stop.color.g, stop.color.b,
+                                          stop.color.a);
       }
 
       break;
+    }
+    default:
+    {
+      // We should support all pattern types!
+      MOZ_ASSERT(false);
     }
   }
 
@@ -339,10 +369,10 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
     return;
   }
 
-  SourceSurfaceCairo* sourcesurf = static_cast<SourceSurfaceCairo*>(aSurface);
+  SourceSurfaceCairo* source = static_cast<SourceSurfaceCairo*>(aSurface);
 
-  Float width = aSurface->GetSize().width,
-        height = aSurface->GetSize().height;
+  Float width = aSurface->GetSize().width;
+  Float height = aSurface->GetSize().height;
   Rect extents(0, 0, width, height);
 
   AlphaBoxBlur blur(extents, IntSize(0, 0),
@@ -361,7 +391,7 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                                                   blur.GetStride());
 
   // Draw the source surface into the surface we're going to blur.
-  cairo_surface_t* surf = sourcesurf->GetSurface();
+  cairo_surface_t* surf = source->GetSurface();
   cairo_pattern_t* pat = cairo_pattern_create_for_surface(surf);
 
   cairo_t* ctx = cairo_create(blursurf);
@@ -413,6 +443,10 @@ DrawTargetCairo::DrawPattern(const Pattern& aPattern,
                              const DrawOptions& aOptions,
                              DrawPatternType aDrawType)
 {
+  if (!PatternIsCompatible(aPattern)) {
+    return;
+  }
+
   cairo_pattern_t* pat = GfxPatternToCairoPattern(aPattern, aOptions.mAlpha);
   cairo_set_source(mContext, pat);
 
@@ -631,9 +665,9 @@ DrawTargetCairo::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurf
     IntSize size;
     cairo_surface_t* surf = static_cast<cairo_surface_t*>(aSurface.mSurface);
     if (GetCairoSurfaceSize(surf, size)) {
-      RefPtr<SourceSurfaceCairo> sourcesurf =
+      RefPtr<SourceSurfaceCairo> source =
         new SourceSurfaceCairo(surf, size, aSurface.mFormat);
-      return sourcesurf;
+      return source;
     }
   }
 
