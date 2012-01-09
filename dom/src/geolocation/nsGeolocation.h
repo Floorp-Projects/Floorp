@@ -134,7 +134,7 @@ public:
   NS_DECL_NSIGEOLOCATIONUPDATE
   NS_DECL_NSIOBSERVER
 
-  nsGeolocationService() {mTimeout = 6000;};
+  nsGeolocationService() {}
 
   nsresult Init();
 
@@ -162,9 +162,6 @@ private:
   // and closes down the provider, unless we are watching a point, and in that
   // case, we disable the disconnect timer.
   nsCOMPtr<nsITimer> mDisconnectTimer;
-
-  // Time, in milliseconds, to wait for the location provider to spin up.
-  PRInt32 mTimeout;
 
   // The object providing geo location information to us.
   nsCOMArray<nsIGeolocationProvider> mProviders;
