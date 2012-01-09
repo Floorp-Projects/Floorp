@@ -48,7 +48,6 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsHTMLDocument.h"
-#include "nsIParserFilter.h"
 #include "nsIHTMLContentSink.h"
 #include "nsIXMLContentSink.h"
 #include "nsHTMLParts.h"
