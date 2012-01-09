@@ -17,11 +17,37 @@ function repeatToLargerThan1K(data) {
     return data;
 }
 
+function SyncWithCacheThread(aFunc) {
+  do_check_eq(sync_with_cache_IO_thread_cb.listener, null);
+  sync_with_cache_IO_thread_cb.listener = aFunc;
+
+  var cache = Cc["@mozilla.org/network/cache-service;1"].
+                 getService(Ci.nsICacheService);
+  var session = cache.createSession(
+                  "HTTP",
+                  Ci.nsICache.STORE_ANYWHERE,
+                  Ci.nsICache.STREAM_BASED);
+
+  var cacheEntry = session.asyncOpenCacheEntry(
+                     "nonexistententry",
+                     Ci.nsICache.ACCESS_READ,
+                     sync_with_cache_IO_thread_cb);
+}
+var sync_with_cache_IO_thread_cb = {
+  listener: null,
+
+  onCacheEntryAvailable: function oCEA(descriptor, accessGranted, status) {
+    do_check_neq(status, Cr.NS_OK);
+    cb = this.listener;
+    this.listener = null;
+    do_execute_soon(cb);
+  }
+};
+
 function clearCache() {
     var service = Components.classes["@mozilla.org/network/cache-service;1"]
-        .getService(Components.interfaces.nsICacheService);
-    service.evictEntries(
-        Components.interfaces.nsICache.STORE_ANYWHERE);
+        .getService(Ci.nsICacheService);
+    service.evictEntries(Ci.nsICache.STORE_ANYWHERE);
 }
 
 function setupChannel(suffix, value) {
@@ -59,7 +85,15 @@ var tests = [
             ];
 
 function nextTest() {
-    clearCache();
+    // We really want each test to be self-contained. Make sure cache is
+    // cleared and also let all operations finish before starting a new test
+    SyncWithCacheThread(function() {
+        clearCache();
+        SyncWithCacheThread(runNextTest);
+    });
+}
+
+function runNextTest() {
     var aTest = tests.shift();
     if (!aTest) {
         httpserver.stop(do_test_finished);
