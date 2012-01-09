@@ -225,26 +225,6 @@ const DOM_CARDSTATE_NETWORK_LOCKED = "network_locked";
 const DOM_CARDSTATE_NOT_READY      = "not_ready";
 const DOM_CARDSTATE_READY          = "ready";
 
-const DOM_CALL_READYSTATE_DIALING        = "dialing";
-const DOM_CALL_READYSTATE_RINGING        = "ringing";
-const DOM_CALL_READYSTATE_BUSY           = "busy";
-const DOM_CALL_READYSTATE_CONNECTING     = "connecting";
-const DOM_CALL_READYSTATE_CONNECTED      = "connected";
-const DOM_CALL_READYSTATE_DISCONNECTING  = "disconnecting";
-const DOM_CALL_READYSTATE_DISCONNECTED   = "disconnected";
-const DOM_CALL_READYSTATE_INCOMING       = "incoming";
-const DOM_CALL_READYSTATE_HOLDING        = "holding";
-const DOM_CALL_READYSTATE_HELD           = "held";
-
-const RIL_TO_DOM_CALL_STATE = [
-  DOM_CALL_READYSTATE_CONNECTED, // CALL_READYSTATE_ACTIVE
-  DOM_CALL_READYSTATE_HELD,      // CALL_READYSTATE_HOLDING
-  DOM_CALL_READYSTATE_DIALING,   // CALL_READYSTATE_DIALING
-  DOM_CALL_READYSTATE_RINGING,   // CALL_READYSTATE_ALERTING
-  DOM_CALL_READYSTATE_INCOMING,  // CALL_READYSTATE_INCOMING
-  DOM_CALL_READYSTATE_HELD       // CALL_READYSTATE_WAITING (XXX is this right?)
-];
-
 
 /**
  * GSM PDU constants
@@ -413,3 +393,7 @@ const PDU_ALPHABET_7BIT_DEFAULT = [
   "\xfc",   // LATIN SMALL LETTER U WITH DIAERESIS
   "\xe0"    // LATIN SMALL LETTER A WITH GRAVE
 ];
+
+
+// Allow this file to be imported via Components.utils.import().
+const EXPORTED_SYMBOLS = Object.keys(this);

@@ -504,6 +504,8 @@ irregularFilenames = {
 
     'nsIDOMTouch': 'nsIDOMTouchEvent',
     'nsIDOMTouchList': 'nsIDOMTouchEvent',
+
+    'nsITelephoneCallback': 'nsITelephone',
     }
 
 customIncludes = [
