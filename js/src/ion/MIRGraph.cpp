@@ -211,8 +211,12 @@ MBasicBlock::linkOsrValues(MStart *start)
 
     for (uint32 i = 0; i < stackDepth(); i++) {
         StackSlot &var = slots_[i];
-        if (!var.isCopy())
-            var.def->toOsrValue()->setResumePoint(res);
+        if (!var.isCopy()) {
+            if (i == info().scopeChainSlot())
+                var.def->toOsrScopeChain()->setResumePoint(res);
+            else
+                var.def->toOsrValue()->setResumePoint(res);
+        }
     }
 }
 

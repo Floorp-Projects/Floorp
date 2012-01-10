@@ -57,7 +57,7 @@ bool
 LIRGenerator::visitParameter(MParameter *param)
 {
     ptrdiff_t offset;
-    if (param->index() == -1)
+    if (param->index() == MParameter::THIS_SLOT)
         offset = THIS_FRAME_SLOT;
     else
         offset = 1 + param->index();
@@ -78,6 +78,19 @@ LIRGenerator::visitParameter(MParameter *param)
 #elif defined(JS_PUNBOX64)
     ins->getDef(0)->setOutput(LArgument(offset));
 #endif
+
+    return true;
+}
+
+bool
+LIRGenerator::visitCallee(MCallee *callee)
+{
+    LCallee *ins = new LCallee;
+    if (!define(ins, callee, LDefinition::PRESET))
+        return false;
+
+    ins->getDef(0)->setOutput(LArgument(-sizeof(IonJSFrameLayout)
+                                        + IonJSFrameLayout::offsetOfCalleeToken()));
 
     return true;
 }
@@ -496,6 +509,13 @@ LIRGenerator::visitOsrValue(MOsrValue *value)
 }
 
 bool
+LIRGenerator::visitOsrScopeChain(MOsrScopeChain *object)
+{
+    LOsrScopeChain *lir = new LOsrScopeChain(useRegister(object->entry()));
+    return define(lir, object);
+}
+
+bool
 LIRGenerator::visitToDouble(MToDouble *convert)
 {
     MDefinition *opd = convert->input();
@@ -652,6 +672,12 @@ LIRGenerator::visitLoadSlot(MLoadSlot *ins)
     }
 
     return true;
+}
+
+bool
+LIRGenerator::visitFunctionEnvironment(MFunctionEnvironment *ins)
+{
+    return define(new LFunctionEnvironment(useRegister(ins->function())), ins);
 }
 
 bool
@@ -841,17 +867,27 @@ LIRGenerator::visitGuardClass(MGuardClass *ins)
 }
 
 bool
-LIRGenerator::visitLoadProperty(MLoadProperty *ins)
+LIRGenerator::visitCallGetProperty(MCallGetProperty *ins)
 {
-    LLoadPropertyGeneric *lir = new LLoadPropertyGeneric();
+    LCallGetProperty *lir = new LCallGetProperty();
     lir->setOperand(0, useRegisterAtStart(ins->getOperand(0)));
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+}
 
-    if (!defineVMReturn(lir, ins))
-        return false;
-    if (!assignSafepoint(lir, ins))
-        return false;
+bool
+LIRGenerator::visitCallGetName(MCallGetName *ins)
+{
+    LCallGetName *lir = new LCallGetName();
+    lir->setOperand(0, useRegisterAtStart(ins->getOperand(0)));
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+}
 
-    return true;
+bool
+LIRGenerator::visitCallGetNameTypeOf(MCallGetNameTypeOf *ins)
+{
+    LCallGetNameTypeOf *lir = new LCallGetNameTypeOf();
+    lir->setOperand(0, useRegisterAtStart(ins->getOperand(0)));
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool

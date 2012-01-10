@@ -162,9 +162,20 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
     IonSpew(IonSpew_Bailouts, "expr stack slots %u, is function frame %u",
             exprStackSlots, fp->isFunctionFrame());
     if (fp->isFunctionFrame()) {
-        JS_ASSERT(iter.slots() >= fp->fun()->nargs + 1U);
+        JS_ASSERT(iter.slots() >= CountArgSlots(fp->fun()));
         IonSpew(IonSpew_Bailouts, "frame slots %u, nargs %u, nfixed %u",
                 iter.slots(), fp->fun()->nargs, fp->script()->nfixed);
+
+        // The scope chain value will be undefined if the function never
+        // accesses its scope chain (via a NAME opcode) or modifies the
+        // scope chain via BLOCK opcodes. In such cases keep the default
+        // environment-of-callee scope.
+        Value scopeChainv = iter.read();
+        if (scopeChainv.isObject())
+            fp->setScopeChainNoCallObj(scopeChainv.toObject());
+        else
+            JS_ASSERT(scopeChainv.isUndefined());
+
         Value thisv = iter.read();
         fp->formalArgs()[-1] = thisv;
 
@@ -173,7 +184,7 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, IonBailoutIterator &iter)
             fp->formalArgs()[i] = arg;
         }
 
-        exprStackSlots -= (fp->fun()->nargs + 1);
+        exprStackSlots -= CountArgSlots(fp->fun());
     }
 
     for (uint32 i = 0; i < fp->script()->nfixed; i++) {

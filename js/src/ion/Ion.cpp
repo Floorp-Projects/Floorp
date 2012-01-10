@@ -857,7 +857,7 @@ EnterIon(JSContext *cx, StackFrame *fp, CallTarget target, void *jitcode, bool o
 
     void *calleeToken;
     if (fp->isFunctionFrame()) {
-        argc = CountArgSlots(fp->fun());
+        argc = CountArgSlots(fp->fun()) - 1;
         argv = fp->formalArgs() - 1;
         calleeToken = CalleeToToken(fp->callee().toFunction());
     } else {

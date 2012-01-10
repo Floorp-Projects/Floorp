@@ -49,12 +49,14 @@ namespace ion {
 #define MIR_OPCODE_LIST(_)                                                  \
     _(Constant)                                                             \
     _(Parameter)                                                            \
+    _(Callee)                                                               \
     _(TableSwitch)                                                          \
     _(Goto)                                                                 \
     _(Test)                                                                 \
     _(Compare)                                                              \
     _(Phi)                                                                  \
     _(OsrValue)                                                             \
+    _(OsrScopeChain)                                                        \
     _(CheckOverRecursed)                                                    \
     _(RecompileCheck)                                                       \
     _(PrepareCall)                                                          \
@@ -87,6 +89,7 @@ namespace ion {
     _(Elements)                                                             \
     _(LoadSlot)                                                             \
     _(StoreSlot)                                                            \
+    _(FunctionEnvironment)                                                  \
     _(TypeBarrier)                                                          \
     _(GetPropertyCache)                                                     \
     _(GuardShape)                                                           \
@@ -96,7 +99,9 @@ namespace ion {
     _(BoundsCheck)                                                          \
     _(LoadElement)                                                          \
     _(StoreElement)                                                         \
-    _(LoadProperty)                                                         \
+    _(CallGetProperty)                                                      \
+    _(CallGetName)                                                          \
+    _(CallGetNameTypeOf)                                                    \
     _(StringLength)
 
 // Forward declarations of MIR types.

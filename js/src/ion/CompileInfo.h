@@ -47,7 +47,7 @@ namespace ion {
 inline uintN
 CountArgSlots(JSFunction *fun)
 {
-    return fun ? fun->nargs + 1 : 0; // +1 for |this|
+    return fun ? fun->nargs + 2 : 0; // +2 for |scopeChain| and |this|
 }
 
 // Contains information about the compilation source for IR being generated.
@@ -113,13 +113,17 @@ class CompileInfo
         return nlocals() + CountArgSlots(fun());
     }
 
-    uint32 thisSlot() const {
+    uint32 scopeChainSlot() const {
         JS_ASSERT(fun());
         return 0;
     }
-    uint32 firstArgSlot() const {
+    uint32 thisSlot() const {
         JS_ASSERT(fun());
         return 1;
+    }
+    uint32 firstArgSlot() const {
+        JS_ASSERT(fun());
+        return 2;
     }
     uint32 argSlot(uint32 i) const {
         return firstArgSlot() + i;

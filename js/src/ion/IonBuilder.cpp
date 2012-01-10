@@ -340,7 +340,10 @@ IonBuilder::buildInline(MResumePoint *callerResumePoint, MDefinition *thisDefn,
 void
 IonBuilder::rewriteParameters()
 {
-    for (uint32 i = 0; i < CountArgSlots(info().fun()); i++) {
+    JS_ASSERT(info().scopeChainSlot() == 0);
+    static const uint32 START_SLOT = 1;
+
+    for (uint32 i = START_SLOT; i < CountArgSlots(info().fun()); i++) {
         MParameter *param = current->getSlot(i)->toParameter();
         types::TypeSet *types = param->typeSet();
         if (!types)
@@ -395,6 +398,23 @@ IonBuilder::initParameters()
         current->add(param);
         current->initSlot(info().argSlot(i), param);
     }
+
+    // The scope chain is only tracked in scripts that have NAME opcodes which
+    // will try to access the scope. For other scripts, the scope instructions
+    // will be held live by resume points and code will still be generated for
+    // them, so just use a constant undefined value.
+    MInstruction *scope;
+    if (script->analysis()->usesScopeChain()) {
+        MCallee *callee = MCallee::New();
+        current->add(callee);
+
+        scope = MFunctionEnvironment::New(callee);
+    } else {
+        scope = MConstant::New(UndefinedValue());
+    }
+
+    current->add(scope);
+    current->initSlot(info().scopeChainSlot(), scope);
 }
 
 // We try to build a control-flow graph in the order that it would be built as
@@ -700,7 +720,10 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_SETGNAME:
         return jsop_setgname(info().getAtom(pc));
- 
+
+      case JSOP_NAME:
+        return jsop_getname(info().getAtom(pc));
+
       case JSOP_DUP:
         current->pushSlot(current->stackDepth() - 1);
         return true;
@@ -2406,6 +2429,15 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *pc)
     MOsrEntry *entry = MOsrEntry::New();
     osrBlock->add(entry);
 
+    // Initialize |scopeChain|.
+    {
+        uint32 slot = info().scopeChainSlot();
+
+        MOsrScopeChain *scopev = MOsrScopeChain::New(entry);
+        osrBlock->add(scopev);
+        osrBlock->initSlot(slot, scopev);
+    }
+
     // Initialize |this| parameter.
     {
         uint32 slot = info().thisSlot();
@@ -2866,6 +2898,31 @@ IonBuilder::jsop_setgname(JSAtom *atom)
 }
 
 bool
+IonBuilder::jsop_getname(JSAtom *atom)
+{
+    current->pushSlot(info().scopeChainSlot());
+    MDefinition *scopeChain = current->pop();
+
+    MCallGetPropertyOrName *ins;
+
+    JSOp op2 = JSOp(pc[JSOP_NAME_LENGTH]);
+    if (op2 == JSOP_TYPEOF)
+        ins = MCallGetNameTypeOf::New(scopeChain, atom);
+    else
+        ins = MCallGetName::New(scopeChain, atom);
+
+    current->add(ins);
+    current->push(ins);
+
+    if (!resumeAfter(ins))
+        return false;
+
+    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::TypeSet *types = oracle->propertyRead(script, pc);
+    return pushTypeBarrier(ins, types, barrier);
+}
+
+bool
 IonBuilder::jsop_getelem()
 {
     if (oracle->elementReadIsDense(script, pc))
@@ -3052,7 +3109,7 @@ IonBuilder::jsop_getprop(JSAtom *atom)
             load->setResultType(unary.rval);
         ins = load;
     } else {
-        ins = new MLoadProperty(obj, atom);
+        ins = MCallGetProperty::New(obj, atom);
     }
 
     current->add(ins);

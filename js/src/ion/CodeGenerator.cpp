@@ -274,6 +274,12 @@ CodeGenerator::visitParameter(LParameter *lir)
 }
 
 bool
+CodeGenerator::visitCallee(LCallee *lir)
+{
+    return true;
+}
+
+bool
 CodeGenerator::visitStart(LStart *lir)
 {
     return true;
@@ -305,6 +311,18 @@ CodeGenerator::visitOsrEntry(LOsrEntry *lir)
 
     // Allocate the full frame for this function.
     masm.subPtr(Imm32(frameSize()), StackPointer);
+    return true;
+}
+
+bool
+CodeGenerator::visitOsrScopeChain(LOsrScopeChain *lir)
+{
+    const LAllocation *frame   = lir->getOperand(0);
+    const LDefinition *object  = lir->getDef(0);
+
+    const ptrdiff_t frameOffset = StackFrame::offsetOfScopeChain();
+
+    masm.loadPtr(Address(ToRegister(frame), frameOffset), ToRegister(object));
     return true;
 }
 
@@ -358,6 +376,14 @@ CodeGenerator::visitElements(LElements *lir)
 {
     Address elements(ToRegister(lir->object()), JSObject::offsetOfElements());
     masm.loadPtr(elements, ToRegister(lir->output()));
+    return true;
+}
+
+bool
+CodeGenerator::visitFunctionEnvironment(LFunctionEnvironment *lir)
+{
+    Address environment(ToRegister(lir->function()), JSFunction::offsetOfEnvironment());
+    masm.loadPtr(environment, ToRegister(lir->output()));
     return true;
 }
 
@@ -528,8 +554,14 @@ CodeGenerator::generateArgumentsChecks()
     // No registers are allocated yet, so it's safe to grab anything.
     Register temp = GeneralRegisterSet(EntryTempMask).getAny();
 
+    CompileInfo &info = gen->info();
+
+    // Indexes need to be shifted by one, to skip the scope chain slot.
+    JS_ASSERT(info.scopeChainSlot() == 0);
+    static const uint32 START_SLOT = 1;
+
     Label mismatched;
-    for (uint32 i = 0; i < CountArgSlots(gen->info().fun()); i++) {
+    for (uint32 i = START_SLOT; i < CountArgSlots(info.fun()); i++) {
         // All initial parameters are guaranteed to be MParameters.
         MParameter *param = rp->getOperand(i)->toParameter();
         types::TypeSet *types = param->typeSet();
@@ -538,7 +570,7 @@ CodeGenerator::generateArgumentsChecks()
 
         // Use ReturnReg as a scratch register here, since not all platforms
         // have an actual ScratchReg.
-        int32 offset = ArgToStackOffset(i * sizeof(Value));
+        int32 offset = ArgToStackOffset((i - START_SLOT) * sizeof(Value));
         masm.guardTypeSet(Address(StackPointer, offset), types, temp, &mismatched);
     }
 
@@ -809,18 +841,36 @@ CodeGenerator::visitOutOfLineUnboxDouble(OutOfLineUnboxDouble *ool)
     return true;
 }
 
-bool
-CodeGenerator::visitLoadPropertyGeneric(LLoadPropertyGeneric *ins)
-{
-    typedef bool (*pf)(JSContext *, JSObject *, JSAtom *, Value *);
-    static const VMFunction GetPropertyInfo = FunctionInfo<pf>(GetProperty);
-    const Register obj = ToRegister(ins->getOperand(0));
+typedef bool (*GetPropertyOrNameFn)(JSContext *, JSObject *, PropertyName *, Value *);
 
-    pushArg(ImmGCPtr(ins->mir()->atom()));
-    pushArg(obj);
-    if (!callVM(GetPropertyInfo, ins))
-        return false;
-    return true;
+bool
+CodeGenerator::visitCallGetProperty(LCallGetProperty *lir)
+{
+    static const VMFunction Info = FunctionInfo<GetPropertyOrNameFn>(GetObjectProperty);
+
+    pushArg(ImmGCPtr(lir->mir()->atom()));
+    pushArg(ToRegister(lir->getOperand(0)));
+    return callVM(Info, lir);
+}
+
+bool
+CodeGenerator::visitCallGetName(LCallGetName *lir)
+{
+    static const VMFunction Info = FunctionInfo<GetPropertyOrNameFn>(GetScopeName);
+
+    pushArg(ImmGCPtr(lir->mir()->atom()));
+    pushArg(ToRegister(lir->getOperand(0)));
+    return callVM(Info, lir);
+}
+
+bool
+CodeGenerator::visitCallGetNameTypeOf(LCallGetNameTypeOf *lir)
+{
+    static const VMFunction Info = FunctionInfo<GetPropertyOrNameFn>(GetScopeNameForTypeOf);
+
+    pushArg(ImmGCPtr(lir->mir()->atom()));
+    pushArg(ToRegister(lir->getOperand(0)));
+    return callVM(Info, lir);
 }
 
 // An out-of-line path to call an inline cache and load a result property.
