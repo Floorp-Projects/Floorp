@@ -43,7 +43,10 @@
 #include "nsIArray.idl"
 
 interface nsIPersistentProperties;
+interface nsIDOMCSSPrimitiveValue;
 interface nsIDOMDOMStringList;
+interface nsIDOMNode;
+interface nsIAccessibleDocument;
 interface nsIAccessibleRelation;
 
 /**
@@ -99,6 +102,53 @@ interface nsIAccessible : nsISupports
    * or -1 if this accessible does not have a parent.
    */
   readonly attribute long indexInParent;
+
+  /**
+   * The innerHTML for the HTML element associated with this accessible if applicable.
+   * This is a text string of all the markup inside the DOM
+   * node, not including the start and end tag for the node.
+   */
+  readonly attribute DOMString innerHTML;
+
+  /**
+   * Retrieve the computed style value for this DOM node, if it is a DOM element.
+   * Note: the meanings of width, height and other size measurements depend
+   * on the version of CSS being used. Therefore, for bounds information, 
+   * it is better to use nsIAccessible::accGetBounds.
+   *
+   * @param pseudoElt [in] The pseudo element to retrieve style for, or NULL
+   *                  for general computed style information for this node.
+   * @param propertyName [in] Retrieve the computed style value for this property name,
+   *                     for example "border-bottom".
+   */
+  DOMString getComputedStyleValue(in DOMString pseudoElt, in DOMString propertyName);
+
+  /**
+   * The method is similar to getComputedStyleValue() excepting that this one
+   * returns nsIDOMCSSPrimitiveValue.
+   */
+  nsIDOMCSSPrimitiveValue getComputedStyleCSSValue(in DOMString pseudoElt,
+                                                   in DOMString propertyName);
+
+  /**
+   * The DOM node this nsIAccessible is associated with.
+   */
+  readonly attribute nsIDOMNode DOMNode;
+
+  /**
+   * The document accessible that this access node resides in.
+   */
+  readonly attribute nsIAccessibleDocument document;
+
+  /**
+   * The root document accessible that this access node resides in.
+   */
+  readonly attribute nsIAccessibleDocument rootDocument;
+
+  /**
+   * The language for the current DOM node, e.g. en, de, etc.
+   */
+  readonly attribute DOMString language;
 
   /**
    * Accessible name -- the main text equivalent for this node. The name is
@@ -284,6 +334,26 @@ interface nsIAccessible : nsISupports
    * Action number 0 is the default action
    */
   void doAction(in PRUint8 index);   
+
+  /**
+   * Makes an object visible on screen.
+   *
+   * @param scrollType - defines where the object should be placed on
+   *                     the screen (see nsIAccessibleScrollType for
+   *                     available constants).
+   */
+  void scrollTo(in unsigned long aScrollType);
+
+  /**
+   * Moves the top left of an object to a specified location.
+   *
+   * @param coordinateType [in] - specifies whether the coordinates are relative to
+   *                         the screen or the parent object (for available
+   *                         constants refer to nsIAccessibleCoordinateType)
+   * @param x [in] - defines the x coordinate
+   * @param y [in] - defines the y coordinate
+  */
+  void scrollToPoint(in unsigned long coordinateType, in long x, in long y);
 
   /**
    * Get a pointer to accessibility interface for this node, which is specific 

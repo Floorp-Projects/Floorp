@@ -40,7 +40,6 @@
 #define nsAccUtils_h_
 
 #include "nsIAccessible.h"
-#include "nsIAccessNode.h"
 #include "nsIAccessibleRole.h"
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleTable.h"
