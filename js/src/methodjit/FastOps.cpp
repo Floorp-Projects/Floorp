@@ -789,13 +789,12 @@ mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
     if (op == JSOP_AND || op == JSOP_OR) {
         frame.syncForBranch(target, Uses(0));
     } else {
-        JS_ASSERT(op == JSOP_IFEQ || op == JSOP_IFEQX ||
-                  op == JSOP_IFNE || op == JSOP_IFNEX);
+        JS_ASSERT(op == JSOP_IFEQ || op == JSOP_IFNE);
         frame.syncForBranch(target, Uses(1));
     }
 
     FrameEntry *fe = frame.peek(-1);
-    Assembler::Condition cond = (op == JSOP_IFNE || op == JSOP_IFNEX || op == JSOP_OR)
+    Assembler::Condition cond = (op == JSOP_IFNE || op == JSOP_OR)
                                 ? Assembler::NonZero
                                 : Assembler::Zero;
 
@@ -859,7 +858,7 @@ mjit::Compiler::jsop_ifneq(JSOp op, jsbytecode *target)
 
         frame.pop();
 
-        if (op == JSOP_IFEQ || op == JSOP_IFEQX)
+        if (op == JSOP_IFEQ)
             b = !b;
         if (b) {
             if (!frame.syncForBranch(target, Uses(0)))

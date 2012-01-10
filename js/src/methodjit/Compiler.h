@@ -729,7 +729,7 @@ private:
     static inline Assembler::Condition
     GetStubCompareCondition(JSOp fused)
     {
-        return (fused == JSOP_IFEQ) ? Assembler::Zero : Assembler::NonZero;
+        return fused == JSOP_IFEQ ? Assembler::Zero : Assembler::NonZero;
     }
 
     /* Fast builtins. */
