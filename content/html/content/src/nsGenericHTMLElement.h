@@ -47,6 +47,7 @@
 #include "nsGkAtoms.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsDOMMemoryReporter.h"
+#include "nsIDOMMozBrowserFrameElement.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -1019,7 +1020,8 @@ PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
  */
 
 class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
-                                  public nsIFrameLoaderOwner
+                                  public nsIFrameLoaderOwner,
+                                  public nsIDOMMozBrowserFrameElement
 {
 public:
   nsGenericHTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
@@ -1064,6 +1066,9 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsGenericHTMLFrameElement,
                                                      nsGenericHTMLElement)
 
+  // nsIDOMMozBrowserFrameElement
+  NS_DECL_NSIDOMMOZBROWSERFRAMEELEMENT
+
 protected:
   // This doesn't really ensure a frame loade in all cases, only when
   // it makes sense.
@@ -1071,6 +1076,8 @@ protected:
   nsresult LoadSrc();
   nsresult GetContentDocument(nsIDOMDocument** aContentDocument);
   nsresult GetContentWindow(nsIDOMWindow** aContentWindow);
+
+  nsresult BrowserFrameSecurityCheck();
 
   nsRefPtr<nsFrameLoader> mFrameLoader;
   // True when the element is created by the parser
