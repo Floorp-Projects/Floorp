@@ -73,6 +73,20 @@ SmsChild::RecvNotifySentMessage(const SmsMessageData& aMessageData)
   return true;
 }
 
+bool
+SmsChild::RecvNotifyDeliveredMessage(const SmsMessageData& aMessageData)
+{
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (!obs) {
+    return true;
+  }
+
+  nsCOMPtr<SmsMessage> message = new SmsMessage(aMessageData);
+  obs->NotifyObservers(message, kSmsDeliveredObserverTopic, nsnull);
+
+  return true;
+}
+
 } // namespace sms
 } // namespace dom
 } // namespace mozilla

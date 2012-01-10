@@ -70,6 +70,7 @@ private:
                                          nsIDOMMozSmsMessage* aMessage);
   NS_DECL_EVENT_HANDLER(received)
   NS_DECL_EVENT_HANDLER(sent)
+  NS_DECL_EVENT_HANDLER(delivered)
 };
 
 } // namespace sms

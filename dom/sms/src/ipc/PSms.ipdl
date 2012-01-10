@@ -63,6 +63,8 @@ child:
 
     NotifySentMessage(SmsMessageData aMessageData);
 
+    NotifyDeliveredMessage(SmsMessageData aMessageData);
+
 parent:
     sync HasSupport()
         returns (bool aHasSupport);
