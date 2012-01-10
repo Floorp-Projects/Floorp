@@ -98,6 +98,7 @@ abstract public class GeckoApp
     public static final String ACTION_WEBAPP        = "org.mozilla.gecko.WEBAPP";
     public static final String ACTION_DEBUG         = "org.mozilla.gecko.DEBUG";
     public static final String ACTION_BOOKMARK      = "org.mozilla.gecko.BOOKMARK";
+    public static final String ACTION_LOAD          = "org.mozilla.gecko.LOAD";
     public static final String SAVED_STATE_URI      = "uri";
     public static final String SAVED_STATE_TITLE    = "title";
     public static final String SAVED_STATE_VIEWPORT = "viewport";
@@ -1446,9 +1447,23 @@ abstract public class GeckoApp
         if (sGREDir == null)
             sGREDir = new File(this.getApplicationInfo().dataDir);
 
-        prefetchDNS(intent.getData());
+        String passedUri = mLastUri;
 
-        sGeckoThread = new GeckoThread(intent, mLastUri, mRestoreSession);
+        Uri data = intent.getData();
+        if (data != null && "http".equals(data.getScheme()) &&
+            isHostOnPrefetchWhitelist(data.getHost())) {
+            Intent copy = new Intent(intent);
+            copy.setAction(ACTION_LOAD);
+            GeckoAppShell.getHandler().post(new RedirectorRunnable(copy));
+            // We're going to handle this uri with the redirector, so setting
+            // the action to MAIN and clearing the uri data prevents us from
+            // loading it twice
+            intent.setAction(Intent.ACTION_MAIN);
+            intent.setData(null);
+            passedUri = null;
+        }
+
+        sGeckoThread = new GeckoThread(intent, passedUri, mRestoreSession);
         if (!ACTION_DEBUG.equals(intent.getAction()) &&
             checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched))
             sGeckoThread.start();
@@ -1646,6 +1661,76 @@ abstract public class GeckoApp
         mMainLayout.removeView(cameraView);
     }
 
+    abstract public String getDefaultUAString();
+    abstract public String getUAStringForHost(String host);
+
+    class RedirectorRunnable implements Runnable {
+        Intent mIntent;
+        RedirectorRunnable(Intent intent) {
+            mIntent = intent;
+        }
+        public void run() {
+            HttpURLConnection connection = null;
+            try {
+                // this class should only be initialized with an intent with non-null data
+                URL url = new URL(mIntent.getData().toString());
+                // data url should have an http scheme
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestProperty("User-Agent", getUAStringForHost(url.getHost()));
+                connection.setInstanceFollowRedirects(false);
+                connection.setRequestMethod("GET");
+                connection.connect();
+                int code = connection.getResponseCode();
+                if (code >= 300 && code < 400) {
+                    String location = connection.getHeaderField("Location");
+                    Uri data;
+                    if (location != null &&
+                        (data = Uri.parse(location)) != null &&
+                        !"about".equals(data.getScheme()) && 
+                        !"chrome".equals(data.getScheme())) {
+                        mIntent.setData(data);
+                        mLastUri = mLastTitle = location;
+                    } else {
+                        mIntent.putExtra("prefetched", 1);
+                    }
+                } else {
+                    mIntent.putExtra("prefetched", 1);
+                }
+            } catch (IOException ioe) {
+                Log.i(LOGTAG, "exception trying to pre-fetch redirected url", ioe);
+                mIntent.putExtra("prefetched", 1);
+            } catch (Exception e) {
+                Log.w(LOGTAG, "unexpected exception, passing url directly to Gecko but we should explicitly catch this", e);
+                mIntent.putExtra("prefetched", 1);
+            } finally {
+                if (connection != null)
+                    connection.disconnect();
+            }
+            mMainHandler.postAtFrontOfQueue(new Runnable() {
+                public void run() {
+                    onNewIntent(mIntent);
+                }
+            });
+        }
+    }
+
+    private final String kPrefetchWhiteListArray[] = new String[] { 
+        "t.co",
+        "bit.ly",
+        "moz.la",
+        "aje.me",
+        "facebook.com",
+        "goo.gl",
+        "tinyurl.com"
+    };
+    
+    private final CopyOnWriteArrayList<String> kPrefetchWhiteList =
+        new CopyOnWriteArrayList<String>(kPrefetchWhiteListArray);
+
+    private boolean isHostOnPrefetchWhitelist(String host) {
+        return kPrefetchWhiteList.contains(host);
+    }
+
     @Override
     protected void onNewIntent(Intent intent) {
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onNewIntent");
@@ -1656,10 +1741,25 @@ abstract public class GeckoApp
             System.exit(0);
             return;
         }
+
+        if (checkLaunchState(LaunchState.Launched)) {
+            Uri data = intent.getData();
+            Bundle bundle = intent.getExtras();
+            // if the intent has data (i.e. a URI to be opened) and the scheme
+            // is either http, we'll prefetch it, which means warming
+            // up the radio and DNS cache by connecting and parsing the redirect
+            // if the return code is between 300 and 400
+            if (data != null && 
+                "http".equals(data.getScheme()) &&
+                (bundle == null || bundle.getInt("prefetched", 0) != 1) &&
+                isHostOnPrefetchWhitelist(data.getHost())) {
+                GeckoAppShell.getHandler().post(new RedirectorRunnable(intent));
+                return;
+            }
+        }
         final String action = intent.getAction();
         if (ACTION_DEBUG.equals(action) &&
             checkAndSetLaunchState(LaunchState.Launching, LaunchState.WaitForDebugger)) {
-
             mMainHandler.postDelayed(new Runnable() {
                 public void run() {
                     Log.i(LOGTAG, "Launching from debug intent after 5s wait");
@@ -1677,8 +1777,12 @@ abstract public class GeckoApp
             Log.i(LOGTAG, "Intent : ACTION_MAIN");
             GeckoAppShell.sendEventToGecko(new GeckoEvent(""));
         }
+        else if (ACTION_LOAD.equals(action)) {
+            String uri = intent.getDataString();
+            loadUrl(uri, AwesomeBar.Type.EDIT);
+            Log.i(LOGTAG,"onNewIntent: " + uri);
+        }
         else if (Intent.ACTION_VIEW.equals(action)) {
-            prefetchDNS(intent.getData());
             String uri = intent.getDataString();
             GeckoAppShell.sendEventToGecko(new GeckoEvent(uri));
             Log.i(LOGTAG,"onNewIntent: " + uri);
@@ -2334,22 +2438,6 @@ abstract public class GeckoApp
         layerController.setLayerClient(mSoftwareLayerClient);
     }
 
-    private void prefetchDNS(final Uri u) {
-        // resolving the host here starts up the radio
-        // and may prime the dns cache.  See
-        // http://www.stevesouders.com/blog/2011/09/21/making-a-mobile-connection/
-        // for more information.
-        new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        Log.i(LOGTAG,"resolving: " + u.getHost());
-                        InetAddress.getByName(u.getHost());
-                    } catch (Exception e) {
-                        // we really don't care.
-                    }
-                }
-            }, "DNSPrefetcher Thread").start();
-    }
 }
 
 class PluginLayoutParams extends AbsoluteLayout.LayoutParams

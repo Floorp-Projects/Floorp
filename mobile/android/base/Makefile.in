@@ -151,6 +151,8 @@ ifeq (,$(ANDROID_VERSION_CODE))
 ANDROID_VERSION_CODE=$(shell $(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid | cut -c1-10)
 endif
 
+UA_BUILDID=$(shell $(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid | cut -c1-8)
+
 DEFINES += \
   -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
   -DMOZ_APP_DISPLAYNAME="$(MOZ_APP_DISPLAYNAME)" \
@@ -161,6 +163,7 @@ DEFINES += \
   -DMOZ_CRASHREPORTER=$(MOZ_CRASHREPORTER) \
   -DANDROID_VERSION_CODE=$(ANDROID_VERSION_CODE) \
   -DMOZILLA_OFFICIAL=$(MOZILLA_OFFICIAL) \
+  -DUA_BUILDID=$(UA_BUILDID) \
   $(NULL)
 
 GARBAGE += \
@@ -554,7 +557,7 @@ $(PP_RES_XML): $(subst res/,$(srcdir)/resources/, $(PP_RES_XML).in)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
 
-AndroidManifest.xml $(FENNEC_PP_JAVA_FILES) $(SYNC_PP_JAVA_FILES) package-name.txt: % : %.in
+AndroidManifest.xml $(FENNEC_PP_JAVA_FILES) $(SYNC_PP_JAVA_FILES) package-name.txt: % : %.in Makefile.in
 	mkdir -p db sync/repositories/android
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
