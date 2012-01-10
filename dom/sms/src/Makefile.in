@@ -80,6 +80,7 @@ CPPSRCS = \
   Constants.cpp \
   SmsChild.cpp \
   SmsDatabaseService.cpp \
+  SmsRequest.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
