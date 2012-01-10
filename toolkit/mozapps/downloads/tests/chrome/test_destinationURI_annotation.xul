@@ -34,6 +34,9 @@ let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
 let dm = Cc["@mozilla.org/download-manager;1"]
            .getService(Ci.nsIDownloadManager);
 
+let os = Cc["@mozilla.org/observer-service;1"]
+           .getService(Ci.nsIObserverService);
+
 Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
 
 let checkDestination = false,
@@ -63,6 +66,32 @@ let annoObserver = {
   onItemAnnotationRemoved: function() {}
 }
 
+let TestFinisher = {
+  _dmuiDone: false,
+  _callback: null,
+
+  observe: function(aSubject, aTopic, aData) {
+    os.removeObserver(TestFinisher, "download-manager-ui-done");
+
+    if (this._callback) {
+      SimpleTest.executeSoon(this._callback);
+      this._callback = null;
+    } else {
+      this._dmuiDone = true;
+    }
+  },
+
+  waitForDMUIDone: function(callback) {
+    if (this._dmuiDone) {
+      SimpleTest.executeSoon(callback);
+    } else {
+      this._callback = callback;
+    }
+  }
+};
+
+os.addObserver(TestFinisher, "download-manager-ui-done", false);
+
 let downloadListener = {
 
   onDownloadStateChange: function(aState, aDownload) {
@@ -74,20 +103,8 @@ let downloadListener = {
         aDownload.targetFile.remove(false);
       } catch (ex) {}
 
-      let os = Cc["@mozilla.org/observer-service;1"].
-               getService(Ci.nsIObserverService);
+      TestFinisher.waitForDMUIDone(endTest);
 
-      let testObs = {
-        observe: function(aSubject, aTopic, aData) {
-          if (aTopic != "download-manager-ui-done") {
-            return;
-          }
-          os.removeObserver(testObs, "download-manager-ui-done");
-          SimpleTest.executeSoon(endTest);
-        }
-      };
-
-      os.addObserver(testObs, "download-manager-ui-done", false);
     }
   },
 
@@ -117,6 +134,7 @@ let windowObserver = {
       win.removeEventListener("load", onLoad, false);
 
       if (win.location == UCT_URI) {
+        ww.unregisterNotification(windowObserver);
         SimpleTest.executeSoon(function() {
           win.document.documentElement._fireButtonEvent("accept");
           win.close();
@@ -131,13 +149,13 @@ function endTest() {
   ok(checkDestination, "file destination was set");
   ok(checkFileName, "file name was set");
 
-  ww.unregisterNotification(windowObserver);
   PlacesUtils.annotations.removeObserver(annoObserver);
   dm.removeListener(downloadListener);
 
   ww = null;
   PlacesUtils = null;
   dm = null;
+  os = null;
 
   Cc["@mozilla.org/appshell/window-mediator;1"]
     .getService(Ci.nsIWindowMediator)
