@@ -285,6 +285,21 @@ public:
     return 0;
   }
 
+#ifdef DEBUG
+  /**
+   * Mark the table as constant after initialization.
+   *
+   * This will prevent assertions when a read-only hash is accessed on multiple
+   * threads without synchronization.
+   */
+  void MarkImmutable()
+  {
+    NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
+
+    PL_DHashMarkTableImmutable(&mTable);
+  }
+#endif
+
 protected:
   PLDHashTable mTable;
 

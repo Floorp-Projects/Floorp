@@ -333,13 +333,17 @@ mHashMutex("Telemetry::mHashMutex")
   for (int i = 0; i < sizeof(trackedDBs)/sizeof(const char*); i++)
     mTrackedDBs.PutEntry(nsDependentCString(trackedDBs[i]));
 
+#ifdef DEBUG
+  // Mark immutable to prevent asserts on simultaneous access from multiple threads
+  mTrackedDBs.MarkImmutable();
+#endif
+
   mSlowSQLOnMainThread.Init();
   mSlowSQLOnOtherThread.Init();
   mHistogramMap.Init(Telemetry::HistogramCount);
 }
 
 TelemetryImpl::~TelemetryImpl() {
-  mTrackedDBs.Clear();
   mSlowSQLOnMainThread.Clear();
   mSlowSQLOnOtherThread.Clear();
   mHistogramMap.Clear();
