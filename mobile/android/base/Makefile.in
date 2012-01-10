@@ -122,6 +122,7 @@ FENNEC_JAVA_FILES = \
   gfx/ViewportMetrics.java \
   gfx/WidgetTileLayer.java \
   ui/PanZoomController.java \
+  ui/SubdocumentScrollHelper.java \
   $(NULL)
 
 FENNEC_PP_JAVA_FILES = \
