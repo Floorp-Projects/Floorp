@@ -37,7 +37,10 @@
 <!ENTITY sync.subtitle.success.label 'Your data is now being downloaded in the background. You can go to Settings to manage your account.'>
 <!ENTITY sync.settings.label 'Settings'>
 <!ENTITY sync.subtitle.manage.label 'Your &syncBrand.fullName.label; account is already set up. Go to Settings to manage your account.'>
-  
+
+<!-- Pair Device -->
+<!ENTITY sync.pair.tryagain.label 'Please try again.'>
+
 <!-- Common text -->
 <!ENTITY sync.button.cancel.label 'Cancel'>
 <!ENTITY sync.button.connect.label 'Connect'>
