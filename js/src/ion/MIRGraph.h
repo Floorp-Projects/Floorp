@@ -115,6 +115,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // as needed.
     void setVariable(uint32 slot);
 
+    // Update the index of the linked list of stack slot during swapAt
+    // operations.  The value must have been copied from the source to the
+    // destination before calling this function.
+    void updateIndexes(StackSlot &elem, uint32 oldIdx, uint32 newIdx);
+
   public:
     ///////////////////////////////////////////////////////
     ////////// BEGIN GRAPH BUILDING INSTRUCTIONS //////////
@@ -131,6 +136,12 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void setId(uint32 id) {
         id_ = id;
     }
+
+    // Move the definition to the top of the stack.
+    void pick(int32 depth);
+
+    // Exchange 2 stack slots at the defined depth
+    void swapAt(int32 depth);
 
     // Gets the instruction associated with various slot types.
     MDefinition *peek(int32 depth);
