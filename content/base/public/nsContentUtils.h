@@ -1836,6 +1836,18 @@ public:
    */
   static bool IsAutocompleteEnabled(nsIDOMHTMLInputElement* aInput);
 
+  /**
+   * If the URI is chrome, return true unconditionarlly.
+   *
+   * Otherwise, get the contents of the given pref, and treat it as a
+   * comma-separated list of URIs.  Return true if the given URI's prepath is
+   * in the list, and false otherwise.
+   *
+   * Comparisons are case-insensitive, and whitespace between elements of the
+   * comma-separated list is ignored.
+   */
+  static bool URIIsChromeOrInPref(nsIURI *aURI, const char *aPref);
+
 private:
   static bool InitializeEventTable();
 
