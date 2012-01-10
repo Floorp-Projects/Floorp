@@ -693,7 +693,7 @@ public class BrowserProvider extends ContentProvider {
 
                 String url = values.getAsString(Bookmarks.URL);
                 ContentValues imageValues = extractImageValues(values, url);
-                Boolean isFolder = values.getAsBoolean(Bookmarks.IS_FOLDER);
+                Boolean isFolder = values.getAsInteger(Bookmarks.IS_FOLDER) == 1;
 
                 if ((isFolder == null || !isFolder) && imageValues != null
                         && !TextUtils.isEmpty(url)) {
