@@ -96,8 +96,6 @@ using mozilla::DefaultXDisplay;
 #include "nsIScrollableFrame.h"
 
 #include "nsContentCID.h"
-static NS_DEFINE_CID(kRangeCID, NS_RANGE_CID);
-
 #include "nsWidgetsCID.h"
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -833,10 +831,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagText(const char* *result)
     if (NS_FAILED(rv))
       return rv;
 
-    nsCOMPtr<nsIDOMRange> range(do_CreateInstance(kRangeCID,&rv));
-    if (NS_FAILED(rv))
-      return rv;
-
+    nsRefPtr<nsRange> range = new nsRange();
     rv = range->SelectNode(node);
     if (NS_FAILED(rv))
       return rv;

@@ -311,11 +311,9 @@ nsCopySupport::GetTransferableForNode(nsINode* aNode,
   // Make a temporary selection with aNode in a single range.
   nsresult rv = NS_NewDomSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDOMRange> range;
-  rv = NS_NewRange(getter_AddRefs(range));
-  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+  nsRefPtr<nsRange> range = new nsRange();
   rv = range->SelectNode(node);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = selection->AddRange(range);

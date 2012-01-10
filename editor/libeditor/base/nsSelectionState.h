@@ -46,6 +46,7 @@
 
 class nsIDOMCharacterData;
 class nsISelection;
+class nsRange;
 
 /***************************************************************************
  * class for recording selection info.  stores selection as collection of
@@ -59,7 +60,7 @@ struct nsRangeStore
   nsRangeStore();
   ~nsRangeStore();
   nsresult StoreRange(nsIDOMRange *aRange);
-  nsresult GetRange(nsCOMPtr<nsIDOMRange> *outRange);
+  nsresult GetRange(nsRange** outRange);
         
   nsCOMPtr<nsIDOMNode> startNode;
   PRInt32              startOffset;

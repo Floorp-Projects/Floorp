@@ -64,7 +64,7 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIEnumerator.h"
 #include "nsIDOMNamedNodeMap.h"
-#include "nsIRange.h"
+#include "nsRange.h"
 
 #include "nsEditorUtils.h"
 #include "nsWSRunObject.h"
@@ -252,8 +252,7 @@ nsHTMLEditRules::Init(nsPlaintextEditor *aEditor)
   mReturnInEmptyLIKillsList = !returnInEmptyLIKillsList.EqualsLiteral("false");
 
   // make a utility range for use by the listenter
-  mUtilRange = do_CreateInstance("@mozilla.org/content/range;1");
-  NS_ENSURE_TRUE(mUtilRange, NS_ERROR_NULL_POINTER);
+  mUtilRange = new nsRange();
    
   // set up mDocChangeRange to be whole doc
   nsCOMPtr<nsIDOMElement> rootElem = do_QueryInterface(mHTMLEditor->GetRoot());
@@ -263,8 +262,7 @@ nsHTMLEditRules::Init(nsPlaintextEditor *aEditor)
     nsAutoLockRulesSniffing lockIt((nsTextEditRules*)this);
     if (!mDocChangeRange)
     {
-      mDocChangeRange = do_CreateInstance("@mozilla.org/content/range;1");
-      NS_ENSURE_TRUE(mDocChangeRange, NS_ERROR_NULL_POINTER);
+      mDocChangeRange = new nsRange();
     }
     mDocChangeRange->SelectNode(rootElem);
     res = AdjustSpecialBreaks();
@@ -300,7 +298,7 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     // remember where our selection was before edit action took place:
     
     // get selection
-    nsCOMPtr<nsISelection>selection;
+    nsCOMPtr<nsISelection> selection;
     nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
     NS_ENSURE_SUCCESS(res, res);
   
@@ -328,14 +326,12 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     if(mDocChangeRange)
     {
       // clear out our accounting of what changed
-      nsCOMPtr<nsIRange> range = do_QueryInterface(mDocChangeRange);
-      range->Reset(); 
+      mDocChangeRange->Reset(); 
     }
     if(mUtilRange)
     {
       // ditto for mUtilRange.
-      nsCOMPtr<nsIRange> range = do_QueryInterface(mUtilRange);
-      range->Reset(); 
+      mUtilRange->Reset(); 
     }
 
     // remember current inline styles for deletion and normal insertion operations
@@ -594,7 +590,7 @@ nsHTMLEditRules::WillDoAction(nsISelection *aSelection,
       return NS_OK;
     }
 
-    nsCOMPtr<nsIRange> range = do_QueryInterface(domRange);
+    nsRange* range = static_cast<nsRange*>(domRange.get());
     nsCOMPtr<nsIDOMNode> ancestor =
       do_QueryInterface(range->GetCommonAncestor());
     if (!mHTMLEditor->IsModifiableNode(ancestor))
@@ -1488,8 +1484,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     // the correct portion of the document.
     if (!mDocChangeRange)
     {
-      mDocChangeRange = do_CreateInstance("@mozilla.org/content/range;1");
-      NS_ENSURE_TRUE(mDocChangeRange, NS_ERROR_NULL_POINTER);
+      mDocChangeRange = new nsRange();
     }
     res = mDocChangeRange->SetStart(selNode, selOffset);
     NS_ENSURE_SUCCESS(res, res);
@@ -5255,8 +5250,7 @@ nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
     bool nodeBefore=false, nodeAfter=false;
     
     // create a range that represents expanded selection
-    nsCOMPtr<nsIDOMRange> range = do_CreateInstance("@mozilla.org/content/range;1");
-    NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
+    nsRefPtr<nsRange> range = new nsRange();
     res = range->SetStart(selStartNode, selStartOffset);
     NS_ENSURE_SUCCESS(res, res);
     res = range->SetEnd(selEndNode, selEndOffset);
@@ -5896,7 +5890,9 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
     {
       nsRangeStore *item = rangeItemArray.Elements() + i;
       mHTMLEditor->mRangeUpdater.DropRangeItem(item);
-      nsresult res2 = item->GetRange(address_of(opRange));
+      nsRefPtr<nsRange> range;
+      nsresult res2 = item->GetRange(getter_AddRefs(range));
+      opRange = range;
       if (NS_FAILED(res2) && NS_SUCCEEDED(res)) {
         // Remember the failure, but keep going so we make sure to unregister
         // all our range items.
@@ -6414,7 +6410,7 @@ nsHTMLEditRules::GetNodesFromPoint(DOMPoint point,
   point.GetPoint(node, offset);
   
   // use it to make a range
-  nsCOMPtr<nsIDOMRange> range = do_CreateInstance("@mozilla.org/content/range;1");
+  nsRefPtr<nsRange> range = new nsRange();
   res = range->SetStart(node, offset);
   NS_ENSURE_SUCCESS(res, res);
   /* SetStart() will also set the end for this new range
@@ -7634,7 +7630,7 @@ nsHTMLEditRules::PinSelectionToNewBlock(nsISelection *aSelection)
   temp = selNode;
   
   // use ranges and sRangeHelper to compare sel point to new block
-  nsCOMPtr<nsIDOMRange> range = do_CreateInstance("@mozilla.org/content/range;1");
+  nsRefPtr<nsRange> range = new nsRange();
   res = range->SetStart(selNode, selOffset);
   NS_ENSURE_SUCCESS(res, res);
   res = range->SetEnd(selNode, selOffset);
@@ -8429,9 +8425,10 @@ nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
   
   if (!mDocChangeRange)
   {
-    // clone aRange.  
-    res = aRange->CloneRange(getter_AddRefs(mDocChangeRange));
-    return res;
+    // clone aRange.
+    nsCOMPtr<nsIDOMRange> range;
+    res = aRange->CloneRange(getter_AddRefs(range));
+    mDocChangeRange = static_cast<nsRange*>(range.get());
   }
   else
   {

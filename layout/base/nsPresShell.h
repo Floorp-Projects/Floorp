@@ -74,7 +74,7 @@
 #include "nsContentUtils.h"
 #include "nsRefreshDriver.h"
 
-class nsIRange;
+class nsRange;
 class nsIDragService;
 class nsCSSStyleSheet;
 
@@ -548,7 +548,7 @@ protected:
   // the range
   nsRect ClipListToRange(nsDisplayListBuilder *aBuilder,
                          nsDisplayList* aList,
-                         nsIRange* aRange);
+                         nsRange* aRange);
 
   // create a RangePaintInfo for the range aRange containing the
   // display list needed to paint the range to a surface

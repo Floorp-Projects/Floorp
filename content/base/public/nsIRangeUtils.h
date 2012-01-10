@@ -45,7 +45,7 @@
 #include "nsISupports.h"
 
 // Forward declarations
-class nsIDOMRange;
+class nsRange;
 class nsIDOMNode;
 class nsIContent;
 
@@ -61,7 +61,7 @@ public:
                                      nsIDOMNode* aParent2, PRInt32 aOffset2) = 0;
                                
   NS_IMETHOD CompareNodeToRange(nsIContent* aNode, 
-                                nsIDOMRange* aRange,
+                                nsRange* aRange,
                                 bool *outNodeBefore,
                                 bool *outNodeAfter) = 0;
 };
