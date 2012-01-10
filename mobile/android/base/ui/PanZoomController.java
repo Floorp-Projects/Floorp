@@ -1025,8 +1025,7 @@ public class PanZoomController
         mLastEventTime = detector.getEventTime();
     }
 
-    @Override
-    public void onLongPress(MotionEvent motionEvent) {
+    private void sendPointToGecko(String event, MotionEvent motionEvent) {
         String json;
         try {
             PointF point = new PointF(motionEvent.getX(), motionEvent.getY());
@@ -1035,13 +1034,17 @@ public class PanZoomController
                 return;
             }
             json = PointUtils.toJSON(point).toString();
-        } catch(Exception ex) {
-            Log.w(LOGTAG, "Error building return: " + ex);
-            return; // json would be null
+        } catch (Exception e) {
+            Log.e(LOGTAG, "Unable to convert point to JSON for " + event, e);
+            return;
         }
 
-        GeckoEvent e = new GeckoEvent("Gesture:LongPress", json);
-        GeckoAppShell.sendEventToGecko(e);
+        GeckoAppShell.sendEventToGecko(new GeckoEvent(event, json));
+    }
+
+    @Override
+    public void onLongPress(MotionEvent motionEvent) {
+        sendPointToGecko("Gesture:LongPress", motionEvent);
     }
 
     public boolean getRedrawHint() {
@@ -1050,35 +1053,14 @@ public class PanZoomController
 
     @Override
     public boolean onDown(MotionEvent motionEvent) {
-        String json;
-        try {
-            PointF point = new PointF(motionEvent.getX(), motionEvent.getY());
-            point = mController.convertViewPointToLayerPoint(point);
-            json = PointUtils.toJSON(point).toString();
-        } catch(Exception ex) {
-            throw new RuntimeException(ex);
-        }
-
-        GeckoEvent e = new GeckoEvent("Gesture:ShowPress", json);
-        GeckoAppShell.sendEventToGecko(e);
+        sendPointToGecko("Gesture:ShowPress", motionEvent);
         return false;
     }
 
     @Override
     public boolean onSingleTapConfirmed(MotionEvent motionEvent) {
-        String json;
-        try {
-            PointF point = new PointF(motionEvent.getX(), motionEvent.getY());
-            point = mController.convertViewPointToLayerPoint(point);
-            json = PointUtils.toJSON(point).toString();
-        } catch(Exception ex) {
-            throw new RuntimeException(ex);
-        }
-
         GeckoApp.mAppContext.mAutoCompletePopup.hide();
-
-        GeckoEvent e = new GeckoEvent("Gesture:SingleTap", json);
-        GeckoAppShell.sendEventToGecko(e);
+        sendPointToGecko("Gesture:SingleTap", motionEvent);
         return true;
     }
 
@@ -1089,17 +1071,7 @@ public class PanZoomController
 
     @Override
     public boolean onDoubleTap(MotionEvent motionEvent) {
-        String json;
-        try {
-            PointF point = new PointF(motionEvent.getX(), motionEvent.getY());
-            point = mController.convertViewPointToLayerPoint(point);
-            json = PointUtils.toJSON(point).toString();
-        } catch(Exception ex) {
-            throw new RuntimeException(ex);
-        }
-
-        GeckoEvent e = new GeckoEvent("Gesture:DoubleTap", json);
-        GeckoAppShell.sendEventToGecko(e);
+        sendPointToGecko("Gesture:DoubleTap", motionEvent);
         return true;
     }
 
