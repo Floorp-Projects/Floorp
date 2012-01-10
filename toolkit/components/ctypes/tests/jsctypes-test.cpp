@@ -40,6 +40,7 @@
 
 #include "jsctypes-test.h"
 #include "nsCRTGlue.h"
+#include <string.h>
 #include <math.h>
 #include <stdarg.h>
 
@@ -160,24 +161,16 @@ get_##name##_stats(size_t* align, size_t* size, size_t* nalign, size_t* nsize, \
 }
 #include "typedefs.h"
 
-template <typename T>
-PRInt32 StrLen(const T* string)
-{
-  const T *end;
-  for (end = string; *end; ++end);
-  return end - string;
-}
-
 PRInt32
 test_ansi_len(const char* string)
 {
-  return StrLen(string);
+  return PRInt32(strlen(string));
 }
 
 PRInt32
 test_wide_len(const PRUnichar* string)
 {
-  return StrLen(string);
+  return PRInt32(NS_strlen(string));
 }
 
 const char *

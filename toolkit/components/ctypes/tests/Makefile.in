@@ -56,6 +56,12 @@ LOCAL_INCLUDES = \
     -I$(topsrcdir)/js/src/ctypes \
     $(NULL)
 
+EXTRA_DSO_LDOPTS += \
+    $(XPCOM_STANDALONE_GLUE_LDOPTS) \
+    $(MOZALLOC_LIB) \
+    $(NSPR_LIBS) \
+    $(NULL)
+
 XPCSHELL_TESTS = unit
 
 _CHROME_TEST_FILES = \
