@@ -278,6 +278,8 @@ DEFAULT_GMAKE_FLAGS += \
 	$(NULL)
 endif
 
+DEFAULT_GMAKE_FLAGS += FREEBL_NO_DEPEND=0
+
 SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile locales/Makefile
 
 include $(topsrcdir)/config/rules.mk
