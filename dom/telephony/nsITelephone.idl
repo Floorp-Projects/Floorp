@@ -40,31 +40,58 @@
 [scriptable, uuid(9b7e3a01-9c45-4af3-81bb-1bf08a842226)]
 interface nsITelephoneCallback : nsISupports
 {
-  void oncallstatechange(in jsval event);
+  // 'callState' uses the CALL_STATE values from nsITelephone.
+  void callStateChanged(in unsigned long callIndex,
+                        in unsigned short callState,
+                        in AString number);
 
-  //XXX philikon's additions
-  void onoperatorchange(in jsval event);
-  void onradiostatechange(in jsval event);
-  void oncardstatechange(in jsval event);
-  void onsignalstrengthchange(in jsval event);
+  // 'callState' uses the CALL_STATE values from nsITelephone. Return true to
+  // continue enumeration or false to cancel.
+  boolean enumerateCallState(in unsigned long callIndex,
+                             in unsigned short callState,
+                             in AString number,
+                             in boolean isActive);
 };
 
 [scriptable, uuid(5be6e41d-3aee-4f5c-8284-95cf529dd6fe)]
 interface nsITelephone : nsISupports
 {
+  const unsigned short CALL_STATE_UNKNOWN = 0;
+  const unsigned short CALL_STATE_DIALING = 1;
+  const unsigned short CALL_STATE_RINGING = 2;
+  const unsigned short CALL_STATE_BUSY = 3;
+  const unsigned short CALL_STATE_CONNECTING = 4;
+  const unsigned short CALL_STATE_CONNECTED = 5;
+  const unsigned short CALL_STATE_HOLDING = 6;
+  const unsigned short CALL_STATE_HELD = 7;
+  const unsigned short CALL_STATE_RESUMING = 8;
+  const unsigned short CALL_STATE_DISCONNECTING = 9;
+  const unsigned short CALL_STATE_DISCONNECTED = 10;
+  const unsigned short CALL_STATE_INCOMING = 11;
+
   readonly attribute jsval currentState;
+
   void registerCallback(in nsITelephoneCallback callback);
   void unregisterCallback(in nsITelephoneCallback callback);
+
+  /**
+   * Will continue calling callback.enumerateCallState until the callback
+   * returns false.
+   */
+  void enumerateCalls(in nsITelephoneCallback callback);
 
   /**
    * Functionality for making and managing phone calls.
    */
   void dial(in DOMString number);
-  void hangUp(in long callIndex);
+  void hangUp(in unsigned long callIndex);
+
   void startTone(in DOMString dtmfChar);
   void stopTone();
-  void answerCall();
-  void rejectCall();
+
+  void answerCall(in unsigned long callIndex);
+  void rejectCall(in unsigned long callIndex);
+
   attribute bool microphoneMuted;
   attribute bool speakerEnabled;
 

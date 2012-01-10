@@ -50,7 +50,7 @@ function start() {
 
   var kIsWindowsVistaOrHigher = false;
   if (kIsWindows) {
-    // code borrowed from browser/components/wintaskbar/test/browser_taskbar_preview.js
+    // code borrowed from browser/modules/test/browser_taskbar_preview.js
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var version = Components.classes["@mozilla.org/system-info;1"]
                             .getService(Components.interfaces.nsIPropertyBag2)
@@ -323,7 +323,7 @@ function start() {
   // due to various weird failures, including one making getRenderbufferParameter tests
   // on DEPTH_STENCIL fail
   if (kIsMac) {
-    // code borrowed from browser/components/wintaskbar/test/browser_taskbar_preview.js
+    // code borrowed from browser/modules/test/browser_taskbar_preview.js
     var is106orHigher = false;
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var version = Components.classes["@mozilla.org/system-info;1"]

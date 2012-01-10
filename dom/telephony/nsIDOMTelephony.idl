@@ -1,3 +1,5 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=40: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,12 +16,13 @@
  * The Original Code is Telephony.
  *
  * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
+ *   The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Philipp von Weitershausen <philipp@weitershausen.de>
+ *   Ben Turner <bent.mozilla@gmail.com> (Original Author)
+ *   Philipp von Weitershausen <philipp@weitershausen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,52 +39,30 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDOMEventTarget.idl"
-#include "nsIDOMEvent.idl"
+
 interface nsIDOMEventListener;
-interface mozIDOMTelephonyCall;
+interface nsIDOMTelephonyCall;
 
-[scriptable, uuid(c7b0046b-ee80-447c-8a95-a389003891bc)]
-interface mozIDOMTelephony : nsIDOMEventTarget {
-
-  readonly attribute jsval liveCalls;
-  mozIDOMTelephonyCall dial(in DOMString number);
-  void startTone(in DOMString dtmfChar);
-  void stopTone();
-  attribute nsIDOMEventListener onincoming;
+[scriptable, builtinclass, uuid(047be0d8-a9cd-49aa-8948-2f60ff3a7a18)]
+interface nsIDOMTelephony : nsIDOMEventTarget
+{
+  nsIDOMTelephonyCall dial(in DOMString number);
 
   attribute boolean muted;
-  attribute boolean speakerOn;
+  attribute boolean speakerEnabled;
 
-  //XXX philikon's additions
-  attribute nsIDOMEventListener onoperatorchange;
-  attribute nsIDOMEventListener onradiostatechange;
-  attribute nsIDOMEventListener oncardstatechange;
-  attribute nsIDOMEventListener onsignalstrengthchange;
-  readonly attribute jsval signalStrength;
-  readonly attribute jsval operator;
-  readonly attribute jsval radioState;
-  readonly attribute jsval cardState;
-};
+  // The call that is "active", i.e. receives microphone input and tones
+  // generated via startTone.
+  attribute jsval active;
 
-[scriptable, uuid(3d0060db-72ef-4b87-aceb-a16ed4c5253e)]
-interface mozIDOMTelephonyCall : nsIDOMEventTarget {
+  // Array of all calls that are currently connected.
+  readonly attribute jsval calls;
 
-  readonly attribute DOMString number;
-  readonly attribute DOMString readyState;
+  void startTone(in DOMString tone);
+  void stopTone();
+  void sendTones(in DOMString tones,
+                 [optional] in unsigned long toneDuration,
+                 [optional] in unsigned long intervalDuration);
 
-  void answer();
-  void disconnect();
-
-  attribute nsIDOMEventListener onreadystatechange;
-  attribute nsIDOMEventListener onringing;
-  attribute nsIDOMEventListener onbusy;
-  attribute nsIDOMEventListener onconnecting;
-  attribute nsIDOMEventListener onconnected;
-  attribute nsIDOMEventListener ondisconnecting;
-  attribute nsIDOMEventListener ondisconnected;
-};
-
-[scriptable, uuid(c8c42b0c-a0dd-4702-9425-a7a80b2075c3)]
-interface mozIDOMTelephonyCallEvent : nsIDOMEvent {
-  readonly attribute mozIDOMTelephonyCall call;
+  attribute nsIDOMEventListener onincoming;
 };

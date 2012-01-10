@@ -37,20 +37,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_telephony_radio_h__
-#define mozilla_dom_telephony_radio_h__
+#ifndef mozilla_dom_telephony_telephonycommon_h__
+#define mozilla_dom_telephony_telephonycommon_h__
 
-#include "jsapi.h"
-#include "nsComponentManagerUtils.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
-#include "nsServiceManagerUtils.h"
-
-#include "nsIObserver.h"
-#include "mozilla/ipc/Ril.h"
-
-#define TELEPHONYRADIO_CONTRACTID "@mozilla.org/telephony/radio;1"
-#define TELEPHONYRADIOINTERFACE_CONTRACTID "@mozilla.org/telephony/radio-interface;1"
+#include "nsDOMEventTargetWrapperCache.h"
+#include "nsStringGlue.h"
+#include "nsTArray.h"
 
 #define BEGIN_TELEPHONY_NAMESPACE \
   namespace mozilla { namespace dom { namespace telephony {
@@ -59,48 +55,14 @@
 #define USING_TELEPHONY_NAMESPACE \
   using namespace mozilla::dom::telephony;
 
-// {a5c3a6de-84c4-4b15-8611-8aeb8d97f8ba}
-#define TELEPHONYRADIO_CID \
-  {0xa5c3a6de, 0x84c4, 0x4b15, {0x86, 0x11, 0x8a, 0xeb, 0x8d, 0x97, 0xf8, 0xba}}
-
-// {a688f191-8ffc-47f3-8740-94a312cf59cb}}
-#define TELEPHONYRADIOINTERFACE_CID \
-  {0xd66e7ece, 0x41b1, 0x4608, {0x82, 0x80, 0x72, 0x50, 0xa6, 0x44, 0xe6, 0x6f}}
-
-
-class nsIXPConnectJSObjectHolder;
-class nsITelephone;
-class nsIWifi;
+class nsIDOMTelephony;
+class nsIDOMTelephonyCall;
 
 BEGIN_TELEPHONY_NAMESPACE
 
-class RadioManager : public nsIObserver
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-  nsresult Init();
-  void Shutdown();
-
-  static already_AddRefed<RadioManager>
-  FactoryCreate();
-
-  static already_AddRefed<nsITelephone>
-  GetTelephone();
-
-protected:
-  RadioManager();
-  ~RadioManager();
-
-  nsresult InitTelephone(JSContext *cx);
-  nsresult InitWifi(JSContext *cx);
-
-  nsCOMPtr<nsITelephone> mTelephone;
-  nsCOMPtr<nsIWifi> mWifi;
-  bool mShutdown;
-};
+class Telephony;
+class TelephonyCall;
 
 END_TELEPHONY_NAMESPACE
 
-#endif // mozilla_dom_telephony_radio_h__
+#endif // mozilla_dom_telephony_telephonycommon_h__

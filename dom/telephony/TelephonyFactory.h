@@ -1,3 +1,5 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=40: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,9 +37,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef mozilla_dom_telephony_telephonyfactory_h__
+#define mozilla_dom_telephony_telephonyfactory_h__
 
-[scriptable, uuid(8f031451-ac25-4816-a09e-a075bb704e63)]
-interface nsIRadioWorker : nsISupports {
-    readonly attribute jsval worker;
-};
+#include "nsIDOMTelephony.h"
+#include "nsPIDOMWindow.h"
+
+// Implemented in Telephony.cpp.
+
+nsresult
+NS_NewTelephony(nsPIDOMWindow* aWindow, nsIDOMTelephony** aTelephony);
+
+#endif // mozilla_dom_telephony_telephonyfactory_h__

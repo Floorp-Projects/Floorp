@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=716127
+-->
+<head>
+  <title>Test for getCurrentPosition </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="geolocation_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=716127">Mozilla Bug 716127</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+resume_geolocationProvider();
+force_prompt(true);
+
+function successCallback(position) {
+  check_geolocation(position);
+
+  SpecialPowers.pushPrefEnv({'set': [['geo.timeout', 100]]}, function() {
+      delay_geolocationProvider(1000);
+      force_prompt(true);
+      navigator.geolocation.getCurrentPosition(success2, handle_error, {maximumAge: 0});
+  });
+}
+
+function errorCallback() {
+  ok(false, "unexpected error");
+  SimpleTest.finish();
+}
+
+navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
+
+function success2(position) {
+  check_geolocation(position);
+  reset_prompt();
+  SimpleTest.finish();
+}
+
+function handle_error() {
+  ok(false, "geolocation provider should not have timed out");
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>
+
