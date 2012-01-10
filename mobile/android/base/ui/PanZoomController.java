@@ -285,7 +285,7 @@ public class PanZoomController
         case PANNING_HOLD:
         case PANNING_HOLD_LOCKED:
         case PINCHING:
-            mState = PanZoomState.PINCHING;
+            Log.e(LOGTAG, "Received impossible touch down while in " + mState);
             return false;
         }
         Log.e(LOGTAG, "Unhandled case " + mState + " in onTouchStart");
@@ -354,19 +354,7 @@ public class PanZoomController
             fling();
             return true;
         case PINCHING:
-            int points = event.getPointerCount();
-            if (points == 1) {
-                // last touch up
-                mState = PanZoomState.NOTHING;
-            } else if (points == 2) {
-                int pointRemovedIndex = event.getActionIndex();
-                int pointRemainingIndex = 1 - pointRemovedIndex; // kind of a hack
-                mState = PanZoomState.TOUCHING;
-                mX.firstTouchPos = mX.touchPos = event.getX(pointRemainingIndex);
-                mX.firstTouchPos = mY.touchPos = event.getY(pointRemainingIndex);
-            } else {
-                // still pinching, do nothing
-            }
+            mState = PanZoomState.NOTHING;
             return true;
         case ANIMATED_ZOOM:
             return false;
