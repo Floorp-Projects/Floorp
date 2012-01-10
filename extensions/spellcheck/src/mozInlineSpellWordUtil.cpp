@@ -43,7 +43,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMNSRange.h"
 #include "nsIDOMRange.h"
 #include "nsIEditor.h"
 #include "nsIDOMNode.h"

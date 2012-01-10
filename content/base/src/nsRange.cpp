@@ -336,7 +336,6 @@ DOMCI_DATA(Range, nsRange)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsRange)
   NS_INTERFACE_MAP_ENTRY(nsIDOMRange)
   NS_INTERFACE_MAP_ENTRY(nsIRange)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSRange)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRange)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Range)
@@ -665,9 +664,9 @@ nsRange::ParentChainChanged(nsIContent *aContent)
   DoSetRange(mStartParent, mStartOffset, mEndParent, mEndOffset, newRoot);
 }
 
-/********************************************************
- * Utilities for comparing points: API from nsIDOMNSRange
- ********************************************************/
+/******************************************************
+ * Utilities for comparing points: API from nsIDOMRange
+ ******************************************************/
 NS_IMETHODIMP
 nsRange::IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, bool* aResult)
 {
@@ -2377,7 +2376,6 @@ nsRange::Detach()
   return NS_OK;
 }
 
-// nsIDOMNSRange interface
 NS_IMETHODIMP    
 nsRange::CreateContextualFragment(const nsAString& aFragment,
                                   nsIDOMDocumentFragment** aReturn)

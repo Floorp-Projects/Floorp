@@ -30,8 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=451376
                        aInRangeNode, aInRangeOffset,
                        aAfterRangeNode, aAfterRangeOffset)
     {
-      var range = document.createRange().
-        QueryInterface(Components.interfaces.nsIDOMNSRange);
+      var range = document.createRange();
 
       range.setStart(aStartNode, aStartOffset);
       range.setEnd(aEndNode, aEndOffset);
