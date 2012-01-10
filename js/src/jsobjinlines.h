@@ -634,6 +634,23 @@ JSObject::denseArrayHasInlineSlots() const
 
 namespace js {
 
+inline JSObject *
+ValueToObjectOrPrototype(JSContext *cx, const Value &v)
+{
+    if (v.isObject())
+        return &v.toObject();
+    GlobalObject *global = &cx->fp()->scopeChain().global();
+    if (v.isString())
+        return global->getOrCreateStringPrototype(cx);
+    if (v.isNumber())
+        return global->getOrCreateNumberPrototype(cx);
+    if (v.isBoolean())
+        return global->getOrCreateBooleanPrototype(cx);
+    JS_ASSERT(v.isNull() || v.isUndefined());
+    js_ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, v, NULL);
+    return NULL;
+}
+
 /*
  * Any name atom for a function which will be added as a DeclEnv object to the
  * scope chain above call objects for fun.
