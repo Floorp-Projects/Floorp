@@ -225,7 +225,12 @@ function testEnd() {
   executeSoon(finishTest);
 }
 
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.gcli.enable");
+});
+
 function test() {
+  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab(TEST_URI);
   browser.addEventListener("load", tabLoad, true);
 }

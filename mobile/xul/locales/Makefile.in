@@ -56,6 +56,7 @@ endif
 SUBMAKEFILES += \
         $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/Makefile \
         $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/Makefile \
+        $(DEPTH)/mobile/locales/Makefile \
         $(NULL)
 
 MOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox-mobile.mozilla.org
