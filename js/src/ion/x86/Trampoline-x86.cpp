@@ -593,9 +593,10 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
     // Check if the calling frame has been invalidated, in which case we can't
     // disturb the frame descriptor.
+    Register scratch = (f.outParam == Type_Value) ? ReturnReg : JSReturnReg_Type;
     Label invalidated;
-    masm.pop(esi);
-    masm.cmpl(esi, Operand(esp, 0));
+    masm.pop(scratch);
+    masm.cmpl(scratch, Operand(esp, 0));
     masm.j(Assembler::NotEqual, &invalidated);
 
     masm.retn(Imm32(sizeof(IonExitFrameLayout) + f.explicitArgs * sizeof(void *)));
