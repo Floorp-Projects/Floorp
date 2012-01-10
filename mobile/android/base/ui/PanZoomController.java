@@ -435,7 +435,8 @@ public class PanZoomController
             }
         }
 
-        mX.setFlingState(Axis.FlingStates.PANNING); mY.setFlingState(Axis.FlingStates.PANNING);
+        mX.startPan();
+        mY.startPan();
         mX.displace(mOverridePanning); mY.displace(mOverridePanning);
         updatePosition();
     }
@@ -689,7 +690,7 @@ public class PanZoomController
 
     // Physics information for one axis (X or Y).
     private abstract static class Axis {
-        public enum FlingStates {
+        private enum FlingStates {
             STOPPED,
             PANNING,
             FLINGING,
@@ -718,12 +719,6 @@ public class PanZoomController
         public float displacement;
 
         public Axis() {}
-
-        public FlingStates getFlingState() { return mFlingState; }
-
-        public void setFlingState(FlingStates aFlingState) {
-            mFlingState = aFlingState;
-        }
 
         private float getViewportEnd() { return getOrigin() + getViewportLength(); }
 
@@ -813,13 +808,17 @@ public class PanZoomController
             return locked ? 0.0f : velocity;
         }
 
+        void startPan() {
+            mFlingState = FlingStates.PANNING;
+        }
+
         public void startFling(boolean stopped, boolean panningOverridden) {
             disableSnap = panningOverridden;
 
             if (stopped) {
-                setFlingState(FlingStates.STOPPED);
+                mFlingState = FlingStates.STOPPED;
             } else {
-                setFlingState(FlingStates.FLINGING);
+                mFlingState = FlingStates.FLINGING;
             }
         }
 
@@ -851,7 +850,7 @@ public class PanZoomController
 
         void stopFling() {
             velocity = 0.0f;
-            setFlingState(FlingStates.STOPPED);
+            mFlingState = FlingStates.STOPPED;
         }
 
         // Performs displacement of the viewport position according to the current velocity.
