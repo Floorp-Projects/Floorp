@@ -35,25 +35,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_sms_SmsServiceFactory_h
-#define mozilla_dom_sms_SmsServiceFactory_h
+#ifndef mozilla_dom_sms_SmsDatabaseService_h
+#define mozilla_dom_sms_SmsDatabaseService_h
 
-#include "nsCOMPtr.h"
-
-class nsISmsService;
+#include "nsISmsDatabaseService.h"
 
 namespace mozilla {
 namespace dom {
 namespace sms {
 
-class SmsServiceFactory
+class SmsDatabaseService : public nsISmsDatabaseService
 {
 public:
-  static already_AddRefed<nsISmsService> Create();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISMSDATABASESERVICE
 };
 
 } // namespace sms
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_sms_SmsServiceFactory_h
+#endif // mozilla_dom_sms_SmsDatabaseService_h

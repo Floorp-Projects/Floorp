@@ -252,7 +252,8 @@ static void Shutdown();
 #endif
 #include "nsCSPService.h"
 #include "nsISmsService.h"
-#include "mozilla/dom/sms/SmsServiceFactory.h"
+#include "nsISmsDatabaseService.h"
+#include "mozilla/dom/sms/SmsServicesFactory.h"
 
 using namespace mozilla::dom::sms;
 
@@ -300,7 +301,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHapticFeedback)
 #endif
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ThirdPartyUtil, Init)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsISmsService, SmsServiceFactory::Create)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsISmsService, SmsServicesFactory::CreateSmsService)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsISmsDatabaseService, SmsServicesFactory::CreateSmsDatabaseService)
 
 //-----------------------------------------------------------------------------
 
@@ -793,7 +795,8 @@ NS_DEFINE_NAMED_CID(NS_DEVICE_MOTION_CID);
 NS_DEFINE_NAMED_CID(NS_HAPTICFEEDBACK_CID);
 #endif
 #endif
-NS_DEFINE_NAMED_CID(NS_SMSSERVICE_CID);
+NS_DEFINE_NAMED_CID(SMS_SERVICE_CID);
+NS_DEFINE_NAMED_CID(SMS_DATABASE_SERVICE_CID);
 
 static nsresult
 CreateWindowCommandTableConstructor(nsISupports *aOuter,
@@ -1063,7 +1066,8 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #endif
   { &kTHIRDPARTYUTIL_CID, false, NULL, ThirdPartyUtilConstructor },
   { &kNS_STRUCTUREDCLONECONTAINER_CID, false, NULL, nsStructuredCloneContainerConstructor },
-  { &kNS_SMSSERVICE_CID, false, NULL, nsISmsServiceConstructor },
+  { &kSMS_SERVICE_CID, false, NULL, nsISmsServiceConstructor },
+  { &kSMS_DATABASE_SERVICE_CID, false, NULL, nsISmsDatabaseServiceConstructor },
   { NULL }
 };
 
@@ -1198,7 +1202,8 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #endif
   { THIRDPARTYUTIL_CONTRACTID, &kTHIRDPARTYUTIL_CID },
   { NS_STRUCTUREDCLONECONTAINER_CONTRACTID, &kNS_STRUCTUREDCLONECONTAINER_CID },
-  { SMSSERVICE_CONTRACTID, &kNS_SMSSERVICE_CID },
+  { SMS_SERVICE_CONTRACTID, &kSMS_SERVICE_CID },
+  { SMS_DATABASE_SERVICE_CONTRACTID, &kSMS_DATABASE_SERVICE_CID },
   { NULL }
 };
 

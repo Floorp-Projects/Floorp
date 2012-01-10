@@ -94,7 +94,7 @@ SmsParent::RecvHasSupport(bool* aHasSupport)
 {
   *aHasSupport = false;
 
-  nsCOMPtr<nsISmsService> smsService = do_GetService(SMSSERVICE_CONTRACTID);
+  nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(smsService, true);
 
   smsService->HasSupport(aHasSupport);
@@ -106,7 +106,7 @@ SmsParent::RecvGetNumberOfMessagesForText(const nsString& aText, PRUint16* aResu
 {
   *aResult = 0;
 
-  nsCOMPtr<nsISmsService> smsService = do_GetService(SMSSERVICE_CONTRACTID);
+  nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(smsService, true);
 
   smsService->GetNumberOfMessagesForText(aText, aResult);
@@ -116,7 +116,7 @@ SmsParent::RecvGetNumberOfMessagesForText(const nsString& aText, PRUint16* aResu
 bool
 SmsParent::RecvSendMessage(const nsString& aNumber, const nsString& aMessage)
 {
-  nsCOMPtr<nsISmsService> smsService = do_GetService(SMSSERVICE_CONTRACTID);
+  nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(smsService, true);
 
   smsService->Send(aNumber, aMessage);

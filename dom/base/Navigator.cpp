@@ -994,7 +994,7 @@ Navigator::IsSmsAllowed() const
 bool
 Navigator::IsSmsSupported() const
 {
-  nsCOMPtr<nsISmsService> smsService = do_GetService(SMSSERVICE_CONTRACTID);
+  nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(smsService, false);
 
   bool result = false;

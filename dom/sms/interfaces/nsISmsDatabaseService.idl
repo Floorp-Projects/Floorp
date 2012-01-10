@@ -19,7 +19,6 @@
  *
  * Contributor(s):
  *  Mounir Lamouri <mounir.lamouri@mozilla.com> (Original Author)
- *  Philipp von Weitershausen <philipp@weitershausen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,25 +36,16 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMMozSmsMessage;
-
 %{C++
-#define SMS_SERVICE_CID { 0xbada3cb8, 0xa568, 0x4dff, { 0xb5, 0x43, 0x52, 0xbb, 0xb3, 0x14, 0x31, 0x21 } }
-#define SMS_SERVICE_CONTRACTID "@mozilla.org/sms/smsservice;1"
+#define SMS_DATABASE_SERVICE_CID \
+{ 0xb5bd6b55, 0x2e56, 0x4f1d,    \
+ { 0xa4, 0x38, 0x1d, 0x10, 0xd6, 0xf3, 0x4d, 0xe5 } }
+#define SMS_DATABASE_SERVICE_CONTRACTID "@mozilla.org/sms/smsdatabaseservice;1"
 %}
 
-[scriptable, builtinclass, uuid(a0fbbe74-5d61-4b7e-b7ab-9b5224f9e5e9)]
-interface nsISmsService : nsISupports
-{
-  boolean        hasSupport();
-  unsigned short getNumberOfMessagesForText(in DOMString text);
-            void send(in DOMString number, in DOMString message);
+interface nsIDOMMozSmsMessage;
 
-  [implicit_jscontext]
-  nsIDOMMozSmsMessage createSmsMessage(in long      id,
-                                       in DOMString delivery,
-                                       in DOMString sender,
-                                       in DOMString receiver,
-                                       in DOMString body,
-                                       in jsval     timestamp);
+[scriptable, function, uuid(ff6128fd-8caf-4b2b-898e-fb4051996767)]
+interface nsISmsDatabaseService : nsISupports
+{
 };
