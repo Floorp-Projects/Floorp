@@ -491,7 +491,7 @@ endif
 
 ifeq ($(OS_ARCH),Darwin)
 ifdef MOZ_SYDNEYAUDIO
-EXTRA_DSO_LDOPTS += \
+OS_LIBS += \
   -framework Carbon \
   -framework CoreAudio \
   -framework AudioToolbox \
