@@ -464,7 +464,6 @@ public class PanZoomController
         }
 
         mState = PanZoomState.FLING;
-        mX.setFlingState(Axis.FlingStates.SNAPPING); mY.setFlingState(Axis.FlingStates.SNAPPING);
         Log.d(LOGTAG, "end bounce at " + metrics);
 
         startAnimationTimer(new BounceRunnable(bounceStartMetrics, metrics));
@@ -690,8 +689,6 @@ public class PanZoomController
             STOPPED,
             PANNING,
             FLINGING,
-            WAITING_TO_SNAP,
-            SNAPPING,
         }
 
         public enum Overscroll {
@@ -716,10 +713,7 @@ public class PanZoomController
 
         public float displacement;
 
-        private int mSnapFrame;
-        private float mSnapPos, mSnapEndPos;
-
-        public Axis() { mSnapFrame = -1; }
+        public Axis() {}
 
         public FlingStates getFlingState() { return mFlingState; }
 
@@ -808,15 +802,11 @@ public class PanZoomController
         }
 
         public void startFling(boolean stopped) {
-            if (!stopped) {
-                setFlingState(FlingStates.FLINGING);
-                return;
-            }
-
-            if (disableSnap || FloatUtils.fuzzyEquals(getExcess(), 0.0f))
+            if (stopped) {
                 setFlingState(FlingStates.STOPPED);
-            else
-                setFlingState(FlingStates.WAITING_TO_SNAP);
+            } else {
+                setFlingState(FlingStates.FLINGING);
+            }
         }
 
         /* Advances a fling animation by one step. */
@@ -847,7 +837,7 @@ public class PanZoomController
 
             if (Math.abs(velocity) < 0.3f) {
                 velocity = 0.0f;
-                setFlingState(FlingStates.WAITING_TO_SNAP);
+                setFlingState(FlingStates.STOPPED);
             }
         }
 
