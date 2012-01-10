@@ -95,6 +95,8 @@ public class PanZoomController
     // The minimum amount of space that must be present for an axis to be considered scrollable,
     // in pixels.
     private static final float MIN_SCROLLABLE_DISTANCE = 0.5f;
+    // The number of milliseconds per frame assuming 60 fps
+    private static final float MS_PER_FRAME = 1000.0f / 60.0f;
     // The maximum amount we allow you to zoom into a page
     private static final float MAX_ZOOM = 4.0f;
 
@@ -373,17 +375,14 @@ public class PanZoomController
         return (float)Math.sqrt(dx * dx + dy * dy);
     }
 
-    private float clampByFactor(float oldValue, float newValue, float factor) {
-        float maxChange = Math.abs(oldValue * factor);
-        return Math.min(oldValue + maxChange, Math.max(oldValue - maxChange, newValue));
-    }
-
-    private void track(float x, float y, float lastX, float lastY, float timeDelta) {
+    private void track(float x, float y, long time) {
+        float timeDelta = (float)(time - mLastEventTime);
         if (FloatUtils.fuzzyEquals(timeDelta, 0)) {
             // probably a duplicate event, ignore it. using a zero timeDelta will mess
             // up our velocity
             return;
         }
+        mLastEventTime = time;
 
         if (mState == PanZoomState.PANNING_LOCKED) {
             // check to see if we should break the axis lock
@@ -406,25 +405,8 @@ public class PanZoomController
             }
         }
 
-        float newVelocityX = ((lastX - x) / timeDelta) * (1000.0f/60.0f);
-        float newVelocityY = ((lastY - y) / timeDelta) * (1000.0f/60.0f);
-        float maxChange = MAX_EVENT_ACCELERATION * timeDelta;
-
-        // If there's a direction change, or current velocity is very low,
-        // allow setting of the velocity outright. Otherwise, use the current
-        // velocity and a maximum change factor to set the new velocity.
-        if (Math.abs(mX.velocity) < 1.0f ||
-            (((mX.velocity > 0) != (newVelocityX > 0)) &&
-             !FloatUtils.fuzzyEquals(newVelocityX, 0.0f)))
-            mX.velocity = newVelocityX;
-        else
-            mX.velocity = clampByFactor(mX.velocity, newVelocityX, maxChange);
-        if (Math.abs(mY.velocity) < 1.0f ||
-            (((mY.velocity > 0) != (newVelocityY > 0)) &&
-             !FloatUtils.fuzzyEquals(newVelocityY, 0.0f)))
-            mY.velocity = newVelocityY;
-        else
-            mY.velocity = clampByFactor(mY.velocity, newVelocityY, maxChange);
+        mX.updateWithTouchAt(x, timeDelta);
+        mY.updateWithTouchAt(y, timeDelta);
     }
 
     private void track(MotionEvent event) {
@@ -432,24 +414,11 @@ public class PanZoomController
         mY.lastTouchPos = mY.touchPos;
 
         for (int i = 0; i < event.getHistorySize(); i++) {
-            float x = event.getHistoricalX(0, i);
-            float y = event.getHistoricalY(0, i);
-            long time = event.getHistoricalEventTime(i);
-
-            float timeDelta = (float)(time - mLastEventTime);
-            mLastEventTime = time;
-
-            track(x, y, mX.touchPos, mY.touchPos, timeDelta);
-            mX.touchPos = x; mY.touchPos = y;
+            track(event.getHistoricalX(0, i),
+                  event.getHistoricalY(0, i),
+                  event.getHistoricalEventTime(i));
         }
-
-        float timeDelta = (float)(event.getEventTime() - mLastEventTime);
-        mLastEventTime = event.getEventTime();
-
-        track(event.getX(0), event.getY(0), mX.touchPos, mY.touchPos, timeDelta);
-
-        mX.touchPos = event.getX(0);
-        mY.touchPos = event.getY(0);
+        track(event.getX(0), event.getY(0), event.getEventTime());
 
         if (stopped()) {
             if (mState == PanZoomState.PANNING) {
@@ -762,6 +731,24 @@ public class PanZoomController
             velocity = 0.0f;
             locked = false;
             firstTouchPos = touchPos = lastTouchPos = pos;
+        }
+
+        void updateWithTouchAt(float pos, float timeDelta) {
+            float newVelocity = (touchPos - pos) / timeDelta * MS_PER_FRAME;
+
+            // If there's a direction change, or current velocity is very low,
+            // allow setting of the velocity outright. Otherwise, use the current
+            // velocity and a maximum change factor to set the new velocity.
+            boolean curVelocityIsLow = Math.abs(velocity) < 1.0f;
+            boolean directionChange = (velocity > 0) != (newVelocity > 0);
+            if (curVelocityIsLow || (directionChange && !FloatUtils.fuzzyEquals(newVelocity, 0.0f))) {
+                velocity = newVelocity;
+            } else {
+                float maxChange = Math.abs(velocity * timeDelta * MAX_EVENT_ACCELERATION);
+                velocity = Math.min(velocity + maxChange, Math.max(velocity - maxChange, newVelocity));
+            }
+
+            touchPos = pos;
         }
 
         public Overscroll getOverscroll() {
