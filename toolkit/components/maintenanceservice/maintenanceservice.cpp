@@ -54,8 +54,8 @@ HANDLE gWorkDoneEvent = NULL;
 HANDLE gThread = NULL;
 bool gServiceControlStopping = false;
 
-// logs are pretty small ~10 lines, so 5 seems reasonable.
-#define LOGS_TO_KEEP 5
+// logs are pretty small, about 20 lines, so 10 seems reasonable.
+#define LOGS_TO_KEEP 10
 
 BOOL GetLogDirectoryPath(WCHAR *path);
 
