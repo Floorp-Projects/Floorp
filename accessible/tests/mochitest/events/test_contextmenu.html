@@ -91,7 +91,7 @@
         var item = menu.getChildAt(idx);
 
         if (hasState(item, STATE_FOCUSED))
-          return getAccessible(item, [nsIAccessNode]);
+          return getAccessible(item);
       }
       return null;
     }

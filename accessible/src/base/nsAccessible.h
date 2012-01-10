@@ -130,6 +130,17 @@ public:
   virtual void Description(nsString& aDescription);
 
   /**
+   * Return DOM node associated with this accessible.
+   */
+  inline already_AddRefed<nsIDOMNode> DOMNode() const
+  {
+    nsIDOMNode *DOMNode = nsnull;
+    if (GetNode())
+      CallQueryInterface(GetNode(), &DOMNode);
+    return DOMNode;
+  }
+
+  /**
    * Returns the accessible name specified by ARIA.
    */
   nsresult GetARIAName(nsAString& aName);
