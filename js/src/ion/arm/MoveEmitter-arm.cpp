@@ -93,22 +93,16 @@ MoveEmitterARM::spillSlot() const
 Operand
 MoveEmitterARM::toOperand(const MoveOperand &operand, bool isFloat) const
 {
-    if (operand.isMemory()) {
+    if (operand.isMemory() || operand.isEffectiveAddress()) {
         if (operand.base() != StackPointer) {
             JS_ASSERT(operand.disp() < 1024 && operand.disp() > -1024);
-            if (isFloat)
-                return Operand(operand.base(), operand.disp());
-            else
-                return Operand(operand.base(), operand.disp());
+            return Operand(operand.base(), operand.disp());
         }
 
         JS_ASSERT(operand.disp() >= 0);
         
         // Otherwise, the stack offset may need to be adjusted.
-        if (isFloat)
-            return Operand(StackPointer, operand.disp() + (masm.framePushed() - pushedAtStart_));
-        else
-            return Operand(StackPointer, operand.disp() + (masm.framePushed() - pushedAtStart_));
+        return Operand(StackPointer, operand.disp() + (masm.framePushed() - pushedAtStart_));
     }
     if (operand.isGeneralReg())
         return Operand(operand.reg());
@@ -219,11 +213,22 @@ MoveEmitterARM::emitMove(const MoveOperand &from, const MoveOperand &to)
             // don't re-clobber its value.
             spilledReg_ = InvalidReg;
         }
-        masm.ma_ldr(toOperand(from, false), to.reg());
+
+        JS_ASSERT(from.isMemory() || from.isEffectiveAddress());
+        if (from.isMemory())
+            masm.ma_ldr(toOperand(from, false), to.reg());
+        else
+            masm.ma_add(from.base(), Imm32(from.disp()), to.reg());
     } else {
         // Memory to memory gpr move.
         Register reg = tempReg();
-        masm.ma_ldr(toOperand(from, false), reg);
+
+        JS_ASSERT(from.isMemory() || from.isEffectiveAddress());
+        if (from.isMemory())
+            masm.ma_ldr(toOperand(from, false), reg);
+        else
+            masm.ma_add(from.reg(), Imm32(from.disp()), reg);
+        JS_ASSERT(to.base() != reg);
         masm.ma_str(reg, toOperand(to, false));
     }
 }
@@ -241,6 +246,7 @@ MoveEmitterARM::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
         masm.ma_vldr(toOperand(from, true), to.floatReg());
     } else {
         // Memory to memory float move.
+        JS_ASSERT(from.isMemory());
         FloatRegister reg = ScratchFloatReg;
         masm.ma_vldr(toOperand(from, true), reg);
         masm.ma_vstr(reg, toOperand(to, true));
