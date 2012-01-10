@@ -332,16 +332,6 @@ class InlineList : protected InlineListNode<T>
         static_cast<Node *>(at->next)->prev = item;
         at->next = item;
     }
-    void steal(InlineList<T> *from) {
-        Node *oldTail = this->prev;
-        Node *stealHead = from->next;
-        Node *stealTail = from->prev;
-        oldTail->next = stealHead;
-        stealHead->prev = oldTail;
-        stealTail->next = this;
-        this->prev = stealTail;
-        from->next = from->prev = from;
-    }
     void remove(Node *t) {
         t->prev->next = t->next;
         static_cast<Node *>(t->next)->prev = t->prev;
