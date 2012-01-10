@@ -314,17 +314,19 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins)
     masm.callWithExitFrame(wrapper);
     if (!createSafepoint(ins))
         return false;
+
 #if defined(JS_CPU_ARM)
     // Technically, we're need to remove IonExitFrameLayout from the stack, including
     // the return addres.  However, we make the call into the VM via callIon, which adjusts the
     // stack as if we'd return via the ION mechanism, which pops the return address.
     // Thus we need to lie here in order to do the right thing.
-    int extraPop = (sizeof(IonExitFrameLayout) - sizeof(void*)) / sizeof(void*);
+    int framePop = (sizeof(IonExitFrameLayout) - sizeof(void*)) / sizeof(void*);
 #else
-    int extraPop = 0;
+    int framePop = 0;
 #endif
+
     // Pop arguments from framePushed.
-    masm.implicitPop(fun.explicitArgs + argumentPadding / sizeof(void *) + extraPop);
+    masm.implicitPop(fun.explicitStackSlots() + argumentPadding / sizeof(void *) + framePop);
 
     // Stack is:
     //    ... frame ...

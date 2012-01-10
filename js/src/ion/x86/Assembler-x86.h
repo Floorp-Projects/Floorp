@@ -230,6 +230,10 @@ class Assembler : public AssemblerX86Shared
         push(Imm32(ptr.value));
         writeDataRelocation(masm.currentOffset());
     }
+    void push(const FloatRegister &src) {
+        subl(Imm32(sizeof(double)), StackPointer);
+        movsd(src, Operand(StackPointer, 0));
+    }
 
     void movl(const ImmGCPtr &ptr, const Register &dest) {
         masm.movl_i32r(ptr.value, dest.code());
