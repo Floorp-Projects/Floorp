@@ -43,7 +43,12 @@
 
 const TEST_DUPLICATE_ERROR_URI = "http://example.com/browser/browser/devtools/webconsole/test//test-duplicate-error.html";
 
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.gcli.enable");
+});
+
 function test() {
+  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   expectUncaughtException();
   addTab(TEST_DUPLICATE_ERROR_URI);
   browser.addEventListener("DOMContentLoaded", testDuplicateErrors, false);
