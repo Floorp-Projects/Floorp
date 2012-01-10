@@ -2494,6 +2494,20 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *pc)
     // Unboxes in the MResumePiont, so that the MStart always sees Values.
     osrBlock->linkOsrValues(start);
 
+    // Clone types of the other predecessor of the pre-header to the osr block,
+    // such as pre-header phi's won't discard specialized type of the
+    // predecessor.
+    JS_ASSERT(predecessor->stackDepth() == osrBlock->stackDepth());
+    for (uint32 i = 0; i < osrBlock->stackDepth(); i++) {
+        MIRType guessType = predecessor->getSlot(i)->type();
+        if (guessType != MIRType_Value) {
+            MDefinition *def = osrBlock->getSlot(i);
+            MInstruction *actual = MUnbox::New(def, guessType, MUnbox::Fallible);
+            osrBlock->add(actual);
+            osrBlock->rewriteSlot(i, actual);
+        }
+    }
+
     // Finish the osrBlock.
     osrBlock->end(MGoto::New(preheader));
     preheader->addPredecessor(osrBlock);
