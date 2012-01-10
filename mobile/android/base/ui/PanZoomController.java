@@ -236,7 +236,8 @@ public class PanZoomController
         // anything special.
         switch (mState) {
         case FLING:
-            mX.velocity = mY.velocity = 0.0f;
+            mX.stopFling();
+            mY.stopFling();
             mState = PanZoomState.NOTHING;
             // fall through
         case ANIMATED_ZOOM:
@@ -392,18 +393,18 @@ public class PanZoomController
             angle = Math.abs(angle); // range [0, pi]
             if (angle < AXIS_LOCK_ANGLE || angle > (Math.PI - AXIS_LOCK_ANGLE)) {
                 // lock to x-axis
-                mX.locked = false;
-                mY.locked = true;
+                mX.setLocked(false);
+                mY.setLocked(true);
             } else if (Math.abs(angle - (Math.PI / 2)) < AXIS_LOCK_ANGLE) {
                 // lock to y-axis
-                mX.locked = true;
-                mY.locked = false;
+                mX.setLocked(true);
+                mY.setLocked(false);
             } else {
                 // break axis lock but log the angle so we can fine-tune this when people complain
                 mState = PanZoomState.PANNING;
-                mX.locked = mY.locked = false;
+                mX.setLocked(false);
+                mY.setLocked(false);
                 angle = Math.abs(angle - (Math.PI / 2));  // range [0, pi/2]
-                Log.i(LOGTAG, "Breaking axis lock at " + (angle * 180.0 / Math.PI) + " degrees");
             }
         }
 
@@ -440,16 +441,14 @@ public class PanZoomController
     }
 
     private void fling() {
-        mX.disableSnap = mY.disableSnap = mOverridePanning;
-
         mX.displace(mOverridePanning); mY.displace(mOverridePanning);
         updatePosition();
 
         stopAnimationTimer();
 
         boolean stopped = stopped();
-        mX.startFling(stopped);
-        mY.startFling(stopped);
+        mX.startFling(stopped, mOverridePanning);
+        mY.startFling(stopped, mOverridePanning);
 
         startAnimationTimer(new FlingRunnable());
     }
@@ -706,9 +705,9 @@ public class PanZoomController
         private float firstTouchPos;            /* Position of the first touch event on the current drag. */
         private float touchPos;                 /* Position of the most recent touch event on the current drag. */
         private float lastTouchPos;             /* Position of the touch event before touchPos. */
-        public float velocity;                  /* Velocity in this direction. */
-        public boolean locked;                  /* Whether movement on this axis is locked. */
-        public boolean disableSnap;             /* Whether overscroll snapping is disabled. */
+        private float velocity;                  /* Velocity in this direction. */
+        private boolean locked;                  /* Whether movement on this axis is locked. */
+        private boolean disableSnap;             /* Whether overscroll snapping is disabled. */
 
         private FlingStates mFlingState;        /* The fling state we're in on this axis. */
 
@@ -736,6 +735,10 @@ public class PanZoomController
 
         float panDistance(float currentPos) {
             return currentPos - firstTouchPos;
+        }
+
+        void setLocked(boolean locked) {
+            this.locked = locked;
         }
 
         void saveTouchPos() {
@@ -810,7 +813,9 @@ public class PanZoomController
             return locked ? 0.0f : velocity;
         }
 
-        public void startFling(boolean stopped) {
+        public void startFling(boolean stopped, boolean panningOverridden) {
+            disableSnap = panningOverridden;
+
             if (stopped) {
                 setFlingState(FlingStates.STOPPED);
             } else {
