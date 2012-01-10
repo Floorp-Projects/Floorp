@@ -665,15 +665,8 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_NOTEARG:
         return jsop_notearg();
 
-      case JSOP_CALLARG:
-      {
-        current->pushArg(GET_SLOTNO(pc));
-        if (!pushConstant(UndefinedValue())) // Implicit |this|.
-            return false;
-        return jsop_notearg();
-      }
-
       case JSOP_GETARG:
+      case JSOP_CALLARG:
         current->pushArg(GET_SLOTNO(pc));
         return true;
 
