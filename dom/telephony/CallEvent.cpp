@@ -85,7 +85,7 @@ DOMCI_DATA(CallEvent, CallEvent)
 NS_IMETHODIMP
 CallEvent::GetCall(nsIDOMTelephonyCall** aCall)
 {
-  nsCOMPtr<nsIDOMTelephonyCall> call = mCall;
+  nsCOMPtr<nsIDOMTelephonyCall> call = mCall.get();
   call.forget(aCall);
   return NS_OK;
 }
