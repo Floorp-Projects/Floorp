@@ -840,8 +840,7 @@ PluginInstanceParent::BackgroundDescriptor()
 
 #ifdef MOZ_X11
     gfxXlibSurface* xsurf = static_cast<gfxXlibSurface*>(mBackground.get());
-    return SurfaceDescriptorX11(xsurf->XDrawable(), xsurf->XRenderFormat()->id,
-                                xsurf->GetSize());
+    return SurfaceDescriptorX11(xsurf);
 #endif
 
 #ifdef XP_WIN

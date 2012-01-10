@@ -3280,8 +3280,7 @@ PluginInstanceChild::ShowPluginFrame()
 #ifdef MOZ_X11
     if (mCurrentSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
         gfxXlibSurface *xsurf = static_cast<gfxXlibSurface*>(mCurrentSurface.get());
-        currSurf = SurfaceDescriptorX11(xsurf->XDrawable(), xsurf->XRenderFormat()->id,
-                                        mCurrentSurface->GetSize());
+        currSurf = SurfaceDescriptorX11(xsurf);
         // Need to sync all pending x-paint requests
         // before giving drawable to another process
         XSync(mWsInfo.display, False);
