@@ -3446,14 +3446,7 @@ PluginInstanceChild::RecvUpdateBackground(const SurfaceDescriptor& aBackground,
         switch (aBackground.type()) {
 #ifdef MOZ_X11
         case SurfaceDescriptor::TSurfaceDescriptorX11: {
-            SurfaceDescriptorX11 xdesc = aBackground.get_SurfaceDescriptorX11();
-            XRenderPictFormat pf;
-            pf.id = xdesc.xrenderPictID();
-            XRenderPictFormat *incFormat =
-                XRenderFindFormat(DefaultXDisplay(), PictFormatID, &pf, 0);
-            mBackground =
-                new gfxXlibSurface(DefaultScreenOfDisplay(DefaultXDisplay()),
-                                   xdesc.XID(), incFormat, xdesc.size());
+            mBackground = aBackground.get_SurfaceDescriptorX11().OpenForeign();
             break;
         }
 #endif
