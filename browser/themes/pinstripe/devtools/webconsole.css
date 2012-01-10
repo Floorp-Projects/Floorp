@@ -70,11 +70,7 @@
   color: GrayText;
   margin-top: 0;
   margin-bottom: 0;
-}
-
-.hud-msg-node {
-  list-style-image: url(chrome://browser/skin/devtools/webconsole.png);
-  -moz-image-region: rect(0, 1px, 0, 0);
+  font: 11px Menlo, Monaco, monospace;
 }
 
 .webconsole-msg-icon {
@@ -94,6 +90,9 @@
   -moz-margin-start: 3px;
   -moz-margin-end: 6px;
   white-space: pre-wrap;
+  list-style-image: url(chrome://browser/skin/devtools/webconsole.png);
+  -moz-image-region: rect(0, 1px, 0, 0);
+  font: 11px Menlo, Monaco, monospace;
 }
 
 .webconsole-msg-body-piece {
@@ -136,7 +135,6 @@
   color: inherit;
 }
 
-.hud-output-node,
 .jsterm-input-node,
 .jsterm-complete-node {
   font: 11px Menlo, Monaco, monospace;

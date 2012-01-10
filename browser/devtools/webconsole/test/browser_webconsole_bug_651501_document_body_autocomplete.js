@@ -8,7 +8,12 @@
 
 Cu.import("resource:///modules/PropertyPanel.jsm");
 
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.gcli.enable");
+});
+
 function test() {
+  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab("data:text/html,Web Console autocompletion bug in document.body");
   browser.addEventListener("load", onLoad, true);
 }

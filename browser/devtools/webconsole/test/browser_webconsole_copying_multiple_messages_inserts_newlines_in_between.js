@@ -12,8 +12,13 @@
 
 const TEST_URI = "data:text/html,Web Console test for bug 586142";
 
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.gcli.enable");
+});
+
 function test()
 {
+  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab(TEST_URI);
   browser.addEventListener("DOMContentLoaded", onLoad, false);
 }
