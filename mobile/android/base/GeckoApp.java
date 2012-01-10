@@ -1460,7 +1460,7 @@ abstract public class GeckoApp
 
         prefetchDNS(intent.getData());
 
-        sGeckoThread = new GeckoThread(intent, mLastUri, mLastTitle);
+        sGeckoThread = new GeckoThread(intent, mLastUri);
         if (!ACTION_DEBUG.equals(intent.getAction()) &&
             checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched))
             sGeckoThread.start();
@@ -1481,6 +1481,8 @@ abstract public class GeckoApp
         } else {
             mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
         }
+
+        mBrowserToolbar.setTitle(mLastTitle);
 
         mFavicons = new Favicons(this);
 

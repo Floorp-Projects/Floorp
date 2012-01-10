@@ -54,12 +54,10 @@ public class GeckoThread extends Thread {
 
     Intent mIntent;
     String mUri;
-    String mTitle;
 
-    GeckoThread (Intent intent, String uri, String title) {
+    GeckoThread (Intent intent, String uri) {
         mIntent = intent;
         mUri = uri;
-        mTitle = title;
     }
 
     public void run() {
@@ -95,12 +93,6 @@ public class GeckoThread extends Thread {
         Log.w(LOGTAG, "zerdatime " + new Date().getTime() + " - runGecko");
 
         // and then fire us up
-
-        app.mMainHandler.post(new Runnable() {
-            public void run() {
-                app.mBrowserToolbar.setTitle(mTitle);
-            }
-        });
         try {
             Log.w(LOGTAG, "RunGecko - URI = " + mUri);
 
