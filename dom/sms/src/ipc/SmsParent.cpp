@@ -59,6 +59,7 @@ SmsParent::SmsParent()
   }
 
   obs->AddObserver(this, kSmsReceivedObserverTopic, false);
+  obs->AddObserver(this, kSmsSentObserverTopic, false);
 }
 
 void
@@ -70,6 +71,7 @@ SmsParent::ActorDestroy(ActorDestroyReason why)
   }
 
   obs->RemoveObserver(this, kSmsReceivedObserverTopic);
+  obs->RemoveObserver(this, kSmsSentObserverTopic);
 }
 
 NS_IMETHODIMP
@@ -84,6 +86,17 @@ SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     unused << SendNotifyReceivedMessage(static_cast<SmsMessage*>(message.get())->GetData());
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, kSmsSentObserverTopic)) {
+    nsCOMPtr<nsIDOMMozSmsMessage> message = do_QueryInterface(aSubject);
+    if (!message) {
+      NS_ERROR("Got a 'sms-sent' topic without a valid message!");
+      return NS_OK;
+    }
+
+    unused << SendNotifySentMessage(static_cast<SmsMessage*>(message.get())->GetData());
     return NS_OK;
   }
 
