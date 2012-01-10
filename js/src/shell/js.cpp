@@ -1827,12 +1827,8 @@ UpdateSwitchTableBounds(JSContext *cx, JSScript *script, uintN offset,
     pc = script->code + offset;
     op = JSOp(*pc);
     switch (op) {
-      case JSOP_TABLESWITCHX:
-        jmplen = JUMPX_OFFSET_LEN;
-        goto jump_table;
       case JSOP_TABLESWITCH:
         jmplen = JUMP_OFFSET_LEN;
-      jump_table:
         pc += jmplen;
         low = GET_JUMP_OFFSET(pc);
         pc += JUMP_OFFSET_LEN;
@@ -1841,12 +1837,8 @@ UpdateSwitchTableBounds(JSContext *cx, JSScript *script, uintN offset,
         n = high - low + 1;
         break;
 
-      case JSOP_LOOKUPSWITCHX:
-        jmplen = JUMPX_OFFSET_LEN;
-        goto lookup_table;
       case JSOP_LOOKUPSWITCH:
         jmplen = JUMP_OFFSET_LEN;
-      lookup_table:
         pc += jmplen;
         n = GET_INDEX(pc);
         pc += INDEX_LEN;
@@ -1885,7 +1877,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
                 name = "case";
             } else {
                 JSOp op = JSOp(script->code[offset]);
-                JS_ASSERT(op == JSOP_LABEL || op == JSOP_LABELX);
+                JS_ASSERT(op == JSOP_LABEL);
             }
         }
         Sprint(sp, "%3u: %4u %5u [%4u] %-8s", uintN(sn - notes), lineno, offset, delta, name);
@@ -1944,7 +1936,7 @@ SrcNotes(JSContext *cx, JSScript *script, Sprinter *sp)
           }
           case SRC_SWITCH: {
             JSOp op = JSOp(script->code[offset]);
-            if (op == JSOP_GOTO || op == JSOP_GOTOX)
+            if (op == JSOP_GOTO)
                 break;
             Sprint(sp, " length %u", uintN(js_GetSrcNoteOffset(sn, 0)));
             uintN caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
