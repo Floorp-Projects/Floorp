@@ -448,7 +448,8 @@ public class PanZoomController
         stopAnimationTimer();
 
         boolean stopped = stopped();
-        mX.startFling(stopped); mY.startFling(stopped);
+        mX.startFling(stopped);
+        mY.startFling(stopped);
 
         startAnimationTimer(new FlingRunnable());
     }
@@ -508,9 +509,7 @@ public class PanZoomController
     }
 
     private boolean stopped() {
-        float absVelocity = (float)Math.sqrt(mX.velocity * mX.velocity +
-                                             mY.velocity * mY.velocity);
-        return absVelocity < STOPPED_THRESHOLD;
+        return getVelocity() < STOPPED_THRESHOLD;
     }
 
     private void updatePosition() {
