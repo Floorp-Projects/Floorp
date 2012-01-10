@@ -129,6 +129,30 @@ class LRecompileCheck : public LInstructionHelper<0, 0, 0>
     LIR_HEADER(RecompileCheck);
 };
 
+class LMulI : public LBinaryMath<0, 1>
+{
+  public:
+    LIR_HEADER(MulI);
+
+    LMulI(const LAllocation &lhs, const LAllocation &rhs,
+          const LAllocation &lhsCopy)
+    {
+        setOperand(0, lhs);
+        setOperand(1, rhs);
+        setOperand(2, lhsCopy);
+    }
+
+    MMul *mir() {
+        return mir_->toMul();
+    }
+    const LAllocation *lhsCopy() {
+        return this->getOperand(2);
+    }
+    const LDefinition *output() {
+        return this->getDef(0);
+    }
+};
+
 } // namespace ion
 } // namespace js
 

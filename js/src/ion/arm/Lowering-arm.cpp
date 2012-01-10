@@ -284,6 +284,15 @@ LIRGeneratorARM::lowerDivI(MDiv *div)
 }
 
 bool
+LIRGeneratorARM::lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs)
+{
+    LMulI *lir = new LMulI;
+    if (mul->fallible() && !assignSnapshot(lir))
+        return false;
+    return lowerForALU(lir, mul, lhs, rhs);
+}
+
+bool
 LIRGeneratorARM::lowerModI(MMod *mod)
 {
     JS_NOT_REACHED("NYI: LModI");

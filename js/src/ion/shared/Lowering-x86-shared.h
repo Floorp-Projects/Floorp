@@ -53,6 +53,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     {}
     bool visitTableSwitch(MTableSwitch *tableswitch);
     bool visitRecompileCheck(MRecompileCheck *ins);
+    bool lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs);
 };
 
 }
