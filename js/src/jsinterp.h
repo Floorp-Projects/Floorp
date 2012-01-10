@@ -368,7 +368,13 @@ JSObject*
 NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type);
 
 bool
-GetProperty(JSContext *cx, JSObject *obj, JSAtom *atom, Value *property);
+GetObjectProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp);
+
+bool
+GetScopeName(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp);
+
+bool
+GetScopeNameForTypeOf(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp);
 
 }  /* namespace js */
 

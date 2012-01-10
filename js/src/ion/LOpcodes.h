@@ -51,6 +51,7 @@
     _(Double)                       \
     _(Value)                        \
     _(Parameter)                    \
+    _(Callee)                       \
     _(TableSwitch)                  \
     _(Goto)                         \
     _(NewArray)                     \
@@ -82,6 +83,7 @@
     _(Start)                        \
     _(OsrEntry)                     \
     _(OsrValue)                     \
+    _(OsrScopeChain)                \
     _(ImplicitThis)                 \
     _(Slots)                        \
     _(Elements)                     \
@@ -100,9 +102,12 @@
     _(LoadElementT)                 \
     _(StoreElementV)                \
     _(StoreElementT)                \
+    _(FunctionEnvironment)          \
     _(GetPropertyCacheV)            \
     _(GetPropertyCacheT)            \
-    _(LoadPropertyGeneric)          \
+    _(CallGetProperty)              \
+    _(CallGetName)                  \
+    _(CallGetNameTypeOf)            \
     _(ArrayLength)                  \
     _(StringLength)
 

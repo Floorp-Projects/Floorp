@@ -2987,7 +2987,7 @@ BEGIN_CASE(JSOP_LENGTH)
                                  ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                                  : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
                                  &rval)
-            : !GetProperty(cx, obj, name, &rval))
+            : !GetObjectProperty(cx, obj, name, &rval))
         {
             goto error;
         }
@@ -3502,43 +3502,26 @@ BEGIN_CASE(JSOP_CALLNAME)
         DO_NEXT_OP(len);
     }
 
-    JSProperty *prop;
-    if (!FindPropertyHelper(cx, name, true, global, &obj, &obj2, &prop))
-        goto error;
-    if (!prop) {
-        /* Kludge to allow (typeof foo == "undefined") tests. */
-        JSOp op2 = JSOp(regs.pc[JSOP_NAME_LENGTH]);
-        if (op2 == JSOP_TYPEOF) {
-            PUSH_UNDEFINED();
-            TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
-            len = JSOP_NAME_LENGTH;
-            DO_NEXT_OP(len);
-        }
-
-        JSAutoByteString bytes;
-        if (js_AtomToPrintableString(cx, name, &bytes))
-            js_ReportIsNotDefined(cx, bytes.ptr());
-        goto error;
-    }
-
-    /* Take the slow path if prop was not found in a native object. */
-    if (!obj->isNative() || !obj2->isNative()) {
-        if (!obj->getProperty(cx, name, &rval))
+    JSOp op2 = JSOp(regs.pc[JSOP_NAME_LENGTH]);
+    if (op2 == JSOP_TYPEOF) {
+        if (!GetScopeNameForTypeOf(cx, obj, name, &rval))
             goto error;
     } else {
-        Shape *shape = (Shape *)prop;
-        JSObject *normalized = obj;
-        if (normalized->isWith() && !shape->hasDefaultGetter())
-            normalized = &normalized->asWith().object();
-        NATIVE_GET(cx, normalized, obj2, shape, JSGET_METHOD_BARRIER, &rval);
+        if (!GetScopeName(cx, obj, name, &rval))
+            goto error;
     }
 
     PUSH_COPY(rval);
     TypeScript::Monitor(cx, script, regs.pc, rval);
 
     /* obj must be on the scope chain, thus not a function. */
-    if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
+    if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME) {
+        JSObject *obj2;
+        JSProperty *prop;
+        if (!FindPropertyHelper(cx, name, true, false, &obj, &obj2, &prop))
+            return false;
         PUSH_IMPLICIT_THIS(cx, obj, rval);
+    }
 }
 END_CASE(JSOP_NAME)
 
@@ -5444,7 +5427,45 @@ js::NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type)
 }
 
 bool
-js::GetProperty(JSContext *cx, JSObject *obj, JSAtom *atom, Value *property)
+js::GetObjectProperty(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp)
 {
-    return obj->getGeneric(cx, ATOM_TO_JSID(atom), property);
+    return obj->getProperty(cx, name, vp);
+}
+
+bool
+js::GetScopeName(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp)
+{
+    JSObject *obj2;
+    JSProperty *prop;
+    if (!FindPropertyHelper(cx, name, true, false, &obj, &obj2, &prop))
+        return false;
+
+    if (!prop) {
+        JSAutoByteString printable;
+        if (js_AtomToPrintableString(cx, name, &printable))
+            js_ReportIsNotDefined(cx, printable.ptr());
+        return false;
+    }
+
+    return obj->getProperty(cx, name, vp);
+}
+
+/*
+ * Alternate form for NAME opcodes followed immediately by a TYPEOF,
+ * which do not report an exception on (typeof foo == "undefined") tests.
+ */
+bool
+js::GetScopeNameForTypeOf(JSContext *cx, JSObject *obj, PropertyName *name, Value *vp)
+{
+    JSObject *obj2;
+    JSProperty *prop;
+    if (!FindPropertyHelper(cx, name, true, false, &obj, &obj2, &prop))
+        return false;
+
+    if (!prop) {
+        vp->setUndefined();
+        return true;
+    }
+
+    return obj->getProperty(cx, name, vp);
 }

@@ -183,6 +183,13 @@ class LParameter : public LInstructionHelper<BOX_PIECES, 0, 0>
     LIR_HEADER(Parameter);
 };
 
+// Stack offset for a word-sized immutable input value to a frame.
+class LCallee : public LInstructionHelper<1, 0, 0>
+{
+  public:
+    LIR_HEADER(Callee);
+};
+
 // Jumps to the start of a basic block.
 class LGoto : public LInstructionHelper<0, 0, 0>
 {
@@ -769,6 +776,22 @@ class LOsrValue : public LInstructionHelper<BOX_PIECES, 1, 0>
     }
 };
 
+// Materialize a JSObject scope chain stored in an interpreter frame for OSR.
+class LOsrScopeChain : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(OsrScopeChain);
+
+    LOsrScopeChain(const LAllocation &entry)
+    {
+        setOperand(0, entry);
+    }
+
+    const MOsrScopeChain *mir() {
+        return mir_->toOsrScopeChain();
+    }
+};
+
 // Determines the implicit |this| value for function calls.
 class LImplicitThis : public LInstructionHelper<BOX_PIECES, 1, 0>
 {
@@ -1122,14 +1145,47 @@ class LStringLength : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LLoadPropertyGeneric : public LCallInstructionHelper<BOX_PIECES, 1, 0>
+// Load a function's call environment.
+class LFunctionEnvironment : public LInstructionHelper<1, 1, 0>
 {
   public:
-    LIR_HEADER(LoadPropertyGeneric);
+    LIR_HEADER(FunctionEnvironment);
 
-    MLoadProperty *mir() const {
-        return mir_->toLoadProperty();
+    LFunctionEnvironment(const LAllocation &function) {
+        setOperand(0, function);
     }
+    const LAllocation *function() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
+class LCallGetPropertyOrName : public LCallInstructionHelper<BOX_PIECES, 1, 0>
+{
+  public:
+    MCallGetPropertyOrName *mir() const {
+        return static_cast<MCallGetPropertyOrName *>(mir_);
+    }
+};
+
+class LCallGetProperty : public LCallGetPropertyOrName
+{
+  public:
+    LIR_HEADER(CallGetProperty);
+};
+
+class LCallGetName : public LCallGetPropertyOrName
+{
+  public:
+    LIR_HEADER(CallGetName);
+};
+
+class LCallGetNameTypeOf : public LCallGetPropertyOrName
+{
+  public:
+    LIR_HEADER(CallGetNameTypeOf);
 };
 
 // Mark a Value if it is a GCThing.
