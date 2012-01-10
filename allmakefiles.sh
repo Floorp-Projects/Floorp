@@ -74,9 +74,9 @@ extensions/Makefile
 
 if [ ! "$LIBXUL_SDK" ]; then
   add_makefiles "
-    memory/Makefile
     memory/mozalloc/Makefile
-    memory/mozutils/Makefile
+    mozglue/Makefile
+    mozglue/build/Makefile
   "
   if [ "$MOZ_MEMORY" ]; then
     add_makefiles "
@@ -87,6 +87,7 @@ if [ ! "$LIBXUL_SDK" ]; then
     add_makefiles "
       other-licenses/android/Makefile
       other-licenses/skia-npapi/Makefile
+      mozglue/android/Makefile
     "
   fi
 fi
