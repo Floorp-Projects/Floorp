@@ -47,7 +47,9 @@
 #include "mozilla/StringBuilder.h"
 
 // we eventually want to make this runtime switchable
-//#define USE_BACKTRACE
+#if defined(XP_MACOSX) || defined(XP_UNIX)
+#define USE_BACKTRACE
+#endif
 #ifdef USE_BACKTRACE
 #include <execinfo.h>
 #endif
@@ -122,6 +124,12 @@ public:
     , mTagName(aTagName)
   { }
 
+  ProfileEntry(char aTagName, uintptr_t aTagOffset)
+    : mTagOffset(aTagOffset)
+    , mLeafAddress(0)
+    , mTagName(aTagName)
+  { }
+
   string TagToString(Profile *profile);
 
 private:
@@ -129,6 +137,7 @@ private:
     const char* mTagData;
     double mTagFloat;
     Address mTagAddress;
+    uintptr_t mTagOffset;
   };
   Address mLeafAddress;
   char mTagName;
@@ -144,10 +153,7 @@ public:
     , mEntrySize(aEntrySize)
   {
     mEntries = new ProfileEntry[mEntrySize];
-    mNeedsSharedLibraryInfo = false;
-#if defined(ENABLE_SPS_LEAF_DATA) || defined(USE_BACKTRACE)
     mNeedsSharedLibraryInfo = true;
-#endif
   }
 
   ~Profile()
@@ -235,6 +241,7 @@ class TableTicker: public Sampler {
     , mStack(aStack)
     , mSaveRequested(false)
   {
+    mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
     mProfile.addTag(ProfileEntry('m', "Start"));
   }
 
@@ -266,6 +273,7 @@ class TableTicker: public Sampler {
   Profile mProfile;
   Stack *mStack;
   bool mSaveRequested;
+  bool mUseStackWalk;
 };
 
 /**
@@ -331,21 +339,12 @@ void doBacktrace(Profile &aProfile)
   void *array[100];
   int count = backtrace (array, 100);
 
-  bool isSignal = true;
-#ifndef __i386__
-  // the test doesn't work for 64bit
-  isSignal = false;
-#endif
-  for (int i = count-1; i >= 0; i--) {
-    if( isSignal ) {
-      if( (intptr_t)array[i] == -1 ) { // signal frames have addresses of -1?
-        isSignal = false;
-      }
-      continue;
-    }
+  aProfile.addTag(ProfileEntry('s', "XRE_Main", 0));
+
+  for (int i = 0; i < count; i++) {
+    if( (intptr_t)array[i] == -1 ) break;
     aProfile.addTag(ProfileEntry('l', (const char*)array[i]));
   }
-  aProfile.addTag(ProfileEntry('s', "XRE_Main", 0));
 }
 #endif
 
@@ -380,7 +379,11 @@ void TableTicker::Tick(TickSample* sample)
   mStack->mQueueClearMarker = true;
 
 #ifdef USE_BACKTRACE
-  doBacktrace(mProfile);
+  if (mUseStackWalk) {
+    doBacktrace(mProfile);
+  } else {
+    doSampleStackTrace(mStack, mProfile, sample);
+  }
 #else
   doSampleStackTrace(mStack, mProfile, sample);
 #endif
@@ -409,8 +412,10 @@ string ProfileEntry::TagToString(Profile *profile)
       if (pc > (Address)e.GetStart() && pc < (Address)e.GetEnd()) {
         if (e.GetName()) {
           found = true;
+
           snprintf(tagBuff, 1024, "l-%s@%p\n", e.GetName(), pc - e.GetStart());
           tag += string(tagBuff);
+
           break;
         }
       }
@@ -518,7 +523,12 @@ char* mozilla_sampler_get_profile()
 
 const char** mozilla_sampler_get_features()
 {
-  static const char* features[] = {""};
+  static const char* features[] = {
+#ifdef MOZ_PROFILING && USE_BACKTRACE
+    "stackwalk",
+#endif
+    NULL
+  };
 
   return features;
 }
