@@ -74,6 +74,7 @@ _TEST_FILES = \
 		test_focusrings.xul \
 		file_moving_xhr.html \
 		test_vibrator.html \
+		test_getContentState.html \
 		$(NULL)
 
 _CHROME_FILES = \
