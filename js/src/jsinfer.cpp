@@ -3572,10 +3572,8 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         /* Handle as a property access. */
         PropertyAccess(cx, script, pc, script->global()->getType(cx), false, seen, id);
 
-        if (op == JSOP_CALLGNAME) {
-            pushed[1].addType(cx, Type::UnknownType());
+        if (op == JSOP_CALLGNAME)
             pushed[0].addPropagateThis(cx, script, pc, Type::UnknownType());
-        }
 
         if (CheckNextTest(pc))
             pushed[0].addType(cx, Type::UndefinedType());
@@ -3603,10 +3601,8 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
             addTypeBarrier(cx, pc, seen, Type::UnknownType());
         }
 
-        if (op == JSOP_CALLNAME) {
-            pushed[1].addType(cx, Type::UnknownType());
+        if (op == JSOP_CALLNAME)
             pushed[0].addPropagateThis(cx, script, pc, Type::UnknownType());
-        }
         break;
       }
 
@@ -3646,10 +3642,8 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         TypeSet *seen = bytecodeTypes(pc);
         addTypeBarrier(cx, pc, seen, Type::UnknownType());
         seen->addSubset(cx, &pushed[0]);
-        if (op == JSOP_CALLFCSLOT) {
-            pushed[1].addType(cx, Type::UndefinedType());
+        if (op == JSOP_CALLFCSLOT)
             pushed[0].addPropagateThis(cx, script, pc, Type::UndefinedType());
-        }
         break;
       }
 
@@ -3672,10 +3666,8 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
             /* Local 'let' variable. Punt on types for these, for now. */
             pushed[0].addType(cx, Type::UnknownType());
         }
-        if (op == JSOP_CALLARG || op == JSOP_CALLLOCAL) {
-            pushed[1].addType(cx, Type::UndefinedType());
+        if (op == JSOP_CALLARG || op == JSOP_CALLLOCAL)
             pushed[0].addPropagateThis(cx, script, pc, Type::UndefinedType());
-        }
         break;
       }
 
@@ -3752,8 +3744,6 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
             poppedTypes(pc, 0)->addCallProperty(cx, script, pc, id);
 
         seen->addSubset(cx, &pushed[0]);
-        if (op == JSOP_CALLPROP)
-            poppedTypes(pc, 0)->addFilterPrimitives(cx, &pushed[1], TypeSet::FILTER_NULL_VOID);
         if (CheckNextTest(pc))
             pushed[0].addType(cx, Type::UndefinedType());
         break;
@@ -3771,10 +3761,8 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         poppedTypes(pc, 1)->addGetProperty(cx, script, pc, seen, JSID_VOID);
 
         seen->addSubset(cx, &pushed[0]);
-        if (op == JSOP_CALLELEM) {
-            poppedTypes(pc, 1)->addFilterPrimitives(cx, &pushed[1], TypeSet::FILTER_NULL_VOID);
-            pushed[0].addPropagateThis(cx, script, pc, Type::UndefinedType(), &pushed[1]);
-        }
+        if (op == JSOP_CALLELEM)
+            pushed[0].addPropagateThis(cx, script, pc, Type::UndefinedType(), poppedTypes(pc, 1));
         if (CheckNextTest(pc))
             pushed[0].addType(cx, Type::UndefinedType());
         break;
@@ -4046,6 +4034,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         /* Pushes information about whether an exception was thrown. */
         break;
 
+      case JSOP_IMPLICITTHIS:
       case JSOP_EXCEPTION:
         pushed[0].addType(cx, Type::UnknownType());
         break;
@@ -4088,10 +4077,8 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         pushed[0].addType(cx, Type::UnknownType());
         break;
 
-      case JSOP_CALLXMLNAME:
-        pushed[1].addType(cx, Type::UnknownType());
-        /* FALLTHROUGH */
       case JSOP_XMLNAME:
+      case JSOP_CALLXMLNAME:
         pushed[0].addType(cx, Type::UnknownType());
         break;
 
@@ -4667,7 +4654,7 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
             if (calleev.kind() != SSAValue::PUSHED)
                 return false;
             jsbytecode *calleepc = script->code + calleev.pushedOffset();
-            if (JSOp(*calleepc) != JSOP_CALLPROP || calleev.pushedIndex() != 0)
+            if (JSOp(*calleepc) != JSOP_CALLPROP)
                 return false;
 
             /*
@@ -4677,8 +4664,8 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
             analysis->breakTypeBarriersSSA(cx, analysis->poppedValue(calleepc, 0));
             analysis->breakTypeBarriers(cx, calleepc - script->code, true);
 
-            TypeSet *funcallTypes = analysis->pushedTypes(calleepc, 0);
-            TypeSet *scriptTypes = analysis->pushedTypes(calleepc, 1);
+            TypeSet *funcallTypes = analysis->poppedTypes(pc, GET_ARGC(pc) + 1);
+            TypeSet *scriptTypes = analysis->poppedTypes(pc, GET_ARGC(pc));
 
             /* Need to definitely be calling Function.call on a specific script. */
             JSObject *funcallObj = funcallTypes->getSingleton(cx, false);
@@ -4695,9 +4682,9 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
              * Generate constraints to clear definite properties from the type
              * should the Function.call or callee itself change in the future.
              */
-            analysis->pushedTypes(calleev.pushedOffset(), 0)->add(cx,
+            funcallTypes->add(cx,
                 cx->typeLifoAlloc().new_<TypeConstraintClearDefiniteSingle>(type));
-            analysis->pushedTypes(calleev.pushedOffset(), 1)->add(cx,
+            scriptTypes->add(cx,
                 cx->typeLifoAlloc().new_<TypeConstraintClearDefiniteSingle>(type));
 
             TypeNewScript::Initializer pushframe(TypeNewScript::Initializer::FRAME_PUSH, uses->offset);

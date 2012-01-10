@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var t1 = document.createTextNode("a");
+  var t2 = document.createTextNode("b");
+  document.appendChild(t1);
+  document.appendChild(t2);
+  var sel = window.getSelection();
+  sel.collapse(t2, 0)
+  document.normalize();
+  sel.removeAllRanges();
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

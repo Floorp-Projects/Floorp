@@ -48,7 +48,6 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsHTMLDocument.h"
-#include "nsIParserFilter.h"
 #include "nsIHTMLContentSink.h"
 #include "nsIXMLContentSink.h"
 #include "nsHTMLParts.h"
@@ -103,9 +102,6 @@
 #include "nsFrameSelection.h"
 #include "nsISelectionPrivate.h"//for toStringwithformat code
 
-#include "nsICharsetDetector.h"
-#include "nsICharsetDetectionAdaptor.h"
-#include "nsCharsetDetectionAdaptorCID.h"
 #include "nsICharsetAlias.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
@@ -147,11 +143,6 @@ using namespace mozilla::dom;
 
 #define NS_MAX_DOCUMENT_WRITE_DEPTH 20
 
-#define DETECTOR_CONTRACTID_MAX 127
-static char g_detector_contractid[DETECTOR_CONTRACTID_MAX + 1];
-static bool gInitDetector = false;
-static bool gPlugDetector = false;
-
 #include "prmem.h"
 #include "prtime.h"
 
@@ -182,25 +173,6 @@ static bool ConvertToMidasInternalCommand(const nsAString & inCommandID,
 
 static bool ConvertToMidasInternalCommand(const nsAString & inCommandID,
                                             nsACString& outCommandID);
-static int
-MyPrefChangedCallback(const char*aPrefName, void* instance_data)
-{
-  const nsAdoptingCString& detector_name =
-    Preferences::GetLocalizedCString("intl.charset.detector");
-
-  if (!detector_name.IsEmpty()) {
-    PL_strncpy(g_detector_contractid, NS_CHARSET_DETECTOR_CONTRACTID_BASE,
-               DETECTOR_CONTRACTID_MAX);
-    PL_strncat(g_detector_contractid, detector_name,
-               DETECTOR_CONTRACTID_MAX);
-    gPlugDetector = true;
-  } else {
-    g_detector_contractid[0]=0;
-    gPlugDetector = false;
-  }
-
-  return 0;
-}
 
 // ==================================================================
 // =
@@ -569,65 +541,6 @@ nsHTMLDocument::TryDefaultCharset( nsIMarkupDocumentViewer* aMarkupDV,
 }
 
 void
-nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsACString& aCharset,
-                                   const char* aCommand)
-{
-  if (mIsRegularHTML && 
-      nsHtml5Module::sEnabled && 
-      aCommand && 
-      (!nsCRT::strcmp(aCommand, "view") ||
-       !nsCRT::strcmp(aCommand, "view-source"))) {
-    return; // the HTML5 parser uses chardet directly
-  }
-  nsCOMPtr <nsIParserFilter> cdetflt;
-
-  nsresult rv_detect;
-  if(!gInitDetector) {
-    const nsAdoptingCString& detector_name =
-      Preferences::GetLocalizedCString("intl.charset.detector");
-
-    if(!detector_name.IsEmpty()) {
-      PL_strncpy(g_detector_contractid, NS_CHARSET_DETECTOR_CONTRACTID_BASE,
-                 DETECTOR_CONTRACTID_MAX);
-      PL_strncat(g_detector_contractid, detector_name,
-                 DETECTOR_CONTRACTID_MAX);
-      gPlugDetector = true;
-    }
-
-    Preferences::RegisterCallback(MyPrefChangedCallback,
-                                  "intl.charset.detector");
-
-    gInitDetector = true;
-  }
-
-  if (gPlugDetector) {
-    nsCOMPtr <nsICharsetDetector> cdet =
-      do_CreateInstance(g_detector_contractid, &rv_detect);
-    if (NS_SUCCEEDED(rv_detect)) {
-      cdetflt = do_CreateInstance(NS_CHARSET_DETECTION_ADAPTOR_CONTRACTID,
-                                  &rv_detect);
-
-      nsCOMPtr<nsICharsetDetectionAdaptor> adp = do_QueryInterface(cdetflt);
-      if (adp) {
-        nsCOMPtr<nsIWebShellServices> wss = do_QueryInterface(aDocShell);
-        if (wss) {
-          rv_detect = adp->Init(wss, cdet, this, mParser,
-                                PromiseFlatCString(aCharset).get(), aCommand);
-
-          if (mParser)
-            mParser->SetParserFilter(cdetflt);
-        }
-      }
-    }
-    else {
-      // IF we cannot create the detector, don't bother to
-      // create one next time.
-      gPlugDetector = false;
-    }
-  }
-}
-
-void
 nsHTMLDocument::SetDocumentCharacterSet(const nsACString& aCharSetID)
 {
   nsDocument::SetDocumentCharacterSet(aCharSetID);
@@ -912,13 +825,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       parserCharsetSource = charsetSource;
     }
 
-    if(kCharsetFromAutoDetection > charsetSource && !isPostPage) {
-      StartAutodetection(docShell, charset, aCommand);
-    }
-
     // ahmed
     // Check if 864 but in Implicit mode !
-    // XXXbz why is this happening after StartAutodetection ?
     if ((textType == IBMBIDI_TEXTTYPE_LOGICAL) &&
         (charset.LowerCaseEqualsLiteral("ibm864"))) {
       charset.AssignLiteral("IBM864i");

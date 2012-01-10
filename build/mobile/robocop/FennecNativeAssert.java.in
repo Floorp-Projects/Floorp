@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Date;
 
 import java.lang.Class;
 import java.lang.reflect.InvocationTargetException;
@@ -77,7 +78,22 @@ public class FennecNativeAssert implements Assert {
   // If waiting for an event.
   private boolean asleep = false;
 
-  public FennecNativeAssert(){
+  // Internal state variables to make logging match up with existing mochitests
+  private int lineNumber = 0;
+  private int passed = 0;
+  private int failed = 0;
+  private int todo = 0;
+  
+  // Used to write the first line of the test file
+  private boolean logStarted = false;
+
+  // Used to write the test-start/test-end log lines
+  private String logTestName = "";
+
+  // Measure the time it takes to run test case
+  private long startTime = 0;
+
+  public FennecNativeAssert() {
   }
 
   // Write information to a logfile and logcat
@@ -110,8 +126,34 @@ public class FennecNativeAssert implements Assert {
   public void setLogFile(String filename)
   {
     logFile = filename;
+
+    //TODO: these two messages are mochitest specific
+    String message;
+    if (!logStarted) {
+      message = Integer.toString(lineNumber++) + " INFO SimpleTest START";
+      dumpLog(message);
+      logStarted = true;
+    }
+
+    if (logTestName != "") {
+      message = Integer.toString(lineNumber++) + " INFO TEST-END | " + logTestName;
+      long diff = (new Date().getTime()) - startTime;
+      message += " | finished in " + diff + "ms";
+      dumpLog(message);
+      logTestName = "";
+    }
   }
 
+  public void setTestName(String testName)
+  {
+    String[] nameParts = testName.split("\\.");
+    logTestName = nameParts[nameParts.length - 1];
+    startTime = new Date().getTime();
+
+    //TODO: this is mochitest specific
+    String message = Integer.toString(lineNumber++) + " INFO TEST-START | " + logTestName;
+    dumpLog(message);
+  }
 
   class testInfo {
     public boolean result;
@@ -127,24 +169,23 @@ public class FennecNativeAssert implements Assert {
 
   }
 
-
-  private void _logResult(testInfo test, String passString, String failString)
+  private void _logMochitestResult(testInfo test, String passString, String failString)
   {
     boolean isError = true;
     String resultString = failString;
-    if(test.result || test.todo){
+    if (test.result || test.todo) {
       isError = false;
     }
-    if(test.result)
+    if (test.result)
     {
       resultString = passString;
     }
-    String diag= test.name;
-    if(test.diag!=null) diag+= " - " + test.diag;
+    String diag = test.name;
+    if (test.diag != null) diag += " - " + test.diag;
 
-    String message = resultString + " | " + "ROBOCOP" + " | " + diag;
-    if(isError) {
-      if(logFile == null)
+    String message = Integer.toString(lineNumber++) + " INFO " + resultString + " | " + logTestName + " | " + diag;
+    if (isError) {
+      if (logFile == null)
       {
         assert(false);
       }
@@ -155,11 +196,48 @@ public class FennecNativeAssert implements Assert {
     else {
       dumpLog(message);
     }
+
+    if (test.todo) {
+      todo++;
+    } else if (isError) {
+      failed++;
+    } else {
+      passed++;
+    }
+  }
+
+  public void finalize()
+  {
+    // It appears that we call finalize during cleanup, this might be an invalid assertion.
+    String message;
+
+    if (logTestName != "") {
+      long diff = (new Date().getTime()) - startTime;
+
+      //TODO: this is mochitest specific
+      message = Integer.toString(lineNumber++) + " INFO TEST-END | " + logTestName;
+      message += " | finished in " + diff + "ms";
+      dumpLog(message);
+
+      logTestName = "";
+    }
+
+    //TODO: this is all mochitest specific
+    message = Integer.toString(lineNumber++) + " INFO TEST-START | Shutdown";
+    dumpLog(message);
+    message = Integer.toString(lineNumber++) + " INFO Passed: " + Integer.toString(passed);
+    dumpLog(message);
+    message = Integer.toString(lineNumber++) + " INFO Failed: " + Integer.toString(failed);
+    dumpLog(message);
+    message = Integer.toString(lineNumber++) + " INFO Todo: " + Integer.toString(todo);
+    dumpLog(message);
+    message = Integer.toString(lineNumber++) + " INFO SimpleTest FINISHED";
+    dumpLog(message);
   }
 
   public void ok(boolean condition, String name, String diag) {
     testInfo test = new testInfo(condition, name, diag, false);
-    _logResult(test, "TEST-PASS", "TEST-UNEXPECTED-FAIL");
+    _logMochitestResult(test, "TEST-PASS", "TEST-UNEXPECTED-FAIL");
     testList.add(test);
   }
 
@@ -183,7 +261,7 @@ public class FennecNativeAssert implements Assert {
 
   public void todo(boolean condition, String name, String diag) {
     testInfo test = new testInfo(condition, name, diag, true);
-    _logResult(test, "TEST-UNEXPECTED-PASS", "TEST-KNOWN-FAIL");
+    _logMochitestResult(test, "TEST-UNEXPECTED-PASS", "TEST-KNOWN-FAIL");
     testList.add(test);
   }
 
@@ -207,6 +285,6 @@ public class FennecNativeAssert implements Assert {
 
   public void info(String name, String message) {
     testInfo test = new testInfo(true, name, message, false);
-    _logResult(test, "TEST-INFO", "INFO FAILED?");
+    _logMochitestResult(test, "TEST-INFO", "INFO FAILED?");
   }
 }

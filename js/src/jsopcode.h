@@ -117,8 +117,6 @@ typedef enum JSOp {
 #define JOF_LEFTASSOC    (1U<<16) /* left-associative operator */
 #define JOF_DECLARING    (1U<<17) /* var, const, or function declaration op */
 #define JOF_INDEXBASE    (1U<<18) /* atom segment base setting prefix op */
-#define JOF_CALLOP       (1U<<19) /* call operation that pushes function and
-                                     this */
 #define JOF_PARENHEAD    (1U<<20) /* opcode consumes value of expression in
                                      parenthesized statement head */
 #define JOF_INVOKE       (1U<<21) /* JSOP_CALL, JSOP_NEW, JSOP_EVAL */
