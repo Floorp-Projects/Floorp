@@ -491,7 +491,7 @@ public:
   // replaced with nsIRandomGenerator when 419739 is fixed.
   nsresult RandomNumber(PRInt64 *randomNum);
   // Return an array with all Prefixes known
-  nsresult ReadPrefixes(nsTArray<PRUint32>& array, PRUint32 aKey);
+  nsresult ReadPrefixes(FallibleTArray<PRUint32>& array, PRUint32 aKey);
 
 
 protected:
@@ -513,7 +513,8 @@ protected:
   nsCOMPtr<mozIStorageStatement> mPartialEntriesBeforeStatement;
 
   nsCOMPtr<mozIStorageStatement> mRandomStatement;
-  nsCOMPtr<mozIStorageStatement> mAllPrefixStatement;
+  nsCOMPtr<mozIStorageStatement> mAllPrefixGetStatement;
+  nsCOMPtr<mozIStorageStatement> mAllPrefixCountStatement;
 };
 
 nsresult
@@ -576,8 +577,13 @@ nsUrlClassifierStore::Init(nsUrlClassifierDBServiceWorker *worker,
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mConnection->CreateStatement(NS_LITERAL_CSTRING("SELECT domain, partial_data, complete_data FROM ")
-     + entriesName,
-     getter_AddRefs(mAllPrefixStatement));
+    + entriesName,
+    getter_AddRefs(mAllPrefixGetStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mConnection->CreateStatement(NS_LITERAL_CSTRING("SELECT COUNT(1) FROM ")
+    + entriesName,
+    getter_AddRefs(mAllPrefixCountStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -599,7 +605,8 @@ nsUrlClassifierStore::Close()
   mLastPartialEntriesStatement = nsnull;
   mRandomStatement = nsnull;
 
-  mAllPrefixStatement = nsnull;
+  mAllPrefixGetStatement = nsnull;
+  mAllPrefixCountStatement = nsnull;
 
   mConnection = nsnull;
 }
@@ -3550,10 +3557,11 @@ static nsresult KeyedHash(PRUint32 aPref, PRUint32 aDomain,
   return NS_OK;
 }
 
-nsresult nsUrlClassifierStore::ReadPrefixes(nsTArray<PRUint32>& array,
+nsresult nsUrlClassifierStore::ReadPrefixes(FallibleTArray<PRUint32>& array,
                                             PRUint32 aKey)
 {
-  mozStorageStatementScoper scoper(mAllPrefixStatement);
+  mozStorageStatementScoper scoper(mAllPrefixGetStatement);
+  mozStorageStatementScoper scoperToo(mAllPrefixCountStatement);
   bool hasMoreData;
   PRUint32 pcnt = 0;
   PRUint32 fcnt = 0;
@@ -3565,20 +3573,31 @@ nsresult nsUrlClassifierStore::ReadPrefixes(nsTArray<PRUint32>& array,
   }
 #endif
 
-  while (NS_SUCCEEDED(mAllPrefixStatement->ExecuteStep(&hasMoreData)) && hasMoreData) {
+  // Make sure we allocate no more than we really need, so first
+  // check how much entries there are
+  if (NS_SUCCEEDED(mAllPrefixCountStatement->ExecuteStep(&hasMoreData)) && hasMoreData) {
+    PRUint32 count = mAllPrefixCountStatement->AsInt32(0);
+    if (!array.SetCapacity(count)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  } else {
+    return NS_ERROR_FILE_CORRUPTED;
+  }
+
+  while (NS_SUCCEEDED(mAllPrefixGetStatement->ExecuteStep(&hasMoreData)) && hasMoreData) {
     PRUint32 prefixval;
     PRUint32 domainval;
     PRUint32 size;
 
-    const PRUint8 *blobdomain = mAllPrefixStatement->AsSharedBlob(0, &size);
+    const PRUint8 *blobdomain = mAllPrefixGetStatement->AsSharedBlob(0, &size);
     if (!blobdomain || (size != DOMAIN_LENGTH))
       return false;
 
     domainval = *(reinterpret_cast<const PRUint32*>(blobdomain));
 
-    const PRUint8 *blobprefix = mAllPrefixStatement->AsSharedBlob(1, &size);
+    const PRUint8 *blobprefix = mAllPrefixGetStatement->AsSharedBlob(1, &size);
     if (!blobprefix || (size != PARTIAL_LENGTH)) {
-      const PRUint8 *blobfull = mAllPrefixStatement->AsSharedBlob(2, &size);
+      const PRUint8 *blobfull = mAllPrefixGetStatement->AsSharedBlob(2, &size);
       if (!blobfull || (size != COMPLETE_LENGTH)) {
         prefixval = domainval;
         fcnt++;
@@ -3593,7 +3612,8 @@ nsresult nsUrlClassifierStore::ReadPrefixes(nsTArray<PRUint32>& array,
     nsresult rv = KeyedHash(prefixval, domainval, aKey, &keyedVal);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    array.AppendElement(keyedVal);
+    PRUint32 *res = array.AppendElement(keyedVal);
+    MOZ_ASSERT(res != nsnull);
     pcnt++;
     // Normal DB size is about 500k entries. If we are getting 10x
     // as much, the database must be corrupted.
@@ -3624,9 +3644,11 @@ nsUrlClassifierDBServiceWorker::ConstructPrefixSet()
   nsresult rv = mPrefixSet->GetKey(&key);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsTArray<PRUint32> array;
+  FallibleTArray<PRUint32> array;
   rv = mMainStore.ReadPrefixes(array, key);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    goto error_bailout;
+  }
 
 #ifdef HASHFUNCTION_COLLISION_TEST
   array.Sort();
@@ -3639,22 +3661,37 @@ nsUrlClassifierDBServiceWorker::ConstructPrefixSet()
   LOG(("%d collisions in the set", collisions));
 #endif
 
-  // clear old tree
-  rv = mPrefixSet->SetPrefixes(nsnull, 0);
-  NS_ENSURE_SUCCESS(rv, rv);
   if (array.IsEmpty()) {
-    // DB is empty, but put a sentinel to show that we looked
-    array.AppendElement(0);
+    // DB is empty, put a sentinel to show that we loaded it
+    if (!array.AppendElement(0)) {
+      goto error_bailout;
+    }
   }
-  // construct new one
+  // SetPrefixes requires sorted arrays
+  array.Sort();
+
+  // construct new prefixset
   rv = mPrefixSet->SetPrefixes(array.Elements(), array.Length());
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    goto error_bailout;
+  }
 
   // store the new tree to disk
   rv = mPrefixSet->StoreToFile(mPSFile);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "failed to store the prefixset");
 
   return NS_OK;
+
+ error_bailout:
+  // load an empty prefixset so the browser can work
+  nsAutoTArray<PRUint32, 1> sentinel;
+  sentinel.Clear();
+  sentinel.AppendElement(0);
+  mPrefixSet->SetPrefixes(sentinel.Elements(), sentinel.Length());
+  if (rv == NS_ERROR_OUT_OF_MEMORY) {
+    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_PS_OOM, 1);
+  }
+  return rv;
 }
 
 nsresult
