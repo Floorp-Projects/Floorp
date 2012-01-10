@@ -265,12 +265,7 @@ public class PanZoomController
             return false;
         case FLING:
         case NOTHING:
-            mState = PanZoomState.TOUCHING;
-            mX.velocity = mY.velocity = 0.0f;
-            mX.locked = mY.locked = false;
-            mX.lastTouchPos = mX.firstTouchPos = mX.touchPos = event.getX(0);
-            mY.lastTouchPos = mY.firstTouchPos = mY.touchPos = event.getY(0);
-            mLastEventTime = event.getEventTime();
+            startTouch(event.getX(0), event.getY(0), event.getEventTime());
             return false;
         case TOUCHING:
         case PANNING:
@@ -363,6 +358,13 @@ public class PanZoomController
         // ensure we snap back if we're overscrolled
         bounce();
         return false;
+    }
+
+    private void startTouch(float x, float y, long time) {
+        mX.startTouch(x);
+        mY.startTouch(y);
+        mState = PanZoomState.TOUCHING;
+        mLastEventTime = time;
     }
 
     private float panDistance(MotionEvent move) {
@@ -756,6 +758,12 @@ public class PanZoomController
 
         private float getViewportEnd() { return getOrigin() + getViewportLength(); }
 
+        public void startTouch(float pos) {
+            velocity = 0.0f;
+            locked = false;
+            firstTouchPos = touchPos = lastTouchPos = pos;
+        }
+
         public Overscroll getOverscroll() {
             boolean minus = (getOrigin() < 0.0f);
             boolean plus = (getViewportEnd() > getPageLength());
@@ -984,19 +992,13 @@ public class PanZoomController
         if (mState == PanZoomState.ANIMATED_ZOOM)
             return;
 
-        mState = PanZoomState.PANNING_HOLD_LOCKED;
-        mX.firstTouchPos = mX.lastTouchPos = mX.touchPos = detector.getFocusX();
-        mY.firstTouchPos = mY.lastTouchPos = mY.touchPos = detector.getFocusY();
+        // switch back to the touching state
+        startTouch(detector.getFocusX(), detector.getFocusY(), detector.getEventTime());
 
         // Force a viewport synchronisation
         mController.setForceRedraw();
         mController.notifyLayerClientOfGeometryChange();
         GeckoApp.mAppContext.showPluginViews();
-
-        mState = PanZoomState.TOUCHING;
-        mX.velocity = mY.velocity = 0.0f;
-        mX.locked = mY.locked = false;
-        mLastEventTime = detector.getEventTime();
     }
 
     public boolean getRedrawHint() {
