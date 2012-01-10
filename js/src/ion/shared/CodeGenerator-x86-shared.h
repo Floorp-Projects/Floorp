@@ -48,6 +48,7 @@ namespace js {
 namespace ion {
 
 class OutOfLineBailout;
+class MulNegativeZeroCheck;
 
 class CodeGeneratorX86Shared : public CodeGeneratorShared
 {
@@ -136,6 +137,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
 
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);
+    bool visitMulNegativeZeroCheck(MulNegativeZeroCheck *ool);
 };
 
 // An out-of-line bailout thunk.

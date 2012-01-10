@@ -49,6 +49,9 @@
 using namespace js;
 using namespace js::ion;
 
+namespace js {
+namespace ion {
+
 class DeferredJumpTable : public DeferredData
 {
     LTableSwitch *lswitch;
@@ -409,6 +412,23 @@ CodeGeneratorX86Shared::visitSubI(LSubI *ins)
     return true;
 }
 
+class MulNegativeZeroCheck : public OutOfLineCodeBase<CodeGeneratorX86Shared>
+{
+    LMulI *ins_;
+
+  public:
+    MulNegativeZeroCheck(LMulI *ins)
+      : ins_(ins)
+    { }
+
+    virtual bool accept(CodeGeneratorX86Shared *codegen) {
+        return codegen->visitMulNegativeZeroCheck(this);
+    }
+    LMulI *ins() const {
+        return ins_;
+    }
+};
+
 bool
 CodeGeneratorX86Shared::visitMulI(LMulI *ins)
 {
@@ -462,14 +482,38 @@ CodeGeneratorX86Shared::visitMulI(LMulI *ins)
         if (mul->canOverflow() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
             return false;
 
-        // Bailout on 0 (could be -0.0)
         if (mul->canBeNegativeZero()) {
-            masm.testl(ToRegister(lhs), ToRegister(lhs));
-            if (!bailoutIf(Assembler::Equal, ins->snapshot()))
+            // Jump to an OOL path if the result is 0.
+            MulNegativeZeroCheck *ool = new MulNegativeZeroCheck(ins);
+            if (!addOutOfLineCode(ool))
                 return false;
+
+            masm.testl(ToRegister(lhs), ToRegister(lhs));
+            masm.j(Assembler::Zero, ool->entry());
+            masm.bind(ool->rejoin());
         }
     }
 
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitMulNegativeZeroCheck(MulNegativeZeroCheck *ool)
+{
+    LMulI *ins = ool->ins();
+    Register result = ToRegister(ins->output());
+    Register lhsCopy = ToRegister(ins->lhsCopy());
+    Operand rhs = ToOperand(ins->rhs());
+    JS_ASSERT(lhsCopy != result);
+
+    // Result is -0 if lhs or rhs is negative.
+    masm.movl(lhsCopy, result);
+    masm.orl(rhs, result);
+    if (!bailoutIf(Assembler::Signed, ins->snapshot()))
+        return false;
+
+    masm.xorl(result, result);
+    masm.jmp(ool->rejoin());
     return true;
 }
 
@@ -861,3 +905,6 @@ CodeGeneratorX86Shared::createArrayElementOperand(Register elements, const LAllo
 
     return Operand(elements, ToRegister(index), TimesEight);
 }
+
+} // namespace ion
+} // namespace js
