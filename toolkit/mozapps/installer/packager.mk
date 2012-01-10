@@ -901,7 +901,7 @@ ESCAPE_SPACE = $(subst $(space),\$(space),$(1))
 CHECKSUM_ALGORITHM = 'sha512'
 
 # This variable defines where the checksum file will be located
-CHECKSUM_FILE = "$(DIST)/$(PKG_PATH)/$(PKG_BASENAME).checksums"
+CHECKSUM_FILE = "$(DIST)/$(PKG_PATH)/$(CHECKSUMS_FILE_BASENAME).checksums"
 CHECKSUM_FILES = $(CHECKSUM_FILE)
 
 UPLOAD_FILES= \
