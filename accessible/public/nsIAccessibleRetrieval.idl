@@ -43,15 +43,12 @@ interface nsIAccessible;
 interface nsIWeakReference;
 interface nsIPresShell;
 interface nsIDOMWindow;
-interface nsIAccessNode;
 interface nsIDOMDOMStringList;
 interface nsIAccessiblePivot;
 
 /**
- * An interface for in-process accessibility clients
- * wishing to get an nsIAccessible or nsIAccessNode for
- * a given DOM node.
- * More documentation at:
+ * An interface for in-process accessibility clients wishing to get an
+ * nsIAccessible for a given DOM node.  More documentation at:
  *   http://www.mozilla.org/projects/ui/accessibility
  */
 [scriptable, uuid(310ce77d-c92b-4761-82e8-77e1a728e8d4)]
