@@ -47,6 +47,7 @@ mobile/xul/components/build/Makefile
 mobile/xul/modules/Makefile
 mobile/xul/installer/Makefile
 mobile/xul/locales/Makefile
+mobile/locales/Makefile
 mobile/xul/Makefile
 mobile/xul/themes/core/Makefile
 "

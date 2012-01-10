@@ -57,7 +57,12 @@ function tabLoad(aEvent) {
   });
 }
 
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.gcli.enable");
+});
+
 function test() {
+  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab("data:text/html,Web Console test for bug 601352");
   browser.addEventListener("load", tabLoad, true);
 }

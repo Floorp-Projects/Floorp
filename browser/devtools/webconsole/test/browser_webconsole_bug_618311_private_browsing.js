@@ -41,7 +41,12 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//t
 let pb = Cc["@mozilla.org/privatebrowsing;1"].
          getService(Ci.nsIPrivateBrowsingService);
 
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.gcli.enable");
+});
+
 function test() {
+  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab("data:text/html,Web Console test for bug 618311 (private browsing)");
 
   browser.addEventListener("load", function() {

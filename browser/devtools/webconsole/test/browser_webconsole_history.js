@@ -46,7 +46,12 @@ const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test//t
 const HISTORY_BACK = -1;
 const HISTORY_FORWARD = 1;
 
+registerCleanupFunction(function() {
+  Services.prefs.clearUserPref("devtools.gcli.enable");
+});
+
 function test() {
+  Services.prefs.setBoolPref("devtools.gcli.enable", false);
   addTab(TEST_URI);
   browser.addEventListener("DOMContentLoaded", testHistory, false);
 }
