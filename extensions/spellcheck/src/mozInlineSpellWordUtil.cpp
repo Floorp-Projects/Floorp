@@ -54,6 +54,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsIFrame.h"
 #include "nsRange.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 
@@ -525,6 +526,10 @@ mozInlineSpellWordUtil::BuildSoftText()
       // Since GetPreviousContent follows tree *preorder*, we're about to traverse
       // up out of 'node'. Since node induces breaks (e.g., it's a block),
       // don't bother trying to look outside it, just stop now.
+      break;
+    }
+    // GetPreviousContent below expects mRootNode to be an ancestor of node.
+    if (!nsContentUtils::ContentIsDescendantOf(node, mRootNode)) {
       break;
     }
     node = node->GetPreviousContent(mRootNode);
