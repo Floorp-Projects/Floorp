@@ -239,10 +239,12 @@ SvcInstall(SvcInstallAction action)
            "should only be called when elevated. (%d)\n", GetLastError()));
       return FALSE;
     } 
+  }
 
+  if (schService) {
     if (!SetUserAccessServiceDACL(schService)) {
-      LOG(("Could not set security ACE on service handle, the service will not be "
-           "able to be started from unelevated processes. "
+      LOG(("Could not set security ACE on service handle, the service will not"
+           "be able to be started from unelevated processes. "
            "This error should never happen.  (%d)\n", 
            GetLastError()));
     }
@@ -372,7 +374,7 @@ SetUserAccessServiceDACL(SC_HANDLE hService)
  * @param  hService  The service to set the access control list on
  * @param  pNewAcl   The out param ACL which should be freed by caller
  * @param  psd       out param security descriptor, should be freed by caller
- * @return TRUE if successful
+ * @return ERROR_SUCCESS if successful
  */
 DWORD
 SetUserAccessServiceDACL(SC_HANDLE hService, PACL &pNewAcl, 
@@ -383,18 +385,24 @@ SetUserAccessServiceDACL(SC_HANDLE hService, PACL &pNewAcl,
   if (!QueryServiceObjectSecurity(hService, DACL_SECURITY_INFORMATION, 
                                   &psd, 0, &needed)) {
     if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+      LOG(("Warning: Could not query service object security size.  (%d)\n", 
+           GetLastError()));
       return GetLastError();
     }
 
     DWORD size = needed;
     psd = (PSECURITY_DESCRIPTOR)LocalAlloc(LPTR, size);
     if (!psd) {
+      LOG(("Warning: Could not allocate security descriptor.  (%d)\n", 
+           GetLastError()));
       return ERROR_INSUFFICIENT_BUFFER;
     }
 
     // Get the actual security descriptor now
     if (!QueryServiceObjectSecurity(hService, DACL_SECURITY_INFORMATION, 
                                     psd, size, &needed)) {
+      LOG(("Warning: Could not allocate security descriptor.  (%d)\n", 
+           GetLastError()));
       return GetLastError();
     }
   }
@@ -405,35 +413,44 @@ SetUserAccessServiceDACL(SC_HANDLE hService, PACL &pNewAcl,
   BOOL bDaclDefaulted = FALSE;
   if ( !GetSecurityDescriptorDacl(psd, &bDaclPresent, &pacl, 
                                   &bDaclDefaulted)) {
+    LOG(("Warning: Could not obtain DACL.  (%d)\n", GetLastError()));
     return GetLastError();
   }
 
-  // Build the ACE.
+  // Build the ACE, BuildExplicitAccessWithName cannot fail so it is not logged.
   EXPLICIT_ACCESS ea;
   BuildExplicitAccessWithName(&ea, TEXT("Users"), 
                               SERVICE_START | SERVICE_STOP | GENERIC_READ, 
                               SET_ACCESS, NO_INHERITANCE);
   DWORD lastError = SetEntriesInAcl(1, (PEXPLICIT_ACCESS)&ea, pacl, &pNewAcl);
   if (ERROR_SUCCESS != lastError) {
+    LOG(("Warning: Could not set entries in ACL.  (%d)\n", lastError));
     return lastError;
   }
 
   // Initialize a new security descriptor.
   SECURITY_DESCRIPTOR sd;
   if (!InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION)) {
+    LOG(("Warning: Could not initialize security descriptor.  (%d)\n", 
+         GetLastError()));
     return GetLastError();
   }
 
   // Set the new DACL in the security descriptor.
   if (!SetSecurityDescriptorDacl(&sd, TRUE, pNewAcl, FALSE)) {
+    LOG(("Warning: Could not set security descriptor DACL.  (%d)\n", 
+         GetLastError()));
     return GetLastError();
   }
 
   // Set the new security descriptor for the service object.
   if (!SetServiceObjectSecurity(hService, DACL_SECURITY_INFORMATION, &sd)) {
+    LOG(("Warning: Could not set object security.  (%d)\n", 
+         GetLastError()));
     return GetLastError();
   }
 
   // Woohoo, raise the roof
+  LOG(("User access was set successfully on the service.\n"));
   return ERROR_SUCCESS;
 }
