@@ -137,6 +137,10 @@ class MacroAssemblerX86Shared : public Assembler
         push(t);
         framePushed_ += STACK_SLOT_SIZE;
     }
+    void Push(const FloatRegister &t) {
+        push(t);
+        framePushed_ += sizeof(double);
+    }
     void Pop(const Register &reg) {
         pop(reg);
         framePushed_ -= STACK_SLOT_SIZE;

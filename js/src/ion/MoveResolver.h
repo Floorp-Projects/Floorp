@@ -59,7 +59,8 @@ class MoveResolver
         enum Kind {
             REG,
             FLOAT_REG,
-            ADDRESS
+            ADDRESS,
+            EFFECTIVE_ADDRESS
         };
 
         Kind kind_;
@@ -67,14 +68,19 @@ class MoveResolver
         int32 disp_;
 
       public:
+        enum AddressKind {
+            MEMORY = ADDRESS,
+            EFFECTIVE = EFFECTIVE_ADDRESS
+        };
+
         MoveOperand()
         { }
         explicit MoveOperand(const Register &reg) : kind_(REG), code_(reg.code())
         { }
         explicit MoveOperand(const FloatRegister &reg) : kind_(FLOAT_REG), code_(reg.code())
         { }
-        MoveOperand(const Register &reg, int32 disp)
-          : kind_(ADDRESS),
+        MoveOperand(const Register &reg, int32 disp, AddressKind addrKind = MEMORY)
+            : kind_((Kind) addrKind),
             code_(reg.code()),
             disp_(disp)
         { }
@@ -95,6 +101,9 @@ class MoveResolver
         bool isMemory() const {
             return kind_ == ADDRESS;
         }
+        bool isEffectiveAddress() const {
+            return kind_ == EFFECTIVE_ADDRESS;
+        }
         Register reg() const {
             JS_ASSERT(isGeneralReg());
             return Register::FromCode(code_);
@@ -104,7 +113,7 @@ class MoveResolver
             return FloatRegister::FromCode(code_);
         }
         Register base() const {
-            JS_ASSERT(isMemory());
+            JS_ASSERT(isMemory() || isEffectiveAddress());
             return Register::FromCode(code_);
         }
         int32 disp() const {
@@ -116,7 +125,7 @@ class MoveResolver
                 return false;
             if (code_ != other.code_)
                 return false;
-            if (isMemory())
+            if (isMemory() || isEffectiveAddress())
                 return disp_ == other.disp_;
             return true;
         }

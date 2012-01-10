@@ -77,6 +77,8 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     uint32 setupABICall(uint32 arg);
 
   public:
+    using MacroAssemblerX86Shared::Push;
+
     typedef MoveResolver::MoveOperand MoveOperand;
     typedef MoveResolver::Move Move;
 
@@ -154,6 +156,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void pushValue(ValueOperand val) {
         push(val.typeReg());
         push(val.payloadReg());
+    }
+    void Push(const ValueOperand &val) {
+        pushValue(val);
+        framePushed_ += sizeof(Value);
     }
     void popValue(ValueOperand val) {
         pop(val.payloadReg());

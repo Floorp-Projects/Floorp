@@ -87,7 +87,7 @@ MoveEmitterX86::spillSlot() const
 Operand
 MoveEmitterX86::toOperand(const MoveOperand &operand) const
 {
-    if (operand.isMemory()) {
+    if (operand.isMemory() || operand.isEffectiveAddress()) {
         if (operand.base() != StackPointer)
             return Operand(operand.base(), operand.disp());
 
@@ -192,14 +192,24 @@ MoveEmitterX86::emitMove(const MoveOperand &from, const MoveOperand &to)
             // don't re-clobber its value.
             spilledReg_ = InvalidReg;
         }
-        masm.mov(toOperand(from), to.reg());
+
+        JS_ASSERT(from.isMemory() || from.isEffectiveAddress());
+        if (from.isMemory())
+            masm.mov(toOperand(from), to.reg());
+        else
+            masm.lea(toOperand(from), to.reg());
     } else {
         // Memory to memory gpr move.
         Register reg = tempReg();
         // Reload its previous value from the stack.
         if (reg == from.base())
             masm.mov(spillSlot(), from.base());
-        masm.mov(toOperand(from), reg);
+
+        JS_ASSERT(from.isMemory() || from.isEffectiveAddress());
+        if (from.isMemory())
+            masm.mov(toOperand(from), reg);
+        else
+            masm.lea(toOperand(from), reg);
         JS_ASSERT(to.base() != reg);
         masm.mov(reg, toOperand(to));
     }
@@ -214,6 +224,7 @@ MoveEmitterX86::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
         masm.movsd(toOperand(from), to.floatReg());
     } else {
         // Memory to memory float move.
+        JS_ASSERT(from.isMemory());
         masm.movsd(toOperand(from), ScratchFloatReg);
         masm.movsd(ScratchFloatReg, toOperand(to));
     }

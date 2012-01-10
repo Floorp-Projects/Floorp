@@ -573,15 +573,40 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     masm.loadPtr(Address(cxreg, offsetof(ThreadData, ionJSContext)), cxreg);
     masm.setABIArg(0, cxreg);
 
+    size_t argDisp = 0;
+    size_t argc = 1;
+
     // Copy arguments.
     if (f.explicitArgs) {
-        for (uint32 i = 0; i < f.explicitArgs; i++)
-            masm.setABIArg(i + 1, MoveOperand(argsBase, i * sizeof(void *)));
+        for (uint32 explicitArg = 0; explicitArg < f.explicitArgs; explicitArg++) {
+            MoveOperand from;
+            switch (f.argProperties(explicitArg)) {
+              case VMFunction::WordByValue:
+                masm.setABIArg(argc++, MoveOperand(argsBase, argDisp));
+                argDisp += sizeof(void *);
+                break;
+              case VMFunction::DoubleByValue:
+                masm.setABIArg(argc++, MoveOperand(argsBase, argDisp));
+                argDisp += sizeof(void *);
+                masm.setABIArg(argc++, MoveOperand(argsBase, argDisp));
+                argDisp += sizeof(void *);
+                break;
+              case VMFunction::WordByRef:
+                masm.setABIArg(argc++, MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
+                argDisp += sizeof(void *);
+                break;
+              case VMFunction::DoubleByRef:
+                masm.setABIArg(argc++, MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
+                argDisp += 2 * sizeof(void *);
+                break;
+            }
+        }
     }
 
     // Copy the implicit outparam, if any.
     if (outReg != InvalidReg)
-        masm.setABIArg(f.argc() - 1, outReg);
+        masm.setABIArg(argc++, outReg);
+    JS_ASSERT(f.argc() == argc);
 
     masm.callWithABI(f.wrapped);
 
@@ -602,7 +627,8 @@ IonCompartment::generateVMWrapper(JSContext *cx, const VMFunction &f)
     masm.ma_cmp(r4, Operand(sp, 0));
     masm.ma_b(&invalidated, Assembler::NotEqual);
 
-    masm.retn(Imm32(sizeof(IonExitFrameLayout) + argumentPadding + f.explicitArgs * sizeof(void *)));
+    masm.retn(Imm32(sizeof(IonExitFrameLayout) + argumentPadding +
+                    f.explicitStackSlots() * sizeof(void *)));
 
     masm.bind(&exception);
     masm.handleException();

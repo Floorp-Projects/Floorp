@@ -89,6 +89,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
   public:
     using MacroAssemblerX86Shared::call;
+    using MacroAssemblerX86Shared::Push;
 
     typedef MoveResolver::MoveOperand MoveOperand;
     typedef MoveResolver::Move Move;
@@ -129,6 +130,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void pushValue(ValueOperand val) {
         push(val.valueReg());
+    }
+    void Push(const ValueOperand &val) {
+        pushValue(val);
+        framePushed_ += sizeof(Value);
     }
     void popValue(ValueOperand val) {
         pop(val.valueReg());

@@ -607,6 +607,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         push(ptr);
         adjustFrame(STACK_SLOT_SIZE);
     }
+    void Push(const ValueOperand &val) {
+        pushValue(val);
+        framePushed_ += sizeof(Value);
+    }
     void Pop(const Register &reg) {
         ma_pop(reg);
         adjustFrame(-STACK_SLOT_SIZE);
