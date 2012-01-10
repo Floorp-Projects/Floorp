@@ -39,6 +39,7 @@
 #include "SourceSurfaceCairo.h"
 #include "PathCairo.h"
 #include "HelpersCairo.h"
+#include "ScaledFontCairo.h"
 
 #include "cairo.h"
 
@@ -589,6 +590,26 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
                             const DrawOptions &aOptions)
 {
   AutoPrepareForDrawing prep(this, mContext);
+
+  if (aFont->GetType() != FONT_CAIRO)
+    return;
+
+  ScaledFontCairo* scaledFont = static_cast<ScaledFontCairo*>(aFont);
+  cairo_set_scaled_font(mContext, scaledFont->GetCairoScaledFont());
+
+  cairo_pattern_t* pat = GfxPatternToCairoPattern(aPattern, aOptions.mAlpha);
+  cairo_set_source(mContext, pat);
+  cairo_pattern_destroy(pat);
+
+  // Convert our GlyphBuffer into an array of Cairo glyphs.
+  std::vector<cairo_glyph_t> glyphs(aBuffer.mNumGlyphs);
+  for (uint32_t i = 0; i < aBuffer.mNumGlyphs; ++i) {
+    glyphs[i].index = aBuffer.mGlyphs[i].mIndex;
+    glyphs[i].x = aBuffer.mGlyphs[i].mPosition.x;
+    glyphs[i].y = aBuffer.mGlyphs[i].mPosition.y;
+  }
+
+  cairo_show_glyphs(mContext, &glyphs[0], aBuffer.mNumGlyphs);
 }
 
 void
