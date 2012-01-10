@@ -70,34 +70,15 @@ public class PanZoomController
 {
     private static final String LOGTAG = "GeckoPanZoomController";
 
-    // This fraction of velocity remains after every animation frame when the velocity is low.
-    private static final float FRICTION_SLOW = 0.85f;
-    // This fraction of velocity remains after every animation frame when the velocity is high.
-    private static final float FRICTION_FAST = 0.97f;
-    // Below this velocity (in pixels per frame), the friction starts increasing from FRICTION_FAST
-    // to FRICTION_SLOW.
-    private static final float VELOCITY_THRESHOLD = 10.0f;
     // Animation stops if the velocity is below this value when overscrolled or panning.
     private static final float STOPPED_THRESHOLD = 4.0f;
     // Animation stops is the velocity is below this threshold when flinging.
     private static final float FLING_STOPPED_THRESHOLD = 0.1f;
-    // The percentage of the surface which can be overscrolled before it must snap back.
-    private static final float SNAP_LIMIT = 0.75f;
-    // The rate of deceleration when the surface has overscrolled.
-    private static final float OVERSCROLL_DECEL_RATE = 0.04f;
     // The distance the user has to pan before we recognize it as such (e.g. to avoid
     // 1-pixel pans between the touch-down and touch-up of a click). In units of inches.
     private static final float PAN_THRESHOLD = 0.1f;
     // Angle from axis within which we stay axis-locked
     private static final double AXIS_LOCK_ANGLE = Math.PI / 6.0; // 30 degrees
-    // The maximum velocity change factor between events, per ms, in %.
-    // Direction changes are excluded.
-    private static final float MAX_EVENT_ACCELERATION = 0.012f;
-    // The minimum amount of space that must be present for an axis to be considered scrollable,
-    // in pixels.
-    private static final float MIN_SCROLLABLE_DISTANCE = 0.5f;
-    // The number of milliseconds per frame assuming 60 fps
-    private static final float MS_PER_FRAME = 1000.0f / 60.0f;
     // The maximum amount we allow you to zoom into a page
     private static final float MAX_ZOOM = 4.0f;
 
@@ -652,193 +633,6 @@ public class PanZoomController
         // Force a viewport synchronisation
         mController.setForceRedraw();
         mController.notifyLayerClientOfGeometryChange();
-    }
-
-    // Physics information for one axis (X or Y).
-    private abstract static class Axis {
-        private enum FlingStates {
-            STOPPED,
-            PANNING,
-            FLINGING,
-        }
-
-        private enum Overscroll {
-            NONE,
-            MINUS,      // Overscrolled in the negative direction
-            PLUS,       // Overscrolled in the positive direction
-            BOTH,       // Overscrolled in both directions (page is zoomed to smaller than screen)
-        }
-
-        private final SubdocumentScrollHelper mSubscroller;
-
-        private float firstTouchPos;            /* Position of the first touch event on the current drag. */
-        private float touchPos;                 /* Position of the most recent touch event on the current drag. */
-        private float lastTouchPos;             /* Position of the touch event before touchPos. */
-        private float velocity;                  /* Velocity in this direction. */
-        private boolean locked;                  /* Whether movement on this axis is locked. */
-        private boolean disableSnap;             /* Whether overscroll snapping is disabled. */
-
-        private FlingStates mFlingState;        /* The fling state we're in on this axis. */
-
-        public abstract float getOrigin();
-        protected abstract float getViewportLength();
-        protected abstract float getPageLength();
-
-        public float displacement;
-
-        public Axis(SubdocumentScrollHelper subscroller) {
-            mSubscroller = subscroller;
-        }
-
-        private float getViewportEnd() { return getOrigin() + getViewportLength(); }
-
-        public void startTouch(float pos) {
-            velocity = 0.0f;
-            locked = false;
-            firstTouchPos = touchPos = lastTouchPos = pos;
-        }
-
-        float panDistance(float currentPos) {
-            return currentPos - firstTouchPos;
-        }
-
-        void setLocked(boolean locked) {
-            this.locked = locked;
-        }
-
-        void saveTouchPos() {
-            lastTouchPos = touchPos;
-        }
-
-        void updateWithTouchAt(float pos, float timeDelta) {
-            float newVelocity = (touchPos - pos) / timeDelta * MS_PER_FRAME;
-
-            // If there's a direction change, or current velocity is very low,
-            // allow setting of the velocity outright. Otherwise, use the current
-            // velocity and a maximum change factor to set the new velocity.
-            boolean curVelocityIsLow = Math.abs(velocity) < 1.0f;
-            boolean directionChange = (velocity > 0) != (newVelocity > 0);
-            if (curVelocityIsLow || (directionChange && !FloatUtils.fuzzyEquals(newVelocity, 0.0f))) {
-                velocity = newVelocity;
-            } else {
-                float maxChange = Math.abs(velocity * timeDelta * MAX_EVENT_ACCELERATION);
-                velocity = Math.min(velocity + maxChange, Math.max(velocity - maxChange, newVelocity));
-            }
-
-            touchPos = pos;
-        }
-
-        boolean overscrolled() {
-            return getOverscroll() != Overscroll.NONE;
-        }
-
-        private Overscroll getOverscroll() {
-            boolean minus = (getOrigin() < 0.0f);
-            boolean plus = (getViewportEnd() > getPageLength());
-            if (minus && plus)
-                return Overscroll.BOTH;
-            else if (minus)
-                return Overscroll.MINUS;
-            else if (plus)
-                return Overscroll.PLUS;
-            else
-                return Overscroll.NONE;
-        }
-
-        // Returns the amount that the page has been overscrolled. If the page hasn't been
-        // overscrolled on this axis, returns 0.
-        private float getExcess() {
-            switch (getOverscroll()) {
-            case MINUS:     return -getOrigin();
-            case PLUS:      return getViewportEnd() - getPageLength();
-            case BOTH:      return getViewportEnd() - getPageLength() - getOrigin();
-            default:        return 0.0f;
-            }
-        }
-
-        /*
-         * Returns true if the page is zoomed in to some degree along this axis such that scrolling
-         * is possible. Otherwise, returns false.
-         */
-        private boolean scrollable() {
-            return getViewportLength() <= getPageLength() - MIN_SCROLLABLE_DISTANCE;
-        }
-
-        /*
-         * Returns the resistance, as a multiplier, that should be taken into account when
-         * tracking or pinching.
-         */
-        public float getEdgeResistance() {
-            float excess = getExcess();
-            return (excess > 0.0f) ? SNAP_LIMIT - excess / getViewportLength() : 1.0f;
-        }
-
-        /* Returns the velocity. If the axis is locked, returns 0. */
-        public float getRealVelocity() {
-            return locked ? 0.0f : velocity;
-        }
-
-        void startPan() {
-            mFlingState = FlingStates.PANNING;
-        }
-
-        public void startFling(boolean stopped) {
-            disableSnap = mSubscroller.scrolling();
-
-            if (stopped) {
-                mFlingState = FlingStates.STOPPED;
-            } else {
-                mFlingState = FlingStates.FLINGING;
-            }
-        }
-
-        /* Advances a fling animation by one step. */
-        public boolean advanceFling() {
-            if (mFlingState != FlingStates.FLINGING) {
-                return false;
-            }
-
-            float excess = getExcess();
-            if (disableSnap || FloatUtils.fuzzyEquals(excess, 0.0f)) {
-                // If we aren't overscrolled, just apply friction.
-                if (Math.abs(velocity) >= VELOCITY_THRESHOLD) {
-                    velocity *= FRICTION_FAST;
-                } else {
-                    float t = velocity / VELOCITY_THRESHOLD;
-                    velocity *= FloatUtils.interpolate(FRICTION_SLOW, FRICTION_FAST, t);
-                }
-            } else {
-                // Otherwise, decrease the velocity linearly.
-                float elasticity = 1.0f - excess / (getViewportLength() * SNAP_LIMIT);
-                if (getOverscroll() == Overscroll.MINUS)
-                    velocity = Math.min((velocity + OVERSCROLL_DECEL_RATE) * elasticity, 0.0f);
-                else // must be Overscroll.PLUS
-                    velocity = Math.max((velocity - OVERSCROLL_DECEL_RATE) * elasticity, 0.0f);
-            }
-            return true;
-        }
-
-        void stopFling() {
-            velocity = 0.0f;
-            mFlingState = FlingStates.STOPPED;
-        }
-
-        // Performs displacement of the viewport position according to the current velocity.
-        public void displace() {
-            if (!mSubscroller.scrolling() && (locked || !scrollable()))
-                return;
-
-            if (mFlingState == FlingStates.PANNING)
-                displacement += (lastTouchPos - touchPos) * getEdgeResistance();
-            else
-                displacement += velocity;
-        }
-
-        float resetDisplacement() {
-            float d = displacement;
-            displacement = 0.0f;
-            return d;
-        }
     }
 
     /* Returns the nearest viewport metrics with no overscroll visible. */
