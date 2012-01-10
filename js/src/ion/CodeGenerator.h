@@ -74,9 +74,11 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCaptureAllocations(LCaptureAllocations *lir);
     bool visitGoto(LGoto *lir);
     bool visitParameter(LParameter *lir);
+    bool visitCallee(LCallee *lir);
     bool visitStart(LStart *lir);
     bool visitReturn(LReturn *ret);
     bool visitOsrEntry(LOsrEntry *lir);
+    bool visitOsrScopeChain(LOsrScopeChain *lir);
     bool visitStackArg(LStackArg *lir);
     bool visitValueToInt32(LValueToInt32 *lir);
     bool visitValueToDouble(LValueToDouble *lir);
@@ -95,7 +97,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitArrayLength(LArrayLength *lir);
     bool visitStringLength(LStringLength *lir);
     bool visitInitializedLength(LInitializedLength *lir);
-    bool visitLoadPropertyGeneric(LLoadPropertyGeneric *ins);
+    bool visitFunctionEnvironment(LFunctionEnvironment *lir);
+    bool visitCallGetProperty(LCallGetProperty *lir);
+    bool visitCallGetName(LCallGetName *lir);
+    bool visitCallGetNameTypeOf(LCallGetNameTypeOf *lir);
     bool visitGetPropertyCacheV(LGetPropertyCacheV *load) { return visitGetPropertyCache(load); }
     bool visitGetPropertyCacheT(LGetPropertyCacheT *load) { return visitGetPropertyCache(load); }
 

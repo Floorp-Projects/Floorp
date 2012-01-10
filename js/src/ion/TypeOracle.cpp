@@ -284,7 +284,8 @@ TypeInferenceOracle::getCallTarget(JSScript *caller, uint32 argc, jsbytecode *pc
 bool
 TypeInferenceOracle::canEnterInlinedScript(JSScript *inlineScript)
 {
-        return inlineScript->hasAnalysis() && inlineScript->analysis()->ranInference();
+    return inlineScript->hasAnalysis() && inlineScript->analysis()->ranInference() &&
+        !inlineScript->analysis()->usesScopeChain();
 }
 
 TypeSet *

@@ -105,6 +105,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     // Visitor hooks are explicit, to give CPU-specific versions a chance to
     // intercept without a bunch of explicit gunk in the .cpp.
     bool visitParameter(MParameter *param);
+    bool visitCallee(MCallee *callee);
     bool visitGoto(MGoto *ins);
     bool visitNewArray(MNewArray *ins);
     bool visitCheckOverRecursed(MCheckOverRecursed *ins);
@@ -128,6 +129,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitStart(MStart *start);
     bool visitOsrEntry(MOsrEntry *entry);
     bool visitOsrValue(MOsrValue *value);
+    bool visitOsrScopeChain(MOsrScopeChain *object);
     bool visitToDouble(MToDouble *convert);
     bool visitToInt32(MToInt32 *convert);
     bool visitTruncateToInt32(MTruncateToInt32 *truncate);
@@ -136,6 +138,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitSlots(MSlots *ins);
     bool visitElements(MElements *ins);
     bool visitLoadSlot(MLoadSlot *ins);
+    bool visitFunctionEnvironment(MFunctionEnvironment *ins);
     bool visitStoreSlot(MStoreSlot *ins);
     bool visitTypeBarrier(MTypeBarrier *ins);
     bool visitArrayLength(MArrayLength *ins);
@@ -145,7 +148,9 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitStoreElement(MStoreElement *ins);
     bool visitGetPropertyCache(MGetPropertyCache *ins);
     bool visitGuardClass(MGuardClass *ins);
-    bool visitLoadProperty(MLoadProperty *ins);
+    bool visitCallGetProperty(MCallGetProperty *ins);
+    bool visitCallGetName(MCallGetName *ins);
+    bool visitCallGetNameTypeOf(MCallGetNameTypeOf *ins);
     bool visitStringLength(MStringLength *ins);
 };
 
