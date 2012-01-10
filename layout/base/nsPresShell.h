@@ -852,17 +852,28 @@ private:
   // over our window or there is no last observed mouse location for some
   // reason.
   nsPoint mMouseLocation;
-  class nsSynthMouseMoveEvent : public nsRunnable {
+  class nsSynthMouseMoveEvent : public nsARefreshObserver {
   public:
     nsSynthMouseMoveEvent(PresShell* aPresShell, bool aFromScroll)
       : mPresShell(aPresShell), mFromScroll(aFromScroll) {
       NS_ASSERTION(mPresShell, "null parameter");
     }
-    void Revoke() { mPresShell = nsnull; }
-    NS_IMETHOD Run() {
+    ~nsSynthMouseMoveEvent() {
+      Revoke();
+    }
+
+    NS_INLINE_DECL_REFCOUNTING(nsSynthMouseMoveEvent)
+    
+    void Revoke() {
+      if (mPresShell) {
+        mPresShell->GetPresContext()->RefreshDriver()->
+          RemoveRefreshObserver(this, Flush_Display);
+        mPresShell = nsnull;
+      }
+    }
+    virtual void WillRefresh(mozilla::TimeStamp aTime) {
       if (mPresShell)
         mPresShell->ProcessSynthMouseMoveEvent(mFromScroll);
-      return NS_OK;
     }
   private:
     PresShell* mPresShell;
