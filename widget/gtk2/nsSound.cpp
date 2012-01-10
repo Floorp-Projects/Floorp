@@ -55,6 +55,9 @@
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/Services.h"
+#include "nsIStringBundle.h"
+#include "nsIXULAppInfo.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -147,6 +150,32 @@ ca_context_get_default()
             g_free(sound_theme_name);
         }
     }
+
+    nsCOMPtr<nsIStringBundleService> bundleService =
+        mozilla::services::GetStringBundleService();
+    if (bundleService) {
+        nsCOMPtr<nsIStringBundle> brandingBundle;
+        bundleService->CreateBundle("chrome://branding/locale/brand.properties",
+                                    getter_AddRefs(brandingBundle));
+        if (brandingBundle) {
+            nsAutoString wbrand;
+            brandingBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+                                              getter_Copies(wbrand));
+            NS_ConvertUTF16toUTF8 brand(wbrand);
+
+            ca_context_change_props(ctx, "application.name", brand.get(), NULL);
+        }
+    }
+
+    nsCOMPtr<nsIXULAppInfo> appInfo = do_GetService("@mozilla.org/xre/app-info;1");
+    if (appInfo) {
+        nsCAutoString version;
+        appInfo->GetVersion(version);
+
+        ca_context_change_props(ctx, "application.version", version.get(), NULL);
+    }
+
+    ca_context_change_props(ctx, "application.icon_name", MOZ_APP_NAME, NULL);
 
     return ctx;
 }
