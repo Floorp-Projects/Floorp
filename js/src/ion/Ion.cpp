@@ -186,6 +186,8 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
         MarkRoot(trc, bailoutHandler_.unsafeGet(), "bailoutHandler");
     if (argumentsRectifier_)
         MarkRoot(trc, argumentsRectifier_.unsafeGet(), "argumentsRectifier");
+    if (invalidator_)
+        MarkRoot(trc, invalidator_.unsafeGet(), "invalidator");
     for (size_t i = 0; i < bailoutTables_.length(); i++) {
         if (bailoutTables_[i])
             MarkRoot(trc, bailoutTables_[i].unsafeGet(), "bailoutTable");
@@ -206,6 +208,8 @@ IonCompartment::sweep(JSContext *cx)
         bailoutHandler_ = NULL;
     if (argumentsRectifier_ && IsAboutToBeFinalized(cx, argumentsRectifier_))
         argumentsRectifier_ = NULL;
+    if (invalidator_ && IsAboutToBeFinalized(cx, invalidator_))
+        invalidator_ = NULL;
 
     for (size_t i = 0; i < bailoutTables_.length(); i++) {
         if (bailoutTables_[i] && IsAboutToBeFinalized(cx, bailoutTables_[i]))
