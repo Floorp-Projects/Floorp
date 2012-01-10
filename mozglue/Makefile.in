@@ -11,15 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Aero Peek
+# The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Mozilla Corporation
-# Portions created by the Initial Developer are Copyright (C) 2009
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Rob Arnold <tellrob@gmail.com>
+#  Mike Hommey <mh@glandium.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,22 +35,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef ENABLE_TESTS
-DIRS += test
+DIRS =
+ifeq (android,$(MOZ_WIDGET_TOOLKIT))
+DIRS += android
 endif
 
-MODULE = wintaskbar
-
-EXTRA_JS_MODULES = \
-	WindowsPreviewPerTab.jsm \
-	WindowsJumpLists.jsm \
-	$(NULL)
+DIRS += build
 
 include $(topsrcdir)/config/rules.mk

@@ -508,36 +508,13 @@ NS_IMPL_THREADSAFE_RELEASE(nsGeolocationService)
 
 static bool sGeoEnabled = true;
 static bool sGeoIgnoreLocationFilter = false;
-
-static int
-GeoEnabledChangedCallback(const char *aPrefName, void *aClosure)
-{
-  sGeoEnabled = Preferences::GetBool("geo.enabled", true);
-  return 0;
-}
-
-static int
-GeoIgnoreLocationFilterChangedCallback(const char *aPrefName, void *aClosure)
-{
-  sGeoIgnoreLocationFilter =
-    Preferences::GetBool("geo.ignore.location_filter", true);
-  return 0;
-}
-
+static PRInt32 sProviderTimeout = 6000; // Time, in milliseconds, to wait for the location provider to spin up.
 
 nsresult nsGeolocationService::Init()
 {
-  mTimeout = Preferences::GetInt("geo.timeout", 6000);
-
-  Preferences::RegisterCallback(GeoIgnoreLocationFilterChangedCallback,
-                                "geo.ignore.location_filter");
-
-  GeoIgnoreLocationFilterChangedCallback("geo.ignore.location_filter", nsnull);
-
-
-  Preferences::RegisterCallback(GeoEnabledChangedCallback, "geo.enabled");
-
-  GeoEnabledChangedCallback("geo.enabled", nsnull);
+  Preferences::AddIntVarCache(&sProviderTimeout, "geo.timeout", sProviderTimeout);
+  Preferences::AddBoolVarCache(&sGeoEnabled, "geo.enabled", sGeoEnabled);
+  Preferences::AddBoolVarCache(&sGeoIgnoreLocationFilter, "geo.ignore.location_filter", sGeoIgnoreLocationFilter);
 
   if (!sGeoEnabled)
     return NS_ERROR_FAILURE;
@@ -710,7 +687,7 @@ nsGeolocationService::SetDisconnectTimer()
     mDisconnectTimer->Cancel();
 
   mDisconnectTimer->Init(this,
-                         mTimeout,
+                         sProviderTimeout,
                          nsITimer::TYPE_ONE_SHOT);
 }
 
@@ -881,7 +858,7 @@ nsGeolocation::HasActiveCallbacks()
     if (mWatchingCallbacks[i]->IsActive())
       return true;
 
-  return false;
+  return mPendingCallbacks.Length() != 0;
 }
 
 void
