@@ -516,6 +516,7 @@
 #include "nsIDOMSmsEvent.h"
 #include "nsIDOMSmsRequest.h"
 #include "nsIDOMSmsFilter.h"
+#include "nsIDOMSmsCursor.h"
 #include "nsIPrivateDOMEvent.h"
 
 #ifdef MOZ_B2G_RIL
@@ -1417,6 +1418,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(MozSmsFilter, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(MozSmsCursor, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(CSSFontFaceRule, nsDOMGenericSH,
@@ -4002,6 +4006,10 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(MozSmsFilter, nsIDOMMozSmsFilter)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozSmsFilter)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozSmsCursor, nsIDOMMozSmsCursor)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozSmsCursor)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CSSFontFaceRule, nsIDOMCSSFontFaceRule)

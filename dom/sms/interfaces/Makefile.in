@@ -54,6 +54,7 @@ XPIDLSRCS = \
   nsISmsDatabaseService.idl \
   nsIDOMSmsRequest.idl \
   nsIDOMSmsFilter.idl \
+  nsIDOMSmsCursor.idl \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
