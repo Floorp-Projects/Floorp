@@ -61,6 +61,8 @@ sync protocol PSms {
 child:
     NotifyReceivedMessage(SmsMessageData aMessageData);
 
+    NotifySentMessage(SmsMessageData aMessageData);
+
 parent:
     sync HasSupport()
         returns (bool aHasSupport);

@@ -40,6 +40,7 @@ namespace dom {
 namespace sms {
 
 const char* kSmsReceivedObserverTopic = "sms-received";
+const char* kSmsSentObserverTopic     = "sms-sent";
 
 } // namespace sms
 } // namespace dom
