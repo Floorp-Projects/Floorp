@@ -135,6 +135,7 @@ public class PanZoomController
     }
 
     private final LayerController mController;
+    private final SubdocumentScrollHelper mSubscroller;
     private final Axis mX;
     private final Axis mY;
 
@@ -149,40 +150,22 @@ public class PanZoomController
     /* Current state the pan/zoom UI is in. */
     private PanZoomState mState;
 
-    private boolean mOverridePanning;
-    private boolean mOverrideScrollAck;
-    private boolean mOverrideScrollPending;
-
     public PanZoomController(LayerController controller) {
         mController = controller;
-        mX = new AxisX();
-        mY = new AxisY();
+        mSubscroller = new SubdocumentScrollHelper(this);
+        mX = new AxisX(mSubscroller);
+        mY = new AxisY(mSubscroller);
+
         mState = PanZoomState.NOTHING;
 
         GeckoAppShell.registerGeckoEventListener("Browser:ZoomToRect", this);
         GeckoAppShell.registerGeckoEventListener("Browser:ZoomToPageWidth", this);
-        GeckoAppShell.registerGeckoEventListener("Panning:Override", this);
-        GeckoAppShell.registerGeckoEventListener("Panning:CancelOverride", this);
-        GeckoAppShell.registerGeckoEventListener("Gesture:ScrollAck", this);
     }
 
     public void handleMessage(String event, JSONObject message) {
         Log.i(LOGTAG, "Got message: " + event);
         try {
-            if ("Panning:Override".equals(event)) {
-                mOverridePanning = true;
-                mOverrideScrollAck = true;
-            } else if ("Panning:CancelOverride".equals(event)) {
-                mOverridePanning = false;
-            } else if ("Gesture:ScrollAck".equals(event)) {
-                mController.post(new Runnable() {
-                    public void run() {
-                        mOverrideScrollAck = true;
-                        if (mOverridePanning && mOverrideScrollPending)
-                            updatePosition();
-                    }
-                });
-            } else if (event.equals("Browser:ZoomToRect")) {
+            if (event.equals("Browser:ZoomToRect")) {
                 float scale = mController.getZoomFactor();
                 float x = (float)message.getDouble("x");
                 float y = (float)message.getDouble("y");
@@ -262,7 +245,7 @@ public class PanZoomController
         // user is taking control of movement, so stop
         // any auto-movement we have going
         stopAnimationTimer();
-        mOverridePanning = false;
+        mSubscroller.cancel();
 
         switch (mState) {
         case ANIMATED_ZOOM:
@@ -437,19 +420,17 @@ public class PanZoomController
 
         mX.startPan();
         mY.startPan();
-        mX.displace(mOverridePanning); mY.displace(mOverridePanning);
         updatePosition();
     }
 
     private void fling() {
-        mX.displace(mOverridePanning); mY.displace(mOverridePanning);
         updatePosition();
 
         stopAnimationTimer();
 
         boolean stopped = stopped();
-        mX.startFling(stopped, mOverridePanning);
-        mY.startFling(stopped, mOverridePanning);
+        mX.startFling(stopped);
+        mY.startFling(stopped);
 
         startAnimationTimer(new FlingRunnable());
     }
@@ -512,33 +493,19 @@ public class PanZoomController
         return getVelocity() < STOPPED_THRESHOLD;
     }
 
+    PointF getDisplacement() {
+        return new PointF(mX.resetDisplacement(), mY.resetDisplacement());
+    }
+
     private void updatePosition() {
-        if (mOverridePanning) {
-            if (!mOverrideScrollAck) {
-                mOverrideScrollPending = true;
-                return;
-            }
-
-            mOverrideScrollPending = false;
-            JSONObject json = new JSONObject();
-
-            try {
-                json.put("x", mX.displacement);
-                json.put("y", mY.displacement);
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "Error forming Gesture:Scroll message: " + e);
-            }
-
-            GeckoEvent e = new GeckoEvent("Gesture:Scroll", json.toString());
-            GeckoAppShell.sendEventToGecko(e);
-            mOverrideScrollAck = false;
-        } else {
+        mX.displace();
+        mY.displace();
+        PointF displacement = getDisplacement();
+        if (! mSubscroller.scrollBy(displacement)) {
             synchronized (mController) {
-                mController.scrollBy(new PointF(mX.displacement, mY.displacement));
+                mController.scrollBy(displacement);
             }
         }
-
-        mX.displacement = mY.displacement = 0;
     }
 
     private abstract class AnimationRunnable implements Runnable {
@@ -643,11 +610,10 @@ public class PanZoomController
             boolean flingingX = mX.advanceFling();
             boolean flingingY = mY.advanceFling();
 
-            boolean overscrolled = ((mX.overscrolled() || mY.overscrolled()) && !mOverridePanning);
+            boolean overscrolled = ((mX.overscrolled() || mY.overscrolled()) && !mSubscroller.scrolling());
 
             /* If we're still flinging in any direction, update the origin. */
             if (flingingX || flingingY) {
-                mX.displace(mOverridePanning); mY.displace(mOverridePanning);
                 updatePosition();
 
                 /*
@@ -667,8 +633,8 @@ public class PanZoomController
             }
 
             /*
-             * Perform a bounce-back animation if overscrolled, unless panning is being overridden
-             * (which happens e.g. when the user is panning an iframe).
+             * Perform a bounce-back animation if overscrolled, unless panning is being
+             * handled by the subwindow scroller.
              */
             if (overscrolled) {
                 bounce();
@@ -703,6 +669,8 @@ public class PanZoomController
             BOTH,       // Overscrolled in both directions (page is zoomed to smaller than screen)
         }
 
+        private final SubdocumentScrollHelper mSubscroller;
+
         private float firstTouchPos;            /* Position of the first touch event on the current drag. */
         private float touchPos;                 /* Position of the most recent touch event on the current drag. */
         private float lastTouchPos;             /* Position of the touch event before touchPos. */
@@ -718,7 +686,9 @@ public class PanZoomController
 
         public float displacement;
 
-        public Axis() {}
+        public Axis(SubdocumentScrollHelper subscroller) {
+            mSubscroller = subscroller;
+        }
 
         private float getViewportEnd() { return getOrigin() + getViewportLength(); }
 
@@ -812,8 +782,8 @@ public class PanZoomController
             mFlingState = FlingStates.PANNING;
         }
 
-        public void startFling(boolean stopped, boolean panningOverridden) {
-            disableSnap = panningOverridden;
+        public void startFling(boolean stopped) {
+            disableSnap = mSubscroller.scrolling();
 
             if (stopped) {
                 mFlingState = FlingStates.STOPPED;
@@ -854,14 +824,20 @@ public class PanZoomController
         }
 
         // Performs displacement of the viewport position according to the current velocity.
-        public void displace(boolean panningOverridden) {
-            if (!panningOverridden && (locked || !scrollable()))
+        public void displace() {
+            if (!mSubscroller.scrolling() && (locked || !scrollable()))
                 return;
 
             if (mFlingState == FlingStates.PANNING)
                 displacement += (lastTouchPos - touchPos) * getEdgeResistance();
             else
                 displacement += velocity;
+        }
+
+        float resetDisplacement() {
+            float d = displacement;
+            displacement = 0.0f;
+            return d;
         }
     }
 
@@ -901,6 +877,7 @@ public class PanZoomController
     }
 
     private class AxisX extends Axis {
+        AxisX(SubdocumentScrollHelper subscroller) { super(subscroller); }
         @Override
         public float getOrigin() { return mController.getOrigin().x; }
         @Override
@@ -910,6 +887,7 @@ public class PanZoomController
     }
 
     private class AxisY extends Axis {
+        AxisY(SubdocumentScrollHelper subscroller) { super(subscroller); }
         @Override
         public float getOrigin() { return mController.getOrigin().y; }
         @Override
