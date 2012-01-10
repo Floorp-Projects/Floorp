@@ -85,6 +85,7 @@ CPPSRCS = \
   SmsRequest.cpp \
   SmsRequestManager.cpp \
   SmsFilter.cpp \
+  SmsCursor.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
