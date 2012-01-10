@@ -141,21 +141,16 @@ BytecodeNoFallThrough(JSOp op)
 {
     switch (op) {
       case JSOP_GOTO:
-      case JSOP_GOTOX:
       case JSOP_DEFAULT:
-      case JSOP_DEFAULTX:
       case JSOP_RETURN:
       case JSOP_STOP:
       case JSOP_RETRVAL:
       case JSOP_THROW:
       case JSOP_TABLESWITCH:
-      case JSOP_TABLESWITCHX:
       case JSOP_LOOKUPSWITCH:
-      case JSOP_LOOKUPSWITCHX:
       case JSOP_FILTER:
         return true;
       case JSOP_GOSUB:
-      case JSOP_GOSUBX:
         // these fall through indirectly, after executing a 'finally'.
         return false;
       default:
@@ -407,13 +402,10 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             hasFunctionCalls_ = true;
             break;
 
-          case JSOP_TABLESWITCH:
-          case JSOP_TABLESWITCHX: {
+          case JSOP_TABLESWITCH: {
             isInlineable = false;
-            jsbytecode *pc2 = pc;
-            unsigned jmplen = (op == JSOP_TABLESWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
-            unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
-            pc2 += jmplen;
+            unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
+            jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
             jsint low = GET_JUMP_OFFSET(pc2);
             pc2 += JUMP_OFFSET_LEN;
             jsint high = GET_JUMP_OFFSET(pc2);
@@ -425,25 +417,22 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             getCode(defaultOffset).safePoint = true;
 
             for (jsint i = low; i <= high; i++) {
-                unsigned targetOffset = offset + GetJumpOffset(pc, pc2);
+                unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
                 if (targetOffset != offset) {
                     if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, stackDepth))
                         return;
                 }
                 getCode(targetOffset).switchTarget = true;
                 getCode(targetOffset).safePoint = true;
-                pc2 += jmplen;
+                pc2 += JUMP_OFFSET_LEN;
             }
             break;
           }
 
-          case JSOP_LOOKUPSWITCH:
-          case JSOP_LOOKUPSWITCHX: {
+          case JSOP_LOOKUPSWITCH: {
             isInlineable = false;
-            jsbytecode *pc2 = pc;
-            unsigned jmplen = (op == JSOP_LOOKUPSWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
-            unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
-            pc2 += jmplen;
+            unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
+            jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
             unsigned npairs = GET_UINT16(pc2);
             pc2 += UINT16_LEN;
 
@@ -454,12 +443,12 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
             while (npairs) {
                 pc2 += INDEX_LEN;
-                unsigned targetOffset = offset + GetJumpOffset(pc, pc2);
+                unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
                 if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, stackDepth))
                     return;
                 getCode(targetOffset).switchTarget = true;
                 getCode(targetOffset).safePoint = true;
-                pc2 += jmplen;
+                pc2 += JUMP_OFFSET_LEN;
                 npairs--;
             }
             break;
@@ -558,13 +547,12 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
         uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
 
         /* Check basic jump opcodes, which may or may not have a fallthrough. */
-        if (type == JOF_JUMP || type == JOF_JUMPX) {
+        if (type == JOF_JUMP) {
             /* Some opcodes behave differently on their branching path. */
             unsigned newStackDepth = stackDepth;
 
             switch (op) {
               case JSOP_CASE:
-              case JSOP_CASEX:
                 /* Case instructions do not push the lvalue back when branching. */
                 newStackDepth--;
                 break;
@@ -572,7 +560,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
               default:;
             }
 
-            unsigned targetOffset = offset + GetJumpOffset(pc, pc);
+            unsigned targetOffset = offset + GET_JUMP_OFFSET(pc);
             if (!addJump(cx, targetOffset, &nextOffset, &forwardJump, newStackDepth))
                 return;
         }
@@ -593,11 +581,11 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             }
             JS_ASSERT(nextcode->stackDepth == stackDepth);
 
-            if (type == JOF_JUMP || type == JOF_JUMPX)
+            if (type == JOF_JUMP)
                 nextcode->jumpFallthrough = true;
 
             /* Treat the fallthrough of a branch instruction as a jump target. */
-            if (type == JOF_JUMP || type == JOF_JUMPX)
+            if (type == JOF_JUMP)
                 nextcode->jumpTarget = true;
             else
                 nextcode->fallthrough = true;
@@ -748,9 +736,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
           }
 
           case JSOP_LOOKUPSWITCH:
-          case JSOP_LOOKUPSWITCHX:
           case JSOP_TABLESWITCH:
-          case JSOP_TABLESWITCHX:
             /* Restore all saved variables. :FIXME: maybe do this precisely. */
             for (unsigned i = 0; i < savedCount; i++) {
                 LifetimeVariable &var = *saved[i];
@@ -790,7 +776,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
         }
 
         uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
-        if (type == JOF_JUMP || type == JOF_JUMPX) {
+        if (type == JOF_JUMP) {
             /*
              * Forward jumps need to pull in all variables which are live at
              * their target offset --- the variables live before the jump are
@@ -852,8 +838,8 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 
                     jsbytecode *entrypc = script->code + entry;
 
-                    if (JSOp(*entrypc) == JSOP_GOTO || JSOp(*entrypc) == JSOP_GOTOX)
-                        loop->entry = entry + GetJumpOffset(entrypc, entrypc);
+                    if (JSOp(*entrypc) == JSOP_GOTO)
+                        loop->entry = entry + GET_JUMP_OFFSET(entrypc);
                     else
                         loop->entry = targetOffset;
                 } else {
@@ -1392,14 +1378,6 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             break;
           }
 
-          case JSOP_CALLARG:
-          case JSOP_CALLLOCAL: {
-            uint32_t slot = GetBytecodeSlot(script, pc);
-            if (trackSlot(slot))
-                stack[stackDepth - 2] = code->poppedValues[0] = values[slot];
-            break;
-          }
-
           /* Short circuit ops which push back one of their operands. */
 
           case JSOP_MOREITER:
@@ -1439,12 +1417,9 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
            * and all case statements or exception/finally handlers.
            */
 
-          case JSOP_TABLESWITCH:
-          case JSOP_TABLESWITCHX: {
-            jsbytecode *pc2 = pc;
-            unsigned jmplen = (op == JSOP_TABLESWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
-            unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
-            pc2 += jmplen;
+          case JSOP_TABLESWITCH: {
+            unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
+            jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
             jsint low = GET_JUMP_OFFSET(pc2);
             pc2 += JUMP_OFFSET_LEN;
             jsint high = GET_JUMP_OFFSET(pc2);
@@ -1453,20 +1428,17 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             checkBranchTarget(cx, defaultOffset, branchTargets, values, stackDepth);
 
             for (jsint i = low; i <= high; i++) {
-                unsigned targetOffset = offset + GetJumpOffset(pc, pc2);
+                unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
                 if (targetOffset != offset)
                     checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
-                pc2 += jmplen;
+                pc2 += JUMP_OFFSET_LEN;
             }
             break;
           }
 
-          case JSOP_LOOKUPSWITCH:
-          case JSOP_LOOKUPSWITCHX: {
-            jsbytecode *pc2 = pc;
-            unsigned jmplen = (op == JSOP_LOOKUPSWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
-            unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
-            pc2 += jmplen;
+          case JSOP_LOOKUPSWITCH: {
+            unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
+            jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
             unsigned npairs = GET_UINT16(pc2);
             pc2 += UINT16_LEN;
 
@@ -1474,9 +1446,9 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
 
             while (npairs) {
                 pc2 += INDEX_LEN;
-                unsigned targetOffset = offset + GetJumpOffset(pc, pc2);
+                unsigned targetOffset = offset + GET_JUMP_OFFSET(pc2);
                 checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
-                pc2 += jmplen;
+                pc2 += JUMP_OFFSET_LEN;
                 npairs--;
             }
             break;
@@ -1503,7 +1475,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
         }
 
         uint32_t type = JOF_TYPE(js_CodeSpec[op].format);
-        if (type == JOF_JUMP || type == JOF_JUMPX) {
+        if (type == JOF_JUMP) {
             unsigned targetOffset = FollowBranch(cx, script, offset);
             checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
 
@@ -1855,21 +1827,6 @@ CrossScriptSSA::foldValue(const CrossSSAValue &cv)
                         return foldValue(CrossSSAValue(calleeFrame, analysis->poppedValue(pc, 0)));
                     offset += GetBytecodeLength(pc);
                 }
-            }
-            break;
-          }
-
-          case JSOP_CALLPROP: {
-            /*
-             * The second value pushed by CALLPROP is the same as its popped
-             * value. We don't do this folding during the SSA analysis itself
-             * as we still need to distinguish the two values during type
-             * inference --- any popped null or undefined value will throw an
-             * exception, and not actually end up in the pushed set.
-             */
-            if (v.pushedIndex() == 1) {
-                ScriptAnalysis *analysis = frame.script->analysis();
-                return foldValue(CrossSSAValue(cv.frame, analysis->poppedValue(pc, 0)));
             }
             break;
           }

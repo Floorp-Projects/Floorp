@@ -1589,72 +1589,62 @@ const char js_defineSetter_str[] = "__defineSetter__";
 const char js_lookupGetter_str[] = "__lookupGetter__";
 const char js_lookupSetter_str[] = "__lookupSetter__";
 
-JS_FRIEND_API(JSBool)
-js::obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
+enum DefineType { Getter, Setter };
+
+template<DefineType Type>
+static bool
+DefineAccessor(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (!BoxNonStrictThis(cx, args))
         return false;
-    JSObject *obj = &args.thisv().toObject();
 
-    if (args.length() <= 1 || !js_IsCallable(args[1])) {
+    if (args.length() < 2 || !js_IsCallable(args[1])) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_GETTER_OR_SETTER,
-                             js_getter_str);
-        return JS_FALSE;
+                             Type == Getter ? js_getter_str : js_setter_str);
+        return false;
     }
-    PropertyOp getter = CastAsPropertyOp(&args[1].toObject());
 
     jsid id;
     if (!ValueToId(cx, args[0], &id))
-        return JS_FALSE;
-    if (!CheckRedeclaration(cx, obj, id, JSPROP_GETTER))
-        return JS_FALSE;
-    /*
-     * Getters and setters are just like watchpoints from an access
-     * control point of view.
-     */
-    Value junk;
-    uintN attrs;
-    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
-        return JS_FALSE;
+        return false;
+
+    JSObject *descObj = NewBuiltinClassInstance(cx, &ObjectClass);
+    if (!descObj)
+        return false;
+
+    JSAtomState &state = cx->runtime->atomState;
+    /* enumerable: true */
+    if (!descObj->defineProperty(cx, state.enumerableAtom, BooleanValue(true)))
+        return false;
+
+    /* configurable: true */
+    if (!descObj->defineProperty(cx, state.configurableAtom, BooleanValue(true)))
+        return false;
+
+    /* enumerable: true */
+    PropertyName *acc = (Type == Getter) ? state.getAtom : state.setAtom;
+    if (!descObj->defineProperty(cx, acc, args[1]))
+        return false;
+
+    JSBool dummy;
+    if (!js_DefineOwnProperty(cx, &args.thisv().toObject(), id, ObjectValue(*descObj), &dummy))
+        return false;
     args.rval().setUndefined();
-    return obj->defineGeneric(cx, id, UndefinedValue(), getter, JS_StrictPropertyStub,
-                              JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED);
+    return true;
+}
+
+JS_FRIEND_API(JSBool)
+js::obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
+{
+    return DefineAccessor<Getter>(cx, argc, vp);
 }
 
 JS_FRIEND_API(JSBool)
 js::obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!BoxNonStrictThis(cx, args))
-        return false;
-    JSObject *obj = &args.thisv().toObject();
-
-    if (args.length() <= 1 || !js_IsCallable(args[1])) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_BAD_GETTER_OR_SETTER,
-                             js_setter_str);
-        return JS_FALSE;
-    }
-    StrictPropertyOp setter = CastAsStrictPropertyOp(&args[1].toObject());
-
-    jsid id;
-    if (!ValueToId(cx, args[0], &id))
-        return JS_FALSE;
-    if (!CheckRedeclaration(cx, obj, id, JSPROP_SETTER))
-        return JS_FALSE;
-    /*
-     * Getters and setters are just like watchpoints from an access
-     * control point of view.
-     */
-    Value junk;
-    uintN attrs;
-    if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
-        return JS_FALSE;
-    args.rval().setUndefined();
-    return obj->defineGeneric(cx, id, UndefinedValue(), JS_PropertyStub, setter,
-                              JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED);
+    return DefineAccessor<Setter>(cx, argc, vp);
 }
 
 static JSBool
@@ -4665,7 +4655,6 @@ PurgeProtoChain(JSContext *cx, JSObject *obj, jsid id)
         }
         shape = obj->nativeLookup(cx, id);
         if (shape) {
-            PCMETER(JS_PROPERTY_CACHE(cx).pcpurges++);
             if (!obj->shadowingShapeChange(cx, *shape))
                 return false;
 
@@ -5106,13 +5095,12 @@ js::LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     return LookupPropertyWithFlagsInline(cx, obj, id, flags, objp, propp);
 }
 
-PropertyCacheEntry *
+bool
 js::FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool global,
                        JSObject **objp, JSObject **pobjp, JSProperty **propp)
 {
     jsid id = ATOM_TO_JSID(name);
     JSObject *scopeChain, *obj, *parent, *pobj;
-    PropertyCacheEntry *entry;
     int scopeIndex;
     JSProperty *prop;
 
@@ -5132,7 +5120,6 @@ js::FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool
     }
 
     /* Scan entries on the scope chain that we can cache across. */
-    entry = JS_NO_PROP_CACHE_FILL;
     obj = scopeChain;
     parent = obj->enclosingScope();
     for (scopeIndex = 0;
@@ -5141,7 +5128,7 @@ js::FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool
          : !obj->getOps()->lookupProperty;
          ++scopeIndex) {
         if (!LookupPropertyWithFlags(cx, obj, id, cx->resolveFlags, &pobj, &prop))
-            return NULL;
+            return false;
 
         if (prop) {
 #ifdef DEBUG
@@ -5164,14 +5151,16 @@ js::FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool
                 JS_ASSERT(obj->isNative());
             }
 #endif
+
             /*
              * We must check if pobj is native as a global object can have
              * non-native prototype.
              */
             if (cacheResult && pobj->isNative()) {
-                entry = JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, pobj,
-                                                   (Shape *) prop);
+                JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, pobj,
+                                           (Shape *) prop);
             }
+
             goto out;
         }
 
@@ -5185,11 +5174,9 @@ js::FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool
 
     for (;;) {
         if (!obj->lookupGeneric(cx, id, &pobj, &prop))
-            return NULL;
-        if (prop) {
-            PCMETER(JS_PROPERTY_CACHE(cx).nofills++);
+            return false;
+        if (prop)
             goto out;
-        }
 
         /*
          * We conservatively assume that a resolve hook could mutate the scope
@@ -5208,7 +5195,7 @@ js::FindPropertyHelper(JSContext *cx, PropertyName *name, bool cacheResult, bool
     *objp = obj;
     *pobjp = pobj;
     *propp = prop;
-    return entry;
+    return true;
 }
 
 /*
@@ -5255,9 +5242,7 @@ js::FindIdentifierBase(JSContext *cx, JSObject *scopeChain, PropertyName *name)
                 return obj;
             }
             JS_ASSERT_IF(obj->isScope(), pobj->getClass() == obj->getClass());
-            DebugOnly<PropertyCacheEntry*> entry =
-                JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, pobj, (Shape *) prop);
-            JS_ASSERT(entry);
+            JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, pobj, (Shape *) prop);
             return obj;
         }
 
@@ -5406,8 +5391,6 @@ js_GetPropertyHelperInline(JSContext *cx, JSObject *obj, JSObject *receiver, jsi
         if (!CallJSPropertyOp(cx, obj->getClass()->getProperty, obj, id, vp))
             return JS_FALSE;
 
-        PCMETER(getHow & JSGET_CACHE_RESULT && JS_PROPERTY_CACHE(cx).nofills++);
-
         /* Record non-undefined values produced by the class getter hook. */
         if (!vp->isUndefined())
             AddTypePropertyId(cx, obj, id, *vp);
@@ -5534,7 +5517,6 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, Value *vp)
 #endif
         return GetPropertyHelper(cx, obj, id, getHow, vp);
     }
-    JS_ASSERT_IF(getHow & JSGET_CACHE_RESULT, obj->isDenseArray());
 #if JS_HAS_XML_SUPPORT
     if (obj->isXML())
         return js_GetXMLMethod(cx, obj, id, vp);
@@ -5697,8 +5679,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
             JS_ASSERT(shape->isDataDescriptor());
 
             if (!shape->writable()) {
-                PCMETER((defineHow & JSDNP_CACHE_RESULT) && JS_PROPERTY_CACHE(cx).rofills++);
-
                 /* Error in strict mode code, warn with strict option, otherwise do nothing. */
                 if (strict)
                     return obj->reportReadOnly(cx, id);

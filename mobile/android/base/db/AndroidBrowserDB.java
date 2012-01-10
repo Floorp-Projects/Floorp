@@ -44,6 +44,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.CursorWrapper;
+import android.database.sqlite.SQLiteConstraintException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -51,8 +52,10 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.Browser;
 import android.provider.Browser.BookmarkColumns;
+import android.util.Log;
 
 public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
+    private static final String LOGTAG = "AndroidBrowserDB";
     private static final String URL_COLUMN_ID = "_id";
     private static final String URL_COLUMN_THUMBNAIL = "thumbnail";
 
@@ -286,8 +289,19 @@ public class AndroidBrowserDB implements BrowserDB.BrowserDBIface {
                                 Browser.BookmarkColumns.URL + " = ?",
                                 new String[] { uri });
 
-        if (updated == 0)
-            cr.insert(Browser.BOOKMARKS_URI, values);
+        if (updated == 0) {
+            try {
+                cr.insert(Browser.BOOKMARKS_URI, values);
+            } catch (SQLiteConstraintException e) {
+                // insert() mysteriously and intermittently fails with "error
+                // code 19: constraint failed" on some Honeycomb and ICS
+                // devices. Bookmark favicons are not a critical feature, so
+                // we can ignore this error for now. bug 711977; bug 712791
+                Log.e(LOGTAG,
+                      String.format("Inserting favicon for \"%s\" failed with SQLiteConstraintException: %s",
+                                    uri, e.getMessage()));
+            }
+        }
     }
 
     public void updateThumbnailForUrl(ContentResolver cr, String uri,

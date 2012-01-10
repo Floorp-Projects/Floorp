@@ -191,7 +191,7 @@ static void insert_soinfo_into_debug_map(soinfo * info)
     map->l_name = (char*) info->name;
     map->l_ld = (uintptr_t)info->dynamic;
 
-    /* Stick the new library before libmozutils.so
+    /* Stick the new library before libmozglue.so
      */
     if (!_r_debug)
         return;
@@ -2449,7 +2449,7 @@ void simple_linker_init(void)
      * load before that */
     struct link_map *map = debug->r_map;
     while (map) {
-        if (strcmp(map->l_name, "libmozutils.so"))
+        if (strcmp(map->l_name, "libmozglue.so"))
             r_debug_insert = map;
         map = map->l_next;
     }

@@ -55,8 +55,8 @@
 #include "nsIAtom.h"
 
 #define NS_IPARSER_IID \
-{ 0xc9169398, 0x897a, 0x481d, \
-  { 0xa9, 0x5f, 0xd6, 0x60, 0x6e, 0xf8, 0x37, 0x56 } }
+{ 0x0c8c3998, 0x9959, 0x496e, \
+  { 0xbd, 0xd9, 0x0b, 0x6f, 0xc4, 0x1c, 0x3b, 0x87 } }
 
 // {41421C60-310A-11d4-816F-000064657374}
 #define NS_IDEBUG_DUMP_CONTENT_IID \
@@ -65,7 +65,6 @@
 
 class nsIContentSink;
 class nsIRequestObserver;
-class nsIParserFilter;
 class nsString;
 class nsIURI;
 class nsIChannel;
@@ -175,8 +174,6 @@ class nsIParser : public nsISupports {
      */
     NS_IMETHOD_(void) SetDocumentCharset(const nsACString& aCharset, PRInt32 aSource)=0;
     NS_IMETHOD_(void) GetDocumentCharset(nsACString& oCharset, PRInt32& oSource)=0;
-
-    NS_IMETHOD_(void) SetParserFilter(nsIParserFilter* aFilter) = 0;
 
     /** 
      * Get the channel associated with this parser

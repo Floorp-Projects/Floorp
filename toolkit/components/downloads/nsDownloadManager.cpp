@@ -895,6 +895,7 @@ nsDownloadManager::Init()
   (void)mObserverService->AddObserver(this, "offline-requested", false);
   (void)mObserverService->AddObserver(this, "sleep_notification", false);
   (void)mObserverService->AddObserver(this, "wake_notification", false);
+  (void)mObserverService->AddObserver(this, "profile-before-change", false);
   (void)mObserverService->AddObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC, false);
   (void)mObserverService->AddObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC, false);
   (void)mObserverService->AddObserver(this, NS_PRIVATE_BROWSING_REQUEST_TOPIC, false);
@@ -1686,6 +1687,9 @@ nsDownloadManager::CleanUp()
 NS_IMETHODIMP
 nsDownloadManager::GetCanCleanUp(bool *aResult)
 {
+  // This method should never return anything but NS_OK for the benefit of
+  // unwitting consumers.
+  
   *aResult = false;
 
   DownloadState states[] = { nsIDownloadManager::DOWNLOAD_FINISHED,
@@ -1705,23 +1709,24 @@ nsDownloadManager::GetCanCleanUp(bool *aResult)
       "OR state = ? "
       "OR state = ? "
       "OR state = ?"), getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
   for (PRUint32 i = 0; i < ArrayLength(states); ++i) {
     rv = stmt->BindInt32ByIndex(i, states[i]);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
   }
 
   bool moreResults; // We don't really care...
   rv = stmt->ExecuteStep(&moreResults);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
 
   PRInt32 count;
   rv = stmt->GetInt32(0, &count);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
 
   if (count > 0)
     *aResult = true;
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1937,6 +1942,12 @@ nsDownloadManager::Observe(nsISupports *aSubject,
     nsDownload *dl2 = FindDownload(id);
     if (dl2)
       return CancelDownload(id);
+  } else if (strcmp(aTopic, "profile-before-change") == 0) {
+    // Null statements to finalize them.
+    mGetIdsForURIStatement = nsnull;
+    mUpdateDownloadStatement = nsnull;
+    mozilla::DebugOnly<nsresult> rv = mDBConn->Close();
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   } else if (strcmp(aTopic, "quit-application") == 0) {
     // Try to pause all downloads and, if appropriate, mark them as auto-resume
     // unless user has specified that downloads should be canceled
@@ -1951,12 +1962,6 @@ nsDownloadManager::Observe(nsISupports *aSubject,
    // aborted downloads if the user's retention policy specifies it.
     if (GetRetentionBehavior() == 1)
       CleanUp();
-
-    // Null statements to finalize them.
-    mGetIdsForURIStatement = nsnull;
-    mUpdateDownloadStatement = nsnull;
-    mozilla::DebugOnly<nsresult> rv = mDBConn->Close();
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
   } else if (strcmp(aTopic, "quit-application-requested") == 0 &&
              currDownloadCount) {
     nsCOMPtr<nsISupportsPRBool> cancelDownloads =

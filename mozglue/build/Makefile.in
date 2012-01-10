@@ -43,38 +43,38 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = mozutils
-LIBRARY_NAME = mozutils
+MODULE = mozglue
+LIBRARY_NAME = mozglue
 DIST_INSTALL = 1
 
 ifdef MOZ_MEMORY
-SHARED_LIBRARY_LIBS = $(call EXPAND_LIBNAME_PATH,jemalloc,../jemalloc)
+SHARED_LIBRARY_LIBS = $(call EXPAND_LIBNAME_PATH,jemalloc,$(DEPTH)/memory/jemalloc)
 else
 # Temporary, until bug 662814 lands
 VISIBILITY_FLAGS =
 CPPSRCS = dummy.cpp
 endif
  
-# Build mozutils as a shared lib on Windows, OSX and Android.
+# Build mozglue as a shared lib on Windows, OSX and Android.
 ifneq (,$(filter WINNT Darwin Android,$(OS_TARGET)))
 FORCE_SHARED_LIB = 1
 else
 FORCE_STATIC_LIB = 1
 endif
 
-MOZ_UTILS_LDFLAGS = # Don't link against ourselves
+MOZ_GLUE_LDFLAGS = # Don't link against ourselves
 
 ifeq (WINNT,$(OS_TARGET))
-DEFFILE = mozutils.def
+DEFFILE = mozglue.def
 
-mozutils.def: mozutils.def.in
+mozglue.def: mozglue.def.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(ACDEFINES) $< > $@
 
-GARBAGE += mozutils.def
+GARBAGE += mozglue.def
 
 LDFLAGS += -ENTRY:DllMain
 
-ifneq (,$(filter -DEFAULTLIB:mozcrt,$(MOZ_UTILS_LDFLAGS)))
+ifneq (,$(filter -DEFAULTLIB:mozcrt,$(MOZ_GLUE_LDFLAGS)))
 # Don't install the import library if we use mozcrt
 NO_INSTALL_IMPORT_LIBRARY = 1
 endif
@@ -84,6 +84,7 @@ ifeq (android, $(MOZ_WIDGET_TOOLKIT))
 # Add Android linker
 EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
 SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,$(DEPTH)/other-licenses/android)
+SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,../android)
 endif
 
 ifeq (Android, $(OS_TARGET))

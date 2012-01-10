@@ -71,11 +71,8 @@ static inline int32
 GetJumpOffset(jsbytecode *pc)
 {
     JSOp op = JSOp(*pc);
-    JS_ASSERT(js_CodeSpec[op].type() == JOF_JUMP ||
-              js_CodeSpec[op].type() == JOF_JUMPX);
-    return (js_CodeSpec[op].type() == JOF_JUMP)
-           ? GET_JUMP_OFFSET(pc)
-           : GET_JUMPX_OFFSET(pc);
+    JS_ASSERT(js_CodeSpec[op].type() == JOF_JUMP);
+    return GET_JUMP_OFFSET(pc);
 }
 
 static inline jsbytecode *
@@ -524,7 +521,6 @@ IonBuilder::snoopControlFlow(JSOp op)
         return processReturn(op);
 
       case JSOP_GOTO:
-      case JSOP_GOTOX:
       {
         jssrcnote *sn = info().getNote(cx, pc);
         switch (sn ? SN_TYPE(sn) : SRC_NULL) {
@@ -563,7 +559,6 @@ IonBuilder::snoopControlFlow(JSOp op)
         return tableSwitch(op, info().getNote(cx, pc));
 
       case JSOP_IFNE:
-      case JSOP_IFNEX:
         // We should never reach an IFNE, it's a stopAt point, which will
         // trigger closing the loop.
         JS_NOT_REACHED("we should never reach an ifne!");
@@ -704,9 +699,6 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_ENDINIT:
         return true;
 
-      case JSOP_IFEQX:
-        return jsop_ifeq(JSOP_IFEQX);
-
       case JSOP_CALL:
         return jsop_call(GET_ARGC(pc));
 
@@ -717,10 +709,8 @@ IonBuilder::inspectOpcode(JSOp op)
         return pushConstant(Int32Value(GET_UINT16(pc)));
 
       case JSOP_GETGNAME:
-        return jsop_getgname(info().getAtom(pc));
-
       case JSOP_CALLGNAME:
-        return jsop_callgname(info().getAtom(pc));
+        return jsop_getgname(info().getAtom(pc));
 
       case JSOP_BINDGNAME:
         return pushConstant(ObjectValue(*script->global()));
@@ -1049,7 +1039,7 @@ IonBuilder::processDoWhileBodyEnd(CFGState &state)
 IonBuilder::ControlStatus
 IonBuilder::processDoWhileCondEnd(CFGState &state)
 {
-    JS_ASSERT(JSOp(*pc) == JSOP_IFNE || JSOp(*pc) == JSOP_IFNEX);
+    JS_ASSERT(JSOp(*pc) == JSOP_IFNE);
 
     // We're guaranteed a |current|, it's impossible to break or return from
     // inside the conditional expression.
@@ -1070,7 +1060,7 @@ IonBuilder::processDoWhileCondEnd(CFGState &state)
 IonBuilder::ControlStatus
 IonBuilder::processWhileCondEnd(CFGState &state)
 {
-    JS_ASSERT(JSOp(*pc) == JSOP_IFNE || JSOp(*pc) == JSOP_IFNEX);
+    JS_ASSERT(JSOp(*pc) == JSOP_IFNE);
 
     // Balance the stack past the IFNE.
     MDefinition *ins = current->pop();
@@ -1107,7 +1097,7 @@ IonBuilder::processWhileBodyEnd(CFGState &state)
 IonBuilder::ControlStatus
 IonBuilder::processForCondEnd(CFGState &state)
 {
-    JS_ASSERT(JSOp(*pc) == JSOP_IFNE || JSOp(*pc) == JSOP_IFNEX);
+    JS_ASSERT(JSOp(*pc) == JSOP_IFNE);
 
     // Balance the stack past the IFNE.
     MDefinition *ins = current->pop();
@@ -1307,7 +1297,7 @@ IonBuilder::processAndOrEnd(CFGState &state)
 IonBuilder::ControlStatus
 IonBuilder::processBreak(JSOp op, jssrcnote *sn)
 {
-    JS_ASSERT(op == JSOP_GOTO || op == JSOP_GOTOX);
+    JS_ASSERT(op == JSOP_GOTO);
 
     // Find the target loop.
     CFGState *found = NULL;
@@ -1353,7 +1343,7 @@ IonBuilder::processBreak(JSOp op, jssrcnote *sn)
 IonBuilder::ControlStatus
 IonBuilder::processContinue(JSOp op, jssrcnote *sn)
 {
-    JS_ASSERT(op == JSOP_GOTO || op == JSOP_GOTOX);
+    JS_ASSERT(op == JSOP_GOTO);
 
     // Find the target loop.
     CFGState *found = NULL;
@@ -1380,7 +1370,7 @@ IonBuilder::processContinue(JSOp op, jssrcnote *sn)
 IonBuilder::ControlStatus
 IonBuilder::processSwitchBreak(JSOp op, jssrcnote *sn)
 {
-    JS_ASSERT(op == JSOP_GOTO || op == JSOP_GOTOX);
+    JS_ASSERT(op == JSOP_GOTO);
 
     // Find the target switch.
     CFGState *found = NULL;
@@ -1608,7 +1598,7 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
     jsbytecode *bodyStart = pc;
     jsbytecode *bodyEnd = updatepc;
     if (condpc != ifne) {
-        JS_ASSERT(JSOp(*bodyStart) == JSOP_GOTO || JSOp(*bodyStart) == JSOP_GOTOX);
+        JS_ASSERT(JSOp(*bodyStart) == JSOP_GOTO);
         JS_ASSERT(bodyStart + GetJumpOffset(bodyStart) == condpc);
         bodyStart = GetNextPc(bodyStart);
     }
@@ -1830,10 +1820,8 @@ IonBuilder::jsop_ifeq(JSOp op)
 
     // We only handle cases that emit source notes.
     jssrcnote *sn = info().getNote(cx, pc);
-    if (!sn) {
-        // :FIXME: log this.
-        return false;
-    }
+    if (!sn)
+        return abort("expected sourcenote");
 
     MDefinition *ins = current->pop();
 
@@ -1877,7 +1865,7 @@ IonBuilder::jsop_ifeq(JSOp op)
         jsbytecode *trueEnd = pc + js_GetSrcNoteOffset(sn, 0);
         JS_ASSERT(trueEnd > pc);
         JS_ASSERT(trueEnd < falseStart);
-        JS_ASSERT(JSOp(*trueEnd) == JSOP_GOTO || JSOp(*trueEnd) == JSOP_GOTOX);
+        JS_ASSERT(JSOp(*trueEnd) == JSOP_GOTO);
         JS_ASSERT(!info().getNote(cx, trueEnd));
 
         jsbytecode *falseEnd = trueEnd + GetJumpOffset(trueEnd);
@@ -2808,35 +2796,6 @@ IonBuilder::jsop_getgname(JSAtom *atom)
 
     current->push(load);
     return pushTypeBarrier(load, types, barrier);
-}
-
-bool
-IonBuilder::jsop_callgname(JSAtom *atom)
-{
-    // Push callee.
-    if (!jsop_getgname(atom))
-        return false;
-
-    if (!script->hasGlobal())
-        return abort("CALLGNAME non-compile-and-go");
-
-    // Fast path for functions whose global is statically known to be
-    // the current global.
-    types::TypeSet *types = oracle->propertyRead(script, pc);
-    if (types && types->hasGlobalObject(cx, script->global()))
-        return pushConstant(UndefinedValue()) && jsop_notearg();
-
-    // The callee must be a function for MImplicitThis.
-    MDefinition *callee = current->peek(-1);
-    MGuardClass *guard = MGuardClass::New(callee, &js::FunctionClass);
-    current->add(guard);
-
-    // Push implicit |this|.
-    MImplicitThis *this_ = MImplicitThis::New(callee);
-    current->add(this_);
-    current->push(this_);
-
-    return jsop_notearg();
 }
 
 bool
