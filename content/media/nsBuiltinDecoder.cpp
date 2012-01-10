@@ -202,12 +202,14 @@ nsresult nsBuiltinDecoder::Load(nsMediaStream* aStream,
 
   mDecoderStateMachine = CreateStateMachine();
   if (!mDecoderStateMachine) {
+    LOG(PR_LOG_DEBUG, ("%p Failed to create state machine!", this));
     return NS_ERROR_FAILURE;
   }
 
   nsBuiltinDecoder* cloneDonor = static_cast<nsBuiltinDecoder*>(aCloneDonor);
   if (NS_FAILED(mDecoderStateMachine->Init(cloneDonor ?
                                            cloneDonor->mDecoderStateMachine : nsnull))) {
+    LOG(PR_LOG_DEBUG, ("%p Failed to init state machine!", this));
     return NS_ERROR_FAILURE;
   }
   {
