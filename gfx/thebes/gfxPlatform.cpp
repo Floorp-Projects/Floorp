@@ -516,7 +516,13 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
 RefPtr<ScaledFont>
 gfxPlatform::GetScaledFontForFont(gfxFont *aFont)
 {
-  return NULL;
+  NativeFont nativeFont;
+  nativeFont.mType = NATIVE_FONT_CAIRO_FONT_FACE;
+  nativeFont.mFont = aFont;
+  RefPtr<ScaledFont> scaledFont =
+    Factory::CreateScaledFontForNativeFont(nativeFont,
+                                           aFont->GetAdjustedSize());
+  return scaledFont;
 }
 
 cairo_user_data_key_t kDrawSourceSurface;
