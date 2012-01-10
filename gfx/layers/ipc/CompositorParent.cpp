@@ -57,17 +57,21 @@ CompositorParent::~CompositorParent()
   MOZ_COUNT_DTOR(CompositorParent);
 }
 
+bool
+CompositorParent::RecvFixMeDoNotCall()
+{
+  NS_RUNTIMEABORT("not reached");
+  return NULL;
+}
+
 void
 CompositorParent::Destroy()
 {
   NS_ABORT_IF_FALSE(ManagedPLayersParent().Length() == 0,
                     "CompositorParent destroyed before managed PLayersParent");
-}
 
-bool
-CompositorParent::RecvInit()
-{
-  return true;
+  // Ensure that the layer manager is destroyed on the compositor thread.
+  mLayerManager = NULL;
 }
 
 bool
