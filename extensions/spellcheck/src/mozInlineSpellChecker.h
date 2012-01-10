@@ -40,7 +40,7 @@
 #define __mozinlinespellchecker_h__
 
 #include "nsAutoPtr.h"
-#include "nsIRange.h"
+#include "nsRange.h"
 #include "nsIEditorSpellCheck.h"
 #include "nsIEditActionListener.h"
 #include "nsIInlineSpellChecker.h"
@@ -78,7 +78,7 @@ public:
                              nsIDOMNode* aNewAnchorNode, PRInt32 aNewAnchorOffset,
                              bool* aContinue);
   nsresult InitForSelection();
-  nsresult InitForRange(nsIRange* aRange);
+  nsresult InitForRange(nsRange* aRange);
 
   nsresult FinishInitOnEvent(mozInlineSpellWordUtil& aWordUtil);
 
@@ -104,14 +104,14 @@ public:
 
   // Used for events where we have already computed the range to use. It can
   // also be NULL in these cases where we need to check the entire range.
-  nsCOMPtr<nsIRange> mRange;
+  nsRefPtr<nsRange> mRange;
 
   // If we happen to know something was inserted, this is that range.
   // Can be NULL (this only allows an optimization, so not setting doesn't hurt)
   nsCOMPtr<nsIDOMRange> mCreatedRange;
 
   // Contains the range computed for the current word. Can be NULL.
-  nsCOMPtr<nsIRange> mNoCheckRange;
+  nsRefPtr<nsRange> mNoCheckRange;
 
   // Indicates the position of the cursor for the event (so we can compute
   // mNoCheckRange). It can be NULL if we don't care about the cursor position
@@ -292,7 +292,7 @@ public:
 
   nsresult MakeSpellCheckRange(nsIDOMNode* aStartNode, PRInt32 aStartOffset,
                                nsIDOMNode* aEndNode, PRInt32 aEndOffset,
-                               nsIRange** aRange);
+                               nsRange** aRange);
 
   // DOM and editor event registration helper routines
   nsresult RegisterEventListeners();

@@ -58,6 +58,7 @@ EXPORTS		= \
 		nsNodeInfoManager.h \
 		nsNodeUtils.h \
 		nsPropertyTable.h \
+		nsRange.h \
 		nsScriptLoader.h \
 		nsStubDocumentObserver.h \
 		nsStubImageDecoderObserver.h \

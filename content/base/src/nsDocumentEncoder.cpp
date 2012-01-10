@@ -62,7 +62,7 @@
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMNodeList.h"
-#include "nsIRange.h"
+#include "nsRange.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
 #include "nsICharsetConverterManager.h"
@@ -113,9 +113,9 @@ protected:
   // This serializes the content of aNode.
   nsresult SerializeToStringIterative(nsINode* aNode,
                                       nsAString& aStr);
-  nsresult SerializeRangeToString(nsIRange *aRange,
+  nsresult SerializeRangeToString(nsRange *aRange,
                                   nsAString& aOutputString);
-  nsresult SerializeRangeNodes(nsIRange* aRange, 
+  nsresult SerializeRangeNodes(nsRange* aRange, 
                                nsINode* aNode, 
                                nsAString& aString,
                                PRInt32 aDepth);
@@ -155,7 +155,7 @@ protected:
 
   nsCOMPtr<nsIDocument>          mDocument;
   nsCOMPtr<nsISelection>         mSelection;
-  nsCOMPtr<nsIRange>             mRange;
+  nsRefPtr<nsRange>              mRange;
   nsCOMPtr<nsINode>              mNode;
   nsCOMPtr<nsIOutputStream>      mStream;
   nsCOMPtr<nsIContentSerializer> mSerializer;
@@ -204,7 +204,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocumentEncoder)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSelection)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRange)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mRange, nsIDOMRange)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCommonParent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -289,7 +289,7 @@ nsDocumentEncoder::SetSelection(nsISelection* aSelection)
 NS_IMETHODIMP
 nsDocumentEncoder::SetRange(nsIDOMRange* aRange)
 {
-  mRange = do_QueryInterface(aRange);
+  mRange = static_cast<nsRange*>(aRange);
   return NS_OK;
 }
 
@@ -766,7 +766,7 @@ static nsresult GetLengthOfDOMNode(nsIDOMNode *aNode, PRUint32 &aCount)
 }
 
 nsresult
-nsDocumentEncoder::SerializeRangeNodes(nsIRange* aRange,
+nsDocumentEncoder::SerializeRangeNodes(nsRange* aRange,
                                        nsINode* aNode,
                                        nsAString& aString,
                                        PRInt32 aDepth)
@@ -937,7 +937,7 @@ nsDocumentEncoder::SerializeRangeContextEnd(const nsTArray<nsINode*>& aAncestorA
 }
 
 nsresult
-nsDocumentEncoder::SerializeRangeToString(nsIRange *aRange,
+nsDocumentEncoder::SerializeRangeToString(nsRange *aRange,
                                           nsAString& aOutputString)
 {
   if (!aRange || aRange->Collapsed())
@@ -1079,7 +1079,7 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
         }
       }
 
-      nsCOMPtr<nsIRange> r = do_QueryInterface(range);
+      nsRange* r = static_cast<nsRange*>(range.get());
       rv = SerializeRangeToString(r, output);
       NS_ENSURE_SUCCESS(rv, rv);
     }

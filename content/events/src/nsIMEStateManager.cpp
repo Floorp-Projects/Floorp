@@ -492,7 +492,7 @@ nsTextStateManager::Init(nsIWidget* aWidget,
   rv = sel->GetRangeAt(0, getter_AddRefs(selDomRange));
 
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIRange> selRange(do_QueryInterface(selDomRange));
+    nsRange* selRange = static_cast<nsRange*>(selDomRange.get());
     NS_ENSURE_TRUE(selRange && selRange->GetStartParent(),
                    NS_ERROR_UNEXPECTED);
 
