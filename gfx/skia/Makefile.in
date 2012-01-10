@@ -68,6 +68,7 @@ VPATH += \
 	$(srcdir)/src/ports \
 	$(srcdir)/src/opts \
 	$(srcdir)/src/effects \
+	$(srcdir)/src/utils \
 	$(NULL)
 
 EXPORTS_skia = \
@@ -317,6 +318,19 @@ CPPSRCS += \
 
 DEFINES += -DSK_BUILD_FOR_ANDROID_NDK
 OS_CXXFLAGS += $(CAIRO_FT_CFLAGS)
+endif
+
+ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += \
+	SkFontHost_FreeType.cpp \
+	SkFontHost_linux.cpp \
+	SkFontHost_gamma.cpp \
+	SkTime_Unix.cpp \
+	SkMMapStream.cpp \
+	SkOSFile.cpp \
+	$(NULL)
+
+OS_CXXFLAGS += $(MOZ_PANGO_CFLAGS)
 endif
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
